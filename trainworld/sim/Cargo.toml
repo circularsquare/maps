@@ -40,6 +40,18 @@ name = "pack_gravity"
 path = "src/bin/pack_gravity.rs"
 required-features = ["demand"]
 
+# T-275: the walk's detour factors between nearby zones (pipeline/routes.py runs it).
+[[bin]]
+name = "pack_walk"
+path = "src/bin/pack_walk.rs"
+required-features = ["demand"]
+
+# T-174: the regional market's all-pairs figures into its pack (pipeline/intercity.py runs it).
+[[bin]]
+name = "market_pack"
+path = "src/bin/market_pack.rs"
+required-features = ["demand"]
+
 # T-007: a day of demand on a given network (the real New York network), for the comparison
 # with measured ridership (pipeline/realnet.py).
 [[bin]]
@@ -51,6 +63,24 @@ required-features = ["demand"]
 [[bin]]
 name = "realsave"
 path = "src/bin/realsave.rs"
+required-features = ["demand"]
+
+# T-276: one commute gravity over every zone pack (pipeline/intercity.py runs it).
+[[bin]]
+name = "joint_gravity"
+path = "src/bin/joint_gravity.rs"
+required-features = ["demand"]
+
+# T-276: each zone pack's local trips a day with no rail (pipeline/zone_summary.py).
+[[bin]]
+name = "zone_summary"
+path = "src/bin/zone_summary.rs"
+required-features = ["demand"]
+
+# T-276: a day on the real New York network with every layer (local and regional), before/after.
+[[bin]]
+name = "zones_day"
+path = "src/bin/zones_day.rs"
 required-features = ["demand"]
 
 [profile.release]

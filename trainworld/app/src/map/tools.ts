@@ -10,6 +10,8 @@
 // that point. Backspace takes the last point back, Escape drops the route. Each point takes the
 // level selected when it was placed. While drawing, the worker previews the route (one request in
 // flight): its cost, whether it can be built and why not, and the radius and speed of every curve.
+// The worker makes the finished route one piece of track per corner (T-244), so the delete tool
+// removes one piece.
 //
 // Delete (T-096): hovering shows what a click removes (a station or flyover ringed, a stretch of
 // track drawn red, its name by the cursor); a click removes blueprint at once and asks first for
@@ -23,15 +25,18 @@ import type { Map as MlMap, MapMouseEvent } from "maplibre-gl";
 import { lngLatToPack } from "../game/coords";
 import { describeIssues } from "../game/issues";
 import { km, money, moneyShort } from "../game/format";
-import { ask, buildLevel, buildPlatform, lineDraft, selection, singleTrack, tool } from "../game/ui";
+import { ask, buildLevel, buildPlatform, lineDraft, selection, trackCount, tool } from "../game/ui";
 import { describeRemovable, removeThing, type Removable } from "../game/remove";
+import { loadPlaces, placesNear } from "../game/placeList";
+import { compass } from "../game/places";
 import { edit, say, world } from "../game/world";
 import type { PiInput, RouteEnd } from "../workers/protocol";
 import type { ClockClient, PreviewAnswer } from "../workers/clockClient";
 import { toLngLat, toLocal } from "./geo";
 import { strokesFromPreview } from "./network";
-import { platformAxis, stationBox, stationRadii } from "./stationGeometry";
+import { PLATFORM_HALF_M, platformShape, reversed, stationPath, stationShape, waysFrom } from "./stationGeometry";
 import type { Overlay } from "./overlay";
+import type { StopMarkers } from "./stopMarkers";
 
 const SNAP_NODE_PX = 12;
 const SNAP_EDGE_PX = 10;
@@ -61,6 +66,8 @@ export class Tools {
   private ring: HTMLDivElement;
   private lineSession = 0;
   private editingLine: number | null = null;
+  /** the toggle markers on every station while a line's stops are edited (T-233); set by main.ts */
+  stops: StopMarkers | null = null;
   private stopClicks: Promise<void> = Promise.resolve();
 
   constructor(private map: MlMap, private overlay: Overlay, private client: ClockClient) {
@@ -74,7 +81,10 @@ export class Tools {
     this.box.append(this.tag, this.ring);
     overlay.afterMapFrame.push(() => this.place());
     effect(() => { buildPlatform.value; if (tool.value === "station") this.place(); });
-    effect(() => { buildLevel.value; singleTrack.value; if (tool.peek() === "track" && this.start) this.requestPreview(); });
+    // the place lists name stations where the tiles have no streets (T-065); fetch them once the
+    // station tool is first picked, not at startup
+    effect(() => { if (tool.value === "station") void loadPlaces(); });
+    effect(() => { buildLevel.value; trackCount.value; if (tool.peek() === "track" && this.start) this.requestPreview(); });
     effect(() => {
       const active = tool.value === "line" ? lineDraft.value.line : null;
       const w = world.value;
@@ -155,6 +165,7 @@ export class Tools {
     const t = tool.peek();
     if (t === "select") return;
     if (t === "delete") return this.deleteHover(e.point.x, e.point.y);
+    if (t === "line") this.stops?.hover(e.point.x, e.point.y); // T-233: the toggle markers' tag
     this.hover = t === "line" ? null : this.snap(e.point.x, e.point.y, e.lngLat);
     if (t === "track" && this.start) this.requestPreview();
     this.place();
@@ -253,7 +264,7 @@ export class Tools {
 
   private async finish(to: RouteEnd) {
     if (!this.start) return;
-    const a = await edit({ op: "route", from: this.start.end, to, pis: this.pis.map((p) => p.pi), single: singleTrack.peek() });
+    const a = await edit({ op: "route", from: this.start.end, to, pis: this.pis.map((p) => p.pi), single: trackCount.peek() === 1, quad: trackCount.peek() === 4 });
     if (a.ok) {
       const p = this.lastPreview;
       say(p ? `Blueprint added: ${(p.lengthM / 1000).toFixed(2)} km, ${money(p.cost * 1e6)} to construct.` : "Blueprint added.");
@@ -270,7 +281,7 @@ export class Tools {
     const [ax, ay] = this.screen(last.lx, last.ly), [bx, by] = this.screen(h.lx, h.ly);
     if (Math.hypot(ax - bx, ay - by) < 3) return;
     const to = this.endOf(h);
-    this.client.preview({ from: this.start.end, to, pis: this.pis.map((p) => p.pi), single: singleTrack.peek() }, (a) => {
+    this.client.preview({ from: this.start.end, to, pis: this.pis.map((p) => p.pi), single: trackCount.peek() === 1, quad: trackCount.peek() === 4 }, (a) => {
       if (!this.start) return;
       this.lastPreview = a;
       this.overlay.renderer.setPreview(a.pts.length >= 6 ? strokesFromPreview(a.pts, !a.ok, a.speeds, true) : null);
@@ -287,19 +298,21 @@ export class Tools {
       say("Click on track to put a station there.");
       return;
     }
-    const name = this.nameFor(e.point.x, e.point.y);
+    const name = await this.nameFor(e.point.x, e.point.y);
     const at = s.kind === "node" ? { kind: "node" as const, node: s.node } : { kind: "edge" as const, edge: s.edge, ...this.pack(s.lx, s.ly) };
     const a = await edit({ op: "addStation", at, platform: buildPlatform.peek(), name });
     if (a.ok) say(`${name} added as a blueprint station.`);
   }
 
   /**
-   * A name for a new station: the nearest named street within 400 m on the basemap's loaded
-   * tiles (shortened New York style), else the nearest neighbourhood, else "Station N". Names
-   * already in use are skipped, so a second station on Broadway takes its cross street.
+   * A name for a new station: from zoom 13, where the basemap's tiles carry street names, the
+   * nearest named street within 400 m (shortened New York style); else the nearest place on the
+   * city's OSM place list (T-065, game/placeList.ts); else a place on the loaded tiles; else
+   * "Station N". Names already in use are skipped, so a second station on Broadway takes its
+   * cross street and a second one in Williamsburg the next neighbourhood or "North Williamsburg".
    */
-  private nameFor(px: number, py: number): string {
-    const taken = new Set(world.peek()?.save.stations.map((s) => s.name) ?? []);
+  private async nameFor(px: number, py: number): Promise<string> {
+    let taken = new Set(world.peek()?.save.stations.map((s) => s.name) ?? []);
     const at = this.map.unproject([px, py]);
     const kx = 111320 * Math.cos((at.lat * Math.PI) / 180), ky = 110540;
     const dist = (g: Geometry): number => {
@@ -336,8 +349,13 @@ export class Tools {
       }
       return [...best].sort((a, b) => a[1] - b[1]).map((e) => e[0]).find((n) => !taken.has(n)) ?? null;
     };
-    const street = pickFrom("transportation_name", 400, (p) => p.class !== "motorway");
+    // below zoom 13 the tiles hold only the bigger roads, so the nearest one shown is not the nearest
+    const street = this.map.getZoom() >= STREET_NAME_ZOOM ? pickFrom("transportation_name", 400, (p) => p.class !== "motorway") : null;
     if (street) return street;
+    const near = await placesNear(at.lng, at.lat).catch(() => []);
+    taken = new Set(world.peek()?.save.stations.map((s) => s.name) ?? []); // a station added meanwhile counts
+    const listed = placeName(near, taken);
+    if (listed) return listed;
     const place = pickFrom("place", 1200, (p) => ["neighbourhood", "quarter", "suburb", "village", "hamlet", "town"].includes(p.class));
     if (place) return place;
     for (let k = 1; ; k++) if (!taken.has(`Station ${k}`)) return `Station ${k}`;
@@ -412,16 +430,43 @@ export class Tools {
   private lineClick(e: MapMouseEvent) {
     const n = this.overlay.renderer.net;
     if (!n) return;
+    // a toggle marker (T-233, map/stopMarkers.ts) is on top of the station
+    const marker = this.stops?.pick(e.point.x, e.point.y);
+    if (marker) {
+      this.stops!.activate(marker, e.point.x, e.point.y);
+      return;
+    }
     const station=this.overlay.renderer.stationAt(e.point.x,e.point.y,(x,y)=>this.screen(x,y),7);
     const hit=station>=0?Number(n.stationIds[station]):-1;
     if (hit < 0) {
-      say("Click a station to add it to the line. Press Enter when the line is done.");
+      say("Click a circle to add or remove a stop. Press Enter when the line is done.");
       return;
     }
+    this.toggleStop(hit);
+  }
+
+  /** Add the station as a stop, or take it out if the line stops there (T-233). Clicks queue and
+   * each reads the latest stops. */
+  toggleStop(station: number) {
     const session = this.lineSession;
-    this.stopClicks = this.stopClicks.then(() => this.addStop(hit, session)).catch(() => {
-      if (session === this.lineSession) say("Could not add that stop. Please try again.", true);
+    this.stopClicks = this.stopClicks.then(() => this.toggle(station, session)).catch(() => {
+      if (session === this.lineSession) say("Could not change that stop. Please try again.", true);
     });
+  }
+
+  private async toggle(station: number, session: number) {
+    if (session !== this.lineSession || tool.peek() !== "line") return;
+    const id = lineDraft.peek().line;
+    const line = world.peek()?.save.lines.find((l) => Number(l.id) === id);
+    if (id === null || !line) return;
+    const before = line.stops.map(Number);
+    if (!before.includes(station)) return this.addStop(station, session);
+    // taking a stop out: the route between its neighbours is the worker's, as the inspector's crosses
+    const a = await edit({ op: "setStops", line: id, stops: before.filter((s) => s !== station) });
+    if (a.ok && session === this.lineSession && tool.peek() === "line") {
+      const latest = world.peek()?.save.lines.find((l) => Number(l.id) === id);
+      if (latest) lineDraft.value = { line: id, stops: latest.stops.map(Number) };
+    }
   }
 
   private async addStop(station: number, session: number) {
@@ -473,7 +518,9 @@ export class Tools {
     return m;
   }
 
-  /** The placement ghost uses the same platform length and screen minimum as built stations. */
+  /** The placement ghost: the platform as it will be drawn, at the configured length along the
+   * snapped track and curved with it, as built stations are (T-144, T-189). */
+  private ghost: SVGSVGElement | null = null;
   private stationGhost(h: Exclude<Snap,{kind:"free"}>) {
     const n=this.overlay.renderer.net,w=world.peek();
     if (!n || !w) return;
@@ -486,15 +533,28 @@ export class Tools {
       usage.get(edge)!.add(n.lines.colour[i]);
     }
     candidates.sort((a,b)=>(usage.get(b)?.size??0)-(usage.get(a)?.size??0)||a-b);
-    const edge=candidates[0],bundle=usage.get(edge)?.size??0;
+    const edge=candidates[0];
     const [,lat]=toLngLat(h.lx,h.ly);
-    const [ax,ay]=platformAxis(n.edgePts.get(edge),h.lx,h.ly,buildPlatform.peek()/2/Math.cos(lat*Math.PI/180));
-    const box=stationBox(h.lx,h.ly,ax,ay,(x,y)=>this.screen(x,y),stationRadii(this.map.getZoom())[0],bundle,this.overlay.renderer.slotPx);
-    this.ring.className="station-ghost";
-    this.ring.style.width=`${box.halfLength*2}px`;
-    this.ring.style.height=`${box.halfWidth*2}px`;
-    this.ring.style.margin="0";
-    this.ring.style.transform=`translate(${box.x}px,${box.y}px) rotate(${Math.atan2(box.uy,box.ux)}rad) translate(-50%,-50%)`;
+    const perM=1/Math.cos(lat*Math.PI/180);
+    // the track either way from the point, as network.ts lays out a built station's platform
+    const pts=n.edgePts.get(edge);
+    const ways:ArrayLike<number>[]=h.kind==="edge"
+      ? pts ? waysFrom(pts,h.lx,h.ly) : []
+      : candidates.map((id)=>{ const e=w.edges.find((x)=>x.id===id), p=n.edgePts.get(id); return !e||!p?new Float32Array(0):e.a===h.node?p:reversed(p); });
+    const sh=platformShape(ways,0,buildPlatform.peek()/2*perM);
+    const shape=stationShape(h.lx,h.ly,sh,PLATFORM_HALF_M*perM,(x,y)=>this.screen(x,y),this.overlay.renderer.stationStyle,false);
+    if (!this.ghost) {
+      this.ghost=document.createElementNS("http://www.w3.org/2000/svg","svg");
+      this.ghost.setAttribute("class","station-ghost");
+      this.ghost.setAttribute("width","1");
+      this.ghost.setAttribute("height","1");
+      this.ghost.appendChild(document.createElementNS("http://www.w3.org/2000/svg","path"));
+      this.box.appendChild(this.ghost);
+    }
+    this.ring.style.display="none";
+    this.ghost.style.display="";
+    this.ghost.style.transform=`translate(${shape.x}px,${shape.y}px)`;
+    this.ghost.firstElementChild!.setAttribute("d",stationPath(shape));
   }
 
   /** Move the DOM markers to the camera (after each MapLibre frame and each change). */
@@ -519,11 +579,8 @@ export class Tools {
     }
     for (let i = k; i < this.marks.length; i++) this.marks[i].style.display = "none";
 
-    // Reset the shared marker after a platform ghost before using a snap/delete ring.
-    this.ring.className="snap-ring";
-    this.ring.style.removeProperty("width");
-    this.ring.style.removeProperty("height");
-    this.ring.style.removeProperty("margin");
+    // the platform ghost shows only while the station tool snaps (below)
+    if (this.ghost) this.ghost.style.display = "none";
     // the delete tool: a ring on the station or flyover, and what a click removes by the cursor
     if (t === "delete") {
       const d = this.delHover, what = d && describeRemovable(d);
@@ -582,6 +639,30 @@ export function curveLabels(verts: Float64Array): { x: number; y: number; text: 
     i = j;
   }
   return out;
+}
+
+/** From this zoom the basemap's tiles carry street names (T-065). */
+const STREET_NAME_ZOOM = 13;
+/** A taken nearest place gives way to an untaken one at most this much further away. */
+const PLACE_SLACK_M = 800;
+
+/**
+ * A station's name from the places near it (nearest first, game/placeList.ts): the nearest, or
+ * if that name is taken another within PLACE_SLACK_M further, or the nearest with the way the
+ * station lies from it ("North Williamsburg"), or with a number ("Williamsburg 2"). Null when no
+ * place is near.
+ */
+export function placeName(near: { place: { name: string }; d: number; dx: number; dy: number }[], taken: Set<string>): string | null {
+  if (!near.length) return null;
+  const first = near[0];
+  const free = near.find((n) => n.d <= first.d + PLACE_SLACK_M && !taken.has(n.place.name));
+  if (free) return free.place.name;
+  if (first.d > 150) {
+    const way = compass(first.dx, first.dy);
+    const named = `${way[0].toUpperCase()}${way.slice(1)} ${first.place.name}`;
+    if (!taken.has(named)) return named;
+  }
+  for (let k = 2; ; k++) if (!taken.has(`${first.place.name} ${k}`)) return `${first.place.name} ${k}`;
 }
 
 /** "West 42nd Street" -> "W 42nd St". */

@@ -29,6 +29,18 @@ Full design, numbers and sources: `notes/T-008.md`.
   clicked points show as squares, each curve its radius and speed limit, and the cursor the
   stretch's length, average cost multiplier (level and water over its length) and price ("1.5 km,
   cost 1.33x, $25.5M", T-085), or why it cannot be built.
+- **One piece per corner** (T-244, Anita: deleting one stretch should not delete the whole
+  path): a finished route is several edges, one per corner clicked, joined at plain nodes (two
+  edge ends, no station) in the middle of the leg between two corners. The leg middle is on the
+  straight, so each corner stays a PI of its own piece with the same auto radius (a corner next to
+  an end may use the whole leg, which is now the half leg it had anyway), and the track is exactly
+  where it was drawn: same length, price, curves, speed limits and run times (tested against the
+  same route as one edge). A leg that changes level is not cut (its ramp is centred between its
+  corners and a node sits at a whole level), nor one under 40 m. A route with one corner or none
+  stays one edge. Drawing it is one undo step; the delete tool, Construct in the track inspector
+  and the track inspector itself act on one piece, and removing a piece leaves its neighbours with
+  track ends where it was. The joints are not drawn and cost nothing; trains pass them with no
+  speed limit or delay (a track section runs on through a plain node, 6.2).
 - **Reshaping blueprint track** (T-064, T-092, T-071): a selected stretch of blueprint track shows its PIs
   as squares on the map; dragging one previews the new shape with each curve's radius and speed
   (or why it cannot be built), letting go applies it as one undoable edit, Escape puts it back. The
@@ -39,8 +51,13 @@ Full design, numbers and sources: `notes/T-008.md`.
   Insertion, removal and per-corner levels each use the existing checked, undoable shape edit.
   The inspector can also put all corners on one level; its ends keep theirs, with ramps. A set
   radius that a drag leaves no room for goes back to auto (splitting track for a station or a
-  branch sets the radii next to the split so its shape does not change). Constructed track cannot
-  be reshaped (remove it and draw it again). notes/T-064.md.
+  branch sets the radii next to the split so its shape does not change; a split inside a curve
+  gives the two new PIs the radius that ends each half at the node, the curve's own to under 1%,
+  or goes to the curve's end when it is within a few metres of it, T-258). A joint between two
+  pieces of a route (T-244: a plain node on the straight between the corners either side of it)
+  moves with a corner dragged next to it, to the same fraction of the way between the corners, and
+  the preview shows the neighbouring piece too, so a corner drags as it did when the route was one
+  edge. Constructed track cannot be reshaped (remove it and draw it again). notes/T-064.md.
 - **Moving blueprint nodes** (T-093): with the select tool, a track end, junction or station can be
   dragged while every edge meeting there is blueprint and its station is not constructed; the
   blueprint track there follows, previewed like a reshape (each curve's radius and speed, or why
@@ -51,8 +68,13 @@ Full design, numbers and sources: `notes/T-008.md`.
   and paths; their times change. A constructed node, or one where constructed track meets, stays
   put (dragging it when it is selected says so; otherwise the map pans as usual). notes/T-093.md.
 - **Placing stations**: click on track (it is split there) or on a node. A new station is named
-  after the nearest street on the basemap within 400 m ("W 42nd St"), skipping names in use, else
-  a neighbourhood, else "Station N"; the player can rename it.
+  after the nearest street on the basemap within 400 m ("W 42nd St"), skipping names in use, when
+  the map is at zoom 13 or closer (further out the tiles hold only the bigger roads). Otherwise,
+  or with no street that near, it takes the nearest place on the city's OSM place list (T-065,
+  `game/placeList.ts`; neighbourhoods within 2.5 km of their label point, towns 5 km): if that
+  name is in use, another place at most 800 m further, else the way the station lies from it
+  ("North Williamsburg"), else a number ("Williamsburg 2"). Failing that, a place on the loaded
+  tiles, else "Station N". The player can rename it.
 - **Curve speed** `v = sqrt(a_lat * R)`, **a_lat = 1.1 m/s²** (LGV design: 7,000 m for 320 km/h).
   100 m: 38 km/h, 300 m: 65, 1,000 m: 119, 1,800 m: 160. **Minimum radius 100 m.** The track has no
   speed cap of its own; the M1 train's top speed is **160 km/h**. Grades do not change speed.
@@ -67,6 +89,22 @@ Full design, numbers and sources: `notes/T-008.md`.
   both directions sharing it, with sections split at stations. A single-track station has one
   shared platform track; it does not automatically add a passing loop. (Anita, 2026-10-08; not NIMBY-style
   individual tracks.)
+- **Quad track** (T-255): the third setting. The stroke draws the double track as usual and an
+  express double track beside it, 8 m to the left of the drawn direction (centre to centre, so
+  4 m between every pair of neighbouring tracks), from the same start node to the same end node:
+  it leaves each end along the node's heading like a turnout and swings out over 150 m (less on a
+  short leg), and between them runs parallel, each corner concentric with the drawn one (radius
+  8 m smaller on the inside of the turn, 8 m larger outside; a drawn curve under 108 m is too
+  tight for quad). So lines change pairs only at the ends of the quad stretch, where the two pairs
+  meet as a junction (a fork with nothing behind it if the end is new track). Both pairs are
+  ordinary double-track edges, cut into pieces per corner (T-244), priced, deleted and drawn like
+  any track: quad costs two double tracks, plus junctions at ends on existing track. A station
+  placed on either pair (on track or on a node) gets a twin of the same name level with it on the
+  other pair, in the same edit: the local and express platforms, one complex and one label. If
+  the twin cannot be built there, the station goes in alone. **Express copy** in the line
+  inspector copies a line with every stop that has a twin (a station within 12 m) moved to it and
+  the path found again, so the copy runs on the express pair wherever the local one runs on quad
+  track, and opens stop editing on it; the player clicks off the stops it skips.
 - **Junctions in plain words** (T-080): a new junction is built flat (the branch crosses the other
   direction's track at the same level: cheaper, trains may wait for each other). The junction
   inspector says so in plain words and offers "Build a flyover" with its price (paid at once on a
@@ -79,8 +117,12 @@ Full design, numbers and sources: `notes/T-008.md`.
   crosses those at grade (notes/T-030.md). Ground level means within half a level (4 m) of the
   ground, so the low end of a ramp counts too: bridge and tunnel approaches start on land.
 - **Stations** are nodes on a route, platform length 60-400 m in 20 m steps, level and free of
-  other nodes along it; curved platforms are fine. Platform length caps train length (20 m cars).
-  Platform tracks = the route's tracks. Riders change between stations up to 300 m apart on foot, and platforms within 100 m of each other count as one station (4.4).
+  other nodes along it; curved platforms are fine. Through a station the platform is centred on
+  the node; at a dead end it runs from the node along the track and trains stop at its middle
+  (`service.rs`). The map draws it there, at its true length and bent as the track is, from
+  zoom 15, as a box whose width is fixed on the ground too (16 m, a quarter narrower than a plain line and its rim, the same for every station and mode), so its shape is the same at every zoom
+  (docs/interface.md, Stations on the map; T-189, T-204, T-239). Platform length caps train length (20 m cars).
+  Platform tracks = the route's tracks. Riders change between stations up to 300 m apart on foot, and platforms within 100 m of each other count as one station (4.4). Stations whose platforms come within 50 m form a station complex, which a click on a station selects as one (T-249) and the demand circles can show as one (8, T-146); the player can link any two stations up to 1 km apart into one complex and unlink them (T-197, saved with the network as `Network::links`, not in the undo history). Riders change between any two stations of a complex on foot, however far apart (4.4, T-161).
 
 ### 6.2 Capacity and junctions
 
@@ -131,10 +173,8 @@ delays on resources used by count schedules. Legacy fixed-frequency schedules re
 capacity pass: delay lengthens their round trips and raises fleet needs without changing rate.
 The underlying capacity pass is incremental: an edit
 rebuilds only the resources around the edges, nodes and lines it touched and re-solves those and
-the ones a rescheduled line uses, with the same result as rebuilding everything (T-050). In WASM
-the historical fixed-frequency pass took 0.02-0.2 ms an edit at 2,000 route-km with 60 lines and 1,250 resources, and 0.2-1.2 ms
-at 10,000 km with 400 lines and 11,000 resources, where the whole pass takes 13 ms
-(notes/T-050.md). Each delay is baked into the line's run-time profile per demand level as a hold
+the ones a rescheduled line uses, with the same result as rebuilding everything (T-050; timings
+in notes/T-050.md). Each delay is baked into the line's run-time profile per demand level as a hold
 at the resource's entry: a slower approach when the delay is shorter than what braking to a stop
 and starting again there would cost, otherwise a stop in front of it. So trains visibly crawl or
 queue at a tangle.
@@ -147,6 +187,9 @@ demand", and for a junction "Click to see the junction and its flyover"). Marker
 network and under the demand views' bubbles and catchment (T-099). Like station names, they hide
 below zoom 12 and reserve space around each tag (48 px horizontally / 28 px vertically before
 zoom 14, then 20 / 12 px). Larger delays win collisions, then higher utilisation (T-102).
+Markers never cover a station name: each takes the first spot around its resource that is clear
+of names and earlier markers (above right, above left, below right, below left, right, left), and
+hides only when none is (T-184, docs/interface.md).
 The junction inspector (T-031) draws the junction as a small diagram and lists its moves (from
 one station or direction to another), with the lines on each, trains an hour at the level in
 force, the wait per train, which moves each crosses, and the busiest crossing's utilisation. The
@@ -176,6 +219,37 @@ busy track, and names the places it waits most (notes/T-031.md).
   extending track or changing congestion adjusts the headway while preserving the allocation.
   Resources used by count schedules keep continuous delays so rounding cannot make the solve
   oscillate. Legacy saves preserve their original frequencies until a schedule is edited.
+- **Departures** (`Service::run_deps`): per period, the first departure at the period's start and
+  then one a headway; a whole-line fleet's reverse departures are offset by the forward trip so
+  each train turns straight back. When the pattern changes (a new period, or an edit) a new
+  departure closer than half a headway after the old pattern's last one is left out, so trains
+  never leave a terminal in pairs.
+- **Trains join and leave at the ends** (T-206, notes/T-206.md). An edit that changes a running
+  line's departures (its train count, a whole-line fleet's headway after track or congestion
+  changes, its turnaround) takes effect at the game time it is made: departures before it keep the
+  old pattern (an *era*, `Service::eras`), so every train already running carries on where it was;
+  departures after it follow the new one. A train running when its profile changed is drawn from
+  where it was (`Service::shifts`: at the same place, or at the same stop with the dwell it had
+  left). At each terminal trains are handed over (`Service::hand_over`): a train that has finished
+  its run and turnaround takes the next departure from there if it comes within that departure's
+  headway (an hour at most), standing at the platform until then; a departure no train waits for
+  is a train entering service there; a train that finds another already waiting, or no departure
+  soon enough, leaves service at the end of its turnaround. So an added train enters at a
+  terminal, a removed one finishes its trip and leaves at a terminal, and headways even out as
+  trains turn; the same happens at every change of period. A train that had left service before
+  a change never comes back. In steady service with a whole-line fleet every train is ready at
+  exactly its next departure and nothing stands longer. Each drawn trip names the departure its
+  train takes next (`Trip::next`, the fourth number per trip of `TrackApi.trips`, NaN when it
+  leaves service), so a selected train is followed onto its next trip (T-245). Eras are not saved: they are dropped once
+  no train of theirs can be drawn (an hour plus the longest trip and two headways after the
+  change), and a loaded game starts without them. Deterministic: the drawn trips are a function
+  of the service, its eras and the hour asked for, and every window agrees.
+- **Changing a train count is quick** (T-229, notes/T-229.md). The stepper shows the new count at
+  once (`game/world.ts` `pendingTrains`), and clicks made while an edit is in flight are folded
+  into one edit sent when it lands. The worker sends a service-only state for it: no geometry
+  moved, so it skips rebuilding the renderer's buffers and the main thread swaps in only the new
+  run profiles (`renderer.setService`). On the real New York save an edit takes 36-48 ms in the
+  worker (was 83-89, half of it those buffers) and 6-10 ms on the main thread (was 11-17).
 - **Trip times on the stops list**: each stop shows the time from the start of the line, next to
   the station (e.g. Grand Central 1m23s, Long Island City 2m59s), and the panel shows the whole
   round trip.
@@ -221,7 +295,13 @@ multiplier per level (Anita, 2026-10-08):
   more than the cash. Cars are never sold: spares serve the next line that needs them.
 - **Running cost** US$1.50 per car-km (trains an hour each way x line length x cars; set for play,
   a quarter of a real figure, T-091), and **fares**,
-  are settled each game hour by the clock worker into the cash and a per-day ledger. Fare per ride
+  are settled by the clock worker into the cash and a per-day ledger as the game runs, not once an
+  hour (T-284): each game hour's fares are paid as that hour's trains pick up riders (the boarding
+  account's trains leaving platforms, 6.6, weighted by the riders each takes; evenly in an hour
+  without one), its running cost drains evenly, and both are paid in full by the hour's end, so a
+  day's totals are those of whole-hour settling. The worker settles and sends the cash and today's
+  ledger four times a wall second while the clock runs; the top bar shows the cash to the dollar,
+  and only it and the Money tab's cash and Today column re-render. Fare per ride
   = a base plus a rate per km of the ride, one curve for the network, set in the Money tab ($1.50
   + $0.10 a km to start); a ride that changes lines pays the base once. Fare income comes from
   demand's riders and passenger-km per period (`app/src/game/money.ts`). Changing the fare
@@ -235,9 +315,7 @@ multiplier per level (Anita, 2026-10-08):
   constant; running costs scale in the track model, fares in `app/src/game/money.ts`), so a game
   day earns and spends what a hundred real days would. The fare the player sets and the US$1.50 a
   car-km shown are the figures before that scaling; construction and train prices stay real. The
-  Money tab says so. The historical T-028 priced example for the real New York network (T-007)
-  earned about $1.71B a game
-  day in fares against about $0.59B of running costs.
+  Money tab says so in the hover of "A day at this schedule".
 
 ### 6.5 Edits
 
@@ -270,3 +348,74 @@ PIs (format TWT4 also keeps the T-079 original drawn points and optional whole-l
 TWT2 and TWT3 saves load),
 nodes, stations and lines: ~100 KB compressed for 10,000 route-km on a synthetic network
 (notes/T-040.md; T-008 estimated 170 KB with denser drawing).
+
+### 6.6 Boarding: each train's load, each platform's crowd
+
+The boarding account (T-164, `sim/src/track/boarding.rs`, `app/src/game/boarding.ts`, notes/T-164.md)
+turns demand's riders per period into a load per train and a crowd per platform. It adds nothing
+per person and does not change who travels: demand still decides that (SPEC 4).
+
+- **Input**: per line, direction, stop and period, demand's boardings and alightings (transfers
+  included), sent by the main thread with each demand result, and each period's busiest-hour
+  factor (docs/demand.md). One set per kind of day (T-260): a weekday's and a weekend's riders
+  make two accounts of the same trains, and each game hour's trains and platforms read their own
+  day's (`day_kind_at`; a kind with no riders yet reads the weekday's). A line's panel shows the
+  day chosen in the top bar.
+- **Arrivals**: a stop's boardings in a period arrive spread over it by a fixed shape, scaled so the
+  busiest clock hour is the busiest-hour factor times the mean hour: a tent (rising to the middle,
+  falling away) for the two peaks and midday, falling from its start for the evening, highest at
+  both ends for the night. The period's total is kept exactly.
+- **Each train, in the order it leaves each stop**: the line's share alighting there gets off
+  (demand's alightings over the riders it has arriving, per period; everyone at the last stop), then
+  it takes whoever is waiting up to its crush load (160 a car). The rest wait for the next train of
+  the same line and direction. Lines sharing stops keep separate queues: demand has already split
+  the riders between them by frequency (4.4's common lines), and a rider left behind does not
+  switch to another line.
+- **A day at a time**: worked out for a day of departures from 03:00, from empty platforms; a
+  direction where anyone is still waiting when that day ends is run again from a day earlier, so
+  the queue carries round. Departures are the drawn trips to the bit (`Service::run_deps`). While
+  a line has eras (T-206) its day starts six hours before its latest change instead, so the
+  account holds the departures actually drawn around the change: a train that has not entered
+  service carries nobody, and trains that left before the change keep their loads. Nothing
+  is saved: it follows from the service and the riders. Each line's inputs are hashed, so an edit
+  works out again only the lines it changed; new riders redo every line, a few lines at a time
+  between the clock worker's other messages (3 a step).
+- **Each game hour** the worker sends, with the hour's trips, each trip's riders per stop-to-stop
+  stretch and each platform's departures with the riders each left behind, its arrival rate, and
+  the hour's riders left behind and longest wait. The renderer reads the train's load for the
+  stretch it is drawn on (empty once at its last stop; packed to crush, drawn full with a red
+  edge, T-207, half as thick again since T-218), and a platform's crowd at any moment is what
+  the last train left plus who has arrived since, drawn as the platform filling up wherever
+  platforms are drawn (zoom 15 and in, T-189, T-204, T-219; docs/interface.md).
+- **Room on a platform** (T-219, `platformRoom` in `game/boarding.ts`): what counts as a full
+  platform for drawing. Each direction's riders wait on one side, 2.5 m of usable width (half a
+  6 m island platform less the edge strip kept clear) along the platform's length, at 0.3 m² a
+  rider: the roomy end of Fruin's queuing level of service E (0.2-0.3 m² a person, standing in
+  contact with others; the TCQSM's platform scale), about a train's standing density at crush. A
+  150 m platform holds 1,250 a side. Only the drawing uses it: the account still lets a crowd
+  grow past it (nobody is turned away from a platform).
+- **Cost** on the real New York save (109 lines, 3,294 platforms): new riders 40-60 ms of the clock
+  worker in steps of at most about 5 ms; an hour's slice 1-2 ms and about 450 kB, transferred;
+  drawing the crowds 0.1-0.2 ms a frame on the main thread.
+
+- **How full trains get** (T-207, notes/T-207.md). On the real New York save, of the trains leaving
+  between 08:00 and 09:00 the median is at 48% of crush at its fullest stretch, the 90th
+  percentile at 78%, and 23 of 878 reach crush; between 17:00 and 18:00, 70%, 98% and 71 of 836.
+  A player's Manhattan trunk (18 stops Harlem to Fulton St, 14 ten-car trains at the peaks) is
+  packed full on every peak train. Trains reach crush mostly in the busiest half hour: arrivals
+  peak at 1.8 times the period's mean at its middle, against demand's 1.4 for the busiest hour.
+  Demand's crowding penalty (docs/demand.md step 7) starts once seats run out, so its equilibrium
+  usually sits between seated and crush loads.
+- **What the panels show** (T-230): every train-fullness figure is the account's: the gauge on
+  trains, the train tag and inspector, the line inspector's "Trains today" (`Boarding::line_summary`:
+  fullest train, trains leaving full and when, riders left behind a day, longest wait) and the
+  platforms. Demand's busiest-hour average train is not shown: on the real New York save 28 of the
+  93 lines it put under 100% leave riders behind in the account (the L: 87%, yet 13 trains leave
+  full 17:51-18:34 and 4,300 are left behind), because riders arrive fastest mid-peak.
+
+Riders left behind feed back into demand (T-188): each crowding round runs this rule on the
+period's own trains and adds the average extra wait at each line, direction and stop to that
+boarding's cost (docs/demand.md 4.4 step 7), so a line that leaves people behind loses riders to
+other routes or the car. The account itself is not read back: the clock worker's day and demand's
+periods give the same rule, but demand's is worked out inside the solve, so it settles with the
+crowding rounds. There are no signals (SPEC 2.1).

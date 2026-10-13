@@ -18,8 +18,8 @@ NCES = "https://nces.ed.gov/opengis/rest/services/K12_School_Locations/EDGE_ADMI
 FIELDS = "NCESSCH,SCH_NAME,SURVYEAR,STATUS,VIRTUAL,MEMBER,LATCOD,LONCOD"
 
 
-def public_schools(boundary, excluded=None):
-    """Eligible physical schools inside a polygon, excluding a higher-quality area.
+def public_schools(boundary):
+    """Eligible physical schools inside a polygon.
 
     Do not use this layer's CNTY field (not a reliable full county FIPS). Spatial
     filtering also respects the game's 2020 Connecticut county boundaries.
@@ -48,8 +48,6 @@ def public_schools(boundary, excluded=None):
             point = Point(r["LONCOD"], r["LATCOD"])
             if not boundary.covers(point):
                 reason = "outside_city"
-            elif excluded is not None and excluded.covers(point):
-                reason = "higher_quality_DOE_area"
             elif str(r["STATUS"]).strip() not in {"1", "3", "4", "5", "8"}:
                 reason = "not_operational"
             elif r["VIRTUAL"] not in {"Not Virtual", "Supplemental Virtual"}:

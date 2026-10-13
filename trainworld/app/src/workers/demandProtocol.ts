@@ -18,6 +18,8 @@ export interface DemandNetwork {
   frame: FrameSpec;
   /** x, y per station in that frame; each pack receives a copy in its own frame */
   stXY: Float32Array;
+  /** each station's complex (T-161, `DemandApi.set_complexes`): equal numbers are one complex */
+  complex: Uint32Array;
   /** stops per line */
   lineN: Uint32Array;
   /** station index of every stop, line after line */
@@ -39,14 +41,22 @@ export interface DemandNetwork {
 }
 
 export type ToDemand =
-  /** the city pack (header text and .bin) and the periods this worker solves */
-  | { kind: "init"; packs: { id: CityId; header: string; bin: ArrayBuffer }[]; intercity: string; periods: number[]; aux?: boolean }
+  /** start the WASM with the periods this worker solves; city packs (header text and .bin) and the
+   * regional market may come here or in `open`s after it (T-149) */
+  | { kind: "init"; packs: { id: CityId; header: string; bin: ArrayBuffer }[]; intercity?: string | Uint8Array; periods: number[]; aux?: boolean;
+      /** T-173: open a small synthetic everyday layer first (`everyday_warm_up`), before `ready` */
+      warmEveryday?: boolean }
+  /** open more city packs and/or the regional market (T-149); answered by `opened`. The market is
+   * the pack's text or, from the page, its UTF-8 bytes (T-180: decoded in the worker; the aux
+   * worker, which never opens it, gets none) */
+  | { kind: "open"; packs: { id: CityId; header: string; bin: ArrayBuffer }[]; intercity?: string | Uint8Array }
   /** solve every period of this worker on `net`: free flow, then `rounds` crowding rounds */
   | { kind: "solve"; version: number; net: DemandNetwork; rounds: number }
   /**
    * Queries for the demand views (T-078, notes/T-078.md), answered between periods. `id` matches
    * the reply; `version` is the solve they ask about: a worker that has moved on to a newer
-   * network answers with nulls.
+   * network answers with nulls. Every query also carries `day` (T-260, game/ui.ts `shownDay`,
+   * 0 when absent): the kind of day its answer weighs the periods for.
    */
   /** the city's cells and zones (static; any worker) */
   /** `frame`: the world frame the answer's coordinates are wanted in (T-125) */
@@ -69,7 +79,16 @@ export type ToDemand =
    * (`IntercityApi.selection_flows`); `end` 0 homes, 1 jobs; `cells` pack cell ids of `city` */
   | { kind: "icSel"; id: number; city: CityId; version: number; round: number; end: number; cells: Uint32Array }
   /** a station's longer-trip rail riders over this worker's periods (`IntercityApi.station_flows`) */
-  | { kind: "icStation"; id: number; city: CityId; version: number; round: number; station: number };
+  | { kind: "icStation"; id: number; city: CityId; version: number; round: number; station: number }
+  /** one everyday purpose's local trip legs per cell by mode over this worker's periods
+   * (`EverydayApi.cell_modes_of`, T-158); `purpose` indexes `EVERYDAY_KEYS` (game/purposes.ts) */
+  | { kind: "purposeModes"; id: number; city: CityId; version: number; round: number; purpose: number }
+  /** transfers over this worker's periods (T-176), every population and purpose together, with
+   * either end at one of `nodes` (route nodes, the result arrays' order) */
+  | { kind: "transfers"; id: number; city: CityId; version: number; round: number; nodes: Uint32Array }
+  /** the trip explorer (T-195): one trip from `from` to `to` (world metres) as a commute, in every
+   * period this worker holds (`DemandApi.trip`) */
+  | { kind: "trip"; id: number; city: CityId; version: number; round: number; from: [number, number]; to: [number, number] };
 
 export type FromDemand =
   | {
@@ -80,13 +99,19 @@ export type FromDemand =
       openMs: number;
       /** a solve on a small network, so V8 has optimised the kernel before the first real one */
       warmMs: number;
-      /** DemandApi.info(): cells, zones, home-to-work trips a day, walk share with no rail, open ms */
-      info: number[];
+      /** DemandApi.info(): cells, zones, home-to-work trips a day, walk share with no rail, open ms
+       * (the home city's; absent when `init` carried no pack for it) */
+      info?: number[];
       /** demand_periods(): 6 numbers per period (from, to, level, to-work share, to-home share, peak-hour factor) */
       periods: number[];
+      /** T-260 `day_factors()`: load factor per kind of day, purpose and period, then each day's
+       * trip rate per purpose (sim/src/demand/days.rs) */
+      days: number[];
       /** WASM linear memory, bytes */
       memBytes: number;
     }
+  /** an `open` is done: its cities' info as `ready`'s, and whether it opened the market */
+  | { kind: "opened"; cityInfo: Record<CityId, number[]>; market: boolean; openMs: number; warmMs: number; memBytes: number }
   | { kind: "failed"; error: string }
   | {
       kind: "result";
@@ -95,15 +120,29 @@ export type FromDemand =
       /** DemandApi.summary(): round, trips, rail, walk, ms, pairs, crowding stats */
       summary: number[];
       citySummary: Record<CityId, number[]>;
+      /** T-260: per city, trips, rail trips and walked trips of each purpose (`parts.keys` order,
+       * the market's longer trips left out), so a weekend's split can be worked out */
+      cityParts?: Record<CityId, number[]>;
       intercitySummary: number[];
+      /** T-276: IntercityApi.part_summary(): longer trips and rail, then commute legs between
+       * zones and rail (both in `intercitySummary`) */
+      intercityParts?: number[];
+      /** per market pair (from, to, longer trips, rail) */
       corridors: number[];
+      /** T-276: per market pair in `corridors` order, commute legs between zones and rail legs */
+      commuteCorridors?: number[];
       /** per route node (line by line, run 0 stops then run 1 stops): riders in the period */
       seg: Float32Array;
       board: Float32Array;
-      intercityBoard: Float32Array;
       alight: Float32Array;
       /** busiest-hour load on the segment leaving the node, share of crush capacity */
       loadOfCrush: Float32Array;
+      /**
+       * The same `seg`, `board` and `alight` split by trip purpose (T-158, the map's purpose
+       * filter): `keys` (game/purposes.ts `PurposeKey`) and, per key in that order, one block of
+       * one value per route node. The purposes add up to the totals. Crowding is never split.
+       */
+      parts?: { keys: string[]; seg: Float32Array; board: Float32Array; alight: Float32Array };
       /** this stage in the worker, ms, and set_network's ms when this was the version's first stage */
       ms: number;
       setupMs: number;
@@ -115,6 +154,8 @@ export type FromDemand =
   | { kind: "cells"; id: number; city: CityId; xy: Float32Array; h3: BigUint64Array; zone: Uint32Array; zoneXY: Float32Array }
   /** `mask`: bit q set for each period included; null sums: no network, or not `version` */
   | { kind: "subSums"; id: number; city: CityId; version: number; mask: number; sums: Float32Array | null; everyday: Float32Array | null }
+  /** `everyday`: per purpose kind 30 timing values, m, then m far cells, their rail, walk and
+   * drive legs (`EverydayApi.selection_sparse_day`, T-285) */
   | { kind: "purposes"; id: number; city: CityId; version: number; mask: number; work: Float32Array | null; everyday: Float32Array | null; names: string[] }
   /** six blocks of one value per cell (home rail, walk, drive, work rail, walk, drive) */
   | { kind: "cellModes"; id: number; city: CityId; version: number; modes: Float32Array | null }
@@ -125,4 +166,13 @@ export type FromDemand =
   /** `mask` as `subSums`; `packed` as `IntercityApi.selection_flows` (null: no network, or not `version`) */
   | { kind: "icSel"; id: number; city: CityId; version: number; mask: number; packed: Float64Array | null }
   /** `packed` as `IntercityApi.station_flows` */
-  | { kind: "icStation"; id: number; city: CityId; version: number; mask: number; packed: Float64Array | null };
+  | { kind: "icStation"; id: number; city: CityId; version: number; mask: number; packed: Float64Array | null }
+  /** six blocks of one value per cell as `cellModes`, trip legs; empty when the city has no such
+   * purpose; null: no network, or not `version` and `round` */
+  | { kind: "purposeModes"; id: number; city: CityId; version: number; mask: number; modes: Float32Array | null }
+  /** triples (route node arriving, route node leaving, riders), each pair once, summed over this
+   * worker's periods; null: no network, or not `version` and `round` */
+  | { kind: "transfers"; id: number; city: CityId; version: number; mask: number; pairs: Float32Array | null }
+  /** one `DemandApi.trip` answer per period in `periods` (the cells' x, y turned into world
+   * metres); null: no network, or not `version` and `round` */
+  | { kind: "trip"; id: number; city: CityId; version: number; mask: number; periods: number[]; answers: Float64Array[] | null };

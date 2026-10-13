@@ -373,6 +373,38 @@ fn save_round_trip_is_exact() {
     let _ = l;
 }
 
+/// T-197: the player's station links survive a save, by position (ids are renumbered); a network
+/// with none encodes as before, and a pair that is not two stations is neither made nor saved.
+#[test]
+fn station_links_save_and_load() {
+    let (mut w, nodes, _, _) = simple();
+    let plain = super::save::encode(&w.net);
+    assert!(!plain.windows(4).any(|x| x == b"LNK1"));
+    let (a, b) = (nodes[0], nodes[2]);
+    assert!(w.net.is_station(a) && w.net.is_station(b));
+    assert!(!w.net.link(a, a));
+    assert!(w.net.link(b, a));
+    assert!(w.net.link(a, b), "linking again is fine");
+    assert_eq!(w.net.links, vec![[a.min(b), a.max(b)]]);
+    let bytes = super::save::encode(&w.net);
+    assert_eq!(&bytes[..plain.len()], &plain[..], "the block is appended at the end");
+    let back = TrackWorld::new(super::save::decode(&bytes).unwrap());
+    let at = |net: &super::net::Network, n: u32| (net.node_x[n as usize], net.node_y[n as usize]);
+    let got: Vec<_> = back.net.links_live().map(|[p, q]| (at(&back.net, p), at(&back.net, q))).collect();
+    let want: Vec<_> = w.net.links_live().map(|[p, q]| (at(&w.net, p), at(&w.net, q))).collect();
+    assert_eq!(got, want);
+    assert_eq!(super::save::encode(&back.net), bytes);
+    // without the block the save still loads (older saves), with no links
+    let cut = bytes.windows(4).position(|x| x == b"LNK1").unwrap();
+    assert!(super::save::decode(&bytes[..cut]).unwrap().links.is_empty());
+    // a link to a node that is no longer a station is not saved
+    w.net.node_platform[b as usize] = 0;
+    assert_eq!(w.net.links_live().count(), 0);
+    assert!(!super::save::encode(&w.net).windows(4).any(|x| x == b"LNK1"));
+    assert!(w.net.unlink(a, b));
+    assert!(!w.net.unlink(a, b));
+}
+
 #[test]
 fn synthetic_network_builds() {
     let w = TrackWorld::new(super::bench::synth(200.0, 50, 9, 3));
@@ -465,5 +497,171 @@ fn whole_line_count_edit_timing() {
         let residual = (w.net.line_tph[id as usize][0] as f64 * ls.round_trip[0] / 3600.0 - counts[0] as f64).abs();
         assert!(residual < 0.001, "{residual}");
         println!("{km} km: legacy conversion {conversion:.2} ms; add one train {edit:.2} ms; residual {residual:.6}");
+    }
+}
+
+// ---- T-206: trains join and leave at the ends of a line
+
+/// A - B - C with a whole-line fleet of `n` at every level.
+fn fleet_line(n: u32) -> (TrackWorld, u32) {
+    let (mut w, _, _, id) = simple();
+    let tph = w.net.line_tph[id as usize];
+    w.apply(Op::TrainCounts { id, trains: Some([n, n, n]), tph }).unwrap();
+    (w, id)
+}
+
+/// Change the line's fleet at game time `now`, as the clock worker does.
+fn set_fleet(w: &mut TrackWorld, id: u32, n: u32, now: f64) {
+    let before = w.svc.before_edit(&w.net, now);
+    let tph = w.net.line_tph[id as usize];
+    w.apply(Op::TrainCounts { id, trains: Some([n, n, n]), tph }).unwrap();
+    w.svc.note_changes(&w.net, &before, now);
+}
+
+/// Trains drawn at `t`: (run, departure).
+fn drawn_at(w: &TrackWorld, t: f64) -> Vec<(u8, f64)> {
+    let mut v: Vec<(u8, f64)> = w.svc.trips(&w.net, t, t + 1e-3).iter().filter(|x| x.draw <= t && x.end >= t).map(|x| (x.run, x.dep)).collect();
+    v.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    v
+}
+
+#[test]
+fn a_steady_fleet_is_handed_over_without_standing() {
+    let (w, id) = fleet_line(7);
+    let ls = &w.svc.lines[id as usize];
+    let t0 = 3.0 * 86400.0 + 7.0 * 3600.0;
+    for t in w.svc.trips(&w.net, t0, t0 + 3600.0) {
+        let ready = t.draw + ls.trip_len(&w.net, id, t.run as usize, t.level as usize);
+        assert!(t.end - ready < 1.5, "a train stood {} s longer at a terminal mid-period", t.end - ready);
+    }
+    for k in 0..20 {
+        assert_eq!(drawn_at(&w, t0 + 600.0 + k as f64 * 131.0).len(), 7);
+    }
+}
+
+#[test]
+fn changing_the_fleet_moves_no_train() {
+    for (from, to) in [(6u32, 9u32), (9, 6), (6, 7), (7, 6)] {
+        let (mut w, id) = fleet_line(from);
+        let now = 2.0 * 86400.0 + 11.0 * 3600.0 + 417.0;
+        let before = drawn_at(&w, now);
+        // where each train is drawn at `t`, by (run, departure)
+        let place = |w: &TrackWorld, t: f64| -> Vec<((u8, f64), (f64, f64))> {
+            let ls = &w.svc.lines[id as usize];
+            w.svc.trips(&w.net, t, t + 1e-3).iter().filter(|x| x.draw <= t && x.end >= t).map(|x| {
+                let (s, _) = super::profile::state_at(&ls.runs[x.run as usize].prof[x.level as usize].phases, t - x.draw);
+                ((x.run, x.dep), w.svc.position(&w.net, id, x.run as usize, s))
+            }).collect()
+        };
+        let positions = place(&w, now);
+        set_fleet(&mut w, id, to, now);
+        // every train running a moment before the change is still there, where it was
+        let after = drawn_at(&w, now + 1e-3);
+        let moved = place(&w, now + 1e-3);
+        for (b, p0) in &positions {
+            assert!(after.contains(b), "{from}->{to}: train {b:?} vanished at the change");
+            let p = moved.iter().find(|m| m.0 == *b).unwrap().1;
+            assert!((p.0 - p0.0).hypot(p.1 - p0.1) < 0.5, "{from}->{to}: a train jumped {} m: {b:?} {p0:?} {p:?}", (p.0 - p0.0).hypot(p.1 - p0.1));
+        }
+        // and nothing appears mid-line: every trip drawn after the change but not before left a
+        // terminal after it
+        let rt = w.svc.lines[id as usize].round_trip[MEDIUM];
+        for t in w.svc.trips(&w.net, now, now + 2.0 * rt) {
+            assert!(t.dep >= now - 1e-6 || before.contains(&(t.run, t.dep)), "{from}->{to}: {t:?} appeared mid-line");
+        }
+        // trains drawn: never far from either fleet while it changes, the new fleet once settled
+        let (lo, hi) = (from.min(to) as usize, from.max(to) as usize);
+        let mut t = now;
+        while t < now + 1.5 * rt {
+            let n = drawn_at(&w, t).len();
+            assert!(n + 1 >= lo && n <= hi + 1, "{from}->{to}: {n} trains at +{:.0} s", t - now);
+            t += 37.0;
+        }
+        let settled = now + 3.0 * rt + 300.0;
+        assert_eq!(drawn_at(&w, settled).len(), to as usize, "{from}->{to} settled");
+        // and the change is forgotten once its trains are gone, leaving the plain pattern
+        let trips = w.svc.trips(&w.net, settled, settled + 3600.0);
+        w.svc.prune_eras(&w.net, settled + 4.0 * 3600.0);
+        assert!(w.svc.eras_of(id as usize).is_empty());
+        let plain = w.svc.trips(&w.net, settled, settled + 3600.0);
+        let late = |v: &[super::service::Trip]| v.iter().filter(|x| x.dep > settled + rt).map(|x| (x.run, x.dep, x.end)).collect::<Vec<_>>();
+        assert_eq!(late(&trips), late(&plain));
+    }
+}
+
+#[test]
+fn a_new_pattern_never_sends_trains_out_in_pairs() {
+    // the period changes and an edit: departures from each terminal at least half a headway apart
+    let (mut w, id) = fleet_line(6);
+    let tph = w.net.line_tph[id as usize];
+    w.apply(Op::TrainCounts { id, trains: Some([9, 5, 2]), tph }).unwrap();
+    let now = 86400.0 + 8.0 * 3600.0 + 1000.0;
+    let before = w.svc.before_edit(&w.net, now);
+    w.apply(Op::TrainCounts { id, trains: Some([12, 5, 2]), tph }).unwrap();
+    w.svc.note_changes(&w.net, &before, now);
+    for r in 0..2 {
+        let mut d = vec![];
+        w.svc.run_deps(&w.net, id as usize, r, 86400.0, 2.0 * 86400.0, &mut d);
+        d.sort_by(|a, b| a.dep.total_cmp(&b.dep));
+        for p in d.windows(2) {
+            assert!(p[1].dep - p[0].dep >= 0.5 * p[1].hw - 1e-6, "run {r}: {:?} then {:?}", p[0], p[1]);
+        }
+    }
+}
+
+#[test]
+fn each_train_names_the_trip_it_takes_next() {
+    // T-245: a handed-over trip names its next departure (the other run's trip from its terminal),
+    // no departure is taken by two trains, and a train leaving service names none
+    let (mut w, id) = fleet_line(7);
+    let t0 = 3.0 * 86400.0 + 7.0 * 3600.0;
+    let ls = &w.svc.lines[id as usize];
+    let steady = w.svc.trips(&w.net, t0, t0 + 3600.0);
+    for t in &steady {
+        let ready = t.draw + ls.trip_len(&w.net, id, t.run as usize, t.level as usize);
+        if ready < t0 + 3000.0 {
+            assert!(t.next.is_some(), "a steady fleet's train left service: {t:?}");
+        }
+    }
+    let now = 86400.0 + 9.0 * 3600.0 + 1234.0;
+    set_fleet(&mut w, id, 4, now);
+    let all = w.svc.trips(&w.net, now - 3600.0, now + 3.0 * 3600.0);
+    let mut taken: Vec<(u8, f64)> = vec![];
+    let mut left = 0;
+    for t in &all {
+        match t.next {
+            Some(n) => {
+                let u = all.iter().find(|u| u.run != t.run && (u.draw - n).abs() < 1e-6);
+                assert!(u.is_some() || n > now + 2.5 * 3600.0, "{t:?} names a departure not drawn");
+                assert!((t.end - n).abs() <= 1.0 + 1e-6, "{t:?} stands until {} but leaves at {n}", t.end);
+                assert!(!taken.contains(&(1 - t.run, n)), "two trains take the departure at {n}");
+                taken.push((1 - t.run, n));
+            }
+            None => left += 1,
+        }
+    }
+    assert!(left >= 3, "three of seven trains leave service after the cut, {left} did");
+}
+
+#[test]
+fn every_window_hands_trains_over_alike() {
+    let (mut w, id) = fleet_line(7);
+    let now = 86400.0 + 9.0 * 3600.0 + 1234.0; // a change late in the morning peak
+    set_fleet(&mut w, id, 4, now);
+    let a = w.svc.trips(&w.net, now - 1800.0, now + 1800.0);
+    let b = w.svc.trips(&w.net, now, now + 3600.0);
+    for t in &a {
+        if let Some(u) = b.iter().find(|u| u.run == t.run && u.dep == t.dep) {
+            assert_eq!(t.end, u.end, "{t:?} against {u:?}");
+            assert_eq!(t.next, u.next, "{t:?} against {u:?}");
+        }
+    }
+    // a standing train always leaves on a departure from that terminal
+    let ls = &w.svc.lines[id as usize];
+    for t in &b {
+        let ready = t.draw + ls.trip_len(&w.net, id, t.run as usize, t.level as usize);
+        if t.end > ready + 1.5 {
+            assert!(b.iter().chain(&a).any(|u| u.run != t.run && (u.draw - t.end).abs() < 1e-6), "{t:?} stood for nothing");
+        }
     }
 }

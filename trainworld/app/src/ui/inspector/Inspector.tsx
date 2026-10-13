@@ -1,8 +1,10 @@
 // The inspector shows whatever is selected, and is blank when nothing is (SPEC 8).
 
 import { selection } from "../../game/ui";
+import { CityInspector } from "./CityInspector";
 import { CommutersInspector } from "./CommutersInspector";
 import { LineInspector } from "./LineInspector";
+import { TripInspector } from "./TripInspector";
 import { AreaInspector, JunctionInspector, StationInspector, TrackInspector, TrainInspector } from "./others";
 
 export function Inspector() {
@@ -15,6 +17,8 @@ export function Inspector() {
   else if (s.kind === "track") body = <TrackInspector edge={s.edge} />;
   else if (s.kind === "junction") body = <JunctionInspector node={s.node} />;
   else if (s.kind === "commuters") body = <CommutersInspector />;
+  else if (s.kind === "city") body = <CityInspector key={s.city} id={s.city} />;
+  else if (s.kind === "trip") body = <TripInspector />;
   else body = <AreaInspector sel={s} />;
   return <section id="inspector">{body}</section>;
 }

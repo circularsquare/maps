@@ -1,19 +1,20 @@
-// Tab contents: build, lines, stations, money, city.
+// Tab contents: build, lines, stations, money (settings: SettingsTab.tsx). The City tab is gone
+// (T-220): the city overview's bubbles and the city inspector show its trips, search goes to a
+// city, and Explore a trip is at the bottom of Settings.
 
 import { clock } from "../game/clock";
-import { activeCity, CITIES, cityById } from "../game/cities";
 import { useState } from "preact/hooks";
 import { createLine } from "../game/lineActions";
-import { lineDemand, stationDemand, demandView, intercityDemand, INTERCITY_PLACES } from "../game/demand";
+import { lineDemand, stationDemand, demandView } from "../game/demand";
 import type { JSX } from "preact";
-import { count, levelLabel, money } from "../game/format";
+import { count, levelLabel, money, moneyExact } from "../game/format";
 import { DEMAND_INDEX, LEVELS, type Level } from "../game/types";
-import { buildLevel, buildPlatform, lineSort, selection, singleTrack, tool, type Tool } from "../game/ui";
+import { buildLevel, buildPlatform, display, lineSort, selection, setDisplay, trackCount, tool, type Tool } from "../game/ui";
 import { linesAt, setFares, world } from "../game/world";
-import { income, moneyState } from "../game/money";
+import { income, liveMoney, moneyState } from "../game/money";
 import type { DayLedger } from "../workers/protocol";
 import { live } from "../map/live";
-import { Chip, Icon, Row, Segmented, Stepper } from "./widgets";
+import { Check, Chip, Icon, Row, Segmented, Stepper } from "./widgets";
 import { BlueprintBreakdown, BlueprintControls } from "./Blueprint";
 
 const STATUS: Record<string, string> = { running: "", planned: "Planned", broken: "Broken" };
@@ -40,6 +41,8 @@ const TOOLS: [Tool, string, () => JSX.Element, string, string][] = [
 
 /** The tool each number key picks (T-096). */
 export const TOOL_KEYS: Record<string, Tool> = { "1": "track", "2": "station", "3": "delete" };
+/** The trip explorer's key (T-195); unlike the build tools it leaves the tab as it is. */
+export const TRIP_KEY = "4";
 
 /** Pick a build tool; the one in use again, or Select, goes back to selecting. */
 export function pickTool(v: Tool) {
@@ -57,7 +60,7 @@ export function BuildTab() {
       <div class="build-options">
         <div class="group tool-pick">
           {TOOLS.map(([id, label, I, key, title]) => (
-            <button class={"btn text" + (t === id ? " on" : "")} title={`${title} (${key})`} onClick={() => pickTool(id)}>
+            <button class={"btn text" + (t === id ? " on" : "")} data-tip={`${title} (${key})`} onClick={() => pickTool(id)}>
               <I />
               {label}
               {key !== "Esc" && <span class="key muted">{key}</span>}
@@ -76,7 +79,7 @@ export function BuildTab() {
           {LEVEL_NAME[lv]} at ${Math.round(BASE_M_PER_KM * MULT[lv])}M per km ({MULT[lv].toFixed(1)}x)
         </p>
         <div class="h">Track</div>
-        <Segmented<boolean> options={[[false, "Double"], [true, "Single"]]} value={singleTrack.value} onChange={(v) => (singleTrack.value = v)} />
+        <Segmented<1 | 2 | 4> options={[[1, "Single"], [2, "Double"], [4, "Quad"]]} value={trackCount.value} onChange={(v) => (trackCount.value = v)} />
         <div class="h">New stations</div>
         <ul class="rows">
           <li>
@@ -115,8 +118,7 @@ export function LinesTab() {
           <option value="name">Name</option><option value="passengers">Forecast riders</option>
         </select></label>
       </div>
-      {w.save.lines.length > 0 && <p class="muted small">Riders are steady-state forecasts for the current network and schedules.</p>}
-      {w.save.lines.length === 0 && <p class="muted">No lines yet. Create a line, then choose its stations.</p>}
+      {w.save.lines.length === 0 && <p class="muted">No lines yet.</p>}
       <ul class="rows pick">
         {lines.map((l) => {
           const st = w.lineStats[l.id];
@@ -130,8 +132,8 @@ export function LinesTab() {
                 <span class="val muted">{STATUS[st.status]}</span>
               ) : (
                 <>
-                  <span class="val" title={dm ? `${count(dm.ridersPerDay)} forecast riders a day` : undefined}>{dm ? count(dm.ridersPerDay) : ""}</span>
-                  <span class="val muted w-trains">{st.trainsNeeded[lev]} trains</span>
+                  <span class="val" data-tip={dm ? `${count(dm.ridersPerDay)} forecast riders a day` : undefined}>{dm ? count(dm.ridersPerDay) : ""}</span>
+                  <span class="val muted w-trains">{st.trainsNeeded[lev]} {st.trainsNeeded[lev] === 1 ? "train" : "trains"}</span>
                 </>
               )}
             </li>
@@ -150,9 +152,19 @@ export function StationsTab() {
   if (!w) return null;
   const sel = selection.value;
   const st = [...w.save.stations].sort((a, b) => (stationDemand(b.id)?.boardings ?? 0) - (stationDemand(a.id)?.boardings ?? 0) || a.name.localeCompare(b.name));
+  const d = display.value;
   return (
     <>
-      {st.length === 0 && <p class="muted">No stations yet. Pick the station tool and click on track.</p>}
+      {/* T-213: the stations' own map setting sits with them, above the list */}
+      <div class="checks">
+        <Check checked={d.stationRiders} onChange={(v) => setDisplay("stationRiders", v)}>
+          <span data-tip="Circle area shows daily entries and exits, up to 150,000">Station demand circles</span>
+        </Check>
+        {d.stationRiders && <Check checked={d.complexView} onChange={(v) => setDisplay("complexView", v)}>
+          One circle per station complex
+        </Check>}
+      </div>
+      {st.length === 0 && <p class="muted">No stations yet.</p>}
       <ul class="rows pick">
         {st.map((s) => (
           <li class={sel?.kind === "station" && sel.station === s.id ? "on" : ""} onClick={() => (selection.value = { kind: "station", station: s.id })}>
@@ -173,21 +185,34 @@ export function StationsTab() {
   );
 }
 
+const ledgerNet = (d: DayLedger) => d.fares - d.running - d.trains - d.build;
+
+/** T-284: the cash as fares land, to the dollar, as in the top bar. */
+function LiveCash() {
+  return <>{moneyExact(liveMoney.value.cash * 1e6)}</>;
+}
+
+/** T-284: one figure of today's column as fares land. */
+function TodayCell({ v }: { v: (d: DayLedger) => number }) {
+  const d = liveMoney.value.today;
+  return <td class="num">{d ? money(v(d) * 1e6) : ""}</td>;
+}
+
 export function MoneyTab() {
   const w = world.value;
   const m = moneyState.value;
   if (!w || !m) return null;
   const inc = income.value;
-  const today = m.ledger[m.ledger.length - 1];
-  const prev = m.ledger.length > 1 ? m.ledger[m.ledger.length - 2] : null;
-  const net = (d: DayLedger | null) => (d ? d.fares - d.running - d.trains - d.build : 0);
+  // T-284: the cash and today's column follow fares as they land (`liveMoney`, own components)
+  const todayDay = m.ledger[m.ledger.length - 1]?.day ?? 0;
+  const prev = m.ledger.find((d) => d.day === todayDay - 1) ?? null;
   const cell = (d: DayLedger | null, v: (d: DayLedger) => number) => <td class="num">{d ? money(v(d) * 1e6) : ""}</td>;
   const f = m.fares;
   return (
     <>
       <ul class="rows">
         <Row label="Cash" bold>
-          {money(m.cash * 1e6)}
+          <LiveCash />
         </Row>
       </ul>
       <table class="ledger">
@@ -199,27 +224,27 @@ export function MoneyTab() {
         <tr>
           <td>Fares</td>
           {cell(prev, (d) => d.fares)}
-          {cell(today, (d) => d.fares)}
+          <TodayCell v={(d) => d.fares} />
         </tr>
         <tr>
           <td>Running trains</td>
           {cell(prev, (d) => -d.running)}
-          {cell(today, (d) => -d.running)}
+          <TodayCell v={(d) => -d.running} />
         </tr>
         <tr>
           <td>New trains</td>
           {cell(prev, (d) => -d.trains)}
-          {cell(today, (d) => -d.trains)}
+          <TodayCell v={(d) => -d.trains} />
         </tr>
         <tr>
           <td>Construction</td>
           {cell(prev, (d) => -d.build)}
-          {cell(today, (d) => -d.build)}
+          <TodayCell v={(d) => -d.build} />
         </tr>
         <tr class="b">
           <td>Net</td>
-          {cell(prev, net)}
-          {cell(today, net)}
+          {cell(prev, ledgerNet)}
+          <TodayCell v={ledgerNet} />
         </tr>
       </table>
       <div class="h">Fare</div>
@@ -234,65 +259,20 @@ export function MoneyTab() {
         </li>
         <Row label="A 10 km ride">{"$" + (f.base + 10 * f.perKm).toFixed(2)}</Row>
       </ul>
-      <div class="h">A day at this schedule</div>
+      <div class="h"><span data-tip={`Fares and running costs count ${m.economy} times over in a game day. Track, stations and trains cost what they would in real life.`}>A day at this schedule</span></div>
       <ul class="rows">
         <Row label="Fares">{demandView.value ? money(inc.faresPerDay) : ""}</Row>
         <Row label="Running trains">{money(-inc.runningPerDay)}</Row>
       </ul>
       <div class="h">Trains</div>
       <ul class="rows">
-        <Row label="Cars owned">{m.fleet}</Row>
+        <Row label={<span data-tip={`A car costs ${money(m.carPrice * 1e6)} and $${m.runCostCarKm.toFixed(2)} a km to run. Cars are bought when a line needs more than the spare ones.`}>Cars owned</span>}>{m.fleet}</Row>
         <Row label="Cars the lines need">{m.carsNeeded}</Row>
       </ul>
       <ul class="rows">
         <Row label="Track and stations built">{money(w.money.builtValue)}</Row>
       </ul>
-      <p class="note muted">
-        A car costs {money(m.carPrice * 1e6)} and {"$" + m.runCostCarKm.toFixed(2)} a km to run. Trains are bought when a line needs more than the spare cars. Spare cars are kept for other lines.
-      </p>
-      <p class="note muted">
-        Fares and running costs count {m.economy} times over in a game day. Track, stations and trains cost what they would in real life.
-      </p>
     </>
   );
 }
 
-export function CityTab() {
-  const city = cityById(activeCity.value);
-  const market = intercityDemand.value;
-  // The market publishes undirected corridors: each row includes both travel directions.
-  const corridors = market?.corridors
-    .filter(c => c.from !== c.to && (c.from === city.market || c.to === city.market) && c.trips > 0)
-    .sort((a, b) => b.trips - a.trips);
-  const total = corridors?.reduce((sum, c) => sum + c.trips, 0) ?? 0;
-  const rail = corridors?.reduce((sum, c) => sum + c.rail, 0) ?? 0;
-  return <>
-    <div class="h">{city.name}</div>
-    <div class="city-navigation">
-      <button class="btn text" onClick={() => live.map?.flyTo({center: city.center, zoom: city.zoom})}>City centre</button>
-      <button class="btn text" onClick={() => {
-        const lon = CITIES.map(c => c.center[0]), lat = CITIES.map(c => c.center[1]);
-        live.map?.fitBounds([[Math.min(...lon) - 0.7, Math.min(...lat) - 0.5], [Math.max(...lon) + 0.7, Math.max(...lat) + 0.5]], {padding:40});
-      }}>Whole region</button>
-    </div>
-    {!market ? <p class="note muted" role="status">Calculating demand…</p> : <>
-      <p class="city-trip-total small"><b>{count(total)}</b> intercity trips · <b>{count(rail)}</b> by train</p>
-      <p class="muted small">Both directions per day · Top 5 connections</p>
-      <ul class="corridors">
-        {corridors?.slice(0, 5).map(c => {
-          const other = c.from === city.market ? c.to : c.from;
-          const share = Math.max(0, Math.min(100, 100 * c.rail / c.trips));
-          const description = `${INTERCITY_PLACES[other]}: ${count(c.trips)} trips a day; train ${count(c.rail)} (${Math.round(share)}%), other ${count(c.trips - c.rail)} (${Math.round(100-share)}%)`;
-          return <li key={other} title={description}>
-            <div class="corridor-heading"><span>{INTERCITY_PLACES[other]}</span><span class="num">{count(c.rail)}/{count(c.trips)} trips</span></div>
-            <div class="bar corridor-bar" role="img" aria-label={description}>
-              <i class="seg seg-train" style={{width: `${share}%`}} />
-              <i class="seg seg-drive" style={{width: `${100-share}%`}} />
-            </div>
-          </li>;
-        })}
-      </ul>
-      {!corridors?.length && <p class="muted small">No intercity demand is modelled here yet.</p>}
-    </>}
-  </>;
-}

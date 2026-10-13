@@ -27,7 +27,8 @@ try {
  await page.waitForFunction(v=>window.twDemand.view()?.version>v&&window.twDemand.view().round===3,legacy.version,{timeout:180000});
  const combined=await measure();
  if(combined.cities.some(c=>c.rail<=0)||combined.lines!==legacy.lines+1||combined.workers>6)throw Error('Combined real network incorrect '+JSON.stringify(combined));
- await page.getByRole('button',{name:'City',exact:true}).click();await page.getByRole('button',{name:'Philadelphia',exact:true}).click();
+ // the City tab is gone (T-220): search goes to a city
+ await page.getByRole('button',{name:'Search stations, lines and places'}).click();await page.getByRole('combobox',{name:'Search stations, lines and places'}).fill('Philadelphia');await page.keyboard.press('Enter');
  await page.waitForFunction(()=>window.twDemand.activeCity.value==='phl'&&Math.abs(window.tw.map.getCenter().lng+75.1636)<.001);
  const query=await page.evaluate(async()=>{
   const c=await window.twDemand.cityCells(),m=await window.twDemand.cellModes(),s=await window.twDemand.stationRiders(String(window.tw.world.value.save.stations.find(s=>s.name==='Philadelphia north').id));
@@ -37,5 +38,5 @@ try {
  await page.evaluate(()=>{window.tw.display.value={...window.tw.display.value,commuters:true,commuterEnd:'home'};document.querySelector('#debug').style.display='none';});
  await page.waitForTimeout(1500);await page.screenshot({path:'artifacts/trainworld/T-116-philadelphia.png'});
  const gl=await page.evaluate(()=>window.tw.renderer.gl.getError());if(errors.length||gl)throw Error(JSON.stringify({errors,gl}));
- const result={legacy,combined,fixture,query,errors,gl};console.log(JSON.stringify(result));await writeFile('trainworld/notes/T-116-real-browser.json',JSON.stringify(result,null,2));
+ const result={legacy,combined,fixture,query,errors,gl};console.log(JSON.stringify(result));await writeFile('artifacts/trainworld/notes-outputs/T-116-real-browser.json',JSON.stringify(result,null,2));
 }finally{await browser.close();}

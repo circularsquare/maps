@@ -33,7 +33,7 @@ const registry=JSON.parse(readFileSync(new URL('../app/src/game/registry.json',i
 const packs=registry.cities.map(({id})=>({id,header:readFileSync(new URL(`../data/packs/${id}.json`,import.meta.url),'utf8'),bin:Uint8Array.from(readFileSync(new URL(`../data/packs/${id}.bin`,import.meta.url))).buffer}));
 w.postMessage({kind:'init',packs,intercity:readFileSync(new URL(`../data/packs/${registry.market.pack}.json`,import.meta.url),'utf8'),periods:[0,1,2,3,4]});
 const ready=await next(m=>m.kind==='ready'||m.kind==='failed');assert.equal(ready.kind,'ready',ready.error);
-assert.equal(Object.keys(ready.cityInfo).length,9);
+assert.equal(Object.keys(ready.cityInfo).length,registry.cities.length);
 const times=new Float32Array(18);for(let lev=0;lev<3;lev++){times[lev*3]=60;times[lev*3+1]=60;times[(lev+3)*3+1]=60;times[(lev+3)*3+2]=60;}
 const net={frame:{kind:'equirectangular',lon:-73.985,lat:40.758},stXY:new Float32Array([0,0,4000,0,8000,0]),lineN:new Uint32Array([3]),stops:new Uint32Array([0,1,2]),times,tph:new Float32Array([12,12,12]),cars:new Float32Array([4]),fare:{base:1,perKm:.1},hopKm:new Float32Array([4,4,0,0,4,4])};
 w.postMessage({kind:'solve',version:1,net,rounds:1});
@@ -41,24 +41,40 @@ await next(m=>m.kind==='done'||m.kind==='failed');
 const failure=messages.find(m=>m.kind==='failed');assert(!failure,failure?.error);
 const results=messages.filter(m=>m.kind==='result'&&m.summary[0]===1);
 assert.equal(results.length,5);
-const sums=messages.find(m=>m.kind==='sums'&&m.city==='nyc'&&m.round===1);
-assert(sums.everyday?.length>0);
-const n=sums.everyday.length/6, cells=new Uint32Array([80000,80001,80002]);
-w.postMessage({kind:'purposes',id:1,city:'nyc',version:1,round:1,end:1,cells});
-const purpose=await next(m=>m.kind==='purposes'&&m.id===1);
-assert.equal(purpose.mask,31);assert.equal(purpose.everyday.length,purpose.names.length*(30+3*n));
-assert.deepEqual(purpose.names,['Shopping and errands','Social and leisure','School (metro public)','University (metro IPEDS)']);
-const stride=30+3*n;
-for(let mode=0;mode<3;mode++){
-  let total=0;for(let kind=0;kind<purpose.names.length;kind++)for(let q=0;q<5;q++)total+=purpose.everyday[kind*stride+mode*5+q]+purpose.everyday[kind*stride+15+mode*5+q];
-  const bubble=cells.reduce((a,c)=>a+sums.everyday[(mode+3)*n+c],0);
-  assert(Math.abs(total-bubble)<1e-4*Math.max(1,bubble));
+// Every city has the six everyday purposes since T-142 (New York since T-066/T-140/T-152): for
+// each, a selection's purpose/mode/period counts reconcile with its bubble cell sums. The test
+// line is in Manhattan, so the other cities' trips walk or drive.
+const everydayLegs={};let id=1;
+for(const {id:city} of registry.cities){
+  const sums=messages.find(m=>m.kind==='sums'&&m.city===city&&m.round===1);
+  assert(sums.everyday?.length>0,`${city}: no everyday sums`);
+  const n=sums.everyday.length/6;
+  const cells=city==='nyc'?new Uint32Array([80000,80001,80002]):new Uint32Array([Math.floor(n*.3),Math.floor(n*.5),Math.floor(n*.5)+1,Math.floor(n*.7)]);
+  w.postMessage({kind:'purposes',id,city,version:1,round:1,end:1,cells});
+  const purpose=await next(m=>m.kind==='purposes'&&m.id===id);id++;
+  assert.equal(purpose.mask,31);
+  // six since T-142's airports and medical visits (Springfield's airport purpose is there, at zero)
+  assert.deepEqual(purpose.names,['Shopping and errands','Social and leisure','School','University','Airport','Medical'],city);
+  assert.equal(purpose.work.length,30);
+  // T-285: packed, per kind 30 timing values, m, m far cells, their rail, walk and drive legs
+  const at=[];let p=0;
+  for(let kind=0;kind<purpose.names.length;kind++){at.push(p);p+=31+4*purpose.everyday[p+30];}
+  assert.equal(p,purpose.everyday.length,`${city}: packed layout`);
+  for(let mode=0;mode<3;mode++){
+    let total=0,far=0;
+    for(const o of at){
+      for(let q=0;q<5;q++)total+=purpose.everyday[o+mode*5+q]+purpose.everyday[o+15+mode*5+q];
+      const m=purpose.everyday[o+30];for(let i=0;i<m;i++)far+=purpose.everyday[o+31+(mode+1)*m+i];
+    }
+    const bubble=cells.reduce((a,c)=>a+sums.everyday[(mode+3)*n+c],0);
+    assert(Math.abs(total-bubble)<1e-4*Math.max(1,bubble),`${city} mode ${mode}: ${total} against ${bubble}`);
+    assert(Math.abs(far-total)<1e-4*Math.max(1,total),`${city} mode ${mode}: far end ${far} against ${total}`);
+  }
+  // the day's everyday trip legs, all modes: each half of the sums (one per trip end) adds up to them
+  let legs=0;for(let k=3*n;k<6*n;k++)legs+=sums.everyday[k];everydayLegs[city]=Math.round(legs);
 }
-// Other cities keep their commute layer; no fabricated purpose arrays.
-w.postMessage({kind:'purposes',id:2,city:'phl',version:1,round:1,end:1,cells:new Uint32Array([0])});
-const other=await next(m=>m.kind==='purposes'&&m.id===2);assert.equal(other.everyday,null);assert.equal(other.work.length,30);
 const total=results.reduce((a,m)=>a+m.summary[1],0),rail=results.reduce((a,m)=>a+m.summary[2],0);
 for(const m of results){const fromLayers=Object.values(m.citySummary).reduce((a,v)=>a+v[1],0)+m.intercitySummary[1];assert(Math.abs(fromLayers-m.summary[1])<1e-6);}
-const result={cities:9,periods:5,sharedCrowdingRounds:1,tripLegs:total,railTripLegs:rail,nycPurposeQuery:true,otherCitiesCommuteOnly:true,versionedSnapshotMatchesPurposeQuery:true,wasmMemoryMiB:results.at(-1).memBytes/1024/1024};
-writeFileSync(new URL('T-066-worker-check.json',import.meta.url),JSON.stringify(result,null,2));console.log(result);
+const result={cities:registry.cities.length,periods:5,sharedCrowdingRounds:1,tripLegs:total,railTripLegs:rail,everyCityPurposeQuery:true,everydayLegsPerCity:everydayLegs,versionedSnapshotMatchesPurposeQuery:true,wasmMemoryMiB:results.at(-1).memBytes/1024/1024};
+writeFileSync(new URL('../../artifacts/trainworld/notes-outputs/T-066-worker-check.json',import.meta.url),JSON.stringify(result,null,2));console.log(result);
 await w.terminate();

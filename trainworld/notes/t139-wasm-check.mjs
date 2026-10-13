@@ -42,6 +42,6 @@ assert.equal(markets,10);assert.equal(rn,real.info()[1]);
 const ids=new Set(Array.from({length:rn},(_,z)=>realRow[rh+4*rn+3*z+2]));
 assert.equal(ids.size,10);
 const result={synthetic:{sameCityTrips:same,otherCityTrips:other,metadataPreservedAcrossPeriodPool:true,stationMembershipMatches:true},real:{markets,zones:rn,zoneMarketIds:[...ids].sort((a,b)=>a-b)}};
-writeFileSync(new URL('T-139-wasm-check.json',import.meta.url),JSON.stringify(result,null,2));
+writeFileSync(new URL('../../artifacts/trainworld/notes-outputs/T-139-wasm-check.json',import.meta.url),JSON.stringify(result,null,2));
 console.log(result);
 full.free();first.free();second.free();real.free();

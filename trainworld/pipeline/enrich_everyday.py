@@ -1,13 +1,16 @@
-"""Append customer-sector weights to an existing NYC pack without changing commutes.
+"""Append customer-sector weights to an existing city pack without changing commutes.
 
-Uses cached LODES blocks and the same land-area spreading as build_city.py.
-Run from maps: venv/Scripts/python.exe trainworld/pipeline/enrich_everyday.py
+Uses cached LODES blocks and the same land-area spreading as build_city.py. Any registered
+US city (T-066 New York, T-142 the rest); re-running replaces the two arrays in place.
+Run from maps: venv/Scripts/python.exe trainworld/pipeline/enrich_everyday.py phl
 """
 import json
 import os
+import sys
 import numpy as np
 import pandas as pd
 import build_city as b
+import education_sources as education
 import spread
 
 
@@ -29,19 +32,20 @@ def main(city="nyc"):
     cells = np.frombuffer(buf, dtype="<u8", count=a["count"], offset=a["offset"]).copy()
     index = np.searchsorted(cells, ids)
     hit = (index < len(cells)) & (cells[np.minimum(index, len(cells)-1)] == ids)
+    out = {}
     for name, v in vals.items():
         missing = float(v[~hit].sum())
         if missing > 0.01:
             raise ValueError(f"{name}: {missing} jobs outside existing cells; rebuild city pack")
         weights = np.zeros(len(cells), dtype="<f4")
         weights[index[hit]] = v[hit]
-        # Re-running replaces the directory entry; older bytes remain harmlessly unreferenced.
-        header["arrays"] = [a for a in header["arrays"] if a["name"] != name]
-        buf += b"\0" * (-len(buf) % 8)
-        header["arrays"].append(dict(name=name, dtype="f32", per="cell", offset=len(buf), count=len(cells)))
-        buf += weights.tobytes()
-        print(name, float(weights.sum()), flush=True)
-    header["everyday"] = {"enabled": city == "nyc", "source": "LODES CNS07+CNS19 errands; CNS17+CNS18 leisure, original block locations, spread by land area"}
+        out[name] = weights
+        print(name, float(weights.sum(dtype=np.float64)), flush=True)
+    # Compacts the directory: a re-run leaves no orphaned bytes, other arrays copied bit for bit.
+    buf = education.replace_cell_arrays(header, buf, out)
+    header["everyday"] = {"enabled": True, "source": "LODES CNS07+CNS19 errands; CNS17+CNS18 leisure, original block locations, spread by land area",
+                          "errand_jobs": float(out["errand_jobs"].sum(dtype=np.float64)),
+                          "leisure_jobs": float(out["leisure_jobs"].sum(dtype=np.float64))}
     with open(stem + ".bin.part", "wb") as f:
         f.write(buf)
     with open(stem + ".json.part", "w") as f:
@@ -52,4 +56,4 @@ def main(city="nyc"):
 
 
 if __name__ == "__main__":
-    main()
+    main(*sys.argv[1:2])

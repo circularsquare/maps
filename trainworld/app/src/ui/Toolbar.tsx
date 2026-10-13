@@ -2,15 +2,18 @@
 // Construction controls and the blueprint quote live together in Build (T-100).
 
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
-import { ask, lineDraft, tool, type Tool } from "../game/ui";
-import { notice } from "../game/world";
+import { ask, lineDraft, selection, tool, type Tool } from "../game/ui";
+import { notice, world } from "../game/world";
+import { live } from "../map/live";
 
 const HINT: Record<Tool, string> = {
   select: "",
-  track: "Click where the track should turn. Start or end on track to join it. Click the last point again or press Enter to finish. Backspace takes a point back.",
+  // T-253: hints say what a click does now, in as few words as will do
+  track: "Click where the track turns. Click the last point or press Enter to finish; Backspace takes one back.",
   station: "Click on track to put a station there.",
-  line: "Click stations to insert stops. Press Enter or Escape to finish editing.",
-  delete: "Click track, a station or a flyover to remove it. Blueprint is removed at once. Constructed things need a yes first and are not refunded.",
+  line: "Click the circles to add or remove stops. Press Enter or Escape to finish editing.",
+  delete: "Click track, a station or a flyover to remove it.",
+  trip: "Click where a trip starts, or a station.",
 };
 
 /** Native modal keeps map input blocked and traps/restores focus; Escape answers no. */
@@ -65,11 +68,22 @@ function Notice() {
   }, [n]);
   const t = tool.value;
   const draft = lineDraft.value;
-  const hint = t === "line" && draft.stops.length === 1 ? "Now click the next station." : HINT[t];
+  const sel = selection.value;
+  const hint = t === "line" && draft.stops.length === 1 ? "Now click the next station."
+    : t === "trip" && sel?.kind === "trip" && !sel.to ? "Now click where the trip ends, or a station."
+    : HINT[t];
   const show = n && performance.now() - n.at < NOTICE_MS;
   if (!show && !hint) return null;
+  // stop editing (T-233): which line, how many stops, and the way out
+  const editing = t === "line" && draft.line !== null ? world.value?.save.lines.find((l) => l.num === draft.line) : undefined;
   return (
     <div id="tool-notes">
+      {editing && (
+        <p class="stop-edit-head">
+          <span>Editing stops on {editing.name}: {editing.stops.length} {editing.stops.length === 1 ? "stop" : "stops"}</span>
+          <button class="btn text" onClick={() => live.tools?.exit()}>Done</button>
+        </p>
+      )}
       {hint && <p class="muted">{hint}</p>}
       {show && <p class={n.bad ? "bad" : ""}>{n.text}</p>}
     </div>

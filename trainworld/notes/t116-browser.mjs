@@ -11,13 +11,14 @@ try {
  await waitSolve(page);
  const empty=await page.evaluate(()=>({cities:[...window.twDemand.cities()].map(([id,d])=>[id,d.tripsPerDay,d.railTripsPerDay]),market:window.twDemand.intercity(),origin:window.tw.world.value.save.city}));
  if(empty.cities.length!==2||empty.cities.some(c=>c[1]<=0||c[2]!==0)||empty.market.tripsPerDay<=0||empty.market.railTripsPerDay!==0)throw Error('Empty regional solve failed '+JSON.stringify(empty));
- await page.getByRole('button',{name:'City',exact:true}).click();
- await page.getByRole('button',{name:'Philadelphia',exact:true}).click();
+ // the City tab is gone (T-220): search goes to a city
+ const goCity=async name=>{await page.getByRole('button',{name:'Search stations, lines and places'}).click();await page.getByRole('combobox',{name:'Search stations, lines and places'}).fill(name);await page.keyboard.press('Enter');};
+ await goCity('Philadelphia');
  await page.waitForFunction(()=>window.twDemand.activeCity.value==='phl'&&Math.abs(window.tw.map.getCenter().lng+75.1636)<.001);
  if(await page.locator('#topbar .city').innerText()!=='Philadelphia')throw Error('Focused city header wrong');
  const phl=await page.evaluate(async()=>{const c=await window.twDemand.cityCells(),m=await window.twDemand.cellModes();return {n:c.n,xy:Array.from(c.xy.slice(0,2)),modes:m?.homeRail.length};});
  if(phl.n!==110578||phl.modes!==phl.n||phl.xy[0]>-30000)throw Error('Philadelphia cells not transformed '+JSON.stringify(phl));
- await page.getByRole('button',{name:'New York',exact:true}).click();
+ await goCity('New York');
  await page.waitForFunction(()=>window.twDemand.activeCity.value==='nyc'&&Math.abs(window.tw.map.getCenter().lng+73.985)<.001);
  const nyc=await page.evaluate(async()=>{const c=await window.twDemand.cityCells();return {n:c.n,xy:Array.from(c.xy.slice(0,2))};});
  if(nyc.n===phl.n||nyc.n<200000)throw Error('City cells retained old focus');
@@ -73,12 +74,12 @@ try {
  if(savedHeader.region!=='northeast'||savedHeader.cities.length!==2)throw Error('Region metadata absent');
  await page.evaluate(data=>{const bytes=Uint8Array.from(data).buffer;window.tw.client.post({kind:'import',bytes},[bytes]);},Array.from(saved));
  await page.waitForFunction(()=>window.tw.world.value.save.lines.length===3&&window.tw.world.value.save.stations.length===5);
- await page.getByRole('button',{name:'City',exact:true}).click();
- await page.getByRole('button',{name:'Whole region',exact:true}).click();
+ // the City tab's Whole region button is gone (T-220): zoom out to every city
+ await page.evaluate(()=>window.tw.map.fitBounds([[-77.8,38.4],[-70.7,42.6]],{padding:40,duration:0}));
  await page.waitForTimeout(1000);await page.evaluate(()=>document.querySelector('#debug').style.display='none');
  await page.screenshot({path:'artifacts/trainworld/T-116-northeast.png'});
  const layout=await page.locator('#tabs').evaluate(e=>({width:e.clientWidth,scrollWidth:e.scrollWidth})).catch(()=>null);
  if(errors.length)throw Error(errors.join('\n'));
  const result={empty,phl,nyc,fixture,good,off,restored,savedHeader,layout,errors};
- console.log(JSON.stringify(result));await writeFile('trainworld/notes/T-116-browser.json',JSON.stringify(result,null,2));
+ console.log(JSON.stringify(result));await writeFile('artifacts/trainworld/notes-outputs/T-116-browser.json',JSON.stringify(result,null,2));
 }finally{await browser.close();}

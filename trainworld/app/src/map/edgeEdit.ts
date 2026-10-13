@@ -194,7 +194,9 @@ export class EdgeEditor {
     for (let i = 0; i < pis.length; i++) {
       const [x, y] = this.overlay.toScreen(...this.local(pis[i]));
       const m = this.el(this.marks, i, "pi-mark drag");
-      m.title = `Corner ${i + 1}: drag to move`;
+      // the game's own tag (ui/tip.ts, T-210), set only when it changes as this runs every frame
+      const tip = `Corner ${i + 1}: drag to move`;
+      if (m.dataset.tip !== tip) m.dataset.tip = tip;
       m.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
     }
     for (let i = pis.length; i < this.marks.length; i++) this.marks[i].style.display = "none";

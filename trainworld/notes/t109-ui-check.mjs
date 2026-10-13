@@ -75,5 +75,5 @@ try {
  if(errors.length)throw Error(errors.join('\n'));
  await page.screenshot({path:'artifacts/trainworld/T-109-lines.png'});
  const result={created,copied,badge,next,sortCount:natural.length,layout,errors};
- console.log(JSON.stringify(result));await writeFile('trainworld/notes/T-109-check.json',JSON.stringify(result,null,2));
+ console.log(JSON.stringify(result));await writeFile('artifacts/trainworld/notes-outputs/T-109-check.json',JSON.stringify(result,null,2));
 }finally{await browser.close();}

@@ -10,6 +10,7 @@
 //! real; it, removing constructed track or stations, and changing a constructed junction or
 //! platform are final (they clear the undo history). Money is US$M.
 
+use super::boarding::Boarding;
 use super::cost::{GeoMask, NoWater, RunMask, TransformedMask, UnionMask, WaterMask};
 use super::frame::FrameKind;
 use super::geom::{self, GeomIssue, Pi};
@@ -38,11 +39,18 @@ pub struct TrackApi {
     last_trains: f64,
     /// The last route the drawing tool asked about: (cost, length, issues), and its vertices.
     route_vertices: Vec<Pi>,
+    /// The express pair of the last quad route asked about (T-255), else empty.
+    route_express: Vec<Pi>,
     /// Per rendered segment of the last route/edge preview, authoritative geometry speed km/h.
     preview_speeds: Vec<f32>,
     /// The pack rasters installed with `add_pack_water`, kept so the water mask can be rebuilt
     /// when a loaded save is in another frame (T-125).
     rasters: Vec<PackWater>,
+    /// The boarding account (T-164): demand's riders per period, and each train's load and each
+    /// platform's crowd worked out from them. Never saved.
+    boarding: Boarding,
+    /// Game seconds now (`set_now`; NaN until the worker sets it: edits then re-space at once).
+    now: f64,
 }
 
 /// A pack's water raster and the origin of the pack's own frame.
@@ -94,6 +102,17 @@ struct Resolved {
     ops: Vec<Op>,
 }
 
+/// A reshape of a blueprint edge (`TrackApi::reshaped`): the edit, the edge's vertices after it,
+/// and the neighbouring pieces whose joint moves with it (T-244), in the stroke's order: `before`
+/// ends at the edge's a node, `after` starts at its b node (empty where none moves).
+struct Reshape {
+    op: Op,
+    verts: Vec<Pi>,
+    tracks: u8,
+    before: Vec<Pi>,
+    after: Vec<Pi>,
+}
+
 #[wasm_bindgen]
 impl TrackApi {
     /// An empty network for a city: its origin and running side (right in the US).
@@ -108,9 +127,46 @@ impl TrackApi {
             fleet: 0,
             last_trains: 0.0,
             route_vertices: vec![],
+            route_express: vec![],
             preview_speeds: vec![],
             rasters: vec![],
+            boarding: Boarding::default(),
+            now: f64::NAN,
         }
+    }
+
+    /// Demand's riders for the boarding account (T-164), as `Boarding::set_riders` reads them:
+    /// 5 busiest-hour factors, then per line its id, stop count `n`, and per period boardings
+    /// then alightings at each of its `2n` route nodes. One kind of day's (T-260: 0 weekday,
+    /// 1 weekend; each hour reads its own day's, `params::day_kind_at`).
+    pub fn set_riders(&mut self, packed: Vec<f32>, day: u32) {
+        self.boarding.set_riders_day(&packed, day as usize);
+    }
+    /// A line's day in the boarding account for its panel (T-230, `Boarding::line_summary`), on
+    /// a kind of day (T-260); empty before riders.
+    pub fn line_account(&self, line: u32, day: u32) -> Vec<f64> {
+        self.boarding.line_summary_day(&self.w.svc, line as usize, day as usize)
+    }
+    /// Forget the riders (a game was loaded: its demand comes later).
+    pub fn clear_riders(&mut self) {
+        self.boarding.clear();
+    }
+    pub fn has_riders(&self) -> bool {
+        self.boarding.has_riders()
+    }
+    /// The hour `[epoch, epoch + 3600)` of the boarding account, lined up with `trips(epoch)`
+    /// (`Boarding::hour` has the layout). Brings the account up to date first.
+    pub fn boarding_hour(&mut self, epoch: f64) -> Vec<f32> {
+        self.boarding.hour(&self.w.net, &self.w.svc, epoch)
+    }
+    /// Work out at most `max_lines` out-of-date lines of the account; true if more remain. The
+    /// clock worker steps through new riders this way between messages (T-164).
+    pub fn boarding_step(&mut self, max_lines: u32) -> bool {
+        self.boarding.ensure_some(&self.w.net, &self.w.svc, max_lines as usize)
+    }
+    /// Lines whose account was worked out again since the last call.
+    pub fn boarding_redone(&mut self) -> u32 {
+        self.boarding.take_redone() as u32
     }
 
     /// Make the network empty and put it in the world frame (Lambert conformal, `frame.rs`) or the
@@ -331,19 +387,32 @@ impl TrackApi {
     /// refused if the cash is short.
     fn run(&mut self, op: Op) -> u32 {
         let fleet = self.fleet;
+        let before = self.w.svc.before_edit(&self.w.net, self.now);
         let r = self.w.apply_paid(op, self.cash, false, &|w| trains_to_buy(w, fleet));
-        self.settle(r)
+        self.settle(r, &before)
     }
 
     /// A final, charged edit (see the module comment), trains included.
     fn run_charged(&mut self, op: Op) -> u32 {
         let fleet = self.fleet;
+        let before = self.w.svc.before_edit(&self.w.net, self.now);
         let r = self.w.apply_paid(op, self.cash, true, &|w| trains_to_buy(w, fleet));
-        self.settle(r)
+        self.settle(r, &before)
     }
 
-    fn settle(&mut self, r: Result<(EditResult, f64), ChargeError>) -> u32 {
+    /// The game time now, from the clock worker (T-206): an edit that changes a line's departures
+    /// takes effect from here, trains already running keep their places, and patterns from before
+    /// are forgotten once their trains are no longer drawn.
+    pub fn set_now(&mut self, t: f64) {
+        self.now = t;
+        self.w.svc.prune_eras(&self.w.net, t);
+    }
+
+    fn settle(&mut self, r: Result<(EditResult, f64), ChargeError>, before: &super::service::Before) -> u32 {
         self.last_trains = 0.0;
+        if r.is_ok() {
+            self.w.svc.note_changes(&self.w.net, before, self.now);
+        }
         match r {
             Ok((r, trains)) => {
                 self.cash -= r.charge + trains;
@@ -389,31 +458,59 @@ impl TrackApi {
     /// and tracks. One undoable edit. Constructed track cannot be reshaped.
     pub fn set_edge_pis(&mut self, id: u32, pis: &[f64]) -> u32 {
         match self.reshaped(id, pis) {
-            Ok(d) => self.run(Op::Edge { id, data: Some(d) }),
+            Ok(r) => self.run(r.op),
             Err(i) => self.refuse(i),
         }
     }
 
-    /// What `set_edge_pis` would do, without doing it: the layout of `preview_route`.
+    /// What `set_edge_pis` would do, without doing it: the layout of `preview_route`. Its
+    /// polyline includes the next pieces of the stroke where a joint moves with it (T-244).
     pub fn preview_edge(&mut self, id: u32, pis: &[f64]) -> Vec<f64> {
         self.preview_speeds.clear();
-        let d = match self.reshaped(id, pis) {
-            Ok(d) => d,
+        let r = match self.reshaped(id, pis) {
+            Ok(r) => r,
             Err(i) => {
                 self.refuse(i);
                 return vec![0.0; 5];
             }
         };
-        let verts = vertices_of(&self.w.net, &d, None);
-        let tracks = d.tracks;
-        let r = self.w.trial(Op::Edge { id, data: Some(d) });
-        self.preview_out(r, &verts, tracks)
+        let t = self.w.trial(r.op);
+        let mut out = self.preview_out(t, &r.verts, r.tracks);
+        if r.before.is_empty() && r.after.is_empty() {
+            return out;
+        }
+        let main = out.split_off(5 + 4 * r.verts.len());
+        let main_speeds = std::mem::take(&mut self.preview_speeds);
+        let joint_speed = main_speeds.first().copied().unwrap_or((V_TOP * 3.6) as f32);
+        let mut speeds = vec![];
+        if !r.before.is_empty() {
+            let f = geom::fit(&r.before);
+            render_samples(&f.pieces, &f.vert, &mut out);
+            speeds.extend(render_speeds(&f.pieces, &f.vert));
+            speeds.push(joint_speed);
+        }
+        out.extend(main);
+        speeds.extend(main_speeds);
+        if !r.after.is_empty() {
+            let f = geom::fit(&r.after);
+            speeds.push(joint_speed);
+            render_samples(&f.pieces, &f.vert, &mut out);
+            speeds.extend(render_speeds(&f.pieces, &f.vert));
+        }
+        self.preview_speeds = speeds;
+        out
     }
 
     /// A blueprint edge with new PIs, its ends and tracks kept. A set radius the edit did not
     /// change that no longer fits its legs (a neighbour moved; radii frozen by a split) goes back
     /// to auto; one the edit set is kept, and refused if it does not fit.
-    fn reshaped(&self, id: u32, pis: &[f64]) -> Result<EdgeData, Issue> {
+    ///
+    /// A joint between two pieces of one stroke (T-244: a plain node where this edge and one
+    /// other blueprint edge meet, lying on the straight between the corners either side of it)
+    /// moves with a corner next to it, to the same fraction of the way between the corners, so
+    /// the corner drags as it did before the stroke was cut into pieces. The other piece keeps its
+    /// corners; its leg to the joint turns with it.
+    fn reshaped(&self, id: u32, pis: &[f64]) -> Result<Reshape, Issue> {
         let Some(mut d) = self.editable(id) else { return Err(Issue::NoSuchEdge { edge: id }) };
         if d.built {
             return Err(Issue::NodeInUse { node: d.a });
@@ -421,8 +518,193 @@ impl TrackApi {
         let old = std::mem::replace(&mut d.pis, pis_from(pis));
         d.thru.clear();
         let same_count = old.len() == d.pis.len();
-        relax_radii(&self.w.net, &mut d, None, &|k, p| same_count && old[k].radius == p.radius);
-        Ok(d)
+        let net = &self.w.net;
+        let mut moved: Vec<(u32, f64, f64)> = vec![];
+        let mut others: Vec<(u32, u32, EdgeData)> = vec![];
+        if !old.is_empty() && !d.pis.is_empty() {
+            let ends = [(d.a, old[0], d.pis[0]), (d.b, old[old.len() - 1], d.pis[d.pis.len() - 1])];
+            for (node, near_old, near_new) in ends {
+                if (near_old.x, near_old.y) == (near_new.x, near_new.y) || moved.iter().any(|m| m.0 == node) {
+                    continue;
+                }
+                let Some((o, which, od, far, t)) = self.free_joint(node, id, near_old) else { continue };
+                moved.push((node, quant(near_new.x + t * (far.x - near_new.x)), quant(near_new.y + t * (far.y - near_new.y))));
+                others.push((o, which, od));
+            }
+        }
+        relax_radii(net, &mut d, &moved, &|k, p| same_count && old[k].radius == p.radius);
+        let verts = vertices_of(net, &d, &moved);
+        let tracks = d.tracks;
+        if moved.is_empty() {
+            return Ok(Reshape { op: Op::Edge { id, data: Some(d) }, verts, tracks, before: vec![], after: vec![] });
+        }
+        let mut ops = vec![];
+        for &(n, x, y) in &moved {
+            let mut nd = net.node_data(n).ok_or(Issue::NoSuchNode { node: n })?;
+            nd.x = x;
+            nd.y = y;
+            ops.push(Op::Node { id: n, data: Some(nd) });
+        }
+        let (a, b) = (d.a, d.b);
+        ops.push(Op::Edge { id, data: Some(d) });
+        let (mut before, mut after) = (vec![], vec![]);
+        for (o, which, mut od) in others {
+            relax_radii(net, &mut od, &moved, &|_, _| true);
+            let mut v = vertices_of(net, &od, &moved);
+            let joint = net.end_node(o, which);
+            // drawn in the stroke's order: up to the joint at a, on from the joint at b
+            if (joint == a) == (which == 0) {
+                v.reverse();
+            }
+            if joint == a {
+                before = v;
+            } else if joint == b {
+                after = v;
+            }
+            ops.push(Op::Edge { id: o, data: Some(od) });
+        }
+        Ok(Reshape { op: Op::Batch(ops), verts, tracks, before, after })
+    }
+
+    /// The other piece at a joint of a stroke (T-244) that may follow a corner of `e` next to it
+    /// (`near`, before the edit): a node with no station where only `e` and one other blueprint
+    /// edge meet, on the straight between `near` and the other piece's corner next to it. Returns
+    /// that edge, which of its ends is at the joint, its data, that corner (or its far node, if it
+    /// has none) and how far along from `near` to it the joint lies (0..1).
+    fn free_joint(&self, node: u32, e: u32, near: Pi) -> Option<(u32, u32, EdgeData, Pi, f64)> {
+        let net = &self.w.net;
+        let i = node as usize;
+        let p = &net.node_ports[i];
+        if p.n != 2 || net.node_platform[i] > 0 || net.built_ports(node) > 0 {
+            return None;
+        }
+        let (o, which) = p.ends().iter().map(|&c| (c >> 1, c & 1)).find(|&(o, _)| o != e)?;
+        if !net.edge_thru[o as usize].is_empty() || net.end_node(o, 1 - which) == node {
+            return None;
+        }
+        let od = net.edge_data(o)?;
+        let far = match od.pis.len() {
+            0 => {
+                let f = net.end_node(o, 1 - which) as usize;
+                Pi::new(net.node_x[f], net.node_y[f], 0.0, net.node_level[f])
+            }
+            n => od.pis[if which == 0 { 0 } else { n - 1 }],
+        };
+        let (dx, dy) = (far.x - near.x, far.y - near.y);
+        let l = dx.hypot(dy);
+        if l < 1.0 {
+            return None;
+        }
+        let (jx, jy) = (net.node_x[i] - near.x, net.node_y[i] - near.y);
+        let t = (jx * dx + jy * dy) / (l * l);
+        let off = (jx * dy - jy * dx).abs() / l;
+        (t > 0.0 && t < 1.0 && off < 0.05).then_some((o, which, od, far, t))
+    }
+
+    /// Ops joining edge `e` with the pieces at its joints (T-244, `free_joint`) within `reach` of
+    /// chainage `s`, so something placed at `s` has room; and where `s` is on the joined edge,
+    /// which keeps `e`'s id and direction. The shape is unchanged (a radius the joined fit would
+    /// change is set to the one it had), lines through it follow. None if no joint is that near.
+    fn unjoin_near(&self, e: u32, s: f64, reach: f64) -> Option<(Vec<Op>, f64)> {
+        let net = &self.w.net;
+        let d = net.edge_data(e)?;
+        if !d.thru.is_empty() {
+            return None;
+        }
+        let len = net.edge_len[e as usize];
+        let own = vertices_of(net, &d, &[]);
+        let ends = [(d.a, s < reach, own[1]), (d.b, len - s < reach, own[own.len() - 2])];
+        let mut merges: [Option<(u32, u32, EdgeData)>; 2] = [None, None];
+        for (k, &(node, near, corner)) in ends.iter().enumerate() {
+            if !near {
+                continue;
+            }
+            if let Some((o, which, od, _, _)) = self.free_joint(node, e, corner) {
+                if od.built == d.built && od.tracks == d.tracks && o != e && merges[0].as_ref().map_or(true, |m| m.0 != o) {
+                    merges[k] = Some((o, which, od));
+                }
+            }
+        }
+        if merges.iter().all(|m| m.is_none()) {
+            return None;
+        }
+        // the vertices of each part in the joined edge's direction, with each corner's radius
+        let radii = |v: &[Pi]| geom::fit(v).radius;
+        let mut verts: Vec<(Pi, f64)> = vec![];
+        let mut s = s;
+        let mut a = d.a;
+        if let Some((o, which, od)) = &merges[0] {
+            let mut v = vertices_of(net, od, &[]);
+            let mut r = radii(&v);
+            if *which == 0 {
+                v.reverse();
+                r.reverse();
+            }
+            a = net.end_node(*o, 1 - which);
+            verts.extend(v.iter().copied().zip(r).take(v.len() - 1));
+            s += net.edge_len[*o as usize];
+        }
+        let r = radii(&own);
+        let skip = if merges[0].is_some() { 1 } else { 0 };
+        let keep = if merges[1].is_some() { own.len() - 1 } else { own.len() };
+        verts.extend(own.iter().copied().zip(r).take(keep).skip(skip));
+        let mut b = d.b;
+        if let Some((o, which, od)) = &merges[1] {
+            let mut v = vertices_of(net, od, &[]);
+            let mut r = radii(&v);
+            if *which == 1 {
+                v.reverse();
+                r.reverse();
+            }
+            b = net.end_node(*o, 1 - which);
+            verts.extend(v.iter().copied().zip(r).skip(1));
+        }
+        let mut pis: Vec<Pi> = verts.iter().map(|v| v.0).collect();
+        let f = geom::fit(&pis);
+        for j in 1..pis.len() - 1 {
+            let want = verts[j].1;
+            if want > 0.0 && (f.radius[j] - want).abs() > 0.01 {
+                pis[j].radius = quant(want);
+            }
+        }
+        let joined = EdgeData { a, b, tracks: d.tracks, pis: pis[1..pis.len() - 1].to_vec(), built: d.built, thru: vec![] };
+        // each part's direction that runs the joined edge's way
+        let mut forward: Vec<(u32, u32)> = vec![(e, 0)];
+        if let Some((o, which, _)) = &merges[0] {
+            forward.push((*o, if *which == 1 { 0 } else { 1 }));
+        }
+        if let Some((o, which, _)) = &merges[1] {
+            forward.push((*o, if *which == 0 { 0 } else { 1 }));
+        }
+        let mut ops = vec![Op::Edge { id: e, data: Some(joined) }];
+        for (k, m) in merges.iter().enumerate() {
+            if let Some((o, _, _)) = m {
+                ops.push(Op::Edge { id: *o, data: None });
+                ops.push(Op::Node { id: if k == 0 { d.a } else { d.b }, data: None });
+            }
+        }
+        for l in 0..net.line_count() as u32 {
+            if !net.line_ok(l) || !net.line_path(l).iter().any(|&p| forward.iter().any(|f| f.0 == super::net::path_edge(p))) {
+                continue;
+            }
+            let mut ld = net.line_data(l)?;
+            let mut path: Vec<u32> = vec![];
+            for &p in &ld.path {
+                let pe = super::net::path_edge(p);
+                match forward.iter().find(|f| f.0 == pe) {
+                    Some(&(_, fwd)) => {
+                        let step = e << 1 | (if (p & 1) == fwd { 0 } else { 1 });
+                        if path.last() != Some(&step) {
+                            path.push(step);
+                        }
+                    }
+                    None => path.push(p),
+                }
+            }
+            ld.path = path;
+            ops.push(Op::Line { id: l, data: Some(ld) });
+        }
+        Some((ops, s))
     }
 
     /// An edge as an edit starts from it. One drawn while the track ran through the clicked
@@ -443,7 +725,7 @@ impl TrackApi {
     pub fn edge_pis(&self, id: u32) -> Vec<f64> {
         let Some(d) = self.editable(id) else { return vec![] };
         let net = &self.w.net;
-        let f = geom::fit(&vertices_of(net, &d, None));
+        let f = geom::fit(&vertices_of(net, &d, &[]));
         let mut out = vec![!net.edge_thru[id as usize].is_empty() as u8 as f64];
         for (i, p) in d.pis.iter().enumerate() {
             let rad = f.radius.get(i + 1).copied().unwrap_or(0.0);
@@ -583,8 +865,8 @@ impl TrackApi {
             }
             d.pis = v;
             d.thru.clear();
-            relax_radii(net, &mut d, Some((node, x, y)), &|_, _| true);
-            shapes.push(vertices_of(net, &d, Some((node, x, y))));
+            relax_radii(net, &mut d, &[(node, x, y)], &|_, _| true);
+            shapes.push(vertices_of(net, &d, &[(node, x, y)]));
             ops.push(Op::Edge { id: e, data: Some(d) });
         }
         Ok((Op::Batch(ops), shapes))
@@ -656,16 +938,33 @@ impl TrackApi {
         if let Some(p) = lead_in(&ra, next_a) {
             verts.push(p);
         }
+        let first_click = verts.len();
         verts.extend_from_slice(&pis);
         if let Some(p) = lead_in(&rb, prev_b) {
             verts.push(p);
         }
         verts.push(Pi::new(rb.x, rb.y, 0.0, rb.level));
-        let edge = self.w.net.alloc_edge();
-        new_edges.push(edge);
         let mut ops = ra.ops.clone();
         ops.extend(rb.ops.clone());
-        ops.push(Op::Edge { id: edge, data: Some(EdgeData { a: ra.node, b: rb.node, tracks, pis: verts[1..verts.len() - 1].to_vec(), built: false, thru: vec![] }) });
+        // Quad track (T-255): the drawn pair, and an express pair beside it from end to end.
+        let quad = tracks == 4;
+        let tracks = if quad { 2 } else { tracks };
+        // One piece of track per corner clicked (T-244), joined at plain nodes, the shape unchanged.
+        let pieces = stroke_pieces(&verts, first_click, pis.len());
+        self.push_pieces(&pieces, ra.node, rb.node, tracks, &mut ops, &mut new_nodes, &mut new_edges);
+        let mut express = vec![];
+        if quad {
+            let (ex, first, clicks) = match express_verts(&verts, first_click, pis.len()) {
+                Some(v) => v,
+                None => {
+                    self.release(&new_nodes, &new_edges);
+                    return Err(Issue::Geom { edge: u32::MAX, issue: GeomIssue::ZeroLeg(0) });
+                }
+            };
+            let pieces = stroke_pieces(&ex, first, clicks);
+            self.push_pieces(&pieces, ra.node, rb.node, tracks, &mut ops, &mut new_nodes, &mut new_edges);
+            express = ex;
+        }
         // A junction this route makes (it had two edge ends, or it splits track) is flying if
         // the build setting says so; never one that already stands.
         for r in [&ra, &rb] {
@@ -673,6 +972,7 @@ impl TrackApi {
                 ops.push(Op::Node { id: r.node, data: Some(NodeData { x: r.x, y: r.y, level: r.level, flying: true }) });
             }
         }
+        self.route_express = express;
         Ok((Op::Batch(ops), verts, new_nodes, new_edges))
     }
 
@@ -755,9 +1055,41 @@ impl TrackApi {
         };
         let r = self.w.trial(op);
         self.release(&nn, &ne);
-        let out = self.preview_out(r, &verts, tracks);
+        let mut out = self.preview_out(r, &verts, tracks.min(2));
+        if !self.route_express.is_empty() && out.len() > 5 {
+            // a quad route's express pair, drawn on from the end back to the start (T-255)
+            let mut back = self.route_express.clone();
+            back.reverse();
+            let f = geom::fit(&back);
+            let joint = self.preview_speeds.last().copied().unwrap_or((V_TOP * 3.6) as f32);
+            self.preview_speeds.push(joint);
+            render_samples(&f.pieces, &f.vert, &mut out);
+            self.preview_speeds.extend(render_speeds(&f.pieces, &f.vert));
+        }
         self.route_vertices = verts;
         out
+    }
+
+    /// Edges for the pieces of a stroke (`stroke_pieces`) from node `a` to node `b`, with new
+    /// joints between them.
+    #[allow(clippy::too_many_arguments)]
+    fn push_pieces(&mut self, pieces: &[Vec<Pi>], a: u32, b: u32, tracks: u8, ops: &mut Vec<Op>, nodes: &mut Vec<u32>, edges: &mut Vec<u32>) {
+        let mut from = a;
+        for (k, p) in pieces.iter().enumerate() {
+            let to = if k + 1 == pieces.len() {
+                b
+            } else {
+                let joint = *p.last().unwrap();
+                let n = self.w.net.alloc_node();
+                nodes.push(n);
+                ops.push(Op::Node { id: n, data: Some(NodeData { x: joint.x, y: joint.y, level: joint.level, flying: false }) });
+                n
+            };
+            let edge = self.w.net.alloc_edge();
+            edges.push(edge);
+            ops.push(Op::Edge { id: edge, data: Some(EdgeData { a: from, b: to, tracks, pis: p[1..p.len() - 1].to_vec(), built: false, thru: vec![] }) });
+            from = to;
+        }
     }
 
     /// Draw a route as blueprint (one undoable edit). Same arguments as `preview_route`.
@@ -784,18 +1116,83 @@ impl TrackApi {
             if self.w.net.node_platform[id as usize] > 0 {
                 return self.refuse(Issue::StationPorts { node: id });
             }
+            // a joint or plain node on quad track: its twin beside it too (T-255)
+            let ends = self.w.net.node_ports[id as usize].ends().to_vec();
+            if let Some(&c) = ends.first() {
+                let (e, which) = (c >> 1, c & 1);
+                let s = if which == 0 { 0.0 } else { self.w.net.edge_len[e as usize] };
+                if let Some((twin, ts)) = self.twin_at(e, s) {
+                    let r = self.station_ops(&[(u32::MAX, id as f64), (twin, ts)], &st);
+                    if r == 0 {
+                        return 0;
+                    }
+                }
+            }
             return self.run(Op::Station { node: id, data: Some(st) });
         }
         if !self.w.net.edge_ok(id) {
             return self.refuse(Issue::NoSuchEdge { edge: id });
         }
         let s = self.w.net.project(id, x, y).0;
-        let (node, new_edge) = (self.w.net.alloc_node(), self.w.net.alloc_edge());
-        let r = self.run(Op::Batch(vec![Op::Split { edge: id, s, node, new_edge }, Op::Station { node, data: Some(st) }]));
+        // On quad track (T-255) the pair beside gets a station of the same name level with it:
+        // the local and express platforms of one station, a complex. If that cannot be built,
+        // the one station alone.
+        if let Some((twin, ts)) = self.twin_at(id, s) {
+            let r = self.station_ops(&[(id, s), (twin, ts)], &st);
+            if r == 0 {
+                return 0;
+            }
+        }
+        self.station_ops(&[(id, s)], &st)
+    }
+
+    /// Stations splitting edges at chainages, one undoable edit (`add_station`). A joint of a drawn
+    /// route (T-244) within a platform's reach goes first: the pieces either side become one edge
+    /// again, so the platform has room. `(u32::MAX, node)` puts one on an existing node instead.
+    fn station_ops(&mut self, at: &[(u32, f64)], st: &StationData) -> u32 {
+        let mut ops = vec![];
+        let (mut nodes, mut edges) = (vec![], vec![]);
+        for &(e, s) in at {
+            if e == u32::MAX {
+                // an existing node, `s` its id
+                ops.push(Op::Station { node: s as u32, data: Some(st.clone()) });
+                continue;
+            }
+            let (more, s) =self.unjoin_near(e, s, st.platform as f64 / 2.0 + 2.0).unwrap_or((vec![], s));
+            ops.extend(more);
+            let (node, new_edge) = (self.w.net.alloc_node(), self.w.net.alloc_edge());
+            nodes.push(node);
+            edges.push(new_edge);
+            ops.extend([Op::Split { edge: e, s, node, new_edge }, Op::Station { node, data: Some(st.clone()) }]);
+        }
+        let r = self.run(Op::Batch(ops));
         if r != 0 {
-            self.release(&[node], &[new_edge]);
+            self.release(&nodes, &edges);
         }
         r
+    }
+
+    /// The track beside edge `e` at chainage `s` on quad track (T-255): another edge running
+    /// parallel at about `QUAD_SPACING`, and the chainage on it level with `s`.
+    fn twin_at(&self, e: u32, s: f64) -> Option<(u32, f64)> {
+        let net = &self.w.net;
+        let (x, y, th) = geom::pos_at(net.edge_pieces(e), s);
+        let mut best: Option<(u32, f64, f64)> = None;
+        for f in 0..net.edge_count() as u32 {
+            if f == e || !net.edge_ok(f) {
+                continue;
+            }
+            let (sf, dist) = net.project(f, x, y);
+            if !(QUAD_SPACING * 0.5..=QUAD_SPACING * 1.5).contains(&dist) {
+                continue;
+            }
+            let thf = geom::pos_at(net.edge_pieces(f), sf).2;
+            if (th - thf).sin().abs() > 0.03 || best.is_some_and(|b| b.2 <= dist) {
+                continue;
+            }
+            best = Some((f, sf, dist));
+        }
+        best.map(|b| (b.0, b.1))
     }
 
     /// Rename a station or change its platform. A longer platform on a constructed station is
@@ -811,17 +1208,37 @@ impl TrackApi {
     }
 
     /// Remove a station (and its node if no track is left there). Constructed: final, no refund.
+    /// Its links (T-197) go with it, and undoing the removal does not bring them back.
     pub fn remove_station(&mut self, node: u32) -> u32 {
         let Some(old) = self.w.net.station_data(node) else { return self.refuse(Issue::NoSuchNode { node }) };
         let mut ops = vec![Op::Station { node, data: None }];
         if self.w.net.node_ports[node as usize].n == 0 {
             ops.push(Op::Node { id: node, data: None });
         }
-        if old.built {
+        let r = if old.built {
             self.run_charged(Op::Batch(ops))
         } else {
             self.run(Op::Batch(ops))
+        };
+        if r == 0 {
+            self.w.net.links.retain(|&[a, b]| a != node && b != node);
         }
+        r
+    }
+
+    // ---- station links (T-197): stations the player joins into one complex
+    /// Link two stations into one complex. 0 done (or already linked); otherwise one of them is
+    /// not a station, or they are the same. Not undoable (a setting, like fares).
+    pub fn link_stations(&mut self, a: u32, b: u32) -> u32 {
+        if self.w.net.link(a, b) { 0 } else { self.refuse(Issue::NoSuchNode { node: if self.w.net.is_station(a) { b } else { a } }) }
+    }
+    /// Undo a link between two stations. 0 done; 1 if they were not linked.
+    pub fn unlink_stations(&mut self, a: u32, b: u32) -> u32 {
+        if self.w.net.unlink(a, b) { 0 } else { 1 }
+    }
+    /// The links whose two ends are stations now: node pairs, flat.
+    pub fn station_links(&self) -> Vec<u32> {
+        self.w.net.links_live().flatten().collect()
     }
 
     /// Remove an edge, and nodes left with no track and no station. Lines using it reroute or
@@ -974,6 +1391,25 @@ impl TrackApi {
         if r == 0 { self.w.net.next_line_number = self.w.net.next_line_number.saturating_add(1); }
         r
     }
+    /// A copy of a line for an express service (T-255): every stop with a station on the pair
+    /// beside it (quad track, `twin_at`'s stations of one name) moves there, and the path is found
+    /// again over them, so the copy runs on the other pair wherever there is one. Where that has
+    /// no route, a plain copy. The player then takes out the stops it skips.
+    pub fn express_copy(&mut self, source: u32, id: u32, name: String) -> u32 {
+        let Some(mut d) = self.w.net.line_data(source) else { return self.refuse(Issue::NoSuchLine { line: source }) };
+        let net = &self.w.net;
+        let stops: Vec<u32> = d.stops.iter().map(|&s| twin_station(net, s).unwrap_or(s)).collect();
+        if stops != d.stops {
+            if let Some(path) = net.route(&stops) {
+                d.stops = stops;
+                d.path = path;
+            }
+        }
+        d.name = name;
+        let r = self.run(Op::Line { id, data: Some(d) });
+        if r == 0 { self.w.net.next_line_number = self.w.net.next_line_number.saturating_add(1); }
+        r
+    }
     pub fn next_line_name(&mut self) -> String {
         loop {
             let name = format!("Line {}", self.w.net.next_line_number);
@@ -983,20 +1419,42 @@ impl TrackApi {
     }
     /// Try every insertion slot using the same turn-valid route as set_stops.
     pub fn insert_stop(&self, line: u32, station: u32) -> Vec<f64> {
-        if !self.w.net.line_ok(line) { return vec![]; }
+        best_insert(&self.w.net, line, station, &mut HopMemo::new()).map_or(vec![], |(stops, _)| stops.iter().map(|&s| s as f64).collect())
+    }
+
+    /// How every station stands to a line while its stops are edited (T-233, T-237): per station
+    /// node, `[node, tier]`, tier 0 a stop of the line, 1 adding it keeps the line's path (a
+    /// station on it, or past an end on track the path can carry on over: the path is extended),
+    /// 2 adding it changes the path, 3 it cannot be added. Worked out with `insert_stop`'s own
+    /// search, so the markers say what a click does. Empty if the line is not there.
+    pub fn stop_tiers(&self, line: u32) -> Vec<f64> {
         let net = &self.w.net;
-        let old = net.line_stops(line);
-        if old.contains(&station) { return vec![]; }
-        let mut best = None;
-        let mut best_len = f64::INFINITY;
-        for slot in (0..=old.len()).rev() {
-            let mut stops = old.to_vec(); stops.insert(slot, station);
-            if let Some(path) = net.route(&stops) {
-                let len: f64 = path.iter().map(|p| net.edge_len[(p >> 1) as usize]).sum();
-                if len < best_len - 0.001 { best_len = len; best = Some(stops); }
-            }
+        if !net.line_ok(line) {
+            return vec![];
         }
-        best.unwrap_or_default().iter().map(|&s| s as f64).collect()
+        let stops = net.line_stops(line);
+        let old = net.line_path(line);
+        let reach = reachable_from(net, stops);
+        let mut memo = HopMemo::new();
+        let mut out = vec![];
+        for n in 0..net.node_count() as u32 {
+            if !net.node_ok(n) || net.node_platform[n as usize] == 0 {
+                continue;
+            }
+            let tier = if stops.contains(&n) {
+                0.0
+            } else if !stops.is_empty() && !reach[n as usize] {
+                3.0
+            } else {
+                match best_insert(net, line, n, &mut memo) {
+                    None => 3.0,
+                    Some((_, path)) if old.is_empty() || path.windows(old.len()).any(|w| w == old) => 1.0,
+                    Some(_) => 2.0,
+                }
+            };
+            out.extend([n as f64, tier]);
+        }
+        out
     }
     pub fn remove_line(&mut self, id: u32) -> u32 {
         self.run(Op::Line { id, data: None })
@@ -1026,8 +1484,9 @@ impl TrackApi {
     }
     fn step(&mut self, redo: bool) -> u32 {
         let fleet = self.fleet;
+        let before = self.w.svc.before_edit(&self.w.net, self.now);
         match self.w.step_paid(redo, self.cash, &|w| trains_to_buy(w, fleet)) {
-            Some(r) => self.settle(r),
+            Some(r) => self.settle(r, &before),
             None => {
                 self.money_short = None;
                 self.issues.clear();
@@ -1234,14 +1693,20 @@ impl TrackApi {
         }
         out
     }
-    /// Trips drawn in `[epoch, epoch + 3600)`: per trip, profile index and departure relative to
-    /// `epoch` (may be negative: still running from before). Running lines only.
+    /// Trips drawn in `[epoch, epoch + 3600)`: per trip, profile index, departure relative to
+    /// `epoch` (may be negative: still running from before) and when it stops being drawn,
+    /// relative to `epoch` (its train leaves service or takes its next departure, T-206), and the
+    /// departure its train takes next from that terminal, relative to `epoch` (the other run's
+    /// trip drawn from then; NaN when it leaves service there, T-245). Running lines only.
     pub fn trips(&self, epoch: f64) -> Vec<f32> {
         self.w
             .svc
             .trips(&self.w.net, epoch, epoch + 3600.0)
             .iter()
-            .flat_map(|t| [((t.line * 2 + t.run as u32) * 3 + t.level as u32) as f32, (t.dep - epoch) as f32])
+            .flat_map(|t| {
+                let next = t.next.map_or(f32::NAN, |n| (n - epoch) as f32);
+                [((t.line * 2 + t.run as u32) * 3 + t.level as u32) as f32, (t.draw - epoch) as f32, (t.end - epoch) as f32, next]
+            })
             .collect()
     }
     /// A run's path resampled every `step` m (x, y pairs), for the renderer's line texture.
@@ -1409,12 +1874,12 @@ fn trains_to_buy(w: &TrackWorld, fleet: u32) -> f64 {
 }
 
 /// An edge's vertices: its a node, its PIs, its b node; `moved` puts one node somewhere else.
-fn vertices_of(net: &Network, d: &EdgeData, moved: Option<(u32, f64, f64)>) -> Vec<Pi> {
+fn vertices_of(net: &Network, d: &EdgeData, moved: &[(u32, f64, f64)]) -> Vec<Pi> {
     let at = |n: u32| -> Pi {
         let i = n as usize;
-        match moved {
-            Some((m, x, y)) if m == n => Pi::new(x, y, 0.0, net.node_level[i]),
-            _ => Pi::new(net.node_x[i], net.node_y[i], 0.0, net.node_level[i]),
+        match moved.iter().find(|m| m.0 == n) {
+            Some(&(_, x, y)) => Pi::new(x, y, 0.0, net.node_level[i]),
+            None => Pi::new(net.node_x[i], net.node_y[i], 0.0, net.node_level[i]),
         }
     };
     let mut v = vec![at(d.a)];
@@ -1424,7 +1889,7 @@ fn vertices_of(net: &Network, d: &EdgeData, moved: Option<(u32, f64, f64)>) -> V
 }
 
 /// Set radii that no longer fit their legs go back to auto, where `may(pi index, pi)` allows it.
-fn relax_radii(net: &Network, d: &mut EdgeData, moved: Option<(u32, f64, f64)>, may: &dyn Fn(usize, &Pi) -> bool) {
+fn relax_radii(net: &Network, d: &mut EdgeData, moved: &[(u32, f64, f64)], may: &dyn Fn(usize, &Pi) -> bool) {
     let verts = vertices_of(net, d, moved);
     for issue in geom::fit(&verts).issues {
         if let GeomIssue::ArcDoesNotFit(j) = issue {
@@ -1444,6 +1909,215 @@ fn vertex_rows(f: &geom::Fit, verts: &[Pi], out: &mut Vec<f64>) {
         out.extend([x, y, rad, if rad > 0.0 { geom::curve_speed(rad) * 3.6 } else { V_TOP * 3.6 }]);
     }
 }
+
+/// Hops already searched while trying stops (T-237): `(from, to, side arrived on at from, 2 for
+/// none)` to `Network::find_path`'s answer. Valid for one state of the network.
+type HopMemo = std::collections::HashMap<(u32, u32, u8), Option<(Vec<u32>, u8)>>;
+
+/// `Network::route`, with each hop's search kept in `memo`: the same answer, but trying a stop in
+/// every slot searches each hop once.
+fn route_memo(net: &Network, stops: &[u32], memo: &mut HopMemo) -> Option<Vec<u32>> {
+    if stops.iter().any(|&s| !net.node_ok(s) || net.node_platform[s as usize] == 0) {
+        return None;
+    }
+    let mut path = vec![];
+    let mut side = None;
+    for w in stops.windows(2) {
+        let hop = memo.entry((w[0], w[1], side.unwrap_or(2))).or_insert_with(|| net.find_path(w[0], w[1], side));
+        let (p, s) = hop.as_ref()?;
+        path.extend_from_slice(p);
+        side = Some(*s);
+    }
+    Some(path)
+}
+
+/// The line's stops with `station` inserted where its path is shortest, and that path
+/// (`TrackApi::insert_stop`): every slot tried with the route search `set_stops` uses, the end
+/// winning ties. None if no slot has a route, or it is a stop already.
+fn best_insert(net: &Network, line: u32, station: u32, memo: &mut HopMemo) -> Option<(Vec<u32>, Vec<u32>)> {
+    if !net.line_ok(line) {
+        return None;
+    }
+    let old = net.line_stops(line);
+    if old.contains(&station) {
+        return None;
+    }
+    let mut best = None;
+    let mut best_len = f64::INFINITY;
+    for slot in (0..=old.len()).rev() {
+        let mut stops = old.to_vec();
+        stops.insert(slot, station);
+        if let Some(path) = route_memo(net, &stops, memo) {
+            let len: f64 = path.iter().map(|p| net.edge_len[(p >> 1) as usize]).sum();
+            if len < best_len - 0.001 {
+                best_len = len;
+                best = Some((stops, path));
+            }
+        }
+    }
+    best
+}
+
+/// Nodes a train can reach from any of `stops`, leaving it either way, over valid moves. Moves
+/// work both ways, so a node outside it has no route to or from a stop either.
+fn reachable_from(net: &Network, stops: &[u32]) -> Vec<bool> {
+    let mut seen_node = vec![false; net.node_count()];
+    let mut seen = vec![false; 2 * net.edge_count()];
+    let mut queue: Vec<u32> = vec![];
+    for &s in stops {
+        if !net.node_ok(s) {
+            continue;
+        }
+        seen_node[s as usize] = true;
+        for &c in net.node_ports[s as usize].ends() {
+            if !seen[c as usize] {
+                seen[c as usize] = true;
+                queue.push(c);
+            }
+        }
+    }
+    while let Some(st) = queue.pop() {
+        let (_, node) = net.path_nodes(st);
+        seen_node[node as usize] = true;
+        let arr = net.port_side(super::net::path_edge(st), 1 - super::net::path_dir(st)).unwrap_or(0);
+        let p = &net.node_ports[node as usize];
+        for (k, &c) in p.ends().iter().enumerate() {
+            if p.side[k] != arr && !seen[c as usize] {
+                seen[c as usize] = true;
+                queue.push(c);
+            }
+        }
+    }
+    seen_node
+}
+
+/// A drawn stroke cut into pieces, one per corner clicked (T-244), so removing one removes only
+/// that stretch. `verts` is the whole stroke (end, lead-in, the `clicks` corners from index
+/// `first`, lead-in, end); each piece is a vertex list from end or joint to joint or end.
+///
+/// The cut is at the middle of the leg between two consecutive corners. That point is on the
+/// straight (an auto curve takes at most half of a leg between corners), so each corner stays a
+/// PI of its own piece with its auto radius, and the radius is the same as in the whole stroke: a
+/// corner next to an end may use the whole leg, which is now the half leg it had anyway. A leg
+/// that changes level is not cut, since a ramp is centred between its corners and the joint, a
+/// node, must be at a whole level. Any radius that would still come out different (rounding to the
+/// millimetre grid) is set to the whole stroke's, so the track is where it was drawn.
+fn stroke_pieces(verts: &[Pi], first: usize, clicks: usize) -> Vec<Vec<Pi>> {
+    let f = geom::fit(verts);
+    let mut cuts: Vec<(usize, Pi)> = vec![];
+    if f.issues.is_empty() {
+        for i in first..(first + clicks).saturating_sub(1) {
+            let (p, q) = (verts[i], verts[i + 1]);
+            let leg = (q.x - p.x).hypot(q.y - p.y);
+            if p.level != q.level || leg < 2.0 * MIN_JOINT_LEG || f.tangent[i] > leg / 2.0 + 1e-6 || f.tangent[i + 1] > leg / 2.0 + 1e-6 {
+                continue;
+            }
+            cuts.push((i, Pi::new(quant((p.x + q.x) / 2.0), quant((p.y + q.y) / 2.0), 0.0, p.level)));
+        }
+    }
+    let mut out = vec![];
+    let mut start = 0;
+    let mut head = verts[0];
+    let end = (verts.len() - 1, verts[verts.len() - 1]);
+    for &(i, joint) in cuts.iter().chain(std::iter::once(&end)) {
+        let mut p = vec![head];
+        p.extend_from_slice(&verts[start + 1..=i.min(verts.len() - 2)]);
+        p.push(joint);
+        // what the whole stroke uses at each corner of the piece
+        let pf = geom::fit(&p);
+        for j in 1..p.len() - 1 {
+            let g = start + j;
+            if f.radius[g] > 0.0 && (pf.radius[j] - f.radius[g]).abs() > 0.01 {
+                p[j].radius = quant(f.radius[g]);
+            }
+        }
+        out.push(p);
+        start = i;
+        head = joint;
+    }
+    out
+}
+
+/// Centre line to centre line between the two double tracks of quad track, m (T-255): 4 m between
+/// every pair of neighbouring tracks, as on the double track itself.
+pub const QUAD_SPACING: f64 = 8.0;
+/// How long the express pair takes to swing out to its place beside the drawn pair, m.
+const QUAD_TAPER: f64 = 150.0;
+
+/// The express pair of a quad route (T-255): from the drawn route's `verts` (end, lead-in, the
+/// `clicks` corners from index `first`, lead-in, end), a double track starting and ending at the
+/// same nodes, leaving each end along its heading, swinging out to `QUAD_SPACING` to the left of
+/// the drawn direction over `QUAD_TAPER` (less on a short leg), and running parallel between,
+/// each corner concentric with the drawn one (radius smaller by the spacing on the inside of the
+/// turn, larger outside). Returns its vertices, the index of its first corner-like vertex and how
+/// many there are (the taper ends and the corners), for `stroke_pieces`. None if degenerate.
+fn express_verts(verts: &[Pi], first: usize, clicks: usize) -> Option<(Vec<Pi>, usize, usize)> {
+    let n = verts.len();
+    let f = geom::fit(verts);
+    let leg = |i: usize| -> Option<(f64, f64, f64)> {
+        let (dx, dy) = (verts[i + 1].x - verts[i].x, verts[i + 1].y - verts[i].y);
+        let l = dx.hypot(dy);
+        (l > 1e-6).then(|| (dx / l, dy / l, l))
+    };
+    let d = QUAD_SPACING;
+    // the legs the tapers lie on: from the vertex before the first corner, into the one after the last
+    let (s, e) = (first - 1, first + clicks);
+    let (ux, uy, la) = leg(s)?;
+    let (vx, vy, lb) = leg(e - 1)?;
+    let ta = QUAD_TAPER.min(if clicks == 0 { 0.3 } else { 0.4 } * la);
+    let tb = QUAD_TAPER.min(if clicks == 0 { 0.3 } else { 0.4 } * lb);
+    let qa = Pi::new(quant(verts[s].x + ux * ta - uy * d), quant(verts[s].y + uy * ta + ux * d), 0.0, verts[s].level);
+    let qb = Pi::new(quant(verts[e].x - vx * tb - vy * d), quant(verts[e].y - vy * tb + vx * d), 0.0, verts[e].level);
+    let mut corners = vec![];
+    for i in first..first + clicks {
+        let (ax, ay, _) = leg(i - 1)?;
+        let (bx, by, _) = leg(i)?;
+        let (n1, n2) = ((-ay, ax), (-by, bx));
+        let dot = n1.0 * n2.0 + n1.1 * n2.1;
+        if f.radius[i] <= 0.0 || dot < -0.9 {
+            continue; // no curve here (straight on), or turning back
+        }
+        let k = d / (1.0 + dot);
+        let left = ax * by - ay * bx > 0.0;
+        let r = if left { f.radius[i] - d } else { f.radius[i] + d };
+        corners.push(Pi::new(quant(verts[i].x + k * (n1.0 + n2.0)), quant(verts[i].y + k * (n1.1 + n2.1)), quant(r.max(1.0)), verts[i].level));
+    }
+    let (a, b) = (verts[0], verts[n - 1]);
+    let mut out = vec![Pi::new(a.x, a.y, 0.0, a.level)];
+    let (hx, hy, _) = leg(0)?;
+    if let Some(p) = lead_in_along(a.x, a.y, a.level, hy.atan2(hx), (qa.x, qa.y)) {
+        out.push(p);
+    }
+    let first_out = out.len();
+    out.push(qa);
+    out.extend(corners.iter().copied());
+    out.push(qb);
+    let count = out.len() - first_out;
+    let (gx, gy, _) = leg(n - 2)?;
+    if let Some(p) = lead_in_along(b.x, b.y, b.level, (-gy).atan2(-gx), (qb.x, qb.y)) {
+        out.push(p);
+    }
+    out.push(Pi::new(b.x, b.y, 0.0, b.level));
+    Some((out, first_out, count))
+}
+
+/// The station beside station `s` on quad track (T-255): the nearest other station within one
+/// and a half times `QUAD_SPACING`, the other platform of the same stop.
+fn twin_station(net: &Network, s: u32) -> Option<u32> {
+    if !net.node_ok(s) {
+        return None;
+    }
+    let (x, y) = (net.node_x[s as usize], net.node_y[s as usize]);
+    (0..net.node_count() as u32)
+        .filter(|&n| n != s && net.node_ok(n) && net.node_platform[n as usize] > 0)
+        .map(|n| (n, (net.node_x[n as usize] - x).hypot(net.node_y[n as usize] - y)))
+        .filter(|&(_, d)| d <= QUAD_SPACING * 1.5)
+        .min_by(|a, b| a.1.total_cmp(&b.1))
+        .map(|(n, _)| n)
+}
+
+/// The shortest leg either side of a joint between pieces of a stroke, m (T-244).
+const MIN_JOINT_LEG: f64 = 20.0;
 
 /// A PI along a node's heading, so a new edge leaves the node the way its track runs (like a
 /// turnout) and its first arc starts right at the node: on the main line's heading, a straight
@@ -2201,6 +2875,398 @@ mod tests {
         let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(3000.0, 0.0).iter()).copied().collect();
         assert_ne!(w.add_route(&ends, &[], 2, false), 0);
         assert!(w.issue_kinds().contains("GroundOverWater"), "{}", w.issue_kinds());
+    }
+
+    /// T-237: the stop markers' tiers come from the line tool's own search: a station past either
+    /// end over track the line can carry on over is reachable as it is (the path only grows), a
+    /// branch past an end too, a station on a bypass changes the path, and a branch the line would
+    /// have to turn back to reach or a station on other track cannot be added.
+    #[test]
+    fn stop_tiers_follow_the_line_tool() {
+        let mut a = api();
+        let route = |a: &mut TrackApi, ends: [f64; 10], pis: &[f64]| assert_eq!(a.add_route(&ends, pis, 2, false), 0, "{}", a.issues());
+        route(&mut a, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 9000.0, 0.0, 0.0], &[]);
+        let on_main = |a: &TrackApi, x: f64| (0..a.w.net.edge_count() as u32).find(|&e| a.w.net.edge_ok(e) && a.w.net.project(e, x, 0.0).1 < 0.01 && a.w.net.node_y[a.w.net.edge_a[e as usize] as usize] == 0.0 && a.w.net.node_y[a.w.net.edge_b[e as usize] as usize] == 0.0).unwrap() as f64;
+        // a bypass from 2 km to 4 km, a branch from 6 km past the end, one from 4.5 km facing back
+        let e1 = on_main(&a, 2000.0);
+        let ends = [2.0, e1, 2000.0, 0.0, 0.0, 2.0, e1, 4000.0, 0.0, 0.0];
+        route(&mut a, ends, &[3000.0, 800.0, 0.0, 0.0]);
+        let e = on_main(&a, 6000.0);
+        route(&mut a, [2.0, e, 6000.0, 0.0, 0.0, 0.0, 0.0, 7500.0, 1500.0, 0.0], &[]);
+        let e = on_main(&a, 4500.0);
+        route(&mut a, [2.0, e, 4500.0, 0.0, 0.0, 0.0, 0.0, 3500.0, -1500.0, 0.0], &[]);
+        // other track, not joined
+        route(&mut a, [0.0, 0.0, 0.0, 5000.0, 0.0, 0.0, 0.0, 7000.0, 5000.0, 0.0], &[]);
+        let nearest = |a: &TrackApi, x: f64, y: f64| (0..a.w.net.edge_count() as u32).filter(|&e| a.w.net.edge_ok(e)).min_by(|&p, &q| a.w.net.project(p, x, y).1.total_cmp(&a.w.net.project(q, x, y).1)).unwrap();
+        let station = |a: &mut TrackApi, x: f64, y: f64, name: &str| -> u32 {
+            let e = nearest(a, x, y);
+            assert_eq!(a.add_station(2, e, x, y, 200, name.into()), 0, "{name}: {}", a.issues());
+            let n = a.w.net.node_count() as u32;
+            (0..n).filter(|&k| a.w.net.node_ok(k) && a.w.net.node_platform[k as usize] > 0).min_by(|&p, &q| {
+                let d = |k: u32| (a.w.net.node_x[k as usize] - x).hypot(a.w.net.node_y[k as usize] - y);
+                d(p).total_cmp(&d(q))
+            }).unwrap()
+        };
+        let first = station(&mut a, 1000.0, 0.0, "A");
+        let last = station(&mut a, 5000.0, 0.0, "B");
+        let between = station(&mut a, 3000.0, 0.0, "M");
+        let past_end = station(&mut a, 8000.0, 0.0, "C");
+        let before_start = station(&mut a, 300.0, 0.0, "D");
+        let bypass = station(&mut a, 3000.0, 650.0, "S");
+        let branch = station(&mut a, 7200.0, 1300.0, "Y");
+        let facing_back = station(&mut a, 3700.0, -1300.0, "Z");
+        let other = station(&mut a, 6000.0, 5000.0, "E");
+        let id = a.new_line_id();
+        assert_eq!(a.set_line(id, &[first, last], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+        let tiers: std::collections::HashMap<u32, f64> = a.stop_tiers(id).chunks(2).map(|c| (c[0] as u32, c[1])).collect();
+        assert_eq!(tiers.len(), 9);
+        let want = [(first, 0.0), (last, 0.0), (between, 1.0), (past_end, 1.0), (before_start, 1.0), (bypass, 2.0), (branch, 1.0), (facing_back, 3.0), (other, 3.0)];
+        for (n, t) in want {
+            assert_eq!(tiers[&n], t, "station {}", a.w.net.node_name[n as usize]);
+        }
+        // and a click does what the marker says
+        let path = a.line_path(id);
+        for (n, t) in want {
+            let stops: Vec<u32> = a.insert_stop(id, n).iter().map(|&s| s as u32).collect();
+            assert_eq!(stops.is_empty(), t == 0.0 || t == 3.0, "station {}", a.w.net.node_name[n as usize]);
+            if stops.is_empty() {
+                continue;
+            }
+            assert_eq!(a.set_stops(id, &stops), 0, "{}", a.issues());
+            let grown = a.line_path(id);
+            assert_eq!(grown.windows(path.len()).any(|w| w == path), t == 1.0, "station {}", a.w.net.node_name[n as usize]);
+            assert_eq!(a.undo(), 0);
+        }
+        // with no route yet, every station joined to the one stop counts as on it
+        let lone = a.new_line_id();
+        assert_eq!(a.set_line(lone, &[first], 0.0, 0.0, 0.0, 30.0, 180.0, 0, 0, "One".into()), 0, "{}", a.issues());
+        let tiers: std::collections::HashMap<u32, f64> = a.stop_tiers(lone).chunks(2).map(|c| (c[0] as u32, c[1])).collect();
+        assert_eq!((tiers[&past_end], tiers[&bypass], tiers[&other]), (1.0, 1.0, 3.0));
+    }
+
+    /// T-244: the corners of a stroke, and the same stroke as one edge (set directly).
+    const CLICKS: [(f64, f64); 4] = [(1500.0, 300.0), (2600.0, -400.0), (4800.0, 1200.0), (6200.0, 900.0)];
+    fn stroke(level_of: &dyn Fn(usize) -> i8) -> (Vec<f64>, Vec<f64>) {
+        let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(7600.0, 2400.0).iter()).copied().collect();
+        let pis = CLICKS.iter().enumerate().flat_map(|(k, &(x, y))| [x, y, 0.0, level_of(k) as f64]).collect();
+        (ends, pis)
+    }
+    fn one_edge(pis: &[f64]) -> (TrackApi, u32) {
+        let mut b = api();
+        let (n0, n1, e) = (b.new_node_id(), b.new_node_id(), b.new_edge_id());
+        assert_eq!(b.set_node(n0, 0.0, 0.0, 0, false), 0);
+        assert_eq!(b.set_node(n1, 7600.0, 2400.0, 0, false), 0);
+        assert_eq!(b.set_edge(e, n0, n1, 2, pis), 0, "{}", b.issues());
+        (b, e)
+    }
+    fn live_edges(a: &TrackApi) -> Vec<u32> {
+        (0..a.w.net.edge_count() as u32).filter(|&e| a.w.net.edge_ok(e)).collect()
+    }
+    /// Every drawn point of `a`'s track lies on `b`'s edge `e`, and their lengths agree.
+    fn same_track(a: &TrackApi, b: &TrackApi, e: u32, tol: f64) {
+        let mut len = 0.0;
+        for p in live_edges(a) {
+            len += a.w.net.edge_len[p as usize];
+            for q in a.edge_render(p).chunks(3) {
+                let off = b.w.net.project(e, q[0], q[1]).1;
+                assert!(off < tol, "piece {p}: {off} m off the stroke at {q:?}");
+            }
+        }
+        assert!((len - b.w.net.edge_len[e as usize]).abs() < tol, "{len} against {}", b.w.net.edge_len[e as usize]);
+    }
+
+    #[test]
+    fn a_stroke_is_one_piece_per_corner() {
+        let mut a = api();
+        let (ends, pis) = stroke(&|_| 0);
+        let pv = a.preview_route(&ends, &pis, 2, false);
+        assert_eq!(pv[0], 1.0, "{}", a.issues());
+        assert!(live_edges(&a).is_empty(), "a preview builds nothing");
+        assert_eq!(a.add_route(&ends, &pis, 2, false), 0, "{}", a.issues());
+        let (b, e) = one_edge(&pis);
+        // four corners, four pieces, joined at three plain nodes, each corner in a piece of its own
+        let edges = live_edges(&a);
+        assert_eq!(edges.len(), 4);
+        let joints: Vec<_> = a.nodes_info().chunks(10).filter(|c| c[4] == 2.0).map(|c| c[0] as u32).collect();
+        assert_eq!(joints.len(), 3);
+        for &p in &edges {
+            let corners = a.edge_pis(p);
+            assert_eq!(corners.len(), 9, "one corner");
+            assert_eq!(corners[3], 0.0, "auto radius");
+        }
+        let whole = b.edge_pis(e);
+        let used: Vec<f64> = edges.iter().map(|&p| a.edge_pis(p)[5]).collect();
+        for k in 0..4 {
+            assert!((used[k] - whole[5 + 8 * k]).abs() < 0.01, "corner {k}: {} against {}", used[k], whole[5 + 8 * k]);
+        }
+        // the very same track, price and preview
+        same_track(&a, &b, e, 0.005);
+        assert!((a.total_cost() - b.total_cost()).abs() < 1e-6, "{} against {}", a.total_cost(), b.total_cost());
+        assert!((pv[1] - b.total_cost()).abs() < 1e-6);
+        // one undo takes the whole stroke away, one redo brings it back
+        assert_eq!(a.undo(), 0);
+        assert!(live_edges(&a).is_empty() && a.nodes_info().is_empty());
+        assert_eq!(a.redo(), 0);
+        assert_eq!(live_edges(&a), edges);
+        // saves keep the pieces
+        let mut c = api();
+        assert!(c.load(&a.save()));
+        assert_eq!(c.edges_info(), a.edges_info());
+        // removing a piece in the middle leaves its neighbours, ending where it was
+        assert_eq!(a.delete_edge(edges[1]), 0, "{}", a.issues());
+        assert_eq!(live_edges(&a).len(), 3);
+        for &j in &joints[..2] {
+            assert_eq!(a.nodes_info().chunks(10).find(|c| c[0] as u32 == j).unwrap()[4], 1.0, "a track end now");
+        }
+        // a leg that changes level is not cut: its ramp is centred between its corners
+        let mut d = api();
+        let (ends, pis) = stroke(&|k| if k >= 2 { 1 } else { 0 });
+        assert_eq!(d.add_route(&ends, &pis, 2, false), 0, "{}", d.issues());
+        assert_eq!(live_edges(&d).len(), 3);
+        let (_, pis_flat) = stroke(&|k| if k >= 2 { 1 } else { 0 });
+        let mut e2 = api();
+        let (n0, n1, x) = (e2.new_node_id(), e2.new_node_id(), e2.new_edge_id());
+        assert_eq!(e2.set_node(n0, 0.0, 0.0, 0, false), 0);
+        assert_eq!(e2.set_node(n1, 7600.0, 2400.0, 0, false), 0);
+        assert_eq!(e2.set_edge(x, n0, n1, 2, &pis_flat), 0, "{}", e2.issues());
+        same_track(&d, &e2, x, 0.005);
+        assert!((d.total_cost() - e2.total_cost()).abs() < 1e-6);
+    }
+
+    /// T-244: a line over a stroke in pieces runs exactly as over the stroke in one edge: the
+    /// joints add no speed limit, no delay and no cost.
+    #[test]
+    fn pieces_run_like_the_whole_stroke() {
+        let (ends, pis) = stroke(&|_| 0);
+        let mut a = api();
+        assert_eq!(a.add_route(&ends, &pis, 2, false), 0, "{}", a.issues());
+        let (mut b, _) = one_edge(&pis);
+        let mut times = vec![];
+        for t in [&mut a, &mut b] {
+            let end = |t: &TrackApi, x: f64| t.nodes_info().chunks(10).find(|c| (c[1] - x).abs() < 1e-6).unwrap()[0] as u32;
+            let (w, e) = (end(t, 0.0), end(t, 7600.0));
+            assert_eq!(t.add_station(1, w, 0.0, 0.0, 200, "West".into()), 0);
+            assert_eq!(t.add_station(1, e, 0.0, 0.0, 200, "East".into()), 0);
+            let id = t.new_line_id();
+            assert_eq!(t.set_line_with_trains(id, &[w, e], 6, 4, 2, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", t.issues());
+            let quote = t.blueprint_cost();
+            assert_eq!(t.construct_all(), 0, "{}", t.issues());
+            times.push((t.stop_times(id, 0, 0), t.stop_times(id, 1, 0), t.line_summary(id), t.lines_info()[9], quote, t.markers(0).len()));
+        }
+        let (p, q) = (&times[0], &times[1]);
+        for k in 0..2 {
+            let (x, y) = if k == 0 { (&p.0, &q.0) } else { (&p.1, &q.1) };
+            assert_eq!(x.len(), y.len());
+            for (s, t) in x.iter().zip(y) {
+                assert!((s - t).abs() < 1e-3, "run {k}: {s} s against {t} s");
+            }
+        }
+        for (s, t) in p.2.iter().zip(&q.2) {
+            assert!((s - t).abs() < 1e-3, "summary {:?} against {:?}", p.2, q.2);
+        }
+        assert!((p.3 - q.3).abs() < 0.01, "length {} against {}", p.3, q.3);
+        assert!((p.4 - q.4).abs() < 1e-6, "price {} against {}", p.4, q.4);
+        assert_eq!(p.5, q.5, "capacity markers");
+        // one track section for the line, as over one edge
+        let sections = |t: &TrackApi| t.w.svc.cap.res.iter().filter(|r| r.kind == super::super::capacity::ResKind::Section).count();
+        assert_eq!(sections(&a), sections(&b));
+    }
+
+    /// T-258: a station can go anywhere along a curve (partway round, at its ends), on track drawn
+    /// from an existing track end (a lead-in curve, then the corner's curve) and on plain track,
+    /// and the split leaves the track, its run time and its price as they were.
+    #[test]
+    fn stations_go_anywhere_on_a_curve() {
+        for (from_track, corner, radius) in [(true, (1500.0, 300.0), 0.0), (false, (1500.0, 300.0), 0.0), (true, (900.0, 700.0), 0.0), (false, (700.0, -900.0), 0.0), (true, (1500.0, 300.0), 150.0), (false, (1500.0, 1200.0), 400.0), (true, (1200.0, -500.0), 120.0)] {
+            let mut a = api();
+            let mut start = [0.0, 0.0, 0.0, 0.0, 0.0];
+            if from_track {
+                let lead: Vec<f64> = free(-3000.0, 0.0).iter().chain(free(0.0, 0.0).iter()).copied().collect();
+                assert_eq!(a.add_route(&lead, &[], 2, false), 0);
+                let n = a.nodes_info().chunks(10).find(|c| c[1].abs() < 1e-6 && c[2].abs() < 1e-6).unwrap()[0];
+                start = [1.0, n, 0.0, 0.0, 0.0];
+            }
+            let ends: Vec<f64> = start.iter().chain(free(3000.0, -600.0).iter()).copied().collect();
+            assert_eq!(a.add_route(&ends, &[corner.0, corner.1, radius, 0.0], 2, false), 0, "{}", a.issues());
+            let e = *live_edges(&a).last().unwrap();
+            let len = a.w.net.edge_len[e as usize];
+            let pieces: Vec<_> = a.w.net.edge_pieces(e).to_vec();
+            let (cost, before) = (a.total_cost(), a.edge_render(e));
+            let mut tried = 0;
+            let mut failed = vec![];
+            for p in pieces.iter().filter(|p| p.k != 0.0) {
+                for f in [0.0, 0.01, 0.1, 0.25, 0.5, 0.75, 0.9, 0.99, 1.0] {
+                    let s = (p.s0 + f * p.len).clamp(110.0, len - 110.0);
+                    let (x, y, _) = geom::pos_at(&pieces, s);
+                    tried += 1;
+                    if a.add_station(2, e, x, y, 200, "S".into()) != 0 {
+                        failed.push((s, a.issues(), format!("{:?}", a.w.net.split_plan(e, a.w.net.project(e, x, y).0)), a.w.net.edge_data(e)));
+                        continue;
+                    }
+                    // the same track and price, and an undo puts it back exactly
+                    for q in before.chunks(3) {
+                        let off = live_edges(&a).iter().map(|&k| a.w.net.project(k, q[0], q[1]).1).fold(f64::INFINITY, f64::min);
+                        assert!(off < 0.01, "split at {s}: {off} m off");
+                    }
+                    let station = 10.0 * (0.4 + 0.6 * 200.0 / 200.0) * 1.0;
+                    assert!((a.total_cost() - cost - station).abs() < 0.05, "split at {s}: {} against {}", a.total_cost() - station, cost);
+                    assert_eq!(a.undo(), 0);
+                    assert_eq!(a.edge_render(e), before);
+                }
+            }
+            assert!(tried > 8);
+            assert!(failed.is_empty(), "{from_track} {corner:?} {radius}: {failed:?}");
+        }
+    }
+
+    /// T-244: a station placed next to a joint joins the two pieces again first, so the platform
+    /// has room; the track and the lines over it are as they were.
+    #[test]
+    fn a_station_next_to_a_joint_joins_the_pieces() {
+        let (ends, pis) = stroke(&|_| 0);
+        let mut a = api();
+        assert_eq!(a.add_route(&ends, &pis, 2, false), 0, "{}", a.issues());
+        let end = |t: &TrackApi, x: f64| t.nodes_info().chunks(10).find(|c| (c[1] - x).abs() < 1e-6).unwrap()[0] as u32;
+        let (w, east) = (end(&a, 0.0), end(&a, 7600.0));
+        assert_eq!(a.add_station(1, w, 0.0, 0.0, 200, "West".into()), 0);
+        assert_eq!(a.add_station(1, east, 0.0, 0.0, 200, "East".into()), 0);
+        let id = a.new_line_id();
+        assert_eq!(a.set_line(id, &[w, east], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+        let t0 = a.stop_times(id, 0, 0);
+        let edges = live_edges(&a);
+        // 30 m before the second joint, on the second piece
+        let j = a.w.net.edge_b[edges[1] as usize];
+        let len = a.w.net.edge_len[edges[1] as usize];
+        let (x, y, _) = geom::pos_at(a.w.net.edge_pieces(edges[1]), len - 30.0);
+        assert_eq!(a.add_station(2, edges[1], x, y, 200, "Middle".into()), 0, "{}", a.issues());
+        assert!(!a.w.net.node_ok(j), "the joint went");
+        assert_eq!(live_edges(&a).len(), 4, "two pieces joined, then split at the station");
+        let (b, e) = one_edge(&pis);
+        same_track(&a, &b, e, 0.005);
+        assert!(!a.w.net.line_broken[id as usize]);
+        let t1 = a.stop_times(id, 0, 0);
+        assert!((t0.last().unwrap() - t1.last().unwrap()).abs() < 1e-3, "{t0:?} {t1:?}");
+        assert_eq!(a.undo(), 0);
+        assert_eq!(live_edges(&a), edges);
+        assert!(a.w.net.node_ok(j));
+        // after reversing the line's path: still fine
+        let id2 = a.new_line_id();
+        assert_eq!(a.set_line(id2, &[east, w], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "R".into()), 0);
+        assert_eq!(a.add_station(2, edges[1], x, y, 200, "Middle".into()), 0, "{}", a.issues());
+        assert!(!a.w.net.line_broken[id2 as usize] && !a.w.net.line_broken[id as usize]);
+    }
+
+    /// T-255: quad track is the drawn double track and an express double track beside it, end to
+    /// end; a station on one pair gets its twin on the other; an express copy of a line runs on
+    /// the express pair.
+    #[test]
+    fn quad_track_and_express_copy() {
+        let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(12000.0, 0.0).iter()).copied().collect();
+        let pis = vec![3000.0, 400.0, 0.0, 0.0, 6000.0, 0.0, 0.0, 0.0, 9000.0, 400.0, 0.0, 0.0];
+        let mut a = api();
+        // continuing an existing track end, so the start becomes a junction
+        let lead: Vec<f64> = free(-3000.0, 0.0).iter().chain(free(0.0, 0.0).iter()).copied().collect();
+        assert_eq!(a.add_route(&lead, &[], 2, false), 0);
+        let start = a.nodes_info().chunks(10).find(|c| c[1].abs() < 1e-6 && c[2].abs() < 1e-6).unwrap()[0];
+        let mut quad_ends = ends.clone();
+        quad_ends[..5].copy_from_slice(&[1.0, start, 0.0, 0.0, 0.0]);
+        let pv = a.preview_route(&quad_ends, &pis, 4, false);
+        assert_eq!(pv[0], 1.0, "{}", a.issues());
+        assert_eq!(a.preview_render_speeds().len(), (pv.len() - 5 - 4 * pv[3] as usize) / 3 - 1);
+        let before = a.total_cost();
+        assert_eq!(a.add_route(&quad_ends, &pis, 4, false), 0, "{}", a.issues());
+        let mut b = api();
+        let (n0, n1, e) = (b.new_node_id(), b.new_node_id(), b.new_edge_id());
+        assert_eq!(b.set_node(n0, 0.0, 0.0, 0, false) + b.set_node(n1, 12000.0, 0.0, 0, false) + b.set_edge(e, n0, n1, 2, &pis), 0);
+        let on_local = |a: &TrackApi, p: u32| { let r = a.edge_render(p); let k = r.len() / 6 * 3; b.w.net.project(e, r[k], r[k + 1]).1 < 2.0 };
+        let new: Vec<u32> = live_edges(&a).into_iter().filter(|&p| p != 0).collect();
+        let (local, express) = (new[..3].to_vec(), new[3..].to_vec());
+        assert!(local[1..].iter().all(|&p| on_local(&a, p)) && express.iter().all(|&p| !on_local(&a, p)));
+        assert!(express.len() >= 3, "{express:?}");
+        // beside it, 8 m to the left, away from the tapers at the ends
+        let len = b.w.net.edge_len[e as usize];
+        for &p in &express {
+            for q in a.edge_render(p).chunks(3) {
+                let (s, _) = b.w.net.project(e, q[0], q[1]);
+                let off = local.iter().map(|&l| a.w.net.project(l, q[0], q[1]).1).fold(f64::INFINITY, f64::min);
+                if s > QUAD_TAPER + 300.0 && s < len - QUAD_TAPER - 50.0 {
+                    assert!((off - QUAD_SPACING).abs() < 0.05, "express {p} {off} m off at {s}");
+                }
+            }
+        }
+        // two double tracks' price, and a junction where it leaves the old track
+        let added = a.total_cost() - before;
+        assert!((added / b.total_cost() - 2.0).abs() < 0.1, "{added} against {}", b.total_cost());
+        let j = a.nodes_info().chunks(10).find(|c| c[0] == start).unwrap()[4];
+        assert_eq!(j, 3.0, "the old track end is a junction now");
+        // stations: each gets its twin on the other pair, same name
+        let mut stops = vec![];
+        for (piece, at, name) in [(local[1], 60.0, "First"), (local[2], 400.0, "Last")] {
+            let p = piece; let (x, y, _) = geom::pos_at(a.w.net.edge_pieces(p), at);
+            assert_eq!(a.add_station(2, p, x, y, 200, name.into()), 0, "{} on {p} at {:?}: {:?} {:?}", a.issues(), a.w.net.project(p, x, y), a.w.net.edge_data(p), a.edge_pis(p));
+            let named: Vec<u32> = (0..a.w.net.node_count() as u32).filter(|&k| a.w.net.node_ok(k) && a.w.net.node_platform[k as usize] > 0 && a.w.net.node_name[k as usize] == name).collect();
+            assert_eq!(named.len(), 2, "{name} and its twin");
+            let local_one = *named.iter().min_by(|&&p, &&q| { let d = |k: u32| b.w.net.project(e, a.w.net.node_x[k as usize], a.w.net.node_y[k as usize]).1; d(p).total_cmp(&d(q)) }).unwrap();
+            stops.push(local_one);
+        }
+        // a station on a joint node of the drawn pair gets its twin too
+        let joint = (0..a.w.net.node_count() as u32).find(|&k| a.w.net.node_ok(k) && a.w.net.node_ports[k as usize].n == 2 && a.w.net.node_platform[k as usize] == 0 && b.w.net.project(e, a.w.net.node_x[k as usize], a.w.net.node_y[k as usize]).1 < 0.5 && (1000.0..11000.0).contains(&a.w.net.node_x[k as usize])).unwrap();
+        assert_eq!(a.add_station(1, joint, 0.0, 0.0, 200, "Joint".into()), 0, "{}", a.issues());
+        assert_eq!((0..a.w.net.node_count() as u32).filter(|&k| a.w.net.node_ok(k) && a.w.net.node_platform[k as usize] > 0 && a.w.net.node_name[k as usize] == "Joint").count(), 2);
+        assert_eq!(a.undo(), 0);
+        let id = a.new_line_id();
+        assert_eq!(a.set_line(id, &stops, 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "Local".into()), 0, "{}", a.issues());
+        let ex = a.new_line_id();
+        assert_eq!(a.express_copy(id, ex, "Local express".into()), 0, "{}", a.issues());
+        let es = a.line_stops(ex);
+        assert_eq!(es.len(), 2);
+        assert!(es.iter().zip(&stops).all(|(p, q)| p != q && a.w.net.node_name[*p as usize] == a.w.net.node_name[*q as usize]), "the twins");
+        let on_express = a.line_path(ex).iter().filter(|&&p| !on_local(&a, p >> 1)).count();
+        assert!(on_express == a.line_path(ex).len() && on_express >= 2, "{:?}", a.line_path(ex));
+        assert!(a.line_path(id).iter().all(|&p| on_local(&a, p >> 1)));
+        assert!(!a.w.net.line_broken[ex as usize]);
+        assert!(a.stop_times(ex, 0, 0).last().unwrap() > &60.0);
+        assert_eq!(a.undo(), 0);
+        assert!(!a.w.net.line_ok(ex));
+        // deleting an express piece leaves the drawn pair
+        assert_eq!(a.delete_edge(express[express.len() / 2]), 0, "{}", a.issues());
+        assert!(!a.w.net.line_broken[id as usize]);
+    }
+
+    /// T-244: dragging a corner of a piece moves the joints next to it along, so the stroke
+    /// reshapes as if it were still one edge.
+    #[test]
+    fn reshaping_a_piece_moves_its_joints() {
+        let (ends, pis) = stroke(&|_| 0);
+        let mut a = api();
+        assert_eq!(a.add_route(&ends, &pis, 2, false), 0, "{}", a.issues());
+        let edges = live_edges(&a);
+        let mid = edges[1];
+        let moved = [2700.0, -900.0, 0.0, 0.0];
+        let pv = a.preview_edge(mid, &moved);
+        assert_eq!(pv[0], 1.0, "{}", a.issues());
+        assert_eq!(a.preview_render_speeds().len(), (pv.len() - 5 - 4 * pv[3] as usize) / 3 - 1);
+        assert_eq!(a.set_edge_pis(mid, &moved), 0, "{}", a.issues());
+        let mut whole = pis.clone();
+        whole[4..8].copy_from_slice(&moved);
+        let (b, e) = one_edge(&whole);
+        same_track(&a, &b, e, 0.01);
+        assert_eq!(live_edges(&a), edges, "the same pieces");
+        assert_eq!(a.undo(), 0);
+        let (b, e) = one_edge(&pis);
+        same_track(&a, &b, e, 0.005);
+        // a joint drags like any blueprint node, keeping its heading
+        let j = a.w.net.edge_b[edges[0] as usize];
+        let (x, y) = (a.w.net.node_x[j as usize], a.w.net.node_y[j as usize]);
+        assert_eq!(a.move_node(j, x + 40.0, y + 60.0), 0, "{}", a.issues());
+        // a line still routes over the pieces through the joints
+        let end = |t: &TrackApi, x: f64| t.nodes_info().chunks(10).find(|c| (c[1] - x).abs() < 1e-6).unwrap()[0] as u32;
+        let (w, east) = (end(&a, 0.0), end(&a, 7600.0));
+        assert_eq!(a.add_station(1, w, 0.0, 0.0, 200, "West".into()), 0);
+        assert_eq!(a.add_station(1, east, 0.0, 0.0, 200, "East".into()), 0);
+        let id = a.new_line_id();
+        assert_eq!(a.set_line(id, &[w, east], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+        assert_eq!(a.line_path(id).len(), 4);
     }
 }
 #[cfg(test)]

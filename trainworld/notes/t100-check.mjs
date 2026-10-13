@@ -58,6 +58,6 @@ try {
  await page.getByRole('button',{name:'Build',exact:true}).click();
  await page.screenshot({path:'artifacts/trainworld/T-100-built.png'});
  const result={fixture,charge,layout,errors};
- console.log(JSON.stringify(result));await writeFile('trainworld/notes/T-100-check.json',JSON.stringify(result,null,2));
+ console.log(JSON.stringify(result));await writeFile('artifacts/trainworld/notes-outputs/T-100-check.json',JSON.stringify(result,null,2));
  if(errors.length)throw Error(errors.join('\n'));
 }finally{await browser.close();}

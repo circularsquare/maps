@@ -4,7 +4,11 @@
 // one another; the worst delays win collisions. DOM tags move on MapLibre's frames.
 // A junction's tag is a link to the junction's inspector, where a flyover can be built (T-080).
 // Hovering a tag says what it means (T-099). The tags sit under the demand views' canvas.
+// Station names are placed first and tags keep off them (T-184): a tag takes the first of six
+// spots around its resource (above right, above left, below right, below left, right, left)
+// clear of every shown name and every tag already placed, and hides only when none is.
 
+import { effect } from "@preact/signals";
 import { duration } from "../game/format";
 import type { Selection, WorldView } from "../game/types";
 import { selection, tool } from "../game/ui";
@@ -14,9 +18,12 @@ import type { Overlay } from "./overlay";
 import { perfOff, perfTry } from "../perfFlags";
 import type { Map as MlMap } from "maplibre-gl";
 import { MIN_LABEL_ZOOM, labelPadding } from "./labelLayout";
+import type { StationLabels } from "./stationLabels";
 
 /** ?perfOff=markers (T-045, measurement only). */
 const NO_MARKERS = perfOff("markers");
+/** px between a tag's corner and its resource, and kept clear around a station name (T-184). */
+const GAP_X = 6, GAP_Y = 5, NAME_CLEAR = 3;
 
 const KIND = ["Track", "Single track", "Platform", "Terminus", "Junction", "Flat crossing"];
 const DEMAND = ["high", "medium", "low"];
@@ -24,15 +31,23 @@ const DEMAND = ["high", "medium", "low"];
 export class CapacityMarkers {
   /** Demand discs draw above these DOM tags; wired to the same select handler as the map. */
   demandClick: ((px: number, py: number, add: boolean) => Selection | undefined) | null = null;
+  /** The trip tool's click at a map point (px), for a click on a tag while it is on (T-221). */
+  tripClick: ((px: number, py: number) => void) | null = null;
+  /** The select tool's click at a map point (px), for a click on a tag that opens nothing of its
+   * own: the station, train or track under the tag is selected as if the tag were not there (T-256). */
+  selectClick: ((px: number, py: number, add: boolean) => void) | null = null;
   private box: HTMLDivElement;
   private items: { el: HTMLDivElement; x: number; y: number; w: number; h: number }[] = [];
   private visible = true;
   private placedMatrix: number[] | null = null;
   private placedSize = "";
+  private placedLabels = -1;
 
   private tip: HTMLDivElement;
 
-  constructor(private container: HTMLElement, private overlay: Overlay, private map: MlMap) {
+  /** `labels` must be constructed first: its frame hook then runs before this one, so a pan's
+   * label offset is current when the tags are placed. */
+  constructor(private container: HTMLElement, private overlay: Overlay, private map: MlMap, private labels: StationLabels | null = null) {
     this.box = document.createElement("div");
     this.box.className = "cap-marks";
     container.appendChild(this.box);
@@ -40,7 +55,15 @@ export class CapacityMarkers {
     this.tip.className = "tool-tag demand-tag";
     this.tip.style.display = "none";
     container.appendChild(this.tip);
+    // T-224: with any tool on, the tags take no pointer events, so every press, move and double
+    // click reaches the map (a tag can sit on a station or track the tool wants)
+    effect(() => {
+      const pass = tool.value !== "select";
+      this.box.classList.toggle("pass", pass);
+      if (pass) this.tip.style.display = "none";
+    });
     overlay.afterMapFrame.push(() => this.place());
+    if (labels) labels.onPlace = () => this.place();
     document.fonts.ready.then(() => {
       for (const it of this.items) it.w = 0;
       this.placedMatrix = null;
@@ -84,6 +107,14 @@ export class CapacityMarkers {
         return [e.clientX - r.left, e.clientY - r.top] as const;
       };
       el.onclick = (e) => {
+        // the trip tool's clicks go through to the map (T-221: a tag can sit on a station); since
+        // T-224 the tags take no pointer events while any tool is on, so this is only a fallback
+        if (tool.peek() === "trip") {
+          const [x, y] = point(e);
+          this.tripClick?.(x, y);
+          e.stopPropagation();
+          return;
+        }
         if (tool.peek() !== "select") return;
         const [x, y] = point(e);
         const above = this.demandClick?.(x, y, e.shiftKey);
@@ -92,6 +123,10 @@ export class CapacityMarkers {
           e.stopPropagation();
         } else if (junction !== null) {
           selection.value = { kind: "junction", node: junction };
+          e.stopPropagation();
+        } else if (this.selectClick) {
+          // T-256: otherwise what is drawn under the tag (its station, a train, the track)
+          this.selectClick(x, y, e.shiftKey);
           e.stopPropagation();
         }
       };
@@ -128,11 +163,18 @@ export class CapacityMarkers {
     if (!m) return;
     const W = this.overlay.canvas.clientWidth, H = this.overlay.canvas.clientHeight;
     const size = `${W},${H},${zoom < 14}`;
-    if (size === this.placedSize && this.placedMatrix?.every((v, i) => v === m[i])) return;
+    const labelsAt = this.labels?.version ?? 0;
+    if (size === this.placedSize && labelsAt === this.placedLabels && this.placedMatrix?.every((v, i) => v === m[i])) return;
     this.placedMatrix = Array.from(m);
     this.placedSize = size;
+    this.placedLabels = labelsAt;
     const [padX, padY] = labelPadding(zoom);
     const taken: [number, number, number, number][] = [];
+    // Shown station names on or near the screen, with a little clearance (T-184).
+    const names = (this.labels?.rects() ?? [])
+      .filter((n) => n[2] > -64 && n[0] < W + 64 && n[3] > -64 && n[1] < H + 64)
+      .map((n) => [n[0] - NAME_CLEAR, n[1] - NAME_CLEAR, n[2] + NAME_CLEAR, n[3] + NAME_CLEAR]);
+    const hits = (r: number[], boxes: number[][]) => boxes.some((t) => r[0] < t[2] && r[2] > t[0] && r[1] < t[3] && r[3] > t[1]);
     // Batch measurements before writes, and repeat only when tags or fonts change.
     for (const it of this.items) if (!it.w) {
       it.w = it.el.offsetWidth;
@@ -140,15 +182,25 @@ export class CapacityMarkers {
     }
     for (const it of this.items) {
       const [x, y] = this.overlay.toScreen(it.x, it.y);
-      const sx = Math.round(x), sy = Math.round(y);
-      // Match the CSS offset above and right of the resource.
-      const r: [number, number, number, number] = [sx + 6 - padX, sy - 22 - padY, sx + 6 + it.w + padX, sy - 22 + it.h + padY];
-      const off = sx + 6 + it.w < 0 || sx + 6 > W || sy - 22 + it.h < 0 || sy - 22 > H;
-      const hit = taken.some(t => r[0] < t[2] && r[2] > t[0] && r[1] < t[3] && r[3] > t[1]);
-      it.el.style.visibility = off || hit ? "hidden" : "";
-      if (off || hit) continue;
-      taken.push(r);
-      it.el.style.transform = `translate(${sx}px, ${sy}px)`;
+      const sx = Math.round(x), sy = Math.round(y), w = it.w, h = it.h;
+      // The tag's top left at each spot around the resource, in order of preference.
+      const spots: [number, number][] = [
+        [sx + GAP_X, sy - GAP_Y - h], [sx - GAP_X - w, sy - GAP_Y - h],
+        [sx + GAP_X, sy + GAP_Y], [sx - GAP_X - w, sy + GAP_Y],
+        [sx + GAP_X + 2, sy - Math.round(h / 2)], [sx - GAP_X - 2 - w, sy - Math.round(h / 2)],
+      ];
+      let at: [number, number] | null = null;
+      for (const [tx, ty] of spots) {
+        if (tx + w < 0 || tx > W || ty + h < 0 || ty > H) continue;
+        if (hits([tx, ty, tx + w, ty + h], names)) continue;
+        const r = [tx - padX, ty - padY, tx + w + padX, ty + h + padY];
+        if (hits(r, taken)) continue;
+        taken.push(r as [number, number, number, number]);
+        at = [tx, ty];
+        break;
+      }
+      it.el.style.visibility = at ? "" : "hidden";
+      if (at) it.el.style.transform = `translate(${at[0]}px, ${at[1]}px)`;
     }
   }
 }

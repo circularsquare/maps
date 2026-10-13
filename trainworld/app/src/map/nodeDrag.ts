@@ -214,7 +214,7 @@ function previewStrokes(a: PreviewAnswer): Strokes | null {
   const n = all.reduce((s, x) => s + x.count, 0);
   const out: Strokes = {
     seg: new Float32Array(n * 4), colour: new Uint32Array(n), edge: new Uint32Array(n), level: new Float32Array(n),
-    flags: new Float32Array(n), dist: new Float32Array(n), offset: new Float32Array(n), count: n,
+    flags: new Float32Array(n), dist: new Float32Array(n), count: n,
   };
   let o = 0;
   for (const s of all) {
@@ -224,7 +224,6 @@ function previewStrokes(a: PreviewAnswer): Strokes | null {
     out.level.set(s.level.subarray(0, s.count), o);
     out.flags.set(s.flags.subarray(0, s.count), o);
     out.dist.set(s.dist.subarray(0, s.count), o);
-    if (s.offset) out.offset!.set(s.offset.subarray(0, s.count), o);
     o += s.count;
   }
   return out;

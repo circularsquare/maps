@@ -63,5 +63,5 @@ try {
  await click(ids.I);await wait([ids.I]);
  await click(ids.B);await wait([ids.I,ids.B]);
  const result={ids,stops:await stops(),errors};if(errors.length)throw Error(errors.join('\n'));
- await writeFile('trainworld/notes/T-112-check.json',JSON.stringify(result,null,2));console.log(JSON.stringify(result));
+ await writeFile('artifacts/trainworld/notes-outputs/T-112-check.json',JSON.stringify(result,null,2));console.log(JSON.stringify(result));
 } finally {await browser.close();}

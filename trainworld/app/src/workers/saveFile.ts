@@ -99,7 +99,21 @@ export async function decodeSave(file: Uint8Array): Promise<{ header: SaveHeader
 const DB = "anitabuilder";
 const STORE = "saves";
 
-export interface StoredSave {
+/** What the saves list shows of a slot without opening it (T-241), made by the clock worker each
+ * time it writes the slot. Absent in slots written before T-241 until they are next saved. */
+export interface SlotSummary {
+  /** a small picture of the network's track and lines in their colours: a PNG data URL, 384 x 256
+   * px (drawn at half that size); absent for an empty network */
+  thumb?: string;
+  /** the cities the stations are in, most stations first (registry ids) */
+  cities: string[];
+  lines: number;
+  stations: number;
+  /** US$M */
+  cash: number;
+}
+
+export interface StoredSave extends Partial<SlotSummary> {
   bytes: Uint8Array;
   /** Date.now() when written */
   at: number;
@@ -108,7 +122,7 @@ export interface StoredSave {
   city?: string;
 }
 
-export interface SaveSlot { key: string; name: string; at: number; day: number; }
+export interface SaveSlot extends Partial<SlotSummary> { key: string; name: string; at: number; day: number; }
 export const ORIGINAL_SLOT = "autosave";
 export const ORIGINAL_NAME = "Original game";
 export function slotName(key: string, save?: StoredSave | null): string { return save?.name || (key === ORIGINAL_SLOT ? ORIGINAL_NAME : "Saved game"); }
@@ -170,8 +184,11 @@ export async function writeStored(key: string, v: StoredSave): Promise<boolean> 
 export async function listSlots(): Promise<SaveSlot[]> {
   const s = await store("readonly");
   const [keys, saves] = await Promise.all([req(s.getAllKeys()), req(s.getAll())]);
-  return keys.flatMap((key, i) => typeof key === "string" && (key === ORIGINAL_SLOT || key.startsWith("slot-"))
-    ? [{ key, name: slotName(key, saves[i]), at: saves[i].at, day: saves[i].day }] : []).sort((a, b) => b.at - a.at);
+  return keys.flatMap((key, i) => {
+    if (typeof key !== "string" || !(key === ORIGINAL_SLOT || key.startsWith("slot-"))) return [];
+    const s = saves[i] as StoredSave;
+    return [{ key, name: slotName(key, s), at: s.at, day: s.day, thumb: s.thumb, cities: s.cities, lines: s.lines, stations: s.stations, cash: s.cash }];
+  }).sort((a, b) => b.at - a.at);
 }
 
 /** Save while preserving a slot's latest name (it may have been renamed elsewhere). */

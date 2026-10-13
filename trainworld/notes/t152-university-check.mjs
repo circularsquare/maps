@@ -38,5 +38,5 @@ close(sum(all.subarray(3*stride,3*stride+30)),2*info[9],'university daily budget
 const result={institutions:h.university.institutions,enrollment:h.university.enrolled,onlineExcluded:h.university.exclusively_online_excluded,
  attendanceOutings:info[9],dailyUniversityLegs:2*info[9],walkShare:info[10],meanKm:info[11],campus:campus.name,
  selectedCampusLegs:sum(university.subarray(0,30)),existingGenerationPreserved:true,purposeTimingAndBubbleCountsReconcile:true};
-writeFileSync(new URL('T-152-wasm-check.json',import.meta.url),JSON.stringify(result,null,2));console.log(result);
+writeFileSync(new URL('../../artifacts/trainworld/notes-outputs/T-152-wasm-check.json',import.meta.url),JSON.stringify(result,null,2));console.log(result);
 real.free();commute.free();

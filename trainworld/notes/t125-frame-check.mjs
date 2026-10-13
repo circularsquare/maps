@@ -2,7 +2,7 @@
 // conversions (app/src/game/cities.ts), checked against PROJ's values (pipeline/frame_fixture.py
 // writes app/src/game/frame.fixture.json) and against the formulas every earlier build used.
 //   node trainworld/notes/t125-frame-check.mjs        (from the maps root)
-// Writes trainworld/notes/T-125-frame-check.json.
+// Writes artifacts/trainworld/notes-outputs/T-125-frame-check.json.
 import assert from 'node:assert/strict';
 import { readFile, writeFile } from 'node:fs/promises';
 import { build } from '../app/node_modules/vite/dist/node/index.js';
@@ -86,4 +86,4 @@ for (const [name, spec] of [['legacy', cities.LEGACY_FRAME], ['world', cities.NE
   if (!Number.isFinite(s)) throw new Error('nan');
 }
 console.log(JSON.stringify(out));
-await writeFile('trainworld/notes/T-125-frame-check.json', JSON.stringify(out, null, 2) + '\n');
+await writeFile('artifacts/trainworld/notes-outputs/T-125-frame-check.json', JSON.stringify(out, null, 2) + '\n');

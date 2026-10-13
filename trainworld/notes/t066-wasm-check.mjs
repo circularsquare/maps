@@ -73,5 +73,5 @@ for(let mode=0;mode<3;mode++){
   close(p,chosen.reduce((a,c)=>a+realModes[(mode+3)*n+c],0),'real destination purpose vs bubble');
 }
 const result={fixture:{pooledModes:true,pooledPurposes:true,workTimingReconciles:true,faresReduceRail:true},nyc:{cells:n,openMs,errandOutings:info[0],errandWalkFraction:info[1],errandMeanKm:info[2],socialOutings:info[3],socialWalkFraction:info[4],socialMeanKm:info[5],commuteMeanKm:JSON.parse(header).gravity.mean_trip_km,dailyNewTripLegs:total,selectedCells:chosen.length,lineRailTrips:sum(Array.from({length:5},(_,q)=>real.summary(q)[2]))}};
-writeFileSync(new URL('T-066-wasm-check.json',import.meta.url),JSON.stringify(result,null,2));console.log(result);
+writeFileSync(new URL('../../artifacts/trainworld/notes-outputs/T-066-wasm-check.json',import.meta.url),JSON.stringify(result,null,2));console.log(result);
 real.free();city.free();

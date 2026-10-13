@@ -1,3 +1,5 @@
+Archived: task done, see ARCHIVE.md. Kept as background; SPEC.md and docs/ say what is true now.
+
 # T-134 regional market expansion
 
 The regional endpoint pack now reads New York, Philadelphia, Boston and Washington DC city-pack cells, plus the existing Mercer County Census/LODES points. Market IDs remain New York 0, Philadelphia 1, Mercer 2, Boston 3, Washington DC 4. The source weights, 600 m sites, 6 km zones, trip rate, distance decay, fares and mode-choice model are unchanged.

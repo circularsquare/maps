@@ -20,14 +20,14 @@ const bundle = await build({ configFile: false, logLevel: 'silent', plugins: [{
 const output = (Array.isArray(bundle) ? bundle[0] : bundle).output;
 class Element {
   style = {}; children = []; listeners = {}; offsetWidth = 40; offsetHeight = 20;
-  classList = { add() {} };
+  classList = { add() {}, remove() {}, toggle() {} };
   appendChild(el) { this.children.push(el); }
   replaceChildren(...els) { this.children = els; }
   getBoundingClientRect() { return { left: 20, top: 30, bottom: 50 }; }
   addEventListener(type, f) { (this.listeners[type] ??= []).push(f); }
 }
 globalThis.location = { search: '' };
-globalThis.document = { visibilityState: 'visible', documentElement: { dataset: {} }, addEventListener() {}, createElement: () => new Element(), fonts: { ready: Promise.resolve() } };
+globalThis.document = { visibilityState: 'visible', documentElement: { dataset: {}, style: { setProperty() {} } }, addEventListener() {}, createElement: () => new Element(), fonts: { ready: Promise.resolve() } };
 const { NetworkRenderer, pick, discAt, startClock, CapacityMarkers, selection, tool, addFinder, startHover } = await import('data:text/javascript;base64,' + Buffer.from(output.find(o => o.type === 'chunk').code).toString('base64'));
 startClock(0).setRunning(false);
 const F = a => new Float32Array(a);
@@ -40,7 +40,7 @@ const n = {
   phases: F([0, 0, 0, 0]), lineTable: F([0, 2, 100, 100, 2, 2, 100, 100]),
   samples: F([0, 0, 100, 0, 3, 0, 103, 0]),
 };
-const ov = { camMatrix: [], toScreen: (x, y) => [x, y], renderer: Object.assign(new NetworkRenderer(), {
+const ov = { camMatrix: [], toScreen: (x, y) => [x, y], toScreenInto: (x, y, out, at = 0) => { out[at] = x; out[at + 1] = y; }, renderer: Object.assign(new NetworkRenderer(), {
   net: n, slotPx: 6, trips: F([0, 0, 6, 0]), tripEpoch: 0, tripCount: 2, detailedTrains: false,
 }) };
 assert.equal(pick(ov, 0, 0, true).line, '1', 'last train wins even if another is closer');

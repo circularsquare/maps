@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {readFile,writeFile} from 'node:fs/promises';
-const json=async name=>JSON.parse(await readFile(`trainworld/notes/${name}.json`,'utf8'));
+const json=async name=>JSON.parse(await readFile(`artifacts/trainworld/notes-outputs/${name}.json`,'utf8'));
 const [nativeBefore,nativeAfter,before,after]=await Promise.all([
  json('T-123-before-results'),json('T-123-after-results'),
  json('T-119-browser-t123-before'),json('T-119-browser-t123-final'),
@@ -37,4 +37,4 @@ const result={nativeValuesCompared:values,nativeWorstRelativeDifference:worst,br
  firstEstimateMs:[before.combined.firstEstimateMs,after.combined.firstEstimateMs],
  refinedMs:[before.combined.refinedMs,after.combined.refinedMs],
  remoteBasemapUnavailable:after.errors.length>0};
-await writeFile('trainworld/notes/T-123-check.json',JSON.stringify(result,null,2)+'\n');console.log(result);
+await writeFile('artifacts/trainworld/notes-outputs/T-123-check.json',JSON.stringify(result,null,2)+'\n');console.log(result);

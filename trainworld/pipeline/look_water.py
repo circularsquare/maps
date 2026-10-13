@@ -26,6 +26,12 @@ VIEWS = {
         ("Jamaica Bay and JFK", -73.83, 40.62, 9.0),
         ("Newark Bay, Kill van Kull, Arthur Kill", -74.14, 40.64, 7.5),
     ],
+    "tor": [  # T-277
+        ("Toronto Harbour and the Islands", -79.38, 43.63, 5.0),
+        ("Humber River and Etobicoke shore", -79.48, 43.63, 4.5),
+        ("Hamilton Harbour", -79.83, 43.29, 7.5),
+        ("Lake Simcoe shore", -79.45, 44.25, 9.0),
+    ],
 }
 
 

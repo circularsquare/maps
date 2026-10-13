@@ -12,6 +12,8 @@
 //! - `capacity`: resources, utilisation, Kingman delay, holds per line.
 //! - `service`: per line and direction: runs, profiles per demand level, stop times, round trip,
 //!   trains needed, the trips to draw.
+//! - `boarding`: the boarding account (T-164): demand's riders per period turned into each
+//!   train's load and each platform's crowd, a day at a time.
 //! - `save`: the network part of a save (varints, mm deltas).
 //! - `wasm`: the wasm-bindgen API for the clock worker (a sketch).
 //! - `bench`: a synthetic 2,000 km network and edit timings (`src/bin/track_bench.rs`).
@@ -19,6 +21,7 @@
 
 #[cfg(any(not(target_arch = "wasm32"), feature = "track-bench"))]
 pub mod bench;
+pub mod boarding;
 pub mod capacity;
 pub mod cost;
 pub mod cross;

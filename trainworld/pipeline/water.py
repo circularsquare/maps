@@ -239,8 +239,10 @@ class WaterMask:
         }
 
 
-def build_mask(lon0, lat0, bbox_ll, cell, fetch, counties_zip, pad_m=2000.0):
-    """Water mask over bbox_ll (plus pad_m), pixel size `cell` metres, grid snapped to `cell`."""
+def build_mask(lon0, lat0, bbox_ll, cell, fetch, counties_zip, pad_m=2000.0, source=None):
+    """Water mask over bbox_ll (plus pad_m), pixel size `cell` metres, grid snapped to `cell`.
+    `source(bbox_ll) -> (lon/lat water polygons, info dict)` replaces the TIGER water for a pack
+    outside the US (T-277, pipeline/canada.py); its info goes into the header as it is."""
     w, s, e, n = bbox_ll
     k = np.cos(np.radians(lat0))
     xw, xe = R_EARTH * np.radians(w - lon0) * k - pad_m, R_EARTH * np.radians(e - lon0) * k + pad_m
@@ -251,10 +253,14 @@ def build_mask(lon0, lat0, bbox_ll, cell, fetch, counties_zip, pad_m=2000.0):
     # source polygons over the padded grid, in lon/lat
     gw, gs_ = to_lonlat(np.array([x0]), np.array([y0]), lon0, lat0)
     ge, gn = to_lonlat(np.array([x0 + W * cell]), np.array([y0 + H * cell]), lon0, lat0)
-    geoms, info = water_geometries((gw[0], gs_[0], ge[0], gn[0]), fetch, counties_zip)
+    if source is not None:
+        geoms, info = source((gw[0], gs_[0], ge[0], gn[0]))
+    else:
+        geoms, info = water_geometries((gw[0], gs_[0], ge[0], gn[0]), fetch, counties_zip)
     local = [to_local(g, lon0, lat0) for g in geoms]
     x1, y1, x2, y2, gid = polygon_edges(local)
     _, row, c0, c1 = scanline_runs(x1, y1, x2, y2, gid, x0, y0, cell, W, H)
-    info = {"source": "TIGER/Line 2020 AREAWATER per county + open sea outside TIGER 2020 states",
-            "counties": len(info["counties"]), "areawater_polygons": info["areawater_polygons"]}
+    if source is None:
+        info = {"source": "TIGER/Line 2020 AREAWATER per county + open sea outside TIGER 2020 states",
+                "counties": len(info["counties"]), "areawater_polygons": info["areawater_polygons"]}
     return WaterMask.from_runs(float(x0), float(y0), float(cell), W, H, row, c0, c1), info

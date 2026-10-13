@@ -7,21 +7,27 @@
 
 import { computed, signal } from "@preact/signals";
 import { activeCity, REGISTRY, type CityId } from "./cities";
+import { DAY_KINDS, type DayKind } from "./days";
+import { shownDay } from "./ui";
+import type { PurposeFilter, PurposeKey } from "./purposes";
 import type { ModeSplit } from "./types";
 
 export interface LineDemand {
   /** boardings onto the line a day, both directions, transfers included */
   ridersPerDay: number;
-  /** The separately modelled regional market's boardings onto this line. */
-  intercityRidersPerDay?: number;
   /** fullest train at high demand: the worst segment's busiest-hour load in a high-demand
-   * period, % of the crush capacity of the trains running then */
+   * period, % of the crush capacity of the trains running then. A forecast average, not shown to
+   * the player since T-230: the line panel shows the boarding account's trains instead */
   fullestPct: number;
   /** boardings a day at each stop, both directions, in the line's stop order */
   boardings: number[];
   /** riders per segment and period, `loads[period][segment]`: run 0's segments (stop k to
    * k + 1) and then run 1's in its own travel order; periods as game/periods.ts */
   loads: Float32Array[];
+  /** boardings and alightings per period at each route node, `board[period][node]`: run 0's
+   * stops, then run 1's, each in its travel order (2 x stops); the boarding account's input (T-164) */
+  board?: Float32Array[];
+  alight?: Float32Array[];
 }
 
 export interface StationDemand {
@@ -32,8 +38,14 @@ export interface StationDemand {
 export interface DemandView {
   /** the demand client's solve number this came from */
   version: number;
+  /** the kind of day it is for (T-260): a weekend is worked out from the weekday's solve */
+  day: DayKind;
   /** crowding rounds every period has had: 0 = the free-flow first estimate */
   round: number;
+  /** the solve's last round: its figures are final. Earlier rounds are shown only as estimates,
+   * where nothing final is shown yet (T-232); a re-solve after an edit keeps the last final
+   * result until its own final round */
+  final: boolean;
   /** Mode split, % of legs: network-wide here, all modelled local purposes in cityDemandViews. */
   split: ModeSplit;
   trainShareByPeriod: [string, number][];
@@ -44,17 +56,59 @@ export interface DemandView {
   railTripsPerDay: number;
   lines: Map<string, LineDemand>;
   stations: Map<string, StationDemand>;
+  /** The same lines and stations by trip purpose, for the map's purpose filter (T-158); the
+   * purposes add up to `lines` and `stations`. Absent purposes carried no riders. Keyed by the
+   * shown purposes (game/purposes.ts `PURPOSES`): "school" counts university too (T-192). */
+  purposes?: Map<PurposeKey, PurposeDemand>;
 }
 
-/** The newest finished solve; null until the first lands. */
-export const demandView = signal<DemandView | null>(null);
+/** One purpose's share of `DemandView.lines` and `.stations` (T-158). */
+export interface PurposeDemand {
+  /** per line id: boardings a day and riders per segment and period, as `LineDemand` */
+  lines: Map<string, { ridersPerDay: number; boardings: number[]; loads: Float32Array[] }>;
+  stations: Map<string, StationDemand>;
+}
+
+/** A line's riders per segment and period as the map draws them: one purpose's, or all. */
+export function lineLoadsFor(dv: DemandView | null, lineId: string, purpose: PurposeFilter = "all"): Float32Array[] | undefined {
+  if (!dv) return undefined;
+  if (purpose === "all") return dv.lines.get(lineId)?.loads;
+  // a purpose with no riders anywhere has no entry: zeros, not "unknown"
+  const own = dv.purposes?.get(purpose)?.lines.get(lineId)?.loads;
+  return own ?? dv.lines.get(lineId)?.loads.map((p) => new Float32Array(p.length));
+}
+
+/** A station's boardings and alightings as the map draws them: one purpose's, or all. */
+export function stationRidersFor(dv: DemandView | null, id: string, purpose: PurposeFilter = "all"): StationDemand | undefined {
+  if (!dv) return undefined;
+  if (purpose === "all") return dv.stations.get(id);
+  return dv.purposes?.get(purpose)?.stations.get(id) ?? (dv.stations.has(id) ? { boardings: 0, alightings: 0 } : undefined);
+}
+
+/** The regional layer (T-117, T-276): trips a day include the commutes between zones; each
+ * corridor's trips and rail are both parts together, `commutes` and `commuteRail` the commute legs. */
+export interface IntercityDemand { version: number; round: number; tripsPerDay: number; railTripsPerDay: number; commuteTripsPerDay?: number; commuteRailPerDay?: number; corridors: {from: number; to: number; trips: number; rail: number; commutes?: number; commuteRail?: number}[] }
+
+/** One kind of day's results (T-260, game/days.ts): the network's view, each city's, the market's.
+ * Written together by workers/demandClient.ts. */
+export interface DayDemand {
+  view: DemandView | null;
+  cities: Map<CityId, DemandView>;
+  intercity: IntercityDemand | null;
+}
+const noDay = (): DayDemand => ({ view: null, cities: new Map(), intercity: null });
+/** The newest finished solve for each kind of day, `DayKind` order. */
+export const demandByDay = signal<DayDemand[]>(DAY_KINDS.map(noDay));
+
+/** The newest finished solve on the shown kind of day (`shownDay`); null until the first lands. */
+export const demandView = computed<DemandView | null>(() => demandByDay.value[shownDay.value]?.view ?? null);
 /** The split with no rail at all, known once the city pack is open (before any solve). */
 export const baseSplit = signal<ModeSplit | null>(null);
-/** Local purpose shares (NYC everyday trips included), separate from network-wide totals. */
-export const cityDemandViews = signal<Map<CityId, DemandView>>(new Map());
+/** Local purpose shares (everyday trips included), separate from network-wide totals. */
+export const cityDemandViews = computed<Map<CityId, DemandView>>(() => demandByDay.value[shownDay.value]?.cities ?? new Map());
 export const cityBaseSplits = signal<Map<CityId, ModeSplit>>(new Map());
 /** Distinct, synthetic intercity trips: never included in local commute denominators. */
-export const intercityDemand = signal<{version: number; round: number; tripsPerDay: number; railTripsPerDay: number; corridors: {from: number; to: number; trips: number; rail: number}[] } | null>(null);
+export const intercityDemand = computed<IntercityDemand | null>(() => demandByDay.value[shownDay.value]?.intercity ?? null);
 /** A solve is running for a newer network than the one `demandView` shows. */
 export const demandUpdating = signal(false);
 /** How far that solve has got: results published so far (the free-flow estimate, then each
@@ -94,6 +148,8 @@ export interface CityCells {
 export interface CellModes {
   /** the `DemandView.version` these belong to */
   version: number;
+  /** and its kind of day (T-260) */
+  day: DayKind;
   /** living in the cell: by rail, walking the whole way, driving (car, bus, taxi) */
   homeRail: Float32Array;
   homeWalk: Float32Array;
@@ -119,11 +175,14 @@ export interface ZoneRiders {
 
 /**
  * One station's riders (`stationRiders(id)`). Stations whose platforms are within 100 m of each
- * other are one station for demand (SPEC 4.4), so a pair of them answers the same.
+ * other are one station for demand (SPEC 4.4), so a pair of them answers the same. Asked for a
+ * station complex (T-146, `members`), the answer is the sum over its distinct demand stations.
  */
 export interface StationRiders {
   version: number;
   stationId: string;
+  /** the stations summed: `members.join(",")`, just the station's id outside complex view */
+  scope: string;
   /** commuters living in each cell who use this station at the home end (its catchment) */
   home: CellRiders;
   /** commuters working in each cell who use this station at the work end */
@@ -159,7 +218,12 @@ export interface Flows {
   cutDrive: number;
   /** Same local trip legs as the bubbles, separated by activity and departure direction. */
   purposes: PurposeTrips[];
+  /** The far end and totals of each local purpose on its own, for the map's purpose filter
+   * (T-158); the fields mean what the ones above mean. Absent: the selection has none of it. */
+  byPurpose?: Map<PurposeKey, FarEnd>;
 }
+
+export type FarEnd = Pick<Flows, "rail" | "walk" | "drive" | "cells" | "farRail" | "farWalk" | "farDrive" | "cutRail" | "cutWalk" | "cutDrive">;
 
 export interface PurposeTrips {
   name: string;
@@ -231,17 +295,41 @@ export interface IntercitySelection {
 export interface IntercityStation {
   version: number;
   stationId: string;
+  /** as `StationRiders.scope` */
+  scope: string;
   starts: PlaceFlows;
   ends: PlaceFlows;
 }
 
+/** Riders changing from one line at one station to another line at another (or the same) station
+ * a day, every period and purpose (T-176). Both ends name a snapshot station and line; a walking
+ * transfer has two different stations. */
+export interface TransferPair {
+  fromStation: string;
+  fromLine: string;
+  toStation: string;
+  toLine: string;
+  riders: number;
+}
+
+/** The transfers at a station complex (`complexTransfers(members)`): every pair with either end at
+ * a member, both directions of a line merged. */
+export interface ComplexTransfers {
+  version: number;
+  round: number;
+  /** as `StationRiders.scope`: the members asked about, joined by commas */
+  scope: string;
+  pairs: TransferPair[];
+}
+
 export interface DemandQueries {
-  cityCells(): Promise<CityCells | null>;
-  cellModes(): Promise<CellModes | null>;
-  stationRiders(stationId: string, top?: number): Promise<StationRiders | null>;
+  transfers(members: string[]): Promise<ComplexTransfers | null>;
+  cityCells(city?: CityId): Promise<CityCells | null>;
+  cellModes(purpose?: PurposeFilter, city?: CityId): Promise<CellModes | null>;
+  stationRiders(stationId: string, top?: number, members?: string[]): Promise<StationRiders | null>;
   flows(end: "home" | "work", cells: Uint32Array): Promise<Flows | null>;
   intercitySelection(end: "home" | "work", cells: Uint32Array): Promise<IntercitySelection | null>;
-  intercityStation(stationId: string): Promise<IntercityStation | null>;
+  intercityStation(stationId: string, members?: string[]): Promise<IntercityStation | null>;
 }
 
 let queries: DemandQueries | null = null;
@@ -249,14 +337,18 @@ let queries: DemandQueries | null = null;
 export function setDemandQueries(q: DemandQueries) {
   queries = q;
 }
-/** The city's cells (null until the pool has opened the city). */
-export const cityCells = (): Promise<CityCells | null> => queries?.cityCells() ?? Promise.resolve(null);
-/** Commuters a day per cell by mode, for the solve `demandView` shows. One 4.9 MB answer in New York. */
-export const cellModes = (): Promise<CellModes | null> => queries?.cellModes() ?? Promise.resolve(null);
+/** The city's cells (null until the pool has opened the city). `city`: another zone's than the
+ * focused one (a nearby zone's bubbles, T-276); it waits for that zone to open. */
+export const cityCells = (city?: CityId): Promise<CityCells | null> => queries?.cityCells(city) ?? Promise.resolve(null);
+/** Local trip legs a day per cell by mode, for the solve `demandView` shows. One 4.9 MB answer in
+ * New York. `purpose`: one purpose's legs only (T-158); longer trips have no local legs (zeros).
+ * `city`: a nearby zone's (T-276), not cached; null while that zone is not in the solve shown. */
+export const cellModes = (purpose: PurposeFilter = "all", city?: CityId): Promise<CellModes | null> => queries?.cellModes(purpose, city) ?? Promise.resolve(null);
 /** A station's catchment and where its riders go, for the solve `demandView` shows; `top` zones
- * per direction (default 20). A few kB; ask on click. */
-export const stationRiders = (stationId: string, top?: number): Promise<StationRiders | null> =>
-  queries?.stationRiders(stationId, top) ?? Promise.resolve(null);
+ * per direction (default 20). A few kB; ask on click. `members`: a station complex's stations,
+ * summed (T-146). */
+export const stationRiders = (stationId: string, top?: number, members?: string[]): Promise<StationRiders | null> =>
+  queries?.stationRiders(stationId, top, members) ?? Promise.resolve(null);
 /** Where the commuters living (or working) in `cells` (pack cell ids) work (or live), by mode, for
  * the solve `demandView` shows. Asked on click; null while there is no solve or the workers have
  * moved on to a newer network. */
@@ -266,6 +358,10 @@ export const flows = (end: "home" | "work", cells: Uint32Array): Promise<Flows |
  * solve `demandView` shows. Null while there is no solve or the workers moved on. */
 export const intercitySelection = (end: "home" | "work", cells: Uint32Array): Promise<IntercitySelection | null> =>
   queries?.intercitySelection(end, cells) ?? Promise.resolve(null);
-/** A station's longer-trip riders by place. Null as above. */
-export const intercityStation = (stationId: string): Promise<IntercityStation | null> =>
-  queries?.intercityStation(stationId) ?? Promise.resolve(null);
+/** A station's longer-trip riders by place, or a complex's (`members`). Null as above. */
+export const intercityStation = (stationId: string, members?: string[]): Promise<IntercityStation | null> =>
+  queries?.intercityStation(stationId, members) ?? Promise.resolve(null);
+/** Transfers a day at a station complex's members (T-176), for the solve `demandView` shows. A few
+ * kB; asked when the complex map shows. Null while there is no solve or the workers moved on. */
+export const complexTransfers = (members: string[]): Promise<ComplexTransfers | null> =>
+  queries?.transfers(members) ?? Promise.resolve(null);

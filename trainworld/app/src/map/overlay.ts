@@ -14,7 +14,7 @@
 import type { Map as MlMap } from "maplibre-gl";
 import { clock, SPEEDS } from "../game/clock";
 import type { DrawOptions, NetworkRenderer } from "./renderer";
-import { localToMerc } from "./geo";
+import { EARTH_C, localToMerc, ORIGIN_MERC } from "./geo";
 import { perfOff } from "../perfFlags";
 
 /** ?perfOff=overlay (T-045, measurement only): skip the WebGL draw. */
@@ -83,7 +83,8 @@ export class Overlay {
     this.canvas = document.createElement("canvas");
     this.canvas.className = "overlay";
     map.getContainer().appendChild(this.canvas);
-    const gl = this.canvas.getContext("webgl2", { antialias: true, premultipliedAlpha: true, alpha: true });
+    // a stencil for the track drawn through the station boxes (T-236, renderer.ts)
+    const gl = this.canvas.getContext("webgl2", { antialias: true, premultipliedAlpha: true, alpha: true, stencil: true });
     if (!gl) throw new Error("no WebGL2");
     this.gl = gl;
     renderer.init(gl);
@@ -213,5 +214,17 @@ export class Overlay {
     const [mx, my] = localToMerc(x, y);
     const cx = m[0] * mx + m[4] * my + m[12], cy = m[1] * mx + m[5] * my + m[13], cw = m[3] * mx + m[7] * my + m[15];
     return [((cx / cw + 1) / 2) * this.cssW, ((1 - cy / cw) / 2) * this.cssH];
+  }
+
+  /** `toScreen` into `out[at]`, `out[at + 1]`, allocating nothing (T-180: hovering a big network
+   * projects every segment on each pointer move, and the two arrays per point were most of the
+   * cost). The same arithmetic in the same order, so the same numbers. */
+  toScreenInto(x: number, y: number, out: Float64Array, at = 0) {
+    const m = this.camMatrix;
+    if (!m) { out[at] = out[at + 1] = NaN; return; }
+    const mx = ORIGIN_MERC[0] + x / EARTH_C, my = ORIGIN_MERC[1] + y / EARTH_C;
+    const cx = m[0] * mx + m[4] * my + m[12], cy = m[1] * mx + m[5] * my + m[13], cw = m[3] * mx + m[7] * my + m[15];
+    out[at] = ((cx / cw + 1) / 2) * this.cssW;
+    out[at + 1] = ((1 - cy / cw) / 2) * this.cssH;
   }
 }

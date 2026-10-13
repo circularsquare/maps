@@ -58,6 +58,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5;
       stroke-linejoin: round; stroke-linecap: round; display: block; }
 svg .solid { fill: currentColor; }
+svg .bg { fill: var(--bg); }
 svg .stroke2 { stroke-width: 2; }
 
 /* ---------- dock ---------- */
@@ -67,16 +68,22 @@ svg .stroke2 { stroke-width: 2; }
   border-right: 1px solid var(--rule);
   display: flex; flex-direction: column; min-height: 0;
 }
-.tabs { display: flex; flex: none; }
+/* T-252: the tabs are icons (their names on hover), on the left; the saves button (T-251) and
+   the settings gear on the right */
+.tabs { display: flex; flex: none; background: var(--shade); border-bottom: 1px solid var(--rule); }
 .tab {
-  flex: 1; height: 36px; padding: 0;
+  flex: none; width: 46px; height: 36px; padding: 0; margin-bottom: -1px;
   border: 0; border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
-  background: var(--shade); color: var(--muted); cursor: pointer;
+  background: var(--shade); color: var(--muted); cursor: pointer; display: grid; place-items: center;
 }
+.tab svg { width: 18px; height: 18px; }
+.tab svg .bg { fill: var(--shade); }
 .tab:hover { color: var(--text); }
 .tab.on { background: var(--bg); color: var(--text); border-bottom-color: var(--bg);
           box-shadow: inset 0 3px 0 var(--accent); }
-.tab.gear { flex: none; width: 36px; border-right: 0; display: grid; place-items: center; }
+.tab.on svg .bg { fill: var(--bg); }
+.tab.gear { width: 36px; border-right: 0; border-left: 1px solid var(--rule); }
+.tab.save { margin-left: auto; }
 
 /* The tab area has one fixed height whatever the tab, so the inspector never moves; only the
    player's drag of the divider below it does (T-085). */
@@ -151,7 +158,6 @@ body.resizing, body.resizing * { user-select: none; }
 .confirmation h2 { font-size: 18px; margin: 0 0 12px; }
 .confirmation p { margin: 0 0 18px; }
 .confirmation-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
-.city-navigation { display: flex; flex-wrap: wrap; gap: 6px; }
 
 /* ---------- inspector ---------- */
 
@@ -174,11 +180,29 @@ table.sched td { text-align: right; padding: 3px 0; border-bottom: 1px dotted va
 table.sched tr.now td:first-child { font-weight: 700; }
 .rows.sub-rows > li { padding-left: 12px; color: var(--muted); min-height: 24px; }
 svg.junction-map { display: block; margin: 8px auto 2px; width: 112px; height: 112px; stroke-width: initial; }
+.complex-map { margin: 8px 0 4px; }
+.complex-map svg { stroke: none; stroke-width: 1; stroke-linecap: butt; }
+.complex-map p { margin: 4px 0 0; }
+.complex-map-platform { cursor: pointer; }
+.complex-map text { font-size: 12px; stroke: var(--map-land); stroke-width: 3px; stroke-linejoin: round; paint-order: stroke; }
+.complex-map-label { fill: var(--net-ink); }
+.complex-map-scale { fill: var(--muted); }
+/* T-249: back to the complex from a station opened on its own, a link in the subtitle */
+.sub .btn.inline { display: inline; min-height: 0; height: auto; padding: 0; border: 0; background: none; font: inherit; color: var(--accent); cursor: pointer; text-decoration: underline; }
+/* T-246, T-250: the complex's lines on top, waiting now and boardings a day */
+.complex-stations { margin-top: 6px; }
+.complex-stations .val { min-width: 48px; }
+.complex-stations .val.bad { color: #b23a3a; }
+.rows.pick.complex-stations > li.cols { cursor: default; background: none; min-height: 20px; }
 .moves > li { align-items: flex-start; padding: 3px 0; }
 .load-bar { position: relative; display: block; height: 10px; border: 1px solid var(--rule); margin-right: 8px; }
 .load-bar .fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); }
 .load-bar .seats { position: absolute; top: -3px; bottom: -3px; width: 1px; background: var(--text); }
 .moves .what { display: flex; flex-direction: column; gap: 1px; }
+/* T-164: a station's waiting riders, a line and direction a row */
+.rows.waiting > li { align-items: flex-start; padding: 3px 0; }
+.rows.waiting .what { display: flex; flex-direction: column; gap: 1px; }
+.rows.waiting .bad, .rows.waiting .val { color: #b23a3a; }
 table.ledger { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; margin-top: 6px; }
 table.ledger th { font-weight: 400; color: var(--muted); font-size: 12px; text-align: right; padding: 0 0 2px; }
 table.ledger td { text-align: right; padding: 3px 0; border-bottom: 1px dotted var(--rule); white-space: nowrap; }
@@ -217,9 +241,12 @@ table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
 .split { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; }
 .split-train { display: inline-flex; align-items: baseline; gap: 6px; }
 .split-train .sw { align-self: center; }
-.demand-busy { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; flex: none; }
+/* T-180: in a narrow column the bar gives way first (its shrink factor is 6), then this, which ends
+   in an ellipsis; the whole text is its hover. (A shrink factor under 1 here would leave it
+   overflowing once the bar is at its minimum.) */
+.demand-busy { display: block; font-size: 12px; flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .split-other { color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
-.bar { flex: 1 1 340px; max-width: 440px; min-width: 60px; height: 14px; display: flex;
+.bar { flex: 1 6 340px; max-width: 440px; min-width: 60px; height: 14px; display: flex;
        border: 1px solid var(--rule); background: var(--bg); }
 .seg { display: block; height: 100%; }
 /* train, walking, driving: the commuter dot map's colours whatever the theme (T-084;
@@ -237,10 +264,38 @@ table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
 .save-notice button { flex: none; }
 
 #map { position: relative; flex: 1; min-height: 0; background: var(--map-land); }
-.demand-selector { position: absolute; left: 10px; top: 10px; z-index: 4;
-  display: flex; flex-wrap: wrap; max-width: calc(100% - 20px); background: var(--bg); }
+/* T-231: the demand buttons and, under them, the stations full alert */
+.map-top-left { position: absolute; left: 10px; top: 10px; z-index: 4; max-width: calc(100% - 20px);
+  display: flex; flex-direction: column; align-items: flex-start; gap: 6px; pointer-events: none; }
+.map-top-left > * { pointer-events: auto; }
+.demand-selector { display: flex; flex-wrap: wrap; max-width: 100%; }
+.stations-full { font-size: 12px; padding: 4px 8px; color: #b23a3a; border-color: #b23a3a; background: var(--bg); }
 .demand-selector .btn { font-size: 12px; padding: 4px 8px; }
 .demand-selector .btn + .btn { margin-left: -1px; }
+/* T-158: one trip purpose on the map; a swatch in its purpose colour while one is chosen */
+.demand-selector .purpose-filter { display: flex; align-items: center; gap: 5px; height: 28px; margin-left: 6px;
+  padding: 0 0 0 6px; border: 1px solid var(--rule); background: var(--bg); font-size: 12px; }
+.demand-selector .purpose-filter.on { border-color: var(--accent); background: var(--tint); }
+.demand-selector .purpose-filter select { height: 100%; padding: 0 4px 0 0; border: 0; background: transparent; cursor: pointer; outline: none; }
+/* T-169: the browser's keyboard ring, round the whole control (swatch included); none after a click */
+.demand-selector .purpose-filter:not(.mouse):has(select:focus-visible) { outline: auto 1px; outline: -webkit-focus-ring-color auto 1px; }
+/* T-149, T-172: shown only when demand could not load; it covers everything until a choice. */
+.loading-screen { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 16px;
+  background: color-mix(in srgb, var(--bg) 72%, transparent); }
+.loading-box { background: var(--bg); border: 1px solid var(--rule); padding: 14px 18px; max-width: 420px; cursor: default; }
+.loading-box p + p { margin-top: 2px; }
+.loading-actions { display: flex; gap: 8px; margin-top: 12px; }
+/* T-180: while a loaded game's clock waits for demand, a card in the middle of the map. The map
+   under it keeps every pointer event; no transition or animation, the percentage is the motion. */
+.loading-card-wrap { position: absolute; left: 0; right: 0; top: var(--bar-h); bottom: 0; z-index: 6;
+  display: grid; place-items: center; padding: 16px; pointer-events: none; }
+.loading-card { background: var(--bg); border: 1px solid var(--rule); padding: 14px 20px;
+  min-width: min(260px, 100%); max-width: 100%; text-align: center; }
+.loading-card p + p { margin-top: 2px; }
+/* T-243: the load's progress as a filling bar (its percentage on hover); the fill jumps, no transition */
+.load-bar { display: block; height: 8px; margin: 8px 0 6px; border: 1px solid var(--rule); background: var(--bg); pointer-events: auto; }
+.load-fill { display: block; height: 100%; background: var(--accent); }
+.load-bar.thin { flex: 0 0 64px; height: 6px; margin: 0; }
 /* MapLibre sets Helvetica on its container. Map UI must use the same font as the dock. */
 #map, #map .maplibregl-ctrl { font-family: var(--font); }
 #map canvas.overlay { position: absolute; left: 0; top: 0; pointer-events: none; z-index: 1; }
@@ -287,6 +342,8 @@ table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
 .pi-label, .tool-tag { font-size: 12px; color: var(--net-ink); background: color-mix(in srgb, var(--map-land) 88%, transparent);
                        padding: 0 4px; border: 1px solid var(--rule); }
 .tool-tag { max-width: 340px; white-space: normal !important; }
+/* T-210: the same tag for the panels and controls (ui/tip.ts), over everything, never in the way */
+.ui-tag { position: fixed; left: 0; top: 0; z-index: 1000; pointer-events: none; width: max-content; }
 .pi-mark.drag { width: 11px; height: 11px; margin: -6px 0 0 -6px; pointer-events: auto; cursor: move; }
 .pi-mark.drag:hover { background: var(--tint); }
 .snap-ring { width: 16px; height: 16px; margin: -8px 0 0 -8px; border: 2px solid var(--accent); border-radius: 50%; }
@@ -297,12 +354,34 @@ table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
 .speed-key li { display: flex; align-items: center; gap: 6px; }
 .speed-key i { display: inline-block; width: 16px; height: 4px; }
 .cap-marks { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
-.cap-mark { position: absolute; left: 0; top: 0; margin: -22px 0 0 6px; padding: 0 4px; font-size: 12px;
+.cap-mark { position: absolute; left: 0; top: 0; padding: 0 4px; font-size: 12px;
             color: #fff; white-space: nowrap; pointer-events: auto; cursor: default; }
 .cap-mark.link { cursor: pointer; }
+/* T-224: while a tool is on, presses and moves on a tag reach the map underneath */
+.cap-marks.pass .cap-mark { pointer-events: none; }
 .cap-mark.busy { background: #c98a12; }
 .cap-mark.near { background: #d0601c; }
 .cap-mark.over { background: #c0392b; }
+
+/* stop editing (T-233, map/stopMarkers.ts): the demand views go, a toggle marker sits on every
+   station. Markers take no pointer events; the map's own clicks pick them. */
+.stop-editing #map canvas.overlay.demand, .stop-editing #map canvas.overlay.trip, .stop-editing .cap-marks,
+.stop-editing .intercity-labels, .stop-editing .demand-tag, .stop-editing .demand-box { display: none !important; }
+.stop-marks { position: absolute; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; --c: #888; --ms: 20px; }
+.stop-mark { position: absolute; left: 0; top: 0; box-sizing: border-box; width: var(--ms); height: var(--ms);
+             margin: calc(var(--ms) / -2) 0 0 calc(var(--ms) / -2); border-radius: 50%;
+             background: #fff; border: 3px solid var(--c); box-shadow: 0 0 0 1px var(--net-ink); z-index: 2; }
+.stop-mark.on { background: var(--c); border: 2px solid #fff; z-index: 3; }
+/* reachable stations are drawn smaller than the line's own stops (T-239); sizes as FAR_SCALE and
+   NEAR_SCALE in stopMarkers.ts */
+.stop-mark.route { width: calc(var(--ms) * 0.8); height: calc(var(--ms) * 0.8);
+             margin: calc(var(--ms) * -0.4) 0 0 calc(var(--ms) * -0.4); }
+.stop-mark.reroute, .stop-mark.cut { width: calc(var(--ms) * 0.65); height: calc(var(--ms) * 0.65);
+             margin: calc(var(--ms) * -0.325) 0 0 calc(var(--ms) * -0.325); background: #e6e3df; border: 2px solid #a8a39d;
+             box-shadow: none; opacity: 0.8; z-index: 1; }
+.stop-mark.cut { background: #d6d3cf; border-color: #b9b5b0; opacity: 0.6; z-index: 0; }
+.stop-edit-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.stop-tag { position: absolute; left: 0; top: 0; z-index: 4; pointer-events: none; white-space: nowrap !important; }
 
 /* inspector extras */
 .palette { display: flex; flex-wrap: wrap; gap: 4px; margin: 8px 0 0 40px; }
@@ -384,34 +463,100 @@ table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
 .save-slot-new { display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0; }
 .save-slot-new input { width: 100%; min-width: 0; padding: 4px 6px; border: 1px solid var(--rule); background: var(--bg); }
 .save-slots { list-style: none; padding: 0; margin: 8px 0; }
-.save-slots > li { padding: 8px 0; border-bottom: 1px dotted var(--rule); }
-.save-slot-title { display: flex; gap: 8px; justify-content: space-between; overflow-wrap: anywhere; }
-.save-slots .pane-foot { margin-top: 4px; }
+.save-slots > li { padding: 8px; margin: 0 0 6px; border: 1px solid var(--rule); }
+/* T-241: the game being played is marked with the accent, the others have an Open button */
+.save-slots > li.on { border-color: var(--accent); background: var(--tint); }
+/* T-251: the saved games in a centred panel, like the confirmation dialog */
+.saves-panel { width: min(600px, calc(100vw - 40px)); max-height: calc(100vh - 60px); padding: 0; border: 1px solid var(--rule);
+  background: var(--bg); color: var(--text); overflow: hidden; }
+.saves-panel[open] { display: flex; flex-direction: column; }
+.saves-panel::backdrop { background: rgb(0 0 0 / 28%); }
+.saves-inner { padding: 16px 20px 20px; overflow-y: auto; min-height: 0; }
+.saves-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.saves-head h2 { font-size: 18px; margin: 0; }
+.save-card { display: flex; gap: 14px; align-items: stretch; }
+.save-thumb { flex: none; width: 192px; height: 128px; display: block; background: var(--map-land); border: 1px solid var(--rule); }
+.save-info { display: flex; flex-direction: column; gap: 2px; }
+.save-actions { display: flex; gap: 6px; margin-top: auto; padding-top: 8px; justify-content: flex-end; }
+.save-thumb.empty { display: grid; place-items: center; text-align: center; padding: 4px; }
+.save-info { flex: 1; min-width: 0; }
+.save-slot-title { display: flex; gap: 8px; justify-content: space-between; align-items: baseline; overflow-wrap: anywhere; }
+.save-playing { flex: none; padding: 0 5px; color: var(--bg); background: var(--accent); }
+.save-slots .pane-foot { margin-top: 6px; }
+.save-actions .save-open { border-color: var(--accent); }
+.save-files { flex-wrap: wrap; justify-content: flex-start; }
 .purpose-scope { display: flex; gap: 6px; margin: 8px 0; }
 .purpose-scope button { background: transparent; border: 1px solid currentColor; border-radius: 4px; padding: 4px 8px; color: inherit; opacity: .65; cursor: pointer; }
 .purpose-scope button.on { opacity: 1; background: #8882; }
-.purpose-item { padding: 10px 0; border-bottom: 1px solid #8883; }
-.purpose-heading { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; margin-bottom: 8px; }
-.purpose-chart-row { display: grid; grid-template-columns: 92px 1fr; gap: 8px; align-items: center; margin-top: 5px; }
-.purpose-bars { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; height: 28px; }
-.purpose-bar-slot { display: flex; align-items: flex-end; background: #8881; height: 100%; }
-.purpose-bar-slot i { display: block; width: 100%; background: #5486a9; min-height: 0; }
-.purpose-axis { display: grid; grid-template-columns: 100px repeat(5, 1fr); gap: 5px; font-size: 10px; opacity: .7; margin-top: 4px; text-align: center; }
+.purpose-item { padding: 6px 0; border-bottom: 1px solid #8883; }
+.purpose-heading { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; margin-bottom: 4px; }
+/* T-193: one chart a purpose, departures toward the destination up from the baseline and home down */
+.purpose-mirror { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0 5px; }
+.purpose-mirror .slot { display: flex; flex-direction: column; }
+.purpose-mirror .up, .purpose-mirror .down { display: flex; height: 18px; background: #8881; }
+.purpose-mirror .up { align-items: flex-end; border-bottom: 1px solid var(--text); }
+.purpose-mirror .down { align-items: flex-start; }
+.purpose-mirror i { display: block; width: 100%; min-height: 0; }
+.purpose-axis { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; font-size: 10px; opacity: .7; margin-top: 3px; text-align: center; }
 
 /* Focused-city demand and purpose charts (T-143). */
-.demand-selector .demand-pending { opacity: .45; cursor: wait; }
-.city-trip-total { margin-top: 8px; }
-.corridors { list-style: none; padding: 0; margin: 0; }
-.corridors li { padding: 5px 0; border-bottom: 1px solid var(--rule); }
-.corridor-heading { display: flex; justify-content: space-between; gap: 8px; }
-.corridor-heading .num { white-space: nowrap; }
-.corridor-bar { width: 100%; max-width: none; height: 5px; box-sizing: border-box; margin: 3px 0 0; }
+/* faded text, not opacity: the selector has no background of its own (T-192), so an opacity fade
+   would let the map show through the buttons */
+.demand-selector .demand-pending { color: color-mix(in srgb, var(--text) 40%, var(--bg)); cursor: wait; }
 .purpose-summary { display: flex; align-items: center; gap: 12px; margin: 12px 0; }
 .purpose-pie { width: 88px; height: 88px; flex: 0 0 88px; }
 .purpose-legend { list-style: none; padding: 0; margin: 0; flex: 1; min-width: 0; font-size: 12px; }
 .purpose-legend li { display: flex; align-items: center; gap: 6px; margin: 5px 0; }
 .purpose-legend li span { flex: 1; min-width: 0; }
 .purpose-legend b { font-variant-numeric: tabular-nums; }
+/* T-165: riders by purpose under a line's riders or a station's boardings; the purpose the map
+   shows is ringed in the bar and bold in the key */
+.rows > li.purpose-split { display: block; padding: 6px 0 4px; }
+.split-bar { width: 100%; max-width: none; height: 8px; }
+.split-bar .seg.shown { outline: 2px solid var(--text); outline-offset: 0; position: relative; z-index: 1; }
+.split-key { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-wrap: wrap; column-gap: 12px; font-size: 12px; }
+.split-key li { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
 
 /* T-144: platform placement preview, aligned with its track. */
-.station-ghost { border: 2px solid var(--accent); background: #ffffffb3; opacity: .7; transform-origin: 0 0; }
+/* T-189: the placement ghost is the platform's outline, curved with the track (map/tools.ts) */
+.station-ghost { position: absolute; left: 0; top: 0; overflow: visible; opacity: .7; }
+.station-ghost path { fill: #ffffffb3; stroke: var(--accent); stroke-width: 2px; }
+
+/* T-148: the search box at the map's upper right, under the demand selector on narrow maps */
+.map-search { position: absolute; right: 10px; top: 10px; z-index: 4; width: 280px; max-width: calc(100% - 20px); }
+.map-search input { display: block; width: 100%; height: 28px; padding: 0 8px; border: 1px solid var(--rule);
+  border-radius: 0; background: var(--bg); font-size: 12px; outline: none; }
+.map-search input:focus { border-color: var(--accent); }
+/* T-211: collapsed to a magnifying glass at the box's right end */
+.map-search.closed { width: auto; }
+.map-search-results { list-style: none; margin: -1px 0 0; padding: 0; border: 1px solid var(--rule); background: var(--bg); }
+.map-search-results li { display: flex; align-items: center; gap: 6px; min-height: 28px; padding: 2px 8px; cursor: pointer; }
+.map-search-results li.on { background: var(--tint); }
+.map-search-results li.none { cursor: default; }
+.map-search-results .grow { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.search-mark { width: 10px; height: 10px; margin: 0 3px; flex: none; border-radius: 50%; background: #fff; border: 2px solid var(--net-ink); }
+.search-mark.city { border-radius: 0; background: var(--muted); border-color: var(--muted); }
+.search-mark.place { background: none; border-color: var(--muted); }
+@container map-column (max-width: 680px) {
+  .map-search { left: 10px; right: auto; top: 46px; }
+  /* T-231: the alert sits beside the search glass, which is under the demand buttons here */
+  .stations-full { margin-left: 36px; }
+}
+@container map-column (max-width: 360px) {
+  .map-search { top: 80px; }
+}
+
+/* T-195: the trip explorer's inspector and its canvas over the demand views' */
+#map canvas.overlay.trip { z-index: 2; }
+.trip-modes .trip-bar { width: 100%; max-width: none; height: 10px; margin: 6px 0 2px; }
+.trip-legs > li { min-height: 26px; }
+.trip-hbar { width: 60px; flex: none; display: flex; align-items: center; }
+/* T-220: Explore a trip at the bottom of Settings */
+.trip-start .key { margin-left: 6px; }
+
+/* T-247: the UI scale (Settings, --ui from game/ui.ts). Panels are zoomed whole (every size here is
+   px); the map's own DOM tags keep their placement and only their text is sized, since their
+   positions come from the map. The WebGL map is never scaled. Dock.tsx divides its drags by it. */
+#dock, #topbar, .save-notice, #tools, .map-top-left, .map-search, .loading-card, .loading-box, #debug { zoom: var(--ui, 1); }
+.loading-card-wrap { top: calc(var(--bar-h) * var(--ui, 1)); }
+.stn-label, .pi-label, .tool-tag, .cap-mark, .intercity-label { font-size: calc(12px * var(--ui, 1)); }

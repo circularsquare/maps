@@ -31,8 +31,11 @@ export function pointerLocal(map: MlMap, px: number, py: number): [number, numbe
   return toLocal(ll.lng, ll.lat);
 }
 
+/** Points where something drawn above the discs is (the selected station, T-189): no disc there. */
+export const hoverAbove: { at: ((px: number, py: number) => boolean) | null } = { at: null };
+
 export function hoverAt(map: MlMap, px: number, py: number): string[] | null {
-  if (!finders.length) return null;
+  if (!finders.length || hoverAbove.at?.(px, py)) return null;
   const [x, y] = pointerLocal(map, px, py);
   for (const { f } of finders) {
     const t = f(x, y);

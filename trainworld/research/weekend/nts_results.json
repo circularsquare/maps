@@ -1,0 +1,170 @@
+{
+ "2025": {
+  "commuting": {
+   "wkday_per_yr": 20.18,
+   "sat": 0.347,
+   "sun": 0.215,
+   "wkend": 0.281
+  },
+  "business": {
+   "wkday_per_yr": 3.26,
+   "sat": 0.296,
+   "sun": 0.27,
+   "wkend": 0.283
+  },
+  "shopping": {
+   "wkday_per_yr": 19.25,
+   "sat": 1.566,
+   "sun": 0.988,
+   "wkend": 1.277
+  },
+  "personal business": {
+   "wkday_per_yr": 11.61,
+   "sat": 0.652,
+   "sun": 0.721,
+   "wkend": 0.686
+  },
+  "leisure (VF home+elsewhere, sport/ent, holiday/day trip)": {
+   "wkday_per_yr": 26.86,
+   "sat": 1.672,
+   "sun": 1.481,
+   "wkend": 1.577
+  },
+  "leisure + just walk": {
+   "wkday_per_yr": 37.88,
+   "sat": 1.495,
+   "sun": 1.383,
+   "wkend": 1.439
+  },
+  "education": {
+   "wkday_per_yr": 12.53,
+   "sat": 0.027,
+   "sun": 0.012,
+   "wkend": 0.019
+  },
+  "escort education": {
+   "wkday_per_yr": 11.05,
+   "sat": 0.029,
+   "sun": 0.012,
+   "wkend": 0.021
+  },
+  "all purposes": {
+   "wkday_per_yr": 126.33,
+   "sat": 0.909,
+   "sun": 0.745,
+   "wkend": 0.827
+  }
+ },
+ "2024": {
+  "commuting": {
+   "wkday_per_yr": 19.98,
+   "sat": 0.329,
+   "sun": 0.24,
+   "wkend": 0.284
+  },
+  "business": {
+   "wkday_per_yr": 4.41,
+   "sat": 0.314,
+   "sun": 0.244,
+   "wkend": 0.279
+  },
+  "shopping": {
+   "wkday_per_yr": 22.06,
+   "sat": 1.526,
+   "sun": 1.038,
+   "wkend": 1.282
+  },
+  "personal business": {
+   "wkday_per_yr": 13.26,
+   "sat": 0.587,
+   "sun": 0.693,
+   "wkend": 0.64
+  },
+  "leisure (VF home+elsewhere, sport/ent, holiday/day trip)": {
+   "wkday_per_yr": 31.29,
+   "sat": 1.697,
+   "sun": 1.443,
+   "wkend": 1.57
+  },
+  "leisure + just walk": {
+   "wkday_per_yr": 43.0,
+   "sat": 1.545,
+   "sun": 1.346,
+   "wkend": 1.446
+  },
+  "education": {
+   "wkday_per_yr": 12.42,
+   "sat": 0.032,
+   "sun": 0.017,
+   "wkend": 0.024
+  },
+  "escort education": {
+   "wkday_per_yr": 11.21,
+   "sat": 0.03,
+   "sun": 0.012,
+   "wkend": 0.021
+  },
+  "all purposes": {
+   "wkday_per_yr": 137.48,
+   "sat": 0.939,
+   "sun": 0.766,
+   "wkend": 0.852
+  }
+ },
+ "2023+2024+2025": {
+  "commuting": {
+   "wkday_per_yr": 20.43,
+   "sat": 0.331,
+   "sun": 0.23,
+   "wkend": 0.281
+  },
+  "business": {
+   "wkday_per_yr": 3.77,
+   "sat": 0.317,
+   "sun": 0.251,
+   "wkend": 0.284
+  },
+  "shopping": {
+   "wkday_per_yr": 21.3,
+   "sat": 1.521,
+   "sun": 1.007,
+   "wkend": 1.264
+  },
+  "personal business": {
+   "wkday_per_yr": 12.4,
+   "sat": 0.612,
+   "sun": 0.712,
+   "wkend": 0.662
+  },
+  "leisure (VF home+elsewhere, sport/ent, holiday/day trip)": {
+   "wkday_per_yr": 29.32,
+   "sat": 1.677,
+   "sun": 1.47,
+   "wkend": 1.574
+  },
+  "leisure + just walk": {
+   "wkday_per_yr": 40.78,
+   "sat": 1.526,
+   "sun": 1.379,
+   "wkend": 1.452
+  },
+  "education": {
+   "wkday_per_yr": 12.48,
+   "sat": 0.039,
+   "sun": 0.017,
+   "wkend": 0.028
+  },
+  "escort education": {
+   "wkday_per_yr": 11.21,
+   "sat": 0.034,
+   "sun": 0.015,
+   "wkend": 0.024
+  },
+  "all purposes": {
+   "wkday_per_yr": 133.42,
+   "sat": 0.927,
+   "sun": 0.763,
+   "wkend": 0.845
+  }
+ }
+}

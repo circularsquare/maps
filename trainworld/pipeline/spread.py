@@ -37,8 +37,10 @@ def block_polygons(fips, fetch, want):
     return out
 
 
-def spread(df, counties, fetch, mask, lon0, lat0, cell=50.0, cols=("pop", "jobs")):
+def spread(df, counties, fetch, mask, lon0, lat0, cell=50.0, cols=("pop", "jobs"), polygons=None):
     """df: one row per block with geoid, lat, lon (internal point) and the value columns `cols`.
+    `polygons` ({geoid: lon/lat polygon}) replaces the TIGER block polygons of `counties` for a
+    pack outside the US (T-277: Canadian dissemination areas).
     Returns (h3 ids uint64, {col: per-cell values}, stats)."""
     t0 = time.time()
     f = int(round(cell / mask.cell))
@@ -48,9 +50,11 @@ def spread(df, counties, fetch, mask, lon0, lat0, cell=50.0, cols=("pop", "jobs"
     x0, y0 = mask.x0, mask.y0
     want = set(df["geoid"])
     geoms, gids = [], []
-    for fips in sorted(counties):
-        polys = block_polygons(fips, fetch, want)
+    sources = [polygons] if polygons is not None else (block_polygons(fips, fetch, want) for fips in sorted(counties))
+    for polys in sources:
         for g, p in polys.items():
+            if g not in want:
+                continue
             geoms.append(water.to_local(p, lon0, lat0))
             gids.append(g)
     print(f"  block polygons: {len(geoms):,} of {len(want):,} blocks, {time.time() - t0:.0f} s", flush=True)

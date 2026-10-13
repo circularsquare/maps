@@ -102,6 +102,8 @@ export interface Save {
   cash: number;
   stations: StationInput[];
   lines: LineInput[];
+  /** stations the player linked into one complex (T-197), each pair once */
+  links: [StationId, StationId][];
 }
 
 // ---------- results from the workers ----------
@@ -202,6 +204,12 @@ export type Selection =
   /** commuter bubbles picked on the map (T-097): the cells (city pack order) of `areas` bubbles,
    * at the homes or the jobs end */
   | { kind: "commuters"; end: "home" | "work"; cells: number[]; areas: number }
+  /** a city's longer-trips bubble picked zoomed far out (T-186): the registry's city id */
+  | { kind: "city"; city: string }
   | { kind: "cell"; cell: string }
   | { kind: "zone"; zone: number }
+  /** the trip explorer (T-195): where a trip starts and ends, world metres; `to` null until the
+   * second click. An end picked by clicking a station (T-221) is at the station's position and
+   * names it. */
+  | { kind: "trip"; from: [number, number]; to: [number, number] | null; fromStation?: StationId; toStation?: StationId }
   | null;

@@ -1,8 +1,10 @@
 // Money as the UI reads it (T-028; SPEC 6.4). The clock worker keeps the cash, the cars owned,
-// the fare curve and the day ledger, and sends them with every state and whenever an hour is
-// settled (`moneyState`). Fare income is worked out here, on the main thread, because the riders
-// are here (game/demand.ts): each period's riders times the fare curve, sent back to the worker as
-// income per game hour (workers/clockClient.ts), which adds it to the cash hour by hour.
+// the fare curve and the day ledger, and sends them with every state and whenever an hour ends
+// (`moneyState`), and the cash and today's ledger several times a wall second (`liveMoney`, T-284).
+// Fare income is worked out here, on the main thread, because the riders are here
+// (game/demand.ts): each period's riders times the fare curve, sent back to the worker as income
+// per game hour (workers/clockClient.ts). The worker pays each hour's fares into the cash as that
+// hour's trains pick up riders, and its running cost evenly.
 //
 // Fare per ride = base + per km x the ride's length along the line. A ride that changes lines
 // pays the base once: boardings are scaled to trips by the city's rail trips over all boardings.
@@ -12,15 +14,25 @@
 // so a line pays back in about a game week. The fare the player sets stays a real fare.
 
 import { computed, signal } from "@preact/signals";
-import { demandView } from "./demand";
+import { demandByDay, demandView, type DemandView } from "./demand";
 import { PERIODS } from "./periods";
 import { world } from "./world";
 import { DEMANDS } from "./types";
 import type { MoneyState } from "../workers/protocol";
+import type { DayLedger } from "../workers/saveFile";
 
 export type { MoneyState };
 
 export const moneyState = signal<MoneyState | null>(null);
+/** T-284: the cash and today's ledger as they move, several times a wall second while the clock
+ * runs (the worker's "cash" message; also set from every `moneyState`). Only the figures that show
+ * them read it (the top bar's cash, the Money tab's cash and today), each its own small component,
+ * so nothing else re-renders as fares land. */
+export const liveMoney = signal<{ cash: number; today: DayLedger | null }>({ cash: 0, today: null });
+export function setMoneyState(m: MoneyState) {
+  moneyState.value = m;
+  liveMoney.value = { cash: m.cash, today: m.ledger[m.ledger.length - 1] ?? null };
+}
 /** When the last autosave was written (Date.now()), null before the first. */
 export const lastSaved = signal<number | null>(null);
 
@@ -43,8 +55,13 @@ export interface Income {
   lines: Map<string, LineMoney>;
 }
 
-export const income = computed<Income>(() => {
-  const w = world.value, dv = demandView.value, m = moneyState.value;
+/** Fare income and running costs on the kind of day the demand views show (game/days.ts); the
+ * worker settles each hour by its own day's (`incomeByDay`, T-260). */
+export const income = computed<Income>(() => incomeFor(demandView.value));
+export const incomeByDay = computed<Income[]>(() => demandByDay.value.map((d) => incomeFor(d.view)));
+
+function incomeFor(dv: DemandView | null): Income {
+  const w = world.value, m = moneyState.value;
   const perPeriod = PERIODS.map(() => 0);
   const lines = new Map<string, LineMoney>();
   let faresDay = 0, runningDay = 0;
@@ -79,4 +96,4 @@ export const income = computed<Income>(() => {
     runningDay += running;
   }
   return { perHour: perPeriod.map((v, p) => v / PERIOD_HOURS[p] / 1e6), faresPerDay: faresDay, runningPerDay: runningDay, lines };
-});
+}

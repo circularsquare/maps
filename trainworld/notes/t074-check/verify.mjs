@@ -49,6 +49,6 @@ const result=await page.evaluate(()=>({stations:window.tw.world.value.save.stati
 result.renamed=renamed;result.errors=errors;
 console.log(JSON.stringify(result));
 await page.screenshot({path:'artifacts/trainworld/t074-check/real-network.png'});
-await writeFile('trainworld/notes/t074-check/verification.json',JSON.stringify(result,null,2));
+await writeFile('artifacts/trainworld/notes-outputs/t074-check/verification.json',JSON.stringify(result,null,2));
 if(result.maxError>1||result.maxOverlaps>0||renamed!==1||errors.length)throw Error('Real-network verification failed');
 }finally{await browser.close();}

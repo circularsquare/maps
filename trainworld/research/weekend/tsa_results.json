@@ -1,0 +1,24 @@
+{
+ "by_dow_mean": {
+  "Mon": 2622745,
+  "Tue": 2163031,
+  "Wed": 2270028,
+  "Thu": 2645478,
+  "Fri": 2680909,
+  "Sat": 2274418,
+  "Sun": 2736967
+ },
+ "monfri_mean": 2475647,
+ "ratio": {
+  "Mon": 1.059,
+  "Tue": 0.874,
+  "Wed": 0.917,
+  "Thu": 1.069,
+  "Fri": 1.083,
+  "Sat": 0.919,
+  "Sun": 1.106
+ },
+ "sat_over_wkday": 0.919,
+ "sun_over_wkday": 1.106,
+ "wkend_over_wkday": 1.012
+}

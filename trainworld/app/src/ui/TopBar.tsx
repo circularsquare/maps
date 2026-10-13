@@ -6,13 +6,19 @@ import type { ComponentChildren } from "preact";
 import { clock, SPEEDS } from "../game/clock";
 import { activeCity, cityById } from "../game/cities";
 import { demandStep, demandUpdating, demandView, modeSplit } from "../game/demand";
-import { clockTime, dayOf, money } from "../game/format";
+import { clockTime, dayOf, money, moneyExact } from "../game/format";
+import { weekdayName, weekdayOf } from "../game/days";
+import { shownDay } from "../game/ui";
+
+const WEEKDAY_LONG = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+import { cityNames, loadFailure, loadProgress } from "../game/loading";
 import { world } from "../game/world";
-import { moneyState } from "../game/money";
+import { liveMoney, moneyState } from "../game/money";
 import { Icon } from "./widgets";
+import { LoadBar, loadingCardShown } from "./LoadingScreen";
 import { perfOff } from "../perfFlags";
 import { saveSlotsState } from "../workers/clockClient";
-import { tab } from "../game/ui";
+import { savesOpen } from "./SavesPanel";
 
 const NO_CLOCK = perfOff("clock");
 
@@ -21,26 +27,37 @@ const DEMAND_NAME = { high: "High demand", medium: "Medium demand", low: "Low de
 function Clock() {
   // ?perfOff=clock (T-045, measurement only): read without subscribing, so it never re-renders.
   const minute = NO_CLOCK ? clock.minute.peek() : clock.minute.value;
+  // T-172: a loaded game's clock waits for its first demand estimate; building does not
+  const held = clock.held.value;
   return (
-    <div class="clock" title={`Day ${dayOf(minute)} · ${DEMAND_NAME[NO_CLOCK ? clock.demand.peek() : clock.demand.value]}`}>
-      <span class="day muted">Day {dayOf(minute)}</span>
-      <b class="time big">{clockTime(minute)}</b>
+    <div class="clock" data-tip={held ? "The clock starts when demand has loaded" : `${WEEKDAY_LONG[weekdayOf(dayOf(minute))]}, day ${dayOf(minute)} · ${DEMAND_NAME[NO_CLOCK ? clock.demand.peek() : clock.demand.value]}`}>
+      <span class="day muted">{weekdayName(dayOf(minute))} {dayOf(minute)}</span>
+      <b class={"time big" + (held ? " muted" : "")}>{clockTime(minute)}</b>
       <span class="demand muted">{DEMAND_NAME[NO_CLOCK ? clock.demand.peek() : clock.demand.value]}</span>
     </div>
   );
+}
+
+/** T-284: its own component, re-rendered as fares land (several times a wall second while the clock
+ * runs) without the rest of the top bar. */
+function Cash() {
+  const live = liveMoney.value, m = moneyState.value;
+  const today = live.today;
+  const tip = today ? `Today: fares ${money(today.fares * 1e6)}, running trains ${money(-today.running * 1e6)}` : undefined;
+  return <div class="cash num" data-tip={m ? tip : undefined}>{m ? moneyExact(live.cash * 1e6) : ""}</div>;
 }
 
 function Speed() {
   const running = clock.running.value;
   const speed = clock.speed.value;
   const btn = (i: number, icon: ComponentChildren, title: string) => (
-    <button class={"btn icon" + (running && speed === i ? " on" : "")} title={title} onClick={() => clock.setSpeed(i)}>
+    <button class={"btn icon" + (running && speed === i ? " on" : "")} data-tip={title} aria-label={title} onClick={() => clock.setSpeed(i)}>
       {icon}
     </button>
   );
   return (
     <div class="group speed">
-      <button class={"btn icon" + (!running ? " on" : "")} title="Pause" onClick={() => clock.setRunning(!running)}>
+      <button class={"btn icon" + (!running ? " on" : "")} data-tip="Pause (Space)" aria-label="Pause" onClick={() => clock.setRunning(!running)}>
         <Icon.pause />
       </button>
       {btn(0, <Icon.play1 />, "Normal speed")}
@@ -55,22 +72,40 @@ function SaveNotice() {
   if (state.writable) return null;
   return <div class="save-notice" role="status">
     <span>{state.reason ?? "Autosave is off for this game."}</span>
-    <button class="btn" onClick={() => { tab.value = "settings"; }}>Saves</button>
+    <button class="btn" onClick={() => { savesOpen.value = true; }}>Saves</button>
   </div>;
 }
 
 export function TopBar() {
   const w = world.value;
   if (!w) return <header id="topbar" />;
-  const s = modeSplit.value ?? { train: 0, walk: 0, drive: 0 }; // T-026: from the demand workers
+  const known = modeSplit.value; // T-026: from the demand workers
+  const s = known ?? { train: 0, walk: 0, drive: 0 };
   const city = cityById(activeCity.value);
-  const pct = (v: number) => v.toFixed(1) + "%";
+  // T-172: no figures until the city has opened (the game is playable while it loads)
+  const pct = (v: number) => (known ? v.toFixed(1) + "%" : "–");
   const step = demandStep.value;
-  const busy = !demandView.value ? "Loading demand data" : demandUpdating.value ? `Updating demand ${Math.min(step.done + 1, step.of)}/${step.of}` : null;
+  // T-149, T-172: a city loading (at startup, after a pan, or construction reaching it) says how
+  // far it has got
+  const load = loadProgress.value;
+  const busy = loadFailure.value ? "Demand could not load"
+    // T-180: while the clock waits, the card in the middle of the map says it instead
+    : loadingCardShown() ? null
+    // T-212: "Loading data", not the cities' names (those are in the hover)
+    // T-243: a thin bar after it, not a percentage
+    : load ? "Loading data"
+    : !demandView.value ? "Loading data…"
+    // T-232: figures before a solve's final round are shown only where nothing final is, and say so
+    : !demandView.value.final ? `Estimate, refining ${Math.min(step.done + 1, step.of)}/${step.of}…`
+    : demandUpdating.value ? `Updating demand ${Math.min(step.done + 1, step.of)}/${step.of}…` : null;
+  const busyTip = loadFailure.value ?? (load && !loadingCardShown() ? `Loading ${cityNames(load.cities)}, ${Math.floor(load.fraction * 100)}%. ${load.step}`
+    : !demandView.value || !busy ? busy
+    : !demandView.value.final ? "These figures are an early estimate. They settle when the forecast is finished."
+    : "These figures are for the network before your last change. They change once the new forecast is finished.");
   return (
     <><header id="topbar">
       <div class="city">{city.name}</div>
-      <div class="split" title={`How people in ${city.name} travel: Train ${pct(s.train)}, Walking ${pct(s.walk)}, Driving ${pct(s.drive)}${demandUpdating.value ? " (updating)" : ""}`} style={{ opacity: demandUpdating.value ? 0.6 : 1 }}>
+      <div class="split" data-tip={`How people in ${city.name} travel${shownDay.value ? " at weekends" : " on weekdays"}: Train ${pct(s.train)}, Walking ${pct(s.walk)}, Driving ${pct(s.drive)}${demandView.value && !demandView.value.final ? " (an early estimate)" : demandUpdating.value ? " (before your last change)" : ""}`} style={{ opacity: demandUpdating.value ? 0.6 : 1 }}>
         <span class="split-train">
           <i class="sw sw-train" />
           Train <b class="big">{pct(s.train)}</b>
@@ -88,9 +123,11 @@ export function TopBar() {
           <i class="sw sw-drive" />
           Driving {pct(s.drive)}
         </span>
-        {busy && <span class="demand-busy muted" role="status">{busy}…</span>}
+        {/* T-180: cut short with an ellipsis in a narrow column; the whole text on hover */}
+        {busy && <span class="demand-busy muted" role="status" data-tip={busyTip ?? undefined}>{busy}</span>}
+        {busy && load && !loadFailure.value && <LoadBar fraction={load.fraction} step={load.step} thin />}
       </div>
-      <div class="cash num">{money((moneyState.value?.cash ?? 0) * 1e6)}</div>
+      <Cash />
       <Clock />
       <Speed />
     </header><SaveNotice /></>

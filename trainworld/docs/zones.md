@@ -1,0 +1,221 @@
+[Back to the spec](../SPEC.md)
+
+# Zones (T-276)
+
+Written 2026-10-13. Anita's decisions behind it: option 2 of `research/intercity-review.md`
+(retune the regional market and add commutes between cities) inside a world divided into zones;
+Mercer County joins New York. Which parts are built is in section 9.
+
+## 1. What a zone is
+
+The world is divided into **zones**, and every place is in exactly one zone or in dead space.
+
+- A **city zone** is a metro area with a hand-drawn extent: today's nine city packs, Toronto next
+  (T-277).
+- A **non-city zone** is land between and around city zones that is not part of any metro: the
+  country between Providence, Hartford, Springfield and Boston, say.
+- **Dead space** is everything else: Nunavut, and for now most of the world. Nothing there makes or
+  attracts a trip in any layer, so a line through it carries only riders going through.
+
+Both kinds of zone are the same thing in the code: a **pack** in the registry
+(`app/src/game/registry.json`, its `cities` list), built by the same pipeline from the same
+national sources, with the same cells (H3 resolution 9), the same local demand layer and the same
+bubbles. They differ only in how their extent is chosen and a `kind` in the registry (`"city"`, the
+default, or `"zone"`). So everything a city has, a non-city zone has too: it opens when it is viewed
+or reached by a station, has a city inspector, a boundary line, a place list, its own bubbles, and a
+place in the regional market. Anita: "so these are basically cities i guess. theyre like. non urban
+areas."
+
+Why one kind of pack rather than a coarse second model: everything that works for cities (bubbles,
+selection, the trip explorer, loading, reach, saves) works for non-city zones with no new code
+paths, and a zone can become a city zone later by redrawing extents, not by switching model. The
+cost of fine cells in thin country is small: cells exist only where people or jobs are.
+
+## 2. How non-city zones are built
+
+**Unit.** A non-city zone is one **county-sized statistical unit**: a US county, a Canadian census
+division, a NUTS-3 region in Europe; elsewhere the country's second-level unit of 100k-1M people.
+One unit per zone, so zone lines are lines that every national dataset already uses; a unit of
+under 100,000 people joins the neighbouring non-city zone it shares the longest border with. A
+unit belongs to a city zone (and so is not a non-city zone) when that city's pack lists it.
+
+**Which units are modelled (the extent).** A unit not in any city zone is modelled when it
+**touches two different city zones**: it lies between them. Today that is Worcester MA, Windham CT,
+New London CT and Litchfield CT in New England. **Open** (Anita): whether modelled space should
+also reach a ring around each city, every unit whose population-weighted centre is within about
+40 km of a city zone (in the Northeast about 30 more counties and 9 million people: the Lehigh
+Valley, Lancaster, Berks, Hillsborough NH, Ulster, Cape Cod and so on), or stay between cities
+only. Everything not modelled is dead space.
+
+**Mercer County (Trenton) is part of New York's city zone**, not a non-city zone (Anita leaned
+this way). Reasons: it is in the New York combined statistical area; LODES holds 175,000 jobs
+between Mercer and New York's counties against 88,000 with Philadelphia's; and as a zone of
+387,000 people pinched between two big packs, most of its commuting would cross a zone line. A
+county between two city zones whose commuting runs mostly to one of them may join it this way; the
+choice is made per county when a city's extent is drawn, as extents always have been (pragmatic,
+no study). Its place in the market (id 2, "Trenton") stays in the registry with no sites, because
+market ids are never renumbered.
+
+**Data.** The same national sources as the country's city zones, at the same grain: in the US 2020
+census blocks less institutions (T-234), LODES WAC and RAC, NCES, IPEDS, FAA, OSM. Where a country
+has no small-area jobs (tier 0, docs/demand.md 4.1), population from Kontur (H3 resolution 8,
+global, each hexagon spread over its seven resolution 9 children) or the national census, and jobs
+from the GHSL non-residential built-up layer (T-012). A country's non-city zones are built by that
+country's city adapter (Toronto's for Canada, T-277) with `kind: "zone"`.
+
+**Names.** A non-city zone is named after its unit ("Worcester County" in the US, the census
+division's name in Canada); a merged zone after its most populous unit.
+
+## 3. How the demand layers split the work
+
+By purpose and by zone, with no seam a commuter can see:
+
+| Trips | Layer | Notes |
+|---|---|---|
+| Commutes with both ends in one zone | the zone's local layer | the joint commute gravity's within-zone part (section 4) |
+| Commutes crossing a zone line | the regional layer, purpose "commute" | the same gravity's cross-zone part, at the market's 6 km zones; commute timing, weekday-heavy |
+| Everyday outings, school, university, airport, medical | the zone's local layer, inside the zone | as now; outings crossing a zone line under the market's onset are not modelled (short trips near the line: small) |
+| Longer trips (visits, business, leisure) | the regional layer, purpose "longer trips" | the retuned market (section 5), within and between zones, a share leaving the map |
+| Anything starting or ending in dead space | none | except the market's trips that leave the map, counted as leaving and not routed |
+
+A non-city zone's local layer is the same as a city's: commutes and everyday purposes inside it,
+"local-ish" only in that its trips are longer and its cells thinner.
+
+## 4. Commutes between zones
+
+**One commute gravity for every zone together.** The local gravity (doubly constrained, 2 km zones,
+f(d) = d^-0.8 exp(-d / 30 km)) is solved offline once over every zone pack's gravity zones at once,
+by a native bin (`joint_gravity`) with the kernel's own code. Every home's commuters are shared
+over every job in reach, in its own zone or another, so moving a zone line moves no commuter.
+
+- **Within one pack** a pair uses the pack's own decay table and border factor, exactly as the pack
+  does at runtime.
+- **Across packs** a pair uses the great-circle distance between the two gravity zones' centres,
+  cut at 150 km (beyond it the decay is under a thousandth of a 10 km pair's, and LODES's long
+  links are mostly head-office addresses, notes/T-268.md), and a **border factor per region pair**:
+  the factor of the pack that holds both regions (New Jersey and Pennsylvania take Philadelphia's,
+  Maryland and DC Washington's 0.45), else the country's default (US states 0.23). T-171 found the
+  factor should stay as fitted per pack rather than become one global value; this keeps every
+  pack's own fit for the pairs it was fitted on. National borders take a factor per country pair
+  (US-Canada 0.05 for now, judgement from Windsor-Detroit's few thousand cross-border commuters
+  against a gravity that would send several times more; fitted when a zone pair across the border
+  is built).
+- The solve gives each pack new balancing factors (`row`, `col` in its gravity block) and the
+  within-pack trip totals of each gravity zone (`home_trips`, `work_trips`), so the pack's runtime
+  rebuilds exactly the within-zone part. A pack's cells count commuters from those totals rather
+  than from the pack's total trips over its people (which assumed every commute stays in the pack).
+- The cross-pack part is spread from gravity zones to the market's 6 km zones by each gravity zone's
+  homes (at the home end) and jobs (at the work end) in each, and shipped in the market pack as a
+  list of home zone, work zone and commuters a day.
+
+**Fitting and checking.** The curve and the factors are each pack's fitted values, so nothing new
+is fitted for commutes between zones in the US. LODES OD 2023 is the check, not an input: commuters
+between each pair of zones against LODES's jobs between the same counties (the table in
+notes/T-268.md: Baltimore - Washington 414k, Boston - Providence 222k, New Haven - New York 134k,
+Hartford - New Haven 129k ...), aiming for the right order, not a fit. Other countries fit the
+curve and their border factors on their census commuting flows (Canada's census commuting flows by
+census subdivision, England and Wales WU01EW, Japan's census commuting tables) when their first
+zone pair is built.
+
+**At runtime** (the regional layer, `intercity.rs`). Commute pairs are built only between zones a
+station serves, as the market's pairs are. Each period carries C(h, w) x the share of trips to work
+leaving then, from h to w, and C(h, w) x the share of trips home, on the same station pairs
+reversed: the local layer's 70/12/6/4/8 and 2/18/58/16/6. Mode choice is the local commute's: a
+logit at 0.05 per perceived minute, driving weighted 1.33 plus parking at the work end (3 minutes
+plus the work zone's jobs per km² / 2,500, at most 40, job-weighted over the 6 km zone), against
+the best rail strategy with its walks, waits, transfers and fares. The weekend has 0.30 of a
+weekday's commutes with the weekend's work timing (days.rs `WORK`). Their loads join the
+work purpose's (T-158), so the purpose filter's "Work" shows them.
+
+## 5. The retuned market (longer trips)
+
+Option 1 of the review, in the same structure (zones, served pairs only, the offline derived block):
+
+- **An outside world.** Each zone's normaliser has an extra term for every place not modelled: the
+  population of the world outside every zone (Kontur, H3 resolution 6, global, aggregated) at its
+  distance, at the represented places' mean attraction per person. So a share of every zone's trips
+  leaves the map, more from a zone near the edge than from one in the middle, and adding a zone
+  later moves only the trips that went to where it now is.
+- **The trip rate, the onset and the curve** from NHTS 2017 (national): the rate of non-commute trips
+  by distance band for Northeast residents, fitted with the outside world in place. Section 9 has
+  the fitted values.
+- **The car pays more than time.** Running cost per km and the local layer's parking at the
+  destination, each split over the car's occupants (two on a long trip, NHTS), at the game's value
+  of time (3 perceived minutes a dollar). No tolls (T-270).
+- Everyday outings still taper by the complement of the market's onset, so the two layers meet
+  without a gap or a double count.
+
+## 6. On the map
+
+**Over a non-city zone** it is the focused zone, exactly as a city is focused: the zone holding the
+view's centre (the nearest zone if none holds it). Its bubbles are drawn as a city's are, and the
+top bar names it. **Nearby zones** are drawn too: every zone whose boundary is on screen (at most
+four, nearest first) shows its own bubbles beside the focused zone's, so a zone line is not a cliff
+in the bubbles. A click on a nearby zone's bubble focuses that zone and selects the bubble. Over
+dead space the focused zone is the nearest one, so the same rule shows the nearby zones' bubbles.
+
+Bubbles need a zone's results: a zone on screen is opened (its pack downloaded and opened in the
+workers) like a viewed city. With no station within reach its bubbles are all walking and driving,
+as a city's are before anything is built.
+
+**Zoomed far out** (8.5 and below) every zone is one bubble, as if it were one place: its trips a
+day at homes (Homes) or at destinations (Destinations) in every layer, local trips, commutes
+between zones and longer trips, coloured by train share, sized against the busiest zone whose
+centre is on screen (New York's local trips would otherwise dwarf every other zone). A zone not opened has no rail and its
+totals come from a small summary written by the pipeline (`data/packs/zones.json`: each zone's
+trips a day by purpose with no rail). A click on one selects the zone and draws one bubble per
+other zone for the commutes and longer trips between them, as T-186 does for cities.
+
+**Selection, the inspector and loading.** A non-city zone's city inspector is a city's. Search finds
+zones by name. Loading treats a zone as a city: opened when viewed or reached, its boundary file
+and place list fetched on demand. **Startup must not fetch every zone's files**: the clock worker's
+water masks and the boundaries are fetched for the zones on screen or reached, not for every
+registered zone (today every registered city's water mask loads at startup).
+
+## 7. Other countries and borders
+
+Every rule above is per country: the unit (US county, Canadian census division, NUTS-3), the data
+adapters, the border factors. Toronto (T-277) is a city zone of Canada with Canadian census
+divisions around it as its non-city zones once modelled space reaches them. The joint commute
+gravity spans countries: a pair across the US-Canada border takes the national border factor, and
+the market's longer trips across it a national factor of their own (0.5 for now, judgement: border
+formalities and currency deter trips; fitted later from cross-border travel counts). A world with
+two separate clusters of zones (the Northeast and Toronto, 500 km apart) needs nothing special:
+the commute gravity has no pairs between them, and the market's longer trips between them are its
+long tail.
+
+## 8. Performance
+
+- **Opening.** A non-city zone is a pack the size of a small city (Worcester County 860k people,
+  about Providence's), opened only when viewed or reached, like a city: 0.05-0.3 s natively with its
+  everyday layer. Commute packs open from shipped factors as now (a few ms).
+- **The market pack** grows by the cross-zone commute list. Its pairs are built only between zones
+  a station serves, so a solve's pair loop grows with the network's reach, not with the list.
+  Cross-zone commute pairs add a second pass over served pairs to the market's per-period work
+  (the market pass was 0.06 s natively a period on the real New York network).
+- **The joint gravity** is offline only (`joint_gravity`, about a minute natively over the ten
+  packs); a runtime edit never reruns it.
+- **Startup** must stay as it is: zones add registry entries, and their files are fetched on demand
+  (section 6). Nearby zones' bubbles open more packs than a single focused city did; a pack opened
+  only for its bubbles may open commute-only in the auxiliary worker if opening cost shows up.
+
+## 9. What is built (T-276)
+
+All five stages are built; numbers and checks in [notes/T-276.md](../notes/T-276.md).
+
+1. Mercer County in New York's pack (207,766 cells, 21.97M people).
+2. The market retuned: 0.107 departures a weekday, onset 25-50 km, `max(d, 25)^-2.37`, the outside
+   world (0.76M of 5.13M departures leave the map), the car's running cost and parking.
+3. Commutes between zones: `joint_gravity`, 1.51M commuters across pack lines among the 13 zones
+   (1.12M among the nine cities before the non-city zones), in the regional layer at commute timing and the local commute's mode choice.
+4. Non-city zones Worcester, Windham, New London and Litchfield Counties (`wor`, `wnd`, `nlc`,
+   `lit`); the focus follows the zone under the view, and up to three nearby zones' bubbles show
+   beside the focused zone's (app/src/game/zones.ts, map/zoneFocus.ts, map/commuterView.ts).
+5. The far-zoomed per-zone bubble: local trips plus the regional layer's, coloured by train share.
+
+Not built, each its own task: park-and-ride (T-295), the market's routed drives (T-279), the
+commute part's own weekend factor in a station's far-zone rows (T-296), a faster joint solve
+(T-297), commutes shown apart from longer trips (T-298), the market's seam trips against NEC
+FUTURE (T-299), the ring of zones round each city (T-300, Anita's call), closing packs (T-301), and
+fetching zones' water masks and boundaries on demand rather than at startup (T-302; today every
+registered zone's are fetched at startup, as cities' are).

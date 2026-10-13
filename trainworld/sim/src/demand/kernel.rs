@@ -44,9 +44,17 @@ pub struct Params {
     /// Walk band width for subzones, minutes. 0 = no bands; < 0 = one subzone per cell (exact).
     pub band_min: f32,
     /// Gravity distance decay: f(d) = d^-decay_pow x exp(-d / decay_km), d in km (T-006: fitted
-    /// to LODES OD for New York; decay_pow 0 is the plain exponential).
+    /// to LODES OD for New York; decay_pow 0 is the plain exponential). T-162 refitted decay_km
+    /// (29 -> 40) jointly with the US border factor on New York and Philadelphia LODES; T-198
+    /// flattened the near end to d^-0.8 exp(-d/30 km) (T-185: job-rich homes' trips were too
+    /// short). These are the US packs' values: a pack's gravity is used as shipped only when
+    /// they match it (`city_gravity`), so they change together with `build_city.py`'s.
     pub decay_km: f32,
     pub decay_pow: f32,
+    /// The decay's factor between home and work zones in different first-level regions (T-162:
+    /// US states). Only for a gravity solved here or by `pack_gravity`: a pack's own gravity
+    /// carries its factor (`PackGravity::border_factor`), so each country sets its own.
+    pub border_factor: f32,
     pub w_walk: f32,
     pub w_wait: f32,
     pub w_home_wait: f32,
@@ -101,12 +109,27 @@ pub struct Params {
     /// this straight-line distance and board there, at the walk's perceived time plus the usual
     /// boarding cost. Only after a ride, so walking between two stations is never a rail trip.
     /// 0 turns it off. T-007: crossing lines at different levels cannot share a station node.
+    /// Stations of one complex (`Network::st_group`, T-161) are walks whatever the distance.
     pub xfer_walk_m: f32,
     /// The transfer walk is on foot: speed and perceived weight (Subway Builder's 1.39).
     pub xfer_mps: f32,
     pub w_xfer: f32,
     /// Stations of the snapshot this close together are one demand station (`api::merge_stations`).
-    pub station_merge_m: f32,}
+    pub station_merge_m: f32,
+    /// Riders left behind by full trains wait longer (T-188, `left_behind`): each crowding round
+    /// adds the average extra wait at each line, direction and stop to that boarding's cost.
+    pub left_behind: bool,
+    /// The pack's routed walks and drives (T-275, `routes`): walks to stations around water,
+    /// the walk share and the drive's road between zones by real paths. None: straight lines
+    /// x `walk_detour` and x `road_detour`.
+    pub routes: Option<std::sync::Arc<super::routes::Routes>>,
+    /// The routed factor's multiplier (T-275): shortest-distance routes over the pack's roads
+    /// are on average shorter than `road_detour`, which the density speeds were fitted with (to
+    /// ACS car commute times on New York, T-090), and than the faster roads drivers take. 1.3 /
+    /// 1.210, New York's commute-weighted routed factor, keeps New York's drives at the fitted
+    /// level; water, bays and sparse roads still lengthen a pair against the others.
+    pub road_routed_scale: f32,
+}
 
 impl Default for Params {
     fn default() -> Self {
@@ -122,8 +145,9 @@ impl Default for Params {
             w_walk_far: 8.0,
             zone_m: 2000.0,
             band_min: 0.0,
-            decay_km: 29.0,
-            decay_pow: 1.0,
+            decay_km: 30.0,
+            decay_pow: 0.8,
+            border_factor: 1.0,
             w_walk: 2.0,
             w_wait: 1.37,
             w_home_wait: 0.4,
@@ -160,6 +184,9 @@ impl Default for Params {
             xfer_mps: 1.2,
             w_xfer: 1.39,
             station_merge_m: 100.0,
+            left_behind: true,
+            routes: None,
+            road_routed_scale: 1.3 / 1.210,
         }
     }
 }
@@ -178,11 +205,13 @@ impl Params {
             "w_walk_far" => self.w_walk_far = v,
             "pair_walk_max" => self.pair_walk_max = v,
             "road_detour" => self.road_detour = v,
+            "road_routed_scale" => self.road_routed_scale = v,
             "road_local_km" => self.road_local_km = v,
             "road_city_kmh" => self.road_city_kmh = v,
             "road_town_kmh" => self.road_town_kmh = v,
             "road_dens50" => self.road_dens50 = v,
             "road_far_kmh" => self.road_far_kmh = v,
+            "left_behind" => self.left_behind = v != 0.0,
             // the drive before T-090: one speed everywhere
             "road_kmh" => {
                 self.road_city_kmh = v;
@@ -217,9 +246,24 @@ impl Params {
     /// minutes a km.
     #[inline]
     pub fn drive_min(&self, d_m: f32, a: (f32, f32), b: (f32, f32)) -> f32 {
-        let road = d_m * 0.001 * self.road_detour;
+        self.drive_min_f(d_m, self.road_detour, a, b)
+    }
+    /// `drive_min` with the road `f` x the straight line (T-275: the zones' routed factor,
+    /// `drive_factor`).
+    #[inline]
+    pub fn drive_min_f(&self, d_m: f32, f: f32, a: (f32, f32), b: (f32, f32)) -> f32 {
+        let road = d_m * 0.001 * f;
         let e = (0.5 * road).min(self.road_local_km);
         e * (a.0 + b.0) + (road - 2.0 * e) * 0.5 * (a.1 + b.1)
+    }
+    /// The road's length over the straight line between zones i and j: the pack's routed factor
+    /// (T-275), else `road_detour`.
+    #[inline]
+    pub fn drive_factor(&self, i: usize, j: usize) -> f32 {
+        match &self.routes {
+            Some(r) if r.has_drive() => r.drive_factor(i, j) * self.road_routed_scale,
+            _ => self.road_detour,
+        }
     }
     /// Real minutes of the walk between two stations on a transfer, `d_m` metres straight line.
     pub fn xfer_min(&self, d_m: f32) -> f32 {
@@ -240,6 +284,9 @@ pub struct Zones {
     pub cell_zone: Vec<u32>,
     pub gx: Vec<i32>,
     pub gy: Vec<i32>,
+    /// First-level region of each zone (T-162). A square cut by a region border is one zone per
+    /// region, all at the square's position: two zones can share `gx`, `gy`.
+    pub region: Vec<u8>,
     /// Grid size in zones, and its lower-left corner in metres.
     pub w: i32,
     pub h: i32,
@@ -259,8 +306,31 @@ impl Zones {
     pub fn density(&self) -> Vec<f32> {
         (0..self.n).map(|i| ((self.pop[i] + self.jobs[i]) / (self.ncell[i].max(1) as f64 * CELL_KM2 as f64)) as f32).collect()
     }
+    /// The zones of each grid square, CSR by square index gx * h + gy (usually one; two or more
+    /// where a region border cuts the square).
+    pub fn by_square(&self) -> (Vec<u32>, Vec<u32>) {
+        let ns = (self.w * self.h) as usize;
+        let mut off = vec![0u32; ns + 1];
+        for i in 0..self.n {
+            off[(self.gx[i] * self.h + self.gy[i]) as usize + 1] += 1;
+        }
+        for s in 0..ns {
+            off[s + 1] += off[s];
+        }
+        let mut fill = off.clone();
+        let mut items = vec![0u32; self.n];
+        for i in 0..self.n {
+            let s = (self.gx[i] * self.h + self.gy[i]) as usize;
+            items[fill[s] as usize] = i as u32;
+            fill[s] += 1;
+        }
+        (off, items)
+    }
 }
 
+/// Zones are the cells' 2 km squares, one per region in a square a region border cuts (T-162).
+/// Zone ids in order of each zone's first cell, so a pack with one region gets the zones it had
+/// before regions.
 pub fn build_zones(city: &City, zone_m: f32) -> Zones {
     let minx = city.x.iter().cloned().fold(f32::INFINITY, f32::min);
     let miny = city.y.iter().cloned().fold(f32::INFINITY, f32::min);
@@ -268,17 +338,20 @@ pub fn build_zones(city: &City, zone_m: f32) -> Zones {
     let maxy = city.y.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
     let w = ((maxx - minx) / zone_m) as i32 + 1;
     let h = ((maxy - miny) / zone_m) as i32 + 1;
-    let mut grid = vec![NONE; (w * h) as usize];
-    let mut z = Zones { zone_m, n: 0, cell_zone: vec![0; city.len()], gx: vec![], gy: vec![], w, h, x0: minx, y0: miny, pop: vec![], jobs: vec![], ncell: vec![] };
+    let nreg = city.region.iter().copied().max().map_or(1, |r| r as usize + 1);
+    let mut grid = vec![NONE; (w * h) as usize * nreg];
+    let mut z = Zones { zone_m, n: 0, cell_zone: vec![0; city.len()], gx: vec![], gy: vec![], region: vec![], w, h, x0: minx, y0: miny, pop: vec![], jobs: vec![], ncell: vec![] };
     for c in 0..city.len() {
         let gx = ((city.x[c] - minx) / zone_m) as i32;
         let gy = ((city.y[c] - miny) / zone_m) as i32;
-        let g = (gx * h + gy) as usize;
+        let r = city.region.get(c).copied().unwrap_or(0);
+        let g = (gx * h + gy) as usize * nreg + r as usize;
         if grid[g] == NONE {
             grid[g] = z.n as u32;
             z.n += 1;
             z.gx.push(gx);
             z.gy.push(gy);
+            z.region.push(r);
             z.pop.push(0.0);
             z.jobs.push(0.0);
             z.ncell.push(0);
@@ -293,14 +366,22 @@ pub fn build_zones(city: &City, zone_m: f32) -> Zones {
 }
 
 pub struct Gravity {
-    /// T_IJ = row[I] * col[J] * f(I, J), with row = A_I O_I and col = B_J D_J.
+    /// T_IJ = row[I] * col[J] * f(I, J) * k(I, J), with row = A_I O_I and col = B_J D_J, and k
+    /// = `border` when zones I and J are in different regions, else 1 (`Gravity::k`, T-162).
     pub row: Vec<f64>,
     pub col: Vec<f64>,
+    /// The decay's factor across a region border.
+    pub border: f32,
     /// f by grid offset: index (dx + offx) * th + (dy + offy).
     pub ftab: Vec<f32>,
     /// Walk share of all trips by grid offset, same index as `ftab` (`Params::walk_share`);
     /// empty until `set_walk` fills it.
     pub wtab: Vec<f32>,
+    /// T-275: the zone-centre distances (km) by grid offset and the routes whose walk factors
+    /// lengthen the walk between nearby zones around water (`walk_share_pair`); set by `set_walk`.
+    pub wdtab: Vec<f32>,
+    pub wroutes: Option<std::sync::Arc<super::routes::Routes>>,
+    pub wcurve: (f32, f32),
     pub th: i32,
     pub offx: i32,
     pub offy: i32,
@@ -320,14 +401,44 @@ impl Gravity {
     pub fn key(&self, z: &Zones, j: usize) -> i32 {
         z.gx[j] * self.th + z.gy[j]
     }
+    /// The region factor between zones i and j: 1 in one region, `border` across.
+    #[inline]
+    pub fn k(&self, z: &Zones, i: usize, j: usize) -> f32 {
+        if z.region[i] == z.region[j] { 1.0 } else { self.border }
+    }
     pub fn t(&self, z: &Zones, i: usize, j: usize) -> f64 {
-        self.row[i] * self.col[j] * self.ftab[(self.base(z, i) + self.key(z, j)) as usize] as f64
+        self.row[i] * self.col[j] * (self.ftab[(self.base(z, i) + self.key(z, j)) as usize] * self.k(z, i, j)) as f64
     }
 
     /// Fill `wtab` from the zone-centre distances (the same ones `decay_table` uses).
     pub fn set_walk(&mut self, z: &Zones, p: &Params) {
         let (_, dtab) = decay_table(z.w, z.h, z.zone_m, 1.0, 0.0);
         self.wtab = dtab.iter().map(|&d| p.walk_share(d)).collect();
+        self.wroutes = p.routes.clone().filter(|r| r.walk_window() > 0);
+        self.wcurve = (p.walk_d0_km, p.walk_s_km);
+        self.wdtab = if self.wroutes.is_some() { dtab } else { vec![] };
+    }
+
+    /// The walk share between zones i and j at table index `k` (`base(i) + key(j)`): `wtab`,
+    /// or with the pack's routes (T-275) the walk around water between them, the zone-centre
+    /// distance times their walk factor.
+    #[inline]
+    pub fn walk_share_at(&self, i: usize, j: usize, k: usize) -> f32 {
+        if let Some(r) = &self.wroutes {
+            let f = r.walk_factor(i, j);
+            if f > 1.0 {
+                return 1.0 / (1.0 + ((self.wdtab[k] * f - self.wcurve.0) / self.wcurve.1).exp());
+            }
+        }
+        self.wtab[k]
+    }
+
+    /// The same for any zone pair (0 before `set_walk`).
+    pub fn walk_share_pair(&self, z: &Zones, i: usize, j: usize) -> f32 {
+        if self.wtab.is_empty() {
+            return 0.0;
+        }
+        self.walk_share_at(i, j, (self.base(z, i) + self.key(z, j)) as usize)
     }
 
     /// All-day trips that would walk with no rail at all: sum over zone pairs of T_IJ times the
@@ -343,10 +454,7 @@ impl Gravity {
         if self.wtab.is_empty() {
             return (home, work);
         }
-        let mut at = vec![NONE; (z.w * z.h) as usize];
-        for j in 0..z.n {
-            at[(z.gx[j] * z.h + z.gy[j]) as usize] = j as u32;
-        }
+        let (off, at) = z.by_square();
         // reach: the largest offset (in zones) along either axis whose share is above 1e-6
         let mut r = 0;
         while r < z.w.max(z.h) && self.wtab[((r + self.offx) * self.th + self.offy) as usize] > 1e-6 {
@@ -359,14 +467,14 @@ impl Gravity {
             let base = self.base(z, i);
             for gx in (z.gx[i] - r).max(0)..=(z.gx[i] + r).min(z.w - 1) {
                 for gy in (z.gy[i] - r).max(0)..=(z.gy[i] + r).min(z.h - 1) {
-                    let j = at[(gx * z.h + gy) as usize];
-                    if j == NONE {
-                        continue;
-                    }
+                    let s = (gx * z.h + gy) as usize;
                     let k = (base + gx * self.th + gy) as usize;
-                    let t = self.row[i] * self.col[j as usize] * (self.ftab[k] * self.wtab[k]) as f64;
-                    home[i] += t;
-                    work[j as usize] += t;
+                    for &j in &at[off[s] as usize..off[s + 1] as usize] {
+                        let j = j as usize;
+                        let t = self.row[i] * self.col[j] * (self.ftab[k] * self.k(z, i, j) * self.walk_share_at(i, j, k)) as f64;
+                        home[i] += t;
+                        work[j] += t;
+                    }
                 }
             }
         }
@@ -420,6 +528,7 @@ pub fn zones_from_pack(city: &City, pg: &PackGravity) -> Zones {
         cell_zone: pg.cell_zone.clone(),
         gx: pg.gx.clone(),
         gy: pg.gy.clone(),
+        region: if pg.zone_region.len() == n { pg.zone_region.clone() } else { vec![0; n] },
         w: pg.grid_w,
         h: pg.grid_h,
         x0: pg.grid_x0,
@@ -442,8 +551,12 @@ pub fn gravity_from_pack(z: &Zones, pg: &PackGravity) -> Gravity {
     Gravity {
         row: pg.row.clone(),
         col: pg.col.clone(),
+        border: pg.border_factor,
         ftab,
         wtab: vec![],
+        wdtab: vec![],
+        wroutes: None,
+        wcurve: (0.0, 1.0),
         th: 2 * z.h - 1,
         offx: z.w - 1,
         offy: z.h - 1,
@@ -460,6 +573,7 @@ pub fn to_pack_gravity(z: &Zones, g: &Gravity, p: &Params) -> PackGravity {
         zone_m: z.zone_m,
         decay_km: p.decay_km,
         decay_pow: p.decay_pow,
+        border_factor: g.border,
         grid_x0: z.x0,
         grid_y0: z.y0,
         grid_w: z.w,
@@ -467,17 +581,24 @@ pub fn to_pack_gravity(z: &Zones, g: &Gravity, p: &Params) -> PackGravity {
         cell_zone: z.cell_zone.clone(),
         gx: z.gx.clone(),
         gy: z.gy.clone(),
+        // one region: nothing to ship (and the pack reads as before T-162)
+        zone_region: if z.region.iter().any(|&r| r != z.region[0]) { z.region.clone() } else { vec![] },
         row: g.row.clone(),
         col: g.col.clone(),
         iters: g.iters,
         max_err: g.max_err,
         mean_km: g.mean_km,
         trips: g.total,
+        // the pack's own gravity: every commute stays in it (T-276's joint solve sets these)
+        home: vec![],
+        work: vec![],
+        joint: None,
     }
 }
 
 /// Doubly constrained gravity by Furness balancing. Workers = population scaled to total jobs.
-/// The decay depends on zone-centre distance only, so f is a small table by grid offset.
+/// The decay depends on zone-centre distance only, so f is a small table by grid offset; it is
+/// multiplied by `p.border_factor` between zones of different regions (T-162).
 pub fn gravity(z: &Zones, p: &Params, max_iters: usize, tol: f64) -> Gravity {
     let (w, h) = (z.w, z.h);
     let th = 2 * h - 1;
@@ -489,17 +610,21 @@ pub fn gravity(z: &Zones, p: &Params, max_iters: usize, tol: f64) -> Gravity {
     let rows: Vec<usize> = (0..z.n).filter(|&i| o[i] > 0.0).collect();
     let cols: Vec<usize> = (0..z.n).filter(|&j| z.jobs[j] > 0.0).collect();
     let ckey: Vec<i32> = cols.iter().map(|&j| z.gx[j] * th + z.gy[j]).collect();
-    let mut g = Gravity { row: vec![0.0; z.n], col: z.jobs.clone(), ftab, wtab: vec![], th, offx, offy, iters: 0, max_err: 0.0, mean_km: 0.0, total: 0.0 };
+    let creg: Vec<u8> = cols.iter().map(|&j| z.region[j]).collect();
+    // the factor by "regions differ" (index 0 same, 1 different)
+    let kf = [1.0f64, p.border_factor as f64];
+    let mut g = Gravity { row: vec![0.0; z.n], col: z.jobs.clone(), border: p.border_factor, ftab, wtab: vec![], wdtab: vec![], wroutes: None, wcurve: (0.0, 1.0), th, offx, offy, iters: 0, max_err: 0.0, mean_km: 0.0, total: 0.0 };
     let mut colc: Vec<f64> = cols.iter().map(|&j| g.col[j]).collect();
     let mut acc = vec![0f64; cols.len()];
     for it in 0..max_iters {
-        // rows: A_I = 1 / sum_J col_J f_IJ
+        // rows: A_I = 1 / sum_J col_J f_IJ k_IJ
         let mut err: f64 = 0.0;
         for &i in &rows {
             let base = g.base(z, i);
+            let ri = z.region[i];
             let mut s = 0.0f64;
             for (k, &key) in ckey.iter().enumerate() {
-                s += colc[k] * g.ftab[(base + key) as usize] as f64;
+                s += colc[k] * g.ftab[(base + key) as usize] as f64 * kf[(creg[k] != ri) as usize];
             }
             if it > 0 {
                 err = err.max((g.row[i] * s / o[i] - 1.0).abs());
@@ -511,13 +636,14 @@ pub fn gravity(z: &Zones, p: &Params, max_iters: usize, tol: f64) -> Gravity {
         if it > 0 && err < tol {
             break;
         }
-        // columns: B_J = 1 / sum_I row_I f_IJ
+        // columns: B_J = 1 / sum_I row_I f_IJ k_IJ
         acc.iter_mut().for_each(|v| *v = 0.0);
         for &i in &rows {
             let base = g.base(z, i);
+            let ri = z.region[i];
             let r = g.row[i];
             for (k, &key) in ckey.iter().enumerate() {
-                acc[k] += r * g.ftab[(base + key) as usize] as f64;
+                acc[k] += r * g.ftab[(base + key) as usize] as f64 * kf[(creg[k] != ri) as usize];
             }
         }
         for (k, &j) in cols.iter().enumerate() {
@@ -529,9 +655,10 @@ pub fn gravity(z: &Zones, p: &Params, max_iters: usize, tol: f64) -> Gravity {
     let (mut sum, mut sumd) = (0.0f64, 0.0f64);
     for &i in &rows {
         let base = g.base(z, i);
+        let ri = z.region[i];
         for (k, &key) in ckey.iter().enumerate() {
             let idx = (base + key) as usize;
-            let t = g.row[i] * colc[k] * g.ftab[idx] as f64;
+            let t = g.row[i] * colc[k] * g.ftab[idx] as f64 * kf[(creg[k] != ri) as usize];
             sum += t;
             sumd += t * dtab[idx] as f64;
         }
@@ -551,6 +678,9 @@ pub struct Access {
     /// Real walk minutes, K per cell.
     pub walk: Vec<f32>,
     pub cells_with_access: usize,
+    /// Per station, the cells whose walk to it goes around water (T-275,
+    /// `routes::Routes::station_walks`), with their walking metres; None without routes.
+    pub ex: Vec<Option<std::sync::Arc<Vec<(u32, f32)>>>>,
 }
 
 /// Station lookup grid with buckets the size of the walk cutoff.
@@ -613,7 +743,7 @@ const ACCESS_BUCKET_M: f32 = 1000.0;
 /// sparse).
 pub fn build_access(city: &City, net: &Network, p: &Params) -> Access {
     let n = city.len();
-    let mut a = Access { n: vec![0; n], st: vec![NONE; n * K], walk: vec![f32::INFINITY; n * K], cells_with_access: 0 };
+    let mut a = Access { n: vec![0; n], st: vec![NONE; n * K], walk: vec![f32::INFINITY; n * K], cells_with_access: 0, ex: vec![None; net.n_stations()] };
     if net.n_stations() == 0 || n == 0 {
         return a;
     }
@@ -650,12 +780,37 @@ pub fn build_access(city: &City, net: &Network, p: &Params) -> Access {
         let gx1 = (((sx + cut - minx) / size).floor() as i32).min(w - 1);
         let gy0 = (((sy - cut - miny) / size).floor() as i32).max(0);
         let gy1 = (((sy + cut - miny) / size).floor() as i32).min(h - 1);
+        // T-275: the cells whose walk to this station goes around water (searched once a station
+        // position, kept for the thread)
+        let ex = p.routes.as_ref().and_then(|r| {
+            r.station_walks(sx, sy, cut, |f| {
+                for gx in gx0..=gx1 {
+                    for gy in gy0..=gy1 {
+                        let k = (gx * h + gy) as usize;
+                        for &c in &cells[off[k] as usize..off[k + 1] as usize] {
+                            f(c, city.x[c as usize], city.y[c as usize]);
+                        }
+                    }
+                }
+            })
+        });
+        a.ex[s] = ex.clone();
+        let exl: &[(u32, f32)] = ex.as_deref().map_or(&[], |v| &v[..]);
         for gx in gx0..=gx1 {
             for gy in gy0..=gy1 {
                 let k = (gx * h + gy) as usize;
                 for &c in &cells[off[k] as usize..off[k + 1] as usize] {
+                    let mut d2 = (city.x[c as usize] - sx).powi(2) + (city.y[c as usize] - sy).powi(2);
+                    if !exl.is_empty() && d2 <= cut2 {
+                        if let Ok(e) = exl.binary_search_by_key(&c, |e| e.0) {
+                            let m = exl[e].1;
+                            if m > cut {
+                                continue; // around the water it is beyond the walk's bound
+                            }
+                            d2 = m * m;
+                        }
+                    }
                     let c = c as usize;
-                    let d2 = (city.x[c] - sx).powi(2) + (city.y[c] - sy).powi(2);
                     let cnt = a.n[c] as usize;
                     let wk = &mut a.walk[c * K..c * K + K];
                     if d2 > cut2 || (cnt == K && d2 >= wk[K - 1]) {
@@ -700,8 +855,8 @@ pub struct Subzones {
     pub cx: Vec<f32>,
     pub cy: Vec<f32>,
     /// CSR access list (the fast walk, SPEC 4.3): station, perceived minutes (the members'
-    /// `Params::access_cost`, pop/jobs-weighted mean), and the weighted mean straight-line
-    /// distance in metres. Used at both ends of a trip.
+    /// `Params::access_cost`, pop/jobs-weighted mean), and the weighted mean distance in metres
+    /// (straight, or around water with the pack's routes, T-275). Used at both ends of a trip.
     pub acc_off: Vec<u32>,
     pub acc_st: Vec<u32>,
     pub acc_w: Vec<f32>,
@@ -809,11 +964,17 @@ pub fn build_subzones(city: &City, zones: &Zones, acc: &Access, net: &Network, p
         }
         for e in cand.iter_mut() {
             let (sx, sy) = (net.st_x[e.1 as usize], net.st_y[e.1 as usize]);
+            let ex = acc.ex.get(e.1 as usize).and_then(|v| v.as_ref());
             let (mut wd, mut wc) = (0.0f64, 0.0f64);
             for &c in m {
-                let c = c as usize;
-                let wt = (city.pop[c] + city.jobs[c]).max(1e-6) as f64;
-                let d = ((city.x[c] - sx).powi(2) + (city.y[c] - sy).powi(2)).sqrt();
+                let wt = (city.pop[c as usize] + city.jobs[c as usize]).max(1e-6) as f64;
+                let d = ((city.x[c as usize] - sx).powi(2) + (city.y[c as usize] - sy).powi(2)).sqrt();
+                // T-275: around water where the walk must go round (cut off: no weight)
+                let d = super::routes::walk_m(ex, c, d);
+                if !d.is_finite() {
+                    wd += wt * p.walk_cutoff_m as f64;
+                    continue;
+                }
                 wd += wt * d as f64;
                 wc += wt * (-(p.beta * p.access_cost(d)) as f64).exp();
             }
@@ -824,7 +985,7 @@ pub fn build_subzones(city: &City, zones: &Zones, acc: &Access, net: &Network, p
             // subzone per cell on the hand-made network, this 0.1% over)
             e.0 = (-(wc / wsum).ln() / p.beta as f64) as f32;
         }
-        cand.retain(|e| e.2 <= p.walk_cutoff_m);
+        cand.retain(|e| e.2 <= p.walk_cutoff_m && e.0.is_finite());
         if cand.is_empty() {
             // every member is within reach of its own nearest station, so the mean distance to
             // that station is too; this only guards against rounding
@@ -894,6 +1055,10 @@ pub struct Graph {
     pub rn_fare: Vec<f32>,
     /// Departures an hour for each route node in this period.
     pub rn_tph: Vec<f32>,
+    /// Average extra real minutes a rider boarding at this route node waits because full trains
+    /// leave riders on the platform (T-188, `left_behind`); 0 at free flow. Added to the
+    /// boarding at the platform wait's weight.
+    pub rn_left: Vec<f32>,
     /// Incoming edges, CSR, for destination-based strategy search.
     pub rev_off: Vec<u32>,
     pub rev_from: Vec<u32>,
@@ -952,24 +1117,41 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
         }
         edges.push((node, st, 0.0, NONE));
     }
-    // walking transfers: from each route node (having ridden) to the stations nearby
+    // walking transfers: from each route node (having ridden) to the stations nearby, and to every
+    // other station of its complex however far (T-161), at the same walk cost by distance
+    let cut2 = p.xfer_walk_m * p.xfer_walk_m;
+    let walk = |a: usize, b: usize| {
+        let d2 = (net.st_x[b] - net.st_x[a]).powi(2) + (net.st_y[b] - net.st_y[a]).powi(2);
+        (d2, p.xfer_min(d2.sqrt()) * p.w_xfer)
+    };
+    let mut near: Vec<Vec<(u32, f32)>> = vec![vec![]; s];
     if p.xfer_walk_m > 0.0 && s > 1 {
         let grid = StationGrid::new(net, p.xfer_walk_m, p.xfer_walk_m);
-        let cut2 = p.xfer_walk_m * p.xfer_walk_m;
-        let mut near: Vec<Vec<(u32, f32)>> = vec![vec![]; s];
         for a in 0..s {
-            let (x, y) = (net.st_x[a], net.st_y[a]);
-            grid.near(x, y, |b| {
-                let d2 = (net.st_x[b as usize] - x).powi(2) + (net.st_y[b as usize] - y).powi(2);
+            grid.near(net.st_x[a], net.st_y[a], |b| {
+                let (d2, c) = walk(a, b as usize);
                 if b as usize != a && d2 <= cut2 {
-                    near[a].push((b, p.xfer_min(d2.sqrt()) * p.w_xfer));
+                    near[a].push((b, c));
                 }
             });
         }
-        for (r, &st) in rn_station.iter().enumerate() {
-            for &(b, c) in &near[st as usize] {
-                edges.push(((s + r) as u32, b, c, NONE));
+    }
+    if net.st_group.len() == s {
+        for members in complex_members(&net.st_group) {
+            for &a in &members {
+                for &b in &members {
+                    let (d2, c) = walk(a as usize, b as usize);
+                    // within the walk limit the edge is there already
+                    if a != b && (p.xfer_walk_m <= 0.0 || d2 > cut2) {
+                        near[a as usize].push((b, c));
+                    }
+                }
             }
+        }
+    }
+    for (r, &st) in rn_station.iter().enumerate() {
+        for &(b, c) in &near[st as usize] {
+            edges.push(((s + r) as u32, b, c, NONE));
         }
     }
     edges.sort_by_key(|e| e.0);
@@ -990,6 +1172,7 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
         if h > 0.0 && h.is_finite() { 60.0 / h } else { 0.0 }
     }).collect();
     Graph {
+        rn_left: vec![0.0; rn_ride.len()],
         rn_tph,
         rev_off,
         rev_from: incoming.iter().map(|x| x.1).collect(),
@@ -1005,6 +1188,17 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
         adj_cost: edges.iter().map(|e| e.2).collect(),
         adj_seg: edges.iter().map(|e| e.3).collect(),
     }
+}
+
+/// The stations of each complex with more than one (`Network::st_group`), in station order.
+pub fn complex_members(group: &[u32]) -> Vec<Vec<u32>> {
+    let mut by: HashMap<u32, Vec<u32>> = HashMap::new();
+    for (st, &g) in group.iter().enumerate() {
+        by.entry(g).or_default().push(st as u32);
+    }
+    let mut out: Vec<Vec<u32>> = by.into_values().filter(|m| m.len() > 1).collect();
+    out.sort_unstable_by_key(|m| m[0]);
+    out
 }
 
 /// Ride edges cost real minutes times a crowding factor per segment (indexed by route node).
@@ -1099,6 +1293,8 @@ pub fn skims_extend(sk: &mut Skims, g: &Graph, p: &Params, want: &[bool]) {
                 let nd = if from < s && v >= s {
                     let f = g.rn_tph[v - s];
                     if f == 0.0 { continue; }
+                    // a line that leaves riders behind costs its boarders the extra wait (T-188)
+                    let d = d + g.rn_left[v - s] * p.w_wait;
                     let sum = frequency[from] + f;
                     let cost = (weighted[from] + f * d) / sum + board_cost(60.0 / sum, p);
                     if cost >= dist[from] { continue; }
@@ -1155,12 +1351,13 @@ struct SkimKey {
     adj_to: Vec<u32>,
     adj_cost: Vec<f32>,
     rn_tph: Vec<f32>,
+    rn_left: Vec<f32>,
     par: [f32; 4],
 }
 
 impl SkimKey {
     fn of(g: &Graph, p: &Params) -> SkimKey {
-        SkimKey { n_st: g.n_st, n: g.n, adj_off: g.adj_off.clone(), adj_to: g.adj_to.clone(), adj_cost: g.adj_cost.clone(), rn_tph: g.rn_tph.clone(), par: [p.platform_wait_cap_min, p.w_wait, p.w_home_wait, p.transfer_min] }
+        SkimKey { n_st: g.n_st, n: g.n, adj_off: g.adj_off.clone(), adj_to: g.adj_to.clone(), adj_cost: g.adj_cost.clone(), rn_tph: g.rn_tph.clone(), rn_left: g.rn_left.clone(), par: [p.platform_wait_cap_min, p.w_wait, p.w_home_wait, p.transfer_min] }
     }
     fn same(&self, g: &Graph, p: &Params) -> bool {
         self.n_st == g.n_st
@@ -1170,6 +1367,7 @@ impl SkimKey {
             && self.adj_to == g.adj_to
             && self.adj_cost == g.adj_cost
             && self.rn_tph == g.rn_tph
+            && self.rn_left == g.rn_left
     }
 }
 
@@ -1383,6 +1581,8 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
     // "packed per-destination layout"): per zone, then per subzone, then its egress stations.
     struct DZone {
         key: i32,
+        reg: u8,
+        zid: u32,
         min: f32,
         dv: f32,
         q0: u32,
@@ -1417,11 +1617,14 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
             dvz += dv[v];
             dst.push(Dst { x: sz.cx[v], y: sz.cy[v], loc: local[v], park: park[v], dv: dv[v], m: acc_m[v], e0, e1: eg_st.len() as u32 });
         }
-        dz.push(DZone { key: gr.key(z, j), min: zmin(j), dv: dvz, q0, q1: dst.len() as u32 });
+        dz.push(DZone { key: gr.key(z, j), reg: z.region[j], zid: j as u32, min: zmin(j), dv: dvz, q0, q1: dst.len() as u32 });
     }
     // the decay and the walk share by zone offset side by side: one lookup per zone pair
     let fw: Vec<[f32; 2]> = gr.ftab.iter().enumerate().map(|(k, &f)| [f, if gr.wtab.is_empty() { 0.0 } else { gr.wtab[k] }]).collect();
-    let mut fz = vec![[0f32; 2]; dz.len()];
+    // with a third: the road's length over the straight line between the zones (T-275)
+    let mut fz = vec![[0f32, 0.0, p.road_detour]; dz.len()];
+    let routed_walk = gr.wroutes.is_some();
+    let routed_drive = p.routes.as_ref().is_some_and(|r| r.has_drive());
     let mut a_row = vec![0f32; s];
     let mut y_row = vec![0f32; s];
     // per destination (position in `dst`): rail trips over the logsum, for the origin at hand
@@ -1433,10 +1636,22 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
         let base = gr.base(z, i);
         let us = &sz.zo[sz.zo_off[i] as usize..sz.zo_off[i + 1] as usize];
         let ou_zone: f32 = us.iter().map(|&u| ou[u as usize]).sum();
-        // the decay and walk share to every destination zone, once for all of this zone's
-        // origins
+        // the decay (times the region factor) and walk share to every destination zone, once
+        // for all of this zone's origins
+        let ri = z.region[i];
         for (o, zj) in fz.iter_mut().zip(&dz) {
-            *o = fw[(base + zj.key) as usize];
+            let k = (base + zj.key) as usize;
+            let [f, w] = fw[k];
+            *o = [f, w, o[2]];
+            if zj.reg != ri {
+                o[0] *= gr.border;
+            }
+            if routed_walk && w > 0.0 {
+                o[1] = gr.walk_share_at(i, zj.zid as usize, k);
+            }
+            if routed_drive {
+                o[2] = p.drive_factor(i, zj.zid as usize);
+            }
         }
         for (ui, &u) in us.iter().enumerate() {
             let u = u as usize;
@@ -1457,7 +1672,7 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
             // past this, a destination's walk takes the pair over `pair_walk_max`
             let wmax = p.pair_walk_max - m_u;
             let nz = dstep.partition_point(|&m| m as f32 * 10.0 <= wmax);
-            for (zj, &[f, pw]) in dz[..nz].iter().zip(&fz) {
+            for (zj, &[f, pw, df]) in dz[..nz].iter().zip(&fz) {
                 if zj.min > wmax {
                     continue;
                 }
@@ -1483,7 +1698,7 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
                         continue; // no rail route (or only the same station at both ends)
                     }
                     let d = ((ux - dd.x).powi(2) + (uy - dd.y).powi(2)).sqrt();
-                    let road = p.drive_min(d, lu, dd.loc) * p.w_drive + dd.park;
+                    let road = p.drive_min_f(d, df, lu, dd.loc) * p.w_drive + dd.park;
                     let rail = m_u + dd.m + p.fare_min - fast_ln(ssum) / th;
                     let util = p.beta * (road - rail) + p.asc_rail;
                     let x = tu * dd.dv * (1.0 - pw) / (1.0 + fast_exp(-util));
@@ -1570,10 +1785,89 @@ impl Loads {
 /// splits over useful departures; route flow follows its best ride/alight/walking-transfer edge.
 /// Work is O(edges) per destination, independent of the number of OD pairs carrying flow.
 pub fn assign(g: &Graph, sk: &Skims, od: &[f32]) -> Loads {
+    assign_inner(g, sk, od, None)
+}
+
+/// `assign`, also adding the period's transfers into `xfer` (laid out by `ix`, T-176). The loads
+/// are `assign`'s to the bit: the transfers are counted beside them, never mixed in.
+pub fn assign_with_transfers(g: &Graph, sk: &Skims, od: &[f32], ix: &XferIndex, xfer: &mut [f32]) -> Loads {
+    debug_assert_eq!(xfer.len(), ix.len);
+    if cfg!(test) && XFER_OFF.load(std::sync::atomic::Ordering::Relaxed) {
+        return assign(g, sk, od);
+    }
+    assign_inner(g, sk, od, Some((ix, xfer)))
+}
+
+/// Test switch (T-176's cost measurement): `assign_with_transfers` counts nothing.
+pub static XFER_OFF: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// Where transfers are counted (T-176): one slot per (arriving edge, departure) pair a rider can
+/// change between. An arriving edge is a route node's edge to a station: alighting at its own
+/// station, or a walking transfer to one nearby; the departures are that station's boarding
+/// edges. So a slot is a pair of route nodes (line, direction and stop in, and out), which is
+/// platform to platform. Depends only on the graph's edges, the same in every period and round.
+pub struct XferIndex {
+    /// Per edge: for an arriving edge, its first slot (its station's departures follow in edge
+    /// order); `NONE` for every other edge.
+    pub at: Vec<u32>,
+    pub len: usize,
+}
+
+pub fn xfer_index(g: &Graph) -> XferIndex {
+    let s = g.n_st;
+    let mut at = vec![NONE; g.adj_to.len()];
+    let mut len = 0usize;
+    for v in s..g.n {
+        for e in g.adj_off[v] as usize..g.adj_off[v + 1] as usize {
+            let to = g.adj_to[e] as usize;
+            if to < s {
+                at[e] = len as u32;
+                len += (g.adj_off[to + 1] - g.adj_off[to]) as usize;
+            }
+        }
+    }
+    XferIndex { at, len }
+}
+
+/// The transfers in `xfer` (laid out by `ix`) with either end at a route node marked in `sel`
+/// (one byte per route node), as triples (route node in, route node out, riders), appended to
+/// `out`. Route nodes are indices from 0 (node - n_st), the order of `Loads::seg`.
+pub fn transfer_pairs(g: &Graph, ix: &XferIndex, xfer: &[f32], sel: &[u8], out: &mut Vec<f32>) {
+    let s = g.n_st;
+    if xfer.len() != ix.len || sel.len() != g.n - s {
+        return;
+    }
+    for v in s..g.n {
+        let a = sel[v - s] != 0;
+        for e in g.adj_off[v] as usize..g.adj_off[v + 1] as usize {
+            let slot = ix.at[e];
+            if slot == NONE {
+                continue;
+            }
+            let to = g.adj_to[e] as usize;
+            for (k, d) in (g.adj_off[to] as usize..g.adj_off[to + 1] as usize).enumerate() {
+                let x = xfer[slot as usize + k];
+                let w = g.adj_to[d] as usize - s;
+                if x > 0.0 && (a || sel[w] != 0) {
+                    out.extend([(v - s) as f32, w as f32, x]);
+                }
+            }
+        }
+    }
+}
+
+fn assign_inner(g: &Graph, sk: &Skims, od: &[f32], mut xf: Option<(&XferIndex, &mut [f32])>) -> Loads {
     let (s, n) = (sk.s, sk.n);
     let nr = n - s;
     let mut l = Loads::zero(s, nr);
     let mut flow = vec![0f32; n];
+    // T-176: riders arriving at each station towards this destination, as a list per station
+    // (first record, then each record's next): the arriving edge's first slot and the riders.
+    // A station is walked after every node that feeds it, so its list is whole by then.
+    let counting = xf.is_some();
+    let mut head = if counting { vec![NONE; s] } else { vec![] };
+    let mut rec: Vec<(u32, f32, u32)> = vec![];
+    let mut use_k: Vec<(u32, f32)> = vec![];
     for dst in 0..s {
         flow.fill(0.0);
         let mut total = 0.0;
@@ -1591,6 +1885,10 @@ pub fn assign(g: &Graph, sk: &Skims, od: &[f32]) -> Loads {
         let next = &sk.next[slot][..];
         let board = &sk.board_tph[slot][..];
         let order = &sk.order[slot][..];
+        if counting {
+            head.fill(NONE);
+            rec.clear();
+        }
         for &v in order.iter().skip(1).rev() {
             let v = v as usize;
             let f = flow[v];
@@ -1600,11 +1898,31 @@ pub fn assign(g: &Graph, sk: &Skims, od: &[f32]) -> Loads {
                 let sum: f32 = edges.clone().map(|e| board[g.adj_to[e] as usize - s]).sum();
                 if sum == 0.0 { continue; }
                 l.board[v] += f;
-                for e in edges {
+                for e in edges.clone() {
                     let to = g.adj_to[e] as usize;
                     let share = f * board[to - s] / sum;
                     flow[to] += share;
                     l.rn_board[to - s] += share;
+                }
+                if head.get(v).is_some_and(|&h| h != NONE) {
+                    // the riders who arrived here leave by the departures as everyone here does
+                    // (only the useful ones: about half go the wrong way for this destination)
+                    use_k.clear();
+                    for (k, e) in edges.clone().enumerate() {
+                        let b = board[g.adj_to[e] as usize - s];
+                        if b > 0.0 {
+                            use_k.push((k as u32, b / sum));
+                        }
+                    }
+                    let x = &mut xf.as_mut().unwrap().1;
+                    let mut i = head[v];
+                    while i != NONE {
+                        let (at, fin, nx) = rec[i as usize];
+                        for &(k, share) in &use_k {
+                            x[(at + k) as usize] += fin * share;
+                        }
+                        i = nx;
+                    }
                 }
             } else {
                 let to = next[v] as usize;
@@ -1617,6 +1935,13 @@ pub fn assign(g: &Graph, sk: &Skims, od: &[f32]) -> Loads {
                     // Walking transfers alight at the route node's station, not the walk's end.
                     l.alight[g.rn_station[v - s] as usize] += f;
                     l.rn_alight[v - s] += f;
+                    if to != dst {
+                        if let Some((ix, _)) = xf.as_ref() {
+                            let e = (g.adj_off[v] as usize..g.adj_off[v + 1] as usize).find(|&e| g.adj_to[e] as usize == to).unwrap();
+                            rec.push((ix.at[e], f, head[to]));
+                            head[to] = (rec.len() - 1) as u32;
+                        }
+                    }
                 }
             }
         }
@@ -1688,6 +2013,150 @@ pub fn msa(avg: &mut [f32], new: &[f32], round: usize) {
     }
 }
 
+// ---------------------------------------------------------------------------------------------
+// 7b. Riders left behind by full trains (T-188)
+
+/// The longest average extra wait, in real minutes, a boarding is given for full trains: a line
+/// whose riders arrive faster than its trains take them all period long has a queue that never
+/// clears, and its wait would grow without bound.
+pub const LEFT_WAIT_CAP_MIN: f32 = 60.0;
+
+/// What `left_behind` found over a period's network.
+#[derive(Clone, Copy, Debug, Default)]
+pub struct LeftStats {
+    /// Riders who could not get on the first train to leave after they arrived (the boarding
+    /// account's "left behind", `RunAccount::left_h`).
+    pub left: f64,
+    /// Extra minutes waited for full trains, all riders together.
+    pub rider_min: f64,
+    /// Route nodes where anyone is left behind.
+    pub stops: usize,
+}
+
+/// The boarding account's rule (track/boarding.rs, docs/track-and-service.md 6.6) run on one
+/// period's own trains, to price riders left behind into the next crowding round (T-188): per
+/// route node, the average extra real minutes a rider boarding there waits because full trains
+/// left them on the platform.
+///
+/// Each direction of each line runs its period's trains at an even headway; riders arrive at each
+/// stop over the period by the account's shape for that period (scaled so the busiest hour is
+/// the busiest-hour factor times the mean, so riders arrive fastest mid-period); each train lets
+/// off the stop's share alighting (demand's alightings over the riders arriving there) and takes
+/// whoever waits up to its crush load. Whoever does not fit waits a headway more for the next
+/// train of the same line and direction. A queue still there when the period ends is cleared at
+/// the period's average spare room (a queue that grows for half an hour and clears in half an
+/// hour adds its riders' half hour). Trains leaving before the period carry riders arriving at
+/// the period's opening rate, so they reach the later stops with a load. `board` and `alight`
+/// are the period's riders per route node, every population together.
+pub fn left_behind(g: &Graph, net: &Network, p: &Params, board: &[f32], alight: &[f32]) -> (Vec<f32>, LeftStats) {
+    use crate::track::boarding::{shape_cum, shape_g, shape_strength, SHAPE};
+    let nr = g.rn_line.len();
+    let mut out = vec![0.0f32; nr];
+    let mut stats = LeftStats::default();
+    if board.len() != nr || alight.len() != nr || p.period_hours <= 0.0 {
+        return (out, stats);
+    }
+    let shape = SHAPE[p.period.min(SHAPE.len() - 1)];
+    let hours = p.period_hours as f64;
+    let c = shape_strength(shape, hours, p.peak_hour_factor as f64);
+    let len = hours * 3600.0;
+    let rate0 = 1.0 + c * shape_g(shape, 0.0);
+    let mut alpha: Vec<f64> = vec![];
+    let mut off: Vec<f64> = vec![];
+    let mut carry: Vec<f64> = vec![];
+    let mut r0 = 0usize;
+    for l in 0..net.n_lines() {
+        let n = (net.line_off[l + 1] - net.line_off[l]) as usize;
+        for _dir in 0..2 {
+            let run = r0..r0 + n;
+            r0 += n;
+            let tph = g.rn_tph[run.start] as f64;
+            let cap = net.line_crush[l] as f64;
+            let b = &board[run.clone()];
+            if n < 2 || tph <= 0.0 || cap <= 0.0 || b.iter().map(|&v| v as f64).sum::<f64>() < 1.0 {
+                continue;
+            }
+            let a = &alight[run.clone()];
+            // the share of the riders aboard leaving at each stop, from the period's totals
+            alpha.clear();
+            let mut on = 0.0f64;
+            for k in 0..n {
+                let off_k = a[k] as f64;
+                alpha.push(if k + 1 == n { 1.0 } else if on > 1e-6 { (off_k / on).clamp(0.0, 1.0) } else { 0.0 });
+                on = (on + b[k] as f64 - off_k).max(0.0);
+            }
+            // seconds from the first stop to each stop
+            off.clear();
+            let mut t = 0.0f64;
+            for k in 0..n {
+                off.push(t);
+                t += g.rn_ride[run.start + k] as f64 * 60.0;
+            }
+            let h = 3600.0 / tph;
+            // trains leaving the first stop from a run and a headway before the period to its end
+            let i0 = -((off[n - 1] + h) / h).ceil() as i64;
+            let i1 = (len / h).ceil() as i64;
+            carry.clear();
+            carry.resize((i1 - i0).max(0) as usize, 0.0);
+            for k in 0..n {
+                let bk = b[k] as f64;
+                let cum = |t: f64| if t <= 0.0 { bk / len * rate0 * t } else if t >= len { bk } else { bk * shape_cum(shape, c, t / len) };
+                let (mut q, mut q_end, mut rider_s, mut left) = (0.0f64, 0.0f64, 0.0f64, 0.0f64);
+                let (mut room_sum, mut trains) = (0.0f64, 0usize);
+                for (j, i) in (i0..i1).enumerate() {
+                    let t = (i as f64 + 0.5) * h + off[k];
+                    let arrived = (cum(t) - cum(t - h)).max(0.0);
+                    let on = carry[j] * (1.0 - alpha[k]);
+                    let room = (cap - on).max(0.0);
+                    let waiting = q + arrived;
+                    let got_on = waiting.min(room);
+                    q = waiting - got_on;
+                    carry[j] = if k + 1 < n { on + got_on } else { 0.0 };
+                    if (0.0..len).contains(&t) {
+                        rider_s += q * h;
+                        left += arrived.min(q);
+                        room_sum += room;
+                        trains += 1;
+                        q_end = q;
+                    }
+                }
+                if bk < 1.0 || trains == 0 {
+                    continue;
+                }
+                if q_end > 0.0 {
+                    // what is left clears at the room the period's trains had to spare on average
+                    let spare = room_sum / trains as f64 * tph / 3600.0 - bk / len;
+                    rider_s += if spare > 0.0 { (q_end * q_end / (2.0 * spare)).min(q_end * len) } else { q_end * len };
+                }
+                if rider_s > 0.0 {
+                    out[run.start + k] = ((rider_s / bk / 60.0) as f32).min(LEFT_WAIT_CAP_MIN);
+                    stats.left += left;
+                    stats.rider_min += rider_s / 60.0;
+                    stats.stops += 1;
+                }
+            }
+        }
+    }
+    (out, stats)
+}
+
+/// The costs a crowding round is solved with, from the frozen loads of every population together
+/// (`total`): the crowding factor per segment from the segment loads, and, when `total` also
+/// carries the boardings and alightings per route node after them (`3 x` route nodes), the extra
+/// wait for riders left behind (`left_behind`, T-188; none with the segment loads alone or with
+/// `Params::left_behind` off). None if `total` has another length or a bad number.
+pub fn round_costs(g: &Graph, net: &Network, p: &Params, total: &[f32]) -> Option<(Vec<f32>, Vec<f32>)> {
+    let nr = g.rn_line.len();
+    if (total.len() != nr && total.len() != 3 * nr) || total.iter().any(|v| !v.is_finite() || *v < 0.0) {
+        return None;
+    }
+    let mut loads = Loads::zero(g.n_st, nr);
+    loads.seg.copy_from_slice(&total[..nr]);
+    let (fac, _) = crowd_factors(g, net, &loads, p);
+    let left = if total.len() == 3 * nr && p.left_behind { left_behind(g, net, p, &total[nr..2 * nr], &total[2 * nr..]).0 } else { vec![0.0; nr] };
+    Some((fac, left))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1700,6 +2169,7 @@ mod tests {
             hop_min: vec![], hop_back: vec![], line_speed_kmh: vec![0.0; lines.len()],
             line_headway_min: tph.iter().map(|t| [if *t > 0.0 { 60.0 / t } else { f32::INFINITY }; network::PERIODS]).collect(),
             line_seats: vec![100.0; lines.len()], line_crush: vec![200.0; lines.len()],
+            st_group: vec![],
         };
         for (l, stops) in lines.iter().enumerate() {
             net.line_stops.extend_from_slice(stops);
@@ -1827,6 +2297,140 @@ mod tests {
         clear_skim_cache();
     }
 
+    /// T-176: transfers are counted platform to platform. A to C changes at B from line 0 to line 1
+    /// (and back on the way home); riders who end at B do not transfer.
+    #[test]
+    fn transfers_between_route_nodes() {
+        let p = common_test_params();
+        // line 0: 0-1-2, line 1: 1-3 (stations 1 and 2 at 2 and 4 km on x, 3 is 2 km north of 2)
+        let net = common_test_net(&[&[0, 1, 2], &[1, 3]], &[6.0, 6.0], &[2.0, 2.0]);
+        let g = build_graph(&net, &p);
+        let sk = skims(&g, &p);
+        let s = g.n_st;
+        let mut od = vec![0.0; s * s];
+        od[3] = 100.0; // 0 to 3: line 0 to B, line 1 on
+        od[s * 3] = 40.0; // 3 to 0: line 1 to B, line 0 back
+        od[1] = 7.0; // 0 to 1: no transfer
+        let ix = xfer_index(&g);
+        let mut x = vec![0.0; ix.len];
+        let l = assign_with_transfers(&g, &sk, &od, &ix, &mut x);
+        let plain = assign(&g, &sk, &od);
+        assert_eq!((l.seg, l.board, l.rn_board, l.rn_alight), (plain.seg.clone(), plain.board.clone(), plain.rn_board.clone(), plain.rn_alight.clone()));
+        let mut out = vec![];
+        transfer_pairs(&g, &ix, &x, &vec![1u8; g.n - s], &mut out);
+        // route nodes: line 0 run 0 = 0,1,2 (stations 0,1,2), run 1 = 3,4,5 (2,1,0); line 1 run 0 =
+        // 6,7 (1,3), run 1 = 8,9 (3,1)
+        let mut pairs: Vec<(u32, u32, f32)> = out.chunks(3).map(|c| (c[0] as u32, c[1] as u32, c[2])).collect();
+        pairs.sort_by_key(|p| (p.0, p.1));
+        assert_eq!(pairs, vec![(1, 6, 100.0), (9, 4, 40.0)]);
+        // only pairs touching the selection
+        let mut sel = vec![0u8; g.n - s];
+        sel[4] = 1;
+        let mut out = vec![];
+        transfer_pairs(&g, &ix, &x, &sel, &mut out);
+        assert_eq!(out, vec![9.0, 4.0, 40.0]);
+    }
+
+    /// T-161: stations of one complex are walking transfers whatever the distance, costed like any
+    /// walk; without the complex 2 km is out of reach and the trip has no rail.
+    #[test]
+    fn complex_members_are_walking_transfers() {
+        let p = Params { xfer_walk_m: 300.0, ..common_test_params() };
+        // line 0: 0-1, line 1: 2-3; stations 1 and 2 are 2 km apart
+        let mut net = common_test_net(&[&[0, 1], &[2, 3]], &[6.0, 6.0], &[2.0, 2.0]);
+        let walk_edge = |g: &Graph, r: usize, to: u32| (g.adj_off[g.n_st + r] as usize..g.adj_off[g.n_st + r + 1] as usize).find(|&e| g.adj_to[e] == to).map(|e| g.adj_cost[e]);
+        let g = build_graph(&net, &p);
+        assert_eq!(walk_edge(&g, 1, 2), None);
+        assert!(skims(&g, &p).r[3].is_infinite());
+        net.st_group = vec![0, 1, 1, 3];
+        let g = build_graph(&net, &p);
+        // route nodes: line 0 run 0 = 0, 1 (stations 0, 1); line 1 run 0 = 4, 5 (2, 3)
+        assert_eq!(walk_edge(&g, 1, 2), Some(p.xfer_min(2000.0) * p.w_xfer));
+        assert_eq!(walk_edge(&g, 4, 1), Some(p.xfer_min(2000.0) * p.w_xfer));
+        assert_eq!(walk_edge(&g, 1, 0), None, "a station outside the complex stays out of reach");
+        let sk = skims(&g, &p);
+        assert!(sk.r[3].is_finite());
+        let s = g.n_st;
+        let mut od = vec![0.0; s * s];
+        od[3] = 100.0;
+        let ix = xfer_index(&g);
+        let mut x = vec![0.0; ix.len];
+        assign_with_transfers(&g, &sk, &od, &ix, &mut x);
+        let mut out = vec![];
+        transfer_pairs(&g, &ix, &x, &vec![1u8; g.n - s], &mut out);
+        assert_eq!(out, vec![1.0, 4.0, 100.0]);
+        // a group within the walk limit adds nothing: no edge twice
+        net.st_x = vec![0.0, 2000.0, 2100.0, 4000.0];
+        let a = build_graph(&net, &p).adj_to.len();
+        net.st_group = vec![];
+        assert_eq!(build_graph(&net, &p).adj_to.len(), a);
+        assert_eq!(complex_members(&[5, 2, 5, 7, 2, 2]), vec![vec![0, 2], vec![1, 4, 5]]);
+    }
+
+    /// T-176 on a small city with walking transfers: the loads are `assign`'s to the bit, and at
+    /// every station the transfers leaving are the boardings that are not first boardings.
+    #[test]
+    fn transfers_account_for_every_boarding_after_the_first() {
+        let full = synth::synth_city(1);
+        let keep: Vec<usize> = (0..full.len()).filter(|&c| full.x[c].hypot(full.y[c]) < 15_000.0).collect();
+        let city = crate::demand::pack::City {
+            name: "t".into(),
+            h3: keep.iter().map(|&c| full.h3[c]).collect(),
+            x: keep.iter().map(|&c| full.x[c]).collect(),
+            y: keep.iter().map(|&c| full.y[c]).collect(),
+            pop: keep.iter().map(|&c| full.pop[c]).collect(),
+            jobs: keep.iter().map(|&c| full.jobs[c]).collect(),
+            region: vec![], gravity: None,
+        };
+        let net = network::synth_network();
+        let p = Params::default();
+        assert!(p.xfer_walk_m > 0.0);
+        let z = build_zones(&city, p.zone_m);
+        let mut gr = gravity(&z, &p, 100, 1e-4);
+        gr.set_walk(&z, &p);
+        let acc = build_access(&city, &net, &p);
+        let sz = build_subzones(&city, &z, &acc, &net, &p);
+        let g = build_graph(&net, &p);
+        let sk = skims(&g, &p);
+        let mo = mode_choice(&z, &gr, &sz, &station_exp(&sk, &p), g.n_st, &p);
+        let ix = xfer_index(&g);
+        let mut x = vec![0.0; ix.len];
+        let l = assign_with_transfers(&g, &sk, &mo.od, &ix, &mut x);
+        let plain = assign(&g, &sk, &mo.od);
+        assert_eq!(l.seg, plain.seg);
+        assert_eq!(l.board, plain.board);
+        assert_eq!(l.alight, plain.alight);
+        assert_eq!(l.rn_board, plain.rn_board);
+        assert_eq!(l.rn_alight, plain.rn_alight);
+        assert_eq!(l.entry, plain.entry);
+        assert_eq!(l.exit, plain.exit);
+        let s = g.n_st;
+        let mut out = vec![];
+        transfer_pairs(&g, &ix, &x, &vec![1u8; g.n - s], &mut out);
+        let mut leaving = vec![0f64; s];
+        let mut from = vec![0f64; g.n - s];
+        let mut walked = 0.0;
+        for c in out.chunks(3) {
+            let (a, b) = (c[0] as usize, c[1] as usize);
+            leaving[g.rn_station[b] as usize] += c[2] as f64;
+            from[a] += c[2] as f64;
+            if g.rn_station[a] != g.rn_station[b] {
+                walked += c[2] as f64;
+            }
+        }
+        let total: f64 = leaving.iter().sum();
+        // (the synthetic network has no stations close enough to walk between: the real network
+        // test `transfers_real_network` counts walks)
+        assert!(total > 0.0, "transfers {total}, walked {walked}");
+        for st in 0..s {
+            let want = (l.board[st] - l.entry[st]) as f64;
+            assert!((leaving[st] - want).abs() <= 1e-3 * (l.board[st] as f64).max(1.0), "station {st}: {} leaving, {want} boardings after the first", leaving[st]);
+        }
+        for r in 0..g.n - s {
+            assert!(from[r] <= l.rn_alight[r] as f64 * 1.0001 + 1e-3, "route node {r}: {} transfer, {} alight", from[r], l.rn_alight[r]);
+        }
+    }
+
     #[test]
     fn fast_exp_is_close() {
         let mut x = -30.0f32;
@@ -1851,7 +2455,7 @@ mod tests {
             y: keep.iter().map(|&c| full.y[c]).collect(),
             pop: keep.iter().map(|&c| full.pop[c]).collect(),
             jobs: keep.iter().map(|&c| full.jobs[c]).collect(),
-            gravity: None,
+            region: vec![], gravity: None,
         };
         let net = network::synth_network();
         let p = Params::default();
@@ -1882,6 +2486,68 @@ mod tests {
         assert_eq!((wb, wt, mo.rail_walk), (0.0, 0.0, 0.0), "rail cannot take reserved walking trips");
         let boards: f64 = l.board.iter().map(|&v| v as f64).sum();
         assert!(boards >= od_sum * 0.999);
+    }
+
+    /// T-162: a region border (here a north-south line at x = 300 m, through the middle of a
+    /// column of zones) splits the squares it cuts, the factor cuts trips across it, both margins
+    /// still balance, and the pack round trip rebuilds exactly the trips solved.
+    #[test]
+    fn region_border_factor() {
+        let full = synth::synth_city(1);
+        let keep: Vec<usize> = (0..full.len()).filter(|&c| full.x[c].hypot(full.y[c]) < 15_000.0).collect();
+        let mut city = crate::demand::pack::City {
+            name: "t".into(),
+            h3: keep.iter().map(|&c| full.h3[c]).collect(),
+            x: keep.iter().map(|&c| full.x[c]).collect(),
+            y: keep.iter().map(|&c| full.y[c]).collect(),
+            pop: keep.iter().map(|&c| full.pop[c]).collect(),
+            jobs: keep.iter().map(|&c| full.jobs[c]).collect(),
+            region: vec![],
+            gravity: None,
+        };
+        let p1 = Params::default();
+        let z0 = build_zones(&city, p1.zone_m);
+        let g0 = gravity(&z0, &p1, 200, 1e-6);
+        city.region = city.x.iter().map(|&x| (x > 300.0) as u8).collect();
+        let z = build_zones(&city, p1.zone_m);
+        assert!(z.n > z0.n, "the border splits squares");
+        let (off, _) = z.by_square();
+        assert_eq!(off.windows(2).filter(|w| w[1] > w[0]).count(), z0.n, "same squares");
+        let cross = |z: &Zones, g: &Gravity| -> f64 {
+            let mut s = 0.0;
+            for i in 0..z.n {
+                for j in 0..z.n {
+                    if z.region[i] != z.region[j] {
+                        s += g.t(z, i, j);
+                    }
+                }
+            }
+            s
+        };
+        // factor 1: the split changes nothing but where the intrazonal trips of cut squares go
+        let g1 = gravity(&z, &p1, 200, 1e-6);
+        assert!((g1.total / g0.total - 1.0).abs() < 1e-6);
+        let pk = Params { border_factor: 0.25, ..Params::default() };
+        let gk = gravity(&z, &pk, 200, 1e-6);
+        assert!((gk.total / g0.total - 1.0).abs() < 1e-6);
+        let (c1, ck) = (cross(&z, &g1), cross(&z, &gk));
+        assert!(ck < 0.6 * c1, "cross-border trips {ck} with the factor, {c1} without");
+        // both margins hold with the factor
+        let (tp, tj): (f64, f64) = (z.pop.iter().sum(), z.jobs.iter().sum());
+        for i in 0..z.n {
+            let (r, c): (f64, f64) = ((0..z.n).map(|j| gk.t(&z, i, j)).sum(), (0..z.n).map(|j| gk.t(&z, j, i)).sum());
+            assert!((r - z.pop[i] * tj / tp).abs() <= 1e-3 * z.pop[i] * tj / tp + 1e-6, "row {i}");
+            assert!((c - z.jobs[i]).abs() <= 1e-3 * z.jobs[i] + 1e-6, "column {i}");
+        }
+        // shipped and rebuilt: the same zones, factor and trips
+        city.gravity = Some(to_pack_gravity(&z, &gk, &pk));
+        let (h, b) = crate::demand::pack::write(&city);
+        let back = crate::demand::pack::parse(&h, &b).unwrap();
+        let (zb, gb, from_pack) = city_gravity(&back, &p1);
+        assert!(from_pack && zb.n == z.n && zb.region == z.region && gb.border == 0.25);
+        for (i, j) in [(0, 1), (3, z.n - 1), (z.n / 2, z.n / 3)] {
+            assert!((gb.t(&zb, i, j) / gk.t(&z, i, j).max(1e-30) - 1.0).abs() < 1e-5 || gk.t(&z, i, j) < 1e-12);
+        }
     }
 
     /// The ring search finds the same K nearest stations within the bound as a full scan.

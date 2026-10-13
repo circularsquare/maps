@@ -69,13 +69,173 @@ impl LineSvc {
     }
 }
 
-/// A departure the renderer draws: `profile(line, run, level)` from time `dep`.
+/// A departure the renderer draws: `profile(line, run, level)` from time `dep`, drawn until `end`:
+/// the end of its run and turnaround, or later when the train stands at the terminal for its next
+/// departure (T-206). `hw` is the headway of the pattern it belongs to.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Trip {
     pub line: u32,
     pub run: u8,
     pub level: u8,
+    /// The departure in the line's pattern (the boarding account's key).
     pub dep: f64,
+    /// When it is drawn leaving: `dep`, or moved so a train running when its line's profile
+    /// changed carries on from where it was (T-206).
+    pub draw: f64,
+    pub end: f64,
+    pub hw: f64,
+    /// The departure its train takes next, from the terminal it ends at (that trip's `draw`,
+    /// `hand_over`); None when the train leaves service there (T-245: a selected train is
+    /// followed onto its next trip).
+    pub next: Option<f64>,
+}
+
+/// A train running when an edit is applied: where it is on its profile (T-206).
+#[derive(Clone, Copy, Debug)]
+pub struct InFlight {
+    line: u32,
+    run: u8,
+    level: u8,
+    dep: f64,
+    s: f64,
+    /// Standing at a stop: seconds before it would have left; with `s` infinite, standing at its
+    /// last stop: seconds it has stood there.
+    stopped_left: Option<f64>,
+}
+
+/// The service as an edit found it (`Service::before_edit`, then `note_changes`).
+#[derive(Clone, Debug, Default)]
+pub struct Before {
+    lat: Vec<Option<Lattice>>,
+    flight: Vec<InFlight>,
+    lens: Vec<[f64; 6]>,
+}
+
+/// The earliest time a profile's train has reached `s` (it never goes back), within `[0, dur]`.
+fn time_reaching(ph: &[profile::Phase], dur: f64, s: f64) -> f64 {
+    let (mut lo, mut hi) = (0.0, dur);
+    if profile::state_at(ph, hi).0 < s {
+        return hi;
+    }
+    for _ in 0..60 {
+        let mid = 0.5 * (lo + hi);
+        if profile::state_at(ph, mid).0 >= s { hi = mid } else { lo = mid }
+    }
+    hi
+}
+
+/// A line's departure pattern (T-206): trains an hour per demand level, and where run 1's
+/// departures sit after each period's start (a whole-line fleet's reverse trips follow the forward
+/// ones round the circuit; 0 otherwise).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Lattice {
+    pub tph: [f32; LEVELS],
+    pub off: [f64; LEVELS],
+}
+
+impl Lattice {
+    pub const NONE: Lattice = Lattice { tph: [0.0; LEVELS], off: [0.0; LEVELS] };
+}
+
+/// The pattern a line ran before a change at `until` (T-206): departures before `until` keep it,
+/// so trains already running keep their places; later departures follow the next pattern.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Era {
+    pub until: f64,
+    pub lat: Lattice,
+    /// The trains drawn at `until` (run, departure): only these may stand at a terminal across
+    /// the change for a departure of the new pattern, so a train that had left service never
+    /// comes back.
+    pub drawn: Vec<(u8, f64)>,
+}
+
+/// The longest a train stands at a terminal for its next departure before it leaves service.
+pub const HANDOVER_MAX_S: f64 = 3600.0;
+/// A train ready this little after a departure still takes it (a whole-line fleet's round trip is
+/// solved to about 0.04 s of its trains times the headway).
+const HANDOVER_TOL_S: f64 = 1.0;
+/// At a change of pattern (a new period, an edit), a departure closer than this share of its
+/// headway after the last one of the old pattern is left out, so trains never leave in pairs.
+const MIN_GAP_SHARE: f64 = 0.5;
+/// An era's pattern is looked back over this long for its last departure.
+const ERA_LOOKBACK_S: f64 = 4.0 * 3600.0;
+const DAY_S: f64 = 86400.0;
+
+/// The periods in the order of the day.
+fn day_order() -> [usize; 5] {
+    let mut o = [0, 1, 2, 3, 4];
+    o.sort_by(|&a, &b| PERIOD_HOURS[a].0.total_cmp(&PERIOD_HOURS[b].0));
+    o
+}
+
+/// Period `p` of `day` for run `r` of a pattern: (first departure, headway, departures), or None
+/// without service.
+fn period_points(lat: &Lattice, r: usize, day: i64, p: usize) -> Option<(f64, f64, i64)> {
+    let lev = PERIOD_LEVEL[p];
+    let tph = lat.tph[lev] as f64;
+    if tph <= 0.0 {
+        return None;
+    }
+    let hw = 3600.0 / tph;
+    let (h0, h1) = PERIOD_HOURS[p];
+    let (start, end) = (day as f64 * DAY_S + h0 * 3600.0, day as f64 * DAY_S + h1 * 3600.0);
+    let ps = start + if r == 1 { lat.off[lev] } else { 0.0 };
+    // the points ps + k hw before the period's end
+    let mut n = ((end - ps) / hw).ceil() as i64;
+    while n > 0 && ps + (n - 1) as f64 * hw >= end {
+        n -= 1;
+    }
+    while ps + n as f64 * hw < end {
+        n += 1;
+    }
+    if n <= 0 { None } else { Some((ps, hw, n)) }
+}
+
+/// One run's departures from a pattern in `[a, b)`, with level and headway: per period,
+/// `start + off + k * headway`, leaving out any closer than half a headway after the period
+/// before's last (MIN_GAP_SHARE). A pure function of the pattern, so every window agrees.
+fn lattice_deps(lat: &Lattice, r: usize, a: f64, b: f64, out: &mut Vec<(f64, u8, f64)>) {
+    if !(b > a) {
+        return;
+    }
+    let order = day_order();
+    let d0 = (a / DAY_S).floor() as i64;
+    let d1 = (b / DAY_S).floor() as i64;
+    // the last departure before day d0: the day before's last period with service
+    let mut last: Option<f64> = None;
+    for &p in order.iter().rev() {
+        if let Some((ps, hw, n)) = period_points(lat, r, d0 - 1, p) {
+            last = Some(ps + (n - 1) as f64 * hw);
+            break;
+        }
+    }
+    for day in d0..=d1 {
+        for &p in &order {
+            let Some((ps, hw, n)) = period_points(lat, r, day, p) else { continue };
+            let mut k0 = 0i64;
+            if let Some(l) = last {
+                while k0 < n && ps + k0 as f64 * hw - l < MIN_GAP_SHARE * hw {
+                    k0 += 1;
+                }
+            }
+            if k0 >= n {
+                continue;
+            }
+            let lev = PERIOD_LEVEL[p] as u8;
+            let mut k = k0.max(((a - ps) / hw).floor() as i64 - 1).max(k0);
+            while k < n {
+                let d = ps + k as f64 * hw;
+                if d >= b {
+                    break;
+                }
+                if d >= a {
+                    out.push((d, lev, hw));
+                }
+                k += 1;
+            }
+            last = Some(ps + (n - 1) as f64 * hw);
+        }
+    }
 }
 
 /// What `update` recomputed.
@@ -96,6 +256,12 @@ pub struct ServiceDirty {
 pub struct Service {
     pub lines: Vec<LineSvc>,
     pub cap: Capacity,
+    /// Per line, the patterns it ran before recent changes, oldest first (T-206). Never saved:
+    /// kept only while trains of an old pattern may still be drawn, then pruned.
+    pub eras: Vec<Vec<Era>>,
+    /// Per line, trains running when an edit changed their profile: (run, departure, seconds
+    /// their drawing is moved by), so each carries on from where it was (T-206). Pruned with eras.
+    pub shifts: Vec<Vec<(u8, f64, f64)>>,
 }
 
 fn build_run(net: &Network, l: u32, rev: bool, train_len: f64, dwell: f64) -> Option<Run> {
@@ -355,49 +521,284 @@ impl Service {
         self.update(net, &all, &all, true)
     }
 
-    /// Departures overlapping `[t0, t1)` (game seconds), from each period's trains per hour.
-    /// Departures repeat daily; both directions leave their first stop on the same clock.
-    pub fn trips(&self, net: &Network, t0: f64, t1: f64) -> Vec<Trip> {
-        let mut out = vec![];
-        for (l, ls) in self.lines.iter().enumerate() {
-            if !ls.running {
+    /// A running line's departure pattern now (None when it is not running).
+    pub fn lattice(&self, net: &Network, l: usize) -> Option<Lattice> {
+        let ls = self.lines.get(l)?;
+        if !ls.running || l >= net.line_count() {
+            return None;
+        }
+        let tph = net.line_tph[l];
+        // The reverse departure follows the forward trip's turnaround, so an odd whole-line fleet
+        // stays evenly spaced around the complete circuit.
+        let off = std::array::from_fn(|lev| {
+            let t = tph[lev] as f64;
+            if net.line_trains[l].is_some() && t > 0.0 { ls.trip_len(net, l as u32, 0, lev) % (3600.0 / t) } else { 0.0 }
+        });
+        Some(Lattice { tph, off })
+    }
+
+    /// Every line's pattern and every train running at `now`, before an edit (`note_changes`
+    /// after it).
+    pub fn before_edit(&self, net: &Network, now: f64) -> Before {
+        let lat = (0..self.lines.len()).map(|l| self.lattice(net, l)).collect();
+        let mut flight = vec![];
+        if now.is_finite() {
+            for t in self.trips(net, now, now + 1e-3) {
+                let p = &self.lines[t.line as usize].runs[t.run as usize].prof[t.level as usize];
+                let tau = now - t.draw;
+                if tau < 0.0 {
+                    continue;
+                }
+                if tau >= p.duration {
+                    // standing at the terminal: as long again after the new profile's arrival
+                    flight.push(InFlight { line: t.line, run: t.run, level: t.level, dep: t.dep, s: f64::INFINITY, stopped_left: Some(tau - p.duration) });
+                    continue;
+                }
+                let (s, v) = profile::state_at(&p.phases, tau);
+                let stopped_left = (v < 0.01).then(|| time_reaching(&p.phases, p.duration, s + 0.05) - tau);
+                flight.push(InFlight { line: t.line, run: t.run, level: t.level, dep: t.dep, s, stopped_left });
+            }
+        }
+        let lens = (0..self.lines.len()).map(|l| self.trip_lens(net, l)).collect();
+        Before { lat, flight, lens }
+    }
+
+    /// A line's trip lengths (run and turnaround) per run and level.
+    fn trip_lens(&self, net: &Network, l: usize) -> [f64; 6] {
+        let ls = &self.lines[l];
+        std::array::from_fn(|k| if ls.ok && l < net.line_count() { ls.trip_len(net, l as u32, k / 3, k % 3) } else { 0.0 })
+    }
+
+    /// After an edit at game time `now` (T-206): a running line whose pattern changed keeps its
+    /// old one for departures before `now`, so its trains in service run on; a line not running
+    /// before had no departures. A line that stops running forgets its eras. A train running
+    /// when its profile changed is drawn from where it was (`shifts`): at the same place, or
+    /// standing at the same stop for the time it had left there.
+    pub fn note_changes(&mut self, net: &Network, before: &Before, now: f64) {
+        if !now.is_finite() {
+            return;
+        }
+        self.eras.resize(self.lines.len(), vec![]);
+        self.shifts.resize(self.lines.len(), vec![]);
+        for f in &before.flight {
+            let l = f.line as usize;
+            let Some(ls) = self.lines.get(l).filter(|ls| ls.running) else { continue };
+            let p = &ls.runs[f.run as usize].prof[f.level as usize];
+            let tau = match f.stopped_left {
+                Some(stood) if f.s.is_infinite() => p.duration + stood,
+                Some(left) => {
+                    let arrive = time_reaching(&p.phases, p.duration, f.s - 0.05);
+                    let leave = time_reaching(&p.phases, p.duration, f.s + 0.05);
+                    (leave - left).max(arrive).min(leave)
+                }
+                None => time_reaching(&p.phases, p.duration, f.s),
+            };
+            let by = now - tau - f.dep;
+            let v = &mut self.shifts[l];
+            v.retain(|x| !(x.0 == f.run && x.1 == f.dep));
+            if by.abs() > 1e-3 {
+                v.push((f.run, f.dep, by));
+            }
+        }
+        for l in 0..self.lines.len() {
+            let Some(after) = self.lattice(net, l) else {
+                self.eras[l].clear();
+                self.shifts[l].clear();
+                continue;
+            };
+            let was = before.lat.get(l).copied().flatten().unwrap_or(Lattice::NONE);
+            let lens = self.trip_lens(net, l);
+            let reshaped = before.lens.get(l).is_some_and(|b| b.iter().zip(&lens).any(|(x, y)| (x - y).abs() > 1e-6));
+            let v = &mut self.eras[l];
+            match v.last() {
+                // a change at the same instant: the pattern before the instant stands for
+                // everything before it
+                Some(e) if e.until >= now => {}
+                _ if was != after || reshaped => {
+                    let drawn = before.flight.iter().filter(|f| f.line as usize == l).map(|f| (f.run, f.dep)).collect();
+                    v.push(Era { until: now, lat: was, drawn })
+                }
+                _ => {}
+            }
+        }
+    }
+
+    /// Forget eras whose trains can no longer be drawn at `now` (or that lie after it: the clock
+    /// went back).
+    pub fn prune_eras(&mut self, net: &Network, now: f64) {
+        if !now.is_finite() {
+            return;
+        }
+        for l in 0..self.eras.len().max(self.shifts.len()) {
+            if self.eras_of(l).is_empty() && self.shifts.get(l).map_or(true, |v| v.is_empty()) {
                 continue;
             }
-            for r in 0..2 {
-                for (p, &(h0, h1)) in PERIOD_HOURS.iter().enumerate() {
-                    let lev = PERIOD_LEVEL[p];
-                    let tph = net.line_tph[l][lev] as f64;
-                    if tph <= 0.0 {
-                        continue;
-                    }
-                    let hw = 3600.0 / tph;
-                    let dur = ls.trip_len(net, l as u32, r, lev);
-                    let d0 = ((t0 - dur) / 86400.0).floor() as i64;
-                    let d1 = (t1 / 86400.0).floor() as i64;
-                    for day in d0..=d1 {
-                        let (start, pe) = (day as f64 * 86400.0 + h0 * 3600.0, day as f64 * 86400.0 + h1 * 3600.0);
-                        // The reverse departure follows the forward trip's turnaround, so an
-                        // odd whole-line fleet stays evenly spaced around the complete circuit.
-                        let offset = if r == 1 && net.line_trains[l].is_some() { ls.trip_len(net, l as u32, 0, lev) % hw } else { 0.0 };
-                        let ps = start + offset;
-                        let k0 = ((t0 - dur - ps) / hw).ceil().max(0.0) as i64;
-                        let mut k = k0;
-                        loop {
-                            let dep = ps + k as f64 * hw;
-                            if dep >= pe || dep >= t1 {
-                                break;
-                            }
-                            if dep + dur > t0 {
-                                out.push(Trip { line: l as u32, run: r as u8, level: lev as u8, dep });
-                            }
-                            k += 1;
+            let (dur, hcap) = if l < self.lines.len() { self.reach(net, l) } else { (0.0, 0.0) };
+            let keep = now - 3600.0 - dur - 2.0 * hcap - 60.0;
+            if let Some(v) = self.eras.get_mut(l) {
+                v.retain(|e| e.until > keep && e.until <= now + 1.0);
+            }
+            if let Some(v) = self.shifts.get_mut(l) {
+                v.retain(|x| x.1 > keep && x.1 <= now + 1.0);
+            }
+        }
+    }
+
+    /// A line's eras (empty for most).
+    pub fn eras_of(&self, l: usize) -> &[Era] {
+        self.eras.get(l).map_or(&[], |v| &v[..])
+    }
+
+    /// The longest trip a line draws (run and turnaround) and the longest it may stand at a
+    /// terminal for its next departure.
+    fn reach(&self, net: &Network, l: usize) -> (f64, f64) {
+        let ls = &self.lines[l];
+        if !ls.ok {
+            return (0.0, 0.0);
+        }
+        let mut dur = 0.0f64;
+        for r in 0..2 {
+            for lev in 0..LEVELS {
+                dur = dur.max(ls.trip_len(net, l as u32, r, lev));
+            }
+        }
+        let mut hw = 0.0f64;
+        let cur = [net.line_tph[l]];
+        for tph in cur.iter().chain(self.eras_of(l).iter().map(|e| &e.lat.tph)) {
+            for &t in tph {
+                if t > 0.0 {
+                    hw = hw.max(3600.0 / t as f64);
+                }
+            }
+        }
+        (dur, hw.min(HANDOVER_MAX_S))
+    }
+
+    /// One direction's departures in `[a, b)` (T-164, T-206), unsorted, appended to `out` with
+    /// `end` at the end of its run and turnaround. Before each era's `until` the era's pattern;
+    /// after the last, the line's own. The boarding account uses it too, so its departures are the
+    /// drawn ones to the bit.
+    pub fn run_deps(&self, net: &Network, l: usize, r: usize, a: f64, b: f64, out: &mut Vec<Trip>) {
+        let Some(cur) = self.lattice(net, l) else { return };
+        let ls = &self.lines[l];
+        let eras = self.eras_of(l);
+        let shifts = self.shifts.get(l).map_or(&[][..], |v| &v[..]);
+        let mut seg_start = f64::NEG_INFINITY;
+        let mut last: Option<f64> = None;
+        let mut buf: Vec<(f64, u8, f64)> = vec![];
+        for i in 0..=eras.len() {
+            let (lat, seg_end) = if i < eras.len() { (&eras[i].lat, eras[i].until) } else { (&cur, f64::INFINITY) };
+            // an era is followed by another pattern, whose first departures need its last one
+            let lo = if i < eras.len() { seg_start.max(a.min(seg_end - ERA_LOOKBACK_S)) } else { seg_start.max(a) };
+            let hi = if i < eras.len() { seg_end } else { b };
+            buf.clear();
+            lattice_deps(lat, r, lo, hi, &mut buf);
+            let prev = last;
+            for &(d, lev, hw) in &buf {
+                if prev.is_some_and(|p| d - p < MIN_GAP_SHARE * hw) {
+                    continue;
+                }
+                last = Some(d);
+                if d >= a && d < b {
+                    let draw = d + shifts.iter().find(|x| x.0 as usize == r && x.1 == d).map_or(0.0, |x| x.2);
+                    let end = draw + ls.trip_len(net, l as u32, r, lev as usize);
+                    out.push(Trip { line: l as u32, run: r as u8, level: lev, dep: d, draw, end, hw, next: None });
+                }
+            }
+            seg_start = seg_end;
+        }
+    }
+
+    /// Hand trains over at a line's two terminals (T-206). A train that has finished its run and
+    /// turnaround takes the next departure from that terminal if it comes within that
+    /// departure's headway (at most HANDOVER_MAX_S), and stands there until it leaves: its trip's
+    /// `end` moves to that departure. A departure no train is waiting for is a train entering
+    /// service there; a train that finds another already waiting for the next departure, or no
+    /// departure soon enough, leaves service at the end of its turnaround. In steady service with
+    /// a whole-line fleet every train is ready exactly at its next departure, so nothing changes.
+    fn hand_over(trips: &mut [Trip], eras: &[Era]) {
+        let ready: Vec<f64> = trips.iter().map(|t| t.end).collect();
+        // whether train `w` may stand until `d`: within the departure's headway, and not across a
+        // change unless it was drawn then
+        let can = |trips: &[Trip], w: usize, d: f64, hw: f64| {
+            d >= ready[w] - HANDOVER_TOL_S
+                && d - ready[w] <= HANDOVER_MAX_S.min(hw.max(1.0)) + HANDOVER_TOL_S
+                && eras.iter().all(|e| !(ready[w] < e.until && d > e.until) || e.drawn.contains(&(trips[w].run, trips[w].dep)))
+        };
+        for r in 0..2u8 {
+            // trains finishing run r stand at the first stop of the other run
+            let mut ev: Vec<(f64, u8, usize)> = vec![];
+            let mut deps: Vec<(f64, f64)> = vec![];
+            for (i, t) in trips.iter().enumerate() {
+                if t.run == r {
+                    ev.push((ready[i] - HANDOVER_TOL_S, 0, i));
+                } else {
+                    ev.push((t.draw, 1, i));
+                    deps.push((t.draw, t.hw));
+                }
+            }
+            ev.sort_by(|a, b| a.0.total_cmp(&b.0).then(a.1.cmp(&b.1)));
+            deps.sort_by(|a, b| a.0.total_cmp(&b.0));
+            let mut wait: Option<usize> = None;
+            for &(_, kind, i) in &ev {
+                if kind == 0 {
+                    // two trains here: the first keeps its place unless it could not take the
+                    // next departure anyway
+                    if let Some(w) = wait {
+                        let next = deps.get(deps.partition_point(|d| d.0 < ready[i] - HANDOVER_TOL_S)).copied();
+                        if !next.is_some_and(|(d, hw)| can(trips, w, d, hw)) {
+                            wait = Some(i);
                         }
+                    } else {
+                        wait = Some(i);
+                    }
+                } else if let Some(w) = wait.take() {
+                    let (d, hw) = (trips[i].draw, trips[i].hw);
+                    if can(trips, w, d, hw) {
+                        trips[w].end = d.max(ready[w]);
+                        trips[w].next = Some(d);
                     }
                 }
             }
         }
-        out.sort_by(|a, b| a.dep.total_cmp(&b.dep).then((a.line, a.run).cmp(&(b.line, b.run))));
+    }
+
+    /// Trips drawn in `[t0, t1)` (game seconds): each running line's departures, the trains
+    /// handed over at the terminals (`hand_over`), those drawn at some time in the window.
+    pub fn trips(&self, net: &Network, t0: f64, t1: f64) -> Vec<Trip> {
+        let mut out: Vec<Trip> = vec![];
+        let mut buf: Vec<Trip> = vec![];
+        for (l, ls) in self.lines.iter().enumerate() {
+            if !ls.running {
+                continue;
+            }
+            // far enough back that every train drawn in the window is handed over as it would be
+            // from any other window
+            let (dur, hcap) = self.reach(net, l);
+            let (a, b) = (t0 - dur - 2.0 * hcap - 60.0, t1 + dur + hcap + HANDOVER_TOL_S + 1.0);
+            buf.clear();
+            for r in 0..2 {
+                self.run_deps(net, l, r, a, b, &mut buf);
+            }
+            let eras = self.eras_of(l);
+            Self::hand_over(&mut buf, eras);
+            // a train that had left service before a change stays gone, whatever the new profile
+            // says about how long its trip would have taken
+            let gone = |t: &Trip| eras.iter().any(|e| t.draw < e.until && t.end > e.until && !e.drawn.contains(&(t.run, t.dep)));
+            out.extend(buf.iter().filter(|t| t.draw < t1 && t.end > t0 && !gone(t)));
+        }
+        out.sort_by(|a, b| a.draw.total_cmp(&b.draw).then((a.line, a.run).cmp(&(b.line, b.run))));
         out
+    }
+
+    /// Where a line's boarding account starts its day (T-164, T-206): 03:00 of a quiet day, or,
+    /// while it has eras, six hours before its latest change, so the account's day holds the
+    /// departures actually drawn around it.
+    pub fn account_start(&self, l: usize, start_hour: f64) -> f64 {
+        match self.eras_of(l).last() {
+            Some(e) => ((e.until - 6.0 * 3600.0) / 60.0).floor() * 60.0,
+            None => DAY_S + start_hour * 3600.0,
+        }
     }
 
     /// Where a run's offset `s` is on the track: (edge, direction, offset along the edge from a).

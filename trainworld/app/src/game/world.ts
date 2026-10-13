@@ -36,12 +36,60 @@ export async function edit(op: EditOp, quiet = false): Promise<EditAnswer> {
 
 const num = (id: LineId) => Number(id);
 
+/** Train counts asked for but not yet in `world` (T-229): the stepper shows them at once, and a
+ * second click before the first edit lands counts from them, not from the old figure. */
+export const pendingTrains = signal<ReadonlyMap<LineId, [number, number, number]>>(new Map());
+/** Per line: the edit in flight, and whether a newer count waits to go when it lands. */
+const trainEdits = new Map<LineId, { busy: boolean; next: [number, number, number] | null }>();
+
+/** A line's trains on the entire line per demand level, as the player last set them. */
+export function trainsShown(id: LineId): [number, number, number] | null {
+  return pendingTrains.value.get(id) ?? (world.value?.lineStats[id]?.trainsNeeded as [number, number, number] | undefined) ?? null;
+}
+
+/** Step a line's trains for one demand level, `by` from what it shows now (T-229). Clicks while an
+ * edit is in flight are folded into one edit sent when it lands, so fast clicking never queues a
+ * recompute per click. */
+export function stepTrainCount(id: LineId, demand: Demand, by: number) {
+  const base = trainsShown(id);
+  if (!base) return;
+  const t: [number, number, number] = [...base] as [number, number, number];
+  t[DEMAND_INDEX[demand]] = Math.max(0, Math.round(t[DEMAND_INDEX[demand]] + by));
+  setTrainCounts(id, t);
+}
+
 export function setTrainCount(id: LineId, demand: Demand, trains: number) {
-  const st = world.value?.lineStats[id];
-  if (!st) return;
-  const t: [number, number, number] = [...st.trainsNeeded] as [number, number, number];
+  const base = trainsShown(id);
+  if (!base) return;
+  const t: [number, number, number] = [...base] as [number, number, number];
   t[DEMAND_INDEX[demand]] = Math.max(0, Math.round(trains));
-  void edit({ op: "setTrainCount", line: num(id), trains: t });
+  setTrainCounts(id, t);
+}
+
+function setTrainCounts(id: LineId, t: [number, number, number]) {
+  const p = new Map(pendingTrains.peek());
+  p.set(id, t);
+  pendingTrains.value = p;
+  const job = trainEdits.get(id) ?? { busy: false, next: null };
+  trainEdits.set(id, job);
+  job.next = t;
+  if (job.busy) return;
+  const send = async () => {
+    job.busy = true;
+    while (job.next) {
+      const trains = job.next;
+      job.next = null;
+      const a = await edit({ op: "setTrainCount", line: num(id), trains });
+      if (!a.ok) job.next = null; // refused (money): the stepper goes back to the world's count
+    }
+    job.busy = false;
+    trainEdits.delete(id);
+    // the world now holds the last count sent (or, refused, the one before it)
+    const q = new Map(pendingTrains.peek());
+    q.delete(id);
+    pendingTrains.value = q;
+  };
+  void send();
 }
 
 /** The fare curve for the whole network (T-028): US$ a ride plus US$ a km. */

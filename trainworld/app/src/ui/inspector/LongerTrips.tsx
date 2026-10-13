@@ -5,7 +5,6 @@
 import { demandView, intercityPlaceName, type PlaceFlows } from "../../game/demand";
 import { count } from "../../game/format";
 import { MODE_COLOURS } from "../../game/palette";
-import { display } from "../../game/ui";
 import { intercityPick, intercityStationView } from "../../map/intercityView";
 import { Row } from "../widgets";
 
@@ -35,10 +34,11 @@ function Direction({ title, verb, flows, own, railOnly }: { title: string; verb:
   );
 }
 
-function Head() {
+/** T-253: what longer trips are, and what the map draws of them, is the heading's hover */
+function Head({ tip }: { tip?: string }) {
   return (
     <div class="h">
-      Longer trips
+      <span data-tip={tip ?? "Visits, shopping and business, not commutes"}>Longer trips</span>
       <span class="right muted small">a day</span>
     </div>
   );
@@ -61,8 +61,7 @@ export function SelectionLongerTrips() {
   const back = <Direction title="Arrive here" verb="From" flows={p.data.ends} own={p.own} railOnly={false} />;
   return (
     <>
-      <Head />
-      <p class="muted small">Visits, shopping and business, not commutes. Counted for the areas the selection lies in.</p>
+      <Head tip={`Visits, shopping and business, not commutes, for the areas the selection lies in. The map's bubbles are their ${home ? "destinations" : "origins"} outside this metropolitan area, on a separate scale from local trips.`} />
       <ul class="rows">
         <li class="muted small">
           <span class="grow" />
@@ -71,15 +70,14 @@ export function SelectionLongerTrips() {
         </li>
       </ul>
       {home ? <>{out}{back}</> : <>{back}{out}</>}
-      {display.value.intercity && <p class="muted small">Bubbles on the map: {home ? "destinations" : "origins"} outside this metropolitan area. Longer trips within it are listed here. Bubble sizes use a separate scale from local trips.</p>}
     </>
   );
 }
 
 /** For the station inspector: the longer-trip riders using this station. */
-export function StationLongerTrips({ id }: { id: string }) {
+export function StationLongerTrips({ id, scope = id }: { id: string; scope?: string }) {
   const v = intercityStationView.value;
-  if (!demandView.value || !v || v.stationId !== id) return null;
+  if (!demandView.value || !v || v.stationId !== id || v.scope !== scope) return null;
   if (v.starts.rail <= 0 && v.ends.rail <= 0) {
     return (
       <>

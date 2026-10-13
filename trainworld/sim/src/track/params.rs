@@ -120,6 +120,14 @@ pub const LEVELS: usize = 3;
 /// peak, evening, night): start and end hour, and which demand level schedules them.
 pub const PERIOD_HOURS: [(f64, f64); 5] = [(6.0, 10.0), (10.0, 16.0), (16.0, 20.0), (20.0, 24.0), (0.0, 6.0)];
 pub const PERIOD_LEVEL: [usize; 5] = [HIGH, MEDIUM, HIGH, MEDIUM, LOW];
+/// Kinds of day (T-260): weekday 0, weekend 1. Game day 1, a new game's first, is a Monday, so
+/// days 6 and 7 of each week (Saturday, Sunday) are the weekend. The main thread's copy is
+/// app/src/game/days.ts.
+pub const DAY_KINDS: usize = 2;
+pub fn day_kind_at(t: f64) -> usize {
+    let day = (t / 86400.0).floor() as i64;
+    if (day - 1).rem_euclid(7) >= 5 { 1 } else { 0 }
+}
 
 // ---- render tiles (SPEC 6.5) ----
 

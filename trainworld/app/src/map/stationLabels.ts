@@ -2,7 +2,9 @@
 // MapLibre symbol layer would sit under the overlay, with track drawn through the names. Labels
 // move on MapLibre's frames only (the camera does not change otherwise). A flat pan translates
 // one compositor layer; other camera changes re-place names. A greedy pass hides any label that
-// overlaps a more important one (transfers first, then lines, then constructed).
+// overlaps a more important one (transfers first, then lines, then constructed). Stations of one
+// complex that share a name have one label between them (T-169, labelGroups below). Capacity tags
+// are placed after the names and keep off them (T-184, rects() and onPlace).
 //
 // Winning over basemap place names (T-032): an invisible symbol layer on top of the basemap holds
 // the same names at the same spots. MapLibre places symbols from the top layer down, so basemap
@@ -11,11 +13,13 @@
 
 import type { FeatureCollection } from "geojson";
 import type { GeoJSONSource, Map as MlMap } from "maplibre-gl";
-import type { WorldView } from "../game/types";
+import { buildComplexes } from "../game/complexes";
+import type { StationInput, WorldView } from "../game/types";
 import { toLocal } from "./geo";
 import type { Overlay } from "./overlay";
 import { perfOff, perfTry } from "../perfFlags";
 import { MIN_LABEL_ZOOM, labelPadding } from "./labelLayout";
+import { plainBoxHalfPx } from "./stationGeometry";
 
 /** ?perfOff=labels (T-045, measurement only): DOM labels never placed. */
 const NO_LABELS = perfOff("labels");
@@ -49,6 +53,13 @@ export class StationLabels {
   private placedSize: [number, number] = [0, 0];
   private anchor: [number, number] = [0, 0];
   private needsPlacement = true;
+  /** Shown labels' boxes in screen px at the last full placement, before the pan offset. */
+  private placed: [number, number, number, number][] = [];
+  private offset: [number, number] = [0, 0];
+  /** Bumped whenever the shown names change place, so capacity tags know to place again (T-184). */
+  version = 0;
+  /** Called after the names change place outside a pan (capacity tags follow, T-184). */
+  onPlace: (() => void) | null = null;
 
   constructor(container: HTMLElement, private overlay: Overlay, private map: MlMap) {
     this.box = document.createElement("div");
@@ -102,31 +113,38 @@ export class StationLabels {
   }
 
   set(w: WorldView) {
-    const lines = new Map<string, number>();
-    for (const l of w.save.lines) for (const s of new Set(l.stops)) lines.set(s, (lines.get(s) ?? 0) + 1);
-    const st = [...w.save.stations].sort((a, b) => (lines.get(b.id) ?? 0) - (lines.get(a.id) ?? 0) || Number(b.built) - Number(a.built));
+    const stations = w.save.stations;
+    const lines = new Map<string, Set<string>>();
+    for (const l of w.save.lines) for (const s of l.stops) {
+      const set = lines.get(s);
+      if (set) set.add(l.id);
+      else lines.set(s, new Set([l.id]));
+    }
     // Most edits leave the stations as they were: keep the labels and the shadow layer then
     // (rebuilding 470 labels and the shadow source took ~100 ms an edit on a 2,000 km network, T-063).
-    const key = st.map((s) => `${s.id}|${s.name}|${s.built}|${s.lng}|${s.lat}|${s.heading}|${lines.get(s.id) ?? 0}`).join("\n");
+    // Length and the player's links are in the key because they decide complexes (T-209).
+    const links = w.save.links ?? [];
+    const key = stations.map((s) => `${s.id}|${s.name}|${s.built}|${s.lng}|${s.lat}|${s.heading}|${s.length}|${[...(lines.get(s.id) ?? [])].join(",")}`).join("\n") + "\n" + links.join("|");
     if (key === this.key) return;
     this.key = key;
+    const names = labelGroups(stations, lines, links);
     this.plane.textContent = "";
     this.needsPlacement = true;
-    this.labels = st.map((s) => {
+    this.labels = names.map((g) => {
       const el = document.createElement("div");
-      el.className = "stn-label" + (s.built ? "" : " plan");
+      el.className = "stn-label" + (g.built ? "" : " plan");
       if (LAYERED) el.style.willChange = "transform"; // ?perfTry=labelLayers (T-045)
-      el.textContent = s.name;
+      el.textContent = g.name;
       this.plane.appendChild(el);
-      const [x, y] = toLocal(s.lng, s.lat);
-      return { el, x, y, below: Math.abs(Math.cos(s.heading)) > Math.abs(Math.sin(s.heading)), w: 0, h: 0 };
+      const [x, y] = toLocal(g.lng, g.lat);
+      return { el, x, y, below: Math.abs(Math.cos(g.heading)) > Math.abs(Math.sin(g.heading)), w: 0, h: 0 };
     });
     this.shadow = {
       type: "FeatureCollection",
-      features: st.map((s, i) => ({
+      features: names.map((g, i) => ({
         type: "Feature",
-        geometry: { type: "Point", coordinates: [s.lng, s.lat] },
-        properties: { name: s.name, anchor: this.labels[i].below ? "top" : "left", offset: this.labels[i].below ? [0, 0.6] : [0.7, 0] },
+        geometry: { type: "Point", coordinates: [g.lng, g.lat] },
+        properties: { name: g.name, anchor: this.labels[i].below ? "top" : "left", offset: this.labels[i].below ? [0, 0.6] : [0.7, 0] },
       })),
     };
     (this.map.getSource(SHADOW) as GeoJSONSource | undefined)?.setData(this.shadow);
@@ -140,6 +158,14 @@ export class StationLabels {
     this.place();
   }
 
+  /** The shown names' boxes in screen px as they are now, pan included; capacity tags keep off
+   * them (T-184). */
+  rects(): [number, number, number, number][] {
+    if (!this.shown) return [];
+    const [dx, dy] = this.offset;
+    return this.placed.map((r) => [r[0] + dx, r[1] + dy, r[2] + dx, r[3] + dy]);
+  }
+
   place() {
     const zoom = this.map.getZoom();
     const show = this.visible && zoom >= MIN_LABEL_ZOOM && !NO_LABELS;
@@ -147,6 +173,8 @@ export class StationLabels {
       this.shown = show;
       this.box.style.display = show ? "" : "none";
       this.needsPlacement = true;
+      this.version++;
+      if (!show) this.onPlace?.();
     }
     if (!show || !this.overlay.camMatrix) return;
     const W = this.overlay.canvas.clientWidth, H = this.overlay.canvas.clientHeight;
@@ -163,6 +191,7 @@ export class StationLabels {
       if (Math.abs(dx) < PAN_MARGIN / 2 && Math.abs(dy) < PAN_MARGIN / 2) {
         const transform = `translate(${dx}px, ${dy}px)`;
         if (this.plane.style.transform !== transform) this.plane.style.transform = transform;
+        this.offset = [dx, dy];
         return;
       }
     }
@@ -171,6 +200,8 @@ export class StationLabels {
     this.placedSize = [W, H];
     this.anchor = this.overlay.toScreen(0, 0);
     this.plane.style.transform = "";
+    this.offset = [0, 0];
+    this.placed = [];
     const margin = PAN ? PAN_MARGIN : 0;
     // Reserve breathing room around each name, especially at neighbourhood scale.
     const [padX, padY] = labelPadding(zoom);
@@ -182,10 +213,12 @@ export class StationLabels {
         l.h = l.el.offsetHeight;
       }
     }
+    // clear of a platform box, which widens as the map zooms in (T-204)
+    const gap = Math.max(GAP, plainBoxHalfPx(this.overlay.renderer.stationStyle, zoom) + 4);
     for (const l of this.labels) {
       const [sx, sy] = this.overlay.toScreen(l.x, l.y);
-      const x = l.below ? sx - l.w / 2 : sx + GAP;
-      const y = l.below ? sy + GAP - 2 : sy - l.h / 2;
+      const x = l.below ? sx - l.w / 2 : sx + gap;
+      const y = l.below ? sy + gap - 2 : sy - l.h / 2;
       const r: [number, number, number, number] = [x, y, x + l.w, y + l.h];
       const collision: [number, number, number, number] = [r[0] - padX, r[1] - padY, r[2] + padX, r[3] + padY];
       const off = r[2] < -margin || r[0] > W + margin || r[3] < -margin || r[1] > H + margin;
@@ -196,7 +229,50 @@ export class StationLabels {
       }
       taken.push(collision);
       l.el.style.visibility = "";
-      l.el.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+      const rx = Math.round(x), ry = Math.round(y);
+      l.el.style.transform = `translate(${rx}px, ${ry}px)`;
+      this.placed.push([rx, ry, rx + l.w, ry + l.h]);
     }
+    this.version++;
+    this.onPlace?.();
   }
+}
+
+interface NameGroup {
+  name: string;
+  lng: number;
+  lat: number;
+  heading: number;
+  built: boolean;
+  /** distinct lines stopping at any of its stations */
+  lines: number;
+}
+
+/** One label per distinct name per station complex (T-169): stations of one complex that share a
+ * name (three Times Sq platforms) get one label at their mean position, oriented like the member
+ * with the most lines; differently named members keep their own. Most important first: most
+ * lines, then constructed, then save order. The player's links count, as everywhere a complex is
+ * used (T-197, T-209). */
+function labelGroups(stations: readonly StationInput[], lines: ReadonlyMap<string, ReadonlySet<string>>, links: readonly (readonly [string, string])[] = []): NameGroup[] {
+  const cx = buildComplexes(stations, links);
+  const groups = new Map<string, StationInput[]>();
+  for (const s of stations) {
+    const k = `${cx.of.get(s.id)}\u0000${s.name}`;
+    const g = groups.get(k);
+    if (g) g.push(s);
+    else groups.set(k, [s]);
+  }
+  const out: NameGroup[] = [];
+  for (const members of groups.values()) {
+    const ids = new Set<string>();
+    let lng = 0, lat = 0, lead = members[0];
+    for (const s of members) {
+      lng += s.lng;
+      lat += s.lat;
+      for (const l of lines.get(s.id) ?? []) ids.add(l);
+      if ((lines.get(s.id)?.size ?? 0) > (lines.get(lead.id)?.size ?? 0)) lead = s;
+    }
+    out.push({ name: lead.name, lng: lng / members.length, lat: lat / members.length, heading: lead.heading, built: members.some((s) => s.built), lines: ids.size });
+  }
+  return out.sort((a, b) => b.lines - a.lines || Number(b.built) - Number(a.built));
 }

@@ -35,5 +35,5 @@ try {
   const mode=await page.evaluate(()=>window.tw.display.value.trackColour);if(mode!==(lineLoad?'traffic':'line'))throw Error('Legacy migration failed');migrations.push({lineLoad,mode});
  }
  if(errors.length)throw Error(errors.join('\n'));
- const result={modes,speeds,migrations,errors};console.log(JSON.stringify(result));await writeFile('trainworld/notes/T-105-check.json',JSON.stringify(result,null,2));
+ const result={modes,speeds,migrations,errors};console.log(JSON.stringify(result));await writeFile('artifacts/trainworld/notes-outputs/T-105-check.json',JSON.stringify(result,null,2));
 }finally{await browser.close();}

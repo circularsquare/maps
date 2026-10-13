@@ -2,29 +2,175 @@
 // and zone (T-026's).
 
 import { useEffect, useState } from "preact/hooks";
-import { clock } from "../../game/clock";
+import { clock, SPEEDS } from "../../game/clock";
 import { demandView, lineDemand } from "../../game/demand";
 import { PERIODS, periodAt } from "../../game/periods";
 import { count, duration, levelLabel, money } from "../../game/format";
 import { compass, stationTowards } from "../../game/places";
-import { DEMAND_INDEX, type Level, type LineInput, type Selection } from "../../game/types";
+import { DEMAND_INDEX, type Level, type LineInput, type Selection, type StationInput } from "../../game/types";
+import { complexOf, inComplexView, openAlone } from "../../game/complexView";
+import { complexNow, type ComplexNow } from "../../game/complexLive";
+import { cancelLink, linking, linksAmong, startLink, unlink } from "../../game/links";
 import { queryClock } from "../../workers/clockClient";
 import { parseEdgePis, type EdgePi, type EdgePis } from "../../map/edgeEdit";
-import { display, selection } from "../../game/ui";
+import { display, selection, setDisplay, tool } from "../../game/ui";
+import { stationPoint } from "../../game/trip";
+import { pickTool } from "../tabs";
 import { edit, linesAt, say, world } from "../../game/world";
 import { live } from "../../map/live";
 import { removeThing } from "../../game/remove";
 import { tripAt } from "../../map/network";
-import { Chip, Row, Stepper } from "../widgets";
+import { nextLeavingAt, platformsAt, tripLoad } from "../../game/boarding";
+import { Chip, Row, Segmented, Stepper } from "../widgets";
 import { StationRiders } from "./StationRiders";
 import { StationLongerTrips } from "./LongerTrips";
+import { ComplexMap } from "./ComplexMap";
+import { PurposeSplit } from "./PurposeSplit";
 
 function StationGlyph() {
   return <span class="st-glyph" />;
 }
 
 function Built({ built, what }: { built: boolean; what: string }) {
-  return built ? null : <p class="muted">Blueprint. {what} is built when you construct it.</p>;
+  return built ? null : <p class="muted" data-tip={`${what} is built when you construct it`}>Blueprint</p>;
+}
+
+/** Open station `m` on its own, in station view, from its complex (T-246, T-249). */
+function openStation(m: string) {
+  openAlone(m);
+  live.overlay?.invalidate();
+}
+
+/** One row of the complex view's list (T-250): a line name and every station of the complex where a
+ * line of that name stops (the save's branches and patterns, "subway 6" to Parkchester and to Pelham
+ * Bay Park, summed), or a station no line stops at. */
+interface ComplexRow {
+  name: string;
+  line: LineInput | null;
+  stations: string[];
+  /** the busiest of them, opened by a click */
+  open: string;
+  built: boolean;
+  waiting: number | null;
+  full: boolean;
+  boardings: number;
+  tip: string;
+  waitTip: string;
+}
+
+function complexRows(members: string[], lines: LineInput[], byId: Map<string, StationInput>, now: ComplexNow | null): ComplexRow[] {
+  const inside = new Set(members);
+  const groups = new Map<string, LineInput[]>();
+  for (const l of lines) groups.set(l.name, [...(groups.get(l.name) ?? []), l]);
+  const rows: ComplexRow[] = [];
+  for (const [name, ls] of groups) {
+    const ids = new Set(ls.map((l) => l.id));
+    const per = new Map<string, number>();
+    for (const l of ls) l.stops.forEach((st, k) => {
+      if (inside.has(st)) per.set(st, (per.get(st) ?? 0) + (lineDemand(l.id)?.boardings[k] ?? 0));
+    });
+    const stations = [...per.keys()];
+    const boardings = [...per.values()].reduce((a, b) => a + b, 0);
+    const open = stations.reduce((a, b) => ((per.get(b) ?? 0) > (per.get(a) ?? 0) ? b : a), stations[0]);
+    const qs = (now?.queues ?? []).filter((q) => ids.has(q.line));
+    const waiting = now && now.platforms.size ? qs.reduce((a, q) => a + q.waiting, 0) : null;
+    const full = qs.some((q) => q.leftBehind) || stations.some((m) => {
+      const p = now?.platforms.get(m);
+      return !!p && Math.max(p.side[0], p.side[1]) >= p.room;
+    });
+    const names = [...new Set(stations.map((m) => byId.get(m)?.name ?? ""))];
+    const ends = [...new Set(ls.flatMap((l) => [l.stops[0], l.stops[l.stops.length - 1]]).filter((s) => !inside.has(s)).map((s) => byId.get(s)?.name ?? ""))];
+    rows.push({
+      name, line: ls[0], stations, open, built: stations.some((m) => byId.get(m)?.built), waiting, full, boardings,
+      tip: `${name} at ${names.join(" and ")}` + (ends.length ? `\nTo ${ends.join(", ")}` : ""),
+      waitTip: waiting === null ? "Nobody waiting: no train calls here this hour"
+        : `${count(waiting)} riders waiting for ${name} now` + (full ? "\nA platform is full, or the last train left riders behind" : ""),
+    });
+  }
+  rows.sort((a, b) => b.boardings - a.boardings || a.name.localeCompare(b.name));
+  for (const m of members) {
+    if (lines.some((l) => l.stops.includes(m))) continue;
+    const s = byId.get(m);
+    if (s) rows.push({ name: s.name, line: null, stations: [m], open: m, built: s.built, waiting: null, full: false, boardings: 0, tip: `${s.name}\nNo line stops here`, waitTip: "" });
+  }
+  return rows;
+}
+
+/** The complex now (game/complexLive.ts): worked out again every 10 game seconds or so (at most
+ * every 150 ms of real time), and re-rendered only when something shown changed. */
+function useComplexNow(members: string[]): ComplexNow | null {
+  const [now, setNow] = useState<ComplexNow | null>(() => complexNow(members));
+  const scope = members.join(",");
+  useEffect(() => {
+    let key = "", t = NaN, board: unknown = null;
+    const tick = () => {
+      const r = live.overlay?.renderer, at = clock.now();
+      if (Math.abs(at - t) < 10 && r?.board === board) return;
+      t = at;
+      board = r?.board ?? null;
+      const c = complexNow(members);
+      const k = c?.key ?? "";
+      if (k !== key) {
+        key = k;
+        setNow(c);
+      }
+    };
+    tick();
+    const h = setInterval(tick, 150);
+    return () => clearInterval(h);
+  }, [scope, world.value]);
+  return now;
+}
+
+/** A station complex as one (T-146): its stations, the lines serving any of them and the
+ * boardings at all of them. */
+function ComplexSummary({ id, members }: { id: string; members: string[] }) {
+  const w = world.value;
+  if (!w) return null;
+  const inside = new Set(members);
+  const at = (l: LineInput) => {
+    const b = lineDemand(l.id)?.boardings;
+    let sum = 0;
+    l.stops.forEach((st, k) => { if (inside.has(st)) sum += b?.[k] ?? 0; });
+    return sum;
+  };
+  const lines = w.save.lines.filter((l) => l.stops.some((st) => inside.has(st)));
+  const known = lines.some((l) => lineDemand(l.id));
+  const total = lines.reduce((a, l) => a + at(l), 0);
+  const byId = new Map(w.save.stations.map((s) => [s.id, s]));
+  const now = useComplexNow(members);
+  const rows = complexRows(members, lines, byId, now);
+  return (
+    <>
+      {/* the complex's lines first, one row per line name with its branches and directions summed
+          (T-246, T-250, Anita: "show on top the component stations ... one row per line"); a click
+          opens the line's busiest station there on its own */}
+      <ul class="rows pick complex-stations">
+        <li class="cols muted small">
+          <span class="grow">Lines</span>
+          <span class="val">Waiting</span>
+          <span class="val">A day</span>
+        </li>
+        {rows.map((r) => (
+          <li class={r.stations.includes(id) ? "on" : ""} onClick={() => openStation(r.open)} data-tip={r.tip}>
+            {r.line && <Chip line={r.line} size="sm" />}
+            <span class={"grow" + (r.built ? "" : " muted")}>{r.name}</span>
+            <span class={"val" + (r.full ? " bad" : "")} data-tip={r.waitTip}>{r.waiting !== null ? count(r.waiting) : ""}</span>
+            <span class="val" data-tip={known && r.line ? `${count(r.boardings)} boardings a day` : "Boardings are known once demand is worked out"}>{known && r.line ? count(r.boardings) : ""}</span>
+          </li>
+        ))}
+      </ul>
+      <ComplexMap id={id} members={members} stations={byId} lines={lines} now={now} onOpen={openStation} />
+      <ul class="rows pick">
+        {lines.length > 0 && (
+          <Row label="Boardings a day" bold>
+            {known ? count(total) : ""}
+          </Row>
+        )}
+        <PurposeSplit scope={lines.map((l) => ({ line: l.id, at: l.stops.flatMap((st, k) => (inside.has(st) ? [k] : [])) }))} unit="boardings" />
+      </ul>
+    </>
+  );
 }
 
 export function StationInspector({ id }: { id: string }) {
@@ -32,6 +178,10 @@ export function StationInspector({ id }: { id: string }) {
   const [editing, setEditing] = useState(false);
   const s = w?.save.stations.find((s) => s.id === id);
   if (!w || !s) return null;
+  // a station complex (T-146): the switch shows only when there is more than this station
+  const members = complexOf(id);
+  const asComplex = members.length > 1 && inComplexView(id);
+  const scope = asComplex ? members.join(",") : id;
   const lines = linesAt(id);
   const here = lines.map((l) => [l, lineDemand(l.id)?.boardings[l.stops.indexOf(id)] ?? 0] as const);
   const total = here.reduce((a, [, b]) => a + b, 0);
@@ -63,12 +213,95 @@ export function StationInspector({ id }: { id: string }) {
             }}
           />
         ) : (
-          <span class="name" onDblClick={() => setEditing(true)} title="Double click to rename">
+          <span class="name" onDblClick={() => setEditing(true)} data-tip="Double click to rename">
             {s.name}
           </span>
         )}
       </div>
-      <div class="sub muted">Level {levelLabel(s.level)}</div>
+      {/* a click on a station always shows its complex (T-249); a station opened on its own from
+          the complex's list goes back to it from here, the Station / Complex switch is gone */}
+      <div class="sub muted">
+        {asComplex ? `Complex of ${members.length} stations` : `Level ${levelLabel(s.level)}`}
+        {!asComplex && members.length > 1 && (
+          <>
+            {" · "}
+            <button class="btn text inline" onClick={() => { selection.value = { kind: "station", station: id }; live.overlay?.invalidate(); }} data-tip="Show the whole complex">
+              Complex of {members.length} stations
+            </button>
+          </>
+        )}
+      </div>
+      {asComplex ? (
+        <ComplexSummary id={id} members={members} />
+      ) : (
+        <StationDetails s={s} lines={lines} here={here} total={total} props={props} construct={construct} remove={remove} />
+      )}
+      <StationLinks id={id} members={asComplex ? members : [id]} />
+      <StationRiders id={id} scope={scope} />
+      <StationLongerTrips id={id} scope={scope} />
+    </>
+  );
+}
+
+/** Start a trip at a station (T-221): the trip tool on, the station as where the trip starts; the
+ * next click (a station or a place) is where it ends. */
+function tripFrom(id: string) {
+  const at = stationPoint(id);
+  if (!at) return;
+  if (linking.peek() !== null) cancelLink();
+  if (tool.peek() !== "trip") pickTool("trip");
+  selection.value = { kind: "trip", from: at, to: null, fromStation: id };
+}
+
+/** The player's links (T-197, game/links.ts): those touching the station (or, in complex view,
+ * any member), each with Unlink, and the button that starts a new one. Stations the distance rule
+ * groups are not listed: they cannot be split. */
+function StationLinks({ id, members }: { id: string; members: string[] }) {
+  const w = world.value;
+  if (!w) return null;
+  const picking = linking.value === id;
+  const pairs = linksAmong(members);
+  const byId = new Map(w.save.stations.map((s) => [s.id, s]));
+  const end = (x: string) => (
+    <>
+      <span>{byId.get(x)?.name ?? ""}</span>
+      {linesAt(x).map((l) => <Chip line={l} size="sm" />)}
+    </>
+  );
+  return (
+    <>
+      {pairs.length > 0 && <div class="h">Linked by you</div>}
+      {pairs.length > 0 && (
+        <ul class="rows">
+          {pairs.map(([a, b]) => (
+            <li>
+              <span class="grow" style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "4px" }}>{members.length > 1 ? <>{end(a)}<span>and</span>{end(b)}</> : end(a === id ? b : a)}</span>
+              <button class="btn text" onClick={() => void unlink(a, b)}>Unlink</button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {picking && <p class="muted">Click another station on the map to link it with this one. Stations up to 1 km apart can be linked, and riders change between them on foot. Esc stops.</p>}
+      <div class="pane-foot">
+        {/* T-221: a trip from this station to the next station or place clicked */}
+        <button class="btn text" onClick={() => tripFrom(id)} data-tip="Then click another station or a place to see how the demand model's people would travel there">
+          Trip from here
+        </button>
+        <button class="btn text" onClick={() => (picking ? cancelLink() : startLink(id))} data-tip="Linked stations are one complex, and riders change between them on foot">
+          {picking ? "Stop linking" : "Link to another station"}
+        </button>
+      </div>
+    </>
+  );
+}
+
+/** The station view's own rows and actions. */
+function StationDetails({ s, lines, here, total, props, construct, remove }: {
+  s: StationInput; lines: LineInput[]; here: (readonly [LineInput, number])[]; total: number;
+  props: (platform: number) => void; construct: () => void; remove: () => void;
+}) {
+  return (
+    <>
       <Built built={s.built} what="The station" />
       <ul class="rows">
         <li>
@@ -90,7 +323,9 @@ export function StationInspector({ id }: { id: string }) {
             {lines.some((l) => lineDemand(l.id)) ? count(total) : ""}
           </Row>
         )}
+        <PurposeSplit scope={lines.map((l) => ({ line: l.id, at: [l.stops.indexOf(s.id)] }))} unit="boardings" />
       </ul>
+      <Waiting node={s.num} lines={lines} />
       <div class="pane-foot">
         {!s.built ? (
           <button class="btn text" onClick={construct}>
@@ -99,12 +334,61 @@ export function StationInspector({ id }: { id: string }) {
         ) : (
           <span />
         )}
-        <button class="btn text" onClick={remove} title={s.built ? "Removing a constructed station refunds nothing" : ""}>
+        <button class="btn text" onClick={remove} data-tip={s.built ? "Removing a constructed station refunds nothing" : ""}>
           Remove station
         </button>
       </div>
-      <StationRiders id={id} />
-      <StationLongerTrips id={id} />
+    </>
+  );
+}
+
+/** Riders on the platforms now (T-164): per line and direction, from the boarding account, with
+ * how many a full train left behind this hour and the longest wait for a train. */
+function Waiting({ node, lines }: { node: number; lines: LineInput[] }) {
+  clock.minute.value; // re-render each game minute: the crowds change
+  // and the moment a train leaves one of its platforms with whoever fitted (T-238)
+  const [, bump] = useState(0);
+  const speed = clock.speed.value, running = clock.running.value, held = clock.held.value;
+  const w = world.value;
+  const r = live.overlay?.renderer;
+  const epoch = r?.tripsEpoch ?? NaN;
+  const next = r?.board ? nextLeavingAt(r.board, node, clock.now() - epoch) : Infinity;
+  useEffect(() => {
+    if (!Number.isFinite(next) || !clock.ticking) return;
+    const ms = ((next - (clock.now() - epoch)) / SPEEDS[speed]) * 1000 + 5;
+    const id = setTimeout(() => bump((x) => x + 1), Math.max(0, ms));
+    return () => clearTimeout(id);
+  }, [next, epoch, speed, running, held]);
+  if (!w || !r?.board) return null;
+  const byId = new Map(lines.map((l) => [l.id, l]));
+  const rows = platformsAt(r.board, node, clock.now() - r.tripsEpoch).filter((p) => byId.has(p.line));
+  if (!rows.length) return null;
+  const name = new Map(w.save.stations.map((s) => [s.id, s.name]));
+  return (
+    <>
+      <div class="h">
+        Waiting now
+      </div>
+      <ul class="rows waiting">
+        {rows.map((p) => {
+          const l = byId.get(p.line)!;
+          const to = name.get(p.run === 0 ? l.stops[l.stops.length - 1] : l.stops[0]);
+          return (
+            <li>
+              <Chip line={l} />
+              <span class="grow what">
+                <span>To {to}</span>
+                {p.leftBehind >= 1 ? (
+                  <span class="bad small">{count(p.leftBehind)} left behind, longest wait {duration(p.longestWait)}</span>
+                ) : (
+                  <span class="muted small">{p.arriving >= 1 ? `${count(p.arriving)} arriving, longest wait ${duration(p.longestWait)}` : "Nobody arriving"}</span>
+                )}
+              </span>
+              <span class="val num">{count(p.waiting)}</span>
+            </li>
+          );
+        })}
+      </ul>
     </>
   );
 }
@@ -116,7 +400,9 @@ export function TrainInspector({ line, profile, dep }: { line: string; profile: 
   const net = live.overlay?.renderer.net;
   if (!w || !l || !net) return null;
   const st = w.lineStats[l.id];
-  const at = tripAt(net, profile, dep, clock.now());
+  // a train standing at a terminal for its next departure is drawn past its trip (T-206)
+  const ren = live.overlay!.renderer, ti = ren.tripIndex(profile, dep - ren.tripsEpoch);
+  const at = tripAt(net, profile, dep, clock.now(), ti >= 0 && ren.tripEnds ? ren.tripEnds[ti] + ren.tripsEpoch : -Infinity);
   const name = new Map(w.save.stations.map((s) => [s.id, s.name]));
   const run = Math.floor(profile / 3) % 2;
   const stops = run === 0 ? l.stops : [...l.stops].reverse();
@@ -138,9 +424,9 @@ export function TrainInspector({ line, profile, dep }: { line: string; profile: 
           </Row>
         </ul>
       ) : (
-        <p class="muted">This train has finished its trip.</p>
+        <p class="muted">This train finished its trip and left service.</p>
       )}
-      {at && <OnBoard line={l} run={run} s={at.s} stopS={stopS} cars={st.cars} />}
+      {at && <OnBoard line={l} run={run} s={at.s} stopS={stopS} cars={st.cars} profile={profile} dep={dep} />}
     </>
   );
 }
@@ -151,11 +437,11 @@ const SEATS_PER_CAR = 44;
 const CRUSH_PER_CAR = 160;
 
 /**
- * The steady-state load forecast for a train's current segment (T-083, SPEC 8): the riders demand puts on the segment it is running
- * (`LineDemand.loads`, riders over the whole period) shared among the trains the line runs in
- * that period, with both the average and busiest hour; against seats and crush load.
+ * Who is on board (T-083, T-164, SPEC 8): this train's own riders on the stretch it is running,
+ * from the boarding account (game/boarding.ts), against seats and crush load; and the typical
+ * train of the period, demand's riders on the stretch shared among the trains then.
  */
-function OnBoard({ line, run, s, stopS, cars }: { line: LineInput; run: number; s: number; stopS: number[]; cars: number }) {
+function OnBoard({ line, run, s, stopS, cars, profile, dep }: { line: LineInput; run: number; s: number; stopS: number[]; cars: number; profile: number; dep: number }) {
   const dm = lineDemand(line.id);
   const n = line.stops.length;
   const p = periodAt(clock.minute.value * 60);
@@ -164,33 +450,43 @@ function OnBoard({ line, run, s, stopS, cars }: { line: LineInput; run: number; 
   let seg = 0;
   while (seg + 1 < n - 1 && stopS[seg + 1] <= s + 1) seg++;
   const loads = dm?.loads[p];
-  if (!demandView.value || !loads || loads.length !== 2 * (n - 1) || trains <= 0)
+  const r = live.overlay?.renderer;
+  const i = r?.board ? r.tripIndex(profile, dep - r.tripsEpoch) : -1;
+  const own = r?.board && i >= 0 ? tripLoad(r.board, i, run === 0 ? seg : n - 2 - seg) : null;
+  if (!demandView.value || own === null || !loads || loads.length !== 2 * (n - 1) || trains <= 0)
     return (
       <ul class="rows">
-        <Row label="Forecast load">
+        <Row label="Riders aboard">
           <span class="muted">{demandView.value ? "available after the next demand update" : "available once demand is ready"}</span>
         </Row>
       </ul>
     );
   const atEnd = s >= stopS[n - 1] - 1;
-  const average = atEnd ? 0 : loads[run === 0 ? seg : n - 1 + seg] / trains;
-  const busiest = average * (demandView.value.peakHourFactor[p] ?? 1);
-  const basis = display.value.trainLoadBasis;
-  const aboard = basis === "average" ? average : busiest;
+  // the typical train this hour on this stretch, from the same account as this one (T-230): its
+  // line's trains in this direction drawn this hour
+  let sum = 0, many = 0;
+  const b = r!.board!, stretch = run === 0 ? seg : n - 2 - seg;
+  for (let k = 0; k < r!.tripCount; k++) {
+    const pk = r!.trips[k * 2];
+    if (Math.floor(pk / 6) !== Math.floor(profile / 6) || Math.floor(pk / 3) % 2 !== run) continue;
+    const v = tripLoad(b, k, stretch);
+    if (v !== null) { sum += v; many++; }
+  }
+  const average = atEnd || !many ? 0 : sum / many;
+  const aboard = atEnd ? 0 : own;
   const seats = SEATS_PER_CAR * cars, crush = CRUSH_PER_CAR * cars;
-  const state = aboard <= 0.5 ? "Empty" : aboard <= seats ? "Seats free" : aboard <= crush ? "Standing" : "Over full";
+  const state = aboard <= 0.5 ? "Empty" : aboard <= seats ? "Seats free" : aboard < crush - 0.5 ? "Standing" : "Full";
   return (
     <>
       <div class="h">
-        Forecast load<span class="right muted small">{PERIODS[p].name.toLowerCase()}, {basis === "average" ? "average" : "busiest hour"}</span>
+        <span data-tip="Counted train by train from the demand forecast: riders board at the forecast's rate until the train is packed full">On board</span><span class="right muted small">{PERIODS[p].name.toLowerCase()}</span>
       </div>
-      <p class="muted small">Steady-state demand for this stretch, not a live passenger count.</p>
       <ul class="rows">
-        <Row label="Typical train" bold={basis === "average"}>{Math.round(average).toLocaleString("en-US")}</Row>
-        <Row label="Busiest-hour train" bold={basis === "busiest"}>{Math.round(busiest).toLocaleString("en-US")}</Row>
+        <Row label="Riders aboard" bold>{Math.round(aboard).toLocaleString("en-US")}</Row>
+        <Row label="Typical train this hour">{Math.round(average).toLocaleString("en-US")}</Row>
         <li>
           <span class="grow">
-            <span class="load-bar">
+            <span class="load-bar" data-tip={`${Math.round(aboard).toLocaleString("en-US")} riders aboard. The bar is full at ${crush.toLocaleString("en-US")} packed full, and the tick marks the ${seats.toLocaleString("en-US")} seats.`}>
               <i class="fill" style={{ width: Math.min(100, (aboard / crush) * 100) + "%" }} />
               <i class="seats" style={{ left: (seats / crush) * 100 + "%" }} />
             </span>
@@ -251,10 +547,8 @@ function Shape({ edge, version }: { edge: number; version: number }) {
   return (
     <>
       <div class="h">
-        Corners
+        <span data-tip={"Add a corner between points, then drag its square on the map." + (shape.legacy ? " This stretch runs through its squares; once you change it, they become corners like on any other track." : "")}>Corners</span>
       </div>
-      <p class="muted small">Add a corner between points, then drag its square on the map.</p>
-      {shape.legacy && <p class="note muted">This stretch runs through its squares. Once you change it, they become corners like on any other track.</p>}
       <div class="blueprint-corners">
         {Array.from({ length: pis.length + 1 }, (_, i) => <>
           <button class="btn text add-corner" disabled={busy} onClick={() => add(i)}
@@ -334,7 +628,7 @@ export function TrackInspector({ edge }: { edge: number }) {
         ) : (
           <span />
         )}
-        <button class="btn text" onClick={remove} title={e.built ? "Removing constructed track refunds nothing" : ""}>
+        <button class="btn text" onClick={remove} data-tip={e.built ? "Removing constructed track refunds nothing" : ""}>
           Remove track
         </button>
       </div>
@@ -386,7 +680,7 @@ function parseJunction(d: Float64Array): { ports: JPort[]; moves: JMove[] } {
 
 /** The junction from above: each track leaving it, and the moves as curves through the middle,
  * in the first line's colour; a move that crosses another is drawn thicker. */
-function JunctionMap({ ports, moves, colourOf }: { ports: JPort[]; moves: JMove[]; colourOf: (line: number) => string }) {
+function JunctionMap({ ports, moves, colourOf, tip }: { ports: JPort[]; moves: JMove[]; colourOf: (line: number) => string; tip: (m: JMove) => string }) {
   const R = 46, c = 56;
   // Branches leave almost along the main line; spread close ends to at least 30 degrees apart so
   // each can be told apart (a diagram, not a map).
@@ -416,7 +710,7 @@ function JunctionMap({ ports, moves, colourOf }: { ports: JPort[]; moves: JMove[
       {moves.map((m) => {
         const [x1, y1] = end(ports[m.from]);
         const [x2, y2] = end(ports[m.to]);
-        return <path d={`M${x1},${y1} Q${c},${c} ${x2},${y2}`} fill="none" stroke={colourOf(m.lines[0])} stroke-width={m.crosses.length ? 3 : 1.5} />;
+        return <path d={`M${x1},${y1} Q${c},${c} ${x2},${y2}`} fill="none" stroke={colourOf(m.lines[0])} stroke-width={m.crosses.length ? 3 : 1.5} data-tip={tip(m)} />;
       })}
       <circle cx={c} cy={c} r="3" fill="var(--text)" />
     </svg>
@@ -466,7 +760,6 @@ export function JunctionInspector({ node }: { node: number }) {
       <Built built={built} what="The junction" />
       {n.flying ? (
         <>
-          <p class="note muted">One track goes over the other here, so trains never wait for each other to cross.</p>
           {!built && (
             <div class="pane-foot">
               <span />
@@ -478,18 +771,14 @@ export function JunctionInspector({ node }: { node: number }) {
         </>
       ) : (
         <>
-          <p class="note muted">
-            {crossing
-              ? "Some trains cross the path of others here on the same level, so they wait for each other. A flyover takes one track over the other."
-              : "No trains cross each other's path here now. A flyover takes one track over the other, for when they do."}
-          </p>
+          <p class="note muted">{crossing ? "Trains cross on the level here and wait for each other." : "No trains cross here now."}</p>
           <ul class="rows">
             <Row label="Flyover price">{price === null ? "" : money(price * 1e6)}</Row>
             <Row label="Waiting it saves">{perTrain >= 1 ? `${duration(perTrain)} a train at ${demand} demand` : "none now"}</Row>
           </ul>
           <div class="pane-foot">
             <span class="muted small">{built ? "Paid at once" : "Added to the blueprint"}</span>
-            <button class="btn text" onClick={() => setFlying(true)}>
+            <button class="btn text" data-tip="Take one track over the other, so trains never wait to cross" onClick={() => setFlying(true)}>
               Build a flyover
             </button>
           </div>
@@ -497,7 +786,8 @@ export function JunctionInspector({ node }: { node: number }) {
       )}
       {info && moves.length > 0 && (
         <>
-          <JunctionMap ports={info.ports} moves={moves} colourOf={colourOf} />
+          <JunctionMap ports={info.ports} moves={moves} colourOf={colourOf}
+            tip={(m) => `${label(m)}: ${Math.round(m.tph[lev])} trains an hour at ${demand} demand${m.crosses.length ? "\nIt crosses another route on the level, so it is drawn thicker" : ""}`} />
           <div class="h">
             Routes through it<span class="right muted small">trains an hour, wait per train</span>
           </div>

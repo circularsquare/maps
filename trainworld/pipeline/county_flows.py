@@ -42,12 +42,15 @@ def acs_flows():
     return pd.read_csv(cache, dtype={"h": str, "w": str})
 
 
-def model_flows():
-    header, a = read_pack.load_pack("nyc")
+def model_flows(packs=read_pack.PACKS):
+    header, a = read_pack.load_pack("nyc", packs)
     g = header["gravity"]
     nz = header["zones"]
     zone = a["zone"].astype(np.int64)
     gx, gy = a["zone_gx"].astype(np.int64), a["zone_gy"].astype(np.int64)
+    # T-162: the decay x border_factor between zones of different states (none in older packs)
+    zr = a["zone_region"].astype(np.int64) if "zone_region" in a else np.zeros(nz, np.int64)
+    bf = g.get("border_factor", 1.0)
     cc = np.fromfile(os.path.join(realnet.WORK, "cell_county.u8"), np.uint8)
     nc = len(ORDER)
     zh = np.zeros((nz, nc))
@@ -64,6 +67,7 @@ def model_flows():
         d = zk * np.sqrt((gx[s:e, None] - gx[None, :]) ** 2 + (gy[s:e, None] - gy[None, :]) ** 2)
         d[d == 0] = g["intrazonal_km"]
         t = row[s:e, None] * col[None, :] * np.exp(-d / g["decay_km"]) * d ** -g.get("decay_pow", 0.0)
+        t *= np.where(zr[s:e, None] != zr[None, :], bf, 1.0)
         F += zh[s:e].T @ t @ zw
     return F
 

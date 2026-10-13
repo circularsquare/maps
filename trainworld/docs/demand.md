@@ -38,17 +38,65 @@ of students, retirees or children sends fewer commuters than its population (T-0
 totals now within 10% of ACS commuters, the Bronx was 23% over). Elsewhere, population until a
 source by residence is found.
 
+**People in institutions are not homes** (T-234, Anita: "why are there homes on rikers
+island?"). The census counts people where they are held or cared for: prisons and jails,
+juvenile facilities, nursing homes and other institutions (psychiatric hospitals, hospice). They
+make no commutes, errands, outings or school trips, so the 2020 census's institutional group
+quarters (redistricting file PL 94-171, table P5, per block, every state) are taken off each
+block's population before anything is built on it: residents for everyday outings, child and
+adult homes for school and university, the medical and airport origins, the market's sites. The
+park draw's nearby-residents term still counts them until parks are next fetched from OSM
+(T-235): the total moves under 1%, but a small park beside a big prison draws up to about four
+times too much. All four institutional types go, nursing homes included:
+their residents rarely leave. The non-institutional types stay: college dorms (students
+travel, and feed university trips from their own block), military quarters and other
+non-institutional places (shelters, group homes). LODES also puts job holders on such blocks
+(Rikers Island: 676 on blocks where 27 people live outside the jails), so on a block with an
+institution the commute home end is capped at the residents left; elsewhere LODES stands. Over the
+nine packs this takes 362,000 people (0.8%) and 66,000 job holders (0.3%) off homes; per city:
+[T-234](../notes/T-234.md). `pipeline/group_quarters.py` holds the source and the rule;
+`build_city.py` applies it as it reads the blocks.
+
 **People who work at their own home make no commute and are not counted** (Anita). LODES places
 a remote worker at the employer's office, so commute trips are scaled down by the share working
 from home (US: ACS "worked from home", by tract at the home end, by industry at the work end). Jobs whose work is at other people's homes
 (home care aides) are real commutes and are spread over where people live (T-014).
 
-**Everyday outings (T-066, NYC first).** All resident population generates home-based shopping/
+**Every registered city has the same non-work purposes from the same national sources** (T-142):
+everyday outings from LODES sectors, school attendance from NCES public schools, university
+attendance from IPEDS, all built by `pipeline/enrich_all.py <city>` onto a finished pack (and by
+`build_city.py` for a new one). No city has a city-specific source: New York's five boroughs used
+NYC DOE building enrollment until T-181 (Anita, 2026-10-12) and now use NCES like everywhere
+else. A pack without these arrays opens
+commute-only. Per-city inputs and totals, and per-capita checks against New York:
+[T-142](../notes/T-142.md).
+
+**Everyday outings (T-066).** All resident population generates home-based shopping/
 errands (0.3 outings/person/day) and social/leisure (0.2), each with an outward and return leg.
 These are partial, provisional activity budgets, not survey estimates or a commute-share target.
 Shopping attracts trips by LODES retail and other-service employment (CNS07+CNS19). Social
-destinations mix independently normalized food/recreation jobs (CNS17+CNS18) and population,
-50/50, including visits to friends/family. Employees are relative draw, never customer capacity.
+destinations mix three independently normalized draws: population (visits to friends and family)
+46%, food/recreation jobs (CNS17+CNS18) 46%, and **parks 8%** (T-196; a pack without parks keeps
+50/50). Employees are relative draw, never customer capacity.
+
+**Parks (T-196).** `pipeline/enrich_parks.py <city>` takes OpenStreetMap's parks, commons,
+recreation grounds, beach resorts, botanical gardens and named beaches in the pack's boundary,
+nature reserves named as parks ("Keney Park", "... Recreation Area") as parks, and other named
+nature reserves at a quarter; playgrounds, dog parks, pitches, golf courses, cemeteries, private
+and unnamed places are left out, and a place inside a larger kept one merges into it. Each place
+draws factor x sqrt(area in ha) x D / (D + 2,000), D the residents per km² of land within 2 km
+of its edge (the place itself left out): the square root is the diminishing return on size (a
+park 100 times larger draws 10 times as much), and the population term discounts parks few people
+live near without multiplying the ones in dense places, which the gravity already sends more trips
+to (Anita: "by size and by population nearby"). It is a density, not a count, because a count
+within 2 km grows with a park's edge: counted, Harriman State Park (19,000 ha) outdrew Central Park
+five times; by density Central Park draws 17, Harriman 15. The draw is spread over the pack cells inside the place (the nearest cell within 500 m
+for a small one) as the `park_draw` array. The 8% share is the American Time Use Survey 2023:
+7.6% of leisure outings (eating out, socialising and leisure, sport and recreation) end
+"outdoors away from home" (95% interval 6.4-8.7%); friends' homes are 23% there and restaurants,
+gyms and other places 70%. Parks take their share evenly from the other two draws, so the 50/50
+balance T-066 chose between them stays. Parks change where social outings go, not how many there
+are; no season (ATUS is a year's average). Per city: [T-196](../notes/T-196.md).
 The pipeline spreads original sector locations by the same block land-area method as population;
 office/headquarters commute corrections do not relocate these customer weights.
 
@@ -60,8 +108,12 @@ continuous demand, not sampled individual travellers. It is stable across networ
 **Everyday trips below 150 m cell-centre distance vanish entirely**, with no replacement or
 denominator contribution, including walking. The cutoff is limited by cell grain; real within-cell
 journeys are not separately represented. Existing commuting behavior stays unchanged.
-Local weight tapers by the complement of the regional market's smooth 40–80 km onset; trips at
-80 km or more disappear from this layer. Only within-pack everyday outings are generated here.
+Local weight tapers smoothly from 1 at 40 km to 0 at 80 km; trips at 80 km or more disappear
+from this layer. Only within-pack everyday outings are generated here. Since T-276 the regional
+market's longer trips start at 25 km (docs/zones.md 5), so the two overlap from 25 to 80 km; the
+local outings' 3-6 km decays leave under 2% of social outings past 25 km, so the double count is
+negligible, and airport trips (20 km decay), which the market does not place at airports, keep
+their reach (decision T-276).
 
 After station access is rebuilt, eligible cell edges aggregate into purpose-specific subzone
 pairs, retaining weighted length and walking shares. Outward and return mode/route choices run
@@ -71,35 +123,107 @@ for cell, selection and period queries. City mode splits, line loads and fare in
 trips. Local bubbles count **trip legs**, twice the former commute-person count before adding
 everyday travel; their purpose/timing queries reconcile to those same endpoint totals. Commute
 station catchments remain explicitly commuter counts. Source-neutral cell-weight names allow
-other countries' destination inputs later; runtime enables this first slice only for NYC.
+other countries' destination inputs later; runtime enables the layer for any pack that carries
+the arrays (`errand_jobs` and the rest).
 
-**School attendance (T-140/T-150, NYC metro public schools).** Inside the five boroughs,
-DOE school points and building enrollment retain 844,956 pupils across 1,213 matched buildings,
-97.9% of positive source enrollment (report dated 2026-09-09). Shared buildings count once.
-Outside the boroughs, NCES EDGE/CCD 2023-24 adds 3,199 public schools and 1,849,674 enrolled pupils,
-for 2,694,630 pupils in total. Spatial exclusion of the DOE area prevents overlap; distinct
-NCES school IDs at shared coordinates retain their distinct enrollment. Operational physical
-schools with positive known enrollment are included; virtual/unknown categories are omitted.
-All eligible NCES enrollment in this metro matched existing cells, with one 237 m snap.
-Missing enrollment/sites contribute no invented pupils. Source dates differ deliberately.
+**School attendance (T-140/T-150/T-181, metro public schools).** Every pack's schools are the
+NCES EDGE/CCD 2023-24 public schools in its counties (`pipeline/enrich_schools.py <city>`): 230
+to 1,370 schools in each of the other cities, and in New York 5,064 schools with 2,825,244 enrolled pupils, charter
+schools included. 100% of eligible enrollment matched to cells everywhere, with at most two snaps
+(New York one, 237 m). Distinct NCES school IDs at shared coordinates keep their own enrollment,
+so a building holding several schools counts each once. Operational physical schools with
+positive known enrollment are included; virtual/unknown categories are omitted. Missing
+enrollment/sites contribute no invented pupils. Until T-181, New York's five boroughs used NYC
+DOE building enrollment instead (844,956 pupils in 1,213 buildings); NCES has 975,570 there,
+the difference being mostly charter schools (141,775 pupils), which the DOE building report did
+not carry (notes/T-181.md).
 
 Origins use 2020 block residents weighted by ACS 2023 tract ages 5–17 plus two fifths of
-under-fives, approximating ages 3–4, spread by block land area across all 25 metro counties.
-Missing shares use full-state county FIPS fallbacks, or the metro age share for Connecticut gaps.
-The pack contains about 3.87 million estimated child-home weights. Each destination cell generates
+under-fives, approximating ages 3–4, spread by block land area across all the pack's counties.
+Missing shares use full-state county FIPS fallbacks, or the pack's age share for Connecticut gaps.
+The New York pack contains about 3.87 million estimated child-home weights. Each destination cell generates
 0.9 attendance outings per enrolled pupil on a typical school day. This attendance factor is
 provisional. Sixteen deterministic home samples per school cell use child weights and a 2.5 km
 distance-decay scale. Unlike customer trips, school demand is destination-constrained by
 enrollment. The same 150 m exclusion, local-distance taper and directional assignment apply.
 
-School attendance joins bubbles, purpose/timing inspection, fares, loads and crowding under
-School (metro public). Private schools, universities and school attendance in other city packs
-are not modelled. Estimated homes are not observed student journeys or catchment/grade assignments.
+School attendance joins bubbles, purpose/timing inspection, fares, loads and crowding as the
+model purpose School, shown to the player together with University as "School and university"
+(T-192). Private schools are not modelled (NCES's Private School Survey is the
+national source for them, T-142).
+Estimated homes are not observed student journeys or catchment/grade assignments.
 There is no school calendar, escort demand, school-bus choice or student-fare policy yet.
-Source selection and international/university follow-ups: [education data](../research/education-data.md).
-Existing school staff commutes remain in Work. Airport passengers and patients still need
-facility/visit inputs; those unmodelled purposes are labelled explicitly. Parks currently have
-only the general leisure proxy. Activity chains, visitor origins and cross-pack everyday outings
+Source selection and international follow-ups: [education data](../research/education-data.md).
+
+**University attendance (T-152, metro IPEDS; every city T-142).** IPEDS 2023 directory and Fall
+Enrollment records supply, in New York, 261 active degree-granting reporting institutions and
+836,714 eligible students (the other cities: 8 to 76 institutions, 48k to 282k students). The
+layer uses degree/certificate-seeking undergraduates plus graduate students and excludes
+exclusively distance-education students. Nondegree undergraduates are omitted. Structural
+blank online counts are accepted as zero only when IPEDS marks them not applicable and reports the
+whole cohort as non-distance; unknown counts remain excluded. One budget is attached to each
+reporting UNITID's directory coordinate, avoiding child-campus and merged-institution duplicates.
+The exception is an institution that absorbed others in the data year (IPEDS `ACT` "C" with
+`NEWID` pointing at it): its total is split over its own and the absorbed campuses' points by
+each one's own eligible enrollment the year before (IPEDS 2022). This is Connecticut State
+Community College, which in 2023 reported all twelve former community colleges at Hartford; split,
+Hartford keeps 5 of them, New Haven gets Gateway and Naugatuck Valley, and New York's Fairfield
+County gets Housatonic and Norwalk (5,330 students New York had not counted). Otherwise this is
+not campus-level allocation: a multi-campus institution with one UNITID (Northern Virginia
+Community College, Montgomery College, Community College of Rhode Island) sits at one point.
+
+Adult homes use block population multiplied by the ACS tract age-18+ share. A provisional 60%
+typical-day attendance factor, 6 km distance-decay scale and separate day/evening schedule produce
+about 1.0 million trip legs a day in New York. The purpose joins the same bubbles, fares, assignment, loads and
+crowding as other local trips as the model purpose University (shown with School as "School and
+university", T-192). Homes, attendance and timing are
+estimates; staff remain in Work. Universities in other countries need country/source adapters.
+Existing school staff commutes remain in Work.
+
+**Airport ground trips (T-142, every city).** Air passengers travelling between an airport and
+their home or hotel. `pipeline/enrich_airports.py <city>` takes each airport with scheduled
+service in the pack's counties from OurAirports (global), its CY2024 boardings from the FAA
+(national; Wikidata's patronage figure, halved, where the FAA lacks it), and sets its daily
+outings to boardings x O&D share x pack share / 366. The O&D share is the part of boardings that
+start the passenger's air journey there rather than connect (BTS DB1B Market, 2024 Q2, domestic:
+0.66 at BWI, 0.74 at Dulles, 0.82-0.83 at Philadelphia and National, 0.90 at the three New York
+airports, 0.98-1.00 elsewhere). The pack share is the airport's catchment inside the pack's
+counties: every US county within 300 km by its 2020 population x exp(-d / 20 km) from its
+centre of population (BWI 0.66 to Baltimore, the rest to Washington; Bradley 0.57 to Hartford;
+Tweed 0.47 to New Haven; the big hubs 0.94-1.00). The outings sit on the airport's passenger
+terminals (OSM `aeroway=terminal` within 4 km, split by footprint; cargo, general aviation and
+military terminals left out by name; the airport's point where none is mapped). One outing is a
+trip to the terminal and one from it (a passenger leaving, a passenger arriving): boardings and
+alightings are about equal, so legs a day are twice the outings. The other end is half
+residents, a quarter jobs (business visitors) and a quarter leisure jobs (hotels, food,
+attractions), each normalised, none within 1.5 km of a terminal (its own jobs are not its
+passengers' ends), drawn with a 20 km exponential decay and normalised per airport, so each
+airport keeps its total before the 150 m exclusion and the 40-80 km taper (to sampling
+precision: every airport with over 1,000 outings a day within 0.4% of its input, except
+Westchester, 4% short, and Long Island MacArthur, 11% short, whose catchments reach past the
+80 km cut). Two stratified
+destination samples a home cell, not sixteen: the destinations are a handful of airports, and
+each sample costs the same at opening. Airport staff are commuters already (LODES) and are not
+counted again. Trips to an airport in another pack (Springfield to Bradley, Washington to BWI)
+and connecting passengers are not modelled. Per city: [T-142](../notes/T-142.md).
+
+**Medical visits (T-142, every city).** Patients and visitors at hospitals, clinics, doctors and
+dentists; staff are commuters already. `pipeline/enrich_medical.py <city>` takes OSM
+`amenity=hospital|clinic|doctors|dentist` (or the same `healthcare=*`) in the pack's counties and
+sizes each in visits a year (judgement scaled to national figures): a hospital 1,000 per bed
+(OSM `beds`, else its site's building floor area, footprint x levels, at the pack's own tagged
+hospitals' beds per floor square metre, about one bed per 190 m² in New York, else their
+median), a clinic 10,000, a doctors' practice 4,000, a dentist 3,000. A hospital mapped twice
+(a building or point inside its campus) counts once. Residents make 0.04 medical outings a day
+(0.08 legs, against NHTS 2022's 0.091 medical/dental legs per person a day: 4.02% of 2.27 trips),
+to these places by size and a 5 km exponential decay, origin-constrained like errands but with
+two destination samples a home cell (the city's medical trips in aggregate are what the game
+shows; against sixteen, the walk share moves at most 0.3 points and the mean length 0.1 km). OSM's
+doctors and dentists are mapped unevenly; where they are missing, their visits go to the nearest
+mapped places instead. Per city: [T-142](../notes/T-142.md).
+
+Private schools are not modelled yet (candidate national source: [T-142](../notes/T-142.md));
+unmodelled purposes are labelled explicitly. Activity chains, visitor origins and cross-pack everyday outings
 remain later work. Research: [T-138](../notes/T-138.md); implementation and checks:
 [T-066](../notes/T-066.md), [T-140](../notes/T-140.md).
 
@@ -126,9 +250,55 @@ load busiest-hour factors; their five-period departure shares are provisional:
 | Social return | 2% | 25% | 43% | 27% | 3% |
 | School outward | 94% | 4% | 1.5% | 0.4% | 0.1% |
 | School return | 1% | 82% | 15% | 1.8% | 0.2% |
+| University outward | 65% | 27% | 7% | 0.9% | 0.1% |
+| University return | 4% | 42% | 42% | 11% | 1% |
+| To the airport | 30% | 35% | 22% | 6% | 7% |
+| From the airport | 12% | 33% | 28% | 24% | 3% |
+| Medical outward | 30% | 55% | 12% | 2% | 1% |
+| Medical return | 8% | 60% | 25% | 5% | 2% |
 
 The inspector uses actual purpose/mode/period selection results. Bars show departures per hour,
 dividing period counts by 4/6/4/4/6 hours; outward and return rows remain separate.
+
+**Kinds of day** (T-260, notes/T-170.md). Two: weekday and weekend. Game day 1, a new game's
+first, is a Monday, so days 6 and 7 of each week are the weekend (`day_kind_at` in
+`sim/src/track/params.rs`, `app/src/game/days.ts`); no holidays yet. The tables above and the
+solve are a weekday's. **A weekend is worked out from the weekday's solve, not solved**: without
+crowding a trip's mode and route depend on its period's service only, and the solve keeps each
+period's loads, boardings and alightings and each city's trips, rail and walking by purpose
+(T-158). So the weekend's riders of a purpose in period q are the weekday's times
+`rate x (weekend outward + return share) / (weekday outward + return share)`
+(`sim/src/demand/days.rs` `load_factor`); the views are built from those on the main thread and
+every query (bubbles, catchments, selections, longer trips, transfers) weighs its periods the
+same way in the workers, with the everyday purposes' per-direction weekend shares where it reads
+directions. The weekend keeps the weekday's crowded route and mode choices (fewer riders would
+crowd less), and the same trains run every day (Anita: no separate weekend schedules for now;
+T-261 would need its own solve).
+
+Weekend trips per weekday trip, from NHTS 2017 (person-weighted, Mon-Fri against Saturday and
+Sunday; England's NTS agrees for work, shopping and leisure) and, for airports, TSA checkpoint
+throughput 2025 by day of week: work 0.30, shopping and errands 1.22, social and leisure 1.60,
+school 0.08, university 0.22, airport 1.01, medical 0.24, the regional market's longer trips 1.58
+(NHTS trips of 50 miles or more). Weekend period shares are the weekday's above times NHTS's
+weekend/weekday ratio in each period, renormalised; school, university, airport and medical keep
+their weekday timing (too few weekend trips in NHTS to shape them):
+
+| Weekend, purpose/direction | 6–10 | 10–16 | 16–20 | 20–24 | 0–6 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| To work | 54.6% | 16.1% | 11.6% | 8.7% | 9.0% |
+| Home from work | 4.5% | 17.5% | 36.6% | 28.9% | 12.5% |
+| Errands outward | 9.8% | 63.2% | 23.0% | 3.2% | 0.8% |
+| Errands return | 6.6% | 58.6% | 27.7% | 6.6% | 0.5% |
+| Social outward | 7.6% | 47.8% | 30.7% | 13.4% | 0.5% |
+| Social return | 1.5% | 38.8% | 38.1% | 18.2% | 3.4% |
+| Longer trips | 15.1% | 34.9% | 23.5% | 23.9% | 2.6% |
+
+On New York's real network a weekend day has 0.77 of a weekday's local rail legs (6.39M against
+8.29M; commutes 1.04M against 3.46M, social 2.60M against 1.62M), its busiest period is midday,
+and each purpose keeps its weekday rail share. Costs: no extra solve or opening; the weekend's
+views about 7 ms on the main thread a publish; the boarding account twice the work (one account
+per kind of day); weekend bubbles are asked for only while shown (about 0.6 s in each solving
+worker). Weekday results are bit-identical to before (notes/T-170.md).
 
 ### 4.3 Mode choice and catchment
 
@@ -158,17 +328,21 @@ Thus `walk = w`, `rail = (1 - w) * r`, and `drive = (1 - w) * (1 - r)`, where `r
 rail-versus-road result. This prevents attractive rail or expensive parking from taking the
 walk share of very short trips. Commutes use the gravity's 2 km zone-centre distance, so a short
 trip across a zone boundary can still inherit a coarse walking share. Everyday purposes use the
-sampled cell-centre distance. The curve gives 84% walking within one 2 km zone, 32% to the next
-zone and 6% two zones away; the remainder is offered to rail and driving. With no rail 5.9% of
-New York's commutes walk (ACS: about 6%). Judgement until fitted. notes/T-153.md.
+sampled cell-centre distance. Either distance is times the two zones' walk factor where water
+lies between them (T-275, below), so a home across a river from its job is as far as the walk
+round by a bridge. The curve gives 84% walking within one 2 km zone, 32% to the next
+zone and 6% two zones away; the remainder is offered to rail and driving. With no rail 4.8% of
+New York's commutes walk (4.9% with the straight line; ACS: about 6%). Judgement until fitted.
+notes/T-153.md.
 
 Weights (perceived minutes per real minute), from Subway Builder's published constants where they
 exist: riding 1.0, the fast walk to and from stations 2.0 for its first 10 minutes and 8.0 after
 (below), walking between platforms on a transfer 1.39, platform wait 1.37, waiting at home before a
 known departure 0.4, congested driving 1.33, plus parking cost and ~3 min to park.
 
-**Driving** (T-090; `place_min_per_km`, `drive_min` in `sim/src/demand/kernel.rs`). The road is 1.3x
-the straight line. Its first and last 2 km (at most half the road each) are local streets, the rest
+**Driving** (T-090, T-275; `place_min_per_km`, `drive_min_f`, `drive_factor` in
+`sim/src/demand/kernel.rs`). The road is the straight line times the two zones' routed factor
+(below) times 1.074, or 1.3x the straight line in a pack without routes. Its first and last 2 km (at most half the road each) are local streets, the rest
 main roads. Each place has a speed for both, by its density (commuters living and working per km²
 of land in its 2 km zone): local streets 40 km/h and main roads 80 km/h in open country, both
 falling towards 15 km/h where it is dense, half way at 5,000 per km². The middle of a trip runs at
@@ -177,6 +351,56 @@ minutes (it took 70 at the old flat 28 km/h), Brooklyn to Midtown (10 km) about 
 Manhattan about 13. On the gravity's commutes this gives 26-37 minutes in the four big boroughs
 (ACS car commutes 34-38) and 36-47 in the suburbs (ACS 27-33; the gravity's suburban commutes are
 too long, T-072). Parking is charged at the destination by its job density, as before.
+
+**Routed walking and driving** (T-275, notes/T-275.md). Walks and drives go round water and
+over bridges, from data that exists for any city: OpenStreetMap roads and bridges (Geofabrik
+extracts) and the pack's own water mask. `pipeline/routes.py <city>` adds them to a finished
+pack, in place, and must be rerun whenever the pack's zones change (`build_city.py`, a gravity
+re-solve); `routes.py --check` lists the packs whose routes are missing or stale. A pack without
+them, or with them made for other zones, has every walk and drive straight x 1.3, as before.
+- **Walks.** A barrier raster at 50 m (`walk_row`, `walk_x`, header `routes.walk`): a pixel is a
+  barrier when 3 of its 4 water-mask pixels are water, every OSM way a person may walk on that
+  crosses as a bridge (footways, paths, streets; not motorways, trunk roads only with `foot=yes`)
+  is land, and islets under 0.1 km² are water. Stations are the player's, so the walk to them is
+  searched in the game: from each station over the raster's pixels within its 4 km bound
+  (eight neighbours, never across a barrier's corner), and a cell's walk is its straight line
+  times how much longer the search's path is than the free path between the same two pixels,
+  exactly the straight line where nothing is in the way, and none (no access) where water cuts
+  it off within the bound. The cells whose walk differs are kept per station position for the
+  worker (`routes::station_walks`), shared by a city's commute and everyday populations, so an
+  edit searches only the stations it moved or added. The fast walk to and from stations, the
+  access subzones and the trip explorer all use these distances. Between zones, the walk's
+  factor to every zone within 2 squares (`walk_zone`) comes from the same search run from each
+  zone's representative cell over the other zone's cells, both directions averaged.
+- **Drives.** Per zone, the routed factor (road metres over straight metres, commuter-weighted
+  over the other zone's cells) to every zone within 6 squares (`drive_near`), and between
+  supercells of 4 x 4 squares per region beyond (`drive_far`, `drive_super`). The roads are
+  every public road but service ways; each place joins its nearest road point whose straight
+  line crosses no water, at 1.3x that line. The speeds stay the density model's above: only the
+  road's length comes from the routes. The factor is multiplied by `road_routed_scale`,
+  1.3 / 1.210: shortest-distance routes come to 1.17-1.26x the straight line, commute- and
+  distance-weighted (New York 1.210), while the density speeds were fitted on New York with 1.3,
+  so New York keeps its fitted level and other places their difference from it (and the longer,
+  faster roads drivers really take are covered). Hoboken to Midtown is now 7.5 km by road (5.0
+  before), St George to Wall St 22 km (12), Stamford to Huntington 83 km (30).
+- **Not routed**: walking transfers between stations (300 m and complexes) stay straight x 1.3,
+  because every population must build the same graph from the same stations to share its
+  strategy searches (T-119) and none of the real New York network's 80 pairs within 300 m has
+  water between them; ferries are no walk or drive (T-280); the regional market's drives
+  (T-276's redesign).
+
+**The interface** (for other work, T-276 included). Byte tables, factor = `exp(q / 64)`. A zone's
+window slot is `(dx + W) * (2W + 1) + (dy + W)` for the other zone's square offset (dx, dy), W 6
+for driving and 2 for walking; the pack stores, zone by zone, a byte for each zone of its window
+that exists in slot order then region order (a square cut by a region border holds one zone per
+region), and the sim expands them to slot x region-count + region. `drive_far` is
+supercells x supercells, supercells numbered in order of their first zone. The header's `routes`
+block holds the windows, the supercell size, the zone count and `zones_check` (a sum over zones of
+position and region, `routes::zones_check`; the tables are used only when it matches).
+**Lookup**: `Params::drive_factor(i, j)` (`Routes::drive_factor` x `road_routed_scale`) and
+`Gravity::walk_share_pair(z, i, j)`. Across pack edges nothing is stored; the pipeline's
+`routes.drive_factors(lon, lat, extracts)` gives the same factor between any list of places from
+the same roads (unscaled).
 
 Route choice is not all-or-nothing shortest path. NIMBY Rails' best-known complaint is riders
 waiting 50 minutes for a fast train that arrives one minute earlier. Wait time counts at its
@@ -189,7 +413,8 @@ slightly better one does not take everyone.
 
 **One way to reach a station: a fast walk** (Anita, 2026-10-09, as Subway Builder does). Getting
 to and from stations is a single access mode at both ends, a walk at roughly bicycle speed and
-willingness: **15 km/h along a path 1.3x the straight line (5.2 minutes a straight km); the first
+willingness: **15 km/h along a path 1.3x the straight line, or round water by a bridge where one is
+in the way (above; 5.2 minutes a straight km); the first
 10 minutes (1.9 km) weigh 2.0 each, every minute after that 8.0** (T-090: a 10-minute ride to the
 station is taken readily, a 20-minute one rarely). So a station 1 km away costs 10 perceived
 minutes, 2 km 23, 2.5 km 44, 3 km 65, 3.5 km 86. Against driving, a home 1 km out has 59% of the
@@ -224,14 +449,64 @@ of pairs. Even pairing only cells within walk of a station is 90-180M pairs on t
 works on two levels:
 
 1. **Gravity between 2 km square zones, once per city.** Doubly constrained, commuting residents to
-   commuting jobs (4.1), decay by distance only: **f(d) = d^-1 x exp(-d / 29 km)**, fitted to
-   LODES OD for New York (T-006; 4,700-6,200 zones). It does not depend on the network, so edits
-   never rerun it. The pipeline solves it (Furness, the sim crate's own code run natively, ~3 s)
+   commuting jobs (4.1), decay by distance: **f(d) = d^-0.8 x exp(-d / 30 km), x k between zones in
+   different first-level regions** (the US packs' curve, carried in each pack's gravity block). The regions are US states (a cell's state is the one holding
+   most of its census blocks' people and jobs); a square a state line cuts is one zone per state,
+   both at the square's position. k is the pack's `border_factor`: **0.23 for the US packs**,
+   fitted with the decay length on New York and Philadelphia LODES OD (T-162: each city's own k
+   came to 0.235 and 0.219, and 0.228 and 0.207 at T-198's curve), and **0.45 for Washington**, its
+   own fit (0.454 at this curve, 0.486 at T-162's), since
+   DC is a city counted as a state: with 0.23, DC residents working in Maryland or Virginia were
+   3-4% of DC's commuters against LODES's 13.5% each (T-181; `build_city.py` `CITIES[...]
+   ["border_factor"]` overrides `BORDER_FACTOR_US`). It stands for everything that keeps people
+   working in their own state (separate labour markets, residency rules, tolls); the crow-fly
+   gravity without it sent 2-4x LODES across state lines, land borders and rivers alike, while
+   water inside one state was about right (T-159). A pack with no factor has 1. T-171 tested the
+   alternatives on five packs' LODES (notes/T-171.md 2): per-state-pair factors tie it (they
+   only separate DC from real states), a fade near the line is score-neutral, and a factor only
+   between metros or a water or toll-crossing term in its place does clearly worse.
+
+   **Borders outside the US** (Anita, 2026-10-12, T-181; no non-US pack exists yet). National
+   borders get a factor; inside the Schengen area it is weaker (closer to 1) than across other
+   national borders. First-level regions (states, provinces, prefectures, Länder) get none,
+   factor 1, by default. The values are fitted on the country's own commuting data when its first
+   pack is built. This does not contradict the US packs: there the first-level factor is a
+   measurement, not a default, because LODES shows US states cut commuting to about a quarter
+   (T-159, T-162). Elsewhere an admin-1 line is not assumed to: Tokyo's prefectures exchange
+   millions of commuters, and many admin-1 layers have city-states (Berlin, Vienna, Mexico City)
+   where a state-sized factor would be far too strong, as Washington shows. A country whose own
+   OD data shows an admin-1 effect can still fit one. The mechanism is the same per-pack factor:
+   a pack's `region` per cell becomes the country, and a pack spanning Schengen and non-Schengen
+   borders would need a factor per region pair (not built).
+
+   **The curve** (T-198, from T-185's diagnosis). T-006 fitted d^-1 on New York; T-162 kept that
+   shape and moved its length from 29 to 40 km to give back the trip length the border factor
+   removes. T-185 found the steep near end kept residents of job-rich places too close to home:
+   in LODES they commute out to suburban jobs (reverse commuting) about as far down the list of
+   nearest jobs as anyone else, and the model sent them 17-26% too short. The flatter
+   d^-0.8 exp(-d / 30 km), one value for every US pack, lengthens job-centre residents' trips by
+   0.6-1.3 km in all nine packs (still 9-19% short) and moves centre-to-suburb commuting from
+   0.73-0.87x LODES to 0.88-0.97x, undershooting as Anita asked. Trips misplaced by length, county
+   pair, nearest-job rank and centre/suburb class fall in eight packs (sum of the four 17-35% to
+   12-27%); New York, the densest and most centre-heavy, is about neutral (16.2% to 16.7%: its
+   own-county share falls from 42.0% to 40.1%, LODES 42.8%). Per pack: notes/T-198.md. It does not
+   depend on the network, so edits never rerun it. The pipeline solves it (Furness, the sim crate's own code run natively, ~3 s)
    and ships a zone id per cell and two factors per zone in the pack (notes/T-004.md); opening a
    city rebuilds zone trips in ~2 ms in WASM instead of solving them for 8 s. Zone trips spread to
-   cells by commuters at each end.
-2. **Access per cell**: the 6 nearest stations within the walk's 4 km bound (4.3), found by
-   scattering each station over the cells near it. 7-13 ms native.
+   cells by commuters at each end. **Joint gravity** (T-276, docs/zones.md 4): the shipped
+   factors are those of one solve over every zone pack (`bin/joint_gravity.rs`, about 12 minutes,
+   run by pipeline/intercity.py), so a pack's zone trips are the part of each commute that stays in
+   it; `zone_home` and `zone_work` (per zone, the trips kept) let cells count their commuters per
+   zone (`DemandApi::home_k`, `work_k`) instead of the pack's total over its people. Each pack's
+   homes still send as many commuters as it has jobs (scaled per pack, as alone: scaled to the
+   union, packs with net commuting from outside every zone would balance through their
+   neighbours, and the solve barely converged). Furness stops at 500 iterations, max row error
+   2e-4 (one Boston zone; the rest far below).
+2. **Access per cell**: the 6 nearest stations by walk within the walk's 4 km bound (4.3), found by
+   scattering each station over the cells near it. 7-13 ms native. With routes (T-275) each
+   station's walk is searched once per position (0.6-1.2 ms a station: opening the real New York
+   network's 867 stations costs 0.5-0.6 s native and 1.0 s in WASM, once per worker; an edit
+   searches only its new or moved stations and costs what it did, 31 ms in WASM with or without).
 3. **Access subzones**: the cells of one zone that share their nearest station. Each carries its
    perceived walk to each of its stations, averaged over its cells as the mode choice weighs them
    (a logsum at its 0.05 scale: the walk's cost grows faster than its length, and the near cells
@@ -250,7 +525,25 @@ works on two levels:
    a train may walk to another station within 300 m straight line and board there (walk at its
    weight; walk edges start only after a ride, so walking between stations is never a rail trip).
    Snapshot stations within 100 m of each other are one demand station (side-by-side platforms of
-   two lines; never two neighbours on one line). Destination strategies and boarding frequencies
+   two lines; never two neighbours on one line). **Station complexes are transfer points** (T-161):
+   the clock worker sends each constructed station's complex with the snapshot (game/complexes.ts
+   over constructed stations only, with the player's links, T-197; `DemandApi.set_complexes`), and
+   a rider leaving a train at one may walk to any other demand station of the same complex however
+   far, at the same cost as any walking transfer: the centre-to-centre distance x 1.3 detour at
+   1.2 m/s, weighted 1.39, then the boarding's usual wait and 5-minute transfer penalty. No extra
+   fixed penalty: the 5 minutes already fall on every change, at one platform or after a walk, so
+   a walk of 120 m costs 3 perceived minutes more than a change across the platform and a linked
+   pair 1 km apart 25 more. The members stay separate demand stations joined by walk edges rather
+   than one merged station: each keeps its own catchment and position, a long link is not a free
+   teleport, and transfers stay counted platform to platform for the complex map (T-176). The
+   trip explorer shows such a change as a walk between the two stations. On the real New York save
+   this changes nothing: the 100 m merge (single linkage, so a chain of platforms is one demand
+   station) already makes its 855 complexes 873 demand stations, and the 20 pairs of demand
+   stations sharing a complex are at most 269 m apart, inside the 300 m walk (Penn Station's 24
+   platforms are 2 demand stations, Grand Central's 16 are 3, Times Sq's 10 are 2;
+   `complexes_real_network`, notes/T-161.md). It matters for members more than 300 m apart: long
+   platforms end to end, a long chained complex the player builds, and linked stations.
+   Destination strategies and boarding frequencies
    are kept for loading. Each destination's search is independent, so only stations someone can
    end a rail trip at are searched towards (those in the access lists of subzones with jobs,
    `egress_stations`): a population living near two stations of an 875-station network needs two
@@ -274,10 +567,19 @@ works on two levels:
    mode (`flows`, T-098 for the bubbles: the gravity's zone trips from the selection, rail along
    the kept station pairs, walk and drive the rest; totals exact and equal to `cellModes`, far
    rail by place blurred like `stationRiders`; 10-20 ms in WASM for one cell or thousands, the
-   far cells holding the last 1% left out as a cut total; notes/T-098.md).
+   far cells holding the last 1% left out as a cut total; notes/T-098.md). A selection's everyday
+   purposes (`EverydayApi::selection_sparse_day`) visit only the selection's destination samples
+   (a purpose's samples laid out by the selected end are read by range, the others scanned for
+   selected cells before any is weighed) and answer only the far cells they reach; the main
+   thread adds the workers' answers up over those cells (`workers/selectionMerge.ts`). A click on
+   a bubble on the real New York save shows its far end 80-170 ms after the click when no solve
+   is running (first click of a session about 300 ms); it took 0.5-0.9 s (1.5 s first) when every
+   sample of the city was weighed and every worker sent three numbers per cell per purpose
+   (T-285, notes/T-285.md).
 6. **Loading**: each destination's strategy is walked from farthest settled nodes towards it.
    Station flow splits by accepted departure frequency, retaining each line's individual segment
-   loads and boarding/alighting counts (T-069).
+   loads and boarding/alighting counts (T-069). Transfers are counted beside the loads (T-176,
+   "Transfers" below).
 7. **Crowding**: a penalty per segment from the loads, repeat 4-6, average the loads (method of
    successive averages). Each round costs as much as the first pass. The riders projects worked
    this out; read memory `reference_transit_crowding_assignment.md` (in
@@ -289,6 +591,39 @@ works on two levels:
    which no segment is over its seats has the free-flow estimate's factors (all one), so it would
    solve the same pass again: it is skipped, with exactly the same result (T-119; the real
    network is crowded in every period, so this only shortens small networks).
+
+   **Riders left behind** (T-188, `kernel::left_behind`, `round_costs`). Each round also prices
+   the wait for full trains. From the same frozen loads (every population's segment loads,
+   boardings and alightings per route node; the worker sends all three), each direction of each
+   line runs the boarding account's rule (docs/track-and-service.md 6.6) on the period's own
+   trains: an even headway at the period's frequency, riders arriving at each stop by the
+   account's shape for the period (fastest mid-period, the busiest hour at the busiest-hour
+   factor), each train letting off the stop's alighting share and taking riders up to crush, the
+   rest waiting a headway more for the next train of the same line and direction. A queue left
+   at the period's end clears at the trains' average spare room. The rider-minutes waited
+   beyond the first train, over the stop's boardings, are that boarding's average extra wait
+   (capped at 60 minutes, `LEFT_WAIT_CAP_MIN`, for a line whose queue never clears), added to
+   the line's cost at that boarding at the platform wait's weight (1.37) in the strategy search,
+   so riders spread to other lines, other stations or the car. The free-flow estimate has none.
+   Decisions (DECISIONS 2026-10-13):
+   - **Inside the solve, not read back from the clock worker's account.** The account is worked
+     out from a finished solve's riders on the main thread's schedule; feeding it back would need
+     a second solve after every solve (and a third, to settle), and a new game would open on
+     waits from no account. Run per period inside each round, it settles with the crowding by the
+     same averaging (the waits come from the averaged loads, as the crowding factors do; no extra
+     damping), costs nothing measurable (a loop over trains and stops), and needs no state at
+     startup. The two are the same rule on the same trains; demand's differs only in using
+     even headways and in each period standing alone (no queue carried in from the period before).
+   - **Per period, not per hour.** Demand's periods are the solve's unit; the account's hours are
+     not mapped back. The arrival shape gives the period its mid-period peak.
+   - **Weekdays only.** The weekend is worked out from the weekday solve (4.2), keeping its
+     route and mode choices, so it keeps the weekday's waits too; with fewer riders its trains
+     are emptier, so this errs towards too few weekend riders on lines full on weekdays.
+   On the real New York save (commutes and everyday purposes, native, three rounds;
+   `left_behind_real_network`, notes/T-188.md): rail trips a day fall 0.1% (commutes 3,463,591
+   to 3,460,098, everyday 4,831,084 to 4,825,736); riders left behind in the evening peak fall
+   from 40,600 to 30,400 and in the morning from 5,600 to 4,500; the LIRR Hempstead Branch loses
+   4.2% of its boardings and the Babylon Branch 2.3%; no busiest line moves more than 0.8%.
 
 **Cost.** One period on the 202,337-cell New York pack and the hand-made network, one stage (the
 free-flow estimate or one crowding round), one thread: 0.25-0.3 s native, 0.27 s in WASM (0.23-0.24
@@ -313,7 +648,108 @@ workers first. Skipping zone pairs under 0.2-0.5 trips cuts pairs 1.1-4x but dro
 (segment loads 3.5-5.4% off, T-020). **If there is time to spare**,
 10-minute walk bands are the accuracy lever: 2.4x the pairs, every error about a fifth smaller.
 
-The Northeast recomputes both city populations and the separate regional market on service or
+**Which cities are open** (T-149). A worker holds only the city packs the game needs: the viewed
+city and every city with a built station inside its footprint or within 4.5 km of it (the walk's
+4 km bound plus a margin for edge cells and pack frames, `app/src/workers/cityReach.ts`). Any
+other city has no subzone with a station, so all its trips walk or drive and it adds nothing to
+any line's load, fare or crowding: leaving it unloaded changes no number elsewhere. A worker
+check solved a Midtown line with all nine packs open and with New York alone; every line load,
+boarding, crowding figure, New York and market summary and corridor was bit-identical, and the
+other eight cities had zero rail (notes/T-149.md). Packs arrive in `open` messages after the
+WASM starts, the viewed city's first; a solve covers the cities open when it starts, and the
+client sends one only when every city its network needs is open in every worker. A city opened
+later (a pan to it, or construction reaching it) joins at the next solve, which the client sends
+at once; until then it answers no query and has no city view. Opening is cheap for a commute
+pack (16 ms New York, 1-7 ms the others, natively); the cost is each city's everyday purposes
+(New York 0.9-1.1 s natively, 1.3-1.9 s in each of five Chrome workers, 5.0 s before T-172;
+since T-142 the other cities too: Washington 0.6 s natively and 1.4-1.6 s from download to open in
+three Chrome workers, Philadelphia 0.4 s and 0.9-1.0 s, Boston 0.3 s, Baltimore 0.24 s, the four
+small ones 0.05-0.13 s; T-142's airports and medical visits add 5-15% natively, two samples a
+cell each, and in Chrome Philadelphia measured 1.1-1.2 s and Washington 1.7-1.8 s); the
+regional market was 1.0 s natively and 1.2-1.6 s in Chrome until
+T-174, and is now 0.09 s natively and 0.1-0.4 s in Chrome (reading its sites). A new game
+opens only New York; a save with construction in several cities pays
+each of their openings once, in every worker, and a worker holding all nine everyday layers uses
+about 496 MB of WASM memory (475 MB before the airports and medical visits) against 278 MB with
+New York's alone (T-142).
+T-172 made the everyday opening cheap: zone centres sit on the zone grid, so the destination
+gravity's decay comes from one table per purpose by grid offset instead of a square root and an
+exp per zone pair (the sampled destinations agree with before to 7 significant figures in every
+purpose's trips, walk share and trip length), and the long loops of the opening and of
+`set_network` run in functions called once per zone or per 16k samples, because a browser
+optimises a WebAssembly function only between calls (a single long call stays in the baseline
+compiler throughout: in Chrome that made the opening 3-5x slower than natively). Startup
+timings: notes/T-172.md, notes/T-174.md.
+
+**Everyday warm-up** (T-173). Even so, five workers opening New York's everyday layer at the same
+time from baseline code took 7-8 s each instead of 1.3-1.8 s in most page loads (one worker alone
+1.6 s, three 4.1 s each: as if they shared one core; never with Chrome's
+`--no-wasm-dynamic-tiering`; not the module cache, efficiency mode or the tiering budget). So
+worker 0 opens a small synthetic everyday layer first (`warm.rs`, 22,500 cells, about 150 ms;
+ready 0.36-0.66 s after navigation, about when New York has downloaded), and the client holds the other solving workers' city packs
+until it is ready (`demandClient.ts` `held`). Compiled code is shared by a page's workers, so
+they all open on optimised code: New York 1.3-1.8 s in every worker in 10 of 10 page loads,
+against 3.4-7.3 s in 7 of 10 without (`?perfOff=stagger`, same build).
+
+**The market since T-276** (docs/zones.md 4-5, SPEC 5.1). Longer trips: 0.107 weekday departures
+a resident, onset 25-50 km, `max(d, 25)^-2.37`, an outside world in every zone's normaliser
+(`MarketPack::outside`, pipeline/outside.py: Kontur people in no zone, 6,037 points of H3
+resolution 5 to 3 by distance, cut at 5,000 km; 5,991 points), so the `derived` block also holds the departures
+that leave the map (0.76M of 5.13M with the 13 zones). The car's perceived minutes add 15 cents a road km and the
+destination zone's parking (`site_park`: the local rule at each site's 2 km zone, job-weighted),
+both halved for two occupants (`car_min`). Commutes between zones: `commute_home`, `commute_work`
+(a site of each 6 km zone) and `commute_trips` from `bin/joint_gravity.rs`; at opening merged by
+zone pair, at `set_network` kept between served zones (`cpairs`), and in each period's pass chosen
+once per commuter on its home-to-work station pairs (logit 0.05, drive x 1.33 + parking at work,
+access weights at that scale), outward legs at `TO_WORK[q]`, the trip home at `TO_HOME[q]` on the
+same pairs reversed; their own assignment (`c_avg`) is the work purpose's share of the market's
+loads (`commute_loads`; the worker moves it from longer trips to work), with their own corridors
+(`commute_corridors`), parts (`part_summary`: longer trips and rail, then commute legs and rail)
+and a tail on `selection_flows` (legs of commuters living in the selection by work zone, of those
+working there by home zone). A station's far-zone rows hold both parts and take the longer trips'
+weekend factor (a known approximation: commuters are counted 1.58x rather than 0.30x on a weekend
+there). On the real New York network (fares $1.50 + $0.10/km, three rounds, `zones_day`) the
+market's rail went from 1,866 to 37,566 trips a day (its trips 0.69M to 4.12M), the commutes
+between zones 262 legs (the real network stops at the pack's edges); New York's local rail share
+19.1% to 18.8%; a solve 31 s to 29 s natively.
+
+**The market opens without its zone pairs** (T-174). It had two passes over every zone pair in
+every solving worker (2,913 zones, 2.26M kept directed pairs; time and memory growing with the
+square of the zones). Now the figures that need all pairs (each zone's row normaliser, the day's
+trips, each corridor's trips, the pair count) come from the pack's `derived` block, written by
+the same Rust code natively (`bin/market_pack.rs`, run by `pipeline/intercity.py`; 0.46 s), and
+`set_network` builds the pairs only between zones some station serves (any other pair has no
+access at one end, so no rail trip): 127,646 of 2.26M on the real New York save, in the whole
+list's order, so every rail figure is the same sum. All-mode trips for a selection are
+computed row by row for its zones when asked (one row is every other zone, about 0.1 ms).
+The block carries its formula name, the decay at four distances (to 1e-9: the pipeline's exp
+and powf are the platform's, the browser's Rust's own) and a checksum of the zones; if any
+disagrees the game derives it at opening, as before. Results: natively, every output of a
+five-period, three-round solve on the real network plus a Philadelphia line is identical with
+and without the block and to the code before T-174 (`intercity_real_network_outputs`); in the
+production WASM the f32 outputs differ by at most 1.2e-7 relative, the libm difference
+(`notes/t174-market-check.mjs`). WASM memory per solving worker on the NYC save 377 MB to 300 MB.
+
+**The market's distances are on the ground** (T-128). Its sites and zones stay in the New York
+equirectangular pack frame (their x and y, the 600 m site squares and every position the app
+reads are unchanged), but the pack names that frame (`"frame": {"kind": "equirect", ...}`, format
+2), and the kernel takes each zone centre through it to the unit sphere and measures zone pairs
+by great circle (`zone_km`; the same as `track::frame::great_circle`, which the world frame's
+lengths are checked against). The decay and the drive time follow. The plane was 1.2% short
+east-west at Philadelphia and 2.7% at Boston. Site lon/lat are not stored: the frame is affine in
+lon/lat, so the plane's weighted zone centre is exactly the weighted centre of the sites' lon/lat,
+and storing them would add about 5 MB to the 8.2 MB download for nothing. A pack without `frame`
+(before T-128) keeps plane distances under the old formula name, so its block stays current and
+its numbers are exactly as before. The formula name changed, so the shipped pack's block was
+rewritten (`pipeline/intercity.py --derive`, which also adds `frame` to an older pack; derive
+0.63 s against 0.46 s, the arcsine per pair; at opening in WASM without a block 1.06 s against 0.83 s).
+Effect on the shipped pack, not re-tuned: the day's trips 696,093 -> 696,100 (each zone's
+departures are normalised, only pruning moves), kept pairs 2,263,260 -> 2,262,696; corridors move
+by up to about 3% (New York - Philadelphia -0.3%, New York - Boston +1.7%, New York - Washington
+-2.6%, Philadelphia - Washington -2.6%, Washington - Baltimore +1.0%, Boston - Providence -1.1%);
+market rail on the real New York network plus a Philadelphia line 2,172 -> 2,174 a day (+0.07%).
+
+The Northeast recomputes every open city population and the separate regional market on service or
 fare changes; per-city dirty filtering remains future work. At each period's crowding round, the
 worker freezes their combined segment flows and feeds that same vector to all three populations.
 Capacities and busiest-hour factors agree, so shared crowding affects every rider. The free-flow
@@ -322,9 +758,10 @@ same way. A faster worker cannot mix a later round with another worker's first e
 network supersedes work after the population in progress (a pass is up to a second of one call).
 
 Longer-trip queries (T-118, SPEC 5.2) come from the regional API, not the local ones. Each period
-keeps rail trips per directed zone pair and, per station, rail trips starting and ending there by
+keeps rail trips per directed served zone pair (T-174) and, per station, rail trips starting and ending there by
 far zone (T-120; one f32 per station, direction and zone, about 7 MB a period on 875 stations), both from the same
-assignment pass that loads the lines. `selection_flows` sums the market's zone pairs for the 600 m
+assignment pass that loads the lines. `selection_flows` sums the market's zone pairs (each
+selected zone's row computed when asked, T-174) for the 600 m
 squares a selection of local cells lies in (a partly selected square counts its selected share;
 homes by population share of the zone's departures, jobs by attraction share of its arrivals);
 `station_flows` reads the per-station row. Both answer by market (the inspector's places) and by
@@ -337,11 +774,104 @@ and exits. A period's regional solve costs about 8 ms on the small real-pack pro
 
 Each solving worker holds both local APIs and the regional API; stations transform from the loaded
 game's world frame (T-125) through longitude and latitude into each pack's own frame (the regional
-market's is the New York pack frame). Line and station loads and fares include all
+market's is the New York pack frame; its zone distances are great circles, T-128). Line and station loads and fares include all
 populations. The top bar's denominator and the cell, flow and station-catchment queries remain the
 focused city's local commutes. Query XY is returned in world coordinates; cell and zone ids remain
 pack-local. Focus changes reset caches, layers and commuter selections, and reject late replies,
 including a switch away and back.
+
+**Loads by purpose** (T-158, the map's purpose filter, section 8). Every period's result also
+carries its segment loads, boardings and alightings split by purpose: work is the local city
+populations together, then the everyday layer's six purposes (four before T-142's airports and
+medical visits), then the regional market as
+longer trips. The populations were already separate; the everyday layer's purposes are kept apart
+inside its pass. Its station-pair trips are assigned purpose by purpose (its pairs are stored
+purpose by purpose, so one station-pair matrix is filled, assigned and cleared once a purpose) along
+the same strategies, and the results add up to the total, which is what crowding reads.
+Each purpose's loads are averaged across crowding rounds like the total, so they still add up
+after every round. Nothing is solved again per purpose and mode choice never sees the split.
+On the real New York network (867 stations, 3,512 route nodes, 817k everyday pairs with four
+purposes; native, one period) the everyday pass's assignment took 98-101 ms purpose by purpose
+against 32-33 ms for one assignment of the summed trips: about 65 ms more per period and stage,
+against an everyday pass of about 500 ms and a combined stage of about 1.5 s. With six purposes
+(T-142) the pairs are 1.05M and the assignment 167-184 ms against 38-52 ms summed. Memory: no
+extra matrix; the kept purpose loads are 3 arrays per purpose per period (3,512 floats each:
+250 kB a period with six), and each result message carries 8 purposes x 3 arrays x 14 kB, about
+340 kB. Purposes agree with the total to 2.4e-7 (float rounding). One purpose's local trip legs
+per cell for the bubbles come from `EverydayApi.cell_modes_of(kind)`, asked of the solving
+workers on demand (`purposeModes`) and answered only from a finished round, like stations; work
+alone is the commute sums the bubbles already have.
+
+**Transfers** (T-176, for the complex map, section 8). A station's flow is everyone there, so
+loading alone forgets which line a rider arrived on. `kernel::assign_with_transfers` keeps it: when
+a route node's riders leave the train at a station that is not the destination (at their own
+station, or by a walking transfer to one within 300 m or in the same complex, T-161), the riders and the edge they arrived by
+are noted on that station's list for this destination. A station is loaded after every node that
+feeds it (the walk goes farthest first), so when it splits its flow over its useful departures the
+list is whole, and each arrival splits the same way as everyone there: riders x that departure's
+share, added to the slot of (arriving edge, departure). Slots are laid out once per graph
+(`xfer_index`; every edge from a route node to a station, then that station's boarding edges in
+order), so a slot is a pair of route nodes, line, direction and stop in and out: platform to
+platform, merged demand stations included. The loads are `assign`'s to the bit; the transfers are
+counted beside them. Every population does it (commutes, the everyday pass with all its purposes
+in one array, the regional market), each round, averaged across rounds with the loads' weights.
+Check: at every station the transfers leaving equal its boardings less its first boardings, and
+on the real network the commutes' transfers equal all boardings less entries
+(2,278,897 in periods 0 and 2; 593k of them walk between demand stations).
+Query: `transfers(sel)` on each API gives (route node in, route node out, riders) for every
+pair with either end at a route node marked in `sel`, for each period held; the worker adds every
+population's and period's by pair and answers the `transfers` message with the route nodes of one
+complex, on request only (never pushed with results). The client adds the workers' answers and
+names each end by station and line, both runs together (`complexTransfers(members)`).
+Cost on the real New York network (native, period 0): one commute assignment 36 ms, 42 ms counting
+transfers (riders arriving at a station x its useful departures, about half of them, for each
+destination); whole free-flow stages best of five, counted against not, commute 1,027 against
+1,024 ms and everyday 337 against 339 ms, within the noise, so they are counted every round rather
+than on the last only. Memory: 28,538 slots, 111 kB a period and population plus a 43 kB index
+(about 0.5 MB a worker holding one period of New York commutes, its everyday purposes and the
+market). The New York save's Penn Station answer is 886 pairs, 10.6 kB, 9 ms in the worker.
+Loads with and without counting are bit-identical natively (`transfers_real_network`, two periods,
+free flow and three rounds, commutes and everyday) and in the WASM worker (five periods, three
+rounds, the market too; notes/T-147.md).
+
+**The trip explorer** (T-195, `sim/src/demand/trip.rs`, the interface in section 8). One trip
+between two points, as the commute model decides it in each period: `DemandApi.trip(q, from, to)`
+takes the cell nearest each point (within 600 m, else the point is outside the city), reads the
+trip as a commute from a home in the first to work in the second, and answers with the model's
+own numbers for that pair of subzones (4.4 step 5): the walk share (by the two zones' distance),
+the drive (real minutes between the subzones' centres, its parking, its perceived cost), the
+rail logsum over every pair of access and egress stations and each pair's share of the trip's
+rail riders, rail's utility against the road and the chance of walking, rail and driving. The
+expressions and their order are `mode_choice`'s, so the figures are the same f32 numbers, on the
+period's own graph (the costs of its last crowding round; the published loads are the rounds'
+average). Rail is a strategy, not one path: riders spread over the station pairs by the access
+logit and, at each station, over the useful departures by frequency. So the answer also walks the
+destination strategies `assign` loads, from each station pair carrying at least 0.5% of the
+trip's rail riders, and lists every route (a sequence of boardings, with a walk between stations
+where the strategy takes one) carrying at least 0.5%, at most eight, biggest first, each with
+its share, legs, waits (half the combined headway of the useful trains at the station),
+in-vehicle minutes with and without crowding, and distance fare. Strategies are searched towards
+the destination's egress stations only (at most six searches, a few ms; each search is
+independent, so they are the solve's). It changes no state and is answered between stages, like
+the other queries: each solving worker answers for the periods it holds, only from a round that
+all its periods hold (`trip` message, the cells' positions in world metres). A trip whose end has
+no subzone (no station within 4 km), or whose cheapest walks pass `pair_walk_max`, or with no
+connecting service in the period gets no rail; its drive is priced between the two cells.
+
+Checks: over every destination subzone, an origin's rail trips from these pair choices add up to
+the solve's own for that origin subzone, and the station pairs' shares to its station-pair
+matrix, within 1e-6 (f32 summation order) on the synthetic city, free flow and crowded
+(`pair_choice_reproduces_mode_choice`), and within 6e-6 for the three origins of
+`trip_real_network` on the real New York network; the WASM worker's answers for those three
+trips equal the native ones to 1.7e-7 relative (rail and drive chances identical). On the real
+save in Chrome a trip is answered in 3-14 ms. Park Slope to Midtown in the morning peak: train
+91%, drive 9% (the drive is 36 minutes plus parking that counts as 43); the busiest route is the
+F from 7 Av to 47-50 Sts-Rockefeller Ctr with 17% of the trip's train riders, the rest spread over
+neighbouring stations at both ends and the 42 St stations. Jersey City (Journal Square) to Wall
+St: train 62% (PATH to World Trade Center, then the 1 or a walk). Mineola to Hicksville: drive
+63%, train 37%. Everyday purposes choose the same way on the same rail and road costs but with
+the walk share and the drive's distance from the sampled cells, and their own subzone averages;
+the explorer shows the commute.
 
 **The pool and the bubbles' chain** (T-119). The pool is half the logical cores less one, at most
 5, at least 1 workers that solve, and one more that holds no period (SPEC 7). Periods go to workers
@@ -354,7 +884,9 @@ round is published. The commuters by mode per cell (`cell_modes`) read only thos
 network's subzones, so the worker with no periods answers them whatever round the others are in.
 Stations, selections and longer-trip queries still read a period's state and are answered only
 from a round that every period of the worker holds, so they wait for the solve to finish (T-119
-leaves them; a selection made during the solve gets its far end when it ends).
+leaves them; a selection made during the solve gets its far end when it ends: 7.5-11 s after the
+click on the real New York save with five workers, T-285; answering from a kept copy of the shown
+result is proposed in notes/T-285.md, T-122).
 
 **Cost on the real combined network** (T-119: the 109-line New York save plus one Philadelphia
 line, 875 demand stations, 5,039 subzones, 13.9M subzone pairs a period; native, one period, free
@@ -363,8 +895,11 @@ the three populations (Philadelphia's has 35 subzones but searched towards all 8
 York's mode choice 0.81 s; the market's pair loop 0.06 s. Now 1.25 s: one search (0.29 s), the
 mode choice, and Philadelphia's 2 destinations. Results are identical to floating point noise
 (max difference 2e-16 of each array's largest value over line loads, boardings, entries and the
-summaries of all five periods; the market's own round-0 search is separate because its
-free-flow graph leaves the distance fare out, see TASKS).
+summaries of all five periods). Since T-172 (fixing T-121) the market's free-flow estimate also
+routes with the distance fare, as the local populations' does, so round 0 shares their search
+too; before, its own round-0 search towards every station a far zone can reach took 1.8 s natively
+a period on the 109-line save (against 0.1 s for a crowding round), and in five Chrome workers
+at once made round 0 four times as long as a crowding round (10 s against 2.3 s).
 
 In Chrome on this machine (16 threads), the real network plus the Philadelphia line:
 

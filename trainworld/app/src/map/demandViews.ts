@@ -4,7 +4,9 @@
 //
 // - Network layers (line width, station size, train fill): map/demandLayers.ts, rebuilt when the
 //   network, the world, the demand result, the period in force or a setting changes.
-// - Commuter bubbles and a bubble selection: map/commuterView.ts.
+// - Commuter bubbles and a bubble selection: map/commuterView.ts; they catch up over a game day
+//   after a new result (T-156, map/catchUp.ts).
+// - Longer trips of a selection, and one bubble per city zoomed far out: map/intercityView.ts.
 // - A selected station's riders: `stationRiders(id)`, drawn as discs over the network by
 //   map/demandOverlay.ts and listed in the station inspector from `stationView`.
 // - Hovering any of these discs shows how many people they stand for (map/demandHover.ts).
@@ -13,19 +15,21 @@ import { computed, effect, signal } from "@preact/signals";
 import type { Map as MlMap } from "maplibre-gl";
 import { activeCity } from "../game/cities";
 import { clock } from "../game/clock";
+import { complexes, selectedScope } from "../game/complexView";
 import { packToLngLat } from "../game/coords";
-import { cityCells, demandView, stationRiders, type CityCells, type DemandView, type StationRiders } from "../game/demand";
+import { cellModes, cityCells, demandByDay, demandView, stationRiders, type CityCells, type DemandView, type StationRiders } from "../game/demand";
 import { count } from "../game/format";
 import { CATCHMENT_COLOUR, DESTINATION_ALPHA, DESTINATION_COLOUR, rgb } from "../game/palette";
 import { compass } from "../game/places";
 import { periodAt } from "../game/periods";
+import { tripOpenedFrom } from "../game/trip";
 import type { Selection } from "../game/types";
-import { display, selection } from "../game/ui";
+import { display, purposeFilter, selection, stopEditing } from "../game/ui";
 import { world } from "../game/world";
 import { DISC } from "../workers/commutersProtocol";
 import { commuterStats, startCommuterView } from "./commuterView";
 import { buildLayers } from "./demandLayers";
-import { addFinder, discAt, hoverAt, startHover } from "./demandHover";
+import { addFinder, discAt, hoverAbove, hoverAt, pointerLocal, startHover } from "./demandHover";
 import { DemandOverlay } from "./demandOverlay";
 import { MERC_K, toLocal } from "./geo";
 import { startIntercityView } from "./intercityView";
@@ -37,8 +41,9 @@ export interface Place {
   name: string;
   riders: number;
 }
-/** The selected station's riders, as the inspector lists them; null while unknown. */
-export const stationView = signal<{ stationId: string; home: number; work: number; places: Place[] } | null>(null);
+/** The selected station's riders, as the inspector lists them; null while unknown. `scope`: the
+ * stations counted, `StationRiders.scope` (its complex's in complex view, T-146). */
+export const stationView = signal<{ stationId: string; scope: string; home: number; work: number; places: Place[] } | null>(null);
 
 /** The period in force on the clock; changes five times a game day. */
 const period = computed(() => periodAt(clock.minute.value * 60));
@@ -63,6 +68,13 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
   const renderer = overlay.renderer;
   const view = new DemandOverlay(map, overlay);
   startHover(map);
+  // The selected station shows above the bubbles (T-189): cut out of them, redrawn when the
+  // network draws a new selection, and picked before them.
+  const project = (x: number, y: number) => overlay.toScreen(x, y);
+  view.cutouts = () => renderer.selectedShapes(project);
+  renderer.onSelectionDrawn = () => view.invalidate();
+  const onSelected = (px: number, py: number) => renderer.selectedStationAt(px, py, project) >= 0;
+  hoverAbove.at = onSelected;
 
   // ---- network layers ----
   let netSeen: unknown = null;
@@ -71,9 +83,12 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
     const n = renderer.net, w = world.peek();
     if (!n || !w) return;
     const d = display.peek();
-    const on = { lineLoad: d.trackColour === "traffic", stationRiders: d.stationRiders, trainLoad: d.trainLoad, trainLoadBasis: d.trainLoadBasis };
+    // stop editing (T-233) draws plain widths and no station circles: the demand is out of the way
+    const editing = stopEditing.peek();
+    const on = { lineLoad: d.trackColour === "traffic" && !editing, stationRiders: d.stationRiders && !editing, trainLoad: d.trainLoad, trainLoadBasis: d.trainLoadBasis,
+      complexes: d.complexView ? complexes.peek() : null, purpose: purposeFilter.peek(), days: demandByDay.peek().map((x) => x.view) };
     // an edit changes the network and then the world: one build for both when nothing else moved
-    const now = [n, w, demandView.peek(), period.peek(), on.lineLoad, on.stationRiders, on.trainLoad, on.trainLoadBasis];
+    const now = [n, w, demandView.peek(), period.peek(), on.lineLoad, on.stationRiders, on.trainLoad, on.trainLoadBasis, on.complexes, on.purpose];
     if (now.every((v, i) => v === inputs[i])) return;
     inputs = now;
     const t0 = performance.now();
@@ -99,14 +114,16 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
     demandView.value;
     period.value;
     const d = display.value;
-    void [d.stationRiders, d.trainLoad, d.trainLoadBasis, d.trackColour];
+    void [d.stationRiders, d.trainLoad, d.trainLoadBasis, d.trackColour, d.complexView];
+    purposeFilter.value;
+    stopEditing.value;
     schedule();
   });
 
   // ---- commuter bubbles ----
   const commuters = startCommuterView(map, view);
   // ---- longer trips of a selection or a station (T-118) ----
-  startIntercityView(view, map);
+  const intercity = startIntercityView(view, map);
 
   // ---- a selected station's riders ----
   let focusSeen = activeCity.peek();
@@ -119,9 +136,12 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
     view.setDiscs("stationNear", null);
     view.setDiscs("stationFar", null);
   };
+  // a station's catchment counts commuters: off the map while the purpose filter shows another
+  // purpose (T-158); the inspector keeps its numbers
+  const commutesShown = () => purposeFilter.peek() === "all" || purposeFilter.peek() === "work";
   const show = (r: StationRiders, cells: CityCells | null) => {
     const side = stationSide.peek();
-    marks = cells ? { ...marksFor(r, side, cells), side } : null;
+    marks = cells && commutesShown() ? { ...marksFor(r, side, cells), side } : null;
     view.setDiscs("stationNear", marks?.near ?? null);
     view.setDiscs("stationFar", marks?.far ?? null);
     stationView.value = describe(r, side, cells);
@@ -132,6 +152,7 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
     const sel = selection.value;
     const dv = demandView.value;
     stationSide.value;
+    purposeFilter.value;
     if (sel?.kind !== "station" || !dv) {
       stationAsk++;
       last = null;
@@ -140,20 +161,22 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
       return;
     }
     const id = sel.station;
-    if (last && last.r.stationId === id && last.dv === dv) {
-      // only the side changed
+    // the station, or its complex in complex view (T-146)
+    const scope = selectedScope.value || id, members = scope.split(",");
+    if (last && last.r.stationId === id && last.r.scope === scope && last.dv === dv) {
+      // only the side or the purpose filter changed (or a display setting that does not matter here)
       const r = last.r;
-      void (cellsP ??= cityCells()).then((cells) => show(r, cells));
+      if (!!marks !== commutesShown() || (marks && marks.side !== stationSide.peek())) void (cellsP ??= cityCells()).then((cells) => show(r, cells));
       return;
     }
-    if (!last || last.r.stationId !== id) {
+    if (!last || last.r.stationId !== id || last.r.scope !== scope) {
       stationView.value = null;
       clear();
     }
     const ask = ++stationAsk;
     void (async () => {
       const t0 = performance.now();
-      const [r, cells] = await Promise.all([stationRiders(id, 20), (cellsP ??= cityCells())]);
+      const [r, cells] = await Promise.all([stationRiders(id, 20, members), (cellsP ??= cityCells())]);
       // null: the workers moved on (the next demandView asks again), or not a station demand knows
       if (ask !== stationAsk || !r) return;
       viewStats.stationMs = performance.now() - t0;
@@ -169,17 +192,55 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
     let i = discAt(marks.near, x, y);
     if (i >= 0) return [`${count(marks.nearN[i])} riders ${live ? "live" : "work"} here`];
     i = discAt(marks.far, x, y);
-    if (i >= 0) return [`${count(marks.farN[i])} of them ${live ? "work" : "live"} here`];
+    if (i >= 0) return [`${count(marks.farN[i])} of them ${live ? "work" : "live"} here`, "Click to explore this trip"];
     return null;
   });
+
+  /**
+   * A click on a far-end disc of a station's catchment opens the trip explorer for the pair
+   * (T-208): from the catchment cell with the most of the station's riders to the far zone's cell
+   * with the most rail legs at that end (the cached all-purpose answer: the riders' own cells in
+   * the 2 km zone are not known here, and the zone's centre can fall where nobody is). True when
+   * the click was on one.
+   */
+  const stationTrip = (px: number, py: number): boolean => {
+    const sel = selection.peek();
+    const m = marks, l = last;
+    if (!m || !l || sel?.kind !== "station") return false;
+    const [x, y] = pointerLocal(map, px, py);
+    if (discAt(m.near, x, y) >= 0) return false;
+    const k = discAt(m.far, x, y);
+    if (k < 0) return false;
+    const side = m.side;
+    const own = (side === "home" ? l.r.home : l.r.work).cells[0];
+    const zone = (side === "home" ? l.r.homeRidersWorkIn : l.r.workRidersLiveIn).zones[k];
+    void Promise.all([(cellsP ??= cityCells()), cellModes("all")]).then(([cells, modes]) => {
+      if (!cells || own === undefined || selection.peek() !== sel) return;
+      const legs = side === "home" ? modes?.workRail : modes?.homeRail;
+      let best = -1, bestN = -1;
+      for (let c = 0; c < cells.n; c++) {
+        if (cells.zone[c] !== zone) continue;
+        const n = legs ? legs[c] : 0;
+        if (n > bestN) (bestN = n), (best = c);
+      }
+      if (best < 0) return;
+      const at = (c: number): [number, number] => [cells.xy[c * 2], cells.xy[c * 2 + 1]];
+      const trip: Selection = side === "home" ? { kind: "trip", from: at(own), to: at(best) } : { kind: "trip", from: at(best), to: at(own) };
+      tripOpenedFrom.value = { trip, from: sel, what: `From ${world.peek()?.save.stations.find((s) => s.id === sel.station)?.name ?? "the station"}'s riders` };
+      selection.value = trip;
+    });
+    return true;
+  };
 
   return {
     networkChanged() {
       if (renderer.net !== netSeen) schedule();
     },
     click(px, py, add) {
-      const picked = commuters.click(px, py, add);
+      if (onSelected(px, py)) return undefined; // the network picks the selected station
+      const picked = commuters.click(px, py, add) ?? intercity.click(px, py);
       if (picked !== undefined) return picked;
+      if (stationTrip(px, py)) return selection.peek() ?? undefined;
       // Station catchments and longer-trip discs describe the current selection. They are
       // drawn over the network, so a click on them retains that selection and is consumed.
       return hoverAt(map, px, py) ? selection.peek() ?? undefined : undefined;
@@ -246,5 +307,5 @@ function describe(r: StationRiders, side: "home" | "work", cells: CityCells | nu
     byName.set(name, (byName.get(name) ?? 0) + far.riders[k]);
   }
   const places = [...byName].map(([name, riders]) => ({ name, riders })).sort((a, b) => b.riders - a.riders);
-  return { stationId: r.stationId, home: r.home.total, work: r.work.total, places };
+  return { stationId: r.stationId, scope: r.scope, home: r.home.total, work: r.work.total, places };
 }

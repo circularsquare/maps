@@ -16,6 +16,9 @@ pub struct City {
     /// those arrays; otherwise the pack's `pop` and `jobs`. The gravity balances on them.
     pub pop: Vec<f32>,
     pub jobs: Vec<f32>,
+    /// First-level region of each cell (a US state; elsewhere admin-1), an index into the
+    /// header's `regions` list (T-162). Empty if the pack has none: one region.
+    pub region: Vec<u8>,
     /// The zone gravity solved by the pipeline; None if the pack has none (then the kernel
     /// solves it, which is what the pipeline itself does).
     pub gravity: Option<PackGravity>,
@@ -36,13 +39,16 @@ impl City {
 }
 
 /// Doubly constrained gravity between square zones, as shipped: zone trips
-/// T_IJ = row_I * col_J * d_IJ^-decay_pow * exp(-d_IJ / decay_km), d by zone grid offset
-/// (SPEC 4.4). In the header: `"decay": "exp"` (decay_pow 0) or `"pow_exp"` with `decay_pow`.
+/// T_IJ = row_I * col_J * d_IJ^-decay_pow * exp(-d_IJ / decay_km) * k_IJ, d by zone grid offset
+/// (SPEC 4.4), k_IJ = `border_factor` when the two zones are in different regions, else 1
+/// (T-162). In the header: `"decay": "exp"` (decay_pow 0) or `"pow_exp"` with `decay_pow`.
 #[derive(Clone, Debug)]
 pub struct PackGravity {
     pub zone_m: f32,
     pub decay_km: f32,
     pub decay_pow: f32,
+    /// The decay's factor between zones of different regions; 1 (no effect) in a pack without it.
+    pub border_factor: f32,
     /// Lower-left corner of the zone grid, metres from the pack origin, and its size in zones.
     pub grid_x0: f32,
     pub grid_y0: f32,
@@ -50,15 +56,25 @@ pub struct PackGravity {
     pub grid_h: i32,
     /// Per cell.
     pub cell_zone: Vec<u32>,
-    /// Per zone: grid column and row, and the two balancing factors (A_I O_I and B_J D_J).
+    /// Per zone: grid column and row, region (empty: all one region; a square cut by a region
+    /// border is one zone per region), and the two balancing factors (A_I O_I and B_J D_J).
     pub gx: Vec<i32>,
     pub gy: Vec<i32>,
+    pub zone_region: Vec<u8>,
     pub row: Vec<f64>,
     pub col: Vec<f64>,
     pub iters: usize,
     pub max_err: f64,
     pub mean_km: f64,
     pub trips: f64,
+    /// T-276: with a joint gravity (every zone pack solved together, `bin/joint_gravity.rs`), the
+    /// trips each zone's homes and jobs keep inside this pack (`zone_home`, `zone_work`); the rest
+    /// cross into another pack and travel in the regional layer. Empty: the pack's own gravity,
+    /// where every zone's commuters stay in the pack.
+    pub home: Vec<f64>,
+    pub work: Vec<f64>,
+    /// T-276: the joint solve's header block (`gravity.joint`), kept as it is
+    pub joint: Option<Value>,
 }
 
 fn dtype_size(dtype: &str) -> Result<usize, String> {
@@ -132,9 +148,10 @@ pub fn parse(header: &str, bin: &[u8]) -> Result<City, String> {
     let cells = v["cells"].as_u64().ok_or("header has no cells")? as usize;
     let zones = v["zones"].as_u64().unwrap_or(0) as usize;
     let name = v["city"].as_str().unwrap_or("?").to_string();
-    let mut city = City { name, h3: vec![], x: vec![], y: vec![], pop: vec![], jobs: vec![], gravity: None };
-    let (mut cz, mut gx, mut gy, mut row, mut col) = (vec![], vec![], vec![], vec![], vec![]);
+    let mut city = City { name, h3: vec![], x: vec![], y: vec![], pop: vec![], jobs: vec![], region: vec![], gravity: None };
+    let (mut cz, mut gx, mut gy, mut row, mut col, mut zr) = (vec![], vec![], vec![], vec![], vec![], vec![]);
     let (mut ch, mut cw) = (vec![], vec![]);
+    let (mut zhome, mut zwork) = (vec![], vec![]);
     for a in v["arrays"].as_array().ok_or("header has no arrays")? {
         let aname = a["name"].as_str().unwrap_or("");
         let dtype = a["dtype"].as_str().unwrap_or("");
@@ -142,8 +159,8 @@ pub fn parse(header: &str, bin: &[u8]) -> Result<City, String> {
         let off = a["offset"].as_u64().unwrap_or(0) as usize;
         let count = a["count"].as_u64().unwrap_or(0) as usize;
         let known = match per {
-            "cell" => matches!(aname, "h3" | "x_m" | "y_m" | "pop" | "jobs" | "zone" | "commute_home" | "commute_work"),
-            "zone" => matches!(aname, "zone_gx" | "zone_gy" | "zone_row" | "zone_col"),
+            "cell" => matches!(aname, "h3" | "x_m" | "y_m" | "pop" | "jobs" | "zone" | "commute_home" | "commute_work" | "region"),
+            "zone" => matches!(aname, "zone_gx" | "zone_gy" | "zone_row" | "zone_col" | "zone_region" | "zone_home" | "zone_work"),
             _ => false,
         };
         if !known {
@@ -171,6 +188,16 @@ pub fn parse(header: &str, bin: &[u8]) -> Result<City, String> {
             "zone_gy" => gy = read_ints(bin, off, count, dtype)?.into_iter().map(|v| v as i32).collect(),
             "zone_row" => row = read_f64s(bin, off, count, dtype)?,
             "zone_col" => col = read_f64s(bin, off, count, dtype)?,
+            "zone_home" => zhome = read_f64s(bin, off, count, dtype)?,
+            "zone_work" => zwork = read_f64s(bin, off, count, dtype)?,
+            "region" | "zone_region" => {
+                let v = read_ints(bin, off, count, dtype)?;
+                if v.iter().any(|&r| !(0..=255).contains(&r)) {
+                    return Err(format!("{aname} holds a region id outside 0..255"));
+                }
+                let v: Vec<u8> = v.into_iter().map(|r| r as u8).collect();
+                if aname == "region" { city.region = v } else { zr = v }
+            }
             _ => unreachable!(),
         }
     }
@@ -181,6 +208,9 @@ pub fn parse(header: &str, bin: &[u8]) -> Result<City, String> {
     }
     if city.h3.is_empty() {
         city.h3 = (0..cells as u64).collect();
+    }
+    if !city.region.is_empty() && city.region.len() != cells {
+        return Err("region does not have one entry per cell".into());
     }
     match (ch.len() == cells, cw.len() == cells) {
         (true, true) => {
@@ -206,10 +236,22 @@ pub fn parse(header: &str, bin: &[u8]) -> Result<City, String> {
         };
         let o = g["grid_origin_m"].as_array().ok_or("gravity block lacks grid_origin_m")?;
         let s = g["grid"].as_array().ok_or("gravity block lacks grid")?;
+        // T-162: a pack from before region-aware gravity has neither: one region, factor 1
+        let border_factor = g["border_factor"].as_f64().unwrap_or(1.0) as f32;
+        if !(border_factor > 0.0 && border_factor.is_finite()) {
+            return Err(format!("gravity border_factor {border_factor} is not a positive number"));
+        }
+        if !zr.is_empty() && zr.len() != zones {
+            return Err("zone_region does not have one entry per zone".into());
+        }
+        if zhome.len() != zwork.len() || zhome.iter().chain(&zwork).any(|v| !v.is_finite() || *v < 0.0) {
+            return Err("zone_home and zone_work must come together, finite and not negative".into());
+        }
         city.gravity = Some(PackGravity {
             zone_m: num("zone_m")? as f32,
             decay_km: num("decay_km")? as f32,
             decay_pow,
+            border_factor,
             grid_x0: o[0].as_f64().unwrap_or(0.0) as f32,
             grid_y0: o[1].as_f64().unwrap_or(0.0) as f32,
             grid_w: s[0].as_i64().unwrap_or(0) as i32,
@@ -217,12 +259,16 @@ pub fn parse(header: &str, bin: &[u8]) -> Result<City, String> {
             cell_zone: cz,
             gx,
             gy,
+            zone_region: zr,
             row,
             col,
             iters: num("iterations").unwrap_or(0.0) as usize,
             max_err: num("max_error").unwrap_or(0.0),
             mean_km: num("mean_trip_km")?,
             trips: num("trips")?,
+            home: zhome,
+            work: zwork,
+            joint: g.get("joint").cloned(),
         });
     }
     Ok(city)
@@ -250,24 +296,55 @@ fn le_f32(a: impl Iterator<Item = f32>) -> Vec<u8> {
 
 /// Add (or replace) the zone gravity in a format-1 pack: the per-zone arrays go on the end of
 /// the .bin, the `gravity` block and `zones` count into the header. Everything else in the
-/// header (origin, totals, sources) is kept. Used by the pipeline (`bin/pack_gravity.rs`).
+/// header (origin, totals, sources) is kept. Used by the pipeline (`bin/pack_gravity.rs`), on a
+/// cells-only pack or (T-162) on a finished one, whose old gravity arrays are dropped and the
+/// .bin rewritten without their bytes.
 pub fn with_gravity(header: &str, bin: &[u8], g: &PackGravity) -> Result<(String, Vec<u8>), String> {
     let mut v: Value = serde_json::from_str(header).map_err(|e| format!("header: {e}"))?;
     let cells = v["cells"].as_u64().ok_or("header has no cells")? as usize;
     if g.cell_zone.len() != cells {
         return Err(format!("{} cell zone ids for {cells} cells", g.cell_zone.len()));
     }
-    // drop any gravity arrays already there (their bytes stay as dead space; the pipeline
-    // always starts from a cells-only pack, so in practice there are none)
-    let mut arrays: Vec<Value> = v["arrays"].as_array().cloned().unwrap_or_default();
-    arrays.retain(|a| !matches!(a["name"].as_str().unwrap_or(""), "zone" | "zone_gx" | "zone_gy" | "zone_row" | "zone_col"));
     let nz = g.gx.len();
-    let mut w = Writer { bin: bin.to_vec(), entries: vec![] };
+    if !g.zone_region.is_empty() && g.zone_region.len() != nz {
+        return Err(format!("{} zone regions for {nz} zones", g.zone_region.len()));
+    }
+    let gravity_array = |a: &Value| matches!(a["name"].as_str().unwrap_or(""), "zone" | "zone_gx" | "zone_gy" | "zone_row" | "zone_col" | "zone_region" | "zone_home" | "zone_work");
+    if !g.home.is_empty() && (g.home.len() != nz || g.work.len() != nz) {
+        return Err(format!("{} zone_home and {} zone_work for {nz} zones", g.home.len(), g.work.len()));
+    }
+    let old: Vec<Value> = v["arrays"].as_array().cloned().unwrap_or_default();
+    // the other arrays, copied into a fresh .bin so no dead bytes are left behind (as they were
+    // if a dtype is not one this reader can size)
+    let sizes: Option<Vec<usize>> = old.iter().map(|a| dtype_size(a["dtype"].as_str().unwrap_or("")).ok().map(|s| s * a["count"].as_u64().unwrap_or(0) as usize)).collect();
+    let (mut w, mut arrays) = match sizes {
+        Some(sizes) => {
+            let mut w = Writer { bin: Vec::with_capacity(bin.len()), entries: vec![] };
+            for (a, size) in old.iter().zip(sizes) {
+                if gravity_array(a) {
+                    continue;
+                }
+                let off = a["offset"].as_u64().ok_or("array without an offset")? as usize;
+                let bytes = bin.get(off..off + size).ok_or(format!("array {} runs past the end of the .bin", a["name"]))?;
+                w.push(a["name"].as_str().unwrap_or(""), a["dtype"].as_str().unwrap_or(""), a["per"].as_str().unwrap_or("cell"), a["count"].as_u64().unwrap_or(0) as usize, bytes.to_vec());
+            }
+            let kept = std::mem::take(&mut w.entries);
+            (w, kept)
+        }
+        None => (Writer { bin: bin.to_vec(), entries: vec![] }, old.into_iter().filter(|a| !gravity_array(a)).collect()),
+    };
     w.push("zone", "u32", "cell", cells, g.cell_zone.iter().flat_map(|v| v.to_le_bytes()).collect());
     w.push("zone_gx", "u16", "zone", nz, g.gx.iter().flat_map(|&v| (v as u16).to_le_bytes()).collect());
     w.push("zone_gy", "u16", "zone", nz, g.gy.iter().flat_map(|&v| (v as u16).to_le_bytes()).collect());
+    if !g.zone_region.is_empty() {
+        w.push("zone_region", "u8", "zone", nz, g.zone_region.clone());
+    }
     w.push("zone_row", "f32", "zone", nz, le_f32(g.row.iter().map(|&v| v as f32)));
     w.push("zone_col", "f32", "zone", nz, le_f32(g.col.iter().map(|&v| v as f32)));
+    if !g.home.is_empty() {
+        w.push("zone_home", "f32", "zone", nz, le_f32(g.home.iter().map(|&v| v as f32)));
+        w.push("zone_work", "f32", "zone", nz, le_f32(g.work.iter().map(|&v| v as f32)));
+    }
     arrays.extend(w.entries);
     v["format"] = json!(FORMAT);
     v["zones"] = json!(nz);
@@ -279,6 +356,8 @@ pub fn with_gravity(header: &str, bin: &[u8], g: &PackGravity) -> Result<(String
         "decay": if g.decay_pow == 0.0 { "exp" } else { "pow_exp" },
         "decay_km": g.decay_km,
         "decay_pow": g.decay_pow,
+        "border_factor": (g.border_factor as f64 * 1e6).round() / 1e6,
+        "border": "the decay x border_factor when the home and work zones are in different regions (zone_region; T-162)",
         "intrazonal_km": 0.52 * g.zone_m as f64 / 1000.0,
         "workers": "home-end weights (commute_home if the pack has it, else pop) scaled to the work-end total",
         "iterations": g.iters,
@@ -287,6 +366,10 @@ pub fn with_gravity(header: &str, bin: &[u8], g: &PackGravity) -> Result<(String
         "trips": g.trips,
         "solver": "trainworld-sim kernel::gravity (sim/src/bin/pack_gravity.rs)",
     });
+    if let Some(j) = &g.joint {
+        v["gravity"]["joint"] = j.clone();
+        v["gravity"]["solver"] = json!("trainworld-sim bin/joint_gravity.rs: every zone pack's gravity solved together (T-276)");
+    }
     let text = serde_json::to_string_pretty(&v).map_err(|e| e.to_string())? + "\n";
     Ok((text, w.bin))
 }
@@ -299,6 +382,9 @@ pub fn write(city: &City) -> (String, Vec<u8>) {
     w.push("h3", "u64", "cell", n, city.h3.iter().flat_map(|v| v.to_le_bytes()).collect());
     for (name, a) in [("x_m", &city.x), ("y_m", &city.y), ("pop", &city.pop), ("jobs", &city.jobs)] {
         w.push(name, "f32", "cell", n, le_f32(a.iter().cloned()));
+    }
+    if !city.region.is_empty() {
+        w.push("region", "u8", "cell", n, city.region.clone());
     }
     let (p, j) = city.totals();
     let v = json!({
@@ -347,6 +433,7 @@ mod tests {
             y: vec![-1.0, -2.0, -3.0],
             pop: vec![5.0, 0.0, 7.0],
             jobs: vec![0.0, 9.0, 1.0],
+            region: vec![],
             gravity: None,
         }
     }
@@ -390,13 +477,12 @@ mod tests {
         assert!(parse(&h3, &w.bin).is_err());
     }
 
-    #[test]
-    fn gravity_roundtrip() {
-        let mut city = small();
-        city.gravity = Some(PackGravity {
+    fn small_gravity(zone_region: Vec<u8>, border_factor: f32) -> PackGravity {
+        PackGravity {
             zone_m: 2000.0,
             decay_km: 9.0,
             decay_pow: 0.5,
+            border_factor,
             grid_x0: 1.0,
             grid_y0: -3.0,
             grid_w: 1,
@@ -404,20 +490,83 @@ mod tests {
             cell_zone: vec![1, 0, 1],
             gx: vec![0, 0],
             gy: vec![1, 0],
+            zone_region,
             row: vec![0.5, 2.25],
             col: vec![3.0, 0.125],
             iters: 7,
             max_err: 1e-5,
             mean_km: 1.5,
             trips: 10.0,
-        });
+            home: vec![],
+            work: vec![],
+            joint: None,
+        }
+    }
+
+    #[test]
+    fn joint_gravity_roundtrip() {
+        // T-276: the trips each zone keeps in the pack, and the joint block, survive a write
+        let mut city = small();
+        let mut g = small_gravity(vec![], 1.0);
+        g.home = vec![1.5, 2.5];
+        g.work = vec![3.0, 0.25];
+        g.joint = Some(json!({"packs": ["t", "u"], "cross_out": 4.0}));
+        city.gravity = Some(g);
+        let (h, b) = write(&city);
+        let c = parse(&h, &b).unwrap().gravity.unwrap();
+        assert_eq!((c.home, c.work), (vec![1.5, 2.5], vec![3.0, 0.25]));
+        assert_eq!(c.joint.unwrap()["cross_out"], 4.0);
+        // solving the pack alone again drops them
+        let (h2, b2) = with_gravity(&h, &b, &small_gravity(vec![], 1.0)).unwrap();
+        let c2 = parse(&h2, &b2).unwrap().gravity.unwrap();
+        assert!(c2.home.is_empty() && c2.joint.is_none());
+        assert!(!h2.contains("zone_home"));
+    }
+
+    #[test]
+    fn gravity_roundtrip() {
+        let mut city = small();
+        city.region = vec![0, 1, 0];
+        city.gravity = Some(small_gravity(vec![0, 1], 0.25));
         let (h, b) = write(&city);
         let c = parse(&h, &b).unwrap();
+        assert_eq!(c.region, city.region);
         let (g, g0) = (c.gravity.unwrap(), city.gravity.unwrap());
         assert_eq!(g.cell_zone, g0.cell_zone);
         assert_eq!((g.gx, g.gy), (g0.gx, g0.gy));
+        assert_eq!(g.zone_region, g0.zone_region);
         assert_eq!((g.row, g.col), (g0.row, g0.col));
-        assert_eq!((g.grid_w, g.grid_h, g.zone_m, g.decay_km, g.decay_pow), (1, 2, 2000.0, 9.0, 0.5));
+        assert_eq!((g.grid_w, g.grid_h, g.zone_m, g.decay_km, g.decay_pow, g.border_factor), (1, 2, 2000.0, 9.0, 0.5, 0.25));
         assert_eq!(g.trips, 10.0);
+    }
+
+    #[test]
+    fn pack_without_regions_has_factor_one() {
+        // T-162: a pack written before region-aware gravity (no zone_region, no border_factor)
+        let mut city = small();
+        city.gravity = Some(small_gravity(vec![], 1.0));
+        let (h, b) = write(&city);
+        let h = h.replace("\"border_factor\": 1.0,", "");
+        assert!(!h.contains("border_factor\""));
+        let c = parse(&h, &b).unwrap();
+        let g = c.gravity.unwrap();
+        assert!(c.region.is_empty() && g.zone_region.is_empty());
+        assert_eq!(g.border_factor, 1.0);
+    }
+
+    #[test]
+    fn regravity_drops_the_old_arrays() {
+        // solving again on a finished pack replaces the gravity and leaves no dead bytes
+        let mut city = small();
+        city.gravity = Some(small_gravity(vec![], 1.0));
+        let (h, b) = write(&city);
+        let (h2, b2) = with_gravity(&h, &b, &small_gravity(vec![1, 0], 0.5)).unwrap();
+        let c = parse(&h2, &b2).unwrap();
+        assert_eq!(c.x, city.x);
+        assert_eq!(c.jobs, city.jobs);
+        let g = c.gravity.unwrap();
+        assert_eq!((g.zone_region, g.border_factor), (vec![1, 0], 0.5));
+        assert_eq!(h2.matches("\"zone_gx\"").count(), 1);
+        assert!(b2.len() <= b.len() + 8, "{} bytes after, {} before", b2.len(), b.len());
     }
 }

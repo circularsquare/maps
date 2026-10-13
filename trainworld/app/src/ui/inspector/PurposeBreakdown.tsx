@@ -1,82 +1,103 @@
 import { useState } from "preact/hooks";
 import type { PurposeTrips } from "../../game/demand";
 import { count } from "../../game/format";
+import { purposeColour, shownName } from "../../game/purposes";
 
 const LABELS = ["6–10", "10–16", "16–20", "20–24", "0–6"];
 const HOURS = [4, 6, 4, 4, 6];
 
-// Purpose colours are independent of the UI theme. Green is reserved for future events.
-function purposeColour(name: string) {
-  if (/^work/i.test(name)) return "#3978c6";
-  if (/school/i.test(name)) return "#168b91";
-  if (/university/i.test(name)) return "#c48225";
-  if (/social|leisure/i.test(name)) return "#9460b4";
-  if (/shopping|errands/i.test(name)) return "#d94a53";
-  if (/event/i.test(name)) return "#439447";
-  return "#8a817b";
-}
+type Row = { name: string; outward: number[]; returning: number[]; total: number };
 
-function PurposePie({ rows, total }: { rows: {name: string; total: number}[]; total: number }) {
+function PurposePie({ rows, total, unit }: { rows: Row[]; total: number; unit: string }) {
   let angle = 0;
+  const pct = (n: number) => (total > 0 ? Math.round(100 * n / total) : 0);
+  // T-194: every slice and key entry gives its count, not only its share
+  const words = (p: Row) => `${p.name}: ${count(p.total)} ${unit} a day, ${pct(p.total)}%`;
   return <div class="purpose-summary">
-    <svg class="purpose-pie" viewBox="0 0 100 100" role="img" aria-label={total > 0 ? `Purpose shares: ${rows.map(p => `${p.name} ${Math.round(100*p.total/total)}%`).join(", ")}` : "No trips in this scope"}>
+    <svg class="purpose-pie" viewBox="0 0 100 100" role="img" aria-label={total > 0 ? `Purpose shares: ${rows.map(p => `${p.name} ${pct(p.total)}%`).join(", ")}` : "No trips in this scope"}>
       {total <= 0 ? <circle cx="50" cy="50" r="48" fill="var(--shade)" /> : rows.filter(p => p.total > 0).map(p => {
         const start = angle, sweep = 2*Math.PI*p.total/total;
         angle += sweep;
         const point = (a: number) => `${50+48*Math.sin(a)} ${50-48*Math.cos(a)}`;
         return sweep >= 2*Math.PI-1e-8
-          ? <circle key={p.name} cx="50" cy="50" r="48" fill={purposeColour(p.name)}><title>{p.name}: 100%</title></circle>
-          : <path key={p.name} d={`M 50 50 L ${point(start)} A 48 48 0 ${sweep > Math.PI ? 1 : 0} 1 ${point(angle)} Z`} fill={purposeColour(p.name)}><title>{p.name}: {Math.round(100*p.total/total)}%</title></path>;
+          ? <circle key={p.name} cx="50" cy="50" r="48" fill={purposeColour(p.name)} data-tip={words(p)} />
+          : <path key={p.name} d={`M 50 50 L ${point(start)} A 48 48 0 ${sweep > Math.PI ? 1 : 0} 1 ${point(angle)} Z`} fill={purposeColour(p.name)} data-tip={words(p)} />;
       })}
     </svg>
     <ul class="purpose-legend">
-      {rows.map(p => <li key={p.name}><i class="sw" style={{background: purposeColour(p.name)}} /><span>{p.name}</span><b>{total > 0 ? Math.round(100*p.total/total) : 0}%</b></li>)}
+      {rows.map(p => <li key={p.name} data-tip={words(p)}><i class="sw" style={{background: purposeColour(p.name)}} /><span>{p.name}</span><b>{pct(p.total)}%</b></li>)}
     </ul>
   </div>;
+}
+
+/**
+ * One purpose's departures through the day (T-193): a bar per period, trips towards the
+ * destination up from a shared baseline and trips home down from it, both as departures an hour
+ * on one scale. Each bar's hover gives the count.
+ */
+function Timing({ row, colour, unit }: { row: Row; colour: string; unit: string }) {
+  const max = Math.max(...row.outward.map((v, q) => v / HOURS[q]), ...row.returning.map((v, q) => v / HOURS[q]));
+  const sumOut = row.outward.reduce((a, b) => a + b, 0), sumBack = row.returning.reduce((a, b) => a + b, 0);
+  const tip = (dir: string, v: number, q: number, all: number) =>
+    `${dir}, ${LABELS[q]}: ${count(v)} ${unit} (${count(v / HOURS[q])} an hour), ${all > 0 ? Math.round(100 * v / all) : 0}% of the day's`;
+  const h = (v: number, q: number) => `${max > 0 ? 100 * (v / HOURS[q]) / max : 0}%`;
+  return <>
+    <div class="purpose-mirror">
+      {LABELS.map((_, q) => <div class="slot" key={q}>
+        <div class="up" data-tip={tip("To destination", row.outward[q], q, sumOut)}><i style={{ background: colour, height: h(row.outward[q], q) }} /></div>
+        <div class="down" data-tip={tip("Return home", row.returning[q], q, sumBack)}><i style={{ background: colour, height: h(row.returning[q], q) }} /></div>
+      </div>)}
+    </div>
+    <div class="purpose-axis">{LABELS.map(l => <span key={l}>{l}</span>)}</div>
+  </>;
 }
 
 /** The selected bubble's actual departure-period mode counts, including crowding. */
 export function PurposeBreakdown({ purposes }: { purposes?: PurposeTrips[] }) {
   const [railOnly, setRailOnly] = useState(false);
   const periodCounts = (v: number[][]) => LABELS.map((_, q) => v[0][q] + (railOnly ? 0 : v[1][q] + v[2][q]));
-  const rows = purposes?.map(p => {
-    const outward = periodCounts(p.outward), returning = periodCounts(p.returning);
-    return {name: p.name, outward, returning, total: [...outward, ...returning].reduce((a,b) => a+b,0)};
-  });
+  // T-192: the model's school and university are one row, "School and university"
+  let rows: Row[] | undefined;
+  if (purposes) {
+    const byName = new Map<string, Row>();
+    for (const p of purposes) {
+      const name = shownName(p.name), outward = periodCounts(p.outward), returning = periodCounts(p.returning);
+      const r = byName.get(name);
+      if (!r) byName.set(name, { name, outward, returning, total: 0 });
+      else outward.forEach((v, q) => { r.outward[q] += v; r.returning[q] += returning[q]; });
+    }
+    rows = [...byName.values()];
+    for (const r of rows) r.total = [...r.outward, ...r.returning].reduce((a, b) => a + b, 0);
+  }
   const all = rows?.reduce((a,p) => a+p.total,0) ?? 0;
+  /** what a purpose covers (T-253: these were notes under the chart) */
+  const coverage = (name: string): string | undefined =>
+    /^(school|university)/i.test(name) ? "Matched public schools and degree-granting colleges across the metro area. Private schools and exclusively online or nondegree students are not included. Homes, campus locations and typical-day attendance are estimated."
+    : /^airport/i.test(name) ? "Air passengers to and from the metro area's commercial airports, not connecting passengers or airport staff. For an arriving passenger, the trip from the airport counts as the return. Homes and hotels at the other end are estimated."
+    : /^medical/i.test(name) ? "Patients and visitors at hospitals, clinics, doctors and dentists mapped in OpenStreetMap. Each place's share of visits is estimated from its size."
+    : undefined;
   const school = purposes?.some(p => /^school/i.test(p.name));
   const university = purposes?.some(p => /^university/i.test(p.name));
-  const chart = (values: number[], label: string, maximum: number, colour: string) => (
-    <div class="purpose-chart-row">
-      <span class="muted small">{label}</span>
-      <div class="purpose-bars">
-        {values.map((v,q) => <div class="purpose-bar-slot" title={`${LABELS[q]}: ${count(v)} trips (${count(v/HOURS[q])}/hour); ${values.reduce((a,b)=>a+b,0)>0 ? Math.round(v/values.reduce((a,b)=>a+b,0)*100) : 0}% of this direction`}>
-          <i style={{background: colour, height: `${maximum > 0 ? 100*(v/HOURS[q])/maximum : 0}%`}} />
-        </div>)}
-      </div>
-    </div>
-  );
+  // T-142: a city without an airport (Springfield) still lists the purpose, at zero
+  const airport = purposes?.some(p => /^airport/i.test(p.name));
+  const medical = purposes?.some(p => /^medical/i.test(p.name));
+  const missing = [!school && "school attendance", !university && "university attendance", !airport && "airport passengers", !medical && "medical visits"].filter((s): s is string => !!s);
+  const missingText = missing.length ? `${missing.length > 1 ? `${missing.slice(0, -1).join(", ")} and ${missing[missing.length - 1]}` : missing[0]} ${missing.length > 1 ? "are" : "is"} not modelled here.` : "";
+  const unit = railOnly ? "train trip legs" : "trip legs";
   return <>
-    <div class="h">Trip purposes</div>
+    {/* T-253: what each purpose covers, and what is not modelled, are hovers rather than notes */}
+    <div class="h"><span data-tip={[missingText && missingText[0].toUpperCase() + missingText.slice(1), (rows?.length ?? 0) > 1 && "Everyday timing and travel patterns are initial estimates."].filter(Boolean).join(" ") || undefined}>Trip purposes</span></div>
     <div class="purpose-scope">
       <button type="button" aria-pressed={!railOnly} class={!railOnly ? "on" : ""} onClick={() => setRailOnly(false)}>All modes</button>
       <button type="button" aria-pressed={railOnly} class={railOnly ? "on" : ""} onClick={() => setRailOnly(true)}>Train only</button>
     </div>
     {!rows ? <p class="muted">Working it out.</p> : <>
-      <p class="muted small">{count(all)} {railOnly ? "train" : "local"} trip legs a day. Bars show departures per hour.</p>
-      <PurposePie rows={rows} total={all} />
-      {rows.map(p => {
-        const max = Math.max(...p.outward.map((v,q) => v/HOURS[q]), ...p.returning.map((v,q) => v/HOURS[q]));
-        return <div class="purpose-item" key={p.name}>
-          <div class="purpose-heading"><span><i class="sw" style={{background: purposeColour(p.name)}} /> {p.name}</span><span>{count(p.total)} · {all>0 ? Math.round(100*p.total/all) : 0}%</span></div>
-          {chart(p.outward,"To destination",max,purposeColour(p.name))}
-          {chart(p.returning,"Return home",max,purposeColour(p.name))}
-          <div class="purpose-axis"><span />{LABELS.map(l => <span>{l}</span>)}</div>
-        </div>;
-      })}
-      {school && <p class="muted small">School covers matched public-school sites across the New York metro. Private-school attendance is not included. Home locations and typical school-day attendance are estimated.</p>}
-      {university && <p class="muted small">University covers matched degree-granting colleges across the New York metro. Exclusively online and nondegree undergraduate students are excluded. Campus locations, adult homes and typical-day attendance are approximate.</p>}
-      <p class="muted small">{!university && "University attendance, "}{!school && "School attendance, "}{school ? "Airport" : "airport"} passengers and medical visits are not modelled yet. {rows.length>1 && "Everyday timing and travel patterns are initial estimates."}</p>
+      <p class="muted small" data-tip="Bars above each line are departures an hour toward the destination, bars below it departures home">{count(all)} {railOnly ? "train" : "local"} trip legs a day</p>
+      <PurposePie rows={rows} total={all} unit={unit} />
+      {rows.map(p => <div class="purpose-item" key={p.name}>
+        <div class="purpose-heading"><span data-tip={coverage(p.name)}><i class="sw" style={{background: purposeColour(p.name)}} /> {p.name}</span><span>{count(p.total)} · {all>0 ? Math.round(100*p.total/all) : 0}%</span></div>
+        <Timing row={p} colour={purposeColour(p.name)} unit={unit} />
+      </div>)}
     </>}
   </>;
 }

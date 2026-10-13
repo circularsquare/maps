@@ -61,5 +61,5 @@ for (const old of [true, false, false, true]) {
   if(during.alignment.max>1 || checks.some(c=>c.max>1) || !hidden || errors.length) throw Error('Browser check failed');
   await context.close();
 }
-await writeFile('trainworld/notes/t074-check/results.json',JSON.stringify(results,null,2));
+await writeFile('artifacts/trainworld/notes-outputs/t074-check/results.json',JSON.stringify(results,null,2));
 await browser.close();

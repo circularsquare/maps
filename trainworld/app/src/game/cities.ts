@@ -10,7 +10,11 @@ import registryJson from "./registry.json";
 import { makeFrame, type Frame, type FrameSpec } from "./frame";
 
 export type CityId = string;
-export interface City { id: CityId; name: string; origin: { lon: number; lat: number }; center: [number, number]; zoom: number; market: number }
+/** A zone of the world (T-276, docs/zones.md): a city zone, or a non-city zone (`kind` "zone");
+ * `localTrips`: its local trip legs a day with no rail (pipeline/zones.py), for the far-zoomed
+ * bubble of a zone not opened. */
+/** `market`: the city's place in the regional market, or -1 for one outside it (Toronto, T-277). */
+export interface City { id: CityId; name: string; kind?: "city" | "zone"; origin: { lon: number; lat: number }; center: [number, number]; zoom: number; market: number; localTrips?: number }
 interface Registry {
   world: string;
   frame: FrameSpec;

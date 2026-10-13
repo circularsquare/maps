@@ -25,10 +25,10 @@ export function BlueprintControls() {
     <div class="blueprint-controls">
       <div class="blueprint-head">
         <span class="b">Blueprint</span>
-        <b class="num" data-total={total} title="Total construction cost">{money(total)}</b>
+        <b class="num" data-total={total} data-tip="Total construction cost">{money(total)}</b>
         <div class="group">
-          <button class="btn icon" title="Undo (Ctrl+Z)" disabled={!w?.canUndo} onClick={() => void undo()}><Icon.undo /></button>
-          <button class="btn icon" title="Redo (Ctrl+Y)" disabled={!w?.canRedo} onClick={() => void redo()}><Icon.redo /></button>
+          <button class="btn icon" data-tip="Undo (Ctrl+Z)" aria-label="Undo" disabled={!w?.canUndo} onClick={() => void undo()}><Icon.undo /></button>
+          <button class="btn icon" data-tip="Redo (Ctrl+Y)" aria-label="Redo" disabled={!w?.canRedo} onClick={() => void redo()}><Icon.redo /></button>
         </div>
       </div>
       <button class="btn text blueprint-construct" disabled={total <= 0} onClick={construct}>Construct blueprints</button>
@@ -56,7 +56,7 @@ export function BlueprintBreakdown() {
                         <span>{r.kind === 5 ? "New cars" : `${LEVEL_NAME[r.level]} (${levelLabel(r.level)})`}</span>
                         <span class="small muted">{description(r)}</span>
                       </span>
-                      <span class="val" title={`$${Math.round(r.cost).toLocaleString()}`}>{money(r.cost)}</span>
+                      <span class="val" data-tip={`$${Math.round(r.cost).toLocaleString()}`}>{money(r.cost)}</span>
                     </li>
                   ))}
                 </ul>

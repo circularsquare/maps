@@ -93,6 +93,6 @@ try {
   const gl = await page.evaluate(() => window.tw.renderer.gl.getError());
   const result = { fixture, nyc: { probe: nyc.probe, cells: nyc.cells, starts: nyc.r.starts, ends: nyc.r.ends, matched: nyc.r.matched }, phl: { probe: phl.probe, cells: phl.cells, starts: phl.r.starts, ends: phl.r.ends, matched: phl.r.matched }, station, errors, missing, gl };
   console.log(JSON.stringify(result));
-  await writeFile('trainworld/notes/T-118-browser.json', JSON.stringify(result, null, 2));
+  await writeFile('artifacts/trainworld/notes-outputs/T-118-browser.json', JSON.stringify(result, null, 2));
   if (errors.filter(e => !/404/.test(e)).length || gl) throw Error(JSON.stringify({ errors, gl }));
 } finally { await ctx.close(); }

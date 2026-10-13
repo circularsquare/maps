@@ -29,5 +29,5 @@ try{
  await page.evaluate(()=>{const tw=window.tw;document.querySelector('#debug').style.display='none';tw.display.value={...tw.display.value,trains:false,commuters:false,stationNames:false};tw.map.jumpTo({center:[-73.989,40.750],zoom:15});});
  await page.waitForTimeout(200);await page.screenshot({path:'artifacts/trainworld/T-094-stations.png'});
  if(errors.length||result.webglError)throw Error(JSON.stringify({errors,result}));
- await writeFile('trainworld/notes/T-094-browser.json',JSON.stringify({result,errors},null,2));console.log(JSON.stringify({result,errors}));
+ await writeFile('artifacts/trainworld/notes-outputs/T-094-browser.json',JSON.stringify({result,errors},null,2));console.log(JSON.stringify({result,errors}));
 }finally{await browser.close();}

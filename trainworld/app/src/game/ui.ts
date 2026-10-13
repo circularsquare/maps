@@ -2,10 +2,15 @@
 // none of it is in the save. Settings and theme are remembered per browser (localStorage), which
 // may be unavailable (private window), so every read and write is guarded.
 
-import { effect, signal } from "@preact/signals";
+import { computed, effect, signal } from "@preact/signals";
+import { currentDay, type DayKind } from "./days";
+import type { PurposeFilter } from "./purposes";
 import type { Level, Selection } from "./types";
 
-export type Tab = "build" | "lines" | "stations" | "money" | "city" | "settings";
+export type Tab = "build" | "lines" | "stations" | "money" | "settings";
+/** Tabs a remembered choice can name: the City tab is gone (T-220), so a browser that last had it
+ * open starts on Lines. */
+const TABS: Tab[] = ["build", "lines", "stations", "money", "settings"];
 export type Theme = "pink" | "blue" | "green";
 export const THEMES: Theme[] = ["pink", "blue", "green"];
 /** names used before 2026-10-09, so a remembered choice survives the rename */
@@ -20,19 +25,32 @@ export interface DisplaySettings {
   basemapLabels: boolean;
   /** explicit analytical view: translucent circles behind platforms, area by daily entries/exits */
   stationRiders: boolean;
-  /** trains filled by how full they are */
+  /** station complexes (T-146): the station inspector and the demand circles take each complex
+   * (stations whose platforms nearly touch, game/complexes.ts) as one */
+  complexView: boolean;
+  /** trains filled by how full they are: each train's own load from the boarding account (T-164) */
   trainLoad: boolean;
-  /** Period average or its busiest hour; also selects the train inspector's gauge. */
+  /** Period average or its busiest hour, for a line the boarding account has no riders for yet.
+   * No longer a setting (T-164): each train has its own load. */
   trainLoadBasis: "average" | "busiest";
+  /** riders waiting on platforms (T-164), drawn as each platform filling up (T-219), or not
+   * ("off"). "dots" is the T-164 option T-219 dropped, kept in older browsers' settings: on. */
+  platformCrowds: "patch" | "dots" | "off";
   /** the commuter dot map, coloured by how people get to work */
   commuters: boolean;
   /** the dot map's end of the commute: where commuters live, or where they work */
   commuterEnd: "home" | "work";
   /** commuter bubbles' size, as a multiple of their width (T-099; 1 = BUBBLE_DENSITY's sizes) */
   bubbleSize: number;
-  /** longer trips (non-commute, T-118) drawn as bubbles for a selected bubble set or station */
-  intercity: boolean;
+  /** T-247: the size of the page's panels and text, 0.8-1.2 (UI_SCALES); the map itself is not scaled */
+  uiScale: number;
+  /** T-266: the day the demand views show: the clock's own (`today`), or always a weekday or a
+   * weekend day. The trains and platforms follow the clock whatever this says. */
+  dayShown: "today" | "weekday" | "weekend";
 }
+
+/** T-247: the UI scale setting's steps */
+export const UI_SCALES = [0.8, 0.85, 0.9, 0.95, 1, 1.05, 1.1, 1.15, 1.2];
 
 const DEFAULT_DISPLAY: DisplaySettings = {
   trackColour: "traffic",
@@ -41,12 +59,16 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   capacity: true,
   basemapLabels: true,
   stationRiders: false,
+  // T-192 (Anita): one circle per station complex by default
+  complexView: true,
   trainLoad: true,
   trainLoadBasis: "busiest",
+  platformCrowds: "patch",
   commuters: false,
   commuterEnd: "home",
   bubbleSize: 1,
-  intercity: true,
+  uiScale: 1,
+  dayShown: "today",
 };
 
 const STORE = "trainworld-ui";
@@ -57,7 +79,12 @@ export interface DockLayout {
   paneH: number | null;
 }
 
-function load(): Partial<{ tab: Tab; theme: Theme; display: Partial<DisplaySettings>; dock: DockLayout }> {
+/** The stored settings' version: 2 since complex view became the default (T-192). Settings stored
+ * before it had saved the old default with everything else, so their complex view is dropped once
+ * and the new default applies. */
+const VERSION = 2;
+
+function load(): Partial<{ tab: Tab; theme: Theme; display: Partial<DisplaySettings>; dock: DockLayout; v: number }> {
   try {
     return JSON.parse(localStorage.getItem(STORE) || "{}");
   } catch {
@@ -66,13 +93,15 @@ function load(): Partial<{ tab: Tab; theme: Theme; display: Partial<DisplaySetti
 }
 const saved = load();
 // Migrate the former Line + separate width checkbox into the four-way display choice.
-const oldDisplay = saved.display as (Partial<DisplaySettings> & { lineLoad?: boolean }) | undefined;
-const { lineLoad: legacyLineLoad, ...migratedDisplay } = oldDisplay ?? {};
+const oldDisplay = saved.display as (Partial<DisplaySettings> & { lineLoad?: boolean; intercity?: boolean }) | undefined;
+// `intercity` (hide the longer-trip bubbles) is no longer a setting (T-222): dropped from storage
+const { lineLoad: legacyLineLoad, intercity: _intercity, ...migratedDisplay } = oldDisplay ?? {};
+if ((saved.v ?? 1) < 2) delete migratedDisplay.complexView;
 const trackColour = oldDisplay?.trackColour === "line" && legacyLineLoad !== undefined
   ? legacyLineLoad === false ? "line" : "traffic"
   : oldDisplay?.trackColour ?? DEFAULT_DISPLAY.trackColour;
 
-export const tab = signal<Tab>(saved.tab ?? "lines");
+export const tab = signal<Tab>(saved.tab && TABS.includes(saved.tab) ? saved.tab : "lines");
 export const selection = signal<Selection>(null);
 export const display = signal<DisplaySettings>({ ...DEFAULT_DISPLAY, ...migratedDisplay, trackColour });
 export const dockLayout = signal<DockLayout>({ dockW: saved.dock?.dockW ?? null, paneH: saved.dock?.paneH ?? null });
@@ -80,21 +109,34 @@ const savedTheme = OLD_THEME[saved.theme as string] ?? saved.theme;
 export const theme = signal<Theme>(THEMES.includes(savedTheme as Theme) ? (savedTheme as Theme) : "pink");
 
 /** What a click on the map does: select (pick), draw track, place a station, add stops to a line,
- * remove what is clicked (T-096). */
-export type Tool = "select" | "track" | "station" | "line" | "delete";
+ * remove what is clicked (T-096), pick a trip's two ends (T-195). */
+export type Tool = "select" | "track" | "station" | "line" | "delete" | "trip";
 export const tool = signal<Tool>("select");
 /** A question waiting in a centered modal (T-096/T-113: removing something
  * constructed): `run` on the yes button, nothing on the no button or Esc. */
 export const ask = signal<{ text: string; yes: string; no: string; run: () => void } | null>(null);
 /** The selected line whose stops the map tool is editing. */
 export const lineDraft = signal<{ line: number | null; stops: number[] }>({ line: null, stops: [] });
+/** Stop editing is on (T-233): the line tool with a line to edit. The map then hides the demand
+ * views, dims the other lines and puts a toggle marker on every station (map/stopMarkers.ts). */
+export const stopEditing = computed(() => tool.value === "line" && lineDraft.value.line !== null);
 /** A newly created line opens its inspector with the default name selected for replacement. */
 export const renameLinePrompt = signal<string | null>(null);
 export const lineSort = signal<"name" | "passengers">("name");
 /** Platform length for new stations, m. */
+/** The map's demand drawn for one trip purpose only, or all (T-158). Not remembered: a page
+ * load starts on all purposes, so nobody returns to a map that silently leaves riders out. */
+export const purposeFilter = signal<PurposeFilter>("all");
 export const buildPlatform = signal(200);
 export const buildLevel = signal<Level>(0);
-export const singleTrack = signal(false);
+/** Track the drawing tool lays: single, double, or quad (two doubles side by side, T-255). */
+export const trackCount = signal<1 | 2 | 4>(2);
+
+/** The kind of day every demand view shows (T-260, T-266): the setting, or the clock's day. */
+export const shownDay = computed<DayKind>(() => {
+  const s = display.value.dayShown;
+  return s === "weekday" ? 0 : s === "weekend" ? 1 : currentDay.value;
+});
 
 export function setDisplay<K extends keyof DisplaySettings>(k: K, v: DisplaySettings[K]) {
   display.value = { ...display.value, [k]: v };
@@ -103,8 +145,16 @@ export function setDisplay<K extends keyof DisplaySettings>(k: K, v: DisplaySett
 effect(() => {
   document.documentElement.dataset.theme = theme.value;
 });
+/** T-247: the UI scale as a CSS variable; style.css zooms the panels and sizes the map's tags by it */
+export const uiScale = computed(() => {
+  const s = Number(display.value.uiScale);
+  return Number.isFinite(s) ? Math.min(1.2, Math.max(0.8, s)) : 1;
+});
 effect(() => {
-  const s = { tab: tab.value, theme: theme.value, display: display.value, dock: dockLayout.value };
+  document.documentElement.style.setProperty("--ui", String(uiScale.value));
+});
+effect(() => {
+  const s = { tab: tab.value, theme: theme.value, display: display.value, dock: dockLayout.value, v: VERSION };
   try {
     localStorage.setItem(STORE, JSON.stringify(s));
   } catch {

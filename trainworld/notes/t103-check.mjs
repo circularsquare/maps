@@ -74,5 +74,5 @@ try {
   if(await page.evaluate(()=>window.tw.renderer.gl.getError()))throw Error('WebGL error');
  }
  if(errors.length)throw Error(errors.join('\n'));
- const result={actualCars,checks,widths,picks,errors};console.log(JSON.stringify(result));await writeFile('trainworld/notes/T-107-check.json',JSON.stringify(result,null,2));
+ const result={actualCars,checks,widths,picks,errors};console.log(JSON.stringify(result));await writeFile('artifacts/trainworld/notes-outputs/T-107-check.json',JSON.stringify(result,null,2));
 }finally{await browser.close();}

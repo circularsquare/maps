@@ -49,5 +49,5 @@ try {
   const s=await sample();if(capacity?!s.visible:s.visible)throw Error('Capacity toggle failed');
  }
  if(errors.length)throw Error(errors.join('\n'));
- const result={samples,tooltip,errors};console.log(JSON.stringify(result));await writeFile('trainworld/notes/T-102-check.json',JSON.stringify(result,null,2));
+ const result={samples,tooltip,errors};console.log(JSON.stringify(result));await writeFile('artifacts/trainworld/notes-outputs/T-102-check.json',JSON.stringify(result,null,2));
 }finally{await browser.close();}

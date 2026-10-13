@@ -40,6 +40,22 @@ class UniversitySources(unittest.TestCase):
         self.assertFalse(rows)
         self.assertEqual(excluded[0]["reason"],"invalid_enrollment_or_online_count")
 
+    def test_merger_splits_over_absorbed_campuses_by_prior_enrollment(self):
+        # T-142: 1 absorbed 2 and 3 this year; 3 lies outside the pack, 4 is unrelated
+        directory = pd.DataFrame([
+            dict(UNITID=1, INSTNM="Merged", LATITUDE=5.0, LONGITUD=5.0, ACT="A", CYACTIVE=1, NEWID=-2, DEGGRANT=1, F1SYSNAM=""),
+            dict(UNITID=2, INSTNM="Campus in", LATITUDE=6.0, LONGITUD=6.0, ACT="C", CYACTIVE=3, NEWID=1, DEGGRANT=1, F1SYSNAM=""),
+            dict(UNITID=3, INSTNM="Campus out", LATITUDE=50.0, LONGITUD=50.0, ACT="C", CYACTIVE=3, NEWID=1, DEGGRANT=1, F1SYSNAM=""),
+            dict(UNITID=4, INSTNM="Other", LATITUDE=7.0, LONGITUD=7.0, ACT="A", CYACTIVE=1, NEWID=-2, DEGGRANT=1, F1SYSNAM="")])
+        now = pd.DataFrame([dict(UNITID=1, EFDELEV=3, EFDETOT=1000, EFDEEXC=0), dict(UNITID=4, EFDELEV=3, EFDETOT=50, EFDEEXC=0)])
+        before = pd.DataFrame([dict(UNITID=i, EFDELEV=3, EFDETOT=t, EFDEEXC=o) for i, t, o in [(1, 300, 100), (2, 400, 100), (3, 500, 0), (4, 60, 0)]])
+        rows, _ = u.institutions(directory, now, box(0, 0, 10, 10), before)
+        by = {(r["unitid"], r.get("campus_unitid")): r["enrollment"] for r in rows}
+        # shares 200 : 300 : 500 of last year's eligible; the outside campus's share is not in the pack
+        self.assertEqual(by, {(1, 1): 200, (1, 2): 300, (4, None): 50})
+        rows, _ = u.institutions(directory, now, box(0, 0, 10, 10))
+        self.assertEqual({r["unitid"]: r["enrollment"] for r in rows}, {1: 1000, 4: 50})
+
     def test_adults_exclude_all_under18_and_use_full_county_fallback(self):
         rows = []
         for key, children in [("36001000002",20),("34001000002",40),("09-000002",60)]:

@@ -132,5 +132,5 @@ pub fn synth_city(seed: u64) -> City {
     let lsum: f64 = local.iter().sum();
     let lscale = (JOBS_TOTAL - centre_sum) / lsum;
     let jobs: Vec<f32> = jc.iter().zip(&local).map(|(&c, &l)| (c + l * lscale) as f32).collect();
-    City { name: "synthetic-ny".into(), h3, x: xs, y: ys, pop, jobs, gravity: None }
+    City { name: "synthetic-ny".into(), h3, x: xs, y: ys, pop, jobs, region: vec![], gravity: None }
 }

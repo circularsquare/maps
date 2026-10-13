@@ -15,6 +15,11 @@ export function money(n: number): string {
   return s + "$" + Math.round(a / 1000) + "k";
 }
 
+/** To the dollar, for the cash (T-284: it moves as fares land): 5834215320 -> "$5,834,215,320". */
+export function moneyExact(n: number): string {
+  return (n < 0 ? "−" : "") + "$" + Math.round(Math.abs(n)).toLocaleString("en-US");
+}
+
 /** Three significant figures, for the drawing tag (T-085): "$25.5M", "$133M", "$1.33B". */
 export function moneyShort(n: number): string {
   const a = Math.abs(n), s = n < 0 ? "−" : "";

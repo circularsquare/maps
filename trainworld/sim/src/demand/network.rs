@@ -24,6 +24,10 @@ pub struct Network {
     pub line_headway_min: Vec<[f32; PERIODS]>,
     pub line_seats: Vec<f32>,
     pub line_crush: Vec<f32>,
+    /// The station complex of each station (T-161): stations with the same number are one complex
+    /// (game/complexes.ts, including the player's links, T-197), and a rider may change between any
+    /// two of them on foot whatever the distance (`kernel::build_graph`). Empty: no complexes.
+    pub st_group: Vec<u32>,
 }
 
 #[derive(Clone, Copy)]
@@ -123,6 +127,7 @@ pub fn synth_network() -> Network {
         line_headway_min: vec![],
         line_seats: vec![],
         line_crush: vec![],
+        st_group: vec![],
     };
     for &(name, kind, pts) in LINES {
         let mut stops: Vec<u32> = vec![];

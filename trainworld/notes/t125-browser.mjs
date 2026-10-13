@@ -183,12 +183,12 @@ try {
   const gl = await page.evaluate(() => window.tw.renderer.gl.getError());
   check('no page errors or WebGL errors', errors.length === 0 && gl === 0, { errors, gl });
   result.errors = errors;
-  await writeFile('trainworld/notes/T-125-browser.json', JSON.stringify(result, null, 1));
+  await writeFile('artifacts/trainworld/notes-outputs/T-125-browser.json', JSON.stringify(result, null, 1));
   console.log(JSON.stringify(result.checks.map(c => [c.ok, c.name])));
   console.log(JSON.stringify({ longLine: result.longLine, legacy: { stations: legacy.stations, cash: legacy.cash, lines: legacy.lines, rail: legacy.rail }, shared: { stations: shared.stations, rail: shared.rail } }));
 } catch (err) {
   result.failed = String(err);
-  await writeFile('trainworld/notes/T-125-browser.json', JSON.stringify(result, null, 1));
+  await writeFile('artifacts/trainworld/notes-outputs/T-125-browser.json', JSON.stringify(result, null, 1));
   console.error(String(err));
   process.exitCode = 1;
 } finally { await browser.close(); }

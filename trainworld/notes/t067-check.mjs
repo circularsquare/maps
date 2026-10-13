@@ -24,5 +24,5 @@ try {
  await page.evaluate(()=>window.tw.client.edit({op:'fares',base:1.5,perKm:0.1}));await page.waitForTimeout(500);
  if(await page.evaluate(()=>window.twDemand.log.length)!==count)throw Error('Unchanged fare unnecessarily solved again');
  if(errors.length)throw Error(errors.join('\n'));
- const result={results,errors};console.log(JSON.stringify(result));await writeFile('trainworld/notes/T-067-check.json',JSON.stringify(result,null,2));
+ const result={results,errors};console.log(JSON.stringify(result));await writeFile('artifacts/trainworld/notes-outputs/T-067-check.json',JSON.stringify(result,null,2));
 }finally{await browser.close();}

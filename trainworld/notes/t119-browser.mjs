@@ -2,7 +2,7 @@
 // one Philadelphia line added. Needs `python serve.py` at the maps root (localhost:8800/trainworld/)
 // and playwright. Run from the maps root:
 //   LABEL=after WORKERS=3 node trainworld/notes/t119-browser.mjs
-// Isolated browser profile; writes trainworld/notes/T-119-browser-<LABEL>.json.
+// Isolated browser profile; writes artifacts/trainworld/notes-outputs/T-119-browser-<LABEL>.json.
 import { readFile, writeFile, mkdtemp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -82,6 +82,6 @@ try {
   const start = await page.evaluate(() => JSON.parse(JSON.stringify(window.twDemand.start)));
   const result = { label, workers: combined.workers, start, legacy, combined, summary, errors };
   console.log(JSON.stringify({ label, legacy: { ...legacy, bubbleTimeline: undefined, periodMs: undefined }, combined: { ...combined, bubbleTimeline: undefined, periodMs: undefined } }, null, 1));
-  await writeFile(`trainworld/notes/T-119-browser-${label}.json`, JSON.stringify(result, null, 1));
+  await writeFile(`artifacts/trainworld/notes-outputs/T-119-browser-${label}.json`, JSON.stringify(result, null, 1));
   if (errors.length) console.log('page errors', errors);
 } finally { await ctx.close(); }

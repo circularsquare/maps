@@ -20,10 +20,18 @@ pub mod intercity;
 pub mod everyday;
 pub mod bench;
 pub mod clock;
+/// T-260: kinds of day (weekday, weekend), worked out from the weekday's solve.
+pub mod days;
 pub mod kernel;
 pub mod network;
 pub mod pack;
+/// T-275: routed walks (around water, over bridges) and drives (OSM roads) from the pack.
+pub mod routes;
 pub mod synth;
+/// T-195: the trip explorer's query (one trip's route, costs and mode chances).
+pub mod trip;
+/// T-173: the everyday warm-up a demand worker runs at startup.
+pub mod warm;
 
 #[cfg(target_arch = "wasm32")]
 pub mod wasm;

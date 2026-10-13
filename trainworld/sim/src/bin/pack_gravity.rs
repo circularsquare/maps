@@ -3,7 +3,12 @@
 //! zone arrays and `gravity` header block added (notes/T-004.md). pipeline/build_city.py runs it.
 //!
 //!   cargo run --release --features demand --bin pack_gravity -- IN.json OUT.json
-//!       [--zone-m 2000] [--decay-km K] [--decay-pow A] [--tol 1e-4]   (defaults: kernel::Params)
+//!       [--zone-m 2000] [--decay-km K] [--decay-pow A] [--border-factor F] [--tol 1e-4]
+//!       (defaults: kernel::Params; the border factor's is 1, no effect)
+//!
+//! IN may be a finished pack (T-162: re-solving with regions); its old gravity is replaced.
+//! Zones are split by the cells' `region` array when the pack has one, and the decay between
+//! zones of different regions is multiplied by the border factor.
 //!
 //! One implementation of the gravity: the game's loader rebuilds zone trips from these factors
 //! with the same decay table, so what the pipeline balanced is exactly what the game uses.
@@ -31,6 +36,11 @@ fn main() {
                 p.decay_pow = val().parse().unwrap();
                 i += 1;
             }
+            "--border-factor" => {
+                p.border_factor = val().parse().unwrap();
+                assert!(p.border_factor > 0.0, "--border-factor must be positive");
+                i += 1;
+            }
             "--tol" => {
                 tol = val().parse().unwrap();
                 i += 1;
@@ -50,10 +60,24 @@ fn main() {
     if g.max_err > tol {
         eprintln!("WARNING: Furness stopped at max row error {:.2e} (> {tol:.0e}) after {} iterations", g.max_err, g.iters);
     }
+    let nreg = z.region.iter().copied().max().map_or(0, |r| r as usize + 1);
+    let squares = { let (off, _) = z.by_square(); off.windows(2).filter(|w| w[1] > w[0]).count() };
     println!(
-        "gravity: {} zones ({} x {} grid of {} m), decay d^-{} exp(-d/{} km); Furness {} iterations, max row error {:.1e}; mean trip {:.2} km; {:.0} trips; {:.0} ms",
-        z.n, z.w, z.h, z.zone_m, p.decay_pow, p.decay_km, g.iters, g.max_err, g.mean_km, g.total, ms
+        "gravity: {} zones ({} squares cut by a region border add {}; {} regions) on a {} x {} grid of {} m, decay d^-{} exp(-d/{} km) x {} across regions; Furness {} iterations, max row error {:.1e}; mean trip {:.2} km; {:.0} trips; {:.0} ms",
+        z.n, squares, z.n - squares, nreg, z.w, z.h, z.zone_m, p.decay_pow, p.decay_km, p.border_factor, g.iters, g.max_err, g.mean_km, g.total, ms
     );
+    if nreg > 1 {
+        // the share of trips that cross a region border
+        let mut cross = 0.0f64;
+        for i in 0..z.n {
+            for j in 0..z.n {
+                if z.region[i] != z.region[j] && g.row[i] > 0.0 && g.col[j] > 0.0 {
+                    cross += g.t(&z, i, j);
+                }
+            }
+        }
+        println!("  trips between regions: {:.0} ({:.2}%)", cross, 100.0 * cross / g.total);
+    }
     let pg = kernel::to_pack_gravity(&z, &g, &p);
     let (h2, b2) = pack::with_gravity(&header, &bin, &pg).unwrap_or_else(|e| panic!("{e}"));
     // read back what is about to be written before replacing anything
@@ -67,5 +91,5 @@ fn main() {
     std::fs::rename(format!("{bin_path}.part"), &bin_path).unwrap();
     std::fs::write(format!("{json_path}.part"), &h2).unwrap();
     std::fs::rename(format!("{json_path}.part"), &json_path).unwrap();
-    println!("wrote {json_path} and .bin ({:.2} MB, {} bytes of zone arrays added)", b2.len() as f64 / 1e6, b2.len() - bin.len());
+    println!("wrote {json_path} and .bin ({:.2} MB; the input's .bin was {:.2} MB)", b2.len() as f64 / 1e6, bin.len() as f64 / 1e6);
 }

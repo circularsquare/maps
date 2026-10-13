@@ -57,6 +57,22 @@
       {
         "name": "Springfield",
         "regionName": "Springfield region"
+      },
+      {
+        "name": "Worcester County",
+        "regionName": "Worcester County"
+      },
+      {
+        "name": "Windham County",
+        "regionName": "Windham County"
+      },
+      {
+        "name": "New London County",
+        "regionName": "New London County"
+      },
+      {
+        "name": "Litchfield County",
+        "regionName": "Litchfield County"
       }
     ]
   },
@@ -73,7 +89,8 @@
         40.758
       ],
       "zoom": 11.2,
-      "market": 0
+      "market": 0,
+      "localTrips": 47527489.0
     },
     {
       "id": "phl",
@@ -87,7 +104,8 @@
         39.9526
       ],
       "zoom": 11.2,
-      "market": 1
+      "market": 1,
+      "localTrips": 13188835.0
     },
     {
       "id": "bos",
@@ -101,7 +119,8 @@
         42.3601
       ],
       "zoom": 11.2,
-      "market": 3
+      "market": 3,
+      "localTrips": 11037810.0
     },
     {
       "id": "wdc",
@@ -115,7 +134,8 @@
         38.8977
       ],
       "zoom": 11.2,
-      "market": 4
+      "market": 4,
+      "localTrips": 13490131.0
     },
     {
       "id": "bal",
@@ -129,7 +149,8 @@
         39.2904
       ],
       "zoom": 11.2,
-      "market": 5
+      "market": 5,
+      "localTrips": 5781758.0
     },
     {
       "id": "pvd",
@@ -143,7 +164,8 @@
         41.824
       ],
       "zoom": 11.2,
-      "market": 6
+      "market": 6,
+      "localTrips": 3319988.0
     },
     {
       "id": "nhv",
@@ -157,7 +179,8 @@
         41.3083
       ],
       "zoom": 11.2,
-      "market": 7
+      "market": 7,
+      "localTrips": 1617179.0
     },
     {
       "id": "hfd",
@@ -171,7 +194,8 @@
         41.7637
       ],
       "zoom": 11.2,
-      "market": 8
+      "market": 8,
+      "localTrips": 2458534.0
     },
     {
       "id": "spf",
@@ -185,7 +209,87 @@
         42.1015
       ],
       "zoom": 11.2,
-      "market": 9
+      "market": 9,
+      "localTrips": 1431448.0
+    },
+    {
+      "id": "tor",
+      "name": "Toronto",
+      "origin": {
+        "lon": -79.3832,
+        "lat": 43.6534
+      },
+      "center": [
+        -79.3832,
+        43.6534
+      ],
+      "zoom": 11.2,
+      "market": -1,
+      "localTrips": 15463757.0
+    },
+    {
+      "id": "wor",
+      "name": "Worcester County",
+      "kind": "zone",
+      "origin": {
+        "lon": -71.8023,
+        "lat": 42.2626
+      },
+      "center": [
+        -71.8023,
+        42.2626
+      ],
+      "zoom": 10.5,
+      "market": 10,
+      "localTrips": 1539392.0
+    },
+    {
+      "id": "wnd",
+      "name": "Windham County",
+      "kind": "zone",
+      "origin": {
+        "lon": -72.2087,
+        "lat": 41.7107
+      },
+      "center": [
+        -72.2087,
+        41.7107
+      ],
+      "zoom": 10.5,
+      "market": 11,
+      "localTrips": 183990.0
+    },
+    {
+      "id": "nlc",
+      "name": "New London County",
+      "kind": "zone",
+      "origin": {
+        "lon": -72.0759,
+        "lat": 41.5243
+      },
+      "center": [
+        -72.0759,
+        41.5243
+      ],
+      "zoom": 10.5,
+      "market": 12,
+      "localTrips": 487485.0
+    },
+    {
+      "id": "lit",
+      "name": "Litchfield County",
+      "kind": "zone",
+      "origin": {
+        "lon": -73.1212,
+        "lat": 41.8007
+      },
+      "center": [
+        -73.1212,
+        41.8007
+      ],
+      "zoom": 10.5,
+      "market": 13,
+      "localTrips": 270255.0
     }
   ]
 }

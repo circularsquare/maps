@@ -6,7 +6,10 @@
 import { effect, signal } from "@preact/signals";
 import { clock, SPEEDS } from "../game/clock";
 import { HOME_CITY, setWorldFrame } from "../game/cities";
-import { income, lastSaved, moneyState } from "../game/money";
+import { holdForGameLoad } from "../game/loading";
+import { incomeByDay, lastSaved, liveMoney, setMoneyState } from "../game/money";
+import { demandByDay } from "../game/demand";
+import { accountVersion, packRiders } from "../game/boarding";
 import { lineDraft, selection, tool } from "../game/ui";
 import { say, setEditSink, world } from "../game/world";
 import type { LineInput, LineStats, StationInput, TrackEdge, TrackNode, WorldView } from "../game/types";
@@ -59,6 +62,13 @@ function letterOf(name: string): string {
   return c.toUpperCase();
 }
 
+/** Flat node pairs (the clock worker's `links`) as station id pairs (T-197). */
+function pairsOf(flat: number[]): [string, string][] {
+  const out: [string, string][] = [];
+  for (let i = 0; i + 1 < flat.length; i += 2) out.push([String(flat[i]), String(flat[i + 1])]);
+  return out;
+}
+
 /** The UI's world view from the worker's state. */
 function toWorld(s: ClockState, city: { population: number; jobs: number }): WorldView {
   const stations: StationInput[] = s.nodes
@@ -105,7 +115,7 @@ function toWorld(s: ClockState, city: { population: number; jobs: number }): Wor
   return {
     version: s.version,
     capacity: s.markers,
-    save: { version: 0, city: HOME_CITY, clock: clock.now(), cash: s.cash * 1e6, stations, lines },
+    save: { version: 0, city: HOME_CITY, clock: clock.now(), cash: s.cash * 1e6, stations, lines, links: pairsOf(s.links ?? []) },
     lineStats,
     edges,
     nodes,
@@ -154,7 +164,16 @@ export class ClockClient {
   private sawSlots = false;
   /** the renderer's hooks, set by main.ts */
   onState: (s: ClockState) => void = () => {};
-  onTrips: (epoch: number, version: number, trips: Float32Array) => void = () => {};
+  /** `board`: the boarding account's hour (T-164, game/boarding.ts), once demand has riders */
+  onTrips: (epoch: number, version: number, trips: Float32Array, board?: Float32Array, ends?: Float32Array, nexts?: Float32Array) => void = () => {};
+  /** the boarding account's last hours: ms in the worker for the hour, lines worked out again
+   * before it and the ms that took in steps (all, longest), bytes; newest last, at most 40
+   * (`?debug=1`, notes/T-164.md) */
+  boardLog: { ms: number; redone: number; bytes: number; prepMs: number; prepMax: number }[] = [];
+  /** the last edits' time in the worker by step, and the main thread's for the state they sent
+   * (T-229, `?debug=1`); newest last, at most 40 */
+  editLog: { worker?: Record<string, number>; stateMs?: number }[] = [];
+  private lastStateMs = 0;
 
   constructor(cityId = HOME_CITY) {
     this.worker = new Worker(new URL("./clock.worker.ts", import.meta.url), { type: "module" });
@@ -167,20 +186,29 @@ export class ClockClient {
     this.post({ kind: "init", city: cityId, pack: new URL("packs/" + cityId, document.baseURI).href, fresh, slot });
     setEditSink((op) => this.edit(op));
     current = this;
-    // The worker settles money by the game hour from the clock (T-028): tell it each time the
+    // The worker settles money from the clock (T-028, T-284): tell it each time the
     // clock is set, paused, resumed or sped up.
     const sendClock = () => this.post({ kind: "clock", t: clock.now(), rate: clock.ticking ? SPEEDS[clock.speed.peek()] : 0, at: Date.now() });
     clock.onChange(sendClock);
     sendClock();
     // Fare income from the riders (game/money.ts), whenever riders, fares or lines change.
+    // One table per kind of day (T-260): the worker settles each hour by its own day's.
     let lastIncome = "";
     effect(() => {
-      const per = income.value.perHour;
-      const key = per.join(",");
+      const per = incomeByDay.value.map((i) => i.perHour);
+      const key = JSON.stringify(per);
       if (key !== lastIncome) {
         lastIncome = key;
         this.post({ kind: "income", perHour: per });
       }
+    });
+    // Demand's riders for the boarding account (T-164): each new result, every kind of day's
+    // (T-260); the trains and platforms of each hour read their own day's.
+    effect(() => {
+      demandByDay.value.forEach((d, day) => {
+        const packed = d.view ? packRiders(d.view) : null;
+        if (packed) this.post({ kind: "riders", packed, day }, [packed.buffer]);
+      });
     });
     // Hidden or closing: write the autosave now (T-029).
     document.addEventListener("visibilitychange", () => document.visibilityState === "hidden" && this.post({ kind: "flush" }));
@@ -203,13 +231,19 @@ export class ClockClient {
       case "error":
         console.warn("clock worker:", msg.message);
         break;
-      case "state":
-        moneyState.value = msg.state.money;
+      case "state": {
+        const t0 = performance.now();
+        setMoneyState(msg.state.money);
         world.value = toWorld(msg.state, this.city);
         this.onState(msg.state);
+        this.lastStateMs = performance.now() - t0;
         break;
+      }
       case "money":
-        moneyState.value = msg.money;
+        setMoneyState(msg.money);
+        break;
+      case "cash": // T-284: fares landing, running costs draining
+        liveMoney.value = { cash: msg.cash, today: msg.today };
         break;
       case "loaded":
         // the game now in the worker may be in the other frame (T-125); first, before anything reads positions
@@ -218,6 +252,8 @@ export class ClockClient {
           say(msg.error, true);
           if (msg.from === "file") break;
         }
+        // a different game: its clock waits for its demand (T-149); the snapshot follows
+        holdForGameLoad();
         // Ids are renumbered by a load: nothing old may stay selected or half drawn.
         selection.value = null;
         tool.value = "select";
@@ -256,11 +292,18 @@ export class ClockClient {
         break;
       }
       case "trips":
-        this.onTrips(msg.epoch, msg.version, msg.trips);
+        if (msg.board) {
+          this.boardLog.push({ ms: msg.boardMs ?? 0, redone: msg.redone ?? 0, bytes: msg.board.byteLength, prepMs: msg.prepMs ?? 0, prepMax: msg.prepMax ?? 0 });
+          if (this.boardLog.length > 40) this.boardLog.shift();
+          accountVersion.value++;
+        }
+        this.onTrips(msg.epoch, msg.version, msg.trips, msg.board, msg.ends, msg.nexts);
         break;
       case "edited": {
         const f = this.pending.get(msg.seq);
         this.pending.delete(msg.seq);
+        this.editLog.push({ worker: msg.ms, stateMs: this.lastStateMs });
+        if (this.editLog.length > 40) this.editLog.shift();
         f?.({ ok: msg.ok, issues: msg.issues, charge: msg.charge, line: msg.line });
         break;
       }
@@ -294,7 +337,7 @@ export class ClockClient {
   }
 
   /** Ask what a route would cost. One request in flight; newer ones replace a waiting one. */
-  preview(req: { from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean }, cb: (a: PreviewAnswer) => void) {
+  preview(req: { from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean }, cb: (a: PreviewAnswer) => void) {
     this.ask((seq) => ({ kind: "preview", seq, ...req }), cb);
   }
 

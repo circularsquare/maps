@@ -12,9 +12,11 @@ try {
   await page.addStyleTag({content:'#debug-root {display:none}'});
   check('nine local populations solve',await page.evaluate(()=>twDemand.cities().size===9));
   check('ten-market corridor summary',await page.evaluate(()=>twDemand.intercity().corridors.length===55),await page.evaluate(()=>({trips:twDemand.intercity().tripsPerDay,corridors:twDemand.intercity().corridors.length}))); 
-  await page.getByRole('button',{name:'City',exact:true}).click();
   for(const [id,name,center,market] of [['bal','Baltimore',[-76.6122,39.2904],5],['pvd','Providence',[-71.4128,41.8240],6],['nhv','New Haven',[-72.9279,41.3083],7],['hfd','Hartford',[-72.6851,41.7637],8],['spf','Springfield',[-72.5898,42.1015],9]]) {
-    await page.getByRole('button',{name,exact:true}).click();
+    // the City tab is gone (T-220): search goes to a city
+    await page.getByRole('button',{name:'Search stations, lines and places'}).click();
+    await page.getByRole('combobox',{name:'Search stations, lines and places'}).fill(name);
+    await page.keyboard.press('Enter');
     await page.waitForFunction(id=>twDemand.activeCity.value===id,id);
     await page.waitForFunction(()=>!tw.map.isMoving());
     await page.getByRole('group',{name:'Demand on the map'}).getByRole('button',{name:'Homes',exact:true}).click();
@@ -60,5 +62,5 @@ try {
   await page.waitForFunction(()=>tw.world.value.save.lines.length===109&&twDemand.view()?.lines.size===109&&twDemand.view()?.round===3,undefined,{timeout:360000});
   check('existing NYC save remains playable',await page.evaluate(()=>tw.frame().kind==='equirect'&&twDemand.cities().size===9&&twDemand.cities().get('nyc').railTripsPerDay>0));
   check('no browser exceptions',errors.length===0,errors);
-} finally {await writeFile('trainworld/notes/T-137-browser.json',JSON.stringify(result,null,2));await browser.close();}
+} finally {await writeFile('artifacts/trainworld/notes-outputs/T-137-browser.json',JSON.stringify(result,null,2));await browser.close();}
 console.log(JSON.stringify(result,null,2));

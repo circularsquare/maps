@@ -3,8 +3,12 @@
 
 import type { Level } from "./types";
 
-/** Default line colours in order: a normal saturated metro palette (SPEC 8). */
-export const LINE_PALETTE = ["#d7263d", "#1f6fd1", "#1a9a4a", "#f08a00", "#8a3fb8", "#f2c200", "#8f5a2a", "#0e9a9a"];
+/** Default line colours in order: a normal saturated metro palette (SPEC 8). The last five (gray,
+ * yellow-green, pink, magenta, light blue; Anita, T-223) keep every pair at least 19 apart in
+ * CIEDE2000 (the first eight's closest pair, orange and yellow, is 20); yellow-green, pink and
+ * light blue are light enough that their chips take dark letters (`inkOn`). */
+export const LINE_PALETTE = ["#d7263d", "#1f6fd1", "#1a9a4a", "#f08a00", "#8a3fb8", "#f2c200", "#8f5a2a", "#0e9a9a",
+  "#74797e", "#9ccb19", "#f59dc6", "#e62aa6", "#5cc3f0"];
 
 /** Track colour by height (display setting): warm above ground, grey at ground, cool below. */
 export const LEVEL_COLOURS: Record<Level, string> = {
@@ -19,6 +23,11 @@ export const LEVEL_COLOURS: Record<Level, string> = {
 
 /** Station rings and names on the map. */
 export const NET_INK = "#2b2b2b";
+
+/** A platform's edges inside its station box (T-236, Anita: "show the actual platforms as like
+ * little blue lines"), on the map and in the complex map. A periwinkle: CIEDE2000 15 from the line
+ * blue and the light blue (the palette's blues leave no room for more), 38 from white. */
+export const PLATFORM_BLUE = "#8085f0";
 
 /**
  * How commuters travel (T-097, Anita: Subway Builder's scheme, red car, blue train, green walk):

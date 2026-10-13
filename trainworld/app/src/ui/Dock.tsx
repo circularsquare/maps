@@ -4,20 +4,21 @@
 // area and the inspector up or down (T-085), both remembered per browser (game/ui.ts).
 
 import type { JSX } from "preact";
-import { useEffect, useRef } from "preact/hooks";
-import { dockLayout, tab, type Tab } from "../game/ui";
+import { useEffect, useLayoutEffect, useRef } from "preact/hooks";
+import { dockLayout, tab, uiScale, type Tab } from "../game/ui";
 import { live } from "../map/live";
 import { Inspector } from "./inspector/Inspector";
-import { BuildTab, CityTab, LinesTab, MoneyTab, StationsTab } from "./tabs";
+import { BuildTab, LinesTab, MoneyTab, StationsTab } from "./tabs";
+import { SavesPanel, savesOpen } from "./SavesPanel";
 import { SettingsTab } from "./SettingsTab";
 import { Icon } from "./widgets";
 
-const TABS: [Tab, string][] = [
-  ["build", "Build"],
-  ["lines", "Lines"],
-  ["stations", "Stations"],
-  ["money", "Money"],
-  ["city", "City"],
+/** T-252: the tabs are icons, their names in the hover */
+const TABS: [Tab, string, () => JSX.Element][] = [
+  ["build", "Build", Icon.wrench],
+  ["lines", "Lines", Icon.route],
+  ["stations", "Stations", Icon.building],
+  ["money", "Money", Icon.money],
 ];
 
 const PANES: Record<Tab, () => JSX.Element | null> = {
@@ -25,7 +26,6 @@ const PANES: Record<Tab, () => JSX.Element | null> = {
   lines: LinesTab,
   stations: StationsTab,
   money: MoneyTab,
-  city: CityTab,
   settings: SettingsTab,
 };
 
@@ -34,8 +34,9 @@ const DOCK_MIN = 280, DOCK_MAX = 560;
 /** The tab area and the inspector each keep at least this much, px. */
 const PANE_MIN = 110, INSPECTOR_MIN = 160, TABS_H = 36;
 
-const dockWidth = (w: number) => Math.round(Math.max(DOCK_MIN, Math.min(DOCK_MAX, w, innerWidth * 0.45)));
-const paneHeight = (h: number) => Math.round(Math.max(PANE_MIN, Math.min(h, innerHeight - TABS_H - INSPECTOR_MIN)));
+// The dock is zoomed by the UI scale (T-247): its sizes are in its own px, the window's in screen px.
+const dockWidth = (w: number) => Math.round(Math.max(DOCK_MIN, Math.min(DOCK_MAX, w, innerWidth * 0.45 / uiScale.peek())));
+const paneHeight = (h: number) => Math.round(Math.max(PANE_MIN, Math.min(h, innerHeight / uiScale.peek() - TABS_H - INSPECTOR_MIN)));
 
 /** Drag with the pointer captured on the handle; `f` gets the pointer position. */
 function startDrag(e: PointerEvent, f: (x: number, y: number) => void) {
@@ -63,38 +64,60 @@ export function Dock() {
   const lay = dockLayout.value;
   const ref = useRef<HTMLElement>(null);
   // The map's canvas follows the dock's width.
+  const scale = uiScale.value;
   useEffect(() => {
     live.map?.resize();
-  }, [lay.dockW]);
+  }, [lay.dockW, scale]);
+  // T-215: each tab keeps its own scroll position (this session), so a tab opens where it was
+  // left, at its top the first time, never at another tab's scroll. The Build tab scrolls its
+  // options list, the others the whole tab area.
+  const paneRef = useRef<HTMLElement>(null);
+  const scrolls = useRef<Partial<Record<Tab, number>>>({});
+  const restoring = useRef(false);
+  useLayoutEffect(() => {
+    const pane = paneRef.current;
+    if (!pane) return;
+    const scroller = (pane.querySelector(".build-options") as HTMLElement | null) ?? pane;
+    restoring.current = true;
+    pane.scrollTop = 0;
+    scroller.scrollTop = scrolls.current[t] ?? 0;
+    restoring.current = false;
+  }, [t]);
   const style: Record<string, string> = {};
   if (lay.dockW !== null) style["--dock-w"] = dockWidth(lay.dockW) + "px";
   if (lay.paneH !== null) style["--pane-h"] = paneHeight(lay.paneH) + "px";
   const dragWidth = (e: PointerEvent) => {
     const left = ref.current!.getBoundingClientRect().left;
-    startDrag(e, (x) => (dockLayout.value = { ...dockLayout.value, dockW: dockWidth(x - left) }));
+    startDrag(e, (x) => (dockLayout.value = { ...dockLayout.value, dockW: dockWidth((x - left) / uiScale.peek()) }));
   };
   const dragDivider = (e: PointerEvent) => {
     const top = ref.current!.querySelector(".pane")!.getBoundingClientRect().top;
-    startDrag(e, (_, y) => (dockLayout.value = { ...dockLayout.value, paneH: paneHeight(y - top) }));
+    startDrag(e, (_, y) => (dockLayout.value = { ...dockLayout.value, paneH: paneHeight((y - top) / uiScale.peek()) }));
   };
   return (
     <aside id="dock" ref={ref} style={style}>
       <nav class="tabs">
-        {TABS.map(([id, label]) => (
-          <button class={"tab" + (t === id ? " on" : "")} onClick={() => (tab.value = id)}>
-            {label}
+        {TABS.map(([id, label, Glyph]) => (
+          <button class={"tab" + (t === id ? " on" : "")} data-tip={label} aria-label={label} aria-pressed={t === id} onClick={() => (tab.value = id)}>
+            <Glyph />
           </button>
         ))}
-        <button class={"tab gear" + (t === "settings" ? " on" : "")} title="Settings" aria-label="Settings" onClick={() => (tab.value = "settings")}>
+        {/* T-251: the saved games open in their own panel, not as a tab */}
+        <button class="tab gear save" data-tip="Saved games" aria-label="Saved games" onClick={() => (savesOpen.value = true)}>
+          <Icon.save />
+        </button>
+        <button class={"tab gear" + (t === "settings" ? " on" : "")} data-tip="Settings" aria-label="Settings" aria-pressed={t === "settings"} onClick={() => (tab.value = "settings")}>
           <Icon.gear />
         </button>
       </nav>
-      <section class={"pane" + (t === "build" ? " build-pane" : "")}>
+      <SavesPanel />
+      <section class={"pane" + (t === "build" ? " build-pane" : "")} ref={paneRef}
+        onScrollCapture={(e) => { if (!restoring.current) scrolls.current[t] = (e.target as HTMLElement).scrollTop; }}>
         <Pane />
       </section>
-      <div class="pane-resize" title="Drag to resize" onPointerDown={dragDivider} />
+      <div class="pane-resize" data-tip="Drag to resize" onPointerDown={dragDivider} />
       <Inspector />
-      <div class="dock-resize" title="Drag to resize" onPointerDown={dragWidth} />
+      <div class="dock-resize" data-tip="Drag to resize" onPointerDown={dragWidth} />
     </aside>
   );
 }

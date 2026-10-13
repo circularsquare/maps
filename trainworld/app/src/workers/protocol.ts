@@ -40,7 +40,7 @@ export type StationAt = { kind: "node"; node: NodeId } | { kind: "edge"; edge: E
  * (SPEC 6.4). Line ids are the track model's numbers. */
 export type EditOp =
   /** a route turning at the clicked points `pis`; a junction it makes is flat (T-080) */
-  | { op: "route"; from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean }
+  | { op: "route"; from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean }
   | { op: "removeEdge"; edge: EdgeId }
   /** reshape blueprint track (T-064): its PIs replaced (moved, or a radius set), same ends */
   | { op: "edgePis"; edge: EdgeId; pis: PiInput[] }
@@ -56,13 +56,15 @@ export type EditOp =
   | { op: "constructAll" }
   | { op: "constructLine"; line: number }
   | { op: "addLine"; stops: NodeId[]; name: string; colour: string }
-  | { op: "copyLine"; line: number; name?: string }
+  | { op: "copyLine"; line: number; name?: string; express?: boolean }
   | { op: "setStops"; line: number; stops: NodeId[] }
   | { op: "setTrainCount"; line: number; trains: [number, number, number] }
   | { op: "lineLook"; line: number; name: string; colour: string; letter?: string }
   | { op: "removeLine"; line: number }
   /** the fare curve (T-028): US$ a ride plus US$ a km; not undoable, a setting */
   | { op: "fares"; base: number; perKm: number }
+  /** link two stations into one complex, or undo a link (T-197): node ids; not undoable, a setting */
+  | { op: "link"; a: NodeId; b: NodeId; on: boolean }
   | { op: "undo" }
   | { op: "redo" };
 
@@ -72,7 +74,7 @@ export type ToClock =
   | { kind: "init"; city: string; pack: string; packs?: string[]; fresh?: boolean; slot?: string }
   | { kind: "edit"; seq: number; op: EditOp }
   /** what a route would cost and whether it can be built; answered with "preview" */
-  | { kind: "preview"; seq: number; from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean }
+  | { kind: "preview"; seq: number; from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean }
   /** what giving blueprint track new PIs would do (T-064); answered with "preview" */
   | { kind: "previewEdge"; seq: number; edge: EdgeId; pis: PiInput[] }
   /** what moving a blueprint node would do (T-093); answered with "preview", one part per edge */
@@ -85,8 +87,11 @@ export type ToClock =
    * when stopped). The worker settles money by the game hour from it (T-028). */
   | { kind: "clock"; t: number; rate: number; at: number }
   /** fare income in force, US$M per game hour for each of the five periods (from demand riders,
-   * game/money.ts) */
-  | { kind: "income"; perHour: number[] }
+   * game/money.ts), one table per kind of day (T-260, game/days.ts `DayKind` order) */
+  | { kind: "income"; perHour: number[][] }
+  /** demand's riders for the boarding account (T-164): `TrackApi.set_riders`'s packing, built by
+   * game/boarding.ts `packRiders` from the demand result, for one kind of day (T-260) */
+  | { kind: "riders"; packed: Float32Array; day: number }
   /** write the autosave now if anything changed (the page is being hidden or closed) */
   | { kind: "flush" }
   /** the game as a file: answered with "exported" */
@@ -102,7 +107,7 @@ export type ToClock =
   | {
       kind: "query";
       seq: number;
-      q: { what: "insertStop"; line: number; station: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number };
+      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "lineAccount"; line: number; day: number };
     };
 
 /** Money as the worker keeps it (T-028), US$M unless said. */
@@ -119,7 +124,8 @@ export interface MoneyState {
   fares: { base: number; perKm: number };
   /** running cost per game hour at high, medium, low demand */
   runningPerHour: [number, number, number];
-  /** recent game days, oldest first; the last is today so far */
+  /** recent game days, oldest first; the last is today so far (as of the last whole hour; the
+   * "cash" message carries today as fares land, T-284) */
   ledger: DayLedger[];
 }
 
@@ -224,6 +230,8 @@ export interface ClockState {
   edges: ClockEdge[];
   nodes: ClockNode[];
   lines: ClockLine[];
+  /** stations the player linked into one complex (T-197): node id pairs, flat */
+  links: number[];
   render: ClockRender;
   money: MoneyState;
   /** the renderer's buffers, built in the worker from the rest (T-063); the arrays are shared with
@@ -231,12 +239,16 @@ export interface ClockState {
   net?: NetworkBuffers;
   /** worker ms: building the state, building `net` */
   ms?: number[];
+  /** only the service changed (a train count, T-229): no geometry moved, so `net` is not built and
+   * the renderer keeps its buffers, taking only the new phase tables and profile meta */
+  service?: boolean;
 }
 
 export type FromClock =
   | { kind: "ready"; initMs: number; frame: FrameSpec; water: boolean; population: number; jobs: number }
   /** an edit's answer; `issues` are the track model's problem kinds (`TrackApi.issue_kinds`) */
-  | { kind: "edited"; seq: number; ok: boolean; issues: string[]; charge: number; line?: number }
+  /** `ms`: the worker's time on the edit by step (T-229, for `?debug=1`) */
+  | { kind: "edited"; seq: number; ok: boolean; issues: string[]; charge: number; line?: number; ms?: Record<string, number> }
   | {
       kind: "preview";
       seq: number;
@@ -259,11 +271,19 @@ export type FromClock =
       parts?: Uint32Array;
     }
   | { kind: "state"; state: ClockState }
-  /** trips drawn in [epoch, epoch + 3600): profile index, departure - epoch (notes/T-040.md) */
-  | { kind: "trips"; version: number; epoch: number; trips: Float32Array }
+  /** trips drawn in [epoch, epoch + 3600): profile index, departure - epoch (notes/T-040.md);
+   * `ends`, per trip, when it stops being drawn - epoch (its train takes its next departure from
+   * the terminal or leaves service, T-206); `nexts`, per trip, the departure - epoch its train
+   * takes next (the other run's trip drawn from then), NaN when it leaves service (T-245); `board`, once demand's riders are known: that hour of the boarding account, lined up with
+   * `trips` (`TrackApi.boarding_hour`, game/boarding.ts reads it; T-164), the ms it took, the
+   * lines worked out again since the last, and the ms spent stepping through them (all, longest) */
+  | { kind: "trips"; version: number; epoch: number; trips: Float32Array; ends?: Float32Array; nexts?: Float32Array; board?: Float32Array; boardMs?: number; redone?: number; prepMs?: number; prepMax?: number }
   | { kind: "snapshot"; snapshot: NetworkSnapshot }
   /** money changed without a network change (an hour settled, fares set) */
   | { kind: "money"; money: MoneyState }
+  /** T-284: the cash and today's ledger as fares land and running costs drain, several times a wall
+   * second while the clock runs; the rest of MoneyState comes with "money" when an hour turns */
+  | { kind: "cash"; cash: number; today: MoneyState["ledger"][number] }
   /** a game was loaded or started (`from`), at game time `clock`; a failed import says why in
    * `error` and changes nothing */
   /** `frame`: the game now in the worker (a save made before T-125 is in the legacy frame) */
@@ -311,6 +331,10 @@ export interface SnapshotStation {
   level: Level;
   /** platform length, m */
   platform: number;
+  /** its station complex among the snapshot's stations (T-161, game/complexes.ts with the
+   * player's links): stations with the same number are one complex, and demand lets riders change
+   * between any two of them on foot. Absent in snapshots made before T-161: no complexes. */
+  complex?: number;
 }
 
 export interface SnapshotLine {

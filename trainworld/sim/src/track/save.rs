@@ -14,7 +14,9 @@ use super::params::*;
 /// points like PIs, no radius). Only edges drawn between T-079 and T-092 have them (`EdgeData::
 /// thru`); they are kept so such an edge reshapes from its clicks, and are written back as long
 /// as it is unchanged. TWT2 (T-055: constructed flags on stations, node flag 4, and edges,
-/// tracks | 4) has none and still loads.
+/// tracks | 4) has none and still loads. Optional trailing blocks follow the lines: `LUI1` (line
+/// numbers and symbols) and, when the player linked stations, `LNK1` (T-197: count, then node
+/// pairs in the dense ids). A save without them loads with none.
 const MAGIC: &[u8; 4] = b"TWT4";
 /// TWT5 (T-125) is TWT4 byte for byte except that the metres are in the Lambert conformal world
 /// frame (`frame.rs`). TWT4 and older are always the legacy equirectangular frame, and a network
@@ -181,6 +183,17 @@ pub fn encode(net: &Network) -> Vec<u8> {
     w.u(net.next_line_number as u64);
     w.u(lines.len() as u64);
     for &l in &lines { w.s(&net.line_symbol[l as usize]); }
+    // T-197: the player's station links, after LUI1 and only when there are any, so a network
+    // without links encodes exactly as before and older readers stop at LUI1.
+    let links: Vec<[u32; 2]> = net.links_live().collect();
+    if !links.is_empty() {
+        w.0.extend_from_slice(b"LNK1");
+        w.u(links.len() as u64);
+        for [a, b] in links {
+            w.u(node_id[a as usize] as u64);
+            w.u(node_id[b as usize] as u64);
+        }
+    }
     w.0
 }
 
@@ -233,6 +246,7 @@ pub fn convert_frame(bytes: &[u8], to: FrameKind) -> Result<Vec<u8>, String> {
         }
     }
     out.next_line_number = net.next_line_number;
+    out.links = net.links.clone();
     Ok(encode(&out))
 }
 
@@ -322,6 +336,14 @@ pub fn decode(bytes: &[u8]) -> Result<Network, String> {
         net.next_line_number = (r.u()? as u32).max(1);
         if r.u()? as usize != n_lines { return Err("bad line UI extension".into()); }
         for i in 0..n_lines { net.line_symbol[i] = r.s()?; }
+    }
+    if r.0.get(r.1..r.1 + 4) == Some(b"LNK1") {
+        r.1 += 4;
+        for _ in 0..r.u()? {
+            let (a, b) = (r.u()? as u32, r.u()? as u32);
+            // a pair naming no station is dropped rather than refusing the whole save
+            net.link(a, b);
+        }
     }
     net.take_touch();
     Ok(net)

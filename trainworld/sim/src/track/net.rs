@@ -311,6 +311,11 @@ pub struct Network {
     pub stops: Pool<u32>,
     pub paths: Pool<u32>,
 
+    /// Stations the player linked into one complex by hand (T-197): node pairs, smaller id first.
+    /// Not part of the undo history (a setting, like fares); a pair whose node is no longer a
+    /// station is ignored (`links_live`) and not saved.
+    pub links: Vec<[u32; 2]>,
+
     pub crossings: Vec<Crossing>,
     pub grid: Grid,
     /// CSR by edge id: lines whose path uses the edge, ascending.
@@ -409,6 +414,7 @@ impl Network {
             line_free: vec![],
             stops: Pool::default(),
             paths: Pool::default(),
+            links: vec![],
             crossings: vec![],
             grid: Grid::default(),
             edge_lines_off: vec![0],
@@ -437,6 +443,33 @@ impl Network {
     }
     pub fn line_ok(&self, l: u32) -> bool {
         self.line_alive.get(l as usize).copied().unwrap_or(false)
+    }
+    /// A live node with a station on it.
+    pub fn is_station(&self, n: u32) -> bool {
+        self.node_ok(n) && self.node_platform[n as usize] > 0
+    }
+    /// The player's links (T-197) whose two ends are both stations now.
+    pub fn links_live(&self) -> impl Iterator<Item = [u32; 2]> + '_ {
+        self.links.iter().copied().filter(|&[a, b]| self.is_station(a) && self.is_station(b))
+    }
+    /// Link two stations into one complex (T-197). False if either is not a station or they are
+    /// the same; linking a linked pair again changes nothing.
+    pub fn link(&mut self, a: u32, b: u32) -> bool {
+        if a == b || !self.is_station(a) || !self.is_station(b) {
+            return false;
+        }
+        let p = [a.min(b), a.max(b)];
+        if !self.links.contains(&p) {
+            self.links.push(p);
+        }
+        true
+    }
+    /// Remove the link between two stations, if there is one. True if there was.
+    pub fn unlink(&mut self, a: u32, b: u32) -> bool {
+        let p = [a.min(b), a.max(b)];
+        let n = self.links.len();
+        self.links.retain(|&q| q != p);
+        self.links.len() != n
     }
 
     /// A free node id for a new node (claimed when the op adding it is applied).
@@ -1570,8 +1603,27 @@ impl Network {
             let r = quant(1.0 / piece.k.abs());
             let t1 = r * ((s - piece.s0) * piece.k.abs() / 2.0).tan();
             let t2 = r * ((piece.s0 + piece.len - s) * piece.k.abs() / 2.0).tan();
-            let pi1 = Pi::new(quant(x - t1 * th.cos()), quant(y - t1 * th.sin()), r, v[m].level);
-            let pi2 = Pi::new(quant(x + t2 * th.cos()), quant(y + t2 * th.sin()), r, v[m].level);
+            let mut pi1 = Pi::new(quant(x - t1 * th.cos()), quant(y - t1 * th.sin()), r, v[m].level);
+            let mut pi2 = Pi::new(quant(x + t2 * th.cos()), quant(y + t2 * th.sin()), r, v[m].level);
+            // On the millimetre grid a new PI a few metres from the node turns by a slightly
+            // different angle than the arc did, and at the arc's radius its curve would overrun
+            // the leg to the node ("does not fit", T-258). Each takes the radius that ends its
+            // curve at the node; that is the arc's to well under 1% unless the PI is within a few
+            // metres of the node, and then the split goes to the arc's end instead.
+            // the radius at `p` (between `a` and `b`) whose tangent is `leg` long
+            let fits = |a: (f64, f64), p: &Pi, b: (f64, f64), leg: f64| -> f64 {
+                let half = geom::wrap((b.1 - p.y).atan2(b.0 - p.x) - (p.y - a.1).atan2(p.x - a.0)).abs() / 2.0;
+                if half < 1e-12 { f64::INFINITY } else { leg / half.tan() }
+            };
+            let to_node = |p: &Pi| (node.x - p.x).hypot(node.y - p.y);
+            let r1 = fits((v[m - 1].x, v[m - 1].y), &pi1, (node.x, node.y), to_node(&pi1));
+            let r2 = fits((node.x, node.y), &pi2, (v[m + 1].x, v[m + 1].y), to_node(&pi2));
+            if r1.min(r2) < 0.99 * r {
+                let end = if s - piece.s0 < piece.s0 + piece.len - s { piece.s0 } else { piece.s0 + piece.len };
+                return self.split_plan(e, end);
+            }
+            pi1.radius = r.min((r1 * 0.99999 / QUANT).floor() * QUANT);
+            pi2.radius = r.min((r2 * 0.99999 / QUANT).floor() * QUANT);
             p1 = v[..m].to_vec();
             p1.push(pi1);
             p1.push(marker);

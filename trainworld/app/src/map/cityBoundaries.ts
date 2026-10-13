@@ -1,8 +1,9 @@
 // Exact pack outlines and a subtle shade outside the focused metropolitan area. Basemap-only
 // layers sit beneath labels, track and demand; they never intercept a map click.
 import { effect } from "@preact/signals";
-import type { FeatureCollection, MultiPolygon, Polygon } from "geojson";
+import type { FeatureCollection, MultiPolygon } from "geojson";
 import type { GeoJSONSource, Map as MlMap } from "maplibre-gl";
+import { cityBoundary } from "../game/boundaries";
 import { activeCity, CITIES } from "../game/cities";
 import { cityGeometry, outsideCity } from "./boundaryGeometry";
 
@@ -20,11 +21,7 @@ export function startCityBoundaries(map: MlMap): () => void {
   const geometry = (id: string) => {
     let p = geometries.get(id);
     if (!p) {
-      p = fetch(new URL(`packs/${id}.boundary.geojson`, document.baseURI))
-        .then(async r => {
-          if (!r.ok) throw new Error(`City boundary ${id}: ${r.status}`);
-          return cityGeometry(await r.json() as FeatureCollection<Polygon | MultiPolygon>);
-        });
+      p = cityBoundary(id).then(cityGeometry);
       geometries.set(id, p);
       void p.catch(() => geometries.delete(id));
     }
@@ -57,10 +54,13 @@ export function startCityBoundaries(map: MlMap): () => void {
     }, before);
     for (const city of CITIES) {
       const id = `tw-city-boundary-${city.id}`;
-      if (!map.getSource(id)) map.addSource(id, {
-        type: "geojson",
-        data: new URL(`packs/${city.id}.boundary.geojson`, document.baseURI).href,
-      });
+      if (!map.getSource(id)) {
+        // the same fetch as the demand pool's reach test (game/boundaries.ts), not one of its own
+        map.addSource(id, { type: "geojson", data: empty });
+        cityBoundary(city.id).then((fc) => {
+          if (alive) (map.getSource(id) as GeoJSONSource | undefined)?.setData(fc);
+        }, (error) => console.warn("City outline unavailable", error));
+      }
       if (!map.getLayer(id)) map.addLayer({
         id,
         type: "line",

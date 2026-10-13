@@ -41,5 +41,5 @@ try {
  await page.reload();await page.waitForFunction(()=>window.tw?.display);
  if(await page.evaluate(()=>window.tw.display.value.trainLoadBasis)!=='average')throw Error('Setting not persisted');
  if(errors.length)throw Error(errors.join('\n'));
- result.errors=errors;console.log(JSON.stringify(result));await writeFile('trainworld/notes/T-087-check.json',JSON.stringify(result,null,2));
+ result.errors=errors;console.log(JSON.stringify(result));await writeFile('artifacts/trainworld/notes-outputs/T-087-check.json',JSON.stringify(result,null,2));
 }finally{await browser.close();}

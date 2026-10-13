@@ -83,7 +83,7 @@ try {
   await page.mouse.up();
   check('long press above station starts bubble selection',await page.evaluate(()=>tw.selection.value?.kind==='commuters'));
 } finally {
-  await writeFile('trainworld/notes/T-132-browser.json',JSON.stringify(result,null,2));
+  await writeFile('artifacts/trainworld/notes-outputs/T-132-browser.json',JSON.stringify(result,null,2));
   await browser.close();
 }
 console.log(JSON.stringify(result,null,2));

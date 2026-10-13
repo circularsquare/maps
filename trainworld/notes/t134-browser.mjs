@@ -12,9 +12,11 @@ try {
   await page.addStyleTag({content:'#debug-root {display:none}'});
   check('four local populations solve',await page.evaluate(()=>twDemand.cities().size===4));
   check('five-market corridor summary',await page.evaluate(()=>twDemand.intercity().corridors.length===15));
-  await page.getByRole('button',{name:'City',exact:true}).click();
   for(const [id,name,center,market] of [['bos','Boston',[-71.0589,42.3601],3],['wdc','Washington, DC',[-77.0365,38.8977],4]]) {
-    await page.getByRole('button',{name,exact:true}).click();
+    // the City tab is gone (T-220): search goes to a city
+    await page.getByRole('button',{name:'Search stations, lines and places'}).click();
+    await page.getByRole('combobox',{name:'Search stations, lines and places'}).fill(name);
+    await page.keyboard.press('Enter');
     await page.waitForFunction(id=>twDemand.activeCity.value===id,id);
     await page.waitForFunction(()=>!tw.map.isMoving());
     await page.getByRole('group',{name:'Demand on the map'}).getByRole('button',{name:'Homes',exact:true}).click();
@@ -60,5 +62,5 @@ try {
   await page.waitForFunction(()=>tw.world.value.save.lines.length===109&&twDemand.view()?.lines.size===109&&twDemand.view()?.round===3,undefined,{timeout:240000});
   check('existing NYC save remains playable',await page.evaluate(()=>tw.frame().kind==='equirect'&&twDemand.cities().size===4&&twDemand.cities().get('nyc').railTripsPerDay>0));
   check('no browser exceptions',errors.length===0,errors);
-} finally {await writeFile('trainworld/notes/T-134-browser.json',JSON.stringify(result,null,2));await browser.close();}
+} finally {await writeFile('artifacts/trainworld/notes-outputs/T-134-browser.json',JSON.stringify(result,null,2));await browser.close();}
 console.log(JSON.stringify(result,null,2));

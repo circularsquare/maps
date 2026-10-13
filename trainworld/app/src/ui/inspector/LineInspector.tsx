@@ -8,14 +8,16 @@ import { nearestStation } from "../../game/places";
 import { queryClock } from "../../workers/clockClient";
 import { clock } from "../../game/clock";
 import { lineDemand } from "../../game/demand";
-import { count, duration, headway, money } from "../../game/format";
+import { clockTime, count, duration, headway, money } from "../../game/format";
+import { accountVersion } from "../../game/boarding";
 import { LINE_PALETTE } from "../../game/palette";
 import { DEMAND_INDEX, DEMANDS, type Demand, type LineStats } from "../../game/types";
-import { ask, lineDraft, renameLinePrompt, selection, tool } from "../../game/ui";
+import { ask, lineDraft, renameLinePrompt, selection, shownDay, tool } from "../../game/ui";
 import { income } from "../../game/money";
-import { edit, linesAt, renameLine, say, setTrainCount, setLineColour, world } from "../../game/world";
+import { edit, linesAt, renameLine, say, setLineColour, stepTrainCount, trainsShown, world } from "../../game/world";
 import { live } from "../../map/live";
 import { Chip, Icon, Row, Stepper } from "../widgets";
+import { PurposeSplit } from "./PurposeSplit";
 
 const DEMAND_LABEL: Record<Demand, string> = { high: "High", medium: "Medium", low: "Low" };
 
@@ -74,6 +76,46 @@ function RoundTrip({ st, lev, stops, spots }: { st: LineStats; lev: number; stop
   );
 }
 
+/** A line's day in the per-train account (T-230, `TrackApi.line_account`). */
+interface AccountDay {
+  fullestPct: number;
+  fullTrains: number;
+  leftBehind: number;
+  longestWaitS: number;
+  /** when full trains leave the stop where they are fullest, s into the day */
+  spans: [number, number][];
+}
+
+function accountFrom(d: Float64Array): AccountDay | null {
+  if (d.length < 5) return null;
+  const spans: [number, number][] = [];
+  for (let k = 0; k < d[4]; k++) spans.push([d[5 + 2 * k], d[6 + 2 * k]]);
+  return { fullestPct: Math.round(100 * d[0]), fullTrains: d[1], leftBehind: d[2], longestWaitS: d[3], spans };
+}
+
+/** Times of day for the full-train spans: "07:40 to 08:50, 17:35 to 18:45". */
+function spansText(spans: [number, number][]): string {
+  const t = (s: number) => clockTime(Math.round(s / 60) % 1440);
+  return spans.map(([a, b]) => (b - a < 60 ? t(a) : `${t(a)} to ${t(b)}`)).join(", ");
+}
+
+/** The line's trains today as the per-train account counts them (T-230): how full the fullest
+ * one gets, how many leave packed full and when, and who is left on the platform. */
+function TrainsToday({ day }: { day: AccountDay }) {
+  return (
+    <>
+      <div class="h"><span data-tip="Counted train by train from the forecast riders. Whoever does not fit on a full train waits for the next one.">Trains today</span></div>
+      <ul class="rows">
+        <Row label="Fullest train">{day.fullTrains > 0 ? "100%" : `${day.fullestPct}% full`}</Row>
+        {day.fullTrains > 0 && <Row label="Trains leaving full">{count(day.fullTrains)}</Row>}
+        {day.spans.length > 0 && <Row label="When">{spansText(day.spans)}</Row>}
+        <Row label="Riders left on the platform">{count(day.leftBehind)}</Row>
+        {day.leftBehind >= 1 && <Row label="Longest wait">{day.longestWaitS >= 86400 ? "More than a day" : duration(day.longestWaitS)}</Row>}
+      </ul>
+    </>
+  );
+}
+
 export function LineInspector({ id }: { id: string }) {
   const w = world.value;
   const [editing, setEditing] = useState(false);
@@ -105,6 +147,19 @@ export function LineInspector({ id }: { id: string }) {
       on = false;
     };
   }, [l?.num, w?.version, lev]);
+  // its day in the per-train account (T-230), asked again after every edit and each hour of it
+  const [day, setDay] = useState<AccountDay | null>(null);
+  const acct = accountVersion.value;
+  // the kind of day the demand views show (T-260)
+  const kind = shownDay.value;
+  useEffect(() => {
+    if (!l) return;
+    let on = true;
+    void queryClock({ what: "lineAccount", line: l.num, day: kind }).then((d) => on && setDay(d ? accountFrom(d) : null));
+    return () => {
+      on = false;
+    };
+  }, [l?.num, w?.version, acct, kind]);
   if (!w || !l) return null;
   const st = w.lineStats[l.id];
   const dm = lineDemand(l.id); // riders: T-026's demand workers; blank until the first solve lands
@@ -136,7 +191,7 @@ export function LineInspector({ id }: { id: string }) {
     if (a.ok && lineDraft.peek().line === l.num) lineDraft.value = { line: l.num, stops };
   };
   const remove = () => {
-    ask.value = { text: `Delete ${l.name}? This removes the line and its schedule. Track and stations stay.`, yes: "Delete line", no: "Keep line", run: () => {
+    ask.value = { text: `Delete ${l.name}? Track and stations stay.`, yes: "Delete line", no: "Keep line", run: () => {
       ask.value = null;
       void edit({ op: "removeLine", line: l.num }).then(a => {
         if (!a.ok) return;
@@ -146,15 +201,17 @@ export function LineInspector({ id }: { id: string }) {
       });
     }};
   };
-  const copy = async () => {
+  /** A copy to edit; an express copy (T-255) runs on the express pair of quad track where there
+   * is one and goes straight to stop editing, so the player clicks off the stops it skips. */
+  const copy = async (express = false) => {
     if (copying) return;
     setCopying(true);
     try {
-      const a = await edit({ op: "copyLine", line: l.num });
+      const a = await edit({ op: "copyLine", line: l.num, express });
       if (!a.ok || a.line === undefined) return;
       live.tools?.exit();
-      lineDraft.value = { line: a.line, stops: l.stops.map(Number) };
-      renameLinePrompt.value = String(a.line);
+      lineDraft.value = { line: a.line, stops: [] };
+      if (!express) renameLinePrompt.value = String(a.line);
       selection.value = { kind: "line", line: String(a.line) };
       tool.value = "line";
     } finally { setCopying(false); }
@@ -163,7 +220,7 @@ export function LineInspector({ id }: { id: string }) {
   return (
     <>
       <div class="title">
-        <button class={"badge-edit" + (colours ? " on" : "")} title="Edit line colour and symbol" aria-label="Edit line colour and symbol" onClick={() => setColours(!colours)}><Chip line={l} size="lg" /></button>
+        <button class={"badge-edit" + (colours ? " on" : "")} data-tip="Edit line colour and symbol" aria-label="Edit line colour and symbol" onClick={() => setColours(!colours)}><Chip line={l} size="lg" /></button>
         {editing ? (
           <input
             class="name-edit"
@@ -179,7 +236,7 @@ export function LineInspector({ id }: { id: string }) {
         ) : (
           <span class="name">{l.name}</span>
         )}
-        <button class="btn icon" title="Rename" onClick={() => { setNameDraft(l.name); setEditing(true); }}>
+        <button class="btn icon" data-tip="Rename" aria-label="Rename" onClick={() => { setNameDraft(l.name); setEditing(true); }}>
           <Icon.pencil />
         </button>
       </div>
@@ -188,9 +245,9 @@ export function LineInspector({ id }: { id: string }) {
           <label>Symbol <input aria-label="Line symbol" value={symbol} onInput={e => setSymbol(e.currentTarget.value)} onChange={e => void edit({op:"lineLook",line:l.num,name:l.name,colour:l.colour,letter:e.currentTarget.value.trim()})} /></label>
           <div class="palette">
           {LINE_PALETTE.map((c) => (
-            <button class={"swatch" + (c === l.colour ? " on" : "")} style={{ "--c": c }} title={c} onClick={() => setLineColour(l.id, c)} />
+            <button class={"swatch" + (c === l.colour ? " on" : "")} style={{ "--c": c }} data-tip={c} aria-label={c} onClick={() => setLineColour(l.id, c)} />
           ))}
-          <label class="swatch custom" title="Any colour" style={{ "--c": l.colour }}>
+          <label class="swatch custom" data-tip="Any colour" style={{ "--c": l.colour }}>
             <input type="color" value={l.colour} onChange={(e) => setLineColour(l.id, (e.target as HTMLInputElement).value)} />
           </label>
           </div>
@@ -199,21 +256,18 @@ export function LineInspector({ id }: { id: string }) {
       <div class="sub muted">
         {l.stops.length} stops, {st.km.toFixed(1)} km{st.cars ? `, ${st.cars} car trains` : ""}
       </div>
-      {l.stops.length < 2 && <p class="muted small">Choose at least two stations to give this line a route.</p>}
+      {l.stops.length < 2 && <p class="muted small">No route: fewer than two stops.</p>}
       {st.status === "planned" && l.stops.length >= 2 && (
         <div class="callout">
-          <p>
-            Planned. Trains run once its track and stations are constructed.
-            {st.trainCost > 0 && ` The price includes ${money(st.trainCost)} for its trains.`}
-          </p>
-          <button class="btn text" onClick={build}>
+          <p>Planned</p>
+          <button class="btn text" data-tip={`Track and stations ${money(st.buildCost)}${st.trainCost > 0 ? `, trains ${money(st.trainCost)}` : ""}. Trains run once it is constructed.`} onClick={build}>
             Construct for {money(st.buildCost + st.trainCost)}
           </button>
         </div>
       )}
       {st.status === "broken" && (
         <div class="callout bad">
-          <p>Broken. Track it used is gone. Draw track between its stops again, or change its stops.</p>
+          <p>Broken: track it used is gone.</p>
         </div>
       )}
 
@@ -228,21 +282,19 @@ export function LineInspector({ id }: { id: string }) {
           <tr class={d === now ? "now" : ""}>
             <td>{DEMAND_LABEL[d]}</td>
             <td>
-              <Stepper value={st.trainsNeeded[DEMAND_INDEX[d]]} label="trains on the entire line" onStep={(s) => setTrainCount(l.id, d, st.trainsNeeded[DEMAND_INDEX[d]] + s)} />
+              <Stepper value={(trainsShown(l.id) ?? st.trainsNeeded)[DEMAND_INDEX[d]]} label="trains on the entire line" onStep={(s) => stepTrainCount(l.id, d, s)} />
             </td>
             <td>{headway(l.tph[d])}</td>
           </tr>
         ))}
       </table>
 
-      <div class="h">Demand forecast</div>
-      <p class="muted small">Steady state for the current network and schedule.</p>
+      <div class="h"><span data-tip="Steady state for the current network and schedule">Demand forecast</span></div>
       <ul class="rows">
         <Row label="Riders a day">{dm ? count(dm.ridersPerDay) : ""}</Row>
-        <Row label="Local trips">{dm ? count(Math.max(0,dm.ridersPerDay-(dm.intercityRidersPerDay ?? 0))) : ""}</Row>
-        <Row label="Longer trips">{dm ? count(dm.intercityRidersPerDay ?? 0) : ""}</Row>
-        <Row label="Fullest train at high demand">{dm ? dm.fullestPct + "%" : ""}</Row>
+        <PurposeSplit scope={[{ line: l.id }]} unit="riders" />
       </ul>
+      {st.status === "running" && day && <TrainsToday day={day} />}
       {st.status === "running" && (
         <>
           <div class="h">Finances</div>
@@ -258,10 +310,10 @@ export function LineInspector({ id }: { id: string }) {
       </div>
       <div class="line-stop-actions">
         <button class={"btn text" + (editingStops ? " on" : "")} onClick={addStops}><Icon.pencil />{editingStops ? "Done editing stops" : "Edit stops"}</button>
-        <button class="btn text" onClick={copy} disabled={copying}>Copy line</button>
+        <button class="btn text" onClick={() => void copy()} disabled={copying}>Copy line</button>
+        <button class="btn text" onClick={() => void copy(true)} disabled={copying} data-tip="Copy onto the express tracks where there are any, then click the stops it skips">Express copy</button>
         <button class="btn text danger" onClick={remove}>Delete line</button>
       </div>
-      {editingStops && <p class="muted small">Click stations to insert stops. Red crosses remove stops; Enter or Escape finishes editing.</p>}
       <ul class="stops" style={{ "--c": l.colour }}>
         {l.stops.map((s, i) => {
           const others = linesAt(s).filter((o) => o.id !== l.id);
@@ -278,7 +330,7 @@ export function LineInspector({ id }: { id: string }) {
               ))}
               <span class="n num">{dm ? count(dm.boardings[i]) : ""}</span>
               {editingStops && (
-                <button class="btn icon mini danger" title="Take this stop out of the line" aria-label={`Remove stop ${name.get(s)}`} onClick={() => removeStop(i)}>
+                <button class="btn icon mini danger" data-tip="Take this stop out of the line" aria-label={`Remove stop ${name.get(s)}`} onClick={() => removeStop(i)}>
                   <Icon.cross />
                 </button>
               )}

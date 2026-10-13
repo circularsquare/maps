@@ -6,6 +6,7 @@
 
 import { computed, signal, type Signal } from "@preact/signals";
 import { PERIODS, periodAt } from "./periods";
+import { currentDay, dayKindAt } from "./days";
 import type { Demand } from "./types";
 
 /** Game seconds per wall second for the three speed buttons. Provisional. */
@@ -21,6 +22,9 @@ class GameClock {
   private anchorSim: number;
   private anchorWall = performance.now();
   private hidden = document.visibilityState === "hidden";
+  /** Frozen while a loaded game's demand is still being calculated (T-149, game/loading.ts):
+   * separate from `running`, so the player's pause and speed survive it. */
+  readonly held = signal(false);
   /** speed button index into SPEEDS */
   readonly speed = signal(0);
   readonly running = signal(true);
@@ -32,17 +36,18 @@ class GameClock {
   constructor(start: number) {
     this.anchorSim = start;
     this.minute = signal(Math.floor(start / 60));
+    currentDay.value = dayKindAt(start);
   }
 
   /** game seconds now */
   now(): number {
-    if (!this.running.peek() || this.hidden) return this.anchorSim;
+    if (!this.ticking) return this.anchorSim;
     return this.anchorSim + ((performance.now() - this.anchorWall) / 1000) * SPEEDS[this.speed.peek()];
   }
 
   /** Is time moving (so frames are needed)? */
   get ticking() {
-    return this.running.peek() && !this.hidden;
+    return this.running.peek() && !this.hidden && !this.held.peek();
   }
 
   private reanchor() {
@@ -58,7 +63,12 @@ class GameClock {
   /** Called once per frame by the renderer: moves the display minute along. */
   tick() {
     const m = Math.floor(this.now() / 60);
-    if (m !== this.minute.peek()) this.minute.value = m;
+    if (m !== this.minute.peek()) {
+      this.minute.value = m;
+      // T-266: the demand views on "Today" follow the clock into and out of a weekend
+      const k = dayKindAt(m * 60);
+      if (k !== currentDay.peek()) currentDay.value = k;
+    }
   }
 
   onChange(f: () => void) {
@@ -87,6 +97,15 @@ class GameClock {
   setHidden(h: boolean) {
     this.reanchor(); // freeze at the moment it was hidden
     this.hidden = h;
+    this.reanchor();
+    this.changed();
+  }
+
+  /** Hold or release the clock for loading (T-149). */
+  setHeld(h: boolean) {
+    if (h === this.held.peek()) return;
+    this.reanchor();
+    this.held.value = h;
     this.reanchor();
     this.changed();
   }

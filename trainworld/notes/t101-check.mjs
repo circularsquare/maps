@@ -37,6 +37,6 @@ try{
  if(!(await sample()).shown)throw Error('Station names switch did not restore labels');
  await page.evaluate(()=>window.tw.display.value={...window.tw.display.value,commuterEnd:'home'});await page.waitForTimeout(150);
  if(await page.locator('#commuter-legend').count())throw Error('Homes legend reappeared');
- const result={samples,fonts,errors};console.log(JSON.stringify(result));await writeFile('trainworld/notes/T-101-check.json',JSON.stringify(result,null,2));
+ const result={samples,fonts,errors};console.log(JSON.stringify(result));await writeFile('artifacts/trainworld/notes-outputs/T-101-check.json',JSON.stringify(result,null,2));
  if(errors.length)throw Error(errors.join('\n'));
 }finally{await browser.close();}

@@ -28,6 +28,8 @@ import shapefile  # pyshp
 from shapely.geometry import mapping, shape
 from shapely import make_valid, union_all
 
+import group_quarters
+import regions
 import spread
 import water
 import wfh
@@ -52,6 +54,22 @@ QCEW_TOTAL = "https://data.bls.gov/cew/data/api/{year}/a/industry/10.csv"
 
 STATES = {"09": "ct", "10": "de", "11": "dc", "24": "md", "25": "ma", "33": "nh",
           "34": "nj", "36": "ny", "42": "pa", "44": "ri", "51": "va", "54": "wv"}
+
+# T-162: the work gravity's decay between zones in different states is multiplied by this
+# (notes/T-162.md: fitted jointly with the decay on LODES OD for New York and Philadelphia). It is
+# a per-pack value, shipped in the pack's gravity block: a pack from another country's pipeline
+# sets its own from its own commuting data, and a pack that sets none gets 1 (no effect). A city
+# config's own "border_factor" overrides it: Washington's 0.45 (T-181, Anita 2026-10-12; refitted
+# at the T-198 curve), its own fit, because DC is a city counted as a state. T-198 rechecked 0.23 at
+# the flatter curve: New York's own fit 0.228, Philadelphia's 0.207.
+BORDER_FACTOR_US = 0.23
+# The work gravity's distance curve, f(d) = d^-DECAY_POW_US exp(-d / DECAY_KM_US km), shipped in the
+# pack's gravity block (T-198, from T-185's diagnosis: the flatter near end sends job-rich homes'
+# commuters out as far as LODES does). The sim crate's `Params` default is the same pair; since T-277
+# the game takes each pack's shipped curve at opening (`DemandApi::new`), so a pack with its own fitted
+# curve (Toronto's "decay_pow"/"decay_km") opens from its shipped factors too.
+DECAY_POW_US = 0.8
+DECAY_KM_US = 30.0
 
 CITIES = {
     "bal": {
@@ -108,6 +126,7 @@ CITIES = {
         "boundary_notes": "notes/T-134-packs.md",
         # Broad Washington-Arlington-Alexandria metro extent. Keep Calvert's
         # established DC commuter catchment rather than chasing recent MSA revisions.
+        "border_factor": 0.45,  # its own LODES fit (0.454 at T-198's curve; 0.486 at T-162's), not the US 0.23
         "counties": {
             "11001": "District of Columbia",
             "24009": "Calvert", "24017": "Charles", "24021": "Frederick MD",
@@ -126,7 +145,7 @@ CITIES = {
         "water": {"cell_m": 25.0, "min_width_px": 2},
         "boundary_notes": "notes/T-115.md",
         # Philadelphia-Camden-Wilmington MSA, OMB July 2023: 11 counties.
-        # Disjoint from nyc; Mercer/Trenton is a separate MSA, for future corridor demand.
+        # Disjoint from nyc; Mercer/Trenton is in New York's pack since T-276.
         "counties": {
             "42017": "Bucks", "42029": "Chester", "42045": "Delaware PA",
             "42091": "Montgomery", "42101": "Philadelphia",
@@ -171,7 +190,59 @@ CITIES = {
             "34031": "Passaic", "34035": "Somerset", "34037": "Sussex", "34039": "Union",
             # added
             "09001": "Fairfield CT", "36027": "Dutchess", "36071": "Orange NY",
+            # T-276 (Anita): Mercer (Trenton, Princeton), in the New York CSA, with twice the
+            # LODES commuting to New York's counties (175k jobs both ways) as to Philadelphia's
+            "34021": "Mercer",
         },
+    },
+    # T-277: the first pack outside the US, built by pipeline/canada.py from Statistics Canada's
+    # 2021 census. "counties" are census divisions (4 digits): the Greater Toronto and Hamilton
+    # Area. One province, so one region and no border factor (SPEC 4, "Borders outside the US").
+    "tor": {
+        "country": "ca",
+        "origin": (-79.3832, 43.6534),  # Toronto City Hall
+        "water": {"cell_m": 25.0, "min_width_px": 2},
+        "boundary_notes": "notes/T-277.md",
+        "border_factor": 1.0,
+        # fitted on the 2021 census commuting flows between its 28 municipalities (notes/t277_fit.py:
+        # 5.6% of commutes misplaced between municipality pairs, against 15.1% at the US curve)
+        "decay_pow": 1.2, "decay_km": 20.0,
+        "counties": {"3518": "Durham", "3519": "York", "3520": "Toronto", "3521": "Peel",
+                     "3524": "Halton", "3525": "Hamilton"},
+    },
+    # T-276: non-city zones (docs/zones.md 2): one county each, the counties that touch two city
+    # zones. Same sources and cells as a city; `kind` "zone" in the registry.
+    "wor": {
+        "kind": "zone", "name": "Worcester County",
+        "origin": (-71.8023, 42.2626),  # Worcester city hall
+        "lodes_years": (2023, 2022),
+        "water": {"cell_m": 25.0, "min_width_px": 2},
+        "boundary_notes": "docs/zones.md",
+        "counties": {"25027": "Worcester MA"},
+    },
+    "wnd": {
+        "kind": "zone", "name": "Windham County",
+        "origin": (-72.2087, 41.7107),  # Willimantic
+        "lodes_years": (2023, 2022),
+        "water": {"cell_m": 25.0, "min_width_px": 2},
+        "boundary_notes": "docs/zones.md",
+        "counties": {"09015": "Windham CT"},
+    },
+    "nlc": {
+        "kind": "zone", "name": "New London County",
+        "origin": (-72.0759, 41.5243),  # Norwich
+        "lodes_years": (2023, 2022),
+        "water": {"cell_m": 25.0, "min_width_px": 2},
+        "boundary_notes": "docs/zones.md",
+        "counties": {"09011": "New London CT"},
+    },
+    "lit": {
+        "kind": "zone", "name": "Litchfield County",
+        "origin": (-73.1212, 41.8007),  # Torrington
+        "lodes_years": (2023, 2022),
+        "water": {"cell_m": 25.0, "min_width_px": 2},
+        "boundary_notes": "docs/zones.md",
+        "counties": {"09005": "Litchfield CT"},
     },
 }
 
@@ -299,16 +370,20 @@ def read_dbf(path, fields):
 
 
 def blocks_for_state(fips, county_set):
+    """The state's 2020 blocks in the county set. `pop` is the census population less the people
+    in institutional group quarters (prisons, nursing homes; T-234, pipeline/group_quarters.py),
+    with `pop_census` and `gq_inst` beside it."""
     dbf = fetch_zip_member(TIGER_BLOCKS.format(fips=fips), ".dbf")
     d = read_dbf(dbf, ["GEOID20", "POP20", "INTPTLAT20", "INTPTLON20"])
     geoid = np.char.strip(d["GEOID20"]).astype("U15")
     keep = np.isin(geoid.astype("U5"), list(county_set))  # astype to U5 truncates: state+county
-    return pd.DataFrame({
+    df = pd.DataFrame({
         "geoid": geoid[keep],
         "pop": np.char.strip(d["POP20"][keep]).astype(np.int64),
         "lat": np.char.strip(d["INTPTLAT20"][keep]).astype(np.float64),
         "lon": np.char.strip(d["INTPTLON20"][keep]).astype(np.float64),
-    }), len(geoid)
+    })
+    return group_quarters.remove(df, {c for c in county_set if c[:2] == fips}, fetch), len(geoid)
 
 
 def jobs_for_state(st, years, county_set):
@@ -336,6 +411,9 @@ def residents_for_state(st, year, county_set):
 # ---------------------------------------------------------------- build
 
 def build_boundary(city, cfg):
+    if cfg.get("country") == "ca":  # T-277: census subdivisions, pipeline/canada.py
+        import canada
+        return canada.build_boundary(city, cfg)
     path = fetch(COUNTIES)
     r = shapefile.Reader(path)
     fields = [f[0] for f in r.fields[1:]]
@@ -435,6 +513,9 @@ def adjust_jobs(df, cfg, rates=None):
 def build_water(cfg, boundary):
     """The water mask over the boundary's bounding box (T-030): TIGER water at `cell_m`, then
     water narrower than `min_width_px` pixels dropped (pipeline/water.py)."""
+    if cfg.get("country") == "ca":  # T-277: StatCan lakes and the land outside its shorelines
+        import canada
+        return canada.build_water(cfg, boundary)
     t = time.time()
     lon0, lat0 = cfg["origin"]
     wc = cfg["water"]
@@ -467,7 +548,7 @@ def commute_by_county(city, cfg, df):
               f"{r['to_work_after']:>10,.0f} ({r['to_work_after'] / r['to_work_before'] - 1:+6.1%})")
 
 
-def write_cells(city, cfg, cells, totals, sources, mask=None, mask_info=None, commute=None):
+def write_cells(city, cfg, cells, totals, sources, mask=None, mask_info=None, commute=None, regions=None):
     """The cell arrays (and the water mask) as a format-1 pack without the gravity, in
     data/work/<city>.cells.*; pack_gravity keeps every array it does not know."""
     order = np.argsort(cells["h3"])
@@ -484,6 +565,8 @@ def write_cells(city, cfg, cells, totals, sources, mask=None, mask_info=None, co
     for name in ("errand_jobs", "leisure_jobs"):
         if name in cells:
             arrays.append((name, "f32", "cell", cells[name][order].astype("<f4")))
+    if "region" in cells:  # T-162: what the gravity's zones are split by
+        arrays.append(("region", "u8", "cell", cells["region"][order].astype("u1")))
     if mask is not None:
         arrays += [("water_row", "u32", "water", mask.row_off.astype("<u4")),
                    ("water_x", "u16", "water", mask.xs.astype("<u2"))]
@@ -509,6 +592,8 @@ def write_cells(city, cfg, cells, totals, sources, mask=None, mask_info=None, co
         header["water"] = mask.header(mask_info)
     if commute is not None:
         header["commute"] = commute
+    if regions is not None:
+        header["regions"] = regions
     stem = os.path.join(WORK, f"{city}.cells")
     with open(stem + ".bin.part", "wb") as f:
         f.write(buf)
@@ -519,10 +604,17 @@ def write_cells(city, cfg, cells, totals, sources, mask=None, mask_info=None, co
     return stem + ".json"
 
 
-def add_gravity(cells_json, city):
+def add_gravity(cells_json, city, extra=None):
     """Solve the 2 km zone gravity with the sim crate's own code (sim/src/bin/pack_gravity.rs)
     and write the finished pack to data/packs/. One implementation of the gravity: the game
-    rebuilds zone trips from these factors with the same decay table (notes/T-019.md)."""
+    rebuilds zone trips from these factors with the same decay table (notes/T-019.md). Zones
+    split by the cells' regions, the decay x the city's border factor across them (its config's
+    "border_factor", else BORDER_FACTOR_US; T-162, T-181); `extra` passes other pack_gravity
+    arguments (a later --border-factor wins)."""
+    factor = CITIES[city].get("border_factor", BORDER_FACTOR_US)
+    # a pack's own fitted curve (T-277: Toronto's, from the census commuting flows), else the US one
+    decay_pow = CITIES[city].get("decay_pow", DECAY_POW_US)
+    decay_km = CITIES[city].get("decay_km", DECAY_KM_US)
     env = dict(os.environ)
     cargo_bin = os.path.join(os.path.expanduser("~"), ".cargo", "bin")
     env["PATH"] = cargo_bin + os.pathsep + env.get("PATH", "")
@@ -534,7 +626,8 @@ def add_gravity(cells_json, city):
     if not cargo:
         sys.exit("cargo not found: install Rust (rustup) or put ~/.cargo/bin on PATH")
     cmd = [cargo, "run", "--quiet", "--release", "--features", "demand", "--bin", "pack_gravity",
-           "--manifest-path", os.path.join(ROOT, "sim", "Cargo.toml"), "--", cells_json, out_json]
+           "--manifest-path", os.path.join(ROOT, "sim", "Cargo.toml"), "--", cells_json, out_json,
+           "--border-factor", str(factor), "--decay-pow", str(decay_pow), "--decay-km", str(decay_km)] + list(extra or [])
     subprocess.run(cmd, env=env, check=True)
     with open(os.path.join(PACKS, f"{city}.bin"), "rb") as f:
         buf = f.read()
@@ -574,6 +667,9 @@ def checks(cfg, county_pop, county_jobs, lodes_year):
 def main(city):
     t0 = time.time()
     cfg = CITIES[city]
+    if cfg.get("country") == "ca":  # T-277: Canada's census sources, pipeline/canada.py
+        import canada
+        return canada.main(city)
     for d in (RAW, WORK, PACKS):
         os.makedirs(d, exist_ok=True)
     county_set = set(cfg["counties"])
@@ -585,7 +681,8 @@ def main(city):
     blocks, jobs, years, sources = [], [], set(), []
     for fips in state_fips:
         b, n_all = blocks_for_state(fips, county_set)
-        print(f"blocks {STATES[fips]}: {len(b):,} of {n_all:,} in the county set, pop {b['pop'].sum():,}")
+        print(f"blocks {STATES[fips]}: {len(b):,} of {n_all:,} in the county set, pop {b['pop_census'].sum():,}, "
+              f"{b['gq_inst'].sum():,} of them in institutions (T-234) -> {b['pop'].sum():,}")
         blocks.append(b)
         w, y, url = jobs_for_state(STATES[fips], cfg["lodes_years"], county_set)
         print(f"jobs {STATES[fips]}: LODES {y}, {len(w):,} blocks, {w['jobs'].sum():,} jobs")
@@ -608,9 +705,13 @@ def main(city):
           f"{df['rac'].sum():,.0f} on blocks with a centroid")
     for k in ["jobs", "C000", "CE01", "CE03", "rac"] + wfh.CNS:
         df[k] = df[k].fillna(0).astype(np.int64)
+    # T-234: no more job holders on a block with institutions than it has residents left
+    df = group_quarters.cap_job_holders(df)
+    print(f"job holders on blocks with institutions capped at their residents (T-234): "
+          f"{df['rac_lodes'].sum():,} -> {df['rac'].sum():,}")
     df = df[(df["pop"] > 0) | (df["jobs"] > 0) | (df["rac"] > 0)]
 
-    county_pop = blocks.groupby(blocks["geoid"].str[:5])["pop"].sum().to_dict()
+    county_pop = blocks.groupby(blocks["geoid"].str[:5])["pop_census"].sum().to_dict()
     county_jobs = df.groupby(df["geoid"].str[:5])["jobs"].sum().to_dict()
 
     df = df.reset_index(drop=True)
@@ -639,12 +740,15 @@ def main(city):
     # corrections to office/headquarters commuting employment.
     adj_df["errand_jobs"] = df["CNS07"] + df["CNS19"]
     adj_df["leisure_jobs"] = df["CNS17"] + df["CNS18"]
+    # T-162: each cell's state, for the gravity's zones and border factor (pipeline/regions.py)
+    adj_df, region_codes, region_cols = regions.add_columns(adj_df)
     uniq, vals, st = spread.spread(adj_df, county_set, fetch, mask, lon0, lat0,
-                                   cols=("pop", "jobs", "home_c", "work_c", "errand_jobs", "leisure_jobs"))
+                                   cols=("pop", "jobs", "home_c", "work_c", "errand_jobs", "leisure_jobs") + tuple(region_cols))
     pop, job, hc, wc = vals["pop"], vals["jobs"], vals["home_c"], vals["work_c"]
     print(f"spread: {st}")
     keep = (pop > 0) | (job > 0)
     uniq, pop, job, hc, wc = uniq[keep], pop[keep], job[keep], hc[keep], wc[keep]
+    region = regions.of_cells({c: vals[c][keep] for c in region_cols}, region_cols)
     commute_by_county(city, cfg, adj_df)
     print(f"spread: {len(uniq):,} cells, {int((pop > 0).sum()):,} with people, {int((job > 0).sum()):,} with jobs")
     ll = np.array([h3.cell_to_latlng(h3.int_to_str(int(c))) for c in uniq])
@@ -654,7 +758,7 @@ def main(city):
     totals = {"pop": int(round(pop.sum())), "jobs": int(round(job.sum())),
               "commute_home": int(round(hc.sum())), "commute_work": int(round(wc.sum()))}
     sources = [
-        {"what": "population", "name": "2020 Census, TIGER/Line TABBLOCK20 POP20, spread over each block polygon (TIGER2020PL) by land area",
+        {"what": "population", "name": group_quarters.POP_SOURCE,
          "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/"},
         {"what": "jobs", "name": f"LEHD LODES 8 WAC S000 JT00 {lodes_year}, C000 (all jobs)",
          "url": "https://lehd.ces.census.gov/data/lodes/LODES8/"},
@@ -668,21 +772,30 @@ def main(city):
                     "url": "https://www2.census.gov/programs-surveys/acs/summary_file/2023/table-based-SF/"})
     sources.append({"what": "home end of commutes", "name": f"LEHD LODES 8 RAC S000 JT00 {lodes_year}, C000 (jobs by home block)",
                     "url": "https://lehd.ces.census.gov/data/lodes/LODES8/"})
-    commute = {"home": "LODES RAC jobs by home block x (1 - tract work-from-home share)",
+    sources.append({"what": "group quarters", "name": group_quarters.SOURCE, "url": group_quarters.SOURCE_URL})
+    commute = {"home": group_quarters.HOME_RULE,
                "work": "sum over LODES sectors of jobs x (1 - industry work-from-home share)",
                "region_share": round(ts["region_share"], 4),
                "industries": wstats["industries"]}
     cells_json = write_cells(city, cfg, {"h3": uniq, "x_m": x, "y_m": y, "pop": pop, "jobs": job,
                                          "errand_jobs": vals["errand_jobs"][keep], "leisure_jobs": vals["leisure_jobs"][keep],
-                                         "commute_home": hc, "commute_work": wc},
-                             totals, sources, mask, mask_info, commute)
+                                         "commute_home": hc, "commute_work": wc, "region": region},
+                             totals, sources, mask, mask_info, commute, regions.header_block(region_codes))
     nbytes, gz = add_gravity(cells_json, city)
-    if city == "nyc":
-        # Attendance inputs are separate from commuting sectors; rebuild them with the pack.
-        import enrich_schools
-        enrich_schools.main()
-        import enrich_universities
-        enrich_universities.main()
+    # Attendance inputs are separate from commuting sectors; rebuild them with the pack. Every
+    # US city, New York included: NCES public schools and IPEDS (T-142, T-181).
+    import enrich_schools
+    enrich_schools.main(city)
+    import enrich_universities
+    enrich_universities.main(city)
+    # T-142: airport ground trips (OurAirports, FAA, DB1B) and medical visits (OSM)
+    import enrich_airports
+    enrich_airports.main(city)
+    import enrich_medical
+    enrich_medical.main(city)
+    # T-196: parks as social/leisure destinations (OSM)
+    import enrich_parks
+    enrich_parks.main(city)
 
     print(f"totals: pop {totals['pop']:,}, jobs {totals['jobs']:,}")
     checks(cfg, county_pop, county_jobs, lodes_year)

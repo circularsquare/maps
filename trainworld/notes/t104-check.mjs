@@ -34,5 +34,5 @@ try {
  await page.screenshot({path:'artifacts/trainworld/T-104-schedule.png'});
  const layout=await page.locator('#inspector').evaluate(e=>({width:e.clientWidth,scrollWidth:e.scrollWidth}));if(layout.scrollWidth>layout.width+1)throw Error('Inspector overflows');
  if(errors.length)throw Error(errors.join('\n'));
- const result={initial,chosen,stepped,restored,layout,errors};console.log(JSON.stringify(result));await writeFile('trainworld/notes/T-104-check.json',JSON.stringify(result,null,2));
+ const result={initial,chosen,stepped,restored,layout,errors};console.log(JSON.stringify(result));await writeFile('artifacts/trainworld/notes-outputs/T-104-check.json',JSON.stringify(result,null,2));
 }finally{await browser.close();}

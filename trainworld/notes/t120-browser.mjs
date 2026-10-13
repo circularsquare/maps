@@ -108,6 +108,6 @@ try {
   const gl = await page.evaluate(() => window.tw.renderer.gl.getError());
   const result = { fixture, nyc: { cells: nyc.cells, matched: nyc.r.matched, starts: zoneStats(nyc.r.starts), ends: zoneStats(nyc.r.ends) }, nycJobs: { starts: zoneStats(timesJobs.r.starts), ends: zoneStats(timesJobs.r.ends) }, phl: { cells: phl.cells, starts: zoneStats(phl.r.starts), ends: zoneStats(phl.r.ends) }, hov, station: { name: station.name, stationId: station.stationId, starts: zoneStats(station.starts), ends: zoneStats(station.ends) }, errors, gl };
   console.log(JSON.stringify(result, null, 1));
-  await writeFile('trainworld/notes/T-120-browser.json', JSON.stringify(result, null, 2));
+  await writeFile('artifacts/trainworld/notes-outputs/T-120-browser.json', JSON.stringify(result, null, 2));
   if (errors.filter(e => !/404/.test(e)).length || gl) throw Error(JSON.stringify({ errors, gl }));
 } finally { await ctx.close(); }

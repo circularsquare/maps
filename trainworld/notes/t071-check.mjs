@@ -43,5 +43,5 @@ try{
  const refusal=await page.evaluate(()=>window.tw.client.edit({op:'edgePis',edge:window.edge,pis:[{x:2000,y:1000,level:0,radius:0}]}));
  if(refusal.ok)throw Error('Constructed edge was reshaped');
  if(errors.length)throw Error(errors.join('\n'));
- const result={added,dragged,raised,two,removed,layout,refusal,errors};console.log(JSON.stringify(result));await writeFile('trainworld/notes/T-071-check.json',JSON.stringify(result,null,2));
+ const result={added,dragged,raised,two,removed,layout,refusal,errors};console.log(JSON.stringify(result));await writeFile('artifacts/trainworld/notes-outputs/T-071-check.json',JSON.stringify(result,null,2));
 }finally{await browser.close();}

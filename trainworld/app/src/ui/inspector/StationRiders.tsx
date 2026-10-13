@@ -6,16 +6,19 @@
 import { demandView } from "../../game/demand";
 import { count } from "../../game/format";
 import { CATCHMENT_COLOUR, DESTINATION_ALPHA, DESTINATION_COLOUR } from "../../game/palette";
+import { purposeWords } from "../../game/purposes";
+import { purposeFilter } from "../../game/ui";
 import { stationSide, stationView } from "../../map/demandViews";
 import { Row } from "../widgets";
 
 /** Places listed at the far end. */
 const PLACES = 8;
 
-export function StationRiders({ id }: { id: string }) {
+/** `scope`: the stations counted, ids joined by commas (the complex's in complex view, T-146). */
+export function StationRiders({ id, scope = id }: { id: string; scope?: string }) {
   const v = stationView.value;
   const side = stationSide.value;
-  if (!demandView.value || !v || v.stationId !== id) return null;
+  if (!demandView.value || !v || v.stationId !== id || v.scope !== scope) return null;
   const disc = <i class="mk" style={{ background: CATCHMENT_COLOUR }} />;
   const blank = <i class="mk" />;
   return (
@@ -35,6 +38,9 @@ export function StationRiders({ id }: { id: string }) {
           <span class="val">{count(v.work)}</span>
         </li>
       </ul>
+      {purposeFilter.value !== "all" && purposeFilter.value !== "work" && (
+        <p class="muted small" data-tip={`The map shows ${purposeFilter.value === "longer" ? "longer trips" : `${purposeWords(purposeFilter.value)} trips`} only`}>Not drawn under this purpose filter.</p>
+      )}
       {v.places.length > 0 && (
         <>
           <div class="h">

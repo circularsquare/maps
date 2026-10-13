@@ -37,12 +37,14 @@ try {
  await page.screenshot({path:'artifacts/trainworld/T-113-confirmation.png'});
  await modal.getByRole('button',{name:'Delete line',exact:true}).click();
  await page.waitForFunction(()=>window.tw.world.value.save.lines.length===0);
- await page.getByRole('button',{name:'City',exact:true}).click();
- if(await page.getByText('Trips by train',{exact:true}).count()||await page.getByText('People',{exact:true}).count()||await page.getByText('Jobs',{exact:true}).count())throw Error('Old City summary remains');
+ // the City tab is gone (T-220): no City tab, and search goes to a city
+ if(await page.getByRole('button',{name:'City',exact:true}).count())throw Error('City tab remains');
  await page.evaluate(()=>window.tw.map.jumpTo({center:[-74.8,40.2],zoom:9}));
- await page.getByRole('button',{name:'New York',exact:true}).click();
+ await page.getByRole('button',{name:'Search stations, lines and places'}).click();
+ await page.getByRole('combobox',{name:'Search stations, lines and places'}).fill('New York');
+ await page.keyboard.press('Enter');
  await page.waitForFunction(()=>Math.abs(window.tw.map.getCenter().lng+73.985)<.001);
  if(errors.length)throw Error(errors.join('\n'));
  const result={checks,confirmed:true,cityNavigation:true,errors};console.log(JSON.stringify(result));
- await writeFile('trainworld/notes/T-113-check.json',JSON.stringify(result,null,2));
+ await writeFile('artifacts/trainworld/notes-outputs/T-113-check.json',JSON.stringify(result,null,2));
 }finally{await browser.close();}

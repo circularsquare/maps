@@ -10,8 +10,10 @@ try {
   await page.goto('http://localhost:8800/trainworld/?new=1&paused=1&debug=1&demandWorkers=2');
   await page.waitForFunction(()=>window.twDemand?.view()?.round===3,undefined,{timeout:180000});
   await page.addStyleTag({content:'#debug-root {display:none}'});
-  await page.getByRole('button',{name:'City',exact:true}).click();
-  await page.getByRole('button',{name:'Boston',exact:true}).click();
+  // the City tab is gone (T-220): search goes to a city
+  await page.getByRole('button',{name:'Search stations, lines and places'}).click();
+  await page.getByRole('combobox',{name:'Search stations, lines and places'}).fill('Boston');
+  await page.keyboard.press('Enter');
   await page.waitForFunction(()=>!tw.map.isMoving()&&twDemand.activeCity.value==='bos');
   await page.getByRole('group',{name:'Demand on the map'}).getByRole('button',{name:'Destinations',exact:true}).click();
   await page.waitForFunction(()=>twViews.overlay.discsDrawn>0&&twViews.overlay.showBubbles);
@@ -43,12 +45,11 @@ try {
   check('regional panning retains Boston selection',unchanged);
   await page.mouse.move(320,870);
   await page.screenshot({path:'artifacts/trainworld/T-135-regional-work.png'});
-  await page.evaluate(()=>{tw.display.value={...tw.display.value,intercity:false};});
-  check('hide setting clears circles and labels',await page.evaluate(()=>!twViews.overlay.sets.has('inter')&&document.querySelectorAll('.intercity-label').length===0));
-  await page.evaluate(()=>{tw.display.value={...tw.display.value,intercity:true};tw.map.jumpTo({center:[-71.0589,42.3601],zoom:11.2});});
+  // the setting that hid these bubbles is gone (T-222): they are always drawn
+  await page.evaluate(()=>{tw.map.jumpTo({center:[-71.0589,42.3601],zoom:11.2});});
   await page.waitForFunction(()=>twViews.overlay.sets.get('inter')?.count>5);
   check('zoom back restores detailed zones',await page.evaluate(n=>twViews.overlay.sets.get('inter').count===n&&document.querySelectorAll('.intercity-label').length===0,flows.zones));
   await page.screenshot({path:'artifacts/trainworld/T-135-close-work.png'});
   check('no browser exceptions',errors.length===0,errors);
-} finally {await writeFile('trainworld/notes/T-135-browser.json',JSON.stringify(results,null,2));await browser.close();}
+} finally {await writeFile('artifacts/trainworld/notes-outputs/T-135-browser.json',JSON.stringify(results,null,2));await browser.close();}
 console.log(JSON.stringify(results,null,2));

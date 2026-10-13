@@ -1,0 +1,45 @@
+# T-277: campus points for Canadian university and college enrolment (pipeline/canada.py).
+# Universities: Council of Ontario Universities Table 3, fall 2022-23 headcount (full and part
+# time), split between campuses by `share` (University of Toronto: its 2023-24 quick facts,
+# St. George 68,454, Mississauga 16,739, Scarborough 14,601; York's Glendon about 5%, judgement).
+# Colleges: Ontario's college enrolment file, fall full-time headcount, by its campus names exactly.
+# Left out: online campuses and the private partner campuses (Niagara's Toronto School of
+# Management, Fleming's Trebas, Georgian's ILAC, Sheridan's CCTT, Mohawk's Mississauga, Humber's
+# IGS), whose addresses were not checked. Points are campus centres to about 200 m.
+institution,campus,source,headcount,share,lat,lon
+University of Toronto,St. George,university,97371,0.686,43.6629,-79.3957
+University of Toronto,Mississauga,university,97371,0.168,43.5483,-79.6627
+University of Toronto,Scarborough,university,97371,0.146,43.7845,-79.1871
+Toronto Metropolitan University,main,university,47623,1,43.6577,-79.3788
+York University,Keele,university,52791,0.95,43.7735,-79.5019
+York University,Glendon,university,52791,0.05,43.7275,-79.3783
+OCAD University,main,university,5042,1,43.6532,-79.3914
+Ontario Tech University,North Oshawa,university,11054,1,43.9456,-78.8968
+McMaster University,main,university,38353,1,43.2609,-79.9192
+Universite de l'Ontario francais,main,university,101,1,43.6450,-79.3685
+Centennial College,Ashtonbee Campus,college,,1,43.7300,-79.2905
+Centennial College,Downsview Park Aerospace Campus,college,,1,43.7426,-79.4735
+Centennial College,Morningside Campus,college,,1,43.7866,-79.1910
+Centennial College,Progress Campus (main),college,,1,43.7848,-79.2275
+Centennial College,Story Arts Centre,college,,1,43.6872,-79.3478
+George Brown College,Casa Loma,college,,1,43.6757,-79.4103
+George Brown College,Hospitality and Tourism Centre,college,,1,43.6522,-79.3696
+George Brown College,St. James (main),college,,1,43.6511,-79.3700
+George Brown College,Waterfront Campus,college,,1,43.6440,-79.3655
+George Brown College,Young Centre for the Performing Arts,college,,1,43.6503,-79.3592
+George Brown College,Toronto Metropolitan University,college,,1,43.6577,-79.3788
+Humber College,North Campus (main),college,,1,43.7289,-79.6074
+Humber College,Lakeshore,college,,1,43.5967,-79.5192
+Seneca College,King Campus,college,,1,43.9531,-79.5162
+Seneca College,Markham Campus (Seneca International Academy),college,,1,43.8514,-79.3570
+Seneca College,Newnham Campus (main),college,,1,43.7962,-79.3487
+Seneca College,Seneca @ York Campus,college,,1,43.7712,-79.4991
+Sheridan College,Davis Campus,college,,1,43.6560,-79.7393
+Sheridan College,Hazel McCallion,college,,1,43.5911,-79.6474
+Sheridan College,Trafalgar Road Campus (main),college,,1,43.4693,-79.6985
+Durham College,Durham College - Oshawa Campus (main),college,,1,43.9447,-78.8967
+Durham College,Durham College - Whitby Campus,college,,1,43.8902,-78.9393
+Mohawk College,Fennell Campus (main),college,,1,43.2386,-79.8873
+Mohawk College,Institute for Applied Health Sciences at McMaster,college,,1,43.2649,-79.9171
+Mohawk College,Stoney Creek Campus for Skilled Trades,college,,1,43.2200,-79.7140
+Mohawk College,Centre for Aviation Technology at Hamilton International Airport,college,,1,43.1700,-79.9300

@@ -9,11 +9,13 @@
 
 import init, { TrackApi } from "../wasm/track/sim"; // the track model only (T-051)
 import { toLocal } from "../map/geo";
-import { CITIES, HOME_CITY, NEW_GAME_FRAME, WORLD_ID } from "../game/cities";
+import { CITIES, cityNear, HOME_CITY, NEW_GAME_FRAME, WORLD_ID } from "../game/cities";
 import { frameKindName, makeFrame, type Frame, type FrameSpec } from "../game/frame";
 import { PERIODS, periodAt } from "../game/periods";
+import { DAY_KINDS, dayKindAt } from "../game/days";
 import { networkFromState } from "../map/network";
-import { decodeSave, encodeSave, isNortheastSave, readStored, SAVE_FORMAT, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, deleteSlot, leaseSlot, ORIGINAL_SLOT, type SlotLease, type DayLedger, type SaveHeader } from "./saveFile";
+import { buildComplexes } from "../game/complexes";
+import { decodeSave, encodeSave, isNortheastSave, readStored, SAVE_FORMAT, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, deleteSlot, leaseSlot, ORIGINAL_SLOT, type SlotLease, type SlotSummary, type DayLedger, type SaveHeader } from "./saveFile";
 import type { ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FromClock, MoneyState, NetworkSnapshot, PiInput, RouteEnd, ToClock } from "./protocol";
 
 /** Run 0 of each line is resampled this often (m) for the renderer's line texture. */
@@ -46,17 +48,31 @@ let version = 0;
 let snapVersion = 0;
 let epoch = NaN;
 let snapTimer = 0;
+/** the last edit's time by step, ms (T-229): sent with its answer for `?debug=1` */
+let timing: Record<string, number> = {};
 
 // Money and the clock (T-028). The main thread's clock is the game's; it tells this worker each
 // time it is set, paused or changes speed, and the worker settles fares and running costs one game
 // hour at a time from that.
 let fares = { ...START_FARES };
 let ledger: DayLedger[] = [];
-/** fare income per game hour in each period, US$M (from the main thread's demand results) */
-let incomePerHour = PERIODS.map(() => 0);
+/** fare income per game hour in each period, US$M (from the main thread's demand results), per
+ * kind of day (T-260, game/days.ts) */
+let incomePerHour: number[][] = DAY_KINDS.map(() => PERIODS.map(() => 0));
 let clk = { t: START_CLOCK, rate: 0, at: Date.now() };
-/** game hours before this one are settled */
-let settledHour = Math.floor(START_CLOCK / 3600);
+/** T-284: money is settled up to this game second, not by whole hours, so the cash moves as fares
+ * land. `partHour` is the hour being settled and `partFare`, `partCost` the shares of its fares and
+ * running cost already in the cash (each reaches 1 as the hour ends, so an hour still pays its whole
+ * fare and cost). */
+let settledT = START_CLOCK;
+let partHour = Math.floor(START_CLOCK / 3600);
+let partFare = (START_CLOCK % 3600) / 3600, partCost = partFare;
+/** per game hour (absolute index), the share of its fares paid by each second into it (3601
+ * values from 0 to 1), from the boarding account's trains leaving platforms with riders; an hour
+ * without one pays evenly (T-284) */
+const hourShape = new Map<number, Float32Array>();
+/** the cash and today's fares last sent in a "cash" message */
+let sentCash = NaN, sentFares = NaN;
 /** something to autosave; when the last autosave was written */
 let dirty = false;
 let savedAt = Date.now();
@@ -240,6 +256,7 @@ function buildState(): ClockState {
     edges,
     nodes,
     lines,
+    links: Array.from(a.station_links()),
     render: {
       edgePts: pts,
       edgeSpeed,
@@ -287,29 +304,94 @@ function moneyState(): MoneyState {
 }
 
 function sendMoney() {
-  send({ kind: "money", money: moneyState() });
+  const m = moneyState();
+  sentCash = m.cash;
+  sentFares = m.ledger[m.ledger.length - 1]?.fares ?? NaN;
+  send({ kind: "money", money: m });
 }
 
-/** Fares in and running costs out for every whole game hour up to now. */
+/** T-284: the cash and today's ledger, if either moved since last sent. */
+function sendCash() {
+  const cash = api!.cash(), today = dayEntry(Math.floor(gameNow() / 86400));
+  if (cash === sentCash && today.fares === sentFares) return;
+  sentCash = cash;
+  sentFares = today.fares;
+  send({ kind: "cash", cash, today: { ...today } });
+}
+
+/** Fares in and running costs out up to now (T-284: to the game second, not the whole hour). An
+ * hour's fare (the main thread's income for its period and kind of day) is paid as its trains
+ * pick up riders (`hourShape`), its running cost evenly; by the hour's end both are paid in full,
+ * so a day's totals are what whole-hour settling gave. Returns whether an hour ended. */
 function settle(): boolean {
   if (!api) return false;
-  const now = Math.floor(gameNow() / 3600);
-  if (now - settledHour > 24 * 366) settledHour = now - 24 * 366; // a year at most in one go
-  if (now <= settledHour) return false;
+  const now = gameNow();
+  if (now - settledT > 86400 * 366) { // a year at most in one go
+    settledT = Math.floor((now - 86400 * 366) / 3600) * 3600;
+    partHour = settledT / 3600;
+    partFare = partCost = 0;
+  }
+  if (now <= settledT) return false;
   const running = [0, 1, 2].map((l) => api!.running_cost(l));
-  let cash = api.cash();
-  for (; settledHour < now; settledHour++) {
-    const t = settledHour * 3600;
+  let cash = api.cash(), ended = false;
+  while (settledT < now) {
+    const h = Math.floor(settledT / 3600);
+    if (h !== partHour) { partHour = h; partFare = partCost = 0; }
+    const t = h * 3600, end = Math.min(now, t + 3600), full = end >= t + 3600;
     const p = periodAt(t);
-    const fare = incomePerHour[p] ?? 0, cost = running[LEVEL_OF[PERIODS[p].demand]];
-    cash += fare - cost;
+    // T-260: the hour's own kind of day; the weekday's until a weekend's has come
+    const fare = (incomePerHour[dayKindAt(t)] ?? incomePerHour[0])?.[p] ?? 0, cost = running[LEVEL_OF[PERIODS[p].demand]];
+    const wf = full ? 1 : shareAt(h, end - t), wc = full ? 1 : (end - t) / 3600;
+    const df = Math.max(0, wf - partFare), dc = Math.max(0, wc - partCost);
+    partFare = Math.max(partFare, wf);
+    partCost = Math.max(partCost, wc);
+    cash += fare * df - cost * dc;
     const d = dayEntry(Math.floor(t / 86400));
-    d.fares += fare;
-    d.running += cost;
+    d.fares += fare * df;
+    d.running += cost * dc;
+    settledT = full ? t + 3600 : end;
+    if (full) { ended = true; hourShape.delete(h); }
   }
   api.set_cash(cash);
   dirty = true;
-  return true;
+  return ended;
+}
+
+/** The share of hour `h`'s fares paid by `s` seconds into it (T-284). */
+function shareAt(h: number, s: number): number {
+  const c = hourShape.get(h);
+  if (!c) return s / 3600;
+  return c[Math.max(0, Math.min(3600, Math.floor(s)))];
+}
+
+/** T-284: when hour `epoch`'s fares are paid, from its slice of the boarding account
+ * (game/boarding.ts `readBoardHour` has the layout): each train leaving a platform in the hour
+ * takes the riders waiting less those it leaves behind, and the hour's fares are paid in
+ * proportion as they board. Only the timing within the hour comes from here. */
+function shapeHour(epoch: number, b: Float32Array) {
+  const h = Math.round(epoch / 3600);
+  for (const k of hourShape.keys()) if (k < partHour - 1) hourShape.delete(k);
+  const nt = b[0], nl = b[1], nq = b[2];
+  const q0 = 4 + 2 * nt + nl, e0 = q0 + nq * 10;
+  const bins = new Float64Array(3600);
+  let total = 0;
+  for (let q = 0; q < nq; q++) {
+    const Q = q0 + q * 10, rate = b[Q + 4], first = b[Q + 8], n = b[Q + 9];
+    for (let j = first + 1; j < first + n; j++) {
+      const t = b[e0 + j * 2];
+      if (!(t >= 0 && t < 3600)) continue;
+      const tPrev = b[e0 + (j - 1) * 2], leftPrev = b[e0 + (j - 1) * 2 + 1];
+      const w = Math.max(0, leftPrev + rate * Math.max(0, t - tPrev) - b[e0 + j * 2 + 1]);
+      bins[Math.floor(t)] += w;
+      total += w;
+    }
+  }
+  if (!(total > 0)) { hourShape.delete(h); return; }
+  const c = new Float32Array(3601);
+  let acc = 0;
+  for (let s = 0; s < 3600; s++) { c[s] = acc / total; acc += bins[s]; }
+  c[3600] = 1;
+  hourShape.set(h, c);
 }
 
 // ---------------------------------------------------------------- saves (T-029)
@@ -324,6 +406,93 @@ function saveBytes(): Promise<Uint8Array> {
   return encodeSave(header(), api!.save());
 }
 
+/** T-241: the saves list's picture of the network and its figures. Read at once, before anything
+ * awaits (call it straight after saveBytes); a failure leaves the picture out, never the save. */
+// T-251: drawn at twice the size the saves panel shows it (192 x 128), for sharp lines on high-density screens
+const THUMB_W = 384, THUMB_H = 256, THUMB_PAD = 16;
+async function slotSummary(): Promise<SlotSummary> {
+  const a = api!;
+  // stations and the cities they are in
+  const ni = a.nodes_info();
+  const byCity = new Map<string, number>();
+  let stations = 0;
+  for (let i = 0; i < ni.length; i += 10) {
+    if (ni[i + 7] <= 0) continue;
+    stations++;
+    const [lng, lat] = packLngLat(ni[i + 1], ni[i + 2]);
+    const c = cityNear(lng, lat);
+    byCity.set(c, (byCity.get(c) ?? 0) + 1);
+  }
+  const cities = [...byCity].sort((x, y) => y[1] - x[1]).map(([c]) => c);
+  const li = a.lines_info();
+  const summary: SlotSummary = { cities, lines: li.length / 22, stations, cash: a.cash() };
+  try {
+    if (typeof OffscreenCanvas === "undefined") return summary;
+    // track (grey) and each line's route (its colour), in local units: what the renderer draws
+    const track: ArrayLike<number>[] = [];
+    const ei = a.edges_info();
+    for (let i = 0; i < ei.length; i += 10) {
+      const id = ei[i];
+      let d: ArrayLike<number> | undefined = edgeDrawn.get(id);
+      if (!d) {
+        const r = a.edge_render(id), out = new Float32Array(r.length);
+        for (let k = 0; k < r.length; k += 3) out.set([...packLocal(r[k], r[k + 1]), r[k + 2]], k);
+        d = out;
+      }
+      const xy = new Float32Array((d.length / 3) * 2);
+      for (let k = 0, j = 0; k < d.length; k += 3, j += 2) { xy[j] = d[k]; xy[j + 1] = d[k + 1]; }
+      track.push(xy);
+    }
+    const routes: { colour: string; xy: ArrayLike<number> }[] = [];
+    for (let i = 0; i < li.length; i += 22) {
+      if (li[i + 2] !== 1) continue;
+      const id = li[i];
+      let d: ArrayLike<number> | undefined = lineDrawn.get(id);
+      if (!d) {
+        const p = a.run_polyline(id, 0, SAMPLE_STEP), out = new Float32Array(p.length);
+        for (let k = 0; k < p.length; k += 2) out.set(packLocal(p[k], p[k + 1]), k);
+        d = out;
+      }
+      routes.push({ colour: hex(li[i + 1]), xy: d });
+    }
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const xy of [...track, ...routes.map((r) => r.xy)])
+      for (let k = 0; k < xy.length; k += 2) {
+        x0 = Math.min(x0, xy[k]); x1 = Math.max(x1, xy[k]);
+        y0 = Math.min(y0, xy[k + 1]); y1 = Math.max(y1, xy[k + 1]);
+      }
+    if (!(x1 >= x0)) return summary; // nothing built or drawn
+    // at least 3 km across, so a single short stretch is not blown up to fill the picture
+    const span = Math.max(x1 - x0, (y1 - y0) * THUMB_W / THUMB_H, 3000);
+    const s = (THUMB_W - 2 * THUMB_PAD) / span;
+    const ox = THUMB_W / 2 - ((x0 + x1) / 2) * s, oy = THUMB_H / 2 - ((y0 + y1) / 2) * s;
+    const canvas = new OffscreenCanvas(THUMB_W, THUMB_H);
+    const ctx = canvas.getContext("2d")!;
+    ctx.lineCap = ctx.lineJoin = "round";
+    const stroke = (xy: ArrayLike<number>) => {
+      ctx.beginPath();
+      let lx = NaN, ly = NaN;
+      for (let k = 0; k < xy.length; k += 2) {
+        const px = ox + xy[k] * s, py = oy + xy[k + 1] * s;
+        if (k > 0 && k < xy.length - 2 && Math.hypot(px - lx, py - ly) < 0.8) continue;
+        if (k === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        lx = px; ly = py;
+      }
+      ctx.stroke();
+    };
+    ctx.strokeStyle = "#b9b4ad";
+    ctx.lineWidth = 2.5;
+    track.forEach(stroke);
+    ctx.lineWidth = 4.5;
+    for (const r of routes) { ctx.strokeStyle = r.colour; stroke(r.xy); }
+    const png = new Uint8Array(await (await canvas.convertToBlob({ type: "image/png" })).arrayBuffer());
+    let bin = "";
+    for (let k = 0; k < png.length; k += 0x8000) bin += String.fromCharCode(...png.subarray(k, k + 0x8000));
+    summary.thumb = "data:image/png;base64," + btoa(bin);
+  } catch { /* no picture */ }
+  return summary;
+}
+
 function autosave(): Promise<boolean> {
   if (saveInFlight) return saveInFlight.then(ok => dirty && ok ? autosave() : ok);
   if (!api || !dirty) return Promise.resolve(true);
@@ -334,10 +503,12 @@ function autosave(): Promise<boolean> {
     try {
       const day = Math.floor(gameNow() / 86400);
       const t0 = performance.now();
-      const bytes = await saveBytes();
+      const bytesP = saveBytes(), summaryP = slotSummary();
+      const bytes = await bytesP;
       const encodeMs = performance.now() - t0;
+      const summary = await summaryP;
       const at = Date.now();
-      await writeSlot(key, { bytes, at, day, city });
+      await writeSlot(key, { bytes, at, day, city, ...summary });
       savedAt = at;
       saveFailure = undefined;
       send({ kind: "saved", at, bytes: bytes.length, encodeMs, totalMs: performance.now() - t0 });
@@ -363,8 +534,9 @@ async function manageSlot(msg: Extract<ToClock, { kind: "saveSlot" }>) {
       const lease = await leaseSlot(key);
       if (!lease) throw new Error("This browser cannot protect save slots. Save to a file instead.");
       try {
-        const bytes = await saveBytes();
-        await writeSlot(key, { bytes, at: Date.now(), day: Math.floor(gameNow() / 86400), city, name: msg.name?.trim() || "Saved game" });
+        const bytesP = saveBytes(), summaryP = slotSummary();
+        const bytes = await bytesP;
+        await writeSlot(key, { bytes, at: Date.now(), day: Math.floor(gameNow() / 86400), city, name: msg.name?.trim() || "Saved game", ...await summaryP });
         // Finish earlier writes before releasing the old slot's guard. The new copy is already safe.
         if (activeLease) await autosave();
         activeLease?.release();
@@ -433,8 +605,13 @@ function newGame() {
 /** After a load or a new game: the clock, fresh state, a new snapshot for demand. */
 function restart(t: number, from: "autosave" | "file" | "new") {
   clk = { t, rate: clk.rate, at: Date.now() };
-  settledHour = Math.floor(t / 3600);
-  incomePerHour = PERIODS.map(() => 0); // the main thread sends the new network's once demand lands
+  // T-284: the loaded hour counts as paid up to the clock, evenly (its trains' timing is not known yet)
+  settledT = t;
+  partHour = Math.floor(t / 3600);
+  partFare = partCost = (t - partHour * 3600) / 3600;
+  hourShape.clear();
+  incomePerHour = DAY_KINDS.map(() => PERIODS.map(() => 0)); // the main thread sends the new network's once demand lands
+  api!.clear_riders(); // and its riders (T-164)
   forget(true);
   syncFrame();
   send({ kind: "loaded", from, clock: t, frame: frameSpec() });
@@ -443,28 +620,82 @@ function restart(t: number, from: "autosave" | "file" | "new") {
   send({ kind: "snapshot", snapshot: buildSnapshot() });
 }
 
-function sendState() {
+/** `service`: only the service changed (a train count, T-229): the renderer's buffers are not built
+ * again, which was about half the edit's time on New York's real network. */
+function sendState(service = false) {
   const t0 = performance.now();
   const s = buildState();
   const t1 = performance.now();
+  if (service) {
+    s.service = true;
+    s.ms = [t1 - t0, 0];
+    timing.state = t1 - t0;
+    const r = s.render;
+    send({ kind: "state", state: s }, [r.edgePts.buffer, r.edgeOff.buffer, r.phases.buffer, r.meta.buffer, r.samples.buffer, r.lineTable.buffer, ...(r.edgeSpeed ? [r.edgeSpeed.buffer] : [])] as Transferable[]);
+    sendTrips();
+    return;
+  }
   // The renderer's buffers are built here too, so the main thread only uploads them (T-063).
   const n = networkFromState(s);
   s.net = n;
   s.ms = [t1 - t0, performance.now() - t1];
+  timing.state = t1 - t0;
+  timing.buffers = performance.now() - t1;
   const r = s.render;
   const bufs = new Set<ArrayBufferLike>([r.edgePts.buffer, r.edgeOff.buffer, r.phases.buffer, r.meta.buffer, r.samples.buffer, r.lineTable.buffer]);
   if (r.edgeSpeed) bufs.add(r.edgeSpeed.buffer);
-  for (const st of [n.track, n.lines]) for (const v of [st.seg, st.colour, st.edge, st.level, st.flags, st.dist, st.offset, st.speed]) if (v) bufs.add(v.buffer);
-  for (const v of [n.lineColours, n.lineCars, n.stations, n.stationAxis, n.junctions, n.sampleOff]) if (v) bufs.add(v.buffer);
+  for (const st of [n.track, n.lines]) for (const v of [st.seg, st.colour, st.edge, st.level, st.flags, st.dist, st.speed]) if (v) bufs.add(v.buffer);
+  for (const v of [n.lineColours, n.lineCars, n.stations, n.stationAxis, n.stationShape, n.junctions]) if (v) bufs.add(v.buffer);
   send({ kind: "state", state: s }, [...bufs] as Transferable[]);
   sendTrips();
 }
 
+/** Lines of the boarding account worked out per step: a few ms on New York's real network, so an
+ * edit or the money tick never waits long behind new riders (T-164, notes/T-164.md). */
+const BOARDING_STEP_LINES = 3;
+let boardingTimer = 0;
+/** time spent stepping since the last hour sent, and its longest step (`?debug=1`) */
+let prep = { ms: 0, max: 0 };
+function stepBoarding() {
+  clearTimeout(boardingTimer);
+  if (!api) return;
+  const t0 = performance.now();
+  const more = api.boarding_step(BOARDING_STEP_LINES);
+  const ms = performance.now() - t0;
+  prep = { ms: prep.ms + ms, max: Math.max(prep.max, ms) };
+  if (more) boardingTimer = setTimeout(stepBoarding, 0) as unknown as number;
+  else sendTrips();
+}
+
 function sendTrips() {
   if (!api || !Number.isFinite(epoch)) return;
+  api.set_now(gameNow());
+  timing.trips = 0;
+  timing.board = 0;
   for (const e of [epoch, epoch + 3600]) {
-    const trips = api.trips(e);
-    send({ kind: "trips", version, epoch: e, trips }, [trips.buffer]);
+    // per trip: profile, departure, end and the departure its train takes next, relative to the
+    // epoch; the end (T-206) and the next (T-245) go apart
+    const tT = performance.now();
+    const raw = api.trips(e), n = raw.length / 4;
+    timing.trips += performance.now() - tT;
+    const trips = new Float32Array(n * 2), ends = new Float32Array(n), nexts = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+      trips[i * 2] = raw[i * 4];
+      trips[i * 2 + 1] = raw[i * 4 + 1];
+      ends[i] = raw[i * 4 + 2];
+      nexts[i] = raw[i * 4 + 3];
+    }
+    // The boarding account's hour (T-164), once demand's riders are here: each trip's loads and
+    // the platforms' crowds. The account is worked out again only for lines whose service or
+    // riders changed.
+    if (api.has_riders()) {
+      const t0 = performance.now();
+      const board = api.boarding_hour(e);
+      shapeHour(e, board); // T-284: when this hour's fares land, read before the slice is sent
+      timing.board += performance.now() - t0;
+      send({ kind: "trips", version, epoch: e, trips, ends, nexts, board, boardMs: performance.now() - t0, redone: api.boarding_redone(), prepMs: prep.ms, prepMax: prep.max }, [trips.buffer, ends.buffer, nexts.buffer, board.buffer]);
+      prep = { ms: 0, max: 0 };
+    } else send({ kind: "trips", version, epoch: e, trips, ends, nexts }, [trips.buffer, ends.buffer, nexts.buffer]);
   }
 }
 
@@ -474,10 +705,19 @@ function buildSnapshot(): NetworkSnapshot {
   const a = api!;
   const ni = a.nodes_info();
   const stations: NetworkSnapshot["stations"] = [];
+  const geo: { id: string; x: number; y: number; heading: number; length: number }[] = [];
   for (let i = 0; i < ni.length; i += 10) {
-    if (ni[i + 7] > 0 && ni[i + 8] === 1)
+    if (ni[i + 7] > 0 && ni[i + 8] === 1) {
       stations.push({ id: ni[i], name: a.node_name(ni[i]), x: ni[i + 1], y: ni[i + 2], level: ni[i + 3] as any, platform: ni[i + 7] });
+      geo.push({ id: String(ni[i]), x: ni[i + 1], y: ni[i + 2], heading: ni[i + 9], length: ni[i + 7] });
+    }
   }
+  // T-161: each constructed station's complex, among constructed stations only (a blueprint
+  // platform carries nobody, so it joins nothing), with the player's links (T-197)
+  const fl = a.station_links(), links: [string, string][] = [];
+  for (let k = 0; k + 1 < fl.length; k += 2) links.push([String(fl[k]), String(fl[k + 1])]);
+  const cx = buildComplexes(geo, links);
+  stations.forEach((s) => (s.complex = cx.of.get(String(s.id))));
   const li = a.lines_info();
   const lines: NetworkSnapshot["lines"] = [];
   for (let i = 0; i < li.length; i += 22) {
@@ -525,7 +765,7 @@ function apply(op: EditOp): { r: number; line?: number } {
   const a = api!;
   switch (op.op) {
     case "route":
-      return { r: a.add_route(new Float64Array([...endArr(op.from), ...endArr(op.to)]), pisArr(op.pis), op.single ? 1 : 2, false) };
+      return { r: a.add_route(new Float64Array([...endArr(op.from), ...endArr(op.to)]), pisArr(op.pis), op.single ? 1 : op.quad ? 4 : 2, false) };
     case "edgePis":
       return { r: a.set_edge_pis(op.edge, pisArr(op.pis)) };
     case "moveNode":
@@ -560,10 +800,10 @@ function apply(op: EditOp): { r: number; line?: number } {
       const existing = new Set<string>();
       const info = a.lines_info();
       for (let i = 0; i < info.length; i += 22) existing.add(a.line_name(info[i]));
-      const base = op.name?.trim() || `${a.line_name(op.line)} copy`;
+      const base = op.name?.trim() || `${a.line_name(op.line)} ${op.express ? "express" : "copy"}`;
       let name = base, n = 2;
       while (existing.has(name)) name = `${base} ${n++}`;
-      return { r: a.copy_line(op.line, id, name), line: id };
+      return { r: op.express ? a.express_copy(op.line, id, name) : a.copy_line(op.line, id, name), line: id };
     }
     case "setStops":
       return { r: a.set_stops(op.line, new Uint32Array(op.stops)) };
@@ -578,6 +818,8 @@ function apply(op: EditOp): { r: number; line?: number } {
     case "fares":
       fares = { base: Math.max(0, op.base), perKm: Math.max(0, op.perKm) };
       return { r: 0 };
+    case "link":
+      return { r: op.on ? a.link_stations(op.a, op.b) : a.unlink_stations(op.a, op.b) };
     case "undo":
       return { r: a.undo() };
     case "redo":
@@ -644,6 +886,7 @@ async function processMessage(msg: ToClock) {
       send({ kind: "snapshot", snapshot: buildSnapshot() });
     })();
     setInterval(tick, 1000);
+    setInterval(liveMoney, LIVE_MONEY_MS);
     return;
   }
   await ready;
@@ -660,11 +903,19 @@ async function processMessage(msg: ToClock) {
   }
 };
 
-/** Once a wall second: settle money while the clock runs, autosave when due. */
+/** Once a wall second: autosave when due. */
 function tick() {
   if (!api) return;
-  if (clk.rate > 0 && settle()) sendMoney();
   if (dirty && Date.now() - savedAt >= AUTOSAVE_MS) void autosave();
+}
+
+/** T-284: how often the cash is settled and sent while the clock runs, wall ms: 15 game seconds at
+ * normal speed, 4 game minutes at the fastest. */
+const LIVE_MONEY_MS = 250;
+function liveMoney() {
+  if (!api || !(clk.rate > 0)) return;
+  if (settle()) sendMoney();
+  else sendCash();
 }
 
 /** Messages that replace or copy the whole game. */
@@ -691,6 +942,8 @@ async function whole(msg: Extract<ToClock, { kind: "import" | "export" | "newGam
 function handle(msg: ToClock) {
   if (!api) return;
   if (settle()) sendMoney();
+  // an edit's new departures start now; trains already running keep their places (T-206)
+  api.set_now(gameNow());
   if (msg.kind === "edit") {
     if (msg.op.op === "fares") {
       apply(msg.op);
@@ -700,7 +953,22 @@ function handle(msg: ToClock) {
       send({ kind: "edited", seq: msg.seq, ok: true, issues: [], charge: 0 });
       return;
     }
+    if (msg.op.op === "link") {
+      // T-197: a setting outside the undo history, like fares; the complexes change, so the
+      // drawing (links in the state) and demand (the snapshot's complexes) both follow
+      const { r } = apply(msg.op);
+      if (r === 0) {
+        dirty = true;
+        sendState();
+        scheduleSnapshot();
+      }
+      send({ kind: "edited", seq: msg.seq, ok: r === 0, issues: r === 0 ? [] : msg.op.on ? issues() : [], charge: 0 });
+      return;
+    }
+    const tA = performance.now();
     const { r, line } = apply(msg.op);
+    const tB = performance.now();
+    timing = {};
     const charge = r === 0 ? api.last_charge() : 0;
     // The new state first, so the world is up to date when the edit's answer arrives.
     if (r === 0) {
@@ -713,25 +981,32 @@ function handle(msg: ToClock) {
       }
       forget();
       const demand = api.dirty_demand_lines();
-      sendState();
+      sendState(msg.op.op === "setTrainCount");
       if (demand.length || msg.op.op === "undo" || msg.op.op === "redo") scheduleSnapshot();
     }
-    send({ kind: "edited", seq: msg.seq, ok: r === 0, issues: r === 0 ? [] : issues(), charge, line });
+    send({ kind: "edited", seq: msg.seq, ok: r === 0, issues: r === 0 ? [] : issues(), charge, line, ms: { apply: tB - tA, ...timing, total: performance.now() - tA } });
     // Paid for something: keep it (T-029, autosave on construct).
     if (charge > 0) void autosave();
   } else if (msg.kind === "clock") {
     clk = { t: msg.t, rate: msg.rate, at: msg.at };
   } else if (msg.kind === "income") {
-    incomePerHour = msg.perHour.slice(0, PERIODS.length);
+    incomePerHour = msg.perHour.map((p) => p.slice(0, PERIODS.length));
+  } else if (msg.kind === "riders") {
+    // a new demand result: the boarding account follows it (T-164), a few lines at a time, one
+    // kind of day's riders a message (T-260)
+    api.set_riders(msg.packed, msg.day ?? 0);
+    stepBoarding();
   } else if (msg.kind === "flush") {
     void autosave();
   } else if (msg.kind === "query") {
     const q = msg.q;
     const data =
       q.what === "insertStop" ? api.insert_stop(q.line, q.station)
+      : q.what === "stopTiers" ? api.stop_tiers(q.line)
       : q.what === "junction" ? api.junction_info(q.node)
       : q.what === "edgePis" ? api.edge_pis(q.edge)
       : q.what === "flyover" ? new Float64Array([api.flyover_cost(q.node)])
+      : q.what === "lineAccount" ? api.line_account(q.line, q.day ?? 0)
       : api.line_delays(q.line, q.level);
     send({ kind: "answer", seq: msg.seq, data }, [data.buffer]);
   } else if (msg.kind === "previewNode") {
@@ -739,7 +1014,7 @@ function handle(msg: ToClock) {
   } else if (msg.kind === "preview" || msg.kind === "previewEdge") {
     const out =
       msg.kind === "preview"
-        ? api.preview_route(new Float64Array([...endArr(msg.from), ...endArr(msg.to)]), pisArr(msg.pis), msg.single ? 1 : 2, false)
+        ? api.preview_route(new Float64Array([...endArr(msg.from), ...endArr(msg.to)]), pisArr(msg.pis), msg.single ? 1 : msg.quad ? 4 : 2, false)
         : api.preview_edge(msg.edge, pisArr(msg.pis));
     const ok = out[0] === 1, nv = out[3];
     const verts = new Float64Array(nv * 4);

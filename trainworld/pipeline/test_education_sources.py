@@ -20,7 +20,7 @@ class EducationSources(unittest.TestCase):
                        STATUS="1", VIRTUAL="Not Virtual", MEMBER=100, LATCOD=5,
                        LONCOD=5, **changes)}
         rows = [row("a"), row("b")]
-        for key, field, value in [("doe", "LONCOD", 1), ("closed", "STATUS", "2"),
+        for key, field, value in [("closed", "STATUS", "2"),
                                   ("virtual", "VIRTUAL", "Full Virtual"),
                                   ("missing", "MEMBER", -1), ("outside", "LONCOD", 20)]:
             r = row(key)
@@ -30,10 +30,10 @@ class EducationSources(unittest.TestCase):
             p = Path(tmp) / "page.json"
             p.write_text(json.dumps({"features": rows}))
             with patch.object(e.b, "fetch", return_value=str(p)):
-                schools, excluded = e.public_schools(box(0, 0, 10, 10), box(0, 0, 2, 10))
+                schools, excluded = e.public_schools(box(0, 0, 10, 10))
             self.assertEqual([r["building"] for r in schools], ["NCES:a", "NCES:b"])
             self.assertEqual(sum(r["enrollment"] for r in schools), 200)
-            self.assertEqual(len(excluded), 5)
+            self.assertEqual(len(excluded), 4)
             p.write_text(json.dumps({"features": [row("a"), row("a")]}))
             with patch.object(e.b, "fetch", return_value=str(p)), self.assertRaisesRegex(ValueError, "duplicate"):
                 e.public_schools(box(0, 0, 10, 10))

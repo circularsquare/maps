@@ -31,4 +31,4 @@ const {net,world,demand}=fixture(Array.from({length:10000},(_,i)=>i*200));
 const start=performance.now();buildLayers(net,world,demand,0,{lineLoad:false,stationRiders:true,trainLoad:false});
 const firstMs=performance.now()-start,again=performance.now();buildLayers(net,world,demand,0,{lineLoad:false,stationRiders:true,trainLoad:false});
 const cachedMs=performance.now()-again;
-const result={cases,firstMs,cachedMs};await writeFile('trainworld/notes/T-094-check.json',JSON.stringify(result,null,2));console.log(JSON.stringify(result));
+const result={cases,firstMs,cachedMs};await writeFile('artifacts/trainworld/notes-outputs/T-094-check.json',JSON.stringify(result,null,2));console.log(JSON.stringify(result));

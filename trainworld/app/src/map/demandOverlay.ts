@@ -10,6 +10,41 @@ import { NET_INK, rgb } from "../game/palette";
 import { DISC } from "../workers/commutersProtocol";
 import { EARTH_C, LOCAL_TO_MERC, mul4 } from "./geo";
 import type { Overlay } from "./overlay";
+import { PLATFORM_POINTS, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, shapePoints, type StationShape } from "./stationGeometry";
+
+// The selected station shows above the bubbles (T-189, Anita): after the discs, the canvas is
+// cleared where it is drawn, fully over the station and its outline and fading out over its glow,
+// so the network canvas below (the station, its glow, a train standing in it) shows through. One
+// quad per selected station, in CSS px; the shape is the renderer's (stationGeometry.ts).
+const CUT_VS = `#version 300 es
+precision highp float;
+uniform vec2 u_css;      // the canvas, CSS px
+uniform vec2 u_c;        // the station's middle, CSS px (y down)
+uniform vec2 u_u;        // along it and across it
+uniform vec2 u_n;
+uniform vec3 u_box;      // the quad in its frame: half its length, then from and to across
+out vec2 v_p;
+void main() {
+  vec2 corner = vec2(float(gl_VertexID & 1) * 2.0 - 1.0, gl_VertexID < 2 ? -1.0 : 1.0);
+  v_p = vec2(corner.x * u_box.x, corner.y < 0.0 ? u_box.y : u_box.z);
+  vec2 s = u_c + u_u * v_p.x + u_n * v_p.y;
+  gl_Position = vec4(s.x / u_css.x * 2.0 - 1.0, 1.0 - s.y / u_css.y * 2.0, 0.0, 1.0);
+}`;
+
+const CUT_FS = `#version 300 es
+precision highp float;
+uniform vec3 u_size;     // half length, half width, (unused)
+uniform float u_dot;
+uniform vec2 u_q[${PLATFORM_POINTS}]; // the centre line in the frame, CSS px (T-254)
+uniform float u_outline;
+uniform float u_glow;
+in vec2 v_p;
+out vec4 o;
+${SHAPE_GLSL}
+void main() {
+  float d = u_dot > 0.0 ? length(v_p) - u_dot : boxSdf(polyFrame(v_p, u_q), u_size.xy);
+  o = vec4(0.0, 0.0, 0.0, 1.0 - clamp((d - u_outline) / u_glow, 0.0, 1.0));
+}`;
 
 // A disc per instance: radius in local units, colour and alpha, and an edge (0 none, 1 a white
 // edge of 1 px, 2 a dark outline of 2 px). No minimum size: a tiny count is a tiny disc.
@@ -124,6 +159,10 @@ export class DemandOverlay {
   /** called when the aggregation level on screen changes */
   onLevel: (level: number) => void = () => {};
   private lastLevel = -1;
+  /** the selected stations on screen, cut out of the discs (T-189); none when unset */
+  cutouts: (() => StationShape[]) | null = null;
+  private cutProg: WebGLProgram | null = null;
+  private cutU: Record<string, WebGLUniformLocation | null> = {};
 
   constructor(private map: MlMap, private overlay: Overlay) {
     this.canvas = document.createElement("canvas");
@@ -193,6 +232,16 @@ export class DemandOverlay {
     this.invalidate();
   }
 
+  /** A nearby zone's bubbles (T-276), drawn under the focused zone's and shown with them; null
+   * removes the zone's. */
+  private nearby = new Map<string, (DiscSet | null)[]>();
+  setNearbyBubbles(zone: string, levels: Float32Array[] | null) {
+    for (const s of this.nearby.get(zone) ?? []) this.dropSet(s);
+    this.nearby.delete(zone);
+    if (levels) this.nearby.set(zone, levels.map((d) => (d.length ? this.makeSet(d) : null)));
+    this.invalidate();
+  }
+
   /** Commuter bubbles' radius as a multiple of the built one (the settings slider, T-099). */
   bubbleSize = 1;
   setBubbleSize(s: number) {
@@ -238,6 +287,10 @@ export class DemandOverlay {
     // each set with its radius scale: the player's bubble size for commuter bubbles, 1 for a
     // station's discs
     const list: [DiscSet, number][] = [];
+    if (this.showBubbles) for (const sets of this.nearby.values()) {
+      const n = sets[level];
+      if (n) list.push([n, this.bubbleSize]);
+    }
     const b = this.showBubbles ? this.bubbles[level] : null;
     if (b) list.push([b, this.bubbleSize]);
     for (const l of LAYERS) {
@@ -281,9 +334,51 @@ export class DemandOverlay {
       this.discsDrawn += s.count;
     }
     gl.bindVertexArray(null);
+    this.cut(dpr);
     if (timing) gl.endQuery(this.timerExt.TIME_ELAPSED_EXT);
     this.drawMs = performance.now() - t0;
     this.draws++;
+  }
+
+  /** Clear the discs over the selected stations (T-189), after drawing them. */
+  private cut(dpr: number) {
+    const shapes = this.cutouts?.() ?? [];
+    if (!shapes.length) return;
+    const gl = this.gl;
+    if (!this.cutProg) {
+      this.cutProg = compile(gl, CUT_VS, CUT_FS);
+      for (const n of ["u_css", "u_c", "u_u", "u_n", "u_box", "u_size", "u_dot", "u_q", "u_outline", "u_glow"]) this.cutU[n] = gl.getUniformLocation(this.cutProg, n);
+    }
+    const u = this.cutU;
+    gl.useProgram(this.cutProg);
+    // what is drawn keeps (1 - alpha) of itself
+    gl.blendFunc(gl.ZERO, gl.ONE_MINUS_SRC_ALPHA);
+    gl.uniform2f(u.u_css, this.canvas.width / dpr, this.canvas.height / dpr);
+    gl.uniform1f(u.u_outline, SEL_OUTLINE_PX);
+    gl.uniform1f(u.u_glow, SEL_GLOW_PX);
+    const reach = SEL_OUTLINE_PX + SEL_GLOW_PX + 1;
+    for (const s of shapes) {
+      // the shape's own centre line (T-254); the quad round it, its ends carried on
+      const q = s.dot > 0 ? new Float32Array(2 * PLATFORM_POINTS) : shapePoints(s);
+      let lo = Infinity, hi = -Infinity, ax = 0;
+      for (let i = 0; i < PLATFORM_POINTS; i++) {
+        lo = Math.min(lo, q[i * 2 + 1]); hi = Math.max(hi, q[i * 2 + 1]);
+        ax = Math.max(ax, Math.abs(q[i * 2]));
+      }
+      const r = s.halfWidth + reach + Math.max(0, s.halfLength - ax);
+      const box: [number, number, number] = s.dot > 0
+        ? [s.dot + reach, -s.dot - reach, s.dot + reach]
+        : [ax + r, lo - r, hi + r];
+      gl.uniform2fv(u.u_q, q);
+      gl.uniform2f(u.u_c, s.x, s.y);
+      gl.uniform2f(u.u_u, s.ux, s.uy);
+      gl.uniform2f(u.u_n, s.nx, s.ny);
+      gl.uniform3f(u.u_box, ...box);
+      gl.uniform3f(u.u_size, s.halfLength, s.halfWidth, s.k);
+      gl.uniform1f(u.u_dot, s.dot);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    }
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
   }
 
   private pollTimer() {

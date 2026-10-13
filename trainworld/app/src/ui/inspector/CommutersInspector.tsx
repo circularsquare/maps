@@ -3,6 +3,7 @@
 
 import { count } from "../../game/format";
 import { BUBBLE_ALPHA, modeMix } from "../../game/palette";
+import { purposeWords } from "../../game/purposes";
 import { commuterPick } from "../../map/commuterView";
 import { Row } from "../widgets";
 import { SelectionLongerTrips } from "./LongerTrips";
@@ -50,9 +51,11 @@ export function CommutersInspector() {
         {swatch(...p.totals)}
         <span class="name">{home ? "Trips from homes here" : "Trips to destinations here"}</span>
       </div>
-      <div class="sub muted">{p.sel.areas === 1 ? "One area" : `${p.sel.areas} areas`}</div>
+      <div class="sub muted" data-tip="Outward and return legs included. Longer trips are counted separately below.">{p.sel.areas === 1 ? "One area" : `${p.sel.areas} areas`}</div>
       <Modes totals={p.totals} />
-      <p class="muted small">Outward and return legs included. Longer trips are counted separately below.</p>
+      {p.purpose && p.purpose !== "all" && <p class="muted small">
+        {p.purpose === "longer" ? "Longer trips only: no local trips counted." : `${purposeWords(p.purpose)[0].toUpperCase() + purposeWords(p.purpose).slice(1)} trips only.`}
+      </p>}
       <PurposeBreakdown purposes={p.purposes} />
       <div class="h">
         {home ? "Where they go" : "Where their homes are"}

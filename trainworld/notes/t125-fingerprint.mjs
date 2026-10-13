@@ -4,7 +4,7 @@
 // Loads the WASM currently in app/src/wasm/track (run it once before a rebuild and once after),
 // both city water rasters as the clock worker installs them, and the save (default: the real NYC
 // network fixture). Then, as the shared Northeast saves do, builds a Philadelphia line in the same
-// legacy frame and fingerprints that too. Writes trainworld/notes/T-125-fingerprint-<label>.json.
+// legacy frame and fingerprints that too. Writes artifacts/trainworld/notes-outputs/T-125-fingerprint-<label>.json.
 import { readFile, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { gunzipSync } from 'node:zlib';
@@ -65,5 +65,5 @@ const line = api.new_line_id();
 ok(api.set_line_with_trains(line, new Uint32Array([a, c]), 4, 4, 2, 30, 180, 0, 0x17a488, 'Philadelphia check'), 'line');
 ok(api.construct_all(), 'construct all');
 out.withPhiladelphia = fingerprint();
-await writeFile(`trainworld/notes/T-125-fingerprint-${label}.json`, JSON.stringify(out, null, 2) + '\n');
+await writeFile(`artifacts/trainworld/notes-outputs/T-125-fingerprint-${label}.json`, JSON.stringify(out, null, 2) + '\n');
 console.log(JSON.stringify(out));

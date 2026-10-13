@@ -59,4 +59,4 @@ async function run(world) {
 const out = [];
 for (let rep = 0; rep < 2; rep++) for (const world of [false, true]) { const r = await run(world); if (rep === 1) out.push(r); }
 console.log(JSON.stringify(out, null, 1));
-await writeFile('trainworld/notes/T-125-edit-timing.json', JSON.stringify(out, null, 2) + '\n');
+await writeFile('artifacts/trainworld/notes-outputs/T-125-edit-timing.json', JSON.stringify(out, null, 2) + '\n');

@@ -1,4 +1,5 @@
-"""T-152: optional NYC metro university attendance inputs from IPEDS 2023.
+"""T-152: optional university attendance inputs from IPEDS 2023, for any US city pack
+(New York first; the other registered cities T-142). `enrich_universities.py <city>`.
 
 Active degree-granting reporting institutions; degree/certificate-seeking
 undergraduates plus graduates, excluding exclusively distance-education students.
@@ -33,10 +34,9 @@ def source(name):
     return result
 
 
-def institutions(directory, enrollment, boundary):
-    """Select non-overlapping level rows and exclude online-only pupils, not campuses."""
-    if directory.UNITID.duplicated().any() or enrollment.duplicated(["UNITID", "EFDELEV"]).any():
-        raise ValueError("duplicate IPEDS institution/level rows")
+def eligible(enrollment):
+    """Eligible students by UNITID (degree-seeking undergraduates + graduates, less exclusively
+    online), and the UNITIDs whose counts are invalid."""
     levels = enrollment[enrollment.EFDELEV.isin([3, 12])].copy()
     # A structural blank (A=not applicable) is zero ONLY when the reported non-distance
     # cohort already equals the total. Other missing/negative counts remain unknown.
@@ -51,12 +51,46 @@ def institutions(directory, enrollment, boundary):
     levels = levels[valid].copy()
     totals = levels.groupby("UNITID")[["EFDETOT", "EFDEEXC"]].sum()
     totals["eligible"] = totals.EFDETOT - totals.EFDEEXC
+    return totals, invalid_ids
+
+
+def merged_sites(directory, previous):
+    """T-142: an institution that absorbed others this year (their ACT "C", NEWID pointing at it)
+    reports one total at its own directory point, which put all twelve Connecticut community
+    colleges (2023) at Hartford. Split its total over its own and the absorbed campuses' points
+    by each one's own eligible enrollment the year before. {UNITID: [(unitid, name, lat, lon,
+    share)]}; an institution without prior counts stays whole."""
+    if previous is None:
+        return {}
+    prior, _ = eligible(previous)
+    absorbed = directory[(directory.NEWID > 0) & (directory.ACT.astype(str).str.strip() == "C")]
+    sites = {}
+    for target, group in absorbed.groupby("NEWID"):
+        rows = pd.concat([directory[directory.UNITID == target], group])
+        rows = rows[np.isfinite(rows.LATITUDE) & np.isfinite(rows.LONGITUD)]
+        weights = np.array([max(0.0, float(prior.eligible.get(u, 0.0))) for u in rows.UNITID])
+        if len(rows) < 2 or weights.sum() <= 0:
+            continue
+        sites[int(target)] = [(int(r.UNITID), r.INSTNM, float(r.LATITUDE), float(r.LONGITUD), float(w / weights.sum()))
+                              for r, w in zip(rows.itertuples(), weights) if w > 0]
+    return sites
+
+
+def institutions(directory, enrollment, boundary, previous=None):
+    """Select non-overlapping level rows and exclude online-only pupils, not campuses.
+    `previous`: the year before's enrollment, to split this year's mergers (`merged_sites`)."""
+    if directory.UNITID.duplicated().any() or enrollment.duplicated(["UNITID", "EFDELEV"]).any():
+        raise ValueError("duplicate IPEDS institution/level rows")
+    totals, invalid_ids = eligible(enrollment)
+    sites = merged_sites(directory, previous)
     matched, excluded = [], []
     for r in directory.itertuples():
         if not np.isfinite(r.LATITUDE) or not np.isfinite(r.LONGITUD):
             excluded.append({"unitid": int(r.UNITID), "reason": "missing_coordinates"})
             continue
-        if not boundary.covers(Point(r.LONGITUD, r.LATITUDE)):
+        pieces = sites.get(int(r.UNITID), [(int(r.UNITID), r.INSTNM, float(r.LATITUDE), float(r.LONGITUD), 1.0)])
+        inside = [p for p in pieces if boundary.covers(Point(p[3], p[2]))]
+        if not inside:
             continue
         reason = None
         if str(r.ACT).strip() not in {"A", "N", "R"} or r.CYACTIVE != 1 or r.NEWID > 0:
@@ -73,10 +107,14 @@ def institutions(directory, enrollment, boundary):
             excluded.append({"unitid": int(r.UNITID), "name": r.INSTNM, "reason": reason})
             continue
         t = totals.loc[r.UNITID]
-        matched.append(dict(unitid=int(r.UNITID), name=r.INSTNM, lat=float(r.LATITUDE),
-                            lon=float(r.LONGITUD), enrollment=int(t.eligible),
-                            total_degree_seeking_and_grad=int(t.EFDETOT),
-                            exclusively_online=int(t.EFDEEXC), system=str(r.F1SYSNAM).strip()))
+        for unitid, name, lat, lon, share in inside:
+            row = dict(unitid=int(r.UNITID), name=r.INSTNM, lat=lat, lon=lon,
+                       enrollment=int(round(t.eligible * share)),
+                       total_degree_seeking_and_grad=int(round(t.EFDETOT * share)),
+                       exclusively_online=int(round(t.EFDEEXC * share)), system=str(r.F1SYSNAM).strip())
+            if share < 1.0:
+                row |= dict(campus_unitid=unitid, campus=name, share=share)
+            matched.append(row)
     return matched, excluded
 
 
@@ -103,7 +141,7 @@ def adult_weights(blocks):
 def main(city="nyc"):
     cfg = b.CITIES[city]
     boundary = b.build_boundary(city, cfg)
-    records, excluded = institutions(source(f"hd{YEAR}"), source(f"ef{YEAR}a_dist"), boundary)
+    records, excluded = institutions(source(f"hd{YEAR}"), source(f"ef{YEAR}a_dist"), boundary, source(f"ef{YEAR - 1}a_dist"))
     stem = os.path.join(b.PACKS, city)
     with open(stem + ".json") as f:
         header = json.load(f)
@@ -145,15 +183,16 @@ def main(city="nyc"):
     adults[positions[hit]] = values["university_adults"][hit]
     buf = education.replace_cell_arrays(header, buf, {"university_adults": adults, "university_enrollment": enrollment})
     header["university"] = dict(
-        coverage="Matched active degree-granting IPEDS reporting institutions in NYC metro; undergraduate degree/certificate-seeking and graduate students, excluding exclusively online enrollment",
-        year=YEAR, enrolled=float(enrollment.sum(dtype=np.float64)), institutions=len(matched),
+        coverage="Matched active degree-granting IPEDS reporting institutions in the city pack's counties; undergraduate degree/certificate-seeking and graduate students, excluding exclusively online enrollment",
+        year=YEAR, enrolled=float(enrollment.sum(dtype=np.float64)), institutions=len({r["unitid"] for r in matched}),
+        sites=len(matched), merged_campus_sites=sum(1 for r in matched if "campus_unitid" in r),
         exclusively_online_excluded=sum(r["exclusively_online"] for r in records),
         location_match_share=float(enrollment.sum())/source_total, adult_weight=float(adults.sum(dtype=np.float64)),
         adult_origin="2020 block population x ACS 2023 tract age 18+ share; full county FIPS fallback, metro fallback for Connecticut",
         fallback_blocks=fallback, attendance_factor=0.6, decay_m=6000,
-        limitations="One directory point per reporting UNITID, not campus-specific allocation; adult homes and attendance/timing estimated; no nondegree undergraduates, staff or global coverage",
-        sources=[BASE+f"hd{YEAR}.zip", BASE+f"ef{YEAR}a_dist.zip", "https://api.census.gov/data/2023/acs/acs5/groups/B01001.html"],
-        source_sha256={name: hashlib.sha256(open(os.path.join(b.RAW, name), "rb").read()).hexdigest() for name in [f"hd{YEAR}.zip", f"ef{YEAR}a_dist.zip"]})
+        limitations=f"One directory point per reporting UNITID, not campus-specific allocation, except institutions that absorbed others in {YEAR} (split over the absorbed campuses by their {YEAR - 1} enrollment); adult homes and attendance/timing estimated; no nondegree undergraduates, staff or global coverage",
+        sources=[BASE+f"hd{YEAR}.zip", BASE+f"ef{YEAR}a_dist.zip", BASE+f"ef{YEAR - 1}a_dist.zip", "https://api.census.gov/data/2023/acs/acs5/groups/B01001.html"],
+        source_sha256={name: hashlib.sha256(open(os.path.join(b.RAW, name), "rb").read()).hexdigest() for name in [f"hd{YEAR}.zip", f"ef{YEAR}a_dist.zip", f"ef{YEAR - 1}a_dist.zip"]})
     with open(stem + ".bin.part", "wb") as f:
         f.write(buf)
     with open(stem + ".json.part", "w") as f:
@@ -168,4 +207,5 @@ def main(city="nyc"):
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+    main(*sys.argv[1:2])

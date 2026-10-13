@@ -43,12 +43,13 @@ const children=source('school_children'),enrollment=source('school_enrollment');
 assert(enrollment.every((v,c)=>v===0 || audit.schools.some(s=>s.cell===c)));
 assert(children.every(v=>Number.isFinite(v) && v>=0));
 if(h.school.nces_schools){
- assert(h.school.doe_enrolled===844956 && h.school.nces_schools>3000);
+ // T-181: NCES alone, five boroughs included (no DOE building input since then)
+ assert(h.school.doe_enrolled===undefined && h.school.nces_schools>5000 && h.school.nces_enrolled===h.school.enrolled);
  assert(sum(children)>3000000);
  assert(children.some((v,c)=>v>0 && (xy[2*c]<-40000 || xy[2*c]>50000)));
  assert(audit.schools.some(s=>s.source==='NCES CCD 2023-24'));
 }
 else assert(children.every((v,c)=>v===0 || (xy[2*c]>-40000 && xy[2*c]<50000)));
 const result={matchedBuildings:h.school.matched_buildings,enrollment:h.school.enrolled,sourceEnrollmentCoverage:h.school.location_match_share,attendanceOutings:info[6],dailySchoolTripLegs:2*info[6],schoolWalkFraction:info[7],schoolMeanKm:info[8],selectedBuilding:school.building,selectedSchoolTripLegs:schoolLegs,selectedSchoolRailLegs:schoolRail,morningOutwardShare:morning/outward,middayHomewardShare:middayReturn/returning,existingLayersPreserved:true,purposeAndFarCountsReconcile:true};
-writeFileSync(new URL('T-140-school-check.json',import.meta.url),JSON.stringify(result,null,2));console.log(result);
+writeFileSync(new URL('../../artifacts/trainworld/notes-outputs/T-140-school-check.json',import.meta.url),JSON.stringify(result,null,2));console.log(result);
 real.free();commute.free();

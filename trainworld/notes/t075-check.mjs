@@ -20,5 +20,5 @@ try{
   });results.push({candidate,...result});await page.close();
  }
  if(errors.length||results.some(r=>r.webglError))throw Error(JSON.stringify({errors,results}));
- await writeFile('trainworld/notes/T-075-check.json',JSON.stringify({results,errors},null,2));console.log(JSON.stringify({results,errors}));
+ await writeFile('artifacts/trainworld/notes-outputs/T-075-check.json',JSON.stringify({results,errors},null,2));console.log(JSON.stringify({results,errors}));
 }finally{await browser.close();}

@@ -1,3 +1,5 @@
+Archived: task done, see ARCHIVE.md. Kept as background; SPEC.md and docs/ say what is true now.
+
 # T-134: Boston and Washington city packs
 
 Anita requested a lighter city-addition process: use a sensible broad metro extent and
@@ -41,5 +43,5 @@ named-location water checks were invented (the read-back report explicitly lists
 Run with the maps venv, `CARGO_BUILD_JOBS=2`; no pipeline parallelism was added. The first
 attempt hit sandbox network restrictions and the download/build commands succeeded with
 the standard network escalation. Build logs are
-`T-134-bos-build.log` and `T-134-wdc-build.log`; inputs are cached in `data/raw/` and generated
+`../../artifacts/trainworld/notes-outputs/T-134-bos-build.log` and `../../artifacts/trainworld/notes-outputs/T-134-wdc-build.log`; inputs are cached in `data/raw/` and generated
 JSON/binary/boundary products are in `data/packs/`, all following the existing pipeline.

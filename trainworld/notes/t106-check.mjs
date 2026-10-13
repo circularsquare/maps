@@ -31,5 +31,5 @@ try{
  const resized=await page.evaluate(()=>({mapWidth:document.querySelector('#topbar').getBoundingClientRect().width,barHeight:document.querySelector('#topbar').getBoundingClientRect().height}));
  if(resized.barHeight<70)throw Error('Dock resize did not trigger compact header');
  if(errors.length)throw Error(errors.join('\n'));
- await writeFile('trainworld/notes/T-106-check.json',JSON.stringify({measurements,resized,errors},null,2));console.log(JSON.stringify({measurements,resized,errors}));
+ await writeFile('artifacts/trainworld/notes-outputs/T-106-check.json',JSON.stringify({measurements,resized,errors},null,2));console.log(JSON.stringify({measurements,resized,errors}));
 }finally{await browser.close();}

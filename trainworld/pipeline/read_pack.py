@@ -50,7 +50,16 @@ def check_gravity(header, a):
     zone = a["zone"].astype(np.int64)
     gx, gy = a["zone_gx"].astype(np.int64), a["zone_gy"].astype(np.int64)
     assert zone.max() < nz and gx.max() < w and gy.max() < h
-    assert len(np.unique(gx * h + gy)) == nz, "two zones share a grid square"
+    # T-162: zones are (square, region); a pack without zone_region is one region, factor 1
+    zr = a["zone_region"].astype(np.int64) if "zone_region" in a else np.zeros(nz, np.int64)
+    assert len(zr) == nz, "zone_region is not one per zone"
+    bf = float(g.get("border_factor", 1.0))
+    assert bf > 0, bf
+    assert len(np.unique((gx * h + gy) * 256 + zr)) == nz, "two zones share a grid square and a region"
+    if "region" in a:
+        bad = int((a["region"].astype(np.int64) != zr[zone]).sum())
+        assert bad == 0, f"{bad} cells are in a zone of another region"
+        assert zr.max() < len(header["regions"]["ids"]), "zone region outside the header's list"
     cx = ((a["x_m"] - np.float32(x0)) / np.float32(zm)).astype(np.int64)
     cy = ((a["y_m"] - np.float32(y0)) / np.float32(zm)).astype(np.int64)
     bad = int(((cx != gx[zone]) | (cy != gy[zone])).sum())
@@ -65,24 +74,41 @@ def check_gravity(header, a):
     zk = zm / 1000.0
     rsum = np.zeros(nz)
     csum = np.zeros(nz)
-    tot = dsum = 0.0
+    tot = dsum = cross = 0.0
     for s in range(0, nz, 400):
         e = min(nz, s + 400)
         dx = gx[s:e, None] - gx[None, :]
         dy = gy[s:e, None] - gy[None, :]
         d = zk * np.sqrt(dx * dx + dy * dy)
         d[d == 0] = g["intrazonal_km"]
-        t = row[s:e, None] * col[None, :] * np.exp(-d / g["decay_km"]) * d ** -a_pow
+        other = zr[s:e, None] != zr[None, :]
+        t = row[s:e, None] * col[None, :] * np.exp(-d / g["decay_km"]) * d ** -a_pow * np.where(other, bf, 1.0)
         rsum[s:e] = t.sum(axis=1)
         csum += t.sum(axis=0)
         tot += t.sum()
         dsum += (t * d).sum()
+        cross += t[other].sum()
+    joint = "zone_home" in a
+    if joint:
+        # T-276: a joint gravity over every zone pack: each zone's trips kept in the pack are its
+        # rows' and columns' sums here, and never more than its workers and jobs
+        kept_h, kept_w = a["zone_home"].astype(np.float64), a["zone_work"].astype(np.float64)
+        assert (kept_h <= workers * 1.002 + 1e-3).all() and (kept_w <= zjobs * 1.002 + 1e-3).all(), "a zone keeps more than it has"
+        workers, zjobs = kept_h, kept_w
     rerr = np.max(np.abs(rsum[workers > 0] / workers[workers > 0] - 1))
     cerr = np.max(np.abs(csum[zjobs > 0] / zjobs[zjobs > 0] - 1))
     assert rerr < 2e-3 and cerr < 2e-3, f"factors do not balance: rows {rerr:.1e}, columns {cerr:.1e}"
-    assert abs(tot / g["trips"] - 1) < 1e-4 and abs(dsum / tot - g["mean_trip_km"]) < 0.01
-    print(f"  gravity: {nz:,} zones of {zm:.0f} m on a {w} x {h} grid; trips {tot:,.0f}, "
-          f"mean {dsum / tot:.2f} km; worst row sum {rerr:.1e} off workers, column {cerr:.1e} off jobs; OK")
+    assert abs(tot / g["trips"] - 1) < 1e-4 and (joint or abs(dsum / tot - g["mean_trip_km"]) < 0.01)
+    if joint:
+        j = g["joint"]
+        print(f"  joint gravity (T-276) over {', '.join(j['packs'])}: {j['commuters_out']:,.0f} commuters to other packs, {j['commuters_in']:,.0f} from them")
+    squares = len(np.unique(gx * h + gy))
+    names = header.get("regions", {}).get("names", [])
+    print(f"  gravity: {nz:,} zones of {zm:.0f} m on a {w} x {h} grid ({squares:,} squares, {nz - squares} split by a "
+          f"region border); trips {tot:,.0f}, mean {dsum / tot:.2f} km; worst row sum {rerr:.1e} off workers, column "
+          f"{cerr:.1e} off jobs; OK")
+    print(f"  regions: {', '.join(names) if names else 'one'}; border factor {bf:g}; trips between regions "
+          f"{cross:,.0f} ({cross / tot:.2%})")
 
 
 def water_mask(header, a):
@@ -140,6 +166,14 @@ WATER_TESTS = {
         False: {"Times Square": (-73.9855, 40.7580), "Roosevelt Island": (-73.9500, 40.7620),
                 "Governors Island": (-74.0165, 40.6895), "Central Park": (-73.9660, 40.7820),
                 "Hoboken": (-74.0300, 40.7440), "JFK": (-73.7781, 40.6413), "Staten Island": (-74.1500, 40.5800)},
+    },
+    "tor": {  # T-277: StatCan lakes and the land outside the cartographic shorelines
+        True: {"Lake Ontario off Toronto": (-79.3800, 43.6000), "Toronto Harbour": (-79.3750, 43.6380),
+               "Hamilton Harbour": (-79.8500, 43.2900), "Lake Simcoe": (-79.4000, 44.3300),
+               "Lake Ontario off Oshawa": (-78.8500, 43.8100)},
+        False: {"Toronto City Hall": (-79.3832, 43.6534), "Billy Bishop airport": (-79.3962, 43.6285),
+                "Pearson": (-79.6248, 43.6777), "Hamilton City Hall": (-79.8711, 43.2557),
+                "Union Station": (-79.3806, 43.6453)},
     },
 }
 

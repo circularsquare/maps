@@ -112,5 +112,5 @@ try {
   await failureContext.close();
   check(errors.length===0,errors.join('\n'));
   const result={alpha,beta,rescued:rescued.active,slots:Object.fromEntries(Object.entries(saved).map(([k,v])=>[k,{name:v.name,base:v.header.fares.base}])),errors};
-  await writeFile('trainworld/notes/T-068-check.json',JSON.stringify(result,null,2)); console.log(JSON.stringify(result));
+  await writeFile('artifacts/trainworld/notes-outputs/T-068-check.json',JSON.stringify(result,null,2)); console.log(JSON.stringify(result));
 } finally { await browser.close(); }
