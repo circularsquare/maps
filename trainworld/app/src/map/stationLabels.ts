@@ -14,8 +14,9 @@
 import type { FeatureCollection } from "geojson";
 import type { GeoJSONSource, Map as MlMap } from "maplibre-gl";
 import { buildComplexes } from "../game/complexes";
+import { groundScale } from "../game/coords";
 import type { StationInput, WorldView } from "../game/types";
-import { toLocal } from "./geo";
+import { anchor, toLocal } from "./geo";
 import type { Overlay } from "./overlay";
 import { perfOff, perfTry } from "../perfFlags";
 import { MIN_LABEL_ZOOM, labelPadding } from "./labelLayout";
@@ -124,7 +125,8 @@ export class StationLabels {
     // (rebuilding 470 labels and the shadow source took ~100 ms an edit on a 2,000 km network, T-063).
     // Length and the player's links are in the key because they decide complexes (T-209).
     const links = w.save.links ?? [];
-    const key = stations.map((s) => `${s.id}|${s.name}|${s.built}|${s.lng}|${s.lat}|${s.heading}|${s.length}|${[...(lines.get(s.id) ?? [])].join(",")}`).join("\n") + "\n" + links.join("|");
+    // and the draw anchor: the names' positions are in its local units (T-307)
+    const key = `${anchor().version}\n` + stations.map((s) => `${s.id}|${s.name}|${s.built}|${s.lng}|${s.lat}|${s.heading}|${s.length}|${[...(lines.get(s.id) ?? [])].join(",")}`).join("\n") + "\n" + links.join("|");
     if (key === this.key) return;
     this.key = key;
     const names = labelGroups(stations, lines, links);
@@ -254,7 +256,7 @@ interface NameGroup {
  * lines, then constructed, then save order. The player's links count, as everywhere a complex is
  * used (T-197, T-209). */
 function labelGroups(stations: readonly StationInput[], lines: ReadonlyMap<string, ReadonlySet<string>>, links: readonly (readonly [string, string])[] = []): NameGroup[] {
-  const cx = buildComplexes(stations, links);
+  const cx = buildComplexes(stations, links, groundScale);
   const groups = new Map<string, StationInput[]>();
   for (const s of stations) {
     const k = `${cx.of.get(s.id)}\u0000${s.name}`;

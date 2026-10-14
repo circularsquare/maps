@@ -411,6 +411,9 @@ def residents_for_state(st, year, county_set):
 # ---------------------------------------------------------------- build
 
 def build_boundary(city, cfg):
+    if cfg.get("tier0"):  # T-287: global sources only, pipeline/tier0.py
+        import tier0
+        return tier0.build_boundary(city, cfg)
     if cfg.get("country") == "ca":  # T-277: census subdivisions, pipeline/canada.py
         import canada
         return canada.build_boundary(city, cfg)
@@ -620,7 +623,8 @@ def add_gravity(cells_json, city, extra=None):
     env["PATH"] = cargo_bin + os.pathsep + env.get("PATH", "")
     env.setdefault("CARGO_BUILD_JOBS", "2")
     # its own target dir, so the pipeline never waits on (or blocks) the app's wasm builds
-    env["CARGO_TARGET_DIR"] = os.path.join(WORK, "target")
+    # (from ROOT, not WORK: a scratch build that points WORK elsewhere still shares the compiled crate)
+    env["CARGO_TARGET_DIR"] = os.path.join(ROOT, "data", "work", "target")
     out_json = os.path.join(PACKS, f"{city}.json")
     cargo = shutil.which("cargo", path=env["PATH"])  # Windows does not search env's PATH itself
     if not cargo:
@@ -667,6 +671,9 @@ def checks(cfg, county_pop, county_jobs, lodes_year):
 def main(city):
     t0 = time.time()
     cfg = CITIES[city]
+    if cfg.get("tier0"):  # T-287: global sources only, pipeline/tier0.py
+        import tier0
+        return tier0.main(city)
     if cfg.get("country") == "ca":  # T-277: Canada's census sources, pipeline/canada.py
         import canada
         return canada.main(city)

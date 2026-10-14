@@ -173,15 +173,16 @@ impl TrackApi {
         self.boarding.take_redone() as u32
     }
 
-    /// Make the network empty and put it in the world frame (Lambert conformal, `frame.rs`) or the
-    /// legacy one. False, changing nothing, if anything is drawn: a network's metres cannot be
+    /// Make the network empty and put it in a frame (`frame_kind` numbers: 0 legacy, 1 conic, 2
+    /// Mercator, `frame.rs`). False, changing nothing, if anything is drawn or the kind is not
+    /// known: a network's metres cannot be
     /// reinterpreted, only converted (`convert_save_frame`).
-    pub fn set_empty_frame(&mut self, world: bool) -> bool {
+    pub fn set_empty_frame(&mut self, kind: u8) -> bool {
         let n = &self.w.net;
         if (0..n.node_count() as u32).any(|i| n.node_ok(i)) || (0..n.line_count() as u32).any(|l| n.line_ok(l)) {
             return false;
         }
-        let kind = if world { FrameKind::Lcc } else { FrameKind::Equirect };
+        let Some(kind) = FrameKind::from_u8(kind) else { return false };
         let mut net = Network::new_in(kind, n.origin_lon, n.origin_lat, n.right_hand);
         std::mem::swap(&mut net.water_mask, &mut self.w.net.water_mask);
         self.w = TrackWorld::new(net);
@@ -189,7 +190,8 @@ impl TrackApi {
         true
     }
 
-    /// The frame of the loaded network: 0 legacy equirectangular, 1 world (Lambert conformal).
+    /// The frame of the loaded network: 0 legacy equirectangular, 1 the Northeast conic (T-125),
+    /// 2 the Mercator world (T-306).
     pub fn frame_kind(&self) -> u8 {
         self.w.net.frame_kind as u8
     }
@@ -272,10 +274,11 @@ impl TrackApi {
         }
     }
 
-    /// The save's bytes in another frame (0 legacy, 1 world), see `save::convert_frame`. Empty if
+    /// The save's bytes in another frame (`frame_kind` numbers), see `save::convert_frame`. Empty if
     /// the bytes are not a save.
-    pub fn convert_save_frame(bytes: &[u8], world: bool) -> Vec<u8> {
-        save::convert_frame(bytes, if world { FrameKind::Lcc } else { FrameKind::Equirect }).unwrap_or_default()
+    pub fn convert_save_frame(bytes: &[u8], kind: u8) -> Vec<u8> {
+        let Some(to) = FrameKind::from_u8(kind) else { return vec![] };
+        save::convert_frame(bytes, to).unwrap_or_default()
     }
     pub fn save(&self) -> Vec<u8> {
         save::encode(&self.w.net)
@@ -488,7 +491,7 @@ impl TrackApi {
         let joint_speed = main_speeds.first().copied().unwrap_or((V_TOP * 3.6) as f32);
         let mut speeds = vec![];
         if !r.before.is_empty() {
-            let f = geom::fit(&r.before);
+            let f = self.w.net.fit(&r.before);
             render_samples(&f.pieces, &f.vert, &mut out);
             speeds.extend(render_speeds(&f.pieces, &f.vert));
             speeds.push(joint_speed);
@@ -496,7 +499,7 @@ impl TrackApi {
         out.extend(main);
         speeds.extend(main_speeds);
         if !r.after.is_empty() {
-            let f = geom::fit(&r.after);
+            let f = self.w.net.fit(&r.after);
             speeds.push(joint_speed);
             render_samples(&f.pieces, &f.vert, &mut out);
             speeds.extend(render_speeds(&f.pieces, &f.vert));
@@ -633,7 +636,7 @@ impl TrackApi {
             return None;
         }
         // the vertices of each part in the joined edge's direction, with each corner's radius
-        let radii = |v: &[Pi]| geom::fit(v).radius;
+        let radii = |v: &[Pi]| net.fit(v).radius;
         let mut verts: Vec<(Pi, f64)> = vec![];
         let mut s = s;
         let mut a = d.a;
@@ -664,7 +667,7 @@ impl TrackApi {
             verts.extend(v.iter().copied().zip(r).skip(1));
         }
         let mut pis: Vec<Pi> = verts.iter().map(|v| v.0).collect();
-        let f = geom::fit(&pis);
+        let f = net.fit(&pis);
         for j in 1..pis.len() - 1 {
             let want = verts[j].1;
             if want > 0.0 && (f.radius[j] - want).abs() > 0.01 {
@@ -729,7 +732,7 @@ impl TrackApi {
     pub fn edge_pis(&self, id: u32) -> Vec<f64> {
         let Some(d) = self.editable(id) else { return vec![] };
         let net = &self.w.net;
-        let f = geom::fit(&vertices_of(net, &d, &[]));
+        let f = net.fit(&vertices_of(net, &d, &[]));
         let mut out = vec![!net.edge_thru[id as usize].is_empty() as u8 as f64];
         for (i, p) in d.pis.iter().enumerate() {
             let rad = f.radius.get(i + 1).copied().unwrap_or(0.0);
@@ -802,7 +805,7 @@ impl TrackApi {
         self.last = None;
         let mut out = vec![ok, cost, shapes.len() as f64];
         for verts in &shapes {
-            let f = geom::fit(verts);
+            let f = self.w.net.fit(verts);
             out.push(verts.len() as f64);
             vertex_rows(&f, verts, &mut out);
             let mut pts = vec![];
@@ -853,13 +856,13 @@ impl TrackApi {
                     let fp = &net.node_ports[fi];
                     let side = fp.find(e, 1 - which).map_or(1, |q| fp.side[q]);
                     let fdir = if side == 1 { net.node_heading[fi] } else { net.node_heading[fi] + PI };
-                    if let Some(p) = lead_in_along(fx, fy, net.node_level[fi], fdir, (x, y)) {
+                    if let Some(p) = lead_in_along(fx, fy, net.node_level[fi], fdir, (x, y), net.frame().scaled()) {
                         v.push(p);
                     }
                 }
                 if keep {
                     let toward = v.first().map_or((fx, fy), |p| (p.x, p.y));
-                    if let Some(p) = lead_in_along(x, y, nd.level, leave, toward) {
+                    if let Some(p) = lead_in_along(x, y, nd.level, leave, toward, net.frame().scaled()) {
                         v.insert(0, p);
                     }
                 }
@@ -925,6 +928,7 @@ impl TrackApi {
     /// existing track gets a lead-in PI on that track's heading, so it leaves like a turnout.
     fn route_op(&mut self, ends: &[f64], pis: &[f64], tracks: u8, flying: bool) -> Result<(Op, Vec<Pi>, Vec<u32>, Vec<u32>), Issue> {
         let pis = pis_from(pis);
+        let scaled = self.w.net.frame().scaled();
         let (a, b) = (end_from(&ends[0..5]), end_from(&ends[5..10]));
         let mut new_nodes = vec![];
         let mut new_edges = vec![];
@@ -939,12 +943,12 @@ impl TrackApi {
         let mut verts: Vec<Pi> = vec![Pi::new(ra.x, ra.y, 0.0, ra.level)];
         let next_a = pis.first().map_or((rb.x, rb.y), |p| (p.x, p.y));
         let prev_b = pis.last().map_or((ra.x, ra.y), |p| (p.x, p.y));
-        if let Some(p) = lead_in(&ra, next_a) {
+        if let Some(p) = lead_in(&ra, next_a, scaled) {
             verts.push(p);
         }
         let first_click = verts.len();
         verts.extend_from_slice(&pis);
-        if let Some(p) = lead_in(&rb, prev_b) {
+        if let Some(p) = lead_in(&rb, prev_b, scaled) {
             verts.push(p);
         }
         verts.push(Pi::new(rb.x, rb.y, 0.0, rb.level));
@@ -954,18 +958,18 @@ impl TrackApi {
         let quad = tracks == 4;
         let tracks = if quad { 2 } else { tracks };
         // One piece of track per corner clicked (T-244), joined at plain nodes, the shape unchanged.
-        let pieces = stroke_pieces(&verts, first_click, pis.len());
+        let pieces = stroke_pieces(&verts, first_click, pis.len(), scaled);
         self.push_pieces(&pieces, ra.node, rb.node, tracks, &mut ops, &mut new_nodes, &mut new_edges);
         let mut express = vec![];
         if quad {
-            let (ex, first, clicks) = match express_verts(&verts, first_click, pis.len()) {
+            let (ex, first, clicks) = match express_verts(&verts, first_click, pis.len(), scaled) {
                 Some(v) => v,
                 None => {
                     self.release(&new_nodes, &new_edges);
                     return Err(Issue::Geom { edge: u32::MAX, issue: GeomIssue::ZeroLeg(0) });
                 }
             };
-            let pieces = stroke_pieces(&ex, first, clicks);
+            let pieces = stroke_pieces(&ex, first, clicks, scaled);
             self.push_pieces(&pieces, ra.node, rb.node, tracks, &mut ops, &mut new_nodes, &mut new_edges);
             express = ex;
         }
@@ -1064,7 +1068,7 @@ impl TrackApi {
             // a quad route's express pair, drawn on from the end back to the start (T-255)
             let mut back = self.route_express.clone();
             back.reverse();
-            let f = geom::fit(&back);
+            let f = self.w.net.fit(&back);
             let joint = self.preview_speeds.last().copied().unwrap_or((V_TOP * 3.6) as f32);
             self.preview_speeds.push(joint);
             render_samples(&f.pieces, &f.vert, &mut out);
@@ -1112,6 +1116,40 @@ impl TrackApi {
     /// A blueprint station: on an existing node (kind 1, `id`) or splitting an edge near (x, y)
     /// (kind 2, `id` = edge).
     pub fn add_station(&mut self, kind: u32, id: u32, x: f64, y: f64, platform: u16, name: String) -> u32 {
+        self.station_at(kind, id, x, y, platform, name, false)
+    }
+
+    /// Whether `add_station` with these arguments would succeed, without doing it (T-311): the
+    /// placement ghost's colour. The same code as `add_station` with the edit tried and rolled
+    /// back, so the ghost and the click cannot disagree (cash included). 0 when it would work;
+    /// otherwise `issue_kinds()` says why.
+    pub fn preview_station(&mut self, kind: u32, id: u32, x: f64, y: f64, platform: u16) -> u32 {
+        self.station_at(kind, id, x, y, platform, String::new(), true)
+    }
+
+    /// An edit, or with `dry` a trial of it: checked as a real edit is, then rolled back.
+    fn attempt(&mut self, op: Op, dry: bool) -> u32 {
+        if !dry {
+            return self.run(op);
+        }
+        let fleet = self.fleet;
+        match self.w.trial_with(op, |w| trains_to_buy(w, fleet)) {
+            Ok((r, trains)) => {
+                let need = r.charge + trains;
+                self.issues.clear();
+                self.money_short = None;
+                if need > 1e-9 && need > self.cash + 1e-6 {
+                    self.money_short = Some((need, self.cash));
+                    return 1;
+                }
+                0
+            }
+            Err(e) => self.done(Err(e)),
+        }
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn station_at(&mut self, kind: u32, id: u32, x: f64, y: f64, platform: u16, name: String, dry: bool) -> u32 {
         let st = StationData { platform, name, built: false };
         if kind == 1 {
             if !self.w.net.node_ok(id) {
@@ -1126,13 +1164,13 @@ impl TrackApi {
                 let (e, which) = (c >> 1, c & 1);
                 let s = if which == 0 { 0.0 } else { self.w.net.edge_len[e as usize] };
                 if let Some((twin, ts)) = self.twin_at(e, s) {
-                    let r = self.station_ops(&[(u32::MAX, id as f64), (twin, ts)], &st);
+                    let r = self.station_ops(&[(u32::MAX, id as f64), (twin, ts)], &st, dry);
                     if r == 0 {
                         return 0;
                     }
                 }
             }
-            return self.run(Op::Station { node: id, data: Some(st) });
+            return self.attempt(Op::Station { node: id, data: Some(st) }, dry);
         }
         if !self.w.net.edge_ok(id) {
             return self.refuse(Issue::NoSuchEdge { edge: id });
@@ -1142,18 +1180,18 @@ impl TrackApi {
         // the local and express platforms of one station, a complex. If that cannot be built,
         // the one station alone.
         if let Some((twin, ts)) = self.twin_at(id, s) {
-            let r = self.station_ops(&[(id, s), (twin, ts)], &st);
+            let r = self.station_ops(&[(id, s), (twin, ts)], &st, dry);
             if r == 0 {
                 return 0;
             }
         }
-        self.station_ops(&[(id, s)], &st)
+        self.station_ops(&[(id, s)], &st, dry)
     }
 
     /// Stations splitting edges at chainages, one undoable edit (`add_station`). A joint of a drawn
     /// route (T-244) within a platform's reach goes first: the pieces either side become one edge
     /// again, so the platform has room. `(u32::MAX, node)` puts one on an existing node instead.
-    fn station_ops(&mut self, at: &[(u32, f64)], st: &StationData) -> u32 {
+    fn station_ops(&mut self, at: &[(u32, f64)], st: &StationData, dry: bool) -> u32 {
         let mut ops = vec![];
         let (mut nodes, mut edges) = (vec![], vec![]);
         for &(e, s) in at {
@@ -1169,8 +1207,8 @@ impl TrackApi {
             edges.push(new_edge);
             ops.extend([Op::Split { edge: e, s, node, new_edge }, Op::Station { node, data: Some(st.clone()) }]);
         }
-        let r = self.run(Op::Batch(ops));
-        if r != 0 {
+        let r = self.attempt(Op::Batch(ops), dry);
+        if r != 0 || dry {
             self.release(&nodes, &edges);
         }
         r
@@ -1895,7 +1933,7 @@ fn vertices_of(net: &Network, d: &EdgeData, moved: &[(u32, f64, f64)]) -> Vec<Pi
 /// Set radii that no longer fit their legs go back to auto, where `may(pi index, pi)` allows it.
 fn relax_radii(net: &Network, d: &mut EdgeData, moved: &[(u32, f64, f64)], may: &dyn Fn(usize, &Pi) -> bool) {
     let verts = vertices_of(net, d, moved);
-    for issue in geom::fit(&verts).issues {
+    for issue in net.fit(&verts).issues {
         if let GeomIssue::ArcDoesNotFit(j) = issue {
             if j > 0 && j < verts.len() - 1 && may(j - 1, &d.pis[j - 1]) {
                 d.pis[j - 1].radius = 0.0;
@@ -2006,14 +2044,14 @@ fn reachable_from(net: &Network, stops: &[u32]) -> Vec<bool> {
 /// that changes level is not cut, since a ramp is centred between its corners and the joint, a
 /// node, must be at a whole level. Any radius that would still come out different (rounding to the
 /// millimetre grid) is set to the whole stroke's, so the track is where it was drawn.
-fn stroke_pieces(verts: &[Pi], first: usize, clicks: usize) -> Vec<Vec<Pi>> {
-    let f = geom::fit(verts);
+fn stroke_pieces(verts: &[Pi], first: usize, clicks: usize, scaled: bool) -> Vec<Vec<Pi>> {
+    let f = geom::fit_in(verts, scaled);
     let mut cuts: Vec<(usize, Pi)> = vec![];
     if f.issues.is_empty() {
         for i in first..(first + clicks).saturating_sub(1) {
             let (p, q) = (verts[i], verts[i + 1]);
             let leg = (q.x - p.x).hypot(q.y - p.y);
-            if p.level != q.level || leg < 2.0 * MIN_JOINT_LEG || f.tangent[i] > leg / 2.0 + 1e-6 || f.tangent[i + 1] > leg / 2.0 + 1e-6 {
+            if p.level != q.level || leg < 2.0 * MIN_JOINT_LEG * kk(scaled, p.y) || f.tangent[i] > leg / 2.0 + 1e-6 || f.tangent[i + 1] > leg / 2.0 + 1e-6 {
                 continue;
             }
             cuts.push((i, Pi::new(quant((p.x + q.x) / 2.0), quant((p.y + q.y) / 2.0), 0.0, p.level)));
@@ -2028,7 +2066,7 @@ fn stroke_pieces(verts: &[Pi], first: usize, clicks: usize) -> Vec<Vec<Pi>> {
         p.extend_from_slice(&verts[start + 1..=i.min(verts.len() - 2)]);
         p.push(joint);
         // what the whole stroke uses at each corner of the piece
-        let pf = geom::fit(&p);
+        let pf = geom::fit_in(&p, scaled);
         for j in 1..p.len() - 1 {
             let g = start + j;
             if f.radius[g] > 0.0 && (pf.radius[j] - f.radius[g]).abs() > 0.01 {
@@ -2055,21 +2093,24 @@ const QUAD_TAPER: f64 = 150.0;
 /// each corner concentric with the drawn one (radius smaller by the spacing on the inside of the
 /// turn, larger outside). Returns its vertices, the index of its first corner-like vertex and how
 /// many there are (the taper ends and the corners), for `stroke_pieces`. None if degenerate.
-fn express_verts(verts: &[Pi], first: usize, clicks: usize) -> Option<(Vec<Pi>, usize, usize)> {
+fn express_verts(verts: &[Pi], first: usize, clicks: usize, scaled: bool) -> Option<(Vec<Pi>, usize, usize)> {
     let n = verts.len();
-    let f = geom::fit(verts);
+    let f = geom::fit_in(verts, scaled);
     let leg = |i: usize| -> Option<(f64, f64, f64)> {
         let (dx, dy) = (verts[i + 1].x - verts[i].x, verts[i + 1].y - verts[i].y);
         let l = dx.hypot(dy);
         (l > 1e-6).then(|| (dx / l, dy / l, l))
     };
-    let d = QUAD_SPACING;
+    // Ground spacing for the radii; plane spacing (times k at the stroke's start) for positions.
+    let kp = kk(scaled, verts[0].y);
+    let dg = QUAD_SPACING;
+    let d = QUAD_SPACING * kp;
     // the legs the tapers lie on: from the vertex before the first corner, into the one after the last
     let (s, e) = (first - 1, first + clicks);
     let (ux, uy, la) = leg(s)?;
     let (vx, vy, lb) = leg(e - 1)?;
-    let ta = QUAD_TAPER.min(if clicks == 0 { 0.3 } else { 0.4 } * la);
-    let tb = QUAD_TAPER.min(if clicks == 0 { 0.3 } else { 0.4 } * lb);
+    let ta = (QUAD_TAPER * kp).min(if clicks == 0 { 0.3 } else { 0.4 } * la);
+    let tb = (QUAD_TAPER * kp).min(if clicks == 0 { 0.3 } else { 0.4 } * lb);
     let qa = Pi::new(quant(verts[s].x + ux * ta - uy * d), quant(verts[s].y + uy * ta + ux * d), 0.0, verts[s].level);
     let qb = Pi::new(quant(verts[e].x - vx * tb - vy * d), quant(verts[e].y - vy * tb + vx * d), 0.0, verts[e].level);
     let mut corners = vec![];
@@ -2083,13 +2124,13 @@ fn express_verts(verts: &[Pi], first: usize, clicks: usize) -> Option<(Vec<Pi>, 
         }
         let k = d / (1.0 + dot);
         let left = ax * by - ay * bx > 0.0;
-        let r = if left { f.radius[i] - d } else { f.radius[i] + d };
+        let r = if left { f.radius[i] - dg } else { f.radius[i] + dg };
         corners.push(Pi::new(quant(verts[i].x + k * (n1.0 + n2.0)), quant(verts[i].y + k * (n1.1 + n2.1)), quant(r.max(1.0)), verts[i].level));
     }
     let (a, b) = (verts[0], verts[n - 1]);
     let mut out = vec![Pi::new(a.x, a.y, 0.0, a.level)];
     let (hx, hy, _) = leg(0)?;
-    if let Some(p) = lead_in_along(a.x, a.y, a.level, hy.atan2(hx), (qa.x, qa.y)) {
+    if let Some(p) = lead_in_along(a.x, a.y, a.level, hy.atan2(hx), (qa.x, qa.y), scaled) {
         out.push(p);
     }
     let first_out = out.len();
@@ -2098,7 +2139,7 @@ fn express_verts(verts: &[Pi], first: usize, clicks: usize) -> Option<(Vec<Pi>, 
     out.push(qb);
     let count = out.len() - first_out;
     let (gx, gy, _) = leg(n - 2)?;
-    if let Some(p) = lead_in_along(b.x, b.y, b.level, (-gy).atan2(-gx), (qb.x, qb.y)) {
+    if let Some(p) = lead_in_along(b.x, b.y, b.level, (-gy).atan2(-gx), (qb.x, qb.y), scaled) {
         out.push(p);
     }
     out.push(Pi::new(b.x, b.y, 0.0, b.level));
@@ -2115,9 +2156,14 @@ fn twin_station(net: &Network, s: u32) -> Option<u32> {
     (0..net.node_count() as u32)
         .filter(|&n| n != s && net.node_ok(n) && net.node_platform[n as usize] > 0)
         .map(|n| (n, (net.node_x[n as usize] - x).hypot(net.node_y[n as usize] - y)))
-        .filter(|&(_, d)| d <= QUAD_SPACING * 1.5)
+        .filter(|&(_, d)| d <= QUAD_SPACING * 1.5 * net.k_at(y))
         .min_by(|a, b| a.1.total_cmp(&b.1))
         .map(|(n, _)| n)
+}
+
+/// Plane metres per ground metre at plane `y` in a scaled (Mercator) frame, else exactly 1.
+fn kk(scaled: bool, y: f64) -> f64 {
+    if scaled { super::frame::merc_k(y) } else { 1.0 }
 }
 
 /// The shortest leg either side of a joint between pieces of a stroke, m (T-244).
@@ -2128,18 +2174,18 @@ const MIN_JOINT_LEG: f64 = 20.0;
 /// would run on top of the main line (an overlap). `toward` is the next vertex of the route; of
 /// the directions the node allows, the one nearer to it. None where the node has no track yet
 /// or the route already leaves along the heading.
-fn lead_in(r: &Resolved, toward: (f64, f64)) -> Option<Pi> {
+fn lead_in(r: &Resolved, toward: (f64, f64), scaled: bool) -> Option<Pi> {
     if r.dirs.is_empty() {
         return None;
     }
     let want = (toward.1 - r.y).atan2(toward.0 - r.x);
     let dir = r.dirs.iter().copied().min_by(|a, b| geom::wrap(a - want).abs().total_cmp(&geom::wrap(b - want).abs())).unwrap();
-    lead_in_along(r.x, r.y, r.level, dir, toward)
+    lead_in_along(r.x, r.y, r.level, dir, toward, scaled)
 }
 
 /// A lead-in PI leaving (x, y) on heading `dir` towards `toward` (`lead_in`), or None when the
 /// way to `toward` is already within the node's tolerance of the heading.
-fn lead_in_along(x: f64, y: f64, level: i8, dir: f64, toward: (f64, f64)) -> Option<Pi> {
+fn lead_in_along(x: f64, y: f64, level: i8, dir: f64, toward: (f64, f64), scaled: bool) -> Option<Pi> {
     let (dx, dy) = (toward.0 - x, toward.1 - y);
     let dist = dx.hypot(dy);
     if dist < 1.0 {
@@ -2151,7 +2197,7 @@ fn lead_in_along(x: f64, y: f64, level: i8, dir: f64, toward: (f64, f64)) -> Opt
     }
     // The arc at the lead-in uses the whole first leg (auto radius, notes/T-008.md 1.2) as long
     // as its radius stays under the cap; 0.3 of the way keeps it inside half the next leg.
-    let d = (R_CAP * (delta / 2.0).tan()).min(0.3 * dist).max(0.5);
+    let d = (R_CAP * kk(scaled, y) * (delta / 2.0).tan()).min(0.3 * dist).max(0.5);
     Some(Pi::new(x + dir.cos() * d, y + dir.sin() * d, 0.0, level).quantised())
 }
 
@@ -3160,6 +3206,32 @@ mod tests {
         assert!(!a.w.net.line_broken[id2 as usize] && !a.w.net.line_broken[id as usize]);
     }
 
+    /// T-311: `preview_station` answers as `add_station` would, in the middle of a stretch and
+    /// near its end, and changes nothing (no edit, no undo step, no cash, no ids).
+    #[test]
+    fn preview_station_agrees_with_add_station() {
+        let (ends, pis) = stroke(&|_| 0);
+        let mut a = api();
+        assert_eq!(a.add_route(&ends, &pis, 2, false), 0, "{}", a.issues());
+        let edge = live_edges(&a)[0];
+        let len = a.w.net.edge_len[edge as usize];
+        let (cash, nodes, edges_n) = (a.cash, a.nodes_info(), live_edges(&a));
+        let mut seen = [0, 0];
+        for s in [len * 0.5, 20.0, len - 20.0, len * 0.3] {
+            let (x, y, _) = geom::pos_at(a.w.net.edge_pieces(edge), s);
+            let dry = a.preview_station(2, edge, x, y, 200);
+            assert_eq!((a.cash, a.nodes_info(), live_edges(&a)), (cash, nodes.clone(), edges_n.clone()), "dry run at {s}");
+            let why = a.issues();
+            let real = a.add_station(2, edge, x, y, 200, "S".into());
+            assert_eq!(dry == 0, real == 0, "at {s}: preview {dry} ({why}) real {real} ({})", a.issues());
+            seen[(real == 0) as usize] += 1;
+            if real == 0 {
+                assert_eq!(a.undo(), 0);
+            }
+        }
+        assert!(seen[0] > 0 && seen[1] > 0, "both answers should occur: {seen:?}");
+    }
+
     /// T-255: quad track is the drawn double track and an express double track beside it, end to
     /// end; a station on one pair gets its twin on the other; an express copy of a line runs on
     /// the express pair.
@@ -3295,7 +3367,7 @@ mod regional_water_tests {
         assert!(at(&a, -75.1636 + 0.0004, 39.9526 + 0.0004));
         assert!(!at(&a, -75.1636 + 0.012, 39.9526 + 0.0004));
         // a world-frame network: the same ground is water, through the other chart
-        assert!(a.set_empty_frame(true));
+        assert!(a.set_empty_frame(1));
         assert_eq!(a.frame_kind(), 1);
         assert!(at(&a, -75.1636 + 0.0004, 39.9526 + 0.0004));
         assert!(!at(&a, -75.1636 + 0.012, 39.9526 + 0.0004));
@@ -3312,13 +3384,13 @@ mod regional_water_tests {
         assert!(at(&a, -75.1636 + 0.0004, 39.9526 + 0.0004));
         assert!(!at(&a, -75.1636 + 0.012, 39.9526 + 0.0004));
         // a frame cannot be switched under drawn track
-        assert!(a.set_empty_frame(false));
+        assert!(a.set_empty_frame(0));
         let n = a.new_node_id();
         assert_eq!(a.add_route(&[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3000.0, 0.0, 0.0], &[], 2, false), 0);
         let _ = n;
-        assert!(!a.set_empty_frame(true));
-        assert_eq!(TrackApi::convert_save_frame(&a.save(), true)[..4], *b"TWT5");
-        assert!(TrackApi::convert_save_frame(b"junk", true).is_empty());
+        assert!(!a.set_empty_frame(1));
+        assert_eq!(TrackApi::convert_save_frame(&a.save(), 1)[..4], *b"TWT5");
+        assert!(TrackApi::convert_save_frame(b"junk", 1).is_empty());
     }
 
     #[test]
@@ -3348,7 +3420,7 @@ mod regional_water_tests {
         // The same crossings, in the legacy Northeast frame and in the world frame (T-125).
         for world_frame in [false, true] {
             let mut a = api();
-            assert!(a.set_empty_frame(world_frame));
+            assert!(a.set_empty_frame(world_frame as u8));
             for city in ["nyc", "phl"] {
                 let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../data/packs");
                 let head: serde_json::Value = serde_json::from_slice(&std::fs::read(dir.join(format!("{city}.json"))).unwrap()).unwrap();

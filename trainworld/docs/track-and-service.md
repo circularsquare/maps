@@ -74,7 +74,10 @@ Full design, numbers and sources: `notes/T-008.md`.
   `game/placeList.ts`; neighbourhoods within 2.5 km of their label point, towns 5 km): if that
   name is in use, another place at most 800 m further, else the way the station lies from it
   ("North Williamsburg"), else a number ("Williamsburg 2"). Failing that, a place on the loaded
-  tiles, else "Station N". The player can rename it.
+  tiles, else "Station N". The player can rename it. Before the click, the placement ghost
+  (docs/interface.md) shows whether it would work: the clock worker tries the same `addStation`
+  and rolls it back (`TrackApi.preview_station`, T-311), so the ghost and the click cannot
+  disagree, cash included.
 - **Curve speed** `v = sqrt(a_lat * R)`, **a_lat = 1.1 m/s²** (LGV design: 7,000 m for 320 km/h).
   100 m: 38 km/h, 300 m: 65, 1,000 m: 119, 1,800 m: 160. **Minimum radius 100 m.** The track has no
   speed cap of its own; the M1 train's top speed is **160 km/h**. Grades do not change speed.

@@ -263,12 +263,13 @@ def place_kind(shop, amenity, tourism, leisure):
     return "job"
 
 
-def osm_places(city, boundary, extract=OSM_EXTRACT):
+def osm_places(city, boundary, extract=OSM_EXTRACT, cache=None):
     """Per OSM place: kind (errand, leisure, job; or land, commercial or industrial land in units
     of LANDUSE_M2_PER_PLACE), point and weight. Read from the Geofabrik extract with GDAL's OSM
     driver (routes.py downloads it; T-277 first tried Overpass in 0.3 degree tiles, and the public
-    servers took minutes a tile and answered 504 on others), cached as a small CSV."""
-    cache = os.path.join(RAW_CA, f"osm_jobs_{city}.csv.gz")
+    servers took minutes a tile and answered 504 on others), cached as a small CSV. Any country's
+    extract works (tier0.py passes its own `cache` path)."""
+    cache = cache or os.path.join(RAW_CA, f"osm_jobs_{city}.csv.gz")
     if os.path.exists(cache):
         out = pd.read_csv(cache)
     else:
@@ -307,6 +308,7 @@ def osm_places(city, boundary, extract=OSM_EXTRACT):
                 continue
             rows.append((place_kind(shop, am, tour, lei), c.y, c.x, 1.0))
         out = pd.DataFrame(rows, columns=["kind", "lat", "lon", "w"])
+        os.makedirs(os.path.dirname(cache), exist_ok=True)
         out.to_csv(cache, index=False)
         print(f"  OSM extract read: {n_pts:,} points, {len(mp):,} areas, {time.time() - t0:.0f} s", flush=True)
     print("OSM job places: " + ", ".join(f"{k} {v:,.0f}" for k, v in out.groupby("kind").w.sum().items()))

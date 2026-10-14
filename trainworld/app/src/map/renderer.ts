@@ -1,6 +1,6 @@
 import { boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, bridgeShape, enclosingCircle, insideStation, PLATFORM_POINTS, platformPoints, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, shapePoints, STATION_BOX_ZOOM, STATIONS_ZOOM, stationHaloRadius, stationRadii, stationRing, stationShape, type PlatformShape, type Project, type StationShape, type StationStyle } from "./stationGeometry";
 // WebGL2 network renderer: track and line strokes (one instanced quad per polyline segment, white
-// casing under the colour; blueprint dashed and faded), stations (platforms along the track, or
+// casing under the colour; blueprint solid, lighter and without casing, T-311), stations (platforms along the track, or
 // dots zoomed out, T-189), the drawing tool's preview,
 // and instanced trains positioned on the GPU from keyframes (shared phase tables, notes/T-040.md)
 // and a time uniform. Per frame the CPU sets uniforms and issues a handful of draw calls, whatever
@@ -13,7 +13,7 @@ import { boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, bridgeShape, enclosingCircle, insid
 
 import { LEVEL_COLOURS, NET_INK, PLATFORM_BLUE, rgb } from "../game/palette";
 import { platformRoom, readBoardHour, QUEUE_STRIDE, type BoardHour } from "../game/boarding";
-import { LOCAL_TO_MERC, MERC_K, EARTH_C, mul4 } from "./geo";
+import { anchor, anchorPsi, EARTH_C, localToMercMatrix, mul4, PSI_PER_UNIT } from "./geo";
 import { lineAt, type NetworkBuffers, type Strokes } from "./network";
 
 const TEX_W = 2048;
@@ -99,8 +99,6 @@ in float a_dist;
 in float a_wmul;            // width as a multiple of the line width (riders, T-084); 1 otherwise
 out vec3 v_color;
 out float v_alpha;
-out float v_dash;
-out float v_dashed;
 void main() {
   int flags = int(a_flags + 0.5);
   bool sel = (u_kind == 1 && int(a_colour) == u_sel_line) || (u_kind == 0 && int(a_edge) == u_sel_edge);
@@ -128,9 +126,11 @@ void main() {
   vec2 off = nrm * side * w * 0.5 + dir * (along * 2.0 - 1.0) * w * 0.5;
   c.xy += off / half_vp * c.w;
   gl_Position = c;
-  v_dash = a_dist * u_px_per_unit + along * len - (along * 2.0 - 1.0) * w * 0.5;
-  v_dashed = blueprint && !placement ? 1.0 : 0.0;
-  v_alpha = (!placement && (flags & 3) != 0 ? 0.55 : 1.0) * faint * (u_kind == 1 && !sel ? u_dim : 1.0);
+  // Blueprint is solid but lighter (T-311): the colour mixed towards white, opaque, because
+  // segments overlap at every joint and see-through blueprint would show a bead there. Lines
+  // that do not run (faded) stay see-through.
+  bool bp = blueprint && !placement;
+  v_alpha = (!placement && !bp && (flags & 2) != 0 ? 0.55 : 1.0) * faint * (u_kind == 1 && !sel ? u_dim : 1.0);
   vec3 lc = u_level_colours[clamp(3 - int(round(a_level)), 0, 6)];
   if (u_casing > 0.0) v_color = placement ? u_sel : vec3(1.0);
   else if ((flags & 16) != 0) v_color = u_bad;
@@ -145,17 +145,15 @@ void main() {
   else if (placement) v_color = vec3(1.0);
   else if (u_kind == 0) v_color = sel ? u_sel : u_track;
   else v_color = texelFetch(u_line_colours, ivec2(int(a_colour) % ${LINES_W}, int(a_colour) / ${LINES_W}), 0).rgb;
+  if (bp) v_color = mix(v_color, vec3(1.0), 0.45);
 }`;
 
 const STROKE_FS = `#version 300 es
 precision mediump float;
 in vec3 v_color;
 in float v_alpha;
-in float v_dash;
-in float v_dashed;
 out vec4 o;
 void main() {
-  if (v_dashed > 0.5 && mod(v_dash, 13.0) > 8.0) discard;
   o = vec4(v_color * v_alpha, v_alpha);
 }`;
 
@@ -540,8 +538,9 @@ uniform int u_sel_line;            // stop editing (T-233): the edited line's tr
 uniform float u_dim;               // the others' share of full strength
 uniform vec2 u_sel_trip;           // the selected train (T-242): profile, departure - epoch; x < 0 none
 uniform highp int u_pass;          // 0 every train but the selected, 1 the selected's halo, 2 the selected
+uniform float u_psi0;              // the anchor's isometric latitude (T-307): k = cosh(u_psi0 - y * PSI_PER_UNIT)
 out float v_alpha;
-in vec2 a_load;                // this trip's first load in u_loads or -1, seconds to its last stop
+in vec2 a_load;               // this trip's first load in u_loads or -1, seconds to its last stop
 ${POS_GLSL}
 out vec2 v_uv;
 flat out float v_k;
@@ -570,12 +569,14 @@ void main() {
   float offsetM = u_detail ? (float(car) + 0.5) * pitchM - totalM * 0.5 : 0.0;
   float carD = u_detail ? centre + offsetM : d;
   vec2 p = lineAt(L, carD);
+  // local units per metre of ground where the train is (T-307: mercator's scale, 1 / cos(lat))
+  float kM = cosh(u_psi0 - p.y * ${PSI_PER_UNIT.toExponential(9)});
   // Both representations share the same width: splitting into cars must not shrink the train.
-  vec2 px = max(u_min_px, vec2(cars * 20.0, 3.0) * ${MERC_K.toFixed(6)} * u_px_per_unit);
-  if (u_detail) px.x = max(2.0 * u_dpr, pitchM * ${MERC_K.toFixed(6)} * u_px_per_unit - max(1.5 * u_dpr, ${MERC_K.toFixed(6)} * u_px_per_unit));
+  vec2 px = max(u_min_px, vec2(cars * 20.0, 3.0) * kM * u_px_per_unit);
+  if (u_detail) px.x = max(2.0 * u_dpr, pitchM * kM * u_px_per_unit - max(1.5 * u_dpr, kM * u_px_per_unit));
   // Heading along the chord between the train's two ends (as its bogies sit on the track), not
   // the sample segment under its centre, which turns in steps on curves (T-047).
-  float h = max(0.5 * px.x / u_px_per_unit / ${MERC_K.toFixed(6)}, 1.0);
+  float h = max(0.5 * px.x / u_px_per_unit / kM, 1.0);
   vec2 back = lineAt(L, carD - h), front = lineAt(L, carD + h);
   vec4 c = u_matrix * vec4(p, 0.0, 1.0);
   vec4 cb = u_matrix * vec4(back, 0.0, 1.0);
@@ -640,7 +641,7 @@ void main() {
   }
   v_empty = mix(lc, vec3(1.0), 0.18);
   v_front = run == 0 ? 1.0 : -1.0;
-  v_consist = vec2(u_detail ? totalM * ${MERC_K.toFixed(6)} * u_px_per_unit : px.x, offsetM * ${MERC_K.toFixed(6)} * u_px_per_unit);
+  v_consist = vec2(u_detail ? totalM * kM * u_px_per_unit : px.x, offsetM * kM * u_px_per_unit);
   v_detail = u_detail ? 1.0 : 0.0;
   v_cab = u_detail && (run == 0 ? float(car) == cars - 1.0 : car == 0) ? 1.0 : 0.0;
 }`;
@@ -1067,7 +1068,7 @@ export class NetworkRenderer {
     this.selProg = compile(gl, SEL_VS, SEL_FS);
     this.selU = uniforms(gl, this.selProg, ["u_bbox", "u_css", "u_shapes", "u_count", "u_dpr", "u_height", "u_ink", "u_outline", "u_glow"]);
     this.selTex = this.texture(this.selData, "rgba32f", SEL_MAX * SEL_STRIDE, []);
-    this.trainU = uniforms(gl, this.trainProg, ["u_matrix", "u_viewport", "u_time", "u_px_per_unit", "u_min_px", "u_phases", "u_meta", "u_samples", "u_lines", "u_line_colours", "u_fill", "u_bad", "u_detail", "u_dpr", "u_cars", "u_loads", "u_stretch", "u_sel_line", "u_dim", "u_sel_trip", "u_pass", "u_ink"]);
+    this.trainU = uniforms(gl, this.trainProg, ["u_matrix", "u_viewport", "u_time", "u_px_per_unit", "u_min_px", "u_phases", "u_meta", "u_samples", "u_lines", "u_line_colours", "u_fill", "u_bad", "u_detail", "u_dpr", "u_cars", "u_loads", "u_stretch", "u_sel_line", "u_dim", "u_sel_trip", "u_pass", "u_ink", "u_psi0"]);
     this.timerExt = gl.getExtension("EXT_disjoint_timer_query_webgl2");
     this.tripBuf = gl.createBuffer();
     this.endBuf = gl.createBuffer();
@@ -1367,7 +1368,9 @@ export class NetworkRenderer {
     const n = this.net;
     if (!n) return;
     const uTime = this.sync(time);
-    const m = mul4(mercMatrix, LOCAL_TO_MERC);
+    // the network's buffers are relative to the anchor they were built at (T-307)
+    const a = n.anchor ?? anchor();
+    const m = mul4(mercMatrix, localToMercMatrix(a));
     const vp = [gl.drawingBufferWidth, gl.drawingBufferHeight] as const;
     const pxPerUnit = ((512 * Math.pow(2, zoom)) / EARTH_C) * dpr;
 
@@ -1617,6 +1620,7 @@ export class NetworkRenderer {
       gl.uniform2f(this.trainU.u_viewport, vp[0], vp[1]);
       gl.uniform1f(this.trainU.u_time, uTime);
       gl.uniform1f(this.trainU.u_px_per_unit, pxPerUnit);
+      gl.uniform1f(this.trainU.u_psi0, anchorPsi(a));
       // a pill no shorter than before T-199 thinned it (2.2 times T-107's width)
       gl.uniform2f(this.trainU.u_min_px, tw * 2.2 / 0.75, tw);
       this.bindTrainTextures(this.trainU);

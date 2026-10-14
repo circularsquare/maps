@@ -18,8 +18,8 @@ bars). The network is not styled by us: lines, trains and stations take the line
   the bar drops secondary labels and uses two rows below
   520 px (three below 300 px), with cash, time, train share and all speed controls available.
   The cash has a fixed width (room for "-$99,999,999,999", T-305): the minus and the $ stay in
-  their places and the digits are right-aligned in tabular figures, so a figure that changes to
-  the dollar never moves the rest of the bar.
+  their places and the digits follow the $ directly (left-aligned, T-310) in tabular figures, so a
+  figure that changes to the dollar never moves the rest of the bar and no gap grows after the $.
   Hovering the split or time retains the hidden mode shares, day and demand level (T-106).
   **The build tools
   (draw track, place station, delete, level, single track) live in the Build tab of the dock**,
@@ -57,8 +57,8 @@ bars). The network is not styled by us: lines, trains and stations take the line
   full and when (spans under half an hour apart, at the stop where each is fullest; T-230), and
   riders left on the platform by full trains; each stop's boardings today in the stops list. A
   station's lines with their boardings today and its "Today" boardings with purpose shares; a
-  complex's list has a "Today" column (T-250). The Lines tab shows riders today (and sorts by
-  them, "Riders today"), the Stations tab boardings today; both re-sort each game hour. Counted
+  complex's list has a "Today" column (T-250). The Lines tab shows riders today and the Stations tab
+  boardings today, each a column that sorts (below); the sort re-runs each game hour. Counted
   by the clock worker from the boarding account's departures up to now (`TrackApi.today`: a
   stop's boardings since midnight are the riders arrived by its last departure less those still
   waiting, less the same at midnight), the account of today's kind of day; fares from each line's
@@ -127,8 +127,14 @@ bars). The network is not styled by us: lines, trains and stations take the line
 - **Confirmations** (T-113): a centered Are you sure? dialog with operation-specific text,
   cancel and action buttons. Cancel receives initial focus, Tab/Shift+Tab stay in the dialog,
   Escape cancels, focus returns when dismissed, and background map/tools are blocked.
-- **Line management** (T-109 to T-112): the Lines pane has New line and a Name / Riders today
-  sort above its list. Names sort naturally; Riders today sorts by riders so far today, descending, re-sorted each game hour (T-293). Actions
+- **Sorting the lists** (T-310): the Lines and Stations lists sort by clicking a column header,
+  with no dropdown. Lines has Name, Riders (riders so far today) and Trains; Stations has Name and
+  Today (boardings so far today). A click sorts by that column (names A to Z, figures biggest first),
+  a second click reverses it, and the sorted column has a small arrow (up for ascending). Each
+  header's hover says what it sorts by. Names sort naturally, ties fall back to the name. Defaults:
+  Lines by name, Stations by boardings. The sort is kept while the page is open and re-runs each
+  game hour (T-293).
+- **Line management** (T-109 to T-112): the Lines pane has New line above its list. Actions
   belong above lists of arbitrary length. New line immediately selects an empty zero-train line
   in the inspector, enters Edit stops and focuses its unique `Line N` name with all text selected.
   The number follows persisted creation order, including copies, and skips names already used.
@@ -438,7 +444,23 @@ bars). The network is not styled by us: lines, trains and stations take the line
   leaving it with Esc returns to selecting. While drawing track, its placement ghost is solid
   with a dark casing: white in Line/Traffic views, or coloured by the selected Height/Max speed
   view using the preview's fitted geometry. An invalid ghost is red. Once placed, blueprint track
-  is drawn dashed and faded. Build has the
+  is drawn solid, in the track's or line's colour mixed 45% towards white and opaque (T-311,
+  Anita: the dashes "look quite confusing as the lines curve"; opaque because segments overlap
+  at every joint and see-through blueprint showed a bead there), without casing. Lines that do
+  not run stay see-through at 55%. **The station tool's ghost** (T-311, Anita: "theres no
+  indicator for whether its okay to put a station here") is always the platform's full box at its
+  true length, at every zoom (not a dot below zoom 15), and is blue (`#2f6fe0` fill, `#1c4fb8`
+  outline) where a click would place the station and red (`#e03c3c`, `#b91f1f`) where it would be
+  refused; fixed colours, not the theme accent, with a thin white halo. A refused spot also shows
+  the reason in the tag by the pointer. The answer comes from the clock worker (one request in
+  flight, asked when the spot, platform length or network changes; the last answer stays up
+  meanwhile). **Placement help** (T-312, Anita: "distance from last station placed", "a circle
+  around station we're currently placing of like 1km and 2km"): with the station tool on and the
+  pointer snapped to track, the tag says how far the spot is from the station placed last in this
+  session, as the straight line ("1.2 km from W 46th St"; nothing before the first placement, and
+  the refusal reason takes the tag's place where the spot is refused), and two thin rings at 1 km and 2 km of ground
+  distance, each labelled at its top, follow the spot under the ghost (`stationRings` in
+  map/tools.ts, an SVG layer in the tool markers, not the renderer; fixed grey ink at 35%). Build has the
   total and "Construct blueprints", including the new train cars that constructing starts,
   after spare cars. Its expandable cost breakdown shows track by priced level, single/double,
   land/water and ramps (charged at the dearer end), stations, junction switches, flyovers and
@@ -446,10 +468,11 @@ bars). The network is not styled by us: lines, trains and stations take the line
   the constructed service, so starting several lines together includes their resulting delays
   without changing the game. Tool hints and a refused edit's reason show at the map's bottom left.
 - **A new game** starts on day 1 at 07:00 in an empty New York with $6B. Opening the page
-  continues the last game (section 11).
+  continues the last game (section 11). The map does not come back to the exact view it was
+  left in (T-310): the URL's view only says which city or zone, and the map starts at that city's
+  registry centre and zoom (zoomed out over it). A page opened with no view starts over New York.
 - **Money tab**: cash; yesterday and today (fares, running trains, new trains, construction,
-  net); the fare curve (each ride, each km, and what a 10 km ride costs); a day at this schedule
-  (its heading's hover says fares and running costs count 100 times over, 6.4); cars owned (the
+  net); the fare curve (each ride, each km, and what a 10 km ride costs); cars owned (the
   car prices in its hover) and cars the lines need; the value of the track and stations built.
   The line inspector shows a running line's fares and running cost so far today (T-293).
 - **Exact metropolitan focus and boundaries** (T-131, T-139): each registered pack's dissolved
@@ -458,7 +481,9 @@ bars). The network is not styled by us: lines, trains and stations take the line
   stroke and a lighter inside stroke. A subtle shade darkens the basemap outside its exact
   footprint, including excluded enclaves, leaving islands inside the city clear. These are
   metropolitan demand areas, not municipal limits. The layers sit beneath labels and game
-  overlays, never intercept clicks, follow city focus and survive basemap style changes.
+  overlays, never intercept clicks, follow city focus and survive basemap style changes. When the
+  focus moves to another zone the shade swaps to the new footprint in one step, never through an
+  empty frame (T-310); the footprints are made ready at startup.
 - **The goal number is always visible.** In a city: its mode split as one bar (e.g. driving 80%,
   train 16%, walking 4%); the player's job is to make the train share grow. Subway Builder does
   this well. It is the split of all modelled local trip legs (commutes plus everyday outings, school and university),
@@ -556,7 +581,8 @@ bars). The network is not styled by us: lines, trains and stations take the line
   estimate started. The first result, a change of purpose filter or city, and
   a result landing while the clock is held (a game loading) show at once. The bubbles are rebuilt
   in their worker when f has moved 0.01 and at most four times a second, only while catching up.
-  Their hover tags read what the bubbles show. The inspectors, a bubble selection and its far
+  Their hover tags read what the bubbles show, and end with the bubble's three closest stations
+  and the minutes to walk there (T-312, "Closest stations", below). The inspectors, a bubble selection and its far
   end, a station's catchment and the top bar are the current forecast at once. The city bubbles
   zoomed far out (below) catch up the same way; a selection's inter-region trip bubbles do not.
 
@@ -667,6 +693,16 @@ bars). The network is not styled by us: lines, trains and stations take the line
   catchment are the station's); its subtitle then ends with "Complex of 16 stations" as a link
   back, and any new selection, a click on the same station included, shows the complex again.
   Then the complex map (below) and the complex's boardings today with their purpose split.
+  **Closest stations** (T-312, `StationClosest` in ui/inspector/others.tsx, `game/walks.ts`): below
+  the station's lines, the three other stations with the shortest walk, built or blueprint
+  (blueprint ones muted and marked), each with its walking minutes ("7 min", hover: the metres).
+  A click on a row selects that station (and moves the map to it if off screen). The station's
+  own complex and stations of its own name are left out, and a name is listed once (the real
+  save has a station per platform group). The walk is the demand model's routed walk (docs/demand.md
+  4.3), so a station across the Hudson is never a neighbour; one that water cuts off shows "no
+  walk", but only when fewer than three can be walked to within 10 km. Minutes are the routed
+  metres x the model's 1.3 detour at a plain 4.8 km/h (the 15 km/h fast walk to stations stands
+  in for bikes and buses and is not used). The bubble hover tag lists the same from the bubble's centre.
   Commuters and inter-region trips cover the whole complex, each of the demand model's stations counted
   once, and the map draws the complex's catchment. "One circle per station complex" in the
   Stations tab (under Station demand circles, T-213; on by default since T-192) groups only the
@@ -874,7 +910,7 @@ bars). The network is not styled by us: lines, trains and stations take the line
   the true 12 m, so both double with each zoom level and its shape never changes. Every station
   has this width in every mode: in Line with traffic thickness a line can be wider than the
   stations on it, and dots do not grow for it either. It is never shorter than it is wide. Station
-  names sit clear of a plain box at any zoom. Blueprint stations are faded.
+  names sit clear of a plain box at any zoom. Blueprint stations are faded (blueprint track is lightened instead, opaque, T-311).
   Platforms drawn over each other are one white shape with one dark outline round the whole of
   it (T-217, Anita: "all the white rectangles overlapping seamlessly ... and then one continuous
   black outline surrounding the whole white shape"): every station's dark shape is drawn first,

@@ -222,6 +222,9 @@ pub enum Issue {
     LineSchedule { line: u32 },
     /// A split point on a ramp, too near a node, or outside the edge.
     SplitPoint { edge: u32 },
+    /// A node or PI nearer the poles than 85 degrees or past the antimeridian (Mercator frame,
+    /// docs/world.md).
+    OutsideWorld { x: f64, y: f64 },
 }
 
 /// What the raw setters touched since the last `take_touch`.
@@ -351,6 +354,28 @@ impl Network {
     /// The network's frame (origin and kind).
     pub fn frame(&self) -> Frame {
         self.frame
+    }
+
+    /// Plane metres per ground metre at plane `y`: `cosh(y / R)` in the Mercator frame, exactly 1
+    /// in the others (frame.rs). Metre figures entering the plane are multiplied by it.
+    #[inline]
+    pub fn k_at(&self, y: f64) -> f64 {
+        if self.frame.scaled() {
+            super::frame::merc_k(y)
+        } else {
+            1.0
+        }
+    }
+
+    /// Fit an alignment in this network's frame (ground lengths in the Mercator frame, geom.rs).
+    pub fn fit(&self, v: &[Pi]) -> geom::Fit {
+        geom::fit_in(v, self.frame.scaled())
+    }
+
+    /// True if a node may be placed here: anywhere in the unscaled frames; in the Mercator frame
+    /// within 85 degrees of the equator and not across the antimeridian (docs/world.md).
+    pub fn inside_world(&self, x: f64, y: f64) -> bool {
+        !self.frame.scaled() || super::frame::merc_inside(x, y)
     }
 
     /// An empty network in the given frame kind.
@@ -926,7 +951,7 @@ impl Network {
                 self.edge_time[i] = 0.0;
                 continue;
             }
-            let f = geom::fit(&self.edge_vertices(e));
+            let f = self.fit(&self.edge_vertices(e));
             let mut wet = vec![];
             cost::water_spans(f.len, |s| { let (x, y, _) = geom::pos_at(&f.pieces, s); (x, y) }, self.water_mask.as_ref(), &mut wet);
             self.edge_len[i] = f.len;
@@ -1067,7 +1092,7 @@ impl Network {
             .collect();
         for (s1, s2, overlap) in hits {
             let (x, y, _) = geom::pos_at(self.edge_pieces(e), s1);
-            if shared.iter().any(|&n| (self.node_x[n as usize] - x).hypot(self.node_y[n as usize] - y) < SHARED_NODE_CLEAR) {
+            if shared.iter().any(|&n| (self.node_x[n as usize] - x).hypot(self.node_y[n as usize] - y) < SHARED_NODE_CLEAR * self.k_at(y)) {
                 continue;
             }
             let (v1, v2) = (self.edge_vert(e), self.edge_vert(f));
@@ -1140,6 +1165,13 @@ impl Network {
 
     /// Web mercator tile (zoom 12) of a local point.
     pub fn tile_of(&self, x: f64, y: f64) -> (u32, u32) {
+        if self.frame.scaled() {
+            // The Mercator plane is the tiles' own: arithmetic only.
+            let z = (1u32 << TILE_ZOOM) as f64;
+            let c = 2.0 * PI * EARTH_R;
+            let (tx, ty) = (((x / c + 0.5) * z).floor(), ((0.5 - y / c) * z).floor());
+            return (tx.clamp(0.0, z - 1.0) as u32, ty.clamp(0.0, z - 1.0) as u32);
+        }
         let (lon, lat) = self.frame().to_lonlat(x, y);
         let lat = lat.to_radians();
         let z = (1u32 << TILE_ZOOM) as f64;
@@ -1196,7 +1228,11 @@ impl Network {
     }
 
     fn check_edge(&self, e: u32, out: &mut Vec<Issue>) {
-        let f = geom::fit(&self.edge_vertices(e));
+        let verts = self.edge_vertices(e);
+        if let Some(p) = verts.iter().find(|p| !self.inside_world(p.x, p.y)) {
+            out.push(Issue::OutsideWorld { x: p.x, y: p.y });
+        }
+        let f = self.fit(&verts);
         for issue in f.issues {
             out.push(Issue::Geom { edge: e, issue });
         }
@@ -1216,6 +1252,9 @@ impl Network {
 
     fn check_node(&self, n: u32, out: &mut Vec<Issue>) {
         let i = n as usize;
+        if !self.inside_world(self.node_x[i], self.node_y[i]) {
+            out.push(Issue::OutsideWorld { x: self.node_x[i], y: self.node_y[i] });
+        }
         let p = &self.node_ports[i];
         let h = self.node_heading[i];
         for (k, &c) in p.ends().iter().enumerate() {
@@ -1469,8 +1508,9 @@ impl Network {
     pub fn project(&self, e: u32, x: f64, y: f64) -> (f64, f64) {
         let mut best = (0.0, f64::INFINITY);
         for p in self.edge_pieces(e) {
+            // Plane offsets into the piece; the chainage returned is ground metres.
             let cands: [f64; 2] = if p.k == 0.0 {
-                let d = ((x - p.x0) * p.th0.cos() + (y - p.y0) * p.th0.sin()).clamp(0.0, p.len);
+                let d = ((x - p.x0) * p.th0.cos() + (y - p.y0) * p.th0.sin()).clamp(0.0, p.plen);
                 [d, d]
             } else {
                 // Angle of the point around the centre, as a distance along the arc from its
@@ -1479,13 +1519,13 @@ impl Network {
                 let a0 = (p.y0 - cy).atan2(p.x0 - cx);
                 let a = (y - cy).atan2(x - cx);
                 let t = geom::wrap((a - a0) * p.k.signum());
-                [(t / p.k.abs()).clamp(0.0, p.len), ((t + 2.0 * PI) / p.k.abs()).clamp(0.0, p.len)]
+                [(t / p.k.abs()).clamp(0.0, p.plen), ((t + 2.0 * PI) / p.k.abs()).clamp(0.0, p.plen)]
             };
-            for ds in cands {
-                let (px, py, _) = p.at(ds);
+            for d in cands {
+                let (px, py, _) = p.at_plane(d);
                 let dist = (px - x).hypot(py - y);
                 if dist < best.1 {
-                    best = (p.s0 + ds, dist);
+                    best = (p.s0 + p.ground_s(d), dist);
                 }
             }
         }
@@ -1568,7 +1608,7 @@ impl Network {
             return Err(Issue::NoSuchEdge { edge: e });
         }
         let v = self.edge_vertices(e);
-        let f = geom::fit(&v);
+        let f = self.fit(&v);
         let mut s = s;
         if s < 5.0 || s > f.len - 5.0 {
             return Err(Issue::SplitPoint { edge: e });
@@ -1600,9 +1640,18 @@ impl Network {
         let inside_arc = piece.k != 0.0 && s > piece.s0 + 1e-9 && s < piece.s0 + piece.len - 1e-9;
         if inside_arc {
             let m = f.piece_at_vertex[j] as usize;
-            let r = quant(1.0 / piece.k.abs());
-            let t1 = r * ((s - piece.s0) * piece.k.abs() / 2.0).tan();
-            let t2 = r * ((piece.s0 + piece.len - s) * piece.k.abs() / 2.0).tan();
+            // `r` is the ground radius the new PIs are given; the tangents are plane geometry.
+            let scaled = self.frame.scaled();
+            let r = quant(piece.ground_radius());
+            let rt = if scaled { piece.radius() } else { r };
+            let (d1, d2) = if scaled {
+                let d1 = piece.plane_d(s - piece.s0);
+                (d1, piece.plen - d1)
+            } else {
+                (s - piece.s0, piece.s0 + piece.len - s)
+            };
+            let t1 = rt * (d1 * piece.k.abs() / 2.0).tan();
+            let t2 = rt * (d2 * piece.k.abs() / 2.0).tan();
             let mut pi1 = Pi::new(quant(x - t1 * th.cos()), quant(y - t1 * th.sin()), r, v[m].level);
             let mut pi2 = Pi::new(quant(x + t2 * th.cos()), quant(y + t2 * th.sin()), r, v[m].level);
             // On the millimetre grid a new PI a few metres from the node turns by a slightly
@@ -1616,8 +1665,9 @@ impl Network {
                 if half < 1e-12 { f64::INFINITY } else { leg / half.tan() }
             };
             let to_node = |p: &Pi| (node.x - p.x).hypot(node.y - p.y);
-            let r1 = fits((v[m - 1].x, v[m - 1].y), &pi1, (node.x, node.y), to_node(&pi1));
-            let r2 = fits((node.x, node.y), &pi2, (v[m + 1].x, v[m + 1].y), to_node(&pi2));
+            // In ground metres (plane radius over k at the PI; k is 1 unscaled).
+            let r1 = fits((v[m - 1].x, v[m - 1].y), &pi1, (node.x, node.y), to_node(&pi1)) / self.k_at(pi1.y);
+            let r2 = fits((node.x, node.y), &pi2, (v[m + 1].x, v[m + 1].y), to_node(&pi2)) / self.k_at(pi2.y);
             if r1.min(r2) < 0.99 * r {
                 let end = if s - piece.s0 < piece.s0 + piece.len - s { piece.s0 } else { piece.s0 + piece.len };
                 return self.split_plan(e, end);

@@ -122,7 +122,11 @@ export const lineDraft = signal<{ line: number | null; stops: number[] }>({ line
 export const stopEditing = computed(() => tool.value === "line" && lineDraft.value.line !== null);
 /** A newly created line opens its inspector with the default name selected for replacement. */
 export const renameLinePrompt = signal<string | null>(null);
-export const lineSort = signal<"name" | "passengers">("name");
+/** How the Lines and Stations lists are sorted: the column clicked and its direction (T-310). Kept
+ * while the page is open, as the list sort always was. */
+export interface ListSort<K extends string> { key: K; dir: 1 | -1 }
+export const lineSort = signal<ListSort<"name" | "riders" | "trains">>({ key: "name", dir: 1 });
+export const stationSort = signal<ListSort<"name" | "riders">>({ key: "riders", dir: -1 });
 /** Platform length for new stations, m. */
 /** The map's demand drawn for one trip purpose only, or all (T-158). Not remembered: a page
  * load starts on all purposes, so nobody returns to a map that silently leaves riders out. */

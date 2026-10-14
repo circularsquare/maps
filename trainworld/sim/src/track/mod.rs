@@ -40,4 +40,6 @@ pub mod world;
 #[cfg(test)]
 mod frame_tests;
 #[cfg(test)]
+mod merc_tests;
+#[cfg(test)]
 mod tests;

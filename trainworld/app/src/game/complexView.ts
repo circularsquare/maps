@@ -8,6 +8,8 @@ import { demandView, stationRidersFor } from "./demand";
 import type { StationId } from "./types";
 import { selection } from "./ui";
 import { world } from "./world";
+import { groundScale } from "./coords";
+import { getWorldFrame } from "./cities";
 
 let lastKey = "";
 let last: Complexes = { of: new Map(), members: [] };
@@ -16,10 +18,10 @@ let last: Complexes = { of: new Map(), members: [] };
 export const complexes = computed<Complexes>(() => {
   const st = world.value?.save.stations ?? [];
   const links = world.value?.save.links ?? [];
-  const k = st.map((s) => `${s.id}:${s.x}:${s.y}:${s.heading}:${s.length}`).join("|") + "/" + links.join("|");
+  const k = getWorldFrame().kind + st.map((s) => `${s.id}:${s.x}:${s.y}:${s.heading}:${s.length}`).join("|") + "/" + links.join("|");
   if (k !== lastKey) {
     lastKey = k;
-    last = buildComplexes(st, links);
+    last = buildComplexes(st, links, groundScale);
   }
   return last;
 });
@@ -46,10 +48,10 @@ let near: Complexes = { of: new Map(), members: [] };
  * (5 Av/42 St with Grand Central, about 240 px at zoom 14.2). */
 export const dotGroups = computed(() => {
   const st = world.value?.save.stations ?? [];
-  const k = st.map((s) => `${s.id}:${s.x}:${s.y}:${s.heading}:${s.length}`).join("|");
+  const k = getWorldFrame().kind + st.map((s) => `${s.id}:${s.x}:${s.y}:${s.heading}:${s.length}`).join("|");
   if (k !== nearKey) {
     nearKey = k;
-    near = buildComplexes(st, []);
+    near = buildComplexes(st, [], groundScale);
   }
   return withLeads(near);
 });

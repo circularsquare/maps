@@ -14,10 +14,9 @@
 // so a line pays back in about a game week. The fare the player sets stays a real fare.
 
 import { computed, signal } from "@preact/signals";
-import { demandByDay, demandView, type DemandView } from "./demand";
+import { demandByDay, type DemandView } from "./demand";
 import { PERIODS } from "./periods";
 import { world } from "./world";
-import { DEMANDS } from "./types";
 import type { MoneyState } from "../workers/protocol";
 import type { DayLedger } from "../workers/saveFile";
 
@@ -37,13 +36,8 @@ export function setMoneyState(m: MoneyState) {
 export const lastSaved = signal<number | null>(null);
 
 const PERIOD_HOURS = PERIODS.map((p) => p.to - p.from);
-/** Hours a day each demand level is scheduled (high 8, medium 10, low 6). */
-export const LEVEL_HOURS = DEMANDS.map((d) => PERIODS.filter((p) => p.demand === d).reduce((a, p) => a + p.to - p.from, 0));
 
 export interface LineMoney {
-  /** US$ a day */
-  faresPerDay: number;
-  runningPerDay: number;
   /** fare income per game hour in each period, US$M (the worker's fares taken today, T-293) */
   perHour: number[];
 }
@@ -51,23 +45,17 @@ export interface LineMoney {
 export interface Income {
   /** fare income per game hour in each period, US$M */
   perHour: number[];
-  /** US$ a day */
-  faresPerDay: number;
-  runningPerDay: number;
   lines: Map<string, LineMoney>;
 }
 
-/** Fare income and running costs on the kind of day the demand views show (game/days.ts); the
- * worker settles each hour by its own day's (`incomeByDay`, T-260). */
-export const income = computed<Income>(() => incomeFor(demandView.value));
+/** Fare income on each kind of day; the worker settles each hour by its own day's (T-260). */
 export const incomeByDay = computed<Income[]>(() => demandByDay.value.map((d) => incomeFor(d.view)));
 
 function incomeFor(dv: DemandView | null): Income {
   const w = world.value, m = moneyState.value;
   const perPeriod = PERIODS.map(() => 0);
   const lines = new Map<string, LineMoney>();
-  let faresDay = 0, runningDay = 0;
-  if (!w || !m) return { perHour: perPeriod, faresPerDay: 0, runningPerDay: 0, lines };
+  if (!w || !m) return { perHour: perPeriod, lines };
   const { base, perKm } = m.fares;
   const x = m.economy;
   const boardings = w.save.lines.reduce((a, l) => a + (dv?.lines.get(l.id)?.ridersPerDay ?? 0), 0);
@@ -75,9 +63,6 @@ function incomeFor(dv: DemandView | null): Income {
   for (const l of w.save.lines) {
     const st = w.lineStats[l.id];
     if (!st || st.status !== "running") continue;
-    const tph = [l.tph.high, l.tph.medium, l.tph.low];
-    const running = tph.reduce((a, t, k) => a + t * LEVEL_HOURS[k], 0) * 2 * st.km * st.cars * m.runCostCarKm * x;
-    let fares = 0;
     const linePer = PERIODS.map(() => 0);
     const dm = dv?.lines.get(l.id);
     const n = l.stops.length;
@@ -92,12 +77,9 @@ function incomeFor(dv: DemandView | null): Income {
         const r = (base * rides * (total > 0 ? pk / total : 0) + perKm * pk) * x;
         perPeriod[p] += r;
         linePer[p] += r;
-        fares += r;
       });
     }
-    lines.set(l.id, { faresPerDay: fares, runningPerDay: running, perHour: linePer.map((v, p) => v / PERIOD_HOURS[p] / 1e6) });
-    faresDay += fares;
-    runningDay += running;
+    lines.set(l.id, { perHour: linePer.map((v, p) => v / PERIOD_HOURS[p] / 1e6) });
   }
-  return { perHour: perPeriod.map((v, p) => v / PERIOD_HOURS[p] / 1e6), faresPerDay: faresDay, runningPerDay: runningDay, lines };
+  return { perHour: perPeriod.map((v, p) => v / PERIOD_HOURS[p] / 1e6), lines };
 }

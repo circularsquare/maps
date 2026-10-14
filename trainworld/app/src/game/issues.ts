@@ -34,6 +34,7 @@ const TEXT: Record<string, string> = {
   EdgeLoop: "Track cannot start and end at the same place.",
   NodeLevel: "Levels go from −3 to +3.",
   Tracks: "Track is single or double.",
+  OutsideWorld: "Track cannot be built within 5 degrees of a pole or across the 180th meridian.",
 };
 
 export function describeIssue(kind: string): string {

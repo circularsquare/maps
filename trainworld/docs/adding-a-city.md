@@ -239,23 +239,29 @@ country (`pipeline/canada.py`), chosen by `"country"` in the city's config: `bui
 (`spread.py`, given the country's polygons) and the water rasterizer (`water.build_mask`, given a
 `source`) are shared, so the runtime needs nothing new.
 
-What Canada's adapter uses (sources and URLs in notes/T-277.md):
+What Canada's adapter uses (sources and URLs in notes/T-277.md), and tier 0, the adapter from
+global sources only (`pipeline/tier0.py`, T-287; sources and its measured distance from Toronto's
+real pack in notes/T-287.md):
 
-| Input | US | Canada |
-|---|---|---|
-| Population and grain | 2020 blocks, TIGER polygons | 2021 dissemination areas (StatCan 98-10-0015-01; polygons from Esri Canada's copy) |
-| Institutions | PL 94-171 P5 off homes | none (no small-area figure) |
-| Jobs at work | LODES WAC by block | census usual place of work by census tract of work (98-10-0498-01), at-home workers put back by income band, no fixed workplace added; to DAs by OSM job places and population |
-| Home end | LODES RAC x ACS work from home | commuters by tract of residence (98-10-0480-01) plus at-home workers commuting again |
-| Work from home | ACS 2019-2023 by tract and industry | Labour Force Survey May 2024 (24.7%, Toronto CMA), at both ends |
-| Everyday destinations | LODES retail, service, food, leisure sectors | OSM shops and services; restaurants, bars, venues, hotels (Geofabrik extract) |
-| Gravity curve | fitted on LODES OD (T-198) | fitted on census flows between municipalities (98-10-0459-01; `notes/t277_fit.py`) |
-| Regions, border | states, 0.23 | provinces, factor 1 |
-| Water | TIGER AREAWATER and states | StatCan lakes and rivers; land = cartographic municipalities plus US states |
-| Schools | NCES | Ontario school information file (provincial; other provinces need their own) |
-| Universities | IPEDS | Council of Ontario Universities headcounts and Ontario's college campus file, at points in `pipeline/ca_campuses.csv` |
-| Airports | FAA enplanements, DB1B connecting share | StatCan 23-10-0253-01 enplaned; connecting share by judgement (Pearson 0.75) |
-| Medical, parks, places | OSM (Overpass) | the same scripts, OSM from the extract |
+| Input | US | Canada | Tier 0 (any country) |
+|---|---|---|---|
+| Population and grain | 2020 blocks, TIGER polygons | 2021 dissemination areas (StatCan 98-10-0015-01; polygons from Esri Canada's copy) | GHSL GHS-POP E2020 100 m (R2023A, CC BY), each pixel over four 50 m points off water, into cells; scaled to district totals where the config gives them |
+| Institutions | PL 94-171 P5 off homes | none (no small-area figure) | none |
+| Jobs at work | LODES WAC by block | census usual place of work by census tract of work (98-10-0498-01), at-home workers put back by income band, no fixed workplace added; to DAs by OSM job places and population | population x jobs a resident (World Bank: ILO employment-to-population 15+ x share 15+), spread 50% by GHSL non-residential built-up volume (GHS-BUILT-V NRES), 30% OSM job places, 20% population |
+| Home end | LODES RAC x ACS work from home | commuters by tract of residence (98-10-0480-01) plus at-home workers commuting again | population x commuters a resident |
+| Work from home | ACS 2019-2023 by tract and industry | Labour Force Survey May 2024 (24.7%, Toronto CMA), at both ends | one national share from the config (default 0) |
+| Everyday destinations | LODES retail, service, food, leisure sectors | OSM shops and services; restaurants, bars, venues, hotels (Geofabrik extract) | the same OSM places, per cell |
+| Gravity curve | fitted on LODES OD (T-198) | fitted on census flows between municipalities (98-10-0459-01; `notes/t277_fit.py`) | borrowed from a fitted city, or power 1 with the length fitted to a published median or mean commute (`tier0.fit_curve`) |
+| Regions, border | states, 0.23 | provinces, factor 1 | one region, factor 1 |
+| Water | TIGER AREAWATER and states | StatCan lakes and rivers; land = cartographic municipalities plus US states | the config's `water_source` (OSM water is T-041) |
+| Schools | NCES | Ontario school information file (provincial; other provinces need their own) | OSM `amenity=school` sites; pupils = population x share aged 0-14 (World Bank) x 0.9, by the square root of site area |
+| Universities | IPEDS | Council of Ontario Universities headcounts and Ontario's college campus file, at points in `pipeline/ca_campuses.csv` | OSM `amenity=university|college`; Wikidata P2196 students by institution, split by site area; other sites by area at the median density |
+| Airports | FAA enplanements, DB1B connecting share | StatCan 23-10-0253-01 enplaned; connecting share by judgement (Pearson 0.75) | OurAirports + Wikidata patronage / 2; connecting share by judgement; pack share from GHSL population |
+| Medical, parks, places | OSM (Overpass) | the same scripts, OSM from the extract | the same, from the extract |
+
+A tier 0 city is a `CITIES` entry with `"tier0": True` (the keys are listed in `tier0.py`'s
+docstring); `build_city.py <id>` hands it to `tier0.main`. A country's census then replaces one
+input at a time (the upgrades table in research/world-sampler.md).
 
 What was hard, for the next country:
 

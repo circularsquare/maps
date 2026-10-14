@@ -25,6 +25,7 @@ import type { Map as MlMap, MapMouseEvent } from "maplibre-gl";
 import { lngLatToPack } from "../game/coords";
 import { describeIssues } from "../game/issues";
 import { km, money, moneyShort } from "../game/format";
+import { metresBetween } from "../game/walks";
 import { ask, buildLevel, buildPlatform, lineDraft, selection, trackCount, tool } from "../game/ui";
 import { describeRemovable, removeThing, type Removable } from "../game/remove";
 import { loadPlaces, placesNear } from "../game/placeList";
@@ -60,6 +61,8 @@ export class Tools {
   private delHover: (Removable & { lx: number; ly: number }) | null = null;
   private delAt: [number, number] = [0, 0];
   private lastPreview: PreviewAnswer | null = null;
+  /** where the last station of this session was placed (lng, lat), T-312 */
+  private lastPlaced: [number, number] | null = null;
   private box: HTMLDivElement;
   private marks: HTMLDivElement[] = [];
   private tag: HTMLDivElement;
@@ -301,7 +304,23 @@ export class Tools {
     const name = await this.nameFor(e.point.x, e.point.y);
     const at = s.kind === "node" ? { kind: "node" as const, node: s.node } : { kind: "edge" as const, edge: s.edge, ...this.pack(s.lx, s.ly) };
     const a = await edit({ op: "addStation", at, platform: buildPlatform.peek(), name });
-    if (a.ok) say(`${name} added as a blueprint station.`);
+    if (a.ok) {
+      this.lastPlaced = toLngLat(s.lx, s.ly); // T-312: the hover tag's "km from" (found again by position)
+      say(`${name} added as a blueprint station.`);
+    }
+  }
+
+  /** The station placed last in this session (T-312), found by its position so a rename shows. */
+  private lastPlacedName(): { name: string; lng: number; lat: number } | null {
+    const p = this.lastPlaced;
+    if (!p) return null;
+    let best: { name: string; lng: number; lat: number } | null = null, bestD = 30;
+    for (const s of world.peek()?.save.stations ?? []) {
+      const d = metresBetween(p[0], p[1], s.lng, s.lat);
+      if (d < bestD) (bestD = d), (best = s);
+    }
+    if (!best) this.lastPlaced = null; // taken out again
+    return best;
   }
 
   /**
@@ -542,19 +561,76 @@ export class Tools {
       ? pts ? waysFrom(pts,h.lx,h.ly) : []
       : candidates.map((id)=>{ const e=w.edges.find((x)=>x.id===id), p=n.edgePts.get(id); return !e||!p?new Float32Array(0):e.a===h.node?p:reversed(p); });
     const sh=platformShape(ways,0,buildPlatform.peek()/2*perM);
-    const shape=stationShape(h.lx,h.ly,sh,PLATFORM_HALF_M*perM,(x,y)=>this.screen(x,y),this.overlay.renderer.stationStyle,false);
+    // always the full box at its true length, whatever the zoom (T-311): the map's own style
+    // draws dots below STATION_BOX_ZOOM
+    const style={...this.overlay.renderer.stationStyle,boxes:true};
+    const shape=stationShape(h.lx,h.ly,sh,PLATFORM_HALF_M*perM,(x,y)=>this.screen(x,y),style,false);
     if (!this.ghost) {
       this.ghost=document.createElementNS("http://www.w3.org/2000/svg","svg");
-      this.ghost.setAttribute("class","station-ghost");
       this.ghost.setAttribute("width","1");
       this.ghost.setAttribute("height","1");
       this.ghost.appendChild(document.createElementNS("http://www.w3.org/2000/svg","path"));
       this.box.appendChild(this.ghost);
     }
+    this.checkGhost(h);
     this.ring.style.display="none";
     this.ghost.style.display="";
+    this.ghost.setAttribute("class",`station-ghost ${this.ghostOk===false?"bad":"ok"}`);
     this.ghost.style.transform=`translate(${shape.x}px,${shape.y}px)`;
     this.ghost.firstElementChild!.setAttribute("d",stationPath(shape));
+  }
+
+  /** Faint rings 1 and 2 km (ground distance) round the station being placed (T-312), under the
+   * ghost, labelled at their tops. */
+  private rings: SVGSVGElement | null = null;
+  private stationRings(h: Exclude<Snap,{kind:"free"}>) {
+    const NS="http://www.w3.org/2000/svg";
+    if (!this.rings) {
+      const r=this.rings=document.createElementNS(NS,"svg");
+      r.setAttribute("width","1");
+      r.setAttribute("height","1");
+      r.setAttribute("class","station-rings");
+      for (let i=0;i<2;i++) {
+        r.appendChild(document.createElementNS(NS,"circle"));
+        r.appendChild(document.createElementNS(NS,"text"));
+      }
+      this.box.insertBefore(r,this.box.firstChild);
+    }
+    const [lng,lat]=toLngLat(h.lx,h.ly);
+    const [cx,cy]=this.screen(h.lx,h.ly);
+    const [ex,ey]=this.screen(...toLocal(lng+1000/(6371008.8*Math.cos(lat*Math.PI/180))*180/Math.PI,lat));
+    const km1=Math.hypot(ex-cx,ey-cy);
+    this.rings.style.display="";
+    this.rings.style.transform=`translate(${cx}px,${cy}px)`;
+    const kids=this.rings.children;
+    for (let i=0;i<2;i++) {
+      const r=km1*(i+1), c=kids[i*2], t=kids[i*2+1];
+      c.setAttribute("r",String(r));
+      t.setAttribute("y",String(-r-3));
+      t.textContent=`${i+1} km`;
+    }
+  }
+
+  /** Whether a click here would place the station (T-311): the worker tries the same `addStation`
+   * the click sends and rolls it back. Asked when the spot, the platform length or the network
+   * changes, one request in flight (the newest waits), and the last answer stays up meanwhile. */
+  private ghostOk: boolean | null = null;
+  private ghostWhy = "";
+  private ghostKey = "";
+  private checkGhost(h: Exclude<Snap,{kind:"free"}>) {
+    const platform=buildPlatform.peek();
+    const key=`${h.kind==="node"?`n${h.node}`:`e${h.edge}`}:${h.lx.toFixed(1)}:${h.ly.toFixed(1)}:${platform}:${world.peek()?.version}`;
+    if (key===this.ghostKey) return;
+    this.ghostKey=key;
+    const at=h.kind==="node"?{kind:"node" as const,node:h.node}:{kind:"edge" as const,edge:h.edge,...this.pack(h.lx,h.ly)};
+    this.client.checkStation(at,platform,(ok,issues)=>{
+      if (key!==this.ghostKey) return; // a newer spot is already asked
+      const why=ok?"":describeIssues(issues)||"Cannot be built here.";
+      if (ok===this.ghostOk && why===this.ghostWhy) return;
+      this.ghostOk=ok;
+      this.ghostWhy=why;
+      if (tool.peek()==="station") this.place();
+    });
   }
 
   /** Move the DOM markers to the camera (after each MapLibre frame and each change). */
@@ -581,6 +657,7 @@ export class Tools {
 
     // the platform ghost shows only while the station tool snaps (below)
     if (this.ghost) this.ghost.style.display = "none";
+    if (this.rings) this.rings.style.display = "none";
     // the delete tool: a ring on the station or flyover, and what a click removes by the cursor
     if (t === "delete") {
       const d = this.delHover, what = d && describeRemovable(d);
@@ -600,8 +677,10 @@ export class Tools {
     const h = this.hover;
     if ((t === "track" || t === "station") && h && h.kind !== "free") {
       this.ring.style.display = "";
-      if (t === "station") this.stationGhost(h);
-      else put(this.ring, h.lx, h.ly);
+      if (t === "station") {
+        this.stationRings(h);
+        this.stationGhost(h);
+      } else put(this.ring, h.lx, h.ly);
     } else this.ring.style.display = "none";
     const pv = this.lastPreview;
     if (t === "track" && this.start && h && pv) {
@@ -610,6 +689,19 @@ export class Tools {
       this.tag.textContent = pv.ok
         ? `${km(pv.lengthM)}, cost ${pv.mult.toFixed(2)}x, ${moneyShort(pv.cost * 1e6)}`
         : describeIssues(pv.issues) || "Cannot be built here.";
+      put(this.tag, h.lx, h.ly, 14, 12);
+    } else if (t === "station" && h && h.kind !== "free" && this.ghostOk === false) {
+      // why a click here would be refused (T-311)
+      this.tag.style.display = "";
+      this.tag.className = "tool-tag bad";
+      this.tag.textContent = this.ghostWhy;
+      put(this.tag, h.lx, h.ly, 14, 12);
+    } else if (t === "station" && h && h.kind !== "free" && this.lastPlacedName()) {
+      // T-312: how far from the station placed last
+      const last = this.lastPlacedName()!, [lng, lat] = toLngLat(h.lx, h.ly);
+      this.tag.style.display = "";
+      this.tag.className = "tool-tag";
+      this.tag.textContent = `${km(metresBetween(lng, lat, last.lng, last.lat))} from ${last.name}`;
       put(this.tag, h.lx, h.ly, 14, 12);
     } else this.tag.style.display = "none";
   }

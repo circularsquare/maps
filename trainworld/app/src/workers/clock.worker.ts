@@ -8,9 +8,9 @@
 // holds the whole network. Fine for a city; per-tile updates are follow-up work (notes/T-025.md).
 
 import init, { TrackApi } from "../wasm/track/sim"; // the track model only (T-051)
-import { toLocal } from "../map/geo";
+import { anchor, makeAnchor, setAnchor, toLocal } from "../map/geo";
 import { CITIES, cityNear, HOME_CITY, NEW_GAME_FRAME, WORLD_ID } from "../game/cities";
-import { frameKindName, makeFrame, type Frame, type FrameSpec } from "../game/frame";
+import { frameKindName, frameKindNumber, makeFrame, mercK, type Frame, type FrameSpec } from "../game/frame";
 import { PERIODS, periodAt } from "../game/periods";
 import { DAY_KINDS, dayKindAt } from "../game/days";
 import { networkFromState } from "../map/network";
@@ -112,9 +112,14 @@ function send(msg: FromClock, transfer: Transferable[] = []) {
 function packLngLat(x: number, y: number): [number, number] {
   return frame.toLonLat(x, y);
 }
+/** world metres -> local units, relative to the draw anchor the main thread last sent (T-307) */
 function packLocal(x: number, y: number): [number, number] {
   const [lng, lat] = packLngLat(x, y);
   return toLocal(lng, lat);
+}
+function anchorSpec() {
+  const a = anchor();
+  return { lng: a.lng, lat: a.lat, version: a.version };
 }
 
 async function loadWater(packUrl: string): Promise<{ ok: boolean; population: number; jobs: number }> {
@@ -269,6 +274,7 @@ function buildState(): ClockState {
       lineTable,
     },
     money: moneyState(),
+    anchor: anchorSpec(),
   };
 }
 
@@ -747,7 +753,7 @@ function buildSnapshot(): NetworkSnapshot {
   // platform carries nobody, so it joins nothing), with the player's links (T-197)
   const fl = a.station_links(), links: [string, string][] = [];
   for (let k = 0; k + 1 < fl.length; k += 2) links.push([String(fl[k]), String(fl[k + 1])]);
-  const cx = buildComplexes(geo, links);
+  const cx = buildComplexes(geo, links, (y) => (frame.kind === "merc" ? mercK(y) : 1));
   stations.forEach((s) => (s.complex = cx.of.get(String(s.id))));
   const li = a.lines_info();
   const lines: NetworkSnapshot["lines"] = [];
@@ -879,7 +885,7 @@ async function processMessage(msg: ToClock) {
       const t0 = performance.now();
       await init();
       api = new TrackApi(NEW_GAME_FRAME.lon, NEW_GAME_FRAME.lat, true);
-      api.set_empty_frame(NEW_GAME_FRAME.kind === "lcc");
+      api.set_empty_frame(frameKindNumber(NEW_GAME_FRAME.kind));
       syncFrame();
       let water = { ok: false, population: 0, jobs: 0 };
       try {
@@ -930,6 +936,7 @@ async function processMessage(msg: ToClock) {
     // A Rust panic: report it rather than leave the main thread waiting on an answer.
     send({ kind: "error", message: String(err) });
     if (msg.kind === "edit") send({ kind: "edited", seq: msg.seq, ok: false, issues: ["Internal"], charge: 0 });
+    if (msg.kind === "previewStation") send({ kind: "stationCheck", seq: msg.seq, ok: false, issues: ["Internal"] });
     if (msg.kind === "preview" || msg.kind === "previewEdge" || msg.kind === "previewNode") send({ kind: "preview", seq: msg.seq, ok: false, cost: 0, lengthM: 0, mult: 0, issues: ["Internal"], verts: new Float64Array(0), pts: new Float32Array(0) });
   }
 };
@@ -1042,6 +1049,10 @@ function handle(msg: ToClock) {
       : q.what === "today" ? today()
       : api.line_delays(q.line, q.level);
     send({ kind: "answer", seq: msg.seq, data }, [data.buffer]);
+  } else if (msg.kind === "previewStation") {
+    const at = msg.at;
+    const r = at.kind === "node" ? api.preview_station(1, at.node, 0, 0, msg.platform) : api.preview_station(2, at.edge, at.x, at.y, msg.platform);
+    send({ kind: "stationCheck", seq: msg.seq, ok: r === 0, issues: r === 0 ? [] : issues() });
   } else if (msg.kind === "previewNode") {
     sendNodePreview(msg.seq, api.preview_move_node(msg.node, msg.x, msg.y));
   } else if (msg.kind === "preview" || msg.kind === "previewEdge") {
@@ -1064,11 +1075,18 @@ function handle(msg: ToClock) {
     // Explicit shape also permits type-checking before the track WASM declarations regenerate.
     const speeds = (api as TrackApi & { preview_render_speeds(): Float32Array }).preview_render_speeds();
     if (speeds.length !== Math.max(0, pts.length / 3 - 1)) throw new Error("Preview speed/point length mismatch");
-    send({ kind: "preview", seq: msg.seq, ok, cost: out[1], lengthM: out[2], mult: out[4], issues: ok ? [] : issues(), verts, pts, speeds }, [verts.buffer, pts.buffer, speeds.buffer]);
+    send({ kind: "preview", seq: msg.seq, ok, cost: out[1], lengthM: out[2], mult: out[4], issues: ok ? [] : issues(), verts, pts, speeds, anchor: anchor().version }, [verts.buffer, pts.buffer, speeds.buffer]);
   } else if (msg.kind === "epoch") {
     if (msg.epoch !== epoch) {
       epoch = msg.epoch;
       sendTrips();
+    }
+  } else if (msg.kind === "anchor") {
+    // the view travelled far (T-307): every drawn position again, relative to the new anchor
+    if (msg.version !== anchor().version) {
+      setAnchor(makeAnchor(msg.lng, msg.lat, msg.version));
+      forget(true);
+      sendState();
     }
   }
 }
@@ -1087,5 +1105,5 @@ function sendNodePreview(seq: number, out: Float64Array) {
     parts.push(pts.length / 3);
   }
   const v = new Float64Array(verts), p = new Float32Array(pts), pa = new Uint32Array(parts);
-  send({ kind: "preview", seq, ok, cost: out[1], lengthM: 0, mult: 0, issues: ok ? [] : issues(), verts: v, pts: p, parts: pa }, [v.buffer, p.buffer, pa.buffer]);
+  send({ kind: "preview", seq, ok, cost: out[1], lengthM: 0, mult: 0, issues: ok ? [] : issues(), verts: v, pts: p, parts: pa, anchor: anchor().version }, [v.buffer, p.buffer, pa.buffer]);
 }

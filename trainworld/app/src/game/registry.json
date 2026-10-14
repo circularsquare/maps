@@ -1,7 +1,7 @@
 {
   "world": "northeast",
   "frame": {
-    "kind": "lcc",
+    "kind": "merc",
     "lon": -73.985,
     "lat": 40.758
   },

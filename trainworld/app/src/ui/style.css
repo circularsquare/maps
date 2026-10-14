@@ -112,6 +112,18 @@ body.resizing, body.resizing * { user-select: none; }
 .rows.pick > li.on { background: var(--tint); }
 .w-trains { width: 68px; }
 .w-num { width: 44px; }
+.w-riders { width: 56px; }
+/* T-310: the Lines and Stations lists' column headers, one button a column; the sorted one is dark
+   and has an arrow (beside the label, before it on the number columns so the label keeps its place) */
+.sort-head { display: flex; align-items: center; gap: 8px; min-height: 22px; border-bottom: 1px solid var(--rule); }
+.sort-btn { display: inline-flex; align-items: center; gap: 4px; padding: 0; border: 0; background: none;
+            font-size: 12px; color: var(--muted); cursor: pointer; }
+.sort-btn.grow { flex: 1; min-width: 0; }
+.sort-btn.val { flex: none; justify-content: flex-end; }
+.sort-btn:hover, .sort-btn.on { color: var(--text); }
+.sort-arrow { display: none; width: 0; height: 0; border-left: 3.5px solid transparent; border-right: 3.5px solid transparent; }
+.sort-arrow.up { display: block; border-bottom: 5px solid currentColor; }
+.sort-arrow.down { display: block; border-top: 5px solid currentColor; }
 .w-period { width: 96px; flex: none; }
 .hbar { display: inline-block; height: 8px; background: var(--accent); vertical-align: middle; }
 .pane-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; gap: 8px; }
@@ -256,10 +268,10 @@ table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
 .seg-drive, .sw-drive { background: var(--mode-drive); }
 .sw { display: inline-block; width: 10px; height: 10px; flex: none; }
 /* T-305: cash updates to the dollar, so its box has a fixed width: room for "−$99,999,999,999", the
-   sign and the $ at fixed places, the digits right-aligned in tabular figures */
+   sign and the $ at fixed places, the digits left-aligned right after the $ (T-310) in tabular figures */
 .cash { flex: none; width: 16ch; display: flex; font-variant-numeric: tabular-nums; }
 .cash-sign, .cash-cur { flex: none; width: 1ch; }
-.cash-digits { flex: 1; min-width: 0; text-align: right; }
+.cash-digits { flex: 1; min-width: 0; text-align: left; }
 .clock { display: flex; align-items: baseline; gap: 8px; font-variant-numeric: tabular-nums; }
 .clock .time { min-width: 46px; }
 .clock .demand { min-width: 108px; }
@@ -526,8 +538,16 @@ table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
 
 /* T-144: platform placement preview, aligned with its track. */
 /* T-189: the placement ghost is the platform's outline, curved with the track (map/tools.ts) */
-.station-ghost { position: absolute; left: 0; top: 0; overflow: visible; opacity: .7; }
-.station-ghost path { fill: #ffffffb3; stroke: var(--accent); stroke-width: 2px; }
+/* T-311: blue where a click would place the station, red where it would be refused; fixed colours,
+   not the theme accent, so the two always read as yes and no on the basemap and over track */
+.station-ghost { position: absolute; left: 0; top: 0; overflow: visible; opacity: .92; filter: drop-shadow(0 0 1.5px #fff); }
+.station-ghost path { stroke-width: 2px; stroke-linejoin: round; }
+/* T-312: 1 km and 2 km round the station being placed */
+.station-rings { position: absolute; left: 0; top: 0; overflow: visible; }
+.station-rings circle { fill: none; stroke: var(--net-ink); stroke-opacity: .35; stroke-width: 1px; }
+.station-rings text { fill: var(--net-ink); fill-opacity: .6; font-size: calc(11px * var(--ui, 1)); text-anchor: middle; paint-order: stroke; stroke: var(--map-land); stroke-width: 3px; stroke-opacity: .8; }
+.station-ghost.ok path { fill: #2f6fe0a6; stroke: #1c4fb8; }
+.station-ghost.bad path { fill: #e03c3ca6; stroke: #b91f1f; }
 
 /* T-148: the search box at the map's upper right, under the demand selector on narrow maps */
 .map-search { position: absolute; right: 10px; top: 10px; z-index: 4; width: 280px; max-width: calc(100% - 20px); }

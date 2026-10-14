@@ -57,7 +57,9 @@ fn main() {
     let t0 = now_ms();
 
     let registry: Value = serde_json::from_str(&std::fs::read_to_string(format!("{root}/app/src/game/registry.json")).unwrap()).unwrap();
-    let wf = &registry["frame"];
+    // Zone distances in the Northeast conic at the market's origin (T-125). The game's own frame
+    // is Mercator since T-306 and its plane metres are not ground metres, so it is not used here.
+    let wf = &registry["market"]["frame"];
     let world = Frame::lcc(wf["lon"].as_f64().unwrap(), wf["lat"].as_f64().unwrap());
     let borders: Value = serde_json::from_str(&std::fs::read_to_string(format!("{root}/pipeline/borders.json")).unwrap()).unwrap();
 

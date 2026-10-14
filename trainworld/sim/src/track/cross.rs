@@ -57,8 +57,8 @@ fn line_line(p: &Piece, q: &Piece, out: &mut Vec<Hit>) {
         }
         // Collinear: overlap of the two intervals measured along p.
         let t0 = wx * d1x + wy * d1y;
-        let t1 = t0 + q.len * (d1x * d2x + d1y * d2y);
-        let (lo, hi) = (t0.min(t1).max(0.0), t0.max(t1).min(p.len));
+        let t1 = t0 + q.plen * (d1x * d2x + d1y * d2y);
+        let (lo, hi) = (t0.min(t1).max(0.0), t0.max(t1).min(p.plen));
         if hi - lo > 0.01 {
             for t in [lo, hi] {
                 let (x, y) = (p.x0 + t * d1x, p.y0 + t * d1y);
@@ -70,8 +70,8 @@ fn line_line(p: &Piece, q: &Piece, out: &mut Vec<Hit>) {
     }
     let t = cross2(wx, wy, d2x, d2y) / den;
     let u = cross2(wx, wy, d1x, d1y) / den;
-    if in_range(t, p.len) && in_range(u, q.len) {
-        out.push(Hit { dp: t.clamp(0.0, p.len), dq: u.clamp(0.0, q.len), overlap: false });
+    if in_range(t, p.plen) && in_range(u, q.plen) {
+        out.push(Hit { dp: t.clamp(0.0, p.plen), dq: u.clamp(0.0, q.plen), overlap: false });
     }
 }
 
@@ -90,13 +90,13 @@ fn line_arc(l: &Piece, a: &Piece, out: &mut Vec<Hit>, swap: bool) {
     let sq = disc.sqrt();
     let roots = if sq < 1e-12 { [-b, f64::NAN] } else { [-b - sq, -b + sq] };
     for t in roots {
-        if !t.is_finite() || !in_range(t, l.len) {
+        if !t.is_finite() || !in_range(t, l.plen) {
             continue;
         }
         let (x, y) = (l.x0 + t * dx, l.y0 + t * dy);
         let u = arc_param(a, x, y);
-        if in_range(u, a.len) {
-            let (t, u) = (t.clamp(0.0, l.len), u.clamp(0.0, a.len));
+        if in_range(u, a.plen) {
+            let (t, u) = (t.clamp(0.0, l.plen), u.clamp(0.0, a.plen));
             out.push(if swap { Hit { dp: u, dq: t, overlap: false } } else { Hit { dp: t, dq: u, overlap: false } });
         }
     }
@@ -116,13 +116,13 @@ fn arc_arc(p: &Piece, q: &Piece, out: &mut Vec<Hit>) {
         let mut ds: Vec<(f64, f64)> = vec![];
         for (x, y, _) in [q.at(0.0), q.end()] {
             let u = arc_param(p, x, y);
-            if in_range(u, p.len) {
+            if in_range(u, p.plen) {
                 ds.push((u, arc_param(q, x, y)));
             }
         }
         for (x, y, _) in [p.at(0.0), p.end()] {
             let u = arc_param(q, x, y);
-            if in_range(u, q.len) {
+            if in_range(u, q.plen) {
                 ds.push((arc_param(p, x, y), u));
             }
         }
@@ -130,7 +130,7 @@ fn arc_arc(p: &Piece, q: &Piece, out: &mut Vec<Hit>) {
             ds.sort_by(|a, b| a.0.total_cmp(&b.0));
             if ds[ds.len() - 1].0 - ds[0].0 > 0.01 {
                 for (a, b) in [ds[0], ds[ds.len() - 1]] {
-                    out.push(Hit { dp: a.clamp(0.0, p.len), dq: b.clamp(0.0, q.len), overlap: true });
+                    out.push(Hit { dp: a.clamp(0.0, p.plen), dq: b.clamp(0.0, q.plen), overlap: true });
                 }
             }
         }
@@ -145,8 +145,8 @@ fn arc_arc(p: &Piece, q: &Piece, out: &mut Vec<Hit>) {
     let pts = if h < 1e-9 { vec![(mx, my)] } else { vec![(mx - h * ey / d, my + h * ex / d), (mx + h * ey / d, my - h * ex / d)] };
     for (x, y) in pts {
         let (u, w) = (arc_param(p, x, y), arc_param(q, x, y));
-        if in_range(u, p.len) && in_range(w, q.len) {
-            out.push(Hit { dp: u.clamp(0.0, p.len), dq: w.clamp(0.0, q.len), overlap: false });
+        if in_range(u, p.plen) && in_range(w, q.plen) {
+            out.push(Hit { dp: u.clamp(0.0, p.plen), dq: w.clamp(0.0, q.plen), overlap: false });
         }
     }
 }
@@ -173,7 +173,8 @@ pub fn intersect_alignments(p: &[Piece], q: &[Piece], same: bool, out: &mut Vec<
             hits.clear();
             intersect(a, b, &mut hits);
             for h in &hits {
-                let (s, t) = (a.s0 + h.dp, b.s0 + h.dq);
+                // Offsets are plane metres; chainage is ground metres (geom.rs).
+                let (s, t) = (a.s0 + a.ground_s(h.dp), b.s0 + b.ground_s(h.dq));
                 if same && (s - t).abs() < 1.0 {
                     continue;
                 }
@@ -187,9 +188,9 @@ pub fn intersect_alignments(p: &[Piece], q: &[Piece], same: bool, out: &mut Vec<
 
 /// Cells of the grid a piece passes through (chunked, conservative by the arc's sagitta).
 pub fn piece_cells(p: &Piece, out: &mut Vec<(i32, i32)>) {
-    let n = (p.len / CHUNK).ceil().max(1.0) as usize;
+    let n = (p.plen / CHUNK).ceil().max(1.0) as usize;
     for j in 0..n {
-        let (d0, d1) = (p.len * j as f64 / n as f64, p.len * (j + 1) as f64 / n as f64);
+        let (d0, d1) = (p.plen * j as f64 / n as f64, p.plen * (j + 1) as f64 / n as f64);
         let b = p.bbox_part(d0, d1);
         let (x0, y0) = ((b[0] / CELL).floor() as i32, (b[1] / CELL).floor() as i32);
         let (x1, y1) = ((b[2] / CELL).floor() as i32, (b[3] / CELL).floor() as i32);

@@ -15,6 +15,13 @@
 //!
 //! Near the origin the two frames agree to the first order, which is why Lcc keeps the origin and
 //! the metre units of the legacy frame; they are different charts of the same ground.
+//!
+//! - **Merc** is the frame of new games since T-306 (docs/world.md): spherical Mercator over the
+//!   whole Earth, `x = R lon`, `y = R atanh(sin lat)`, no origin. Conformal like Lcc, with scale
+//!   `k = 1 / cos(lat) = cosh(y / R)` (1.32 at New York, 1.61 at London). Unlike the other two the
+//!   track model does not treat its plane metres as ground metres: every piece of track carries
+//!   its ground length (geom.rs), and metre figures are scaled by `k` where they enter the plane.
+//!   So lengths, radii and costs are true anywhere between 85 S and 85 N.
 
 use super::params::EARTH_R;
 use std::f64::consts::PI;
@@ -23,6 +30,7 @@ use std::f64::consts::PI;
 pub enum FrameKind {
     Equirect = 0,
     Lcc = 1,
+    Merc = 2,
 }
 
 impl FrameKind {
@@ -30,9 +38,26 @@ impl FrameKind {
         match v {
             0 => Some(FrameKind::Equirect),
             1 => Some(FrameKind::Lcc),
+            2 => Some(FrameKind::Merc),
             _ => None,
         }
     }
+}
+
+/// Track is refused nearer the poles than this, degrees (docs/world.md).
+pub const MERC_MAX_LAT: f64 = 85.0;
+
+/// Mercator scale at plane `y`: plane metres per ground metre, `cosh(y / R)`.
+#[inline]
+pub fn merc_k(y: f64) -> f64 {
+    (y / EARTH_R).cosh()
+}
+
+/// True if a Mercator plane point is inside the buildable world: within 85 degrees of the
+/// equator and inside the antimeridian (the plane's east and west edges).
+pub fn merc_inside(x: f64, y: f64) -> bool {
+    let ymax = EARTH_R * MERC_MAX_LAT.to_radians().sin().atanh();
+    x.abs() < PI * EARTH_R && y.abs() <= ymax
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -49,6 +74,10 @@ pub struct Frame {
 
 impl Frame {
     pub fn new(kind: FrameKind, lon0: f64, lat0: f64) -> Frame {
+        if kind == FrameKind::Merc {
+            // No origin: the plane is the whole Earth's.
+            return Frame { kind, lon0: 0.0, lat0: 0.0, n: 0.0, rf: 0.0, rho0: 0.0, cos_lat0: 1.0 };
+        }
         let phi0 = lat0.to_radians();
         let n = phi0.sin();
         let t0 = (PI / 4.0 + phi0 / 2.0).tan();
@@ -60,6 +89,9 @@ impl Frame {
     }
     pub fn lcc(lon0: f64, lat0: f64) -> Frame {
         Frame::new(FrameKind::Lcc, lon0, lat0)
+    }
+    pub fn merc() -> Frame {
+        Frame::new(FrameKind::Merc, 0.0, 0.0)
     }
     /// The same origin in another frame.
     pub fn with_kind(&self, kind: FrameKind) -> Frame {
@@ -80,6 +112,7 @@ impl Frame {
                 let lat = 2.0 * (self.rf / rho).powf(1.0 / self.n).atan() - PI / 2.0;
                 (self.lon0 + (theta / self.n).to_degrees(), lat.to_degrees())
             }
+            FrameKind::Merc => ((x / EARTH_R).to_degrees(), (y / EARTH_R).sinh().atan().to_degrees()),
         }
     }
 
@@ -95,6 +128,7 @@ impl Frame {
                 let theta = self.n * wrap_lon(lon - self.lon0).to_radians();
                 (rho * theta.sin(), self.rho0 - rho * theta.cos())
             }
+            FrameKind::Merc => (EARTH_R * wrap_lon(lon).to_radians(), EARTH_R * lat.to_radians().sin().atanh()),
         }
     }
 
@@ -109,7 +143,17 @@ impl Frame {
                 let k = self.n * rho / (EARTH_R * phi.cos());
                 (k, k)
             }
+            FrameKind::Merc => {
+                let k = 1.0 / lat.to_radians().cos();
+                (k, k)
+            }
         }
+    }
+
+    /// True for the frame whose plane metres are not ground metres (Merc): its pieces of track
+    /// carry ground lengths and its metre figures are scaled by `k` (geom.rs).
+    pub fn scaled(&self) -> bool {
+        self.kind == FrameKind::Merc
     }
 }
 

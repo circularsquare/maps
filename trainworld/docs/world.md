@@ -117,6 +117,10 @@ so they hold offsets from an anchor (next section).
 
 ### Clock worker, renderer and pick
 
+Built (T-307), except that the demand views stay on the home anchor until T-317: `map/geo.ts`
+(`anchor()`, `anchorWanted`, `kAtY`), `ClockClient.followView` and the "anchor" message, the
+renderer drawing each network at its own anchor, `u_psi0` for k in the train shader.
+
 - **One draw anchor, following the view.** `geo.ts`'s fixed `ORIGIN_LNGLAT` becomes the current
   anchor, with a version number. The main thread moves it when the view centre is more than about
   100 km of ground from it at zoom 10 or deeper (shallower zooms do not need it: a metre is under

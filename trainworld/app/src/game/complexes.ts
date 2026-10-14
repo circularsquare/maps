@@ -53,8 +53,10 @@ export function segmentGap(p0x: number, p0y: number, p1x: number, p1y: number, q
 }
 
 /** Group stations into complexes; `links` are the player's pairs (a pair naming a station not in
- * the list is ignored). */
-export function buildComplexes(stations: readonly Pick<StationInput, "id" | "x" | "y" | "heading" | "length">[], links: readonly (readonly [StationId, StationId])[] = []): Complexes {
+ * the list is ignored). `kAt` is the world frame's metres per ground metre at a world y
+ * (`groundScale` in game/coords.ts; 1 outside the Mercator frame, T-306): platform lengths and
+ * the distances above are ground metres. */
+export function buildComplexes(stations: readonly Pick<StationInput, "id" | "x" | "y" | "heading" | "length">[], links: readonly (readonly [StationId, StationId])[] = [], kAt: (y: number) => number = () => 1): Complexes {
   const n = stations.length;
   const parent = Array.from({ length: n }, (_, i) => i);
   const find = (i: number) => {
@@ -62,11 +64,12 @@ export function buildComplexes(stations: readonly Pick<StationInput, "id" | "x" 
     return i;
   };
   const ends = new Float64Array(n * 4);
-  let reach = DEMAND_MERGE_M;
+  const k = stations.map((s) => kAt(s.y));
+  let reach = DEMAND_MERGE_M * k.reduce((m, v) => Math.max(m, v), 1);
   stations.forEach((s, i) => {
-    const h = Math.max(0, s.length) / 2, dx = Math.cos(s.heading) * h, dy = Math.sin(s.heading) * h;
+    const h = Math.max(0, s.length) / 2 * k[i], dx = Math.cos(s.heading) * h, dy = Math.sin(s.heading) * h;
     ends.set([s.x - dx, s.y - dy, s.x + dx, s.y + dy], i * 4);
-    reach = Math.max(reach, 2 * h + PLATFORM_GAP_M);
+    reach = Math.max(reach, 2 * h + PLATFORM_GAP_M * k[i]);
   });
   // a grid as wide as the farthest two linked centres can be: candidates in the 3 x 3 block
   const key = (i: number) => `${Math.floor(stations[i].x / reach)},${Math.floor(stations[i].y / reach)}`;
@@ -84,8 +87,9 @@ export function buildComplexes(stations: readonly Pick<StationInput, "id" | "x" 
         for (const j of cells.get(`${gx},${gy}`) ?? []) {
           if (j <= i) continue;
           const a = stations[i], b = stations[j];
-          const linked = Math.hypot(a.x - b.x, a.y - b.y) <= DEMAND_MERGE_M ||
-            segmentGap(ends[i * 4], ends[i * 4 + 1], ends[i * 4 + 2], ends[i * 4 + 3], ends[j * 4], ends[j * 4 + 1], ends[j * 4 + 2], ends[j * 4 + 3]) <= PLATFORM_GAP_M;
+          const kk = (k[i] + k[j]) / 2;
+          const linked = Math.hypot(a.x - b.x, a.y - b.y) <= DEMAND_MERGE_M * kk ||
+            segmentGap(ends[i * 4], ends[i * 4 + 1], ends[i * 4 + 2], ends[i * 4 + 3], ends[j * 4], ends[j * 4 + 1], ends[j * 4 + 2], ends[j * 4 + 3]) <= PLATFORM_GAP_M * kk;
           if (!linked) continue;
           const ra = find(i), rb = find(j);
           if (ra !== rb) parent[Math.max(ra, rb)] = Math.min(ra, rb);

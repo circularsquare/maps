@@ -2,6 +2,7 @@
 // leads to, a compass direction, the station nearest a point. Pack metres, y north.
 
 import { world } from "./world";
+import { groundDist } from "./coords";
 
 const COMPASS = ["east", "northeast", "north", "northwest", "west", "southwest", "south", "southeast"];
 
@@ -14,7 +15,7 @@ export function compass(dx: number, dy: number): string {
 export function nearestStation(x: number, y: number): { name: string; d: number } | null {
   let best: { name: string; d: number } | null = null;
   for (const s of world.value?.save.stations ?? []) {
-    const d = Math.hypot(s.x - x, s.y - y);
+    const d = groundDist(s.x, s.y, x, y);
     if (!best || d < best.d) best = { name: s.name, d };
   }
   return best;

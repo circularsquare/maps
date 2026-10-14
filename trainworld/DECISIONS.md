@@ -5,6 +5,43 @@ reasoning and what it replaced.
 
 ## 2026-10-14
 
+- **Closest stations and walking minutes are worked out on the main thread** (T-312, Anita: "list
+  3 closest stations ... and their walking distance in minutes"). The walking barrier the demand
+  model routes on lives in the demand workers' wasm, which is busy during a solve and would need a
+  wasm rebuild and a new query, for a hover. Instead `game/walks.ts` fetches the pack's `walk_row`
+  and `walk_x` (about 250 KB) and runs a TypeScript copy of `WalkGrid::field` and `Field::eff`, so
+  the walks are the model's own and cross no river that it does not. Minutes are the routed metres
+  x the model's 1.3 detour at 4.8 km/h, a plain walk (not the 15 km/h fast walk to stations).
+  Ranked by walk, same-complex and same-name stations left out, a name once; a cut-off station
+  shows "no walk" only to fill the list when fewer than three can be walked to within 10 km. The
+  1 and 2 km rings while placing are an SVG layer beside the ghost, not in the renderer.
+
+- **The station ghost says yes or no, and blueprint track is solid** (T-311, Anita: "theres no
+  indicator for whether its okay to put a station here"; "the dashedness looks quite confusing as
+  the lines curve"). The ghost is always the full box at its true length (it was a dot below zoom
+  15) and is blue where a click would place the station, red where it would be refused, the
+  reason in the tag. The test is the click's own: `TrackApi.preview_station` runs `add_station`'s
+  code as a trial and rolls it back (cash included), asked of the clock worker once per change of
+  spot, one in flight, last answer kept meanwhile; a UI-side guess would drift from the model.
+  Colours fixed, not the theme accent (blue #2f6fe0, red #e03c3c). Blueprint track lost its dashes
+  for the same colour mixed 45% towards white, opaque: plain 55% alpha would double up where
+  segments overlap at every joint and show beads on curves, which the dashes had hidden. Lines
+  that do not run keep their 55% see-through. `dist` in the stroke buffers (network.ts) is now
+  unused by the shader.
+
+- **Tier 0's jobs proxy weights GHSL non-residential volume by height^1.5** (T-287). By volume
+  alone Toronto's centre got a third of its jobs (suburban warehouses outweigh towers); weighted by
+  each cell's mean non-residential height (volume over surface) to the power 1.5, jobs within 3 km
+  of King and Bay come to 383k against the census pack's 354k, and jobs misplaced between
+  municipalities fall from 7.4% to 4.0%. Blend 50% that, 30% OSM job places, 20% population (set
+  before looking). The power is in-sample on Toronto; London (T-288) checks it. Population from
+  GHSL GHS-POP rather than WorldPop: one product family for people and buildings.
+- **Tier 0's curve: prefer a borrowed fitted curve to a length fitted to one published figure**
+  (T-287). Fitting only the length to Toronto's 10.5 km median commute (2016) gave
+  d^-1 exp(-d/95 km): 17.5% of commutes misplaced between municipalities, against 15.7% with the
+  US curve and 11.3% with Toronto's own, and 22% fewer riders on a test line. `tier0.fit_curve`
+  stays for cities with nothing to borrow; a distance distribution (Mumbai's census bands) should
+  fit both parameters.
 - **Panels count today so far, not a whole-day forecast** (T-293, Anita: "lets not even show the
   whole day forecast cuz it shows stuff in the future. lets only show so far today, and call it
   'today'"). Replaces the line panel's Demand forecast, Trains today and Finances (riders, fares
@@ -2045,3 +2082,6 @@ reasoning and what it replaced.
 - 2026-10-13 (T-276): commutes are one doubly constrained gravity over every zone pack (`joint_gravity`), within-pack pairs with the pack's own curve and factor (so the runtime rebuilds them exactly), cross-pack pairs on the great circle cut at 150 km with a factor per region pair taken from the pack holding both regions, else the country's admin-1 default (US 0.23, as T-171 asked: not one global value), national borders 0.05 (US-Canada, judgement). Each pack's homes are scaled to its own jobs, not the union's: scaled to the union the solve forced net commuting through neighbours and barely converged. The cross-pack part (1.12M commuters, 5.9%) travels in the regional layer at commute timing, the local commute's mode choice and the work purpose's weekend factor; pairs under one commuter a day between 6 km zones are dropped and their commuters given to the home zone's kept pairs (172k pairs among the 13 zones, the market pack 8.2 to 13.9 MB).
 - 2026-10-13 (T-276): the market's longer trips: 0.107 weekday departures a resident (was 0.015), onset 25-50 km (was 40-80), `max(d, 25)^-2.37` (was `exp(-d/180)/max(d,40)^1.2`), fitted together on NHTS 2017 Northeast weekday ground trips of 50-1,000 km, with an outside world (Kontur people in no zone) in every normaliser so 17% of departures leave the map. The car pays 15 cents a road km and the local parking, both over two occupants. Local outings keep their 40-80 km taper (the overlap from 25 km is under 2% of social outings; airport trips keep their reach). The market's trips between adjacent packs now include short regional trips across their seam, so they far exceed NEC FUTURE's metro-to-metro figures (New York - Philadelphia 380k against 57k); long pairs are right (New York - Boston 53k against 50k).
 - 2026-10-14 (Anita): one save for the whole world, at least as the player feels it (T-304); London first; the sampler's extents as proposed (Greater London, Ile-de-France, Berlin and its ring, Shanghai's 16 districts, the Mumbai metropolitan region); non-city zones between cities only (T-300); line and station panels show only counts so far today, labelled "Today", never whole-day forecasts (T-293); T-122's frozen copies rejected (memory grows with open cities), instead compute what is on screen or likely to be looked at first (T-303); pack backups deleted.
+- 2026-10-14 (Anita): the one-world design (docs/world.md) is approved. Local time per region as NIMBY Rails does it: the clock shows the local time where the player is looking, and each region's traffic runs on its own local time (T-309). Old saves convert to the world frame on load, correcting anything that moves substantially where that is easy (T-308).
+- 2026-10-14 (Anita, T-310): the Money tab's "A day at this schedule" is gone (a whole-day forecast, as T-293 dropped elsewhere), with the code only it used (`income`, the per-day fare and running figures). The top bar cash keeps its fixed width but the digits sit right after the $. A reload does not restore the exact view: the URL hash only picks the nearest city or zone, and the map starts at that registry centre and zoom (nearest centre, not boundary, since it must be known before the boundaries load). The Lines and Stations lists sort by clicking column headers (a second click reverses, an arrow marks the column), not a dropdown; the sort stays a per-page-load setting as before. The grey veil's flash at the end of a pan was `cityBoundaries.ts` emptying the shade source on every change of focused zone before the new shape arrived; it now swaps in one setData from footprints made ready at startup.
+- 2026-10-14 (T-307): the draw anchor moves on MapLibre's moveend only (not during a pan), so a long drag rebuilds the worker's buffers once; at 300 km from the anchor Float32 is still centimetre-exact. The grid is 1 degree, so a fresh anchor is at most about 80 km from the view, inside the 100 km reach. New York keeps (-73.98, 40.73) as the anchor until the view leaves it, so it draws and picks exactly as before. The main thread switches its anchor when the state built at it arrives, not when it asks, so nothing is ever converted with one anchor and drawn with another; previews crossing a switch are shifted (a translation in Mercator). The demand views stay on the home anchor for now (T-317): rebuilding the bubble workers on an anchor change is its own piece of work, and their discs are coarse enough that it matters only far from New York.

@@ -18,6 +18,7 @@ import { stationPoint } from "../../game/trip";
 import { pickTool } from "../tabs";
 import { edit, linesAt, say, world } from "../../game/world";
 import { live } from "../../map/live";
+import { closestStations, minLabel } from "../../game/walks";
 import { removeThing } from "../../game/remove";
 import { tripAt } from "../../map/network";
 import { nextLeavingAt, platformsAt, tripLoad } from "../../game/boarding";
@@ -256,9 +257,40 @@ export function StationInspector({ id }: { id: string }) {
       ) : (
         <StationDetails s={s} lines={lines} props={props} construct={construct} remove={remove} />
       )}
+      <StationClosest s={s} members={members} />
       <StationLinks id={id} members={asComplex ? members : [id]} />
       <StationRiders id={id} scope={scope} />
       <StationLongerTrips id={id} scope={scope} />
+    </>
+  );
+}
+
+/** The 3 stations closest on foot (T-312, game/walks.ts), built or blueprint, the station's own
+ * complex left out; a click selects one (and moves the map to it if it is off screen). */
+function StationClosest({ s, members }: { s: StationInput; members: string[] }) {
+  const w = world.value;
+  if (!w) return null;
+  const rows = closestStations(s.lng, s.lat, w.save.stations, new Set(members), 3, s.name);
+  if (!rows.length) return null;
+  const open = (t: StationInput) => {
+    selection.value = { kind: "station", station: t.id };
+    const map = live.map;
+    if (map && !map.getBounds().contains([t.lng, t.lat])) map.jumpTo({ center: [t.lng, t.lat] });
+    live.overlay?.invalidate();
+  };
+  return (
+    <>
+      <div class="h">Closest stations</div>
+      <ul class="rows pick">
+        {rows.map((r) => (
+          <li onClick={() => open(r.station)}>
+            <span class={"grow" + (r.station.built ? "" : " muted")}>{r.station.name}{r.station.built ? "" : " (blueprint)"}</span>
+            <span class="val" data-tip={r.metres === null ? "Water in the way" : `${count(Math.round(r.metres))} m on foot`}>
+              {r.metres === null ? "no walk" : minLabel(r.metres)}
+            </span>
+          </li>
+        ))}
+      </ul>
     </>
   );
 }

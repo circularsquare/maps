@@ -27,20 +27,31 @@ export function startCityBoundaries(map: MlMap): () => void {
     }
     return p;
   };
+  // The footprints that have arrived with their shade shapes: a change of focus swaps one for the
+  // other in a single setData, so the veil is never empty between them (T-310: the empty step drew
+  // a frame without the veil each time a pan ended on another zone).
+  const ready = new Map<string, { city: MultiPolygon; outside: MultiPolygon }>();
+  const show = (id: string, city: MultiPolygon) => {
+    let r = ready.get(id);
+    if (!r) ready.set(id, (r = { city, outside: outsideCity(city) }));
+    (map.getSource(SHADE) as GeoJSONSource | undefined)?.setData(r.outside);
+    (map.getSource(FOCUS) as GeoJSONSource | undefined)?.setData(r.city);
+  };
   const focus = async (id: string) => {
     const mine = ++request;
-    // Never shade against the previous city while the new footprint is loading.
-    (map.getSource(SHADE) as GeoJSONSource | undefined)?.setData(empty);
-    (map.getSource(FOCUS) as GeoJSONSource | undefined)?.setData(empty);
     for (const city of CITIES) {
       const layer = `tw-city-boundary-${city.id}`;
       if (map.getLayer(layer)) map.setLayoutProperty(layer, "visibility", city.id === id ? "none" : "visible");
     }
+    const known = ready.get(id);
+    if (known) return show(id, known.city);
+    // Never shade against the previous city while the new footprint is loading.
+    (map.getSource(SHADE) as GeoJSONSource | undefined)?.setData(empty);
+    (map.getSource(FOCUS) as GeoJSONSource | undefined)?.setData(empty);
     try {
       const city = await geometry(id);
       if (!alive || mine !== request) return;
-      (map.getSource(SHADE) as GeoJSONSource | undefined)?.setData(outsideCity(city));
-      (map.getSource(FOCUS) as GeoJSONSource | undefined)?.setData(city);
+      show(id, city);
     } catch (error) {
       if (alive && mine === request) console.warn("City focus boundary unavailable", error);
     }
@@ -86,6 +97,12 @@ export function startCityBoundaries(map: MlMap): () => void {
       }, before);
     }
     void focus(activeCity.peek());
+    // every footprint made ready now, so no later change of focus has to wait for one
+    for (const city of CITIES) {
+      void geometry(city.id).then((g) => {
+        if (alive && !ready.has(city.id)) ready.set(city.id, { city: g, outside: outsideCity(g) });
+      }, () => {});
+    }
   };
   map.on("style.load", add);
   if (map.isStyleLoaded()) add();

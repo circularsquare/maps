@@ -34,7 +34,7 @@ import { CATCH_STEP, CATCH_WALL_MS, caughtUp, tripsDone } from "./catchUp";
 import { cityOverview } from "./intercityView";
 import { addFinder, discAt, pointerLocal } from "./demandHover";
 import { bubbleLevel, type DemandOverlay } from "./demandOverlay";
-import { MERC_K, toLocal } from "./geo";
+import { HOME_ANCHOR, MERC_K, toLocal } from "./geo";
 
 
 export interface Place {
@@ -580,7 +580,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   const places = (fc: Groups[]): Place[] => {
     if (!city) return [];
     const a = fc[2]; // resolution 7, about 5 km²: places a player knows
-    const st = (world.peek()?.save.stations ?? []).map((s) => ({ name: s.name, at: toLocal(s.lng, s.lat) }));
+    const st = (world.peek()?.save.stations ?? []).map((s) => ({ name: s.name, at: toLocal(s.lng, s.lat, HOME_ANCHOR) }));
     const sel = selection.peek();
     let cx = 0, cy = 0, n = 0;
     if (sel?.kind === "commuters") for (const c of sel.cells.slice(0, 2000)) (cx += city.cellX[c]), (cy += city.cellY[c]), n++;

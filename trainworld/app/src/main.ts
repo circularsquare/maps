@@ -22,7 +22,7 @@ import { cancelLink, linkPicked, linking } from "./game/links";
 import { pickTool, TOOL_KEYS, TRIP_KEY } from "./ui/tabs";
 import { keyIsTheirs, releaseSelectsAfterMousePick } from "./ui/keys";
 import { redo, undo, world } from "./game/world";
-import { income, lastSaved, moneyState } from "./game/money";
+import { lastSaved, moneyState } from "./game/money";
 import { live } from "./map/live";
 import { createMap, setBasemapLabels } from "./map/mapView";
 import { startCityBoundaries } from "./map/cityBoundaries";
@@ -42,7 +42,7 @@ import { CapacityMarkers } from "./map/capacityMarkers";
 import { startTrackHover } from "./map/trackHover";
 import { perfOff, perfTry } from "./perfFlags";
 import { DEMAND_INDEX, type Selection } from "./game/types";
-import { MERC_K, ORIGIN_MERC } from "./map/geo";
+import { anchor, kAtY, toLngLat, toLocal } from "./map/geo";
 import { Debug, perfText } from "./ui/Debug";
 import { Dock } from "./ui/Dock";
 import { Toolbar } from "./ui/Toolbar";
@@ -149,6 +149,17 @@ if (SYNTH) {
     overlay.invalidate();
   };
   renderer.onEpoch = (e) => client.setEpoch(e);
+  // The draw anchor follows the view (T-307, map/geo.ts): asked for when a move ends far from it;
+  // once the network drawn at the new one is in, a MapLibre frame moves everything placed on it
+  // (names, tags, the trip view) with the same camera.
+  map.on("moveend", () => {
+    const c = map.getCenter();
+    client.followView(c.lng, c.lat, map.getZoom());
+  });
+  client.onAnchor = () => {
+    map.triggerRepaint();
+    overlay.invalidate();
+  };
 }
 const tools = new Tools(map, overlay, client);
 live.tools = tools;
@@ -390,7 +401,7 @@ if (DEBUG) {
       for (let i = 0; i < r.tripCount; i++) {
         const at = tripAt(n, src.data[i * 2], src.data[i * 2 + 1] + e, t, src.ends ? src.ends[i] + e : -Infinity);
         if (!at) continue;
-        errs.push(Math.hypot(gpu[i * 2] - at.x, gpu[i * 2 + 1] - at.y) / MERC_K);
+        errs.push(Math.hypot(gpu[i * 2] - at.x, gpu[i * 2 + 1] - at.y) / kAtY(at.y, n.anchor));
       }
     }
     errs.sort((a, b) => a - b);
@@ -398,8 +409,10 @@ if (DEBUG) {
   };
 
   (window as any).tw = {
-    map, overlay, renderer, clock, world, selection, display, tools, client, checkPrecision, moneyState, income, lastSaved, pick, tripAt,
-    originMerc: ORIGIN_MERC,
+    map, overlay, renderer, clock, world, selection, display, tools, client, checkPrecision, moneyState, lastSaved, pick, tripAt,
+    // the current draw anchor (T-307), mercator 0..1, and conversions with it
+    get originMerc() { return anchor().merc; },
+    anchor, toLocal, toLngLat,
     frame: () => { const f = getWorldFrame(); return { kind: f.kind, lon: f.lon, lat: f.lat }; }, packToLngLat, lngLatToPack,
     select: (s: unknown) => (selection.value = s as any),
     lagStart: () => {

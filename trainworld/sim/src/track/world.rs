@@ -446,7 +446,7 @@ impl TrackWorld {
     /// Cost and validity of an alignment not yet built (the drawing tool's preview runs the same
     /// code): the fitted geometry, its track cost (water included) and its geometry problems.
     pub fn preview(&self, vertices: &[super::geom::Pi], tracks: u8) -> (super::geom::Fit, f64, bool) {
-        let f = super::geom::fit(vertices);
+        let f = self.net.fit(vertices);
         let mut wet = vec![];
         super::cost::water_spans(f.len, |s| { let (x, y, _) = super::geom::pos_at(&f.pieces, s); (x, y) }, self.net.water_mask.as_ref(), &mut wet);
         let c = super::cost::track_cost(f.len, &f.vert, &wet, tracks);

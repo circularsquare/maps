@@ -8,7 +8,7 @@
 
 import { rgb } from "../game/palette";
 import type { ClockState } from "../workers/protocol";
-import { toLocal } from "./geo";
+import { anchor, toLocal, type Anchor } from "./geo";
 import { bridgeEnds, PLATFORM_HALF_M, PLATFORM_POINTS, platformPoints, platformShape, reversed } from "./stationGeometry";
 
 /** Colour index of bare track (not a line). */
@@ -82,6 +82,9 @@ export interface NetworkBuffers {
   sampleStroke?: Int32Array;
   /** per edge id: local polyline (x, y, z triples), for snapping and picking */
   edgePts: Map<number, Float32Array>;
+  /** The draw anchor every position here is relative to (T-307, geo.ts): the clock worker's when
+   * it built them. Absent (a synthetic network): the current one. */
+  anchor?: Anchor;
 }
 
 /** Stroke segments into typed arrays that grow by doubling (number[] pushes cost ~25 ms for a
@@ -324,6 +327,7 @@ export function networkFromState(s: ClockState): NetworkBuffers {
     stationLine,
     sampleStroke,
     edgePts,
+    anchor: anchor(),
   };
 }
 

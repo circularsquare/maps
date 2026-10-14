@@ -14,7 +14,7 @@
 import type { Map as MlMap } from "maplibre-gl";
 import { clock, SPEEDS } from "../game/clock";
 import type { DrawOptions, NetworkRenderer } from "./renderer";
-import { EARTH_C, localToMerc, ORIGIN_MERC } from "./geo";
+import { anchor, EARTH_C, localToMerc } from "./geo";
 import { perfOff } from "../perfFlags";
 
 /** ?perfOff=overlay (T-045, measurement only): skip the WebGL draw. */
@@ -207,7 +207,8 @@ export class Overlay {
     if (clock.ticking) this.frameNow();
   }
 
-  /** local units -> CSS px in the map container, with the camera of the last frame */
+  /** local units (of the current anchor, which the drawn network shares, T-307) -> CSS px in the
+   * map container, with the camera of the last frame */
   toScreen(x: number, y: number): [number, number] {
     const m = this.camMatrix;
     if (!m) return [NaN, NaN];
@@ -222,7 +223,8 @@ export class Overlay {
   toScreenInto(x: number, y: number, out: Float64Array, at = 0) {
     const m = this.camMatrix;
     if (!m) { out[at] = out[at + 1] = NaN; return; }
-    const mx = ORIGIN_MERC[0] + x / EARTH_C, my = ORIGIN_MERC[1] + y / EARTH_C;
+    const o = anchor().merc;
+    const mx = o[0] + x / EARTH_C, my = o[1] + y / EARTH_C;
     const cx = m[0] * mx + m[4] * my + m[12], cy = m[1] * mx + m[5] * my + m[13], cw = m[3] * mx + m[7] * my + m[15];
     out[at] = ((cx / cw + 1) / 2) * this.cssW;
     out[at + 1] = ((1 - cy / cw) / 2) * this.cssH;

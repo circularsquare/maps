@@ -22,6 +22,10 @@ const MAGIC: &[u8; 4] = b"TWT4";
 /// frame (`frame.rs`). TWT4 and older are always the legacy equirectangular frame, and a network
 /// in that frame still encodes as TWT4, identical to what earlier builds wrote.
 const MAGIC_TWT5: &[u8; 4] = b"TWT5";
+/// TWT6 (T-306) is TWT5 byte for byte except that the metres are in the Mercator frame of the whole
+/// Earth (`frame.rs`); the origin fields keep the game's home origin, which the frame does not use.
+/// Radii are ground metres, as the player set them.
+const MAGIC_TWT6: &[u8; 4] = b"TWT6";
 const MAGIC_TWT3: &[u8; 4] = b"TWT3";
 const MAGIC_TWT2: &[u8; 4] = b"TWT2";
 
@@ -91,7 +95,12 @@ impl R<'_> {
 
 /// Encode the network's inputs.
 pub fn encode(net: &Network) -> Vec<u8> {
-    let mut w = W(if net.frame_kind == FrameKind::Lcc { MAGIC_TWT5 } else { MAGIC }.to_vec());
+    let mut w = W(match net.frame_kind {
+        FrameKind::Lcc => MAGIC_TWT5,
+        FrameKind::Merc => MAGIC_TWT6,
+        FrameKind::Equirect => MAGIC,
+    }
+    .to_vec());
     w.0.extend_from_slice(&net.origin_lon.to_le_bytes());
     w.0.extend_from_slice(&net.origin_lat.to_le_bytes());
     w.u(net.right_hand as u64);
@@ -208,7 +217,8 @@ pub fn convert_frame(bytes: &[u8], to: FrameKind) -> Result<Vec<u8>, String> {
     if net.frame_kind == to {
         return Ok(encode(&net));
     }
-    let (from, into) = (net.frame(), net.frame().with_kind(to));
+    // The target frame at the save's home origin (a Mercator frame keeps it but does not use it).
+    let (from, into) = (net.frame(), super::frame::Frame::new(to, net.origin_lon, net.origin_lat));
     let at = |x: f64, y: f64| {
         let (lon, lat) = from.to_lonlat(x, y);
         let (x, y) = into.from_lonlat(lon, lat);
@@ -252,12 +262,16 @@ pub fn convert_frame(bytes: &[u8], to: FrameKind) -> Result<Vec<u8>, String> {
 
 /// Decode into a fresh network (dense ids). Derive with `TrackWorld::new`.
 pub fn decode(bytes: &[u8]) -> Result<Network, String> {
-    if bytes.len() < 20 || (&bytes[..4] != MAGIC && &bytes[..4] != MAGIC_TWT5 && &bytes[..4] != MAGIC_TWT3 && &bytes[..4] != MAGIC_TWT2) {
+    if bytes.len() < 20 || (&bytes[..4] != MAGIC && &bytes[..4] != MAGIC_TWT5 && &bytes[..4] != MAGIC_TWT6 && &bytes[..4] != MAGIC_TWT3 && &bytes[..4] != MAGIC_TWT2) {
         return Err("not a trainworld track save".into());
     }
     let f = |o: usize| f64::from_le_bytes(bytes[o..o + 8].try_into().unwrap());
-    let v4 = &bytes[..4] == MAGIC || &bytes[..4] == MAGIC_TWT5;
-    let kind = if &bytes[..4] == MAGIC_TWT5 { FrameKind::Lcc } else { FrameKind::Equirect };
+    let v4 = &bytes[..4] == MAGIC || &bytes[..4] == MAGIC_TWT5 || &bytes[..4] == MAGIC_TWT6;
+    let kind = match &bytes[..4] {
+        b"TWT5" => FrameKind::Lcc,
+        b"TWT6" => FrameKind::Merc,
+        _ => FrameKind::Equirect,
+    };
     let mut net = Network::new_in(kind, f(4), f(12), false);
     let mut r = R(bytes, 20);
     net.right_hand = r.u()? == 1;

@@ -9,7 +9,7 @@
 
 import { BUBBLE_ALPHA } from "../game/palette";
 import { aggregate, biggestFirst, discs, reorder } from "../map/bubbles";
-import { toLocal } from "../map/geo";
+import { HOME_ANCHOR, toLocal } from "../map/geo";
 import { BUBBLE_DENSITY, BUBBLE_RES, type BubbleLevel, type FromCommuters, type Grouping, type ToCommuters } from "./commutersProtocol";
 
 import { makeFrame, type FrameSpec } from "../game/frame";
@@ -24,7 +24,7 @@ function setCells(xy: Float32Array, h3: BigUint64Array, spec: FrameSpec) {
   cellY = new Float32Array(n);
   for (let i = 0; i < n; i++) {
     const [lng, lat] = frame.toLonLat(xy[i * 2], xy[i * 2 + 1]);
-    const [x, y] = toLocal(lng, lat);
+    const [x, y] = toLocal(lng, lat, HOME_ANCHOR); // the demand views stay on the home anchor (T-307)
     cellX[i] = x;
     cellY[i] = y;
   }

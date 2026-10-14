@@ -13,7 +13,8 @@ import { accountVersion, packRiders } from "../game/boarding";
 import { lineDraft, selection, tool } from "../game/ui";
 import { say, setEditSink, world } from "../game/world";
 import type { LineInput, LineStats, StationInput, TrackEdge, TrackNode, WorldView } from "../game/types";
-import type { ClockState, EditOp, FromClock, NetworkSnapshot, PiInput, RouteEnd, ToClock } from "./protocol";
+import type { ClockState, EditOp, FromClock, NetworkSnapshot, PiInput, RouteEnd, StationAt, ToClock } from "./protocol";
+import { anchor, anchorWanted, EARTH_C, HOME_ANCHOR, makeAnchor, setAnchor, type Anchor } from "../map/geo";
 
 export const saveSlotsState = signal<{ slots: import("./saveFile").SaveSlot[]; active: string; writable: boolean; at: number; reason?: string; error?: string }>({ slots: [], active: "autosave", writable: true, at: 0 });
 export function manageSaveSlot(action: "refresh" | "create" | "open" | "rename" | "delete", key?: string, name?: string) {
@@ -156,6 +157,9 @@ export class ClockClient {
   private worker: Worker;
   private seq = 0;
   private pending = new Map<number, (a: EditAnswer) => void>();
+  private stationBusy = false;
+  private stationNext: { at: StationAt; platform: number; cb: (ok: boolean, issues: string[]) => void } | null = null;
+  private stationCb: ((ok: boolean, issues: string[]) => void) | null = null;
   private previewBusy = false;
   private previewNext: { msg: (seq: number) => ToClock; cb: (a: PreviewAnswer) => void } | null = null;
   private previewCb: ((a: PreviewAnswer) => void) | null = null;
@@ -174,6 +178,41 @@ export class ClockClient {
    * (T-229, `?debug=1`); newest last, at most 40 */
   editLog: { worker?: Record<string, number>; stateMs?: number }[] = [];
   private lastStateMs = 0;
+  /** Draw anchors (T-307, map/geo.ts) by version: the one asked for last, and the ones states and
+   * previews may still arrive in. `anchor()` switches when the worker's state built at a new one
+   * arrives, so the drawn network and every local-unit conversion change together. */
+  private anchors = new Map<number, Anchor>([[HOME_ANCHOR.version, HOME_ANCHOR]]);
+  private wantedAnchor: Anchor = HOME_ANCHOR;
+  /** called after `anchor()` moved, before the state built at it is handed over (main.ts) */
+  onAnchor: (a: Anchor) => void = () => {};
+
+  /** The view moved (MapLibre's moveend): ask for a new draw anchor when it has travelled far. */
+  followView(lng: number, lat: number, zoom: number) {
+    const to = anchorWanted(lng, lat, zoom, this.wantedAnchor);
+    if (!to) return;
+    const a = makeAnchor(to[0], to[1], this.wantedAnchor.version + 1);
+    this.anchors.set(a.version, a);
+    for (const v of this.anchors.keys()) if (v < a.version - 8 && v !== anchor().version) this.anchors.delete(v);
+    this.wantedAnchor = a;
+    this.post({ kind: "anchor", lng: a.lng, lat: a.lat, version: a.version });
+  }
+
+  /** The anchor of `version`, as the worker reported it. */
+  private anchorOf(spec: { lng: number; lat: number; version: number }): Anchor {
+    let a = this.anchors.get(spec.version);
+    if (!a) this.anchors.set(spec.version, (a = makeAnchor(spec.lng, spec.lat, spec.version)));
+    return a;
+  }
+
+  /** A preview's positions, relative to anchor `version`, moved to the current anchor's local
+   * units in place (an anchor change and a preview crossed). */
+  private toCurrentAnchor(version: number | undefined, verts: Float64Array, pts: Float32Array) {
+    const from = version === undefined ? undefined : this.anchors.get(version), to = anchor();
+    if (!from || from === to) return;
+    const dx = (from.merc[0] - to.merc[0]) * EARTH_C, dy = (from.merc[1] - to.merc[1]) * EARTH_C;
+    for (let i = 0; i < verts.length; i += 4) { verts[i] += dx; verts[i + 1] += dy; }
+    for (let i = 0; i < pts.length; i += 3) { pts[i] += dx; pts[i + 1] += dy; }
+  }
 
   constructor(cityId = HOME_CITY) {
     this.worker = new Worker(new URL("./clock.worker.ts", import.meta.url), { type: "module" });
@@ -237,9 +276,16 @@ export class ClockClient {
         break;
       case "state": {
         const t0 = performance.now();
+        // built at another draw anchor (T-307): switch to it first, so everything rebuilt from
+        // this state converts with the anchor its positions are relative to
+        const a = msg.state.anchor ? this.anchorOf(msg.state.anchor) : anchor();
+        const moved = a !== anchor();
+        if (moved) setAnchor(a);
+        if (msg.state.net) msg.state.net.anchor = a;
         setMoneyState(msg.state.money);
         world.value = toWorld(msg.state, this.city);
         this.onState(msg.state);
+        if (moved) this.onAnchor(a);
         this.lastStateMs = performance.now() - t0;
         break;
       }
@@ -313,10 +359,19 @@ export class ClockClient {
       }
       case "preview": {
         this.previewBusy = false;
+        this.toCurrentAnchor(msg.anchor, msg.verts, msg.pts);
         this.previewCb?.({ ok: msg.ok, cost: msg.cost, lengthM: msg.lengthM, mult: msg.mult, issues: msg.issues, verts: msg.verts, pts: msg.pts, speeds: msg.speeds, parts: msg.parts });
         const n = this.previewNext;
         this.previewNext = null;
         if (n) this.ask(n.msg, n.cb);
+        break;
+      }
+      case "stationCheck": {
+        this.stationBusy = false;
+        this.stationCb?.(msg.ok, msg.issues);
+        const n = this.stationNext;
+        this.stationNext = null;
+        if (n) this.checkStation(n.at, n.platform, n.cb);
         break;
       }
       case "snapshot":
@@ -353,6 +408,18 @@ export class ClockClient {
   /** What moving a blueprint node to pack metres (x, y) would do (T-093); the same queue. */
   previewNode(node: number, x: number, y: number, cb: (a: PreviewAnswer) => void) {
     this.ask((seq) => ({ kind: "previewNode", seq, node, x, y }), cb);
+  }
+
+  /** Whether a station could be placed here (T-311): the worker tries `addStation` and rolls it
+   * back. One request in flight; a newer one replaces a waiting one. */
+  checkStation(at: StationAt, platform: number, cb: (ok: boolean, issues: string[]) => void) {
+    if (this.stationBusy) {
+      this.stationNext = { at, platform, cb };
+      return;
+    }
+    this.stationBusy = true;
+    this.stationCb = cb;
+    this.post({ kind: "previewStation", seq: ++this.seq, at, platform });
   }
 
   /** Drop a preview waiting to be sent (a drag was cancelled or finished). */

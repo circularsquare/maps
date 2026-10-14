@@ -79,9 +79,15 @@ export type ToClock =
   | { kind: "previewEdge"; seq: number; edge: EdgeId; pis: PiInput[] }
   /** what moving a blueprint node would do (T-093); answered with "preview", one part per edge */
   | { kind: "previewNode"; seq: number; node: NodeId; x: number; y: number }
+  /** whether `addStation` with these arguments would succeed, nothing changed (T-311, the
+   * placement ghost's colour); answered with "stationCheck" */
+  | { kind: "previewStation"; seq: number; at: StationAt; platform: number }
   /** the render epoch the main thread is in (start of the game hour, s): send its trips and the
    * next hour's */
   | { kind: "epoch"; epoch: number }
+  /** the draw anchor moved (T-307, map/geo.ts): rebuild every drawn position relative to it and send
+   * a full state */
+  | { kind: "anchor"; lng: number; lat: number; version: number }
   /** the game clock (main thread, game/clock.ts) whenever it is set, paused, resumed or changes
    * speed: game seconds `t` at wall time `at` (Date.now()), moving `rate` game s per wall s (0
    * when stopped). The worker settles money by the game hour from it (T-028). */
@@ -244,6 +250,8 @@ export interface ClockState {
   /** only the service changed (a train count, T-229): no geometry moved, so `net` is not built and
    * the renderer keeps its buffers, taking only the new phase tables and profile meta */
   service?: boolean;
+  /** the draw anchor its local units are relative to (T-307, map/geo.ts) */
+  anchor?: { lng: number; lat: number; version: number };
 }
 
 export type FromClock =
@@ -271,6 +279,8 @@ export type FromClock =
       /** several alignments (a node drag moves every edge there, T-093): where each starts in
        * `pts`, in triples, and the end; absent = one */
       parts?: Uint32Array;
+      /** the draw anchor version `verts` and `pts` are relative to (T-307) */
+      anchor?: number;
     }
   | { kind: "state"; state: ClockState }
   /** trips drawn in [epoch, epoch + 3600): profile index, departure - epoch (notes/T-040.md);
@@ -292,6 +302,8 @@ export type FromClock =
   | { kind: "loaded"; from: "autosave" | "file" | "new"; clock: number; frame: FrameSpec; error?: string }
   /** the save file, for the player to keep */
   | { kind: "exported"; bytes: Uint8Array; day: number }
+  /** a station placement's check (T-311): `issues` as an edit's */
+  | { kind: "stationCheck"; seq: number; ok: boolean; issues: string[] }
   /** a query's answer, in the track model's flat layout (pack metres) */
   | { kind: "answer"; seq: number; data: Float64Array }
   /** an autosave was written (Date.now()), its size, and worker ms to encode and to write */

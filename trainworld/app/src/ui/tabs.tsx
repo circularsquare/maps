@@ -5,13 +5,13 @@
 import { clock } from "../game/clock";
 import { useState } from "preact/hooks";
 import { createLine } from "../game/lineActions";
-import { lineDemand, stationDemand, demandView } from "../game/demand";
 import type { JSX } from "preact";
 import { count, levelLabel, money, moneyExact } from "../game/format";
 import { DEMAND_INDEX, LEVELS, type Level } from "../game/types";
-import { buildLevel, buildPlatform, display, lineSort, selection, setDisplay, trackCount, tool, type Tool } from "../game/ui";
+import { buildLevel, buildPlatform, display, lineSort, selection, setDisplay, stationSort, trackCount, tool, type ListSort, type Tool } from "../game/ui";
+import type { Signal } from "@preact/signals";
 import { linesAt, setFares, world } from "../game/world";
-import { income, liveMoney, moneyState } from "../game/money";
+import { liveMoney, moneyState } from "../game/money";
 import { accountVersion } from "../game/boarding";
 import { stationsToday, today, todayLoaded, useToday } from "../game/today";
 import type { DayLedger } from "../workers/protocol";
@@ -96,10 +96,32 @@ export function BuildTab() {
   );
 }
 
+/** T-310: a list's column headers. A click sorts by the column (numbers biggest first), a second
+ * click reverses it, and the sorted column carries a small arrow. A column with a `cls` is a
+ * right-aligned number column of that width; the arrow sits before its label so the label stays
+ * over the figures. */
+function SortHead<K extends string>({ sort, cols }: { sort: Signal<ListSort<K>>; cols: { key: K; label: string; tip: string; first: 1 | -1; cls?: string }[] }) {
+  const s = sort.value;
+  return (
+    <div class="sort-head">
+      {cols.map((c) => {
+        const on = s.key === c.key;
+        const arrow = <i class={"sort-arrow" + (on ? (s.dir > 0 ? " up" : " down") : "")} />;
+        return (
+          <button class={"sort-btn" + (c.cls ? " val " + c.cls : " grow") + (on ? " on" : "")} data-tip={c.tip}
+            onClick={() => (sort.value = on ? { key: c.key, dir: s.dir === 1 ? -1 : 1 } : { key: c.key, dir: c.first })}>
+            {c.cls && arrow}{c.label}{!c.cls && arrow}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 /** T-293: one line's riders today, its own component so only it re-renders as the count moves. */
 function RidersToday({ line }: { line: string }) {
   const d = today.value.get(line);
-  return <span class="val" data-tip={d ? `${count(d.riders)} riders today` : undefined}>{d ? count(d.riders) : ""}</span>;
+  return <span class="val w-riders" data-tip={d ? `${count(d.riders)} riders today` : undefined}>{d ? count(d.riders) : ""}</span>;
 }
 
 function TotalToday() {
@@ -132,18 +154,24 @@ export function LinesTab() {
     try { await createLine(); } finally { setCreating(false); }
   };
   const natural = (a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" });
+  // a line that is not running has no train count and no riders: it sorts as zero
+  const trains = (id: string) => (w.lineStats[id]?.status === "running" ? w.lineStats[id].trainsNeeded[lev] : 0);
+  const { key, dir } = lineSort.value;
   const lines = [...w.save.lines].sort((a, b) =>
-    (lineSort.value === "passengers" ? (t.get(b.id)?.riders ?? 0) - (t.get(a.id)?.riders ?? 0) : 0)
-    || natural(a.name, b.name) || a.num - b.num);
+    (key === "riders" ? ((t.get(a.id)?.riders ?? 0) - (t.get(b.id)?.riders ?? 0)) * dir
+      : key === "trains" ? (trains(a.id) - trains(b.id)) * dir : 0)
+    || natural(a.name, b.name) * (key === "name" ? dir : 1) || a.num - b.num);
   return (
     <>
       <div class="line-list-actions">
         <button class="btn text" onClick={newLine} disabled={creating}><Icon.plus />New line</button>
-        <label>Sort <select aria-label="Sort lines" value={lineSort.value} onChange={e => lineSort.value = e.currentTarget.value as "name" | "passengers"}>
-          <option value="name">Name</option><option value="passengers">Riders today</option>
-        </select></label>
       </div>
       {w.save.lines.length === 0 && <p class="muted">No lines yet.</p>}
+      {w.save.lines.length > 0 && <SortHead sort={lineSort} cols={[
+        { key: "name", label: "Name", tip: "Sort by name", first: 1 },
+        { key: "riders", label: "Riders", tip: "Sort by riders today", first: -1, cls: "w-riders" },
+        { key: "trains", label: "Trains", tip: "Sort by trains needed", first: -1, cls: "w-trains" },
+      ]} />}
       <ul class="rows pick">
         {lines.map((l) => {
           const st = w.lineStats[l.id];
@@ -179,7 +207,10 @@ export function StationsTab() {
   if (!w) return null;
   const sel = selection.value;
   const by = stationsToday.peek();
-  const st = [...w.save.stations].sort((a, b) => (by.get(b.id) ?? 0) - (by.get(a.id) ?? 0) || a.name.localeCompare(b.name));
+  const { key, dir } = stationSort.value;
+  const st = [...w.save.stations].sort((a, b) =>
+    (key === "riders" ? ((by.get(a.id) ?? 0) - (by.get(b.id) ?? 0)) * dir : 0)
+    || a.name.localeCompare(b.name) * (key === "name" ? dir : 1));
   const d = display.value;
   return (
     <>
@@ -193,6 +224,10 @@ export function StationsTab() {
         </Check>}
       </div>
       {st.length === 0 && <p class="muted">No stations yet.</p>}
+      {st.length > 0 && <SortHead sort={stationSort} cols={[
+        { key: "name", label: "Name", tip: "Sort by name", first: 1 },
+        { key: "riders", label: "Today", tip: "Sort by boardings today", first: -1, cls: "w-num" },
+      ]} />}
       <ul class="rows pick">
         {st.map((s) => (
           <li class={sel?.kind === "station" && sel.station === s.id ? "on" : ""} onClick={() => (selection.value = { kind: "station", station: s.id })}>
@@ -230,7 +265,6 @@ export function MoneyTab() {
   const w = world.value;
   const m = moneyState.value;
   if (!w || !m) return null;
-  const inc = income.value;
   // T-284: the cash and today's column follow fares as they land (`liveMoney`, own components)
   const todayDay = m.ledger[m.ledger.length - 1]?.day ?? 0;
   const prev = m.ledger.find((d) => d.day === todayDay - 1) ?? null;
@@ -286,11 +320,6 @@ export function MoneyTab() {
           <Stepper value={"$" + f.perKm.toFixed(2)} wide label="fare a km" onStep={(s) => setFares(f.base, f.perKm + s * 0.01)} />
         </li>
         <Row label="A 10 km ride">{"$" + (f.base + 10 * f.perKm).toFixed(2)}</Row>
-      </ul>
-      <div class="h"><span data-tip={`Fares and running costs count ${m.economy} times over in a game day. Track, stations and trains cost what they would in real life.`}>A day at this schedule</span></div>
-      <ul class="rows">
-        <Row label="Fares">{demandView.value ? money(inc.faresPerDay) : ""}</Row>
-        <Row label="Running trains">{money(-inc.runningPerDay)}</Row>
       </ul>
       <div class="h">Trains</div>
       <ul class="rows">

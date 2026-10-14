@@ -5,12 +5,12 @@
 ### 4.1 Where trips come from
 
 A **doubly constrained gravity model** from homes to jobs with a distance-decay curve. Tiers say
-how good the inputs are. **All nine registered Northeast cities have playable tier 1 packs;
-global tier 0 is planned**:
+how good the inputs are. **The registered cities have playable tier 1 packs; tier 0, from global
+sources only, is built (`pipeline/tier0.py`, T-287) and measured on Toronto** (notes/T-287.md):
 
 | Tier | Inputs | Status |
 |---|---|---|
-| 0 | population grid + a jobs proxy (GHSL non-residential built-up, 100 m, global, free) | build |
+| 0 | GHSL population grid scaled to district totals + a jobs proxy (GHSL non-residential volume weighted by height, OSM job places, population) + OSM, Wikidata and OurAirports for the other purposes | built; no city uses it yet |
 | 1 | population + real jobs counts by small area | build |
 | 2 | a real home-to-work OD matrix | not an input; used as a **check** on the tier-1 fit where it exists (LODES OD for the US) |
 
@@ -388,6 +388,13 @@ them, or with them made for other zones, has every walk and drive straight x 1.3
   strategy searches (T-119) and none of the real New York network's 80 pairs within 300 m has
   water between them; ferries are no walk or drive (T-280); the regional market's drives
   (T-276's redesign).
+- **The map's walking minutes** (T-312, `app/src/game/walks.ts`): the closest-stations lists of
+  the station inspector and the bubble hover walk the same barrier raster, read on the main thread
+  from the pack's `walk_row` and `walk_x` (a Range request, about 250 KB a city) with a TypeScript
+  copy of `WalkGrid::field` and `Field::eff` (same constants, same search), so a hover never waits
+  for a demand worker mid-solve. Minutes = routed metres x `walk_detour` 1.3 / 4.8 km/h. It does
+  not check `zones_check`: a pack whose routes are stale still has its barrier here. Change the
+  search in `routes.rs` and `walks.ts` together.
 
 **The interface** (for other work, T-276 included). Byte tables, factor = `exp(q / 64)`. A zone's
 window slot is `(dx + W) * (2W + 1) + (dy + W)` for the other zone's square offset (dx, dy), W 6

@@ -1,39 +1,115 @@
 // Coordinates. "Local units" are web mercator metres (mercator 0..1 times the earth's
-// circumference) relative to a city origin; real metres at the origin's latitude are local / MERC_K.
-// Keeping them small and relative is what lets float32 hold them to a centimetre at street zoom.
-// One origin for now (New York); a city pack will carry its own.
+// circumference) relative to the draw anchor; a metre on the ground is `k` local units, where
+// k = 1 / cos(lat) (`kAtY`, `kAtLat`). Keeping them small and relative is what lets float32 hold
+// them to a centimetre at street zoom.
+//
+// The draw anchor follows the view (T-307, docs/world.md "Clock worker, renderer and pick"): when
+// the view centre is more than ANCHOR_REACH_M of ground from it at ANCHOR_ZOOM or deeper, the
+// anchor moves to the view, snapped to an ANCHOR_GRID_DEG grid so small pans never move it. The
+// main thread asks the clock worker for the new anchor (workers/clockClient.ts `followView`); the
+// worker rebuilds its draw buffers relative to it, and the main thread switches `anchor()` when that
+// state arrives, so the network drawn and every local-unit conversion change together. Caches in
+// local units rebuild with the world it comes with, or key on `anchor().version`.
+//
+// The demand views (bubbles, catchments, longer trips, the hover finders' pointer) stay on
+// HOME_ANCHOR for now (T-317): within the Northeast and Toronto that is centimetre-exact anyway.
 
-export const ORIGIN_LNGLAT: [number, number] = [-73.98, 40.73];
 export const EARTH_C = 40075016.686;
-/** real metre -> local unit at the origin's latitude */
-export const MERC_K = 1 / Math.cos((ORIGIN_LNGLAT[1] * Math.PI) / 180);
+const EARTH_R = 6371008.8;
+const RAD = Math.PI / 180;
+
+/** A draw anchor: where local units are measured from. `version` 0 is HOME_ANCHOR; each move of
+ * the anchor takes the next. */
+export interface Anchor {
+  lng: number;
+  lat: number;
+  /** its mercator 0..1 position */
+  merc: [number, number];
+  version: number;
+}
 
 function mercY(lat: number) {
-  const s = Math.sin((lat * Math.PI) / 180);
+  const s = Math.sin(lat * RAD);
   return 0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI);
 }
 
-export const ORIGIN_MERC: [number, number] = [(ORIGIN_LNGLAT[0] + 180) / 360, mercY(ORIGIN_LNGLAT[1])];
+export function makeAnchor(lng: number, lat: number, version: number): Anchor {
+  return { lng, lat, merc: [(lng + 180) / 360, mercY(lat)], version };
+}
+
+/** New York: the single origin every view used before T-307, and still the anchor there. */
+export const HOME_ANCHOR = makeAnchor(-73.98, 40.73, 0);
+/** real metre -> local unit at HOME_ANCHOR's latitude (the demand views, which stay on it) */
+export const MERC_K = 1 / Math.cos(HOME_ANCHOR.lat * RAD);
+
+let current = HOME_ANCHOR;
+/** The anchor local units are measured from now (in a worker: the one it was last told). */
+export function anchor(): Anchor {
+  return current;
+}
+export function setAnchor(a: Anchor) {
+  current = a;
+}
+
+/** The anchor moves when the view centre is farther than this from it, metres of ground... */
+export const ANCHOR_REACH_M = 100_000;
+/** ...at this zoom or deeper (further out a metre is under a pixel) */
+export const ANCHOR_ZOOM = 10;
+/** and goes to the nearest point of this grid, degrees: at most about 80 km from the centre */
+export const ANCHOR_GRID_DEG = 1;
+
+/** Where the anchor should go for a view centred at (lng, lat) at `zoom`, or null to stay at `a`. */
+export function anchorWanted(lng: number, lat: number, zoom: number, a: Anchor): [number, number] | null {
+  if (zoom < ANCHOR_ZOOM || !Number.isFinite(lng) || !Number.isFinite(lat)) return null;
+  if (groundM(lng, lat, a.lng, a.lat) <= ANCHOR_REACH_M) return null;
+  const g = ANCHOR_GRID_DEG;
+  const to: [number, number] = [Math.max(-180, Math.min(180, Math.round(lng / g) * g)), Math.max(-80, Math.min(80, Math.round(lat / g) * g))];
+  return to[0] === a.lng && to[1] === a.lat ? null : to;
+}
+
+/** Great-circle distance, metres. */
+function groundM(lng1: number, lat1: number, lng2: number, lat2: number): number {
+  const p1 = lat1 * RAD, p2 = lat2 * RAD;
+  const h = Math.sin((p2 - p1) / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(((lng2 - lng1) * RAD) / 2) ** 2;
+  return 2 * EARTH_R * Math.asin(Math.min(1, Math.sqrt(h)));
+}
 
 /** lng/lat -> local units */
-export function toLocal(lng: number, lat: number): [number, number] {
-  return [((lng + 180) / 360 - ORIGIN_MERC[0]) * EARTH_C, (mercY(lat) - ORIGIN_MERC[1]) * EARTH_C];
+export function toLocal(lng: number, lat: number, a: Anchor = current): [number, number] {
+  return [((lng + 180) / 360 - a.merc[0]) * EARTH_C, (mercY(lat) - a.merc[1]) * EARTH_C];
 }
 
 /** local units -> mercator 0..1 (the input space of MapLibre's mainMatrix) */
-export function localToMerc(x: number, y: number): [number, number] {
-  return [ORIGIN_MERC[0] + x / EARTH_C, ORIGIN_MERC[1] + y / EARTH_C];
+export function localToMerc(x: number, y: number, a: Anchor = current): [number, number] {
+  return [a.merc[0] + x / EARTH_C, a.merc[1] + y / EARTH_C];
 }
 
 /** local units -> lng/lat */
-export function toLngLat(x: number, y: number): [number, number] {
-  const [mx, my] = localToMerc(x, y);
+export function toLngLat(x: number, y: number, a: Anchor = current): [number, number] {
+  const [mx, my] = localToMerc(x, y, a);
   const lat = (Math.atan(Math.sinh(Math.PI * (1 - 2 * my))) * 180) / Math.PI;
   return [mx * 360 - 180, lat];
 }
 
-/** Column-major 4x4: local units -> mercator 0..1. */
-export const LOCAL_TO_MERC = [1 / EARTH_C, 0, 0, 0, 0, 1 / EARTH_C, 0, 0, 0, 0, 1, 0, ORIGIN_MERC[0], ORIGIN_MERC[1], 0, 1];
+/** Column-major 4x4: local units of anchor `a` -> mercator 0..1. */
+export function localToMercMatrix(a: Anchor = current): number[] {
+  return [1 / EARTH_C, 0, 0, 0, 0, 1 / EARTH_C, 0, 0, 0, 0, 1, 0, a.merc[0], a.merc[1], 0, 1];
+}
+
+/** The isometric latitude at the anchor, rad: k at local y is cosh(this - y * PSI_PER_UNIT). */
+export function anchorPsi(a: Anchor = current): number {
+  return 2 * Math.PI * (0.5 - a.merc[1]);
+}
+export const PSI_PER_UNIT = (2 * Math.PI) / EARTH_C;
+
+/** Local units per metre of ground at local y (mercator's scale, 1 / cos(lat) there). */
+export function kAtY(y: number, a: Anchor = current): number {
+  return Math.cosh(anchorPsi(a) - y * PSI_PER_UNIT);
+}
+/** Local units per metre of ground at a latitude. */
+export function kAtLat(lat: number): number {
+  return 1 / Math.cos(lat * RAD);
+}
 
 /** out = a * b, column-major 4x4, in float64; result as float32 for the GPU. */
 export function mul4(a: ArrayLike<number>, b: ArrayLike<number>): Float32Array {

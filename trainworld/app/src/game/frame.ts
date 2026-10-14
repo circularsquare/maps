@@ -6,10 +6,16 @@
 // - "lcc": a spherical Lambert conformal conic tangent at lat0, the frame of new games. Scale
 //   1 + dlat^2 / 2 (0.24% at 450 km north or south of the origin), conformal, so arcs stay arcs.
 //
+// - "merc": spherical Mercator over the whole Earth, the frame of new games since T-306
+//   (docs/world.md): x = R lon, y = R atanh(sin lat), no origin (the spec's lon and lat are the
+//   game's home origin, kept but not used). Its plane metres are not ground metres: scale
+//   k = 1 / cos(lat) = cosh(y / R), so a distance in its metres is divided by k for the ground. The
+//   track model's lengths are already ground metres.
+//
 // A frame is a value, not a global: a demand pack's own frame is an "equirect" at its origin, and a
 // game's frame is read from its save.
 
-export type FrameKind = "equirect" | "lcc";
+export type FrameKind = "equirect" | "lcc" | "merc";
 export interface FrameSpec { kind: FrameKind; lon: number; lat: number }
 export interface Frame extends FrameSpec {
   /** plane metres to [lon, lat] in degrees */
@@ -26,10 +32,29 @@ const RAD = Math.PI / 180;
 const cache = new Map<string, Frame>();
 
 export function makeFrame(spec: FrameSpec): Frame {
-  const key = `${spec.kind}:${spec.lon}:${spec.lat}`;
+  // Mercator has no origin: every "merc" spec is the one frame (callers compare frames by identity).
+  const key = spec.kind === "merc" ? "merc" : `${spec.kind}:${spec.lon}:${spec.lat}`;
   let f = cache.get(key);
-  if (!f) cache.set(key, (f = spec.kind === "lcc" ? lcc(spec) : equirect(spec)));
+  if (!f) cache.set(key, (f = spec.kind === "lcc" ? lcc(spec) : spec.kind === "merc" ? merc(spec) : equirect(spec)));
   return f;
+}
+
+/** Mercator scale at plane y: plane metres per ground metre. */
+export function mercK(y: number): number {
+  return Math.cosh(y / EARTH_R);
+}
+
+function merc({ lon, lat }: FrameSpec): Frame {
+  return {
+    kind: "merc", lon, lat,
+    toLonLat: (x, y) => [x / (EARTH_R * RAD), Math.atan(Math.sinh(y / EARTH_R)) / RAD],
+    fromLonLat: (lon, lat) => {
+      let d = lon % 360;
+      d = d > 180 ? d - 360 : d < -180 ? d + 360 : d;
+      return [EARTH_R * d * RAD, EARTH_R * Math.atanh(Math.sin(lat * RAD))];
+    },
+    scaleAt: (lat) => { const k = 1 / Math.cos(lat * RAD); return [k, k]; },
+  };
 }
 
 function equirect({ lon: lon0, lat: lat0 }: FrameSpec): Frame {
@@ -65,7 +90,12 @@ function lcc({ lon: lon0, lat: lat0 }: FrameSpec): Frame {
   };
 }
 
-/** The frame a track save's bytes are in: TWT5 is the world frame, older formats the legacy one. */
+/** The frame a track save's bytes are in (`TrackApi.frame_kind`): TWT6 is Mercator (2), TWT5 the
+ * Northeast conic (1), older formats the legacy one (0). */
 export function frameKindName(kind: number): FrameKind {
-  return kind === 1 ? "lcc" : "equirect";
+  return kind === 2 ? "merc" : kind === 1 ? "lcc" : "equirect";
+}
+/** The number `TrackApi.set_empty_frame` and `convert_save_frame` take for a frame kind. */
+export function frameKindNumber(kind: FrameKind): number {
+  return kind === "merc" ? 2 : kind === "lcc" ? 1 : 0;
 }

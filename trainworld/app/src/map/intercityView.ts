@@ -41,7 +41,7 @@ import { DISC } from "../workers/commutersProtocol";
 import { CATCH_STEP, caughtUp, tripsDone } from "./catchUp";
 import { addFinder, discAt, pointerLocal } from "./demandHover";
 import type { DemandOverlay } from "./demandOverlay";
-import { EARTH_C, MERC_K, toLocal, toLngLat } from "./geo";
+import { EARTH_C, HOME_ANCHOR, MERC_K, toLocal, toLngLat } from "./geo";
 
 /** A bubble selection's longer trips, for the commuters inspector; null while unknown. */
 export const intercityPick = signal<{ sel: Selection; data: IntercitySelection; own: number } | null>(null);
@@ -104,7 +104,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     Array.from(labels.children).forEach((child, i) => {
       const el = child as HTMLElement;
       if (!marks) return;
-      const p = map.project(toLngLat(marks.discs[i * DISC], marks.discs[i * DISC + 1]));
+      const p = map.project(toLngLat(marks.discs[i * DISC], marks.discs[i * DISC + 1], HOME_ANCHOR));
       const r = marks.discs[i * DISC + 2] * (512 * 2 ** map.getZoom() / EARTH_C) * view.bubbleSize;
       const w = el.offsetWidth, h = el.offsetHeight;
       const positions = [[p.x + r + 5, p.y - h / 2], [p.x - w - r - 5, p.y - h / 2], [p.x - w / 2, p.y + r + 5], [p.x - w / 2, p.y - h - r - 5]];
@@ -195,7 +195,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     const pxPerUnit = 512 * 2 ** map.getZoom() / EARTH_C;
     const discs = new Float32Array(points.length * DISC);
     points.forEach((p, i) => {
-      const [x, y] = toLocal(p.city.center[0], p.city.center[1]);
+      const [x, y] = toLocal(p.city.center[0], p.city.center[1], HOME_ANCHOR);
       const c = modeMix(p.rail, 0, Math.max(0, p.all - p.rail));
       // a zone off screen bigger than the scale is drawn at the scale (T-276)
       const r = OVERVIEW_PX * Math.sqrt(Math.min(1, p.all / max)) / pxPerUnit;
@@ -244,7 +244,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     const tags: string[][] = [];
     points.forEach((z, i) => {
       const [lng, lat] = z.ll;
-      const [x, y] = toLocal(lng, lat);
+      const [x, y] = toLocal(lng, lat, HOME_ANCHOR);
       const c = modeMix(z.rail, 0, Math.max(0, z.all - z.rail));
       // Area, not radius, represents total travellers. Before the common radius scale, the
       // biggest regional circle is 38px and detailed zones scale against their busiest zone.

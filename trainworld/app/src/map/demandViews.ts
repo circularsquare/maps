@@ -31,7 +31,7 @@ import { commuterStats, startCommuterView } from "./commuterView";
 import { buildLayers } from "./demandLayers";
 import { addFinder, discAt, hoverAbove, hoverAt, pointerLocal, startHover } from "./demandHover";
 import { DemandOverlay } from "./demandOverlay";
-import { MERC_K, toLocal } from "./geo";
+import { HOME_ANCHOR, MERC_K, toLocal } from "./geo";
 import { startIntercityView } from "./intercityView";
 import type { Overlay } from "./overlay";
 
@@ -250,10 +250,10 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
   };
 }
 
-/** Pack metres to local units. */
+/** Pack metres to local units of the home anchor (the demand views stay on it for now, T-307). */
 function local(x: number, y: number): [number, number] {
   const [lng, lat] = packToLngLat(x, y);
-  return toLocal(lng, lat);
+  return toLocal(lng, lat, HOME_ANCHOR);
 }
 
 /**

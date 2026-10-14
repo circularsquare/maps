@@ -19,7 +19,7 @@ import { askTrip, stationName, stationPoint, tripKey, tripPeriod, tripView, type
 import { selection } from "../game/ui";
 import { world } from "../game/world";
 import { addFinder } from "./demandHover";
-import { toLngLat, toLocal } from "./geo";
+import { HOME_ANCHOR, toLngLat, toLocal } from "./geo";
 import type { NetworkBuffers } from "./network";
 import type { Overlay } from "./overlay";
 import { pick } from "./pick";
@@ -212,7 +212,9 @@ export function startTripView(map: MlMap, overlay: Overlay): TripTool {
   // ?debug=1: what is drawn, for the browser checks
   if (new URLSearchParams(location.search).get("debug") === "1") (window as any).twTrip = { drawn: () => drawn };
 
-  addFinder(30, (lx, ly) => {
+  addFinder(30, (hx, hy) => {
+    // the finders' pointer is on the home anchor, the routes on the drawn network's (T-307)
+    const [lx, ly] = toLocal(...toLngLat(hx, hy, HOME_ANCHOR));
     if (!drawn || !marks) return null;
     const z = map.getZoom();
     const tol = (HIT_PX * 40075016.686) / (512 * Math.pow(2, z));

@@ -42,6 +42,35 @@ What Canada's data changed, rule by rule (sources in notes/T-277.md, the adapter
   own; part-time college students are not counted.
 - **Borders**: Ontario is one region with no factor; the pack does not reach the US border.
 
+## Tier 0: global sources only (`pipeline/tier0.py`, T-287, 2026-10-14)
+
+The adapter for countries with no small-area census inputs (Shanghai, Mumbai first). Measured by
+building Toronto from tier 0 against the real pack (notes/T-287.md has every table):
+
+- **Population** is GHSL GHS-POP (100 m) scaled to district totals: 2.0% misplaced between
+  Toronto's 28 municipalities, but municipalities built up after 2020 come out 15-27% short (the
+  GHSL epoch lags). Use the latest epoch and the newest district totals for fast-growing cities.
+- **Jobs** are a proxy: population x the World Bank employment rate, spread 50% by GHSL
+  non-residential volume weighted by height^1.5, 30% by OSM job places, 20% by population. 4.0%
+  misplaced between municipalities, 18.6% between 2 km zones; the centre right within 10-25%.
+  Without the height weight the centre had a third of its jobs. Why it may not carry over: the
+  height power was picked on Toronto (in-sample); where much work is informal or at home (Mumbai),
+  buildings miss it, so raise the population share; where industry is large, industrial land
+  overdraws (Brampton +40%). Check: London (T-288) against BRES jobs by LSOA.
+- **Where workers live** is population x one rate (no source by residence): 3.8% misplaced
+  between municipalities in Toronto. Student and retiree areas send too many commuters.
+- **The distance curve without flows** is the weakest step: fitting only its length (power 1) to
+  a published median commute (Toronto 2016, 10.5 km) gave d^-1 exp(-d/95 km), far too flat:
+  17.5% of commutes misplaced against 11.3% with Toronto's own fitted curve on the same tier 0
+  inputs, and 22% fewer riders on a test line. Borrowing the US curve did better (15.7%). Check:
+  where a distance distribution exists (India's census bands), fit both parameters; with a single
+  figure, borrow the most similar fitted city's curve.
+- **Schools** are OSM sites sized by the square root of site area with pupils from the national
+  share aged 0-14 (-6% in Toronto, 5.3% misplaced); public and private alike.
+- **Universities** are OSM campuses with Wikidata student counts, which few OSM campuses carry
+  (4 of 63 in Toronto), so most are sized by area: +20% in Toronto, 10.7% misplaced.
+- **Airports**: Wikidata's patronage matched StatCan's within 0.3% for Toronto's three airports.
+
 ## Homes (docs/demand.md 4.1)
 
 - **People in institutions are not homes** (T-234). The US packs take the 2020 census's

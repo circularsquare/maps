@@ -8,7 +8,7 @@
 import type { Map as MlMap } from "maplibre-gl";
 import { NET_INK, rgb } from "../game/palette";
 import { DISC } from "../workers/commutersProtocol";
-import { EARTH_C, LOCAL_TO_MERC, mul4 } from "./geo";
+import { EARTH_C, HOME_ANCHOR, localToMercMatrix, mul4 } from "./geo";
 import type { Overlay } from "./overlay";
 import { PLATFORM_POINTS, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, shapePoints, type StationShape } from "./stationGeometry";
 
@@ -321,7 +321,8 @@ export class DemandOverlay {
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
     gl.useProgram(this.prog);
-    gl.uniformMatrix4fv(this.u.u_matrix, false, mul4(m0, LOCAL_TO_MERC));
+    // the demand views' discs stay on the home anchor for now (T-307, map/geo.ts)
+    gl.uniformMatrix4fv(this.u.u_matrix, false, mul4(m0, localToMercMatrix(HOME_ANCHOR)));
     gl.uniform2f(this.u.u_viewport, this.canvas.width, this.canvas.height);
     gl.uniform1f(this.u.u_px_per_unit, ((512 * Math.pow(2, zoom)) / EARTH_C) * dpr);
     gl.uniform3fv(this.u.u_ink, rgb(NET_INK).map((v) => v / 255));

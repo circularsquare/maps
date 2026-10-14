@@ -1,11 +1,46 @@
 //! Alignment geometry (SPEC 6.1, notes/T-008.md 1-2): points of intersection (PIs) with a circular
 //! arc fitted at each, straights between, ramps centred between vertices of different levels.
 //!
-//! Coordinates are local metres, x east and y north of the city origin (the city pack's frame).
-//! Headings are radians counter-clockwise from east. Curvature `k` is signed: positive turns left.
+//! Coordinates are the game frame's plane metres, x east and y north (frame.rs). Headings are
+//! radians counter-clockwise from east. Curvature `k` is signed: positive turns left.
+//!
+//! **Plane and ground (T-306).** In the legacy and conic frames a plane metre is taken as a ground
+//! metre. In the Mercator frame it is not (`k = cosh(y / R)` plane metres per ground metre), so
+//! each piece keeps both: `plen`, `x0`, `y0`, `k` are plane geometry, and `s0`, `len` are ground
+//! metres. Chainage `s` everywhere outside this file and cross.rs is ground metres; `at` takes a
+//! ground offset and maps it to the plane. A straight is a rhumb line, whose ground length is
+//! exact in closed form (`rhumb_plane`, `rhumb_ground`); an arc's ground length is Simpson's rule
+//! on `1 / k` over its ends and middle (centimetres on a 10 km curve), mapped linearly. In the
+//! unscaled frames `g` is exactly 1 and every result is bit-identical to before.
 
+use super::frame::merc_k;
 use super::params::*;
 use std::f64::consts::PI;
+
+/// Plane distance along a rhumb line (a Mercator straight) starting at latitude `lat0` (radians)
+/// with plane heading sine `u`, for a ground distance `s`. Stable for any `u`, including 0.
+pub fn rhumb_plane(lat0: f64, u: f64, s: f64) -> f64 {
+    let a = s * u / (2.0 * EARTH_R);
+    let q = if a.abs() < 1e-12 { s / (2.0 * EARTH_R) } else { a.sin() / u };
+    let lat1 = lat0 + s * u / EARTH_R;
+    let c = 2.0 * ((lat0 + lat1) / 2.0).cos() * q / (1.0 - lat0.sin() * lat1.sin());
+    let z = c * u;
+    let h = if z.abs() < 1e-8 { 1.0 + z * z / 3.0 } else { z.atanh() / z };
+    EARTH_R * c * h
+}
+
+/// Ground distance along a rhumb line starting at plane `y0` with plane heading sine `u`, for a
+/// plane distance `d`. The inverse of `rhumb_plane`.
+pub fn rhumb_ground(y0: f64, u: f64, d: f64) -> f64 {
+    let y1 = y0 + d * u;
+    let a = d * u / (2.0 * EARTH_R);
+    let p = if a.abs() < 1e-12 { d / (2.0 * EARTH_R) } else { a.sinh() / u };
+    let (sa, sb) = ((y0 / EARTH_R).sinh(), (y1 / EARTH_R).sinh());
+    let e = 2.0 * ((y0 + y1) / (2.0 * EARTH_R)).cosh() * p / (1.0 + sa * sb);
+    let w = e * u;
+    let h = if w.abs() < 1e-8 { 1.0 - w * w / 3.0 } else { w.atan() / w };
+    EARTH_R * e * h
+}
 
 /// A vertex of an alignment: an end node or a PI. `radius` 0 = auto; ignored at the ends.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -26,7 +61,8 @@ impl Pi {
     }
 }
 
-/// One straight (`k` = 0) or circular arc, `s0` = chainage of its start along the edge.
+/// One straight (`k` = 0) or circular arc, `s0` = chainage of its start along the edge (ground
+/// metres), `len` its ground length, `plen` its plane length (equal in the unscaled frames).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Piece {
     pub s0: f64,
@@ -34,23 +70,59 @@ pub struct Piece {
     pub x0: f64,
     pub y0: f64,
     pub th0: f64,
+    /// Plane curvature, per plane metre.
     pub k: f64,
+    pub plen: f64,
+    /// Plane metres per ground metre over the piece (`plen / len`); exactly 1 when unscaled.
+    pub g: f64,
+    /// A Mercator straight: plane and ground distances are related by the rhumb line from
+    /// latitude `lat0` (radians), not by `g`.
+    pub rhumb: bool,
+    pub lat0: f64,
 }
 
 impl Piece {
-    /// Position and heading `ds` metres into the piece.
+    /// Plane distance for a ground offset `ds` into the piece.
+    #[inline]
+    pub fn plane_d(&self, ds: f64) -> f64 {
+        if self.rhumb {
+            rhumb_plane(self.lat0, self.th0.sin(), ds)
+        } else if self.g == 1.0 {
+            ds
+        } else {
+            ds * self.g
+        }
+    }
+    /// Ground offset for a plane distance `d` into the piece.
+    #[inline]
+    pub fn ground_s(&self, d: f64) -> f64 {
+        if self.rhumb {
+            rhumb_ground(self.y0, self.th0.sin(), d)
+        } else if self.g == 1.0 {
+            d
+        } else {
+            d / self.g
+        }
+    }
+    /// Position and heading `ds` ground metres into the piece.
     #[inline]
     pub fn at(&self, ds: f64) -> (f64, f64, f64) {
-        let th = self.th0 + self.k * ds;
+        self.at_plane(self.plane_d(ds))
+    }
+    /// Position and heading `d` plane metres into the piece.
+    #[inline]
+    pub fn at_plane(&self, d: f64) -> (f64, f64, f64) {
+        let th = self.th0 + self.k * d;
         if self.k == 0.0 {
-            (self.x0 + ds * self.th0.cos(), self.y0 + ds * self.th0.sin(), th)
+            (self.x0 + d * self.th0.cos(), self.y0 + d * self.th0.sin(), th)
         } else {
             (self.x0 + (th.sin() - self.th0.sin()) / self.k, self.y0 - (th.cos() - self.th0.cos()) / self.k, th)
         }
     }
     pub fn end(&self) -> (f64, f64, f64) {
-        self.at(self.len)
+        self.at_plane(self.plen)
     }
+    /// Radius in the plane (geometry).
     pub fn radius(&self) -> f64 {
         if self.k == 0.0 {
             f64::INFINITY
@@ -58,29 +130,38 @@ impl Piece {
             1.0 / self.k.abs()
         }
     }
+    /// Radius on the ground (speed, display, saving).
+    pub fn ground_radius(&self) -> f64 {
+        if self.g == 1.0 {
+            self.radius()
+        } else {
+            self.radius() / self.g
+        }
+    }
     /// Curve speed limit, capped at the train's top speed (SPEC 6.1).
     pub fn v_limit(&self) -> f64 {
         if self.k == 0.0 {
             V_TOP
         } else {
-            curve_speed(1.0 / self.k.abs())
+            curve_speed(self.ground_radius())
         }
     }
     /// Centre of an arc.
     pub fn center(&self) -> (f64, f64) {
         (self.x0 - self.th0.sin() / self.k, self.y0 + self.th0.cos() / self.k)
     }
-    /// Bounding box `[xmin, ymin, xmax, ymax]` of the part `[d0, d1]` of the piece, exact.
+    /// Bounding box `[xmin, ymin, xmax, ymax]` of the part `[d0, d1]` (plane metres) of the
+    /// piece, exact.
     pub fn bbox_part(&self, d0: f64, d1: f64) -> [f64; 4] {
-        let (xa, ya, tha) = self.at(d0);
-        let (xb, yb, thb) = self.at(d1);
+        let (xa, ya, tha) = self.at_plane(d0);
+        let (xb, yb, thb) = self.at_plane(d1);
         let mut b = [xa.min(xb), ya.min(yb), xa.max(xb), ya.max(yb)];
         if self.k != 0.0 {
             // Extremes of a circle are where the heading is a multiple of pi/2.
             let (lo, hi) = if tha < thb { (tha, thb) } else { (thb, tha) };
             let mut j = (lo / (PI / 2.0)).ceil() as i64;
             while (j as f64) * (PI / 2.0) <= hi {
-                let (x, y, _) = self.at(((j as f64) * (PI / 2.0) - self.th0) / self.k);
+                let (x, y, _) = self.at_plane(((j as f64) * (PI / 2.0) - self.th0) / self.k);
                 b[0] = b[0].min(x);
                 b[1] = b[1].min(y);
                 b[2] = b[2].max(x);
@@ -91,7 +172,7 @@ impl Piece {
         b
     }
     pub fn bbox(&self) -> [f64; 4] {
-        self.bbox_part(0.0, self.len)
+        self.bbox_part(0.0, self.plen)
     }
 }
 
@@ -150,7 +231,16 @@ pub struct Fit {
 /// ramps. Never fails: problems are listed in `issues`, and the geometry is still produced (with a
 /// clamped straight where an arc does not fit) so the drawing tool can show it red.
 pub fn fit(v: &[Pi]) -> Fit {
+    fit_in(v, false)
+}
+
+/// `fit` in a frame whose plane metres are not ground metres (`scaled`, the Mercator frame): a
+/// vertex's radius is in ground metres and becomes `radius * k` in the plane, the radius cap,
+/// the minimum radius and the fit tolerance likewise, and every piece gets its ground length.
+/// `Fit::radius` is the ground radius. Unscaled, this is the original fit, bit for bit.
+pub fn fit_in(v: &[Pi], scaled: bool) -> Fit {
     let n = v.len();
+    let kv = |i: usize| if scaled { merc_k(v[i].y) } else { 1.0 };
     let mut f = Fit { vert_s: vec![0.0; n], radius: vec![0.0; n], tangent: vec![0.0; n], ..Default::default() };
     if n < 2 {
         return f;
@@ -173,6 +263,8 @@ pub fn fit(v: &[Pi]) -> Fit {
         }
     }
     let mut delta = vec![0.0; n];
+    // Plane radius at each vertex (f.radius holds the ground one).
+    let mut rp = vec![0.0; n];
     if !zero {
         for i in 1..n - 1 {
             let d = wrap(leg_th[i] - leg_th[i - 1]);
@@ -186,16 +278,31 @@ pub fn fit(v: &[Pi]) -> Fit {
             let t = (d.abs() / 2.0).tan();
             let avail_in = if i == 1 { leg_len[0] } else { leg_len[i - 1] / 2.0 };
             let avail_out = if i == n - 2 { leg_len[i] } else { leg_len[i] / 2.0 };
-            let r = if v[i].radius > 0.0 { v[i].radius } else { (avail_in.min(avail_out) / t).min(R_CAP) };
-            if r < MIN_RADIUS - 1e-6 {
+            let pick = |k: f64| if v[i].radius > 0.0 { v[i].radius * k } else { (avail_in.min(avail_out) / t).min(R_CAP * k) };
+            let mut k = kv(i);
+            if scaled {
+                // The scale where the arc is, not at the PI: its middle lies `r (sec(d/2) - 1)`
+                // inside the corner, a kilometre or more on a wide turn (0.02% of k per km at
+                // London). Two rounds settle it.
+                let (bx, by) = (leg_th[i].cos() - leg_th[i - 1].cos(), leg_th[i].sin() - leg_th[i - 1].sin());
+                let ey = by / bx.hypot(by);
+                for _ in 0..2 {
+                    let e = pick(k) * (1.0 / (d.abs() / 2.0).cos() - 1.0);
+                    k = merc_k(v[i].y + e * ey);
+                }
+            }
+            let r = pick(k);
+            if r < (MIN_RADIUS - 1e-6) * k {
                 f.issues.push(GeomIssue::RadiusTooSmall(i));
             }
             delta[i] = d;
-            f.radius[i] = r;
+            rp[i] = r;
+            f.radius[i] = if scaled { r / k } else { r };
             f.tangent[i] = r * t;
         }
         for i in 0..n - 1 {
-            if f.tangent[i] + f.tangent[i + 1] > leg_len[i] + FIT_TOL {
+            let tol = if scaled { FIT_TOL * kv(i) } else { FIT_TOL };
+            if f.tangent[i] + f.tangent[i + 1] > leg_len[i] + tol {
                 for j in [i, i + 1] {
                     let blame = v[j].radius > 0.0 && j > 0 && j < n - 1;
                     if blame && !f.issues.contains(&GeomIssue::ArcDoesNotFit(j)) {
@@ -211,25 +318,44 @@ pub fn fit(v: &[Pi]) -> Fit {
         let (t0, t1) = (f.tangent[i], f.tangent[i + 1]);
         let straight = (leg_len[i] - t0 - t1).max(0.0);
         if straight > 1e-9 {
-            f.pieces.push(Piece { s0: s, len: straight, x0: v[i].x + t0 * c, y0: v[i].y + t0 * sn, th0: leg_th[i], k: 0.0 });
+            let (x0, y0) = (v[i].x + t0 * c, v[i].y + t0 * sn);
+            let mut p = Piece { s0: s, len: straight, x0, y0, th0: leg_th[i], k: 0.0, plen: straight, g: 1.0, rhumb: false, lat0: 0.0 };
+            if scaled {
+                p.rhumb = true;
+                p.lat0 = (y0 / EARTH_R).sinh().atan();
+                p.len = rhumb_ground(y0, sn, straight);
+                p.g = straight / p.len;
+            }
+            f.pieces.push(p);
             f.piece_at_vertex.push(i as u32);
-            s += straight;
+            s += p.len;
         }
         if i + 1 < n - 1 {
             if f.radius[i + 1] > 0.0 {
-                let r = f.radius[i + 1];
+                let r = rp[i + 1];
                 let alen = r * delta[i + 1].abs();
-                f.pieces.push(Piece {
+                let mut p = Piece {
                     s0: s,
                     len: alen,
                     x0: v[i + 1].x - t1 * c,
                     y0: v[i + 1].y - t1 * sn,
                     th0: leg_th[i],
                     k: delta[i + 1].signum() / r,
-                });
+                    plen: alen,
+                    g: 1.0,
+                    rhumb: false,
+                    lat0: 0.0,
+                };
+                if scaled {
+                    // Simpson's rule on 1 / k over the arc's ends and middle.
+                    let inv = |d: f64| 1.0 / merc_k(p.at_plane(d).1);
+                    p.len = alen / 6.0 * (inv(0.0) + 4.0 * inv(alen / 2.0) + inv(alen));
+                    p.g = alen / p.len;
+                }
+                f.pieces.push(p);
                 f.piece_at_vertex.push(i as u32 + 1);
-                f.vert_s[i + 1] = s + alen / 2.0;
-                s += alen;
+                f.vert_s[i + 1] = s + p.len / 2.0;
+                s += p.len;
             } else {
                 f.vert_s[i + 1] = s;
             }
