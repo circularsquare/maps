@@ -86,10 +86,13 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   picked.
 - **Right or middle drag moves the map** while the tool is on; the wheel and arrow keys work as
   always. The map's own left drag is off for the tool's time.
-- **The Build tab** shows "Selected" with a count (its hover lists track and stations) and two icon
-  buttons, Disable (D) and Enable (E), each only when it would change something; and "N disabled"
-  while any blueprint is disabled, whatever the tool. Disabling and enabling are one undoable edit
-  each (Ctrl+Z). Esc clears the pick, then leaves the tool; leaving also clears it.
+- **The selection bar** [T-353; `BlueprintBar` in `ui/Blueprint.tsx`] sits at the top centre of the
+  map while the tool has a selection (level with the demand buttons, lower on narrower maps; it
+  appears and goes in one step): "N selected" (its hover lists track and stations), Disable and
+  Enable as buttons with icon and word (keys D and E in their hovers), each greyed when it would
+  change nothing, and Clear. The Build tab shows only "N disabled" while any blueprint is disabled,
+  whatever the tool. Disabling and enabling are one undoable edit each (Ctrl+Z). Esc clears the
+  pick, then leaves the tool; leaving also clears it.
 - Disabled is a state on the piece, saved with the game ([track-and-service.md](track-and-service.md)
   6.4). The piece's own Construct button (track and station inspectors) and a line's Construct build
   it anyway, which clears the state.

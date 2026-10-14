@@ -1,5 +1,15 @@
 # Archive
 
+- T-348 [P1] Main-thread lag while demand loads. Done 2026-10-14: lag only in the first 10-14 s after a load; the Lines tab's per-comparison collator and station placement fixed (startup long tasks about 35-40% less, longest 0.8-1.4 s to 0.23-0.32 s); the rest is CPU starvation, T-355. notes/T-348.md.
+
+- T-352 [P2] City outlines with maritime lines. Done 2026-10-14: the 13 US boundary files are TIGER/Line counties with their water, simplified together (no overlaps between packs; Boston reaches 24 km out, New York 13 km); packs, water masks and demand untouched. Toronto still hugs its shore. `build_city.py --boundary-only`.
+
+- T-353 [P2] Selection buttons where they are seen. Done 2026-10-14: while the Select tool has a selection, a bar at the map's top centre with "N selected", Disable, Enable (icon and word) and Clear; the dock's icon pair removed as a duplicate. `BlueprintBar`, docs/ui-building.md.
+- T-319 [P3] Running side per region. Abandoned 2026-10-14 (Anita: messy at junctions, not worth effort): right-hand running everywhere; a single global toggle at most, if ever.
+
+- T-349 [P2] Top bar restyle. Done 2026-10-14: 46 px, name, split (bar then labels), cash, time, demand and speed on one centre line; three type styles (normal 14, figure 18 bold, small 12 muted); status lies under the bar out of the flow; two rows below 700 px. docs/ui-panels.md.
+- T-350 [P2] One grey for loading zones. Done 2026-10-14: the loading fill uses the outside shade's colour and opacity (`SHADE_PAINT`) and is drawn only on the zone in view, since every other loading zone is already under the outside shade. docs/ui-demand-views.md.
+- T-347 [P1] Loading card and held clock until the fresh solve's final. Done 2026-10-14: real New York save, card and clock go at 19.8-22.1 s (cache or not), a new game at 8 s; the cached figures show behind the card. `HOLD_ROUND` in workers/demandClient.ts.
 - T-345 [P3] Dead `cityBaseSplits` and `baseSplit`. Done 2026-10-14 in T-328: removed from game/demand.ts and workers/demandClient.ts.
 - T-328 [P2] Loading fix 5: the last final demand result kept beside the save. Done 2026-10-14: on reload of the real save figures show at 1.8-2.2 s instead of 10-11 s (bubbles 3.7 s instead of 11.6 s), the clock runs on them, the fresh final replaces them bit for bit. notes/T-328.md.
 - T-341 [P2] Top bar of fixed widths. Done 2026-10-14: fixed city box (ellipsis, hover), split section of bar, labels and a reserved status line with the thin load bar; bar length equal for every zone and status; top bar 54 px. The split shows dashes until the zone has its own figures (no-rail base split dropped). docs/ui-panels.md.

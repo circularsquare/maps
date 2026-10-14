@@ -61,32 +61,44 @@ exceptions). One dock on the left [T-252, `ui/Dock.tsx`]:
 
 ## The top bar
 
-`ui/TopBar.tsx`, left to right. **Every part has a fixed width** [T-341], so no city name or status
-moves the split bar (the same length for every zone): the name box is cut with an ellipsis (the
-whole name on hover), the percentages and counts are in tabular figures in boxes of fixed width, and
-the bar's three lines (bar, labels, status) keep their height with nothing on the status line.
+`ui/TopBar.tsx`, left to right, 46 px high, **every part centred on one line** [T-349]: city name,
+the split (bar, then its labels), cash, day and time, demand level, speed buttons. **Three type
+styles only**: normal (14 px, regular, text colour: name, "Train", cash), figure (18 px, bold: the
+train share and the time) and small (12 px, regular, muted: rides, walking, driving, day, demand
+level, status). **Every part has a fixed width** [T-341], so no city name or status moves the split
+bar (the same length for every zone): the name box is cut with an ellipsis (the whole name on
+hover), the percentages and counts are in tabular figures in boxes of fixed width, and the split
+bar is centred in the bar with nothing under it: the status is a tag over the map (Status, below).
+Walking and driving drop below 1250 px of map
+column, the day below 1100, the demand level and rides below 760; below 700 px the bar takes two
+rows (name, cash, time and speed over the split).
 
 - **The goal number**: the focused zone's mode split as one bar (driving, train, walking, in the
   mode colours whatever the theme), the split of all its modelled local trip legs (commutes,
   everyday outings, school and university), so the shares are of rides a day, not people [T-342].
-  The labels under it give the train share with its rides a day ("Train 18.5% 8.81M rides") and the
+  The labels after it give the train share with its rides a day ("Train 18.5% 8.81M rides") and the
   walking and driving shares; the hover gives all three counts and the total. The player's job is
   to make the train share grow. It shows "–" and an empty bar until the zone has figures of its own
   (a solve's, or the bare pass's for a zone no station reaches; not the no-rail split a pack gives
   before that), and over dead space [T-318]. The hover says "on weekdays" or "at weekends" for the
   day shown. The zone named is the focused zone ([ui-demand-views.md](ui-demand-views.md)).
-- **Status**, the third line under the split: while a solve runs after an edit, "Updating demand
+- **Status** [T-349]: a small tag (small type style, background, thin border) hung from the map's
+  top edge under the split bar's left edge, below the top bar and the autosave notice, over the map
+  (the demand selector sits 16 px lower to leave room). It appears and goes in one step and moves
+  nothing; the whole text is its hover. While a solve runs after an edit, "Updating demand
   2/4…" and the split faded, the figures held [T-232], and the same while a reload shows the cached
-  figures from the last time the game was open, with a hover saying so [T-328]; during startup's refinement "Estimate,
-  refining 2/4…"; a city loading later "Loading data" with a thin bar after it (Loading, below).
+  figures from the last time the game was open, with a hover saying so [T-328]; during startup's
+  refinement "Estimate, refining 2/4…"; a city loading later "Loading data" with a thin bar after it
+  (Loading, below).
 - **Cash**, to the dollar, moving as fares are paid and running costs drain [T-284]. Fixed width
   (room for "-$99,999,999,999") with the digits left-aligned after the $ in tabular figures, so a
   changing figure never moves the rest of the bar [T-305, T-310].
 - **The clock**: day of the week, day and time ("Sat 13", hover "Saturday, day 13"), the local
   time where the player is looking [T-309]; the demand level ("High demand"); pause and three
   speeds. **Space** pauses and resumes at the speed that was running, even with a button focused.
-- **Narrow maps**: secondary labels drop first; two rows below 520 px, three below 300 px, with
-  cash, time, train share and all speed controls kept. Hovering the split or the time gives what
+- **Narrow maps**: secondary labels drop first; two rows below 700 px, a different two below 520
+  px (speed beside the split), three below 300 px, with cash, time, train share and all speed
+  controls kept. Hovering the split or the time gives what
   was dropped [T-106].
 - An **Autosave off** notice when this tab cannot autosave (saves, below); a click opens the saved
   games.
@@ -198,21 +210,25 @@ centre and zoom, or over New York with none [T-310].
 [T-149, T-172, T-180, T-212, T-232, T-243, T-318; `game/loading.ts`, `ui/LoadingScreen.tsx`]
 
 - Nothing is blocked: the map, inspectors and building work as soon as the network is drawn.
-- **A loaded game** (the page opening, a file, a slot, a new game) holds only the clock until the
-  first estimate of every city it needs has landed; the time is greyed and its hover says "The
-  clock starts when demand has loaded". Meanwhile a card in the middle of the map says "Loading
-  data" over a filling bar and the current step (Downloading city data, Opening city data,
-  Calculating demand), naming no cities; the percentage is only the bar's hover ("42% loaded"). A
-  slot whose cities are all open shows the bar for its solve alone. The card takes no input but the
-  bar's hover (a press pans the map beneath), has no animation or spinner, and goes when the clock
-  starts.
+- **A loaded game** (the page opening, a file, a slot, a new game) holds only the clock until its
+  fresh demand solve has finished its last round [T-347; before, the first estimate]; the time is
+  greyed and its hover says "The clock starts when demand has loaded". Meanwhile a card in the
+  middle of the map says "Loading data" over a filling bar and the current step (Downloading city
+  data, Opening city data, Calculating demand), naming no cities; the percentage is only the bar's
+  hover ("42% loaded"). The bar counts to that final round, so on the real New York save it fills
+  for about 20 s. A slot whose cities are all open shows the bar for its solve alone. The card
+  takes no input but the bar's hover (a press pans the map beneath), has no animation or spinner,
+  and goes when the clock starts. The figures behind it are the solve's estimates, or the last
+  final result kept beside the save when there is one (T-328; the split's hover ends "(from the
+  last time this game was open)").
 - **The bar moves in proportion to time** [T-243, notes/T-243.md]: each step weighs as long as it
   is expected to take (a download by its rate, opening about 130 ms per MB of pack, the estimate
   about 0.6 s plus 2.2 ms per line stop, scaled by this browser's last load); inside a step the fill
   moves with time against that expectation until the step really ends, slowing if late, never
   going back.
-- The crowding rounds then refine the figures with the clock running; the status says "Estimate,
-  refining 2/4…" (hover: the figures are an early estimate).
+- A city opened later (a pan, construction) shows its estimate at once and the crowding rounds
+  refine it with the clock running; the status says "Estimate, refining 2/4…" (hover: the figures
+  are an early estimate).
 - **After an edit** nothing changes until the new solve's final round: split, riders, bubbles and
   the boarding account keep the last finished forecast, the split faded and the status "Updating
   demand 2/4…", then all change at once [T-232]. Queries asked meanwhile (a catchment, a bubble

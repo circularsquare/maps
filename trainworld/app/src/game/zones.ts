@@ -10,6 +10,9 @@ import { CITIES, cityNear, cityWithin, ZONE_REACH_M, type CityId } from "./citie
 import { cityBoundary } from "./boundaries";
 import { distanceTo, footprint, touchesBox, type Footprint } from "../workers/cityReach";
 
+/** Metres per degree, as workers/cityReach.ts measures. */
+const M_PER_DEG = 111_320;
+
 /** Zones beside the focused one that show their bubbles, at most this many. */
 export const NEARBY = 3;
 
@@ -43,7 +46,13 @@ export function zoneAt(lon: number, lat: number): CityId {
 
 function nearestZone(lon: number, lat: number): { id: CityId; d: number } | null {
   let best: CityId | null = null, bestD = Infinity;
+  // T-348: a zone whose bounding box is no nearer than the best so far cannot win, so its outline
+  // is not walked (the same flat metres as distanceTo; placing 1,756 stations took about 200 ms)
+  // (with a millimetre to spare for rounding, so the answer is exactly the full walk's)
+  const kx = M_PER_DEG * Math.cos((lat * Math.PI) / 180);
   for (const f of footprints) {
+    const [w, s, e, n] = f.bbox;
+    if (Math.hypot(Math.max(0, w - lon, lon - e) * kx, Math.max(0, s - lat, lat - n) * M_PER_DEG) > bestD + 1e-3) continue;
     const d = distanceTo(f, lon, lat);
     if (d < bestD) (bestD = d), (best = f.id);
     if (d === 0) break;

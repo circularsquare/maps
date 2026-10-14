@@ -142,13 +142,15 @@ export function search(query: string): SearchHit[] {
       });
     }
   scored.sort((a, b) => a.score - b.score || KIND_ORDER[a.hit.kind] - KIND_ORDER[b.hit.kind] || b.weight - a.weight
-    || a.hit.name.localeCompare(b.hit.name, undefined, { numeric: true }));
+    || numeric(a.hit.name, b.hit.name));
   const hits = scored.slice(0, MAX_HITS).map((s) => s.hit);
   tagTwins(hits);
   return hits;
 }
 
 const cityById = (id: string) => CITIES.find((c) => c.id === id)?.name ?? "";
+/** Names in natural order; one collator, since localeCompare with options builds one per call (T-348). */
+const numeric = new Intl.Collator(undefined, { numeric: true }).compare;
 
 type StationHit = Extract<SearchHit, { kind: "station" }>;
 
@@ -196,7 +198,7 @@ function isRegistryCity(p: Place): boolean {
 /** "subway A, C, E": line names in order, a first word they all share written once, three at
  * most ("subway 1, 2, 3 and 7 more"). */
 export function lineList(names: string[]): string {
-  const sorted = [...names].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+  const sorted = [...names].sort(numeric);
   const first = sorted[0].split(" ")[0];
   const shared = sorted.every((n) => n.startsWith(first + " ") && n.length > first.length + 1);
   const parts = shared ? sorted.map((n) => n.slice(first.length + 1)) : sorted;

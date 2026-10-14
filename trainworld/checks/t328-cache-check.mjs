@@ -3,7 +3,8 @@
 //   MODE=prepare | reload | stale    BASE=http://localhost:6151/    OUT=<folder>    RUNS=3
 //   node trainworld/checks/t328-cache-check.mjs            (from the maps root)
 // prepare: imports T-007-real-nyc.save into the profile's autosave slot.
-// reload: RUNS page loads; each records when the network was drawn, when the clock was released,
+// reload: RUNS page loads; each records when the network was drawn, when the clock was released
+//   (T-347: not before the fresh final, with or without the cache),
 //   every change of the shown view (version:round:final, version 0 = the cache) and a signature of
 //   every figure in the first final view shown and in the fresh solve's final. PASS when the
 //   fresh final's signature is the same on every run and the cached view's equals it.
@@ -148,6 +149,10 @@ try {
     ok = fresh.size === 1 && cachedSame;
     console.log(`${fresh.size === 1 ? 'PASS' : 'FAIL'}  fresh finals agree on every run (${[...fresh].join(', ')})`);
     console.log(`${cachedSame ? 'PASS' : 'FAIL'}  the cached view equals the fresh final (${out.runs.filter((r) => r.cached).length} cached runs)`);
+    // T-347: the clock stays held, the card up, until the fresh final lands, cache or not
+    const heldToFinal = out.runs.every((r) => r.clock !== undefined && r.freshFinal !== undefined && r.clock >= r.freshFinal);
+    ok &&= heldToFinal;
+    console.log(`${heldToFinal ? 'PASS' : 'FAIL'}  the clock is held until the fresh final (clock ${out.runs.map((r) => r.clock).join('/')}, final ${out.runs.map((r) => r.freshFinal).join('/')})`);
   } else if (MODE === 'stale') {
     // the cache entry, as the page stores it (IndexedDB "anitabuilder", store "saves", keys "demand:...")
     const tamper = (field) => page.evaluate((field) => new Promise((res, rej) => {

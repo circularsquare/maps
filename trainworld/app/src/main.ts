@@ -51,6 +51,7 @@ import { Dock } from "./ui/Dock";
 import { Toolbar } from "./ui/Toolbar";
 import { TopBar } from "./ui/TopBar";
 import { MapTopLeft } from "./ui/DemandSelector";
+import { BlueprintBar } from "./ui/Blueprint";
 import { startSearch } from "./ui/Search";
 import { startTips } from "./ui/tip";
 import { startLoadingGate } from "./ui/LoadingScreen";
@@ -96,6 +97,9 @@ startZoneLoading(map); // T-343: zones whose demand has not arrived, grey with a
 const demandSelectorRoot = document.createElement("div");
 map.getContainer().appendChild(demandSelectorRoot);
 render(h(MapTopLeft, null), demandSelectorRoot); // the demand buttons and the stations full alert (T-231)
+const blueprintBarRoot = document.createElement("div");
+map.getContainer().appendChild(blueprintBarRoot);
+render(h(BlueprintBar, null), blueprintBarRoot); // T-353: the Select tool's Disable and Enable at the top centre
 startSearch(map.getContainer()); // T-148: the search box at the map's upper right
 const renderer = new NetworkRenderer();
 /** A click on the commuter bubbles (T-097; set below once the demand views start). */

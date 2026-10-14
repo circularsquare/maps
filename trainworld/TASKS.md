@@ -5,7 +5,7 @@ P3 = later. Finished or abandoned tasks move to `ARCHIVE.md`.
 
 **Direction** (Anita, 2026-10-14; details in CLAUDE.md "Working here"). Order of work:
 1. responsiveness (T-325, T-328 done; T-327, then T-326); 2. the crossover tool (T-338);
-3. London end to end (T-041, T-319, T-288), and no other sampler city until London has taught
+3. London end to end (T-041, T-288; start once T-348 is back), and no other sampler city until London has taught
 what works; 4. a demand-realism batch checked on London and New York (T-295, T-270, T-271,
 T-272); 5. a design for game modes (campaign, sandbox, goals), not yet a task. Other
 performance work stays parked until she reports a problem.
@@ -22,13 +22,21 @@ ARCHIVE.md.
 
 - T-303 [P2] Demand loading and responsiveness. Stage 1 (measure and propose, notes/T-303.md) done; the whole proposal approved by Anita 2026-10-14 ("the proposed loading fixes make sense to me, lets try it out"). Built as T-324 to T-328, in that order.
 
-- T-319 [P3] One world, stage 4: running side per region (docs/world.md). `right_hand` is one flag per network and only `capacity.rs` reads it; Britain, France's main lines, India and Japan run on the left. Take it from the registry's region and read it per junction. Before London's junctions carry traffic. Open.
 - T-321 [P3] Local time's rest (found in T-309, docs/world.md "Local time"): the money ledger's days are the game clock's (New York's), not each region's; the demand bubbles' catch-up over a day (map/catchUp.ts) follows the clock, not the local time in view; the regional market has no trips between zones of different offsets yet, and when it does (London to Paris), a trip's period needs a rule (its origin's local time). None matters until a second offset has demand (T-288). Open.
 
 
 
 - T-326 [P2] Loading fix 3 (T-303 item 3): separate clusters (Toronto vs the Northeast) solve separately, an edit re-solves only its own cluster, the viewed one first. Three stages. After T-325. Open.
 - T-327 [P2] Loading fix 4 (T-303 item 4): clicks during the startup solve answered from the newest round every worker holds (about 2 s instead of up to 10). Open.
+
+## In progress (batch 25, 2026-10-14)
+
+
+- T-355 [P2] Startup CPU headroom (found in T-348): in the first 10-14 s after a load (packs opening, basemap tiles parsing, 5 solving workers at full speed, other work on the box) the main thread is descheduled: long tasks of 50-230 ms wall with 3-7 ms of CPU. With 3 solving workers the long tasks about halve, but the final lands at 26-28 s instead of 19-20 s. Anita's choice: fewer workers, or a pool that grows once the map has settled. Open; notes/T-348.md.
+- T-356 [P3] A move far from the draw anchor (T-307) brings a whole clock state: the world is rebuilt on the main thread (labels, complexes, network buffers, every list), about 50 ms of main thread per long pan (T-348). Rebuild only what depends on the anchor. Open.
+- T-354 [P3] Two smaller main-thread costs (T-348): a pack opening in every worker is copied for each worker in one task (45-70 ms for New York, demandClient `post`), and a solve's final publish takes 70-110 ms (three kinds of day, purposes, bubble sums). Spread each over several tasks. Open.
+- T-357 [P3] After T-352's sea outlines: `outside.py` then `intercity.py` were not rerun; a rerun would move 194 Kontur hexagons (0.88M people, mostly water-centred or on zone edges) from the outside world into zones, which is more correct. Do it with the next market rebuild, not alone. Toronto's outline still hugs Lake Ontario (StatCan cartographic subdivisions); a lake-line source if it ever looks wrong beside the US cities. Open.
+- T-351 [P2] A new game (no stations) opens the viewed city bare from the start instead of in every solving worker with a full solve (docs/demand.md "Bare zones": bare only once the reach is known, so startup opens the viewed city everywhere). An empty network's reach is known at once; expected about 1-1.5 s instead of about 8 s. Anita 2026-10-14: a new game keeps the hold (T-347). After T-348 (same code). Open.
 
 ## In progress (batch 24, 2026-10-14)
 

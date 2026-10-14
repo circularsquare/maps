@@ -110,10 +110,13 @@ Web first, so it can be shared as a link.
   nothing final is (startup, a whole-game load, a city just opened), and for lines new or changed by
   the edit, which take the free-flow estimate's riders as soon as it lands. What the player sees:
   [ui-panels.md](ui-panels.md) "Loading".
-- **Loading and readiness** [T-149, T-172, T-180, T-243]: input is never blocked. A loaded game
-  holds only the clock until every needed city has its first estimate (every period's free-flow
-  result), or until its cached final result shows (T-328, section 11); the crowding rounds refine it
-  in the background. The demand pool starts before the map is
+- **Loading and readiness** [T-149, T-172, T-180, T-243, T-347]: input is never blocked. A loaded
+  game holds only the clock until every needed city is open and the fresh solve's final round has
+  landed (`HOLD_ROUND`); T-172 released it at the first estimate and T-328 at the cached result, but
+  the game then lagged through the crowding rounds, so Anita had it wait (T-347). The cached result
+  (section 11) is drawn behind the loading card without releasing it. A city opened later (a pan,
+  construction) is a load without a hold and counts as done at its first estimate (`READY_ROUND`).
+  The demand pool starts before the map is
   set up; the regional market goes to the workers as bytes and is decoded there; each zone's
   boundary file is fetched once for the reach test and the outlines (`game/boundaries.ts`).
   `game/loading.ts`; timings in notes/T-172.md, frame times in notes/T-180.md.
@@ -179,9 +182,10 @@ all results are recomputed. About 100 KB compressed per 10,000 route-km (T-040).
   and of the market, the app build, the worker count and the perfOff flags; the zones must be the
   ones the new solve covers. When a whole game loads and the key matches, the result shows at once
   (about 0.1 s after the network is drawn; the bubbles once the zone's cells are open, about 3.7 s),
-  the clock runs on it and the status reads "Updating demand"; the workers solve as before, clicks
-  and other purposes' or days' bubbles wait for them, and the fresh final replaces it in one step
-  (it is bit for bit the same). A test page, `?new=1` and a tab without the slot never
+  the loading card stays up and the clock held until the fresh final (T-347), the cached figures
+  drawn behind the card with the status "Updating demand" (hover text as before); the workers solve
+  as before, their estimates not shown, clicks and other purposes' or days' bubbles wait for them,
+  and the fresh final replaces the cache in one step (it is bit for bit the same). A test page, `?new=1` and a tab without the slot never
   write it.
 - **Old saves are a nicety** (Anita, 2026-10-12): only Anita has saves, so no real effort goes into
   migrations.

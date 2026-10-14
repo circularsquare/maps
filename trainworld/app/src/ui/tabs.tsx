@@ -23,6 +23,10 @@ import { BlueprintBreakdown, BlueprintControls, BlueprintPick } from "./Blueprin
 
 const STATUS: Record<string, string> = { running: "", planned: "Planned", broken: "Broken" };
 
+/** Line names in natural order ("2" before "10"). One collator for every comparison: localeCompare
+ * with options builds a new one each call, which made sorting 109 lines take 15-400 ms (T-348). */
+const natural = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" }).compare;
+
 // SPEC 6.4. A display copy: the track model (sim/src/track/params.rs) owns the real price list.
 const BASE_M_PER_KM = 90;
 const MULT: Record<Level, number> = { 3: 1.8, 2: 1.3, 1: 0.8, 0: 0.3, [-1]: 1.0, [-2]: 1.1, [-3]: 1.2 };
@@ -186,7 +190,6 @@ export function LinesTab() {
     setCreating(true);
     try { await createLine(); } finally { setCreating(false); }
   };
-  const natural = (a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" });
   // a line that is not running has no train count and no riders: it sorts as zero
   const trains = (id: string) => (w.lineStats[id]?.status === "running" ? w.lineStats[id].trainsNeeded[levOf(id)] : 0);
   const { key, dir } = lineSort.value;

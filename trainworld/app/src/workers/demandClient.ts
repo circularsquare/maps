@@ -11,7 +11,7 @@
 //   driving only), no solve covers it and none is started for it. A station built within reach
 //   opens it in every worker, and the solves cover it from then on.
 // - Reports what it is loading (game/loading.ts `loadProgress`) and releases a loaded game's
-//   clock hold once that game's network has its first estimate (READY_ROUND, T-172).
+//   clock hold once that game's network has its final result (HOLD_ROUND, T-347).
 // - The day's five periods are split over the pool by index (worker i solves periods i, i + n,
 //   ...). Each worker sends the free-flow estimate of all its periods first, then the crowding
 //   rounds.
@@ -78,11 +78,18 @@ import { BUILD, CACHE_FORMAT, CACHE_VERSION, cacheAvailable, canonical, fromStor
  */
 const ROUNDS = 3;
 /**
- * A loaded game's demand is ready, and its clock runs, once this round is published: the
- * free-flow estimate (T-172). The crowding rounds then refine it in the background, as after
- * any edit. (T-149 waited for the last round; on the real New York save that was 8 s more.)
+ * A load's solve is done, for the loading bar, once this round is published: the free-flow
+ * estimate (T-172; a city opened by a pan or a station reaching it). The crowding rounds then
+ * refine it in the background, as after any edit.
  */
 const READY_ROUND = 0;
+/**
+ * A loaded game's clock runs, and its loading card goes, once the solve's last round is published
+ * (T-347; T-149 waited for it, T-172 stopped at the estimate, and the game was left lagging
+ * through the rounds). The cached result of the last time the game was open (T-328) is drawn
+ * meanwhile but does not release it.
+ */
+const HOLD_ROUND = ROUNDS;
 const PERIOD_STRIDE = 6;
 
 /**
@@ -232,17 +239,21 @@ const LAST_SOLVE = "anitabuilder-load-solve";
 const MARKET = "market";
 
 const solveModel = (stops: number) => SOLVE_MS.base + SOLVE_MS.perStop * stops;
-function lastSolve(): { ms: number; stops: number } | null {
+/** T-347: until a load has timed its final round, the final is guessed at this many first estimates */
+const FINAL_FACTOR = 2.5;
+function lastSolve(): { ms: number; stops: number; finalMs?: number } | null {
   try {
     const v = JSON.parse(localStorage.getItem(LAST_SOLVE) || "null");
     return v && v.ms > 0 && v.stops >= 0 ? v : null;
   } catch { return null; }
 }
-/** Expected ms from a solve's start to its first estimate; `stops` null = the network is not known yet. */
-function solveEstimate(stops: number | null): number {
+/** Expected ms from a solve's start to its first estimate, or (`toFinal`, T-347) to its final
+ * round; `stops` null = the network is not known yet. */
+function solveEstimate(stops: number | null, toFinal = false): number {
   const last = lastSolve();
   const n = stops ?? last?.stops ?? 0;
-  return last ? last.ms * solveModel(n) / solveModel(last.stops) : solveModel(n);
+  const ms = last ? (toFinal ? last.finalMs ?? last.ms * FINAL_FACTOR : last.ms) * solveModel(n) / solveModel(last.stops) : solveModel(n) * (toFinal ? FINAL_FACTOR : 1);
+  return ms;
 }
 
 /**
@@ -772,14 +783,17 @@ class DemandClient {
     // T-325: a city the solves must cover is loaded when open in every worker; another, when open bare
     const sn = this.solveNeed(this.latest());
     const loaded = (item: string) => (item === MARKET || sn === null || sn.has(item as CityId) ? this.opened.has(item) : this.isOpen(item));
-    // T-328: a zone the shown cached result covers has its figures; it loads unseen
-    const cached = this.cacheShown() ? this.cachedCities : null;
+    // T-328: a zone the shown cached result covers has its figures; it loads unseen (T-347: not
+    // while a game load's card is up, which counts everything to the fresh final)
+    const cached = this.cacheShown() && !this.hold ? this.cachedCities : null;
+    // T-347: a game load's solve is done at its final round; any other load's, at its estimate
+    const doneRound = this.hold ? HOLD_ROUND : READY_ROUND;
     const missing = [...need].filter((id) => !loaded(id) && !cached?.has(id)).sort((a, b) => (a === viewed ? -1 : b === viewed ? 1 : 0));
     const atStartup = startup.peek() === "loading";
     const s = this.cur;
     if (!this.job) {
       // T-243: a loaded game whose cities are all open (a browser slot) still waits for its solve
-      const heldSolve = !!this.hold && this.hold.version !== undefined && s?.version === this.hold.version && s.published < READY_ROUND;
+      const heldSolve = !!this.hold && this.hold.version !== undefined && s?.version === this.hold.version && s.published < doneRound;
       if (!missing.length && !(atStartup && !this.opened.has(MARKET)) && !heldSolve) {
         if (!atStartup) loadProgress.value = null;
         return;
@@ -791,13 +805,14 @@ class DemandClient {
     if (!this.opened.has(MARKET) && !job.items.includes(MARKET)) job.items.push(MARKET);
     if (atStartup && need.has(viewed) && !job.cities.includes(viewed)) job.cities.unshift(viewed);
     const needsSolve = this.jobNeedsSolve(job);
-    const solved = !needsSolve || (!!s && job.version !== undefined && s.version === job.version && s.published >= READY_ROUND);
+    const solved = !needsSolve || (!!s && job.version !== undefined && s.version === job.version && s.published >= doneRound);
     if (solved && job.items.every(loaded)) {
       // remembered for the next load's estimate (T-243): a startup's solve, so it describes the
-      // game a reload opens
+      // game a reload opens; T-347: and the time to its final round, which the card now waits for
       if (job.startup && s && s.firstAt !== undefined) {
         const stops = s.svc.lines.reduce((n, l) => n + l.stops.length, 0);
-        try { localStorage.setItem(LAST_SOLVE, JSON.stringify({ ms: Math.round(s.firstAt - s.sentAt), stops })); } catch { /* storage unavailable */ }
+        const finalMs = s.refinedAt !== undefined ? Math.round(s.refinedAt - s.sentAt) : undefined;
+        try { localStorage.setItem(LAST_SOLVE, JSON.stringify({ ms: Math.round(s.firstAt - s.sentAt), stops, ...(finalMs ? { finalMs } : {}) })); } catch { /* storage unavailable */ }
       }
       this.job = null;
       clearInterval(this.progressTick);
@@ -838,12 +853,12 @@ class DemandClient {
     // Solving: period results landed, and time against the expected solve (none for a load of
     // zones opened bare, T-325).
     const svc = this.latest();
-    const solveMs = needsSolve ? solveEstimate(svc ? svc.lines.reduce((n, l) => n + l.stops.length, 0) : null) : 0;
+    const solveMs = needsSolve ? solveEstimate(svc ? svc.lines.reduce((n, l) => n + l.stops.length, 0) : null, !!this.hold) : 0;
     let solve = 0;
     if (s && job.version !== undefined && s.version === job.version) {
       let landed = 0;
-      for (let r = 0; r <= READY_ROUND; r++) landed += r <= s.published ? PERIODS.length : s.byRound[r].filter(Boolean).length;
-      solve = Math.max(landed / (PERIODS.length * (READY_ROUND + 1)), within(s.sentAt, solveMs));
+      for (let r = 0; r <= doneRound; r++) landed += r <= s.published ? PERIODS.length : s.byRound[r].filter(Boolean).length;
+      solve = Math.max(landed / (PERIODS.length * (doneRound + 1)), within(s.sentAt, solveMs));
     }
     const doneMs = dlMs * dl + openMs * open + solveMs * solve;
     const fraction = Math.min(0.99, doneMs / (dlMs + openMs + solveMs));
@@ -908,8 +923,9 @@ class DemandClient {
     }
   }
 
-  /** Show a cached result as a final one under CACHE_VERSION. The clock runs on it; the solve of the
-   * same network carries on, its estimates are not shown, and its final round replaces it whole. */
+  /** Show a cached result as a final one under CACHE_VERSION, behind the loading card (the clock
+   * stays held, T-347); the solve of the same network carries on, its estimates are not shown, and
+   * its final round replaces it whole. */
   private applyCache(svc: Service, ids: ReturnType<typeof canonical>, stored: StoredDemand, hash: string, cities: CityId[]) {
     const days = fromStored(stored, ids);
     if (days.length !== DAY_KINDS.length) throw new Error("days");
@@ -924,16 +940,8 @@ class DemandClient {
     demandByDay.value = days;
     this.addBareViews();
     demandUpdating.value = true; // "Updating demand" until the fresh final
-    // the load in hand is covered; the clock runs
-    this.job = null;
-    clearInterval(this.progressTick);
-    this.progressTick = 0;
-    loadProgress.value = null;
-    if (this.hold) {
-      this.hold = null;
-      loadComplete();
-      if (nearbyZones.peek().length) this.ensure();
-    }
+    // T-347: a game load's card and held clock stay until the fresh final lands (T-328 released
+    // them here); the card's bar carries on as it was
     this.progress();
   }
 
@@ -964,12 +972,12 @@ class DemandClient {
     (this.cacheLog ??= { at: t0 }).wrote = { at: performance.now(), ms, bytes: storedSize(stored) + (modes?.data.byteLength ?? 0), ok };
   }
 
-  /** A held game's network has its first estimate: the clock runs. */
+  /** A held game's network has its final result (T-347): the clock runs. */
   private checkHold() {
     if (this.hold && this.idle()) return this.settleIdle(); // T-318
     const s = this.cur;
     // (and the viewed zone open, bare perhaps, so its figures show: T-325)
-    if (this.hold && s && this.hold.version === s.version && s.published >= READY_ROUND && !this.waiting && [...this.viewedSet()].every((id) => this.isOpen(id))) {
+    if (this.hold && s && this.hold.version === s.version && s.published >= HOLD_ROUND &&!this.waiting && [...this.viewedSet()].every((id) => this.isOpen(id))) {
       this.hold = null;
       loadComplete();
       // the nearby zones' packs may load now (T-276)
@@ -1129,7 +1137,7 @@ class DemandClient {
     // so the figures never step through the rounds; estimates show only where nothing final is
     // shown yet: before the first final result, after a whole-game load, or for a city just opened
     const shown = cityDemandViews.peek();
-    const showEstimates = !demandView.peek()?.final || !!this.hold || cities.some((id) => !shown.has(id));
+    const showEstimates = !demandView.peek()?.final || (!!this.hold && !this.cacheShown()) || cities.some((id) => !shown.has(id));
     this.cur = { version, svc, layout, results: PERIODS.map(() => null), byRound: Array.from({length: ROUNDS + 1}, () => PERIODS.map(() => null)), published: -1, arrivedAt, sentAt: performance.now(), periodMs: [], setupMs: [], memBytes: [], cities, showEstimates };
     this.log.push(this.cur);
     if (this.log.length > 50) this.log.shift();

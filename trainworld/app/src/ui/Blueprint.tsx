@@ -1,5 +1,5 @@
 import { km, levelLabel, money } from "../game/format";
-import { offTotals, pickedState, switchPicked } from "../game/blueprintPick";
+import { clearBpPicked, offTotals, pickedState, switchPicked } from "../game/blueprintPick";
 import { tool } from "../game/ui";
 import type { BlueprintItem, Level } from "../game/types";
 import { edit, redo, say, undo, world } from "../game/world";
@@ -38,27 +38,37 @@ export function BlueprintControls() {
   );
 }
 
-/** The blueprint tool's pick (T-333): how many pieces, and switching them off or on; and, whatever
- * the tool, how many pieces are switched off, since Construct and the total leave them out. */
+const pieces = (e: number, st: number) => [e ? `${e} track` : "", st ? `${st} ${st === 1 ? "station" : "stations"}` : ""].filter(Boolean).join(", ");
+
+/** How many blueprint pieces are switched off (T-333), whatever the tool, since Construct and the
+ * total leave them out. Selecting, disabling and enabling are in the map's BlueprintBar (T-353). */
 export function BlueprintPick() {
-  const on = tool.value === "blueprint";
-  const s = pickedState.value, off = offTotals.value;
+  const off = offTotals.value;
   const offN = off.edges + off.stations;
-  if (!on && !offN) return null;
-  const piece = (e: number, st: number) => [e ? `${e} track` : "", st ? `${st} ${st === 1 ? "station" : "stations"}` : ""].filter(Boolean).join(", ");
+  if (!offN) return null;
   return (
     <div class="blueprint-pick">
-      {on && (
-        <div class="blueprint-head">
-          <span class="b">Selected</span>
-          <b class="num" data-tip={piece(s.edges, s.stations) || "Nothing selected"}>{s.edges + s.stations}</b>
-          <div class="group">
-            <button class="btn icon" data-tip="Disable the selection (D): Construct and the total leave it out" aria-label="Disable the selection" disabled={!s.on} onClick={() => void switchPicked(true)}><Icon.switchOff /></button>
-            <button class="btn icon" data-tip="Enable the selection (E)" aria-label="Enable the selection" disabled={!s.off} onClick={() => void switchPicked(false)}><Icon.switchOn /></button>
-          </div>
-        </div>
-      )}
-      {offN > 0 && <p class="small muted" data-tip={`Disabled: ${piece(off.edges, off.stations)}. Construct and the total leave these out`}>{offN} disabled</p>}
+      <p class="small muted" data-tip={`Disabled: ${pieces(off.edges, off.stations)}. Construct and the total leave these out`}>{offN} disabled</p>
+    </div>
+  );
+}
+
+/** T-353: while the Select tool has a selection, a bar at the map's top centre: how many pieces are
+ * selected, Disable, Enable and Clear in words (the dock's icon buttons were not found). Appears and
+ * goes in one step. */
+export function BlueprintBar() {
+  const s = pickedState.value;
+  const n = s.edges + s.stations;
+  if (tool.value !== "blueprint" || n === 0) return null;
+  const piece = pieces(s.edges, s.stations);
+  return (
+    <div class="blueprint-bar" role="group" aria-label="Blueprint selection">
+      <span class="count" data-tip={piece}>{n} selected</span>
+      <div class="group">
+        <button class="btn text" data-tip="Disable the selection (D): Construct and the total leave it out" disabled={!s.on} onClick={() => void switchPicked(true)}><Icon.switchOff />Disable</button>
+        <button class="btn text" data-tip="Enable the selection (E)" disabled={!s.off} onClick={() => void switchPicked(false)}><Icon.switchOn />Enable</button>
+      </div>
+      <button class="btn text" data-tip="Clear the selection (Esc)" onClick={() => clearBpPicked()}><Icon.cross />Clear</button>
     </div>
   );
 }

@@ -78,7 +78,12 @@ From the maps root, one city at a time, in the background, with `CARGO_BUILD_JOB
 `data/work/target`. **The sim crate must compile**: another agent mid-edit in `sim/` stops the
 build at the gravity step. Canada's adapter has `canada.py <id> --finish` to resume from the
 cached cells; a US build reruns whole, about a minute.) It writes `data/packs/<id>.json`, `.bin`,
-`.boundary.geojson` and intermediates in `data/work/<id>.*`, and runs every non-work purpose
+`.boundary.geojson` (a US pack's: TIGER/Line 2020 counties with their water out to the state and
+county lines at sea, simplified topologically by `pipeline/tiger_counties.py`, so the outline and
+shade run straight offshore and neighbouring packs share exact borders, T-352; the build itself
+filters by the shoreline-clipped cartographic counties; `build_city.py --boundary-only [ids]`
+rewrites only these files and each pack header's boundary source line) and intermediates in
+`data/work/<id>.*`, and runs every non-work purpose
 (schools, universities, everyday sectors, airports, medical visits, parks), so `enrich_all.py` is
 not needed for a new pack. Parks, medical and airport terminals query Overpass in the US path,
 which can be slow or down (T-196: an hour for nine packs on a bad evening; on 2026-10-13 every
@@ -253,6 +258,7 @@ real pack in notes/T-287.md):
 | Everyday destinations | LODES retail, service, food, leisure sectors | OSM shops and services; restaurants, bars, venues, hotels (Geofabrik extract) | the same OSM places, per cell |
 | Gravity curve | fitted on LODES OD (T-198) | fitted on census flows between municipalities (98-10-0459-01; `notes/t277_fit.py`) | borrowed from a fitted city, or power 1 with the length fitted to a published median or mean commute (`tier0.fit_curve`) |
 | Regions, border | states, 0.23 | provinces, factor 1 | one region, factor 1 |
+| Drawn boundary | TIGER/Line counties, water included (T-352) | cartographic census subdivisions, clipped at the shore (hugs Lake Ontario) | the config's district polygons |
 | Water | TIGER AREAWATER and states | StatCan lakes and rivers; land = cartographic municipalities plus US states | the config's `water_source` (OSM water is T-041) |
 | Schools | NCES | Ontario school information file (provincial; other provinces need their own) | OSM `amenity=school` sites; pupils = population x share aged 0-14 (World Bank) x 0.9, by the square root of site area |
 | Universities | IPEDS | Council of Ontario Universities headcounts and Ontario's college campus file, at points in `pipeline/ca_campuses.csv` | OSM `amenity=university|college`; Wikidata P2196 students by institution, split by site area; other sites by area at the median density |

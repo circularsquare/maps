@@ -5,6 +5,8 @@
 Downloads are cached in data/raw/; outputs go to data/packs/<city>.json, .bin and
 .boundary.geojson. Safe to re-run: cached files are reused, outputs are replaced whole.
 The zone gravity is solved by the sim crate (cargo, `pack_gravity`), so Rust must be installed.
+
+    python pipeline/build_city.py --boundary-only [ids]     (T-352: only the boundary files)
 """
 import os
 os.environ.setdefault("OMP_NUM_THREADS", "2")  # before numpy; Anita is using the machine
@@ -48,6 +50,12 @@ LODES_RAC = "https://lehd.ces.census.gov/data/lodes/LODES8/{st}/rac/{st}_rac_S00
 # 2020 county polygons: they match the 2020 block GEOIDs (Connecticut's old counties, which
 # LODES 8 also uses; the 2022+ files have Connecticut's planning regions instead).
 COUNTIES = "https://www2.census.gov/geo/tiger/GENZ2020/shp/cb_2020_us_county_500k.zip"
+# T-352: the DRAWN boundary (data/packs/<id>.boundary.geojson: outline, shade, reach test) is TIGER/Line
+# counties, which include the water out to the state and county lines at sea (pipeline/tiger_counties.py).
+# The cartographic file above, clipped to the shoreline, stays the land footprint the build itself uses
+# (the water mask's extent, the points kept for schools, airports, parks and the rest).
+BOUNDARY_NAME = "Census TIGER/Line 2020 counties (tl_2020_us_county, water included, simplified), counties in "
+BOUNDARY_URL = "https://www2.census.gov/geo/tiger/TIGER2020/COUNTY/tl_2020_us_county.zip"
 # Checks only, not inputs.
 POPEST = "https://www2.census.gov/programs-surveys/popest/datasets/2020-2021/counties/totals/co-est2021-alldata.csv"
 QCEW_TOTAL = "https://data.bls.gov/cew/data/api/{year}/a/industry/10.csv"
@@ -411,12 +419,20 @@ def residents_for_state(st, year, county_set):
 # ---------------------------------------------------------------- build
 
 def build_boundary(city, cfg):
+    """Write data/packs/<city>.boundary.geojson, the TIGER/Line counties dissolved (T-352), and
+    return the shoreline footprint (cartographic counties, dissolved) that the rest of the build
+    filters by: so a pack's cells, water mask and points do not depend on the drawn water."""
     if cfg.get("tier0"):  # T-287: global sources only, pipeline/tier0.py
         import tier0
         return tier0.build_boundary(city, cfg)
     if cfg.get("country") == "ca":  # T-277: census subdivisions, pipeline/canada.py
         import canada
         return canada.build_boundary(city, cfg)
+    import tiger_counties
+    tiger = tiger_counties.counties(fetch)
+    absent = [c for c in cfg["counties"] if c not in tiger]
+    assert not absent, f"TIGER counties missing {absent}"
+    drawn = union_all([tiger[c] for c in cfg["counties"]])
     path = fetch(COUNTIES)
     r = shapefile.Reader(path)
     fields = [f[0] for f in r.fields[1:]]
@@ -432,12 +448,13 @@ def build_boundary(city, cfg):
             return [round(c[0], 6), round(c[1], 6)]
         return [rnd(x) for x in c]
 
-    geom = mapping(merged)
+    geom = mapping(drawn)
     geom = {"type": geom["type"], "coordinates": rnd(geom["coordinates"])}
     fc = {"type": "FeatureCollection", "features": [{
         "type": "Feature",
         "properties": {"city": city, "counties": sorted(cfg["counties"]),
-                       "source": "Census cartographic boundary file cb_2020_us_county_500k, dissolved"},
+                       "source": "Census TIGER/Line 2020 counties tl_2020_us_county, dissolved, "
+                                 f"simplified {tiger_counties.TOLERANCE_DEG} degrees (T-352)"},
         "geometry": geom,
     }]}
     out = os.path.join(PACKS, f"{city}.boundary.geojson")
@@ -769,8 +786,8 @@ def main(city):
          "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/"},
         {"what": "jobs", "name": f"LEHD LODES 8 WAC S000 JT00 {lodes_year}, C000 (all jobs)",
          "url": "https://lehd.ces.census.gov/data/lodes/LODES8/"},
-        {"what": "boundary", "name": "Census cb_2020_us_county_500k, counties in " + cfg.get("boundary_notes", "notes/T-003.md"),
-         "url": COUNTIES},
+        {"what": "boundary", "name": BOUNDARY_NAME + cfg.get("boundary_notes", "notes/T-003.md"),
+         "url": BOUNDARY_URL},
     ]
     sources.append({"what": "water", "name": "TIGER/Line 2020 AREAWATER by county, and the sea outside "
                     "the TIGER 2020 state polygons", "url": "https://www2.census.gov/geo/tiger/TIGER2020/AREAWATER/"})
@@ -818,5 +835,31 @@ def main(city):
     print(f"done in {time.time() - t0:.1f} s")
 
 
+def boundary_only(ids):
+    """T-352: rewrite only data/packs/<id>.boundary.geojson (and the pack header's boundary source
+    line) for US packs, with no other build step: the pack, its gravity and its routes stay as they
+    are. No ids: every US pack."""
+    import re
+    for city in ids or [c for c, v in CITIES.items() if not v.get("tier0") and v.get("country") != "ca"]:
+        cfg = CITIES[city]
+        assert not cfg.get("tier0") and cfg.get("country") != "ca", f"{city} is not a US pack"
+        build_boundary(city, cfg)
+        path = os.path.join(PACKS, f"{city}.json")
+        with open(path, "rb") as f:
+            text = f.read().decode("utf-8")
+        notes = cfg.get("boundary_notes", "notes/T-003.md")
+        pattern = re.compile(r'("name": )"Census cb_2020_us_county_500k, counties in ' + re.escape(notes) + r'"(,\s*"url": )"'
+                             + re.escape(COUNTIES) + '"')
+        new, n = pattern.subn(lambda m: f'{m.group(1)}"{BOUNDARY_NAME}{notes}"{m.group(2)}"{BOUNDARY_URL}"', text)
+        if n:
+            with open(path + ".part", "wb") as f:
+                f.write(new.encode("utf-8"))
+            os.replace(path + ".part", path)
+        print(f"  {city}: pack header boundary source {'updated' if n else 'already current'}")
+
+
 if __name__ == "__main__":
-    main(sys.argv[1] if len(sys.argv) > 1 else "nyc")
+    if "--boundary-only" in sys.argv:
+        boundary_only([a for a in sys.argv[1:] if not a.startswith("--")])
+    else:
+        main(sys.argv[1] if len(sys.argv) > 1 else "nyc")

@@ -271,8 +271,8 @@ Each stage is its own task.
    `boarding::tests::t309_real_save_runs_as_before`, a week of trips, boarding slices and today's
    counts); `a_london_line_runs_on_londons_hours`; a browser check of a London and a New York
    line in one new game. The rest is T-321.
-4. **Running side per region**, T-319: `right_hand` from the registry, read per junction. Small; before
-   London's junctions carry traffic.
+4. **Running side**: dropped (T-319, Anita 2026-10-14). Every network runs on the right, worldwide;
+   `right_hand` stays one flag per network and only junction capacity reads it.
 5. **World-scale loading**: water masks and boundaries for the zones on screen or reached, not
    every registered one (already T-302, folded into T-303's proposal).
 6. **Globe** (T-033) on the Mercator frame.

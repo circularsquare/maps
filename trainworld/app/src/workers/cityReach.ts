@@ -70,7 +70,9 @@ function reaches(f: Footprint, lon: number, lat: number): boolean {
 /** Metres from (lon, lat) to the footprint: 0 inside it (T-276, the zone under the view). */
 export function distanceTo(f: Footprint, lon: number, lat: number): number {
   const kx = M_PER_DEG * Math.cos((lat * Math.PI) / 180), ky = M_PER_DEG;
-  let inside = false, best = Infinity;
+  // T-348: the nearest point by its squared distance, and Math.hypot (slow) for that one only:
+  // placing 1,756 stations walked New York's outline for each in about 140 ms
+  let inside = false, best = Infinity, bx0 = 0, by0 = 0;
   for (const ring of f.rings) {
     for (let k = 0, m = ring.length / 2; k < m; k++) {
       const j = (k + 1) % m;
@@ -78,11 +80,12 @@ export function distanceTo(f: Footprint, lon: number, lat: number): number {
       const bx = (ring[2 * j] - lon) * kx, by = (ring[2 * j + 1] - lat) * ky;
       const dx = bx - ax, dy = by - ay, len = dx * dx + dy * dy;
       const t = len > 0 ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / len)) : 0;
-      best = Math.min(best, Math.hypot(ax + t * dx, ay + t * dy));
+      const px = ax + t * dx, py = ay + t * dy, d2 = px * px + py * py;
+      if (d2 < best) (best = d2), (bx0 = px), (by0 = py);
       if ((ay > 0) !== (by > 0) && ax - (ay * dx) / dy > 0) inside = !inside;
     }
   }
-  return inside ? 0 : best;
+  return inside ? 0 : best === Infinity ? Infinity : Math.hypot(bx0, by0);
 }
 
 /** Whether the footprint touches the box (west, south, east, north, degrees): an edge crosses it,

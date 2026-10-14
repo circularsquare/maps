@@ -39,6 +39,11 @@ One unit per zone, so zone lines are lines that every national dataset already u
 under 100,000 people joins the neighbouring non-city zone it shares the longest border with. A
 unit belongs to a city zone (and so is not a non-city zone) when that city's pack lists it.
 
+**Boundary file.** A zone's drawn boundary is its units dissolved. In the US the units are TIGER/Line
+2020 counties, which include the water inside each county out to the state and county lines at sea
+(T-352), so an outline and the outside shade run straight offshore instead of hugging the coast.
+Neighbouring zones share exact simplified borders, so their boundaries do not overlap.
+
 **Which units are modelled (the extent).** A unit not in any city zone is modelled when it
 **touches two different city zones**: it lies between them. Today that is Worcester MA, Windham CT,
 New London CT and Litchfield CT in New England. Modelled space stays between cities for now (Anita,

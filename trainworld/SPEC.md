@@ -153,8 +153,9 @@ MapLibre GL 6 for the basemap, with our own WebGL2 renderer on a canvas over it 
 stations and trains, drawn in the same frame as MapLibre's. Rust compiled to WebAssembly in Web
 Workers: one clock worker (track model, lines, money, boarding account, autosave) and a pool of
 demand workers that each own a fixed set of the five periods. Threads talk by transferring
-versioned snapshots. A loaded game holds only its clock until the first demand estimate lands, or
-its last final result kept beside the save shows (T-328); input is never blocked. City packs come from an offline Python pipeline. The simulation is a pure
+versioned snapshots. A loaded game holds only its clock, behind a loading card, until its
+fresh demand solve's final result lands (T-347; the last final result kept beside the save, T-328,
+is drawn behind the card meanwhile); input is never blocked. City packs come from an offline Python pipeline. The simulation is a pure
 function of (save, pack versions, game time), bar the hour or two after a service edit [T-206].
 Detail: [docs/architecture.md](docs/architecture.md) 7; file layout in `docs/code-map.md`.
 

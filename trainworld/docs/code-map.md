@@ -89,7 +89,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 Money); `SettingsTab.tsx`; `SavesPanel.tsx` (saved games, T-251); `widgets.tsx` (chips, steppers,
 checkboxes and the inline SVG icons); `TopBar.tsx`; `Toolbar.tsx` (tool hints and the confirmation
 dialog); `DemandSelector.tsx` (None/Homes/Destinations and the purpose filter); `Blueprint.tsx`
-(Build's quote and Construct); `Debug.tsx` (the `?debug=1` readout); `inspector/` (one inspector
+(Build's quote and Construct, and the Select tool's selection bar on the map, T-353); `Debug.tsx` (the `?debug=1` readout); `inspector/` (one inspector
 per selection kind: `others.tsx` holds station, train, track, junction and cell or zone;
 `ComplexMap.tsx` the complex map); `LoadingScreen.tsx` (the clock hold at startup, the loading card,
 the screen when demand cannot load, T-149, T-172, T-180); `Search.tsx` (T-148); `StationsFull.tsx`
@@ -142,7 +142,10 @@ Run from the maps root (`node trainworld/checks/<file>`).
 - Browser and timing (Playwright, `PLAYWRIGHT_MODULE`): `startup-timing.mjs` with
   `static-serve.mjs` (startup marks on a scratch production build), `t303-measure.mjs` (demand
   loading, clicks, pans), `t328-cache-check.mjs` (the demand cache on reload: timing, cached
-  against fresh final to the bit, a changed build, pack or network shows none), `t161-complexes.mjs` (the real save's complexes for the native
+  against fresh final to the bit, a changed build, pack or network shows none), `t348-lag.mjs`
+  (main-thread long tasks and frame gaps while demand loads: startup, pans, a re-solve, a zone
+  joining the solve; optional Chrome trace) with `t348-analyze.mjs` (what each long task in a
+  trace spent its time on), `t161-complexes.mjs` (the real save's complexes for the native
   comparison), `t125-fingerprint.mjs` (a save's derived geometry, before and after a frame
   change), `t277-browser.mjs` (Toronto; the template for a new city's browser check, not rerun
   since T-277).
@@ -154,7 +157,9 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
 - `build_city.py nyc` writes `data/packs/` (downloads cached in `data/raw/`; the zone gravity is
   solved by the sim crate's `pack_gravity` bin through cargo, built in `data/work/target`).
   `read_pack.py nyc` checks a pack, `look_pack.py nyc` draws `../artifacts/trainworld/T-004.png`.
-  City configs are in `build_city.py`.
+  City configs are in `build_city.py`. `build_city.py --boundary-only [ids]` rewrites only the
+  US packs' `.boundary.geojson` from TIGER/Line counties with their water (`tiger_counties.py`,
+  simplified topologically once for the whole US into `data/work/tiger_counties_simple.json`, T-352).
 - `regions.py nyc` adds each cell's state to a finished pack and re-solves its gravity in place
   (seconds; T-162): the way to re-solve after a decay or border factor change without a rebuild.
 - `enrich_all.py phl bos` adds the non-work inputs (everyday sectors, NCES schools, IPEDS

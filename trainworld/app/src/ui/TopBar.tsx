@@ -3,6 +3,7 @@
 // re-renders only it.
 
 import type { ComponentChildren } from "preact";
+import { useEffect, useLayoutEffect, useRef } from "preact/hooks";
 import { clock, SPEEDS } from "../game/clock";
 import { activeCity, cityById, viewedZone } from "../game/cities";
 import { demandStep, demandUpdating, demandView, modeRides, modeSplit } from "../game/demand";
@@ -33,9 +34,9 @@ function Clock() {
   const held = clock.held.value;
   return (
     <div class="clock" data-tip={held ? "The clock starts when demand has loaded" : `${WEEKDAY_LONG[weekdayOf(dayOf(minute))]}, day ${dayOf(minute)} · ${DEMAND_NAME[NO_CLOCK ? clock.demand.peek() : clock.demand.value]}`}>
-      <span class="day muted">{weekdayName(dayOf(minute))} {dayOf(minute)}</span>
-      <b class={"time big" + (held ? " muted" : "")}>{clockTime(minute)}</b>
-      <span class="demand muted">{DEMAND_NAME[NO_CLOCK ? clock.demand.peek() : clock.demand.value]}</span>
+      <span class="day sm">{weekdayName(dayOf(minute))} {dayOf(minute)}</span>
+      <b class={"time lg" + (held ? " held" : "")}>{clockTime(minute)}</b>
+      <span class="demand sm">{DEMAND_NAME[NO_CLOCK ? clock.demand.peek() : clock.demand.value]}</span>
     </div>
   );
 }
@@ -121,38 +122,60 @@ export function TopBar() {
       {/* T-341: every part has a fixed width; a long name is cut short, the whole name on hover */}
       <div class="city" data-tip={city?.name}>{city?.name}</div>
       <div class="split">
-        <div class="split-row" data-tip={`Rides a day ${city ? "in " + city.name + " " : ""}${shownDay.value ? "at weekends" : "on weekdays"}: ${rides ? `Train ${pct(s.train)} (${count(rides.train)}), Walking ${pct(s.walk)} (${count(rides.walk)}), Driving ${pct(s.drive)} (${count(rides.drive)}), all ${count(rides.all)} rides` : `Train ${pct(s.train)}, Walking ${pct(s.walk)}, Driving ${pct(s.drive)}`}${demandView.value && !demandView.value.final ? " (an early estimate)" : demandView.value?.version === CACHE_VERSION ? " (from the last time this game was open)" : demandUpdating.value ? " (before your last change)" : ""}`} style={{ opacity: demandUpdating.value ? 0.6 : 1 }}>
-          <span class="bar">
-            <i class="seg seg-train" style={{ width: s.train + "%" }} />
-            <i class="seg seg-walk" style={{ width: s.walk + "%" }} />
-            <i class="seg seg-drive" style={{ width: s.drive + "%" }} />
+        <div data-tip={`Rides a day ${city ? "in " + city.name + " " : ""}${shownDay.value ? "at weekends" : "on weekdays"}: ${rides ? `Train ${pct(s.train)} (${count(rides.train)}), Walking ${pct(s.walk)} (${count(rides.walk)}), Driving ${pct(s.drive)} (${count(rides.drive)}), all ${count(rides.all)} rides` : `Train ${pct(s.train)}, Walking ${pct(s.walk)}, Driving ${pct(s.drive)}`}${demandView.value && !demandView.value.final ? " (an early estimate)" : demandView.value?.version === CACHE_VERSION ? " (from the last time this game was open)" : demandUpdating.value ? " (before your last change)" : ""}`} class={"split-row" + (demandUpdating.value ? " updating" : "")}>
+          <span class="bar-box">
+            <span class="bar">
+              <i class="seg seg-train" style={{ width: s.train + "%" }} />
+              <i class="seg seg-walk" style={{ width: s.walk + "%" }} />
+              <i class="seg seg-drive" style={{ width: s.drive + "%" }} />
+            </span>
           </span>
-          <span class="split-labels">
           <span class="split-train">
             <i class="sw sw-train" />
-            Train <b class="big pct">{pct(s.train)}</b>
-            <span class="muted rides">{rides ? count(rides.train) + " rides" : ""}</span>
+            Train <b class="lg pct">{pct(s.train)}</b>
+            <span class="sm rides">{rides ? count(rides.train) + " rides" : ""}</span>
           </span>
-          <span class="split-other">
+          <span class="split-other sm">
             <i class="sw sw-walk" />
             Walking <span class="pct">{pct(s.walk)}</span>
           </span>
-          <span class="split-other">
+          <span class="split-other sm">
             <i class="sw sw-drive" />
             Driving <span class="pct">{pct(s.drive)}</span>
           </span>
-          </span>
-        </div>
-        {/* T-341: its own line under the bar, reserved whether or not there is a status, so nothing moves.
-            T-180: cut short with an ellipsis in a narrow column; the whole text on hover */}
-        <div class="split-status">
-          {busy && <span class="demand-busy muted" role="status" data-tip={busyTip ?? undefined}>{busy}</span>}
-          {busy && load && !loadFailure.value && <LoadBar fraction={load.fraction} step={load.step} thin />}
         </div>
       </div>
       <Cash />
       <Clock />
       <Speed />
-    </header><SaveNotice /></>
+    </header><SaveNotice />
+    <StatusTag busy={busy} tip={busyTip} load={busy && load && !loadFailure.value ? load : null} /></>
   );
+}
+
+/** T-349: the status, as a small tag over the map's top edge under the split bar's left edge (below the
+ * top bar and the autosave notice), so the bar needs no room for it and nothing moves. A zero-height
+ * anchor after the notice; the tag appears and goes in one step. */
+function StatusTag({ busy, tip, load }: { busy: string | null; tip: string | null | undefined; load: { fraction: number; step: string } | null }) {
+  const anchor = useRef<HTMLDivElement>(null);
+  const place = () => {
+    const a = anchor.current, box = document.querySelector("#topbar .bar-box");
+    if (!a || !box) return;
+    // visual px on both sides; the tag's own zoom scales only its contents
+    a.style.left = Math.round(box.getBoundingClientRect().left - (a.closest("#main") ?? a).getBoundingClientRect().left) + "px";
+  };
+  useLayoutEffect(place);
+  useEffect(() => {
+    const bar = document.getElementById("topbar");
+    if (!bar) return;
+    const ro = new ResizeObserver(place);
+    ro.observe(bar);
+    return () => ro.disconnect();
+  }, []);
+  return <div class="status-anchor" ref={anchor}>
+    {busy && <div class="status-tag sm" role="status" data-tip={tip ?? undefined}>
+      <span class="demand-busy">{busy}</span>
+      {load && <LoadBar fraction={load.fraction} step={load.step} thin />}
+    </div>}
+  </div>;
 }

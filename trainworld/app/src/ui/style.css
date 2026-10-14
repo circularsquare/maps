@@ -16,7 +16,7 @@
   --net-ink: #2b2b2b;
   --map-land: #f2f2ef;
   --dock-w: clamp(304px, 24vw, 352px);
-  --bar-h: 54px; /* T-341: three lines in the split section */
+  --bar-h: 46px; /* T-349: one centre line; the status lies under the bar */
 }
 
 * { box-sizing: border-box; }
@@ -252,29 +252,38 @@ table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
 #main { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column;
         container-type: inline-size; container-name: map-column; }
 #topbar {
-  flex: none; height: var(--bar-h); display: flex; align-items: center; gap: 18px;
+  flex: none; height: var(--bar-h); display: flex; align-items: center; gap: 18px; line-height: 1.2;
   padding: 0 10px 0 16px; border-bottom: 1px solid var(--rule); white-space: nowrap;
 }
+/* T-349: three type styles in the whole bar and one centre line. The base is the normal style (14 px,
+   400, the text colour: name, "Train", cash); .lg is the figure style (18 px, 700, text colour: the
+   train share and the time); .sm is the small muted style (12 px, 400, muted: rides, walking, driving,
+   day, demand level, status). Every part is centred on the bar's middle. */
+#topbar .lg { font-size: 18px; font-weight: 700; }
+#topbar .sm { font-size: 12px; font-weight: 400; color: var(--muted); }
 /* T-341: every part of the bar has a fixed width, so no city or status moves the split bar: the name
    box is cut short with an ellipsis (its whole name on hover), the percentages use tabular figures in
-   boxes of fixed width. Three lines in the split section: the bar, the labels, and the status (a line
-   kept whether or not there is one). */
-.city { flex: none; width: 130px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; }
-.split { flex: 1; min-width: 0; max-width: 520px; display: flex; flex-direction: column; justify-content: center;
-         gap: 2px; font-variant-numeric: tabular-nums; }
-.split-row { display: flex; flex-direction: column; gap: 2px; }
-.split-labels { display: flex; align-items: center; gap: 14px; height: 18px; overflow: hidden; }
-.split-train { flex: none; display: inline-flex; align-items: baseline; gap: 6px; }
-.split-train .sw { align-self: center; }
-.pct { display: inline-block; min-width: 4.6ch; text-align: left; }
-.rides { display: inline-block; width: 10.5ch; font-size: 12px; overflow: hidden; text-overflow: ellipsis; }
-/* T-180: in a narrow column this ends in an ellipsis; the whole text is its hover. T-341: it is the
-   status line's text, which keeps its height with nothing on it. */
-.split-status { display: flex; align-items: center; gap: 8px; height: 12px; min-width: 0; }
-.demand-busy { display: block; font-size: 12px; line-height: 12px; flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.split-status .load-bar.thin { height: 4px; }
-.split-other { flex: none; color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
-.bar { flex: none; width: 100%; height: 10px; display: flex; border: 1px solid var(--rule); background: var(--bg); }
+   boxes of fixed width. The split is one row (bar, then its labels), centred in the bar (T-349). */
+.city { flex: none; width: 130px; overflow: hidden; text-overflow: ellipsis; }
+.split { flex: 1; min-width: 0; max-width: 560px; display: flex; align-items: center; font-variant-numeric: tabular-nums; }
+.split-row { flex: 1; min-width: 0; display: flex; align-items: center; gap: 14px; height: 24px; }
+.split-row.updating .bar, .split-row.updating .split-train, .split-row.updating .split-other { opacity: 0.6; }
+.bar-box { flex: 1; min-width: 60px; position: relative; display: block; height: 10px; }
+.split-train { flex: none; display: inline-flex; align-items: center; gap: 6px; }
+.pct { display: inline-block; width: 5ch; text-align: left; }
+.split-other .pct { width: 5.6ch; }
+.rides { display: inline-block; width: 10.5ch; overflow: hidden; text-overflow: ellipsis; }
+/* T-349: the status is a small tag hung from the map's top edge under the split bar's left edge (TopBar.tsx
+   sets the anchor's left), over the map, so the bar makes no room for it. T-180: in a narrow column the
+   text ends in an ellipsis; the whole text is its hover. */
+.status-anchor { position: relative; flex: none; height: 0; z-index: 5; pointer-events: none; }
+.status-tag { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 8px; height: 18px; padding: 0 8px;
+  max-width: 360px; background: var(--bg); border: 1px solid var(--rule); border-top: 0; white-space: nowrap;
+  font-size: 12px; font-weight: 400; line-height: 14px; color: var(--muted); pointer-events: auto; zoom: var(--ui, 1); }
+.demand-busy { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.status-tag .load-bar.thin { height: 4px; margin-right: 0; }
+.split-other { flex: none; display: inline-flex; align-items: center; gap: 6px; }
+.bar { display: flex; width: 100%; height: 10px; border: 1px solid var(--rule); background: var(--bg); }
 .seg { display: block; height: 100%; }
 /* train, walking, driving: the commuter dot map's colours whatever the theme (T-084;
    --mode-* are set from game/palette.ts MODE_COLOURS in main.ts) */
@@ -287,7 +296,8 @@ table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
 .cash { flex: none; width: 16ch; display: flex; font-variant-numeric: tabular-nums; }
 .cash-sign, .cash-cur { flex: none; width: 1ch; }
 .cash-digits { flex: 1; min-width: 0; text-align: left; }
-.clock { display: flex; align-items: baseline; gap: 8px; font-variant-numeric: tabular-nums; }
+.clock { display: flex; align-items: center; gap: 8px; font-variant-numeric: tabular-nums; }
+.clock .time.held { color: var(--muted); }
 .clock .day { min-width: 58px; }
 .clock .time { min-width: 46px; }
 .clock .demand { min-width: 108px; }
@@ -298,7 +308,7 @@ table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
 
 #map { position: relative; flex: 1; min-height: 0; background: var(--map-land); }
 /* T-231: the demand buttons and, under them, the stations full alert */
-.map-top-left { position: absolute; left: 10px; top: 10px; z-index: 4; max-width: calc(100% - 20px);
+.map-top-left { position: absolute; left: 10px; top: 26px; z-index: 4; max-width: calc(100% - 20px);
   display: flex; flex-direction: column; align-items: flex-start; gap: 6px; pointer-events: none; }
 .map-top-left > * { pointer-events: auto; }
 .demand-selector { display: flex; flex-wrap: wrap; max-width: 100%; }
@@ -361,7 +371,13 @@ table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
 .blueprint-items .val { flex: none; white-space: nowrap; }
 .blueprint-construct { width: 100%; }
 .blueprint-pick { margin-top: 14px; }
-.blueprint-pick .blueprint-head { margin-bottom: 2px; }
+/* T-353: the Select tool's bar at the map's top centre, level with the demand buttons (below the status tag).
+   Lower on narrower maps, where the demand buttons and the search box take the sides. */
+.blueprint-bar { position: absolute; left: 50%; top: 26px; transform: translateX(-50%); z-index: 4; display: flex; align-items: center; gap: 10px;
+  padding: 6px 8px 6px 12px; background: var(--bg); border: 1px solid var(--rule); white-space: nowrap; }
+.blueprint-bar .count { min-width: 76px; }
+@container map-column (max-width: 1000px) { .blueprint-bar { top: 62px; } }
+@container map-column (max-width: 680px) { .blueprint-bar { top: 96px; } }
 .bp-box { position: absolute; z-index: 3; pointer-events: none; border: 1.5px dashed var(--net-ink); background: color-mix(in srgb, var(--net-ink) 10%, transparent); }
 .btn.lv { min-width: 32px; padding: 0 4px; font-variant-numeric: tabular-nums; }
 .tool-pick { display: flex; }
@@ -467,28 +483,37 @@ table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
 .maplibregl-ctrl-bottom-right .maplibregl-ctrl { margin: 0 !important; }
 
 /* The dock is resizable, so adapt to the map column rather than the browser width. */
+@container map-column (max-width: 1250px) {
+  .split-other { display: none; }
+}
 @container map-column (max-width: 1100px) {
   #topbar { gap: 12px; }
-  .split { gap: 9px; }
+  .split-row { gap: 10px; }
   .clock .day { display: none; }
-}
-@container map-column (max-width: 900px) {
-  .split-other { display: none; }
 }
 @container map-column (max-width: 760px) {
   .clock .demand { display: none; }
   .rides { display: none; }
   .city { width: 96px; }
 }
-@container map-column (max-width: 520px) {
-  #topbar { height: auto; min-height: 76px; padding: 6px 10px;
-    display: grid; grid-template-columns: minmax(0, 1fr) auto auto;
-    grid-template-areas: "city cash clock" "split split speed"; gap: 4px 10px; }
+/* T-349: below 700 px the bar takes two rows: name, cash, time and speed on the first, the split
+   (bar, labels, status under the bar) on the second */
+@container map-column (max-width: 700px) {
+  #topbar { height: auto; min-height: 64px; padding: 6px 10px;
+    display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto;
+    grid-template-areas: "city cash clock speed" "split split split split"; gap: 4px 12px; }
   #topbar .city { grid-area: city; width: auto; min-width: 0; }
   #topbar .cash { grid-area: cash; }
   #topbar .clock { grid-area: clock; justify-self: end; }
-  #topbar .split { grid-area: split; }
+  #topbar .split { grid-area: split; max-width: none; }
   #topbar .speed { grid-area: speed; justify-self: end; }
+  .rides { display: inline-block; }
+  .split-other { display: inline-flex; }
+}
+@container map-column (max-width: 520px) {
+  #topbar { grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-areas: "city cash clock" "split split speed"; }
+  .split-other { display: none; }
 }
 @container map-column (max-width: 300px) {
   #topbar { grid-template-columns: minmax(0, 1fr) auto;
@@ -608,6 +633,6 @@ table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
 /* T-247: the UI scale (Settings, --ui from game/ui.ts). Panels are zoomed whole (every size here is
    px); the map's own DOM tags keep their placement and only their text is sized, since their
    positions come from the map. The WebGL map is never scaled. Dock.tsx divides its drags by it. */
-#dock, #topbar, .save-notice, #tools, .map-top-left, .map-search, .loading-card, .loading-box, #debug { zoom: var(--ui, 1); }
+#dock, #topbar, .save-notice, #tools, .map-top-left, .map-search, .blueprint-bar, .loading-card, .loading-box, #debug { zoom: var(--ui, 1); }
 .loading-card-wrap { top: calc(var(--bar-h) * var(--ui, 1)); }
 .stn-label, .pi-label, .tool-tag, .cap-mark, .intercity-label { font-size: calc(12px * var(--ui, 1)); }

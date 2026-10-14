@@ -2,7 +2,9 @@
 // "nothing known here yet" rather than "no demand", with a small bar over it filling as it loads
 // (hover: "Loading Toronto, 40%"). Grey: every zone being loaded (game/loading.ts `zoneLoads`), and
 // a nearby zone whose bubbles would show but has not been opened yet (it opens after the startup
-// load). The shade goes in one step when the zone's figures arrive. A zone re-solving after an
+// load). T-350: the grey is the outside shade's own (SHADE_PAINT), filled only on the zone in view,
+// since every other zone already lies under the outside shade. The shade goes in one step when the
+// zone's figures arrive. A zone re-solving after an
 // edit keeps its figures and is never grey. The bars hide while the startup card is up, which says
 // the same thing in the middle of the map.
 
@@ -11,12 +13,13 @@ import { h, render } from "preact";
 import type { FeatureCollection, MultiPolygon } from "geojson";
 import type { GeoJSONSource, Map as MlMap } from "maplibre-gl";
 import { cityBoundary } from "../game/boundaries";
-import { cityById, type CityId } from "../game/cities";
+import { activeCity, cityById, type CityId } from "../game/cities";
 import { cityDemandViews } from "../game/demand";
 import { loadFailure, zoneLoads } from "../game/loading";
 import { nearbyZones } from "../game/zones";
 import { LoadBar, loadingCardShown } from "../ui/LoadingScreen";
 import { cityGeometry } from "./boundaryGeometry";
+import { SHADE_PAINT } from "./cityBoundaries";
 
 const SHADE = "tw-zone-loading";
 /** how far a bar keeps from the map's edges, px */
@@ -108,7 +111,7 @@ export function startZoneLoading(map: MlMap): () => void {
       const before = map.getStyle().layers.find((l) => l.type === "symbol")?.id;
       map.addLayer({
         id: SHADE, type: "fill", source: SHADE,
-        paint: { "fill-color": "#8a8f99", "fill-opacity": 0.32, "fill-antialias": false },
+        paint: { ...SHADE_PAINT },
       }, before);
     }
     draw();
@@ -124,7 +127,10 @@ export function startZoneLoading(map: MlMap): () => void {
     const ids = new Set(loads.keys());
     if (!loadFailure.value) for (const id of nearbyZones.value) if (!shown.has(id)) ids.add(id);
     loadingCardShown(); // the bars follow the card
-    grey = [...ids];
+    // T-350: only the zone in view takes the fill: every other zone already lies under the outside
+    // shade (map/cityBoundaries.ts), which is this same grey, and stacking would darken it
+    const focus = activeCity.value;
+    grey = [...ids].filter((id) => id === focus);
     draw();
   });
 

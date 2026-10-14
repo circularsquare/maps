@@ -12,6 +12,8 @@ const FOCUS = "tw-city-focus";
 const INNER = "tw-city-focus-inner";
 const OUTER = "tw-city-focus-outer";
 const empty: FeatureCollection = { type: "FeatureCollection", features: [] };
+/** The one grey of "not the zone in view": outside the focused zone, and (T-350) a zone still loading. */
+export const SHADE_PAINT = { "fill-color": "#182536", "fill-opacity": 0.075, "fill-antialias": false } as const;
 
 /** Install the registered packs' outlines, including after a basemap style replacement. */
 export function startCityBoundaries(map: MlMap): () => void {
@@ -61,7 +63,7 @@ export function startCityBoundaries(map: MlMap): () => void {
     if (!map.getSource(SHADE)) map.addSource(SHADE, { type: "geojson", data: empty });
     if (!map.getLayer(SHADE)) map.addLayer({
       id: SHADE, type: "fill", source: SHADE,
-      paint: { "fill-color": "#182536", "fill-opacity": 0.075, "fill-antialias": false },
+      paint: { ...SHADE_PAINT },
     }, before);
     for (const city of CITIES) {
       const id = `tw-city-boundary-${city.id}`;

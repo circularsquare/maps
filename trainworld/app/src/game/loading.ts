@@ -4,9 +4,10 @@
 // (ui/LoadingScreen.tsx), the top bar and the demand selector.
 //
 // A loaded game (the page opening, a file, a browser slot, a new game) holds the clock until its
-// demand has its first estimate (every period's free-flow result, over every city it needs; T-172:
-// T-149 waited for the last crowding round). Input is never blocked: the player can look around
-// and build while demand loads. Only a failed load puts up a screen (ui/LoadingScreen.tsx).
+// fresh demand solve has landed its final crowding round, over every city it needs (T-347; T-172
+// let go at the first estimate, T-149 first waited for the last round). Input is never blocked:
+// the player can look around and build while demand loads. Only a failed load puts up a screen
+// (ui/LoadingScreen.tsx).
 
 import { signal } from "@preact/signals";
 import { clock } from "./clock";
@@ -54,7 +55,7 @@ export function takeGameLoadHold(): boolean {
   return armed;
 }
 
-/** The held game's demand has its first estimate: the clock runs. */
+/** The held game's demand has its final result: the clock runs. */
 export function loadComplete() {
   clock?.setHeld(false);
   if (startup.peek() === "loading") startup.value = "ready";
