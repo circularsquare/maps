@@ -34,8 +34,14 @@ export const PURPOSES: { key: PurposeKey; name: string }[] = [
   { key: "social", name: "Social and leisure" },
   { key: "medical", name: "Medical" },
   { key: "airport", name: "Airport" },
-  { key: "longer", name: "Longer trips" },
+  { key: "longer", name: "Inter-region trips" },
 ];
+
+/** The purposes the map's filter offers (T-305, Anita): the inter-region trips are left out, so
+ * they show under all purposes only. */
+export const FILTER_PURPOSES = PURPOSES.filter((p) => p.key !== "longer");
+/** A filter value as the filter can hold it: the inter-region trips fall back to all purposes. */
+export const asFilter = (v: string): PurposeFilter => (FILTER_PURPOSES.some((p) => p.key === v) ? (v as PurposeKey) : "all");
 
 export const purposeName = (key: PurposeFilter): string => (key === "all" ? "All purposes" : PURPOSES.find((p) => p.key === key)?.name ?? key);
 

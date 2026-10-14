@@ -44,6 +44,8 @@ export interface LineMoney {
   /** US$ a day */
   faresPerDay: number;
   runningPerDay: number;
+  /** fare income per game hour in each period, US$M (the worker's fares taken today, T-293) */
+  perHour: number[];
 }
 
 export interface Income {
@@ -76,6 +78,7 @@ function incomeFor(dv: DemandView | null): Income {
     const tph = [l.tph.high, l.tph.medium, l.tph.low];
     const running = tph.reduce((a, t, k) => a + t * LEVEL_HOURS[k], 0) * 2 * st.km * st.cars * m.runCostCarKm * x;
     let fares = 0;
+    const linePer = PERIODS.map(() => 0);
     const dm = dv?.lines.get(l.id);
     const n = l.stops.length;
     if (dm && st.stopS[0]?.length === n && st.stopS[1]?.length === n) {
@@ -88,10 +91,11 @@ function incomeFor(dv: DemandView | null): Income {
       pkm.forEach((pk, p) => {
         const r = (base * rides * (total > 0 ? pk / total : 0) + perKm * pk) * x;
         perPeriod[p] += r;
+        linePer[p] += r;
         fares += r;
       });
     }
-    lines.set(l.id, { faresPerDay: fares, runningPerDay: running });
+    lines.set(l.id, { faresPerDay: fares, runningPerDay: running, perHour: linePer.map((v, p) => v / PERIOD_HOURS[p] / 1e6) });
     faresDay += fares;
     runningDay += running;
   }

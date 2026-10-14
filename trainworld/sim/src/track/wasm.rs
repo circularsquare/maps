@@ -147,6 +147,10 @@ impl TrackApi {
     pub fn line_account(&self, line: u32, day: u32) -> Vec<f64> {
         self.boarding.line_summary_day(&self.w.svc, line as usize, day as usize)
     }
+    /// Every line's day so far at game time `t` (T-293, `Boarding::today` has the layout).
+    pub fn today(&self, t: f64) -> Vec<f64> {
+        self.boarding.today(&self.w.svc, t)
+    }
     /// Forget the riders (a game was loaded: its demand comes later).
     pub fn clear_riders(&mut self) {
         self.boarding.clear();

@@ -39,7 +39,7 @@ export function StationRiders({ id, scope = id }: { id: string; scope?: string }
         </li>
       </ul>
       {purposeFilter.value !== "all" && purposeFilter.value !== "work" && (
-        <p class="muted small" data-tip={`The map shows ${purposeFilter.value === "longer" ? "longer trips" : `${purposeWords(purposeFilter.value)} trips`} only`}>Not drawn under this purpose filter.</p>
+        <p class="muted small" data-tip={`The map shows ${purposeWords(purposeFilter.value)} trips only`}>Not drawn under this purpose filter.</p>
       )}
       {v.places.length > 0 && (
         <>

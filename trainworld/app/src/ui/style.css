@@ -255,6 +255,11 @@ table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
 .seg-walk, .sw-walk { background: var(--mode-walk); }
 .seg-drive, .sw-drive { background: var(--mode-drive); }
 .sw { display: inline-block; width: 10px; height: 10px; flex: none; }
+/* T-305: cash updates to the dollar, so its box has a fixed width: room for "−$99,999,999,999", the
+   sign and the $ at fixed places, the digits right-aligned in tabular figures */
+.cash { flex: none; width: 16ch; display: flex; font-variant-numeric: tabular-nums; }
+.cash-sign, .cash-cur { flex: none; width: 1ch; }
+.cash-digits { flex: 1; min-width: 0; text-align: right; }
 .clock { display: flex; align-items: baseline; gap: 8px; font-variant-numeric: tabular-nums; }
 .clock .time { min-width: 46px; }
 .clock .demand { min-width: 108px; }
@@ -409,6 +414,8 @@ table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
 .h .mk { margin-right: 6px; align-self: center; }
 /* T-097: the tag by the pointer over a bubble, and the box of a long press and drag */
 .demand-tag { position: absolute; left: 0; top: 0; z-index: 4; pointer-events: none; white-space: nowrap !important; }
+/* T-305: the network tag wraps at 320 px (a complex's line list is long); a short tag is as wide as its text */
+.track-tag { width: max-content; max-width: 320px; white-space: normal !important; }
 .demand-box { position: absolute; z-index: 4; pointer-events: none; border: 1px solid var(--net-ink);
               background: color-mix(in srgb, var(--net-ink) 8%, transparent); }
 .intercity-labels { position: absolute; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; }

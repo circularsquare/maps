@@ -3,6 +3,30 @@
 Newest first. One entry per decision: what, and why. The spec states the result; this keeps the
 reasoning and what it replaced.
 
+## 2026-10-14
+
+- **Panels count today so far, not a whole-day forecast** (T-293, Anita: "lets not even show the
+  whole day forecast cuz it shows stuff in the future. lets only show so far today, and call it
+  'today'"). Replaces the line panel's Demand forecast, Trains today and Finances (riders, fares
+  and running cost a day; the account's whole day of trains), the station and complex boardings a
+  day, and the Lines and Stations tabs' figures. Counts come from the boarding account's
+  departures since midnight (`TrackApi.today`), so they are the trains and platforms the player
+  sees; fares from each line's hourly fare as the cash is paid. Lists sort by today's counts
+  re-sorted each game hour, except the complex list, kept in forecast order so rows do not jump
+  in the early morning. The purpose split shows shares only. The map's demand views and the
+  station's commuters and inter-region trips lists stay demand's whole-day picture (Anita: they
+  are demand's picture, not the panels' counts). The line panel's longest wait went: a so-far
+  version needs the wait per departure, which the account keeps only per hour.
+
+- **Inter-region trips are no purpose in the filter, and the name replaces "longer trips" on screen**
+  (T-305, Anita). They show under All purposes only; a filter value of "longer" falls back to all
+  (`asFilter`, `game/purposes.ts`). Code identifiers and docs/demand.md keep "longer trips". The
+  top bar's cash has a fixed width with the $ in a fixed place; a station's hover tag lists its
+  lines by their chips' symbols (each once across its complex) in place of "one dot for the
+  complex's N stations". A line the player gave no symbol is listed by its name without a leading mode or operator word
+  ("subway 6X" is "6X", "lirr Port Washington Branch" "Port Washington Branch"); its chip keeps
+  showing the name's first letter. Lines are de-duplicated on the text shown.
+
 ## 2026-10-13
 
 - **A bubble selection's everyday far end visits only the selection's samples and answers sparse**
@@ -2020,3 +2044,4 @@ reasoning and what it replaced.
 - 2026-10-13 (T-276, docs/zones.md): the world is zones. A non-city zone is a pack like a city's (same pipeline, cells, purposes and views, `kind: "zone"` in the registry), one county-sized statistical unit each (US county, Canadian census division, NUTS-3), modelled when it touches two city zones (Worcester, Windham, New London, Litchfield); a coarse second model was rejected because every view, query and loading path would need a twin. How far modelled space reaches around cities is Anita's (open). Mercer County joins New York's pack (Anita's lean): in the New York CSA, LODES 175k jobs both ways with New York's counties against 88k with Philadelphia's; market id 2 keeps its name with no sites.
 - 2026-10-13 (T-276): commutes are one doubly constrained gravity over every zone pack (`joint_gravity`), within-pack pairs with the pack's own curve and factor (so the runtime rebuilds them exactly), cross-pack pairs on the great circle cut at 150 km with a factor per region pair taken from the pack holding both regions, else the country's admin-1 default (US 0.23, as T-171 asked: not one global value), national borders 0.05 (US-Canada, judgement). Each pack's homes are scaled to its own jobs, not the union's: scaled to the union the solve forced net commuting through neighbours and barely converged. The cross-pack part (1.12M commuters, 5.9%) travels in the regional layer at commute timing, the local commute's mode choice and the work purpose's weekend factor; pairs under one commuter a day between 6 km zones are dropped and their commuters given to the home zone's kept pairs (172k pairs among the 13 zones, the market pack 8.2 to 13.9 MB).
 - 2026-10-13 (T-276): the market's longer trips: 0.107 weekday departures a resident (was 0.015), onset 25-50 km (was 40-80), `max(d, 25)^-2.37` (was `exp(-d/180)/max(d,40)^1.2`), fitted together on NHTS 2017 Northeast weekday ground trips of 50-1,000 km, with an outside world (Kontur people in no zone) in every normaliser so 17% of departures leave the map. The car pays 15 cents a road km and the local parking, both over two occupants. Local outings keep their 40-80 km taper (the overlap from 25 km is under 2% of social outings; airport trips keep their reach). The market's trips between adjacent packs now include short regional trips across their seam, so they far exceed NEC FUTURE's metro-to-metro figures (New York - Philadelphia 380k against 57k); long pairs are right (New York - Boston 53k against 50k).
+- 2026-10-14 (Anita): one save for the whole world, at least as the player feels it (T-304); London first; the sampler's extents as proposed (Greater London, Ile-de-France, Berlin and its ring, Shanghai's 16 districts, the Mumbai metropolitan region); non-city zones between cities only (T-300); line and station panels show only counts so far today, labelled "Today", never whole-day forecasts (T-293); T-122's frozen copies rejected (memory grows with open cities), instead compute what is on screen or likely to be looked at first (T-303); pack backups deleted.

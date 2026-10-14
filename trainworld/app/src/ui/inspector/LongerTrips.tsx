@@ -38,7 +38,7 @@ function Direction({ title, verb, flows, own, railOnly }: { title: string; verb:
 function Head({ tip }: { tip?: string }) {
   return (
     <div class="h">
-      <span data-tip={tip ?? "Visits, shopping and business, not commutes"}>Longer trips</span>
+      <span data-tip={tip ?? "Visits, shopping and business, not commutes"}>Inter-region trips</span>
       <span class="right muted small">a day</span>
     </div>
   );

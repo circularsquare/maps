@@ -59,7 +59,9 @@ let ledger: DayLedger[] = [];
 /** fare income per game hour in each period, US$M (from the main thread's demand results), per
  * kind of day (T-260, game/days.ts) */
 let incomePerHour: number[][] = DAY_KINDS.map(() => PERIODS.map(() => 0));
-let clk = { t: START_CLOCK, rate: 0, at: Date.now() };
+/** the same per line id (T-293), for each line's fares taken today */
+let lineIncome = new Map<number, number[][]>();
+let clk ={ t: START_CLOCK, rate: 0, at: Date.now() };
 /** T-284: money is settled up to this game second, not by whole hours, so the cash moves as fares
  * land. `partHour` is the hour being settled and `partFare`, `partCost` the shares of its fares and
  * running cost already in the cash (each reaches 1 as the hour ends, so an hour still pays its whole
@@ -355,6 +357,35 @@ function settle(): boolean {
   api.set_cash(cash);
   dirty = true;
   return ended;
+}
+
+/** T-293: every line's day so far (`TrackApi.today`, its layout), then each listed line's fares
+ * taken today, US$M, in the same order: its fare for each hour since midnight, the hour now by the
+ * share already paid, as `settle` pays the network's. */
+function today(): Float64Array {
+  const a = api!;
+  if (settle()) sendMoney();
+  const now = Math.min(gameNow(), settledT);
+  const v = a.today(now);
+  const count = v[0];
+  const h0 = Math.floor(now / 86400) * 24, hNow = Math.floor(now / 3600);
+  // the share of each hour since midnight paid so far
+  const shares: { t: number; w: number }[] = [];
+  for (let h = h0; h <= hNow; h++) shares.push({ t: h * 3600, w: h < hNow ? 1 : h === partHour ? partFare : 0 });
+  const fares: number[] = [];
+  let i = 1;
+  for (let k = 0; k < count; k++) {
+    const id = v[i], n = v[i + 1], spans = v[i + 6];
+    const per = lineIncome.get(id);
+    let f = 0;
+    if (per) for (const s of shares) f += ((per[dayKindAt(s.t)] ?? per[0])?.[periodAt(s.t)] ?? 0) * s.w;
+    fares.push(f);
+    i += 7 + 2 * spans + n;
+  }
+  const out = new Float64Array(v.length + fares.length);
+  out.set(v);
+  out.set(fares, v.length);
+  return out;
 }
 
 /** The share of hour `h`'s fares paid by `s` seconds into it (T-284). */
@@ -991,6 +1022,7 @@ function handle(msg: ToClock) {
     clk = { t: msg.t, rate: msg.rate, at: msg.at };
   } else if (msg.kind === "income") {
     incomePerHour = msg.perHour.map((p) => p.slice(0, PERIODS.length));
+    lineIncome = new Map((msg.lines ?? []).map((l) => [l.line, l.perHour]));
   } else if (msg.kind === "riders") {
     // a new demand result: the boarding account follows it (T-164), a few lines at a time, one
     // kind of day's riders a message (T-260)
@@ -1007,6 +1039,7 @@ function handle(msg: ToClock) {
       : q.what === "edgePis" ? api.edge_pis(q.edge)
       : q.what === "flyover" ? new Float64Array([api.flyover_cost(q.node)])
       : q.what === "lineAccount" ? api.line_account(q.line, q.day ?? 0)
+      : q.what === "today" ? today()
       : api.line_delays(q.line, q.level);
     send({ kind: "answer", seq: msg.seq, data }, [data.buffer]);
   } else if (msg.kind === "previewNode") {

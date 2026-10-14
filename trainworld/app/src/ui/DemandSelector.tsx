@@ -1,7 +1,7 @@
 import { activeCity, cityById } from "../game/cities";
 import { cityDemandViews } from "../game/demand";
 import { loadProgress } from "../game/loading";
-import { PURPOSES, purposeColour, type PurposeFilter } from "../game/purposes";
+import { asFilter, FILTER_PURPOSES, purposeColour } from "../game/purposes";
 import { useState } from "preact/hooks";
 import { display, purposeFilter } from "../game/ui";
 import { StationsFull } from "./StationsFull";
@@ -37,7 +37,7 @@ export function DemandSelector() {
 
 /** The purpose filter (T-158): every demand drawing on the map narrowed to one trip purpose. */
 function PurposeSelect() {
-  const purpose = purposeFilter.value;
+  const purpose = asFilter(purposeFilter.value);
   // T-169: Chrome counts a mouse-focused select as :focus-visible, so the ring would stay after a
   // pick. Like the bar's buttons, it shows for keyboard focus only (style.css).
   const [mouse, setMouse] = useState(false);
@@ -45,9 +45,9 @@ function PurposeSelect() {
     {purpose !== "all" && <i class="sw" style={{ background: purposeColour(purpose) }} />}
     <select aria-label="Trip purpose on the map" value={purpose}
       onPointerDown={() => setMouse(true)} onKeyDown={() => setMouse(false)} onBlur={() => setMouse(false)}
-      onChange={(e) => { purposeFilter.value = (e.currentTarget as HTMLSelectElement).value as PurposeFilter; }}>
+      onChange={(e) => { purposeFilter.value = asFilter((e.currentTarget as HTMLSelectElement).value); }}>
       <option value="all">All purposes</option>
-      {PURPOSES.map((p) => <option key={p.key} value={p.key}>{p.name}</option>)}
+      {FILTER_PURPOSES.map((p) => <option key={p.key} value={p.key}>{p.name}</option>)}
     </select>
   </label>;
 }

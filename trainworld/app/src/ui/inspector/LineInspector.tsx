@@ -1,19 +1,20 @@
 // The line inspector: name and colour, whether it runs (and what constructing the rest costs), the
-// schedule by demand level with headway and trains needed (SPEC 6.3), riders, fares and running
-// cost a day (T-028), the stops with each stop's time from the start of the line, and the round
+// schedule by demand level with headway and trains needed (SPEC 6.3), its day so far (riders,
+// fares, running cost and its trains, T-293), the stops with each stop's time from the start of
+// the line and boardings today, and the round
 // trip split into running, dwell, turning and waiting, with where it waits (T-031).
 
 import { useEffect, useRef, useState } from "preact/hooks";
 import { nearestStation } from "../../game/places";
 import { queryClock } from "../../workers/clockClient";
 import { clock } from "../../game/clock";
-import { lineDemand } from "../../game/demand";
 import { clockTime, count, duration, headway, money } from "../../game/format";
-import { accountVersion } from "../../game/boarding";
 import { LINE_PALETTE } from "../../game/palette";
-import { DEMAND_INDEX, DEMANDS, type Demand, type LineStats } from "../../game/types";
-import { ask, lineDraft, renameLinePrompt, selection, shownDay, tool } from "../../game/ui";
-import { income } from "../../game/money";
+import { PERIODS, periodAt } from "../../game/periods";
+import { today, useToday } from "../../game/today";
+import { DEMAND_INDEX, DEMANDS, type Demand, type LineInput, type LineStats } from "../../game/types";
+import { ask, lineDraft, renameLinePrompt, selection, tool } from "../../game/ui";
+import { moneyState } from "../../game/money";
 import { edit, linesAt, renameLine, say, setLineColour, stepTrainCount, trainsShown, world } from "../../game/world";
 import { live } from "../../map/live";
 import { Chip, Icon, Row, Stepper } from "../widgets";
@@ -76,44 +77,55 @@ function RoundTrip({ st, lev, stops, spots }: { st: LineStats; lev: number; stop
   );
 }
 
-/** A line's day in the per-train account (T-230, `TrackApi.line_account`). */
-interface AccountDay {
-  fullestPct: number;
-  fullTrains: number;
-  leftBehind: number;
-  longestWaitS: number;
-  /** when full trains leave the stop where they are fullest, s into the day */
-  spans: [number, number][];
-}
-
-function accountFrom(d: Float64Array): AccountDay | null {
-  if (d.length < 5) return null;
-  const spans: [number, number][] = [];
-  for (let k = 0; k < d[4]; k++) spans.push([d[5 + 2 * k], d[6 + 2 * k]]);
-  return { fullestPct: Math.round(100 * d[0]), fullTrains: d[1], leftBehind: d[2], longestWaitS: d[3], spans };
-}
-
 /** Times of day for the full-train spans: "07:40 to 08:50, 17:35 to 18:45". */
 function spansText(spans: [number, number][]): string {
   const t = (s: number) => clockTime(Math.round(s / 60) % 1440);
   return spans.map(([a, b]) => (b - a < 60 ? t(a) : `${t(a)} to ${t(b)}`)).join(", ");
 }
 
-/** The line's trains today as the per-train account counts them (T-230): how full the fullest
- * one gets, how many leave packed full and when, and who is left on the platform. */
-function TrainsToday({ day }: { day: AccountDay }) {
+/** US$ of running cost since midnight (T-293): each hour's trains at its demand level, the hour
+ * now in part, as the worker drains the cash (T-284). */
+function runningToday(l: LineInput, st: LineStats): number {
+  const m = moneyState.value;
+  if (!m) return 0;
+  const now = clock.now(), h0 = Math.floor(now / 86400) * 24, t = now / 3600;
+  const tph = { high: l.tph.high, medium: l.tph.medium, low: l.tph.low };
+  let cost = 0;
+  for (let h = h0; h < t; h++) {
+    const lev = PERIODS[periodAt(h * 3600)].demand;
+    cost += tph[lev] * 2 * st.km * st.cars * m.runCostCarKm * m.economy * Math.min(1, t - h);
+  }
+  return cost;
+}
+
+/** The line's day so far (T-293, game/today.ts): riders, fares and running cost, and its trains
+ * from the boarding account (T-230): how many left packed full and when, the fullest, and who
+ * was left on the platform. Its own component: it re-renders as the counts move. */
+function LineToday({ l, st }: { l: LineInput; st: LineStats }) {
+  const d = today.value.get(l.id);
+  if (!d) return null;
+  const fullest = Math.round(100 * d.fullest);
   return (
     <>
-      <div class="h"><span data-tip="Counted train by train from the forecast riders. Whoever does not fit on a full train waits for the next one.">Trains today</span></div>
+      <div class="h"><span data-tip="Since midnight, counted train by train. Whoever does not fit on a full train waits for the next one.">Today</span></div>
       <ul class="rows">
-        <Row label="Fullest train">{day.fullTrains > 0 ? "100%" : `${day.fullestPct}% full`}</Row>
-        {day.fullTrains > 0 && <Row label="Trains leaving full">{count(day.fullTrains)}</Row>}
-        {day.spans.length > 0 && <Row label="When">{spansText(day.spans)}</Row>}
-        <Row label="Riders left on the platform">{count(day.leftBehind)}</Row>
-        {day.leftBehind >= 1 && <Row label="Longest wait">{day.longestWaitS >= 86400 ? "More than a day" : duration(day.longestWaitS)}</Row>}
+        <Row label="Riders">{count(d.riders)}</Row>
+        <PurposeSplit scope={[{ line: l.id }]} unit="riders" />
+        <Row label="Fares">{money(d.fares)}</Row>
+        <Row label="Running trains">{money(-runningToday(l, st))}</Row>
+        <Row label="Fullest train">{d.fullTrains > 0 ? "100%" : `${fullest}% full`}</Row>
+        {d.fullTrains > 0 && <Row label="Trains leaving full">{count(d.fullTrains)}</Row>}
+        {d.spans.length > 0 && <Row label="When">{spansText(d.spans)}</Row>}
+        <Row label="Riders left on the platform">{count(d.leftBehind)}</Row>
       </ul>
     </>
   );
+}
+
+/** One stop's boardings today (T-293), in the stops list. */
+function StopToday({ line, i }: { line: string; i: number }) {
+  const d = today.value.get(line);
+  return <span class="n num" data-tip={d ? `${count(d.stops[i] ?? 0)} boardings today` : undefined}>{d ? count(d.stops[i] ?? 0) : ""}</span>;
 }
 
 export function LineInspector({ id }: { id: string }) {
@@ -147,23 +159,10 @@ export function LineInspector({ id }: { id: string }) {
       on = false;
     };
   }, [l?.num, w?.version, lev]);
-  // its day in the per-train account (T-230), asked again after every edit and each hour of it
-  const [day, setDay] = useState<AccountDay | null>(null);
-  const acct = accountVersion.value;
-  // the kind of day the demand views show (T-260)
-  const kind = shownDay.value;
-  useEffect(() => {
-    if (!l) return;
-    let on = true;
-    void queryClock({ what: "lineAccount", line: l.num, day: kind }).then((d) => on && setDay(d ? accountFrom(d) : null));
-    return () => {
-      on = false;
-    };
-  }, [l?.num, w?.version, acct, kind]);
+  // its day so far (T-293), kept fresh while the panel is open
+  useToday();
   if (!w || !l) return null;
   const st = w.lineStats[l.id];
-  const dm = lineDemand(l.id); // riders: T-026's demand workers; blank until the first solve lands
-  const lm = income.value.lines.get(l.id); // fares and running cost a day (T-028)
   const name = new Map(w.save.stations.map((s) => [s.id, s.name]));
   const times = st.fromStartByLevel[lev] ?? st.fromStartS;
   const editingStops = tool.value === "line" && lineDraft.value.line === l.num;
@@ -289,24 +288,10 @@ export function LineInspector({ id }: { id: string }) {
         ))}
       </table>
 
-      <div class="h"><span data-tip="Steady state for the current network and schedule">Demand forecast</span></div>
-      <ul class="rows">
-        <Row label="Riders a day">{dm ? count(dm.ridersPerDay) : ""}</Row>
-        <PurposeSplit scope={[{ line: l.id }]} unit="riders" />
-      </ul>
-      {st.status === "running" && day && <TrainsToday day={day} />}
-      {st.status === "running" && (
-        <>
-          <div class="h">Finances</div>
-          <ul class="rows">
-            <Row label="Fares">{dm && lm ? money(lm.faresPerDay) : ""}</Row>
-            <Row label="Running trains">{lm ? money(-lm.runningPerDay) : ""}</Row>
-          </ul>
-        </>
-      )}
+      {st.status === "running" && <LineToday l={l} st={st} />}
 
       <div class="h">
-        Stops<span class="right muted small">forecast boardings per day</span>
+        Stops<span class="right muted small">boardings today</span>
       </div>
       <div class="line-stop-actions">
         <button class={"btn text" + (editingStops ? " on" : "")} onClick={addStops}><Icon.pencil />{editingStops ? "Done editing stops" : "Edit stops"}</button>
@@ -328,7 +313,7 @@ export function LineInspector({ id }: { id: string }) {
               {others.map((o) => (
                 <Chip line={o} size="sm" />
               ))}
-              <span class="n num">{dm ? count(dm.boardings[i]) : ""}</span>
+              <StopToday line={l.id} i={i} />
               {editingStops && (
                 <button class="btn icon mini danger" data-tip="Take this stop out of the line" aria-label={`Remove stop ${name.get(s)}`} onClick={() => removeStop(i)}>
                   <Icon.cross />

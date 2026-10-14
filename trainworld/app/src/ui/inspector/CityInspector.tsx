@@ -27,14 +27,14 @@ export function CityInspector({ id }: { id: string }) {
   const all = places.reduce((s, [, p]) => s + p.all, 0), rail = places.reduce((s, [, p]) => s + p.rail, 0);
   const mix = modeMix(rail, 0, Math.max(0, all - rail));
   const filter = purposeFilter.value;
-  const drawn = filter === "all" || filter === "longer";
+  const drawn = filter === "all";
   return (
     <>
       <div class="title">
         <i class="mk" style={{ background: `rgba(${mix[0]}, ${mix[1]}, ${mix[2]}, ${BUBBLE_ALPHA})` }} />
         <span class="name">{city.name}</span>
       </div>
-      <div class="sub muted" data-tip="Visits, shopping and business, not commutes. Both directions are counted.">Longer trips to and from other places</div>
+      <div class="sub muted" data-tip="Visits, shopping and business, not commutes. Both directions are counted.">Inter-region trips to and from other places</div>
       {!market ? (
         <p class="muted">Calculating demand.</p>
       ) : (
@@ -60,7 +60,7 @@ export function CityInspector({ id }: { id: string }) {
               </li>
             ))}
           </ul>
-          {!places.length && <p class="muted small">No longer trips are modelled here yet.</p>}
+          {!places.length && <p class="muted small">No inter-region trips are modelled here yet.</p>}
           {!drawn && <p class="muted small">Not drawn under this purpose filter.</p>}
         </>
       )}

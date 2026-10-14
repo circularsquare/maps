@@ -17,6 +17,9 @@ bars). The network is not styled by us: lines, trains and stations take the line
   day and time, the demand level ("High demand"), pause and three speeds. At narrow map widths,
   the bar drops secondary labels and uses two rows below
   520 px (three below 300 px), with cash, time, train share and all speed controls available.
+  The cash has a fixed width (room for "-$99,999,999,999", T-305): the minus and the $ stay in
+  their places and the digits are right-aligned in tabular figures, so a figure that changes to
+  the dollar never moves the rest of the bar.
   Hovering the split or time retains the hidden mode shares, day and demand level (T-106).
   **The build tools
   (draw track, place station, delete, level, single track) live in the Build tab of the dock**,
@@ -46,14 +49,25 @@ bars). The network is not styled by us: lines, trains and stations take the line
   the station's platforms with whoever fitted, the instant the boarding account boards it (T-238:
   the panel sets a timer for the station's next departure from the hour's events), and grow with
   arrivals each game minute in between, as the platform fill on the map does.
-- **Trains today** (T-230, Anita: the line panel said "fullest train 91%" while a platform left
-  601 behind): the line inspector's train fullness comes from the boarding account, the same as
-  the platforms and the trains drawn: its fullest train ("100%" when a train leaves packed full,
-  T-239, else "N% full"), how many
-  trains leave full and when (spans of full trains under half an hour apart, at the stop where
-  each is fullest), the riders left on the platform a day and the longest wait ("More than a
-  day" when a queue never clears). Demand's busiest-hour average train is not shown
-  (docs/track-and-service.md 6.6 says why). `TrackApi.line_account`, asked again after each edit and each hour of the account.
+- **Today** (T-293, Anita: "lets not even show the whole day forecast cuz it shows stuff in the
+  future. lets only show so far today, and call it 'today'"): the line and station panels count
+  the day from midnight to now instead of forecasting a whole day. A line's "Today": riders
+  (boardings on its trains, by purpose shares), fares taken, running cost so far, its fullest
+  train so far ("100%" when one left packed full, T-239, else "N% full"), how many trains left
+  full and when (spans under half an hour apart, at the stop where each is fullest; T-230), and
+  riders left on the platform by full trains; each stop's boardings today in the stops list. A
+  station's lines with their boardings today and its "Today" boardings with purpose shares; a
+  complex's list has a "Today" column (T-250). The Lines tab shows riders today (and sorts by
+  them, "Riders today"), the Stations tab boardings today; both re-sort each game hour. Counted
+  by the clock worker from the boarding account's departures up to now (`TrackApi.today`: a
+  stop's boardings since midnight are the riders arrived by its last departure less those still
+  waiting, less the same at midnight), the account of today's kind of day; fares from each line's
+  hourly fare paid as the cash is (T-284). Asked four times a wall second while a panel shows
+  them and the clock runs (`game/today.ts`, about 5 ms a round trip on the real New York save),
+  and only the small components showing them re-render. Demand's busiest-hour average train is
+  not shown (docs/track-and-service.md 6.6 says why). The map's demand views (bubbles, traffic
+  widths, station circles, the complex map's widths, the commuters and longer trips lists) stay
+  demand's whole-day picture.
 - **Stations full** (T-231, Anita: "a global alert in the top left under the demand buttons that
   says like n stations full"; `ui/StationsFull.tsx`): under the demand buttons, a red-outlined
   button "5 stations full" counts the station complexes (one count a complex) where, now, a
@@ -89,7 +103,7 @@ bars). The network is not styled by us: lines, trains and stations take the line
   a train, commuter bubbles, a cell or zone. Nothing selected means it is blank (no text at all), not a default line. **Its top edge
   never moves when the tab changes**: the tab content area has a fixed height and scrolls.
 - **No City tab** (T-220, Anita: "redundant" now that the city bubbles exist; it was T-143's City
-  pane). What it offered went elsewhere: a city's longer trips by place are the city overview's
+  pane). What it offered went elsewhere: a city's inter-region trips by place are the city overview's
   bubbles and the city inspector (T-186, "Zoomed far out" below); City centre is the city
   inspector's Go to button and search's city results; Whole region is zooming out, where the
   overview draws every city; Explore a trip is a button at the bottom of Settings (key 4 as
@@ -105,15 +119,16 @@ bars). The network is not styled by us: lines, trains and stations take the line
   split included; on Today the views switch as the clock crosses into or out of a weekend. There
   is no other mark of the day shown: the clock says the day, and Weekdays or Weekends are a choice
   the player made. A switch of day shows at once: the bubbles' catch-up over a game day (T-156) is
-  for a new forecast, not another day. A line inspector's daily boardings count
+  for a new forecast, not another day. The panels' Today counts (T-293) follow the clock's own
+  day, not this setting. A line inspector's riders count
   transfers on every line actually boarded; the purpose split under them (Riders by purpose,
-  below) is where longer trips show; there are no separate Local trips and Longer trips rows
+  below) is where inter-region trips show; there are no separate Local trips and Inter-region trips rows
   (T-182).
 - **Confirmations** (T-113): a centered Are you sure? dialog with operation-specific text,
   cancel and action buttons. Cancel receives initial focus, Tab/Shift+Tab stay in the dialog,
   Escape cancels, focus returns when dismissed, and background map/tools are blocked.
-- **Line management** (T-109 to T-112): the Lines pane has New line and a Name / Forecast riders
-  sort above its list. Names sort naturally; forecast riders sort by riders a day, descending. Actions
+- **Line management** (T-109 to T-112): the Lines pane has New line and a Name / Riders today
+  sort above its list. Names sort naturally; Riders today sorts by riders so far today, descending, re-sorted each game hour (T-293). Actions
   belong above lists of arbitrary length. New line immediately selects an empty zero-train line
   in the inspector, enters Edit stops and focuses its unique `Line N` name with all text selected.
   The number follows persisted creation order, including copies, and skips names already used.
@@ -128,7 +143,7 @@ bars). The network is not styled by us: lines, trains and stations take the line
   test every insertion position and choose the shortest valid route while keeping existing stop
   order; Enter or Escape finishes. Incomplete lines remain planned and do not run trains.
   **Stop editing mode** (T-233): while a line's stops are edited (Edit stops, New line, Copy line)
-  the map hides the demand views (bubbles, a station's catchment, longer-trip bubbles, the trip
+  the map hides the demand views (bubbles, a station's catchment, inter-region trip bubbles, the trip
   route, capacity tags, traffic line widths and station circles), draws the other lines and their
   trains at 30% (the edited line's trains stay full) and
   puts a round toggle marker on every station, over everything (`map/stopMarkers.ts`). A stop is
@@ -148,9 +163,10 @@ bars). The network is not styled by us: lines, trains and stations take the line
   seconds. The markers take no pointer events, so the wheel and dragging work over them. The panel
   at the map's lower left shows "Editing stops on <line>: N stops" and a Done button; Enter and
   Escape also leave.
-  The line inspector has, in order, Schedule (trains for each demand level), Demand forecast
-  (riders a day, by purpose), Trains today and Finances for a running line, then the stops with
-  their times and the round trip split into running, dwell, turning and waiting.
+  The line inspector has, in order, Schedule (trains for each demand level), Today for a running
+  line (riders by purpose, fares, running cost and its trains so far, T-293), then the stops with
+  their times and boardings today, and the round trip split into running, dwell, turning and
+  waiting.
 - **Demand readiness** (T-143): Homes/Destinations fade (their text; the buttons stay opaque, as
   the bar has no background of its own and so no strip between Destinations and the purpose
   filter, T-192) while the focused city has no published
@@ -158,20 +174,20 @@ bars). The network is not styled by us: lines, trains and stations take the line
   None remains available; ordinary recomputes retain the prior result and usable controls.
 - **Purpose filter** (T-158): a dropdown at the end of the None/Homes/Destinations bar: All
   purposes (the default), Work, School and university, Shopping and errands, Social and leisure,
-  Medical, Airport (T-142), Longer trips. School and university are one shown purpose everywhere
+  Medical, Airport (T-142). Inter-region trips are not an option (T-305): they show under All
+  purposes only. School and university are one shown purpose everywhere
   (filter, pie, purpose split, timing charts, tooltips) in school's blue-green, though the model
   keeps them apart, as their homes, places and timing differ (T-192, `game/purposes.ts`
   `membersOf`); choosing it draws both. With one purpose chosen, a swatch in its purpose colour (the purpose pie's, T-143;
-  longer trips grey) sits before the name and the control takes the accent border, and every
+  its colour) sits before the name and the control takes the accent border, and every
   demand drawing on the map counts that purpose only: line widths in Line with traffic thickness,
   the station demand circles (complex view too), the Homes/Destinations bubbles and their hover
   counts ("12,400 school and university trips a day at homes here"), a bubble selection's own and far-end
   bubbles, and the track tag. Widths, circles and bubbles keep their usual scales, so a small
-  purpose (school and university, longer trips) draws thin and purposes stay comparable. Work is every city's commutes; the six everyday purposes (five as shown) are each
+  purpose (school and university) draws thin and purposes stay comparable. Work is every city's commutes; the six everyday purposes (five as shown) are each
   city's own everyday layer (every registered city since T-142);
-  Longer trips is the regional market, which has no local bubbles, so the city's bubbles are
-  empty under it. The regional market has no purposes of its own, so longer-trip bubbles show
-  only under All purposes or Longer trips, and a selected station's commuter catchment (commuters
+  inter-region trips are the regional market, which has no purposes of its own, so their bubbles
+  show only under All purposes (they still count in All), and a selected station's commuter catchment (commuters
   only) only under All purposes or Work; the station inspector then says the commuters are not
   drawn. Train fill and crowding always count everyone aboard: the filter changes what is drawn,
   never the solve. A bubble selection's inspector counts and far-end places follow the filter
@@ -180,13 +196,12 @@ bars). The network is not styled by us: lines, trains and stations take the line
   Not remembered: each page load starts on All purposes. Like the bar's buttons it shows the
   browser's focus ring for keyboard focus only, round the whole control, never after a click (T-169).
   While the viewed city's pack is still loading the hover text is "Loading Boston, 37%" (T-149).
-- **Riders by purpose** (T-165, `ui/inspector/PurposeSplit.tsx`): under a line's "Riders a day"
-  and a station's "Boardings a day" (a complex's in complex view) a thin stacked bar splits that
-  figure by purpose in the purpose colours, in the filter's order, with a small key of names and
-  rounded shares ("<1%" for a sliver) below it; hovering a segment or key entry gives the count
-  ("Work: 369k riders a day, 48%"). The figures are `DemandView.purposes` summed over the same
-  stops the inspector's total sums, so the parts add up to the number above them (within 1e-7 on
-  the real NYC save). Every purpose is listed, those with no riders here in muted text. Under
+- **Riders by purpose** (T-165, `ui/inspector/PurposeSplit.tsx`): under a line's riders today
+  and a station's boardings today (a complex's in complex view) a thin stacked bar splits riders
+  by purpose in the purpose colours, in the filter's order, with a small key of names and
+  rounded shares ("<1%" for a sliver) below it; hovering a segment or key entry gives the share
+  ("Work: 48% of riders"; no forecast count since T-293). The shares are `DemandView.purposes`
+  over the same stops the inspector counts. Every purpose is listed, those with no riders here in muted text. Under
   the purpose filter the split still shows every purpose; the one the map draws is ringed in
   the bar and bold in the key, so a thin line on the map can be read against its whole.
 - **Loading** (T-149, T-172, T-180): nothing is blocked while demand loads. The map, the
@@ -247,7 +262,7 @@ bars). The network is not styled by us: lines, trains and stations take the line
   **Panel and text size** (T-247, Anita: the fonts felt a bit big): 80% to 120% in 5% steps, 100%
   by default, remembered per browser; no reset button (Anita). It zooms the dock, top bar, map buttons, search, loading
   card, tool notes and dialogs, and sizes the text of the map's DOM tags (station names, capacity
-  and tool tags, longer-trip labels) and of the hover tag; the map itself is never scaled.
+  and tool tags, inter-region trip labels) and of the hover tag; the map itself is never scaled.
 - **Track display** (T-105): four mutually exclusive choices: Line (uniform width), Line with
   traffic thickness (default, riders in the current period), Height, and Max speed. Height and
   Max speed colour the track itself with uniform width; trains keep their line colours. Max speed
@@ -274,8 +289,7 @@ bars). The network is not styled by us: lines, trains and stations take the line
   "41,200 forecast riders a day in both directions", the line's daily forecast on that
   stop-to-stop stretch, every period summed (the width itself is the current period's hourly
   rate); counts round to the nearest 100 above 1,000. Under the purpose filter (above) the count
-  is that purpose's and a third line says so ("Shopping and errands trips only", "Longer trips
-  only"). Height: "Tunnel at level −2", "Ground
+  is that purpose's and a third line says so ("Shopping and errands trips only"). Height: "Tunnel at level −2", "Ground
   level" and so on, by the level the colour shows. Max speed: "Max speed 120 km/h". A planned
   line adds "Not running yet", a broken one "Not running"; bare track in the line views says
   "No line runs here"; before the first solve the traffic view says "Calculating demand". Once
@@ -283,25 +297,29 @@ bars). The network is not styled by us: lines, trains and stations take the line
   dragging, zooming or picking a tool hides it, and the next one needs another rest. It follows
   the pick order: bubbles, capacity tags and editing handles above the network leave it hidden,
   and junctions say nothing.
-- **Network tooltips** (T-194, `map/networkTips.ts`): the same tag, after the same rest, for what
+- **Network tooltips** (T-194, `map/networkTips.ts`): the same tag (it wraps at 320 px, as wide as
+  its text when shorter; T-305), after the same rest, for what
   is drawn on the network besides track. A train: "Line 1 train", its riders aboard ("340 riders
   aboard", the train inspector's count from the boarding account) and "352 seats, 1,280 packed
   full", the two marks of its fill gauge; a line the account has no riders for yet says "About 300
-  riders on a train in the busiest hour", which the gauge then shows. A station: its name, with
+  riders on a train in the busiest hour", which the gauge then shows. A station: its name, then its
+  lines by their symbol, or with none their name without a leading mode word ("subway 6X" is
+  "6X", "lirr Port Washington Branch" "Port Washington Branch"), each once across the complex's
+  stations (a station drawn as its own box lists its own lines only; T-305), with
   demand circles on its circle's "41,200 boardings and alightings a day" (in complex view "at the
   complex's 4 stations"), and where platform crowds are drawn a line per line and direction with
   anyone waiting ("120 waiting for subway 1 to Van Cortlandt Park-242 St", "after a full train left
   some behind" while that side is red) or "Nobody waiting on the platforms", then the fill drawn:
   "Platform 21% full on one side and 4% on the other (room for 1,250 a side)", or "Platform 21%
   full (room for 2,500)" where trains use one side only (T-219). Zoomed out, a complex's one dot
-  gives its busiest station's tag with "One dot for the complex's 10 stations" (T-217), and on a
+  gives its busiest station's tag with the complex's lines (T-217, T-305), and on a
   dot the crowd lines are its tint's numbers instead: "4,257 waiting at the complex", "Fullest
   platform 45% full" (or "full"), and "A full train left some behind" while it is red (T-228). The crowd
   is inside the platform, so the station's own hover covers it. A demand circle away from any station, under the network: its busiest station's
   name and the count. The purpose filter's third line applies to circle counts. The tag refreshes
   each game minute while shown, as trains move and crowds change.
 - **Every drawn quantity has a tooltip** (Anita, 2026-10-12; audit T-194, notes/T-194.md): the
-  bubbles, catchments, longer-trip and city bubbles (demandHover.ts), line widths and track
+  bubbles, catchments, inter-region trip and city bubbles (demandHover.ts), line widths and track
   colours (track tag), trains, stations, crowds and demand circles (network tag), capacity tags,
   and in the panels the purpose split, pie and timing bars, the trip explorer's bars, the complex
   map's lines and transfer curves, the junction map's routes and the train's load bar.
@@ -433,7 +451,7 @@ bars). The network is not styled by us: lines, trains and stations take the line
   net); the fare curve (each ride, each km, and what a 10 km ride costs); a day at this schedule
   (its heading's hover says fares and running costs count 100 times over, 6.4); cars owned (the
   car prices in its hover) and cars the lines need; the value of the track and stations built.
-  The line inspector shows a running line's fares and running cost a day.
+  The line inspector shows a running line's fares and running cost so far today (T-293).
 - **Exact metropolitan focus and boundaries** (T-131, T-139): each registered pack's dissolved
   Census county footprint has a thin solid outline at regional zooms, fading between zoom 8.5
   and 10.5. The focused city retains a thin solid boundary at closer zooms, with a darker outside
@@ -445,8 +463,8 @@ bars). The network is not styled by us: lines, trains and stations take the line
   train 16%, walking 4%); the player's job is to make the train share grow. Subway Builder does
   this well. It is the split of all modelled local trip legs (commutes plus everyday outings, school and university),
   shown at 60% opacity while a newer network is being solved. Its three colours are the mode
-  colours below, whatever the theme. Zoomed far out: one bubble per city for longer trips, sized
-  by trips, showing rail's share (T-186, under Longer trips below).
+  colours below, whatever the theme. Zoomed far out: one bubble per city for inter-region trips, sized
+  by trips, showing rail's share (T-186, under Inter-region trips below).
 - **Demand views** (Anita's pick, 2026-10-09; T-084, notes/T-084.md). Line widths, station
   circles and bubbles are steady-state forecasts from the latest demand solve. Train fill and
   platform crowds are the boarding account (T-164, docs/track-and-service.md 6.6): still made from
@@ -540,7 +558,7 @@ bars). The network is not styled by us: lines, trains and stations take the line
   in their worker when f has moved 0.01 and at most four times a second, only while catching up.
   Their hover tags read what the bubbles show. The inspectors, a bubble selection and its far
   end, a station's catchment and the top bar are the current forecast at once. The city bubbles
-  zoomed far out (below) catch up the same way; a selection's longer-trip bubbles do not.
+  zoomed far out (below) catch up the same way; a selection's inter-region trip bubbles do not.
 
   There is no corner summary box: the city mode split is in the top bar, and local splits are
   shown on hover and in the inspector (T-101, Anita).
@@ -640,15 +658,16 @@ bars). The network is not styled by us: lines, trains and stations take the line
   "one row per line, not one row per line-direction"): one row per line name, the save's
   branches and patterns of it summed ("subway 6" to Parkchester and to Pelham Bay Park is one
   row), with its chip, its name, the riders waiting for it now (red when one of its platforms is
-  full or its last train left riders behind) and its boardings a day there, busiest first; the
+  full or its last train left riders behind) and its boardings there today (T-293), busiest by
+  the forecast first, so the order holds through the day; the
   row's hover gives the line and station names and where its trains go ("subway 6 at Grand
   Central-42 St / To Chambers St/Brooklyn Bridge-City Hall, Parkchester, Pelham Bay Park"), each
   number its own hover. A click on a row opens that line's busiest station there on its own in
   station view (`openAlone`, `singleStation` in game/complexView.ts: its inspector, outline and
   catchment are the station's); its subtitle then ends with "Complex of 16 stations" as a link
   back, and any new selection, a click on the same station included, shows the complex again.
-  Then the complex map (below) and the complex's boardings a day with their purpose split.
-  Commuters and longer trips cover the whole complex, each of the demand model's stations counted
+  Then the complex map (below) and the complex's boardings today with their purpose split.
+  Commuters and inter-region trips cover the whole complex, each of the demand model's stations counted
   once, and the map draws the complex's catchment. "One circle per station complex" in the
   Stations tab (under Station demand circles, T-213; on by default since T-192) groups only the
   demand circles. In complex view every member is drawn selected (an outline and a glow, never larger),
@@ -707,7 +726,7 @@ bars). The network is not styled by us: lines, trains and stations take the line
   the complex is left out. A second note under the map says what the curves are. Why line to line
   rather than bundle to bundle: notes/T-147.md.
 
-  **Longer trips** (T-118; sim/src/demand/intercity.rs, SPEC 5.2) have a "Longer trips" section
+  **Inter-region trips** (T-118; sim/src/demand/intercity.rs, SPEC 5.2) have an "Inter-region trips" section
   in the inspector of a bubble selection and of a station, and their bubbles are always drawn
   (the settings pane's check to hide them is gone, Anita: "we always want that on", T-222), except
   while the map shows one local purpose. A bubble selection lists trips that leave from
@@ -716,10 +735,10 @@ bars). The network is not styled by us: lines, trains and stations take the line
   under 40 km. On the map the selection's own end is drawn at the far end: for Homes, where the
   trips go; for Destinations, where they come from. A station lists rail riders who start and end there,
   by place, and draws where the ones starting there go (T-120). At every zoom, a selection's or
-  station's longer-trip bubbles are limited to markets outside the focused metropolitan area
-  (the city overview below draws the focused city too, T-186); same-city longer-trip counts
+  station's inter-region trip bubbles are limited to markets outside the focused metropolitan area
+  (the city overview below draws the focused city too, T-186); same-city inter-region trip counts
   remain in the inspector (T-139). Above zoom 9.5, every positive far
-  6 km zone in those other markets is shown at its actual position. Longer trips have their own relative scale: the
+  6 km zone in those other markets is shown at its actual position. Inter-region trips have their own relative scale: the
   busiest disc covers 0.15 of a zone's area; every disc's area is proportional to total travellers.
   Smaller counts are no longer dropped. At zoom 9.5 and below, exact place totals become one
   labeled bubble per other city or town, anchored at the registered city centre (towns use their
@@ -739,7 +758,7 @@ bars). The network is not styled by us: lines, trains and stations take the line
   region about half a 1,400 px map wide with Philadelphia and Hartford on screen), with Homes or
   Destinations on and no bubble or station selection, each of the nine cities, the focused one
   included, is one bubble at its registered centre in place of the focused city's own bubbles:
-  area is its longer trips a day to and from every other place (both directions), colour its train share as above, labelled "Philadelphia · 187k trips/day". The busiest
+  area is its inter-region trips a day to and from every other place (both directions), colour its train share as above, labelled "Philadelphia · 187k trips/day". The busiest
   is 28 px in radius before the size slider, larger than a selection's 19 px city circles since
   nothing local is drawn beside it. Homes and Destinations look the same here: the market's
   corridors have no direction. A click on a city's bubble selects the city (a `city` selection):
@@ -748,16 +767,16 @@ bars). The network is not styled by us: lines, trains and stations take the line
   and by train, with a "Go to Philadelphia" button that moves the camera to the city's centre view
   (the search's) and clears the selection (T-220, the City tab's City centre button). A click on
   another city's bubble selects that one; Escape or an empty click clears it. A city selection keeps its bubbles at any zoom and hides the focused city's own.
-  Hover gives "187k longer trips a day between Philadelphia and other places" (or "between
+  Hover gives "187k inter-region trips a day between Philadelphia and other places" (or "between
   Philadelphia and New York") and the train count. Trenton (Mercer County) is a market place but
   not a registered city: it has no bubble, but its trips count in its neighbours' totals and are
-  listed in the inspector. The overview follows the purpose filter like the other longer-trip
+  listed in the inspector. The overview follows the purpose filter like the other inter-region trip
   bubbles: with a local purpose chosen, the focused city's own bubbles stay at every zoom.
 
   Bubbles and selections cover the focused city's modelled local trips; station catchments still
   count its commuters explicitly. Changing
   city clears old cell-indexed selections and cached layers. Network widths, station totals and
-  train fill include all registered cities and longer trips.
+  train fill include all registered cities and inter-region trips.
   Data is asked for, not pushed (4.4): each view asks again when the demand result changes and
   keeps showing its last answer meanwhile. Bubbles are rebuilt when a result is shown: after an
   edit only the solve's final round is (T-232, "Updating demand" under Loading above), so once; at startup, a
@@ -829,8 +848,8 @@ bars). The network is not styled by us: lines, trains and stations take the line
   for 5 Av/42 St-Bryant Pk linked with Grand Central.) A dot stands for its group's busiest station (boardings plus
   alightings a day; its first station before demand is
   known): a click, the delete tool and the line tool pick that station, and its tag is that
-  station's, saying how many of the complex's stations the dot holds ("One dot for 16 of the
-  complex's 23 stations"). It is drawn selected when any of its stations is, and in complex view
+  station's, listing the lines of the whole complex (T-305; it once said how many of the complex's
+  stations the dot held). It is drawn selected when any of its stations is, and in complex view
   every dot and connector of the complex is. With platform crowds on, a dot's
   white is tinted by its platforms' crowd (T-228, Anita: "highlight the circle slightly"): towards
   the crowd grey by its fullest platform side's share of the room there (at most 45% of the way,

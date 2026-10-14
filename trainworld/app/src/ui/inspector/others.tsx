@@ -21,6 +21,7 @@ import { live } from "../../map/live";
 import { removeThing } from "../../game/remove";
 import { tripAt } from "../../map/network";
 import { nextLeavingAt, platformsAt, tripLoad } from "../../game/boarding";
+import { today, useToday, type LineToday } from "../../game/today";
 import { Chip, Row, Segmented, Stepper } from "../widgets";
 import { StationRiders } from "./StationRiders";
 import { StationLongerTrips } from "./LongerTrips";
@@ -53,12 +54,15 @@ interface ComplexRow {
   built: boolean;
   waiting: number | null;
   full: boolean;
+  /** the forecast's boardings a day: only the rows' order and the station a click opens */
   boardings: number;
+  /** boardings today so far (T-293), null before the first count */
+  today: number | null;
   tip: string;
   waitTip: string;
 }
 
-function complexRows(members: string[], lines: LineInput[], byId: Map<string, StationInput>, now: ComplexNow | null): ComplexRow[] {
+function complexRows(members: string[], lines: LineInput[], byId: Map<string, StationInput>, now: ComplexNow | null, today: Map<string, LineToday>): ComplexRow[] {
   const inside = new Set(members);
   const groups = new Map<string, LineInput[]>();
   for (const l of lines) groups.set(l.name, [...(groups.get(l.name) ?? []), l]);
@@ -66,9 +70,15 @@ function complexRows(members: string[], lines: LineInput[], byId: Map<string, St
   for (const [name, ls] of groups) {
     const ids = new Set(ls.map((l) => l.id));
     const per = new Map<string, number>();
-    for (const l of ls) l.stops.forEach((st, k) => {
-      if (inside.has(st)) per.set(st, (per.get(st) ?? 0) + (lineDemand(l.id)?.boardings[k] ?? 0));
-    });
+    let todayB: number | null = null;
+    for (const l of ls) {
+      const t = today.get(l.id);
+      l.stops.forEach((st, k) => {
+        if (!inside.has(st)) return;
+        per.set(st, (per.get(st) ?? 0) + (lineDemand(l.id)?.boardings[k] ?? 0));
+        if (t) todayB = (todayB ?? 0) + (t.stops[k] ?? 0);
+      });
+    }
     const stations = [...per.keys()];
     const boardings = [...per.values()].reduce((a, b) => a + b, 0);
     const open = stations.reduce((a, b) => ((per.get(b) ?? 0) > (per.get(a) ?? 0) ? b : a), stations[0]);
@@ -81,7 +91,7 @@ function complexRows(members: string[], lines: LineInput[], byId: Map<string, St
     const names = [...new Set(stations.map((m) => byId.get(m)?.name ?? ""))];
     const ends = [...new Set(ls.flatMap((l) => [l.stops[0], l.stops[l.stops.length - 1]]).filter((s) => !inside.has(s)).map((s) => byId.get(s)?.name ?? ""))];
     rows.push({
-      name, line: ls[0], stations, open, built: stations.some((m) => byId.get(m)?.built), waiting, full, boardings,
+      name, line: ls[0], stations, open, built: stations.some((m) => byId.get(m)?.built), waiting, full, boardings, today: todayB,
       tip: `${name} at ${names.join(" and ")}` + (ends.length ? `\nTo ${ends.join(", ")}` : ""),
       waitTip: waiting === null ? "Nobody waiting: no train calls here this hour"
         : `${count(waiting)} riders waiting for ${name} now` + (full ? "\nA platform is full, or the last train left riders behind" : ""),
@@ -91,7 +101,7 @@ function complexRows(members: string[], lines: LineInput[], byId: Map<string, St
   for (const m of members) {
     if (lines.some((l) => l.stops.includes(m))) continue;
     const s = byId.get(m);
-    if (s) rows.push({ name: s.name, line: null, stations: [m], open: m, built: s.built, waiting: null, full: false, boardings: 0, tip: `${s.name}\nNo line stops here`, waitTip: "" });
+    if (s) rows.push({ name: s.name, line: null, stations: [m], open: m, built: s.built, waiting: null, full: false, boardings: 0, today: null, tip: `${s.name}\nNo line stops here`, waitTip: "" });
   }
   return rows;
 }
@@ -128,46 +138,57 @@ function ComplexSummary({ id, members }: { id: string; members: string[] }) {
   const w = world.value;
   if (!w) return null;
   const inside = new Set(members);
-  const at = (l: LineInput) => {
-    const b = lineDemand(l.id)?.boardings;
-    let sum = 0;
-    l.stops.forEach((st, k) => { if (inside.has(st)) sum += b?.[k] ?? 0; });
-    return sum;
-  };
   const lines = w.save.lines.filter((l) => l.stops.some((st) => inside.has(st)));
-  const known = lines.some((l) => lineDemand(l.id));
-  const total = lines.reduce((a, l) => a + at(l), 0);
   const byId = new Map(w.save.stations.map((s) => [s.id, s]));
   const now = useComplexNow(members);
-  const rows = complexRows(members, lines, byId, now);
   return (
     <>
-      {/* the complex's lines first, one row per line name with its branches and directions summed
-          (T-246, T-250, Anita: "show on top the component stations ... one row per line"); a click
-          opens the line's busiest station there on its own */}
-      <ul class="rows pick complex-stations">
-        <li class="cols muted small">
-          <span class="grow">Lines</span>
-          <span class="val">Waiting</span>
-          <span class="val">A day</span>
-        </li>
-        {rows.map((r) => (
-          <li class={r.stations.includes(id) ? "on" : ""} onClick={() => openStation(r.open)} data-tip={r.tip}>
-            {r.line && <Chip line={r.line} size="sm" />}
-            <span class={"grow" + (r.built ? "" : " muted")}>{r.name}</span>
-            <span class={"val" + (r.full ? " bad" : "")} data-tip={r.waitTip}>{r.waiting !== null ? count(r.waiting) : ""}</span>
-            <span class="val" data-tip={known && r.line ? `${count(r.boardings)} boardings a day` : "Boardings are known once demand is worked out"}>{known && r.line ? count(r.boardings) : ""}</span>
-          </li>
-        ))}
-      </ul>
+      <ComplexLines id={id} members={members} lines={lines} byId={byId} now={now} />
       <ComplexMap id={id} members={members} stations={byId} lines={lines} now={now} onOpen={openStation} />
+      {lines.length > 0 && <BoardingsToday lines={lines} at={(l) => l.stops.flatMap((st, k) => (inside.has(st) ? [k] : []))} />}
+    </>
+  );
+}
+
+/** The complex's lines (T-246, T-250, Anita: "show on top the component stations ... one row per
+ * line"), one row per line name with its branches and directions summed: riders waiting now and
+ * boardings today (T-293). A click opens the line's busiest station there on its own. Its own
+ * component, re-rendered as today's counts move. */
+function ComplexLines({ id, members, lines, byId, now }: { id: string; members: string[]; lines: LineInput[]; byId: Map<string, StationInput>; now: ComplexNow | null }) {
+  const rows = complexRows(members, lines, byId, now, today.value);
+  return (
+    <ul class="rows pick complex-stations">
+      <li class="cols muted small">
+        <span class="grow">Lines</span>
+        <span class="val">Waiting</span>
+        <span class="val">Today</span>
+      </li>
+      {rows.map((r) => (
+        <li class={r.stations.includes(id) ? "on" : ""} onClick={() => openStation(r.open)} data-tip={r.tip}>
+          {r.line && <Chip line={r.line} size="sm" />}
+          <span class={"grow" + (r.built ? "" : " muted")}>{r.name}</span>
+          <span class={"val" + (r.full ? " bad" : "")} data-tip={r.waitTip}>{r.waiting !== null ? count(r.waiting) : ""}</span>
+          <span class="val" data-tip={r.today !== null ? `${count(r.today)} boardings today` : undefined}>{r.today !== null ? count(r.today) : ""}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** A station's or complex's boardings today (T-293) under a "Today" heading, with the purpose
+ * shares; `at`: the stops of each line counted. Its own component, re-rendered as counts move. */
+function BoardingsToday({ lines, at }: { lines: LineInput[]; at: (l: LineInput) => number[] }) {
+  const t = today.value;
+  const known = lines.some((l) => t.has(l.id));
+  const total = lines.reduce((a, l) => a + at(l).reduce((b, k) => b + (t.get(l.id)?.stops[k] ?? 0), 0), 0);
+  return (
+    <>
+      <div class="h"><span data-tip="Since midnight">Today</span></div>
       <ul class="rows pick">
-        {lines.length > 0 && (
-          <Row label="Boardings a day" bold>
-            {known ? count(total) : ""}
-          </Row>
-        )}
-        <PurposeSplit scope={lines.map((l) => ({ line: l.id, at: l.stops.flatMap((st, k) => (inside.has(st) ? [k] : [])) }))} unit="boardings" />
+        <Row label="Boardings" bold>
+          {known ? count(total) : ""}
+        </Row>
+        <PurposeSplit scope={lines.map((l) => ({ line: l.id, at: at(l) }))} unit="boardings" />
       </ul>
     </>
   );
@@ -176,6 +197,7 @@ function ComplexSummary({ id, members }: { id: string; members: string[] }) {
 export function StationInspector({ id }: { id: string }) {
   const w = world.value;
   const [editing, setEditing] = useState(false);
+  useToday(); // T-293: boardings today, kept fresh while the panel is open
   const s = w?.save.stations.find((s) => s.id === id);
   if (!w || !s) return null;
   // a station complex (T-146): the switch shows only when there is more than this station
@@ -183,8 +205,6 @@ export function StationInspector({ id }: { id: string }) {
   const asComplex = members.length > 1 && inComplexView(id);
   const scope = asComplex ? members.join(",") : id;
   const lines = linesAt(id);
-  const here = lines.map((l) => [l, lineDemand(l.id)?.boardings[l.stops.indexOf(id)] ?? 0] as const);
-  const total = here.reduce((a, [, b]) => a + b, 0);
   const props = (platform: number, name = s.name) => void edit({ op: "stationProps", node: s.num, platform, name });
   const commit = (e: Event) => {
     const n = (e.target as HTMLInputElement).value.trim();
@@ -234,7 +254,7 @@ export function StationInspector({ id }: { id: string }) {
       {asComplex ? (
         <ComplexSummary id={id} members={members} />
       ) : (
-        <StationDetails s={s} lines={lines} here={here} total={total} props={props} construct={construct} remove={remove} />
+        <StationDetails s={s} lines={lines} props={props} construct={construct} remove={remove} />
       )}
       <StationLinks id={id} members={asComplex ? members : [id]} />
       <StationRiders id={id} scope={scope} />
@@ -296,10 +316,13 @@ function StationLinks({ id, members }: { id: string; members: string[] }) {
 }
 
 /** The station view's own rows and actions. */
-function StationDetails({ s, lines, here, total, props, construct, remove }: {
-  s: StationInput; lines: LineInput[]; here: (readonly [LineInput, number])[]; total: number;
+function StationDetails({ s, lines, props, construct, remove }: {
+  s: StationInput; lines: LineInput[];
   props: (platform: number) => void; construct: () => void; remove: () => void;
 }) {
+  // T-293: each line's boardings here today (re-rendered as they move: a small part of the panel)
+  const t = today.value;
+  const here = lines.map((l) => [l, t.get(l.id)?.stops[l.stops.indexOf(s.id)] ?? 0] as const);
   return (
     <>
       <Built built={s.built} what="The station" />
@@ -309,22 +332,17 @@ function StationDetails({ s, lines, here, total, props, construct, remove }: {
           <Stepper value={s.length + " m"} wide label="platform length" onStep={(d) => props(Math.max(60, Math.min(400, s.length + d * 20)))} />
         </li>
       </ul>
-      {lines.length > 0 && <div class="h">Lines</div>}
+      {lines.length > 0 && <div class="h">Lines<span class="right muted small">boardings today</span></div>}
       <ul class="rows pick">
         {here.map(([l, b]) => (
           <li onClick={() => (selection.value = { kind: "line", line: l.id })}>
             <Chip line={l} />
             <span class="grow">{l.name}</span>
-            <span class="val">{lineDemand(l.id) ? count(b) : ""}</span>
+            <span class="val">{t.has(l.id) ? count(b) : ""}</span>
           </li>
         ))}
-        {lines.length > 0 && (
-          <Row label="Boardings a day" bold>
-            {lines.some((l) => lineDemand(l.id)) ? count(total) : ""}
-          </Row>
-        )}
-        <PurposeSplit scope={lines.map((l) => ({ line: l.id, at: [l.stops.indexOf(s.id)] }))} unit="boardings" />
       </ul>
+      {lines.length > 0 && <BoardingsToday lines={lines} at={(l) => [l.stops.indexOf(s.id)]} />}
       <Waiting node={s.num} lines={lines} />
       <div class="pane-foot">
         {!s.built ? (

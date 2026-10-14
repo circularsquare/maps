@@ -494,6 +494,100 @@ impl Boarding {
         out
     }
 
+    /// Today so far (T-293): every line's departures from midnight to game time `t`, read from the
+    /// account of `t`'s kind of day (the account's day is periodic, so the hours after midnight
+    /// are its own). One flat array: the line count, then per line with an account its id, stop
+    /// count `n`, riders boarded, trains that left packed full, riders left behind by a full
+    /// train, the fullest train's riders as a share of crush, the number of spans of full trains,
+    /// per span its first and last time (s into the day), then boardings at each stop in the
+    /// line's own stop order (both directions).
+    ///
+    /// A stop's boardings since midnight telescope: the riders who have arrived by its last
+    /// departure, less those still waiting after it, less the same at its last departure before
+    /// midnight. Riders left behind are counted per departure as in `simulate` (who arrived since
+    /// the train before and is still waiting).
+    pub fn today(&self, svc: &Service, t: f64) -> Vec<f64> {
+        let day = self.kind_at(t);
+        let tod = t.rem_euclid(DAY);
+        let mut out = vec![0.0];
+        let mut count = 0;
+        for (l, acc) in self.accounts[day].iter().enumerate() {
+            let Some(acc) = acc else { continue };
+            let Some(ls) = svc.lines.get(l) else { continue };
+            let cap = CRUSH_PER_CAR * ls.cars.max(1) as f64;
+            let n = acc.runs[0].n;
+            let mut stops = vec![0.0f64; n];
+            let (mut boarded, mut left, mut fullest) = (0.0f64, 0.0f64, 0.0f64);
+            let mut full: Vec<f64> = vec![];
+            for (r, ra) in acc.runs.iter().enumerate() {
+                let m = ra.deps.len();
+                if m == 0 || ra.n != n {
+                    continue;
+                }
+                for k in 0..n {
+                    let arr = &ra.arrivals[k];
+                    let ts = &ra.order_t[k * m..(k + 1) * m];
+                    let ord = &ra.order[k * m..(k + 1) * m];
+                    let q = |j: usize| ra.q_after[ord[j] as usize * n + k] as f64;
+                    let done = ts.partition_point(|&s| s <= tod);
+                    if done == 0 {
+                        continue;
+                    }
+                    let (t_before, q_before) = (ts[m - 1] - DAY, q(m - 1));
+                    let last = done - 1;
+                    let b = (arr.cum(ts[last]) - q(last)) - (arr.cum(t_before) - q_before);
+                    let stop = if r == 0 { k } else { n - 1 - k };
+                    stops[stop] += b.max(0.0);
+                    boarded += b.max(0.0);
+                    let mut prev = t_before;
+                    for j in 0..done {
+                        let a = (arr.cum(ts[j]) - arr.cum(prev)).max(0.0);
+                        left += a.min(q(j));
+                        prev = ts[j];
+                    }
+                }
+                // trains: the fullest stretch each has reached by now
+                for j in 0..m {
+                    let (mut best, mut at_t) = (0.0f64, f64::NAN);
+                    for k in 0..n {
+                        let off = ra.stop_dep[ra.levels[j] as usize].get(k).copied().unwrap_or(0.0);
+                        let s = (ra.deps[j] + off).rem_euclid(DAY);
+                        // reached by now today (a trip from before midnight counts at the stops
+                        // it reaches after it)
+                        if s > tod {
+                            continue;
+                        }
+                        let v = ra.load[j * n + k] as f64;
+                        if v > best {
+                            best = v;
+                            at_t = s;
+                        }
+                    }
+                    fullest = fullest.max(best / cap);
+                    if best >= cap - 0.5 && !at_t.is_nan() {
+                        full.push(at_t);
+                    }
+                }
+            }
+            full.sort_by(f64::total_cmp);
+            let mut spans: Vec<(f64, f64)> = vec![];
+            for &s in &full {
+                match spans.last_mut() {
+                    Some(p) if s - p.1 <= 1800.0 => p.1 = s,
+                    _ => spans.push((s, s)),
+                }
+            }
+            out.extend([l as f64, n as f64, boarded, full.len() as f64, left, fullest, spans.len() as f64]);
+            for (a, b) in spans {
+                out.extend([a, b]);
+            }
+            out.extend(stops);
+            count += 1;
+        }
+        out[0] = count as f64;
+        out
+    }
+
     /// Riders aboard a trip leaving each stop, in its own stop order (checks and inspectors).
     pub fn trip_account(&self, line: u32, run: usize, dep: f64) -> Option<Vec<f32>> {
         let ra = &self.accounts[self.kind_at(dep)].get(line as usize)?.as_ref()?.runs[run];
@@ -779,6 +873,33 @@ mod tests {
         assert!((ra.load[i * 3] - 50.0).abs() < 1.0, "{}", ra.load[i * 3]);
         assert_eq!(ra.load[i * 3 + 1], ra.load[i * 3]);
         assert_eq!(ra.load[i * 3 + 2], 0.0);
+    }
+
+    #[test]
+    fn today_counts_up_to_the_days_riders() {
+        // T-293: boardings since midnight grow through the day to the day's riders
+        let (w, l) = setup(10.0);
+        let mut b = Boarding::default();
+        b.set_riders(&riders(l, [500.0, 200.0, 500.0, 200.0, 50.0]));
+        b.ensure(&w.net, &w.svc);
+        let day = 500.0 * 8.0 + 200.0 * 10.0 + 50.0 * 6.0;
+        let at = |h: f64| {
+            let v = b.today(&w.svc, 2.0 * DAY + h * 3600.0);
+            assert_eq!(v[0], 1.0);
+            assert_eq!(v[1], l as f64);
+            v[3]
+        };
+        let (night, noon, end) = (at(0.0), at(12.0), at(23.999));
+        // at midnight: at most the trains leaving at 00:00 (the night's 50 an hour at each end)
+        assert!(night < 150.0, "{night}");
+        assert!(noon > 0.3 * 2.0 * day && noon < 0.7 * 2.0 * day, "{noon}");
+        // both directions, everyone who arrived by the last train has boarded
+        assert!((end - 2.0 * day).abs() < 0.02 * day, "{end} {}", 2.0 * day);
+        // stops: A and C board, B nobody
+        let v = b.today(&w.svc, 2.0 * DAY + 23.999 * 3600.0);
+        let spans = v[7] as usize;
+        let stops = &v[8 + 2 * spans..8 + 2 * spans + 3];
+        assert!(stops[1] < 1e-6 && (stops[0] - day).abs() < 0.02 * day, "{stops:?}");
     }
 
     #[test]

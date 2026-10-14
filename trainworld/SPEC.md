@@ -230,7 +230,7 @@ numbers mode choice used (T-195, docs/demand.md 4.4).
 **Weekdays and weekends** (T-260): game day 1 is a Monday and days 6 and 7 of each week are the
 weekend. The solve is a weekday's; a weekend is worked out from it per purpose and period, not
 solved again (NHTS 2017 weekend rates: work 0.30 of a weekday, shopping 1.22, social 1.60, school
-0.08, university 0.22, medical 0.24, longer trips 1.58; airports 1.01 from TSA; weekend timing
+0.08, university 0.22, medical 0.24, inter-region trips 1.58; airports 1.01 from TSA; weekend timing
 shifted by NHTS's period ratios), keeping the weekday's route and mode choices. The same trains run
 every day. **Open** (T-261): whether weekends get their own trains per hour, which would need a
 weekend solve. docs/demand.md 4.2.
@@ -240,7 +240,7 @@ Read the full numbered section in [demand.md](docs/demand.md).
 ## 5. Demand: the regional layer
 
 The regional layer carries what crosses zones or goes far (T-117, T-276; design and reasons in
-[docs/zones.md](docs/zones.md)): **longer trips** (visits, business, leisure, 25 km and more) within
+[docs/zones.md](docs/zones.md)): **inter-region trips** (visits, business, leisure, 25 km and more) within
 and between every zone, and **commutes between zones**. Market ids are stable and new zones
 append; Trenton's id (2) stays with no sites since Mercer joined New York (T-276).
 
@@ -248,7 +248,7 @@ append; Trenton's id (2) stays with no sites since Mercer joined New York (T-276
 
 Generate **total** all-mode trips, then let the player's network earn rail's share.
 The pack has 258,013 population/job-weighted endpoint sites at 600 m grain from every zone pack,
-grouped into 3,260 zones of 6 km. **Longer trips** (T-276): each resident makes 0.107 departures a
+grouped into 3,260 zones of 6 km. **Inter-region trips** (T-276): each resident makes 0.107 departures a
 weekday, shared by attraction `population + 2 * jobs` x an onset from 0 at 25 km to 1 at 50 km x
 `max(distance, 25 km)^-2.37` among every zone **and an outside world** (Kontur population living in
 no zone, at the zones' attraction per person), so 0.76M of the 5.13M departures leave the map
@@ -271,13 +271,13 @@ trips row by row on demand (T-174). Opening the market costs reading its sites a
 not its pairs. The block names its formula and is ignored if stale (derived at opening instead,
 same result): `pipeline/intercity.py --derive` refreshes it in seconds. docs/demand.md 4.4.
 
-**Longer trips** compete with driving through a logit at 0.025 per perceived minute. The car takes
+**Inter-region trips** compete with driving through a logit at 0.025 per perceived minute. The car takes
 15 minutes plus 1.25 times the great-circle distance at 85 km/h, plus (T-276) 15 cents a road km
 and the local layer's parking at the destination, both split over two occupants, at 3 perceived
 minutes a dollar; no tolls (T-270). **Commutes between zones** choose as local commutes do: 0.05
 per perceived minute, the drive weighted 1.33 plus the work end's parking. Fares, service,
 transfers and shared crowding affect rail; the commutes' loads are the work purpose's (T-158).
-Longer trips' period shares are 20/35/25/15/5 percent. Air, coach, induced travel, park-and-ride
+Inter-region trips' period shares are 20/35/25/15/5 percent. Air, coach, induced travel, park-and-ride
 and routed drives between zones (T-275 routes drives inside packs) remain future work.
 
 ### 5.2 Where a long-distance trip starts and ends
@@ -288,14 +288,14 @@ weighted station options per zone end feed the common strategy graph. Local feed
 transfers and the intercity service receive actual loads and boardings. No express-only route
 or station-city affiliation bypasses the player's local network.
 
-**Seeing longer trips (T-118).** The commuter views cannot show them: a Philadelphia bubble's
-longer trips end in New York, off the screen. So a selected bubble set and a selected station
+**Seeing inter-region trips (T-118).** The commuter views cannot show them: a Philadelphia bubble's
+inter-region trips end in New York, off the screen. So a selected bubble set and a selected station
 each list them by all represented places and
 draw them by far zone up close, aggregating to labeled other-city totals at regional zooms
-(T-135, T-136). Same-city longer-trip bubbles are omitted at every zoom (T-139); their counts
-remain in the inspector. Bubble area represents total travellers within the longer-trip layer;
+(T-135, T-136). Same-city inter-region trip bubbles are omitted at every zoom (T-139); their counts
+remain in the inspector. Bubble area represents total travellers within the inter-region trip layer;
 colour represents the train share, red at zero and blue at 100%.
-Longer trips use their own visible size scale, blue for train and red for everything else;
+Inter-region trips use their own visible size scale, blue for train and red for everything else;
 section 8 has the display. A selection of local cells is mapped
 to the market through its 600 m squares: the pipeline built the sites from the same cells, so each
 selected cell falls in one site's square, a square counts the selected share of its commuters
@@ -499,17 +499,22 @@ on screen show their bubbles beside its own; a click on one focuses that zone an
 bubble (T-276, [zones.md](docs/zones.md) 6). Riders, loads and fares follow a
 new result at once, while the bubbles move to it over a game day (T-156). After an edit every
 figure keeps the last finished forecast until the new solve's final round lands (T-232). Zoomed
-out to 8.5 and below each city is one longer-trips bubble (T-186); longer-trip bubbles are always
+out to 8.5 and below each city is one inter-region trips bubble (T-186); inter-region trip bubbles are always
 drawn, except while the map shows one local purpose (T-222). Station demand circles are an option
 in the Stations tab (T-213). A "5 stations full" button under the selector counts the complexes
 with full platforms or riders left behind by the last train (T-231, T-284).
+
+**Today, not a forecast** (T-293, Anita): the line and station panels and the Lines and Stations
+tabs count the day so far from midnight (riders, boardings, fares, running cost, trains that left
+full, riders left behind), from the boarding account's departures up to now, moving as trains
+run; they show no whole-day forecast. The map's demand views stay demand's whole-day picture.
 
 **Selecting and inspecting.** The inspector shows whatever is selected: a line, a station
 complex, track, a junction, a train, bubbles, a city or a trip. Stations whose platforms come
 within 50 m form a station complex, and the player can link any two stations up to 1 km apart
 into one (T-146, T-197); riders change between a complex's stations on foot (T-161). A click on a
 station selects its whole complex (T-249): its lines, one row each with riders waiting now and
-boardings a day (T-250), then a small map of its platforms with their crowds, the trains standing
+boardings today (T-250), then a small map of its platforms with their crowds, the trains standing
 or pulling in and the busiest changes between lines (T-147, T-176, T-246). Search (a magnifying
 glass, `/`, Ctrl+K or Ctrl+F) finds stations, lines, cities and the places on each city's OSM
 place list, and moves the camera there at once (T-148, T-177, T-211); no addresses. The trip

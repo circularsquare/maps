@@ -210,11 +210,11 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
   const render = () => {
     marks = null;
     labels.replaceChildren();
-    // the regional market has no purposes: its bubbles show for all purposes or longer trips
-    // only (T-158); the inspector keeps the numbers
+    // the regional market has no purposes: its bubbles show for all purposes only (T-158, T-305);
+    // the inspector keeps the numbers
     const filter = purposeFilter.peek();
     // (always drawn otherwise: the setting to hide them went with T-222)
-    const shown = filter === "all" || filter === "longer";
+    const shown = filter === "all";
     const mode = cityMode();
     // a selected city always takes the place of the city's own bubbles; zoomed far out only
     // when the overview has something to draw
@@ -254,7 +254,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       const r = unscaledRadius * INTERCITY_RADIUS_SCALE;
       discs.set([x, y, r, c[0] / 255, c[1] / 255, c[2] / 255, BUBBLE_ALPHA, 1], i * DISC);
       const place = z.name || "here";
-      tags.push(railOnly ? [`${count(z.rail)} riders a day on longer trips ${verb} ${place}`] : [`${count(z.all)} longer trips a day ${verb} ${place}`, `${count(z.rail)} by train`]);
+      tags.push(railOnly ? [`${count(z.rail)} riders a day on inter-region trips ${verb} ${place}`] : [`${count(z.all)} inter-region trips a day ${verb} ${place}`, `${count(z.rail)} by train`]);
       if (regional) label(`${z.name} · ${count(z.all)} ${railOnly ? "riders" : "trips"}/day`);
     });
     marks = { discs, tags };

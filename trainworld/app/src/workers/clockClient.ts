@@ -77,7 +77,7 @@ function toWorld(s: ClockState, city: { population: number; jobs: number }): Wor
       id: String(n.id), num: n.id, name: n.name, lng: n.lng, lat: n.lat, x: n.x, y: n.y, level: n.level as any, length: n.platform, built: n.stationBuilt, heading: n.heading,
     }));
   const lines: LineInput[] = s.lines.map((l) => ({
-    id: String(l.id), num: l.id, letter: l.letter || letterOf(l.name), name: l.name, colour: l.colour, stops: l.stops.map(String),
+    id: String(l.id), num: l.id, letter: l.letter || letterOf(l.name), symbol: l.letter, name: l.name, colour: l.colour, stops: l.stops.map(String),
     tph: { high: l.tph[0], medium: l.tph[1], low: l.tph[2] },
   }));
   const lineStats: Record<string, LineStats> = {};
@@ -195,11 +195,15 @@ export class ClockClient {
     // One table per kind of day (T-260): the worker settles each hour by its own day's.
     let lastIncome = "";
     effect(() => {
-      const per = incomeByDay.value.map((i) => i.perHour);
-      const key = JSON.stringify(per);
+      const days = incomeByDay.value;
+      const per = days.map((i) => i.perHour);
+      // T-293: each line's too, for its fares taken today
+      const ids = new Set(days.flatMap((i) => [...i.lines.keys()]));
+      const lines = [...ids].map((id) => ({ line: Number(id), perHour: days.map((i) => i.lines.get(id)?.perHour ?? (per[0] ?? []).map(() => 0)) }));
+      const key = JSON.stringify([per, lines]);
       if (key !== lastIncome) {
         lastIncome = key;
-        this.post({ kind: "income", perHour: per });
+        this.post({ kind: "income", perHour: per, lines });
       }
     });
     // Demand's riders for the boarding account (T-164): each new result, every kind of day's

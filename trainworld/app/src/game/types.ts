@@ -52,6 +52,8 @@ export interface LineInput {
   num: number;
   /** one or two characters on the line's chip */
   letter: string;
+  /** the symbol the player set, "" while none: the chip then shows the name's first letter (T-305) */
+  symbol?: string;
   name: string;
   /** "#rrggbb", from the saturated line palette or player-set */
   colour: string;

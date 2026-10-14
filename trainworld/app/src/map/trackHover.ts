@@ -85,7 +85,7 @@ function lineTip(n: NetworkBuffers, w: WorldView | null, dv: DemandView | null, 
   if (day === null) return [name, "Calculating demand"];
   const count = day < 0.5 ? "No forecast riders on this stretch" : `${riders(day)} forecast riders a day in both directions`;
   // the purpose filter (T-158) says what it counted
-  return purpose === "all" ? [name, count] : [name, count, purpose === "longer" ? "Longer trips only" : `${purposeName(purpose)} trips only`];
+  return purpose === "all" ? [name, count] : [name, count, `${purposeName(purpose)} trips only`];
 }
 
 /** The tag's lines at a point (CSS px in the map), or null: what the current track display draws

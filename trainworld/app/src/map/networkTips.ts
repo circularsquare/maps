@@ -18,7 +18,7 @@ import { complexes, complexOf } from "../game/complexView";
 import { demandView, stationRidersFor } from "../game/demand";
 import { PERIODS, periodAt } from "../game/periods";
 import { purposeName } from "../game/purposes";
-import type { WorldView } from "../game/types";
+import type { LineInput, WorldView } from "../game/types";
 import { display, purposeFilter } from "../game/ui";
 import { stationScale } from "./demandLayers";
 import { tripAt } from "./network";
@@ -32,12 +32,20 @@ const n0 = (v: number) => Math.round(v).toLocaleString("en-US");
 /** A forecast count, rounded as the track tag rounds one (trackHover.ts `riders`). */
 const forecast = (n: number) => (n >= 1000 ? Math.round(n / 100) * 100 : n >= 100 ? Math.round(n / 10) * 10 : Math.round(n)).toLocaleString("en-US");
 
+/** A line in a station's tag (T-305): the symbol the player set, else its name without a leading
+ * mode or operator word ("subway 6X" is "6X", "lirr Port Washington Branch" "Port Washington
+ * Branch", "Line 3" "3"). */
+function lineShortName(l: LineInput): string {
+  if (l.symbol) return l.symbol;
+  return l.name.replace(/^(?:\p{Ll}+|Line)\s+(?=\S)/u, "");
+}
+
 /** "12,400 boardings and alightings a day", with what the purpose filter counts. */
 function circleLines(riders: number, members: number): string[] {
   const p = purposeFilter.peek();
   const where = members > 1 ? `, at the complex's ${members} stations` : "";
   const out = [`${forecast(riders)} boardings and alightings a day${where}`];
-  if (p !== "all") out.push(p === "longer" ? "Longer trips only" : `${purposeName(p)} trips only`);
+  if (p !== "all") out.push(`${purposeName(p)} trips only`);
   return out;
 }
 
@@ -134,11 +142,11 @@ export function stationTip(ov: Overlay, w: WorldView, i: number): string[] | nul
   const s = w.save.stations.find((x) => x.id === id);
   if (!s) return null;
   const out = [s.name];
-  // zoomed out a complex is one dot, standing for its busiest station (T-217)
-  const dot = ov.renderer.dotStations(i);
-  // a complex the player linked is a dot per group of platforms, joined by thin lines (T-225)
-  const all = ov.renderer.stationStyle.boxes ? 1 : complexOf(id).length;
-  if (dot > 1 || all > dot) out.push(all > dot ? (dot > 1 ? `One dot for ${dot} of the complex's ${all} stations` : `One of the complex's ${all} stations`) : `One dot for the complex's ${dot} stations`);
+  // T-305: the lines serving the station, or the complex's stations together (zoomed out a complex
+  // is one dot, T-217), by their symbols or short names (`lineShortName`), each once
+  const members = new Set(ov.renderer.stationStyle.boxes ? [id] : complexOf(id));
+  const names = [...new Set(w.save.lines.filter((l) => l.stops.some((st) => members.has(st))).map(lineShortName))];
+  if (names.length) out.push(names.join(", "));
   if (!s.built) out.push("Blueprint");
   else if (display.peek().stationRiders) {
     const c = circleOf(w, id);

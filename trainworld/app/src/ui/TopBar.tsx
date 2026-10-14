@@ -44,7 +44,14 @@ function Cash() {
   const live = liveMoney.value, m = moneyState.value;
   const today = live.today;
   const tip = today ? `Today: fares ${money(today.fares * 1e6)}, running trains ${money(-today.running * 1e6)}` : undefined;
-  return <div class="cash num" data-tip={m ? tip : undefined}>{m ? moneyExact(live.cash * 1e6) : ""}</div>;
+  // T-305: a box of fixed width, the minus then the $ at fixed places and the digits right-aligned
+  const exact = m ? moneyExact(live.cash * 1e6) : "";
+  const neg = exact.startsWith("−");
+  return <div class="cash num" data-tip={m ? tip : undefined}>
+    <span class="cash-sign">{neg ? "−" : ""}</span>
+    <span class="cash-cur">{m ? "$" : ""}</span>
+    <span class="cash-digits">{exact.replace(/^−?\$/, "")}</span>
+  </div>;
 }
 
 function Speed() {

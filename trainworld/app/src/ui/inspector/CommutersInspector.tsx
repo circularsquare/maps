@@ -51,10 +51,10 @@ export function CommutersInspector() {
         {swatch(...p.totals)}
         <span class="name">{home ? "Trips from homes here" : "Trips to destinations here"}</span>
       </div>
-      <div class="sub muted" data-tip="Outward and return legs included. Longer trips are counted separately below.">{p.sel.areas === 1 ? "One area" : `${p.sel.areas} areas`}</div>
+      <div class="sub muted" data-tip="Outward and return legs included. Inter-region trips are counted separately below.">{p.sel.areas === 1 ? "One area" : `${p.sel.areas} areas`}</div>
       <Modes totals={p.totals} />
       {p.purpose && p.purpose !== "all" && <p class="muted small">
-        {p.purpose === "longer" ? "Longer trips only: no local trips counted." : `${purposeWords(p.purpose)[0].toUpperCase() + purposeWords(p.purpose).slice(1)} trips only.`}
+        {`${purposeWords(p.purpose)[0].toUpperCase() + purposeWords(p.purpose).slice(1)} trips only.`}
       </p>}
       <PurposeBreakdown purposes={p.purposes} />
       <div class="h">

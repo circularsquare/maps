@@ -14,6 +14,11 @@ batches 10-19 were Anita's feedback from playing. Batch history is in ARCHIVE.md
 ## In progress (batch 22, 2026-10-13)
 
 
+## In progress (batch 23, 2026-10-14)
+
+- T-303 [P2] Demand loading and responsiveness, stage 1: measure and propose (Anita: "demand loading performance is definitely becoming an issue"; bubbles slow in the first minute while demand re-solves; T-122's frozen copies rejected as too much memory). Measure startup, panning into zones, memory per worker, and clicks during the first minute; propose what to compute first (what is on screen, what the player is likely to look at) and what to leave until asked; folds in T-301 and T-302. A proposal for Anita, no build. Taking, 2026-10-14 (batch 23).
+- T-304 [P2] One world, stage 1: the design (Anita: "one save for whole world. at least thats exactly how it should feel to the player"). Track model frames and the renderer origin so London, Shanghai and New York share one save (T-126, T-127). A design for Anita, no build. Stage 1 done, design in docs/world.md waiting for Anita.
+
 ## Demand and data
 n- T-283 [P3] Toronto's Yonge test line lost all its airport riders once routes were added (567 to none, found in T-277): check whether routed walks or drives cut Pearson's terminals off from stations, or whether airport trips now drive. May affect US airports too. Open; notes/T-277.md.
 
@@ -23,7 +28,6 @@ n- T-283 [P3] Toronto's Yonge test line lost all its airport riders once routes 
 - T-297 [P3] The joint commute gravity takes 12 minutes (500 Furness iterations on 23k zones, stopping at 2e-4 on one Boston zone): a faster convergence (over-relaxation, or a tolerance per zone size) would make `pipeline/intercity.py` quicker to rerun. Open; notes/T-276.md.
 - T-298 [P3] Inspectors and longer-trip bubbles show the commutes between zones merged into the longer trips (a selection's far end, the city inspector's places, the far-zoomed bubbles, labelled "longer trips" in places): split them or relabel, as Anita prefers once she has seen them. Also the far-zoomed bubbles: scaled to the busiest zone on screen, so with New York in view (zoom 7) the small zones are dots and Litchfield and Windham lose their labels; a floor or a separate scale for non-city zones. Open; notes/T-276.md.
 - T-299 [P3] The market's trips between neighbouring packs (New York - Philadelphia 380k a day, Washington - Baltimore 299k) include short trips across their seam since the 25 km onset; NEC FUTURE's metro-to-metro figures are 57k and 6k. Compare the market's trips over 80 km and centre to centre with NEC FUTURE before tuning anything. Open; notes/T-276.md.
-- T-300 [P3] How far modelled space reaches (docs/zones.md 2, open, Anita): non-city zones between two city zones only (built: Worcester, Windham, New London, Litchfield), or also a ring of counties within about 40 km of a city (about 30 counties, 9M people in the Northeast). Waiting for Anita.
 - T-280 [P3] Ferries (found in T-275): with walks blocked by water, Staten Island's commute rail share fell from 2.9% to 1.9% (ACS 3.7%), since its real link to Manhattan is the Staten Island Ferry; NY Waterway, Boston's harbour ferries and others likewise. A ferry as an access leg or its own line kind. Parked (Anita 2026-10-13: nothing to do about ferries for now); notes/T-275.md.
 - T-142 [P3] Continue non-work demand. Done 2026-10-12: all nine cities have everyday, school (NCES), university (IPEDS), airport (FAA, DB1B, OurAirports, OSM terminals) and medical (OSM) purposes. Remaining: private schools (NCES PSS, New York too) and other countries' adapters (airports already take a Wikidata fallback for passenger counts). P2 to P3 in T-259: the nine cities are done and other countries wait for city additions (paused). Open; notes/T-142.md.
 - T-269 [P3] realnet's operator count is wrong (found in T-171): `realnet.py compare` counts first boardings at stations labelled with an operator, so PATH's Manhattan stations (merged with subway complexes) count as subway, riders reaching an operator by another train are missed, and commuter rail's returns from Penn and Grand Central are hidden. Count trips using each operator (boardings on its lines less changes between two of its lines) from route-node boardings and transfers, as notes/t171_net.rs.txt and t171_operators.py do. Open; notes/T-171.md 2.5.
@@ -58,7 +62,6 @@ n- T-283 [P3] Toronto's Yonge test line lost all its airport riders once routes 
 
 ## Interface
 
-- T-293 [P2] "So far today" counts, a design for Anita's review (from T-284's audit): the line and station panels show whole-day forecasts (riders a day, boardings a day, fares a day, "Trains today" from the account, the station view's left behind this hour), which a live simulation would not change; what would move is a running count of today so far (riders carried, fares taken, trains that left full, riders left behind), reset at midnight, from the boarding account's departures up to now. Which panels get counts beside or instead of forecasts is Anita's call. Waiting for Anita; notes/T-284.md.
 - T-294 [P3] Fares across a period's hours (from T-284): each hour of a period is paid the period's fares spread evenly, while the boarding account's riders peak mid-period, so 07:00 earns as much as 08:00. Weight the period's hours by the account's boardings each hour, keeping the period's total (the worker already reads each hour's slice, `shapeHour`). Small; open; notes/T-284.md.
 
 - T-166 [P3] A station's riders by purpose on the map: under the purpose filter a selected station's catchment shows commuters only (hidden for other purposes). Everyday and school catchments need per-purpose station queries from `EverydayApi`. Open; notes/T-158.md.
@@ -73,8 +76,8 @@ n- T-283 [P3] Toronto's Yonge test line lost all its airport riders once routes 
 
 World sampler (T-286, research/world-sampler.md). All waiting for Anita's review of research/world-sampler.md; the shared stages first: T-126 and T-127 (a frame and renderer origin per world), T-041 (OSM water), then T-287.
 
-- T-287 [P2] Tier 0 adapter `pipeline/tier0.py`: population grid (GHSL or WorldPop) scaled to admin totals, GHSL non-residential plus OSM places plus population as the jobs proxy (folds in T-012), OSM everyday places, schools and campuses sized by area (Wikidata students), medical, parks, OurAirports-Wikidata airports, a fallback curve fitted to a trip-length figure; checked by rebuilding an existing pack (New Haven or Toronto) from tier 0 against LODES or StatCan. Waiting for Anita's review of research/world-sampler.md.
-- T-288 [P2] London (first city of the sampler): tier 0 plus England's upgrades (Census 2021 OA population, BRES jobs by LSOA, curve fitted on 2011 MSOA flows, GIAS schools, HESA), and tier 0 measured against them; Europe world, `market: -1`. Waiting for Anita's review of research/world-sampler.md.
+- T-287 [P2] Tier 0 adapter `pipeline/tier0.py`: population grid (GHSL or WorldPop) scaled to admin totals, GHSL non-residential plus OSM places plus population as the jobs proxy (folds in T-012), OSM everyday places, schools and campuses sized by area (Wikidata students), medical, parks, OurAirports-Wikidata airports, a fallback curve fitted to a trip-length figure; checked by rebuilding an existing pack (New Haven or Toronto) from tier 0 against LODES or StatCan. Waiting for Anita's review of research/world-sampler.md. Plan approved 2026-10-14 (Anita). Stage 1: the adapter, checked on an existing pack. Taking, 2026-10-14 (batch 23).
+- T-288 [P2] London (first city of the sampler): tier 0 plus England's upgrades (Census 2021 OA population, BRES jobs by LSOA, curve fitted on 2011 MSOA flows, GIAS schools, HESA), and tier 0 measured against them; Europe world, `market: -1`. Waiting for Anita's review of research/world-sampler.md. Plan approved 2026-10-14 (Anita); after T-287 and T-304. Open.
 - T-289 [P2] Paris: tier 0 plus France's upgrades (Filosofi 200 m population, census jobs by commune, curve fitted on INSEE commune flows 2022, ministry school files); Europe world. Waiting for Anita's review of research/world-sampler.md.
 - T-290 [P2] Berlin: tier 0 plus Zensus 2022 100 m population and BA jobs per municipality (Berlin itself split by tier 0), curve from London's or Paris's checked on Pendleratlas flows; Europe world. Waiting for Anita's review of research/world-sampler.md.
 - T-291 [P2] Shanghai: tier 0 scaled to the 16 districts' 2020 census totals, curve length fitted to the 10.2 km mean commute, CAAC airport figures; its own world near 31 N; CJK basemap labels checked. Waiting for Anita's review of research/world-sampler.md.
@@ -125,13 +128,6 @@ World sampler (T-286, research/world-sampler.md). All waiting for Anita's review
   notes/T-090.md.
 - T-044 [P3] Adaptive cell grain, only if performance needs it: keep res 9 (or finer) in dense
   centres, merge sparse suburban cells (SPEC 3).
-- T-122 [P2] Station catchments, a selection's far end and longer-trip queries wait for the solve
-  to finish (a worker answers only when all its periods are at the round asked): a bubble click
-  during a re-solve shows its far end 7.5-11 s later on the real New York save (T-285). Keep a
-  frozen copy of what they read for the shown final result (local `sz`, `svc`, `SubOut`; the
-  everyday layer's `pairs`, `edge_pair`, `probability`; the market's station rows) and answer
-  from it during the next solve; about 40-60 MB a worker. Design for Anita's review in
-  notes/T-285.md ("Left"), with cheaper partial steps. notes/T-119.md.
 - T-124 [P3] Reuse the periods an edit did not touch: a change to one demand level's trains leaves
   the other levels' periods identical (their inputs are the same), so the workers could keep
   their results. Saves CPU, not time, while each period has a worker; helps the 1-3 worker pools

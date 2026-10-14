@@ -88,7 +88,9 @@ export type ToClock =
   | { kind: "clock"; t: number; rate: number; at: number }
   /** fare income in force, US$M per game hour for each of the five periods (from demand riders,
    * game/money.ts), one table per kind of day (T-260, game/days.ts `DayKind` order) */
-  | { kind: "income"; perHour: number[][] }
+  /** fare income per game hour in each period, per kind of day (US$M); `lines` the same per line
+   * (T-293: each line's fares taken today) */
+  | { kind: "income"; perHour: number[][]; lines?: { line: number; perHour: number[][] }[] }
   /** demand's riders for the boarding account (T-164): `TrackApi.set_riders`'s packing, built by
    * game/boarding.ts `packRiders` from the demand result, for one kind of day (T-260) */
   | { kind: "riders"; packed: Float32Array; day: number }
@@ -107,7 +109,7 @@ export type ToClock =
   | {
       kind: "query";
       seq: number;
-      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "lineAccount"; line: number; day: number };
+      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "lineAccount"; line: number; day: number } | { what: "today" };
     };
 
 /** Money as the worker keeps it (T-028), US$M unless said. */

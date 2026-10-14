@@ -12,6 +12,8 @@ import { DEMAND_INDEX, LEVELS, type Level } from "../game/types";
 import { buildLevel, buildPlatform, display, lineSort, selection, setDisplay, trackCount, tool, type Tool } from "../game/ui";
 import { linesAt, setFares, world } from "../game/world";
 import { income, liveMoney, moneyState } from "../game/money";
+import { accountVersion } from "../game/boarding";
+import { stationsToday, today, todayLoaded, useToday } from "../game/today";
 import type { DayLedger } from "../workers/protocol";
 import { live } from "../map/live";
 import { Check, Chip, Icon, Row, Segmented, Stepper } from "./widgets";
@@ -94,13 +96,36 @@ export function BuildTab() {
   );
 }
 
+/** T-293: one line's riders today, its own component so only it re-renders as the count moves. */
+function RidersToday({ line }: { line: string }) {
+  const d = today.value.get(line);
+  return <span class="val" data-tip={d ? `${count(d.riders)} riders today` : undefined}>{d ? count(d.riders) : ""}</span>;
+}
+
+function TotalToday() {
+  const t = today.value;
+  if (!t.size) return null;
+  let n = 0;
+  for (const d of t.values()) n += d.riders;
+  return <span class="muted">{count(n)} riders today</span>;
+}
+
+/** T-293: one station's boardings today. */
+function StationToday({ id }: { id: string }) {
+  const n = stationsToday.value.get(id) ?? null;
+  return <span class="val w-num" data-tip={n !== null ? `${count(n)} boardings today` : undefined}>{n !== null ? count(n) : ""}</span>;
+}
+
 export function LinesTab() {
   const [creating, setCreating] = useState(false);
+  useToday(); // T-293: riders today, kept fresh while the tab is open
+  void accountVersion.value; // re-sorted each game hour; the counts themselves move on their own
+  void todayLoaded.value;
   const w = world.value;
   if (!w) return null;
   const sel = selection.value;
   const lev = DEMAND_INDEX[clock.demand.value];
-  const total = w.save.lines.reduce((s, l) => s + (lineDemand(l.id)?.ridersPerDay ?? 0), 0);
+  const t = today.peek();
   const newLine = async () => {
     if (creating) return;
     setCreating(true);
@@ -108,14 +133,14 @@ export function LinesTab() {
   };
   const natural = (a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" });
   const lines = [...w.save.lines].sort((a, b) =>
-    (lineSort.value === "passengers" ? (lineDemand(b.id)?.ridersPerDay ?? 0) - (lineDemand(a.id)?.ridersPerDay ?? 0) : 0)
+    (lineSort.value === "passengers" ? (t.get(b.id)?.riders ?? 0) - (t.get(a.id)?.riders ?? 0) : 0)
     || natural(a.name, b.name) || a.num - b.num);
   return (
     <>
       <div class="line-list-actions">
         <button class="btn text" onClick={newLine} disabled={creating}><Icon.plus />New line</button>
         <label>Sort <select aria-label="Sort lines" value={lineSort.value} onChange={e => lineSort.value = e.currentTarget.value as "name" | "passengers"}>
-          <option value="name">Name</option><option value="passengers">Forecast riders</option>
+          <option value="name">Name</option><option value="passengers">Riders today</option>
         </select></label>
       </div>
       {w.save.lines.length === 0 && <p class="muted">No lines yet.</p>}
@@ -123,7 +148,6 @@ export function LinesTab() {
         {lines.map((l) => {
           const st = w.lineStats[l.id];
           const on = (sel?.kind === "line" || sel?.kind === "train") && sel.line === l.id;
-          const dm = lineDemand(l.id);
           return (
             <li class={on ? "on" : ""} onClick={() => (selection.value = { kind: "line", line: l.id })}>
               <Chip line={l} />
@@ -132,7 +156,7 @@ export function LinesTab() {
                 <span class="val muted">{STATUS[st.status]}</span>
               ) : (
                 <>
-                  <span class="val" data-tip={dm ? `${count(dm.ridersPerDay)} forecast riders a day` : undefined}>{dm ? count(dm.ridersPerDay) : ""}</span>
+                  <RidersToday line={l.id} />
                   <span class="val muted w-trains">{st.trainsNeeded[lev]} {st.trainsNeeded[lev] === 1 ? "train" : "trains"}</span>
                 </>
               )}
@@ -141,17 +165,21 @@ export function LinesTab() {
         })}
       </ul>
       <div class="pane-foot">
-        <span class="muted">{demandView.value ? count(total) + " forecast riders a day" : ""}</span>
+        <TotalToday />
       </div>
     </>
   );
 }
 
 export function StationsTab() {
+  useToday(); // T-293
+  void accountVersion.value; // re-sorted each game hour, as the lines
+  void todayLoaded.value;
   const w = world.value;
   if (!w) return null;
   const sel = selection.value;
-  const st = [...w.save.stations].sort((a, b) => (stationDemand(b.id)?.boardings ?? 0) - (stationDemand(a.id)?.boardings ?? 0) || a.name.localeCompare(b.name));
+  const by = stationsToday.peek();
+  const st = [...w.save.stations].sort((a, b) => (by.get(b.id) ?? 0) - (by.get(a.id) ?? 0) || a.name.localeCompare(b.name));
   const d = display.value;
   return (
     <>
@@ -172,13 +200,13 @@ export function StationsTab() {
             {linesAt(s.id).map((l) => (
               <Chip line={l} size="sm" />
             ))}
-            <span class="val w-num">{s.built ? count(stationDemand(s.id)?.boardings ?? 0) : "Plan"}</span>
+            {s.built ? <StationToday id={s.id} /> : <span class="val w-num">Plan</span>}
           </li>
         ))}
       </ul>
       {st.length > 0 && (
         <div class="pane-foot">
-          <span class="muted">{st.length} stations, boardings a day</span>
+          <span class="muted">{st.length} stations, boardings today</span>
         </div>
       )}
     </>
