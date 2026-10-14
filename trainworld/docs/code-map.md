@@ -168,6 +168,9 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
 - `routes.py <ids>` adds routed walking and driving to finished packs (OSM from Geofabrik, cached
   in `data/raw/osm/`; the sim's `pack_walk` bin; 1-8 minutes a pack; rerun after anything that
   changes a pack's zones, `--check` lists stale ones; T-275).
+- `osm_water.py` is the water source for cities outside the US (OSM coastline sea plus Geofabrik
+  inland water, T-041; `source(extracts)` for a config's `water_source`, `mask <id>` for a
+  water-only pack in `data/work/osm_water/`; docs/adding-a-city.md).
 - `places.py [ids]` writes each city's OSM place list, `data/packs/<id>.places.json` (towns and
   neighbourhoods inside the boundary, one Overpass request a city cached in `data/raw/`; T-177),
   beside the pack, not in it.

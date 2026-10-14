@@ -172,8 +172,9 @@ With no station within reach (T-325) it opens **bare**, in the auxiliary demand 
 bubbles and city figures come from a no-rail pass there (all walking and driving, exactly what a
 solve would give it), and no solve covers it or is started for it. A click on its bubble draws the
 far end as a solved zone's does (T-336): local trips from the auxiliary worker, longer trips and
-commutes between zones from the solving workers, which hold the market. A zone opens bare only
-once the network's reach is known, so at startup the viewed city opens in every worker as before.
+commutes between zones from the solving workers, which hold the market. A new game opens the
+viewed city bare from the start (T-351); a saved game's viewed city opens in every worker, since
+its pack downloads before the network's reach is known (docs/demand.md "Bare zones").
 A station built within reach downloads the pack again and opens it in every worker; the next solve
 waits for it and covers it from then on, and its bare figures serve until a shown solve does.
 Detail: [demand.md](demand.md), "Bare zones".

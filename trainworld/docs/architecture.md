@@ -97,7 +97,7 @@ Web first, so it can be shared as a link.
   its own copy: the viewed zone first, and every zone with a built station inside its footprint or
   within 4.5 km of it, since only those can put a rider on a line (`workers/cityReach.ts`); a zone
   viewed or on screen that no station reaches opens bare in the auxiliary worker alone [T-325,
-  [demand.md](demand.md) "Bare zones"]. Solving
+  [demand.md](demand.md) "Bare zones"], the viewed zone of a new game from the start [T-351]. Solving
   workers also open the regional market, always. A solve waits until every pack it needs is open in
   every worker, so a published result never leaves out a constructed city. Worker 0 first opens a
   small synthetic everyday layer (`warm.rs`) and the others get packs only once it is ready, so
@@ -110,10 +110,13 @@ Web first, so it can be shared as a link.
   nothing final is (startup, a whole-game load, a city just opened), and for lines new or changed by
   the edit, which take the free-flow estimate's riders as soon as it lands. What the player sees:
   [ui-panels.md](ui-panels.md) "Loading".
-- **Loading and readiness** [T-149, T-172, T-180, T-243, T-347]: input is never blocked. A loaded
-  game holds only the clock until every needed city is open and the fresh solve's final round has
-  landed (`HOLD_ROUND`); T-172 released it at the first estimate and T-328 at the cached result, but
-  the game then lagged through the crowding rounds, so Anita had it wait (T-347). The cached result
+- **Loading and readiness** [T-149, T-172, T-180, T-243, T-347, T-351]: input is never blocked. A
+  loaded game holds only the clock until every needed city is open and the fresh solve's final
+  round has landed (`HOLD_ROUND`, `holdDone`); T-172 released it at the first estimate and T-328 at
+  the cached result, but the game then lagged through the crowding rounds, so Anita had it wait
+  (T-347). A viewed zone open bare is final from its opening: a new game (no station) opens its
+  viewed zone bare, its solve covers the market alone, and the card goes when the bare figures
+  arrive, about 2.7 s after navigation instead of about 7 s (T-351). The cached result
   (section 11) is drawn behind the loading card without releasing it. A city opened later (a pan,
   construction) is a load without a hold and counts as done at its first estimate (`READY_ROUND`).
   The demand pool starts before the map is

@@ -4,8 +4,8 @@
 Source (M1, US only): TIGER/Line 2020 AREAWATER for every county near the city, which covers
 rivers, bays, sounds, reservoirs and the sea out to the state line (3 nautical miles), plus the
 open sea beyond: the extent minus the TIGER 2020 state polygons (which run out to that line).
-OSM's coastline-derived water polygons would generalise to the world but are a 906 MB global
-download (osmdata.openstreetmap.de) with no way to fetch one region; see notes/T-030.md.
+Outside the US a `source` replaces it: Canada's (pipeline/canada.py) or OpenStreetMap's for any
+country (pipeline/osm_water.py, T-041; within 0.6% of these TIGER pixels on New York's grid).
 
 The grid is in the pack's local frame (metres east and north of the pack origin, equirectangular,
 as x_m/y_m). A pixel is water when its centre is inside a water polygon.

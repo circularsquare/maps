@@ -32,6 +32,12 @@ VIEWS = {
         ("Hamilton Harbour", -79.83, 43.29, 7.5),
         ("Lake Simcoe shore", -79.45, 44.25, 9.0),
     ],
+    "lon": [  # T-041
+        ("Central London, Westminster to Tower Bridge", -0.10, 51.505, 4.5),
+        ("Isle of Dogs and the Royal Docks", 0.01, 51.505, 5.0),
+        ("Staines reservoirs and Heathrow", -0.48, 51.45, 7.5),
+        ("Lee Valley reservoirs", -0.03, 51.62, 5.0),
+    ],
 }
 
 
@@ -46,8 +52,9 @@ def dense(m):
     return np.cumsum(d, axis=1, dtype=np.int8)[:, :W] > 0
 
 
-def main(city, out):
-    header, a = load_pack(city)
+def main(city, out, packs=PACKS):
+    """`packs`: another folder of packs, such as T-041's water-only ones (data/work/osm_water)."""
+    header, a = load_pack(city, packs)
     m = water_mask(header, a)
     lon0, lat0 = header["origin"]["lon"], header["origin"]["lat"]
     k = math.cos(math.radians(lat0))
@@ -64,8 +71,9 @@ def main(city, out):
     small = w[: H // f * f, : W // f * f].reshape(H // f, f, W // f, f).mean(axis=(1, 3))
     ext = [x0 / 1e3, (x0 + W // f * f * cell) / 1e3, y0 / 1e3, (y0 + H // f * f * cell) / 1e3]
     ax.imshow(small, origin="lower", extent=ext, cmap="Blues", vmin=-0.3, vmax=1.2, interpolation="nearest")
-    for bx, by in boundary_xy(city, lon0, lat0):
-        ax.plot(bx, by, color="#c0392b", lw=0.5)
+    if os.path.exists(os.path.join(PACKS, f"{city}.boundary.geojson")):  # a water-only pack has none
+        for bx, by in boundary_xy(city, lon0, lat0):
+            ax.plot(bx, by, color="#c0392b", lw=0.5)
     ax.set_title(f"{city} water mask: {W} x {H} pixels of {cell:.0f} m, {m['runs']:,} runs, "
                  f"{m['bytes'] / 1e6:.2f} MB; water {m['water_share']:.1%} of the extent", fontsize=10)
     ax.set_xlabel("km east of the pack origin", fontsize=8)

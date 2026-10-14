@@ -175,6 +175,15 @@ WATER_TESTS = {
                 "Pearson": (-79.6248, 43.6777), "Hamilton City Hall": (-79.8711, 43.2557),
                 "Union Station": (-79.3806, 43.6453)},
     },
+    "lon": {  # T-041: OSM water (sea polygons + Geofabrik England); first checked on the water-only pack
+        True: {"Thames by Waterloo Bridge": (-0.1170, 51.5085), "Thames off Greenwich": (-0.0094, 51.4857),
+               "Thames at Gravesend": (0.3700, 51.4480), "Royal Victoria Dock": (0.0284, 51.5066),
+               "Royal Albert Dock": (0.0580, 51.5061), "Queen Mary Reservoir": (-0.4602, 51.4160),
+               "King George V Reservoir": (-0.0197, 51.6441), "William Girling Reservoir": (-0.0256, 51.6294)},
+        False: {"Trafalgar Square": (-0.1281, 51.5080), "Buckingham Palace": (-0.1419, 51.5014),
+                "Mudchute, Isle of Dogs": (-0.0110, 51.4920), "Heathrow": (-0.4543, 51.4700),
+                "Stratford station": (-0.0035, 51.5416), "Greenwich Observatory": (-0.0015, 51.4769)},
+    },
 }
 
 

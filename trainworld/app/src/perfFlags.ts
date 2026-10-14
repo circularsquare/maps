@@ -14,6 +14,8 @@
 //   stagger  no everyday warm-up in demand worker 0, city packs open in every worker at once
 //            (before T-173)
 //   early    new or changed lines get no figures until the final round (before T-324)
+//   bareStart  the viewed zone opens in every worker at startup, a new game's too, and no
+//            building tool opens it ahead of a first station (before T-351)
 //
 // `?perfTry=...` turns on candidate fixes, measured in notes/T-045.md before anyone adopts them:
 //   labelLayers  each station label and capacity tag on its own compositor layer
@@ -26,5 +28,5 @@ const q = new URLSearchParams(location.search);
 const off = new Set((q.get("perfOff") ?? "").split(",").filter(Boolean));
 const tries = new Set((q.get("perfTry") ?? "").split(",").filter(Boolean));
 
-export const perfOff = (part: "labels" | "shadow" | "hover" | "clock" | "overlay" | "markers" | "idle" | "labelPan" | "noDouble" | "stagger" | "early") => off.has(part);
+export const perfOff = (part: "labels" | "shadow" | "hover" | "clock" | "overlay" | "markers" | "idle" | "labelPan" | "noDouble" | "stagger" | "early" | "bareStart") => off.has(part);
 export const perfTry = (fix: "labelLayers" | "hoverCursor" | "idle" | "noDouble") => tries.has(fix);

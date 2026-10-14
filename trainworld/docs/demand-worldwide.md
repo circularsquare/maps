@@ -154,7 +154,7 @@ building Toronto from tier 0 against the real pack (notes/T-287.md has every tab
   94-213 m); a city's ACS-like car commute times against the model's, as T-090 did.
 - **Routed walks** (T-275). A walk to a station goes round water on a 50 m raster from the pack's
   water mask, with every OSM way a person may walk on that is a bridge opened. Why it may not
-  carry over: the water mask is TIGER's in the US (T-041 for elsewhere); OSM's `foot=` tagging
+  carry over: the water mask is TIGER's in the US and OSM's elsewhere (T-041; within 0.6% of TIGER at New York); OSM's `foot=` tagging
   on bridges is good in Europe and patchy elsewhere, and trunk bridges are assumed to have no
   footway unless `foot=yes`, which drops real footways in countries that tag them on the road
   itself; walking ferries (Istanbul, Hong Kong's Star Ferry, Venice) are no walk; a bridge

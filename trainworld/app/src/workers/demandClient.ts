@@ -6,10 +6,12 @@
 //   riders are ever left out of a published result. Each worker owns its copy of every
 //   population; the pool budget applies to the whole world, not each city.
 // - T-325: a zone no station reaches, viewed or shown beside the view, opens `bare` in the aux
-//   worker alone, once the network's reach is known (until then the viewed city opens in every
-//   worker, as before). Its city figures and bubbles come from there (no rail: walking and
-//   driving only), no solve covers it and none is started for it. A station built within reach
-//   opens it in every worker, and the solves cover it from then on.
+//   worker alone. Its city figures and bubbles come from there (no rail: walking and driving
+//   only), no solve covers it and none is started for it. A station built within reach opens it
+//   in every worker, and the solves cover it from then on. T-351: at startup the viewed zone's
+//   pack is fetched before the network's reach is known; it opens bare if the reach is known by
+//   the time it has downloaded and leaves the zone out, else in every worker as before. A new
+//   game (`?new=1`) has no stations, so its reach is known at once and the viewed zone opens bare.
 // - Reports what it is loading (game/loading.ts `loadProgress`) and releases a loaded game's
 //   clock hold once that game's network has its final result (HOLD_ROUND, T-347).
 // - The day's five periods are split over the pool by index (worker i solves periods i, i + n,
@@ -26,7 +28,7 @@ import { effect } from "@preact/signals";
 import { activeCity, CITIES, getWorldFrame, HOME_CITY, LEGACY_FRAME, MARKET_PACK, marketToWorld, viewedZone, worldFrameEpoch, type CityId } from "../game/cities";
 import type { FrameSpec } from "../game/frame";
 import { DAY_KINDS, type DayKind } from "../game/days";
-import { shownDay } from "../game/ui";
+import { shownDay, tool } from "../game/ui";
 import {
   cityDemandViews, demandByDay, intercityDemand,
   type DayDemand,
@@ -87,7 +89,8 @@ const READY_ROUND = 0;
  * A loaded game's clock runs, and its loading card goes, once the solve's last round is published
  * (T-347; T-149 waited for it, T-172 stopped at the estimate, and the game was left lagging
  * through the rounds). The cached result of the last time the game was open (T-328) is drawn
- * meanwhile but does not release it.
+ * meanwhile but does not release it. A viewed zone open bare is final from its opening (T-351:
+ * `holdDone`).
  */
 const HOLD_ROUND = ROUNDS;
 const PERIOD_STRIDE = 6;
@@ -395,6 +398,8 @@ class DemandClient {
   private opened = new Set<string>();
   /** T-325: cities fetched to open bare (the aux worker only), and those open so, with their figures */
   private fetchingBare = new Set<CityId>();
+  /** T-351: cities fetched before the reach was known, decided (bare or every worker) once downloaded */
+  private fetchingUndecided = new Set<CityId>();
   private bareOpen = new Map<CityId, BareFigures>();
   /** bytes of each item, the weight of its opening in the percentage */
   private bytes = new Map<string, number>();
@@ -449,7 +454,27 @@ class DemandClient {
     effect(() => { activeCity.value; viewedZone.value; this.ensure(); });
     // and the zones beside it with bubbles on screen (T-276), once nothing waits on them
     effect(() => { nearbyZones.value; this.ensure(); });
+    // T-351: a building tool picked in a game with no station readies the viewed zone for its solve
+    effect(() => { tool.value; this.prefetchViewed(); });
   }
+
+  /**
+   * T-351: in a game with no station (a bare start), a building tool picked opens the viewed zone,
+   * open bare, in every worker too, so the first station's solve need not wait for it (about 2.4 s
+   * for New York in five workers). No solve covers it for that (`solveNeed`); it joins the solves
+   * once a station reaches it, as any zone. Not while a game load's card is up.
+   */
+  private prefetchViewed() {
+    const t = tool.peek();
+    if ((t !== "track" && t !== "station" && t !== "blueprint") || perfOff("bareStart")) return;
+    const svc = this.latest(), id = activeCity.peek();
+    if (this.hold || !svc || svc.stations.length || !viewedZone.peek() || this.status.startsWith("failed")) return;
+    if (!this.fetchingBare.has(id) || this.fetching.has(id) || this.fetchingUndecided.has(id)) return;
+    this.prefetched.add(id);
+    this.fetchCity(id, "full");
+  }
+  /** T-351: zones opened in every worker ahead of a station (`prefetchViewed`) */
+  private prefetched = new Set<CityId>();
 
   /** T-276: nearby zones open for their bubbles only after the startup load and outside a loaded
    * game's clock hold, so they never hold the clock; they show no loading bar and a solve never
@@ -517,7 +542,8 @@ class DemandClient {
     const reached = this.reachedSet(svc);
     if (!reached) return null;
     const out = new Set(reached);
-    for (const id of this.fetching) if (id !== MARKET) out.add(id as CityId);
+    // (T-351: not a zone opened ahead of a station that does not reach it yet)
+    for (const id of this.fetching) if (id !== MARKET && !this.prefetched.has(id as CityId)) out.add(id as CityId);
     return out;
   }
 
@@ -553,18 +579,29 @@ class DemandClient {
     // over dead space with no station in reach there is nothing to open, the market included
     if (need.size && !this.fetching.has(MARKET)) this.fetchMarket();
     // T-325: a city no station reaches opens bare; while the reach is not known (startup), the
-    // viewed city opens in every worker as before
-    const reached = this.reachedSet(this.latest());
-    for (const id of need) this.want(id, reached === null || reached.has(id));
+    // viewed city's pack is fetched and decided once downloaded (T-351)
+    const reached = this.knownReach();
+    for (const id of need) this.want(id, reached === null ? null : reached.has(id));
     if (this.nearbyOpen()) for (const id of nearbyZones.peek()) this.want(id, !!reached?.has(id));
     this.flush();
     this.progress();
   }
 
-  /** Fetch `id` to open in every worker (`full`), or bare in the aux worker, unless already. */
-  private want(id: CityId, full: boolean) {
-    if (full) { if (!this.fetching.has(id)) this.fetchCity(id); }
-    else if (!this.fetching.has(id) && !this.fetchingBare.has(id)) this.fetchCity(id, true);
+  /** T-351: the reach as far as opening a pack goes. A new game's (`?new=1`) is known to be empty
+   * before its network arrives: it has no stations. */
+  private knownReach(): Set<CityId> | null {
+    const svc = this.latest();
+    if (!svc && NEW_GAME && !this.lastKey) return new Set();
+    return this.reachedSet(svc);
+  }
+
+  /** Fetch `id` to open in every worker (`full`), bare in the aux worker (false), or (null: the
+   * reach is not known yet) either, decided once downloaded; unless already. */
+  private want(id: CityId, full: boolean | null) {
+    if (this.fetching.has(id) || this.fetchingUndecided.has(id)) return;
+    if (full) this.fetchCity(id, "full");
+    else if (full === null) this.fetchCity(id, this.fetchingBare.has(id) || perfOff("bareStart") ? "full" : "undecided");
+    else if (!this.fetchingBare.has(id)) this.fetchCity(id, "bare");
   }
 
   /** Download one pack file, counting its bytes as they arrive. */
@@ -621,14 +658,27 @@ class DemandClient {
    * `?perfOff=stagger`, the old way). */
   private held: (() => void)[] | null = perfOff("stagger") ? null : [];
 
-  /** `bare` (T-325): to the aux worker alone. A pack opened bare and reached later is fetched again
-   * for every worker (the page keeps no copy). */
-  private fetchCity(id: CityId, bare = false) {
-    (bare ? this.fetchingBare : this.fetching).add(id);
-    const log: LoadLog = { item: id, requestedAt: performance.now(), ...(bare ? { bare } : {}) };
+  /** `full`: to every worker; `bare` (T-325): to the aux worker alone; `undecided` (T-351): either,
+   * by the reach known once it has downloaded. A pack opened bare and reached later is fetched
+   * again for every worker (the page keeps no copy). */
+  private fetchCity(id: CityId, mode: "full" | "bare" | "undecided") {
+    if (mode === "full") this.fetching.add(id);
+    else if (mode === "bare") this.fetchingBare.add(id);
+    else this.fetchingUndecided.add(id);
+    const log: LoadLog = { item: id, requestedAt: performance.now(), ...(mode === "bare" ? { bare: true } : {}) };
     this.start.loads.push(log);
     Promise.all([this.download(`${id}.json`), this.download(`${id}.bin`)]).then(([header, bin]) => {
       log.downloadedAt = performance.now();
+      // T-351: fetched before the reach was known: bare if it is known now and leaves the zone out,
+      // else in every worker (a save's network comes after its viewed pack, which then opens as before)
+      let bare = mode === "bare";
+      if (mode === "undecided") {
+        this.fetchingUndecided.delete(id);
+        const reached = this.knownReach();
+        bare = reached !== null && !reached.has(id) && !this.fetching.has(id);
+        if (bare) { log.bare = true; this.fetchingBare.add(id); }
+        else this.fetching.add(id);
+      }
       this.bytes.set(id, bin.byteLength);
       const own = bin.byteOffset === 0 && bin.byteLength === bin.buffer.byteLength ? bin.buffer as ArrayBuffer : bin.slice().buffer;
       const pack = { id, header: new TextDecoder().decode(header), bin: own };
@@ -739,7 +789,7 @@ class DemandClient {
     const shown = cityDemandViews.peek(), now = performance.now();
     const next = new Map<CityId, number>();
     let moving = false;
-    for (const id of [...this.fetching, ...this.fetchingBare]) {
+    for (const id of [...this.fetching, ...this.fetchingBare, ...this.fetchingUndecided]) {
       if (id === MARKET || shown.has(id) || next.has(id) || this.status.startsWith("failed")) continue;
       let f: number;
       if (this.job?.cities.includes(id)) f = this.job.best;
@@ -809,7 +859,8 @@ class DemandClient {
     if (solved && job.items.every(loaded)) {
       // remembered for the next load's estimate (T-243): a startup's solve, so it describes the
       // game a reload opens; T-347: and the time to its final round, which the card now waits for
-      if (job.startup && s && s.firstAt !== undefined) {
+      // (not a bare start's, T-351: its solve covers no zone and says nothing of the next game's)
+      if (job.startup && s && s.firstAt !== undefined && s.cities.length) {
         const stops = s.svc.lines.reduce((n, l) => n + l.stops.length, 0);
         const finalMs = s.refinedAt !== undefined ? Math.round(s.refinedAt - s.sentAt) : undefined;
         try { localStorage.setItem(LAST_SOLVE, JSON.stringify({ ms: Math.round(s.firstAt - s.sentAt), stops, ...(finalMs ? { finalMs } : {}) })); } catch { /* storage unavailable */ }
@@ -853,7 +904,8 @@ class DemandClient {
     // Solving: period results landed, and time against the expected solve (none for a load of
     // zones opened bare, T-325).
     const svc = this.latest();
-    const solveMs = needsSolve ? solveEstimate(svc ? svc.lines.reduce((n, l) => n + l.stops.length, 0) : null, !!this.hold) : 0;
+    // (T-351: a solve covering no zone, the market alone, is short)
+    const solveMs = !needsSolve ? 0 : sn?.size === 0 ? SOLVE_MS.base : solveEstimate(svc ? svc.lines.reduce((n, l) => n + l.stops.length, 0) : null, !!this.hold);
     let solve = 0;
     if (s && job.version !== undefined && s.version === job.version) {
       let landed = 0;
@@ -972,16 +1024,28 @@ class DemandClient {
     (this.cacheLog ??= { at: t0 }).wrote = { at: performance.now(), ms, bytes: storedSize(stored) + (modes?.data.byteLength ?? 0), ok };
   }
 
+  /**
+   * A held game's figures are final (T-347): its network's solve has published HOLD_ROUND and the
+   * viewed zone is open, so its figures show. A zone the solve covers has them from that round; a
+   * zone open bare (T-325) from its opening, since they are final as they come (no station reaches
+   * it: what any solve gives it). T-351: a bare start's solve covers no zone, only the market, and
+   * lands within a second; its hold ends when the viewed zone's bare figures arrive.
+   */
+  private holdDone(): boolean {
+    const s = this.cur;
+    if (!this.hold || !s || this.hold.version !== s.version || this.waiting) return false;
+    return s.published >= HOLD_ROUND && [...this.viewedSet()].every((id) => this.isOpen(id));
+  }
+
   /** A held game's network has its final result (T-347): the clock runs. */
   private checkHold() {
     if (this.hold && this.idle()) return this.settleIdle(); // T-318
-    const s = this.cur;
-    // (and the viewed zone open, bare perhaps, so its figures show: T-325)
-    if (this.hold && s && this.hold.version === s.version && s.published >= HOLD_ROUND &&!this.waiting && [...this.viewedSet()].every((id) => this.isOpen(id))) {
+    if (this.holdDone()) {
       this.hold = null;
       loadComplete();
       // the nearby zones' packs may load now (T-276)
       if (nearbyZones.peek().length) this.ensure();
+      this.prefetchViewed(); // a building tool picked while the card was up (T-351)
     }
   }
 
@@ -1904,6 +1968,9 @@ const PURPOSE_INDEX_COUNT = 2 + EVERYDAY_KEYS.length;
 let client: DemandClient | null = null;
 
 const TEST = new URLSearchParams(location.search).get("demandTest") === "1";
+/** T-351: the page starts a new game (`?new=1`, workers/clockClient.ts): no stations, so the viewed
+ * zone opens bare from the start. */
+const NEW_GAME = !TEST && !perfOff("bareStart") && new URLSearchParams(location.search).get("new") === "1";
 
 /** Start the pool for a city. With `?demandTest=1` it solves T-005's hand-made network. */
 export function startDemand(city = HOME_CITY) {

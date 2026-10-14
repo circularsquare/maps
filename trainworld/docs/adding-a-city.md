@@ -259,11 +259,30 @@ real pack in notes/T-287.md):
 | Gravity curve | fitted on LODES OD (T-198) | fitted on census flows between municipalities (98-10-0459-01; `notes/t277_fit.py`) | borrowed from a fitted city, or power 1 with the length fitted to a published median or mean commute (`tier0.fit_curve`) |
 | Regions, border | states, 0.23 | provinces, factor 1 | one region, factor 1 |
 | Drawn boundary | TIGER/Line counties, water included (T-352) | cartographic census subdivisions, clipped at the shore (hugs Lake Ontario) | the config's district polygons |
-| Water | TIGER AREAWATER and states | StatCan lakes and rivers; land = cartographic municipalities plus US states | the config's `water_source` (OSM water is T-041) |
+| Water | TIGER AREAWATER and states | StatCan lakes and rivers; land = cartographic municipalities plus US states | OSM: `osm_water.source([extracts])` as the config's `water_source` (below) |
 | Schools | NCES | Ontario school information file (provincial; other provinces need their own) | OSM `amenity=school` sites; pupils = population x share aged 0-14 (World Bank) x 0.9, by the square root of site area |
 | Universities | IPEDS | Council of Ontario Universities headcounts and Ontario's college campus file, at points in `pipeline/ca_campuses.csv` | OSM `amenity=university|college`; Wikidata P2196 students by institution, split by site area; other sites by area at the median density |
 | Airports | FAA enplanements, DB1B connecting share | StatCan 23-10-0253-01 enplaned; connecting share by judgement (Pearson 0.75) | OurAirports + Wikidata patronage / 2; connecting share by judgement; pack share from GHSL population |
 | Medical, parks, places | OSM (Overpass) | the same scripts, OSM from the extract | the same, from the extract |
+
+**Water outside the US (T-041).** `pipeline/osm_water.py` gives any city a water mask from
+OpenStreetMap: the sea from osmdata.openstreetmap.de's coastline polygons
+(`data/raw/osmdata/water-polygons-split-4326.zip`, 906 MB, downloaded once for the world and kept;
+a city's box is read out of the zip in about 10 s) and inland water areas (`natural=water`,
+`landuse=reservoir`, `waterway=riverbank|dock|canal`; not intermittent, covered or dry basins) from
+the region's Geofabrik extract, read once per extract into `data/raw/osm/<extract>.water.fgb`
+(England: 13 minutes, 115 MB; a US state 1-3 minutes). In a tier 0 config:
+`"water_source": osm_water.source(["europe/united-kingdom/england"])`; the extracts must cover the
+whole box. To read an extract ahead, or to see a city's mask before its pack exists:
+
+    venv\Scripts\python.exe trainworld\pipeline\osm_water.py read europe/france/ile-de-france
+    venv\Scripts\python.exe trainworld\pipeline\osm_water.py mask par --extracts europe/france/ile-de-france --bbox w,s,e,n --origin lon,lat --png artifacts\trainworld\T-###-par-water.png
+
+`mask` writes a water-only pack, `data/work/osm_water/<id>.json/.bin` (the pack's water block and
+arrays only), draws it with `look_water.py` and runs `read_pack.py`'s water test places for that
+id (add them to `WATER_TESTS`, close-ups to `look_water.VIEWS`). On New York's grid it disagrees
+with TIGER on 0.56% of pixels and passes all 18 of T-030's test places (notes/T-041.md). The
+Geofabrik `.osm.pbf` can go once every OSM read for the region is cached.
 
 A tier 0 city is a `CITIES` entry with `"tier0": True` (the keys are listed in `tier0.py`'s
 docstring); `build_city.py <id>` hands it to `tier0.main`. A country's census then replaces one

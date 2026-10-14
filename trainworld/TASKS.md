@@ -36,7 +36,7 @@ ARCHIVE.md.
 - T-356 [P3] A move far from the draw anchor (T-307) brings a whole clock state: the world is rebuilt on the main thread (labels, complexes, network buffers, every list), about 50 ms of main thread per long pan (T-348). Rebuild only what depends on the anchor. Open.
 - T-354 [P3] Two smaller main-thread costs (T-348): a pack opening in every worker is copied for each worker in one task (45-70 ms for New York, demandClient `post`), and a solve's final publish takes 70-110 ms (three kinds of day, purposes, bubble sums). Spread each over several tasks. Open.
 - T-357 [P3] After T-352's sea outlines: `outside.py` then `intercity.py` were not rerun; a rerun would move 194 Kontur hexagons (0.88M people, mostly water-centred or on zone edges) from the outside world into zones, which is more correct. Do it with the next market rebuild, not alone. Toronto's outline still hugs Lake Ontario (StatCan cartographic subdivisions); a lake-line source if it ever looks wrong beside the US cities. Open.
-- T-351 [P2] A new game (no stations) opens the viewed city bare from the start instead of in every solving worker with a full solve (docs/demand.md "Bare zones": bare only once the reach is known, so startup opens the viewed city everywhere). An empty network's reach is known at once; expected about 1-1.5 s instead of about 8 s. Anita 2026-10-14: a new game keeps the hold (T-347). After T-348 (same code). Open.
+- T-359 [P3] After T-351: a bare start's card waits 2.0-2.2 s for New York's bare opening in the aux worker alone while the solving workers sit idle (they open only the market); opening it bare split over the pool could bring the card to about 1-1.5 s. Also the in-game "Start a new game" still solves the viewed zone in every worker (already open there). Open; notes/T-351.md.
 
 ## In progress (batch 24, 2026-10-14)
 
@@ -109,9 +109,9 @@ ARCHIVE.md.
 
 ## Later: the world (M2-M3)
 
-World sampler (T-286, research/world-sampler.md). All waiting for Anita's review of research/world-sampler.md; the shared stages first: T-126 and T-127 (a frame and renderer origin per world), T-041 (OSM water), then T-287.
+World sampler (T-286, research/world-sampler.md). All waiting for Anita's review of research/world-sampler.md; the shared stages first: T-126 and T-127 (a frame and renderer origin per world), then T-287 (T-041's OSM water is done).
 
-- T-288 [P2] London (first city of the sampler): tier 0 plus England's upgrades (Census 2021 OA population, BRES jobs by LSOA, curve fitted on 2011 MSOA flows, GIAS schools, HESA), and tier 0 measured against them; Europe world, `market: -1`. Waiting for Anita's review of research/world-sampler.md. Plan approved 2026-10-14 (Anita); after T-287 and T-304. Measure tier 0 with `notes/t287_compare.py`'s tables (BRES for jobs): the first out-of-sample check of the jobs proxy's height power 1.5 and blend, which were set on Toronto (notes/T-287.md). Open.
+- T-288 [P2] London (first city of the sampler): tier 0 plus England's upgrades (Census 2021 OA population, BRES jobs by LSOA, curve fitted on 2011 MSOA flows, GIAS schools, HESA), and tier 0 measured against them; in the one world (T-304), `market: -1`. Plan approved 2026-10-14 (Anita). Stage a (tier 0 pack, playable) taking, 2026-10-14. Measure tier 0 with `notes/t287_compare.py`'s tables (BRES for jobs): the first out-of-sample check of the jobs proxy's height power 1.5 and blend, which were set on Toronto (notes/T-287.md). Open.
 - T-314 [P2] Tier 0's curve without flows: `tier0.fit_curve` fitted only the length to one published median and came out far too flat on Toronto (17.5% of commutes misplaced against 11.3% with Toronto's own curve, 22% fewer riders on a test line; notes/T-287.md). Fit both parameters where a distance distribution exists (Mumbai's census B-28 bands, for T-292), and write the rule for borrowing the most similar fitted city's curve (which city, checked against the published figure). Open.
 - T-315 [P3] Tier 0 universities: few OSM campuses carry a Wikidata id (4 of 63 in Toronto), so most are sized by area (+20% students in Toronto, 10.7% misplaced). Try matching OSM campus names to Wikidata universities with coordinates in the boundary, and splitting a multi-campus institution's count. Open.
 - T-316 [P3] Tier 0 boundaries from global admin units (geoBoundaries ADM2-3, NUTS-3/ITL3) instead of a hand-made GeoJSON, and district population totals from the same units where a national source publishes them. Open.
@@ -122,10 +122,7 @@ World sampler (T-286, research/world-sampler.md). All waiting for Anita's review
 
 - T-282 [P3] Toronto from the official StatCan files (found in T-277): StatCan's geography server (www12) answered a bot check, so the pack uses dissemination areas from ArcGIS copies and a gravity curve fitted on the lockdown month's 2021 flows. With Anita's downloads (dissemination block boundaries `ldb_000a21a_e.zip`, the 2016 commuting flows 98-400-X2016325; URLs in notes/T-277.md): finer grain, and a refit on pre-pandemic flows. Also the college partner campuses (about 16,000 students) left out of `pipeline/ca_campuses.csv`. Open; notes/T-277.md.
 
-- T-041 [P3] Water mask from OSM instead of TIGER, for cities outside the US (M3) and the world
-  pack's intercity track (M2): coastline-derived sea polygons plus inland water, reproducing the
-  T-030 checks in `read_pack.py`. The osmdata.openstreetmap.de sea file is one 906 MB global zip,
-  so this wants a once-per-world preprocessing step. notes/T-030.md.
+- T-358 [P3] Water between city packs for intercity track (M2, the half of T-041 not done): each pack's mask covers only its own box, so ground track between cities sees no water. `pipeline/osm_water.py` can make masks for any box (sea plus Geofabrik extracts); needs a world or corridor mask format and the app to read it. Open; notes/T-041.md.
 - T-060 [P3] City packs on R2: versioned path, compressed, cached for good, one base-URL constant
   in `workers/demandClient.ts` (and the clock worker's pack URL); parse the header in JS so
   `serde_json` leaves the WASM. notes/T-026.md "Serving the pack from R2 later".

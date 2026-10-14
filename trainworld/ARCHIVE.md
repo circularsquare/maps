@@ -1,5 +1,9 @@
 # Archive
 
+- T-351 [P2] A new game opens the viewed zone bare. Done 2026-10-14: `?new=1` card gone at 2.6-2.8 s instead of 6.6-7.1 s, figures and bubbles identical to the bit; a building tool picked opens the zone everywhere ahead of a first station (first estimate 2.0 s as before); saves unchanged. notes/T-351.md.
+
+- T-041 [P2] Water mask from OSM. Done 2026-10-14: `pipeline/osm_water.py` (coastline sea zip plus Geofabrik inland water) as tier 0's `water_source`; on New York's grid 0.56% of pixels differ from TIGER, all 18 test places right; London's preview mask in `data/work/osm_water/lon.*`. Intercity water is T-358. notes/T-041.md.
+
 - T-348 [P1] Main-thread lag while demand loads. Done 2026-10-14: lag only in the first 10-14 s after a load; the Lines tab's per-comparison collator and station placement fixed (startup long tasks about 35-40% less, longest 0.8-1.4 s to 0.23-0.32 s); the rest is CPU starvation, T-355. notes/T-348.md.
 
 - T-352 [P2] City outlines with maritime lines. Done 2026-10-14: the 13 US boundary files are TIGER/Line counties with their water, simplified together (no overlaps between packs; Boston reaches 24 km out, New York 13 km); packs, water masks and demand untouched. Toronto still hugs its shore. `build_city.py --boundary-only`.

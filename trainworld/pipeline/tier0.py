@@ -30,8 +30,9 @@ census or registers then upgrade single inputs by replacing one function. What e
   patronage (P3872) / 2, O&D share 1 except the config's judgement values for hubs, pack share
   from the GHSL population around the airport (exp(-d/20 km), as enrich_airports).
 - Medical and parks: the shared scripts, OSM read from the Geofabrik extract (canada.osm_caches).
-- Water: the config's `water_source` (lon/lat polygons, as water.build_mask takes); the global OSM
-  water source is T-041's, not this module's.
+- Water: the config's `water_source` (lon/lat polygons, as water.build_mask takes); for any country
+  `osm_water.source([<Geofabrik extracts>])` (T-041: OSM coastline sea plus the extracts' inland
+  water).
 - Gravity curve: the config's "decay_pow"/"decay_km" if given (borrowed from a fitted city), else
   the length fitted so the model's median commute (straight line between 2 km zones) matches the
   config's published figure ("curve": {"median_km" or "mean_km", "pow"}), fit_curve below.
@@ -271,7 +272,7 @@ def build_boundary(city, cfg):
 def build_water(cfg, boundary):
     import water
     if "water_source" not in cfg:
-        raise ValueError("tier 0 needs a water_source (lon/lat water polygons); OSM water for any country is T-041")
+        raise ValueError("tier 0 needs a water_source, such as osm_water.source([<Geofabrik extract>]) (T-041)")
     lon0, lat0 = cfg["origin"]
     wc = cfg["water"]
     mask, info = water.build_mask(lon0, lat0, boundary.bounds, wc["cell_m"], b.fetch, None, source=cfg["water_source"])

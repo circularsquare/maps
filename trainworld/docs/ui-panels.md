@@ -211,7 +211,8 @@ centre and zoom, or over New York with none [T-310].
 
 - Nothing is blocked: the map, inspectors and building work as soon as the network is drawn.
 - **A loaded game** (the page opening, a file, a slot, a new game) holds only the clock until its
-  fresh demand solve has finished its last round [T-347; before, the first estimate]; the time is
+  fresh demand solve has finished its last round [T-347; before, the first estimate] (a new game:
+  until its viewed zone's figures, opened bare, arrive, T-351); the time is
   greyed and its hover says "The clock starts when demand has loaded". Meanwhile a card in the
   middle of the map says "Loading data" over a filling bar and the current step (Downloading city
   data, Opening city data, Calculating demand), naming no cities; the percentage is only the bar's

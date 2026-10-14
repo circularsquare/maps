@@ -712,8 +712,23 @@ go with `icSel` to the solving workers, holding the market, for longer trips and
 zones. `checks/t325-bare-check.mjs` finds every one of these equal to the bit to the same zone
 solved with no station in it.
 
-- A zone opens bare only once the reach is known (the first network and the footprints): at
-  startup the viewed city opens in every worker as before.
+- **At startup** (T-351) the viewed zone's pack downloads before the network's reach (the first
+  network and the footprints) is known, and is sent once downloaded: bare if the reach is known by
+  then and leaves the zone out, else to every worker. A new game (`?new=1`) has no station, so its
+  reach is known at once: the viewed zone opens bare, the solving workers open only the market and
+  solve it (under 0.1 s), and the loading card and held clock go when the bare figures arrive,
+  which are final as they come (`holdDone`). New York's city figures and bubbles are identical to
+  the bit to the full solve's; the network's own totals leave the bare zone out, as after a pan.
+  Card gone 2.6-2.8 s after navigation (dev server, warm), against 6.6-7.1 s before; the bare
+  opening is 2.0-2.2 s of it, 0.4 s more without the everyday warm-up, which stays. A saved game's
+  network arrives after its viewed pack has downloaded (about 2.1 s against 0.65 s for the real
+  New York save), so a save opens as before; waiting for the reach would cost every save that
+  reaches its viewed zone about 1.4 s.
+- **The first station** (T-351): with no station in the game, picking the track, station or
+  blueprint tool opens the bare viewed zone in every solving worker as well (`prefetchViewed`,
+  2.4-2.6 s for New York), with no solve started for it, so a first line's solve need not wait:
+  its first estimate came 2.0-2.1 s after the build, as when the zone was open everywhere; built
+  with no tool picked first, 4.4-4.6 s. notes/T-351.md.
 - A station built within reach downloads the pack again (the page keeps no copy) and opens it in
   every worker; the solve waits for it and covers it from then on. Its bare figures serve until a
   shown solve covers it. The auxiliary worker keeps its bare copy (WASM memory never shrinks).
