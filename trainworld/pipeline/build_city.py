@@ -218,6 +218,33 @@ CITIES = {
         "counties": {"3518": "Durham", "3519": "York", "3520": "Toronto", "3521": "Peel",
                      "3524": "Halton", "3525": "Hamilton"},
     },
+    # T-288 stage a: London from tier 0 (global sources only, pipeline/tier0.py). The outline is
+    # whole ITL3 units (ONS, January 2025): Greater London's 21, every unit touching it, West
+    # Sussex (North East) for Gatwick and Medway (else a hole between Gravesham and Swale).
+    # Population scaled to Census 2021 district totals (pipeline/england.py).
+    "lon": {
+        "tier0": True,
+        "origin": (-0.1246, 51.5073),  # Charing Cross
+        "water": {"cell_m": 25.0, "min_width_px": 2},
+        "boundary_notes": "notes/T-288.md",
+        "itl3": ["TLI33", "TLI34", "TLI35", "TLI36", "TLI41", "TLI42", "TLI43", "TLI44",
+                 "TLI45", "TLI51", "TLI52", "TLI53", "TLI54", "TLI61", "TLI62", "TLI63", "TLI71", "TLI72",
+                 "TLI73", "TLI74", "TLI75",
+                 "TLJ26", "TLH27", "TLH32", "TLJ15", "TLH26", "TLJ25", "TLJ46", "TLH35", "TLH36", "TLJ13",
+                 "TLJ43", "TLJ28", "TLJ41"],
+        "boundary_file": lambda: __import__("england").itl3_boundary("lon", CITIES["lon"]["itl3"]),
+        "admin_totals": lambda boundary: __import__("england").lad_totals(boundary),
+        "water_source": lambda bbox: __import__("osm_water").source(["europe/united-kingdom/england"])(bbox),
+        "extract": "europe/united-kingdom/england",
+        "iso2": "GB",
+        # ONS Opinions and Lifestyle Survey (GB, 2022-23, "Who are the hybrid workers?", Nov 2024):
+        # 13% work only from home, 28% hybrid; about half a hybrid worker's days at home
+        "wfh": 0.27,
+        "od_share": {"EGLL": 0.7},  # Heathrow's transfer passengers, judgement as Pearson's 0.75
+        # borrowed from Toronto (T-277's fit): T-287 found it the best curve for tier 0 inputs; T-314
+        "decay_pow": 1.2, "decay_km": 20.0,
+        "region_name": "England",
+    },
     # T-276: non-city zones (docs/zones.md 2): one county each, the counties that touch two city
     # zones. Same sources and cells as a city; `kind` "zone" in the registry.
     "wor": {

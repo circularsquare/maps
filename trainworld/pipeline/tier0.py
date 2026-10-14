@@ -25,7 +25,9 @@ census or registers then upgrade single inputs by replacing one function. What e
   median site). Children are the same share of every cell's people.
 - Universities: OSM amenity=university|college, each institution sized by its Wikidata student
   count (P2196) split over its sites by area; sites with no Wikidata count by area at the
-  median students per hectare of those with one; points with no count left out.
+  median students per hectare of those with one; points with no count left out. The total is
+  then scaled to population x the national tertiary students a resident (UNESCO via the World
+  Bank, SE.TER.ENRL / SP.POP.TOTL; T-288), so the counts and areas only spread it.
 - Airports: OurAirports scheduled-service airports in the boundary, boardings = Wikidata
   patronage (P3872) / 2, O&D share 1 except the config's judgement values for hubs, pack share
   from the GHSL population around the airport (exp(-d/20 km), as enrich_airports).
@@ -39,7 +41,7 @@ census or registers then upgrade single inputs by replacing one function. What e
 - Regions: one region, no border factor.
 
 Config keys (a CITIES entry with "tier0": True): origin, water, boundary_file (GeoJSON, any
-polygons, dissolved), water_source, extract (Geofabrik path), iso2 (World Bank country),
+polygons, dissolved; or a callable returning its path, as england.itl3_boundary), water_source, extract (Geofabrik path), iso2 (World Bank country),
 admin_totals (callable boundary -> [(name, shapely geometry, population)], optional), wfh (share
 working at home, optional), od_share ({OurAirports ident: share}, optional), curve or
 decay_pow/decay_km, region_name (optional), epoch (GHSL epoch, default 2020).
@@ -121,16 +123,31 @@ def _tile_path(kind, epoch, r, c):
     return path
 
 
-def _read_tile_window(path, r0, r1, c0, c1):
-    """Rows r0:r1, columns c0:c1 of a GHSL tile, decoding only the TIFF tiles they touch."""
+def _read_tile_window(path, r0, r1, c0, c1, tile_x0=None, tile_y0=None):
+    """Rows r0:r1, columns c0:c1 of a GHSL tile (counted from the nominal 1,000 km tile's corner
+    tile_x0, tile_y0), decoding only the TIFF tiles they touch. Some tiles are cut short (T-288:
+    GHS-BUILT-V NRES R3_C18 is 9,000 pixels wide); the GeoTIFF tie point says where the image
+    starts, and rows or columns outside it are zero."""
     import tifffile
     with zipfile.ZipFile(path) as z:
         data = z.read(next(n for n in z.namelist() if n.endswith(".tif")))
     with tifffile.TiffFile(io.BytesIO(data)) as tf:
         pg = tf.pages[0]
+        out = np.zeros((r1 - r0, c1 - c0), np.float64)
+        dr = dc = 0
+        tie = pg.tags.get(33922)
+        if tile_x0 is not None and tie is not None:
+            dc = int(round((tie.value[3] - tile_x0) / PIX_M))  # image column 0 in tile columns
+            dr = int(round((tile_y0 - tie.value[4]) / PIX_M))
+        R0, R1 = max(r0 - dr, 0), min(r1 - dr, pg.imagelength)  # in image rows and columns
+        C0, C1 = max(c0 - dc, 0), min(c1 - dc, pg.imagewidth)
+        if R0 >= R1 or C0 >= C1:
+            return out
+        oR, oC = R0 + dr - r0, C0 + dc - c0  # where the image part lands in out
+        sub = out[oR:oR + (R1 - R0), oC:oC + (C1 - C0)]
+        r0, r1, c0, c1 = R0, R1, C0, C1
         th, tw = pg.tilelength, pg.tilewidth
         nx = math.ceil(pg.imagewidth / tw)
-        out = np.zeros((r1 - r0, c1 - c0), np.float64)
         fh = tf.filehandle
         for ty in range(r0 // th, (r1 - 1) // th + 1):
             for tx in range(c0 // tw, (c1 - 1) // tw + 1):
@@ -142,7 +159,7 @@ def _read_tile_window(path, r0, r1, c0, c1):
                 ya, xa = ty * th, tx * tw
                 ra, rb = max(r0, ya), min(r1, ya + seg.shape[0])
                 ca, cb = max(c0, xa), min(c1, xa + seg.shape[1])
-                out[ra - r0:rb - r0, ca - c0:cb - c0] = seg[ra - ya:rb - ya, ca - xa:cb - xa]
+                sub[ra - r0:rb - r0, ca - c0:cb - c0] = seg[ra - ya:rb - ya, ca - xa:cb - xa]
     out[out < 0] = 0.0  # nodata (-200 in GHS-POP)
     return out
 
@@ -172,7 +189,7 @@ def ghsl_window(kind, bbox_ll, epoch=2020, pad_m=0.0):
             path = _tile_path(kind, epoch, r, c)
             if path is None:
                 continue
-            win = _read_tile_window(path, r_a, r_b, c_a, c_b)
+            win = _read_tile_window(path, r_a, r_b, c_a, c_b, tx0, ty0)
             wr, wc = round((Y0 - ty0) / PIX_M) + r_a, round((tx0 - X0) / PIX_M) + c_a
             out[wr:wr + win.shape[0], wc:wc + win.shape[1]] = win
     return out, X0, Y0
@@ -244,9 +261,37 @@ def worldbank(iso2):
     return emp * (1 - kids), kids, int(year)
 
 
+WB_TERTIARY = "https://api.worldbank.org/v2/country/{iso2}/indicator/{ind}?format=json&date=2010:2025&per_page=100"
+
+
+def tertiary_share(iso2):
+    """Tertiary students a resident, nationally: UNESCO's enrolment in tertiary education, all
+    programmes (World Bank SE.TER.ENRL) over the population (SP.POP.TOTL) of the latest year with
+    both; (share, year), or (None, None) where UNESCO has no figure (T-288)."""
+    by = {}
+    for ind in ("SE.TER.ENRL", "SP.POP.TOTL"):
+        path = raw(f"worldbank_{iso2}_{ind}.json")
+        if not os.path.exists(path):
+            r = requests.get(WB_TERTIARY.format(iso2=iso2, ind=ind), headers=b.UA, timeout=60)
+            r.raise_for_status()
+            with open(path, "w") as f:
+                json.dump(r.json(), f)
+        with open(path) as f:
+            for x in json.load(f)[1] or []:
+                if x["value"] is not None:
+                    by.setdefault(x["date"], {})[ind] = x["value"]
+    years = [y for y, v in by.items() if len(v) == 2]
+    if not years:
+        return None, None
+    y = max(years)
+    return by[y]["SE.TER.ENRL"] / by[y]["SP.POP.TOTL"], int(y)
+
+
 # ---------------------------------------------------------------- boundary and water
 
 def build_boundary(city, cfg):
+    if callable(cfg["boundary_file"]):  # T-288: a country module writes it from admin units
+        cfg["boundary_file"] = cfg["boundary_file"]()
     with open(cfg["boundary_file"]) as f:
         fc = json.load(f)
     feats = fc["features"] if "features" in fc else [fc]
@@ -616,7 +661,15 @@ def education_osm(city, boundary, kids):
     unknown = uni[uni.students.isna() & (uni.m2 > 0)]
     unk_students = unknown.m2.to_numpy() * per_m2
     rows = pd.concat([known, unknown])
-    uenr, n_u = place(rows, np.concatenate([known_students, unk_students]))
+    # T-288: the total from the national tertiary enrolment a resident; Wikidata counts and site
+    # areas only spread it. Unscaled, London's counted institutions were dense central buildings
+    # (1,925 students a hectare at the median), which put 50-150k students on suburban campuses.
+    site_students = np.concatenate([known_students, unk_students])
+    ter, ter_year = tertiary_share(cfg["iso2"])
+    raw_total = float(site_students.sum())
+    if ter and raw_total > 0:
+        site_students = site_students * (pop.sum() * ter / raw_total)
+    uenr, n_u = place(rows, site_students)
     adults = pop * (1 - kids)
     buf = education.replace_cell_arrays(header, buf, {"school_children": children.astype("<f4"), "school_enrollment": enr,
                                                       "university_adults": adults.astype("<f4"), "university_enrollment": uenr})
@@ -628,17 +681,19 @@ def education_osm(city, boundary, kids):
         "attendance_factor": 0.9, "sources": ["https://www.openstreetmap.org/copyright", WORLDBANK.format(iso2=cfg["iso2"])]}
     header["university"] = dict(
         coverage="tier 0: OSM amenity=university|college; Wikidata P2196 students by institution split over its sites by area, other sites "
-                 f"at the median {per_m2 * 1e4:.0f} students a hectare",
+                 f"at the median {per_m2 * 1e4:.0f} students a hectare"
+                 + (f"; scaled to population x {ter:.4f} tertiary students a resident (UNESCO via World Bank SE.TER.ENRL, {ter_year})" if ter else ""),
         enrolled=float(uenr.sum(dtype=np.float64)), institutions=int(known.wikidata.nunique()), sites=int(n_u),
         location_match_share=1.0, adult_weight=float(adults.sum()), adult_origin=f"population x {1 - kids:.3f} (ages 15+, World Bank)",
         attendance_factor=0.6, decay_m=6000, limitations="Wikidata counts are of mixed years and definitions; sites without a count sized by area",
-        sources=["https://www.openstreetmap.org/copyright", WIKIDATA])
+        sources=["https://www.openstreetmap.org/copyright", WIKIDATA, WB_TERTIARY.format(iso2=cfg["iso2"], ind="SE.TER.ENRL")])
     canada.rewrite(stem, header, buf)
     with open(os.path.join(b.WORK, city + ".universities.audit.json"), "w") as f:
         json.dump([dict(name=r.name, wikidata=r.wikidata, m2=r.m2, students=s) for r, s in
-                   zip(rows.itertuples(), np.concatenate([known_students, unk_students]))], f, indent=1)
+                   zip(rows.itertuples(), site_students)], f, indent=1)
     print(f"schools: {len(sch):,} OSM sites, {enr.sum():,.0f} pupils of {pupils:,.0f}; universities: {known.wikidata.nunique()} with Wikidata "
-          f"counts ({len(known)} sites), {len(unknown)} sites by area at {per_m2 * 1e4:.0f} a hectare, {uenr.sum():,.0f} students", flush=True)
+          f"counts ({len(known)} sites), {len(unknown)} sites by area at {per_m2 * 1e4:.0f} a hectare, {raw_total:,.0f} students before "
+          f"scaling, {uenr.sum():,.0f} after" + (f" ({ter:.4f} a resident, {ter_year})" if ter else " (no national figure, unscaled)"), flush=True)
 
 
 # ---------------------------------------------------------------- airports, medical, parks

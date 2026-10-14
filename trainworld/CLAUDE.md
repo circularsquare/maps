@@ -88,8 +88,8 @@ packs, `..\venv\Scripts\python.exe`). Details and build orders: `docs/code-map.m
 ## Working here (Anita's decisions)
 
 - **The goal is the whole world; demand realism is core** (2026-10-13). New US cities stay paused.
-  Instead a sampler of other countries' cities (Toronto done; London, Berlin, Paris, Shanghai,
-  Mumbai next, not all at once) to learn which demand methods work everywhere. Each is a
+  Instead a sampler of other countries' cities (Toronto done; London playable at tier 0,
+  England's inputs next; then Berlin, Paris, Shanghai, Mumbai, not all at once) to learn which demand methods work everywhere. Each is a
   low-fidelity first pass: missing data (medical, say) is left out, extents pragmatic, basic
   checks, no deep calibration. The global build is the baseline everywhere; the reach goal is
   tailoring country by country, first for likely-popular countries (China, Japan, the UK, Germany

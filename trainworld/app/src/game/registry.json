@@ -239,6 +239,22 @@
       "localTrips": 15463757.0
     },
     {
+      "id": "lon",
+      "name": "London",
+      "origin": {
+        "lon": -0.1246,
+        "lat": 51.5073
+      },
+      "center": [
+        -0.1246,
+        51.5073
+      ],
+      "zoom": 11.2,
+      "utcOffset": 0,
+      "market": -1,
+      "localTrips": 30704274.0
+    },
+    {
       "id": "wor",
       "name": "Worcester County",
       "kind": "zone",

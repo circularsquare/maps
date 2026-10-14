@@ -147,8 +147,9 @@ Run from the maps root (`node trainworld/checks/<file>`).
   joining the solve; optional Chrome trace) with `t348-analyze.mjs` (what each long task in a
   trace spent its time on), `t161-complexes.mjs` (the real save's complexes for the native
   comparison), `t125-fingerprint.mjs` (a save's derived geometry, before and after a frame
-  change), `t277-browser.mjs` (Toronto; the template for a new city's browser check, not rerun
-  since T-277).
+  change), `t277-browser.mjs` (Toronto; not rerun since T-277), `t288-browser.mjs` (London:
+  open, boundary, the top bar's split, Thames refusal, a Central line test to a final solve; the
+  template for a new city's browser check).
 
 ## pipeline/: city packs (Python)
 
@@ -176,7 +177,9 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   beside the pack, not in it.
 - `frame_fixture.py` writes PROJ's values for the world frame (`app/src/game/frame.fixture.json`),
   which `checks/t125-frame-check.mjs` and the Rust frame test compare with.
-- `tier0.py`: the adapter from global sources only (T-287); `canada.py`: Canada's adapters.
+- `tier0.py`: the adapter from global sources only (T-287); `canada.py`: Canada's adapters;
+  `england.py`: England's inputs for a tier 0 city (ITL3 outline, Census 2021 district totals;
+  T-288; England's census upgrades go here, T-360).
 - Basemap glyph tiles (`app/public/fonts/`, checked in): `glyphs.py` rebuilds them, after a
   one-off `cargo install build_pbf_glyphs --locked` (on Windows set `CFLAGS` to a libz-sys zlib
   folder first, notes/T-056.md). Only needed to change the font, weights or fallback.

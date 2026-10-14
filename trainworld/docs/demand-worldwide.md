@@ -68,7 +68,21 @@ building Toronto from tier 0 against the real pack (notes/T-287.md has every tab
 - **Schools** are OSM sites sized by the square root of site area with pupils from the national
   share aged 0-14 (-6% in Toronto, 5.3% misplaced); public and private alike.
 - **Universities** are OSM campuses with Wikidata student counts, which few OSM campuses carry
-  (4 of 63 in Toronto), so most are sized by area: +20% in Toronto, 10.7% misplaced.
+  (4 of 63 in Toronto), so most are sized by area. Since T-288 the total is population x the
+  national tertiary students a resident (UNESCO enrolment via the World Bank, SE.TER.ENRL over
+  SP.POP.TOTL; UK 0.037 in 2018, Canada 0.044), and the counts and areas only spread it: London's
+  counted institutions are dense central buildings (1,925 students a hectare at the median), which
+  sized suburban campuses at 50-150k students and the pack at 2.4M against about half a million.
+  Why it may not carry over: students gather in university cities, so a national rate undercounts
+  a city with many campuses (Toronto -20% against Ontario's files; Boston or Oxford would be far
+  under) and overcounts one with few. Check: London against HESA (T-360).
+- **London's first reading** (T-288, tier 0, notes/T-288.md): GHSL put 12-19% too many people in
+  central boroughs (Westminster, Kensington and Chelsea, Camden, Hammersmith) before scaling to
+  Census 2021 districts, so the district totals matter in old dense centres. The jobs proxy
+  draws far too little to the centre: 483k jobs in Westminster and the City against about 1.3-1.4M
+  published, 4.36M in Greater London against about 6M, partly because the job total is the
+  national rate x residents (a commuter city's core has more jobs than residents). Check: T-360
+  against BRES by LSOA.
 - **Airports**: Wikidata's patronage matched StatCan's within 0.3% for Toronto's three airports.
 
 ## Homes (docs/demand.md 4.1)
