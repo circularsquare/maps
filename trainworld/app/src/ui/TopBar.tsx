@@ -3,20 +3,17 @@
 // re-renders only it.
 
 import type { ComponentChildren } from "preact";
-import { useEffect, useLayoutEffect, useRef } from "preact/hooks";
 import { clock, SPEEDS } from "../game/clock";
 import { activeCity, cityById, viewedZone } from "../game/cities";
-import { demandStep, demandUpdating, demandView, modeRides, modeSplit } from "../game/demand";
+import { demandUpdating, demandView, modeRides, modeSplit } from "../game/demand";
 import { clockTime, count, dayOf, money, moneyExact } from "../game/format";
 import { weekdayName, weekdayOf } from "../game/days";
 import { shownDay } from "../game/ui";
 
 const WEEKDAY_LONG = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-import { cityNames, demandIdle, loadFailure, loadProgress } from "../game/loading";
 import { world } from "../game/world";
 import { liveMoney, moneyState } from "../game/money";
 import { Icon } from "./widgets";
-import { LoadBar, loadingCardShown } from "./LoadingScreen";
 import { perfOff } from "../perfFlags";
 import { saveSlotsState } from "../workers/clockClient";
 import { CACHE_VERSION } from "../workers/demandCache";
@@ -97,26 +94,6 @@ export function TopBar() {
   const pct = (v: number) => (known ? v.toFixed(1) + "%" : "–");
   // T-342: the shares are of rides (trip legs) a day; the train's count beside its share, all in the hover
   const rides = modeRides.value;
-  const step = demandStep.value;
-  // T-149, T-172: a city loading (at startup, after a pan, or construction reaching it) says how
-  // far it has got
-  const load = loadProgress.value;
-  const busy = loadFailure.value ? "Demand could not load"
-    // T-180: while the clock waits, the card in the middle of the map says it instead
-    : loadingCardShown() ? null
-    // T-212: "Loading data", not the cities' names (those are in the hover)
-    // T-243: a thin bar after it, not a percentage
-    : load ? "Loading data"
-    : !demandView.value ? (demandIdle.value ? null : "Loading data…") // T-318: nothing to load over dead space
-    // T-232: figures before a solve's final round are shown only where nothing final is, and say so
-    : !demandView.value.final ? `Estimate, refining ${Math.min(step.done + 1, step.of)}/${step.of}…`
-    : demandUpdating.value ? `Updating demand ${Math.min(step.done + 1, step.of)}/${step.of}…` : null;
-  const busyTip = loadFailure.value ?? (load && !loadingCardShown() ? `Loading ${cityNames(load.cities)}, ${Math.floor(load.fraction * 100)}%. ${load.step}`
-    : !demandView.value || !busy ? busy
-    : !demandView.value.final ? "These figures are an early estimate. They settle when the forecast is finished."
-    // T-328: the figures kept from the last time this game was open, while it is worked out again
-    : demandView.value.version === CACHE_VERSION ? "These figures are from the last time this game was open. They are being worked out again."
-    : "These figures are for the network before your last change. They change once the new forecast is finished.");
   return (
     <><header id="topbar">
       {/* T-341: every part has a fixed width; a long name is cut short, the whole name on hover */}
@@ -148,34 +125,6 @@ export function TopBar() {
       <Cash />
       <Clock />
       <Speed />
-    </header><SaveNotice />
-    <StatusTag busy={busy} tip={busyTip} load={busy && load && !loadFailure.value ? load : null} /></>
+    </header><SaveNotice /></>
   );
-}
-
-/** T-349: the status, as a small tag over the map's top edge under the split bar's left edge (below the
- * top bar and the autosave notice), so the bar needs no room for it and nothing moves. A zero-height
- * anchor after the notice; the tag appears and goes in one step. */
-function StatusTag({ busy, tip, load }: { busy: string | null; tip: string | null | undefined; load: { fraction: number; step: string } | null }) {
-  const anchor = useRef<HTMLDivElement>(null);
-  const place = () => {
-    const a = anchor.current, box = document.querySelector("#topbar .bar-box");
-    if (!a || !box) return;
-    // visual px on both sides; the tag's own zoom scales only its contents
-    a.style.left = Math.round(box.getBoundingClientRect().left - (a.closest("#main") ?? a).getBoundingClientRect().left) + "px";
-  };
-  useLayoutEffect(place);
-  useEffect(() => {
-    const bar = document.getElementById("topbar");
-    if (!bar) return;
-    const ro = new ResizeObserver(place);
-    ro.observe(bar);
-    return () => ro.disconnect();
-  }, []);
-  return <div class="status-anchor" ref={anchor}>
-    {busy && <div class="status-tag sm" role="status" data-tip={tip ?? undefined}>
-      <span class="demand-busy">{busy}</span>
-      {load && <LoadBar fraction={load.fraction} step={load.step} thin />}
-    </div>}
-  </div>;
 }

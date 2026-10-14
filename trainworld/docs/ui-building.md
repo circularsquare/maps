@@ -87,7 +87,8 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
 - **Right or middle drag moves the map** while the tool is on; the wheel and arrow keys work as
   always. The map's own left drag is off for the tool's time.
 - **The selection bar** [T-353; `BlueprintBar` in `ui/Blueprint.tsx`] sits at the top centre of the
-  map while the tool has a selection (level with the demand buttons, lower on narrower maps; it
+  map while the tool has a selection (on the demand buttons' row on a map column over 1350 px, so it
+  clears the status tag beside them [T-349]; one row lower below that, lower again below 680 px; it
   appears and goes in one step): "N selected" (its hover lists track and stations), Disable and
   Enable as buttons with icon and word (keys D and E in their hovers), each greyed when it would
   change nothing, and Clear. The Build tab shows only "N disabled" while any blueprint is disabled,

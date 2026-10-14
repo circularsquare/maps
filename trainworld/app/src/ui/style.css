@@ -273,13 +273,13 @@ table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
 .pct { display: inline-block; width: 5ch; text-align: left; }
 .split-other .pct { width: 5.6ch; }
 .rides { display: inline-block; width: 10.5ch; overflow: hidden; text-overflow: ellipsis; }
-/* T-349: the status is a small tag hung from the map's top edge under the split bar's left edge (TopBar.tsx
-   sets the anchor's left), over the map, so the bar makes no room for it. T-180: in a narrow column the
-   text ends in an ellipsis; the whole text is its hover. */
-.status-anchor { position: relative; flex: none; height: 0; z-index: 5; pointer-events: none; }
-.status-tag { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 8px; height: 18px; padding: 0 8px;
-  max-width: 360px; background: var(--bg); border: 1px solid var(--rule); border-top: 0; white-space: nowrap;
-  font-size: 12px; font-weight: 400; line-height: 14px; color: var(--muted); pointer-events: auto; zoom: var(--ui, 1); }
+/* T-349: the status is a small tag on the map's top row, right of the demand buttons (StatusTag.tsx), so
+   the top bar makes no room for it. T-180: in a narrow column the text ends in an ellipsis; the whole
+   text is its hover. */
+.status-tag { flex: 0 1 auto; min-width: 0; display: flex; align-items: center; gap: 8px; height: 24px; padding: 0 8px;
+  max-width: 360px; background: var(--bg); border: 1px solid var(--rule); white-space: nowrap;
+  font-size: 12px; font-weight: 400; line-height: 14px; color: var(--muted); }
+.map-top-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; max-width: 100%; }
 .demand-busy { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .status-tag .load-bar.thin { height: 4px; margin-right: 0; }
 .split-other { flex: none; display: inline-flex; align-items: center; gap: 6px; }
@@ -308,7 +308,7 @@ table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
 
 #map { position: relative; flex: 1; min-height: 0; background: var(--map-land); }
 /* T-231: the demand buttons and, under them, the stations full alert */
-.map-top-left { position: absolute; left: 10px; top: 26px; z-index: 4; max-width: calc(100% - 20px);
+.map-top-left { position: absolute; left: 10px; top: 10px; z-index: 4; max-width: calc(100% - 20px);
   display: flex; flex-direction: column; align-items: flex-start; gap: 6px; pointer-events: none; }
 .map-top-left > * { pointer-events: auto; }
 .demand-selector { display: flex; flex-wrap: wrap; max-width: 100%; }
@@ -371,13 +371,13 @@ table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
 .blueprint-items .val { flex: none; white-space: nowrap; }
 .blueprint-construct { width: 100%; }
 .blueprint-pick { margin-top: 14px; }
-/* T-353: the Select tool's bar at the map's top centre, level with the demand buttons (below the status tag).
-   Lower on narrower maps, where the demand buttons and the search box take the sides. */
-.blueprint-bar { position: absolute; left: 50%; top: 26px; transform: translateX(-50%); z-index: 4; display: flex; align-items: center; gap: 10px;
+/* T-353: the Select tool's bar at the map's top centre, level with the demand buttons. Lower on narrower
+   maps, where the demand buttons with the status tag (T-349) and the search box take the row. */
+.blueprint-bar { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); z-index: 4; display: flex; align-items: center; gap: 10px;
   padding: 6px 8px 6px 12px; background: var(--bg); border: 1px solid var(--rule); white-space: nowrap; }
 .blueprint-bar .count { min-width: 76px; }
-@container map-column (max-width: 1000px) { .blueprint-bar { top: 62px; } }
-@container map-column (max-width: 680px) { .blueprint-bar { top: 96px; } }
+@container map-column (max-width: 1350px) { .blueprint-bar { top: 46px; } }
+@container map-column (max-width: 680px) { .blueprint-bar { top: 80px; } }
 .bp-box { position: absolute; z-index: 3; pointer-events: none; border: 1.5px dashed var(--net-ink); background: color-mix(in srgb, var(--net-ink) 10%, transparent); }
 .btn.lv { min-width: 32px; padding: 0 4px; font-variant-numeric: tabular-nums; }
 .tool-pick { display: flex; }
@@ -618,8 +618,15 @@ table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
   /* T-231: the alert sits beside the search glass, which is under the demand buttons here */
   .stations-full { margin-left: 36px; }
 }
+/* T-349: this narrow, the status tag drops to a second row under the demand buttons, a row kept
+   whether or not it shows; the search glass, the alert and the Select bar sit under it */
+@container map-column (max-width: 520px) {
+  .map-top-row { min-height: 58px; align-content: flex-start; }
+  .map-search { top: 74px; }
+  .blueprint-bar { top: 110px; }
+}
 @container map-column (max-width: 360px) {
-  .map-search { top: 80px; }
+  .map-search { top: 108px; }
 }
 
 /* T-195: the trip explorer's inspector and its canvas over the demand views' */

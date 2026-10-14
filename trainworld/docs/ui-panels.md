@@ -82,10 +82,12 @@ rows (name, cash, time and speed over the split).
   (a solve's, or the bare pass's for a zone no station reaches; not the no-rail split a pack gives
   before that), and over dead space [T-318]. The hover says "on weekdays" or "at weekends" for the
   day shown. The zone named is the focused zone ([ui-demand-views.md](ui-demand-views.md)).
-- **Status** [T-349]: a small tag (small type style, background, thin border) hung from the map's
-  top edge under the split bar's left edge, below the top bar and the autosave notice, over the map
-  (the demand selector sits 16 px lower to leave room). It appears and goes in one step and moves
-  nothing; the whole text is its hover. While a solve runs after an edit, "Updating demand
+- **Status** [T-349, `ui/StatusTag.tsx`]: a small tag (small type style, background, thin border)
+  on the map's top row, to the right of the demand buttons and centred with them (`ui/DemandSelector.tsx`;
+  the buttons stay at the top left). It appears and goes in one step and moves nothing; the whole
+  text is its hover. On a map column under 520 px the tag takes a second row under the buttons,
+  kept whether or not it shows, with the search glass, the stations full alert and the selection bar
+  under it. While a solve runs after an edit, "Updating demand
   2/4…" and the split faded, the figures held [T-232], and the same while a reload shows the cached
   figures from the last time the game was open, with a hover saying so [T-328]; during startup's
   refinement "Estimate, refining 2/4…"; a city loading later "Loading data" with a thin bar after it

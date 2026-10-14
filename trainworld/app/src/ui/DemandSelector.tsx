@@ -5,11 +5,16 @@ import { asFilter, FILTER_PURPOSES, purposeColour } from "../game/purposes";
 import { useState } from "preact/hooks";
 import { display, purposeFilter } from "../game/ui";
 import { StationsFull } from "./StationsFull";
+import { StatusTag } from "./StatusTag";
 
-/** The map's upper left: the demand buttons, and under them the stations full alert (T-231). */
+/** The map's upper left: the demand buttons with the status tag to their right (T-349), and under
+ * them the stations full alert (T-231). */
 export function MapTopLeft() {
   return <div class="map-top-left">
-    <DemandSelector />
+    <div class="map-top-row">
+      <DemandSelector />
+      <StatusTag />
+    </div>
     <StationsFull />
   </div>;
 }
