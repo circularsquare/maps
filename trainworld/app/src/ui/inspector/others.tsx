@@ -494,7 +494,8 @@ const CRUSH_PER_CAR = 160;
 function OnBoard({ line, run, s, stopS, cars, profile, dep }: { line: LineInput; run: number; s: number; stopS: number[]; cars: number; profile: number; dep: number }) {
   const dm = lineDemand(line.id);
   const n = line.stops.length;
-  const p = periodAt(clock.minute.value * 60);
+  // T-309: the period in the line's own local time
+  const p = periodAt(clock.minute.value * 60 + (world.value?.lineStats[line.id]?.shift ?? 0));
   const tph = line.tph[PERIODS[p].demand];
   const trains = tph * (PERIODS[p].to - PERIODS[p].from);
   let seg = 0;

@@ -28,13 +28,14 @@ import { purposeWords, type PurposeFilter } from "../game/purposes";
 import type { Selection } from "../game/types";
 import { display, purposeFilter, selection, tool } from "../game/ui";
 import { world } from "../game/world";
-import { BUBBLE_DENSITY, RES_AREA_M2, type Bubbles, type FromCommuters, type Ready, type Summed, type ToCommuters } from "../workers/commutersProtocol";
+import { BUBBLE_DENSITY, RES_AREA_M2, type Bubbles, type FromCommuters, type Moved, type Ready, type Summed, type ToCommuters } from "../workers/commutersProtocol";
 import { aggregate, discs, type Groups } from "./bubbles";
 import { CATCH_STEP, CATCH_WALL_MS, caughtUp, tripsDone } from "./catchUp";
 import { cityOverview } from "./intercityView";
-import { addFinder, discAt, pointerLocal } from "./demandHover";
+import { anchorVersion } from "./anchorVersion";
+import { addFinder, discAt, pointerAt, pointerLocal, type Pointer } from "./demandHover";
 import { bubbleLevel, type DemandOverlay } from "./demandOverlay";
-import { HOME_ANCHOR, MERC_K, toLocal } from "./geo";
+import { anchor, anchorShift, kAtY, toLocal, type Anchor } from "./geo";
 
 
 export interface Place {
@@ -62,7 +63,9 @@ function farOf(f: Flows, purpose: PurposeFilter): FarEnd | null {
 export const commuterStats = { nearbyMs: 0, nearbyBuilds: 0, nearbyShown: {} as Record<string, number>, cellsMs: 0, workerMs: 0, roundTripMs: 0, builds: 0, uploadMs: 0, selectMs: 0, flowsMs: 0, farMs: 0, farCells: 0, sumMs: 0,
   /** T-285: performance.now() when a selection's far end was asked for, its answer came, the
    * bubble worker's sums came and the far end was handed to the overlay */
-  pickAt: 0, flowsAt: 0, summedAt: 0, farAt: 0 };
+  pickAt: 0, flowsAt: 0, summedAt: 0, farAt: 0,
+  /** ?debug=1 (T-317): the city's bubbles on show, with the anchor their positions are relative to */
+  probe: null as null | (() => { anchor: Anchor; levels: { discs: Float32Array; group: Uint32Array }[] } | null) };
 
 const pct = (v: number, all: number) => (all > 0 ? Math.round((100 * v) / all) : 0);
 const modeLine = (t: number, w: number, d: number) => {
@@ -80,21 +83,48 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   let nextId = 1;
   /** replies of every bubble worker (the focused zone's and the nearby zones'), by message id */
   const pending = new Map<number, (b: any) => void>();
+  // Positions are measured from the draw anchor (map/geo.ts, T-317). A worker is told the anchor in
+  // force with its cells and again whenever it has changed (`sync`, before anything is asked of it),
+  // and every answer says which anchor it is relative to. Its cells come back each time (`Moved`),
+  // for the selection's discs made here.
+  const readies = new WeakMap<Worker, Ready>();
+  const told = new WeakMap<Worker, number>();
+  const sync = (w: Worker) => {
+    const a = anchor();
+    if (told.get(w) === a.version) return;
+    told.set(w, a.version);
+    const id = nextId++;
+    pending.set(id, (m: Moved) => {
+      const r = readies.get(w);
+      // the cells are updated in place: the focused zone's and a nearby zone's both hold the one object
+      if (!r || m.anchor.version < r.anchor.version) return;
+      r.cellX = m.cellX;
+      r.cellY = m.cellY;
+      r.anchor = m.anchor;
+      if (w === worker) drawPick();
+    });
+    const msg: ToCommuters = { kind: "anchor", id, anchor: a };
+    w.postMessage(msg);
+  };
   /** A bubble worker for one zone's cells: the focused zone's, or a nearby zone's (T-276). */
   const spawn = (cells: CityCells): { worker: Worker; ready: Promise<Ready> } => {
     const w = new Worker(new URL("../workers/commuters.worker.ts", import.meta.url), { type: "module" });
     const ready = new Promise<Ready>((done) => {
       w.onmessage = (e: MessageEvent<FromCommuters>) => {
         const m = e.data;
-        if (m.kind === "ready") done(m);
-        else {
+        if (m.kind === "ready") {
+          readies.set(w, m);
+          done(m);
+        } else {
           pending.get(m.id)?.(m);
           pending.delete(m.id);
         }
       };
     });
     const f = getWorldFrame();
-    const msg: ToCommuters = { kind: "cells", xy: cells.xy.slice(), h3: cells.h3.slice(), frame: { kind: f.kind, lon: f.lon, lat: f.lat } };
+    const a = anchor();
+    const msg: ToCommuters = { kind: "cells", xy: cells.xy.slice(), h3: cells.h3.slice(), frame: { kind: f.kind, lon: f.lon, lat: f.lat }, anchor: a };
+    told.set(w, a.version);
     w.postMessage(msg, [msg.xy.buffer, msg.h3.buffer]);
     return { worker: w, ready };
   };
@@ -125,6 +155,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   /** Catching up to the result `version` from `from`, the legs per cell drawn when it landed
    * (homes by rail, walking, driving, then destinations the same), since `start` (catchUp.ts). */
   let catching: { version: number; day: number; purpose: PurposeFilter; from: Float32Array[]; start: number } | null = null;
+  commuterStats.probe = () => (shown ? { anchor: shown.bubbles.anchor, levels: shown.bubbles.levels.map((l) => ({ discs: l.discs, group: l.group })) } : null);
   let wanted = 0;
   /** builds of the city's bubbles in flight (a new result's); the catch-up's redraws wait for them */
   let building = 0;
@@ -159,7 +190,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
       if (sameFrame && worker && city && cellsWorld && !zones.has(old)) {
         const keep = was && was.f >= 1 ? { dv: was.dv, end: was.end, purpose: was.purpose, bubbles: was.bubbles, modes: was.modes } : null;
         zones.set(old, { worker, city, cellsWorld, start: Promise.resolve(true), ask: 0, shown: keep });
-        if (keep) view.setNearbyBubbles(old, keep.bubbles.levels.map((l) => l.discs));
+        if (keep) view.setNearbyBubbles(old, keep.bubbles.levels.map((l) => l.discs), keep.bubbles.anchor);
       } else worker?.terminate();
       focusSeen = focus; frameSeen = frameNow; focusEpoch++; wanted++;
       worker = null; workerReady = null; city = null; cellsWorld = null;
@@ -179,6 +210,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
       commuterPick.value = null;
       if (selection.peek()?.kind === "commuters") selection.value = null;
     }
+    anchorVersion.value; // the bubbles are measured from the draw anchor (T-317): again when it moves
     const d = display.value;
     const dv = demandView.value;
     const updating = demandUpdating.value;
@@ -197,7 +229,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     if (!d.commuters || !dv) return;
     const end = d.commuterEnd;
     // a solve's first estimate, and its refined result once the crowding rounds are done
-    if (shown && shown.dv.version === dv.version && shown.dv.day === dv.day && shown.end === end && shown.purpose === purpose && (shown.dv === dv || updating)) return;
+    if (shown && shown.dv.version === dv.version && shown.dv.day === dv.day && shown.end === end && shown.purpose === purpose && (shown.dv === dv || updating) && shown.bubbles.anchor.version === anchor().version) return;
     const ask = ++wanted;
     building++;
     void (async () => {
@@ -214,6 +246,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
       const f = share();
       // a whole build is kept for a later switch of end only when it is not part way caught up
       let b = f >= 1 && built?.modes === modes ? built.ends.get(end) : undefined;
+      if (b && b.anchor.version !== anchor().version) b = undefined;
       if (!b) {
         if (!(await startWorker())) return;
         const t0 = performance.now();
@@ -221,7 +254,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
         commuterStats.workerMs = b.ms;
         commuterStats.roundTripMs = performance.now() - t0;
         commuterStats.builds++;
-        if (f >= 1 && built?.modes === modes) built.ends.set(end, b);
+        if (f >= 1 && built?.modes === modes && b.anchor.version === anchor().version) built.ends.set(end, b);
       }
       if (ask !== wanted) return;
       showBubbles({ dv, end, purpose, bubbles: b, modes, from: f < 1 ? catching!.from : null, f });
@@ -261,6 +294,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   /** Bubbles of one end from legs per cell (rail, walking, driving; transferred), in worker `w`. */
   const buildOn = (w: Worker, end: "home" | "work", cells: Float32Array[]) => {
     const id = nextId++;
+    sync(w);
     return new Promise<Bubbles>((done) => {
       pending.set(id, done);
       const msg: ToCommuters = { kind: "build", id, end, train: cells[0], walk: cells[1], drive: cells[2] };
@@ -276,6 +310,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     const dv = demandView.value;
     const updating = demandUpdating.value;
     const purpose = purposeFilter.value;
+    anchorVersion.value; // again at a new draw anchor (T-317)
     // the focused zone's own entry is left for the focus change to take over (above)
     for (const id of [...zones.keys()]) if (!ids.includes(id) && id !== focus) dropZone(id);
     if (!d.commuters || !dv) return;
@@ -285,7 +320,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
       let z = zones.get(id);
       if (!z) zones.set(id, (z = { worker: null, city: null, cellsWorld: null, ask: 0, shown: null }));
       const s = z.shown;
-      if (s && s.dv.version === dv.version && s.dv.day === dv.day && s.end === end && s.purpose === purpose && (s.dv === dv || updating)) continue;
+      if (s && s.dv.version === dv.version && s.dv.day === dv.day && s.end === end && s.purpose === purpose && (s.dv === dv || updating) && s.bubbles.anchor.version === anchor().version) continue;
       // another purpose's or end's bubbles would mislead: none meanwhile (a new result keeps the last)
       if (s && (s.purpose !== purpose || s.end !== end)) {
         z.shown = null;
@@ -313,17 +348,24 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
         const b = await buildOn(entry.worker, end, MODE_KEYS.slice(o, o + 3).map((k) => modes[k].slice()));
         if (!live()) return;
         entry.shown = { dv, end, purpose, bubbles: b, modes };
-        view.setNearbyBubbles(id, b.levels.map((l) => l.discs));
+        view.setNearbyBubbles(id, b.levels.map((l) => l.discs), b.anchor);
         commuterStats.nearbyMs = performance.now() - t0;
         commuterStats.nearbyBuilds++;
         commuterStats.nearbyShown[id] = performance.now();
       })();
     }
   });
+  // a new draw anchor goes to every worker at once, so their cells are measured from it for the
+  // selection's discs even while no bubbles are being built
+  effect(() => {
+    anchorVersion.value;
+    if (worker) sync(worker);
+    for (const z of zones.values()) if (z.worker) sync(z.worker);
+  });
   const showBubbles = (s: NonNullable<typeof shown>) => {
     shown = s;
     if (s.f >= 1 && catching?.version === s.modes.version) catching = null;
-    view.setBubbles(s.bubbles.levels.map((l) => l.discs));
+    view.setBubbles(s.bubbles.levels.map((l) => l.discs), s.bubbles.anchor);
     commuterStats.uploadMs = view.uploadMs;
   };
   // On the game clock's minutes: rebuild with the new share when it has moved a step (and not
@@ -351,36 +393,36 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
 
   // ---- hover ----
   const endWord = (end: "home" | "work") => (end === "home" ? "at homes" : "at destinations");
-  addFinder(10, (x, y) => {
+  addFinder(10, (p) => {
     if (!shown || !display.peek().commuters || cityOverview.peek()) return null;
     const sel = selection.peek();
     if (sel?.kind === "station") return null;
     if (sel?.kind === "commuters") {
-      let i = discAt(nearDiscs, x, y, view.bubbleSize);
+      let i = discAt(nearDiscs, p, nearAnchor, view.bubbleSize);
       if (i >= 0 && near) return [`${count(near.train[i] + near.walk[i] + near.drive[i])} ${tripWords()} a day ${endWord(sel.end)} here`, "Outward and return legs included.", modeLine(near.train[i], near.walk[i], near.drive[i])];
-      i = discAt(farDiscs, x, y, view.bubbleSize);
+      i = discAt(farDiscs, p, farAnchor, view.bubbleSize);
       if (i >= 0 && far) return [`${count(far.train[i] + far.walk[i] + far.drive[i])} ${tripWords()} a day ${endWord(sel.end === "home" ? "work" : "home")} here`, `${sel.end === "home" ? "Their homes" : "Their destinations"} are in the selected area.`, modeLine(far.train[i], far.walk[i], far.drive[i]), "Click to explore this trip"];
       return null;
     }
     const L = shown.bubbles.levels[bubbleLevel(map.getZoom())];
-    const i = discAt(L.discs, x, y, view.bubbleSize);
+    const i = discAt(L.discs, p, shown.bubbles.anchor, view.bubbleSize);
     if (i < 0) return null;
     return [`${count(L.train[i] + L.walk[i] + L.drive[i])} ${tripWords()} a day ${endWord(shown.end)} here`, "Outward and return legs included.", modeLine(L.train[i], L.walk[i], L.drive[i])];
   });
   /** A nearby zone's bubble under the point (T-276): drawn under the focused zone's, shown with them. */
-  const nearbyAt = (x: number, y: number): { id: CityId; s: ZoneShown; i: number } | null => {
+  const nearbyAt = (p: Pointer): { id: CityId; s: ZoneShown; i: number } | null => {
     const sel = selection.peek()?.kind;
     if (!display.peek().commuters || cityOverview.peek() || sel === "commuters" || sel === "station") return null;
     const level = bubbleLevel(map.getZoom());
     for (const [id, z] of zones) {
       if (!z.shown || id === activeCity.peek()) continue;
-      const i = discAt(z.shown.bubbles.levels[level].discs, x, y, view.bubbleSize);
+      const i = discAt(z.shown.bubbles.levels[level].discs, p, z.shown.bubbles.anchor, view.bubbleSize);
       if (i >= 0) return { id, s: z.shown, i };
     }
     return null;
   };
-  addFinder(9, (x, y) => {
-    const hit = nearbyAt(x, y);
+  addFinder(9, (p) => {
+    const hit = nearbyAt(p);
     if (!hit) return null;
     const L = hit.s.bubbles.levels[bubbleLevel(map.getZoom())], i = hit.i;
     return [`${count(L.train[i] + L.walk[i] + L.drive[i])} ${tripWords()} a day ${endWord(hit.s.end)} here`, "Outward and return legs included.", modeLine(L.train[i], L.walk[i], L.drive[i])];
@@ -389,15 +431,16 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   // ---- selecting bubbles ----
   /** The city's bubbles at the zoom on screen whose disc contains (or, for a box, whose centre is
    * in) the given area: their groups. */
-  const groupsAt = (x: number, y: number): number[] => {
+  const groupsAt = (p: Pointer): number[] => {
     if (!shown) return [];
     const L = shown.bubbles.levels[bubbleLevel(map.getZoom())];
-    const i = discAt(L.discs, x, y, view.bubbleSize);
+    const i = discAt(L.discs, p, shown.bubbles.anchor, view.bubbleSize);
     return i < 0 ? [] : [L.group[i]];
   };
-  const groupsIn = (x0: number, y0: number, x1: number, y1: number): number[] => {
+  const groupsIn = (p0: Pointer, p1: Pointer): number[] => {
     if (!shown) return [];
     const L = shown.bubbles.levels[bubbleLevel(map.getZoom())];
+    const [x0, y0] = pointerLocal(p0, shown.bubbles.anchor), [x1, y1] = pointerLocal(p1, shown.bubbles.anchor);
     const out: number[] = [];
     for (let i = 0; i < L.group.length; i++) {
       const x = L.discs[i * 8], y = L.discs[i * 8 + 1];
@@ -455,24 +498,24 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   /** A click in the select tool: a bubble selection, or undefined to let the network have it. */
   const click = (px: number, py: number, add: boolean): Selection | undefined => {
     if (!display.peek().commuters || !shown || selection.peek()?.kind === "station" || cityOverview.peek()) return undefined;
-    const [x, y] = pointerLocal(map, px, py);
+    const p = pointerAt(map, px, py);
     const sel = selection.peek();
     // A selection replaces the city's bubbles. Its near/far discs remain above the network,
     // but clicking them must not select an invisible city bubble underneath.
     if (sel?.kind === "commuters") {
-      if (discAt(nearDiscs, x, y, view.bubbleSize) >= 0) return sel;
+      if (discAt(nearDiscs, p, nearAnchor, view.bubbleSize) >= 0) return sel;
       // a far-end bubble opens the trip explorer for the pair (T-208)
-      const i = discAt(farDiscs, x, y, view.bubbleSize);
+      const i = discAt(farDiscs, p, farAnchor, view.bubbleSize);
       return i >= 0 ? farTrip(sel, i) ?? sel : undefined;
     }
-    const s = selectGroups(groupsAt(x, y), add);
+    const s = selectGroups(groupsAt(p), add);
     if (s) return s;
     // a nearby zone's bubble (T-276): its zone takes the focus, with this worker and these bubbles
     // (the focus change above), and the bubble is selected as one of the focused zone's
-    const hit = nearbyAt(x, y);
+    const hit = nearbyAt(p);
     if (!hit) return undefined;
     activeCity.value = hit.id;
-    return activeCity.peek() === hit.id && focusSeen === hit.id ? selectGroups(groupsAt(x, y), false) ?? undefined : undefined;
+    return activeCity.peek() === hit.id && focusSeen === hit.id ? selectGroups(groupsAt(p), false) ?? undefined : undefined;
   };
 
   // Long press, then drag: a box; the bubbles whose centres are in it are selected.
@@ -492,10 +535,10 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     const [x, y] = rel(e);
     const sel = selection.peek();
     if (sel?.kind === "station") return;
-    const [lx, ly] = pointerLocal(map, x, y);
+    const at = pointerAt(map, x, y);
     // Start a bubble box only on a visible city/selected-home bubble. A long press on a train,
     // station, empty map or a destination disc should keep its ordinary interaction.
-    if (sel?.kind === "commuters" ? discAt(nearDiscs, lx, ly, view.bubbleSize) < 0 : !groupsAt(lx, ly).length) return;
+    if (sel?.kind === "commuters" ? discAt(nearDiscs, at, nearAnchor, view.bubbleSize) < 0 : !groupsAt(at).length) return;
     const p = { x, y, on: false, add: e.shiftKey, timer: 0 };
     p.timer = window.setTimeout(() => {
       p.on = true;
@@ -530,15 +573,16 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     map.getCanvas().style.cursor = "";
     const [x, y] = rel(e);
     if (Math.hypot(x - p.x, y - p.y) <= STILL_PX) return; // a long press in place: the click decides
-    const [ax, ay] = pointerLocal(map, p.x, p.y), [bx, by] = pointerLocal(map, x, y);
-    const s = selectGroups(groupsIn(ax, ay, bx, by), p.add);
+    const s = selectGroups(groupsIn(pointerAt(map, p.x, p.y), pointerAt(map, x, y)), p.add);
     if (s) selection.value = s;
   });
 
   // ---- the selection on the map and in the inspector ----
   let near: Groups | null = null, far: Groups | null = null;
   let nearDiscs: Float32Array | null = null, farDiscs: Float32Array | null = null;
-  /** the far end summed into every level (in the worker: up to ~80k cells) */
+  /** the anchors the near and far discs are relative to (T-317) */
+  let nearAnchor: Anchor = anchor(), farAnchor: Anchor = anchor();
+  /** the far end summed into every level (in the worker: up to ~80k cells), relative to `farAnchor` */
   let farCells: Groups[] | null = null;
   let flowAsk = 0;
   let lastFlowKey: unknown = null;
@@ -560,15 +604,16 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     const [mt, mw, md] = sel.end === "home" ? [m.homeRail, m.homeWalk, m.homeDrive] : [m.workRail, m.workWalk, m.workDrive];
     const t = Float32Array.from(sel.cells, (c) => mt[c]), w = Float32Array.from(sel.cells, (c) => mw[c]), d = Float32Array.from(sel.cells, (c) => md[c]);
     near = aggregate(g, city.cellX, city.cellY, sel.cells, t, w, d);
-    nearDiscs = discs(near, 1 / BUBBLE_DENSITY[sel.end], BUBBLE_ALPHA, 2);
-    view.setDiscs("near", nearDiscs);
+    nearAnchor = city.anchor;
+    nearDiscs = discs(near, 1 / BUBBLE_DENSITY[sel.end], BUBBLE_ALPHA, 2, nearAnchor);
+    view.setDiscs("near", nearDiscs, nearAnchor);
     if (farCells) {
       far = farCells[level];
       // sized among themselves: the biggest about the area of a bubble's hexagon
       let max = 0;
       for (let i = 0; i < far.group.length; i++) max = Math.max(max, far.train[i] + far.walk[i] + far.drive[i]);
-      farDiscs = discs(far, max > 0 ? (0.6 * RES_AREA_M2[level]) / max : 0, BUBBLE_ALPHA, 1);
-      view.setDiscs("far", farDiscs);
+      farDiscs = discs(far, max > 0 ? (0.6 * RES_AREA_M2[level]) / max : 0, BUBBLE_ALPHA, 1, farAnchor);
+      view.setDiscs("far", farDiscs, farAnchor);
     } else {
       far = farDiscs = null;
       view.setDiscs("far", null);
@@ -577,13 +622,15 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   view.onLevel = () => drawPick();
 
   /** The far end's places, named by the station nearest them. */
-  const places = (fc: Groups[]): Place[] => {
+  const places = (fc: Groups[], A: Anchor): Place[] => {
     if (!city) return [];
     const a = fc[2]; // resolution 7, about 5 km²: places a player knows
-    const st = (world.peek()?.save.stations ?? []).map((s) => ({ name: s.name, at: toLocal(s.lng, s.lat, HOME_ANCHOR) }));
+    const st = (world.peek()?.save.stations ?? []).map((s) => ({ name: s.name, at: toLocal(s.lng, s.lat, A) }));
     const sel = selection.peek();
+    // everything in the units of `A`, the anchor the far end was summed at
+    const [sx, sy] = anchorShift(city.anchor, A);
     let cx = 0, cy = 0, n = 0;
-    if (sel?.kind === "commuters") for (const c of sel.cells.slice(0, 2000)) (cx += city.cellX[c]), (cy += city.cellY[c]), n++;
+    if (sel?.kind === "commuters") for (const c of sel.cells.slice(0, 2000)) (cx += city.cellX[c] + sx), (cy += city.cellY[c] + sy), n++;
     cx /= n || 1;
     cy /= n || 1;
     const byName = new Map<string, number>();
@@ -597,7 +644,8 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
         const dd = Math.hypot(s.at[0] - a.x[i], s.at[1] - a.y[i]);
         if (dd < best) (best = dd), (name = s.name);
       }
-      if (best > 3000 * MERC_K) name = `${Math.max(1, Math.round(Math.hypot(a.x[i] - cx, a.y[i] - cy) / MERC_K / 1000))} km ${compass(a.x[i] - cx, -(a.y[i] - cy))}`;
+      const k = kAtY(a.y[i], A);
+      if (best > 3000 * k) name = `${Math.max(1, Math.round(Math.hypot(a.x[i] - cx, a.y[i] - cy) / k / 1000))} km ${compass(a.x[i] - cx, -(a.y[i] - cy))}`;
       byName.set(name, (byName.get(name) ?? 0) + a.train[i] + a.walk[i] + a.drive[i]);
     }
     return [...byName].map(([name, riders]) => ({ name, riders })).sort((p, q) => q.riders - p.riders);
@@ -620,7 +668,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     // the far end: asked again when the selection or the demand result changes, and summed
     // again for another purpose filter from the answer in hand (T-158)
     const dv = demandView.peek();
-    const key = [sel, dv, purpose];
+    const key = [sel, dv, purpose, anchor().version]; // the far end is summed again at a new draw anchor (T-317)
     if ((lastFlowKey as unknown[] | null)?.every((v, i) => v === key[i])) return;
     lastFlowKey = key;
     const ask = ++flowAsk;
@@ -642,13 +690,15 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
         pending.set(id, done);
         const none = new Float32Array(0);
         const msg: ToCommuters = { kind: "sum", id, cells: fe?.cells ?? new Uint32Array(0), train: fe?.farRail ?? none, walk: fe?.farWalk ?? none, drive: fe?.farDrive ?? none };
+        sync(worker!);
         worker!.postMessage(msg);
       });
       if (ask !== flowAsk || selection.peek() !== sel) return;
       const t2 = performance.now();
       commuterStats.summedAt = t2;
       farCells = summed.levels;
-      commuterPick.value = { sel, totals, purposes: f.purposes, far: { totals: ft, places: places(farCells) }, purpose };
+      farAnchor = summed.anchor;
+      commuterPick.value = { sel, totals, purposes: f.purposes, far: { totals: ft, places: places(farCells, farAnchor) }, purpose };
       drawPick();
       commuterStats.farAt = performance.now();
       commuterStats.farMs = commuterStats.farAt - t2;
@@ -658,6 +708,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   effect(() => {
     const sel = selection.value;
     demandView.value;
+    anchorVersion.value;
     if (sel?.kind !== "commuters") {
       flowAsk++;
       farCells = null;

@@ -50,6 +50,9 @@ pub struct LineSvc {
     pub trains: [u32; 3],
     /// Per demand level: capacity delay over the round trip.
     pub delay: [f64; 3],
+    /// Seconds the line's local time runs ahead of the game clock (T-309, `Network::line_shift`):
+    /// its periods and its boarding account's hours are its own region's.
+    pub shift: f64,
 }
 
 impl LineSvc {
@@ -126,15 +129,17 @@ fn time_reaching(ph: &[profile::Phase], dur: f64, s: f64) -> f64 {
 
 /// A line's departure pattern (T-206): trains an hour per demand level, and where run 1's
 /// departures sit after each period's start (a whole-line fleet's reverse trips follow the forward
-/// ones round the circuit; 0 otherwise).
+/// ones round the circuit; 0 otherwise), and `shift`, the line's local time ahead of the game
+/// clock (T-309): its periods start on its own region's hours.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Lattice {
     pub tph: [f32; LEVELS],
     pub off: [f64; LEVELS],
+    pub shift: f64,
 }
 
 impl Lattice {
-    pub const NONE: Lattice = Lattice { tph: [0.0; LEVELS], off: [0.0; LEVELS] };
+    pub const NONE: Lattice = Lattice { tph: [0.0; LEVELS], off: [0.0; LEVELS], shift: 0.0 };
 }
 
 /// The pattern a line ran before a change at `until` (T-206): departures before `until` keep it,
@@ -191,10 +196,34 @@ fn period_points(lat: &Lattice, r: usize, day: i64, p: usize) -> Option<(f64, f6
     if n <= 0 { None } else { Some((ps, hw, n)) }
 }
 
-/// One run's departures from a pattern in `[a, b)`, with level and headway: per period,
-/// `start + off + k * headway`, leaving out any closer than half a headway after the period
-/// before's last (MIN_GAP_SHARE). A pure function of the pattern, so every window agrees.
+/// One run's departures from a pattern in `[a, b)` of game time, with level and headway: the
+/// pattern's periods are laid out in the line's local time (T-309, `Lattice::shift`), and each
+/// departure is the same game time from any window.
 fn lattice_deps(lat: &Lattice, r: usize, a: f64, b: f64, out: &mut Vec<(f64, u8, f64)>) {
+    let s = lat.shift;
+    if s == 0.0 {
+        return lattice_deps_local(lat, r, a, b, out);
+    }
+    // a second either side, so rounding in `a + s` never loses a departure on the window's edge
+    let start = out.len();
+    lattice_deps_local(lat, r, a + s - 1.0, b + s + 1.0, out);
+    let mut k = start;
+    for i in start..out.len() {
+        let (d, lev, hw) = out[i];
+        let d = d - s;
+        if d >= a && d < b {
+            out[k] = (d, lev, hw);
+            k += 1;
+        }
+    }
+    out.truncate(k);
+}
+
+/// One run's departures from a pattern in `[a, b)` of the line's local time, with level and
+/// headway: per period, `start + off + k * headway`, leaving out any closer than half a headway
+/// after the period before's last (MIN_GAP_SHARE). A pure function of the pattern, so every window
+/// agrees.
+fn lattice_deps_local(lat: &Lattice, r: usize, a: f64, b: f64, out: &mut Vec<(f64, u8, f64)>) {
     if !(b > a) {
         return;
     }
@@ -349,6 +378,7 @@ fn build_line(net: &Network, l: u32) -> LineSvc {
             ls.runs = [a, b];
             ls.ok = true;
             ls.running = net.line_constructed(l);
+            ls.shift = net.line_shift(l);
         }
         _ => {}
     }
@@ -534,7 +564,14 @@ impl Service {
             let t = tph[lev] as f64;
             if net.line_trains[l].is_some() && t > 0.0 { ls.trip_len(net, l as u32, 0, lev) % (3600.0 / t) } else { 0.0 }
         });
-        Some(Lattice { tph, off })
+        Some(Lattice { tph, off, shift: ls.shift })
+    }
+
+    /// Every line's local time again, after the time zone table changed (T-309).
+    pub fn reshift(&mut self, net: &Network) {
+        for (l, ls) in self.lines.iter_mut().enumerate() {
+            ls.shift = if ls.ok { net.line_shift(l as u32) } else { 0.0 };
+        }
     }
 
     /// Every line's pattern and every train running at `now`, before an edit (`note_changes`
@@ -791,13 +828,13 @@ impl Service {
         out
     }
 
-    /// Where a line's boarding account starts its day (T-164, T-206): 03:00 of a quiet day, or,
-    /// while it has eras, six hours before its latest change, so the account's day holds the
-    /// departures actually drawn around it.
+    /// Where a line's boarding account starts its day, in game time (T-164, T-206): 03:00 of a
+    /// quiet day in the line's local time (T-309), or, while it has eras, six hours before its
+    /// latest change, so the account's day holds the departures actually drawn around it.
     pub fn account_start(&self, l: usize, start_hour: f64) -> f64 {
         match self.eras_of(l).last() {
             Some(e) => ((e.until - 6.0 * 3600.0) / 60.0).floor() * 60.0,
-            None => DAY_S + start_hour * 3600.0,
+            None => DAY_S + start_hour * 3600.0 - self.lines.get(l).map_or(0.0, |ls| ls.shift),
         }
     }
 

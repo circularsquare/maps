@@ -14,6 +14,7 @@
 //!   trains needed, the trips to draw.
 //! - `boarding`: the boarding account (T-164): demand's riders per period turned into each
 //!   train's load and each platform's crowd, a day at a time.
+//! - `localtime`: each region's local time (T-309): the zone table and a place's shift.
 //! - `save`: the network part of a save (varints, mm deltas).
 //! - `wasm`: the wasm-bindgen API for the clock worker (a sketch).
 //! - `bench`: a synthetic 2,000 km network and edit timings (`src/bin/track_bench.rs`).
@@ -27,6 +28,7 @@ pub mod cost;
 pub mod cross;
 pub mod frame;
 pub mod geom;
+pub mod localtime;
 pub mod net;
 pub mod params;
 pub mod profile;

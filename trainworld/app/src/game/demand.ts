@@ -6,7 +6,7 @@
 // String()).
 
 import { computed, signal } from "@preact/signals";
-import { activeCity, REGISTRY, type CityId } from "./cities";
+import { activeCity, REGISTRY, viewedZone, type CityId } from "./cities";
 import { DAY_KINDS, type DayKind } from "./days";
 import { shownDay } from "./ui";
 import type { PurposeFilter, PurposeKey } from "./purposes";
@@ -115,8 +115,8 @@ export const demandUpdating = signal(false);
  * crowding round) of all it will publish. */
 export const demandStep = signal({ done: 0, of: 4 });
 
-/** The mode-split bar's numbers (null while the pack is still loading). */
-export const modeSplit = computed<ModeSplit | null>(() => cityDemandViews.value.get(activeCity.value)?.split ?? cityBaseSplits.value.get(activeCity.value) ?? baseSplit.value);
+/** The mode-split bar's numbers (null while the pack is still loading, and over dead space, T-318). */
+export const modeSplit = computed<ModeSplit | null>(() => !viewedZone.value ? null : cityDemandViews.value.get(activeCity.value)?.split ?? cityBaseSplits.value.get(activeCity.value) ?? baseSplit.value);
 
 export const lineDemand = (id: string): LineDemand | null => demandView.value?.lines.get(id) ?? null;
 export const stationDemand = (id: string): StationDemand | null => demandView.value?.stations.get(id) ?? null;

@@ -19,13 +19,13 @@ import { askTrip, stationName, stationPoint, tripKey, tripPeriod, tripView, type
 import { selection } from "../game/ui";
 import { world } from "../game/world";
 import { addFinder } from "./demandHover";
-import { HOME_ANCHOR, toLngLat, toLocal } from "./geo";
+import { toLngLat, toLocal } from "./geo";
 import type { NetworkBuffers } from "./network";
 import type { Overlay } from "./overlay";
 import { pick } from "./pick";
 
 /** The period the explorer shows: the player's pick, else the one in force on the clock. */
-export const shownPeriod = computed(() => tripPeriod.value ?? periodAt(clock.minute.value * 60));
+export const shownPeriod = computed(() => tripPeriod.value ?? periodAt(clock.local.value * 60)); // T-309: local in view
 
 /** Hit distance for the hover, px. */
 const HIT_PX = 6;
@@ -212,10 +212,10 @@ export function startTripView(map: MlMap, overlay: Overlay): TripTool {
   // ?debug=1: what is drawn, for the browser checks
   if (new URLSearchParams(location.search).get("debug") === "1") (window as any).twTrip = { drawn: () => drawn };
 
-  addFinder(30, (hx, hy) => {
-    // the finders' pointer is on the home anchor, the routes on the drawn network's (T-307)
-    const [lx, ly] = toLocal(...toLngLat(hx, hy, HOME_ANCHOR));
+  addFinder(30, (p) => {
+    // the routes are on the drawn network's anchor, which is the current one (T-307)
     if (!drawn || !marks) return null;
+    const [lx, ly] = toLocal(p.lng, p.lat);
     const z = map.getZoom();
     const tol = (HIT_PX * 40075016.686) / (512 * Math.pow(2, z));
     const loc = (p: [number, number]) => { const [lng, lat] = packToLngLat(p[0], p[1]); return toLocal(lng, lat); };

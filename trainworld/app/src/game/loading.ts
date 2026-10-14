@@ -28,6 +28,9 @@ export interface LoadProgress {
 export const loadProgress = signal<LoadProgress | null>(null);
 /** "loading" until the first game's demand has its first estimate, "failed" if it could not load. */
 export const startup = signal<"loading" | "ready" | "failed">("loading");
+/** T-318: nothing needs demand now: the view is over dead space and no built station reaches a
+ * zone. Nothing loads, no card or status says "Loading data", and the clock is not held for it. */
+export const demandIdle = signal(false);
 /** Why demand could not load (the pool is stopped); null while it works. */
 export const loadFailure = signal<string | null>(null);
 

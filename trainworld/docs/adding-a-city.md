@@ -16,11 +16,11 @@ Logs, check outputs and images go in `../artifacts/trainworld/` (from the maps r
 
 ## 1. Choose the city and its footprint
 
-- **Where.** The world frame is good within about 5 degrees of latitude of New York (35.8 to
-  45.8 N, T-125; Toronto at 43.7 N is inside). The renderer's single origin is centimetre-exact
-  within about 300 km of New York and 12 cm at 1,000 km (T-127; Toronto is 550 km away, check it
-  at the deepest zoom). The market keeps its sites in an equirectangular New York frame but
-  measures zone distances on the ground (T-128).
+- **Where.** Anywhere between 85 S and 85 N: new games are in the Mercator world frame, whose
+  track lengths are ground lengths everywhere (T-306, docs/world.md), and the renderer anchors to
+  the view (T-307). Games saved in the Northeast conic (TWT5) or the legacy frame are converted to
+  Mercator when they load (T-308). The market keeps its sites in an equirectangular New York frame
+  but measures zone distances on the ground (T-128); a city outside it is `market: -1`.
 - **Footprint.** Whole county-level units: US 2020 counties (`cb_2020_us_county_500k` GEOIDs;
   Connecticut's old counties), Canadian census divisions, the country's equivalent elsewhere. The
   metro area (OMB, BLS's list, StatCan's CMA) trimmed or widened by judgement to whole units; no
@@ -143,7 +143,9 @@ only once the pack, its boundary and its water mask exist**: every agent's clock
 registered city's water mask at startup, and the Node checks open every registered pack.
 
 - Append to `cities`: `id`, `name`, `origin` (**exactly** the `build_city.py` origin, since it is
-  the pack's frame), `center` (usually the origin), `zoom` 11.2, `market`.
+  the pack's frame), `center` (usually the origin), `zoom` 11.2, `utcOffset`, `market`.
+- `utcOffset` (T-309): the city's standard time offset from UTC in whole hours, no daylight
+  saving; round a half hour down (India's +5:30 is +5). Its periods, weekends and fares run on it.
 - `market` is the city's index in `market.places`, or **-1 for a city outside the regional
   market** (Toronto, until T-276 places it; `intercity.py`, `outside.py`, the city bubbles and the
   worker's longer-trip selection skip it). To join the market, append to `market.places`:

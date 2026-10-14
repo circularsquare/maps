@@ -1,5 +1,6 @@
 {
   "world": "northeast",
+  "clockUtcOffset": -5,
   "frame": {
     "kind": "merc",
     "lon": -73.985,
@@ -89,6 +90,7 @@
         40.758
       ],
       "zoom": 11.2,
+      "utcOffset": -5,
       "market": 0,
       "localTrips": 47527489.0
     },
@@ -104,6 +106,7 @@
         39.9526
       ],
       "zoom": 11.2,
+      "utcOffset": -5,
       "market": 1,
       "localTrips": 13188835.0
     },
@@ -119,6 +122,7 @@
         42.3601
       ],
       "zoom": 11.2,
+      "utcOffset": -5,
       "market": 3,
       "localTrips": 11037810.0
     },
@@ -134,6 +138,7 @@
         38.8977
       ],
       "zoom": 11.2,
+      "utcOffset": -5,
       "market": 4,
       "localTrips": 13490131.0
     },
@@ -149,6 +154,7 @@
         39.2904
       ],
       "zoom": 11.2,
+      "utcOffset": -5,
       "market": 5,
       "localTrips": 5781758.0
     },
@@ -164,6 +170,7 @@
         41.824
       ],
       "zoom": 11.2,
+      "utcOffset": -5,
       "market": 6,
       "localTrips": 3319988.0
     },
@@ -179,6 +186,7 @@
         41.3083
       ],
       "zoom": 11.2,
+      "utcOffset": -5,
       "market": 7,
       "localTrips": 1617179.0
     },
@@ -194,6 +202,7 @@
         41.7637
       ],
       "zoom": 11.2,
+      "utcOffset": -5,
       "market": 8,
       "localTrips": 2458534.0
     },
@@ -209,6 +218,7 @@
         42.1015
       ],
       "zoom": 11.2,
+      "utcOffset": -5,
       "market": 9,
       "localTrips": 1431448.0
     },
@@ -224,6 +234,7 @@
         43.6534
       ],
       "zoom": 11.2,
+      "utcOffset": -5,
       "market": -1,
       "localTrips": 15463757.0
     },
@@ -240,6 +251,7 @@
         42.2626
       ],
       "zoom": 10.5,
+      "utcOffset": -5,
       "market": 10,
       "localTrips": 1539392.0
     },
@@ -256,6 +268,7 @@
         41.7107
       ],
       "zoom": 10.5,
+      "utcOffset": -5,
       "market": 11,
       "localTrips": 183990.0
     },
@@ -272,6 +285,7 @@
         41.5243
       ],
       "zoom": 10.5,
+      "utcOffset": -5,
       "market": 12,
       "localTrips": 487485.0
     },
@@ -288,6 +302,7 @@
         41.8007
       ],
       "zoom": 10.5,
+      "utcOffset": -5,
       "market": 13,
       "localTrips": 270255.0
     }

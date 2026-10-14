@@ -222,7 +222,9 @@ busy track, and names the places it waits most (notes/T-031.md).
   extending track or changing congestion adjusts the headway while preserving the allocation.
   Resources used by count schedules keep continuous delays so rounding cannot make the solve
   oscillate. Legacy saves preserve their original frequencies until a schedule is edited.
-- **Departures** (`Service::run_deps`): per period, the first departure at the period's start and
+- **Departures** (`Service::run_deps`): per period of the line's local time (T-309: its first
+  stop's region's, `Lattice::shift`; a New York to Toronto line is on one offset, a London to
+  Paris line would run on London's), the first departure at the period's start and
   then one a headway; a whole-line fleet's reverse departures are offset by the forward trip so
   each train turns straight back. When the pattern changes (a new period, or an edit) a new
   departure closer than half a headway after the old pattern's last one is left out, so trains
@@ -347,8 +349,8 @@ take 0.4-2.6 ms in WASM on a 2,000 km, 60-line network, and 1.5-2.5 ms at 10,000
 lines except on track many lines share (about 20 ms for an edge of 23 lines, nearly all of it
 their profiles); track no line uses, under 0.1 ms (notes/T-050.md). A save holds
 PIs (format TWT4 also keeps the T-079 original drawn points and optional whole-line allocations; TWT5
-(T-125) is TWT4 in the Lambert conformal world frame, and the only difference is the magic;
-TWT2 and TWT3 saves load),
+(T-125) is TWT4 in the Northeast conic and TWT6 (T-306) TWT4 in the Mercator world frame, the
+only difference being the magic; TWT2 and TWT3 saves load),
 nodes, stations and lines: ~100 KB compressed for 10,000 route-km on a synthetic network
 (notes/T-040.md; T-008 estimated 170 KB with denser drawing).
 
@@ -374,6 +376,9 @@ per person and does not change who travels: demand still decides that (SPEC 4).
   the same line and direction. Lines sharing stops keep separate queues: demand has already split
   the riders between them by frequency (4.4's common lines), and a rider left behind does not
   switch to another line.
+- **Local time** (T-309): a line's account runs on its own local time (`LineAccount::shift`): its
+  hours, busiest hours, kind of day and "today" from its local midnight. The money settles each
+  local time's lines by their own period and day (`localGroups` in the clock worker).
 - **A day at a time**: worked out for a day of departures from 03:00, from empty platforms; a
   direction where anyone is still waiting when that day ends is run again from a day earlier, so
   the queue carries round. Departures are the drawn trips to the bit (`Service::run_deps`). While

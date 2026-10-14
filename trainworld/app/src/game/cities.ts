@@ -13,10 +13,13 @@ export type CityId = string;
 /** A zone of the world (T-276, docs/zones.md): a city zone, or a non-city zone (`kind` "zone");
  * `localTrips`: its local trip legs a day with no rail (pipeline/zones.py), for the far-zoomed
  * bubble of a zone not opened. */
-/** `market`: the city's place in the regional market, or -1 for one outside it (Toronto, T-277). */
-export interface City { id: CityId; name: string; kind?: "city" | "zone"; origin: { lon: number; lat: number }; center: [number, number]; zoom: number; market: number; localTrips?: number }
+/** `market`: the city's place in the regional market, or -1 for one outside it (Toronto, T-277).
+ * `utcOffset`: its whole-hour standard time offset from UTC, no daylight saving (T-309). */
+export interface City { id: CityId; name: string; kind?: "city" | "zone"; origin: { lon: number; lat: number }; center: [number, number]; zoom: number; utcOffset?: number; market: number; localTrips?: number }
 interface Registry {
   world: string;
+  /** T-309: the UTC offset the game clock counts world time in (game/localTime.ts) */
+  clockUtcOffset: number;
   frame: FrameSpec;
   legacyFrame: FrameSpec;
   market: { pack: string; frame: FrameSpec; places: { name: string; regionName: string }[] };
@@ -86,9 +89,38 @@ export function cityToMarket(x: number, y: number, id: CityId): { x: number; y: 
   return convert(x, y, packFrame(id), MARKET_FRAME);
 }
 
-/** Follow the nearer city when panning; navigation buttons select it immediately. */
+/** The nearest registered city or zone by centre, at any distance (a lookup that needs some zone,
+ * not a name for the place: for that see `cityWithin` and `placeAt` in game/zones.ts). */
 export function cityNear(lon: number, lat: number): CityId {
   const cosLat = Math.cos(lat * Math.PI / 180);
   const dist = (c: City) => Math.hypot((lon - c.center[0]) * cosLat, lat - c.center[1]);
   return [...CITIES].sort((a, b) => dist(a) - dist(b))[0].id;
 }
+
+/** T-318: how far from a zone's centre a place still counts as in it while its boundary is not
+ * loaded: 120 km, past the farthest edge of the biggest metro here (New York reaches Trenton and
+ * Pike County, about 100 km out). Once the boundary is in, `ZONE_REACH_M` from it is used instead. */
+export const CENTRE_REACH_M = 120_000;
+/** T-318: how far outside a zone's boundary a place still gets its name and loads its pack: 40 km,
+ * about the market's onset (25-50 km, docs/zones.md 5) and the ring T-300 would add round a city.
+ * Past it the view is over dead space. */
+export const ZONE_REACH_M = 40_000;
+
+/** The nearest zone whose centre is within `CENTRE_REACH_M`, else null (dead space). */
+export function cityWithin(lon: number, lat: number): CityId | null {
+  const id = cityNear(lon, lat), c = cityById(id);
+  const kx = 111_320 * Math.cos(lat * Math.PI / 180);
+  return Math.hypot((lon - c.center[0]) * kx, (lat - c.center[1]) * 111_320) <= CENTRE_REACH_M ? id : null;
+}
+
+/** The view in the URL hash (`#zoom/lat/lng`), before MapLibre reads it. */
+export function hashView(): { lng: number; lat: number; zoom: number } | null {
+  const m = /^#(-?[\d.]+)\/(-?[\d.]+)\/(-?[\d.]+)/.exec(location.hash);
+  const zoom = m ? Number(m[1]) : NaN, lat = m ? Number(m[2]) : NaN, lng = m ? Number(m[3]) : NaN;
+  return Number.isFinite(zoom) && Number.isFinite(lat) && Number.isFinite(lng) ? { lng, lat, zoom } : null;
+}
+
+/** T-318: the zone the view is in or within reach of; null over dead space. It decides the top bar's
+ * name and whether anything loads for the view (workers/demandClient.ts). Set by map/zoneFocus.ts
+ * after each pan; from the start view until the map exists (the URL hash, else the default view). */
+export const viewedZone = signal<CityId | null>((() => { const v = hashView(); return v ? cityWithin(v.lng, v.lat) : cityWithin(-73.96, 40.75); })());

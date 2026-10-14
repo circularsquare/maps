@@ -1,4 +1,4 @@
-import { activeCity, cityById } from "../game/cities";
+import { activeCity, cityById, viewedZone } from "../game/cities";
 import { cityDemandViews } from "../game/demand";
 import { loadProgress } from "../game/loading";
 import { asFilter, FILTER_PURPOSES, purposeColour } from "../game/purposes";
@@ -17,10 +17,11 @@ export function MapTopLeft() {
 /** The map's demand view stays within reach whichever dock tab is open. */
 export function DemandSelector() {
   const d = display.value;
-  const ready = cityDemandViews.value.has(activeCity.value);
+  const ready = !!viewedZone.value && cityDemandViews.value.has(activeCity.value);
   // T-149: the viewed city may still be loading after a pan
   const load = loadProgress.value;
-  const pending = load?.cities.includes(activeCity.value) ? `Loading ${cityById(activeCity.value).name}, ${Math.floor(load.fraction * 100)}%` : "Calculating demand";
+  const pending = !viewedZone.value ? "Nothing modelled here" // T-318: dead space
+    : load?.cities.includes(activeCity.value) ? `Loading ${cityById(activeCity.value).name}, ${Math.floor(load.fraction * 100)}%` : "Calculating demand";
   const selected = d.commuters ? d.commuterEnd : "none";
   return <div class="demand-selector" role="group" aria-label="Demand on the map">
     {([ ["none", "None"], ["home", "Homes"], ["work", "Destinations"] ] as const).map(([value, label]) =>

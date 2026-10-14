@@ -124,20 +124,30 @@ starts or ends. **Open** (Anita): whether modelled space should also reach a rin
 around each city. Mercer County (Trenton) is part of New York's pack since T-276 (New York CSA,
 twice the commuting to New York's counties as to Philadelphia's). Each zone keeps its own local
 pack; commutes are one gravity over all zones (section 4); shared lines retain their whole routes.
-The top bar follows the focused zone, the one under the view. Exact pack boundaries show at
-regional zooms.
+The top bar follows the focused zone, the one under the view or within 40 km of it; over dead
+space it has no name and nothing loads (T-318). Exact pack boundaries show at regional zooms.
 
-**Coordinates (T-125).** The track model is planar metres in the game's frame. New games use a
-Lambert conformal conic tangent at New York (-73.985, 40.758): conformal, so arc radii and curve
-speeds are right in every direction, with a scale error of `dlat^2/2` that depends on latitude
-alone (0.06% at 220 km north or south of New York, 0.24% at 450 km, under 0.4% from 35.8 to
-45.8 N, any longitude). A line between cities has its true length: New York to Philadelphia,
-Boston, Washington and Pittsburgh measure within 0.02% of the great circle. Saves made before
-this load in the original equirectangular frame (a fixed `cos(lat)` east-west scale, 1.2% short
-at Philadelphia and worse further out) and stay in it; the save's network bytes name the frame.
-Every demand pack keeps its own local origin and frame; all conversions go through longitude and
-latitude. `app/src/game/registry.json` is the one registry of the world, its frames, its regional
-market pack and its cities; adding a region is an entry there plus its pack. notes/T-125.md.
+**Coordinates (T-125, T-306; [docs/world.md](docs/world.md)).** One save holds the whole Earth.
+The track model is planar, in one frame for new games: spherical Mercator in metres
+(`x = R lon`, `y = R atanh(sin lat)`), conformal, so curves are circles and angles at junctions
+are true, with scale `k = 1/cos(lat)` (1.32 at New York, 1.61 at London). Lengths are measured on
+the ground, not in the plane: every piece of track carries its ground length (a straight is a
+rhumb line, exact in closed form; an arc by Simpson's rule on `1/k`), chainage everywhere is
+ground metres, and metre figures entering the plane (a set radius, the radius cap, the minimum
+radius, tolerances, quad-track spacing) are multiplied by `k` there. So lengths, curve speeds,
+costs and run times are right anywhere: a 3 km line of one ground shape measures and runs the
+same in New York and London (within 0.0003%), a London curve set to 1,500 m is 1,500 m on the
+ground (within 0.03%, the rhumb line's own curvature), and track near New York matches the conic
+of T-125 within 0.01%. Track is refused within 5 degrees of the poles and across the 180th
+meridian. Saves are written in Mercator (TWT6). A save in an older frame, TWT5 the Northeast conic
+of T-125 (a Lambert conformal conic tangent at New York, 0.4% scale error within 5 degrees of
+latitude) or TWT4 and older the original equirectangular frame (1.2% short at Philadelphia), is
+converted to Mercator once when it loads, through longitude and latitude (T-308, section 11).
+Every demand pack keeps its own local origin
+and frame; all conversions go through longitude and latitude. App code that compares world metres
+with a metre figure goes through `groundScale` or `groundDist` (`game/coords.ts`).
+`app/src/game/registry.json` is the one registry of the world, its frames, its regional market
+pack and its cities; adding a region is an entry there plus its pack. notes/T-125.md.
 
 - **World**: one real-world map. Basemap from vector tiles (Protomaps/OpenFreeMap), repainted
   faint so the player's network reads first.
@@ -234,6 +244,11 @@ solved again (NHTS 2017 weekend rates: work 0.30 of a weekday, shopping 1.22, so
 shifted by NHTS's period ratios), keeping the weekday's route and mode choices. The same trains run
 every day. **Open** (T-261): whether weekends get their own trains per hour, which would need a
 weekend solve. docs/demand.md 4.2.
+**Local time** (T-309, docs/world.md "Local time"): one game clock keeps world time in UTC-5; each
+region's periods, weekends, boarding hours and fares run on its own local time (a registry
+`utcOffset`, a whole hour of standard time, no daylight saving; a place in no zone takes
+`round(lon / 15)`), a line on its first stop's region's, and the top bar shows the local time and
+day where the player is looking.
 
 Read the full numbered section in [demand.md](docs/demand.md).
 
@@ -479,8 +494,9 @@ lines sharing track are drawn over each other, not side by side (T-190). Four tr
 Line, Line with traffic thickness (the default: width linear in a stretch's riders over the whole
 day shown, from half a line to 6.6 lines for the network's busiest stretch-day, T-227, T-274; it
 does not change with the hour), Height and Max speed. Below zoom 11 only
-the lines are drawn (T-205). From 11 to 15 stations are dots, stations whose platforms nearly
-touch sharing one dot (T-217) and a player's link a thin connector between dots (T-225); from 15
+the lines are drawn (T-205). From 11 to 15 every station is its own dot, a complex's dots
+merged under one outline and joined by connectors of the same white and rim where they do not
+touch, the player's links too (T-313); from 15
 a station is its platform, a band of fixed ground width that follows the track's own centre line
 (T-204, T-254). Platforms drawn over each other are one white shape with one dark outline, the
 track running through it and each platform's long edges as thin blue lines (T-236). Trains are
@@ -587,15 +603,25 @@ too. Optional TWT4 trailing metadata preserves compatibility with earlier saves 
 Stations the player linked into one complex are another optional trailing block (`LNK1`, T-197),
 written only when there are links, so a save without them is byte for byte as before.
 New headers retain `city: nyc` and add optional region/city-pack metadata (the registry's world
-and cities). The frame is not in the header: the network bytes say it (TWT5 is the world frame;
-TWT4 and older, the original equirectangular one, T-125). Existing NYC and Northeast files and
-browser slots load unchanged, in their own frame and for good; new games and their saves are in the
-world frame (section 3). Philadelphia track, service and finances save in the same network (T-116).
+and cities). The frame is not in the header: the network bytes say it (TWT6 is the Mercator world
+frame, T-306; TWT5 the Northeast conic, T-125; TWT4 and older the original equirectangular one).
+TWT6 is TWT5 byte for byte but for the magic; its origin fields keep the game's home origin, which
+the frame does not use, and its radii are ground metres. A file or browser slot in an older frame
+is converted to Mercator when it loads (T-308): the clock worker runs `convert_save_frame` on the
+network bytes, loads the result, and writes the slot again at once in TWT6 (the player sees
+nothing; the old bytes stay under a hidden key `old-frame-<slot>` in the same database). Cash,
+fleet, fares and the ledger are copied as they are; track lengths follow the true ground (the
+real NYC save: -0.04% in all, no line's run time over 0.3%), so quotes and run times move by that
+much and money already spent does not. Every city's track, service and finances save in the same
+network (T-116).
 
 - Local first (T-029): the clock worker builds and compresses the save (format `TWG1`: a JSON
   header and the track model's network bytes, gzip, `app/src/workers/saveFile.ts`) and writes it to
   IndexedDB itself: at once after anything paid for, else once a wall minute if something changed,
-  and when the page is hidden. On start the last game loads (`?new=1` skips it). The saved games
+  and when the page is hidden. On start the last game loads. `?new=1` starts a new game
+  that reads no slot and owns none: it does not autosave until "Save as a copy" gives it a slot of
+  its own (T-320); `?synth=1` and `?demandTest=1` load the last game but do not autosave it either,
+  and the top bar says so. The saved games
   panel (T-251: a centred panel opened by the floppy disk button beside the Settings gear, or by
   the top bar's Autosave off notice) saves the game to a file (`anitabuilder-nyc-day-12.save`),
   loads one, and starts a new game after a confirmation that replaces only the active slot. **Named browser slots** (T-068) let

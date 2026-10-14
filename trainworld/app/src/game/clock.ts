@@ -1,12 +1,14 @@
 // The game clock on the main thread: game seconds (float64), anchored to wall time, frozen while
 // paused or hidden. The renderer reads `now()` every frame; the UI reads `minute`, a signal that
-// changes once per game minute, so the top bar re-renders a text node and nothing else.
+// changes once per game minute, so the top bar re-renders a text node and nothing else. The clock
+// keeps world time; `local` is the minute in the local time in view (T-309, game/localTime.ts).
 //
 // With T-025 the clock worker keeps the authoritative time; this copy stays for drawing.
 
-import { computed, signal, type Signal } from "@preact/signals";
+import { computed, effect, signal, type Signal } from "@preact/signals";
 import { PERIODS, periodAt } from "./periods";
 import { currentDay, dayKindAt } from "./days";
+import { viewShift } from "./localTime";
 import type { Demand } from "./types";
 
 /** Game seconds per wall second for the three speed buttons. Provisional. */
@@ -28,15 +30,26 @@ class GameClock {
   /** speed button index into SPEEDS */
   readonly speed = signal(0);
   readonly running = signal(true);
-  /** absolute game minute, for display */
+  /** absolute game minute of world time (game/localTime.ts) */
   readonly minute: Signal<number>;
-  readonly demand = computed(() => demandAt(this.minute.value * 60));
+  /** T-309: the game minute in local time where the player is looking, for the top bar, the
+   * demand level and every "now" a view shows */
+  readonly local = computed(() => this.minute.value + viewShift.value / 60);
+  readonly demand = computed(() => demandAt(this.local.value * 60));
+  /** the game hour of world time: periods and offsets are whole hours, so a line's level in its
+   * own local time changes only with it (T-309) */
+  readonly hour = computed(() => Math.floor(this.minute.value / 60));
   private listeners: (() => void)[] = [];
 
   constructor(start: number) {
     this.anchorSim = start;
     this.minute = signal(Math.floor(start / 60));
-    currentDay.value = dayKindAt(start);
+    // T-266, T-309: the demand views on "Today" follow the local day in view into and out of a
+    // weekend, as the minutes pass or the view pans into another time zone
+    effect(() => {
+      const k = dayKindAt(this.local.value * 60);
+      if (k !== currentDay.peek()) currentDay.value = k;
+    });
   }
 
   /** game seconds now */
@@ -63,12 +76,7 @@ class GameClock {
   /** Called once per frame by the renderer: moves the display minute along. */
   tick() {
     const m = Math.floor(this.now() / 60);
-    if (m !== this.minute.peek()) {
-      this.minute.value = m;
-      // T-266: the demand views on "Today" follow the clock into and out of a weekend
-      const k = dayKindAt(m * 60);
-      if (k !== currentDay.peek()) currentDay.value = k;
-    }
+    if (m !== this.minute.peek()) this.minute.value = m;
   }
 
   onChange(f: () => void) {

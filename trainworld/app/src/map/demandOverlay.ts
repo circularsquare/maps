@@ -8,7 +8,7 @@
 import type { Map as MlMap } from "maplibre-gl";
 import { NET_INK, rgb } from "../game/palette";
 import { DISC } from "../workers/commutersProtocol";
-import { EARTH_C, HOME_ANCHOR, localToMercMatrix, mul4 } from "./geo";
+import { anchor, EARTH_C, localToMercMatrix, mul4, type Anchor } from "./geo";
 import type { Overlay } from "./overlay";
 import { PLATFORM_POINTS, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, shapePoints, type StationShape } from "./stationGeometry";
 
@@ -134,6 +134,8 @@ interface DiscSet {
   vao: WebGLVertexArrayObject;
   buf: WebGLBuffer;
   count: number;
+  /** the draw anchor the discs' positions are relative to (T-317): drawn with its matrix */
+  anchor: Anchor;
 }
 
 export class DemandOverlay {
@@ -192,7 +194,7 @@ export class DemandOverlay {
     this.canvas.style.height = c.clientHeight + "px";
   }
 
-  private makeSet(data: Float32Array): DiscSet {
+  private makeSet(data: Float32Array, a: Anchor): DiscSet {
     const gl = this.gl;
     const buf = gl.createBuffer()!;
     const vao = gl.createVertexArray()!;
@@ -214,7 +216,7 @@ export class DemandOverlay {
     }
     gl.bindVertexArray(null);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
-    return { vao, buf, count: data.length / DISC };
+    return { vao, buf, count: data.length / DISC, anchor: a };
   }
 
   private dropSet(s: DiscSet | null | undefined) {
@@ -223,11 +225,12 @@ export class DemandOverlay {
     this.gl.deleteVertexArray(s.vao);
   }
 
-  /** The city's bubbles, one disc set per aggregation level; null for none. */
-  setBubbles(levels: Float32Array[] | null) {
+  /** The city's bubbles, one disc set per aggregation level, built relative to anchor `a` (T-317);
+   * null for none. */
+  setBubbles(levels: Float32Array[] | null, a: Anchor = anchor()) {
     const t0 = performance.now();
     for (const s of this.bubbles) this.dropSet(s);
-    this.bubbles = (levels ?? []).map((d) => (d.length ? this.makeSet(d) : null));
+    this.bubbles = (levels ?? []).map((d) => (d.length ? this.makeSet(d, a) : null));
     this.uploadMs = performance.now() - t0;
     this.invalidate();
   }
@@ -235,10 +238,10 @@ export class DemandOverlay {
   /** A nearby zone's bubbles (T-276), drawn under the focused zone's and shown with them; null
    * removes the zone's. */
   private nearby = new Map<string, (DiscSet | null)[]>();
-  setNearbyBubbles(zone: string, levels: Float32Array[] | null) {
+  setNearbyBubbles(zone: string, levels: Float32Array[] | null, a: Anchor = anchor()) {
     for (const s of this.nearby.get(zone) ?? []) this.dropSet(s);
     this.nearby.delete(zone);
-    if (levels) this.nearby.set(zone, levels.map((d) => (d.length ? this.makeSet(d) : null)));
+    if (levels) this.nearby.set(zone, levels.map((d) => (d.length ? this.makeSet(d, a) : null)));
     this.invalidate();
   }
 
@@ -257,11 +260,12 @@ export class DemandOverlay {
     this.invalidate();
   }
 
-  /** One of the small disc layers (a selection's ends, a station's catchment); null clears it. */
-  setDiscs(layer: DiscLayer, data: Float32Array | null) {
+  /** One of the small disc layers (a selection's ends, a station's catchment), built relative to
+   * anchor `a` (T-317); null clears it. */
+  setDiscs(layer: DiscLayer, data: Float32Array | null, a: Anchor = anchor()) {
     this.dropSet(this.sets.get(layer));
     this.sets.delete(layer);
-    if (data && data.length) this.sets.set(layer, this.makeSet(data));
+    if (data && data.length) this.sets.set(layer, this.makeSet(data, a));
     this.invalidate();
   }
 
@@ -321,14 +325,22 @@ export class DemandOverlay {
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
     gl.useProgram(this.prog);
-    // the demand views' discs stay on the home anchor for now (T-307, map/geo.ts)
-    gl.uniformMatrix4fv(this.u.u_matrix, false, mul4(m0, localToMercMatrix(HOME_ANCHOR)));
+    // each set is drawn with the matrix of the anchor it was built at (T-317, map/geo.ts); most
+    // draws have one anchor, a switch has two for a moment
+    const matrices = new Map<number, Float32Array>();
     gl.uniform2f(this.u.u_viewport, this.canvas.width, this.canvas.height);
     gl.uniform1f(this.u.u_px_per_unit, ((512 * Math.pow(2, zoom)) / EARTH_C) * dpr);
     gl.uniform3fv(this.u.u_ink, rgb(NET_INK).map((v) => v / 255));
     gl.uniform1f(this.u.u_dpr, dpr);
     this.discsDrawn = 0;
+    let uploaded = -1;
     for (const [s, rs] of list) {
+      if (s.anchor.version !== uploaded) {
+        uploaded = s.anchor.version;
+        let m = matrices.get(uploaded);
+        if (!m) matrices.set(uploaded, (m = mul4(m0, localToMercMatrix(s.anchor))));
+        gl.uniformMatrix4fv(this.u.u_matrix, false, m);
+      }
       gl.uniform1f(this.u.u_rscale, rs);
       gl.bindVertexArray(s.vao);
       gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, s.count);

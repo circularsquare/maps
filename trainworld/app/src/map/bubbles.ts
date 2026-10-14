@@ -4,7 +4,7 @@
 
 import { modeMix } from "../game/palette";
 import { DISC, type Grouping } from "../workers/commutersProtocol";
-import { MERC_K } from "./geo";
+import { kAtY, type Anchor } from "./geo";
 
 export interface Groups {
   /** group index per entry */
@@ -75,9 +75,11 @@ export function reorder(g: Groups, order: Uint32Array): Groups {
 
 /**
  * Discs for groups, in their order: area `perCommuter` m² for each commuter (no minimum: nobody,
- * no disc), coloured by the mode mix (`modeMix`), or by `colour` when given.
+ * no disc), coloured by the mode mix (`modeMix`), or by `colour` when given. `a` is the anchor the
+ * groups' positions are relative to (T-317): a disc's radius is in metres of ground times k where
+ * the disc is.
  */
-export function discs(g: Groups, perCommuter: number, alpha: number, edge: number, colour?: [number, number, number]): Float32Array {
+export function discs(g: Groups, perCommuter: number, alpha: number, edge: number, a: Anchor, colour?: [number, number, number]): Float32Array {
   const n = g.group.length;
   const out = new Float32Array(n * DISC);
   for (let i = 0; i < n; i++) {
@@ -85,7 +87,7 @@ export function discs(g: Groups, perCommuter: number, alpha: number, edge: numbe
     const c = colour ?? modeMix(g.train[i], g.walk[i], g.drive[i]);
     out[i * DISC] = g.x[i];
     out[i * DISC + 1] = g.y[i];
-    out[i * DISC + 2] = Math.sqrt((all * perCommuter) / Math.PI) * MERC_K;
+    out[i * DISC + 2] = Math.sqrt((all * perCommuter) / Math.PI) * kAtY(g.y[i], a);
     out[i * DISC + 3] = c[0] / 255;
     out[i * DISC + 4] = c[1] / 255;
     out[i * DISC + 5] = c[2] / 255;

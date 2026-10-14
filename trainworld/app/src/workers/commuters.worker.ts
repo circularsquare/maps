@@ -9,25 +9,42 @@
 
 import { BUBBLE_ALPHA } from "../game/palette";
 import { aggregate, biggestFirst, discs, reorder } from "../map/bubbles";
-import { HOME_ANCHOR, toLocal } from "../map/geo";
+import { toLocal, type Anchor } from "../map/geo";
 import { BUBBLE_DENSITY, BUBBLE_RES, type BubbleLevel, type FromCommuters, type Grouping, type ToCommuters } from "./commutersProtocol";
 
 import { makeFrame, type FrameSpec } from "../game/frame";
 
 let cellX = new Float32Array(0), cellY = new Float32Array(0);
+/** each cell's longitude and latitude, for placing it from any draw anchor (T-317) */
+let cellLng = new Float64Array(0), cellLat = new Float64Array(0);
+/** the draw anchor cellX/cellY (and so everything sent) are relative to; the main thread moves it */
+let cur: Anchor | null = null;
 let levels: Grouping[] = [];
 
-function setCells(xy: Float32Array, h3: BigUint64Array, spec: FrameSpec) {
-  const frame = makeFrame(spec);
-  const n = xy.length / 2;
+/** Measure every cell from draw anchor `a` (map/geo.ts, T-317). */
+function place(a: Anchor) {
+  cur = a;
+  const n = cellLng.length;
   cellX = new Float32Array(n);
   cellY = new Float32Array(n);
   for (let i = 0; i < n; i++) {
-    const [lng, lat] = frame.toLonLat(xy[i * 2], xy[i * 2 + 1]);
-    const [x, y] = toLocal(lng, lat, HOME_ANCHOR); // the demand views stay on the home anchor (T-307)
+    const [x, y] = toLocal(cellLng[i], cellLat[i], a);
     cellX[i] = x;
     cellY[i] = y;
   }
+}
+
+function setCells(xy: Float32Array, h3: BigUint64Array, spec: FrameSpec, a: Anchor) {
+  const frame = makeFrame(spec);
+  const n = xy.length / 2;
+  cellLng = new Float64Array(n);
+  cellLat = new Float64Array(n);
+  for (let i = 0; i < n; i++) {
+    const [lng, lat] = frame.toLonLat(xy[i * 2], xy[i * 2 + 1]);
+    cellLng[i] = lng;
+    cellLat[i] = lat;
+  }
+  place(a);
   levels = BUBBLE_RES.map((res) => {
     const groupOf = new Uint32Array(n);
     let count = 0;
@@ -63,9 +80,9 @@ function build(end: "home" | "work", train: Float32Array, walk: Float32Array, dr
   const out: BubbleLevel[] = levels.map((g) => {
     const a = aggregate(g, cellX, cellY, null, train, walk, drive);
     const s = reorder(a, biggestFirst(a));
-    return { discs: discs(s, 1 / BUBBLE_DENSITY[end], BUBBLE_ALPHA, 1), group: s.group, train: s.train, walk: s.walk, drive: s.drive };
+    return { discs: discs(s, 1 / BUBBLE_DENSITY[end], BUBBLE_ALPHA, 1, cur!), group: s.group, train: s.train, walk: s.walk, drive: s.drive };
   });
-  return { levels: out, totals };
+  return { levels: out, totals, anchor: cur! };
 }
 
 self.onmessage = (e: MessageEvent<ToCommuters>) => {
@@ -73,14 +90,21 @@ self.onmessage = (e: MessageEvent<ToCommuters>) => {
   const t0 = performance.now();
   const post = (m: FromCommuters, transfer: Transferable[]) => (self as unknown as Worker).postMessage(m, transfer);
   if (msg.kind === "cells") {
-    setCells(msg.xy, msg.h3, msg.frame);
+    setCells(msg.xy, msg.h3, msg.frame, msg.anchor);
     // copies: the worker keeps its own for every build
-    const ready: FromCommuters = { kind: "ready", ms: performance.now() - t0, cellX: cellX.slice(), cellY: cellY.slice(), levels: levels.map((l) => ({ ...l, groupOf: l.groupOf.slice(), off: l.off.slice(), members: l.members.slice() })) };
+    const ready: FromCommuters = { kind: "ready", ms: performance.now() - t0, cellX: cellX.slice(), cellY: cellY.slice(), anchor: cur!, levels: levels.map((l) => ({ ...l, groupOf: l.groupOf.slice(), off: l.off.slice(), members: l.members.slice() })) };
     post(ready, [ready.cellX.buffer, ready.cellY.buffer, ...ready.levels.flatMap((l) => [l.groupOf.buffer, l.off.buffer, l.members.buffer])]);
     return;
   }
+  if (msg.kind === "anchor") {
+    // a version already in force is not measured again
+    if (!cur || msg.anchor.version !== cur.version) place(msg.anchor);
+    const moved: FromCommuters = { kind: "moved", id: msg.id, anchor: cur!, cellX: cellX.slice(), cellY: cellY.slice() };
+    post(moved, [moved.cellX.buffer, moved.cellY.buffer]);
+    return;
+  }
   if (msg.kind === "sum") {
-    const out: FromCommuters = { kind: "summed", id: msg.id, levels: levels.map((g) => aggregate(g, cellX, cellY, msg.cells, msg.train, msg.walk, msg.drive)), ms: 0 };
+    const out: FromCommuters = { kind: "summed", id: msg.id, levels: levels.map((g) => aggregate(g, cellX, cellY, msg.cells, msg.train, msg.walk, msg.drive)), anchor: cur!, ms: 0 };
     out.ms = performance.now() - t0;
     post(out, out.levels.flatMap((l) => [l.group.buffer, l.x.buffer, l.y.buffer, l.train.buffer, l.walk.buffer, l.drive.buffer]));
     return;

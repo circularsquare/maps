@@ -24,7 +24,8 @@ export const PERIODS: readonly Period[] = [
 
 const LEVEL_INDEX: Record<Demand, number> = { high: 0, medium: 1, low: 2 };
 
-/** The period at game time `t` (seconds), as an index into PERIODS. */
+/** The period at time `t` (seconds), as an index into PERIODS. Callers pass local time (T-309):
+ * each region's periods run on its own hours. */
 export function periodAt(t: number): number {
   const h = (Math.floor(t / 3600) % 24 + 24) % 24;
   return PERIODS.findIndex((p) => h >= p.from && h < p.to);

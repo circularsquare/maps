@@ -44,7 +44,13 @@ const ov = { camMatrix: [], toScreen: (x, y) => [x, y], toScreenInto: (x, y, out
   net: n, slotPx: 6, trips: F([0, 0, 6, 0]), tripEpoch: 0, tripCount: 2, detailedTrains: false,
 }) };
 assert.equal(pick(ov, 0, 0, true).line, '1', 'last train wins even if another is closer');
-assert.equal(pick(ov, 0, 0, false).station, 'over', 'last station wins overlapping hits');
+// overlapping platforms: the last drawn wins; overlapping dots: the nearest centre (T-313)
+assert.equal(pick(ov, 0, 0, false).station, 'under', 'dots: the nearest centre wins');
+assert.equal(pick(ov, 3, 0, false).station, 'over', 'dots: each picks its own station');
+const dotStyle = ov.renderer.stationStyle;
+ov.renderer.stationStyle = { ...dotStyle, boxes: true };
+assert.equal(pick(ov, 0, 0, false).station, 'over', 'platforms: last station wins overlapping hits');
+ov.renderer.stationStyle = dotStyle;
 n.stationCount = 0;
 assert.equal(pick(ov, 0, 0, false).line, '2', 'last line stroke wins');
 assert.equal(pick(ov, 0, 0, false, { kind: 'line', line: '2' }).edge, 20, 'selected line still cycles to track');

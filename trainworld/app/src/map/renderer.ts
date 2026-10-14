@@ -1,4 +1,4 @@
-import { boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, bridgeShape, enclosingCircle, insideStation, PLATFORM_POINTS, platformPoints, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, shapePoints, STATION_BOX_ZOOM, STATIONS_ZOOM, stationHaloRadius, stationRadii, stationRing, stationShape, type PlatformShape, type Project, type StationShape, type StationStyle } from "./stationGeometry";
+import { boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, bridgeShape, connectorHalfPx, spanningPairs, insideStation, PLATFORM_POINTS, platformPoints, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, shapePoints, STATION_BOX_ZOOM, STATIONS_ZOOM, stationHaloRadius, stationRadii, stationRing, stationShape, type PlatformShape, type Project, type StationShape, type StationStyle } from "./stationGeometry";
 // WebGL2 network renderer: track and line strokes (one instanced quad per polyline segment, white
 // casing under the colour; blueprint solid, lighter and without casing, T-311), stations (platforms along the track, or
 // dots zoomed out, T-189), the drawing tool's preview,
@@ -41,9 +41,6 @@ const PLATFORM_RGB = rgb(PLATFORM_BLUE).map((v) => v / 255);
 /** The track drawn through a station box (T-236) is at most this share of the box's white, so the
  * crowd and the blue platform edges show beside it. */
 const TRACK_IN_BOX = 0.3;
-/** Zoomed out, a player's link is a thin line between its two dots (T-225, Anita: "yes, connector"):
- * a white core this half wide with a dark rim this wide, CSS px, drawn like a platform bridge. */
-const CONN_HALF_PX = 1, CONN_RING_PX = 1;
 /** RGBA texels per selected shape in the outline's texture (SEL_FS): its frame, size and dot, then
  * its centre line (T-254). */
 const SEL_STRIDE = 3 + Math.ceil(PLATFORM_POINTS / 2);
@@ -59,13 +56,10 @@ const SEL_MAX = Math.floor(2048 / SEL_STRIDE); // texels in a row: 2048, the nar
 /** A selected train's ring (T-242): the train's own shape grown by this, CSS px, with a white band
  * between, so the train reads at zoom 11-13 where it is a few px. */
 const SEL_RING_GAP_PX = 6;
-/** Stations as the network's complexes group them (T-217): zoomed out a complex is one dot, drawn
- * and picked as `lead` (its busiest station, game/complexView.ts). */
+/** Stations as the complex rule's distances group them (game/complexView.ts `dotGroups`): zoomed out
+ * each group's dots are joined by connectors, the shortest set that links them all (T-313). */
 export interface StationGroups {
-  of: Map<string, number>;
   members: string[][];
-  /** per complex: the station its dot stands for */
-  lead: string[];
 }
 
 const STROKE_VS = `#version 300 es
@@ -158,7 +152,7 @@ void main() {
 }`;
 
 // Stations (T-144, T-189, T-217): a platform is a band along its track at its true length, bent as
-// the track bends, white with a dark rim; zoomed out a dot, one for a whole complex. The quad is laid
+// the track bends, white with a dark rim; zoomed out a dot, one a station (T-313). The quad is laid
 // out in the platform's frame at its middle (along the track there, across towards the side it
 // bends to) and the fragment shader measures the distance from the band (SHAPE_GLSL). Stations
 // drawn over each other make one white shape with one outline round it (T-217, Anita: "all the white
@@ -189,16 +183,11 @@ in vec2 a_axis;          // half the platform along its track at its middle, loc
 in vec4 a_shape;         // the platform's middle from the node, half the turn along it (rad), half its true width (local units)
 in vec2 a_sz;            // (x unused since T-239), daily riders' square-root scale
 in vec2 a_halo;          // demand circle's offset, local units (a station complex's, T-146)
-in vec2 a_sel;           // drawn selected as a platform, and as a dot (any station of its complex
-                         // selected there, T-217)
-in vec4 a_cplx;          // zoomed out (T-217): its complex's dot centre from the node and the farthest
-                         // member's middle from that centre (local units), and its part: 0 on its
-                         // own, 1 the complex's dot, 2 the same with every member a blueprint, 3
-                         // drawn by another member's dot
+in vec2 a_sel;           // drawn selected (x; y unused since T-313)
 in vec4 a_crowd;         // riders waiting (T-219): how full the platform's + and - side is (0-1),
                          // and whether the last train on that side left anyone behind
-in vec2 a_dcrowd;        // zoomed out (T-228): the fullest platform side of its dot (its complex's
-                         // for the complex's dot), 0-1, and 1 if any train there left riders behind
+in vec2 a_dcrowd;        // zoomed out (T-228): the station's fullest platform side, 0-1, and 1 if
+                         // any train there left riders behind
 uniform highp sampler2D u_stline; // RG32F, per station ${PLATFORM_POINTS} texels: its track's centre line from the node (T-254)
 out vec2 v_p;            // in the platform's frame at its middle, px
 flat out vec3 v_size;    // half length, half width, (0); a demand circle's radius
@@ -224,11 +213,10 @@ void main() {
     return;
   }
   bool boxes = u_boxes > 0.5;
-  bool sel = (boxes ? a_sel.x : a_sel.y) > 0.5;
-  int part = int(a_cplx.w + 0.5);
+  bool sel = a_sel.x > 0.5;
   bool noCrowd = !boxes || (flags & 2) != 0 || max(a_crowd.x, a_crowd.y) <= 0.0;
   // the blue platform edges (u_layer 3, T-236) are drawn on platforms only
-  if ((u_pass == 1) != sel || (!boxes && part == 3) || (u_layer == 2 && noCrowd) || (u_layer == 3 && !boxes)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+  if ((u_pass == 1) != sel || (u_layer == 2 && noCrowd) || (u_layer == 3 && !boxes)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   // zoomed out a dot is tinted by its platforms' crowd (T-228): the fullest side's share, and
   // whether any train there left riders behind
   if (!boxes) v_crowd = vec4(a_dcrowd, 0.0, 0.0);
@@ -251,15 +239,8 @@ void main() {
   float cover = 0.3 * u_line + u_ring + u_pixel;
   float hl = max(len, hw);
   float k = len > 1e-6 && abs(a_shape.z) > 1e-3 ? a_shape.z / len : 0.0;
-  if (!boxes) {
-    v_dot = max((flags & 1) != 0 || part > 0 ? u_radius.y : u_radius.x, cover);
-    if (part > 0) {
-      // a complex is one dot at its centre, covering every member's middle (T-217)
-      v_alpha = part == 2 ? 0.6 : 1.0;
-      v_dot = max(v_dot, a_cplx.z * perLoc + u_ring + u_pixel);
-      c = u_matrix * vec4(a_st.xy + a_cplx.xy, 0.0, 1.0);
-    }
-  }
+  // zoomed out every station is its own dot at its platform's middle (T-313)
+  if (!boxes) v_dot = max((flags & 1) != 0 ? u_radius.y : u_radius.x, cover);
   float lo, hi, xl, xh;
   ${qZero}
   if (v_dot > 0.0) {
@@ -301,7 +282,7 @@ void main() {
 
 // A link's bridge (T-217): a straight box between the two platforms' nearest points, as thin as
 // BRIDGE_HALF_PX on the ground with the station rim along it, drawn with the stations' layers so it
-// joins their white shape. Platforms only: zoomed out a linked complex is one dot.
+// joins their white shape. Zoomed out the same program draws the connectors between dots (T-313).
 const BRIDGE_VS = `#version 300 es
 precision highp float;
 uniform mat4 u_matrix;
@@ -789,7 +770,8 @@ export interface DrawOptions {
   selStations?: number[];
   /** riders waiting on platforms (T-164, T-219): each platform filling up as they wait */
   crowds?: boolean;
-  /** the network's complexes (T-217): zoomed out, each is one dot; absent, every station its own */
+  /** the stations the complex rule's distances group (T-313): zoomed out their dots are joined by
+   * connectors; absent, only the player's links are */
   groups?: StationGroups | null;
 }
 
@@ -853,8 +835,8 @@ export class NetworkRenderer {
   private crowds = new Float32Array(0);
   /** per station: riders waiting on its + and - side */
   private crowdWait = new Float32Array(0);
-  /** per station, zoomed out (T-228): its dot's fullest platform side (0-1, the complex's for the
-   * complex's dot) and whether a train there left riders behind; and the riders waiting at it */
+  /** per station, zoomed out (T-228): its dot's fullest platform side (0-1) and whether a train
+   * there left riders behind; and the riders waiting at it */
   private dotCrowds = new Float32Array(0);
   private dotWait = new Float32Array(0);
   private dotCrowdBuf: WebGLBuffer | null = null;
@@ -889,64 +871,46 @@ export class NetworkRenderer {
   private stationSelBuf: WebGLBuffer | null = null;
   /** what `stationSelBuf` and `bridgeFlagBuf` were last written for */
   private selDrawnKey = "";
-  /** the complexes as last drawn (T-217): per station its dot's centre from the node, the farthest
-   * member from it, its part (STATION_VS `a_cplx`); per complex dot, its members */
+  /** the groups the connectors were last worked out for (T-313) */
   private groupSrc: { groups: StationGroups | null; net: NetworkBuffers | null } = { groups: null, net: null };
-  private cplx = new Float32Array(0);
-  private cplxBuf: WebGLBuffer | null = null;
-  private dotMembers = new Map<number, number[]>();
-  private dotOf = new Int32Array(0);
   private bridgeProg: WebGLProgram | null = null;
   private bridgeU: Record<string, WebGLUniformLocation | null> = {};
   private bridgeVao: WebGLVertexArrayObject | null = null;
   private bridgeFlagBuf: WebGLBuffer | null = null;
-  /** zoomed out, per link the two dots' centres, local units (T-225; ends equal when one dot holds
-   * both), and its VAO with the selected and faded flags */
+  /** zoomed out, the connectors between dots (T-313): the two stations of each (index pairs), their
+   * dots' centres (local units), and its VAO with the selected and faded flags; rebuilt by
+   * syncGroups, so kept apart from `res` */
+  connPairs = new Int32Array(0);
   private connEnds = new Float32Array(0);
   private connVao: WebGLVertexArrayObject | null = null;
-  private connEndsBuf: WebGLBuffer | null = null;
   private connFlagBuf: WebGLBuffer | null = null;
+  private connRes: { del: () => void }[] = [];
   private selProg: WebGLProgram | null = null;
   private selU: Record<string, WebGLUniformLocation | null> = {};
   private selTex: WebGLTexture | null = null;
   private selData = new Float32Array(SEL_MAX * SEL_STRIDE * 4);
   /** Station `i` on screen as the last draw drew it (stationGeometry.ts): its platform, or zoomed
-   * out its complex's one dot; null for a station whose complex's dot another member draws (T-217). */
-  drawnShapeOf(i: number, project: Project): StationShape | null {
-    const part = this.cplx[i * 4 + 3] ?? 0;
-    if (this.stationStyle.boxes || !part) return this.stationShapeOf(i, project);
-    if (part > 2.5) return null;
-    const n = this.net!;
-    const cx = n.stations[i * 3] + this.cplx[i * 4], cy = n.stations[i * 3 + 1] + this.cplx[i * 4 + 1];
-    const [x, y] = project(cx, cy), [ox, oy] = project(cx + 1, cy);
-    const own = this.stationShapeOf(i, project);
-    const st = this.stationStyle;
-    const dot = Math.max(own.dot, st.radius[1], this.cplx[i * 4 + 2] * Math.hypot(ox - x, oy - y) + st.ringPx + 1);
-    return { ...own, x, y, dot };
-  }
-  /** How many stations station `i`'s drawn shape stands for: zoomed out, a complex's dot all its
-   * members (T-217); otherwise 1. */
-  dotStations(i: number): number {
-    if (this.stationStyle.boxes || !(this.cplx[i * 4 + 3] > 0)) return 1;
-    return this.dotMembers.get(this.dotOf[i])?.length ?? 1;
+   * out its own dot (T-313). */
+  drawnShapeOf(i: number, project: Project): StationShape {
+    return this.stationShapeOf(i, project);
   }
   /** The bridges between linked stations (T-217) drawn selected, on screen: both their stations
-   * are. Platforms only. */
+   * are; zoomed out, the connectors between selected dots (T-313). */
   private selectedBridges(project: Project): StationShape[] {
-    const n = this.net, idx = n?.stationLinkIdx, ends = n?.stationLinks;
-    if (!n || !idx || !ends) return [];
+    const n = this.net;
+    if (!n) return [];
     const out: StationShape[] = [];
     if (!this.stationStyle.boxes) {
-      // zoomed out, the links' connectors between two dots (T-225)
-      const c = this.connEnds;
-      for (let k = 0; k < idx.length / 2 && c.length >= idx.length * 2; k++) {
-        if (this.dotOf[idx[k * 2]] === this.dotOf[idx[k * 2 + 1]]) continue;
-        if (!this.dotSelected(idx[k * 2]) || !this.dotSelected(idx[k * 2 + 1])) continue;
+      const p = this.connPairs, c = this.connEnds, half = connectorHalfPx(this.stationStyle);
+      for (let k = 0; k < p.length / 2; k++) {
+        if (!this.drawnSelected(p[k * 2]) || !this.drawnSelected(p[k * 2 + 1])) continue;
         const b = bridgeShape(c[k * 4], c[k * 4 + 1], c[k * 4 + 2], c[k * 4 + 3], project, this.stationStyle);
-        if (b) out.push({ ...b, halfWidth: CONN_HALF_PX + CONN_RING_PX });
+        if (b) out.push({ ...b, halfWidth: half });
       }
       return out;
     }
+    const idx = n.stationLinkIdx, ends = n.stationLinks;
+    if (!idx || !ends) return out;
     for (let k = 0; k < idx.length / 2; k++) {
       if (!this.drawnSelected(idx[k * 2]) || !this.drawnSelected(idx[k * 2 + 1])) continue;
       const b = bridgeShape(ends[k * 4], ends[k * 4 + 1], ends[k * 4 + 2], ends[k * 4 + 3], project, this.stationStyle);
@@ -967,49 +931,42 @@ export class NetworkRenderer {
   private drawnSelected(i: number) {
     return i === this.selectedStation || this.selectedAlso.has(i);
   }
-  /** Whether station `i`'s drawn shape is selected: as a platform, itself; zoomed out, its complex's
-   * dot, if any of the complex is (T-217). */
-  private shapeSelected(i: number) {
-    return this.stationStyle.boxes ? this.drawnSelected(i) : this.dotSelected(i);
-  }
-  private dotSelected(i: number) {
-    if (!(this.cplx[i * 4 + 3] > 0)) return this.drawnSelected(i);
-    return (this.dotMembers.get(this.dotOf[i]) ?? [i]).some((j) => this.drawnSelected(j));
-  }
   /** The topmost station drawn at a point, with a small pointer tolerance; demand halos are not
    * targets. Selected stations are drawn last (T-189), so they come first; zoomed far out they are
-   * the only ones drawn (T-205). Zoomed out a complex's dot gives its busiest station (T-217). */
+   * the only ones drawn (T-205). Zoomed out each dot gives its own station (T-313): of dots that
+   * overlap, the one whose centre is nearest. */
   stationAt(px: number, py: number, project: Project, padding = 7): number {
     const n = this.net;
     if (!n) return -1;
-    for (const sel of this.stationStyle.hidden ? [true] : [true, false])
+    const dots = !this.stationStyle.boxes;
+    for (const sel of this.stationStyle.hidden ? [true] : [true, false]) {
+      let best = -1, bestD = Infinity;
       for (let i = n.stationCount - 1; i >= 0; i--) {
-        if (this.shapeSelected(i) !== sel) continue;
+        if (this.drawnSelected(i) !== sel) continue;
         const s = this.drawnShapeOf(i, project);
-        if (s && insideStation(s, px, py, padding)) return i;
+        if (!insideStation(s, px, py, padding)) continue;
+        if (!dots) return i;
+        const d = Math.hypot(px - s.x, py - s.y);
+        if (d < bestD) [best, bestD] = [i, d];
       }
+      if (best >= 0) return best;
+    }
     return -1;
   }
-  /** The selected stations drawn, by index: the selected one, or its complex in complex view; zoomed
-   * out the dots standing for them (T-217). */
+  /** The selected stations drawn, by index: the selected one, or its complex in complex view. */
   private selectedDrawn(): number[] {
     const n = this.net;
     if (!n) return [];
     const out = new Set<number>();
-    for (const i of [this.selectedStation, ...this.selectedAlso]) {
-      if (i < 0 || i >= n.stationCount) continue;
-      out.add(!this.stationStyle.boxes && this.cplx[i * 4 + 3] > 0 ? this.dotOf[i] : i);
-    }
+    for (const i of [this.selectedStation, ...this.selectedAlso]) if (i >= 0 && i < n.stationCount) out.add(i);
     return [...out];
   }
-  /** The selected stations as drawn, with the bridges between them (T-217): the outline and glow go
-   * round them, and the demand bubbles are cut away round them so they show above (T-189). */
+  /** The selected stations as drawn, with the bridges or connectors between them (T-217, T-313):
+   * the outline and glow go round them, and the demand bubbles are cut away round them so they
+   * show above (T-189). */
   selectedShapes(project: Project): StationShape[] {
     const out: StationShape[] = [];
-    for (const i of this.selectedDrawn()) {
-      const s = this.drawnShapeOf(i, project);
-      if (s) out.push(s);
-    }
+    for (const i of this.selectedDrawn()) out.push(this.drawnShapeOf(i, project));
     return out.concat(this.selectedBridges(project));
   }
   /** A selected station drawn at a point, or -1 (picking: it is above the demand bubbles). */
@@ -1240,11 +1197,6 @@ export class NetworkRenderer {
     this.attrib(this.stationProg, "a_halo", this.stationHaloBuf, 2, gl.FLOAT, 1);
     this.stationSelBuf = this.buffer(new Float32Array(Math.max(1, n.stationCount) * 2));
     this.attrib(this.stationProg, "a_sel", this.stationSelBuf, 2, gl.FLOAT, 1);
-    this.cplx = new Float32Array(Math.max(1, n.stationCount) * 4);
-    this.cplxBuf = this.buffer(this.cplx);
-    this.attrib(this.stationProg, "a_cplx", this.cplxBuf, 4, gl.FLOAT, 1);
-    this.dotMembers = new Map();
-    this.dotOf = new Int32Array(Math.max(1, n.stationCount)).map((_, i) => i);
     this.groupSrc = { groups: null, net: null };
     this.crowdBuf = this.buffer(this.crowds);
     this.dotCrowdBuf = this.buffer(this.dotCrowds);
@@ -1262,16 +1214,7 @@ export class NetworkRenderer {
     this.attrib(this.bridgeProg!, "a_ends", this.buffer(links ? n.stationLinks! : new Float32Array(4)), 4, gl.FLOAT, 1);
     this.bridgeFlagBuf = this.buffer(new Float32Array(Math.max(1, links / 2) * 2));
     this.attrib(this.bridgeProg!, "a_bflag", this.bridgeFlagBuf, 2, gl.FLOAT, 1);
-    // and zoomed out as connectors between two dots (T-225), their ends written by syncGroups
-    this.connEnds = new Float32Array(Math.max(1, links / 2) * 4);
-    this.connVao = gl.createVertexArray()!;
-    const cv = this.connVao;
-    this.res.push({ del: () => gl.deleteVertexArray(cv) });
-    gl.bindVertexArray(cv);
-    this.connEndsBuf = this.buffer(this.connEnds);
-    this.attrib(this.bridgeProg!, "a_ends", this.connEndsBuf, 4, gl.FLOAT, 1);
-    this.connFlagBuf = this.buffer(new Float32Array(Math.max(1, links / 2) * 2));
-    this.attrib(this.bridgeProg!, "a_bflag", this.connFlagBuf, 2, gl.FLOAT, 1);
+    // zoomed out the connectors between dots (T-313) are built by syncGroups
 
     this.trainVao = gl.createVertexArray()!;
     const tv = this.trainVao;
@@ -1498,8 +1441,10 @@ export class NetworkRenderer {
         gl.uniform3fv(bu.u_bad, BAD_RGB);
         gl.uniform3fv(bu.u_crowd_rgb, CROWD_RGB);
       }
-      // zoomed out, the links as thin lines between dots (T-225), a fixed width on screen
-      const connectors = !boxes && this.bridgeProg && this.connVao ? (n.stationLinkIdx?.length ?? 0) / 2 : 0;
+      // zoomed out, the connectors between a complex's dots and the player's links (T-313, Anita:
+      // "it should look like its made of the same material"): the dots' rim, and their white
+      // drawn in the same layer, so dots and connectors are one white shape with one outline
+      const connectors = !boxes && this.bridgeProg && this.connVao ? this.connPairs.length / 2 : 0;
       if (connectors) {
         const bu = this.bridgeU, p = this.projector(m, vp[0] / dpr, vp[1] / dpr);
         const [x0, y0] = p(n.stations[0], n.stations[1]), [x1, y1] = p(n.stations[0] + 1, n.stations[1]);
@@ -1507,22 +1452,20 @@ export class NetworkRenderer {
         gl.useProgram(this.bridgeProg);
         gl.uniformMatrix4fv(bu.u_matrix, false, m);
         gl.uniform2f(bu.u_viewport, vp[0], vp[1]);
-        gl.uniform1f(bu.u_ring, CONN_RING_PX * dpr);
-        gl.uniform1f(bu.u_bridge, CONN_HALF_PX / pxPerLoc);
+        gl.uniform1f(bu.u_ring, ring * dpr);
+        gl.uniform1f(bu.u_bridge, (connectorHalfPx(this.stationStyle) - ring) / pxPerLoc);
         gl.uniform1i(bu.u_halo, 0);
         gl.uniform3fv(bu.u_ink, this.ink);
         gl.uniform3fv(bu.u_bad, BAD_RGB);
         gl.uniform3fv(bu.u_crowd_rgb, CROWD_RGB);
         gl.uniform1f(bu.u_mask, 0);
       }
-      const connDraw = (pass: number) => {
+      const connDraw = (pass: number, layer: number) => {
         gl.useProgram(this.bridgeProg);
         gl.uniform1i(this.bridgeU.u_pass, pass);
+        gl.uniform1i(this.bridgeU.u_layer, layer);
         gl.bindVertexArray(this.connVao);
-        for (const layer of [0, 1]) {
-          gl.uniform1i(this.bridgeU.u_layer, layer);
-          gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, connectors);
-        }
+        gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, connectors);
       };
       // Riders waiting on the platforms (T-164, T-219), where platforms are drawn; zoomed out a tint
       // on each dot (T-228).
@@ -1570,8 +1513,11 @@ export class NetworkRenderer {
           if (!shapes.length) break;
           this.drawGlow(shapes, dpr, vp);
         }
-        if (connectors) connDraw(pass);
+        // zoomed out the connectors' white goes under the dots' white, so a dot's crowd tint (T-228)
+        // stays whole (T-313)
+        if (connectors) connDraw(pass, 0);
         layerDraw(pass, 0, true);
+        if (connectors) connDraw(pass, 1);
         layerDraw(pass, 1, true);
         if (!boxes) continue;
         if (through) {
@@ -1713,50 +1659,49 @@ export class NetworkRenderer {
     gl.activeTexture(gl.TEXTURE0);
   }
 
-  /** Each complex's one dot zoomed out (T-217), from `groups` (game/complexView.ts): at the centre of
-   * the smallest circle round its members' platform middles, as large as covers them, drawn and
-   * picked as its lead.
-   * Rebuilt when the complexes or the network change. */
+  /** The connectors between dots zoomed out (T-313, Anita: "if the dots don't touch, we draw the
+   * connector"): within each group of `groups` (game/complexView.ts `dotGroups`, the complex rule's
+   * distances) the shortest joins linking all its dots, and each of the player's links (T-197)
+   * between two groups from one linked station's dot to the other's. Each runs centre to centre;
+   * where dots overlap it is hidden inside them. Rebuilt when the groups or the network change. */
   private syncGroups(n: NetworkBuffers, groups: StationGroups | null) {
     if (this.groupSrc.groups === groups && this.groupSrc.net === n) return;
     this.groupSrc = { groups, net: n };
-    const c = this.cplx;
-    c.fill(0);
-    this.dotMembers = new Map();
-    this.dotOf = new Int32Array(Math.max(1, n.stationCount)).map((_, i) => i);
+    const S = n.stations, sh = n.stationShape;
+    const mid = (i: number): [number, number] => [S[i * 3] + (sh?.[i * 4] ?? 0), S[i * 3 + 1] + (sh?.[i * 4 + 1] ?? 0)];
+    const pairs: number[] = [];
+    const groupOf = new Int32Array(Math.max(1, n.stationCount)).fill(-1);
     if (groups) {
       const index = new Map(n.stationIds.map((id, i) => [id, i]));
-      const S = n.stations, sh = n.stationShape;
       groups.members.forEach((ids, k) => {
         const m = ids.map((id) => index.get(id)).filter((i): i is number => i !== undefined);
-        if (m.length < 2) return;
-        let lead = index.get(groups.lead[k]) ?? m[0];
-        if (!m.includes(lead)) lead = m[0];
-        const mid = (i: number): [number, number] => [S[i * 3] + (sh?.[i * 4] ?? 0), S[i * 3 + 1] + (sh?.[i * 4 + 1] ?? 0)];
-        // the smallest circle round the members' middles: its centre is the complex's
-        const [cx, cy, far] = enclosingCircle(m.map(mid));
-        const blueprints = m.every((i) => (Math.round(S[i * 3 + 2]) & 2) !== 0);
-        for (const i of m) {
-          c.set([cx - S[i * 3], cy - S[i * 3 + 1], far, i === lead ? (blueprints ? 2 : 1) : 3], i * 4);
-          this.dotOf[i] = lead;
-        }
-        this.dotMembers.set(lead, m);
+        for (const i of m) groupOf[i] = k;
+        for (const [a, b] of spanningPairs(m.map(mid))) pairs.push(m[a], m[b]);
       });
     }
-    if (this.cplxBuf) this.rewrite(this.cplxBuf, c);
-    // each link's connector zoomed out (T-225): from one dot's centre to the other's; none (ends
-    // equal) when one dot holds both stations
-    const idx = n.stationLinkIdx, ce = this.connEnds;
-    if (idx?.length && ce.length >= idx.length * 2) {
-      const S = n.stations, sh = n.stationShape;
-      const centre = (i: number): [number, number] =>
-        c[i * 4 + 3] > 0 ? [S[i * 3] + c[i * 4], S[i * 3 + 1] + c[i * 4 + 1]] : [S[i * 3] + (sh?.[i * 4] ?? 0), S[i * 3 + 1] + (sh?.[i * 4 + 1] ?? 0)];
-      for (let k = 0; k < idx.length / 2; k++) {
-        const i = idx[k * 2], j = idx[k * 2 + 1];
-        const a = centre(i), b = this.dotOf[i] === this.dotOf[j] ? a : centre(j);
-        ce.set([a[0], a[1], b[0], b[1]], k * 4);
-      }
-      if (this.connEndsBuf) this.rewrite(this.connEndsBuf, ce);
+    const idx = n.stationLinkIdx;
+    for (let k = 0; idx && k < idx.length / 2; k++) {
+      const i = idx[k * 2], j = idx[k * 2 + 1];
+      if (groupOf[i] < 0 || groupOf[i] !== groupOf[j]) pairs.push(i, j);
+    }
+    this.connPairs = Int32Array.from(pairs);
+    const count = pairs.length / 2;
+    const ce = (this.connEnds = new Float32Array(Math.max(1, count) * 4));
+    for (let k = 0; k < count; k++) ce.set([...mid(pairs[k * 2]), ...mid(pairs[k * 2 + 1])], k * 4);
+    // its own buffers and VAO, replaced with the connectors
+    for (const r of this.connRes) r.del();
+    this.connRes = [];
+    this.connVao = null;
+    this.connFlagBuf = null;
+    if (this.gl && this.bridgeProg) {
+      const gl = this.gl;
+      const cv = (this.connVao = gl.createVertexArray()!);
+      this.connRes.push({ del: () => gl.deleteVertexArray(cv) });
+      gl.bindVertexArray(cv);
+      this.attrib(this.bridgeProg, "a_ends", this.buffer(ce, this.connRes), 4, gl.FLOAT, 1);
+      this.connFlagBuf = this.buffer(new Float32Array(Math.max(1, count) * 2), this.connRes);
+      this.attrib(this.bridgeProg, "a_bflag", this.connFlagBuf, 2, gl.FLOAT, 1);
+      gl.bindVertexArray(null);
     }
     this.selDrawnKey = "";
   }
@@ -1767,22 +1712,21 @@ export class NetworkRenderer {
     if (key === this.selDrawnKey) return;
     this.selDrawnKey = key;
     const flags = new Float32Array(Math.max(1, n.stationCount) * 2);
-    // zoomed out a complex's dot is selected when any of it is (T-217)
-    for (let i = 0; i < n.stationCount; i++) flags.set([this.drawnSelected(i) ? 1 : 0, this.dotSelected(i) ? 1 : 0], i * 2);
+    for (let i = 0; i < n.stationCount; i++) flags[i * 2] = this.drawnSelected(i) ? 1 : 0;
     if (this.stationSelBuf) this.rewrite(this.stationSelBuf, flags);
-    const idx = n.stationLinkIdx;
-    if (idx?.length && this.bridgeFlagBuf) {
-      const b = new Float32Array(idx.length);
+    // a bridge or connector is selected with both its stations, and faded when either is a blueprint
+    const pairFlags = (idx: ArrayLike<number>) => {
+      const b = new Float32Array(Math.max(2, idx.length));
       for (let k = 0; k < idx.length / 2; k++) {
         const i = idx[k * 2], j = idx[k * 2 + 1];
         b[k * 2] = this.drawnSelected(i) && this.drawnSelected(j) ? 1 : 0;
         b[k * 2 + 1] = (Math.round(n.stations[i * 3 + 2]) | Math.round(n.stations[j * 3 + 2])) & 2 ? 1 : 0;
       }
-      this.rewrite(this.bridgeFlagBuf, b);
-      // zoomed out, a connector is selected with its two dots (T-225)
-      for (let k = 0; k < idx.length / 2; k++) b[k * 2] = this.dotSelected(idx[k * 2]) && this.dotSelected(idx[k * 2 + 1]) ? 1 : 0;
-      if (this.connFlagBuf) this.rewrite(this.connFlagBuf, b);
-    }
+      return b;
+    };
+    const idx = n.stationLinkIdx;
+    if (idx?.length && this.bridgeFlagBuf) this.rewrite(this.bridgeFlagBuf, pairFlags(idx));
+    if (this.connPairs.length && this.connFlagBuf) this.rewrite(this.connFlagBuf, pairFlags(this.connPairs));
   }
 
   /** How full station `i`'s platform is as last drawn (T-219): each side's share of the room to
@@ -1800,8 +1744,8 @@ export class NetworkRenderer {
       : { shares: [(w[i * 2] + w[i * 2 + 1]) / (2 * room)], room: 2 * room };
   }
 
-  /** Zoomed out, the crowd station `i`'s dot is tinted by (T-228): riders waiting at its platforms
-   * (its complex's on a complex's dot), its fullest platform side's share of the room there, and
+  /** Zoomed out, the crowd station `i`'s dot is tinted by (T-228): riders waiting at its platforms,
+   * its fullest platform side's share of the room there, and
    * whether a train there left riders behind; null as platforms or when crowds are not drawn. */
   dotCrowd(i: number): { waiting: number; share: number; leftBehind: boolean } | null {
     if (!this.crowdsShown || this.stationStyle.boxes || i < 0 || i >= this.dotWait.length) return null;
@@ -1855,16 +1799,15 @@ export class NetworkRenderer {
       }
     }
     if (this.crowdBuf) this.rewrite(this.crowdBuf, c);
-    // each dot's (T-228): its own platforms', and on a complex's dot the whole complex's
+    // each dot's (T-228): its station's platforms
     const dc = this.dotCrowds, dw = this.dotWait;
     dc.fill(0);
     dw.fill(0);
     for (let s = 0; s < n.stationCount; s++) {
       if (!sides[s]) continue;
-      const d = this.cplx[s * 4 + 3] > 0 ? this.dotOf[s] : s;
-      dc[d * 2] = Math.max(dc[d * 2], c[s * 4], c[s * 4 + 1]);
-      if (c[s * 4 + 2] > 0 || c[s * 4 + 3] > 0) dc[d * 2 + 1] = 1;
-      dw[d] += w[s * 2] + w[s * 2 + 1];
+      dc[s * 2] = Math.max(c[s * 4], c[s * 4 + 1]);
+      if (c[s * 4 + 2] > 0 || c[s * 4 + 3] > 0) dc[s * 2 + 1] = 1;
+      dw[s] = w[s * 2] + w[s * 2 + 1];
     }
     if (this.dotCrowdBuf) this.rewrite(this.dotCrowdBuf, dc);
     this.crowdAt = { t, board: b };

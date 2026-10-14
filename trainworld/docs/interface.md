@@ -110,8 +110,8 @@ bars). The network is not styled by us: lines, trains and stations take the line
   before). Its top-five train/other bars were dropped: the inspector lists every place with all
   and train counts, and the overview colours each city by its train share. The tabs are Build,
   Lines, Stations, Money (icons since T-252) and the Settings gear; a browser that last had the City tab open starts
-  on Lines. The top bar follows the nearer full city when
-  panning and shows its modelled local trip share (its hover says "on weekdays" or "at
+  on Lines. The top bar follows the zone under the view when
+  panning (no name over dead space, T-318) and shows its modelled local trip share (its hover says "on weekdays" or "at
   weekends"); the clock shows the day of the week before the day number ("Sat 13", the hover
   "Saturday, day 13"). **Demand shown for** (T-260, T-266; Settings, above Track display, a
   remembered display setting `dayShown`): Today (the default, hover "The clock's day: weekdays,
@@ -242,7 +242,8 @@ bars). The network is not styled by us: lines, trains and stations take the line
   Opening city data"); in a narrow map
   column the bar gives way first and the status then ends in an ellipsis. If demand cannot load a screen says "Demand could not load" with the reason and
   two buttons, Try again (reload) and Play without demand, and takes every key until one is
-  pressed.
+  pressed. A game whose view is over dead space and whose stations reach no zone loads nothing
+  (T-318): no card, no status, the clock is not held, the mode split reads "–".
 - **Settings** (`ui/SettingsTab.tsx`), in order: Bubble size (only while Homes or Destinations
   bubbles are on; the bubbles themselves are the selector at the map's upper left), the four track
   display modes, show or hide trains, station names, capacity markers and map labels, "Riders on
@@ -264,7 +265,10 @@ bars). The network is not styled by us: lines, trains and stations take the line
   button, which closes the panel and loads that game, and Delete (asked first); every card has
   Rename. Under the cards: Save as a copy (with a
   name), Save to a file, Load a file, New game. A slot saved before T-241 shows "No picture yet"
-  until it is next saved.
+  until it is next saved. A page opened with `?new=1`, `?synth=1` or `?demandTest=1` (checks and
+  the stress network, T-320) does not autosave: the top bar says "Autosave is off in this test
+  page. Save a copy to keep the game.", no card is marked Playing in a `?new=1` page, and Save as
+  a copy gives the game a slot of its own, which autosaves from then on.
   **Panel and text size** (T-247, Anita: the fonts felt a bit big): 80% to 120% in 5% steps, 100%
   by default, remembered per browser; no reset button (Anita). It zooms the dock, top bar, map buttons, search, loading
   card, tool notes and dialogs, and sizes the text of the map's DOM tags (station names, capacity
@@ -317,9 +321,9 @@ bars). The network is not styled by us: lines, trains and stations take the line
   anyone waiting ("120 waiting for subway 1 to Van Cortlandt Park-242 St", "after a full train left
   some behind" while that side is red) or "Nobody waiting on the platforms", then the fill drawn:
   "Platform 21% full on one side and 4% on the other (room for 1,250 a side)", or "Platform 21%
-  full (room for 2,500)" where trains use one side only (T-219). Zoomed out, a complex's one dot
-  gives its busiest station's tag with the complex's lines (T-217, T-305), and on a
-  dot the crowd lines are its tint's numbers instead: "4,257 waiting at the complex", "Fullest
+  full (room for 2,500)" where trains use one side only (T-219). Zoomed out each dot gives its own
+  station's tag with its own lines (T-313, T-305), and on a
+  dot the crowd lines are its tint's numbers instead: "1,257 waiting", "Fullest
   platform 45% full" (or "full"), and "A full train left some behind" while it is red (T-228). The crowd
   is inside the platform, so the station's own hover covers it. A demand circle away from any station, under the network: its busiest station's
   name and the count. The purpose filter's third line applies to circle counts. The tag refreshes
@@ -592,8 +596,11 @@ bars). The network is not styled by us: lines, trains and stations take the line
   **The focused zone and nearby zones** (T-276, [zones.md](zones.md) 6; `map/zoneFocus.ts`,
   `game/zones.ts`). After a pan the focused zone (the top bar's name, the shaded outside, the
   bubbles that can be selected) is the registered zone, city or not, whose boundary
-  (`<id>.boundary.geojson`) holds the view's centre; over dead space the nearest boundary; before
-  the boundaries have loaded the nearest registered centre. Search picks its zone the same way. A
+  (`<id>.boundary.geojson`) holds the view's centre or lies within 40 km of it; before the
+  boundaries have loaded the nearest registered centre within 120 km. Farther than that is dead
+  space (T-318): the top bar has no name, the split shows "–", the demand buttons say "Nothing
+  modelled here", nothing loads and no card or status says "Loading data"; the focus stays on the
+  last zone (`placeAt`, `viewedZone`). Search picks its zone by the nearest boundary. A
   bubble, station or trip selection keeps the focus where it is. Beside the focused zone's bubbles,
   up to three more zones whose boundaries touch the visible map, nearest the centre first, show
   their own bubbles with the same look, end, purpose filter and day, drawn under the focused
@@ -870,27 +877,33 @@ bars). The network is not styled by us: lines, trains and stations take the line
   station (or complex) is still drawn and clickable. Demand circles, bubbles and capacity tags are
   unchanged.
 - **Stations on the map** (T-189, T-204, `map/stationGeometry.ts`): from zoom 11 to 15 every
-  station is a dot (white, dark rim; ordinary 3.3/3.8/5.6 px radius at zoom 11/12/15, a station
-  served by more than one line 4.3/5/7.2 px, never narrower than the lines through it). The
-  stations the complex rule's distances group (game/complexes.ts without the player's links,
-  `dotGroups` in game/complexView.ts) are one dot (T-217, Anita: always, no setting) at the
-  centre of the smallest circle round their platforms' middles (the mean leans towards the side with
-  more platforms), as large as the transfer dot or as
-  reaches past its farthest platform's middle by the rim and a pixel, so the lines run into it; it
-  is faded only when every station in it is a blueprint. A player's link between two such groups
-  is a thin line between their two dots (T-225, Anita: "yes, connector"): a white core 2 px wide
-  with a 1 px dark rim either side, under the dots, drawn selected with them; a link inside one
-  group draws nothing. (One dot round a whole linked complex was about 240 px across at zoom 14.2
-  for 5 Av/42 St-Bryant Pk linked with Grand Central.) A dot stands for its group's busiest station (boardings plus
-  alightings a day; its first station before demand is
-  known): a click, the delete tool and the line tool pick that station, and its tag is that
-  station's, listing the lines of the whole complex (T-305; it once said how many of the complex's
-  stations the dot held). It is drawn selected when any of its stations is, and in complex view
-  every dot and connector of the complex is. With platform crowds on, a dot's
+  station is its own dot at its platform's middle (white, dark rim; T-313, Anita: "make station
+  small dots bigger, maybe 65% bigger radius": ordinary 5.4/6.3/9.2 px radius at zoom 11/12/15, a
+  station served by more than one line 7/8.3/11.9 px, 1.65 times T-189's, never narrower than the
+  lines through it). A complex's dots are one shape the way its boxes are (T-313, Anita: "stop
+  growing dots to fit all the platform centers within the complex dot ... their outlines merge in
+  the same way that station boxes do"): every dark disc is drawn first, then every white inside its
+  rim, so dots that overlap have one outline round them all. Dots that do not touch are joined by a
+  connector: a straight band from one dot's centre to the other's with the dots' own rim along both
+  sides and white 35% of an ordinary dot's white radius either side of its middle (about 7.7 px
+  across at zoom 13), its dark drawn with the dots' dark and its white with their white, under it,
+  so dots and connectors are one white shape with one outline (Anita: "it should look like its
+  made of the same material"). Connectors join the stations the complex rule's distances group
+  (game/complexes.ts without the player's links, `dotGroups` in game/complexView.ts), by the
+  shortest set of joins linking all of a group's dots, and each of the player's links between
+  two groups, from one linked station's dot to the other's (T-225); a join between dots that
+  overlap is hidden inside them. (T-217 drew a group as one dot covering its platforms' middles,
+  about 240 px across at zoom 14.2 for 5 Av/42 St-Bryant Pk linked with Grand Central.) Each dot is
+  its own station: a click picks the dot whose centre is nearest among those under the pointer,
+  and selects its complex as everywhere (T-249); the delete tool and the line tool take that
+  station, and its tag is that station's, with its own lines (T-305). In complex view every dot
+  and connector of the complex is drawn selected, with one outline and glow round them all, and
+  the demand bubbles are cut away round that shape. A connector is faded when either of its
+  stations is a blueprint. With platform crowds on, a dot's
   white is tinted by its platforms' crowd (T-228, Anita: "highlight the circle slightly"): towards
   the crowd grey by its fullest platform side's share of the room there (at most 45% of the way,
   at full), or a pale red (40% of the way to the over-full red) while a train at any of its
-  platforms left riders behind; a group's dot takes all its platforms. From zoom
+  platforms left riders behind; a connector stays white. From zoom
   15 (Anita: "turn into them sooner, around ~4x more zoomed in" than T-189's 13; a 150-200 m
   platform is then 80-110 px long) a station is its platform: a band along its track as long as
   the platform, following the track's own centre line (T-254, Anita: "ideally we actually fit the

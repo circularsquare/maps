@@ -232,7 +232,10 @@ remain later work. Research: [T-138](../notes/T-138.md); implementation and chec
 Five periods: morning peak 6-10, midday 10-16, evening peak 16-20, evening 20-24, night 0-6. They
 are the player's scheduling periods too (section 6.3: high demand in the peaks, medium midday and
 evening, low at night), defined once in `sim/src/track/params.rs` (`PERIOD_HOURS`,
-`PERIOD_LEVEL`) for schedules and demand alike.
+`PERIOD_LEVEL`) for schedules and demand alike. The hours are local time (T-309,
+docs/world.md "Local time"): each line's periods, boarding hours and kind of day are its first
+stop's region's, so London's morning peak is London's 6-10. The solve itself has no clock, so
+demand's period q is every region's own period q.
 
 Each commuter makes a trip to work and a trip home a day. Of the day's trips to work, 70 / 12 / 6 /
 4 / 8% start in the five periods; of the trips home, 2 / 18 / 58 / 16 / 6% (judgement for now). A

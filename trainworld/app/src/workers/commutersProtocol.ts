@@ -2,6 +2,7 @@
 // (workers/commuters.worker.ts), T-097.
 
 import type { FrameSpec } from "../game/frame";
+import type { Anchor } from "../map/geo";
 /** H3 resolutions the bubbles are aggregated at, finest first (cells are resolution 9). */
 export const BUBBLE_RES = [9, 8, 7, 6] as const;
 /** Average H3 cell area per resolution in BUBBLE_RES, m² (H3's own table). */
@@ -21,7 +22,11 @@ export const DISC = 8;
 export const BUBBLE_DENSITY = { home: 50000 / 1e6, work: 160000 / 1e6 } as const;
 
 export type ToCommuters =
-  | { kind: "cells"; xy: Float32Array; h3: BigUint64Array; frame: FrameSpec }
+  /** `anchor`: the draw anchor positions are measured from (T-317, map/geo.ts); every answer says
+   * which one its positions are relative to */
+  | { kind: "cells"; xy: Float32Array; h3: BigUint64Array; frame: FrameSpec; anchor: Anchor }
+  /** the draw anchor moved: measure the cells from the new one and send them back (`Moved`) */
+  | { kind: "anchor"; id: number; anchor: Anchor }
   | { kind: "build"; id: number; end: "home" | "work"; train: Float32Array; walk: Float32Array; drive: Float32Array }
   /** a set of cells with their own counts (a selection's far end, up to ~80k cells), summed
    * into every level */
@@ -33,7 +38,18 @@ export interface Summed {
   id: number;
   /** one per BUBBLE_RES: group, x, y, train, walk, drive per group with anyone in it */
   levels: { group: Uint32Array; x: Float32Array; y: Float32Array; train: Float32Array; walk: Float32Array; drive: Float32Array }[];
+  /** the anchor `x` and `y` are relative to */
+  anchor: Anchor;
   ms: number;
+}
+
+/** The answer to `anchor`: the cells' positions from the new anchor. */
+export interface Moved {
+  kind: "moved";
+  id: number;
+  anchor: Anchor;
+  cellX: Float32Array;
+  cellY: Float32Array;
 }
 
 export interface Grouping {
@@ -49,9 +65,11 @@ export interface Grouping {
 export interface Ready {
   kind: "ready";
   ms: number;
-  /** per cell, local units (map/geo.ts) */
+  /** per cell, local units of `anchor` (map/geo.ts); the main thread updates the three when a
+   * `Moved` arrives */
   cellX: Float32Array;
   cellY: Float32Array;
+  anchor: Anchor;
   levels: Grouping[];
 }
 
@@ -73,7 +91,9 @@ export interface Bubbles {
   levels: BubbleLevel[];
   /** commuters by mode, the whole city */
   totals: [number, number, number];
+  /** the anchor the discs' positions are relative to */
+  anchor: Anchor;
   ms: number;
 }
 
-export type FromCommuters = Ready | Bubbles | Summed;
+export type FromCommuters = Ready | Bubbles | Summed | Moved;

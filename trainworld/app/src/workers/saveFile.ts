@@ -5,8 +5,9 @@
 //   "TWG1"                 magic
 //   u32 little-endian      length of the JSON header in bytes
 //   JSON header (UTF-8)    `SaveHeader`: city, clock, money, fares, the day ledger
-//   the rest               the track model's network save (`TrackApi.save()`: "TWT4" legacy frame since T-104,
-//                          "TWT5" world frame since T-125; TWT2/3 load, always in the legacy frame)
+//   the rest               the track model's network save (`TrackApi.save()`: "TWT6" Mercator world frame since
+//                          T-306; older saves, "TWT5" conic since T-125, "TWT4" and TWT2/3 legacy frame, are
+//                          converted to Mercator when they load, T-308)
 //
 // Nothing in it depends on wall time, so saving the same game twice gives the same bytes.
 // Autosaves live in IndexedDB (database "anitabuilder", store "saves", one key per slot; the original game keeps key "autosave").
@@ -60,6 +61,16 @@ export function isNortheastSave(h: SaveHeader): boolean {
 async function pipe(bytes: Uint8Array, s: CompressionStream | DecompressionStream): Promise<Uint8Array> {
   const out = new Response(new Blob([bytes as BlobPart]).stream().pipeThrough(s));
   return new Uint8Array(await out.arrayBuffer());
+}
+
+/**
+ * Which frame a network's bytes are in, from their magic (T-308): TWT6 is the world's Mercator,
+ * TWT5 the Northeast conic, TWT4 and older the legacy equirectangular frame. A load converts
+ * anything but the new-game frame (`convert_save_frame`) before the track model reads it.
+ */
+export function trackFrameKind(track: Uint8Array): "merc" | "lcc" | "equirect" {
+  const m = new TextDecoder().decode(track.subarray(0, 4));
+  return m === "TWT6" ? "merc" : m === "TWT5" ? "lcc" : "equirect";
 }
 
 /** Header and network bytes -> the compressed file. */

@@ -7,7 +7,7 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import { nearestStation } from "../../game/places";
 import { queryClock } from "../../workers/clockClient";
-import { clock } from "../../game/clock";
+import { clock, demandAt } from "../../game/clock";
 import { clockTime, count, duration, headway, money } from "../../game/format";
 import { LINE_PALETTE } from "../../game/palette";
 import { PERIODS, periodAt } from "../../game/periods";
@@ -88,7 +88,8 @@ function spansText(spans: [number, number][]): string {
 function runningToday(l: LineInput, st: LineStats): number {
   const m = moneyState.value;
   if (!m) return 0;
-  const now = clock.now(), h0 = Math.floor(now / 86400) * 24, t = now / 3600;
+  // T-309: in the line's own local time, from its midnight
+  const now = clock.now() + st.shift, h0 = Math.floor(now / 86400) * 24, t = now / 3600;
   const tph = { high: l.tph.high, medium: l.tph.medium, low: l.tph.low };
   let cost = 0;
   for (let h = h0; h < t; h++) {
@@ -141,7 +142,8 @@ export function LineInspector({ id }: { id: string }) {
   const l = w?.save.lines.find((l) => l.id === id);
   const [symbol, setSymbol] = useState("");
   useEffect(() => { setSymbol(l?.letter ?? ""); }, [l?.letter]);
-  const now = clock.demand.value;
+  // T-309: the demand level now in the line's own local time
+  const now = demandAt(clock.hour.value * 3600 + (w?.lineStats[id]?.shift ?? 0));
   const lev = DEMAND_INDEX[now];
   useEffect(() => {
     if (renameLinePrompt.value === id) {

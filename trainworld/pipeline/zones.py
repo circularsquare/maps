@@ -35,7 +35,10 @@ def register(reg):
         lon, lat = cfg["origin"]
         reg["market"]["places"].append({"name": cfg["name"], "regionName": cfg["name"]})
         reg["cities"].append({"id": cid, "name": cfg["name"], "kind": "zone", "origin": {"lon": lon, "lat": lat},
-                              "center": [lon, lat], "zoom": 10.5, "market": len(reg["market"]["places"]) - 1})
+                              "center": [lon, lat], "zoom": 10.5,
+                              # T-309: whole-hour standard offset; the longitude's if the config has none
+                              "utcOffset": cfg.get("utc_offset", round(lon / 15)),
+                              "market": len(reg["market"]["places"]) - 1})
         added.append(cid)
     return added
 

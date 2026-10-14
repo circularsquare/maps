@@ -2,7 +2,7 @@
 // (T-220): the city overview's bubbles and the city inspector show its trips, search goes to a
 // city, and Explore a trip is at the bottom of Settings.
 
-import { clock } from "../game/clock";
+import { clock, demandAt } from "../game/clock";
 import { useState } from "preact/hooks";
 import { createLine } from "../game/lineActions";
 import type { JSX } from "preact";
@@ -146,7 +146,9 @@ export function LinesTab() {
   const w = world.value;
   if (!w) return null;
   const sel = selection.value;
-  const lev = DEMAND_INDEX[clock.demand.value];
+  // T-309: each line's demand level now in its own local time
+  const hour = clock.hour.value;
+  const levOf = (id: string) => DEMAND_INDEX[demandAt(hour * 3600 + (w.lineStats[id]?.shift ?? 0))];
   const t = today.peek();
   const newLine = async () => {
     if (creating) return;
@@ -155,7 +157,7 @@ export function LinesTab() {
   };
   const natural = (a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" });
   // a line that is not running has no train count and no riders: it sorts as zero
-  const trains = (id: string) => (w.lineStats[id]?.status === "running" ? w.lineStats[id].trainsNeeded[lev] : 0);
+  const trains = (id: string) => (w.lineStats[id]?.status === "running" ? w.lineStats[id].trainsNeeded[levOf(id)] : 0);
   const { key, dir } = lineSort.value;
   const lines = [...w.save.lines].sort((a, b) =>
     (key === "riders" ? ((t.get(a.id)?.riders ?? 0) - (t.get(b.id)?.riders ?? 0)) * dir
@@ -185,7 +187,7 @@ export function LinesTab() {
               ) : (
                 <>
                   <RidersToday line={l.id} />
-                  <span class="val muted w-trains">{st.trainsNeeded[lev]} {st.trainsNeeded[lev] === 1 ? "train" : "trains"}</span>
+                  <span class="val muted w-trains">{st.trainsNeeded[levOf(l.id)]} {st.trainsNeeded[levOf(l.id)] === 1 ? "train" : "trains"}</span>
                 </>
               )}
             </li>

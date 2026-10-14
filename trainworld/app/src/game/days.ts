@@ -17,9 +17,10 @@ const WEEKDAY_NAME = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 export const weekdayOf = (day: number): number => ((day - 1) % 7 + 7) % 7;
 export const weekdayName = (day: number): string => WEEKDAY_NAME[weekdayOf(day)];
 export const dayKindOf = (day: number): DayKind => (weekdayOf(day) >= 5 ? 1 : 0);
-/** The kind of day at game time `t` (seconds). */
+/** The kind of day at time `t` (seconds). Callers pass local time (T-309, game/localTime.ts): a
+ * line's or a view's, never the bare game clock outside New York's time zone. */
 export const dayKindAt = (t: number): DayKind => dayKindOf(Math.floor(t / 86400));
 
-/** The kind of day the game clock is in, kept by game/clock.ts as the minutes pass (main thread
- * only). The demand views show it unless the player chose one (game/ui.ts `shownDay`, T-266). */
+/** The kind of day it is in the local time in view (T-309), kept by game/clock.ts as the minutes
+ * pass and the view pans (main thread only). The demand views show it unless the player chose one (game/ui.ts `shownDay`, T-266). */
 export const currentDay = signal<DayKind>(0);

@@ -4,14 +4,14 @@
 
 import type { ComponentChildren } from "preact";
 import { clock, SPEEDS } from "../game/clock";
-import { activeCity, cityById } from "../game/cities";
+import { activeCity, cityById, viewedZone } from "../game/cities";
 import { demandStep, demandUpdating, demandView, modeSplit } from "../game/demand";
 import { clockTime, dayOf, money, moneyExact } from "../game/format";
 import { weekdayName, weekdayOf } from "../game/days";
 import { shownDay } from "../game/ui";
 
 const WEEKDAY_LONG = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-import { cityNames, loadFailure, loadProgress } from "../game/loading";
+import { cityNames, demandIdle, loadFailure, loadProgress } from "../game/loading";
 import { world } from "../game/world";
 import { liveMoney, moneyState } from "../game/money";
 import { Icon } from "./widgets";
@@ -26,7 +26,8 @@ const DEMAND_NAME = { high: "High demand", medium: "Medium demand", low: "Low de
 
 function Clock() {
   // ?perfOff=clock (T-045, measurement only): read without subscribing, so it never re-renders.
-  const minute = NO_CLOCK ? clock.minute.peek() : clock.minute.value;
+  // T-309: the local time and day where the player is looking
+  const minute = NO_CLOCK ? clock.local.peek() : clock.local.value;
   // T-172: a loaded game's clock waits for its first demand estimate; building does not
   const held = clock.held.value;
   return (
@@ -88,7 +89,8 @@ export function TopBar() {
   if (!w) return <header id="topbar" />;
   const known = modeSplit.value; // T-026: from the demand workers
   const s = known ?? { train: 0, walk: 0, drive: 0 };
-  const city = cityById(activeCity.value);
+  // T-318: no name over dead space (the focus stays on the last zone, which is not where the view is)
+  const city = viewedZone.value ? cityById(activeCity.value) : null;
   // T-172: no figures until the city has opened (the game is playable while it loads)
   const pct = (v: number) => (known ? v.toFixed(1) + "%" : "–");
   const step = demandStep.value;
@@ -101,7 +103,7 @@ export function TopBar() {
     // T-212: "Loading data", not the cities' names (those are in the hover)
     // T-243: a thin bar after it, not a percentage
     : load ? "Loading data"
-    : !demandView.value ? "Loading data…"
+    : !demandView.value ? (demandIdle.value ? null : "Loading data…") // T-318: nothing to load over dead space
     // T-232: figures before a solve's final round are shown only where nothing final is, and say so
     : !demandView.value.final ? `Estimate, refining ${Math.min(step.done + 1, step.of)}/${step.of}…`
     : demandUpdating.value ? `Updating demand ${Math.min(step.done + 1, step.of)}/${step.of}…` : null;
@@ -111,8 +113,8 @@ export function TopBar() {
     : "These figures are for the network before your last change. They change once the new forecast is finished.");
   return (
     <><header id="topbar">
-      <div class="city">{city.name}</div>
-      <div class="split" data-tip={`How people in ${city.name} travel${shownDay.value ? " at weekends" : " on weekdays"}: Train ${pct(s.train)}, Walking ${pct(s.walk)}, Driving ${pct(s.drive)}${demandView.value && !demandView.value.final ? " (an early estimate)" : demandUpdating.value ? " (before your last change)" : ""}`} style={{ opacity: demandUpdating.value ? 0.6 : 1 }}>
+      <div class="city">{city?.name}</div>
+      <div class="split" data-tip={`How people ${city ? "in " + city.name + " " : ""}travel${shownDay.value ? " at weekends" : " on weekdays"}: Train ${pct(s.train)}, Walking ${pct(s.walk)}, Driving ${pct(s.drive)}${demandView.value && !demandView.value.final ? " (an early estimate)" : demandUpdating.value ? " (before your last change)" : ""}`} style={{ opacity: demandUpdating.value ? 0.6 : 1 }}>
         <span class="split-train">
           <i class="sw sw-train" />
           Train <b class="big">{pct(s.train)}</b>

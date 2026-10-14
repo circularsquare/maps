@@ -1,10 +1,10 @@
 // The world's station complexes (T-146, game/complexes.ts) and the complex view: a selected station
 // is shown as its complex unless opened on its own (T-249). The demand circles take a complex as
-// one by their own setting (`display.complexView`, demandViews.ts).
+// one by their own setting (`display.complexView`, demandViews.ts). Zoomed out, the distance groups
+// whose dots are joined by connectors (T-313).
 
 import { computed, effect, signal } from "@preact/signals";
 import { buildComplexes, membersOf, type Complexes } from "./complexes";
-import { demandView, stationRidersFor } from "./demand";
 import type { StationId } from "./types";
 import { selection } from "./ui";
 import { world } from "./world";
@@ -26,26 +26,12 @@ export const complexes = computed<Complexes>(() => {
   return last;
 });
 
-/** Groups with each one's busiest station (boardings plus alightings a day, every purpose; its first
- * station before demand is known). */
-function withLeads(c: Complexes) {
-  const dv = demandView.value;
-  const riders = (id: StationId) => {
-    const d = stationRidersFor(dv, id);
-    return d ? d.boardings + d.alightings : 0;
-  };
-  return { ...c, lead: c.members.map((m) => m.reduce((best, id) => (riders(id) > riders(best) ? id : best), m[0])) };
-}
-
-/** The complexes with each one's busiest station. */
-export const complexLeads = computed(() => withLeads(complexes.value));
-
 let nearKey = "";
 let near: Complexes = { of: new Map(), members: [] };
-/** The stations the distance rule groups, the player's links left out (T-225, Anita): zoomed out
- * each group is one dot, standing for its busiest station when clicked (T-217), and each link a thin
- * line between two dots. A complex linked across hundreds of metres was one dot covering all of it
- * (5 Av/42 St with Grand Central, about 240 px at zoom 14.2). */
+/** The stations the distance rule groups, the player's links left out: zoomed out each station is
+ * its own dot, and each group's dots are joined by the shortest set of connectors, each link by one
+ * more between its two stations' dots (T-313, map/renderer.ts `syncGroups`). The same object while
+ * no station moved, appeared or changed length. */
 export const dotGroups = computed(() => {
   const st = world.value?.save.stations ?? [];
   const k = getWorldFrame().kind + st.map((s) => `${s.id}:${s.x}:${s.y}:${s.heading}:${s.length}`).join("|");
@@ -53,7 +39,7 @@ export const dotGroups = computed(() => {
     nearKey = k;
     near = buildComplexes(st, [], groundScale);
   }
-  return withLeads(near);
+  return near;
 });
 
 /** The stations in `id`'s complex, itself included (just [id] for a station on its own). */

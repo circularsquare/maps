@@ -148,11 +148,21 @@ Option 1 of the review, in the same structure (zones, served pairs only, the off
 ## 6. On the map
 
 **Over a non-city zone** it is the focused zone, exactly as a city is focused: the zone holding the
-view's centre (the nearest zone if none holds it). Its bubbles are drawn as a city's are, and the
-top bar names it. **Nearby zones** are drawn too: every zone whose boundary is on screen (at most
+view's centre. Its bubbles are drawn as a city's are, and the top bar names it. A centre outside
+every boundary still belongs to the nearest zone when it is within 40 km of that zone's boundary
+(T-318; about the market's onset and the ring T-300 would add). Before the boundaries have loaded
+the rule is 120 km from a zone's centre, past the biggest metro's far edge.
+
+**Over dead space**, farther than that from every zone (London while it has no pack), the view
+belongs to no zone. The top bar shows no name and "–" for the split. Nothing is loaded or solved
+for the view (no pack, not even the market), no "Loading data" card or status shows, the clock is
+not held, and the focused zone stays where it was. A built station that reaches a zone still loads
+that zone. One helper answers it, `placeAt` in `game/zones.ts`, kept in `viewedZone`
+(`game/cities.ts`).
+
+**Nearby zones** are drawn too: every zone whose boundary is on screen (at most
 four, nearest first) shows its own bubbles beside the focused zone's, so a zone line is not a cliff
-in the bubbles. A click on a nearby zone's bubble focuses that zone and selects the bubble. Over
-dead space the focused zone is the nearest one, so the same rule shows the nearby zones' bubbles.
+in the bubbles. A click on a nearby zone's bubble focuses that zone and selects the bubble.
 
 Bubbles need a zone's results: a zone on screen is opened (its pack downloaded and opened in the
 workers) like a viewed city. With no station within reach its bubbles are all walking and driving,

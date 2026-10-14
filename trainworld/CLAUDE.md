@@ -68,10 +68,10 @@ it.
   worker, `demand/` for the demand workers (two modules from the one crate, notes/T-051.md).
   - `src/game/`: what the UI reads. `types.ts` (the save's inputs, worker results, `WorldView`,
     `Selection`), `world.ts` (the snapshot signal and the edit functions), `ui.ts` (tab,
-    selection, display settings, theme), `clock.ts`, `periods.ts` (the five periods), `days.ts` (weekday and weekend, the shown day, T-260),
+    selection, display settings, theme), `clock.ts`, `localTime.ts` (each region's local time and the local time in view, T-309; the track model's side is `sim/src/track/localtime.rs`), `periods.ts` (the five periods), `days.ts` (weekday and weekend, the shown day, T-260),
     `demand.ts` (demand results: mode split, riders), `boarding.ts` (the boarding account's hour on
     the main thread: riders packed for the clock worker, platform crowds, T-164), `complexLive.ts` (a complex's platform crowds and trains now, for the complex map, T-246), `palette.ts`, `format.ts`, `coords.ts`
-    (world metres to lng/lat), `frame.ts` and `registry.json` (the two world frames and the one city registry, `cities.ts` reads it, T-125), `issues.ts` (the track model's refusals in plain words),
+    (world metres to lng/lat), `frame.ts` and `registry.json` (the world frames and the one city registry, `cities.ts` reads it, T-125), `issues.ts` (the track model's refusals in plain words),
     `money.ts` (cash and ledger from the worker, fare income from riders, T-028), `places.ts`
     (station and compass names for the inspectors), `remove.ts` (removing things, with the
     question asked before removing anything constructed, T-096), `loading.ts` (what is loading,
@@ -86,7 +86,7 @@ it.
     `ui/inspector/TripInspector.tsx`, its state `game/trip.ts`, its query `sim/src/demand/trip.rs`),
     `stationLabels.ts`, `capacityMarkers.ts`, `stopMarkers.ts` (the toggle markers of stop editing, T-233), `trainFollow.ts` (a selected train followed onto its next trip, T-245), `pick.ts`, `tools.ts` (drawing track, placing
     stations, the line tool), `edgeEdit.ts` (dragging blueprint track's PIs, T-064, T-092), `nodeDrag.ts` (dragging
-    blueprint nodes, T-093), `geo.ts`,
+    blueprint nodes, T-093), `geo.ts` (the draw anchor, T-307), `anchorVersion.ts` (its version as a signal, T-317),
     `synth.ts` (stress network), and the demand views (T-084, T-097): `demandViews.ts` (wiring,
     a station's catchment), `demandLayers.ts` (line width, station size, train fill),
     `commuterView.ts` and `bubbles.ts` (commuter bubbles and bubble selections), `intercityView.ts`
@@ -107,8 +107,9 @@ it.
     `selectionMerge.ts` (a bubble selection's everyday far end added up over the workers, T-285).
   - URL: `?debug=1` (readout, `window.tw` probes incl. `lagStart/lagStop`, `checkPrecision`;
     `window.twDemand` with demand timings and `client.qlog` per query, `window.twViews` with the demand views'), `?paused=1`, `?new=1` (a new game instead of the
-    autosave), `?synth=1&lines=500&trains=10000`,
-    `?demandTest=1` (demand on T-005's hand-made network), `?demandWorkers=N`,
+    autosave; it owns no slot and never writes one until a copy is saved, T-320, so it is safe in a
+    browser profile holding real games), `?synth=1&lines=500&trains=10000`,
+    `?demandTest=1` (demand on T-005's hand-made network; both also never autosave), `?demandWorkers=N`,
     `?perfOff=...` / `?perfTry=...` (CPU A/B switches, `src/perfFlags.ts`, notes/T-045.md).
 - `npm run build --prefix app` = wasm-pack twice (Cargo profile `wasm`) → type check → `app/dist/` (city packs copied into
   `dist/packs/` by `vite.config.ts`), which serve.py serves at `localhost:8800/trainworld/`. `npm run dev --prefix app` for an agent's own loop.

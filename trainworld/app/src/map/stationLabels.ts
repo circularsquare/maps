@@ -215,8 +215,9 @@ export class StationLabels {
         l.h = l.el.offsetHeight;
       }
     }
-    // clear of a platform box, which widens as the map zooms in (T-204)
-    const gap = Math.max(GAP, plainBoxHalfPx(this.overlay.renderer.stationStyle, zoom) + 4);
+    // clear of a platform box, which widens as the map zooms in (T-204), or of a transfer dot (T-313)
+    const ss = this.overlay.renderer.stationStyle;
+    const gap = Math.max(GAP, plainBoxHalfPx(ss, zoom) + 4, ss.boxes ? 0 : ss.radius[1] + 3);
     for (const l of this.labels) {
       const [sx, sy] = this.overlay.toScreen(l.x, l.y);
       const x = l.below ? sx - l.w / 2 : sx + gap;

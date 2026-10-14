@@ -9,13 +9,14 @@
 
 import init, { TrackApi } from "../wasm/track/sim"; // the track model only (T-051)
 import { anchor, makeAnchor, setAnchor, toLocal } from "../map/geo";
-import { CITIES, cityNear, HOME_CITY, NEW_GAME_FRAME, WORLD_ID } from "../game/cities";
+import { CITIES, cityWithin, HOME_CITY, NEW_GAME_FRAME, WORLD_ID } from "../game/cities";
 import { frameKindName, frameKindNumber, makeFrame, mercK, type Frame, type FrameSpec } from "../game/frame";
 import { PERIODS, periodAt } from "../game/periods";
 import { DAY_KINDS, dayKindAt } from "../game/days";
+import { timeZoneTable } from "../game/localTime";
 import { networkFromState } from "../map/network";
 import { buildComplexes } from "../game/complexes";
-import { decodeSave, encodeSave, isNortheastSave, readStored, SAVE_FORMAT, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, deleteSlot, leaseSlot, ORIGINAL_SLOT, type SlotLease, type SlotSummary, type DayLedger, type SaveHeader } from "./saveFile";
+import { decodeSave, encodeSave, isNortheastSave, trackFrameKind, readStored, SAVE_FORMAT, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, deleteSlot, leaseSlot, ORIGINAL_SLOT, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type SaveHeader } from "./saveFile";
 import type { ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FromClock, MoneyState, NetworkSnapshot, PiInput, RouteEnd, ToClock } from "./protocol";
 
 /** Run 0 of each line is resampled this often (m) for the renderer's line texture. */
@@ -82,6 +83,9 @@ let saveInFlight: Promise<boolean> | null = null;
 let activeSlot = ORIGINAL_SLOT;
 let activeLease: SlotLease | null = null;
 let storageReady = true;
+/** `?new=1`, `?synth=1`, `?demandTest=1` (T-320): no slot is written until "Save as a copy" gives
+ * the game a slot of its own; a `?new=1` game has no active slot ("") and reads none */
+let testPage = false;
 let saveFailure: string | undefined;
 const slotChanges = typeof BroadcastChannel === "undefined" ? null : new BroadcastChannel("anitabuilder-save-slots");
 slotChanges?.addEventListener("message", () => { if (api) void publishSlots(); });
@@ -91,7 +95,8 @@ async function publishSlots(error?: string) {
   try { slots = await listSlots(); storageReady = true; } catch { storageReady = false; }
   const writable = !!activeLease && storageReady && !saveFailure;
   const reason = saveFailure || (!storageReady ? "Browser storage is unavailable. Save to a file to keep this game."
-    : !activeLease ? navigator.locks ? "Autosave is off here because this slot was opened in another tab. Save to a new slot, or close the other tab and reload."
+    : !activeLease ? testPage ? "Autosave is off in this test page. Save a copy to keep the game."
+      : navigator.locks ? "Autosave is off here because this slot was opened in another tab. Save to a new slot, or close the other tab and reload."
       : "This browser cannot protect save slots. Save to a file to keep this game." : undefined);
   send({ kind: "saveSlots", slots, active: activeSlot, writable, at: slots.find(s => s.key === activeSlot)?.at ?? 0, reason, error });
 }
@@ -219,6 +224,7 @@ function buildState(): ClockState {
       stopS: [[...a.line_stop_s(id, 0)], [...a.line_stop_s(id, 1)]],
       buildCost: ok && !running ? a.line_build_cost(id) : 0,
       trainCost: ok && !running ? a.line_train_cost(id) : 0,
+      shift: a.line_shift(id),
     });
   }
   // Keyframes: phase tables, profile meta, and run 0 of every line resampled.
@@ -327,6 +333,23 @@ function sendCash() {
   send({ kind: "cash", cash, today: { ...today } });
 }
 
+/** T-309: the running lines grouped by the local time they run on, each group's running cost per
+ * demand level and its fare income per kind of day and period. With one local time (every game in
+ * the Northeast and Toronto) the network's totals, as before. */
+function localGroups(): { shift: number; running: number[]; income: number[][] }[] {
+  const a = api!;
+  const shifts = [...a.running_shifts()];
+  if (shifts.length <= 1) return [{ shift: shifts[0] ?? 0, running: [0, 1, 2].map((l) => a.running_cost(l)), income: incomePerHour }];
+  return shifts.map((s) => {
+    const income = incomePerHour.map((p) => p.map(() => 0));
+    for (const [id, per] of lineIncome) {
+      if (a.line_shift(id) !== s) continue;
+      per.forEach((row, k) => row.forEach((v, p) => { if (income[k]) income[k][p] += v; }));
+    }
+    return { shift: s, running: [0, 1, 2].map((l) => a.running_cost_in(l, s)), income };
+  });
+}
+
 /** Fares in and running costs out up to now (T-284: to the game second, not the whole hour). An
  * hour's fare (the main thread's income for its period and kind of day) is paid as its trains
  * pick up riders (`hourShape`), its running cost evenly; by the hour's end both are paid in full,
@@ -340,15 +363,20 @@ function settle(): boolean {
     partFare = partCost = 0;
   }
   if (now <= settledT) return false;
-  const running = [0, 1, 2].map((l) => api!.running_cost(l));
+  const groups = localGroups();
   let cash = api.cash(), ended = false;
   while (settledT < now) {
     const h = Math.floor(settledT / 3600);
     if (h !== partHour) { partHour = h; partFare = partCost = 0; }
     const t = h * 3600, end = Math.min(now, t + 3600), full = end >= t + 3600;
-    const p = periodAt(t);
-    // T-260: the hour's own kind of day; the weekday's until a weekend's has come
-    const fare = (incomePerHour[dayKindAt(t)] ?? incomePerHour[0])?.[p] ?? 0, cost = running[LEVEL_OF[PERIODS[p].demand]];
+    // T-309: each local time's lines at their own period and day; T-260: the hour's own kind of
+    // day, the weekday's until a weekend's has come
+    let fare = 0, cost = 0;
+    for (const g of groups) {
+      const tl = t + g.shift, p = periodAt(tl);
+      fare += (g.income[dayKindAt(tl)] ?? g.income[0])?.[p] ?? 0;
+      cost += g.running[LEVEL_OF[PERIODS[p].demand]];
+    }
     const wf = full ? 1 : shareAt(h, end - t), wc = full ? 1 : (end - t) / 3600;
     const df = Math.max(0, wf - partFare), dc = Math.max(0, wc - partCost);
     partFare = Math.max(partFare, wf);
@@ -374,17 +402,21 @@ function today(): Float64Array {
   const now = Math.min(gameNow(), settledT);
   const v = a.today(now);
   const count = v[0];
-  const h0 = Math.floor(now / 86400) * 24, hNow = Math.floor(now / 3600);
-  // the share of each hour since midnight paid so far
-  const shares: { t: number; w: number }[] = [];
-  for (let h = h0; h <= hNow; h++) shares.push({ t: h * 3600, w: h < hNow ? 1 : h === partHour ? partFare : 0 });
+  const hNow = Math.floor(now / 3600);
   const fares: number[] = [];
   let i = 1;
   for (let k = 0; k < count; k++) {
     const id = v[i], n = v[i + 1], spans = v[i + 6];
     const per = lineIncome.get(id);
     let f = 0;
-    if (per) for (const s of shares) f += ((per[dayKindAt(s.t)] ?? per[0])?.[periodAt(s.t)] ?? 0) * s.w;
+    // each hour since the line's local midnight (T-309), at its local period and day, by the
+    // share already paid
+    const sh = a.line_shift(id);
+    const h0 = Math.floor((now + sh) / 86400) * 24 - sh / 3600;
+    if (per) for (let h = h0; h <= hNow; h++) {
+      const t = h * 3600 + sh, w = h < hNow ? 1 : h === partHour ? partFare : 0;
+      f += ((per[dayKindAt(t)] ?? per[0])?.[periodAt(t)] ?? 0) * w;
+    }
     fares.push(f);
     i += 7 + 2 * spans + n;
   }
@@ -457,8 +489,8 @@ async function slotSummary(): Promise<SlotSummary> {
     if (ni[i + 7] <= 0) continue;
     stations++;
     const [lng, lat] = packLngLat(ni[i + 1], ni[i + 2]);
-    const c = cityNear(lng, lat);
-    byCity.set(c, (byCity.get(c) ?? 0) + 1);
+    const c = cityWithin(lng, lat); // T-318: a station over dead space is in no city
+    if (c) byCity.set(c, (byCity.get(c) ?? 0) + 1);
   }
   const cities = [...byCity].sort((x, y) => y[1] - x[1]).map(([c]) => c);
   const li = a.lines_info();
@@ -594,13 +626,14 @@ async function manageSlot(msg: Extract<ToClock, { kind: "saveSlot" }>) {
         if (!stored) throw new Error("That save slot no longer exists.");
         const decoded = await decodeSave(stored.bytes);
         if (!isNortheastSave(decoded.header)) throw new Error("This save is for another region.");
-        await loadGame(stored.bytes, "file");
+        const converted = await loadGame(stored.bytes, "file");
         activeLease?.release();
         activeSlot = key;
         activeLease = lease;
         saveFailure = undefined;
         dirty = false;
         savedAt = stored.at;
+        if (converted) await saveConverted(key, stored);
       } catch (err) { lease?.release(); throw err; }
     } else {
       const key = msg.key;
@@ -618,16 +651,38 @@ async function manageSlot(msg: Extract<ToClock, { kind: "saveSlot" }>) {
   } catch (err) { await publishSlots((err as Error).message); }
 }
 
-/** Replace the game with a save's. Throws a player-readable reason, changing nothing. */
-async function loadGame(bytes: Uint8Array, from: "autosave" | "file") {
+/** whether the game just loaded was converted from an older frame (T-308), for the "loaded" message */
+let convertedOnLoad = false;
+
+/** Replace the game with a save's. Throws a player-readable reason, changing nothing. A save whose
+ * track is not in the world frame is converted once, through longitude and latitude, and loaded in
+ * it (T-308); the return value says so, and the caller then writes the slot again in the new
+ * format. Money, fares and the ledger are not touched. */
+async function loadGame(bytes: Uint8Array, from: "autosave" | "file"): Promise<boolean> {
   const { header: h, track } = await decodeSave(bytes);
   if (!isNortheastSave(h)) throw new Error("This save is for another region.");
-  if (!api!.load(track)) throw new Error("This save is damaged.");
+  let net = track, converted = false;
+  if (trackFrameKind(track) !== NEW_GAME_FRAME.kind) {
+    const c = TrackApi.convert_save_frame(track, frameKindNumber(NEW_GAME_FRAME.kind));
+    // an unreadable network converts to nothing: let the load below say so
+    if (c.length) { net = c; converted = true; }
+  }
+  if (!api!.load(net)) throw new Error("This save is damaged.");
   api!.set_cash(h.cash);
   api!.set_fleet(h.fleet ?? 0);
   fares = { ...START_FARES, ...h.fares };
   ledger = (h.ledger ?? []).map((d) => ({ ...d }));
+  convertedOnLoad = converted;
   restart(h.clock, from);
+  return converted;
+}
+
+/** After a slot's save was converted on load: keep the old-format copy under a key the saves list
+ * does not show, then write the slot in the new format. */
+async function saveConverted(key: string, old: StoredSave) {
+  await writeStored("old-frame-" + key, old);
+  dirty = true;
+  await autosave();
 }
 
 function newGame() {
@@ -651,7 +706,8 @@ function restart(t: number, from: "autosave" | "file" | "new") {
   api!.clear_riders(); // and its riders (T-164)
   forget(true);
   syncFrame();
-  send({ kind: "loaded", from, clock: t, frame: frameSpec() });
+  send({ kind: "loaded", from, clock: t, frame: frameSpec(), converted: convertedOnLoad || undefined });
+  convertedOnLoad = false;
   sendState();
   clearTimeout(snapTimer);
   send({ kind: "snapshot", snapshot: buildSnapshot() });
@@ -885,6 +941,8 @@ async function processMessage(msg: ToClock) {
       const t0 = performance.now();
       await init();
       api = new TrackApi(NEW_GAME_FRAME.lon, NEW_GAME_FRAME.lat, true);
+      // T-309: each region's local time, kept across loads
+      api.set_time_zones(timeZoneTable());
       api.set_empty_frame(frameKindNumber(NEW_GAME_FRAME.kind));
       syncFrame();
       let water = { ok: false, population: 0, jobs: 0 };
@@ -904,14 +962,22 @@ async function processMessage(msg: ToClock) {
       moneyParams = [...api.money_params()];
       send({ kind: "ready", initMs: performance.now() - t0, frame: frameSpec(), water: water.ok, population: water.population, jobs: water.jobs });
       // The last game, unless the page asked for a new one (T-029).
-      activeSlot = msg.slot?.startsWith("slot-") ? msg.slot : ORIGINAL_SLOT;
-      if (activeSlot !== ORIGINAL_SLOT && !await readStored(activeSlot)) activeSlot = ORIGINAL_SLOT;
-      activeLease = await leaseSlot(activeSlot);
+      testPage = !!(msg.fresh || msg.testPage);
+      if (msg.fresh) {
+        // T-320: a new game for a check owns no slot, so nothing it does can reach a saved game
+        activeSlot = "";
+        activeLease = null;
+      } else {
+        activeSlot = msg.slot?.startsWith("slot-") ? msg.slot : ORIGINAL_SLOT;
+        if (activeSlot !== ORIGINAL_SLOT && !await readStored(activeSlot)) activeSlot = ORIGINAL_SLOT;
+        // a stress page reads the slot but does not take it, so it never writes it
+        activeLease = msg.testPage ? null : await leaseSlot(activeSlot);
+      }
       await publishSlots();
       const stored = msg.fresh ? null : await readStored(activeSlot);
       if (stored) {
         try {
-          await loadGame(stored.bytes, "autosave");
+          if (await loadGame(stored.bytes, "autosave") && activeLease) await saveConverted(activeSlot, stored);
           return;
         } catch (err) {
           // Keep the unreadable save aside rather than overwrite it with the new game.

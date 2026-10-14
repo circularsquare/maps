@@ -11,8 +11,11 @@
 // state arrives, so the network drawn and every local-unit conversion change together. Caches in
 // local units rebuild with the world it comes with, or key on `anchor().version`.
 //
-// The demand views (bubbles, catchments, longer trips, the hover finders' pointer) stay on
-// HOME_ANCHOR for now (T-317): within the Northeast and Toronto that is centimetre-exact anyway.
+// The demand views follow it too (T-317): every disc set (bubbles, a selection's ends, a station's
+// catchment, longer trips) is built relative to the anchor in force and keeps that anchor with it
+// (`DemandOverlay` draws each set with its own anchor's matrix, the hover finders turn the pointer
+// into each set's local units), and is rebuilt when `anchor().version` changes (the signal
+// `anchorVersion`, map/anchorVersion.ts). Disc sizes use k at the disc (`kAtY`, `kAtLat`).
 
 export const EARTH_C = 40075016.686;
 const EARTH_R = 6371008.8;
@@ -39,7 +42,8 @@ export function makeAnchor(lng: number, lat: number, version: number): Anchor {
 
 /** New York: the single origin every view used before T-307, and still the anchor there. */
 export const HOME_ANCHOR = makeAnchor(-73.98, 40.73, 0);
-/** real metre -> local unit at HOME_ANCHOR's latitude (the demand views, which stay on it) */
+/** real metre -> local unit at HOME_ANCHOR's latitude: only for the stress network (synth.ts),
+ * which lives at New York. Everything else uses k where it is (`kAtY`, `kAtLat`). */
 export const MERC_K = 1 / Math.cos(HOME_ANCHOR.lat * RAD);
 
 let current = HOME_ANCHOR;
@@ -105,6 +109,11 @@ export const PSI_PER_UNIT = (2 * Math.PI) / EARTH_C;
 /** Local units per metre of ground at local y (mercator's scale, 1 / cos(lat) there). */
 export function kAtY(y: number, a: Anchor = current): number {
   return Math.cosh(anchorPsi(a) - y * PSI_PER_UNIT);
+}
+/** Local units of anchor `to` that a point at (0, 0) of anchor `from` is at: add it to positions in
+ * `from`'s units to get `to`'s. */
+export function anchorShift(from: Anchor, to: Anchor): [number, number] {
+  return [(from.merc[0] - to.merc[0]) * EARTH_C, (from.merc[1] - to.merc[1]) * EARTH_C];
 }
 /** Local units per metre of ground at a latitude. */
 export function kAtLat(lat: number): number {

@@ -108,10 +108,10 @@ assert.ok(stationPath(s).startsWith('M'));
 // dots zoomed out, covering the line as drawn
 s=stationShape(0,0,straight,1,project,{...style,boxes:false},true);
 near(s.dot,stationRadii(15)[1],'transfer dot');assert.ok(insideStation(s,10+s.dot-0.1,20));assert.ok(!insideStation(s,10+HL-1,20),'a dot is not the platform');
-near(stationShape(0,0,straight,1,project,{...style,boxes:false,linePx:20},false).dot,0.5*0.6*20+2.5,'a dot covers a plain line at its width now');
+near(stationShape(0,0,straight,1,project,{...style,boxes:false,linePx:40},false).dot,0.5*0.6*40+2.5,'a dot covers a plain line at its width now');
 assert.ok(STATION_BOX_ZOOM>=14.5&&STATION_BOX_ZOOM<=15.5,'boxes from about zoom 15');
 assert.ok(STATIONS_ZOOM>=10&&STATIONS_ZOOM<STATION_BOX_ZOOM,'stations hidden further out than the dots');
-near(stationRadii(9)[0],2.2);near(stationRadii(15)[0],5.6);near(stationHaloRadius(15),56);
+near(stationRadii(9)[0],2.2*1.65,'T-313: 65% wider than T-189\'s');near(stationRadii(15)[0],5.6*1.65);near(stationHaloRadius(15),56);
 
 // --- the network's stations
 function state(reverse=false){
@@ -158,9 +158,11 @@ renderer.selectedStation=-1;
 
 // --- T-217: a link's bridge, and a complex as one dot zoomed out
 {
- const {bridgeEnds,bridgeShape,BRIDGE_HALF_PX,enclosingCircle}=mod;
- let c=enclosingCircle([[0,0],[10,0],[10,0],[9,1],[1,1],[5,0.5]]);near(c[0],5,'smallest circle, not the mean',1e-6);near(c[2],5,'',1e-6);
- c=enclosingCircle([[0,0],[4,0],[2,3]]);near(Math.hypot(c[0]-0,c[1]-0),c[2],'on all three',1e-6);near(Math.hypot(c[0]-2,c[1]-3),c[2],'',1e-6);
+ const {bridgeEnds,bridgeShape,BRIDGE_HALF_PX,spanningPairs,connectorHalfPx}=mod;
+ // T-313: the shortest joins linking a complex's dots
+ let sp=spanningPairs([[0,0],[10,0],[20,0],[10,1]]);assert.equal(sp.length,3,'n-1 joins');
+ assert.ok(!sp.some(([a,b])=>(a===0&&b===2)||(a===2&&b===0)),'no long join past a nearer dot');
+ assert.equal(spanningPairs([[0,0]]).length,0,'one dot, no join');
  const flat={mx:0,my:0,ax:100,ay:0,phi:0},inset=6*U;
  let e=bridgeEnds(0,0,flat,300,0,flat);
  near(e[0],100-inset,'end to end: from inside the first platform\'s end',1e-3);near(e[2],200+inset,'to inside the second\'s',1e-3);near(e[1],0);near(e[3],0);
@@ -172,22 +174,25 @@ renderer.selectedStation=-1;
  const r2=new NetworkRenderer();
  r2.net={...net,stations:F([0,0,0,0,100,0]),stationAxis:F([50,0,50,0]),stationShape:F([0,0,0,0,0,0,0,0]),stationCount:2,stationIds:['a','b'],stationLinkIdx:new Int32Array([0,1]),stationLinks:F([0,0,0,100])};
  r2.stationStyle={boxes:false,radius:stationRadii(13),linePx:4,ringPx:2,boxLinePx:6.6,boxRingPx:2};
- r2.cplx=new Float32Array(8);r2.dotOf=new Int32Array([0,1]);
- r2.syncGroups(r2.net,{of:new Map([['a',0],['b',0]]),members:[['a','b']],lead:['b']});
- assert.equal(r2.drawnShapeOf(0,id),null,'zoomed out the complex is drawn by one member');
- const dot=r2.drawnShapeOf(1,id);near(dot.x,0);near(dot.y,50,'at the complex\'s centre');assert.ok(dot.dot>=50+2+1-1e-6,'covering every member');
- assert.equal(r2.stationAt(0,50,id,0),1,'a click on the dot picks the busiest station');assert.equal(r2.stationAt(0,0,id,0),1);
- assert.equal(r2.dotStations(1),2);
- r2.selectedStation=0;assert.equal(r2.selectedShapes(id).length,1,'one dot for the selected complex');
+ // T-313: zoomed out every station is its own dot, a group's dots joined by a connector
+ r2.syncGroups(r2.net,{members:[['a','b']]});
+ const d0=r2.drawnShapeOf(0,id),d1=r2.drawnShapeOf(1,id);
+ assert.ok(d0.dot>0&&d1.dot>0&&d1.dot<20,'a dot each, not one covering both');near(d0.y,0);near(d1.y,100,'each at its own platform');
+ assert.equal(r2.connPairs.length,2,'one connector in the group');assert.equal(r2.connEnds.length,4,'the link inside the group adds none');
+ near(r2.connEnds[1],0,'connector from one dot');near(r2.connEnds[3],100,'to the other');
+ assert.equal(r2.stationAt(0,0,id,0),0,'each dot picks its own station');assert.equal(r2.stationAt(0,100,id,0),1);
+ r2.selectedStation=0;assert.equal(r2.selectedShapes(id).length,1,'only the selected dot');
+ r2.selectedAlso=new Set([1]);const sel=r2.selectedShapes(id);assert.equal(sel.length,3,'two dots and their connector share one outline');
+ near(sel[2].halfWidth,connectorHalfPx(r2.stationStyle),'the connector as drawn: its white and the dots\' rim');
+ r2.selectedAlso=new Set();
  r2.stationStyle={...r2.stationStyle,boxes:true};
- assert.equal(r2.stationAt(0,0,id,0),0,'platforms are picked one by one');assert.equal(r2.dotStations(1),1);
+ assert.equal(r2.stationAt(0,0,id,0),0,'platforms are picked one by one');
  r2.selectedAlso=new Set([1]);assert.equal(r2.selectedShapes(id).length,3,'two platforms and their bridge share one outline');
- // T-225: zoomed out, linked stations the distance rule keeps apart are a dot each and a connector
+ // the player's link between two groups: one connector between the linked stations' dots
  const r3=new NetworkRenderer();
- r3.net={...r2.net};r3.stationStyle={...r2.stationStyle,boxes:false};r3.cplx=new Float32Array(8);r3.dotOf=new Int32Array([0,1]);r3.connEnds=new Float32Array(4);
- r3.syncGroups(r3.net,{of:new Map([['a',0],['b',1]]),members:[['a'],['b']],lead:['a','b']});
- assert.ok(r3.drawnShapeOf(0,id).dot>0&&r3.drawnShapeOf(1,id).dot>0,'each group its own dot');assert.ok(r3.drawnShapeOf(1,id).dot<20,'not one dot covering both');
- near(r3.connEnds[1],0,'connector from one dot');near(r3.connEnds[3],100,'to the other');
+ r3.net={...r2.net};r3.stationStyle={...r2.stationStyle,boxes:false};
+ r3.syncGroups(r3.net,{members:[['a'],['b']]});
+ assert.equal(r3.connPairs.length,2,'the link\'s connector');near(r3.connEnds[1],0,'connector from one dot');near(r3.connEnds[3],100,'to the other');
  r3.selectedStation=0;r3.selectedAlso=new Set([1]);assert.equal(r3.selectedShapes(id).length,3,'two dots and their connector share one outline');
  r3.selectedAlso=new Set();assert.equal(r3.selectedShapes(id).length,1,'no connector when only one end is selected');
 }
@@ -214,4 +219,4 @@ near(layers.stationSize[1],1);near(layers.stationSize[3],.5);
 near(layers.stationSize[1]**2,4*layers.stationSize[3]**2,'circle area proportional to daily demand');
 assert.ok(buildLayers(net,world,demand,0,{...switches,stationRiders:false}).stationSize.every(v=>v===0));
 near(stationScale(0),0);near(stationScale(300000),1);
-console.log('T-144/T-189/T-204/T-205 checks passed: platform along its track (straight, curved, dead end), true length, one shape at every zoom, covers its lines at the box zoom, dots zoomed out, hidden further out but for the selected, curved picking, no growth when selected, selected on top, deterministic platform, blueprint flag, demand circles; T-217 bridges between linked platforms, a complex as one dot zoomed out picking its busiest station, one outline round selected platforms and their bridge; T-225 a dot per group of a linked complex and a connector; T-227 linear line widths and picking across a wide line; T-254 boxes follow the track (S-curve, straight unchanged, dead end, short edge).');
+console.log('T-144/T-189/T-204/T-205 checks passed: platform along its track (straight, curved, dead end), true length, one shape at every zoom, covers its lines at the box zoom, dots zoomed out, hidden further out but for the selected, curved picking, no growth when selected, selected on top, deterministic platform, blueprint flag, demand circles; T-217 bridges between linked platforms, one outline round selected platforms and their bridge; T-313 a dot per station zoomed out, picked one by one, joined by connectors within a group and along links; T-227 linear line widths and picking across a wide line; T-254 boxes follow the track (S-curve, straight unchanged, dead end, short edge).');

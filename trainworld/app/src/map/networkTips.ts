@@ -14,7 +14,7 @@
 
 import { crowdAt, QUEUE_STRIDE, tripLoad } from "../game/boarding";
 import { clock } from "../game/clock";
-import { complexes, complexOf } from "../game/complexView";
+import { complexes } from "../game/complexView";
 import { demandView, stationRidersFor } from "../game/demand";
 import { PERIODS, periodAt } from "../game/periods";
 import { purposeName } from "../game/purposes";
@@ -106,9 +106,8 @@ function crowdLines(ov: Overlay, w: WorldView, id: string, i: number): string[] 
   const dot = r.dotCrowd(i);
   if (dot) {
     if (dot.waiting < 1) return ["Nobody waiting on the platforms"];
-    const where = r.dotStations(i) > 1 ? " at these stations" : "";
     const fullest = dot.share >= 1 ? "full" : `${Math.round(dot.share * 100)}% full`;
-    const out = [`${n0(dot.waiting)} waiting${where}`, `Fullest platform ${fullest}`];
+    const out = [`${n0(dot.waiting)} waiting`, `Fullest platform ${fullest}`];
     if (dot.leftBehind) out.push("A full train left some behind");
     return out;
   }
@@ -142,9 +141,9 @@ export function stationTip(ov: Overlay, w: WorldView, i: number): string[] | nul
   const s = w.save.stations.find((x) => x.id === id);
   if (!s) return null;
   const out = [s.name];
-  // T-305: the lines serving the station, or the complex's stations together (zoomed out a complex
-  // is one dot, T-217), by their symbols or short names (`lineShortName`), each once
-  const members = new Set(ov.renderer.stationStyle.boxes ? [id] : complexOf(id));
+  // T-305: the lines serving the station (zoomed out too, where every station is its own dot since
+  // T-313), by their symbols or short names (`lineShortName`), each once
+  const members = new Set([id]);
   const names = [...new Set(w.save.lines.filter((l) => l.stops.some((st) => members.has(st))).map(lineShortName))];
   if (names.length) out.push(names.join(", "));
   if (!s.built) out.push("Blueprint");

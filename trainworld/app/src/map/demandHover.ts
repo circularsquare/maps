@@ -5,11 +5,16 @@ import type { Map as MlMap } from "maplibre-gl";
 import { DISC } from "../workers/commutersProtocol";
 import { closestStations, minLabel, walkGridEpoch } from "../game/walks";
 import { world } from "../game/world";
-import { HOME_ANCHOR, toLngLat, toLocal } from "./geo";
+import { toLngLat, toLocal, type Anchor } from "./geo";
 
-/** A finder gets the pointer in local units of the home anchor (the demand views stay on it for
- * now, T-307, map/geo.ts) and answers the tag's lines, or null. */
-export type Finder = (x: number, y: number) => string[] | null;
+/** Where the pointer is on the ground. Each disc set is in the local units of its own draw anchor
+ * (T-317, map/geo.ts), so a finder turns the pointer into those (`discAt`, `pointerLocal`). */
+export interface Pointer {
+  lng: number;
+  lat: number;
+}
+/** A finder gets the pointer and answers the tag's lines, or null. */
+export type Finder = (p: Pointer) => string[] | null;
 const finders: { order: number; f: Finder }[] = [];
 
 /** Higher `order` is drawn higher and asked first. */
@@ -18,16 +23,18 @@ export function addFinder(order: number, f: Finder) {
   finders.sort((a, b) => b.order - a.order);
 }
 
-/** The centre of the disc `discAt` found last (local units): the tag lists the stations closest to it. */
+/** The centre of the disc `discAt` found last (longitude, latitude): the tag lists the stations closest to it. */
 let lastDisc: [number, number] | null = null;
 
-/** The topmost disc of a set (drawn last) containing the point, or -1; radii times `scale`. */
-export function discAt(discs: Float32Array | null, x: number, y: number, scale = 1): number {
+/** The topmost disc of a set (drawn last, built relative to anchor `a`) containing the pointer,
+ * or -1; radii times `scale`. */
+export function discAt(discs: Float32Array | null, p: Pointer, a: Anchor, scale = 1): number {
   if (!discs) return -1;
+  const [x, y] = toLocal(p.lng, p.lat, a);
   for (let i = discs.length / DISC - 1; i >= 0; i--) {
     const dx = discs[i * DISC] - x, dy = discs[i * DISC + 1] - y, r = discs[i * DISC + 2] * scale;
     if (dx * dx + dy * dy <= r * r) {
-      lastDisc = [discs[i * DISC], discs[i * DISC + 1]];
+      lastDisc = toLngLat(discs[i * DISC], discs[i * DISC + 1], a);
       return i;
     }
   }
@@ -38,12 +45,11 @@ const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
 let closest: { key: string; lines: string[] } | null = null;
 /** T-312: a bubble's 3 closest stations with their walking minutes (game/walks.ts), built or
  * blueprint; kept while the pointer stays on the bubble. */
-function closestLines(at: [number, number]): string[] {
+function closestLines([lng, lat]: [number, number]): string[] {
   const w = world.peek();
   if (!w) return [];
-  const key = `${at[0].toFixed(1)},${at[1].toFixed(1)},${w.version},${walkGridEpoch.peek()}`;
+  const key = `${lng.toFixed(6)},${lat.toFixed(6)},${w.version},${walkGridEpoch.peek()}`;
   if (closest?.key === key) return closest.lines;
-  const [lng, lat] = toLngLat(at[0], at[1], HOME_ANCHOR);
   const near = closestStations(lng, lat, w.save.stations);
   const lines = near.length
     ? ["Closest stations", ...near.map((n) => `${esc(n.station.name)}${n.station.built ? "" : " (blueprint)"}, ${n.metres === null ? "no walk" : minLabel(n.metres)}`)]
@@ -52,10 +58,15 @@ function closestLines(at: [number, number]): string[] {
   return lines;
 }
 
-/** Pointer (CSS px in the map) to local units of the home anchor. */
-export function pointerLocal(map: MlMap, px: number, py: number): [number, number] {
+/** Pointer (CSS px in the map) to a place on the ground. */
+export function pointerAt(map: MlMap, px: number, py: number): Pointer {
   const ll = map.unproject([px, py]);
-  return toLocal(ll.lng, ll.lat, HOME_ANCHOR);
+  return { lng: ll.lng, lat: ll.lat };
+}
+
+/** The pointer in local units of anchor `a`. */
+export function pointerLocal(p: Pointer, a: Anchor): [number, number] {
+  return toLocal(p.lng, p.lat, a);
 }
 
 /** Points where something drawn above the discs is (the selected station, T-189): no disc there. */
@@ -63,10 +74,10 @@ export const hoverAbove: { at: ((px: number, py: number) => boolean) | null } = 
 
 export function hoverAt(map: MlMap, px: number, py: number): string[] | null {
   if (!finders.length || hoverAbove.at?.(px, py)) return null;
-  const [x, y] = pointerLocal(map, px, py);
+  const p = pointerAt(map, px, py);
   for (const { f } of finders) {
     lastDisc = null;
-    const t = f(x, y);
+    const t = f(p);
     if (t) return lastDisc ? [...t, ...closestLines(lastDisc)] : t;
   }
   return null;

@@ -6,10 +6,11 @@
 // Through a station the platform is centred on the node; at a dead end it runs from the node along
 // the track, as the trains stop at its middle there (sim service.rs). Its width is fixed on the
 // ground too (T-204), so the box keeps one shape at every zoom. Zoomed out (below
-// STATION_BOX_ZOOM) every station is a dot instead, a complex one dot (T-217, renderer.ts), and
-// below STATIONS_ZOOM stations are not drawn (T-205). Selection never changes the size: a selected
-// station gets an outline and a glow (T-189). The player's links are drawn as thin bridges between
-// two platforms (T-217, `bridgeEnds`, `bridgeShape`).
+// STATION_BOX_ZOOM) every station is its own dot instead, a complex's dots joined by connectors under
+// one outline (T-313, renderer.ts), and below STATIONS_ZOOM stations are not drawn (T-205).
+// Selection never changes the size: a selected station gets an outline and a glow (T-189). The
+// player's links are drawn as thin bridges between two platforms (T-217, `bridgeEnds`,
+// `bridgeShape`).
 
 import { EARTH_C } from "./geo";
 
@@ -164,9 +165,19 @@ export function waysFrom(p: ArrayLike<number>, x: number, y: number): [Float32Ar
   return [new Float32Array(fwd), new Float32Array(back)];
 }
 
+/** Dots are this much wider in radius than T-189's (T-313, Anita: "make station small dots bigger,
+ * maybe 65% bigger radius"). */
+const DOT_GROW = 1.65;
 /** Dot radius in CSS px, ordinary and transfer stations; a dot also covers the lines through it. */
 export function stationRadii(zoom: number): [number, number] {
-  return [interpolate(zoom, [[9, 2.2], [12, 3.8], [15, 5.6]]), interpolate(zoom, [[9, 2.8], [12, 5], [15, 7.2]])];
+  return [DOT_GROW * interpolate(zoom, [[9, 2.2], [12, 3.8], [15, 5.6]]), DOT_GROW * interpolate(zoom, [[9, 2.8], [12, 5], [15, 7.2]])];
+}
+/** Zoomed out, a connector between two dots (T-313): its white is this share of an ordinary dot's
+ * white radius, either side of its middle, with the dots' own rim along both sides. */
+const CONNECTOR_WHITE = 0.35;
+/** A connector's half width on screen, its white and its rim, CSS px (T-313). */
+export function connectorHalfPx(st: Pick<StationStyle, "radius" | "ringPx">): number {
+  return CONNECTOR_WHITE * Math.max(0, st.radius[0] - st.ringPx) + st.ringPx;
 }
 export function stationHaloRadius(zoom: number) { return interpolate(zoom, [[9, 18], [12, 40], [15, 56]]); }
 /** The dark rim of a station, CSS px. */
@@ -418,34 +429,28 @@ export function bridgeEnds(ax: number, ay: number, sa: PlatformShape, bx: number
   return best;
 }
 
-/** The smallest circle holding every point (x, y pairs): centre and radius (T-217, a complex's one
- * dot: centred so it reaches its farthest stations evenly, where the mean leans to the side with
- * more platforms). Incremental, exact; fine for the tens of points of a complex. */
-export function enclosingCircle(p: [number, number][]): [number, number, number] {
-  const inside = (c: [number, number, number], q: [number, number]) => Math.hypot(q[0] - c[0], q[1] - c[1]) <= c[2] * (1 + 1e-9) + 1e-9;
-  const two = (a: [number, number], b: [number, number]): [number, number, number] => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, Math.hypot(a[0] - b[0], a[1] - b[1]) / 2];
-  const three = (a: [number, number], b: [number, number], c: [number, number]): [number, number, number] => {
-    const bx = b[0] - a[0], by = b[1] - a[1], cx = c[0] - a[0], cy = c[1] - a[1], d = 2 * (bx * cy - by * cx);
-    if (Math.abs(d) < 1e-12) {
-      // in a line: the circle on its two farthest points
-      const cs = [two(a, b), two(a, c), two(b, c)];
-      return cs.reduce((m, k) => (k[2] > m[2] ? k : m));
+/** The shortest set of straight joins linking every point (x, y pairs): a minimum spanning tree,
+ * as index pairs (T-313: zoomed out, the connectors between a complex's dots). Prim's, O(n²); fine
+ * for the tens of stations of a complex. */
+export function spanningPairs(p: [number, number][]): [number, number][] {
+  const n = p.length, out: [number, number][] = [];
+  if (n < 2) return out;
+  const best = new Float64Array(n).fill(Infinity), from = new Int32Array(n), done = new Uint8Array(n);
+  let cur = 0;
+  done[0] = 1;
+  for (let step = 1; step < n; step++) {
+    let next = -1;
+    for (let j = 0; j < n; j++) {
+      if (done[j]) continue;
+      const d = Math.hypot(p[j][0] - p[cur][0], p[j][1] - p[cur][1]);
+      if (d < best[j]) [best[j], from[j]] = [d, cur];
+      if (next < 0 || best[j] < best[next]) next = j;
     }
-    const ux = (cy * (bx * bx + by * by) - by * (cx * cx + cy * cy)) / d, uy = (bx * (cx * cx + cy * cy) - cx * (bx * bx + by * by)) / d;
-    return [a[0] + ux, a[1] + uy, Math.hypot(ux, uy)];
-  };
-  if (!p.length) return [0, 0, 0];
-  let c: [number, number, number] = [p[0][0], p[0][1], 0];
-  for (let i = 1; i < p.length; i++) {
-    if (inside(c, p[i])) continue;
-    c = [p[i][0], p[i][1], 0];
-    for (let j = 0; j < i; j++) {
-      if (inside(c, p[j])) continue;
-      c = two(p[i], p[j]);
-      for (let k = 0; k < j; k++) if (!inside(c, p[k])) c = three(p[i], p[j], p[k]);
-    }
+    done[next] = 1;
+    out.push([from[next], next]);
+    cur = next;
   }
-  return c;
+  return out;
 }
 
 /** A bridge on screen as a straight box (CSS px), or null when its ends meet: the CPU twin of

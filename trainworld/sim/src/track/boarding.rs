@@ -163,6 +163,9 @@ pub struct RunAccount {
 #[derive(Clone, Debug, Default)]
 pub struct LineAccount {
     key: u64,
+    /// The line's local time ahead of the game clock (T-309, `LineSvc::shift`): the account's
+    /// times of day are its local times, so game time `t` is `t + shift` here.
+    pub shift: f64,
     pub runs: [RunAccount; 2],
 }
 
@@ -270,6 +273,7 @@ impl Boarding {
         h.add(ls.cars as u64);
         h.add(net.line_trains[l].is_some() as u64);
         h.f(net.line_turn[l] as f64);
+        h.f(ls.shift);
         for t in net.line_tph[l] {
             h.f(t as f64);
         }
@@ -280,6 +284,7 @@ impl Boarding {
                 h.f(e.lat.tph[lev] as f64);
                 h.f(e.lat.off[lev]);
             }
+            h.f(e.lat.shift);
         }
         for r in 0..2 {
             for lev in 0..LEVELS {
@@ -329,7 +334,7 @@ impl Boarding {
                     let a = simulate(net, svc, l, r, lr, &self.peak, false);
                     if a.leftover > 0.5 { simulate(net, svc, l, r, lr, &self.peak, true) } else { a }
                 });
-                self.accounts[day][l] = Some(LineAccount { key, runs });
+                self.accounts[day][l] = Some(LineAccount { key, shift: ls.shift, runs });
                 self.redone += 1;
             }
         }
@@ -358,21 +363,27 @@ impl Boarding {
     /// riders left on the platform as it went. Between two, the crowd grows at the rate.
     pub fn hour(&mut self, net: &Network, svc: &Service, epoch: f64) -> Vec<f32> {
         self.ensure(net, svc);
-        // the hour's kind of day (T-260): every trip and platform of the hour reads its account
-        let day = self.kind_at(epoch);
+        // the hour's kind of day (T-260) in each line's local time (T-309): every trip and
+        // platform of the line reads that day's account, at its local hour
+        let shift = |l: usize| svc.lines.get(l).map_or(0.0, |ls| ls.shift);
         let trips = svc.trips(net, epoch, epoch + 3600.0);
         let mut offs: Vec<f32> = Vec::with_capacity(trips.len() * 2);
         let mut loads: Vec<f32> = vec![];
         for t in &trips {
+            let day = self.kind_at(epoch + shift(t.line as usize));
             offs.push(self.trip_loads(t, day, &mut loads));
             offs.push(svc.lines[t.line as usize].runs[t.run as usize].prof[t.level as usize].duration as f32);
         }
         let mut queues: Vec<f32> = vec![];
         let mut events: Vec<f32> = vec![];
-        let h0 = epoch.rem_euclid(DAY);
-        let hour = ((h0 / 3600.0).floor() as usize).min(23);
-        for (l, acc) in self.accounts[day].iter().enumerate() {
-            let Some(acc) = acc else { continue };
+        let nl = self.accounts.iter().map(|a| a.len()).max().unwrap_or(0);
+        for l in 0..nl {
+            // the hour in the line's local time
+            let epoch = epoch + shift(l);
+            let day = self.kind_at(epoch);
+            let Some(Some(acc)) = self.accounts[day].get(l) else { continue };
+            let h0 = epoch.rem_euclid(DAY);
+            let hour = ((h0 / 3600.0).floor() as usize).min(23);
             let ls = &svc.lines[l];
             for (r, ra) in acc.runs.iter().enumerate() {
                 let m = ra.deps.len();
@@ -433,7 +444,7 @@ impl Boarding {
     fn trip_loads(&self, t: &Trip, day: usize, loads: &mut Vec<f32>) -> f32 {
         let Some(Some(acc)) = self.accounts[day].get(t.line as usize) else { return -1.0 };
         let ra = &acc.runs[t.run as usize];
-        let Some(i) = ra.find(t.dep) else { return -1.0 };
+        let Some(i) = ra.find(t.dep + acc.shift) else { return -1.0 };
         let n = ra.n;
         let at = loads.len();
         loads.resize(at + n - 1, 0.0);
@@ -507,13 +518,16 @@ impl Boarding {
     /// midnight. Riders left behind are counted per departure as in `simulate` (who arrived since
     /// the train before and is still waiting).
     pub fn today(&self, svc: &Service, t: f64) -> Vec<f64> {
-        let day = self.kind_at(t);
-        let tod = t.rem_euclid(DAY);
         let mut out = vec![0.0];
         let mut count = 0;
-        for (l, acc) in self.accounts[day].iter().enumerate() {
-            let Some(acc) = acc else { continue };
+        let nl = self.accounts.iter().map(|a| a.len()).max().unwrap_or(0);
+        for l in 0..nl {
             let Some(ls) = svc.lines.get(l) else { continue };
+            // the line's own day and time of day (T-309: its local time)
+            let t = t + ls.shift;
+            let day = self.kind_at(t);
+            let tod = t.rem_euclid(DAY);
+            let Some(Some(acc)) = self.accounts[day].get(l) else { continue };
             let cap = CRUSH_PER_CAR * ls.cars.max(1) as f64;
             let n = acc.runs[0].n;
             let mut stops = vec![0.0f64; n];
@@ -590,6 +604,9 @@ impl Boarding {
 
     /// Riders aboard a trip leaving each stop, in its own stop order (checks and inspectors).
     pub fn trip_account(&self, line: u32, run: usize, dep: f64) -> Option<Vec<f32>> {
+        // the line's local time (T-309): both kinds of day's accounts carry the same shift
+        let shift = self.accounts[0].get(line as usize).and_then(|a| a.as_ref()).map_or(0.0, |a| a.shift);
+        let dep = dep + shift;
         let ra = &self.accounts[self.kind_at(dep)].get(line as usize)?.as_ref()?.runs[run];
         let i = ra.find(dep)?;
         Some(ra.load[i * ra.n..(i + 1) * ra.n].to_vec())
@@ -658,6 +675,11 @@ pub fn simulate(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRider
     let from = if warm { t0 - DAY } else { t0 };
     let mut trips: Vec<Trip> = vec![];
     svc.run_deps(net, l, r, from, t0 + DAY, &mut trips);
+    // T-309: from here on, times are the line's local time (its periods, hours and days)
+    let t0 = t0 + ls.shift;
+    for t in &mut trips {
+        t.dep += ls.shift;
+    }
     trips.sort_by(|a, b| a.dep.total_cmp(&b.dep));
     let m = trips.len();
     let stop_dep: [Vec<f64>; LEVELS] = std::array::from_fn(|lev| ls.runs[r].prof[lev].dep.clone());
@@ -1035,6 +1057,162 @@ mod tests {
         let ra = &b.accounts[0][l as usize].as_ref().unwrap().runs[0];
         let late = ra.deps.iter().enumerate().filter(|(_, &d)| d > (now + 600.0).rem_euclid(DAY) && d < (now + 3000.0).rem_euclid(DAY)).count();
         assert!(late <= 5, "{late} departures in 40 minutes at 4 an hour");
+    }
+
+    /// T-309: a London line and a New York line in one Mercator world, on the registry's time
+    /// zones (New York's and Toronto's; London is in none, so its longitude's UTC+0). The same
+    /// schedule and riders run on each city's own hours.
+    #[test]
+    fn a_london_line_runs_on_londons_hours() {
+        use crate::track::frame::FrameKind;
+        use crate::track::localtime::TimeZones;
+        use crate::track::net::Network;
+        use crate::track::world::TrackWorld;
+        let mut net = Network::new_in(FrameKind::Merc, -73.985, 40.758, true);
+        net.time_zones = TimeZones::from_table(&[-5.0, 120_000.0, -73.985, 40.758, -5.0, -79.3832, 43.6534, -5.0]);
+        let mut w = TrackWorld::new(net);
+        let city = |w: &mut TrackWorld, lon: f64, lat: f64| {
+            let k = 1.0 / (lat * std::f64::consts::PI / 180.0).cos();
+            let (x, y) = w.net.frame().from_lonlat(lon, lat);
+            let (x, y) = (quant(x), quant(y));
+            let s: Vec<u32> = (0..3).map(|i| node(w, x + i as f64 * 3000.0 * k, y, 0)).collect();
+            edge(w, s[0], s[1], &[], 0).unwrap();
+            edge(w, s[1], s[2], &[], 0).unwrap();
+            for &n in &s {
+                station(w, n, 200);
+            }
+            line(w, &s, [10.0, 5.0, 2.5])
+        };
+        let nyc = city(&mut w, -73.99, 40.75);
+        let lon = city(&mut w, -0.12, 51.51);
+        assert_eq!(w.svc.lines[nyc as usize].shift, 0.0);
+        assert_eq!(w.svc.lines[lon as usize].shift, 5.0 * 3600.0);
+        // service periods: the morning peak's ten an hour start at 06:00 local, 01:00 game time
+        let day = 3.0 * DAY;
+        let levels = |l: u32, h: f64| -> Vec<u8> {
+            let mut v: Vec<u8> = w.svc.trips(&w.net, day + h * 3600.0, day + (h + 1.0) * 3600.0).iter().filter(|t| t.line == l && t.draw >= day + h * 3600.0).map(|t| t.level).collect();
+            v.dedup();
+            v
+        };
+        assert_eq!(levels(lon, 0.0), vec![LOW as u8]);
+        assert_eq!(levels(lon, 1.0), vec![HIGH as u8]);
+        assert_eq!(levels(nyc, 1.0), vec![LOW as u8]);
+        assert_eq!(levels(nyc, 6.0), vec![HIGH as u8]);
+        // every window agrees on the departures, across the change of period too
+        let deps = |a: f64, b: f64| {
+            let mut v = vec![];
+            w.svc.run_deps(&w.net, lon as usize, 1, day + a * 3600.0, day + b * 3600.0, &mut v);
+            v.iter().map(|t| t.dep).collect::<Vec<f64>>()
+        };
+        let mut two = deps(0.5, 1.0);
+        two.extend(deps(1.0, 1.7));
+        assert_eq!(deps(0.5, 1.7), two);
+        // the boarding account: London at 03:00 game time is its 08:00, New York's at 08:00
+        let mut b = Boarding::default();
+        let mut wk = riders(nyc, [500.0, 200.0, 500.0, 200.0, 50.0]);
+        wk.extend_from_slice(&riders(lon, [500.0, 200.0, 500.0, 200.0, 50.0])[PERIODS..]);
+        b.set_riders_day(&wk, 0);
+        let mut we = riders(nyc, [100.0, 300.0, 200.0, 200.0, 10.0]);
+        we.extend_from_slice(&riders(lon, [100.0, 300.0, 200.0, 200.0, 10.0])[PERIODS..]);
+        b.set_riders_day(&we, 1);
+        let arriving = |h: &[f32], l: u32| {
+            let (nt, nl, nq) = (h[0] as usize, h[1] as usize, h[2] as usize);
+            let q0 = 4 + 2 * nt + nl;
+            (0..nq).map(|k| &h[q0 + k * QUEUE_STRIDE..q0 + (k + 1) * QUEUE_STRIDE]).filter(|q| q[1] as u32 == l).map(|q| q[7]).sum::<f32>()
+        };
+        let at = |b: &mut Boarding, h: f64| b.hour(&w.net, &w.svc, day + h * 3600.0);
+        let (h3, h8) = (at(&mut b, 3.0), at(&mut b, 8.0));
+        // 500 an hour at each end in the morning peak, 50 at night
+        assert!((arriving(&h3, lon) - 1000.0).abs() < 1.0, "{}", arriving(&h3, lon));
+        assert!((arriving(&h3, nyc) - 100.0).abs() < 1.0, "{}", arriving(&h3, nyc));
+        assert!((arriving(&h8, nyc) - 1000.0).abs() < 1.0, "{}", arriving(&h8, nyc));
+        // every London trip of the hour has its load in the account
+        let trips = w.svc.trips(&w.net, day + 3.0 * 3600.0, day + 4.0 * 3600.0);
+        assert!(trips.iter().filter(|t| t.line == lon).all(|t| b.trip_account(t.line, t.run as usize, t.dep).is_some()));
+        // weekends by the local day: game day 6 (Saturday) starts five hours early in London,
+        // at 19:00 on Friday game time (day 5), where New York is still on Friday evening
+        let fri = 5.0 * DAY + 20.0 * 3600.0 - day;
+        let h = at(&mut b, fri / 3600.0);
+        assert!((arriving(&h, lon) - 20.0).abs() < 0.5, "{}", arriving(&h, lon)); // Saturday 01:00
+        assert!((arriving(&h, nyc) - 400.0).abs() < 1.0, "{}", arriving(&h, nyc)); // Friday 20:00
+        // fares follow: today's boardings count from London's midnight
+        let v = b.today(&w.svc, day + 3.0 * 3600.0);
+        assert_eq!(v[0], 2.0);
+    }
+
+    /// T-309: the real New York save (trainworld/T-007-real-nyc.save, Anita's) runs exactly as
+    /// before local time with the registry's time zones: every line is on New York's time, and a
+    /// week of drawn trips, every hour's boarding slice, today's counts and the line summaries are
+    /// bit-identical to the network without a time zone table. Runs on request, on the save's
+    /// track bytes (gunzipped, after its JSON header): `T309_TRACK=<file> cargo test --manifest-path
+    /// sim/Cargo.toml --release t309 -- --ignored --nocapture`.
+    #[test]
+    #[ignore]
+    fn t309_real_save_runs_as_before() {
+        use crate::track::localtime::TimeZones;
+        use crate::track::world::TrackWorld;
+        let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
+        let bytes = std::fs::read(std::env::var("T309_TRACK").expect("T309_TRACK: the save's track bytes")).unwrap();
+        // the registry's table, as app/src/game/localTime.ts builds it
+        let reg = std::fs::read_to_string(format!("{root}/app/src/game/registry.json")).unwrap();
+        let num = |s: &str| s.trim().trim_end_matches(',').trim().parse::<f64>().unwrap();
+        let clock = num(reg.split("\"clockUtcOffset\":").nth(1).unwrap().split('\n').next().unwrap());
+        let mut table = vec![clock, 120_000.0];
+        for city in reg.split("\"center\": [").skip(1) {
+            let mut it = city.split(']').next().unwrap().split(',');
+            let (lon, lat) = (num(it.next().unwrap()), num(it.next().unwrap()));
+            let off = num(city.split("\"utcOffset\":").nth(1).unwrap().split('\n').next().unwrap());
+            table.extend([lon, lat, off]);
+        }
+        println!("time zone table: {} zones, clock UTC{clock}", (table.len() - 2) / 3);
+        let a = TrackWorld::new(crate::track::save::decode(&bytes).unwrap());
+        let mut net = crate::track::save::decode(&bytes).unwrap();
+        net.time_zones = TimeZones::from_table(&table);
+        let b = TrackWorld::new(net);
+        let running: Vec<usize> = (0..b.svc.lines.len()).filter(|&l| b.svc.lines[l].running).collect();
+        assert!(running.iter().all(|&l| b.svc.lines[l].shift == 0.0));
+        assert!(b.net.time_zones.set);
+        println!("{} running lines, all on New York's time", running.len());
+        let day = 2.0 * DAY;
+        let mut trips = 0;
+        for h in 0..(7 * 24) {
+            let (t0, t1) = (day + h as f64 * 3600.0, day + (h + 1) as f64 * 3600.0);
+            let (x, y) = (a.svc.trips(&a.net, t0, t1), b.svc.trips(&b.net, t0, t1));
+            assert_eq!(x, y, "hour {h}");
+            trips += x.len();
+        }
+        // made-up riders on every running line (the account's arithmetic is what is compared)
+        let packed = |scale: f32| {
+            let mut v = vec![1.4, 1.15, 1.4, 1.3, 1.5];
+            for &l in &running {
+                let n = b.svc.lines[l].stops.len();
+                v.extend([l as f32, n as f32]);
+                for p in 0..PERIODS {
+                    let x = scale * (p as f32 + 1.0) * 37.0;
+                    v.extend((0..2 * n).map(|k| if k % n + 1 < n { x } else { 0.0 }));
+                    v.extend((0..2 * n).map(|k| if k % n > 0 { x } else { 0.0 }));
+                }
+            }
+            v
+        };
+        let (mut ba, mut bb) = (Boarding::default(), Boarding::default());
+        for bo in [&mut ba, &mut bb] {
+            bo.set_riders_day(&packed(1.0), 0);
+            bo.set_riders_day(&packed(0.6), 1);
+        }
+        for h in 0..(7 * 24) {
+            let t = day + h as f64 * 3600.0;
+            let (x, y) = (ba.hour(&a.net, &a.svc, t), bb.hour(&b.net, &b.svc, t));
+            assert!(x.len() == y.len() && x.iter().zip(&y).all(|(p, q)| p.to_bits() == q.to_bits()), "hour {h}");
+            let (x, y) = (ba.today(&a.svc, t + 1234.5), bb.today(&b.svc, t + 1234.5));
+            assert!(x.len() == y.len() && x.iter().zip(&y).all(|(p, q)| p.to_bits() == q.to_bits()), "today {h}");
+        }
+        for &l in &running {
+            for d in 0..DAY_KINDS {
+                assert_eq!(ba.line_summary_day(&a.svc, l, d), bb.line_summary_day(&b.svc, l, d));
+            }
+        }
+        println!("a week: {trips} trips, every hourly boarding slice and today's counts bit-identical");
     }
 
     #[test]

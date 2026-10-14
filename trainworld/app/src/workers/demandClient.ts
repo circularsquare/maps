@@ -18,7 +18,7 @@
 //   has landed, then swaps it in whole (free flow first, again after each crowding round).
 
 import { effect } from "@preact/signals";
-import { activeCity, CITIES, getWorldFrame, HOME_CITY, LEGACY_FRAME, MARKET_PACK, marketToWorld, worldFrameEpoch, type CityId } from "../game/cities";
+import { activeCity, CITIES, getWorldFrame, HOME_CITY, LEGACY_FRAME, MARKET_PACK, marketToWorld, viewedZone, worldFrameEpoch, type CityId } from "../game/cities";
 import type { FrameSpec } from "../game/frame";
 import { DAY_KINDS, type DayKind } from "../game/days";
 import { shownDay } from "../game/ui";
@@ -51,7 +51,7 @@ import {
   type ZoneRiders,
 } from "../game/demand";
 import { makeFrame } from "../game/frame";
-import { loadComplete, loadFailed, loadProgress, startup, takeGameLoadHold } from "../game/loading";
+import { demandIdle, loadComplete, loadFailed, loadProgress, startup, takeGameLoadHold } from "../game/loading";
 import { PERIODS, periodsMatch } from "../game/periods";
 import { EVERYDAY_KEYS, membersOf, PURPOSES, shownKey, type PurposeFilter, type PurposeKey } from "../game/purposes";
 import { perfOff } from "../perfFlags";
@@ -395,7 +395,7 @@ class DemandClient {
       this.footprints = "failed";
     }).then(() => this.ensure());
     // the viewed city loads when it changes (a pan, the city buttons)
-    effect(() => { activeCity.value; this.ensure(); });
+    effect(() => { activeCity.value; viewedZone.value; this.ensure(); });
     // and the zones beside it with bubbles on screen (T-276), once nothing waits on them
     effect(() => { nearbyZones.value; this.ensure(); });
   }
@@ -409,12 +409,35 @@ class DemandClient {
 
   // --- Loading only what is needed (T-149) -------------------------------------------------------
 
+  /** T-318: the viewed zone alone; empty over dead space, where nothing loads for the view. */
+  private viewedSet(): Set<CityId> {
+    return new Set(viewedZone.peek() ? [activeCity.peek()] : []);
+  }
+
+  /** T-318: a network is in hand and neither the view nor any station needs a pack: nothing to
+   * load or solve. The clock's hold goes, and no card or status says "Loading data". */
+  private idle(): boolean {
+    const svc = this.latest();
+    return !!svc && this.needed(svc)?.size === 0;
+  }
+
+  private settleIdle() {
+    demandUpdating.value = false; // a waiting network stays: it is solved when the view or a station needs a pack
+    this.job = null;
+    clearInterval(this.progressTick);
+    this.progressTick = 0;
+    loadProgress.value = null;
+    const held = !!this.hold || startup.peek() === "loading";
+    this.hold = null;
+    if (held) loadComplete();
+  }
+
   /** The cities a solve of `svc` needs open: the viewed one, and every one a built station reaches.
    * Null while that is not known yet (the footprints are still loading). */
   private needed(svc: Service | null): Set<CityId> | null {
-    const out = new Set<CityId>([activeCity.peek()]);
+    const out = this.viewedSet();
     if (!svc || svc.stations.length === 0) return out;
-    if (this.footprints === "failed") return new Set([activeCity.peek(), ...CITIES.map((c) => c.id)]);
+    if (this.footprints === "failed") return new Set([...out, ...CITIES.map((c) => c.id)]);
     if (!this.footprints) return null;
     let reached = this.reach.get(svc);
     if (!reached) {
@@ -439,8 +462,11 @@ class DemandClient {
   /** Fetch whatever the newest service and the view need, the viewed city first; then solve if all is open. */
   private ensure() {
     if (this.status.startsWith("failed")) return;
-    const need = this.needed(this.latest()) ?? new Set([activeCity.peek()]);
-    if (!this.fetching.has(MARKET)) this.fetchMarket();
+    const known = this.needed(this.latest());
+    const need = known ?? this.viewedSet();
+    demandIdle.value = known?.size === 0; // T-318
+    // over dead space with no station in reach there is nothing to open, the market included
+    if (need.size && !this.fetching.has(MARKET)) this.fetchMarket();
     for (const id of need) if (!this.fetching.has(id)) this.fetchCity(id);
     if (this.nearbyOpen()) for (const id of nearbyZones.peek()) if (!this.fetching.has(id)) this.fetchCity(id);
     this.flush();
@@ -539,6 +565,7 @@ class DemandClient {
    * since the newest solve (the viewed city after a pan). */
   private flush() {
     if (this.status.startsWith("failed")) return;
+    if (this.idle()) return this.settleIdle();
     if (this.waiting) {
       const need = this.needed(this.waiting.svc);
       if (need && this.allOpen(need)) {
@@ -573,7 +600,14 @@ class DemandClient {
   /** The loading progress: each step weighted by its expected time, T-243 (game/loading.ts). */
   private progress() {
     if (this.status.startsWith("failed")) return;
-    const need = this.needed(this.latest()) ?? new Set([activeCity.peek()]);
+    const known = this.needed(this.latest());
+    if (known?.size === 0) {
+      // T-318: nothing to load or solve (dead space); the load in hand, if any, finishes unseen
+      if (this.job) { this.job = null; clearInterval(this.progressTick); this.progressTick = 0; }
+      loadProgress.value = null;
+      return;
+    }
+    const need = known ?? this.viewedSet();
     const viewed = activeCity.peek();
     const missing = [...need].filter((id) => !this.opened.has(id)).sort((a, b) => (a === viewed ? -1 : b === viewed ? 1 : 0));
     const atStartup = startup.peek() === "loading";
@@ -590,7 +624,7 @@ class DemandClient {
     const job = this.job;
     for (const id of missing) if (!job.items.includes(id)) { job.items.push(id); job.cities.push(id); }
     if (!this.opened.has(MARKET) && !job.items.includes(MARKET)) job.items.push(MARKET);
-    if (atStartup && !job.cities.includes(viewed)) job.cities.unshift(viewed);
+    if (atStartup && need.has(viewed) && !job.cities.includes(viewed)) job.cities.unshift(viewed);
     const finished = s && job.version !== undefined && s.version === job.version && s.published >= READY_ROUND;
     if (finished) {
       // remembered for the next load's estimate (T-243): a startup's solve, so it describes the
@@ -672,6 +706,7 @@ class DemandClient {
 
   /** A held game's network has its first estimate: the clock runs. */
   private checkHold() {
+    if (this.hold && this.idle()) return this.settleIdle(); // T-318
     const s = this.cur;
     if (this.hold && s && this.hold.version === s.version && s.published >= READY_ROUND && !this.waiting) {
       this.hold = null;

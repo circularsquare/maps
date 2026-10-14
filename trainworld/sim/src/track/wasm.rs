@@ -185,9 +185,30 @@ impl TrackApi {
         let Some(kind) = FrameKind::from_u8(kind) else { return false };
         let mut net = Network::new_in(kind, n.origin_lon, n.origin_lat, n.right_hand);
         std::mem::swap(&mut net.water_mask, &mut self.w.net.water_mask);
+        net.time_zones = self.w.net.time_zones.clone();
         self.w = TrackWorld::new(net);
         self.rebuild_water();
         true
+    }
+
+    /// Each region's local time (T-309, `localtime.rs`): the game clock's UTC offset (h), the
+    /// reach of a zone's centre (m), then per registered zone its centre's lon, lat and UTC offset
+    /// (h). Kept across loads; every line's periods follow it from now.
+    pub fn set_time_zones(&mut self, table: &[f64]) {
+        self.w.net.time_zones = super::localtime::TimeZones::from_table(table);
+        self.w.svc.reshift(&self.w.net);
+    }
+    /// Seconds a line's local time runs ahead of the game clock (T-309); 0 for no such line.
+    pub fn line_shift(&self, line: u32) -> f64 {
+        self.w.svc.lines.get(line as usize).filter(|s| s.ok).map_or(0.0, |s| s.shift)
+    }
+    /// The local times the running lines run on, seconds ahead of the game clock, each once,
+    /// ascending (T-309: money settles each one's hours by its own periods).
+    pub fn running_shifts(&self) -> Vec<f64> {
+        let mut v: Vec<f64> = self.w.svc.lines.iter().filter(|s| s.running).map(|s| s.shift).collect();
+        v.sort_by(f64::total_cmp);
+        v.dedup();
+        v
     }
 
     /// The frame of the loaded network: 0 legacy equirectangular, 1 the Northeast conic (T-125),
@@ -264,6 +285,7 @@ impl TrackApi {
         match save::decode(bytes) {
             Ok(mut net) => {
                 std::mem::swap(&mut net.water_mask, &mut self.w.net.water_mask);
+                net.time_zones = self.w.net.time_zones.clone();
                 self.w = TrackWorld::new(net);
                 if !self.rasters.is_empty() {
                     self.rebuild_water();
@@ -310,10 +332,14 @@ impl TrackApi {
     /// Running cost of the running lines per hour at a demand level, US$M: trains an hour in each
     /// direction times the line's length and cars, at the game's economy scale (T-081).
     pub fn running_cost(&self, level: usize) -> f64 {
+        self.running_cost_in(level, f64::NAN)
+    }
+    /// `running_cost` of the lines on one local time (`running_shifts`, T-309); NaN: every line.
+    pub fn running_cost_in(&self, level: usize, shift: f64) -> f64 {
         let n = &self.w.net;
         let mut car_km = 0.0;
         for (l, s) in self.w.svc.lines.iter().enumerate() {
-            if s.running {
+            if s.running && (shift.is_nan() || s.shift == shift) {
                 car_km += n.line_tph[l][level.min(LEVELS - 1)] as f64 * 2.0 * s.runs[0].len / 1000.0 * s.cars as f64;
             }
         }

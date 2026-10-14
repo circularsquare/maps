@@ -6,7 +6,7 @@
 
 import { h, render } from "preact";
 import { clock } from "../game/clock";
-import { continueWithoutDemand, loadFailure, loadProgress, startup } from "../game/loading";
+import { continueWithoutDemand, demandIdle, loadFailure, loadProgress, startup } from "../game/loading";
 
 function LoadingScreen() {
   if (startup.value !== "failed") return null;
@@ -24,7 +24,7 @@ function LoadingScreen() {
 
 /** True while the loading card is up: a loaded game's clock waits for its demand (T-180). */
 export function loadingCardShown(): boolean {
-  return clock.held.value && !loadFailure.value;
+  return clock.held.value && !loadFailure.value && !demandIdle.value; // T-318: nothing to load over dead space
 }
 
 /** T-243: a bar filling as the load goes, in place of a percentage; the percentage is its hover.

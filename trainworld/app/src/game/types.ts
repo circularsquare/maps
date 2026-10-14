@@ -142,6 +142,8 @@ export interface LineStats {
   /** dwell at each intermediate stop, and the layover at each end, s */
   dwellS: number;
   turnaroundS: number;
+  /** seconds the line's local time runs ahead of the game clock (T-309, game/localTime.ts) */
+  shift: number;
 }
 
 export interface ModeSplit {

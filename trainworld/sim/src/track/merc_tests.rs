@@ -277,3 +277,110 @@ fn a_conic_save_converts_to_mercator_with_lengths_moving_by_the_conic_scale() {
         assert!((again.node_x[i] - w.net.node_x[i]).hypot(again.node_y[i] - w.net.node_y[i]) < 0.003, "node {i}: {} m", (again.node_x[i] - w.net.node_x[i]).hypot(again.node_y[i] - w.net.node_y[i]));
     }
 }
+
+/// T-308: what converting a real legacy-frame save to Mercator changes, line by line. Needs the
+/// real save (trainworld/T-007-real-nyc.save, Anita's), so it runs only on request:
+/// `cargo test --manifest-path sim/Cargo.toml --release t308 -- --ignored --nocapture`.
+#[test]
+#[ignore]
+fn t308_real_save_conversion_report() {
+    let path = std::env::var("T308_SAVE").unwrap_or_else(|_| concat!(env!("CARGO_MANIFEST_DIR"), "/../T-007-real-nyc.save").into());
+    let bytes = std::fs::read(path).unwrap();
+    let old = TrackWorld::new(super::save::decode(&bytes).unwrap());
+    let merc_bytes = super::save::convert_frame(&bytes, FrameKind::Merc).unwrap();
+    let new = TrackWorld::new(super::save::decode(&merc_bytes).unwrap());
+    assert_eq!(&merc_bytes[..4], b"TWT6");
+    let all = |w: &TrackWorld| (0..w.net.edge_count() as u32).filter(|&e| w.net.edge_ok(e)).collect::<Vec<_>>();
+    let (eo, en) = (all(&old), all(&new));
+    assert_eq!(eo, en);
+    // Refusals the geometry would now give (the conversion itself never checks).
+    let issues = |w: &TrackWorld| w.net.validate(&all(w), &[], &[]);
+    let (io, inn) = (issues(&old), issues(&new));
+    println!("issues: legacy {} merc {}", io.len(), inn.len());
+    // Crossings carry positions that move with the frame: compare those by their edges only.
+    let key = |i: &Issue| match i {
+        Issue::Crossing { e1, e2, overlap, .. } => format!("Crossing {e1} {e2} {overlap}"),
+        i => format!("{i:?}"),
+    };
+    let (ko, kn): (std::collections::BTreeSet<String>, std::collections::BTreeSet<String>) = (io.iter().map(&key).collect(), inn.iter().map(&key).collect());
+    println!("issues new in Mercator: {}, gone: {}", kn.difference(&ko).count(), ko.difference(&kn).count());
+    for k in kn.difference(&ko).take(20) {
+        println!("  new   {k}");
+    }
+    for k in ko.difference(&kn).take(20) {
+        println!("  gone  {k}");
+    }
+    let count = |s: &std::collections::BTreeSet<String>, what: &str| s.iter().filter(|k| k.contains(what)).count();
+    println!("legacy: {} RadiusTooSmall, {} ArcDoesNotFit, {} crossings; merc: {}, {}, {}", count(&ko, "RadiusTooSmall"), count(&ko, "ArcDoesNotFit"), count(&ko, "Crossing"), count(&kn, "RadiusTooSmall"), count(&kn, "ArcDoesNotFit"), count(&kn, "Crossing"));
+    // Per edge: length, cost, tightest curve (ground radius).
+    let min_r = |w: &TrackWorld, e: u32| {
+        w.net.edge_pieces(e).iter().filter(|p| p.k != 0.0).map(|p| (1.0 / p.k.abs()) / p.g).fold(f64::INFINITY, f64::min)
+    };
+    let (mut len_o, mut len_n, mut cost_o, mut cost_n) = (0.0, 0.0, 0.0, 0.0);
+    let mut worst_r = (0.0f64, 0u32);
+    let mut worst_edge = (0.0f64, 0u32);
+    let mut tight = (f64::INFINITY, f64::INFINITY);
+    let mut by_change: Vec<(f64, u32)> = vec![];
+    for &e in &eo {
+        let i = e as usize;
+        len_o += old.net.edge_len[i];
+        len_n += new.net.edge_len[i];
+        cost_o += old.net.edge_cost[i];
+        cost_n += new.net.edge_cost[i];
+        let d = (new.net.edge_len[i] / old.net.edge_len[i] - 1.0).abs();
+        if d > worst_edge.0 {
+            worst_edge = (d, e);
+        }
+        by_change.push((d, e));
+        let (ro, rn) = (min_r(&old, e), min_r(&new, e));
+        if ro.is_finite() && rn.is_finite() {
+            let d = (rn / ro - 1.0).abs();
+            if d > worst_r.0 {
+                worst_r = (d, e);
+            }
+            tight = (tight.0.min(ro), tight.1.min(rn));
+        }
+    }
+    println!("edges {}: length {:.3} km -> {:.3} km ({:+.4}%), cost {:.3} -> {:.3} ({:+.4}%)", eo.len(), len_o / 1e3, len_n / 1e3, (len_n / len_o - 1.0) * 100.0, cost_o, cost_n, (cost_n / cost_o - 1.0) * 100.0);
+    println!("worst edge length change {:.4}% (edge {}), worst tightest-radius change {:.4}% (edge {}), tightest radius anywhere {:.2} m -> {:.2} m", worst_edge.0 * 100.0, worst_edge.1, worst_r.0 * 100.0, worst_r.1, tight.0, tight.1);
+    by_change.sort_by(|a, b| b.0.total_cmp(&a.0));
+    for &(_, e) in by_change.iter().take(6) {
+        let i = e as usize;
+        println!("  edge {e}: {:.1} m -> {:.1} m ({:+.3}%)", old.net.edge_len[i], new.net.edge_len[i], (new.net.edge_len[i] / old.net.edge_len[i] - 1.0) * 100.0);
+    }
+    let over = by_change.iter().filter(|c| c.0 > 0.005).count();
+    println!("edges whose length changes by more than 0.5%: {over} of {}", by_change.len());
+    // Per line.
+    struct Row {
+        name: String,
+        len_o: f64,
+        len_n: f64,
+        rt_o: [f64; 3],
+        rt_n: [f64; 3],
+        tr_o: [u32; 3],
+        tr_n: [u32; 3],
+        ok_o: bool,
+        ok_n: bool,
+    }
+    let mut rows = vec![];
+    for l in 0..old.net.line_count() {
+        if !old.net.line_ok(l as u32) {
+            continue;
+        }
+        let (a, b) = (&old.svc.lines[l], &new.svc.lines[l]);
+        rows.push(Row { name: old.net.line_name[l].clone(), len_o: a.runs[0].len, len_n: b.runs[0].len, rt_o: a.round_trip, rt_n: b.round_trip, tr_o: a.trains, tr_n: b.trains, ok_o: a.ok, ok_n: b.ok });
+    }
+    println!("lines {}; not ok: legacy {}, merc {}", rows.len(), rows.iter().filter(|r| !r.ok_o).count(), rows.iter().filter(|r| !r.ok_n).count());
+    let pct = |a: f64, b: f64| if a > 0.0 { (b / a - 1.0) * 100.0 } else { 0.0 };
+    rows.sort_by(|a, b| pct(b.rt_o[0], b.rt_n[0]).abs().total_cmp(&pct(a.rt_o[0], a.rt_n[0]).abs()));
+    println!("{:<28} {:>9} {:>9} {:>7} {:>10} {:>10} {:>7} trains(h/m/l) old -> new", "line", "len old m", "len new m", "len %", "rt old s", "rt new s", "rt %");
+    for r in rows.iter().take(15) {
+        println!("{:<28} {:>9.0} {:>9.0} {:>+7.3} {:>10.1} {:>10.1} {:>+7.3} {:?} -> {:?}", r.name, r.len_o, r.len_n, pct(r.len_o, r.len_n), r.rt_o[0], r.rt_n[0], pct(r.rt_o[0], r.rt_n[0]), r.tr_o, r.tr_n);
+    }
+    let over1 = rows.iter().filter(|r| (0..3).any(|k| pct(r.rt_o[k], r.rt_n[k]).abs() > 1.0)).count();
+    let trains_changed = rows.iter().filter(|r| r.tr_o != r.tr_n).count();
+    let tot = |f: &dyn Fn(&Row) -> f64| rows.iter().map(f).sum::<f64>();
+    println!("lines with a run time change over 1%: {over1}; lines whose trains needed changed: {trains_changed}");
+    println!("all lines: length {:+.4}%, round trip (high) {:+.4}%", pct(tot(&|r| r.len_o), tot(&|r| r.len_n)), pct(tot(&|r| r.rt_o[0]), tot(&|r| r.rt_n[0])));
+    println!("trains needed, all lines, high/medium/low: {:?} -> {:?}", (0..3).map(|k| rows.iter().map(|r| r.tr_o[k]).sum::<u32>()).collect::<Vec<_>>(), (0..3).map(|k| rows.iter().map(|r| r.tr_n[k]).sum::<u32>()).collect::<Vec<_>>());
+}

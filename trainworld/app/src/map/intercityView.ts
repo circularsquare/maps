@@ -39,9 +39,10 @@ import { display, purposeFilter, selection } from "../game/ui";
 import type { Selection } from "../game/types";
 import { DISC } from "../workers/commutersProtocol";
 import { CATCH_STEP, caughtUp, tripsDone } from "./catchUp";
-import { addFinder, discAt, pointerLocal } from "./demandHover";
+import { anchorVersion } from "./anchorVersion";
+import { addFinder, discAt, pointerAt } from "./demandHover";
 import type { DemandOverlay } from "./demandOverlay";
-import { EARTH_C, HOME_ANCHOR, MERC_K, toLocal, toLngLat } from "./geo";
+import { anchor, EARTH_C, kAtLat, toLocal, toLngLat, type Anchor } from "./geo";
 
 /** A bubble selection's longer trips, for the commuters inspector; null while unknown. */
 export const intercityPick = signal<{ sel: Selection; data: IntercitySelection; own: number } | null>(null);
@@ -70,6 +71,8 @@ export const cityOverview = signal(false);
 
 interface Marks {
   discs: Float32Array;
+  /** the draw anchor the discs are relative to (T-317) */
+  anchor: Anchor;
   /** per disc, in disc order: the hover tag's lines */
   tags: string[][];
   /** per disc, the city it stands for, in the city view (T-186) */
@@ -104,7 +107,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     Array.from(labels.children).forEach((child, i) => {
       const el = child as HTMLElement;
       if (!marks) return;
-      const p = map.project(toLngLat(marks.discs[i * DISC], marks.discs[i * DISC + 1], HOME_ANCHOR));
+      const p = map.project(toLngLat(marks.discs[i * DISC], marks.discs[i * DISC + 1], marks.anchor));
       const r = marks.discs[i * DISC + 2] * (512 * 2 ** map.getZoom() / EARTH_C) * view.bubbleSize;
       const w = el.offsetWidth, h = el.offsetHeight;
       const positions = [[p.x + r + 5, p.y - h / 2], [p.x - w - r - 5, p.y - h / 2], [p.x - w / 2, p.y + r + 5], [p.x - w / 2, p.y - h - r - 5]];
@@ -151,6 +154,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     const f = marketShare();
     marketF = f;
     if (f >= 1) marketFrom = null;
+    const a = anchor();
     const m = drawnPairs(f);
     if (!m) {
       view.setDiscs("inter", null);
@@ -195,15 +199,15 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     const pxPerUnit = 512 * 2 ** map.getZoom() / EARTH_C;
     const discs = new Float32Array(points.length * DISC);
     points.forEach((p, i) => {
-      const [x, y] = toLocal(p.city.center[0], p.city.center[1], HOME_ANCHOR);
+      const [x, y] = toLocal(p.city.center[0], p.city.center[1], a);
       const c = modeMix(p.rail, 0, Math.max(0, p.all - p.rail));
       // a zone off screen bigger than the scale is drawn at the scale (T-276)
       const r = OVERVIEW_PX * Math.sqrt(Math.min(1, p.all / max)) / pxPerUnit;
       discs.set([x, y, r, c[0] / 255, c[1] / 255, c[2] / 255, BUBBLE_ALPHA, p.isOwn ? 2 : 1], i * DISC);
       label(`${p.city.name} · ${count(p.all)} trips/day`);
     });
-    marks = { discs, tags: points.map((p) => p.tag), cities: points.map((p) => p.city.id) };
-    view.setDiscs("inter", discs);
+    marks = { discs, anchor: a, tags: points.map((p) => p.tag), cities: points.map((p) => p.city.id) };
+    view.setDiscs("inter", discs, a);
     placeLabels();
   };
 
@@ -229,6 +233,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       return;
     }
     const regional = map.getZoom() <= CITY_BUBBLE_ZOOM;
+    const a = anchor();
     const points = regional ? current.flows.places.filter(p => p.all > 0 && p.place !== current!.own).map(p => {
       const city = CITIES.find(c => c.market === p.place);
       const ll = city?.center ?? packToLngLat(p.x, p.y);
@@ -244,27 +249,28 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     const tags: string[][] = [];
     points.forEach((z, i) => {
       const [lng, lat] = z.ll;
-      const [x, y] = toLocal(lng, lat, HOME_ANCHOR);
+      const [x, y] = toLocal(lng, lat, a);
       const c = modeMix(z.rail, 0, Math.max(0, z.all - z.rail));
       // Area, not radius, represents total travellers. Before the common radius scale, the
       // biggest regional circle is 38px and detailed zones scale against their busiest zone.
       // No minimum distorts smaller counts.
       const unscaledRadius = regional ? 38 * Math.sqrt(z.all / max) / pxPerUnit
-        : Math.sqrt(0.6 * 6000 ** 2 / Math.PI * z.all / max) * MERC_K;
+        : Math.sqrt(0.6 * 6000 ** 2 / Math.PI * z.all / max) * kAtLat(lat);
       const r = unscaledRadius * INTERCITY_RADIUS_SCALE;
       discs.set([x, y, r, c[0] / 255, c[1] / 255, c[2] / 255, BUBBLE_ALPHA, 1], i * DISC);
       const place = z.name || "here";
       tags.push(railOnly ? [`${count(z.rail)} riders a day on inter-region trips ${verb} ${place}`] : [`${count(z.all)} inter-region trips a day ${verb} ${place}`, `${count(z.rail)} by train`]);
       if (regional) label(`${z.name} · ${count(z.all)} ${railOnly ? "riders" : "trips"}/day`);
     });
-    marks = { discs, tags };
-    view.setDiscs("inter", discs);
+    marks = { discs, anchor: a, tags };
+    view.setDiscs("inter", discs, a);
     placeLabels();
   };
   effect(() => {
     display.value.bubbleSize;
     display.value.commuters;
     purposeFilter.value;
+    anchorVersion.value; // the discs are measured from the draw anchor (T-317)
     render();
   });
   map.on("zoom", render);
@@ -299,9 +305,9 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
   });
 
   // under the commuter discs (order 10): where both are under the pointer, the commuters answer
-  addFinder(5, (x, y) => {
+  addFinder(5, (p) => {
     if (!marks) return null;
-    const i = discAt(marks.discs, x, y, view.bubbleSize);
+    const i = discAt(marks.discs, p, marks.anchor, view.bubbleSize);
     return i < 0 ? null : marks.tags[i];
   });
 
@@ -360,8 +366,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
    * bubble keeps the selection); undefined when no city bubble is there. */
   const click = (px: number, py: number): Selection | undefined => {
     if (!marks?.cities) return undefined;
-    const [x, y] = pointerLocal(map, px, py);
-    const i = discAt(marks.discs, x, y, view.bubbleSize);
+    const i = discAt(marks.discs, pointerAt(map, px, py), marks.anchor, view.bubbleSize);
     if (i < 0) return undefined;
     const sel = selection.peek();
     return sel?.kind === "city" && sel.city === marks.cities[i] ? sel : { kind: "city", city: marks.cities[i] };

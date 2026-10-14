@@ -29,9 +29,10 @@ import { world } from "../game/world";
 import { DISC } from "../workers/commutersProtocol";
 import { commuterStats, startCommuterView } from "./commuterView";
 import { buildLayers } from "./demandLayers";
-import { addFinder, discAt, hoverAbove, hoverAt, pointerLocal, startHover } from "./demandHover";
+import { anchorVersion } from "./anchorVersion";
+import { addFinder, discAt, hoverAbove, hoverAt, pointerAt, startHover } from "./demandHover";
 import { DemandOverlay } from "./demandOverlay";
-import { HOME_ANCHOR, MERC_K, toLocal } from "./geo";
+import { anchor, kAtY, toLocal, type Anchor } from "./geo";
 import { startIntercityView } from "./intercityView";
 import type { Overlay } from "./overlay";
 
@@ -46,7 +47,7 @@ export interface Place {
 export const stationView = signal<{ stationId: string; scope: string; home: number; work: number; places: Place[] } | null>(null);
 
 /** The period in force on the clock; changes five times a game day. */
-const period = computed(() => periodAt(clock.minute.value * 60));
+const period = computed(() => periodAt(clock.local.value * 60)); // T-309: the local time in view
 
 /** Timings for ?debug=1 (`window.twViews`) and the notes. */
 export const viewStats = { layersMs: 0, layerBuilds: 0, stationMs: 0, commuters: commuterStats };
@@ -130,7 +131,7 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
   let cellsP: Promise<CityCells | null> | null = null;
   let stationAsk = 0;
   let last: { r: StationRiders; dv: DemandView } | null = null;
-  let marks: { near: Float32Array; far: Float32Array; nearN: Float32Array; farN: Float32Array; side: "home" | "work" } | null = null;
+  let marks: { near: Float32Array; far: Float32Array; nearN: Float32Array; farN: Float32Array; side: "home" | "work"; anchor: Anchor } | null = null;
   const clear = () => {
     marks = null;
     view.setDiscs("stationNear", null);
@@ -139,12 +140,17 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
   // a station's catchment counts commuters: off the map while the purpose filter shows another
   // purpose (T-158); the inspector keeps its numbers
   const commutesShown = () => purposeFilter.peek() === "all" || purposeFilter.peek() === "work";
-  const show = (r: StationRiders, cells: CityCells | null) => {
+  /** The catchment's discs, relative to the draw anchor in force (T-317: redone when it moves). */
+  const drawMarks = (r: StationRiders, cells: CityCells | null) => {
     const side = stationSide.peek();
-    marks = cells && commutesShown() ? { ...marksFor(r, side, cells), side } : null;
-    view.setDiscs("stationNear", marks?.near ?? null);
-    view.setDiscs("stationFar", marks?.far ?? null);
-    stationView.value = describe(r, side, cells);
+    const a = anchor();
+    marks = cells && commutesShown() ? { ...marksFor(r, side, cells, a), side, anchor: a } : null;
+    view.setDiscs("stationNear", marks?.near ?? null, a);
+    view.setDiscs("stationFar", marks?.far ?? null, a);
+  };
+  const show = (r: StationRiders, cells: CityCells | null) => {
+    drawMarks(r, cells);
+    stationView.value = describe(r, stationSide.peek(), cells);
   };
   effect(() => {
     const focus = activeCity.value;
@@ -186,12 +192,18 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
       show(r, cells);
     })();
   });
-  addFinder(20, (x, y) => {
+  effect(() => {
+    anchorVersion.value;
+    const l = last;
+    if (!l || !marks) return;
+    void (cellsP ??= cityCells()).then((cells) => { if (last === l) drawMarks(l.r, cells); });
+  });
+  addFinder(20, (p) => {
     if (!marks) return null;
     const live = marks.side === "home";
-    let i = discAt(marks.near, x, y);
+    let i = discAt(marks.near, p, marks.anchor);
     if (i >= 0) return [`${count(marks.nearN[i])} riders ${live ? "live" : "work"} here`];
-    i = discAt(marks.far, x, y);
+    i = discAt(marks.far, p, marks.anchor);
     if (i >= 0) return [`${count(marks.farN[i])} of them ${live ? "work" : "live"} here`, "Click to explore this trip"];
     return null;
   });
@@ -207,9 +219,9 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
     const sel = selection.peek();
     const m = marks, l = last;
     if (!m || !l || sel?.kind !== "station") return false;
-    const [x, y] = pointerLocal(map, px, py);
-    if (discAt(m.near, x, y) >= 0) return false;
-    const k = discAt(m.far, x, y);
+    const p = pointerAt(map, px, py);
+    if (discAt(m.near, p, m.anchor) >= 0) return false;
+    const k = discAt(m.far, p, m.anchor);
     if (k < 0) return false;
     const side = m.side;
     const own = (side === "home" ? l.r.home : l.r.work).cells[0];
@@ -250,10 +262,10 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
   };
 }
 
-/** Pack metres to local units of the home anchor (the demand views stay on it for now, T-307). */
-function local(x: number, y: number): [number, number] {
+/** Pack metres to local units of anchor `a` (T-317). */
+function local(x: number, y: number, a: Anchor): [number, number] {
   const [lng, lat] = packToLngLat(x, y);
-  return toLocal(lng, lat, HOME_ANCHOR);
+  return toLocal(lng, lat, a);
 }
 
 /**
@@ -261,7 +273,7 @@ function local(x: number, y: number): [number, number] {
  * busiest the area of a cell; the zones at the far end filled and partly see-through below them,
  * the busiest half a zone wide. No minimum size. Smaller ones last, so they stay visible.
  */
-function marksFor(r: StationRiders, side: "home" | "work", cells: CityCells) {
+function marksFor(r: StationRiders, side: "home" | "work", cells: CityCells, a: Anchor) {
   const near = side === "home" ? r.home : r.work;
   const far = side === "home" ? r.homeRidersWorkIn : r.workRidersLiveIn;
   const nc = rgb(CATCHMENT_COLOUR).map((v) => v / 255), fc = rgb(DESTINATION_COLOUR).map((v) => v / 255);
@@ -270,13 +282,13 @@ function marksFor(r: StationRiders, side: "home" | "work", cells: CityCells) {
   // lists come most first, which is biggest first: smaller discs draw over bigger ones
   for (let k = 0; k < far.zones.length; k++) {
     const z = far.zones[k];
-    const [x, y] = local(cells.zoneXY[z * 2], cells.zoneXY[z * 2 + 1]);
-    farD.set([x, y, (cells.zoneM / 2) * Math.sqrt(far.riders[k] / maxFar) * MERC_K, fc[0], fc[1], fc[2], DESTINATION_ALPHA, 0], k * DISC);
+    const [x, y] = local(cells.zoneXY[z * 2], cells.zoneXY[z * 2 + 1], a);
+    farD.set([x, y, (cells.zoneM / 2) * Math.sqrt(far.riders[k] / maxFar) * kAtY(y, a), fc[0], fc[1], fc[2], DESTINATION_ALPHA, 0], k * DISC);
   }
   for (let k = 0; k < near.cells.length; k++) {
     const c = near.cells[k];
-    const [x, y] = local(cells.xy[c * 2], cells.xy[c * 2 + 1]);
-    nearD.set([x, y, CELL_R * Math.sqrt(near.riders[k] / maxNear) * MERC_K, nc[0], nc[1], nc[2], 1, 1], k * DISC);
+    const [x, y] = local(cells.xy[c * 2], cells.xy[c * 2 + 1], a);
+    nearD.set([x, y, CELL_R * Math.sqrt(near.riders[k] / maxNear) * kAtY(y, a), nc[0], nc[1], nc[2], 1, 1], k * DISC);
   }
   return { near: nearD, far: farD, nearN: near.riders, farN: far.riders };
 }

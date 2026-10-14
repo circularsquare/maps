@@ -325,6 +325,9 @@ pub struct Network {
     pub edge_lines_off: Vec<u32>,
     pub edge_lines: Vec<u32>,
     pub water_mask: Box<dyn WaterMask>,
+    /// Each region's local time (T-309, `localtime.rs`): from the clock worker, not saved, and
+    /// carried over to a loaded network like the water mask.
+    pub time_zones: super::localtime::TimeZones,
     pub touch: Touch,
 }
 
@@ -354,6 +357,17 @@ impl Network {
     /// The network's frame (origin and kind).
     pub fn frame(&self) -> Frame {
         self.frame
+    }
+
+    /// Seconds a line's local time runs ahead of the game clock (T-309): the region of its first
+    /// stop's. 0 without a time zone table or stops.
+    pub fn line_shift(&self, l: u32) -> f64 {
+        if !self.time_zones.set || !self.line_ok(l) {
+            return 0.0;
+        }
+        let Some(&s) = self.line_stops(l).first() else { return 0.0 };
+        let (lon, lat) = self.frame.to_lonlat(self.node_x[s as usize], self.node_y[s as usize]);
+        self.time_zones.shift_at(lon, lat)
     }
 
     /// Plane metres per ground metre at plane `y`: `cosh(y / R)` in the Mercator frame, exactly 1
@@ -445,6 +459,7 @@ impl Network {
             edge_lines_off: vec![0],
             edge_lines: vec![],
             water_mask: Box::new(NoWater),
+            time_zones: Default::default(),
             touch: Touch::default(),
         }
     }

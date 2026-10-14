@@ -14,6 +14,7 @@ import { lineDraft, selection, tool } from "../game/ui";
 import { say, setEditSink, world } from "../game/world";
 import type { LineInput, LineStats, StationInput, TrackEdge, TrackNode, WorldView } from "../game/types";
 import type { ClockState, EditOp, FromClock, NetworkSnapshot, PiInput, RouteEnd, StationAt, ToClock } from "./protocol";
+import { anchorVersion } from "../map/anchorVersion";
 import { anchor, anchorWanted, EARTH_C, HOME_ANCHOR, makeAnchor, setAnchor, type Anchor } from "../map/geo";
 
 export const saveSlotsState = signal<{ slots: import("./saveFile").SaveSlot[]; active: string; writable: boolean; at: number; reason?: string; error?: string }>({ slots: [], active: "autosave", writable: true, at: 0 });
@@ -104,6 +105,7 @@ function toWorld(s: ClockState, city: { population: number; jobs: number }): Wor
       stopS: l.stopS,
       dwellS: l.dwell,
       turnaroundS: l.turnaround,
+      shift: l.shift,
     };
   }
   const edges: TrackEdge[] = s.edges.map((e) => ({
@@ -166,6 +168,9 @@ export class ClockClient {
   private city = { population: 0, jobs: 0 };
   private epoch = NaN;
   private sawSlots = false;
+  /** the last game load: where it came from and whether its save was converted to the world frame
+   * (T-308; read by `?debug=1` checks, the player is told nothing) */
+  lastLoad: { from: "autosave" | "file" | "new"; converted: boolean } | null = null;
   /** the renderer's hooks, set by main.ts */
   onState: (s: ClockState) => void = () => {};
   /** `board`: the boarding account's hour (T-164, game/boarding.ts), once demand has riders */
@@ -218,11 +223,14 @@ export class ClockClient {
     this.worker = new Worker(new URL("./clock.worker.ts", import.meta.url), { type: "module" });
     this.worker.onmessage = (e: MessageEvent<FromClock>) => this.receive(e.data);
     this.worker.onerror = (e) => (clockWorkerStatus.value = "failed to load: " + (e.message ?? ""));
-    const fresh = new URLSearchParams(location.search).get("new") === "1";
+    const q = new URLSearchParams(location.search);
+    const fresh = q.get("new") === "1";
+    // T-320: a check or stress page never writes over a saved game
+    this.testPage = fresh || q.get("synth") === "1" || q.get("demandTest") === "1";
     this.cityId = cityId;
     let slot = "autosave";
     try { slot = localStorage.getItem("anitabuilder-save-slot") || slot; } catch { /* storage unavailable */ }
-    this.post({ kind: "init", city: cityId, pack: new URL("packs/" + cityId, document.baseURI).href, fresh, slot });
+    this.post({ kind: "init", city: cityId, pack: new URL("packs/" + cityId, document.baseURI).href, fresh, testPage: this.testPage, slot });
     setEditSink((op) => this.edit(op));
     current = this;
     // The worker settles money from the clock (T-028, T-284): tell it each time the
@@ -259,6 +267,8 @@ export class ClockClient {
   }
 
   private cityId: string;
+  /** `?new=1`, `?synth=1` or `?demandTest=1`: no autosave until a copy is saved (T-320) */
+  private testPage: boolean;
 
   post(msg: ToClock, transfer: Transferable[] = []) {
     this.worker.postMessage(msg, transfer);
@@ -285,7 +295,10 @@ export class ClockClient {
         setMoneyState(msg.state.money);
         world.value = toWorld(msg.state, this.city);
         this.onState(msg.state);
-        if (moved) this.onAnchor(a);
+        if (moved) {
+          anchorVersion.value = a.version; // the demand views rebuild at it (T-317)
+          this.onAnchor(a);
+        }
         this.lastStateMs = performance.now() - t0;
         break;
       }
@@ -298,6 +311,7 @@ export class ClockClient {
       case "loaded":
         // the game now in the worker may be in the other frame (T-125); first, before anything reads positions
         setWorldFrame(msg.frame);
+        this.lastLoad = { from: msg.from, converted: !!msg.converted };
         if (msg.error) {
           say(msg.error, true);
           if (msg.from === "file") break;
@@ -324,7 +338,8 @@ export class ClockClient {
         const before = saveSlotsState.value;
         saveSlotsState.value = { slots: msg.slots, active: msg.active, writable: msg.writable, at: msg.at, reason: msg.reason, error: msg.error };
         lastSaved.value = msg.at;
-        if (!this.sawSlots || before.active !== msg.active) {
+        // a test page does not make its slot the one the next page opens, until it changes (T-320)
+        if (msg.active && ((!this.sawSlots && !this.testPage) || before.active !== msg.active)) {
           try { localStorage.setItem("anitabuilder-save-slot", msg.active); } catch { /* storage unavailable */ }
         }
         this.sawSlots = true;

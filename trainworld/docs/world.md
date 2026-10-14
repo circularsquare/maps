@@ -1,9 +1,10 @@
 # One world: track, stations and trains anywhere on Earth (T-304)
 
-T-304 stage 1, 2026-10-14. A design for Anita's review; nothing is built yet. Anita, 2026-10-14:
-"one save for whole world. at least thats exactly how it should feel to the player." It replaces
-the "one world per region" idea in research/world-sampler.md (its open call 1) and closes T-126 and
-T-127 once built. Background: notes/T-125.md.
+T-304, 2026-10-14; approved by Anita the same day ("i think this is a good way to handle it":
+track lengths are true ground lengths, nothing distorts with zoom). Anita, 2026-10-14: "one save
+for whole world. at least thats exactly how it should feel to the player." It replaces the "one
+world per region" idea in research/world-sampler.md (its open call 1) and closes T-126 and T-127.
+Built so far: the track model (T-306) and the renderer anchor (T-307). Background: notes/T-125.md.
 
 ## What has to be true
 
@@ -66,17 +67,26 @@ basemap. Mercator's `k` stays between 1.0 and 2.0 from 60 S to 60 N, where nearl
 - **Ground metres along the track.** `geom::fit` and the pieces it makes stay in plane units, but
   each piece carries its ground length. A straight piece is a rhumb line, and its ground length
   has a closed form (`R` times the latitude change over the cosine of its bearing; plane length
-  over `k` when it runs east-west), so it is exact at any length. An arc takes `k` at its
-  midpoint; across a 10 km curve at London `k` varies by 0.1%, so that is centimetres. Every `s`
+  over `k` when it runs east-west; `geom::rhumb_ground` and `rhumb_plane`, stable for any
+  bearing), so it is exact at any length. An arc's ground length is Simpson's rule on `1/k` over
+  its ends and middle; across a 10 km curve at London `k` varies by 0.1%, so that is centimetres.
+  A piece maps ground offsets to the plane (`Piece::at` takes ground metres, `at_plane` plane
+  ones); in the conic and legacy frames the map is the identity and every result is bit for bit
+  what it was. Every `s`
   outside the geometry (edge length, profiles, capacity, stops, platforms, hold points, ramps,
   costs, water spans, the run polylines the renderer samples) is ground metres, as it is now;
   `pos_at` takes a ground `s`. So `profile.rs`, `capacity.rs`, `service.rs`, `boarding.rs` and
   `cost.rs` keep their arithmetic.
-- **Metre figures into the plane.** `fit` takes the scale at each vertex: a player's radius, the
-  auto radius cap (`R_CAP`), `MIN_RADIUS` and `FIT_TOL` are multiplied by `k` there. Curve speed
-  uses the ground radius (plane radius over `k`). `cross.rs` scales `SHARED_NODE_CLEAR`; station
-  platforms and ramps are already measured along `s`. Radii in the save are ground metres, the
-  number the player typed.
+- **Metre figures into the plane.** `geom::fit_in` (through `Network::fit`) multiplies a
+  player's radius, the auto radius cap (`R_CAP`), `MIN_RADIUS` and `FIT_TOL` by `k` where the
+  arc is (the arc's middle lies up to a kilometre inside the corner, so `k` is taken there, not
+  at the PI). Curve speed uses the ground radius (plane radius over `k`). `cross.rs` works in
+  plane offsets and hands back ground chainage; `SHARED_NODE_CLEAR`, the drawing tool's lead-in
+  cap, the stroke joint leg and quad-track spacing and taper are scaled by `k`. Station platforms
+  and ramps are measured along `s`. Radii in the save are ground metres, the number the player
+  typed. A plane circle is a ground circle up to the rhumb line's own ground curvature
+  (`tan(lat)/R`, 2e-7 per metre at London): a 1,500 m curve there measures 1,500.4 m through three
+  points on the ground, sub-metre.
 - **Shown straight is built straight.** A straight edge is a rhumb line, which is what a straight
   line on the Mercator basemap is, and it is charged its true ground length. (New York to Chicago
   as one straight: 1,140 km along the rhumb line, 1,139 km by great circle. The track runs where it
@@ -84,23 +94,29 @@ basemap. Mercator's `k` stays between 1.0 and 2.0 from 60 S to 60 N, where nearl
 - `tile_of` is arithmetic (it calls trigonometry today). The water mask (`GeoMask`) already goes
   through longitude and latitude and needs nothing.
 - **The plane's edges.** Track is refused above 85 N and below 85 S, and no edge crosses the
-  antimeridian (180 degrees): no railway does. Decided, not open.
+  antimeridian (180 degrees): no railway does. A node or PI there is `Issue::OutsideWorld`
+  ("Track cannot be built within 5 degrees of a pole or across the 180th meridian."). Decided,
+  not open.
 - **Running side.** `right_hand` is one flag per network and only `capacity.rs` reads it. Britain,
   France's main lines, India and Japan run on the left. It becomes a property of the place (the
   registry's region), read per junction. Decided; a small task of its own.
 
 ### Save format
 
-- **TWT6**: TWT5 byte for byte, with `Merc` as the frame. The origin fields stay and are written as
-  zero. Node positions are millimetre deltas in plane units as now; a jump from New York to London
+- **TWT6**: TWT5 byte for byte, with `Merc` as the frame. The origin fields keep the game's home
+  origin (New York), which the Mercator frame does not use but a conversion back to the conic
+  does. Node positions are millimetre deltas in plane units as now; a jump from New York to London
   costs a few bytes once.
-- **Old saves.** `save::convert_frame` already moves a network into another frame through
-  longitude and latitude, keeping every place on the ground (round trip within 2.5 mm). Giving it
-  the `Merc` target is the whole cost. TWT5 games (the conic) change by at most about 0.05% in
-  length between Washington and Boston when converted, 0.13% at Toronto. Anita's legacy TWT4 save changes more: Philadelphia's track gets
-  about 1.2% longer, Boston's 2.7%. Money already spent, fares and schedules do not move; quotes
-  and run times do. Whether to convert on load is **open** (choice 2). A save left in its old frame
-  keeps loading as it does now but can only build within the Northeast.
+- **Old saves.** `save::convert_frame` moves a network into another frame through longitude and
+  latitude, keeping every place on the ground, and takes `Merc` as a target
+  (`TrackApi::convert_save_frame(bytes, 2)`). A conic (TWT5) network's edges change by the conic's
+  scale: 0.0007% near New York, -0.04% at Boston. Anita's real New York save (TWT2, legacy frame,
+  all within the five boroughs) converts with all 1,647 edges and all 109 lines intact: track
+  4,500.62 km to 4,498.63 km (-0.044%), construction value -0.02%, round trips -0.02% in all, the
+  most-changed line 0.3%. A legacy save with Philadelphia track changes more there (about 1.2%),
+  since the legacy frame is 1.2% short at Philadelphia. Money already spent, fares and schedules do
+  not move; quotes and run times do. Anita decided to convert on load, correcting anything that
+  moves substantially where that is easy; built in T-308: see "Stages" below.
 
 ### Demand packs and the market
 
@@ -110,16 +126,25 @@ for a Mercator game unchanged once `frame.ts` knows the kind. London's pack (T-2
 like Toronto's. A Europe market later is a second market entry in the registry (research/
 world-sampler.md, open call 4); the registry's single `market` becomes a list then, not before.
 
-Two places in the app measure distance in world units and need ground distance instead:
-`cityReach.ts` (the 4.5 km reach of a station) and any Float32 array that holds world metres
-(`commuterView`'s `cellsWorld`): in Mercator those are millions of metres, too large for Float32,
-so they hold offsets from an anchor (next section).
+App code that compares world metres with a metre figure goes through `groundScale` or
+`groundDist` (`game/coords.ts`, T-306): station complexes (`buildComplexes` takes the scale),
+links' 1 km limit, the nearest station. `cityReach.ts` and the walks already measure in longitude
+and latitude. Float32 arrays that hold world metres (`commuterView`'s `cellsWorld`) are millions
+of metres in Mercator, too large for Float32, so they hold offsets from an anchor (next section,
+T-307).
 
 ### Clock worker, renderer and pick
 
-Built (T-307), except that the demand views stay on the home anchor until T-317: `map/geo.ts`
-(`anchor()`, `anchorWanted`, `kAtY`), `ClockClient.followView` and the "anchor" message, the
-renderer drawing each network at its own anchor, `u_psi0` for k in the train shader.
+Built (T-307, T-317): `map/geo.ts` (`anchor()`, `anchorWanted`, `kAtY`), `ClockClient.followView`
+and the "anchor" message, the renderer drawing each network at its own anchor, `u_psi0` for k in
+the train shader. The demand views follow the anchor the same way (T-317): every disc set (the
+city's bubbles, a nearby zone's, a selection's near and far ends, a station's catchment, longer
+trips) is built relative to the anchor in force and carries it; `DemandOverlay` draws each set
+with its own anchor's matrix, so an old set stays put while its replacement is built; the hover
+finders get the pointer as longitude and latitude (`discAt(discs, pointer, anchor)`); the bubble
+workers keep each cell's longitude and latitude, are told the anchor with their cells and again
+whenever `anchorVersion` (`map/anchorVersion.ts`, set by the clock client when the new state
+arrives) changes, and every answer names its anchor. Disc sizes use k at the disc.
 
 - **One draw anchor, following the view.** `geo.ts`'s fixed `ORIGIN_LNGLAT` becomes the current
   anchor, with a version number. The main thread moves it when the view centre is more than about
@@ -153,14 +178,35 @@ assumes a flat affine camera) stays T-033's problem.
 
 ### Local time
 
-One save across time zones raises a question the frame does not: London's morning peak comes five
-hours before New York's. Today every city runs on one clock and nothing knows time zones (Toronto
-shares New York's). Either every region's demand periods, service levels, weekend and boarding
-hours follow its own local time while one game clock runs (shown in the focused region's time),
-or the whole world shares one hour, so London's morning peak runs at New York's morning. This is
-**open** (choice 1). Local time touches `periods.ts`, `days.ts`, the clock worker's hourly trip
-lists and the demand workers' period mapping; Mumbai's +5:30 offset would be rounded to a whole
-hour so period boundaries stay on the hour.
+Each region runs on its own local time, as NIMBY Rails does (Anita, T-309): London's morning peak
+comes five hours of game time before New York's, and the clock shows the local time where the
+player is looking.
+
+- **One clock, world time.** The game clock counts game seconds in the registry's
+  `clockUtcOffset`, UTC-5 (New York's standard time), so every save made before local time reads
+  the same and the Northeast and Toronto run exactly as before. Game day 1 is a Monday in that
+  time; a region's local day is the clock's day at its local time.
+- **A region's offset** is its registry entry's `utcOffset`: a whole hour of standard time, no
+  daylight saving (a seasonal hour would move every period twice a year for nothing the game
+  models). Half-hour offsets round to a whole hour so period boundaries stay on the hour; India's
+  +5:30 is +5, which puts the game's 6-10 morning peak on Mumbai's real 6:30-10:30, nearer its late
+  office peak than +6 would (5:30-9:30). A place is in the nearest registered zone whose centre is
+  within 120 km (`cityWithin`, the same rule in `game/localTime.ts` and `sim/src/track/localtime.rs`);
+  a place in no zone takes its longitude's nominal offset, `round(lon / 15)`, until its region is
+  registered (London 0, but Paris also 0 until it has its +1 entry).
+- **What runs on local time.** Demand's five periods are abstract (a solve has no clock), so
+  demand follows from the rest: each line's service periods (`Lattice::shift`: its departures laid
+  out on its local hours), its boarding account (times of day, the busiest hours, the riders' kind
+  of day, "today" from its local midnight), and money (each local time's lines settle by their own
+  period and day: fares from their own income per period, running costs at their own demand level).
+- **A line runs on the local time of its first stop's region.** A line from New York to Toronto is
+  on one offset either way; a London to Paris line would be on London's. Simple, and a line's
+  timetable has one clock, as a real one does.
+- **The view.** The top bar's time, day and demand level, the demand views' period and their
+  "Today" kind of day are the local time at the view's centre (`viewShift`, updated as the map
+  moves). A line's inspector and the Lines tab show each line's level in its own local time.
+- **Not yet local** (T-321): the money ledger's days, the catch-up of the demand bubbles over a
+  day, and the regional market's longer trips between zones of different offsets (none today).
 
 ### NIMBY Rails
 
@@ -188,37 +234,52 @@ From research/nimby-rails.md (the developer's own posts; much of it is not publi
 
 ## Stages
 
-Each stage is its own task, with ids given when Anita approves the design.
+Each stage is its own task.
 
-1. **London buildable in the same save as New York.** Two tasks, which can run in parallel; London
-   is playable when both land.
-   - 1a. Track model: the `Merc` frame (Rust and `frame.ts`), ground lengths per piece, metre
-     figures through `k` in `fit` and `cross.rs`, TWT6, `convert_frame` to `Merc`, new games in
-     it, the registry's world frame set to `Merc`, the 85-degree and antimeridian refusals.
-     Checks: lengths against great circle and rhumb line at New York, London, Mumbai, Shanghai and
-     60 N; curve speed at the right ground radius at those latitudes; a converted Northeast save
-     against its TWT5 numbers; the T-125 fingerprint for TWT4 and TWT5 saves left unconverted;
-     edit timings (`t125-edit-timing.mjs`).
-   - 1b. Renderer: the moving anchor in `geo.ts`, the clock worker's anchored draw buffers, every
-     Float32 view cache following the anchor version, `MERC_K` per vertex. Checks: headless
-     screenshots at zoom 18 in New York and London with track, platforms and trains on the
-     basemap's streets; panning New York to London at zoom 12; frame times unchanged.
+1. **London buildable in the same save as New York.** Two tasks, run in parallel.
+   - 1a, T-306 (done 2026-10-14). Track model: the `Merc` frame (Rust and `frame.ts`), ground
+     lengths per piece, metre figures through `k`, TWT6, `convert_frame` to `Merc`, new games in
+     it (the registry's `frame.kind` is `merc`), the 85-degree and antimeridian refusals, and app
+     code comparing world metres with metre figures through `groundScale` and `groundDist`
+     (`game/coords.ts`: station complexes, links, nearest station). Checks:
+     `sim/src/track/merc_tests.rs` (rhumb lengths exact against a numerical integral at five
+     latitudes; the same track near New York in the conic and in Mercator within 0.01% in length,
+     cost and run time, with the same crossings; New York and London in one TWT6 save, London's
+     curve and straights against the great circle, the same shape at both places within 0.003%;
+     the refusals; a conic save converted), every earlier sim test unchanged, and a headless
+     browser check (`../artifacts/trainworld/notes-outputs/T-306-browser.json`): a new game is
+     Mercator, New York and London lines of one ground shape measure and run the same, the save
+     loads back, the real New York save still loads in its own frame with 4,500.617 km, 109 lines
+     and riders.
+   - 1b, T-307 and T-317. Renderer: the moving anchor in `geo.ts`, the clock worker's anchored draw
+     buffers, every Float32 view cache following the anchor version, `MERC_K` per vertex; the
+     demand views (T-317) the same, with bubble workers told the anchor.
    London's water and demand come with its pack (T-288); until then track there pays no water
-   cost.
-2. **Old saves** (after choice 2): convert TWT4 and TWT5 saves on load, or leave them. Small.
-3. **Local time** (after choice 1): periods, weekends and boarding hours per region. Needed
-   before London's demand (T-288) means much.
-4. **Running side per region**: `right_hand` from the registry, read per junction. Small; before
+   cost, and the top bar names no zone there and nothing loads for the view (T-318, done).
+2. **Old saves**, T-308 (done 2026-10-14): the clock worker converts any save whose network is not
+   TWT6 (`trackFrameKind` in `saveFile.ts`, `TrackApi.convert_save_frame`) once, as it loads from
+   the autosave or a slot, or imports from a file, then writes the slot again in TWT6; the old
+   bytes are kept under the hidden key `old-frame-<slot>`. Money, fleet, fares and the ledger are
+   copied. Nothing needed correcting: the real NYC save (TWT2) moves 0.3% at most on any line's
+   run time, no line's trains needed change, and no curve is newly refused (the 586 geometry
+   refusals that save already carries are the same before and after, so a set radius, which
+   `fit_in` reads as ground metres, behaves as it did). The check is the ignored test
+   `merc_tests::t308_real_save_conversion_report`.
+3. **Local time**, T-309 (done 2026-10-14): periods, weekends, boarding hours and money per
+   line's region, the clock showing the local time in view ("Local time" above). Checks: the
+   real New York save runs bit-identically with the registry's time zones (ignored test
+   `boarding::tests::t309_real_save_runs_as_before`, a week of trips, boarding slices and today's
+   counts); `a_london_line_runs_on_londons_hours`; a browser check of a London and a New York
+   line in one new game. The rest is T-321.
+4. **Running side per region**, T-319: `right_hand` from the registry, read per junction. Small; before
    London's junctions carry traffic.
 5. **World-scale loading**: water masks and boundaries for the zones on screen or reached, not
    every registered one (already T-302, folded into T-303's proposal).
 6. **Globe** (T-033) on the Mercator frame.
 
-## Open choices for Anita
+## Anita's choices (2026-10-14)
 
-1. **open** Local time: each region runs on its own local time under one game clock
-   (recommended), or the whole world shares one hour?
-2. **open** Old saves: convert your existing games to the world frame when they load
-   (recommended: the conic saves move by about 0.05%, 0.13% at Toronto, the original New York save by 1.2% at
-   Philadelphia and 2.7% at Boston, money unchanged), or leave them in their old frames for good,
-   Northeast only? This settles T-129.
+1. Local time: each region runs on its own local time and the clock shows the local time in view,
+   as NIMBY Rails does (T-309).
+2. Old saves: converted to the world frame on load, correcting what moves substantially where that
+   is easy (T-308; settles T-129).

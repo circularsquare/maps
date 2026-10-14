@@ -70,8 +70,10 @@ export type EditOp =
 
 export type ToClock =
   /** `pack`: the city pack's URL without extension (".../packs/nyc"), absolute. `fresh`: start a
-   * new game even if there is an autosave (`?new=1`). */
-  | { kind: "init"; city: string; pack: string; packs?: string[]; fresh?: boolean; slot?: string }
+   * new game even if there is an autosave (`?new=1`). `testPage`: the page is a check or stress
+   * page (`?new=1`, `?synth=1`, `?demandTest=1`, T-320): it never writes a slot until the player
+   * saves a copy; `fresh` also does not read one. */
+  | { kind: "init"; city: string; pack: string; packs?: string[]; fresh?: boolean; testPage?: boolean; slot?: string }
   | { kind: "edit"; seq: number; op: EditOp }
   /** what a route would cost and whether it can be built; answered with "preview" */
   | { kind: "preview"; seq: number; from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean }
@@ -194,6 +196,8 @@ export interface ClockLine {
   buildCost: number;
   /** US$M for the trains it will need once constructed, after spare cars (T-028) */
   trainCost: number;
+  /** seconds its local time runs ahead of the game clock: its first stop's region's (T-309) */
+  shift: number;
 }
 
 /** Everything drawn, in local units (map/geo.ts). */
@@ -298,8 +302,9 @@ export type FromClock =
   | { kind: "cash"; cash: number; today: MoneyState["ledger"][number] }
   /** a game was loaded or started (`from`), at game time `clock`; a failed import says why in
    * `error` and changes nothing */
-  /** `frame`: the game now in the worker (a save made before T-125 is in the legacy frame) */
-  | { kind: "loaded"; from: "autosave" | "file" | "new"; clock: number; frame: FrameSpec; error?: string }
+  /** `frame`: the game now in the worker; `converted`: its save was in an older frame and was
+   * converted to the world's on the way in (T-308) */
+  | { kind: "loaded"; from: "autosave" | "file" | "new"; clock: number; frame: FrameSpec; error?: string; converted?: boolean }
   /** the save file, for the player to keep */
   | { kind: "exported"; bytes: Uint8Array; day: number }
   /** a station placement's check (T-311): `issues` as an edit's */
