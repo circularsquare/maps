@@ -1,5 +1,5 @@
 // World frames (T-125): how the track model's planar metres relate to longitude and latitude. The
-// same two frames as sim/src/track/frame.rs, in the same arithmetic; notes/t125-frame-check.mjs
+// same two frames as sim/src/track/frame.rs, in the same arithmetic; checks/t125-frame-check.mjs
 // compares this file with PROJ's values.
 //
 // - "equirect": x = R dlon cos(lat0), y = R dlat. Every save made before T-125 is in it.

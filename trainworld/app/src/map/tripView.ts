@@ -1,4 +1,4 @@
-// The trip explorer on the map (T-195; docs/interface.md "Trip explorer"): the tool's clicks,
+// The trip explorer on the map (T-195; docs/ui-inspectors.md "The trip explorer"): the tool's clicks,
 // asking the demand workers about the trip (game/trip.ts), and drawing its routes on a canvas of
 // its own over the demand views' (2D: a few dozen points, projected on each MapLibre frame).
 //

@@ -10,8 +10,8 @@ Mercer County joins New York. Which parts are built is in section 9.
 
 The world is divided into **zones**, and every place is in exactly one zone or in dead space.
 
-- A **city zone** is a metro area with a hand-drawn extent: today's nine city packs, Toronto next
-  (T-277).
+- A **city zone** is a metro area with a hand-drawn extent: the nine Northeast city packs and
+  Toronto (T-277).
 - A **non-city zone** is land between and around city zones that is not part of any metro: the
   country between Providence, Hartford, Springfield and Boston, say.
 - **Dead space** is everything else: Nunavut, and for now most of the world. Nothing there makes or
@@ -41,11 +41,9 @@ unit belongs to a city zone (and so is not a non-city zone) when that city's pac
 
 **Which units are modelled (the extent).** A unit not in any city zone is modelled when it
 **touches two different city zones**: it lies between them. Today that is Worcester MA, Windham CT,
-New London CT and Litchfield CT in New England. **Open** (Anita): whether modelled space should
-also reach a ring around each city, every unit whose population-weighted centre is within about
-40 km of a city zone (in the Northeast about 30 more counties and 9 million people: the Lehigh
-Valley, Lancaster, Berks, Hillsborough NH, Ulster, Cape Cod and so on), or stay between cities
-only. Everything not modelled is dead space.
+New London CT and Litchfield CT in New England. Modelled space stays between cities for now (Anita,
+2026-10-14, T-300): no ring of units round each city (in the Northeast that ring would be about 30
+more counties and 9 million people). Everything not modelled is dead space.
 
 **Mercer County (Trenton) is part of New York's city zone**, not a non-city zone (Anita leaned
 this way). Reasons: it is in the New York combined statistical area; LODES holds 175,000 jobs
@@ -150,7 +148,7 @@ Option 1 of the review, in the same structure (zones, served pairs only, the off
 **Over a non-city zone** it is the focused zone, exactly as a city is focused: the zone holding the
 view's centre. Its bubbles are drawn as a city's are, and the top bar names it. A centre outside
 every boundary still belongs to the nearest zone when it is within 40 km of that zone's boundary
-(T-318; about the market's onset and the ring T-300 would add). Before the boundaries have loaded
+(T-318; about the market's onset). Before the boundaries have loaded
 the rule is 120 km from a zone's centre, past the biggest metro's far edge.
 
 **Over dead space**, farther than that from every zone (London while it has no pack), the view
@@ -226,6 +224,6 @@ All five stages are built; numbers and checks in [notes/T-276.md](../notes/T-276
 Not built, each its own task: park-and-ride (T-295), the market's routed drives (T-279), the
 commute part's own weekend factor in a station's far-zone rows (T-296), a faster joint solve
 (T-297), commutes shown apart from longer trips (T-298), the market's seam trips against NEC
-FUTURE (T-299), the ring of zones round each city (T-300, Anita's call), closing packs (T-301), and
+FUTURE (T-299), closing packs (T-301), and
 fetching zones' water masks and boundaries on demand rather than at startup (T-302; today every
 registered zone's are fetched at startup, as cities' are).

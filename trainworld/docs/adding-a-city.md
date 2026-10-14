@@ -177,10 +177,9 @@ and after. A non-city zone is a `CITIES` entry in `build_city.py` with `"kind": 
 ## 8. Tests that list cities
 
 - `sim/src/demand/everyday.rs`, test `every_pack_everyday`: its city list is hardcoded; add the id.
-- `notes/t066-worker-check.mjs` reads the registry (since T-277 it asserts
+- `checks/t066-worker-check.mjs` reads the registry (since T-277 it asserts
   `registry.cities.length`, not 9).
-- `notes/t137-browser.mjs`, `t142-browser.mjs` name their cities; write a browser check for the new
-  city or batch rather than editing them (T-277's `t277-browser.mjs` is a template).
+- Write a browser check for the new city or batch; `checks/t277-browser.mjs` (Toronto) is a template.
 
 ## 9. Checks
 
@@ -188,16 +187,15 @@ Native and Node (`npm run wasm --prefix trainworld/app` only if Rust changed):
 
     cargo test --release --features demand --manifest-path trainworld/sim/Cargo.toml every_pack_everyday -- --ignored --nocapture
     npm run check --prefix trainworld/app
-    node trainworld/notes/t066-worker-check.mjs
-    node trainworld/notes/t149-worker-check.mjs
-    node trainworld/notes/t174-market-check.mjs      (a city in the market)
+    node trainworld/checks/t066-worker-check.mjs
+    node trainworld/checks/t149-worker-check.mjs
+    node trainworld/checks/t174-market-check.mjs      (a city in the market)
 
 `every_pack_everyday` prints each city's per-resident outings: school about 0.11-0.15, university
 0.02-0.08, errands and social at New York's rates by construction (Toronto: school 0.128,
 university 0.033).
 
-Browser (own Vite on a port 6100-6149 with HMR and watching off, e.g. a copy of
-`scratchpad/agent-toronto/dev-nowatch.mjs`; headless Chrome through Playwright with its own
+Browser (own Vite with HMR and watching off, `checks/dev-nowatch.mjs`; headless Chrome through Playwright with its own
 profile directory; never touch app/dist). A new game, then for each new city:
 
 - jump to its centre: it becomes the active city, its pack opens (`twDemand.client.start.loads`),
@@ -212,8 +210,8 @@ profile directory; never touch app/dist). A new game, then for each new city:
 
 Startup (optional for one city): a production build into a scratch folder (`node
 trainworld/app/node_modules/vite/bin/vite.js build trainworld/app --outDir <scratch>/dist
---emptyOutDir`), served by `node trainworld/notes/static-serve.mjs <scratch>/dist 6101`, timed by
-`notes/startup-timing.mjs` before and after the registry change. A new game opens only the viewed
+--emptyOutDir`), served by `node trainworld/checks/static-serve.mjs <scratch>/dist 6101`, timed by
+`checks/startup-timing.mjs` before and after the registry change. A new game opens only the viewed
 city, so a new city should add only its boundary and water-mask fetches.
 
 ## 10. Docs

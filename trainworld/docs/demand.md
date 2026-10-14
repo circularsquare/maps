@@ -14,6 +14,12 @@ sources only, is built (`pipeline/tier0.py`, T-287) and measured on Toronto** (n
 | 1 | population + real jobs counts by small area | build |
 | 2 | a real home-to-work OD matrix | not an input; used as a **check** on the tier-1 fit where it exists (LODES OD for the US) |
 
+**Cells** are the unit of local demand: H3 resolution 9 (about 0.1 km², 170 m edge), only cells
+with people or jobs. Resolution 8 (about 0.74 km², Kontur's) is too coarse for walk catchment:
+half a cell is about 4 minutes of walking. Each census block is spread over the cells its polygon
+covers, by land area (T-013). Grain matters most in city centres (Anita): keep res 9 or finer where
+it is dense; the suburbs may be coarser if performance ever needs it (T-044).
+
 Subway Builder also uses gravity: LODES gives it homes and jobs, then a distance-based gravity
 model picks each commuter's workplace (`research/competitors.md`). Tier 1 done well is at its level.
 
@@ -640,7 +646,7 @@ free-flow estimate or one crowding round), one thread: 0.25-0.3 s native, 0.27 s
 before T-090's wider reach: the extra origin subzones each build their station row and visit the
 destination zones, and the drive costs a little more per pair; a day is 15% longer in WASM). An
 edit reruns everything except gravity. Periods are independent, so the game runs them in a pool
-of workers (section 7): with three workers in Chrome the mode split updated 0.49-0.55 s after a
+of workers ([architecture.md](architecture.md) 7): with three workers in Chrome the mode split updated 0.49-0.55 s after a
 new network reached them and the third crowding round landed by 1.9-2.0 s at T-078; T-090 adds
 about 15% (not measured in Chrome). Each worker holds its own copy of the city: 18 MB of WASM
 memory open, about 23 MB after solving (notes/T-026.md). New York's real 867-station network is
@@ -701,10 +707,10 @@ until it is ready (`demandClient.ts` `held`). Compiled code is shared by a page'
 they all open on optimised code: New York 1.3-1.8 s in every worker in 10 of 10 page loads,
 against 3.4-7.3 s in 7 of 10 without (`?perfOff=stagger`, same build).
 
-**The market since T-276** (docs/zones.md 4-5, SPEC 5.1). Longer trips: 0.107 weekday departures
+**The market since T-276** (docs/zones.md 4-5, [regional.md](regional.md) 5.1). Longer trips: 0.107 weekday departures
 a resident, onset 25-50 km, `max(d, 25)^-2.37`, an outside world in every zone's normaliser
 (`MarketPack::outside`, pipeline/outside.py: Kontur people in no zone, 6,037 points of H3
-resolution 5 to 3 by distance, cut at 5,000 km; 5,991 points), so the `derived` block also holds the departures
+resolution 5 to 3 by distance, cut at 5,000 km), so the `derived` block also holds the departures
 that leave the map (0.76M of 5.13M with the 13 zones). The car's perceived minutes add 15 cents a road km and the
 destination zone's parking (`site_park`: the local rule at each site's 2 km zone, job-weighted),
 both halved for two occupants (`car_min`). Commutes between zones: `commute_home`, `commute_work`
@@ -718,14 +724,9 @@ loads (`commute_loads`; the worker moves it from longer trips to work), with the
 and a tail on `selection_flows` (legs of commuters living in the selection by work zone, of those
 working there by home zone). A station's far-zone rows hold both parts and take the longer trips'
 weekend factor (a known approximation: commuters are counted 1.58x rather than 0.30x on a weekend
-there). On the real New York network (fares $1.50 + $0.10/km, three rounds, `zones_day`) the
-market's rail went from 1,866 to 37,566 trips a day (its trips 0.69M to 4.12M), the commutes
-between zones 262 legs (the real network stops at the pack's edges); New York's local rail share
-19.1% to 18.8%; a solve 31 s to 29 s natively.
+there, T-296). Measurements on the real New York network: notes/T-276.md.
 
-**The market opens without its zone pairs** (T-174). It had two passes over every zone pair in
-every solving worker (2,913 zones, 2.26M kept directed pairs; time and memory growing with the
-square of the zones). Now the figures that need all pairs (each zone's row normaliser, the day's
+**The market opens without its zone pairs** (T-174). The figures that need all pairs (each zone's row normaliser, the day's
 trips, each corridor's trips, the pair count) come from the pack's `derived` block, written by
 the same Rust code natively (`bin/market_pack.rs`, run by `pipeline/intercity.py`; 0.46 s), and
 `set_network` builds the pairs only between zones some station serves (any other pair has no
@@ -734,30 +735,19 @@ list's order, so every rail figure is the same sum. All-mode trips for a selecti
 computed row by row for its zones when asked (one row is every other zone, about 0.1 ms).
 The block carries its formula name, the decay at four distances (to 1e-9: the pipeline's exp
 and powf are the platform's, the browser's Rust's own) and a checksum of the zones; if any
-disagrees the game derives it at opening, as before. Results: natively, every output of a
-five-period, three-round solve on the real network plus a Philadelphia line is identical with
-and without the block and to the code before T-174 (`intercity_real_network_outputs`); in the
-production WASM the f32 outputs differ by at most 1.2e-7 relative, the libm difference
-(`notes/t174-market-check.mjs`). WASM memory per solving worker on the NYC save 377 MB to 300 MB.
+disagrees the game derives it at opening instead, with the same result
+(`intercity_real_network_outputs`; in WASM within 1.2e-7 relative, the libm difference,
+`checks/t174-market-check.mjs`).
 
 **The market's distances are on the ground** (T-128). Its sites and zones stay in the New York
 equirectangular pack frame (their x and y, the 600 m site squares and every position the app
 reads are unchanged), but the pack names that frame (`"frame": {"kind": "equirect", ...}`, format
 2), and the kernel takes each zone centre through it to the unit sphere and measures zone pairs
 by great circle (`zone_km`; the same as `track::frame::great_circle`, which the world frame's
-lengths are checked against). The decay and the drive time follow. The plane was 1.2% short
-east-west at Philadelphia and 2.7% at Boston. Site lon/lat are not stored: the frame is affine in
-lon/lat, so the plane's weighted zone centre is exactly the weighted centre of the sites' lon/lat,
-and storing them would add about 5 MB to the 8.2 MB download for nothing. A pack without `frame`
-(before T-128) keeps plane distances under the old formula name, so its block stays current and
-its numbers are exactly as before. The formula name changed, so the shipped pack's block was
-rewritten (`pipeline/intercity.py --derive`, which also adds `frame` to an older pack; derive
-0.63 s against 0.46 s, the arcsine per pair; at opening in WASM without a block 1.06 s against 0.83 s).
-Effect on the shipped pack, not re-tuned: the day's trips 696,093 -> 696,100 (each zone's
-departures are normalised, only pruning moves), kept pairs 2,263,260 -> 2,262,696; corridors move
-by up to about 3% (New York - Philadelphia -0.3%, New York - Boston +1.7%, New York - Washington
--2.6%, Philadelphia - Washington -2.6%, Washington - Baltimore +1.0%, Boston - Providence -1.1%);
-market rail on the real New York network plus a Philadelphia line 2,172 -> 2,174 a day (+0.07%).
+lengths are checked against). The decay and the drive time follow. Site lon/lat are not stored:
+the frame is affine in lon/lat, so the plane's weighted zone centre is exactly the weighted centre
+of the sites' lon/lat. A pack without `frame` keeps plane distances under the old formula name.
+`pipeline/intercity.py --derive` adds `frame` to an older pack.
 
 The Northeast recomputes every open city population and the separate regional market on service or
 fare changes; per-city dirty filtering remains future work. At each period's crowding round, the
@@ -767,7 +757,7 @@ estimate lands when all five periods agree on version and round; three refinemen
 same way. A faster worker cannot mix a later round with another worker's first estimate. A newer
 network supersedes work after the population in progress (a pass is up to a second of one call).
 
-Longer-trip queries (T-118, SPEC 5.2) come from the regional API, not the local ones. Each period
+Longer-trip queries (T-118, [regional.md](regional.md) 5.2) come from the regional API, not the local ones. Each period
 keeps rail trips per directed served zone pair (T-174) and, per station, rail trips starting and ending there by
 far zone (T-120; one f32 per station, direction and zone, about 7 MB a period on 875 stations), both from the same
 assignment pass that loads the lines. `selection_flows` sums the market's zone pairs (each
@@ -790,7 +780,7 @@ focused city's local commutes. Query XY is returned in world coordinates; cell a
 pack-local. Focus changes reset caches, layers and commuter selections, and reject late replies,
 including a switch away and back.
 
-**Loads by purpose** (T-158, the map's purpose filter, section 8). Every period's result also
+**Loads by purpose** (T-158, the map's purpose filter, [ui-demand-views.md](ui-demand-views.md)). Every period's result also
 carries its segment loads, boardings and alightings split by purpose: work is the local city
 populations together, then the everyday layer's six purposes (four before T-142's airports and
 medical visits), then the regional market as
@@ -812,7 +802,7 @@ per cell for the bubbles come from `EverydayApi.cell_modes_of(kind)`, asked of t
 workers on demand (`purposeModes`) and answered only from a finished round, like stations; work
 alone is the commute sums the bubbles already have.
 
-**Transfers** (T-176, for the complex map, section 8). A station's flow is everyone there, so
+**Transfers** (T-176, for the complex map, [ui-inspectors.md](ui-inspectors.md)). A station's flow is everyone there, so
 loading alone forgets which line a rider arrived on. `kernel::assign_with_transfers` keeps it: when
 a route node's riders leave the train at a station that is not the destination (at their own
 station, or by a walking transfer to one within 300 m or in the same complex, T-161), the riders and the edge they arrived by
@@ -844,7 +834,7 @@ Loads with and without counting are bit-identical natively (`transfers_real_netw
 free flow and three rounds, commutes and everyday) and in the WASM worker (five periods, three
 rounds, the market too; notes/T-147.md).
 
-**The trip explorer** (T-195, `sim/src/demand/trip.rs`, the interface in section 8). One trip
+**The trip explorer** (T-195, `sim/src/demand/trip.rs`, the interface in [ui-inspectors.md](ui-inspectors.md)). One trip
 between two points, as the commute model decides it in each period: `DemandApi.trip(q, from, to)`
 takes the cell nearest each point (within 600 m, else the point is outside the city), reads the
 trip as a commute from a home in the first to work in the second, and answers with the model's
@@ -884,7 +874,7 @@ the walk share and the drive's distance from the sampled cells, and their own su
 the explorer shows the commute.
 
 **The pool and the bubbles' chain** (T-119). The pool is half the logical cores less one, at most
-5, at least 1 workers that solve, and one more that holds no period (SPEC 7). Periods go to workers
+5, at least 1 workers that solve, and one more that holds no period ([architecture.md](architecture.md) 7). Periods go to workers
 by index, so five workers solve a stage of all five periods at once. The bubbles ask for the
 commuters by mode right after a round is published, when every worker is already part way into
 the next round and cannot answer a question about the round before from its live state. So each

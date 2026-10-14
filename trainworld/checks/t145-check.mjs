@@ -1,0 +1,20 @@
+// Run from maps: node trainworld/checks/t145-check.mjs
+import assert from 'node:assert/strict';
+import {build} from '../app/node_modules/vite/dist/node/index.js';
+const result=await build({configFile:false,logLevel:'silent',build:{write:false,minify:false,lib:{entry:'trainworld/app/src/map/network.ts',formats:['es']}}});
+const output=(Array.isArray(result)?result[0]:result).output;
+const {strokesFromPreview,F_BLUEPRINT,F_BAD,F_PLACEMENT}=await import('data:text/javascript;base64,'+Buffer.from(output.find(o=>o.type==='chunk').code).toString('base64'));
+const points=new Float32Array([0,0,0,50,0,8,100,50,16]);
+const speeds=new Float32Array([160,75]);
+const original=points.slice(),ghost=strokesFromPreview(points,false,speeds,true);
+assert.equal(ghost.count,2);
+assert.deepEqual(ghost.speed,speeds,'speed values remain in the authoritative segment order');
+assert.deepEqual([...ghost.level],[0,1],'height changes remain aligned with segment starts');
+assert.ok(ghost.flags.every(f=>(f&F_BLUEPRINT)!==0&&(f&F_PLACEMENT)!==0&&(f&F_BAD)===0));
+const bad=strokesFromPreview(points,true,speeds,true);
+assert.ok(bad.flags.every(f=>(f&F_BAD)!==0),'invalid colour override survives solid placement mode');
+const ordinary=strokesFromPreview(points,false);
+assert.ok(ordinary.flags.every(f=>f===F_BLUEPRINT),'ordinary blueprint preview semantics remain unchanged');
+assert.throws(()=>strokesFromPreview(points,false,new Float32Array([160]),true),/length mismatch/);
+assert.deepEqual(points,original,'previews do not mutate source geometry');
+console.log('T-145 preview contract checks passed: exact speed/level alignment, solid-only placement flag, invalid override, blueprint preservation and malformed-array refusal.');

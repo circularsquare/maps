@@ -75,7 +75,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   name is in use, another place at most 800 m further, else the way the station lies from it
   ("North Williamsburg"), else a number ("Williamsburg 2"). Failing that, a place on the loaded
   tiles, else "Station N". The player can rename it. Before the click, the placement ghost
-  (docs/interface.md) shows whether it would work: the clock worker tries the same `addStation`
+  ([ui-building.md](ui-building.md)) shows whether it would work: the clock worker tries the same `addStation`
   and rolls it back (`TrackApi.preview_station`, T-311), so the ghost and the click cannot
   disagree, cash included.
 - **Curve speed** `v = sqrt(a_lat * R)`, **a_lat = 1.1 m/s²** (LGV design: 7,000 m for 320 km/h).
@@ -124,7 +124,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   the node; at a dead end it runs from the node along the track and trains stop at its middle
   (`service.rs`). The map draws it there, at its true length and bent as the track is, from
   zoom 15, as a box whose width is fixed on the ground too (16 m, a quarter narrower than a plain line and its rim, the same for every station and mode), so its shape is the same at every zoom
-  (docs/interface.md, Stations on the map; T-189, T-204, T-239). Platform length caps train length (20 m cars).
+  ([ui-map.md](ui-map.md) "Stations"; T-189, T-204, T-239). Platform length caps train length (20 m cars).
   Platform tracks = the route's tracks. Riders change between stations up to 300 m apart on foot, and platforms within 100 m of each other count as one station (4.4). Stations whose platforms come within 50 m form a station complex, which a click on a station selects as one (T-249) and the demand circles can show as one (8, T-146); the player can link any two stations up to 1 km apart into one complex and unlink them (T-197, saved with the network as `Network::links`, not in the undo history). Riders change between any two stations of a complex on foot, however far apart (4.4, T-161).
 
 ### 6.2 Capacity and junctions
@@ -192,7 +192,7 @@ below zoom 12 and reserve space around each tag (48 px horizontally / 28 px vert
 zoom 14, then 20 / 12 px). Larger delays win collisions, then higher utilisation (T-102).
 Markers never cover a station name: each takes the first spot around its resource that is clear
 of names and earlier markers (above right, above left, below right, below left, right, left), and
-hides only when none is (T-184, docs/interface.md).
+hides only when none is (T-184, [ui-map.md](ui-map.md)).
 The junction inspector (T-031) draws the junction as a small diagram and lists its moves (from
 one station or direction to another), with the lines on each, trains an hour at the level in
 force, the wait per train, which moves each crosses, and the busiest crossing's utilisation. The
@@ -254,7 +254,7 @@ busy track, and names the places it waits most (notes/T-031.md).
   into one edit sent when it lands. The worker sends a service-only state for it: no geometry
   moved, so it skips rebuilding the renderer's buffers and the main thread swaps in only the new
   run profiles (`renderer.setService`). On the real New York save an edit takes 36-48 ms in the
-  worker (was 83-89, half of it those buffers) and 6-10 ms on the main thread (was 11-17).
+  worker and 6-10 ms on the main thread.
 - **Trip times on the stops list**: each stop shows the time from the start of the line, next to
   the station (e.g. Grand Central 1m23s, Long Island City 2m59s), and the panel shows the whole
   round trip.
@@ -352,7 +352,7 @@ PIs (format TWT4 also keeps the T-079 original drawn points and optional whole-l
 (T-125) is TWT4 in the Northeast conic and TWT6 (T-306) TWT4 in the Mercator world frame, the
 only difference being the magic; TWT2 and TWT3 saves load),
 nodes, stations and lines: ~100 KB compressed for 10,000 route-km on a synthetic network
-(notes/T-040.md; T-008 estimated 170 KB with denser drawing).
+(notes/T-040.md).
 
 ### 6.6 Boarding: each train's load, each platform's crowd
 
@@ -392,9 +392,9 @@ per person and does not change who travels: demand still decides that (SPEC 4).
   stretch and each platform's departures with the riders each left behind, its arrival rate, and
   the hour's riders left behind and longest wait. The renderer reads the train's load for the
   stretch it is drawn on (empty once at its last stop; packed to crush, drawn full with a red
-  edge, T-207, half as thick again since T-218), and a platform's crowd at any moment is what
+  edge, T-207, T-218), and a platform's crowd at any moment is what
   the last train left plus who has arrived since, drawn as the platform filling up wherever
-  platforms are drawn (zoom 15 and in, T-189, T-204, T-219; docs/interface.md).
+  platforms are drawn (zoom 15 and in, T-189, T-204, T-219; [ui-map.md](ui-map.md)).
 - **Room on a platform** (T-219, `platformRoom` in `game/boarding.ts`): what counts as a full
   platform for drawing. Each direction's riders wait on one side, 2.5 m of usable width (half a
   6 m island platform less the edge strip kept clear) along the platform's length, at 0.3 m² a

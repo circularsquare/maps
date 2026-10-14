@@ -1,4 +1,4 @@
-// The trip explorer (T-195; docs/demand.md "The trip explorer", docs/interface.md). One trip
+// The trip explorer (T-195; docs/demand.md "The trip explorer", docs/ui-inspectors.md). One trip
 // between two points on the map, read as a commute from a home at the first point to work at the
 // second, the way the demand model decides it: the train's routes through the model's strategies,
 // the drive, and the chance of each mode in each period. The numbers are the model's own

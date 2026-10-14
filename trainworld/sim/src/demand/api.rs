@@ -2294,7 +2294,7 @@ mod tests {
     /// T-161: the real New York network (nyc_real_track.json) with and without its station
     /// complexes, commutes and the everyday purposes, every period, free flow and three crowding
     /// rounds. The complexes are T-007-real-nyc.save's as the game makes them
-    /// (`notes/t161-complexes.mjs` writes them to ../artifacts/trainworld/t161/). Prints rail trips,
+    /// (`checks/t161-complexes.mjs` writes them to ../artifacts/trainworld/t161/). Prints rail trips,
     /// boardings and transfers both ways, the transfers inside Penn Station, Grand Central and
     /// Times Sq, and the lines whose riders move most.
     /// `cargo test --release --features demand complexes_real_network -- --ignored --nocapture`

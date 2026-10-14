@@ -15,7 +15,7 @@
 // (curved platforms are taken as straight); levels are ignored, so lines crossing over or under
 // each other form a complex too.
 //
-// Pure geometry, no signals (notes/t146-check.mjs runs it in node); the world's complexes and the
+// Pure geometry, no signals (checks/t146-check.mjs runs it in node); the world's complexes and the
 // complex view are in game/complexView.ts.
 
 import type { StationId, StationInput } from "./types";

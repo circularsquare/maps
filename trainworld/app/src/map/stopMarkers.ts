@@ -1,4 +1,4 @@
-// Stop editing on the map (T-233, docs/interface.md): while a line's stops are being edited every
+// Stop editing on the map (T-233, docs/ui-building.md): while a line's stops are being edited every
 // station carries a round toggle marker over everything else. A stop is a disc in the line's
 // colour inside a white ring inside a dark one (no check, T-239); the others are hollow. Stations
 // a stop can be added at without changing the line's path (on it, or past an end on track it can

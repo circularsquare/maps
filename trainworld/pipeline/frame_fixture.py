@@ -1,7 +1,7 @@
 """T-125: reference values for the world frame, from PROJ.
 
 Prints the Rust constant `LCC_PROJ` (sim/src/track/frame.rs) and writes app/src/game/frame.fixture.json
-(read by notes/t125-frame-check.mjs to check the TypeScript copy of the frame).
+(read by checks/t125-frame-check.mjs to check the TypeScript copy of the frame).
 Run: ..\\venv\\Scripts\\python.exe frame_fixture.py
 """
 import json

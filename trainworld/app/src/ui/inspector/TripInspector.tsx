@@ -1,4 +1,4 @@
-// The trip explorer's inspector (T-195, docs/interface.md): one trip between two points as the
+// The trip explorer's inspector (T-195, docs/ui-inspectors.md): one trip between two points as the
 // demand model decides it, for one period: the chance of each mode, the train's main route with
 // its walks, waits, rides and changes, the other routes the train riders spread over, and the
 // drive. Every number is the model's (game/trip.ts); every drawn quantity has a hover with it.
