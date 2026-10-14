@@ -1,5 +1,11 @@
 # Archive
 
+- T-333 [P2] Drag-select blueprints. Done 2026-10-14: Select tool (key 5), drag box, Shift adds, click picks; Disable (D) and Enable (E) switch pieces so Construct and the total skip them; grey when disabled, saved with the game. Real save checked with real drags. DECISIONS, docs/ui-building.md.
+
+- T-331 [P2] Blueprint track 25% narrower. Done 2026-10-14: the whole width, rails included, is 75% of T-322's (rails at least 1 px); a line planned along it fills the middle. docs/ui-map.md.
+
+- T-332 [P2] Lines and Stations lists for a world network. Done 2026-10-14: a pin (viewed place) and globe toggle and a Near column (distance from the screen centre, nearest stop for a line), updated on move end; `game/listScope.ts`, docs/ui-inspectors.md.
+
 - T-329 [P1] Cleanup pass and lean docs. Done 2026-10-14: short doc rules and agent working rules in CLAUDE.md, file layout to docs/code-map.md; `checks/smoke.mjs` before each commit, kept checks in `checks/`, one-offs deleted; SPEC.md summarised, interface split into docs/ui-*.md.
 
 - T-324 [P2] Loading fix 1 (T-303 item 2). Done 2026-10-14: a line new or changed by an edit (stops differ from the shown result) takes the free-flow estimate's riders as soon as it lands, with stations only such lines serve; every other figure keeps T-232's one change per edit, and the final round replaces all (`demandClient.ts` `publishNewLines`). Trains of a running line with no figures yet, or with no boarding account yet, are striped in the line colour and white (`demandLayers.ts` PENDING, `renderer.ts` train fill), never solid like a full train; the train panel says "Calculating" and "estimate" by the period while the figures are the estimate; the train hover adds "(estimate)". Real NYC save, Toronto open, a new five-stop Yonge line: riders at 5.1-5.2 s after building instead of 15.7-15.9 s (`?perfOff=early`, same build); final figures identical to the old behaviour (110 lines' riders, split, trips, station totals), and identical between two runs. Screenshots ../artifacts/trainworld/T-324-*.png. SPEC 7, DECISIONS.

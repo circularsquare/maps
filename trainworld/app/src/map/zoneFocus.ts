@@ -9,6 +9,7 @@ import { batch, effect } from "@preact/signals";
 import type { Map as MlMap } from "maplibre-gl";
 import { activeCity, viewedZone } from "../game/cities";
 import { display, selection } from "../game/ui";
+import { viewCentre } from "../game/listScope";
 import { loadZones, nearbyZones, placeAt, zonesInBox, zonesLoaded } from "../game/zones";
 import { OVERVIEW_ZOOM } from "./intercityView";
 import { shiftAt, viewShift } from "../game/localTime";
@@ -20,6 +21,7 @@ export function startZoneFocus(map: MlMap) {
     // T-318: over dead space the focus stays where it was and nothing is viewed (no name, no load)
     const here = placeAt(c.lng, c.lat);
     batch(() => {
+      viewCentre.value = [c.lng, c.lat]; // T-332: the Lines and Stations lists sort by it
       if (here && moved && k !== "commuters" && k !== "station" && k !== "trip") activeCity.value = here;
       viewedZone.value = here;
     });
@@ -36,6 +38,7 @@ export function startZoneFocus(map: MlMap) {
     if (next.length !== prev.length || next.some((id, i) => id !== prev[i])) nearbyZones.value = next;
   };
   map.on("moveend", () => place(true));
+  { const c = map.getCenter(); viewCentre.value = [c.lng, c.lat]; }
   // T-309: the clock shows the local time in view, switching as the view crosses a time zone
   const local = () => {
     const c = map.getCenter(), s = shiftAt(c.lng, c.lat);

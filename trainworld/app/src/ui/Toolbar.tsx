@@ -14,6 +14,7 @@ const HINT: Record<Tool, string> = {
   line: "Click the circles to add or remove stops. Press Enter or Escape to finish editing.",
   delete: "Click track, a station or a flyover to remove it.",
   trip: "Click where a trip starts, or a station.",
+  blueprint: "Drag a box round blueprint track and stations. Shift adds to the selection. D disables it, E enables it. Right drag moves the map.",
 };
 
 /** Native modal keeps map input blocked and traps/restores focus; Escape answers no. */

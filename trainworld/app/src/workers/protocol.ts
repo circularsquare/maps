@@ -54,6 +54,8 @@ export type EditOp =
   | { op: "removeStation"; node: NodeId }
   | { op: "construct"; edges: EdgeId[]; stations: NodeId[] }
   | { op: "constructAll" }
+  /** switch blueprint track and stations off or on (T-333): Construct and the quote skip what is off; one undoable edit */
+  | { op: "blueprintOff"; edges: EdgeId[]; stations: NodeId[]; off: boolean }
   | { op: "constructLine"; line: number }
   | { op: "addLine"; stops: NodeId[]; name: string; colour: string }
   | { op: "copyLine"; line: number; name?: string; express?: boolean }
@@ -145,6 +147,8 @@ export interface ClockEdge {
   b: number;
   tracks: 1 | 2;
   built: boolean;
+  /** a blueprint switched off (T-333) */
+  off: boolean;
   lengthM: number;
   /** US$M */
   cost: number;
@@ -165,6 +169,8 @@ export interface ClockNode {
   flying: boolean;
   platform: number;
   stationBuilt: boolean;
+  /** a blueprint station switched off (T-333) */
+  stationOff: boolean;
   name: string;
   /** track heading through it, rad, counter-clockwise from east */
   heading: number;

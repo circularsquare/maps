@@ -375,8 +375,8 @@ impl TrackApi {
         let mut rows = self.w.net.blueprint_cost_items();
         if !rows.is_empty() && self.w.svc.lines.iter().any(|s| s.ok && !s.running) {
             let net = &self.w.net;
-            let edges: Vec<u32> = (0..net.edge_count() as u32).filter(|&e| net.edge_ok(e) && !net.edge_built[e as usize]).collect();
-            let stations: Vec<u32> = (0..net.node_count() as u32).filter(|&n| net.node_ok(n) && net.node_platform[n as usize] > 0 && !net.node_built[n as usize]).collect();
+            let edges: Vec<u32> = (0..net.edge_count() as u32).filter(|&e| net.edge_ok(e) && !net.edge_built[e as usize] && !net.edge_off[e as usize]).collect();
+            let stations: Vec<u32> = (0..net.node_count() as u32).filter(|&n| net.node_ok(n) && net.node_platform[n as usize] > 0 && !net.node_built[n as usize] && !net.node_off[n as usize]).collect();
             let ops = self.construct_ops(&edges, &stations);
             let fleet = self.fleet;
             // Starting several lines together can change junction delays and their fleet needs.
@@ -485,7 +485,7 @@ impl TrackApi {
         if self.w.net.edge_ok(id) && self.w.net.edge_built[id as usize] {
             return self.refuse(Issue::NoSuchEdge { edge: id });
         }
-        self.run(Op::Edge { id, data: Some(EdgeData { a, b, tracks, pis: pis_from(pis), built: false, thru: vec![] }) })
+        self.run(Op::Edge { id, data: Some(EdgeData { a, b, tracks, pis: pis_from(pis), built: false, off: false, thru: vec![] }) })
     }
     /// Reshape a blueprint edge (T-064): new PIs (x, y, radius 0 = auto, level each), same ends
     /// and tracks. One undoable edit. Constructed track cannot be reshaped.
@@ -653,7 +653,7 @@ impl TrackApi {
                 continue;
             }
             if let Some((o, which, od, _, _)) = self.free_joint(node, e, corner) {
-                if od.built == d.built && od.tracks == d.tracks && o != e && merges[0].as_ref().map_or(true, |m| m.0 != o) {
+                if od.built == d.built && od.off == d.off && od.tracks == d.tracks && o != e && merges[0].as_ref().map_or(true, |m| m.0 != o) {
                     merges[k] = Some((o, which, od));
                 }
             }
@@ -700,7 +700,7 @@ impl TrackApi {
                 pis[j].radius = quant(want);
             }
         }
-        let joined = EdgeData { a, b, tracks: d.tracks, pis: pis[1..pis.len() - 1].to_vec(), built: d.built, thru: vec![] };
+        let joined = EdgeData { a, b, tracks: d.tracks, pis: pis[1..pis.len() - 1].to_vec(), built: d.built, off: d.off, thru: vec![] };
         // each part's direction that runs the joined edge's way
         let mut forward: Vec<(u32, u32)> = vec![(e, 0)];
         if let Some((o, which, _)) = &merges[0] {
@@ -772,7 +772,7 @@ impl TrackApi {
         self.run(Op::Split { edge, s, node, new_edge })
     }
     pub fn set_station(&mut self, node: u32, platform: u16, name: String) -> u32 {
-        self.run(Op::Station { node, data: Some(StationData { platform, name, built: false }) })
+        self.run(Op::Station { node, data: Some(StationData { platform, name, built: false, off: false }) })
     }
 
     /// Put a whole blueprint edge on one level (its ends keep theirs, with ramps), shape
@@ -1121,7 +1121,7 @@ impl TrackApi {
             };
             let edge = self.w.net.alloc_edge();
             edges.push(edge);
-            ops.push(Op::Edge { id: edge, data: Some(EdgeData { a: from, b: to, tracks, pis: p[1..p.len() - 1].to_vec(), built: false, thru: vec![] }) });
+            ops.push(Op::Edge { id: edge, data: Some(EdgeData { a: from, b: to, tracks, pis: p[1..p.len() - 1].to_vec(), built: false, off: false, thru: vec![] }) });
             from = to;
         }
     }
@@ -1176,7 +1176,7 @@ impl TrackApi {
 
     #[allow(clippy::too_many_arguments)]
     fn station_at(&mut self, kind: u32, id: u32, x: f64, y: f64, platform: u16, name: String, dry: bool) -> u32 {
-        let st = StationData { platform, name, built: false };
+        let st = StationData { platform, name, built: false, off: false };
         if kind == 1 {
             if !self.w.net.node_ok(id) {
                 return self.refuse(Issue::NoSuchNode { node: id });
@@ -1267,7 +1267,7 @@ impl TrackApi {
     /// paid for at once (final).
     pub fn set_station_props(&mut self, node: u32, platform: u16, name: String) -> u32 {
         let Some(old) = self.w.net.station_data(node) else { return self.refuse(Issue::NoSuchNode { node }) };
-        let op = Op::Station { node, data: Some(StationData { platform, name, built: old.built }) };
+        let op = Op::Station { node, data: Some(StationData { platform, name, built: old.built, off: old.off }) };
         if old.built && old.platform != platform {
             self.run_charged(op)
         } else {
@@ -1396,12 +1396,52 @@ impl TrackApi {
         ops
     }
 
-    /// Construct the whole blueprint.
+    /// The blueprint edges and stations switched off (T-333), as two lists of ids.
+    pub fn off_edges(&self) -> Vec<u32> {
+        let net = &self.w.net;
+        (0..net.edge_count() as u32).filter(|&e| net.edge_ok(e) && net.edge_off[e as usize]).collect()
+    }
+    pub fn off_stations(&self) -> Vec<u32> {
+        let net = &self.w.net;
+        (0..net.node_count() as u32).filter(|&n| net.node_ok(n) && net.node_platform[n as usize] > 0 && net.node_off[n as usize]).collect()
+    }
+
+    /// Construct the whole blueprint except what is switched off (T-333).
     pub fn construct_all(&mut self) -> u32 {
         let net = &self.w.net;
-        let edges: Vec<u32> = (0..net.edge_count() as u32).filter(|&e| net.edge_ok(e) && !net.edge_built[e as usize]).collect();
-        let stations: Vec<u32> = (0..net.node_count() as u32).filter(|&n| net.node_ok(n) && net.node_platform[n as usize] > 0 && !net.node_built[n as usize]).collect();
+        let edges: Vec<u32> = (0..net.edge_count() as u32).filter(|&e| net.edge_ok(e) && !net.edge_built[e as usize] && !net.edge_off[e as usize]).collect();
+        let stations: Vec<u32> = (0..net.node_count() as u32).filter(|&n| net.node_ok(n) && net.node_platform[n as usize] > 0 && !net.node_built[n as usize] && !net.node_off[n as usize]).collect();
         self.construct(&edges, &stations)
+    }
+
+    /// Switch blueprint edges and stations off or on (T-333): Construct and the blueprint quote
+    /// skip what is off. One undoable edit; constructed pieces and ones already in that state are
+    /// left alone. Returns 1 when nothing changed.
+    pub fn set_blueprint_off(&mut self, edges: &[u32], stations: &[u32], off: bool) -> u32 {
+        let net = &self.w.net;
+        let mut ops = vec![];
+        for &e in edges {
+            if let Some(mut d) = net.edge_data(e) {
+                if !d.built && d.off != off {
+                    d.off = off;
+                    ops.push(Op::Edge { id: e, data: Some(d) });
+                }
+            }
+        }
+        for &n in stations {
+            if let Some(mut d) = net.station_data(n) {
+                if !d.built && d.off != off {
+                    d.off = off;
+                    ops.push(Op::Station { node: n, data: Some(d) });
+                }
+            }
+        }
+        if ops.is_empty() {
+            self.money_short = None;
+            self.issues = vec![];
+            return 1;
+        }
+        self.run(Op::Batch(ops))
     }
 
     /// Construct what a line needs to run: its path's edges and its stops.
@@ -2574,6 +2614,53 @@ mod tests {
     }
 
     #[test]
+    fn blueprint_switched_off_is_skipped_saved_and_undone() {
+        let mut a = api();
+        a.set_cash(6000.0);
+        for y in [0.0, 5000.0] {
+            let ends: Vec<f64> = free(0.0, y).iter().chain(free(2000.0, y).iter()).copied().collect();
+            assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+        }
+        let nodes = a.nodes_info();
+        let n0 = nodes[0] as u32;
+        assert_eq!(a.add_station(1, n0, 0.0, 0.0, 200, "A".into()), 0, "{}", a.issues());
+        let edges: Vec<u32> = a.edges_info().chunks(10).map(|c| c[0] as u32).collect();
+        let all = a.blueprint_cost();
+        let first = a.blueprint_cost_items().chunks_exact(7).map(|r| r[6]).sum::<f64>();
+        assert!((all - first).abs() < 1e-8);
+        // switch the second route off: the quote drops by its track, the station stays
+        assert_eq!(a.set_blueprint_off(&edges[1..], &[], true), 0, "{}", a.issues());
+        assert_eq!(a.off_edges(), edges[1..].to_vec());
+        let quote: f64 = a.blueprint_cost_items().chunks_exact(7).map(|r| r[6]).sum();
+        assert!(quote < first - 50.0, "{quote} vs {first}");
+        // the same again changes nothing; switching the station off drops its price too
+        assert_eq!(a.set_blueprint_off(&edges[1..], &[], true), 1);
+        assert_eq!(a.set_blueprint_off(&[], &[n0], true), 0);
+        assert_eq!(a.off_stations(), vec![n0]);
+        assert!(a.blueprint_cost_items().chunks_exact(7).map(|r| r[6]).sum::<f64>() < quote - 1.0);
+        // saved and loaded
+        let snapshot = a.save();
+        let mut b = api();
+        assert!(b.load(&snapshot));
+        assert_eq!(b.off_edges(), edges[1..].to_vec());
+        assert_eq!(b.off_stations(), vec![n0]);
+        // undo puts the station back
+        assert_eq!(a.undo(), 0);
+        assert!(a.off_stations().is_empty());
+        // Construct builds only what is on, and clears nothing else
+        let quote2: f64 = a.blueprint_cost_items().chunks_exact(7).map(|r| r[6]).sum();
+        assert!((quote2 - quote).abs() < 1e-8, "the first switch-off left the station on");
+        assert_eq!(a.construct_all(), 0, "{}", a.issues());
+        assert!((a.last_charge() - quote2).abs() < 1e-6, "charge {} quote {}", a.last_charge(), quote2);
+        assert!(a.blueprint_cost_items().is_empty());
+        assert!(a.built_cost() > 0.0 && a.blueprint_cost() > 0.0, "the switched off track is still blueprint");
+        assert_eq!(a.off_edges(), edges[1..].to_vec());
+        // building a switched off piece by hand clears the switch
+        assert_eq!(a.construct(&edges[1..], &[]), 0, "{}", a.issues());
+        assert!(a.off_edges().is_empty());
+    }
+
+    #[test]
     fn blueprint_quote_shared_lines_matches_charge_without_changing_game() {
         let mut a = api();
         let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(1000.0, 0.0).iter()).copied().collect();
@@ -2876,7 +2963,7 @@ mod tests {
         // as T-079 stored it: fitted PIs with set radii, and the point clicked
         let fitted = vec![Pi::new(1200.0, 380.0, 1500.0, 0), Pi::new(2800.0, 380.0, 1500.0, 0)];
         let clicks = vec![Pi::new(2000.0, 300.0, 0.0, 0)];
-        let op = Op::Edge { id: e, data: Some(EdgeData { a: n0, b: n1, tracks: 2, pis: fitted.clone(), built: false, thru: clicks.clone() }) };
+        let op = Op::Edge { id: e, data: Some(EdgeData { a: n0, b: n1, tracks: 2, pis: fitted.clone(), built: false, off: false, thru: clicks.clone() }) };
         assert!(a.w.apply(op).is_ok());
         let bytes = a.save();
         assert_eq!(&bytes[..4], b"TWT4");

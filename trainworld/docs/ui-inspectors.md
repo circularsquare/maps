@@ -32,10 +32,20 @@ key.
 ## Lines tab and the line inspector
 
 - **The Lines tab** has New line above its list (actions go above lists of any length). The list
-  sorts by clicking a column header [T-310]: Name, Riders (today) and Trains. A click sorts by that
-  column (names A to Z, figures biggest first), a second reverses it, the sorted column has a small
-  arrow, and each header's hover says what it sorts by. Names sort naturally, ties by name. Lines
-  default to by name. The sort is kept while the page is open and re-runs each game hour.
+  sorts by clicking a column header [T-310]: Name, Riders (today), Trains and Near. A click sorts by that
+  column (names A to Z, figures biggest first, Near nearest first), a second reverses it, the sorted
+  column has a small arrow, and each header's hover says what it sorts by. Names sort naturally, ties
+  by name. Lines default to by name. The sort is kept while the page is open and re-runs each game hour.
+- **Scope and Near** [T-332; `game/listScope.ts`, `ScopeToggle` in `ui/tabs.tsx`]: beside New line
+  (and above the Stations list) a toggle between the viewed place (a pin and its name, hover "Only
+  <name>") and the whole world (a globe); one setting for both tabs, kept while the page is open, the
+  place the default. The place is `viewedZone` (T-318); a station is in it when `placeAt` says so, a
+  line when any stop is. A line with no stops and the selected row stay listed. Over unmodelled space
+  the pin is disabled and the world is shown. The Near header is always there (beside "Name" until it
+  is used); sorted by it, each row ends with its distance from the centre of the screen (a line's is
+  its nearest stop's, hover "1.4 km from the centre of the screen"), rows without one last, and the
+  column's width is given back to the names under any other sort. The centre is taken at each move end (`viewCentre`, set in
+  `map/zoneFocus.ts`), so the order follows the view without moving while it is dragged.
 - **New line** [T-109 to T-112] selects an empty zero-train line, enters stop editing
   ([ui-building.md](ui-building.md)) and focuses its unique `Line N` name, text selected. N follows
   saved creation order, copies included, skipping names in use.
@@ -73,7 +83,9 @@ key.
 
 - **The Stations tab** has, above its list, "Station demand circles" and "One circle per station
   complex" (the circles described in the checkbox's hover) [T-213]. The list sorts like the Lines
-  tab's [T-310], by Name or Today (boardings so far today), boardings by default.
+  tab's [T-310], by Name, Today (boardings so far today) or Near, boardings by default. The scope
+  toggle and distance column are the Lines tab's (above); the footer reads "N of M stations" when
+  only the viewed place is listed.
 - **A click on a station selects its whole complex** [T-249]: complex view, whatever was selected
   before (there is no Station / Complex switch). A station on its own is a complex of one. Complex
   rules: [ui-map.md](ui-map.md) "Station complexes".

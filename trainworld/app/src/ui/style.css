@@ -113,6 +113,9 @@ body.resizing, body.resizing * { user-select: none; }
 .w-trains { width: 68px; }
 .w-num { width: 44px; }
 .w-riders { width: 56px; }
+.w-near { width: 58px; white-space: nowrap; }
+.group.scope .btn { display: inline-flex; align-items: center; gap: 4px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.group.scope .btn svg { width: 14px; height: 14px; flex: none; }
 /* T-310: the Lines and Stations lists' column headers, one button a column; the sorted one is dark
    and has an arrow (beside the label, before it on the number columns so the label keeps its place) */
 .sort-head { display: flex; align-items: center; gap: 8px; min-height: 22px; border-bottom: 1px solid var(--rule); }
@@ -120,6 +123,9 @@ body.resizing, body.resizing * { user-select: none; }
             font-size: 12px; color: var(--muted); cursor: pointer; }
 .sort-btn.grow { flex: 1; min-width: 0; }
 .sort-btn.val { flex: none; justify-content: flex-end; }
+/* T-332: the Near header with no distance column under it sits beside "Name" instead */
+.sort-head { position: relative; }
+.sort-btn.near-off { position: absolute; left: 58px; }
 .sort-btn:hover, .sort-btn.on { color: var(--text); }
 .sort-arrow { display: none; width: 0; height: 0; border-left: 3.5px solid transparent; border-right: 3.5px solid transparent; }
 .sort-arrow.up { display: block; border-bottom: 5px solid currentColor; }
@@ -340,6 +346,9 @@ table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
 .blueprint-items .what { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .blueprint-items .val { flex: none; white-space: nowrap; }
 .blueprint-construct { width: 100%; }
+.blueprint-pick { margin-top: 14px; }
+.blueprint-pick .blueprint-head { margin-bottom: 2px; }
+.bp-box { position: absolute; z-index: 3; pointer-events: none; border: 1.5px dashed var(--net-ink); background: color-mix(in srgb, var(--net-ink) 10%, transparent); }
 .btn.lv { min-width: 32px; padding: 0 4px; font-variant-numeric: tabular-nums; }
 .tool-pick { display: flex; }
 .tool-pick > .btn { flex: 1; }

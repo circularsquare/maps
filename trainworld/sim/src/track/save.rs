@@ -124,7 +124,7 @@ pub fn encode(net: &Network) -> Vec<u8> {
         (px, py) = (net.node_x[i], net.node_y[i]);
         w.i(net.node_level[i] as i64);
         let plat = net.node_platform[i];
-        w.u(net.node_flying[i] as u64 | ((plat > 0) as u64) << 1 | ((plat > 0 && net.node_built[i]) as u64) << 2);
+        w.u(net.node_flying[i] as u64 | ((plat > 0) as u64) << 1 | ((plat > 0 && net.node_built[i]) as u64) << 2 | ((plat > 0 && net.node_off[i] && !net.node_built[i]) as u64) << 3);
         if plat > 0 {
             w.u(plat as u64);
             w.s(&net.node_name[i]);
@@ -138,7 +138,7 @@ pub fn encode(net: &Network) -> Vec<u8> {
         w.i(a - prev_a);
         w.i(node_id[d.b as usize] as i64 - a);
         prev_a = a;
-        w.u(d.tracks as u64 | (d.built as u64) << 2 | (!d.thru.is_empty() as u64) << 3);
+        w.u(d.tracks as u64 | (d.built as u64) << 2 | (!d.thru.is_empty() as u64) << 3 | ((d.off && !d.built) as u64) << 4);
         w.u(d.pis.len() as u64);
         let (mut px, mut py) = (net.node_x[d.a as usize], net.node_y[d.a as usize]);
         for p in &d.pis {
@@ -234,7 +234,7 @@ pub fn convert_frame(bytes: &[u8], to: FrameKind) -> Result<Vec<u8>, String> {
         let (x, y) = at(net.node_x[i], net.node_y[i]);
         out.set_node(id, Some(NodeData { x, y, level: net.node_level[i], flying: net.node_flying[i] })).map_err(|e| format!("{e:?}"))?;
         if net.node_platform[i] > 0 {
-            out.set_station(id, Some(StationData { platform: net.node_platform[i], name: net.node_name[i].clone(), built: net.node_built[i] })).map_err(|e| format!("{e:?}"))?;
+            out.set_station(id, Some(StationData { platform: net.node_platform[i], name: net.node_name[i].clone(), built: net.node_built[i], off: net.node_off[i] })).map_err(|e| format!("{e:?}"))?;
         }
     }
     let moved = |p: &Pi| {
@@ -287,7 +287,7 @@ pub fn decode(bytes: &[u8]) -> Result<Network, String> {
         if flags & 2 != 0 {
             let platform = r.u()? as u16;
             let name = r.s()?;
-            net.set_station(id, Some(StationData { platform, name, built: flags & 4 != 0 })).map_err(|e| format!("{e:?}"))?;
+            net.set_station(id, Some(StationData { platform, name, built: flags & 4 != 0, off: flags & 8 != 0 })).map_err(|e| format!("{e:?}"))?;
         }
     }
     let n_edges = r.u()? as usize;
@@ -298,7 +298,7 @@ pub fn decode(bytes: &[u8]) -> Result<Network, String> {
         let b = a + r.i()?;
         prev_a = a;
         let tb = r.u()?;
-        let (tracks, built) = ((tb & 3) as u8, tb & 4 != 0);
+        let (tracks, built, off) = ((tb & 3) as u8, tb & 4 != 0, tb & 16 != 0);
         let n = r.u()? as usize;
         let (mut px, mut py) = (net.node_x[a as usize], net.node_y[a as usize]);
         let mut pis = Vec::with_capacity(n);
@@ -318,7 +318,7 @@ pub fn decode(bytes: &[u8]) -> Result<Network, String> {
                 thru.push(Pi { x, y, radius: 0.0, level: r.i()? as i8 });
             }
         }
-        net.set_edge(id, Some(EdgeData { a: a as u32, b: b as u32, tracks, pis, built, thru })).map_err(|e| format!("{e:?}"))?;
+        net.set_edge(id, Some(EdgeData { a: a as u32, b: b as u32, tracks, pis, built, off, thru })).map_err(|e| format!("{e:?}"))?;
     }
     let n_lines = r.u()? as usize;
     for _ in 0..n_lines {

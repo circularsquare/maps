@@ -162,9 +162,12 @@ that zone. One helper answers it, `placeAt` in `game/zones.ts`, kept in `viewedZ
 four, nearest first) shows its own bubbles beside the focused zone's, so a zone line is not a cliff
 in the bubbles. A click on a nearby zone's bubble focuses that zone and selects the bubble.
 
-Bubbles need a zone's results: a zone on screen is opened (its pack downloaded and opened in the
-workers) like a viewed city. With no station within reach its bubbles are all walking and driving,
-as a city's are before anything is built.
+Bubbles need a zone's results: a zone on screen is opened (its pack downloaded) like a viewed city.
+With no station within reach (T-325) it opens **bare**, in the auxiliary demand worker only: its
+bubbles and city figures come from a no-rail pass there (all walking and driving, exactly what a
+solve would give it), and no solve covers it or is started for it. A station built within reach
+opens it in every worker, and the solves cover it from then on. Until T-336, a click on a bare
+zone's bubble draws no far end.
 
 **Zoomed far out** (8.5 and below) every zone is one bubble, as if it were one place: its trips a
 day at homes (Homes) or at destinations (Destinations) in every layer, local trips, commutes
@@ -204,8 +207,8 @@ long tail.
 - **The joint gravity** is offline only (`joint_gravity`, about a minute natively over the ten
   packs); a runtime edit never reruns it.
 - **Startup** must stay as it is: zones add registry entries, and their files are fetched on demand
-  (section 6). Nearby zones' bubbles open more packs than a single focused city did; a pack opened
-  only for its bubbles may open commute-only in the auxiliary worker if opening cost shows up.
+  (section 6). A zone opened only for its bubbles opens bare in the auxiliary worker (T-325):
+  0.3-1.5 s, and its everyday layer once rather than in every solving worker.
 
 ## 9. What is built (T-276)
 

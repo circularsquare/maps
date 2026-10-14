@@ -37,9 +37,14 @@ Positron, repainted faint (`map/basemap.ts`), so the network reads first.
     160 km/h (not a train's speed), keyed 40/80/120/160 km/h from warm red through ochre and green
     to blue.
   In Height and Max speed the width is uniform and trains keep their line colours.
-- **Blueprint track** [T-311, T-322] is drawn solid and opaque as two rails in every track view: a
-  light blue middle (#a9cdf3) as wide as a line, with a dark blue rail (#2f62b3) 16% of a line width
-  (at least 1 px) along each edge. All rails are drawn before any middle, as the casing is, so curves
+- **Blueprint track** [T-311, T-322, T-331, T-333] is drawn solid and opaque as two rails in every
+  track view: a light blue middle (#a9cdf3) between dark blue rails (#2f62b3). The whole width is 75%
+  of what T-322 drew (a line plus a rail of 16% of a line width, at least 1 px, either side), the
+  rails never under 1 px: 6.5 px at zoom 15 (4.5 middle), 4.4 at zoom 12. A line planned along it
+  fills the middle, not a full line width. **Switched off** [T-333]: grey rails (#9aa3ae) round a
+  nearly white middle (#f2f4f7), and a station at 30% instead of 60%; in Height and Max speed the
+  colour is mixed 80% towards white instead of 45%. **Picked** with the blueprint tool: an ink band
+  3 px beyond the rails, drawn under the track, and the stations' selection outline. All rails are drawn before any middle, as the casing is, so curves
   and joints join cleanly. In Height and Max speed the middle keeps the view's colour mixed 45%
   towards white; a selected blueprint's middle is the selection ink mixed the same way. A line
   planned along blueprint track fills the middle in its colour mixed 45% towards white. Lines that

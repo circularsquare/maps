@@ -43,6 +43,8 @@ export interface StationInput {
   length: number;
   /** constructed; false = blueprint (SPEC 6.4) */
   built: boolean;
+  /** a blueprint switched off (T-333): Construct skips it */
+  off?: boolean;
   /** track heading through it, rad, counter-clockwise from east */
   heading: number;
 }
@@ -68,6 +70,8 @@ export interface TrackEdge {
   b: NodeId;
   tracks: 1 | 2;
   built: boolean;
+  /** a blueprint switched off (T-333): Construct skips it */
+  off?: boolean;
   lengthM: number;
   /** build cost, US$ */
   cost: number;

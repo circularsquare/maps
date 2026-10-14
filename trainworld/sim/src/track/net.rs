@@ -134,6 +134,9 @@ pub struct EdgeData {
     pub pis: Vec<Pi>,
     /// Constructed (paid for, can carry trains); false = blueprint (SPEC 6.4).
     pub built: bool,
+    /// A blueprint the player switched off (T-333): Construct and the blueprint quote skip it. It
+    /// changes nothing else, and building it by hand (a piece's or a line's Construct) clears it.
+    pub off: bool,
     /// Kept only for track drawn while the track ran through the clicked points (T-079, saves
     /// from then until T-092): the points clicked, which its PIs were fitted through. Geometry
     /// never reads them. Such an edge keeps its shape until it is reshaped; the first reshape
@@ -148,6 +151,8 @@ pub struct StationData {
     pub name: String,
     /// Constructed; false = blueprint (SPEC 6.4).
     pub built: bool,
+    /// Switched off while a blueprint (T-333, see `EdgeData::off`).
+    pub off: bool,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -269,6 +274,8 @@ pub struct Network {
     pub node_name: Vec<String>,
     /// The station on the node is constructed (meaningless without a platform).
     pub node_built: Vec<bool>,
+    /// The blueprint station is switched off (T-333).
+    pub node_off: Vec<bool>,
     pub node_ports: Vec<Ports>,
     /// Derived: the track heading through the node.
     pub node_heading: Vec<f64>,
@@ -280,6 +287,8 @@ pub struct Network {
     pub edge_tracks: Vec<u8>,
     /// Constructed; false = blueprint.
     pub edge_built: Vec<bool>,
+    /// The blueprint edge is switched off (T-333).
+    pub edge_off: Vec<bool>,
     pub edge_pis: Vec<Span>,
     /// Per edge: the points a T-079 edge was drawn through (`EdgeData::thru`), else empty.
     pub edge_thru: Vec<Vec<Pi>>,
@@ -416,6 +425,7 @@ impl Network {
             node_platform: vec![],
             node_name: vec![],
             node_built: vec![],
+            node_off: vec![],
             node_ports: vec![],
             node_heading: vec![],
             node_free: vec![],
@@ -424,6 +434,7 @@ impl Network {
             edge_b: vec![],
             edge_tracks: vec![],
             edge_built: vec![],
+            edge_off: vec![],
             edge_pis: vec![],
             edge_thru: vec![],
             edge_len: vec![],
@@ -558,6 +569,7 @@ impl Network {
         self.node_platform.push(0);
         self.node_name.push(String::new());
         self.node_built.push(false);
+        self.node_off.push(false);
         self.node_ports.push(Ports::default());
         self.node_heading.push(0.0);
     }
@@ -567,6 +579,7 @@ impl Network {
         self.edge_b.push(0);
         self.edge_tracks.push(2);
         self.edge_built.push(false);
+        self.edge_off.push(false);
         self.edge_pis.push(Span::default());
         self.edge_thru.push(vec![]);
         self.edge_len.push(0.0);
@@ -633,12 +646,12 @@ impl Network {
     pub fn edge_data(&self, e: u32) -> Option<EdgeData> {
         self.edge_ok(e).then(|| {
             let i = e as usize;
-            EdgeData { a: self.edge_a[i], b: self.edge_b[i], tracks: self.edge_tracks[i], pis: self.pis.get(self.edge_pis[i]).to_vec(), built: self.edge_built[i], thru: self.edge_thru[i].clone() }
+            EdgeData { a: self.edge_a[i], b: self.edge_b[i], tracks: self.edge_tracks[i], pis: self.pis.get(self.edge_pis[i]).to_vec(), built: self.edge_built[i], off: self.edge_off[i], thru: self.edge_thru[i].clone() }
         })
     }
     pub fn station_data(&self, n: u32) -> Option<StationData> {
         (self.node_ok(n) && self.node_platform[n as usize] > 0)
-            .then(|| StationData { platform: self.node_platform[n as usize], name: self.node_name[n as usize].clone(), built: self.node_built[n as usize] })
+            .then(|| StationData { platform: self.node_platform[n as usize], name: self.node_name[n as usize].clone(), built: self.node_built[n as usize], off: self.node_off[n as usize] })
     }
     pub fn line_data(&self, l: u32) -> Option<LineData> {
         self.line_ok(l).then(|| {
@@ -797,6 +810,7 @@ impl Network {
                 self.edge_b[i] = d.b;
                 self.edge_tracks[i] = d.tracks;
                 self.edge_built[i] = d.built;
+                self.edge_off[i] = d.off && !d.built;
                 self.edge_pis[i] = self.pis.replace(self.edge_pis[i], &d.pis);
                 self.edge_thru[i] = d.thru;
                 self.node_ports[d.a as usize].add(id << 1);
@@ -811,6 +825,7 @@ impl Network {
                 let i = id as usize;
                 self.edge_alive[i] = false;
                 self.edge_built[i] = false;
+                self.edge_off[i] = false;
                 self.pis.free(self.edge_pis[i]);
                 self.edge_pis[i] = Span::default();
                 self.edge_thru[i] = vec![];
@@ -837,11 +852,13 @@ impl Network {
                 self.node_platform[i] = 0;
                 self.node_name[i].clear();
                 self.node_built[i] = false;
+                self.node_off[i] = false;
             }
             Some(d) => {
                 self.node_platform[i] = d.platform;
                 self.node_name[i] = d.name;
                 self.node_built[i] = d.built;
+                self.node_off[i] = d.off && !d.built;
             }
         }
         self.touch.stations.push(node);
@@ -1414,7 +1431,7 @@ impl Network {
             r.1 += cost;
         };
         for e in 0..self.edge_count() {
-            if self.edge_alive[e] && !self.edge_built[e] {
+            if self.edge_alive[e] && !self.edge_built[e] && !self.edge_off[e] {
                 cost::track_cost_parts(self.edge_len[e], self.edge_vert(e as u32), self.edge_water(e as u32), self.edge_tracks[e], |level, wet, ramp, m, c| {
                     add(0, level, self.edge_tracks[e], wet, ramp, m, c);
                 });
@@ -1424,11 +1441,11 @@ impl Network {
             if !self.node_alive[n] { continue; }
             let wet = self.water_mask.is_water(self.node_x[n], self.node_y[n]);
             let level = self.node_level[n];
-            if self.node_platform[n] > 0 && !self.node_built[n] {
+            if self.node_platform[n] > 0 && !self.node_built[n] && !self.node_off[n] {
                 let tracks = self.node_tracks(n as u32);
                 add(1, level, tracks, wet, false, 1.0, cost::station_cost(level, self.node_platform[n], tracks, wet));
             }
-            if self.node_ports[n].n >= 3 && self.built_ports(n as u32) < 3 {
+            if self.node_ports[n].n >= 3 && self.built_ports(n as u32) < 3 && self.built_after_ports(n as u32) >= 3 {
                 let base = cost::junction_cost(level, false, wet);
                 add(2, level, 0, wet, false, 1.0, base);
                 if self.node_flying[n] {
@@ -1438,7 +1455,8 @@ impl Network {
         }
         for x in &self.crossings {
             if let CrossKind::Flat(level) = x.kind {
-                if !self.edge_built[x.e1 as usize] || !self.edge_built[x.e2 as usize] {
+                let (e1, e2) = (x.e1 as usize, x.e2 as usize);
+                if (!self.edge_built[e1] || !self.edge_built[e2]) && !self.edge_off[e1] && !self.edge_off[e2] {
                     let wet = self.water_mask.is_water(x.x, x.y);
                     add(4, level, 0, wet, false, 1.0, cost::crossing_cost(level, wet));
                 }
@@ -1511,6 +1529,12 @@ impl Network {
     /// Edge ends at a node whose edge is constructed.
     pub fn built_ports(&self, n: u32) -> usize {
         self.node_ports[n as usize].ends().iter().filter(|&&c| self.edge_built[(c >> 1) as usize]).count()
+    }
+
+    /// Edge ends at a node whose edge is constructed or will be by Construct (not switched off,
+    /// T-333): the blueprint quote prices a junction once this reaches three.
+    pub fn built_after_ports(&self, n: u32) -> usize {
+        self.node_ports[n as usize].ends().iter().filter(|&&c| self.edge_built[(c >> 1) as usize] || !self.edge_off[(c >> 1) as usize]).count()
     }
 
     /// The constructed station or edge set is complete for a line: it can carry trains.
@@ -1713,7 +1737,7 @@ impl Network {
             freeze(&mut p2, 1, i + 1);
         }
         let i = e as usize;
-        let (tracks, built) = (self.edge_tracks[i], self.edge_built[i]);
+        let (tracks, built, off) = (self.edge_tracks[i], self.edge_built[i], self.edge_off[i]);
         // A T-079 edge's clicked points go with the half they lie on; one at the split is the
         // node now.
         let (mut t1, mut t2) = (vec![], vec![]);
@@ -1725,8 +1749,8 @@ impl Network {
                 t2.push(*p);
             }
         }
-        let a = EdgeData { a: self.edge_a[i], b: u32::MAX, tracks, pis: p1[1..p1.len() - 1].to_vec(), built, thru: t1 };
-        let b = EdgeData { a: u32::MAX, b: self.edge_b[i], tracks, pis: p2[1..p2.len() - 1].to_vec(), built, thru: t2 };
+        let a = EdgeData { a: self.edge_a[i], b: u32::MAX, tracks, pis: p1[1..p1.len() - 1].to_vec(), built, off, thru: t1 };
+        let b = EdgeData { a: u32::MAX, b: self.edge_b[i], tracks, pis: p2[1..p2.len() - 1].to_vec(), built, off, thru: t2 };
         Ok((node, a, b))
     }
 }

@@ -12,12 +12,14 @@ import { buildLevel, buildPlatform, display, lineSort, selection, setDisplay, st
 import type { Signal } from "@preact/signals";
 import { linesAt, setFares, world } from "../game/world";
 import { liveMoney, moneyState } from "../game/money";
+import { cityById, viewedZone } from "../game/cities";
+import { fmtDist, listScope, scopedLists } from "../game/listScope";
 import { accountVersion } from "../game/boarding";
 import { stationsToday, today, todayLoaded, useToday } from "../game/today";
 import type { DayLedger } from "../workers/protocol";
 import { live } from "../map/live";
 import { Check, Chip, Icon, Row, Segmented, Stepper } from "./widgets";
-import { BlueprintBreakdown, BlueprintControls } from "./Blueprint";
+import { BlueprintBreakdown, BlueprintControls, BlueprintPick } from "./Blueprint";
 
 const STATUS: Record<string, string> = { running: "", planned: "Planned", broken: "Broken" };
 
@@ -39,10 +41,11 @@ const TOOLS: [Tool, string, () => JSX.Element, string, string][] = [
   ["track", "Track", Icon.track, "1", "Draw track"],
   ["station", "Station", Icon.station, "2", "Place stations"],
   ["delete", "Delete", Icon.bin, "3", "Delete track, stations and flyovers"],
+  ["blueprint", "Select", Icon.marquee, "5", "Drag a box round blueprint track and stations to disable or enable them"],
 ];
 
 /** The tool each number key picks (T-096). */
-export const TOOL_KEYS: Record<string, Tool> = { "1": "track", "2": "station", "3": "delete" };
+export const TOOL_KEYS: Record<string, Tool> = { "1": "track", "2": "station", "3": "delete", "5": "blueprint" };
 /** The trip explorer's key (T-195); unlike the build tools it leaves the tab as it is. */
 export const TRIP_KEY = "4";
 
@@ -89,6 +92,7 @@ export function BuildTab() {
             <Stepper value={buildPlatform.value + " m"} wide label="platform length" onStep={(s) => (buildPlatform.value = Math.max(60, Math.min(400, buildPlatform.value + s * 20)))} />
           </li>
         </ul>
+        <BlueprintPick />
         <BlueprintBreakdown />
       </div>
       <BlueprintControls />
@@ -117,6 +121,33 @@ function SortHead<K extends string>({ sort, cols }: { sort: Signal<ListSort<K>>;
     </div>
   );
 }
+
+/** T-332: the viewed place or the whole world. Over dead space only the world is on offer. */
+function ScopeToggle() {
+  const zone = viewedZone.value;
+  const name = zone ? cityById(zone).name : null;
+  const here = listScope.value === "here" && !!zone;
+  return (
+    <div class="group scope">
+      <button class={"btn" + (here ? " on" : "")} disabled={!zone} data-tip={name ? `Only ${name}` : "Nothing modelled here"}
+        onClick={() => (listScope.value = "here")}>
+        <Icon.pin />{name}
+      </button>
+      <button class={"btn" + (here ? "" : " on")} data-tip="The whole world" aria-label="The whole world" onClick={() => (listScope.value = "world")}>
+        <Icon.globe />
+      </button>
+    </div>
+  );
+}
+
+/** T-332: a row's distance from the centre of the screen. */
+function Near({ m }: { m: number | undefined }) {
+  return <span class="val muted w-near" data-tip={m !== undefined ? `${fmtDist(m)} from the centre of the screen` : undefined}>{m !== undefined ? fmtDist(m) : ""}</span>;
+}
+
+/** Rows with no distance (a line with no stops) sort last whichever way the column runs. */
+const byNear = (a: number | undefined, b: number | undefined, dir: number) =>
+  a === undefined || b === undefined ? (a === undefined ? 1 : 0) - (b === undefined ? 1 : 0) : (a - b) * dir;
 
 /** T-293: one line's riders today, its own component so only it re-renders as the count moves. */
 function RidersToday({ line }: { line: string }) {
@@ -159,20 +190,25 @@ export function LinesTab() {
   // a line that is not running has no train count and no riders: it sorts as zero
   const trains = (id: string) => (w.lineStats[id]?.status === "running" ? w.lineStats[id].trainsNeeded[levOf(id)] : 0);
   const { key, dir } = lineSort.value;
-  const lines = [...w.save.lines].sort((a, b) =>
+  // T-332: only the viewed place unless the world is chosen
+  const sc = scopedLists(w.save.stations, w.save.lines, (k, id) => (k === "line" && (sel?.kind === "line" || sel?.kind === "train") && sel.line === id));
+  const lines = [...sc.lines].sort((a, b) =>
     (key === "riders" ? ((t.get(a.id)?.riders ?? 0) - (t.get(b.id)?.riders ?? 0)) * dir
-      : key === "trains" ? (trains(a.id) - trains(b.id)) * dir : 0)
+      : key === "trains" ? (trains(a.id) - trains(b.id)) * dir
+      : key === "near" ? byNear(sc.lineDist.get(a.id), sc.lineDist.get(b.id), dir) : 0)
     || natural(a.name, b.name) * (key === "name" ? dir : 1) || a.num - b.num);
   return (
     <>
       <div class="line-list-actions">
         <button class="btn text" onClick={newLine} disabled={creating}><Icon.plus />New line</button>
+        <ScopeToggle />
       </div>
-      {w.save.lines.length === 0 && <p class="muted">No lines yet.</p>}
+      {lines.length === 0 && <p class="muted">{w.save.lines.length === 0 ? "No lines yet." : "No lines here."}</p>}
       {w.save.lines.length > 0 && <SortHead sort={lineSort} cols={[
         { key: "name", label: "Name", tip: "Sort by name", first: 1 },
         { key: "riders", label: "Riders", tip: "Sort by riders today", first: -1, cls: "w-riders" },
         { key: "trains", label: "Trains", tip: "Sort by trains needed", first: -1, cls: "w-trains" },
+        { key: "near", label: "Near", tip: "Sort by distance from the centre of the screen, by the nearest stop", first: 1, cls: key === "near" ? "w-near" : "near-off" },
       ]} />}
       <ul class="rows pick">
         {lines.map((l) => {
@@ -190,6 +226,7 @@ export function LinesTab() {
                   <span class="val muted w-trains">{st.trainsNeeded[levOf(l.id)]} {st.trainsNeeded[levOf(l.id)] === 1 ? "train" : "trains"}</span>
                 </>
               )}
+              {key === "near" && <Near m={sc.lineDist.get(l.id)} />}
             </li>
           );
         })}
@@ -210,12 +247,15 @@ export function StationsTab() {
   const sel = selection.value;
   const by = stationsToday.peek();
   const { key, dir } = stationSort.value;
-  const st = [...w.save.stations].sort((a, b) =>
-    (key === "riders" ? ((by.get(a.id) ?? 0) - (by.get(b.id) ?? 0)) * dir : 0)
+  const sc = scopedLists(w.save.stations, w.save.lines, (k, id) => k === "station" && sel?.kind === "station" && sel.station === id);
+  const st = [...sc.stations].sort((a, b) =>
+    (key === "riders" ? ((by.get(a.id) ?? 0) - (by.get(b.id) ?? 0)) * dir
+      : key === "near" ? byNear(sc.stationDist.get(a.id), sc.stationDist.get(b.id), dir) : 0)
     || a.name.localeCompare(b.name) * (key === "name" ? dir : 1));
   const d = display.value;
   return (
     <>
+      <div class="line-list-actions"><ScopeToggle /></div>
       {/* T-213: the stations' own map setting sits with them, above the list */}
       <div class="checks">
         <Check checked={d.stationRiders} onChange={(v) => setDisplay("stationRiders", v)}>
@@ -225,10 +265,11 @@ export function StationsTab() {
           One circle per station complex
         </Check>}
       </div>
-      {st.length === 0 && <p class="muted">No stations yet.</p>}
+      {st.length === 0 && <p class="muted">{w.save.stations.length === 0 ? "No stations yet." : "No stations here."}</p>}
       {st.length > 0 && <SortHead sort={stationSort} cols={[
         { key: "name", label: "Name", tip: "Sort by name", first: 1 },
         { key: "riders", label: "Today", tip: "Sort by boardings today", first: -1, cls: "w-num" },
+        { key: "near", label: "Near", tip: "Sort by distance from the centre of the screen", first: 1, cls: key === "near" ? "w-near" : "near-off" },
       ]} />}
       <ul class="rows pick">
         {st.map((s) => (
@@ -238,12 +279,13 @@ export function StationsTab() {
               <Chip line={l} size="sm" />
             ))}
             {s.built ? <StationToday id={s.id} /> : <span class="val w-num">Plan</span>}
+            {key === "near" && <Near m={sc.stationDist.get(s.id)} />}
           </li>
         ))}
       </ul>
       {st.length > 0 && (
         <div class="pane-foot">
-          <span class="muted">{st.length} stations, boardings today</span>
+          <span class="muted">{sc.zone ? `${st.length} of ${sc.total.stations}` : st.length} stations, boardings today</span>
         </div>
       )}
     </>

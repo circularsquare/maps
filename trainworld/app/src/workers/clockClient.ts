@@ -76,7 +76,7 @@ function toWorld(s: ClockState, city: { population: number; jobs: number }): Wor
   const stations: StationInput[] = s.nodes
     .filter((n) => n.platform > 0)
     .map((n) => ({
-      id: String(n.id), num: n.id, name: n.name, lng: n.lng, lat: n.lat, x: n.x, y: n.y, level: n.level as any, length: n.platform, built: n.stationBuilt, heading: n.heading,
+      id: String(n.id), num: n.id, name: n.name, lng: n.lng, lat: n.lat, x: n.x, y: n.y, level: n.level as any, length: n.platform, built: n.stationBuilt, off: n.stationOff, heading: n.heading,
     }));
   const lines: LineInput[] = s.lines.map((l) => ({
     id: String(l.id), num: l.id, letter: l.letter || letterOf(l.name), symbol: l.letter, name: l.name, colour: l.colour, stops: l.stops.map(String),
@@ -109,7 +109,7 @@ function toWorld(s: ClockState, city: { population: number; jobs: number }): Wor
     };
   }
   const edges: TrackEdge[] = s.edges.map((e) => ({
-    id: e.id, a: e.a, b: e.b, tracks: e.tracks, built: e.built, lengthM: e.lengthM, cost: e.cost * 1e6, vminKmh: e.vminKmh,
+    id: e.id, a: e.a, b: e.b, tracks: e.tracks, built: e.built, off: e.off, lengthM: e.lengthM, cost: e.cost * 1e6, vminKmh: e.vminKmh,
     levelMin: e.levelMin as any, levelMax: e.levelMax as any, lines: edgeLines.get(e.id) ?? [],
   }));
   const nodes = new Map<number, TrackNode>(

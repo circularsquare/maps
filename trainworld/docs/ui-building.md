@@ -10,14 +10,15 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
 
 [T-100; `ui/tabs.tsx`, `ui/Blueprint.tsx`; tools in `map/tools.ts`]
 
-- **Tools**: draw track (key 1), station (2), delete (3); then the level with its multiplier and
+- **Tools**: draw track (key 1), station (2), delete (3), select blueprints (5, below); then the level with its multiplier and
   price per km, single, double or quad track [T-255], and the platform length for new stations.
   The number keys work from any tab and open the Build tab; the key of the tool already on does
-  nothing. Each button shows its key. There is no Select button: clicking the active tool again or
+  nothing. Each button shows its key. There is no button for plain selecting: clicking the active tool again or
   leaving it with Esc returns to selecting. The trip tool (key 4) is in
   [ui-inspectors.md](ui-inspectors.md).
 - **At the bottom of the pane**, fixed while the settings above scroll: the blueprint total, undo
-  and redo, and "Construct blueprints", which builds every blueprint. The total includes the new
+  and redo, and "Construct blueprints", which builds every blueprint that is not disabled
+  ([below](#disabling-blueprint)). The total includes the new
   train cars that constructing starts, after spare cars. An expandable cost breakdown shows track
   by priced level, single or double, land or water and ramps (charged at the dearer end), stations,
   junction switches, flyovers and flat crossings, with lengths, counts and prices from the track
@@ -69,6 +70,29 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
 removed at once (undoable); anything constructed only after a yes in the confirmation dialog
 ("Remove 1.2 km of constructed track? Nothing is refunded." with Remove and Keep; Esc is Keep). The
 inspectors' Remove buttons ask the same way. Lines are removed from the line panel.
+
+## Disabling blueprint
+
+[T-333; `map/blueprintBox.ts`, `game/blueprintPick.ts`, `ui/Blueprint.tsx` `BlueprintPick`] The
+Select tool (key 5, a dashed box icon) picks blueprint track and blueprint stations so they can be
+disabled: Construct and the blueprint total leave a disabled piece out, and it is drawn grey
+([ui-map.md](ui-map.md) "Lines and track"). It is a tool of its own because a plain drag on the map
+is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
+
+- **Left drag** draws a box. It picks the blueprint track it touches and the blueprint stations
+  inside it (stations only from zoom 11, where they are drawn); the pick follows the box live.
+  **Shift+drag adds** to the pick. A click picks the piece under the pointer, Shift+click adds it or
+  takes it out again, a click on nothing clears the pick. Constructed track and stations are never
+  picked.
+- **Right or middle drag moves the map** while the tool is on; the wheel and arrow keys work as
+  always. The map's own left drag is off for the tool's time.
+- **The Build tab** shows "Selected" with a count (its hover lists track and stations) and two icon
+  buttons, Disable (D) and Enable (E), each only when it would change something; and "N disabled"
+  while any blueprint is disabled, whatever the tool. Disabling and enabling are one undoable edit
+  each (Ctrl+Z). Esc clears the pick, then leaves the tool; leaving also clears it.
+- Disabled is a state on the piece, saved with the game ([track-and-service.md](track-and-service.md)
+  6.4). The piece's own Construct button (track and station inspectors) and a line's Construct build
+  it anyway, which clears the state.
 
 ## Reshaping blueprint
 

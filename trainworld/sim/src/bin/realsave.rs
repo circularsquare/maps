@@ -68,7 +68,7 @@ fn main() {
             net.set_node(id, Some(NodeData { x: quant(x), y: quant(y), level, flying: false })).unwrap();
             let s = &stations[stops[k]];
             let name = s["name"].as_str().unwrap().to_string();
-            net.set_station(id, Some(StationData { platform, name: name.clone(), built: true })).unwrap();
+            net.set_station(id, Some(StationData { platform, name: name.clone(), built: true, off: false })).unwrap();
             node_key.push(s["key"].as_str().unwrap().to_string());
             node_names.push(name);
             nodes.push(id);
@@ -91,7 +91,7 @@ fn main() {
             }
             pis.push(Pi::new(bx - lead * head[k + 1].cos(), by - lead * head[k + 1].sin(), 0.0, level).quantised());
             let e = net.alloc_edge();
-            net.set_edge(e, Some(EdgeData { a, b, tracks: 2, pis, built: true, thru: vec![] })).unwrap();
+            net.set_edge(e, Some(EdgeData { a, b, tracks: 2, pis, built: true, off: false, thru: vec![] })).unwrap();
             path.push(e << 1);
         }
         let tph: Vec<f32> = l["tph"].as_array().unwrap().iter().map(|v| v.as_f64().unwrap() as f32).collect();

@@ -20,12 +20,12 @@ pub fn node(w: &mut TrackWorld, x: f64, y: f64, level: i8) -> u32 {
 pub fn edge(w: &mut TrackWorld, a: u32, b: u32, pis: &[(f64, f64)], level: i8) -> Result<u32, Vec<Issue>> {
     let id = w.net.alloc_edge();
     let pis = pis.iter().map(|&(x, y)| Pi::new(x, y, 0.0, level)).collect();
-    w.apply(Op::Edge { id, data: Some(EdgeData { a, b, tracks: 2, pis, built: true, thru: vec![] }) })?;
+    w.apply(Op::Edge { id, data: Some(EdgeData { a, b, tracks: 2, pis, built: true, off: false, thru: vec![] }) })?;
     Ok(id)
 }
 
 pub fn station(w: &mut TrackWorld, n: u32, platform: u16) {
-    w.apply(Op::Station { node: n, data: Some(StationData { platform, name: format!("S{n}"), built: true }) }).unwrap();
+    w.apply(Op::Station { node: n, data: Some(StationData { platform, name: format!("S{n}"), built: true, off: false }) }).unwrap();
 }
 
 pub fn line(w: &mut TrackWorld, stops: &[u32], tph: [f32; 3]) -> u32 {
@@ -54,7 +54,7 @@ fn unused_blueprint_extension_preserves_running_service_but_planned_lines_previe
         let trips = w.svc.trips(&w.net, 28800.0, 32400.0);
         let blueprint = w.net.alloc_edge();
         w.apply(Op::Edge { id: blueprint, data: Some(EdgeData {
-            a: b, b: c, tracks: 2, pis: vec![], built: false, thru: vec![],
+            a: b, b: c, tracks: 2, pis: vec![], built: false, off: false, thru: vec![],
         }) }).unwrap();
         let check = |w: &TrackWorld| {
             let after = &w.svc.lines[l as usize];

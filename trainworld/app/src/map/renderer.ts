@@ -29,6 +29,13 @@ const SEL_RGB = rgb(NET_INK).map((v) => v / 255);
 const BP_MID_RGB = rgb("#a9cdf3").map((v) => v / 255);
 const BP_RAIL_RGB = rgb("#2f62b3").map((v) => v / 255);
 const BP_RAIL_SHARE = 0.16;
+/** T-331 (Anita on T-322: "maybe overshot just a little bit"): the whole blueprint track, rails
+ * included, is this share of T-322's width; the rails stay at least a pixel. */
+const BP_NARROW = 0.75;
+/** A blueprint switched off (T-333): cold grey rails round a nearly white middle, so it reads as
+ * not part of the next construction without leaving the map. */
+const BP_OFF_MID_RGB = rgb("#f2f4f7").map((v) => v / 255);
+const BP_OFF_RAIL_RGB = rgb("#9aa3ae").map((v) => v / 255);
 /** Seats and crush load per 20 m car, for the gauge (map/demandLayers.ts `gauge`, T-083). */
 const SEATS_PER_CAR = 44, CRUSH_PER_CAR = 160;
 /** A train's width on screen by zoom, CSS px, pills and cars alike (T-199: 75% of T-107's 5/8/12,
@@ -91,6 +98,8 @@ uniform vec3 u_sel;
 uniform vec2 u_bp;           // blueprint track (T-322): its middle's width and each rail's (px)
 uniform vec3 u_bp_mid;       // its middle, light blue
 uniform vec3 u_bp_rail;      // its two rails, dark blue
+uniform vec3 u_bp_off_mid;   // the same switched off (T-333)
+uniform vec3 u_bp_off_rail;
 uniform highp sampler2D u_line_colours;
 in vec4 a_seg;
 in uint a_colour;
@@ -111,8 +120,12 @@ void main() {
   // rails are its casing pass, drawn for every segment before any middle, so the joints are clean;
   // the middle is a line wide, so a line planned along it fills it and the rails show either side
   bool bpTrack = blueprint && !placement && u_kind == 0;
+  bool swOff = (flags & 64) != 0;
   if ((u_only_sel == 1 && !sel) || (u_casing > 0.0 && blueprint && !placement && !bpTrack)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+  // a line planned along blueprint fills the track's middle (T-331: narrower than a line now)
+  bool bpLine = blueprint && !placement && u_kind == 1;
   float w = bpTrack ? u_bp.x + (sel ? u_width.y : 0.0) + (u_casing > 0.0 ? 2.0 * u_bp.y : 0.0)
+    : bpLine ? u_bp.x + (sel ? u_width.y : 0.0) + u_casing
     : u_width.x * a_wmul + (sel ? u_width.y : 0.0) + u_casing;
   if (u_cap > 0.0) w = min(w, u_cap);
   // thinner than a pixel (zoomed far out, T-205): a pixel wide and fainter, rather than broken up
@@ -141,7 +154,7 @@ void main() {
   v_alpha = (!placement && !bp && (flags & 2) != 0 ? 0.55 : 1.0) * faint * (u_kind == 1 && !sel ? u_dim : 1.0);
   vec3 lc = u_level_colours[clamp(3 - int(round(a_level)), 0, 6)];
   bool bpMid = false;
-  if (u_casing > 0.0) v_color = bpTrack ? u_bp_rail : placement ? u_sel : vec3(1.0);
+  if (u_casing > 0.0) v_color = bpTrack ? (swOff ? u_bp_off_rail : u_bp_rail) : placement ? u_sel : vec3(1.0);
   else if ((flags & 16) != 0) v_color = u_bad;
   else if ((u_kind == 2 && !placement) || u_by_level == 1) v_color = lc;
   else if (u_by_speed == 1) {
@@ -152,11 +165,11 @@ void main() {
       : mix(fast, top, clamp((a_speed - 120.0) / 40.0, 0.0, 1.0));
   }
   else if (placement) v_color = vec3(1.0);
-  else if (u_kind == 0 && bpTrack && !sel) { v_color = u_bp_mid; bpMid = true; }
+  else if (u_kind == 0 && bpTrack && !sel) { v_color = swOff ? u_bp_off_mid : u_bp_mid; bpMid = true; }
   else if (u_kind == 0) v_color = sel ? u_sel : u_track;
   else v_color = texelFetch(u_line_colours, ivec2(int(a_colour) % ${LINES_W}, int(a_colour) / ${LINES_W}), 0).rgb;
   // other blueprint colours (a planned line, a selected blueprint, by height or speed) lighter
-  if (bp && !bpMid && u_casing <= 0.0) v_color = mix(v_color, vec3(1.0), 0.45);
+  if (bp && !bpMid && u_casing <= 0.0) v_color = mix(v_color, vec3(1.0), swOff ? 0.8 : 0.45);
 }`;
 
 const STROKE_FS = `#version 300 es
@@ -217,7 +230,7 @@ void main() {
   v_dot = 0.0;
   v_crowd = a_crowd;
   int flags = int(a_st.z + 0.5);
-  v_alpha = (flags & 2) != 0 ? 0.6 : 1.0;
+  v_alpha = (flags & 8) != 0 ? 0.3 : (flags & 2) != 0 ? 0.6 : 1.0; // 8: a blueprint switched off (T-333)
   vec2 half_vp = u_viewport * 0.5;
   vec2 corner = vec2(float(gl_VertexID & 1) * 2.0 - 1.0, gl_VertexID < 2 ? -1.0 : 1.0);
   if (u_halo == 1) {
@@ -836,6 +849,9 @@ export class NetworkRenderer {
   private track: StrokeVao | null = null;
   private lines: StrokeVao | null = null;
   private preview: StrokeVao | null = null;
+  private highlightRes: { del: () => void }[] = [];
+  /** the drag-selected blueprint (T-333): an ink band drawn under the track */
+  private highlight: StrokeVao | null = null;
   private stationVao: WebGLVertexArrayObject | null = null;
   private trainVao: WebGLVertexArrayObject | null = null;
   private probeVao: WebGLVertexArrayObject | null = null;
@@ -1040,7 +1056,7 @@ export class NetworkRenderer {
     this.stationProg = compile(gl, STATION_VS, STATION_FS);
     this.trainProg = compile(gl, TRAIN_VS, TRAIN_FS);
     this.hasStencil = (gl.getParameter(gl.STENCIL_BITS) ?? 0) > 0;
-    this.strokeU = uniforms(gl, this.strokeProg, ["u_matrix", "u_viewport", "u_width", "u_casing", "u_cap", "u_kind", "u_sel_line", "u_sel_edge", "u_only_sel", "u_dim", "u_by_level", "u_by_speed", "u_px_per_unit", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_line_colours"]);
+    this.strokeU = uniforms(gl, this.strokeProg, ["u_matrix", "u_viewport", "u_width", "u_casing", "u_cap", "u_kind", "u_sel_line", "u_sel_edge", "u_only_sel", "u_dim", "u_by_level", "u_by_speed", "u_px_per_unit", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_line_colours"]);
     this.stationU = uniforms(gl, this.stationProg, ["u_matrix", "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass", "u_layer", "u_halo", "u_halo_radius", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_hair", "u_plat", "u_mask", "u_stline"]);
     this.bridgeProg = compile(gl, BRIDGE_VS, STATION_FS);
     this.bridgeU = uniforms(gl, this.bridgeProg, ["u_matrix", "u_viewport", "u_ring", "u_bridge", "u_pass", "u_layer", "u_halo", "u_ink", "u_bad", "u_crowd_rgb", "u_mask"]);
@@ -1271,6 +1287,13 @@ export class NetworkRenderer {
     this.preview = s && s.count ? this.strokes(s, this.previewRes) : null;
   }
 
+  /** The blueprint track picked by a drag selection (T-333), drawn as an ink band under the track, or null. */
+  setHighlight(s: Strokes | null) {
+    for (const r of this.highlightRes) r.del();
+    this.highlightRes = [];
+    this.highlight = s && s.count ? this.strokes(s, this.highlightRes) : null;
+  }
+
   /** Trips for the hour starting at `epoch` (from the worker). */
   setTrips(epoch: number, version: number, data: Float32Array, board?: Float32Array, ends?: Float32Array, nexts?: Float32Array) {
     const old = this.tripsBy.get(epoch);
@@ -1376,9 +1399,13 @@ export class NetworkRenderer {
     gl.uniform3fv(u.u_bad, BAD_RGB);
     gl.uniform3fv(u.u_sel, SEL_RGB);
     // blueprint track (T-322): a line-wide light blue middle between two thin dark blue rails
-    gl.uniform2f(u.u_bp, wLine, Math.max(1, BP_RAIL_SHARE * wLine / dpr) * dpr);
+    const bpRail = Math.max(1, BP_NARROW * Math.max(1, BP_RAIL_SHARE * wLine / dpr)) * dpr;
+    const bpMid = Math.max(0, BP_NARROW * (wLine + 2 * Math.max(1, BP_RAIL_SHARE * wLine / dpr) * dpr) - 2 * bpRail);
+    gl.uniform2f(u.u_bp, bpMid, bpRail);
     gl.uniform3fv(u.u_bp_mid, BP_MID_RGB);
     gl.uniform3fv(u.u_bp_rail, BP_RAIL_RGB);
+    gl.uniform3fv(u.u_bp_off_mid, BP_OFF_MID_RGB);
+    gl.uniform3fv(u.u_bp_off_rail, BP_OFF_RAIL_RGB);
     gl.activeTexture(gl.TEXTURE2);
     gl.bindTexture(gl.TEXTURE_2D, this.tex.colours);
     gl.uniform1i(u.u_line_colours, 2);
@@ -1402,6 +1429,17 @@ export class NetworkRenderer {
       stroke(this.track, 0, opt.byLevel || opt.bySpeed ? wLine : wTrack, opt.selEdge >= 0, cap);
       if (!opt.byLevel && !opt.bySpeed) stroke(this.lines, 1, wLine, opt.selLine >= 0, cap);
     };
+    if (this.highlight) {
+      // an ink band 3 px beyond the blueprint's rails either side (kind 2 placement strokes in a
+      // casing pass are the selection ink)
+      gl.uniform1i(u.u_kind, 2);
+      gl.uniform3f(u.u_width, bpMid + 2 * bpRail + 6 * dpr, 0, 0);
+      gl.uniform1f(u.u_cap, 0);
+      gl.uniform1i(u.u_only_sel, 0);
+      gl.uniform1f(u.u_casing, 0.01 * dpr);
+      gl.bindVertexArray(this.highlight.vao);
+      gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, this.highlight.count);
+    }
     trackStrokes();
     stroke(this.preview, 2, wLine, false);
 

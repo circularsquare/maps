@@ -111,7 +111,8 @@ packs, `..\venv\Scripts\python.exe`). Details and build orders: `docs/code-map.m
   on migrations until she says.
 - **Task size** (2026-10-13): split big tasks into stages, each its own id and report. A big
   task's design goes to Anita before it is built; small, quick, isolated work needs no review.
-  Be kind to subagents: clear briefs, thanks, problems relayed without blame.
+  Treat subagents well by substance: a brief they can act on (goal, decisions made, scope, done
+  looks like), leave to stop or push back, problems relayed without blame; no formulaic thanks.
 - **Asks for Anita** go in the "For you" block of the final message and, if they outlive the
   session, under "Added by agents" in `TODO.md`. Subagents are welcome (standing go-ahead).
 - **Serving**: `python serve.py add trainworld <folder> "rail building game"` at the maps root, so

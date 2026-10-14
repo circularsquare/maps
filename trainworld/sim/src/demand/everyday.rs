@@ -1797,8 +1797,28 @@ impl EverydayApi {
     }
 }
 
+#[wasm_bindgen]
+impl EverydayApi {
+    /// `cell_modes_day` over the periods in `mask` (bit q = period q) whether solved or not, no
+    /// rail where a period has no solve (T-325): a zone no station reaches, held by the
+    /// auxiliary worker alone, answers for each solving worker's periods in turn, so its bubbles
+    /// add up exactly as a solve's would.
+    pub fn cell_modes_mask_day(&self, mask: u32, day: u32) -> Vec<f32> {
+        self.modes_in(None, day as usize, Some(mask))
+    }
+    /// `cell_modes_of_day` over the periods in `mask`, as `cell_modes_mask_day`.
+    pub fn cell_modes_of_mask_day(&self, kind: u32, mask: u32, day: u32) -> Vec<f32> {
+        self.modes_in(Some(kind as usize), day as usize, Some(mask))
+    }
+}
+
 impl EverydayApi {
     fn modes_of(&self, only: Option<usize>, day: usize) -> Vec<f32> {
+        self.modes_in(only, day, None)
+    }
+    /// `mask` None: the solved periods, each with its rail. Some: the periods in the mask; a
+    /// period's rail only where it has a solve.
+    fn modes_in(&self, only: Option<usize>, day: usize, mask: Option<u32>) -> Vec<f32> {
         let n = self.engine.city.len();
         let mut out = vec![0.0; 6 * n];
         // edges are stored purpose by purpose (`edge`)
@@ -1816,10 +1836,14 @@ impl EverydayApi {
             let mut rail = 0.0;
             let p = everyday(kind);
             for q in 0..5 {
-                if let Some(st) = &self.per[q] {
+                let held = match mask {
+                    Some(m) => m >> q & 1 == 1,
+                    None => self.per[q].is_some(),
+                };
+                if held {
                     let (o, r) = (share_out(day, p, q), share_ret(day, p, q));
                     total += w * (o + r);
-                    if pi != NONE {
+                    if let (true, Some(st)) = (pi != NONE, &self.per[q]) {
                         let pr = st.probability[pi as usize];
                         let scale = self.edge_motorized_scale(pi, pw);
                         rail += w * scale * (o * pr[0] + r * pr[1]);

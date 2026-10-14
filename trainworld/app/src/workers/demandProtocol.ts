@@ -45,11 +45,16 @@ export type ToDemand =
    * regional market may come here or in `open`s after it (T-149) */
   | { kind: "init"; packs: { id: CityId; header: string; bin: ArrayBuffer }[]; intercity?: string | Uint8Array; periods: number[]; aux?: boolean;
       /** T-173: open a small synthetic everyday layer first (`everyday_warm_up`), before `ready` */
-      warmEveryday?: boolean }
+      warmEveryday?: boolean;
+      /** T-325, the aux worker: each solving worker's periods, in worker order, so a zone it holds
+       * alone answers period group by period group as the solving workers would */
+      groups?: number[][] }
   /** open more city packs and/or the regional market (T-149); answered by `opened`. The market is
    * the pack's text or, from the page, its UTF-8 bytes (T-180: decoded in the worker; the aux
-   * worker, which never opens it, gets none) */
-  | { kind: "open"; packs: { id: CityId; header: string; bin: ArrayBuffer }[]; intercity?: string | Uint8Array }
+   * worker, which never opens it, gets none). `bare` (T-325, aux worker only): a zone no station
+   * reaches, opened for its bubbles and city figures alone (no rail, so no solve needs it); a
+   * later `open` of the same pack without `bare` adds it to the solves as well */
+  | { kind: "open"; packs: { id: CityId; header: string; bin: ArrayBuffer }[]; intercity?: string | Uint8Array; bare?: boolean }
   /** solve every period of this worker on `net`: free flow, then `rounds` crowding rounds */
   | { kind: "solve"; version: number; net: DemandNetwork; rounds: number }
   /**
@@ -88,7 +93,14 @@ export type ToDemand =
   | { kind: "transfers"; id: number; city: CityId; version: number; round: number; nodes: Uint32Array }
   /** the trip explorer (T-195): one trip from `from` to `to` (world metres) as a commute, in every
    * period this worker holds (`DemandApi.trip`) */
-  | { kind: "trip"; id: number; city: CityId; version: number; round: number; from: [number, number]; to: [number, number] };
+  | { kind: "trip"; id: number; city: CityId; version: number; round: number; from: [number, number]; to: [number, number] }
+  /** T-325, the aux worker: a bare zone's legs per cell with no rail, any version. `purpose` -1:
+   * commutes and every everyday purpose, -2: commutes alone, k >= 0: everyday kind k alone */
+  | { kind: "bare"; id: number; city: CityId; version: number; round: number; purpose: number };
+
+/** T-325: a bare zone's figures per period (index q), as a solve's `result` would carry them:
+ * `citySummary`'s numbers and `cityParts`'s, the latter in the order of its own `keys`. */
+export interface BareFigures { summary: number[][]; parts: number[][]; keys: string[] }
 
 export type FromDemand =
   | {
@@ -111,7 +123,9 @@ export type FromDemand =
       memBytes: number;
     }
   /** an `open` is done: its cities' info as `ready`'s, and whether it opened the market */
-  | { kind: "opened"; cityInfo: Record<CityId, number[]>; market: boolean; openMs: number; warmMs: number; memBytes: number }
+  | { kind: "opened"; cityInfo: Record<CityId, number[]>; market: boolean; openMs: number; warmMs: number; memBytes: number;
+      /** T-325: the packs were opened bare (aux worker), with each one's figures */
+      bare?: Record<CityId, BareFigures> }
   | { kind: "failed"; error: string }
   | {
       kind: "result";
@@ -175,4 +189,9 @@ export type FromDemand =
   | { kind: "transfers"; id: number; city: CityId; version: number; mask: number; pairs: Float32Array | null }
   /** one `DemandApi.trip` answer per period in `periods` (the cells' x, y turned into world
    * metres); null: no network, or not `version` and `round` */
-  | { kind: "trip"; id: number; city: CityId; version: number; mask: number; periods: number[]; answers: Float64Array[] | null };
+  | { kind: "trip"; id: number; city: CityId; version: number; mask: number; periods: number[]; answers: Float64Array[] | null }
+  /** T-325: `commute` as `cellModes`'s six blocks (commuters, not legs); `parts` one block set per
+   * solving worker's periods (`masks`), the everyday legs as that worker's `sums` message would
+   * carry them (empty arrays for a kind the zone lacks; none without an everyday layer). Null
+   * `commute`: not open bare here */
+  | { kind: "bare"; id: number; city: CityId; commute: Float32Array | null; masks: number[]; parts: Float32Array[] };

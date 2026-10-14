@@ -284,11 +284,14 @@ try {
         return !pending && !c.waiting && s && v && v.version === s.version && v.final;
       }, nLoads, { timeout: 240000, polling: 100 }).catch(() => log('settle timeout', name));
       const after = await dump();
-      // a click right away on the focused zone's biggest bubble, if any
-      const hits = await findBubbles();
-      const st = { name, t0, focus: after.focus, newLoads: after.loads.slice(nLoads).map((l) => ({ ...l, req: l.req - t0, dl: l.dl && l.dl - t0, open: l.open && l.open - t0 })), newSolves: after.solves.slice(nSolves).map((s) => ({ ...s, sent: s.sent - t0, first: s.first && s.first - t0, refined: s.refined && s.refined - t0 })), mem: await memNow(), opened: after.opened, bubbles: hits.length };
+      // the focused zone's bubbles, waited for up to 15 s (T-325: a bare zone settles at once,
+      // its bubbles a moment later); `bubblesAt` ms after the jump, or null
+      let hits = await findBubbles();
+      for (let k = 0; k < 150 && !hits.length; k++) { await page.waitForTimeout(100); hits = await findBubbles(); }
+      const bubblesAt = hits.length ? (await page.evaluate(() => Math.round(performance.now()))) - t0 : null;
+      const st = { name, t0, focus: after.focus, newLoads: after.loads.slice(nLoads).map((l) => ({ ...l, req: l.req - t0, dl: l.dl && l.dl - t0, open: l.open && l.open - t0 })), newSolves: after.solves.slice(nSolves).map((s) => ({ ...s, sent: s.sent - t0, first: s.first && s.first - t0, refined: s.refined && s.refined - t0 })), mem: await memNow(), opened: after.opened, bubbles: hits.length, bubblesAt };
       steps.push(st);
-      log(name, 'focus', st.focus, 'loads', st.newLoads.map((l) => `${l.item} dl ${l.dl} open ${l.open}`).join(', '), '| solves', st.newSolves.map((s) => `v${s.v} sent ${s.sent} final ${s.refined} [${s.cities}]`).join(', '), '| mem', st.mem.solve.join('/'));
+      log(name, 'focus', st.focus, 'loads', st.newLoads.map((l) => `${l.item} dl ${l.dl} open ${l.open}`).join(', '), '| solves', st.newSolves.map((s) => `v${s.v} sent ${s.sent} final ${s.refined} [${s.cities}]`).join(', '), '| mem', st.mem.solve.join('/'), 'aux', st.mem.opened.at(-1), '| bubbles at', bubblesAt);
     }
     // back to Midtown, a re-solve of the same network with every pack open, and clicks during it
     await page.evaluate(() => window.tw.map.jumpTo({ center: [-73.975, 40.745], zoom: 12.3 }));

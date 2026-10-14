@@ -289,6 +289,13 @@ multiplier per level (Anita, 2026-10-08):
   edge is constructed, a flat crossing when its second is.
   An unused blueprint extension leaves a constructed line's endpoint stopping position, run
   time and capacity unchanged. Planned lines preview the full planned station geometry (T-108).
+  **Disabled blueprint** (T-333): a blueprint edge or station can be switched off (`off` on
+  `EdgeData` and `StationData`, an undoable edit, saved as spare flag bits so an old reader
+  ignores it). Construct all and the blueprint quote skip it, and a junction or crossing is priced
+  only when the pieces that are not disabled complete it; everything else treats it as ordinary
+  blueprint (lines plan over it, it can be reshaped). Constructing a piece by hand, or the
+  track a line needs, builds it and clears the state; splitting keeps it on both halves and
+  joining only merges pieces in the same state.
 - **Removing constructed track refunds nothing**, and the game asks before doing it (T-096). Undo applies to blueprint edits, lines and
   schedules. Constructing, removing anything constructed, making a constructed junction flying and
   lengthening a constructed platform are final (the last two are paid at once): they clear the

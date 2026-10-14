@@ -170,6 +170,8 @@ function forget(all = false) {
 function buildState(): ClockState {
   const a = api!;
   const ei = a.edges_info();
+  const offEdges = new Set<number>(a.off_edges());
+  const offStations = new Set<number>(a.off_stations());
   const edges: ClockEdge[] = [];
   const drawn: Float32Array[] = [];
   const off: number[] = [0];
@@ -177,7 +179,7 @@ function buildState(): ClockState {
   for (let i = 0; i < ei.length; i += 10) {
     const id = ei[i];
     edges.push({
-      id, a: ei[i + 1], b: ei[i + 2], tracks: ei[i + 3] as 1 | 2, built: ei[i + 4] === 1, lengthM: ei[i + 5], cost: ei[i + 6],
+      id, a: ei[i + 1], b: ei[i + 2], tracks: ei[i + 3] as 1 | 2, built: ei[i + 4] === 1, off: offEdges.has(id), lengthM: ei[i + 5], cost: ei[i + 6],
       vminKmh: ei[i + 7], levelMin: ei[i + 8], levelMax: ei[i + 9],
     });
     let d = edgeDrawn.get(id);
@@ -207,7 +209,7 @@ function buildState(): ClockState {
     const [lng, lat] = packLngLat(ni[i + 1], ni[i + 2]);
     nodes.push({
       id: ni[i], x: ni[i + 1], y: ni[i + 2], lng, lat, level: ni[i + 3], ports: ni[i + 4], builtPorts: ni[i + 5], flying: ni[i + 6] === 1,
-      platform: ni[i + 7], stationBuilt: ni[i + 8] === 1, name: ni[i + 7] > 0 ? a.node_name(ni[i]) : "", heading: ni[i + 9],
+      platform: ni[i + 7], stationBuilt: ni[i + 8] === 1, stationOff: offStations.has(ni[i]), name: ni[i + 7] > 0 ? a.node_name(ni[i]) : "", heading: ni[i + 9],
     });
   }
   const li = a.lines_info();
@@ -881,6 +883,8 @@ function apply(op: EditOp): { r: number; line?: number } {
       return { r: a.construct(new Uint32Array(op.edges), new Uint32Array(op.stations)) };
     case "constructAll":
       return { r: a.construct_all() };
+    case "blueprintOff":
+      return { r: a.set_blueprint_off(new Uint32Array(op.edges), new Uint32Array(op.stations), op.off) };
     case "constructLine":
       return { r: a.construct_line(op.line) };
     case "addLine": {

@@ -1,4 +1,6 @@
 import { km, levelLabel, money } from "../game/format";
+import { offTotals, pickedState, switchPicked } from "../game/blueprintPick";
+import { tool } from "../game/ui";
 import type { BlueprintItem, Level } from "../game/types";
 import { edit, redo, say, undo, world } from "../game/world";
 import { Icon } from "./widgets";
@@ -32,6 +34,31 @@ export function BlueprintControls() {
         </div>
       </div>
       <button class="btn text blueprint-construct" disabled={total <= 0} onClick={construct}>Construct blueprints</button>
+    </div>
+  );
+}
+
+/** The blueprint tool's pick (T-333): how many pieces, and switching them off or on; and, whatever
+ * the tool, how many pieces are switched off, since Construct and the total leave them out. */
+export function BlueprintPick() {
+  const on = tool.value === "blueprint";
+  const s = pickedState.value, off = offTotals.value;
+  const offN = off.edges + off.stations;
+  if (!on && !offN) return null;
+  const piece = (e: number, st: number) => [e ? `${e} track` : "", st ? `${st} ${st === 1 ? "station" : "stations"}` : ""].filter(Boolean).join(", ");
+  return (
+    <div class="blueprint-pick">
+      {on && (
+        <div class="blueprint-head">
+          <span class="b">Selected</span>
+          <b class="num" data-tip={piece(s.edges, s.stations) || "Nothing selected"}>{s.edges + s.stations}</b>
+          <div class="group">
+            <button class="btn icon" data-tip="Disable the selection (D): Construct and the total leave it out" aria-label="Disable the selection" disabled={!s.on} onClick={() => void switchPicked(true)}><Icon.switchOff /></button>
+            <button class="btn icon" data-tip="Enable the selection (E)" aria-label="Enable the selection" disabled={!s.off} onClick={() => void switchPicked(false)}><Icon.switchOn /></button>
+          </div>
+        </div>
+      )}
+      {offN > 0 && <p class="small muted" data-tip={`Disabled: ${piece(off.edges, off.stations)}. Construct and the total leave these out`}>{offN} disabled</p>}
     </div>
   );
 }

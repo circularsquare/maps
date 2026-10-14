@@ -37,6 +37,8 @@ import { makeSynth } from "./map/synth";
 import { Tools } from "./map/tools";
 import { StopMarkers } from "./map/stopMarkers";
 import { EdgeEditor } from "./map/edgeEdit";
+import { BlueprintBox } from "./map/blueprintBox";
+import { bpPicked, clearBpPicked } from "./game/blueprintPick";
 import { NodeDrag } from "./map/nodeDrag";
 import { CapacityMarkers } from "./map/capacityMarkers";
 import { startTrackHover } from "./map/trackHover";
@@ -114,7 +116,11 @@ const overlay = new Overlay(map, renderer, () => {
     selEdge: sel?.kind === "track" ? sel.edge : -1,
     selStation: sel?.kind === "station" && n ? n.stationIds.indexOf(sel.station) : -1,
     // complex view: every member's box drawn selected (T-163)
-    selStations: sel?.kind === "station" && n && inComplexView(sel.station) ? complexOf(sel.station).map((id) => n.stationIds.indexOf(id)) : [],
+    selStations: [
+      ...(sel?.kind === "station" && n && inComplexView(sel.station) ? complexOf(sel.station).map((id) => n.stationIds.indexOf(id)) : []),
+      // the blueprint stations picked with the blueprint tool's box (T-333)
+      ...(n ? bpPicked.value.stations.map((id) => n.stationIds.indexOf(String(id))) : []),
+    ],
     crowds: d.platformCrowds !== "off", // T-164, T-219
     groups: dotGroups.peek(), // zoomed out, the stations the distance rule groups are one dot (T-217, T-225)
   };
@@ -141,6 +147,7 @@ if (SYNTH) {
     if (s.service && renderer.net) renderer.setService(s.render.phases, s.render.meta);
     else renderer.setNetwork(s.net ?? networkFromState(s)); // built in the worker (T-063)
     views.networkChanged();
+    blueprintBox.refreshHighlight();
     overlay.invalidate();
   };
   if (DEBUG) (window as any).twViews = { stats: viewStats, overlay: views.overlay, hover: views.hover, click: views.click };
@@ -162,6 +169,8 @@ if (SYNTH) {
   };
 }
 const tools = new Tools(map, overlay, client);
+// The blueprint tool: a drag box picks blueprint track and stations to switch off or on (T-333).
+const blueprintBox = new BlueprintBox(map, overlay);
 live.tools = tools;
 // Stop editing (T-233): a toggle marker on every station; the page class hides the demand views
 tools.stops = new StopMarkers(map, overlay, (station) => tools.toggleStop(station));
@@ -220,6 +229,7 @@ effect(() => {
 // ---- picking and tools ----
 map.on("click", (e) => {
   if (tool.peek() === "trip") tripTool.click(e); // T-195
+  else if (tool.peek() === "blueprint") return; // its pointer handlers pick (map/blueprintBox.ts)
   else if (tool.peek() !== "select") tools.click(e);
   else selectAt(e.point.x, e.point.y, e.originalEvent.shiftKey);
 });
@@ -245,6 +255,7 @@ if (!SYNTH && !perfOff("hover")) // ?perfOff=hover: T-045 measurement only
       if (map.getCanvas().style.cursor !== c) map.getCanvas().style.cursor = c;
       return;
     }
+    if (tool.peek() === "blueprint") return;
     if (tool.peek() !== "select") return tools.move(e);
     const cur = linking.peek() !== null ? (pick(overlay, e.point.x, e.point.y, false)?.kind === "station" ? "pointer" : "crosshair") : demandHover?.(e.point.x, e.point.y) ? "pointer" : nodeDrag.hit(e.point.x, e.point.y)?.movable ? "move" : pick(overlay, e.point.x, e.point.y, display.peek().trains) ? "pointer" : "";
     // ?perfTry=hoverCursor (T-045): write the cursor only when it changes
@@ -263,7 +274,7 @@ window.addEventListener("keydown", (e) => {
     e.preventDefault();
     return;
   }
-  if (e.key === "Escape" && (nodeDrag.cancel() || edgeEditor.cancel() || cancelLink())) {
+  if (e.key === "Escape" && (nodeDrag.cancel() || edgeEditor.cancel() || cancelLink() || blueprintBox.cancel())) {
     e.preventDefault();
     return;
   }
@@ -284,6 +295,16 @@ window.addEventListener("keydown", (e) => {
     edgeEditor.cancel();
     if (tool.peek() !== k) pickTool(k);
     tab.value = "build";
+    return;
+  }
+  // the blueprint tool: Esc clears the pick, then leaves the tool; D and E switch the pick off or on
+  if (tool.peek() === "blueprint" && e.key === "Escape" && (bpPicked.peek().edges.length || bpPicked.peek().stations.length)) {
+    e.preventDefault();
+    clearBpPicked();
+    return;
+  }
+  if (blueprintBox.key(e)) {
+    e.preventDefault();
     return;
   }
   if (tools.key(e)) {

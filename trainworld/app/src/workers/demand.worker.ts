@@ -10,11 +10,16 @@
 // One worker of the pool has no periods (`aux`, T-119): it only sets the network up. It is never
 // busy, so the questions that need no period's result (the cells, a bubble's commuters by mode
 // from the sums it is handed) are answered at once, not after a busy worker's current pass.
+//
+// T-325: the aux worker also holds the zones no station reaches, opened `bare`: their commute and
+// everyday layers on an empty network, solved once for every period with no rail. Their bubbles
+// and city figures come from there; no solve covers them, and no solving worker opens them.
 
 import init, { DemandApi, EverydayApi, IntercityApi, day_factors, demand_periods, everyday_warm_up, release_skims, wasm_memory_bytes } from "../wasm/demand/sim"; // demand only (T-051)
 import { CITIES, cityToMarket, cityToWorld, HOME_CITY, setWorldFrame, worldToCity, worldToMarket, type CityId } from "../game/cities";
 import { EVERYDAY_KEYS, EVERYDAY_NAMES } from "../game/purposes";
-import type { DemandNetwork, FromDemand, ToDemand } from "./demandProtocol";
+import { PERIODS } from "../game/periods";
+import type { BareFigures, DemandNetwork, FromDemand, ToDemand } from "./demandProtocol";
 
 /** WASM started (and the market opened if `init` carried it): `open` and solves wait for this. */
 let started = false;
@@ -45,6 +50,10 @@ const sumsByRound = new Map<string, { mask: number; sums: Float32Array; everyday
 /** the populations the network in hand was solved for, and its route nodes (`transfers`, T-176) */
 let jobPopulations: (DemandApi | EverydayApi | IntercityApi)[] = [];
 let jobNodes = 0;
+/** T-325, the aux worker: each solving worker's periods as a bit mask, in worker order */
+let groupMasks: number[] = [];
+/** T-325, the aux worker: zones open bare, apart from `cities` (a solve never covers these) */
+const bare = new Map<CityId, { a: DemandApi; e: EverydayApi | null; figures: BareFigures }>();
 
 function sendMessage(msg: FromDemand, transfer: Transferable[] = []) {
   postMessage(msg, { transfer });
@@ -65,11 +74,15 @@ function yieldNow(): Promise<void> {
  * carrying the everyday arrays gets the layer (every registered city since T-142); a pack
  * without them stays commute-only.
  */
-function openPacks(packs: { id: CityId; header: string; bin: ArrayBuffer }[], market: string | Uint8Array | undefined) {
+function openPacks(packs: { id: CityId; header: string; bin: ArrayBuffer }[], market: string | Uint8Array | undefined, isBare = false) {
   for (const pack of packs) {
+    if (isBare) {
+      if (!bare.has(pack.id)) bare.set(pack.id, openBare(pack));
+      continue;
+    }
     if (cities.has(pack.id)) continue;
     cities.set(pack.id, new DemandApi(pack.header, new Uint8Array(pack.bin)));
-    if (!aux && JSON.parse(pack.header).arrays.some((a: {name: string}) => a.name === "errand_jobs")) everyday.set(pack.id, new EverydayApi(pack.header, new Uint8Array(pack.bin)));
+    if (!aux && hasEveryday(pack.header)) everyday.set(pack.id, new EverydayApi(pack.header, new Uint8Array(pack.bin)));
   }
   if (market !== undefined && !aux && !intercity) {
     // T-180: the page sends the pack's bytes; decoding 8 MB here keeps it off the main thread
@@ -78,9 +91,11 @@ function openPacks(packs: { id: CityId; header: string; bin: ArrayBuffer }[], ma
     if (intercity.info()[3] !== 1) console.warn("regional market pack: derived block missing or stale, derived at opening; run pipeline/intercity.py --derive");
   }
   return Object.fromEntries(packs.map(({ id }) => {
-    const info = Array.from(cities.get(id)!.info());
-    // Auxiliary worker only serves commute allocation; compute workers report all local demand.
-    const extra = everyday.get(id)?.info();
+    const b = isBare ? bare.get(id) : undefined;
+    const info = Array.from((b?.a ?? cities.get(id)!).info());
+    // Auxiliary worker only serves commute allocation; compute workers report all local demand
+    // (and so does the aux worker for a zone it holds bare, T-325).
+    const extra = (b ? b.e : everyday.get(id))?.info();
     if (extra) {
       let outings = 0, walking = 0;
       for (let k=0;k<extra.length;k+=3) { outings += extra[k]; walking += extra[k]*extra[k+1]; }
@@ -89,6 +104,39 @@ function openPacks(packs: { id: CityId; header: string; bin: ArrayBuffer }[], ma
     }
     return [id, info];
   })) as Record<CityId, number[]>;
+}
+
+const hasEveryday = (header: string) => JSON.parse(header).arrays.some((a: {name: string}) => a.name === "errand_jobs");
+
+/**
+ * T-325: a zone no station reaches, opened bare. With no station within reach every trip walks or
+ * drives, so its layers are set on an empty network and solved once for every period: the same
+ * figures a solve of any network gives it (no subzone, no rail), worked out the same way as
+ * `run` does per period (`citySummary`, `cityParts`).
+ */
+function openBare(pack: { id: CityId; header: string; bin: ArrayBuffer }) {
+  const bin = new Uint8Array(pack.bin);
+  const a = new DemandApi(pack.header, bin);
+  const e = hasEveryday(pack.header) ? new EverydayApi(pack.header, bin) : null;
+  const f0 = new Float32Array(0), u0 = new Uint32Array(0);
+  a.set_network(f0, u0, u0, f0, f0, f0);
+  e?.set_network(f0, u0, u0, f0, f0, f0);
+  const keys = ["work", ...EVERYDAY_KEYS.slice(0, Math.min(EVERYDAY_KEYS.length, e?.purpose_count() ?? 0))];
+  const figures: BareFigures = { summary: [], parts: [], keys };
+  for (let q = 0; q < PERIODS.length; q++) {
+    a.solve(q);
+    e?.solve(q);
+    const own = Array.from(a.summary(q)), s = own.slice();
+    const v = e?.summary(q);
+    if (v) for (const k of [1, 2, 3, 5]) s[k] += v[k] ?? 0;
+    const p = new Array(3 * keys.length).fill(0);
+    for (let k = 0; k < 3; k++) p[k] = own[1 + k] ?? 0;
+    const kt = e?.kind_totals(q);
+    if (kt) for (let k = 0; k < Math.min(kt.length, 3 * (keys.length - 1)); k++) p[3 + k] = kt[k];
+    figures.summary.push(s);
+    figures.parts.push(p);
+  }
+  return { a, e, figures };
 }
 
 /** Warm-up solves on the first city a worker opens, so V8 has optimised the kernel before the first real one. */
@@ -108,6 +156,7 @@ onmessage = (e: MessageEvent<ToDemand>) => {
         const t1 = performance.now();
         aux = !!msg.aux;
         mine = msg.periods;
+        groupMasks = (msg.groups ?? []).map((g) => g.reduce((m, q) => m | (1 << q), 0));
         // T-173: one worker opens a small synthetic everyday layer first, so the browser has
         // optimised that code before the real cities open in every worker at once
         // (150: 22,500 cells, 900 zones; about 150 ms, mostly while the packs download)
@@ -128,10 +177,12 @@ onmessage = (e: MessageEvent<ToDemand>) => {
       if (!started) return;
       try {
         const t0 = performance.now();
-        const cityInfo = openPacks(msg.packs, msg.intercity);
+        const isBare = !!msg.bare && aux;
+        const cityInfo = openPacks(msg.packs, msg.intercity, isBare);
         const openMs = performance.now() - t0;
         const warmMs = warmUp();
-        sendMessage({ kind: "opened", cityInfo, market: msg.intercity !== undefined, openMs, warmMs, memBytes: wasm_memory_bytes() });
+        const figures = isBare ? Object.fromEntries(msg.packs.map(({ id }) => [id, bare.get(id)!.figures])) : undefined;
+        sendMessage({ kind: "opened", cityInfo, market: msg.intercity !== undefined, openMs, warmMs, memBytes: wasm_memory_bytes(), ...(figures ? { bare: figures } : {}) });
       } catch (err) {
         sendMessage({ kind: "failed", error: String(err) });
       }
@@ -195,7 +246,8 @@ const MARKET_OF: Record<CityId, number> = Object.fromEntries(CITIES.map(c => [c.
 /** The demand views' queries (T-078). They run between periods, never inside a solve. */
 function query(msg: Exclude<ToDemand, { kind: "init" | "open" | "solve" }>) {
   // A city the network in hand was not set on (opened since, T-149) answers as if not opened.
-  const a = msg.kind === "cells" || jobCities.has(msg.city) ? cities.get(msg.city) : undefined;
+  // (cells: a zone open bare answers too, T-325)
+  const a = msg.kind === "cells" ? cities.get(msg.city) ?? bare.get(msg.city)?.a : jobCities.has(msg.city) ? cities.get(msg.city) : undefined;
   type WithoutCity<T> = T extends {city: CityId} ? Omit<T, "city"> : T;
   // T-285: when the question was taken up (epoch ms) and how long it took, for ?debug=1's timings
   const qStart = performance.timeOrigin + performance.now();
@@ -286,6 +338,14 @@ function query(msg: Exclude<ToDemand, { kind: "init" | "open" | "solve" }>) {
         }
       }
       sendMessage({ kind: "trip", id: msg.id, version: msg.version, mask: live ? a!.solved_mask() : 0, periods, answers: live ? answers : null }, answers.map((v) => v.buffer));
+    } else if (msg.kind === "bare") {
+      // T-325: no network in it, so any version and round; the everyday legs per solving worker's
+      // periods, as each would have sent them, so the main thread adds them up as it does those
+      const b = bare.get(msg.city);
+      const commute = !b ? null : msg.purpose < 0 ? b.a.cell_modes_day(new Float32Array(0), day) : new Float32Array(0);
+      const e = msg.purpose === -2 ? null : b?.e;
+      const parts = !e ? [] : groupMasks.map((m) => msg.purpose === -1 ? e.cell_modes_mask_day(m, day) : msg.purpose < e.purpose_count() ? e.cell_modes_of_mask_day(msg.purpose, m, day) : new Float32Array(0));
+      sendMessage({ kind: "bare", id: msg.id, commute, masks: parts.length ? groupMasks : [], parts }, [...(commute ? [commute.buffer] : []), ...parts.map((p) => p.buffer)]);
     }
   } catch (err) {
     // a failed query answers with nothing; the pool itself carries on
@@ -299,6 +359,7 @@ function query(msg: Exclude<ToDemand, { kind: "init" | "open" | "solve" }>) {
     else if (msg.kind === "purposeModes") sendMessage({ kind: "purposeModes", id: msg.id, version: msg.version, mask: 0, modes: null });
     else if (msg.kind === "transfers") sendMessage({ kind: "transfers", id: msg.id, version: msg.version, mask: 0, pairs: null });
     else if (msg.kind === "trip") sendMessage({ kind: "trip", id: msg.id, version: msg.version, mask: 0, periods: [], answers: null });
+    else if (msg.kind === "bare") sendMessage({ kind: "bare", id: msg.id, commute: null, masks: [], parts: [] });
   }
 }
 

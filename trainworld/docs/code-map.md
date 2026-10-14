@@ -68,6 +68,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   for names and tags).
 - Tools: `pick.ts`, `tools.ts` (drawing track, placing stations, the line tool), `edgeEdit.ts`
   (dragging blueprint track's PIs, T-064, T-092), `nodeDrag.ts` (dragging blueprint nodes, T-093),
+  `blueprintBox.ts` (the Select tool's drag box, T-333; its state is `game/blueprintPick.ts`),
   `stopMarkers.ts` (the toggle markers of stop editing, T-233).
 - Trains and trips: `trainFollow.ts` (a selected train followed onto its next trip, T-245),
   `tripView.ts` (the trip explorer's route, T-195; its panel is `ui/inspector/TripInspector.tsx`).
@@ -132,7 +133,8 @@ Run from the maps root (`node trainworld/checks/<file>`).
   widths), `t145-check` (the route preview contract), `t146-check` (complexes), `t125-frame-check`
   (world frames against PROJ), `t116-save-check` (save format), `t285-merge-check` (needs
   `--experimental-strip-types`), `t066-wasm-check` (demand WASM contract), `t066-worker-check` and
-  `t149-worker-check` (the real demand worker in Node, a few minutes each), `t174-market-check`
+  `t149-worker-check` (the real demand worker in Node, a few minutes each), `t325-bare-check` (a
+  zone opened bare against the same zone solved, to the bit; `ZONE=tor` for another), `t174-market-check`
   (the regional market's derived block).
 - Browser and timing (Playwright, `PLAYWRIGHT_MODULE`): `startup-timing.mjs` with
   `static-serve.mjs` (startup marks on a scratch production build), `t303-measure.mjs` (demand

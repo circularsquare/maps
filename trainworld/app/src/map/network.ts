@@ -16,6 +16,8 @@ export const TRACK = 0xffffff;
 /** Segment flags. */
 export const F_BLUEPRINT = 1;
 export const F_FADED = 2;
+/** a blueprint switched off (T-333): Construct skips it, drawn grey */
+export const F_OFF = 64;
 export const F_BAD = 16;
 /** Live placement only: solid body/casing without changing its blueprint status. */
 export const F_PLACEMENT = 32;
@@ -185,10 +187,19 @@ export function strokesFromPreview(pts: Float32Array, bad: boolean, speed?: Floa
   return strokes;
 }
 
+/** Several edges' local polylines (x, y, z triples) as one stroke set, for the drag-selected
+ * blueprint's highlight band (T-333). */
+export function strokesFromEdges(lines: Float32Array[]): Strokes {
+  const b = new StrokeBuilder();
+  for (const pts of lines) b.add(pts, TRACK, 0xffffffff, F_PLACEMENT);
+  return b.build();
+}
+
 export function networkFromState(s: ClockState): NetworkBuffers {
   const r = s.render;
   const edgePts = new Map<number, Float32Array>();
   const builtEdge = new Map<number, boolean>();
+  const offEdge = new Set<number>(s.edges.filter((e) => e.off).map((e) => e.id));
   const track = new StrokeBuilder();
   const speeds = new Float32Array(Math.max(0, r.edgePts.length / 3 - s.edges.length));
   let speedAt = 0;
@@ -196,7 +207,7 @@ export function networkFromState(s: ClockState): NetworkBuffers {
     const pts = r.edgePts.subarray(r.edgeOff[i] * 3, r.edgeOff[i + 1] * 3);
     edgePts.set(e.id, pts);
     builtEdge.set(e.id, e.built);
-    track.add(pts, TRACK, e.id, e.built ? 0 : F_BLUEPRINT);
+    track.add(pts, TRACK, e.id, e.built ? 0 : F_BLUEPRINT | (e.off ? F_OFF : 0));
     for (let k = r.edgeOff[i]; k < r.edgeOff[i + 1] - 1; k++) speeds[speedAt++] = r.edgeSpeed?.[k] ?? e.vminKmh;
   });
   const maxLine = s.lines.reduce((m, l) => Math.max(m, l.id), -1);
@@ -222,7 +233,7 @@ export function networkFromState(s: ClockState): NetworkBuffers {
       const pts = edgePts.get(e);
       const ends = edgeEnds.get(e);
       if (pts) {
-        const flags = l.running ? 0 : F_FADED | (builtEdge.get(e) ? 0 : F_BLUEPRINT);
+        const flags = l.running ? 0 : F_FADED | (builtEdge.get(e) ? 0 : F_BLUEPRINT | (offEdge.has(e) ? F_OFF : 0));
         // one slot per edge since T-190: no line sits beside another
         const info: [number, number, number, number] = [Math.min(stretch, Math.max(0, l.stops.length - 2)), 0, 1, 1];
         if (pts.length >= 6) firstStroke[k] = lines.count;
@@ -289,7 +300,7 @@ export function networkFromState(s: ClockState): NetworkBuffers {
     stationAxis.set([sh.ax, sh.ay], i * 2);
     stationShape.set([sh.mx, sh.my, sh.phi, PLATFORM_HALF_M * perM], i * 4);
     stationLine.set(platformPoints(sh), i * 2 * PLATFORM_POINTS);
-    stations.set([p[0], p[1], ((served.get(n.id) ?? 0) > 1 ? 1 : 0) | (n.stationBuilt ? 0 : 2) | (lined.has(n.id) ? 4 : 0)], i * 3);
+    stations.set([p[0], p[1], ((served.get(n.id) ?? 0) > 1 ? 1 : 0) | (n.stationBuilt ? 0 : 2) | (lined.has(n.id) ? 4 : 0) | (n.stationOff ? 8 : 0)], i * 3);
   });
   // the player's links as bridges between the two platforms' nearest points (T-217)
   const stationIndex = new Map(st.map((n, i) => [n.id, i]));

@@ -110,7 +110,7 @@ export const theme = signal<Theme>(THEMES.includes(savedTheme as Theme) ? (saved
 
 /** What a click on the map does: select (pick), draw track, place a station, add stops to a line,
  * remove what is clicked (T-096), pick a trip's two ends (T-195). */
-export type Tool = "select" | "track" | "station" | "line" | "delete" | "trip";
+export type Tool = "select" | "track" | "station" | "line" | "delete" | "trip" | "blueprint";
 export const tool = signal<Tool>("select");
 /** A question waiting in a centered modal (T-096/T-113: removing something
  * constructed): `run` on the yes button, nothing on the no button or Esc. */
@@ -125,8 +125,8 @@ export const renameLinePrompt = signal<string | null>(null);
 /** How the Lines and Stations lists are sorted: the column clicked and its direction (T-310). Kept
  * while the page is open, as the list sort always was. */
 export interface ListSort<K extends string> { key: K; dir: 1 | -1 }
-export const lineSort = signal<ListSort<"name" | "riders" | "trains">>({ key: "name", dir: 1 });
-export const stationSort = signal<ListSort<"name" | "riders">>({ key: "riders", dir: -1 });
+export const lineSort = signal<ListSort<"name" | "riders" | "trains" | "near">>({ key: "name", dir: 1 });
+export const stationSort = signal<ListSort<"name" | "riders" | "near">>({ key: "riders", dir: -1 });
 /** Platform length for new stations, m. */
 /** The map's demand drawn for one trip purpose only, or all (T-158). Not remembered: a page
  * load starts on all purposes, so nobody returns to a map that silently leaves riders out. */

@@ -23,7 +23,9 @@ batches 10-19 were Anita's feedback from playing. Batch history is in ARCHIVE.md
 
 
 
-- T-325 [P2] Loading fix 2 (T-303 item 1): zones no station reaches stay out of the solve, opened in the auxiliary worker only, their bubbles from a no-rail pass; a click on such a zone's bubble asks the solving workers for its inter-region trips. Three stages per notes/T-303.md. After T-324. Open.
+- T-325 [P2] Loading fix 2 (T-303 item 1): zones no station reaches stay out of the solve, opened bare in the auxiliary worker only. Stage a done 2026-10-14 (notes/T-325.md): bare zones' city figures and bubbles from a no-rail pass, bit-identical, no re-solve on a pan. Stages b and c are T-336 and T-337; the line moves to ARCHIVE.md with T-337.
+- T-336 [P2] T-325 stage b: clicks on a bare zone's bubble (the everyday far end and commutes from the aux worker's no-rail pass, per solving worker's periods as stage a does; longer trips and commutes between zones asked of the solving workers, which hold the market). Until then such a click draws no far end. After T-325 a. Open; notes/T-325.md.
+- T-337 [P2] T-325 stage c: SPEC and docs/zones.md, docs/demand.md for bare zones (what opens where, when a zone joins the solves, memory), once T-336 is in. Open.
 - T-326 [P2] Loading fix 3 (T-303 item 3): separate clusters (Toronto vs the Northeast) solve separately, an edit re-solves only its own cluster, the viewed one first. Three stages. After T-325. Open.
 - T-327 [P2] Loading fix 4 (T-303 item 4): clicks during the startup solve answered from the newest round every worker holds (about 2 s instead of up to 10). Open.
 - T-328 [P2] Loading fix 5 (T-303 item 5): on reload show the last final result at once, cached beside the save and keyed by network, packs and build, and let the clock run on it while the fresh solve finishes (Anita: yes). Open.
@@ -32,10 +34,7 @@ batches 10-19 were Anita's feedback from playing. Batch history is in ARCHIVE.md
 
 - T-330 [P3] Line chips without a symbol show the first letter of the name, so in the real save every subway chip reads "S" and PATH "P" (seen in T-323). Default a chip to the line's short name (`lineShortName` in map/networkTips.ts, T-305: "subway 6X" to "6X"), cut to fit, when the player has set no symbol. Open.
 
-- T-331 [P2] Blueprint track 25% narrower (Anita: T-322's rails "look better, more visible, but maybe overshot just a little bit"). After T-329. Open.
-- T-332 [P2] Lines and Stations lists for a world network (Anita: "the global stations list is not super helpful"): a toggle between the viewed city and the whole world, and a sort by nearness to the centre of the screen, so the busiest line in the viewed city is one click away. After T-329. Open.
-- T-333 [P2] Drag-select blueprints (Anita): drag a box to select blueprint track and stations, shift to add to the selection; disable the selection so the next construction skips it, and enable it again the same way. After T-329. Open.
-- T-334 [P3] Crossovers in general (Anita: "think about crossovers in general?"): how a player joins parallel tracks (double track, quad, side-by-side lines) so trains can switch; folds in T-257's quad crossovers. A short design for Anita, no build. Open.
+- T-334 [P3] Crossovers in general (Anita: "think about crossovers in general?"): how a player joins parallel tracks (double track, quad, side-by-side lines) so trains can switch; folds in T-257's quad crossovers. Design in notes/T-334.md waiting for Anita.
 
 ## Demand and data
 n- T-283 [P3] Toronto's Yonge test line lost all its airport riders once routes were added (567 to none, found in T-277): check whether routed walks or drives cut Pearson's terminals off from stations, or whether airport trips now drive. May affect US airports too. Open; notes/T-277.md.
