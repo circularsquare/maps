@@ -116,8 +116,19 @@ second. Inspectors, selections, catchments and the top bar are the current forec
   its zone, which takes over that zone's worker and bubbles, and selects the bubble. Selections,
   far ends, the catch-up and the inspector are the focused zone's only. The demand pool opens a
   nearby zone's pack like a viewed city's, but only after the startup load and outside a clock
-  hold, with no loading bar; a solve never waits for it, and once it is open the network is solved
-  again.
+  hold, with no top bar progress (only the bar over the zone, below); a solve never waits for it.
+  A zone no station reaches (the usual nearby zone) opens bare in the auxiliary worker and starts
+  no solve; one a station reaches opens in every worker and joins the next solve [T-325,
+  [demand.md](demand.md) "Bare zones"].
+- **A zone still loading is grey** [T-343, `map/zoneLoading.ts`, `zoneLoads` in `game/loading.ts`]:
+  every zone fetched whose figures have not arrived (downloading, opening, bare or solved, or
+  waiting for its first estimate), and a nearby zone not opened yet, is filled grey inside its
+  boundary, over the basemap and under its labels and the network, whether or not a demand view is
+  on. A thin bar sits a little under the zone's centre, kept inside the zone's on-screen part,
+  filling as it loads (hover "Loading Toronto, 40%"; the top bar's load for the zones in it, else
+  the zone's own download and opening). The grey and bar go in one step when the figures arrive. A
+  zone re-solving after an edit keeps its figures and is not grey. The bars hide while the startup
+  card is up.
 
 ## Bubble selections
 

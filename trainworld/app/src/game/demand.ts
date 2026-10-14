@@ -118,8 +118,21 @@ export const demandUpdating = signal(false);
  * crowding round) of all it will publish. */
 export const demandStep = signal({ done: 0, of: 4 });
 
-/** The mode-split bar's numbers (null while the pack is still loading, and over dead space, T-318). */
-export const modeSplit = computed<ModeSplit | null>(() => !viewedZone.value ? null : cityDemandViews.value.get(activeCity.value)?.split ?? cityBaseSplits.value.get(activeCity.value) ?? baseSplit.value);
+/** The mode-split bar's numbers: the viewed zone's own figures (a solve's, or the bare pass's for a
+ * zone no station reaches), null until it has them and over dead space (T-318). T-341: the no-rail
+ * `cityBaseSplits` and `baseSplit`, known once a pack is open, are not shown here: with stations
+ * in reach they are not the zone's split yet. */
+export const modeSplit = computed<ModeSplit | null>(() => !viewedZone.value ? null : cityDemandViews.value.get(activeCity.value)?.split ?? null);
+
+/** T-342: the same split in rides (trip legs) a day, `all` the total of the three. It is what
+ * `modeSplit` is a percentage of (the zone's modelled local legs, `DemandView.tripsPerDay`); null
+ * until the zone has a solved or bare view, and over dead space. */
+export const modeRides = computed<(ModeSplit & { all: number }) | null>(() => {
+  const v = !viewedZone.value ? null : cityDemandViews.value.get(activeCity.value);
+  if (!v) return null;
+  const all = v.tripsPerDay;
+  return { all, train: v.railTripsPerDay, walk: all * v.split.walk / 100, drive: all * v.split.drive / 100 };
+});
 
 export const lineDemand = (id: string): LineDemand | null => demandView.value?.lines.get(id) ?? null;
 export const stationDemand = (id: string): StationDemand | null => demandView.value?.stations.get(id) ?? null;

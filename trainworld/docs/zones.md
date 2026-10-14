@@ -165,9 +165,13 @@ in the bubbles. A click on a nearby zone's bubble focuses that zone and selects 
 Bubbles need a zone's results: a zone on screen is opened (its pack downloaded) like a viewed city.
 With no station within reach (T-325) it opens **bare**, in the auxiliary demand worker only: its
 bubbles and city figures come from a no-rail pass there (all walking and driving, exactly what a
-solve would give it), and no solve covers it or is started for it. A station built within reach
-opens it in every worker, and the solves cover it from then on. Until T-336, a click on a bare
-zone's bubble draws no far end.
+solve would give it), and no solve covers it or is started for it. A click on its bubble draws the
+far end as a solved zone's does (T-336): local trips from the auxiliary worker, longer trips and
+commutes between zones from the solving workers, which hold the market. A zone opens bare only
+once the network's reach is known, so at startup the viewed city opens in every worker as before.
+A station built within reach downloads the pack again and opens it in every worker; the next solve
+waits for it and covers it from then on, and its bare figures serve until a shown solve does.
+Detail: [demand.md](demand.md), "Bare zones".
 
 **Zoomed far out** (8.5 and below) every zone is one bubble, as if it were one place: its trips a
 day at homes (Homes) or at destinations (Destinations) in every layer, local trips, commutes

@@ -16,7 +16,7 @@
   --net-ink: #2b2b2b;
   --map-land: #f2f2ef;
   --dock-w: clamp(304px, 24vw, 352px);
-  --bar-h: 46px;
+  --bar-h: 54px; /* T-341: three lines in the split section */
 }
 
 * { box-sizing: border-box; }
@@ -255,17 +255,26 @@ table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
   flex: none; height: var(--bar-h); display: flex; align-items: center; gap: 18px;
   padding: 0 10px 0 16px; border-bottom: 1px solid var(--rule); white-space: nowrap;
 }
-.city { font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.split { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; }
-.split-train { display: inline-flex; align-items: baseline; gap: 6px; }
+/* T-341: every part of the bar has a fixed width, so no city or status moves the split bar: the name
+   box is cut short with an ellipsis (its whole name on hover), the percentages use tabular figures in
+   boxes of fixed width. Three lines in the split section: the bar, the labels, and the status (a line
+   kept whether or not there is one). */
+.city { flex: none; width: 130px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; }
+.split { flex: 1; min-width: 0; max-width: 520px; display: flex; flex-direction: column; justify-content: center;
+         gap: 2px; font-variant-numeric: tabular-nums; }
+.split-row { display: flex; flex-direction: column; gap: 2px; }
+.split-labels { display: flex; align-items: center; gap: 14px; height: 18px; overflow: hidden; }
+.split-train { flex: none; display: inline-flex; align-items: baseline; gap: 6px; }
 .split-train .sw { align-self: center; }
-/* T-180: in a narrow column the bar gives way first (its shrink factor is 6), then this, which ends
-   in an ellipsis; the whole text is its hover. (A shrink factor under 1 here would leave it
-   overflowing once the bar is at its minimum.) */
-.demand-busy { display: block; font-size: 12px; flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.split-other { color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
-.bar { flex: 1 6 340px; max-width: 440px; min-width: 60px; height: 14px; display: flex;
-       border: 1px solid var(--rule); background: var(--bg); }
+.pct { display: inline-block; min-width: 4.6ch; text-align: left; }
+.rides { display: inline-block; width: 10.5ch; font-size: 12px; overflow: hidden; text-overflow: ellipsis; }
+/* T-180: in a narrow column this ends in an ellipsis; the whole text is its hover. T-341: it is the
+   status line's text, which keeps its height with nothing on it. */
+.split-status { display: flex; align-items: center; gap: 8px; height: 12px; min-width: 0; }
+.demand-busy { display: block; font-size: 12px; line-height: 12px; flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.split-status .load-bar.thin { height: 4px; }
+.split-other { flex: none; color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
+.bar { flex: none; width: 100%; height: 10px; display: flex; border: 1px solid var(--rule); background: var(--bg); }
 .seg { display: block; height: 100%; }
 /* train, walking, driving: the commuter dot map's colours whatever the theme (T-084;
    --mode-* are set from game/palette.ts MODE_COLOURS in main.ts) */
@@ -279,6 +288,7 @@ table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
 .cash-sign, .cash-cur { flex: none; width: 1ch; }
 .cash-digits { flex: 1; min-width: 0; text-align: left; }
 .clock { display: flex; align-items: baseline; gap: 8px; font-variant-numeric: tabular-nums; }
+.clock .day { min-width: 58px; }
 .clock .time { min-width: 46px; }
 .clock .demand { min-width: 108px; }
 .save-notice { flex: none; padding: 6px 10px; border-bottom: 1px solid var(--accent);
@@ -319,6 +329,10 @@ table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
 .load-bar { display: block; height: 8px; margin: 8px 0 6px; border: 1px solid var(--rule); background: var(--bg); pointer-events: auto; }
 .load-fill { display: block; height: 100%; background: var(--accent); }
 .load-bar.thin { flex: 0 0 64px; height: 6px; margin: 0; }
+/* T-343: a bar over each zone still loading (map/zoneLoading.ts), centred on its point */
+.zone-loads { position: absolute; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; }
+.zone-load { position: absolute; left: 0; top: 0; }
+.zone-load .load-bar { width: 96px; height: 6px; margin: -4px 0 0 -48px; zoom: var(--ui, 1); }
 /* MapLibre sets Helvetica on its container. Map UI must use the same font as the dock. */
 #map, #map .maplibregl-ctrl { font-family: var(--font); }
 #map canvas.overlay { position: absolute; left: 0; top: 0; pointer-events: none; z-index: 1; }
@@ -463,13 +477,14 @@ table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
 }
 @container map-column (max-width: 760px) {
   .clock .demand { display: none; }
-  .bar { min-width: 40px; }
+  .rides { display: none; }
+  .city { width: 96px; }
 }
 @container map-column (max-width: 520px) {
   #topbar { height: auto; min-height: 76px; padding: 6px 10px;
     display: grid; grid-template-columns: minmax(0, 1fr) auto auto;
     grid-template-areas: "city cash clock" "split split speed"; gap: 4px 10px; }
-  #topbar .city { grid-area: city; }
+  #topbar .city { grid-area: city; width: auto; min-width: 0; }
   #topbar .cash { grid-area: cash; }
   #topbar .clock { grid-area: clock; justify-self: end; }
   #topbar .split { grid-area: split; }

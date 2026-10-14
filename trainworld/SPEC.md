@@ -67,7 +67,10 @@ periods, weekends and fares run on its own `utcOffset`, a line on its first stop
 
 **Zones** [T-276, [docs/zones.md](docs/zones.md)]: the world is divided into **city zones** (the
 city packs), **non-city zones** (county-sized units touching two city zones, built as packs by the
-same pipeline, `kind: "zone"`) and **dead space**, where no trip starts or ends.
+same pipeline, `kind: "zone"`) and **dead space**, where no trip starts or ends. Only zones a
+built station reaches join the demand solves; a zone viewed or beside the view that no station
+reaches opens **bare** in one auxiliary worker, its figures, bubbles and clicks from a no-rail pass
+that equals a solve's to the bit, so panning never re-solves [T-325].
 
 - **City zones**: New York (with Mercer County since T-276), Philadelphia-Camden-Wilmington,
   Boston (with southern New Hampshire), Washington (with surrounding Maryland, Virginia and

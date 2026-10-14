@@ -305,9 +305,11 @@ function query(msg: Exclude<ToDemand, { kind: "init" | "open" | "solve" }>) {
       const packed = live ? a!.flows_day(msg.end, msg.cells, msg.sums, day) : null;
       sendMessage({ kind: "flows", id: msg.id, version: msg.version, packed: packed && packed.length ? packed : null }, packed ? [packed.buffer] : []);
     } else if (msg.kind === "icSel") {
-      // a city outside the regional market (market -1, T-277) has no longer trips
-      const ok = live && !!intercity && MARKET_OF[msg.city] >= 0;
-      const sq = ok ? selectionSquares(msg.city, a!, msg.end, msg.cells) : null;
+      // a city outside the regional market (market -1, T-277) has no longer trips. T-336: a zone
+      // open bare in the aux worker comes with its squares (this worker does not hold the zone)
+      const held = msg.version === current && mine.every(q => roundsHeld[q] === msg.round);
+      const ok = (msg.sq ? held : live) && !!intercity && MARKET_OF[msg.city] >= 0;
+      const sq = !ok ? null : msg.sq ?? selectionSquares(msg.city, a!, msg.end, msg.cells);
       const packed = sq ? Float64Array.from(intercity!.selection_flows_day(MARKET_OF[msg.city], sq.xy, sq.share, day)) : null;
       sendMessage({ kind: "icSel", id: msg.id, version: msg.version, mask: ok ? intercity!.solved_mask() : 0, packed }, packed ? [packed.buffer] : []);
     } else if (msg.kind === "icStation") {
@@ -346,6 +348,22 @@ function query(msg: Exclude<ToDemand, { kind: "init" | "open" | "solve" }>) {
       const e = msg.purpose === -2 ? null : b?.e;
       const parts = !e ? [] : groupMasks.map((m) => msg.purpose === -1 ? e.cell_modes_mask_day(m, day) : msg.purpose < e.purpose_count() ? e.cell_modes_of_mask_day(msg.purpose, m, day) : new Float32Array(0));
       sendMessage({ kind: "bare", id: msg.id, commute, masks: parts.length ? groupMasks : [], parts }, [...(commute ? [commute.buffer] : []), ...parts.map((p) => p.buffer)]);
+    } else if (msg.kind === "bareFlows") {
+      // T-336: a bare zone's selection with no rail: the commuters' far end as `flows` gives it
+      // (no subzones, so no rail sums), and per solving worker's periods what its `purposes` would
+      const b = bare.get(msg.city);
+      const packed = b ? b.a.flows_day(msg.end, msg.cells, new Float32Array(0), day) : null;
+      const work = b ? groupMasks.map((m) => b.a.purpose_timing_mask_day(msg.end, msg.cells, m, day)) : [];
+      const e = b?.e;
+      const extra = e ? groupMasks.map((m) => e.selection_sparse_mask_day(msg.end, msg.cells, m, day)) : [];
+      const names = EVERYDAY_PURPOSES.slice(0, e?.purpose_count() ?? 0);
+      const out = packed && packed.length ? packed : null;
+      sendMessage({ kind: "bareFlows", id: msg.id, packed: out, masks: b ? groupMasks : [], work, everyday: extra, names }, [...(out ? [out.buffer] : []), ...work.map((v) => v.buffer), ...extra.map((v) => v.buffer)]);
+    } else if (msg.kind === "bareSquares") {
+      // T-336: the solving workers hold the market but not the zone: its squares come from here
+      const b = bare.get(msg.city);
+      const sq = b && MARKET_OF[msg.city] >= 0 ? selectionSquares(msg.city, b.a, msg.end, msg.cells) : null;
+      sendMessage({ kind: "bareSquares", id: msg.id, xy: sq?.xy ?? null, share: sq?.share ?? null });
     }
   } catch (err) {
     // a failed query answers with nothing; the pool itself carries on
@@ -360,6 +378,8 @@ function query(msg: Exclude<ToDemand, { kind: "init" | "open" | "solve" }>) {
     else if (msg.kind === "transfers") sendMessage({ kind: "transfers", id: msg.id, version: msg.version, mask: 0, pairs: null });
     else if (msg.kind === "trip") sendMessage({ kind: "trip", id: msg.id, version: msg.version, mask: 0, periods: [], answers: null });
     else if (msg.kind === "bare") sendMessage({ kind: "bare", id: msg.id, commute: null, masks: [], parts: [] });
+    else if (msg.kind === "bareFlows") sendMessage({ kind: "bareFlows", id: msg.id, packed: null, masks: [], work: [], everyday: [], names: [] });
+    else if (msg.kind === "bareSquares") sendMessage({ kind: "bareSquares", id: msg.id, xy: null, share: null });
   }
 }
 

@@ -29,10 +29,10 @@ export function loadingCardShown(): boolean {
 
 /** T-243: a bar filling as the load goes, in place of a percentage; the percentage is its hover.
  * The fill jumps to each new value (no transition). */
-export function LoadBar({ fraction, step, thin }: { fraction: number; step: string; thin?: boolean }) {
+export function LoadBar({ fraction, step, thin, tip }: { fraction: number; step: string; thin?: boolean; tip?: string }) {
   const pct = Math.floor(fraction * 100);
   return <span class={"load-bar" + (thin ? " thin" : "")} role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct}
-    data-tip={`${pct}% loaded\n${step}`}>
+    data-tip={tip ?? `${pct}% loaded\n${step}`}>
     <i class="load-fill" style={{ width: `${fraction * 100}%` }} />
   </span>;
 }

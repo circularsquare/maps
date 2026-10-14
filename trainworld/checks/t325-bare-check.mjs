@@ -4,7 +4,8 @@
 // and solve a Midtown line, so Philadelphia is open but unreached; the aux worker also opens
 // Philadelphia bare. Every figure the page builds for the zone must be the same to the bit:
 // each period's city summary and purpose parts (the city views), each solving worker's everyday
-// legs per cell (weekday and weekend, every purpose kind alone), and the commuters by mode.
+// legs per cell (weekday and weekend, every purpose kind alone), and the commuters by mode; and
+// (T-336) a bubble selection's far end: commutes, everyday purposes, longer trips.
 // Run from the maps root: node trainworld/checks/t325-bare-check.mjs
 import assert from 'node:assert/strict';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
@@ -124,9 +125,61 @@ for (const day of [0, 1]) {
   sameBits(b.commute, solved, `commuters by mode, day ${day}`);
   checked.commute++;
 }
+// T-336: a bubble selection's far end. Solved: every solving worker's `flowRail` added up in period
+// order and spread by one worker (`flows`), each worker's `purposes`, and the longer trips (`icSel`)
+// from the zone's own cells. Bare: the aux worker's `bareFlows`, and `icSel` asked of the solving
+// workers with the squares the aux worker works out (`bareSquares`).
+const cellsReply = await aux.ask({ kind: 'cells', city: ZONE, frame: net.frame });
+const nCells = cellsReply.xy.length / 2;
+const selections = {
+  block: Uint32Array.from({ length: 60 }, (_, k) => Math.floor(nCells / 2) + k),
+  spread: Uint32Array.from({ length: Math.floor(nCells / 97) }, (_, k) => k * 97),
+  one: Uint32Array.of(Math.floor(nCells / 3)),
+};
+checked.selections = 0; checked.longer = 0;
+const byMaskOrder = (rs) => [...rs].sort((a, b) => a.mask - b.mask);
+for (const [name, cells] of Object.entries(selections)) {
+  for (const end of [0, 1]) {
+    for (const day of [0, 1]) {
+      const what = `${name}, end ${end}, day ${day}`;
+      const q = { city: ZONE, version: 1, round: ROUNDS, day, end, cells };
+      const rail = byMaskOrder(await Promise.all(solving.map((s) => s.ask({ kind: 'flowRail', ...q }))));
+      let sums = null;
+      for (const r of rail) { assert(r.sums, `flowRail ${what}`); if (!sums) sums = r.sums.slice(); else for (let k = 0; k < sums.length; k++) sums[k] += r.sums[k]; }
+      const solvedFlows = (await solving[0].ask({ kind: 'flows', ...q, sums })).packed;
+      const purposes = byMaskOrder(await Promise.all(solving.map((s) => s.ask({ kind: 'purposes', ...q }))));
+      const b = await aux.ask({ kind: 'bareFlows', ...q });
+      assert(solvedFlows && b.packed, `flows answered, ${what}`);
+      sameBits(b.packed, solvedFlows, `far end (commutes), ${what}`);
+      const order = b.masks.map((m, i) => [m, i]).sort((x, y) => x[0] - y[0]).map(([, i]) => i);
+      assert.deepEqual(order.map((i) => b.masks[i]), purposes.map((r) => r.mask), `masks, ${what}`);
+      order.forEach((i, j) => {
+        sameBits(b.work[i], purposes[j].work, `work timing, ${what}, part ${j}`);
+        sameBits(b.everyday[i], purposes[j].everyday, `everyday far end, ${what}, part ${j}`);
+        assert.deepEqual(b.names, purposes[j].names, `purpose names, ${what}`);
+      });
+      checked.selections++;
+      // longer trips and commutes between zones: the squares from the bare copy, asked of the market
+      const sq = await aux.ask({ kind: 'bareSquares', ...q });
+      const solvedIc = byMaskOrder(await Promise.all(solving.map((s) => s.ask({ kind: 'icSel', ...q }))));
+      if (!sq.xy) { assert(solvedIc.every((r) => !r.packed), `outside the market, ${what}`); continue; }
+      const bareIc = byMaskOrder(await Promise.all(solving.map((s) => s.ask({ kind: 'icSel', ...q, sq: { xy: sq.xy, share: sq.share } }))));
+      solvedIc.forEach((r, j) => {
+        assert(r.packed && bareIc[j].packed, `icSel answered, ${what}`);
+        assert.equal(r.mask, bareIc[j].mask);
+        const x = new Uint32Array(r.packed.buffer), y = new Uint32Array(bareIc[j].packed.buffer);
+        assert.equal(x.length, y.length, `longer trips length, ${what}`);
+        for (let k = 0; k < x.length; k++) assert.equal(x[k], y[k], `longer trips, ${what}, part ${j} [${k >> 1}]`);
+      });
+      checked.longer++;
+    }
+  }
+}
 // not open bare: null, never a failure
 const none = await aux.ask({ kind: 'bare', city: 'bos', version: 1, round: ROUNDS, day: 0, purpose: -1 });
 assert.equal(none.commute, null);
+assert.equal((await aux.ask({ kind: 'bareFlows', city: 'bos', version: 1, round: ROUNDS, day: 0, end: 0, cells: Uint32Array.of(0) })).packed, null);
+assert.equal((await aux.ask({ kind: 'bareSquares', city: 'bos', version: 1, round: ROUNDS, day: 0, end: 0, cells: Uint32Array.of(0) })).xy, null);
 const mem = { solvingWorkerMiB: Math.round(solving[0].messages.filter((m) => m.kind === 'done').at(-1).memBytes / 1048576), auxWorkerMiB: Math.round(aux.messages.filter((m) => m.kind === 'done').at(-1).memBytes / 1048576) };
 for (const s of [...solving, aux]) await s.w.terminate();
 const result = { zone: ZONE, groups: GROUPS, kinds, checked, identical: true, bareOpenMs: Math.round(bareOpenMs), setupAndSolveMs: Math.round(solveMs), ...mem };

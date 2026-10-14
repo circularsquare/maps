@@ -1872,7 +1872,7 @@ impl EverydayApi {
         let n = self.engine.city.len();
         let stride = 30 + 3 * n;
         let mut out = vec![0.0; self.totals.len() * stride];
-        for (kind, (timing, far, legs)) in self.selection_parts(end, cells, day).into_iter().enumerate() {
+        for (kind, (timing, far, legs)) in self.selection_parts(end, cells, day, u32::MAX).into_iter().enumerate() {
             let base = kind * stride;
             out[base..base + 30].copy_from_slice(&timing);
             for (i, &c) in far.iter().enumerate() {
@@ -1887,8 +1887,14 @@ impl EverydayApi {
     /// the selection reaches, the same numbers. Per purpose kind: 30 timing values, `m`, then `m`
     /// far cells (ascending), their rail, their walking and their driving legs.
     pub fn selection_sparse_day(&self, end: u32, cells: &[u32], day: u32) -> Vec<f32> {
+        self.selection_sparse_mask_day(end, cells, u32::MAX, day)
+    }
+    /// `selection_sparse_day` over the solved periods in `mask` alone (bit q = period q; T-336),
+    /// as `cell_modes_mask_day`: a zone held by the auxiliary worker alone answers for each
+    /// solving worker's periods in turn.
+    pub fn selection_sparse_mask_day(&self, end: u32, cells: &[u32], mask: u32, day: u32) -> Vec<f32> {
         let mut out = vec![];
-        for (timing, far, legs) in self.selection_parts(end, cells, day) {
+        for (timing, far, legs) in self.selection_parts(end, cells, day, mask) {
             out.extend_from_slice(&timing);
             out.push(far.len() as f32);
             out.extend(far.iter().map(|&c| c as f32));
@@ -1907,7 +1913,7 @@ impl EverydayApi {
     /// selected end (homes for outings, sites for schools) reads their ranges directly; at the
     /// other end the sample list is scanned for selected cells, and only those are weighed. The
     /// samples are taken in the order of the whole list, so every sum is the same as visiting all.
-    fn selection_parts(&self, end: u32, cells: &[u32], day: u32) -> Vec<([f32; 30], Vec<u32>, Vec<f32>)> {
+    fn selection_parts(&self, end: u32, cells: &[u32], day: u32, mask: u32) -> Vec<([f32; 30], Vec<u32>, Vec<f32>)> {
         let day = day as usize;
         let n = self.engine.city.len();
         let mut selected = vec![false; n];
@@ -1942,6 +1948,9 @@ impl EverydayApi {
                 };
                 let pi = self.edge_pair.get(k).copied().unwrap_or(NONE);
                 for q in 0..5 {
+                    if mask >> q & 1 == 0 {
+                        continue;
+                    }
                     if let Some(st) = &self.per[q] {
                         for direction in 0..2 {
                             let share = if direction == 0 { share_out(day, everyday(kind), q) } else { share_ret(day, everyday(kind), q) };

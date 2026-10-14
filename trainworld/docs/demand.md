@@ -673,9 +673,9 @@ check solved a Midtown line with all nine packs open and with New York alone; ev
 boarding, crowding figure, New York and market summary and corridor was bit-identical, and the
 other eight cities had zero rail (notes/T-149.md). Packs arrive in `open` messages after the
 WASM starts, the viewed city's first; a solve covers the cities open when it starts, and the
-client sends one only when every city its network needs is open in every worker. A city opened
-later (a pan to it, or construction reaching it) joins at the next solve, which the client sends
-at once; until then it answers no query and has no city view. Opening is cheap for a commute
+client sends one only when every city its network needs is open in every worker. A city that
+construction reaches later joins at the next solve, which the client sends at once; a city only
+viewed or on screen opens bare instead (below). Opening is cheap for a commute
 pack (16 ms New York, 1-7 ms the others, natively); the cost is each city's everyday purposes
 (New York 0.9-1.1 s natively, 1.3-1.9 s in each of five Chrome workers, 5.0 s before T-172;
 since T-142 the other cities too: Washington 0.6 s natively and 1.4-1.6 s from download to open in
@@ -696,6 +696,33 @@ purpose's trips, walk share and trip length), and the long loops of the opening 
 optimises a WebAssembly function only between calls (a single long call stays in the baseline
 compiler throughout: in Chrome that made the opening 3-5x slower than natively). Startup
 timings: notes/T-172.md, notes/T-174.md.
+
+**Bare zones** (T-325, T-336). A zone viewed or on screen beside the view that no built station
+reaches opens **bare**: its pack goes to the auxiliary worker alone, which sets its commute and
+everyday layers on an empty network and solves every period once. With no station in reach every
+trip walks or drives, so these are exactly the figures any solve gives it. No solving worker opens
+it and no solve is started or waited for, so a pan never re-solves. The `opened` reply carries
+each period's city summary and purpose parts, from which the page builds the zone's city view as
+from a solve's results. Bubbles ask the auxiliary worker (`bare`): commuters by mode, and the
+everyday legs once per solving worker's periods (`cell_modes_mask_day`), added up in period order
+as a solved zone's are. A bubble click asks it `bareFlows` (the commuters' far end, and per
+solving worker's periods the work timing and everyday far end: `purpose_timing_mask_day`,
+`selection_sparse_mask_day`) and `bareSquares` (the selection as the market's 600 m squares), which
+go with `icSel` to the solving workers, holding the market, for longer trips and commutes between
+zones. `checks/t325-bare-check.mjs` finds every one of these equal to the bit to the same zone
+solved with no station in it.
+
+- A zone opens bare only once the reach is known (the first network and the footprints): at
+  startup the viewed city opens in every worker as before.
+- A station built within reach downloads the pack again (the page keeps no copy) and opens it in
+  every worker; the solve waits for it and covers it from then on. Its bare figures serve until a
+  shown solve covers it. The auxiliary worker keeps its bare copy (WASM memory never shrinks).
+- **Memory and time** (real New York save, five solving workers, a 13-step pan): each solving
+  worker stayed at 354 MB, against 855-955 MB when every zone on the way opened in every worker
+  and was solved (10 solves); the auxiliary worker grew from 76 to 477 MB; the pool from about
+  4.6 GB to 2.25 GB. A bare zone's bubbles came 1.5-3.6 s after arriving, against a final result
+  16.6-22.6 s after. A click on a bare zone's bubble drew its far end in 155 ms. Opening bare took
+  0.7-1.4 s (Toronto, Philadelphia) in Node.
 
 **Everyday warm-up** (T-173). Even so, five workers opening New York's everyday layer at the same
 time from baseline code took 7-8 s each instead of 1.3-1.8 s in most page loads (one worker alone

@@ -80,7 +80,8 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   `demandHover.ts` (the count tag by the pointer).
 - Tags and outlines: `trackHover.ts` and `networkTips.ts` (the hover tags on track, trains and
   stations, T-157, T-194), `cityBoundaries.ts` and `boundaryGeometry.ts` (the metro outlines and
-  outside shade, T-131, T-139).
+  outside shade, T-131, T-139), `zoneLoading.ts` (zones still loading drawn grey with a loading
+  bar, T-343).
 
 ### src/ui/: Preact components
 
@@ -134,7 +135,8 @@ Run from the maps root (`node trainworld/checks/<file>`).
   (world frames against PROJ), `t116-save-check` (save format), `t285-merge-check` (needs
   `--experimental-strip-types`), `t066-wasm-check` (demand WASM contract), `t066-worker-check` and
   `t149-worker-check` (the real demand worker in Node, a few minutes each), `t325-bare-check` (a
-  zone opened bare against the same zone solved, to the bit; `ZONE=tor` for another), `t174-market-check`
+  zone opened bare against the same zone solved, bubbles and bubble clicks, to the bit; `ZONE=tor`
+  for another), `t174-market-check`
   (the regional market's derived block).
 - Browser and timing (Playwright, `PLAYWRIGHT_MODULE`): `startup-timing.mjs` with
   `static-serve.mjs` (startup marks on a scratch production build), `t303-measure.mjs` (demand

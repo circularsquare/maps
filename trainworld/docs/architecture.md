@@ -95,7 +95,9 @@ Web first, so it can be shared as a link.
   that answers at once what needs no period's result (a city's cells, each bubble's commuters by
   mode). Worker i owns periods i, i + n, .... Every worker opens only the packs the game needs, each
   its own copy: the viewed zone first, and every zone with a built station inside its footprint or
-  within 4.5 km of it, since only those can put a rider on a line (`workers/cityReach.ts`). Solving
+  within 4.5 km of it, since only those can put a rider on a line (`workers/cityReach.ts`); a zone
+  viewed or on screen that no station reaches opens bare in the auxiliary worker alone [T-325,
+  [demand.md](demand.md) "Bare zones"]. Solving
   workers also open the regional market, always. A solve waits until every pack it needs is open in
   every worker, so a published result never leaves out a constructed city. Worker 0 first opens a
   small synthetic everyday layer (`warm.rs`) and the others get packs only once it is ready, so

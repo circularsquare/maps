@@ -5,8 +5,8 @@
 import type { ComponentChildren } from "preact";
 import { clock, SPEEDS } from "../game/clock";
 import { activeCity, cityById, viewedZone } from "../game/cities";
-import { demandStep, demandUpdating, demandView, modeSplit } from "../game/demand";
-import { clockTime, dayOf, money, moneyExact } from "../game/format";
+import { demandStep, demandUpdating, demandView, modeRides, modeSplit } from "../game/demand";
+import { clockTime, count, dayOf, money, moneyExact } from "../game/format";
 import { weekdayName, weekdayOf } from "../game/days";
 import { shownDay } from "../game/ui";
 
@@ -93,6 +93,8 @@ export function TopBar() {
   const city = viewedZone.value ? cityById(activeCity.value) : null;
   // T-172: no figures until the city has opened (the game is playable while it loads)
   const pct = (v: number) => (known ? v.toFixed(1) + "%" : "–");
+  // T-342: the shares are of rides (trip legs) a day; the train's count beside its share, all in the hover
+  const rides = modeRides.value;
   const step = demandStep.value;
   // T-149, T-172: a city loading (at startup, after a pan, or construction reaching it) says how
   // far it has got
@@ -113,28 +115,37 @@ export function TopBar() {
     : "These figures are for the network before your last change. They change once the new forecast is finished.");
   return (
     <><header id="topbar">
-      <div class="city">{city?.name}</div>
-      <div class="split" data-tip={`How people ${city ? "in " + city.name + " " : ""}travel${shownDay.value ? " at weekends" : " on weekdays"}: Train ${pct(s.train)}, Walking ${pct(s.walk)}, Driving ${pct(s.drive)}${demandView.value && !demandView.value.final ? " (an early estimate)" : demandUpdating.value ? " (before your last change)" : ""}`} style={{ opacity: demandUpdating.value ? 0.6 : 1 }}>
-        <span class="split-train">
-          <i class="sw sw-train" />
-          Train <b class="big">{pct(s.train)}</b>
-        </span>
-        <span class="bar">
-          <i class="seg seg-train" style={{ width: s.train + "%" }} />
-          <i class="seg seg-walk" style={{ width: s.walk + "%" }} />
-          <i class="seg seg-drive" style={{ width: s.drive + "%" }} />
-        </span>
-        <span class="split-other">
-          <i class="sw sw-walk" />
-          Walking {pct(s.walk)}
-        </span>
-        <span class="split-other">
-          <i class="sw sw-drive" />
-          Driving {pct(s.drive)}
-        </span>
-        {/* T-180: cut short with an ellipsis in a narrow column; the whole text on hover */}
-        {busy && <span class="demand-busy muted" role="status" data-tip={busyTip ?? undefined}>{busy}</span>}
-        {busy && load && !loadFailure.value && <LoadBar fraction={load.fraction} step={load.step} thin />}
+      {/* T-341: every part has a fixed width; a long name is cut short, the whole name on hover */}
+      <div class="city" data-tip={city?.name}>{city?.name}</div>
+      <div class="split">
+        <div class="split-row" data-tip={`Rides a day ${city ? "in " + city.name + " " : ""}${shownDay.value ? "at weekends" : "on weekdays"}: ${rides ? `Train ${pct(s.train)} (${count(rides.train)}), Walking ${pct(s.walk)} (${count(rides.walk)}), Driving ${pct(s.drive)} (${count(rides.drive)}), all ${count(rides.all)} rides` : `Train ${pct(s.train)}, Walking ${pct(s.walk)}, Driving ${pct(s.drive)}`}${demandView.value && !demandView.value.final ? " (an early estimate)" : demandUpdating.value ? " (before your last change)" : ""}`} style={{ opacity: demandUpdating.value ? 0.6 : 1 }}>
+          <span class="bar">
+            <i class="seg seg-train" style={{ width: s.train + "%" }} />
+            <i class="seg seg-walk" style={{ width: s.walk + "%" }} />
+            <i class="seg seg-drive" style={{ width: s.drive + "%" }} />
+          </span>
+          <span class="split-labels">
+          <span class="split-train">
+            <i class="sw sw-train" />
+            Train <b class="big pct">{pct(s.train)}</b>
+            <span class="muted rides">{rides ? count(rides.train) + " rides" : ""}</span>
+          </span>
+          <span class="split-other">
+            <i class="sw sw-walk" />
+            Walking <span class="pct">{pct(s.walk)}</span>
+          </span>
+          <span class="split-other">
+            <i class="sw sw-drive" />
+            Driving <span class="pct">{pct(s.drive)}</span>
+          </span>
+          </span>
+        </div>
+        {/* T-341: its own line under the bar, reserved whether or not there is a status, so nothing moves.
+            T-180: cut short with an ellipsis in a narrow column; the whole text on hover */}
+        <div class="split-status">
+          {busy && <span class="demand-busy muted" role="status" data-tip={busyTip ?? undefined}>{busy}</span>}
+          {busy && load && !loadFailure.value && <LoadBar fraction={load.fraction} step={load.step} thin />}
+        </div>
       </div>
       <Cash />
       <Clock />

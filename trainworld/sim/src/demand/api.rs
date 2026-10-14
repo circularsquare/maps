@@ -760,10 +760,22 @@ impl DemandApi {
     /// `purpose_timing` on a kind of day (T-260): each period's legs scaled by the commute's load
     /// factor and split into to work and home by that day's shares.
     pub fn purpose_timing_day(&self, end: u32, cells: &[u32], day: u32) -> Vec<f32> {
+        self.purpose_timing_in(end, cells, day, u32::MAX)
+    }
+
+    /// `purpose_timing_day` over the solved periods in `mask` alone (bit q = period q; T-336): a
+    /// zone no station reaches, held by the auxiliary worker alone, answers for each solving
+    /// worker's periods in turn, so a selection's figures add up as a solve's would.
+    pub fn purpose_timing_mask_day(&self, end: u32, cells: &[u32], mask: u32, day: u32) -> Vec<f32> {
+        self.purpose_timing_in(end, cells, day, mask)
+    }
+
+    fn purpose_timing_in(&self, end: u32, cells: &[u32], day: u32, mask: u32) -> Vec<f32> {
         let day = day as usize;
         let n = self.city.len();
         let mut out = vec![0.0; 30];
         for q in 0..PERIODS {
+            if mask >> q & 1 == 0 { continue; }
             let Some(st) = self.period(q) else { continue };
             let mut sums = vec![0.0; 4 * self.sz.as_ref().map_or(0, |s| s.n)];
             let ns = sums.len() / 4;

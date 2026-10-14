@@ -82,7 +82,10 @@ export type ToDemand =
   | { kind: "flows"; id: number; city: CityId; version: number; round: number; end: number; cells: Uint32Array; sums: Float32Array }
   /** longer trips (T-118) of a bubble selection's cells over this worker's periods
    * (`IntercityApi.selection_flows`); `end` 0 homes, 1 jobs; `cells` pack cell ids of `city` */
-  | { kind: "icSel"; id: number; city: CityId; version: number; round: number; end: number; cells: Uint32Array }
+  | { kind: "icSel"; id: number; city: CityId; version: number; round: number; end: number; cells: Uint32Array;
+      /** T-336: the selection's squares, from the aux worker's `bareSquares`, for a zone open bare
+       * there (this worker does not hold it); `cells` and `end` are then unread */
+      sq?: { xy: Float32Array; share: Float32Array } }
   /** a station's longer-trip rail riders over this worker's periods (`IntercityApi.station_flows`) */
   | { kind: "icStation"; id: number; city: CityId; version: number; round: number; station: number }
   /** one everyday purpose's local trip legs per cell by mode over this worker's periods
@@ -96,7 +99,13 @@ export type ToDemand =
   | { kind: "trip"; id: number; city: CityId; version: number; round: number; from: [number, number]; to: [number, number] }
   /** T-325, the aux worker: a bare zone's legs per cell with no rail, any version. `purpose` -1:
    * commutes and every everyday purpose, -2: commutes alone, k >= 0: everyday kind k alone */
-  | { kind: "bare"; id: number; city: CityId; version: number; round: number; purpose: number };
+  | { kind: "bare"; id: number; city: CityId; version: number; round: number; purpose: number }
+  /** T-336, the aux worker: a bubble selection of a bare zone, as `flows` and `purposes` answer
+   * for a solved one; any version */
+  | { kind: "bareFlows"; id: number; city: CityId; version: number; round: number; end: number; cells: Uint32Array }
+  /** T-336, the aux worker: a bare zone's selection as the regional market's squares, for the
+   * solving workers' `icSel` */
+  | { kind: "bareSquares"; id: number; city: CityId; version: number; round: number; end: number; cells: Uint32Array };
 
 /** T-325: a bare zone's figures per period (index q), as a solve's `result` would carry them:
  * `citySummary`'s numbers and `cityParts`'s, the latter in the order of its own `keys`. */
@@ -194,4 +203,11 @@ export type FromDemand =
    * solving worker's periods (`masks`), the everyday legs as that worker's `sums` message would
    * carry them (empty arrays for a kind the zone lacks; none without an everyday layer). Null
    * `commute`: not open bare here */
-  | { kind: "bare"; id: number; city: CityId; commute: Float32Array | null; masks: number[]; parts: Float32Array[] };
+  | { kind: "bare"; id: number; city: CityId; commute: Float32Array | null; masks: number[]; parts: Float32Array[] }
+  /** T-336: `packed` as `flows`'s (null: not open bare here); per solving worker's periods
+   * (`masks`), `work` and `everyday` as that worker's `purposes` answer would carry them
+   * (`everyday` empty without an everyday layer) */
+  | { kind: "bareFlows"; id: number; city: CityId; packed: Float32Array | null; masks: number[]; work: Float32Array[]; everyday: Float32Array[]; names: string[] }
+  /** T-336: the squares' centres in the market frame and the share of each selected; null: not
+   * open bare here, or outside the regional market */
+  | { kind: "bareSquares"; id: number; city: CityId; xy: Float32Array | null; share: Float32Array | null };

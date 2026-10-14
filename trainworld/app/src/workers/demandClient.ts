@@ -56,7 +56,7 @@ import {
   type ZoneRiders,
 } from "../game/demand";
 import { makeFrame } from "../game/frame";
-import { demandIdle, loadComplete, loadFailed, loadProgress, startup, takeGameLoadHold } from "../game/loading";
+import { demandIdle, loadComplete, loadFailed, loadProgress, startup, takeGameLoadHold, zoneLoads } from "../game/loading";
 import { PERIODS, periodsMatch } from "../game/periods";
 import { EVERYDAY_KEYS, membersOf, PURPOSES, shownKey, type PurposeFilter, type PurposeKey } from "../game/purposes";
 import { perfOff } from "../perfFlags";
@@ -107,7 +107,7 @@ interface Service {
 }
 
 type Result = Extract<FromDemand, { kind: "result" }>;
-type QueryKind = "cells" | "subSums" | "cellModes" | "station" | "flowRail" | "flows" | "purposes" | "icSel" | "icStation" | "purposeModes" | "transfers" | "trip" | "bare";
+type QueryKind = "cells" | "subSums" | "cellModes" | "station" | "flowRail" | "flows" | "purposes" | "icSel" | "icStation" | "purposeModes" | "transfers" | "trip" | "bare" | "bareFlows" | "bareSquares";
 type Reply = Extract<FromDemand, { kind: QueryKind }>;
 type QueryMessage = Extract<ToDemand, { kind: QueryKind }>;
 type WithoutCity<T> = T extends unknown ? Omit<T, "city" | "round"> : never;
@@ -687,8 +687,52 @@ class DemandClient {
     if (!this.progressTimer) this.progressTimer = setTimeout(() => { this.progressTimer = 0; this.progress(); }, 100) as unknown as number;
   }
 
-  /** The loading progress: each step weighted by its expected time, T-243 (game/loading.ts). */
   private progress() {
+    this.jobProgress();
+    this.zoneProgress();
+  }
+
+  /** T-343: the best share shown so far for each zone loading outside the load in hand */
+  private zoneBest = new Map<CityId, number>();
+
+  /** T-343: every zone fetched (in every worker or bare) whose figures have not arrived, with its
+   * share done (game/loading.ts `zoneLoads`): the load in hand's for its zones, else its own
+   * download and opening, each weighted by its expected time as the load's are. */
+  private zoneProgress() {
+    const shown = cityDemandViews.peek(), now = performance.now();
+    const next = new Map<CityId, number>();
+    let moving = false;
+    for (const id of [...this.fetching, ...this.fetchingBare]) {
+      if (id === MARKET || shown.has(id) || next.has(id) || this.status.startsWith("failed")) continue;
+      let f: number;
+      if (this.job?.cities.includes(id)) f = this.job.best;
+      else {
+        let got = 0, total = 0, at = Infinity;
+        for (const file of [`${id}.json`, `${id}.bin`]) {
+          const d = this.downloads.get(file);
+          if (d) { got += d.got; total += d.total || d.got; at = Math.min(at, d.at); }
+        }
+        const bytes = this.bytes.get(id);
+        const dl = bytes !== undefined ? 1 : total > 0 ? Math.min(0.99, got / total) : 0;
+        const dlMs = at === Infinity ? 300 : dl >= 1 || got === 0 ? Math.max(300, now - at) : (now - at) / dl;
+        const openMs = Math.max(300, (bytes ?? (total || GUESS_BYTES)) / 1e6 * OPEN_MS_PER_MB.city);
+        const log = this.start.loads.find((l) => l.item === id && l.downloadedAt !== undefined && !l.openedAt);
+        const open = this.isOpen(id) ? 1 : log ? Math.min(STEP_CAP, (now - log.downloadedAt!) / openMs) : 0;
+        f = (dlMs * dl + openMs * open) / (dlMs + openMs);
+        if (!this.isOpen(id)) moving = true;
+      }
+      const best = Math.max(this.zoneBest.get(id) ?? 0, Math.min(0.99, f));
+      next.set(id, best);
+    }
+    this.zoneBest = new Map(next);
+    const prev = zoneLoads.peek();
+    if (next.size !== prev.size || [...next].some(([id, f]) => prev.get(id) !== f)) zoneLoads.value = next;
+    // a bare zone's load moves with time while it downloads and opens; nothing else ticks for it
+    if (moving && !this.progressTick) this.progressSoon();
+  }
+
+  /** The loading progress: each step weighted by its expected time, T-243 (game/loading.ts). */
+  private jobProgress() {
     if (this.status.startsWith("failed")) return;
     const known = this.needed(this.latest());
     if (known?.size === 0) {
@@ -841,13 +885,14 @@ class DemandClient {
     clearInterval(this.progressTick);
     this.progressTick = 0;
     this.hold = null;
+    zoneLoads.value = new Map();
     console.error("demand:", why);
     loadFailed(why);
   }
 
   private receive(i: number, msg: FromDemand) {
     if (msg.kind === "failed") return this.fail(`worker ${i}: ${msg.error}`);
-    if (msg.kind === "cells" || msg.kind === "subSums" || msg.kind === "cellModes" || msg.kind === "station" || msg.kind === "flowRail" || msg.kind === "flows" || msg.kind === "purposes" || msg.kind === "icSel" || msg.kind === "icStation" || msg.kind === "purposeModes" || msg.kind === "transfers" || msg.kind === "trip" || msg.kind === "bare") {
+    if (msg.kind === "cells" || msg.kind === "subSums" || msg.kind === "cellModes" || msg.kind === "station" || msg.kind === "flowRail" || msg.kind === "flows" || msg.kind === "purposes" || msg.kind === "icSel" || msg.kind === "icStation" || msg.kind === "purposeModes" || msg.kind === "transfers" || msg.kind === "trip" || msg.kind === "bare" || msg.kind === "bareFlows" || msg.kind === "bareSquares") {
       const w = this.pendingQueries.get(msg.id);
       if (!w) return;
       const t = msg as { qStart?: number; qMs?: number };
@@ -1262,22 +1307,40 @@ class DemandClient {
     const version = demandView.peek()?.version;
     if (version === undefined || cells.length === 0) return null;
     const e = end === "home" ? 0 : 1;
-    const [parts, purposeParts] = await Promise.all([
-      this.ask((id) => ({ kind: "flowRail", id, version, end: e, cells })),
-      this.ask((id) => ({ kind: "purposes", id, version, end: e, cells })),
-    ]);
-    let mask = 0;
-    let sums: Float32Array | null = null;
-    for (const r of parts) {
-      if (r.kind !== "flowRail" || !r.sums) return null;
-      mask |= r.mask;
-      if (!sums) sums = r.sums;
-      else for (let k = 0; k < sums.length; k++) sums[k] += r.sums[k];
+    // the commutes' far end, packed as `flows` answers, and each worker's `purposes` answer
+    let p: Float32Array;
+    let purposeParts: { mask: number; work: Float32Array | null; everyday: Float32Array | null; names: string[] }[];
+    if (this.isBare(city)) {
+      // T-336: a zone open bare: the aux worker's no-rail pass, one part per solving worker's periods
+      const [r] = await this.ask((id) => ({ kind: "bareFlows", id, version, end: e, cells }), [this.computeN]);
+      if (r?.kind !== "bareFlows" || !r.packed) return null;
+      p = r.packed;
+      purposeParts = r.masks.map((mask, i) => ({ mask, work: r.work[i], everyday: r.everyday[i] ?? null, names: r.names }));
+    } else {
+      const [parts, purposeReplies] = await Promise.all([
+        this.ask((id) => ({ kind: "flowRail", id, version, end: e, cells })),
+        this.ask((id) => ({ kind: "purposes", id, version, end: e, cells })),
+      ]);
+      let mask = 0;
+      let sums: Float32Array | null = null;
+      // in worker (period) order, as everywhere the workers' answers are added up (T-336)
+      for (const r of byMask(parts)) {
+        if (r.kind !== "flowRail" || !r.sums) return null;
+        mask |= r.mask;
+        if (!sums) sums = r.sums;
+        else for (let k = 0; k < sums.length; k++) sums[k] += r.sums[k];
+      }
+      if (!sums || mask !== ALL_PERIODS) return null;
+      const [r] = await this.ask((id) => ({ kind: "flows", id, version, end: e, cells, sums: sums! }), [0], [sums.buffer]);
+      if (r?.kind !== "flows" || !r.packed) return null;
+      p = r.packed;
+      purposeParts = [];
+      for (const reply of purposeReplies) {
+        if (reply.kind !== "purposes") return null;
+        purposeParts.push(reply);
+      }
     }
-    if (!sums || mask !== ALL_PERIODS) return null;
-    const [r] = await this.ask((id) => ({ kind: "flows", id, version, end: e, cells, sums: sums! }), [0], [sums.buffer]);
-    if (r?.kind !== "flows" || !r.packed) return null;
-    const p = r.packed;
+    purposeParts.sort((a, b) => a.mask - b.mask);
     const n = p[6];
     const at = (k: number) => p.subarray(7 + k * n, 7 + (k + 1) * n);
     const result: Flows = {
@@ -1304,9 +1367,9 @@ class DemandClient {
     // T-285: each worker's everyday answer is packed (per purpose kind 30 timing values, m, m far
     // cells ascending, their rail, walk and drive legs), only the far cells the selection reaches
     const everyday: Float32Array[] = [];
-    mask = 0;
+    let mask = 0;
     for (const reply of purposeParts) {
-      if (reply.kind !== "purposes" || !reply.work) return null;
+      if (!reply.work) return null;
       if (purposeNames && JSON.stringify(purposeNames) !== JSON.stringify(reply.names)) return null;
       purposeNames = reply.names;
       mask |= reply.mask;
@@ -1359,7 +1422,15 @@ class DemandClient {
     const version = demandView.peek()?.version;
     if (version === undefined || cells.length === 0) return null;
     const e = end === "home" ? 0 : 1;
-    const v = await this.sumIntercity("icSel", version, (id) => ({ kind: "icSel", id, version, end: e, cells }));
+    // T-336: a zone open bare: the solving workers hold the market but not the zone, so its squares
+    // come from the aux worker with the question
+    let sq: { xy: Float32Array; share: Float32Array } | undefined;
+    if (this.isBare(activeCity.peek())) {
+      const [r] = await this.ask((id) => ({ kind: "bareSquares", id, version, end: e, cells }), [this.computeN]);
+      if (r?.kind !== "bareSquares" || !r.xy || !r.share) return null;
+      sq = { xy: r.xy, share: r.share };
+    }
+    const v = await this.sumIntercity("icSel", version, (id) => ({ kind: "icSel", id, version, end: e, cells, ...(sq ? { sq } : {}) }));
     if (!v) return null;
     // per place, 8 numbers after the matched share: starts (all, rail, x, y) then ends; then per
     // far zone (all, rail) of starts and of ends, then zone x, y, market (not summed)

@@ -26,6 +26,7 @@ import { lastSaved, moneyState } from "./game/money";
 import { live } from "./map/live";
 import { createMap, setBasemapLabels } from "./map/mapView";
 import { startCityBoundaries } from "./map/cityBoundaries";
+import { startZoneLoading } from "./map/zoneLoading";
 import { startZoneFocus } from "./map/zoneFocus";
 import { StationLabels } from "./map/stationLabels";
 import { networkFromState, tripAt } from "./map/network";
@@ -91,6 +92,7 @@ startDemand();
 // ---- map and overlay ----
 const map = createMap(document.getElementById("map")!);
 startCityBoundaries(map);
+startZoneLoading(map); // T-343: zones whose demand has not arrived, grey with a loading bar
 const demandSelectorRoot = document.createElement("div");
 map.getContainer().appendChild(demandSelectorRoot);
 render(h(MapTopLeft, null), demandSelectorRoot); // the demand buttons and the stations full alert (T-231)

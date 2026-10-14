@@ -26,6 +26,9 @@ export interface LoadProgress {
 
 /** What the demand pool is loading now; null when nothing is. */
 export const loadProgress = signal<LoadProgress | null>(null);
+/** T-343: each zone being loaded whose figures have not arrived yet, with its share done (0-1).
+ * A zone of the load above has that load's share; a zone opened for its bubbles only, its own. */
+export const zoneLoads = signal<ReadonlyMap<CityId, number>>(new Map());
 /** "loading" until the first game's demand has its first estimate, "failed" if it could not load. */
 export const startup = signal<"loading" | "ready" | "failed">("loading");
 /** T-318: nothing needs demand now: the view is over dead space and no built station reaches a

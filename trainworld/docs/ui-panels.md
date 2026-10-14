@@ -61,17 +61,23 @@ exceptions). One dock on the left [T-252, `ui/Dock.tsx`]:
 
 ## The top bar
 
-`ui/TopBar.tsx`, left to right:
+`ui/TopBar.tsx`, left to right. **Every part has a fixed width** [T-341], so no city name or status
+moves the split bar (the same length for every zone): the name box is cut with an ellipsis (the
+whole name on hover), the percentages and counts are in tabular figures in boxes of fixed width, and
+the bar's three lines (bar, labels, status) keep their height with nothing on the status line.
 
 - **The goal number**: the focused zone's mode split as one bar (driving, train, walking, in the
   mode colours whatever the theme), the split of all its modelled local trip legs (commutes,
-  everyday outings, school and university). The player's job is to make the train share grow. It
-  shows "–" until the zone has opened, and over dead space [T-318]. Its hover says "on weekdays"
-  or "at weekends" for the day shown. The zone named is the focused zone
-  ([ui-demand-views.md](ui-demand-views.md)).
-- **Status**: while a solve runs after an edit, "Updating demand 2/4…" and the split faded, the
-  figures held [T-232]; during startup's refinement "Estimate, refining 2/4…"; a city loading later
-  "Loading data" with a thin bar (Loading, below).
+  everyday outings, school and university), so the shares are of rides a day, not people [T-342].
+  The labels under it give the train share with its rides a day ("Train 18.5% 8.81M rides") and the
+  walking and driving shares; the hover gives all three counts and the total. The player's job is
+  to make the train share grow. It shows "–" and an empty bar until the zone has figures of its own
+  (a solve's, or the bare pass's for a zone no station reaches; not the no-rail split a pack gives
+  before that), and over dead space [T-318]. The hover says "on weekdays" or "at weekends" for the
+  day shown. The zone named is the focused zone ([ui-demand-views.md](ui-demand-views.md)).
+- **Status**, the third line under the split: while a solve runs after an edit, "Updating demand
+  2/4…" and the split faded, the figures held [T-232]; during startup's refinement "Estimate,
+  refining 2/4…"; a city loading later "Loading data" with a thin bar after it (Loading, below).
 - **Cash**, to the dollar, moving as fares are paid and running costs drain [T-284]. Fixed width
   (room for "-$99,999,999,999") with the digits left-aligned after the $ in tabular figures, so a
   changing figure never moves the rest of the bar [T-305, T-310].

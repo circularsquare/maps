@@ -1,5 +1,11 @@
 # Archive
 
+- T-341 [P2] Top bar of fixed widths. Done 2026-10-14: fixed city box (ellipsis, hover), split section of bar, labels and a reserved status line with the thin load bar; bar length equal for every zone and status; top bar 54 px. The split shows dashes until the zone has its own figures (no-rail base split dropped). docs/ui-panels.md.
+- T-342 [P2] The mode split counts rides. Done 2026-10-14: the shares were already of rides (trip legs a day, all modelled local purposes); "Train 18.5% 8.81M rides" beside the bar, hover has train, walking, driving and all rides (`modeRides` in game/demand.ts).
+- T-337 [P2] T-325 stage c, spec for bare zones. Done 2026-10-14: SPEC 3, docs/zones.md 6 and 8, docs/demand.md "Bare zones"; notes/T-325.md folded in and removed.
+- T-325 [P2] Loading fix 2: zones no station reaches stay out of the solve, opened bare in the aux worker. Done 2026-10-14 (stages T-336, T-337): no re-solve on a pan, pool memory about halved, figures bit-identical. docs/demand.md "Bare zones".
+- T-343 [P2] Zones still loading shown grey. Done 2026-10-14: a zone fetched without figures is filled grey with a thin bar over it ("Loading Toronto, 40%"), gone in one step when figures arrive; `map/zoneLoading.ts`, docs/ui-demand-views.md.
+- T-336 [P2] T-325 stage b, clicks on a bare zone's bubble. Done 2026-10-14: far end from the aux worker per solving worker's periods, longer trips from the solving workers given the aux worker's squares; equal to the bit to the solved zone's. docs/demand.md "Bare zones".
 - T-334 [P3] Crossovers design. Done 2026-10-14: notes/T-334.md; Anita chose the crossover tool, built as T-338.
 - T-257 [P3] Quad track follow-ups. Folded into T-338 (crossovers) and T-340 (quad end-node stations), 2026-10-14.
 - T-333 [P2] Drag-select blueprints. Done 2026-10-14: Select tool (key 5), drag box, Shift adds, click picks; Disable (D) and Enable (E) switch pieces so Construct and the total skip them; grey when disabled, saved with the game. Real save checked with real drags. DECISIONS, docs/ui-building.md.
