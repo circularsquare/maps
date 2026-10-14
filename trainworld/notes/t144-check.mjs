@@ -111,7 +111,7 @@ near(s.dot,stationRadii(15)[1],'transfer dot');assert.ok(insideStation(s,10+s.do
 near(stationShape(0,0,straight,1,project,{...style,boxes:false,linePx:40},false).dot,0.5*0.6*40+2.5,'a dot covers a plain line at its width now');
 assert.ok(STATION_BOX_ZOOM>=14.5&&STATION_BOX_ZOOM<=15.5,'boxes from about zoom 15');
 assert.ok(STATIONS_ZOOM>=10&&STATIONS_ZOOM<STATION_BOX_ZOOM,'stations hidden further out than the dots');
-near(stationRadii(9)[0],2.2*1.65,'T-313: 65% wider than T-189\'s');near(stationRadii(15)[0],5.6*1.65);near(stationHaloRadius(15),56);
+near(stationRadii(9)[0],2.2*1.32,'T-313, T-322: 32% wider than T-189\'s');near(stationRadii(15)[0],5.6*1.32);near(stationHaloRadius(15),56);
 
 // --- the network's stations
 function state(reverse=false){

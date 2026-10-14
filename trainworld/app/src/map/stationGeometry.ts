@@ -165,16 +165,17 @@ export function waysFrom(p: ArrayLike<number>, x: number, y: number): [Float32Ar
   return [new Float32Array(fwd), new Float32Array(back)];
 }
 
-/** Dots are this much wider in radius than T-189's (T-313, Anita: "make station small dots bigger,
- * maybe 65% bigger radius"). */
-const DOT_GROW = 1.65;
+/** Dots are this much wider in radius than T-189's: T-313's 1.65 (Anita: "make station small dots
+ * bigger, maybe 65% bigger radius"), less a fifth (T-322). */
+const DOT_GROW = 1.65 * 0.8;
 /** Dot radius in CSS px, ordinary and transfer stations; a dot also covers the lines through it. */
 export function stationRadii(zoom: number): [number, number] {
   return [DOT_GROW * interpolate(zoom, [[9, 2.2], [12, 3.8], [15, 5.6]]), DOT_GROW * interpolate(zoom, [[9, 2.8], [12, 5], [15, 7.2]])];
 }
 /** Zoomed out, a connector between two dots (T-313): its white is this share of an ordinary dot's
- * white radius, either side of its middle, with the dots' own rim along both sides. */
-const CONNECTOR_WHITE = 0.35;
+ * white radius, either side of its middle, with the dots' own rim along both sides (0.35 in T-313,
+ * thinner in T-322). */
+const CONNECTOR_WHITE = 0.3;
 /** A connector's half width on screen, its white and its rim, CSS px (T-313). */
 export function connectorHalfPx(st: Pick<StationStyle, "radius" | "ringPx">): number {
   return CONNECTOR_WHITE * Math.max(0, st.radius[0] - st.ringPx) + st.ringPx;
@@ -182,6 +183,9 @@ export function connectorHalfPx(st: Pick<StationStyle, "radius" | "ringPx">): nu
 export function stationHaloRadius(zoom: number) { return interpolate(zoom, [[9, 18], [12, 40], [15, 56]]); }
 /** The dark rim of a station, CSS px. */
 export function stationRing(zoom: number) { return interpolate(zoom, [[9, 1.2], [13, 2]]); }
+/** A dot's dark rim (and its connectors'), CSS px: a quarter thinner than a box's (T-322, Anita: "a
+ * little thinner"). */
+export function dotRing(zoom: number) { return 0.75 * stationRing(zoom); }
 /** A selected station's outline outside its rim, and the glow beyond that, CSS px (T-189). */
 export const SEL_OUTLINE_PX = 2;
 export const SEL_GLOW_PX = 6;

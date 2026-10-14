@@ -9,6 +9,7 @@
 
 import type { Complexes } from "../game/complexes";
 import { lineLoadsFor, stationRidersFor, type DemandView } from "../game/demand";
+import { loadFailure } from "../game/loading";
 import { PERIODS } from "../game/periods";
 import type { PurposeFilter } from "../game/purposes";
 import type { WorldView } from "../game/types";
@@ -55,6 +56,10 @@ export function stationScale(ridersPerDay: number): number {
 /** Seats and crush load per 20 m car: as ui/inspector/others.tsx (T-083) and
  * `SEATS_PER_CAR`, `CRUSH_PER_CAR` in sim/src/demand/api.rs. */
 const SEATS_PER_CAR = 44, CRUSH_PER_CAR = 160;
+/** A train's fill when its line runs and train loads are shown but demand has no figures for it
+ * yet (T-324); -1 is no gauge at all (train loads off, or the line not running). */
+export const PENDING = -2;
+
 /** The train gauge: half full when every seat is taken, full at crush; 2 = over full. */
 export function gauge(aboard: number, cars: number): number {
   const seats = SEATS_PER_CAR * cars, crush = CRUSH_PER_CAR * cars;
@@ -147,9 +152,12 @@ export function buildLayers(net: NetworkBuffers, w: WorldView, dv: DemandView | 
     }
   }
 
-  // the trains: gauges per sample
+  // the trains: gauges per sample; PENDING for a running line demand has no figures for yet
+  // (T-324: drawn striped, never like a full train)
   const fill = new Float32Array(nSamples * 2).fill(-1);
   const strokeOf = net.sampleStroke;
+  const pending = new Set<number>();
+  if (on.trainLoad && !loadFailure.peek()) for (const l of w.save.lines) if (w.lineStats[l.id]?.status === "running" && l.stops.length >= 2 && !nums.has(l.num)) pending.add(l.num);
   let lastLine = -1;
   let v: ReturnType<typeof nums.get>;
   if (strokeOf && on.trainLoad && info)
@@ -160,7 +168,10 @@ export function buildLayers(net: NetworkBuffers, w: WorldView, dv: DemandView | 
         lastLine = L.colour[i];
         v = nums.get(lastLine);
       }
-      if (!v) continue;
+      if (!v) {
+        if (pending.has(lastLine)) fill[k * 2] = fill[k * 2 + 1] = PENDING;
+        continue;
+      }
       const s = info[i * 4];
       fill[k * 2] = v.g0[s] ?? -1;
       fill[k * 2 + 1] = v.g1[s] ?? -1;

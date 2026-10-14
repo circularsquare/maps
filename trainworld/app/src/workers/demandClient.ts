@@ -172,6 +172,9 @@ interface Solve {
   sentAt: number;
   firstAt?: number;
   refinedAt?: number;
+  /** T-324: when new or changed lines got the first estimate's figures early, and which */
+  earlyAt?: number;
+  earlyLines?: string[];
   periodMs: number[][];
   setupMs: number[];
   /** WASM linear memory per worker after its last stage, bytes */
@@ -1308,14 +1311,62 @@ class DemandClient {
     if (s === this.cur) demandStep.value = { done: round + 1, of: ROUNDS + 1 };
     // T-232: a round before the final one is shown only when nothing final would be held instead
     const final = round >= ROUNDS;
-    if (!final && !s.showEstimates) return;
     const res = s.results as Result[];
+    if (!final && !s.showEstimates) {
+      // T-324: lines new or changed since the shown result have no figures; theirs come from the
+      // first estimate at once, every other figure waits for the final round as above
+      if (round === 0 && s === this.cur && !perfOff("early")) this.publishNewLines(s, res);
+      return;
+    }
     // T-260: the weekday is the solve itself; a weekend is worked out from it, purpose by purpose
     demandByDay.value = DAY_KINDS.map((day) => this.dayDemand(s, round, final, day, day === 0 ? res : res.map((r, q) => this.dayResult(r, q, day))));
     if (final) {
       s.refinedAt = performance.now();
       if (s === this.cur) demandUpdating.value = false;
     }
+  }
+
+  /**
+   * T-324: the first estimate's figures for the lines the shown result has none for that fit (new
+   * lines, and lines whose stops changed), added to the shown result. Everything else shown stays
+   * as it is: other lines, the split, the bubbles, and stations a shown line already serves (a
+   * station only the new lines serve gets the estimate too). The view keeps the shown solve's
+   * version and round, so queries and the bubbles behave as before; the final round replaces all.
+   */
+  private publishNewLines(s: Solve, res: Result[]) {
+    const days = demandByDay.peek();
+    const base = this.log.find((x) => x.version === days[0].view?.version);
+    if (!base || !days[0].view) return;
+    const had = new Map(base.layout.map((l) => [l.id, l.stops.join(",")]));
+    // a line given early figures by an earlier solve's estimate is still "new" against the base
+    const fresh = s.layout.filter((l) => had.get(l.id) !== l.stops.join(","));
+    if (!fresh.length) return;
+    const part = { ...s, layout: fresh };
+    s.earlyAt = performance.now();
+    s.earlyLines = fresh.map((l) => l.id);
+    demandByDay.value = days.map((d, k) => {
+      const day = k as DayKind;
+      if (!d.view) return d;
+      const est = this.dayDemand(part, 0, false, day, day === 0 ? res : res.map((r, q) => this.dayResult(r, q, day))).view!;
+      const lines = new Map(d.view.lines), stations = new Map(d.view.stations);
+      for (const { id } of fresh) {
+        const l = est.lines.get(id);
+        if (l) lines.set(id, { ...l, estimate: true });
+      }
+      for (const [id, v] of est.stations) if (!stations.has(id)) stations.set(id, v);
+      let purposes = d.view.purposes;
+      if (est.purposes) {
+        purposes = new Map(purposes);
+        for (const [key, p] of est.purposes) {
+          const old = purposes.get(key);
+          const pl = new Map(old?.lines), ps = new Map(old?.stations);
+          for (const { id } of fresh) { const l = p.lines.get(id); if (l) pl.set(id, l); }
+          for (const [id, v] of p.stations) if (!ps.has(id) && !d.view.stations.has(id)) ps.set(id, v);
+          purposes.set(key, { lines: pl, stations: ps });
+        }
+      }
+      return { ...d, view: { ...d.view, lines, stations, purposes } };
+    });
   }
 
   /** A kind of day's load factor for purpose `key` in period `q` (sim/src/demand/days.rs). */

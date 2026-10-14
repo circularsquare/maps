@@ -3,9 +3,7 @@
 
 import type { Map as MlMap } from "maplibre-gl";
 import { DISC } from "../workers/commutersProtocol";
-import { closestStations, minLabel, walkGridEpoch } from "../game/walks";
-import { world } from "../game/world";
-import { toLngLat, toLocal, type Anchor } from "./geo";
+import { toLocal, type Anchor } from "./geo";
 
 /** Where the pointer is on the ground. Each disc set is in the local units of its own draw anchor
  * (T-317, map/geo.ts), so a finder turns the pointer into those (`discAt`, `pointerLocal`). */
@@ -23,9 +21,6 @@ export function addFinder(order: number, f: Finder) {
   finders.sort((a, b) => b.order - a.order);
 }
 
-/** The centre of the disc `discAt` found last (longitude, latitude): the tag lists the stations closest to it. */
-let lastDisc: [number, number] | null = null;
-
 /** The topmost disc of a set (drawn last, built relative to anchor `a`) containing the pointer,
  * or -1; radii times `scale`. */
 export function discAt(discs: Float32Array | null, p: Pointer, a: Anchor, scale = 1): number {
@@ -33,29 +28,9 @@ export function discAt(discs: Float32Array | null, p: Pointer, a: Anchor, scale 
   const [x, y] = toLocal(p.lng, p.lat, a);
   for (let i = discs.length / DISC - 1; i >= 0; i--) {
     const dx = discs[i * DISC] - x, dy = discs[i * DISC + 1] - y, r = discs[i * DISC + 2] * scale;
-    if (dx * dx + dy * dy <= r * r) {
-      lastDisc = toLngLat(discs[i * DISC], discs[i * DISC + 1], a);
-      return i;
-    }
+    if (dx * dx + dy * dy <= r * r) return i;
   }
   return -1;
-}
-
-const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
-let closest: { key: string; lines: string[] } | null = null;
-/** T-312: a bubble's 3 closest stations with their walking minutes (game/walks.ts), built or
- * blueprint; kept while the pointer stays on the bubble. */
-function closestLines([lng, lat]: [number, number]): string[] {
-  const w = world.peek();
-  if (!w) return [];
-  const key = `${lng.toFixed(6)},${lat.toFixed(6)},${w.version},${walkGridEpoch.peek()}`;
-  if (closest?.key === key) return closest.lines;
-  const near = closestStations(lng, lat, w.save.stations);
-  const lines = near.length
-    ? ["Closest stations", ...near.map((n) => `${esc(n.station.name)}${n.station.built ? "" : " (blueprint)"}, ${n.metres === null ? "no walk" : minLabel(n.metres)}`)]
-    : [];
-  closest = { key, lines };
-  return lines;
 }
 
 /** Pointer (CSS px in the map) to a place on the ground. */
@@ -76,9 +51,8 @@ export function hoverAt(map: MlMap, px: number, py: number): string[] | null {
   if (!finders.length || hoverAbove.at?.(px, py)) return null;
   const p = pointerAt(map, px, py);
   for (const { f } of finders) {
-    lastDisc = null;
     const t = f(p);
-    if (t) return lastDisc ? [...t, ...closestLines(lastDisc)] : t;
+    if (t) return t;
   }
   return null;
 }

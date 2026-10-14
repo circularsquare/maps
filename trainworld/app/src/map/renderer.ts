@@ -1,4 +1,4 @@
-import { boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, bridgeShape, connectorHalfPx, spanningPairs, insideStation, PLATFORM_POINTS, platformPoints, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, shapePoints, STATION_BOX_ZOOM, STATIONS_ZOOM, stationHaloRadius, stationRadii, stationRing, stationShape, type PlatformShape, type Project, type StationShape, type StationStyle } from "./stationGeometry";
+import { boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, bridgeShape, connectorHalfPx, dotRing, spanningPairs, insideStation, PLATFORM_POINTS, platformPoints, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, shapePoints, STATION_BOX_ZOOM, STATIONS_ZOOM, stationHaloRadius, stationRadii, stationRing, stationShape, type PlatformShape, type Project, type StationShape, type StationStyle } from "./stationGeometry";
 // WebGL2 network renderer: track and line strokes (one instanced quad per polyline segment, white
 // casing under the colour; blueprint solid, lighter and without casing, T-311), stations (platforms along the track, or
 // dots zoomed out, T-189), the drawing tool's preview,
@@ -23,6 +23,12 @@ export const EPOCH_S = 3600;
 const TRACK_RGB = rgb("#77746f").map((v) => v / 255);
 const BAD_RGB = rgb("#d23c3c").map((v) => v / 255);
 const SEL_RGB = rgb(NET_INK).map((v) => v / 255);
+/** Blueprint track (T-322, Anita: "light blue", "slightly wider", "like two parallel rails"): a
+ * light blue middle as wide as a line, with a dark blue rail this share of a line width (at least
+ * a pixel) along each edge. */
+const BP_MID_RGB = rgb("#a9cdf3").map((v) => v / 255);
+const BP_RAIL_RGB = rgb("#2f62b3").map((v) => v / 255);
+const BP_RAIL_SHARE = 0.16;
 /** Seats and crush load per 20 m car, for the gauge (map/demandLayers.ts `gauge`, T-083). */
 const SEATS_PER_CAR = 44, CRUSH_PER_CAR = 160;
 /** A train's width on screen by zoom, CSS px, pills and cars alike (T-199: 75% of T-107's 5/8/12,
@@ -82,6 +88,9 @@ uniform vec3 u_level_colours[7];
 uniform vec3 u_track;
 uniform vec3 u_bad;
 uniform vec3 u_sel;
+uniform vec2 u_bp;           // blueprint track (T-322): its middle's width and each rail's (px)
+uniform vec3 u_bp_mid;       // its middle, light blue
+uniform vec3 u_bp_rail;      // its two rails, dark blue
 uniform highp sampler2D u_line_colours;
 in vec4 a_seg;
 in uint a_colour;
@@ -98,8 +107,13 @@ void main() {
   bool sel = (u_kind == 1 && int(a_colour) == u_sel_line) || (u_kind == 0 && int(a_edge) == u_sel_edge);
   bool blueprint = (flags & 1) != 0;
   bool placement = (flags & 32) != 0;
-  if ((u_only_sel == 1 && !sel) || (u_casing > 0.0 && blueprint && !placement)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
-  float w = u_width.x * a_wmul + (sel ? u_width.y : 0.0) + u_casing;
+  // blueprint track is two dark blue rails either side of a light blue middle (T-322, Anita): the
+  // rails are its casing pass, drawn for every segment before any middle, so the joints are clean;
+  // the middle is a line wide, so a line planned along it fills it and the rails show either side
+  bool bpTrack = blueprint && !placement && u_kind == 0;
+  if ((u_only_sel == 1 && !sel) || (u_casing > 0.0 && blueprint && !placement && !bpTrack)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+  float w = bpTrack ? u_bp.x + (sel ? u_width.y : 0.0) + (u_casing > 0.0 ? 2.0 * u_bp.y : 0.0)
+    : u_width.x * a_wmul + (sel ? u_width.y : 0.0) + u_casing;
   if (u_cap > 0.0) w = min(w, u_cap);
   // thinner than a pixel (zoomed far out, T-205): a pixel wide and fainter, rather than broken up
   float faint = clamp(w, 0.05, 1.0);
@@ -126,7 +140,8 @@ void main() {
   bool bp = blueprint && !placement;
   v_alpha = (!placement && !bp && (flags & 2) != 0 ? 0.55 : 1.0) * faint * (u_kind == 1 && !sel ? u_dim : 1.0);
   vec3 lc = u_level_colours[clamp(3 - int(round(a_level)), 0, 6)];
-  if (u_casing > 0.0) v_color = placement ? u_sel : vec3(1.0);
+  bool bpMid = false;
+  if (u_casing > 0.0) v_color = bpTrack ? u_bp_rail : placement ? u_sel : vec3(1.0);
   else if ((flags & 16) != 0) v_color = u_bad;
   else if ((u_kind == 2 && !placement) || u_by_level == 1) v_color = lc;
   else if (u_by_speed == 1) {
@@ -137,9 +152,11 @@ void main() {
       : mix(fast, top, clamp((a_speed - 120.0) / 40.0, 0.0, 1.0));
   }
   else if (placement) v_color = vec3(1.0);
+  else if (u_kind == 0 && bpTrack && !sel) { v_color = u_bp_mid; bpMid = true; }
   else if (u_kind == 0) v_color = sel ? u_sel : u_track;
   else v_color = texelFetch(u_line_colours, ivec2(int(a_colour) % ${LINES_W}, int(a_colour) / ${LINES_W}), 0).rgb;
-  if (bp) v_color = mix(v_color, vec3(1.0), 0.45);
+  // other blueprint colours (a planned line, a selected blueprint, by height or speed) lighter
+  if (bp && !bpMid && u_casing <= 0.0) v_color = mix(v_color, vec3(1.0), 0.45);
 }`;
 
 const STROKE_FS = `#version 300 es
@@ -617,8 +634,9 @@ void main() {
     if (aboard >= crush - 0.5) v_fill = 2.0;
   } else {
     // no account for this train (its line's stops just changed, or demand is not in yet): no
-    // gauge, rather than the forecast's average train in its place (T-230, Anita)
-    v_fill = -1.0;
+    // gauge, rather than the forecast's average train in its place (T-230, Anita); striped as
+    // "not worked out yet" where its line shows loads (T-324), never solid like a full train
+    v_fill = v_fill >= 0.0 || v_fill < -1.5 ? -2.0 : -1.0;
   }
   v_empty = mix(lc, vec3(1.0), 0.18);
   v_front = run == 0 ? 1.0 : -1.0;
@@ -677,6 +695,10 @@ void main() {
     float back = (p.x + v_consist.y) * v_front + v_consist.x * 0.5;
     core = mix(v_empty, v_color, clamp(min(v_fill, 1.0) * v_consist.x - back + 0.5, 0.0, 1.0));
     if (v_fill > 1.5) rim = u_bad;
+  } else if (v_fill < -1.5) {
+    // riders not worked out yet (T-324): diagonal stripes of the line colour and white
+    float w = max(2.0, 2.0 * u_dpr);
+    core = mod(p.x + p.y, 2.0 * w) < w ? v_empty : vec3(1.0);
   }
   // Window strips and a front cab read as a train once each car is large enough to see them.
   if (v_detail > 0.5 && v_px.x > 18.0 * u_dpr) {
@@ -1018,7 +1040,7 @@ export class NetworkRenderer {
     this.stationProg = compile(gl, STATION_VS, STATION_FS);
     this.trainProg = compile(gl, TRAIN_VS, TRAIN_FS);
     this.hasStencil = (gl.getParameter(gl.STENCIL_BITS) ?? 0) > 0;
-    this.strokeU = uniforms(gl, this.strokeProg, ["u_matrix", "u_viewport", "u_width", "u_casing", "u_cap", "u_kind", "u_sel_line", "u_sel_edge", "u_only_sel", "u_dim", "u_by_level", "u_by_speed", "u_px_per_unit", "u_level_colours", "u_track", "u_bad", "u_sel", "u_line_colours"]);
+    this.strokeU = uniforms(gl, this.strokeProg, ["u_matrix", "u_viewport", "u_width", "u_casing", "u_cap", "u_kind", "u_sel_line", "u_sel_edge", "u_only_sel", "u_dim", "u_by_level", "u_by_speed", "u_px_per_unit", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_line_colours"]);
     this.stationU = uniforms(gl, this.stationProg, ["u_matrix", "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass", "u_layer", "u_halo", "u_halo_radius", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_hair", "u_plat", "u_mask", "u_stline"]);
     this.bridgeProg = compile(gl, BRIDGE_VS, STATION_FS);
     this.bridgeU = uniforms(gl, this.bridgeProg, ["u_matrix", "u_viewport", "u_ring", "u_bridge", "u_pass", "u_layer", "u_halo", "u_ink", "u_bad", "u_crowd_rgb", "u_mask"]);
@@ -1353,6 +1375,10 @@ export class NetworkRenderer {
     gl.uniform3fv(u.u_track, TRACK_RGB);
     gl.uniform3fv(u.u_bad, BAD_RGB);
     gl.uniform3fv(u.u_sel, SEL_RGB);
+    // blueprint track (T-322): a line-wide light blue middle between two thin dark blue rails
+    gl.uniform2f(u.u_bp, wLine, Math.max(1, BP_RAIL_SHARE * wLine / dpr) * dpr);
+    gl.uniform3fv(u.u_bp_mid, BP_MID_RGB);
+    gl.uniform3fv(u.u_bp_rail, BP_RAIL_RGB);
     gl.activeTexture(gl.TEXTURE2);
     gl.bindTexture(gl.TEXTURE_2D, this.tex.colours);
     gl.uniform1i(u.u_line_colours, 2);
@@ -1385,7 +1411,8 @@ export class NetworkRenderer {
       // selected ones (T-205).
       const boxes = zoom >= STATION_BOX_ZOOM;
       const hidden = zoom < STATIONS_ZOOM;
-      const ring = stationRing(zoom);
+      // a dot's rim is thinner than a box's (T-322)
+      const ring = boxes ? stationRing(zoom) : dotRing(zoom);
       const boxLinePx = interp(STATION_BOX_ZOOM, LINE_PX), boxRingPx = stationRing(STATION_BOX_ZOOM);
       this.stationStyle = { boxes, radius: stationRadii(zoom), linePx: wLine / dpr, ringPx: ring, boxLinePx, boxRingPx, hidden };
       this.syncGroups(n, opt.groups ?? null);

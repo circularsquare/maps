@@ -46,7 +46,9 @@ export interface Place {
  * for,. */
 export const commuterPick = signal<{ sel: Selection; totals: [number, number, number]; purposes?: PurposeTrips[]; far: { totals: [number, number, number]; places: Place[] } | null;
   /** the map's purpose filter the totals and far end count (T-158) */
-  purpose?: PurposeFilter } | null>(null);
+  purpose?: PurposeFilter;
+  /** the selection's centre, longitude and latitude (T-323) */
+  at?: [number, number] } | null>(null);
 
 /** "local trips", or the purpose filter's trips (T-158), for the hover tags. */
 const tripWords = () => {
@@ -659,10 +661,21 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     const [mt, mw, md] = sel.end === "home" ? [m.homeRail, m.homeWalk, m.homeDrive] : [m.workRail, m.workWalk, m.workDrive];
     const totals: [number, number, number] = [0, 0, 0];
     for (const c of sel.cells) (totals[0] += mt[c]), (totals[1] += mw[c]), (totals[2] += md[c]);
+    // T-323: the selection's centre (longitude, latitude), its cells weighted by their trip legs, for
+    // the panel's closest stations
+    let at: [number, number] | undefined;
+    if (cellsWorld) {
+      let sx = 0, sy = 0, sw = 0;
+      for (const c of sel.cells) {
+        const wt = mt[c] + mw[c] + md[c];
+        sx += cellsWorld[c * 2] * wt; sy += cellsWorld[c * 2 + 1] * wt; sw += wt;
+      }
+      if (sw > 0) at = getWorldFrame().toLonLat(sx / sw, sy / sw);
+    }
     const prev = commuterPick.peek();
     const purpose = shown.purpose;
     const keepFar = prev?.sel === sel && prev.purpose === purpose ? prev.far : null;
-    commuterPick.value = { sel, totals, far: keepFar, purposes: prev?.sel === sel ? prev.purposes : undefined, purpose };
+    commuterPick.value = { sel, totals, far: keepFar, purposes: prev?.sel === sel ? prev.purposes : undefined, purpose, at };
     drawPick();
     commuterStats.selectMs = performance.now() - t0;
     // the far end: asked again when the selection or the demand result changes, and summed
@@ -698,7 +711,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
       commuterStats.summedAt = t2;
       farCells = summed.levels;
       farAnchor = summed.anchor;
-      commuterPick.value = { sel, totals, purposes: f.purposes, far: { totals: ft, places: places(farCells, farAnchor) }, purpose };
+      commuterPick.value = { sel, totals, purposes: f.purposes, far: { totals: ft, places: places(farCells, farAnchor) }, purpose, at };
       drawPick();
       commuterStats.farAt = performance.now();
       commuterStats.farMs = commuterStats.farAt - t2;

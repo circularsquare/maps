@@ -6,6 +6,7 @@ import { BUBBLE_ALPHA, modeMix } from "../../game/palette";
 import { purposeWords } from "../../game/purposes";
 import { commuterPick } from "../../map/commuterView";
 import { Row } from "../widgets";
+import { ClosestStations } from "./ClosestStations";
 import { SelectionLongerTrips } from "./LongerTrips";
 import { PurposeBreakdown } from "./PurposeBreakdown";
 
@@ -53,6 +54,7 @@ export function CommutersInspector() {
       </div>
       <div class="sub muted" data-tip="Outward and return legs included. Inter-region trips are counted separately below.">{p.sel.areas === 1 ? "One area" : `${p.sel.areas} areas`}</div>
       <Modes totals={p.totals} />
+      {p.at && p.sel.areas === 1 && <ClosestStations lng={p.at[0]} lat={p.at[1]} />}
       {p.purpose && p.purpose !== "all" && <p class="muted small">
         {`${purposeWords(p.purpose)[0].toUpperCase() + purposeWords(p.purpose).slice(1)} trips only.`}
       </p>}

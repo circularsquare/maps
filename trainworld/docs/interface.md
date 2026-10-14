@@ -448,10 +448,17 @@ bars). The network is not styled by us: lines, trains and stations take the line
   leaving it with Esc returns to selecting. While drawing track, its placement ghost is solid
   with a dark casing: white in Line/Traffic views, or coloured by the selected Height/Max speed
   view using the preview's fitted geometry. An invalid ghost is red. Once placed, blueprint track
-  is drawn solid, in the track's or line's colour mixed 45% towards white and opaque (T-311,
-  Anita: the dashes "look quite confusing as the lines curve"; opaque because segments overlap
-  at every joint and see-through blueprint showed a bead there), without casing. Lines that do
-  not run stay see-through at 55%. **The station tool's ghost** (T-311, Anita: "theres no
+  is drawn solid and opaque (T-311, Anita: the dashes "look quite confusing as the lines curve";
+  opaque because segments overlap at every joint and see-through blueprint showed a bead there)
+  like two parallel rails (T-322, Anita: light blue, "slightly wider" than built lines because
+  blueprints matter more while building; grey vanished in the Lines view): a light blue middle
+  (#a9cdf3) as wide as a line, with a dark blue rail (#2f62b3) 16% of a line width (at least 1 px)
+  along each edge, in every track view. The rails are drawn for every blueprint segment before
+  any middle, the way built lines' white casing is, so curves and junctions join cleanly. In
+  Height and Max speed the middle keeps the view's colour, mixed 45% towards white, between the
+  same rails; a selected blueprint's middle is the selection ink mixed the same way. A line planned
+  along blueprint track fills the middle, in its colour mixed 45% towards white, with the rails
+  either side. Lines that do not run stay see-through at 55%. **The station tool's ghost** (T-311, Anita: "theres no
   indicator for whether its okay to put a station here") is always the platform's full box at its
   true length, at every zoom (not a dot below zoom 15), and is blue (`#2f6fe0` fill, `#1c4fb8`
   outline) where a click would place the station and red (`#e03c3c`, `#b91f1f`) where it would be
@@ -585,8 +592,8 @@ bars). The network is not styled by us: lines, trains and stations take the line
   estimate started. The first result, a change of purpose filter or city, and
   a result landing while the clock is held (a game loading) show at once. The bubbles are rebuilt
   in their worker when f has moved 0.01 and at most four times a second, only while catching up.
-  Their hover tags read what the bubbles show, and end with the bubble's three closest stations
-  and the minutes to walk there (T-312, "Closest stations", below). The inspectors, a bubble selection and its far
+  Their hover tags read what the bubbles show (kept lean: no station list, T-323; a clicked bubble's
+  panel has the closest stations, below). The inspectors, a bubble selection and its far
   end, a station's catchment and the top bar are the current forecast at once. The city bubbles
   zoomed far out (below) catch up the same way; a selection's inter-region trip bubbles do not.
 
@@ -700,16 +707,19 @@ bars). The network is not styled by us: lines, trains and stations take the line
   catchment are the station's); its subtitle then ends with "Complex of 16 stations" as a link
   back, and any new selection, a click on the same station included, shows the complex again.
   Then the complex map (below) and the complex's boardings today with their purpose split.
-  **Closest stations** (T-312, `StationClosest` in ui/inspector/others.tsx, `game/walks.ts`): below
-  the station's lines, the three other stations with the shortest walk, built or blueprint
-  (blueprint ones muted and marked), each with its walking minutes ("7 min", hover: the metres).
+  **Closest stations** (T-312, T-323, `ClosestStations` in ui/inspector/ClosestStations.tsx,
+  `game/walks.ts`): below the station's lines, the three other stations with the shortest walk,
+  built or blueprint (blueprint ones muted and marked), each with the chips of the lines stopping
+  there (a chip per line name, six at most, then "+n") and its walking minutes ("7 min", hover: the
+  metres).
   A click on a row selects that station (and moves the map to it if off screen). The station's
   own complex and stations of its own name are left out, and a name is listed once (the real
   save has a station per platform group). The walk is the demand model's routed walk (docs/demand.md
   4.3), so a station across the Hudson is never a neighbour; one that water cuts off shows "no
   walk", but only when fewer than three can be walked to within 10 km. Minutes are the routed
   metres x the model's 1.3 detour at a plain 4.8 km/h (the 15 km/h fast walk to stations stands
-  in for bikes and buses and is not used). The bubble hover tag lists the same from the bubble's centre.
+  in for bikes and buses and is not used). The panel of a selected demand bubble (one area; under the mode split) lists the same from the
+  bubble's centre, its cells weighted by their trip legs; a selection of several areas has none.
   Commuters and inter-region trips cover the whole complex, each of the demand model's stations counted
   once, and the map draws the complex's catchment. "One circle per station complex" in the
   Stations tab (under Station demand circles, T-213; on by default since T-192) groups only the
@@ -877,16 +887,17 @@ bars). The network is not styled by us: lines, trains and stations take the line
   station (or complex) is still drawn and clickable. Demand circles, bubbles and capacity tags are
   unchanged.
 - **Stations on the map** (T-189, T-204, `map/stationGeometry.ts`): from zoom 11 to 15 every
-  station is its own dot at its platform's middle (white, dark rim; T-313, Anita: "make station
-  small dots bigger, maybe 65% bigger radius": ordinary 5.4/6.3/9.2 px radius at zoom 11/12/15, a
-  station served by more than one line 7/8.3/11.9 px, 1.65 times T-189's, never narrower than the
-  lines through it). A complex's dots are one shape the way its boxes are (T-313, Anita: "stop
+  station is its own dot at its platform's middle (white, dark rim a quarter thinner than a box's,
+  1.5 px at zoom 13; T-313, Anita: "make station small dots bigger, maybe 65% bigger radius", then
+  T-322: "20% smaller", "the black rim a little thinner": ordinary 4.3/5/7.4 px radius at zoom
+  11/12/15, a station served by more than one line 5.6/6.6/9.5 px, 1.32 times T-189's, never
+  narrower than the lines through it). A complex's dots are one shape the way its boxes are (T-313, Anita: "stop
   growing dots to fit all the platform centers within the complex dot ... their outlines merge in
   the same way that station boxes do"): every dark disc is drawn first, then every white inside its
   rim, so dots that overlap have one outline round them all. Dots that do not touch are joined by a
   connector: a straight band from one dot's centre to the other's with the dots' own rim along both
-  sides and white 35% of an ordinary dot's white radius either side of its middle (about 7.7 px
-  across at zoom 13), its dark drawn with the dots' dark and its white with their white, under it,
+  sides and white 30% of an ordinary dot's white radius either side of its middle (about 5.6 px
+  across at zoom 13; T-322 made it thinner), its dark drawn with the dots' dark and its white with their white, under it,
   so dots and connectors are one white shape with one outline (Anita: "it should look like its
   made of the same material"). Connectors join the stations the complex rule's distances group
   (game/complexes.ts without the player's links, `dotGroups` in game/complexView.ts), by the
@@ -923,7 +934,7 @@ bars). The network is not styled by us: lines, trains and stations take the line
   the true 12 m, so both double with each zoom level and its shape never changes. Every station
   has this width in every mode: in Line with traffic thickness a line can be wider than the
   stations on it, and dots do not grow for it either. It is never shorter than it is wide. Station
-  names sit clear of a plain box at any zoom. Blueprint stations are faded (blueprint track is lightened instead, opaque, T-311).
+  names sit clear of a plain box at any zoom. Blueprint stations are faded (blueprint track is drawn as blue rails instead, opaque, T-311, T-322).
   Platforms drawn over each other are one white shape with one dark outline round the whole of
   it (T-217, Anita: "all the white rectangles overlapping seamlessly ... and then one continuous
   black outline surrounding the whole white shape"): every station's dark shape is drawn first,

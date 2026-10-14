@@ -433,8 +433,13 @@ Web first, so it can be shared as a link.
   finished forecast, faded with "Updating demand 2/4…", until the new solve's last round lands,
   so figures change once per edit instead of stepping through the rounds. The earlier rounds are
   shown only where nothing final is: at startup, after a whole-game load, or for a city just
-  opened; the top bar then says "Estimate, refining 2/4…". Timings on the real network:
-  docs/demand.md 4.4.
+  opened; the top bar then says "Estimate, refining 2/4…". **A line new or changed by the edit**
+  (its stops differ from the shown result's) has no figures to keep, so it takes the free-flow
+  estimate's riders as soon as that lands, as do stations only such lines serve; its final round
+  replaces them like everything else (T-324: a new Toronto line showed riders 5 s after it was
+  built instead of 16-17 s, final figures unchanged). Until a running line has any figures its
+  trains are drawn striped in the line colour and white, never solid like a full train, and the
+  train panel says "Calculating". Timings on the real network: docs/demand.md 4.4.
 - **Loading and readiness** (T-149, T-172): input is never blocked; the map, inspectors and
   building work as soon as the network is drawn. A loaded game (the page opening, a file, a
   browser slot, a new game) holds only the game clock, until its network has its first estimate

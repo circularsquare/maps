@@ -16,12 +16,21 @@ batches 10-19 were Anita's feedback from playing. Batch history is in ARCHIVE.md
 
 ## In progress (batch 23, 2026-10-14)
 
-- T-303 [P2] Demand loading and responsiveness, stage 1: measure and propose (Anita: "demand loading performance is definitely becoming an issue"; bubbles slow in the first minute while demand re-solves; T-122's frozen copies rejected as too much memory). Measure startup, panning into zones, memory per worker, and clicks during the first minute; propose what to compute first (what is on screen, what the player is likely to look at) and what to leave until asked; folds in T-301 and T-302. A proposal for Anita, no build. Stage 1 done, proposal in notes/T-303.md waiting for Anita.
+- T-303 [P2] Demand loading and responsiveness. Stage 1 (measure and propose, notes/T-303.md) done; the whole proposal approved by Anita 2026-10-14 ("the proposed loading fixes make sense to me, lets try it out"). Built as T-324 to T-328, in that order.
 
 - T-319 [P3] One world, stage 4: running side per region (docs/world.md). `right_hand` is one flag per network and only `capacity.rs` reads it; Britain, France's main lines, India and Japan run on the left. Take it from the registry's region and read it per junction. Before London's junctions carry traffic. Open.
 - T-321 [P3] Local time's rest (found in T-309, docs/world.md "Local time"): the money ledger's days are the game clock's (New York's), not each region's; the demand bubbles' catch-up over a day (map/catchUp.ts) follows the clock, not the local time in view; the regional market has no trips between zones of different offsets yet, and when it does (London to Paris), a trip's period needs a rule (its origin's local time). None matters until a second offset has demand (T-288). Open.
 
 
+
+- T-325 [P2] Loading fix 2 (T-303 item 1): zones no station reaches stay out of the solve, opened in the auxiliary worker only, their bubbles from a no-rail pass; a click on such a zone's bubble asks the solving workers for its inter-region trips. Three stages per notes/T-303.md. After T-324. Open.
+- T-326 [P2] Loading fix 3 (T-303 item 3): separate clusters (Toronto vs the Northeast) solve separately, an edit re-solves only its own cluster, the viewed one first. Three stages. After T-325. Open.
+- T-327 [P2] Loading fix 4 (T-303 item 4): clicks during the startup solve answered from the newest round every worker holds (about 2 s instead of up to 10). Open.
+- T-328 [P2] Loading fix 5 (T-303 item 5): on reload show the last final result at once, cached beside the save and keyed by network, packs and build, and let the clock run on it while the fresh solve finishes (Anita: yes). Open.
+
+- T-329 [P1] Cleanup pass and lean docs for good (Anita 2026-10-14: "lets do the cleanup pass and try to also make those changes so that we will keep it somewhat clean and lean when adding stuff in the future"). Short doc rules in CLAUDE.md (archive entries at most two lines plus a notes link; DECISIONS only for choices someone might revisit; DECISIONS and ARCHIVE are searched, not read); CLAUDE.md slimmed to rules, its file layout moved to docs/code-map.md, one "agent working rules" section so briefs carry only the task; SPEC.md to a true summary; docs/interface.md split by area; a standing `checks/smoke.mjs` run before every commit, the useful old check scripts moved to `checks/`, one-offs deleted; notes/test-batch-next.md retired. Starts when T-322, T-323 and T-324 finish. Open.
+
+- T-330 [P3] Line chips without a symbol show the first letter of the name, so in the real save every subway chip reads "S" and PATH "P" (seen in T-323). Default a chip to the line's short name (`lineShortName` in map/networkTips.ts, T-305: "subway 6X" to "6X"), cut to fit, when the player has set no symbol. Open.
 
 ## Demand and data
 n- T-283 [P3] Toronto's Yonge test line lost all its airport riders once routes were added (567 to none, found in T-277): check whether routed walks or drives cut Pearson's terminals off from stations, or whether airport trips now drive. May affect US airports too. Open; notes/T-277.md.
