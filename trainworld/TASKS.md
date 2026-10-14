@@ -34,10 +34,9 @@ batches 10-19 were Anita's feedback from playing. Batch history is in ARCHIVE.md
 
 - T-330 [P3] Line chips without a symbol show the first letter of the name, so in the real save every subway chip reads "S" and PATH "P" (seen in T-323). Default a chip to the line's short name (`lineShortName` in map/networkTips.ts, T-305: "subway 6X" to "6X"), cut to fit, when the player has set no symbol. Open.
 
-- T-334 [P3] Crossovers in general (Anita: "think about crossovers in general?"): how a player joins parallel tracks (double track, quad, side-by-side lines) so trains can switch; folds in T-257's quad crossovers. Design in notes/T-334.md waiting for Anita.
 
 ## Demand and data
-n- T-283 [P3] Toronto's Yonge test line lost all its airport riders once routes were added (567 to none, found in T-277): check whether routed walks or drives cut Pearson's terminals off from stations, or whether airport trips now drive. May affect US airports too. Open; notes/T-277.md.
+- T-283 [P3] Toronto's Yonge test line lost all its airport riders once routes were added (567 to none, found in T-277): check whether routed walks or drives cut Pearson's terminals off from stations, or whether airport trips now drive. May affect US airports too. Open; notes/T-277.md.
 
 - T-279 [P2] Routes after the zone changes (from T-275): `pipeline/routes.py nyc` (8 minutes) once T-276's New York rebuild (Mercer) is final, and for any new pack (Worcester `wor`, Toronto `tor`) and after any gravity re-solve, joint gravity included: a pack whose zones changed has its routes ignored (straight x 1.3). `routes.py --check` lists them. New York, Worcester, Windham, New London and Litchfield done in T-276 (2026-10-13, `routes.py --check` all current). Left: routed drives for the regional market and between packs (T-276's zones; its car is still the great circle x 1.25): `routes.drive_factors(lon, lat, extracts)` gives them. Open; notes/T-275.md.
 - T-295 [P2] Park-and-ride (from T-276): commuters between zones and longer trips reach stations only by the fast walk, so on a test network of five real commuter corridors across zone lines rail carries a third to a fifth of their real riders (notes/T-276.md). A drive-to-station access leg for the regional layer at least (SPEC 5.3; T-034 found it doubled suburban rail in the local layer, so the local layer is a separate question). Open.
@@ -75,7 +74,10 @@ n- T-283 [P3] Toronto's Yonge test line lost all its airport riders once routes 
 ## Track and trains
 
 - T-248 [P3] Since T-244 the track inspector's Construct and level buttons act on one piece of a drawn route; consider "this piece / the whole run between junctions and stations" if Anita finds constructing piece by piece tedious. Open.
-- T-257 [P3] Quad track follow-ups (T-255): crossovers between the pairs mid-stretch (today lines change pairs only at a quad stroke's ends); a station on a quad stroke's own end node is refused when that end is new track (two pairs leaving one side of a node with nothing behind, "one-sided"); the express pair is always on the left of the drawn direction (draw the other way for the right). On hold (Anita 2026-10-13: express and quad need more design thought; no further work until she says).
+
+- T-338 [P2] Crossover tool (notes/T-334.md, Anita 2026-10-14): click on quad track or any track with a parallel pair within about 15 m to join them with an X (about 120 m, 50 km/h, priced as two junctions), so lines can change pairs mid-stretch; quad stays express pair beside local pair. Open.
+- T-339 [P3] An express slowed by a local ahead of it on plain double track (Anita: "ideally express is slowed by local ahead of it but thats whatever"). Today trains pass through each other at no cost. Low priority. Open.
+- T-340 [P3] Quad track's rest (from T-257): a station on a quad stroke's own end node is refused when that end is new track; the express pair is always left of the drawn direction. Open.
 
 ## Interface
 

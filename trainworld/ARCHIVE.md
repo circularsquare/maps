@@ -1,5 +1,7 @@
 # Archive
 
+- T-334 [P3] Crossovers design. Done 2026-10-14: notes/T-334.md; Anita chose the crossover tool, built as T-338.
+- T-257 [P3] Quad track follow-ups. Folded into T-338 (crossovers) and T-340 (quad end-node stations), 2026-10-14.
 - T-333 [P2] Drag-select blueprints. Done 2026-10-14: Select tool (key 5), drag box, Shift adds, click picks; Disable (D) and Enable (E) switch pieces so Construct and the total skip them; grey when disabled, saved with the game. Real save checked with real drags. DECISIONS, docs/ui-building.md.
 
 - T-331 [P2] Blueprint track 25% narrower. Done 2026-10-14: the whole width, rails included, is 75% of T-322's (rails at least 1 px); a line planned along it fills the middle. docs/ui-map.md.
