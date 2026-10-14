@@ -8,7 +8,7 @@ Seven answers at municipality level. CALLS (sources/lv.md says more):
   other (6,922): `other`. It holds every language not listed (Romani, German, Armenian,
     Estonian, Livonian and migrants' languages alike); the table does not let an indigenous
     remainder be told apart from a foreign one.
-  Latgalian: NOT A HOME-LANGUAGE ANSWER. Latgalian speakers answered "Latvian" (the law treats
+  Latgalian (audit 2026-10-13: now drawn, split from Latvian in Latgale in countries/lv.py at the 2022 survey home share 8.8%; see sources/lv.md). Originally: NOT A HOME-LANGUAGE ANSWER. Latgalian speakers answered "Latvian" (the law treats
     Latgalian as a variety of Latvian); a separate question asked who uses Latgalian daily
     (TSG11-08, 164,506, 8.8%, a quarter of them Russian at home). Daily use is not the language
     mostly spoken at home, so nothing is moved onto a Latgalian node; sources/lv.md has the

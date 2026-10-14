@@ -102,6 +102,23 @@ def _rollup_tables():
     return tables
 
 
+def _subdot_tables():
+    """spec §17's groups too small for one dot, with their national people, per country.
+
+    Read from `data/processed/subdot.json` (subdot.py), for `_rollup_tables`' reason: it needs
+    every country's `counts()`, and `--refresh-meta` must stay the cheap path. A missing file
+    leaves every country without the table, and the viewer's pies then simply do not draw these
+    groups, which is what it did before §17.
+    """
+    path = PROC / "subdot.json"
+    if not path.exists():
+        print(f"  !! no {path.name} — run: python subdot.py  (pies will not draw sub-dot groups)")
+        return {}
+    tables = json.loads(path.read_text(encoding="utf-8"))
+    print(f"  subdot.json: {len(tables)} countries")
+    return tables
+
+
 def load(path: Path, cc: str):
     with open(path, encoding="utf-8") as f:
         gj = json.load(f)
@@ -313,12 +330,15 @@ def main():
         covers = _coverage.coverage()
         counts["regions"] = _coverage.regions()
         rolls = _rollup_tables()
+        subdots = _subdot_tables()
         for cc, entry in counts.get("countries", {}).items():
             entry["covers"] = sorted(covers.get(cc, ()))
             # §7a-i-1's fallback table, refreshable for coverage.py's reason: it comes from
             # the taxonomy mapping rather than from the dots, so fixing a column's node must
             # not cost a retile. `rollup.py` is what writes it.
             entry["roll"] = rolls.get(cc, {})
+            # §17: the groups under one dot, with their people, at the rings' positions
+            entry["subdot"] = subdots.get(cc, {})
             meta = COUNTRIES.get(cc)
             if not meta:
                 print(f"  {cc}: not in countries.py — left as it was")
@@ -410,6 +430,7 @@ def main():
         covers = _coverage.coverage()
         regions = _coverage.regions()
         rolls = _rollup_tables()
+        subdots = _subdot_tables()
 
         per_country = {}
         # A COUNTRY CAN DRAW NO DOTS AT ALL AND STILL EXIST. Before the microstate tier
@@ -452,6 +473,7 @@ def main():
                 "rings": r["n"].value_counts().to_dict() if r is not None else {},
                 "covers": sorted(covers.get(cc, ())),
                 "roll": rolls.get(cc, {}),
+                "subdot": subdots.get(cc, {}),       # §17, subdot.py
             }
             # The legend counts marks, and at 1:10,000 a country has different ones: two of
             # India's seventeen nodes stop drawing a dot at all and become rings instead. So

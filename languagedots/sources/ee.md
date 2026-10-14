@@ -111,3 +111,20 @@ the viewer.
 
 None needed: the question covers everyone. The 2011 census (on the same API) would corroborate at
 municipality level; not looked for.
+
+## Minority-language audit (2026-10-13)
+
+No change. Võro and Seto: the census counts them under Estonian (RL21431 has no Võro or Seto
+line among its 245 languages). The only figures are ability, not mother tongue: RL21447, people
+with Estonian as mother tongue, "can speak a dialect": Võru dialect 85,780 and Setu 25,080 (of
+898,070 Estonian-mother-tongue people; 151,820 can speak any dialect; by age, 65+ is 23,780 and
+6,650, under 15 is 2,100 and 350). RL21446 has the same by municipality. That is "can speak the
+parish dialect", several times the number who use it at home (a 2005 Võru County school survey
+had 9% of children using Võro actively with family; a 2024 survey of 660 people with Võro or
+Seto roots, Todesk in Keel ja Kirjandus, found steady shift to Estonian). No published count of
+home or first-language Võro/Seto was found, so nothing is split off. Võro and Seto are also
+not in the tree (glottolog files them as dialects of Estonian's Võro-Seto group; both have ISO
+codes, vro and, for Seto, none separate). If Anita wants them shown, the least bad proxy is the
+RL21446 "Setu" count (25,080) at Seto's homeland municipalities, labelled as ability.
+Ukrainian (12,433), Finnish, Latvian, Belarusian and the rest are census mother tongue and fine.
+Romani 457 and Karelian 44 sit in `other` (15,848), checked in RL21431.

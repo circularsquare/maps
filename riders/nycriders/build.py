@@ -25,10 +25,21 @@ from bisect import bisect_left
 
 GTFS_DIR = "data/gtfs_subway"
 STATIONS_CSV = "../../data/nystreets/MTA_Subway_Stations.csv"
-OD_CSV = "data/od_wednesday_sep.csv"
+OD_CSV = "data/od_wednesday_2026-05.csv"
 OUT_JSON = "trains.json"
 GEOMETRY_JSON = "geometry.json"
 SERVICE_ID = "Weekday"
+
+# --day picks the O-D file, the GTFS service and the output names.
+# Wednesday keeps the unsuffixed names the page and website already use.
+# May 2026: of all months in 2025-26, the one whose weekends lose the fewest
+# riders to closures (September 2025, the old month, had the 3 closed east of
+# Franklin Av every weekend), and inside the GTFS calendar (2026-03-01..05-16).
+DAYS = {
+    'wednesday': dict(od_csv="data/od_wednesday_2026-05.csv", service_id="Weekday", suffix=""),
+    'saturday':  dict(od_csv="data/od_saturday_2026-05.csv",  service_id="Saturday", suffix="-saturday"),
+    'sunday':    dict(od_csv="data/od_sunday_2026-05.csv",    service_id="Sunday",   suffix="-sunday"),
+}
 DEFAULT_SAMPLE_RATE = 1.0  # 0.1 for testing, 1.0 for full data
 SAMPLE_RATE = DEFAULT_SAMPLE_RATE
 HOUR_RANGE = None  # e.g. (7, 12) for 7am-noon
@@ -47,12 +58,12 @@ INF = float('inf')
 # ---------------------------------------------------------------------------
 
 def load_gtfs():
-    """Load GTFS weekday stop_times, trips, and route colors."""
+    """Load GTFS stop_times, trips, and route colors for SERVICE_ID."""
     print("Loading GTFS data...")
 
     trips = pd.read_csv(f"{GTFS_DIR}/trips.txt")
     trips = trips[trips.service_id == SERVICE_ID]
-    print(f"  {len(trips)} weekday trips")
+    print(f"  {len(trips)} {SERVICE_ID} trips")
 
     import os
     st_path = f"{GTFS_DIR}/stop_times_fixed.txt"
@@ -1640,6 +1651,7 @@ def build_stats_output(seg_stats, sub_polylines, station_stats, complex_info,
 # ---------------------------------------------------------------------------
 
 def main():
+    global SAMPLE_RATE, HOUR_RANGE, OD_CSV, SERVICE_ID, OUT_JSON, STATS_JSON, CACHE_FILE, NUM_WORKERS
     parser = argparse.ArgumentParser(description="Build NYC subway ridership animation data.")
     parser.add_argument('--sample', type=float, default=DEFAULT_SAMPLE_RATE,
                         help=f"O-D sampling rate, 0.0-1.0 (default: {DEFAULT_SAMPLE_RATE})")
@@ -1650,9 +1662,20 @@ def main():
                              f"Use this while iterating on stats.json / trains.json output.")
     parser.add_argument('--no-cache', action='store_true',
                         help=f"Skip writing {CACHE_FILE} after a full build")
+    parser.add_argument('--day', choices=sorted(DAYS), default='wednesday',
+                        help="Which day's riders and timetable to build (default: wednesday)")
+    parser.add_argument('--workers', type=int, default=NUM_WORKERS,
+                        help=f"Routing worker processes (default: {NUM_WORKERS})")
     args = parser.parse_args()
 
-    global SAMPLE_RATE, HOUR_RANGE
+    day = DAYS[args.day]
+    OD_CSV = day['od_csv']
+    SERVICE_ID = day['service_id']
+    OUT_JSON = f"trains{day['suffix']}.json"
+    STATS_JSON = f"stats{day['suffix']}.json"
+    CACHE_FILE = f"build_cache{day['suffix'].replace('-', '_')}.pkl"
+    NUM_WORKERS = args.workers
+    print(f"Day: {args.day} (O-D {OD_CSV}, GTFS service {SERVICE_ID}) -> {OUT_JSON}, {STATS_JSON}")
     SAMPLE_RATE = args.sample
     if args.hours:
         lo, hi = args.hours.split('-')

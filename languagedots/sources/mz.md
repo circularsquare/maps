@@ -141,3 +141,7 @@ ones; without it Portuguese would be spread evenly over every village.
 ## Cross-border groups (2026-10-06, 5d7dac7e-xb)
 
 Cindau, Cimanika and Chitewe now sit in a Shona group with Zimbabwe's Shona (Glottolog's Core Shona); Elomwe in a Lomwe group with Malawi's Lomwe; Cisena in a Sena group with Malawi's Sena. Cinyanja stays on the Nyanja leaf, already in the Nyanja group beside Malawi's Chewa (one language; Mozambique prints the other name). Swati has no label here, so Eswatini's Swati stops at the border: its speakers are inside 'Outras línguas moçambicanas' and are not split out. Groups only (taxonomy/regroup.txt): no label's node or count changed, each keeps its leaf and colour; dots rewritten in place. The full table of cases is in followups.md (2026-10-06, languages that stop at a border).
+
+## Swahili audit (2026-10-13)
+
+Checked, no change. The 2017 census mother-tongue table gives Kiswahili 26,261 people, all in Cabo Delgado (data/normalized/mz.csv), and that is what is drawn.

@@ -19,7 +19,8 @@ ETHNICITY = {
     "indoeuropean.slavic.south.bosnian": ["bosniaks", "gorani"],
     "turkic.turkish": ["turks"],
     "indoeuropean.indoaryan.romani.romani": ["roma"],
-    "other": ["other", "gorani"],
+    "other": ["other"],
+    "indoeuropean.slavic.south.gorani": ["gorani"],
 }
 
 # ASK's estimate for the north, by ethnicity (xk_north.csv) -> the language its additions sit in
@@ -50,6 +51,12 @@ def _counts():
     if df["geo_id"].nunique() != 38:
         raise SystemExit("xk: expected 38 municipalities in xk.csv; re-run sources/xk_census.py")
     df["unit"] = df["geo_id"]
+    # Minority-language audit (2026-10-13): Dragash's "Other (specify)" is the Gorani's own speech
+    # (sources/xk.md), drawn on the Gorani node; the rest of Kosovo's Other stays on `other`.
+    gor = (df["geo_name"] == "Dragash") & (df["source_category"] == "Other (specify)")
+    if gor.sum() != 1:
+        raise SystemExit("xk: expected one Dragash 'Other (specify)' row")
+    df.loc[gor, "source_category"] = "Other (specify), Dragash: Gorani"
     df["node"] = df["source_category"].map(xk2024.resolve)
     df = df[df["node"].notna() & (df["count"] > 0)]
     out = by_unit(df)
@@ -147,6 +154,7 @@ ENTRY = dict(
         "Most Serbs in the four northern municipalities did not take part in the census. The "
         "statistics agency's language table includes its own estimate for them, about 17,000 "
         "people, nearly all Serbian speakers; those dots are an estimate, not answers. "
-        "Other is mostly the Gorani of Dragash, whose own Slavic speech the census does not "
-        "name; some Gorani gave Serbian or Bosnian instead."),
+        "The census has no Gorani answer. In Dragash the Other answers (5,980 people) are drawn "
+        "as Gorani, the Slavic speech of the Gora villages; some Gorani gave Serbian or Bosnian "
+        "instead, and those stay as the census has them."),
 )

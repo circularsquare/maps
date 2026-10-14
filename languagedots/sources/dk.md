@@ -67,3 +67,10 @@ kommune in 12 hexes).
 
 A kommune breakdown of Greenland-born residents (DST has none open); a survey of the German
 minority's home language.
+
+## Minority-language audit (2026-10-13)
+
+Checked, no change. German 5,000 (a third of about 15,000 minority members, "two thirds speak
+Danish, often Soenderjysk, at home"): consistent with the Council of Europe's 12,000-15,000
+German-speakers figure, and no newer home-language survey turned up. Soenderjysk stays on Danish
+(a dialect). Greenlandic and Faroese come through the Greenland- and Faroe-born rows.

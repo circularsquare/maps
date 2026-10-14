@@ -51,8 +51,11 @@ PUBLIC = "https://pub-ae551368cea941f39101e13c84d60bde.r2.dev/languagedots"
 # DATA_BASE, so a rename here is a rename there.
 RAW_FILES = ["data/processed/languagedots.pmtiles"]
 GZ_FILES = ["data/processed/counts.json", "data/processed/not_drawn.geojson",
-            "taxonomy/languages.json", "country_shapes.geojson", "admin1_shapes.geojson"]
-REPO_FILES = ["index.html"]
+            "taxonomy/languages.json", "country_shapes.geojson", "admin1_shapes.geojson",
+            "place_index.json"]
+# icon.png is the tab icon, preview.png the social link preview (og:image points at
+# anita.garden/languagedots/preview.png, so both must be on the site itself, not R2).
+REPO_FILES = ["index.html", "icon.png", "preview.png"]
 
 # Under data/, which is gitignored, so the compressed copies never reach a repo.
 STAGE = os.path.join(ROOT, "data", "gz_stage")
@@ -276,6 +279,12 @@ def main():
     for rel in REPO_FILES:
         src = os.path.join(ROOT, rel)
         dst = os.path.join(WEBSITE, rel)
+        if rel != "index.html":
+            print(f"   {rel}  (plain copy)")
+            if not a.dry_run:
+                os.makedirs(os.path.dirname(dst), exist_ok=True)
+                shutil.copy2(src, dst)
+            continue
         print(f"   {rel}  (front matter + analytics via religiondots/tools/web_wrap.py"
               f"{', new folder' if not os.path.isdir(WEBSITE) else ''})")
         if not a.dry_run:

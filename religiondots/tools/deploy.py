@@ -59,14 +59,16 @@ PUBLIC = "https://pub-ae551368cea941f39101e13c84d60bde.r2.dev/religiondots/data"
 # regions.pmtiles is regions mode's (regions_tiles.py), and the same rule applies.
 RAW_FILES = ["processed/religiondots.pmtiles", "processed/regions.pmtiles"]
 GZ_FILES = ["processed/counts.json", "processed/country_shapes.geojson",
-            "processed/not_drawn.geojson"]
+            "processed/not_drawn.geojson", "processed/place_index.json"]
 GZ_DIRS = ["buffers"]
 
 # Staged under data/, which is gitignored whole, so the compressed copies never reach a repo.
 STAGE = "gz_stage"
 
 # Copied into the website repo, keeping the same relative path.
-REPO_FILES = ["index.html", "taxonomy/religions.json"]
+# icon.png is the tab icon, preview.png the social link preview (og:image points at
+# anita.garden/religiondots/preview.png, so both must be on the site itself, not R2).
+REPO_FILES = ["index.html", "taxonomy/religions.json", "icon.png", "preview.png"]
 
 # `--s3-no-check-bucket` IS NOT OPTIONAL AND ITS ABSENCE LOOKS LIKE A DEAD TOKEN.  Before its
 # first upload rclone calls CreateBucket to make sure the destination exists, which is an ADMIN

@@ -24,6 +24,12 @@ NAMES = {
     # regional languages, metropolitan
     "Breton": f"{IE}.celtic.breton",
     "Gallo": f"{RO}.gallo",
+    "Picard": f"{RO}.picard",
+    "Norman": f"{RO}.norman",
+    "Poitevin-Saintongeais": f"{RO}.poitevin_saintongeais",
+    "Champenois": f"{RO}.champenois",
+    "Burgundian-Morvandiau": f"{RO}.burgundian",
+    "Franc-Comtois": f"{RO}.franc_comtois",
     "Basque": "isolate.basque",
     "Alsatian": f"{GE}.continental.alsatian",
     "Lorraine Franconian": f"{GE}.continental.lorraine_franconian",

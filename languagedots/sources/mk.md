@@ -112,3 +112,13 @@ non-residents from registers; they are not in these resident tables.
 * The 2002 census (religiondots found its municipal tables under `PopisNaNaselenie`) was not
   looked at for mother tongue; the spec rules out a time slider.
 * Megleno-Romanian apart from Aromanian: no table splits them.
+
+## Minority-language audit (2026-10-13)
+
+No change. Checked the census's second language table, T1016P21 (language usually spoken in the
+household, national, downloaded to `data/raw/mk/T1016P21_en.json`): Macedonian 1,145,327,
+Albanian 444,026, Turkish 61,596, Bosniak 15,509, Romani 28,088, Serbian 4,993, Vlach 1,795,
+against the drawn mother tongue 1,127,394 / 447,001 / 62,723 / 15,615 / 31,721 / 11,252 / 3,151.
+The two questions agree within a few percent except Serbian and Vlach, where home use is lower.
+Mother tongue is the higher figure for the small groups, so it stays. Roma by ethnicity 46,433,
+Vlachs 8,714: ethnic counts, not language. Verdict: right.

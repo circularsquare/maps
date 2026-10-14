@@ -123,3 +123,32 @@ away from Emilian, Venetian and Gallurese. Neapolitan, Sicilian and Friulian wer
 - Indian citizens are drawn 70% from Punjab, the share a University of Trento study found.
 - Slovenian in Friuli-Venezia Giulia and Griko in the Salento: the survey's knowledge of a
   minority language, times the half of those who use it in the family.
+
+## Minority-language audit (2026-10-13)
+
+No counts changed.
+- Friulian 265,263. Checked against ARLeF / University of Udine sociolinguistic survey 2014
+  (arlef.it, "1 ricerca sociolinguistica sulla lingua friulana 2015", provinces of Udine, Pordenone,
+  Gorizia): about 600,000 speak it (420,000 regularly, 180,000 occasionally). Among those, the
+  language their parents used together was Friulian for 67% and both for 13% (about 420,000 as a
+  childhood language); the language they use today with their own children is Friulian for 28%
+  and both for 28% (about 250,000 on the half-for-both rule). The drawn 265,000 sits on the
+  current-family measure, which is the concept used everywhere else. Kept.
+- Sardinian 305,753 (+ Sassarese 40,888, Gallurese 32,384, Alghero Catalan): about 24% of
+  Sardinia. Oppo 2007 (Regione Sardegna, "Le lingue dei sardi", 2006) has Italian as the only
+  first language of about 90% of 15-24s and 67% of 25-44s, older groups mostly Sardinian; the
+  ISTAT 2024 family-language figure drawn here is compatible. Kept. Logudorese and Campidanese
+  not split (one named language in the survey and in Law 482).
+- German in South Tyrol 326,855, Ladin 36,274 (20,499 South Tyrol, 15,775 Trentino): ASTAT 2024
+  and ISPAT 2021 declared language groups, the best sources; language group is a declaration but
+  tracks home language closely there. Kept.
+- Slovenian 44,529 (survey knowledge x 49.1%), Griko, Calabrian Greek: kept; no better source.
+- Possible undercounts, no source found to fix them with: Arbereshe 27,117 (region dialect rate
+  borrowed for 41 comuni; published speaker estimates are 80-100k but are ability), Piedmont
+  Occitan 4,610 (Regis, Univ. Torino, calls it used almost only by adults but gives no home-use
+  share), Franco-Provencal outside Aosta. Franco-Provencal in Aosta (29,000, 24% of the Valley)
+  is plausible.
+- Not drawn and small: Ladin of Belluno (Cortina, Livinallongo, Colle Santa Lucia, about 7,400
+  residents), Walser of Gressoney / Issime / Alagna / Formazza, German of Sauris / Timau / Sappada,
+  Cimbrian in Veneto, Gallo-Italic of Sicily and Basilicata, Brigasc. Each a few thousand at
+  most; no per-comune home-use share found. Left.

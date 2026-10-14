@@ -2,6 +2,9 @@
 # repeated from other fragments, and the block below is every node the origin mixes bring in.
 uralic | Uralic
 uralic.saami_north | North Sami
+uralic.saami_lule | Lule Sami | 0.80 0.12 345
+uralic.saami_south | South Sami | 0.56 0.13 335
+uralic.kven | Kven | 0.72 0.13 205
 # --- origin_mix borrowed nodes (python sources/origin_mix.py --fragment no) ---
 # Every node the origin mixes bring in that tree.txt lacks, repeated without colour.
 africa_other | Other African languages

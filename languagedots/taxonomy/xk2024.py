@@ -13,9 +13,9 @@ CALLS (sources/xk.md says more):
   Romani (5,597): `romani.romani`, variety not stated, as mk2021 and rs2022.
   Albanian, Turkish: as printed.
   "Other (specify)" (8,978): `other`. ASK prints no breakdown. Two thirds (5,980) is in Dragash,
-    where 7,828 people declared Gorani ethnicity: it is mostly the Gorani's own Slavic speech
-    (nashinski), but nothing published says how much, so it stays on the bare remainder rather
-    than being guessed into a node. No indigenous remainder to keep apart.
+    where 7,828 people declared Gorani ethnicity: it is the Gorani's own Slavic speech
+    (nashinski). AUDIT 2026-10-13: Dragash's 5,980 are drawn on the Gorani node (countries/xk.py
+    relabels them "Other (specify), Dragash: Gorani"); the other 2,998 stay on `other`.
   NOT_STATED: "Not available" (0 everywhere in 2024) and "Total", the universe row.
 """
 IE = "indoeuropean"
@@ -28,6 +28,8 @@ NAMES = {
     "Turkish": "turkic.turkish",
     "Romani": f"{IE}.indoaryan.romani.romani",
     "Other (specify)": "other",
+    # countries/xk.py relabels Dragash's Other (5,980; Gorani villages) before resolving
+    "Other (specify), Dragash: Gorani": f"{SL}.gorani",
 }
 NOT_STATED = {"Not available", "Total"}
 

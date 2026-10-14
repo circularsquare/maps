@@ -1,19 +1,25 @@
 """
 Fetch MTA Subway Origin-Destination ridership data from Socrata API.
-Pulls a single representative day (Wednesday in September 2025) and filters
-to all O-D pairs for a single day type.
+Pulls one month and one day of the week (an average day of that type), all
+O-D pairs by hour.
 
-Expected: ~1.6M rows, may take a while.
+    python fetch_data.py --year 2026 --month 5 --day wednesday   # what build.py uses
+    python fetch_data.py --year 2026 --month 5 --day saturday
+    python fetch_data.py --year 2026 --month 5 --day sunday
+
+Writes data/od_<day>_<mon>.csv for 2025 (the names build.py already uses) and
+data/od_<day>_<year>-<mm>.csv for other years. Expect ~1.2-1.6M rows.
 """
-import requests
+import argparse
+import calendar
 import csv
 import time
 
-DATASET_ID = "y2qv-fytt"
-BASE_URL = f"https://data.ny.gov/resource/{DATASET_ID}.json"
+import requests
 
-EXPECTED_ROWS = 1588000
-WHERE = "month=9 AND day_of_week='Wednesday'"
+# one dataset per year; 2026 is "Beginning 2026" and grows month by month
+DATASETS = {2023: "uhf3-t34z", 2024: "jsu2-fbtj", 2025: "y2qv-fytt", 2026: "28vm-gjqr"}
+
 FIELDS = (
     "hour_of_day,"
     "origin_station_complex_id,origin_station_complex_name,"
@@ -23,12 +29,12 @@ FIELDS = (
     "estimated_average_ridership"
 )
 
-OUT_FILE = "data/od_wednesday_sep.csv"
-LIMIT = 10000
+EXPECTED_ROWS = 1588000
+LIMIT = 500000  # big pages: ordered paging with large offsets is slow on Socrata
 TIMEOUT = 300
 
 
-def fetch_all():
+def fetch_all(base_url, where):
     rows = []
     offset = 0
     session = requests.Session()
@@ -39,12 +45,13 @@ def fetch_all():
         print(f"  [{pct:3d}%] fetching rows {offset}-{offset+LIMIT} ({elapsed:.0f}s elapsed)...", end=" ", flush=True)
         for attempt in range(3):
             try:
-                resp = session.get(BASE_URL, params={
+                resp = session.get(base_url, params={
                     "$select": FIELDS,
-                    "$where": WHERE,
+                    "$where": where,
                     "$limit": LIMIT,
                     "$offset": offset,
-                    "$order": "hour_of_day,estimated_average_ridership DESC",
+                    "$order": "hour_of_day,estimated_average_ridership DESC,"
+                              "origin_station_complex_id,destination_station_complex_id",
                 }, timeout=TIMEOUT)
                 resp.raise_for_status()
                 break
@@ -62,20 +69,36 @@ def fetch_all():
     return rows
 
 
-def write_csv(rows):
+def write_csv(rows, out_file):
     if not rows:
         print("No data!")
         return
     keys = list(rows[0].keys())
-    with open(OUT_FILE, "w", newline="") as f:
+    with open(out_file, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=keys)
         w.writeheader()
         w.writerows(rows)
-    print(f"Wrote {len(rows)} rows to {OUT_FILE}")
+    print(f"Wrote {len(rows)} rows to {out_file}")
 
 
 if __name__ == "__main__":
-    print(f"Fetching O-D data for Wednesdays in September 2025...")
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--year', type=int, default=2025, choices=sorted(DATASETS))
+    parser.add_argument('--month', type=int, default=9)
+    parser.add_argument('--day', default='wednesday',
+                        help="day of the week, e.g. wednesday, saturday, sunday")
+    args = parser.parse_args()
+
+    day = args.day.capitalize()
+    mon = calendar.month_abbr[args.month].lower()
+    if args.year == 2025:
+        out_file = f"data/od_{day.lower()}_{mon}.csv"
+    else:
+        out_file = f"data/od_{day.lower()}_{args.year}-{args.month:02d}.csv"
+    base_url = f"https://data.ny.gov/resource/{DATASETS[args.year]}.json"
+    where = f"month={args.month} AND day_of_week='{day}'"
+
+    print(f"Fetching O-D data for {day}s in {calendar.month_name[args.month]} {args.year} -> {out_file}")
     print(f"Expecting ~{EXPECTED_ROWS:,} rows")
-    rows = fetch_all()
-    write_csv(rows)
+    rows = fetch_all(base_url, where)
+    write_csv(rows, out_file)

@@ -270,6 +270,30 @@ it goes on a new leaf `lowgerman.plattdeutsch` "Low German (Plattdeutsch)", hand
 teal (0.80 0.12 180) against German's blue. Not split further; a dialect split would follow
 whatever Anita rules for High German.
 
+**Respread inside the Land (2026-10-13).** Anita: keep the count, respread, "keep the respread
+relatively weak", and a little mixed Platt/Westphalian. Land totals unchanged; only placement.
+`KREIS` in de_regional.py multiplies each Gemeinde's weight (population x the rural factor):
+Lower Saxony's core areas as the Land government names them (Drucksache 16/3880, 2011:
+Ostfriesland, Emsland, Oldenburg incl. the Oldenburger Münsterland, Stade) x1.5, Cuxhaven,
+Rotenburg, Osterholz, Bentheim x1.25, the south (Hannover, Braunschweig, Hildesheim and
+neighbours) x0.75, Göttingen, Goslar, Northeim x0.5 (largely Central German); NRW's Münsterland
+x1.3, the Ruhr cities x0.6, its edge (Hamm, Unna, Ennepe-Ruhr, Recklinghausen) x0.8; the survey
+left NRW's densest parts out (its footnote 2). `WEP_SHARE` draws part of each Kreis as
+Westphalian, part as Plattdeutsch, by eye from the dialect maps (Wiesinger via de.wikipedia
+"Westfälisch"): Osnabrück 70%, Bentheim 60%, Emsland 40%, Vechta and Diepholz 30%, Cloppenburg
+15% Westphalian; in NRW's north-east, beside Eastphalian, Minden-Lübbecke 75%, Höxter 85%, Lippe
+90%. Result, share of people drawn as Low German: Ostfriesland 3.4-6.7% (was 2.4-4.7),
+Münsterland Kreise 5.4-5.9% (4.0-4.3), Hannover 1.8% (2.6), Göttingen 1.6% (3.3), Dortmund and
+Bochum 1.9% (3.0). Nationally Westphalian 305,435 (was 282,667), Plattdeutsch 779,488.
+Reverse: empty KREIS and WEP_SHARE.
+
+**Westphalian, Germany against the Netherlands.** nl draws 627,907 as Westphalian, Germany
+305,435. Not a like-for-like pair: nl's figure is a direct home-language question (CBS SSW
+2019) and its Westphalian is Glottolog's wide Westphalic (Drents, Sallands, Stellingwerfs,
+Veluws as well as Twents and Achterhoeks), while Germany's is a "speaks very well" proxy. The
+direction fits the literature: Dutch Low Saxon is passed on and spoken at home far more than
+Platt across the border.
+
 **Published estimates, by homeland** (Sorbian settlement area per de.wikipedia "Sorbisches
 Siedlungsgebiet"; Gemeinden in it only with a few named villages left out, those in it "except"
 a few villages taken whole; names matched to Zensus 2022 ARS, each exactly once):

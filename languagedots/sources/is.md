@@ -40,3 +40,8 @@ Files: `sources/is_pop.py`, `taxonomy/is2026.py` (identity mapping), `taxonomy/t
 ## Room for improvement
 
 A survey of immigrants' home language in Iceland (none found) would replace TeO2.
+
+## Minority-language audit (2026-10-13)
+
+Checked, no change. No regional or minority language in Iceland to add (Icelandic Sign Language
+about 250 users, not drawn).

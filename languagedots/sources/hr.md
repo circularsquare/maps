@@ -146,3 +146,11 @@ The scatter raised no Kontur cap block.
 
 No hand-picks (taxonomy/tree.d/hr.txt has the distances). Croatian against Italian, the one pair
 that matters in Istria, is 0.117 in the palette of 2026-10-05.
+
+## Minority-language audit (2026-10-13)
+
+No change. 2021 mother tongue is complete for the minority languages: Serbian 45,004, Romani
+15,269, Albanian 13,503, Italian 12,890, Hungarian 7,218, Slovenian 7,620, Czech 4,915. Istro-
+Romanian (Zejane and Susnjevica, very few speakers; no figure checked) is not a census answer and sits under
+Croatian or Other; under one dot, not split. Chakavian and Kajkavian are inside Croatian and no
+home-language count of them exists. Verdict: right.

@@ -5,7 +5,8 @@
 from _shared import *  # noqa: F401,F403
 import numpy as np
 
-REGIONAL = {"Breton", "Gallo", "Basque", "Alsatian", "Lorraine Franconian", "Occitan",
+REGIONAL = {"Picard", "Norman", "Poitevin-Saintongeais", "Champenois", "Burgundian-Morvandiau",
+            "Franc-Comtois", "Breton", "Gallo", "Basque", "Alsatian", "Lorraine Franconian", "Occitan",
             "Corsican", "Catalan", "Antillean Creole", "Guianese Creole", "Reunion Creole",
             "Shimaore", "Kibushi"}
 
@@ -95,8 +96,11 @@ ENTRY = dict(
              people=4_272_964),
         dict(covers="Regional languages in mainland France",
              source="regional surveys, 2012-2024 (Brittany, Pays Basque, Alsace, Moselle, "
-                    "Occitan, Corsica, Northern Catalonia), applied to adults",
-             people=1_415_311),
+                    "Occitan, Corsica, Northern Catalonia), applied to adults; plus Picard, Norman "
+                    "and four other langues d'oil, an estimate scaled from the 1999 family "
+                    "survey, and Creole for people born in the overseas departments and living "
+                    "in the mainland (2008)",
+             people=1_415_311 + 62_200 - 4_912 + 228_407),
         dict(covers="Overseas departments: creoles, Shimaore, Kibushi",
              source="INED/INSEE family survey 2009-10; INSEE surveys of Guyane (2019-20) and "
                     "Mayotte (2019), Mayotte census 2017",
@@ -121,6 +125,10 @@ ENTRY = dict(
         "measure different things: Basque, Catalan and Corsican by first or childhood "
         "language, Breton, Gallo, Alsatian, Moselle Platt and Occitan by speakers who learned "
         "the language from their parents. Occitan is surveyed only in Nouvelle-Aquitaine and "
-        "Occitanie, and no survey counts West Flemish, Franco-Provençal or the langues d'oïl "
-        "other than Gallo, so all of these are drawn as French elsewhere."),
+        "Occitanie. No survey counts West Flemish or Franco-Provençal, so those are drawn as "
+        "French. Picard, Norman, Poitevin-Saintongeais, Champenois, Burgundian and "
+        "Franc-Comtois are an estimate: the 570,000 adults who had a langue d'oïl from their "
+        "parents in 1999, scaled down as far as Breton fell, less Gallo, shared out by rural "
+        "population. Creole in the mainland counts only people born in the overseas "
+        "departments (2008), not their children."),
 )

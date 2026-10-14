@@ -84,3 +84,7 @@ check_country: 48,305 people, 7 units, 6 nodes, ok. Scatter at 1:1000: 47 dots, 
   searched. A national split would not change the drawing at this grain much.
 - MT14 (Faroese language skills) could note how many non-Faroese first-language speakers speak
   Faroese; not used.
+
+## Minority-language audit (2026-10-13)
+
+Checked, no change. Faroese 93.8% (45,361) is the 2011 census first language; Danish 3.2%.

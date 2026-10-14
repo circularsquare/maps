@@ -421,3 +421,12 @@ every OA); every unit keeps its total (asserted). Reversal: drop the `uk_home_us
 
 Result: check_country ok; 64,788 dots, 101 rings (all on derived rows). After the NI student
 removal: check_country ok, 64,789 dots, 101 rings.
+
+## Minority-language audit (2026-10-13)
+
+Checked, no change. Scotland's 2022 census asked main language only (Scots 13,433-13,470,
+Gaelic 3,536-3,551) and ability; there is no 2022 home-language question, so the 2011 home-use
+rescaling in section 10 (Gaelic 24,974, Scots 55,817) remains the best proxy. Welsh 306k is
+ability x APS daily share; Welsh census speakers 538k. Cornish 572 is the 2021 main-language
+count (563 in TS024). Irish in NI 28,817 and Ulster Scots 399 per section 10. Manx and Channel
+Island languages are outside the UK file.

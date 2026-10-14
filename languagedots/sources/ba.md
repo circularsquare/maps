@@ -115,3 +115,9 @@ Scatter: 3,516 dots at 1:1000, 4 rings, 7,672 people (0.22%) below one dot per l
   records the hand-pick to try (a green, 0.68 0.16 135) if Mostar or the central Bosnian valley
   reads as one colour.
 * Nothing finer exists: no newer census, and Other is unsplit everywhere BHAS publishes.
+
+## Minority-language audit (2026-10-13)
+
+No change. 2013 mother tongue: Romani 5,766 (Roma are known to declare the majority
+language; no home-language alternative), Albanian 2,420, Turkish 1,233. Other 10,649 is never broken down.
+Verdict: right as measured, Romani likely a floor.

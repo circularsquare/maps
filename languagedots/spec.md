@@ -201,6 +201,105 @@ row, as religiondots §6.10 does. Simplified: a fixed people cut rather than rel
 ladder fitted to the panel's height, and folded languages keep their own colours on the map.
 Anything on the path to the selection never folds.
 
+### 4.6 Checkboxes in the legend hide languages (BUILT 2026-10-12, Anita asked for them; the calls below are PROPOSED)
+
+Ported from religiondots' per-row boxes (its spec §10.3, which has the longer argument). Every
+legend row has a box in a column on the right. Ticked is the resting state and recedes (half
+opacity dark steel); unticked or half ticked is full strength, because the column is read for what
+was turned off. A row with nothing of it on the map dims, and its box does not (it is the way back).
+The hover cue belongs to the box, not the row, since the row selects. A link in the scope line
+flips between "hide all" and "show all", read off the tree; on the phone only "show all" shows.
+
+- **The set is exact, one id per node whose own people are off.** A group's unnamed people (the
+  "Other Indo-Aryan" row) have their own box and move without the group, which is what lets a reader
+  hide everything and tick back Hindi without the Indo-Aryan people nobody named. Hiding a branch adds
+  every id under it, over the whole taxonomy and not only the rows this country has, so switching
+  country does not bring back what a click took off. A parent shows three states, computed over the
+  nodes present in this scope that have people of their own there.
+- **Hidden languages stay on the map in grey** (Anita, 2026-10-12, after the first version removed
+  them: "if we show only Romanians and a city is 99% non-Romanian we should show a 99% dark pie with
+  a 1% Romanian slice. Keep their size"). Hiding says what to look at, not that nobody lives there,
+  so the people are still drawn, in the dim grey the selection already uses for what it is not
+  (`DIM`, #3b3b3b). Dots: a hidden language's palette entry is DIM, a palette write and no re-decode.
+  Pies: the pie keeps its full size. Everything hidden in the cell folds into ONE wedge of DIM, last
+  in the order, whose angle is its share of the cell like every wedge's; the visible languages
+  fold and fill the other slots as before (the hidden wedge takes one of the 9, so a cell with
+  hidden people has 8 for the rest). The first version shrank the pie by the visible share, the
+  dots' ink-per-person rule, and was dropped: it made a mostly hidden city vanish.
+- **Grey marks still answer a hover and a click**, in both modes, and the tooltip says what they
+  are. A pie's tooltip lists the grey wedge as "22 hidden languages 12%", which opens into them
+  like any folded row (their swatches grey in its small pie), so the numbers read as they did
+  before the tick. A pinned tooltip is let go when the set changes, since its wedges just changed.
+  The old "N of M people shown" line is gone: the pie is whole again, so the total is the total.
+- **Numbers do not rescale.** The legend's counts, bars, shares and the composition bar stay the
+  scope's, as in religiondots, and so do a pie's tooltip shares.
+- **Hiding and selecting together: hiding wins, and the two greys are one grey.** A hidden language
+  is never in the selection: it draws DIM whether or not its group is selected, it takes no ink in
+  the locator rings, and in a pie it stays in the hidden wedge, beside (and the same colour as) the
+  selection's own "other languages" wedge. So selecting Indo-Aryan with Urdu hidden lights the rest
+  of Indo-Aryan and leaves Urdu dark, which is what the ticks say.
+- **Not remembered across a reload** (Anita, 2026-10-12: "so people aren't confused why stuff is
+  hidden"). Every load starts with everything shown. Nothing is written, and the `ld.hidden` key the
+  first version wrote is removed on load so an old value does not linger. Colours (`ld.colours`)
+  are still remembered. The first version stored the set as `{roots, only}`; that code is gone.
+  Marks whose language is missing from the taxonomy (grey) cannot be hidden.
+- The legend list keeps its scroll position across a tick (a reader ticks several in a row); other
+  rebuilds still start at the top.
+- **"Reset colours" row in Settings** (Anita, 2026-10-12, as religiondots' `#ctl-reset`). Shown only
+  while at least one colour set in the swatch editor is saved, and absent otherwise (not greyed, no
+  transition). It clears `ld.colours` back to the built-in colours. **Hidden rows do not count
+  toward it**: religiondots' `overrideCount` counts both, but a row that says "colours" and then
+  also un-hides things would surprise, and "show all" already does the second. So the row is
+  colours only.
+
+### 4.7 Place search (BUILT 2026-10-12, Anita asked for it; the calls below are PROPOSED)
+
+> "add an address search feature somewhere, not super prominent but it would be nice to be able to
+> type in a country or subdivision or address and go to that place."
+
+A small magnifier button beside the about button (bottom left on the desktop, top left on the
+phone), the same round style. It opens one input and a list of up to 6 places; Escape or a click
+away closes it. It is not merged into "Find a language", which searches the legend.
+
+- **Photon** (`photon.komoot.io/api/?q=&limit=6&lang=en`), which allows search as you type.
+  300 ms after the last key, from 3 characters, and the request before it is cancelled. The request
+  is a plain GET with `referrerPolicy: no-referrer` and no cookies: the query and nothing else.
+  Enter takes the first row on the list, or, with nothing listed yet, runs the search now and
+  picks its first answer.
+- **Photon is slow (about 2 s), so the list does not wait for it** (Anita, 2026-10-12).
+  *Instant answers:* the map's own countries (their names and framing boxes) and
+  `place_index.json`, the world's 4,578 first-level divisions as name, country and box, 204 KB,
+  made by `tools/make_place_index.py` from the Natural Earth admin-1 zip `make_admin1.py` already
+  downloads (names in Latin letters only; a division wider than 180 degrees takes the box of its
+  biggest part). It is fetched with a relative URL the first time the box opens (`DATA_BASE +
+  'place_index.json'`, in `deploy.py`'s `GZ_FILES`, so it travels to R2 with the other data). From 2
+  characters, a name or a word in it starting with the text, countries first and then the larger
+  divisions, the top 4; a division is fitted to its box to at most zoom 12. Photon's results join
+  underneath when they arrive, and a country or state they share with the local list is not listed
+  twice (by country code, and by name and country). *Loading:* a "Searching" row with a small ring
+  is the last row from the keystroke until Photon answers; the ring is the only animation on the
+  page, a plain rotation. *Cache:* each answer is kept for the session by folded query, so typing
+  a query again lists it at once and sends nothing.
+- **Picking.** A result with an extent is fitted to it (Photon's extent is west, north, east, south;
+  one under 0.001 degrees, or over 120 degrees wide, is ignored). Otherwise the map jumps to the
+  point at a zoom by Photon's `type`: country 4, state 6, county 9, city 10, district 12,
+  locality 13, street 14, house 15, anything else 13. A country uses this map's own framing box
+  (`view`) where it has one, because Photon's extent for the United States or Russia crosses the
+  date line and frames the whole world. No animation. The padding is `viewPadding()`, so the place
+  lands in the band beside the legend (on the phone, above the sheet), and a point jump is panned
+  by the same amount.
+- **Auto.** The jump ends in a normal `moveend`, so Auto picks the country the way it does for any
+  pan (Bavaria gives Germany, Kathmandu gives Nepal). One call: a country held by hand that does
+  not contain the place would leave the map empty there, so the search puts the picker back on
+  Auto. Left alone, "Kathmandu" with India held shows a blank map.
+- **Rows** read the place name, then up to three of its district, city, county, state and country
+  (each once, the last three kept), in the grey the legend uses for context. An address with no
+  name reads "street number", number first in the countries that write it so. Photon with
+  `lang=en` gives English names where OpenStreetMap has them and the local name otherwise; there is
+  no Latin transliteration to ask for, so a place with only a local-script name shows it.
+- **Phone.** The popover is full width under the buttons and ends well above the legend sheet. Its
+  input is 16px so iOS does not zoom the page.
+
 ## 5. Colour (PROPOSED, 2026-10-04, for Anita's review)
 
 `taxonomy/build.py`. One colour per node, the same in every country, hand-tunable.

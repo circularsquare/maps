@@ -114,3 +114,18 @@ the written counts and take written labels from the fragments.
 A Sami speaker count by kommune (the Folkeregister has recorded Sami language since 2021 but
 publishes nothing yet); Kven estimates for Nord-Troms and Finnmark; 2024 codes once LAU 2024
 polygons are available.
+
+## Minority-language audit (2026-10-13)
+
+Added Kven 2,000, Lule Sami 500 and South Sami 300, all `derived`, each carved out of the same
+kommune's Norwegian in `countries/no.py` (`_MINORITY`, `_small_minorities()`); the normalized csv is
+untouched, so a no_ssb.py re-run keeps them. New nodes in `tree.d/no.txt`: `uralic.kven`
+(hand-set colour), `uralic.saami_lule` and `uralic.saami_south` (colours as se.txt).
+Figures are rough and not home-language counts: Kven "2,000-8,000" (2005 government report via
+Wikipedia; mostly over 60; I took the bottom), Lule Sami about 650 native speakers
+(2015, both countries; 500 taken for Norway), South Sami about 500-600 fluent across both
+countries (300 for Norway). Placement is a call, not a source: Kven over Storfjord 700, Porsanger
+700, Vadso 300, Nordreisa 300; Lule over Hamaroy 300 and Narvik 200 (old Tysfjord); South Sami over
+Snasa 100, Hattfjelldal 60, Roros 60, Royrvik 40, Grane 40. Nothing here reaches one dot; they
+draw as rings. North Sami 10,000 left: published ranges run 10,000-25,000 for Norway and the
+2012 survey is the only one with a method. Reversal: empty `_MINORITY`.

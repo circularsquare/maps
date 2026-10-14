@@ -14,7 +14,16 @@ def _counts():
         raise SystemExit(f"se.csv: {df['geo_id'].nunique()} kommuner, expected 290")
     df["node"] = df["source_category"].map(se2025.resolve)
     df["unit"] = df["geo_id"]
-    return df.groupby(["unit", "node", "tier"], as_index=False)["count"].sum()
+    df = df.groupby(["unit", "node", "tier"], as_index=False)["count"].sum()
+    # Minority-language audit 2026-10-13 (sources/se.md): Elfdalian, 2,000 speakers in Alvdalen,
+    # carved out of the kommun's Swedish.
+    i = df.index[(df["unit"] == "2039") & (df["node"] == "indoeuropean.germanic.north.swedish")
+                 & (df["tier"] == "derived")]
+    if len(i) != 1 or df.at[i[0], "count"] <= 2000:
+        raise SystemExit("se: cannot take Elfdalian out of Alvdalen's Swedish")
+    df.at[i[0], "count"] -= 2000
+    return pd.concat([df, pd.DataFrame([dict(unit="2039", node="indoeuropean.germanic.north.elfdalian",
+                                             tier="derived", count=2000.0)])], ignore_index=True)
 
 
 ENTRY = dict(
@@ -30,7 +39,7 @@ ENTRY = dict(
         dict(covers="National minority languages",
              source="published speaker estimates for Meänkieli, Sami, Romani and Yiddish "
                     "(Parkvall, ISOF), placed on the kommuner where they are spoken",
-             nodes=["uralic.meankieli", "uralic.saami_north", "uralic.saami_lule",
+             nodes=["indoeuropean.germanic.north.elfdalian", "uralic.meankieli", "uralic.saami_north", "uralic.saami_lule",
                     "uralic.saami_south", "indoeuropean.indoaryan.romani.romani",
                     "indoeuropean.germanic.continental.yiddish"]),
         dict(covers="Immigrants and their Sweden-born children",
@@ -60,7 +69,7 @@ ENTRY = dict(
         "Syria, Turkey and Iran are split between their countries' languages in the "
         "proportions Parkvall's 2006 counts imply; Syrians who came later are drawn as Arabic "
         "speakers. Meänkieli is drawn at 30,000 speakers (the Institute for Language and "
-        "Folklore gives 50,000 to 75,000 in a wider sense), Sami at 6,000, Romani at 11,000 "
+        "Folklore gives 50,000 to 75,000 in a wider sense), Sami at 6,000, Romani at 11,000, Elfdalian at 2,000 "
         "and Yiddish at 1,000. Inside each municipality dots follow where people live, not "
         "where each language's speakers do."),
 )

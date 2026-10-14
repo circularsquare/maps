@@ -22,7 +22,31 @@ def _counts():
     df = pd.concat([df, sv], ignore_index=True)
     df["node"] = df["source_category"].map(no2023.resolve)
     df["unit"] = df["geo_id"]
-    return df.groupby(["unit", "node", "tier"], as_index=False)["count"].sum()
+    df = df.groupby(["unit", "node", "tier"], as_index=False)["count"].sum()
+    return _small_minorities(df)
+
+
+# Minority-language audit 2026-10-13 (sources/no.md): Kven, Lule Sami and South Sami, rough
+# speaker estimates spread over the kommuner where they are spoken, each carved out of the same
+# kommune's Norwegian. kommune code -> people.
+_MINORITY = {
+    "uralic.kven": {"5425": 700, "5436": 700, "5405": 300, "5428": 300},
+    "uralic.saami_lule": {"1875": 300, "1806": 200},
+    "uralic.saami_south": {"5041": 100, "1826": 60, "5025": 60, "5043": 40, "1825": 40},
+}
+
+
+def _small_minorities(df):
+    nor = (df["node"] == "indoeuropean.germanic.north.norwegian") & (df["tier"] == "derived")
+    rows = []
+    for node, units in _MINORITY.items():
+        for u, n in units.items():
+            i = df.index[nor & (df["unit"] == u)]
+            if len(i) != 1 or df.at[i[0], "count"] <= n:
+                raise SystemExit(f"no: cannot take {n} {node} speakers out of {u}'s Norwegian")
+            df.at[i[0], "count"] -= n
+            rows.append(dict(unit=u, node=node, tier="derived", count=float(n)))
+    return pd.concat([df, pd.DataFrame(rows)], ignore_index=True)
 
 
 ENTRY = dict(
@@ -43,6 +67,10 @@ ENTRY = dict(
         dict(covers="North Sami speakers",
              source="Sami language survey 2012, about 10,000 speakers",
              nodes=["uralic.saami_north"]),
+        dict(covers="Kven, Lule Sami and South Sami speakers",
+             source="rough published estimates (about 2,000 Kven, 500 Lule Sami, 300 South "
+                    "Sami), taken out of Norwegian",
+             nodes=["uralic.kven", "uralic.saami_lule", "uralic.saami_south"]),
         dict(covers="Svalbard", source="Statistics Norway 2026, by settlement and citizenship",
              people=SVALBARD_2026),
         dict(covers="Everyone else", source="Statistics Norway 2023, drawn as Norwegian",
@@ -64,8 +92,8 @@ ENTRY = dict(
         "Norwegian figure exists). Everyone else is drawn as Norwegian, which covers both "
         "written standards, Bokmål and Nynorsk. About 10,000 people speak North Sami (the Sami "
         "language survey of 2012), drawn half in Kautokeino and Karasjok and half in the rest "
-        "of the Sami language area. Lule and South Sami, a few hundred speakers each, are not "
-        "drawn. Svalbard is drawn by citizenship at its settlements (Statistics Norway, 2026): "
+        "of the Sami language area. Kven (about 2,000), Lule Sami (about 500) and South Sami "
+        "(about 300) are rough estimates placed on the kommuner where they are spoken. Svalbard is drawn by citizenship at its settlements (Statistics Norway, 2026): "
         "Norwegians as Norwegian, the rest on their country's languages. Barentsburg's "
         "Ukrainians, mostly from the Donbas, are drawn at Donetsk oblast's 76% Russian."),
 )

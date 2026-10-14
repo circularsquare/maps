@@ -390,6 +390,45 @@ def overseas(pop, imm_lang, rr):
     return pd.DataFrame(rows, columns=["dep", "label", "count", "part"])
 
 
+def extras(pop, reg):
+    """Mainland Creole (DOM-born) and langues d'oil other than Gallo; see fr_regional.py."""
+    import geopandas as gpd
+    rows = []
+    mainland = sorted(d for d in pop[pop["GEO_OBJECT"] == "DEP"]["GEO"].unique()
+                      if not d.startswith("97"))
+    dpop = pop[pop["GEO_OBJECT"] == "DEP"].groupby("GEO")["n"].sum()
+    idf = [d for d in R.IDF if d in mainland]
+    rest = [d for d in mainland if d not in idf]
+    for dom, (lab, born, f_idf) in R.DOM_BORN_MAINLAND.items():
+        n = born * R.DOM_BORN_SHARE[dom]
+        for deps, share in ((idf, f_idf), (rest, 1 - f_idf)):
+            tot = dpop[deps].sum()
+            for d in deps:
+                rows.append((d, lab, n * share * dpop[d] / tot, "DOM-born in the mainland"))
+        print(f"  mainland {lab:18} born {dom}: {born:,} x {R.DOM_BORN_SHARE[dom]:.1%} = {n:,.0f}")
+    # langues d'oil
+    breton = reg.loc[reg["label"] == "Breton", "count"].sum()
+    gallo = reg.loc[reg["label"] == "Gallo", "count"].sum()
+    ratio = breton / R.EHF1999_BRETON
+    total = R.EHF1999_OIL * ratio - gallo
+    lay = gpd.read_file(PLACE, ignore_geometry=True)
+    rural = lay[lay["pop"] < 2000].groupby("unit")["pop"].sum()
+    weight = {a: sum(rural.get(d, 0.0) for d in ds) for a, ds in R.OIL_AREAS.items()}
+    wsum = sum(weight.values())
+    print(f"  langues d'oil: {R.EHF1999_OIL:,} x Breton ratio {ratio:.4f} ({breton:,.0f}/"
+          f"{R.EHF1999_BRETON:,}) = {R.EHF1999_OIL * ratio:,.0f}, less Gallo {gallo:,.0f} = "
+          f"{total:,.0f}")
+    for a, ds in R.OIL_AREAS.items():
+        n = total * weight[a] / wsum
+        if n < R.OIL_MIN:
+            print(f"  {a:22} {n:8,.0f}  below {R.OIL_MIN:,}: not drawn")
+            continue
+        print(f"  {a:22} {n:8,.0f}  (rural population {weight[a]:,.0f})")
+        for d in ds:
+            rows.append((d, a, n * rural.get(d, 0.0) / weight[a], "langues d'oil, modelled"))
+    return pd.DataFrame(rows, columns=["dep", "label", "count", "part"])
+
+
 IMMI_CHILD = {}
 FRENCH_NODE = "indoeuropean.romance.french"
 
@@ -440,6 +479,8 @@ def main():
     pop, com64 = population()
     print("regional languages:")
     reg = regional(pop, com64)
+    print("added 2026-10-13 (DOM-born Creole speakers, langues d'oil):")
+    ext = extras(pop, reg)
     print("overseas:")
     dom = overseas(pop, imm_lang, rr)
 
@@ -459,6 +500,8 @@ def main():
                 parts.append((lab, n, "immigrants by country of birth"))
             for _, r_ in reg[reg["dep"] == dep].iterrows():
                 parts.append((r_["label"], r_["count"], "regional survey"))
+            for _, r_ in ext[ext["dep"] == dep].iterrows():
+                parts.append((r_["label"], r_["count"], r_["part"]))
         for _, r_ in dom[dom["dep"] == dep].iterrows():
             parts.append((r_["label"], r_["count"], "overseas survey"))
         if dep == "976":

@@ -113,3 +113,14 @@ against Hungarian and Romanian than before. Left alone: Bosnian and Montenegrin 
 "Unknown" (4.6%) is highest in central Belgrade (Savski venac 15.2%, Stari grad 11.3%) and in
 Majdanpek and Kučevo (11.9%, 9.1%), the second pair Vlach country; leaving it out may slightly
 understate Vlach in the east. Not corrected: nothing published says what the unknowns speak.
+
+## Minority-language audit (2026-10-13)
+
+No change. All named languages are 2022 mother-tongue counts: Hungarian 170,875, Bosnian 145,329,
+Romani 79,687, Albanian 65,475, Slovak 38,584, Vlach 23,216, Romanian 21,477, Croatian 12,048.
+Roma by ethnicity is 131,936 (RZS 2022, ethnicity x mother tongue table, national row,
+`media/31348/1_stanovnistvo-prema-nacionalnoj-pripadnosti-i-maternjem-jeziku.xlsx`, kept as
+`data/raw/rs/ethnicity_mother_tongue_region.xlsx`); of them 78,598 gave Romani and 47,371 Serbian,
+so the mother tongue is below the ethnic count, as everywhere. Independent Roma estimates are not
+home-language counts and are not used. Vlach is drawn as printed (Romanian
+speech of eastern Serbia). "Other" 45,641 has no breakdown. Verdict: right.

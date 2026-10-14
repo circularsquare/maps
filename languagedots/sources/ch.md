@@ -192,3 +192,18 @@ family-language tables are the same census and the same kind of question (spoken
 - Liechtenstein's office publishes main language by its 11 communes (opendata.swiss,
   `standige-bevolkerung-nach-hauptsprache-geschlecht-und-gemeinde`, etab.llv.li PxWeb), a lead
   for `li` if it is ever queued.
+
+## 7. Minority-language audit (2026-10-13)
+
+No counts changed.
+- Romansh 35,097 (main language, VZ 2000). BFS's 2024 structural survey has it at 0.43% of
+  mentions per resident (about 40,000 on 9.0M), against 0.48% in 2000. Roughly flat. Kept. (BFS
+  "regularly speaks" figures for Romansh, around 60,000, include bilinguals with another main
+  language: a competence concept, not used.)
+- Swiss German / Standard German split: already modelled from the same census's family-language
+  tables (section 5a). Kept. Walser German stays in Swiss German.
+- Lombard dialect in Ticino and Graubuenden's Italian valleys stays Italian, as Bavarian and
+  Alemannic stay German. Franco-Provencal in Valais/Fribourg/Vaud has no census answer left.
+  Yenish and Sinte: no figure.
+- Immigrant-language growth since 2000 (English, Albanian, Portuguese) is the known cost of the
+  2000 vintage, not a regional-language issue.

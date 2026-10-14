@@ -59,6 +59,7 @@ ROUNDS = [
      "Q2", "Q2OTHER", "withinwt_hh", "Q84A", "Q84AOTHER", "Q102"),
 ]
 LANG_LABEL = ("language of respondent", "language spoken in home", "mother tongue")
+HOME_Q = {7: ("Q2B", "Q2BOTHER")}   # R7 asks both; R4, R6, R8, R9 have one item, used for both
 INTERVIEWER = {7: "Q112"}   # interviewer number, kept where the round has one (R7)
 ETH_LABEL = ("tribe or ethnic group", "ethnic community")
 
@@ -87,8 +88,9 @@ def fetch():
         up = {c.upper(): c for c in meta.column_names}
         locs = [c for c in ("DISTRICT", "LOCATION.LEVEL.1") if c in up]
         iv = [INTERVIEWER[rnd]] if rnd in INTERVIEWER else []
+        hq = list(HOME_Q.get(rnd, ())) + ["Q1"]
         want = list(dict.fromkeys(["COUNTRY", "REGION", "RESPNO", "URBRUR", q, qo, wt, eth, etho,
-                                   il] + locs + iv))
+                                   il] + locs + iv + hq))
         lab = str(meta.column_names_to_labels.get(up[q.upper()], "")).casefold()
         say(any(t in lab for t in LANG_LABEL), f"R{rnd} {q} is the home-language question "
             f"({lab!r})")
@@ -116,7 +118,12 @@ def fetch():
             "eth": lab_of(eth), "eth_verbatim": sub[c[etho]].astype(str).str.strip(),
             "intlang": lab_of(il), "w": w,
             "interviewer": lab_of(iv[0]).astype(str) if iv else "",
+            "age": pd.to_numeric(sub[c["Q1"]], errors="coerce"),
         })
+        if rnd in HOME_Q:      # R7: Q2B "language spoken in home", beside Q2A mother tongue
+            o["home"], o["home_verbatim"] = lab_of(HOME_Q[rnd][0]), sub[c[HOME_Q[rnd][1]]].astype(str).str.strip()
+        else:
+            o["home"], o["home_verbatim"] = o["lang"], o["verbatim"]
         say(o["lang"].notna().all(), f"R{rnd}: every answer code has a label")
         out.append(o)
     a = pd.concat(out, ignore_index=True)
@@ -137,6 +144,18 @@ SWAHILI = "Swahili"
 # home wording (Q2B in R7), 65.8% nationally.
 SW_ROUNDS = [7]
 DRAWN_ROUNDS = [4, 6, 7, 8, 9]
+# Swahili audit (2026-10-13). Each unit's Swahili share is no longer R7's mother tongue alone but
+#   (1 - CHILD) * adults' mother tongue (R7 Q2A) + CHILD * household language (R7 Q2B, R8 Q2,
+#   R9 Q2, pooled), each unit's share shrunk to the national one by K_SHRINK respondents.
+# A child's first language is the language of the home it grows up in; an adult's is the mother
+# tongue they name. CHILD is the share of the 2022 census population aged 0-14 (NBS, summary
+# Table 1: 26,399,988 of 61,741,120 = 42.8%). SW_MODE = "mother" puts the 2026-10-05 ruling back.
+SW_MODE = "blend"      # "mother" (2026-10-05 ruling), "blend", or "home" (household language alone)
+CHILD = 26_399_988 / 61_741_120
+K_SHRINK = 50          # household language, respondents' weight towards the national share
+K_SHRINK_A = 5         # adults first language: light, units have 80-500 respondents in 3 rounds
+SW_MOTHER_ROUNDS = [4, 6, 7]   # R4, R6 "home language" (read as first language, matches LOT) + R7 Q2A
+SW_HOME_ROUNDS = [7, 8, 9]
 # Two R7 interviewers recorded Swahili as nearly every respondent's mother tongue (TAN15 98 of
 # 100, TAN25 82 of 96) where the other interviewers on their team, in the same regions and
 # often the same districts, recorded it for 0-20%: the mother tongues of Dodoma, Kigoma,
@@ -416,6 +435,18 @@ def answer(row):
     return CODED[lab]
 
 
+def home_swahili(row):
+    """1.0 / 0.0 whether the household-language answer (R7 Q2B; R8, R9 Q2) is Swahili; NaN for a
+    non-answer. Free text counts as Swahili where VERBATIM says so (Tumbatu, Pemba...)."""
+    lab = str(row["home"]).strip()
+    if lab in NON_ANSWERS or lab in ("", "nan"):
+        return np.nan
+    if lab in READ_VERBATIM:
+        v = " ".join(str(row["home_verbatim"]).split()).upper()
+        return 1.0 if VERBATIM.get(v) == SWAHILI else 0.0
+    return 1.0 if CODED.get(lab) == SWAHILI else 0.0
+
+
 def drop_interviewers(a):
     """R7: leave out DROP_INTERVIEWERS' respondents, after checking each recorded Swahili as
     mother tongue for 80%+ of respondents while the rest of R7's interviewers in the same
@@ -446,15 +477,38 @@ def single_verbatims(a):
     return one
 
 
+def shrunk(s, key, flag, rounds, k=K_SHRINK):
+    """Weighted share of respondents of `rounds` with flag == 1 per unit, shrunk to the national
+    share by k respondents (the unit's share counts for its head count). Returns (shares by geo_id, national share)."""
+    t = s[s["round"].isin(rounds) & s[flag].notna()]
+    nat = (t[flag] * t["w"]).sum() / t["w"].sum()
+    num = (t[flag] * t["w"]).groupby(t["geo_id"]).sum()
+    den = t["w"].groupby(t["geo_id"]).sum()
+    n = t.groupby("geo_id").size()      # head count, not weight: Zanzibar is oversampled (weights ~0.3)
+    return (n * num / den + k * nat) / (n + k), nat
+
+
+B_UNIT = {}      # unit -> household-language Swahili share (district placement)
+
+
 def unit_shares(a):
-    """Swahili from SW_ROUNDS; every other answer from all drawn rounds among the rest."""
-    s = a[a["round"].isin(SW_ROUNDS)]
-    sw = (s[s["answer"] == SWAHILI].groupby("geo_id")["w"].sum()
-          / s.groupby("geo_id")["w"].sum()).fillna(0)
+    """Swahili per SW_MODE; every other answer from all drawn rounds among the rest."""
+    gids = sorted(set(a["geo_id"]))
+    if SW_MODE == "mother":
+        s = a[a["round"].isin(SW_ROUNDS)]
+        sw = (s[s["answer"] == SWAHILI].groupby("geo_id")["w"].sum()
+              / s.groupby("geo_id")["w"].sum()).fillna(0)
+    else:
+        a["m_sw"] = (a["answer"] == SWAHILI).astype(float)
+        A, na = shrunk(a, "answer", "m_sw", SW_MOTHER_ROUNDS, K_SHRINK_A)
+        B, nb = shrunk(a, "answer", "h_sw", SW_HOME_ROUNDS)
+        print(f"  adults' mother tongue (R4, R6, R7) Swahili {na:.1%} nationally; household language "
+              f"(R7-R9 pooled) {nb:.1%}; child share {CHILD:.1%}")
+        sw = B if SW_MODE == "home" else (1 - CHILD) * A + CHILD * B
+        B_UNIT.update(B.to_dict())
     rest = a[a["answer"] != SWAHILI]
     r = rest.groupby(["geo_id", "answer"])["w"].sum()
     r = r.div(r.groupby(level="geo_id").sum(), level="geo_id")
-    gids = sorted(set(a["geo_id"]))
     sw = sw.reindex(gids).fillna(0)
     # a unit where every non-Swahili answer is missing would leave a hole: none is, asserted
     have = set(r.index.get_level_values(0))
@@ -475,6 +529,7 @@ def main():
     a["region_code"] = a["region_code"].astype(int)
     print(f"  {len(a):,} respondents in the extract, rounds {sorted(a['round'].unique())}")
     a["answer"] = a.apply(answer, axis=1)
+    a["h_sw"] = a.apply(home_swahili, axis=1)
 
     sw = (a.assign(s=(a["answer"] == SWAHILI) * a["w"]).groupby("round")["s"].sum()
           / a.groupby("round")["w"].sum())
@@ -628,9 +683,17 @@ def district_shares(a, df, nm):
         rest_u = us[langs] / max(1e-12, us[langs].sum())
         own = {}
         for d, bd in b.groupby("adm2"):
-            s = bd[bd["round"].isin(SW_ROUNDS)]
-            n_s = s["w"].sum()
-            sw = (s.loc[s["answer"] == SWAHILI, "w"].sum() + K * sw_u) / (n_s + K)
+            if SW_MODE == "mother":
+                s = bd[bd["round"].isin(SW_ROUNDS)]
+                n_s = s["w"].sum()
+                sw = (s.loc[s["answer"] == SWAHILI, "w"].sum() + K * sw_u) / (n_s + K)
+            else:
+                # placement: the district's household-language Swahili share (shrunk to the
+                # unit's) relative to the unit's, applied to the unit's blended share
+                s = bd[bd["round"].isin(SW_HOME_ROUNDS) & bd["h_sw"].notna()]
+                b_u = float(B_UNIT.get(u, 0.0))
+                b_d = ((s["h_sw"] * s["w"]).sum() + K * b_u) / (s["w"].sum() + K)
+                sw = min(1.0, sw_u * b_d / b_u) if b_u > 0 else sw_u
             r = bd[bd["answer"] != SWAHILI]
             t = r.groupby("answer")["w"].sum().reindex(langs).fillna(0.0)
             rest = (t + K * rest_u) / (t.sum() + K)

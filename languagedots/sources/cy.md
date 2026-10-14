@@ -131,3 +131,9 @@ census enumerated there, unchanged.
 `data/normalized/cy_place.csv`, `taxonomy/cy2021.py`, `countries/cy.py`, `ask/015-cy.md`;
 the north: `sources/cy_north.py`, `data/raw/cy/north2011/`, `data/normalized/cy_north.csv`,
 `data/geo/cy/cy_north_units.gpkg`, `data/geo/cy/cy_hexes.gpkg`.
+
+## Minority-language audit (2026-10-13)
+
+No change. 2021 native language: Arabic 19,663, Armenian 1,067 (districts summed), Turkish in the
+south counted with the north's 285,778. Cypriot Maronite Arabic is not a census answer; very few
+speakers (no figure checked), and they sit inside Arabic (and in the north, Turkish). Under one dot, not split. Verdict: right.

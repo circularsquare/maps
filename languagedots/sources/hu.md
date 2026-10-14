@@ -140,3 +140,15 @@ share a place here (Slovak villages in Békés and the Pilis; Ukrainians mostly 
   same cube. FMF is the nearer thing to "home language" and could corroborate; not read.
 - 2001 and 2011 are in the same cubes (TIME_PERIOD) and not read.
 - KSH's national breakdown of "other" mother tongues.
+
+## Minority-language audit (2026-10-13)
+
+No change. Drawn is census 2022 mother tongue. KSH also published the language used with family
+and friends (`FMF_*`, national WBS009 read 2026-10-13): Hungarian 8,201,455, German 66,491
+(MT 28,473), Romani 22,275 (MT 15,440), Boyash 9,332 (MT 7,979), Slovak 12,521 (MT 10,123),
+Romanian 13,633, Ukrainian 15,356, Croatian 9,171, Serbian 6,017, other 354,918 (MT 70,526).
+These are multi-answer ("used with family or friends") counts, which include bilinguals who use
+the language beside Hungarian, so they are the "can use" end, not the first language. Mother
+tongue is kept for Romani, Boyash and German. The Roma count may be low through non-response
+(12.2% skipped), which nothing here
+can adjust.

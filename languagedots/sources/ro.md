@@ -143,3 +143,14 @@ darker brick or an orange would also work there).
   release; not opened).
 - No screenshot: the tiles are built by the supervisor's build tail. Worth a look at Dobruja
   (§7) and at Harghita/Covasna against Mureş once they are.
+
+## Minority-language audit (2026-10-13)
+
+No change. The census is mother tongue for the whole country, so Hungarian 1,038,806 (6.3% of
+the drawn),
+Romani 199,050, well under the number declaring Roma ethnicity (not compared here), Ukrainian 40,861, German 15,943, Russian 14,414,
+Turkish 17,101, Tatar 13,805 are all the census answer. 13.1% of residents have no recorded
+language and the missing share is highest in big cities, which understates Romanian and
+Romani in the cities and Hungarian less (Székely counties 7%). Not fixable from a source.
+Csángó Hungarian is counted as Hungarian (or Romanian) by the census; Aromanian is in
+Romanian or `other` (19,741). Neither has a column; no sourced home-language figure found.

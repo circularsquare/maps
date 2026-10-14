@@ -107,3 +107,10 @@ on PxStat repeat SAPS.
 1:1000, 5,117 dots across 4,895 Small Areas; 0.62% of people are in languages under one dot
 nationally; 6 rings. Placement is the Small Area polygon itself (median about 260 people), no
 weight, water-clipped.
+
+## Minority-language audit (2026-10-13)
+
+Checked, no change. Irish 71,968 is CSO's own "speaks Irish daily outside education" figure;
+Gaeltacht daily speakers are about a third of it, so it errs high for first language, but the
+census has no first-language question and the call is recorded in section 4. Irish Cant 'Shelta'
+comes via Q15. Ulster Scots in Donegal has no source.

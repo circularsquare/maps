@@ -20,13 +20,23 @@
     "about": "World mother-tongue dot map (India, Nepal, Pakistan so far)"
   },
   {
-    "name": "trainworld",
-    "folder": "trainworld/app/dist",
-    "about": "rail building game (skeleton)"
-  },
-  {
     "name": "trainworld-mock",
     "folder": "trainworld/mock",
     "about": "trainworld UI mock"
+  },
+  {
+    "name": "nycriders",
+    "folder": "riders/nycriders",
+    "about": "Animated NYC subway riders"
+  },
+  {
+    "name": "trainworld",
+    "folder": ".tw-snap/trainworld/app/dist",
+    "about": "rail building game"
+  },
+  {
+    "name": "isochrone",
+    "folder": "C:/Users/anita/projects/maps/isochrone",
+    "about": "Walking time from anywhere in the world"
   }
 ]

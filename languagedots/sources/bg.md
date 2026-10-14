@@ -136,3 +136,11 @@ looked at when it is.
 - `note_public`: what was asked, the three named languages plus other, where Turkish leads, the
   Pomaks drawn as Bulgarian, Roma who gave another mother tongue, the register-added people and
   Sofia's gap, the 1 km grid.
+
+## Minority-language audit (2026-10-13)
+
+No change. 2021 mother tongue: Turkish 514,386 (Turkish ethnicity 508,378), Romani 227,974 (Roma
+ethnicity 266,720; 82.8% of Roma gave Romani, the rest Bulgarian or Turkish). Pomaks answer
+Bulgarian and stay Bulgarian. "Other" 62,906 (Armenian, Aromanian, Vlach, Russian, Greek, recent
+migrants) has no published breakdown at municipality level. 10% of residents were register-added
+with no language and are not drawn. Verdict: right.

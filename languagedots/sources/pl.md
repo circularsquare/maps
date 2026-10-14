@@ -133,3 +133,28 @@ the scatter raised no Kontur cap block.
 Not required for a home-language census. The national-ethnic question of the same census (annex
 Tab1_Etno) agrees in shape: 596,224 declared a Silesian identity (first or second), 179,685
 Kashubian, 144,177 German, against 467,145, 89,198 and 216,342 naming the language at home.
+
+## 6. Minority-language audit (2026-10-13)
+
+Question: are Silesian, Kashubian, Lemko, Romani undercounted? No change made.
+
+| language | drawn | mentions (gmina table) | published figure | verdict |
+|---|---|---|---|---|
+| Silesian | 254,017 (+67 gwara) | 467,145 (+130 gwara) | GUS NSP 2021 home language: ~458k name it, 53.3k name only Silesian (press reports of GUS release: wprost.pl, wiadomosci.ox.pl). Method on 53.3k alone + half of the other ~414k = ~260k | consistent with the method |
+| Kashubian | 45,566 | 89,198 | same table | consistent |
+| Lemko | 3,224 | 6,147 | same table | consistent |
+| Romani | 3,625 | 7,284 | same table (Roma are more numerous; most name Polish) | as measured |
+
+Reasoning. The map draws what the census measured: language used at home, up to three answers.
+About 90% of the people who name Silesian also name Polish (the Silesian-only figure of 53.3k
+against 467k mentions), so drawing each such person half Polish, half Silesian (spec 3.6) is the
+only split the table supports; it gives 254k, within ~6k of 53.3k + (467k - 53.3k)/2. Which of the
+two is "first" is not in the published table (answers are not ordered), so there is no basis for
+giving Silesian more than half. The larger numbers people quote (467k, or 596k Silesian identity,
+either answer) count anyone who names it or who declares the identity, not home language alone.
+The 596k identity figure is a different concept (national-ethnic identity) and is not drawn.
+Placement checked: Silesian 206k in Slaskie, 45k in Opolskie, under 1k anywhere else;
+Kashubian 45.1k of 45.6k in Pomorskie; Lemko in Podkarpackie/Lesser Poland/Lower Silesia
+(the post-1947 resettlement areas, Dolnoslaskie 02 and Malopolskie 12); nothing to fix.
+Not done: a ruling to draw Silesian+Polish speakers more heavily on Silesian in Upper Silesia
+would need an ordered-answer cross-table (GUS microdata); none is public.

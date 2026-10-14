@@ -97,3 +97,32 @@ populations of Jelgava city (0090000, given 21,629; census 2011 59,511) and Jēk
 inside that region is affected. religiondots' lv_lau.gpkg `pop` carries the swap
 and its `_lv_place_weight` uses it, so in religiondots Zemgale's dots under-weight Jelgava and
 over-weight Jēkabpils. lv_geo.py here asserts the swap and does not use that column.
+
+## Minority-language audit (2026-10-13)
+
+**Latgalian: now drawn, 24,193 people (1.29%), tier `derived`, new leaf
+`indoeuropean.baltic.latgalian` (taxonomy/tree.d/lv.txt, new file).** Reverses the "not drawn"
+call in section 3, which rested on daily use overstating home use about fivefold. The better
+figure is the one section 1 already quotes: CSB's Adult Education Survey 2022, language used at
+home, one answer, ages 18-69: Latgalian 1.2% nationally, **8.8% in Latgale**. That is the same
+concept as the map's (the 2011 question was the language mostly spoken at home). Applied as:
+
+- Latgale = the statistical region LV005, 21 municipalities, 274,917 people with a home
+  language in TSG11-08 (the list of municipality codes in `countries/lv.py::_LATGALE` sums to
+  that exactly, and to the region's 76,947 Latvian-at-home daily users; Varakļāni county,
+  which looks Latgalian, belongs to Vidzeme and is left out).
+- 8.8% x 274,917 = 24,193 people move from Latvian to Latgalian, shared over those 21
+  municipalities in proportion to Latvian-at-home people who use Latgalian daily (TSG11-08,
+  76,947 in all; the share moved is 31% of them, never above a municipality's Latvian). Largest:
+  Rēzekne county, Rēzekne city, Balvi, Preiļi, Kārsava. Outside Latgale nothing moves: 24,193
+  is already 1.29% of the country against the survey's 1.2%, so Latgale holds essentially all
+  of it (the survey's age range 18-69 and rounding explain the rest). Riga's 5% daily users are
+  left as Latvian.
+- Latgale's total is unchanged. The 2022 share is applied to 2011 people (Latgale has lost
+  population since; the share is what is borrowed). The distribution inside Latgale is a
+  proxy from daily use, said so in `parts` and `note_public`.
+- Not drawn as Latgalian: Russian-at-home daily users (40,553), who stay Russian.
+
+Other languages: Livonian is inside `other` (6,922) and cannot be told apart (a few dozen
+people). Nothing else to check: the 2011 table has no minority language beyond Lithuanian,
+Polish, Belarusian and Ukrainian.

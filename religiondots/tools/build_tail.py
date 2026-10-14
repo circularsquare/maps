@@ -255,6 +255,13 @@ def main():
         if args.rollup:
             note("rollup")
             run([py, "rollup.py"])
+        # spec §17.11: the groups under one dot with their people, which tiles.py carries into
+        # counts.json. Reads the rings scatter.py just wrote, so it goes before tiles. Not fatal:
+        # without it the pies only miss those groups, as they did before §17.11.
+        note("subdot")
+        print(f"\n$ {py} subdot.py", flush=True)
+        if subprocess.run([py, "subdot.py"], cwd=ROOT).returncode != 0:
+            print("!! subdot.py FAILED; counts.json keeps the last subdot.json. Run it by hand.")
         note("tiles")
         run([py, "tiles.py", "--countries", ccs, "--coarse", "--no-atomic",
              "--jobs", str(args.jobs)])                                         # step 11

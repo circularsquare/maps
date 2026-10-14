@@ -158,3 +158,11 @@ dark teal), Sami 0.62 0.12 165 (dark sea-green, #249c74), Estonian 0.66 0.11 220
 - `11rz` (marital status by age, language and sex by area) and `11s2` (Finnish and Swedish speakers
   by area) could be a third check on the national languages; not read.
 - Postal-code (Paavo) data was not looked at; the register table is already at municipality.
+
+## Minority-language audit (2026-10-13)
+
+Checked, no change. Swedish 284,611 (5.0%) is registered mother tongue, the best available;
+Sami 2,076 matches the register. Karelian (Kotus about 5,000, Wikipedia 11,000, both speaker
+counts) and Finnish Kalo Romani (6,000-10,000 speakers) have no register code, so they sit inside
+"other"/Finnish and cannot be separated; not drawn. Needs a ruling if Anita wants an
+estimate placed (Karelian: Joensuu/North Karelia, Helsinki; Kalo: Helsinki area).

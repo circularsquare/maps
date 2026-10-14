@@ -56,3 +56,7 @@ Ngazidja 0.57 0.16 18, Ndzwani 0.68 0.14 42, Mwali 0.48 0.13 5.
 ## Scatter
 
 756 dots over 447 hexes (with French, 2026-10-05).
+
+## Swahili audit (2026-10-13)
+
+Checked, no change. Comorian is its own language here (Ngazidja, Ndzwani and Mwali nodes) and Swahili is not drawn.

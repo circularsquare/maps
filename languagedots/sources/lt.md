@@ -155,3 +155,22 @@ are next tuned (Belarus and Latvia will meet the same three).
 None needed for the remainder (the question was asked of everyone). The 2011 census
 (GBS010302, by territory, a full enumeration) would be the corroboration for the 2021 survey
 estimates at municipality level; not compared.
+
+## Minority-language audit (2026-10-13)
+
+No change.
+- **Polish 143,930** (5.1%) is the census mother tongue, 2021. 12,417 ethnic Poles named
+  two mother tongues (grey `two_mother_tongues` bucket) and 19,260 named Russian. Polish at
+  home is therefore somewhat above the drawn figure if the two-answer Poles are counted in, by a
+  margin no source fixes.
+- **Two mother tongues 49,066 (1.75%)** is the one lump left. The census prints ethnicity of
+  the people in it (17,822 Lithuanians, 12,417 Poles, 8,905 Russians, 3,219 Belarusians, 1,728
+  Ukrainians) but not the pairs. Splitting it half Lithuanian and half the local minority
+  language is a guess that changes counts; left for Anita (see report).
+- **Samogitian (Zemaitiu)**: not asked in any census (the mother-tongue question has no
+  Samogitian answer; Glottolog files it as a dialect of Lithuanian, ISO sgs). Published
+  figures are self-assessed speaking skill or attitude (e.g. regional surveys with 15-20% of
+  Lithuanians "speak Samogitian"), which is competence, not first language; not used and not
+  drawn.
+- Belarusian 6,711, Russian 190,733, Ukrainian, Romani 1,973, Latvian and German are census
+  mother tongue; nothing to compare for same concept.

@@ -128,3 +128,26 @@ Worth a look by whoever owns the colours.
 - Retention borrowed from Italy; a Greek survey of immigrant home language would replace it.
 - Not drawn: Pontic Greek and Tsakonian (Glottolog languages; estimates are of Pontic descent, not
   speech), Cham Albanian in Epirus, Armenian of Greek citizens (8,990 in 1951), Ladino.
+
+## Minority-language audit (2026-10-13)
+
+No change. The 2021 census of Greece asked nothing on language and none since 1951, so every
+figure is a speaker estimate placed by 1951 rates or modern area lists (§3). Checked against what
+exists: the 1951 mother-tongue census gave Aromanian 39,855, Slavic 41,017, Albanian 22,736,
+Pomak 18,670, Romani 7,429 on 7.6M people. The drawn Aromanian
+50,000 and Slavic 50,000 are the low end of published estimates and about the 1951 census counts;
+Arvanitika 50,000 is Sasse 1991 against 150,000+ in Ethnologue and 200,000 Arvanites in MRG, all
+"speakers" or ethnic figures, not home language, so the low end stays. Turkish 60,000 and Pomak
+36,000 are the usual 50/35 split of the 120,000 Muslim minority. None of the higher figures is a
+home-language count, so none is used. Verdict: plausible, not provable.
+
+Open, not changed:
+- **Albanian immigrants and naturalised citizens.** Eurostat `cens_21cob_r3` (country of birth,
+  2021): 425,079 born in Albania against 374,925 Albanian citizens (`cens_21ctz_r3`). At least
+  50,000 Albania-born residents hold another citizenship (mostly Greek), and they are drawn as
+  Greek. A large share are ethnic Greeks from southern Albania who speak Greek, so only part is
+  Albanian-speaking; no Greek source gives the share, so nothing moved.
+- Armenian of Greek citizens (8,990 in 1951; no home-language figure today), Tsakonian,
+  Megleno-Romanian (Pella), Cham Albanian: no usable figure, not drawn.
+- Macedonian/Slavic in Greece: counted as in §3 (Drama, Kavala, Serres as Bulgarian). The choice
+  of label and size is politically loaded; left for Anita.

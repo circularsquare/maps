@@ -116,3 +116,11 @@ those five hold 6,365 of the 7,430 placeable. Italian: Piran 7.0%, Izola 4.3%, K
 3,531 in the top five). Bosnian: Jesenice 16.7%, Velenje 6.3%. Serbo-Croatian: Velenje 5.7%,
 Jesenice 5.2%, Postojna 5.1%. Croatian highest along the border: Metlika 13.3%, Rogatec 11.3%.
 Unknown highest in Dobrna 7.4%, Piran 7.1%, Izola 4.7%, Ljubljana 4.1%.
+
+## Minority-language audit (2026-10-13)
+
+No change. 2002 is the last mother-tongue census: Hungarian 7,430 placeable of 7,713, Italian
+3,531 of 3,762, Romani 3,635 of 3,834. Later censuses are register-based. The fixed bilingual
+settlement lists would sharpen placement of Hungarian and Italian inside their municipalities
+(needs settlement polygons) but not the counts. Verdict: right for 2002. (Bosnian and Serbian
+both sum to 31,294 over the municipalities: checked against the raw table, a coincidence.)

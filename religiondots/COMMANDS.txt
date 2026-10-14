@@ -243,6 +243,12 @@ Run in order.  Every step, every time, even when only one country changed.
         turns up here for the OTHER reason -- the source did measure it and the tree has no
         node for the cell -- that is a taxonomy question, not a roll-up one.
 
+    python subdot.py [--countries cc,cc] [--dry-run]
+        Builds data/processed/subdot.json (spec 17.11) -- per country and edition, each group
+        too small for one dot, at its ring's position, with its national people from counts().
+        The pies draw them at their real size. tools/build_tail.py runs it before tiles.py; by
+        hand, follow it with `tiles.py --refresh-meta`. No retile.
+
     python rollup.py [--countries cc,cc] [--dry-run]
         Builds data/processed/rollup.json -- per country, `node -> the level this country
         COUNTED it at`, which is what the viewer reads for `inferred dots: not shown`.

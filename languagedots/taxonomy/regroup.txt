@@ -326,6 +326,9 @@
     indoeuropean.romance.afrobolivian
 = indoeuropean.romance.french | French
     indoeuropean.romance.gallo
+    indoeuropean.romance.picard indoeuropean.romance.norman
+    indoeuropean.romance.poitevin_saintongeais indoeuropean.romance.champenois
+    indoeuropean.romance.burgundian indoeuropean.romance.franc_comtois
 # Swiss German under German at Anita's request through the ch agent; Glottolog has it (Central
 # Alemannic) and Alsatian in a separate Alemannic language, so the Alemannic nodes come too.
 = indoeuropean.germanic.continental.german | German

@@ -171,3 +171,70 @@ COD-AB Tanzania (OCHA, CC BY-IGO); Kontur CC BY 4.0; Glottolog CC BY.
 ## Cross-border groups (2026-10-06, 5d7dac7e-xb)
 
 Ha and Hangaza are in a Rwanda-Rundi group with Kinyarwanda and Kirundi; Nyakyusa is a group holding Malawi's Nkhonde. Groups only (taxonomy/regroup.txt): no label's node or count changed, each keeps its leaf and colour; dots rewritten in place. The full table of cases is in followups.md (2026-10-06, languages that stop at a border).
+
+## Swahili audit (2026-10-13)
+
+Anita thought Swahili was too low (4.3% nationally, 2.3% on the mainland, Dar es Salaam 13%). It
+was. R7's mother-tongue question (Q2A) records what an adult names as the language they grew up
+with, and a Sukuma, Chaga or Gogo adult living in Dar es Salaam names their group's language even
+when the household speaks Swahili.
+
+**Evidence looked at (all Afrobarometer; `data/raw/tz/ab_tz_language.csv` now has `home` and
+`age` columns; `data/raw/tz/ab_r7r9_both.csv` is a side extract of R7-R9 with both items for
+Tanzania, Kenya, Uganda and Mozambique).** R7 (2016) asked both questions of the same 2,204
+respondents (after the two dropped interviewers): Q2A mother tongue Swahili 4.0% (urban 8.2%,
+rural 2.0%); Q2B "language spoken in home" Swahili 71.9% (urban 92.6%, rural 61.7%). R8 (2019)
+and R9 (2021) ask the home item only: 61.4% (urban 89.6%, rural 47.4%) and 70.4% (urban 93.8%,
+rural 57.1%). Pooled R7-R9 household answer: 67.7%. The mother-tongue answer has no age gradient
+(18-29: 4.9%, 60 and over: 3.2%), so it does not pick up the shift among the young. Of the 336
+R7 respondents with Sukuma mother tongue and a household answer of Sukuma or Swahili, 162 gave
+Swahili and 173 Sukuma. A search for a household or child survey that asks home language directly
+(Uwezo and Twaweza, the 2013 RTI early grade reading baseline, the National Panel Survey, DHS)
+found no published table; Twaweza's slides on mother tongue and learning carry no home-language
+share. Not used: a 10% mother-tongue estimate for Swahili (Rubagumya 1990, quoted in a paper the
+search returned, not opened) and the LOT 7% already in section 1.
+
+**Call.** The map is first / home language. A child grows up in the household's language; an
+adult's first language is the one they name. So each region's Swahili share is
+`(1 - CHILD) x adults' first language + CHILD x household language`, with CHILD the 2022 census
+share aged 0-14: 26,399,988 of 61,741,120 = 42.8% (NBS 2022 census summary Table 1; the under-18
+share of 49% in a news report was not used). Adults' first language pools R4 and R6 (the old
+"home language" wording, which reads as a first language and agrees with LOT) and R7 Q2A. The
+household language pools R7 Q2B, R8 and R9. Each region's share is shrunk to the national one,
+by 5 respondents for the adults' item and 50 for the household item (Togo's `K_SHRINK`). The
+shrink uses head counts, not weights: Zanzibar's weights average 0.3 and would over-shrink it.
+Code: `shrunk()` and `unit_shares()` in `sources/tz_afro.py`. `SW_MODE = "mother"` puts the
+2026-10-05 ruling back and `"home"` draws the household answer alone. The 5 and the choice of
+0-14 are mine. Each region keeps its total; the other languages give up what Swahili gains in
+proportion to their old shares.
+
+**Placement inside a region.** A district's Swahili share is the region's blended share times the
+district's household-language share (R7 and R9 respondents, shrunk to the region's by 8) over the
+region's. Musoma Urban comes out 36% Swahili, Musoma rural 11%. Other languages as before.
+
+**Swahili, before to after (share of each region):**
+
+| | before | after |
+|---|---:|---:|
+| Tanzania | 2.65M (4.3%) | 19.39M (31.4%) |
+| mainland | 2.3% | 29.8% |
+| Dar es Salaam | 13% | 48% |
+| Mjini Magharibi, Kaskazini Unguja, Kaskazini Pemba, Kusini Pemba, Kusini Unguja | 59, 100, 77, 71, 38% | 83, 90, 87, 82, 72% |
+| Lindi, Pwani, Iringa, Ruvuma, Morogoro | 10, 6, 0, 0, 1% | 42, 44, 40, 39, 36% |
+| Arusha, Kilimanjaro, Tanga, Mtwara, Kigoma | 4, 2, 4, 4, 0% | 35, 36, 30, 34, 34% |
+| Mwanza, Shinyanga, Simiyu, Geita, Kagera, Mara | 0, 0, 0, 0, 0, 2% | 24, 16, 15, 18, 19, 21% |
+
+Sukuma goes from 12.3M (20.0%) to 9.8M (15.9%), Ha 3.0M to 2.1M, Gogo 2.6M to 1.9M, Chaga 2.0M
+to 1.3M.
+
+**Probably still low:** Dar es Salaam. The adult part is the migrants' first language, and the
+household answer is 98%, so a reading that put every urban household on Swahili would give 98%;
+the blend gives 48%. Kaskazini Unguja falls from 100 to 90%, because shrinking a small unit towards the
+national share costs it a little (its three rounds all say 92 to 100%). **Possibly high:** rural mainland, where 47-62% name Swahili as the household
+language but children in Sukuma and Gogo villages may learn the group's language first.
+
+**Checks.** Totals unchanged (61,741,120). `check_country.py tz` ok. `scatter.py --country tz`:
+61,692 dots. Split-half checks of the other languages still pass (Sukuma +0.94). The LOT atlas
+district table would replace all of this for a first-language reading.
+
+Anita, 2026-10-13: keep the adults/children blend (SW_MODE as built), for Tanzania and Kenya.

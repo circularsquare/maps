@@ -138,3 +138,18 @@ Colours: all nodes exist (France and Germany); no hand-set colours.
   other (Kind en Gezin's language spoken with babies, by commune, would measure Flanders directly).
 - Modern figures for Ronse, Enghien and the other border facility communes; the 1947 per-commune
   table.
+
+## 8. Minority-language audit (2026-10-13)
+
+No counts changed. Belgium has no census or official survey of home language, so there is no
+yardstick for the regional languages, and none was found:
+- Walloon, Picard, Gaumais, Champenois: a circulating "360,000 Walloon speakers (2018)" has no
+  traceable source; Francard (1992) calls any number hazardous. Left as French, as the
+  Germany/Austria rule leaves dialects on the standard language where no named survey exists.
+- Flemish dialects incl. West Flemish, Limburgish, Brabantian: Taalpeil 2009 (Taalunie) has about
+  70% of Flemish parents using dialect or regional speech with each other, 65% with children, but
+  that counts tussentaal and dialect together and cannot be split into named languages.
+  Left as Dutch. (Glottolog treats West Flemish and Limburgish as languages; France draws no West
+  Flemish either, so the two are consistent.)
+- Luxembourgish round Arlon, Platdiets near Welkenraedt: no figure. Left.
+- German in BE336 (91.8%) and the border-commune minorities are as recorded in section 3.

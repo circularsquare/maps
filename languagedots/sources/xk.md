@@ -115,3 +115,33 @@ towns, each one settlement.
 Cut from the reader-facing text and not recorded above; verbatim from the old `note_public`.
 
 - The statistics agency's language table includes its own estimate for them, about 17,000 people, nearly all Serbian speakers; those dots are an estimate, not answers, and the confidence control removes them.
+
+## Minority-language audit (2026-10-13)
+
+Question asked: are Kosovo's regional and minority languages undercounted against a
+mother-tongue or home-language figure?
+
+| language | drawn | best figure | verdict |
+|---|---:|---|---|
+| Albanian | 1,485,170 | ASK 2024 mother tongue (same); Albanians + Ashkali + Egyptians 1,481,787 | right |
+| Serbian | 55,168 | ASK 2024 mother tongue; 16,369 of it ASK's estimate for the north | right |
+| Bosnian | 28,854 | ASK 2024 mother tongue | right (includes some Gorani who answered Bosnian) |
+| Turkish | 18,748 | ASK 2024 mother tongue; Turks by ethnicity 19,419 | right |
+| Romani | 5,597 | ASK 2024 mother tongue; Roma by ethnicity 8,730 | census figure kept (Roma are known to declare the majority language; no independent estimate used) |
+| Gorani | 0 -> 5,980 | none published as a language; Gorani ethnicity 7,828 in Dragash | moved, see below |
+
+**Changed: Dragash's "Other (specify)" (5,980) is now drawn as Gorani.** Dragash holds 7,828
+declared Gorani; its answers are Albanian 17,452, Serbian 1,676, Bosnian 3,674, Turkish 110,
+Romani 4, Other 5,980. The non-Albanian answers (11,330) are the Gorani plus Dragash's Bosniaks
+(2,900), so Other can only be the Gorani's own speech (nashinski), as the old comment in
+xk2024.py already said. Anita's 2026-10-09 ruling is to lean towards splitting a lumped answer
+into a named language, by place from knowledge, recorded as such. Gorani is the node me.txt
+already defines (Glottolog gora1268, Slavic, a sibling of Macedonian); `taxonomy/tree.d/xk.txt`
+repeats it without a colour, as the brief asks. Kosovo's other 2,998 "Other" stay on `other`.
+Counts per unit unchanged (Dragash total 28,896). Placement: Gorani follows the 2011 Gorani
+villages (the ETHNICITY weight "gorani"); `other` no longer borrows them. The Gorani who answered
+Serbian (1,676) or Bosnian (3,674) are left where they declared; nothing separates them from the
+Serbs and Bosniaks of the same municipality.
+Edited: `countries/xk.py` (relabel in `_counts`, ETHNICITY, note_public), `taxonomy/xk2024.py`
+(one NAMES entry), new `taxonomy/tree.d/xk.txt`. New tree node in this fragment: Gorani (already
+defined in me.txt; the build tail must see it from xk too).

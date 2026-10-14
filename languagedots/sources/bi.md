@@ -86,3 +86,7 @@ full results ever add one) would replace this.
 ## Cross-border groups (2026-10-06, 5d7dac7e-xb)
 
 Kirundi is in a Rwanda-Rundi group with Kinyarwanda, Ha and Hangaza. Their colours are still far apart. Groups only (taxonomy/regroup.txt): no label's node or count changed, each keeps its leaf and colour; dots rewritten in place. The full table of cases is in followups.md (2026-10-06, languages that stop at a border).
+
+## Swahili audit (2026-10-13)
+
+Checked, no change. Swahili is 0.5% (Afrobarometer R5 and R6; Bujumbura Mairie 4.0%, Cibitoke 2.4%), as above. No better source found.

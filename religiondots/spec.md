@@ -181,6 +181,16 @@ Project for Islam's split only after a hand review, hand rows for the small reli
 15.6 the tint — OPEN · 15.7 all 201, and the title needs two numbers · 15.8 the world total ·
 15.9 §14 clearance · 15.10 shape, and what is open
 
+**§17 Dot style: pies, and a shorter settings block** — BUILT 2026-10-12. `merged` becomes `pies`
+(one pie per merge cell, languagedots' drawing, religiondots' content); presence rings, the
+`national estimates` toggle and the `inferred dots` toggle leave the legend; selection rings for
+pies; `reset colours` shows only when a colour is set · **17.10 `draw as` pies / dots / regions,
+pies by default, and languagedots' Size, Cap and Aggregation, the pies binned from the scatter's
+buffers** · **17.11 the groups under one dot drawn at their real size (`subdot.py`)** · 17.12 pies
+2× bigger · **17.13 hidden religions stay on the map in grey** · 17.14 the pie card's names on
+one line · **17.15 Auto chooses later, languagedots' rule** · 17.16 the hidden set is not
+remembered · **17.17 the kept card's rows open into their subgroups**
+
 ---
 
 ## 1. What the map has to do
@@ -1946,7 +1956,11 @@ but a false claim about where people are. The base is now set so a lone dot stay
 cap bites from about k ≈ 80. Losing resolution among the largest metros costs nothing anyone can
 read; losing rural America costs the map its subject.
 
-### 4.2b Consolidation is toggleable — added 2026-08-27
+### 4.2b Consolidation is toggleable — added 2026-08-27; `merged` REPLACED by `pies` 2026-10-12 (§17)
+
+> **Reversed in part by §17.** The merged marks are no longer drawn: `dot style` is now
+> `separate` / `pies`, one pie per merge cell, built from the same merged tile layer. §4.2a's merge
+> and its radius cap stand, as the pies' data and their size; what follows is the history.
 
 The merge happens at build time, so switching it off is not a rendering option — the unmerged dots
 have to be *in the archive*. `tiles.py` emitted them as an `atomic` layer beside `dots`, and the
@@ -2230,7 +2244,11 @@ saves vertex work only (a quarter of it), not fill. If a phone driver ever draws
 mobile drivers are where point sizes have been rounded), `?points=0` is the comparison and
 `usePoints` is the switch.
 
-### 4.3 Presence marks: a second grammar that carries no magnitude — DECIDED 2026-08-27
+### 4.3 Presence marks: a second grammar that carries no magnitude — DECIDED 2026-08-27, REMOVED 2026-10-12 (§17)
+
+> **Reversed by §17.** Rings, their control and their layers are gone from the viewer (Anita's call).
+> The `rings` source layers are still in the archive, undrawn. §17 says what a ring-sized group
+> would need to be drawn at its real size.
 
 **The current rule, as amended 2026-09-03:**
 
@@ -3917,7 +3935,12 @@ smaller key — `tier` joins `(unit, node)` in the grouping, a mixed pair become
 divide in proportion by construction. It now draws 4,295 against 499. **The general form: a qualifier
 on a row must not be aggregated over the rows it qualifies; it must key them.**
 
-### 7a. The non-colour treatment, second attempt — BUILT 2026-09-05
+### 7a. The non-colour treatment, second attempt — BUILT 2026-09-05; the control REMOVED 2026-10-12 (§17)
+
+> **The `inferred dots` control is gone since §17**: inferred dots are always shown and
+> `onlyMeasured` is a constant `false`. The roll-up code in §7a-i to §7a-iii is still in the viewer,
+> unreached. The passive half of this section stands: the header's `data modelled` row (§7c) and the
+> about panel's list still give the shares.
 
 §7 ended with "if confidence is drawn again it has to be in something that is not colour". This is
 that thing, and §14.5 makes it a precondition rather than a nicety: **no ethnicity-derived country
@@ -5912,7 +5935,10 @@ thing twice. The about panel still opens with the sentence, which is where it wa
 anyway. The derived/modelled readout moved off the end of the `inferred dots` line onto its own line
 under it, and lost the em dash it needed there.
 
-### 10.3 A share bar per row, and a column of checkboxes — DECIDED 2026-09-07
+### 10.3 A share bar per row, and a column of checkboxes — DECIDED 2026-09-07; hiding draws grey since 2026-10-12 (§17.13)
+
+> **Since §17.13 a hidden religion stays on the map in grey** (dots, pies and regions mode's pies)
+> instead of leaving it. The numbers still do not rescale.
 
 Two asks, and they turned out to share a denominator (§6.10a) and nothing else.
 
@@ -11003,7 +11029,10 @@ Open:
 3. **What the unit-composition panel does when clicked in an estimate-only country.** There is no unit
    and no composition; there is a country and a list of quoted shares.
 
-### 15.11 Built behind a toggle, Pew first — BUILT 2026-09-14
+### 15.11 Built behind a toggle, Pew first — BUILT 2026-09-14; the toggle REMOVED 2026-10-12 (§17)
+
+> **Always on since §17**: the `national estimates` row is gone, the outlines show whenever a
+> religion is selected, and the two files are fetched the first time one is.
 
 > Anita, 2026-09-14: *"lets build pew first. also lets first build this as a toggleable feature. nto
 > enabled by default. i think small religions from specificalyl entered figures is good yeah … though
@@ -11098,3 +11127,473 @@ the caption line, and returning to all countries brings back all 74.
 **Further figures are work for short agents**, one item each from `estimates_todo.md`, which is where
 Anita's call of the same day put them rather than in one long session. `CLAUDE.md` points an agent
 spun up for this at that file.
+
+## 16. Place search — BUILT 2026-10-12, Anita's ask; the calls are PROPOSED
+
+> "add an address search feature somewhere, not super prominent but it would be nice to be able to
+> type in a country or subdivision or address and go to that place."
+
+A small magnifier button to the right of the about button (bottom left on the desktop; top right,
+left of the about button, on the phone). It opens one input and a list of up to 6 places; Escape or
+a click away closes it. The same control as languagedots' (its spec §4.7 has the argument), in this
+page's own tokens: the country picker's dark menu look, the about button's round style.
+
+- **Photon** (`photon.komoot.io/api/?q=&limit=6&lang=en`), 300 ms after the last key, from 3
+  characters, the stale request cancelled. A plain GET with `referrerPolicy: no-referrer` and no
+  cookies: the query and nothing else.
+- **Photon takes about 2 s, so the list does not wait for it** (Anita, 2026-10-12). The built
+  countries (`META` names and views) and `data/processed/place_index.json` answer at once: the
+  world's 4,578 first-level divisions as name, country and box, 204 KB, made by languagedots'
+  `tools/make_place_index.py` (which writes this copy too) from Natural Earth, fetched through
+  `DATA_BASE` the first time the box opens and listed in this folder's `deploy.py`. From 2 characters,
+  a name or a word in it starting with the text, countries first, the top 4; Photon's results join
+  underneath without repeating a country or state. A "Searching" row with a small ring shows from
+  the keystroke until Photon answers (the ring is the one animation here), and each answer is kept
+  for the session by query.
+- **Picking.** A result with an extent is fitted to it; one without is jumped to at a zoom by its
+  type (country 4, state 6, county 9, city 10, district 12, locality 13, street 14, house 15,
+  other 13). A country uses `META[cc].view`, because Photon's extent for the United States or
+  Russia crosses the date line. No animation. The padding is `panelPadding`, so the place lands in
+  the band between the panels (above the sheet on the phone).
+- **Auto.** The jump ends in a `moveend`, which `considerCamera` already watches, so Auto picks the
+  country as for any pan. A country held by hand that does not contain the place is let go
+  (`pickAuto`), because the map shows one country's dots only and would be empty there.
+- **Phone.** `#left`'s right padding grows from 44px to 78px so the title and subtitle clear the
+  second button; the list drops under the buttons and stays above the sheet; the input is 16px.
+- Self-contained: its own CSS block (`#place-*`), element, and one function at the end of the
+  script. It does not touch the dot drawing.
+
+## 17. Dot style: pies, and a shorter settings block — BUILT 2026-10-12
+
+> Anita, 2026-10-12: *"rework religiondots 'merged' mode and just replace it with the pie chart mode
+> from languagedots."* The same day, while it was being built: simplify the legend's settings, since
+> the pies add things there (no `inferred dots`, no presence rings, estimates always on, selection
+> rings, and the reset row only when there is something to reset).
+
+**The one sentence:** `dot style` is now `separate` / `pies`, where a pie stands in each merge cell
+holding the people the dots there stand for, cut into the legend's rows; it reverses §4.2b's merged
+rendering and §4.3's rings, and takes three controls out of the legend.
+
+The settings block is now: map style, people per dot, dot style, dot size (`pie size` in pies mode),
+show non-religions, and reset colours when a colour has been set. Checked at 1400×900 and on the
+phone sheet at 390×844.
+
+### 17.1 What a pie is, and where its data comes from — the data source REVERSED by §17.10
+
+> Since §17.10 the pies are binned from the scatter's buffers on languagedots' grid, not read from
+> the merged tiles. The rest of this subsection is the first build.
+
+**One pie per merge cell and country, from the merged tile layer the merged marks were drawn
+from.** No retile. `tiles.py` writes one mark per (32×32 cell of a tile, node, country, tier) at the
+mean position of its dots (§4.2a), and the position is an integer in the tile's 4096 extent, so
+`x >> 7, y >> 7` recovers the cell exactly, with no float flooring to go wrong. Every mark of one
+cell and one country is summed into one pie at their dot-weighted mean. **Countries are never summed
+into one automatic pie**, which is `tiles.py`'s rule and regions mode's (§4.2a, the regions pies).
+
+The marks are read from each loaded tile's own parsed data (`tileMarks`, through MapLibre's feature
+index) rather than `querySourceFeatures`, so each mark's tile is known: languagedots' STAND-INS
+(`finerInside`) leave out a stand-in parent's marks wherever a loaded child already covers the
+ground, so nothing is counted twice while tiles arrive. Decoded once per tile and cached against
+the tile's parsed data. The merged layer stays in the style at opacity 0 while pies show, because a
+layer with visibility none leaves its source unloaded; its paint is constants and its filter null,
+so no legend change ever re-evaluates it.
+
+### 17.2 What a pie holds follows the dots
+
+**The rule is SCATTER's, because §7a-ii made the shader the authority.** A mark counts as the node
+it is drawn as (the roll-up target when §7a-i applies, which since §17.6 it never does), and is
+dropped where that node is hidden (§10.3) or out of scope (§6.7), where the country is muted
+(§7a-iii), or where it is modelled under the roll-up. The same per-node table `SCATTER.setPalette`
+builds, built again in `rebuildDotPies` from the same helpers (`rollUpMap`, `isHidden`, `subtree`).
+§7a-i's warning about duplicated rules applies, and the pies were checked against the dots for
+selection, hiding and the country filter (§17.9).
+
+**A wedge is a LEGEND ROW, not a node.** `dotPieRows` walks `paletteFor`'s logic with ids instead
+of colours: a drawn node paints its subtree and a drawn child paints over its part, `MERGE_OWN`
+hands Catholic's own dots to Latin Catholic, a split branch's own dots are its `…, unspecified` row,
+and §6.10's folded children are the "N small groups" row. So every wedge's colour is a swatch in the
+legend and the card names what the legend names. Hover naming (§7a-ii, §4.2c) follows: the card
+names rows, in the colours the map draws them.
+
+### 17.3 How a pie is drawn follows languagedots — the sizing REVERSED by §17.10
+
+> Since §17.10 a pie is sized as languagedots sizes it (ink per person on the ground, Size, Cap
+> off by default), not as the merged mark was. The first bullet below is the first build.
+
+- **Size: the merged mark's area.** Radius r(z)·√k with `MERGED_STOPS`, `DOT_GAIN`, the 1:10,000 gain
+  and §4.2a's cap of half a merge cell, so a pie has exactly the ink its marks had together and
+  stays inside its cell. The dot-size slider sizes pies too and reads `pie size` in pies mode, as it
+  already did in regions mode.
+- **No border, `DOT_ALPHA`, wedges in the legend's order from north, clockwise.** Smallest pie
+  drawn first, so a bigger one covers a smaller one.
+- **On the GPU, one layer for both kinds of pie.** Regions mode's `pieLayer` and the dot style's
+  pies were the same object to draw, so they share one custom layer and shader (`pieLayer`, with
+  `pieMode()` saying whose list it holds). A pan or zoom changes only the matrix; the list is rebuilt
+  when the camera stops (`moveend`, then `idle` and arriving tiles at most once per 150 ms).
+- **Each wedge is one float**, its palette index × 4096 plus its end in 4095ths of a turn, exact in
+  a float32, so 24 wedges are six vec4s. The layer draws its own world copies, §4.2d's Fiji lesson,
+  which regions mode's pies had not done.
+
+**Folding, and the one real conflict.** Up to 9 rows (languagedots' count) each get a wedge. Past
+that: the 5 largest rows, then the rest folded by family (the root, or with a religion selected, the
+selection's child it sits under), each family's tail one wedge in the family's own colour, which is
+§6.10's rule for a row too small to keep. **Languagedots then puts what is left in one grey "other"
+wedge, and that is the part not taken: grey here is the not-a-religion ramp (§6.3a), so a grey wedge
+would read as "no religion".** The families get room instead (24 slots), and only past that do the
+smallest families share one last wedge, in the colour of its largest row, which is a legend colour,
+and the card says it is several. The biggest pie found in testing, London at world zoom, filled 24
+wedges with no shared one.
+
+### 17.4 The card, keeping it, and the box
+
+- **Hover** shows the pie's card: the country (or countries) in bold, a larger copy of the pie, and
+  one line per wedge with §10.6's key, name, share of the pie and people, folded wedges last, then
+  the pie's total people. Shares are of the pie, so they add up to 100%.
+- **A click keeps it** (languagedots' pinning). A kept card stays at its point while the map moves,
+  takes the pointer, scrolls past 70% of the screen, and its folded rows open into their members (the
+  ten largest, then "N more"), its pie splitting the open wedge the same way. **A double-click on a
+  row selects that religion**, as a double-click on a dot does. A click off the pie, Esc, or a change
+  of dot style or map style lets it go. After a change to what the dots show, the kept card is looked
+  up again under its point, because its counts were made under the old rules.
+- **Press and hold, then drag** draws a box; on release every pie whose centre is inside becomes one
+  pie of all their people, filling the box and fixed to the ground, with its card kept. Redone at
+  every rebuild, so it survives pans and zooms; let go by a click off it, Esc, a change of style, or
+  a change of country. **The box may hold more than one country, and its card names them** — the one
+  place two censuses are summed, and a call: the reader drew the box, so the sum is the one asked
+  for, and each dot in it is already the category its own census counted.
+- **Not carried over:** languagedots' place line ("near Kayseri"), which needs its place gathering
+  and an admin-1 file this map does not have; the card names the country instead.
+
+### 17.5 Selection rings — ported for pies
+
+Languagedots' locator rings: with a religion selected, a faint ring in its colour around each pie
+whose ink is too little to see, decided by adding the selection's ink into a coarse screen grid on
+the GPU each frame. Constants as languagedots had them on 2026-10-12, **except the whole-screen gate,
+50 px² there and 1,000 px² here**: at 50, Bahá'í at world zoom (76 pies, about 525 px² of ink, most of
+it in the United States) counted as plainly on the map, and its pies in Kenya and India, a pixel or
+two each, got no ring. At 1,000 they do, and Judaism (about 10,800 px²) and Jainism still get none.
+Every pie is the selection while one is selected (§6.7 hides the rest), so a pie's selected share is
+always all of it; the ring takes the colour of its largest wedge.
+
+**Separate mode does not get them, deliberately for now.** The ink pass draws every mark a second
+time each frame and reads the grid back, which for pies is a few thousand instances and for the
+scatter is up to five million, the most expensive frame this map draws (§4.2e). It can be added to
+`SCATTER.render` the same way if the separate dots want it.
+
+### 17.6 Three controls leave the legend — the sub-dot groups AMENDED by §17.11
+
+> §17.11 built the cheap data step described at the end of this subsection: pies now draw the
+> groups under one dot at their real size.
+
+**`inferred dots` is gone and inferred dots are always shown**, the old default. `onlyMeasured` is
+now a constant `false` rather than unpicked: the roll-up runs through the scatter's two shaders and
+palette, its hit test, the legend's tallies, `layerFilter` and the pies, and pinning it leaves all of
+that reading as it did, restorable by turning the constant back into a control. The tier shares the
+control's caption printed are still on screen: the header's `data modelled` row for a country
+(§7c) and the about panel's per-country list for all of them, both from `tierWords` /
+`tierShares`. `renderTierControl` is deleted.
+
+**`national estimates` is gone and the layer is always on** (`showEstimates` a constant `true`). Its
+behaviour is §15.11a's unchanged: outlines only with a religion selected, none in a one-country
+view, fading out from z6.5. The two files are fetched the first time a religion is selected
+(`applyEstimates`), so a view with nothing selected still never pays for the 2.2 MB of shapes.
+
+**Presence rings are gone (§4.3 reversed).** The control, both ring layers, their paint, filters,
+hover card and sizes, the about panel's sentence, and the `people per dot` tooltip's mention. The
+legend's presence test already counted rings only while they were drawn, so it now reads dots
+alone; the `rings` source layers stay in the archive, undrawn.
+
+**What happens to a group too small for one dot.** §4.1a's carry means the only people the dots do
+not draw are a node's final remainder in a country, and in practice a node with fewer people in a
+whole country than one dot: under 1,000, or 10,000 in the coarse edition. **In both dot styles those
+groups are not drawn and are not in the legend**, which is what the default (rings off) already did.
+Anita asked for pies mode to draw them as small pies sized by their real count. **That needs data the
+archive does not have, so it is not built:** a ring feature carries `n`, `c` and `why`, the rings
+geojson adds only `congregations`, and counts.json's `rings` tally is a count of rings (1 each), not
+of people. Two ways to get it, the second much cheaper:
+
+1. `scatter.py` writes the node's national count on each ring, and `tiles.py` carries it into the
+   `rings` layers. Every country re-scattered and a full retile.
+2. A small script beside `rollup.py` writes each country's sub-dot nodes and their national counts
+   (from `counts()`, which is minutes, not a retile) to a JSON file that `tiles.py --refresh-meta`
+   carries into counts.json. The viewer then reads the ring positions from the `rings` source layers
+   already in the archive and adds each as a fractional part of the pie in its cell (or a small pie of
+   its own), sized by count ÷ people per dot.
+
+**`reset colours` shows only when a colour has been set, and resets colours only.** It used to grey
+out, and it used to put the hidden set back too, which the label does not say; `show all` and the
+boxes already do that, and `HIDDEN_DEFAULT` is empty, so nothing of the old reset is lost.
+
+### 17.7 What was removed and what was kept
+
+- Removed: the merged circle rendering (the merged layer no longer draws, except below); the hover,
+  double-click and query paths that named merged marks, now limited to that fallback (a circle at
+  opacity 0 still answers queries, which is §4.3's "Sikh ring says Wesleyan Church", and its
+  mouseleave would have taken the pie card down); the ring layers; the three controls.
+- Kept: `colorExpr` and `layerFilter`, for the fallback. **The no-instancing fallback is the one
+  place merged marks survive** (`markFallback()`): a context with no instancing cannot draw the
+  scatter, and the pies need WebGL2 too, so the merged layer draws its circles as before and the dot
+  style control hides itself. A WebGL1 context with instancing draws separate dots and hides the
+  control likewise. Simulated on the running page by setting `SCATTER.unsupported`; not tested on a
+  real WebGL1 device.
+- Nothing stores the dot style (not localStorage, not the URL), so `merged` needed no migration.
+
+### 17.8 Smaller calls — the control ids and the default REVERSED by §17.10
+
+- Default stays `separate`, Anita's 2026-09-02 call.
+- The control ids are `#ctl-style` / `#style-seg`, the global `dotPies`; `merged` is gone.
+- The pie card's people are `fmtPop`, the legend's rounding.
+- `PIE_PIN` and not `PIN`, which is already §6.11's palette table.
+
+### 17.9 Verified on the running page, 2026-10-12
+
+Headless Chrome on the desktop GPU (ANGLE, AMD RX 6600), through the controls:
+
+| view | pies | rebuild |
+|---|---|---|
+| world, z1.35 | 1,578 | 34 ms first, 19 ms after |
+| India z4.5 (Auto: India) | 736 | 14 ms |
+| India z4.5, 1:10,000 | 2,131 | 15 ms |
+| Germany z5.3, all countries | 8,616 | 31 ms |
+| United States z3.6 | 1,580 | 30 ms |
+
+Panning by script at the frame rate: 16.3 ms a frame with world pies, with Bahá'í's rings on, and
+with separate dots, which is the display's own rate in all three. Islam selected over India: only
+Islam's three rows in the pies; Hinduism hidden: no Hindu part in any pie; Zoroastrianism and
+Bahá'í selected; back to separate (merged layer hidden, the pie layer empty); regions mode's pies
+drawn through the shared layer; hover and kept cards, a London pie's folded Christianity tail opened
+into its five rows, a double-click in the card selecting `No religion`; the box over Gujarat (one
+pie of 15m people, its card kept) surviving a zoom and let go by Esc; a colour set and reset (the
+row appearing and leaving); the phone sheet's settings. No console errors beyond the basemap's
+missing `circle-11` sprite.
+
+**Not done:** a real phone (the box gesture and the per-frame ink read-back are the parts to watch);
+a real WebGL1 device.
+
+### 17.10 Draw as: pies, dots or regions, and languagedots' Size, Cap and Aggregation — BUILT 2026-10-12
+
+> Anita, the same day, on the first build's even grid of same-size discs
+> (`review_pies_india_card.png`): give religiondots languagedots' sizing controls with its
+> defaults, and replace `map style` and `dot style` with one three-way selector, pies by default.
+
+**The settings block is now:** draw as (pies / dots / regions), people per dot, size, cap,
+aggregation, show non-religions, and reset colours when a colour is set. Checked at 1400×900 and
+on the 390×844 phone sheet.
+
+**`draw as`, pies by default.** Languagedots' label. `dots` is the old `separate`; `regions` is
+regions mode. One row, because regions never combined with either dot style. What a mode cannot
+use leaves the block, as `people per dot` already did in regions mode: in `dots`, Cap and
+Aggregation go (body class `draw-dots`); in `regions`, people per dot, Cap and Aggregation go.
+The ids are `#ctl-draw` / `#draw-seg` (0 pies, 1 dots, 2 regions); `dotPies` and `regionsMode`
+stay the two booleans the file reads. Where pies cannot be drawn (no WebGL2, or the no-instancing
+fallback) the `pies` chip is hidden and the map falls back to dots.
+
+**Size, Cap and Aggregation are languagedots' own, on its stops and with its defaults** (Size 1×,
+Cap none, Aggregation low):
+
+- **Size** is a multiplier on area, on languagedots' twelve stops, 0.2× to 10×. A pie's ink is
+  `DOT_KM2` = 3.9 km² per 1,000 people on the ground, so it doubles in pixels per zoom until
+  `PIE_MAXZ` = 12. **This replaces §17.3's merged-mark sizing**, which is what made every pie the
+  same disc: with §4.2a's cap of half a cell, every cell holding more than about 80 dots drew at the
+  cap. The dots take Size's square root on their radius, so the separate dots keep §9's tuned curve
+  and Size 1× is exactly the old 1.0×; regions mode's pies take it the same way.
+- **Cap**: a ceiling on one cell's whole pie, `CAP_FRAC` = 0.65 of the cell's width at 1×, as a
+  multiplier on its area, 0.5× to 5×, and off at the top stop. Off by default, as languagedots.
+- **Aggregation**: the grid. Languagedots' four levels, 32, 64, 128 and 256 cells to a tile at the
+  tile's zoom (`PIE_CELL_BITS` = 6 plus `detail`, −1 to 2), slider right is coarser, default low
+  (128 a tile, cells 4 to 8 px across).
+
+**Cap and Aggregation are the pies' alone; Size applies to all three modes.** Languagedots' dots
+are merged marks in the same cells, so its three sliders all apply to them. Religiondots' dots are
+one dot per 1,000 people with no cells: aggregating them would bring back the merged marks this
+section exists to remove, and there is no cell to cap.
+
+**WHAT AGGREGATION COULD HONESTLY DO FROM THE TILES, AND WHY THE PIES LEFT THEM.** The merged
+tiles are built on one grid, 32 cells a tile (`tiles.py` CELL_BITS 5), which is languagedots'
+`high`. Coarser is a floor; finer (64, 128, 256 a tile, which includes the default) is not in any
+tile at the zoom MapLibre loads. **No retile was needed**: the scatter's buffers (§4.2d) hold every
+dot at its exact position and are already loaded for the dots, so the pies are now binned from them
+onto any grid. That also retires the hidden merged layer and the stand-in handling: the merged tile
+layer is drawn only by the no-instancing fallback now.
+
+**Binning, and what it costs.** A grid the view's own width or finer (from about zoom 6 at the
+default) walks the dots of the buckets in view. For wider views each buffer is binned once, at a
+fine level (`PIE_FINE` 12, cells about 10 km) and a coarse one (`PIE_COARSE` 9), by full `nid` so
+the scatter's rule still applies entry by entry, keeping each fine cell's mean position; a rebuild
+then floors those entries to its grid. Dot by dot, the world view took 250 to 460 ms over 7.3
+million dots; now a rebuild measures (headless, desktop CPU, default settings):
+
+| view | pies | binning | rebuild |
+|---|---|---|---|
+| world z1.35 | 9,964 | 18-20 ms | 48-73 ms |
+| India z4.5 | 9,772 | 5 ms | 23-30 ms |
+| United States z3.6 | 10,833 | 12 ms | 52-71 ms |
+| Germany z5.3 | 35,239 | 11-20 ms | 87-97 ms |
+
+Most of what is left is per pie (wedges, upload, sort); a rebuild runs only when the map comes to
+rest. Panning by script: 16.3 ms a frame at world zoom and over India (the display's rate), 18.8 to
+21 ms over the United States. The fragment shader stops at the first wedge a pixel is in.
+
+### 17.11 The groups under one dot, at their real size — BUILT 2026-10-12
+
+Anita approved §17.6's cheaper route the same day. **No retile.**
+
+- **`subdot.py`** (new, beside `rollup.py`): for every country and both editions, each ring
+  `scatter.py` placed (`rings_<cc>.geojson`, `rings_<cc>_10k.geojson`) with that node's national
+  people from the country's own `counts()`, into `data/processed/subdot.json` as `{cc: {"1000":
+  [[node, lon, lat, people], ...], "10000": [...]}}`. A ring whose count is zero is left out and
+  one at or over the dot value is printed; neither happened. **135 countries, 2,142 groups,
+  2.88 million people over both editions** (Czechia: 18 at 1:1,000, 5,109 people; the United States:
+  51 and 110).
+- **`tiles.py --refresh-meta`** now carries each country's entry into counts.json as `subdot`
+  (`_subdot_tables`, read the way `_rollup_tables` is; a full build writes it too). counts.json went
+  from 1,052,177 bytes (2026-10-04) to 1,165,567. The refresh also re-wrote every country's display
+  fields, coverage and roll table from the current `countries.py`, `coverage.py` and
+  `rollup.json`, which is what `--refresh-meta` always does.
+- **Pies mode** adds each group to the cell its ring sits in as the fraction of a dot it is
+  (people ÷ people per dot), so it is part of the pie there, or a small pie of its own, sized by its
+  real count like everything else. The same rule as the dots: a hidden or out-of-scope group is not
+  added; a country drawn only by such groups (no buffer at all) is still drawn. The legend counts
+  them in pies mode, so a row appears for a node only they draw (Czechia's Methodists, 896 people),
+  and the tooltip's dot count rounds down while its people do not.
+- **Dots mode draws nothing for them, deliberately.** A dot there means 1,000 people and a reader
+  counts dots (§4.1); a smaller dot would be the "minimum dot size" §4.3 rejected, and a dot of
+  896 people at the size of a whole one would overstate it. They are not in the dots legend either.
+- **Not covered:** a sub-dot node whose every row is derived never got a ring (§3.10), so it has no
+  position and is still not drawn. And a ring's position is the group's largest concentration, so a
+  group spread over a country is drawn in one place, as the ring said.
+
+**Verified:** Czechia, Methodists selected: one pie of 896 people at the ring's place in Plzeň, its
+card "Methodist 100%, 896 people", a selection ring around it; hidden, no pie; in dots mode, no row
+and no mark. The world legend moves from 7,277m to 7,278m in pies mode.
+
+**Review images** (overwritten for this round): `review_pies_world.png`, `review_pies_india_card.png`,
+`review_pies_box.png`, `review_pies_bahai_rings.png`, `review_pies_phone_settings.png`, and
+`review_pies_settings_desktop.png` for the new settings block.
+
+### 17.12 Pies twice as big at the same Size — Anita, 2026-10-12
+
+Every pie's radius is 2 times what §17.10's languagedots sizing gives at the same Size (`PIE_GAIN`
+in index.html, on the base before Size and Cap), so Size 1× now draws 2× the radius, 4× the area,
+of languagedots' sizing as first carried over. Anita asked for about 1.6× and corrected it to 2×
+the same day. A gain on the radius rather than a new `DOT_KM2`, so
+that constant still reads as languagedots' own. The Cap is unchanged (it is a fraction of the cell),
+the dots and regions mode's pies are unchanged, and so are the selection rings' thresholds, which
+read the pies' drawn size.
+
+### 17.13 Hidden religions stay on the map in grey — BUILT 2026-10-12, Anita's call; reverses §10.3's removal
+
+> Languagedots' rule (its spec §4.6, "HIDING LANGUAGES" and `pieWedges`' second argument), asked for
+> here the same day: hiding says what to look at, not that nobody lives there.
+
+- **The grey is `HIDDEN_GREY` = #333333**, neutral, L* 21. It sits between the out-of-scope
+  colour #1c1c1c (never drawn: out of scope is still removed, §6.7) and the darkest of the
+  not-a-religion ramp, `unrecorded` #444455 (blue-grey): CIE76 ΔE 11.0 and 13.7, and the only
+  neutral that dark on the map. Languagedots' #3b3b3b is ΔE 11.9 from `unrecorded`, which is
+  42.8 million of Germany's dots, so the darker one was taken.
+- **Pies keep their full size.** Everything hidden in a pie is ONE wedge in the grey, last, at its
+  true share; it takes one of the slots and the visible rows fold as before in the rest. The card
+  lists it as "N hidden religions", which opens into them like any folded row (grey swatches).
+- **Dots draw grey instead of collapsing.** The palette entry is the grey at alpha 254, which is how
+  the shader tells it apart: with anything hidden the scatter draws twice, the grey dots first
+  (`u_pass` 1) and the coloured ones over them (`u_pass` 2), so the dots a reader is looking at are
+  never under the grey. §4.2e's culling stays off while anything is hidden, as it was when hidden
+  dots were removed. **Grey dots still answer hover and click**, and a coloured dot under the same
+  point wins; the card is the grey key, the name and "· hidden".
+- **Hiding wins over the selection.** Out of scope is still removed. A hidden node inside the
+  selection is grey, takes no ink in the selection rings (a pie's ring ink is its visible share,
+  carried as the fraction of the ring's colour index), and a pie that is all hidden gets no ring.
+- **Regions mode:** the pies keep hidden families as the grey wedge, as the dot pies do. The fill
+  under them keeps the old rule: an area wears its largest family that is shown, so hiding a family
+  still hands the area to the next largest. The fill is a colour per area, and a grey area would
+  read as "no religion here".
+- **The numbers do not rescale** (§10.3): the legend, the bars and a pie card's shares stay the
+  scope's, so the hidden wedge reads at its real share.
+
+Verified headless: Hinduism hidden over India, every pie a grey wedge at its share (one card:
+"1 hidden religion 75%, 4.8m", opening to Hinduism); Islam selected with Hinduism hidden, no Hindu
+part anywhere (out of scope); dots mode grey, a grey dot answering "Hinduism · hidden"; regions mode,
+297 of 298 pies with a grey wedge. Image: `review_pies_hidden.png`, `review_pies_hidden_card.png`.
+
+### 17.14 The pie card's names on one line — 2026-10-12, Anita's report
+
+Over the United States the card was MapLibre's default 240px wide, so "Christianity, unspecified",
+"Stone-Campbell Restorationist" and the rest broke one word to a line. The card now grows to
+`PIE_CARD_MAX` = min(560px, the window less 16px), names do not wrap, and only a name past about
+300px, or one on a narrow phone, is cut with an ellipsis, its full name on hover (`title`). The
+share and people columns keep their fixed widths, so they still line up. Other cards in the same
+popup keep their 240px. Measured: a 20-row US card 414px wide with no name wrapped or cut; an India
+card 335px; on a 390px phone a 12-row New York card 368px wide, two names cut ("Esoteric, New Age
+and Western occult", "8 smaller groups in Christianity"). Images: `review_pies_us_card.png`,
+`review_pies_phone_card.png`.
+
+### 17.15 Auto chooses a country later: languagedots' rule — 2026-10-12, Anita ("too aggressive")
+
+Languagedots' Auto is religiondots' ported and then tightened twice at Anita's request. The
+releasing half was never changed there and is not here. The choosing half came back:
+
+- **Entry numbers:** fill 0.85 → **1.5** (the country's box spans 1.5 times the view along its
+  fuller axis, about half a zoom past touching two edges), cover 0.2 → **0.5** (its box over half
+  the view).
+- **The land test** (`landShares`, `AUTO_LAND_IN` 0.65): a 15×15 grid over the view, each sample
+  weighted by a Gaussian of its distance from the middle (σ 0.25 of the side), and the country must
+  hold 65% of the weighted samples that land on any country. Asked on both routes that choose (the
+  centre over the country, and the centre over sea with the country holding the middle); not asked
+  to keep one.
+- **`countryAt` skips a part under four pixels across**, so the camera is never "over" an enclave
+  too small to see.
+- Kept religiondots' own: its dot-count route over sea (languagedots has no dots and asks outline
+  samples there), its small-country branch, and `scopeDrawsIn`.
+
+**Measured at 1400×900, zooming in on the middle of each country** (old rule against what the page
+now does): **Germany** was chosen from z5.5 and is now from **z6.25**; **India** from z4.25, now from
+**z5.0**. Over Germany at z5.75 the old rule took it with the box at 1.13 of the view and 62% of the
+weighted land; now it waits until 1.60 and 78%. Letting go when zooming out is unchanged (its box
+under 0.6 of the band beside the panels), so the gap between choosing and letting go is wider.
+
+### 17.16 The hidden set is not remembered — 2026-10-12, Anita ("so people aren't confused why stuff is hidden")
+
+Every page load starts with everything shown (`HIDDEN_DEFAULT`, which is empty). `saveOverrides`
+writes colours only, and `loadOverrides` ignores the `hidden` / `hiddenOnly` keys an earlier version
+stored, so a returning visitor's old set does not come back (checked: a store seeded with
+Christianity hidden loads with nothing hidden and its colour kept). Colours are still remembered.
+`copyOverrides()` still prints the current hidden set as a `HIDDEN_DEFAULT` line, which is still what
+it is for: a maintainer putting a default into the source, which every visitor would then start from.
+
+### 17.17 A row in the kept pie card opens into its subgroups — 2026-10-12, Anita, over North Korea
+
+Her example: "East Asian new religions 13%" should split. **Any row whose people include dots
+counted finer than the row opens**, from the per-dot nodes the pies are built from: it lists the next
+level under it, with shares and counts; the row's own people are "X, unspecified"; a row whose
+people are all its own (most `unspecified` rows) does not open. **Nested**: a subgroup holding finer
+ones opens again, and **a level with only one branch is skipped**, so North Korea's East Asian new
+religions open straight to Cheondogyo rather than through Korean new religions. The "N small groups"
+row and the folded family rows open the same way, one level at a time. **The card's small pie splits
+the slice** as deep as rows are open; **the map's pie does not change**.
+
+- **Subgroups are drawn in shades of the row's colour**, lighter and darker by size, the row's own
+  people in its exact colour. Their focus-palette colours were tried first and put Cheondogyo in
+  Christianity's yellow and Korean folk religion in Islam's green inside a violet row.
+- **Kept (clicked) cards only.** A hover card does not take the pointer, so it cannot be opened; it
+  shows no ▸.
+- A row that opens still selects on a double-click.
+
+Images: `review_pies_card_breakdown.png` (North Korea, both rows open),
+`review_pies_card_breakdown_us.png` (the United States, Judaism open into its six movements).
+
+### 17.18 Each mode shows only the settings it uses — 2026-10-12, Anita, before deploying
+
+| draw as | settings |
+|---|---|
+| pies | draw as, size, cap, aggregation, show non-religions |
+| dots | draw as, people per dot, size, show non-religions |
+| regions | draw as, show non-religions |
+
+Reset colours shows in every mode once a colour is set (§17). **A hidden setting does not act on
+the mode:** the pies and regions mode always read the 1:1,000 edition, and the reader's people-per-dot
+choice (`dotsDotValue`) is kept for when they go back to dots (`syncDotValue` sets `DOT_VALUE` from
+the two). Regions mode's pies are always at size 1×; the slider no longer reaches them (`pieScale`).
+Checked headless at 1400×900 and on the 390×844 phone sheet: the rows above in each mode; dots at
+1:10,000, then pies (built from all 7.28 million 1:1,000 dots, the 10,000 chip still lit for later),
+then regions (the size slider moved without changing the pies), then dots again at 1:10,000; no
+console errors.

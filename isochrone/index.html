@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Walking time</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
+<style>
+html, body { margin: 0; height: 100%; background: #0a0a0a; color: #ccc;
+    font: 400 14px/1.45 'Nunito', system-ui, sans-serif; }
+#map { position: absolute; inset: 0; }
+.maplibregl-control-container { z-index: 2; }
+
+#title { position: absolute; top: 14px; left: 16px; z-index: 3; font-weight: 700; font-size: 20px;
+    color: #ddd; text-shadow: 0 1px 4px #000; pointer-events: none; }
+
+.panel { position: absolute; z-index: 3; background: rgba(10,10,10,.85); border: 1px solid #333;
+    border-radius: 8px; padding: 10px 12px; }
+.panel h2 { margin: 0 0 6px; font-size: 11px; letter-spacing: .08em; font-weight: 700; color: #888; }
+
+#legend { right: 12px; bottom: 28px; min-width: 132px; }
+#legend .row { display: flex; align-items: center; gap: 8px; color: #aaa; font-variant-numeric: tabular-nums;
+    line-height: 1.7; }
+#legend .sw { width: 22px; height: 10px; border-radius: 2px; flex: none; }
+
+#infobtn { position: absolute; z-index: 3; left: 12px; bottom: 28px; width: 30px; height: 30px;
+    background: none; border: 1px solid #555; color: #ccc; border-radius: 6px; cursor: pointer;
+    font: italic 700 17px 'Times New Roman', Times, serif; padding: 0; }
+#infobtn.active { border-color: #6889a8; color: #6889a8; }
+#info { left: 12px; bottom: 66px; width: 330px; max-width: calc(100vw - 48px); display: none; }
+#info.open { display: block; }
+#info p { margin: 0 0 8px; color: #ccc; }
+#info p:last-child { margin-bottom: 0; }
+#info a { color: #89b4fa; }
+
+#tip { position: absolute; z-index: 4; pointer-events: none; display: none; background: rgba(10,10,10,.9);
+    border: 1px solid #333; border-radius: 6px; padding: 3px 8px; color: #ddd; white-space: nowrap;
+    font-variant-numeric: tabular-nums; }
+
+#origin { width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 2px solid #000;
+    box-sizing: border-box; }
+body.busy, body.busy .maplibregl-canvas { cursor: progress !important; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div id="title">Walking time</div>
+<div id="tip"></div>
+
+<div id="legend" class="panel">
+    <h2>Time on foot</h2>
+    <div id="legendRows"></div>
+</div>
+
+<button id="infobtn" title="About this map">i</button>
+<div id="info" class="panel">
+    <p>Click anywhere to set the start. Each colour is how long it takes to walk there. A day is 8 hours of walking.</p>
+    <p>Speeds come from the Malaria Atlas Project walking-only friction surface (Weiss et al., Nature Medicine 2020, CC BY 4.0), which sets a pace for every square kilometre from roads, land cover and slope. It was made to measure how far people live from health care. The whole world is worked out on cells of about 10 km, and the area in view on cells of 3 km and then 1 km as you zoom in.</p>
+    <p>Water cannot be crossed. Danger, weather, borders and rest are not counted. Basemap from <a href="https://openfreemap.org" target="_blank">OpenFreeMap</a> and <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>, drawn with <a href="https://maplibre.org" target="_blank">MapLibre GL</a>.</p>
+</div>
+
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script>
+// ---- bands: walking hours, 8 hours to a walking day ----
+const BANDS = [
+    { h: 1,    label: '1 hour',   color: [253, 231, 37] },
+    { h: 2,    label: '2 hours',  color: [220, 227, 25] },
+    { h: 4,    label: '4 hours',  color: [168, 219, 52] },
+    { h: 8,    label: '1 day',    color: [110, 206, 88] },
+    { h: 16,   label: '2 days',   color: [53, 183, 121] },
+    { h: 32,   label: '4 days',   color: [31, 158, 137] },
+    { h: 64,   label: '8 days',   color: [38, 130, 142] },
+    { h: 128,  label: '16 days',  color: [49, 104, 142] },
+    { h: 256,  label: '32 days',  color: [62, 74, 137] },
+    { h: 512,  label: '64 days',  color: [72, 40, 120] },
+    { h: 1024, label: '128 days', color: [68, 1, 84] },
+];
+const MAX_HOURS = BANDS[BANDS.length - 1].h;
+const OVERLAY_ALPHA = 190;
+
+document.getElementById('legendRows').innerHTML = BANDS.map(b =>
+    `<div class="row"><span class="sw" style="background:rgb(${b.color.join(',')})"></span>${b.label}</div>`).join('');
+
+document.getElementById('infobtn').onclick = () => {
+    document.getElementById('info').classList.toggle('open');
+    document.getElementById('infobtn').classList.toggle('active');
+};
+
+// ---- map ----
+const map = new maplibregl.Map({
+    container: 'map',
+    style: 'https://tiles.openfreemap.org/styles/dark',
+    center: [24, 46], zoom: 3.2, minZoom: 1.5, maxZoom: 9,
+    attributionControl: { compact: true },
+});
+map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+
+let meta = null;
+let originMarker = null;
+let originId = 0;           // which click the shown overlays belong to
+const tip = document.getElementById('tip');
+window.solveLog = [];       // timings, for checking from the console
+
+const worker = new Worker('worker.js');
+const workerReady = new Promise(res => {
+    worker.addEventListener('message', function once(e) {
+        if (e.data.type === 'ready') { worker.removeEventListener('message', once); res(); }
+    });
+});
+
+async function loadGrid() {
+    meta = await (await fetch('data/grid.json')).json();
+    const tiles = await (await fetch('data/tiles/index.json')).json();
+    const resp = await fetch('data/grid.bin.gz');
+    const stream = resp.body.pipeThrough(new DecompressionStream('gzip'));
+    const bytes = await new Response(stream).arrayBuffer();
+    worker.postMessage({ type: 'init', meta, tiles, bytes, bands: BANDS, alpha: OVERLAY_ALPHA,
+                         maxHours: MAX_HOURS }, [bytes]);
+    await workerReady;
+}
+
+// ---- overlays ----
+// One canvas source per level: 10 (whole world), 3 and 1 (windows round the view), finest on
+// top. The worker paints each one linear in Web Mercator y, which is how MapLibre stretches
+// a canvas between its corners. Where a finer window is shown, the coarser canvas has a hole
+// cut in it, so the coarse colours do not show through the window's water.
+const merc = lat => Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360));
+const LEVELS = [10, 3, 1];
+const layers = {};
+for (const k of LEVELS) {
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = 1;
+    layers[k] = { id: 'walk' + (k === 10 ? '' : k), canvas, ctx: canvas.getContext('2d'),
+                  img: null, m: null, shown: false, holeRect: null, holes: [] };
+}
+
+function addLayers() {
+    const firstSymbol = map.getStyle().layers.find(l => l.type === 'symbol');
+    for (const k of LEVELS) {
+        const lv = layers[k];
+        map.addSource(lv.id, { type: 'canvas', canvas: lv.canvas, animate: false,
+            coordinates: [[-180, 85], [180, 85], [180, -60], [-180, -60]] });
+        map.addLayer({ id: lv.id, type: 'raster', source: lv.id, layout: { visibility: 'none' },
+            paint: { 'raster-opacity': 1, 'raster-fade-duration': 0, 'raster-resampling': 'linear' } },
+            firstSymbol && firstSymbol.id);
+    }
+}
+
+// Send the canvas to the GPU once. MapLibre only re-reads a canvas source while it "plays";
+// play until a frame has drawn it, then stop (4.7.1 internals: tiles, _playing).
+function upload(lv) {
+    const src = map.getSource(lv.id);
+    src.play();
+    const stop = () => {
+        if (Object.keys(src.tiles).length === 0 && lv.shown) { map.once('render', stop); return; }
+        src._playing = false;
+    };
+    map.once('render', stop);
+}
+
+function show(k, m) {
+    const lv = layers[k];
+    lv.canvas.width = m.cw; lv.canvas.height = m.ch;
+    lv.img = new ImageData(m.px, m.cw, m.ch);
+    lv.ctx.putImageData(lv.img, 0, 0);
+    delete m.px;
+    lv.m = m;
+    lv.holes = []; lv.holeRect = null;
+    lv.shown = true;
+    map.getSource(lv.id).setCoordinates([[m.west, m.north], [m.east, m.north], [m.east, m.south], [m.west, m.south]]);
+    map.setLayoutProperty(lv.id, 'visibility', 'visible');
+}
+
+function hide(k) {
+    const lv = layers[k];
+    if (!lv.shown) return;
+    lv.shown = false; lv.m = null;
+    map.setLayoutProperty(lv.id, 'visibility', 'none');
+}
+
+// Cut the finer window out of a canvas (and put back the last hole). Rounded inwards, so a
+// sliver of the coarser canvas may stay under the finer one's edge but no gap opens.
+function setHole(lv, rect) {
+    const same = (a, b) => a === b || (a && b && a.west === b.west && a.east === b.east &&
+                                       a.north === b.north && a.south === b.south);
+    if (same(lv.holeRect, rect)) return false;
+    for (const h of lv.holes) lv.ctx.putImageData(lv.img, 0, 0, h[0], h[1], h[2], h[3]);
+    lv.holes = []; lv.holeRect = rect;
+    if (rect) {
+        const m = lv.m, cw = m.cw, ch = m.ch;
+        const yT = merc(m.north), yB = merc(m.south);
+        const y0 = Math.max(0, Math.ceil((yT - merc(rect.north)) / (yT - yB) * ch));
+        const y1 = Math.min(ch, Math.floor((yT - merc(rect.south)) / (yT - yB) * ch));
+        for (const s of [-360, 0, 360]) {
+            const x0 = Math.max(0, Math.ceil((rect.west + s - m.west) / (m.east - m.west) * cw));
+            const x1 = Math.min(cw, Math.floor((rect.east + s - m.west) / (m.east - m.west) * cw));
+            if (x1 > x0 && y1 > y0) {
+                lv.ctx.clearRect(x0, y0, x1 - x0, y1 - y0);
+                lv.holes.push([x0, y0, x1 - x0, y1 - y0]);
+            }
+        }
+    }
+    return true;
+}
+
+// After any change: each shown level gets a hole where the next finer shown level is.
+function refresh(changed) {
+    const ch = new Set(changed);
+    const rect = k => layers[k].shown ? layers[k].m : null;
+    if (layers[10].shown && setHole(layers[10], rect(3) || rect(1))) ch.add(10);
+    if (layers[3].shown && setHole(layers[3], rect(1))) ch.add(3);
+    for (const k of ch) if (layers[k].shown) upload(layers[k]);
+}
+
+worker.addEventListener('message', (e) => {
+    const m = e.data;
+    if (m.type === 'none') { document.body.classList.remove('busy'); return; }
+    if (m.type === 'coarse') {
+        document.body.classList.remove('busy');
+        originId = m.originId;
+        hide(3); hide(1);
+        show(10, m);
+        refresh([10]);
+        const { lng, lat } = m.origin;
+        if (!originMarker) {
+            const el = document.createElement('div'); el.id = 'origin';
+            originMarker = new maplibregl.Marker({ element: el }).setLngLat([lng, lat]).addTo(map);
+        } else originMarker.setLngLat([lng, lat]);
+        solveLog.push({ level: 10, solveMs: m.ms, paintMs: m.paintMs, cells: m.W * m.H });
+        console.log('L10 solve', m.ms, 'ms, paint', m.paintMs, 'ms');
+    } else if (m.type === 'win') {
+        if (m.originId !== originId) return;
+        show(m.level, m);
+        refresh([m.level]);
+        solveLog.push({ level: m.level, fetchMs: m.fetchMs, solveMs: m.solveMs, paintMs: m.paintMs,
+                        cells: m.cells, cols: m.W, rows: m.H });
+        console.log('L' + m.level, m.W + 'x' + m.H, 'fetch', m.fetchMs, 'solve', m.solveMs, 'paint', m.paintMs, 'ms');
+    } else if (m.type === 'clear') {
+        if (m.originId !== originId) return;
+        for (const k of m.levels) hide(k);
+        refresh([]);
+    }
+});
+
+function setOrigin(lng, lat) {
+    if (!meta || lat > meta.north || lat < meta.south) return;
+    lng = ((lng + 540) % 360) - 180;
+    document.body.classList.add('busy');
+    worker.postMessage({ type: 'run', lng, lat });
+}
+
+let viewTimer = 0;
+function sendView() {
+    const b = map.getBounds();
+    worker.postMessage({ type: 'view', west: b.getWest(), east: b.getEast(),
+                         north: b.getNorth(), south: b.getSouth(), zoom: map.getZoom() });
+}
+map.on('moveend', () => { clearTimeout(viewTimer); viewTimer = setTimeout(sendView, 200); });
+
+function fmt(h) {
+    if (h < 1) return Math.max(1, Math.round(h * 60)) + ' min';
+    if (h < 8) {
+        const m = Math.round((h - Math.floor(h)) * 60);
+        return Math.floor(h) + ' h' + (m ? ' ' + m + ' min' : '');
+    }
+    const days = Math.floor(h / 8), rem = Math.round(h - days * 8);
+    return days + (days === 1 ? ' day' : ' days') + (rem ? ' ' + rem + ' h' : '');
+}
+
+// Walking hours at a point, from the finest shown level that covers it.
+function timeAt(lng, lat) {
+    for (const k of [1, 3, 10]) {
+        const lv = layers[k];
+        if (!lv.shown) continue;
+        const m = lv.m;
+        const x = Math.floor((((lng - m.west) % 360) + 360) % 360 / m.cellDeg);
+        const y = Math.floor((m.north - lat) / m.cellDeg);
+        if (x >= m.W || y < 0 || y >= m.H) continue;
+        return m.dist[y * m.W + x];
+    }
+    return Infinity;
+}
+
+map.on('click', e => setOrigin(e.lngLat.lng, e.lngLat.lat));
+
+map.on('mousemove', e => {
+    const h = timeAt(e.lngLat.lng, e.lngLat.lat);
+    if (!(h <= MAX_HOURS)) { tip.style.display = 'none'; return; }
+    tip.textContent = fmt(h);
+    tip.style.display = 'block';
+    tip.style.left = (e.point.x + 14) + 'px';
+    tip.style.top = (e.point.y + 14) + 'px';
+});
+map.getCanvas().addEventListener('mouseleave', () => { tip.style.display = 'none'; });
+
+Promise.all([loadGrid(), new Promise(res => map.once('load', res))]).then(() => {
+    addLayers();
+    sendView();
+    // Cluj-Napoca, in Transylvania
+    setOrigin(23.6, 46.77);
+});
+</script>
+</body>
+</html>

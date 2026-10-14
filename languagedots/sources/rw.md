@@ -40,3 +40,7 @@ proved these district totals equal the thirty NISR district profiles to the pers
 ## Cross-border groups (2026-10-06, 5d7dac7e-xb)
 
 Kinyarwanda is in a Rwanda-Rundi group with Kirundi, Ha and Hangaza. Their colours are still far apart. Groups only (taxonomy/regroup.txt): no label's node or count changed, each keeps its leaf and colour; dots rewritten in place. The full table of cases is in followups.md (2026-10-06, languages that stop at a border).
+
+## Swahili audit (2026-10-13)
+
+Checked, no change. Kinyarwanda is drawn for everyone; no source gives a Swahili first-language share (section above).

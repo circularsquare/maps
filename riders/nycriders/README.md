@@ -16,20 +16,27 @@ The visualization shows each train as a dot moving along its route at real sched
 Run in order:
 
 ```bash
-# 1. Download O-D data from Socrata (or use curl, see below). Outputs data/od_wednesday_oct.csv
-python fetch_data.py
+# 1. Download O-D data from Socrata, one file per day type. Outputs data/od_<day>_2026-05.csv
+python fetch_data.py --year 2026 --month 5 --day wednesday
+python fetch_data.py --year 2026 --month 5 --day saturday
+python fetch_data.py --year 2026 --month 5 --day sunday
 
-# Alternatively, one-shot curl (faster):
-curl -o data/od_wednesday_oct.csv 'https://data.ny.gov/resource/jsu2-fbtj.csv?$select=hour_of_day,origin_station_complex_id,origin_station_complex_name,origin_latitude,origin_longitude,destination_station_complex_id,destination_station_complex_name,destination_latitude,destination_longitude,estimated_average_ridership&$where=month=10%20AND%20day_of_week=%27Wednesday%27&$limit=2000000&$order=hour_of_day,estimated_average_ridership%20DESC'
+# 1c. Speed fixes to the timetable (writes data/gtfs_subway/stop_times_fixed.txt,
+#     all three services at once)
+python check_speeds.py --apply
 
-# 2. Route riders via RAPTOR and assign to train runs. Outputs trains.json
+# 2. Route riders via RAPTOR and assign to train runs. Outputs trains.json + stats.json
+#    (--day saturday / sunday write trains-<day>.json + stats-<day>.json; ~8 min on 6 workers)
 python build.py
+python build.py --day saturday --workers 6
+python build.py --day sunday --workers 6
 
-# 3. Serve and open
-python -m http.server 8000
+# 3. Serve and open: the maps-wide server, http://localhost:8800/nycriders/
+python ../../serve.py
 
 # 4. copy to website
 cp /c/Users/anita/projects/maps/riders/nycriders/index.html /c/Users/anita/projects/website/nycriders/index.html
+# (and the trains*.json / stats*.json files when they change)
 
 ```
 
@@ -37,8 +44,8 @@ cp /c/Users/anita/projects/maps/riders/nycriders/index.html /c/Users/anita/proje
 
 | File | Source | Notes |
 |------|--------|-------|
-| `data/od_wednesday_oct.csv` | [MTA O-D Ridership 2024](https://data.ny.gov/Transportation/MTA-Subway-Origin-Destination-Ridership-Estimate-2/jsu2-fbtj) | Wednesdays in October, all pairs. ~1.6M rows, ~180 MB |
-| `data/gtfs_subway/` | [MTA GTFS Static](http://web.mta.info/developers/data/nyct/subway/google_transit.zip) | Weekday schedule used. ~20k trips |
+| `data/od_{wednesday,saturday,sunday}_2026-05.csv` | [MTA O-D Ridership: Beginning 2026](https://data.ny.gov/d/28vm-gjqr) | May 2026, all pairs. ~1.3-1.6M rows, ~150 MB each. May was picked as the month whose weekends lose the fewest riders to closures across 2025-26 (September 2025, used before, had the 3 closed east of Franklin Av every weekend) |
+| `data/gtfs_subway/` | [MTA GTFS Static](http://web.mta.info/developers/data/nyct/subway/google_transit.zip) | Weekday, Saturday and Sunday services (spring 2026 timetable). ~20k trips |
 | `../../data/nystreets/MTA_Subway_Stations.csv` | MTA | 496 stations, maps GTFS Stop ID to Complex ID |
 
 ## Key config

@@ -133,6 +133,22 @@ Not required for a mother-tongue census. Romani is low against the Roma populati
 against estimates of the Roma population in the low hundreds of thousands), as in every Czech census: most Roma name Czech. That is what
 the census measured, and the map draws it as measured.
 
+## 6b. Minority-language audit (2026-10-13)
+
+No change. The table is the mother tongue question, so the drawn counts are the census's own
+numbers (single answers plus half of each two-answer person), not an estimate.
+
+| language | drawn | note | verdict |
+|---|---|---|---|
+| Moravian | 22,585 | 16,523 single plus half of two-answer; Brno 2,985 | as measured; Moravian nationality is a much larger, different concept |
+| Silesian | 1,272 | Frydek-Mistek, Karvina, Opava districts | as measured |
+| Romani | 16,191 | mother tongue; most Roma name Czech | as measured |
+| Slovak | 187,992 | | as measured |
+| Polish | 39,926 | Trinec, Cesky Tesin, Karvina, Prague | as measured |
+
+Placement follows the census's obec rows (Moravian, Silesian, Romani, Slovak, Polish, German,
+Hungarian are among the 13 languages published per obec), so it is the census's. Nothing to fix.
+
 ## 7. Licence
 
 ČSÚ open data via data.gov.cz, attribution to Český statistický úřad; religiondots/sources/cz.md §8

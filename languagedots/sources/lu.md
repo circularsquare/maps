@@ -90,3 +90,10 @@ with a few hundred people.
   Italian, Belgian and German citizens per commune).
 - Cross-border workers (about half the workforce) live abroad and are not counted; said in
   `note_public`.
+
+## 5. Minority-language audit (2026-10-13)
+
+No counts changed. Luxembourg's regional language is Luxembourgish itself, drawn as the census
+main language (275,361, 48.9% of respondents; the 2021 census main-language question is the best
+possible yardstick). No other autochthonous minority language exists (Luxembourgish-area
+Moselle Franconian dialects are the same language). Nothing to add.

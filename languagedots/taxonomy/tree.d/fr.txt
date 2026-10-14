@@ -24,6 +24,14 @@ creole.french_based | French-based creoles
 # ---- new ----
 indoeuropean.romance.occitan | Occitan
 indoeuropean.romance.gallo | Gallo
+# langues d'oil beside French and Gallo (added 2026-10-13, minority-language audit; Romance
+# languages of the oil group in Glottolog; glottocodes left out, none from memory)
+indoeuropean.romance.picard | Picard
+indoeuropean.romance.norman | Norman
+indoeuropean.romance.poitevin_saintongeais | Poitevin-Saintongeais
+indoeuropean.romance.champenois | Champenois
+indoeuropean.romance.burgundian | Burgundian (Morvandiau)
+indoeuropean.romance.franc_comtois | Franc-Comtois
 indoeuropean.germanic.continental.lorraine_franconian | Lorraine Franconian (Platt) | 0.80 0.09 245
 creole.french_based.antillean | Antillean Creole (Guadeloupe, Martinique)
 creole.french_based.guianese | Guianese Creole

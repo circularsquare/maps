@@ -145,3 +145,13 @@ around Finland's Sami sea-green, Turoyo hand-set darker than the generated Assyr
   generation by language.
 - Inside a kommun, everything follows population; Södertälje's Syriacs, Rinkeby's Somalis and
   the mountain Sami are not placed by group.
+
+## Minority-language audit (2026-10-13)
+
+Added Elfdalian (Oevdalian) 2,000, `derived`, carved out of Aelvdalen's (2039) Swedish in
+`countries/se.py`. Source: usual published range 2,000-3,000 speakers (Wikipedia, Aelvdalen
+kommun); bottom taken since most are older. New node `indoeuropean.germanic.north.elfdalian` in
+`tree.d/se.txt`. Checked and left: Finnish 149,365 against Parkvall/ISOF 175,000-200,000 (explained in
+section 3), Meaenkieli 30,000, Sami 6,000 (home-first-language level), Romani 11,000, Yiddish 1,000.
+Swedish Sign Language (about 3,000 deaf first-language users) not drawn; no sign language is drawn
+in the Nordic files.

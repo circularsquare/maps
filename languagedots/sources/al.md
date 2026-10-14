@@ -84,3 +84,13 @@ languages are most likely undercounted. Not corrected; no other source counts th
 
 * 2023 qark/national home-language table: no languages named (§1).
 * 2011 public microdata (`/media/1548/...mikrodata.rar`, religiondots §2): prefecture geography only.
+
+## Minority-language audit (2026-10-13)
+
+No change. 2011 mother tongue is the only census table that names languages (§1): Greek 15,196,
+Macedonian 4,443, Aromanian 3,848, Romani 4,025 (national table 1.1.15, §3). The 2011 census was
+contested (§5), so the minorities are likely low. Ethnic-group counts and the much higher
+Aromanian and Greek estimates are ethnic or "can speak" figures, not home language; none is
+used, and no ethnicity figure is quoted here because the INSTAT ethnicity table was not opened.
+Shishtavec's 105 "Macedonian" are Gorani speakers (Gora); left as printed, under one dot.
+Verdict: right as measured, probably a floor.

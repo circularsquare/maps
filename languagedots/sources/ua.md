@@ -155,3 +155,19 @@ Romanian 142,296, Bulgarian 134,569, Belarusian 56,200, Armenian 51,924, Gagauz 
   Odesa, the Danube, the Tisza). The Kontur UA extract holds only Ukraine, so 1,644 of them
   (125,705 people) were snapped to the nearest unit within 2 km. 26 (632 people) were dropped.
 - The scatter stopped on no Kontur cap block, and `kontur_cap.csv` has no rows added.
+
+## Minority-language audit (2026-10-13)
+
+No change; two things need Anita (below). Drawn 2001 native-language shares, not home language
+(no newer census exists). Checks against the nationality tables are already in "Checks" 7:
+every minority language is 1.0-1.3 times the people of that nationality naming their own
+language, so none is under-counted relative to the census itself. Hungarian 161,298, Romanian 142,242 plus Moldovan 183,797, Bulgarian 134,042, Crimean Tatar 1,072 (mainland; Crimea comes from Russia's 2021
+census), Gagauz 23,179, Belarusian 50,371, Polish, Romani 22,875 all fine.
+- **Surzhyk** (mixed Ukrainian-Russian): not a census answer; every survey figure is a
+  self-description, often on top of Ukrainian or Russian. Not drawable. 
+- **Rusyn** (Zakarpattia): about 10,100 people had Rusyn nationality in 2001; the census
+  counted the language as Ukrainian and Ukraine does not recognise Rusyn as a language. Moving
+  Zakarpattia's Rusyn-nationality people onto a Rusyn node would be a derived split with
+  political weight: left for Anita.
+- Ukraine's 2001 shares pre-date the 2014 and 2022 changes; Russian-at-home use has since
+  fallen sharply (surveys), which is not drawn.

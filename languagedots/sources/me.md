@@ -146,3 +146,8 @@ census's first scheduled year) has the settlement workbooks, including mother to
 
 * Russian and Ukrainian speakers are mostly recent arrivals on the coast.
 * Settlement cells under 10 are withheld, so very small groups are placed less exactly.
+
+## Minority-language audit (2026-10-13)
+
+No change. 2023 mother tongue names Albanian 32,725, Bosnian 43,470, Romani 4,658, Goranski 226,
+Bokeljski 186; all measured, Gorani and Bokelj already split out. Verdict: right.

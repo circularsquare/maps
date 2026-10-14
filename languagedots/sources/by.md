@@ -140,3 +140,15 @@ lightness; Polish is under 5% in every raion here.
   flipping back is one filter in `countries/by.py::_counts`.
 - Minsk as one unit rather than nine districts.
 - Belarusian's colour changed for every country.
+
+## Minority-language audit (2026-10-13)
+
+No change. Home language, 2019 census: Belarusian 26.0%, Russian 71.4%. Trasianka (the mixed
+Russian-Belarusian speech) is not a census answer and has no counted speakers: the census
+form took one language name, and mixed speakers write Russian or Belarusian (probably most
+of the Belarusian-at-home and Russian-at-home people in the countryside). Survey estimates
+(Hentschel and Zeller; the 2009 census 'native' versus 'home' gaps) are about how many mix,
+not about how many name it as the language they speak first, so there is no drawable figure.
+Polish: 4,508 at home, 20,740 native, against 287,693 ethnic Poles (19,141 of them named Polish
+native); the census numbers are the home-language answer and stand. Ukrainian 8,055 at home,
+55,020 native, Romani 4,804 at home, Armenian, Turkmen and others as printed.

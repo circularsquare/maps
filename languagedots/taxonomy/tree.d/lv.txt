@@ -1,0 +1,8 @@
+# Latvia, 2011 census home language (taxonomy/lv2011.py) plus the Latgalian split of the
+# 2026-10-13 minority-language audit (countries/lv.py, sources/lv.md). Baltic and Latvian are
+# repeated bare from lt.txt, as the rules ask; Latgalian is the one new leaf. Glottolog files
+# Latgalian with Latvian as a variety; it has its own ISO code and literary standard, and
+# Anita's rule is to lean towards naming. No glottocode given.
+indoeuropean.baltic | Baltic
+indoeuropean.baltic.latvian | Latvian
+indoeuropean.baltic.latgalian | Latgalian

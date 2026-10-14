@@ -93,6 +93,17 @@ SE_ROUNDS = [4, 6]   # used only for the split-half and printouts since 2026-10-
 # 80-395 respondents; 31 Swahili and 7 English answers, too few for 47 counties). "r46" puts
 # back the R4/R6 county shares.
 SE_SOURCE = "r7_mother"
+# Swahili audit (2026-10-13). Swahili (not English) is now
+#   (1 - CHILD) * adults' mother tongue (R7 Q2A, by province) + CHILD * household language
+#   (R7 Q2B, R8 Q2, R9 Q2 pooled, by county),
+# each shrunk to its national share by K_SHRINK respondents. A child's first language is the
+# language of the home it grows up in, an adult's is the mother tongue they name. CHILD is the
+# share of the 2019 census population aged 0-14: 18,537,711 (KNBS, 2019 Analytical Report on
+# Population Dynamics) of 47,564,296. SW_MODE = "mother" gives the 2026-10-05 ruling back.
+SW_MODE = "blend"
+CHILD = 18_537_711 / 47_564_296
+K_SHRINK = 50
+SW_HOME_ROUNDS = [7, 8, 9]
 MOTHER = RAW / "ab_ke_r7_mother.csv"
 NON_ANSWERS = {"Missing", "Don't know", "Refused", "Kenyan"}
 OTHER_KE = "Other African language"
@@ -392,12 +403,38 @@ def r7_mother():
     return e
 
 
-def county_shares(a):
+def home_swahili(a):
+    """Household-language Swahili share per county, R7-R9 pooled (Q2B, Q2, Q2), shrunk to the
+    national share by K_SHRINK respondents. Taken before R7-R9's Swahili answers are moved onto
+    their ethnic group's language. Returns (series by county, national share)."""
+    h = a[a["round"].isin(SW_HOME_ROUNDS)]
+    nat = h.loc[h["answer"] == "Swahili", "w"].sum() / h["w"].sum()
+    num = h[h["answer"] == "Swahili"].groupby("county")["w"].sum().reindex(sorted(COUNTY_PROV)).fillna(0)
+    den = h.groupby("county")["w"].sum().reindex(sorted(COUNTY_PROV)).fillna(0)
+    return (num + K_SHRINK * nat) / (den + K_SHRINK), nat
+
+
+def county_shares(a, B=None):
     """Swahili and English from R7's mother tongue by province (or SE_ROUNDS by county); every
-    other answer from all rounds among the rest."""
+    other answer from all rounds among the rest. B: household-language Swahili by county."""
     if SE_SOURCE == "r7_mother":
         pe = r7_mother()
+        if SW_MODE == "blend":
+            # province Swahili at mother tongue, shrunk to the national share by K_SHRINK
+            m = pd.read_csv(MOTHER, dtype=str, keep_default_na=False)
+            m = m[~m["Q2A"].isin(NON_ANSWERS)]
+            m["w"] = m["withinwt"].astype(float)
+            m["sw"] = (m["Q2A"].map(lambda x: CODED.get(x, x)) == "Swahili") * m["w"]
+            nat = m["sw"].sum() / m["w"].sum()
+            A = (m.groupby("REGION")["sw"].sum() + K_SHRINK * nat) / (m.groupby("REGION")["w"].sum() + K_SHRINK)
+            print(f"  Swahili: adults' mother tongue (R7) {nat:.2%}; household language "
+                  f"(R7-R9) {B[1]:.1%}; child share {CHILD:.1%}")
+            for p in PROVINCE:
+                pe[(p, "Swahili")] = float(A.get(p, nat))
         rows = {(c, k): v for (p, k), v in pe.items() for c in PROVINCE[p]}
+        if SW_MODE == "blend":
+            for c in COUNTY_PROV:
+                rows[(c, "Swahili")] = (1 - CHILD) * rows.get((c, "Swahili"), 0.0) + CHILD * float(B[0][c])
         e = pd.Series(rows, dtype=float)
         e.index.names = ["county", "answer"]
     else:
@@ -424,6 +461,7 @@ def main():
     se_tab = a[a["answer"].isin(SE)].groupby(["round", "answer"])["w"].sum().unstack(fill_value=0)
     print("\n  Swahili and English, weighted share of each round:")
     print((se_tab.div(a.groupby("round")["w"].sum(), axis=0)).round(3).to_string())
+    B = home_swahili(a)
     a = se_by_ethnicity(a)
     a = split_combined(a)
     one = single_verbatims(a)
@@ -437,7 +475,7 @@ def main():
     gid = dict(zip(rd["geo_name"], rd["geo_id"]))
     say(set(pop) == set(COUNTY_PROV), "the 47 county names match KNBS's, both ways")
 
-    sh = county_shares(a)
+    sh = county_shares(a, B)
     s = sh.groupby(level="county").sum()
     say((s - 1).abs().max() < 1e-9, "every county's shares sum to 1")
     n_c = a.groupby("county").size()

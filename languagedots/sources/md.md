@@ -147,3 +147,13 @@ layer plus Transnistria's hexes; `countries/md.py` reads it, so re-run `md_pmr.p
 
 Room for improvement: the 2015 census's native-language tables by raion, if they were ever
 published, would replace the right-bank shares.
+
+## Minority-language audit (2026-10-13)
+
+No change. RPL 2024 mother tongue: Gagauz 87,407 (87.8% of Gagauz by nationality name Gagauz, Moldova's 2024 table 5.33), Bulgarian 28,839, Ukrainian 71,878, Romani
+7,640, Russian 280,050. All census, same concept as drawn; matches the ethnicity by retention
+cross-check already in the Transnistria section. Gagauz drawn 92,946 includes Transnistria's
+5,539 (derived). Gagauz in Gagauzia is 77%; right bank Gagauz mostly sits in Gagauzia, Taraclia
+and Besalma. Romani 7,804 drawn: fine.
+Transnistria's Russian is probably understated (said in `note_public`); no source by
+raion. Nothing to fix.

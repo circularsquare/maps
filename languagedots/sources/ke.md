@@ -187,3 +187,38 @@ Kontur CC BY 4.0; Glottolog CC BY.
 ## Cross-border groups (2026-10-06, 5d7dac7e-xb)
 
 Kalenjin is now a group: the census's 'Kalenjin' draws on 'Kalenjin (variety not given)', beside Pokot, Sabaot and Uganda's Kupsabiny. Turkana and Teso are in an Ateker group; Somali is a group with Somalia's Benaadir and Maay. Groups only (taxonomy/regroup.txt): no label's node or count changed, each keeps its leaf and colour; dots rewritten in place. The full table of cases is in followups.md (2026-10-06, languages that stop at a border).
+
+## Swahili audit (2026-10-13)
+
+Swahili was 745,000 (1.6%): R7's mother-tongue question (Q2A) by province. The same R7
+respondents answered Q2B "language spoken in home" 28.5% Swahili (urban 51.1%, rural 15.9%); R8
+27.8% (urban 44.9%, rural 18.6%); R9 27.1% (urban 50.0%, rural 15.2%). Younger adults name it
+more (R9: 18-29 31%, 60 and over 20%). The side extract is `data/raw/tz/ab_r7r9_both.csv` (R7-R9,
+both items, age, urban; Kenya, Tanzania, Uganda, Mozambique).
+
+**Call (the same as Tanzania, `sources/tz.md`).** Swahili per county is
+`(1 - CHILD) x adults' mother tongue + CHILD x household language`, with CHILD = 18,537,711 aged
+0-14 of 47,564,296 = 39.0% (KNBS 2019 Analytical Report on Population Dynamics, figure taken
+from a web search result; the report was not opened). Adults: R7 Q2A by old province, shrunk to
+the national share by 50 respondents. Household language: R7-R9 pooled by county (6,399
+respondents, median about 140 a county), shrunk to the national 27.8% by 50. English stays at
+R7 mother tongue by province. The other languages are computed as before (R7-R9 Swahili answers
+on the person's ethnic group) and scaled to what Swahili leaves. Placement stays on population
+inside a county. Code: `home_swahili()` and `county_shares()` in `sources/ke_afro.py`;
+`SW_MODE = "mother"` reverses it.
+
+| Swahili | before | after |
+|---|---:|---:|
+| Kenya | 745,000 (1.6%) | 5.63M (11.9%) |
+| Mombasa, Nairobi | 3.8, 4.8% | 27.3, 23.2% |
+| Trans Nzoia, Kajiado, Nakuru, Taita/Taveta, Kilifi | 2.3, 2.3, 2.3, 3.8, 3.8% | 22.3, 18.6, 17.5, 17.5, 17.0% |
+| Makueni, Kitui, Homa Bay, Kisii | 0, 0, 0, 0% | 4.0, 4.7, 5.0, 5.4% |
+
+Kikuyu goes from 17.5% to 15.4%, Luhya 14.5% to 12.6%, Luo 11.4% to 10.2%. The census check in
+section 4 now shows each big group 0.4 to 1.8 points under its census ethnic share, because
+Swahili takes people from every group.
+
+**Probably still low:** Mombasa and Nairobi, where the household answer is 70 to 80%; the
+adult mother-tongue part is one province share, with no coast and inland split.
+
+Anita, 2026-10-13: keep the adults/children blend (SW_MODE as built), for Tanzania and Kenya.

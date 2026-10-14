@@ -37,8 +37,10 @@ ENTRY = dict(
     source=("Afrobarometer rounds 4 and 6 to 9 (2008-2022), Kenya, home language; county "
             "populations from the 2019 Kenya Population and Housing Census (KNBS)"),
     how=("survey, 2008-2022, about 9,900 adults' home language, shares per county applied to "
-         "2019 census populations; Swahili and English at their share of the 2016 mother-tongue "
-         "question, other Swahili and English answers drawn on the person's ethnic language"),
+         "2019 census populations; English at its share of the 2016 mother-tongue question; "
+         "Swahili for children (0-14, 39% of the census) at the share of households speaking it "
+         "at home and for adults at their mother tongue; other Swahili and English answers drawn "
+         "on the person's ethnic language"),
     parts=[
         dict(covers="Everyone",
              source="Afrobarometer 2008-2022, home language, shares per county applied to the "
@@ -58,8 +60,10 @@ ENTRY = dict(
         "Kenya's census asks ethnicity, not language, so this map uses the Afrobarometer: about "
         "9,900 adults asked their home language between 2008 and 2022, with each county's "
         "shares applied to its 2019 census population. A county's mix rests on 28 to 1,000 "
-        "interviews, so small languages are uncertain. From 2016 many people named Swahili as "
-        "the language used at home beside a first language; Swahili and English are drawn at "
-        "their 2016 mother-tongue share instead. Luhya, Kalenjin and Mijikenda are each drawn "
-        "as one language, as the survey asked them."),
+        "interviews, so small languages are uncertain. From 2016 about 28% of adults named Swahili "
+        "as the language of the home, but under 2% as their mother tongue. Swahili is drawn "
+        "halfway between the two: children (39% of the population) at the household answer, "
+        "adults at their mother tongue. English is drawn at its 2016 mother-tongue share. "
+        "Luhya, Kalenjin and Mijikenda are each drawn as one language, as the survey asked "
+        "them."),
 )

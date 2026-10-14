@@ -181,3 +181,47 @@ GUYANE = {"Guianese Creole": 0.20, "Ndyuka": 0.08}
 # Shimaore too, so the natives are split 82:33 between the two.
 MAYOTTE = dict(pop=256_518, born_abroad=0.36, born_france=0.06, comorian=0.95, malagasy=0.04,
                shimaore=0.82, kibushi=0.33)
+
+# ---- added 2026-10-13 (minority-language audit; Anita's go-ahead through the coordinator) -------
+# 1. MAINLAND CREOLE. People born in a DOM and living in the mainland are not INSEE immigrants,
+# so they were drawn as French. INSEE Premiere 1389 (https://www.insee.fr/fr/statistiques/1281122),
+# census 2008: born in Martinique 117,000, Guadeloupe 115,400, Reunion 108,000, Guyane 24,400,
+# living in mainland France; two thirds of the Antilleans (153,000) in Ile-de-France, 28% of the
+# Reunionese, about half of the Guyanese. Each group takes the DOM's own childhood-language
+# share (DOM_CREOLE above, MFV 2009-10, Creole alone plus half of both; Guyane: GUYANE). FIRST
+# GENERATION ONLY: no source gives the second generation's Creole, so French-born children are
+# French. The 2008 vintage is the newest placement by birthplace that was found; the DOM-born
+# have grown since, so this is a floor. The childhood share is used as the home share, as in the
+# DOM itself (nothing measures how much is kept after moving).
+DOM_BORN_MAINLAND = {   # label, born in mainland (2008), share of the group in Ile-de-France
+    "971": ("Antillean Creole", 115_400, 2 / 3),
+    "972": ("Antillean Creole", 117_000, 2 / 3),
+    "974": ("Reunion Creole", 108_000, 0.28),
+    "973": ("Guianese Creole", 24_400, 0.50),
+}
+DOM_BORN_SHARE = {"971": DOM_CREOLE["971"][1], "972": DOM_CREOLE["972"][1],
+                  "974": DOM_CREOLE["974"][1], "973": GUYANE["Guianese Creole"]}
+IDF = ["75", "77", "78", "91", "92", "93", "94", "95"]
+
+# 2. LANGUES D'OIL OTHER THAN GALLO. INED/INSEE Etude de l'histoire familiale 1999: adults whose
+# parents usually spoke a langue d'oil to them at about age 5, 570,000 (Gallo included); Breton
+# 280,000 on the same question (as quoted in files.eke.eus/pdf/topaketen_aktak/insee/
+# enquete_transmission_familiale_des_langues.pdf, from Heran, Population & Societes 376).
+# Scaled down by Breton's own ratio, today's drawn Breton over 1999's. Our call (no survey gives
+# today's figure, nor a split by language): Breton is the closest case, a rural langue
+# regional that lost its transmission earlier than the 1999 cohort. Gallo's drawn count is then
+# taken out, and the rest shared among the areas by rural population (people living in communes
+# under 2,000 inhabitants, RP 2021 communes of the placement layer). An area under OIL_MIN is not
+# drawn and stays French.
+EHF1999_OIL = 570_000
+EHF1999_BRETON = 280_000
+OIL_MIN = 5_000
+OIL_AREAS = {   # label -> departements (traditional area; Gallo's Brittany/Mayenne area excluded)
+    "Picard": ["59", "62", "80", "02", "60"],
+    "Norman": ["14", "27", "50", "61", "76"],
+    "Poitevin-Saintongeais": ["85", "79", "86", "16", "17"],
+    "Champenois": ["08", "10", "51", "52"],
+    "Lorrain Romance": ["54", "55", "88"],
+    "Burgundian-Morvandiau": ["21", "58", "71", "89"],
+    "Franc-Comtois": ["25", "39", "70", "90"],
+}

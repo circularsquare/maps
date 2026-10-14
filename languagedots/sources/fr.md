@@ -202,3 +202,80 @@ Shimaore's ochre in Mayotte). Occitan (teal) sits near Corsican and Gallo, which
   TeO); Kurdish among Turkish-born; Soninke among Malian- and Mauritanian-born.
 - Retention by country rather than TeO2 region (TeO2 microdata at Quetelet-Progedo would give
   it for the large origins).
+
+## 8. Minority-language audit (2026-10-13)
+
+No counts changed. Concept checked: language spoken first or mainly at home.
+
+Yardstick found: INSEE/INED Etude de l'histoire familiale 1999 (EHF), adults, "language your
+parents usually spoke to you at about age 5" (Heran, Population & Societes 376; figures as
+quoted in Bachoc's summary, files.eke.eus/pdf/topaketen_aktak/insee/
+enquete_transmission_familiale_des_langues.pdf): usual / occasional / re-transmitted to own
+children. Alsatian 660k / 240k / 410k; langue d'oc 610k / 1.06M / 250k; langues d'oil 570k /
+850k / 300k; Breton 280k / 400k / 100k; hexagonal Creole 110k / 120k / 90k; Catalan 80k / 100k /
+50k; Basque 63k / 13k / 34.5k. This is a 1999 stock of mostly older adults, so today's drawn
+figures should sit below it; they do, except Alsatian (below).
+
+Verdicts:
+- Alsatian 619k: roughly right but the top of the plausible range. 1999's usual-childhood-language
+  stock was 660k; the drawn figure rests on a 2012 ability survey x 89% from parents, with no
+  further decay to 2026. Kept; the 2022 CeA report (walled) would settle it.
+- Occitan 426k: right level (EHF 610k usual in 1999, 250k re-transmitted). Kept.
+- Breton 52.6k, Basque 52.2k, Catalan 46.1k, Corsican 106k, Lorraine Franconian 68k, Gallo 45k:
+  consistent with EHF and with the newer surveys already used. Kept.
+- Creoles in the DOM: from INED/INSEE MFV 2009-10 childhood language, a direct first-language
+  measure. Kept.
+- Not drawn, no survey: West Flemish (Nord, uncited ~20k), Franco-Provencal (Savoie, Lyon area),
+  Yenish/Romani/Sinte, Bressan, Walloon in the Ardennes. Arbereshe, Piedmont Occitan and Alsatian
+  left as they are (Anita's call, via the coordinator, 2026-10-13).
+
+### 8a. Added: langues d'oil other than Gallo (modelled; code in `fr_build.extras()`, constants in
+`fr_regional.py`)
+
+EHF 1999 (see above) has 570k adults whose parents usually spoke a langue d'oil to them at about
+five, Gallo included. Our estimate, not a survey figure:
+1. Scale by Breton's decline between EHF 1999 and today's drawn Breton: 52,584 / 280,000 = 0.188,
+   giving 107,046 for all langues d'oil. Why Breton: the nearest case with both a 1999 and a
+   recent figure, a rural language that lost transmission in the same cohorts. Alsatian (0.94) or
+   Occitan (0.70) would give five times more; Breton is the low end and so the cautious choice.
+2. Take out Gallo's drawn count (44,846), leaving 62,200.
+3. Share that out among the seven traditional areas by rural population (RP 2021 communes under
+   2,000 inhabitants in the area's departements; "our call", flagged in note_public). Areas under
+   5,000 stay French.
+4. Within an area, by each departement's rural population; inside a departement, on population.
+
+| area | departements | drawn |
+|---|---|---|
+| Picard | 59, 62, 80, 02, 60 | 16,429 |
+| Norman | 14, 27, 50, 61, 76 | 12,493 |
+| Poitevin-Saintongeais | 85, 79, 86, 16, 17 | 8,738 |
+| Burgundian (Morvandiau) | 21, 58, 71, 89 | 7,791 |
+| Franc-Comtois | 25, 39, 70, 90 | 5,969 |
+| Champenois | 08, 10, 51, 52 | 5,868 |
+| Lorrain Romance | 54, 55, 88 | 4,912, below the 5,000 cut, not drawn |
+
+57,288 people in all, taken from French in the same departement. Angevin, Mayennais, Berrichon
+and the other oil varieties of the Loire valley have no area here and stay French. New tree nodes
+(tree.d/fr.txt, taxonomy/fr2023.py): picard, norman, poitevin_saintongeais, champenois, burgundian,
+franc_comtois, all under indoeuropean.romance beside Gallo. Gallo is regrouped under French in
+taxonomy/regroup.txt; these six are not (shared file, not touched): the orchestrator may want
+them there too. Part names in fr.csv: "langues d'oil, modelled". Tier stays `derived`, as every
+row of this country.
+
+### 8b. Added: Creole of people born overseas and living in the mainland
+
+Not INSEE immigrants, so they were drawn as French. INSEE Premiere 1389 (census 2008,
+insee.fr/fr/statistiques/1281122): born in Martinique 117,000, Guadeloupe 115,400, Reunion
+108,000, Guyane 24,400, living in the mainland. Two thirds of the Antilleans live in
+Ile-de-France, 28% of the Reunionese, about half of the Guyanese. Each group x the DOM's own
+childhood-language share from MFV 2009-10 (sections 3, Creole alone plus half of both:
+Guadeloupe 58.1%, Martinique 52.1%, Reunion 88.5%; Guyane 20%): Antillean Creole 66,990 +
+60,957, Reunion Creole 95,580, Guianese Creole 4,880; 228,407 in all. Split between Ile-de-France
+and the rest by the groups' printed shares, then by departement population.
+Calls: first generation only (no source gives the second generation's Creole; their French-born
+children are drawn as French, as for immigrants). No discount for language loss after moving
+(no source; the DOM itself uses the same childhood-language share). 2008 is the newest
+birthplace count found, so this is a floor; INSEE's RP 2023 tables found in Melodi carry no
+place-of-birth by departement. EHF 1999 counted 110k adults with a Creole parent language in the
+hexagon, so 228k for a larger 2023 group is of the right order. Placement is by population, not
+by where the Antilleans live inside Ile-de-France.

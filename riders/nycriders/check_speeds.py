@@ -13,7 +13,9 @@ import pandas as pd
 from collections import defaultdict
 
 GTFS_DIR = "data/gtfs_subway"
-SERVICE_ID = "Weekday"
+# every service build.py can use; --apply rewrites stop_times_fixed.txt from
+# the original, so fixing only one service would drop the others' fixes
+SERVICE_IDS = ["Weekday", "Saturday", "Sunday"]
 
 SPEED_THRESHOLD_KMH = 90
 DWELL_TIME = 20
@@ -68,7 +70,7 @@ def main():
 
     # load trips + stop_times
     trips = pd.read_csv(f"{GTFS_DIR}/trips.txt")
-    trips = trips[trips.service_id == SERVICE_ID]
+    trips = trips[trips.service_id.isin(SERVICE_IDS)]
     trip_route = dict(zip(trips.trip_id, trips.route_id))
 
     st_path = f"{GTFS_DIR}/stop_times_fixed.txt" if args.check_fixed else f"{GTFS_DIR}/stop_times.txt"
@@ -206,9 +208,9 @@ def main():
     full_st = pd.read_csv(f"{GTFS_DIR}/stop_times.txt")
 
     # we need to map our filtered index back to the full file
-    # rebuild: only adjust weekday trips
-    weekday_trip_ids = set(trips.trip_id)
-    filtered = full_st[full_st.trip_id.isin(weekday_trip_ids)].copy()
+    # rebuild: only adjust trips of the services checked above
+    checked_trip_ids = set(trips.trip_id)
+    filtered = full_st[full_st.trip_id.isin(checked_trip_ids)].copy()
     filtered['arr_secs'] = filtered.arrival_time.apply(time_to_secs)
     filtered['dep_secs'] = filtered.departure_time.apply(time_to_secs)
     filtered = filtered.sort_values(['trip_id', 'stop_sequence'])

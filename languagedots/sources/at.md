@@ -138,3 +138,14 @@ left alone since both are other countries' colours.
 - STATcube and Länder offices for a Gemeinde-level 2001 table outside Burgenland and Kärnten.
 - Wien at Zählbezirk: Tabelle 2 has citizenship by Zählbezirk, but religiondots' hexes are keyed
   to Gemeindebezirk only, so inside a Wien district placement is by population.
+
+## 8. Minority-language audit (2026-10-13)
+
+No counts changed. The 2001 census Umgangssprache is a direct home-language count and the best
+source there is for the recognised Volksgruppen: Slovenian 24,855 (plus Windisch 568),
+Burgenland Croatian 19,412, Hungarian 40,583, Czech 17,742, Slovak 10,234, Romanes 6,273. Austria
+published no later language count, so there is nothing newer to test them against. The ethnic
+Volksgruppen estimates quoted elsewhere (Slovenes 30-50k, Roma 25-30k, Croats 30k+) are
+affiliation or competence figures and are not the same concept; not used. Kept.
+Bavarian and Alemannic dialects stay German (Anita's 2026-10-06 ruling for Austria and
+Germany). Vorarlberg Walser is inside that.

@@ -108,6 +108,17 @@ each take their neighbour's old colour; Cieszyn olive against Goral dark green, 
   and 10-13% in the centres of Bratislava and Košice and in Komárno, Trebišov and Lučenec. Those
   people are not drawn, so these places look thinner than they are; `note_public` says so.
 
+## 6b. Minority-language audit (2026-10-13)
+
+No change. Mother tongue, one answer, every row a published obec count, so drawn equals the
+census: Hungarian 462,175 (8.48%), Romani 100,526 (1.84%, more than the 67k who gave Romani
+nationality), Rusyn 38,679, Czech 33,864, Ukrainian 7,608, German 3,959. Hungarian sits in the
+southern strip (369 obce with a Hungarian majority), Rusyn in the north-east. The census's
+second question, language used most at home, is not on the results portal under Z01 indicators
+that I could list (tried Z01 1-59, Z02, Z03 ids; nothing for home language), so I could not
+compare; if it exists it would be a closer match to "home" than mother tongue but this one is
+already defined as the home language of childhood.
+
 ## 7. Not done
 
 The census's "language used most at home" question would be a second view; not used, as the map

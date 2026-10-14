@@ -89,12 +89,14 @@ ENTRY = dict(
     source=("Afrobarometer rounds 4 and 6 to 9 (2008-2022), Tanzania, home language; region "
             "populations from the 2022 Population and Housing Census (National Bureau of "
             "Statistics)"),
-    how=("a survey, 2008-2022, five rounds pooled, home language (Swahili from the 2016 "
-         "round's mother tongue question); shares per region applied to the 2022 census "
+    how=("a survey, 2008-2022, five rounds pooled, home language; Swahili for children (0-14, "
+         "42.8% of the 2022 census) at the share of households speaking it at home in 2016-2021, "
+         "for adults at their first language; shares per region applied to the 2022 census "
          "population"),
     parts=[
         dict(covers="Swahili",
-             source="Afrobarometer 2016, mother tongue, region shares",
+             source="Afrobarometer 2008-2021, adults' first language and household language, "
+                    "region shares weighted by the 2022 census share of children",
              nodes=["nigercongo.bantu.swahili"]),
         dict(covers="Other languages",
              source="Afrobarometer 2008-2022, five rounds, home language, on 2022 census "
@@ -115,11 +117,11 @@ ENTRY = dict(
         "survey. The Afrobarometer asked about 10,800 adults in five rounds from 2008 to 2022 "
         "which language they speak at home, and each region's shares are applied to its 2022 "
         "census population. A region's mix rests on 100 to 1,200 interviews, so small "
-        "languages can be over or under drawn. Since 2016 about two thirds of Tanzanians "
-        "answer Swahili as the language of the home, many of whom grew up with another. This "
-        "map shows first languages, so Swahili is drawn from the 2016 round's question on "
-        "mother tongue, about 4% of Tanzanians, most of them in Zanzibar and Dar es Salaam. "
-        "That is below the 7% of mainlanders the Languages of Tanzania project counted in "
-        "2009. Mbeya and Songwe are drawn as one region, because the survey filed Songwe "
-        "under Mbeya until 2021."),
+        "languages can be over or under drawn. Since 2016 about two thirds of adults answer "
+        "Swahili as the language of the home, but only about 5% name it as the language they "
+        "grew up with. Swahili is drawn between the two: children (43% of the "
+        "population) at the household answer, adults at the language they grew up with. That "
+        "gives about a third of Tanzanians, against 7% of mainlanders counted by the Languages "
+        "of Tanzania project in 2009. Mbeya and Songwe are drawn as one region, because the "
+        "survey filed Songwe under Mbeya until 2021."),
 )

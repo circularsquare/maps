@@ -1,0 +1,3 @@
+# Kosovo, Census 2024 (taxonomy/xk2024.py). One node, defined in full by me.txt (colour there);
+# repeated here because Kosovo now uses it for Dragash's "Other" answers (audit 2026-10-13).
+indoeuropean.slavic.south.gorani | Gorani

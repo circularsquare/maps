@@ -79,6 +79,40 @@ DSB_AREA = ["Cottbus", "Burg (Spreewald)", "Briesen", "Dissen-Striesow", "Drachh
             "Calau", "Lübbenau/Spreewald", "Neupetershain", "Neu-Seeland", "Senftenberg",
             "Vetschau/Spreewald"]
 
+# Inside a Land, a weak lean towards the heartlands (2026-10-13, Anita: "keep the respread
+# relatively weak"). Each Land's total is unchanged; only where its dots go. Kreis -> factor on
+# top of population x RURAL. Lower Saxony: the Land government's core areas (Drucksache 16/3880,
+# 2011: Ostfriesland, Emsland, Oldenburg, in and around Stade) up, the declining south down,
+# Goettingen and Goslar further (largely Central German: Eichsfeld, Hann. Muenden, the Upper
+# Harz). NRW: the Muensterland up, the Ruhr cities down (the survey left NRW's densest parts
+# out, footnote 2, so its 5.2% fits them worst).
+KREIS = {
+    **dict.fromkeys(["03452", "03457", "03462", "03402",            # Ostfriesland
+                     "03454",                                       # Emsland
+                     "03403", "03405", "03401", "03451", "03455",   # Oldenburg
+                     "03458", "03461", "03453", "03460",
+                     "03359"], 1.5),                                # Stade
+    **dict.fromkeys(["03352", "03357", "03356", "03456"], 1.25),    # around Stade; Bentheim
+    **dict.fromkeys(["03241", "03101", "03102", "03103", "03157",   # the south
+                     "03158", "03254", "03252", "03255", "03154"], 0.75),
+    **dict.fromkeys(["03159", "03153", "03155"], 0.5),              # Goettingen, Goslar, Northeim
+    **dict.fromkeys(["05554", "05558", "05566", "05570"], 1.3),     # Muensterland
+    **dict.fromkeys(["05913", "05911", "05914", "05916", "05512",   # Ruhr cities
+                     "05513"], 0.6),
+    **dict.fromkeys(["05915", "05978", "05954", "05562"], 0.8),     # Ruhr edge
+}
+# Westphalian (Glottolog Westphalic) and the generic Plattdeutsch leaf overlap at the edges:
+# Kreis -> share drawn as Westphalian. Lower Saxony's Westphalian west and south-west
+# (Osnabrueck Land, Bentheim, south Emsland around Lingen, the Oldenburg Muensterland, south
+# Diepholz) take part of NI's Platt; NRW's north-east, beside Eastphalian, gives a little back.
+# Shares are by eye from the dialect maps (Wiesinger 1983 via de.wikipedia "Westfaelisch"),
+# kept mixed on purpose: the boundaries are transition belts.
+WEP_SHARE = {
+    "03459": 0.7, "03404": 0.7, "03456": 0.6, "03454": 0.4,
+    "03460": 0.3, "03251": 0.3, "03453": 0.15,
+    "05770": 0.75, "05762": 0.85, "05766": 0.9,
+}
+
 ESTIMATES = [
     # node, Land, count, area, how the area is weighted
     # Upper Sorbian: 20,000-25,000 speakers (Schoen, Scholze (eds.), Sorbisches Kulturlexikon,
@@ -161,9 +195,21 @@ def main():
         print(f"  {land}: {len(ars):>4} Gemeinden, {area_pop / 1e6:5.2f}M people "
               f"({100 * area_pop / land_pop[land]:3.0f}% of the Land); {sg}% -> {n:9,.0f}"
               f"   ((sehr) gut {sg + g:.1f}% would be {(sg + g) / 100 * ADULT * ger_area:9,.0f})")
-        rows.append(dict(geo_id=land, node=node, count=round(n), area=name,
-                         source="Adler et al. 2016, Plattdeutsch 'sehr gut'"))
-        areas += [dict(ars=a, area=name, factor=f) for a, f in zip(ars, rural(ars))]
+        # weight per Gemeinde, then split between the two leaves by WEP_SHARE: each leaf is
+        # its own area, so the weighter places it by pop x its factor and the counts follow
+        w = {a: f * KREIS.get(a[:5], 1.0) for a, f in zip(ars, rural(ars))}
+        wsum = sum(gpop[a] * w[a] for a in ars)
+        wep = {a: WEP_SHARE.get(a[:5], 1.0 if node == WEP else 0.0) for a in ars}
+        for leaf, nm_, part in ((WEP, f"wep{land}", lambda a: wep[a]),
+                                (NDS, name, lambda a: 1 - wep[a])):
+            fac = {a: w[a] * part(a) for a in ars if part(a) > 0}
+            if not fac:
+                continue
+            c = n * sum(gpop[a] * f for a, f in fac.items()) / wsum
+            rows.append(dict(geo_id=land, node=leaf, count=round(c), area=nm_,
+                             source="Adler et al. 2016, Plattdeutsch 'sehr gut'"))
+            areas += [dict(ars=a, area=nm_, factor=f) for a, f in fac.items()]
+            print(f"      {nm_}: {len(fac)} Gemeinden -> {c:9,.0f}")
 
     for node, land, count, name, rule in ESTIMATES:
         if name == "hsb":

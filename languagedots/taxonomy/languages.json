@@ -16256,7 +16256,43 @@
 "id": "indoeuropean.romance.french.gallo",
 "label": "Gallo",
 "parent": "indoeuropean.romance.french",
-"color": "#6ce2d1"
+"color": "#78d8ff"
+},
+{
+"id": "indoeuropean.romance.french.picard",
+"label": "Picard",
+"parent": "indoeuropean.romance.french",
+"color": "#828bd5"
+},
+{
+"id": "indoeuropean.romance.french.norman",
+"label": "Norman",
+"parent": "indoeuropean.romance.french",
+"color": "#97cfff"
+},
+{
+"id": "indoeuropean.romance.french.poitevin_saintongeais",
+"label": "Poitevin-Saintongeais",
+"parent": "indoeuropean.romance.french",
+"color": "#24a898"
+},
+{
+"id": "indoeuropean.romance.french.champenois",
+"label": "Champenois",
+"parent": "indoeuropean.romance.french",
+"color": "#4e9ad0"
+},
+{
+"id": "indoeuropean.romance.french.burgundian",
+"label": "Burgundian (Morvandiau)",
+"parent": "indoeuropean.romance.french",
+"color": "#65e1e0"
+},
+{
+"id": "indoeuropean.romance.french.franc_comtois",
+"label": "Franc-Comtois",
+"parent": "indoeuropean.romance.french",
+"color": "#b8c4ff"
 },
 {
 "id": "indoeuropean.germanic.continental.lorraine_franconian",
@@ -18979,13 +19015,13 @@
 "id": "indoeuropean.romance.ladin",
 "label": "Ladin",
 "parent": "indoeuropean.romance",
-"color": "#4e9ad0"
+"color": "#4fcdcd"
 },
 {
 "id": "indoeuropean.romance.gallurese",
 "label": "Gallurese",
 "parent": "indoeuropean.romance",
-"color": "#a8c9ff"
+"color": "#7bf3ff"
 },
 {
 "id": "indoeuropean.romance.sassarese",
@@ -19635,6 +19671,12 @@
 "label": "Yugoslav",
 "parent": "indoeuropean.slavic.south.serbocroatian",
 "color": "#d3eb85"
+},
+{
+"id": "indoeuropean.baltic.latgalian",
+"label": "Latgalian",
+"parent": "indoeuropean.baltic",
+"color": "#a98732"
 },
 {
 "id": "indoeuropean.slavic.south.serbocroatian.bokelj",
@@ -21292,6 +21334,24 @@
 "label": "North Sami",
 "parent": "uralic.saami",
 "color": "#ca5794"
+},
+{
+"id": "uralic.saami.saami_lule",
+"label": "Lule Sami",
+"parent": "uralic.saami",
+"color": "#f59ecf"
+},
+{
+"id": "uralic.saami.saami_south",
+"label": "South Sami",
+"parent": "uralic.saami",
+"color": "#a25492"
+},
+{
+"id": "uralic.kven",
+"label": "Kven",
+"parent": "uralic",
+"color": "#00bbcb"
 },
 {
 "id": "signlanguage.nzsl",
@@ -29205,22 +29265,16 @@
 "color": "#f98662"
 },
 {
-"id": "uralic.saami.saami_lule",
-"label": "Lule Sami",
-"parent": "uralic.saami",
-"color": "#f59ecf"
-},
-{
-"id": "uralic.saami.saami_south",
-"label": "South Sami",
-"parent": "uralic.saami",
-"color": "#a25492"
-},
-{
 "id": "afroasiatic.aramaic.turoyo",
 "label": "Turoyo",
 "parent": "afroasiatic.aramaic",
 "color": "#00b3c2"
+},
+{
+"id": "indoeuropean.germanic.north.elfdalian",
+"label": "Elfdalian",
+"parent": "indoeuropean.germanic.north",
+"color": "#398ad6"
 },
 {
 "id": "signlanguage.spj",

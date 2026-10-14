@@ -135,3 +135,11 @@ hexes, read-only); Glottolog CC BY.
 ## Cross-border groups (2026-10-06, 5d7dac7e-xb)
 
 Pokot and Kupsabiny are in the Kalenjin group with Kenya's; Teso and Karamojong in Ateker; Aringa under Lugbara; Konzo with the DRC's Nande; Kinyarwanda and Rufumbira in Rwanda-Rundi. Groups only (taxonomy/regroup.txt): no label's node or count changed, each keeps its leaf and colour; dots rewritten in place. The full table of cases is in followups.md (2026-10-06, languages that stop at a border).
+
+## Swahili audit (2026-10-13)
+
+Checked, no change. Drawn 73,000 (0.16%). Afrobarometer household language ("language spoken in
+home") for Swahili: R7 0.4%, R8 0.0%, R9 0.3% (4,800 respondents; R7 mother tongue 0.1%), with no
+age or urban pattern (`data/raw/tz/ab_r7r9_both.csv`). Swahili in Uganda is a second language
+and the survey finds almost no household that uses it; the drawn 0.16% is the same size as the
+survey's roughly 0.2%.

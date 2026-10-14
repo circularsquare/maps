@@ -85,6 +85,7 @@ indoeuropean.germanic.continental.luxembourgish | Luxembourgish
 indoeuropean.germanic.continental.yiddish | Yiddish
 indoeuropean.germanic.north | North Germanic
 indoeuropean.germanic.north.danish | Danish
+indoeuropean.germanic.north.elfdalian | Elfdalian | 0.62 0.14 250
 indoeuropean.germanic.north.icelandic | Icelandic
 indoeuropean.germanic.north.norwegian | Norwegian
 indoeuropean.germanic.north.swedish | Swedish
