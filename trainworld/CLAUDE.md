@@ -91,7 +91,11 @@ packs, `..\venv\Scripts\python.exe`). Details and build orders: `docs/code-map.m
   Instead a sampler of other countries' cities (Toronto done; London, Berlin, Paris, Shanghai,
   Mumbai next, not all at once) to learn which demand methods work everywhere. Each is a
   low-fidelity first pass: missing data (medical, say) is left out, extents pragmatic, basic
-  checks, no deep calibration.
+  checks, no deep calibration. The global build is the baseline everywhere; the reach goal is
+  tailoring country by country, first for likely-popular countries (China, Japan, the UK, Germany
+  and the like) (2026-10-14). Whole-world estimate, 2026-10-14: about 40-60 agent hours (robust
+  unattended tier 0, a few sampler cities, automatic city and zone choice, runtime scaling), then
+  days of machine time for the build.
 - **General sources and methods only** (2026-10-12, stressed 2026-10-13). Prefer global sources
   (OSM, GHSL, Kontur, WorldPop) or a method any national census can feed. A one-city source is
   worth it only if very easy; one for a minor city never is. Research briefs say this.

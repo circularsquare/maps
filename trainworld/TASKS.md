@@ -3,13 +3,17 @@
 Open agent work. Format and rules in `CLAUDE.md`. P1 = now or blocking, P2 = this milestone,
 P3 = later. Finished or abandoned tasks move to `ARCHIVE.md`.
 
-**Direction** (Anita; details in CLAUDE.md "Working here"): content and gameplay first.
-Performance work stays parked until she reports a concrete problem; city additions are paused
-(nine is enough for now).
+**Direction** (Anita, 2026-10-14; details in CLAUDE.md "Working here"). Order of work:
+1. responsiveness (T-336 first, then T-328, T-327, T-326); 2. the crossover tool (T-338);
+3. London end to end (T-041, T-319, T-288), and no other sampler city until London has taught
+what works; 4. a demand-realism batch checked on London and New York (T-295, T-270, T-271,
+T-272); 5. a design for game modes (campaign, sandbox, goals), not yet a task. Other
+performance work stays parked until she reports a problem.
 
-**Where things stand (2026-10-13).** M1's New York sandbox is complete. M2 is under way: nine
-Northeast cities play in one save with the regional market (T-116, T-117, T-134, T-137), and
-batches 10-19 were Anita's feedback from playing. Batch history is in ARCHIVE.md.
+**Where things stand (2026-10-14).** One save spans the Earth (Mercator frame, local time); the
+Northeast (nine cities, Mercer in New York, four county zones, commutes between them) and
+Toronto play; a global-sources city builder (tier 0) exists, checked on Toronto. History is in
+ARCHIVE.md.
 
 ## In progress (batch 22, 2026-10-13)
 
