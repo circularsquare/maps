@@ -18,6 +18,7 @@ import { Icon } from "./widgets";
 import { LoadBar, loadingCardShown } from "./LoadingScreen";
 import { perfOff } from "../perfFlags";
 import { saveSlotsState } from "../workers/clockClient";
+import { CACHE_VERSION } from "../workers/demandCache";
 import { savesOpen } from "./SavesPanel";
 
 const NO_CLOCK = perfOff("clock");
@@ -112,13 +113,15 @@ export function TopBar() {
   const busyTip = loadFailure.value ?? (load && !loadingCardShown() ? `Loading ${cityNames(load.cities)}, ${Math.floor(load.fraction * 100)}%. ${load.step}`
     : !demandView.value || !busy ? busy
     : !demandView.value.final ? "These figures are an early estimate. They settle when the forecast is finished."
+    // T-328: the figures kept from the last time this game was open, while it is worked out again
+    : demandView.value.version === CACHE_VERSION ? "These figures are from the last time this game was open. They are being worked out again."
     : "These figures are for the network before your last change. They change once the new forecast is finished.");
   return (
     <><header id="topbar">
       {/* T-341: every part has a fixed width; a long name is cut short, the whole name on hover */}
       <div class="city" data-tip={city?.name}>{city?.name}</div>
       <div class="split">
-        <div class="split-row" data-tip={`Rides a day ${city ? "in " + city.name + " " : ""}${shownDay.value ? "at weekends" : "on weekdays"}: ${rides ? `Train ${pct(s.train)} (${count(rides.train)}), Walking ${pct(s.walk)} (${count(rides.walk)}), Driving ${pct(s.drive)} (${count(rides.drive)}), all ${count(rides.all)} rides` : `Train ${pct(s.train)}, Walking ${pct(s.walk)}, Driving ${pct(s.drive)}`}${demandView.value && !demandView.value.final ? " (an early estimate)" : demandUpdating.value ? " (before your last change)" : ""}`} style={{ opacity: demandUpdating.value ? 0.6 : 1 }}>
+        <div class="split-row" data-tip={`Rides a day ${city ? "in " + city.name + " " : ""}${shownDay.value ? "at weekends" : "on weekdays"}: ${rides ? `Train ${pct(s.train)} (${count(rides.train)}), Walking ${pct(s.walk)} (${count(rides.walk)}), Driving ${pct(s.drive)} (${count(rides.drive)}), all ${count(rides.all)} rides` : `Train ${pct(s.train)}, Walking ${pct(s.walk)}, Driving ${pct(s.drive)}`}${demandView.value && !demandView.value.final ? " (an early estimate)" : demandView.value?.version === CACHE_VERSION ? " (from the last time this game was open)" : demandUpdating.value ? " (before your last change)" : ""}`} style={{ opacity: demandUpdating.value ? 0.6 : 1 }}>
           <span class="bar">
             <i class="seg seg-train" style={{ width: s.train + "%" }} />
             <i class="seg seg-walk" style={{ width: s.walk + "%" }} />

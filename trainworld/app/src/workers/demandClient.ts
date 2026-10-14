@@ -28,10 +28,9 @@ import type { FrameSpec } from "../game/frame";
 import { DAY_KINDS, type DayKind } from "../game/days";
 import { shownDay } from "../game/ui";
 import {
-  cityDemandViews, cityBaseSplits, demandByDay, intercityDemand,
+  cityDemandViews, demandByDay, intercityDemand,
   type DayDemand,
   type DemandView,
-  baseSplit,
   demandStep,
   demandUpdating,
   demandView,
@@ -67,6 +66,9 @@ import { readTripPeriod, setTripQuery, tripKey, type RouteNodes, type Trip } fro
 import { demandTestSnapshot } from "./demandTest";
 import { mergeEveryday } from "./selectionMerge";
 import type { NetworkSnapshot } from "./protocol";
+import { saveSlotsState } from "./clockClient";
+import { readDemandCache, writeDemandCache } from "./saveFile";
+import { BUILD, CACHE_FORMAT, CACHE_VERSION, cacheAvailable, canonical, fromStored, sameKey, sha256, storedSize, toStored, type CacheKey, type StoredDemand } from "./demandCache";
 
 /**
  * Crowding rounds after the free-flow estimate (T-022, notes/T-022.md). Each lands as its own
@@ -155,6 +157,13 @@ function byMask(parts: Reply[]): Reply[] {
 /** A bare zone's everyday legs per solving worker's periods (T-325), in `byMask`'s order. */
 function bareParts(r: Extract<FromDemand, { kind: "bare" }>): Float32Array[] {
   return r.parts.map((p, i) => [r.masks[i], p] as const).sort((a, b) => a[0] - b[0]).map(([, p]) => p);
+}
+
+function concat(parts: Float32Array[]): Float32Array {
+  const out = new Float32Array(parts.reduce((n, p) => n + p.length, 0));
+  let o = 0;
+  for (const p of parts) { out.set(p, o); o += p.length; }
+  return out;
 }
 
 /** Sort parallel arrays by value, most first, keeping at most `top`. */
@@ -340,8 +349,6 @@ class DemandClient {
   /** every worker's sums for a round of the newest solve, sent unasked (T-119): `version:round:city` */
   private pushed = new Map<string, { mask: number; sums: Float32Array; everyday: Float32Array | null }[]>();
   private ready = 0;
-  /** home-to-work trips a day, from the first worker's info */
-  private info: number[] | null = null;
   /** demand_periods() from the first worker: PERIOD_STRIDE numbers per period */
   private periodTable: number[] = [];
   private version = 0;
@@ -392,6 +399,22 @@ class DemandClient {
   /** a loaded game's clock hold: released when this version has its first estimate */
   private hold: { version?: number } | null = null;
 
+  // --- T-328: the last final result kept beside the save (workers/demandCache.ts) ---
+  private cacheOn = cacheAvailable() && !TEST;
+  /** off: no cache is written (a check turns it off to leave a network uncached) */
+  cacheWrites = true;
+  /** SHA-256 of each pack opened in every worker (and "market"), as it downloads */
+  private packHash = new Map<string, { p: Promise<string>; set: (h: string) => void }>();
+  /** resolves once the zone footprints are known (or failed) */
+  private footprintsReady: Promise<unknown> = Promise.resolve();
+  /** the zones of the cached result shown, and its network's hash */
+  private cachedCities = new Set<CityId>();
+  private cachedHash: string | null = null;
+  /** its bubbles, if it kept them */
+  private cachedModes: StoredDemand["modes"] | null = null;
+  /** what the last read and write did (window.twDemand.client.cacheLog with ?debug=1) */
+  cacheLog: { at: number; hash?: string; readMs?: number; miss?: string; shownAt?: number; wrote?: { at: number; ms: number; bytes: number; ok: boolean } } | null = null;
+
   constructor(_city: string) {
     effect(() => { activeCity.value; worldFrameEpoch.value; this.syncFocus(); });
     const n = (this.computeN = poolSize());
@@ -406,10 +429,11 @@ class DemandClient {
       const msg: ToDemand = { kind: "init", packs: [], periods: this.periodsOf[i], aux: i === n, warmEveryday: i === 0 && n > 1 && !perfOff("stagger"), ...(i === n ? { groups: this.periodsOf.slice(0, n) } : {}) };
       w.postMessage(msg);
     }
-    loadFootprints().then((f) => { this.footprints = f; }, (err) => {
+    this.footprintsReady = loadFootprints().then((f) => { this.footprints = f; }, (err) => {
       console.warn("demand: city footprints unavailable, loading every city", err);
       this.footprints = "failed";
-    }).then(() => this.ensure());
+    });
+    this.footprintsReady.then(() => this.ensure());
     // the viewed city loads when it changes (a pan, the city buttons)
     effect(() => { activeCity.value; viewedZone.value; this.ensure(); });
     // and the zones beside it with bubbles on screen (T-276), once nothing waits on them
@@ -597,6 +621,8 @@ class DemandClient {
       this.bytes.set(id, bin.byteLength);
       const own = bin.byteOffset === 0 && bin.byteLength === bin.buffer.byteLength ? bin.buffer as ArrayBuffer : bin.slice().buffer;
       const pack = { id, header: new TextDecoder().decode(header), bin: own };
+      // T-328: hashed before the bytes go to the workers (WebCrypto copies them at the call)
+      if (!bare) this.hashPack(id, [header, bin]);
       if (!bare) return this.post({ pack });
       const msg: ToDemand = { kind: "open", packs: [pack], bare: true };
       this.workers[this.computeN].postMessage(msg, [own]);
@@ -610,6 +636,7 @@ class DemandClient {
     this.download(`${MARKET_PACK}.json`).then((text) => {
       log.downloadedAt = performance.now();
       this.bytes.set(MARKET, text.byteLength);
+      this.hashPack(MARKET, [text]);
       this.post({ intercity: text });
     }).catch((err) => this.fail(`regional market: ${String(err)}`));
   }
@@ -625,14 +652,13 @@ class DemandClient {
     this.settleWaiters();
   }
 
-  /** T-325: the aux worker opened zones bare: their figures, base splits and city views. */
-  private bareOpened(figures: Record<CityId, BareFigures>, cityInfo: Record<CityId, number[]>) {
+  /** T-325: the aux worker opened zones bare: their figures and city views. */
+  private bareOpened(figures: Record<CityId, BareFigures>) {
     for (const [id, f] of Object.entries(figures)) {
       this.bareOpen.set(id, f);
       const log = this.start.loads.find((l) => l.item === id && l.bare);
       if (log) log.openedAt = performance.now();
     }
-    this.baseSplits(cityInfo);
     this.addBareViews();
     this.settleWaiters();
   }
@@ -746,7 +772,9 @@ class DemandClient {
     // T-325: a city the solves must cover is loaded when open in every worker; another, when open bare
     const sn = this.solveNeed(this.latest());
     const loaded = (item: string) => (item === MARKET || sn === null || sn.has(item as CityId) ? this.opened.has(item) : this.isOpen(item));
-    const missing = [...need].filter((id) => !loaded(id)).sort((a, b) => (a === viewed ? -1 : b === viewed ? 1 : 0));
+    // T-328: a zone the shown cached result covers has its figures; it loads unseen
+    const cached = this.cacheShown() ? this.cachedCities : null;
+    const missing = [...need].filter((id) => !loaded(id) && !cached?.has(id)).sort((a, b) => (a === viewed ? -1 : b === viewed ? 1 : 0));
     const atStartup = startup.peek() === "loading";
     const s = this.cur;
     if (!this.job) {
@@ -829,18 +857,111 @@ class DemandClient {
     loadProgress.value = { cities: job.cities.filter((id) => id !== MARKET), fraction: job.best, step, startup: job.startup };
   }
 
-  /** Each newly opened city's split with no rail (a solving worker's info: everyday purposes included). */
-  private baseSplits(cityInfo: Record<CityId, number[]>) {
-    const ids = Object.keys(cityInfo).filter((id) => !cityBaseSplits.peek().has(id));
-    if (!ids.length) return;
-    const next = new Map(cityBaseSplits.peek());
-    for (const id of ids) { const walk = 100 * cityInfo[id][3]; next.set(id, { train: 0, walk, drive: 100 - walk }); }
-    cityBaseSplits.value = next;
-    const home = cityInfo[HOME_CITY];
-    if (home && !this.info) {
-      this.info = home;
-      if (!demandView.peek()) baseSplit.value = { train: 0, walk: 100 * home[3], drive: 100 - 100 * home[3] };
+  // --- T-328: the demand cache (workers/demandCache.ts) -----------------------------------------
+
+  /** The hash of a pack's bytes, waited for until it has downloaded. */
+  private packHashOf(id: string) {
+    let h = this.packHash.get(id);
+    if (!h) {
+      let set!: (s: string) => void;
+      const p = new Promise<string>((r) => (set = r));
+      this.packHash.set(id, (h = { p, set }));
     }
+    return h;
+  }
+
+  private hashPack(id: string, parts: Uint8Array[]) {
+    if (!this.cacheOn) return;
+    const h = this.packHashOf(id);
+    Promise.all(parts.map((b) => sha256(b as Uint8Array<ArrayBuffer>))).then((hs) => h.set(hs.join("")), () => h.set("unhashed"));
+  }
+
+  /** The cache key of a solve covering `cities`, once their packs and the market have downloaded. */
+  private async keyFor(cities: CityId[]): Promise<CacheKey> {
+    const ids = [MARKET, ...cities];
+    const hashes = await Promise.all(ids.map((id) => this.packHashOf(id).p));
+    return { format: CACHE_FORMAT, build: BUILD, workers: this.computeN, flags: new URLSearchParams(location.search).get("perfOff") ?? "", packs: Object.fromEntries(ids.map((id, i) => [id, hashes[i]])) };
+  }
+
+  /** A whole game's network arrived: show its cached final result if there is one for exactly this
+   * network, these packs and this build, and nothing of its solve is shown yet. */
+  private async tryCache(svc: Service) {
+    const log: NonNullable<DemandClient["cacheLog"]> = (this.cacheLog = { at: performance.now() });
+    try {
+      const canon = canonical(svc);
+      const hash = (log.hash = await sha256(canon.text));
+      const stored = await readDemandCache<StoredDemand>(hash, saveSlotsState.peek().active);
+      log.readMs = performance.now() - log.at;
+      if (!stored) return void (log.miss = "none");
+      // the zones it covered must be the ones this solve will cover
+      await this.footprintsReady;
+      const need = this.solveNeed(svc);
+      const cities = Object.keys(stored.packs ?? {}).filter((k) => k !== MARKET);
+      if (!need || need.size !== cities.length || cities.some((id) => !need.has(id))) return void (log.miss = "zones");
+      const why = sameKey(stored, await this.keyFor(cities));
+      if (why) return void (log.miss = why);
+      if (this.latest() !== svc || (this.cur?.svc === svc && this.cur.published >= 0) || this.status.startsWith("failed")) return void (log.miss = "late");
+      this.applyCache(svc, canon, stored, hash, cities);
+      log.shownAt = performance.now();
+    } catch (err) {
+      log.miss = "error: " + String(err);
+    }
+  }
+
+  /** Show a cached result as a final one under CACHE_VERSION. The clock runs on it; the solve of the
+   * same network carries on, its estimates are not shown, and its final round replaces it whole. */
+  private applyCache(svc: Service, ids: ReturnType<typeof canonical>, stored: StoredDemand, hash: string, cities: CityId[]) {
+    const days = fromStored(stored, ids);
+    if (days.length !== DAY_KINDS.length) throw new Error("days");
+    const now = performance.now();
+    // a solve entry for it, so its layout and zones are known as a shown solve's are (T-324, T-325);
+    // first in the log, so the newest solve stays last
+    this.log.unshift({ version: CACHE_VERSION, svc, layout: packService(svc).layout, results: [], byRound: [], published: stored.round, arrivedAt: now, sentAt: now, periodMs: [], setupMs: [], memBytes: [], cities, showEstimates: false });
+    this.cachedCities = new Set(cities);
+    this.cachedHash = hash;
+    this.cachedModes = stored.modes ?? null;
+    if (this.cur?.svc === svc) this.cur.showEstimates = false;
+    demandByDay.value = days;
+    this.addBareViews();
+    demandUpdating.value = true; // "Updating demand" until the fresh final
+    // the load in hand is covered; the clock runs
+    this.job = null;
+    clearInterval(this.progressTick);
+    this.progressTick = 0;
+    loadProgress.value = null;
+    if (this.hold) {
+      this.hold = null;
+      loadComplete();
+      if (nearbyZones.peek().length) this.ensure();
+    }
+    this.progress();
+  }
+
+  /** The figures shown are the cache's. */
+  private cacheShown(): boolean {
+    return demandByDay.peek()[0]?.view?.version === CACHE_VERSION;
+  }
+
+  /** A final result landed: keep it beside the save (not from a test page or a tab without the slot). */
+  private async writeCache(s: Solve) {
+    const slots = saveSlotsState.peek();
+    if (!this.cacheOn || !this.cacheWrites || !slots.writable || !slots.active) return;
+    const days = demandByDay.peek();
+    if (days.some((d) => d.view?.version !== s.version)) return;
+    const t0 = performance.now();
+    const canon = canonical(s.svc);
+    const stored = toStored(days, s.cities, canon);
+    const [hash, key] = await Promise.all([sha256(canon.text), this.keyFor(s.cities)]);
+    // the bubbles, when they were asked for this result (weekday, every purpose, the viewed zone)
+    const m = this.modesP, city = this.focusCity;
+    const cm = m && m.version === s.version && m.day === 0 ? await m.p : null;
+    // the result shown at load is the same one, unless it can now add its bubbles
+    if (hash === this.cachedHash && (this.cachedModes || !cm)) return;
+    const modes = cm && { city, data: concat([cm.homeRail, cm.homeWalk, cm.homeDrive, cm.workRail, cm.workWalk, cm.workDrive]) };
+    const ms = performance.now() - t0;
+    const ok = await writeDemandCache(slots.active, hash, { ...key, at: Date.now(), round: s.published, days: stored, ...(modes ? { modes } : {}) } satisfies StoredDemand);
+    this.cachedHash = hash;
+    (this.cacheLog ??= { at: t0 }).wrote = { at: performance.now(), ms, bytes: storedSize(stored) + (modes?.data.byteLength ?? 0), ok };
   }
 
   /** A held game's network has its first estimate: the clock runs. */
@@ -918,7 +1039,6 @@ class DemandClient {
         console.error("demand: game/periods.ts disagrees with sim/src/track/params.rs PERIOD_HOURS / PERIOD_LEVEL", msg.periods);
       if (!this.periodTable.length && i < this.computeN) this.periodTable = msg.periods;
       if (!this.dayTable.length && i < this.computeN) this.dayTable = msg.days;
-      if (i < this.computeN) this.baseSplits(msg.cityInfo);
       for (const id of Object.keys(msg.cityInfo)) this.openedBy(id);
       if (++this.ready === this.workers.length) {
         this.status = "ready";
@@ -932,13 +1052,11 @@ class DemandClient {
       const w = this.start.workers[i];
       if (w) { w.openMs += msg.openMs; w.warmMs += msg.warmMs; w.memBytes = msg.memBytes; }
       if (msg.bare) {
-        this.bareOpened(msg.bare, msg.cityInfo);
+        this.bareOpened(msg.bare);
         this.progress();
         this.checkHold();
         return;
       }
-      // the aux worker's info leaves out the everyday purposes: the solving workers' is the city's
-      if (i < this.computeN) this.baseSplits(msg.cityInfo);
       for (const id of Object.keys(msg.cityInfo)) this.openedBy(id);
       if (msg.market) this.openedBy(MARKET);
       this.flush();
@@ -981,6 +1099,8 @@ class DemandClient {
     this.lastKey = key;
     demandUpdating.value = true;
     this.send(svc, performance.now());
+    // T-328: a whole game's network: its last final result may be kept beside the save
+    if (this.hold && this.cacheOn) void this.tryCache(svc);
   }
 
   /** Solve the current network again under a new version (timing runs). */
@@ -1126,6 +1246,12 @@ class DemandClient {
     const round = demandView.peek()?.round ?? 0;
     const day = shownDay.peek();
     if (everydayToo && other === undefined && this.modesP?.version === version && this.modesP.round === round && this.modesP.day === day) return this.modesP.p;
+    // T-328: the cached result's bubbles, when it kept this zone's for this day
+    const kept = this.cachedModes;
+    if (version === CACHE_VERSION && everydayToo && other === undefined && day === 0 && kept?.city === activeCity.peek()) {
+      const n = kept.data.length / 6, b = (k: number) => kept.data.slice(k * n, (k + 1) * n);
+      return Promise.resolve({ version, day, homeRail: b(0), homeWalk: b(1), homeDrive: b(2), workRail: b(3), workWalk: b(4), workDrive: b(5) });
+    }
     const p = (async (): Promise<CellModes | null> => {
       const city = other ?? activeCity.peek();
       if (this.isBare(city)) return this.bareModes(city, everydayToo, version, round, day, other);
@@ -1136,7 +1262,9 @@ class DemandClient {
       // round); asked for only when one is missing. A weekend's are always asked for (T-260).
       const sent = day === 0 ? this.pushed.get(`${version}:${round}:${city}`) : undefined;
       const parts: { mask: number; sums: Float32Array | null; everyday: Float32Array | null }[] = sent && sent.length === this.computeN ? sent : (await this.ask((id) => ({ kind: "subSums", id, version }), undefined, [], other)).map((r) => (r.kind === "subSums" ? r : { mask: 0, sums: null, everyday: null }));
-      for (const r of parts) {
+      // in worker (period) order, not arrival order, so the same result gives the same bubbles to
+      // the bit (T-328: the cached bubbles are compared with the fresh ones)
+      for (const r of [...parts].sort((a, b) => a.mask - b.mask)) {
         if (!r.sums) return null;
         mask |= r.mask;
         if (!sums) sums = r.sums.slice();
@@ -1523,7 +1651,10 @@ class DemandClient {
     demandByDay.value = DAY_KINDS.map((day) => this.dayDemand(s, round, final, day, day === 0 ? res : res.map((r, q) => this.dayResult(r, q, day))));
     if (final) {
       s.refinedAt = performance.now();
-      if (s === this.cur) demandUpdating.value = false;
+      if (s === this.cur) {
+        demandUpdating.value = false;
+        void this.writeCache(s); // T-328
+      }
     }
   }
 
@@ -1773,7 +1904,7 @@ export function startDemand(city = HOME_CITY) {
   setTripQuery((from, to) => c.trip(from, to)); // T-195
   setDemandQueries({ transfers: (members) => c.transfers(members), cityCells: (city) => c.cityCells(city), cellModes: (purpose, city) => c.purposeModes(purpose ?? "all", city), stationRiders: (id, top, members) => c.stationRiders(id, top, members), flows: (end, cells) => c.flows(end, cells), intercitySelection: (end, cells) => c.intercitySelection(end, cells), intercityStation: (id, members) => c.intercityStation(id, members) });
   if (TEST) c.submitNetwork(demandTestSnapshot());
-  if (new URLSearchParams(location.search).get("debug") === "1") (window as any).twDemand = { client: c, log: c.log, start: c.start, resubmit: () => c.resubmit(), view: () => demandView.peek(), cities: () => cityDemandViews.peek(), intercity: () => intercityDemand.peek(), activeCity, cellModes: () => c.cellModes(), stationRiders: (id: string) => c.stationRiders(id), cityCells: () => c.cityCells(), flows: (end: "home" | "work", cells: Uint32Array) => c.flows(end, cells), intercitySelection: (end: "home" | "work", cells: Uint32Array) => c.intercitySelection(end, cells), intercityStation: (id: string) => c.intercityStation(id), transfers: (members: string[]) => c.transfers(members), trip: (from: [number, number], to: [number, number]) => c.trip(from, to) };
+  if (new URLSearchParams(location.search).get("debug") === "1") (window as any).twDemand = { client: c, log: c.log, days: () => demandByDay.peek(), start: c.start, resubmit: () => c.resubmit(), view: () => demandView.peek(), cities: () => cityDemandViews.peek(), intercity: () => intercityDemand.peek(), activeCity, cellModes: () => c.cellModes(), stationRiders: (id: string) => c.stationRiders(id), cityCells: () => c.cityCells(), flows: (end: "home" | "work", cells: Uint32Array) => c.flows(end, cells), intercitySelection: (end: "home" | "work", cells: Uint32Array) => c.intercitySelection(end, cells), intercityStation: (id: string) => c.intercityStation(id), transfers: (members: string[]) => c.transfers(members), trip: (from: [number, number], to: [number, number]) => c.trip(from, to) };
   return c;
 }
 

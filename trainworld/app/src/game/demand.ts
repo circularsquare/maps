@@ -105,23 +105,19 @@ export const demandByDay = signal<DayDemand[]>(DAY_KINDS.map(noDay));
 
 /** The newest finished solve on the shown kind of day (`shownDay`); null until the first lands. */
 export const demandView = computed<DemandView | null>(() => demandByDay.value[shownDay.value]?.view ?? null);
-/** The split with no rail at all, known once the city pack is open (before any solve). */
-export const baseSplit = signal<ModeSplit | null>(null);
 /** Local purpose shares (everyday trips included), separate from network-wide totals. */
 export const cityDemandViews = computed<Map<CityId, DemandView>>(() => demandByDay.value[shownDay.value]?.cities ?? new Map());
-export const cityBaseSplits = signal<Map<CityId, ModeSplit>>(new Map());
 /** Distinct, synthetic intercity trips: never included in local commute denominators. */
 export const intercityDemand = computed<IntercityDemand | null>(() => demandByDay.value[shownDay.value]?.intercity ?? null);
-/** A solve is running for a newer network than the one `demandView` shows. */
+/** A solve is running for a newer network than the one `demandView` shows (or, T-328, the shown
+ * figures are the cache's and the same network is being solved again). */
 export const demandUpdating = signal(false);
 /** How far that solve has got: results published so far (the free-flow estimate, then each
  * crowding round) of all it will publish. */
 export const demandStep = signal({ done: 0, of: 4 });
 
 /** The mode-split bar's numbers: the viewed zone's own figures (a solve's, or the bare pass's for a
- * zone no station reaches), null until it has them and over dead space (T-318). T-341: the no-rail
- * `cityBaseSplits` and `baseSplit`, known once a pack is open, are not shown here: with stations
- * in reach they are not the zone's split yet. */
+ * zone no station reaches), null until it has them and over dead space (T-318). */
 export const modeSplit = computed<ModeSplit | null>(() => !viewedZone.value ? null : cityDemandViews.value.get(activeCity.value)?.split ?? null);
 
 /** T-342: the same split in rides (trip legs) a day, `all` the total of the three. It is what

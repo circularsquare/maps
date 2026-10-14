@@ -112,7 +112,8 @@ Web first, so it can be shared as a link.
   [ui-panels.md](ui-panels.md) "Loading".
 - **Loading and readiness** [T-149, T-172, T-180, T-243]: input is never blocked. A loaded game
   holds only the clock until every needed city has its first estimate (every period's free-flow
-  result); the crowding rounds refine it in the background. The demand pool starts before the map is
+  result), or until its cached final result shows (T-328, section 11); the crowding rounds refine it
+  in the background. The demand pool starts before the map is
   set up; the regional market goes to the workers as bytes and is decoded there; each zone's
   boundary file is fetched once for the reach test and the outlines (`game/boundaries.ts`).
   `game/loading.ts`; timings in notes/T-172.md, frame times in notes/T-180.md.
@@ -168,6 +169,20 @@ all results are recomputed. About 100 KB compressed per 10,000 route-km (T-040).
   exported). Rename and delete refuse slots owned by another tab. Storage failures keep the dirty
   state and a persistent notice, with file export still available; browsers without locks disable
   browser writes. notes/T-029.md, notes/T-068.md.
+- **Demand cache** [T-328, `workers/demandCache.ts`]: each final demand result is kept beside its
+  slot in the same IndexedDB store (`demand:<slot>:<network hash>`, one per slot, 7.3 MB for the
+  real New York save, 4.9 MB of it the bubbles; a deleted slot takes its cache along). It holds what
+  the page shows from a final solve (every kind of day's lines, stations, purposes, each solved
+  zone's split, the market's trips, and the viewed zone's weekday bubbles of every purpose when they
+  were on show), not worker state; lines and stations by their place in the network, since a load
+  renumbers ids. Its key is a SHA-256 of the network demand reads, of every pack the solve covered
+  and of the market, the app build, the worker count and the perfOff flags; the zones must be the
+  ones the new solve covers. When a whole game loads and the key matches, the result shows at once
+  (about 0.1 s after the network is drawn; the bubbles once the zone's cells are open, about 3.7 s),
+  the clock runs on it and the status reads "Updating demand"; the workers solve as before, clicks
+  and other purposes' or days' bubbles wait for them, and the fresh final replaces it in one step
+  (it is bit for bit the same). A test page, `?new=1` and a tab without the slot never
+  write it.
 - **Old saves are a nicety** (Anita, 2026-10-12): only Anita has saves, so no real effort goes into
   migrations.
 - **Later**: sharing by link (upload a save, get a link, M4); accounts only for sync and sharing,

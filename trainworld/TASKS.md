@@ -4,7 +4,7 @@ Open agent work. Format and rules in `CLAUDE.md`. P1 = now or blocking, P2 = thi
 P3 = later. Finished or abandoned tasks move to `ARCHIVE.md`.
 
 **Direction** (Anita, 2026-10-14; details in CLAUDE.md "Working here"). Order of work:
-1. responsiveness (T-325 done; T-328, then T-327, T-326); 2. the crossover tool (T-338);
+1. responsiveness (T-325, T-328 done; T-327, then T-326); 2. the crossover tool (T-338);
 3. London end to end (T-041, T-319, T-288), and no other sampler city until London has taught
 what works; 4. a demand-realism batch checked on London and New York (T-295, T-270, T-271,
 T-272); 5. a design for game modes (campaign, sandbox, goals), not yet a task. Other
@@ -29,14 +29,14 @@ ARCHIVE.md.
 
 - T-326 [P2] Loading fix 3 (T-303 item 3): separate clusters (Toronto vs the Northeast) solve separately, an edit re-solves only its own cluster, the viewed one first. Three stages. After T-325. Open.
 - T-327 [P2] Loading fix 4 (T-303 item 4): clicks during the startup solve answered from the newest round every worker holds (about 2 s instead of up to 10). Open.
-- T-328 [P2] Loading fix 5 (T-303 item 5): on reload show the last final result at once, cached beside the save and keyed by network, packs and build, and let the clock run on it while the fresh solve finishes (Anita: yes). Open.
 
 ## In progress (batch 24, 2026-10-14)
 
 
 - T-344 [P3] A zone's loading bar can stick near 99% (found in T-343): the viewed zone opened in every worker but never solved, because the view moved to dead space before its first solve; its grey and bar stay until something solves it. Rare. Open.
 
-- T-345 [P3] Dead code from T-342: `cityBaseSplits` and `baseSplit` (game/demand.ts, set in workers/demandClient.ts about line 834) are no longer read by anything; remove them. Open.
+
+- T-346 [P3] After T-328, a reload with the cache on screen hides the fresh solve's estimates, so bubbles for a purpose other than all, or for the weekend (not cached), wait for the final at about 20 s instead of the first estimate at about 11 s. Show such views from the first estimate, or cache them. Also untested in a browser: a reload after deletions renumber ids (the key is built to cover it). Open; notes/T-328.md.
 
 - T-335 [P3] Split docs/demand.md (about 900 lines) by area like the interface docs (sources and purposes, timing, mode choice and walking, the kernel and its costs), cutting its measurement trails to notes/. Found in T-329. Open.
 

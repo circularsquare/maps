@@ -76,7 +76,8 @@ the bar's three lines (bar, labels, status) keep their height with nothing on th
   before that), and over dead space [T-318]. The hover says "on weekdays" or "at weekends" for the
   day shown. The zone named is the focused zone ([ui-demand-views.md](ui-demand-views.md)).
 - **Status**, the third line under the split: while a solve runs after an edit, "Updating demand
-  2/4…" and the split faded, the figures held [T-232]; during startup's refinement "Estimate,
+  2/4…" and the split faded, the figures held [T-232], and the same while a reload shows the cached
+  figures from the last time the game was open, with a hover saying so [T-328]; during startup's refinement "Estimate,
   refining 2/4…"; a city loading later "Loading data" with a thin bar after it (Loading, below).
 - **Cash**, to the dollar, moving as fares are paid and running costs drain [T-284]. Fixed width
   (room for "-$99,999,999,999") with the digits left-aligned after the $ in tabular figures, so a

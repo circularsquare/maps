@@ -224,7 +224,42 @@ export async function deleteSlot(key: string): Promise<void> {
   const s = await store("readwrite");
   const done = committed(s.transaction);
   await req(s.delete(key));
+  // and its demand cache (T-328)
+  for (const k of await req(s.getAllKeys())) if (typeof k === "string" && k.startsWith(`${DEMAND_PREFIX}${key}:`)) s.delete(k);
   await done;
+}
+
+// T-328: the last final demand result of each slot, kept beside it under `demand:<slot>:<network
+// hash>` (workers/demandCache.ts says what is in it). One per slot: writing one removes the slot's
+// others. Looked up by the network's hash alone, since a whole-game load sends its network before
+// the slot it came from is announced; the same network gives the same result whatever slot holds it.
+const DEMAND_PREFIX = "demand:";
+
+/** The cached demand result for a network hash, from any slot (the given slot's first). */
+export async function readDemandCache<T>(hash: string, slot: string): Promise<T | null> {
+  try {
+    const s = await store("readonly");
+    const keys = (await req(s.getAllKeys())).filter((k): k is string => typeof k === "string" && k.startsWith(DEMAND_PREFIX) && k.endsWith(":" + hash));
+    const key = keys.find((k) => k === `${DEMAND_PREFIX}${slot}:${hash}`) ?? keys[0];
+    return key ? ((await req(s.get(key))) as T | undefined) ?? null : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Store a slot's demand result for a network hash, removing the slot's older one. */
+export async function writeDemandCache(slot: string, hash: string, v: unknown): Promise<boolean> {
+  try {
+    const s = await store("readwrite");
+    const done = committed(s.transaction);
+    const key = `${DEMAND_PREFIX}${slot}:${hash}`;
+    for (const k of await req(s.getAllKeys())) if (typeof k === "string" && k !== key && k.startsWith(`${DEMAND_PREFIX}${slot}:`)) s.delete(k);
+    await req(s.put(v, key));
+    await done;
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export interface SlotLease { release: () => void; }

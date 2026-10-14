@@ -1,5 +1,7 @@
 # Archive
 
+- T-345 [P3] Dead `cityBaseSplits` and `baseSplit`. Done 2026-10-14 in T-328: removed from game/demand.ts and workers/demandClient.ts.
+- T-328 [P2] Loading fix 5: the last final demand result kept beside the save. Done 2026-10-14: on reload of the real save figures show at 1.8-2.2 s instead of 10-11 s (bubbles 3.7 s instead of 11.6 s), the clock runs on them, the fresh final replaces them bit for bit. notes/T-328.md.
 - T-341 [P2] Top bar of fixed widths. Done 2026-10-14: fixed city box (ellipsis, hover), split section of bar, labels and a reserved status line with the thin load bar; bar length equal for every zone and status; top bar 54 px. The split shows dashes until the zone has its own figures (no-rail base split dropped). docs/ui-panels.md.
 - T-342 [P2] The mode split counts rides. Done 2026-10-14: the shares were already of rides (trip legs a day, all modelled local purposes); "Train 18.5% 8.81M rides" beside the bar, hover has train, walking, driving and all rides (`modeRides` in game/demand.ts).
 - T-337 [P2] T-325 stage c, spec for bare zones. Done 2026-10-14: SPEC 3, docs/zones.md 6 and 8, docs/demand.md "Bare zones"; notes/T-325.md folded in and removed.

@@ -59,6 +59,8 @@ export default defineConfig({
   // Served under /trainworld/ by maps/serve.py, so every URL in the build must be relative.
   base: "./",
   worker: { format: "es" },
+  // T-328: the app build, part of the demand cache's key: new at each build and dev-server start
+  define: { __TW_BUILD__: JSON.stringify(Date.now().toString(36)) },
   build: { outDir: "dist", target: "es2022" },
   plugins: [packs()],
 });

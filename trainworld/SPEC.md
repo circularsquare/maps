@@ -153,8 +153,8 @@ MapLibre GL 6 for the basemap, with our own WebGL2 renderer on a canvas over it 
 stations and trains, drawn in the same frame as MapLibre's. Rust compiled to WebAssembly in Web
 Workers: one clock worker (track model, lines, money, boarding account, autosave) and a pool of
 demand workers that each own a fixed set of the five periods. Threads talk by transferring
-versioned snapshots. A loaded game holds only its clock until the first demand estimate lands;
-input is never blocked. City packs come from an offline Python pipeline. The simulation is a pure
+versioned snapshots. A loaded game holds only its clock until the first demand estimate lands, or
+its last final result kept beside the save shows (T-328); input is never blocked. City packs come from an offline Python pipeline. The simulation is a pure
 function of (save, pack versions, game time), bar the hour or two after a service edit [T-206].
 Detail: [docs/architecture.md](docs/architecture.md) 7; file layout in `docs/code-map.md`.
 
@@ -200,7 +200,9 @@ Rough on purpose: the bar is the right order (section 1).
 ## 11. Saves and accounts
 
 A save is the player's inputs only; everything else is recomputed from versioned packs. The clock
-worker writes it to IndexedDB in named browser slots (one writing tab per slot) and to files.
+worker writes it to IndexedDB in named browser slots (one writing tab per slot) and to files. Beside
+each slot the page keeps its last final demand result, shown at once on reload when the network,
+packs and build match [T-328].
 Keeping old saves loading is a nicety: only Anita has saves. Sharing by link and accounts (on
 `shonei-server`) come later. [docs/architecture.md](docs/architecture.md) 11.
 

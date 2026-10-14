@@ -101,7 +101,8 @@ the screen when demand cannot load, T-149, T-172, T-180); `Search.tsx` (T-148); 
 
 `protocol.ts` (edit ops, clock messages, the network snapshot for demand), `clock.worker.ts` (owns
 the network: `TrackApi`, notes/T-025.md; money and autosave too), `saveFile.ts` (the save format
-and IndexedDB, T-029), `clockClient.ts`, `demand.worker.ts`, `demandClient.ts`,
+and IndexedDB, T-029), `clockClient.ts`, `demand.worker.ts`, `demandClient.ts`, `demandCache.ts`
+(the last final demand result kept beside the save, T-328),
 `demandProtocol.ts`, `demandTest.ts`, `cityReach.ts` (which city packs a network's stations can
 reach, T-149), `commuters.worker.ts` and `commutersProtocol.ts` (the commuter bubbles' sums,
 T-097), `selectionMerge.ts` (a bubble selection's everyday far end added up over the workers,
@@ -140,7 +141,8 @@ Run from the maps root (`node trainworld/checks/<file>`).
   (the regional market's derived block).
 - Browser and timing (Playwright, `PLAYWRIGHT_MODULE`): `startup-timing.mjs` with
   `static-serve.mjs` (startup marks on a scratch production build), `t303-measure.mjs` (demand
-  loading, clicks, pans), `t161-complexes.mjs` (the real save's complexes for the native
+  loading, clicks, pans), `t328-cache-check.mjs` (the demand cache on reload: timing, cached
+  against fresh final to the bit, a changed build, pack or network shows none), `t161-complexes.mjs` (the real save's complexes for the native
   comparison), `t125-fingerprint.mjs` (a save's derived geometry, before and after a frame
   change), `t277-browser.mjs` (Toronto; the template for a new city's browser check, not rerun
   since T-277).
