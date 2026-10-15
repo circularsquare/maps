@@ -191,6 +191,8 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   `data/work/world_field.*`, a pipeline input never shipped, about 6 minutes;
   `world_field.py` reads it (`load().around(lon, lat)`: r5 within 300 km, r4 to 1,000, r3
   beyond; `locate()`); `checks/world_field_check.py` checks it (country totals, fixed links).
+- `longhaul_fit.py [--write]` fits the long-trip tail and border factor on the world field (T-376,
+  about 6 minutes) and writes `pipeline/longhaul.json`, the parameters stage 3 reads.
 - `frame_fixture.py` writes PROJ's values for the world frame (`app/src/game/frame.fixture.json`),
   which `checks/t125-frame-check.mjs` and the Rust frame test compare with.
 - `tier0.py`: the adapter from global sources only (T-287); `canada.py`: Canada's adapters;
