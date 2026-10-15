@@ -583,8 +583,10 @@ works on two levels:
    graph each. A worker keeps two tables; when a third graph comes, the table with the fewest
    searched destinations gives way, and only to one with at least as many to search (a cheaper one
    is searched for that call alone), so the order populations are solved in does not change what
-   is searched (T-405). A table is stations² costs plus about 12 bytes a node per searched
-   destination: on the real save 45 MB for New York's, 3 MB for New Haven's.
+   is searched (T-405). A table is stations² costs plus, per searched destination, each node's next
+   node and the settle order (u16 ids below 65,535 nodes) and one bit per boarding route node for
+   the departures accepted there (their trains an hour are the graph's): about 4 bytes a node, 18 MB
+   for New York's on the real save (T-398).
 5. **Mode choice per subzone pair.** The access logit factorises: each origin subzone gets one row
    over all stations, the logsum of its access options followed by every station-to-station cost
    (at most 6 options x stations multiply-adds); each pair then multiplies that row into its
@@ -595,7 +597,9 @@ works on two levels:
    the pairs where the 2.5 km edge had them: hand-made network 4.2M pairs (4.1M before T-090;
    with the 4 km reach and no pair bound 9.3M), real network 13.8M (13.6M; 31.8M). What a pair
    reads about its destination is packed in visiting order. Rail trips go back onto access
-   stations once per origin subzone and are kept by station pair, and by subzone and access
+   stations once per origin subzone and are kept by station pair (over the stations in the city's
+   access lists only, since no other station starts or ends a commute: a city a few stations reach
+   keeps a few rows, not the whole network's, T-398), and by subzone and access
    station at each end for the demand views (T-084, notes/T-078.md). The views ask for them on
    demand, never pushed: commuters by mode per cell (`cellModes`), a station's catchment and far
    end (`stationRiders`, with the home riders split into those who walked and those who rode to
@@ -714,8 +718,12 @@ the Northeast never downloads it. A new game
 opens only New York; a save with construction in several cities pays
 each of their openings once, in every worker. Only the cells with a budget for a purpose hold its
 destination samples and their pair indices (T-395; about half of all cells x purposes have none):
-natively New York's everyday layer holds 57 MB of them and all nine cities' 207 MB, and the nine
-layers' heap after opening plus the pair indices is about 276 MB a worker (notes/perf-survey.md 3).
+natively New York's everyday layer holds 57 MB of them and all nine cities' 207 MB. A sample's
+pair index is held only once a network gives its layer a pair, written in place on the next
+network, and the pairs are found through a 4-byte-a-slot table sized from the last network's count
+(T-398). Natively a solving worker on the real save holding three periods has about 222 MB of heap
+after a solve and 256 MB at its peak; with all nine Northeast cities open, 420 and 458 MB
+(notes/T-398.md).
 T-172 made the everyday opening cheap: zone centres sit on the zone grid, so the destination
 gravity's decay comes from one table per purpose by grid offset instead of a square root and an
 exp per zone pair (the sampled destinations agree with before to 7 significant figures in every
@@ -829,7 +837,8 @@ network supersedes work after the population in progress (a pass is up to a seco
 
 Longer-trip queries (T-118, [regional.md](regional.md) 5.2) come from the regional API, not the local ones. Each period
 keeps rail trips per directed served zone pair (T-174) and, per station, rail trips starting and ending there by
-far zone (T-120; one f32 per station, direction and zone, about 7 MB a period on 875 stations), both from the same
+far zone (T-120; one f32 per station, direction and served zone, the only zones a rail trip reaches, T-398;
+the market's whole period is about 7 MB on the real save), both from the same
 assignment pass that loads the lines. `selection_flows` sums the market's zone pairs (each
 selected zone's row computed when asked, T-174) for the 600 m
 squares a selection of local cells lies in (a partly selected square counts its selected share;

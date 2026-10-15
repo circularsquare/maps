@@ -183,7 +183,7 @@ pub(crate) fn routes(g: &Graph, sk: &Skims, p: &Params, a: usize, t: usize, min_
     if slot == NONE || a == t {
         return out;
     }
-    let (next, board) = (&sk.next[slot as usize], &sk.board_tph[slot as usize]);
+    let (next, board) = (&sk.next[slot as usize].to_vec(), &sk.board_tph(g, slot as usize));
     let mut rep = vec![NONE; g.n_st];
     for (r, &st) in g.rn_station.iter().enumerate().rev() {
         rep[st as usize] = r as u32;

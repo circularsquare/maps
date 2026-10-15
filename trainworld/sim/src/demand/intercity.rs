@@ -211,8 +211,9 @@ struct Period {
     c_corridors: Vec<f64>,
     /// Rail trips of each directed pair in this period (T-118), averaged over rounds like the loads.
     pair_rail: Vec<f32>,
-    /// Per station, `2 * zones` numbers (T-118, T-120): rail trips starting here by destination
-    /// zone, then ending here by origin zone. f32: it is one cell per station and zone.
+    /// Per station, `2 * served zones` numbers (T-118, T-120): rail trips starting here by
+    /// destination zone, then ending here by origin zone, in `served` order (no other zone has a
+    /// rail trip; T-398). f32: it is one cell per station and zone.
     st: Vec<f32>,
     round: usize,
     ms: f64,
@@ -253,8 +254,10 @@ pub struct IntercityApi {
     /// The zone pairs between zones some station serves (T-174), both directions, in the order
     /// the whole market lists them (by lower zone, then higher). Built by `set_network`.
     pairs: Vec<Pair>,
-    /// The zones `pairs` was built for (ascending).
+    /// The zones `pairs` was built for (ascending), and each zone's place in it (`u32::MAX`
+    /// if not served).
     served: Vec<usize>,
+    served_at: Vec<u32>,
     /// (origin zone, destination zone) to its index in `pairs`.
     pair_index: HashMap<(u32, u32), u32>,
     /// The all-pairs figures: from the pack, or derived at opening (`from_pack` false).
@@ -312,8 +315,9 @@ impl IntercityApi {
         let mut rail = 0.;
         let mut cor = vec![0.; self.corridors.len()];
         let mut pair_rail = vec![0f32; self.pairs.len()];
-        let nz = self.zones.len();
+        let nz = self.served.len();
         let w = 2 * nz;
+        let col = &self.served_at;
         let mut st = vec![0f32; s * w];
         for (pi, pair) in self.pairs.iter().enumerate() {
             let trips = pair.trips * SHARES[q] as f64;
@@ -346,8 +350,8 @@ impl IntercityApi {
                     let rr = r * v / sum;
                     od[k] += rr as f32;
                     let (sa, sb) = (k / s, k % s);
-                    st[sa * w + pair.b] += rr as f32;
-                    st[sb * w + nz + pair.a] += rr as f32;
+                    st[sa * w + col[pair.b] as usize] += rr as f32;
+                    st[sb * w + nz + col[pair.a] as usize] += rr as f32;
                 }
             }
         }
@@ -392,10 +396,11 @@ impl IntercityApi {
                 let (a, b) = ((ro * v / sum) as f32, (rr_ * v / sum) as f32);
                 od_c[sa * s + sb] += a;
                 od_c[sb * s + sa] += b;
-                st[sa * w + wz] += a;
-                st[sb * w + nz + h] += a;
-                st[sb * w + h] += b;
-                st[sa * w + nz + wz] += b;
+                let (hc, wc) = (col[h] as usize, col[wz] as usize);
+                st[sa * w + wc] += a;
+                st[sb * w + nz + hc] += a;
+                st[sb * w + hc] += b;
+                st[sa * w + nz + wc] += b;
             }
         }
         let c_loads = if od_c.is_empty() {
@@ -454,6 +459,10 @@ impl IntercityApi {
             self.cpairs.push(CPair { c: c as u32, car, corridor, ride: km >= pc.ride_min_km });
         }
         self.cpairs.shrink_to_fit();
+        self.served_at = vec![u32::MAX; self.zones.len()];
+        for (k, &z) in served.iter().enumerate() {
+            self.served_at[z] = k as u32;
+        }
         self.served = served;
     }
     /// Every pair of the market, as the served pairs would be with every zone served.
@@ -1686,6 +1695,7 @@ impl IntercityApi {
             cpair_of: vec![],
             pairs: vec![],
             served: vec![],
+            served_at: vec![],
             pair_index: HashMap::new(),
             daily: derived.daily,
             derived,
@@ -2242,12 +2252,14 @@ impl IntercityApi {
         let nz = self.zones.len();
         let head = 6 * self.markets;
         let mut out = vec![0.; head + 5 * nz];
+        let ns = self.served.len();
         for q in 0..PERIODS {
             let Some(per) = self.per(q) else { continue };
             let f = load_factor(day as usize, LONGER, q) as f64;
-            if let Some(row) = per.st.get(s as usize * 2 * nz..(s as usize + 1) * 2 * nz) {
-                for (z, &v) in row.iter().enumerate() {
-                    out[head + z] += v as f64 * f;
+            if let Some(row) = per.st.get(s as usize * 2 * ns..(s as usize + 1) * 2 * ns) {
+                for (k, &z) in self.served.iter().enumerate() {
+                    out[head + z] += row[k] as f64 * f;
+                    out[head + nz + z] += row[ns + k] as f64 * f;
                 }
             }
         }

@@ -235,7 +235,10 @@ pub(crate) struct SubOut {
     /// at the home end, and at the work end.
     acc_home: Vec<f32>,
     acc_work: Vec<f32>,
-    /// Rail trips by (home station, work station), S x S, before the trips home are reversed.
+    /// Rail trips by (home station, work station) before the trips home are reversed, over the
+    /// stations in the subzones' access lists only (`DemandApi::od_st`; every other station's row
+    /// and column are zero, and a city a few stations reach would hold a whole network's S x S
+    /// otherwise, T-398).
     pub(crate) od: Vec<f32>,
     /// Rail trips by the perceived minutes of both walks together (`ModeOut::rail_walksum`).
     walksum: Vec<f32>,
@@ -292,6 +295,10 @@ pub struct DemandApi {
     pub(crate) sz: Option<Subzones>,
     /// The stations a trip can end at (`egress_stations`): the only ones strategies are searched to.
     want: Vec<bool>,
+    /// The stations in the subzones' access lists, ascending, and each station's place among them
+    /// (`u32::MAX` if absent): the rows and columns of `SubOut::od`.
+    od_st: Vec<u32>,
+    od_at: Vec<u32>,
     pub(crate) per: Vec<Option<Period>>,
     pub(crate) fare_per_km: f32,
     pub(crate) fare_km: Vec<f32>,
@@ -421,10 +428,28 @@ impl DemandApi {
             walk_lost_work: mo.walk_lost_to_sub,
             acc_home: mo.acc_home,
             acc_work: mo.acc_work,
-            od: mo.od,
+            od: self.compact_od(&mo.od, g.n_st),
             walksum: mo.rail_walksum.iter().map(|&v| v as f32).collect(),
         };
         (mo.rail, mo.rail_walk, l, mo.pairs, sub)
+    }
+
+    /// An S x S station-pair table over `od_st` only (`SubOut::od`).
+    pub(crate) fn compact_od(&self, od: &[f32], s: usize) -> Vec<f32> {
+        let k = self.od_st.len();
+        let mut out = Vec::with_capacity(k * k);
+        for &a in &self.od_st {
+            let row = &od[a as usize * s..(a as usize + 1) * s];
+            out.extend(self.od_st.iter().map(|&t| row[t as usize]));
+        }
+        out
+    }
+
+    /// `sub.od` at stations (a, t): 0 where either is in no access list.
+    #[inline]
+    fn sub_od(&self, sub: &SubOut, a: usize, t: usize) -> f32 {
+        let (i, j) = (self.od_at[a], self.od_at[t]);
+        if i == u32::MAX || j == u32::MAX { 0.0 } else { sub.od[i as usize * self.od_st.len() + j as usize] }
     }
 }
 
@@ -537,7 +562,7 @@ impl DemandApi {
         let (walk_home_zone, walk_work_zone) = gr.walk_trips_by_zone(&z);
         let walk_all = walk_home_zone.iter().sum();
         let (home_k, work_k) = zone_trip_factors(&city, &z, &gr, gravity_from_pack);
-        Ok(DemandApi { city, z, gr, base, walk_all, walk_home_zone, walk_work_zone, home_k, work_k, svc: None, sz: None, want: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], open_ms: now_ms() - t0, complex_in: vec![], same: 0, layout_same: false, reusable: false })
+        Ok(DemandApi { city, z, gr, base, walk_all, walk_home_zone, walk_work_zone, home_k, work_k, svc: None, sz: None, want: vec![], od_st: vec![], od_at: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], open_ms: now_ms() - t0, complex_in: vec![], same: 0, layout_same: false, reusable: false })
     }
 
     /// The station complex of each station of the networks `set_network` is given from now on
@@ -604,11 +629,23 @@ impl DemandApi {
             self.fare_km.clear();
             self.sz = None;
             self.want.clear();
+            self.od_st.clear();
+            self.od_at.clear();
             if ns > 0 && nl > 0 {
                 let net = Self::period_net(&svc, 0);
                 let acc = build_access(&self.city, &net, &self.base);
                 let sz = build_subzones(&self.city, &self.z, &acc, &net, &self.base);
                 self.want = egress_stations(&sz, svc.st_x.len());
+                self.od_at = vec![u32::MAX; svc.st_x.len()];
+                for &a in &sz.acc_st {
+                    self.od_at[a as usize] = 0;
+                }
+                for (a, at) in self.od_at.iter_mut().enumerate() {
+                    if *at == 0 {
+                        *at = self.od_st.len() as u32;
+                        self.od_st.push(a as u32);
+                    }
+                }
                 self.sz = Some(sz);
             }
         }
@@ -665,6 +702,8 @@ impl DemandApi {
         self.svc = None;
         self.sz = None;
         self.want.clear();
+        self.od_st.clear();
+        self.od_at.clear();
         clear_skim_cache();
         now_ms() - t0
     }
@@ -1017,7 +1056,7 @@ impl DemandApi {
         for q in 0..PERIODS {
             let Some(st) = self.period(q) else { continue };
             let sub = &st.sub;
-            if sub.acc_home.len() != sz.acc_st.len() || sub.od.len() != s * s {
+            if sub.acc_home.len() != sz.acc_st.len() || sub.od.len() != self.od_st.len() * self.od_st.len() {
                 continue;
             }
             dep.iter_mut().for_each(|v| *v = 0.0);
@@ -1043,10 +1082,10 @@ impl DemandApi {
                     // over the subzones arriving at t; and where its work riders live
                     let zu = sz.zone[u] as usize;
                     if arr[t] > 0.0 {
-                        to_zone[zu] += sub.od[a * s + t] * sub.acc_work[k] / arr[t] * f;
+                        to_zone[zu] += self.sub_od(sub, a, t) * sub.acc_work[k] / arr[t] * f;
                     }
                     if dep[t] > 0.0 {
-                        from_zone[zu] += sub.od[t * s + a] * sub.acc_home[k] / dep[t] * f;
+                        from_zone[zu] += self.sub_od(sub, t, a) * sub.acc_home[k] / dep[t] * f;
                     }
                 }
             }
@@ -1130,7 +1169,7 @@ impl DemandApi {
         for p in 0..PERIODS {
             let Some(st) = self.period(p) else { continue };
             let sub = &st.sub;
-            if sub.acc_home.len() != sz.acc_st.len() || sub.od.len() != s * s {
+            if sub.acc_home.len() != sz.acc_st.len() || sub.od.len() != self.od_st.len() * self.od_st.len() {
                 continue;
             }
             let (near_rail, near_lost) = if end == 0 { (&sub.rail_home, &sub.walk_lost_home) } else { (&sub.rail_work, &sub.walk_lost_work) };
@@ -1164,13 +1203,15 @@ impl DemandApi {
                 }
                 if end == 0 {
                     let f = q[a] / dep[a];
-                    for (o, &x) in far_st.iter_mut().zip(&sub.od[a * s..(a + 1) * s]) {
-                        *o += f * x;
+                    let k = self.od_st.len();
+                    let i = self.od_at[a] as usize;
+                    for (&t, &x) in self.od_st.iter().zip(&sub.od[i * k..(i + 1) * k]) {
+                        far_st[t as usize] += f * x;
                     }
                 } else {
                     let f = q[a] / arr[a];
                     for (b, o) in far_st.iter_mut().enumerate() {
-                        *o += f * sub.od[b * s + a];
+                        *o += f * self.sub_od(sub, b, a);
                     }
                 }
             }
@@ -1563,7 +1604,7 @@ mod tests {
         assert_eq!(l.rn_board, want.rn_board);
         assert_eq!(l.rn_alight, want.rn_alight);
         assert_eq!(l.entry, want.entry);
-        assert_eq!(sub.od, mo.od);
+        assert_eq!(sub.od, api.compact_od(&mo.od, s));
         assert!(rail > 0.0);
         clear_skim_cache();
     }

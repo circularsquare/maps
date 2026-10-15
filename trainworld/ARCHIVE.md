@@ -1,5 +1,7 @@
 # Archive
 
+- T-398 [P2] Lower a demand worker's memory peak (T-361 item 2). Done 2026-10-15: natively on the real save a worker's peak 353 to 256 MB, steady 281 to 222; nine cities 698 to 458; outputs identical to the byte, times unchanged. notes/T-398.md.
+
 - T-415 [P3] A count edit at one level no longer moves other levels' figures. Done 2026-10-15: the fleet settle loop steps only levels outside tolerance, so the New York save's first high-level edit lands in 11.5 s instead of 20.8. notes/T-415.md.
 
 - T-416 [P2] Markers at loose ends and draggable points. Done 2026-10-15: round markers on every loose end with the track or station tool, square ones on draggable blueprint points with the select tool (`map/endMarkers.ts`); the existing node snap does the rest.

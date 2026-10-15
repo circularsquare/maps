@@ -36,7 +36,11 @@ unsafe impl GlobalAlloc for Counting {
     unsafe fn realloc(&self, p: *mut u8, l: Layout, new: usize) -> *mut u8 {
         let q = System.realloc(p, l, new);
         if !q.is_null() {
-            if new > l.size() {
+            if q != p {
+                // a move holds both blocks for the copy
+                grow(new);
+                CUR.fetch_sub(l.size(), Relaxed);
+            } else if new > l.size() {
                 grow(new - l.size());
             } else {
                 CUR.fetch_sub(l.size() - new, Relaxed);

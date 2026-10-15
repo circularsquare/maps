@@ -10,7 +10,6 @@ use super::{
     pack,
 };
 use crate::track::params::PERIOD_HOURS;
-use std::collections::HashMap;
 use wasm_bindgen::prelude::*;
 
 const K: usize = 16;
@@ -119,27 +118,63 @@ impl Sampler<'_> {
     }
 }
 
-/// A multiply-rotate hasher for `set_network`'s pair index (T-172): its keys are one u64 packed
-/// from the purpose and two subzones, so the default SipHash's guard against crafted keys only
-/// costs time. Pairs are numbered in first-seen order, so the hasher changes no result.
-#[derive(Default)]
-struct FastHasher(u64);
-impl std::hash::Hasher for FastHasher {
-    fn write(&mut self, bytes: &[u8]) {
-        for &b in bytes {
-            self.write_u64(b as u64);
+/// `set_network`'s index of the pairs by purpose and subzones (T-398): open addressing over pair
+/// numbers, each key read back from its pair, so a slot is 4 bytes; sized from the last network's
+/// pair count. Pairs are numbered in first-seen order, so the table changes no result.
+struct PairIndex {
+    slots: Vec<u32>,
+    len: usize,
+}
+
+impl PairIndex {
+    fn with_capacity(n: usize) -> PairIndex {
+        PairIndex { slots: vec![NONE; (n * 4 / 3 + 1).next_power_of_two().max(1 << 12)], len: 0 }
+    }
+    fn key(kind: u32, u: u32, v: u32) -> u64 {
+        (kind as u64) << 58 | (u as u64) << 29 | v as u64
+    }
+    #[inline]
+    fn start(&self, key: u64) -> usize {
+        let h = key.wrapping_mul(0x9e37_79b9_7f4a_7c15);
+        (h ^ h >> 32) as usize & (self.slots.len() - 1)
+    }
+    /// The number of the pair (kind, u, v), pushing it onto `pairs` if it is new.
+    #[inline]
+    fn find_or_push(&mut self, pairs: &mut Vec<Pair>, kind: u32, u: u32, v: u32) -> u32 {
+        if 4 * (self.len + 1) > 3 * self.slots.len() {
+            self.grow(pairs);
+        }
+        let key = Self::key(kind, u, v);
+        let mask = self.slots.len() - 1;
+        let mut i = self.start(key);
+        loop {
+            let at = self.slots[i];
+            if at == NONE {
+                pairs.push(Pair { u, v, kind, trips: 0.0, walk: 0.0, distance: 0.0 });
+                let n = (pairs.len() - 1) as u32;
+                self.slots[i] = n;
+                self.len += 1;
+                return n;
+            }
+            let q = &pairs[at as usize];
+            if q.u == u && q.v == v && q.kind == kind {
+                return at;
+            }
+            i = (i + 1) & mask;
         }
     }
-    fn write_u64(&mut self, x: u64) {
-        self.0 = (self.0.rotate_left(5) ^ x).wrapping_mul(0x517c_c1b7_2722_0a95);
-    }
-    fn finish(&self) -> u64 {
-        // hashbrown takes buckets from the low bits and tags from the top ones: fold the high
-        // bits of the product down
-        self.0 ^ (self.0 >> 29)
+    fn grow(&mut self, pairs: &[Pair]) {
+        self.slots = vec![NONE; 2 * self.slots.len()];
+        let mask = self.slots.len() - 1;
+        for (n, q) in pairs.iter().enumerate() {
+            let mut i = self.start(Self::key(q.kind, q.u, q.v));
+            while self.slots[i] != NONE {
+                i = (i + 1) & mask;
+            }
+            self.slots[i] = n as u32;
+        }
     }
 }
-type FastHash = std::hash::BuildHasherDefault<FastHasher>;
 
 /// exp(-d / decay) between two zone centres by their grid offset (T-172). Zones of one square
 /// (the same zone, or zones a region border splits, T-162) are 0.52 of a zone apart.
@@ -990,7 +1025,7 @@ fn local_share(d: f32) -> f32 {
 struct Pair {
     u: u32,
     v: u32,
-    kind: usize,
+    kind: u32,
     trips: f32,
     walk: f32,
     distance: f32,
@@ -1105,7 +1140,7 @@ impl EverydayApi {
     }
     /// Join destination samples `r` to the subzone pairs they fall in (for `set_network`).
     #[inline(never)]
-    fn index_edges(&mut self, r: std::ops::Range<usize>, index: &mut HashMap<u64, u32, FastHash>) {
+    fn index_edges(&mut self, r: std::ops::Range<usize>, index: &mut PairIndex) {
         for k in r {
             let Some((kind, c, d)) = self.ends(k) else {
                 continue;
@@ -1119,12 +1154,10 @@ impl EverydayApi {
             }
             let distance = self.distance(c, d);
             let (w, pw) = self.weight(kind, c, d, distance);
-            let key = (kind as u64) << 58 | (u as u64) << 29 | v as u64;
-            let pairs = &mut self.pairs;
-            let i = *index.entry(key).or_insert_with(|| {
-                pairs.push(Pair { u, v, kind, trips: 0.0, walk: 0.0, distance: 0.0 });
-                (pairs.len() - 1) as u32
-            });
+            let i = index.find_or_push(&mut self.pairs, kind as u32, u, v);
+            if self.edge_pair.is_empty() {
+                self.edge_pair.resize(self.destinations.len(), NONE);
+            }
             self.edge_pair[k] = i;
             let pair = &mut self.pairs[i as usize];
             pair.trips += w;
@@ -1260,11 +1293,11 @@ impl EverydayApi {
             let ride_m = p.ride_min_km * 1000.0;
             let density = self.engine.z.density();
             for (i, pair) in self.pairs.iter().enumerate() {
-                if pair.kind != od_kind {
+                if pair.kind as usize != od_kind {
                     if od_used {
                         flush(&mut od, od_kind, &mut parts);
                     }
-                    od_kind = pair.kind;
+                    od_kind = pair.kind as usize;
                     od_used = false;
                 }
                 // the home end: its walks, or on a trip of `ride_min_km` or more its walks and
@@ -1314,9 +1347,9 @@ impl EverydayApi {
                     let pr = (1.0 - pair.walk) / (1.0 + fast_exp(-(p.beta * (road - rail) + p.asc_rail)));
                     probability[i][direction] = pr;
                     let share = if direction == 0 {
-                        OUTWARD[pair.kind][q]
+                        OUTWARD[pair.kind as usize][q]
                     } else {
-                        RETURN[pair.kind][q]
+                        RETURN[pair.kind as usize][q]
                     };
                     let trips = pair.trips * share * pr / sum;
                     od_used = true;
@@ -1357,8 +1390,8 @@ impl EverydayApi {
         }
         for (i, pair) in self.pairs.iter().enumerate() {
             let r = pair.trips as f64
-                * (OUTWARD[pair.kind][q] as f64 * probability[i][0] as f64
-                    + RETURN[pair.kind][q] as f64 * probability[i][1] as f64);
+                * (OUTWARD[pair.kind as usize][q] as f64 * probability[i][0] as f64
+                    + RETURN[pair.kind as usize][q] as f64 * probability[i][1] as f64);
             rail += r;
         }
         (trips, rail, walk.max(0.0))
@@ -1598,12 +1631,16 @@ impl EverydayApi {
         if self.engine.layout_same {
             return Ok(now_ms() - t);
         }
+        // T-398: the pair list keeps its room for the next network; the samples' pairs are
+        // written in place, and only once a sample has a pair (none read as `NONE`)
+        let last = self.pairs.len();
         self.pairs.clear();
-        self.edge_pair = vec![NONE; self.destinations.len()];
+        self.edge_pair.clear();
         if self.engine.sz.is_none() {
             return Ok(now_ms() - t);
         }
-        let mut index: HashMap<u64, u32, FastHash> = HashMap::default();
+        // about one pair in eight samples on New York's first network
+        let mut index = PairIndex::with_capacity(if last > 0 { last } else { self.destinations.len() / 8 });
         for r in chunks(self.destinations.len()) {
             self.index_edges(r, &mut index);
         }
@@ -1819,8 +1856,8 @@ impl EverydayApi {
         }
         for (i, pair) in self.pairs.iter().enumerate() {
             let pr = st.probability[i];
-            out[3 * pair.kind + 1] += pair.trips as f64
-                * (OUTWARD[pair.kind][q] as f64 * pr[0] as f64 + RETURN[pair.kind][q] as f64 * pr[1] as f64);
+            out[3 * pair.kind as usize + 1] += pair.trips as f64
+                * (OUTWARD[pair.kind as usize][q] as f64 * pr[0] as f64 + RETURN[pair.kind as usize][q] as f64 * pr[1] as f64);
         }
         out
     }

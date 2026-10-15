@@ -1514,18 +1514,69 @@ pub struct Skims {
     /// Each destination's slot in the arrays below, `NONE` if it was not searched.
     pub slot: Vec<u32>,
     /// Per searched destination (by slot), kept apart so adding one never moves the rest:
-    /// the best next node towards it for route nodes (N), the accepted departures an hour per
-    /// boarding route node (N - S; boarding flow splits by these frequencies, so a rider takes
-    /// the first useful train), and the search's settle order, nearest node first (as many as
-    /// were reached).
-    pub next: Vec<Vec<u32>>,
-    pub board_tph: Vec<Vec<f32>>,
-    pub order: Vec<Vec<u32>>,
+    /// the best next node towards it for route nodes (N), which boarding route nodes' departures
+    /// are accepted (a bit per route node; an accepted one's departures an hour are its
+    /// `Graph::rn_tph`, and boarding flow splits by them, so a rider takes the first useful
+    /// train), and the search's settle order, nearest node first (as many as were reached).
+    /// Node ids are u16 below 65,535 nodes (T-398: the tables are most of a worker's peak).
+    pub next: Vec<NodeIds>,
+    pub board: Vec<Box<[u64]>>,
+    pub order: Vec<NodeIds>,
+}
+
+/// Node ids, as small as the graph allows (`NONE` is the type's largest value).
+#[derive(Clone)]
+pub enum NodeIds {
+    Short(Box<[u16]>),
+    Long(Box<[u32]>),
+}
+
+impl NodeIds {
+    fn of(v: &[u32], n: usize) -> NodeIds {
+        if n < u16::MAX as usize {
+            NodeIds::Short(v.iter().map(|&x| if x == NONE { u16::MAX } else { x as u16 }).collect())
+        } else {
+            NodeIds::Long(v.into())
+        }
+    }
+    pub fn to_vec(&self) -> Vec<u32> {
+        match self {
+            NodeIds::Short(v) => v.iter().map(|&x| if x == u16::MAX { NONE } else { x as u32 }).collect(),
+            NodeIds::Long(v) => v.to_vec(),
+        }
+    }
+}
+
+/// A node id as an index (`NodeIds`); an absent one is at least the node count.
+trait Id: Copy {
+    fn ix(self) -> usize;
+}
+impl Id for u16 {
+    #[inline(always)]
+    fn ix(self) -> usize {
+        self as usize
+    }
+}
+impl Id for u32 {
+    #[inline(always)]
+    fn ix(self) -> usize {
+        self as usize
+    }
+}
+
+/// Departures an hour accepted at boarding route node `r` towards a destination (`Skims::board`).
+#[inline(always)]
+fn accepted(bits: &[u64], g: &Graph, r: usize) -> f32 {
+    if bits[r >> 6] >> (r & 63) & 1 == 1 { g.rn_tph[r] } else { 0.0 }
 }
 
 impl Skims {
     pub fn empty(g: &Graph) -> Skims {
-        Skims { s: g.n_st, n: g.n, r: vec![f32::INFINITY; g.n_st * g.n_st], slot: vec![NONE; g.n_st], next: vec![], board_tph: vec![], order: vec![] }
+        Skims { s: g.n_st, n: g.n, r: vec![f32::INFINITY; g.n_st * g.n_st], slot: vec![NONE; g.n_st], next: vec![], board: vec![], order: vec![] }
+    }
+    /// The accepted departures an hour per boarding route node towards the destination in `slot`.
+    pub fn board_tph(&self, g: &Graph, slot: usize) -> Vec<f32> {
+        (0..g.n - g.n_st).map(|r| accepted(&self.board[slot], g, r)).collect()
     }
 }
 
@@ -1557,15 +1608,17 @@ pub fn skims_extend(sk: &mut Skims, g: &Graph, p: &Params, want: &[bool]) {
     let mut frequency = vec![0f32; s];
     let mut weighted = vec![0f32; s];
     let mut heap: BinaryHeap<Reverse<(u32, u32)>> = BinaryHeap::with_capacity(n);
+    let mut next = vec![NONE; n];
+    let mut order: Vec<u32> = Vec::with_capacity(n);
     for &dst in &todo {
         sk.slot[dst] = sk.next.len() as u32;
         dist.fill(f32::INFINITY);
         done.fill(false);
         frequency.fill(0.0);
         weighted.fill(0.0);
-        let mut next = vec![NONE; n];
-        let mut board = vec![0f32; nr];
-        let mut order: Vec<u32> = Vec::with_capacity(n);
+        next.fill(NONE);
+        order.clear();
+        let mut board = vec![0u64; nr.div_ceil(64)].into_boxed_slice();
         dist[dst] = 0.0;
         heap.push(Reverse((0f32.to_bits(), dst as u32)));
         while let Some(Reverse((_, v))) = heap.pop() {
@@ -1588,7 +1641,7 @@ pub fn skims_extend(sk: &mut Skims, g: &Graph, p: &Params, want: &[bool]) {
                     if cost >= dist[from] { continue; }
                     frequency[from] = sum;
                     weighted[from] += f * d;
-                    board[v - s] = f;
+                    board[(v - s) >> 6] |= 1 << ((v - s) & 63);
                     cost
                 } else { d + g.adj_cost[e] };
                 if nd < dist[from] {
@@ -1598,10 +1651,9 @@ pub fn skims_extend(sk: &mut Skims, g: &Graph, p: &Params, want: &[bool]) {
                 }
             }
         }
-        order.shrink_to_fit();
-        sk.next.push(next);
-        sk.board_tph.push(board);
-        sk.order.push(order);
+        sk.next.push(NodeIds::of(&next, n));
+        sk.board.push(board);
+        sk.order.push(NodeIds::of(&order, n));
         for src in 0..s {
             // The first boarding is not a transfer; the trip's base fare is added later.
             sk.r[src * s + dst] = if src == dst { 0.0 } else { dist[src] - p.transfer_min };
@@ -1659,9 +1711,9 @@ impl SkimKey {
     }
 }
 
-/// Skims tables a thread keeps (`with_skims`). Each holds stations² route costs plus about 12
-/// bytes a node per searched destination: on the real New York save 45 MB for New York's table,
-/// 3 MB for New Haven's (T-405).
+/// Skims tables a thread keeps (`with_skims`). Each holds stations² route costs plus about 4
+/// bytes a node per searched destination (u16 ids): on the real New York save 18 MB for New
+/// York's table (T-398).
 const SKIM_TABLES: usize = 2;
 
 thread_local! {
@@ -2229,25 +2281,52 @@ fn assign_inner(g: &Graph, sk: &Skims, od: &[f32], mut xf: Option<(&XferIndex, &
         let slot = sk.slot[dst] as usize;
         debug_assert!(slot != NONE as usize, "flow towards station {dst}, which was not searched");
         if slot == NONE as usize { continue; }
-        let next = &sk.next[slot][..];
-        let board = &sk.board_tph[slot][..];
-        let order = &sk.order[slot][..];
+        let bits = &sk.board[slot][..];
         if counting {
             head.fill(NONE);
             rec.clear();
         }
+        let mut w = DestWalk { g, s, n, dst, bits, flow: &mut flow, l: &mut l, head: &mut head, rec: &mut rec, use_k: &mut use_k, xf: xf.as_mut().map(|(ix, x)| (*ix, &mut **x)) };
+        match (&sk.next[slot], &sk.order[slot]) {
+            (NodeIds::Short(next), NodeIds::Short(order)) => w.run(next, order),
+            (NodeIds::Long(next), NodeIds::Long(order)) => w.run(next, order),
+            _ => unreachable!("a destination's ids in two widths"),
+        }
+    }
+    l
+}
+
+/// One destination's part of `assign_inner`: its flows walked back along the settle order.
+struct DestWalk<'a> {
+    g: &'a Graph,
+    s: usize,
+    n: usize,
+    dst: usize,
+    bits: &'a [u64],
+    flow: &'a mut [f32],
+    l: &'a mut Loads,
+    head: &'a mut [u32],
+    rec: &'a mut Vec<(u32, f32, u32)>,
+    use_k: &'a mut Vec<(u32, f32)>,
+    xf: Option<(&'a XferIndex, &'a mut [f32])>,
+}
+
+impl DestWalk<'_> {
+    #[inline(always)]
+    fn run<I: Id>(&mut self, next: &[I], order: &[I]) {
+        let DestWalk { g, s, n, dst, bits, ref mut flow, ref mut l, ref mut head, ref mut rec, ref mut use_k, ref mut xf } = *self;
         for &v in order.iter().skip(1).rev() {
-            let v = v as usize;
+            let v = v.ix();
             let f = flow[v];
             if f == 0.0 { continue; }
             if v < s {
                 let edges = g.adj_off[v] as usize..g.adj_off[v + 1] as usize;
-                let sum: f32 = edges.clone().map(|e| board[g.adj_to[e] as usize - s]).sum();
+                let sum: f32 = edges.clone().map(|e| accepted(bits, g, g.adj_to[e] as usize - s)).sum();
                 if sum == 0.0 { continue; }
                 l.board[v] += f;
                 for e in edges.clone() {
                     let to = g.adj_to[e] as usize;
-                    let share = f * board[to - s] / sum;
+                    let share = f * accepted(bits, g, to - s) / sum;
                     flow[to] += share;
                     l.rn_board[to - s] += share;
                 }
@@ -2256,7 +2335,7 @@ fn assign_inner(g: &Graph, sk: &Skims, od: &[f32], mut xf: Option<(&XferIndex, &
                     // (only the useful ones: about half go the wrong way for this destination)
                     use_k.clear();
                     for (k, e) in edges.clone().enumerate() {
-                        let b = board[g.adj_to[e] as usize - s];
+                        let b = accepted(bits, g, g.adj_to[e] as usize - s);
                         if b > 0.0 {
                             use_k.push((k as u32, b / sum));
                         }
@@ -2265,14 +2344,14 @@ fn assign_inner(g: &Graph, sk: &Skims, od: &[f32], mut xf: Option<(&XferIndex, &
                     let mut i = head[v];
                     while i != NONE {
                         let (at, fin, nx) = rec[i as usize];
-                        for &(k, share) in &use_k {
+                        for &(k, share) in use_k.iter() {
                             x[(at + k) as usize] += fin * share;
                         }
                         i = nx;
                     }
                 }
             } else {
-                let to = next[v] as usize;
+                let to = next[v].ix();
                 if to >= n { continue; }
                 flow[to] += f;
                 if to >= s {
@@ -2293,7 +2372,6 @@ fn assign_inner(g: &Graph, sk: &Skims, od: &[f32], mut xf: Option<(&XferIndex, &
             }
         }
     }
-    l
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -2569,7 +2647,7 @@ mod tests {
             let g = build_graph(&common_test_net(&[&[0, 1], &[0, 1]], &[6.0, frequency], &[2.0, slow]), &p);
             let sk = skims(&g, &p);
             assert!((sk.r[1] - 7.0).abs() < 1e-5);
-            assert_eq!(sk.board_tph[1][4], 0.0);
+            assert_eq!(sk.board_tph(&g, 1)[4], 0.0);
         }
     }
 
