@@ -657,6 +657,9 @@ function marketFigures(parts: IntercityApi[], q: number) {
     parts: of((p) => p.part_summary(q), (i) => i % 2 === 1),
     corridors: of((p) => p.corridor_summary(q), (i) => i % 4 === 3),
     commuteCorridors: of((p) => p.commute_corridors(q), (i) => i % 2 === 1),
+    // T-378: the same in every part
+    corridorModes: parts.length ? parts[0].corridor_modes() : new Float32Array(0),
+    elsewhere: parts.length ? Array.from(parts[0].elsewhere(q)) : [],
   };
 }
 /** A `DemandApi.trip` answer's route nodes (trip.ts `PAIR_LEN`, `LEG_LEN`) from its cluster's
@@ -915,7 +918,7 @@ async function run() {
           if (e) for (let k = 0; k < Math.min(e.length, 3 * (local - 1)); k++) v[3 + k] = e[k];
           return [id, v];
         })) as Record<CityId, number[]>;
-        const msg = { version: job.version, period: q, summary, citySummary, cityParts, intercitySummary, intercityParts: market ? market.parts : [], corridors: market ? market.corridors : [], commuteCorridors: market ? market.commuteCorridors : [], seg, board, alight, loadOfCrush, parts, ms, setupMs, memBytes: wasm_memory_bytes() };
+        const msg = { version: job.version, period: q, summary, citySummary, cityParts, intercitySummary, intercityParts: market ? market.parts : [], corridors: market ? market.corridors : [], commuteCorridors: market ? market.commuteCorridors : [], corridorModes: market?.corridorModes, elsewhere: market?.elsewhere, seg, board, alight, loadOfCrush, parts, ms, setupMs, memBytes: wasm_memory_bytes() };
         return { msg, transfer: [seg.buffer, board.buffer, alight.buffer, loadOfCrush.buffer, parts.seg.buffer, parts.board.buffer, parts.alight.buffer] };
       };
       for (const c of early) {

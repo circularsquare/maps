@@ -1,34 +1,111 @@
 // Longer trips (T-118, SPEC 8): the market's non-commute trips of a bubble selection or of a
-// selected station, by place, all modes and by train. The same numbers are drawn on the map as
-// bubbles (map/intercityView.ts), one per far zone; the swatch is the map's train blue.
+// selected station, by place, all modes and by train, car and plane (T-378). The same numbers are
+// drawn on the map as bubbles (map/intercityView.ts), one per far zone.
 
+import type { ComponentChildren } from "preact";
 import { demandView, intercityPlaceName, type PlaceFlows } from "../../game/demand";
 import { count } from "../../game/format";
 import { MODE_COLOURS } from "../../game/palette";
 import { intercityPick, intercityStationView } from "../../map/intercityView";
-import { Row } from "../widgets";
+import { Icon, Row } from "../widgets";
 
-/** The train colour of the map's bubbles. */
-const dot = () => <i class="mk" style={{ background: MODE_COLOURS.train }} />;
+const MODES = [
+  { key: "rail", icon: Icon.train, colour: MODE_COLOURS.train, by: "by train" },
+  { key: "car", icon: Icon.ride, colour: MODE_COLOURS.drive, by: "by car" },
+  { key: "air", icon: Icon.plane, colour: "var(--muted)", by: "by plane" },
+] as const;
+type Split = { all: number; rail: number; car: number; air: number };
+
+const exact = (n: number) => Math.round(n).toLocaleString("en");
+const pct = (n: number, of: number) => {
+  const p = of > 0 ? (100 * n) / of : 0;
+  return n >= 0.5 && p < 0.5 ? "<1%" : Math.round(p) + "%";
+};
+
+/** The column heads: all modes, then each mode's icon with its hover. */
+export function ModeHead({ what }: { what: string }) {
+  return (
+    <li class="muted small">
+      <span class="grow" />
+      <span class="val w-num" data-tip={`${what} a day, every mode`}>All</span>
+      {MODES.map((m) => (
+        <span class="val w-mode" data-tip={`${what} ${m.by}`}>
+          <span class="mode-icon" style={{ color: m.colour }}>{m.icon()}</span>
+        </span>
+      ))}
+    </li>
+  );
+}
+
+/** A row's numbers: all modes, then by train, car and plane, each with its hover. */
+export function ModeCells({ s, what }: { s: Split; what: string }) {
+  return (
+    <>
+      <span class="val w-num" data-tip={`${exact(s.all)} ${what} a day`}>{count(s.all)}</span>
+      {MODES.map((m) => (
+        <span class="val w-mode" data-tip={`${exact(s[m.key])} ${m.by}, ${pct(s[m.key], s.all)} of ${exact(s.all)}`}>{count(s[m.key])}</span>
+      ))}
+    </>
+  );
+}
+
+/** Trips with places that have no zone: all modes alone (their modes are not modelled). */
+export function ElsewhereRow({ n, label = "Elsewhere" }: { n: number; label?: ComponentChildren }) {
+  if (!(n >= 0.5)) return null;
+  return (
+    <li>
+      <span class="grow" data-tip="Places outside every zone of the game; how these trips travel is not modelled">{label}</span>
+      <span class="val w-num" data-tip={`${exact(n)} trips a day`}>{count(n)}</span>
+      {MODES.map(() => <span class="val w-mode" />)}
+    </li>
+  );
+}
+
+/** Rows biggest first (`rows` already are), with the Elsewhere row at its place among them. */
+export function bySize(rows: [number, ComponentChildren][], elsewhere: number, row: ComponentChildren): ComponentChildren[] {
+  const at = rows.findIndex(([n]) => n < elsewhere);
+  const out = rows.map(([, r]) => r);
+  out.splice(at < 0 ? out.length : at, 0, row);
+  return out;
+}
 
 function Direction({ title, verb, flows, own, railOnly }: { title: string; verb: string; flows: PlaceFlows; own: number; railOnly: boolean }) {
+  if (railOnly) {
+    return (
+      <>
+        <ul class="rows">
+          <li class="b">
+            <span class="grow">{title}</span>
+            <span class="val w-num">{count(flows.rail)}</span>
+          </li>
+        </ul>
+        <ul class="rows sub-rows">
+          {flows.places.map((p) => (
+            <li>
+              <span class="grow">{verb} {intercityPlaceName(p.place, own)}</span>
+              <span class="val w-num">{count(p.rail)}</span>
+            </li>
+          ))}
+        </ul>
+      </>
+    );
+  }
+  const total = { ...flows, all: flows.all + flows.elsewhere };
   return (
     <>
       <ul class="rows">
         <li class="b">
           <span class="grow">{title}</span>
-          {!railOnly && <span class="val w-num">{count(flows.all)}</span>}
-          <span class="val w-num">{count(flows.rail)}</span>
+          <ModeCells s={total} what="trips" />
         </li>
       </ul>
       <ul class="rows sub-rows">
-        {flows.places.map((p) => (
+        {bySize(flows.places.map((p) => [p.all, (
           <li>
-            <span class="grow">{verb} {intercityPlaceName(p.place, own)}</span>
-            {!railOnly && <span class="val w-num">{count(p.all)}</span>}
-            <span class="val w-num">{count(p.rail)}</span>
+            <span class="grow" data-tip={`${verb} ${intercityPlaceName(p.place, own)}`}>{verb} {intercityPlaceName(p.place, own)}</span>
+            <ModeCells s={p} what="trips" />
           </li>
-        ))}
+        )]), flows.elsewhere, <ElsewhereRow n={flows.elsewhere} />)}
       </ul>
     </>
   );
@@ -63,11 +140,7 @@ export function SelectionLongerTrips() {
     <>
       <Head tip={`Visits, shopping and business, not commutes, for the areas the selection lies in. The map's bubbles are their ${home ? "destinations" : "origins"} outside this metropolitan area, on a separate scale from local trips.`} />
       <ul class="rows">
-        <li class="muted small">
-          <span class="grow" />
-          <span class="val w-num">All</span>
-          <span class="val w-num">{dot()} Train</span>
-        </li>
+        <ModeHead what="Trips" />
       </ul>
       {home ? <>{out}{back}</> : <>{back}{out}</>}
     </>
@@ -96,4 +169,3 @@ export function StationLongerTrips({ id, scope = id }: { id: string; scope?: str
     </>
   );
 }
-

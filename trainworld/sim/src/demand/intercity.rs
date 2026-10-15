@@ -8,7 +8,9 @@
 //! place under `near_km`), so any pair of places has its trips with no pack open. A market here is
 //! a *composition*: the world rows plus the packs of the places a worker has open; pairs are built
 //! only between 6 km zones some station of its network serves, on one track component, on one
-//! landmass (no car between landmasses: those trips stay fixed until air, T-378).
+//! landmass or with air between them. T-378: air is a third mode between far places each with an
+//! airport, by place (the same whatever the network); it is not built, has no capacity and loads
+//! nothing.
 //!
 //! A pack in the old single-pack form (`sites` with a market column: the Northeast's
 //! data/packs/intercity.json, the joint commute gravity's input, and the tests' fixtures) opens as
@@ -214,6 +216,12 @@ struct ZoneIn {
     commute_work: Vec<u32>,
     #[serde(default)]
     commute_trips: Vec<f32>,
+    /// T-378: the airports its people fly from (longitude, latitude), and for each the places it
+    /// has direct flights to (pipeline/market_zones.py)
+    #[serde(default)]
+    airports: Vec<[f64; 2]>,
+    #[serde(default)]
+    air_direct: Vec<Vec<u32>>,
 }
 fn one() -> f64 {
     1.
@@ -244,6 +252,13 @@ pub struct Row {
     /// commuters a day from here to each other place
     #[serde(default)]
     commute: Vec<(u32, f64)>,
+    /// T-378: per airport its people fly from, the drive there in minutes (people-weighted over
+    /// its zones) and the places it flies to directly; and a car's parking here (perceived
+    /// minutes, attraction-weighted)
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    air: Vec<(f64, Vec<u32>)>,
+    #[serde(default)]
+    park: f64,
 }
 /// The world: the output frame (positions the app reads), the rule, the place count and the rows.
 #[derive(Deserialize, Clone)]
@@ -283,15 +298,29 @@ struct Place {
     zones: u32,
     off: u32,
     zone: String,
+    air: Vec<(f64, Vec<u32>)>,
+    park: f64,
 }
 /// Per ordered pair of places: the border factor, the tail's income factor, near or not, and
-/// the distance between their centres.
+/// the distance between their centres; T-378: whether a car can make the trip, the share of the
+/// trips not by rail that fly, and the weight of every mode but rail against the reference
+/// (`refm`: the car's minutes, or with no car the plane's).
 #[derive(Clone, Copy, Default)]
 struct PairRule {
     b: f64,
     rel: f64,
     near: bool,
     km: f64,
+    car: bool,
+    air: f32,
+    rest: f32,
+    refm: f32,
+}
+impl PairRule {
+    /// A pair the solve may build: a car or a plane to compete with.
+    fn has_alt(&self) -> bool {
+        self.car || self.air > 0.
+    }
 }
 struct Zone {
     /// centre in the output frame, and on the unit sphere (zeros in a plane pack)
@@ -311,6 +340,8 @@ struct Zone {
     /// parking for a car arriving here, perceived minutes (its sites' `site_park`, jobs-weighted)
     park: f32,
     gid: u32,
+    /// departures a day, to anywhere (T-378: those to places with no zone are what is left)
+    dep: f64,
 }
 /// One place's sites, in its pack's frame: the access search and the rides work in its plane.
 struct Group {
@@ -354,14 +385,19 @@ struct Market {
     corridor_trips: Vec<f64>,
     daily: f64,
     leaving: f64,
+    /// each place's departures a day to places with no zone
+    leaving_by: Vec<f64>,
     place_pairs: usize,
 }
 
+/// `drive` is the reference alternative's perceived minutes (the car's, or with no car the
+/// plane's) and `rest` the weight of every mode but rail against it (T-378).
 struct Pair {
     a: usize,
     b: usize,
     trips: f64,
     drive: f32,
+    rest: f32,
     corridor: usize,
 }
 /// T-276: a commute between two zones some station serves: its index in `commutes`, and the
@@ -451,6 +487,19 @@ const LONG_OCCUPANCY: f32 = 2.;
 /// T-276: a longer trip's car as perceived minutes over `d` km to a zone where parking costs `park`.
 fn car_min(d: f32, park: f32) -> f32 {
     drive_min(d) + (d * ROAD_DETOUR * CAR_USD_PER_KM * FARE_MIN_PER_USD + park) / LONG_OCCUPANCY
+}
+/// T-378 (notes/T-362.md "Modes"; the terminal time and the fare's base set on the rail-air share
+/// curve, notes/T-378.md): air door to door, minutes at the airports, cruise speed and the
+/// flight's fixed minutes on the great circle, the extra minutes with no direct flight, the fare.
+const AIR_TERMINAL_MIN: f64 = 60.;
+const AIR_KMH: f64 = 750.;
+const AIR_FIXED_MIN: f64 = 30.;
+const AIR_NO_DIRECT_MIN: f64 = 60.;
+const AIR_FARE_USD: f64 = 50.;
+const AIR_USD_PER_KM: f64 = 0.09;
+/// A flight's perceived minutes over `km` with `access` minutes of driving at the two ends.
+fn air_min(km: f64, access: f64, direct: bool) -> f64 {
+    access + AIR_TERMINAL_MIN + km / AIR_KMH * 60. + AIR_FIXED_MIN + if direct { 0. } else { AIR_NO_DIRECT_MIN } + (AIR_FARE_USD + AIR_USD_PER_KM * km) * FARE_MIN_PER_USD as f64
 }
 
 impl Market {
@@ -749,7 +798,7 @@ fn build(b: Built) -> Result<Market, String> {
         pack_first_site[place] = cell_zone.len();
         let f = frames[zi_];
         for k in 0..nz {
-            mz.push(Zone { x: 0., y: 0., u: [0.; 3], pop: 0., w_attr: 0., jobs: 0., g: 0., t: 0., a: 0., ta: 0., place, park: 0., gid: places[place].off + k as u32 });
+            mz.push(Zone { x: 0., y: 0., u: [0.; 3], pop: 0., w_attr: 0., jobs: 0., g: 0., t: 0., a: 0., ta: 0., place, park: 0., gid: places[place].off + k as u32, dep: 0. });
         }
         let s_inc = zin.inc.min(1.).powf(rule.eps);
         let total_pop: f64 = zin.sites.iter().map(|s| s[2]).sum();
@@ -776,7 +825,9 @@ fn build(b: Built) -> Result<Market, String> {
             let u = (zin.cell_pop.get(si).copied().unwrap_or(0.).max(1.) / rule.u_ref_people).max(1e-12);
             zz.ta += attr * k_attr * u.powf(rule.th);
             site_u.push(u);
-            site_mult.push((s_inc, s_inc * u.powf(rule.tho) / rule.u_mean_us));
+            let (sg, st) = (s_inc, s_inc * u.powf(rule.tho) / rule.u_mean_us);
+            site_mult.push((sg, st));
+            zz.dep += pop * (rule.r * sg + rule.rt * st);
             if let Some(&p) = zin.site_park.get(si) {
                 if !p.is_finite() || p < 0. {
                     return Err("invalid site parking".into());
@@ -828,12 +879,35 @@ fn build(b: Built) -> Result<Market, String> {
                 }
             }
         }
+        // T-378: the drive from each zone's centre to each airport, people-weighted
+        if !zin.air_direct.is_empty() && zin.air_direct.len() != zin.airports.len() || zin.airports.iter().flatten().any(|v| !v.is_finite()) {
+            return Err(format!("place {place}: invalid airports"));
+        }
+        let zs = &mz[first..first + nz];
+        let w: f64 = zs.iter().map(|z| z.pop).sum();
+        let air: Vec<(f64, Vec<u32>)> = if !ground {
+            vec![]
+        } else {
+            zin.airports
+                .iter()
+                .enumerate()
+                .map(|(k, a)| {
+                    let u = unit(a[0], a[1]);
+                    let s: f64 = zs.iter().map(|z| z.pop * drive_min(chord_km(&z.u, &u) as f32) as f64).sum();
+                    (if w > 0. { s / w } else { drive_min(0.) as f64 }, zin.air_direct.get(k).cloned().unwrap_or_default())
+                })
+                .collect()
+        };
+        let aw: f64 = zs.iter().map(|z| z.w_attr).sum();
+        let park = if aw > 0. { zs.iter().map(|z| z.park as f64 * z.w_attr).sum::<f64>() / aw } else { 0. };
         let pl = &mut places[place];
         pl.open = true;
         pl.country = country_id(&zin.country);
         pl.inc = zin.inc.min(1.);
         pl.road = zin.road;
         pl.zone = zin.zone.clone();
+        pl.air = air;
+        pl.park = park;
     }
     for (g, c) in group_cities.into_iter().enumerate() {
         let (kz, kplace) = ride_zones(&c);
@@ -886,6 +960,8 @@ fn build(b: Built) -> Result<Market, String> {
                 pl.pop = r.pop;
                 pl.dep = r.dep;
                 pl.zone = r.zone.clone();
+                pl.air = r.air.iter().filter(|a| a.0.is_finite() && a.0 >= 0.).cloned().collect();
+                pl.park = if r.park.is_finite() { r.park.max(0.) } else { 0. };
                 for &(j, t) in &r.near {
                     if (j as usize) < np && t.is_finite() && t >= 0. {
                         near.insert((r.place.min(j as usize) as u32, r.place.max(j as usize) as u32), t);
@@ -948,6 +1024,7 @@ fn build(b: Built) -> Result<Market, String> {
     }
     // ---- per pair of places
     let mut pp = vec![PairRule::default(); np * np];
+    let beta = market_params().beta;
     for i in 0..np {
         for j in 0..np {
             let (p, q) = (&places[i], &places[j]);
@@ -960,7 +1037,34 @@ fn build(b: Built) -> Result<Market, String> {
             };
             let b = if p.country == q.country { 1. } else { rule.border * p.inc.powf(rule.border_eps) };
             let rel = if p.inc > 0. { (q.inc / p.inc).min(1.).powf(rule.eps_t) } else { 1. };
-            pp[i * np + j] = PairRule { b, rel, near: km < near_km, km };
+            let near = km < near_km;
+            // T-378: a car within a landmass; a plane between far places each with an airport;
+            // both by place, the same whoever builds what (very far pairs coarse, T-362)
+            let car = p.road == q.road;
+            // the best pair of airports: the drives to them, and a direct flight or a change
+            let flight = if i == j || near {
+                None
+            } else {
+                let mut best: Option<f64> = None;
+                for (x, xd) in &p.air {
+                    for (y, yd) in &q.air {
+                        let direct = xd.contains(&(j as u32)) || yd.contains(&(i as u32));
+                        let v = air_min(km, x + y, direct);
+                        best = Some(best.map_or(v, |b| b.min(v)));
+                    }
+                }
+                best.map(|v| v as f32)
+            };
+            let car_m = car_min(km as f32, (0.5 * (p.park + q.park)) as f32);
+            let (air, rest, refm) = match (car, flight) {
+                (true, Some(f)) => {
+                    let w = (-beta * (f - car_m)).clamp(-80., 80.).exp();
+                    (w / (1. + w), 1. + w, car_m)
+                }
+                (false, Some(f)) => (1., 1., f),
+                _ => (0., 1., car_m),
+            };
+            pp[i * np + j] = PairRule { b, rel, near, km, car, air, rest, refm };
         }
     }
     let corridors: Vec<(usize, usize)> = (0..np).flat_map(|a| (a..np).map(move |b| (a, b))).collect();
@@ -995,6 +1099,7 @@ fn build(b: Built) -> Result<Market, String> {
         corridor_trips: vec![],
         daily: 0.,
         leaving: 0.,
+        leaving_by: vec![],
         place_pairs: 0,
     };
     for (c, z) in m.zones.iter().enumerate() {
@@ -1110,7 +1215,8 @@ fn build(b: Built) -> Result<Market, String> {
         }
     }
     m.daily = ct.iter().sum();
-    m.leaving = (0..np).filter(|&p| m.places[p].has).map(|p| (m.places[p].dep - to_places[p]).max(0.)).sum();
+    m.leaving_by = (0..np).map(|p| if m.places[p].has { (m.places[p].dep - to_places[p]).max(0.) } else { 0. }).collect();
+    m.leaving = m.leaving_by.iter().sum();
     m.corridor_trips = ct;
     m.place_pairs = pairs;
     // ---- each 600 m square's site
@@ -1232,6 +1338,8 @@ pub fn world_rows(header: &str) -> Result<Vec<Row>, String> {
             zones: pl.zones,
             near,
             commute: commute.into_iter().collect(),
+            air: pl.air.clone(),
+            park: pl.park,
         });
     }
     Ok(out)
@@ -1424,7 +1532,7 @@ impl IntercityApi {
                     terms.push((sa * s + sb, v));
                 }
             }
-            let fraction = sum / (1. + sum);
+            let fraction = sum / (pair.rest as f64 + sum);
             let r = trips * fraction;
             rail += r;
             cor[pair.corridor] += r;
@@ -1501,8 +1609,8 @@ impl IntercityApi {
     fn per(&self, q: usize) -> Option<&Period> {
         self.per.get(q).and_then(|v| v.as_ref())
     }
-    /// The pairs between the `served` zones (ascending) joined by track, on one landmass, in the
-    /// whole market's order (T-174, T-409, T-377). `comp` is `served_comp` for them.
+    /// The pairs between the `served` zones (ascending) joined by track, with a car or a plane to
+    /// compete with, in the whole market's order (T-174, T-409, T-377). `comp` is `served_comp`.
     fn set_served(&mut self, served: Vec<usize>, comp: Vec<Vec<u32>>) {
         let m = self.m.clone();
         let joined = |i: usize, k: usize| comp[i].iter().any(|c| comp[k].binary_search(c).is_ok());
@@ -1512,8 +1620,10 @@ impl IntercityApi {
             let za = &m.zones[a];
             for (k, &b) in served.iter().enumerate().skip(i + 1) {
                 let zb = &m.zones[b];
-                // T-377: no car between landmasses; those trips are fixed until air (T-378)
-                if m.places[za.place].road != m.places[zb.place].road || !joined(i, k) {
+                // T-377, T-378: with neither a car nor a plane (near places on two landmasses)
+                // the trips stay fixed
+                let r = *m.pr(za.place, zb.place);
+                if !r.has_alt() || !joined(i, k) {
                     continue;
                 }
                 let trips = m.eachway(za, zb);
@@ -1522,8 +1632,9 @@ impl IntercityApi {
                 }
                 let d = m.zone_km(za, zb) as f32;
                 let corridor = m.corridor(za.place, zb.place);
-                pairs.push(Pair { a, b, trips, drive: car_min(d, zb.park), corridor });
-                pairs.push(Pair { a: b, b: a, trips, drive: car_min(d, za.park), corridor });
+                let drive = |park: f32| if r.car { car_min(d, park) } else { r.refm };
+                pairs.push(Pair { a, b, trips, drive: drive(zb.park), rest: r.rest, corridor });
+                pairs.push(Pair { a: b, b: a, trips, drive: drive(za.park), rest: r.rest, corridor });
             }
         }
         pairs.shrink_to_fit();
@@ -1922,6 +2033,19 @@ impl IntercityApi {
             self.m.corridors.iter().enumerate().flat_map(|(i, &(a, b))| [a as f64, b as f64, self.m.corridor_trips[i] * SHARES[q] as f64, s.corridors[i]]).collect()
         })
     }
+    /// T-378: per corridor, the shares of its longer trips not by rail that fly and that drive
+    /// (neither: near places on two landmasses). The same whatever the network.
+    pub fn corridor_modes(&self) -> Vec<f32> {
+        self.m.corridors.iter().flat_map(|&(a, b)| {
+            let r = self.m.pr(a, b);
+            [r.air, if r.car { 1. - r.air } else { 0. }]
+        }).collect()
+    }
+    /// T-378: per place, its longer trips in period `q` with places that have no zone, each way.
+    pub fn elsewhere(&self, q: usize) -> Vec<f64> {
+        let s = SHARES.get(q).copied().unwrap_or(0.) as f64;
+        self.m.leaving_by.iter().map(|v| v * s).collect()
+    }
     /// T-276: per corridor, the commutes between zones in period `q`: legs and rail legs.
     pub fn commute_corridors(&self, q: usize) -> Vec<f64> {
         let legs = 0.5 * (TO_WORK[q] + TO_HOME[q]) as f64;
@@ -1976,8 +2100,9 @@ impl IntercityApi {
     /// place at the far end (trips starting in the selection that end there: all modes, by rail,
     /// all-mode trips times far x and y; then the same for trips ending in the selection), then
     /// per global 6 km zone (`zone_count`) all and rail of starts and of ends, every zone's x, y
-    /// and place, then the commutes' tail (4 per place, 4 per zone). Places with no pack open
-    /// here are counted by place only.
+    /// and place, then the commutes' tail (4 per place, 4 per zone), then (T-378) the trips with
+    /// places that have no zone, starting and ending. Places with no pack open here are counted by
+    /// place only.
     pub fn selection_flows(&self, market: u32, xy: &[f32], share: &[f32]) -> Vec<f64> {
         self.selection_flows_day(market, xy, share, WEEKDAY as u32)
     }
@@ -2002,7 +2127,8 @@ impl IntercityApi {
         let day = day as usize;
         let (np, ng) = (m.places.len(), m.n_gid);
         let head = 1 + 8 * np;
-        let mut out = vec![0.; head + 7 * ng + 4 * np + 4 * ng];
+        let mut out = vec![0.; head + 7 * ng + 4 * np + 4 * ng + 2];
+        let away = out.len() - 2;
         m.write_zone_xy(&mut out[head + 4 * ng..head + 7 * ng]);
         if xy.len() != 2 * share.len() || market as usize >= np {
             return out;
@@ -2033,10 +2159,15 @@ impl IntercityApi {
         const NONE: u32 = u32::MAX;
         let closed: Vec<usize> = (0..np).filter(|&p| m.places[p].has && !m.places[p].open).collect();
         let mut rows: HashMap<usize, (Vec<(u32, u32, u32, f64)>, Vec<(usize, f64)>)> = HashMap::new();
+        // T-378: each zone's trips each way with places that have no zone: its departures less
+        // its trips with every place, as `Market::leaving_by` is a place's
+        let mut away_z: HashMap<usize, f64> = HashMap::new();
         for z in (0..nz).filter(|&z| pop_w[z] > 0. || attr_w[z] > 0.) {
             let at = |a: usize, b: usize| self.pair_index.get(&(a as u32, b as u32)).copied().unwrap_or(NONE);
-            let row = m.zone_row(z).into_iter().map(|(b, trips)| (b as u32, at(z, b), at(b, z), trips)).collect();
-            let far = closed.iter().map(|&p| (p, m.zone_place_eachway(&m.zones[z], p))).filter(|(_, t)| *t > 0.).collect();
+            let row: Vec<_> = m.zone_row(z).into_iter().map(|(b, trips)| (b as u32, at(z, b), at(b, z), trips)).collect();
+            let far: Vec<_> = closed.iter().map(|&p| (p, m.zone_place_eachway(&m.zones[z], p))).filter(|(_, t)| *t > 0.).collect();
+            let known = row.iter().map(|r| r.3).sum::<f64>() + far.iter().map(|f| f.1).sum::<f64>();
+            away_z.insert(z, (m.zones[z].dep - known).max(0.));
             rows.insert(z, (row, far));
         }
         let rail = |per: Option<&Period>, i: u32| match per {
@@ -2050,6 +2181,7 @@ impl IntercityApi {
             for (dir, weights) in [(0usize, &pop_w), (1usize, &attr_w)] {
                 for (z, &w) in weights.iter().enumerate().filter(|(_, w)| **w > 0.) {
                     let (row, far) = &rows[&z];
+                    out[away + dir] += w * away_z[&z] * sh;
                     for &(b, out_i, in_i, trips) in row {
                         let zb = &m.zones[b as usize];
                         let all = w * trips * sh;
@@ -2115,8 +2247,9 @@ impl IntercityApi {
         let mut out = self.selection_flows_day(market, xy, share, day);
         let (np, ng) = (self.m.places.len(), self.m.n_gid);
         let (head, tail) = (1 + 8 * np, 1 + 8 * np + 7 * ng);
+        let away = out.len() - 2;
         let rail = |i: usize| {
-            if i == 0 {
+            if i == 0 || i >= away {
                 false
             } else if i < head {
                 (i - 1) % 4 == 1

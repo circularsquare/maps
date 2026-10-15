@@ -8,8 +8,8 @@ one station), a stretch of track, a junction, a train, bubbles, a city or zone, 
 selected leaves it blank, with no text. An empty click on the map or Escape clears the selection.
 One component per kind in `ui/inspector/` (`others.tsx` holds station, train, track, junction and
 cell or zone). The track and junction inspectors are in [ui-building.md](ui-building.md) and
-[track-and-service.md](track-and-service.md) 6.2; a bubble selection's and a city's in
-[ui-demand-views.md](ui-demand-views.md).
+[track-and-service.md](track-and-service.md) 6.2; a bubble selection's and a city's (their
+inter-region trips by train, car and plane) in [ui-demand-views.md](ui-demand-views.md).
 
 ## Today, not a forecast
 

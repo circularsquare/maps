@@ -800,9 +800,15 @@ against 3.4-7.3 s in 7 of 10 without (`?perfOff=stagger`, same build).
 **The world market** (T-377, [regional.md](regional.md) 5.1, docs/zones.md 4-5). Longer trips
 follow T-376's rule: ground and tail departures, each over its own normaliser against the world
 field, both stored per 6 km zone in the place's pack, so the departures to places with no zone
-(`info()[4]`) need no outside world. The car's perceived minutes add 15 cents a road km and the
-destination zone's parking (`site_park`: the local rule at each site's 2 km zone, job-weighted),
-both halved for two occupants (`car_min`). Commutes between zones: in the home place's pack,
+(`info()[4]`, by place `elsewhere(q)`, a selection's in its last two numbers) need no outside
+world. The car's perceived minutes add 15 cents a road km and the destination zone's parking
+(`site_park`: the local rule at each site's 2 km zone, job-weighted), both halved for two occupants
+(`car_min`). T-378: the plane (`air_min`, [regional.md](regional.md) 5.1) is priced per pair of
+places when the market is built (`PairRule`: car or not, the plane's share of the trips not by
+rail, the weight of every mode but rail against the reference, the reference's minutes with no
+car); a served pair's rail share is `sum / (rest + sum)` against its zones' car time (or the
+plane's, with no car), and the split of the rest by plane and car is the pair's
+(`corridor_modes`), which the client applies to every figure it shows. Commutes between zones: in the home place's pack,
 `commute_home` (its 6 km zone), `commute_place` and `commute_work` (the work place and its zone)
 and `commute_trips`, from `bin/joint_gravity.rs` by way of `data/packs/intercity.json`
 (pipeline/market_zones.py); at opening merged by zone pair, at `set_network` kept between served

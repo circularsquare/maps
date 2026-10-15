@@ -199,7 +199,7 @@ fn intercity_selection_places_conserve_and_rail_is_within_all() {
     let nz = a.zone_count();
     assert_eq!(nz, a.m.zones.len());
     assert!(none[1..head + 4 * nz].iter().all(|v| *v == 0.));
-    assert_eq!(all.len(), head + 7 * nz + 4 * MARKETS + 4 * nz);
+    assert_eq!(all.len(), head + 7 * nz + 4 * MARKETS + 4 * nz + 2);
     for d in 0..2 {
         let (mut tot, mut rail, mut sx) = (0., 0., 0.);
         for z in 0..nz {
@@ -297,7 +297,7 @@ fn expanded_markets_route_boston_and_washington_and_keep_flow_layouts() {
     solve_all(&mut a);
     let nz = a.zone_count();
     let selected = a.selection_flows(3, &[180000., 0.], &[1.]);
-    assert_eq!(selected.len(), 41 + 7 * nz + 20 + 4 * nz);
+    assert_eq!(selected.len(), 41 + 7 * nz + 20 + 4 * nz + 2);
     assert_eq!(selected[0], 1.);
     assert!(selected[1 + 8 * 4 + 1] > 0., "Boston to Washington is served");
     let washington = a.selection_flows(4, &[240000., 0.], &[1.]);
@@ -591,6 +591,100 @@ fn places_not_open_answer_by_place() {
     // the place's own trips are the same as with every pack open
     assert!((f[1] - s[1]).abs() < 1e-9 * f[1]);
 }
+/// T-378: a place's pack with airports (longitude, latitude), each flying direct to `direct`.
+fn with_air(pack: &str, airports: &[(f64, f64)], direct: &[u32], road: Option<i64>) -> String {
+    let mut v: serde_json::Value = serde_json::from_str(pack).unwrap();
+    v["airports"] = serde_json::json!(airports.iter().map(|a| [a.0, a.1]).collect::<Vec<_>>());
+    v["air_direct"] = serde_json::json!(airports.iter().map(|_| direct).collect::<Vec<_>>());
+    if let Some(r) = road {
+        v["road"] = r.into();
+    }
+    v.to_string()
+}
+/// Airports at places 0, 2 and 3 (place 1 has none), 0 and 2 flying direct; place 2 on another
+/// landmass when `island`.
+fn air_packs(island: bool) -> Vec<String> {
+    let p = world_packs();
+    vec![
+        with_air(&p[0], &[(0.1, 50.)], &[2], None),
+        p[1].clone(),
+        with_air(&p[2], &[(11.1, 50.02)], &[], island.then_some(5)),
+        with_air(&p[3], &[(0., 49.05)], &[], None),
+    ]
+}
+/// A line between place 0's and place 2's centres taking `hours`, every 10 minutes, with fares
+/// over 900 km.
+fn far_line(a: &mut IntercityApi, hours: f32) {
+    let s = hours * 3600.;
+    let times = [s, 0., s, 0., s, 0., 0., s, 0., s, 0., s];
+    a.set_network_ll(&[0., 50., 11., 50.], &[2], &[0, 1], &times, &[6., 6., 6.], &[8.]).unwrap();
+    a.set_fares(2., 0.1, &[900., 0., 0., 900.]).unwrap();
+}
+#[test]
+fn air_flies_far_pairs_by_place_and_rail_takes_its_share_by_the_curve() {
+    let packs = air_packs(false);
+    let rows = rows_json(&packs);
+    let parsed: Vec<serde_json::Value> = serde_json::from_str(&rows).unwrap();
+    assert!(parsed[0]["air"][0][0].as_f64().unwrap() > 15. && parsed[1].get("air").is_none(), "{rows}");
+    let mut a = IntercityApi::new(&composition(&packs, Some(&rows))).unwrap();
+    let m = a.m.clone();
+    // far with airports at both ends: some fly, the rest drive; near or with no airport: none fly
+    let r02 = *m.pr(0, 2);
+    assert!(r02.car && r02.air > 0.5 && r02.air < 1., "{}", r02.air);
+    assert!((r02.rest - 1. / (1. - r02.air)).abs() < 1e-3 * r02.rest);
+    assert_eq!((m.pr(0, 1).air, m.pr(1, 2).air, m.pr(0, 3).air), (0., 0., 0.));
+    assert!(!m.pr(0, 3).has_alt(), "near and across the sea: no car, no plane");
+    // the corridors' split is the pairs'
+    let modes = a.corridor_modes();
+    let c = m.corridor(0, 2);
+    assert_eq!((modes[2 * c], modes[2 * c + 1]), (r02.air, 1. - r02.air));
+    let c = m.corridor(0, 3);
+    assert_eq!((modes[2 * c], modes[2 * c + 1]), (0., 0.));
+    // the same trips over the same distance with no direct flight fly less
+    let nod = air_packs(false).into_iter().enumerate().map(|(i, p)| if i == 0 { with_air(&p, &[(0.1, 50.)], &[], None) } else { p }).collect::<Vec<_>>();
+    let b = IntercityApi::new(&composition(&nod, Some(&rows_json(&nod)))).unwrap();
+    assert!(b.m.pr(0, 2).air < r02.air);
+    // rail against air on a far pair: about 3 hours on the train wins most, 6 hours little
+    let ratio = |a: &mut IntercityApi, hours: f32| {
+        far_line(a, hours);
+        assert!(a.solve(0));
+        let (za, zb) = (a.m.places[0].off as usize, a.m.places[2].off as usize);
+        let (za, zb) = (a.m.comp_of_gid[za] as usize, a.m.comp_of_gid[zb] as usize);
+        let i = a.pair_index[&(za as u32, zb as u32)] as usize;
+        let rail = a.per(0).unwrap().pair_rail[i] as f64 / (a.pairs[i].trips * SHARES[0] as f64);
+        let air = (1. - rail) * a.m.pr(0, 2).air as f64;
+        rail / (rail + air)
+    };
+    let (fast, slow) = (ratio(&mut a, 3.), ratio(&mut a, 6.));
+    assert!(fast > 0.6 && fast < 0.97 && slow < 0.3 && slow > 0.001, "rail of rail and air: 3 h {fast}, 6 h {slow}");
+    // across the sea the far pair is all air, and still served by rail where track joins it
+    let packs = air_packs(true);
+    let rows = rows_json(&packs);
+    let mut s = IntercityApi::new(&composition(&packs, Some(&rows))).unwrap();
+    let r = *s.m.pr(0, 2);
+    assert!(!r.car && r.air == 1. && r.rest == 1. && r.has_alt());
+    // rail against air does not depend on the car (one logit: the plane's weight against the
+    // car's cancels), up to the car's zone against place distance
+    let island = ratio(&mut s, 3.);
+    assert!((island - fast).abs() < 0.03, "{island} {fast}");
+}
+#[test]
+fn trips_with_places_that_have_no_zone_add_up() {
+    let packs = air_packs(false);
+    let rows = rows_json(&packs);
+    let mut a = IntercityApi::new(&composition(&packs, Some(&rows))).unwrap();
+    a.set_network_ll(&[], &[], &[], &[], &[], &[]).unwrap();
+    solve_all(&mut a);
+    let by_q: f64 = (0..PERIODS).map(|q| a.elsewhere(q)[2]).sum();
+    assert!(by_q > 0. && (by_q - a.m.leaving_by[2]).abs() < 1e-6 * by_q, "{by_q} {}", a.m.leaving_by[2]);
+    // every site of place 2 selected: its trips with nowhere in the market are its row's
+    let g = &a.m.groups.iter().find(|g| a.m.zones[a.m.cell_zone[g.lo]].place == 2).unwrap();
+    let xy: Vec<f32> = (0..g.city.len()).flat_map(|i| [g.city.x[i], g.city.y[i]]).collect();
+    let v = a.selection_flows(2, &xy, &vec![1.; g.city.len()]);
+    let away = v[v.len() - 2];
+    assert!((away - a.m.leaving_by[2]).abs() < 1e-6 * away, "{away} {}", a.m.leaving_by[2]);
+    assert!(v[v.len() - 1] > 0.);
+}
 /// T-377: the worker's way: packs held once, composed; all modes from the composition with no
 /// solve, rail from the parts.
 #[test]
@@ -751,6 +845,41 @@ fn legacy_northeast_pack_opens() {
     eprintln!("{:.0} ms, info {:?}, {} sites, {} zones", now_ms() - t, a.info(), zones.len(), first.len());
     assert_eq!(keys.len() as f64, a.info()[0]);
     assert!(a.info()[2] > 0. && a.m.commuters > 0.);
+}
+/// T-378: rail against the plane on real far pairs, one fast line between two stations (no feeders:
+/// walks and rides only), fares $1.50 + 10 cents a rail km, free flow in the busiest period.
+/// `cargo test --release --features demand real_far_lines_share_rail_with_air -- --ignored --nocapture`
+#[test]
+#[ignore]
+fn real_far_lines_share_rail_with_air() {
+    let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
+    for (a, b, sa, sb, km, hours) in [
+        ("lon", "par", (-0.1263, 51.5306), (2.3553, 48.8809), 492f32, [2.27f32, 3., 4.]),
+        ("nyc", "wdc", (-73.9935, 40.7506), (-77.0064, 38.8973), 362., [2.75, 3.5, 4.5]),
+    ] {
+        let mut api = IntercityApi::new(&real_world(root, Some(&[a, b]))).unwrap();
+        let (pa, pb) = (api.m.places.iter().position(|p| p.zone == a).unwrap(), api.m.places.iter().position(|p| p.zone == b).unwrap());
+        let c = api.m.corridor(pa, pb);
+        let (air, car) = (api.corridor_modes()[2 * c], api.corridor_modes()[2 * c + 1]);
+        for h in hours {
+            let s = h * 3600.;
+            let times = [s, 0., s, 0., s, 0., 0., s, 0., s, 0., s];
+            api.set_network_ll(&[sa.0, sa.1, sb.0, sb.1], &[2], &[0, 1], &times, &[2., 2., 2.], &[16.]).unwrap();
+            api.set_fares(1.5, 0.1, &[km, 0., 0., km]).unwrap();
+            assert!(api.solve(1));
+            let cs = api.corridor_summary(1);
+            let (trips, rail) = (cs[4 * c + 2], cs[4 * c + 3]);
+            let rest = trips - rail;
+            // the zone pair the line serves best: its stations' own zones
+            let per = api.per(1).unwrap();
+            let best = api.pairs.iter().enumerate().filter(|(_, p)| api.m.zones[p.a].place == pa && api.m.zones[p.b].place == pb).map(|(i, p)| per.pair_rail[i] as f64 / (p.trips * SHARES[1] as f64)).fold(0., f64::max);
+            eprintln!(
+                "{a} - {b}, {h} h on the train: {:.0} trips in the period, rail {:.1}%, car {:.1}%, plane {:.1}%, rail of rail and plane {:.0}%; best-served zone pair rail {:.0}%, of rail and plane {:.0}%",
+                trips, 100. * rail / trips, 100. * rest * car as f64 / trips, 100. * rest * air as f64 / trips, 100. * rail / (rail + rest * air as f64),
+                100. * best, 100. * best / (best + (1. - best) * air as f64)
+            );
+        }
+    }
 }
 /// The world composition as the app opens it: the registry's rows and the packs of `ids` (all
 /// that exist with None).

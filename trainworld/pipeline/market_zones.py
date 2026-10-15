@@ -1,6 +1,7 @@
 """T-377 (T-362 stage 3): each registered zone's part of the world market, and the registry's market rows.
 
     python pipeline/market_zones.py [id ...]     every registered zone, or only those named
+    python pipeline/market_zones.py --air        only every zone file's airports (T-378), then the rows
 
 Writes `data/packs/<id>.market.json` per zone (seconds each), then runs the sim crate's `market_pack`
 over every zone's file, which adds up each zone's registry row and the trips between zones whose
@@ -12,8 +13,10 @@ from data/packs/intercity.json, the sites the joint commute gravity names, in th
 other zone's in its own pack frame), each site's parking for an arriving car and the people of its
 H3 r5 cell (the long-haul tail's density, notes/T-376.md), its 6 km zones with their two normalisers
 against the world field (T-375: ground and tail, constants in pipeline/longhaul.json), and the
-commutes from it to other zones (the Northeast's, from the same intercity.json).
+commutes from it to other zones (the Northeast's, from the same intercity.json), and (T-378) the
+airports its people fly from with the zones each flies to directly.
 """
+import csv
 import json
 import math
 import os
@@ -38,6 +41,63 @@ RULE = json.loads((Path(__file__).parent / "longhaul.json").read_text(encoding="
 SITE_M, ZONE_M = 600, 6000
 # the local layer's parking (sim kernel `Params`: park_min, park_jobs_per_km2_per_min, park_cost_cap_min)
 PARK_MIN, PARK_JOBS_PER_KM2_PER_MIN, PARK_CAP_MIN = 3.0, 2500.0, 40.0
+# T-378: a zone's airports are OurAirports' large and medium ones with scheduled service within
+# AIR_RADIUS_KM of its centre carrying AIR_MIN_PAX passengers a year (the biggest AIR_MAX); a route
+# of DIRECT_MIN_PAX a year is a direct flight. Passengers and routes from the flights project's
+# FR24 file, read here only: its terms forbid passing the data on, so only these choices leave it
+# (without it: large airports, no direct flights).
+OURAIRPORTS_CSV = ROOT / "data/raw/t142b/ourairports-airports.csv"
+FLIGHTS = ROOT.parent / "flights/routes_fr24.json"
+AIR_RADIUS_KM, AIR_MIN_PAX, DIRECT_MIN_PAX, AIR_MAX = 150.0, 1e6, 5e4, 8
+AIR_SOURCE = "airports: OurAirports (public domain), chosen and flagged direct by FR24 passengers (maps/flights, offline, T-378)"
+
+
+def airports_by_zone(reg):
+    """Per registered zone id: its airports' [lon, lat], and for each the places it flies to directly."""
+    ports = []
+    with open(OURAIRPORTS_CSV, encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            if r["scheduled_service"] == "yes" and r["type"] in ("large_airport", "medium_airport") and r["iata_code"]:
+                ports.append((r["iata_code"], float(r["longitude_deg"]), float(r["latitude_deg"]), r["type"]))
+    pax, routes, fr = {}, {}, {}
+    if FLIGHTS.exists():
+        f = json.loads(FLIGHTS.read_text(encoding="utf-8"))
+        fr = {k: (v[0], v[1]) for k, v in f["airports"].items()}
+        for a, b, n, *_ in f["routes"]:
+            pax[a] = pax.get(a, 0) + n
+            pax[b] = pax.get(b, 0) + n
+            if n >= DIRECT_MIN_PAX:
+                routes.setdefault(a, set()).add(b)
+                routes.setdefault(b, set()).add(a)
+    fr_codes = list(fr)
+    fr_lon, fr_lat = np.array([fr[k][0] for k in fr_codes]), np.array([fr[k][1] for k in fr_codes])
+
+    def fr_of(p):
+        """The FR24 codes of an OurAirports airport: its own, or any within 5 km (FR24 keeps some
+        old codes: Berlin's BER is SXF)."""
+        if p[0] in pax or not fr_codes:
+            return {p[0]}
+        return {fr_codes[k] for k in np.nonzero(W.km(p[1], p[2], fr_lon, fr_lat) <= 5.0)[0]}
+    lon, lat = np.array([p[1] for p in ports]), np.array([p[2] for p in ports])
+    chosen = {}
+    for c in reg["cities"]:
+        if "place" not in c:
+            continue
+        d = W.km(c["center"][0], c["center"][1], lon, lat)
+        near = [(ports[k], fr_of(ports[k])) for k in np.nonzero(d <= AIR_RADIUS_KM)[0]]
+        size = lambda pc: sum(pax.get(x, 0) for x in pc[1])
+        near = [pc for pc in near if (size(pc) >= AIR_MIN_PAX if pax else pc[0][3] == "large_airport")]
+        near.sort(key=lambda pc: -size(pc))
+        chosen[c["id"]] = near[:AIR_MAX]
+    codes = {cid: set().union(*(pc[1] for pc in v)) for cid, v in chosen.items()}
+    place = {c["id"]: c["place"] for c in reg["cities"] if "place" in c}
+    out = {}
+    for cid, v in chosen.items():
+        flies = lambda pc: set().union(*(routes.get(x, set()) for x in pc[1]))
+        out[cid] = {"airports": [[round(p[1], 5), round(p[2], 5)] for p, _ in v],
+                    "air_direct": [sorted(place[o] for o, oc in codes.items() if o != cid and flies(pc) & oc) for pc in v],
+                    "air_codes": [p[0] for p, _ in v]}
+    return out
 
 
 class Field:
@@ -157,7 +217,7 @@ def zones_of(sites):
     return list(keys), zi, cx, cy
 
 
-def build(cid, reg, F, ne):
+def build(cid, reg, F, ne, air):
     city = next(c for c in reg["cities"] if c["id"] == cid)
     place = city["place"]
     lon0, lat0 = city["center"]
@@ -186,6 +246,8 @@ def build(cid, reg, F, ne):
            "cell_pop": [round(float(v)) for v in cell],
            "sources": ["the zone pack's cells (600 m squares)", "the world field (T-375: Kontur 2023, Natural Earth, World Bank GDP per head)",
                        "pipeline/longhaul.json (T-376)"]}
+    out.update(air.get(cid, {}))
+    out["sources"].append(AIR_SOURCE)
     if city.get("market", -1) >= 0 and len(ne.commutes[0]):
         h, w, t = ne.commutes
         mine = ne.market[h] == city["market"]
@@ -232,23 +294,44 @@ def assign_places(reg):
     reg["market"]["rule"]["min_trips"] = 0.01
 
 
+def write(path, out):
+    part = path.with_suffix(".json.part")
+    part.write_text(json.dumps(out, separators=(",", ":")), encoding="utf-8")
+    os.replace(part, path)
+
+
 def main(ids=None):
+    args = sys.argv[1:] if ids is None else ids
+    air_only = "--air" in args
     reg = json.loads(REG.read_text(encoding="utf-8"))
     assign_places(reg)
     REG.write_text(json.dumps(reg, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    ids = (sys.argv[1:] if ids is None else ids) or [c["id"] for c in reg["cities"]]
-    F = Field()
+    air = airports_by_zone(reg)
+    for cid, a in air.items():
+        print(f"{cid}: airports {' '.join(a['air_codes']) or 'none'}", flush=True)
+    if air_only:
+        # every zone's airports into its file as it stands (no other field changes)
+        for c in reg["cities"]:
+            path = PACKS / f"{c['id']}.market.json"
+            if c["id"] in air and path.exists():
+                out = json.loads(path.read_text(encoding="utf-8"))
+                out.update(air[c["id"]])
+                if AIR_SOURCE not in out.setdefault("sources", []):
+                    out["sources"].append(AIR_SOURCE)
+                write(path, out)
+        ids = []
+    else:
+        ids = [a for a in args if not a.startswith("--")] or [c["id"] for c in reg["cities"]]
+    F = Field() if ids else None
     ne = Northeast()
     for c in reg["cities"]:
         if c.get("market", -1) >= 0:
             place_of_market[c["market"]] = c["place"]
             zone_index[c["market"]] = zones_of(ne.sites[c["market"]])[1] if c["market"] in ne.sites else np.zeros(0, np.int64)
     for cid in ids:
-        out = build(cid, reg, F, ne)
+        out = build(cid, reg, F, ne, air)
         path = PACKS / f"{cid}.market.json"
-        part = path.with_suffix(".json.part")
-        part.write_text(json.dumps(out, separators=(",", ":")), encoding="utf-8")
-        os.replace(part, path)
+        write(path, out)
         print(f"{cid}: place {out['place']}, {out['country']}, income {out['inc']:.3f}, road {out['road']}, "
               f"{len(out['sites'])} sites, {len(out['zones'])} zones, {len(out.get('commute_trips', []))} commutes, "
               f"{path.stat().st_size / 1e6:.2f} MB", flush=True)

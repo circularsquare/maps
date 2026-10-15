@@ -171,9 +171,12 @@ away round it. The catchment counts commuters only.
 [T-118, T-120, T-135, T-136, T-139, T-222; the market in [regional.md](regional.md)]
 
 - A bubble selection's and a station's inspector have an "Inter-region trips" section. A selection
-  lists trips leaving its areas and trips arriving there, each by place with all modes and by
-  train; its own zone's row reads "Other New York places". A station lists rail riders starting
-  and ending there by place.
+  lists trips leaving its areas and trips arriving there, each by place with all modes, then by
+  train, car and plane [T-378] (column heads are the modes' icons, `Icon.train`, `Icon.ride`,
+  `Icon.plane` in `ui/widgets.tsx`; every number's hover gives the exact count and its share), then
+  an "Elsewhere" row for trips with places that have no zone (all modes only; counted in the
+  direction's total); its own zone's row reads "Other New York places". A station lists rail
+  riders starting and ending there by place.
 - On the map they are always drawn (no setting), except under a local purpose filter. A selection
   draws the far end of its own end (Homes: where the trips go; Destinations: where they come from);
   a station where its starting riders go [T-120]. Only zones other than the focused one are drawn;
@@ -182,8 +185,9 @@ away round it. The catchment counts commuters only.
   scale (the busiest covers 0.15 of a zone's area). At 9.5 and below they become one labelled bubble
   per other zone at its registry centre (the largest 19 px radius before the size slider), names and
   daily totals as labels that avoid each other and stay on screen. Area is total travellers with no
-  floor; colour is blue for train and red for the rest, mixed by share (a station's riders are all
-  blue). They lie under the local discs; hover names the place and the direction.
+  floor; colour is blue for train and red for the rest (car and plane), mixed by share (a station's
+  riders are all blue). They lie under the local discs; hover names the place and the direction
+  and gives the trips by train and, per place, by plane.
 - A selection survives a pan to another zone.
 
 ## Zoomed far out: one bubble per zone
@@ -200,7 +204,8 @@ bubbles stay instead. Toronto (`market: -1`) has none.
 
 A click on one selects the zone (a `city` selection, kept at any zoom): it is outlined, with one
 bubble per other zone for the regional trips between the two, on the same scale, and the city
-inspector (`ui/inspector/CityInspector.tsx`) lists its trips by place, all modes and by train, with
+inspector (`ui/inspector/CityInspector.tsx`) lists its trips by place, all modes and by train, car
+and plane as a selection's do, then "Elsewhere" (both directions, as every row), with
 a "Go to Philadelphia" button that moves the camera to its centre and clears the selection
 [T-220]. The overview catches up over a game day like the local bubbles; a selection's
 inter-region bubbles do not.

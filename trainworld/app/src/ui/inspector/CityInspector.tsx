@@ -1,31 +1,37 @@
 // A city picked on the map zoomed far out (T-186, SPEC 8): its longer trips to and from every
-// other place a day, all modes and by train, from the regional market's corridors. The map draws
+// other place a day, all modes and by train, car and plane (T-378), from the regional market's
+// corridors, and those with places that have no zone. The map draws
 // the city outlined and one bubble per other city (map/intercityView.ts). These numbers are the
 // current forecast; the map's bubbles catch up to them over a game day after a change (T-156).
 
 import { cityById } from "../../game/cities";
 import { intercityDemand, INTERCITY_PLACES } from "../../game/demand";
-import { count } from "../../game/format";
-import { BUBBLE_ALPHA, MODE_COLOURS, modeMix } from "../../game/palette";
+import { BUBBLE_ALPHA, modeMix } from "../../game/palette";
 import { purposeFilter } from "../../game/ui";
 import { goTo } from "../Search";
+import { bySize, ElsewhereRow, ModeCells, ModeHead } from "./LongerTrips";
 
 export function CityInspector({ id }: { id: string }) {
   const city = cityById(id);
   const market = intercityDemand.value;
   if (!city) return null;
-  const byPlace = new Map<number, { all: number; rail: number }>();
+  const byPlace = new Map<number, { all: number; rail: number; car: number; air: number }>();
   for (const c of market?.corridors ?? []) {
     if (c.from === c.to || (c.from !== city.place && c.to !== city.place)) continue;
     const other = c.from === city.place ? c.to : c.from;
-    const p = byPlace.get(other) ?? { all: 0, rail: 0 };
+    const p = byPlace.get(other) ?? { all: 0, rail: 0, car: 0, air: 0 };
     p.all += c.trips;
     p.rail += c.rail;
+    p.car += c.car ?? c.trips - c.rail;
+    p.air += c.air ?? 0;
     byPlace.set(other, p);
   }
   const places = [...byPlace].filter(([, p]) => p.all > 0).sort((a, b) => b[1].all - a[1].all);
-  const all = places.reduce((s, [, p]) => s + p.all, 0), rail = places.reduce((s, [, p]) => s + p.rail, 0);
-  const mix = modeMix(rail, 0, Math.max(0, all - rail));
+  const sum = (k: "all" | "rail" | "car" | "air") => places.reduce((s, [, p]) => s + p[k], 0);
+  // T-378: both ways, as the corridors count them
+  const elsewhere = 2 * (market?.elsewhere?.[city.place] ?? 0);
+  const total = { all: sum("all") + elsewhere, rail: sum("rail"), car: sum("car"), air: sum("air") };
+  const mix = modeMix(total.rail, 0, Math.max(0, sum("all") - total.rail));
   const filter = purposeFilter.value;
   const drawn = filter === "all";
   return (
@@ -40,25 +46,19 @@ export function CityInspector({ id }: { id: string }) {
       ) : (
         <>
           <ul class="rows">
-            <li class="muted small">
-              <span class="grow" />
-              <span class="val w-num">All</span>
-              <span class="val w-num"><i class="mk" style={{ background: MODE_COLOURS.train }} /> Train</span>
-            </li>
+            <ModeHead what="Trips" />
             <li class="b">
               <span class="grow">Trips a day</span>
-              <span class="val w-num">{count(all)}</span>
-              <span class="val w-num">{count(rail)}</span>
+              <ModeCells s={total} what="trips" />
             </li>
           </ul>
           <ul class="rows sub-rows">
-            {places.map(([place, p]) => (
+            {bySize(places.map(([place, p]) => [p.all, (
               <li key={place}>
                 <span class="grow">{INTERCITY_PLACES[place]}</span>
-                <span class="val w-num">{count(p.all)}</span>
-                <span class="val w-num">{count(p.rail)}</span>
+                <ModeCells s={p} what="trips" />
               </li>
-            ))}
+            )]), elsewhere, <ElsewhereRow n={elsewhere} />)}
           </ul>
           {!places.length && <p class="muted small">No inter-region trips are modelled here yet.</p>}
           {!drawn && <p class="muted small">Not drawn under this purpose filter.</p>}

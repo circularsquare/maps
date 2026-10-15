@@ -48,10 +48,19 @@ fn main() {
     let names = [("nyc", "phl"), ("nyc", "bos"), ("nyc", "wdc"), ("bos", "wdc"), ("wdc", "bal"), ("phl", "wdc"), ("nyc", "nhv"), ("nhv", "hfd"), ("bos", "pvd"), ("nyc", "tor"), ("lon", "nyc"), ("lon", "tor"), ("lon", "par"), ("par", "ber"), ("lon", "ber"), ("sha", "tyo"), ("mum", "lon"), ("nyc", "nyc"), ("lon", "lon")];
     let pairs: Vec<(usize, usize)> = names.iter().filter_map(|(a, b)| Some((place(a)?, place(b)?))).collect();
     let trips = intercity::place_trips(&full, &pairs, 80.).unwrap();
+    // T-378: each corridor's shares of its trips by plane and by car with no rail
+    let modes = api.corridor_modes();
+    let corridor = |a: usize, b: usize| {
+        let (a, b) = (a.min(b), a.max(b));
+        // corridors run (0, 0), (0, 1) .. (0, n - 1), (1, 1) ..
+        a * places - a * a.saturating_sub(1) / 2 + (b - a)
+    };
     let mut table = vec![];
-    for ((a, b), (all, over)) in names.iter().filter(|(a, b)| place(a).is_some() && place(b).is_some()).zip(&trips) {
-        println!("  {a} - {b}: {:.0} trips a day both ways, {:.0} of them zone to zone over 80 km", 2. * all, 2. * over);
-        table.push(json!({"a": a, "b": b, "both_ways": 2. * all, "over_80km": 2. * over}));
+    for (((a, b), (all, over)), &(pa, pb)) in names.iter().filter(|(a, b)| place(a).is_some() && place(b).is_some()).zip(&trips).zip(&pairs) {
+        let c = corridor(pa, pb);
+        let (air, car) = (modes[2 * c], modes[2 * c + 1]);
+        println!("  {a} - {b}: {:.0} trips a day both ways, {:.0} of them zone to zone over 80 km; with no rail {:.1}% fly, {:.1}% drive", 2. * all, 2. * over, 100. * air, 100. * car);
+        table.push(json!({"a": a, "b": b, "both_ways": 2. * all, "over_80km": 2. * over, "air": air, "car": car}));
     }
     let by_id: serde_json::Map<String, Value> = rows
         .iter()

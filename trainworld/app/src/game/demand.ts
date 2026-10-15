@@ -89,8 +89,10 @@ export function stationRidersFor(dv: DemandView | null, id: string, purpose: Pur
 }
 
 /** The regional layer (T-117, T-276): trips a day include the commutes between zones; each
- * corridor's trips and rail are both parts together, `commutes` and `commuteRail` the commute legs. */
-export interface IntercityDemand { version: number; round: number; tripsPerDay: number; railTripsPerDay: number; commuteTripsPerDay?: number; commuteRailPerDay?: number; corridors: {from: number; to: number; trips: number; rail: number; commutes?: number; commuteRail?: number}[] }
+ * corridor's trips and rail are both parts together, `commutes` and `commuteRail` the commute legs;
+ * T-378: `air` and `car` the rest by plane and by car, `elsewhere` each place's longer trips with
+ * places that have no zone, each way. */
+export interface IntercityDemand { version: number; round: number; tripsPerDay: number; railTripsPerDay: number; commuteTripsPerDay?: number; commuteRailPerDay?: number; corridors: {from: number; to: number; trips: number; rail: number; commutes?: number; commuteRail?: number; air?: number; car?: number}[]; elsewhere?: number[] }
 
 /** One kind of day's results (T-260, game/days.ts): the network's view, each city's, the market's.
  * Written together by workers/demandClient.ts. */
@@ -272,9 +274,11 @@ export function intercityPlaceName(place: number, own = -1): string {
 export interface PlaceTrips {
   /** index into INTERCITY_PLACES */
   place: number;
-  /** all modes, and by rail */
+  /** all modes, and by rail; T-378: by plane and by car (a station's: 0) */
   all: number;
   rail: number;
+  air: number;
+  car: number;
   /** where the trips' far ends are, mean position in the world frame (NaN with no trips) */
   x: number;
   y: number;
@@ -296,6 +300,10 @@ export interface ZoneTrips {
 export interface PlaceFlows {
   all: number;
   rail: number;
+  air: number;
+  car: number;
+  /** T-378: longer trips with places that have no zone (not in `all`) */
+  elsewhere: number;
   /** the places with trips, biggest (all modes) first */
   places: PlaceTrips[];
   /** the far zones with trips, biggest first; their sums equal the places' */

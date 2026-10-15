@@ -38,8 +38,9 @@ Generate **total** all-mode trips, then let the player's network earn rail's sha
   pairs under 0.01 trips a day each way are pruned. Distances are great circles [T-128]. Local
   outings taper over 40-80 km, so the two layers meet without a gap or double count.
 - **Registry rows**: each place's row (`marketRow`: its zones' sums, centre, country, income,
-  landmass, and its trips with every place under 250 km, every zone pair added up) gives any pair
-  of places its trips with no pack open; `bin/market_pack.rs` writes them from every place's pack.
+  landmass, parking, its airports' drive times and direct flights, and its trips with every place
+  under 250 km, every zone pair added up) gives any pair of places its trips and modes with no pack
+  open; `bin/market_pack.rs` writes them from every place's pack.
 - **Commutes between zones**: the cross-pack part of the joint commute gravity
   ([demand.md](demand.md) 4.4, [zones.md](zones.md) 4), spread from 2 km gravity zones to the
   market's zones and kept where at least one a day travels between two 6 km zones (each home zone's
@@ -47,21 +48,40 @@ Generate **total** all-mode trips, then let the player's network earn rail's sha
   to work, the return 2/18/58/16/6% on the same station pair reversed) and 0.30 of a weekday's at
   the weekend.
 - **What is solved**: pairs are built only between 6 km zones some station serves, whose stations
-  share a track component, on one landmass (T-375's, fixed links joined). Every other pair's trips
-  are fixed: counted in the totals, shown, never in the solve. The market's day and its corridors
-  (place pairs) come from the rows, the same in every part of it.
+  share a track component, with a car or a plane to compete with: on one landmass (T-375's, fixed
+  links joined), or far places that both have airports. Every other pair's trips are fixed: counted
+  in the totals, shown, never in the solve. The market's day and its corridors (place pairs) come
+  from the rows, the same in every part of it.
+- **Elsewhere**: a place's or a 6 km zone's departures less its trips with every place are its
+  trips with places that have no zone; shown, never solved, their modes not modelled.
 
-**Mode choice.** Inter-region trips compete with driving through a logit at 0.025 per perceived
-minute. The car takes 15 minutes plus 1.25 times the great-circle distance at 85 km/h, plus 15
-cents a road km and the local layer's parking at the destination, both split over two occupants,
-at 3 perceived minutes a dollar; no tolls (T-270). There is no car between landmasses: those
-trips stay fixed until air is a mode (T-378). Commutes between zones choose as local commutes
-do: 0.05 per perceived minute, the drive weighted 1.33 plus the work end's parking. Fares, service,
-transfers and shared crowding affect rail; the commutes' loads are the work purpose's [T-158].
-Inter-region trips' period shares are 20/35/25/15/5%; their weekend factor 1.58.
+**Mode choice.** Inter-region trips choose rail, car and plane in one logit at 0.025 per perceived
+minute, at 3 perceived minutes a dollar [T-378].
 
-Not modelled yet: air (T-378), coach, induced travel, routed drives between zones (T-279; routes
-inside packs are T-275's).
+- *Car*: 15 minutes plus 1.25 times the great-circle distance at 85 km/h, plus 15 cents a road km
+  and the destination's parking, both split over two occupants; no tolls (T-270). Only within a
+  landmass.
+- *Plane*: between places whose centres are at least 250 km apart (the far pairs) and that both
+  have airports. Door to door: the drive to an airport at each end (the car's drive time,
+  people-weighted over the place's zones), 60 minutes at the airports, the flight at 750 km/h on
+  the great circle between the places' centres plus 30 minutes, 60 more with no direct flight, and
+  a fare of $50 plus 9 cents a km; the best pair of the two places' airports. Not built by the
+  player, no capacity, not drawn.
+- *Rail*: the player's network. Fares, service, transfers and shared crowding affect it.
+
+The car's and the plane's costs are by place (the car's at the places' centres and their mean
+parking), so a pair's split of its trips not by rail between car and plane is the same whoever
+builds what, computed once, and kept (`corridor_modes`); the solve weighs every mode but rail
+against the zone pair's own car time with that split. A place's airports (`pipeline/market_zones.py`):
+OurAirports' large and medium airports with scheduled service within 150 km of its centre carrying
+at least 1M passengers a year, the biggest eight; a route of 50,000 passengers a year is a direct
+flight (both from the flights project's FR24 file, read offline only). Commutes between zones
+choose rail or car as local commutes do: 0.05 per perceived minute, the drive weighted 1.33 plus
+the work end's parking; their loads are the work purpose's [T-158]. Inter-region trips' period
+shares are 20/35/25/15/5%; their weekend factor 1.58.
+
+Not modelled yet: coach, ferries, the Channel crossing's price, induced travel, routed drives
+between zones (T-279; routes inside packs are T-275's).
 
 ## 5.2 Where a long-distance trip starts and ends
 

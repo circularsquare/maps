@@ -112,6 +112,10 @@ body.resizing, body.resizing * { user-select: none; }
 .rows.pick > li.on { background: var(--tint); }
 .w-trains { width: 68px; }
 .w-num { width: 44px; }
+/* T-378: inter-region trips by train, car and plane */
+.w-mode { width: 36px; }
+.rows .val.w-mode .mode-icon { display: inline-flex; justify-content: flex-end; width: 100%; }
+.rows .val.w-mode svg { width: 14px; height: 14px; }
 .w-riders { width: 56px; }
 .w-near { width: 58px; white-space: nowrap; }
 .group.scope .btn { display: inline-flex; align-items: center; gap: 4px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

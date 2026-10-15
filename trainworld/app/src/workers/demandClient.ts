@@ -158,10 +158,11 @@ const marketXY = (x: number, y: number): { x: number; y: number } => marketToWor
 const centreXY = ([lon, lat]: [number, number]): { x: number; y: number } => { const [x, y] = getWorldFrame().fromLonLat(lon, lat); return { x, y }; };
 /** The zone count of a longer-trip answer of `len` numbers. For M markets a selection has 1+8*M
  * header numbers, 4 per zone of flows, 3 per zone of x, y, market, then (T-276) the commutes
- * between zones: 4 per market and 4 per zone; a station has 6*M header numbers then 5 per zone. */
+ * between zones: 4 per market and 4 per zone, then (T-378) the trips with places that have no
+ * zone, starting and ending; a station has 6*M header numbers then 5 per zone. */
 function intercityZones(kind: "icSel" | "icStation", len: number): number {
   const m = INTERCITY_PLACES.length;
-  return kind === "icSel" ? (len - 1 - 12 * m) / 11 : (len - 6 * m) / 5;
+  return kind === "icSel" ? (len - 3 - 12 * m) / 11 : (len - 6 * m) / 5;
 }
 /** Where the zones' own x, y, market start: the same on every worker, so never added up. */
 function intercityZoneXY(kind: "icSel" | "icStation", len: number): number {
@@ -173,6 +174,20 @@ function intercityZoneXY(kind: "icSel" | "icStation", len: number): number {
 function addIntercity(kind: "icSel" | "icStation", sums: Float64Array, v: Float64Array) {
   const xy = intercityZoneXY(kind, sums.length), end = xy + 3 * intercityZones(kind, sums.length);
   for (let k = kind === "icSel" ? 1 : 0; k < sums.length; k++) if (k < xy || k >= end) sums[k] += v[k];
+}
+
+/** T-378: the index of the corridor between places `a` and `b` (`IntercityApi.corridor_summary`
+ * order: (0, 0), (0, 1) .. (1, 1) ..). */
+function corridorOf(a: number, b: number): number {
+  const n = INTERCITY_PLACES.length, i = Math.min(a, b), j = Math.max(a, b);
+  return i * n - (i * (i - 1)) / 2 + (j - i);
+}
+/** T-378: a corridor's longer trips not by rail as [by plane, by car] (its shares from
+ * `IntercityApi.corridor_modes`; before any are known, all by car). Near places on two landmasses
+ * have neither. */
+function corridorSplit(modes: Float32Array | null, c: number, rest: number): [number, number] {
+  if (!modes || 2 * c + 1 >= modes.length) return [0, rest];
+  return [rest * modes[2 * c], rest * modes[2 * c + 1]];
 }
 
 /** A fingerprint of an answer's exact numbers: stations the demand model merged answer with the
@@ -424,6 +439,8 @@ class DemandClient {
   /** T-392: zones whose shown figures come from a cluster published ahead of a newer solve's final
    * (the version they came from); questions about them go to that solve */
   private cityVersion = new Map<CityId, number>();
+  /** T-378: the market's per-corridor shares of the longer trips not by rail by plane and by car */
+  private corridorModes: Float32Array | null = null;
   /** a service waiting for the pool to start */
   private waiting: { svc: Service; arrivedAt: number } | null = null;
   private lastKey = "";
@@ -1980,17 +1997,21 @@ class DemandClient {
     // commuters living in the selection (by where they work) and of those working there (by where
     // they live), all and rail. Starts take the first, ends the second.
     const tail = xy + 3 * nz;
+    const own = CITIES.find((c) => c.id === activeCity.peek())?.place ?? -1;
     const flows = (dir: number): PlaceFlows => {
       const places: PlaceTrips[] = [];
-      let all = 0, rail = 0;
+      let all = 0, rail = 0, air = 0, car = 0;
       for (let p = 0; p < P; p++) {
         const o = 1 + 8 * p + 4 * dir;
         const ca = v[tail + 4 * p + 2 * dir] ?? 0, cr = v[tail + 4 * p + 2 * dir + 1] ?? 0;
         const a = v[o] + ca, r = v[o + 1] + cr;
-        all += a; rail += r;
+        // T-378: the longer trips not by rail by the corridor's shares; commuters drive
+        const [pa, pc] = own >= 0 ? corridorSplit(this.corridorModes, corridorOf(own, p), v[o] - v[o + 1]) : [0, v[o] - v[o + 1]];
+        const c = pc + ca - cr;
+        all += a; rail += r; air += pa; car += c;
         if (a > 0) {
           const city = CITIES.find((c) => c.place === p);
-          places.push({ place: p, all: a, rail: r, ...(v[o] > 0 || !city ? marketXY(v[o + 2] / Math.max(v[o], 1e-9), v[o + 3] / Math.max(v[o], 1e-9)) : centreXY(city.center)) });
+          places.push({ place: p, all: a, rail: r, air: pa, car: c, ...(v[o] > 0 || !city ? marketXY(v[o + 2] / Math.max(v[o], 1e-9), v[o + 3] / Math.max(v[o], 1e-9)) : centreXY(city.center)) });
         }
       }
       const zones: ZoneTrips[] = [];
@@ -1999,7 +2020,7 @@ class DemandClient {
         const a = v[head + 4 * z + 2 * dir] + (v[c] ?? 0);
         if (a > 0) zones.push({ ...marketXY(v[xy + 3 * z], v[xy + 3 * z + 1]), place: v[xy + 3 * z + 2], all: a, rail: v[head + 4 * z + 2 * dir + 1] + (v[c + 1] ?? 0) });
       }
-      return { all, rail, places: places.sort((a, b) => b.all - a.all), zones: zones.sort((a, b) => b.all - a.all) };
+      return { all, rail, air, car, elsewhere: v[v.length - 2 + dir] ?? 0, places: places.sort((a, b) => b.all - a.all), zones: zones.sort((a, b) => b.all - a.all) };
     };
     return { version, starts: flows(0), ends: flows(1), matched: v[0] };
   }
@@ -2036,14 +2057,14 @@ class DemandClient {
       for (let p = 0; p < n; p++) {
         const c = v[dir * n + p];
         rail += c;
-        if (c > 0) places.push({ place: p, all: c, rail: c, ...marketXY(v[(2 + 2 * dir) * n + p] / c, v[(3 + 2 * dir) * n + p] / c) });
+        if (c > 0) places.push({ place: p, all: c, rail: c, air: 0, car: 0, ...marketXY(v[(2 + 2 * dir) * n + p] / c, v[(3 + 2 * dir) * n + p] / c) });
       }
       const zones: ZoneTrips[] = [];
       for (let z = 0; z < nz; z++) {
         const c = v[head + dir * nz + z];
         if (c > 0) zones.push({ ...marketXY(v[xy + 3 * z], v[xy + 3 * z + 1]), place: v[xy + 3 * z + 2], all: c, rail: c });
       }
-      return { all: rail, rail, places: places.sort((a, b) => b.all - a.all), zones: zones.sort((a, b) => b.all - a.all) };
+      return { all: rail, rail, air: 0, car: 0, elsewhere: 0, places: places.sort((a, b) => b.all - a.all), zones: zones.sort((a, b) => b.all - a.all) };
     };
     return { version, stationId, scope: members.join(","), starts: flows(0), ends: flows(1) };
   }
@@ -2273,10 +2294,11 @@ class DemandClient {
     const corridors = r.corridors.slice();
     for (let i = 0; i + 3 < corridors.length; i += 4) { corridors[i + 2] *= fl; corridors[i + 3] *= fl; }
     const commuteCorridors = r.commuteCorridors?.map((v) => v * fw);
+    const elsewhere = r.elsewhere?.map((v) => v * fl);
     const summary = r.summary.slice();
     summary[1] = summary[2] = summary[3] = 0;
     for (const v of [...Object.values(citySummary), intercitySummary]) for (const k of [1, 2, 3]) summary[k] += v[k] ?? 0;
-    return { ...r, seg, board, alight, loadOfCrush, citySummary, intercitySummary, intercityParts, corridors, commuteCorridors, summary, parts: { keys: p.keys, seg: ps, board: pb, alight: pa } };
+    return { ...r, seg, board, alight, loadOfCrush, citySummary, intercitySummary, intercityParts, corridors, commuteCorridors, elsewhere, summary, parts: { keys: p.keys, seg: ps, board: pb, alight: pa } };
   }
 
   /** The views of one kind of day from its period results. */
@@ -2353,20 +2375,26 @@ class DemandClient {
     // T-325: and the zones open bare, from their own figures
     for (const id of this.bareIds()) if (!cities.has(id)) cities.set(id, this.bareView(id, day, network));
     // the regional layer between places: longer trips and (T-276) commutes between zones together
-    const corridors = new Map<string, {from: number; to: number; trips: number; rail: number; commutes: number; commuteRail: number}>();
+    const corridors = new Map<string, {from: number; to: number; trips: number; rail: number; commutes: number; commuteRail: number; air: number; car: number}>();
     let interTrips = 0, interRail = 0, commuteTrips = 0, commuteRail = 0;
+    const elsewhere = INTERCITY_PLACES.map(() => 0);
     for (const r of res) {
       interTrips += r.intercitySummary[1]; interRail += r.intercitySummary[2];
       if (r.intercityParts && r.intercityParts.length >= 4) { commuteTrips += r.intercityParts[2]; commuteRail += r.intercityParts[3]; }
+      if (r.corridorModes?.length) this.corridorModes = r.corridorModes;
+      r.elsewhere?.forEach((v, p) => { if (p < elsewhere.length) elsewhere[p] += v; });
       for (let i = 0, k = 0; i < r.corridors.length; i += 4, k += 2) {
         const [from, to, trips, rail] = r.corridors.slice(i, i + 4), key = `${from}:${to}`;
         const ct = r.commuteCorridors?.[k] ?? 0, cr = r.commuteCorridors?.[k + 1] ?? 0;
-        const old = corridors.get(key) ?? {from, to, trips: 0, rail: 0, commutes: 0, commuteRail: 0};
+        const old = corridors.get(key) ?? {from, to, trips: 0, rail: 0, commutes: 0, commuteRail: 0, air: 0, car: 0};
+        // T-378: the longer trips not by rail split by the corridor's shares; commutes never fly
+        const [air, car] = corridorSplit(this.corridorModes, i / 4, trips - rail);
         old.trips += trips + ct; old.rail += rail + cr; old.commutes += ct; old.commuteRail += cr;
+        old.air += air; old.car += car + ct - cr;
         corridors.set(key, old);
       }
     }
-    return { view: network, cities, intercity: {version: s.version, round, tripsPerDay: interTrips, railTripsPerDay: interRail, commuteTripsPerDay: commuteTrips, commuteRailPerDay: commuteRail, corridors: [...corridors.values()]} };
+    return { view: network, cities, intercity: {version: s.version, round, tripsPerDay: interTrips, railTripsPerDay: interRail, commuteTripsPerDay: commuteTrips, commuteRailPerDay: commuteRail, corridors: [...corridors.values()], elsewhere} };
   }
 }
 

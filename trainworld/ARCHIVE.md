@@ -1,5 +1,7 @@
 ﻿# Archive
 
+- T-378 [P2] T-362 stage 4: air as a third mode; the inspector's mode split. Done 2026-10-15: far places with airports fly door to door (60 min at airports, $50 base, set on the rail-air curve); London - New York all air, London - Paris 39% air with no rail; real save final unchanged. notes/T-378.md.
+
 - T-401 [P3] Profile one period's round by layer natively on the real save. Done 2026-10-15: a New York solve is commute pair loop 36.5%, its scatter 13.2%, strategy skims 12.2%, everyday 20%, market 10%; every pass costs the same, rounds are 75%. Next: T-433 to T-435. notes/T-401.md.
 
 - T-426 [P2] Greater Tokyo with Ibaraki, romaji from a dictionary. Done 2026-10-15: five prefectures, 39.75M people, 17.74M jobs, curve kept; kanji names read by UniDic (35% of places, about one in four or five misread); build 10 minutes. notes/T-420.md "Stage 1b".

@@ -81,15 +81,16 @@ interface Marks {
 
 const PLACES = INTERCITY_PLACES.length;
 
-/** Longer trips a day between every two places, both directions, all modes then by train:
- * [trips, rail] at (a * PLACES + b) * 2, the same for (b, a). */
-function pairs(corridors: { from: number; to: number; trips: number; rail: number }[]): Float64Array {
-  const m = new Float64Array(PLACES * PLACES * 2);
+/** Longer trips a day between every two places, both directions, all modes then by train and
+ * (T-378) by plane: [trips, rail, air] at (a * PLACES + b) * 3, the same for (b, a). */
+function pairs(corridors: { from: number; to: number; trips: number; rail: number; air?: number }[]): Float64Array {
+  const m = new Float64Array(PLACES * PLACES * 3);
   for (const c of corridors) {
     if (c.from === c.to || c.from >= PLACES || c.to >= PLACES) continue;
     for (const [a, b] of [[c.from, c.to], [c.to, c.from]]) {
-      m[(a * PLACES + b) * 2] += c.trips;
-      m[(a * PLACES + b) * 2 + 1] += c.rail;
+      m[(a * PLACES + b) * 3] += c.trips;
+      m[(a * PLACES + b) * 3 + 1] += c.rail;
+      m[(a * PLACES + b) * 3 + 2] += c.air ?? 0;
     }
   }
   return m;
@@ -160,11 +161,11 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       view.setDiscs("inter", null);
       return;
     }
-    const pair = (a: number, b: number) => ({ all: m[(a * PLACES + b) * 2], rail: m[(a * PLACES + b) * 2 + 1] });
+    const pair = (a: number, b: number) => ({ all: m[(a * PLACES + b) * 3], rail: m[(a * PLACES + b) * 3 + 1], air: m[(a * PLACES + b) * 3 + 2] });
     const total = (a: number) => {
-      let all = 0, rail = 0;
-      for (let b = 0; b < PLACES; b++) if (b !== a) (all += m[(a * PLACES + b) * 2]), (rail += m[(a * PLACES + b) * 2 + 1]);
-      return { all, rail };
+      let all = 0, rail = 0, air = 0;
+      for (let b = 0; b < PLACES; b++) if (b !== a) (all += m[(a * PLACES + b) * 3]), (rail += m[(a * PLACES + b) * 3 + 1]), (air += m[(a * PLACES + b) * 3 + 2]);
+      return { all, rail, air };
     };
     const own = selected ? cityById(selected) : null;
     // T-276: zoomed out, a zone is one bubble as if it were one place: its local trips (the city
@@ -176,13 +177,14 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       let t = !own || isOwn ? total(c.place) : pair(own.place, c.place);
       if (!own) {
         const v = local.get(c.id);
-        t = { all: t.all + (v ? v.tripsPerDay : c.localTrips ?? 0), rail: t.rail + (v ? v.railTripsPerDay : 0) };
+        t = { all: t.all + (v ? v.tripsPerDay : c.localTrips ?? 0), rail: t.rail + (v ? v.railTripsPerDay : 0), air: t.air };
       }
+      const modes = [`${count(t.rail)} by train`, ...(t.air >= 0.5 ? [`${count(t.air)} by plane`] : [])];
       const tag = !own
-        ? [`${count(t.all)} trips a day in and from ${c.name}`, `${count(t.rail)} by train`]
+        ? [`${count(t.all)} trips a day in and from ${c.name}`, ...modes]
         : isOwn
-          ? [`${count(t.all)} trips a day between ${c.name} and other places`, `${count(t.rail)} by train`]
-          : [`${count(t.all)} trips a day between ${own.name} and ${c.name}`, `${count(t.rail)} by train`];
+          ? [`${count(t.all)} trips a day between ${c.name} and other places`, ...modes]
+          : [`${count(t.all)} trips a day between ${own.name} and ${c.name}`, ...modes];
       return { ...t, city: c, isOwn, tag };
     }).filter((p) => p.all > 0 || p.isOwn);
     points.sort((a, b) => b.all - a.all);
@@ -254,7 +256,8 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       const r = unscaledRadius * INTERCITY_RADIUS_SCALE;
       discs.set([x, y, r, c[0] / 255, c[1] / 255, c[2] / 255, BUBBLE_ALPHA, 1], i * DISC);
       const place = z.name || "here";
-      tags.push(railOnly ? [`${count(z.rail)} riders a day on inter-region trips ${verb} ${place}`] : [`${count(z.all)} inter-region trips a day ${verb} ${place}`, `${count(z.rail)} by train`]);
+      const air = "air" in z ? (z.air as number) : 0;
+      tags.push(railOnly ? [`${count(z.rail)} riders a day on inter-region trips ${verb} ${place}`] : [`${count(z.all)} inter-region trips a day ${verb} ${place}`, `${count(z.rail)} by train`, ...(air >= 0.5 ? [`${count(air)} by plane`] : [])]);
       if (regional) label(`${z.name} · ${count(z.all)} ${railOnly ? "riders" : "trips"}/day`);
     });
     marks = { discs, anchor: a, tags };
