@@ -728,6 +728,12 @@ mod tests {
             rail > 0. && (starts - rail).abs() < 1e-3 * rail && (ends - rail).abs() < 1e-3 * rail
         );
         assert!(a.station_flows(99).is_empty());
+        // T-326: a station of another cluster: no riders, the zones as any station's answer has them
+        let (none, row) = (a.no_station_flows(), a.station_flows(0));
+        let nz = a.zones.len();
+        assert_eq!(none.len(), row.len());
+        assert!(none[..ST_W + 2 * nz].iter().all(|&v| v == 0.));
+        assert_eq!(none[ST_W + 2 * nz..], row[ST_W + 2 * nz..]);
         // the same after crowding rounds (loads are averaged, not replaced)
         for q in 0..PERIODS {
             let loads = a.seg(q);
@@ -2236,6 +2242,15 @@ impl IntercityApi {
                 out[(3 + 2 * d) * self.markets + zone.market] += v * zone.y as f64;
             }
         }
+        self.write_zone_xy(&mut out[head + 2 * nz..]);
+        out
+    }
+    /// `station_flows` of a station this network does not hold but the whole one does (T-326: a
+    /// station in another cluster): no riders, the zones as always.
+    pub fn no_station_flows(&self) -> Vec<f64> {
+        let nz = self.zones.len();
+        let head = 6 * self.markets;
+        let mut out = vec![0.; head + 5 * nz];
         self.write_zone_xy(&mut out[head + 2 * nz..]);
         out
     }

@@ -21,6 +21,7 @@ import { CITIES, cityToMarket, cityToWorld, HOME_CITY, setWorldFrame, worldToCit
 import { EVERYDAY_KEYS, EVERYDAY_NAMES } from "../game/purposes";
 import { PERIODS } from "../game/periods";
 import type { BareFigures, DemandNetwork, FromDemand, ToDemand } from "./demandProtocol";
+import { cellBox, splitClusters, type Box, type Cluster } from "./demandClusters";
 
 /** WASM started (and the market opened if `init` carried it): `open` and solves wait for this. */
 let started = false;
@@ -35,7 +36,7 @@ const everyday = new Map<CityId, EverydayApi>();
 const EVERYDAY_PURPOSES = EVERYDAY_NAMES;
 let intercity: IntercityApi | null = null;
 let mine: number[] = [];
-let pending: { version: number; net: DemandNetwork; rounds: number; barrier?: boolean } | null = null;
+let pending: { version: number; net: DemandNetwork; rounds: number; barrier?: boolean; whole?: boolean } | null = null;
 let busy = false;
 /** the version whose network `api` holds (queries about any other get nulls) */
 let current = -1;
@@ -60,9 +61,18 @@ let go = { version: -1, round: 0 };
 let wake: (() => void) | null = null;
 /** the questions whose answer reads the periods' state at a round (the others read none) */
 const BY_ROUND = new Set<Query["kind"]>(["station", "flowRail", "purposes", "icSel", "icStation", "transfers", "trip"]);
-/** the populations the network in hand was solved for, and its route nodes (`transfers`, T-176) */
-let jobPopulations: (DemandApi | EverydayApi | IntercityApi)[] = [];
+type Population = DemandApi | EverydayApi | IntercityApi;
+/** T-326: the network in hand's clusters, each with its populations (cities, their everyday
+ * layers, the market: the order their loads are added in), and the whole network's route nodes */
+let jobClusters: (Cluster & { pops: Population[] })[] = [];
 let jobNodes = 0;
+/** whether the network in hand has stations and lines (a population set on it then has subzones) */
+let jobRailed = false;
+let jobStations = 0;
+/** T-326: the cluster `sig` each population holds every one of this worker's periods solved for */
+const held = new Map<Population, string>();
+const boxes = new Map<CityId, Box>();
+const clusterOfCity = (id: CityId) => jobClusters.find((c) => c.cities.includes(id));
 /** T-325, the aux worker: each solving worker's periods as a bit mask, in worker order */
 let groupMasks: number[] = [];
 /** T-325, the aux worker: zones open bare, apart from `cities` (a solve never covers these) */
@@ -310,7 +320,7 @@ function query(msg: Query) {
       const modes = a && msg.version === current ? a.cell_modes_day(msg.sums, day) : null;
       sendMessage({ kind: "cellModes", id: msg.id, version: msg.version, modes: modes && modes.length ? modes : null }, modes ? [modes.buffer] : []);
     } else if (msg.kind === "station") {
-      const packed = live ? a!.station_riders_day(msg.station, day) : null;
+      const packed = live ? stationRiders(msg.city, a!, msg.station, day) : null;
       sendMessage({ kind: "station", id: msg.id, version: msg.version, mask: live ? a!.solved_mask() : 0, packed: packed && packed.length ? packed : null }, packed ? [packed.buffer] : []);
     } else if (msg.kind === "flowRail") {
       const sums = live ? a!.flow_rail_day(msg.end, msg.cells, day) : null;
@@ -337,7 +347,7 @@ function query(msg: Query) {
       sendMessage({ kind: "icSel", id: msg.id, version: msg.version, mask: ok ? intercity!.solved_mask() : 0, packed }, packed ? [packed.buffer] : []);
     } else if (msg.kind === "icStation") {
       const ok = live && !!intercity;
-      const packed = ok ? Float64Array.from(intercity!.station_flows_day(msg.station, day)) : null;
+      const packed = ok ? Float64Array.from(marketStationFlows(intercity!, msg.station, day)) : null;
       sendMessage({ kind: "icStation", id: msg.id, version: msg.version, mask: ok ? intercity!.solved_mask() : 0, packed: packed && packed.length ? packed : null }, packed ? [packed.buffer] : []);
     } else if (msg.kind === "purposeModes") {
       // one everyday purpose's legs (T-158); a city without that purpose answers empty, not null
@@ -352,11 +362,13 @@ function query(msg: Query) {
       const answers: Float64Array[] = [], periods: number[] = [];
       if (live) {
         const o = worldToCity(msg.from[0], msg.from[1], msg.city), d = worldToCity(msg.to[0], msg.to[1], msg.city);
+        const c = clusterOfCity(msg.city);
         for (const q of mine) {
           const v = a!.trip(q, o.x, o.y, d.x, d.y);
           if (v[0] === 1) {
             const p0 = cityToWorld(v[27], v[28], msg.city), p1 = cityToWorld(v[29], v[30], msg.city);
             v[27] = p0.x; v[28] = p0.y; v[29] = p1.x; v[30] = p1.y;
+            if (c) tripNodesGlobal(v, c.nodeGlobal);
           }
           answers.push(v);
           periods.push(q);
@@ -419,14 +431,21 @@ function answerWaiting() {
  * on selection, so the answer is a few thousand numbers, never the whole network's.
  */
 function transfersAt(nodes: Uint32Array, day: number): Float32Array {
-  const sel = new Uint8Array(jobNodes);
-  for (const r of nodes) if (r < jobNodes) sel[r] = 1;
   const sum = new Map<number, number>();
-  for (const p of jobPopulations) {
-    const v = p.transfers_day(sel, day);
-    for (let k = 0; k + 2 < v.length; k += 3) {
-      const key = v[k] * jobNodes + v[k + 1];
-      sum.set(key, (sum.get(key) ?? 0) + v[k + 2]);
+  for (const c of jobClusters) {
+    const sel = new Uint8Array(c.nodeGlobal.length);
+    let any = false;
+    for (const r of nodes) {
+      const l = r < jobNodes ? c.nodeLocal[r] : -1;
+      if (l >= 0) (sel[l] = 1), (any = true);
+    }
+    if (!any) continue;
+    for (const p of c.pops) {
+      const v = p.transfers_day(sel, day);
+      for (let k = 0; k + 2 < v.length; k += 3) {
+        const key = c.nodeGlobal[v[k]] * jobNodes + c.nodeGlobal[v[k + 1]];
+        sum.set(key, (sum.get(key) ?? 0) + v[k + 2]);
+      }
     }
   }
   const out = new Float32Array(3 * sum.size);
@@ -438,35 +457,75 @@ function transfersAt(nodes: Uint32Array, day: number): Float32Array {
 }
 
 /**
+ * T-326: a station's riders from one city, on its cluster's network. A station outside the cluster
+ * gets the answer a population set on the whole network gives for a station it cannot reach: no
+ * riders, every zone listed (`DemandApi.station_riders_day`).
+ */
+function stationRiders(id: CityId, a: DemandApi, station: number, day: number): Float32Array {
+  const c = clusterOfCity(id);
+  const ls = c && c.net.lineN.length ? c.stLocal[station] ?? -1 : -1;
+  if (ls >= 0) return a.station_riders_day(ls, day);
+  return jobRailed && station < jobStations ? new Float32Array(4 + 2 * a.info()[1]) : new Float32Array(0);
+}
+/** The same for the market's longer trips (`IntercityApi.station_flows_day`). */
+function marketStationFlows(m: IntercityApi, station: number, day: number): Float64Array {
+  const c = jobClusters.find((c) => c.market);
+  const ls = c ? c.stLocal[station] ?? -1 : -1;
+  if (ls >= 0) return m.station_flows_day(ls, day);
+  return station < jobStations ? m.no_station_flows() : new Float64Array(0);
+}
+/** A `DemandApi.trip` answer's route nodes (trip.ts `PAIR_LEN`, `LEG_LEN`) from its cluster's
+ * network to the whole network's, the ones the client reads. */
+function tripNodesGlobal(v: Float64Array, nodeGlobal: Uint32Array) {
+  const HEAD = 32, PAIR_LEN = 14, LEG_LEN = 12;
+  const g = (i: number) => { if (v[i] >= 0) v[i] = nodeGlobal[v[i]]; };
+  const np = v[24], nr = v[25];
+  for (let k = 0; k < np; k++) { g(HEAD + k * PAIR_LEN + 2); g(HEAD + k * PAIR_LEN + 3); }
+  let o = HEAD + np * PAIR_LEN;
+  for (let k = 0; k < nr; k++) {
+    const n = v[o + 2];
+    o += 3;
+    for (let i = 0; i < n; i++, o += LEG_LEN) { g(o + 1); g(o + 2); }
+  }
+}
+
+/**
  * A period's `seg`, `board` and `alight` split by trip purpose (T-158, demandProtocol `parts`):
  * work is every city's commutes, then the everyday layer's purposes, then the regional market's
- * longer trips. They add up to the result's totals; crowding is never split.
+ * longer trips. They add up to the result's totals; crowding is never split. Each cluster's route
+ * nodes go to their place in the whole network's (T-326).
  */
-function purposeParts(q: number, nr: number, local: DemandApi[], days: EverydayApi[], regional: IntercityApi | null) {
+function purposeParts(q: number, nr: number, clusters: typeof jobClusters, regional: IntercityApi | null) {
+  const days = clusters.flatMap((c) => c.pops.filter((p): p is EverydayApi => p instanceof EverydayApi));
   const kinds = Math.min(EVERYDAY_KEYS.length, Math.max(0, ...days.map((e) => e.purpose_count())));
   const keys: string[] = ["work", ...EVERYDAY_KEYS.slice(0, kinds)];
   if (regional) keys.push("longer");
   const seg = new Float32Array(keys.length * nr), board = new Float32Array(keys.length * nr), alight = new Float32Array(keys.length * nr);
-  const add = (out: Float32Array, at: number, v: ArrayLike<number>, from = 0) => {
-    if (v.length < from + nr) return; // nothing solved for this population (no network)
-    for (let r = 0; r < nr; r++) out[at * nr + r] += v[from + r];
-  };
-  for (const a of local) { add(seg, 0, a.seg(q)); add(board, 0, a.board(q)); add(alight, 0, a.alight(q)); }
-  for (const e of days) {
-    const v = e.part_loads(q), m = Math.min(kinds, e.purpose_count());
-    if (v.length !== 3 * e.purpose_count() * nr) continue;
-    for (let k = 0; k < m; k++) { add(seg, 1 + k, v, 3 * k * nr); add(board, 1 + k, v, (3 * k + 1) * nr); add(alight, 1 + k, v, (3 * k + 2) * nr); }
-  }
-  if (regional) {
-    const at = keys.length - 1;
-    add(seg, at, regional.seg(q)); add(board, at, regional.board(q)); add(alight, at, regional.alight(q));
-    // T-276: the regional layer's commutes between zones are work: moved from longer trips to it
-    const c = regional.commute_loads(q);
-    if (c.length === 3 * nr) {
-      for (let r = 0; r < nr; r++) {
-        seg[r] += c[r]; seg[at * nr + r] -= c[r];
-        board[r] += c[nr + r]; board[at * nr + r] -= c[nr + r];
-        alight[r] += c[2 * nr + r]; alight[at * nr + r] -= c[2 * nr + r];
+  for (const c of clusters) {
+    const map = c.nodeGlobal, m = map.length;
+    const add = (out: Float32Array, at: number, v: ArrayLike<number>, from = 0) => {
+      if (v.length < from + m) return; // nothing solved for this population (no network)
+      for (let r = 0; r < m; r++) out[at * nr + map[r]] += v[from + r];
+    };
+    for (const a of c.pops) if (a instanceof DemandApi) { add(seg, 0, a.seg(q)); add(board, 0, a.board(q)); add(alight, 0, a.alight(q)); }
+    for (const e of c.pops) {
+      if (!(e instanceof EverydayApi)) continue;
+      const v = e.part_loads(q), k1 = Math.min(kinds, e.purpose_count());
+      if (v.length !== 3 * e.purpose_count() * m) continue;
+      for (let k = 0; k < k1; k++) { add(seg, 1 + k, v, 3 * k * m); add(board, 1 + k, v, (3 * k + 1) * m); add(alight, 1 + k, v, (3 * k + 2) * m); }
+    }
+    if (regional && c.pops.includes(regional)) {
+      const at = keys.length - 1;
+      add(seg, at, regional.seg(q)); add(board, at, regional.board(q)); add(alight, at, regional.alight(q));
+      // T-276: the regional layer's commutes between zones are work: moved from longer trips to it
+      const v = regional.commute_loads(q);
+      if (v.length === 3 * m) {
+        for (let r = 0; r < m; r++) {
+          const g = map[r];
+          seg[g] += v[r]; seg[at * nr + g] -= v[r];
+          board[g] += v[m + r]; board[at * nr + g] -= v[m + r];
+          alight[g] += v[2 * m + r]; alight[at * nr + g] -= v[2 * m + r];
+        }
       }
     }
   }
@@ -485,34 +544,32 @@ async function run() {
       // the cities open now: a pack opened during this job waits for the next one (T-149)
       const jobLocal = [...cities];
       const jobEveryday = [...everyday].filter(([id]) => cities.has(id));
-      jobCities = new Set();
-      // T-161: each station's complex, for every population (a check's network may have none)
-      const complex = n.complex ?? new Uint32Array(0);
-      for (const [id, a] of jobLocal) {
-        const xy = n.stXY.slice();
-        for (let k = 0; k < xy.length; k += 2) {
-          const p = worldToCity(xy[k], xy[k + 1], id); xy[k] = p.x; xy[k + 1] = p.y;
-        }
-        a.set_complexes(complex);
-        setupMs += a.set_network(xy, n.lineN, n.stops, n.times, n.tph, n.cars);
-        a.set_fares(n.fare.base, n.fare.perKm, n.hopKm);
-        const extra = everyday.get(id);
-        if (extra) {
-          extra.set_complexes(complex);
-          setupMs += extra.set_network(xy, n.lineN, n.stops, n.times, n.tph, n.cars);
-          extra.set_fares(n.fare.base, n.fare.perKm, n.hopKm);
-        }
-        jobCities.add(id);
-      }
+      jobCities = new Set(jobLocal.map(([id]) => id));
       const regional = intercity;
-      if (regional) {
-        const mxy = n.stXY.slice();
-        for (let k = 0; k < mxy.length; k += 2) {
-          const p = worldToMarket(mxy[k], mxy[k + 1]); mxy[k] = p.x; mxy[k + 1] = p.y;
+      // T-326: each cluster on its own network; one this worker has solved on the same network
+      // keeps its populations' results, untouched
+      for (const [id, a] of jobLocal) if (!boxes.has(id)) boxes.set(id, cellBox(a.cell_xy()));
+      const split = splitClusters(n, jobLocal.map(([id]) => ({ id, box: boxes.get(id) ?? null })), !!regional, job.rounds, job.whole);
+      jobClusters = split.map((c) => ({ ...c, pops: [
+        ...c.cities.map((id) => cities.get(id)!),
+        ...jobEveryday.filter(([id]) => c.cities.includes(id)).map(([, e]) => e),
+        ...(c.market && regional ? [regional] : []),
+      ] }));
+      const dirty = jobClusters.filter((c) => c.pops.some((p) => held.get(p) !== c.sig));
+      for (const c of dirty) {
+        const m = c.net;
+        for (const p of c.pops) {
+          held.delete(p);
+          const city = p === regional ? null : c.cities.find((id) => cities.get(id) === p || everyday.get(id) === p)!;
+          const xy = m.stXY.slice();
+          for (let k = 0; k < xy.length; k += 2) {
+            const w = city ? worldToCity(xy[k], xy[k + 1], city) : worldToMarket(xy[k], xy[k + 1]);
+            xy[k] = w.x; xy[k + 1] = w.y;
+          }
+          p.set_complexes(m.complex);
+          setupMs += p.set_network(xy, m.lineN, m.stops, m.times, m.tph, m.cars);
+          p.set_fares(m.fare.base, m.fare.perKm, m.hopKm);
         }
-        regional.set_complexes(complex);
-        setupMs += regional.set_network(mxy, n.lineN, n.stops, n.times, n.tph, n.cars);
-        regional.set_fares(n.fare.base, n.fare.perKm, n.hopKm);
       }
       current = job.version;
       roundsHeld.fill(-1);
@@ -520,12 +577,24 @@ async function run() {
       stageRound = -1;
       answerWaiting(); // an older version's get nulls; this one's wait on
       let stale = false;
-      // Periods are independent. Every population in a period advances from one frozen
-      // combined load vector, never from whichever population happened to run first.
-      const populations: (DemandApi | IntercityApi | EverydayApi)[] = [...jobLocal.map(([, a]) => a), ...jobEveryday.map(([, a]) => a)];
-      if (regional) populations.push(regional);
-      jobPopulations = populations;
       jobNodes = 2 * n.stops.length;
+      jobStations = n.stXY.length / 2;
+      jobRailed = jobStations > 0 && n.lineN.length > 0;
+      // a cluster's loads, all its populations', per route node of its network
+      const sum = (c: (typeof jobClusters)[number], read: (a: Population) => Float32Array): Float32Array => {
+        const out = new Float32Array(c.nodeGlobal.length);
+        for (const a of c.pops) { const v = read(a); for (let k = 0; k < out.length; k++) out[k] += v[k] ?? 0; }
+        return out;
+      };
+      // every cluster's, per route node of the whole network
+      const sumAll = (read: (a: Population) => Float32Array): Float32Array => {
+        const out = new Float32Array(jobNodes);
+        for (const c of jobClusters) {
+          const map = c.nodeGlobal;
+          for (const a of c.pops) { const v = read(a); for (let k = 0; k < map.length; k++) out[map[k]] += v[k] ?? 0; }
+        }
+        return out;
+      };
       for (let round = 0; round <= job.rounds && !stale; round++) {
         // T-327: a worker ahead holds its last round until every worker has finished it
         while (job.barrier && round > 0 && !pending && !(go.version > job.version || (go.version === job.version && go.round >= round))) {
@@ -538,29 +607,29 @@ async function run() {
           await yieldNow();
           if (pending) { stale = true; break; }
           const t0 = performance.now();
-          const sum = (read: (a: DemandApi | IntercityApi | EverydayApi) => Float32Array): Float32Array => {
-            const out = new Float32Array(2 * n.stops.length);
-            for (const a of populations) { const v = read(a); for (let k = 0; k < out.length; k++) out[k] += v[k] ?? 0; }
-            return out;
-          };
           // The period is part way between rounds until every population has had it; a query in
           // between (the yields below) must not read it.
           roundsHeld[q] = -2;
-          // every population's segment loads, boardings and alightings per route node: the
-          // crowding and the waits for full trains (T-188) the round is solved with
-          let total: Float32Array | null = null;
-          if (round > 0) {
-            const nr = 2 * n.stops.length;
-            total = new Float32Array(3 * nr);
-            total.set(sum(a => a.seg(q)), 0); total.set(sum(a => a.board(q)), nr); total.set(sum(a => a.alight(q)), 2 * nr);
-          }
-          for (const a of populations) {
-            if (total === null) a.solve(q);
-            else if (!a.crowd_with_external(q, total)) throw new Error("shared crowding layout disagrees");
-            // a population's pass is up to a second of one call: let a waiting query or a newer
-            // network in between
-            await yieldNow();
-            if (pending) { stale = true; break; }
+          // Periods are independent. Every population of a cluster advances from one frozen load
+          // vector of the whole cluster, never from whichever population happened to run first.
+          for (const c of dirty) {
+            // the cluster's segment loads, boardings and alightings per route node: the crowding
+            // and the waits for full trains (T-188) the round is solved with
+            let total: Float32Array | null = null;
+            if (round > 0) {
+              const nr = c.nodeGlobal.length;
+              total = new Float32Array(3 * nr);
+              total.set(sum(c, a => a.seg(q)), 0); total.set(sum(c, a => a.board(q)), nr); total.set(sum(c, a => a.alight(q)), 2 * nr);
+            }
+            for (const a of c.pops) {
+              if (total === null) a.solve(q);
+              else if (!a.crowd_with_external(q, total)) throw new Error("shared crowding layout disagrees");
+              // a population's pass is up to a second of one call: let a waiting query or a newer
+              // network in between
+              await yieldNow();
+              if (pending) { stale = true; break; }
+            }
+            if (stale) break;
           }
           release_skims();
           if (stale) break;
@@ -578,13 +647,13 @@ async function run() {
             }
           }
           const ms = performance.now() - t0;
-          const seg = sum(a => a.seg(q)), board = sum(a => a.board(q)), alight = sum(a => a.alight(q)), loadOfCrush = sum(a => a.load_of_crush(q));
+          const seg = sumAll(a => a.seg(q)), board = sumAll(a => a.board(q)), alight = sumAll(a => a.alight(q)), loadOfCrush = sumAll(a => a.load_of_crush(q));
           const citySummary = Object.fromEntries(jobLocal.map(([id, a]) => [id, Array.from(a.summary(q))])) as Record<CityId, number[]>;
           for (const [id, a] of jobEveryday) { const v = a.summary(q); for (const k of [1, 2, 3, 5]) citySummary[id][k] += v[k] ?? 0; }
           const intercitySummary = Array.from(regional!.summary(q));
           const summary = [round, 0, 0, 0, ms, 0, 0, 0, 0, 0];
           for (const v of [...Object.values(citySummary), intercitySummary]) for (const k of [1, 2, 3, 5]) summary[k] += v[k] ?? 0;
-          const parts = purposeParts(q, 2 * n.stops.length, jobLocal.map(([, a]) => a), jobEveryday.map(([, a]) => a), regional);
+          const parts = purposeParts(q, jobNodes, jobClusters, regional);
           // T-260: each city's trips, rail and walked trips by purpose, `parts.keys` order less the
           // market, so the main thread can work out a weekend's mode split
           const local = parts.keys.length - (regional ? 1 : 0);
@@ -605,7 +674,10 @@ async function run() {
           setupMs = 0;
         }
       }
-      if (!stale) sendMessage({ kind: "done", version: job.version, memBytes: wasm_memory_bytes() });
+      if (!stale) {
+        for (const c of dirty) for (const p of c.pops) held.set(p, c.sig);
+        sendMessage({ kind: "done", version: job.version, memBytes: wasm_memory_bytes(), clusters: [jobClusters.length - dirty.length, dirty.length] });
+      }
     }
   } catch (err) {
     sendMessage({ kind: "failed", error: String(err) });

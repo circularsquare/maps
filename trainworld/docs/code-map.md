@@ -103,7 +103,8 @@ the screen when demand cannot load, T-149, T-172, T-180); `Search.tsx` (T-148); 
 the network: `TrackApi`, notes/T-025.md; money and autosave too), `saveFile.ts` (the save format
 and IndexedDB, T-029), `clockClient.ts`, `demand.worker.ts`, `demandClient.ts`, `demandCache.ts`
 (the last final demand result kept beside the save, T-328),
-`demandProtocol.ts`, `demandTest.ts`, `cityReach.ts` (which city packs a network's stations can
+`demandProtocol.ts`, `demandClusters.ts` (the network split into clusters that share no rider,
+each a sub-network, T-326), `demandTest.ts`, `cityReach.ts` (which city packs a network's stations can
 reach, T-149), `commuters.worker.ts` and `commutersProtocol.ts` (the commuter bubbles' sums,
 T-097), `selectionMerge.ts` (a bubble selection's everyday far end added up over the workers,
 T-285).
@@ -141,7 +142,9 @@ Run from the maps root (`node trainworld/checks/<file>`).
   (the regional market's derived block).
 - Browser and timing (Playwright, `PLAYWRIGHT_MODULE`): `startup-timing.mjs` with
   `static-serve.mjs` (startup marks on a scratch production build), `t303-measure.mjs` (demand
-  loading, clicks, pans), `t328-cache-check.mjs` (the demand cache on reload: timing, cached
+  loading, clicks, pans), `t326-clusters.mjs` (the real save plus a Toronto line: edits in each cluster
+  timed to their final, every final figure hashed against `?perfOff=clusters`),
+  `t328-cache-check.mjs` (the demand cache on reload: timing, cached
   against fresh final to the bit, a changed build, pack or network shows none), `t348-lag.mjs`
   (main-thread long tasks and frame gaps while demand loads: startup, pans, a re-solve, a zone
   joining the solve; optional Chrome trace) with `t348-analyze.mjs` (what each long task in a

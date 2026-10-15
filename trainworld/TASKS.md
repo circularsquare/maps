@@ -39,7 +39,10 @@ PATH, `npm run build --prefix maps/.tw-snap/trainworld/app` (a few minutes; back
 
 
 
-- T-326 [P2] Loading fix 3 (T-303 item 3): separate clusters (Toronto vs the Northeast) solve separately, an edit re-solves only its own cluster, the viewed one first. Three stages. After T-325. Open.
+- T-326 [P2] Loading fix 3 (T-303 item 3): separate clusters (Toronto vs the Northeast) solve separately, an edit re-solves only its own cluster, the viewed one first. Three stages; stage 1 done 2026-10-15 (workers split the network and keep unchanged clusters' results: a Toronto edit's final 28.5 s to 4.5 s, figures identical to the bit). notes/T-326.md.
+  - T-392 [P2] T-326 stage 2: per-cluster publishing and answers (each cluster's final published as it lands; clicks on a cluster not being solved answered at once from its kept state; status for the cluster being solved). Open; notes/T-326.md.
+  - T-393 [P2] T-326 stage 3: the viewed or selected cluster solved first when several are dirty; spec. After T-392. Open.
+- T-394 [P2] Pack reach predates rides (found in T-326): `workers/cityReach.ts` opens a zone's pack for a station within 4.5 km of its outline (the walk), but since T-371/T-389 homes ride to a station up to 15 km away, so a station 5-15 km outside an unopened zone gets none of its riders. Widen REACH_M (about 25 km, as demandClusters.ts's 30 km from cells) or test reach from the cells, and check the bare-zone rule (T-325) against it. Open.
 
 ## In progress (batch 25, 2026-10-14)
 

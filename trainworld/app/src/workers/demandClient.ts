@@ -220,6 +220,8 @@ interface Solve {
   /** T-232: its estimates before the final round are shown (startup, a game load, a city with no
    * figures yet); otherwise the last final result stays shown until this one's final round */
   showEstimates: boolean;
+  /** T-326: the last worker's clusters kept and solved */
+  clusters?: [number, number];
 }
 
 /** When one item (a city or the market) was asked for, downloaded and open in every worker:
@@ -1148,7 +1150,10 @@ class DemandClient {
     }
     const s = this.cur;
     if (!s || msg.version !== s.version) return; // superseded
-    if (msg.kind === "done") return;
+    if (msg.kind === "done") {
+      if (msg.clusters) s.clusters = msg.clusters; // ?debug=1's log: clusters kept and solved
+      return;
+    }
     const results = s.byRound[msg.summary[0]];
     if (!results) return;
     results[msg.period] = msg;
@@ -1222,7 +1227,7 @@ class DemandClient {
     demandStep.value = { done: 0, of: ROUNDS + 1 };
     // T-327: rounds in step only where clicks are answered by round (`target`): it costs the final
     // about 0.7 s on the real save
-    const msg: ToDemand = { kind: "solve", version, net, rounds: ROUNDS, barrier: (showEstimates || !!this.hold) && !perfOff("ahead") };
+    const msg: ToDemand = { kind: "solve", version, net, rounds: ROUNDS, barrier: (showEstimates || !!this.hold) && !perfOff("ahead"), ...(perfOff("clusters") ? { whole: true } : {}) };
     for (const w of this.workers) w.postMessage(msg);
     this.progress(); // T-243: a held game's solve shows its progress even with nothing to load
   }

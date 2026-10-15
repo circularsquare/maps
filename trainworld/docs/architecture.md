@@ -101,7 +101,9 @@ Web first, so it can be shared as a link.
   viewed or on screen that no station reaches opens bare in the auxiliary worker alone [T-325,
   [demand.md](demand.md) "Bare zones"], the viewed zone of a new game from the start [T-351]. Solving
   workers also open the regional market, always. A solve waits until every pack it needs is open in
-  every worker, so a published result never leaves out a constructed city. Worker 0 first opens a
+  every worker, so a published result never leaves out a constructed city. Each worker solves the
+  network's clusters (populations and the lines they reach, sharing no rider) apart, and after an
+  edit only those it touched [T-326, [demand.md](demand.md) "Clusters"]. Worker 0 first opens a
   small synthetic everyday layer (`warm.rs`) and the others get packs only once it is ready, so
   every worker opens on optimised code [T-173]. The clock worker's network snapshot after each
   service change goes to every worker; a worker takes a newer one between populations. Messages:

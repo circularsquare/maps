@@ -955,6 +955,24 @@ A worker already past the round asked about answers nothing and the question goe
 round. After an edit questions wait for the final (the workers hold a network the map does not
 show yet). `?perfOff=ahead` turns all of this off. T-327, notes/T-327.md.
 
+**Clusters** (T-326, `workers/demandClusters.ts`). Each worker splits the network into clusters
+that share no rider and solves each on its own sub-network: the cluster's stations (in snapshot
+order) and its lines, with their own route nodes, mapped back to the whole network's in every
+result and answer. A cluster is joined up from populations, stations and lines: a line joins its
+stations; a station complex joins its stations; stations within 1 km join (merged platforms are
+100 m, walking transfers 300 m); a city joins every station within 30 km of its cells' bounding box
+(the 4 km walk and the 15 km ride from a home group's centre); the regional market joins every
+station within 200 km of a market zone's centre. Clusters are worked out afresh for every network,
+so a station or a market that reaches two of them merges them (T-362's longer trips will join
+cities that way). Lines and stations no population reaches are in no cluster and carry nobody.
+Every population of a cluster crowds on the cluster's own loads, which are the whole network's
+there, since no other population puts a rider on its lines; so the figures are the same as one
+solve of everything. A worker keeps what each population last solved, and a cluster whose
+sub-network, populations and rounds are unchanged since keeps its result untouched: after an edit
+only the clusters it touched are solved, and the others' figures are read from their populations
+as they stand. Every worker splits the same way from the same inputs. `?perfOff=clusters` solves
+everything as one cluster, as before T-326.
+
 **Cost on the real combined network** (T-119: the 109-line New York save plus one Philadelphia
 line, 875 demand stations, 5,039 subzones, 13.9M subzone pairs a period; native, one period, free
 flow or one round, three populations): 1.75 s before. Strategy searches took 0.28 s for each of

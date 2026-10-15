@@ -5,7 +5,9 @@ import type { FrameSpec } from "../game/frame";
 // Each worker owns a copy of the city (parsed from the pack it is sent once) and a fixed set of
 // the day's five periods (game/periods.ts). A `solve` carries the whole network, packed; the
 // worker answers with one `result` per period and round as each lands (round 0 = the free-flow
-// first estimate, then crowding rounds), then `done`. A newer `solve` arriving mid-way supersedes
+// first estimate, then crowding rounds), then `done`. A worker solves each cluster of the network
+// on its own (T-326, demandClusters.ts); every answer is in the whole network's stations and route
+// nodes. A newer `solve` arriving mid-way supersedes
 // the running one at the next period boundary: the old version's remaining results are never
 // sent.
 
@@ -58,7 +60,9 @@ export type ToDemand =
   /** solve every period of this worker on `net`: free flow, then `rounds` crowding rounds */
   | { kind: "solve"; version: number; net: DemandNetwork; rounds: number;
       /** T-327: start each crowding round only once `go` allows it */
-      barrier?: boolean }
+      barrier?: boolean;
+      /** T-326 `?perfOff=clusters`: solve the network as one cluster */
+      whole?: boolean }
   /** T-327: every worker has finished `round - 1` of `version`, so this worker may start `round`.
    * A worker ahead waits at the boundary holding its last round, so every worker holds the round
    * after the published one at some moment, and a question about it can be answered (the final
@@ -180,7 +184,8 @@ export type FromDemand =
       setupMs: number;
       memBytes: number;
     }
-  | { kind: "done"; version: number; memBytes: number }
+  /** `clusters` (T-326): how many kept their result, and how many were solved */
+  | { kind: "done"; version: number; memBytes: number; clusters?: [number, number] }
   /** a worker's `sub_sums` for one city once all its periods have `round` (sent unasked, T-119) */
   | { kind: "sums"; version: number; round: number; city: CityId; mask: number; sums: Float32Array; everyday: Float32Array | null }
   | { kind: "cells"; id: number; city: CityId; xy: Float32Array; h3: BigUint64Array; zone: Uint32Array; zoneXY: Float32Array }
