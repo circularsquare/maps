@@ -206,6 +206,15 @@ WATER_TESTS = {
                 "Vashi station": (72.9989, 19.0632), "Kalyan station": (73.1305, 19.2355), "Panvel": (73.1210, 18.9894),
                 "Mumbai airport": (72.8656, 19.0896)},
     },
+    "ber": {  # T-290: OSM water (Geofabrik Brandenburg with Berlin), points taken from the water cache
+        True: {"Spree by the Reichstag": (13.37632, 52.52105), "Spree at the Oberbaumbruecke": (13.44487, 52.50182),
+               "Havel at Spandau": (13.20524, 52.53462),
+               "Grosser Wannsee": (13.1731, 52.4278), "Grosser Mueggelsee": (13.6501, 52.4368), "Tegeler See": (13.2550, 52.5746),
+               "Templiner See": (13.0168, 52.3670), "Schwielowsee": (12.9542, 52.3360), "Scharmuetzelsee": (14.0569, 52.2473)},
+        False: {"Brandenburger Tor": (13.3777, 52.5163), "Alexanderplatz": (13.4132, 52.5219), "Tempelhofer Feld": (13.4030, 52.4730),
+                "Potsdam Hauptbahnhof": (13.0667, 52.3917), "BER terminal 1": (13.5104, 52.3644),
+                "Frankfurt (Oder) station": (14.5465, 52.3365)},
+    },
 }
 
 

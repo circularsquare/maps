@@ -56,6 +56,17 @@ const CITIES = {
       ['Khar Road', 72.8400, 19.0682], ['Santacruz', 72.8410, 19.0810], ['Vile Parle', 72.8440, 19.0999],
       ['Andheri', 72.8464, 19.1197]],
   },
+  ber: {
+    // T-290: the Stadtbahn from Westkreuz to Ostkreuz; the water pair across the Spree by the
+    // Oberbaumbruecke, checked on the water cache
+    task: 'T-290', name: 'Berlin', centre: [13.3777, 52.5163], water: [[13.4430, 52.5005], [13.4468, 52.5032]],
+    lineName: 'Stadtbahn test', colour: '#008d4f', view: [13.38, 52.515],
+    line: [['Westkreuz', 13.2836, 52.5011], ['Charlottenburg', 13.3044, 52.5049], ['Savignyplatz', 13.3195, 52.5052],
+      ['Zoologischer Garten', 13.3326, 52.5067], ['Tiergarten', 13.3365, 52.5139], ['Bellevue', 13.3474, 52.5199],
+      ['Hauptbahnhof', 13.3695, 52.5251], ['Friedrichstrasse', 13.3870, 52.5203], ['Hackescher Markt', 13.4022, 52.5225],
+      ['Alexanderplatz', 13.4114, 52.5215], ['Jannowitzbruecke', 13.4180, 52.5150], ['Ostbahnhof', 13.4344, 52.5104],
+      ['Warschauer Strasse', 13.4491, 52.5059], ['Ostkreuz', 13.4694, 52.5031]],
+  },
 };
 
 async function playwright() {

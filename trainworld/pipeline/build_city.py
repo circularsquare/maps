@@ -316,6 +316,55 @@ CITIES = {
         "region_name": "Mumbai",
         "latin_names": True,
     },
+    "ber": {
+        "tier0": True,
+        "origin": (13.3777, 52.5163),  # Brandenburger Tor
+        "water": {"cell_m": 25.0, "min_width_px": 2},
+        "boundary_notes": "notes/T-290.md",
+        # Berlin, Potsdam, the eight Landkreise touching Berlin, Brandenburg an der Havel (else a hole
+        # between Havelland and Potsdam-Mittelmark) and Frankfurt (Oder), whole (T-290)
+        "kreise": ["11000", "12054", "12069", "12063", "12065", "12060", "12064", "12067", "12061", "12072",
+                   "12051", "12053"],
+        "boundary_file": lambda: __import__("germany").kreise_boundary("ber", CITIES["ber"]["kreise"]),
+        "population": lambda city, boundary, sig: __import__("germany").zensus_population(city, boundary, sig, CITIES["ber"]["kreise"]),
+        "jobs": lambda city, boundary, sig, w: __import__("germany").pendler_jobs(city, boundary, sig, w, CITIES["ber"]["kreise"]),
+        "jobs_url": "https://pendleratlas.statistikportal.de/",
+        # Geofabrik's Brandenburg extract includes Berlin; the Berlin extract would duplicate it (T-290)
+        "water_source": lambda bbox: __import__("osm_water").source(["europe/germany/brandenburg"])(bbox),
+        "extract": "europe/germany/brandenburg",
+        "iso2": "DE",
+        # Eurostat LFS lfsa_ehomp, Germany 2025, employed 15-64: 13.0% usually work from home, 11.7%
+        # sometimes; judged at about 0.6 and 0.2 of their days, as Paris's (T-290)
+        "wfh": 0.10,
+        # fitted on the Pendlerrechnung's 2024 published flows between Gemeinden with this pack's own
+        # homes and jobs (notes/t290_curve.py); Paris's d^-1.3 exp(-d/20) scores the same
+        "decay_pow": 1.4, "decay_km": 28.0,
+        "region_name": "Berlin-Brandenburg",
+    },
+    # T-420 stage 1: Greater Tokyo, the four prefectures whole, Tokyo's Izu and Ogasawara islands left
+    # out (research/japan.md); Japan's census inputs from pipeline/japan.py
+    "tyo": {
+        "tier0": True,
+        "origin": (139.7671, 35.6812),  # Tokyo Station
+        "water": {"cell_m": 25.0, "min_width_px": 2},
+        "boundary_notes": "notes/T-420.md",
+        "prefectures": ["11", "12", "13", "14"],  # Saitama, Chiba, Tokyo, Kanagawa
+        "neighbours": ["08", "09", "10", "19", "22"],  # land beyond the outline, for meshes it cuts
+        "boundary_file": lambda: __import__("japan").boundary_file("tyo", CITIES["tyo"]["prefectures"]),
+        "population": lambda city, boundary, sig: __import__("japan").mesh_population(city, boundary, sig, CITIES["tyo"]["prefectures"], CITIES["tyo"]["neighbours"]),
+        "jobs": lambda city, boundary, sig, w: __import__("japan").census_jobs(city, boundary, sig, w, CITIES["tyo"]["prefectures"], CITIES["tyo"]["neighbours"]),
+        "jobs_url": "https://www.e-stat.go.jp/gis/statmap-search?type=1",
+        "schools": lambda boundary: __import__("japan").p29_schools(boundary, CITIES["tyo"]["prefectures"], CITIES["tyo"]["neighbours"]),
+        "water_source": lambda bbox: __import__("osm_water").source(["asia/japan/kanto"])(bbox),
+        "extract": "asia/japan/kanto",
+        "iso2": "JP",
+        "wfh": 0.0,  # set from the census and MLIT's telework survey below
+        "decay_pow": 1.4, "decay_km": 20.0,  # placeholder until notes/t420_curve.py
+        "od_share": {"RJAA": 0.8},  # Narita's transfer passengers, judgement
+        "region_name": "Greater Tokyo",
+        "latin_names": True,
+        "kana_romaji": True,  # places.py: romaji from the kana reading where OSM has no Latin name
+    },
     # T-276: non-city zones (docs/zones.md 2): one county each, the counties that touch two city
     # zones. Same sources and cells as a city; `kind` "zone" in the registry.
     "wor": {

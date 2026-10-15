@@ -94,11 +94,15 @@ lines; an edit re-solves only the clusters it touched, the others keep their fig
   Mumbai's two districts and 15 whole talukas: 28.3M people), tier 0 with population scaled to
   2011 census sub-district totals grown to 2020 by district, half the jobs proxy on population
   (informal work), the census's no-travel workers at home, and both curve parameters fitted to
-  the 2011 census commute distance bands, on UTC+5, outside the market [T-292].
+  the 2011 census commute distance bands, on UTC+5, outside the market [T-292]; **Berlin** (Berlin,
+  Potsdam, the eight Landkreise touching Berlin, Brandenburg an der Havel and Frankfurt (Oder):
+  5.5M people), tier 0 with the Zensus 2022 100 m grid scaled to each Gemeinde's population, the
+  Länder's Pendlerrechnung for jobs by Gemeinde of work and a curve fitted on its flows, on UTC+1,
+  outside the market [T-290].
 - **Non-city zones**: Worcester, Windham, New London and Litchfield Counties. Modelled space stays
   between city zones, with no ring round each city, for now (Anita, T-300).
 - **City additions** in the US are paused; a **sampler of other countries' cities** comes next
-  (London, Paris, Shanghai and Mumbai built; Berlin next), each a low-fidelity first pass from general sources
+  (London, Paris, Shanghai, Mumbai and Berlin built), each a low-fidelity first pass from general sources
   (`research/world-sampler.md`). **Cells** are H3 resolution 9 (about 0.1 km²).
 
 ## 4. Demand: local trips

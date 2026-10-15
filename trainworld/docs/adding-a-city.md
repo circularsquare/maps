@@ -366,6 +366,15 @@ census's, scale those units as one group. A census table of commuters by distanc
 curve parameters (`"curve": {"bands": ..., "road_factor": ...}`, `tier0.fit_curve_bands`, about
 100 s in the build).
 
+Berlin (`ber`, T-290, `pipeline/germany.py`) took about 50 minutes: Brandenburg's extract (which
+includes Berlin: never add Geofabrik's Berlin extract beside it, the features would count twice)
+read in 97 s (features) and 107 s (water), the curve script with the signals 4 minutes, the build
+3.5 minutes, `routes.py` 3. BKG's VG250-EW gives Kreise, Gemeinden and their population in one
+file; the Pendleratlas's CSVs (`/data/csv/<year>/<year>_<table>_L<Land>.csv`, found in its JS
+bundle) give jobs by Gemeinde of work and the top flows for the curve. Water test points must sit
+on a channel's middle (polylabel on the cached polygon); a canal under 50 m wide is below the
+mask's 2-pixel width.
+
 What was hard, for the next country:
 
 - **Blocked downloads.** StatCan's geography server (www12) sits behind a bot check, so the

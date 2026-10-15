@@ -56,6 +56,12 @@ VIEWS = {
         ("Vasai Creek and the Ulhas river to Kalyan", 73.00, 19.27, 24.0),
         ("Powai, Vihar and Tulsi lakes", 72.91, 19.16, 8.0),
     ],
+    "ber": [  # T-290
+        ("Central Berlin, the Spree and the Landwehrkanal", 13.40, 52.51, 6.0),
+        ("Havel lakes: Spandau, Wannsee, Tegeler See", 13.20, 52.48, 16.0),
+        ("Mueggelsee and the Dahme", 13.62, 52.43, 10.0),
+        ("Potsdam's lakes", 13.03, 52.38, 12.0),
+    ],
 }
 
 

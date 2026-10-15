@@ -92,7 +92,7 @@
       "zoom": 11.2,
       "utcOffset": -5,
       "market": 0,
-      "localTrips": 47527489.0,
+      "localTrips": 47527611.0,
       "box": [
         -75.219,
         39.475,
@@ -114,7 +114,7 @@
       "zoom": 11.2,
       "utcOffset": -5,
       "market": 1,
-      "localTrips": 13188835.0,
+      "localTrips": 13188246.0,
       "box": [
         -76.257,
         39.272,
@@ -136,7 +136,7 @@
       "zoom": 11.2,
       "utcOffset": -5,
       "market": 3,
-      "localTrips": 11037810.0,
+      "localTrips": 11037820.0,
       "box": [
         -71.924,
         41.565,
@@ -158,7 +158,7 @@
       "zoom": 11.2,
       "utcOffset": -5,
       "market": 4,
-      "localTrips": 13490131.0,
+      "localTrips": 13489918.0,
       "box": [
         -78.418,
         37.972,
@@ -180,7 +180,7 @@
       "zoom": 11.2,
       "utcOffset": -5,
       "market": 5,
-      "localTrips": 5781758.0,
+      "localTrips": 5781861.0,
       "box": [
         -77.335,
         38.694,
@@ -202,7 +202,7 @@
       "zoom": 11.2,
       "utcOffset": -5,
       "market": 6,
-      "localTrips": 3319988.0,
+      "localTrips": 3319920.0,
       "box": [
         -71.908,
         41.095,
@@ -224,7 +224,7 @@
       "zoom": 11.2,
       "utcOffset": -5,
       "market": 7,
-      "localTrips": 1617179.0,
+      "localTrips": 1617450.0,
       "box": [
         -73.352,
         41.087,
@@ -246,7 +246,7 @@
       "zoom": 11.2,
       "utcOffset": -5,
       "market": 8,
-      "localTrips": 2458534.0,
+      "localTrips": 2458603.0,
       "box": [
         -73.054,
         41.177,
@@ -268,7 +268,7 @@
       "zoom": 11.2,
       "utcOffset": -5,
       "market": 9,
-      "localTrips": 1431448.0,
+      "localTrips": 1431177.0,
       "box": [
         -73.1,
         41.979,
@@ -290,7 +290,7 @@
       "zoom": 11.2,
       "utcOffset": -5,
       "market": -1,
-      "localTrips": 15463757.0,
+      "localTrips": 15463790.0,
       "box": [
         -80.274,
         43.032,
@@ -312,7 +312,7 @@
       "zoom": 11.2,
       "utcOffset": 0,
       "market": -1,
-      "localTrips": 33416584.0,
+      "localTrips": 33416727.0,
       "box": [
         -1.17,
         50.844,
@@ -334,7 +334,7 @@
       "zoom": 11.2,
       "utcOffset": 1,
       "market": -1,
-      "localTrips": 28035227.0,
+      "localTrips": 28034918.0,
       "box": [
         1.418,
         48.102,
@@ -356,7 +356,7 @@
       "zoom": 11.2,
       "utcOffset": 8,
       "market": -1,
-      "localTrips": 60497535.0,
+      "localTrips": 60497083.0,
       "box": [
         120.829,
         30.663,
@@ -378,13 +378,35 @@
       "zoom": 11.2,
       "utcOffset": 5,
       "market": -1,
-      "localTrips": 60785715.0,
+      "localTrips": 60785583.0,
       "box": [
         72.633,
         18.467,
         73.817,
         19.888
       ]
+    },
+    {
+      "id": "ber",
+      "name": "Berlin",
+      "origin": {
+        "lon": 13.3777,
+        "lat": 52.5163
+      },
+      "center": [
+        13.3777,
+        52.5163
+      ],
+      "zoom": 11.2,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        12.111,
+        51.708,
+        14.789,
+        53.27
+      ],
+      "localTrips": 12807284.0
     },
     {
       "id": "wor",
@@ -401,7 +423,7 @@
       "zoom": 10.5,
       "utcOffset": -5,
       "market": 10,
-      "localTrips": 1539392.0,
+      "localTrips": 1539179.0,
       "box": [
         -72.341,
         41.989,
@@ -424,7 +446,7 @@
       "zoom": 10.5,
       "utcOffset": -5,
       "market": 11,
-      "localTrips": 183990.0,
+      "localTrips": 183890.0,
       "box": [
         -72.278,
         41.616,
@@ -447,7 +469,7 @@
       "zoom": 10.5,
       "utcOffset": -5,
       "market": 12,
-      "localTrips": 487485.0,
+      "localTrips": 487510.0,
       "box": [
         -72.491,
         41.215,
@@ -470,7 +492,7 @@
       "zoom": 10.5,
       "utcOffset": -5,
       "market": 13,
-      "localTrips": 270255.0,
+      "localTrips": 270393.0,
       "box": [
         -73.543,
         41.449,

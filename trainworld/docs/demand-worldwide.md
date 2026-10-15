@@ -172,6 +172,33 @@ Tier 0 with sub-district totals and a curve fitted to distance bands; notes/T-29
 - **OSM is thin**: 803 school sites for 6.2M pupils, one hospital with beds (so every hospital takes
   the median), a median drive factor of 1.62 between near zones (creeks and hills).
 
+## Germany (Berlin, `pipeline/germany.py`, T-290, 2026-10-15)
+
+Tier 0 with three national upgrades; notes/T-290.md has the tables.
+
+- **Units**: whole Kreise and their Gemeinden from BKG's VG250-EW (land parts), which also carries
+  each Gemeinde's population (the Länder's figure on the Zensus 2022 base). Berlin and Hamburg are
+  one Gemeinde each.
+- **Population**: the Zensus 2022 100 m grid (residents per square, every square in one 153 MB CSV),
+  scaled to each Gemeinde's current population. GHSL is within 2.5% of the census in Berlin but
+  6-10% low in most ring Kreise.
+- **Jobs**: the Länder's Pendlerrechnung (Pendleratlas): everyone employed, by Gemeinde of work
+  (in-commuters plus those working where they live), so civil servants and the self-employed are
+  in, unlike the BA's insured employees. Spread by tier 0's blend inside each Gemeinde, so inside
+  Berlin the jobs have the proxy's shape. The proxy alone gives Berlin 78% of its jobs and the
+  ring Kreise 1.3-1.9 times theirs (14% misplaced between Gemeinden).
+- **Curve**: fitted on the same atlas's flows, which publish each Gemeinde's ten largest in- and
+  out-flows and its own workers (IOP), scored on those pairs only: d^-1.4 exp(-d/28 km). The surface
+  is flat: Paris's and Toronto's curves score the same, London's two points worse, the US curve
+  three. Berlin's own 1.67M internal commuters are one cell, so the fit says little inside Berlin.
+- **Work from home**: 0.10, Eurostat LFS (lfsa_ehomp: 13.0% usually, 11.7% sometimes, Germany
+  2025), judged at 0.6 and 0.2 of their days.
+- **Schools and universities**: tier 0 (schools are per Land in Germany). The national tertiary
+  rate gives 209k students; Berlin holds more than its share of Germany's students, so likely
+  short (no figure checked).
+- **OSM is rich**: 70k job points and 190k job areas, 1,737 school sites, 4,024 medical sites; a
+  median drive factor of 1.42 between near zones (lakes and forests).
+
 ## Homes (docs/demand.md 4.1)
 
 - **People in institutions are not homes** (T-234). The US packs take the 2020 census's

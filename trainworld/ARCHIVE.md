@@ -1,5 +1,6 @@
 # Archive
 
+- T-290 [P2] Berlin. Done 2026-10-15: `ber`, 12 whole Kreise, 5.54M people, tier 0 with Zensus 2022 100 m population, Pendlerrechnung jobs by Gemeinde (2.94M) and a curve fitted on its flows (d^-1.4 exp(-d/28)); checks pass, other packs unchanged. notes/T-290.md.
 - T-397 [P3] Everyday samples per cell scaled to its trips. Done 2026-10-15: one per 8 trips a day, 2 to 16; New York worker peak 259 to 198 MB natively, opening 1.09 to 0.66 s; no station moves over 5%; smoke final 7,596,985. notes/T-397.md.
 - T-402 [P3] Per-cluster finals in the startup and zone-opening solves. Done 2026-10-15: the zone in view's cluster is solved alone through its rounds first; Toronto's final at a Toronto-viewed load 32 s to 5.7 s, the whole final unchanged, figures identical. notes/T-402.md.
 
