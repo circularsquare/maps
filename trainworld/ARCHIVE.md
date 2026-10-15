@@ -1,5 +1,7 @@
 ﻿# Archive
 
+- T-401 [P3] Profile one period's round by layer natively on the real save. Done 2026-10-15: a New York solve is commute pair loop 36.5%, its scatter 13.2%, strategy skims 12.2%, everyday 20%, market 10%; every pass costs the same, rounds are 75%. Next: T-433 to T-435. notes/T-401.md.
+
 - T-426 [P2] Greater Tokyo with Ibaraki, romaji from a dictionary. Done 2026-10-15: five prefectures, 39.75M people, 17.74M jobs, curve kept; kanji names read by UniDic (35% of places, about one in four or five misread); build 10 minutes. notes/T-420.md "Stage 1b".
 
 - T-423 [P3] T-418 stage 3: quad drawn through points. Done 2026-10-15: segments leave each pair a loose end and carry both pairs on from one, concentric, no swing-outs or junctions at joints; twin stations, crossovers and trains work across it. Corners kept (T-422). notes/T-418.md 9.
