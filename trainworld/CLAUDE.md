@@ -15,7 +15,7 @@ Read this, then `SPEC.md`, then `TASKS.md`. Everything else on demand; where cod
 | `notes/T-###.md` | Working notes for a task too big for one line; analysis scripts a note cites | the task's agent |
 | `checks/` | Standing checks, `smoke.mjs` first (code-map.md lists them) | agents |
 | `research/` | Background reports with sources, one file per topic | agents |
-| `TODO.md` | Anita's list: her decisions, tests, chores | Anita; agents add under "Added by agents" only |
+| `TODO.md` | Anita's own list | Anita only; agents never edit it |
 
 ## Doc rules
 
@@ -107,7 +107,7 @@ packs, `..\venv\Scripts\python.exe`). Details and build orders: `docs/code-map.m
 
 - **The goal is the whole world; demand realism is core** (2026-10-13). New US cities stay paused.
   Instead a sampler of other countries' cities (Toronto done; London, Paris, Shanghai, Mumbai, Berlin and
-  Tokyo, the first of Japan's packs, at tier 0 with their country's inputs) to learn which demand methods work everywhere. Each is a
+  Tokyo, Osaka, Nagoya, Fukuoka, Sapporo, Sendai and Hiroshima, the first of Japan's packs, at tier 0 with their country's inputs) to learn which demand methods work everywhere. Each is a
   low-fidelity first pass: missing data (medical, say) is left out, extents pragmatic, basic
   checks, no deep calibration. The global build is the baseline everywhere; the reach goal is
   tailoring country by country, first for likely-popular countries (China, Japan, the UK, Germany
@@ -142,8 +142,9 @@ packs, `..\venv\Scripts\python.exe`). Details and build orders: `docs/code-map.m
 - **Token counts** (2026-10-14): hundreds of metros are planned, so cost per city matters. Every city
   task ends with a retrospective (docs/adding-a-city.md 12); the orchestrator records each task's
   tokens with `checks/token_usage.py` and judges the proposed changes, passing edge cases to Anita.
-- **Asks for Anita** go in the "For you" block of the final message and, if they outlive the
-  session, under "Added by agents" in `TODO.md`. Subagents are welcome (standing go-ahead).
+- **Asks for Anita** go in the "For you" block of the final message, never in `TODO.md` (Anita,
+  2026-10-15). If there are many, or they outlive the session, put them in `notes/for-anita.md` and
+  link it. Subagents are welcome (standing go-ahead).
 - **Serving**: `python serve.py add trainworld <folder> "rail building game"` at the maps root, so
   `localhost:8800/trainworld/`; relative URLs only. 8800 serves a build of the last commit from the
   orchestrator's snapshot worktree `maps/.tw-snap/` (detached HEAD, excluded by
