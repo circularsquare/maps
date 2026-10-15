@@ -90,13 +90,20 @@ rewrites only these files and each pack header's boundary source line) and inter
 `data/work/<id>.*`, and runs every non-work purpose
 (schools, universities, everyday sectors, airports, medical visits, parks), so `enrich_all.py` is
 not needed for a new pack. Parks, medical and airport terminals query Overpass in the US path,
-which can be slow or down (T-196: an hour for nine packs on a bad evening; on 2026-10-13 every
-server answered 504 for the Toronto area, so Canada's adapter reads the same OSM tags from the
-Geofabrik extract instead, `canada.osm_caches`; the US path could do the same).
+which can be slow or down (T-196: an hour for nine packs on a bad evening). Tier 0 and Canada
+read every OSM point and area input (job places, schools and universities, terminals, medical,
+hospital buildings, parks, tier 0's place list) from the region's Geofabrik extract, read once
+by `pipeline/osm_features.py` into `data/raw/osm/<extract>.points.fgb` and `.areas.fgb`
+(T-363; England: 6 minutes in four processes, 920 MB; then seconds a city, London's job places
+40 s). A city gets the same rows as a GDAL read of the .pbf with its own filter. Each script
+still keeps its own small per-city file (`osm_jobs_<id>.csv.gz`, `osm_medical_<id>.json` and
+the like; tier 0's `data/work/<id>.tier0_signals.npz` holds the job places too); delete those to
+reread a city from the cache. The US path could use the same cache.
 
 Then the place list for search and station names (T-177): `venv\Scripts\python.exe
-trainworld\pipeline\places.py wor` → `data/packs/wor.places.json` (one Overpass request, cached
-in `data/raw/osm_places_wor.json`; it prints the count by kind; works for any country).
+trainworld\pipeline\places.py wor` → `data/packs/wor.places.json` (it prints the count by kind).
+A tier 0 city takes it from the extract's cached features; any other city makes one Overpass
+request, cached in `data/raw/osm_places_wor.json` (used whenever it exists).
 
 Then routed walking and driving (T-275): `venv\Scripts\python.exe trainworld\pipeline\routes.py
 wor` adds the `walk` and `drive` arrays from the Geofabrik extract of each region (`EXTRACTS` in
@@ -295,7 +302,8 @@ whole box. To read an extract ahead, or to see a city's mask before its pack exi
 arrays only), draws it with `look_water.py` and runs `read_pack.py`'s water test places for that
 id (add them to `WATER_TESTS`, close-ups to `look_water.VIEWS`). On New York's grid it disagrees
 with TIGER on 0.56% of pixels and passes all 18 of T-030's test places (notes/T-041.md). The
-Geofabrik `.osm.pbf` can go once every OSM read for the region is cached.
+Geofabrik `.osm.pbf` can go once its `.water.fgb`, `.points.fgb`, `.areas.fgb` and `.ways2.npz`
+exist.
 
 A tier 0 city is a `CITIES` entry with `"tier0": True` (the keys are listed in `tier0.py`'s
 docstring); `build_city.py <id>` hands it to `tier0.main`. A country's census then replaces one
@@ -303,10 +311,10 @@ input at a time (the upgrades table in research/world-sampler.md), in a module p
 (`pipeline/england.py`), through tier0's `population`, `jobs` and `schools` hooks. London (`lon`,
 T-288 and T-360, notes/T-288.md) is the worked example: the outline as whole ITL3 units (ONS),
 Census 2021 population by LSOA, BRES jobs by LSOA, GIAS schools, the curve fitted on the 2011
-WU01EW flows (`notes/t360_curve.py`), work from home one national share. Time on a first build: about an
-hour, nearly all of it GDAL reading the 1.7 GB England extract (job places, schools, terminals,
-medical, parks, each a full pass); with those cached a rebuild takes 5 minutes. `places.py`
-(Overpass) answered on the third try; `routes.py` reads the extract once more.
+WU01EW flows (`notes/t360_curve.py`), work from home one national share. Time with England's
+extract already read (water 13 minutes, features 6, roads by `routes.py`): `build_city.py lon`
+about 7.5 minutes reading every OSM input from the feature cache, `routes.py lon --extracts
+europe/united-kingdom/england` 4, `places.py` seconds (T-363).
 
 What London taught, for the next tier 0 city:
 

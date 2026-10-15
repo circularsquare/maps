@@ -111,6 +111,8 @@ packs, `..\venv\Scripts\python.exe`). Details and build orders: `docs/code-map.m
   days of machine time for the build. In tokens (London measured, notes/city-costs.md): a tier 0
   city cost about 6.8M weighted with first-time tooling; perhaps 3M once T-363 and the lean-context
   rules land, so 200 metros about 600M, very roughly two thirds of one week's limit in all.
+- **No precise demand calibration yet** (2026-10-15): balancing and calibrating demand waits until
+  more cities give more data points; a city's checks catch what is badly wrong, nothing finer.
 - **General sources and methods only** (2026-10-12, stressed 2026-10-13). Prefer global sources
   (OSM, GHSL, Kontur, WorldPop) or a method any national census can feed. A one-city source is
   worth it only if very easy; one for a minor city never is. Research briefs say this.

@@ -3,6 +3,10 @@
 Newest first. One entry per decision: what, and why. The spec states the result; this keeps the
 reasoning and what it replaced.
 
+## 2026-10-15
+
+- **The OSM feature cache reproduces GDAL's hiding of relation members** (T-363). A closed way in a multipolygon relation is dropped from a read that also returns the relation, even with tags of its own (a hospital inside a campus relation); `osm_features.read` keeps that so packs match the old per-city reads exactly. Counting every such way instead is one line in `read`, at the risk of counting an area twice.
+
 ## 2026-10-14
 
 - **London stage b: BRES jobs, Census 2021 LSOA population, GIAS schools, its own curve** (T-360). Jobs are BRES 2024 employment by LSOA (8.64M), spread inside each LSOA by the tier 0 proxy; the curve d^-1.85 exp(-d/30 km) is the best district-pair fit to the 2011 WU01EW flows on the pack's own homes and jobs (13.9% misplaced; Toronto's borrowed curve 18.2%); a flatter d^-1.5 exp(-d/20 km) fits the flows' own margins. Universities stay at the national tertiary rate until HESA (T-382).

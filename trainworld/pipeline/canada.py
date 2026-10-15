@@ -265,22 +265,21 @@ def place_kind(shop, amenity, tourism, leisure):
 
 def osm_places(city, boundary, extract=OSM_EXTRACT, cache=None):
     """Per OSM place: kind (errand, leisure, job; or land, commercial or industrial land in units
-    of LANDUSE_M2_PER_PLACE), point and weight. Read from the Geofabrik extract with GDAL's OSM
-    driver (routes.py downloads it; T-277 first tried Overpass in 0.3 degree tiles, and the public
-    servers took minutes a tile and answered 504 on others), cached as a small CSV. Any country's
-    extract works (tier0.py passes its own `cache` path)."""
+    of LANDUSE_M2_PER_PLACE), point and weight. From the extract's cached features (osm_features;
+    T-277 first tried Overpass in 0.3 degree tiles, and the public servers took minutes a tile and
+    answered 504 on others), cached as a small CSV. Any country's extract works (tier0.py passes
+    its own `cache` path)."""
     cache = cache or os.path.join(RAW_CA, f"osm_jobs_{city}.csv.gz")
     if os.path.exists(cache):
         out = pd.read_csv(cache)
     else:
-        import pyogrio
+        import osm_features
         import routes
-        path = routes.download(extract)
         t0 = time.time()
         w, s, e, n = boundary.bounds
         keys = ("shop", "amenity", "office", "craft", "tourism", "leisure")
-        pts = pyogrio.read_dataframe(path, layer="points", columns=["other_tags"], bbox=(w, s, e, n),
-                                     where=" OR ".join(f"other_tags LIKE '%\"{k}\"=>%'" for k in keys))
+        pts = osm_features.read(extract, "points", columns=["other_tags"], bbox=(w, s, e, n),
+                                where=" OR ".join(f"other_tags LIKE '%\"{k}\"=>%'" for k in keys))
         rows = []
         for o, g in zip(pts.other_tags.fillna("").to_numpy(), pts.geometry.to_numpy()):
             t = {k: routes.tag(o, k) for k in keys}
@@ -292,8 +291,8 @@ def osm_places(city, boundary, extract=OSM_EXTRACT, cache=None):
             rows.append((place_kind(t["shop"], am, tour, lei), g.y, g.x, 1.0))
         n_pts = len(rows)
         cols = ["shop", "amenity", "office", "craft", "tourism", "leisure", "landuse"]
-        mp = pyogrio.read_dataframe(path, layer="multipolygons", columns=cols, bbox=(w, s, e, n),
-                                    where=" OR ".join(f"{k} IS NOT NULL" for k in cols))
+        mp = osm_features.read(extract, "multipolygons", columns=cols, bbox=(w, s, e, n),
+                               where=" OR ".join(f"{k} IS NOT NULL" for k in cols))
         for r in mp.itertuples():
             c = r.geometry.representative_point()
             if r.landuse in ("industrial", "commercial", "retail") and not (r.shop or r.amenity or r.office):
@@ -310,7 +309,7 @@ def osm_places(city, boundary, extract=OSM_EXTRACT, cache=None):
         out = pd.DataFrame(rows, columns=["kind", "lat", "lon", "w"])
         os.makedirs(os.path.dirname(cache), exist_ok=True)
         out.to_csv(cache, index=False)
-        print(f"  OSM extract read: {n_pts:,} points, {len(mp):,} areas, {time.time() - t0:.0f} s", flush=True)
+        print(f"  OSM job places: {n_pts:,} points, {len(mp):,} areas, {time.time() - t0:.0f} s", flush=True)
     print("OSM job places: " + ", ".join(f"{k} {v:,.0f}" for k, v in out.groupby("kind").w.sum().items()))
     return out
 
@@ -847,42 +846,43 @@ def _elements(df, cols, node=False):
     return out
 
 
-def _write(name, elements):
+def _write(name, elements, extract):
     path = os.path.join(b.RAW, name + ".json")
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path + ".tmp", "w", encoding="utf-8") as f:
-        json.dump({"elements": elements, "source": f"Geofabrik {OSM_EXTRACT} extract (T-277)"}, f)
+        json.dump({"elements": elements, "source": f"Geofabrik {extract} extract (T-277)"}, f)
     os.replace(path + ".tmp", path)
 
 
 def osm_caches(city, boundary, extract=OSM_EXTRACT):
     """Write the Overpass caches that enrich_airports, enrich_medical and enrich_parks read, from
-    the Geofabrik extract instead (T-277: the public Overpass servers answered 504 for the GTHA).
-    Each file is written only if missing, in the same `out geom tags` shape. Returns the park
-    elements and their cache name for enrich_parks."""
-    import pyogrio
-    import routes
+    the extract's cached features instead (osm_features; T-277: the public Overpass servers
+    answered 504 for the GTHA). Each file is written only if missing, in the same `out geom tags`
+    shape. Returns the park elements and their cache name for enrich_parks."""
+    import osm_features
     import enrich_airports as air
     import enrich_medical as med
     import enrich_parks as parks
-    path = routes.download(extract)
+
+    def read(layer, **kw):
+        return osm_features.read(extract, layer, **kw)
     w, s, e, n = boundary.bounds
     bb = (w - 0.05, s - 0.05, e + 0.05, n + 0.05)
     mcols = ["osm_id", "osm_way_id", "name", "amenity", "aeroway", "leisure", "natural", "building", "other_tags"]
     t0 = time.time()
     term = f"{air.SUB}osm_terminals_{city}"
     if not os.path.exists(os.path.join(b.RAW, term + ".json")):
-        d = pyogrio.read_dataframe(path, layer="multipolygons", columns=mcols, bbox=bb, where="aeroway = 'terminal'")
-        _write(term, _elements(d, ["aeroway", "amenity", "building"]))
+        d = read("multipolygons", columns=mcols, bbox=bb, where="aeroway = 'terminal'")
+        _write(term, _elements(d, ["aeroway", "amenity", "building"]), extract)
         print(f"  extract: {len(d)} terminals", flush=True)
     medn = f"{med.SUB}osm_medical_{city}"
     kinds = "('hospital','clinic','doctors','dentist')"
     hc = " OR ".join(f"other_tags LIKE '%\"healthcare\"=>\"{k}\"%'" for k in ("hospital", "clinic", "doctor", "dentist"))
     if not os.path.exists(os.path.join(b.RAW, medn + ".json")):
-        p = pyogrio.read_dataframe(path, layer="points", columns=["osm_id", "name", "other_tags"], bbox=bb,
-                                   where=" OR ".join(f"other_tags LIKE '%\"amenity\"=>\"{k}\"%'" for k in ("hospital", "clinic", "doctors", "dentist")) + " OR " + hc)
-        m = pyogrio.read_dataframe(path, layer="multipolygons", columns=mcols, bbox=bb, where=f"amenity IN {kinds} OR {hc}")
-        _write(medn, _elements(p, [], node=True) + _elements(m, ["amenity", "building"]))
+        p = read("points", columns=["osm_id", "name", "other_tags"], bbox=bb,
+                 where=" OR ".join(f"other_tags LIKE '%\"amenity\"=>\"{k}\"%'" for k in ("hospital", "clinic", "doctors", "dentist")) + " OR " + hc)
+        m = read("multipolygons", columns=mcols, bbox=bb, where=f"amenity IN {kinds} OR {hc}")
+        _write(medn, _elements(p, [], node=True) + _elements(m, ["amenity", "building"]), extract)
         print(f"  extract: {len(p)} medical points, {len(m)} medical areas", flush=True)
     bld = f"{med.SUB}osm_hospital_buildings_{city}"
     if not os.path.exists(os.path.join(b.RAW, bld + ".json")):
@@ -891,19 +891,19 @@ def osm_caches(city, boundary, extract=OSM_EXTRACT):
         sites = [g for g in sites if g is not None]
         if sites:
             # building:levels and height come through other_tags, as Overpass gives them
-            d = pyogrio.read_dataframe(path, layer="multipolygons", columns=mcols, mask=union_all(sites).buffer(0.0005), where="building IS NOT NULL")
-            _write(bld, _elements(d, ["building"]))
+            d = read("multipolygons", columns=mcols, mask=union_all(sites).buffer(0.0005), where="building IS NOT NULL")
+            _write(bld, _elements(d, ["building"]), extract)
             print(f"  extract: {len(d)} buildings on {len(sites)} hospital sites", flush=True)
         else:
-            _write(bld, [])
+            _write(bld, [], extract)
     pk = f"{parks.SUB}osm_parks_extract_{city}"
     if not os.path.exists(os.path.join(b.RAW, pk + ".json")):
         lei = "('park','common','recreation_ground','beach_resort','nature_reserve','garden')"
-        m = pyogrio.read_dataframe(path, layer="multipolygons", columns=mcols, bbox=bb,
-                                   where=f"leisure IN {lei} OR (\"natural\" = 'beach' AND name IS NOT NULL)")
-        p = pyogrio.read_dataframe(path, layer="points", columns=["osm_id", "name", "other_tags"], bbox=bb,
-                                   where="other_tags LIKE '%\"leisure\"=>\"park\"%'")
-        _write(pk, _elements(m, ["leisure", "natural"]) + _elements(p, [], node=True))
+        m = read("multipolygons", columns=mcols, bbox=bb,
+                 where=f"leisure IN {lei} OR (\"natural\" = 'beach' AND name IS NOT NULL)")
+        p = read("points", columns=["osm_id", "name", "other_tags"], bbox=bb,
+                 where="other_tags LIKE '%\"leisure\"=>\"park\"%'")
+        _write(pk, _elements(m, ["leisure", "natural"]) + _elements(p, [], node=True), extract)
         print(f"  extract: {len(m)} park areas, {len(p)} park points; {time.time() - t0:.0f} s", flush=True)
     with open(os.path.join(b.RAW, pk + ".json"), encoding="utf-8") as f:
         return json.load(f)["elements"], [pk]
@@ -911,7 +911,7 @@ def osm_caches(city, boundary, extract=OSM_EXTRACT):
 
 def enrich_osm(city):
     """Airports, medical visits and parks (the shared enrich scripts), their OSM read from the
-    extract (osm_caches) rather than Overpass."""
+    extract's cached features (osm_caches) rather than Overpass."""
     import enrich_airports
     import enrich_medical
     import enrich_parks

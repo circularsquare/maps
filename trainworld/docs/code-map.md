@@ -172,9 +172,12 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
 - `osm_water.py` is the water source for cities outside the US (OSM coastline sea plus Geofabrik
   inland water, T-041; `source(extracts)` for a config's `water_source`, `mask <id>` for a
   water-only pack in `data/work/osm_water/`; docs/adding-a-city.md).
+- `osm_features.py [extracts]` reads a Geofabrik extract's point and area features once into
+  `data/raw/osm/<extract>.points.fgb` and `.areas.fgb`; `read()` gives tier0.py, canada.py and
+  places.py the rows a GDAL read of the .osm.pbf would (T-363).
 - `places.py [ids]` writes each city's OSM place list, `data/packs/<id>.places.json` (towns and
-  neighbourhoods inside the boundary, one Overpass request a city cached in `data/raw/`; T-177),
-  beside the pack, not in it.
+  neighbourhoods inside the boundary; from the extract's cached features for a tier 0 city, else
+  one Overpass request a city cached in `data/raw/`; T-177), beside the pack, not in it.
 - `frame_fixture.py` writes PROJ's values for the world frame (`app/src/game/frame.fixture.json`),
   which `checks/t125-frame-check.mjs` and the Rust frame test compare with.
 - `tier0.py`: the adapter from global sources only (T-287); `canada.py`: Canada's adapters;

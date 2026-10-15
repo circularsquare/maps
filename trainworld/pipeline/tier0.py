@@ -31,7 +31,8 @@ census or registers then upgrade single inputs by replacing one function. What e
 - Airports: OurAirports scheduled-service airports in the boundary, boardings = Wikidata
   patronage (P3872) / 2, O&D share 1 except the config's judgement values for hubs, pack share
   from the GHSL population around the airport (exp(-d/20 km), as enrich_airports).
-- Medical and parks: the shared scripts, OSM read from the Geofabrik extract (canada.osm_caches).
+- Medical and parks: the shared scripts, OSM from the Geofabrik extract's cached features
+  (osm_features, through canada.osm_caches); job places and schools read the same cache.
 - Water: the config's `water_source` (lon/lat polygons, as water.build_mask takes); for any country
   `osm_water.source([<Geofabrik extracts>])` (T-041: OSM coastline sea plus the extracts' inland
   water).
@@ -570,17 +571,15 @@ def osm_education(city, boundary, extract):
     cache = raw(f"osm_education_{city}.csv.gz")
     if os.path.exists(cache):
         return pd.read_csv(cache, keep_default_na=False)
-    import pyogrio
+    import osm_features
     import overpass
-    import routes
-    path = routes.download(extract)
     t0 = time.time()
     bb = boundary.bounds
     kinds = ("school", "university", "college")
-    mp = pyogrio.read_dataframe(path, layer="multipolygons", columns=["name", "amenity", "other_tags"], bbox=bb,
-                                where="amenity IN ('school','university','college')")
-    pts = pyogrio.read_dataframe(path, layer="points", columns=["name", "other_tags"], bbox=bb,
-                                 where=" OR ".join(f"other_tags LIKE '%\"amenity\"=>\"{k}\"%'" for k in kinds))
+    mp = osm_features.read(extract, "multipolygons", columns=["name", "amenity", "other_tags"], bbox=bb,
+                           where="amenity IN ('school','university','college')")
+    pts = osm_features.read(extract, "points", columns=["name", "other_tags"], bbox=bb,
+                            where=" OR ".join(f"other_tags LIKE '%\"amenity\"=>\"{k}\"%'" for k in kinds))
     import routes as rt
     rows = []
     polys = {k: [] for k in kinds}

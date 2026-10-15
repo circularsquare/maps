@@ -4,9 +4,11 @@ inside the pack's footprint, for the search box and for naming a station placed 
     python pipeline/places.py              every registered city
     python pipeline/places.py nyc phl      some
 
-Needs the pack's boundary (`data/packs/<id>.boundary.geojson`, from build_city.py). One Overpass
-request per city over the boundary's bounding box, cached in `data/raw/osm_places_<id>.json`
-(delete it to refetch); points outside the footprint are dropped. Writes
+Needs the pack's boundary (`data/packs/<id>.boundary.geojson`, from build_city.py). A city whose
+config names a Geofabrik `extract` (tier 0) reads the extract's cached features
+(osm_features); any other, one Overpass request over the boundary's bounding box, cached in
+`data/raw/osm_places_<id>.json` (delete it to refetch; while it exists it is used for every
+city). Points outside the footprint are dropped. Writes
 `data/packs/<id>.places.json`, a separate file so the `.bin` pack is untouched:
 
     {"format": 1, "city": "nyc", "kinds": ["city", "town", ...],
@@ -80,6 +82,25 @@ def fetch(city, bbox):
     raise SystemExit(f"{city}: Overpass failed")
 
 
+def from_extract(extract, bbox):
+    """The same elements from the Geofabrik extract's cached features (osm_features), an area at
+    its bounding box centre as Overpass's `out center` gives it."""
+    import osm_features
+    s, w, n, e = bbox
+    els = []
+    for layer in ("points", "multipolygons"):
+        df = osm_features.read(extract, layer, columns=["name", "place", "other_tags"], bbox=(w, s, e, n),
+                               where=f"place IN {osm_features.PLACE_KINDS} AND name IS NOT NULL")
+        for r in df.itertuples():
+            tags = dict(re.findall(r'"([^"]*)"=>"([^"]*)"', r.other_tags or ""), place=r.place, name=r.name)
+            if layer == "points":
+                els.append({"type": "node", "lon": r.geometry.x, "lat": r.geometry.y, "tags": tags})
+            else:
+                x0, y0, x1, y1 = r.geometry.bounds
+                els.append({"type": "area", "center": {"lon": (x0 + x1) / 2, "lat": (y0 + y1) / 2}, "tags": tags})
+    return {"elements": els}
+
+
 def norm(s):
     s = unicodedata.normalize("NFD", s)
     s = "".join(c for c in s if not unicodedata.combining(c)).lower()
@@ -91,7 +112,13 @@ def build(city):
         fc = json.load(f)
     foot = make_valid(shape(fc["features"][0]["geometry"]))
     w, s, e, n = foot.bounds
-    data = fetch(city, (round(s, 4), round(w, 4), round(n, 4), round(e, 4)))
+    bbox = (round(s, 4), round(w, 4), round(n, 4), round(e, 4))
+    extract = None
+    if not os.path.exists(os.path.join(RAW, f"osm_places_{city}.json")):
+        import build_city
+        extract = build_city.CITIES.get(city, {}).get("extract")
+    data = from_extract(extract, bbox) if extract else fetch(city, bbox)
+    source = f"OpenStreetMap contributors, ODbL (Geofabrik {extract})" if extract else "OpenStreetMap contributors, ODbL (Overpass)"
     rows = []
     for el in data.get("elements", []):
         tags = el.get("tags", {})
@@ -145,7 +172,7 @@ def build(city):
         if r["others"]:
             row.append(r["others"])
         places.append(row)
-    out = {"format": 1, "city": city, "source": "OpenStreetMap contributors, ODbL (Overpass)",
+    out = {"format": 1, "city": city, "source": source,
            "built": datetime.date.today().isoformat(), "kinds": KINDS, "places": places}
     path = os.path.join(PACKS, f"{city}.places.json")
     tmp = path + ".tmp"

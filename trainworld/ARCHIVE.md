@@ -1,5 +1,6 @@
 # Archive
 
+- T-363 [P2] Read a region's OSM once. Done 2026-10-15: `osm_features.py` caches an extract's points and areas (England 6 minutes); tier0, canada and places.py read it; London rebuilt from it gives a byte-identical lon.bin. notes/T-363.md.
 - T-360 [P2] London stage b. Done 2026-10-15: BRES jobs (8.64M), Census 2021 LSOA population, GIAS schools, curve d^-1.85 exp(-d/30 km) from WU01EW; Central test 262k to 533k; tier 0's blend and fallback power retuned, `zones_of` fixed. HESA is T-382. notes/T-288.md.
 - T-288 [P2] London, the first sampler city. Done 2026-10-15: tier 0 build (stage a) then England's inputs (stage b, T-360); playable, outside the market. notes/T-288.md.
 
