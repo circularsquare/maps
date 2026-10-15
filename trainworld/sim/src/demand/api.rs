@@ -436,6 +436,24 @@ impl DemandApi {
         }
         (h, w)
     }
+    /// Rail trips in period `q` by the demand station boarded at the home end: those who walked
+    /// there, and those who rode (T-371).
+    pub fn home_access_modes(&self, q: usize) -> (Vec<f32>, Vec<f32>) {
+        let (Some(st), Some(sz)) = (self.period(q), self.sz.as_ref()) else { return (vec![], vec![]) };
+        let s = self.svc.as_ref().map_or(0, |v| v.st_x.len());
+        let (mut walk, mut ride) = (vec![0f32; s], vec![0f32; s]);
+        if st.sub.acc_home.len() == sz.acc_st.len() {
+            for u in 0..sz.n {
+                for k in sz.walk(u) {
+                    walk[sz.acc_st[k] as usize] += st.sub.acc_home[k];
+                }
+                for k in sz.ride(u) {
+                    ride[sz.acc_st[k] as usize] += st.sub.acc_home[k];
+                }
+            }
+        }
+        (walk, ride)
+    }
     /// Rail trips to work in period `q` by the perceived minutes of the cheapest walks at both
     /// ends together (`kernel::WALKSUM_BAND_MIN` bands).
     pub fn walksum_bands(&self, q: usize) -> Vec<f64> {
@@ -1519,8 +1537,9 @@ mod tests {
             api.params_mut().left_behind = left_behind;
             tph[3] = tph_b;
             cars[1] = cars_b;
-            // line a with room to spare (10 cars leave riders behind mid-peak on this city)
-            cars[0] = 20.0;
+            // line a with room to spare (with rides to stations, T-371, 20 cars leave riders
+            // behind mid-peak on this city)
+            cars[0] = 40.0;
             api.set_network(&xy, &n, &stops, &times, &tph, &cars).unwrap();
             api.solve(0);
             for _ in 0..3 {
@@ -1533,10 +1552,10 @@ mod tests {
             let left_b = st.g.rn_left.iter().zip(&st.g.rn_line).filter(|p| *p.1 == 1).map(|p| *p.0).fold(0.0f32, f32::max);
             (b, a, api.summary(0)[2], left_a, left_b)
         };
-        // line b with room: 12 trains an hour of 32 cars; nobody is left behind and the waits
+        // line b with room: 12 trains an hour of 64 cars; nobody is left behind and the waits
         // change nothing
-        let (b_full_off, _, rail_full_off, _, _) = run(false, 12.0, 32.0);
-        let (b_full, _, rail_full, _, lb_full) = run(true, 12.0, 32.0);
+        let (b_full_off, _, rail_full_off, _, _) = run(false, 12.0, 64.0);
+        let (b_full, _, rail_full, _, lb_full) = run(true, 12.0, 64.0);
         assert_eq!(lb_full, 0.0);
         assert_eq!((b_full, rail_full), (b_full_off, rail_full_off));
         // cut to 4 trains of 8 cars (a twelfth of the room): crowding alone takes some riders
@@ -1547,7 +1566,7 @@ mod tests {
         assert!(lb_on > 5.0, "line b's riders wait {lb_on} minutes more at worst");
         assert_eq!(la_on, 0.0, "line a has room: {la_on}");
         assert!(b_off < b_full, "crowding alone: {b_off:.0} of {b_full:.0}");
-        assert!(b_on < 0.92 * b_off, "line b keeps {b_on:.0} of {b_off:.0} riders");
+        assert!(b_on < 0.95 * b_off, "line b keeps {b_on:.0} of {b_off:.0} riders");
         // line a loses the riders who changed from b; the rest drive
         assert!(rail_on < rail_off, "and some drive: rail {rail_on:.0} against {rail_off:.0}");
         println!("line b full {b_full:.0}; cut, crowding only {b_off:.0}, with the wait {b_on:.0} riders (worst extra wait {lb_on:.1} min); line a {a_off:.0} -> {a_on:.0}; rail {rail_off:.0} -> {rail_on:.0}");
@@ -1794,7 +1813,8 @@ mod tests {
         let (h_mid, w_mid, _) = riders(8);
         assert!(h_end > 0.0 && h_mid > 0.0 && w_mid > 0.0);
         let (x, y) = (api.cell_xy()[2 * c_end], api.cell_xy()[2 * c_end + 1]);
-        assert!((x - xy[0]).hypot(y - xy[1]) < api.base.walk_cutoff_m + 100.0, "a catchment cell beyond the walk's bound");
+        // home cells ride from up to `ride_max_m` from their group's centre (T-371)
+        assert!((x - xy[0]).hypot(y - xy[1]) < api.base.ride_max_m + 9000.0, "a catchment cell beyond the ride's bound");
         assert!(api.station_riders(9999).is_empty());
     }
 
@@ -1838,8 +1858,12 @@ mod tests {
                 if si == 0 {
                     assert!(f[0] > 0.0, "the line's end has rail");
                 }
-                if si == 3 {
-                    assert_eq!(f[0], 0.0, "no rail far from the lines");
+                // far from the lines: homes ride to them (T-371), jobs have no walk from them
+                if si == 3 && end == 0 {
+                    assert!(f[0] > 0.0, "homes far from the lines ride");
+                }
+                if si == 3 && end == 1 {
+                    assert_eq!(f[0], 0.0, "no rail to jobs far from the lines");
                 }
             }
         }

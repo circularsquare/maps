@@ -67,10 +67,13 @@ loads the lines, so they add up to its entries and exits.
 
 ## 5.3 Park-and-ride
 
-Access is the same fast walk at both ends, and any player-built feeder line takes part in regional
-routing. Park-and-ride is planned (T-295): without it a station's commuters between zones come only
-from walking reach, so commuter rail between zones carries a third to a fifth of real figures on a
-test network of five real corridors (notes/T-276.md).
+The local layer's commutes ride to stations at the home end (docs/demand.md 4.3, T-371). The
+regional layer's access is still the walk alone at both ends (the local layer's 6 km/h walk), and
+any player-built feeder line takes part in regional routing. Its rides are T-373 (market sites,
+commutes between zones at the home end, long trips at both ends with a drop-off at the far end):
+until then a station's commuters between zones come only from walking reach, so commuter rail
+between zones carries a third to a fifth of real figures on a test network of five real corridors
+(notes/T-276.md, measured with the earlier fast walk).
 
 ## 5.4 Size
 

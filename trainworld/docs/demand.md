@@ -345,9 +345,9 @@ New York's commutes walk (4.9% with the straight line; ACS: about 6%). Judgement
 notes/T-153.md.
 
 Weights (perceived minutes per real minute), from Subway Builder's published constants where they
-exist: riding 1.0, the fast walk to and from stations 2.0 for its first 10 minutes and 8.0 after
-(below), walking between platforms on a transfer 1.39, platform wait 1.37, waiting at home before a
-known departure 0.4, congested driving 1.33, plus parking cost and ~3 min to park.
+exist: riding 1.0, the walk to and from stations 1.5 (below), walking between platforms on a
+transfer 1.39, platform wait 1.37, waiting at home before a known departure 0.4, congested driving
+1.33 (also on a ride to a station), plus parking cost and ~3 min to park.
 
 **Driving** (T-090, T-275; `place_min_per_km`, `drive_min_f`, `drive_factor` in
 `sim/src/demand/kernel.rs`). The road is the straight line times the two zones' routed factor
@@ -372,13 +372,13 @@ them, or with them made for other zones, has every walk and drive straight x 1.3
   barrier when 3 of its 4 water-mask pixels are water, every OSM way a person may walk on that
   crosses as a bridge (footways, paths, streets; not motorways, trunk roads only with `foot=yes`)
   is land, and islets under 0.1 km² are water. Stations are the player's, so the walk to them is
-  searched in the game: from each station over the raster's pixels within its 4 km bound
+  searched in the game: from each station over the raster's pixels within its 3 km bound
   (eight neighbours, never across a barrier's corner), and a cell's walk is its straight line
   times how much longer the search's path is than the free path between the same two pixels,
   exactly the straight line where nothing is in the way, and none (no access) where water cuts
   it off within the bound. The cells whose walk differs are kept per station position for the
   worker (`routes::station_walks`), shared by a city's commute and everyday populations, so an
-  edit searches only the stations it moved or added. The fast walk to and from stations, the
+  edit searches only the stations it moved or added. The walk to and from stations, the
   access subzones and the trip explorer all use these distances. Between zones, the walk's
   factor to every zone within 2 squares (`walk_zone`) comes from the same search run from each
   zone's representative cell over the other zone's cells, both directions averaged.
@@ -423,34 +423,41 @@ Route choice is not all-or-nothing shortest path. NIMBY Rails' best-known compla
 waiting 50 minutes for a fast train that arrives one minute earlier. Wait time counts at its
 weight and the crowding loop (4.4) spreads riders.
 
-**Access and egress.** Riders spread over the stations they could use by a logit on total cost
-(scale 0.2 per perceived minute: a station 5 minutes worse gets 37% of the better one's weight),
-and rail as a whole is priced at the logsum, so a second usable station helps a little and a
-slightly better one does not take everyone.
+**Access and egress.** Riders spread over the ways they could reach a station (walking or riding
+to each one) by a logit on total cost (scale 0.2 per perceived minute: an option 5 minutes worse
+gets 37% of the better one's weight), and rail as a whole is priced at the logsum, so a second
+usable station helps a little and a slightly better one does not take everyone.
 
-**One way to reach a station: a fast walk** (Anita, 2026-10-09, as Subway Builder does). Getting
-to and from stations is a single access mode at both ends, a walk at roughly bicycle speed and
-willingness: **15 km/h along a path 1.3x the straight line, or round water by a bridge where one is
-in the way (above; 5.2 minutes a straight km); the first
-10 minutes (1.9 km) weigh 2.0 each, every minute after that 8.0** (T-090: a 10-minute ride to the
-station is taken readily, a 20-minute one rarely). So a station 1 km away costs 10 perceived
-minutes, 2 km 23, 2.5 km 44, 3 km 65, 3.5 km 86. Against driving, a home 1 km out has 59% of the
-odds of one beside the station, 2 km out 31%, 2.5 km 11%, 3 km 4%: a station's draw is strong for
-a couple of km and fades out by about 3-3.5 km, sooner where driving is easy and later where it
-is hard (into Manhattan). Between stations the logit above applies (a station 1 km further than
-another within the first 1.9 km gets 12% of its riders, beyond that under 1%).
+**Walking to a station** (Anita, 2026-10-14, T-371). A true walk at both ends: **6 km/h along a
+path 1.3x the straight line, or round water by a bridge where one is in the way (above; 13 minutes
+a straight km), each minute weighing 1.5** (`w_walk`, a starting value for T-372's fit;
+notes/T-371.md). So a station 500 m away costs 9.8
+perceived minutes, 1 km 19.5, 2 km 39. Between walks the logit above applies (a station 500 m
+further gets 14% of the nearer one's riders).
+
+**Riding to a station** (Anita, 2026-10-14, T-295, T-371). Car, bus, bike or a lift are one mode,
+the ride, called driving in the game. It is offered only at the home end of a commute whose two
+zones' centres are at least 5 km apart (`ride_min_km`: shorter, the ride cannot beat driving the
+whole way), from the home zone's home-weighted centre. It costs **`p_ride` 10 + 1.33 x the drive
+to the station + the cheaper of parking at the station and a drop-off, `d_drop` 10** perceived
+minutes: the drive is the whole-trip drive's rule (below), from the home zone to the station's
+zone, and parking is a destination's (3 to park plus the station zone's job density). In a suburb
+a ride to a station 1 km off costs about 16, 3 km 21, 10 km 30, so past about 1 km it is cheaper
+than walking and access flattens out: a long commute's rail cost grows slowly with the distance to
+the station, as Anita's curve does. Which stations: within 15 km straight line (`ride_max_m`), the
+cheapest station of each line, then those of the 6 cheapest lines (`ride_lines`), so a rider
+skips the local stop for the line they want. Homes beyond every walk (3 km) are one subzone per
+6 km square (3 x 3 zones) with rides only, from its home-weighted centre, keeping each zone's
+trip total but taking the most populous zone's distance decay; a commute's work end and the everyday purposes walk only. Car parks are
+automatic and unlimited. `p_ride` and `d_drop` are starting values for T-372's fit.
 
 Two **computational bounds** keep the work down and are set where little rail is left: stations
-are looked for within 4 km straight line (`walk_cutoff_m`), and a pair of places is offered rail
-only if its walks at the two ends together cost at most 80 perceived minutes (`pair_walk_max`).
-On the real New York network 0.1% of rail trips start 3.5-4 km from their station and 0.3% have
-walks of 70-80 together; for a lone line in Manhattan, the worst case, 3% start 3-3.5 km out and
-the bounds cost it about 4% of its riders (notes/T-090.md).
+are looked for within 3 km straight line of a walk (`walk_cutoff_m`), and a pair of places is
+offered rail only if its access and egress together cost at most 80 perceived minutes
+(`pair_walk_max`; a 3 km walk costs 59).
 
-There is no drive, park-and-ride or feeder-bus leg to a station: it was most of a lone Manhattan
-line's riders and doubled suburban rail on the real network (notes/T-034.md), and one mode is
-easier to read. Driving is only the alternative for the whole trip (Anita, 2026-10-09). Roughly
-calibrated on the real New York network (section 9, notes/T-078.md, T-090.md).
+Driving is the alternative for the whole trip. Roughly calibrated on the real New York network
+(section 9, notes/T-078.md, T-090.md, T-371.md).
 
 ### 4.4 Cost of computing it
 

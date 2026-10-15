@@ -273,6 +273,19 @@ Tier 0 with sub-district totals and a curve fitted to distance bands; notes/T-29
   Barriers other than water (motorways, rail yards, gated estates, rivers in deep cuttings) are
   not barriers. Check: the probes in notes/T-275.md for a few crossings per city
   (`pack_walk --probe`).
+- **Walking and riding to a station** (T-371, docs/demand.md 4.3). The walk is 6 km/h on a path
+  1.3x the straight line at weight 1.5; a commute of 5 km or more may instead ride (car, bus, bike
+  or a lift, one mode) to the cheapest station of each line within 15 km, at `p_ride` 10 + 1.33 x
+  the density-model drive + the cheaper of parking by the station zone's job density and a
+  drop-off of 10. Nothing in it is per country: drive speeds come from density, parking from job
+  density, and nobody lacks the ride for want of a car. Why it may not carry over: `p_ride` stands
+  for getting the car out and walking from the car park, a North American picture; where the ride
+  is mostly a bus, a share-auto or a motorbike taxi (Mumbai, Jakarta, Lagos) its fixed cost
+  includes a wait and should be larger, and where cycling is the usual way to the station (the
+  Netherlands, Japan) the ride is cheaper and shorter than here. The work end walks only. The
+  weights are starting values (T-372 fits them on New York). Check: the share of rail riders
+  reaching the station by car or bus per sampler city (UK NTS for London, Metrolinx surveys for
+  Toronto) against the model's home-end ride share (`realnet` prints it).
 - **Walking curve.** Fitted to New York (ACS B08301 walked, T-058/T-090). Walking tolerance
   differs by climate, culture and street design.
 - **Value of time and fare sensitivity.** One value for everyone, from US figures. Incomes differ

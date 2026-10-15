@@ -1112,7 +1112,8 @@ impl EverydayApi {
             let Some(sz) = &self.engine.sz else { return };
             let (u, v) = (sz.cell[c], sz.cell[d]);
             // both ends in a subzone first: the weights cost an exp and a square root
-            if u == NONE || v == NONE {
+            // the ride (T-371) is the commute's only: homes beyond every walk have no rail here
+            if u == NONE || v == NONE || sz.walk(u as usize).is_empty() || sz.walk(v as usize).is_empty() {
                 continue;
             }
             let distance = self.distance(c, d);
@@ -1197,7 +1198,7 @@ impl EverydayApi {
             used[pair.v as usize] = true;
         }
         for u in (0..sz.n).filter(|&u| used[u]) {
-            for k in sz.acc_off[u] as usize..sz.acc_off[u + 1] as usize {
+            for k in sz.walk(u) {
                 want[sz.acc_st[k] as usize] = true;
             }
         }
@@ -1235,7 +1236,7 @@ impl EverydayApi {
             let mut min = vec![0.0; sz.n];
             let mut acc = vec![0.0; sz.acc_st.len()];
             for u in 0..sz.n {
-                let r = sz.acc_off[u] as usize..sz.acc_off[u + 1] as usize;
+                let r = sz.walk(u);
                 min[u] = sz.acc_w[r.clone()]
                     .iter()
                     .copied()
@@ -1262,8 +1263,7 @@ impl EverydayApi {
                     if min[u] + min[v] > p.pair_walk_max {
                         continue;
                     }
-                    let a = sz.acc_off[u] as usize..sz.acc_off[u + 1] as usize;
-                    let b = sz.acc_off[v] as usize..sz.acc_off[v + 1] as usize;
+                    let (a, b) = (sz.walk(u), sz.walk(v));
                     let mut sum = 0.0;
                     for ka in a.clone() {
                         for kb in b.clone() {

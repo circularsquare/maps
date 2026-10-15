@@ -95,13 +95,15 @@ pub(crate) fn pair_choice(api: &DemandApi, p: &Params, sk: &Skims, u: usize, v: 
     let z = &api.z;
     let th = p.station_theta;
     let s = sk.s;
-    let ends = |w: usize| {
-        let r = sz.acc_off[w] as usize..sz.acc_off[w + 1] as usize;
+    let (i, j) = (sz.zone[u] as usize, sz.zone[v] as usize);
+    let ends = |r: std::ops::Range<usize>| {
         let m = sz.acc_w[r.clone()].iter().cloned().fold(f32::INFINITY, f32::min);
         (r, m)
     };
-    let (ru, m_u) = ends(u);
-    let (rv, m_v) = ends(v);
+    // T-371: a long commute's home end walks or rides
+    let by_ride = !sz.ride(u).is_empty() && ride_offered(z, p, i, j);
+    let (ru, m_u) = ends(if by_ride { sz.acc_off[u] as usize..sz.acc_off[u + 1] as usize } else { sz.walk(u) });
+    let (rv, m_v) = ends(sz.walk(v));
     let acc_e = |k: usize, m: f32| fast_exp(-th * (sz.acc_w[k] - m));
     // `station_exp`: exp(-theta r), 0 where there is no route and on the diagonal
     let er = |a: usize, t: usize| {
@@ -123,7 +125,6 @@ pub(crate) fn pair_choice(api: &DemandApi, p: &Params, sk: &Skims, u: usize, v: 
             pairs.push((ka, kt, acc_e(ka, m_u) * er(sz.acc_st[ka] as usize, t) * eg));
         }
     }
-    let (i, j) = (sz.zone[u] as usize, sz.zone[v] as usize);
     let d = ((sz.cx[u] - sz.cx[v]).powi(2) + (sz.cy[u] - sz.cy[v]).powi(2)).sqrt();
     let drive_min = p.drive_min_f(d, p.drive_factor(i, j), p.place_min_per_km(zone_density(z, i)), p.place_min_per_km(zone_density(z, j)));
     let park = park_at(z, p, j);
@@ -306,7 +307,7 @@ impl DemandApi {
         // strategies towards the destination's egress stations only (each search is independent,
         // so they are the model's, T-119)
         let mut want = vec![false; st.g.n_st];
-        for k in sz.acc_off[v] as usize..sz.acc_off[v + 1] as usize {
+        for k in sz.walk(v) {
             want[sz.acc_st[k] as usize] = true;
         }
         let sk = skims_for(&st.g, p, &want);
@@ -343,7 +344,7 @@ impl DemandApi {
         let mut body = vec![];
         for &(ka, kt, share) in &pairs {
             let (a, t) = (sz.acc_st[ka] as usize, sz.acc_st[kt] as usize);
-            body.extend([a as f64, t as f64, rep[a], rep[t], sz.acc_d[ka] as f64, sz.acc_w[ka] as f64, sz.acc_d[kt] as f64, sz.acc_w[kt] as f64, sk.r[a * s + t] as f64, share as f64, p.walk_min(sz.acc_d[ka]) as f64, p.walk_min(sz.acc_d[kt]) as f64]);
+            body.extend([a as f64, t as f64, rep[a], rep[t], sz.acc_d[ka] as f64, sz.acc_w[ka] as f64, sz.acc_d[kt] as f64, sz.acc_w[kt] as f64, sk.r[a * s + t] as f64, share as f64, sz.acc_t[ka] as f64, sz.acc_t[kt] as f64]);
         }
         // routes over the bigger pairs, by their share of the whole trip's rail riders
         let mut all: Vec<(usize, f32, Vec<Leg>)> = vec![];
@@ -499,7 +500,7 @@ mod tests {
                     if sz.pop[u] <= 0.0 || z.pop[i] <= 0.0 {
                         continue;
                     }
-                    let ou = (gr.row[i] * sz.pop[u] as f64 / z.pop[i] * share) as f32;
+                    let ou = sz.origin_weight(u, z, gr, share);
                     let mut rail = 0f64;
                     for v in 0..sz.n {
                         let j = sz.zone[v] as usize;
@@ -697,7 +698,7 @@ mod tests {
             }
             let u = v[4] as usize;
             let i = sz.zone[u] as usize;
-            let ou = (gr.row[i] * sz.pop[u] as f64 / z.pop[i] * st.p.period_share as f64) as f32;
+            let ou = sz.origin_weight(u, z, gr, st.p.period_share as f64);
             let mut rail = 0f64;
             for w in 0..sz.n {
                 let jz = sz.zone[w] as usize;

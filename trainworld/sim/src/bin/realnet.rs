@@ -133,6 +133,7 @@ fn main() {
 
     let mut periods = vec![];
     let (mut day_trips, mut day_rail, mut day_walk) = (0.0, 0.0, 0.0);
+    let (mut day_home_walk, mut day_home_ride) = (0f64, 0f64);
     let (mut band_h, mut band_w) = (vec![0f64; N_BANDS], vec![0f64; N_BANDS]);
     let mut stage_ms = vec![];
     let mut walksum = vec![0f64; N_WALKSUM];
@@ -173,6 +174,9 @@ fn main() {
             walksum[b] += v;
         }
         let (board, alight) = api.station_board(q);
+        let (home_walk, home_ride) = api.home_access_modes(q);
+        day_home_walk += home_walk.iter().map(|&v| v as f64).sum::<f64>();
+        day_home_ride += home_ride.iter().map(|&v| v as f64).sum::<f64>();
         let mut by_cty = Value::Null;
         if let Some(c) = &counties {
             let rail = api.rail_by_cell(q);
@@ -192,6 +196,8 @@ fn main() {
             "exits": round_vec(&api.exits(q), 1.0),
             "board": round_vec(&board, 1.0),
             "alight": round_vec(&alight, 1.0),
+            "home_walk": round_vec(&home_walk, 1.0),
+            "home_ride": round_vec(&home_ride, 1.0),
             "seg": round_vec(&api.seg(q), 1.0),
             "load_of_crush": api.load_of_crush(q).iter().map(|&v| (v as f64 * 1000.0).round() / 1000.0).collect::<Vec<_>>(),
             "county": by_cty,
@@ -207,6 +213,7 @@ fn main() {
         api.n_subzones(),
         (now_ms() - t0) / 1000.0
     );
+    eprintln!("home end: {:.1}% of rail trips ride to the station (T-371)", 100.0 * day_home_ride / (day_home_walk + day_home_ride).max(1e-9));
     // T-090: rail trips by distance from home (and work) to the station, % per band
     let (th, tw) = (band_h.iter().sum::<f64>().max(1e-9), band_w.iter().sum::<f64>().max(1e-9));
     let mut lo = 0.0;
