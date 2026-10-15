@@ -127,7 +127,9 @@ Web first, so it can be shared as a link.
   construction) is a load without a hold and counts as done at its first estimate (`READY_ROUND`).
   The demand pool starts before the map is
   set up; the regional market goes to the workers as bytes and is decoded there; each zone's
-  boundary file is fetched once for the reach test and the outlines (`game/boundaries.ts`).
+  boundary file is fetched once for the reach test and the outlines (`game/boundaries.ts`). The
+  clock worker is ready without any water mask: masks, outlines and place lists are fetched per zone
+  as the view, track or a search needs them (T-302, T-400; docs/zones.md 6).
   `game/loading.ts`; timings in notes/T-172.md, frame times in notes/T-180.md.
 - **Threads talk by snapshots**: a worker transfers a finished buffer with a version number; the
   main thread swaps it in. Works on any host. SharedArrayBuffer is a later option; it needs

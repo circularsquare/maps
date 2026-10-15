@@ -77,7 +77,9 @@ export type ToClock =
    * new game even if there is an autosave (`?new=1`). `testPage`: the page is a check or stress
    * page (`?new=1`, `?synth=1`, `?demandTest=1`, T-320): it never writes a slot until the player
    * saves a copy; `fresh` also does not read one. */
-  | { kind: "init"; city: string; pack: string; packs?: string[]; fresh?: boolean; testPage?: boolean; slot?: string }
+  | { kind: "init"; city: string; pack: string; fresh?: boolean; testPage?: boolean; slot?: string }
+  /** the view's bounds in degrees after a move (T-302): water masks near it are fetched ahead */
+  | { kind: "view"; w: number; s: number; e: number; n: number }
   | { kind: "edit"; seq: number; op: EditOp }
   /** what a route would cost and whether it can be built; answered with "preview" */
   | { kind: "preview"; seq: number; from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean }
@@ -273,7 +275,7 @@ export interface ClockState {
 }
 
 export type FromClock =
-  | { kind: "ready"; initMs: number; frame: FrameSpec; water: boolean; population: number; jobs: number }
+  | { kind: "ready"; initMs: number; frame: FrameSpec }
   /** an edit's answer; `issues` are the track model's problem kinds (`TrackApi.issue_kinds`) */
   /** `ms`: the worker's time on the edit by step (T-229, for `?debug=1`) */
   | { kind: "edited"; seq: number; ok: boolean; issues: string[]; charge: number; line?: number; ms?: Record<string, number> }

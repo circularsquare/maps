@@ -28,7 +28,7 @@ import { distance, length, money, moneyShort, speed, unitMetres, unitShort } fro
 import { metresBetween } from "../game/walks";
 import { ask, buildLevel, buildPlatform, lineDraft, selection, trackCount, tool } from "../game/ui";
 import { describeRemovable, removeThing, type Removable } from "../game/remove";
-import { loadPlaces, placesNear } from "../game/placeList";
+import { loadPlacesAt, placesNear } from "../game/placeList";
 import { compass } from "../game/places";
 import { edit, say, world } from "../game/world";
 import type { PiInput, RouteEnd } from "../workers/protocol";
@@ -84,9 +84,9 @@ export class Tools {
     this.box.append(this.tag, this.ring);
     overlay.afterMapFrame.push(() => this.place());
     effect(() => { buildPlatform.value; if (tool.value === "station") this.place(); });
-    // the place lists name stations where the tiles have no streets (T-065); fetch them once the
-    // station tool is first picked, not at startup
-    effect(() => { if (tool.value === "station") void loadPlaces(); });
+    // the place lists name stations where the tiles have no streets (T-065); the view's zones' are
+    // fetched when the station tool is picked, not at startup (T-400)
+    effect(() => { if (tool.value === "station") { const c = this.map.getCenter(); void loadPlacesAt(c.lng, c.lat); } });
     effect(() => { buildLevel.value; trackCount.value; if (tool.peek() === "track" && this.start) this.requestPreview(); });
     effect(() => {
       const active = tool.value === "line" ? lineDraft.value.line : null;

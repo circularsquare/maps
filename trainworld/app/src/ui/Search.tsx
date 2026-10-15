@@ -1,5 +1,6 @@
 // The search box at the map's upper right (T-148): stations, lines, cities, towns and
-// neighbourhoods by name (game/search.ts; the place lists load on first focus, T-177). Most of the
+// neighbourhoods by name (game/search.ts; the view's zones' place lists load on first focus, T-177,
+// T-400). Most of the
 // time it is a small magnifying glass (T-211); a click on it, "/", Ctrl+K or Ctrl+F opens the box
 // and focuses it, the arrow keys move through the results, Enter picks, and Escape, a pick or
 // leaving the box empty closes it again. Picking moves the camera there at once (no flight, like
@@ -10,7 +11,8 @@ import { h, render } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { activeCity } from "../game/cities";
 import { zoneAt } from "../game/zones";
-import { loadPlaces, places } from "../game/placeList";
+import { loadPlacesAt, places, widenPlaces } from "../game/placeList";
+import { viewCentre } from "../game/listScope";
 import { search, type SearchHit } from "../game/search";
 import { ask, selection, tool } from "../game/ui";
 import type { LineInput } from "../game/types";
@@ -19,6 +21,8 @@ import { live } from "../map/live";
 import { keyIsTheirs } from "./keys";
 import { Chip } from "./widgets";
 
+/** T-400: a search showing fewer results than this asks for more zones' place lists. */
+const WANT = 5;
 /** Closest zoom a station result opens at, unless the map is already closer. */
 const STATION_ZOOM = 14;
 /** The zoom a town or neighbourhood opens at (T-177), by its OSM kind: a town whole, a
@@ -87,6 +91,12 @@ export function Search() {
   void places.value; // and the place lists as they arrive (fetched on first focus, T-177)
   const hits = open ? search(query) : [];
   const cur = Math.min(at, Math.max(0, hits.length - 1));
+  // T-400: few results from the lists in so far: the next nearest zones' lists, until enough or all
+  const wanting = open && query.trim().length >= 3 && hits.length < WANT;
+  useEffect(() => {
+    const c = viewCentre.peek();
+    if (wanting && c) void widenPlaces(c[0], c[1]);
+  }, [wanting, query, places.value.size]);
 
   const expand = () => {
     if (input.current) {
@@ -167,7 +177,7 @@ export function Search() {
         autocomplete="off" spellcheck={false} role="combobox" aria-expanded={open && !!query.trim()}
         aria-controls="map-search-results" aria-activedescendant={hits.length ? `map-search-${cur}` : undefined}
         onInput={(e) => { setQuery(e.currentTarget.value); setOpen(true); setAt(0); }}
-        onFocus={() => { setOpen(true); void loadPlaces(); }}
+        onFocus={() => { setOpen(true); const c = viewCentre.peek(); if (c) void loadPlacesAt(c[0], c[1]); }}
         onBlur={(e) => { setOpen(false); if (!e.currentTarget.value) setExpanded(false); }}
         onKeyDown={onKey} />
       {open && query.trim() && (

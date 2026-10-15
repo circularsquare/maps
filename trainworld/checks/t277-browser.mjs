@@ -35,7 +35,7 @@ try {
   result.opening = await page.evaluate(t0 => { const l = window.twDemand.client.start.loads.find(l => l.item === 'tor'); return { download: Math.round(l.downloadedAt - l.requestedAt), open: Math.round(l.openedAt - l.downloadedAt), fromPan: Math.round(l.openedAt - t0) }; }, t0);
   check('Toronto opens at runtime', true, result.opening);
   await page.waitForFunction(() => window.twDemand.activeCity.value === 'tor', undefined, { timeout: 60000 });
-  const layer = await page.evaluate(() => !!window.tw.map.getLayer('tw-city-boundary-tor'));
+  const layer = await page.evaluate(() => !!window.tw.map.getLayer('tw-city-boundaries')); // T-400: one layer for every zone
   check('Toronto is the active city and its boundary layer exists', layer, { layer });
   await page.evaluate(() => { const d = document.querySelector('#debug'); if (d) d.style.display = 'none'; window.tw.display.value = { ...window.tw.display.value, commuters: true, commuterEnd: 'home' }; });
   await page.waitForTimeout(8000);

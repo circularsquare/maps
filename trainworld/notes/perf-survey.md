@@ -80,6 +80,13 @@ rounds unchanged. At 1k: about half of that.
   allocated and still visited. Storing slots only for cells with a budget (an offset per purpose)
   gives identical results: New York 113 to 59 MB a worker; the nine Northeast cities about -200 MB
   of T-178's 496 MiB. Half a day to a day. (T-395)
+  **Done 2026-10-15**, measured natively with the counting allocator (`t395_probe`, since removed):
+  samples + `edge_pair` New York 107.8 to 56.6 MB, the nine Northeast cities 396 to 207 MB; heap
+  after opening plus `edge_pair`, nine cities, 448 to 276 MB a worker; New York after
+  `set_network` 160.7 to 113.5 MB. New York's opening (1.20 / 1.17 s), `set_network` (0.75 s) and
+  20 passes (17.2 / 16.3 s) unchanged within noise. Every output dumped (loads, parts, kind
+  totals, cell modes, selections, five periods and three crowding rounds on the real track)
+  identical to the byte.
 - **Samples scaled to a cell's trips** (2 to 16 instead of always 16, one per trip or so): slots
   fall to 23-33% of today's (New York 113 to about 32 MB), with a little more sampling noise in
   sparse cells and the totals kept. (T-397)

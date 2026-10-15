@@ -1,5 +1,9 @@
 # Archive
 
+- T-395 [P2] Everyday destination slots only where a purpose has a budget. Done 2026-10-15: samples and `edge_pair` New York 108 to 57 MB natively, nine cities' everyday heap 448 to 276 MB a worker; every output identical to the byte. notes/perf-survey.md 3.
+
+- T-178 [P3] Everyday layer memory per open city. Closed 2026-10-15: covered by T-395 (done, -172 MB a nine-city worker natively) and T-397 (open, fewer samples in sparse cells).
+
 - T-392 [P2] T-326 stages 2 and 3 (T-393 with it). Done 2026-10-15: after an edit clusters solve one by one, the viewed one first, each published as it lands; clicks on a cluster not being solved answer at once (0.4-0.6 s, 28 s before); status tag only for the zone being solved; Toronto edit 2.3 s. notes/T-326.md.
 
 - T-326 [P2] Loading fix 3 (T-303 item 3). Done 2026-10-15 in three stages: separate clusters solve separately (stage 1: unchanged clusters keep their result, a Toronto edit's final 28.5 s to 4.5 s), stages 2 and 3 as T-392; figures identical to the bit. notes/T-326.md.

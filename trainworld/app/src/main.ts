@@ -165,10 +165,13 @@ if (SYNTH) {
   // The draw anchor follows the view (T-307, map/geo.ts): asked for when a move ends far from it;
   // once the network drawn at the new one is in, a MapLibre frame moves everything placed on it
   // (names, tags, the trip view) with the same camera.
+  const bounds = () => { const b = map.getBounds(); client.followBounds(b.getWest(), b.getSouth(), b.getEast(), b.getNorth()); };
   map.on("moveend", () => {
     const c = map.getCenter();
     client.followView(c.lng, c.lat, map.getZoom());
+    bounds();
   });
+  bounds();
   client.onAnchor = () => {
     map.triggerRepaint();
     overlay.invalidate();

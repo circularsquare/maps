@@ -15,7 +15,9 @@ export type CityId = string;
  * bubble of a zone not opened. */
 /** `market`: the city's place in the regional market, or -1 for one outside it (Toronto, T-277).
  * `utcOffset`: its whole-hour standard time offset from UTC, no daylight saving (T-309). */
-export interface City { id: CityId; name: string; kind?: "city" | "zone"; origin: { lon: number; lat: number }; center: [number, number]; zoom: number; utcOffset?: number; market: number; localTrips?: number }
+/** `box`: [west, south, east, north] in degrees round its boundary and water mask
+ * (pipeline/zone_boxes.py, T-302), so where a zone is is known without fetching its files. */
+export interface City { id: CityId; name: string; kind?: "city" | "zone"; origin: { lon: number; lat: number }; center: [number, number]; zoom: number; utcOffset?: number; market: number; localTrips?: number; box?: [number, number, number, number] }
 interface Registry {
   world: string;
   /** T-309: the UTC offset the game clock counts world time in (game/localTime.ts) */
@@ -111,6 +113,22 @@ export function cityWithin(lon: number, lat: number): CityId | null {
   const id = cityNear(lon, lat), c = cityById(id);
   const kx = 111_320 * Math.cos(lat * Math.PI / 180);
   return Math.hypot((lon - c.center[0]) * kx, (lat - c.center[1]) * 111_320) <= CENTRE_REACH_M ? id : null;
+}
+
+/** A zone's `box`, or for one without it a square `CENTRE_REACH_M` round its centre. */
+export function zoneBox(c: City): [number, number, number, number] {
+  if (c.box) return c.box;
+  const dy = CENTRE_REACH_M / 111_320, dx = dy / Math.cos(c.center[1] * Math.PI / 180);
+  return [c.center[0] - dx, c.center[1] - dy, c.center[0] + dx, c.center[1] + dy];
+}
+
+/** The zones whose boxes, widened by `marginM` metres, meet the box [w, s, e, n] in degrees. */
+export function zonesTouching(w: number, s: number, e: number, n: number, marginM = 0): City[] {
+  return CITIES.filter((c) => {
+    const [bw, bs, be, bn] = zoneBox(c);
+    const dy = marginM / 111_320, dx = dy / Math.cos(Math.min(85, Math.max(Math.abs(bs), Math.abs(bn))) * Math.PI / 180);
+    return w <= be + dx && e >= bw - dx && s <= bn + dy && n >= bs - dy;
+  });
 }
 
 /** The view in the URL hash (`#zoom/lat/lng`), before MapLibre reads it. */

@@ -77,8 +77,8 @@ struct Sampler<'a> {
     kind: usize,
     /// samples per cell for this purpose (`SAMPLES`)
     k: usize,
-    /// trips sent from each cell: residents, or a school's or university's enrollment
-    budget: &'a [f32],
+    /// each cell's row of samples in this purpose's slice, NONE for a cell with no budget
+    row: &'a [u32],
     h3: &'a [u64],
     x: &'a [f32],
     y: &'a [f32],
@@ -90,16 +90,14 @@ struct Sampler<'a> {
 }
 
 impl Sampler<'_> {
-    fn budget(&self, c: usize) -> f32 {
-        self.budget.get(c).copied().unwrap_or(0.0)
-    }
     /// `self.k` stratified destinations for each cell of one origin zone, from that zone's `cdf`
     /// over `zones`, into `out` (this purpose's slice of the destinations).
     #[inline(never)]
     fn sample(&self, cells: &[usize], cdf: &[f64], total: f64, out: &mut [u32]) {
         let n_k = self.k;
         for &c in cells {
-            if self.budget(c) <= 0.0 {
+            let row = self.row[c];
+            if row == NONE {
                 continue;
             }
             let seed = (self.h3[c] ^ (self.h3[c] >> 32)) as u32 ^ (self.kind as u32).wrapping_mul(0x9e3779b9);
@@ -114,7 +112,7 @@ impl Sampler<'_> {
                 let distance = ((self.x[c] - self.x[d]).powi(2) + (self.y[c] - self.y[d]).powi(2)).sqrt();
                 // Excluded trips vanish, including from all-mode denominators. No replacement.
                 if distance >= MIN_DISTANCE_M && local_share(distance) > 0.0 {
-                    out[c * n_k + k] = d as u32;
+                    out[row as usize * n_k + k] = d as u32;
                 }
             }
         }
@@ -358,7 +356,7 @@ mod tests {
             "attendance budget follows enrollment, not resident totals"
         );
         let mut school_edges = 0;
-        for k in 2 * 2 * K..a.destinations.len() {
+        for k in a.start[2]..a.destinations.len() {
             if let Some((kind, home, school, _, _)) = a.edge(k) {
                 assert_eq!((kind, home, school), (2, 0, 1));
                 school_edges += 1;
@@ -444,7 +442,7 @@ mod tests {
         assert_eq!(&a.info()[..9], &old.info());
         assert_eq!(&a.destinations[..old.destinations.len()], &old.destinations);
         assert!((a.totals[3]-60.0).abs()<1e-4);
-        for k in 3*2*K..a.destinations.len() {
+        for k in a.start[3]..a.destinations.len() {
             if let Some((kind, home, campus, _, _)) = a.edge(k) {
                 assert_eq!((kind,home,campus),(3,1,0));
             }
@@ -1078,8 +1076,11 @@ pub struct EverydayApi {
     airport_origin: Vec<f32>,
     airport_scale: Vec<f64>,
     /// Where each purpose's samples start in `destinations` (one more entry than purposes): a
-    /// purpose holds cells x `SAMPLES[kind]`, purpose by purpose.
+    /// purpose holds `SAMPLES[kind]` for each of its `live` cells, purpose by purpose.
     start: Vec<usize>,
+    /// Per purpose, the cells with a budget for it (ascending), the only ones holding samples
+    /// (T-395: about half of all cells x purposes have none).
+    live: Vec<Vec<u32>>,
 }
 
 impl EverydayApi {
@@ -1153,7 +1154,7 @@ impl EverydayApi {
         while self.start[kind + 1] <= k {
             kind += 1;
         }
-        let fixed = (k - self.start[kind]) / SAMPLES[kind];
+        let fixed = self.live[kind][(k - self.start[kind]) / SAMPLES[kind]] as usize;
         Some(if site_anchored(kind) { (kind, d as usize, fixed) } else { (kind, fixed, d as usize) })
     }
     /// A sample's trips and walking share, from its ends and their distance.
@@ -1464,11 +1465,24 @@ impl EverydayApi {
         }
         let kinds = weights.len();
         let mut airport_scale = vec![0.0f64; if airport_mass.is_some() { nz } else { 0 }];
+        // trips sent from each cell: residents, or a school's or university's enrollment
+        let budget_of = |kind: usize| -> &[f32] {
+            match kind {
+                2 => school_enrollment.as_deref().unwrap_or(&[]),
+                3 => university_enrollment.as_deref().unwrap_or(&[]),
+                AIRPORT => &airport_origin,
+                _ => &engine.city.pop,
+            }
+        };
         let mut start = vec![0usize];
+        let mut live: Vec<Vec<u32>> = vec![];
         for kind in 0..kinds {
-            start.push(start[kind] + n * SAMPLES[kind]);
+            let budget = budget_of(kind);
+            live.push((0..n as u32).filter(|&c| budget.get(c as usize).is_some_and(|&b| !(b <= 0.0))).collect());
+            start.push(start[kind] + live[kind].len() * SAMPLES[kind]);
         }
         let mut destinations = vec![NONE; start[kinds]];
+        let mut row = vec![NONE; n];
         for (kind, weights) in weights.into_iter().enumerate() {
             let mut mass = vec![0.0; nz];
             let mut cell_cdf = vec![vec![]; nz];
@@ -1486,16 +1500,15 @@ impl EverydayApi {
             let zy: Vec<i32> = zones.iter().map(|&z| engine.z.gy[z]).collect();
             let zmass: Vec<f64> = zones.iter().map(|&z| mass[z]).collect();
             let table = DecayTable::new(&engine.z.gx, &engine.z.gy, engine.z.zone_m, DECAY[kind]);
-            let budget: &[f32] = match kind {
-                2 => school_enrollment.as_deref().unwrap_or(&[]),
-                3 => university_enrollment.as_deref().unwrap_or(&[]),
-                AIRPORT => &airport_origin,
-                _ => &engine.city.pop,
-            };
+            let budget = budget_of(kind);
+            row.fill(NONE);
+            for (i, &c) in live[kind].iter().enumerate() {
+                row[c as usize] = i as u32;
+            }
             let s = Sampler {
                 kind,
                 k: SAMPLES[kind],
-                budget,
+                row: &row,
                 h3: &engine.city.h3,
                 x: &engine.city.x,
                 y: &engine.city.y,
@@ -1508,7 +1521,7 @@ impl EverydayApi {
             let mut cdf = Vec::with_capacity(zones.len());
             for oz in 0..nz {
                 // a zone with nothing to send needs no destinations
-                if !members[oz].iter().any(|&c| s.budget(c) > 0.0) {
+                if !members[oz].iter().any(|&c| budget.get(c).copied().unwrap_or(0.0) > 0.0) {
                     continue;
                 }
                 let total = table.cdf(engine.z.gx[oz], engine.z.gy[oz], &zx, &zy, &zmass, &mut cdf);
@@ -1534,6 +1547,7 @@ impl EverydayApi {
             airport_origin,
             airport_scale,
             start,
+            live,
         };
         for r in chunks(api.destinations.len()) {
             api.add_totals(r);
@@ -1994,9 +2008,11 @@ impl EverydayApi {
             if fixed_is_near {
                 let per = SAMPLES[kind];
                 for &c in &sorted {
-                    let k0 = a + c * per;
-                    for k in k0..(k0 + per).min(b) {
-                        visit(k);
+                    if let Ok(i) = self.live[kind].binary_search(&(c as u32)) {
+                        let k0 = a + i * per;
+                        for k in k0..k0 + per {
+                            visit(k);
+                        }
                     }
                 }
             } else {

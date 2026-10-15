@@ -1,21 +1,28 @@
 // Exact pack outlines and a subtle shade outside the focused metropolitan area. Basemap-only
 // layers sit beneath labels, track and demand; they never intercept a map click.
+// T-400: one source and one line layer hold the outlines of the zones near the view, fetched as the
+// view comes near them (their registry boxes say where they are); a zone's footprint and outside
+// shade are built when it is focused or near the view, never for every registered zone.
 import { effect } from "@preact/signals";
-import type { FeatureCollection, MultiPolygon } from "geojson";
+import type { Feature, FeatureCollection, MultiPolygon } from "geojson";
 import type { GeoJSONSource, Map as MlMap } from "maplibre-gl";
 import { cityBoundary } from "../game/boundaries";
-import { activeCity, CITIES } from "../game/cities";
+import { activeCity, zonesTouching } from "../game/cities";
 import { cityGeometry, outsideCity } from "./boundaryGeometry";
 
 const SHADE = "tw-city-outside";
 const FOCUS = "tw-city-focus";
 const INNER = "tw-city-focus-inner";
 const OUTER = "tw-city-focus-outer";
+export const OUTLINES = "tw-city-boundaries";
+/** outlines fade out by this zoom (the layer's maxzoom) */
+const OUTLINE_MAX_ZOOM = 10.5;
+/** below this zoom a view spans so many zones that their outlines are not fetched for it */
+const OUTLINE_MIN_ZOOM = 5;
 const empty: FeatureCollection = { type: "FeatureCollection", features: [] };
 /** The one grey of "not the zone in view": outside the focused zone, and (T-350) a zone still loading. */
 export const SHADE_PAINT = { "fill-color": "#182536", "fill-opacity": 0.075, "fill-antialias": false } as const;
 
-/** Install the registered packs' outlines, including after a basemap style replacement. */
 export function startCityBoundaries(map: MlMap): () => void {
   let alive = true;
   let request = 0;
@@ -33,18 +40,19 @@ export function startCityBoundaries(map: MlMap): () => void {
   // other in a single setData, so the veil is never empty between them (T-310: the empty step drew
   // a frame without the veil each time a pan ended on another zone).
   const ready = new Map<string, { city: MultiPolygon; outside: MultiPolygon }>();
-  const show = (id: string, city: MultiPolygon) => {
+  const prepared = (id: string, city: MultiPolygon) => {
     let r = ready.get(id);
     if (!r) ready.set(id, (r = { city, outside: outsideCity(city) }));
+    return r;
+  };
+  const show = (id: string, city: MultiPolygon) => {
+    const r = prepared(id, city);
     (map.getSource(SHADE) as GeoJSONSource | undefined)?.setData(r.outside);
     (map.getSource(FOCUS) as GeoJSONSource | undefined)?.setData(r.city);
   };
   const focus = async (id: string) => {
     const mine = ++request;
-    for (const city of CITIES) {
-      const layer = `tw-city-boundary-${city.id}`;
-      if (map.getLayer(layer)) map.setLayoutProperty(layer, "visibility", city.id === id ? "none" : "visible");
-    }
+    if (map.getLayer(OUTLINES)) map.setFilter(OUTLINES, ["!=", ["get", "id"], id]);
     const known = ready.get(id);
     if (known) return show(id, known.city);
     // Never shade against the previous city while the new footprint is loading.
@@ -58,6 +66,30 @@ export function startCityBoundaries(map: MlMap): () => void {
       if (alive && mine === request) console.warn("City focus boundary unavailable", error);
     }
   };
+
+  // the outlines drawn, by zone; the source is set again as each arrives
+  const outlines = new Map<string, Feature<MultiPolygon>>();
+  const asked = new Set<string>();
+  const near = () => {
+    const b = map.getBounds();
+    return zonesTouching(b.getWest(), b.getSouth(), b.getEast(), b.getNorth()).map((c) => c.id);
+  };
+  const follow = () => {
+    const z = map.getZoom();
+    if (z < OUTLINE_MIN_ZOOM) return;
+    for (const id of near()) {
+      // a zone near the view has its shade ready, so focusing it does not wait
+      void geometry(id).then((g) => { if (alive) prepared(id, g); }, () => {});
+      if (z > OUTLINE_MAX_ZOOM || asked.has(id)) continue;
+      asked.add(id);
+      geometry(id).then((g) => {
+        if (!alive) return;
+        outlines.set(id, { type: "Feature", properties: { id }, geometry: g });
+        (map.getSource(OUTLINES) as GeoJSONSource | undefined)?.setData({ type: "FeatureCollection", features: [...outlines.values()] });
+      }, (error) => { asked.delete(id); console.warn("City outline unavailable", error); });
+    }
+  };
+
   const add = () => {
     const before = map.getStyle().layers.find((layer) => layer.type === "symbol")?.id;
     if (!map.getSource(SHADE)) map.addSource(SHADE, { type: "geojson", data: empty });
@@ -65,27 +97,18 @@ export function startCityBoundaries(map: MlMap): () => void {
       id: SHADE, type: "fill", source: SHADE,
       paint: { ...SHADE_PAINT },
     }, before);
-    for (const city of CITIES) {
-      const id = `tw-city-boundary-${city.id}`;
-      if (!map.getSource(id)) {
-        // the same fetch as the demand pool's reach test (game/boundaries.ts), not one of its own
-        map.addSource(id, { type: "geojson", data: empty });
-        cityBoundary(city.id).then((fc) => {
-          if (alive) (map.getSource(id) as GeoJSONSource | undefined)?.setData(fc);
-        }, (error) => console.warn("City outline unavailable", error));
-      }
-      if (!map.getLayer(id)) map.addLayer({
-        id,
-        type: "line",
-        source: id,
-        maxzoom: 10.5,
-        paint: {
-          "line-color": "#73798b",
-          "line-width": 0.8,
-          "line-opacity": ["interpolate", ["linear"], ["zoom"], 8.5, 0.5, 10.5, 0],
-        },
-      }, before);
-    }
+    if (!map.getSource(OUTLINES)) map.addSource(OUTLINES, { type: "geojson", data: { type: "FeatureCollection", features: [...outlines.values()] } });
+    if (!map.getLayer(OUTLINES)) map.addLayer({
+      id: OUTLINES,
+      type: "line",
+      source: OUTLINES,
+      maxzoom: OUTLINE_MAX_ZOOM,
+      paint: {
+        "line-color": "#73798b",
+        "line-width": 0.8,
+        "line-opacity": ["interpolate", ["linear"], ["zoom"], 8.5, 0.5, 10.5, 0],
+      },
+    }, before);
     if (!map.getSource(FOCUS)) map.addSource(FOCUS, { type: "geojson", data: empty });
     // MapLibre polygon strokes use positive offsets for insets and negative for outsets.
     for (const [id, offset, opacity] of [[INNER, 0.45, 0.18], [OUTER, -0.45, 0.48]] as const) {
@@ -99,14 +122,10 @@ export function startCityBoundaries(map: MlMap): () => void {
       }, before);
     }
     void focus(activeCity.peek());
-    // every footprint made ready now, so no later change of focus has to wait for one
-    for (const city of CITIES) {
-      void geometry(city.id).then((g) => {
-        if (alive && !ready.has(city.id)) ready.set(city.id, { city: g, outside: outsideCity(g) });
-      }, () => {});
-    }
+    follow();
   };
   map.on("style.load", add);
+  map.on("moveend", follow);
   if (map.isStyleLoaded()) add();
   const dispose = effect(() => {
     const id = activeCity.value;
@@ -117,7 +136,8 @@ export function startCityBoundaries(map: MlMap): () => void {
     request++;
     dispose();
     map.off("style.load", add);
-    const ids = [INNER, OUTER, FOCUS, SHADE, ...CITIES.map(c => `tw-city-boundary-${c.id}`)];
+    map.off("moveend", follow);
+    const ids = [INNER, OUTER, FOCUS, SHADE, OUTLINES];
     for (const id of ids) if (map.getLayer(id)) map.removeLayer(id);
     for (const id of ids) if (map.getSource(id)) map.removeSource(id);
   };

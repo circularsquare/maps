@@ -21,6 +21,7 @@ import sys
 from pathlib import Path
 
 from build_city import CITIES
+import zone_boxes
 
 ROOT = Path(__file__).resolve().parents[1]
 REG = ROOT / "app/src/game/registry.json"
@@ -64,4 +65,6 @@ if __name__ == "__main__":
     if "--trips" not in sys.argv[1:]:
         print("registered:", register(reg) or "none")
     print("local trips:", local_trips(reg))
+    for c in reg["cities"]:
+        c["box"] = zone_boxes.box(c["id"])  # T-302
     REG.write_text(json.dumps(reg, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")

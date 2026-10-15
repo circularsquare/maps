@@ -108,7 +108,8 @@ office/headquarters commute corrections do not relocate these customer weights.
 
 Destination gravity is origin-constrained: zone attraction times exp(-distance/scale), normalized
 per origin zone, with scales 3 km errands and 6 km social; same-zone distance is 1.04 km. Sixteen
-deterministic stratified destination samples per resident cell/purpose integrate that distribution,
+deterministic stratified destination samples per resident cell/purpose (none kept for a cell
+with no budget for that purpose) integrate that distribution,
 then choose an actual res-9 destination cell by attraction weight. This is an approximation to
 continuous demand, not sampled individual travellers. It is stable across networks and reloads.
 **Everyday trips below 150 m cell-centre distance vanish entirely**, with no replacement or
@@ -701,9 +702,10 @@ cell each, and in Chrome Philadelphia measured 1.1-1.2 s and Washington 1.7-1.8 
 regional market was 1.0 s natively and 1.2-1.6 s in Chrome until
 T-174, and is now 0.09 s natively and 0.1-0.4 s in Chrome (reading its sites). A new game
 opens only New York; a save with construction in several cities pays
-each of their openings once, in every worker, and a worker holding all nine everyday layers uses
-about 496 MB of WASM memory (475 MB before the airports and medical visits) against 278 MB with
-New York's alone (T-142).
+each of their openings once, in every worker. Only the cells with a budget for a purpose hold its
+destination samples and their pair indices (T-395; about half of all cells x purposes have none):
+natively New York's everyday layer holds 57 MB of them and all nine cities' 207 MB, and the nine
+layers' heap after opening plus the pair indices is about 276 MB a worker (notes/perf-survey.md 3).
 T-172 made the everyday opening cheap: zone centres sit on the zone grid, so the destination
 gravity's decay comes from one table per purpose by grid offset instead of a square root and an
 exp per zone pair (the sampled destinations agree with before to 7 significant figures in every

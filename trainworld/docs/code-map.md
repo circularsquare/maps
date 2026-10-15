@@ -42,8 +42,8 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   purposes as shown, T-192), `trip.ts` (the trip explorer's state).
 - Places and frames: `coords.ts` (world metres to lng/lat), `frame.ts` and `registry.json` (the
   world frames and the one city registry, read by `cities.ts`, T-125), `places.ts` (station and
-  compass names for the inspectors), `placeList.ts` (each city's OSM place list, fetched on first
-  search or station naming, T-177, T-065), `boundaries.ts` (each city's boundary file, fetched
+  compass names for the inspectors), `placeList.ts` (each city's OSM place list, fetched per zone by
+  search or station naming, the view's zones first, T-177, T-065, T-400), `boundaries.ts` (each city's boundary file, fetched
   once, T-172), `search.ts` (the search box's matching, T-148), `walks.ts` (walking minutes to the
   closest stations on the demand model's walking barrier, T-312).
 - Stations and lines: `complexes.ts` (station complexes from platform geometry and the player's
@@ -79,8 +79,8 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   up over a game day, T-156), `demandOverlay.ts` (their canvas, over the network's),
   `demandHover.ts` (the count tag by the pointer).
 - Tags and outlines: `trackHover.ts` and `networkTips.ts` (the hover tags on track, trains and
-  stations, T-157, T-194), `cityBoundaries.ts` and `boundaryGeometry.ts` (the metro outlines and
-  outside shade, T-131, T-139), `zoneLoading.ts` (zones still loading drawn grey with a loading
+  stations, T-157, T-194), `cityBoundaries.ts` and `boundaryGeometry.ts` (the metro outlines, one
+  layer for the zones near the view, and the outside shade, T-131, T-139, T-400), `zoneLoading.ts` (zones still loading drawn grey with a loading
   bar, T-343).
 
 ### src/ui/: Preact components
@@ -195,7 +195,8 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
 
 The runtime needs `build_city.py` outputs for all registered zones: cities `nyc` (with Mercer
 since T-276), `phl`, `bos`, `wdc`, `bal`, `pvd`, `nhv`, `hfd`, `spf`; non-city zones `wor`, `wnd`,
-`nlc`, `lit` (docs/zones.md). Then in order: `zones.py` (registers built non-city zones),
+`nlc`, `lit` (docs/zones.md). Then in order: `zones.py` (registers built non-city zones and
+writes every entry's `box` through `zone_boxes.py`, which also runs alone, T-302),
 `outside.py` (the market's outside world, Kontur), `intercity.py` (the market's sites, then the
 joint commute gravity `joint_gravity`, which rewrites every zone pack's gravity factors and the
 market's commute list, about 12 minutes, then the `derived` block with `market_pack`; `--derive`

@@ -158,8 +158,10 @@ the edges. Record cells, population, jobs, commutes, zones and `.bin` raw and gz
 ## 6. Registry
 
 `app/src/game/registry.json` is the only place the app learns about a city (T-125). **Add the line
-only once the pack, its boundary and its water mask exist**: every agent's clock worker loads every
-registered city's water mask at startup, and the Node checks open every registered pack.
+only once the pack, its boundary and its water mask exist**: the demand pool's reach test fetches
+every registered boundary, and the Node checks open every registered pack. Then run
+`python pipeline/zone_boxes.py`, which gives every entry its `box` (boundary and water mask extent);
+the clock worker fetches a zone's mask only where the view or track comes near its box (T-302).
 
 - Append to `cities`: `id`, `name`, `origin` (**exactly** the `build_city.py` origin, since it is
   the pack's frame), `center` (usually the origin), `zoom` 11.2, `utcOffset`, `market`.
@@ -171,8 +173,8 @@ registered city's water mask at startup, and the Node checks open every register
   `{"name": "Worcester", "regionName": "Worcester region"}`. **Market ids are positions in this
   list: append only, never reorder or renumber.**
 
-Vite then serves and copies the packs (`vite.config.ts`), the clock worker loads every registered
-city's water mask at startup, `cityReach.ts` and the map read the boundary file, and saves list the
+Vite then serves and copies the packs (`vite.config.ts`), the clock worker loads the city's water
+mask when it is needed, `cityReach.ts` and the map read the boundary file, and saves list the
 registry's cities in their header (an old save's list stays a subset, so it loads).
 
 ## 7. Regional market and zones
@@ -221,7 +223,7 @@ city's row), run in the background with one wait, since a 10-minute foreground r
 expire (T-289). A new game, then for each new city:
 
 - jump to its centre: it becomes the active city, its pack opens (`twDemand.client.start.loads`),
-  its boundary layer `tw-city-boundary-<id>` exists; Homes bubbles show; screenshot to
+  its outline is the focus outline (`tw-city-focus`); Homes bubbles show; screenshot to
   `artifacts/trainworld/T-###-<id>.png`;
 - ground-level track across water is refused with `GroundOverWater` and the same route in a
   tunnel or on a viaduct accepted;

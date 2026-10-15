@@ -208,6 +208,11 @@ export class ClockClient {
     this.post({ kind: "anchor", lng: a.lng, lat: a.lat, version: a.version });
   }
 
+  /** The view's bounds after a move (T-302): the worker fetches the water masks near it ahead. */
+  followBounds(w: number, s: number, e: number, n: number) {
+    this.post({ kind: "view", w, s, e, n });
+  }
+
   /** The anchor of `version`, as the worker reported it. */
   private anchorOf(spec: { lng: number; lat: number; version: number }): Anchor {
     let a = this.anchors.get(spec.version);
@@ -283,9 +288,8 @@ export class ClockClient {
   private receive(msg: FromClock) {
     switch (msg.kind) {
       case "ready":
-        clockWorkerStatus.value = `ready in ${msg.initMs.toFixed(0)} ms${msg.water ? "" : ", no water mask"}`;
+        clockWorkerStatus.value = `ready in ${msg.initMs.toFixed(0)} ms`;
         setWorldFrame(msg.frame);
-        this.city = { population: msg.population, jobs: msg.jobs };
         break;
       case "error":
         console.warn("clock worker:", msg.message);

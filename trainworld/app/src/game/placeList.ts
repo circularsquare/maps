@@ -1,11 +1,11 @@
 // Each city's place list from OpenStreetMap (T-177, T-065): towns, villages and neighbourhoods
 // inside the pack's footprint, `packs/<id>.places.json` (pipeline/places.py). The search box finds
 // them, and a station placed where the basemap has no street names takes the nearest one's name.
-// Fetched the first time either needs them, never at startup; a failed fetch is forgotten, so the
-// next caller tries again.
+// Fetched per zone when a search or the station tool needs that zone (the view's first), never at
+// startup; a failed fetch is forgotten, so the next caller tries again.
 
 import { signal } from "@preact/signals";
-import { CITIES, type CityId } from "./cities";
+import { CITIES, cityNear, zoneBox, type City, type CityId } from "./cities";
 import { normalise } from "./search";
 
 export interface Place {
@@ -47,9 +47,30 @@ function load(id: CityId): Promise<Place[]> {
   return p;
 }
 
-/** Fetch every registered city's list (each once). Resolves when all have arrived or failed. */
-export function loadPlaces(): Promise<void> {
-  return Promise.all(CITIES.map((c) => load(c.id).catch(() => []))).then(() => undefined);
+const loadAll = (ids: CityId[]) => Promise.all(ids.map((id) => load(id).catch(() => []))).then(() => undefined);
+
+/** Metres from (lng, lat) to a zone's box (0 inside it). */
+function boxDistance(c: City, lng: number, lat: number): number {
+  const [w, s, e, n] = zoneBox(c), kx = 111_320 * Math.cos((lat * Math.PI) / 180);
+  return Math.hypot(Math.max(0, w - lng, lng - e) * kx, Math.max(0, s - lat, lat - n) * 111_320);
+}
+
+/** T-400: the lists of the zones whose boxes hold (lng, lat) or lie within VIEW_M of it, else the
+ * nearest zone's: what the station tool and a first search need. */
+const VIEW_M = 30_000;
+export function loadPlacesAt(lng: number, lat: number): Promise<void> {
+  const ids = CITIES.filter((c) => boxDistance(c, lng, lat) <= VIEW_M).map((c) => c.id);
+  return loadAll(ids.length ? ids : [cityNear(lng, lat)]);
+}
+
+/** T-400: a search finding too little: the next WIDEN zones' lists not yet asked for, nearest to
+ * (lng, lat) first. Resolves false when every list has been asked for. */
+const WIDEN = 4;
+export async function widenPlaces(lng: number, lat: number): Promise<boolean> {
+  const next = CITIES.filter((c) => !files.has(c.id)).sort((a, b) => boxDistance(a, lng, lat) - boxDistance(b, lng, lat)).slice(0, WIDEN);
+  if (!next.length) return false;
+  await loadAll(next.map((c) => c.id));
+  return true;
 }
 
 /** Kinds a station may be named after, nearest first within this many metres. */
@@ -60,7 +81,7 @@ const NAMING_M: Record<string, number> = {
 /** Places near a point that a station there could be named after, nearest first (loads the lists
  * first). Distance is measured to the place's label point. */
 export async function placesNear(lng: number, lat: number): Promise<{ place: Place; d: number; dx: number; dy: number }[]> {
-  await loadPlaces();
+  await loadAll(CITIES.filter((c) => boxDistance(c, lng, lat) <= 6000).map((c) => c.id));
   const kx = 111320 * Math.cos((lat * Math.PI) / 180), ky = 110540;
   const out: { place: Place; d: number; dx: number; dy: number }[] = [];
   for (const list of places.peek().values())

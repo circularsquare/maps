@@ -9,7 +9,7 @@
 
 import init, { TrackApi } from "../wasm/track/sim"; // the track model only (T-051)
 import { anchor, makeAnchor, setAnchor, toLocal } from "../map/geo";
-import { CITIES, cityWithin, HOME_CITY, NEW_GAME_FRAME, WORLD_ID } from "../game/cities";
+import { CITIES, cityWithin, HOME_CITY, NEW_GAME_FRAME, WORLD_ID, zoneBox, zonesTouching } from "../game/cities";
 import { frameKindName, frameKindNumber, makeFrame, mercK, type Frame, type FrameSpec } from "../game/frame";
 import { PERIODS, periodAt } from "../game/periods";
 import { DAY_KINDS, dayKindAt } from "../game/days";
@@ -127,22 +127,147 @@ function anchorSpec() {
   return { lng: a.lng, lat: a.lat, version: a.version };
 }
 
-async function loadWater(packUrl: string): Promise<{ ok: boolean; population: number; jobs: number }> {
-  const head = await (await fetch(packUrl + ".json")).json();
-  const pop = head.totals?.pop ?? 0, jobs = head.totals?.jobs ?? 0;
-  const row = head.arrays.find((a: any) => a.name === "water_row");
-  const xs = head.arrays.find((a: any) => a.name === "water_x");
-  if (!head.water || !row || !xs) return { ok: false, population: pop, jobs };
-  const start = row.offset, end = xs.offset + xs.count * 2;
-  const res = await fetch(packUrl + ".bin", { headers: { Range: `bytes=${start}-${end - 1}` } });
-  const buf = await res.arrayBuffer();
-  const base = res.status === 206 ? start : 0;
-  const rows = new Uint32Array(buf, row.offset - base, row.count);
-  const runs = new Uint16Array(buf, xs.offset - base, xs.count);
-  const w = head.water;
-  // The raster is laid out in the pack's own frame; the track model puts it in the game's (T-125).
-  api!.add_pack_water(w.cell_m, w.origin_m[0], w.origin_m[1], w.size[0], w.size[1], rows, runs, head.origin.lon, head.origin.lat);
-  return { ok: true, population: pop, jobs };
+// ---------------------------------------------------------------- water masks on demand (T-302)
+//
+// A zone's mask is fetched only when the view comes near its box or track is drawn or loaded within
+// it (docs/zones.md 6). The rule that keeps building exact: every zone whose box meets existing track
+// has its mask installed. An edit or preview that would make new track is first worked out, and
+// if its geometry meets a zone whose mask is not in yet, it waits for the mask and is worked out
+// again, so ground over water is never accepted because a mask was late.
+
+/** the packs' folder (the init message's `pack` names one pack in it) */
+let packBase = "";
+interface WaterRaster { cell: number; x0: number; y0: number; w: number; h: number; rows: Uint32Array; runs: Uint16Array; lon: number; lat: number }
+const waterFetches = new Map<string, Promise<WaterRaster | null>>();
+/** zones whose masks are in the track model (a zone with no mask counts once its head said so) */
+const masksIn = new Set<string>();
+/** a point of track this near a zone's box needs its mask: the sampled geometry's spacing to spare */
+const TRACK_MARGIN_M = 2_000;
+/** the view this near a zone's box fetches its mask ahead, when the view is under VIEW_SPAN_M wide */
+const VIEW_MARGIN_M = 20_000;
+const VIEW_SPAN_M = 400_000;
+
+function fetchWater(id: string): Promise<WaterRaster | null> {
+  let p = waterFetches.get(id);
+  if (!p) {
+    const url = new URL(id, packBase).href;
+    p = (async () => {
+      const head = await (await fetch(url + ".json")).json();
+      const row = head.arrays.find((a: any) => a.name === "water_row");
+      const xs = head.arrays.find((a: any) => a.name === "water_x");
+      if (!head.water || !row || !xs) return null;
+      const start = row.offset, end = xs.offset + xs.count * 2;
+      const res = await fetch(url + ".bin", { headers: { Range: `bytes=${start}-${end - 1}` } });
+      if (!res.ok) throw new Error(`${res.status} ${url}.bin`);
+      const buf = await res.arrayBuffer();
+      const base = res.status === 206 ? start : 0;
+      const w = head.water;
+      return {
+        cell: w.cell_m, x0: w.origin_m[0], y0: w.origin_m[1], w: w.size[0], h: w.size[1],
+        rows: new Uint32Array(buf, row.offset - base, row.count), runs: new Uint16Array(buf, xs.offset - base, xs.count),
+        lon: head.origin.lon, lat: head.origin.lat,
+      };
+    })();
+    waterFetches.set(id, p);
+    // a failed fetch is tried again by the next edit or view that needs it
+    p.catch((err) => {
+      if (waterFetches.get(id) === p) waterFetches.delete(id);
+      send({ kind: "error", message: `water mask for ${id} not loaded: ${err}` });
+    });
+  }
+  return p;
+}
+
+/** Install the masks of `ids` (fetching those not fetched); resolves once each is in or failed. The
+ * raster is laid out in the pack's own frame; the track model puts it in the game's (T-125). */
+async function ensureMasks(ids: Iterable<string>): Promise<void> {
+  const todo = [...new Set(ids)].filter((id) => !masksIn.has(id));
+  if (!todo.length) return;
+  const got = await Promise.all(todo.map((id) => fetchWater(id).then((r) => ({ r }), () => null)));
+  todo.forEach((id, k) => {
+    const g = got[k];
+    if (!g || masksIn.has(id)) return;
+    masksIn.add(id);
+    const r = g.r;
+    if (r) api!.add_pack_water(r.cell, r.x0, r.y0, r.w, r.h, r.rows, r.runs, r.lon, r.lat);
+  });
+}
+
+/** The zones within TRACK_MARGIN_M of any of these world-metre points (x, y every `stride`). */
+function zonesOfPoints(xy: ArrayLike<number>, stride = 2, start = 0): string[] {
+  let w = Infinity, s = Infinity, e = -Infinity, n = -Infinity;
+  for (let k = start; k + 1 < xy.length; k += stride) {
+    const [lon, lat] = frame.toLonLat(xy[k], xy[k + 1]);
+    if (lon < w) w = lon; if (lon > e) e = lon;
+    if (lat < s) s = lat; if (lat > n) n = lat;
+  }
+  if (!(e >= w)) return [];
+  const near = zonesTouching(w, s, e, n, TRACK_MARGIN_M);
+  // one box over points far apart (a long route, a whole save) meets zones none of them is near:
+  // test those point by point
+  if (near.length <= 1) return near.map((c) => c.id);
+  const boxes = near.map((c) => {
+    const [bw, bs, be, bn] = zoneBox(c);
+    const dy = TRACK_MARGIN_M / 111_320, dx = dy / Math.cos(Math.min(85, Math.max(Math.abs(bs), Math.abs(bn))) * Math.PI / 180);
+    return { id: c.id, w: bw - dx, s: bs - dy, e: be + dx, n: bn + dy };
+  });
+  const hit = new Set<string>();
+  for (let k = start; k + 1 < xy.length; k += stride) {
+    const [lon, lat] = frame.toLonLat(xy[k], xy[k + 1]);
+    for (const b of boxes) if (lon >= b.w && lon <= b.e && lat >= b.s && lat <= b.n) hit.add(b.id);
+  }
+  return [...hit];
+}
+
+/** Work out a preview; while its geometry meets zones whose masks are not in, install them and work it
+ * out again. Returns the last result. */
+async function withMasks(run: () => Float64Array, points: (out: Float64Array) => number[]): Promise<Float64Array> {
+  for (;;) {
+    const out = run();
+    const need = zonesOfPoints(points(out)).filter((id) => !masksIn.has(id));
+    if (!need.length) return out;
+    await ensureMasks(need);
+    // a mask that could not be fetched (reported) leaves the edit as it was without it
+    if (need.every((id) => !masksIn.has(id))) return run();
+  }
+}
+
+/** world x, y of a route or edge preview's polyline (`preview_route`'s layout) */
+function routePoints(out: Float64Array): number[] {
+  const nv = out[3], p0 = 5 + nv * 4, xy: number[] = [];
+  for (let k = p0; k + 2 < out.length; k += 3) xy.push(out[k], out[k + 1]);
+  return xy;
+}
+/** the same for a node drag's preview (`preview_move_node`) */
+function nodePoints(out: Float64Array): number[] {
+  const n = out[2], xy: number[] = [];
+  let i = 3;
+  for (let e = 0; e < n; e++) {
+    i += out[i] * 4 + 1;
+    const np = out[i++];
+    for (let k = 0; k < np; k++, i += 3) xy.push(out[i], out[i + 1]);
+  }
+  return xy;
+}
+
+/** After a network is loaded: the masks of every zone its track meets, then the network opened again
+ * over them if any was missing (each mask installed on a loaded network would rework all of it). */
+async function masksForLoaded(net: Uint8Array) {
+  const a = api!;
+  syncFrame();
+  const xy: number[] = [];
+  const ni = a.nodes_info();
+  for (let i = 0; i < ni.length; i += 10) xy.push(ni[i + 1], ni[i + 2]);
+  const ei = a.edges_info();
+  for (let i = 0; i < ei.length; i += 10) {
+    const r = a.edge_render(ei[i]);
+    for (let k = 0; k + 2 < r.length; k += 3) xy.push(r[k], r[k + 1]);
+  }
+  const missing = zonesOfPoints(xy).filter((id) => !masksIn.has(id));
+  if (!missing.length) return;
+  a.load(emptyTrack!);
+  await ensureMasks(missing);
+  if (!a.load(net)) throw new Error("This save is damaged.");
 }
 
 // ---------------------------------------------------------------- state for the main thread
@@ -672,6 +797,7 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file"): Promise<b
     if (c.length) { net = c; converted = true; }
   }
   if (!api!.load(net)) throw new Error("This save is damaged.");
+  await masksForLoaded(net);
   api!.set_cash(h.cash);
   api!.set_fleet(h.fleet ?? 0);
   fares = { ...START_FARES, ...h.fares };
@@ -936,15 +1062,31 @@ function issues(): string[] {
 
 let ready: Promise<void> | null = null;
 
+/** the zones whose masks the view fetches ahead (T-302) */
+let viewZones: string[] = [];
+function viewMasks(): Promise<void> {
+  return api && viewZones.length ? ensureMasks(viewZones) : Promise.resolve();
+}
+
 let messages = Promise.resolve();
 onmessage = (e: MessageEvent<ToClock>) => {
   const msg = e.data;
+  if (msg.kind === "view") {
+    // outside the queue, so the fetch starts at once; a mask is installed between messages
+    const midLat = (msg.s + msg.n) / 2, wide = (msg.e - msg.w) * 111_320 * Math.cos(midLat * Math.PI / 180) > VIEW_SPAN_M;
+    const cx = (msg.w + msg.e) / 2;
+    viewZones = (wide ? zonesTouching(cx, midLat, cx, midLat, VIEW_MARGIN_M) : zonesTouching(msg.w, msg.s, msg.e, msg.n, VIEW_MARGIN_M)).map((c) => c.id);
+    for (const id of viewZones) if (!masksIn.has(id)) void fetchWater(id).catch(() => {});
+    void viewMasks();
+    return;
+  }
   messages = messages.then(() => processMessage(msg)).catch(err => send({ kind: "error", message: String(err) }));
 };
 async function processMessage(msg: ToClock) {
   if (msg.kind === "init") {
     // World identity and coordinates never follow the map's focused city.
     city = HOME_CITY;
+    packBase = msg.pack;
     ready = (async () => {
       const t0 = performance.now();
       await init();
@@ -953,22 +1095,12 @@ async function processMessage(msg: ToClock) {
       api.set_time_zones(timeZoneTable());
       api.set_empty_frame(frameKindNumber(NEW_GAME_FRAME.kind));
       syncFrame();
-      let water = { ok: false, population: 0, jobs: 0 };
-      try {
-        api.clear_water();
-        const packs = msg.packs ?? CITIES.map(c => new URL(c.id, msg.pack).href);
-        const loaded = await Promise.allSettled(packs.map(pack => loadWater(pack)));
-        const results = loaded.flatMap(r => r.status === "fulfilled" ? [r.value] : []);
-        water = { ok: loaded.length === results.length && results.every(r => r.ok), population: results[0]?.population ?? 0, jobs: results[0]?.jobs ?? 0 };
-        const failure = loaded.find(r => r.status === "rejected");
-        if (failure?.status === "rejected") send({ kind: "error", message: "Some regional water coverage could not be loaded: " + failure.reason });
-      } catch (err) {
-        send({ kind: "error", message: "city pack not loaded, building without the water mask: " + err });
-      }
+      api.clear_water();
       api.set_cash(START_CASH);
       emptyTrack = api.save();
       moneyParams = [...api.money_params()];
-      send({ kind: "ready", initMs: performance.now() - t0, frame: frameSpec(), water: water.ok, population: water.population, jobs: water.jobs });
+      void viewMasks(); // the view sent before the track model was up
+      send({ kind: "ready", initMs: performance.now() - t0, frame: frameSpec() });
       // The last game, unless the page asked for a new one (T-029).
       testPage = !!(msg.fresh || msg.testPage);
       if (msg.fresh) {
@@ -1005,7 +1137,7 @@ async function processMessage(msg: ToClock) {
   try {
     if (msg.kind === "saveSlot") return await manageSlot(msg);
     if (msg.kind === "import" || msg.kind === "export" || msg.kind === "newGame") return await whole(msg);
-    handle(msg);
+    await handle(msg);
   } catch (err) {
     // A Rust panic: report it rather than leave the main thread waiting on an answer.
     send({ kind: "error", message: String(err) });
@@ -1052,7 +1184,15 @@ async function whole(msg: Extract<ToClock, { kind: "import" | "export" | "newGam
   }
 }
 
-function handle(msg: ToClock) {
+/** Before an edit that makes new track: the masks its geometry needs (worked out as its preview). */
+async function masksFor(op: EditOp) {
+  const a = api!;
+  if (op.op === "route") await withMasks(() => a.preview_route(new Float64Array([...endArr(op.from), ...endArr(op.to)]), pisArr(op.pis), op.single ? 1 : op.quad ? 4 : 2, false), routePoints);
+  else if (op.op === "edgePis") await withMasks(() => a.preview_edge(op.edge, pisArr(op.pis)), routePoints);
+  else if (op.op === "moveNode") await withMasks(() => a.preview_move_node(op.node, op.x, op.y), nodePoints);
+}
+
+async function handle(msg: ToClock) {
   if (!api) return;
   if (settle()) sendMoney();
   // an edit's new departures start now; trains already running keep their places (T-206)
@@ -1078,6 +1218,7 @@ function handle(msg: ToClock) {
       send({ kind: "edited", seq: msg.seq, ok: r === 0, issues: r === 0 ? [] : msg.op.on ? issues() : [], charge: 0 });
       return;
     }
+    await masksFor(msg.op);
     const tA = performance.now();
     const { r, line } = apply(msg.op);
     const tB = performance.now();
@@ -1142,12 +1283,13 @@ function handle(msg: ToClock) {
     }
     send({ kind: "crossoverCheck", seq: msg.seq, ok, issues: ok ? [] : issues(), cost: out[1], parts }, parts.map((p) => p.buffer));
   } else if (msg.kind === "previewNode") {
-    sendNodePreview(msg.seq, api.preview_move_node(msg.node, msg.x, msg.y));
+    const a = api;
+    sendNodePreview(msg.seq, await withMasks(() => a.preview_move_node(msg.node, msg.x, msg.y), nodePoints));
   } else if (msg.kind === "preview" || msg.kind === "previewEdge") {
-    const out =
-      msg.kind === "preview"
-        ? api.preview_route(new Float64Array([...endArr(msg.from), ...endArr(msg.to)]), pisArr(msg.pis), msg.single ? 1 : msg.quad ? 4 : 2, false)
-        : api.preview_edge(msg.edge, pisArr(msg.pis));
+    const a = api;
+    const out = await withMasks(() => msg.kind === "preview"
+      ? a.preview_route(new Float64Array([...endArr(msg.from), ...endArr(msg.to)]), pisArr(msg.pis), msg.single ? 1 : msg.quad ? 4 : 2, false)
+      : a.preview_edge(msg.edge, pisArr(msg.pis)), routePoints);
     const ok = out[0] === 1, nv = out[3];
     const verts = new Float64Array(nv * 4);
     for (let i = 0; i < nv; i++) {

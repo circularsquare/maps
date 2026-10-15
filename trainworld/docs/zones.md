@@ -188,10 +188,27 @@ trips a day by purpose with no rail). A click on one selects the zone and draws 
 other zone for the commutes and longer trips between them, as T-186 does for cities.
 
 **Selection, the inspector and loading.** A non-city zone's city inspector is a city's. Search finds
-zones by name. Loading treats a zone as a city: opened when viewed or reached, its boundary file
-and place list fetched on demand. **Startup must not fetch every zone's files**: the clock worker's
-water masks and the boundaries are fetched for the zones on screen or reached, not for every
-registered zone (today every registered city's water mask loads at startup).
+zones by name. Loading treats a zone as a city: opened when viewed or reached, its files fetched on
+demand. **Startup must not fetch every zone's files.** Each registry entry carries a `box` (west,
+south, east, north round its boundary and water mask; `pipeline/zone_boxes.py`), so where a zone is
+is known without its files (T-302, T-400):
+
+- **Water masks** (clock worker): a zone's mask is fetched when the view comes within 20 km of its box
+  (only the zone under the centre when the view is over 400 km wide), and for every zone whose box,
+  widened by 2 km, a loaded network's track meets; the network then opens over those masks. A
+  preview or an edit that makes track (a route, new PIs, a node moved) is first worked out, and if
+  its geometry comes within 2 km of a zone whose mask is not in, it waits for the mask and is worked
+  out again, so ground over water is never accepted because a mask was late. A mask that cannot be
+  fetched is reported, and the edit is worked out without it.
+- **Outlines**: one source and line layer hold the outlines of the zones whose boxes meet the view,
+  fetched as the view comes near them at zoom 5 to 10.5 (they fade out at 10.5); a zone's footprint
+  and outside shade are built when it is focused or near the view.
+- **Place lists**: a first search or the station tool fetches those of the zones whose boxes lie
+  within 30 km of the view's centre (else the nearest zone's); a search of three or more letters with
+  fewer than five results fetches the next four nearest zones' lists, until it has enough or all are
+  in. A station named after a place fetches the lists of the zones within 6 km of it.
+- **Boundaries** for the focus rule and the demand pool's reach test are still fetched for every
+  zone at startup (T-404).
 
 ## 7. Other countries and borders
 
@@ -216,8 +233,9 @@ long tail.
   (the market pass was 0.06 s natively a period on the real New York network).
 - **The joint gravity** is offline only (`joint_gravity`, about a minute natively over the ten
   packs); a runtime edit never reruns it.
-- **Startup** must stay as it is: zones add registry entries, and their files are fetched on demand
-  (section 6). A zone opened only for its bubbles opens bare in the auxiliary worker (T-325):
+- **Startup** must not grow with the number of zones: zones add registry entries, and their files
+  are fetched on demand (section 6). A mask installed while a big network is loaded reworks the
+  whole network once (about 0.2 s on the real New York network). A zone opened only for its bubbles opens bare in the auxiliary worker (T-325):
   0.3-1.5 s, and its everyday layer once rather than in every solving worker.
 
 ## 9. What is built (T-276)
