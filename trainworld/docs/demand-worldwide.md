@@ -166,6 +166,13 @@ building Toronto from tier 0 against the real pack (notes/T-287.md has every tab
   a city across a strait has only its bridges and tunnels. Check: per new country, the
   commute-weighted factor the pipeline reports and the median snapping distance (US packs:
   94-213 m); a city's ACS-like car commute times against the model's, as T-090 did.
+- **Long drives** (T-370, docs/demand.md 4.3). Each end's density speeds last its own first 10 km
+  of road (2 local, 8 main); anything beyond is open highway at 100 km/h. Why it may not carry
+  over: 100 km/h assumes a motorway between the ends (US, Canada, western Europe); where long
+  roads are two-lane or congested end to end (much of India, Indonesia, Lagos) the middle is far
+  slower, and a sprawling metro whose dense core is wider than 10 km (Mexico City, Jakarta) is
+  slow for longer. Check: a few typical door-to-door drives of 50-130 km per new country against
+  the model's (notes/T-295.md has the US, Toronto and London ones).
 - **Routed walks** (T-275). A walk to a station goes round water on a 50 m raster from the pack's
   water mask, with every OSM way a person may walk on that is a bridge opened. Why it may not
   carry over: the water mask is TIGER's in the US and OSM's elsewhere (T-041; within 0.6% of TIGER at New York); OSM's `foot=` tagging

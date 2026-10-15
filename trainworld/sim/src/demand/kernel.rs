@@ -70,10 +70,13 @@ pub struct Params {
     /// road each) are local streets, at `road_town_kmh` in open country, and the rest is main
     /// roads at `road_far_kmh`; both slow towards `road_city_kmh` where it is dense (half way at
     /// `road_dens50` commuters living and working per km² of land in the zone;
-    /// `place_min_per_km`). So short trips and trips in the city crawl and long suburban ones
-    /// are quick. No road network (T-072).
+    /// `place_min_per_km`). Each end's main roads last `road_end_km`, and any middle beyond runs
+    /// on open highway at `road_open_kmh` (T-370), so short trips and trips in the city crawl and
+    /// long ones are quick.
     pub road_detour: f32,
     pub road_local_km: f32,
+    pub road_end_km: f32,
+    pub road_open_kmh: f32,
     pub road_city_kmh: f32,
     pub road_town_kmh: f32,
     pub road_dens50: f32,
@@ -158,6 +161,8 @@ impl Default for Params {
             asc_rail: 0.0,
             road_detour: 1.3,
             road_local_km: 2.0,
+            road_end_km: 8.0,
+            road_open_kmh: 100.0,
             road_city_kmh: 15.0,
             road_town_kmh: 40.0,
             road_dens50: 5000.0,
@@ -207,6 +212,8 @@ impl Params {
             "road_detour" => self.road_detour = v,
             "road_routed_scale" => self.road_routed_scale = v,
             "road_local_km" => self.road_local_km = v,
+            "road_end_km" => self.road_end_km = v,
+            "road_open_kmh" => self.road_open_kmh = v,
             "road_city_kmh" => self.road_city_kmh = v,
             "road_town_kmh" => self.road_town_kmh = v,
             "road_dens50" => self.road_dens50 = v,
@@ -217,6 +224,7 @@ impl Params {
                 self.road_city_kmh = v;
                 self.road_town_kmh = v;
                 self.road_far_kmh = v;
+                self.road_open_kmh = v;
             }
             _ => return Err(format!("unknown parameter {k}")),
         }
@@ -242,8 +250,8 @@ impl Params {
     }
     /// Real minutes to drive `d_m` metres (straight line) between places a and b
     /// (`place_min_per_km` of each): the first and last `road_local_km` of road (at most half
-    /// each) on each end's local streets, the middle on main roads at the mean of the two ends'
-    /// minutes a km.
+    /// each) on each end's local streets, then up to `road_end_km` (at most half the rest) on
+    /// each end's main roads, and any middle beyond at `road_open_kmh`.
     #[inline]
     pub fn drive_min(&self, d_m: f32, a: (f32, f32), b: (f32, f32)) -> f32 {
         self.drive_min_f(d_m, self.road_detour, a, b)
@@ -254,7 +262,9 @@ impl Params {
     pub fn drive_min_f(&self, d_m: f32, f: f32, a: (f32, f32), b: (f32, f32)) -> f32 {
         let road = d_m * 0.001 * f;
         let e = (0.5 * road).min(self.road_local_km);
-        e * (a.0 + b.0) + (road - 2.0 * e) * 0.5 * (a.1 + b.1)
+        let main = road - 2.0 * e;
+        let k = (0.5 * main).min(self.road_end_km);
+        e * (a.0 + b.0) + k * (a.1 + b.1) + (main - 2.0 * k) * 60.0 / self.road_open_kmh
     }
     /// The road's length over the straight line between zones i and j: the pack's routed factor
     /// (T-275), else `road_detour`.
@@ -2587,6 +2597,24 @@ mod tests {
         // 30 km between open places is much quicker a km than 3 km
         assert!(p.drive_min(30_000.0, open, open) / 30.0 < 0.6 * p.drive_min(3_000.0, open, open) / 3.0);
         assert!(p.drive_min(10_000.0, dense, dense) > 2.0 * p.drive_min(10_000.0, open, open));
+    }
+
+    /// T-370: a long drive into a dense place is slow only near its ends (real peak drives of
+    /// 40-60 km into Manhattan, Philadelphia or Boston take 50-90 minutes); a short one is all
+    /// at its ends' speeds.
+    #[test]
+    fn long_drive_slow_only_near_its_ends() {
+        let p = Params::default();
+        let (city, suburb) = (p.place_min_per_km(30_000.0), p.place_min_per_km(1_000.0));
+        let t = p.drive_min(60_000.0, suburb, city);
+        assert!((60.0..90.0).contains(&t), "60 km into a 30,000/km² place: {t} min");
+        let road = 60.0 * p.road_detour;
+        let t_end = p.road_local_km * (suburb.0 + city.0) + p.road_end_km * (suburb.1 + city.1);
+        let open = (road - 2.0 * (p.road_local_km + p.road_end_km)) * 60.0 / p.road_open_kmh;
+        assert!((t - t_end - open).abs() < 1e-3);
+        let road = 15.0 * p.road_detour;
+        let short = p.road_local_km * (suburb.0 + city.0) + (road - 2.0 * p.road_local_km) * 0.5 * (suburb.1 + city.1);
+        assert!((p.drive_min(15_000.0, suburb, city) - short).abs() < 1e-3);
     }
 
     #[test]

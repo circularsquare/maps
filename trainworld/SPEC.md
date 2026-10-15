@@ -185,8 +185,9 @@ Rough on purpose: the bar is the right order (section 1).
 - **Real-network test** [T-007, notes/T-007.md]: New York's real rail network (867 stations, 109
   lines, from the operators' GTFS) solved natively through the app's `DemandApi`
   (`pipeline/realnet.py`), against ACS rail commute share by county, MTA subway entries by period,
-  the busiest subway links and operator totals. Latest (with routed walks and drives,
-  notes/T-275.md): rail 19.2% of commutes against ACS's 20.3%, county error 2.5 points. Known gaps
+  the busiest subway links and operator totals. Latest (T-370's long drives, notes/T-295.md;
+  commutes only, three rounds): rail 18.4% of commutes against ACS's 20.3%, county error 2.2
+  points, until T-371's ride access and T-372's fit. Known gaps
   are open tasks (PATH low, T-270; commuter rail high, T-271, T-272; subway peak loads, T-216).
 - **Tier-2 check** against LODES OD: commute lengths and county pairs (notes/T-198.md).
 - To do: mode share per city against published figures; long-distance rail share on corridors

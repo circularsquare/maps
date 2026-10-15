@@ -1,5 +1,6 @@
 # Archive
 
+- T-370 [P2] T-295 stage 1, long drives. Done 2026-10-14: each end's density speeds over its own first 10 km of road, the middle at 100 km/h; 60 km into a dense centre 133 to 71 minutes; real-network rail 20.0% to 18.4% (ACS 20.3%). notes/T-295.md.
 - T-381 [P2] T-361 stage 2, settings. Done 2026-10-14: demand workers by threads and memory (3 on this 16-thread machine), "Use more cores" for up to 5 at the next load, "US units" through the distance functions in `game/format.ts`; docs/ui-panels.md Settings.
 - T-351 [P2] A new game opens the viewed zone bare. Done 2026-10-14: `?new=1` card gone at 2.6-2.8 s instead of 6.6-7.1 s, figures and bubbles identical to the bit; a building tool picked opens the zone everywhere ahead of a first station (first estimate 2.0 s as before); saves unchanged. notes/T-351.md.
 

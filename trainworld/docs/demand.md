@@ -351,15 +351,16 @@ known departure 0.4, congested driving 1.33, plus parking cost and ~3 min to par
 
 **Driving** (T-090, T-275; `place_min_per_km`, `drive_min_f`, `drive_factor` in
 `sim/src/demand/kernel.rs`). The road is the straight line times the two zones' routed factor
-(below) times 1.074, or 1.3x the straight line in a pack without routes. Its first and last 2 km (at most half the road each) are local streets, the rest
-main roads. Each place has a speed for both, by its density (commuters living and working per km²
-of land in its 2 km zone): local streets 40 km/h and main roads 80 km/h in open country, both
-falling towards 15 km/h where it is dense, half way at 5,000 per km². The middle of a trip runs at
-the mean of its two ends' main-road minutes a km. So a 25 km trip between suburbs takes about 27
-minutes (it took 70 at the old flat 28 km/h), Brooklyn to Midtown (10 km) about 30, and 3 km inside
-Manhattan about 13. On the gravity's commutes this gives 26-37 minutes in the four big boroughs
-(ACS car commutes 34-38) and 36-47 in the suburbs (ACS 27-33; the gravity's suburban commutes are
-too long, T-072). Parking is charged at the destination by its job density, as before.
+(below) times 1.074, or 1.3x the straight line in a pack without routes. From each end it runs 2 km
+on that end's local streets, then 8 km on that end's main roads, and anything left in the middle
+is open highway at 100 km/h (T-370); a road too short for all that splits it evenly between its two
+ends (at most half each for the local streets, then half the rest each for the main roads). Each
+place has a speed for its streets and main roads, by its density (commuters living and working per
+km² of land in its 2 km zone): local streets 40 km/h and main roads 80 km/h in open country, both
+falling towards 15 km/h where it is dense, half way at 5,000 per km². So a dense end slows only its
+own last 10 km: 3 km inside Manhattan takes about 13 minutes, Brooklyn to Midtown (10 km) about
+30, 25 km between suburbs about 28, and 60 km from a suburb into a 30,000/km² centre about 71.
+Parking is charged at the destination by its job density.
 
 **Routed walking and driving** (T-275, notes/T-275.md). Walks and drives go round water and
 over bridges, from data that exists for any city: OpenStreetMap roads and bridges (Geofabrik
