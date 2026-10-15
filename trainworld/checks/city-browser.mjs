@@ -80,6 +80,70 @@ const CITIES = {
       ['Alexanderplatz', 13.4114, 52.5215], ['Jannowitzbruecke', 13.4180, 52.5150], ['Ostbahnhof', 13.4344, 52.5104],
       ['Warschauer Strasse', 13.4491, 52.5059], ['Ostkreuz', 13.4694, 52.5031]],
   },
+  fuk: {
+    // T-432: the Kuko line, Meinohama to Fukuoka Airport (positions to about 150 m); the water pair
+    // across Dokai Bay by the Wakato bridge, checked on the mask
+    task: 'T-432', name: 'Fukuoka', centre: [130.4207, 33.5897], water: [[130.8125, 33.9035], [130.8185, 33.8955]],
+    lineName: 'Kuko line test', colour: '#f08300', view: [130.40, 33.59],
+    line: [['Meinohama', 130.3243, 33.5838], ['Muromi', 130.3367, 33.5833], ['Fujisaki', 130.3487, 33.5826],
+      ['Nishijin', 130.3590, 33.5832], ['Tojinmachi', 130.3692, 33.5864], ['Ohorikoen', 130.3778, 33.5885],
+      ['Akasaka', 130.3885, 33.5898], ['Tenjin', 130.3992, 33.5913], ['Nakasu-Kawabata', 130.4073, 33.5946],
+      ['Gion', 130.4134, 33.5934], ['Hakata', 130.4207, 33.5897], ['Higashi-Hie', 130.4325, 33.5859],
+      ['Fukuokakuko', 130.4507, 33.5866]],
+  },
+  spk: {
+    // T-432: the Namboku line, Asabu to Makomanai (positions to about 150 m); the water pair across
+    // the Toyohira by Nakajima Park, checked on the mask
+    task: 'T-432', name: 'Sapporo', centre: [141.3508, 43.0687], water: [[141.3570, 43.0450], [141.3700, 43.0450]],
+    lineName: 'Namboku line test', colour: '#00a650', view: [141.35, 43.06],
+    line: [['Asabu', 141.3404, 43.1078], ['Kita-34-jo', 141.3407, 43.1003], ['Kita-24-jo', 141.3408, 43.0906],
+      ['Kita-18-jo', 141.3408, 43.0838], ['Kita-12-jo', 141.3408, 43.0757], ['Sapporo', 141.3507, 43.0683],
+      ['Odori', 141.3542, 43.0606], ['Susukino', 141.3531, 43.0556], ['Nakajima-koen', 141.3537, 43.0489],
+      ['Horohira-bashi', 141.3540, 43.0427], ['Nakanoshima', 141.3557, 43.0385], ['Hiragishi', 141.3610, 43.0322],
+      ['Minami-Hiragishi', 141.3633, 43.0217], ['Sumikawa', 141.3556, 43.0093], ['Jieitai-mae', 141.3474, 42.9998],
+      ['Makomanai', 141.3443, 42.9928]],
+  },
+  sdj: {
+    // T-432: the Namboku line, Izumi-Chuo to Tomizawa, at its OSM station nodes (Asahigaoka placed
+    // by hand); the water pair across the Hirose at Nagamachi, checked on the mask
+    task: 'T-432', name: 'Sendai', centre: [140.8824, 38.2601], water: [[140.8868, 38.2420], [140.8868, 38.2345]],
+    lineName: 'Namboku line test', colour: '#1a9e4b', view: [140.88, 38.26],
+    line: [['Izumi-Chuo', 140.8807, 38.3232], ['Yaotome', 140.8838, 38.3132], ['Kuromatsu', 140.8864, 38.3031],
+      ['Asahigaoka', 140.8830, 38.2955], ['Dainohara', 140.8784, 38.2883], ['Kita-Sendai', 140.8697, 38.2818],
+      ['Kita-Yobancho', 140.8691, 38.2720], ['Kotodai-Koen', 140.8712, 38.2668], ['Hirose-dori', 140.8755, 38.2629],
+      ['Sendai', 140.8800, 38.2598], ['Itsutsubashi', 140.8811, 38.2519], ['Atagobashi', 140.8817, 38.2474],
+      ['Kawaramachi', 140.8879, 38.2407], ['Nagamachi-Itchome', 140.8876, 38.2343], ['Nagamachi', 140.8856, 38.2268],
+      ['Nagamachi-Minami', 140.8771, 38.2247], ['Tomizawa', 140.8707, 38.2145]],
+  },
+  hij: {
+    // T-432: the Astram line, Hondori to Omachi, at its OSM station nodes (Gion-shinbashi-kita left
+    // out); the water pair across the Kyobashi river, checked on the mask
+    task: 'T-432', name: 'Hiroshima', centre: [132.4757, 34.3975], water: [[132.4570, 34.3756], [132.4660, 34.3756]],
+    lineName: 'Astram line test', colour: '#e4007f', view: [132.46, 34.40],
+    line: [['Hondori', 132.4570, 34.3932], ['Kencho-mae', 132.4582, 34.3967], ['Johoku', 132.4588, 34.4054],
+      ['Shin-Hakushima', 132.4603, 34.4076], ['Hakushima', 132.4627, 34.4109], ['Ushita', 132.4648, 34.4175],
+      ['Fudoin-mae', 132.4689, 34.4266], ['Nishihara', 132.4748, 34.4434], ['Nakasuji', 132.4770, 34.4517],
+      ['Furuichi', 132.4752, 34.4577], ['Omachi', 132.4705, 34.4617]],
+  },
+  ngo: {
+    // T-431: the Higashiyama line, Nagoya to Motoyama, at its OSM station nodes; the water pair
+    // across the Shonai river west of Nagoya Station, checked on the mask
+    task: 'T-431', name: 'Nagoya', centre: [136.8815, 35.1709], water: [[136.8330, 35.1560], [136.8420, 35.1560]],
+    lineName: 'Higashiyama line test', colour: '#f6ab00', view: [136.92, 35.17],
+    line: [['Nagoya', 136.8839, 35.1712], ['Fushimi', 136.8974, 35.1692], ['Sakae', 136.9088, 35.1700],
+      ['Shinsakae-machi', 136.9202, 35.1708], ['Chikusa', 136.9299, 35.1707], ['Imaike', 136.9383, 35.1698],
+      ['Ikeshita', 136.9460, 35.1678], ['Kakuozan', 136.9529, 35.1666], ['Motoyama', 136.9637, 35.1639]],
+  },
+  osa: {
+    // T-431: the Midosuji line, Shin-Osaka to Tennoji, at its OSM station nodes; the water pair
+    // across the Yodo (Shin-Yodogawa) by Juso, checked on the mask
+    task: 'T-431', name: 'Osaka', centre: [135.4959, 34.7025], water: [[135.4850, 34.7080], [135.4850, 34.7190]],
+    lineName: 'Midosuji line test', colour: '#e5171f', view: [135.50, 34.69],
+    line: [['Shin-Osaka', 135.4985, 34.7329], ['Nishinakajima-Minamigata', 135.4986, 34.7266], ['Nakatsu', 135.4968, 34.7110],
+      ['Umeda', 135.4976, 34.7034], ['Yodoyabashi', 135.5010, 34.6916], ['Hommachi', 135.5007, 34.6835],
+      ['Shinsaibashi', 135.5004, 34.6745], ['Namba', 135.5003, 34.6662], ['Daikokucho', 135.4979, 34.6562],
+      ['Dobutsuen-mae', 135.5045, 34.6488], ['Tennoji', 135.5153, 34.6461]],
+  },
 };
 
 async function playwright() {

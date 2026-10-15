@@ -125,7 +125,7 @@ def build(city):
     ja = __import__("japan") if cfg.get("kana_romaji") else None
     n_latin, name_src = 0, {}
     data = from_extract(extract, bbox) if extract else fetch(city, bbox)
-    source = f"OpenStreetMap contributors, ODbL (Geofabrik {extract})" if extract else "OpenStreetMap contributors, ODbL (Overpass)"
+    source = f"OpenStreetMap contributors, ODbL (Geofabrik {__import__('osm_features').label(extract)})" if extract else "OpenStreetMap contributors, ODbL (Overpass)"
     rows = []
     for el in data.get("elements", []):
         tags = el.get("tags", {})

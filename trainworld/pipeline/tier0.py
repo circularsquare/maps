@@ -652,7 +652,7 @@ def osm_education(city, boundary, extract):
     for r in mp.itertuples():
         c = r.geometry.representative_point()
         rows.append((r.amenity, r.name or "", c.y, c.x, overpass.area_m2(r.geometry), rt.tag(r.other_tags, "wikidata")))
-        polys[r.amenity].append(r.geometry)
+        polys[r.amenity].append(shapely.make_valid(r.geometry))  # a self-crossing site breaks the query (T-431)
     trees = {k: shapely.STRtree(v) for k, v in polys.items() if v}
     n_dup = 0
     for r in pts.itertuples():
@@ -744,7 +744,8 @@ def education_osm(city, boundary, kids):
     share = np.where(site_m2 > 0, known.m2 / site_m2.where(site_m2 > 0, 1), 1.0 / known.groupby("wikidata").m2.transform("count"))
     known_students = known.students.to_numpy() * share
     dens = known.groupby("wikidata").apply(lambda g: g.students.iloc[0] / max(g.m2.sum(), 1.0))
-    per_m2 = float(np.median(dens[dens < 1].values)) if len(dens) else 0.0  # students a square metre of campus
+    # students a square metre of campus; with no counted campus, by area alone (the national total below sets the level, T-432)
+    per_m2 = float(np.median(dens[dens < 1].values)) if len(dens) else 0.01
     unknown = uni[uni.students.isna() & (uni.m2 > 0)]
     unk_students = unknown.m2.to_numpy() * per_m2
     rows = pd.concat([known, unknown])

@@ -292,16 +292,28 @@ def build(extract):
     print(f"  {extract}: OSM features cached in {time.time() - t0:.0f} s", flush=True)
 
 
+def label(extract):
+    """An extract, or a list of them, as a source line names it."""
+    return extract if isinstance(extract, str) else " + ".join(extract)
+
+
 def read(extract, layer, columns=None, bbox=None, mask=None, where=None):
     """Rows of the cached `layer` ("points" or "multipolygons", as GDAL names the .pbf's) as
-    pyogrio.read_dataframe would give them from the .pbf: same filters, same order."""
+    pyogrio.read_dataframe would give them from the .pbf: same filters, same order. `extract`
+    may be a list of extracts: Geofabrik's regions overlap along their borders, so an object in
+    two of them is kept once (by `seq`, its OSM id; T-431)."""
+    import pandas as pd
     import pyogrio
-    build(extract)
+    exs = [extract] if isinstance(extract, str) else list(extract)
     areas = layer != "points"
-    path = areas_path(extract) if areas else points_path(extract)
     helpers = ["seq"] + (["osm_id", "member_of"] if areas else [])
     cols = None if columns is None else list(dict.fromkeys(list(columns) + helpers))
-    df = pyogrio.read_dataframe(path, columns=cols, bbox=bbox, mask=mask, where=where)
+    parts = []
+    for e in exs:
+        build(e)
+        path = areas_path(e) if areas else points_path(e)
+        parts.append(pyogrio.read_dataframe(path, columns=cols, bbox=bbox, mask=mask, where=where))
+    df = parts[0] if len(parts) == 1 else pd.concat(parts, ignore_index=True).drop_duplicates("seq")
     if areas and len(df):
         rels = set(df["osm_id"].dropna())
         member = [any(r in rels for r in s.strip(",").split(",")) if isinstance(s, str) else False

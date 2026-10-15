@@ -852,7 +852,7 @@ def _write(name, elements, extract):
     path = os.path.join(b.RAW, name + ".json")
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path + ".tmp", "w", encoding="utf-8") as f:
-        json.dump({"elements": elements, "source": f"Geofabrik {extract} extract (T-277)"}, f)
+        json.dump({"elements": elements, "source": f"Geofabrik {__import__('osm_features').label(extract)} extract (T-277)"}, f)
     os.replace(path + ".tmp", path)
 
 

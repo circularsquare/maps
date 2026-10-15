@@ -371,6 +371,148 @@ CITIES = {
         "latin_names": True,
         "kana_romaji": True,  # places.py: romaji from the kana reading, else the kanji's dictionary reading, where OSM has no Latin name
     },
+    # T-431: Keihanshin, four prefectures whole (notes/T-431.md)
+    "osa": {
+        "tier0": True,
+        "origin": (135.4959, 34.7025),  # Osaka Station, Umeda
+        "water": {"cell_m": 25.0, "min_width_px": 2},
+        "boundary_notes": "notes/T-431.md",
+        "prefectures": ["26", "27", "28", "29"],  # Kyoto, Osaka, Hyogo, Nara
+        "neighbours": ["18", "24", "25", "30", "31", "33", "36"],  # land beyond the outline, for meshes it cuts
+        "boundary_file": lambda: __import__("japan").boundary_file("osa", CITIES["osa"]["prefectures"]),
+        "population": lambda city, boundary, sig: __import__("japan").mesh_population(city, boundary, sig, CITIES["osa"]["prefectures"], CITIES["osa"]["neighbours"]),
+        "jobs": lambda city, boundary, sig, w: __import__("japan").census_jobs(city, boundary, sig, w, CITIES["osa"]["prefectures"], CITIES["osa"]["neighbours"]),
+        "jobs_url": "https://www.e-stat.go.jp/gis/statmap-search?type=1",
+        "schools": lambda boundary: __import__("japan").p29_schools(boundary, CITIES["osa"]["prefectures"], CITIES["osa"]["neighbours"]),
+        "water_source": lambda bbox: __import__("osm_water").source(["asia/japan/kansai", "asia/japan/chubu"])(bbox),
+        "extract": "asia/japan/kansai",
+        "iso2": "JP",
+        # 2020 census: 8.1% of workers by place of work at home (table 4); MLIT 2024 telework, Kinki
+        # 24.4% of employed, 2 days in 5 as Tokyo: 0.081 + 0.919 x 0.098
+        "wfh": 0.17,
+        # Tokyo's curve: ties the best fit on the 2020 census flows with this pack's margins (17.7%
+        # misplaced, notes/t420_curve.py) and keeps the census's 41% in their own municipality
+        "decay_pow": 2.2, "decay_km": 80.0,
+        "region_name": "Keihanshin",
+        "latin_names": True,
+        "kana_romaji": True,
+    },
+    # T-431: Chukyo, three prefectures whole; Mie is in Geofabrik's Kansai, so features from both
+    # extracts (osm_features.read keeps an object in both once)
+    "ngo": {
+        "tier0": True,
+        "origin": (136.8815, 35.1709),  # Nagoya Station
+        "water": {"cell_m": 25.0, "min_width_px": 2},
+        "boundary_notes": "notes/T-431.md",
+        "prefectures": ["21", "23", "24"],  # Gifu, Aichi, Mie
+        "neighbours": ["16", "17", "18", "20", "22", "25", "26", "29", "30"],  # land beyond the outline, for meshes it cuts
+        "boundary_file": lambda: __import__("japan").boundary_file("ngo", CITIES["ngo"]["prefectures"]),
+        "population": lambda city, boundary, sig: __import__("japan").mesh_population(city, boundary, sig, CITIES["ngo"]["prefectures"], CITIES["ngo"]["neighbours"]),
+        "jobs": lambda city, boundary, sig, w: __import__("japan").census_jobs(city, boundary, sig, w, CITIES["ngo"]["prefectures"], CITIES["ngo"]["neighbours"]),
+        "jobs_url": "https://www.e-stat.go.jp/gis/statmap-search?type=1",
+        "schools": lambda boundary: __import__("japan").p29_schools(boundary, CITIES["ngo"]["prefectures"], CITIES["ngo"]["neighbours"]),
+        "water_source": lambda bbox: __import__("osm_water").source(["asia/japan/chubu", "asia/japan/kansai"])(bbox),
+        "extract": ["asia/japan/chubu", "asia/japan/kansai"],
+        "iso2": "JP",
+        # 2020 census: 8.8% of workers by place of work at home (table 4); MLIT 2024 telework, Chukyo
+        # 19.6% of employed, 2 days in 5 as Tokyo: 0.088 + 0.912 x 0.078
+        "wfh": 0.16,
+        # Tokyo's curve: ties the best fit on the 2020 census flows with this pack's margins (12.6%
+        # misplaced, notes/t420_curve.py) and keeps the census's 51% in their own municipality
+        "decay_pow": 2.2, "decay_km": 80.0,
+        "region_name": "Chukyo",
+        "latin_names": True,
+        "kana_romaji": True,
+    },
+    # T-432: Japan's regional metros, whole prefectures (Sapporo: Ishikari subprefecture), Tokyo's
+    # inputs; wfh is the census's at-home share plus MLIT's 2024 telework share outside the three big
+    # metros (16.8% of employed) at 2 days in 5 on the rest; curves in notes/T-432.md
+    "fuk": {
+        "tier0": True,
+        "origin": (130.4207, 33.5897),  # Hakata Station
+        "water": {"cell_m": 25.0, "min_width_px": 2},
+        "boundary_notes": "notes/T-432.md",
+        "prefectures": ["40"],  # Fukuoka
+        "neighbours": ["35", "41", "43", "44"],  # Yamaguchi over the Kanmon strait, Saga, Kumamoto, Oita
+        "boundary_file": lambda: __import__("japan").boundary_file("fuk", CITIES["fuk"]["prefectures"]),
+        "population": lambda city, boundary, sig: __import__("japan").mesh_population(city, boundary, sig, CITIES["fuk"]["prefectures"], CITIES["fuk"]["neighbours"]),
+        "jobs": lambda city, boundary, sig, w: __import__("japan").census_jobs(city, boundary, sig, w, CITIES["fuk"]["prefectures"], CITIES["fuk"]["neighbours"]),
+        "jobs_url": "https://www.e-stat.go.jp/gis/statmap-search?type=1",
+        "schools": lambda boundary: __import__("japan").p29_schools(boundary, CITIES["fuk"]["prefectures"], CITIES["fuk"]["neighbours"]),
+        "water_source": lambda bbox: __import__("osm_water").source(["asia/japan/kyushu", "asia/japan/chugoku"])(bbox),
+        "extract": "asia/japan/kyushu",
+        "iso2": "JP",
+        "wfh": 0.15,  # census at home 8.6%
+        "decay_pow": 2.0, "decay_km": 32.0,  # fitted, notes/t420_curve.py
+        "region_name": "Fukuoka",
+        "latin_names": True,
+        "kana_romaji": True,
+    },
+    "spk": {
+        "tier0": True,
+        "origin": (141.3508, 43.0687),  # Sapporo Station
+        "water": {"cell_m": 25.0, "min_width_px": 2},
+        "boundary_notes": "notes/T-432.md",
+        # japan.SUBPREFECTURES; Otaru (01203) sends 15.2% of its resident workers into Ishikari (2020
+        # census table 4), so it joins
+        "prefectures": ["01-ishikari", "01-01203"],
+        "neighbours": ["01-shiribeshi", "01-sorachi", "01-iburi", "01-rumoi"],
+        "boundary_file": lambda: __import__("japan").boundary_file("spk", CITIES["spk"]["prefectures"]),
+        "population": lambda city, boundary, sig: __import__("japan").mesh_population(city, boundary, sig, CITIES["spk"]["prefectures"], CITIES["spk"]["neighbours"]),
+        "jobs": lambda city, boundary, sig, w: __import__("japan").census_jobs(city, boundary, sig, w, CITIES["spk"]["prefectures"], CITIES["spk"]["neighbours"]),
+        "jobs_url": "https://www.e-stat.go.jp/gis/statmap-search?type=1",
+        "schools": lambda boundary: __import__("japan").p29_schools(boundary, CITIES["spk"]["prefectures"], CITIES["spk"]["neighbours"]),
+        "water_source": lambda bbox: __import__("osm_water").source(["asia/japan/hokkaido"])(bbox),
+        "extract": "asia/japan/hokkaido",
+        "iso2": "JP",
+        "wfh": 0.13,  # census at home 6.8%
+        "decay_pow": 2.2, "decay_km": 80.0,  # Tokyo's: ties the best fit (notes/t420_curve.py) and keeps the own-municipality share
+        "region_name": "Sapporo",
+        "latin_names": True,
+        "kana_romaji": True,
+    },
+    "sdj": {
+        "tier0": True,
+        "origin": (140.8824, 38.2601),  # Sendai Station
+        "water": {"cell_m": 25.0, "min_width_px": 2},
+        "boundary_notes": "notes/T-432.md",
+        "prefectures": ["04"],  # Miyagi
+        "neighbours": ["03", "05", "06", "07"],  # Iwate, Akita, Yamagata, Fukushima
+        "boundary_file": lambda: __import__("japan").boundary_file("sdj", CITIES["sdj"]["prefectures"]),
+        "population": lambda city, boundary, sig: __import__("japan").mesh_population(city, boundary, sig, CITIES["sdj"]["prefectures"], CITIES["sdj"]["neighbours"]),
+        "jobs": lambda city, boundary, sig, w: __import__("japan").census_jobs(city, boundary, sig, w, CITIES["sdj"]["prefectures"], CITIES["sdj"]["neighbours"]),
+        "jobs_url": "https://www.e-stat.go.jp/gis/statmap-search?type=1",
+        "schools": lambda boundary: __import__("japan").p29_schools(boundary, CITIES["sdj"]["prefectures"], CITIES["sdj"]["neighbours"]),
+        "water_source": lambda bbox: __import__("osm_water").source(["asia/japan/tohoku"])(bbox),
+        "extract": "asia/japan/tohoku",
+        "iso2": "JP",
+        "wfh": 0.16,  # census at home 9.5%
+        "decay_pow": 1.8, "decay_km": 50.0,  # fitted, notes/t420_curve.py
+        "region_name": "Sendai",
+        "latin_names": True,
+        "kana_romaji": True,
+    },
+    "hij": {
+        "tier0": True,
+        "origin": (132.4757, 34.3975),  # Hiroshima Station
+        "water": {"cell_m": 25.0, "min_width_px": 2},
+        "boundary_notes": "notes/T-432.md",
+        "prefectures": ["34"],  # Hiroshima
+        "neighbours": ["31", "32", "33", "35", "38"],  # Tottori, Shimane, Okayama, Yamaguchi, Ehime over the straits
+        "boundary_file": lambda: __import__("japan").boundary_file("hij", CITIES["hij"]["prefectures"]),
+        "population": lambda city, boundary, sig: __import__("japan").mesh_population(city, boundary, sig, CITIES["hij"]["prefectures"], CITIES["hij"]["neighbours"]),
+        "jobs": lambda city, boundary, sig, w: __import__("japan").census_jobs(city, boundary, sig, w, CITIES["hij"]["prefectures"], CITIES["hij"]["neighbours"]),
+        "jobs_url": "https://www.e-stat.go.jp/gis/statmap-search?type=1",
+        "schools": lambda boundary: __import__("japan").p29_schools(boundary, CITIES["hij"]["prefectures"], CITIES["hij"]["neighbours"]),
+        "water_source": lambda bbox: __import__("osm_water").source(["asia/japan/chugoku", "asia/japan/shikoku"])(bbox),
+        "extract": "asia/japan/chugoku",
+        "iso2": "JP",
+        "wfh": 0.14,  # census at home 8.2%
+        "decay_pow": 1.9, "decay_km": 32.0,  # fitted, notes/t420_curve.py
+        "region_name": "Hiroshima",
+        "latin_names": True,
+        "kana_romaji": True,
+    },
     # T-276: non-city zones (docs/zones.md 2): one county each, the counties that touch two city
     # zones. Same sources and cells as a city; `kind` "zone" in the registry.
     "wor": {

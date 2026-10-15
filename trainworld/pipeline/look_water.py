@@ -69,6 +69,37 @@ VIEWS = {
         ("Mueggelsee and the Dahme", 13.62, 52.43, 10.0),
         ("Potsdam's lakes", 13.03, 52.38, 12.0),
     ],
+    "osa": [  # T-431
+        ("Central Osaka, the Yodo and the bay shore", 135.47, 34.69, 12.0),
+        ("Kobe, the Muko and Amagasaki", 135.30, 34.72, 14.0),
+        ("Kyoto, the Katsura, Uji and Kamo", 135.74, 34.95, 16.0),
+        ("Lake Biwa's south basin", 135.95, 35.10, 30.0),
+    ],
+    "ngo": [  # T-431
+        ("Central Nagoya, the Shonai and the port", 136.86, 35.12, 14.0),
+        ("Kiso, Nagara and Ibi to Ise Bay", 136.72, 35.15, 30.0),
+        ("Gifu and the Nagara", 136.77, 35.43, 12.0),
+    ],
+    "fuk": [  # T-432
+        ("Hakata Bay, Tenjin and the Naka", 130.36, 33.62, 16.0),
+        ("Kitakyushu: Dokai Bay and the Kanmon strait", 130.88, 33.92, 18.0),
+        ("Chikugo river and the Ariake Sea", 130.45, 33.15, 30.0),
+    ],
+    "spk": [  # T-432
+        ("Central Sapporo and the Toyohira", 141.36, 43.06, 10.0),
+        ("Ishikari river to Ishikari Bay", 141.40, 43.20, 30.0),
+        ("Otaru and its harbour", 141.00, 43.20, 10.0),
+    ],
+    "sdj": [  # T-432
+        ("Central Sendai and the Hirose", 140.88, 38.26, 8.0),
+        ("Matsushima Bay", 141.10, 38.35, 16.0),
+        ("Ishinomaki and the Kitakami mouth", 141.30, 38.43, 16.0),
+    ],
+    "hij": [  # T-432
+        ("The Ota delta, central Hiroshima", 132.45, 34.38, 8.0),
+        ("Hiroshima Bay, Miyajima and Kure", 132.40, 34.25, 30.0),
+        ("Onomichi and the Shimanami islands", 133.15, 34.33, 24.0),
+    ],
 }
 
 

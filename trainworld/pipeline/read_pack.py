@@ -263,7 +263,7 @@ WATER_TESTS = {
                 "Sendai Airport terminal": (140.9230, 38.1375)},
     },
     "hij": {  # T-432: OSM water (Geofabrik Chugoku and Shikoku), Ota delta channels taken from the water cache
-        True: {"Hiroshima Bay": (132.40, 34.25), "Ota floodway": (132.43757, 34.35587), "Kyobashi": (132.46134, 34.37563),
+        True: {"Hiroshima Bay": (132.40, 34.31), "Ota floodway": (132.43757, 34.35587), "Kyobashi": (132.46134, 34.37563),
                "Motoyasu": (132.44934, 34.36168), "Temma": (132.42385, 34.36446)},
         False: {"Hiroshima Station": (132.4757, 34.3975), "Hondori": (132.4562, 34.3925), "Kure Station": (132.5654, 34.2463),
                 "Fukuyama Station": (133.3624, 34.4893), "Hiroshima Airport terminal": (132.9194, 34.4361)},

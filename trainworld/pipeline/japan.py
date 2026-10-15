@@ -1,5 +1,6 @@
 """T-420: Japan's inputs for a tier 0 pack (Greater Tokyo first), through tier0's hooks. Written for
-every Japanese pack: a pack names its prefectures, and everything below is national.
+every Japanese pack: a pack names its prefectures (or Hokkaido's subprefectures, `SUBPREFECTURES`),
+and everything below is national.
 
 - **Outline and municipalities**: KSJ N03 administrative areas (MLIT, 2025-01-01, per prefecture),
   municipalities dissolved from their parts; designated cities by ward, the unit the census uses.
@@ -53,6 +54,15 @@ FLOWS_ID0 = 32214305  # e04-00-01; each prefecture's three files follow in order
 FINEST = {"0", "2", "3"}
 MIN_PART_DEG2 = 2e-6
 ISLANDS = 13360         # Tokyo codes from here on are the Izu and Ogasawara islands
+# Units smaller than a prefecture (T-432), usable wherever a prefecture code is: Hokkaido's
+# subprefectures by their N03 name (N03_002), or one municipality as "<pref>-<code>"
+SUBPREFECTURES = {"01-ishikari": "石狩振興局", "01-shiribeshi": "後志総合振興局", "01-sorachi": "空知総合振興局",
+                  "01-iburi": "胆振総合振興局", "01-rumoi": "留萌振興局"}
+
+
+def _real(unit):
+    """The prefecture code of a unit: a prefecture, a subprefecture or a single municipality."""
+    return unit[:2]
 # P29 school kinds (P29_003): elementary, junior high, compulsory, secondary
 P29_SCHOOLS = {"16001", "16002", "16003", "16004"}
 
@@ -145,7 +155,8 @@ def _n03(pref):
     code = df["N03_007"].astype(str).str.zfill(5)
     city = df["N03_004"].fillna("").astype(str)
     ward = df["N03_005"].fillna("").astype(str) if "N03_005" in df else ""
-    return pd.DataFrame({"code": code, "pref": pref, "name": (city + ward), "geometry": df.geometry.to_numpy()})
+    sub = df["N03_002"].fillna("").astype(str) if "N03_002" in df else ""
+    return pd.DataFrame({"code": code, "pref": pref, "name": (city + ward), "sub": sub, "geometry": df.geometry.to_numpy()})
 
 
 def municipalities(prefs):
@@ -155,8 +166,14 @@ def municipalities(prefs):
     if not os.path.exists(path):
         feats = []
         for pref in prefs:
-            df = _n03(pref)
+            df = _n03(_real(pref))
             df = df[df.code.str.match(r"^\d{5}$")]
+            if pref in SUBPREFECTURES:
+                df = df[df["sub"] == SUBPREFECTURES[pref]]
+            elif len(pref) > 2:
+                df = df[df.code == pref[3:]]
+            if df.empty:
+                raise ValueError(f"N03 has no municipality for unit {pref}")
             if pref == "13":
                 df = df[df.code.astype(int) < ISLANDS]
             named = df[~df.code.str.endswith("000")]
@@ -299,7 +316,11 @@ def _flows_id(pref):
 def flows_table(pref):
     """Table 4 of the 2020 census for one prefecture of work, employed people 15+: DataFrame
     w (municipality of work), h (municipality of residence, or 'home' for working at home, 'all'
-    for every worker there), n. Municipalities are the finest unit (wards of designated cities)."""
+    for every worker there), n. Municipalities are the finest unit (wards of designated cities).
+    A unit smaller than a prefecture keeps the rows of its own municipalities of work."""
+    if len(pref) > 2:
+        t = flows_table(_real(pref))
+        return t[t.w.isin({m[0] for m in municipalities([pref])})].reset_index(drop=True)
     cache = raw("flows", f"census2020_t4_{pref}.csv")
     if not os.path.exists(cache):
         path = _get(FLOWS_URL.format(_flows_id(pref)), raw("flows", f"e04-{pref}-01.xlsx"))
@@ -390,7 +411,7 @@ def p29_schools(boundary, prefs, neighbours):
     import pyogrio
     import tier0
     pts = []
-    for pref in prefs:
+    for pref in dict.fromkeys(_real(p) for p in prefs):
         path = _get(P29_URL.format(pref=pref), raw("p29", f"P29-23_{pref}_GML.zip"))
         with zipfile.ZipFile(path) as z:
             names = z.namelist()
@@ -577,7 +598,7 @@ def outline(city):
     n_holes = sum(len(p.interiors) for p in getattr(merged, "geoms", [merged]))
     n_parts = len(getattr(merged, "geoms", [merged]))
     ax.set_title(f"{city}: {len(ms)} municipalities, {n_parts} parts, {n_holes} holes (red)")
-    ax.set_aspect(1 / math.cos(math.radians(35.6)))
+    ax.set_aspect(1 / math.cos(math.radians(merged.centroid.y)))
     path = os.path.join(b.ROOT, "..", "artifacts", "trainworld", f"T-420-{city}-outline.png")
     fig.savefig(path, dpi=110, bbox_inches="tight")
     areas = sorted(((p.area, p.representative_point().coords[0]) for p in getattr(merged, "geoms", [merged])), reverse=True)
@@ -599,7 +620,7 @@ def fetch(city):
     for p in prefs:
         t = flows_table(p)
         print(f"flows {p}: {len(t):,} rows, workers there {t[t.h == 'all'].n.sum():,.0f}, at home {t[t.h == 'home'].n.sum():,.0f}", flush=True)
-        _get(P29_URL.format(pref=p), raw("p29", f"P29-23_{p}_GML.zip"))
+        _get(P29_URL.format(pref=_real(p)), raw("p29", f"P29-23_{_real(p)}_GML.zip"))
 
 
 if __name__ == "__main__":
