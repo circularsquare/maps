@@ -102,7 +102,8 @@ stage 1). The rest show their kanji. The basemap tiles keep OSM's `name`; T-057 
 - **Machine time** (estimates from London and Paris): reading the extract 30-45 minutes at the CPU
   cap; Tokyo's build about 10 minutes and `routes.py` about 8; each other metro 3-7 plus 2-4; each
   zone 1-3 plus 1-2. Japan's joint commute gravity: 25-40k zones of 2 km (today's whole world is
-  23k, 12 minutes), so perhaps 30-60 minutes unless T-297 lands. About 4-6 hours of machine time in
+  23k), about 3 minutes since T-297 (a Japan-sized case solved in 189 s, Japan apart from the
+  rest as its own group). About 4-6 hours of machine time in
   all, spread over the stages.
 - **Tokens**: a tier 0 city costs about 3M weighted (notes/city-costs.md). Building Japan's 45 packs
   one agent each would be about 135M (15% of a week). With a country module most of that goes: stage

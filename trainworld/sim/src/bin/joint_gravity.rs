@@ -1,7 +1,8 @@
 //! T-276: one commute gravity for every zone pack together (docs/zones.md 4).
 //!
 //!   cargo run --release --features demand --bin joint_gravity -- [--root ..] [--cut-km 150]
-//!       [--tol 1e-4] [--threads 3] [--dry] [--report data/work/joint_report.json]
+//!       [--tol 1e-8] [--threads 3] [--dry] [--check] [--report data/work/joint_report.json]
+//!       [--dump factors.json] [--anderson 12] [--max-iters 500]
 //!
 //! Reads every zone pack of the registry (`app/src/game/registry.json`, cities with a market place)
 //! and the regional market's pack (`data/packs/intercity.json`, its sites written by
@@ -21,9 +22,14 @@
 //! zone keeps in the pack, and a `joint` block), and the market pack's `commute_*` arrays: the
 //! cross-pack part spread over the market's 6 km zones by each gravity zone's homes and jobs in
 //! them. `--dry` writes nothing. Prints commuters between each pair of packs.
+//!
+//! The balance (T-297) runs per group of packs joined by any pair within the cut, each to `--tol`
+//! on every column (rows exact), with Anderson mixing; `--check` re-measures both after the solve,
+//! and `--dump` writes the factors and kept trips for comparing two solves.
 
 use serde_json::{json, Value};
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
+use std::sync::atomic::{AtomicUsize, Ordering};
 use trainworld_sim::demand::{clock::now_ms, intercity, kernel, pack};
 use trainworld_sim::track::frame::Frame;
 
@@ -52,7 +58,7 @@ fn main() {
     let has = |k: &str| args.iter().any(|a| a == k);
     let root = get("--root").unwrap_or(concat!(env!("CARGO_MANIFEST_DIR"), "/..").to_string());
     let cut_km: f64 = get("--cut-km").map_or(150.0, |v| v.parse().unwrap());
-    let tol: f64 = get("--tol").map_or(1e-4, |v| v.parse().unwrap());
+    let tol: f64 = get("--tol").map_or(1e-8, |v| v.parse().unwrap());
     let threads: usize = get("--threads").map_or(3, |v| v.parse().unwrap());
     let t0 = now_ms();
 
@@ -170,13 +176,12 @@ fn main() {
         }
     }
 
-    // ---- cross-pack neighbours: buckets of 10 km in the world frame
+    // ---- cross-pack neighbours: per pack, its zones in buckets of 10 km of the world frame
     let bucket_m = 10_000.0;
-    let reach = (cut_km * 1000.0 / bucket_m).ceil() as i32;
-    let mut buckets: HashMap<(i32, i32), Vec<u32>> = HashMap::new();
-    for g in 0..nz {
-        buckets.entry(((px[g] / bucket_m).floor() as i32, (py[g] / bucket_m).floor() as i32)).or_default().push(g as u32);
-    }
+    let reach_f = cut_km * 1000.0 / bucket_m;
+    let reach = reach_f.ceil() as i32;
+    let bucket = |g: usize| ((px[g] / bucket_m).floor() as i32, (py[g] / bucket_m).floor() as i32);
+    let grids: Vec<Grid> = packs.iter().map(|p| Grid::new((p.off..p.off + p.z.n).map(|g| (g as u32, bucket(g))).collect())).collect();
     // per pack, the cross decay by distance in 10 m steps (its own curve)
     let step = 0.01f64;
     let nsteps = (cut_km / step) as usize + 2;
@@ -196,15 +201,17 @@ fn main() {
     // for zone g, every cross-pack zone h within the cut, with w = f(d) x k (the home pack's curve
     // when `g_home`, else h's)
     let cross = |g: usize, g_home: bool, f: &mut dyn FnMut(usize, f64)| {
-        let (bx, by) = ((px[g] / bucket_m).floor() as i32, (py[g] / bucket_m).floor() as i32);
-        for dx in -reach..=reach {
-            for dy in -reach..=reach {
-                let Some(list) = buckets.get(&(bx + dx, by + dy)) else { continue };
-                for &h in list {
+        let (bx, by) = bucket(g);
+        for (q, grid) in grids.iter().enumerate() {
+            if q == zp[g] as usize || bx < grid.x0 - reach || bx > grid.x1 + reach || by < grid.y0 - reach || by > grid.y1 + reach {
+                continue;
+            }
+            for y in (by - reach).max(grid.y0)..=(by + reach).min(grid.y1) {
+                // buckets whose nearest point can be within the cut
+                let m = ((y - by).abs() - 1).max(0) as f64;
+                let dxr = 1 + (reach_f * reach_f - m * m).max(0.0).sqrt().floor() as i32;
+                for &h in grid.row(y, bx - dxr, bx + dxr) {
                     let h = h as usize;
-                    if zp[h] == zp[g] {
-                        continue;
-                    }
                     let d2 = (px[h] - px[g]).powi(2) + (py[h] - py[g]).powi(2);
                     if d2 > cut2 {
                         continue;
@@ -231,66 +238,119 @@ fn main() {
         }
         s
     };
-    // one half step: for every zone g (in parallel), sum_h v_h w(g, h) over its pack and across
-    let sums = |v: &[f64], rows: bool| -> Vec<f64> {
-        let mut out = vec![0f64; nz];
-        let chunk = nz.div_ceil(threads);
-        std::thread::scope(|s| {
-            for (t, part) in out.chunks_mut(chunk).enumerate() {
-                let (packs, within, cross, zp) = (&packs, &within, &cross, &zp);
-                s.spawn(move || {
-                    for (k, slot) in part.iter_mut().enumerate() {
-                        let g = t * chunk + k;
-                        let p = &packs[zp[g] as usize];
-                        // the decay is symmetric within a pack; across packs the home end's curve
-                        let mut acc = within(p, g - p.off, v);
-                        cross(g, rows, &mut |h, w| acc += v[h] * w);
-                        *slot = acc;
-                    }
-                });
-            }
+    // one half step over the zones `zs`: for each zone g, sum_h v_h w(g, h) over its pack and across.
+    // Threads take blocks of zones as they free up: a New York zone costs ten of a small pack's.
+    let sums = |v: &[f64], rows: bool, zs: &[usize]| -> Vec<f64> {
+        const BLOCK: usize = 16;
+        let next = AtomicUsize::new(0);
+        let parts: Vec<Vec<(usize, Vec<f64>)>> = std::thread::scope(|s| {
+            let hs: Vec<_> = (0..threads)
+                .map(|_| {
+                    s.spawn(|| {
+                        let mut mine = vec![];
+                        loop {
+                            let lo = next.fetch_add(1, Ordering::Relaxed) * BLOCK;
+                            if lo >= zs.len() {
+                                break;
+                            }
+                            let vals: Vec<f64> = zs[lo..(lo + BLOCK).min(zs.len())]
+                                .iter()
+                                .map(|&g| {
+                                    let p = &packs[zp[g] as usize];
+                                    // the decay is symmetric within a pack; across packs the home end's curve
+                                    let mut acc = within(p, g - p.off, v);
+                                    cross(g, rows, &mut |h, w| acc += v[h] * w);
+                                    acc
+                                })
+                                .collect();
+                            mine.push((lo, vals));
+                        }
+                        mine
+                    })
+                })
+                .collect();
+            hs.into_iter().map(|h| h.join().unwrap()).collect()
         });
+        let mut out = vec![0f64; nz];
+        for (lo, vals) in parts.into_iter().flatten() {
+            for (k, x) in vals.into_iter().enumerate() {
+                out[zs[lo + k]] = x;
+            }
+        }
         out
     };
 
-    // ---- Furness
+    // ---- groups of packs joined by a pair within the cut: they share no commuter, so each is
+    // balanced alone and stops when it has converged
+    let mut parent: Vec<usize> = (0..np).collect();
+    fn root_of(p: &mut [usize], mut a: usize) -> usize {
+        while p[a] != a {
+            p[a] = p[p[a]];
+            a = p[a];
+        }
+        a
+    }
+    let mut npairs = 0usize;
+    for g in 0..nz {
+        cross(g, true, &mut |h, _| {
+            npairs += 1;
+            let (a, b) = (root_of(&mut parent, zp[g] as usize), root_of(&mut parent, zp[h] as usize));
+            if a != b {
+                parent[a] = b;
+            }
+        });
+    }
+    let mut groups: Vec<Vec<usize>> = vec![];
+    let mut group_of: HashMap<usize, usize> = HashMap::new();
+    for pi in 0..np {
+        let r = root_of(&mut parent, pi);
+        let k = *group_of.entry(r).or_insert_with(|| {
+            groups.push(vec![]);
+            groups.len() - 1
+        });
+        groups[k].push(pi);
+    }
+    let within_pairs: usize = packs.iter().map(|p| p.z.n * p.z.n).sum();
+    eprintln!("pairs: {within_pairs} within packs, {npairs} across");
+    eprintln!("{} groups of packs: {}, {:.0} s", groups.len(), groups.iter().map(|g| g.iter().map(|&p| packs[p].id.as_str()).collect::<Vec<_>>().join("+")).collect::<Vec<_>>().join(", "), (now_ms() - t0) / 1000.0);
+
+    // ---- balancing: Furness steps with Anderson mixing (T-297)
+    let max_iters: usize = get("--max-iters").map_or(500, |v| v.parse().unwrap());
+    let mix: usize = get("--anderson").map_or(12, |v| v.parse().unwrap());
     let mut row = vec![0f64; nz];
     let mut col = jobs.clone();
-    let (mut iters, mut err) = (0, 0.0);
-    let max_iters: usize = get("--max-iters").map_or(500, |v| v.parse().unwrap());
-    for it in 0..max_iters {
-        let s = sums(&col, true);
-        err = 0.0f64;
-        let mut worst = 0;
+    let (mut iters, mut err) = (0, 0f64);
+    for grp in &groups {
+        let zs: Vec<usize> = grp.iter().flat_map(|&pi| packs[pi].off..packs[pi].off + packs[pi].z.n).collect();
+        let name = grp.iter().map(|&p| packs[p].id.as_str()).collect::<Vec<_>>().join("+");
+        let b = balance(&o, &jobs, &col, &zs, &|v, rows| sums(v, rows, &zs), tol, max_iters, mix, &mut |k, e| {
+            if k % 10 == 0 {
+                eprintln!("  {name}: step {k}, max column error {e:.2e} ({:.0} s)", (now_ms() - t0) / 1000.0);
+            }
+        });
+        for &g in &zs {
+            row[g] = b.row[g];
+            col[g] = b.col[g];
+        }
+        eprintln!("{name}: {} Furness steps, max column error {:.2e} (rows exact), {:.0} s", b.steps, b.err, (now_ms() - t0) / 1000.0);
+        iters = iters.max(b.steps);
+        err = err.max(b.err);
+    }
+    if has("--check") {
+        let all: Vec<usize> = (0..nz).collect();
+        let sr = sums(&col, true, &all);
+        let sc = sums(&row, false, &all);
+        let (mut er, mut ec) = (0f64, 0f64);
         for g in 0..nz {
-            if o[g] > 0.0 && s[g] > 0.0 {
-                if it > 0 {
-                    let e = (row[g] * s[g] / o[g] - 1.0).abs();
-                    if e > err {
-                        err = e;
-                        worst = g;
-                    }
-                }
-                row[g] = o[g] / s[g];
-            } else {
-                row[g] = 0.0;
+            if o[g] > 0.0 && sr[g] > 0.0 {
+                er = er.max((row[g] * sr[g] / o[g] - 1.0).abs());
+            }
+            if jobs[g] > 0.0 && sc[g] > 0.0 {
+                ec = ec.max((col[g] * sc[g] / jobs[g] - 1.0).abs());
             }
         }
-        iters = it + 1;
-        if it > 0 && err < tol {
-            break;
-        }
-        let s = sums(&row, false);
-        for g in 0..nz {
-            col[g] = if jobs[g] > 0.0 && s[g] > 0.0 { jobs[g] / s[g] } else { 0.0 };
-        }
-        if it % 10 == 0 {
-            let p = &packs[zp[worst] as usize];
-            let i = worst - p.off;
-            eprintln!("  iteration {it}: max row error {err:.2e} at {} zone {i} ({}, {}), people {:.0}, jobs {:.0} ({:.0} s)", p.id, p.z.gx[i], p.z.gy[i], pop[worst], jobs[worst], (now_ms() - t0) / 1000.0);
-        }
+        eprintln!("check: max row error {er:.2e}, max column error {ec:.2e}, {:.0} s", (now_ms() - t0) / 1000.0);
     }
-    eprintln!("Furness: {iters} iterations, max row error {err:.2e}, {:.0} s", (now_ms() - t0) / 1000.0);
 
     // ---- what each zone keeps in its pack, and the cross-pack flows
     let mut home = vec![0f64; nz];
@@ -301,6 +361,13 @@ fn main() {
             home[g] = row[g] * within(p, i, &col);
             work[g] = col[g] * within(p, i, &row);
         }
+    }
+    if let Some(p) = get("--dump") {
+        let d = json!({
+            "packs": packs.iter().map(|p| json!([p.id, p.off, p.z.n])).collect::<Vec<_>>(),
+            "o": o, "jobs": jobs, "row": row, "col": col, "home": home, "work": work, "iterations": iters,
+        });
+        std::fs::write(&p, serde_json::to_string(&d).unwrap()).unwrap();
     }
     // market zones: each pack cell's 600 m square's site, and its zone
     let market_path = format!("{root}/data/packs/intercity.json");
@@ -365,6 +432,7 @@ fn main() {
             }
         });
     }
+    eprintln!("flows between packs, {:.0} s", (now_ms() - t0) / 1000.0);
     let total_within: f64 = home.iter().sum();
     let total_cross: f64 = by_pack.iter().sum();
     println!(
@@ -455,4 +523,223 @@ fn main() {
     std::fs::write(format!("{market_path}.part"), &text).unwrap();
     std::fs::rename(format!("{market_path}.part"), &market_path).unwrap();
     println!("wrote {} packs and {market_path} ({:.2} MB) in {:.0} s", np, text.len() as f64 / 1e6, (now_ms() - t0) / 1000.0);
+}
+
+/// One pack's zones by bucket, row by row, so a run of buckets in a row is one slice.
+struct Grid {
+    x0: i32,
+    x1: i32,
+    y0: i32,
+    y1: i32,
+    start: Vec<u32>,
+    ids: Vec<u32>,
+}
+
+impl Grid {
+    fn new(mut zs: Vec<(u32, (i32, i32))>) -> Grid {
+        let x0 = zs.iter().map(|z| z.1 .0).min().unwrap_or(0);
+        let x1 = zs.iter().map(|z| z.1 .0).max().unwrap_or(-1);
+        let y0 = zs.iter().map(|z| z.1 .1).min().unwrap_or(0);
+        let y1 = zs.iter().map(|z| z.1 .1).max().unwrap_or(-1);
+        let w = (x1 - x0 + 1).max(0) as usize;
+        let key = |b: (i32, i32)| (b.1 - y0) as usize * w + (b.0 - x0) as usize;
+        zs.sort_by_key(|z| (key(z.1), z.0));
+        let nb = w * (y1 - y0 + 1).max(0) as usize;
+        let mut start = vec![0u32; nb + 1];
+        for z in &zs {
+            start[key(z.1) + 1] += 1;
+        }
+        for k in 0..nb {
+            start[k + 1] += start[k];
+        }
+        Grid { x0, x1, y0, y1, start, ids: zs.into_iter().map(|z| z.0).collect() }
+    }
+
+    /// zones in buckets xa..=xb of row y (y within the grid)
+    fn row(&self, y: i32, xa: i32, xb: i32) -> &[u32] {
+        let (xa, xb) = (xa.max(self.x0), xb.min(self.x1));
+        if xa > xb {
+            return &[];
+        }
+        let w = (self.x1 - self.x0 + 1) as usize;
+        let base = (y - self.y0) as usize * w;
+        &self.ids[self.start[base + (xa - self.x0) as usize] as usize..self.start[base + (xb - self.x0) as usize + 1] as usize]
+    }
+}
+
+struct Balanced {
+    row: Vec<f64>,
+    col: Vec<f64>,
+    steps: usize,
+    /// max over columns of |col (W^T row) / d - 1|; the rows are exact
+    err: f64,
+}
+
+/// The doubly constrained balance over the zones `zs`: row = o / (W col), col = d / (W^T row), where
+/// `sums(v, true)` is W v and `sums(v, false)` is W^T v. A Furness step maps log col to log col and the
+/// solution is its fixed point. Plain Furness crawls along the few slow modes between weakly joined
+/// packs and regions (500 steps to 2e-4 on the Northeast); Anderson mixing of the last `mix` steps
+/// removes them (T-297). `mix` 0 is plain Furness.
+#[allow(clippy::too_many_arguments)]
+fn balance(o: &[f64], d: &[f64], c0: &[f64], zs: &[usize], sums: &dyn Fn(&[f64], bool) -> Vec<f64>, tol: f64, max_steps: usize, mix: usize, log: &mut dyn FnMut(usize, f64)) -> Balanced {
+    let n = o.len();
+    let act: Vec<usize> = zs.iter().copied().filter(|&g| d[g] > 0.0).collect();
+    let mut x: Vec<f64> = act.iter().map(|&g| if c0[g] > 0.0 { c0[g] } else { d[g] }.ln()).collect();
+    // a column no home reaches gets 0, as in plain Furness
+    let mut dead = vec![false; act.len()];
+    let mut hist: VecDeque<(Vec<f64>, Vec<f64>)> = VecDeque::new();
+    let mut prev: Option<(Vec<f64>, Vec<f64>, f64)> = None;
+    let mut best: Option<Balanced> = None;
+    let mut c = vec![0f64; n];
+    for k in 0..max_steps {
+        for (i, &g) in act.iter().enumerate() {
+            c[g] = if dead[i] { 0.0 } else { x[i].exp() };
+        }
+        let s = sums(&c, true);
+        let mut row = vec![0f64; n];
+        for &g in zs {
+            if o[g] > 0.0 && s[g] > 0.0 {
+                row[g] = o[g] / s[g];
+            }
+        }
+        let s = sums(&row, false);
+        let mut gx = vec![0f64; act.len()];
+        let mut f = vec![0f64; act.len()];
+        let mut err = 0f64;
+        for (i, &g) in act.iter().enumerate() {
+            if s[g] > 0.0 {
+                gx[i] = (d[g] / s[g]).ln();
+                f[i] = gx[i] - x[i];
+                err = err.max((-f[i]).exp_m1().abs());
+            } else {
+                dead[i] = true;
+                gx[i] = x[i];
+            }
+        }
+        log(k, err);
+        if best.as_ref().is_none_or(|b| err < b.err) {
+            best = Some(Balanced { row, col: c.clone(), steps: k + 1, err });
+        }
+        if err < tol {
+            break;
+        }
+        let fnorm = f.iter().map(|v| v * v).sum::<f64>().sqrt();
+        if let Some((fp, gp, fnp)) = prev.take() {
+            if fnorm > 2.0 * fnp {
+                hist.clear();
+            } else if mix > 0 {
+                hist.push_back((f.iter().zip(&fp).map(|(a, b)| a - b).collect(), gx.iter().zip(&gp).map(|(a, b)| a - b).collect()));
+                if hist.len() > mix {
+                    hist.pop_front();
+                }
+            }
+        }
+        let gamma = if hist.is_empty() { None } else { least_squares(&hist, &f) };
+        if gamma.is_none() {
+            hist.clear();
+        }
+        x = match &gamma {
+            Some(gm) => {
+                let mut xn = gx.clone();
+                for (j, (_, dg)) in hist.iter().enumerate() {
+                    for (v, dv) in xn.iter_mut().zip(dg) {
+                        *v -= gm[j] * dv;
+                    }
+                }
+                xn
+            }
+            None => gx.clone(),
+        };
+        prev = Some((f, gx, fnorm));
+    }
+    let mut b = best.unwrap();
+    b.steps = b.steps.max(1);
+    b
+}
+
+/// gamma minimising |f - sum_j gamma_j df_j| (normal equations, lightly regularised); None when singular
+fn least_squares(hist: &VecDeque<(Vec<f64>, Vec<f64>)>, f: &[f64]) -> Option<Vec<f64>> {
+    let m = hist.len();
+    let dot = |a: &[f64], b: &[f64]| a.iter().zip(b).map(|(x, y)| x * y).sum::<f64>();
+    let mut a = vec![vec![0f64; m + 1]; m];
+    for i in 0..m {
+        for j in 0..m {
+            a[i][j] = dot(&hist[i].0, &hist[j].0);
+        }
+        a[i][m] = dot(&hist[i].0, f);
+    }
+    let tr: f64 = (0..m).map(|i| a[i][i]).sum::<f64>() / m as f64;
+    for (i, r) in a.iter_mut().enumerate() {
+        r[i] += 1e-12 * tr;
+    }
+    for p in 0..m {
+        let piv = (p..m).max_by(|&i, &j| a[i][p].abs().total_cmp(&a[j][p].abs()))?;
+        a.swap(p, piv);
+        if a[p][p].abs() <= 1e-300 {
+            return None;
+        }
+        for i in p + 1..m {
+            let r = a[i][p] / a[p][p];
+            for j in p..=m {
+                a[i][j] -= r * a[p][j];
+            }
+        }
+    }
+    let mut x = vec![0f64; m];
+    for i in (0..m).rev() {
+        x[i] = (a[i][m] - (i + 1..m).map(|j| a[i][j] * x[j]).sum::<f64>()) / a[i][i];
+    }
+    x.iter().all(|v| v.is_finite()).then_some(x)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Two blocks of 40 zones joined weakly, as packs are: Anderson reaches what plain Furness reaches
+    /// after thousands of steps, in a small fraction of them.
+    #[test]
+    fn anderson_matches_long_furness() {
+        let n = 80;
+        let mut w = vec![0f64; n * n];
+        let mut seed = 7u64;
+        let mut rnd = || {
+            seed = seed.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            (seed >> 11) as f64 / (1u64 << 53) as f64
+        };
+        let pos: Vec<f64> = (0..n).map(|i| i as f64 + rnd()).collect();
+        for i in 0..n {
+            for j in 0..n {
+                let k = if (i < 40) == (j < 40) { 1.0 } else { 0.002 };
+                w[i * n + j] = k * (-(pos[i] - pos[j]).abs() / 6.0).exp() * (1.0 + 0.5 * rnd());
+            }
+        }
+        let mut o: Vec<f64> = (0..n).map(|_| 1.0 + 9.0 * rnd()).collect();
+        let d: Vec<f64> = (0..n).map(|i| if i % 13 == 5 { 0.0 } else { 1.0 + 9.0 * rnd() }).collect();
+        // each block's homes equal its jobs, as each pack's do
+        for b in [0..40, 40..80] {
+            let (so, sd): (f64, f64) = (o[b.clone()].iter().sum(), d[b.clone()].iter().sum());
+            o[b.clone()].iter_mut().for_each(|v| *v *= sd / so);
+        }
+        let sums = |v: &[f64], rows: bool| -> Vec<f64> {
+            (0..n).map(|g| (0..n).map(|h| v[h] * if rows { w[g * n + h] } else { w[h * n + g] }).sum()).collect()
+        };
+        let zs: Vec<usize> = (0..n).collect();
+        let slow = balance(&o, &d, &d, &zs, &sums, 1e-10, 50000, 0, &mut |_, _| {});
+        let fast = balance(&o, &d, &d, &zs, &sums, 1e-10, 50000, 8, &mut |_, _| {});
+        eprintln!("furness {} steps, anderson {}", slow.steps, fast.steps);
+        assert!(slow.err < 1e-10 && fast.err < 1e-10, "{} {}", slow.err, fast.err);
+        assert!(fast.steps * 10 < slow.steps, "anderson {} steps, furness {}", fast.steps, slow.steps);
+        // flows agree (the factors themselves are fixed only up to row x a, col / a); the weak link
+        // fixes the blocks' relative scale only to about err / (the link's share), hence 1e-6
+        for i in 0..n {
+            for j in 0..n {
+                let (a, b) = (slow.row[i] * slow.col[j], fast.row[i] * fast.col[j]);
+                assert!((a - b).abs() <= 1e-6 * a.max(b).max(1e-300), "{i} {j} {a} {b}");
+            }
+        }
+        for j in 0..n {
+            assert_eq!(fast.col[j] == 0.0, d[j] == 0.0);
+        }
+    }
 }

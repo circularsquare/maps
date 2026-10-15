@@ -110,6 +110,11 @@ over every job in reach, in its own zone or another, so moving a zone line moves
 - The cross-pack part is spread from gravity zones to the market's 6 km zones by each gravity zone's
   homes (at the home end) and jobs (at the work end) in each, and shipped in the market pack as a
   list of home zone, work zone and commuters a day.
+- **The balance** (T-297) is solved per group of packs joined by any pair within the cut (groups
+  share no commuter: Japan's packs would balance apart from the Northeast's). Each group runs Furness
+  steps with Anderson mixing of the last 12 steps, until every zone's jobs are met to 1e-8 relative
+  (its homes exactly), about 40 steps. The tolerance is tight because weakly joined packs and regions
+  leave slow modes: a looser residual leaves factors percents off (notes/T-297.md).
 
 **Fitting and checking.** The curve and the factors are each pack's fitted values, so nothing new
 is fitted for commutes between zones in the US. LODES OD 2023 is the check, not an input: commuters
@@ -130,21 +135,21 @@ the best rail strategy with its walks, waits, transfers and fares. The weekend h
 weekday's commutes with the weekend's work timing (days.rs `WORK`). Their loads join the
 work purpose's (T-158), so the purpose filter's "Work" shows them.
 
-## 5. The retuned market (longer trips)
+## 5. The world market (longer trips)
 
-Option 1 of the review, in the same structure (zones, served pairs only, the offline derived block):
+Every zone is a place of one world market (T-377; the rule in [regional.md](regional.md) 5.1):
 
-- **An outside world.** Each zone's normaliser has an extra term for every place not modelled: the
-  population of the world outside every zone (Kontur, H3 resolution 6, global, aggregated) at its
-  distance, at the represented places' mean attraction per person. So a share of every zone's trips
-  leaves the map, more from a zone near the edge than from one in the middle, and adding a zone
-  later moves only the trips that went to where it now is.
-- **The trip rate, the onset and the curve** from NHTS 2017 (national): the rate of non-commute trips
-  by distance band for Northeast residents, fitted with the outside world in place. Section 9 has
-  the fitted values.
+- **Normalisers over the world field** (T-375), never over the zone list: a share of every zone's
+  trips goes to places with no zone, and adding a zone moves only the trips that went to where it
+  now is. Each zone's own pack carries its 6 km zones' two normalisers (ground and tail), so a new
+  zone needs only its own pack and the registry rows rebuilt (`pipeline/market_zones.py`, seconds).
+- **The trip rate, the onset and the curve** from NHTS 2017 for the ground; the long-haul tail,
+  income and border factors fitted in T-376.
+- **Near and far**: places under 250 km apart (centre to centre) pair 6 km zone to 6 km zone; farther
+  ones place to place, spread inside each end.
 - **The car pays more than time.** Running cost per km and the local layer's parking at the
   destination, each split over the car's occupants (two on a long trip, NHTS), at the game's value
-  of time (3 perceived minutes a dollar). No tolls (T-270).
+  of time (3 perceived minutes a dollar). No tolls (T-270); no car between landmasses.
 - Everyday outings still taper by the complement of the market's onset, so the two layers meet
   without a gap or a double count.
 
@@ -221,24 +226,26 @@ Every rule above is per country: the unit (US county, Canadian census division, 
 adapters, the border factors. Toronto (T-277) is a city zone of Canada with Canadian census
 divisions around it as its non-city zones once modelled space reaches them. The joint commute
 gravity spans countries: a pair across the US-Canada border takes the national border factor, and
-the market's longer trips across it a national factor of their own (0.5 for now, judgement: border
-formalities and currency deter trips; fitted later from cross-border travel counts). A world with
-two separate clusters of zones (the Northeast and Toronto, 500 km apart) needs nothing special:
-the commute gravity has no pairs between them, and the market's longer trips between them are its
-long tail.
+the market's longer trips across any border T-376's factor (0.26 times the origin's income factor
+to the power 1.5). A world with separate clusters of zones (the Northeast, Toronto, London, Tokyo)
+needs nothing special: the commute gravity has no pairs between them, the market's longer trips
+between them are place to place, and clusters merge only through track (T-362 decision 6).
 
 ## 8. Performance
 
 - **Opening.** A non-city zone is a pack the size of a small city (Worcester County 860k people,
   about Providence's), opened only when viewed or reached, like a city: 0.05-0.3 s natively with its
   everyday layer. Commute packs open from shipped factors as now (a few ms).
-- **The market pack** is opened only once a market zone is viewed or reached, or a station lies
-  within 30 km of a market zone's box (T-396; demand.md "Which cities are open"). It grows by the cross-zone commute list. Its pairs are built only between zones
-  a station serves, so a solve's pair loop grows with the network's reach, not with the list.
+- **A zone's market pack** is opened only once the zone is viewed or reached, or a station lies
+  within 30 km of its box, and closes with the zone (T-396, T-377; demand.md "Which cities are
+  open"), so the market a worker holds grows with what is viewed and reached, not with the
+  registry. Its pairs are built only between zones a station serves, so a solve's pair loop grows
+  with the network's reach; pairs to every other place come from the registry rows (one row per
+  zone, a few hundred bytes).
   Cross-zone commute pairs add a second pass over served pairs to the market's per-period work
   (the market pass was 0.06 s natively a period on the real New York network).
-- **The joint gravity** is offline only (`joint_gravity`, about a minute natively over the ten
-  packs); a runtime edit never reruns it.
+- **The joint gravity** is offline only (`joint_gravity`, about a minute natively on three
+  threads over the 13 packs' 25.6k zones, about three over 65k); a runtime edit never reruns it.
 - **Startup** must not grow with the number of zones: zones add registry entries, and their files
   are fetched on demand (section 6). A mask installed while a big network is loaded reworks the
   whole network once (about 0.2 s on the real New York network). A zone opened only for its bubbles opens bare in the auxiliary worker (T-325):
@@ -262,8 +269,7 @@ All five stages are built; numbers and checks in [notes/T-276.md](../notes/T-276
 5. The far-zoomed per-zone bubble: local trips plus the regional layer's, coloured by train share.
 
 Not built, each its own task: park-and-ride (T-295), the market's routed drives (T-279), the
-commute part's own weekend factor in a station's far-zone rows (T-296), a faster joint solve
-(T-297), commutes shown apart from longer trips (T-298), the market's seam trips against NEC
+commute part's own weekend factor in a station's far-zone rows (T-296), commutes shown apart from longer trips (T-298), the market's seam trips against NEC
 FUTURE (T-299), and
 fetching zones' water masks and boundaries on demand rather than at startup (T-302; today every
 registered zone's are fetched at startup, as cities' are).

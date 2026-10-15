@@ -1,5 +1,7 @@
 # Archive
 
+- T-297 [P3] A faster joint commute gravity. Done 2026-10-15: Anderson-mixed Furness per group of joined packs, to 1e-8; Northeast 1,156 s to 64, Japan-sized 65k zones about 2,400 s to 189; today's factors were up to 3.5% unconverged. notes/T-297.md.
+
 - T-425 [P2] Fast enrichment on long coastlines. Done 2026-10-15: outline prepared in every enrichment's point tests, parks' ring overlay clipped to its box; Tokyo medical 1,028 s to 12, parks 742 to 119, London medical 125 to 6; Tokyo and London outputs byte-identical. notes/T-425.md.
 - T-301 [P3] Close packs nobody uses. Done 2026-10-15: unneeded packs and the market close after 60 s, or at once beyond two spare zones; long pan's aux peak 154 to 110 MB (new game), 133 to 97 (real save), packs open 14 to 5-8; figures unchanged. notes/T-301.md.
 - T-376 [P2] T-362 stage 2: fit the long-haul tail and border factor. Done 2026-10-15: the tail as its own segment from 300 km, Rt 0.0047, d^-0.70, border 0.26 falling with origin income; US trips over 5,000 km 6.8% to 1.4%, Japan abroad still 6x. notes/T-376.md.
