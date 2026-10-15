@@ -1,5 +1,6 @@
 # Archive
 
+- T-375 [P2] T-362 stage 1: the world field. Done 2026-10-15: 393,791 Kontur r5 cells (4.2 MB) with country, GDP per head and landmass; fixed links derived from Wikidata, all required crossings joined; 96% of people in countries within 10% of the World Bank. notes/T-375.md.
 - T-399 [P3] One commute engine per city. Done 2026-10-15: the everyday layer shares its commutes' cells, zones, gravity and routes (`EverydayApi::beside`); New York worker peak 198 to 188 MB natively, nine cities 350 to 318; subzones stay per layer; outputs identical, set-up unchanged. notes/T-399.md.
 - T-290 [P2] Berlin. Done 2026-10-15: `ber`, 12 whole Kreise, 5.54M people, tier 0 with Zensus 2022 100 m population, Pendlerrechnung jobs by Gemeinde (2.94M) and a curve fitted on its flows (d^-1.4 exp(-d/28)); checks pass, other packs unchanged. notes/T-290.md.
 - T-397 [P3] Everyday samples per cell scaled to its trips. Done 2026-10-15: one per 8 trips a day, 2 to 16; New York worker peak 259 to 198 MB natively, opening 1.09 to 0.66 s; no station moves over 5%; smoke final 7,596,985. notes/T-397.md.

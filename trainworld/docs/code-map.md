@@ -183,6 +183,11 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
 - `places.py [ids]` writes each city's OSM place list, `data/packs/<id>.places.json` (towns and
   neighbourhoods inside the boundary; from the extract's cached features for a tier 0 city, else
   one Overpass request a city cached in `data/raw/`; T-177), beside the pack, not in it.
+- `world_field_build.py` writes the world field for the long-trip market (T-362, T-375): Kontur
+  at H3 r5 with country, GDP per head and landmass (joined by Wikidata fixed links) into
+  `data/work/world_field.*`, a pipeline input never shipped, about 6 minutes;
+  `world_field.py` reads it (`load().around(lon, lat)`: r5 within 300 km, r4 to 1,000, r3
+  beyond; `locate()`); `checks/world_field_check.py` checks it (country totals, fixed links).
 - `frame_fixture.py` writes PROJ's values for the world frame (`app/src/game/frame.fixture.json`),
   which `checks/t125-frame-check.mjs` and the Rust frame test compare with.
 - `tier0.py`: the adapter from global sources only (T-287); `canada.py`: Canada's adapters;
