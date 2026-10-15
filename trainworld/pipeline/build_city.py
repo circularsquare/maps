@@ -341,15 +341,15 @@ CITIES = {
         "decay_pow": 1.4, "decay_km": 28.0,
         "region_name": "Berlin-Brandenburg",
     },
-    # T-420 stage 1: Greater Tokyo, the four prefectures whole, Tokyo's Izu and Ogasawara islands left
-    # out (research/japan.md); Japan's census inputs from pipeline/japan.py
+    # T-420 stage 1 and T-426: Greater Tokyo, five prefectures whole, Tokyo's Izu and Ogasawara islands
+    # left out (research/japan.md); Japan's census inputs from pipeline/japan.py
     "tyo": {
         "tier0": True,
         "origin": (139.7671, 35.6812),  # Tokyo Station
         "water": {"cell_m": 25.0, "min_width_px": 2},
         "boundary_notes": "notes/T-420.md",
-        "prefectures": ["11", "12", "13", "14"],  # Saitama, Chiba, Tokyo, Kanagawa
-        "neighbours": ["08", "09", "10", "19", "22"],  # land beyond the outline, for meshes it cuts
+        "prefectures": ["08", "11", "12", "13", "14"],  # Ibaraki, Saitama, Chiba, Tokyo, Kanagawa
+        "neighbours": ["07", "09", "10", "19", "22"],  # land beyond the outline, for meshes it cuts
         "boundary_file": lambda: __import__("japan").boundary_file("tyo", CITIES["tyo"]["prefectures"]),
         "population": lambda city, boundary, sig: __import__("japan").mesh_population(city, boundary, sig, CITIES["tyo"]["prefectures"], CITIES["tyo"]["neighbours"]),
         "jobs": lambda city, boundary, sig, w: __import__("japan").census_jobs(city, boundary, sig, w, CITIES["tyo"]["prefectures"], CITIES["tyo"]["neighbours"]),
@@ -369,7 +369,7 @@ CITIES = {
         "od_share": {"RJAA": 0.8},  # Narita's transfer passengers, judgement
         "region_name": "Greater Tokyo",
         "latin_names": True,
-        "kana_romaji": True,  # places.py: romaji from the kana reading where OSM has no Latin name
+        "kana_romaji": True,  # places.py: romaji from the kana reading, else the kanji's dictionary reading, where OSM has no Latin name
     },
     # T-276: non-city zones (docs/zones.md 2): one county each, the counties that touch two city
     # zones. Same sources and cells as a city; `kind` "zone" in the registry.

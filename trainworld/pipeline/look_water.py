@@ -61,6 +61,7 @@ VIEWS = {
         ("Arakawa, Edogawa and the Tokyo Bay landfill", 139.86, 35.66, 14.0),
         ("Tama River, Kawasaki and Haneda", 139.70, 35.56, 12.0),
         ("Lake Inba and Teganuma", 140.12, 35.80, 20.0),
+        ("Kasumigaura, Kitaura and the lower Tone", 140.45, 35.98, 40.0),  # T-426
     ],
     "ber": [  # T-290
         ("Central Berlin, the Spree and the Landwehrkanal", 13.40, 52.51, 6.0),

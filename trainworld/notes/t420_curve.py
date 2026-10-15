@@ -3,7 +3,7 @@
 the four prefectures, at-home workers out), against Paris's, London's, Toronto's, the US curve
 and tier 0's fallback. notes/t289_curve.py's method.
 
-    ..\\venv\\Scripts\\python.exe -u trainworld/notes/t420_curve.py [city]
+    ..\\venv\\Scripts\\python.exe -u trainworld/notes/t420_curve.py [city] [task id for the output name]
 
 Makes the pack's tier 0 signals first if they are not cached, so the build that follows reuses
 them. Prints the census's at-home share too (the config's wfh starts from it).
@@ -25,9 +25,11 @@ import japan  # noqa: E402
 import tier0  # noqa: E402
 
 CITY = sys.argv[1] if len(sys.argv) > 1 else "tyo"
-OUT = os.path.join(ROOT, "..", "artifacts", "trainworld", f"T-420-{CITY}-curve.json")
+TASK = sys.argv[2] if len(sys.argv) > 2 else "T-426"
+OUT = os.path.join(ROOT, "..", "artifacts", "trainworld", f"{TASK}-{CITY}-curve.json")
 BINS = [0, 1.5, 3, 5, 7.5, 10, 15, 20, 30, 50, 1e9]
-NAMED = {"Paris d^-1.3 exp(-d/20)": (1.3, 20.0), "London d^-1.85 exp(-d/30)": (1.85, 30.0),
+NAMED = {"Tokyo stage 1 d^-2.2 exp(-d/80)": (2.2, 80.0),
+         "Paris d^-1.3 exp(-d/20)": (1.3, 20.0), "London d^-1.85 exp(-d/30)": (1.85, 30.0),
          "Toronto d^-1.2 exp(-d/20)": (1.2, 20.0), "US d^-0.8 exp(-d/30)": (0.8, 30.0)}
 
 

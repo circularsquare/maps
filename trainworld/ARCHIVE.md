@@ -1,5 +1,7 @@
 ﻿# Archive
 
+- T-426 [P2] Greater Tokyo with Ibaraki, romaji from a dictionary. Done 2026-10-15: five prefectures, 39.75M people, 17.74M jobs, curve kept; kanji names read by UniDic (35% of places, about one in four or five misread); build 10 minutes. notes/T-420.md "Stage 1b".
+
 - T-423 [P3] T-418 stage 3: quad drawn through points. Done 2026-10-15: segments leave each pair a loose end and carry both pairs on from one, concentric, no swing-outs or junctions at joints; twin stations, crossovers and trains work across it. Corners kept (T-422). notes/T-418.md 9.
 
 - T-377 [P2] T-362 stage 3: the world market. Done 2026-10-15: every zone a place, its own market pack with world-field normalisers, registry rows, far pairs place to place; London - New York 5,163 a day; real save final +0.08%, timings unchanged. notes/T-377.md.

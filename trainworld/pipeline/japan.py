@@ -17,7 +17,8 @@ every Japanese pack: a pack names its prefectures, and everything below is natio
 - **Curve**: the same census table, municipality to municipality (notes/t420_curve.py).
 - **Schools**: KSJ P29 (2023) elementary, junior high, compulsory and secondary schools as points;
   each mesh's children 0-14 x tier0.SCHOOL_ENROL go to the nearest such school.
-- **Names**: `kana_romaji`, Hepburn romaji from a kana reading, for places.py.
+- **Names**: `kana_romaji`, Hepburn romaji from a kana reading, and `kanji_romaji`, the kana
+  reading of a kanji name from UniDic (fugashi with unidic-lite), for places.py.
 
 All open: e-Stat under the Government Standard Terms 2.0 (CC BY 4.0 compatible); KSJ N03 and P29
 (2023) CC BY 4.0. Cached in data/raw/tier0/japan/.
@@ -466,6 +467,90 @@ def kana_romaji(kana):
         out.append(syl)
     text = "".join(out)
     return " ".join(w[:1].upper() + w[1:] for w in text.split()) or None
+
+
+# A name's first kanji read as in place names when the dictionary splits it off (上大岡 is Kamiooka,
+# not Ueooka; 南流山 Minaminagareyama, not Nanryusan)
+PLACE_PREFIX = {"上": "カミ", "下": "シモ", "東": "ヒガシ", "西": "ニシ", "南": "ミナミ", "北": "キタ", "中": "ナカ",
+                "新": "シン", "元": "モト", "小": "コ"}
+_TAGGER = []
+
+
+# A town's 町 reads cho in OSM's name:en far more often than machi; a city's 市 is left off, as there
+_SUFFIX = {"町": "cho", "市": ""}
+_PN_WEIGHT = {"地名": 2, "人名": 1}
+_PN_MIN = 2
+_KANSUJI = dict(zip("一二三四五六七八九", range(1, 10)))
+
+
+def _reading(text):
+    """(kana reading, tokens) from UniDic (fugashi with unidic-lite), or None if no analysis knows
+    every token. Of MeCab's ten best analyses, the one with most characters in proper nouns
+    (place names twice a person's name) wins: 宮内 Miyauchi, not the common noun kunai."""
+    if not _TAGGER:
+        import fugashi
+        _TAGGER.append(fugashi.Tagger())
+    best = None
+    for toks in _TAGGER[0].nbestToNodeList(text, 10):
+        kana = [t.feature.kana for t in toks]
+        if not toks or any(t.is_unk or not k or k == "*" for t, k in zip(toks, kana)):
+            continue
+        score = sum(len(t.surface) * _PN_WEIGHT.get(t.feature.pos3, 0)
+                    for t in toks if t.feature.pos2 == "固有名詞" and (len(t.surface) >= _PN_MIN or len(toks) == 1))
+        if best is None or score > best[0]:
+            best = (score, "".join(kana), len(toks))
+    return best and best[1:]
+
+
+def _kansuji(s):
+    if s.isdigit():
+        return int(s)
+    if s == "十":
+        return 10
+    if "十" in s:
+        a, _, c = s.partition("十")
+        return 10 * (_KANSUJI.get(a, 1) if a else 1) + (_KANSUJI.get(c, 0) if c else 0)
+    return _KANSUJI.get(s)
+
+
+def _word_romaji(part):
+    if len(part) > 2 and part[-1] in _SUFFIX:
+        stem = _word_romaji(part[:-1])
+        return stem and stem + _SUFFIX[part[-1]]
+    r = _reading(part)
+    if r and r[1] > 1 and len(part) > 1 and part[0] in PLACE_PREFIX:
+        rest = _reading(part[1:])
+        if rest:
+            r = (PLACE_PREFIX[part[0]] + rest[0], 1)
+    return kana_romaji(r[0]) if r else None
+
+
+def kanji_romaji(name):
+    """Romaji for a kanji name from a reading dictionary (UniDic), through kana_romaji; None where a
+    word is not in the dictionary. One word per part of the name, as Japanese place names are
+    written (Higashiarai, Kamiooka); a block number as "Shintsuka 1-chome"; a leading 大字 (an
+    administrative word) and anything in brackets left out. T-426."""
+    import re
+    name = re.sub(r"[（(][^）)]*[）)]", "", name).strip()
+    name = re.sub(r"^大字", "", name)
+    # 本田ケ谷 Hondagaya: a ケ between kanji is ga, and ケ谷 nearly always gaya
+    name = re.sub(r"(?<=[一-鿿])[ケヶ]谷", "がや", name)
+    name = re.sub(r"(?<=[一-鿿])[ケヶ](?=[一-鿿])", "が", name)
+    suffix = ""
+    m = re.match(r"^(.+?)([一二三四五六七八九十]+|\d+)丁目$", name)
+    if m and _kansuji(m.group(2)):
+        name, suffix = m.group(1), f" {_kansuji(m.group(2))}-chome"
+    else:
+        m = re.match(r"^(.+?)(\d+)$", name)
+        if m:
+            name, suffix = m.group(1), f" {int(m.group(2))}"
+    parts = []
+    for part in name.replace("　", " ").replace("・", " ").split():
+        roma = _word_romaji(part)
+        if not roma:
+            return None
+        parts.append(roma)
+    return (" ".join(parts) + suffix) if parts else None
 
 
 # ---------------------------------------------------------------- command line

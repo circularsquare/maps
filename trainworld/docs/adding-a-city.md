@@ -190,6 +190,10 @@ its national pairs); the market takes the country from the world field. Then, in
     venv\Scripts\python.exe trainworld\pipeline\zones.py --trips     (each zone's local trips, for the overview)
     cd trainworld & ..env\Scripts\python.exe pipelineoutes.py <id>   (last: T-275's routes, for new packs)
 
+`market_zones.py` also gives the zone's pack its airports and direct flights (T-378, from
+OurAirports and the flights project's FR24 file, `maps/flights/routes_fr24.json`; a direct flight
+counts from either end, so other zones need no rerun; `--air` redoes only every pack's airports).
+
 A zone in the Northeast's joint commute gravity (`market` set) runs `intercity.py` instead of
 `market_zones.py`: it rewrites every Northeast pack's gravity factors (the joint solve), so
 existing packs change here too: record the commuters between packs it prints and each corridor's
@@ -381,7 +385,12 @@ T-425, parks 35 minutes and medical 15; now they take 2 minutes together; routes
 row: `prefectures`, `neighbours` (the land beyond the outline, for meshes it cuts) and the region's
 telework share; `python pipeline/japan.py fetch <id>` downloads the census meshes, N03, table 4
 and P29 first, and `japan.py outline <id>` draws the outline. Run `notes/t420_curve.py <id>` for
-the curve before the build (it makes the signals cache).
+the curve before the build (it makes the signals cache; 25 minutes on Greater Tokyo's 4,900 zones).
+Rebuilt with Ibaraki (T-426): the extract's features and water 6 minutes, the build 10, `routes.py
+tyo --extracts asia/japan/kanto` 14 (Japan is not in `routes.EXTRACTS`). Place names need fugashi
+and unidic-lite in the venv (`japan.kanji_romaji`). A rebuilt pack's caches (`data/work/<id>.*`,
+the `osm_*_<id>` files under `data/raw/`, `<id>_prefectures.geojson`) must go first, or the old
+extent's are reused.
 
 What was hard, for the next country:
 

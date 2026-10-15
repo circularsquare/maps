@@ -17,8 +17,9 @@ import build_city as b  # noqa: E402
 import canada  # noqa: E402
 import japan  # noqa: E402
 
-CENSUS_POP = {"11": 7344765, "12": 6284480, "13": 14047594, "14": 9237337}  # 2020 census (Statistics Bureau)
-NAMES = {"11": "Saitama", "12": "Chiba", "13": "Tokyo", "14": "Kanagawa"}
+# 2020 census (Statistics Bureau; Ibaraki's from the prefecture's 2021 population report, T-426)
+CENSUS_POP = {"08": 2867009, "11": 7344765, "12": 6284480, "13": 14047594, "14": 9237337}
+NAMES = {"08": "Ibaraki", "11": "Saitama", "12": "Chiba", "13": "Tokyo", "14": "Kanagawa"}
 
 
 def main():

@@ -122,7 +122,7 @@ def build(city):
     if not os.path.exists(os.path.join(RAW, f"osm_places_{city}.json")):
         extract = cfg.get("extract")
     latin = cfg.get("latin_names", False)
-    kana = __import__("japan").kana_romaji if cfg.get("kana_romaji") else None
+    ja = __import__("japan") if cfg.get("kana_romaji") else None
     n_latin, name_src = 0, {}
     data = from_extract(extract, bbox) if extract else fetch(city, bbox)
     source = f"OpenStreetMap contributors, ODbL (Geofabrik {extract})" if extract else "OpenStreetMap contributors, ODbL (Overpass)"
@@ -149,10 +149,13 @@ def build(city):
         if latin:  # T-291: a Latin name to show, the local one kept for search
             src = next((k for k in LATIN_NAMES if (tags.get(k) or "").strip()), None)
             shown = tags[src].strip() if src else ""
-            if not shown and kana:  # T-420: romaji from the kana reading
+            if not shown and ja:  # T-420: romaji from the kana reading; T-426: else from a reading dictionary
                 src = next((k for k in KANA_NAMES if (tags.get(k) or "").strip()), None)
-                shown = (kana(tags[src]) or "") if src else ""
+                shown = (ja.kana_romaji(tags[src]) or "") if src else ""
                 src = "kana" if shown else None
+                if not shown:
+                    shown = ja.kanji_romaji(name) or ""
+                    src = "dictionary" if shown else None
             name_src[src or "local"] = name_src.get(src or "local", 0) + 1
             if shown and shown != name:
                 others.append(name)

@@ -216,16 +216,20 @@ notes/T-420.md has the tables.
   multiple jobholders; no farms); the scaling moves single wards by up to 38% (Yokohama Nishi-ku
   down, Saitama Chuo-ku up).
 - **Curve**: fitted on the census's municipality flows with the pack's own margins: the surface is
-  flat from London's power 1.85 to 2.3, and only the steep end keeps the census's 33.5% working in
+  flat from London's power 1.85 to 2.3, and only the steep end keeps the census's 34.9% working in
   their own municipality: d^-2.2 exp(-d/80 km).
-- **Work from home**: 0.23: the census's 9.5% working at home, plus MLIT's 2024 telework survey
+- **Work from home**: 0.23: the census's 9.7% working at home, plus MLIT's 2024 telework survey
   (37.5% of Greater Tokyo's employed telework), judged at 2 days in 5, on the rest. Other packs take
   their region's survey figure (Kinki 24.4%, Chukyo 19.6%, elsewhere 16.8%).
 - **Schools**: KSJ P29 points (no pupil counts); each 500 m mesh's children 0-14 x 0.9 go to the
   nearest elementary, junior high, compulsory or secondary school. Universities stay tier 0.
-- **Names**: OSM's `name:en` (66% of Greater Tokyo's places), else romaji from a kana reading
-  (`japan.kana_romaji`, Hepburn with long vowels written short; only 1.3%, since few places without
-  `name:en` carry one), else kanji (33%, mostly neighbourhoods and chome).
+- **Names**: OSM's `name:en` (64% of Greater Tokyo's places), else romaji from a kana reading
+  (`japan.kana_romaji`, Hepburn with long vowels written short, so ASCII like every other name;
+  1.2%), else from the kanji's reading in a dictionary (`japan.kanji_romaji`, UniDic through
+  fugashi; 35%), else kanji (0.5%). The dictionary takes the analysis with most of the name in
+  proper nouns, reads a split-off first 上 下 東 西 南 北 中 新 元 小 as in place names, a final 町
+  as cho, ケ between kanji as ga, and writes a block as "N-chome"; about one name in four or five
+  it gives is misread (against `name:en`, T-426). The kanji stays as a search alias.
 
 ## Homes (docs/demand.md 4.1)
 
@@ -452,8 +456,19 @@ notes/T-420.md has the tables.
   a pack counts as many people as the world field around it, its jobs only moving where in it trips
   end. Where Kontur and a pack's census differ (the Northeast's near pairs rose 2-7% on the switch
   from the zones' own normaliser) the pack's near pairs move by the gap.
-- **No car between landmasses** (T-377, T-375's fixed links). Pairs on two landmasses keep their
-  trips fixed until air is a mode (T-378); a ferry is no link.
+- **No car between landmasses** (T-377, T-375's fixed links). Far pairs on two landmasses fly
+  (T-378); near ones (under 250 km) keep their trips fixed; a ferry is no link.
+- **Air door to door** (T-378, docs/regional.md 5.1). Between far places (250 km and more) that both
+  have airports: drives to the airports, 60 minutes there, 750 km/h plus 30 minutes, 60 more with
+  no direct flight, $50 + 9 cents a km; the terminal time and the base fare were set so rail holds
+  about 80% of rail and air at 3 hours on the train and half near 4 (European studies, notes/T-378.md).
+  Airports from OurAirports (global, public domain), their size and direct routes from FR24 (two
+  days in May 2026, offline). Why it may not carry over: fares (low-cost carriers in Europe and
+  India, dear domestic flights in Japan, subsidised routes), airport times (US security is slower
+  than a Japanese domestic flight), the steep logit (no distance scaling: Paris - Berlin's car is
+  0% beside the plane, real about a tenth), and a single 1M-passenger floor. Check: each country's
+  air and rail share on its big corridors (MLIT for Japan, Eurostat's air O-D counts, DB1B), a fare
+  per country or region where they disagree.
 - **The longer trip's car** (T-276). Drive 15 min + 1.25 x the great circle at 85 km/h, plus 15
   US cents a road km (AAA 2024 fuel and upkeep) and the local layer's parking at the destination,
   both split over two occupants, at 3 perceived minutes a dollar. Fuel prices, tolls (T-270),
