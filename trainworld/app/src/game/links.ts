@@ -9,6 +9,7 @@ import { signal } from "@preact/signals";
 import { LINK_MAX_M } from "./complexes";
 import { groundDist } from "./coords";
 import { complexOf } from "./complexView";
+import { distance, roughDistance } from "./format";
 import type { Selection, StationId } from "./types";
 import { edit, say, world } from "./world";
 
@@ -34,7 +35,7 @@ export function linkRefusal(a: StationId, b: StationId): string | null {
   if (a === b) return "Pick another station to link with.";
   if (complexOf(a).includes(b)) return `${sb.name} is already in this complex.`;
   const d = groundDist(sa.x, sa.y, sb.x, sb.y);
-  if (d > LINK_MAX_M) return `${sb.name} is ${(d / 1000).toFixed(1)} km away. Stations can be linked up to 1 km apart.`;
+  if (d > LINK_MAX_M) return `${sb.name} is ${distance(d)} away. Stations can be linked up to ${roughDistance(LINK_MAX_M)} apart.`;
   return null;
 }
 

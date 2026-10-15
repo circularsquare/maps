@@ -18,7 +18,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { complexTransfers, demandView, lineDemand, type ComplexTransfers, type LineDemand } from "../../game/demand";
-import { count } from "../../game/format";
+import { count, length, scaleBars } from "../../game/format";
 import { segmentGap } from "../../game/complexes";
 import type { LineInput, StationInput } from "../../game/types";
 import { selection } from "../../game/ui";
@@ -350,7 +350,8 @@ export function ComplexMap({ id, members, stations, lines, now, onOpen }: {
 
   // Name labels, when the complex has more than one name: one per name (T-169), busiest first,
   // beside its platforms, clear of every platform, other label and the scale bar.
-  const bar = [10, 20, 50, 100, 200, 500, 1000].find((m) => m * k >= 40) ?? 1000;
+  const bars = scaleBars();
+  const [bar, barLabel] = bars.find(([m]) => m * k >= 40) ?? bars[bars.length - 1];
   const barRect: [number, number, number, number] = [W - 14 - bar * k, H - 24, W, H];
   const taken: [number, number, number, number][] = [barRect];
   const samples: [number, number, number][] = []; // points along each bundle: x, y, radius
@@ -398,7 +399,7 @@ export function ComplexMap({ id, members, stations, lines, now, onOpen }: {
   const inside = new Set(members);
   const links = (world.value?.save.links ?? []).filter(([a, b]) => inside.has(a) && inside.has(b) && stations.has(a) && stations.has(b)).map(([a, b]) => {
     const sa = stations.get(a)!, sb = stations.get(b)!;
-    return { x1: px(sa.x), y1: py(sa.y), x2: px(sb.x), y2: py(sb.y), title: `You linked ${sa.name} with ${sb.name} ${Math.round(Math.hypot(sa.x - sb.x, sa.y - sb.y))} m away` };
+    return { x1: px(sa.x), y1: py(sa.y), x2: px(sb.x), y2: py(sb.y), title: `You linked ${sa.name} with ${sb.name} ${length(Math.hypot(sa.x - sb.x, sa.y - sb.y))} away` };
   });
 
   const band = (d: (typeof drawn)[number], from: number, w: number, extra: number) => ({ x: -d.len / 2 - extra, y: from, width: d.len + 2 * extra, height: w });
@@ -489,7 +490,7 @@ export function ComplexMap({ id, members, stations, lines, now, onOpen }: {
         ))}
         <g transform={`translate(${W - 8 - bar * k} ${H - 8})`}>
           <line x1="0" x2={bar * k} y1="0" y2="0" stroke="var(--muted)" stroke-width="1.5" />
-          <text x={(bar * k) / 2} y="-4" text-anchor="middle" class="complex-map-scale">{bar >= 1000 ? `${bar / 1000} km` : `${bar} m`}</text>
+          <text x={(bar * k) / 2} y="-4" text-anchor="middle" class="complex-map-scale">{barLabel}</text>
         </g>
       </svg>
       {most > 0 && <p class="muted small">Each line is as wide as the riders on its trains at that platform a day.</p>}

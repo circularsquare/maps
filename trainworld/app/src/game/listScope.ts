@@ -37,10 +37,6 @@ export function distFromCentre(lng: number, lat: number, c: [number, number]): n
   return Math.hypot((lng - c[0]) * k * Math.cos(((lat + c[1]) / 2) * Math.PI / 180), (lat - c[1]) * k);
 }
 
-export function fmtDist(m: number): string {
-  return m < 1000 ? `${Math.round(m / 10) * 10} m` : m < 10_000 ? `${(m / 1000).toFixed(1)} km` : `${Math.round(m / 1000).toLocaleString("en-US")} km`;
-}
-
 /** What a tab shows: the stations in the scope, each line with any stop in it, and each station's and
  * line's distance from the centre (a line's is its nearest stop's; null for a line with no stops).
  * A line with no stops, and the selected row, stay listed so nothing just made or opened vanishes. */

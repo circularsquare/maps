@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { nearestStation } from "../../game/places";
 import { queryClock } from "../../workers/clockClient";
 import { clock, demandAt } from "../../game/clock";
-import { clockTime, count, duration, headway, money } from "../../game/format";
+import { clockTime, count, distance, duration, headway, money } from "../../game/format";
 import { LINE_PALETTE } from "../../game/palette";
 import { PERIODS, periodAt } from "../../game/periods";
 import { today, useToday } from "../../game/today";
@@ -255,7 +255,7 @@ export function LineInspector({ id }: { id: string }) {
         </div>
       )}
       <div class="sub muted">
-        {l.stops.length} stops, {st.km.toFixed(1)} km{st.cars ? `, ${st.cars} car trains` : ""}
+        {l.stops.length} stops, {distance(st.km * 1000)}{st.cars ? `, ${st.cars} car trains` : ""}
       </div>
       {l.stops.length < 2 && <p class="muted small">No route: fewer than two stops.</p>}
       {st.status === "planned" && l.stops.length >= 2 && (

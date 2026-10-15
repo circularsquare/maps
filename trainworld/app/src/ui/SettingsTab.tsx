@@ -5,7 +5,7 @@
 // scale (T-247), and last the trip explorer's button (T-220). The saves are in their own panel
 // (T-251, ui/SavesPanel.tsx). T-253: no explanatory notes, only controls and their labels.
 
-import { levelLabel } from "../game/format";
+import { levelLabel, speed } from "../game/format";
 import { LEVEL_COLOURS } from "../game/palette";
 import { LEVELS } from "../game/types";
 import { display, setDisplay, theme, THEMES, tool, UI_SCALES, uiScale, type Theme } from "../game/ui";
@@ -50,7 +50,7 @@ export function SettingsTab() {
         onChange={(v) => setDisplay("trackColour", v)}
       /></div>
       {d.trackColour === "speed" && <ul class="speed-key">
-        {[[40, "#d85b4b"], [80, "#d9a437"], [120, "#55a886"], [160, "#397bc1"]].map(([v, colour]) => <li><i style={{background: String(colour)}} />{v} km/h</li>)}
+        {[[40, "#d85b4b"], [80, "#d9a437"], [120, "#55a886"], [160, "#397bc1"]].map(([v, colour]) => <li><i style={{background: String(colour)}} />{speed(Number(v), 5)}</li>)}
       </ul>}
       {d.trackColour === "height" && (
         <ul class="levels-key">
@@ -93,6 +93,15 @@ export function SettingsTab() {
       <div class="h">Theme</div>
       <Segmented options={THEMES.map((t) => [t, THEME_NAME[t]] as [Theme, string])} value={theme.value} onChange={(v) => (theme.value = v)} />
       <UiScale />
+      <div class="h">Units and performance</div>
+      <div class="checks">
+        <Check checked={d.usUnits} onChange={(v) => setDisplay("usUnits", v)}>
+          <span data-tip="Miles, mph and feet. Off shows kilometres, km/h and metres.">US units</span>
+        </Check>
+        <Check checked={d.moreCores} onChange={(v) => setDisplay("moreCores", v)}>
+          <span data-tip="Up to 5 demand workers, using more of the processor and about 400 MB of memory each. Counts from the next time the page loads.">Use more cores</span>
+        </Check>
+      </div>
       <TripStart />
     </>
   );

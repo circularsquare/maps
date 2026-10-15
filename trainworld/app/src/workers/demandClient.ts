@@ -28,7 +28,7 @@ import { effect } from "@preact/signals";
 import { activeCity, CITIES, getWorldFrame, HOME_CITY, LEGACY_FRAME, MARKET_PACK, marketToWorld, viewedZone, worldFrameEpoch, type CityId } from "../game/cities";
 import type { FrameSpec } from "../game/frame";
 import { DAY_KINDS, type DayKind } from "../game/days";
-import { shownDay, tool } from "../game/ui";
+import { display, shownDay, tool } from "../game/ui";
 import {
   cityDemandViews, demandByDay, intercityDemand,
   type DayDemand,
@@ -96,17 +96,22 @@ const HOLD_ROUND = ROUNDS;
 const PERIOD_STRIDE = 6;
 
 /**
- * Workers in the pool: half the logical cores less one, at most 5 (one per period), at least 1.
- * On the real combined network one period's stage takes over a second, so three workers (two
- * periods on two of them) take twice as long to a result as five (T-119); a 16-thread desktop gets
- * five, an 8-thread laptop three, a 4-thread one a single worker. `?demandWorkers=N` (1-5)
- * overrides it.
+ * Workers in the pool (T-361, T-381). By threads: 12 or more get 3, 6 to 11 get 2, fewer 1; then
+ * by memory (each worker's WASM is a few hundred MB, notes/T-361.md): 4 GB or less (`navigator.deviceMemory`, Chrome
+ * and Edge only) gets 1, and where it is not reported (Firefox, Safari) at most 2. The "Use more
+ * cores" setting restores the older rule, half the threads less one, 1 to 5 (one per period).
+ * `?demandWorkers=N` (1-5) overrides everything. The pool is built once, so the setting counts at
+ * the next load.
  */
 export function poolSize(): number {
   const q = Number(new URLSearchParams(location.search).get("demandWorkers"));
   if (Number.isInteger(q) && q >= 1 && q <= PERIODS.length) return q;
   const hc = navigator.hardwareConcurrency || 4;
-  return Math.max(1, Math.min(PERIODS.length, Math.floor(hc / 2) - 1));
+  if (display.peek().moreCores) return Math.max(1, Math.min(PERIODS.length, Math.floor(hc / 2) - 1));
+  const byThreads = hc >= 12 ? 3 : hc >= 6 ? 2 : 1;
+  const mem = (navigator as { deviceMemory?: number }).deviceMemory;
+  if (mem === undefined) return Math.min(byThreads, 2);
+  return mem <= 4 ? 1 : byThreads;
 }
 
 /** The service demand reads, with the UI's ids. */
@@ -434,6 +439,7 @@ class DemandClient {
   constructor(_city: string) {
     effect(() => { activeCity.value; worldFrameEpoch.value; this.syncFocus(); });
     const n = (this.computeN = poolSize());
+    if (new URLSearchParams(location.search).has("debug")) console.info(`demand workers: ${n} (threads ${navigator.hardwareConcurrency}, memory ${(navigator as { deviceMemory?: number }).deviceMemory ?? "not reported"})`);
     for (let i = 0; i <= n; i++) {
       const w = new Worker(new URL("./demand.worker.ts", import.meta.url), { type: "module" });
       w.onmessage = (e: MessageEvent<FromDemand>) => this.receive(i, e.data);

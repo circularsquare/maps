@@ -1,5 +1,7 @@
 // Number and time formatting for the UI. "−" (U+2212) for negatives, as in the mock.
 
+import { display } from "./ui";
+
 /** 312000 -> "312k", 1.84e6 -> "1.84M" */
 export function count(n: number): string {
   if (n >= 1e6) return (n / 1e6).toFixed(n >= 1e7 ? 1 : 2).replace(/\.?0+$/, "") + "M";
@@ -29,10 +31,87 @@ export function moneyShort(n: number): string {
   return s + "$" + Math.round(a / 1000) + "k";
 }
 
-/** 1520 -> "1.5 km", 350 -> "0.35 km" */
-export function km(m: number): string {
+// Distances, lengths and speeds shown to the player (T-381). Every figure in the game is metric;
+// these are the only places that turn one into miles, feet or mph, by the US units setting. Read
+// while rendering, so a component that calls one redraws when the setting changes.
+
+const M_PER_MILE = 1609.344;
+const FT_PER_M = 3.280839895;
+
+const us = () => display.value.usUnits;
+const trim = (v: number, dp: number) => String(Number(v.toFixed(dp)));
+
+/** 1520 -> "1.5 km" or "0.94 mi", 350 -> "0.35 km" or "0.22 mi" */
+export function distance(m: number): string {
+  if (us()) {
+    const mi = m / M_PER_MILE;
+    return (mi >= 1 ? mi.toFixed(1) : mi.toFixed(2)) + " mi";
+  }
   return (m >= 1000 ? (m / 1000).toFixed(1) : (m / 1000).toFixed(2)) + " km";
 }
+
+/** A position along something and its whole length: "1.2 of 5.4 km". */
+export function distanceOf(part: number, whole: number): string {
+  const u = us() ? M_PER_MILE : 1000;
+  return `${(part / u).toFixed(1)} of ${(whole / u).toFixed(1)} ${us() ? "mi" : "km"}`;
+}
+
+/** A limit in a rule: 1000 -> "1 km" or "0.62 mi". */
+export function roughDistance(m: number): string {
+  return us() ? `${trim(m / M_PER_MILE, 2)} mi` : `${trim(m / 1000, 1)} km`;
+}
+
+/** Whole units, at least one, for "3 km north-east of" place names. */
+export function wholeDistance(m: number): string {
+  return us() ? `${Math.max(1, Math.round(m / M_PER_MILE))} mi` : `${Math.max(1, Math.round(m / 1000))} km`;
+}
+
+/** Short lengths to the unit: platforms, curve radii, a walk. 1250 -> "1,250 m" or "4,100 ft"; feet to the nearest 10. */
+export function length(m: number): string {
+  const v = us() ? Math.round((m * FT_PER_M) / 10) * 10 : Math.round(m);
+  return `${v.toLocaleString("en-US")} ${us() ? "ft" : "m"}`;
+}
+
+/** A distance from here: metres to the nearest 10, then kilometres; feet, then miles. */
+export function shortDistance(m: number): string {
+  if (us()) {
+    const ft = m * FT_PER_M, mi = m / M_PER_MILE;
+    if (ft < 528) return `${Math.round(ft / 10) * 10} ft`;
+    return mi < 1 ? `${mi.toFixed(2)} mi` : mi < 10 ? `${mi.toFixed(1)} mi` : `${Math.round(mi).toLocaleString("en-US")} mi`;
+  }
+  return m < 1000 ? `${Math.round(m / 10) * 10} m` : m < 10_000 ? `${(m / 1000).toFixed(1)} km` : `${Math.round(m / 1000).toLocaleString("en-US")} km`;
+}
+
+/** 160 -> "160 km/h" or "99 mph"; `nearest` rounds in the shown unit (the speed key uses 5). */
+export function speed(kmh: number, nearest = 1): string {
+  const v = us() ? kmh / M_PER_MILE * 1000 : kmh;
+  return `${Math.round(v / nearest) * nearest} ${us() ? "mph" : "km/h"}`;
+}
+
+/** Round lengths a scale bar can show, shortest first, in metres with their labels. */
+export function scaleBars(): [number, string][] {
+  if (us()) return [50, 100, 200, 500, 1000, 2000, 5280].map((ft) => [ft / FT_PER_M, ft === 5280 ? "1 mi" : `${ft.toLocaleString("en-US")} ft`]);
+  return [10, 20, 50, 100, 200, 500, 1000].map((m) => [m, m >= 1000 ? `${m / 1000} km` : `${m} m`]);
+}
+
+/** The unit a per-distance price is quoted in. */
+export function distUnit(): string {
+  return us() ? "mile" : "km";
+}
+
+/** A price or quantity per km, per shown unit. */
+export function perDistance(perKm: number): number {
+  return us() ? perKm * (M_PER_MILE / 1000) : perKm;
+}
+
+/** The inverse of `perDistance`. */
+export function perKmFrom(perUnit: number): number {
+  return us() ? perUnit / (M_PER_MILE / 1000) : perUnit;
+}
+
+/** Mile, and the metres a ruler marking it stands for (the placing rings). */
+export const unitMetres = () => (us() ? M_PER_MILE : 1000);
+export const unitShort = () => (us() ? "mi" : "km");
 
 /** headway in minutes from trains an hour */
 export function headway(tph: number): string {

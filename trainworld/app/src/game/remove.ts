@@ -4,7 +4,7 @@
 // (SPEC 6.4). Lines are removed from the Lines tab, not here.
 
 import type { EditOp } from "../workers/protocol";
-import { km } from "./format";
+import { distance } from "./format";
 import { ask, selection } from "./ui";
 import { edit, say, world } from "./world";
 
@@ -17,7 +17,7 @@ export function describeRemovable(r: Removable): { what: string; built: boolean 
   if (!w) return null;
   if (r.kind === "track") {
     const e = w.edges.find((x) => x.id === r.edge);
-    return e ? { what: `${km(e.lengthM)} of ${e.built ? "constructed " : ""}track`, built: e.built } : null;
+    return e ? { what: `${distance(e.lengthM)} of ${e.built ? "constructed " : ""}track`, built: e.built } : null;
   }
   if (r.kind === "station") {
     const s = w.save.stations.find((x) => x.num === r.node);

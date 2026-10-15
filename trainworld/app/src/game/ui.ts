@@ -47,6 +47,10 @@ export interface DisplaySettings {
   /** T-266: the day the demand views show: the clock's own (`today`), or always a weekday or a
    * weekend day. The trains and platforms follow the clock whatever this says. */
   dayShown: "today" | "weekday" | "weekend";
+  /** T-381: miles, mph and feet instead of kilometres, km/h and metres (the game itself is metric) */
+  usUnits: boolean;
+  /** T-381: demand workers by the old rule (half the threads less one, up to 5); read at the next load */
+  moreCores: boolean;
 }
 
 /** T-247: the UI scale setting's steps */
@@ -69,6 +73,8 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   bubbleSize: 1,
   uiScale: 1,
   dayShown: "today",
+  usUnits: false,
+  moreCores: false,
 };
 
 const STORE = "trainworld-ui";

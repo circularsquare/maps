@@ -169,12 +169,19 @@ dismissed, and the map and tools are blocked meanwhile.
 Destinations is on; 0.5-2x, [T-099]), Demand shown for, Track display (four modes with their key,
 [ui-map.md](ui-map.md)), Show (trains, station names, capacity markers, map labels), Riders on trains
 and platforms ("How full each train is", "How full each platform is", both on by default)
-[T-164], the theme, Panel and text size, and Explore a trip at the bottom [T-220]. Station demand
+[T-164], the theme, Panel and text size, Units and performance, and Explore a trip at the bottom [T-220]. Station demand
 circles are at the top of the Stations tab instead [T-213].
 
 **Panel and text size** [T-247]: 80% to 120% in 5% steps, 100% by default, no reset button. It
 zooms the dock, top bar, map buttons, search, loading card, tool notes and dialogs, and sizes the
 text of the map's DOM tags and the hover tag; the map itself is never scaled.
+
+**Units and performance** [T-381]: "US units" (off by default) shows every distance, length and
+speed in miles, mph and feet instead of kilometres, km/h and metres: panels, inspectors, hovers, the
+track, station and line tools' readouts, the placing rings, the scale bar of a station complex, and
+prices per mile. All go through the distance functions in `game/format.ts`; the game itself stays
+metric. "Use more cores" (off by default) allows up to 5 demand workers instead of 3 at most; its
+hover says it counts from the next load ([architecture.md](architecture.md) 7).
 
 ## Money tab
 

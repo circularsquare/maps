@@ -20,7 +20,7 @@ import { activeCity, getWorldFrame, worldFrameEpoch, type CityId } from "../game
 import { nearbyZones } from "../game/zones";
 import { clock } from "../game/clock";
 import { cellModes, cityCells, demandUpdating, demandView, flows, type CellModes, type CityCells, type DemandView, type FarEnd, type Flows, type PurposeTrips } from "../game/demand";
-import { count } from "../game/format";
+import { count, wholeDistance } from "../game/format";
 import { BUBBLE_ALPHA } from "../game/palette";
 import { tripOpenedFrom } from "../game/trip";
 import { compass } from "../game/places";
@@ -647,7 +647,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
         if (dd < best) (best = dd), (name = s.name);
       }
       const k = kAtY(a.y[i], A);
-      if (best > 3000 * k) name = `${Math.max(1, Math.round(Math.hypot(a.x[i] - cx, a.y[i] - cy) / k / 1000))} km ${compass(a.x[i] - cx, -(a.y[i] - cy))}`;
+      if (best > 3000 * k) name = `${wholeDistance(Math.hypot(a.x[i] - cx, a.y[i] - cy) / k)} ${compass(a.x[i] - cx, -(a.y[i] - cy))}`;
       byName.set(name, (byName.get(name) ?? 0) + a.train[i] + a.walk[i] + a.drive[i]);
     }
     return [...byName].map(([name, riders]) => ({ name, riders })).sort((p, q) => q.riders - p.riders);

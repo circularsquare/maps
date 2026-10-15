@@ -12,7 +12,7 @@ import { effect } from "@preact/signals";
 import type { Map as MlMap } from "maplibre-gl";
 import { clock } from "../game/clock";
 import { demandView, lineLoadsFor, type DemandView } from "../game/demand";
-import { levelLabel } from "../game/format";
+import { levelLabel, speed } from "../game/format";
 import { purposeName, type PurposeFilter } from "../game/purposes";
 import type { WorldView } from "../game/types";
 import { ask, display, purposeFilter, selection, tool } from "../game/ui";
@@ -51,7 +51,7 @@ export function levelText(level: number): string {
 }
 
 export function speedText(kmh: number): string {
-  return `Max speed ${Math.round(kmh)} km/h`;
+  return `Max speed ${speed(kmh)}`;
 }
 
 /** Daily riders on run 0's stretch `k` of a line, both directions: every period's load summed;

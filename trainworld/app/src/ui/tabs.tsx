@@ -6,14 +6,14 @@ import { clock, demandAt } from "../game/clock";
 import { useState } from "preact/hooks";
 import { createLine } from "../game/lineActions";
 import type { JSX } from "preact";
-import { count, levelLabel, money, moneyExact } from "../game/format";
+import { count, distUnit, length, levelLabel, money, moneyExact, perDistance, perKmFrom, shortDistance } from "../game/format";
 import { DEMAND_INDEX, LEVELS, type Level } from "../game/types";
 import { buildLevel, buildPlatform, display, lineSort, selection, setDisplay, stationSort, trackCount, tool, type ListSort, type Tool } from "../game/ui";
 import type { Signal } from "@preact/signals";
 import { linesAt, setFares, world } from "../game/world";
 import { liveMoney, moneyState } from "../game/money";
 import { cityById, viewedZone } from "../game/cities";
-import { fmtDist, listScope, scopedLists } from "../game/listScope";
+import { listScope, scopedLists } from "../game/listScope";
 import { accountVersion } from "../game/boarding";
 import { stationsToday, today, todayLoaded, useToday } from "../game/today";
 import type { DayLedger } from "../workers/protocol";
@@ -85,7 +85,7 @@ export function BuildTab() {
           ))}
         </div>
         <p class="muted small price">
-          {LEVEL_NAME[lv]} at ${Math.round(BASE_M_PER_KM * MULT[lv])}M per km ({MULT[lv].toFixed(1)}x)
+          {LEVEL_NAME[lv]} at ${Math.round(perDistance(BASE_M_PER_KM * MULT[lv]))}M per {distUnit()} ({MULT[lv].toFixed(1)}x)
         </p>
         <div class="h">Track</div>
         <Segmented<1 | 2 | 4> options={[[1, "Single"], [2, "Double"], [4, "Quad"]]} value={trackCount.value} onChange={(v) => (trackCount.value = v)} />
@@ -93,7 +93,7 @@ export function BuildTab() {
         <ul class="rows">
           <li>
             <span class="grow">Platform length</span>
-            <Stepper value={buildPlatform.value + " m"} wide label="platform length" onStep={(s) => (buildPlatform.value = Math.max(60, Math.min(400, buildPlatform.value + s * 20)))} />
+            <Stepper value={length(buildPlatform.value)} wide label="platform length" onStep={(s) => (buildPlatform.value = Math.max(60, Math.min(400, buildPlatform.value + s * 20)))} />
           </li>
         </ul>
         <BlueprintPick />
@@ -146,7 +146,7 @@ function ScopeToggle() {
 
 /** T-332: a row's distance from the centre of the screen. */
 function Near({ m }: { m: number | undefined }) {
-  return <span class="val muted w-near" data-tip={m !== undefined ? `${fmtDist(m)} from the centre of the screen` : undefined}>{m !== undefined ? fmtDist(m) : ""}</span>;
+  return <span class="val muted w-near" data-tip={m !== undefined ? `${shortDistance(m)} from the centre of the screen` : undefined}>{m !== undefined ? shortDistance(m) : ""}</span>;
 }
 
 /** Rows with no distance (a line with no stops) sort last whichever way the column runs. */
@@ -363,14 +363,14 @@ export function MoneyTab() {
           <Stepper value={"$" + f.base.toFixed(2)} wide label="fare a ride" onStep={(s) => setFares(f.base + s * 0.25, f.perKm)} />
         </li>
         <li>
-          <span class="grow">Each km</span>
-          <Stepper value={"$" + f.perKm.toFixed(2)} wide label="fare a km" onStep={(s) => setFares(f.base, f.perKm + s * 0.01)} />
+          <span class="grow">Each {distUnit()}</span>
+          <Stepper value={"$" + perDistance(f.perKm).toFixed(2)} wide label={`fare a ${distUnit()}`} onStep={(s) => setFares(f.base, perKmFrom(Math.max(0, Math.round((perDistance(f.perKm) + s * 0.01) * 100) / 100)))} />
         </li>
-        <Row label="A 10 km ride">{"$" + (f.base + 10 * f.perKm).toFixed(2)}</Row>
+        <Row label={`A 10 ${distUnit()} ride`}>{"$" + (f.base + 10 * perDistance(f.perKm)).toFixed(2)}</Row>
       </ul>
       <div class="h">Trains</div>
       <ul class="rows">
-        <Row label={<span data-tip={`A car costs ${money(m.carPrice * 1e6)} and $${m.runCostCarKm.toFixed(2)} a km to run. Cars are bought when a line needs more than the spare ones.`}>Cars owned</span>}>{m.fleet}</Row>
+        <Row label={<span data-tip={`A car costs ${money(m.carPrice * 1e6)} and $${perDistance(m.runCostCarKm).toFixed(2)} a ${distUnit()} to run. Cars are bought when a line needs more than the spare ones.`}>Cars owned</span>}>{m.fleet}</Row>
         <Row label="Cars the lines need">{m.carsNeeded}</Row>
       </ul>
       <ul class="rows">

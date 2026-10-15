@@ -4,7 +4,7 @@
 // selected demand bubble (its centre). A click on a row selects that station and moves the map to
 // it if it is off screen.
 
-import { count } from "../../game/format";
+import { length } from "../../game/format";
 import { selection } from "../../game/ui";
 import type { LineInput, StationInput } from "../../game/types";
 import { closestStations, minLabel } from "../../game/walks";
@@ -46,7 +46,7 @@ export function ClosestStations({ lng, lat, exclude, own }: { lng: number; lat: 
                 {chips.slice(0, CHIPS).map((l) => <Chip line={l} size="sm" />)}
                 {chips.length > CHIPS && <span class="muted small">+{chips.length - CHIPS}</span>}
               </span>
-              <span class="val" data-tip={r.metres === null ? "Water in the way" : `${count(Math.round(r.metres))} m on foot`}>
+              <span class="val" data-tip={r.metres === null ? "Water in the way" : `${length(r.metres)} on foot`}>
                 {r.metres === null ? "no walk" : minLabel(r.metres)}
               </span>
             </li>

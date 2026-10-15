@@ -24,7 +24,7 @@ import { effect } from "@preact/signals";
 import type { Map as MlMap, MapMouseEvent } from "maplibre-gl";
 import { lngLatToPack } from "../game/coords";
 import { describeIssues } from "../game/issues";
-import { km, money, moneyShort } from "../game/format";
+import { distance, length, money, moneyShort, speed, unitMetres, unitShort } from "../game/format";
 import { metresBetween } from "../game/walks";
 import { ask, buildLevel, buildPlatform, lineDraft, selection, trackCount, tool } from "../game/ui";
 import { describeRemovable, removeThing, type Removable } from "../game/remove";
@@ -270,7 +270,7 @@ export class Tools {
     const a = await edit({ op: "route", from: this.start.end, to, pis: this.pis.map((p) => p.pi), single: trackCount.peek() === 1, quad: trackCount.peek() === 4 });
     if (a.ok) {
       const p = this.lastPreview;
-      say(p ? `Blueprint added: ${(p.lengthM / 1000).toFixed(2)} km, ${money(p.cost * 1e6)} to construct.` : "Blueprint added.");
+      say(p ? `Blueprint added: ${distance(p.lengthM)}, ${money(p.cost * 1e6)} to construct.` : "Blueprint added.");
       this.reset();
     }
   }
@@ -580,7 +580,7 @@ export class Tools {
     this.ghost.firstElementChild!.setAttribute("d",stationPath(shape));
   }
 
-  /** Faint rings 1 and 2 km (ground distance) round the station being placed (T-312), under the
+  /** Faint rings 1 and 2 km, or miles in US units (ground distance), round the station being placed (T-312), under the
    * ghost, labelled at their tops. */
   private rings: SVGSVGElement | null = null;
   private stationRings(h: Exclude<Snap,{kind:"free"}>) {
@@ -598,7 +598,7 @@ export class Tools {
     }
     const [lng,lat]=toLngLat(h.lx,h.ly);
     const [cx,cy]=this.screen(h.lx,h.ly);
-    const [ex,ey]=this.screen(...toLocal(lng+1000/(6371008.8*Math.cos(lat*Math.PI/180))*180/Math.PI,lat));
+    const [ex,ey]=this.screen(...toLocal(lng+unitMetres()/(6371008.8*Math.cos(lat*Math.PI/180))*180/Math.PI,lat));
     const km1=Math.hypot(ex-cx,ey-cy);
     this.rings.style.display="";
     this.rings.style.transform=`translate(${cx}px,${cy}px)`;
@@ -607,7 +607,7 @@ export class Tools {
       const r=km1*(i+1), c=kids[i*2], t=kids[i*2+1];
       c.setAttribute("r",String(r));
       t.setAttribute("y",String(-r-3));
-      t.textContent=`${i+1} km`;
+      t.textContent=`${i+1} ${unitShort()}`;
     }
   }
 
@@ -687,7 +687,7 @@ export class Tools {
       this.tag.style.display = "";
       this.tag.className = "tool-tag" + (pv.ok ? "" : " bad");
       this.tag.textContent = pv.ok
-        ? `${km(pv.lengthM)}, cost ${pv.mult.toFixed(2)}x, ${moneyShort(pv.cost * 1e6)}`
+        ? `${distance(pv.lengthM)}, cost ${pv.mult.toFixed(2)}x, ${moneyShort(pv.cost * 1e6)}`
         : describeIssues(pv.issues) || "Cannot be built here.";
       put(this.tag, h.lx, h.ly, 14, 12);
     } else if (t === "station" && h && h.kind !== "free" && this.ghostOk === false) {
@@ -701,7 +701,7 @@ export class Tools {
       const last = this.lastPlacedName()!, [lng, lat] = toLngLat(h.lx, h.ly);
       this.tag.style.display = "";
       this.tag.className = "tool-tag";
-      this.tag.textContent = `${km(metresBetween(lng, lat, last.lng, last.lat))} from ${last.name}`;
+      this.tag.textContent = `${distance(metresBetween(lng, lat, last.lng, last.lat))} from ${last.name}`;
       put(this.tag, h.lx, h.ly, 14, 12);
     } else this.tag.style.display = "none";
   }
@@ -726,7 +726,7 @@ export function curveLabels(verts: Float64Array): { x: number; y: number; text: 
     while (j < nv - 1 && r > 0 && Math.abs(verts[j * 4 + 2] - r) < 0.5) j++;
     if (r > 0 && r < 5000) {
       const m = (i + j - 1) >> 1;
-      out.push({ x: verts[m * 4], y: verts[m * 4 + 1], text: `${Math.round(r).toLocaleString("en-US")} m, ${Math.round(verts[i * 4 + 3])} km/h` });
+      out.push({ x: verts[m * 4], y: verts[m * 4 + 1], text: `${length(r)}, ${speed(verts[i * 4 + 3])}` });
     }
     i = j;
   }

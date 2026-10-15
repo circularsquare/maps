@@ -1,14 +1,14 @@
 // The track model's problem kinds (`TrackApi.issue_kinds`, sim/src/track/wasm.rs) in plain
 // words for the player. Player-facing text: copy rules in Anita's CLAUDE.md.
 
-import { money } from "./format";
+import { length, money } from "./format";
 
-const TEXT: Record<string, string> = {
+const TEXT: Record<string, string | (() => string)> = {
   "Geom:ZeroLeg": "Two points are in the same place.",
   "Geom:Reversal": "The track would turn back on itself.",
-  "Geom:RadiusTooSmall": "The curve is too tight. Curves need a radius of at least 100 m.",
+  "Geom:RadiusTooSmall": () => `The curve is too tight. Curves need a radius of at least ${length(100)}.`,
   "Geom:ArcDoesNotFit": "The curve does not fit between its neighbours.",
-  "Geom:RampTooShort": "Not enough room to change level. Each level up or down needs 200 m of ramp.",
+  "Geom:RampTooShort": () => `Not enough room to change level. Each level up or down needs ${length(200)} of ramp.`,
   "Geom:LevelRange": "Levels go from −3 to +3.",
   GroundOverWater: "Track at ground level cannot cross water. Pick a viaduct or tunnel level.",
   Crossing: "The new track would cross other track less than one level above or below it.",
@@ -17,7 +17,7 @@ const TEXT: Record<string, string> = {
   NodeOneSided: "Track has to run through a station.",
   TooManyPorts: "Too many tracks meet here.",
   StationPorts: "A station has to be on plain track, and there is one here already.",
-  PlatformLength: "Platforms are 60 to 400 m long.",
+  PlatformLength: () => `Platforms are ${length(60)} to ${length(400)} long.`,
   PlatformTooLong: "The platform would reach a junction or another station. Move it or shorten the platform.",
   PlatformNotLevel: "The platform would be on a ramp.",
   PlatformCrossing: "The platform would sit on a crossing.",
@@ -42,7 +42,8 @@ export function describeIssue(kind: string): string {
     const [, need, have] = kind.split(":").map(Number);
     return `Not enough money. This costs ${money(need * 1e6)} and there is ${money(have * 1e6)}.`;
   }
-  return TEXT[kind] ?? "That cannot be built here.";
+  const t = TEXT[kind];
+  return typeof t === "function" ? t() : t ?? "That cannot be built here.";
 }
 
 export function describeIssues(kinds: string[]): string {

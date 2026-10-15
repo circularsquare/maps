@@ -6,11 +6,12 @@ import { clock, SPEEDS } from "../../game/clock";
 import { demandView, lineDemand } from "../../game/demand";
 import { loadFailure } from "../../game/loading";
 import { PERIODS, periodAt } from "../../game/periods";
-import { count, duration, levelLabel, money } from "../../game/format";
+import { count, distance, distanceOf, duration, length, levelLabel, money, roughDistance, speed } from "../../game/format";
 import { compass, stationTowards } from "../../game/places";
 import { DEMAND_INDEX, type Level, type LineInput, type Selection, type StationInput } from "../../game/types";
 import { complexOf, inComplexView, openAlone } from "../../game/complexView";
 import { complexNow, type ComplexNow } from "../../game/complexLive";
+import { LINK_MAX_M } from "../../game/complexes";
 import { cancelLink, linking, linksAmong, startLink, unlink } from "../../game/links";
 import { queryClock } from "../../workers/clockClient";
 import { parseEdgePis, type EdgePi, type EdgePis } from "../../map/edgeEdit";
@@ -304,7 +305,7 @@ function StationLinks({ id, members }: { id: string; members: string[] }) {
           ))}
         </ul>
       )}
-      {picking && <p class="muted">Click another station on the map to link it with this one. Stations up to 1 km apart can be linked, and riders change between them on foot. Esc stops.</p>}
+      {picking && <p class="muted">Click another station on the map to link it with this one. Stations up to {roughDistance(LINK_MAX_M)} apart can be linked, and riders change between them on foot. Esc stops.</p>}
       <div class="pane-foot">
         {/* T-221: a trip from this station to the next station or place clicked */}
         <button class="btn text" onClick={() => tripFrom(id)} data-tip="Then click another station or a place to see how the demand model's people would travel there">
@@ -332,7 +333,7 @@ function StationDetails({ s, lines, props, construct, remove }: {
       <ul class="rows">
         <li>
           <span class="grow">Platforms</span>
-          <Stepper value={s.length + " m"} wide label="platform length" onStep={(d) => props(Math.max(60, Math.min(400, s.length + d * 20)))} />
+          <Stepper value={length(s.length)} wide label="platform length" onStep={(d) => props(Math.max(60, Math.min(400, s.length + d * 20)))} />
         </li>
       </ul>
       {lines.length > 0 && <div class="h">Lines<span class="right muted small">boardings today</span></div>}
@@ -441,7 +442,7 @@ export function TrainInspector({ line, profile, dep }: { line: string; profile: 
         <ul class="rows">
           <Row label="Next stop">{next >= 0 ? name.get(stops[next]) : "Terminus"}</Row>
           <Row label="Along the line">
-            {(at.s / 1000).toFixed(1)} of {(len / 1000).toFixed(1)} km
+            {distanceOf(at.s, len)}
           </Row>
         </ul>
       ) : (
@@ -580,10 +581,10 @@ function Shape({ edge, version }: { edge: number; version: number }) {
             <legend>Corner {i + 1}</legend>
             <div class="corner-row">
               <span class="grow">
-                {pis[i].used > 0 ? `${Math.round(pis[i].kmh)} km/h` : "No curve"}
+                {pis[i].used > 0 ? speed(pis[i].kmh) : "No curve"}
                 {pis[i].radius > 0 ? "" : <span class="muted"> auto</span>}
               </span>
-              <Stepper value={pis[i].used > 0 ? Math.round(pis[i].used).toLocaleString("en-US") + " m" : "none"} wide label={`corner ${i + 1} radius`} onStep={(d) => step(i, d)} />
+              <Stepper value={pis[i].used > 0 ? length(pis[i].used) : "none"} wide label={`corner ${i + 1} radius`} onStep={(d) => step(i, d)} />
             </div>
             <div class="corner-row">
               <span class="grow">Level</span>
@@ -626,11 +627,11 @@ export function TrackInspector({ edge }: { edge: number }) {
         <span class="name">{e.tracks === 2 ? "Double track" : "Single track"}</span>
       </div>
       <div class="sub muted">
-        {(e.lengthM / 1000).toFixed(2)} km, {lv}
+        {distance(e.lengthM)}, {lv}
       </div>
       <Built built={e.built} what="This track" />
       <ul class="rows">
-        <Row label="Slowest curve">{Math.round(e.vminKmh)} km/h</Row>
+        <Row label="Slowest curve">{speed(e.vminKmh)}</Row>
         <Row label={e.built ? "Cost to build" : "Cost to construct"}>{money(e.cost)}</Row>
       </ul>
       {!e.built && <Shape edge={e.id} version={w.version} />}

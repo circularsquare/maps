@@ -18,7 +18,7 @@ import { clock } from "../game/clock";
 import { complexes, selectedScope } from "../game/complexView";
 import { packToLngLat } from "../game/coords";
 import { cellModes, cityCells, demandByDay, demandView, stationRiders, type CityCells, type DemandView, type StationRiders } from "../game/demand";
-import { count } from "../game/format";
+import { count, wholeDistance } from "../game/format";
 import { CATCHMENT_COLOUR, DESTINATION_ALPHA, DESTINATION_COLOUR, rgb } from "../game/palette";
 import { compass } from "../game/places";
 import { periodAt } from "../game/periods";
@@ -314,7 +314,7 @@ function describe(r: StationRiders, side: "home" | "work", cells: CityCells | nu
         if (!best || d < best.d) best = { name: s.name, d };
       }
       if (best && best.d <= 3000) name = best.name;
-      else if (here) name = `${Math.max(1, Math.round(Math.hypot(x - here.x, y - here.y) / 1000))} km ${compass(x - here.x, y - here.y)}`;
+      else if (here) name = `${wholeDistance(Math.hypot(x - here.x, y - here.y))} ${compass(x - here.x, y - here.y)}`;
     }
     byName.set(name, (byName.get(name) ?? 0) + far.riders[k]);
   }

@@ -9,6 +9,7 @@
 
 import type { Map as MlMap } from "maplibre-gl";
 import { lngLatToPack, packToLngLat } from "../game/coords";
+import { length, speed } from "../game/format";
 import { describeIssues } from "../game/issues";
 import { selection, tool } from "../game/ui";
 import { edit, world } from "../game/world";
@@ -211,7 +212,7 @@ export class EdgeEditor {
           ? []
           : this.shape.pis
               .filter((c) => c.used > 0 && c.used < 5000)
-              .map((c) => ({ at: this.local({ x: c.mx, y: c.my }), text: `${Math.round(c.used).toLocaleString("en-US")} m, ${Math.round(c.kmh)} km/h` }));
+              .map((c) => ({ at: this.local({ x: c.mx, y: c.my }), text: `${length(c.used)}, ${speed(c.kmh)}` }));
     labels.forEach((c, i) => {
       const [x, y] = this.overlay.toScreen(...c.at);
       const l = this.el(this.labels, i, "pi-label");

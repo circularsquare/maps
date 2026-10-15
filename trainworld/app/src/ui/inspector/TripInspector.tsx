@@ -3,7 +3,7 @@
 // its walks, waits, rides and changes, the other routes the train riders spread over, and the
 // drive. Every number is the model's (game/trip.ts); every drawn quantity has a hover with it.
 
-import { count, km } from "../../game/format";
+import { count, distance } from "../../game/format";
 import { MODE_COLOURS } from "../../game/palette";
 import { PERIODS } from "../../game/periods";
 import { routeTotals, stationName, tripOpenedFrom, tripPeriod, tripView, type TripPeriod, type TripRoute } from "../../game/trip";
@@ -53,7 +53,7 @@ function RouteLegs({ t, r }: { t: TripPeriod; r: TripRoute }) {
   return (
     <ul class="rows trip-legs">
       {pair && first && (
-        <li data-tip={`Walk ${km(pair.accessM)} in a straight line, ${pair.accessMin.toFixed(1)} min at the fast walk; it counts as ${pair.accessPerceived.toFixed(1)} min`}>
+        <li data-tip={`Walk ${distance(pair.accessM)} in a straight line, ${pair.accessMin.toFixed(1)} min at the fast walk; it counts as ${pair.accessPerceived.toFixed(1)} min`}>
           <span class="grow">Walk to {name(first.from)}</span>
           <span class="val">{min(pair.accessMin)}</span>
         </li>
@@ -81,7 +81,7 @@ function RouteLegs({ t, r }: { t: TripPeriod; r: TripRoute }) {
         );
       })}
       {pair && last && (
-        <li data-tip={`Walk ${km(pair.egressM)} in a straight line, ${pair.egressMin.toFixed(1)} min at the fast walk; it counts as ${pair.egressPerceived.toFixed(1)} min`}>
+        <li data-tip={`Walk ${distance(pair.egressM)} in a straight line, ${pair.egressMin.toFixed(1)} min at the fast walk; it counts as ${pair.egressPerceived.toFixed(1)} min`}>
           <span class="grow">Walk from {name(last.to)}</span>
           <span class="val">{min(pair.egressMin)}</span>
         </li>
@@ -207,7 +207,7 @@ export function TripInspector() {
   return (
     <>
       {head}
-      <p class="muted small">{PERIODS[q].name}, {km(t.distM)} apart{tripPeriod.value === null ? "" : " (picked below)"}</p>
+      <p class="muted small">{PERIODS[q].name}, {distance(t.distM)} apart{tripPeriod.value === null ? "" : " (picked below)"}</p>
       <ModeBar t={t} />
       {t.walkShare >= 0.005 && <p class="muted small">Walking takes {pct(t.walkShare)} of trips this short whatever the trains do.</p>}
       <div class="h">By train</div>
@@ -234,7 +234,7 @@ export function TripInspector() {
       ) : <p class="muted">No route.</p>}
       <div class="h">By car</div>
       <ul class="rows">
-        <li data-tip={`${km(t.driveDistM)} in a straight line, 1.3 times that by road, at the speeds of the places at each end`}>
+        <li data-tip={`${distance(t.driveDistM)} in a straight line, 1.3 times that by road, at the speeds of the places at each end`}>
           <span class="grow">Drive</span>
           <span class="val">{min(t.driveMin)}</span>
         </li>

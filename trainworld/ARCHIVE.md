@@ -1,5 +1,6 @@
 # Archive
 
+- T-381 [P2] T-361 stage 2, settings. Done 2026-10-14: demand workers by threads and memory (3 on this 16-thread machine), "Use more cores" for up to 5 at the next load, "US units" through the distance functions in `game/format.ts`; docs/ui-panels.md Settings.
 - T-351 [P2] A new game opens the viewed zone bare. Done 2026-10-14: `?new=1` card gone at 2.6-2.8 s instead of 6.6-7.1 s, figures and bubbles identical to the bit; a building tool picked opens the zone everywhere ahead of a first station (first estimate 2.0 s as before); saves unchanged. notes/T-351.md.
 
 - T-041 [P2] Water mask from OSM. Done 2026-10-14: `pipeline/osm_water.py` (coastline sea zip plus Geofabrik inland water) as tier 0's `water_source`; on New York's grid 0.56% of pixels differ from TIGER, all 18 test places right; London's preview mask in `data/work/osm_water/lon.*`. Intercity water is T-358. notes/T-041.md.

@@ -1,4 +1,4 @@
-import { km, levelLabel, money } from "../game/format";
+import { distance, levelLabel, money } from "../game/format";
 import { clearBpPicked, offTotals, pickedState, switchPicked } from "../game/blueprintPick";
 import { tool } from "../game/ui";
 import type { BlueprintItem, Level } from "../game/types";
@@ -10,7 +10,7 @@ const KINDS = ["Track", "Stations", "Junctions", "Flyovers", "Flat crossings", "
 
 function description(r: BlueprintItem) {
   if (r.kind === 5) return `${r.quantity} new ${r.quantity === 1 ? "car" : "cars"}, after spare cars`;
-  const quantity = r.kind === 0 ? km(r.quantity) : `${r.quantity} ${r.kind === 1 ? (r.quantity === 1 ? "station" : "stations") : (r.quantity === 1 ? "item" : "items")}`;
+  const quantity = r.kind === 0 ? distance(r.quantity) : `${r.quantity} ${r.kind === 1 ? (r.quantity === 1 ? "station" : "stations") : (r.quantity === 1 ? "item" : "items")}`;
   return [quantity, r.ramp ? "ramp" : "", r.tracks ? (r.tracks === 1 ? "single track" : "double track") : "", r.wet ? "over water" : "on land"].filter(Boolean).join(", ");
 }
 

@@ -90,8 +90,10 @@ Web first, so it can be shared as a link.
   builds two WASM modules, the clock worker's and the demand workers', so each downloads only its
   own; the main thread loads neither. Both at opt-level 3 (the pair loop is the recompute;
   notes/T-051.md). Flat typed arrays, transferable between threads without copying.
-- **The demand pool** [T-149, T-173, `workers/demandClient.ts`]: half the logical cores less one,
-  at most 5 (one per period), at least 1 solving workers, plus one auxiliary worker with no periods
+- **The demand pool** [T-149, T-173, `workers/demandClient.ts`][T-381]: 3 solving workers on 12 or more
+  logical threads, 2 on 6 to 11, 1 on fewer; then `navigator.deviceMemory` 4 GB or less gives 1, and
+  unreported memory at most 2. The Settings "Use more cores" restores half the threads less one, 1 to 5
+  (one per period), at the next load; `?demandWorkers=N` overrides both. Plus one auxiliary worker with no periods
   that answers at once what needs no period's result (a city's cells, each bubble's commuters by
   mode). Worker i owns periods i, i + n, .... Every worker opens only the packs the game needs, each
   its own copy: the viewed zone first, and every zone with a built station inside its footprint or

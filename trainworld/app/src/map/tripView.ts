@@ -12,7 +12,7 @@ import type { Map as MlMap, MapMouseEvent } from "maplibre-gl";
 import { clock } from "../game/clock";
 import { lngLatToPack, packToLngLat } from "../game/coords";
 import { demandView } from "../game/demand";
-import { count, km } from "../game/format";
+import { count, distance } from "../game/format";
 import { NET_INK } from "../game/palette";
 import { periodAt } from "../game/periods";
 import { askTrip, stationName, stationPoint, tripKey, tripPeriod, tripView, type TripLeg, type TripPeriod, type TripRoute } from "../game/trip";
@@ -348,9 +348,9 @@ function build(t: TripPeriod, fromPack: [number, number], toPack: [number, numbe
     const legs = r.legs;
     const first = legs[0], last = legs[legs.length - 1];
     const a = first ? pos(first.from) : null, b = last ? pos(last.to) : null;
-    if (a && pair) out.parts.push({ pts: [from, a], colour: NET_INK, width: main ? 2.5 : 1.5, dash: true, alpha, tip: [`Walk ${km(pair.accessM)} to ${name(first.from)}, ${minutes(pair.accessMin)}`, "Straight-line distance, the model's average for the homes near here"] });
+    if (a && pair) out.parts.push({ pts: [from, a], colour: NET_INK, width: main ? 2.5 : 1.5, dash: true, alpha, tip: [`Walk ${distance(pair.accessM)} to ${name(first.from)}, ${minutes(pair.accessMin)}`, "Straight-line distance, the model's average for the homes near here"] });
     for (const l of legs) out.parts.push(legPart(l, main, alpha, width, ln, pos, name, share(r), track));
-    if (b && pair) out.parts.push({ pts: [b, to], colour: NET_INK, width: main ? 2.5 : 1.5, dash: true, alpha, tip: [`Walk ${km(pair.egressM)} from ${name(last.to)}, ${minutes(pair.egressMin)}`, "Straight-line distance, the model's average for the jobs near here"] });
+    if (b && pair) out.parts.push({ pts: [b, to], colour: NET_INK, width: main ? 2.5 : 1.5, dash: true, alpha, tip: [`Walk ${distance(pair.egressM)} from ${name(last.to)}, ${minutes(pair.egressMin)}`, "Straight-line distance, the model's average for the jobs near here"] });
     if (main) {
       for (const l of legs) {
         if (l.kind !== "ride") continue;
