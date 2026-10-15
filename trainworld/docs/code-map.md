@@ -140,13 +140,15 @@ Run from the maps root (`node trainworld/checks/<file>`).
   zone opened bare against the same zone solved, bubbles and bubble clicks, to the bit; `ZONE=tor`
   for another), `t174-market-check`
   (the regional market's derived block), `t409-worker-check` (two networks with no track between
-  them solve as two clusters, each as it would alone, to the bit; about a minute).
+  them solve as two clusters, each as it would alone, to the bit; about a minute), `t301-worker-check`
+  (packs and the market closed and reopened, also mid-solve and bare: figures to the bit).
 - Browser and timing (Playwright, `PLAYWRIGHT_MODULE`): `startup-timing.mjs` with
   `static-serve.mjs` (startup marks on a scratch production build), `t303-measure.mjs` (demand
   loading, clicks, pans), `t326-clusters.mjs` (the real save plus a Toronto line: edits in each cluster
   timed to their final, every final figure hashed against `?perfOff=clusters`), `t409-split.mjs` (a
   Boston and a Philadelphia line, in a new game or on the real save, edits timed, against
-  `?perfOff=split`), `t124-periods.mjs`
+  `?perfOff=split`), `t301-pan.mjs` (a long pan, Washington to Toronto and back, bubbles on: worker
+  memory, open packs, reopening times; `SAVE=1` on the real save), `t124-periods.mjs`
   (the real save: a one-level train-count edit and an every-level edit timed to their final, hashed
   against `?perfOff=periods`),
   `t328-cache-check.mjs` (the demand cache on reload: timing, cached

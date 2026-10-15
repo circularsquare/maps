@@ -15,6 +15,9 @@
 // T-325: the aux worker also holds the zones no station reaches, opened `bare`: their commute and
 // everyday layers on an empty network, solved once for every period with no rail. Their bubbles
 // and city figures come from there; no solve covers them, and no solving worker opens them.
+//
+// T-301: `close` frees packs (and the market) the page no longer needs; one the solve in hand
+// covers goes when that solve ends.
 
 import init, { DemandApi, EverydayApi, IntercityApi, day_factors, demand_periods, everyday_warm_up, release_skims, wasm_memory_bytes } from "../wasm/demand/sim"; // demand only (T-051)
 import { CITIES, cityToMarket, cityToWorld, HOME_CITY, setWorldFrame, worldToCity, worldToMarket, type CityId } from "../game/cities";
@@ -61,7 +64,7 @@ let stageRound = -1;
 /** T-327: questions marked `wait` about a round (or version) this worker has not reached yet,
  * answered the moment it has, before it starts the next round */
 let waiting: Query[] = [];
-type Query = Exclude<ToDemand, { kind: "init" | "open" | "solve" | "go" }>;
+type Query = Exclude<ToDemand, { kind: "init" | "open" | "solve" | "go" | "close" }>;
 /** T-327: the round every worker may start, by version and group (a solve marked `barrier` waits
  * for it) */
 let go = { version: -1, group: 0, round: 0 };
@@ -134,13 +137,15 @@ function openPacks(packs: { id: CityId; header: string; bin: ArrayBuffer }[], ma
       if (!bare.has(pack.id)) bare.set(pack.id, openBare(pack));
       continue;
     }
-    if (cities.has(pack.id)) continue;
+    // (T-301: reopened before its close took effect: it stays)
+    if (cities.has(pack.id)) { closeLater.ids.delete(pack.id); continue; }
     const bin = new Uint8Array(pack.bin);
     const a = new DemandApi(pack.header, bin);
     cities.set(pack.id, a);
     // T-399: the everyday layer shares the commutes' cells, zones, gravity and routes
     if (!aux && hasEveryday(pack.header)) everyday.set(pack.id, EverydayApi.beside(a, pack.header, bin));
   }
+  if (market !== undefined && intercity) closeLater.market = false;
   if (market !== undefined && !aux && !intercity) {
     // T-180: the page sends the pack's bytes; decoding 8 MB here keeps it off the main thread
     intercity = new IntercityApi(typeof market === "string" ? market : new TextDecoder().decode(market));
@@ -196,6 +201,64 @@ function openBare(pack: { id: CityId; header: string; bin: ArrayBuffer }) {
   return { a, e, figures };
 }
 
+/** T-301: closes of packs the solve in hand covers, applied once it has ended */
+const closeLater = { ids: new Set<CityId>(), market: false };
+
+/** T-301: take populations out of every kept network's clusters, then free them. */
+function forget(pops: Population[]) {
+  const gone = new Set(pops);
+  for (const cs of [jobClusters, ...[...versions.values()].map((v) => v.clusters)]) for (const c of cs) {
+    if (c.part && gone.has(c.part)) c.part = null;
+    c.pops = c.pops.filter((p) => !gone.has(p));
+    c.solveOrder = c.solveOrder.filter((p) => !gone.has(p));
+  }
+  for (const p of gone) { held.delete(p); heldQ.delete(p); p.free(); }
+}
+
+function dropCity(id: CityId) {
+  const a = cities.get(id);
+  if (!a) return;
+  const e = everyday.get(id);
+  cities.delete(id);
+  everyday.delete(id);
+  boxes.delete(id);
+  if (!bare.has(id)) squares.delete(id);
+  forget(e ? [e, a] : [a]);
+}
+
+function dropMarket() {
+  if (!intercity) return;
+  const parts = [...new Set([intercity, ...marketParts.values(), ...(idle ? [idle] : [])])];
+  marketParts.clear();
+  idle = intercity = null;
+  marketZones = null;
+  forget(parts);
+}
+
+function closePacks(msg: Extract<ToDemand, { kind: "close" }>) {
+  if (msg.bare) {
+    for (const id of msg.ids) {
+      const b = bare.get(id);
+      if (!b) continue;
+      bare.delete(id);
+      b.e?.free();
+      b.a.free();
+      if (!cities.has(id)) squares.delete(id);
+    }
+  } else {
+    for (const id of msg.ids) if (busy && jobCities.has(id)) closeLater.ids.add(id); else dropCity(id);
+    if (msg.market) { if (busy) closeLater.market = true; else dropMarket(); }
+  }
+  sendMessage({ kind: "closed", memBytes: wasm_memory_bytes() });
+}
+
+function closeDeferred() {
+  for (const id of closeLater.ids) dropCity(id);
+  closeLater.ids.clear();
+  if (closeLater.market) dropMarket();
+  closeLater.market = false;
+}
+
 /** Warm-up solves on the first city a worker opens, so V8 has optimised the kernel before the first real one. */
 function warmUp(): number {
   if (warmed || !cities.size) return 0;
@@ -243,6 +306,12 @@ onmessage = (e: MessageEvent<ToDemand>) => {
       } catch (err) {
         sendMessage({ kind: "failed", error: String(err) });
       }
+    });
+  } else if (msg.kind === "close") {
+    // in the opening chain, so a close and a reopen of the same pack keep their order
+    opening = opening.then(() => {
+      if (!started) return;
+      try { closePacks(msg); } catch (err) { sendMessage({ kind: "failed", error: String(err) }); }
     });
   } else if (msg.kind === "solve") {
     pending = msg;
@@ -644,6 +713,7 @@ async function run() {
   busy = true;
   try {
     while (pending && started) {
+      closeDeferred();
       const job = pending;
       pending = null;
       const n = job.net;
@@ -917,4 +987,5 @@ async function run() {
     sendMessage({ kind: "failed", error: String(err) });
   }
   busy = false;
+  closeDeferred();
 }

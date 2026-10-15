@@ -243,6 +243,9 @@ long tail.
   are fetched on demand (section 6). A mask installed while a big network is loaded reworks the
   whole network once (about 0.2 s on the real New York network). A zone opened only for its bubbles opens bare in the auxiliary worker (T-325):
   0.3-1.5 s, and its everyday layer once rather than in every solving worker.
+- **Closing** (T-301; demand.md "Which cities are open"). A zone nobody views, sees beside the view
+  or reaches closes after 60 s, or at once beyond two such zones, so a long pan holds a few zones'
+  packs at a time, not every zone it passed.
 
 ## 9. What is built (T-276)
 
@@ -261,6 +264,6 @@ All five stages are built; numbers and checks in [notes/T-276.md](../notes/T-276
 Not built, each its own task: park-and-ride (T-295), the market's routed drives (T-279), the
 commute part's own weekend factor in a station's far-zone rows (T-296), a faster joint solve
 (T-297), commutes shown apart from longer trips (T-298), the market's seam trips against NEC
-FUTURE (T-299), closing packs (T-301), and
+FUTURE (T-299), and
 fetching zones' water masks and boundaries on demand rather than at startup (T-302; today every
 registered zone's are fetched at startup, as cities' are).

@@ -165,7 +165,6 @@ World sampler (T-286, research/world-sampler.md). All waiting for Anita's review
 
 ## Performance (open since 2026-10-15; ranked in notes/perf-survey.md)
 
-- T-301 [P3] Zone packs never close (T-276): nearby zones' bubbles open each zone on screen in every solving worker (Philadelphia about 90 MB of WASM memory a worker, New Haven and Springfield together 57), so a long pan round the region grows every worker and every solve. Close packs that are neither viewed, nearby nor reached, or open nearby zones commute-only in the auxiliary worker. Parked until it matters; DECISIONS 2026-10-13 (T-276 agent).
 - T-281 [P3] Opening a big save searches every station's walk round water once per worker (T-275): about 1 ms a station in WASM, 1.0 s for the real New York network's 867 stations (53 ms before); edits are unchanged. A tighter search (padded window without bounds checks, reused buffers) or a 100 m raster for the far part would roughly halve it. notes/T-275.md.
 - T-076 [P3] Playing costs 13-15% of a core on any network, nearly all of it Chrome presenting 60
   frames a second (GPU process 9, renderer 4; our draw 0.1-0.2 ms). A lower frame rate when the

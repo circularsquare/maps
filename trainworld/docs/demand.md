@@ -712,9 +712,18 @@ and Washington 1.7-1.8 s); the
 regional market was 1.0 s natively and 1.2-1.6 s in Chrome until
 T-174, and is now 0.09 s natively and 0.1-0.4 s in Chrome (reading its sites). The market is
 opened (T-396) once a market zone is viewed, beside the view or reached, or a built station lies
-within its reach (30 km of a market zone's box), and stays open; before that no solve waits for it
+within its reach (30 km of a market zone's box); before that no solve waits for it
 or covers it, and a solve sent without it is sent again once it opens. A save with nothing near
-the Northeast never downloads it. A new game
+the Northeast never downloads it. **Packs close when nobody needs them** (T-301): a zone that is
+neither viewed, beside the view, reached by a station nor part of the load in hand closes in every
+worker (bare or not) once it has been so for 60 s, or at once when more than two such zones are
+open (the least recently needed first); the market closes 60 s after none of its zones is in those
+sets and no station is in its reach. A closed zone carries no rider on any line, so the shown
+figures stand (a bare zone's city figures stay shown); the next solve leaves it out, and a worker
+solving with it closes it when that solve ends. It reopens as it first opened (download, mostly
+from the browser's cache, and opening). The bare copy of a zone that a shown solve covers closes at
+once. WASM memory never shrinks, so closing bounds a worker's peak (the freed space takes the next
+pack) rather than lowering it. `?perfOff=close` keeps everything open. A new game
 opens only New York; a save with construction in several cities pays
 each of their openings once, in every worker. Only the cells with a budget for a purpose hold its
 destination samples and their pair indices (T-395; about half of all cells x purposes have none),

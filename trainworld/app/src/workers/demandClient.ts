@@ -12,6 +12,7 @@
 //   pack is fetched before the network's reach is known; it opens bare if the reach is known by
 //   the time it has downloaded and leaves the zone out, else in every worker as before. A new
 //   game (`?new=1`) has no stations, so its reach is known at once and the viewed zone opens bare.
+// - T-301: packs (and the market) nobody needs any more close in every worker (`sweep`).
 // - Reports what it is loading (game/loading.ts `loadProgress`) and releases a loaded game's
 //   clock hold once that game's network has its final result (HOLD_ROUND, T-347).
 // - The day's five periods are split over the pool by index (worker i solves periods i, i + n,
@@ -254,7 +255,7 @@ interface Solve {
 
 /** When one item (a city or the market) was asked for, downloaded and open in every worker:
  * performance.now() (window.twDemand.start.loads with ?debug=1). */
-interface LoadLog { item: string; requestedAt: number; downloadedAt?: number; openedAt?: number; bare?: boolean }
+interface LoadLog { item: string; requestedAt: number; downloadedAt?: number; openedAt?: number; bare?: boolean; closedAt?: number }
 /** One file being downloaded, for the loading percentage (T-149). */
 interface Download { got: number; total: number; at: number }
 /**
@@ -278,6 +279,16 @@ const STEP_CAP = 0.98;
 const GUESS_BYTES = 6e6;
 const LAST_SOLVE = "anitabuilder-load-solve";
 const MARKET = "market";
+/**
+ * T-301: a pack no longer needed (not viewed, beside the view, reached by a station, or part of the
+ * load in hand; the market: none of its zones so, and no station in its reach) closes in every worker
+ * once it has gone unneeded for CLOSE_MS, or at once if more than KEEP_SPARE unneeded zones are open
+ * (the least recently needed close first). It reopens when needed, as on first opening.
+ */
+const CLOSE_MS = 60_000;
+const KEEP_SPARE = 2;
+/** the newest load matching `f` (a pack can be opened, closed and opened again) */
+const lastLoad = (loads: LoadLog[], f: (l: LoadLog) => boolean) => { for (let i = loads.length - 1; i >= 0; i--) if (f(loads[i])) return loads[i]; return undefined; };
 
 const solveModel = (stops: number) => SOLVE_MS.base + SOLVE_MS.perStop * stops;
 /** T-347: until a load has timed its final round, the final is guessed at this many first estimates */
@@ -444,6 +455,11 @@ class DemandClient {
   /** T-351: cities fetched before the reach was known, decided (bare or every worker) once downloaded */
   private fetchingUndecided = new Set<CityId>();
   private bareOpen = new Map<CityId, BareFigures>();
+  /** T-301: the figures of zones open bare and closed since, still shown (no station reaches them) */
+  private bareKept = new Map<CityId, BareFigures>();
+  /** T-301: when each open item was last needed, and the sweep's next timed run */
+  private lastNeeded = new Map<string, number>();
+  private closeTimer = 0;
   /** bytes of each item, the weight of its opening in the percentage */
   private bytes = new Map<string, number>();
   private reach = new WeakMap<Service, Set<CityId>>();
@@ -666,6 +682,94 @@ class DemandClient {
     if (this.nearbyOpen()) for (const id of nearbyZones.peek()) this.want(id, !!reached?.has(id));
     this.flush();
     this.progress();
+    this.sweep();
+  }
+
+  // --- Closing what is no longer needed (T-301) ---------------------------------------------------
+
+  /** What must stay open: the zones viewed, beside the view, reached or in the load in hand, and the
+   * market while one of those is its zone or a station is in its reach. Null while the reach is not
+   * known. */
+  private keepSet(): Set<string> | null {
+    const reached = this.knownReach();
+    if (!reached) return null;
+    const keep = new Set<string>([...this.viewedSet(), ...nearbyZones.peek(), ...reached]);
+    if (this.job) for (const id of this.job.items) keep.add(id);
+    const svc = this.latest();
+    if ([...keep].some((id) => id !== MARKET && cityById(id as CityId).market >= 0) || (!!svc && this.nearOf(svc).market)) keep.add(MARKET);
+    return keep;
+  }
+
+  /** Close the packs no longer needed (CLOSE_MS, KEEP_SPARE), and bare copies the solves have made
+   * redundant. Not before startup has finished nor in a loaded game's hold; `?perfOff=close` never. */
+  private sweep() {
+    clearTimeout(this.closeTimer);
+    this.closeTimer = 0;
+    if (perfOff("close") || this.status.startsWith("failed") || this.ready < this.workers.length || this.held || startup.peek() !== "ready" || this.hold) return;
+    const keep = this.keepSet();
+    if (!keep) return;
+    const now = performance.now();
+    for (const id of keep) this.lastNeeded.set(id, now);
+    const last = (id: string) => this.lastNeeded.get(id) ?? 0;
+    // a zone open bare and in every worker whose shown solve covers it: the bare copy answers nothing
+    const redundant = [...this.bareOpen.keys()].filter((id) => this.opened.has(id) && !this.isBare(id));
+    if (redundant.length) this.closeBare(redundant);
+    const inFlight = (id: CityId) => this.fetchingUndecided.has(id) || (this.fetching.has(id) && !this.opened.has(id)) || (this.fetchingBare.has(id) && !this.bareOpen.has(id));
+    const spare = CITIES.map((c) => c.id)
+      .filter((id) => !keep.has(id) && (this.opened.has(id) || this.bareOpen.has(id)) && !inFlight(id))
+      .sort((a, b) => last(b) - last(a));
+    const full: CityId[] = [], bare: CityId[] = [];
+    let next = Infinity;
+    spare.forEach((id, i) => {
+      if (i >= KEEP_SPARE || now - last(id) >= CLOSE_MS) (this.opened.has(id) ? full : bare).push(id);
+      else next = Math.min(next, last(id) + CLOSE_MS);
+    });
+    let market = false;
+    if (this.opened.has(MARKET) && !keep.has(MARKET)) {
+      if (now - last(MARKET) >= CLOSE_MS) market = true;
+      else next = Math.min(next, last(MARKET) + CLOSE_MS);
+    }
+    if (bare.length) this.closeBare(bare);
+    if (full.length || market) this.closeFull(full, market);
+    if (next < Infinity) this.closeTimer = setTimeout(() => this.sweep(), Math.max(1000, next - now + 50)) as unknown as number;
+  }
+
+  /** Close zones open bare in the aux worker; their figures stay shown. */
+  private closeBare(ids: CityId[]) {
+    this.workers[this.computeN].postMessage({ kind: "close", ids, bare: true } satisfies ToDemand);
+    for (const id of ids) {
+      this.bareKept.set(id, this.bareOpen.get(id)!);
+      this.bareOpen.delete(id);
+      this.fetchingBare.delete(id);
+      const log = lastLoad(this.start.loads, (l) => l.item === id && !!l.bare);
+      if (log) log.closedAt = performance.now();
+    }
+  }
+
+  /**
+   * Close packs open in every worker (and their bare copies). No station reaches them, so they carry
+   * no rider on any line and the shown figures stand: the solves stop counting them as covered, and
+   * the next solve leaves them out. A worker solving with one closes it when that solve ends.
+   */
+  private closeFull(ids: CityId[], market: boolean) {
+    for (const w of this.workers) w.postMessage({ kind: "close", ids, ...(market ? { market } : {}) } satisfies ToDemand);
+    const items: string[] = [...ids, ...(market ? [MARKET] : [])];
+    for (const id of items) {
+      this.opened.delete(id);
+      this.acks.delete(id);
+      this.fetching.delete(id);
+      this.prefetched.delete(id as CityId);
+      this.cityVersion.delete(id as CityId);
+      const log = lastLoad(this.start.loads, (l) => l.item === id && !l.bare);
+      if (log) log.closedAt = performance.now();
+    }
+    if (market) this.marketWanted = false;
+    for (const s of this.log) {
+      s.cities = s.cities.filter((id) => !ids.includes(id));
+      if (market) s.market = false;
+    }
+    const alsoBare = ids.filter((id) => this.bareOpen.has(id));
+    if (alsoBare.length) this.closeBare(alsoBare);
   }
 
   /** T-351: the reach as far as opening a pack goes. A new game's (`?new=1`) is known to be empty
@@ -789,8 +893,8 @@ class DemandClient {
     this.acks.set(item, n);
     if (n < this.workers.length) return;
     this.opened.add(item);
-    const log = this.start.loads.find((l) => l.item === item && !l.bare);
-    if (log) log.openedAt = performance.now();
+    const log = lastLoad(this.start.loads, (l) => l.item === item && !l.bare);
+    if (log && log.openedAt === undefined) log.openedAt = performance.now();
     this.settleWaiters();
   }
 
@@ -798,8 +902,9 @@ class DemandClient {
   private bareOpened(figures: Record<CityId, BareFigures>) {
     for (const [id, f] of Object.entries(figures)) {
       this.bareOpen.set(id, f);
-      const log = this.start.loads.find((l) => l.item === id && l.bare);
-      if (log) log.openedAt = performance.now();
+      this.bareKept.delete(id);
+      const log = lastLoad(this.start.loads, (l) => l.item === id && !!l.bare);
+      if (log && log.openedAt === undefined) log.openedAt = performance.now();
     }
     this.addBareViews();
     this.settleWaiters();
@@ -884,7 +989,7 @@ class DemandClient {
         const dl = bytes !== undefined ? 1 : total > 0 ? Math.min(0.99, got / total) : 0;
         const dlMs = at === Infinity ? 300 : dl >= 1 || got === 0 ? Math.max(300, now - at) : (now - at) / dl;
         const openMs = Math.max(300, (bytes ?? (total || GUESS_BYTES)) / 1e6 * OPEN_MS_PER_MB.city);
-        const log = this.start.loads.find((l) => l.item === id && l.downloadedAt !== undefined && !l.openedAt);
+        const log = lastLoad(this.start.loads, (l) => l.item === id && l.downloadedAt !== undefined && !l.openedAt);
         const open = this.isOpen(id) ? 1 : log ? Math.min(STEP_CAP, (now - log.downloadedAt!) / openMs) : 0;
         f = (dlMs * dl + openMs * open) / (dlMs + openMs);
         if (!this.isOpen(id)) moving = true;
@@ -976,7 +1081,7 @@ class DemandClient {
       const ms = (this.bytes.get(item) ?? (size || GUESS_BYTES)) / 1e6 * (item === MARKET ? OPEN_MS_PER_MB.market : OPEN_MS_PER_MB.city);
       openMs += ms;
       openDone += loaded(item) ? ms : ms * (this.acks.get(item) ?? 0) / this.workers.length;
-      const log = this.start.loads.find((l) => l.item === item);
+      const log = lastLoad(this.start.loads, (l) => l.item === item);
       if (log?.downloadedAt !== undefined) openStart = Math.min(openStart, log.downloadedAt);
     }
     const downloaded = job.items.every((i) => this.bytes.has(i) || loaded(i));
@@ -1205,6 +1310,11 @@ class DemandClient {
       this.progress();
       return;
     }
+    if (msg.kind === "closed") {
+      const w = this.start.workers[i];
+      if (w) w.memBytes = msg.memBytes;
+      return;
+    }
     if (msg.kind === "opened") {
       const w = this.start.workers[i];
       if (w) { w.openMs += msg.openMs; w.warmMs += msg.warmMs; w.memBytes = msg.memBytes; }
@@ -1223,6 +1333,7 @@ class DemandClient {
     const s = this.cur;
     if (!s || msg.version !== s.version) return; // superseded
     if (msg.kind === "done") {
+      s.memBytes[i] = msg.memBytes;
       if (msg.clusters) s.clusters = msg.clusters; // ?debug=1's log: clusters kept and solved
       if (msg.periods) (s.periods ??= [])[i] = msg.periods;
       return;
@@ -2061,7 +2172,7 @@ class DemandClient {
    * `dayResult` and `dayDemand` work out a solved city's (the figures are what a solve gives it).
    */
   private bareView(id: CityId, day: DayKind, network: DemandView): DemandView {
-    const b = this.bareOpen.get(id)!;
+    const b = (this.bareOpen.get(id) ?? this.bareKept.get(id))!;
     let trips = 0, rail = 0, walk = 0;
     const trainShareByPeriod: [string, number][] = PERIODS.map((period, q) => {
       let s = b.summary[q];
@@ -2082,13 +2193,18 @@ class DemandClient {
     return { ...network, tripsPerDay: trips, railTripsPerDay: rail, trainShareByPeriod, split: { train: pct(rail), walk: pct(walk), drive: Math.max(0, 100 - pct(rail) - pct(walk)) } };
   }
 
+  /** Zones with bare figures: open bare, or closed since (T-301). */
+  private bareIds(): CityId[] {
+    return [...this.bareOpen.keys(), ...this.bareKept.keys()];
+  }
+
   /** T-325: zones opened bare since the shown result join its city views at once (no solve). */
   private addBareViews() {
     const days = demandByDay.peek();
     let changed = false;
     const next = days.map((d, k) => {
       if (!d.view) return d;
-      const add = [...this.bareOpen.keys()].filter((id) => !d.cities.has(id));
+      const add = this.bareIds().filter((id) => !d.cities.has(id));
       if (!add.length) return d;
       changed = true;
       const cities = new Map(d.cities);
@@ -2224,7 +2340,7 @@ class DemandClient {
       return [id, {...network, tripsPerDay: trips, railTripsPerDay: rail, trainShareByPeriod, split: {train: pct(rail), walk: pct(walk), drive: Math.max(0, 100 - pct(rail) - pct(walk))}}];
     }));
     // T-325: and the zones open bare, from their own figures
-    for (const id of this.bareOpen.keys()) if (!cities.has(id)) cities.set(id, this.bareView(id, day, network));
+    for (const id of this.bareIds()) if (!cities.has(id)) cities.set(id, this.bareView(id, day, network));
     // the regional layer between places: longer trips and (T-276) commutes between zones together
     const corridors = new Map<string, {from: number; to: number; trips: number; rail: number; commutes: number; commuteRail: number}>();
     let interTrips = 0, interRail = 0, commuteTrips = 0, commuteRail = 0;
@@ -2262,7 +2378,7 @@ export function startDemand(city = HOME_CITY) {
   setTripQuery((from, to) => c.trip(from, to)); // T-195
   setDemandQueries({ transfers: (members) => c.transfers(members), cityCells: (city) => c.cityCells(city), cellModes: (purpose, city) => c.purposeModes(purpose ?? "all", city), stationRiders: (id, top, members) => c.stationRiders(id, top, members), flows: (end, cells) => c.flows(end, cells), intercitySelection: (end, cells) => c.intercitySelection(end, cells), intercityStation: (id, members) => c.intercityStation(id, members) });
   if (TEST) c.submitNetwork(demandTestSnapshot());
-  if (new URLSearchParams(location.search).get("debug") === "1") (window as any).twDemand = { client: c, log: c.log, days: () => demandByDay.peek(), start: c.start, resubmit: () => c.resubmit(), view: () => demandView.peek(), cities: () => cityDemandViews.peek(), intercity: () => intercityDemand.peek(), activeCity, cellModes: () => c.cellModes(), stationRiders: (id: string) => c.stationRiders(id), cityCells: () => c.cityCells(), flows: (end: "home" | "work", cells: Uint32Array) => c.flows(end, cells), intercitySelection: (end: "home" | "work", cells: Uint32Array) => c.intercitySelection(end, cells), intercityStation: (id: string) => c.intercityStation(id), transfers: (members: string[]) => c.transfers(members), trip: (from: [number, number], to: [number, number]) => c.trip(from, to) };
+  if (new URLSearchParams(location.search).get("debug") === "1") (window as any).twDemand = { client: c, log: c.log, days: () => demandByDay.peek(), start: c.start, resubmit: () => c.resubmit(), view: () => demandView.peek(), cities: () => cityDemandViews.peek(), nearby: () => nearbyZones.peek(), intercity: () => intercityDemand.peek(), activeCity, cellModes: () => c.cellModes(), stationRiders: (id: string) => c.stationRiders(id), cityCells: () => c.cityCells(), flows: (end: "home" | "work", cells: Uint32Array) => c.flows(end, cells), intercitySelection: (end: "home" | "work", cells: Uint32Array) => c.intercitySelection(end, cells), intercityStation: (id: string) => c.intercityStation(id), transfers: (members: string[]) => c.transfers(members), trip: (from: [number, number], to: [number, number]) => c.trip(from, to) };
   return c;
 }
 

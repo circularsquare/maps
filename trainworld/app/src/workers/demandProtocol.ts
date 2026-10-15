@@ -57,6 +57,10 @@ export type ToDemand =
    * reaches, opened for its bubbles and city figures alone (no rail, so no solve needs it); a
    * later `open` of the same pack without `bare` adds it to the solves as well */
   | { kind: "open"; packs: { id: CityId; header: string; bin: ArrayBuffer }[]; intercity?: string | Uint8Array; bare?: boolean }
+  /** T-301: close city packs (and the market) no longer needed, freeing their WASM memory for the
+   * next pack; `bare`: the aux worker's bare copies. A pack the solve in hand covers closes when that
+   * solve ends, unless an `open` of it comes first. Answered by `closed`. */
+  | { kind: "close"; ids: CityId[]; market?: boolean; bare?: boolean }
   /** solve every period of this worker on `net`: free flow, then `rounds` crowding rounds */
   | { kind: "solve"; version: number; net: DemandNetwork; rounds: number;
       /** T-327: start each crowding round only once `go` allows it */
@@ -155,6 +159,8 @@ export type FromDemand =
   | { kind: "opened"; cityInfo: Record<CityId, number[]>; market: boolean; openMs: number; warmMs: number; memBytes: number;
       /** T-325: the packs were opened bare (aux worker), with each one's figures */
       bare?: Record<CityId, BareFigures> }
+  /** T-301: a `close` is done (WASM memory never shrinks: the freed space is reused) */
+  | { kind: "closed"; memBytes: number }
   | { kind: "failed"; error: string }
   | {
       kind: "result";
