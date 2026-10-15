@@ -1418,9 +1418,12 @@ class DemandClient {
     }
     const home = new Map<number, number>(), work = new Map<number, number>();
     let toZone: Float32Array | null = null, fromZone: Float32Array | null = null;
+    let walked = 0, rode = 0;
     for (const p of kept) {
       const nh = p[0], nw = p[1];
-      let o = 2;
+      walked += p[2];
+      rode += p[3];
+      let o = 4;
       const add = (m: Map<number, number>, n: number) => {
         for (let k = 0; k < n; k++) m.set(p[o + k], (m.get(p[o + k]) ?? 0) + p[o + n + k]);
         o += 2 * n;
@@ -1441,7 +1444,7 @@ class DemandClient {
       const t = topOf(Uint32Array.from(v, (_, i) => i), v, top);
       return { zones: t.keys, riders: t.vals };
     };
-    return { version, stationId, scope: members.join(","), home: cells(home), work: cells(work), homeRidersWorkIn: zones(toZone), workRidersLiveIn: zones(fromZone) };
+    return { version, stationId, scope: members.join(","), home: cells(home), work: cells(work), walked, rode, homeRidersWorkIn: zones(toZone), workRidersLiveIn: zones(fromZone) };
   }
 
   /** A station complex's transfers a day (T-176; game/demand.ts `ComplexTransfers`): the route

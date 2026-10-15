@@ -1,5 +1,9 @@
 # Archive
 
+- T-338 [P2] Crossover tool. Done 2026-10-15: Build tab tool (key 6) joins a track to one 6-15 m beside it with two 120 m diagonals, 50 km/h, priced as two junctions, saved as edge flag 32; routing and capacity unchanged. Polish left as T-391. docs/track-and-service.md 6.1.
+
+- T-374 [P3] Riders arriving by ride in the inspector. Done 2026-10-15: a station's commuters split into walked and drove (bar, icons, hovers; commutes only, not everyday or regional, T-390), the trip explorer shows a ride access as "Drive to" with its minutes and station cost; the station hover left alone. notes/T-374.md.
+
 - T-373 [P2] Park-and-ride stage 4, regional rides. Done 2026-10-15: commutes between zones ride at home, long trips at both ends (far end a drop-off), via `access_options`; corridor commute legs 2-6x T-276's; real save regional rail 35k to 109k, browser 35-36 s. notes/T-373.md.
 
 - T-389 [P2] Rides for everyday trips. Done 2026-10-15: everyday trips of 5 km or more ride at the home end both ways, as commutes do; real save 7.03M to 7.54M rail a day, solve 31-32 s; the map's walking minutes at the model's 6 km/h. notes/T-371.md.

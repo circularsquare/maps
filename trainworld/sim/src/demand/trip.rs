@@ -31,7 +31,7 @@ const MAX_ROUTES: usize = 8;
 
 /// Numbers in the answer's head, per station pair, and per leg (`DemandApi::trip`).
 pub const HEAD: usize = 32;
-pub const PAIR_LEN: usize = 12;
+pub const PAIR_LEN: usize = 14;
 pub const LEG_LEN: usize = 12;
 
 /// Why rail is not offered for a trip (`HEAD` slot 26).
@@ -344,7 +344,10 @@ impl DemandApi {
         let mut body = vec![];
         for &(ka, kt, share) in &pairs {
             let (a, t) = (sz.acc_st[ka] as usize, sz.acc_st[kt] as usize);
-            body.extend([a as f64, t as f64, rep[a], rep[t], sz.acc_d[ka] as f64, sz.acc_w[ka] as f64, sz.acc_d[kt] as f64, sz.acc_w[kt] as f64, sk.r[a * s + t] as f64, share as f64, sz.acc_t[ka] as f64, sz.acc_t[kt] as f64]);
+            // a ride entry (T-371): its perceived minutes less the drive's are the ride's fixed cost and the station end
+            let ride = sz.ride(u).contains(&ka);
+            let station_end = if ride { sz.acc_w[ka] - p.w_drive * sz.acc_t[ka] } else { 0.0 };
+            body.extend([a as f64, t as f64, rep[a], rep[t], sz.acc_d[ka] as f64, sz.acc_w[ka] as f64, sz.acc_d[kt] as f64, sz.acc_w[kt] as f64, sk.r[a * s + t] as f64, share as f64, sz.acc_t[ka] as f64, sz.acc_t[kt] as f64, ride as u8 as f64, station_end as f64]);
         }
         // routes over the bigger pairs, by their share of the whole trip's rail riders
         let mut all: Vec<(usize, f32, Vec<Leg>)> = vec![];
@@ -395,7 +398,10 @@ impl DemandApi {
     /// stations, a route node at each (-1 none), the access walk's straight-line metres and
     /// perceived minutes, the egress walk's, the station-to-station strategy cost (perceived
     /// minutes, the base fare and first boarding's transfer penalty not included), the pair's
-    /// share of the trip's rail riders, and the two walks' real minutes.
+    /// share of the trip's rail riders, the two walks' real minutes (the access entry's are a
+    /// ride's drive minutes, its metres the straight line to the station), whether the access
+    /// entry is a ride (1/0) and, for a ride, the perceived minutes beyond the drive's (the ride's
+    /// fixed cost and the parking or drop-off at the station).
     ///
     /// Then per route, biggest first: its station pair's index, its share of the trip's rail
     /// riders, its legs; then `LEG_LEN` numbers a leg: kind (1 ride, 2 walk between stations),

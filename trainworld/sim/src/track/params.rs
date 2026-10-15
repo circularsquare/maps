@@ -22,6 +22,12 @@ pub const FIT_TOL: f64 = 0.01;
 pub const SHARED_NODE_CLEAR: f64 = 25.0;
 /// Two double-track routes' tracks are this far apart (drawing only).
 pub const TRACK_SPACING: f64 = 4.0;
+/// A crossover (T-338): its length along the track, m, the farthest apart the two tracks it joins
+/// may be (centre to centre, m; the nearest is `CROSSOVER_MIN_GAP`), and its speed limit, m/s.
+pub const CROSSOVER_LEN: f64 = 120.0;
+pub const CROSSOVER_REACH: f64 = 15.0;
+pub const CROSSOVER_MIN_GAP: f64 = 6.0;
+pub const V_CROSSOVER: f64 = 50.0 / 3.6;
 
 // ---- levels (SPEC 6.1) ----
 

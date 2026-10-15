@@ -44,12 +44,13 @@ const LEVEL_NAME: Record<Level, string> = {
 const TOOLS: [Tool, string, () => JSX.Element, string, string][] = [
   ["track", "Track", Icon.track, "1", "Draw track"],
   ["station", "Station", Icon.station, "2", "Place stations"],
+  ["crossover", "Crossover", Icon.crossover, "6", "Click on track beside other track to join the two with a crossover"],
   ["delete", "Delete", Icon.bin, "3", "Delete track, stations and flyovers"],
   ["blueprint", "Select", Icon.marquee, "5", "Drag a box round blueprint track and stations to disable or enable them"],
 ];
 
 /** The tool each number key picks (T-096). */
-export const TOOL_KEYS: Record<string, Tool> = { "1": "track", "2": "station", "3": "delete", "5": "blueprint" };
+export const TOOL_KEYS: Record<string, Tool> = { "1": "track", "2": "station", "3": "delete", "5": "blueprint", "6": "crossover" };
 /** The trip explorer's key (T-195); unlike the build tools it leaves the tab as it is. */
 export const TRIP_KEY = "4";
 

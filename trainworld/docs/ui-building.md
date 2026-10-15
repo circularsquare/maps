@@ -10,8 +10,10 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
 
 [T-100; `ui/tabs.tsx`, `ui/Blueprint.tsx`; tools in `map/tools.ts`]
 
-- **Tools**: draw track (key 1), station (2), delete (3), select blueprints (5, below); then the level with its multiplier and
-  price per km, single, double or quad track [T-255], and the platform length for new stations.
+- **Tools**: draw track (key 1), station (2), crossover (6, below), delete (3), select blueprints
+  (5, below), three buttons on the first row and two on the second; then the level with its
+  multiplier and price per km, single, double or quad track [T-255], and the platform length for
+  new stations.
   The number keys work from any tab and open the Build tab; the key of the tool already on does
   nothing. Each button shows its key. There is no button for plain selecting: clicking the active tool again or
   leaving it with Esc returns to selecting. The trip tool (key 4) is in
@@ -63,10 +65,22 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
 - How a new station is named: [track-and-service.md](track-and-service.md) 6.1. A double click on
   the name in its inspector renames it.
 
+## Placing crossovers
+
+[T-338; `map/tools.ts`, rules in [track-and-service.md](track-and-service.md) 6.1] The crossover
+tool (key 6, an X between two rails) snaps to track only, never to a node. With the pointer on
+track the ghost is the crossover's X as the click would place it, drawn like the track tool's
+ghost (red where it would be refused), and the tag says its price ("$49.5M") or why not ("A
+crossover needs other track alongside within 15 m, with 60 m of plain track each way."). The
+answer comes from the clock worker trying the real edit (`TrackApi.preview_crossover`, one request
+in flight). A click places it as blueprint, one undoable edit; a click off track says to click on
+track beside other track.
+
 ## Deleting
 
-[T-096, T-244; `game/remove.ts`] Hovering shows what a click removes: a stretch of track drawn red
-(one piece of a drawn route), a station or a flyover ringed, its name by the cursor. Blueprint is
+[T-096, T-244, T-338; `game/remove.ts`] Hovering shows what a click removes: a stretch of track
+drawn red (one piece of a drawn route, or "the crossover", which goes whole), a station or a
+flyover ringed, its name by the cursor. Blueprint is
 removed at once (undoable); anything constructed only after a yes in the confirmation dialog
 ("Remove 1.2 km of constructed track? Nothing is refunded." with Remove and Keep; Esc is Keep). The
 inspectors' Remove buttons ask the same way. Lines are removed from the line panel.
@@ -103,8 +117,9 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
 [T-064, T-071, T-092, T-093; `map/edgeEdit.ts`, `map/nodeDrag.ts`; rules in
 [track-and-service.md](track-and-service.md) 6.1]
 
-- With the select tool, a selected blueprint stretch shows its corners as squares; any blueprint
-  track end, junction or station can be dragged. The cursor is a move cursor over a node that can.
+- With the select tool, a selected blueprint stretch shows its corners as squares (not a
+  crossover's, which keeps its shape [T-338]); any blueprint track end, junction or station can be
+  dragged, except a node at a crossover's end. The cursor is a move cursor over a node that can.
   A drag previews the new shape with each curve's radius and speed (or why not); letting go is one
   undoable edit, Escape puts it back.
 - **The track inspector** lists the corners with each curve's speed, a radius stepper (100 to 1,500

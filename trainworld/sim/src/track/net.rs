@@ -143,6 +143,8 @@ pub struct EdgeData {
     /// (a PI drag, a radius, a node drag) makes these points its PIs with auto radius and clears
     /// them (`TrackApi::editable`). Empty for every edge drawn before T-079 or after T-092.
     pub thru: Vec<Pi>,
+    /// One diagonal of a crossover (T-338): fixed shape, `V_CROSSOVER`, priced as a junction.
+    pub crossover: bool,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -230,6 +232,10 @@ pub enum Issue {
     /// A node or PI nearer the poles than 85 degrees or past the antimeridian (Mercator frame,
     /// docs/world.md).
     OutsideWorld { x: f64, y: f64 },
+    /// A crossover's shape is fixed (T-338): it cannot be reshaped, split, raised or moved.
+    Crossover { edge: u32 },
+    /// No track runs parallel within `CROSSOVER_REACH` for a crossover, or not for its length.
+    NoParallel { edge: u32 },
 }
 
 /// What the raw setters touched since the last `take_touch`.
@@ -292,6 +298,7 @@ pub struct Network {
     pub edge_pis: Vec<Span>,
     /// Per edge: the points a T-079 edge was drawn through (`EdgeData::thru`), else empty.
     pub edge_thru: Vec<Vec<Pi>>,
+    pub edge_crossover: Vec<bool>,
     pub edge_len: Vec<f64>,
     pub edge_pieces: Vec<Span>,
     pub edge_vert: Vec<Span>,
@@ -437,6 +444,7 @@ impl Network {
             edge_off: vec![],
             edge_pis: vec![],
             edge_thru: vec![],
+            edge_crossover: vec![],
             edge_len: vec![],
             edge_pieces: vec![],
             edge_vert: vec![],
@@ -582,6 +590,7 @@ impl Network {
         self.edge_off.push(false);
         self.edge_pis.push(Span::default());
         self.edge_thru.push(vec![]);
+        self.edge_crossover.push(false);
         self.edge_len.push(0.0);
         self.edge_pieces.push(Span::default());
         self.edge_vert.push(Span::default());
@@ -646,7 +655,7 @@ impl Network {
     pub fn edge_data(&self, e: u32) -> Option<EdgeData> {
         self.edge_ok(e).then(|| {
             let i = e as usize;
-            EdgeData { a: self.edge_a[i], b: self.edge_b[i], tracks: self.edge_tracks[i], pis: self.pis.get(self.edge_pis[i]).to_vec(), built: self.edge_built[i], off: self.edge_off[i], thru: self.edge_thru[i].clone() }
+            EdgeData { a: self.edge_a[i], b: self.edge_b[i], tracks: self.edge_tracks[i], pis: self.pis.get(self.edge_pis[i]).to_vec(), built: self.edge_built[i], off: self.edge_off[i], thru: self.edge_thru[i].clone(), crossover: self.edge_crossover[i] }
         })
     }
     pub fn station_data(&self, n: u32) -> Option<StationData> {
@@ -729,6 +738,19 @@ impl Network {
     pub fn node_tracks(&self, n: u32) -> u8 {
         let p = &self.node_ports[n as usize];
         p.ends().iter().map(|&c| self.edge_tracks[(c >> 1) as usize]).max().unwrap_or(2)
+    }
+    /// The speed limit an edge puts on every curve of it, m/s: `V_CROSSOVER` on a crossover.
+    pub fn v_cap(&self, e: u32) -> f64 {
+        if self.edge_crossover[e as usize] { V_CROSSOVER } else { V_TOP }
+    }
+    /// Edge ends at a node that are not crossovers and pass `keep`. A crossover pays for its own
+    /// turnouts (T-338), so the nodes at its ends are priced as junctions only with three others.
+    fn priced_ends(&self, n: u32, keep: impl Fn(usize) -> bool) -> usize {
+        self.node_ports[n as usize].ends().iter().map(|&c| (c >> 1) as usize).filter(|&e| !self.edge_crossover[e] && keep(e)).count()
+    }
+    /// A flat crossing between the two diagonals of one crossover is part of its price.
+    fn priced_crossing(&self, x: &Crossing) -> bool {
+        !(self.edge_crossover[x.e1 as usize] && self.edge_crossover[x.e2 as usize])
     }
 
     // ---------------------------------------------------------------- raw setters
@@ -813,6 +835,7 @@ impl Network {
                 self.edge_off[i] = d.off && !d.built;
                 self.edge_pis[i] = self.pis.replace(self.edge_pis[i], &d.pis);
                 self.edge_thru[i] = d.thru;
+                self.edge_crossover[i] = d.crossover;
                 self.node_ports[d.a as usize].add(id << 1);
                 self.node_ports[d.b as usize].add(id << 1 | 1);
                 self.touch_node(d.a);
@@ -829,6 +852,7 @@ impl Network {
                 self.pis.free(self.edge_pis[i]);
                 self.edge_pis[i] = Span::default();
                 self.edge_thru[i] = vec![];
+                self.edge_crossover[i] = false;
                 self.edge_free.push(id);
             }
         }
@@ -987,8 +1011,13 @@ impl Network {
             let mut wet = vec![];
             cost::water_spans(f.len, |s| { let (x, y, _) = geom::pos_at(&f.pieces, s); (x, y) }, self.water_mask.as_ref(), &mut wet);
             self.edge_len[i] = f.len;
-            self.edge_cost[i] = cost::track_cost(f.len, &f.vert, &wet, self.edge_tracks[i]);
-            self.edge_time[i] = f.pieces.iter().map(|p| p.len / p.v_limit()).sum::<f64>().max(1e-3);
+            self.edge_cost[i] = if self.edge_crossover[i] {
+                cost::junction_cost(self.node_level[self.edge_a[i] as usize], false, !wet.is_empty())
+            } else {
+                cost::track_cost(f.len, &f.vert, &wet, self.edge_tracks[i])
+            };
+            let cap = self.v_cap(e);
+            self.edge_time[i] = f.pieces.iter().map(|p| p.len / p.v_limit().min(cap)).sum::<f64>().max(1e-3);
             self.edge_pieces[i] = self.pieces.replace(old, &f.pieces);
             self.edge_vert[i] = self.verts.replace(self.edge_vert[i], &f.vert);
             self.edge_water[i] = self.water.replace(self.edge_water[i], &wet);
@@ -1431,7 +1460,10 @@ impl Network {
             r.1 += cost;
         };
         for e in 0..self.edge_count() {
-            if self.edge_alive[e] && !self.edge_built[e] && !self.edge_off[e] {
+            if self.edge_alive[e] && !self.edge_built[e] && !self.edge_off[e] && self.edge_crossover[e] {
+                let a = self.edge_a[e] as usize;
+                add(2, self.node_level[a], 0, !self.edge_water(e as u32).is_empty(), false, 1.0, self.edge_cost[e]);
+            } else if self.edge_alive[e] && !self.edge_built[e] && !self.edge_off[e] {
                 cost::track_cost_parts(self.edge_len[e], self.edge_vert(e as u32), self.edge_water(e as u32), self.edge_tracks[e], |level, wet, ramp, m, c| {
                     add(0, level, self.edge_tracks[e], wet, ramp, m, c);
                 });
@@ -1445,7 +1477,11 @@ impl Network {
                 let tracks = self.node_tracks(n as u32);
                 add(1, level, tracks, wet, false, 1.0, cost::station_cost(level, self.node_platform[n], tracks, wet));
             }
-            if self.node_ports[n].n >= 3 && self.built_ports(n as u32) < 3 && self.built_after_ports(n as u32) >= 3 {
+            let nn = n as u32;
+            if self.priced_ends(nn, |_| true) >= 3
+                && self.priced_ends(nn, |e| self.edge_built[e]) < 3
+                && self.priced_ends(nn, |e| self.edge_built[e] || !self.edge_off[e]) >= 3
+            {
                 let base = cost::junction_cost(level, false, wet);
                 add(2, level, 0, wet, false, 1.0, base);
                 if self.node_flying[n] {
@@ -1456,7 +1492,7 @@ impl Network {
         for x in &self.crossings {
             if let CrossKind::Flat(level) = x.kind {
                 let (e1, e2) = (x.e1 as usize, x.e2 as usize);
-                if (!self.edge_built[e1] || !self.edge_built[e2]) && !self.edge_off[e1] && !self.edge_off[e2] {
+                if (!self.edge_built[e1] || !self.edge_built[e2]) && !self.edge_off[e1] && !self.edge_off[e2] && self.priced_crossing(x) {
                     let wet = self.water_mask.is_water(x.x, x.y);
                     add(4, level, 0, wet, false, 1.0, cost::crossing_cost(level, wet));
                 }
@@ -1482,13 +1518,15 @@ impl Network {
             if self.node_platform[n] > 0 {
                 c += cost::station_cost(self.node_level[n], self.node_platform[n], self.node_tracks(n as u32), wet());
             }
-            if self.node_ports[n].n >= 3 {
+            if self.priced_ends(n as u32, |_| true) >= 3 {
                 c += cost::junction_cost(self.node_level[n], self.node_flying[n], wet());
             }
         }
         for x in &self.crossings {
             if let CrossKind::Flat(level) = x.kind {
-                c += cost::crossing_cost(level, self.water_mask.is_water(x.x, x.y));
+                if self.priced_crossing(x) {
+                    c += cost::crossing_cost(level, self.water_mask.is_water(x.x, x.y));
+                }
             }
         }
         c
@@ -1512,13 +1550,13 @@ impl Network {
             if self.node_platform[n] > 0 && self.node_built[n] {
                 c += cost::station_cost(self.node_level[n], self.node_platform[n], self.node_tracks(n as u32), wet());
             }
-            if self.built_ports(n as u32) >= 3 {
+            if self.priced_ends(n as u32, |e| self.edge_built[e]) >= 3 {
                 c += cost::junction_cost(self.node_level[n], self.node_flying[n], wet());
             }
         }
         for x in &self.crossings {
             if let CrossKind::Flat(level) = x.kind {
-                if self.edge_built[x.e1 as usize] && self.edge_built[x.e2 as usize] {
+                if self.edge_built[x.e1 as usize] && self.edge_built[x.e2 as usize] && self.priced_crossing(x) {
                     c += cost::crossing_cost(level, self.water_mask.is_water(x.x, x.y));
                 }
             }
@@ -1646,6 +1684,9 @@ impl Network {
         if !self.edge_ok(e) {
             return Err(Issue::NoSuchEdge { edge: e });
         }
+        if self.edge_crossover[e as usize] {
+            return Err(Issue::Crossover { edge: e });
+        }
         let v = self.edge_vertices(e);
         let f = self.fit(&v);
         let mut s = s;
@@ -1749,8 +1790,8 @@ impl Network {
                 t2.push(*p);
             }
         }
-        let a = EdgeData { a: self.edge_a[i], b: u32::MAX, tracks, pis: p1[1..p1.len() - 1].to_vec(), built, off, thru: t1 };
-        let b = EdgeData { a: u32::MAX, b: self.edge_b[i], tracks, pis: p2[1..p2.len() - 1].to_vec(), built, off, thru: t2 };
+        let a = EdgeData { a: self.edge_a[i], b: u32::MAX, tracks, pis: p1[1..p1.len() - 1].to_vec(), built, off, thru: t1, crossover: false };
+        let b = EdgeData { a: u32::MAX, b: self.edge_b[i], tracks, pis: p2[1..p2.len() - 1].to_vec(), built, off, thru: t2, crossover: false };
         Ok((node, a, b))
     }
 }

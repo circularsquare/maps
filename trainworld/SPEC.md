@@ -146,7 +146,10 @@ The regional layer carries what crosses zones or goes far [T-117, T-276]. Detail
   line within 15 km, at a fixed cost plus the drive plus parking or a drop-off at the station; the
   walk is a true 6 km/h walk. The regional layer's commutes between zones ride at the home end and
   its inter-region trips at both ends, the far end a drop-off only, through the same
-  `access_options`, so a lone station in a new city draws riders from beyond walking reach.
+  `access_options`, so a lone station in a new city draws riders from beyond walking reach. A
+  station's inspector splits the commuters who live nearby into those who walked and those who
+  drove, and the trip explorer shows a ride access as a drive [T-374]; the split covers
+  commutes only.
 - **5.4 Size**: the market pack runs in the same worker pool as the zone packs.
 
 ## 6. Building and running
@@ -154,7 +157,9 @@ The regional layer carries what crosses zones or goes far [T-117, T-276]. Detail
 The player draws curved track (straights and circular arcs through the corners clicked, single,
 double or quad, at levels -3 to +3), places stations, and makes lines, all as **blueprints** that
 are free to edit and undo, then pays to **construct** them. A drawn route is one piece of track per
-corner [T-244]. Lines set a whole number of trains for high, medium and low demand; capacity and
+corner [T-244]. A crossover, placed with one click, joins a track to the track beside it (quad's
+other pair, or a route alongside) in an X, 120 m long, 50 km/h, priced as two junctions, so lines
+can change pairs mid-stretch [T-338]. Lines set a whole number of trains for high, medium and low demand; capacity and
 junction conflicts add delay, computed from the schedules in the clock worker before demand runs.
 The clock worker owns edits (with undo for reversible changes), capacity, fleet, costs, money and
 the boarding account. Fares are paid into the cash as trains pick up riders and running costs
@@ -232,4 +237,4 @@ Keeping old saves loading is a nicety: only Anita has saves. Sharing by link and
 - **Weekend service** (T-261, section 4): should weekends get their own trains per hour (or run a
   lower level), at the cost of a weekend solve?
 - Open items in the detailed docs: border factor fade (T-273), how commutes between zones are
-  labelled (T-298), express and quad track design (T-257, on hold).
+  labelled (T-298), automatic crossovers at quad stations (notes/T-334.md option B, on hold).

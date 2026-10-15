@@ -247,7 +247,7 @@ fn main() {
         "views: cell modes {:.0} ms ({n} cells; home rail {:.0} walk {:.0} drive {:.0}; work rail {:.0} walk {:.0} drive {:.0} commuters); \
          station {busiest} riders {:.1} ms: {nh} home cells {:.0}, {nw} work cells {:.0}, to zones {:.0}, from zones {:.0}",
         t2 - t1, tot(0), tot(1), tot(2), tot(3), tot(4), tot(5), t4 - t3,
-        sum(2 + nh, nh), sum(2 + 2 * nh + nw, nw), sum(2 + 2 * nh + 2 * nw, api.info()[1] as usize), sum(2 + 2 * nh + 2 * nw + api.info()[1] as usize, api.info()[1] as usize)
+        sum(4 + nh, nh), sum(4 + 2 * nh + nw, nw), sum(4 + 2 * nh + 2 * nw, api.info()[1] as usize), sum(4 + 2 * nh + 2 * nw + api.info()[1] as usize, api.info()[1] as usize)
     );
     let out = json!({
         "net": net_path,

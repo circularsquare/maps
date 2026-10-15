@@ -485,7 +485,7 @@ impl TrackApi {
         if self.w.net.edge_ok(id) && self.w.net.edge_built[id as usize] {
             return self.refuse(Issue::NoSuchEdge { edge: id });
         }
-        self.run(Op::Edge { id, data: Some(EdgeData { a, b, tracks, pis: pis_from(pis), built: false, off: false, thru: vec![] }) })
+        self.run(Op::Edge { id, data: Some(EdgeData { a, b, tracks, pis: pis_from(pis), built: false, off: false, thru: vec![], crossover: false }) })
     }
     /// Reshape a blueprint edge (T-064): new PIs (x, y, radius 0 = auto, level each), same ends
     /// and tracks. One undoable edit. Constructed track cannot be reshaped.
@@ -547,6 +547,9 @@ impl TrackApi {
         let Some(mut d) = self.editable(id) else { return Err(Issue::NoSuchEdge { edge: id }) };
         if d.built {
             return Err(Issue::NodeInUse { node: d.a });
+        }
+        if d.crossover {
+            return Err(Issue::Crossover { edge: id });
         }
         let old = std::mem::replace(&mut d.pis, pis_from(pis));
         d.thru.clear();
@@ -700,7 +703,7 @@ impl TrackApi {
                 pis[j].radius = quant(want);
             }
         }
-        let joined = EdgeData { a, b, tracks: d.tracks, pis: pis[1..pis.len() - 1].to_vec(), built: d.built, off: d.off, thru: vec![] };
+        let joined = EdgeData { a, b, tracks: d.tracks, pis: pis[1..pis.len() - 1].to_vec(), built: d.built, off: d.off, thru: vec![], crossover: false };
         // each part's direction that runs the joined edge's way
         let mut forward: Vec<(u32, u32)> = vec![(e, 0)];
         if let Some((o, which, _)) = &merges[0] {
@@ -782,6 +785,9 @@ impl TrackApi {
         if d.built {
             return self.refuse(Issue::NodeInUse { node: d.a });
         }
+        if d.crossover {
+            return self.refuse(Issue::Crossover { edge: id });
+        }
         for p in d.pis.iter_mut().chain(d.thru.iter_mut()) {
             p.level = level;
         }
@@ -849,6 +855,9 @@ impl TrackApi {
         let i = node as usize;
         if net.built_ports(node) > 0 || (net.node_platform[i] > 0 && net.node_built[i]) {
             return Err(Issue::NodeInUse { node });
+        }
+        if let Some(&c) = net.node_ports[i].ends().iter().find(|&&c| net.edge_crossover[(c >> 1) as usize]) {
+            return Err(Issue::Crossover { edge: c >> 1 });
         }
         let (x, y) = (quant(x), quant(y));
         let (dx, dy) = (x - nd.x, y - nd.y);
@@ -1121,7 +1130,7 @@ impl TrackApi {
             };
             let edge = self.w.net.alloc_edge();
             edges.push(edge);
-            ops.push(Op::Edge { id: edge, data: Some(EdgeData { a: from, b: to, tracks, pis: p[1..p.len() - 1].to_vec(), built: false, off: false, thru: vec![] }) });
+            ops.push(Op::Edge { id: edge, data: Some(EdgeData { a: from, b: to, tracks, pis: p[1..p.len() - 1].to_vec(), built: false, off: false, thru: vec![], crossover: false }) });
             from = to;
         }
     }
@@ -1263,6 +1272,174 @@ impl TrackApi {
         best.map(|b| (b.0, b.1))
     }
 
+    // ---- crossovers (T-338)
+
+    /// Place a crossover on edge `edge` near (x, y): both diagonals between it and the track
+    /// running parallel beside it, as blueprint. One undoable edit.
+    pub fn add_crossover(&mut self, edge: u32, x: f64, y: f64) -> u32 {
+        let (op, nn, ne, _) = match self.crossover_op(edge, x, y) {
+            Ok(v) => v,
+            Err(i) => return self.refuse(i),
+        };
+        let r = self.run(op);
+        if r != 0 {
+            self.release(&nn, &ne);
+        }
+        r
+    }
+
+    /// What `add_crossover` would do, without doing it: `[ok (1/0), cost US$M, then per diagonal
+    /// its point count and its centre line as x, y, height triples]`. `issue_kinds()` says why not.
+    pub fn preview_crossover(&mut self, edge: u32, x: f64, y: f64) -> Vec<f64> {
+        let (op, nn, ne, diagonals) = match self.crossover_op(edge, x, y) {
+            Ok(v) => v,
+            Err(i) => {
+                self.refuse(i);
+                return vec![0.0, 0.0];
+            }
+        };
+        let r = self.w.trial(op);
+        self.release(&nn, &ne);
+        let ok = r.is_ok();
+        let cost = r.as_ref().map_or(0.0, |r| r.cost_after - r.cost_before);
+        self.done(r.map(|mut r| {
+            r.dirty = Default::default();
+            r
+        }));
+        self.last = None;
+        let mut out = vec![ok as u8 as f64, cost];
+        for verts in &diagonals {
+            let f = self.w.net.fit(verts);
+            let mut pts = vec![];
+            render_samples(&f.pieces, &f.vert, &mut pts);
+            out.push((pts.len() / 3) as f64);
+            out.extend(pts);
+        }
+        out
+    }
+
+    /// Edges that are a crossover's diagonals.
+    pub fn crossover_edges(&self) -> Vec<u32> {
+        let net = &self.w.net;
+        (0..net.edge_count() as u32).filter(|&e| net.edge_ok(e) && net.edge_crossover[e as usize]).collect()
+    }
+
+    /// The crossover edit (`add_crossover`): splits at the four ends (or plain joints there), and
+    /// the two diagonals, each leaving its ends along the track like a turnout and swinging
+    /// across in an S over `CROSSOVER_LEN`. Also the new ids (to release if it is not applied)
+    /// and each diagonal's vertices.
+    #[allow(clippy::type_complexity)]
+    fn crossover_op(&mut self, edge: u32, x: f64, y: f64) -> Result<(Op, Vec<u32>, Vec<u32>, Vec<Vec<Pi>>), Issue> {
+        let net = &self.w.net;
+        if !net.edge_ok(edge) {
+            return Err(Issue::NoSuchEdge { edge });
+        }
+        if net.edge_crossover[edge as usize] {
+            return Err(Issue::Crossover { edge });
+        }
+        let (s, _) = net.project(edge, x, y);
+        let (cx, cy, th) = geom::pos_at(net.edge_pieces(edge), s);
+        let k = net.k_at(cy);
+        // the nearest track beside, running the same way or the other
+        let mut best: Option<(u32, f64, f64)> = None;
+        for f in 0..net.edge_count() as u32 {
+            if f == edge || !net.edge_ok(f) || net.edge_crossover[f as usize] {
+                continue;
+            }
+            let (sf, dist) = net.project(f, cx, cy);
+            if !(CROSSOVER_MIN_GAP * k..=CROSSOVER_REACH * k).contains(&dist) || best.is_some_and(|b| b.2 <= dist) {
+                continue;
+            }
+            if (th - geom::pos_at(net.edge_pieces(f), sf).2).sin().abs() > 0.05 {
+                continue;
+            }
+            best = Some((f, sf, dist));
+        }
+        let Some((f, sf, _)) = best else { return Err(Issue::NoParallel { edge }) };
+        let same = (th - geom::pos_at(net.edge_pieces(f), sf).2).cos() > 0.0;
+        let half = CROSSOVER_LEN / 2.0;
+        let none = || Issue::NoParallel { edge };
+        // back and forward along the drawn edge, then level with them beside
+        let a0 = locate(net, edge, s - half).ok_or_else(none)?;
+        let a1 = locate(net, edge, s + half).ok_or_else(none)?;
+        let (b0, b1) = if same { (sf - half, sf + half) } else { (sf + half, sf - half) };
+        let b0 = locate(net, f, b0).ok_or_else(none)?;
+        let b1 = locate(net, f, b1).ok_or_else(none)?;
+        let locs = [a0, a1, b0, b1];
+        // the ends: where each node will be and its heading in the drawn edge's direction
+        let mut ends: Vec<(f64, f64, i8, f64)> = vec![];
+        for l in &locs {
+            let (x, y, level, h) = match *l {
+                Loc::Node(n) => {
+                    let i = n as usize;
+                    (net.node_x[i], net.node_y[i], net.node_level[i], net.node_heading[i])
+                }
+                Loc::Split(e, s) => {
+                    let (nd, _, _) = net.split_plan(e, s)?;
+                    let h = geom::pos_at(net.edge_pieces(e), net.project(e, nd.x, nd.y).0).2;
+                    (nd.x, nd.y, nd.level, h)
+                }
+            };
+            let h = if (h - th).cos() < 0.0 { h + PI } else { h };
+            ends.push((x, y, level, h));
+        }
+        // no two ends on one node, and the span far enough from where it was clicked to be real
+        for i in 0..4 {
+            for j in i + 1..4 {
+                if (ends[i].0 - ends[j].0).hypot(ends[i].1 - ends[j].1) < CROSSOVER_MIN_GAP * 0.5 * k {
+                    return Err(none());
+                }
+            }
+        }
+        let tracks = net.edge_tracks[edge as usize].min(net.edge_tracks[f as usize]);
+        // splits, several on one edge in order along it: each after the first falls in the new half
+        let mut nodes = vec![0u32; 4];
+        let mut new_nodes = vec![];
+        let mut new_edges = vec![];
+        let mut ops = vec![];
+        let mut splits: Vec<(u32, f64, usize)> = vec![];
+        for (j, l) in locs.iter().enumerate() {
+            match *l {
+                Loc::Node(n) => nodes[j] = n,
+                Loc::Split(e, s) => splits.push((e, s, j)),
+            }
+        }
+        splits.sort_by(|a, b| a.0.cmp(&b.0).then(a.1.total_cmp(&b.1)));
+        let mut prev: Option<(u32, f64, u32)> = None; // original edge, chainage split at, its new half
+        for &(e, s, j) in &splits {
+            let (target, at) = match prev {
+                Some((pe, ps, half)) if pe == e => (half, s - ps),
+                _ => (e, s),
+            };
+            let (nd, _, _) = self.w.net.split_plan(e, s)?; // checked above: never fails here
+            let node = self.w.net.alloc_node();
+            let new_edge = self.w.net.alloc_edge();
+            new_nodes.push(node);
+            new_edges.push(new_edge);
+            nodes[j] = node;
+            ops.push(Op::Split { edge: target, s: at, node, new_edge });
+            prev = Some((e, self.w.net.project(e, nd.x, nd.y).0, new_edge));
+        }
+        let mut diagonals = vec![];
+        for (p, q) in [(0usize, 3usize), (2, 1)] {
+            let (px, py, pl, ph) = ends[p];
+            let (qx, qy, ql, qh) = ends[q];
+            let t = (qx - px).hypot(qy - py) / 4.0;
+            let pis = vec![
+                Pi::new(px + ph.cos() * t, py + ph.sin() * t, 0.0, pl).quantised(),
+                Pi::new(qx - qh.cos() * t, qy - qh.sin() * t, 0.0, ql).quantised(),
+            ];
+            let id = self.w.net.alloc_edge();
+            new_edges.push(id);
+            ops.push(Op::Edge { id, data: Some(EdgeData { a: nodes[p], b: nodes[q], tracks, pis: pis.clone(), built: false, off: false, thru: vec![], crossover: true }) });
+            let mut v = vec![Pi::new(px, py, 0.0, pl)];
+            v.extend(pis);
+            v.push(Pi::new(qx, qy, 0.0, ql));
+            diagonals.push(v);
+        }
+        Ok((Op::Batch(ops), new_nodes, new_edges, diagonals))
+    }
+
     /// Rename a station or change its platform. A longer platform on a constructed station is
     /// paid for at once (final).
     pub fn set_station_props(&mut self, node: u32, platform: u16, name: String) -> u32 {
@@ -1323,7 +1500,12 @@ impl TrackApi {
                 ops.push(Op::Node { id: n, data: None });
             }
         }
-        if net.edge_built[id as usize] {
+        // a crossover goes as a whole: both diagonals (T-338)
+        let partner = crossover_partner(net, id);
+        if let Some(p) = partner {
+            ops.push(Op::DeleteEdge { id: p });
+        }
+        if net.edge_built[id as usize] || partner.is_some_and(|p| net.edge_built[p as usize]) {
             self.run_charged(Op::Batch(ops))
         } else {
             self.run(Op::Batch(ops))
@@ -1333,6 +1515,10 @@ impl TrackApi {
     /// Flat or flying junction. On a constructed junction the flyover is paid at once (final).
     pub fn set_flying(&mut self, node: u32, flying: bool) -> u32 {
         let Some(mut d) = self.w.net.node_data(node) else { return self.refuse(Issue::NoSuchNode { node }) };
+        let net = &self.w.net;
+        if let Some(&c) = net.node_ports[node as usize].ends().iter().find(|&&c| net.edge_crossover[(c >> 1) as usize]) {
+            return self.refuse(Issue::Crossover { edge: c >> 1 });
+        }
         d.flying = flying;
         let op = Op::Node { id: node, data: Some(d) };
         if self.w.net.built_ports(node) >= 3 {
@@ -1647,7 +1833,7 @@ impl TrackApi {
                 continue;
             }
             let i = e as usize;
-            let vmin = n.edge_pieces(e).iter().map(|p| p.v_limit()).fold(V_TOP, f64::min);
+            let vmin = n.edge_pieces(e).iter().map(|p| p.v_limit()).fold(n.v_cap(e), f64::min);
             let zs = n.edge_vert(e).iter().map(|v| v[1]);
             let (lo, hi) = zs.fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), z| (a.min(z), b.max(z)));
             out.extend([e as f64, n.edge_a[i] as f64, n.edge_b[i] as f64, n.edge_tracks[i] as f64, n.edge_built[i] as u8 as f64, n.edge_len[i], n.edge_cost[i], vmin * 3.6, (lo / LEVEL_H).round(), (hi / LEVEL_H).round()]);
@@ -1659,7 +1845,8 @@ impl TrackApi {
     pub fn edge_render_speeds(&self, e: u32) -> Vec<f32> {
         let n = &self.w.net;
         if !n.edge_ok(e) { return vec![]; }
-        render_speeds(n.edge_pieces(e), n.edge_vert(e))
+        let cap = (n.v_cap(e) * 3.6) as f32;
+        render_speeds(n.edge_pieces(e), n.edge_vert(e)).into_iter().map(|v| v.min(cap)).collect()
     }
 
     pub fn edge_render(&self, e: u32) -> Vec<f64> {
@@ -2225,6 +2412,60 @@ fn twin_station(net: &Network, s: u32) -> Option<u32> {
         .filter(|&(_, d)| d <= QUAD_SPACING * 1.5 * net.k_at(y))
         .min_by(|a, b| a.1.total_cmp(&b.1))
         .map(|(n, _)| n)
+}
+
+/// Where a crossover's end goes (T-338): a split of an edge at a chainage, or a plain joint.
+#[derive(Clone, Copy, Debug)]
+enum Loc {
+    Split(u32, f64),
+    Node(u32),
+}
+
+/// How near a plain joint a crossover's end uses the joint instead of a split, m (a split needs
+/// 5 m from a node).
+const JOINT_SNAP: f64 = 8.0;
+
+/// The point chainage `s` along edge `e`, which may be off either end: walked on through plain
+/// joints (two edge ends, no station) onto the next piece. None where the track ends, meets a
+/// junction or a station first, or the point would be within a few metres of one.
+fn locate(net: &Network, mut e: u32, mut s: f64) -> Option<Loc> {
+    for _ in 0..16 {
+        let len = net.edge_len[e as usize];
+        if s >= JOINT_SNAP && s <= len - JOINT_SNAP {
+            return Some(Loc::Split(e, s));
+        }
+        let which = if s < len / 2.0 { 0 } else { 1 };
+        let over = if which == 0 { -s } else { s - len };
+        let n = net.end_node(e, which);
+        let i = n as usize;
+        let p = &net.node_ports[i];
+        if p.n != 2 || net.node_platform[i] > 0 {
+            return None;
+        }
+        if over.abs() < JOINT_SNAP {
+            return Some(Loc::Node(n));
+        }
+        let &c = p.ends().iter().find(|&&c| c != (e << 1 | which))?;
+        let (o, ow) = (c >> 1, c & 1);
+        if net.edge_crossover[o as usize] {
+            return None;
+        }
+        // `over` metres on from `n` into `o`
+        s = if ow == 0 { over } else { net.edge_len[o as usize] - over };
+        e = o;
+    }
+    None
+}
+
+/// The other diagonal of the crossover edge `e` is (T-338): the crossover edge crossing it.
+fn crossover_partner(net: &Network, e: u32) -> Option<u32> {
+    if !net.edge_ok(e) || !net.edge_crossover[e as usize] {
+        return None;
+    }
+    net.crossings.iter().find_map(|c| {
+        let o = if c.e1 == e { c.e2 } else if c.e2 == e { c.e1 } else { return None };
+        (o != e && net.edge_crossover[o as usize]).then_some(o)
+    })
 }
 
 /// Plane metres per ground metre at plane `y` in a scaled (Mercator) frame, else exactly 1.
@@ -2963,7 +3204,7 @@ mod tests {
         // as T-079 stored it: fitted PIs with set radii, and the point clicked
         let fitted = vec![Pi::new(1200.0, 380.0, 1500.0, 0), Pi::new(2800.0, 380.0, 1500.0, 0)];
         let clicks = vec![Pi::new(2000.0, 300.0, 0.0, 0)];
-        let op = Op::Edge { id: e, data: Some(EdgeData { a: n0, b: n1, tracks: 2, pis: fitted.clone(), built: false, off: false, thru: clicks.clone() }) };
+        let op = Op::Edge { id: e, data: Some(EdgeData { a: n0, b: n1, tracks: 2, pis: fitted.clone(), built: false, off: false, thru: clicks.clone(), crossover: false }) };
         assert!(a.w.apply(op).is_ok());
         let bytes = a.save();
         assert_eq!(&bytes[..4], b"TWT4");
@@ -3420,6 +3661,91 @@ mod tests {
         // deleting an express piece leaves the drawn pair
         assert_eq!(a.delete_edge(express[express.len() / 2]), 0, "{}", a.issues());
         assert!(!a.w.net.line_broken[id as usize]);
+    }
+
+    /// T-338: a crossover on quad track joins the two pairs mid-stretch, so a line can change from
+    /// the local pair to the express pair there; it runs at 50 km/h at most over it, is priced as
+    /// two junctions, has a fixed shape, saves, deletes as a whole and undoes in one step. Track
+    /// with nothing beside it is refused.
+    #[test]
+    fn crossover_joins_the_pairs() {
+        let mut a = api();
+        let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(4000.0, 0.0).iter()).copied().collect();
+        assert_eq!(a.add_route(&ends, &[], 4, false), 0, "{}", a.issues());
+        let edge_at = |t: &TrackApi, x: f64, y: f64| -> u32 {
+            live_edges(t).into_iter().filter(|&e| !t.w.net.edge_crossover[e as usize]).min_by(|&p, &q| t.w.net.project(p, x, y).1.total_cmp(&t.w.net.project(q, x, y).1)).unwrap()
+        };
+        let station_at = |t: &TrackApi, x: f64, y: f64| -> u32 {
+            t.nodes_info().chunks(10).filter(|c| c[7] > 0.0).min_by(|p, q| (p[1] - x).hypot(p[2] - y).total_cmp(&(q[1] - x).hypot(q[2] - y))).unwrap()[0] as u32
+        };
+        for x in [500.0, 3500.0] {
+            assert_eq!(a.add_station(2, edge_at(&a, x, 0.0), x, 0.0, 120, format!("S{x}")), 0, "{}", a.issues());
+        }
+        let (w_local, e_express) = (station_at(&a, 500.0, 0.0), station_at(&a, 3500.0, QUAD_SPACING));
+        assert!((a.w.net.node_y[e_express as usize] - QUAD_SPACING).abs() < 0.1);
+        let id = a.new_line_id();
+        assert_ne!(a.set_line(id, &[w_local, e_express], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "X".into()), 0, "no way across yet");
+        // nothing beside plain double track
+        let mut plain = api();
+        assert_eq!(plain.add_route(&ends, &[], 2, false), 0);
+        let only = live_edges(&plain)[0];
+        assert_eq!(plain.preview_crossover(only, 2000.0, 0.0)[0], 0.0);
+        assert_eq!(plain.issue_kinds(), "NoParallel");
+        assert_ne!(plain.add_crossover(only, 2000.0, 0.0), 0);
+        // on the local pair, in the middle
+        let local = edge_at(&a, 2000.0, 0.0);
+        let (edges0, cost0, cash0) = (live_edges(&a).len(), a.total_cost(), a.cash);
+        let pv = a.preview_crossover(local, 2000.0, 0.0);
+        assert_eq!(pv[0], 1.0, "{}", a.issues());
+        let two_junctions = 2.0 * super::super::cost::junction_cost(0, false, false);
+        assert!((pv[1] - two_junctions).abs() < 1e-6, "priced {} not {two_junctions}", pv[1]);
+        assert_eq!(live_edges(&a).len(), edges0, "a preview changes nothing");
+        assert_eq!(a.add_crossover(local, 2000.0, 0.0), 0, "{}", a.issues());
+        assert!((a.total_cost() - cost0 - two_junctions).abs() < 1e-6);
+        assert_eq!(a.cash, cash0, "a blueprint is free until constructed");
+        let xs = a.crossover_edges();
+        assert_eq!(xs.len(), 2);
+        assert_eq!(live_edges(&a).len(), edges0 + 6, "four splits and two diagonals");
+        for &x in &xs {
+            let len = a.w.net.edge_len[x as usize];
+            assert!(len > 110.0 && len < 130.0, "diagonal {len} m");
+            assert!(a.w.net.edge_time[x as usize] >= len / V_CROSSOVER - 1e-6);
+            assert_eq!(crossover_partner(&a.w.net, x), xs.iter().copied().find(|&o| o != x));
+        }
+        // a line from the local pair to the express pair now runs across it, at 50 km/h at most
+        assert_eq!(a.set_line(id, &[w_local, e_express], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "X".into()), 0, "{}", a.issues());
+        let path = a.line_path(id);
+        let over: Vec<u32> = path.iter().map(|p| p >> 1).filter(|e| xs.contains(e)).collect();
+        assert_eq!(over.len(), 1, "one diagonal: {path:?}");
+        let run = &a.w.svc.lines[id as usize].runs[0];
+        let k = run.segs.iter().position(|&p| p >> 1 == over[0]).unwrap();
+        let (s0, s1) = (run.seg_off[k], run.seg_off[k] + a.w.net.edge_len[over[0] as usize]);
+        let v = profile::v_max(&run.free.phases, s0, s1);
+        assert!(v <= V_CROSSOVER + 1e-6, "{} km/h over the crossover", v * 3.6);
+        // fixed shape
+        assert_ne!(a.set_edge_pis(xs[0], &[]), 0);
+        assert_eq!(a.issue_kinds(), "Crossover");
+        let n = a.w.net.edge_a[xs[0] as usize];
+        assert_ne!(a.move_node(n, a.w.net.node_x[n as usize] + 5.0, a.w.net.node_y[n as usize]), 0);
+        // saved and loaded with the flag
+        let bytes = a.save();
+        let mut b = api();
+        assert!(b.load(&bytes));
+        assert_eq!(b.crossover_edges().len(), 2);
+        assert!((b.total_cost() - a.total_cost()).abs() < 1e-6);
+        // deleting one diagonal takes the whole crossover; the line goes back to no route
+        assert_eq!(a.remove_line(id), 0);
+        assert_eq!(a.delete_edge(xs[0]), 0, "{}", a.issues());
+        assert!(a.crossover_edges().is_empty());
+        assert_eq!(a.undo(), 0);
+        assert_eq!(a.crossover_edges().len(), 2);
+        // undoing the placement takes it all away
+        assert_eq!(a.undo(), 0); // the line's removal
+        assert_eq!(a.undo(), 0); // the line
+        assert_eq!(a.undo(), 0); // the crossover
+        assert!(a.crossover_edges().is_empty());
+        assert_eq!(live_edges(&a).len(), edges0);
+        assert!((a.total_cost() - cost0).abs() < 1e-6);
     }
 
     /// T-244: dragging a corner of a piece moves the joints next to it along, so the stroke

@@ -16,7 +16,8 @@ use super::params::*;
 /// as it is unchanged. TWT2 (T-055: constructed flags on stations, node flag 4, and edges,
 /// tracks | 4) has none and still loads. Optional trailing blocks follow the lines: `LUI1` (line
 /// numbers and symbols) and, when the player linked stations, `LNK1` (T-197: count, then node
-/// pairs in the dense ids). A save without them loads with none.
+/// pairs in the dense ids). A save without them loads with none. An edge's flags `| 32` mark a
+/// crossover's diagonal (T-338); older saves have none.
 const MAGIC: &[u8; 4] = b"TWT4";
 /// TWT5 (T-125) is TWT4 byte for byte except that the metres are in the Lambert conformal world
 /// frame (`frame.rs`). TWT4 and older are always the legacy equirectangular frame, and a network
@@ -138,7 +139,7 @@ pub fn encode(net: &Network) -> Vec<u8> {
         w.i(a - prev_a);
         w.i(node_id[d.b as usize] as i64 - a);
         prev_a = a;
-        w.u(d.tracks as u64 | (d.built as u64) << 2 | (!d.thru.is_empty() as u64) << 3 | ((d.off && !d.built) as u64) << 4);
+        w.u(d.tracks as u64 | (d.built as u64) << 2 | (!d.thru.is_empty() as u64) << 3 | ((d.off && !d.built) as u64) << 4 | (d.crossover as u64) << 5);
         w.u(d.pis.len() as u64);
         let (mut px, mut py) = (net.node_x[d.a as usize], net.node_y[d.a as usize]);
         for p in &d.pis {
@@ -298,7 +299,7 @@ pub fn decode(bytes: &[u8]) -> Result<Network, String> {
         let b = a + r.i()?;
         prev_a = a;
         let tb = r.u()?;
-        let (tracks, built, off) = ((tb & 3) as u8, tb & 4 != 0, tb & 16 != 0);
+        let (tracks, built, off, crossover) = ((tb & 3) as u8, tb & 4 != 0, tb & 16 != 0, tb & 32 != 0);
         let n = r.u()? as usize;
         let (mut px, mut py) = (net.node_x[a as usize], net.node_y[a as usize]);
         let mut pis = Vec::with_capacity(n);
@@ -318,7 +319,7 @@ pub fn decode(bytes: &[u8]) -> Result<Network, String> {
                 thru.push(Pi { x, y, radius: 0.0, level: r.i()? as i8 });
             }
         }
-        net.set_edge(id, Some(EdgeData { a: a as u32, b: b as u32, tracks, pis, built, off, thru })).map_err(|e| format!("{e:?}"))?;
+        net.set_edge(id, Some(EdgeData { a: a as u32, b: b as u32, tracks, pis, built, off, thru, crossover })).map_err(|e| format!("{e:?}"))?;
     }
     let n_lines = r.u()? as usize;
     for _ in 0..n_lines {

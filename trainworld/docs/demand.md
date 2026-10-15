@@ -591,7 +591,8 @@ works on two levels:
    stations once per origin subzone and are kept by station pair, and by subzone and access
    station at each end for the demand views (T-084, notes/T-078.md). The views ask for them on
    demand, never pushed: commuters by mode per cell (`cellModes`), a station's catchment and far
-   end (`stationRiders`), and where the commuters living or working in any set of cells go, every
+   end (`stationRiders`, with the home riders split into those who walked and those who rode to
+   it, commutes only: everyday trips and the regional layer are not split, T-374), and where the commuters living or working in any set of cells go, every
    mode (`flows`, T-098 for the bubbles: the gravity's zone trips from the selection, rail along
    the kept station pairs, walk and drive the rest; totals exact and equal to `cellModes`, far
    rail by place blurred like `stationRiders`; 10-20 ms in WASM for one cell or thousands, the

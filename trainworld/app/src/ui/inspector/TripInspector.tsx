@@ -6,6 +6,7 @@
 import { count, distance } from "../../game/format";
 import { MODE_COLOURS } from "../../game/palette";
 import { PERIODS } from "../../game/periods";
+import { WALK_KMH } from "../../game/walks";
 import { routeTotals, stationName, tripOpenedFrom, tripPeriod, tripView, type TripPeriod, type TripRoute } from "../../game/trip";
 import { selection, tool } from "../../game/ui";
 import { world } from "../../game/world";
@@ -53,8 +54,10 @@ function RouteLegs({ t, r }: { t: TripPeriod; r: TripRoute }) {
   return (
     <ul class="rows trip-legs">
       {pair && first && (
-        <li data-tip={`Walk ${distance(pair.accessM)} in a straight line, ${pair.accessMin.toFixed(1)} min at the fast walk; it counts as ${pair.accessPerceived.toFixed(1)} min`}>
-          <span class="grow">Walk to {name(first.from)}</span>
+        <li data-tip={pair.accessRide
+          ? `Driving, a bus or a bike over ${distance(pair.accessM)} in a straight line, ${pair.accessMin.toFixed(1)} min on the road. The ride's fixed cost and the parking or drop-off at the station add ${pair.rideExtra.toFixed(1)} min, so it counts as ${pair.accessPerceived.toFixed(1)} min`
+          : `Walk ${distance(pair.accessM)} in a straight line, ${pair.accessMin.toFixed(1)} min at ${WALK_KMH} km/h; it counts as ${pair.accessPerceived.toFixed(1)} min`}>
+          <span class="grow">{pair.accessRide ? "Drive" : "Walk"} to {name(first.from)}</span>
           <span class="val">{min(pair.accessMin)}</span>
         </li>
       )}
@@ -81,7 +84,7 @@ function RouteLegs({ t, r }: { t: TripPeriod; r: TripRoute }) {
         );
       })}
       {pair && last && (
-        <li data-tip={`Walk ${distance(pair.egressM)} in a straight line, ${pair.egressMin.toFixed(1)} min at the fast walk; it counts as ${pair.egressPerceived.toFixed(1)} min`}>
+        <li data-tip={`Walk ${distance(pair.egressM)} in a straight line, ${pair.egressMin.toFixed(1)} min at ${WALK_KMH} km/h; it counts as ${pair.egressPerceived.toFixed(1)} min`}>
           <span class="grow">Walk from {name(last.to)}</span>
           <span class="val">{min(pair.egressMin)}</span>
         </li>
@@ -216,14 +219,14 @@ export function TripInspector() {
           <RouteLegs t={t} r={main} />
           <ul class="rows">
             <Row label="Door to door" bold>{min(tot.total)}</Row>
-            <li data-tip={`Walking ${tot.walkMin.toFixed(1)} min, waiting ${tot.wait.toFixed(1)} min, on trains ${tot.ride.toFixed(1)} min${tot.xfer > 0 ? `, walking between stations ${tot.xfer.toFixed(1)} min` : ""}`}>
-              <span class="grow muted">Walk {min(tot.walkMin + tot.xfer)}, wait {min(tot.wait)}, ride {min(tot.ride)}</span>
+            <li data-tip={`${tot.driveMin > 0 ? `Driving to the station ${tot.driveMin.toFixed(1)} min, walking` : "Walking"} ${tot.walkMin.toFixed(1)} min, waiting ${tot.wait.toFixed(1)} min, on trains ${tot.ride.toFixed(1)} min${tot.xfer > 0 ? `, walking between stations ${tot.xfer.toFixed(1)} min` : ""}`}>
+              <span class="grow muted">{tot.driveMin > 0 ? `Drive ${min(tot.driveMin)}, walk ${min(tot.walkMin + tot.xfer)}` : `Walk ${min(tot.walkMin + tot.xfer)}`}, wait {min(tot.wait)}, ride {min(tot.ride)}</span>
             </li>
             <li data-tip={`Base fare ${usd(t.baseFarePerceived / t.minPerUsd)} once a trip, plus the distance fare`}>
               <span class="grow">Fare</span>
               <span class="val">{usd(tot.fareUsd)}</span>
             </li>
-            <li data-tip={`What the model weighs against driving, in minutes: walks count double (eight times past 10 minutes), waits 1.37 times, crowding stretches the ride, each change adds 5 and each dollar 3. Averaged over the stations and routes people near here use: the shortest walks ${t.walkStartPerceived.toFixed(1)} and ${t.walkEndPerceived.toFixed(1)} min, the base fare ${t.baseFarePerceived.toFixed(1)} min, the rest ${(t.railPerceived - t.walkStartPerceived - t.walkEndPerceived - t.baseFarePerceived).toFixed(1)} min.`}>
+            <li data-tip={`What the model weighs against driving, in minutes: walks count 1.5 times, waits 1.37 times, crowding stretches the ride, each change adds 5 and each dollar 3. Averaged over the stations and routes people near here use: the shortest walks ${t.walkStartPerceived.toFixed(1)} and ${t.walkEndPerceived.toFixed(1)} min, the base fare ${t.baseFarePerceived.toFixed(1)} min, the rest ${(t.railPerceived - t.walkStartPerceived - t.walkEndPerceived - t.baseFarePerceived).toFixed(1)} min.`}>
               <span class="grow">Counts as</span>
               <span class="val">{min(t.railPerceived)}</span>
             </li>

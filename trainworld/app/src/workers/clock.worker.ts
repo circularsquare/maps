@@ -171,6 +171,7 @@ function buildState(): ClockState {
   const a = api!;
   const ei = a.edges_info();
   const offEdges = new Set<number>(a.off_edges());
+  const crossovers = new Set<number>(a.crossover_edges());
   const offStations = new Set<number>(a.off_stations());
   const edges: ClockEdge[] = [];
   const drawn: Float32Array[] = [];
@@ -179,7 +180,7 @@ function buildState(): ClockState {
   for (let i = 0; i < ei.length; i += 10) {
     const id = ei[i];
     edges.push({
-      id, a: ei[i + 1], b: ei[i + 2], tracks: ei[i + 3] as 1 | 2, built: ei[i + 4] === 1, off: offEdges.has(id), lengthM: ei[i + 5], cost: ei[i + 6],
+      id, a: ei[i + 1], b: ei[i + 2], tracks: ei[i + 3] as 1 | 2, built: ei[i + 4] === 1, off: offEdges.has(id), crossover: crossovers.has(id), lengthM: ei[i + 5], cost: ei[i + 6],
       vminKmh: ei[i + 7], levelMin: ei[i + 8], levelMax: ei[i + 9],
     });
     let d = edgeDrawn.get(id);
@@ -875,6 +876,8 @@ function apply(op: EditOp): { r: number; line?: number } {
       return op.at.kind === "node"
         ? { r: a.add_station(1, op.at.node, 0, 0, op.platform, op.name) }
         : { r: a.add_station(2, op.at.edge, op.at.x, op.at.y, op.platform, op.name) };
+    case "crossover":
+      return { r: a.add_crossover(op.edge, op.x, op.y) };
     case "stationProps":
       return { r: a.set_station_props(op.node, op.platform, op.name) };
     case "removeStation":
@@ -1007,6 +1010,7 @@ async function processMessage(msg: ToClock) {
     send({ kind: "error", message: String(err) });
     if (msg.kind === "edit") send({ kind: "edited", seq: msg.seq, ok: false, issues: ["Internal"], charge: 0 });
     if (msg.kind === "previewStation") send({ kind: "stationCheck", seq: msg.seq, ok: false, issues: ["Internal"] });
+    if (msg.kind === "previewCrossover") send({ kind: "crossoverCheck", seq: msg.seq, ok: false, issues: ["Internal"], cost: 0, parts: [] });
     if (msg.kind === "preview" || msg.kind === "previewEdge" || msg.kind === "previewNode") send({ kind: "preview", seq: msg.seq, ok: false, cost: 0, lengthM: 0, mult: 0, issues: ["Internal"], verts: new Float64Array(0), pts: new Float32Array(0) });
   }
 };
@@ -1123,6 +1127,19 @@ function handle(msg: ToClock) {
     const at = msg.at;
     const r = at.kind === "node" ? api.preview_station(1, at.node, 0, 0, msg.platform) : api.preview_station(2, at.edge, at.x, at.y, msg.platform);
     send({ kind: "stationCheck", seq: msg.seq, ok: r === 0, issues: r === 0 ? [] : issues() });
+  } else if (msg.kind === "previewCrossover") {
+    const out = api.preview_crossover(msg.edge, msg.x, msg.y);
+    const ok = out[0] === 1;
+    const parts: Float32Array[] = [];
+    for (let k = 2; k < out.length; ) {
+      const n = out[k++], pts = new Float32Array(n * 3);
+      for (let j = 0; j < n; j++, k += 3) {
+        const [x, y] = packLocal(out[k], out[k + 1]);
+        pts.set([x, y, out[k + 2]], j * 3);
+      }
+      parts.push(pts);
+    }
+    send({ kind: "crossoverCheck", seq: msg.seq, ok, issues: ok ? [] : issues(), cost: out[1], parts }, parts.map((p) => p.buffer));
   } else if (msg.kind === "previewNode") {
     sendNodePreview(msg.seq, api.preview_move_node(msg.node, msg.x, msg.y));
   } else if (msg.kind === "preview" || msg.kind === "previewEdge") {

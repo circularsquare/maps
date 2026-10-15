@@ -116,7 +116,7 @@ export const theme = signal<Theme>(THEMES.includes(savedTheme as Theme) ? (saved
 
 /** What a click on the map does: select (pick), draw track, place a station, add stops to a line,
  * remove what is clicked (T-096), pick a trip's two ends (T-195). */
-export type Tool = "select" | "track" | "station" | "line" | "delete" | "trip" | "blueprint";
+export type Tool = "select" | "track" | "station" | "crossover" | "line" | "delete" | "trip" | "blueprint";
 export const tool = signal<Tool>("select");
 /** A question waiting in a centered modal (T-096/T-113: removing something
  * constructed): `run` on the yes button, nothing on the no button or Esc. */

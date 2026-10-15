@@ -187,6 +187,13 @@ export function strokesFromPreview(pts: Float32Array, bad: boolean, speed?: Floa
   return strokes;
 }
 
+/** A crossover's two diagonals as the placement preview (T-338), red when it cannot be built. */
+export function strokesFromParts(parts: Float32Array[], bad: boolean): Strokes {
+  const b = new StrokeBuilder();
+  for (const pts of parts) b.add(pts, TRACK, 0xffffffff, F_BLUEPRINT | F_PLACEMENT | (bad ? F_BAD : 0));
+  return b.build();
+}
+
 /** Several edges' local polylines (x, y, z triples) as one stroke set, for the drag-selected
  * blueprint's highlight band (T-333). */
 export function strokesFromEdges(lines: Float32Array[]): Strokes {

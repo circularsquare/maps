@@ -941,7 +941,7 @@ mod tests {
         line(&mut w, &[a, b], [12.0, 8.0, 4.0]);
         let c = node(&mut w, 6000.0, 0.0, 0);
         let id = w.net.alloc_edge();
-        w.apply(Op::Edge { id, data: Some(super::super::net::EdgeData { a: b, b: c, tracks: 2, pis: vec![], built: false, off: false, thru: vec![] }) }).unwrap();
+        w.apply(Op::Edge { id, data: Some(super::super::net::EdgeData { a: b, b: c, tracks: 2, pis: vec![], built: false, off: false, thru: vec![], crossover: false }) }).unwrap();
         assert_eq!(w.net.built_ports(b), 1);
         let cap = &w.svc.cap;
         let term = cap.res.iter().position(|r| r.node == b && r.kind == ResKind::Terminus).unwrap();
@@ -1023,7 +1023,7 @@ mod tests {
         w.apply(Op::Edge { id: e, data: Some(d) }).unwrap();
         station(&mut w, a, 200); station(&mut w, b, 200); line(&mut w, &[a,b], [8.0,4.0,2.0]);
         let c = node(&mut w, 6000.0, 0.0, 0); let extension = w.net.alloc_edge();
-        w.apply(Op::Edge { id: extension, data: Some(super::super::net::EdgeData { a:b,b:c,tracks:2,pis:vec![],built:false,off:false,thru:vec![] }) }).unwrap();
+        w.apply(Op::Edge { id: extension, data: Some(super::super::net::EdgeData { a:b,b:c,tracks:2,pis:vec![],built:false,off:false,thru:vec![],crossover:false }) }).unwrap();
         assert_eq!(w.net.node_tracks(b), 2, "planning geometry retains proposed double track");
         assert_eq!(active_node_tracks(&w.net,b),1, "active capacity sees only constructed track");
         let r = w.svc.cap.res.iter().position(|r|r.node==b&&r.kind==ResKind::Terminus).unwrap();

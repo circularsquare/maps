@@ -380,8 +380,11 @@ table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
 @container map-column (max-width: 680px) { .blueprint-bar { top: 80px; } }
 .bp-box { position: absolute; z-index: 3; pointer-events: none; border: 1.5px dashed var(--net-ink); background: color-mix(in srgb, var(--net-ink) 10%, transparent); }
 .btn.lv { min-width: 32px; padding: 0 4px; font-variant-numeric: tabular-nums; }
-.tool-pick { display: flex; }
-.tool-pick > .btn { flex: 1; }
+/* five tools: three on the first row, two on the second (T-338) */
+.tool-pick { display: flex; flex-wrap: wrap; }
+.tool-pick > .btn { flex: 1 0 30%; }
+.tool-pick > .btn:nth-child(n+4) { margin-top: -1px; }
+.tool-pick > .btn:nth-child(4) { margin-left: 0; }
 .pane .price { margin-top: 4px; }
 #tool-notes { max-width: 640px; padding: 6px 10px; background: var(--bg); width: max-content;
               border-top: 1px solid var(--rule); border-right: 1px solid var(--rule); }
@@ -584,6 +587,7 @@ table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
 .split-bar .seg.shown { outline: 2px solid var(--text); outline-offset: 0; position: relative; z-index: 1; }
 .split-key { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-wrap: wrap; column-gap: 12px; font-size: 12px; }
 .split-key li { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.split-key .mode-icon { display: inline-flex; }
 
 /* T-144: platform placement preview, aligned with its track. */
 /* T-189: the placement ghost is the platform's outline, curved with the track (map/tools.ts) */

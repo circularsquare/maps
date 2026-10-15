@@ -49,6 +49,9 @@ export interface PreviewAnswer {
   parts?: Uint32Array;
 }
 
+/** A crossover preview (T-338): its cost US$M or why not, and its diagonals' centre lines. */
+export type CrossoverAnswer = Pick<Extract<FromClock, { kind: "crossoverCheck" }>, "ok" | "issues" | "cost" | "parts">;
+
 const snapshotListeners: ((s: NetworkSnapshot) => void)[] = [];
 /** Call `f` with every network snapshot from now on (and the newest one, if there is one). */
 export function onNetworkSnapshot(f: (s: NetworkSnapshot) => void) {
@@ -109,7 +112,7 @@ function toWorld(s: ClockState, city: { population: number; jobs: number }): Wor
     };
   }
   const edges: TrackEdge[] = s.edges.map((e) => ({
-    id: e.id, a: e.a, b: e.b, tracks: e.tracks, built: e.built, off: e.off, lengthM: e.lengthM, cost: e.cost * 1e6, vminKmh: e.vminKmh,
+    id: e.id, a: e.a, b: e.b, tracks: e.tracks, built: e.built, off: e.off, crossover: e.crossover, lengthM: e.lengthM, cost: e.cost * 1e6, vminKmh: e.vminKmh,
     levelMin: e.levelMin as any, levelMax: e.levelMax as any, lines: edgeLines.get(e.id) ?? [],
   }));
   const nodes = new Map<number, TrackNode>(
@@ -162,6 +165,9 @@ export class ClockClient {
   private stationBusy = false;
   private stationNext: { at: StationAt; platform: number; cb: (ok: boolean, issues: string[]) => void } | null = null;
   private stationCb: ((ok: boolean, issues: string[]) => void) | null = null;
+  private crossBusy = false;
+  private crossNext: { edge: number; x: number; y: number; cb: (a: CrossoverAnswer) => void } | null = null;
+  private crossCb: ((a: CrossoverAnswer) => void) | null = null;
   private previewBusy = false;
   private previewNext: { msg: (seq: number) => ToClock; cb: (a: PreviewAnswer) => void } | null = null;
   private previewCb: ((a: PreviewAnswer) => void) | null = null;
@@ -389,6 +395,14 @@ export class ClockClient {
         if (n) this.checkStation(n.at, n.platform, n.cb);
         break;
       }
+      case "crossoverCheck": {
+        this.crossBusy = false;
+        this.crossCb?.(msg);
+        const n = this.crossNext;
+        this.crossNext = null;
+        if (n) this.checkCrossover(n.edge, n.x, n.y, n.cb);
+        break;
+      }
       case "snapshot":
         networkSnapshot.value = msg.snapshot;
         for (const f of snapshotListeners) f(msg.snapshot);
@@ -435,6 +449,18 @@ export class ClockClient {
     this.stationBusy = true;
     this.stationCb = cb;
     this.post({ kind: "previewStation", seq: ++this.seq, at, platform });
+  }
+
+  /** What a crossover on track `edge` near pack metres (x, y) would cost, or why not (T-338), with
+   * its two diagonals to draw. One request in flight; a newer one replaces a waiting one. */
+  checkCrossover(edge: number, x: number, y: number, cb: (a: CrossoverAnswer) => void) {
+    if (this.crossBusy) {
+      this.crossNext = { edge, x, y, cb };
+      return;
+    }
+    this.crossBusy = true;
+    this.crossCb = cb;
+    this.post({ kind: "previewCrossover", seq: ++this.seq, edge, x, y });
   }
 
   /** Drop a preview waiting to be sent (a drag was cancelled or finished). */

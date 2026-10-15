@@ -44,7 +44,8 @@ export interface Place {
 }
 /** The selected station's riders, as the inspector lists them; null while unknown. `scope`: the
  * stations counted, `StationRiders.scope` (its complex's in complex view, T-146). */
-export const stationView = signal<{ stationId: string; scope: string; home: number; work: number; places: Place[] } | null>(null);
+export interface StationView { stationId: string; scope: string; home: number; work: number; walked: number; rode: number; places: Place[] }
+export const stationView = signal<StationView | null>(null);
 
 /** The period in force on the clock; changes five times a game day. */
 const period = computed(() => periodAt(clock.local.value * 60)); // T-309: the local time in view
@@ -319,5 +320,5 @@ function describe(r: StationRiders, side: "home" | "work", cells: CityCells | nu
     byName.set(name, (byName.get(name) ?? 0) + far.riders[k]);
   }
   const places = [...byName].map(([name, riders]) => ({ name, riders })).sort((a, b) => b.riders - a.riders);
-  return { stationId: r.stationId, scope: r.scope, home: r.home.total, work: r.work.total, places };
+  return { stationId: r.stationId, scope: r.scope, home: r.home.total, work: r.work.total, walked: r.walked, rode: r.rode, places };
 }

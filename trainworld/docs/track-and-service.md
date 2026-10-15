@@ -98,8 +98,8 @@ Full design, numbers and sources: `notes/T-008.md`.
   it leaves each end along the node's heading like a turnout and swings out over 150 m (less on a
   short leg), and between them runs parallel, each corner concentric with the drawn one (radius
   8 m smaller on the inside of the turn, 8 m larger outside; a drawn curve under 108 m is too
-  tight for quad). So lines change pairs only at the ends of the quad stretch, where the two pairs
-  meet as a junction (a fork with nothing behind it if the end is new track). Both pairs are
+  tight for quad). Lines change pairs at the ends of the quad stretch, where the two pairs meet as
+  a junction (a fork with nothing behind it if the end is new track), and at crossovers (below). Both pairs are
   ordinary double-track edges, cut into pieces per corner (T-244), priced, deleted and drawn like
   any track: quad costs two double tracks, plus junctions at ends on existing track. A station
   placed on either pair (on track or on a node) gets a twin of the same name level with it on the
@@ -108,6 +108,24 @@ Full design, numbers and sources: `notes/T-008.md`.
   inspector copies a line with every stop that has a twin (a station within 12 m) moved to it and
   the path found again, so the copy runs on the express pair wherever the local one runs on quad
   track, and opens stop editing on it; the player clicks off the stops it skips.
+- **Crossovers** (T-338, design notes/T-334.md): the crossover tool joins a track to the track
+  running beside it, with a click. It finds the nearest other track whose centre line is 6-15 m
+  from the click and parallel there (quad's other pair, or a separate route drawn alongside), splits
+  both 60 m either side of the click (or uses a plain joint within 8 m of that point), and joins
+  the four new nodes with two diagonals in an X, one each way, so a train can change track in
+  either direction. Each diagonal is an edge flagged as a crossover (saved as edge flag 32; a save
+  without it has none): an S of two reverse curves leaving each end along the track like a turnout
+  (PIs a quarter of the way in from each end), the track count of the narrower of the two, a
+  50 km/h limit whatever its curves allow, and the price of one junction (0.25 km of track at its
+  level, 2x over water). The four end nodes are not priced as junctions unless three other tracks
+  meet there, and the flat crossing between the two diagonals is part of the price, so a crossover
+  costs two junctions. Routing and capacity need nothing new: each end is a junction node whose
+  moves the crossing rule (6.2) prices, the diagonals' own crossing is a flat crossing, and a line
+  takes a crossover when it is the fastest way to its next stop. Refused (in the tool's tag and on
+  the click) where nothing runs beside within 15 m, or where 60 m either way reaches a track end, a
+  junction or a station. A crossover keeps its shape: no corners to drag, no level change, its end
+  nodes cannot be moved or made a flyover, no station or junction on a diagonal. Deleting either
+  diagonal deletes both (the four nodes stay as plain joints); constructed like any track.
 - **Junctions in plain words** (T-080): a new junction is built flat (the branch crosses the other
   direction's track at the same level: cheaper, trains may wait for each other). The junction
   inspector says so in plain words and offers "Build a flyover" with its price (paid at once on a
@@ -278,7 +296,8 @@ multiplier per level (Anita, 2026-10-08):
 - Stations (200 m, two platform tracks): 10 at grade, 30/40/50 at +1/+2/+3, 60/100/140 at
   -1/-2/-3; scaled by `0.4 + 0.6 x length / 200`.
 - Junction: 0.25 km of track at its level; a flyover adds 0.6 km one level away; flat
-  crossing 0.1 km (cheap to build, dear in delay).
+  crossing 0.1 km (cheap to build, dear in delay). A crossover: two junctions, all told (6.1,
+  T-338); the blueprint breakdown counts it as two junction switches.
 - **Blueprint, then construct** (Anita, 2026-10-09). New track, stations and junctions are drawn
   as a **blueprint**: free, freely edited and undone, drawn faded, shown with its total cost. The
   player pays when they click **Construct**, which builds the blueprint at once if the money is

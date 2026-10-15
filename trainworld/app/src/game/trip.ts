@@ -55,9 +55,14 @@ export interface TripPair {
   accessPerceived: number;
   egressM: number;
   egressPerceived: number;
-  /** the two walks' real minutes (the fast walk, SPEC 4.3) */
+  /** the two walks' real minutes (6 km/h, SPEC 4.3); the access entry of a ride has the drive's */
   accessMin: number;
   egressMin: number;
+  /** the access entry is a ride (T-371: a car, bus, bike or lift to the station, one mode) rather
+   * than a walk, and then the perceived minutes beyond the drive's: the ride's fixed cost and the
+   * parking or drop-off at the station */
+  accessRide: boolean;
+  rideExtra: number;
   /** perceived minutes station to station (waits, rides, changes, distance fare; no base fare) */
   strategy: number;
   share: number;
@@ -119,7 +124,7 @@ export interface Trip {
  * (as `transfers`). */
 export type RouteNodes = { line: string; station: string; k: number }[];
 
-const HEAD = 32, PAIR_LEN = 12, LEG_LEN = 12;
+const HEAD = 32, PAIR_LEN = 14, LEG_LEN = 12;
 
 /** Read one period's packed answer (layout: `DemandApi.trip`). */
 export function readTripPeriod(v: Float64Array, at: RouteNodes): TripPeriod | null {
@@ -129,7 +134,7 @@ export function readTripPeriod(v: Float64Array, at: RouteNodes): TripPeriod | nu
   const pairs: TripPair[] = [];
   for (let k = 0; k < np; k++) {
     const p = v.subarray(HEAD + k * PAIR_LEN, HEAD + (k + 1) * PAIR_LEN);
-    pairs.push({ access: st(p[2]), egress: st(p[3]), accessM: p[4], accessPerceived: p[5], egressM: p[6], egressPerceived: p[7], strategy: p[8], share: p[9], accessMin: p[10], egressMin: p[11] });
+    pairs.push({ access: st(p[2]), egress: st(p[3]), accessM: p[4], accessPerceived: p[5], egressM: p[6], egressPerceived: p[7], strategy: p[8], share: p[9], accessMin: p[10], egressMin: p[11], accessRide: p[12] === 1, rideExtra: p[13] });
   }
   const routes: TripRoute[] = [];
   let o = HEAD + np * PAIR_LEN;
@@ -159,18 +164,19 @@ export function readTripPeriod(v: Float64Array, at: RouteNodes): TripPeriod | nu
   };
 }
 
-/** A route's totals: real minutes walking, waiting, riding and walking between stations, the
- * changes, and the fare in dollars (base fare included). */
+/** A route's totals: real minutes driving to the station (a ride access), walking, waiting, riding
+ * and walking between stations, the changes, and the fare in dollars (base fare included). */
 export function routeTotals(t: TripPeriod, r: TripRoute) {
   const pair = t.pairs[r.pair];
-  const walkM = pair ? pair.accessM + pair.egressM : 0;
-  const walkMin = pair ? pair.accessMin + pair.egressMin : 0;
+  const driveMin = pair?.accessRide ? pair.accessMin : 0;
+  const walkM = pair ? (pair.accessRide ? 0 : pair.accessM) + pair.egressM : 0;
+  const walkMin = pair ? (pair.accessRide ? 0 : pair.accessMin) + pair.egressMin : 0;
   let wait = 0, ride = 0, xfer = 0, fare = t.baseFarePerceived, rides = 0;
   for (const l of r.legs) {
     if (l.kind === "ride") { wait += l.waitMin; ride += l.min; fare += l.farePerceived; rides++; }
     else xfer += l.min;
   }
-  return { walkMin, walkM, wait, ride, xfer, changes: Math.max(0, rides - 1), fareUsd: fare / t.minPerUsd, total: walkMin + wait + ride + xfer };
+  return { driveMin, walkMin, walkM, wait, ride, xfer, changes: Math.max(0, rides - 1), fareUsd: fare / t.minPerUsd, total: driveMin + walkMin + wait + ride + xfer };
 }
 
 let query: ((from: [number, number], to: [number, number]) => Promise<Trip | null>) | null = null;

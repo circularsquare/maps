@@ -72,6 +72,8 @@ export interface TrackEdge {
   built: boolean;
   /** a blueprint switched off (T-333): Construct skips it */
   off?: boolean;
+  /** one diagonal of a crossover (T-338): fixed shape, deleted with the other */
+  crossover?: boolean;
   lengthM: number;
   /** build cost, US$ */
   cost: number;

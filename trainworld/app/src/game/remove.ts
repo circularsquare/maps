@@ -17,6 +17,8 @@ export function describeRemovable(r: Removable): { what: string; built: boolean 
   if (!w) return null;
   if (r.kind === "track") {
     const e = w.edges.find((x) => x.id === r.edge);
+    // a crossover goes as a whole, both diagonals (T-338)
+    if (e?.crossover) return { what: e.built ? "the constructed crossover" : "the crossover", built: e.built };
     return e ? { what: `${distance(e.lengthM)} of ${e.built ? "constructed " : ""}track`, built: e.built } : null;
   }
   if (r.kind === "station") {

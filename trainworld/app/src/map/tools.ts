@@ -32,9 +32,9 @@ import { loadPlaces, placesNear } from "../game/placeList";
 import { compass } from "../game/places";
 import { edit, say, world } from "../game/world";
 import type { PiInput, RouteEnd } from "../workers/protocol";
-import type { ClockClient, PreviewAnswer } from "../workers/clockClient";
+import type { ClockClient, CrossoverAnswer, PreviewAnswer } from "../workers/clockClient";
 import { toLngLat, toLocal } from "./geo";
-import { strokesFromPreview } from "./network";
+import { strokesFromParts, strokesFromPreview } from "./network";
 import { PLATFORM_HALF_M, platformShape, reversed, stationPath, stationShape, waysFrom } from "./stationGeometry";
 import type { Overlay } from "./overlay";
 import type { StopMarkers } from "./stopMarkers";
@@ -117,13 +117,13 @@ export class Tools {
   }
 
   /** What is under the pointer for building: a node, a point on track, or open ground. */
-  private snap(px: number, py: number, lngLat: { lng: number; lat: number }): Snap {
+  private snap(px: number, py: number, lngLat: { lng: number; lat: number }, nodes = true): Snap {
     const w = world.peek();
     const n = this.overlay.renderer.net;
     const [fx, fy] = toLocal(lngLat.lng, lngLat.lat);
     if (!w || !n) return { kind: "free", lx: fx, ly: fy };
     let best = SNAP_NODE_PX * SNAP_NODE_PX, hit: Snap | null = null;
-    for (const node of w.nodes.values()) {
+    for (const node of nodes ? w.nodes.values() : []) {
       const [lx, ly] = toLocal(node.lng, node.lat);
       const [x, y] = this.screen(lx, ly);
       const d = (x - px) ** 2 + (y - py) ** 2;
@@ -169,8 +169,9 @@ export class Tools {
     if (t === "select") return;
     if (t === "delete") return this.deleteHover(e.point.x, e.point.y);
     if (t === "line") this.stops?.hover(e.point.x, e.point.y); // T-233: the toggle markers' tag
-    this.hover = t === "line" ? null : this.snap(e.point.x, e.point.y, e.lngLat);
+    this.hover = t === "line" ? null : this.snap(e.point.x, e.point.y, e.lngLat, t !== "crossover");
     if (t === "track" && this.start) this.requestPreview();
+    if (t === "crossover") this.checkCrossover();
     this.place();
   }
 
@@ -178,6 +179,7 @@ export class Tools {
     const t = tool.peek();
     if (t === "track") this.trackClick(e);
     else if (t === "station") void this.stationClick(e);
+    else if (t === "crossover") void this.crossoverClick(e);
     else if (t === "line") this.lineClick(e);
     else if (t === "delete") this.deleteClick(e);
   }
@@ -227,6 +229,8 @@ export class Tools {
     this.pis = [];
     this.delHover = null;
     this.lastPreview = null;
+    this.cross = null;
+    this.crossKey = "";
     this.overlay.renderer.setPreview(null);
     this.overlay.invalidate();
     this.place();
@@ -307,6 +311,52 @@ export class Tools {
     if (a.ok) {
       this.lastPlaced = toLngLat(s.lx, s.ly); // T-312: the hover tag's "km from" (found again by position)
       say(`${name} added as a blueprint station.`);
+    }
+  }
+
+  // ---------------------------------------------------------------- crossovers (T-338)
+
+  /** The last crossover preview for the track under the pointer, and what it was asked for. */
+  private cross: CrossoverAnswer | null = null;
+  private crossKey = "";
+
+  /** Ask the worker what a crossover here would cost or why not, and draw its X as the preview. */
+  private checkCrossover() {
+    const h = this.hover;
+    if (!h || h.kind !== "edge") {
+      if (this.cross) {
+        this.cross = null;
+        this.crossKey = "";
+        this.overlay.renderer.setPreview(null);
+        this.overlay.invalidate();
+      }
+      return;
+    }
+    const key = `${h.edge}:${h.lx.toFixed(1)}:${h.ly.toFixed(1)}:${world.peek()?.version}`;
+    if (key === this.crossKey) return;
+    this.crossKey = key;
+    const p = this.pack(h.lx, h.ly);
+    this.client.checkCrossover(h.edge, p.x, p.y, (a) => {
+      if (key !== this.crossKey || tool.peek() !== "crossover") return;
+      this.cross = a;
+      this.overlay.renderer.setPreview(a.parts.length ? strokesFromParts(a.parts, !a.ok) : null);
+      this.overlay.invalidate();
+      this.place();
+    });
+  }
+
+  private async crossoverClick(e: MapMouseEvent) {
+    const s = this.snap(e.point.x, e.point.y, e.lngLat, false);
+    if (s.kind !== "edge") {
+      say("Click on track beside other track to put a crossover there.");
+      return;
+    }
+    const cost = this.cross?.ok ? this.cross.cost : null;
+    const a = await edit({ op: "crossover", edge: s.edge, ...this.pack(s.lx, s.ly) });
+    if (a.ok) {
+      say(cost !== null ? `Crossover added as a blueprint, ${money(cost * 1e6)} to construct.` : "Crossover added as a blueprint.");
+      this.crossKey = "";
+      this.checkCrossover();
     }
   }
 
@@ -675,7 +725,7 @@ export class Tools {
     }
     // the snap ring and the cursor tag
     const h = this.hover;
-    if ((t === "track" || t === "station") && h && h.kind !== "free") {
+    if ((t === "track" || t === "station" || t === "crossover") && h && h.kind !== "free") {
       this.ring.style.display = "";
       if (t === "station") {
         this.stationRings(h);
@@ -683,7 +733,13 @@ export class Tools {
       } else put(this.ring, h.lx, h.ly);
     } else this.ring.style.display = "none";
     const pv = this.lastPreview;
-    if (t === "track" && this.start && h && pv) {
+    const cx = this.cross;
+    if (t === "crossover" && h && h.kind === "edge" && cx) {
+      this.tag.style.display = "";
+      this.tag.className = "tool-tag" + (cx.ok ? "" : " bad");
+      this.tag.textContent = cx.ok ? moneyShort(cx.cost * 1e6) : describeIssues(cx.issues) || "Cannot be built here.";
+      put(this.tag, h.lx, h.ly, 14, 12);
+    } else if (t === "track" && this.start && h && pv) {
       this.tag.style.display = "";
       this.tag.className = "tool-tag" + (pv.ok ? "" : " bad");
       this.tag.textContent = pv.ok

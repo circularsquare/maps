@@ -307,17 +307,18 @@ fn build_run(net: &Network, l: u32, rev: bool, train_len: f64, dwell: f64) -> Op
         let len = net.edge_len[e as usize];
         run.seg_off.push(s);
         let pcs = net.edge_pieces(e);
+        let cap = net.v_cap(e);
         let mut add = |a: f64, v: f64| match raw.last() {
             Some(l) if l[1] == v => {}
             _ => raw.push([a, v]),
         };
         if path_dir(p) == 0 {
             for pc in pcs {
-                add(s + pc.s0, pc.v_limit());
+                add(s + pc.s0, pc.v_limit().min(cap));
             }
         } else {
             for pc in pcs.iter().rev() {
-                add(s + len - (pc.s0 + pc.len), pc.v_limit());
+                add(s + len - (pc.s0 + pc.len), pc.v_limit().min(cap));
             }
         }
         s += len;

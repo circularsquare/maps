@@ -105,7 +105,7 @@ for f, (c, e) in cross.items():
     print(f"  {f}: {c:,.0f} / {e:,.0f}")
 # trips
 print("\ntrip explorer (morning peak):")
-HEAD, PAIR_LEN, LEG_LEN = 32, 12, 12
+HEAD, PAIR_LEN, LEG_LEN = 32, 14, 12
 names_d = {d: "/".join(v)[:30] for d, v in dname.items()}
 for t in res["trips"]:
     v = t["am"]

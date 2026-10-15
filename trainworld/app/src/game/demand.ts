@@ -199,6 +199,10 @@ export interface StationRiders {
   home: CellRiders;
   /** commuters working in each cell who use this station at the work end */
   work: CellRiders;
+  /** the home riders (commutes) by how they reach the station: on foot, or by a ride (car, bus,
+   * bike or lift, T-371); commuters a day, adding up to `home.total` */
+  walked: number;
+  rode: number;
   /** where the home riders work, by zone */
   homeRidersWorkIn: ZoneRiders;
   /** where the work riders live, by zone */

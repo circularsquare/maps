@@ -348,7 +348,7 @@ function build(t: TripPeriod, fromPack: [number, number], toPack: [number, numbe
     const legs = r.legs;
     const first = legs[0], last = legs[legs.length - 1];
     const a = first ? pos(first.from) : null, b = last ? pos(last.to) : null;
-    if (a && pair) out.parts.push({ pts: [from, a], colour: NET_INK, width: main ? 2.5 : 1.5, dash: true, alpha, tip: [`Walk ${distance(pair.accessM)} to ${name(first.from)}, ${minutes(pair.accessMin)}`, "Straight-line distance, the model's average for the homes near here"] });
+    if (a && pair) out.parts.push({ pts: [from, a], colour: NET_INK, width: main ? 2.5 : 1.5, dash: true, alpha, tip: [`${pair.accessRide ? "Drive" : "Walk"} ${distance(pair.accessM)} to ${name(first.from)}, ${minutes(pair.accessMin)}`, "Straight-line distance, the model's average for the homes near here"] });
     for (const l of legs) out.parts.push(legPart(l, main, alpha, width, ln, pos, name, share(r), track));
     if (b && pair) out.parts.push({ pts: [b, to], colour: NET_INK, width: main ? 2.5 : 1.5, dash: true, alpha, tip: [`Walk ${distance(pair.egressM)} from ${name(last.to)}, ${minutes(pair.egressMin)}`, "Straight-line distance, the model's average for the jobs near here"] });
     if (main) {

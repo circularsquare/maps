@@ -113,6 +113,13 @@ key.
     as the station's catchment ([ui-demand-views.md](ui-demand-views.md)), with the top far-end
     places listed. Commuters and inter-region trips cover the whole complex, each of the demand
     model's stations counted once.
+  - **How they arrive** [T-374; `AccessSplit` in `ui/inspector/StationRiders.tsx`]: under the two
+    rows, a bar and key in the purpose split's style for the commuters who live nearby, walked
+    (walk icon, the walk colour) against drove (car icon, the drive colour), shares in the key
+    and counts in the hovers ("Drove, took a bus or cycled"). They are the model's commutes
+    at the home end (`walked` and `rode` of `StationRiders`, from `DemandApi.station_riders_day`);
+    everyday trips and the regional layer are not split. Not part of Today's purpose split, which
+    counts boardings so far today.
   - **Inter-region trips**: rail riders starting and ending there, by place [T-118, T-120].
 - **Station view** (one station opened alone) has its level under the name, then in place of the
   complex's lines and map the station's own lines, platform settings, Construct and Remove, and
@@ -198,7 +205,9 @@ work at the end.
 - **The inspector**: the period, the distance, a bar and rows with the chance of train and driving
   (walking too when at least 0.5%). Under "By train" the main route as rows (walk to the first
   station, each line ridden with its chip and the station it goes to, each change and walk, the
-  walk from the last station; each row's minutes its wait and ride), door to door, its walk, wait
+  walk from the last station; each row's minutes its wait and ride; a ride access [T-374] reads
+  "Drive to" with its drive minutes, its hover adding the ride's fixed cost and the station's
+  parking or drop-off), door to door, its drive, walk, wait
   and ride minutes, the fare and the perceived minutes against driving, then the share of the trip's
   train riders taking it, with up to four "Other routes" and their shares. Under "By car" the drive,
   its parking and perceived minutes. "Train by period": a row a period with the train's chance, a

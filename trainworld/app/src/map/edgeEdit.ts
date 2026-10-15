@@ -85,7 +85,7 @@ export class EdgeEditor {
     const s = selection.peek();
     if (tool.peek() !== "select" || s?.kind !== "track") return -1;
     const e = world.peek()?.edges.find((x) => x.id === s.edge);
-    return e && !e.built ? e.id : -1;
+    return e && !e.built && !e.crossover ? e.id : -1; // a crossover keeps its shape (T-338)
   }
 
   /** Call when the selection, tool or world changes. */

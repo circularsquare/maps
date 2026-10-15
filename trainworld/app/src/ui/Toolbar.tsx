@@ -11,6 +11,7 @@ const HINT: Record<Tool, string> = {
   // T-253: hints say what a click does now, in as few words as will do
   track: "Click where the track turns. Click the last point or press Enter to finish; Backspace takes one back.",
   station: "Click on track to put a station there.",
+  crossover: "Click on track beside other track to join the two with a crossover.",
   line: "Click the circles to add or remove stops. Press Enter or Escape to finish editing.",
   delete: "Click track, a station or a flyover to remove it.",
   trip: "Click where a trip starts, or a station.",

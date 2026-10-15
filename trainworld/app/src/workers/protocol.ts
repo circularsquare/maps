@@ -50,6 +50,8 @@ export type EditOp =
   | { op: "edgeLevel"; edge: EdgeId; level: Level }
   | { op: "flying"; node: NodeId; flying: boolean }
   | { op: "addStation"; at: StationAt; platform: number; name: string }
+  /** a crossover on track `edge` near x, y and the track running beside it (T-338) */
+  | { op: "crossover"; edge: EdgeId; x: number; y: number }
   | { op: "stationProps"; node: NodeId; platform: number; name: string }
   | { op: "removeStation"; node: NodeId }
   | { op: "construct"; edges: EdgeId[]; stations: NodeId[] }
@@ -86,6 +88,8 @@ export type ToClock =
   /** whether `addStation` with these arguments would succeed, nothing changed (T-311, the
    * placement ghost's colour); answered with "stationCheck" */
   | { kind: "previewStation"; seq: number; at: StationAt; platform: number }
+  /** what the crossover op would do (T-338); answered with "crossoverCheck" */
+  | { kind: "previewCrossover"; seq: number; edge: EdgeId; x: number; y: number }
   /** the render epoch the main thread is in (start of the game hour, s): send its trips and the
    * next hour's */
   | { kind: "epoch"; epoch: number }
@@ -149,6 +153,8 @@ export interface ClockEdge {
   built: boolean;
   /** a blueprint switched off (T-333) */
   off: boolean;
+  /** one diagonal of a crossover (T-338) */
+  crossover: boolean;
   lengthM: number;
   /** US$M */
   cost: number;
@@ -315,6 +321,8 @@ export type FromClock =
   | { kind: "exported"; bytes: Uint8Array; day: number }
   /** a station placement's check (T-311): `issues` as an edit's */
   | { kind: "stationCheck"; seq: number; ok: boolean; issues: string[] }
+  /** a crossover preview (T-338): cost US$M, each diagonal's centre line (local x, y, height) */
+  | { kind: "crossoverCheck"; seq: number; ok: boolean; issues: string[]; cost: number; parts: Float32Array[] }
   /** a query's answer, in the track model's flat layout (pack metres) */
   | { kind: "answer"; seq: number; data: Float64Array }
   /** an autosave was written (Date.now()), its size, and worker ms to encode and to write */

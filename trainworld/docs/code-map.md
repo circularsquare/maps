@@ -12,7 +12,7 @@ tests natively.
   T-125), the network and its edits with undo (`world.rs`; blueprint and construct, T-055),
   run-time profiles, capacity, the boarding account (`boarding.rs`: each train's load and each
   platform's crowd, T-164), saves, local time (`localtime.rs`, T-309), and `wasm.rs` (`TrackApi`,
-  the clock worker's API, with the drawing tool's routes). In the default build.
+  the clock worker's API, with the drawing tool's routes and the crossover tool's edit, T-338). In the default build.
   `cargo run --release --bin track_bench` times edits on a synthetic 2,000 km network; feature
   `track-bench` exports it to WASM. notes/T-040.md.
 - `src/demand/`: the demand kernel, behind feature `demand` (on in the app's build): `api.rs`
@@ -66,7 +66,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 - Stations: `stationGeometry.ts` (platform shapes along the track for drawing, picking and the
   ghost, T-189, T-254), `stationLabels.ts`, `capacityMarkers.ts`, `labelLayout.ts` (shared spacing
   for names and tags).
-- Tools: `pick.ts`, `tools.ts` (drawing track, placing stations, the line tool), `edgeEdit.ts`
+- Tools: `pick.ts`, `tools.ts` (drawing track, placing stations and crossovers, the line tool), `edgeEdit.ts`
   (dragging blueprint track's PIs, T-064, T-092), `nodeDrag.ts` (dragging blueprint nodes, T-093),
   `blueprintBox.ts` (the Select tool's drag box, T-333; its state is `game/blueprintPick.ts`),
   `stopMarkers.ts` (the toggle markers of stop editing, T-233).

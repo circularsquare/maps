@@ -933,10 +933,11 @@ impl DemandApi {
 
     /// One station's riders over this worker's solved periods, commuters a day, packed (`station`
     /// is an index into `set_network`'s station list; stations merged for demand answer as one):
-    /// `[n_home, n_work, home cells.., their riders.., work cells.., their riders.., work zones
-    /// of the home riders (one per zone).., home zones of the work riders (one per zone)..]`.
-    /// Home riders live in those cells and use this station at the home end of their commute;
-    /// work riders work there and use it at the work end. Cell and zone indices are exact in f32
+    /// `[n_home, n_work, walked, rode, home cells.., their riders.., work cells.., their riders..,
+    /// work zones of the home riders (one per zone).., home zones of the work riders (one per
+    /// zone)..]`. Home riders live in those cells and use this station at the home end of their
+    /// commute, `walked` of them on foot and `rode` by a ride (T-371, T-374; commutes only, the
+    /// same unit as the riders); work riders work there and use it at the work end. Cell and zone indices are exact in f32
     /// (under 2^24). Empty if there is no network or no such station.
     pub fn station_riders(&self, station: u32) -> Vec<f32> {
         self.station_riders_day(station, WEEKDAY as u32)
@@ -952,6 +953,7 @@ impl DemandApi {
         let (mut home_r, mut work_r) = (vec![0f32; sz.n], vec![0f32; sz.n]);
         let (mut to_zone, mut from_zone) = (vec![0f32; nz], vec![0f32; nz]);
         let (mut dep, mut arr) = (vec![0f32; s], vec![0f32; s]);
+        let (mut walked, mut rode) = (0f32, 0f32);
         for q in 0..PERIODS {
             let Some(st) = self.period(q) else { continue };
             let sub = &st.sub;
@@ -971,6 +973,11 @@ impl DemandApi {
                     if t == a {
                         home_r[u] += sub.acc_home[k] * f;
                         work_r[u] += sub.acc_work[k] * f;
+                        if k < sz.acc_mid[u] as usize {
+                            walked += sub.acc_home[k] * f;
+                        } else {
+                            rode += sub.acc_home[k] * f;
+                        }
                     }
                     // where this station's home riders work: their trips to station t, spread
                     // over the subzones arriving at t; and where its work riders live
@@ -1002,8 +1009,8 @@ impl DemandApi {
         };
         let (hc, hv) = cells(&home_r, &self.city.pop, &sz.pop);
         let (wc, wv) = cells(&work_r, &self.city.jobs, &sz.jobs);
-        let mut out = Vec::with_capacity(2 + 2 * (hc.len() + wc.len()) + 2 * nz);
-        out.extend([hc.len() as f32, wc.len() as f32]);
+        let mut out = Vec::with_capacity(4 + 2 * (hc.len() + wc.len()) + 2 * nz);
+        out.extend([hc.len() as f32, wc.len() as f32, walked / 2.0, rode / 2.0]);
         out.extend(hc);
         out.extend(hv);
         out.extend(wc);
@@ -1802,11 +1809,13 @@ mod tests {
             let r = api.station_riders(st);
             let (nh, nw) = (r[0] as usize, r[1] as usize);
             let sum = |a: usize, k: usize| r[a..a + k].iter().map(|&v| v as f64).sum::<f64>();
-            let (home, work) = (sum(2 + nh, nh), sum(2 + 2 * nh + nw, nw));
-            let o = 2 + 2 * nh + 2 * nw;
+            let (home, work) = (sum(4 + nh, nh), sum(4 + 2 * nh + nw, nw));
+            let o = 4 + 2 * nh + 2 * nw;
             assert_eq!(r.len(), o + 2 * nz);
             assert!((sum(o, nz) / home - 1.0).abs() < 1e-3 && (sum(o + nz, nz) / work - 1.0).abs() < 1e-3, "station {st}");
-            (home, work, r[2] as usize)
+            // T-374: the walked and rode riders are the home riders, split
+            assert!(((r[2] + r[3]) as f64 / home - 1.0).abs() < 1e-3, "station {st}: walked {} rode {} of {home}", r[2], r[3]);
+            (home, work, r[4] as usize)
         };
         // the line's end and the shared centre station
         let (h_end, _, c_end) = riders(0);
