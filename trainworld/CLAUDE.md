@@ -23,6 +23,14 @@ Read this, then `SPEC.md`, then `TASKS.md`. Everything else on demand; where cod
   the new design; never append "Update:" paragraphs or leave a section a later one contradicts.
   A spec section past ~150 lines moves to `docs/<area>.md`, leaving a summary and link.
 - **Touch only the section your change touches**, in the spec, docs and code-map alike.
+- **Docs hold current rules only** (Anita, 2026-10-14): the rule and the numbers that decide it, in
+  the present tense. Measurements, how a figure was reached and before/after tables go in notes/.
+  Read the sections you need, never whole files when one section will do.
+- **Comments** (Anita, 2026-10-14): before writing one, check whether the code already says it; most
+  code needs none. A comment says why, only where the why is not evident from the code (a non-obvious
+  choice, a unit, an invariant), with a task id if the reasoning lives elsewhere. Never what the code
+  does, never history ("before T-275 this..."): that is DECISIONS.md. Trim a function's comments when
+  you edit it; no sweeping rewrites.
 - **DECISIONS.md and ARCHIVE.md are searched, never read whole**: grep them for a task id or word.
 - **A DECISIONS line** only for a choice someone might reasonably revisit: date, one or two
   sentences, the task id. Not for what the spec already says.
@@ -68,6 +76,10 @@ Briefs carry only the task; these hold for every agent.
   exclamation marks or softeners, sentence case, no all-caps labels.
 - **Stop at a clean point** if the work outgrows one context: finish the stage you are on, write
   the rest as tasks, hand back. Compacting means the task was sized too big.
+- **Keep your context lean** (T-288's retrospective): each step re-reads your whole conversation,
+  and waking after more than about 5 idle minutes re-caches all of it (29% of London's cost). Wait
+  for a long job with one background wait, not progress polling; do other work meanwhile. Write
+  long logs to a file and read summaries; read doc sections, not whole files; grep TASKS.md.
 - **Reports to the orchestrator are short**: what changed and where, check results, anything for
   Anita. Detail goes in notes/, not the report.
 - **open** in the spec means Anita decides. Otherwise decide, record why, and carry on; never ask
@@ -117,6 +129,9 @@ packs, `..\venv\Scripts\python.exe`). Details and build orders: `docs/code-map.m
   task's design goes to Anita before it is built; small, quick, isolated work needs no review.
   Treat subagents well by substance: a brief they can act on (goal, decisions made, scope, done
   looks like), leave to stop or push back, problems relayed without blame; no formulaic thanks.
+- **Token counts** (2026-10-14): hundreds of metros are planned, so cost per city matters. Every city
+  task ends with a retrospective (docs/adding-a-city.md 12); the orchestrator records each task's
+  tokens with `checks/token_usage.py` and judges the proposed changes, passing edge cases to Anita.
 - **Asks for Anita** go in the "For you" block of the final message and, if they outlive the
   session, under "Added by agents" in `TODO.md`. Subagents are welcome (standing go-ahead).
 - **Serving**: `python serve.py add trainworld <folder> "rail building game"` at the maps root, so

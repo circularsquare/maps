@@ -38,6 +38,10 @@ Logs, check outputs and images go in `../artifacts/trainworld/` (from the maps r
   the US one treats everything outside the TIGER states as sea, so Buffalo or Detroit would need
   Canadian land added).
 - **Id.** Three lowercase letters, unused (`wor`, `abe`, `alb`, `pit`, `ric` were T-179's; `tor`).
+- **Draw the outline before any build** (T-288: Medway's hole cost a second build): a quick
+  picture of the chosen units, checked for holes, islands and gaps against the neighbours.
+- **Reference figures with sources**, gathered before the build, never from memory: population
+  (census), jobs in the core and in all, the commute mode share, one real line's daily riders.
 - Take the task line in TASKS.md (`taking, <date>`), start `notes/T-###.md`.
 
 ## 2. Back up
@@ -234,6 +238,15 @@ what in the task notes). Per-county TIGER block zips are needed again only by `r
 rebuild. A state's `<st>2020.pl.zip` can go once `pl2020_p5_<fips>.csv.gz` exists. Geofabrik
 extracts go once `routes.py` and any OSM reads have cached their results. Delete
 `data/work/pre-T###/` when the batch is accepted.
+
+## 12. Retrospective
+
+Hundreds of cities will go through this list, so each one ends with a short review in its task
+notes (`notes/T-###.md`, "Retrospective", under 30 lines): the parts of the work in order, with
+wall time and tokens for each (`python trainworld/checks/token_usage.py --timeline <your
+transcript>`; the orchestrator gives the path), what was not worth its cost, and proposed changes
+to this list, the tools or the briefs. The orchestrator judges each proposal, adopts or declines
+it with a reason, and passes edge cases to Anita.
 
 ## Outside the US
 
