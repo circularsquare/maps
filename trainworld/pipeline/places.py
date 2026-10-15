@@ -42,7 +42,8 @@ STATUS = "https://overpass-api.de/api/status"
 KINDS = ["city", "town", "borough", "suburb", "quarter", "village", "neighbourhood", "hamlet"]
 OTHER_NAMES = ["alt_name", "short_name", "old_name", "official_name", "name:en"]
 DEDUP_M = 2000.0
-LATIN_NAMES = ["name:en", "name:zh-Latn-pinyin", "name:zh_pinyin"]  # a city's "latin_names" (T-291)
+LATIN_NAMES = ["name:en", "name:zh-Latn-pinyin", "name:zh_pinyin", "name:ja-Latn"]  # a city's "latin_names" (T-291)
+KANA_NAMES = ["name:ja-Hira", "name:ja-Kana", "name:ja_kana"]  # readings for "kana_romaji" (T-420)
 
 
 def query(bbox):
@@ -120,7 +121,8 @@ def build(city):
     if not os.path.exists(os.path.join(RAW, f"osm_places_{city}.json")):
         extract = cfg.get("extract")
     latin = cfg.get("latin_names", False)
-    n_latin = 0
+    kana = __import__("japan").kana_romaji if cfg.get("kana_romaji") else None
+    n_latin, name_src = 0, {}
     data = from_extract(extract, bbox) if extract else fetch(city, bbox)
     source = f"OpenStreetMap contributors, ODbL (Geofabrik {extract})" if extract else "OpenStreetMap contributors, ODbL (Overpass)"
     rows = []
@@ -144,7 +146,13 @@ def build(city):
             pop = int(m.group(1).replace(",", ""))
         others = []
         if latin:  # T-291: a Latin name to show, the local one kept for search
-            shown = next((tags[k].strip() for k in LATIN_NAMES if (tags.get(k) or "").strip()), "")
+            src = next((k for k in LATIN_NAMES if (tags.get(k) or "").strip()), None)
+            shown = tags[src].strip() if src else ""
+            if not shown and kana:  # T-420: romaji from the kana reading
+                src = next((k for k in KANA_NAMES if (tags.get(k) or "").strip()), None)
+                shown = (kana(tags[src]) or "") if src else ""
+                src = "kana" if shown else None
+            name_src[src or "local"] = name_src.get(src or "local", 0) + 1
             if shown and shown != name:
                 others.append(name)
                 name = shown
@@ -197,6 +205,7 @@ def build(city):
     if latin:
         shown = sum(1 for r in kept if all(ord(c) < 0x2E80 for c in r["name"]))
         print(f"{city}: Latin names on {n_latin} of {len(rows)} OSM places; {shown} of {len(kept)} kept places show a Latin name", flush=True)
+        print(f"{city}: shown name by source: " + ", ".join(f"{k} {v} ({v / max(len(rows), 1):.1%})" for k, v in sorted(name_src.items(), key=lambda kv: -kv[1])), flush=True)
 
 
 def main():

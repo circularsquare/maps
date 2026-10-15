@@ -199,6 +199,34 @@ Tier 0 with three national upgrades; notes/T-290.md has the tables.
 - **OSM is rich**: 70k job points and 190k job areas, 1,737 school sites, 4,024 medical sites; a
   median drive factor of 1.42 between near zones (lakes and forests).
 
+## Japan (Tokyo, `pipeline/japan.py`, T-420, 2026-10-15)
+
+Tier 0 with Japan's national inputs, written to serve every Japanese pack (research/japan.md);
+notes/T-420.md has the tables.
+
+- **Units**: whole prefectures, dissolved from KSJ N03 municipalities (designated cities by ward,
+  the census's unit). N03 draws every pier and rock apart; parts under about 0.02 km² are dropped
+  from the outline, and land of no municipality only where it touches one (Tokyo Bay's landfill).
+- **Population**: the 2020 census 500 m mesh, each mesh spread over its cells by GHSL; a mesh the
+  outline cuts on land keeps its share of land inside. Suppressed meshes are already counted in
+  their neighbour, so the mesh totals are the census's (Greater Tokyo within 0.01%).
+- **Jobs**: the 2021 economic census 500 m mesh (persons employed, government included), spread
+  inside each mesh by tier 0's proxy and scaled per municipality to the 2020 census's employed
+  people by place of work. The economic census counts 9% more than the census (dispatched and
+  multiple jobholders; no farms); the scaling moves single wards by up to 38% (Yokohama Nishi-ku
+  down, Saitama Chuo-ku up).
+- **Curve**: fitted on the census's municipality flows with the pack's own margins: the surface is
+  flat from London's power 1.85 to 2.3, and only the steep end keeps the census's 33.5% working in
+  their own municipality: d^-2.2 exp(-d/80 km).
+- **Work from home**: 0.23: the census's 9.5% working at home, plus MLIT's 2024 telework survey
+  (37.5% of Greater Tokyo's employed telework), judged at 2 days in 5, on the rest. Other packs take
+  their region's survey figure (Kinki 24.4%, Chukyo 19.6%, elsewhere 16.8%).
+- **Schools**: KSJ P29 points (no pupil counts); each 500 m mesh's children 0-14 x 0.9 go to the
+  nearest elementary, junior high, compulsory or secondary school. Universities stay tier 0.
+- **Names**: OSM's `name:en` (66% of Greater Tokyo's places), else romaji from a kana reading
+  (`japan.kana_romaji`, Hepburn with long vowels written short; only 1.3%, since few places without
+  `name:en` carry one), else kanji (33%, mostly neighbourhoods and chome).
+
 ## Homes (docs/demand.md 4.1)
 
 - **People in institutions are not homes** (T-234). The US packs take the 2020 census's

@@ -409,6 +409,28 @@
       "localTrips": 12807284.0
     },
     {
+      "id": "tyo",
+      "name": "Tokyo",
+      "origin": {
+        "lon": 139.7671,
+        "lat": 35.6812
+      },
+      "center": [
+        139.7671,
+        35.6812
+      ],
+      "zoom": 11.2,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        138.689,
+        34.881,
+        140.904,
+        36.302
+      ],
+      "localTrips": 73558705.0
+    },
+    {
       "id": "wor",
       "name": "Worcester County",
       "kind": "zone",

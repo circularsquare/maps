@@ -56,6 +56,19 @@ const CITIES = {
       ['Khar Road', 72.8400, 19.0682], ['Santacruz', 72.8410, 19.0810], ['Vile Parle', 72.8440, 19.0999],
       ['Andheri', 72.8464, 19.1197]],
   },
+  tyo: {
+    // T-420: the Ginza line, Shibuya to Asakusa (positions to about 100 m); the water pair across
+    // the Sumida by the Azuma bridge
+    task: 'T-420', name: 'Tokyo', centre: [139.7671, 35.6812], water: [[139.7960, 35.7105], [139.8045, 35.7085]],
+    lineName: 'Ginza line test', colour: '#ff9500', view: [139.75, 35.685],
+    line: [['Shibuya', 139.7016, 35.6590], ['Omotesando', 139.7123, 35.6652], ['Gaiemmae', 139.7178, 35.6705],
+      ['Aoyama-itchome', 139.7238, 35.6727], ['Akasaka-mitsuke', 139.7370, 35.6770], ['Tameike-sanno', 139.7413, 35.6736],
+      ['Toranomon', 139.7497, 35.6703], ['Shimbashi', 139.7583, 35.6667], ['Ginza', 139.7640, 35.6717],
+      ['Kyobashi', 139.7700, 35.6766], ['Nihombashi', 139.7740, 35.6820], ['Mitsukoshimae', 139.7735, 35.6871],
+      ['Kanda', 139.7709, 35.6939], ['Suehirocho', 139.7717, 35.7027], ['Ueno-hirokoji', 139.7727, 35.7075],
+      ['Ueno', 139.7770, 35.7114], ['Inaricho', 139.7826, 35.7114], ['Tawaramachi', 139.7905, 35.7110],
+      ['Asakusa', 139.7976, 35.7107]],
+  },
   ber: {
     // T-290: the Stadtbahn from Westkreuz to Ostkreuz; the water pair across the Spree by the
     // Oberbaumbruecke, checked on the water cache

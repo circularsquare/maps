@@ -358,8 +358,14 @@ CITIES = {
         "water_source": lambda bbox: __import__("osm_water").source(["asia/japan/kanto"])(bbox),
         "extract": "asia/japan/kanto",
         "iso2": "JP",
-        "wfh": 0.0,  # set from the census and MLIT's telework survey below
-        "decay_pow": 1.4, "decay_km": 20.0,  # placeholder until notes/t420_curve.py
+        # 2020 census: 9.5% of workers by place of work work at home (table 4); of the rest, MLIT's
+        # 2024 telework survey has 37.5% of Greater Tokyo's employed teleworking, judged at 2 days in 5
+        # (research/japan.md): 0.095 + 0.905 x 0.15
+        "wfh": 0.23,
+        # fitted on the 2020 census municipality flows with this pack's own homes and jobs
+        # (notes/t420_curve.py); flat from power 1.85 (London's) to 2.3, and only the steep end keeps
+        # the census's 33.5% working in their own municipality
+        "decay_pow": 2.2, "decay_km": 80.0,
         "od_share": {"RJAA": 0.8},  # Narita's transfer passengers, judgement
         "region_name": "Greater Tokyo",
         "latin_names": True,

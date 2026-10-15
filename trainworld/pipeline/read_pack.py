@@ -206,6 +206,15 @@ WATER_TESTS = {
                 "Vashi station": (72.9989, 19.0632), "Kalyan station": (73.1305, 19.2355), "Panvel": (73.1210, 18.9894),
                 "Mumbai airport": (72.8656, 19.0896)},
     },
+    "tyo": {  # T-420: OSM water (Geofabrik Kanto), river and lake points taken from the water cache
+        True: {"Tokyo Bay off Kisarazu and Haneda": (139.90, 35.50), "Sumida at Oku": (139.73781, 35.77691),
+               "Sumida at Kanegafuchi": (139.80253, 35.73861), "Tama at Futako-Tamagawa": (139.54408, 35.63761),
+               "Edo at Matsudo": (139.88978, 35.83662), "Lake Inba (west)": (140.19632, 35.75514),
+               "Lake Inba (north)": (140.24888, 35.79018), "Teganuma": (140.03787, 35.85774)},
+        False: {"Tokyo Station": (139.7671, 35.6812), "Shinjuku Station": (139.7006, 35.6896),
+                "Yokohama Station": (139.6221, 35.4660), "Omiya Station": (139.6239, 35.9063),
+                "Chiba Station": (140.1233, 35.6131), "Haneda terminal 1": (139.7853, 35.5491)},
+    },
     "ber": {  # T-290: OSM water (Geofabrik Brandenburg with Berlin), points taken from the water cache
         True: {"Spree by the Reichstag": (13.37632, 52.52105), "Spree at the Oberbaumbruecke": (13.44487, 52.50182),
                "Havel at Spandau": (13.20524, 52.53462),

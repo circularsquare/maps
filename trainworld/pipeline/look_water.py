@@ -56,6 +56,12 @@ VIEWS = {
         ("Vasai Creek and the Ulhas river to Kalyan", 73.00, 19.27, 24.0),
         ("Powai, Vihar and Tulsi lakes", 72.91, 19.16, 8.0),
     ],
+    "tyo": [  # T-420
+        ("Central Tokyo, the Sumida and the bay shore", 139.78, 35.68, 8.0),
+        ("Arakawa, Edogawa and the Tokyo Bay landfill", 139.86, 35.66, 14.0),
+        ("Tama River, Kawasaki and Haneda", 139.70, 35.56, 12.0),
+        ("Lake Inba and Teganuma", 140.12, 35.80, 20.0),
+    ],
     "ber": [  # T-290
         ("Central Berlin, the Spree and the Landwehrkanal", 13.40, 52.51, 6.0),
         ("Havel lakes: Spandau, Wannsee, Tegeler See", 13.20, 52.48, 16.0),

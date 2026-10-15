@@ -98,11 +98,17 @@ lines; an edit re-solves only the clusters it touched, the others keep their fig
   Potsdam, the eight Landkreise touching Berlin, Brandenburg an der Havel and Frankfurt (Oder):
   5.5M people), tier 0 with the Zensus 2022 100 m grid scaled to each Gemeinde's population, the
   Länder's Pendlerrechnung for jobs by Gemeinde of work and a curve fitted on its flows, on UTC+1,
-  outside the market [T-290].
+  outside the market [T-290]; **Tokyo** (Greater Tokyo: Tokyo, Kanagawa, Saitama and Chiba
+  prefectures whole, Tokyo's Izu and Ogasawara islands left out: 36.9M people), the first stage of
+  covering all of Japan, tier 0 with the 2020 census 500 m mesh population, the 2021 economic
+  census 500 m mesh jobs scaled to the census's workers by municipality of work, a curve fitted on
+  the census's municipality flows, the census's at-home workers plus a telework share, KSJ school
+  points, and place names in romaji (OSM's, else made from the kana reading), on UTC+9, outside
+  the market [T-420, research/japan.md].
 - **Non-city zones**: Worcester, Windham, New London and Litchfield Counties. Modelled space stays
   between city zones, with no ring round each city, for now (Anita, T-300).
 - **City additions** in the US are paused; a **sampler of other countries' cities** comes next
-  (London, Paris, Shanghai, Mumbai and Berlin built), each a low-fidelity first pass from general sources
+  (London, Paris, Shanghai, Mumbai, Berlin and Tokyo built), each a low-fidelity first pass from general sources
   (`research/world-sampler.md`). **Cells** are H3 resolution 9 (about 0.1 km²).
 
 ## 4. Demand: local trips

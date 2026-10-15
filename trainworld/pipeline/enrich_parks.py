@@ -45,6 +45,7 @@ import time
 
 import h3
 import numpy as np
+import shapely
 from shapely import STRtree, points
 from shapely.geometry import Point
 from shapely.ops import transform
@@ -162,6 +163,7 @@ def fetch_tiles(city, boundary, rel):
 
 def places(city, boundary):
     elements, names = fetch_all(city, boundary)
+    shapely.prepare(boundary)  # T-420: 62 ms a covers() on Greater Tokyo's outline unprepared
     rows = []
     for el in elements:
         tags = el.get("tags", {})
