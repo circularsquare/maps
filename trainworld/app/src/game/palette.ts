@@ -10,16 +10,33 @@ import type { Level } from "./types";
 export const LINE_PALETTE = ["#d7263d", "#1f6fd1", "#1a9a4a", "#f08a00", "#8a3fb8", "#f2c200", "#8f5a2a", "#0e9a9a",
   "#74797e", "#9ccb19", "#f59dc6", "#e62aa6", "#5cc3f0"];
 
-/** Track colour by height (display setting): warm above ground, grey at ground, cool below. */
+/** Track colour by height (display setting): warm above ground, green at ground, cool below
+ * (T-413: grey was hard to see on the basemap). */
 export const LEVEL_COLOURS: Record<Level, string> = {
   3: "#c2410c",
   2: "#ea7a1a",
   1: "#f2b134",
-  0: "#8c8c8c",
+  0: "#4caf50",
   [-1]: "#5aa3d8",
   [-2]: "#2f6fbf",
   [-3]: "#23408e",
 };
+
+/** The Max speed display's key, km/h and colour; renderer.ts's stroke shader blends the same stops. */
+export const SPEED_STOPS: [number, string][] = [[40, "#d85b4b"], [80, "#d9a437"], [120, "#55a886"], [160, "#397bc1"]];
+
+/** The colour the Max speed display gives `kmh`. */
+export function speedColour(kmh: number): string {
+  const s = SPEED_STOPS;
+  if (kmh <= s[0][0]) return s[0][1];
+  for (let i = 1; i < s.length; i++) {
+    if (kmh > s[i][0]) continue;
+    const t = (kmh - s[i - 1][0]) / (s[i][0] - s[i - 1][0]);
+    const a = rgb(s[i - 1][1]), b = rgb(s[i][1]);
+    return "#" + a.map((v, k) => Math.round(v + (b[k] - v) * t).toString(16).padStart(2, "0")).join("");
+  }
+  return s[s.length - 1][1];
+}
 
 /** Station rings and names on the map. */
 export const NET_INK = "#2b2b2b";

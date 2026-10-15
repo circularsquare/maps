@@ -1,6 +1,6 @@
 // Top bar: city, the mode split (the goal number, train first, in the fixed mode colours), cash,
-// day and time, the demand level, speed and pause. The clock is its own component so a game minute
-// re-renders only it.
+// day and time (the demand level is in the clock's hover), speed and pause. The clock is its own
+// component so a game minute re-renders only it.
 
 import type { ComponentChildren } from "preact";
 import { clock, SPEEDS } from "../game/clock";
@@ -33,7 +33,6 @@ function Clock() {
     <div class="clock" data-tip={held ? "The clock starts when demand has loaded" : `${WEEKDAY_LONG[weekdayOf(dayOf(minute))]}, day ${dayOf(minute)} · ${DEMAND_NAME[NO_CLOCK ? clock.demand.peek() : clock.demand.value]}`}>
       <span class="day sm">{weekdayName(dayOf(minute))} {dayOf(minute)}</span>
       <b class={"time lg" + (held ? " held" : "")}>{clockTime(minute)}</b>
-      <span class="demand sm">{DEMAND_NAME[NO_CLOCK ? clock.demand.peek() : clock.demand.value]}</span>
     </div>
   );
 }
@@ -94,12 +93,17 @@ export function TopBar() {
   const pct = (v: number) => (known ? v.toFixed(1) + "%" : "–");
   // T-342: the shares are of rides (trip legs) a day; the train's count beside its share, all in the hover
   const rides = modeRides.value;
+  const where = `${city ? "in " + city.name + " " : ""}${shownDay.value ? "at weekends" : "on weekdays"}`;
+  const note = demandView.value && !demandView.value.final ? " (an early estimate)" : demandView.value?.version === CACHE_VERSION ? " (from the last time this game was open)" : viewUpdating.value ? " (before your last change)" : "";
+  // T-406: walking and driving are icons; each has its own hover with the share and its rides
+  const modeTip = (name: string, share: number, n: number | undefined) =>
+    `${name}: ${pct(share)} of rides a day ${where}${rides && n !== undefined ? ` (${count(n)} of ${count(rides.all)})` : ""}${note}`;
   return (
     <><header id="topbar">
       {/* T-341: every part has a fixed width; a long name is cut short, the whole name on hover */}
       <div class="city" data-tip={city?.name}>{city?.name}</div>
       <div class="split">
-        <div data-tip={`Rides a day ${city ? "in " + city.name + " " : ""}${shownDay.value ? "at weekends" : "on weekdays"}: ${rides ? `Train ${pct(s.train)} (${count(rides.train)}), Walking ${pct(s.walk)} (${count(rides.walk)}), Driving ${pct(s.drive)} (${count(rides.drive)}), all ${count(rides.all)} rides` : `Train ${pct(s.train)}, Walking ${pct(s.walk)}, Driving ${pct(s.drive)}`}${demandView.value && !demandView.value.final ? " (an early estimate)" : demandView.value?.version === CACHE_VERSION ? " (from the last time this game was open)" : viewUpdating.value ? " (before your last change)" : ""}`} class={"split-row" + (viewUpdating.value ? " updating" : "")}>
+        <div data-tip={`Rides a day ${where}: ${rides ? `Train ${pct(s.train)} (${count(rides.train)}), Walking ${pct(s.walk)} (${count(rides.walk)}), Driving ${pct(s.drive)} (${count(rides.drive)}), all ${count(rides.all)} rides` : `Train ${pct(s.train)}, Walking ${pct(s.walk)}, Driving ${pct(s.drive)}`}${note}`} class={"split-row" + (viewUpdating.value ? " updating" : "")}>
           <span class="bar-box">
             <span class="bar">
               <i class="seg seg-train" style={{ width: s.train + "%" }} />
@@ -112,13 +116,13 @@ export function TopBar() {
             Train <b class="lg pct">{pct(s.train)}</b>
             <span class="sm rides">{rides ? count(rides.train) + " rides" : ""}</span>
           </span>
-          <span class="split-other sm">
-            <i class="sw sw-walk" />
-            Walking <span class="pct">{pct(s.walk)}</span>
+          <span class="split-other sm" data-tip={modeTip("Walking", s.walk, rides?.walk)}>
+            <span class="mode-icon" style={{ color: "var(--mode-walk)" }}><Icon.walk /></span>
+            <span class="pct">{pct(s.walk)}</span>
           </span>
-          <span class="split-other sm">
-            <i class="sw sw-drive" />
-            Driving <span class="pct">{pct(s.drive)}</span>
+          <span class="split-other sm" data-tip={modeTip("Driving", s.drive, rides?.drive)}>
+            <span class="mode-icon" style={{ color: "var(--mode-drive)" }}><Icon.ride /></span>
+            <span class="pct">{pct(s.drive)}</span>
           </span>
         </div>
       </div>

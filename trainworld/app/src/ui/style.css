@@ -265,10 +265,10 @@ table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
    box is cut short with an ellipsis (its whole name on hover), the percentages use tabular figures in
    boxes of fixed width. The split is one row (bar, then its labels), centred in the bar (T-349). */
 .city { flex: none; width: 130px; overflow: hidden; text-overflow: ellipsis; }
-.split { flex: 1; min-width: 0; max-width: 560px; display: flex; align-items: center; font-variant-numeric: tabular-nums; }
+.split { flex: 1; min-width: 0; display: flex; align-items: center; font-variant-numeric: tabular-nums; }
 .split-row { flex: 1; min-width: 0; display: flex; align-items: center; gap: 14px; height: 24px; }
 .split-row.updating .bar, .split-row.updating .split-train, .split-row.updating .split-other { opacity: 0.6; }
-.bar-box { flex: 1; min-width: 60px; position: relative; display: block; height: 10px; }
+.bar-box { flex: 1; min-width: 80px; position: relative; display: block; height: 10px; }
 .split-train { flex: none; display: inline-flex; align-items: center; gap: 6px; }
 .pct { display: inline-block; width: 5ch; text-align: left; }
 .split-other .pct { width: 5.6ch; }
@@ -282,7 +282,8 @@ table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
 .map-top-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; max-width: 100%; }
 .demand-busy { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .status-tag .load-bar.thin { height: 4px; margin-right: 0; }
-.split-other { flex: none; display: inline-flex; align-items: center; gap: 6px; }
+.split-other { flex: none; display: inline-flex; align-items: center; gap: 4px; }
+.split-other .mode-icon { display: inline-flex; }
 .bar { display: flex; width: 100%; height: 10px; border: 1px solid var(--rule); background: var(--bg); }
 .seg { display: block; height: 100%; }
 /* train, walking, driving: the commuter dot map's colours whatever the theme (T-084;
@@ -300,7 +301,6 @@ table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
 .clock .time.held { color: var(--muted); }
 .clock .day { min-width: 58px; }
 .clock .time { min-width: 46px; }
-.clock .demand { min-width: 108px; }
 .save-notice { flex: none; padding: 6px 10px; border-bottom: 1px solid var(--accent);
   background: var(--tint); display: flex; align-items: center; gap: 8px; font-size: 12px; }
 .save-notice span { flex: 1; min-width: 0; }
@@ -486,16 +486,15 @@ table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
 .maplibregl-ctrl-bottom-right .maplibregl-ctrl { margin: 0 !important; }
 
 /* The dock is resizable, so adapt to the map column rather than the browser width. */
-@container map-column (max-width: 1250px) {
-  .split-other { display: none; }
-}
-@container map-column (max-width: 1100px) {
+@container map-column (max-width: 1000px) {
   #topbar { gap: 12px; }
   .split-row { gap: 10px; }
   .clock .day { display: none; }
 }
+@container map-column (max-width: 860px) {
+  .split-other { display: none; }
+}
 @container map-column (max-width: 760px) {
-  .clock .demand { display: none; }
   .rides { display: none; }
   .city { width: 96px; }
 }

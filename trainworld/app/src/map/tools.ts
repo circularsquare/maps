@@ -24,7 +24,11 @@ import { effect } from "@preact/signals";
 import type { Map as MlMap, MapMouseEvent } from "maplibre-gl";
 import { lngLatToPack } from "../game/coords";
 import { describeIssues } from "../game/issues";
-import { distance, length, money, moneyShort, speed, unitMetres, unitShort } from "../game/format";
+import { count, distance, length, levelLabel, money, moneyShort, speed, unitMetres, unitShort } from "../game/format";
+import { activeCity, getWorldFrame, worldFrameEpoch } from "../game/cities";
+import { cellModes, cityCells, demandView } from "../game/demand";
+import { LEVEL_COLOURS, rgb, speedColour } from "../game/palette";
+import type { Level } from "../game/types";
 import { metresBetween } from "../game/walks";
 import { ask, buildLevel, buildPlatform, lineDraft, selection, trackCount, tool } from "../game/ui";
 import { describeRemovable, removeThing, type Removable } from "../game/remove";
@@ -61,6 +65,10 @@ export class Tools {
   private delHover: (Removable & { lx: number; ly: number }) | null = null;
   private delAt: [number, number] = [0, 0];
   private lastPreview: PreviewAnswer | null = null;
+  /** the request `lastPreview` answers, as JSON */
+  private previewKey = "";
+  /** a placement click waiting for its preview (T-410), by request key */
+  private clickWait: string | null = null;
   /** where the last station of this session was placed (lng, lat), T-312 */
   private lastPlaced: [number, number] | null = null;
   private box: HTMLDivElement;
@@ -229,6 +237,8 @@ export class Tools {
     this.pis = [];
     this.delHover = null;
     this.lastPreview = null;
+    this.previewKey = "";
+    this.clickWait = null;
     this.cross = null;
     this.crossKey = "";
     this.overlay.renderer.setPreview(null);
@@ -258,9 +268,39 @@ export class Tools {
       return;
     }
     const p = this.pack(s.lx, s.ly);
-    this.pis.push({ pi: { x: p.x, y: p.y, level: buildLevel.peek() }, lx: s.lx, ly: s.ly });
+    const pt = { pi: { x: p.x, y: p.y, level: buildLevel.peek() }, lx: s.lx, ly: s.ly };
+    if (e.originalEvent.shiftKey) return this.addPi(pt);
+    // T-410: refused when the route would be unbuildable if it ended at this click, by the same
+    // preview the hover shows (asked again only when the pointer's answer is not for this spot)
+    const req = this.routeReq({ kind: "free", ...pt.pi });
+    const key = JSON.stringify(req);
+    if (key === this.previewKey && this.lastPreview) return this.decide(pt, this.lastPreview);
+    this.clickWait = key;
+    const start = this.start, n = this.pis.length;
+    this.client.preview(req, (a) => {
+      if (this.clickWait !== key) return;
+      this.clickWait = null;
+      if (this.start === start && this.pis.length === n) {
+        this.showPreview(a, key);
+        this.decide(pt, a);
+      }
+      this.requestPreview();
+    });
+  }
+
+  private addPi(pt: { pi: PiInput; lx: number; ly: number }) {
+    this.pis.push(pt);
     this.requestPreview();
     this.place();
+  }
+
+  private decide(pt: { pi: PiInput; lx: number; ly: number }, a: PreviewAnswer) {
+    if (a.ok) this.addPi(pt);
+    else say(describeIssues(a.issues) || "Cannot be built here.", true);
+  }
+
+  private routeReq(to: RouteEnd) {
+    return { from: this.start!.end, to, pis: this.pis.map((p) => p.pi), single: trackCount.peek() === 1, quad: trackCount.peek() === 4 };
   }
 
   private finishAtLast() {
@@ -287,14 +327,20 @@ export class Tools {
     const last = this.pis[this.pis.length - 1] ?? this.start;
     const [ax, ay] = this.screen(last.lx, last.ly), [bx, by] = this.screen(h.lx, h.ly);
     if (Math.hypot(ax - bx, ay - by) < 3) return;
-    const to = this.endOf(h);
-    this.client.preview({ from: this.start.end, to, pis: this.pis.map((p) => p.pi), single: trackCount.peek() === 1, quad: trackCount.peek() === 4 }, (a) => {
-      if (!this.start) return;
-      this.lastPreview = a;
-      this.overlay.renderer.setPreview(a.pts.length >= 6 ? strokesFromPreview(a.pts, !a.ok, a.speeds, true) : null);
-      this.overlay.invalidate();
-      this.place();
+    if (this.clickWait) return; // a click's own preview is in the queue and must not be replaced
+    const req = this.routeReq(this.endOf(h));
+    const key = JSON.stringify(req);
+    this.client.preview(req, (a) => {
+      if (this.start) this.showPreview(a, key);
     });
+  }
+
+  private showPreview(a: PreviewAnswer, key: string) {
+    this.lastPreview = a;
+    this.previewKey = key;
+    this.overlay.renderer.setPreview(a.pts.length >= 6 ? strokesFromPreview(a.pts, !a.ok, a.speeds, true) : null);
+    this.overlay.invalidate();
+    this.place();
   }
 
   // ---------------------------------------------------------------- stations
@@ -358,6 +404,53 @@ export class Tools {
       this.crossKey = "";
       this.checkCrossover();
     }
+  }
+
+  /** Local trip legs a day per cell, homes and destinations together (T-412), for the demand shown. */
+  private legs: { key: string; xy: Float32Array; legs: Float32Array } | null = null;
+  private legsAsked = "";
+
+  /** "About 12k trips a day start or end within 800 m" of the spot (T-412), from the cells behind
+   * the Homes and Destinations bubbles; null until they are in. A trip with both ends inside counts
+   * twice, and a spot near a zone's edge counts the viewed zone's cells only. */
+  private tripsNear(lng: number, lat: number): string | null {
+    const dv = demandView.peek();
+    if (!dv) return null;
+    const key = `${dv.version}:${dv.round}:${dv.day}:${activeCity.peek()}:${worldFrameEpoch.peek()}`;
+    if (this.legs?.key !== key && this.legsAsked !== key) {
+      this.legsAsked = key;
+      void Promise.all([cityCells(), cellModes("all")]).then(([cells, m]) => {
+        if (this.legsAsked !== key) return;
+        if (!cells || !m) {
+          setTimeout(() => { if (this.legsAsked === key) this.legsAsked = ""; }, 2000); // asked again then
+          return;
+        }
+        const legs = new Float32Array(cells.n);
+        for (const a of [m.homeRail, m.homeWalk, m.homeDrive, m.workRail, m.workWalk, m.workDrive])
+          if (a.length === cells.n) for (let i = 0; i < cells.n; i++) legs[i] += a[i];
+        this.legs = { key, xy: cells.xy, legs };
+        if (tool.peek() === "station") this.place();
+      });
+    }
+    const L = this.legs;
+    if (!L) return null;
+    // the radius in world metres each way, so any frame's scale is right here
+    const f = getWorldFrame(), r = unitMetres() === 1000 ? TRIPS_RADIUS_M : M_PER_HALF_MILE;
+    const [x, y] = f.fromLonLat(lng, lat);
+    const dLat = (r / 6371008.8) * (180 / Math.PI), dLng = dLat / Math.cos((lat * Math.PI) / 180);
+    const [ex] = f.fromLonLat(lng + dLng, lat), [, ny] = f.fromLonLat(lng, lat + dLat);
+    const rx = Math.abs(ex - x), ry = Math.abs(ny - y);
+    let sum = 0, cells = 0;
+    for (let i = 0; i < L.legs.length; i++) {
+      const dx = (L.xy[i * 2] - x) / rx, dy = (L.xy[i * 2 + 1] - y) / ry;
+      if (dx * dx + dy * dy <= 1) (sum += L.legs[i]), cells++;
+    }
+    if (!cells) return null;
+    // two significant figures: the figure is rough by nature
+    const p = 10 ** Math.max(0, Math.floor(Math.log10(Math.max(sum, 1))) - 1), r2 = Math.round(sum / p) * p;
+    const n = sum < 50 ? null : r2 >= 10000 ? count(r2) : r2.toLocaleString("en-US");
+    const within = unitMetres() === 1000 ? `${TRIPS_RADIUS_M} m` : "half a mile";
+    return n ? `About ${n} trips a day start or end within ${within}` : `Under 50 trips a day start or end within ${within}`;
   }
 
   /** The station placed last in this session (T-312), found by its position so a rename shows. */
@@ -746,10 +839,8 @@ export class Tools {
       put(this.tag, h.lx, h.ly, 14, 12);
     } else if (t === "track" && this.start && h && pv) {
       this.tag.style.display = "";
-      this.tag.className = "tool-tag" + (pv.ok ? "" : " bad");
-      this.tag.textContent = pv.ok
-        ? `${distance(pv.lengthM)}, cost ${pv.mult.toFixed(2)}x, ${moneyShort(pv.cost * 1e6)}`
-        : describeIssues(pv.issues) || "Cannot be built here.";
+      this.tag.className = "tool-tag";
+      this.tag.replaceChildren(...placementTag(pv, buildLevel.peek(), h.kind === "free"));
       put(this.tag, h.lx, h.ly, 14, 12);
     } else if (t === "station" && h && h.kind !== "free" && this.ghostOk === false) {
       // why a click here would be refused (T-311)
@@ -757,13 +848,19 @@ export class Tools {
       this.tag.className = "tool-tag bad";
       this.tag.textContent = this.ghostWhy;
       put(this.tag, h.lx, h.ly, 14, 12);
-    } else if (t === "station" && h && h.kind !== "free" && this.lastPlacedName()) {
+    } else if (t === "station" && h && h.kind !== "free") {
+      const lines: string[] = [];
+      const last = this.lastPlacedName(), [lng, lat] = toLngLat(h.lx, h.ly);
       // T-312: how far from the station placed last
-      const last = this.lastPlacedName()!, [lng, lat] = toLngLat(h.lx, h.ly);
-      this.tag.style.display = "";
-      this.tag.className = "tool-tag";
-      this.tag.textContent = `${distance(metresBetween(lng, lat, last.lng, last.lat))} from ${last.name}`;
-      put(this.tag, h.lx, h.ly, 14, 12);
+      if (last) lines.push(`${distance(metresBetween(lng, lat, last.lng, last.lat))} from ${last.name}`);
+      const trips = this.tripsNear(lng, lat);
+      if (trips) lines.push(trips);
+      if (lines.length) {
+        this.tag.style.display = "";
+        this.tag.className = "tool-tag";
+        this.tag.replaceChildren(...lines.map((s) => Object.assign(document.createElement("div"), { textContent: s })));
+        put(this.tag, h.lx, h.ly, 14, 12);
+      } else this.tag.style.display = "none";
     } else this.tag.style.display = "none";
   }
 }
@@ -793,6 +890,65 @@ export function curveLabels(verts: Float64Array): { x: number; y: number; text: 
   }
   return out;
 }
+
+/**
+ * T-412: the station tool counts trips within a 10-minute walk: 800 m straight line is about
+ * 1,040 m walked at the model's 1.3 detour, 10 minutes at its 6 km/h. US units: half a mile.
+ */
+const TRIPS_RADIUS_M = 800;
+const M_PER_HALF_MILE = 804.672;
+
+/** A value in the placement tag with its colour behind it (T-411). */
+function chip(text: string, colour: string | null, alpha = 0.5): HTMLSpanElement {
+  const s = document.createElement("span");
+  s.textContent = text;
+  if (colour) {
+    const [r, g, b] = rgb(colour);
+    s.style.background = `rgba(${r},${g},${b},${alpha})`;
+    s.style.padding = "0 3px";
+    s.style.borderRadius = "2px";
+  }
+  return s;
+}
+
+/**
+ * The track tool's tag (T-411): length, cost multiplier, price and the tightest curve; then the
+ * level being placed and the route's lowest speed limit, the multiplier, level and speed on their
+ * colours (yellow growing above 1x; the Height and Max speed displays' colours). When the route
+ * could not be built ending here, why first, and (T-410) that shift-click places the point anyway
+ * when the click would add a point (`free`).
+ */
+function placementTag(pv: PreviewAnswer, level: number, free: boolean): HTMLDivElement[] {
+  const div = (...kids: (string | Node)[]) => {
+    const d = document.createElement("div");
+    d.append(...kids);
+    return d;
+  };
+  const out: HTMLDivElement[] = [];
+  if (!pv.ok) {
+    const why = div(describeIssues(pv.issues) || "Cannot be built here.");
+    why.style.color = "#b23a3a"; // style.css's `.tool-tag.bad`, for this line only
+    out.push(why);
+  }
+  let radius = Infinity;
+  const nv = pv.verts.length / 4;
+  for (let i = 1; i < nv - 1; i++) if (pv.verts[i * 4 + 2] > 0) radius = Math.min(radius, pv.verts[i * 4 + 2]);
+  let top = TOP_KMH;
+  if (pv.speeds?.length) for (const v of pv.speeds) top = Math.min(top, v);
+  else for (let i = 1; i < nv - 1; i++) if (pv.verts[i * 4 + 2] > 0) top = Math.min(top, pv.verts[i * 4 + 3]);
+  if (pv.ok) {
+    const dear = Math.min(1, (pv.mult - 1) / 1.5);
+    out.push(div(`${distance(pv.lengthM)}, cost `, chip(`${pv.mult.toFixed(2)}x`, pv.mult > 1.005 ? COST_YELLOW : null, 0.2 + 0.6 * dear),
+      `, ${moneyShort(pv.cost * 1e6)}`, ...(radius < Infinity ? [`, ${length(radius)} curve`] : [])));
+  }
+  out.push(div(chip(`Level ${levelLabel(level)}`, LEVEL_COLOURS[level as Level] ?? null), ", max speed ", chip(speed(top), speedColour(top))));
+  if (!pv.ok && free) out.push(div("Shift-click to place it anyway"));
+  return out;
+}
+
+/** The M1 train's top speed, km/h: straight track's limit (track-and-service.md 6.1). */
+const TOP_KMH = 160;
+const COST_YELLOW = "#f2c200";
 
 /** From this zoom the basemap's tiles carry street names (T-065). */
 const STREET_NAME_ZOOM = 13;

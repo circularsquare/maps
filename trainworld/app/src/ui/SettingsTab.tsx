@@ -6,7 +6,7 @@
 // (T-251, ui/SavesPanel.tsx). T-253: no explanatory notes, only controls and their labels.
 
 import { levelLabel, speed } from "../game/format";
-import { LEVEL_COLOURS } from "../game/palette";
+import { LEVEL_COLOURS, SPEED_STOPS } from "../game/palette";
 import { LEVELS } from "../game/types";
 import { display, setDisplay, theme, THEMES, tool, UI_SCALES, uiScale, type Theme } from "../game/ui";
 import { pickTool, TRIP_KEY } from "./tabs";
@@ -50,7 +50,7 @@ export function SettingsTab() {
         onChange={(v) => setDisplay("trackColour", v)}
       /></div>
       {d.trackColour === "speed" && <ul class="speed-key">
-        {[[40, "#d85b4b"], [80, "#d9a437"], [120, "#55a886"], [160, "#397bc1"]].map(([v, colour]) => <li><i style={{background: String(colour)}} />{speed(Number(v), 5)}</li>)}
+        {SPEED_STOPS.map(([v, colour]) => <li><i style={{background: colour}} />{speed(v, 5)}</li>)}
       </ul>}
       {d.trackColour === "height" && (
         <ul class="levels-key">

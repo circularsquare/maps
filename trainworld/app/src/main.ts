@@ -229,8 +229,9 @@ map.on("load", () => {
 
 // While a tool is on, double clicks finish a route instead of zooming.
 effect(() => {
-  if (tool.value === "select") map.doubleClickZoom.enable();
-  else map.doubleClickZoom.disable();
+  // a shift-click places a refused track point (T-410), which MapLibre's shift-drag zoom would eat
+  if (tool.value === "select") map.doubleClickZoom.enable(), map.boxZoom.enable();
+  else map.doubleClickZoom.disable(), map.boxZoom.disable();
   map.getCanvas().style.cursor = tool.value === "select" ? "" : "crosshair";
   if (tool.value !== "track") tools.reset();
 });

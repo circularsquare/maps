@@ -38,9 +38,21 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
 [T-023, T-085, T-092, T-244, T-311, T-322]
 
 - Clicks place corners at the level selected (rules in [track-and-service.md](track-and-service.md)
-  6.1). While drawing, the clicked points show as squares, each curve its radius and speed limit,
-  and the tag by the cursor the stretch's length, average cost multiplier and price ("1.5 km, cost
-  1.33x, $25.5M") or why it cannot be built.
+  6.1). While drawing, the clicked points show as squares and each curve its radius and speed
+  limit. **The tag by the cursor** [T-411] has two lines: the stretch's length, average cost
+  multiplier, price and tightest curve ("1.5 km, cost 1.33x, $25.5M, 401 m curve"; no curve, no
+  radius), then the level being placed and the route's lowest speed limit ("Level +2, max speed
+  67 km/h"). The multiplier sits on yellow above 1x, deeper up to 2.5x, plain at 1x and below; the
+  level on its Height colour and the speed on its Max speed colour (`speedColour`,
+  `game/palette.ts`), each at half strength behind dark text. Where the route could not be built
+  ending at the cursor, the reason comes first, in red, and the cost line is left out.
+- **A refused click** [T-410]: a click that adds a corner where the route, if it ended there,
+  could not be built (a curve under 100 m, ground track over water, too little room for a ramp) is
+  refused with the reason at the bottom left, and the tag adds "Shift-click to place it anyway".
+  The answer is the hover's preview for that spot, or one asked for the click when the pointer's
+  answer is for another spot; a shift-click places the corner without asking. Clicks that finish on
+  track or a node, and the first click, are not checked here (the edit itself refuses those). With
+  a tool on, MapLibre's shift-drag zoom is off so the shift-click reaches the tool.
 - **The ghost** is solid with a dark casing: white in the Line and traffic views, coloured by the
   Height or Max speed view from the preview's fitted geometry; red when invalid.
 - **Placed blueprint track** is drawn as blue rails ([ui-map.md](ui-map.md) "Lines and track").
@@ -57,9 +69,14 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
   answer comes from the clock worker trying the real edit (`TrackApi.preview_station`; one request
   in flight, asked when the spot, platform length or network changes, the last answer kept
   meanwhile), so the ghost and the click cannot disagree.
-- **Placement help** [T-312]: with the pointer snapped to track the tag says how far the spot is,
-  in a straight line, from the station placed last in this session ("1.2 km from W 46th St";
-  nothing before the first, and the refusal reason takes its place), and two thin rings at 1 km and
+- **Placement help** [T-312, T-412]: with the pointer snapped to track the tag says how far the
+  spot is, in a straight line, from the station placed last in this session ("1.2 km from W 46th
+  St"; nothing before the first), then roughly how many local trips a day start or end within 800 m
+  (half a mile in US units): "About 12k trips a day start or end within 800 m", two significant
+  figures, "Under 50" below that. 800 m is a 10-minute walk at the model's 6 km/h and 1.3 detour.
+  The count is the Homes and Destinations bubbles' legs (all purposes) over the cells whose centres
+  are inside the circle, from the zone in view only; a trip with both ends inside counts twice.
+  A refused spot shows only the reason. Two thin rings at 1 km and
   2 km of ground distance, each labelled at its top, follow the spot under the ghost
   (`stationRings` in `map/tools.ts`, an SVG layer, fixed grey ink at 35%).
 - How a new station is named: [track-and-service.md](track-and-service.md) 6.1. A double click on

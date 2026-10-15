@@ -22,6 +22,12 @@ day; fares are each line's hourly fare paid as the cash is [T-284]. Asked four t
 while a panel shows them and the clock runs (`game/today.ts`); only the components showing them
 re-render. The map's demand views stay demand's whole-day picture.
 
+**Yesterday** [T-408, `workers/clock.worker.ts` `closeDay`, `yesterday`]: at each line's local
+midnight the clock worker keeps that line's whole day (the same counts as Today, evaluated at the
+day's last second, fares paid whole). A game loaded since the day ended has none kept, and shows
+the day worked out again on the network as it is now (the account is the same for every day of a
+kind). Lines built after the day ended show nothing. Kept days are not saved.
+
 **Riders by purpose** [T-165, `ui/inspector/PurposeSplit.tsx`]: under a line's riders today and a
 station's (or complex's) boardings today, a thin stacked bar in the purpose colours, in the
 purpose filter's order, with a key of names and rounded shares ("<1%" for a sliver); hovering a
@@ -57,10 +63,16 @@ key.
   quad track's express pair, opening stop editing at once; [track-and-service.md](track-and-service.md)
   6.1), and Delete line (asked first). Incomplete lines stay planned and run no trains.
 - **Sections**, in order: Schedule (trains for each demand level, with the resulting headway;
-  [track-and-service.md](track-and-service.md) 6.3); Today for a running line: riders by purpose,
+  [track-and-service.md](track-and-service.md) 6.3; hovering High, Medium or Low gives that
+  level's times of day in the line's local time, from the period table in `game/periods.ts`:
+  "High demand: 06:00 to 10:00, 16:00 to 20:00"; weekends use the same hours) [T-406]; Today for a running line:
+  riders by purpose,
   fares, running cost so far, its fullest train so far ("100%" when one left packed full, else "N%
   full"), how many trains left full and when (spans under half an hour apart, at the stop where
-  each is fullest) and riders left behind [T-230, T-239, T-293]; the stops with their time from
+  each is fullest) and riders left behind [T-230, T-239, T-293]; the block's heading is a Today /
+  Yesterday switch (the Segmented pattern of Settings; the choice is kept while the page is open)
+  and Yesterday gives the same figures for the last complete day in the line's local time, running
+  cost over its 24 hours at the trains it has now [T-408]; the stops with their time from
   the start and boardings today; the round trip split into running, dwell, turning and waiting,
   naming where it waits most [T-031].
 - A line's riders count every line actually boarded, transfers included; inter-region trips show

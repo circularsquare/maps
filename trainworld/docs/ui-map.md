@@ -30,12 +30,12 @@ Positron, repainted faint (`map/basemap.ts`), so the network reads first.
   - **Line**: uniform width in the line colours.
   - **Line + traffic thickness** (the default): width by riders over the day shown
     ([ui-demand-views.md](ui-demand-views.md) "Line width by riders").
-  - **Height**: the track coloured by level, warm above ground, grey at ground, cool below: +3
-    #c2410c, +2 #ea7a1a, +1 #f2b134, 0 #8c8c8c, -1 #5aa3d8, -2 #2f6fbf, -3 #23408e
-    (`LEVEL_COLOURS`).
+  - **Height**: the track coloured by level, warm above ground, green at ground, cool below: +3
+    #c2410c, +2 #ea7a1a, +1 #f2b134, 0 #4caf50, -1 #5aa3d8, -2 #2f6fbf, -3 #23408e
+    (`LEVEL_COLOURS`, T-413).
   - **Max speed**: the geometry's allowed speed at each section, curve limits included, capped at
     160 km/h (not a train's speed), keyed 40/80/120/160 km/h from warm red through ochre and green
-    to blue.
+    to blue (`SPEED_STOPS`, the stroke shader blends the same stops).
   In Height and Max speed the width is uniform and trains keep their line colours.
 - **Blueprint track** [T-311, T-322, T-331, T-333] is drawn solid and opaque as two rails in every
   track view: a light blue middle (#a9cdf3) between dark blue rails (#2f62b3). The whole width is 75%

@@ -31,6 +31,19 @@ export function periodAt(t: number): number {
   return PERIODS.findIndex((p) => h >= p.from && h < p.to);
 }
 
+/** The hours of the day a demand level is scheduled, [from, to) in order, neighbouring periods of
+ * the same level joined. */
+export function levelHours(level: Demand): [number, number][] {
+  const out: [number, number][] = [];
+  for (const p of [...PERIODS].sort((a, b) => a.from - b.from)) {
+    if (p.demand !== level) continue;
+    const last = out[out.length - 1];
+    if (last && last[1] === p.from) last[1] = p.to;
+    else out.push([p.from, p.to]);
+  }
+  return out;
+}
+
 /** Check against the Rust table (per period: from, to, level index, ...; `stride` numbers each). */
 export function periodsMatch(rust: ArrayLike<number>, stride: number): boolean {
   if (rust.length !== PERIODS.length * stride) return false;

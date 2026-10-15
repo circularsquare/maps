@@ -1,5 +1,13 @@
 # Archive
 
+- T-413 [P2] Track level colours. Done 2026-10-15: level 0 is green #4caf50 (chosen over grey, a paler #7cc47f and a darker #2e8b57; screenshots artifacts/trainworld/T-413-*.png); the Settings key follows.
+
+- T-412 [P2] Trips near a station spot. Done 2026-10-15: the station tool's tag adds "About 12k trips a day start or end within 800 m" (a 10-minute walk), from the Homes and Destinations cells of the zone in view.
+
+- T-411 [P2] The track placement hover. Done 2026-10-15: two lines, length, cost multiplier, price, tightest curve; then level and lowest speed limit, the multiplier on yellow above 1x, the level and speed on their display colours.
+
+- T-410 [P2] Refuse clicks that leave bad track. Done 2026-10-15: a corner click is refused when the route would be unbuildable ending there (the hover's preview); shift-click places it anyway, said in the tag. Shift-drag zoom is off while a tool is on.
+
 - T-405 [P2] Solve order and the shared caches. Done 2026-10-15: the skim cache let a city with nothing to search evict New York's table; now the cheapest table gives way, so both orders search the same (native 50 vs 57 s before, within noise after), figures identical. notes/T-405.md.
 
 - T-408 [P2] Yesterday in the line inspector. Done 2026-10-15: the Today block's heading is a Today / Yesterday switch; the clock worker keeps each line's whole day at its local midnight, and a game loaded since then shows the day worked out again on the current network.

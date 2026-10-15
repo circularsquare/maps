@@ -10,17 +10,28 @@ import { queryClock } from "../../workers/clockClient";
 import { clock, demandAt } from "../../game/clock";
 import { clockTime, count, distance, duration, headway, money } from "../../game/format";
 import { LINE_PALETTE } from "../../game/palette";
-import { PERIODS, periodAt } from "../../game/periods";
-import { today, useToday } from "../../game/today";
+import { levelHours, PERIODS, periodAt } from "../../game/periods";
+import { signal } from "@preact/signals";
+import { today, useToday, useYesterday, yesterday } from "../../game/today";
 import { DEMAND_INDEX, DEMANDS, type Demand, type LineInput, type LineStats } from "../../game/types";
 import { ask, lineDraft, renameLinePrompt, selection, tool } from "../../game/ui";
 import { moneyState } from "../../game/money";
 import { edit, linesAt, renameLine, say, setLineColour, stepTrainCount, trainsShown, world } from "../../game/world";
 import { live } from "../../map/live";
-import { Chip, Icon, Row, Stepper } from "../widgets";
+import { Chip, Icon, Row, Segmented, Stepper } from "../widgets";
 import { PurposeSplit } from "./PurposeSplit";
 
 const DEMAND_LABEL: Record<Demand, string> = { high: "High", medium: "Medium", low: "Low" };
+
+/** Which day the Today block shows (T-408), kept while the game is open. */
+const dayShown = signal<"today" | "yesterday">("today");
+
+/** When a demand level runs, in the line's local time (the hour spans of game/periods.ts): "High
+ * demand: 06:00 to 10:00, 16:00 to 20:00". */
+function levelTimes(d: Demand): string {
+  const t = (h: number) => clockTime((h * 60) % 1440);
+  return `${DEMAND_LABEL[d]} demand: ${levelHours(d).map(([a, b]) => `${t(a)} to ${t(b)}`).join(", ")}`;
+}
 
 /** Where a line waits, in words (T-031): from `TrackApi.line_delays`. */
 function spotsFrom(d: Float64Array): { text: string; s: number }[] {
@@ -103,22 +114,33 @@ function runningToday(l: LineInput, st: LineStats): number {
  * from the boarding account (T-230): how many left packed full and when, the fullest, and who
  * was left on the platform. Its own component: it re-renders as the counts move. */
 function LineToday({ l, st }: { l: LineInput; st: LineStats }) {
-  const d = today.value.get(l.id);
-  if (!d) return null;
-  const fullest = Math.round(100 * d.fullest);
+  const yest = dayShown.value === "yesterday";
+  useYesterday(yest);
+  const d = (yest ? yesterday : today).value.get(l.id);
+  if (!d && !yest) return null;
+  const fullest = d ? Math.round(100 * d.fullest) : 0;
   return (
     <>
-      <div class="h"><span data-tip="Since midnight, counted train by train. Whoever does not fit on a full train waits for the next one.">Today</span></div>
-      <ul class="rows">
+      <div class="h">
+        <Segmented<"today" | "yesterday">
+          options={[
+            ["today", <span data-tip="Since midnight, counted train by train. Whoever does not fit on a full train waits for the next one.">Today</span>],
+            ["yesterday", <span data-tip="The last complete day, midnight to midnight in the line's local time">Yesterday</span>],
+          ]}
+          value={dayShown.value}
+          onChange={(v) => { dayShown.value = v; }}
+        />
+      </div>
+      {d && <ul class="rows">
         <Row label="Riders">{count(d.riders)}</Row>
         <PurposeSplit scope={[{ line: l.id }]} unit="riders" />
         <Row label="Fares">{money(d.fares)}</Row>
-        <Row label="Running trains">{money(-runningToday(l, st))}</Row>
+        <Row label="Running trains">{money(-(yest ? d.running : runningToday(l, st)))}</Row>
         <Row label="Fullest train">{d.fullTrains > 0 ? "100%" : `${fullest}% full`}</Row>
         {d.fullTrains > 0 && <Row label="Trains leaving full">{count(d.fullTrains)}</Row>}
         {d.spans.length > 0 && <Row label="When">{spansText(d.spans)}</Row>}
         <Row label="Riders left on the platform">{count(d.leftBehind)}</Row>
-      </ul>
+      </ul>}
     </>
   );
 }
@@ -281,7 +303,7 @@ export function LineInspector({ id }: { id: string }) {
         </tr>
         {DEMANDS.map((d) => (
           <tr class={d === now ? "now" : ""}>
-            <td>{DEMAND_LABEL[d]}</td>
+            <td><span data-tip={levelTimes(d)}>{DEMAND_LABEL[d]}</span></td>
             <td>
               <Stepper value={(trainsShown(l.id) ?? st.trainsNeeded)[DEMAND_INDEX[d]]} label="trains on the entire line" onStep={(s) => stepTrainCount(l.id, d, s)} />
             </td>

@@ -26,10 +26,14 @@ export interface LineToday {
   leftBehind: number;
   /** spans of full trains (s into the day) */
   spans: [number, number][];
+  /** running cost of the trains over the day, US$; only for a whole day (yesterday's) */
+  running: number;
 }
 
 /** Per line id; empty until the first answer (and for a line with no riders yet). */
 export const today = signal<Map<string, LineToday>>(new Map());
+/** each line's last complete day (T-408), asked for while a panel shows it */
+export const yesterday = signal<Map<string, LineToday>>(new Map());
 /** whether any line has counts: lists sorted by today's figures re-sort when it turns */
 export const todayLoaded = computed(() => today.value.size > 0);
 
@@ -43,11 +47,11 @@ export function readToday(d: Float64Array): Map<string, LineToday> {
     const spans: [number, number][] = [];
     for (let s = 0; s < nSpans; s++) spans.push([d[i + 7 + 2 * s], d[i + 8 + 2 * s]]);
     const stops = Array.from(d.subarray(i + 7 + 2 * nSpans, i + 7 + 2 * nSpans + n));
-    const t: LineToday = { riders: d[i + 2], fullTrains: d[i + 3], leftBehind: d[i + 4], fullest: d[i + 5], spans, stops, fares: 0 };
+    const t: LineToday = { riders: d[i + 2], fullTrains: d[i + 3], leftBehind: d[i + 4], fullest: d[i + 5], spans, stops, fares: 0, running: 0 };
     at.push({ id: String(id), t });
     i += 7 + 2 * nSpans + n;
   }
-  at.forEach((a, k) => { a.t.fares = (d[i + k] ?? 0) * 1e6; out.set(a.id, a.t); });
+  at.forEach((a, k) => { a.t.fares = (d[i + k] ?? 0) * 1e6; a.t.running = d[i + at.length + k] ?? 0; out.set(a.id, a.t); });
   return out;
 }
 
@@ -80,6 +84,19 @@ function ask(force = false) {
     if (!d) return;
     today.value = readToday(d);
   });
+}
+
+/** Ask for yesterday's figures while the calling panel shows them (T-408): again when the day turns
+ * or the network or the riders change. */
+export function useYesterday(on: boolean) {
+  const key = (world.value?.version ?? -1) * 1e6 + accountVersion.value;
+  const day = Math.floor(clock.local.value / 1440);
+  useEffect(() => {
+    if (!on) return;
+    let live = true;
+    void queryClock({ what: "yesterday" }).then((d) => { if (live && d) yesterday.value = readToday(d); });
+    return () => { live = false; };
+  }, [on, key, day]);
 }
 
 /** Keep `today` fresh while the calling panel is shown. */

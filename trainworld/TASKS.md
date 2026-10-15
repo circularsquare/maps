@@ -122,10 +122,6 @@ PATH, `npm run build --prefix maps/.tw-snap/trainworld/app` (a few minutes; back
 
 ## Interface
 
-- T-410 [P2] Track placement refuses a click that would leave unplaceable track if the player stopped there (a curve tighter than allowed, ground track over water, and the like); shift-click places it anyway, for a route the next click will make valid (Anita 2026-10-15). Open.
-- T-411 [P2] The track placement hover always shows length, cost multiplier, curve radius, the level being placed and the maximum speed, with the multiplier, level and speed colour coded (Anita's example: "2.5km, cost 1.8x, 401m / height +2, max speed 67km/h", speed orangeish as not fast, level in its track colour, cost yellow above 1x). Open.
-- T-412 [P2] The station tool's hover gives a rough count of trips in the area round the spot (a radius that suits the smooth demand; not exact by nature). Open.
-- T-413 [P2] Track level colours: level 0 is grey today and hard to see; something like blue, pale green, orange (Anita 2026-10-15). Open.
 - T-294 [P3] Fares across a period's hours (from T-284): each hour of a period is paid the period's fares spread evenly, while the boarding account's riders peak mid-period, so 07:00 earns as much as 08:00. Weight the period's hours by the account's boardings each hour, keeping the period's total (the worker already reads each hour's slice, `shapeHour`). Small; open; notes/T-284.md.
 
 - T-166 [P3] A station's riders by purpose on the map: under the purpose filter a selected station's catchment shows commuters only (hidden for other purposes). Everyday and school catchments need per-purpose station queries from `EverydayApi`. Open; notes/T-158.md.

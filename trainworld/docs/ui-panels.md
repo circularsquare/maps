@@ -62,22 +62,25 @@ exceptions). One dock on the left [T-252, `ui/Dock.tsx`]:
 ## The top bar
 
 `ui/TopBar.tsx`, left to right, 46 px high, **every part centred on one line** [T-349]: city name,
-the split (bar, then its labels), cash, day and time, demand level, speed buttons. **Three type
+the split (bar, then its labels), cash, day and time, speed buttons. **Three type
 styles only**: normal (14 px, regular, text colour: name, "Train", cash), figure (18 px, bold: the
-train share and the time) and small (12 px, regular, muted: rides, walking, driving, day, demand
-level, status). **Every part has a fixed width** [T-341], so no city name or status moves the split
-bar (the same length for every zone): the name box is cut with an ellipsis (the whole name on
-hover), the percentages and counts are in tabular figures in boxes of fixed width, and the split
-bar is centred in the bar with nothing under it: the status is a tag over the map (Status, below).
-Walking and driving drop below 1250 px of map
-column, the day below 1100, the demand level and rides below 760; below 700 px the bar takes two
-rows (name, cash, time and speed over the split).
+train share and the time) and small (12 px, regular, muted: rides, walking and driving shares,
+day, status). **Every part has a fixed width** [T-341], so no city name or status moves the split
+bar: the name box is cut with an ellipsis (the whole name on hover), the percentages and counts
+are in tabular figures in boxes of fixed width, and the split bar is centred in the bar with
+nothing under it: the status is a tag over the map (Status, below). The mode bar is the one
+flexible part [T-406]: it takes the width the fixed parts leave, so its length follows the window
+(at least 80 px) and never the numbers beside it, and grows on wide windows. Walking and driving
+are the walk and car icons (the walk and drive mode colours) with the share beside them, each
+with its own hover. They drop below 860 px of map column, the day below 1000, rides below 760;
+below 700 px the bar takes two rows (name, cash, time and speed over the split).
 
 - **The goal number**: the focused zone's mode split as one bar (driving, train, walking, in the
   mode colours whatever the theme), the split of all its modelled local trip legs (commutes,
   everyday outings, school and university), so the shares are of rides a day, not people [T-342].
   The labels after it give the train share with its rides a day ("Train 18.5% 8.81M rides") and the
-  walking and driving shares; the hover gives all three counts and the total. The player's job is
+  walking and driving shares as icons; the hover gives all three counts and the total, and an
+  icon's own hover its share and rides. The player's job is
   to make the train share grow. It shows "–" and an empty bar until the zone has figures of its own
   (a solve's, or the bare pass's for a zone no station reaches; not the no-rail split a pack gives
   before that), and over dead space [T-318]. The hover says "on weekdays" or "at weekends" for the
@@ -96,8 +99,9 @@ rows (name, cash, time and speed over the split).
 - **Cash**, to the dollar, moving as fares are paid and running costs drain [T-284]. Fixed width
   (room for "-$99,999,999,999") with the digits left-aligned after the $ in tabular figures, so a
   changing figure never moves the rest of the bar [T-305, T-310].
-- **The clock**: day of the week, day and time ("Sat 13", hover "Saturday, day 13"), the local
-  time where the player is looking [T-309]; the demand level ("High demand"); pause and three
+- **The clock**: day of the week, day and time ("Sat 13", hover "Saturday, day 13 · High demand":
+  the demand level is only in the hover [T-406]), the local
+  time where the player is looking [T-309]; pause and three
   speeds. **Space** pauses and resumes at the speed that was running, even with a button focused.
 - **Narrow maps**: secondary labels drop first; two rows below 700 px, a different two below 520
   px (speed beside the split), three below 300 px, with cash, time, train share and all speed

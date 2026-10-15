@@ -515,7 +515,7 @@ function settle(): boolean {
     d.fares += fare * df;
     d.running += cost * dc;
     settledT = full ? t + 3600 : end;
-    if (full) { ended = true; hourShape.delete(h); }
+    if (full) { ended = true; hourShape.delete(h); closeDay(t + 3600); }
   }
   api.set_cash(cash);
   dirty = true;
@@ -526,33 +526,93 @@ function settle(): boolean {
  * taken today, US$M, in the same order: its fare for each hour since midnight, the hour now by the
  * share already paid, as `settle` pays the network's. */
 function today(): Float64Array {
-  const a = api!;
   if (settle()) sendMoney();
-  const now = Math.min(gameNow(), settledT);
-  const v = a.today(now);
-  const count = v[0];
-  const hNow = Math.floor(now / 3600);
-  const fares: number[] = [];
+  return packDays(lineDaysAt(Math.min(gameNow(), settledT), false));
+}
+
+/** One line's day, in `TrackApi.today`'s per-line layout, with its fares (US$M) and, for a whole
+ * day, its running cost (US$). */
+interface LineDay { id: number; block: ArrayLike<number>; fare: number; run: number }
+
+/** Every line's block of `TrackApi.today(now)` with its fares taken: each hour since the line's
+ * local midnight (T-309), at its local period and day, by the share already paid (`closed`: the
+ * day is over, every hour paid whole). `shift` keeps the lines on one local time. */
+function lineDaysAt(now: number, closed: boolean, shift?: number): LineDay[] {
+  const a = api!;
+  const v = a.today(now), count = v[0], hNow = Math.floor(now / 3600);
+  const out: LineDay[] = [];
   let i = 1;
   for (let k = 0; k < count; k++) {
-    const id = v[i], n = v[i + 1], spans = v[i + 6];
-    const per = lineIncome.get(id);
-    let f = 0;
-    // each hour since the line's local midnight (T-309), at its local period and day, by the
-    // share already paid
+    const id = v[i], n = v[i + 1], spans = v[i + 6], len = 7 + 2 * spans + n;
     const sh = a.line_shift(id);
-    const h0 = Math.floor((now + sh) / 86400) * 24 - sh / 3600;
-    if (per) for (let h = h0; h <= hNow; h++) {
-      const t = h * 3600 + sh, w = h < hNow ? 1 : h === partHour ? partFare : 0;
-      f += ((per[dayKindAt(t)] ?? per[0])?.[periodAt(t)] ?? 0) * w;
+    if (shift === undefined || sh === shift) {
+      const per = lineIncome.get(id);
+      let f = 0;
+      const h0 = Math.floor((now + sh) / 86400) * 24 - sh / 3600;
+      if (per) for (let h = h0; h <= hNow; h++) {
+        const t = h * 3600 + sh, w = closed || h < hNow ? 1 : h === partHour ? partFare : 0;
+        f += ((per[dayKindAt(t)] ?? per[0])?.[periodAt(t)] ?? 0) * w;
+      }
+      out.push({ id, block: v.subarray(i, i + len), fare: f, run: 0 });
     }
-    fares.push(f);
-    i += 7 + 2 * spans + n;
+    i += len;
   }
-  const out = new Float64Array(v.length + fares.length);
-  out.set(v);
-  out.set(fares, v.length);
   return out;
+}
+
+/** The flat array the panels read (game/today.ts `readToday`): the line count, each line's block,
+ * then each line's fares, then each line's running cost. */
+function packDays(items: LineDay[]): Float64Array {
+  const len = items.reduce((s, d) => s + d.block.length, 1);
+  const out = new Float64Array(len + 2 * items.length);
+  out[0] = items.length;
+  let i = 1;
+  for (const d of items) { out.set(d.block, i); i += d.block.length; }
+  items.forEach((d, k) => { out[i + k] = d.fare; out[i + items.length + k] = d.run; });
+  return out;
+}
+
+/** US$ a running line's trains cost over a whole day at the trains it has now, as the line panel
+ * counts today's (`runningToday` in LineInspector). */
+function dayRunCosts(): Map<number, number> {
+  const li = api!.lines_info(), out = new Map<number, number>();
+  const unit = moneyParams[1] * moneyParams[2];
+  for (let i = 0; i < li.length; i += 22) {
+    if (li[i + 3] !== 1) continue;
+    let trains = 0;
+    for (let h = 0; h < 24; h++) trains += li[i + 5 + LEVEL_OF[PERIODS[periodAt(h * 3600)].demand]];
+    out.set(li[i], trains * 2 * (li[i + 9] / 1000) * (li[i + 21] || li[i + 8]) * unit);
+  }
+  return out;
+}
+
+/** T-408: each line's last complete day, kept at the line's local midnight (`day` is the local day
+ * it covers): what the panel's Yesterday shows. Not saved. */
+const lineDays = new Map<number, LineDay & { day: number }>();
+
+function closeDay(tEnd: number) {
+  const a = api!;
+  for (const s of a.running_shifts()) {
+    if ((tEnd + s) % 86400 !== 0) continue;
+    const day = (tEnd + s) / 86400 - 1, run = dayRunCosts();
+    for (const d of lineDaysAt(tEnd - 1, true, s)) lineDays.set(d.id, { ...d, block: Float64Array.from(d.block), run: run.get(d.id) ?? 0, day });
+  }
+}
+
+/** Every running line's last complete local day. A line with a kept day shows it; a game loaded
+ * since the day ended has none, and shows the day worked out again on the network as it is now. */
+function yesterday(): Float64Array {
+  const a = api!;
+  if (settle()) sendMoney();
+  const now = Math.min(gameNow(), settledT), run = dayRunCosts();
+  const items: LineDay[] = [];
+  for (const s of a.running_shifts()) {
+    const day = Math.floor((now + s) / 86400) - 1;
+    const kept = [...lineDays.values()].filter((d) => d.day === day && run.has(d.id) && a.line_shift(d.id) === s);
+    if (kept.length) items.push(...kept);
+    else for (const d of lineDaysAt((day + 1) * 86400 - s - 1, true, s)) items.push({ ...d, run: run.get(d.id) ?? 0 });
+  }
+  return packDays(items);
 }
 
 /** The share of hour `h`'s fares paid by `s` seconds into it (T-284). */
@@ -832,7 +892,8 @@ function restart(t: number, from: "autosave" | "file" | "new") {
   partHour = Math.floor(t / 3600);
   partFare = partCost = (t - partHour * 3600) / 3600;
   hourShape.clear();
-  incomePerHour = DAY_KINDS.map(() => PERIODS.map(() => 0)); // the main thread sends the new network's once demand lands
+  lineDays.clear();
+  incomePerHour =DAY_KINDS.map(() => PERIODS.map(() => 0)); // the main thread sends the new network's once demand lands
   api!.clear_riders(); // and its riders (T-164)
   forget(true);
   syncFrame();
@@ -1263,6 +1324,7 @@ async function handle(msg: ToClock) {
       : q.what === "flyover" ? new Float64Array([api.flyover_cost(q.node)])
       : q.what === "lineAccount" ? api.line_account(q.line, q.day ?? 0)
       : q.what === "today" ? today()
+      : q.what === "yesterday" ? yesterday()
       : api.line_delays(q.line, q.level);
     send({ kind: "answer", seq: msg.seq, data }, [data.buffer]);
   } else if (msg.kind === "previewStation") {

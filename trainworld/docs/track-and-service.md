@@ -27,8 +27,10 @@ Full design, numbers and sources: `notes/T-008.md`.
   the cursor was what limited it, since that leg is now shared with the new click's curve), and
   the new click becomes a curve as the cursor moves on (tested, notes/T-092.md). While drawing, the
   clicked points show as squares, each curve its radius and speed limit, and the cursor the
-  stretch's length, average cost multiplier (level and water over its length) and price ("1.5 km,
-  cost 1.33x, $25.5M", T-085), or why it cannot be built.
+  stretch's length, average cost multiplier (level and water over its length), price and tightest
+  curve, the level placed and the lowest speed limit (T-085, T-411), or why it cannot be built. A
+  click adding a corner is refused when the route would be unbuildable if it ended there; a
+  shift-click places it anyway (T-410, [ui-building.md](ui-building.md)).
 - **One piece per corner** (T-244, Anita: deleting one stretch should not delete the whole
   path): a finished route is several edges, one per corner clicked, joined at plain nodes (two
   edge ends, no station) in the middle of the leg between two corners. The leg middle is on the
