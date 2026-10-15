@@ -70,8 +70,9 @@ export type ToDemand =
   /** T-327: every worker has finished `round - 1` of `version`, so this worker may start `round`.
    * A worker ahead waits at the boundary holding its last round, so every worker holds the round
    * after the published one at some moment, and a question about it can be answered (the final
-   * waits on the slowest worker either way) */
-  | { kind: "go"; version: number; round: number }
+   * waits on the slowest worker either way). `group` (T-402, 0 when absent): the solve's group of
+   * clusters the round is of, as `plan.ahead` says (0 the cluster solved ahead, 1 the rest) */
+  | { kind: "go"; version: number; round: number; group?: number }
   /**
    * Queries for the demand views (T-078, notes/T-078.md), answered between periods. `id` matches
    * the reply; `version` is the solve they ask about: a worker that has moved on to a newer
@@ -190,11 +191,14 @@ export type FromDemand =
       /** T-392: one cluster's final figures alone, sent the moment it is solved while the solve goes
        * on with other clusters: its cities (only theirs in `citySummary`), whether the market is in it
        * (else the intercity fields are empty), its lines (indices into the network's); every array
-       * still the whole network's, zero off the cluster */
+       * still the whole network's, zero off the cluster. T-402: in a solve with the barrier, the
+       * cluster solved ahead (`plan.ahead`) sends one per round, the round in `summary[0]` */
       cluster?: { cities: CityId[]; market: boolean; lines: Uint32Array };
     }
-  /** T-392: at a solve's start, the cities of each cluster it solves (in order) and of those it keeps */
-  | { kind: "plan"; version: number; solving: CityId[][]; kept: CityId[] }
+  /** T-392: at a solve's start, the cities of each cluster it solves (in order) and of those it
+   * keeps. `ahead` (T-402, a solve with the barrier): the cities of the cluster in view, stepped
+   * through its rounds alone (group 0) before the other clusters together (group 1) */
+  | { kind: "plan"; version: number; solving: CityId[][]; kept: CityId[]; ahead?: CityId[] }
   /** `clusters` (T-326): how many kept their result, and how many were solved; `periods` (T-124):
    * of this worker's periods in the clusters solved, how many were kept and how many solved */
   | { kind: "done"; version: number; memBytes: number; clusters?: [number, number]; periods?: [number, number] }

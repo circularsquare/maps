@@ -55,8 +55,19 @@ let stageRound = -1;
  * answered the moment it has, before it starts the next round */
 let waiting: Query[] = [];
 type Query = Exclude<ToDemand, { kind: "init" | "open" | "solve" | "go" }>;
-/** T-327: the round every worker may start, by version (a solve marked `barrier` waits for it) */
-let go = { version: -1, round: 0 };
+/** T-327: the round every worker may start, by version and group (a solve marked `barrier` waits
+ * for it) */
+let go = { version: -1, group: 0, round: 0 };
+const goAllows = (version: number, group: number, round: number) =>
+  go.version > version || (go.version === version && (go.group > group || (go.group === group && go.round >= round)));
+/** T-402: the solve in hand's dirty clusters by group: a solve with the barrier steps the zone in
+ * view's cluster alone through its rounds first, then the rest together. `stageGroup` is the group
+ * being solved; `ready` the clusters set up on the network in hand */
+const groupOf = new Map<JobCluster, number>();
+let stageGroup = 0;
+const ready = new Set<JobCluster>();
+/** the group the city's cluster is solved in (undefined: kept, or in no cluster) */
+const cityGroup = (city: CityId) => { const c = jobClusters.find((c) => c.cities.includes(city)); return c ? groupOf.get(c) : undefined; };
 /** a paused round boundary's resume (a `go` or a newer network) */
 let wake: (() => void) | null = null;
 /** the questions whose answer reads the periods' state at a round (the others read none) */
@@ -227,7 +238,8 @@ onmessage = (e: MessageEvent<ToDemand>) => {
     wake?.();
     void opening.then(() => { if (started && !busy) run(); });
   } else if (msg.kind === "go") {
-    if (msg.version > go.version || (msg.version === go.version && msg.round > go.round)) go = { version: msg.version, round: msg.round };
+    const group = msg.group ?? 0;
+    if (!goAllows(msg.version, group, msg.round)) go = { version: msg.version, group, round: msg.round };
     wake?.();
   } else {
     query(msg);
@@ -287,7 +299,9 @@ const CITY_ORDER = new Map(CITIES.map((c, i) => [c.id, i]));
 function query(msg: Query) {
   if ((msg as { wait?: boolean }).wait && msg.kind !== "cells" && BY_ROUND.has(msg.kind) && !aux) {
     const { version, round } = msg;
-    const behind = version > current || (version === current && busy && (stageRound < round || (stageRound === round && !mine.every((q) => roundsHeld[q] === round))));
+    // T-402: a zone in a later group of the solve in hand waits for that group's round
+    const g = version === current ? cityGroup(msg.city) ?? stageGroup : stageGroup;
+    const behind = version > current || (version === current && busy && (g > stageGroup || (g === stageGroup && (stageRound < round || (stageRound === round && !mine.every((q) => roundsHeld[q] === round))))));
     if (behind) return void waiting.push(msg);
   }
   // A city the network in hand was not set on (opened since, T-149) answers as if not opened.
@@ -304,12 +318,14 @@ function query(msg: Query) {
   const sendMessage = (reply: WithoutCity<FromDemand>, transfer: Transferable[] = []) => {
     postMessage({ ...reply, city: msg.city, qStart, qMs: performance.timeOrigin + performance.now() - qStart }, { transfer });
   };
-  const live = !!a && msg.kind !== "cells" && ((msg.version === current && mine.every(q => roundsHeld[q] === msg.round)) || (kept && msg.round === at!.rounds));
+  // T-402: the rounds this worker holds are its group's; a cluster of another group has none of them
+  const atRound = (c: JobCluster | undefined) => msg.kind !== "cells" && msg.version === current && (!c || (groupOf.get(c) ?? stageGroup) === stageGroup) && mine.every(q => roundsHeld[q] === msg.round);
+  const live = !!a && msg.kind !== "cells" && (atRound(cl) || (kept && msg.round === at!.rounds));
   // the network's subzones, whatever round (cellModes, flows)
-  const sameNet = msg.kind !== "cells" && (msg.version === current || kept);
+  const sameNet = msg.kind !== "cells" && ((msg.version === current && (!cl || !groupOf.has(cl) || ready.has(cl))) || kept);
   // the regional market's state at the round asked about (its cluster may not be the city's)
   const mc = at?.clusters.find((c) => c.market);
-  const marketLive = msg.kind !== "cells" && ((msg.version === current && mine.every(q => roundsHeld[q] === msg.round)) || (!!mc && isHeld(mc) && msg.round === at!.rounds));
+  const marketLive = msg.kind !== "cells" && (atRound(mc) || (!!mc && isHeld(mc) && msg.round === at!.rounds));
   // T-260: the kind of day asked about (0 weekday, 1 weekend); every answer weighs its periods by it
   const day = (msg as { day?: number }).day ?? 0;
   try {
@@ -457,8 +473,8 @@ function answerWaiting() {
 function transfersAt(at: Version, allLive: boolean, nodes: Uint32Array, day: number): Float32Array {
   const sum = new Map<number, number>(), jobNodes = at.nodes;
   for (const c of at.clusters) {
-    // T-392: a cluster mid-solve has no figures for this network yet
-    if (!allLive && !isHeld(c)) continue;
+    // T-392: a cluster mid-solve has no figures for this network yet (T-402: nor one of a later group)
+    if (!isHeld(c) && !(allLive && (groupOf.get(c) ?? stageGroup) === stageGroup)) continue;
     const sel = new Uint8Array(c.nodeGlobal.length);
     let any = false;
     for (const r of nodes) {
@@ -599,9 +615,16 @@ async function run() {
       // T-392: after an edit (no barrier) the clusters are solved one after another, each to its last
       // round, and each but the last is sent as a cluster result the moment it is done; then the
       // solve's results. With the barrier (the shown estimates step through the rounds) they all go
-      // round by round together.
+      // round by round together, in groups (T-402): the city in view's cluster alone first, sent as
+      // cluster results round by round, then the rest, whose results are the solve's.
       const early = job.barrier ? [] : dirty;
-      const late = job.barrier ? dirty : [];
+      const ahead = job.barrier && !job.whole && dirty.length > 1 && !!job.first && dirty[0].cities.includes(job.first);
+      const groups = !job.barrier ? [] : ahead ? [[dirty[0]], dirty.slice(1)] : [dirty];
+      groupOf.clear();
+      ready.clear();
+      for (const c of early) groupOf.set(c, 0);
+      groups.forEach((cs, g) => { for (const c of cs) groupOf.set(c, g); });
+      stageGroup = 0;
       let periodsKept = 0, periodsSolved = 0;
       const setUp =(c: JobCluster) => {
         const m = c.net;
@@ -632,6 +655,7 @@ async function run() {
           heldQ.set(p, h);
         }
         c.reuse = reuse;
+        ready.add(c);
         for (const q of mine) if (reuse & (1 << q)) periodsKept++; else periodsSolved++;
       };
       const solved =(c: JobCluster) => {
@@ -644,7 +668,7 @@ async function run() {
       jobNodes = 2 * n.stops.length;
       versions.set(job.version, { clusters: jobClusters, stations: n.stXY.length / 2, railed: n.stXY.length > 0 && n.lineN.length > 0, nodes: jobNodes, rounds: job.rounds });
       for (const v of versions.keys()) if (versions.size > KEEP_VERSIONS && v !== job.version) versions.delete(v);
-      sendMessage({ kind: "plan", version: job.version, solving: dirty.map((c) => c.cities), kept: jobClusters.filter((c) => !dirty.includes(c)).flatMap((c) => c.cities) });
+      sendMessage({ kind: "plan", version: job.version, solving: dirty.map((c) => c.cities), kept: jobClusters.filter((c) => !dirty.includes(c)).flatMap((c) => c.cities), ...(ahead ? { ahead: dirty[0].cities } : {}) });
       current = job.version;
       roundsHeld.fill(-1);
       sumsByRound.clear();
@@ -759,49 +783,62 @@ async function run() {
         }
         setupMs = 0;
       }
-      if (!stale) for (const c of late) setUp(c);
       // with the barrier only: without it the results were sent just above
-      for (let round = 0; job.barrier && round <= job.rounds && !stale; round++) {
-        // T-327: a worker ahead holds its last round until every worker has finished it
-        while (job.barrier && round > 0 && !pending && !(go.version > job.version || (go.version === job.version && go.round >= round))) {
-          await new Promise<void>((r) => (wake = r));
-          wake = null;
-        }
-        if (pending) { stale = true; break; }
-        stageRound = round;
-        for (const q of mine) {
-          await yieldNow();
+      for (let g = 0; g < groups.length && !stale; g++) {
+        const late = groups[g];
+        // a group solved ahead sends its cluster's figures alone; the last group's results are the
+        // solve's, with the groups before it held at their last round
+        const alone = g < groups.length - 1 ? late[0] : null;
+        const sumsFor = jobLocal.filter(([id]) => alone ? alone.cities.includes(id) : !groups.slice(0, g).some((cs) => cs.some((c) => c.cities.includes(id))));
+        stageGroup = g;
+        stageRound = -1;
+        roundsHeld.fill(-1);
+        for (const c of late) setUp(c);
+        for (let round = 0; round <= job.rounds && !stale; round++) {
+          // T-327: a worker ahead holds its last round until every worker has finished it
+          while (round > 0 && mine.length && !pending && !goAllows(job.version, g, round)) {
+            await new Promise<void>((r) => (wake = r));
+            wake = null;
+          }
           if (pending) { stale = true; break; }
-          const t0 = performance.now();
-          // The period is part way between rounds until every population has had it; a query in
-          // between (the yields below) must not read it.
-          roundsHeld[q] = -2;
-          for (const c of late) if (!(c.reuse & (1 << q)) && !(await step(c, round, q))) { stale = true; break; }
-          release_skims();
-          if (stale) break;
-          roundsHeld[q] = round;
-          if (q === mine[mine.length - 1]) {
-            for (const [id, a] of jobLocal) {
-              const kept = { mask: a.solved_mask(), sums: a.sub_sums(), everyday: everyday.get(id)?.cell_modes() ?? null };
-              sumsByRound.set(`${id}:${round}`, kept);
-              // and sent unasked, ahead of this round's last result: the client holds every
-              // worker's by the time it publishes the round, and the bubbles need no query to a
-              // worker that is busy with the next round
-              const copy = kept.sums.slice();
-              const extra = kept.everyday?.slice() ?? null;
-              sendMessage({ kind: "sums", version: job.version, round, city: id, mask: kept.mask, sums: copy, everyday: extra }, [copy.buffer, ...(extra ? [extra.buffer] : [])]);
+          stageRound = round;
+          for (const q of mine) {
+            await yieldNow();
+            if (pending) { stale = true; break; }
+            const t0 = performance.now();
+            // The period is part way between rounds until every population has had it; a query in
+            // between (the yields below) must not read it.
+            roundsHeld[q] = -2;
+            for (const c of late) if (!(c.reuse & (1 << q)) && !(await step(c, round, q))) { stale = true; break; }
+            release_skims();
+            if (stale) break;
+            roundsHeld[q] = round;
+            if (q === mine[mine.length - 1]) {
+              for (const [id, a] of sumsFor) {
+                const kept = { mask: a.solved_mask(), sums: a.sub_sums(), everyday: everyday.get(id)?.cell_modes() ?? null };
+                sumsByRound.set(`${id}:${round}`, kept);
+                // and sent unasked, ahead of this round's last result: the client holds every
+                // worker's by the time it publishes the round, and the bubbles need no query to a
+                // worker that is busy with the next round
+                const copy = kept.sums.slice();
+                const extra = kept.everyday?.slice() ?? null;
+                sendMessage({ kind: "sums", version: job.version, round, city: id, mask: kept.mask, sums: copy, everyday: extra }, [copy.buffer, ...(extra ? [extra.buffer] : [])]);
+              }
+            }
+            const { msg, transfer } = figures(q, round, performance.now() - t0, alone ? [alone] : jobClusters);
+            // T-327: ahead of the result, so the client holds every worker's answer for a round by
+            // the time it publishes that round
+            if (q === mine[mine.length - 1]) answerWaiting();
+            if (alone) sendMessage({ kind: "result", ...msg, cluster: { cities: alone.cities, market: alone.market, lines: alone.lines.slice() } }, transfer);
+            else {
+              sendMessage({ kind: "result", ...msg }, transfer);
+              setupMs = 0;
             }
           }
-          const { msg, transfer } = figures(q, round, performance.now() - t0, jobClusters);
-          // T-327: ahead of the result, so the client holds every worker's answer for a round by
-          // the time it publishes that round
-          if (q === mine[mine.length - 1]) answerWaiting();
-          sendMessage({ kind: "result", ...msg }, transfer);
-          setupMs = 0;
         }
+        if (!stale) for (const c of late) solved(c);
       }
       if (!stale) {
-        for (const c of late) solved(c);
         sendMessage({ kind: "done", version: job.version, memBytes: wasm_memory_bytes(), clusters: [jobClusters.length - dirty.length, dirty.length], periods: [periodsKept, periodsSolved] });
       }
     }

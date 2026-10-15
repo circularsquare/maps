@@ -1,5 +1,7 @@
 # Archive
 
+- T-402 [P3] Per-cluster finals in the startup and zone-opening solves. Done 2026-10-15: the zone in view's cluster is solved alone through its rounds first; Toronto's final at a Toronto-viewed load 32 s to 5.7 s, the whole final unchanged, figures identical. notes/T-402.md.
+
 - T-398 [P2] Lower a demand worker's memory peak (T-361 item 2). Done 2026-10-15: natively on the real save a worker's peak 353 to 256 MB, steady 281 to 222; nine cities 698 to 458; outputs identical to the byte, times unchanged. notes/T-398.md.
 
 - T-415 [P3] A count edit at one level no longer moves other levels' figures. Done 2026-10-15: the fleet settle loop steps only levels outside tolerance, so the New York save's first high-level edit lands in 11.5 s instead of 20.8. notes/T-415.md.

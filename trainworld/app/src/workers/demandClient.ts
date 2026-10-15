@@ -146,7 +146,9 @@ type WithoutCity<T> = T extends unknown ? Omit<T, "city" | "round"> : never;
 type Query = WithoutCity<QueryMessage>;
 /** T-327: where a view's question goes: the solve and round the workers are asked about, the shown
  * result's version the answer is given for, and whether a worker short of the round waits for it. */
-interface Target { version: number; round: number; view: number; wait: boolean; solve?: Solve }
+/** `shown` (T-402): the round published of the rounds `round` counts (the cluster's solved ahead,
+ * or the solve's), when not the shown view's */
+interface Target { version: number; round: number; view: number; wait: boolean; solve?: Solve; shown?: number }
 const ALL_PERIODS = (1 << PERIODS.length) - 1;
 const frameOf = (): FrameSpec => { const f = getWorldFrame(); return { kind: f.kind, lon: f.lon, lat: f.lat }; };
 /** A point the regional market reports (in its own pack frame) as a world point. */
@@ -242,8 +244,12 @@ interface Solve {
   /** T-124: per solving worker, its periods kept and solved in the clusters it solved */
   periods?: [number, number][];
   /** T-392: each cluster published ahead of the solve's final, by its cities: its results per
-   * period as they come in, then when it was shown */
-  clusterRes?: Map<string, { res: (Result | null)[]; at?: number }>;
+   * round and period as they come in, the last round in from every worker, and when its final
+   * round was shown */
+  clusterRes?: Map<string, { byRound: (Result | null)[][]; published: number; at?: number }>;
+  /** T-402: the cluster in view, stepped through its rounds alone ahead of the rest (a solve with
+   * the barrier, `plan.ahead`): its cities and key in `clusterRes` */
+  ahead?: { cities: CityId[]; key: string };
 }
 
 /** When one item (a city or the market) was asked for, downloaded and open in every worker:
@@ -930,7 +936,9 @@ class DemandClient {
     if (this.marketWanted && !this.opened.has(MARKET) && !job.items.includes(MARKET)) job.items.push(MARKET);
     if (atStartup && need.has(viewed) && !job.cities.includes(viewed)) job.cities.unshift(viewed);
     const needsSolve = this.jobNeedsSolve(job);
-    const solved = !needsSolve || (!!s && job.version !== undefined && s.version === job.version && s.published >= doneRound);
+    // (T-402: or, when the load's zones are all in the cluster solved ahead, that cluster's round)
+    const ahead = s?.ahead && job.cities.every((id) => s.ahead!.cities.includes(id)) ? s.clusterRes?.get(s.ahead.key)?.published ?? -1 : -1;
+    const solved = !needsSolve || (!!s && job.version !== undefined && s.version === job.version && Math.max(s.published, ahead) >= doneRound);
     if (solved && job.items.every(loaded)) {
       // remembered for the next load's estimate (T-243): a startup's solve, so it describes the
       // game a reload opens; T-347: and the time to its final round, which the card now waits for
@@ -1220,20 +1228,31 @@ class DemandClient {
       return;
     }
     if (msg.kind === "plan") {
-      if (i === 0) demandSolving.value = new Set(msg.solving.flat());
+      if (i === 0) {
+        demandSolving.value = new Set(msg.solving.flat());
+        if (msg.ahead) s.ahead = { cities: msg.ahead, key: msg.ahead.join(",") };
+      }
       return;
     }
     if (msg.cluster) {
-      // T-392: one cluster solved ahead of the rest: shown once every period of it is in
+      // T-392: one cluster solved ahead of the rest: a round of it is shown once every period of it
+      // is in. Its rounds land in order: with the barrier (T-402) no worker starts one before every
+      // worker has the one before; after an edit only the last is sent.
       const key = msg.cluster.cities.join(",");
+      const round = msg.summary[0];
       const m = (s.clusterRes ??= new Map());
       let e = m.get(key);
-      if (!e) m.set(key, (e = { res: PERIODS.map(() => null) }));
-      e.res[msg.period] = msg;
-      if (e.res.every(Boolean) && e.at === undefined) {
-        e.at = performance.now();
-        this.publishCluster(s, e.res as Result[], msg.cluster);
-      }
+      if (!e) m.set(key, (e = { byRound: Array.from({ length: ROUNDS + 1 }, () => PERIODS.map(() => null)), published: -1 }));
+      const res = e.byRound[round];
+      if (!res) return;
+      res[msg.period] = msg;
+      if (!res.every(Boolean) || round <= e.published) return;
+      e.published = round;
+      if (round > 0) e.byRound[round - 1] = [];
+      if (round < ROUNDS && s.ahead?.key === key) for (const w of this.workers.slice(0, this.computeN)) w.postMessage({ kind: "go", version: s.version, round: round + 1, group: 0 } satisfies ToDemand);
+      if (round >= ROUNDS) e.at = performance.now();
+      this.publishCluster(s, res as Result[], msg.cluster, round);
+      this.progress();
       return;
     }
     const results = s.byRound[msg.summary[0]];
@@ -1248,7 +1267,7 @@ class DemandClient {
       s.results = s.byRound[round];
       s.published = round;
       // T-327: every worker has the round, so the next may start
-      if (round < ROUNDS) for (const w of this.workers.slice(0, this.computeN)) w.postMessage({ kind: "go", version: s.version, round: round + 1 } satisfies ToDemand);
+      if (round < ROUNDS) for (const w of this.workers.slice(0, this.computeN)) w.postMessage({ kind: "go", version: s.version, round: round + 1, group: s.ahead ? 1 : 0 } satisfies ToDemand);
       this.publish(s, round);
       if (round > 0) s.byRound[round - 1] = []; // release previous typed-array snapshots
     }
@@ -1344,16 +1363,21 @@ class DemandClient {
   private target(): Target | null {
     const dv = demandView.peek();
     const s = this.cur;
+    // T-402: the zone in view's cluster solved ahead counts its own rounds (the workers tell which
+    // rounds a question means by its zone)
+    const ahead = s?.ahead?.cities.includes(activeCity.peek()) ? s.clusterRes?.get(s.ahead.key)?.published ?? -1 : null;
+    const published = ahead ?? s?.published ?? -1;
     // nothing shown yet (startup, no cache): asked of round 0, whose answer is in hand when it shows
-    if (!dv) return s && s.published < 0 && !perfOff("ahead") ? { version: s.version, round: 0, view: s.version, wait: true, solve: s } : null;
+    if (!dv) return s && published < 0 && !perfOff("ahead") ? { version: s.version, round: 0, view: s.version, wait: true, solve: s, shown: -1 } : null;
+    const cv = this.cityVersion.get(activeCity.peek());
+    if (s && cv === s.version) return { version: cv, round: ROUNDS, view: dv.version, wait: false, solve: s };
     const cached = dv.version === CACHE_VERSION && this.log[0]?.version === CACHE_VERSION && this.log[0].svc === s?.svc;
-    if (s && s.published < ROUNDS && (dv.version === s.version || cached) && !perfOff("ahead")) {
+    if (s && published < ROUNDS && (dv.version === s.version || cached) && !perfOff("ahead")) {
       // no worker starts a round before every worker has the one before (`go`), so every worker
       // has the round after the published one, or will
-      return { version: s.version, round: s.published + 1, view: dv.version, wait: true, solve: s };
+      return { version: s.version, round: published + 1, view: dv.version, wait: true, solve: s, shown: published };
     }
     // T-392: a zone shown from a cluster solved ahead of its solve's final is asked about there
-    const cv = this.cityVersion.get(activeCity.peek());
     if (cv !== undefined) return { version: cv, round: ROUNDS, view: dv.version, wait: false, solve: this.log.find((x) => x.version === cv) };
     return { version: dv.version, round: dv.round, view: dv.version, wait: false, solve: this.log.find((x) => x.version === dv.version) };
   }
@@ -1376,9 +1400,11 @@ class DemandClient {
     if (!t) return Promise.resolve(null);
     if (!t.wait) return run(t);
     const dv = demandView.peek();
-    const shown = dv?.version === t.version ? dv.round : -1;
-    for (const [k, e] of this.aheadP) if (e.version !== t.version || e.round < shown) this.aheadP.delete(k);
-    const base = `${activeCity.peek()}|${shownDay.peek()}|${key}|${t.version}|`;
+    const shown = t.shown ?? (dv?.version === t.version ? dv.round : -1);
+    // (T-402: rounds are counted per zone while the zone in view's cluster is solved ahead)
+    const zone = `${activeCity.peek()}|`;
+    for (const [k, e] of this.aheadP) if (e.version !== t.version || (k.startsWith(zone) && e.round < shown)) this.aheadP.delete(k);
+    const base = `${zone}${shownDay.peek()}|${key}|${t.version}|`;
     const at = (round: number) => {
       let e = this.aheadP.get(base + round);
       if (!e) {
@@ -1975,44 +2001,55 @@ class DemandClient {
    * its lines and their stations, its zones' views, and the regional market's if it is in it. The
    * other figures stay as they are, the network-wide totals among them, until the solve's final;
    * the view keeps the shown version, and questions about the cluster's zones go to this solve
-   * (`cityVersion`), whose workers hold it.
+   * (`cityVersion`), whose workers hold it. T-402: `round` below the last comes from a cluster
+   * solved ahead in a solve with the barrier.
    */
-  private publishCluster(s: Solve, res: Result[], c: { cities: CityId[]; market: boolean; lines: Uint32Array }) {
-    if (s !== this.cur || s.showEstimates) return;
+  private publishCluster(s: Solve, res: Result[], c: { cities: CityId[]; market: boolean; lines: Uint32Array }, round: number) {
+    if (s !== this.cur) return;
+    const final = round >= ROUNDS;
     const days = demandByDay.peek();
-    if (!days[0].view) return;
     const fresh = Array.from(c.lines, (l) => s.layout[l]).filter(Boolean);
     const part = { ...s, layout: fresh };
-    const ids = new Set(s.layout.map((l) => l.id));
-    demandByDay.value = days.map((d, k) => {
-      const day = k as DayKind;
-      if (!d.view) return d;
-      const est = this.dayDemand(part, ROUNDS, true, day, day === 0 ? res : res.map((r, q) => this.dayResult(r, q, day)));
-      const lines = new Map(d.view.lines), stations = new Map(d.view.stations);
-      // lines the network no longer has go too
-      for (const id of lines.keys()) if (!ids.has(id)) lines.delete(id);
-      for (const [id, l] of est.view!.lines) lines.set(id, l);
-      for (const [id, v] of est.view!.stations) stations.set(id, v);
-      let purposes = d.view.purposes;
-      if (est.view!.purposes) {
-        purposes = new Map(purposes);
-        for (const [key, p] of est.view!.purposes) {
-          const old = purposes.get(key);
-          const pl = new Map(old?.lines), ps = new Map(old?.stations);
-          for (const [id, l] of p.lines) pl.set(id, l);
-          for (const [id, v] of p.stations) ps.set(id, v);
-          purposes.set(key, { lines: pl, stations: ps });
+    const of = (day: DayKind, final: boolean) => this.dayDemand(part, round, final, day, day === 0 ? res : res.map((r, q) => this.dayResult(r, q, day)));
+    // T-402: with nothing shown yet, or only this solve's own figures of the cluster, a view of the
+    // cluster alone, which the solve's own results replace (its totals are the cluster's, so never
+    // the solve's final); its rounds before the last only where the solve's estimates are shown
+    const alone = !days[0].view || days[0].view.version === s.version;
+    if (!final && (!s.showEstimates || !alone)) return;
+    if (alone) demandByDay.value = DAY_KINDS.map((day) => of(day, false));
+    else {
+      const ids = new Set(s.layout.map((l) => l.id));
+      demandByDay.value = days.map((d, k) => {
+        const day = k as DayKind;
+        if (!d.view) return d;
+        const est = of(day, final);
+        const lines = new Map(d.view.lines), stations = new Map(d.view.stations);
+        // lines the network no longer has go too
+        for (const id of lines.keys()) if (!ids.has(id)) lines.delete(id);
+        for (const [id, l] of est.view!.lines) lines.set(id, l);
+        for (const [id, v] of est.view!.stations) stations.set(id, v);
+        let purposes = d.view.purposes;
+        if (est.view!.purposes) {
+          purposes = new Map(purposes);
+          for (const [key, p] of est.view!.purposes) {
+            const old = purposes.get(key);
+            const pl = new Map(old?.lines), ps = new Map(old?.stations);
+            for (const [id, l] of p.lines) pl.set(id, l);
+            for (const [id, v] of p.stations) ps.set(id, v);
+            purposes.set(key, { lines: pl, stations: ps });
+          }
         }
-      }
-      const view = { ...d.view, lines, stations, purposes };
-      const cities = new Map<CityId, DemandView>();
-      for (const [id, v] of d.cities) cities.set(id, { ...v, lines, stations, purposes });
-      for (const id of c.cities) {
-        const v = est.cities.get(id);
-        if (v) cities.set(id, { ...view, tripsPerDay: v.tripsPerDay, railTripsPerDay: v.railTripsPerDay, trainShareByPeriod: v.trainShareByPeriod, split: v.split });
-      }
-      return { view, cities, intercity: c.market ? est.intercity : d.intercity };
-    });
+        const view = { ...d.view, lines, stations, purposes };
+        const cities = new Map<CityId, DemandView>();
+        for (const [id, v] of d.cities) cities.set(id, { ...v, lines, stations, purposes });
+        for (const id of c.cities) {
+          const v = est.cities.get(id);
+          if (v) cities.set(id, { ...view, tripsPerDay: v.tripsPerDay, railTripsPerDay: v.railTripsPerDay, trainShareByPeriod: v.trainShareByPeriod, split: v.split });
+        }
+        return { view, cities, intercity: c.market ? est.intercity : d.intercity };
+      });
+    }
+    if (!final) return;
     for (const id of c.cities) this.cityVersion.set(id, s.version);
     const left = new Set(demandSolving.peek() ?? []);
     for (const id of c.cities) left.delete(id);
