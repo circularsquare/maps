@@ -21,6 +21,7 @@ use super::kernel::*;
 use super::network::{Network, PERIODS};
 use super::pack::{self, City};
 use crate::track::params::{LEVELS, PERIOD_HOURS, PERIOD_LEVEL};
+use std::sync::Arc;
 use wasm_bindgen::prelude::*;
 
 /// Share of the day's trips to work that start in each period (order of `PERIOD_HOURS`: 6-10,
@@ -276,9 +277,13 @@ fn zone_trip_factors(city: &City, z: &Zones, gr: &Gravity, from_pack: bool) -> (
 
 #[wasm_bindgen]
 pub struct DemandApi {
-    pub(crate) city: City,
-    pub(crate) z: Zones,
-    pub(crate) gr: Gravity,
+    /// Shared with the city's everyday layer (`with_weights`, T-399).
+    pub(crate) city: Arc<City>,
+    pub(crate) z: Arc<Zones>,
+    pub(crate) gr: Arc<Gravity>,
+    /// The home and work weights station access and subzones are built on in place of
+    /// `city.pop` and `city.jobs` (`with_weights`); None for the commutes.
+    weights: Option<(Vec<f32>, Vec<f32>)>,
     pub(crate) base: Params,
     /// All-day home -> work trips that would walk with no rail (`Gravity::walk_trips`), and the
     /// same by home zone and by work zone.
@@ -535,6 +540,51 @@ impl DemandApi {
         self.reusable = false;
         &mut self.base
     }
+    /// The same city on other home and work weights (the everyday layer's residents and jobs,
+    /// T-399): the cells, zone grid, gravity and routes are shared, the zones' sums are its own,
+    /// and station access and subzones are built on these weights. Its network starts unset.
+    pub(crate) fn with_weights(&self, pop: Vec<f32>, jobs: Vec<f32>) -> DemandApi {
+        let mut z = (*self.z).clone();
+        z.pop.fill(0.0);
+        z.jobs.fill(0.0);
+        for c in 0..self.city.len() {
+            let zi = z.cell_zone[c] as usize;
+            z.pop[zi] += pop[c] as f64;
+            z.jobs[zi] += jobs[c] as f64;
+        }
+        DemandApi {
+            city: self.city.clone(),
+            z: Arc::new(z),
+            gr: self.gr.clone(),
+            weights: Some((pop, jobs)),
+            base: self.base.clone(),
+            walk_all: self.walk_all,
+            walk_home_zone: self.walk_home_zone.clone(),
+            walk_work_zone: self.walk_work_zone.clone(),
+            home_k: self.home_k.clone(),
+            work_k: self.work_k.clone(),
+            svc: None,
+            sz: None,
+            want: vec![],
+            od_st: vec![],
+            od_at: vec![],
+            per: (0..PERIODS).map(|_| None).collect(),
+            fare_per_km: 0.0,
+            fare_km: vec![],
+            open_ms: 0.0,
+            complex_in: vec![],
+            same: 0,
+            layout_same: false,
+            reusable: false,
+        }
+    }
+    /// The home weights access and subzones are built on (`with_weights`).
+    pub(crate) fn pop(&self) -> &[f32] {
+        self.weights.as_ref().map_or(&self.city.pop, |w| &w.0)
+    }
+    pub(crate) fn jobs(&self) -> &[f32] {
+        self.weights.as_ref().map_or(&self.city.jobs, |w| &w.1)
+    }
 }
 
 #[wasm_bindgen]
@@ -556,13 +606,13 @@ impl DemandApi {
         let (z, mut gr, gravity_from_pack) = city_gravity(&city, &base);
         // T-275: the pack's routed walks and drives, if it has them for these zones
         if let Some(r) = super::routes::Routes::from_pack(header, bin, &z)? {
-            base.routes = Some(std::sync::Arc::new(r));
+            base.routes = Some(Arc::new(r));
             gr.set_walk(&z, &base);
         }
         let (walk_home_zone, walk_work_zone) = gr.walk_trips_by_zone(&z);
         let walk_all = walk_home_zone.iter().sum();
         let (home_k, work_k) = zone_trip_factors(&city, &z, &gr, gravity_from_pack);
-        Ok(DemandApi { city, z, gr, base, walk_all, walk_home_zone, walk_work_zone, home_k, work_k, svc: None, sz: None, want: vec![], od_st: vec![], od_at: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], open_ms: now_ms() - t0, complex_in: vec![], same: 0, layout_same: false, reusable: false })
+        Ok(DemandApi { city: Arc::new(city), z: Arc::new(z), gr: Arc::new(gr), weights: None, base, walk_all, walk_home_zone, walk_work_zone, home_k, work_k, svc: None, sz: None, want: vec![], od_st: vec![], od_at: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], open_ms: now_ms() - t0, complex_in: vec![], same: 0, layout_same: false, reusable: false })
     }
 
     /// The station complex of each station of the networks `set_network` is given from now on
@@ -634,7 +684,7 @@ impl DemandApi {
             if ns > 0 && nl > 0 {
                 let net = Self::period_net(&svc, 0);
                 let acc = build_access(&self.city, &net, &self.base);
-                let sz = build_subzones(&self.city, &self.z, &acc, &net, &self.base);
+                let sz = build_subzones_on(&self.city, self.pop(), self.jobs(), &self.z, &acc, &net, &self.base);
                 self.want = egress_stations(&sz, svc.st_x.len());
                 self.od_at = vec![u32::MAX; svc.st_x.len()];
                 for &a in &sz.acc_st {

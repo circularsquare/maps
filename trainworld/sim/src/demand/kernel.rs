@@ -309,6 +309,7 @@ impl Params {
 // ---------------------------------------------------------------------------------------------
 // 1. Zones and gravity
 
+#[derive(Clone)]
 pub struct Zones {
     pub zone_m: f32,
     pub n: usize,
@@ -1054,6 +1055,11 @@ pub fn access_options(zones: &Zones, net: &Network, p: &Params, places: &[(usize
 const RIDE_GROUP: i32 = 3;
 
 pub fn build_subzones(city: &City, zones: &Zones, acc: &Access, net: &Network, p: &Params) -> Subzones {
+    build_subzones_on(city, &city.pop, &city.jobs, zones, acc, net, p)
+}
+
+/// `build_subzones` on home and work weights other than the city's own (`zones` summing them).
+pub fn build_subzones_on(city: &City, home_w: &[f32], work_w: &[f32], zones: &Zones, acc: &Access, net: &Network, p: &Params) -> Subzones {
     let n = city.len();
     let mut cell_sub = vec![NONE; n];
     let mut map: HashMap<u64, u32> = HashMap::new();
@@ -1067,7 +1073,7 @@ pub fn build_subzones(city: &City, zones: &Zones, acc: &Access, net: &Network, p
     let (mut zx, mut zy) = (vec![0f64; zones.n], vec![0f64; zones.n]);
     for c in 0..n {
         let zi = zones.cell_zone[c] as usize;
-        let pop = city.pop[c] as f64;
+        let pop = home_w[c] as f64;
         zx[zi] += pop * city.x[c] as f64;
         zy[zi] += pop * city.y[c] as f64;
         if acc.n[c] == 0 {
@@ -1086,7 +1092,7 @@ pub fn build_subzones(city: &City, zones: &Zones, acc: &Access, net: &Network, p
             }
             continue;
         }
-        if city.pop[c] + city.jobs[c] <= 0.0 {
+        if home_w[c] + work_w[c] <= 0.0 {
             continue; // nobody commutes from or to here
         }
         let key = if p.band_min < 0.0 {
@@ -1200,12 +1206,12 @@ pub fn build_subzones(city: &City, zones: &Zones, acc: &Access, net: &Network, p
         let (mut wsum, mut x, mut y) = (0.0f64, 0.0f64, 0.0f64);
         for &c in m {
             let c = c as usize;
-            let jobs = if walks { city.jobs[c] } else { 0.0 };
-            let wt = (city.pop[c] + jobs).max(1e-6) as f64;
+            let jobs = if walks { work_w[c] } else { 0.0 };
+            let wt = (home_w[c] + jobs).max(1e-6) as f64;
             wsum += wt;
             x += wt * city.x[c] as f64;
             y += wt * city.y[c] as f64;
-            sz.pop[s] += city.pop[c];
+            sz.pop[s] += home_w[c];
             sz.jobs[s] += jobs;
         }
         sz.cx[s] = (x / wsum) as f32;
@@ -1245,7 +1251,7 @@ pub fn build_subzones(city: &City, zones: &Zones, acc: &Access, net: &Network, p
             let ex = acc.ex.get(e.1 as usize).and_then(|v| v.as_ref());
             let (mut wd, mut wc) = (0.0f64, 0.0f64);
             for &c in m {
-                let wt = (city.pop[c as usize] + city.jobs[c as usize]).max(1e-6) as f64;
+                let wt = (home_w[c as usize] + work_w[c as usize]).max(1e-6) as f64;
                 let d = ((city.x[c as usize] - sx).powi(2) + (city.y[c as usize] - sy).powi(2)).sqrt();
                 // T-275: around water where the walk must go round (cut off: no weight)
                 let d = super::routes::walk_m(ex, c, d);

@@ -135,9 +135,8 @@ Impact on the target machine (2 workers) where it differs. "Scales" = what it le
 
 6. **T-301 close packs and cap the aux worker**: bounds the aux at a few hundred MB on long pans
    (477 MB today on the Northeast alone). 1 day, low risk.
-7. **T-399 one engine per city** (T-361 item 3): 15-30 MB a worker for New York (cellbench: the
-   second engine's 12.5 MB plus its access and subzones), the second `set_network` (0.45 s native).
-   1-2 days, moderate risk.
+7. **T-399 one engine per city** (T-361 item 3): done 2026-10-15, -10 MB a New York worker, -33 MB
+   with nine cities; the subzones stay per layer (different weights). notes/T-399.md.
 8. **T-401 profile one period's round by layer natively**, the basis for T-036: no breakdown
    exists beyond cellbench's free flow (commutes 1.5 s, everyday 0.5-0.8 s). Half a day.
 9. **T-281 walk search on opening**: about -0.5 s of load in every worker. 1 day, low risk.

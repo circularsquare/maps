@@ -127,8 +127,11 @@ function openPacks(packs: { id: CityId; header: string; bin: ArrayBuffer }[], ma
       continue;
     }
     if (cities.has(pack.id)) continue;
-    cities.set(pack.id, new DemandApi(pack.header, new Uint8Array(pack.bin)));
-    if (!aux && hasEveryday(pack.header)) everyday.set(pack.id, new EverydayApi(pack.header, new Uint8Array(pack.bin)));
+    const bin = new Uint8Array(pack.bin);
+    const a = new DemandApi(pack.header, bin);
+    cities.set(pack.id, a);
+    // T-399: the everyday layer shares the commutes' cells, zones, gravity and routes
+    if (!aux && hasEveryday(pack.header)) everyday.set(pack.id, EverydayApi.beside(a, pack.header, bin));
   }
   if (market !== undefined && !aux && !intercity) {
     // T-180: the page sends the pack's bytes; decoding 8 MB here keeps it off the main thread
@@ -163,7 +166,7 @@ const hasEveryday = (header: string) => JSON.parse(header).arrays.some((a: {name
 function openBare(pack: { id: CityId; header: string; bin: ArrayBuffer }) {
   const bin = new Uint8Array(pack.bin);
   const a = new DemandApi(pack.header, bin);
-  const e = hasEveryday(pack.header) ? new EverydayApi(pack.header, bin) : null;
+  const e = hasEveryday(pack.header) ? EverydayApi.beside(a, pack.header, bin) : null;
   const f0 = new Float32Array(0), u0 = new Uint32Array(0);
   a.set_network(f0, u0, u0, f0, f0, f0);
   e?.set_network(f0, u0, u0, f0, f0, f0);

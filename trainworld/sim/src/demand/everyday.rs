@@ -644,7 +644,7 @@ mod tests {
         }
         // T-285: a selection's far end, visiting only its samples, against visiting them all
         let n = a.engine.city.len();
-        let pop = &a.engine.city.pop;
+        let pop = a.engine.pop();
         let busy: Vec<u32> = { let mut c: Vec<u32> = (0..n as u32).collect(); c.sort_by(|&x, &y| pop[y as usize].total_cmp(&pop[x as usize])); c };
         let picks: Vec<Vec<u32>> = vec![busy[..1].to_vec(), busy[100..107].to_vec(), busy[..2000].iter().step_by(3).copied().collect(), (0..n as u32).step_by(997).collect()];
         for cells in &picks {
@@ -1000,7 +1000,7 @@ mod tests {
     #[ignore]
     fn every_pack_everyday() {
         let root = concat!(env!("CARGO_MANIFEST_DIR"), "/../data/packs");
-        for city in ["nyc", "phl", "bos", "wdc", "bal", "pvd", "nhv", "hfd", "spf", "tor", "lon", "par", "sha", "mum"] {
+        for city in ["nyc", "phl", "bos", "wdc", "bal", "pvd", "nhv", "hfd", "spf", "tor", "lon", "par", "sha", "mum", "ber"] {
             let (h, b) = pack::load_raw(&format!("{root}/{city}.json")).unwrap();
             let t = now_ms();
             let a = EverydayApi::new(&h, &b).unwrap();
@@ -1228,7 +1228,7 @@ impl EverydayApi {
             2 => self.school_enrollment[d],
             3 => self.university_enrollment[d],
             AIRPORT => (self.airport_origin[c] as f64 * self.airport_scale[self.engine.z.cell_zone[c] as usize]) as f32,
-            _ => self.engine.city.pop[c],
+            _ => self.engine.pop()[c],
         };
         let weight = budget * RATE[kind] / per as f32 * local_share(distance);
         // T-275: the walk goes around water between the two cells' zones
@@ -1434,8 +1434,12 @@ impl EverydayApi {
 impl EverydayApi {
     #[wasm_bindgen(constructor)]
     pub fn new(header: &str, bin: &[u8]) -> Result<EverydayApi, String> {
-        let mut engine = DemandApi::new(header, bin)?;
-        let n = engine.city.len();
+        Self::beside(&DemandApi::new(header, bin)?, header, bin)
+    }
+    /// The everyday layer of the city whose commutes `commutes` holds (opened from the same
+    /// pack), sharing its cells, zones, gravity and routes (T-399).
+    pub fn beside(commutes: &DemandApi, header: &str, bin: &[u8]) -> Result<EverydayApi, String> {
+        let n = commutes.city.len();
         let pop =
             pack::cell_weights(header, bin, "pop", n)?.ok_or("missing resident population")?;
         let retail = pack::cell_weights(header, bin, "errand_jobs", n)?
@@ -1481,16 +1485,9 @@ impl EverydayApi {
         let nonzero = |v: Option<Vec<f32>>| v.filter(|v| sum(v) > 0.0);
         let airport_trips = nonzero(pack::cell_weights(header, bin, "airport_trips", n)?);
         let medical = nonzero(pack::cell_weights(header, bin, "medical_visits", n)?);
-        engine.city.pop = pop;
         // Access centroids and road density use real residents/employment, not commuter weights.
-        engine.city.jobs = pack::cell_weights(header, bin, "jobs", n)?.ok_or("missing jobs")?;
-        engine.z.pop.fill(0.0);
-        engine.z.jobs.fill(0.0);
-        for c in 0..n {
-            let z = engine.z.cell_zone[c] as usize;
-            engine.z.pop[z] += engine.city.pop[c] as f64;
-            engine.z.jobs[z] += engine.city.jobs[c] as f64;
-        }
+        let jobs = pack::cell_weights(header, bin, "jobs", n)?.ok_or("missing jobs")?;
+        let engine = commutes.with_weights(pop, jobs);
         let nz = engine.z.n;
         let mut members = vec![vec![]; nz];
         for c in 0..n {
@@ -1503,9 +1500,9 @@ impl EverydayApi {
         // normalised mass times the decay, and the cell sends its weight times their sum.
         let (airport_origin, airport_mass) = match &airport_trips {
             Some(trips) => {
-                let tj = sum(&engine.city.jobs).max(1e-9);
+                let tj = sum(engine.jobs()).max(1e-9);
                 let mut origin: Vec<f32> = (0..n)
-                    .map(|c| (0.5 * engine.city.pop[c] as f64 / tp + 0.25 * engine.city.jobs[c] as f64 / tj + 0.25 * leisure[c] as f64 / tl) as f32)
+                    .map(|c| (0.5 * engine.pop()[c] as f64 / tp + 0.25 * engine.jobs()[c] as f64 / tj + 0.25 * leisure[c] as f64 / tl) as f32)
                     .collect();
                 // the airport's own jobs are not where its passengers come from (a terminal's
                 // block holds tens of thousands of airport jobs): no ends within 1.5 km of one
@@ -1536,7 +1533,7 @@ impl EverydayApi {
                 2 => school_enrollment.as_deref().unwrap_or(&[]),
                 3 => university_enrollment.as_deref().unwrap_or(&[]),
                 AIRPORT => &airport_origin,
-                _ => &engine.city.pop,
+                _ => engine.pop(),
             }
         };
         let mut start = vec![0usize];

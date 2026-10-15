@@ -673,7 +673,7 @@ destination zones, and the drive costs a little more per pair; a day is 15% long
 edit reruns everything except gravity. Periods are independent, so the game runs them in a pool
 of workers ([architecture.md](architecture.md) 7): with three workers in Chrome the mode split updated 0.49-0.55 s after a
 new network reached them and the third crowding round landed by 1.9-2.0 s at T-078; T-090 adds
-about 15% (not measured in Chrome). Each worker holds its own copy of the city: 18 MB of WASM
+about 15% (not measured in Chrome). Each worker holds its own copy of the city (one for its commutes and everyday layer together): 18 MB of WASM
 memory open, about 23 MB after solving (notes/T-026.md). New York's real 867-station network is
 13.8M pairs, 1.0-1.7 s a stage in WASM, 24-25 s for a whole day on one worker (20 s before T-090).
 
@@ -722,9 +722,12 @@ and a cell holds one sample per 8 of its trips (T-397): natively New York's ever
 2.3M samples, about 18 MB with their pair indices. A sample's
 pair index is held only once a network gives its layer a pair, written in place on the next
 network, and the pairs are found through a 4-byte-a-slot table sized from the last network's count
-(T-398). Natively a solving worker on the real save holding three periods has about 166 MB of heap
-after a solve and 198 MB at its peak; with all nine Northeast cities open, 315 and 350 MB
-(notes/T-397.md).
+(T-398). A city's everyday layer is opened beside its commutes (`EverydayApi::beside`, T-399) and
+shares their cells, zone grid, gravity and routes; its own are the zones' sums of residents and
+jobs, and the station access and subzones built on those weights (not the commute weights), so
+each network sets up the two layers' subzones separately. Natively a solving worker on the real
+save holding three periods has about 156 MB of heap after a solve and 188 MB at its peak; with
+all nine Northeast cities open, 282 and 318 MB (notes/T-399.md).
 T-172 made the everyday opening cheap: zone centres sit on the zone grid, so the destination
 gravity's decay comes from one table per purpose by grid offset instead of a square root and an
 exp per zone pair (the sampled destinations agree with before to 7 significant figures in every

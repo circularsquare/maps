@@ -304,7 +304,8 @@ a city's box is read out of the zip in about 10 s) and inland water areas (`natu
 the region's Geofabrik extract, read once per extract into `data/raw/osm/<extract>.water.fgb`
 (England: 13 minutes, 115 MB; a US state 1-3 minutes). In a tier 0 config:
 `"water_source": osm_water.source(["europe/united-kingdom/england"])`; the extracts must cover the
-whole box. To read an extract ahead, or to see a city's mask before its pack exists:
+whole box, and must not overlap: check Geofabrik's region page first, since a region can contain
+another (Brandenburg includes Berlin, T-290), and two overlapping extracts count every feature twice. To read an extract ahead, or to see a city's mask before its pack exists:
 
     venv\Scripts\python.exe trainworld\pipeline\osm_water.py read europe/france/ile-de-france
     venv\Scripts\python.exe trainworld\pipeline\osm_water.py mask par --extracts europe/france/ile-de-france --bbox w,s,e,n --origin lon,lat --png artifacts\trainworld\T-###-par-water.png
