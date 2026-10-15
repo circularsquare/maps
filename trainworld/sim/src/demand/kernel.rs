@@ -1659,6 +1659,11 @@ impl SkimKey {
     }
 }
 
+/// Skims tables a thread keeps (`with_skims`). Each holds stations² route costs plus about 12
+/// bytes a node per searched destination: on the real New York save 45 MB for New York's table,
+/// 3 MB for New Haven's (T-405).
+const SKIM_TABLES: usize = 2;
+
 thread_local! {
     /// Skims of the graphs a worker solved most recently, newest last (T-119).
     static SKIM_CACHE: std::cell::RefCell<Vec<(SkimKey, Skims)>> = std::cell::RefCell::new(vec![]);
@@ -1668,8 +1673,9 @@ thread_local! {
 /// caller on this thread has searched for the same graph. A worker solves several populations
 /// (two cities and the longer-trip market) on one service, and a period's graph is the same for
 /// all of them once crowding is set, so the searches are done once per period and round, not once
-/// per population (T-119). Stale graphs are dropped as new ones arrive (two are kept: the cities
-/// do not always agree to the last metre on where two stations are).
+/// per population (T-119). The cities do not always agree to the last metre on where two stations
+/// are, so a period can bring a graph per city: `SKIM_TABLES` are kept, and which go is chosen by
+/// what they cost to search again, so the order the populations come in does not decide (T-405).
 pub fn with_skims<R>(g: &Graph, p: &Params, want: &[bool], f: impl FnOnce(&Skims) -> R) -> R {
     if legacy() {
         return f(&skims(g, p));
@@ -1682,8 +1688,17 @@ pub fn with_skims<R>(g: &Graph, p: &Params, want: &[bool], f: impl FnOnce(&Skims
                 c.push(e);
             }
             None => {
-                if c.len() >= 2 {
-                    c.remove(0);
+                if c.len() >= SKIM_TABLES {
+                    // the table cheapest to search again (fewest destinations, the oldest of
+                    // equals) gives way, and only to one that will cost at least as much: a
+                    // cheaper one is searched for this call alone
+                    let todo = (0..g.n_st).filter(|&d| want.get(d).copied().unwrap_or(false)).count();
+                    let (i, kept) = c.iter().enumerate().map(|(i, e)| (i, e.1.next.len())).min_by_key(|e| e.1).unwrap();
+                    if todo < kept {
+                        drop(c);
+                        return f(&skims_for(g, p, want));
+                    }
+                    c.remove(i);
                 }
                 c.push((SkimKey::of(g, p), Skims::empty(g)));
             }
@@ -2626,6 +2641,18 @@ mod tests {
         let full2 = skims(&g2, &p);
         with_skims(&g2, &p, &[true; 4], |sk| assert_eq!(sk.r, full2.r));
         with_skims(&g, &p, &[true; 4], |sk| assert_eq!(sk.r, full.r));
+        // T-405: a third graph wanting fewer searches than either kept table evicts neither
+        let mut g3 = build_graph(&net, &p);
+        factor[0] = 2.0;
+        set_crowding(&mut g3, &factor);
+        let full3 = skims(&g3, &p);
+        with_skims(&g3, &p, &[false; 4], |sk| assert_eq!(sk.slot.iter().filter(|&&v| v != NONE).count(), 0));
+        with_skims(&g3, &p, &[false, true, false, false], |sk| {
+            assert_eq!(sk.slot.iter().filter(|&&v| v != NONE).count(), 1);
+            assert_eq!((0..s).map(|src| sk.r[src * s + 1]).collect::<Vec<_>>(), (0..s).map(|src| full3.r[src * s + 1]).collect::<Vec<_>>());
+        });
+        with_skims(&g2, &p, &[false; 4], |sk| assert_eq!(sk.r, full2.r));
+        with_skims(&g, &p, &[false; 4], |sk| assert_eq!(sk.r, full.r));
         clear_skim_cache();
     }
 

@@ -579,9 +579,9 @@ async function run() {
         ...jobEveryday.filter(([id]) => c.cities.includes(id)).map(([, e]) => e),
         ...(c.market && regional ? [regional] : []),
       ], solveOrder: [
-        // the order the packs opened in (the viewed zone's first): solved in registry order instead,
-        // the real save's startup took 8-9 s longer (T-392), through the caches the populations of
-        // a worker share (routed walks, strategy skims; T-405); the order changes no figure
+        // the order the packs opened in (the viewed zone's first); the order changes no figure. Set
+        // up in registry order instead, the real save's first round-0 solve on each worker is ~1 s
+        // slower in WASM (T-405, notes/T-405.md; the skim cache no longer depends on the order)
         ...[...cities.keys()].filter((id) => c.cities.includes(id)).map((id) => cities.get(id)!),
         ...[...everyday.keys()].filter((id) => c.cities.includes(id) && jobCities.has(id)).map((id) => everyday.get(id)!),
         ...(c.market && regional ? [regional] : []),

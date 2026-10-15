@@ -1,5 +1,13 @@
 # Archive
 
+- T-405 [P2] Solve order and the shared caches. Done 2026-10-15: the skim cache let a city with nothing to search evict New York's table; now the cheapest table gives way, so both orders search the same (native 50 vs 57 s before, within noise after), figures identical. notes/T-405.md.
+
+- T-408 [P2] Yesterday in the line inspector. Done 2026-10-15: the Today block's heading is a Today / Yesterday switch; the clock worker keeps each line's whole day at its local midnight, and a game loaded since then shows the day worked out again on the current network.
+
+- T-407 [P2] Headway 100.0 and 600.0 min for 2 and 1 trains (njt MNEG). Closed 2026-10-15, legacy save: the real save's lines have no train counts, so the panel shows the timetable's trains an hour (0.6 and 0.1) with trains rounded up (2 and 1); the first stepper click turns the counts into a fleet and re-solves the headways (58.6, 116.8). New lines are solved when made.
+
+- T-406 [P2] Top bar and schedule. Done 2026-10-15: walking and driving are icons with hovers, the mode bar takes the free width (never the numbers' width), the demand level is only in the clock's hover, and the schedule's High, Medium and Low hover gives their times of day.
+
 - T-396 [P2] The market's cluster join and opening. Done 2026-10-15: the market joins stations within 30 km of a market zone's box, and opens only when a market zone is viewed or reached; a Toronto save 38.6 to 6.4 MB at startup. Splitting by network left to T-409. notes/T-396.md.
 
 - T-404 [P3] Boundaries on demand. Done 2026-10-15: boundaries fetched only for zones whose boxes are near the view, a station or a place asked about; startup 18 requests (0.76 MB) to 2 (new game) or 8 (real save), flat at 200 zones. notes/T-404.md.

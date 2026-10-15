@@ -577,8 +577,14 @@ works on two levels:
    end a rail trip at are searched towards (those in the access lists of subzones with jobs,
    `egress_stations`): a population living near two stations of an 875-station network needs two
    searches. The tables are shared by the populations of a worker (`kernel::with_skims`, T-119):
-   Philadelphia's, New York's and the regional market's graphs are the same once crowding is
-   set, and a search is done once per period and round, not once per population.
+   populations whose graphs are the same to the bit (a city's commutes and everyday layer; on the
+   real save also New York and the regional market) search once per period and round. Each city
+   converts station positions to its own frame, so cities can differ in the last bits and bring a
+   graph each. A worker keeps two tables; when a third graph comes, the table with the fewest
+   searched destinations gives way, and only to one with at least as many to search (a cheaper one
+   is searched for that call alone), so the order populations are solved in does not change what
+   is searched (T-405). A table is stations² costs plus about 12 bytes a node per searched
+   destination: on the real save 45 MB for New York's, 3 MB for New Haven's.
 5. **Mode choice per subzone pair.** The access logit factorises: each origin subzone gets one row
    over all stations, the logsum of its access options followed by every station-to-station cost
    (at most 6 options x stations multiply-adds); each pair then multiplies that row into its
