@@ -10,7 +10,7 @@ const REGISTRY = JSON.parse(readFileSync(resolve(here, "src/game/registry.json")
 const CITIES = REGISTRY.cities.map((c) => c.id);
 
 /**
- * City packs at `packs/<city>.json`, `.bin`, `.boundary.geojson` and `.places.json` (the OSM place
+ * City packs at `packs/<city>.json`, `.bin`, `.boundary.geojson`, `.market.json` (T-377) and `.places.json` (the OSM place
  * list, pipeline/places.py, fetched only when search or station naming needs it) beside the page: served from
  * data/packs/ by the dev server and copied into dist/packs/ by a build. The clock worker reads the
  * water mask from it with a Range request, the demand workers the cells.
@@ -42,10 +42,11 @@ function packs(): Plugin {
       const out = join(opts.dir ?? resolve(here, "dist"), "packs");
       mkdirSync(out, { recursive: true });
       for (const c of CITIES)
-        for (const ext of [".json", ".bin", ".boundary.geojson", ".places.json"]) {
+        for (const ext of [".json", ".bin", ".boundary.geojson", ".places.json", ".market.json"]) {
           const src = join(PACKS, c + ext);
           if (existsSync(src)) copyFileSync(src, join(out, c + ext));
           else if (ext === ".places.json") this.warn(`place list missing: ${src} (build it with pipeline/places.py ${c})`);
+          else if (ext === ".market.json") this.warn(`market pack missing: ${src} (build it with pipeline/market_zones.py ${c})`);
           else this.warn(`city pack missing: ${src} (build it with pipeline/build_city.py ${c})`);
         }
       const intercity = join(PACKS, REGISTRY.market.pack + ".json");
