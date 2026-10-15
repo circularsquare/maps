@@ -101,13 +101,15 @@ packs, `..\venv\Scripts\python.exe`). Details and build orders: `docs/code-map.m
 
 - **The goal is the whole world; demand realism is core** (2026-10-13). New US cities stay paused.
   Instead a sampler of other countries' cities (Toronto done; London playable at tier 0,
-  England's inputs next; then Berlin, Paris, Shanghai, Mumbai, not all at once) to learn which demand methods work everywhere. Each is a
+  England's inputs next; Paris, Shanghai and Mumbai one at a time from 2026-10-14, then Berlin) to learn which demand methods work everywhere. Each is a
   low-fidelity first pass: missing data (medical, say) is left out, extents pragmatic, basic
   checks, no deep calibration. The global build is the baseline everywhere; the reach goal is
   tailoring country by country, first for likely-popular countries (China, Japan, the UK, Germany
   and the like) (2026-10-14). Whole-world estimate, 2026-10-14: about 40-60 agent hours (robust
   unattended tier 0, a few sampler cities, automatic city and zone choice, runtime scaling), then
-  days of machine time for the build.
+  days of machine time for the build. In tokens (London measured, notes/city-costs.md): a tier 0
+  city cost about 6.8M weighted with first-time tooling; perhaps 3M once T-363 and the lean-context
+  rules land, so 200 metros about 600M, very roughly two thirds of one week's limit in all.
 - **General sources and methods only** (2026-10-12, stressed 2026-10-13). Prefer global sources
   (OSM, GHSL, Kontur, WorldPop) or a method any national census can feed. A one-city source is
   worth it only if very easy; one for a minor city never is. Research briefs say this.

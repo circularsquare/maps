@@ -4,16 +4,33 @@ Open agent work. Format and rules in `CLAUDE.md`. P1 = now or blocking, P2 = thi
 P3 = later. Finished or abandoned tasks move to `ARCHIVE.md`.
 
 **Direction** (Anita, 2026-10-14; details in CLAUDE.md "Working here"). Order of work:
-1. responsiveness (T-325, T-328 done; T-327, then T-326); 2. the crossover tool (T-338);
-3. London end to end (T-288 stage a done; T-360 stage b), then worldwide long trips (T-362, stages T-375 to T-379), and no other sampler city until London has taught
-what works; 4. a demand-realism batch checked on London and New York (T-295, T-270, T-271,
-T-272); 5. a design for game modes (campaign, sandbox, goals), not yet a task. Other
-performance work stays parked until she reports a problem.
+1. London stage b (T-360, running); 2. sampler cities Paris, Shanghai, Mumbai (T-289, T-291,
+T-292), from tonight, one at a time; 3. park-and-ride (T-380 parking check, then T-371 to T-374;
+T-370 done); 4. worldwide long trips (T-362: T-375 to T-379); 5. the crossover tool (T-338);
+6. responsiveness leftovers (T-327, T-326); 7. a demand-realism batch (T-270, T-271, T-272);
+8. a design for game modes, not yet a task. Other performance work stays parked until she
+reports a problem. Anita plans hundreds of metros: cost per city matters (notes/city-costs.md).
 
 **Where things stand (2026-10-14).** One save spans the Earth (Mercator frame, local time); the
-Northeast (nine cities, Mercer in New York, four county zones, commutes between them) and
-Toronto play; a global-sources city builder (tier 0) exists, checked on Toronto. History is in
-ARCHIVE.md.
+Northeast (nine cities, four county zones, commutes between them), Toronto and London (tier 0)
+play. Demand workers are sized to the machine (T-381). History is in ARCHIVE.md.
+
+**Overnight handoff (2026-10-14, for a fresh orchestrator).** Anita approved, for tonight: Paris,
+Shanghai and Mumbai, one city agent at a time (Opus), tier 0 per docs/adding-a-city.md, each
+ending with its retrospective; record each city's line in notes/city-costs.md and judge its
+proposals (adopt the cheap clear ones, decline others with a reason, leave edge cases for Anita
+under "Added by agents" in TODO.md). **CPU cap tonight about 10 cores** (back to 6 when she is
+up); auto mode. Before the first city, **T-363** (read a region's OSM once) is worth doing: it
+saves about an hour of CPU per city. **Disk**: about 32 GB free on 2026-10-14; country extracts
+are 1.5-4.5 GB; delete each city's raw downloads once it is verified, and England's .osm.pbf once
+T-360 is in ARCHIVE.md. **In flight from the previous session**: T-360 (London stage b) edits
+pipeline/england.py, tier0.py, docs/demand-worldwide.md and London's pack; it reports to the
+previous session, so watch ARCHIVE.md for T-360, then commit its files (smoke first). Do not run
+a city build while T-360 is still changing tier0.py; T-363 or a city's research and downloads can
+go meanwhile. **After each city**: `node trainworld/checks/smoke.mjs`, commit explicit paths, then
+rebuild 8800: `git -C maps/.tw-snap checkout --detach <commit>`, then with
+`CARGO_TARGET_DIR=maps/.tw-snap-target`, `CARGO_BUILD_JOBS=3` and `%USERPROFILE%\.cargo\bin` on
+PATH, `npm run build --prefix maps/.tw-snap/trainworld/app` (a few minutes; background it).
 
 ## In progress (batch 22, 2026-10-13)
 
