@@ -181,6 +181,8 @@ struct CPair {
     c: u32,
     car: f32,
     corridor: usize,
+    /// its zones' centres at least `ride_min_km` apart: the home end may ride (T-373)
+    ride: bool,
 }
 /// T-276: the commutes between zones are the local layer's commuters, so they choose as it does:
 /// a logit at its scale, the drive weighted as congested driving plus parking at work, and the
@@ -266,9 +268,15 @@ pub struct IntercityApi {
     svc: Option<Service>,
     access: Vec<Vec<(usize, f32)>>,
     access_work: Vec<Vec<(usize, f32)>>,
-    /// T-276: the same at the commute's logit scale (`commute_params`), homes then jobs
+    /// T-276: the same at the commute's logit scale (`commute_params`), homes then jobs; T-373:
+    /// homes with rides, and by walking alone for commutes too short for a ride
     access_c: Vec<Vec<(usize, f32)>>,
     access_cw: Vec<Vec<(usize, f32)>>,
+    access_c_walk: Vec<Vec<(usize, f32)>>,
+    /// T-373: the sites' 2 km zones (homes and jobs, as the local layer's), whose centres the
+    /// rides start from (`access_options`), and those centres
+    kz: Zones,
+    kplace: Vec<(usize, f32, f32)>,
     /// T-276: commutes between zones: (home zone, work zone, commuters a day), from the pack
     commutes: Vec<(u32, u32, f32)>,
     /// per zone, its commutes as the home end and as the work end (CSR offsets and `commutes` indices)
@@ -357,7 +365,8 @@ impl IntercityApi {
             let (out, ret) = (n as f64 * TO_WORK[q] as f64, n as f64 * TO_HOME[q] as f64);
             terms.clear();
             let mut sum = 0f64;
-            for &(sa, wa) in &self.access_c[h] {
+            let home = if cp.ride { &self.access_c[h] } else { &self.access_c_walk[h] };
+            for &(sa, wa) in home {
                 for &(sb, wb) in &self.access_cw[wz] {
                     if sa == sb {
                         continue;
@@ -438,10 +447,11 @@ impl IntercityApi {
                 continue;
             }
             let (zh, zw) = (&self.zones[h], &self.zones[w]);
-            let car = drive_min(zone_km(zh, zw, self.ground)) * pc.w_drive + zw.park;
+            let km = zone_km(zh, zw, self.ground);
+            let car = drive_min(km) * pc.w_drive + zw.park;
             let corridor = self.corridor_of[zh.market.min(zw.market) * self.markets + zh.market.max(zw.market)];
             self.cpair_of[c] = self.cpairs.len() as u32;
-            self.cpairs.push(CPair { c: c as u32, car, corridor });
+            self.cpairs.push(CPair { c: c as u32, car, corridor, ride: km >= pc.ride_min_km });
         }
         self.cpairs.shrink_to_fit();
         self.served = served;
@@ -989,8 +999,8 @@ mod tests {
             assert!(IntercityApi::new(bad).is_err(), "accepted {bad}");
         }
     }
-    /// Five markets on a line, a station at each; two zones no station reaches (10 km from
-    /// New York's, and one 300 km out).
+    /// Five markets on a line, a station at each; a zone 10 km from New York's that only a ride
+    /// reaches (T-373), and one 300 km out that nothing reaches.
     const FIVE: &str = r#"{"markets":["New York","Philadelphia","Mercer","Boston","Washington DC"],"sites":[[0,0,100000,50000,0],[10000,0,30000,10000,0],[60000,0,100000,50000,1],[120000,0,100000,50000,2],[180000,0,100000,50000,3],[240000,0,100000,50000,4],[300000,50000,50000,20000,4]]}"#;
     fn five_network(a: &mut IntercityApi) {
         let mut times = vec![0.; 30];
@@ -1037,7 +1047,8 @@ mod tests {
         five_network(&mut without);
         // only pairs between served zones, in the whole list's order
         let served: Vec<bool> = (0..with.zones.len()).map(|z| with.served.contains(&z)).collect();
-        assert_eq!(served.iter().filter(|s| !**s).count(), 2);
+        assert_eq!(served.iter().filter(|s| !**s).count(), 1);
+        assert!(served[with.cell_zone[1]], "the zone 10 km out rides to New York's station");
         let want: Vec<_> = with.all_pairs().into_iter().filter(|p| served[p.a] && served[p.b]).map(|p| (p.a, p.b, p.trips)).collect();
         assert_eq!(with.pairs.iter().map(|p| (p.a, p.b, p.trips)).collect::<Vec<_>>(), want);
         assert!(with.pairs.len() < with.derived.pairs);
@@ -1072,6 +1083,23 @@ mod tests {
         assert!(with.pairs.iter().all(|p| with.zones[p.a].market <= 1 && with.zones[p.b].market <= 1));
         with.set_network(&[], &[], &[], &[], &[], &[]).unwrap();
         assert!(with.pairs.is_empty());
+    }
+    /// T-373: rides nest with a site's walks, so a dear ride adds little and a cheap one a lot.
+    #[test]
+    fn rides_nest_with_walks() {
+        let total = |walks: &[(usize, f32)], rides: &[Ride]| {
+            let mut m = BTreeMap::new();
+            add_access(&mut m, walks, rides, 0.025, 0.2, 1.);
+            m.values().sum::<f32>()
+        };
+        let walks = [(0, 20.), (1, 30.)];
+        let alone = total(&walks, &[]);
+        assert!((alone - ((-0.5f32).exp() + (-0.75f32).exp()) / 2.).abs() < 1e-6);
+        let dear = total(&walks, &[(2, 60., 0., 0.)]);
+        assert!(dear > alone && dear < alone * 1.01, "{alone} {dear}");
+        let cheap = total(&walks, &[(2, 10., 0., 0.)]);
+        assert!(cheap > (-0.25f32).exp(), "{cheap}");
+        assert!((total(&[], &[(2, 20., 0., 0.)]) - (-0.5f32).exp()).abs() < 1e-6);
     }
     /// T-128: a pack that names its frame measures zone distances on the ground; one without
     /// keeps its plane (and its derived block); blocks of one kind are stale for the other.
@@ -1513,6 +1541,59 @@ pub fn market_site_zones(header: &str) -> Result<(Vec<u32>, Vec<u32>, Vec<(i32, 
         .collect();
     Ok((o.cell_zone.iter().map(|&z| z as u32).collect(), first, keys))
 }
+/// T-373: the 2 km zones of the market's sites (`city`, whose `jobs` are attractions) with their
+/// homes and jobs as the local layer's zones have them, so a ride's drive and parking are the
+/// local layer's; and each zone's homes-and-jobs-weighted centre, where its rides start.
+fn ride_zones(city: &City) -> (Zones, Vec<(usize, f32, f32)>) {
+    let jobs: Vec<f32> = city.pop.iter().zip(&city.jobs).map(|(&p, &a)| ((a - p) / 2.).max(0.)).collect();
+    let sites = City { name: String::new(), h3: vec![], x: city.x.clone(), y: city.y.clone(), pop: city.pop.clone(), jobs, region: vec![], gravity: None };
+    if sites.is_empty() {
+        return (build_zones(&sites, 2000.), vec![]);
+    }
+    let mut z = build_zones(&sites, 2000.);
+    // a site is a 600 m square, not an H3 cell: its land in cells for `Zones::density`
+    let per_site = (SITE_M / 1000.).powi(2) / CELL_KM2;
+    let mut c = vec![(0f64, 0f64, 0f64); z.n];
+    for s in 0..sites.len() {
+        let zi = z.cell_zone[s] as usize;
+        let w = (sites.pop[s] + sites.jobs[s]) as f64 + 1e-9;
+        c[zi].0 += w;
+        c[zi].1 += w * sites.x[s] as f64;
+        c[zi].2 += w * sites.y[s] as f64;
+    }
+    let mut places = Vec::with_capacity(z.n);
+    for (zi, &(w, x, y)) in c.iter().enumerate() {
+        z.ncell[zi] = ((z.ncell[zi] as f32 * per_site).round() as u32).max(1);
+        places.push((zi, (x / w) as f32, (y / w) as f32));
+    }
+    (z, places)
+}
+/// T-373: a site's access weights at logit scale `beta`, by station, added into `out` times
+/// `share`: its walks (station, perceived minutes) as the mean of their exp(-beta x cost) as
+/// before rides, nested with its rides at the station choice's scale `theta`, so a ride dearer
+/// than the walk adds little; without rides, the walks' weights alone.
+fn add_access(out: &mut BTreeMap<usize, f32>, walks: &[(usize, f32)], rides: &[Ride], beta: f32, theta: f32, share: f32) {
+    let (beta, theta) = (beta as f64, theta as f64);
+    let n = walks.len() as f64;
+    let mean: f64 = walks.iter().map(|w| (-beta * w.1 as f64).exp() / n).sum();
+    if rides.is_empty() {
+        for &(st, c) in walks {
+            *out.entry(st).or_default() += share * ((-beta * c as f64).exp() / n) as f32;
+        }
+        return;
+    }
+    let cw = if walks.is_empty() { f64::INFINITY } else { -mean.ln() / beta };
+    let c0 = rides.iter().map(|r| r.1 as f64).fold(cw, f64::min);
+    let aw = if walks.is_empty() { 0. } else { (-theta * (cw - c0)).exp() };
+    let sum = aw + rides.iter().map(|r| (-theta * (r.1 as f64 - c0)).exp()).sum::<f64>();
+    let total = (-beta * (c0 - sum.ln() / theta)).exp() / sum;
+    for &(st, c) in walks {
+        *out.entry(st).or_default() += share * (total * aw * (-beta * c as f64).exp() / n / mean) as f32;
+    }
+    for r in rides {
+        *out.entry(r.0 as usize).or_default() += share * (total * (-theta * (r.1 as f64 - c0)).exp()) as f32;
+    }
+}
 /// The pack's `derived` block, computed from its sites (T-174; `bin/market_pack.rs`).
 pub fn derive_pack(header: &str) -> Result<Derived, String> {
     let o = open(header)?;
@@ -1576,6 +1657,7 @@ impl IntercityApi {
             (off, items)
         };
         let (c_home, c_work) = (csr(|c| c.0), csr(|c| c.1));
+        let (kz, kplace) = ride_zones(&city);
         let mut c_corridor = vec![0f64; corridors.len()];
         for &(h, w, n) in &commutes {
             let (a, b) = (zones[h as usize].market, zones[w as usize].market);
@@ -1587,6 +1669,9 @@ impl IntercityApi {
             cell_zone,
             access_c: vec![],
             access_cw: vec![],
+            access_c_walk: vec![],
+            kz,
+            kplace,
             commutes,
             c_home,
             c_work,
@@ -1678,31 +1763,35 @@ impl IntercityApi {
         let mut work = weights.clone();
         // T-276: the commutes' access at their own logit scale; the work end by jobs alone
         let commuting = !self.commutes.is_empty();
-        let (mut cw_home, mut cw_work) = (weights.clone(), weights.clone());
+        let (mut cw_home, mut cw_work, mut cw_walk) = (weights.clone(), weights.clone(), weights.clone());
         let beta_c = commute_params().beta;
+        // T-373: rides from each site's 2 km zone, parking or a drop-off at the home end of both
+        // parts, a drop-off at a longer trip's far end; a commute's work end walks
+        let (h_off, h_rides) = access_options(&self.kz, &net, &self.base, &self.kplace, End::Home);
+        let (f_off, f_rides) = access_options(&self.kz, &net, &self.base, &self.kplace, End::Far);
+        let theta = self.base.station_theta;
+        let mut walks: Vec<(usize, f32)> = Vec::with_capacity(K);
         for c in 0..self.city.len() {
             let z = self.cell_zone[c];
             let w = self.city.pop[c] / self.zones[z].pop.max(1e-12) as f32;
             let jw = self.city.jobs[c] / self.zones[z].attr.max(1e-12) as f32;
             let zjobs = ((self.zones[z].attr - self.zones[z].pop) / 2.).max(1e-12);
             let cjw = ((self.city.jobs[c] - self.city.pop[c]) / 2.).max(0.) / zjobs as f32;
-            let n = acc.n[c] as usize;
-            if n == 0 {
-                continue;
-            }
-            for k in 0..n {
-                let i = c * K + k;
+            let kz = self.kz.cell_zone[c] as usize;
+            let home = &h_rides[h_off[kz] as usize..h_off[kz + 1] as usize];
+            let far = &f_rides[f_off[kz] as usize..f_off[kz + 1] as usize];
+            walks.clear();
+            for i in c * K..c * K + acc.n[c] as usize {
                 let walk = acc.walk[i];
-                let cost = walk.min(self.base.walk_easy_min) * self.base.w_walk
-                    + (walk - self.base.walk_easy_min).max(0.) * self.base.w_walk_far;
-                let e = (-self.base.beta * cost).exp() / n as f32;
-                *weights[z].entry(acc.st[i] as usize).or_default() += w * e;
-                *work[z].entry(acc.st[i] as usize).or_default() += jw * e;
-                if commuting {
-                    let ec = (-beta_c * cost).exp() / n as f32;
-                    *cw_home[z].entry(acc.st[i] as usize).or_default() += w * ec;
-                    *cw_work[z].entry(acc.st[i] as usize).or_default() += cjw * ec;
-                }
+                let cost = walk.min(self.base.walk_easy_min) * self.base.w_walk + (walk - self.base.walk_easy_min).max(0.) * self.base.w_walk_far;
+                walks.push((acc.st[i] as usize, cost));
+            }
+            add_access(&mut weights[z], &walks, home, self.base.beta, theta, w);
+            add_access(&mut work[z], &walks, far, self.base.beta, theta, jw);
+            if commuting {
+                add_access(&mut cw_home[z], &walks, home, beta_c, theta, w);
+                add_access(&mut cw_walk[z], &walks, &[], beta_c, theta, w);
+                add_access(&mut cw_work[z], &walks, &[], beta_c, theta, cjw);
             }
         }
         let top8 = |maps: Vec<BTreeMap<usize, f32>>, positive: bool| -> Vec<Vec<(usize, f32)>> {
@@ -1719,8 +1808,10 @@ impl IntercityApi {
         self.access_work = top8(work, false);
         self.access_c = if commuting { top8(cw_home, true) } else { vec![] };
         self.access_cw = if commuting { top8(cw_work, true) } else { vec![] };
+        self.access_c_walk = if commuting { top8(cw_walk, true) } else { vec![] };
         self.want = vec![false; svc.st_x.len()];
-        for list in self.access_work.iter().chain(&self.access_cw) {
+        // a commute's trip home ends at its home station
+        for list in self.access_work.iter().chain(&self.access_cw).chain(&self.access_c).chain(&self.access_c_walk) {
             for &(st, _) in list {
                 self.want[st] = true;
             }

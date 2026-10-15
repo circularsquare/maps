@@ -139,12 +139,14 @@ The regional layer carries what crosses zones or goes far [T-117, T-276]. Detail
   zones**: the joint gravity's cross-pack part, at commute timing and mode choice. Figures needing
   every zone pair are computed offline into the pack's `derived` block; the game builds pairs only
   between zones a station serves [T-174].
-- **5.2 Access**: the same walk to stations as local demand, so feeder lines and transfers carry
-  real loads; nothing bypasses the player's local network.
-- **5.3 Park-and-ride** [T-295, T-371, T-389]: in the local layer a commute or everyday trip of 5 km or more may ride
-  (car, bus, bike or a lift, one mode) from home to the cheapest station of each nearby line
-  within 15 km, at a fixed cost plus the drive plus parking or a drop-off at the station; the walk
-  is a true 6 km/h walk. The regional layer's rides are T-373.
+- **5.2 Access**: the same walks and rides to stations as local demand, so feeder lines and
+  transfers carry real loads; nothing bypasses the player's local network.
+- **5.3 Park-and-ride** [T-295, T-371, T-389, T-373]: a commute or everyday trip of 5 km or more
+  may ride (car, bus, bike or a lift, one mode) from home to the cheapest station of each nearby
+  line within 15 km, at a fixed cost plus the drive plus parking or a drop-off at the station; the
+  walk is a true 6 km/h walk. The regional layer's commutes between zones ride at the home end and
+  its inter-region trips at both ends, the far end a drop-off only, through the same
+  `access_options`, so a lone station in a new city draws riders from beyond walking reach.
 - **5.4 Size**: the market pack runs in the same worker pool as the zone packs.
 
 ## 6. Building and running

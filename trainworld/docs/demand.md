@@ -452,6 +452,8 @@ skips the local stop for the line they want. Homes beyond every walk (3 km) are 
 6 km square (3 x 3 zones) with rides only, from its home-weighted centre, keeping each zone's
 trip total but taking the most populous zone's distance decay; the work or activity end walks
 only. Car parks are automatic and unlimited. `p_ride` and `d_drop` are starting values for T-372's fit.
+The regional layer's rides (commutes between zones, inter-region trips at both ends) come from the
+same function, `access_options` ([regional.md](regional.md) 5.3).
 
 Two **computational bounds** keep the work down and are set where little rail is left: stations
 are looked for within 3 km straight line of a walk (`walk_cutoff_m`), and a pair of places is
@@ -769,7 +771,7 @@ both halved for two occupants (`car_min`). Commutes between zones: `commute_home
 (a site of each 6 km zone) and `commute_trips` from `bin/joint_gravity.rs`; at opening merged by
 zone pair, at `set_network` kept between served zones (`cpairs`), and in each period's pass chosen
 once per commuter on its home-to-work station pairs (logit 0.05, drive x 1.33 + parking at work,
-access weights at that scale), outward legs at `TO_WORK[q]`, the trip home at `TO_HOME[q]` on the
+access weights at that scale, the home end with rides, [regional.md](regional.md) 5.3), outward legs at `TO_WORK[q]`, the trip home at `TO_HOME[q]` on the
 same pairs reversed; their own assignment (`c_avg`) is the work purpose's share of the market's
 loads (`commute_loads`; the worker moves it from longer trips to work), with their own corridors
 (`commute_corridors`), parts (`part_summary`: longer trips and rail, then commute legs and rail)

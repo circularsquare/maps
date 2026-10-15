@@ -285,7 +285,11 @@ Tier 0 with sub-district totals and a curve fitted to distance bands; notes/T-29
   includes a wait and should be larger, and where cycling is the usual way to the station (the
   Netherlands, Japan) the ride is cheaper and shorter than here. The work or activity end walks
   only; errands of 5 km or more ride like commutes, though a lift or taxi to the shops may be
-  rarer than one to work. The
+  rarer than one to work. The regional layer (T-373, docs/regional.md 5.3) uses the same rides:
+  commutes between zones at the home end, inter-region trips at both ends with only a drop-off
+  (`d_drop`) at the far end, which stands for a taxi or a pick-up; where taxis are cheap and common
+  (much of Asia and Latin America) the far end is easier than this, and where long trips end at a
+  rental car or a long walk it is harder. The
   weights are starting values (T-372 fits them on New York). Check: the share of rail riders
   reaching the station by car or bus per sampler city (UK NTS for London, Metrolinx surveys for
   Toronto) against the model's home-end ride share (`realnet` prints it).

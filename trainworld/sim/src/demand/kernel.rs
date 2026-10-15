@@ -947,13 +947,24 @@ pub fn ride_offered(z: &Zones, p: &Params, i: usize, j: usize) -> bool {
 }
 
 /// A ride entry (T-371): station, perceived minutes, straight metres, real drive minutes.
-type Ride = (u32, f32, f32, f32);
+pub type Ride = (u32, f32, f32, f32);
 
-/// The ride entries from each place (its zone, x, y; T-371), CSR. For each line, its station with
-/// the cheapest ride within `ride_max_m`; then the stations of the `ride_lines` cheapest lines.
-/// The drive is the whole-trip drive's (`drive_min_f` with the zones' routed factor) from the
-/// place, in its zone, to the station's zone.
-pub fn place_rides(zones: &Zones, net: &Network, p: &Params, places: &[(usize, f32, f32)]) -> (Vec<u32>, Vec<Ride>) {
+/// The end of a trip a ride serves (T-373): at home the rider may park at the station or be
+/// dropped off; at the far end there is no car to park, only a drop-off (`d_drop`).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum End {
+    Home,
+    Far,
+}
+
+/// The ride options from each place (its zone, x, y), CSR, for every layer (local commutes and
+/// everyday trips, the regional market, T-362's long trips): walks come from `build_access` per
+/// cell, rides from here. For each line, its station with the cheapest ride within `ride_max_m`;
+/// then the stations of the `ride_lines` cheapest lines. The drive is the whole-trip drive's
+/// (`drive_min_f` with the zones' routed factor) from the place, in its zone, to the station's
+/// zone; at the station, the cheaper of parking there and `d_drop` at the home end, `d_drop` at
+/// the far end.
+pub fn access_options(zones: &Zones, net: &Network, p: &Params, places: &[(usize, f32, f32)], end: End) -> (Vec<u32>, Vec<Ride>) {
     let mut off = vec![0u32; places.len() + 1];
     let mut out = vec![];
     if p.ride_lines == 0 || net.n_stations() == 0 {
@@ -962,10 +973,13 @@ pub fn place_rides(zones: &Zones, net: &Network, p: &Params, places: &[(usize, f
     let dens = zones.density();
     let zone_area = (zones.zone_m / 1000.0).powi(2);
     let place = |z: Option<usize>| p.place_min_per_km(z.map_or(0.0, |z| dens[z]));
-    // the cheaper of parking (as a destination's, `mode_choice`) and a drop-off
-    let station_end = |z: Option<usize>| {
-        let park = z.map_or(p.park_min, |z| p.park_min + (zones.jobs[z] as f32 / zone_area / p.park_jobs_per_km2_per_min).min(p.park_cost_cap_min));
-        park.min(p.d_drop)
+    // parking as at a destination (`mode_choice`)
+    let station_end = |z: Option<usize>| match end {
+        End::Far => p.d_drop,
+        End::Home => {
+            let park = z.map_or(p.park_min, |z| p.park_min + (zones.jobs[z] as f32 / zone_area / p.park_jobs_per_km2_per_min).min(p.park_cost_cap_min));
+            park.min(p.d_drop)
+        }
     };
     let (sq_off, sq) = zones.by_square();
     let st_zone: Vec<Option<usize>> = (0..net.n_stations())
@@ -1114,7 +1128,7 @@ pub fn build_subzones(city: &City, zones: &Zones, acc: &Access, net: &Network, p
     for (g, &(pop, x, y)) in gsum.iter().enumerate() {
         places.push((g_rep[g].0 as usize, (x / pop) as f32, (y / pop) as f32));
     }
-    let (ride_off, rides) = place_rides(zones, net, p, &places);
+    let (ride_off, rides) = access_options(zones, net, p, &places, End::Home);
     let place_ride = |pl: usize| &rides[ride_off[pl] as usize..ride_off[pl + 1] as usize];
     // a group with rides is a subzone
     let mut group_sub = vec![NONE; gsum.len()];

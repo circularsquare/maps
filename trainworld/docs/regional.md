@@ -44,14 +44,14 @@ do: 0.05 per perceived minute, the drive weighted 1.33 plus the work end's parki
 transfers and shared crowding affect rail; the commutes' loads are the work purpose's [T-158].
 Inter-region trips' period shares are 20/35/25/15/5%; their weekend factor 1.58.
 
-Not modelled yet: air, coach, induced travel, park-and-ride (5.3), routed drives between zones
-(T-279; routes inside packs are T-275's).
+Not modelled yet: air, coach, induced travel, routed drives between zones (T-279; routes inside
+packs are T-275's).
 
 ## 5.2 Where a long-distance trip starts and ends
 
 Origin access is population-weighted; destination access uses population and jobs. Each site offers
-nearby stations through the same soft fast-walk catchment as local demand. Up to eight weighted
-station options per zone end feed the common strategy graph. Local feeder lines, transfers and the
+nearby stations through the local layer's walk and, where it applies, rides (5.3). Up to eight
+weighted station options per zone end feed the common strategy graph. Local feeder lines, transfers and the
 intercity service receive actual loads and boardings. No express-only route or station-city
 affiliation bypasses the player's local network.
 
@@ -67,13 +67,23 @@ loads the lines, so they add up to its entries and exits.
 
 ## 5.3 Park-and-ride
 
-The local layer's commutes ride to stations at the home end (docs/demand.md 4.3, T-371). The
-regional layer's access is still the walk alone at both ends (the local layer's 6 km/h walk), and
-any player-built feeder line takes part in regional routing. Its rides are T-373 (market sites,
-commutes between zones at the home end, long trips at both ends with a drop-off at the far end):
-until then a station's commuters between zones come only from walking reach, so commuter rail
-between zones carries a third to a fifth of real figures on a test network of five real corridors
-(notes/T-276.md, measured with the earlier fast walk).
+The regional layer rides to stations as the local layer does ([demand.md](demand.md) 4.3, T-371),
+through the same `kernel::access_options` [T-373]: from each 2 km zone of the market's sites
+(their homes and jobs, as a local zone's, give the drive's speeds and the parking), the cheapest
+station of each of the 6 cheapest lines within 15 km, at `p_ride` 10 + 1.33 x the drive + at the
+station a cost that depends on the end:
+
+- **Commutes between zones**: at the home end, the cheaper of parking at the station and a
+  drop-off (`d_drop` 10), when the two zones' centres are 5 km or more apart (`ride_min_km`); the
+  work end walks.
+- **Inter-region trips**: at the home end as a commute's; at the far end a drop-off only
+  (`d_drop`), since the traveller has no car there.
+
+A site's access at each end is its walks (the mean of their weights at the trip's logit scale, as
+before rides) nested with its zone's rides at the station choice's scale (0.2 per minute), so a
+ride dearer than the walk adds little, and a site beyond every walk is reached by its rides alone.
+Zones that only a ride reaches are served (5.1), so a lone intercity station draws on everyone
+within the ride's reach. Player-built feeder lines take part in regional routing as before.
 
 ## 5.4 Size
 
