@@ -234,6 +234,11 @@ CITIES = {
                  "TLJ43", "TLJ28", "TLJ41"],
         "boundary_file": lambda: __import__("england").itl3_boundary("lon", CITIES["lon"]["itl3"]),
         "admin_totals": lambda boundary: __import__("england").lad_totals(boundary),
+        # T-360: England's small-area counts in place of the GHSL population and the jobs proxy
+        "population": lambda city, boundary, sig: __import__("england").lsoa_population(city, boundary, sig),
+        "jobs": lambda city, boundary, sig, w: __import__("england").bres_jobs(city, boundary, sig, w),
+        "jobs_url": "https://www.nomisweb.co.uk/datasets/newbres6pub",
+        "schools": lambda boundary: __import__("england").gias_schools(boundary),
         "water_source": lambda bbox: __import__("osm_water").source(["europe/united-kingdom/england"])(bbox),
         "extract": "europe/united-kingdom/england",
         "iso2": "GB",
@@ -241,8 +246,8 @@ CITIES = {
         # 13% work only from home, 28% hybrid; about half a hybrid worker's days at home
         "wfh": 0.27,
         "od_share": {"EGLL": 0.7},  # Heathrow's transfer passengers, judgement as Pearson's 0.75
-        # borrowed from Toronto (T-277's fit): T-287 found it the best curve for tier 0 inputs; T-314
-        "decay_pow": 1.2, "decay_km": 20.0,
+        # fitted on the 2011 census flows (WU01EW) with this pack's own homes and jobs (T-360)
+        "decay_pow": 1.85, "decay_km": 30.0,
         "region_name": "England",
     },
     # T-276: non-city zones (docs/zones.md 2): one county each, the counties that touch two city

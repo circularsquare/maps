@@ -50,23 +50,42 @@ building Toronto from tier 0 against the real pack (notes/T-287.md has every tab
 - **Population** is GHSL GHS-POP (100 m) scaled to district totals: 2.0% misplaced between
   Toronto's 28 municipalities, but municipalities built up after 2020 come out 15-27% short (the
   GHSL epoch lags). Use the latest epoch and the newest district totals for fast-growing cities.
-- **Jobs** are a proxy: population x the World Bank employment rate, spread 50% by GHSL
-  non-residential volume weighted by height^1.5, 30% by OSM job places, 20% by population. 4.0%
-  misplaced between municipalities, 18.6% between 2 km zones; the centre right within 10-25%.
-  Without the height weight the centre had a third of its jobs. Why it may not carry over: the
-  height power was picked on Toronto (in-sample); where much work is informal or at home (Mumbai),
-  buildings miss it, so raise the population share; where industry is large, industrial land
-  overdraws (Brampton +40%). Check: London (T-288) against BRES jobs by LSOA.
+- **Jobs** are a proxy: population x the World Bank employment rate, spread 30% by GHSL
+  non-residential volume weighted by height^2, 50% by OSM job places, 20% by population (T-360:
+  the best joint fit on Toronto's census and London's BRES, both in-sample; 18.1% and 26.1% of
+  jobs misplaced between 2 km zones). A country with workplace counts by small area (England's
+  BRES by LSOA) replaces the total and the proxy only spreads each area's count (tier0's `jobs`
+  hook). Why it may not carry over: an old mid-rise centre with a large commuter shed defeats it.
+  London's proxy gives Westminster and the City a third of their BRES jobs (483k against 1.51M)
+  and Greater London 4.36M against 5.88M, and no blend, height power or concentration exponent
+  fixes it without wrecking Toronto, whose centre is towers (the height weight that finds
+  Toronto's core misses London's). The total is the residents' rate, so a pack that draws
+  commuters from beyond its edge is short (London -19%; Toronto +9%). Where much work is informal
+  or at home (Mumbai), buildings miss it, so raise the population share; where industry is
+  large, industrial land overdraws (Brampton +40%). Check, for the next big old centre (Paris):
+  the proxy's core against any published central job count.
 - **Where workers live** is population x one rate (no source by residence): 3.8% misplaced
   between municipalities in Toronto. Student and retiree areas send too many commuters.
-- **The distance curve without flows** is the weakest step: fitting only its length (power 1) to
-  a published median commute (Toronto 2016, 10.5 km) gave d^-1 exp(-d/95 km), far too flat:
-  17.5% of commutes misplaced against 11.3% with Toronto's own fitted curve on the same tier 0
-  inputs, and 22% fewer riders on a test line. Borrowing the US curve did better (15.7%). Check:
-  where a distance distribution exists (India's census bands), fit both parameters; with a single
-  figure, borrow the most similar fitted city's curve.
+- **The distance curve without flows**: the length is fitted at power 1.4 (between Toronto's
+  fitted 1.2 and London's 1.5-1.85, T-360) so the model's median straight-line commute between
+  2 km zones matches a published median. Fitted that way to each city's own census median, the
+  rule comes within a point of the city's own fitted curve (London 14.8% of commutes misplaced
+  between districts against 13.9%; Toronto 5.3% against 4.9%), and beats borrowing another
+  city's (Toronto's curve in London 18.2%, the US curve 31.7%). The catch is the median's
+  definition: published medians are often of exact home-to-work distances or by road, and run
+  well above the zone-model median (Toronto's published 10.5 km against 7.2 km in the census
+  flows between zones), which fits far too flat a curve (T-287's 95 km). Divide a road-distance
+  median by about 1.3, and check the figure against any flow table before trusting it. Where a
+  distance distribution exists (India's census bands), fit both parameters.
 - **Schools** are OSM sites sized by the square root of site area with pupils from the national
-  share aged 0-14 (-6% in Toronto, 5.3% misplaced); public and private alike.
+  share aged 0-14 (-6% in Toronto, 5.3% misplaced; London -8% against GIAS's pupils on roll,
+  which include sixth forms, but 21% misplaced between 2 km zones and 14% between districts:
+  OSM's school polygons are uneven, and site area is a weak guide to pupils). Public and
+  private alike. A country register with pupils and coordinates (England's GIAS) replaces the
+  sites and sizes (tier0's `schools` hook).
+- **Population by small area**: GHSL scaled to district totals is already close at the game's
+  scale in London (3.3% misplaced between 2 km zones against Census 2021 by LSOA, 13% between
+  LSOAs), so finer census counts (tier0's `population` hook) matter little for commuting.
 - **Universities** are OSM campuses with Wikidata student counts, which few OSM campuses carry
   (4 of 63 in Toronto), so most are sized by area. Since T-288 the total is population x the
   national tertiary students a resident (UNESCO enrolment via the World Bank, SE.TER.ENRL over
@@ -75,14 +94,10 @@ building Toronto from tier 0 against the real pack (notes/T-287.md has every tab
   sized suburban campuses at 50-150k students and the pack at 2.4M against about half a million.
   Why it may not carry over: students gather in university cities, so a national rate undercounts
   a city with many campuses (Toronto -20% against Ontario's files; Boston or Oxford would be far
-  under) and overcounts one with few. Check: London against HESA (T-360).
-- **London's first reading** (T-288, tier 0, notes/T-288.md): GHSL put 12-19% too many people in
+  under) and overcounts one with few. Check: London against HESA (T-382).
+- **District totals matter in old dense centres**: GHSL put 12-19% too many people in London's
   central boroughs (Westminster, Kensington and Chelsea, Camden, Hammersmith) before scaling to
-  Census 2021 districts, so the district totals matter in old dense centres. The jobs proxy
-  draws far too little to the centre: 483k jobs in Westminster and the City against about 1.3-1.4M
-  published, 4.36M in Greater London against about 6M, partly because the job total is the
-  national rate x residents (a commuter city's core has more jobs than residents). Check: T-360
-  against BRES by LSOA.
+  Census 2021 districts (T-288).
 - **Airports**: Wikidata's patronage matched StatCan's within 0.3% for Toronto's three airports.
 
 ## Homes (docs/demand.md 4.1)
@@ -123,8 +138,11 @@ building Toronto from tier 0 against the real pack (notes/T-287.md has every tab
   centre-heavy city (Paris, Tokyo, Seoul) the centre's pull may dominate and New York's neutral
   result hints the steeper curve could fit as well or better; in sprawling car cities (Los
   Angeles, Houston) both parameters may need to be longer; informal-job cities have no workplace
-  register to fit to. Check: one non-US commuting-flow table per new country (England and Wales
-  WU01EW census flows, Japan's census commuting tables, Korea's), fit the two parameters, compare
+  register to fit to. The two centre-heavy non-US cities bear that out: Toronto fits d^-1.2
+  exp(-d/20 km), London d^-1.85 exp(-d/30 km) on its pack's inputs (d^-1.5 exp(-d/20 km) on the
+  2011 flows' own margins; T-360), and the US curve misplaces 15% of Toronto's and 32% of
+  London's commutes. Check: one non-US commuting-flow table per new country (Japan's census
+  commuting tables, Korea's), fit the two parameters, compare
   with T-185's relative measures (local job ratio, nearest-job rank), not absolute density.
 - **Border factor.** Cross-state US commutes are multiplied by 0.23 (Washington 0.45), fitted to
   LODES; outside the US the policy is national borders only, weaker inside Schengen (T-181). It

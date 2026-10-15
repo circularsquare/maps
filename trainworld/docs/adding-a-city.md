@@ -265,15 +265,15 @@ real pack in notes/T-287.md):
 |---|---|---|---|
 | Population and grain | 2020 blocks, TIGER polygons | 2021 dissemination areas (StatCan 98-10-0015-01; polygons from Esri Canada's copy) | GHSL GHS-POP E2020 100 m (R2023A, CC BY), each pixel over four 50 m points off water, into cells; scaled to district totals where the config gives them |
 | Institutions | PL 94-171 P5 off homes | none (no small-area figure) | none |
-| Jobs at work | LODES WAC by block | census usual place of work by census tract of work (98-10-0498-01), at-home workers put back by income band, no fixed workplace added; to DAs by OSM job places and population | population x jobs a resident (World Bank: ILO employment-to-population 15+ x share 15+), spread 50% by GHSL non-residential built-up volume (GHS-BUILT-V NRES), 30% OSM job places, 20% population |
+| Jobs at work | LODES WAC by block | census usual place of work by census tract of work (98-10-0498-01), at-home workers put back by income band, no fixed workplace added; to DAs by OSM job places and population | population x jobs a resident (World Bank: ILO employment-to-population 15+ x share 15+), spread 30% by GHSL non-residential built-up volume (GHS-BUILT-V NRES) x height^2, 50% OSM job places, 20% population; or a country's workplace counts by small area spread by that blend (`jobs` hook) |
 | Home end | LODES RAC x ACS work from home | commuters by tract of residence (98-10-0480-01) plus at-home workers commuting again | population x commuters a resident |
 | Work from home | ACS 2019-2023 by tract and industry | Labour Force Survey May 2024 (24.7%, Toronto CMA), at both ends | one national share from the config (default 0) |
 | Everyday destinations | LODES retail, service, food, leisure sectors | OSM shops and services; restaurants, bars, venues, hotels (Geofabrik extract) | the same OSM places, per cell |
-| Gravity curve | fitted on LODES OD (T-198) | fitted on census flows between municipalities (98-10-0459-01; `notes/t277_fit.py`) | borrowed from a fitted city, or power 1 with the length fitted to a published median or mean commute (`tier0.fit_curve`) |
+| Gravity curve | fitted on LODES OD (T-198) | fitted on census flows between municipalities (98-10-0459-01; `notes/t277_fit.py`) | power 1.4 with the length fitted to a published median or mean commute (`tier0.fit_curve`), or borrowed from a fitted city; a country's flow table, fitted (London) |
 | Regions, border | states, 0.23 | provinces, factor 1 | one region, factor 1 |
 | Drawn boundary | TIGER/Line counties, water included (T-352) | cartographic census subdivisions, clipped at the shore (hugs Lake Ontario) | the config's district polygons (a GeoJSON, or a callable that writes one: London's whole ITL3 units, `england.itl3_boundary`) |
 | Water | TIGER AREAWATER and states | StatCan lakes and rivers; land = cartographic municipalities plus US states | OSM: `osm_water.source([extracts])` as the config's `water_source` (below) |
-| Schools | NCES | Ontario school information file (provincial; other provinces need their own) | OSM `amenity=school` sites; pupils = population x share aged 0-14 (World Bank) x 0.9, by the square root of site area |
+| Schools | NCES | Ontario school information file (provincial; other provinces need their own) | OSM `amenity=school` sites; pupils = population x share aged 0-14 (World Bank) x 0.9, by the square root of site area; or a national register with pupils (`schools` hook, England's GIAS) |
 | Universities | IPEDS | Council of Ontario Universities headcounts and Ontario's college campus file, at points in `pipeline/ca_campuses.csv` | OSM `amenity=university|college`; Wikidata P2196 students by institution, split by site area; other sites by area at the median density; the total scaled to population x the national tertiary students a resident (World Bank SE.TER.ENRL, T-288) |
 | Airports | FAA enplanements, DB1B connecting share | StatCan 23-10-0253-01 enplaned; connecting share by judgement (Pearson 0.75) | OurAirports + Wikidata patronage / 2; connecting share by judgement; pack share from GHSL population |
 | Medical, parks, places | OSM (Overpass) | the same scripts, OSM from the extract | the same, from the extract |
@@ -300,9 +300,10 @@ Geofabrik `.osm.pbf` can go once every OSM read for the region is cached.
 A tier 0 city is a `CITIES` entry with `"tier0": True` (the keys are listed in `tier0.py`'s
 docstring); `build_city.py <id>` hands it to `tier0.main`. A country's census then replaces one
 input at a time (the upgrades table in research/world-sampler.md), in a module per country
-(`pipeline/england.py`). London (`lon`, T-288, notes/T-288.md) is the worked example: the
-outline as whole ITL3 units (ONS), population scaled to Census 2021 district totals (Nomis TS001),
-Toronto's curve borrowed, work from home one national share. Time on a first build: about an
+(`pipeline/england.py`), through tier0's `population`, `jobs` and `schools` hooks. London (`lon`,
+T-288 and T-360, notes/T-288.md) is the worked example: the outline as whole ITL3 units (ONS),
+Census 2021 population by LSOA, BRES jobs by LSOA, GIAS schools, the curve fitted on the 2011
+WU01EW flows (`notes/t360_curve.py`), work from home one national share. Time on a first build: about an
 hour, nearly all of it GDAL reading the 1.7 GB England extract (job places, schools, terminals,
 medical, parks, each a full pass); with those cached a rebuild takes 5 minutes. `places.py`
 (Overpass) answered on the third try; `routes.py` reads the extract once more.
@@ -315,8 +316,11 @@ What London taught, for the next tier 0 city:
   east of its nominal corner); `tier0._read_tile_window` places each tile by its GeoTIFF tie point.
 - **District totals matter in dense old centres**: GHSL had 12-19% too many people in central
   London boroughs.
-- **The jobs proxy undercounts a commuter city's core** (Westminster and the City at about a third
-  of the published figure): the stage b comparison with BRES (T-360) decides what to change.
+- **The jobs proxy undercounts an old mid-rise core** (Westminster and the City at a third of
+  BRES) and no blend fixes it without breaking Toronto; use workplace counts wherever a country
+  has them (demand-worldwide.md).
+- **Measure each upgrade against tier 0 before switching** (`notes/t360_*.py`); a 2 km zone
+  difference is what the game feels.
 
 What was hard, for the next country:
 

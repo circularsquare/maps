@@ -43,7 +43,10 @@ census or registers then upgrade single inputs by replacing one function. What e
 Config keys (a CITIES entry with "tier0": True): origin, water, boundary_file (GeoJSON, any
 polygons, dissolved; or a callable returning its path, as england.itl3_boundary), water_source, extract (Geofabrik path), iso2 (World Bank country),
 admin_totals (callable boundary -> [(name, shapely geometry, population)], optional), wfh (share
-working at home, optional), od_share ({OurAirports ident: share}, optional), curve or
+working at home, optional), jobs (callable (city, boundary, signals, proxy weight per cell) ->
+(jobs per signal cell, source name), optional: a country's workplace counts by small area, spread
+inside each area by the proxy; jobs_url), population (callable (city, boundary, signals) ->
+(people per signal cell, source name), optional: census counts by small area), od_share ({OurAirports ident: share}, optional), curve or
 decay_pow/decay_km, region_name (optional), epoch (GHSL epoch, default 2020).
 """
 import os
@@ -77,14 +80,13 @@ WORLDBANK = "https://api.worldbank.org/v2/country/{iso2}/indicator/SL.EMP.TOTL.S
 WIKIDATA = "https://query.wikidata.org/sparql"
 
 # The jobs proxy's blend (shares of the job total): GHSL non-residential volume weighted by height,
-# OSM job places, population. Chosen by judgement, then checked on Toronto against the census
-# (notes/T-287.md); the height power 1.5 was picked on Toronto (in-sample: without it the centre
-# held a third of its jobs). Recheck both on London (T-288).
-JOB_BLEND = {"nres": 0.5, "osm": 0.3, "pop": 0.2}
-HEIGHT_POW = 1.5
+# OSM job places, population. The best joint fit on Toronto's census and London's BRES at 2 km zones
+# (T-360, notes/T-288.md); both cities are in-sample.
+JOB_BLEND = {"nres": 0.3, "osm": 0.5, "pop": 0.2}
+HEIGHT_POW = 2.0
 ERRAND_SHARE, LEISURE_SHARE = 0.15, 0.08
 SCHOOL_ENROL = 0.9                    # pupils per child aged 0-14 (judgement; UNESCO rates would refine)
-DEFAULT_CURVE_POW = 1.0               # between the US fit (0.8) and Toronto's (1.2); only the length is fitted
+DEFAULT_CURVE_POW = 1.4               # between Toronto's fit (1.2) and London's (1.5-1.85); only the length is fitted (T-360)
 ZONE_M = 2000.0
 INTRAZONAL_KM = 1.04                  # the game's same-zone distance
 
@@ -407,9 +409,11 @@ def jobs_from(sig, total, blend=None, height_pow=HEIGHT_POW):
 
 def zones_of(x_m, y_m):
     gx, gy = np.floor(x_m / ZONE_M).astype(np.int64), np.floor(y_m / ZONE_M).astype(np.int64)
-    key = gx * 100000 + gy
+    # offset to non-negative, or the key's decoding folds zones south of the origin far away (T-360)
+    gx0, gy0 = gx.min(), gy.min()
+    key = (gx - gx0) * 100000 + (gy - gy0)
     u, zone = np.unique(key, return_inverse=True)
-    return zone, (u // 100000).astype(np.float64), (u % 100000).astype(np.float64)
+    return zone, (u // 100000 + gx0).astype(np.float64), (u % 100000 + gy0).astype(np.float64)
 
 
 def gravity(home, work, d, pw, km, iters=300, tol=1e-4):
@@ -480,10 +484,22 @@ def main(city):
     mask, mask_info = build_water(cfg, boundary)
     sig = signals(city, cfg, boundary, mask)
     jpr, kids, wb_year = worldbank(cfg["iso2"])
+    pop_name = f"GHSL GHS-POP E{cfg.get('epoch', 2020)} R2023A 100 m" + (", scaled to admin totals" if cfg.get("admin_totals") else "")
+    if cfg.get("population"):
+        sig["pop"], pop_name = cfg["population"](city, boundary, sig)
     P = float(sig["pop"].sum())
-    J = P * jpr
     wfh = cfg.get("wfh", 0.0)
-    jobs = jobs_from(sig, J)
+    blend = ", ".join(f"{k} {v:.0%}" for k, v in JOB_BLEND.items())
+    proxy = f"spread by {blend} (GHSL GHS-BUILT-V NRES x (height / 10 m)^{HEIGHT_POW}, OSM job places, population)"
+    if cfg.get("jobs"):
+        jobs, jobs_name = cfg["jobs"](city, boundary, sig, jobs_from(sig, 1.0))
+        jobs_name += f", {proxy} inside each unit"
+        J = float(jobs.sum())
+        jpr = J / P
+    else:
+        J = P * jpr
+        jobs = jobs_from(sig, J)
+        jobs_name = f"tier 0 proxy: population x {jpr:.3f} jobs a resident (World Bank SL.EMP.TOTL.SP.ZS x 15+ share, {wb_year}), {proxy}"
     pop = sig["pop"]
     work_c = jobs * (1 - wfh)
     home_c = pop * (work_c.sum() / P)
@@ -501,13 +517,10 @@ def main(city):
     cfg.setdefault("border_factor", 1.0)
     totals = {"pop": int(round(P)), "jobs": int(round(jobs.sum())),
               "commute_home": int(round(home_c.sum())), "commute_work": int(round(work_c.sum()))}
-    blend = ", ".join(f"{k} {v:.0%}" for k, v in JOB_BLEND.items())
     sources = [
-        {"what": "population", "name": f"GHSL GHS-POP E{cfg.get('epoch', 2020)} R2023A 100 m" + (", scaled to admin totals" if cfg.get("admin_totals") else ""),
+        {"what": "population", "name": pop_name,
          "url": "https://human-settlement.emergency.copernicus.eu/ghs_pop2023.php"},
-        {"what": "jobs", "name": f"tier 0 proxy: population x {jpr:.3f} jobs a resident (World Bank SL.EMP.TOTL.SP.ZS x 15+ share, {wb_year}), "
-                                 f"spread by {blend} (GHSL GHS-BUILT-V NRES x (height / 10 m)^{HEIGHT_POW}, OSM job places, population)",
-         "url": "https://human-settlement.emergency.copernicus.eu/ghs_buC2023.php"},
+        {"what": "jobs", "name": jobs_name, "url": cfg.get("jobs_url", "https://human-settlement.emergency.copernicus.eu/ghs_buC2023.php")},
         {"what": "everyday destinations", "name": "OpenStreetMap shops and services (errands), restaurants, bars, venues and hotels (leisure), per cell",
          "url": "https://www.openstreetmap.org/copyright"},
         {"what": "boundary", "name": f"tier 0 boundary {os.path.basename(cfg['boundary_file'])}", "url": ""},
@@ -646,7 +659,16 @@ def education_osm(city, boundary, kids):
     sizes = np.where(sizes > 0, sizes, med)
     children = pop * kids
     pupils = children.sum() * SCHOOL_ENROL
-    enr, n_s = place(sch, pupils * sizes / sizes.sum())
+    coverage = ("tier 0: OSM amenity=school sites in the boundary (public and private), pupils = population x national share aged 0-14 "
+                f"x {SCHOOL_ENROL}, spread by the square root of site area")
+    school_src = ["https://www.openstreetmap.org/copyright", WORLDBANK.format(iso2=cfg["iso2"])]
+    if cfg.get("schools"):
+        sch, coverage, url = cfg["schools"](boundary)
+        school_src = [url]
+        pupils = float(sch.pupils.sum())
+        enr, n_s = place(sch, sch.pupils.to_numpy(float))
+    else:
+        enr, n_s = place(sch, pupils * sizes / sizes.sum())
     # universities and colleges: Wikidata students by institution, split over its sites by area
     uni = ed[ed.kind.isin(["university", "college"]).to_numpy() & inb].copy()
     wd = wikidata_students(uni.wikidata[uni.wikidata != ""].tolist())
@@ -674,11 +696,10 @@ def education_osm(city, boundary, kids):
     buf = education.replace_cell_arrays(header, buf, {"school_children": children.astype("<f4"), "school_enrollment": enr,
                                                       "university_adults": adults.astype("<f4"), "university_enrollment": uenr})
     header["school"] = {
-        "coverage": "tier 0: OSM amenity=school sites in the boundary (public and private), pupils = population x national share aged 0-14 "
-                    f"x {SCHOOL_ENROL}, spread by the square root of site area",
+        "coverage": coverage,
         "enrolled": float(enr.sum(dtype=np.float64)), "matched_buildings": int(n_s), "location_match_share": float(enr.sum() / max(pupils, 1)),
         "child_weight": float(children.sum()), "child_origin": f"population x {kids:.3f} (World Bank, ages 0-14)",
-        "attendance_factor": 0.9, "sources": ["https://www.openstreetmap.org/copyright", WORLDBANK.format(iso2=cfg["iso2"])]}
+        "attendance_factor": 0.9, "sources": school_src}
     header["university"] = dict(
         coverage="tier 0: OSM amenity=university|college; Wikidata P2196 students by institution split over its sites by area, other sites "
                  f"at the median {per_m2 * 1e4:.0f} students a hectare"
@@ -691,7 +712,7 @@ def education_osm(city, boundary, kids):
     with open(os.path.join(b.WORK, city + ".universities.audit.json"), "w") as f:
         json.dump([dict(name=r.name, wikidata=r.wikidata, m2=r.m2, students=s) for r, s in
                    zip(rows.itertuples(), site_students)], f, indent=1)
-    print(f"schools: {len(sch):,} OSM sites, {enr.sum():,.0f} pupils of {pupils:,.0f}; universities: {known.wikidata.nunique()} with Wikidata "
+    print(f"schools: {len(sch):,} sites, {enr.sum():,.0f} pupils of {pupils:,.0f}; universities: {known.wikidata.nunique()} with Wikidata "
           f"counts ({len(known)} sites), {len(unknown)} sites by area at {per_m2 * 1e4:.0f} a hectare, {raw_total:,.0f} students before "
           f"scaling, {uenr.sum():,.0f} after" + (f" ({ter:.4f} a resident, {ter_year})" if ter else " (no national figure, unscaled)"), flush=True)
 

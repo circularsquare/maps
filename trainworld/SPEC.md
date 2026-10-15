@@ -79,8 +79,9 @@ that equals a solve's to the bit, so panning never re-solves [T-325].
   outside the US, built from Statistics Canada by Canadian adapters with its own fitted commute
   curve, outside the regional market (`market: -1`) [T-277]; **London** (Greater London and
   every ITL3 unit touching it, with Gatwick's and Medway's: 14.5M people), the first sampler city,
-  built from global sources only (tier 0) with Toronto's curve borrowed, on UTC+0, outside the
-  market [T-288; England's own inputs are T-360].
+  built by tier 0 with England's own inputs in place of its proxies (BRES jobs, Census 2021
+  population by LSOA, GIAS schools, a curve fitted on the 2011 census flows), on UTC+0, outside
+  the market [T-288, T-360].
 - **Non-city zones**: Worcester, Windham, New London and Litchfield Counties. Modelled space stays
   between city zones, with no ring round each city, for now (Anita, T-300).
 - **City additions** in the US are paused; a **sampler of other countries' cities** comes next

@@ -78,7 +78,8 @@ Briefs carry only the task; these hold for every agent.
   the rest as tasks, hand back. Compacting means the task was sized too big.
 - **Keep your context lean** (T-288's retrospective): each step re-reads your whole conversation,
   and waking after more than about 5 idle minutes re-caches all of it (29% of London's cost). Wait
-  for a long job with one background wait, not progress polling; do other work meanwhile. Write
+  for a long job with one background wait, not progress polling; do other work meanwhile. Start
+  independent long jobs together and wait once (T-360: six separate waits were still 36%). Write
   long logs to a file and read summaries; read doc sections, not whole files; grep TASKS.md.
 - **Reports to the orchestrator are short**: what changed and where, check results, anything for
   Anita. Detail goes in notes/, not the report.
