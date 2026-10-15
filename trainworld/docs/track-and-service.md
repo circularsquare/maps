@@ -31,7 +31,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   curve, the level placed and the lowest speed limit (T-085, T-411), or why it cannot be built. A
   click adding a corner is refused when the route would be unbuildable if it ended there; a
   shift-click places it anyway (T-410, [ui-building.md](ui-building.md)). This is the "Corners"
-  mode; quad track is always drawn this way.
+  mode.
 - **Drawing through points** (T-418, the Build tab's default; Anita 2026-10-15): two clicks per
   segment, placed at once and never changed by later clicks; Shift held chains the next segment from
   its end. A segment from a track end, a node or track to open ground is **one circular arc through
@@ -46,7 +46,15 @@ Full design, numbers and sources: `notes/T-008.md`.
   the heading ("turn back on itself"), and anything the edit refuses (water, a ramp, 200 m per
   level, that does not fit the second leg). The preview gives the arc's circle (centre and radius,
   `TrackApi::route_arc`) and an edit the segment's end node (`route_end`) to chain from. Segment ends
-  are plain joints, like those between pieces.
+  are plain joints, like those between pieces. **Quad drawn through points** (T-423): a segment
+  ending on open ground leaves each pair its own loose end, the express pair's 8 m to its side; a
+  segment from a loose quad end (the other pair's end within 4-12 m beside it, level with it and
+  facing the same way) carries both pairs on with no swing-out or junction: the drawn pair from the
+  end clicked is the tangent arc, the other pair from the end beside it, on whichever side that
+  is, concentric (so a curve on the inside needs 108 m on the drawn pair). A first segment from a
+  free point is two straights side by side. From other track or a node the express pair swings
+  out as below, which needs a straight, so that segment keeps the lead-in shape (curve then
+  straight); one ending on track or a node has both pairs meet there.
 - **One piece per corner** (T-244, Anita: deleting one stretch should not delete the whole
   path): a finished route is several edges, one per corner clicked, joined at plain nodes (two
   edge ends, no station) in the middle of the leg between two corners. The leg middle is on the
@@ -122,9 +130,11 @@ Full design, numbers and sources: `notes/T-008.md`.
   tight for quad). Lines change pairs at the ends of the quad stretch, where the two pairs meet as
   a junction (a fork with nothing behind it if the end is new track), and at crossovers (below). Both pairs are
   ordinary double-track edges, cut into pieces per corner (T-244), priced, deleted and drawn like
-  any track: quad costs two double tracks, plus junctions at ends on existing track. A station
+  any track: quad costs two double tracks, plus junctions at ends on existing track. Drawn through
+  points, the pairs end apart instead (above). A station
   placed on either pair (on track or on a node) gets a twin of the same name level with it on the
-  other pair, in the same edit: the local and express platforms, one complex and one label. If
+  other pair, in the same edit (on the other pair's loose end or joint when one is level with it,
+  T-423): the local and express platforms, one complex and one label. If
   the twin cannot be built there, the station goes in alone. **Express copy** in the line
   inspector copies a line with every stop that has a twin (a station within 12 m) moved to it and
   the path found again, so the copy runs on the express pair wherever the local one runs on quad

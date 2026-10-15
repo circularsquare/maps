@@ -5,8 +5,8 @@
 // Track, drawing through points (T-418, the Build tab's default): the second click places a
 // segment from the first, one curve leaving along the track there and passing through the click,
 // at once and never changed by later clicks; with Shift held the next segment starts at its end.
-// Backspace takes the last segment of a chain back, Escape or Enter stops. Quad track is drawn
-// by corners.
+// Backspace takes the last segment of a chain back, Escape or Enter stops. On quad track a
+// segment from a loose quad end carries both pairs on (T-423).
 //
 // Track, by corners: click where the track turns (T-023, T-092): each click is a point of intersection (PI)
 // and the track cuts the corner there with a circular curve, auto radius (SPEC 6.1), so a new
@@ -315,9 +315,9 @@ export class Tools {
     });
   }
 
-  /** Drawing through points (T-418); quad track keeps the corner drawing for now. */
+  /** Drawing through points (T-418; quad too since T-423). */
   private through() {
-    return display.peek().drawThrough && trackCount.peek() !== 4;
+    return display.peek().drawThrough;
   }
 
   /** Place the segment from the start to this click; with Shift, the next starts at its end. */
@@ -1054,7 +1054,7 @@ function placementTag(pv: PreviewAnswer, level: number, free: boolean): HTMLDivE
   const nv = pv.verts.length / 4;
   for (let i = 1; i < nv - 1; i++) if (pv.verts[i * 4 + 2] > 0) radius = Math.min(radius, pv.verts[i * 4 + 2]);
   let top = TOP_KMH;
-  if (pv.speeds?.length) for (const v of pv.speeds) top = Math.min(top, v);
+  if (pv.speeds?.length) for (const v of pv.speeds) if (v >= 0) top = Math.min(top, v);
   else for (let i = 1; i < nv - 1; i++) if (pv.verts[i * 4 + 2] > 0) top = Math.min(top, pv.verts[i * 4 + 3]);
   if (pv.ok) {
     const dear = Math.min(1, (pv.mult - 1) / 1.5);

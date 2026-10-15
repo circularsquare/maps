@@ -92,7 +92,10 @@ Briefs carry only the task; these hold for every agent.
 
 `node trainworld/checks/smoke.mjs [url]` from the maps root: Node checks, then a new game and the
 real save in headless Chrome (counts, demand final, station and train clicks, no console or GL
-errors). About half a minute with its own Vite; one PASS or FAIL line per check.
+errors). About half a minute with its own Vite; one PASS or FAIL line per check. After rebuilding
+8800's snapshot, run it once more against `http://localhost:8800/trainworld/`: a production build
+copies only the pack files `vite.config.ts` lists, and the dev server serves everything (T-377's
+market packs were missing there, 2026-10-15).
 
 ## Build and run
 

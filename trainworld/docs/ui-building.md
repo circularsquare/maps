@@ -38,13 +38,13 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
 
 [T-023, T-085, T-092, T-244, T-311, T-322, T-418]
 
-Two modes, picked in the Build tab; quad track is always drawn by corners. The geometry of both is
-in [track-and-service.md](track-and-service.md) 6.1.
+Two modes, picked in the Build tab, for single, double and quad track alike [T-423]. The geometry
+of both is in [track-and-service.md](track-and-service.md) 6.1.
 
 - **Through points** [T-418]: the first click is the start, the second places a segment ending at
   it at once (one undo step), the track passing through the click. A click with Shift held places
   the segment and starts the next one at its end; without Shift the tool is ready for a new start.
-  To carry on later, click the loose end. Backspace while chaining undoes the last segment and
+  To carry on later, click the loose end (on quad, either pair's). Backspace while chaining undoes the last segment and
   draws on from its start; Escape or Enter stops. A click whose segment cannot be built (a curve
   under 100 m, more than 85 degrees off the track's heading, water, too little room for a ramp)
   is refused by the edit, its reason at the bottom left; the ghost was red already. While placing,

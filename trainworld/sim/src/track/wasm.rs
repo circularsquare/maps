@@ -986,7 +986,15 @@ impl TrackApi {
         let prev_b = pis.last().map_or((ra.x, ra.y), |p| (p.x, p.y));
         // T-418: ending on open ground, the segment is one arc through the end; ending on track it
         // must join that like a turnout, so it keeps the usual shape
-        let tangent = self.route_tangent && pis.is_empty() && rb.dirs.is_empty() && tracks != 4;
+        let quad = tracks == 4;
+        let through = self.route_tangent && pis.is_empty();
+        // T-423: quad drawn through points carries both pairs on from a loose quad end, the other
+        // pair's end beside the one clicked (on either side); from other track it swings out as in
+        // Corners, which needs a straight, so that segment is not one arc
+        let beside_a = if quad && through { quad_beside(&self.w.net, ra.node) } else { None };
+        let side = beside_a.map_or(1.0, |b| b.1);
+        let beside_b = if quad && through { quad_beside(&self.w.net, rb.node).filter(|b| b.1 == -side) } else { None };
+        let tangent = through && rb.dirs.is_empty() && (!quad || beside_a.is_some());
         if let (true, Some(dir)) = (tangent, nearer_dir(&ra, next_a)) {
             let (pi, circle) = tangent_arc(ra.x, ra.y, ra.level, dir, next_a, scaled);
             if let Some(c) = circle {
@@ -1012,14 +1020,30 @@ impl TrackApi {
         let mut ops = ra.ops.clone();
         ops.extend(rb.ops.clone());
         // Quad track (T-255): the drawn pair, and an express pair beside it from end to end.
-        let quad = tracks == 4;
         let tracks = if quad { 2 } else { tracks };
         // One piece of track per corner clicked (T-244), joined at plain nodes, the shape unchanged.
         let pieces = stroke_pieces(&verts, first_click, pis.len(), scaled);
         self.push_pieces(&pieces, ra.node, rb.node, tracks, &mut ops, &mut new_nodes, &mut new_edges);
         let mut express = vec![];
         if quad {
-            let (ex, first, clicks) = match express_verts(&verts, first_click, pis.len(), scaled) {
+            // T-423: the express pair's own ends, at a loose quad end or (through points) open ground
+            let mut own = |at: usize, beside: Option<(u32, f64)>, r: &Resolved, ops: &mut Vec<Op>, nodes: &mut Vec<u32>| -> Option<(u32, (f64, f64))> {
+                if let Some((m, _)) = beside {
+                    let net = &self.w.net;
+                    return Some((m, (net.node_x[m as usize], net.node_y[m as usize])));
+                }
+                if !(through && r.dirs.is_empty()) {
+                    return None;
+                }
+                let (x, y) = express_end(&verts, at, side, scaled);
+                let n = self.w.net.alloc_node();
+                nodes.push(n);
+                ops.push(Op::Node { id: n, data: Some(NodeData { x, y, level: r.level, flying: false }) });
+                Some((n, (x, y)))
+            };
+            let own_a = own(0, beside_a, &ra, &mut ops, &mut new_nodes);
+            let own_b = own(1, beside_b, &rb, &mut ops, &mut new_nodes);
+            let (ex, first, clicks) = match express_verts(&verts, first_click, pis.len(), scaled, side, own_a.map(|o| o.1), own_b.map(|o| o.1)) {
                 Some(v) => v,
                 None => {
                     self.release(&new_nodes, &new_edges);
@@ -1027,7 +1051,7 @@ impl TrackApi {
                 }
             };
             let pieces = stroke_pieces(&ex, first, clicks, scaled);
-            self.push_pieces(&pieces, ra.node, rb.node, tracks, &mut ops, &mut new_nodes, &mut new_edges);
+            self.push_pieces(&pieces, own_a.map_or(ra.node, |o| o.0), own_b.map_or(rb.node, |o| o.0), tracks, &mut ops, &mut new_nodes, &mut new_edges);
             express = ex;
         }
         // A junction this route makes (it had two edge ends, or it splits track) is flying if
@@ -1126,7 +1150,9 @@ impl TrackApi {
             let mut back = self.route_express.clone();
             back.reverse();
             let f = self.w.net.fit(&back);
-            let joint = self.preview_speeds.last().copied().unwrap_or((V_TOP * 3.6) as f32);
+            let end = verts[verts.len() - 1];
+            // -1: no track between the pairs' own ends (T-423), so the ghost draws no step there
+            let joint = if (back[0].x - end.x).hypot(back[0].y - end.y) > 0.5 { -1.0 } else { self.preview_speeds.last().copied().unwrap_or((V_TOP * 3.6) as f32) };
             self.preview_speeds.push(joint);
             render_samples(&f.pieces, &f.vert, &mut out);
             self.preview_speeds.extend(render_speeds(&f.pieces, &f.vert));
@@ -1136,7 +1162,8 @@ impl TrackApi {
     }
 
     /// T-418: whether routes after this are drawn through their end (`tangent_arc`): a route with
-    /// no PIs from an end with a heading to open ground becomes one tangent arc. Quad never is.
+    /// no PIs from an end with a heading to open ground becomes one tangent arc (quad only from a
+    /// loose quad end, T-423).
     pub fn set_route_tangent(&mut self, on: bool) {
         self.route_tangent = on;
     }
@@ -1308,7 +1335,19 @@ impl TrackApi {
             }
             best = Some((f, sf, dist));
         }
-        best.map(|b| (b.0, b.1))
+        let (f, sf, _) = best?;
+        // level with a loose end or a joint of the pair beside (quad drawn through points, T-423):
+        // the twin goes on that node, as a split needs room from it
+        let len = net.edge_len[f as usize];
+        for (which, at) in [(0, 0.0), (1, len)] {
+            let n = net.end_node(f, which);
+            let ports = net.node_ports[n as usize].n;
+            let near = (sf - at).abs();
+            if net.node_platform[n as usize] == 0 && ((ports == 1 && near < JOINT_SNAP) || (ports == 2 && near < 1.0)) {
+                return Some((u32::MAX, n as f64));
+            }
+        }
+        Some((f, sf))
     }
 
     // ---- crossovers (T-338)
@@ -2400,7 +2439,11 @@ const QUAD_TAPER: f64 = 150.0;
 /// each corner concentric with the drawn one (radius smaller by the spacing on the inside of the
 /// turn, larger outside). Returns its vertices, the index of its first corner-like vertex and how
 /// many there are (the taper ends and the corners), for `stroke_pieces`. None if degenerate.
-fn express_verts(verts: &[Pi], first: usize, clicks: usize, scaled: bool) -> Option<(Vec<Pi>, usize, usize)> {
+///
+/// T-423: `side` is 1 for the express pair on the left, -1 on the right. An end given as
+/// `own_a` or `own_b` (the express pair's own end node there, from `quad_beside`) has no swing:
+/// the pair runs parallel right to that end, every PI of the drawn route concentric.
+fn express_verts(verts: &[Pi], first: usize, clicks: usize, scaled: bool, side: f64, own_a: Option<(f64, f64)>, own_b: Option<(f64, f64)>) -> Option<(Vec<Pi>, usize, usize)> {
     let n = verts.len();
     let f = geom::fit_in(verts, scaled);
     let leg = |i: usize| -> Option<(f64, f64, f64)> {
@@ -2411,17 +2454,21 @@ fn express_verts(verts: &[Pi], first: usize, clicks: usize, scaled: bool) -> Opt
     // Ground spacing for the radii; plane spacing (times k at the stroke's start) for positions.
     let kp = kk(scaled, verts[0].y);
     let dg = QUAD_SPACING;
-    let d = QUAD_SPACING * kp;
+    let d = QUAD_SPACING * kp * side;
+    // the corners offset: every PI between an own end and the next, else the clicked ones
+    let lo = if own_a.is_some() { 1 } else { first };
+    let hi = if own_b.is_some() { n - 1 } else { first + clicks };
     // the legs the tapers lie on: from the vertex before the first corner, into the one after the last
-    let (s, e) = (first - 1, first + clicks);
+    let (s, e) = (lo - 1, hi);
     let (ux, uy, la) = leg(s)?;
     let (vx, vy, lb) = leg(e - 1)?;
-    let ta = (QUAD_TAPER * kp).min(if clicks == 0 { 0.3 } else { 0.4 } * la);
-    let tb = (QUAD_TAPER * kp).min(if clicks == 0 { 0.3 } else { 0.4 } * lb);
+    let share = if s == e - 1 { 0.3 } else { 0.4 };
+    let ta = (QUAD_TAPER * kp).min(share * la);
+    let tb = (QUAD_TAPER * kp).min(share * lb);
     let qa = Pi::new(quant(verts[s].x + ux * ta - uy * d), quant(verts[s].y + uy * ta + ux * d), 0.0, verts[s].level);
     let qb = Pi::new(quant(verts[e].x - vx * tb - vy * d), quant(verts[e].y - vy * tb + vx * d), 0.0, verts[e].level);
     let mut corners = vec![];
-    for i in first..first + clicks {
+    for i in lo..hi {
         let (ax, ay, _) = leg(i - 1)?;
         let (bx, by, _) = leg(i)?;
         let (n1, n2) = ((-ay, ax), (-by, bx));
@@ -2430,27 +2477,86 @@ fn express_verts(verts: &[Pi], first: usize, clicks: usize, scaled: bool) -> Opt
             continue; // no curve here (straight on), or turning back
         }
         let k = d / (1.0 + dot);
-        let left = ax * by - ay * bx > 0.0;
-        let r = if left { f.radius[i] - dg } else { f.radius[i] + dg };
+        let inside = (ax * by - ay * bx > 0.0) == (side > 0.0);
+        let r = if inside { f.radius[i] - dg } else { f.radius[i] + dg };
         corners.push(Pi::new(quant(verts[i].x + k * (n1.0 + n2.0)), quant(verts[i].y + k * (n1.1 + n2.1)), quant(r.max(1.0)), verts[i].level));
     }
     let (a, b) = (verts[0], verts[n - 1]);
-    let mut out = vec![Pi::new(a.x, a.y, 0.0, a.level)];
-    let (hx, hy, _) = leg(0)?;
-    if let Some(p) = lead_in_along(a.x, a.y, a.level, hy.atan2(hx), (qa.x, qa.y), scaled) {
-        out.push(p);
+    let mut out = vec![];
+    if let Some((x, y)) = own_a {
+        out.push(Pi::new(x, y, 0.0, a.level));
+    } else {
+        out.push(Pi::new(a.x, a.y, 0.0, a.level));
+        let (hx, hy, _) = leg(0)?;
+        if let Some(p) = lead_in_along(a.x, a.y, a.level, hy.atan2(hx), (qa.x, qa.y), scaled) {
+            out.push(p);
+        }
     }
     let first_out = out.len();
-    out.push(qa);
-    out.extend(corners.iter().copied());
-    out.push(qb);
-    let count = out.len() - first_out;
-    let (gx, gy, _) = leg(n - 2)?;
-    if let Some(p) = lead_in_along(b.x, b.y, b.level, (-gy).atan2(-gx), (qb.x, qb.y), scaled) {
-        out.push(p);
+    if own_a.is_none() {
+        out.push(qa);
     }
-    out.push(Pi::new(b.x, b.y, 0.0, b.level));
+    out.extend(corners.iter().copied());
+    if own_b.is_none() {
+        out.push(qb);
+    }
+    let count = out.len() - first_out;
+    if let Some((x, y)) = own_b {
+        out.push(Pi::new(x, y, 0.0, b.level));
+    } else {
+        let (gx, gy, _) = leg(n - 2)?;
+        if let Some(p) = lead_in_along(b.x, b.y, b.level, (-gy).atan2(-gx), (qb.x, qb.y), scaled) {
+            out.push(p);
+        }
+        out.push(Pi::new(b.x, b.y, 0.0, b.level));
+    }
     Some((out, first_out, count))
+}
+
+/// The other pair's loose end beside track end `node` on quad track drawn through points
+/// (T-423): another track end at the same level, about `QUAD_SPACING` to one side, level with it
+/// and carrying on the same way. With the side it lies on, 1 left of that way and -1 right.
+fn quad_beside(net: &Network, node: u32) -> Option<(u32, f64)> {
+    let carry = |n: usize| -> Option<f64> {
+        let p = &net.node_ports[n];
+        (p.n == 1).then(|| if p.side[0] == 1 { net.node_heading[n] + PI } else { net.node_heading[n] })
+    };
+    if !net.node_ok(node) {
+        return None;
+    }
+    let i = node as usize;
+    let h = carry(i)?;
+    let (ux, uy) = (h.cos(), h.sin());
+    let k = net.k_at(net.node_y[i]);
+    let mut best: Option<(u32, f64, f64)> = None;
+    for m in 0..net.node_count() {
+        if m == i || !net.node_ok(m as u32) || net.node_level[m] != net.node_level[i] {
+            continue;
+        }
+        let Some(hm) = carry(m) else { continue };
+        let (dx, dy) = (net.node_x[m] - net.node_x[i], net.node_y[m] - net.node_y[i]);
+        let (along, across) = (dx * ux + dy * uy, ux * dy - uy * dx);
+        if along.abs() > 2.0 * k || !(QUAD_SPACING * 0.5 * k..=QUAD_SPACING * 1.5 * k).contains(&across.abs()) || geom::wrap(hm - h).abs() > 0.03 {
+            continue;
+        }
+        if best.is_some_and(|b| b.2 <= across.abs()) {
+            continue;
+        }
+        best = Some((m as u32, across.signum(), across.abs()));
+    }
+    best.map(|b| (b.0, b.1))
+}
+
+/// Where the express pair's own end goes beside the drawn route's end `at` (0 start, 1 end) on
+/// open ground (T-423): `QUAD_SPACING` to `side` of the track's heading there.
+fn express_end(verts: &[Pi], at: usize, side: f64, scaled: bool) -> (f64, f64) {
+    let n = verts.len();
+    let (p, q) = if at == 0 { (verts[0], verts[1]) } else { (verts[n - 2], verts[n - 1]) };
+    let (dx, dy) = (q.x - p.x, q.y - p.y);
+    let l = dx.hypot(dy).max(1e-9);
+    let d = QUAD_SPACING * kk(scaled, verts[0].y) * side;
+    let o = if at == 0 { p } else { q };
+    (quant(o.x - dy / l * d), quant(o.y + dx / l * d))
 }
 
 /// The station beside station `s` on quad track (T-255): the nearest other station within one
@@ -3868,6 +3974,103 @@ mod tests {
         // deleting an express piece leaves the drawn pair
         assert_eq!(a.delete_edge(express[express.len() / 2]), 0, "{}", a.issues());
         assert!(!a.w.net.line_broken[id as usize]);
+    }
+
+    /// T-423: quad drawn through points. A chain of four segments carries both pairs on at every
+    /// joint (no swing, no junction: two loose ends at each end of the chain, plain joints
+    /// between, the express pair 8 m beside all the way, each local segment one arc with the
+    /// express arc concentric); a segment from the express pair's loose end carries both on the
+    /// other way; one ending on other track joins it as a junction; twin stations go across a
+    /// joint and on the loose ends; a crossover goes on it.
+    #[test]
+    fn quad_drawn_through_points_carries_both_pairs_on() {
+        let mut a = api();
+        a.set_route_tangent(true);
+        let net_nodes = |a: &TrackApi| (0..a.w.net.node_count() as u32).filter(|&k| a.w.net.node_ok(k)).collect::<Vec<u32>>();
+        let nearest = |a: &TrackApi, x: f64, y: f64| -> u32 { net_nodes(a).into_iter().min_by(|&p, &q| { let d = |k: u32| (a.w.net.node_x[k as usize] - x).hypot(a.w.net.node_y[k as usize] - y); d(p).total_cmp(&d(q)) }).unwrap() };
+        let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(600.0, 0.0).iter()).copied().collect();
+        assert_eq!(a.add_route(&ends, &[], 4, false), 0, "{}", a.issues());
+        assert_eq!(live_edges(&a).len(), 2);
+        let (mut end, mut heading) = (a.route_end(), 0.0f64);
+        let mut local = vec![live_edges(&a)[0]];
+        let mut express = vec![live_edges(&a)[1]];
+        for turn in [20.0f64, -15.0, 10.0] {
+            let off = turn.to_radians();
+            let (x0, y0) = (a.w.net.node_x[end as usize], a.w.net.node_y[end as usize]);
+            let (x, y) = (x0 + 500.0 * (heading + off).cos(), y0 + 500.0 * (heading + off).sin());
+            let before = live_edges(&a);
+            assert_eq!(a.add_route(&from_node(end, x, y), &[], 4, false), 0, "{turn}: {}", a.issues());
+            let new: Vec<u32> = live_edges(&a).into_iter().filter(|e| !before.contains(e)).collect();
+            assert_eq!(new.len(), 2, "{turn}: one edge each pair");
+            let (l, e) = if a.w.net.edge_b[new[0] as usize] == a.route_end() { (new[0], new[1]) } else { (new[1], new[0]) };
+            // the local arc is the tangent arc, the express one concentric with it
+            let want = 500.0 / (2.0 * off.abs().sin());
+            let rl = a.edge_pis(l)[5];
+            assert!((rl - want).abs() < 0.01 * want, "{turn}: local {rl} against {want}");
+            let pe = a.edge_pis(e);
+            assert_eq!(pe.len(), 9, "{turn}: one corner on the express pair too");
+            let inside = turn > 0.0;
+            assert!((pe[5] - if inside { rl - QUAD_SPACING } else { rl + QUAD_SPACING }).abs() < 0.5, "{turn}: express radius {} beside {rl}", pe[5]);
+            local.push(l);
+            express.push(e);
+            heading += 2.0 * off;
+            end = a.route_end();
+        }
+        // plain joints, no junctions; four loose ends
+        let ports: Vec<u8> = net_nodes(&a).iter().map(|&k| a.w.net.node_ports[k as usize].n as u8).collect();
+        assert!(ports.iter().all(|&p| p <= 2), "{ports:?}");
+        assert_eq!(ports.iter().filter(|&&p| p == 1).count(), 4, "{ports:?}");
+        for &p in &express {
+            for q in a.edge_render(p).chunks(3) {
+                let off = local.iter().map(|&l| a.w.net.project(l, q[0], q[1]).1).fold(f64::INFINITY, f64::min);
+                assert!((off - QUAD_SPACING).abs() < 0.05, "express {p} {off} m off");
+            }
+        }
+        // the express pair is to the left: its last loose end 8 m left of the local's
+        let (ex, ey) = (a.w.net.node_x[end as usize] - QUAD_SPACING * heading.sin(), a.w.net.node_y[end as usize] + QUAD_SPACING * heading.cos());
+        let ex_end = nearest(&a, ex, ey);
+        assert!((a.w.net.node_x[ex_end as usize] - ex).hypot(a.w.net.node_y[ex_end as usize] - ey) < 0.05);
+        // twin stations: across the first joint, and on the far loose ends
+        let (sx, sy, _) = geom::pos_at(a.w.net.edge_pieces(local[0]), a.w.net.edge_len[local[0] as usize] - 40.0);
+        assert_eq!(a.add_station(2, local[0], sx, sy, 200, "Joint".into()), 0, "{}", a.issues());
+        let named = |a: &TrackApi, name: &str| net_nodes(a).into_iter().filter(|&k| a.w.net.node_platform[k as usize] > 0 && a.w.net.node_name[k as usize] == name).count();
+        assert_eq!(named(&a, "Joint"), 2, "the station and its twin across the joint");
+        assert_eq!(a.add_station(1, end, 0.0, 0.0, 120, "End".into()), 0, "{}", a.issues());
+        assert_eq!(named(&a, "End"), 2, "the loose ends both");
+        assert!(a.w.net.node_platform[ex_end as usize] > 0);
+        assert_eq!(a.undo(), 0);
+        assert_eq!(a.undo(), 0);
+        // a crossover on the new quad track, mid-segment
+        let mid = local[2];
+        let (cx, cy, _) = geom::pos_at(a.w.net.edge_pieces(mid), a.w.net.edge_len[mid as usize] / 2.0);
+        assert_eq!(a.add_crossover(mid, cx, cy), 0, "{}", a.issues());
+        assert_eq!(a.undo(), 0);
+        // from the express pair's loose end at the start, the other way: both pairs carry on
+        let ex0 = nearest(&a, 0.0, QUAD_SPACING);
+        let before = live_edges(&a);
+        assert_eq!(a.add_route(&from_node(ex0, -500.0, -150.0), &[], 4, false), 0, "{}", a.issues());
+        assert_eq!(live_edges(&a).len(), before.len() + 2);
+        assert!(net_nodes(&a).iter().all(|&k| a.w.net.node_ports[k as usize].n != 1 || a.w.net.node_x[k as usize] < -100.0 || a.w.net.node_x[k as usize] > 100.0), "no loose end left at the start");
+        // ending on a plain double track ahead: both pairs meet it at one new junction
+        let (x0, y0) = (a.w.net.node_x[end as usize], a.w.net.node_y[end as usize]);
+        let (ux, uy) = (heading.cos(), heading.sin());
+        // the ghost of a segment from the loose end: both pairs, no step drawn between their ends
+        let pv = a.preview_route(&from_node(end, x0 + 400.0 * (heading + 0.1).cos(), y0 + 400.0 * (heading + 0.1).sin()), &[], 4, false);
+        assert_eq!(pv[0], 1.0, "{}", a.issues());
+        let sp = a.preview_render_speeds();
+        assert_eq!(sp.len(), (pv.len() - 5 - 4 * pv[3] as usize) / 3 - 1);
+        assert_eq!(sp.iter().filter(|&&v| v < 0.0).count(), 1);
+        assert_eq!(a.route_arc().len(), 3, "the local arc's circle");
+        let (px, py) = (x0 + 700.0 * ux, y0 + 700.0 * uy);
+        let cross: Vec<f64> = free(px + 1500.0 * uy, py - 1500.0 * ux).iter().chain(free(px - 1500.0 * uy, py + 1500.0 * ux).iter()).copied().collect();
+        assert_eq!(a.add_route(&cross, &[], 2, false), 0, "{}", a.issues());
+        let other = *live_edges(&a).last().unwrap();
+        let (tx, ty) = (px - 200.0 * uy, py + 200.0 * ux);
+        let to = vec![1.0, end as f64, 0.0, 0.0, 0.0, 2.0, other as f64, tx, ty, 0.0];
+        assert_eq!(a.add_route(&to, &[], 4, false), 0, "{}", a.issues());
+        let meet = a.route_end();
+        assert_eq!(a.w.net.node_ports[meet as usize].n, 4, "the crossed track, the local and the express pair");
+        assert_eq!(net_nodes(&a).iter().filter(|&&k| a.w.net.node_ports[k as usize].n == 1).count(), 4, "the new start's two and the crossed track's two");
     }
 
     /// T-338: a crossover on quad track joins the two pairs mid-stretch, so a line can change from

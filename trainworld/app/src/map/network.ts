@@ -178,7 +178,18 @@ function linesOnEdges(s: ClockState) {
 
 export function strokesFromPreview(pts: Float32Array, bad: boolean, speed?: Float32Array, placement = false): Strokes {
   const b = new StrokeBuilder();
-  b.add(pts, TRACK, 0xffffffff, F_BLUEPRINT | (bad ? F_BAD : 0) | (placement ? F_PLACEMENT : 0));
+  const flags = F_BLUEPRINT | (bad ? F_BAD : 0) | (placement ? F_PLACEMENT : 0);
+  // a negative speed is a step with no track (between quad's two pairs' own ends, T-423): not drawn
+  let from = 0;
+  if (speed) {
+    for (let k = 0; k < speed.length; k++) {
+      if (speed[k] >= 0) continue;
+      b.add(pts.subarray(from * 3, (k + 1) * 3), TRACK, 0xffffffff, flags);
+      from = k + 1;
+    }
+    if (from > 0) speed = speed.filter((v) => v >= 0);
+  }
+  b.add(pts.subarray(from * 3), TRACK, 0xffffffff, flags);
   const strokes = b.build();
   if (speed) {
     if (speed.length !== strokes.count) throw new Error("Preview speed/segment length mismatch");

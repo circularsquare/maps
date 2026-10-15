@@ -93,7 +93,7 @@ export function BuildTab() {
         <div class="h">Drawing</div>
         <Segmented<boolean>
           options={[
-            [true, <span data-tip="Each click ends a curve through that point. Hold Shift to carry on from it. Quad track is drawn by corners">Through points</span>],
+            [true, <span data-tip="Each click ends a curve through that point. Hold Shift to carry on from it">Through points</span>],
             [false, <span data-tip="Each click is a corner the track cuts with a curve">Corners</span>],
           ]}
           value={display.value.drawThrough}

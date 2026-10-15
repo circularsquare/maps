@@ -2,7 +2,7 @@
 // Construction controls and the blueprint quote live together in Build (T-100).
 
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
-import { ask, display, lineDraft, selection, tool, trackCount, type Tool } from "../game/ui";
+import { ask, display, lineDraft, selection, tool, type Tool } from "../game/ui";
 import { notice, world } from "../game/world";
 import { live } from "../map/live";
 
@@ -75,7 +75,7 @@ function Notice() {
   const sel = selection.value;
   const hint = t === "line" && draft.stops.length === 1 ? "Now click the next station."
     : t === "trip" && sel?.kind === "trip" && !sel.to ? "Now click where the trip ends, or a station."
-    : t === "track" && display.value.drawThrough && trackCount.value !== 4 ? THROUGH_HINT
+    : t === "track" && display.value.drawThrough ? THROUGH_HINT
     : HINT[t];
   const show = n && performance.now() - n.at < NOTICE_MS;
   if (!show && !hint) return null;
