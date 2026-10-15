@@ -604,6 +604,10 @@ impl DemandApi {
             }
         }
         let (z, mut gr, gravity_from_pack) = city_gravity(&city, &base);
+        let h: serde_json::Value = serde_json::from_str(header).map_err(|e| e.to_string())?;
+        if let (Some(lon), Some(lat)) = (h["origin"]["lon"].as_f64(), h["origin"]["lat"].as_f64()) {
+            base.cordon = cordon_by_zone(&city, &z, (lon, lat)).map(Arc::new);
+        }
         // T-275: the pack's routed walks and drives, if it has them for these zones
         if let Some(r) = super::routes::Routes::from_pack(header, bin, &z)? {
             base.routes = Some(Arc::new(r));

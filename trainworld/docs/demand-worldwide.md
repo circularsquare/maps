@@ -205,7 +205,8 @@ Tier 0 with Japan's national inputs, written to serve every Japanese pack (resea
 notes/T-420.md has the tables.
 
 - **Units**: whole prefectures, dissolved from KSJ N03 municipalities (designated cities by ward,
-  the census's unit). N03 draws every pier and rock apart; parts under about 0.02 km² are dropped
+  the census's unit); in Hokkaido, subprefectures (N03's 振興局 names, `japan.SUBPREFECTURES`), and
+  a single municipality where the flows say it belongs (Otaru with Sapporo). N03 draws every pier and rock apart; parts under about 0.02 km² are dropped
   from the outline, and land of no municipality only where it touches one (Tokyo Bay's landfill).
 - **Population**: the 2020 census 500 m mesh, each mesh spread over its cells by GHSL; a mesh the
   outline cuts on land keeps its share of land inside. Suppressed meshes are already counted in
@@ -217,12 +218,18 @@ notes/T-420.md has the tables.
   down, Saitama Chuo-ku up).
 - **Curve**: fitted on the census's municipality flows with the pack's own margins: the surface is
   flat from London's power 1.85 to 2.3, and only the steep end keeps the census's 34.9% working in
-  their own municipality: d^-2.2 exp(-d/80 km).
-- **Work from home**: 0.23: the census's 9.7% working at home, plus MLIT's 2024 telework survey
-  (37.5% of Greater Tokyo's employed telework), judged at 2 days in 5, on the rest. Other packs take
-  their region's survey figure (Kinki 24.4%, Chukyo 19.6%, elsewhere 16.8%).
+  their own municipality: d^-2.2 exp(-d/80 km). Keihanshin's and Chukyo's flows fit it as well as
+  any other (T-431), so it is Japan's metro curve. The regional metros fit a little flatter and
+  shorter, each its own (T-432): Fukuoka d^-2.0 exp(-d/32), Sendai d^-1.8 exp(-d/50), Hiroshima
+  d^-1.9 exp(-d/32); Sapporo ties Tokyo's curve and keeps it. Their best fits misplace 8-12% of
+  commuters between municipalities, where Tokyo's curve misplaces 9-12%.
+- **Work from home**: the census's share working at home, plus MLIT's 2024 telework survey share of
+  the region's employed, judged at 2 days in 5, on the rest: Greater Tokyo 0.23 (9.7% and 37.5%),
+  Keihanshin 0.17 (8.1% and Kinki's 24.4%), Chukyo 0.16 (8.8% and 19.6%); elsewhere MLIT's
+  16.8%: Fukuoka 0.15 (8.6%), Sapporo 0.13 (6.8%), Sendai 0.16 (9.5%), Hiroshima 0.14 (8.2%).
 - **Schools**: KSJ P29 points (no pupil counts); each 500 m mesh's children 0-14 x 0.9 go to the
-  nearest elementary, junior high, compulsory or secondary school. Universities stay tier 0.
+  nearest elementary, junior high, compulsory or secondary school. Universities stay tier 0 (where
+  no campus has a Wikidata count, as in Fukuoka, the national total is split by campus area).
 - **Names**: OSM's `name:en` (64% of Greater Tokyo's places), else romaji from a kana reading
   (`japan.kana_romaji`, Hepburn with long vowels written short, so ASCII like every other name;
   1.2%), else from the kanji's reading in a dictionary (`japan.kanji_romaji`, UniDic through
@@ -322,6 +329,18 @@ notes/T-420.md has the tables.
   slower, and a sprawling metro whose dense core is wider than 10 km (Mexico City, Jakarta) is
   slow for longer. Check: a few typical door-to-door drives of 50-130 km per new country against
   the model's (notes/T-295.md has the US, Toronto and London ones).
+- **Parking** (T-380, T-372, docs/demand.md 4.3). In minutes, not money: 3 to park, plus for a paid
+  space 15 x ln(d / 3,000) per one-way trip (capped at 50), d the destination zone's jobs per km²
+  of land; a share 1 / (1 + d / 8,000) parks free; congestion charges from a short list of
+  charging areas (`kernel::CORDONS`: Manhattan, central London). Checked against real prices in New
+  York, London and Toronto (within about half of each) and US and Toronto free-parking shares.
+  Why it may not carry over: prices relative to wages differ (Tokyo, Hong Kong and Singapore
+  dearer; much of the US Sun Belt, Africa and South Asia cheaper, with informal kerb parking),
+  and free parking at work is commoner in North America than in Europe or East Asia; the 15 and
+  the 8,000 are the first country knobs. Other cordons (Stockholm, Gothenburg, Singapore's ERP,
+  Milan's Area C, Durham) join the list when a pack covers them. Check: a day's parking price in
+  a city's main and secondary centres against the rule, and a free-parking-at-work survey where
+  one exists.
 - **Routed walks** (T-275). A walk to a station goes round water on a 50 m raster from the pack's
   water mask, with every OSM way a person may walk on that is a bridge opened. Why it may not
   carry over: the water mask is TIGER's in the US and OSM's elsewhere (T-041; within 0.6% of TIGER at New York); OSM's `foot=` tagging
@@ -335,7 +354,7 @@ notes/T-420.md has the tables.
 - **Walking and riding to a station** (T-371, T-389, docs/demand.md 4.3). The walk is 6 km/h on a
   path 1.3x the straight line at weight 1.5; a commute or everyday trip of 5 km or more may
   instead ride from home (car, bus, bike
-  or a lift, one mode) to the cheapest station of each line within 15 km, at `p_ride` 10 + 1.33 x
+  or a lift, one mode) to the cheapest station of each line within 15 km, at `p_ride` 15 + 1.33 x
   the density-model drive + the cheaper of parking by the station zone's job density and a
   drop-off of 10. Nothing in it is per country: drive speeds come from density, parking from job
   density, and nobody lacks the ride for want of a car. Why it may not carry over: `p_ride` stands
@@ -349,7 +368,7 @@ notes/T-420.md has the tables.
   (`d_drop`) at the far end, which stands for a taxi or a pick-up; where taxis are cheap and common
   (much of Asia and Latin America) the far end is easier than this, and where long trips end at a
   rental car or a long walk it is harder. The
-  weights are starting values (T-372 fits them on New York). Check: the share of rail riders
+  weights are fitted on New York only (T-372: 53-66% of commuter rail riders ride there). Check: the share of rail riders
   reaching the station by car or bus per sampler city (UK NTS for London, Metrolinx surveys for
   Toronto) against the model's home-end ride share (`realnet` prints it).
 - **Walking curve.** Fitted to New York (ACS B08301 walked, T-058/T-090). Walking tolerance

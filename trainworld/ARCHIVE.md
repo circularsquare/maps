@@ -1,5 +1,8 @@
 ﻿# Archive
 
+- T-372 [P2] T-295 stage 3: park-and-ride fit with T-380's parking. Done 2026-10-15: `p_ride` 15; real New York commutes 17.3% to 20.6% rail (ACS 20.3), county error 4.4 to 2.8 points, Kings 35.7 to 42.7%; real save 7.60M to 7.94M rail trips. notes/T-372.md.
+- T-380 [P2] Parking cost by job density against real prices. Done 2026-10-15: built in T-372 (log of jobs per km² of land, a free-parking share, Manhattan and London congestion charges) for local commutes; everyday and regional layers in T-440. notes/T-380.md.
+- T-432 [P2] Japan stage 2b: Fukuoka, Sapporo (Ishikari and Otaru), Sendai, Hiroshima. Done 2026-10-15: population within 0.06% of the census, jobs exact; each its own fitted curve (Sapporo Tokyo's); merged, in the world market; all four browser checks pass. notes/T-432.md.
 - T-044 [P3] Merge sparse cells into their res-8 parent. Done 2026-10-15: `pipeline/merge_cells.py` at 1k trip ends, 22 packs merged (osa, ngo, sdj, hij left to their builds): cells -25% to -70%, packs 123 to 78 MB, a New York worker 102 to 82 MB; the real save's final +0.04%. notes/T-044.md.
 
 - T-421 [P3] A game load's card goes at the zone in view's final. Done 2026-10-15: a Toronto view of the New York plus Toronto save loses its card at about 6 s, not 33 s; zones still solving keep their bar and grey and drop their far bubble until their final; status tag follows the zone in view.

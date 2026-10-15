@@ -85,9 +85,19 @@ pub struct Params {
     pub road_dens50: f32,
     pub road_far_kmh: f32,
     pub w_drive: f32,
+    /// Parking at a destination (T-380, `park_parts`): `park_min` to park for every driver; a
+    /// paid space `park_paid_min` x ln(d / `park_paid_d0`) more, capped at `park_paid_cap_min`,
+    /// d jobs per km² of land in the zone; a share 1 / (1 + d / `park_free_d`) parks free.
     pub park_min: f32,
+    pub park_paid_min: f32,
+    pub park_paid_d0: f32,
+    pub park_paid_cap_min: f32,
+    pub park_free_d: f32,
+    /// A congestion charge per zone (`cordon_by_zone`), perceived minutes a one-way trip, paid
+    /// by every driver arriving there. None: no charge anywhere.
+    pub cordon: Option<std::sync::Arc<Vec<f32>>>,
+    /// The parking rule before T-380, still read by the everyday layer (`everyday.rs`, T-440).
     pub park_cost_cap_min: f32,
-    /// Parking cost: one perceived minute per this many jobs per km² in the destination zone.
     pub park_jobs_per_km2_per_min: f32,
     pub period: usize,
     /// Share of all home->work trips in this period.
@@ -163,7 +173,7 @@ impl Default for Params {
             decay_km: 30.0,
             decay_pow: 0.8,
             border_factor: 1.0,
-            // T-371: 1.5 rather than the usual 2.0, a starting value for T-372's fit
+            // T-371, T-372: 1.5 rather than the usual 2.0 (notes/T-371.md, T-372.md)
             w_walk: 1.5,
             w_wait: 1.37,
             w_home_wait: 0.4,
@@ -182,6 +192,12 @@ impl Default for Params {
             road_far_kmh: 80.0,
             w_drive: 1.33,
             park_min: 3.0,
+            // T-380: within about half of real prices from Croydon to Midtown (notes/T-380.md)
+            park_paid_min: 15.0,
+            park_paid_d0: 3000.0,
+            park_paid_cap_min: 50.0,
+            park_free_d: 8000.0,
+            cordon: None,
             park_cost_cap_min: 40.0,
             park_jobs_per_km2_per_min: 2500.0,
             period: 0,
@@ -205,8 +221,8 @@ impl Default for Params {
             left_behind: true,
             routes: None,
             road_routed_scale: 1.3 / 1.210,
-            // T-371: starting values for T-372's fit (notes/T-295.md)
-            p_ride: 10.0,
+            // T-372: fitted on the real New York network (notes/T-372.md)
+            p_ride: 15.0,
             d_drop: 10.0,
             ride_min_km: 5.0,
             ride_max_m: 15_000.0,
@@ -243,6 +259,16 @@ impl Params {
             "ride_min_km" => self.ride_min_km = v,
             "ride_max_m" => self.ride_max_m = v,
             "ride_lines" => self.ride_lines = v as usize,
+            "park_paid_min" => self.park_paid_min = v,
+            "park_paid_d0" => self.park_paid_d0 = v,
+            "park_paid_cap_min" => self.park_paid_cap_min = v,
+            "park_free_d" => self.park_free_d = v,
+            // scales every zone's cordon charge (0 turns them off)
+            "cordon" => {
+                if let Some(c) = &self.cordon {
+                    self.cordon = Some(std::sync::Arc::new(c.iter().map(|x| x * v).collect()));
+                }
+            }
             // the drive before T-090: one speed everywhere
             "road_kmh" => {
                 self.road_city_kmh = v;
@@ -299,6 +325,31 @@ impl Params {
             _ => self.road_detour,
         }
     }
+    /// Parking at a destination in zone `j`, perceived minutes: what every driver pays (parking
+    /// and any cordon charge), what a paid space costs on top, and the share who park free.
+    pub fn park_parts(&self, z: &Zones, j: usize) -> (f32, f32, f32) {
+        let land = (z.ncell[j].max(1) as f32 * CELL_KM2).min((z.zone_m / 1000.0).powi(2));
+        let d = z.jobs[j] as f32 / land;
+        let paid = if d > self.park_paid_d0 { (self.park_paid_min * (d / self.park_paid_d0).ln()).min(self.park_paid_cap_min) } else { 0.0 };
+        let fixed = self.park_min + self.cordon.as_ref().and_then(|c| c.get(j)).map_or(0.0, |&c| c);
+        (fixed, paid, 1.0 / (1.0 + d / self.park_free_d))
+    }
+    /// The mean of `park_parts` over drivers.
+    pub fn park_mean(&self, z: &Zones, j: usize) -> f32 {
+        let (fixed, paid, free) = self.park_parts(z, j);
+        fixed + (1.0 - free) * paid
+    }
+    /// Rail's share against the car, `util` being rail's utility against a driver who parks free:
+    /// drivers parking free and those paying `paid` for a space choose apart (T-380), the same
+    /// expressions as `mode_choice`'s lanes.
+    pub fn rail_share_parked(&self, util: f32, paid: f32, free: f32) -> f32 {
+        let r0 = 1.0 / (1.0 + fast_exp(-util));
+        if paid < 1e-30 {
+            return r0;
+        }
+        let r1 = 1.0 / (1.0 + fast_exp(-(util + self.beta * paid)));
+        r0 + (1.0 - free) * (r1 - r0)
+    }
     /// Real minutes of the walk between two stations on a transfer, `d_m` metres straight line.
     pub fn xfer_min(&self, d_m: f32) -> f32 {
         d_m * self.walk_detour / self.xfer_mps / 60.0
@@ -329,7 +380,7 @@ pub struct Zones {
     pub y0: f32,
     pub pop: Vec<f64>,
     pub jobs: Vec<f64>,
-    /// Cells in each zone (its land, at `CELL_KM2` a cell).
+    /// Resolution 9 cells in each zone (its land, at `CELL_KM2` a cell; `res9_cells`).
     pub ncell: Vec<u32>,
 }
 
@@ -363,6 +414,52 @@ impl Zones {
     }
 }
 
+/// Congestion charges at a destination (T-372): the charging area (lon, lat ring, a rough outline
+/// at 2 km zones' scale) and its charge in perceived minutes a one-way trip, half the day's charge
+/// at 3 minutes a US dollar.
+pub const CORDONS: &[(&str, f32, &[(f32, f32)])] = &[
+    // Manhattan south of 60th St, $9 at peak (2025)
+    ("Manhattan", 13.5, &[(-74.020, 40.700), (-74.016, 40.715), (-74.012, 40.730), (-74.009, 40.745), (-74.002, 40.760), (-73.994, 40.774), (-73.959, 40.759), (-73.968, 40.748), (-73.972, 40.738), (-73.974, 40.726), (-73.978, 40.711), (-73.999, 40.707), (-74.012, 40.701)]),
+    // the London congestion charge, £18 from 2026 at $1.30
+    ("London", 35.1, &[(-0.159, 51.513), (-0.163, 51.520), (-0.126, 51.528), (-0.105, 51.530), (-0.088, 51.526), (-0.077, 51.524), (-0.072, 51.515), (-0.075, 51.5055), (-0.100, 51.495), (-0.125, 51.487), (-0.144, 51.495), (-0.152, 51.503)]),
+];
+
+fn in_ring(ring: &[(f32, f32)], x: f32, y: f32) -> bool {
+    let mut inside = false;
+    let mut j = ring.len() - 1;
+    for i in 0..ring.len() {
+        let ((xi, yi), (xj, yj)) = (ring[i], ring[j]);
+        if (yi > y) != (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi {
+            inside = !inside;
+        }
+        j = i;
+    }
+    inside
+}
+
+/// Each zone's cordon charge (`CORDONS`), as the share of its jobs inside the charging area times
+/// the charge; None where no charging area holds any jobs. `origin` is the pack's (lon, lat), its
+/// cells' metres equirectangular about it.
+pub fn cordon_by_zone(city: &City, z: &Zones, origin: (f64, f64)) -> Option<Vec<f32>> {
+    const R_EARTH: f64 = 6371008.8;
+    let (lon0, lat0) = origin;
+    let kx = 180.0 / std::f64::consts::PI / R_EARTH / lat0.to_radians().cos();
+    let ky = 180.0 / std::f64::consts::PI / R_EARTH;
+    let mut charged = vec![0f64; z.n];
+    let mut any = false;
+    for c in 0..city.len() {
+        if city.jobs[c] <= 0.0 {
+            continue;
+        }
+        let (lon, lat) = ((lon0 + city.x[c] as f64 * kx) as f32, (lat0 + city.y[c] as f64 * ky) as f32);
+        if let Some(&(_, min, _)) = CORDONS.iter().find(|(_, _, ring)| in_ring(ring, lon, lat)) {
+            charged[z.cell_zone[c] as usize] += (city.jobs[c] * min) as f64;
+            any = true;
+        }
+    }
+    any.then(|| (0..z.n).map(|j| if z.jobs[j] > 0.0 { (charged[j] / z.jobs[j]) as f32 } else { 0.0 }).collect())
+}
+
 /// Zones are the cells' 2 km squares, one per region in a square a region border cuts (T-162).
 /// Zone ids in order of each zone's first cell, so a pack with one region gets the zones it had
 /// before regions.
@@ -393,7 +490,7 @@ pub fn build_zones(city: &City, zone_m: f32) -> Zones {
         }
         let zi = grid[g] as usize;
         z.cell_zone[c] = zi as u32;
-        z.ncell[zi] += 1;
+        z.ncell[zi] += res9_cells(city, c);
         z.pop[zi] += city.pop[c] as f64;
         z.jobs[zi] += city.jobs[c] as f64;
     }
@@ -574,11 +671,20 @@ pub fn zones_from_pack(city: &City, pg: &PackGravity) -> Zones {
     };
     for c in 0..city.len() {
         let zi = z.cell_zone[c] as usize;
-        z.ncell[zi] += 1;
+        z.ncell[zi] += res9_cells(city, c);
         z.pop[zi] += city.pop[c] as f64;
         z.jobs[zi] += city.jobs[c] as f64;
     }
     z
+}
+
+/// Cell `c`'s land in resolution 9 cells: 7 for a merged res-8 cell (T-044), else 1 (synthetic
+/// cities' ids are not H3).
+fn res9_cells(city: &City, c: usize) -> u32 {
+    match city.h3.get(c).map(|&h| (h >> 52) & 0xf) {
+        Some(8) => 7,
+        _ => 1,
+    }
 }
 
 pub fn gravity_from_pack(z: &Zones, pg: &PackGravity) -> Gravity {
@@ -975,15 +1081,11 @@ pub fn access_options(zones: &Zones, net: &Network, p: &Params, places: &[(usize
         return (off, out);
     }
     let dens = zones.density();
-    let zone_area = (zones.zone_m / 1000.0).powi(2);
     let place = |z: Option<usize>| p.place_min_per_km(z.map_or(0.0, |z| dens[z]));
-    // parking as at a destination (`mode_choice`)
+    // parking as at a destination, its mean over drivers
     let station_end = |z: Option<usize>| match end {
         End::Far => p.d_drop,
-        End::Home => {
-            let park = z.map_or(p.park_min, |z| p.park_min + (zones.jobs[z] as f32 / zone_area / p.park_jobs_per_km2_per_min).min(p.park_cost_cap_min));
-            park.min(p.d_drop)
-        }
+        End::Home => z.map_or(p.park_min, |z| p.park_mean(zones, z)).min(p.d_drop),
     };
     let (sq_off, sq) = zones.by_square();
     let st_zone: Vec<Option<usize>> = (0..net.n_stations())
@@ -1884,19 +1986,13 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
     let th = p.station_theta;
     // per subzone: its part of the zone's row / column factor
     let ou: Vec<f32> = (0..sz.n).map(|u| sz.origin_weight(u, z, gr, share)).collect();
-    let zone_area = (z.zone_m / 1000.0).powi(2);
     let dv: Vec<f32> = (0..sz.n)
         .map(|v| {
             let zj = sz.zone[v] as usize;
             if z.jobs[zj] > 0.0 { (gr.col[zj] * sz.jobs[v] as f64 / z.jobs[zj]) as f32 } else { 0.0 }
         })
         .collect();
-    let park: Vec<f32> = (0..sz.n)
-        .map(|v| {
-            let dens = z.jobs[sz.zone[v] as usize] as f32 / zone_area;
-            p.park_min + (dens / p.park_jobs_per_km2_per_min).min(p.park_cost_cap_min)
-        })
-        .collect();
+    let park: Vec<(f32, f32, f32)> = (0..z.n).map(|j| p.park_parts(z, j)).collect();
     // per subzone and access entry: weights exp(-theta (cost - m)), a walk entry's with m the
     // cheapest walk (`acc_m`, the same at both ends; infinite with none), a ride entry's with m
     // the cheapest of walks and rides (`ride_m`)
@@ -1965,8 +2061,9 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
         q1: u32,
     }
     let mut dz: Vec<DZone> = Vec::with_capacity(dzones.len());
-    // per destination: [x, y, local streets, main roads], [parking, trips factor, walk, -]
-    let mut dd: Vec<[[f32; 4]; 2]> = Vec::with_capacity(sz.zd.len());
+    // per destination: [x, y, local streets, main roads], [parking every driver pays, trips
+    // factor, walk, a paid space], [the share parking free, -, -, -]
+    let mut dd: Vec<[[f32; 4]; 3]> = Vec::with_capacity(sz.zd.len());
     // and its egress stations, their weights and `Subzones::acc_st` entries, padded to K with
     // station `s` (read as a dummy past the row's end, 0) at weight 0: a pad adds exactly 0 to
     // every sum it enters, so eight destinations go through the same steps
@@ -1985,7 +2082,8 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
             eg_k.push(kk);
             eg_n.push(sz.walk(v).len() as u8);
             dvz += dv[v];
-            dd.push([[sz.cx[v], sz.cy[v], local[v].0, local[v].1], [park[v], dv[v], acc_m[v], 0.0]]);
+            let (fixed, paid, free) = park[j];
+            dd.push([[sz.cx[v], sz.cy[v], local[v].0, local[v].1], [fixed, dv[v], acc_m[v], paid], [free, 0.0, 0.0, 0.0]]);
         }
         let q1 = dd.len() as u32;
         dz.push(DZone { key: gr.key(z, j), reg: z.region[j], zid: j as u32, min: zmin(j), max: dd[q1 as usize - 1][1][2], dv: dvz, q0, q1 });
@@ -2128,7 +2226,7 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
                     continue;
                 }
                 let [x8, y8, l08, l18] = F8::transpose(std::array::from_fn(|l| dd[q[l]][0]));
-                let [park8, dv8, m8, _] = F8::transpose(std::array::from_fn(|l| dd[q[l]][1]));
+                let [park8, dv8, m8, paid8] = F8::transpose(std::array::from_fn(|l| dd[q[l]][1]));
                 let [tu8, dpw8, df8, mo8] = F8::transpose(std::array::from_fn(|l| visit[(c[l][1] & 0x7fff_ffff) as usize]));
                 let (dx, dy) = (ux8 - x8, uy8 - y8);
                 let d = (dx * dx + dy * dy).sqrt();
@@ -2141,7 +2239,17 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
                 let road = drive * F8::splat(p.w_drive) + park8;
                 let rail = mo8 + m8 + F8::splat(p.fare_min) - ssum.ln() / F8::splat(th);
                 let util = F8::splat(p.beta) * (road - rail) + F8::splat(p.asc_rail);
-                let x = tu8 * dv8 * dpw8 / (F8::splat(1.0) + util.neg().exp());
+                // T-380: rail's share among drivers parking free, and among those paying for a
+                // space (`rail_share_parked`; where no lane pays, the second share equals the first)
+                let r0 = F8::splat(1.0) / (F8::splat(1.0) + util.neg().exp());
+                let r = if paid8.lt_mask(F8::splat(1e-30)) == 0xff {
+                    r0
+                } else {
+                    let [free8, _, _, _] = F8::transpose(std::array::from_fn(|l| dd[q[l]][2]));
+                    let r1 = F8::splat(1.0) / (F8::splat(1.0) + (util + F8::splat(p.beta) * paid8).neg().exp());
+                    r0 + (F8::splat(1.0) - free8) * (r1 - r0)
+                };
+                let x = tu8 * dv8 * dpw8 * r;
                 let g = x / ssum;
                 // trips by egress station y, and y x the row: what reaches each egress entry
                 let mut ya = [[0f32; 8]; K];
@@ -2687,6 +2795,46 @@ mod tests {
 
     fn common_test_params() -> Params {
         Params { xfer_walk_m: 0.0, w_wait: 1.0, w_home_wait: 1.0, platform_wait_cap_min: 100.0, ..Params::default() }
+    }
+
+    /// T-380's parking: by jobs per km² of land, the paid price, the free share and the cordon;
+    /// with nothing to pay the two-logit mix is the one logit to the bit.
+    #[test]
+    fn parking_by_land_density() {
+        let n = 5;
+        let land = 4.0 / CELL_KM2;
+        let ncell = vec![land.round() as u32, land.round() as u32, land.round() as u32, (land / 4.0).round() as u32, land.round() as u32];
+        let km2: Vec<f64> = ncell.iter().map(|&c| c as f64 * CELL_KM2 as f64).collect();
+        let dens = [2000.0, 10000.0, 200000.0, 10000.0, 8000.0];
+        let z = Zones {
+            zone_m: 2000.0, n, cell_zone: vec![], gx: vec![0; n], gy: vec![0; n], region: vec![0; n], w: 1, h: 1, x0: 0.0, y0: 0.0,
+            pop: vec![0.0; n], jobs: (0..n).map(|j| dens[j] * km2[j]).collect(), ncell,
+        };
+        let mut p = Params::default();
+        let near = |a: f32, b: f32| (a - b).abs() < 0.05;
+        let (f0, paid0, free0) = p.park_parts(&z, 0);
+        assert!(f0 == 3.0 && paid0 == 0.0 && near(free0, 0.8));
+        let (_, paid1, _) = p.park_parts(&z, 1);
+        assert!(near(paid1, 15.0 * (10000.0f32 / 3000.0).ln()));
+        assert_eq!(p.park_parts(&z, 2).1, 50.0);
+        // a quarter of the square on land: the same jobs per km² of land, the same price
+        assert!(near(p.park_parts(&z, 3).1, paid1));
+        assert!(near(p.park_parts(&z, 4).2, 0.5));
+        p.cordon = Some(std::sync::Arc::new(vec![0.0, 0.0, 13.5, 0.0, 0.0]));
+        assert_eq!(p.park_parts(&z, 2).0, 16.5);
+        let ring = |name: &str| CORDONS.iter().find(|c| c.0 == name).unwrap().2;
+        // Times Square and Wall St in, Downtown Brooklyn and the Upper East Side out
+        assert!(in_ring(ring("Manhattan"), -73.985, 40.758) && in_ring(ring("Manhattan"), -74.009, 40.706));
+        assert!(!in_ring(ring("Manhattan"), -73.990, 40.693) && !in_ring(ring("Manhattan"), -73.958, 40.775));
+        // Bank and Oxford Circus in, Canary Wharf out
+        assert!(in_ring(ring("London"), -0.089, 51.513) && in_ring(ring("London"), -0.142, 51.515));
+        assert!(!in_ring(ring("London"), -0.024, 51.505));
+        for util in [-3.0f32, 0.0, 2.5] {
+            assert_eq!(p.rail_share_parked(util, 0.0, 0.3), 1.0 / (1.0 + fast_exp(-util)));
+            let r = p.rail_share_parked(util, 20.0, 0.3);
+            let (r0, r1) = (1.0 / (1.0 + fast_exp(-util)), 1.0 / (1.0 + fast_exp(-(util + p.beta * 20.0))));
+            assert!(r > r0 && r < r1 && (r - (0.3 * r0 + 0.7 * r1)).abs() < 1e-6);
+        }
     }
 
     #[test]

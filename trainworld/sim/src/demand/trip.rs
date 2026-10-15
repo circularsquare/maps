@@ -48,10 +48,11 @@ pub(crate) struct PairChoice {
     pub pw: f32,
     /// Straight line between the two subzones' centres, metres: the drive's distance.
     pub d_m: f32,
-    /// Real minutes of the drive, and its parking at the destination (perceived minutes).
+    /// Real minutes of the drive, and its parking at the destination (perceived minutes, the
+    /// mean over drivers who park free and those who pay).
     pub drive_min: f32,
     pub park: f32,
-    /// The drive's whole cost, perceived minutes.
+    /// The drive's whole cost at that mean, perceived minutes.
     pub road: f32,
     /// `RAIL_OFFERED`, `WALKS_TOO_LONG` or `NO_ROUTE`.
     pub why: u32,
@@ -61,7 +62,8 @@ pub(crate) struct PairChoice {
     /// The logsum's sum over station pairs, and the rail cost it gives (perceived minutes).
     pub ssum: f32,
     pub rail: f32,
-    /// Utility of rail against the road, and rail's share of the trips that do not walk.
+    /// Utility of rail against a driver who parks free, and rail's share of the trips that do
+    /// not walk (`Params::rail_share_parked`).
     pub util: f32,
     pub r: f32,
     /// (access entry, egress entry, weight) over every station pair (`Subzones::acc_st` entries):
@@ -72,13 +74,6 @@ pub(crate) struct PairChoice {
 /// Homes and jobs per km² of land in zone `i`, as `Zones::density`.
 fn zone_density(z: &Zones, i: usize) -> f32 {
     ((z.pop[i] + z.jobs[i]) / (z.ncell[i].max(1) as f64 * CELL_KM2 as f64)) as f32
-}
-
-/// Parking at a destination in zone `j`, perceived minutes, as `mode_choice`.
-fn park_at(z: &Zones, p: &Params, j: usize) -> f32 {
-    let zone_area = (z.zone_m / 1000.0).powi(2);
-    let dens = z.jobs[j] as f32 / zone_area;
-    p.park_min + (dens / p.park_jobs_per_km2_per_min).min(p.park_cost_cap_min)
 }
 
 /// The walk share between zones `i` and `j` (`Gravity::wtab`; zero before it is set).
@@ -127,7 +122,9 @@ pub(crate) fn pair_choice(api: &DemandApi, p: &Params, sk: &Skims, u: usize, v: 
     }
     let d = ((sz.cx[u] - sz.cx[v]).powi(2) + (sz.cy[u] - sz.cy[v]).powi(2)).sqrt();
     let drive_min = p.drive_min_f(d, p.drive_factor(i, j), p.place_min_per_km(zone_density(z, i)), p.place_min_per_km(zone_density(z, j)));
-    let park = park_at(z, p, j);
+    let (fixed, paid, free) = p.park_parts(z, j);
+    let road_free = drive_min * p.w_drive + fixed;
+    let park = fixed + (1.0 - free) * paid;
     let road = drive_min * p.w_drive + park;
     let pw = walk_share(api, i, j);
     let why = if m_v > p.pair_walk_max - m_u {
@@ -139,8 +136,8 @@ pub(crate) fn pair_choice(api: &DemandApi, p: &Params, sk: &Skims, u: usize, v: 
     };
     let (rail, util, r) = if why == RAIL_OFFERED {
         let rail = m_u + m_v + p.fare_min - fast_ln(ssum) / th;
-        let util = p.beta * (road - rail) + p.asc_rail;
-        (rail, util, 1.0 / (1.0 + fast_exp(-util)))
+        let util = p.beta * (road_free - rail) + p.asc_rail;
+        (rail, util, p.rail_share_parked(util, paid, free))
     } else {
         (f32::INFINITY, f32::NEG_INFINITY, 0.0)
     };
@@ -288,7 +285,7 @@ impl DemandApi {
             let (i, j) = (self.z.cell_zone[o] as usize, self.z.cell_zone[d] as usize);
             let dm = h[6] as f32;
             let drive = p.drive_min_f(dm, p.drive_factor(i, j), p.place_min_per_km(zone_density(&self.z, i)), p.place_min_per_km(zone_density(&self.z, j)));
-            let park = park_at(&self.z, p, j);
+            let park = p.park_mean(&self.z, j);
             let pw = walk_share(self, i, j);
             h[7] = dm as f64;
             h[8] = pw as f64;
@@ -519,7 +516,7 @@ mod tests {
                         }
                         let dv = (gr.col[j] * sz.jobs[v] as f64 / z.jobs[j]) as f32;
                         let f = gr.ftab[(gr.base(z, i) + gr.key(z, j)) as usize] * gr.k(z, i, j);
-                        let x = ou * f * dv * (1.0 - pc.pw) / (1.0 + fast_exp(-pc.util));
+                        let x = ou * f * dv * (1.0 - pc.pw) * pc.r;
                         rail += x as f64;
                         for &(ka, kt, w) in &pc.pairs {
                             od[sz.acc_st[ka] as usize * s + sz.acc_st[kt] as usize] += (x * w / pc.ssum) as f64;

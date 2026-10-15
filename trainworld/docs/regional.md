@@ -59,7 +59,8 @@ Generate **total** all-mode trips, then let the player's network earn rail's sha
 minute, at 3 perceived minutes a dollar [T-378].
 
 - *Car*: 15 minutes plus 1.25 times the great-circle distance at 85 km/h, plus 15 cents a road km
-  and the destination's parking, both split over two occupants; no tolls (T-270). Only within a
+  and the destination's parking (the local rule before T-380, baked into the market pack's
+  `site_park` until T-440), both split over two occupants; no tolls (T-270). Only within a
   landmass.
 - *Plane*: between places whose centres are at least 250 km apart (the far pairs) and that both
   have airports. Door to door: the drive to an airport at each end (the car's drive time,
@@ -108,7 +109,7 @@ loads the lines, so they add up to its entries and exits.
 The regional layer rides to stations as the local layer does ([demand.md](demand.md) 4.3, T-371),
 through the same `kernel::access_options` [T-373]: from each 2 km zone of the market's sites
 (their homes and jobs, as a local zone's, give the drive's speeds and the parking), the cheapest
-station of each of the 6 cheapest lines within 15 km, at `p_ride` 10 + 1.33 x the drive + at the
+station of each of the 6 cheapest lines within 15 km, at `p_ride` 15 + 1.33 x the drive + at the
 station a cost that depends on the end:
 
 - **Commutes between zones**: at the home end, the cheaper of parking at the station and a

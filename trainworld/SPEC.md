@@ -104,7 +104,12 @@ lines; an edit re-solves only the clusters it touched, the others keep their fig
   census 500 m mesh jobs scaled to the census's workers by municipality of work, a curve fitted on
   the census's municipality flows, the census's at-home workers plus a telework share, KSJ school
   points, and place names in romaji (OSM's, else made from the kana reading or a kanji reading
-  dictionary), on UTC+9 [T-420, T-426, research/japan.md].
+  dictionary), on UTC+9 [T-420, T-426, research/japan.md]; **Osaka** (Keihanshin: Osaka, Kyoto,
+  Hyogo and Nara prefectures whole, 18.2M people) and **Nagoya** (Chukyo: Aichi, Gifu and Mie
+  whole, 11.3M), with the same inputs and curve [T-431]; **Fukuoka** (the prefecture, 5.1M),
+  **Sapporo** (Ishikari subprefecture and Otaru, 2.5M), **Sendai** (Miyagi, 2.3M) and
+  **Hiroshima** (the prefecture, 2.8M), with the same inputs, each its own fitted curve
+  (Sapporo Tokyo's) and the telework share of Japan outside the three big metros [T-432].
 - **Non-city zones**: Worcester, Windham, New London and Litchfield Counties. Modelled space stays
   between city zones, with no ring round each city, for now (Anita, T-300).
 - **City additions** in the US are paused; a **sampler of other countries' cities** comes next
@@ -158,10 +163,14 @@ The regional layer carries what crosses zones or goes far [T-117, T-276]. Detail
   zones a station serves on one track network [T-174, T-409].
 - **5.2 Access**: the same walks and rides to stations as local demand, so feeder lines and
   transfers carry real loads; nothing bypasses the player's local network.
-- **5.3 Park-and-ride** [T-295, T-371, T-389, T-373]: a commute or everyday trip of 5 km or more
+- **5.3 Park-and-ride** [T-295, T-371, T-389, T-373, T-372]: a commute or everyday trip of 5 km or more
   may ride (car, bus, bike or a lift, one mode) from home to the cheapest station of each nearby
   line within 15 km, at a fixed cost plus the drive plus parking or a drop-off at the station; the
-  walk is a true 6 km/h walk. The regional layer's commutes between zones ride at the home end and
+  walk is a true 6 km/h walk. Fitted on New York (T-372): 53-66% of commuter rail riders ride to
+  their station; a lone station in a small city keeps nearly all its corridor riders without
+  feeder lines, and New York's commuter rail without the subway keeps 29% of the city's rail
+  commutes. The car pays parking by the destination's job density with a free-parking share, and
+  congestion charges in Manhattan and central London (T-380, docs/demand.md 4.3). The regional layer's commutes between zones ride at the home end and
   its inter-region trips at both ends, the far end a drop-off only, through the same
   `access_options`, so a lone station in a new city draws riders from beyond walking reach. A
   station's inspector splits the commuters who live nearby into those who walked and those who

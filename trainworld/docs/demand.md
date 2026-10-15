@@ -452,8 +452,8 @@ usable station helps a little and a slightly better one does not take everyone.
 
 **Walking to a station** (Anita, 2026-10-14, T-371). A true walk at both ends: **6 km/h along a
 path 1.3x the straight line, or round water by a bridge where one is in the way (above; 13 minutes
-a straight km), each minute weighing 1.5** (`w_walk`, a starting value for T-372's fit;
-notes/T-371.md). So a station 500 m away costs 9.8
+a straight km), each minute weighing 1.5** (`w_walk`, fitted on New York in T-372;
+notes/T-372.md). So a station 500 m away costs 9.8
 perceived minutes, 1 km 19.5, 2 km 39. Between walks the logit above applies (a station 500 m
 further gets 14% of the nearer one's riders).
 
@@ -462,18 +462,19 @@ mode, the ride, called driving in the game. It is offered only at the home end o
 least 5 km (`ride_min_km`: shorter, the ride cannot beat driving the whole way), from the home
 zone's home-weighted centre: for a commute, 5 km between its two zones' centres; for an everyday
 trip, its own mean distance between home and activity cells, at the home end both ways (the trip
-out boards there, the trip home leaves the train there). It costs **`p_ride` 10 + 1.33 x the drive
+out boards there, the trip home leaves the train there). It costs **`p_ride` 15 + 1.33 x the drive
 to the station + the cheaper of parking at the station and a drop-off, `d_drop` 10** perceived
 minutes: the drive is the whole-trip drive's rule (below), from the home zone to the station's
-zone, and parking is a destination's (3 to park plus the station zone's job density). In a suburb
-a ride to a station 1 km off costs about 16, 3 km 21, 10 km 30, so past about 1 km it is cheaper
+zone, and parking is a destination's mean over drivers (Parking, above). In a suburb
+a ride to a station 1 km off costs about 21, 3 km 26, 10 km 35, so past about 1 km it is cheaper
 than walking and access flattens out: a long commute's rail cost grows slowly with the distance to
 the station, as Anita's curve does. Which stations: within 15 km straight line (`ride_max_m`), the
 cheapest station of each line, then those of the 6 cheapest lines (`ride_lines`), so a rider
 skips the local stop for the line they want. Homes beyond every walk (3 km) are one subzone per
 6 km square (3 x 3 zones) with rides only, from its home-weighted centre, keeping each zone's
 trip total but taking the most populous zone's distance decay; the work or activity end walks
-only. Car parks are automatic and unlimited. `p_ride` and `d_drop` are starting values for T-372's fit.
+only. Car parks are automatic and unlimited. `p_ride`, `d_drop` and `w_walk` are fitted on the real
+New York network (T-372: about 55-65% of commuter rail riders ride to their station).
 The regional layer's rides (commutes between zones, inter-region trips at both ends) come from the
 same function, `access_options` ([regional.md](regional.md) 5.3).
 
