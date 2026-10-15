@@ -9,7 +9,6 @@
 
 import type { Map as MlMap } from "maplibre-gl";
 import { lngLatToPack, packToLngLat } from "../game/coords";
-import { length, speed } from "../game/format";
 import { describeIssues } from "../game/issues";
 import { selection, tool } from "../game/ui";
 import { edit, world } from "../game/world";
@@ -20,7 +19,7 @@ import type { Level } from "../game/types";
 import { toLocal } from "./geo";
 import { live } from "./live";
 import { strokesFromPreview } from "./network";
-import { curveLabels } from "./tools";
+import { curveLabels, setCurveLabel } from "./tools";
 import type { Overlay } from "./overlay";
 
 /** A PI of a stretch, pack metres. */
@@ -204,19 +203,19 @@ export class EdgeEditor {
     // curve labels: from the preview while dragging (local units), else the stretch's own (a
     // T-079 stretch shows none until it is reshaped: its curves are not the ones listed)
     const pv = this.drag ? this.preview : null;
-    const labels: { at: [number, number]; text: string }[] = !on
+    const labels: { at: [number, number]; radius: number; kmh: number }[] = !on
       ? []
       : pv
-        ? curveLabels(pv.verts).map((c) => ({ at: [c.x, c.y] as [number, number], text: c.text }))
+        ? curveLabels(pv.verts).map((c) => ({ at: [c.x, c.y] as [number, number], radius: c.radius, kmh: c.kmh }))
         : this.shape.legacy
           ? []
           : this.shape.pis
               .filter((c) => c.used > 0 && c.used < 5000)
-              .map((c) => ({ at: this.local({ x: c.mx, y: c.my }), text: `${length(c.used)}, ${speed(c.kmh)}` }));
+              .map((c) => ({ at: this.local({ x: c.mx, y: c.my }), radius: c.used, kmh: c.kmh }));
     labels.forEach((c, i) => {
       const [x, y] = this.overlay.toScreen(...c.at);
       const l = this.el(this.labels, i, "pi-label");
-      l.textContent = c.text;
+      setCurveLabel(l, c.radius, c.kmh);
       l.style.transform = `translate(${Math.round(x + 8)}px, ${Math.round(y + 6)}px)`;
     });
     for (let i = labels.length; i < this.labels.length; i++) this.labels[i].style.display = "none";

@@ -20,7 +20,7 @@ import { toLocal } from "./geo";
 import { live } from "./live";
 import { strokesFromPreview, type Strokes } from "./network";
 import type { Overlay } from "./overlay";
-import { curveLabels } from "./tools";
+import { curveLabels, setCurveLabel } from "./tools";
 
 const HIT_PX = 9;
 /** a press becomes a drag once the pointer has moved this far, px (MapLibre's click tolerance) */
@@ -194,7 +194,7 @@ export class NodeDrag {
       }
       const [x, y] = this.overlay.toScreen(c.x, c.y);
       l.style.display = "";
-      l.textContent = c.text;
+      setCurveLabel(l, c.radius, c.kmh);
       l.style.transform = `translate(${Math.round(x + 8)}px, ${Math.round(y + 6)}px)`;
     });
     for (let i = labels.length; i < this.labels.length; i++) this.labels[i].style.display = "none";

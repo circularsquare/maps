@@ -41,6 +41,7 @@ import { EdgeEditor } from "./map/edgeEdit";
 import { BlueprintBox } from "./map/blueprintBox";
 import { bpPicked, clearBpPicked } from "./game/blueprintPick";
 import { NodeDrag } from "./map/nodeDrag";
+import { EndMarkers } from "./map/endMarkers";
 import { CapacityMarkers } from "./map/capacityMarkers";
 import { startTrackHover } from "./map/trackHover";
 import { perfOff, perfTry } from "./perfFlags";
@@ -198,6 +199,8 @@ effect(() => {
 const nodeDrag = new NodeDrag(map, overlay, client);
 nodeDrag.obscuredAt = (x, y) => !!demandHover?.(x, y);
 live.nodeDrag = nodeDrag;
+// Markers on loose ends (track and station tools) and on draggable blueprint points (T-416).
+new EndMarkers(map, overlay);
 
 // Selection and display settings change what the overlay draws.
 effect(() => {

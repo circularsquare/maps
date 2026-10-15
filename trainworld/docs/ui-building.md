@@ -39,7 +39,14 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
 
 - Clicks place corners at the level selected (rules in [track-and-service.md](track-and-service.md)
   6.1). While drawing, the clicked points show as squares and each curve its radius and speed
-  limit. **The tag by the cursor** [T-411] has two lines: the stretch's length, average cost
+  limit, on the speed colour at half strength [T-417]; the same labels show while a selected
+  blueprint stretch is reshaped or a node dragged (`setCurveLabel`, `map/tools.ts`).
+- **Loose ends** [T-416; `map/endMarkers.ts`]: while the track or station tool is on, a small white
+  circle with a dark border marks every loose end (a node with one piece of track and no
+  station), blueprint or built. A track click on one starts or continues the route from it; the
+  station tool's pointer snaps to it, so the station goes at the line's end. The markers take no
+  presses, and show from zoom 9.
+- **The tag by the cursor** [T-411] has two lines: the stretch's length, average cost
   multiplier, price and tightest curve ("1.5 km, cost 1.33x, $25.5M, 401 m curve"; no curve, no
   radius), then the level being placed and the route's lowest speed limit ("Level +2, max speed
   67 km/h"). The multiplier sits on yellow above 1x, deeper up to 2.5x, plain at 1x and below; the
@@ -137,6 +144,8 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
 - With the select tool, a selected blueprint stretch shows its corners as squares (not a
   crossover's, which keeps its shape [T-338]); any blueprint track end, junction or station can be
   dragged, except a node at a crossover's end. The cursor is a move cursor over a node that can.
+  With the select tool every blueprint track end, corner and junction without a station shows the
+  same white square as a corner [T-416; `map/endMarkers.ts`], so draggable points can be seen.
   A drag previews the new shape with each curve's radius and speed (or why not); letting go is one
   undoable edit, Escape puts it back.
 - **The track inspector** lists the corners with each curve's speed, a radius stepper (100 to 1,500

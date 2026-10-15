@@ -796,7 +796,7 @@ export class Tools {
       if (pv) {
         for (const c of curveLabels(pv.verts)) {
           const m = this.el(k++, "pi-label");
-          m.textContent = c.text;
+          setCurveLabel(m, c.radius, c.kmh);
           put(m, c.x, c.y, 8, 6);
         }
       }
@@ -875,8 +875,8 @@ function sameStops(a: readonly number[], b: readonly number[]) {
  * consecutive vertices and gets one label, at its middle one. Curves too gentle to slow a train
  * are not labelled.
  */
-export function curveLabels(verts: Float64Array): { x: number; y: number; text: string }[] {
-  const out: { x: number; y: number; text: string }[] = [];
+export function curveLabels(verts: Float64Array): CurveLabel[] {
+  const out: CurveLabel[] = [];
   const nv = verts.length / 4;
   for (let i = 1; i < nv - 1; ) {
     const r = verts[i * 4 + 2];
@@ -884,11 +884,28 @@ export function curveLabels(verts: Float64Array): { x: number; y: number; text: 
     while (j < nv - 1 && r > 0 && Math.abs(verts[j * 4 + 2] - r) < 0.5) j++;
     if (r > 0 && r < 5000) {
       const m = (i + j - 1) >> 1;
-      out.push({ x: verts[m * 4], y: verts[m * 4 + 1], text: `${length(r)}, ${speed(verts[i * 4 + 3])}` });
+      out.push({ x: verts[m * 4], y: verts[m * 4 + 1], radius: r, kmh: verts[i * 4 + 3] });
     }
     i = j;
   }
   return out;
+}
+
+export interface CurveLabel {
+  x: number;
+  y: number;
+  /** m, and the curve's speed limit in km/h */
+  radius: number;
+  kmh: number;
+}
+
+/** A curve label's content (T-417): the radius and speed limit on the speed colour, as the track
+ * tool's tag colours the speed. Set only when it changes, since the labels are placed every frame. */
+export function setCurveLabel(el: HTMLElement, radius: number, kmh: number) {
+  const key = `${radius}:${kmh}`;
+  if (el.dataset.curve === key && el.firstChild) return;
+  el.dataset.curve = key;
+  el.replaceChildren(chip(`${length(radius)}, ${speed(kmh)}`, speedColour(kmh)));
 }
 
 /**

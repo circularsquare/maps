@@ -398,6 +398,7 @@ table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
 .tool-marks { position: absolute; inset: 0; z-index: 2; pointer-events: none; overflow: hidden; }
 .tool-marks > div { position: absolute; left: 0; top: 0; white-space: nowrap; }
 .pi-mark { width: 9px; height: 9px; margin: -5px 0 0 -5px; background: #fff; border: 2px solid var(--net-ink); z-index: 1; }
+.end-mark { width: 9px; height: 9px; margin: -5px 0 0 -5px; background: #fff; border: 2px solid var(--net-ink); border-radius: 50%; z-index: 1; }
 .pi-label, .tool-tag { font-size: 12px; color: var(--net-ink); background: color-mix(in srgb, var(--map-land) 88%, transparent);
                        padding: 0 4px; border: 1px solid var(--rule); }
 .tool-tag { max-width: 340px; white-space: normal !important; }

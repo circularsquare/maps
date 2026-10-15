@@ -1,5 +1,9 @@
 # Archive
 
+- T-416 [P2] Markers at loose ends and draggable points. Done 2026-10-15: round markers on every loose end with the track or station tool, square ones on draggable blueprint points with the select tool (`map/endMarkers.ts`); the existing node snap does the rest.
+
+- T-417 [P2] Colours on the labels that stay on segments. Done 2026-10-15: curve labels (radius, speed) sit on the speed colour at half strength, in drawing, reshaping and node drag. The game has no per-segment length label.
+
 - T-124 [P3] Reuse the periods an edit did not touch. Done 2026-10-15: a one-level train-count edit on the real save, final 22 s to 11.5 s (3 workers), 30 s to 12.5 s (2, peaks now on separate workers); identical hashes; moving periods not needed. notes/T-124.md.
 
 - T-413 [P2] Track level colours. Done 2026-10-15: level 0 is green #4caf50 (chosen over grey, a paler #7cc47f and a darker #2e8b57; screenshots artifacts/trainworld/T-413-*.png); the Settings key follows.
