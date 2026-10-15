@@ -121,6 +121,32 @@ Tier 0 with two INSEE upgrades; notes/T-289.md has the tables.
   more than France as a whole; not modelled.
 - **Schools**: tier 0's OSM sites; the ministry's files with pupils are T-385.
 
+## China (Shanghai, `pipeline/china.py`, T-291, 2026-10-15)
+
+Tier 0 with district totals; notes/T-291.md has the tables.
+
+- **Districts**: OSM admin_level 6 relations, clipped to land by the OSM coastline (Chinese district
+  lines run far out to sea). Relations that do not assemble are rebuilt from their admin_level 8
+  units or as the province's remainder. geoBoundaries' China ADM2 is too coarse (1:4M, 2017).
+- **Population**: the 2020 census by district, GHSL inside each. GHSL has 24% too many people in
+  Shanghai overall and 23-34% too many in the central districts and Chongming: tier 0 needs
+  district totals in China as in London.
+- **Jobs**: the 2023 economic census, persons employed in legal-person units by district (each
+  province's bulletin no. 1 has the table), the proxy inside each. Individual businesses are left
+  out of that table. The proxy alone gives the seven central districts 19% of jobs against 36%,
+  the same old-core shortfall as London's, and overdraws the industrial outer districts (Baoshan,
+  Jinshan nearly double).
+- **Curve**: power 1.4, length fitted to the published mean commute (10.2 km, the city's 2024-2025
+  transport survey) taken as straight-line: CAUPD-Baidu's yearly commute report (location data,
+  about 45 cities) gives 9.8 km for Shanghai. That report is the general source for other Chinese
+  cities.
+- **Work from home**: 0.
+- **Airports**: CAAC's yearly airport bulletin (passengers / 2) in place of Wikidata.
+- **Names**: OSM `name:en`, then `name:zh-Latn-pinyin`, for places (two thirds of Shanghai's have
+  one); the Chinese name stays a search alias.
+- **OSM is thinner**: 10 airport terminals, one hospital with beds, 18k job points and 22k job areas
+  for 25M people, 551 medical sites; medical and everyday destinations are likely short; not checked.
+
 ## Homes (docs/demand.md 4.1)
 
 - **People in institutions are not homes** (T-234). The US packs take the 2020 census's

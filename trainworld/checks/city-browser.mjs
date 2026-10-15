@@ -35,6 +35,15 @@ const CITIES = {
       ['Hotel de Ville', 2.3522, 48.8573], ['Saint-Paul', 2.3610, 48.8551], ['Bastille', 2.3691, 48.8531],
       ['Gare de Lyon', 2.3733, 48.8448], ['Reuilly Diderot', 2.3872, 48.8472], ['Nation', 2.3959, 48.8484]],
   },
+  sha: {
+    // T-291: Line 2's stations at their OSM station nodes; the water pair across the Huangpu at the Bund
+    task: 'T-291', name: 'Shanghai', centre: [121.4737, 31.2304], water: [[121.4855, 31.2380], [121.5050, 31.2400]],
+    lineName: 'Line 2 test', colour: '#8cc220', view: [121.48, 31.232],
+    line: [['Zhongshan Park', 121.4116, 31.2201], ['Jiangsu Road', 121.4263, 31.2215], ["Jing'an Temple", 121.4421, 31.2253],
+      ['West Nanjing Road', 121.4560, 31.2318], ["People's Square", 121.4711, 31.2342], ['East Nanjing Road', 121.4792, 31.2391],
+      ['Lujiazui', 121.4981, 31.2401], ['Century Avenue', 121.5228, 31.2310], ['Science and Technology Museum', 121.5387, 31.2219],
+      ['Century Park', 121.5467, 31.2108], ['Longyang Road', 121.5535, 31.2052]],
+  },
 };
 
 async function playwright() {

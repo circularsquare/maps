@@ -193,7 +193,7 @@ table's new column, notes/T-###.md.
 - INSEE commuting mode 2022 ("no travel" 4%): https://www.insee.fr/fr/statistiques/8581610
 - French school locations: https://data.gouv.fr/en/datasets/adresse-et-geolocalisation-des-etablissements-denseignement-du-premier-et-second-degres-1
 - Shanghai 2020 census bulletins: https://tjj.sh.gov.cn/tjnj/2020rktjnj/fu02.pdf
-- Shanghai mean commute 10.2 km: https://www.yicai.com/news/102978803.html
+- Shanghai mean commute 10.2 km (7th comprehensive transport survey): https://www.thepaper.cn/newsDetail_forward_33619060 ; CAUPD-Baidu's 2025 report gives 9.8 km for 2024: https://www.yicai.com/news/102978803.html (T-291)
 - CAAC 2024 airports (press): https://m.jiemian.com/article/12217623.html
 - India B-28: https://censusindia.gov.in/nada/index.php/catalog/13954
 - Mumbai ward census tables: https://data.opencity.in/dataset/mumbai-ward-wise-census-data

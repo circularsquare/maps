@@ -1,5 +1,6 @@
 # Archive
 
+- T-291 [P2] Shanghai. Done 2026-10-15: 16 districts tier 0, population and jobs scaled to the 2020 census and 2023 economic census by district, curve d^-1.4 exp(-d/18.2 km) to the 10.2 km mean; Line 2 test 1.19M riders; outside the market. notes/T-291.md.
 - T-289 [P2] Paris. Done 2026-10-15: Ile-de-France tier 0 with INSEE 2022 jobs by commune (5.99M) and a curve fitted on its commune flows, d^-1.3 exp(-d/20 km); Ligne 1 test 641k riders; outside the market. notes/T-289.md.
 - T-364 [P3] One browser check for tier 0 cities. Done 2026-10-15: `checks/city-browser.mjs <id>` with a row per city (London, Paris) replaces `t288-browser.mjs`. notes/T-289.md.
 - T-363 [P2] Read a region's OSM once. Done 2026-10-15: `osm_features.py` caches an extract's points and areas (England 6 minutes); tier0, canada and places.py read it; London rebuilt from it gives a byte-identical lon.bin. notes/T-363.md.

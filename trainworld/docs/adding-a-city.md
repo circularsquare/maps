@@ -42,6 +42,8 @@ Logs, check outputs and images go in `../artifacts/trainworld/` (from the maps r
   picture of the chosen units, checked for holes, islands and gaps against the neighbours.
 - **Reference figures with sources**, gathered before the build, never from memory: population
   (census), jobs in the core and in all, the commute mode share, one real line's daily riders.
+  Look for population and jobs by district (for the `population` and `jobs` hooks) before the
+  first build too: Shanghai found its jobs table late and built twice (T-291).
 - Take the task line in TASKS.md (`taking, <date>`), start `notes/T-###.md`.
 
 ## 2. Back up
@@ -340,6 +342,14 @@ curve fit (`notes/t289_curve.py`, which also makes the signals cache, so the bui
 reuses it). Communes and their legal populations come from geo.api.gouv.fr in one request a
 département. Take water test places from the water cache's own polygons, not from memory (three
 of five guessed points missed).
+
+Shanghai (`sha`, T-291, `pipeline/china.py`) took about 30 minutes: the extract read in seconds,
+the build 7 minutes, `routes.py` 1. Districts come from the extract's OSM admin_level 6
+relations clipped to land by the coastline; relations that GDAL cannot assemble (Jing'an,
+Baoshan) are rebuilt from admin_level 8 units or as the province's remainder. Population and
+jobs are scaled to district tables from the city statistics bureau's census bulletins (the
+economic census's bulletin no. 1 has employment by district): look for both before the first
+build. Places show `name:en` or pinyin where OSM has it (`"latin_names"`).
 
 What was hard, for the next country:
 

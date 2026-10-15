@@ -83,11 +83,15 @@ that equals a solve's to the bit, so panning never re-solves [T-325].
   population by LSOA, GIAS schools, a curve fitted on the 2011 census flows), on UTC+0, outside
   the market [T-288, T-360]; **Paris** (Ile-de-France, its 8 départements: 12.5M people), tier 0
   with INSEE's jobs by commune of work and a curve fitted on its 2022 commune flows, population
-  scaled to each commune's legal population, on UTC+1, outside the market [T-289].
+  scaled to each commune's legal population, on UTC+1, outside the market [T-289]; **Shanghai**
+  (the municipality's 16 districts, Chongming included: 24.9M people), tier 0 with population
+  and jobs scaled to each district's census totals (2020 population census, 2023 economic census)
+  and the curve's length fitted to the published mean commute, place names in Latin script where
+  OSM has them, on UTC+8, outside the market [T-291].
 - **Non-city zones**: Worcester, Windham, New London and Litchfield Counties. Modelled space stays
   between city zones, with no ring round each city, for now (Anita, T-300).
 - **City additions** in the US are paused; a **sampler of other countries' cities** comes next
-  (London and Paris built; Shanghai, Mumbai, Berlin next), each a low-fidelity first pass from general sources
+  (London, Paris and Shanghai built; Mumbai, Berlin next), each a low-fidelity first pass from general sources
   (`research/world-sampler.md`). **Cells** are H3 resolution 9 (about 0.1 km²).
 
 ## 4. Demand: local trips

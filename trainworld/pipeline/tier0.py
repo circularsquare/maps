@@ -47,7 +47,8 @@ admin_totals (callable boundary -> [(name, shapely geometry, population)], optio
 working at home, optional), jobs (callable (city, boundary, signals, proxy weight per cell) ->
 (jobs per signal cell, source name), optional: a country's workplace counts by small area, spread
 inside each area by the proxy; jobs_url), population (callable (city, boundary, signals) ->
-(people per signal cell, source name), optional: census counts by small area), od_share ({OurAirports ident: share}, optional), curve or
+(people per signal cell, source name), optional: census counts by small area), od_share ({OurAirports ident: share}, optional), boardings ({OurAirports
+ident: (boardings a year, "year, source")}, optional: a national figure in place of Wikidata's), curve or
 decay_pow/decay_km, region_name (optional), epoch (GHSL epoch, default 2020).
 """
 import os
@@ -741,7 +742,8 @@ def airports(city, boundary):
     trips = np.zeros(len(cells), "<f4")
     audit = []
     for ap in aps:
-        boardings, when = air.wikidata_boardings(ap["iata"]) if ap["iata"] else (None, None)
+        given = cfg.get("boardings", {}).get(ap["ident"])  # a national figure in place of Wikidata's (T-291)
+        boardings, when = given if given else air.wikidata_boardings(ap["iata"]) if ap["iata"] else (None, None)
         if not boardings:
             audit.append(ap | dict(skipped="no Wikidata patronage"))
             continue
@@ -757,7 +759,7 @@ def airports(city, boundary):
             if c is not None:
                 trips[c] += daily * a / m2
         audit.append(ap | dict(boardings=boardings, when=when, od_share=od, pack_share=share, daily_outings=daily))
-        print(f"  {ap['ident']} {ap['name']}: {boardings:,.0f} boardings (Wikidata {when}), O&D {od:.2f}, pack {share:.2f}, "
+        print(f"  {ap['ident']} {ap['name']}: {boardings:,.0f} boardings ({'config' if given else 'Wikidata'} {when}), O&D {od:.2f}, pack {share:.2f}, "
               f"{daily:,.0f} outings a day", flush=True)
     buf = education.replace_cell_arrays(header, buf, {"airport_trips": trips})
     header["airport"] = dict(

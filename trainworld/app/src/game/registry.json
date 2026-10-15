@@ -271,6 +271,22 @@
       "localTrips": 28035227.0
     },
     {
+      "id": "sha",
+      "name": "Shanghai",
+      "origin": {
+        "lon": 121.4737,
+        "lat": 31.2304
+      },
+      "center": [
+        121.4737,
+        31.2304
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "localTrips": 60497535.0
+    },
+    {
       "id": "wor",
       "name": "Worcester County",
       "kind": "zone",

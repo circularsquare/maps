@@ -957,7 +957,7 @@ mod tests {
     #[ignore]
     fn every_pack_everyday() {
         let root = concat!(env!("CARGO_MANIFEST_DIR"), "/../data/packs");
-        for city in ["nyc", "phl", "bos", "wdc", "bal", "pvd", "nhv", "hfd", "spf", "tor", "lon", "par"] {
+        for city in ["nyc", "phl", "bos", "wdc", "bal", "pvd", "nhv", "hfd", "spf", "tor", "lon", "par", "sha"] {
             let (h, b) = pack::load_raw(&format!("{root}/{city}.json")).unwrap();
             let t = now_ms();
             let a = EverydayApi::new(&h, &b).unwrap();

@@ -191,6 +191,12 @@ WATER_TESTS = {
         False: {"Notre-Dame": (2.3499, 48.8530), "Eiffel Tower": (2.2945, 48.8584), "Place de la Concorde": (2.3212, 48.8656),
                 "Gare du Nord": (2.3553, 48.8809), "Chateau de Versailles": (2.1204, 48.8049), "Roissy CDG terminal 2": (2.5700, 49.0040)},
     },
+    "sha": {  # T-291: OSM water (Geofabrik Shanghai), points checked on the mask
+        True: {"Huangpu off the Bund": (121.4889, 31.2384), "Dianshan Lake": (120.9684, 31.1328), "Dishui Lake": (121.9434, 30.8999),
+               "Yangtze, Baoshan to Changxing": (121.55, 31.43), "Yangtze, Changxing to Chongming": (121.60, 31.52)},
+        False: {"People's Square": (121.4737, 31.2304), "Lujiazui": (121.5050, 31.2400), "Pudong airport": (121.8080, 31.1500),
+                "Hongqiao station": (121.3200, 31.1940), "Chongming, Chengqiao": (121.3990, 31.6250), "Hengsha island": (121.84, 31.33)},
+    },
 }
 
 

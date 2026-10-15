@@ -271,6 +271,29 @@ CITIES = {
         "decay_pow": 1.3, "decay_km": 20.0,
         "region_name": "Ile-de-France",
     },
+    "sha": {
+        "tier0": True,
+        "origin": (121.4737, 31.2304),  # People's Square
+        "water": {"cell_m": 25.0, "min_width_px": 2},
+        "boundary_notes": "notes/T-291.md",
+        # the 16 districts, whole, Chongming included; their 2020 census totals in china.SHANGHAI
+        "boundary_file": lambda: __import__("china").boundary_file("sha"),
+        "population": lambda city, boundary, sig: __import__("china").census_population(city, boundary, sig),
+        "jobs": lambda city, boundary, sig, w: __import__("china").census_jobs(city, boundary, sig, w),
+        "jobs_url": "https://tjj.sh.gov.cn/cmsres/b3/b36d6d16841e4ac0a64a2e6664c69833/85fdf28606c6847035976a586d8d028d.pdf",
+        # the Shanghai extract only: Jiangsu and Zhejiang lie outside the outline, dead space (T-291)
+        "water_source": lambda bbox: __import__("osm_water").source(["asia/china/shanghai"])(bbox),
+        "extract": "asia/china/shanghai",
+        "iso2": "CN",
+        # mean commute 10.2 km a trip, Shanghai's 7th comprehensive transport survey (2024-2025),
+        # taken as straight-line: CAUPD-Baidu's 2024 home-work figure is 9.8 km (notes/T-291.md)
+        "curve": {"mean_km": 10.2},
+        "od_share": {"ZSPD": 0.85},  # Pudong's transfer passengers, judgement (notes/T-291.md)
+        # CAAC 2024 airport bulletin via the press (notes/T-291.md): passengers / 2
+        "boardings": {"ZSPD": (76789000 / 2, "2024, CAAC via press"), "ZSSS": (47972000 / 2, "2024, CAAC via press")},
+        "region_name": "Shanghai",
+        "latin_names": True,  # places.py: name:en, then name:zh-Latn-pinyin, then name (T-291)
+    },
     # T-276: non-city zones (docs/zones.md 2): one county each, the counties that touch two city
     # zones. Same sources and cells as a city; `kind` "zone" in the registry.
     "wor": {

@@ -44,6 +44,12 @@ VIEWS = {
         ("Marne and Seine meeting, Charenton", 2.43, 48.81, 6.0),
         ("Saint-Quentin-en-Yvelines", 2.03, 48.79, 5.0),
     ],
+    "sha": [  # T-291
+        ("Central Shanghai, the Huangpu and Suzhou Creek", 121.48, 31.235, 6.0),
+        ("Yangtze mouth: Baoshan, Changxing, Hengsha", 121.70, 31.40, 30.0),
+        ("Dianshan Lake, Qingpu", 120.98, 31.12, 12.0),
+        ("Pudong's coast and Dishui Lake", 121.90, 30.92, 16.0),
+    ],
 }
 
 

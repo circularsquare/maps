@@ -42,6 +42,7 @@ STATUS = "https://overpass-api.de/api/status"
 KINDS = ["city", "town", "borough", "suburb", "quarter", "village", "neighbourhood", "hamlet"]
 OTHER_NAMES = ["alt_name", "short_name", "old_name", "official_name", "name:en"]
 DEDUP_M = 2000.0
+LATIN_NAMES = ["name:en", "name:zh-Latn-pinyin", "name:zh_pinyin"]  # a city's "latin_names" (T-291)
 
 
 def query(bbox):
@@ -113,10 +114,13 @@ def build(city):
     foot = make_valid(shape(fc["features"][0]["geometry"]))
     w, s, e, n = foot.bounds
     bbox = (round(s, 4), round(w, 4), round(n, 4), round(e, 4))
+    import build_city
+    cfg = build_city.CITIES.get(city, {})
     extract = None
     if not os.path.exists(os.path.join(RAW, f"osm_places_{city}.json")):
-        import build_city
-        extract = build_city.CITIES.get(city, {}).get("extract")
+        extract = cfg.get("extract")
+    latin = cfg.get("latin_names", False)
+    n_latin = 0
     data = from_extract(extract, bbox) if extract else fetch(city, bbox)
     source = f"OpenStreetMap contributors, ODbL (Geofabrik {extract})" if extract else "OpenStreetMap contributors, ODbL (Overpass)"
     rows = []
@@ -139,6 +143,12 @@ def build(city):
         if m:
             pop = int(m.group(1).replace(",", ""))
         others = []
+        if latin:  # T-291: a Latin name to show, the local one kept for search
+            shown = next((tags[k].strip() for k in LATIN_NAMES if (tags.get(k) or "").strip()), "")
+            if shown and shown != name:
+                others.append(name)
+                name = shown
+                n_latin += 1
         for k in OTHER_NAMES:
             for v in (tags.get(k) or "").split(";"):
                 v = v.strip()
@@ -184,6 +194,9 @@ def build(city):
         counts[r["kind"]] += 1
     print(f"{city}: {len(places)} places ({len(rows)} before merging), {os.path.getsize(path) // 1024} KB: "
           + ", ".join(f"{k} {v}" for k, v in counts.items() if v), flush=True)
+    if latin:
+        shown = sum(1 for r in kept if all(ord(c) < 0x2E80 for c in r["name"]))
+        print(f"{city}: Latin names on {n_latin} of {len(rows)} OSM places; {shown} of {len(kept)} kept places show a Latin name", flush=True)
 
 
 def main():

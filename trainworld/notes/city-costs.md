@@ -11,3 +11,4 @@ tokens (2026-10-14, coarse: the meter shows whole percents).
 | London | T-288 stage a | Opus | 92 min | 5.25M | an hour of OSM reads; 29% re-caching after idle waits | first tier 0 city abroad |
 | London | T-360 stage b | Opus | 74 min | 3.53M | six wakes after idle waits, 36% | England's official inputs; found the zones_of bug |
 | Paris | T-289 | Opus | 32 min | about 2.8M | one wake after a 10-minute foreground browser check (261k) | tier 0 plus INSEE jobs and curve; first city after T-363 |
+| Shanghai | T-291 | Opus | 31 min | about 3.5M | built twice (district jobs found after the first build); one 276k wake | tier 0 plus census population and economic census jobs by district |
