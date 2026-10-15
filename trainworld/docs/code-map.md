@@ -181,6 +181,9 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
 - `routes.py <ids>` adds routed walking and driving to finished packs (OSM from Geofabrik, cached
   in `data/raw/osm/`; the sim's `pack_walk` bin; 1-8 minutes a pack; rerun after anything that
   changes a pack's zones, `--check` lists stale ones; T-275).
+- `merge_cells.py <ids> | --all` is every pack's last step (T-044): sparse res-9 cells into their
+  res-8 parent within a zone, the res-9 pack kept in `data/work/res9/`; `--undo` puts it back
+  before any step that rewrites a pack (enrichments, routes, `intercity.py`), `--stats` only counts.
 - `osm_water.py` is the water source for cities outside the US (OSM coastline sea plus Geofabrik
   inland water, T-041; `source(extracts)` for a config's `water_source`, `mask <id>` for a
   water-only pack in `data/work/osm_water/`; docs/adding-a-city.md).
@@ -217,7 +220,9 @@ writes every entry's `box` through `zone_boxes.py`, which also runs alone, T-302
 rewrites every Northeast pack's gravity factors and the commute list, then `market_zones.py`),
 `market_zones.py [ids]` (each zone's market pack against the world field, then `market_pack`'s
 registry rows; seconds a zone, T-377),
-`zones.py --trips`, and last `routes.py <ids>` for any pack whose zones changed (T-275).
+`zones.py --trips`, `routes.py <ids>` for any pack whose zones changed (T-275), and last
+`merge_cells.py --all` (T-044; the chain runs on res-9 packs, so `merge_cells.py <ids> --undo`
+first), then `market_zones.py` for the zones outside the Northeast.
 
 Vite serves and copies all registered packs. Zone packs stay separate; demand workers share a
 regional pool. Registry market places keep NYC0/PHL1/Mercer2 (no sites since T-276)/BOS3/WDC4 and

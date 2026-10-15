@@ -55,7 +55,9 @@ def main(city, out):
         cb = fig.colorbar(sc, ax=ax, shrink=0.6, pad=0.01)
         cb.ax.tick_params(labelsize=8)
     axes[0].set_ylabel("km north of pack origin", fontsize=9, color="#666666")
-    fig.suptitle(f"{city} pack: {header['cells']:,} H3 res-{header['h3_res']} cells", fontsize=12, color="#333333")
+    res = header["h3_res"]
+    cells = f"H3 res-{res} cells" if "merged" not in header else f"H3 res-{res} and res-{res - 1} cells (T-044)"
+    fig.suptitle(f"{city} pack: {header['cells']:,} {cells}", fontsize=12, color="#333333")
     fig.tight_layout()
     os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
     fig.savefig(out, facecolor="white")

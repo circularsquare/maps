@@ -120,6 +120,15 @@ minutes to download and read a new extract; it needs the sim crate to compile (`
 factor (1.3-1.5 in the US packs) and the snapping distance (a median cell over about 300 m from a road means the
 region's OSM roads are thin).
 
+Last, merge the sparse cells (T-044, docs/demand.md 4.1): `venv\Scripts\python.exe
+trainworld\pipeline\merge_cells.py wor`, seconds. It keeps the res-9 pack in
+`data/work/res9/wor.json/.bin` and writes the merged one to `data/packs`; it prints the cells
+before and after (a quarter fewer in a dense Asian or European metro, half in a US one, 70% in a
+rural pack). Every other step reads and writes the res-9 pack: to rerun one on a merged pack,
+`merge_cells.py wor --undo` first, then the step, then `merge_cells.py wor` again (it refuses a
+merged pack some step has changed since). `merge_cells.py --all` remerges every registered pack.
+The market's zone file (`market_zones.py`, section 7) is made after the merge.
+
 Time: about 1 minute for Worcester (1M people) with everything cached; T-134's Washington took
 107 s; Toronto 10 minutes for the cells plus 22 for the rest (the 1 GB OSM extract read twice).
 US downloads are per county (TIGER PL block zips, AREAWATER zips) plus one NCES query per city;
@@ -309,7 +318,7 @@ the region's Geofabrik extract, read once per extract into `data/raw/osm/<extrac
 (England: 13 minutes, 115 MB; a US state 1-3 minutes). In a tier 0 config:
 `"water_source": osm_water.source(["europe/united-kingdom/england"])`; the extracts must cover the
 whole box, and must not overlap: check Geofabrik's region page first, since a region can contain
-another (Brandenburg includes Berlin, T-290), and two overlapping extracts count every feature twice. To read an extract ahead, or to see a city's mask before its pack exists:
+another (Brandenburg includes Berlin, T-290), and two overlapping extracts count every feature twice. Neighbouring regions' polygons also overlap in a strip along their border (Japan's Kansai and Chubu, T-431): a config's `extract` may be a list, and `osm_features.read` then keeps an object found in two once; for water the overlap does no harm. To read an extract ahead, or to see a city's mask before its pack exists:
 
     venv\Scripts\python.exe trainworld\pipeline\osm_water.py read europe/france/ile-de-france
     venv\Scripts\python.exe trainworld\pipeline\osm_water.py mask par --extracts europe/france/ile-de-france --bbox w,s,e,n --origin lon,lat --png artifacts\trainworld\T-###-par-water.png
@@ -390,7 +399,12 @@ Rebuilt with Ibaraki (T-426): the extract's features and water 6 minutes, the bu
 tyo --extracts asia/japan/kanto` 14 (Japan is not in `routes.EXTRACTS`). Place names need fugashi
 and unidic-lite in the venv (`japan.kanji_romaji`). A rebuilt pack's caches (`data/work/<id>.*`,
 the `osm_*_<id>` files under `data/raw/`, `<id>_prefectures.geojson`) must go first, or the old
-extent's are reused.
+extent's are reused. Fukuoka, Sapporo, Sendai and Hiroshima (T-432) were a batch of config rows:
+a Hokkaido pack names subprefectures (`japan.SUBPREFECTURES`) or one municipality (`"01-01203"`);
+each regional metro fits its own curve (4-12 minutes, before the build); builds 2-5 minutes,
+`routes.py` 1-3. KSJ's server sometimes stalls a Python download for good while curl gets the
+same file in seconds: if `japan.py fetch` prints nothing for 10 minutes, fetch the N03 zip by hand
+into `data/raw/tier0/japan/n03/`.
 
 What was hard, for the next country:
 

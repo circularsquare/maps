@@ -227,6 +227,47 @@ WATER_TESTS = {
                 "Potsdam Hauptbahnhof": (13.0667, 52.3917), "BER terminal 1": (13.5104, 52.3644),
                 "Frankfurt (Oder) station": (14.5465, 52.3365)},
     },
+    "osa": {  # T-431: OSM water (Geofabrik Kansai and Chubu), river and lake points taken from the water cache
+        True: {"Osaka Bay off Sakai": (135.30, 34.55), "Lake Biwa (south basin)": (135.88944, 35.02554),
+               "Lake Biwa (north basin)": (136.14479, 35.34479), "Yodo below Juso": (135.46302, 34.70039),
+               "Yodo at Hirakata": (135.62163, 34.80986), "Yamato at Sakai": (135.44846, 34.60778),
+               "Muko river": (135.37409, 34.76692)},
+        False: {"Osaka Station": (135.4959, 34.7025), "Kyoto Station": (135.7588, 34.9858),
+                "Sannomiya Station": (135.1955, 34.6946), "Nara Station": (135.8197, 34.6809),
+                "Kansai airport terminal 1": (135.2440, 34.4320), "Himeji Station": (134.6913, 34.8270)},
+    },
+    "ngo": {  # T-431: OSM water (Geofabrik Chubu and Kansai), river points taken from the water cache
+        True: {"Ise Bay": (136.75, 34.85), "Kiso at Ichinomiya": (136.72987, 35.30114),
+               "Kiso mouth": (136.74242, 35.03825), "Ibi river": (136.71409, 35.10212),
+               "Nagara at Gifu": (136.80578, 35.44391), "Shonai river": (136.83735, 35.15626)},
+        False: {"Nagoya Station": (136.8815, 35.1709), "Gifu Station": (136.7581, 35.4093),
+                "Tsu Station": (136.5084, 34.7340), "Toyohashi Station": (137.3816, 34.7629),
+                "Centrair terminal": (136.8164, 34.8584), "Sakae": (136.9088, 35.1700)},
+    },
+    "fuk": {  # T-432: OSM water (Geofabrik Kyushu and Chugoku); no named river polygon in the cache, so the sea
+        True: {"Hakata Bay": (130.34, 33.64), "Dokai Bay": (130.79101, 33.88795), "Genkai Sea off Itoshima": (130.15, 33.65),
+               "Ariake Sea off Omuta": (130.35, 33.02)},
+        False: {"Hakata Station": (130.4207, 33.5897), "Tenjin": (130.3990, 33.5911), "Kokura Station": (130.8823, 33.8869),
+                "Fukuoka Airport terminal": (130.4511, 33.5859), "Kurume Station": (130.5086, 33.3165)},
+    },
+    "spk": {  # T-432: OSM water (Geofabrik Hokkaido), river points taken from the water cache
+        True: {"Ishikari at Tobetsu": (141.38137, 43.21861), "Toyohira at its mouth": (141.45534, 43.12916),
+               "Ishikari Bay": (141.10, 43.30)},
+        False: {"Sapporo Station": (141.3508, 43.0687), "Odori": (141.3545, 43.0606), "Otaru Station": (140.9935, 43.1979),
+                "New Chitose terminal": (141.6923, 42.7882), "Ebetsu Station": (141.5366, 43.1036)},
+    },
+    "sdj": {  # T-432: OSM water (Geofabrik Tohoku), river points taken from the water cache
+        True: {"Matsushima Bay": (141.06, 38.33), "Pacific off Sendai port": (141.10, 38.20),
+               "Hirose at Nagamachi": (140.88679, 38.23838)},
+        False: {"Sendai Station": (140.8824, 38.2601), "Kotodai Park": (140.8737, 38.2685), "Ishinomaki Station": (141.3022, 38.4295),
+                "Sendai Airport terminal": (140.9230, 38.1375)},
+    },
+    "hij": {  # T-432: OSM water (Geofabrik Chugoku and Shikoku), Ota delta channels taken from the water cache
+        True: {"Hiroshima Bay": (132.40, 34.25), "Ota floodway": (132.43757, 34.35587), "Kyobashi": (132.46134, 34.37563),
+               "Motoyasu": (132.44934, 34.36168), "Temma": (132.42385, 34.36446)},
+        False: {"Hiroshima Station": (132.4757, 34.3975), "Hondori": (132.4562, 34.3925), "Kure Station": (132.5654, 34.2463),
+                "Fukuyama Station": (133.3624, 34.4893), "Hiroshima Airport terminal": (132.9194, 34.4361)},
+    },
 }
 
 
@@ -256,27 +297,43 @@ def check(city):
     for name in ("h3", "x_m", "y_m", "pop", "jobs"):
         assert name in a and len(a[name]) == n, f"array {name} missing or wrong length"
     ids = a["h3"]
-    assert np.all(ids[1:] > ids[:-1]), "h3 ids not sorted and unique"
     res = header["h3_res"]
-    sample = ids[:: max(1, n // 2000)]
-    cells = [h3.int_to_str(int(c)) for c in sample]
-    assert all(h3.is_valid_cell(c) and h3.get_resolution(c) == res for c in cells), "bad h3 id"
+    mb = header.get("merged")  # T-044: res-8 parents merged within a zone, one cell per zone
+    is8 = ((ids >> np.uint64(52)) & np.uint64(0xF)) == res - 1
+    if mb is None:
+        assert np.all(ids[1:] > ids[:-1]), "h3 ids not sorted and unique"
+    else:
+        key, z = ids & ~(np.uint64(0xF) << np.uint64(52)), a["zone"]
+        assert np.all((key[1:] > key[:-1]) | ((key[1:] == key[:-1]) & (z[1:] > z[:-1]) & is8[1:])), \
+            "h3 ids (resolution cleared) not sorted, or a non-merged id twice, or one zone's twice"
+        assert mb["cells"] == n and int(is8.sum()) == mb["parents"], "merged block does not match the cells"
+    sample = np.unique(np.concatenate([np.arange(0, n, max(1, n // 2000)), np.nonzero(is8)[0][:: max(1, int(is8.sum()) // 500)]]))
+    cells = [h3.int_to_str(int(ids[i])) for i in sample]
+    assert all(h3.is_valid_cell(c) and (h3.get_resolution(c) == res or (mb and h3.get_resolution(c) == res - 1))
+               for c in cells), "bad h3 id"
     assert np.all((a["pop"] > 0) | (a["jobs"] > 0)), "empty cell in pack"
     assert np.all(a["pop"] >= 0) and np.all(a["jobs"] >= 0)
     for k in ("pop", "jobs"):
         s = float(a[k].astype(np.float64).sum())
         assert abs(s - header["totals"][k]) < 0.5, f"{k}: arrays sum {s} vs header {header['totals'][k]}"
     lon0, lat0 = header["origin"]["lon"], header["origin"]["lat"]
-    worst = 0.0
-    for i in range(0, n, max(1, n // 500)):
+    worst = worst8 = 0.0
+    for i in sample:
         lat, lon = h3.cell_to_latlng(h3.int_to_str(int(ids[i])))
         x = R_EARTH * math.radians(lon - lon0) * math.cos(math.radians(lat0))
         y = R_EARTH * math.radians(lat - lat0)
-        worst = max(worst, abs(x - a["x_m"][i]), abs(y - a["y_m"][i]))
+        if is8[i]:  # a merged cell sits at its children's weighted centre, inside the parent
+            worst8 = max(worst8, math.hypot(x - a["x_m"][i], y - a["y_m"][i]))
+        else:
+            worst = max(worst, abs(x - a["x_m"][i]), abs(y - a["y_m"][i]))
     assert worst < 1.0, f"x_m/y_m off by {worst:.2f} m from the h3 centre"
+    assert worst8 < 500.0, f"a merged cell {worst8:.0f} m from its parent's centre"
     print(f"{city}: format {header['format']}, {n:,} cells, pop {header['totals']['pop']:,}, "
           f"jobs {header['totals']['jobs']:,}; x {a['x_m'].min() / 1e3:.0f}..{a['x_m'].max() / 1e3:.0f} km, "
           f"y {a['y_m'].min() / 1e3:.0f}..{a['y_m'].max() / 1e3:.0f} km; max x/y error {worst:.3f} m; OK")
+    if mb is not None:
+        print(f"  merged (T-044): {mb['cells_before']:,} res-{res} cells -> {n:,}, {mb['parents']:,} res-{res - 1} cells; "
+              f"furthest from its parent's centre {worst8:.0f} m; OK")
     if "commute_home" in a or "commute_work" in a:
         h, w = a["commute_home"].astype(np.float64), a["commute_work"].astype(np.float64)
         assert len(h) == n and len(w) == n and h.min() >= 0 and w.min() >= 0

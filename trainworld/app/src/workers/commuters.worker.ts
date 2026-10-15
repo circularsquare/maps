@@ -51,9 +51,11 @@ function setCells(xy: Float32Array, h3: BigUint64Array, spec: FrameSpec, a: Anch
     if (res === 9) for (let i = 0; i < n; i++) groupOf[i] = count++;
     else {
       const fill = (1n << BigInt(3 * (15 - res))) - 1n;
+      // clearing the resolution field groups T-044's merged res-8 cells with res-9 neighbours
+      const unres = ~(0xfn << 52n);
       const ids = new Map<bigint, number>();
       for (let i = 0; i < n; i++) {
-        const key = h3[i] | fill;
+        const key = (h3[i] | fill) & unres;
         let g = ids.get(key);
         if (g === undefined) ids.set(key, (g = count++));
         groupOf[i] = g;

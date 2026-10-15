@@ -17,8 +17,16 @@ sources only, is built (`pipeline/tier0.py`, T-287) and measured on Toronto** (n
 **Cells** are the unit of local demand: H3 resolution 9 (about 0.1 km², 170 m edge), only cells
 with people or jobs. Resolution 8 (about 0.74 km², Kontur's) is too coarse for walk catchment:
 half a cell is about 4 minutes of walking. Each census block is spread over the cells its polygon
-covers, by land area (T-013). Grain matters most in city centres (Anita): keep res 9 or finer where
-it is dense; the suburbs may be coarser if performance ever needs it (T-044).
+covers, by land area (T-013). Grain matters most in city centres (Anita): res 9 where it is dense,
+**res 8 where it is sparse** (T-044, `pipeline/merge_cells.py`, the last pipeline step): a res-8
+parent whose cells make under 1,000 trip ends a weekday (commutes and the everyday rates of 4.1's
+purposes, both ends) becomes one cell, merging only the cells inside one 2 km zone, so a parent cut
+by a zone edge is one cell per zone and every zone's sums, the gravity and the routes are those of
+the res-9 pack. A merged cell sums every weight, keeps the parent's H3 index (a parent cut by a zone
+edge gives two cells with one index) and sits at its cells' trip-end-weighted centre; a group stays
+at res 9 if that centre falls on water or outside its zone square. It removes 25-35% of the cells
+of a dense Asian or European metro, 40-65% of a US one and 70% of a rural pack. Enrichments and
+routes run on the res-9 pack, kept in `data/work/res9/`.
 
 Subway Builder also uses gravity: LODES gives it homes and jobs, then a distance-based gravity
 model picks each commuter's workplace (`research/competitors.md`). Tier 1 done well is at its level.
@@ -111,7 +119,7 @@ per origin zone, with scales 3 km errands and 6 km social; same-zone distance is
 Deterministic stratified destination samples per cell/purpose integrate that distribution: one
 per 8 of the cell's trips a day for the purpose, rounded up, 2 to 16 (T-397; none for a cell
 with no budget for that purpose),
-then choose an actual res-9 destination cell by attraction weight. This is an approximation to
+then choose an actual destination cell by attraction weight. This is an approximation to
 continuous demand, not sampled individual travellers. It is stable across networks and reloads.
 **Everyday trips below 150 m cell-centre distance vanish entirely**, with no replacement or
 denominator contribution, including walking. The cutoff is limited by cell grain; real within-cell
@@ -349,7 +357,7 @@ notes/T-153.md.
 Weights (perceived minutes per real minute), from Subway Builder's published constants where they
 exist: riding 1.0, the walk to and from stations 1.5 (below), walking between platforms on a
 transfer 1.39, platform wait 1.37, waiting at home before a known departure 0.4, congested driving
-1.33 (also on a ride to a station), plus parking cost and ~3 min to park.
+1.33 (also on a ride to a station), plus parking (below).
 
 **Driving** (T-090, T-275; `place_min_per_km`, `drive_min_f`, `drive_factor` in
 `sim/src/demand/kernel.rs`). The road is the straight line times the two zones' routed factor
@@ -362,7 +370,19 @@ km² of land in its 2 km zone): local streets 40 km/h and main roads 80 km/h in 
 falling towards 15 km/h where it is dense, half way at 5,000 per km². So a dense end slows only its
 own last 10 km: 3 km inside Manhattan takes about 13 minutes, Brooklyn to Midtown (10 km) about
 30, 25 km between suburbs about 28, and 60 km from a suburb into a 30,000/km² centre about 71.
-Parking is charged at the destination by its job density.
+
+**Parking** (T-380, T-372; `Params::park_parts`). At the destination every driver pays 3 perceived
+minutes to park and any congestion charge there; a paid space costs `15 x ln(d / 3,000)` more per
+one-way trip, capped at 50, with `d` the jobs per km² of land in the destination's 2 km zone (none
+below 3,000: 18 at 10,000, 40 at 42,000, 50 from 85,000). A share `1 / (1 + d / 8,000)` of the
+drivers to that zone park free (80% at 2,000, 50% at 8,000, 16% at 43,000). Rail's share is the mix
+of two logit results, one against the free driver and one against the paying one, weighted by
+that share, not one result at the mean price. Congestion charges (`kernel::CORDONS`, a place's
+charging area and its charge, half the day's charge at 3 minutes a dollar) apply to the share of a
+zone's jobs inside the area: Manhattan south of 60th Street 13.5 minutes ($9), central London 35.1
+(£18); nowhere else. A ride to a station pays the mean over drivers there. The everyday and regional
+layers still charge the rule before T-380 (3 + jobs per km² of the whole square / 2,500, capped at
+40) until T-440.
 
 **Routed walking and driving** (T-275, notes/T-275.md). Walks and drives go round water and
 over bridges, from data that exists for any city: OpenStreetMap roads and bridges (Geofabrik
@@ -892,19 +912,16 @@ carries its segment loads, boardings and alightings split by purpose: work is th
 populations together, then the everyday layer's six purposes (four before T-142's airports and
 medical visits), then the regional market as
 longer trips. The populations were already separate; the everyday layer's purposes are kept apart
-inside its pass. Its station-pair trips are assigned purpose by purpose (its pairs are stored
-purpose by purpose, so one station-pair matrix is filled, assigned and cleared once a purpose) along
-the same strategies, and the results add up to the total, which is what crowding reads.
-Each purpose's loads are averaged across crowding rounds like the total, so they still add up
-after every round. Nothing is solved again per purpose and mode choice never sees the split.
-On the real New York network (867 stations, 3,512 route nodes, 817k everyday pairs with four
-purposes; native, one period) the everyday pass's assignment took 98-101 ms purpose by purpose
-against 32-33 ms for one assignment of the summed trips: about 65 ms more per period and stage,
-against an everyday pass of about 500 ms and a combined stage of about 1.5 s. With six purposes
-(T-142) the pairs are 1.05M and the assignment 167-184 ms against 38-52 ms summed. Memory: no
-extra matrix; the kept purpose loads are 3 arrays per purpose per period (3,512 floats each:
-250 kB a period with six), and each result message carries 8 purposes x 3 arrays x 14 kB, about
-340 kB. Purposes agree with the total to 2.4e-7 (float rounding). One purpose's local trip legs
+inside its pass. Its pairs are stored purpose by purpose, so one station-pair matrix is filled
+by a purpose's pairs and then packed into that purpose's columns
+(origin stations and trips, by destination), and the matrix reused for the next. One walk of each
+destination's strategy then carries every purpose at once, a lane per purpose (T-433,
+`assign_lanes`): each lane does the kernel's assignment arithmetic in its order, so a purpose's
+loads are those of assigning it alone to the bit, and the total is the purposes' sum, which is
+what crowding reads. Each purpose's loads are averaged across crowding rounds like the total, so
+they still add up after every round. Nothing is solved again per purpose and mode choice never
+sees the split. The kept purpose loads are 3 arrays per purpose per period (one float a route
+node each), and each result message carries 8 purposes x 3 arrays. One purpose's local trip legs
 per cell for the bubbles come from `EverydayApi.cell_modes_of(kind)`, asked of the solving
 workers on demand (`purposeModes`) and answered only from a finished round, like stations; work
 alone is the commute sums the bubbles already have.
@@ -922,6 +939,8 @@ order), so a slot is a pair of route nodes, line, direction and stop in and out:
 platform, merged demand stations included. The loads are `assign`'s to the bit; the transfers are
 counted beside them. Every population does it (commutes, the everyday pass with all its purposes
 in one array, the regional market), each round, averaged across rounds with the loads' weights.
+The everyday walk notes an arrival's riders summed over its purposes' lanes, so its transfers
+equal the purpose-by-purpose count to float rounding, not to the bit (T-433).
 Check: at every station the transfers leaving equal its boardings less its first boardings, and
 on the real network the commutes' transfers equal all boardings less entries
 (2,278,897 in periods 0 and 2; 593k of them walk between demand stations).
