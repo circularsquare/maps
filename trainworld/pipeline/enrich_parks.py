@@ -116,6 +116,7 @@ def fetch_tiles(city, boundary, rel):
     """One kind of the pack's places from Overpass in tiles of at most TILE_DEG (the public servers
     time out on a whole metro with geometry), the tiles that miss the boundary skipped."""
     from shapely.geometry import box
+    shapely.prepare(boundary)
     s, w, n, e = overpass.bbox_of(boundary)
     ny, nx = int(np.ceil((n - s) / TILE_DEG)), int(np.ceil((e - w) / TILE_DEG))
     stem = f"{SUB}osm_park{'rels' if rel else 's'}_{city}"
@@ -226,10 +227,18 @@ def main(city="nyc", dry=False):
     P = np.bincount(pi, weights=pop[ci], minlength=len(kept))
     # the density of the ring around the place: its residents over the ring's land (the ring
     # without the place itself, inside the pack's boundary, whose county shapes stop at the shore)
-    import shapely
     land = transform(lambda x, y: xy(x, y), boundary)
-    ring = shapely.intersection(shapely.difference(np.array(near, dtype=object), np.array(geoms, dtype=object)), land)
-    ring_km2 = np.maximum(shapely.area(ring) / 1e6, 0.5)
+    near_a, geoms_a = np.array(near, dtype=object), np.array(geoms, dtype=object)
+    ring_m2 = np.empty(len(kept))
+    for i in range(0, len(kept), 1000):
+        s = slice(i, i + 1000)
+        # T-425: only the land near the ring matters; an overlay with the whole outline costs tens of
+        # ms a park on a long coastline, a rectangle clip about 4 ms. The 1 km margin keeps the clip's
+        # cut edges clear of the ring, which makes the areas bit-identical to the unclipped overlay.
+        box_land = np.array([shapely.clip_by_rect(land, g.bounds[0] - 1000, g.bounds[1] - 1000, g.bounds[2] + 1000, g.bounds[3] + 1000)
+                             for g in near[s]], dtype=object)
+        ring_m2[s] = shapely.area(shapely.intersection(shapely.difference(near_a[s], geoms_a[s]), box_land))
+    ring_km2 = np.maximum(ring_m2 / 1e6, 0.5)
     D = P / ring_km2
     draw = np.zeros(len(cells), np.float64)
     ii, cc = ctree.query(geoms, predicate="contains")

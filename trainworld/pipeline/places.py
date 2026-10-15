@@ -26,7 +26,7 @@ import time
 import unicodedata
 
 import requests
-from shapely import contains_xy, make_valid
+from shapely import contains_xy, make_valid, prepare
 from shapely.geometry import shape
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -113,6 +113,7 @@ def build(city):
     with open(os.path.join(PACKS, f"{city}.boundary.geojson"), encoding="utf-8") as f:
         fc = json.load(f)
     foot = make_valid(shape(fc["features"][0]["geometry"]))
+    prepare(foot)  # T-425
     w, s, e, n = foot.bounds
     bbox = (round(s, 4), round(w, 4), round(n, 4), round(e, 4))
     import build_city

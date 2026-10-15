@@ -376,8 +376,8 @@ bundle) give jobs by Gemeinde of work and the top flows for the curve. Water tes
 on a channel's middle (polylabel on the cached polygon); a canal under 50 m wide is below the
 mask's 2-pixel width.
 
-Tokyo (`tyo`, T-420, `pipeline/japan.py`) took about two hours, an hour of it the build (parks
-35 minutes and medical 15 on a long coastline, T-425; routes 13). A Japanese pack is a config
+Tokyo (`tyo`, T-420, `pipeline/japan.py`) took about two hours, an hour of it the build (before
+T-425, parks 35 minutes and medical 15; now they take 2 minutes together; routes 13). A Japanese pack is a config
 row: `prefectures`, `neighbours` (the land beyond the outline, for meshes it cuts) and the region's
 telework share; `python pipeline/japan.py fetch <id>` downloads the census meshes, N03, table 4
 and P29 first, and `japan.py outline <id>` draws the outline. Run `notes/t420_curve.py <id>` for

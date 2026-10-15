@@ -32,6 +32,7 @@ import h3
 import numpy as np
 import pandas as pd
 import requests
+import shapely
 from shapely.geometry import Point
 
 import build_city as b
@@ -172,6 +173,7 @@ def airports_in(boundary):
     a = pd.read_csv(b.fetch(OURAIRPORTS, SUB + "ourairports-airports.csv"), low_memory=False, keep_default_na=False)
     a = a[(a.scheduled_service == "yes") & a.type.isin(["large_airport", "medium_airport", "small_airport"])]
     rows = []
+    shapely.prepare(boundary)  # T-425
     for r in a.itertuples():
         lat, lon = float(r.latitude_deg), float(r.longitude_deg)
         if boundary.covers(Point(lon, lat)):

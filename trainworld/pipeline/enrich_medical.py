@@ -26,6 +26,7 @@ import sys
 
 import h3
 import numpy as np
+import shapely
 from shapely import STRtree
 from shapely.geometry import Point
 
@@ -65,6 +66,7 @@ def facilities(city, boundary):
                           f'[out:json][timeout:600];(nwr["amenity"~"^(hospital|clinic|doctors|dentist)$"]({s},{w},{n},{e});'
                           f'nwr["healthcare"~"^(hospital|clinic|doctor|dentist)$"]({s},{w},{n},{e}););out geom tags;')
     rows = []
+    shapely.prepare(boundary)  # T-425: an unprepared covers() is tens of ms on a long coastline
     for el in data.get("elements", []):
         tags = el.get("tags", {})
         kind = kind_of(tags)

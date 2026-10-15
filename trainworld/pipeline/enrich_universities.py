@@ -13,6 +13,7 @@ import zipfile
 import h3
 import numpy as np
 import pandas as pd
+import shapely
 from shapely.geometry import Point
 
 import build_city as b
@@ -83,6 +84,7 @@ def institutions(directory, enrollment, boundary, previous=None):
         raise ValueError("duplicate IPEDS institution/level rows")
     totals, invalid_ids = eligible(enrollment)
     sites = merged_sites(directory, previous)
+    shapely.prepare(boundary)  # T-425: the whole IPEDS directory is tested against the outline
     matched, excluded = [], []
     for r in directory.itertuples():
         if not np.isfinite(r.LATITUDE) or not np.isfinite(r.LONGITUD):

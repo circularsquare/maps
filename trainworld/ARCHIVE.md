@@ -1,5 +1,6 @@
 # Archive
 
+- T-425 [P2] Fast enrichment on long coastlines. Done 2026-10-15: outline prepared in every enrichment's point tests, parks' ring overlay clipped to its box; Tokyo medical 1,028 s to 12, parks 742 to 119, London medical 125 to 6; Tokyo and London outputs byte-identical. notes/T-425.md.
 - T-301 [P3] Close packs nobody uses. Done 2026-10-15: unneeded packs and the market close after 60 s, or at once beyond two spare zones; long pan's aux peak 154 to 110 MB (new game), 133 to 97 (real save), packs open 14 to 5-8; figures unchanged. notes/T-301.md.
 - T-376 [P2] T-362 stage 2: fit the long-haul tail and border factor. Done 2026-10-15: the tail as its own segment from 300 km, Rt 0.0047, d^-0.70, border 0.26 falling with origin income; US trips over 5,000 km 6.8% to 1.4%, Japan abroad still 6x. notes/T-376.md.
 - T-409 [P2] The market's pairs split by track network. Done 2026-10-15: one market part per cluster (`IntercityApi::beside`, pack shared), clusters joined per 6 km market zone; two separate networks solve as two clusters, each to the bit as alone; real save plus a Boston line, Boston edit 21 s to 1.0 s; figures unchanged. notes/T-409.md.

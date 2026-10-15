@@ -9,6 +9,7 @@ from urllib.parse import urlencode
 
 import numpy as np
 import pandas as pd
+import shapely
 from shapely.geometry import Point
 
 import build_city as b
@@ -24,6 +25,7 @@ def public_schools(boundary):
     Do not use this layer's CNTY field (not a reliable full county FIPS). Spatial
     filtering also respects the game's 2020 Connecticut county boundaries.
     """
+    shapely.prepare(boundary)  # T-425
     west, south, east, north = boundary.bounds
     where = f"LONCOD >= {west:.8f} AND LONCOD <= {east:.8f} AND LATCOD >= {south:.8f} AND LATCOD <= {north:.8f}"
     digest = hashlib.sha256(where.encode()).hexdigest()[:16]

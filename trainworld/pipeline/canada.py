@@ -669,7 +669,8 @@ def schools(city):
     boundary = build_boundary(city, cfg)
     x = pd.read_excel(b.fetch(ON_SCHOOLS, "ca/on_sif_2023_24.xlsx"))
     x = x[np.isfinite(pd.to_numeric(x.Latitude, errors="coerce")) & (pd.to_numeric(x.Enrolment, errors="coerce") > 0)]
-    recs = [dict(name=r["School Name"], board=r["Board Name"], enrollment=float(r.Enrolment), lat=float(r.Latitude), lon=float(r.Longitude))
+    shapely.prepare(boundary)  # T-425
+    recs =[dict(name=r["School Name"], board=r["Board Name"], enrollment=float(r.Enrolment), lat=float(r.Latitude), lon=float(r.Longitude))
             for _, r in x.iterrows() if boundary.covers(Point(float(r.Longitude), float(r.Latitude)))]
     stem, header, buf, cells = pack_cells(city)
     enr, matched, omitted, snaps = place_at_cells(recs, cells)
@@ -718,6 +719,7 @@ def universities(city):
     cfg = b.CITIES[city]
     boundary = build_boundary(city, cfg)
     recs, year = campuses()
+    shapely.prepare(boundary)  # T-425
     recs = [r for r in recs if boundary.covers(Point(r["lon"], r["lat"]))]
     stem, header, buf, cells = pack_cells(city)
     enr, matched, omitted, snaps = place_at_cells(recs, cells)
