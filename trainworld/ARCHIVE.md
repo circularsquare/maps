@@ -1,5 +1,9 @@
 ﻿# Archive
 
+- T-044 [P3] Merge sparse cells into their res-8 parent. Done 2026-10-15: `pipeline/merge_cells.py` at 1k trip ends, 22 packs merged (osa, ngo, sdj, hij left to their builds): cells -25% to -70%, packs 123 to 78 MB, a New York worker 102 to 82 MB; the real save's final +0.04%. notes/T-044.md.
+
+- T-421 [P3] A game load's card goes at the zone in view's final. Done 2026-10-15: a Toronto view of the New York plus Toronto save loses its card at about 6 s, not 33 s; zones still solving keep their bar and grey and drop their far bubble until their final; status tag follows the zone in view.
+
 - T-036 [P3] Faster commute pair loop and scatter. Done 2026-10-15: eight pairs at a time in SIMD lanes (wasm simd128 on), results identical to the bit; pair loop and scatter 56-62 to 37-40 ns a pair native, a New York edit 22-25 to 19-20 s in the browser. notes/T-036.md.
 
 - T-379 [P3] T-362 stage 5: Northeast checks. Done 2026-10-15: table re-run after air; New York - Philadelphia 301k over 80 km is core to core (seam 2k), not a double count; NEC FUTURE also cuts at 50 miles. Destination choice by people is high, left for T-438. notes/T-379.md.

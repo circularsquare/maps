@@ -3,9 +3,9 @@
 // is what the UI reads about that. Written by workers/demandClient.ts; read by the loading screen
 // (ui/LoadingScreen.tsx), the top bar and the demand selector.
 //
-// A loaded game (the page opening, a file, a browser slot, a new game) holds the clock until its
-// fresh demand solve has landed its final crowding round, over every city it needs (T-347; T-172
-// let go at the first estimate, T-149 first waited for the last round). Input is never blocked:
+// A loaded game (the page opening, a file, a browser slot, a new game) holds the clock until the
+// zone in view has its final figures from its fresh solve (T-347, T-421: its cluster's final may
+// land well before the rest's, whose zones then show their own loading bars). Input is never blocked:
 // the player can look around and build while demand loads. Only a failed load puts up a screen
 // (ui/LoadingScreen.tsx).
 

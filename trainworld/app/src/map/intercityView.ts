@@ -26,7 +26,8 @@
 // Asked for, not pushed, and asked again whenever `demandView` changes, keeping the last answer
 // meanwhile.
 
-import { effect, signal } from "@preact/signals";
+import { computed, effect, signal } from "@preact/signals";
+import { zoneLoads } from "../game/loading";
 import type { Map as MlMap } from "maplibre-gl";
 import { activeCity, cityById, CITIES } from "../game/cities";
 import { clock } from "../game/clock";
@@ -50,6 +51,8 @@ export const intercityPick = signal<{ sel: Selection; data: IntercitySelection; 
 export const intercityStationView = signal<IntercityStation | null>(null);
 
 const marketOf = (id: string) => cityById(id).place;
+/** the zones still loading (game/loading.ts `zoneLoads`), changing only when the set does */
+const loadingZones = computed(() => [...zoneLoads.value.keys()].sort().join(","));
 
 /** Regional views show the complete place totals, rather than scattered endpoint specks. */
 export const CITY_BUBBLE_ZOOM = 9.5;
@@ -186,7 +189,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
           ? [`${count(t.all)} trips a day between ${c.name} and other places`, ...modes]
           : [`${count(t.all)} trips a day between ${own.name} and ${c.name}`, ...modes];
       return { ...t, city: c, isOwn, tag };
-    }).filter((p) => p.all > 0 || p.isOwn);
+    }).filter((p) => p.isOwn || (p.all > 0 && !(!own && zoneLoads.peek().has(p.city.id)))); // T-421: a zone still loading has its bar instead
     points.sort((a, b) => b.all - a.all);
     // one scale: the busiest zone on screen in the overview (T-276: with local trips counted New
     // York's bubble would dwarf every other zone's), the selected zone when one is
@@ -269,6 +272,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     display.value.commuters;
     purposeFilter.value;
     anchorVersion.value; // the discs are measured from the draw anchor (T-317)
+    loadingZones.value;
     render();
   });
   map.on("zoom", render);

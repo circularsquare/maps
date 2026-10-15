@@ -226,13 +226,16 @@ centre and zoom, or over New York with none [T-310].
 [T-149, T-172, T-180, T-212, T-232, T-243, T-318; `game/loading.ts`, `ui/LoadingScreen.tsx`]
 
 - Nothing is blocked: the map, inspectors and building work as soon as the network is drawn.
-- **A loaded game** (the page opening, a file, a slot, a new game) holds only the clock until its
-  fresh demand solve has finished its last round [T-347; before, the first estimate] (a new game:
-  until its viewed zone's figures, opened bare, arrive, T-351); the time is
+- **A loaded game** (the page opening, a file, a slot, a new game) holds only the clock until the
+  zone in view has its final figures [T-347, T-421]: its fresh solve's last round, or that of the
+  zone's own cluster, solved ahead of the rest (T-402: a Toronto view of a game with New York's
+  network, about 6 s instead of 31 s); a new game until its viewed zone's figures, opened bare,
+  arrive (T-351). Zones still solving then show their own loading bar and grey ("A zone still loading
+  is grey" in [ui-demand-views.md](ui-demand-views.md)) until their final lands. The time is
   greyed and its hover says "The clock starts when demand has loaded". Meanwhile a card in the
   middle of the map says "Loading data" over a filling bar and the current step (Downloading city
   data, Opening city data, Calculating demand), naming no cities; the percentage is only the bar's
-  hover ("42% loaded"). The bar counts to that final round, so on the real New York save it fills
+  hover ("42% loaded"). The bar counts to that final, so on the real New York save it fills
   for about 20 s. A slot whose cities are all open shows the bar for its solve alone. The card
   takes no input but the bar's hover (a press pans the map beneath), has no animation or spinner,
   and goes when the clock starts. The figures behind it are the solve's estimates, or the last

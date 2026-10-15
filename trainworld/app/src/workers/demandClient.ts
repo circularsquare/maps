@@ -89,11 +89,11 @@ const ROUNDS = 3;
  */
 const READY_ROUND = 0;
 /**
- * A loaded game's clock runs, and its loading card goes, once the solve's last round is published
- * (T-347; T-149 waited for it, T-172 stopped at the estimate, and the game was left lagging
- * through the rounds). The cached result of the last time the game was open (T-328) is drawn
- * meanwhile but does not release it. A viewed zone open bare is final from its opening (T-351:
- * `holdDone`).
+ * A loaded game's clock runs, and its loading card goes, once the zone in view has its final: the
+ * solve's last round, or (T-421) that of the zone's cluster solved ahead of the rest (T-402), the
+ * other zones then showing their own loading bars until the solve's final (`released`). The cached
+ * result of the last time the game was open (T-328) is drawn meanwhile but does not release it.
+ * A viewed zone open bare is final from its opening (T-351: `holdDone`).
  */
 const HOLD_ROUND = ROUNDS;
 const PERIOD_STRIDE = 6;
@@ -313,18 +313,30 @@ const lastLoad = (loads: LoadLog[], f: (l: LoadLog) => boolean) => { for (let i 
 const solveModel = (stops: number) => SOLVE_MS.base + SOLVE_MS.perStop * stops;
 /** T-347: until a load has timed its final round, the final is guessed at this many first estimates */
 const FINAL_FACTOR = 2.5;
-function lastSolve(): { ms: number; stops: number; finalMs?: number } | null {
+/** a share of `expected` ms gone since `since`: in step to 90%, then slowing toward STEP_CAP, so a
+ * step that runs late still creeps rather than stopping dead */
+function timeShare(since: number | undefined, expected: number, now: number): number {
+  if (since === undefined) return 0;
+  const x = Math.max(0, now - since) / Math.max(1, expected);
+  return x < 0.9 ? x : 0.9 + (STEP_CAP - 0.9) * (1 - Math.exp(-(x - 0.9) / 0.3));
+}
+/** `finalMs`: to the card going (T-421: the zone in view's final); `allMs`: to the solve's final */
+function lastSolve(): { ms: number; stops: number; finalMs?: number; allMs?: number } | null {
   try {
     const v = JSON.parse(localStorage.getItem(LAST_SOLVE) || "null");
     return v && v.ms > 0 && v.stops >= 0 ? v : null;
   } catch { return null; }
 }
-/** Expected ms from a solve's start to its first estimate, or (`toFinal`, T-347) to its final
- * round; `stops` null = the network is not known yet. */
-function solveEstimate(stops: number | null, toFinal = false): number {
+function rememberSolve(ms: number, stops: number, finalMs?: number, allMs?: number) {
+  try { localStorage.setItem(LAST_SOLVE, JSON.stringify({ ms, stops, ...(finalMs ? { finalMs } : {}), ...(allMs ? { allMs } : {}) })); } catch { /* storage unavailable */ }
+}
+/** Expected ms from a solve's start to its first estimate, or (`toFinal`, T-347) to the card going,
+ * or ("all") to the solve's final; `stops` null = the network is not known yet. */
+function solveEstimate(stops: number | null, toFinal: boolean | "all" = false): number {
   const last = lastSolve();
   const n = stops ?? last?.stops ?? 0;
-  const ms = last ? (toFinal ? last.finalMs ?? last.ms * FINAL_FACTOR : last.ms) * solveModel(n) / solveModel(last.stops) : solveModel(n) * (toFinal ? FINAL_FACTOR : 1);
+  const final = toFinal === "all" ? last?.allMs ?? last?.finalMs : last?.finalMs;
+  const ms = last ? (toFinal ? final ?? last.ms * FINAL_FACTOR : last.ms) * solveModel(n) / solveModel(last.stops) : solveModel(n) * (toFinal ? FINAL_FACTOR : 1);
   return ms;
 }
 
@@ -992,6 +1004,10 @@ class DemandClient {
 
   /** T-343: the best share shown so far for each zone loading outside the load in hand */
   private zoneBest = new Map<CityId, number>();
+  /** T-421: a game load's zones still without their final after its card went at the view's */
+  private unsettled: Set<CityId> | null = null;
+  /** T-421: a startup solve released at the view's final, remembered (LAST_SOLVE) at its own */
+  private timeRest?: { version: number; stops: number; finalMs?: number };
 
   /** T-343: every zone fetched (in every worker or bare) whose figures have not arrived, with its
    * share done (game/loading.ts `zoneLoads`): the load in hand's for its zones, else its own
@@ -1001,7 +1017,7 @@ class DemandClient {
     const next = new Map<CityId, number>();
     let moving = false;
     for (const id of [...this.fetching, ...this.fetchingBare, ...this.fetchingUndecided]) {
-      if (isMarket(id) || shown.has(id) || next.has(id) || this.status.startsWith("failed")) continue;
+      if (isMarket(id) || shown.has(id) || next.has(id) || this.unsettled?.has(id) || this.status.startsWith("failed")) continue;
       let f: number;
       if (this.job?.cities.includes(id)) f = this.job.best;
       else {
@@ -1022,10 +1038,24 @@ class DemandClient {
       const best = Math.max(this.zoneBest.get(id) ?? 0, Math.min(0.99, f));
       next.set(id, best);
     }
+    // T-421: a game load's zones still solving after its card went at the view's final, until theirs
+    // lands (through any newer solve: they have no final figures yet)
+    const s = this.cur;
+    if (s && this.unsettled?.size && s.published < ROUNDS && !this.status.startsWith("failed")) {
+      let landed = 0;
+      for (let r = 0; r <= ROUNDS; r++) landed += r <= s.published ? PERIODS.length : s.byRound[r].filter(Boolean).length;
+      const stops = s.svc.lines.reduce((n, l) => n + l.stops.length, 0);
+      const f = Math.max(landed / (PERIODS.length * (ROUNDS + 1)), timeShare(s.sentAt, solveEstimate(stops, "all"), now));
+      for (const id of this.unsettled) {
+        if (next.has(id)) continue;
+        next.set(id, Math.max(this.zoneBest.get(id) ?? 0, Math.min(0.99, f)));
+        moving = true;
+      }
+    }
     this.zoneBest = new Map(next);
     const prev = zoneLoads.peek();
     if (next.size !== prev.size || [...next].some(([id, f]) => prev.get(id) !== f)) zoneLoads.value = next;
-    // a bare zone's load moves with time while it downloads and opens; nothing else ticks for it
+    // a bare zone's load (and, T-421, a released solve's zones) moves with time; nothing else ticks for it
     if (moving && !this.progressTick) this.progressSoon();
   }
 
@@ -1067,17 +1097,22 @@ class DemandClient {
     for (const item of marketsMissing) if (!job.items.includes(item)) job.items.push(item);
     if (atStartup && need.has(viewed) && !job.cities.includes(viewed)) job.cities.unshift(viewed);
     const needsSolve = this.jobNeedsSolve(job);
-    // (T-402: or, when the load's zones are all in the cluster solved ahead, that cluster's round)
+    // (T-402: or, when the load's zones are all in the cluster solved ahead, that cluster's round;
+    // T-421: a game load's, once the zone in view has its final)
     const ahead = s?.ahead && job.cities.every((id) => s.ahead!.cities.includes(id)) ? s.clusterRes?.get(s.ahead.key)?.published ?? -1 : -1;
-    const solved = !needsSolve || (!!s && job.version !== undefined && s.version === job.version && Math.max(s.published, ahead) >= doneRound);
+    const ofJob = !!s && job.version !== undefined && s.version === job.version;
+    const solved = !needsSolve || (ofJob && (Math.max(s.published, ahead) >= doneRound || (!!this.hold && this.viewHasFinal(s))));
     if (solved && job.items.every(loaded)) {
       // remembered for the next load's estimate (T-243): a startup's solve, so it describes the
-      // game a reload opens; T-347: and the time to its final round, which the card now waits for
+      // game a reload opens; T-347, T-421: and the time to the card going, which its bar measures
       // (not a bare start's, T-351: its solve covers no zone and says nothing of the next game's)
-      if (job.startup && s && s.firstAt !== undefined && s.cities.length) {
+      if (job.startup && s && s.cities.length) {
         const stops = s.svc.lines.reduce((n, l) => n + l.stops.length, 0);
-        const finalMs = s.refinedAt !== undefined ? Math.round(s.refinedAt - s.sentAt) : undefined;
-        try { localStorage.setItem(LAST_SOLVE, JSON.stringify({ ms: Math.round(s.firstAt - s.sentAt), stops, ...(finalMs ? { finalMs } : {}) })); } catch { /* storage unavailable */ }
+        const at = s.refinedAt ?? (s.ahead && s.clusterRes?.get(s.ahead.key)?.at);
+        const finalMs = at !== undefined ? Math.round(at - s.sentAt) : undefined;
+        // T-421: a solve released at the view's final is remembered at its own final (`publish`)
+        if (s.refinedAt === undefined) this.timeRest = { version: s.version, stops, finalMs };
+        else if (s.firstAt !== undefined) rememberSolve(Math.round(s.firstAt - s.sentAt), stops, finalMs, finalMs);
       }
       this.job = null;
       clearInterval(this.progressTick);
@@ -1087,13 +1122,7 @@ class DemandClient {
     }
     if (!this.progressTick) this.progressTick = setInterval(() => this.progress(), 100) as unknown as number;
     const now = performance.now();
-    // time against the expectation: in step with it to 90%, then slowing toward STEP_CAP, so a
-    // step that runs late still creeps rather than stopping dead
-    const within = (since: number | undefined, expected: number) => {
-      if (since === undefined) return 0;
-      const x = Math.max(0, now - since) / Math.max(1, expected);
-      return x < 0.9 ? x : 0.9 + (STEP_CAP - 0.9) * (1 - Math.exp(-(x - 0.9) / 0.3));
-    };
+    const within = (since: number | undefined, expected: number) => timeShare(since, expected, now);
     // Downloading: bytes; expected to take as long as its rate so far says.
     let got = 0, total = 0, dlStart = Infinity;
     // Opening: each item in every worker, expected from its size; worker acks are its real progress.
@@ -1252,14 +1281,34 @@ class DemandClient {
   private holdDone(): boolean {
     const s = this.cur;
     if (!this.hold || !s || this.hold.version !== s.version || this.waiting) return false;
-    return s.published >= HOLD_ROUND && [...this.viewedSet()].every((id) => this.isOpen(id));
+    return this.viewHasFinal(s) && [...this.viewedSet()].every((id) => this.isOpen(id));
   }
 
-  /** A held game's network has its final result (T-347): the clock runs. */
+  /** T-421: the zone in view has its final: the solve's, or its cluster's solved ahead (T-402). */
+  private viewHasFinal(s: Solve): boolean {
+    if (s.published >= HOLD_ROUND) return true;
+    const a = s.ahead, c = a && s.clusterRes?.get(a.key);
+    return !!c && c.published >= ROUNDS && [...this.viewedSet()].every((id) => a.cities.includes(id));
+  }
+
+  /** A held game's network has its final result (T-347), or its zone in view has (T-421): the clock runs. */
   private checkHold() {
     if (this.hold && this.idle()) return this.settleIdle(); // T-318
     if (this.holdDone()) {
       this.hold = null;
+      const s = this.cur!;
+      if (s.published < ROUNDS) {
+        const solving = demandSolving.peek();
+        this.unsettled = new Set(s.cities.filter((id) => solving?.has(id) ?? true));
+        // their bars start from their own solve's share (the card's load ended without them)
+        for (const id of this.unsettled) this.zoneBest.delete(id);
+        // the load in hand ends with the card: the other zones show their own bars (`zoneProgress`)
+        this.job = null;
+        clearInterval(this.progressTick);
+        this.progressTick = 0;
+        loadProgress.value = null;
+        this.zoneProgress();
+      }
       loadComplete();
       // the nearby zones' packs may load now (T-276)
       if (nearbyZones.peek().length) this.ensure();
@@ -1392,6 +1441,7 @@ class DemandClient {
       if (round >= ROUNDS) e.at = performance.now();
       this.publishCluster(s, res as Result[], msg.cluster, round);
       this.progress();
+      this.checkHold(); // T-421
       return;
     }
     const results = s.byRound[msg.summary[0]];
@@ -2091,7 +2141,13 @@ class DemandClient {
       if (s === this.cur) {
         demandUpdating.value = false;
         demandSolving.value = null;
+        this.unsettled = null;
         void this.writeCache(s); // T-328
+      }
+      const t = this.timeRest;
+      if (t?.version === s.version) {
+        this.timeRest = undefined;
+        if (s.firstAt !== undefined) rememberSolve(Math.round(s.firstAt - s.sentAt), t.stops, t.finalMs, Math.round(s.refinedAt - s.sentAt));
       }
     }
   }
@@ -2195,7 +2251,7 @@ class DemandClient {
     if (!final) return;
     for (const id of c.cities) this.cityVersion.set(id, s.version);
     const left = new Set(demandSolving.peek() ?? []);
-    for (const id of c.cities) left.delete(id);
+    for (const id of c.cities) { left.delete(id); this.unsettled?.delete(id); }
     demandSolving.value = left;
   }
 

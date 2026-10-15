@@ -4,8 +4,9 @@
 // the city outlined and one bubble per other city (map/intercityView.ts). These numbers are the
 // current forecast; the map's bubbles catch up to them over a game day after a change (T-156).
 
-import { cityById } from "../../game/cities";
+import { cityById, type CityId } from "../../game/cities";
 import { intercityDemand, INTERCITY_PLACES } from "../../game/demand";
+import { zoneLoads } from "../../game/loading";
 import { BUBBLE_ALPHA, modeMix } from "../../game/palette";
 import { purposeFilter } from "../../game/ui";
 import { goTo } from "../Search";
@@ -13,7 +14,8 @@ import { bySize, ElsewhereRow, ModeCells, ModeHead } from "./LongerTrips";
 
 export function CityInspector({ id }: { id: string }) {
   const city = cityById(id);
-  const market = intercityDemand.value;
+  // T-421: a zone still loading (its bar on the map) has no figures to state yet
+  const market = zoneLoads.value.has(id as CityId) ? null : intercityDemand.value;
   if (!city) return null;
   const byPlace = new Map<number, { all: number; rail: number; car: number; air: number }>();
   for (const c of market?.corridors ?? []) {
