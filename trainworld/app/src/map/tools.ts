@@ -2,7 +2,13 @@
 // stops to a line. Selecting (picking) is map/pick.ts; main.ts routes clicks here when a tool is
 // on.
 //
-// Track: click where the track turns (T-023, T-092): each click is a point of intersection (PI)
+// Track, drawing through points (T-418, the Build tab's default): the second click places a
+// segment from the first, one curve leaving along the track there and passing through the click,
+// at once and never changed by later clicks; with Shift held the next segment starts at its end.
+// Backspace takes the last segment of a chain back, Escape or Enter stops. Quad track is drawn
+// by corners.
+//
+// Track, by corners: click where the track turns (T-023, T-092): each click is a point of intersection (PI)
 // and the track cuts the corner there with a circular curve, auto radius (SPEC 6.1), so a new
 // click leaves the track before the previous click's curve as it was. The first click may start
 // on a track end or on track (a new junction, flat, T-080), and a click on track or a track end
@@ -30,7 +36,7 @@ import { cellModes, cityCells, demandView } from "../game/demand";
 import { LEVEL_COLOURS, rgb, speedColour } from "../game/palette";
 import type { Level } from "../game/types";
 import { metresBetween } from "../game/walks";
-import { ask, buildLevel, buildPlatform, lineDraft, selection, trackCount, tool } from "../game/ui";
+import { ask, buildLevel, buildPlatform, display, lineDraft, selection, trackCount, tool } from "../game/ui";
 import { describeRemovable, removeThing, type Removable } from "../game/remove";
 import { loadPlacesAt, placesNear } from "../game/placeList";
 import { compass } from "../game/places";
@@ -38,6 +44,7 @@ import { edit, say, world } from "../game/world";
 import type { PiInput, RouteEnd } from "../workers/protocol";
 import type { ClockClient, CrossoverAnswer, PreviewAnswer } from "../workers/clockClient";
 import { toLngLat, toLocal } from "./geo";
+import { circleOnScreen } from "./curveCircle";
 import { strokesFromParts, strokesFromPreview } from "./network";
 import { PLATFORM_HALF_M, platformShape, reversed, stationPath, stationShape, waysFrom } from "./stationGeometry";
 import type { Overlay } from "./overlay";
@@ -60,6 +67,10 @@ interface Placed {
 export class Tools {
   private start: Placed | null = null;
   private pis: { pi: PiInput; lx: number; ly: number }[] = [];
+  /** drawing through points (T-418): the starts of the segments placed with Shift, for Backspace */
+  private chain: Placed[] = [];
+  /** a segment's edit in flight: clicks wait for it */
+  private placing = false;
   private hover: Snap | null = null;
   /** the delete tool: what a click would remove, and the pointer (map px) */
   private delHover: (Removable & { lx: number; ly: number }) | null = null;
@@ -96,6 +107,7 @@ export class Tools {
     // fetched when the station tool is picked, not at startup (T-400)
     effect(() => { if (tool.value === "station") { const c = this.map.getCenter(); void loadPlacesAt(c.lng, c.lat); } });
     effect(() => { buildLevel.value; trackCount.value; if (tool.peek() === "track" && this.start) this.requestPreview(); });
+    effect(() => { display.value.drawThrough; if (this.start) this.reset(); });
     effect(() => {
       const active = tool.value === "line" ? lineDraft.value.line : null;
       const w = world.value;
@@ -201,6 +213,16 @@ export class Tools {
       else this.exit();
       return true;
     }
+    if (t === "track" && this.start && this.through()) {
+      if (e.key === "Backspace") {
+        void this.takeBackSegment();
+        return true;
+      }
+      if (e.key === "Enter") {
+        this.reset();
+        return true;
+      }
+    }
     if (t === "track" && this.start) {
       if (e.key === "Backspace") {
         if (this.pis.length) this.pis.pop();
@@ -235,6 +257,7 @@ export class Tools {
   reset() {
     this.start = null;
     this.pis = [];
+    this.chain = [];
     this.delHover = null;
     this.lastPreview = null;
     this.previewKey = "";
@@ -254,6 +277,10 @@ export class Tools {
       this.start = { end: this.endOf(s), lx: s.lx, ly: s.ly };
       this.requestPreview();
       this.place();
+      return;
+    }
+    if (this.through()) {
+      void this.segmentClick(e, s);
       return;
     }
     if (s.kind !== "free") {
@@ -288,6 +315,56 @@ export class Tools {
     });
   }
 
+  /** Drawing through points (T-418); quad track keeps the corner drawing for now. */
+  private through() {
+    return display.peek().drawThrough && trackCount.peek() !== 4;
+  }
+
+  /** Place the segment from the start to this click; with Shift, the next starts at its end. */
+  private async segmentClick(e: MapMouseEvent, s: Snap) {
+    const from = this.start;
+    if (!from || this.placing) return;
+    const [sx, sy] = this.screen(from.lx, from.ly);
+    if (Math.hypot(sx - e.point.x, sy - e.point.y) < 6) return; // the start itself, or a double click's second click
+    const chain = e.originalEvent.shiftKey;
+    const p = this.lastPreview;
+    this.placing = true;
+    const a = await edit({ op: "route", ...this.routeReq(this.endOf(s)) });
+    this.placing = false;
+    if (!a.ok || this.start !== from) return;
+    say(p ? `Blueprint added: ${distance(p.lengthM)}, ${money(p.cost * 1e6)} to construct.` : "Blueprint added.");
+    if (!chain || a.node === undefined) {
+      this.reset();
+      return;
+    }
+    this.chain.push(from);
+    this.start = { end: { kind: "node", node: a.node }, lx: s.lx, ly: s.ly };
+    this.lastPreview = null;
+    this.previewKey = "";
+    this.overlay.renderer.setPreview(null);
+    this.overlay.invalidate();
+    this.requestPreview();
+    this.place();
+  }
+
+  /** Backspace while chaining: the last segment undone, drawing on from its start again. */
+  private async takeBackSegment() {
+    const prev = this.chain.pop();
+    if (!prev || this.placing) {
+      this.reset();
+      return;
+    }
+    this.placing = true;
+    const a = await edit({ op: "undo" }, true);
+    this.placing = false;
+    if (!a.ok) return this.reset();
+    this.start = prev;
+    this.lastPreview = null;
+    this.previewKey = "";
+    this.requestPreview();
+    this.place();
+  }
+
   private addPi(pt: { pi: PiInput; lx: number; ly: number }) {
     this.pis.push(pt);
     this.requestPreview();
@@ -300,7 +377,8 @@ export class Tools {
   }
 
   private routeReq(to: RouteEnd) {
-    return { from: this.start!.end, to, pis: this.pis.map((p) => p.pi), single: trackCount.peek() === 1, quad: trackCount.peek() === 4 };
+    const through = this.through();
+    return { from: this.start!.end, to, pis: through ? [] : this.pis.map((p) => p.pi), single: trackCount.peek() === 1, quad: trackCount.peek() === 4, through };
   }
 
   private finishAtLast() {
@@ -321,6 +399,8 @@ export class Tools {
 
   private requestPreview() {
     if (!this.start) return;
+    const se = this.start.end;
+    if (se.kind === "node" && !world.peek()?.nodes.has(se.node)) return this.reset(); // undone meanwhile
     const h = this.hover;
     if (!h) return;
     // Nothing to show while the pointer is on the last point placed.
@@ -781,6 +861,28 @@ export class Tools {
     });
   }
 
+  /** The faint circle the segment being placed curves along (T-418), red when it is refused. */
+  private circle: SVGSVGElement | null = null;
+  private curveCircle(pv: PreviewAnswer | null) {
+    const c = circleOnScreen(pv?.arc, (x, y) => this.screen(x, y), toLngLat, toLocal);
+    if (!c) {
+      if (this.circle) this.circle.style.display = "none";
+      return;
+    }
+    const NS = "http://www.w3.org/2000/svg";
+    if (!this.circle) {
+      this.circle = document.createElementNS(NS, "svg");
+      this.circle.setAttribute("width", "1");
+      this.circle.setAttribute("height", "1");
+      this.circle.appendChild(document.createElementNS(NS, "circle"));
+      this.box.insertBefore(this.circle, this.box.firstChild);
+    }
+    this.circle.style.display = "";
+    this.circle.setAttribute("class", "curve-circle" + (pv!.ok ? "" : " bad"));
+    this.circle.style.transform = `translate(${c.x}px,${c.y}px)`;
+    this.circle.firstElementChild!.setAttribute("r", String(c.r));
+  }
+
   /** Move the DOM markers to the camera (after each MapLibre frame and each change). */
   place() {
     let k = 0;
@@ -802,6 +904,7 @@ export class Tools {
       }
     }
     for (let i = k; i < this.marks.length; i++) this.marks[i].style.display = "none";
+    this.curveCircle(t === "track" && this.start && this.through() ? this.lastPreview : null);
 
     // the platform ghost shows only while the station tool snaps (below)
     if (this.ghost) this.ghost.style.display = "none";
@@ -840,7 +943,7 @@ export class Tools {
     } else if (t === "track" && this.start && h && pv) {
       this.tag.style.display = "";
       this.tag.className = "tool-tag";
-      this.tag.replaceChildren(...placementTag(pv, buildLevel.peek(), h.kind === "free"));
+      this.tag.replaceChildren(...placementTag(pv, buildLevel.peek(), h.kind === "free" && !this.through()));
       put(this.tag, h.lx, h.ly, 14, 12);
     } else if (t === "station" && h && h.kind !== "free" && this.ghostOk === false) {
       // why a click here would be refused (T-311)

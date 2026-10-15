@@ -41,6 +41,12 @@ pub struct TrackApi {
     route_vertices: Vec<Pi>,
     /// The express pair of the last quad route asked about (T-255), else empty.
     route_express: Vec<Pi>,
+    /// T-418: a route from a heading to a free end is one tangent arc (`set_route_tangent`).
+    route_tangent: bool,
+    /// The last tangent route's circle: centre x, y and ground radius, else empty.
+    route_arc: Vec<f64>,
+    /// The end node of the last route asked about (new or existing).
+    route_end: u32,
     /// Per rendered segment of the last route/edge preview, authoritative geometry speed km/h.
     preview_speeds: Vec<f32>,
     /// The pack rasters installed with `add_pack_water`, kept so the water mask can be rebuilt
@@ -128,6 +134,9 @@ impl TrackApi {
             last_trains: 0.0,
             route_vertices: vec![],
             route_express: vec![],
+            route_tangent: false,
+            route_arc: vec![],
+            route_end: u32::MAX,
             preview_speeds: vec![],
             rasters: vec![],
             boarding: Boarding::default(),
@@ -649,52 +658,53 @@ impl TrackApi {
         }
         let len = net.edge_len[e as usize];
         let own = vertices_of(net, &d, &[]);
-        let ends = [(d.a, s < reach, own[1]), (d.b, len - s < reach, own[own.len() - 2])];
-        let mut merges: [Option<(u32, u32, EdgeData)>; 2] = [None, None];
-        for (k, &(node, near, corner)) in ends.iter().enumerate() {
-            if !near {
-                continue;
-            }
-            if let Some((o, which, od, _, _)) = self.free_joint(node, e, corner) {
-                if od.built == d.built && od.off == d.off && od.tracks == d.tracks && o != e && merges[0].as_ref().map_or(true, |m| m.0 != o) {
-                    merges[k] = Some((o, which, od));
+        // T-418: joint after joint on each side, nearest first, until the reach is clear (a
+        // platform over several short segments): (edge, its end at the joint nearer `e`, data)
+        let mut sides: [Vec<(u32, u32, EdgeData)>; 2] = [vec![], vec![]];
+        let mut seen = vec![e];
+        for (k, side) in sides.iter_mut().enumerate() {
+            let (mut node, mut gap, mut corner) = if k == 0 { (d.a, s, own[1]) } else { (d.b, len - s, own[own.len() - 2]) };
+            let mut cur = e;
+            while gap < reach {
+                let Some((o, which, od, _, _)) = self.free_joint(node, cur, corner) else { break };
+                if seen.contains(&o) || od.built != d.built || od.off != d.off || od.tracks != d.tracks {
+                    break;
                 }
+                seen.push(o);
+                let v = vertices_of(net, &od, &[]);
+                node = net.end_node(o, 1 - which);
+                corner = if which == 0 { v[v.len() - 2] } else { v[1] };
+                gap += net.edge_len[o as usize];
+                cur = o;
+                side.push((o, which, od));
             }
         }
-        if merges.iter().all(|m| m.is_none()) {
+        if sides.iter().all(|m| m.is_empty()) {
             return None;
         }
         // the vertices of each part in the joined edge's direction, with each corner's radius
         let radii = |v: &[Pi]| net.fit(v).radius;
+        let oriented = |od: &EdgeData, flip: bool| {
+            let mut v = vertices_of(net, od, &[]);
+            let mut r = radii(&v);
+            if flip {
+                v.reverse();
+                r.reverse();
+            }
+            (v, r)
+        };
+        let mut parts: Vec<(Vec<Pi>, Vec<f64>)> = sides[0].iter().rev().map(|(_, which, od)| oriented(od, *which == 0)).collect();
+        parts.push((own.clone(), radii(&own)));
+        parts.extend(sides[1].iter().map(|(_, which, od)| oriented(od, *which == 1)));
         let mut verts: Vec<(Pi, f64)> = vec![];
-        let mut s = s;
-        let mut a = d.a;
-        if let Some((o, which, od)) = &merges[0] {
-            let mut v = vertices_of(net, od, &[]);
-            let mut r = radii(&v);
-            if *which == 0 {
-                v.reverse();
-                r.reverse();
-            }
-            a = net.end_node(*o, 1 - which);
-            verts.extend(v.iter().copied().zip(r).take(v.len() - 1));
-            s += net.edge_len[*o as usize];
+        let last = parts.len() - 1;
+        for (p, (v, r)) in parts.into_iter().enumerate() {
+            let keep = if p == last { v.len() } else { v.len() - 1 };
+            verts.extend(v.into_iter().zip(r).take(keep).skip(if p == 0 { 0 } else { 1 }));
         }
-        let r = radii(&own);
-        let skip = if merges[0].is_some() { 1 } else { 0 };
-        let keep = if merges[1].is_some() { own.len() - 1 } else { own.len() };
-        verts.extend(own.iter().copied().zip(r).take(keep).skip(skip));
-        let mut b = d.b;
-        if let Some((o, which, od)) = &merges[1] {
-            let mut v = vertices_of(net, od, &[]);
-            let mut r = radii(&v);
-            if *which == 1 {
-                v.reverse();
-                r.reverse();
-            }
-            b = net.end_node(*o, 1 - which);
-            verts.extend(v.iter().copied().zip(r).skip(1));
-        }
+        let s = s + sides[0].iter().map(|m| net.edge_len[m.0 as usize]).sum::<f64>();
+        let a = sides[0].last().map_or(d.a, |m| net.end_node(m.0, 1 - m.1));
+        let b = sides[1].last().map_or(d.b, |m| net.end_node(m.0, 1 - m.1));
         let mut pis: Vec<Pi> = verts.iter().map(|v| v.0).collect();
         let f = net.fit(&pis);
         for j in 1..pis.len() - 1 {
@@ -706,18 +716,12 @@ impl TrackApi {
         let joined = EdgeData { a, b, tracks: d.tracks, pis: pis[1..pis.len() - 1].to_vec(), built: d.built, off: d.off, thru: vec![], crossover: false };
         // each part's direction that runs the joined edge's way
         let mut forward: Vec<(u32, u32)> = vec![(e, 0)];
-        if let Some((o, which, _)) = &merges[0] {
-            forward.push((*o, if *which == 1 { 0 } else { 1 }));
-        }
-        if let Some((o, which, _)) = &merges[1] {
-            forward.push((*o, if *which == 0 { 0 } else { 1 }));
-        }
+        forward.extend(sides[0].iter().map(|&(o, which, _)| (o, if which == 1 { 0 } else { 1 })));
+        forward.extend(sides[1].iter().map(|&(o, which, _)| (o, if which == 0 { 0 } else { 1 })));
         let mut ops = vec![Op::Edge { id: e, data: Some(joined) }];
-        for (k, m) in merges.iter().enumerate() {
-            if let Some((o, _, _)) = m {
-                ops.push(Op::Edge { id: *o, data: None });
-                ops.push(Op::Node { id: if k == 0 { d.a } else { d.b }, data: None });
-            }
+        for &(o, which, _) in sides.iter().flatten() {
+            ops.push(Op::Edge { id: o, data: None });
+            ops.push(Op::Node { id: net.end_node(o, which), data: None });
         }
         for l in 0..net.line_count() as u32 {
             if !net.line_ok(l) || !net.line_path(l).iter().any(|&p| forward.iter().any(|f| f.0 == super::net::path_edge(p))) {
@@ -975,10 +979,28 @@ impl TrackApi {
             self.release(&new_nodes, &new_edges);
             return Err(Issue::EdgeLoop { edge: u32::MAX });
         }
+        self.route_end = rb.node;
+        self.route_arc.clear();
         let mut verts: Vec<Pi> = vec![Pi::new(ra.x, ra.y, 0.0, ra.level)];
         let next_a = pis.first().map_or((rb.x, rb.y), |p| (p.x, p.y));
         let prev_b = pis.last().map_or((ra.x, ra.y), |p| (p.x, p.y));
-        if let Some(p) = lead_in(&ra, next_a, scaled) {
+        // T-418: ending on open ground, the segment is one arc through the end; ending on track it
+        // must join that like a turnout, so it keeps the usual shape
+        let tangent = self.route_tangent && pis.is_empty() && rb.dirs.is_empty() && tracks != 4;
+        if let (true, Some(dir)) = (tangent, nearer_dir(&ra, next_a)) {
+            let (pi, circle) = tangent_arc(ra.x, ra.y, ra.level, dir, next_a, scaled);
+            if let Some(c) = circle {
+                self.route_arc = c.to_vec();
+            }
+            match pi {
+                Ok(Some(p)) => verts.push(p),
+                Ok(None) => {}
+                Err(()) => {
+                    self.release(&new_nodes, &new_edges);
+                    return Err(Issue::Geom { edge: u32::MAX, issue: GeomIssue::Reversal(1) });
+                }
+            }
+        } else if let Some(p) = lead_in(&ra, next_a, scaled) {
             verts.push(p);
         }
         let first_click = verts.len();
@@ -1113,6 +1135,23 @@ impl TrackApi {
         out
     }
 
+    /// T-418: whether routes after this are drawn through their end (`tangent_arc`): a route with
+    /// no PIs from an end with a heading to open ground becomes one tangent arc. Quad never is.
+    pub fn set_route_tangent(&mut self, on: bool) {
+        self.route_tangent = on;
+    }
+
+    /// The circle of the last route preview's tangent arc (T-418): centre x, y and ground radius,
+    /// even when the route was refused; empty when it had none.
+    pub fn route_arc(&self) -> Vec<f64> {
+        self.route_arc.clone()
+    }
+
+    /// The node the last `add_route` ended at, so the next segment can start from it (T-418).
+    pub fn route_end(&self) -> u32 {
+        self.route_end
+    }
+
     /// Edges for the pieces of a stroke (`stroke_pieces`) from node `a` to node `b`, with new
     /// joints between them.
     #[allow(clippy::too_many_arguments)]
@@ -1223,8 +1262,8 @@ impl TrackApi {
         self.station_ops(&[(id, s)], &st, dry)
     }
 
-    /// Stations splitting edges at chainages, one undoable edit (`add_station`). A joint of a drawn
-    /// route (T-244) within a platform's reach goes first: the pieces either side become one edge
+    /// Stations splitting edges at chainages, one undoable edit (`add_station`). The joints of a
+    /// drawn route (T-244, T-418) within a platform's reach go first: the pieces become one edge
     /// again, so the platform has room. `(u32::MAX, node)` puts one on an existing node instead.
     fn station_ops(&mut self, at: &[(u32, f64)], st: &StationData, dry: bool) -> u32 {
         let mut ops = vec![];
@@ -2497,12 +2536,50 @@ const MIN_JOINT_LEG: f64 = 20.0;
 /// the directions the node allows, the one nearer to it. None where the node has no track yet
 /// or the route already leaves along the heading.
 fn lead_in(r: &Resolved, toward: (f64, f64), scaled: bool) -> Option<Pi> {
-    if r.dirs.is_empty() {
-        return None;
-    }
+    lead_in_along(r.x, r.y, r.level, nearer_dir(r, toward)?, toward, scaled)
+}
+
+/// Of the directions an end allows a new edge to leave in, the one nearer to `toward`.
+fn nearer_dir(r: &Resolved, toward: (f64, f64)) -> Option<f64> {
     let want = (toward.1 - r.y).atan2(toward.0 - r.x);
-    let dir = r.dirs.iter().copied().min_by(|a, b| geom::wrap(a - want).abs().total_cmp(&geom::wrap(b - want).abs())).unwrap();
-    lead_in_along(r.x, r.y, r.level, dir, toward, scaled)
+    r.dirs.iter().copied().min_by(|a, b| geom::wrap(a - want).abs().total_cmp(&geom::wrap(b - want).abs()))
+}
+
+/// The furthest off its start's heading a tangent segment's end may be (T-418).
+const TANGENT_MAX_OFF: f64 = 85.0 * PI / 180.0;
+
+/// T-418: the PI that makes a segment from (x, y), leaving on heading `dir`, one circular arc
+/// through `to`. For a chord d at angle a off the heading it lies d / (2 cos a) along the heading,
+/// so both legs are that long and the auto radius, which may use an end leg whole, is
+/// d / (2 sin a). None where `to` is on the heading; Err where it is more than `TANGENT_MAX_OFF`
+/// off it. Also the arc's circle (centre x, y, ground radius), the capped curve's when the arc
+/// would be wider than `R_CAP`; None for a straight.
+#[allow(clippy::type_complexity)]
+fn tangent_arc(x: f64, y: f64, level: i8, dir: f64, to: (f64, f64), scaled: bool) -> (Result<Option<Pi>, ()>, Option<[f64; 3]>) {
+    let (dx, dy) = (to.0 - x, to.1 - y);
+    let d = dx.hypot(dy);
+    let off = geom::wrap(dy.atan2(dx) - dir);
+    if d < 1.0 || off.abs() < 0.002 {
+        return (Ok(None), None);
+    }
+    let a = off.abs();
+    let k = kk(scaled, y);
+    let (ux, uy) = (dir.cos(), dir.sin());
+    let (nx, ny) = (-uy * off.signum(), ux * off.signum());
+    let r = d / (2.0 * a.sin());
+    let rc = R_CAP * k;
+    let circle = if r <= rc || a > TANGENT_MAX_OFF {
+        [x + nx * r, y + ny * r, r / k]
+    } else {
+        // the capped curve starts this far along the heading
+        let s0 = d / (2.0 * a.cos()) - rc * a.tan();
+        [x + ux * s0 + nx * rc, y + uy * s0 + ny * rc, R_CAP]
+    };
+    if a > TANGENT_MAX_OFF {
+        return (Err(()), Some(circle));
+    }
+    let t = d / (2.0 * a.cos());
+    (Ok(Some(Pi::new(x + ux * t, y + uy * t, 0.0, level).quantised())), Some(circle))
 }
 
 /// A lead-in PI leaving (x, y) on heading `dir` towards `toward` (`lead_in`), or None when the
@@ -3573,6 +3650,121 @@ mod tests {
         assert_eq!(a.set_line(id2, &[east, w], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "R".into()), 0);
         assert_eq!(a.add_station(2, edges[1], x, y, 200, "Middle".into()), 0, "{}", a.issues());
         assert!(!a.w.net.line_broken[id2 as usize] && !a.w.net.line_broken[id as usize]);
+    }
+
+    /// T-418: a straight from (0, 0) east to (1000, 0), tangent drawing on, and its east end.
+    fn tangent_start() -> (TrackApi, u32) {
+        let mut a = api();
+        let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(1000.0, 0.0).iter()).copied().collect();
+        assert_eq!(a.add_route(&ends, &[], 2, false), 0);
+        let east = a.route_end();
+        assert!((a.w.net.node_x[east as usize] - 1000.0).abs() < 1e-6);
+        a.set_route_tangent(true);
+        (a, east)
+    }
+    fn from_node(n: u32, x: f64, y: f64) -> Vec<f64> {
+        vec![1.0, n as f64, 0.0, 0.0, 0.0, 0.0, 0.0, x, y, 0.0]
+    }
+
+    /// T-418: from a track end, a click d away at a off the heading is one arc of radius
+    /// d / (2 sin a) ending at the click on heading 2a; one wider than the cap is straight, capped
+    /// curve, straight, still through the click on 2a. The circle is the arc's.
+    #[test]
+    fn a_tangent_segment_is_one_arc_through_the_click() {
+        let (mut a, east) = tangent_start();
+        for (d, deg) in [(500.0, 30.0), (800.0, -50.0), (300.0, 12.0), (2000.0, 70.0), (500.0, 2.0)] {
+            let off: f64 = (deg as f64).to_radians();
+            let (x, y) = (1000.0 + d * off.cos(), d * off.sin());
+            let pv = a.preview_route(&from_node(east, x, y), &[], 2, false);
+            assert_eq!(pv[0], 1.0, "{d} m at {deg}: {}", a.issues());
+            let f = a.w.net.fit(&a.route_vertices);
+            let (ex, ey, eh) = geom::pos_at(&f.pieces, f.len);
+            assert!((ex - x).hypot(ey - y) < 0.01, "{d} m at {deg}: ends at {ex}, {ey}");
+            assert!(geom::wrap(eh - 2.0 * off).abs() < 1e-4, "{d} m at {deg}: leaves on {eh}");
+            let want = d / (2.0 * off.abs().sin());
+            let arc = a.route_arc();
+            let (cx, cy) = (arc[0], arc[1]);
+            if want <= R_CAP {
+                assert!((f.radius[1] - want).abs() < 0.01 * want, "{d} m at {deg}: radius {} against {want}", f.radius[1]);
+                assert!(f.pieces.iter().all(|p| p.k != 0.0 || p.len < 0.05), "{d} m at {deg}: one arc, no straight");
+                assert!(((cx - 1000.0).hypot(cy) - want).abs() < 0.5 && ((cx - x).hypot(cy - y) - want).abs() < 0.5, "{d} m at {deg}: circle {arc:?}");
+            } else {
+                assert_eq!(f.radius[1], R_CAP, "{d} m at {deg}");
+                assert_eq!(f.pieces.iter().filter(|p| p.k == 0.0 && p.len > 1.0).count(), 2, "{d} m at {deg}: straight, curve, straight");
+                assert!((arc[2] - R_CAP).abs() < 1e-6 && ((cx - x).hypot(cy - y) - R_CAP).abs() > 1.0);
+            }
+        }
+        // placed, the end node comes back, and the next segment leaves along this one
+        let off: f64 = 30f64.to_radians();
+        let (x, y) = (1000.0 + 500.0 * off.cos(), 500.0 * off.sin());
+        assert_eq!(a.add_route(&from_node(east, x, y), &[], 2, false), 0, "{}", a.issues());
+        let joint = a.route_end();
+        assert!((a.w.net.node_x[joint as usize] - x).abs() < 0.01 && (a.w.net.node_y[joint as usize] - y).abs() < 0.01);
+        let (x2, y2) = (x + 400.0 * (2.0 * off).cos(), y + 400.0 * (2.0 * off).sin());
+        assert_eq!(a.add_route(&from_node(joint, x2, y2), &[], 2, false), 0, "{}", a.issues());
+        assert_eq!(a.w.net.node_ports[joint as usize].n, 2, "a plain joint");
+        assert!(a.route_arc().is_empty(), "straight on: no curve, no circle");
+        // the first segment's corner dragged sideways: the joint after it follows
+        let e = live_edges(&a).into_iter().find(|&e| a.w.net.edge_b[e as usize] == joint).unwrap();
+        let pis = a.edge_pis(e);
+        assert_eq!(pis.len(), 9, "one corner");
+        assert_eq!(a.set_edge_pis(e, &[pis[1] - 5.0, pis[2] + 10.0, 0.0, pis[4]]), 0, "{}", a.issues());
+        assert!((a.w.net.node_x[joint as usize] - x).hypot(a.w.net.node_y[joint as usize] - y) > 1.0, "the joint moved");
+        // with tangent drawing off, the same click gives the old curve then straight
+        a.set_route_tangent(false);
+        let pv = a.preview_route(&from_node(east, x, -y), &[], 2, false);
+        assert_eq!(pv[0], 1.0);
+        let f = a.w.net.fit(&a.route_vertices);
+        assert!(f.radius[1] < 450.0, "old lead-in: {}", f.radius[1]);
+    }
+
+    /// T-418: a click too close and too far off to the side is refused, the ghost and circle
+    /// still drawn; one behind the end is refused with its circle.
+    #[test]
+    fn a_too_tight_or_backward_tangent_click_is_refused() {
+        let (mut a, east) = tangent_start();
+        let off: f64 = 60f64.to_radians();
+        let ends = from_node(east, 1000.0 + 150.0 * off.cos(), 150.0 * off.sin());
+        let pv = a.preview_route(&ends, &[], 2, false);
+        assert_eq!(pv[0], 0.0);
+        assert!(pv.len() > 5, "the red ghost is drawn");
+        assert!(a.issue_kinds().contains("RadiusTooSmall"), "{}", a.issue_kinds());
+        let r = a.route_arc()[2];
+        assert!((r - 150.0 / (2.0 * off.sin())).abs() < 0.5, "{r}");
+        let fr = a.w.net.fit(&a.route_vertices).radius[1];
+        assert!((fr - r).abs() < 0.5, "the ghost's curve is the circle's: {fr} against {r}");
+        assert_ne!(a.add_route(&ends, &[], 2, false), 0);
+        let back = from_node(east, 900.0, 400.0);
+        assert_eq!(a.preview_route(&back, &[], 2, false)[0], 0.0);
+        assert!(a.issue_kinds().contains("Reversal"), "{}", a.issue_kinds());
+        assert_eq!(a.route_arc().len(), 3);
+        assert_ne!(a.add_route(&back, &[], 2, false), 0);
+        assert_eq!(live_edges(&a).len(), 1, "nothing added");
+    }
+
+    /// T-418: a 400 m platform across three 120 m segments joins all their joints first; dragging
+    /// a segment's corner afterwards moves the joint with it.
+    #[test]
+    fn a_station_spans_several_short_segments() {
+        let (mut a, east) = tangent_start();
+        let mut end = east;
+        let mut heading = 0.0f64;
+        let mut segs = vec![];
+        for turn in [3.0f64, -3.0, 2.0, -2.0, 3.0] {
+            let off = turn.to_radians();
+            let (x0, y0) = (a.w.net.node_x[end as usize], a.w.net.node_y[end as usize]);
+            let (x, y) = (x0 + 120.0 * (heading + off).cos(), y0 + 120.0 * (heading + off).sin());
+            assert_eq!(a.add_route(&from_node(end, x, y), &[], 2, false), 0, "{}", a.issues());
+            heading += 2.0 * off;
+            end = a.route_end();
+            segs.push(*live_edges(&a).last().unwrap());
+        }
+        let mid = segs[2];
+        let (x, y, _) = geom::pos_at(a.w.net.edge_pieces(mid), a.w.net.edge_len[mid as usize] / 2.0);
+        assert_eq!(a.add_station(2, mid, x, y, 400, "Long".into()), 0, "{}", a.issues());
+        assert!(a.w.net.node_platform.iter().any(|&p| p == 400));
+        assert_eq!(a.undo(), 0);
+        assert_eq!(live_edges(&a).len(), 6);
     }
 
     /// T-311: `preview_station` answers as `add_station` would, in the middle of a stretch and

@@ -17,4 +17,14 @@ const ordinary=strokesFromPreview(points,false);
 assert.ok(ordinary.flags.every(f=>f===F_BLUEPRINT),'ordinary blueprint preview semantics remain unchanged');
 assert.throws(()=>strokesFromPreview(points,false,new Float32Array([160]),true),/length mismatch/);
 assert.deepEqual(points,original,'previews do not mutate source geometry');
-console.log('T-145 preview contract checks passed: exact speed/level alignment, solid-only placement flag, invalid override, blueprint preservation and malformed-array refusal.');
+// T-418: a tangent route's circle, `arc` = centre x, y (local), ground radius m, 0
+const circ=await build({configFile:false,logLevel:'silent',build:{write:false,minify:false,lib:{entry:'trainworld/app/src/map/curveCircle.ts',formats:['es']}}});
+const {circleOnScreen}=await import('data:text/javascript;base64,'+Buffer.from((Array.isArray(circ)?circ[0]:circ).output.find(o=>o.type==='chunk').code).toString('base64'));
+// a plain frame: 1 local unit = 1 screen px, lng/lat in metres scaled about lat 0
+const perDeg=6371008.8*Math.PI/180;
+const scr=(x,y)=>[x,y],toLL=(x,y)=>[x/perDeg,y/perDeg],toLoc=(lng,lat)=>[lng*perDeg,lat*perDeg];
+const c=circleOnScreen(new Float64Array([100,50,300,0]),scr,toLL,toLoc);
+assert.ok(c&&c.x===100&&c.y===50&&Math.abs(c.r-300)<0.01,'the circle is centred on the arc centre with its ground radius: '+JSON.stringify(c));
+assert.equal(circleOnScreen(undefined,scr,toLL,toLoc),null,'no arc, no circle');
+assert.equal(circleOnScreen(new Float64Array([1,2,0,0]),scr,toLL,toLoc),null,'a straight has no circle');
+console.log('T-145 preview contract checks passed: exact speed/level alignment, solid-only placement flag, invalid override, blueprint preservation, malformed-array refusal and the T-418 curve circle.');

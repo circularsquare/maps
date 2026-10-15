@@ -33,6 +33,8 @@ export interface EditAnswer {
   charge: number;
   /** the new line's id, for addLine */
   line?: number;
+  /** a route's end node, for drawing on from it (T-418) */
+  node?: number;
 }
 
 export interface PreviewAnswer {
@@ -47,6 +49,8 @@ export interface PreviewAnswer {
   speeds?: Float32Array;
   /** where each alignment starts in `pts` (triples) when there are several (a node drag) */
   parts?: Uint32Array;
+  /** a tangent route's circle (T-418): centre x, y (local units), ground radius m, 0 */
+  arc?: Float64Array;
 }
 
 /** A crossover preview (T-338): its cost US$M or why not, and its diagonals' centre lines. */
@@ -379,13 +383,14 @@ export class ClockClient {
         this.pending.delete(msg.seq);
         this.editLog.push({ worker: msg.ms, stateMs: this.lastStateMs });
         if (this.editLog.length > 40) this.editLog.shift();
-        f?.({ ok: msg.ok, issues: msg.issues, charge: msg.charge, line: msg.line });
+        f?.({ ok: msg.ok, issues: msg.issues, charge: msg.charge, line: msg.line, node: msg.node });
         break;
       }
       case "preview": {
         this.previewBusy = false;
         this.toCurrentAnchor(msg.anchor, msg.verts, msg.pts);
-        this.previewCb?.({ ok: msg.ok, cost: msg.cost, lengthM: msg.lengthM, mult: msg.mult, issues: msg.issues, verts: msg.verts, pts: msg.pts, speeds: msg.speeds, parts: msg.parts });
+        if (msg.arc) this.toCurrentAnchor(msg.anchor, msg.arc, new Float32Array(0));
+        this.previewCb?.({ ok: msg.ok, cost: msg.cost, lengthM: msg.lengthM, mult: msg.mult, issues: msg.issues, verts: msg.verts, pts: msg.pts, speeds: msg.speeds, parts: msg.parts, arc: msg.arc });
         const n = this.previewNext;
         this.previewNext = null;
         if (n) this.ask(n.msg, n.cb);
@@ -429,7 +434,7 @@ export class ClockClient {
   }
 
   /** Ask what a route would cost. One request in flight; newer ones replace a waiting one. */
-  preview(req: { from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean }, cb: (a: PreviewAnswer) => void) {
+  preview(req: { from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean; through?: boolean }, cb: (a: PreviewAnswer) => void) {
     this.ask((seq) => ({ kind: "preview", seq, ...req }), cb);
   }
 

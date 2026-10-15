@@ -30,7 +30,23 @@ Full design, numbers and sources: `notes/T-008.md`.
   stretch's length, average cost multiplier (level and water over its length), price and tightest
   curve, the level placed and the lowest speed limit (T-085, T-411), or why it cannot be built. A
   click adding a corner is refused when the route would be unbuildable if it ended there; a
-  shift-click places it anyway (T-410, [ui-building.md](ui-building.md)).
+  shift-click places it anyway (T-410, [ui-building.md](ui-building.md)). This is the "Corners"
+  mode; quad track is always drawn this way.
+- **Drawing through points** (T-418, the Build tab's default; Anita 2026-10-15): two clicks per
+  segment, placed at once and never changed by later clicks; Shift held chains the next segment from
+  its end. A segment from a track end, a node or track to open ground is **one circular arc through
+  the click, leaving along the track's heading** (a tangent arc; from a node or track, in the
+  direction nearer the click): for a click d away at an angle a off the heading, an edge with one
+  auto-radius PI on the heading d / (2 cos a) from the start, so both legs are equal end legs and
+  the radius is d / (2 sin a), the largest any single curve through the click can have; the track
+  arrives at the click on heading 2a. One wider than the 1,796 m cap is straight, capped curve,
+  straight, still through the click on 2a. A segment from a free point is straight. A segment
+  ending on track or a node joins it like a turnout, so it has today's shape (a lead-in PI at each
+  end). Refused: a curve under 100 m (the ghost and circle red), a click more than 85 degrees off
+  the heading ("turn back on itself"), and anything the edit refuses (water, a ramp, 200 m per
+  level, that does not fit the second leg). The preview gives the arc's circle (centre and radius,
+  `TrackApi::route_arc`) and an edit the segment's end node (`route_end`) to chain from. Segment ends
+  are plain joints, like those between pieces.
 - **One piece per corner** (T-244, Anita: deleting one stretch should not delete the whole
   path): a finished route is several edges, one per corner clicked, joined at plain nodes (two
   edge ends, no station) in the middle of the leg between two corners. The leg middle is on the
@@ -42,7 +58,10 @@ Full design, numbers and sources: `notes/T-008.md`.
   stays one edge. Drawing it is one undo step; the delete tool, Construct in the track inspector
   and the track inspector itself act on one piece, and removing a piece leaves its neighbours with
   track ends where it was. The joints are not drawn and cost nothing; trains pass them with no
-  speed limit or delay (a track section runs on through a plain node, 6.2).
+  speed limit or delay (a track section runs on through a plain node, 6.2). A station placed
+  within half a platform of joints first joins the pieces there into one edge, joint after joint
+  until the platform has room (a long platform over several short segments; T-418), the shape
+  unchanged.
 - **Reshaping blueprint track** (T-064, T-092, T-071): a selected stretch of blueprint track shows its PIs
   as squares on the map; dragging one previews the new shape with each curve's radius and speed
   (or why it cannot be built), letting go applies it as one undoable edit, Escape puts it back. The

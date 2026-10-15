@@ -40,7 +40,8 @@ export type StationAt = { kind: "node"; node: NodeId } | { kind: "edge"; edge: E
  * (SPEC 6.4). Line ids are the track model's numbers. */
 export type EditOp =
   /** a route turning at the clicked points `pis`; a junction it makes is flat (T-080) */
-  | { op: "route"; from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean }
+  /** `through` (T-418): a route with no PIs from a heading to open ground is one tangent arc */
+  | { op: "route"; from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean; through?: boolean }
   | { op: "removeEdge"; edge: EdgeId }
   /** reshape blueprint track (T-064): its PIs replaced (moved, or a radius set), same ends */
   | { op: "edgePis"; edge: EdgeId; pis: PiInput[] }
@@ -82,7 +83,7 @@ export type ToClock =
   | { kind: "view"; w: number; s: number; e: number; n: number }
   | { kind: "edit"; seq: number; op: EditOp }
   /** what a route would cost and whether it can be built; answered with "preview" */
-  | { kind: "preview"; seq: number; from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean }
+  | { kind: "preview"; seq: number; from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean; through?: boolean }
   /** what giving blueprint track new PIs would do (T-064); answered with "preview" */
   | { kind: "previewEdge"; seq: number; edge: EdgeId; pis: PiInput[] }
   /** what moving a blueprint node would do (T-093); answered with "preview", one part per edge */
@@ -278,7 +279,7 @@ export type FromClock =
   | { kind: "ready"; initMs: number; frame: FrameSpec }
   /** an edit's answer; `issues` are the track model's problem kinds (`TrackApi.issue_kinds`) */
   /** `ms`: the worker's time on the edit by step (T-229, for `?debug=1`) */
-  | { kind: "edited"; seq: number; ok: boolean; issues: string[]; charge: number; line?: number; ms?: Record<string, number> }
+  | { kind: "edited"; seq: number; ok: boolean; issues: string[]; charge: number; line?: number; node?: number; ms?: Record<string, number> }
   | {
       kind: "preview";
       seq: number;
@@ -299,6 +300,8 @@ export type FromClock =
       /** several alignments (a node drag moves every edge there, T-093): where each starts in
        * `pts`, in triples, and the end; absent = one */
       parts?: Uint32Array;
+      /** a tangent route's circle (T-418): centre x, y (local units), ground radius m, 0 */
+      arc?: Float64Array;
       /** the draw anchor version `verts` and `pts` are relative to (T-307) */
       anchor?: number;
     }

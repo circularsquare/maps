@@ -12,8 +12,9 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
 
 - **Tools**: draw track (key 1), station (2), crossover (6, below), delete (3), select blueprints
   (5, below), three buttons on the first row and two on the second; then the level with its
-  multiplier and price per km, single, double or quad track [T-255], and the platform length for
-  new stations.
+  multiplier and price per km, single, double or quad track [T-255], the drawing mode ("Through
+  points" or "Corners", below; remembered with the display settings, Through points by default)
+  [T-418], and the platform length for new stations.
   The number keys work from any tab and open the Build tab; the key of the tool already on does
   nothing. Each button shows its key. There is no button for plain selecting: clicking the active tool again or
   leaving it with Esc returns to selecting. The trip tool (key 4) is in
@@ -35,10 +36,21 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
 
 ## Drawing track
 
-[T-023, T-085, T-092, T-244, T-311, T-322]
+[T-023, T-085, T-092, T-244, T-311, T-322, T-418]
 
-- Clicks place corners at the level selected (rules in [track-and-service.md](track-and-service.md)
-  6.1). While drawing, the clicked points show as squares and each curve its radius and speed
+Two modes, picked in the Build tab; quad track is always drawn by corners. The geometry of both is
+in [track-and-service.md](track-and-service.md) 6.1.
+
+- **Through points** [T-418]: the first click is the start, the second places a segment ending at
+  it at once (one undo step), the track passing through the click. A click with Shift held places
+  the segment and starts the next one at its end; without Shift the tool is ready for a new start.
+  To carry on later, click the loose end. Backspace while chaining undoes the last segment and
+  draws on from its start; Escape or Enter stops. A click whose segment cannot be built (a curve
+  under 100 m, more than 85 degrees off the track's heading, water, too little room for a ramp)
+  is refused by the edit, its reason at the bottom left; the ghost was red already. While placing,
+  the circle the segment's curve lies on is drawn faint grey (red when refused) [`map/curveCircle.ts`];
+  none for a straight segment.
+- **Corners**: clicks place corners at the level selected. While drawing, the clicked points show as squares and each curve its radius and speed
   limit, on the speed colour at half strength [T-417]; the same labels show while a selected
   blueprint stretch is reshaped or a node dragged (`setCurveLabel`, `map/tools.ts`).
 - **Loose ends** [T-416; `map/endMarkers.ts`]: while the track or station tool is on, a small white
@@ -53,7 +65,7 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
   level on its Height colour and the speed on its Max speed colour (`speedColour`,
   `game/palette.ts`), each at half strength behind dark text. Where the route could not be built
   ending at the cursor, the reason comes first, in red, and the cost line is left out.
-- **A refused click** [T-410]: a click that adds a corner where the route, if it ended there,
+- **A refused click** (corners) [T-410]: a click that adds a corner where the route, if it ended there,
   could not be built (a curve under 100 m, ground track over water, too little room for a ramp) is
   refused with the reason at the bottom left, and the tag adds "Shift-click to place it anyway".
   The answer is the hover's preview for that spot, or one asked for the click when the pointer's
@@ -63,8 +75,8 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
 - **The ghost** is solid with a dark casing: white in the Line and traffic views, coloured by the
   Height or Max speed view from the preview's fitted geometry; red when invalid.
 - **Placed blueprint track** is drawn as blue rails ([ui-map.md](ui-map.md) "Lines and track").
-- A finished route is one piece per corner; the delete tool, Construct and the track inspector act
-  on one piece [T-244].
+- A finished route is one piece per corner, a through-points segment one piece; the delete tool,
+  Construct and the track inspector act on one piece [T-244].
 
 ## Placing stations
 

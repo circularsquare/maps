@@ -1045,11 +1045,14 @@ function colourInt(c: string) {
   return parseInt(c.slice(1), 16);
 }
 
-function apply(op: EditOp): { r: number; line?: number } {
+function apply(op: EditOp): { r: number; line?: number; node?: number } {
   const a = api!;
   switch (op.op) {
-    case "route":
-      return { r: a.add_route(new Float64Array([...endArr(op.from), ...endArr(op.to)]), pisArr(op.pis), op.single ? 1 : op.quad ? 4 : 2, false) };
+    case "route": {
+      a.set_route_tangent(!!op.through);
+      const r = a.add_route(new Float64Array([...endArr(op.from), ...endArr(op.to)]), pisArr(op.pis), op.single ? 1 : op.quad ? 4 : 2, false);
+      return { r, node: r === 0 ? a.route_end() : undefined };
+    }
     case "edgePis":
       return { r: a.set_edge_pis(op.edge, pisArr(op.pis)) };
     case "moveNode":
@@ -1248,7 +1251,7 @@ async function whole(msg: Extract<ToClock, { kind: "import" | "export" | "newGam
 /** Before an edit that makes new track: the masks its geometry needs (worked out as its preview). */
 async function masksFor(op: EditOp) {
   const a = api!;
-  if (op.op === "route") await withMasks(() => a.preview_route(new Float64Array([...endArr(op.from), ...endArr(op.to)]), pisArr(op.pis), op.single ? 1 : op.quad ? 4 : 2, false), routePoints);
+  if (op.op === "route") await withMasks(() => (a.set_route_tangent(!!op.through), a.preview_route(new Float64Array([...endArr(op.from), ...endArr(op.to)]), pisArr(op.pis), op.single ? 1 : op.quad ? 4 : 2, false)), routePoints);
   else if (op.op === "edgePis") await withMasks(() => a.preview_edge(op.edge, pisArr(op.pis)), routePoints);
   else if (op.op === "moveNode") await withMasks(() => a.preview_move_node(op.node, op.x, op.y), nodePoints);
 }
@@ -1281,7 +1284,7 @@ async function handle(msg: ToClock) {
     }
     await masksFor(msg.op);
     const tA = performance.now();
-    const { r, line } = apply(msg.op);
+    const { r, line, node } = apply(msg.op);
     const tB = performance.now();
     timing = {};
     const charge = r === 0 ? api.last_charge() : 0;
@@ -1299,7 +1302,7 @@ async function handle(msg: ToClock) {
       sendState(msg.op.op === "setTrainCount");
       if (demand.length || msg.op.op === "undo" || msg.op.op === "redo") scheduleSnapshot();
     }
-    send({ kind: "edited", seq: msg.seq, ok: r === 0, issues: r === 0 ? [] : issues(), charge, line, ms: { apply: tB - tA, ...timing, total: performance.now() - tA } });
+    send({ kind: "edited", seq: msg.seq, ok: r === 0, issues: r === 0 ? [] : issues(), charge, line, node, ms: { apply: tB - tA, ...timing, total: performance.now() - tA } });
     // Paid for something: keep it (T-029, autosave on construct).
     if (charge > 0) void autosave();
   } else if (msg.kind === "clock") {
@@ -1350,8 +1353,14 @@ async function handle(msg: ToClock) {
   } else if (msg.kind === "preview" || msg.kind === "previewEdge") {
     const a = api;
     const out = await withMasks(() => msg.kind === "preview"
-      ? a.preview_route(new Float64Array([...endArr(msg.from), ...endArr(msg.to)]), pisArr(msg.pis), msg.single ? 1 : msg.quad ? 4 : 2, false)
+      ? (a.set_route_tangent(!!msg.through), a.preview_route(new Float64Array([...endArr(msg.from), ...endArr(msg.to)]), pisArr(msg.pis), msg.single ? 1 : msg.quad ? 4 : 2, false))
       : a.preview_edge(msg.edge, pisArr(msg.pis)), routePoints);
+    let arc: Float64Array | undefined;
+    const ra = msg.kind === "preview" ? a.route_arc() : null;
+    if (ra?.length === 3) {
+      const [x, y] = packLocal(ra[0], ra[1]);
+      arc = new Float64Array([x, y, ra[2], 0]);
+    }
     const ok = out[0] === 1, nv = out[3];
     const verts = new Float64Array(nv * 4);
     for (let i = 0; i < nv; i++) {
@@ -1367,7 +1376,7 @@ async function handle(msg: ToClock) {
     // Explicit shape also permits type-checking before the track WASM declarations regenerate.
     const speeds = (api as TrackApi & { preview_render_speeds(): Float32Array }).preview_render_speeds();
     if (speeds.length !== Math.max(0, pts.length / 3 - 1)) throw new Error("Preview speed/point length mismatch");
-    send({ kind: "preview", seq: msg.seq, ok, cost: out[1], lengthM: out[2], mult: out[4], issues: ok ? [] : issues(), verts, pts, speeds, anchor: anchor().version }, [verts.buffer, pts.buffer, speeds.buffer]);
+    send({ kind: "preview", seq: msg.seq, ok, cost: out[1], lengthM: out[2], mult: out[4], issues: ok ? [] : issues(), verts, pts, speeds, arc, anchor: anchor().version }, [verts.buffer, pts.buffer, speeds.buffer]);
   } else if (msg.kind === "epoch") {
     if (msg.epoch !== epoch) {
       epoch = msg.epoch;

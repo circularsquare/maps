@@ -90,6 +90,15 @@ export function BuildTab() {
         </p>
         <div class="h">Track</div>
         <Segmented<1 | 2 | 4> options={[[1, "Single"], [2, "Double"], [4, "Quad"]]} value={trackCount.value} onChange={(v) => (trackCount.value = v)} />
+        <div class="h">Drawing</div>
+        <Segmented<boolean>
+          options={[
+            [true, <span data-tip="Each click ends a curve through that point. Hold Shift to carry on from it. Quad track is drawn by corners">Through points</span>],
+            [false, <span data-tip="Each click is a corner the track cuts with a curve">Corners</span>],
+          ]}
+          value={display.value.drawThrough}
+          onChange={(v) => setDisplay("drawThrough", v)}
+        />
         <div class="h">New stations</div>
         <ul class="rows">
           <li>

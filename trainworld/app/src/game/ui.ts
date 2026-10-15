@@ -51,6 +51,8 @@ export interface DisplaySettings {
   usUnits: boolean;
   /** T-381: demand workers by the old rule (half the threads less one, up to 5); read at the next load */
   moreCores: boolean;
+  /** T-418: the track tool draws through each click, one curve per segment (else corner to corner) */
+  drawThrough: boolean;
 }
 
 /** T-247: the UI scale setting's steps */
@@ -75,6 +77,7 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   dayShown: "today",
   usUnits: false,
   moreCores: false,
+  drawThrough: true,
 };
 
 const STORE = "trainworld-ui";
