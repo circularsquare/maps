@@ -1,32 +1,37 @@
-﻿# Tasks
+# Tasks
 
 Open agent work. Format and rules in `CLAUDE.md`. P1 = now or blocking, P2 = this milestone,
 P3 = later. Finished or abandoned tasks move to `ARCHIVE.md`.
 
-**Direction** (Anita, 2026-10-14; details in CLAUDE.md "Working here"). Order of work:
-1. London stage b (T-360, done 2026-10-15); 2. sampler cities Paris, Shanghai, Mumbai (T-289, T-291,
-T-292), from tonight, one at a time; 3. park-and-ride (T-380 parking check, then T-372 and T-374;
-T-370, T-371, T-389, T-373 done); 4. worldwide long trips (T-362: T-375 to T-379); 5. the crossover tool (T-338);
-6. responsiveness leftovers (T-326, T-327 done); 7. a demand-realism batch (T-270, T-271, T-272);
-8. a design for game modes, not yet a task. Performance is open work from 2026-10-15: measured,
-ranked by impact and by what lets the game scale (notes/perf-survey.md). Anita plans hundreds of metros: cost per city matters (notes/city-costs.md).
+**Direction** (Anita, 2026-10-15; details in CLAUDE.md "Working here"). Done on 2026-10-15: the
+sampler cities (Paris, Shanghai, Mumbai, Berlin), park-and-ride with T-380's parking, the world market
+with air (T-375 to T-379), the crossover tool, the NIMBY-style drawing, cell merging and a dozen
+performance tasks. Next, in order: 1. the approved crowding change (T-434: each period stops once a
+round moves its loads under 1%, at most 3); 2. T-440 (the new parking rule in the everyday and
+regional layers) once T-433 is in; 3. Japan stage 3 (prefecture zones for the rest of Japan, T-420's
+line; fetch all e-Stat meshes once); 4. the leftovers in "Performance" by the ranking in
+notes/perf-survey.md and notes/T-401.md (T-439, T-435, T-419); 5. T-422 when Anita has tried the
+new drawing (retire Corners); 6. a design for game modes and money, not yet a task (a far line costs
+about $35B against a new game's $6B). Calibration waits for more data (T-438, T-429, T-437 parked).
+Anita plans hundreds of metros: cost per city matters (notes/city-costs.md, about 1.6-3.4M a pack).
 
-**Where things stand (2026-10-14).** One save spans the Earth (Mercator frame, local time); the
-Northeast (nine cities, four county zones, commutes between them), Toronto and London (tier 0)
-play. Demand workers are sized to the machine (T-381). History is in ARCHIVE.md.
+**Where things stand (2026-10-15 evening).** 26 zones play worldwide: the Northeast (nine cities,
+four county zones), Toronto, London, Paris, Berlin, Shanghai, Mumbai, Greater Tokyo (with Ibaraki),
+Keihanshin, Chukyo, Fukuoka, Sapporo, Sendai and Hiroshima, all in one world market with rail, car
+and air. Real save's demand final: 7,937,750 rail trips a day (after T-372's parking). History is in
+ARCHIVE.md.
 
-**Overnight handoff (2026-10-14, for a fresh orchestrator).** Anita approved, for tonight: Paris,
-Shanghai and Mumbai, one city agent at a time (Opus), tier 0 per docs/adding-a-city.md, each
-ending with its retrospective; record each city's line in notes/city-costs.md and judge its
-proposals (adopt the cheap clear ones, decline others with a reason, leave edge cases for Anita
-under "Added by agents" in TODO.md). **CPU cap tonight about 10 cores** (back to 6 when she is
-up); auto mode. Before the first city, **T-363** (read a region's OSM once) is worth doing: it
-saves about an hour of CPU per city. **Disk**: about 32 GB free on 2026-10-14; country extracts
-are 1.5-4.5 GB; delete each city's raw downloads once it is verified, and England's .osm.pbf once
-T-360 is in ARCHIVE.md. T-360 (London stage b) finished and is committed: tier 0 has new jobs blend and curve rules and `population`, `jobs`, `schools` hooks (notes/T-288.md stage b); its lesson is that tier 0's core jobs and the curve's published median are the weak points to check in each city. Nothing else is in flight. **After each city**: `node trainworld/checks/smoke.mjs`, commit explicit paths, then
-rebuild 8800: `git -C maps/.tw-snap checkout --detach <commit>`, then with
-`CARGO_TARGET_DIR=maps/.tw-snap-target`, `CARGO_BUILD_JOBS=3` and `%USERPROFILE%\.cargo\bin` on
-PATH, `npm run build --prefix maps/.tw-snap/trainworld/app` (a few minutes; background it).
+**Handoff for the next orchestrator (2026-10-15).** Nothing is in flight except possibly T-433 (the
+everyday layer's one-pass assignment and SIMD pair loop): check `git status` and ARCHIVE.md first.
+Asks for Anita go in the final message or notes/for-anita.md, never TODO.md. **After each commit**:
+`node trainworld/checks/smoke.mjs`, commit explicit paths, rebuild 8800 (`git -C maps/.tw-snap
+checkout --detach <commit>`, then with `CARGO_TARGET_DIR=maps/.tw-snap-target`, `CARGO_BUILD_JOBS=3`
+and `%USERPROFILE%\.cargo\bin` on PATH, `npm run build` there through `cmd /c` so PowerShell does not
+treat wasm-pack's stderr as an error), then run smoke again against `http://localhost:8800/trainworld/`
+(a build copies only the pack files vite.config.ts lists). Several agents at once work well when each
+owns named files; give every brief the others' files to leave alone, and allow ids to clash (grep
+TASKS.md and ARCHIVE.md before adding one). New packs end with `merge_cells.py <id>` then
+`market_zones.py <id>`. `data/work/pre-T*` and `data/work/res9/` wait for Anita's acceptance.
 
 ## In progress (batch 22, 2026-10-13)
 

@@ -7,6 +7,11 @@ tokens (2026-10-14, coarse: the meter shows whole percents). Second point: 51% o
 2026-10-15, after the overnight run (T-363, three cities, park-and-ride T-371/T-389/T-373/T-374,
 T-338, T-391, T-327, T-326 stage 1, T-380, T-394, and T-392 still running): 43.7M weighted in
 all, orchestrator 2.3M of it. If the run started near 46%, about 9M a percent, as before.
+Third point: 63% on the evening of 2026-10-15. From 09:00 UTC the session and its agents used about
+172M weighted (30 tasks: six Japanese packs, Berlin, the world market and air, park-and-ride and
+parking, a dozen performance tasks), so about 14M a percent if 51% was read near 09:00 UTC; the
+start is uncertain, so 9-14M a percent is the range. At 1.6-3.4M a pack with a country module, 200
+metros are 300-700M, a quarter to three quarters of a week.
 
 | City | Task | Model | Wall | Weighted tokens | Biggest cost | Notes |
 |---|---|---|---|---|---|---|
