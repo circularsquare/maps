@@ -36,7 +36,7 @@ const everyday = new Map<CityId, EverydayApi>();
 const EVERYDAY_PURPOSES = EVERYDAY_NAMES;
 let intercity: IntercityApi | null = null;
 let mine: number[] = [];
-let pending: { version: number; net: DemandNetwork; rounds: number; barrier?: boolean; whole?: boolean; first?: CityId } | null = null;
+let pending: { version: number; net: DemandNetwork; rounds: number; barrier?: boolean; whole?: boolean; fresh?: boolean; first?: CityId } | null = null;
 let busy = false;
 /** the version whose network `api` holds (queries about any other get nulls) */
 let current = -1;
@@ -66,12 +66,16 @@ type Population = DemandApi | EverydayApi | IntercityApi;
  * layers, the market: the order their loads are added in), and the whole network's route nodes */
 /** `pops` in the order their figures are added up; `solveOrder` the same populations in the order
  * they are set up and solved (it changes no figure) */
-type JobCluster = Cluster & { pops: Population[]; solveOrder: Population[] };
+/** `reuse`: this worker's periods (bit q) kept from the last solve, set when it is set up (T-124) */
+type JobCluster = Cluster & { pops: Population[]; solveOrder: Population[]; reuse: number };
 let jobClusters: JobCluster[] = [];
 let jobNodes = 0;
 /** T-326: the cluster `sig` each population holds every one of this worker's periods solved for,
  * to the last round */
 const held = new Map<Population, string>();
+/** T-124: per population and period, the cluster's `psig` it holds that period solved for, to the
+ * last round, in a solve where every population of the cluster solved it too */
+const heldQ = new Map<Population, string[]>();
 const boxes = new Map<CityId, Box>();
 /** T-392: the clusters of the last few networks, so a question about a shown result whose cluster
  * this worker still holds is answered at once, whatever else is being solved. `railed`: the network
@@ -585,7 +589,7 @@ async function run() {
         ...[...cities.keys()].filter((id) => c.cities.includes(id)).map((id) => cities.get(id)!),
         ...[...everyday.keys()].filter((id) => c.cities.includes(id) && jobCities.has(id)).map((id) => everyday.get(id)!),
         ...(c.market && regional ? [regional] : []),
-      ] }));
+      ], reuse: 0 }));
       const dirty = jobClusters.filter((c) => c.pops.some((p) => held.get(p) !== c.sig));
       // T-393: the cluster of the city in view first
       if (job.first) {
@@ -598,7 +602,8 @@ async function run() {
       // round by round together.
       const early = job.barrier ? [] : dirty;
       const late = job.barrier ? dirty : [];
-      const setUp = (c: JobCluster) => {
+      let periodsKept = 0, periodsSolved = 0;
+      const setUp =(c: JobCluster) => {
         const m = c.net;
         for (const p of c.solveOrder) {
           held.delete(p);
@@ -611,6 +616,29 @@ async function run() {
           p.set_complexes(m.complex);
           setupMs += p.set_network(xy, m.lineN, m.stops, m.times, m.tph, m.cars);
           p.set_fares(m.fare.base, m.fare.perKm, m.hopKm);
+        }
+        // T-124: a period is kept only if every population kept it (its inputs are unchanged: the
+        // Rust side) and each holds it from a whole solve of this cluster's period (`psig`): the
+        // crowding is the whole cluster's
+        let reuse = job.fresh ? 0 : mine.reduce((r, q) => r | (1 << q), 0);
+        for (const p of c.pops) {
+          reuse &= p.solved_mask();
+          const h = heldQ.get(p);
+          for (const q of mine) if (h?.[q] !== c.psig[q]) reuse &= ~(1 << q);
+        }
+        for (const p of c.pops) {
+          const h = heldQ.get(p) ?? [];
+          for (const q of mine) if (!(reuse & (1 << q))) h[q] = "";
+          heldQ.set(p, h);
+        }
+        c.reuse = reuse;
+        for (const q of mine) if (reuse & (1 << q)) periodsKept++; else periodsSolved++;
+      };
+      const solved =(c: JobCluster) => {
+        for (const p of c.pops) {
+          held.set(p, c.sig);
+          const h = heldQ.get(p)!;
+          for (const q of mine) h[q] = c.psig[q];
         }
       };
       jobNodes = 2 * n.stops.length;
@@ -689,13 +717,14 @@ async function run() {
         setUp(c);
         for (let round = 0; round <= job.rounds && !stale; round++) {
           for (const q of mine) {
+            if (c.reuse & (1 << q)) continue;
             await yieldNow();
             if (pending || !(await step(c, round, q))) { stale = true; break; }
             release_skims();
           }
         }
         if (stale) break;
-        for (const p of c.pops) held.set(p, c.sig);
+        solved(c);
         // the last one's figures go with the solve's results, below
         if (c === early[early.length - 1]) break;
         for (const q of mine) {
@@ -747,7 +776,7 @@ async function run() {
           // The period is part way between rounds until every population has had it; a query in
           // between (the yields below) must not read it.
           roundsHeld[q] = -2;
-          for (const c of late) if (!(await step(c, round, q))) { stale = true; break; }
+          for (const c of late) if (!(c.reuse & (1 << q)) && !(await step(c, round, q))) { stale = true; break; }
           release_skims();
           if (stale) break;
           roundsHeld[q] = round;
@@ -772,8 +801,8 @@ async function run() {
         }
       }
       if (!stale) {
-        for (const c of late) for (const p of c.pops) held.set(p, c.sig);
-        sendMessage({ kind: "done", version: job.version, memBytes: wasm_memory_bytes(), clusters: [jobClusters.length - dirty.length, dirty.length] });
+        for (const c of late) solved(c);
+        sendMessage({ kind: "done", version: job.version, memBytes: wasm_memory_bytes(), clusters: [jobClusters.length - dirty.length, dirty.length], periods: [periodsKept, periodsSolved] });
       }
     }
   } catch (err) {

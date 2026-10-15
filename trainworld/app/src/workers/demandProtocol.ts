@@ -63,6 +63,8 @@ export type ToDemand =
       barrier?: boolean;
       /** T-326 `?perfOff=clusters`: solve the network as one cluster */
       whole?: boolean;
+      /** T-124 `?perfOff=periods`: a cluster solved solves every period, none kept */
+      fresh?: boolean;
       /** T-393: the city in view: its cluster is solved first */
       first?: CityId }
   /** T-327: every worker has finished `round - 1` of `version`, so this worker may start `round`.
@@ -193,8 +195,9 @@ export type FromDemand =
     }
   /** T-392: at a solve's start, the cities of each cluster it solves (in order) and of those it keeps */
   | { kind: "plan"; version: number; solving: CityId[][]; kept: CityId[] }
-  /** `clusters` (T-326): how many kept their result, and how many were solved */
-  | { kind: "done"; version: number; memBytes: number; clusters?: [number, number] }
+  /** `clusters` (T-326): how many kept their result, and how many were solved; `periods` (T-124):
+   * of this worker's periods in the clusters solved, how many were kept and how many solved */
+  | { kind: "done"; version: number; memBytes: number; clusters?: [number, number]; periods?: [number, number] }
   /** a worker's `sub_sums` for one city once all its periods have `round` (sent unasked, T-119) */
   | { kind: "sums"; version: number; round: number; city: CityId; mask: number; sums: Float32Array; everyday: Float32Array | null }
   | { kind: "cells"; id: number; city: CityId; xy: Float32Array; h3: BigUint64Array; zone: Uint32Array; zoneXY: Float32Array }

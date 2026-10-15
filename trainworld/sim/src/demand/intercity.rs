@@ -11,7 +11,7 @@
 //! pack names the frame its x and y are in (`frame`, written by pipeline/intercity.py since
 //! T-128); a pack without one keeps the straight distance in its plane and its old formula.
 use super::{
-    api::{demand_groups, merge_stations, scale_triples, DemandApi, Service, FARE_MIN_PER_USD, PEAK_HOUR_FACTOR, TO_HOME, TO_WORK},
+    api::{demand_groups, merge_stations, same_bits, scale_triples, DemandApi, Service, FARE_MIN_PER_USD, PEAK_HOUR_FACTOR, TO_HOME, TO_WORK},
     clock::now_ms,
     days::{load_factor, share_out, share_ret, LONGER, WEEKDAY, WORK},
     kernel::*,
@@ -1762,7 +1762,25 @@ impl IntercityApi {
             cars: cars.to_vec(),
             group,
         };
-        let net = DemandApi::period_net(&svc, 0);
+        // T-124: as `DemandApi::set_network`, access is kept with the layout and a period with
+        // its level's inputs
+        let old = self.svc.as_ref();
+        let same = old.map_or(0, |o| svc.same_periods(o));
+        if !old.is_some_and(|o| svc.same_layout(o)) {
+            self.set_access(&svc);
+        }
+        for (q, p) in self.per.iter_mut().enumerate() {
+            match p {
+                Some(st) if same >> q & 1 == 1 => st.net = DemandApi::period_net(&svc, q),
+                _ => *p = None,
+            }
+        }
+        self.svc = Some(svc);
+        Ok(now_ms() - t)
+    }
+    /// Station access by zone and the zone pairs a station serves, for `svc`'s layout.
+    fn set_access(&mut self, svc: &Service) {
+        let net = DemandApi::period_net(svc, 0);
         let acc = build_access(&self.city, &net, &self.base);
         let mut weights: Vec<BTreeMap<usize, f32>> =
             (0..self.zones.len()).map(|_| BTreeMap::new()).collect();
@@ -1830,9 +1848,6 @@ impl IntercityApi {
         if served != self.served {
             self.set_served(served);
         }
-        self.svc = Some(svc);
-        self.per.iter_mut().for_each(|p| *p = None);
-        Ok(now_ms() - t)
     }
     pub fn station_map(&self) -> Vec<u32> {
         self.svc.as_ref().map_or(vec![], |s| s.st_map.clone())
@@ -1847,10 +1862,13 @@ impl IntercityApi {
         {
             return Err("invalid intercity fare".into());
         }
-        self.base.fare_min = base * FARE_MIN_PER_USD;
-        self.fare_per_km = per_km * FARE_MIN_PER_USD;
-        self.fare_km = km.to_vec();
-        self.per.iter_mut().for_each(|p| *p = None);
+        let (fare_min, per_km) = (base * FARE_MIN_PER_USD, per_km * FARE_MIN_PER_USD);
+        if fare_min.to_bits() != self.base.fare_min.to_bits() || per_km.to_bits() != self.fare_per_km.to_bits() || !same_bits(km, &self.fare_km) {
+            self.base.fare_min = fare_min;
+            self.fare_per_km = per_km;
+            self.fare_km = km.to_vec();
+            self.per.iter_mut().for_each(|p| *p = None);
+        }
         Ok(())
     }
     pub fn solve(&mut self, q: usize) -> bool {

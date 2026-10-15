@@ -1587,7 +1587,17 @@ impl EverydayApi {
         let t = now_ms();
         self.engine
             .set_network(xy, line_n, stops, times, tph, cars)?;
-        self.per.iter_mut().for_each(|v| *v = None);
+        // T-124: as the engine, the periods whose inputs did not change are kept
+        let svc = self.engine.svc.as_ref().unwrap();
+        for (q, v) in self.per.iter_mut().enumerate() {
+            match v {
+                Some(st) if self.engine.same >> q & 1 == 1 => st.net = DemandApi::period_net(svc, q),
+                _ => *v = None,
+            }
+        }
+        if self.engine.layout_same {
+            return Ok(now_ms() - t);
+        }
         self.pairs.clear();
         self.edge_pair = vec![NONE; self.destinations.len()];
         if self.engine.sz.is_none() {
@@ -1605,7 +1615,9 @@ impl EverydayApi {
     }
     pub fn set_fares(&mut self, base: f32, per_km: f32, hop_km: &[f32]) -> Result<(), String> {
         self.engine.set_fares(base, per_km, hop_km)?;
-        self.per.iter_mut().for_each(|v| *v = None);
+        if self.engine.same == 0 {
+            self.per.iter_mut().for_each(|v| *v = None);
+        }
         Ok(())
     }
     pub fn solve(&mut self, q: usize) -> bool {

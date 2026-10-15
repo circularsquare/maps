@@ -6,7 +6,10 @@
 // clusters that share nothing costs only time, splitting two that share riders would change figures.
 
 import { CITIES, getWorldFrame, worldToCity, zoneBox, type CityId } from "../game/cities";
+import { PERIODS } from "../game/periods";
 import type { DemandNetwork } from "./demandProtocol";
+
+const LEVEL = { high: 0, medium: 1, low: 2 } as const;
 
 /** A city reaches a station within this of its cells' bounding box: past the 4 km walk and the
  * 15 km ride from a home's group centre (`ride_max_m`, up to about 9 km off the cell). */
@@ -44,6 +47,9 @@ export interface Cluster {
   nodeLocal: Int32Array;
   /** everything its result depends on, so an unchanged cluster can keep its result */
   sig: string;
+  /** T-124: per period, everything that period's result depends on: `sig` less the other demand
+   * levels' run times and trains an hour */
+  psig: string[];
 }
 
 /** A city's cells' bounding box in its own frame: west, south, east, north metres (null: no cells). */
@@ -190,6 +196,19 @@ function subNetwork(n: DemandNetwork, lineOff: Uint32Array, cities: CityId[], ma
     o += m;
   });
   const net: DemandNetwork = { frame: n.frame, stXY, complex, lineN, stops, times, tph, cars, fare: n.fare, hopKm };
-  const sig = hashOf([`${cities.join(",")}|${market}|${rounds}|${n.fare.base}|${n.fare.perKm}|${frameKey}`, stXY, complex, lineN, stops, times, tph, cars, hopKm]);
-  return { cities, market, net, lines: Uint32Array.from(lines), stLocal, nodeGlobal, nodeLocal, sig };
+  const head = `${cities.join(",")}|${market}|${rounds}|${n.fare.base}|${n.fare.perKm}|${frameKey}`;
+  const sig = hashOf([head, stXY, complex, lineN, stops, times, tph, cars, hopKm]);
+  const levelSig = [0, 1, 2].map((lev) => {
+    const lt = new Float32Array(2 * nStops), lp = new Float32Array(lines.length);
+    let a = 0;
+    lineN.forEach((m, i) => {
+      lt.set(times.subarray(6 * a + lev * m, 6 * a + (lev + 1) * m), 2 * a);
+      lt.set(times.subarray(6 * a + (3 + lev) * m, 6 * a + (4 + lev) * m), 2 * a + m);
+      lp[i] = tph[3 * i + lev];
+      a += m;
+    });
+    return hashOf([`${head}|level ${lev}`, stXY, complex, lineN, stops, lt, lp, cars, hopKm]);
+  });
+  const psig = PERIODS.map((p) => levelSig[LEVEL[p.demand]]);
+  return { cities, market, net, lines: Uint32Array.from(lines), stLocal, nodeGlobal, nodeLocal, sig, psig };
 }

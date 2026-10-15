@@ -945,7 +945,10 @@ the explorer shows the commute.
 
 **The pool and the bubbles' chain** (T-119). The pool is half the logical cores less one, at most
 5, at least 1 workers that solve, and one more that holds no period ([architecture.md](architecture.md) 7). Periods go to workers
-by index, so five workers solve a stage of all five periods at once. The bubbles ask for the
+by index (worker i of n: periods q with q mod n = i), so five workers solve a stage of all five periods at once, unless
+that puts both periods of a demand level on one worker (2 workers: both peaks), when they are dealt
+out level by level (high, then medium, then low: 0, 1, 4 and 2, 3), so an edit to one level's trains
+has its two periods solved side by side (T-124; `periodsOfWorker`, `?perfOff=spread` by index alone). The bubbles ask for the
 commuters by mode right after a round is published, when every worker is already part way into
 the next round and cannot answer a question about the round before from its live state. So each
 worker sends its subzone sums for a round (`sub_sums`, per city) unasked, from the moment all its
@@ -991,6 +994,20 @@ sub-network, populations and rounds are unchanged since keeps its result untouch
 only the clusters it touched are solved, and the others' figures are read from their populations
 as they stand. Every worker splits the same way from the same inputs. `?perfOff=clusters` solves
 everything as one cluster, as before T-326.
+
+Within a cluster that is solved, a period whose own inputs are unchanged keeps its result too
+(T-124). Periods share no rider and each reads only its own demand level's run times and trains an
+hour (the trips home in a period go back by that period's own station pairs; the day's money, the
+purposes and the weekend are worked out from the five periods' results afterwards), so a change to
+one level's trains leaves the other levels' periods exactly as a fresh solve would give them. The
+populations decide it themselves (`set_network`, `Service::same_periods`): with stations, lines, stops,
+cars and complexes unchanged they keep station access and subzones, and every period whose level's
+run times and trains an hour are unchanged; `set_fares` with the same fare keeps them as well. The
+worker keeps a period only when every population of the cluster kept it and each holds it from a whole
+solve of the cluster's period with the same inputs (`psig`, per period like `sig`), since the crowding
+is the cluster's; the other periods are solved from free flow. A train-count change at one level
+re-solves two periods (one at the low level), a new station or a fare change all five.
+`?perfOff=periods` re-solves every period of a cluster solved.
 
 After an edit (a solve without the round barrier) the clusters to solve go one after another, the
 zone in view's first (T-393), each to its last round; each but the last is sent as soon as it is

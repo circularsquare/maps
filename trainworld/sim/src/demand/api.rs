@@ -164,6 +164,41 @@ pub(crate) struct Service {
     pub(crate) group: Vec<u32>,
 }
 
+/// Equal to the bit (T-124: a kept period must be exactly what a fresh solve would give).
+pub(crate) fn same_bits(a: &[f32], b: &[f32]) -> bool {
+    a.len() == b.len() && a.iter().zip(b).all(|(x, y)| x.to_bits() == y.to_bits())
+}
+
+impl Service {
+    /// Stations, lines, stops, cars and complexes equal: station access, subzones and the
+    /// served pairs come out the same, since they never read run times or trains an hour.
+    pub(crate) fn same_layout(&self, o: &Service) -> bool {
+        same_bits(&self.st_x, &o.st_x)
+            && same_bits(&self.st_y, &o.st_y)
+            && self.st_map == o.st_map
+            && self.line_off == o.line_off
+            && self.stops == o.stops
+            && same_bits(&self.cars, &o.cars)
+            && self.group == o.group
+    }
+    /// T-124: the periods (bit q) whose inputs are the same in `o`: the same layout, and the run
+    /// times and trains an hour of the period's level. A period reads no other level's.
+    pub(crate) fn same_periods(&self, o: &Service) -> u32 {
+        if !self.same_layout(o) {
+            return 0;
+        }
+        let level_same = |lev: usize| {
+            self.tph.iter().zip(&o.tph).all(|(a, b)| a[lev].to_bits() == b[lev].to_bits())
+                && self.line_off.windows(2).all(|w| {
+                    let (a, n) = (w[0] as usize, (w[1] - w[0]) as usize);
+                    [lev, 3 + lev].iter().all(|&r| same_bits(&self.times[6 * a + r * n..6 * a + (r + 1) * n], &o.times[6 * a + r * n..6 * a + (r + 1) * n]))
+                })
+        };
+        let same: [bool; LEVELS] = std::array::from_fn(level_same);
+        (0..PERIODS).filter(|&q| same[PERIOD_LEVEL[q]]).fold(0, |m, q| m | 1 << q)
+    }
+}
+
 pub(crate) struct Period {
     pub(crate) net: Network,
     pub(crate) p: Params,
@@ -263,6 +298,12 @@ pub struct DemandApi {
     open_ms: f64,
     /// The complex of each station of the next `set_network` (`set_complexes`, T-161).
     complex_in: Vec<u32>,
+    /// T-124: the periods (bit q) whose inputs the last `set_network` and `set_fares` left as they
+    /// were, so their results were kept; and whether the layout was, so access was kept.
+    pub(crate) same: u32,
+    pub(crate) layout_same: bool,
+    /// Whether `svc` and the periods were built with the parameters as they stand.
+    reusable: bool,
 }
 
 /// Per period: start hour, end hour, demand level (0 high, 1 medium, 2 low), share of trips to
@@ -463,8 +504,10 @@ impl DemandApi {
     pub fn station_map(&self) -> Vec<u32> {
         self.svc.as_ref().map_or(vec![], |s| s.st_map.clone())
     }
-    /// The parameters every period starts from (to change before `set_network`).
+    /// The parameters every period starts from (to change before `set_network`, which then
+    /// keeps nothing).
     pub fn params_mut(&mut self) -> &mut Params {
+        self.reusable = false;
         &mut self.base
     }
 }
@@ -494,7 +537,7 @@ impl DemandApi {
         let (walk_home_zone, walk_work_zone) = gr.walk_trips_by_zone(&z);
         let walk_all = walk_home_zone.iter().sum();
         let (home_k, work_k) = zone_trip_factors(&city, &z, &gr, gravity_from_pack);
-        Ok(DemandApi { city, z, gr, base, walk_all, walk_home_zone, walk_work_zone, home_k, work_k, svc: None, sz: None, want: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], open_ms: now_ms() - t0, complex_in: vec![] })
+        Ok(DemandApi { city, z, gr, base, walk_all, walk_home_zone, walk_work_zone, home_k, work_k, svc: None, sz: None, want: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], open_ms: now_ms() - t0, complex_in: vec![], same: 0, layout_same: false, reusable: false })
     }
 
     /// The station complex of each station of the networks `set_network` is given from now on
@@ -515,7 +558,9 @@ impl DemandApi {
     /// The network to solve on, packed: station x, y pairs (metres in the pack's frame); stops
     /// per line; the stops (station indices) line after line; 6 times per stop (seconds, see
     /// `Service::times`); trains an hour, 3 per line (high, medium, low); cars per line.
-    /// Rebuilds station access and subzones (shared by every period) and forgets all results.
+    /// Rebuilds station access and subzones (shared by every period) unless stations, lines,
+    /// stops, cars and complexes are unchanged, and forgets the results of every period whose
+    /// level's run times or trains an hour changed (T-124; all of them with a new layout).
     /// Returns the ms it took.
     pub fn set_network(&mut self, st_xy: &[f32], line_n: &[u32], stops: &[u32], times: &[f32], tph: &[f32], cars: &[f32]) -> Result<f64, String> {
         let t0 = now_ms();
@@ -545,16 +590,27 @@ impl DemandApi {
             cars: cars.to_vec(),
             group,
         };
-        self.per.iter_mut().for_each(|p| *p = None);
-        self.fare_km.clear();
-        self.sz = None;
-        self.want.clear();
-        if ns > 0 && nl > 0 {
-            let net = Self::period_net(&svc, 0);
-            let acc = build_access(&self.city, &net, &self.base);
-            let sz = build_subzones(&self.city, &self.z, &acc, &net, &self.base);
-            self.want = egress_stations(&sz, svc.st_x.len());
-            self.sz = Some(sz);
+        let old = self.svc.as_ref().filter(|_| self.reusable);
+        self.reusable = true;
+        self.layout_same = old.is_some_and(|o| svc.same_layout(o));
+        self.same = old.map_or(0, |o| svc.same_periods(o));
+        for (q, p) in self.per.iter_mut().enumerate() {
+            match p {
+                Some(st) if self.same >> q & 1 == 1 => st.net = Self::period_net(&svc, q),
+                _ => *p = None,
+            }
+        }
+        if !self.layout_same {
+            self.fare_km.clear();
+            self.sz = None;
+            self.want.clear();
+            if ns > 0 && nl > 0 {
+                let net = Self::period_net(&svc, 0);
+                let acc = build_access(&self.city, &net, &self.base);
+                let sz = build_subzones(&self.city, &self.z, &acc, &net, &self.base);
+                self.want = egress_stations(&sz, svc.st_x.len());
+                self.sz = Some(sz);
+            }
         }
         self.svc = Some(svc);
         Ok(now_ms() - t0)
@@ -569,10 +625,14 @@ impl DemandApi {
             || hop_km.len() != count || hop_km.iter().any(|v| !v.is_finite() || *v < 0.0) {
             return Err("invalid fare or segment distances".into());
         }
-        self.base.fare_min = base_usd * FARE_MIN_PER_USD;
-        self.fare_per_km = per_km_usd * FARE_MIN_PER_USD;
-        self.fare_km = hop_km.to_vec();
-        self.per.iter_mut().for_each(|p| *p = None);
+        let (fare_min, per_km) = (base_usd * FARE_MIN_PER_USD, per_km_usd * FARE_MIN_PER_USD);
+        if fare_min.to_bits() != self.base.fare_min.to_bits() || per_km.to_bits() != self.fare_per_km.to_bits() || !same_bits(hop_km, &self.fare_km) {
+            self.base.fare_min = fare_min;
+            self.fare_per_km = per_km;
+            self.fare_km = hop_km.to_vec();
+            self.per.iter_mut().for_each(|p| *p = None);
+            self.same = 0;
+        }
         Ok(())
     }
 
@@ -1531,6 +1591,62 @@ mod tests {
         let free = crowded.seg(0);
         crowded.crowd(0);
         assert_ne!(crowded.seg(0), free, "a crowded network moves in a round");
+    }
+
+    /// T-124: a change to one level's trains keeps the other levels' periods, and re-solving
+    /// the rest gives every figure a fresh solve of the new network gives, to the bit; a new
+    /// layout or fare keeps nothing.
+    #[test]
+    fn periods_an_edit_did_not_touch_are_kept_exactly() {
+        let solve = |api: &mut DemandApi, mask: u32| {
+            for q in (0..PERIODS).filter(|q| mask >> q & 1 == 1) {
+                api.solve(q);
+                for _ in 0..3 {
+                    assert!(api.crowd(q));
+                }
+            }
+        };
+        let figures = |api: &DemandApi| -> Vec<Vec<u64>> {
+            let bits = |v: Vec<f32>| v.iter().map(|x| x.to_bits() as u64).collect::<Vec<_>>();
+            let mut out = vec![bits(api.sub_sums())];
+            for q in 0..PERIODS {
+                let mut s = api.summary(q);
+                s[4] = 0.0; // ms
+                out.push(s.iter().map(|v| v.to_bits()).collect());
+                out.extend([bits(api.seg(q)), bits(api.board(q)), bits(api.alight(q)), bits(api.load_of_crush(q))]);
+            }
+            out
+        };
+        let (mut api, xy, n, stops, times, tph, cars) = small();
+        let km = |api: &DemandApi| vec![0.5f32; 2 * api.svc.as_ref().unwrap().stops.len()];
+        api.set_network(&xy, &n, &stops, &times, &tph, &cars).unwrap();
+        let hop = km(&api);
+        api.set_fares(2.0, 0.1, &hop).unwrap();
+        solve(&mut api, 0b11111);
+        let mut high = tph.clone();
+        high[0] *= 0.5; // line a's high level
+        api.set_network(&xy, &n, &stops, &times, &high, &cars).unwrap();
+        api.set_fares(2.0, 0.1, &hop).unwrap();
+        let kept = api.solved_mask();
+        assert_eq!(kept, 0b11010, "the medium and low periods are kept");
+        solve(&mut api, 0b11111 & !kept);
+        let (mut fresh, ..) = small();
+        fresh.set_network(&xy, &n, &stops, &times, &high, &cars).unwrap();
+        fresh.set_fares(2.0, 0.1, &hop).unwrap();
+        solve(&mut fresh, 0b11111);
+        assert_eq!(figures(&api), figures(&fresh));
+        // the same network again keeps everything; another fare, or cars, nothing
+        api.set_network(&xy, &n, &stops, &times, &high, &cars).unwrap();
+        api.set_fares(2.0, 0.1, &hop).unwrap();
+        assert_eq!(api.solved_mask(), 0b11111);
+        api.set_fares(2.5, 0.1, &hop).unwrap();
+        assert_eq!(api.solved_mask(), 0);
+        solve(&mut api, 0b11111);
+        let mut more = cars.clone();
+        more[1] += 1.0;
+        api.set_network(&xy, &n, &stops, &times, &high, &more).unwrap();
+        api.set_fares(2.5, 0.1, &hop).unwrap();
+        assert_eq!(api.solved_mask(), 0);
     }
 
     /// T-188: a line cut to too few trains leaves riders behind, and with their extra wait priced

@@ -105,6 +105,19 @@ const PERIOD_STRIDE = 6;
  * `?demandWorkers=N` (1-5) overrides everything. The pool is built once, so the setting counts at
  * the next load.
  */
+/**
+ * The periods solving worker `i` of `n` owns: by index (`q % n`), unless that gives one worker both
+ * periods of a demand level (2 workers: both peaks), when they are dealt out level by level. An edit
+ * to one level's trains re-solves only that level's periods (T-124), so they go to different workers.
+ */
+export function periodsOfWorker(i: number, n: number): number[] {
+  const qs = PERIODS.map((_, q) => q);
+  const clash = qs.some((q) => qs.some((s) => s > q && PERIODS[s].demand === PERIODS[q].demand && s % n === q % n));
+  const LEVEL = { high: 0, medium: 1, low: 2 };
+  const order = clash && !perfOff("spread") ? qs.slice().sort((a, b) => LEVEL[PERIODS[a].demand] - LEVEL[PERIODS[b].demand] || a - b) : qs;
+  return order.filter((_, k) => k % n === i).sort((a, b) => a - b);
+}
+
 export function poolSize(): number {
   const q = Number(new URLSearchParams(location.search).get("demandWorkers"));
   if (Number.isInteger(q) && q >= 1 && q <= PERIODS.length) return q;
@@ -226,6 +239,8 @@ interface Solve {
   showEstimates: boolean;
   /** T-326: the last worker's clusters kept and solved */
   clusters?: [number, number];
+  /** T-124: per solving worker, its periods kept and solved in the clusters it solved */
+  periods?: [number, number][];
   /** T-392: each cluster published ahead of the solve's final, by its cities: its results per
    * period as they come in, then when it was shown */
   clusterRes?: Map<string, { res: (Result | null)[]; at?: number }>;
@@ -463,7 +478,7 @@ class DemandClient {
       w.onmessage = (e: MessageEvent<FromDemand>) => this.receive(i, e.data);
       w.onerror = (e) => this.fail(`worker ${i}: ${e.message}`);
       this.workers.push(w);
-      this.periodsOf.push(i < n ? PERIODS.map((_, q) => q).filter((q) => q % n === i) : []);
+      this.periodsOf.push(i < n ? periodsOfWorker(i, n) : []);
       // the WASM starts at once; packs follow as they arrive (T-149)
       // T-325: the aux worker is told every solving worker's periods, for the zones it holds bare
       const msg: ToDemand = { kind: "init", packs: [], periods: this.periodsOf[i], aux: i === n, warmEveryday: i === 0 && n > 1 && !perfOff("stagger"), ...(i === n ? { groups: this.periodsOf.slice(0, n) } : {}) };
@@ -1201,6 +1216,7 @@ class DemandClient {
     if (!s || msg.version !== s.version) return; // superseded
     if (msg.kind === "done") {
       if (msg.clusters) s.clusters = msg.clusters; // ?debug=1's log: clusters kept and solved
+      if (msg.periods) (s.periods ??= [])[i] = msg.periods;
       return;
     }
     if (msg.kind === "plan") {
@@ -1294,7 +1310,7 @@ class DemandClient {
     // T-327: rounds in step only where clicks are answered by round (`target`): it costs the final
     // about 0.7 s on the real save
     demandSolving.value = null;
-    const msg: ToDemand = { kind: "solve", version, net, rounds: ROUNDS, barrier: (showEstimates || !!this.hold) && !perfOff("ahead"), first: activeCity.peek(), ...(perfOff("clusters") ? { whole: true } : {}) };
+    const msg: ToDemand = { kind: "solve", version, net, rounds: ROUNDS, barrier: (showEstimates || !!this.hold) && !perfOff("ahead"), first: activeCity.peek(), ...(perfOff("clusters") ? { whole: true } : {}), ...(perfOff("periods") ? { fresh: true } : {}) };
     for (const w of this.workers) w.postMessage(msg);
     this.progress(); // T-243: a held game's solve shows its progress even with nothing to load
   }

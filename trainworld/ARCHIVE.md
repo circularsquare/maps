@@ -1,5 +1,7 @@
 # Archive
 
+- T-124 [P3] Reuse the periods an edit did not touch. Done 2026-10-15: a one-level train-count edit on the real save, final 22 s to 11.5 s (3 workers), 30 s to 12.5 s (2, peaks now on separate workers); identical hashes; moving periods not needed. notes/T-124.md.
+
 - T-413 [P2] Track level colours. Done 2026-10-15: level 0 is green #4caf50 (chosen over grey, a paler #7cc47f and a darker #2e8b57; screenshots artifacts/trainworld/T-413-*.png); the Settings key follows.
 
 - T-412 [P2] Trips near a station spot. Done 2026-10-15: the station tool's tag adds "About 12k trips a day start or end within 800 m" (a 10-minute walk), from the Homes and Destinations cells of the zone in view.

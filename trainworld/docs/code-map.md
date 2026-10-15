@@ -143,7 +143,9 @@ Run from the maps root (`node trainworld/checks/<file>`).
 - Browser and timing (Playwright, `PLAYWRIGHT_MODULE`): `startup-timing.mjs` with
   `static-serve.mjs` (startup marks on a scratch production build), `t303-measure.mjs` (demand
   loading, clicks, pans), `t326-clusters.mjs` (the real save plus a Toronto line: edits in each cluster
-  timed to their final, every final figure hashed against `?perfOff=clusters`),
+  timed to their final, every final figure hashed against `?perfOff=clusters`), `t124-periods.mjs`
+  (the real save: a one-level train-count edit and an every-level edit timed to their final, hashed
+  against `?perfOff=periods`),
   `t328-cache-check.mjs` (the demand cache on reload: timing, cached
   against fresh final to the bit, a changed build, pack or network shows none), `t348-lag.mjs`
   (main-thread long tasks and frame gaps while demand loads: startup, pans, a re-solve, a zone

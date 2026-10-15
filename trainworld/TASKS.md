@@ -122,6 +122,9 @@ PATH, `npm run build --prefix maps/.tw-snap/trainworld/app` (a few minutes; back
 
 ## Interface
 
+- T-418 [P2] Track drawing like NIMBY Rails (Anita 2026-10-15): the track passes through every clicked point, a click never changes segments already placed (each new segment leaves the last point along its direction), two clicks place a segment by default and continuing needs another click or a held key, and the curve's circle shows faintly. Design done 2026-10-15, four decisions for Anita at the end of notes/T-418.md. Open.
+- T-416 [P2] Markers at loose ends of track and blueprints while the track or station tool is on, to show where to continue a line or put a station neatly at its end (the station tool snaps to one); blueprint points that can be dragged get the same kind of marker, since nothing shows today that they can be (Anita 2026-10-15). Open.
+- T-417 [P2] The colour coding of T-411's placement hover applies to the labels that stay on placed segments too (length, curve, radius). Open.
 - T-294 [P3] Fares across a period's hours (from T-284): each hour of a period is paid the period's fares spread evenly, while the boarding account's riders peak mid-period, so 07:00 earns as much as 08:00. Weight the period's hours by the account's boardings each hour, keeping the period's total (the worker already reads each hour's slice, `shapeHour`). Small; open; notes/T-284.md.
 
 - T-166 [P3] A station's riders by purpose on the map: under the purpose filter a selected station's catchment shows commuters only (hidden for other purposes). Everyday and school catchments need per-purpose station queries from `EverydayApi`. Open; notes/T-158.md.
@@ -179,10 +182,11 @@ World sampler (T-286, research/world-sampler.md). All waiting for Anita's review
   notes/T-090.md.
 - T-044 [P3] Adaptive cell grain, only if performance needs it: keep res 9 (or finer) in dense
   centres, merge sparse suburban cells (SPEC 3).
-- T-124 [P3] Reuse the periods an edit did not touch: a change to one demand level's trains leaves
-  the other levels' periods identical (their inputs are the same), so the workers could keep
-  their results. Saves CPU, not time, while each period has a worker; helps the 1-3 worker pools
-  of smaller machines. notes/T-119.md.
+- T-415 [P3] A train-count edit at one level moves other levels' trains an hour and run times in the
+  network snapshot by float noise (New York save, line 0 high 20 -> 22: medium tph 6.673098 ->
+  6.6730976, medium hop times on lines 0, 4, 48), so T-124 re-solves those periods too (21 s
+  instead of 11 s for that edit). Make the clock's per-level schedule figures depend on their own
+  level alone (track sim). notes/T-124.md.
 - T-168 [P3] Add a newly viewed city without re-solving the whole network: a city with no construction needs only its own walk and drive figures, but a pan to one re-solves everything (seconds on a big save, in the background). Open; notes/T-149.md.
 - T-397 [P3] Everyday samples per cell scaled to its trips (2 to 16 instead of 16): slots fall to 23-33% of today's (New York about -80 MB a worker after T-395's cut), opening about half as long; a little more sampling noise in sparse cells. Open; notes/perf-survey.md 3.
 - T-398 [P2] T-361 item 2: lower a demand worker's set-up peak (drop the old network's state before building the new, size the everyday pair list and index up front, one reused buffer for strategy skims): estimated 80-150 MB a worker. Open; notes/T-361.md.
