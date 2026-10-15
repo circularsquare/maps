@@ -10,7 +10,7 @@ import type { Map as MlMap } from "maplibre-gl";
 import { activeCity, viewedZone } from "../game/cities";
 import { display, selection } from "../game/ui";
 import { viewCentre } from "../game/listScope";
-import { loadZones, nearbyZones, placeAt, zonesInBox, zonesLoaded } from "../game/zones";
+import { nearbyZones, placeAt, zonesInBox, zonesLoaded } from "../game/zones";
 import { OVERVIEW_ZOOM } from "./intercityView";
 import { shiftAt, viewShift } from "../game/localTime";
 
@@ -56,5 +56,5 @@ export function startZoneFocus(map: MlMap) {
     activeCity.value;
     nearby();
   });
-  void loadZones();
+  place(false); // fetches the boundaries near the view (T-404)
 }

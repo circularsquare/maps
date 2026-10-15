@@ -8,7 +8,7 @@
 // the pack, carries riders between zones.
 
 import type { FeatureCollection, MultiPolygon, Polygon } from "geojson";
-import { CITIES, type CityId } from "../game/cities";
+import { CITIES, zoneBox, type CityId } from "../game/cities";
 import { cityBoundary } from "../game/boundaries";
 
 /** The 3 km walk plus a margin: cell centres lie a little outside the boundary (blocks are spread
@@ -43,9 +43,49 @@ export function footprint(id: CityId, fc: FeatureCollection<Polygon | MultiPolyg
   return { id, rings, bbox };
 }
 
-/** Every registered city's footprint. Rejects if any is missing: the caller then loads every pack. */
-export async function loadFootprints(): Promise<Footprint[]> {
-  return Promise.all(CITIES.map(async ({ id }) => footprint(id, await cityBoundary(id))));
+/** T-404: footprints fetched so far, shared by the reach test and the focus rule; null: the
+ * boundary could not be fetched (not tried again this page). */
+const store = new Map<CityId, Footprint | null>();
+const loading = new Map<CityId, Promise<void>>();
+
+/** The footprint if fetched: undefined while not, null if it failed. */
+export function footprintOf(id: CityId): Footprint | null | undefined {
+  return store.get(id);
+}
+
+/** Fetch the footprints of `ids` not yet in; resolves once all of them are in or failed. */
+export function loadFootprints(ids: Iterable<CityId>): Promise<void> {
+  const ps: Promise<void>[] = [];
+  for (const id of ids) {
+    if (store.has(id)) continue;
+    let p = loading.get(id);
+    if (!p) {
+      p = cityBoundary(id).then((fc) => { store.set(id, footprint(id, fc)); }, (err) => {
+        console.warn("zone boundary unavailable", id, err);
+        store.set(id, null);
+      });
+      loading.set(id, p);
+    }
+    ps.push(p);
+  }
+  return Promise.all(ps).then(() => {});
+}
+
+/** The zones whose registry box, widened by `marginM`, holds some station (lon, lat pairs): the
+ * only ones whose footprint the station can be within `marginM` of (the box holds the boundary). */
+export function zonesNearStations(stations: ArrayLike<number>, marginM: number): CityId[] {
+  const out: CityId[] = [];
+  for (const c of CITIES) {
+    const [w, s, e, n] = zoneBox(c);
+    const dy = marginM / M_PER_DEG;
+    for (let k = 0; k < stations.length; k += 2) {
+      const lon = stations[k], lat = stations[k + 1];
+      if (lat < s - dy || lat > n + dy) continue;
+      const dx = dy / Math.cos((lat * Math.PI) / 180);
+      if (lon >= w - dx && lon <= e + dx) { out.push(c.id); break; }
+    }
+  }
+  return out;
 }
 
 /** Inside the footprint, or within REACH_M of its outline. */

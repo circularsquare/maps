@@ -142,3 +142,5 @@ export function hashView(): { lng: number; lat: number; zoom: number } | null {
  * name and whether anything loads for the view (workers/demandClient.ts). Set by map/zoneFocus.ts
  * after each pan; from the start view until the map exists (the URL hash, else the default view). */
 export const viewedZone = signal<CityId | null>((() => { const v = hashView(); return v ? cityWithin(v.lng, v.lat) : cityWithin(-73.96, 40.75); })());
+// T-396: the focus starts at the zone in view, so a reload at Toronto never opens New York (and the market)
+if (viewedZone.peek()) activeCity.value = viewedZone.peek()!;

@@ -104,8 +104,8 @@ the network: `TrackApi`, notes/T-025.md; money and autosave too), `saveFile.ts` 
 and IndexedDB, T-029), `clockClient.ts`, `demand.worker.ts`, `demandClient.ts`, `demandCache.ts`
 (the last final demand result kept beside the save, T-328),
 `demandProtocol.ts`, `demandClusters.ts` (the network split into clusters that share no rider,
-each a sub-network, T-326), `demandTest.ts`, `cityReach.ts` (which city packs a network's stations can
-reach, T-149), `commuters.worker.ts` and `commutersProtocol.ts` (the commuter bubbles' sums,
+each a sub-network, T-326; `marketReaches`, which stations the market's riders use, T-396), `demandTest.ts`, `cityReach.ts` (which city packs a network's stations can
+reach, T-149; the footprints fetched on demand by registry box, T-404), `commuters.worker.ts` and `commutersProtocol.ts` (the commuter bubbles' sums,
 T-097), `selectionMerge.ts` (a bubble selection's everyday far end added up over the workers,
 T-285).
 

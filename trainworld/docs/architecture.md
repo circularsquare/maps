@@ -100,7 +100,8 @@ Web first, so it can be shared as a link.
   within 4.5 km of it, since only those can put a rider on a line (`workers/cityReach.ts`); a zone
   viewed or on screen that no station reaches opens bare in the auxiliary worker alone [T-325,
   [demand.md](demand.md) "Bare zones"], the viewed zone of a new game from the start [T-351]. Solving
-  workers also open the regional market, always. A solve waits until every pack it needs is open in
+  workers also open the regional market once a market zone is viewed or reached or a station lies
+  within its reach [T-396]. A solve waits until every pack it needs is open in
   every worker, so a published result never leaves out a constructed city. Each worker solves the
   network's clusters (populations and the lines they reach, sharing no rider) apart, and after an
   edit only those it touched [T-326, [demand.md](demand.md) "Clusters"]. Worker 0 first opens a
@@ -127,9 +128,10 @@ Web first, so it can be shared as a link.
   construction) is a load without a hold and counts as done at its first estimate (`READY_ROUND`).
   The demand pool starts before the map is
   set up; the regional market goes to the workers as bytes and is decoded there; each zone's
-  boundary file is fetched once for the reach test and the outlines (`game/boundaries.ts`). The
-  clock worker is ready without any water mask: masks, outlines and place lists are fetched per zone
-  as the view, track or a search needs them (T-302, T-400; docs/zones.md 6).
+  boundary file is fetched once, shared by the reach test, the focus and the outlines
+  (`game/boundaries.ts`). The clock worker is ready without any water mask: masks, outlines, place
+  lists and boundaries are fetched per zone as the view, track or a search needs them (T-302,
+  T-400, T-404; docs/zones.md 6).
   `game/loading.ts`; timings in notes/T-172.md, frame times in notes/T-180.md.
 - **Threads talk by snapshots**: a worker transfers a finished buffer with a version number; the
   main thread swaps it in. Works on any host. SharedArrayBuffer is a later option; it needs

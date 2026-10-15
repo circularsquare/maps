@@ -700,7 +700,11 @@ three Chrome workers, Philadelphia 0.4 s and 0.9-1.0 s, Boston 0.3 s, Baltimore 
 small ones 0.05-0.13 s; T-142's airports and medical visits add 5-15% natively, two samples a
 cell each, and in Chrome Philadelphia measured 1.1-1.2 s and Washington 1.7-1.8 s); the
 regional market was 1.0 s natively and 1.2-1.6 s in Chrome until
-T-174, and is now 0.09 s natively and 0.1-0.4 s in Chrome (reading its sites). A new game
+T-174, and is now 0.09 s natively and 0.1-0.4 s in Chrome (reading its sites). The market is
+opened (T-396) once a market zone is viewed, beside the view or reached, or a built station lies
+within its reach (30 km of a market zone's box), and stays open; before that no solve waits for it
+or covers it, and a solve sent without it is sent again once it opens. A save with nothing near
+the Northeast never downloads it. A new game
 opens only New York; a save with construction in several cities pays
 each of their openings once, in every worker. Only the cells with a budget for a purpose hold its
 destination samples and their pair indices (T-395; about half of all cells x purposes have none):
@@ -966,10 +970,14 @@ order) and its lines, with their own route nodes, mapped back to the whole netwo
 result and answer. A cluster is joined up from populations, stations and lines: a line joins its
 stations; a station complex joins its stations; stations within 1 km join (merged platforms are
 100 m, walking transfers 300 m); a city joins every station within 30 km of its cells' bounding box
-(the 4 km walk and the 15 km ride from a home group's centre); the regional market joins every
-station within 200 km of a market zone's centre. Clusters are worked out afresh for every network,
-so a station or a market that reaches two of them merges them (T-362's longer trips will join
-cities that way). Lines and stations no population reaches are in no cluster and carry nobody.
+(the 4 km walk and the 15 km ride from a home group's centre); the regional market, when open,
+joins every station within 30 km of a market zone's registry box (its sites are those zones' cells,
+its rides reach about 17 km; `MARKET_REACH_M`, T-396). Clusters are worked out afresh for every
+network, so a station or the market that reaches two of them merges them. The market is one
+population, so two networks with no track between them that both lie within its reach share one
+cluster; splitting its pairs by the networks their ends reach needs the market split in the
+kernel (T-409). A market no station reaches is a cluster of its own with no lines: solved once
+and kept. Lines and stations no population reaches are in no cluster and carry nobody.
 Every population of a cluster crowds on the cluster's own loads, which are the whole network's
 there, since no other population puts a rider on its lines; so the figures are the same as one
 solve of everything. A worker keeps what each population last solved, and a cluster whose

@@ -1,5 +1,9 @@
 # Archive
 
+- T-396 [P2] The market's cluster join and opening. Done 2026-10-15: the market joins stations within 30 km of a market zone's box, and opens only when a market zone is viewed or reached; a Toronto save 38.6 to 6.4 MB at startup. Splitting by network left to T-409. notes/T-396.md.
+
+- T-404 [P3] Boundaries on demand. Done 2026-10-15: boundaries fetched only for zones whose boxes are near the view, a station or a place asked about; startup 18 requests (0.76 MB) to 2 (new game) or 8 (real save), flat at 200 zones. notes/T-404.md.
+
 - T-403 [P2] Worker checks stale since T-326/T-392. Done 2026-10-15: `t066-worker-check` and `t149-worker-check` take the solve's final (results without `cluster`), and t066 also checks the plan, the cluster results' count and that their figures match the final's per city.
 
 - T-395 [P2] Everyday destination slots only where a purpose has a budget. Done 2026-10-15: samples and `edge_pair` New York 108 to 57 MB natively, nine cities' everyday heap 448 to 276 MB a worker; every output identical to the byte. notes/perf-survey.md 3.

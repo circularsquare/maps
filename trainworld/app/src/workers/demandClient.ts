@@ -25,7 +25,7 @@
 //   has landed, then swaps it in whole (free flow first, again after each crowding round).
 
 import { effect } from "@preact/signals";
-import { activeCity, CITIES, getWorldFrame, HOME_CITY, LEGACY_FRAME, MARKET_PACK, marketToWorld, viewedZone, worldFrameEpoch, type CityId } from "../game/cities";
+import { activeCity, CITIES, cityById, getWorldFrame, HOME_CITY, LEGACY_FRAME, MARKET_PACK, marketToWorld, viewedZone, worldFrameEpoch, type CityId } from "../game/cities";
 import type { FrameSpec } from "../game/frame";
 import { DAY_KINDS, type DayKind } from "../game/days";
 import { display, shownDay, tool } from "../game/ui";
@@ -62,7 +62,8 @@ import { demandIdle, loadComplete, loadFailed, loadProgress, startup, takeGameLo
 import { PERIODS, periodsMatch } from "../game/periods";
 import { EVERYDAY_KEYS, membersOf, PURPOSES, shownKey, type PurposeFilter, type PurposeKey } from "../game/purposes";
 import { perfOff } from "../perfFlags";
-import { citiesReached, loadFootprints } from "./cityReach";
+import { marketReaches } from "./demandClusters";
+import { citiesReached, footprintOf, loadFootprints, REACH_M, zonesNearStations, type Footprint } from "./cityReach";
 import { nearbyZones } from "../game/zones";
 import type { BareFigures, DemandNetwork, FromDemand, ToDemand } from "./demandProtocol";
 import { readTripPeriod, setTripQuery, tripKey, type RouteNodes, type Trip } from "../game/trip";
@@ -218,6 +219,8 @@ interface Solve {
   memBytes: number[];
   /** the cities open in every worker when it was sent: the solve covers at least these (T-149) */
   cities: CityId[];
+  /** T-396: the market was open in every worker when it was sent, so the solve covers it */
+  market: boolean;
   /** T-232: its estimates before the final round are shown (startup, a game load, a city with no
    * figures yet); otherwise the last final result stays shown until this one's final round */
   showEstimates: boolean;
@@ -422,9 +425,12 @@ class DemandClient {
   private bareOpen = new Map<CityId, BareFigures>();
   /** bytes of each item, the weight of its opening in the percentage */
   private bytes = new Map<string, number>();
-  /** footprints for `needed`; "failed": every city counts as reached */
-  private footprints: Awaited<ReturnType<typeof loadFootprints>> | "failed" | null = null;
   private reach = new WeakMap<Service, Set<CityId>>();
+  /** each network's stations as lon, lat pairs, the zones whose boxes they come near (T-404), and
+   * whether the market's riders reach any (T-396) */
+  private nearZones = new WeakMap<Service, { ll: Float64Array; near: CityId[]; market: boolean }>();
+  /** footprints being fetched for the reach test */
+  private fetchingFootprints = new Set<CityId>();
   private onOpen: { item: string; f: (ok: boolean) => void }[] = [];
   /** the load the percentage describes: its items, the solve that completes it, its best percentage */
   private job: { items: string[]; cities: CityId[]; startup: boolean; version?: number; best: number; anchor?: { shown: number; frac: number } } | null = null;
@@ -440,8 +446,6 @@ class DemandClient {
   cacheWrites = true;
   /** SHA-256 of each pack opened in every worker (and "market"), as it downloads */
   private packHash = new Map<string, { p: Promise<string>; set: (h: string) => void }>();
-  /** resolves once the zone footprints are known (or failed) */
-  private footprintsReady: Promise<unknown> = Promise.resolve();
   /** the zones of the cached result shown, and its network's hash */
   private cachedCities = new Set<CityId>();
   private cachedHash: string | null = null;
@@ -465,11 +469,6 @@ class DemandClient {
       const msg: ToDemand = { kind: "init", packs: [], periods: this.periodsOf[i], aux: i === n, warmEveryday: i === 0 && n > 1 && !perfOff("stagger"), ...(i === n ? { groups: this.periodsOf.slice(0, n) } : {}) };
       w.postMessage(msg);
     }
-    this.footprintsReady = loadFootprints().then((f) => { this.footprints = f; }, (err) => {
-      console.warn("demand: city footprints unavailable, loading every city", err);
-      this.footprints = "failed";
-    });
-    this.footprintsReady.then(() => this.ensure());
     // the viewed city loads when it changes (a pan, the city buttons)
     effect(() => { activeCity.value; viewedZone.value; this.ensure(); });
     // and the zones beside it with bubbles on screen (T-276), once nothing waits on them
@@ -540,19 +539,49 @@ class DemandClient {
   }
 
   /** The cities `svc`'s stations reach; null while that is not known (no network yet, or the
-   * footprints still loading). */
+   * footprints of zones whose boxes the stations come near still loading; T-404). A zone whose
+   * footprint failed counts as reached. */
   private reachedSet(svc: Service | null): Set<CityId> | null {
     if (!svc) return null;
     if (svc.stations.length === 0) return new Set();
-    if (this.footprints === "failed") return new Set(CITIES.map((c) => c.id));
-    if (!this.footprints) return null;
     let reached = this.reach.get(svc);
-    if (!reached) {
-      const f = makeFrame(svc.frame), ll = new Float64Array(2 * svc.stations.length);
-      svc.stations.forEach((s, k) => { const [lon, lat] = f.toLonLat(s.x, s.y); ll[2 * k] = lon; ll[2 * k + 1] = lat; });
-      this.reach.set(svc, (reached = citiesReached(this.footprints, ll)));
+    if (reached) return reached;
+    const { ll, near } = this.nearOf(svc);
+    const missing = near.filter((id) => footprintOf(id) === undefined);
+    if (missing.length) {
+      const fresh = missing.filter((id) => !this.fetchingFootprints.has(id));
+      for (const id of fresh) this.fetchingFootprints.add(id);
+      if (fresh.length) void loadFootprints(fresh).then(() => {
+        for (const id of fresh) this.fetchingFootprints.delete(id);
+        this.ensure();
+      });
+      return null;
     }
+    reached = new Set();
+    const fps: Footprint[] = [];
+    for (const id of near) {
+      const f = footprintOf(id);
+      if (f) fps.push(f);
+      else reached.add(id);
+    }
+    for (const id of citiesReached(fps, ll)) reached.add(id);
+    this.reach.set(svc, reached);
     return reached;
+  }
+
+  private nearOf(svc: Service): { ll: Float64Array; near: CityId[]; market: boolean } {
+    let o = this.nearZones.get(svc);
+    if (!o) {
+      const f = makeFrame(svc.frame), ll = new Float64Array(2 * svc.stations.length);
+      let market = false;
+      svc.stations.forEach((s, k) => {
+        const [lon, lat] = f.toLonLat(s.x, s.y);
+        ll[2 * k] = lon; ll[2 * k + 1] = lat;
+        market ||= marketReaches(lon, lat);
+      });
+      this.nearZones.set(svc, (o = { ll, near: zonesNearStations(ll, REACH_M), market }));
+    }
+    return o;
   }
 
   /** T-325: the cities a solve of `svc` must cover: every one its stations reach, and every one
@@ -587,7 +616,18 @@ class DemandClient {
 
   /** Every city in `need` and the market are open in every worker. */
   private allOpen(need: Set<CityId>): boolean {
-    return this.ready === this.workers.length && this.opened.has(MARKET) && [...need].every((id) => this.opened.has(id));
+    return this.ready === this.workers.length && (!this.marketWanted || this.opened.has(MARKET)) && [...need].every((id) => this.opened.has(id));
+  }
+
+  /** T-396: the market is opened once one of its zones is viewed, beside the view or reached, or a
+   * station is within its riders' reach (`marketReaches`), and stays open: a save with nothing near
+   * the Northeast never downloads it. */
+  private marketWanted = false;
+  private wantsMarket(svc: Service | null, need: Set<CityId>): boolean {
+    if (this.marketWanted) return true;
+    const inMarket = (id: CityId) => cityById(id).market >= 0;
+    this.marketWanted = [...need].some(inMarket) || nearbyZones.peek().some(inMarket) || (!!svc && this.nearOf(svc).market);
+    return this.marketWanted;
   }
 
   /** Fetch whatever the newest service and the view need, the viewed city first; then solve if all is open. */
@@ -597,7 +637,7 @@ class DemandClient {
     const need = known ?? this.viewedSet();
     demandIdle.value = known?.size === 0; // T-318
     // over dead space with no station in reach there is nothing to open, the market included
-    if (need.size && !this.fetching.has(MARKET)) this.fetchMarket();
+    if (need.size && !this.fetching.has(MARKET) && this.wantsMarket(this.latest(), need)) this.fetchMarket();
     // T-325: a city no station reaches opens bare; while the reach is not known (startup), the
     // viewed city's pack is fetched and decided once downloaded (T-351)
     const reached = this.knownReach();
@@ -771,7 +811,7 @@ class DemandClient {
     if (!s || !need || !this.allOpen(need)) return;
     // a city opened since the newest solve (also one that finished loading after the view moved
     // away again: it is open, so solve it rather than leave its load unfinished)
-    if ([...need].some((id) => !s.cities.includes(id))) this.dispatch(s.svc, performance.now());
+    if ([...need].some((id) => !s.cities.includes(id)) || (this.opened.has(MARKET) && !s.market)) this.dispatch(s.svc, performance.now());
   }
 
   /** Resolves when `item` is open in every worker, or bare in the aux worker (false if the pool
@@ -864,7 +904,7 @@ class DemandClient {
     if (!this.job) {
       // T-243: a loaded game whose cities are all open (a browser slot) still waits for its solve
       const heldSolve = !!this.hold && this.hold.version !== undefined && s?.version === this.hold.version && s.published < doneRound;
-      if (!missing.length && !(atStartup && !this.opened.has(MARKET)) && !heldSolve) {
+      if (!missing.length && !(atStartup && this.marketWanted && !this.opened.has(MARKET)) && !heldSolve) {
         if (!atStartup) loadProgress.value = null;
         return;
       }
@@ -872,7 +912,7 @@ class DemandClient {
     }
     const job = this.job;
     for (const id of missing) if (!job.items.includes(id)) { job.items.push(id); job.cities.push(id); }
-    if (!this.opened.has(MARKET) && !job.items.includes(MARKET)) job.items.push(MARKET);
+    if (this.marketWanted && !this.opened.has(MARKET) && !job.items.includes(MARKET)) job.items.push(MARKET);
     if (atStartup && need.has(viewed) && !job.cities.includes(viewed)) job.cities.unshift(viewed);
     const needsSolve = this.jobNeedsSolve(job);
     const solved = !needsSolve || (!!s && job.version !== undefined && s.version === job.version && s.published >= doneRound);
@@ -963,9 +1003,9 @@ class DemandClient {
     Promise.all(parts.map((b) => sha256(b as Uint8Array<ArrayBuffer>))).then((hs) => h.set(hs.join("")), () => h.set("unhashed"));
   }
 
-  /** The cache key of a solve covering `cities`, once their packs and the market have downloaded. */
-  private async keyFor(cities: CityId[]): Promise<CacheKey> {
-    const ids = [MARKET, ...cities];
+  /** The cache key of a solve covering `cities` (and the market), once their packs have downloaded. */
+  private async keyFor(cities: CityId[], market: boolean): Promise<CacheKey> {
+    const ids = market ? [MARKET, ...cities] : cities;
     const hashes = await Promise.all(ids.map((id) => this.packHashOf(id).p));
     return { format: CACHE_FORMAT, build: BUILD, workers: this.computeN, flags: new URLSearchParams(location.search).get("perfOff") ?? "", packs: Object.fromEntries(ids.map((id, i) => [id, hashes[i]])) };
   }
@@ -981,11 +1021,13 @@ class DemandClient {
       log.readMs = performance.now() - log.at;
       if (!stored) return void (log.miss = "none");
       // the zones it covered must be the ones this solve will cover
-      await this.footprintsReady;
+      await loadFootprints(this.nearOf(svc).near);
       const need = this.solveNeed(svc);
       const cities = Object.keys(stored.packs ?? {}).filter((k) => k !== MARKET);
       if (!need || need.size !== cities.length || cities.some((id) => !need.has(id))) return void (log.miss = "zones");
-      const why = sameKey(stored, await this.keyFor(cities));
+      const market = this.wantsMarket(svc, need);
+      if (market !== MARKET in (stored.packs ?? {})) return void (log.miss = "zones");
+      const why = sameKey(stored, await this.keyFor(cities, market));
       if (why) return void (log.miss = why);
       if (this.latest() !== svc || (this.cur?.svc === svc && this.cur.published >= 0) || this.status.startsWith("failed")) return void (log.miss = "late");
       this.applyCache(svc, canon, stored, hash, cities);
@@ -1004,7 +1046,7 @@ class DemandClient {
     const now = performance.now();
     // a solve entry for it, so its layout and zones are known as a shown solve's are (T-324, T-325);
     // first in the log, so the newest solve stays last
-    this.log.unshift({ version: CACHE_VERSION, svc, layout: packService(svc).layout, results: [], byRound: [], published: stored.round, arrivedAt: now, sentAt: now, periodMs: [], setupMs: [], memBytes: [], cities, showEstimates: false });
+    this.log.unshift({ version: CACHE_VERSION, svc, layout: packService(svc).layout, results: [], byRound: [], published: stored.round, arrivedAt: now, sentAt: now, periodMs: [], setupMs: [], memBytes: [], cities, market: MARKET in (stored.packs ?? {}), showEstimates: false });
     this.cachedCities = new Set(cities);
     this.cachedHash = hash;
     this.cachedModes = stored.modes ?? null;
@@ -1031,7 +1073,7 @@ class DemandClient {
     const t0 = performance.now();
     const canon = canonical(s.svc);
     const stored = toStored(days, s.cities, canon);
-    const [hash, key] = await Promise.all([sha256(canon.text), this.keyFor(s.cities)]);
+    const [hash, key] = await Promise.all([sha256(canon.text), this.keyFor(s.cities, s.market)]);
     // the bubbles, when they were asked for this result (weekday, every purpose, the viewed zone)
     const m = this.modesP, city = this.focusCity;
     const cm = m && m.version === s.version && m.day === 0 ? await m.p : null;
@@ -1244,7 +1286,7 @@ class DemandClient {
     // shown yet: before the first final result, after a whole-game load, or for a city just opened
     const shown = cityDemandViews.peek();
     const showEstimates = !demandView.peek()?.final || (!!this.hold && !this.cacheShown()) || cities.some((id) => !shown.has(id));
-    this.cur = { version, svc, layout, results: PERIODS.map(() => null), byRound: Array.from({length: ROUNDS + 1}, () => PERIODS.map(() => null)), published: -1, arrivedAt, sentAt: performance.now(), periodMs: [], setupMs: [], memBytes: [], cities, showEstimates };
+    this.cur = { version, svc, layout, results: PERIODS.map(() => null), byRound: Array.from({length: ROUNDS + 1}, () => PERIODS.map(() => null)), published: -1, arrivedAt, sentAt: performance.now(), periodMs: [], setupMs: [], memBytes: [], cities, market: this.opened.has(MARKET), showEstimates };
     this.log.push(this.cur);
     if (this.log.length > 50) this.log.shift();
     demandUpdating.value = true;

@@ -5,18 +5,27 @@
 // not changed keeps its result (docs/demand.md "Clusters"). Reach is judged generously: joining two
 // clusters that share nothing costs only time, splitting two that share riders would change figures.
 
-import { CITIES, getWorldFrame, worldToCity, type CityId } from "../game/cities";
+import { CITIES, getWorldFrame, worldToCity, zoneBox, type CityId } from "../game/cities";
 import type { DemandNetwork } from "./demandProtocol";
 
 /** A city reaches a station within this of its cells' bounding box: past the 4 km walk and the
  * 15 km ride from a home's group centre (`ride_max_m`, up to about 9 km off the cell). */
 export const CITY_REACH_M = 30_000;
-/** The regional market reaches a station within this of a market zone's centre: its sites lie in
- * the zones (at most about 120 km from a centre, `CENTRE_REACH_M`), and its rides reach 17 km. */
-export const MARKET_REACH_M = 200_000;
+/** T-396: the regional market reaches a station within this of a market zone's registry box: its
+ * sites are the zones' cells, inside the boxes, and its rides reach about 17 km. */
+export const MARKET_REACH_M = 30_000;
 /** Stations this close are joined: platforms merged into one demand station (100 m) and walking
  * transfers (300 m) lie well inside it. */
 export const JOIN_M = 1_000;
+
+const MARKET_BOXES = CITIES.filter((c) => c.market >= 0).map(zoneBox);
+
+/** T-396: whether the regional market's riders can use a station at (lon, lat): within
+ * `MARKET_REACH_M` of a market zone's box. Also what opens the market (workers/demandClient.ts). */
+export function marketReaches(lon: number, lat: number): boolean {
+  const dy = MARKET_REACH_M / 111_320, dx = dy / Math.cos((lat * Math.PI) / 180);
+  return MARKET_BOXES.some(([w, s, e, n]) => lon >= w - dx && lon <= e + dx && lat >= s - dy && lat <= n + dy);
+}
 
 export interface Cluster {
   /** the job's cities in it, in the order given */
@@ -119,12 +128,10 @@ export function splitClusters(n: DemandNetwork, cities: { id: CityId; box: Box }
         if (p.x >= box[0] - CITY_REACH_M && p.x <= box[2] + CITY_REACH_M && p.y >= box[1] - CITY_REACH_M && p.y <= box[3] + CITY_REACH_M) join(s, S + i);
       }
     });
-    const centres = CITIES.filter((c) => c.market >= 0).map((c) => c.center);
     const frame = getWorldFrame();
-    for (let s = 0; s < S; s++) {
+    if (market) for (let s = 0; s < S; s++) {
       const [lon, lat] = frame.toLonLat(n.stXY[2 * s], n.stXY[2 * s + 1]);
-      const kx = 111_320 * Math.cos((lat * Math.PI) / 180);
-      if (centres.some(([clon, clat]) => Math.hypot((lon - clon) * kx, (lat - clat) * 111_320) <= MARKET_REACH_M)) join(s, MARKET);
+      if (marketReaches(lon, lat)) join(s, MARKET);
     }
   }
   // the clusters, in the order of their first population

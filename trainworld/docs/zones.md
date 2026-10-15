@@ -153,7 +153,7 @@ Option 1 of the review, in the same structure (zones, served pairs only, the off
 **Over a non-city zone** it is the focused zone, exactly as a city is focused: the zone holding the
 view's centre. Its bubbles are drawn as a city's are, and the top bar names it. A centre outside
 every boundary still belongs to the nearest zone when it is within 40 km of that zone's boundary
-(T-318; about the market's onset). Before the boundaries have loaded
+(T-318; about the market's onset). Before the boundaries near it have loaded
 the rule is 120 km from a zone's centre, past the biggest metro's far edge.
 
 **Over dead space**, farther than that from every zone (London while it has no pack), the view
@@ -207,8 +207,13 @@ is known without its files (T-302, T-400):
   within 30 km of the view's centre (else the nearest zone's); a search of three or more letters with
   fewer than five results fetches the next four nearest zones' lists, until it has enough or all are
   in. A station named after a place fetches the lists of the zones within 6 km of it.
-- **Boundaries** for the focus rule and the demand pool's reach test are still fetched for every
-  zone at startup (T-404).
+- **Boundaries** for the focus rule and the demand pool's reach test (T-404): a place asked about
+  (the view's centre, a station, a search hit) fetches the boundaries of the zones whose boxes lie
+  within 40 km of it (`ZONE_REACH_M`), and the zones beside the view those whose boxes meet the
+  screen; a network's stations fetch those whose boxes lie within 4.5 km of one (`REACH_M`).
+  Until all of a place's candidates are in, it is placed by the nearest centre as before any
+  boundary loads, so its zone never flips as boundaries arrive one by one. A place no box comes
+  within 40 km of is dead space at once, with nothing fetched.
 
 ## 7. Other countries and borders
 
@@ -227,7 +232,8 @@ long tail.
 - **Opening.** A non-city zone is a pack the size of a small city (Worcester County 860k people,
   about Providence's), opened only when viewed or reached, like a city: 0.05-0.3 s natively with its
   everyday layer. Commute packs open from shipped factors as now (a few ms).
-- **The market pack** grows by the cross-zone commute list. Its pairs are built only between zones
+- **The market pack** is opened only once a market zone is viewed or reached, or a station lies
+  within 30 km of a market zone's box (T-396; demand.md "Which cities are open"). It grows by the cross-zone commute list. Its pairs are built only between zones
   a station serves, so a solve's pair loop grows with the network's reach, not with the list.
   Cross-zone commute pairs add a second pass over served pairs to the market's per-period work
   (the market pass was 0.06 s natively a period on the real New York network).
