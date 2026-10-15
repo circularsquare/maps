@@ -104,7 +104,7 @@ key.
     each with the chips of its lines (six at most, then "+n") and walking minutes ("7 min", the
     metres on hover). A click selects it (and moves the map if it is off screen). Its own complex
     and stations of its own name are left out, and each name is listed once. The walk is the
-    demand model's routed walk ([demand.md](demand.md) 4.3) x the 1.3 detour at 4.8 km/h; a station
+    demand model's routed walk ([demand.md](demand.md) 4.3) x the 1.3 detour at the model's 6 km/h; a station
     water cuts off shows "no walk", only when fewer than three can be walked to within 10 km.
   - **Linked by you**, then the buttons **Trip from here** [T-221] (the trip tool with the station
     as the start) and **Link to another station** (below).

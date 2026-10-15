@@ -1112,8 +1112,8 @@ impl EverydayApi {
             let Some(sz) = &self.engine.sz else { return };
             let (u, v) = (sz.cell[c], sz.cell[d]);
             // both ends in a subzone first: the weights cost an exp and a square root
-            // the ride (T-371) is the commute's only: homes beyond every walk have no rail here
-            if u == NONE || v == NONE || sz.walk(u as usize).is_empty() || sz.walk(v as usize).is_empty() {
+            // the home end walks or rides (T-389), the activity end walks
+            if u == NONE || v == NONE || sz.walk(v as usize).is_empty() {
                 continue;
             }
             let distance = self.distance(c, d);
@@ -1192,13 +1192,15 @@ impl EverydayApi {
         // the one being built in, searches nothing; each destination's search is independent,
         // so this changes no result).
         let mut want = vec![false; s];
-        let mut used = vec![false; sz.n];
+        // 1 an activity end, 2 a home end (walks and rides: the trip home alights there, T-389)
+        let mut used = vec![0u8; sz.n];
         for pair in &self.pairs {
-            used[pair.u as usize] = true;
-            used[pair.v as usize] = true;
+            used[pair.u as usize] |= 2;
+            used[pair.v as usize] |= 1;
         }
-        for u in (0..sz.n).filter(|&u| used[u]) {
-            for k in sz.walk(u) {
+        for u in (0..sz.n).filter(|&u| used[u] != 0) {
+            let r = if used[u] & 2 != 0 { sz.acc_off[u] as usize..sz.acc_off[u + 1] as usize } else { sz.walk(u) };
+            for k in r {
                 want[sz.acc_st[k] as usize] = true;
             }
         }
@@ -1233,18 +1235,28 @@ impl EverydayApi {
                 od.fill(0.0);
             };
             let th = p.station_theta;
+            // per subzone: the cheapest walk and each walk's weight at it; and for a home with
+            // rides (T-389), the cheapest of walks and rides and every entry's weight at that
             let mut min = vec![0.0; sz.n];
+            let mut min_r = vec![f32::INFINITY; sz.n];
             let mut acc = vec![0.0; sz.acc_st.len()];
+            let mut acc_r = vec![0.0; sz.acc_st.len()];
+            let lowest = |r: std::ops::Range<usize>| sz.acc_w[r].iter().copied().fold(f32::INFINITY, f32::min);
             for u in 0..sz.n {
                 let r = sz.walk(u);
-                min[u] = sz.acc_w[r.clone()]
-                    .iter()
-                    .copied()
-                    .fold(f32::INFINITY, f32::min);
+                min[u] = lowest(r.clone());
                 for k in r {
                     acc[k] = fast_exp(-th * (sz.acc_w[k] - min[u]));
                 }
+                if !sz.ride(u).is_empty() {
+                    let all = sz.acc_off[u] as usize..sz.acc_off[u + 1] as usize;
+                    min_r[u] = lowest(all.clone());
+                    for k in all {
+                        acc_r[k] = fast_exp(-th * (sz.acc_w[k] - min_r[u]));
+                    }
+                }
             }
+            let ride_m = p.ride_min_km * 1000.0;
             let density = self.engine.z.density();
             for (i, pair) in self.pairs.iter().enumerate() {
                 if pair.kind != od_kind {
@@ -1254,21 +1266,32 @@ impl EverydayApi {
                     od_kind = pair.kind;
                     od_used = false;
                 }
+                // the home end: its walks, or on a trip of `ride_min_km` or more its walks and
+                // rides (T-389, as the commute's `ride_offered` but on the pair's own distance);
+                // the activity end walks
+                let h = pair.u as usize;
+                let (hr, hm, hw) = if pair.distance >= ride_m && min_r[h].is_finite() {
+                    (sz.acc_off[h] as usize..sz.acc_off[h + 1] as usize, min_r[h], &acc_r)
+                } else {
+                    (sz.walk(h), min[h], &acc)
+                };
+                let x = pair.v as usize;
+                let (xr, xm) = (sz.walk(x), min[x]);
                 for direction in 0..2 {
-                    let (u, v) = if direction == 0 {
-                        (pair.u as usize, pair.v as usize)
+                    let ((a, ma, wa), (b, mb, wb)) = if direction == 0 {
+                        ((hr.clone(), hm, hw), (xr.clone(), xm, &acc))
                     } else {
-                        (pair.v as usize, pair.u as usize)
+                        ((xr.clone(), xm, &acc), (hr.clone(), hm, hw))
                     };
-                    if min[u] + min[v] > p.pair_walk_max {
+                    if ma + mb > p.pair_walk_max {
                         continue;
                     }
-                    let (a, b) = (sz.walk(u), sz.walk(v));
+                    let (u, v) = if direction == 0 { (h, x) } else { (x, h) };
                     let mut sum = 0.0;
                     for ka in a.clone() {
                         for kb in b.clone() {
-                            sum += acc[ka]
-                                * acc[kb]
+                            sum += wa[ka]
+                                * wb[kb]
                                 * er[sz.acc_st[ka] as usize * s + sz.acc_st[kb] as usize];
                         }
                     }
@@ -1286,7 +1309,7 @@ impl EverydayApi {
                             / (self.engine.z.zone_m / 1000.0).powi(2)
                             / p.park_jobs_per_km2_per_min)
                             .min(p.park_cost_cap_min);
-                    let rail = min[u] + min[v] + p.fare_min - fast_ln(sum) / th;
+                    let rail = ma + mb + p.fare_min - fast_ln(sum) / th;
                     let pr = (1.0 - pair.walk) / (1.0 + fast_exp(-(p.beta * (road - rail) + p.asc_rail)));
                     probability[i][direction] = pr;
                     let share = if direction == 0 {
@@ -1300,7 +1323,7 @@ impl EverydayApi {
                         for kb in b.clone() {
                             let ia = sz.acc_st[ka] as usize;
                             let ib = sz.acc_st[kb] as usize;
-                            od[ia * s + ib] += trips * acc[ka] * acc[kb] * er[ia * s + ib];
+                            od[ia * s + ib] += trips * wa[ka] * wb[kb] * er[ia * s + ib];
                         }
                     }
                 }

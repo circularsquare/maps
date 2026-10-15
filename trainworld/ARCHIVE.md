@@ -1,5 +1,6 @@
 # Archive
 
+- T-389 [P2] Rides for everyday trips. Done 2026-10-15: everyday trips of 5 km or more ride at the home end both ways, as commutes do; real save 7.03M to 7.54M rail a day, solve 31-32 s; the map's walking minutes at the model's 6 km/h. notes/T-371.md.
 - T-371 [P2] Park-and-ride stage 2. Done 2026-10-15: a true 6 km/h walk and a ride to the cheapest station per line within 15 km for commutes of 5 km or more (home end); real network LIRR, MNR, NJT +4-5%, ride share 64-74%; real save 7.03M rail (8.52M), solve +7-10%. notes/T-371.md.
 - T-292 [P2] Mumbai. Done 2026-10-15: 2 districts and 15 talukas tier 0, 28.3M people (2011 census grown by district), proxy jobs half on population, curve d^-1.65 exp(-d/32.7 km) fitted to B-28 bands; Western line test 1.83M riders; outside the market. notes/T-292.md.
 - T-291 [P2] Shanghai. Done 2026-10-15: 16 districts tier 0, population and jobs scaled to the 2020 census and 2023 economic census by district, curve d^-1.4 exp(-d/18.2 km) to the 10.2 km mean; Line 2 test 1.19M riders; outside the market. notes/T-291.md.

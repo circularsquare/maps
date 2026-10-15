@@ -4,8 +4,8 @@
 // file's `WalkGrid::field` and `Field::eff`, in the same arithmetic, run on the main thread from
 // the pack's `walk_row` and `walk_x` (about 250 KB a city, fetched once with a Range request) so
 // a hover or an inspector never waits for a demand worker mid-solve. The metres are the demand
-// model's walk; the minutes are those metres x its 1.3 detour at a plain 4.8 km/h (a fast walk to
-// stations, 15 km/h, stands in for bikes and buses, and is not this).
+// model's walk; the minutes are those metres x its 1.3 detour at its 6 km/h (`Params::walk_mps`,
+// T-371; change them together).
 
 import { signal } from "@preact/signals";
 import { cityById, type CityId } from "./cities";
@@ -17,12 +17,12 @@ const ORTH = 70, DIAG = 99, INF = 0x7fffffff, RING = 256;
 const OCTILE_MAX = 1.0824;
 const SNAP_PX = 10;
 
-/** The walking pace (Anita, T-312) and the demand model's detour over the routed metres. */
-export const WALK_KMH = 4.8;
+/** The demand model's walking pace (T-371, T-389) and its detour over the routed metres. */
+export const WALK_KMH = 6;
 export const WALK_DETOUR = 1.3;
 
-/** The stations a place lists, and how far it looks for them: first 4 km (the demand model's
- * bound), then 10 km when fewer than three are reachable. */
+/** The stations a place lists, and how far it looks for them: first 4 km (past the demand
+ * model's 3 km walk), then 10 km when fewer than three are reachable. */
 const BOUNDS = [4000, 10000];
 const SHOWN = 3;
 

@@ -402,7 +402,7 @@ them, or with them made for other zones, has every walk and drive straight x 1.3
   the station inspector and the bubble hover walk the same barrier raster, read on the main thread
   from the pack's `walk_row` and `walk_x` (a Range request, about 250 KB a city) with a TypeScript
   copy of `WalkGrid::field` and `Field::eff` (same constants, same search), so a hover never waits
-  for a demand worker mid-solve. Minutes = routed metres x `walk_detour` 1.3 / 4.8 km/h. It does
+  for a demand worker mid-solve. Minutes = routed metres x `walk_detour` 1.3 / 6 km/h, the model's walk. It does
   not check `zones_check`: a pack whose routes are stale still has its barrier here. Change the
   search in `routes.rs` and `walks.ts` together.
 
@@ -435,10 +435,12 @@ notes/T-371.md). So a station 500 m away costs 9.8
 perceived minutes, 1 km 19.5, 2 km 39. Between walks the logit above applies (a station 500 m
 further gets 14% of the nearer one's riders).
 
-**Riding to a station** (Anita, 2026-10-14, T-295, T-371). Car, bus, bike or a lift are one mode,
-the ride, called driving in the game. It is offered only at the home end of a commute whose two
-zones' centres are at least 5 km apart (`ride_min_km`: shorter, the ride cannot beat driving the
-whole way), from the home zone's home-weighted centre. It costs **`p_ride` 10 + 1.33 x the drive
+**Riding to a station** (Anita, 2026-10-14, T-295, T-371, T-389). Car, bus, bike or a lift are one
+mode, the ride, called driving in the game. It is offered only at the home end of a trip of at
+least 5 km (`ride_min_km`: shorter, the ride cannot beat driving the whole way), from the home
+zone's home-weighted centre: for a commute, 5 km between its two zones' centres; for an everyday
+trip, its own mean distance between home and activity cells, at the home end both ways (the trip
+out boards there, the trip home leaves the train there). It costs **`p_ride` 10 + 1.33 x the drive
 to the station + the cheaper of parking at the station and a drop-off, `d_drop` 10** perceived
 minutes: the drive is the whole-trip drive's rule (below), from the home zone to the station's
 zone, and parking is a destination's (3 to park plus the station zone's job density). In a suburb
@@ -448,8 +450,8 @@ the station, as Anita's curve does. Which stations: within 15 km straight line (
 cheapest station of each line, then those of the 6 cheapest lines (`ride_lines`), so a rider
 skips the local stop for the line they want. Homes beyond every walk (3 km) are one subzone per
 6 km square (3 x 3 zones) with rides only, from its home-weighted centre, keeping each zone's
-trip total but taking the most populous zone's distance decay; a commute's work end and the everyday purposes walk only. Car parks are
-automatic and unlimited. `p_ride` and `d_drop` are starting values for T-372's fit.
+trip total but taking the most populous zone's distance decay; the work or activity end walks
+only. Car parks are automatic and unlimited. `p_ride` and `d_drop` are starting values for T-372's fit.
 
 Two **computational bounds** keep the work down and are set where little rail is left: stations
 are looked for within 3 km straight line of a walk (`walk_cutoff_m`), and a pair of places is

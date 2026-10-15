@@ -6,7 +6,7 @@ P3 = later. Finished or abandoned tasks move to `ARCHIVE.md`.
 **Direction** (Anita, 2026-10-14; details in CLAUDE.md "Working here"). Order of work:
 1. London stage b (T-360, done 2026-10-15); 2. sampler cities Paris, Shanghai, Mumbai (T-289, T-291,
 T-292), from tonight, one at a time; 3. park-and-ride (T-380 parking check, then T-372 to T-374;
-T-370, T-371 done); 4. worldwide long trips (T-362: T-375 to T-379); 5. the crossover tool (T-338);
+T-370, T-371, T-389 done); 4. worldwide long trips (T-362: T-375 to T-379); 5. the crossover tool (T-338);
 6. responsiveness leftovers (T-327, T-326); 7. a demand-realism batch (T-270, T-271, T-272);
 8. a design for game modes, not yet a task. Other performance work stays parked until she
 reports a problem. Anita plans hundreds of metros: cost per city matters (notes/city-costs.md).
@@ -83,7 +83,6 @@ PATH, `npm run build --prefix maps/.tw-snap/trainworld/app` (a few minutes; back
   - T-372 [P2] T-295 stage 3: fit `p_ride`, `d_drop` and `w_walk` (T-371's starting values 10, 10, 1.5; boroughs 6-13 points under ACS since the true walk, Staten Island, Bergen and Rockland over) on the real New York save (ride share 50-70% at suburban stations, county rail shares near ACS), the corridor network, the "one station keeps ~30%" check, and London. Medium. Proposed; notes/T-295.md.
   - T-373 [P2] T-295 stage 4: ride access in the regional layer (market sites, commutes home end, long trips both ends with a drop-off at the far end) through one shared `access_options` that T-362 also uses. Medium. Proposed; notes/T-295.md.
   - T-380 [P2] Check parking cost by job density (Anita doubts it; it is the biggest single term in the car's cost, up to 43 perceived minutes) against real parking prices and search times in a few cities (New York, London, Toronto, a US suburb), before T-372's fit. Small. Done 2026-10-15: right at Midtown and in free suburbs, a third to a seventh of real prices at 10,000-45,000 jobs/km²; proposed log-of-land-density rule with a free-parking share waits on Anita, to land with T-372. notes/T-380.md.
-  - T-389 [P2] Rides for everyday trips past a few km (Anita's decision 2: by trip length, not purpose); T-371 kept everyday purposes on the walk alone, so the real save's everyday rail fell with the true walk (notes/T-371.md). Small to medium. Proposed.
   - T-374 [P3] T-295 stage 5: riders arriving by ride in the station inspector and its hover, and the trip explorer's ride entries (their minutes are drive minutes, shown as walking); SPEC 5.3, docs/demand.md 4.3, demand-worldwide.md. Small. Proposed; notes/T-295.md.
 - T-296 [P3] A station's far-zone rows (`IntercityApi::station_flows_day`) hold commuters between zones and longer trips together and take the longer trips' weekend factor (1.58), so a weekend overcounts the commuters there (0.30); keep the commute part apart if it shows. Open; docs/demand.md 4.4 "The market since T-276".
 - T-297 [P3] The joint commute gravity takes 12 minutes (500 Furness iterations on 23k zones, stopping at 2e-4 on one Boston zone): a faster convergence (over-relaxation, or a tolerance per zone size) would make `pipeline/intercity.py` quicker to rerun. Open; notes/T-276.md.
