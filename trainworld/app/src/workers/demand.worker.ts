@@ -2,7 +2,8 @@
 // Philadelphia local commutes and the separate regional market. Each assigned period
 // advances all populations from one frozen total load vector at every crowding round.
 // Network messages supersede work between populations; queries require the same
-// version AND refinement round across all this worker's periods.
+// version AND refinement round across all this worker's periods; one marked `wait` about a round
+// not reached yet is answered when it is (T-327).
 //
 // Packs open as they arrive (T-149): `init` starts the WASM (and may carry packs), each `open`
 // adds city packs or the regional market. A solve covers the cities open when it starts.
@@ -34,7 +35,7 @@ const everyday = new Map<CityId, EverydayApi>();
 const EVERYDAY_PURPOSES = EVERYDAY_NAMES;
 let intercity: IntercityApi | null = null;
 let mine: number[] = [];
-let pending: { version: number; net: DemandNetwork; rounds: number } | null = null;
+let pending: { version: number; net: DemandNetwork; rounds: number; barrier?: boolean } | null = null;
 let busy = false;
 /** the version whose network `api` holds (queries about any other get nulls) */
 let current = -1;
@@ -47,6 +48,18 @@ const roundsHeld: number[] = [];
  * the answer is kept from when it was whole.
  */
 const sumsByRound = new Map<string, { mask: number; sums: Float32Array; everyday: Float32Array | null }>();
+/** the round the solve in hand is working on or last finished */
+let stageRound = -1;
+/** T-327: questions marked `wait` about a round (or version) this worker has not reached yet,
+ * answered the moment it has, before it starts the next round */
+let waiting: Query[] = [];
+type Query = Exclude<ToDemand, { kind: "init" | "open" | "solve" | "go" }>;
+/** T-327: the round every worker may start, by version (a solve marked `barrier` waits for it) */
+let go = { version: -1, round: 0 };
+/** a paused round boundary's resume (a `go` or a newer network) */
+let wake: (() => void) | null = null;
+/** the questions whose answer reads the periods' state at a round (the others read none) */
+const BY_ROUND = new Set<Query["kind"]>(["station", "flowRail", "purposes", "icSel", "icStation", "transfers", "trip"]);
 /** the populations the network in hand was solved for, and its route nodes (`transfers`, T-176) */
 let jobPopulations: (DemandApi | EverydayApi | IntercityApi)[] = [];
 let jobNodes = 0;
@@ -189,7 +202,11 @@ onmessage = (e: MessageEvent<ToDemand>) => {
     });
   } else if (msg.kind === "solve") {
     pending = msg;
+    wake?.();
     void opening.then(() => { if (started && !busy) run(); });
+  } else if (msg.kind === "go") {
+    if (msg.version > go.version || (msg.version === go.version && msg.round > go.round)) go = { version: msg.version, round: msg.round };
+    wake?.();
   } else {
     query(msg);
   }
@@ -244,7 +261,12 @@ function selectionSquares(id: CityId, a: DemandApi, end: number, cells: Uint32Ar
 const MARKET_OF: Record<CityId, number> = Object.fromEntries(CITIES.map(c => [c.id, c.market]));
 
 /** The demand views' queries (T-078). They run between periods, never inside a solve. */
-function query(msg: Exclude<ToDemand, { kind: "init" | "open" | "solve" }>) {
+function query(msg: Query) {
+  if ((msg as { wait?: boolean }).wait && msg.kind !== "cells" && BY_ROUND.has(msg.kind) && !aux) {
+    const { version, round } = msg;
+    const behind = version > current || (version === current && busy && (stageRound < round || (stageRound === round && !mine.every((q) => roundsHeld[q] === round))));
+    if (behind) return void waiting.push(msg);
+  }
   // A city the network in hand was not set on (opened since, T-149) answers as if not opened.
   // (cells: a zone open bare answers too, T-325)
   const a = msg.kind === "cells" ? cities.get(msg.city) ?? bare.get(msg.city)?.a : jobCities.has(msg.city) ? cities.get(msg.city) : undefined;
@@ -302,7 +324,8 @@ function query(msg: Exclude<ToDemand, { kind: "init" | "open" | "solve" }>) {
       const names = EVERYDAY_PURPOSES.slice(0, layer?.purpose_count() ?? 0);
       sendMessage({ kind: "purposes", id: msg.id, version: msg.version, mask: live ? a!.solved_mask() : 0, work, everyday: extra, names }, [...(work ? [work.buffer] : []), ...(extra ? [extra.buffer] : [])]);
     } else if (msg.kind === "flows") {
-      const packed = live ? a!.flows_day(msg.end, msg.cells, msg.sums, day) : null;
+      // reads the network's subzones and the sums it is given, not any period's state (as cellModes)
+      const packed = a && msg.version === current ? a.flows_day(msg.end, msg.cells, msg.sums, day) : null;
       sendMessage({ kind: "flows", id: msg.id, version: msg.version, packed: packed && packed.length ? packed : null }, packed ? [packed.buffer] : []);
     } else if (msg.kind === "icSel") {
       // a city outside the regional market (market -1, T-277) has no longer trips. T-336: a zone
@@ -381,6 +404,13 @@ function query(msg: Exclude<ToDemand, { kind: "init" | "open" | "solve" }>) {
     else if (msg.kind === "bareFlows") sendMessage({ kind: "bareFlows", id: msg.id, packed: null, masks: [], work: [], everyday: [], names: [] });
     else if (msg.kind === "bareSquares") sendMessage({ kind: "bareSquares", id: msg.id, xy: null, share: null });
   }
+}
+
+/** T-327: ask the waiting questions again; those still ahead of this worker wait on. */
+function answerWaiting() {
+  const w = waiting;
+  waiting = [];
+  for (const m of w) query(m);
 }
 
 /**
@@ -487,6 +517,8 @@ async function run() {
       current = job.version;
       roundsHeld.fill(-1);
       sumsByRound.clear();
+      stageRound = -1;
+      answerWaiting(); // an older version's get nulls; this one's wait on
       let stale = false;
       // Periods are independent. Every population in a period advances from one frozen
       // combined load vector, never from whichever population happened to run first.
@@ -495,6 +527,13 @@ async function run() {
       jobPopulations = populations;
       jobNodes = 2 * n.stops.length;
       for (let round = 0; round <= job.rounds && !stale; round++) {
+        // T-327: a worker ahead holds its last round until every worker has finished it
+        while (job.barrier && round > 0 && !pending && !(go.version > job.version || (go.version === job.version && go.round >= round))) {
+          await new Promise<void>((r) => (wake = r));
+          wake = null;
+        }
+        if (pending) { stale = true; break; }
+        stageRound = round;
         for (const q of mine) {
           await yieldNow();
           if (pending) { stale = true; break; }
@@ -556,6 +595,9 @@ async function run() {
             if (e) for (let k = 0; k < Math.min(e.length, 3 * (local - 1)); k++) v[3 + k] = e[k];
             return [id, v];
           })) as Record<CityId, number[]>;
+          // T-327: ahead of the result, so the client holds every worker's answer for a round by
+          // the time it publishes that round
+          if (q === mine[mine.length - 1]) answerWaiting();
           sendMessage(
             { kind: "result", version: job.version, period: q, summary, citySummary, cityParts, intercitySummary, intercityParts: Array.from(regional!.part_summary(q)), corridors: Array.from(regional!.corridor_summary(q)), commuteCorridors: Array.from(regional!.commute_corridors(q)), seg, board, alight, loadOfCrush, parts, ms, setupMs, memBytes: wasm_memory_bytes() },
             [seg.buffer, board.buffer, alight.buffer, loadOfCrush.buffer, parts.seg.buffer, parts.board.buffer, parts.alight.buffer],

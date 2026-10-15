@@ -477,8 +477,13 @@ export class Tools {
     this.delAt = [px, py];
     if (changed) {
       // the stretch that would go, drawn red over itself
-      const pts = h?.kind === "track" ? this.overlay.renderer.net?.edgePts.get(h.edge) : undefined;
-      this.overlay.renderer.setPreview(pts && pts.length >= 6 ? strokesFromPreview(pts, true) : null);
+      // a crossover goes whole: both diagonals (T-391)
+      const edgePts = this.overlay.renderer.net?.edgePts;
+      const partner = h?.kind === "track" ? world.peek()?.edges.find((x) => x.id === h.edge)?.partner ?? -1 : -1;
+      const parts = h?.kind === "track" && edgePts
+        ? [h.edge, partner].map((id) => edgePts.get(id)).filter((p): p is Float32Array => !!p && p.length >= 6)
+        : [];
+      this.overlay.renderer.setPreview(parts.length ? strokesFromParts(parts, true, false) : null);
       this.overlay.invalidate();
     }
     this.map.getCanvas().style.cursor = h ? "pointer" : "crosshair";

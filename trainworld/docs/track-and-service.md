@@ -125,7 +125,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   the click) where nothing runs beside within 15 m, or where 60 m either way reaches a track end, a
   junction or a station. A crossover keeps its shape: no corners to drag, no level change, its end
   nodes cannot be moved or made a flyover, no station or junction on a diagonal. Deleting either
-  diagonal deletes both (the four nodes stay as plain joints); constructed like any track.
+  diagonal deletes both (the four nodes stay as plain joints); constructing either builds both.
 - **Junctions in plain words** (T-080): a new junction is built flat (the branch crosses the other
   direction's track at the same level: cheaper, trains may wait for each other). The junction
   inspector says so in plain words and offers "Build a flyover" with its price (paid at once on a

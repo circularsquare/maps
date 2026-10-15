@@ -1324,6 +1324,12 @@ impl TrackApi {
         (0..net.edge_count() as u32).filter(|&e| net.edge_ok(e) && net.edge_crossover[e as usize]).collect()
     }
 
+    /// Each of `crossover_edges`' other diagonal, in the same order (`u32::MAX` if it has none).
+    pub fn crossover_partners(&self) -> Vec<u32> {
+        let net = &self.w.net;
+        self.crossover_edges().into_iter().map(|e| crossover_partner(net, e).unwrap_or(u32::MAX)).collect()
+    }
+
     /// The crossover edit (`add_crossover`): splits at the four ends (or plain joints there), and
     /// the two diagonals, each leaving its ends along the track like a turnout and swinging
     /// across in an S over `CROSSOVER_LEN`. Also the new ids (to release if it is not applied)
@@ -1563,7 +1569,16 @@ impl TrackApi {
     fn construct_ops(&self, edges: &[u32], stations: &[u32]) -> Vec<Op> {
         let net = &self.w.net;
         let mut ops = vec![];
+        // a crossover is built as a whole: both diagonals (T-391)
+        let mut all = edges.to_vec();
         for &e in edges {
+            if let Some(p) = crossover_partner(net, e) {
+                if !all.contains(&p) {
+                    all.push(p);
+                }
+            }
+        }
+        for &e in &all {
             if let Some(mut d) = net.edge_data(e) {
                 if !d.built {
                     d.built = true;
@@ -3739,6 +3754,11 @@ mod tests {
         assert!(a.crossover_edges().is_empty());
         assert_eq!(a.undo(), 0);
         assert_eq!(a.crossover_edges().len(), 2);
+        // constructing one diagonal builds both (T-391)
+        assert_eq!(b.crossover_partners(), vec![xs[1], xs[0]]);
+        b.cash = 1e6;
+        assert_eq!(b.construct(&[xs[0]], &[]), 0, "{}", b.issues());
+        assert!(xs.iter().all(|&x| b.w.net.edge_built[x as usize]));
         // undoing the placement takes it all away
         assert_eq!(a.undo(), 0); // the line's removal
         assert_eq!(a.undo(), 0); // the line

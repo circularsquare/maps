@@ -7,7 +7,7 @@ P3 = later. Finished or abandoned tasks move to `ARCHIVE.md`.
 1. London stage b (T-360, done 2026-10-15); 2. sampler cities Paris, Shanghai, Mumbai (T-289, T-291,
 T-292), from tonight, one at a time; 3. park-and-ride (T-380 parking check, then T-372 and T-374;
 T-370, T-371, T-389, T-373 done); 4. worldwide long trips (T-362: T-375 to T-379); 5. the crossover tool (T-338);
-6. responsiveness leftovers (T-327, T-326); 7. a demand-realism batch (T-270, T-271, T-272);
+6. responsiveness leftovers (T-326; T-327 done); 7. a demand-realism batch (T-270, T-271, T-272);
 8. a design for game modes, not yet a task. Other performance work stays parked until she
 reports a problem. Anita plans hundreds of metros: cost per city matters (notes/city-costs.md).
 
@@ -40,7 +40,6 @@ PATH, `npm run build --prefix maps/.tw-snap/trainworld/app` (a few minutes; back
 
 
 - T-326 [P2] Loading fix 3 (T-303 item 3): separate clusters (Toronto vs the Northeast) solve separately, an edit re-solves only its own cluster, the viewed one first. Three stages. After T-325. Open.
-- T-327 [P2] Loading fix 4 (T-303 item 4): clicks during the startup solve answered from the newest round every worker holds (about 2 s instead of up to 10). Open.
 
 ## In progress (batch 25, 2026-10-14)
 
@@ -118,7 +117,6 @@ PATH, `npm run build --prefix maps/.tw-snap/trainworld/app` (a few minutes; back
 
 - T-248 [P3] Since T-244 the track inspector's Construct and level buttons act on one piece of a drawn route; consider "this piece / the whole run between junctions and stations" if Anita finds constructing piece by piece tedious. Open.
 
-- T-391 [P3] Crossover polish (after T-338): the track inspector on a diagonal should say crossover and drop its corner, radius and level controls (refused today; `ui/inspector/others.tsx`), the junction inspector at a crossover end should drop "Build a flyover" (refused), the delete hover should draw both diagonals red, and a diagonal's own Construct should build both. Open.
 - T-339 [P3] An express slowed by a local ahead of it on plain double track (Anita: "ideally express is slowed by local ahead of it but thats whatever"). Today trains pass through each other at no cost. Low priority. Open.
 - T-340 [P3] Quad track's rest (from T-257): a station on a quad stroke's own end node is refused when that end is new track; the express pair is always left of the drawn direction. Open.
 

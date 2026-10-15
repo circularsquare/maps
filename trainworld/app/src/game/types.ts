@@ -74,6 +74,8 @@ export interface TrackEdge {
   off?: boolean;
   /** one diagonal of a crossover (T-338): fixed shape, deleted with the other */
   crossover?: boolean;
+  /** a crossover diagonal's other diagonal, -1 if none */
+  partner?: EdgeId;
   lengthM: number;
   /** build cost, US$ */
   cost: number;

@@ -188,9 +188,9 @@ export function strokesFromPreview(pts: Float32Array, bad: boolean, speed?: Floa
 }
 
 /** A crossover's two diagonals as the placement preview (T-338), red when it cannot be built. */
-export function strokesFromParts(parts: Float32Array[], bad: boolean): Strokes {
+export function strokesFromParts(parts: Float32Array[], bad: boolean, placement = true): Strokes {
   const b = new StrokeBuilder();
-  for (const pts of parts) b.add(pts, TRACK, 0xffffffff, F_BLUEPRINT | F_PLACEMENT | (bad ? F_BAD : 0));
+  for (const pts of parts) b.add(pts, TRACK, 0xffffffff, F_BLUEPRINT | (placement ? F_PLACEMENT : 0) | (bad ? F_BAD : 0));
   return b.build();
 }
 

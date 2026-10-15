@@ -155,6 +155,8 @@ export interface ClockEdge {
   off: boolean;
   /** one diagonal of a crossover (T-338) */
   crossover: boolean;
+  /** the crossover's other diagonal, -1 if none */
+  partner: number;
   lengthM: number;
   /** US$M */
   cost: number;

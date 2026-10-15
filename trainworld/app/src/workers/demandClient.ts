@@ -129,6 +129,9 @@ type Reply = Extract<FromDemand, { kind: QueryKind }>;
 type QueryMessage = Extract<ToDemand, { kind: QueryKind }>;
 type WithoutCity<T> = T extends unknown ? Omit<T, "city" | "round"> : never;
 type Query = WithoutCity<QueryMessage>;
+/** T-327: where a view's question goes: the solve and round the workers are asked about, the shown
+ * result's version the answer is given for, and whether a worker short of the round waits for it. */
+interface Target { version: number; round: number; view: number; wait: boolean; solve?: Solve }
 const ALL_PERIODS = (1 << PERIODS.length) - 1;
 const frameOf = (): FrameSpec => { const f = getWorldFrame(); return { kind: f.kind, lon: f.lon, lat: f.lat }; };
 /** A point the regional market reports (in its own pack frame) as a world point. */
@@ -392,6 +395,8 @@ class DemandClient {
   private dayTable: number[] = [];
   /** `purposeModes` answers: `version:round:purpose` */
   private purposeP = new Map<string, Promise<CellModes | null>>();
+  /** T-327: view answers asked of the running solve by round, `question|version|round` */
+  private aheadP = new Map<string, { version: number; round: number; p: Promise<unknown> }>();
   readonly start: { packMs?: number; postMs?: number; workers: { wasmMs: number; openMs: number; warmMs: number; memBytes: number }[]; loads: LoadLog[] } = { workers: [], loads: [] };
   status = "loading";
   // --- what is loaded (T-149) ---
@@ -1155,6 +1160,8 @@ class DemandClient {
       if (!s.byRound[round].every(Boolean)) break;
       s.results = s.byRound[round];
       s.published = round;
+      // T-327: every worker has the round, so the next may start
+      if (round < ROUNDS) for (const w of this.workers.slice(0, this.computeN)) w.postMessage({ kind: "go", version: s.version, round: round + 1 } satisfies ToDemand);
       this.publish(s, round);
       if (round > 0) s.byRound[round - 1] = []; // release previous typed-array snapshots
     }
@@ -1213,7 +1220,9 @@ class DemandClient {
     if (this.log.length > 50) this.log.shift();
     demandUpdating.value = true;
     demandStep.value = { done: 0, of: ROUNDS + 1 };
-    const msg: ToDemand = { kind: "solve", version, net, rounds: ROUNDS };
+    // T-327: rounds in step only where clicks are answered by round (`target`): it costs the final
+    // about 0.7 s on the real save
+    const msg: ToDemand = { kind: "solve", version, net, rounds: ROUNDS, barrier: (showEstimates || !!this.hold) && !perfOff("ahead") };
     for (const w of this.workers) w.postMessage(msg);
     this.progress(); // T-243: a held game's solve shows its progress even with nothing to load
   }
@@ -1221,7 +1230,7 @@ class DemandClient {
   // --- Demand views (T-078; types and meaning in game/demand.ts) ---------------------------------
 
   /** Send `make(id)` to the given workers (all by default) and collect their replies. */
-  private ask(make: (id: number) => Query, which: number[] = this.workers.slice(0, this.computeN).map((_, i) => i), transfer: Transferable[] = [], zone?: CityId): Promise<Reply[]> {
+  private ask(make: (id: number) => Query, which: number[] = this.workers.slice(0, this.computeN).map((_, i) => i), transfer: Transferable[] = [], zone?: CityId, t?: Target): Promise<Reply[]> {
     this.syncFocus();
     const id = this.nextQuery++;
     // `zone`: a nearby zone's question (T-276), about that zone whatever the focus does meanwhile
@@ -1232,7 +1241,68 @@ class DemandClient {
       this.qlog.push({ id, kind: q.kind, sent: performance.timeOrigin + performance.now(), replies: [] });
       if (this.qlog.length > 200) this.qlog.shift();
       // T-260: the kind of day shown; each answer weighs its periods by it
-      for (const i of which) this.workers[i].postMessage({...q, city, round: demandView.peek()?.round ?? -1, day: shownDay.peek()}, transfer);
+      const round = t?.round ?? demandView.peek()?.round ?? -1;
+      for (const i of which) this.workers[i].postMessage({...q, city, round, day: shownDay.peek(), ...(t?.wait ? { wait: true } : {})}, transfer);
+    });
+  }
+
+  /**
+   * T-327: where a view's question goes. While the running solve's estimates are shown (startup, a
+   * zone just opened), or a cached result of the same network is, the workers are asked about the
+   * newest round any of them is in, and each answers on reaching it: one round ahead of the shown
+   * figures at most. Otherwise the shown result's version and round, as a worker holds them only
+   * when idle. Not after an edit: the workers then hold a network the map does not show yet.
+   */
+  private target(): Target | null {
+    const dv = demandView.peek();
+    const s = this.cur;
+    // nothing shown yet (startup, no cache): asked of round 0, whose answer is in hand when it shows
+    if (!dv) return s && s.published < 0 && !perfOff("ahead") ? { version: s.version, round: 0, view: s.version, wait: true, solve: s } : null;
+    const cached = dv.version === CACHE_VERSION && this.log[0]?.version === CACHE_VERSION && this.log[0].svc === s?.svc;
+    if (s && s.published < ROUNDS && (dv.version === s.version || cached) && !perfOff("ahead")) {
+      // no worker starts a round before every worker has the one before (`go`), so every worker
+      // has the round after the published one, or will
+      return { version: s.version, round: s.published + 1, view: dv.version, wait: true, solve: s };
+    }
+    return { version: dv.version, round: dv.round, view: dv.version, wait: false, solve: this.log.find((x) => x.version === dv.version) };
+  }
+
+  /** The answer asked for at `t` still goes with what is shown. */
+  private still(t: Target): boolean {
+    const v = demandView.peek()?.version;
+    return t.wait ? this.cur?.version === t.version && (v === undefined || v === t.view || v === t.version) : v === t.version;
+  }
+
+  /**
+   * T-327: a view's question (`key`, with the zone and day added) at the target. While the workers
+   * are ahead of the shown round, an answer already asked for the shown round is given (the view
+   * asks again at each publish, and that answer came in just before it), and the next round's is
+   * asked for at once, so each publish finds its answer waiting. A worker already past the round
+   * asked about answers nothing; the question then goes to the newer round.
+   */
+  private viaRound<T>(key: string, run: (t: Target) => Promise<T | null>, tries = 2): Promise<T | null> {
+    const t = this.target();
+    if (!t) return Promise.resolve(null);
+    if (!t.wait) return run(t);
+    const dv = demandView.peek();
+    const shown = dv?.version === t.version ? dv.round : -1;
+    for (const [k, e] of this.aheadP) if (e.version !== t.version || e.round < shown) this.aheadP.delete(k);
+    const base = `${activeCity.peek()}|${shownDay.peek()}|${key}|${t.version}|`;
+    const at = (round: number) => {
+      let e = this.aheadP.get(base + round);
+      if (!e) {
+        const p = run({ ...t, round });
+        this.aheadP.set(base + round, (e = { version: t.version, round, p }));
+        p.then((v) => { if (!v && this.aheadP.get(base + round)?.p === p) this.aheadP.delete(base + round); });
+      }
+      return e.p as Promise<T | null>;
+    };
+    const next = at(t.round);
+    const p = shown >= 0 && this.aheadP.has(base + shown) ? at(shown) : next;
+    return p.then((v) => {
+      if (v || tries <= 0) return v;
+      const t2 = this.target();
+      return t2?.wait && t2.version === t.version && t2.round > t.round ? this.viaRound(key, run, tries - 1) : null;
     });
   }
 
@@ -1393,13 +1463,15 @@ class DemandClient {
 
   /** A station's riders, or a station complex's (`members`, T-146): every member is asked, and
    * members the demand model merged into one station (they answer identically) count once. */
-  async stationRiders(stationId: string, top = 20, members: string[] = [stationId]): Promise<StationRiders | null> {
-    const version = demandView.peek()?.version;
-    const solve = this.log.find((s) => s.version === version);
-    if (version === undefined || !solve) return null;
+  stationRiders(stationId: string, top = 20, members: string[] = [stationId]): Promise<StationRiders | null> {
+    return this.viaRound(`station|${members.join(",")}|${top}`, (t) => this.stationRidersAt(t, stationId, top, members));
+  }
+  private async stationRidersAt(t: Target, stationId: string, top: number, members: string[]): Promise<StationRiders | null> {
+    const solve = t.solve, version = t.view;
+    if (!solve) return null;
     const indices = members.map((m) => solve.svc.stations.findIndex((s) => s.id === m)).filter((i) => i >= 0);
     if (indices.length === 0) return null;
-    const answers = await Promise.all(indices.map((station) => this.ask((id) => ({ kind: "station", id, version, station }))));
+    const answers = await Promise.all(indices.map((station) => this.ask((id) => ({ kind: "station", id, version: t.version, station }), undefined, [], undefined, t)));
     const kept: Float32Array[] = [], seen = new Set<string>();
     for (const parts of answers) {
       let mask = 0;
@@ -1435,7 +1507,7 @@ class DemandClient {
       if (!toZone || !fromZone) (toZone = tz.slice()), (fromZone = fz.slice());
       else for (let z = 0; z < nz; z++) (toZone[z] += tz[z]), (fromZone[z] += fz[z]);
     }
-    if (!toZone || !fromZone) return null;
+    if (!toZone || !fromZone || !this.still(t)) return null;
     const cells = (m: Map<number, number>): CellRiders => {
       const t = topOf([...m.keys()], [...m.values()]);
       return { cells: t.keys, riders: t.vals, total: t.vals.reduce((a, b) => a + b, 0) };
@@ -1450,10 +1522,12 @@ class DemandClient {
   /** A station complex's transfers a day (T-176; game/demand.ts `ComplexTransfers`): the route
    * nodes at its members are sent, every worker answers for its periods, and the pairs are added
    * up by station and line at each end (both runs of a line together). */
-  async transfers(members: string[]): Promise<ComplexTransfers | null> {
-    const version = demandView.peek()?.version, round = demandView.peek()?.round ?? 0;
-    const solve = this.log.find((s) => s.version === version);
-    if (version === undefined || !solve) return null;
+  transfers(members: string[]): Promise<ComplexTransfers | null> {
+    return this.viaRound(`transfers|${members.join(",")}`, (t) => this.transfersAt(t, members));
+  }
+  private async transfersAt(t: Target, members: string[]): Promise<ComplexTransfers | null> {
+    const solve = t.solve, version = t.view, round = t.round;
+    if (!solve) return null;
     const inside = new Set(members);
     const nodes: number[] = [];
     const at: { station: string; line: string }[] = [];
@@ -1467,7 +1541,7 @@ class DemandClient {
     const ids = Uint32Array.from(nodes);
     const sum = new Map<string, TransferPair>();
     let mask = 0;
-    for (const r of byMask(await this.ask((id) => ({ kind: "transfers", id, version, nodes: ids })))) {
+    for (const r of byMask(await this.ask((id) => ({ kind: "transfers", id, version: t.version, nodes: ids }), undefined, [], undefined, t))) {
       if (r.kind !== "transfers" || !r.pairs) return null;
       mask |= r.mask;
       const v = r.pairs;
@@ -1480,23 +1554,25 @@ class DemandClient {
         else sum.set(key, { fromStation: a.station, fromLine: a.line, toStation: b.station, toLine: b.line, riders: v[k + 2] });
       }
     }
-    if (mask !== ALL_PERIODS || demandView.peek()?.version !== version) return null;
+    if (mask !== ALL_PERIODS || !this.still(t)) return null;
     return { version, round, scope: members.join(","), pairs: [...sum.values()].sort((x, y) => y.riders - x.riders) };
   }
 
   /** The trip explorer (T-195; game/trip.ts): one trip from `from` to `to` (world metres) as a
    * commute, every period from the worker holding it. Null while there is no solve, or the
    * workers have moved on to a newer network or round. */
-  async trip(from: [number, number], to: [number, number]): Promise<Trip | null> {
-    const version = demandView.peek()?.version, round = demandView.peek()?.round ?? 0;
-    const solve = this.log.find((s) => s.version === version);
-    if (version === undefined || !solve) return null;
+  trip(from: [number, number], to: [number, number]): Promise<Trip | null> {
+    return this.viaRound(`trip|${from}|${to}`, (t) => this.tripAt(t, from, to));
+  }
+  private async tripAt(t: Target, from: [number, number], to: [number, number]): Promise<Trip | null> {
+    const solve = t.solve, version = t.view, round = t.round;
+    if (!solve) return null;
     const at: RouteNodes = [];
     for (const { id, o, n, stops } of solve.layout)
       for (let k = 0; k < n; k++) at[o + k] = at[o + 2 * n - 1 - k] = { station: stops[k], line: id, k };
     const periods: Trip["periods"] = PERIODS.map(() => null);
     let mask = 0, outside = false;
-    for (const r of await this.ask((id) => ({ kind: "trip", id, version, from, to }))) {
+    for (const r of await this.ask((id) => ({ kind: "trip", id, version: t.version, from, to }), undefined, [], undefined, t)) {
       if (r.kind !== "trip" || !r.answers) return null;
       mask |= r.mask;
       r.periods.forEach((q, i) => {
@@ -1505,16 +1581,24 @@ class DemandClient {
         periods[q] = readTripPeriod(v, at);
       });
     }
-    if (mask !== ALL_PERIODS || demandView.peek()?.version !== version) return null;
+    if (mask !== ALL_PERIODS || !this.still(t)) return null;
     return { version, round, key: tripKey(from, to), periods, outside };
   }
 
   /** Where the commuters of a set of cells go (T-098; game/demand.ts `Flows`): every worker's rail
    * part of its periods, added up, then one worker spreads all modes over the far end. */
-  async flows(end: "home" | "work", cells: Uint32Array): Promise<Flows | null> {
+  flows(end: "home" | "work", cells: Uint32Array): Promise<Flows | null> {
+    if (cells.length === 0) return Promise.resolve(null);
+    // a zone open bare has no rounds (T-325)
+    if (this.isBare(activeCity.peek())) {
+      const dv = demandView.peek();
+      return dv ? this.flowsAt({ version: dv.version, round: dv.round, view: dv.version, wait: false }, end, cells) : Promise.resolve(null);
+    }
+    return this.viaRound(`flows|${end}|${cells.join(",")}`, (t) => this.flowsAt(t, end, cells));
+  }
+  private async flowsAt(t: Target, end: "home" | "work", cells: Uint32Array): Promise<Flows | null> {
     const city = activeCity.peek(), round = demandView.peek()?.round;
-    const version = demandView.peek()?.version;
-    if (version === undefined || cells.length === 0) return null;
+    const version = t.view;
     const e = end === "home" ? 0 : 1;
     // the commutes' far end, packed as `flows` answers, and each worker's `purposes` answer
     let p: Float32Array;
@@ -1527,8 +1611,8 @@ class DemandClient {
       purposeParts = r.masks.map((mask, i) => ({ mask, work: r.work[i], everyday: r.everyday[i] ?? null, names: r.names }));
     } else {
       const [parts, purposeReplies] = await Promise.all([
-        this.ask((id) => ({ kind: "flowRail", id, version, end: e, cells })),
-        this.ask((id) => ({ kind: "purposes", id, version, end: e, cells })),
+        this.ask((id) => ({ kind: "flowRail", id, version: t.version, end: e, cells }), undefined, [], undefined, t),
+        this.ask((id) => ({ kind: "purposes", id, version: t.version, end: e, cells }), undefined, [], undefined, t),
       ]);
       let mask = 0;
       let sums: Float32Array | null = null;
@@ -1540,7 +1624,7 @@ class DemandClient {
         else for (let k = 0; k < sums.length; k++) sums[k] += r.sums[k];
       }
       if (!sums || mask !== ALL_PERIODS) return null;
-      const [r] = await this.ask((id) => ({ kind: "flows", id, version, end: e, cells, sums: sums! }), [0], [sums.buffer]);
+      const [r] = await this.ask((id) => ({ kind: "flows", id, version: t.version, end: e, cells, sums: sums! }), [0], [sums.buffer]);
       if (r?.kind !== "flows" || !r.packed) return null;
       p = r.packed;
       purposeParts = [];
@@ -1604,15 +1688,15 @@ class DemandClient {
       Object.assign(result, merged.far);
       [result.rail, result.walk, result.drive] = merged.legs;
     }
-    if (activeCity.peek() !== city || demandView.peek()?.version !== version || demandView.peek()?.round !== round) return null;
+    if (activeCity.peek() !== city || !this.still(t) || (!t.wait && demandView.peek()?.round !== round)) return null;
     return result;
   }
 
   /** Add up every worker's answer to a longer-trip query (each holds some of the periods); null
    * unless all five periods answered at the version asked about. `matched` copies the first
    * answer's first number (the same on every worker). */
-  private async sumIntercity(kind: "icSel" | "icStation", version: number, make: (id: number) => Query): Promise<Float64Array | null> {
-    const parts = await this.ask(make);
+  private async sumIntercity(kind: "icSel" | "icStation", t: Target, make: (id: number) => Query): Promise<Float64Array | null> {
+    const parts = await this.ask(make, undefined, [], undefined, t);
     let mask = 0;
     let sums: Float64Array | null = null;
     // in worker (period) order, not arrival order: the same sums every time (T-146 compares them)
@@ -1622,14 +1706,17 @@ class DemandClient {
       if (!sums) sums = r.packed.slice();
       else addIntercity(kind, sums, r.packed);
     }
-    if (version !== demandView.peek()?.version || mask !== ALL_PERIODS) return null;
+    if (!this.still(t) || mask !== ALL_PERIODS) return null;
     return sums;
   }
 
   /** The longer trips of a bubble selection (game/demand.ts `IntercitySelection`, T-118). */
-  async intercitySelection(end: "home" | "work", cells: Uint32Array): Promise<IntercitySelection | null> {
-    const version = demandView.peek()?.version;
-    if (version === undefined || cells.length === 0) return null;
+  intercitySelection(end: "home" | "work", cells: Uint32Array): Promise<IntercitySelection | null> {
+    if (cells.length === 0) return Promise.resolve(null);
+    return this.viaRound(`icSel|${end}|${cells.join(",")}`, (t) => this.intercitySelectionAt(t, end, cells));
+  }
+  private async intercitySelectionAt(t: Target, end: "home" | "work", cells: Uint32Array): Promise<IntercitySelection | null> {
+    const version = t.view;
     const e = end === "home" ? 0 : 1;
     // T-336: a zone open bare: the solving workers hold the market but not the zone, so its squares
     // come from the aux worker with the question
@@ -1639,7 +1726,7 @@ class DemandClient {
       if (r?.kind !== "bareSquares" || !r.xy || !r.share) return null;
       sq = { xy: r.xy, share: r.share };
     }
-    const v = await this.sumIntercity("icSel", version, (id) => ({ kind: "icSel", id, version, end: e, cells, ...(sq ? { sq } : {}) }));
+    const v = await this.sumIntercity("icSel", t, (id) => ({ kind: "icSel", id, version: t.version, end: e, cells, ...(sq ? { sq } : {}) }));
     if (!v) return null;
     // per place, 8 numbers after the matched share: starts (all, rail, x, y) then ends; then per
     // far zone (all, rail) of starts and of ends, then zone x, y, market (not summed)
@@ -1675,13 +1762,15 @@ class DemandClient {
 
   /** A station's longer-trip rail riders (game/demand.ts `IntercityStation`, T-118), or a station
    * complex's (`members`, T-146), each demand station once as in `stationRiders`. */
-  async intercityStation(stationId: string, members: string[] = [stationId]): Promise<IntercityStation | null> {
-    const version = demandView.peek()?.version;
-    const solve = this.log.find((s) => s.version === version);
-    if (version === undefined || !solve) return null;
+  intercityStation(stationId: string, members: string[] = [stationId]): Promise<IntercityStation | null> {
+    return this.viaRound(`icStation|${members.join(",")}`, (t) => this.intercityStationAt(t, stationId, members));
+  }
+  private async intercityStationAt(t: Target, stationId: string, members: string[]): Promise<IntercityStation | null> {
+    const solve = t.solve, version = t.view;
+    if (!solve) return null;
     const indices = members.map((m) => solve.svc.stations.findIndex((s) => s.id === m)).filter((i) => i >= 0);
     if (indices.length === 0) return null;
-    const answers = await Promise.all(indices.map((station) => this.sumIntercity("icStation", version, (id) => ({ kind: "icStation", id, version, station }))));
+    const answers = await Promise.all(indices.map((station) => this.sumIntercity("icStation", t, (id) => ({ kind: "icStation", id, version: t.version, station }))));
     let v: Float64Array | null = null;
     const seen = new Set<string>();
     for (const a of answers) {
@@ -1732,6 +1821,7 @@ class DemandClient {
     demandByDay.value = DAY_KINDS.map((day) => this.dayDemand(s, round, final, day, day === 0 ? res : res.map((r, q) => this.dayResult(r, q, day))));
     if (final) {
       s.refinedAt = performance.now();
+      this.aheadP.clear();
       if (s === this.cur) {
         demandUpdating.value = false;
         void this.writeCache(s); // T-328

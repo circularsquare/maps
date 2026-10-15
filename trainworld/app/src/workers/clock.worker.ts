@@ -171,7 +171,8 @@ function buildState(): ClockState {
   const a = api!;
   const ei = a.edges_info();
   const offEdges = new Set<number>(a.off_edges());
-  const crossovers = new Set<number>(a.crossover_edges());
+  const crossoverIds = a.crossover_edges(), crossoverPartners = a.crossover_partners();
+  const crossovers = new Map<number, number>(Array.from(crossoverIds, (id, k) => [id, crossoverPartners[k] === 0xffffffff ? -1 : crossoverPartners[k]]));
   const offStations = new Set<number>(a.off_stations());
   const edges: ClockEdge[] = [];
   const drawn: Float32Array[] = [];
@@ -180,7 +181,7 @@ function buildState(): ClockState {
   for (let i = 0; i < ei.length; i += 10) {
     const id = ei[i];
     edges.push({
-      id, a: ei[i + 1], b: ei[i + 2], tracks: ei[i + 3] as 1 | 2, built: ei[i + 4] === 1, off: offEdges.has(id), crossover: crossovers.has(id), lengthM: ei[i + 5], cost: ei[i + 6],
+      id, a: ei[i + 1], b: ei[i + 2], tracks: ei[i + 3] as 1 | 2, built: ei[i + 4] === 1, off: offEdges.has(id), crossover: crossovers.has(id), partner: crossovers.get(id) ?? -1, lengthM: ei[i + 5], cost: ei[i + 6],
       vminKmh: ei[i + 7], levelMin: ei[i + 8], levelMax: ei[i + 9],
     });
     let d = edgeDrawn.get(id);

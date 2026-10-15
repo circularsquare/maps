@@ -112,7 +112,7 @@ function toWorld(s: ClockState, city: { population: number; jobs: number }): Wor
     };
   }
   const edges: TrackEdge[] = s.edges.map((e) => ({
-    id: e.id, a: e.a, b: e.b, tracks: e.tracks, built: e.built, off: e.off, crossover: e.crossover, lengthM: e.lengthM, cost: e.cost * 1e6, vminKmh: e.vminKmh,
+    id: e.id, a: e.a, b: e.b, tracks: e.tracks, built: e.built, off: e.off, crossover: e.crossover, partner: e.partner, lengthM: e.lengthM, cost: e.cost * 1e6, vminKmh: e.vminKmh,
     levelMin: e.levelMin as any, levelMax: e.levelMax as any, lines: edgeLines.get(e.id) ?? [],
   }));
   const nodes = new Map<number, TrackNode>(

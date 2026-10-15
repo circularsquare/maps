@@ -79,7 +79,7 @@ track beside other track.
 ## Deleting
 
 [T-096, T-244, T-338; `game/remove.ts`] Hovering shows what a click removes: a stretch of track
-drawn red (one piece of a drawn route, or "the crossover", which goes whole), a station or a
+drawn red (one piece of a drawn route, or "the crossover", both diagonals drawn red since it goes whole), a station or a
 flyover ringed, its name by the cursor. Blueprint is
 removed at once (undoable); anything constructed only after a yes in the confirmation dialog
 ("Remove 1.2 km of constructed track? Nothing is refunded." with Remove and Keep; Esc is Keep). The
@@ -126,9 +126,13 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   m, then auto), a level stepper and Remove; Add corner inserts one midway along the selected
   interval; it can put all corners on one level. It has Construct and the level buttons for its
   piece [T-244], and Remove.
+- **On a crossover's diagonal** [T-391] the track inspector is titled "Crossover" and drops the
+  corners and level controls; it shows the slowest curve, the price of both diagonals, Construct
+  (builds both) and Remove crossover.
 - **The junction inspector** [T-031, T-080] draws the junction as a small diagram with its moves,
   says in plain words that it is flat, and offers "Build a flyover" with its price and the waiting
-  it saves ([track-and-service.md](track-and-service.md) 6.2). A junction's capacity tag opens it.
+  it saves ([track-and-service.md](track-and-service.md) 6.2), except at a crossover's end, where
+  the flyover offer is left out [T-391]. A junction's capacity tag opens it.
 
 ## Making and editing lines
 

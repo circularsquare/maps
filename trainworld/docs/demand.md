@@ -937,11 +937,23 @@ worker sends its subzone sums for a round (`sub_sums`, per city) unasked, from t
 periods had that round and ahead of its last result for it; the client adds them up when the
 round is published. The commuters by mode per cell (`cell_modes`) read only those sums and the
 network's subzones, so the worker with no periods answers them whatever round the others are in.
-Stations, selections and longer-trip queries still read a period's state and are answered only
-from a round that every period of the worker holds, so they wait for the solve to finish (T-119
-leaves them; a selection made during the solve gets its far end when it ends: 7.5-11 s after the
-click on the real New York save with five workers, T-285; answering from a kept copy of the shown
-result is proposed in notes/T-285.md, T-122).
+Stations, selections, transfers, trips and longer-trip queries read a period's state, so a worker
+answers them only at a round all its periods hold; a selection's far end spread (`flows`) reads
+only the sums it is handed and answers at any round. While the running solve's estimates are
+shown (startup, a zone just opened), a cached result of the same network is, or nothing is shown
+yet, the client asks about the round after the published one (round 0 before any), marked `wait`:
+a worker short of that round keeps the question and answers it the moment it reaches the round,
+just before that round's last result, so the client holds every answer when it publishes the
+round. Such a solve is sent with `barrier`: a worker starts a crowding round only on `go`, which
+the client sends to every solving worker as it publishes the round before, so a worker with fewer
+periods (the default pool splits five periods 2, 2, 1) waits at the boundary holding its round
+instead of running ahead past the round asked about. That costs the final about 0.7 s and changes
+no figure; solves after an edit run without it. A click then waits at most one stage, and its
+figures are at most one crowding round ahead of the bubbles; the answer for the next round is
+asked for at once, so each publish finds its answer waiting, and the final replaces it as always.
+A worker already past the round asked about answers nothing and the question goes to the newer
+round. After an edit questions wait for the final (the workers hold a network the map does not
+show yet). `?perfOff=ahead` turns all of this off. T-327, notes/T-327.md.
 
 **Cost on the real combined network** (T-119: the 109-line New York save plus one Philadelphia
 line, 875 demand stations, 5,039 subzones, 13.9M subzone pairs a period; native, one period, free

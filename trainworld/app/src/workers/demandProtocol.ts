@@ -56,12 +56,21 @@ export type ToDemand =
    * later `open` of the same pack without `bare` adds it to the solves as well */
   | { kind: "open"; packs: { id: CityId; header: string; bin: ArrayBuffer }[]; intercity?: string | Uint8Array; bare?: boolean }
   /** solve every period of this worker on `net`: free flow, then `rounds` crowding rounds */
-  | { kind: "solve"; version: number; net: DemandNetwork; rounds: number }
+  | { kind: "solve"; version: number; net: DemandNetwork; rounds: number;
+      /** T-327: start each crowding round only once `go` allows it */
+      barrier?: boolean }
+  /** T-327: every worker has finished `round - 1` of `version`, so this worker may start `round`.
+   * A worker ahead waits at the boundary holding its last round, so every worker holds the round
+   * after the published one at some moment, and a question about it can be answered (the final
+   * waits on the slowest worker either way) */
+  | { kind: "go"; version: number; round: number }
   /**
    * Queries for the demand views (T-078, notes/T-078.md), answered between periods. `id` matches
    * the reply; `version` is the solve they ask about: a worker that has moved on to a newer
    * network answers with nulls. Every query also carries `day` (T-260, game/ui.ts `shownDay`,
-   * 0 when absent): the kind of day its answer weighs the periods for.
+   * 0 when absent): the kind of day its answer weighs the periods for. A question that reads the
+   * periods' state may also carry `wait` (T-327): if this worker has not yet reached `round` of
+   * `version`, it is answered as soon as it has, just before that round's last `result`.
    */
   /** the city's cells and zones (static; any worker) */
   /** `frame`: the world frame the answer's coordinates are wanted in (T-125) */

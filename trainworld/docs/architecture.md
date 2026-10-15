@@ -189,7 +189,8 @@ all results are recomputed. About 100 KB compressed per 10,000 route-km (T-040).
   (about 0.1 s after the network is drawn; the bubbles once the zone's cells are open, about 3.7 s),
   the loading card stays up and the clock held until the fresh final (T-347), the cached figures
   drawn behind the card with the status "Updating demand" (hover text as before); the workers solve
-  as before, their estimates not shown, clicks and other purposes' or days' bubbles wait for them,
+  as before, their estimates not shown, other purposes' or days' bubbles wait for them, a click is
+  answered from the newest round the workers reach ([demand.md](demand.md) "The pool", T-327),
   and the fresh final replaces the cache in one step (it is bit for bit the same). A test page, `?new=1` and a tab without the slot never
   write it.
 - **Old saves are a nicety** (Anita, 2026-10-12): only Anita has saves, so no real effort goes into

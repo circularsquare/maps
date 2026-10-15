@@ -1,5 +1,9 @@
 # Archive
 
+- T-327 [P2] Loading fix 4 (T-303 item 4). Done 2026-10-15: clicks during the startup solve are answered at the next round boundary (station clicks 4-6 s, 9-10 s before the first estimate, instead of 17-28 s), startup rounds in step across workers; finals unchanged. notes/T-327.md.
+
+- T-391 [P3] Crossover polish. Done 2026-10-15: a diagonal's inspector is titled Crossover with no corner or level controls and prices both diagonals; Construct on either builds both (sim); no flyover offer at a crossover end; delete hover draws both red. docs/ui-building.md.
+
 - T-338 [P2] Crossover tool. Done 2026-10-15: Build tab tool (key 6) joins a track to one 6-15 m beside it with two 120 m diagonals, 50 km/h, priced as two junctions, saved as edge flag 32; routing and capacity unchanged. Polish left as T-391. docs/track-and-service.md 6.1.
 
 - T-374 [P3] Riders arriving by ride in the inspector. Done 2026-10-15: a station's commuters split into walked and drove (bar, icons, hovers; commutes only, not everyday or regional, T-390), the trip explorer shows a ride access as "Drive to" with its minutes and station cost; the station hover left alone. notes/T-374.md.

@@ -615,26 +615,29 @@ export function TrackInspector({ edge }: { edge: number }) {
   if (!w || !e) return null;
   const lines = w.save.lines.filter((l) => e.lines.includes(l.id));
   const lv = e.levelMin === e.levelMax ? `Level ${levelLabel(e.levelMin)}` : `Levels ${levelLabel(e.levelMin)} to ${levelLabel(e.levelMax)}`;
+  // a crossover is one thing: both diagonals are priced, built and removed together (T-391)
+  const other = e.crossover ? w.edges.find((x) => x.id === e.partner) : undefined;
+  const cost = e.cost + (other?.cost ?? 0);
   const construct = async () => {
     const a = await edit({ op: "construct", edges: [e.id], stations: [] });
-    if (a.ok) say(`Track constructed for ${money(a.charge * 1e6)}.`);
+    if (a.ok) say(`${e.crossover ? "Crossover" : "Track"} constructed for ${money(a.charge * 1e6)}.`);
   };
   // constructed: asks first above the bottom bar (T-096)
   const remove = () => void removeThing({ kind: "track", edge: e.id });
   return (
     <>
       <div class="title">
-        <span class="name">{e.tracks === 2 ? "Double track" : "Single track"}</span>
+        <span class="name">{e.crossover ? "Crossover" : e.tracks === 2 ? "Double track" : "Single track"}</span>
       </div>
       <div class="sub muted">
         {distance(e.lengthM)}, {lv}
       </div>
-      <Built built={e.built} what="This track" />
+      <Built built={e.built} what={e.crossover ? "This crossover" : "This track"} />
       <ul class="rows">
         <Row label="Slowest curve">{speed(e.vminKmh)}</Row>
-        <Row label={e.built ? "Cost to build" : "Cost to construct"}>{money(e.cost)}</Row>
+        <Row label={e.built ? "Cost to build" : "Cost to construct"}>{money(cost)}</Row>
       </ul>
-      {!e.built && <Shape edge={e.id} version={w.version} />}
+      {!e.built && !e.crossover && <Shape edge={e.id} version={w.version} />}
       {lines.length > 0 && <div class="h">Lines on it</div>}
       <ul class="rows pick">
         {lines.map((l) => (
@@ -647,13 +650,13 @@ export function TrackInspector({ edge }: { edge: number }) {
       <div class="pane-foot">
         {!e.built ? (
           <button class="btn text" onClick={construct}>
-            Construct for {money(e.cost)}
+            Construct for {money(cost)}
           </button>
         ) : (
           <span />
         )}
-        <button class="btn text" onClick={remove} data-tip={e.built ? "Removing constructed track refunds nothing" : ""}>
-          Remove track
+        <button class="btn text" onClick={remove} data-tip={e.built ? `Removing a constructed ${e.crossover ? "crossover" : "track"} refunds nothing` : ""}>
+          Remove {e.crossover ? "crossover" : "track"}
         </button>
       </div>
     </>
@@ -758,6 +761,8 @@ export function JunctionInspector({ node }: { node: number }) {
   const n = w?.nodes.get(node);
   if (!w || !n) return null;
   const built = n.builtPorts >= 3;
+  // a crossover's end keeps its shape, so no flyover there (T-391)
+  const atCrossover = w.edges.some((e) => e.crossover && (e.a === node || e.b === node));
   const setFlying = async (flying: boolean) => {
     const a = await edit({ op: "flying", node, flying });
     if (a.ok && flying) say(a.charge > 0 ? `Flyover built for ${money(a.charge * 1e6)}.` : "Flyover added to the blueprint.");
@@ -796,16 +801,18 @@ export function JunctionInspector({ node }: { node: number }) {
       ) : (
         <>
           <p class="note muted">{crossing ? "Trains cross on the level here and wait for each other." : "No trains cross here now."}</p>
-          <ul class="rows">
-            <Row label="Flyover price">{price === null ? "" : money(price * 1e6)}</Row>
-            <Row label="Waiting it saves">{perTrain >= 1 ? `${duration(perTrain)} a train at ${demand} demand` : "none now"}</Row>
-          </ul>
-          <div class="pane-foot">
-            <span class="muted small">{built ? "Paid at once" : "Added to the blueprint"}</span>
-            <button class="btn text" data-tip="Take one track over the other, so trains never wait to cross" onClick={() => setFlying(true)}>
-              Build a flyover
-            </button>
-          </div>
+          {!atCrossover && <>
+            <ul class="rows">
+              <Row label="Flyover price">{price === null ? "" : money(price * 1e6)}</Row>
+              <Row label="Waiting it saves">{perTrain >= 1 ? `${duration(perTrain)} a train at ${demand} demand` : "none now"}</Row>
+            </ul>
+            <div class="pane-foot">
+              <span class="muted small">{built ? "Paid at once" : "Added to the blueprint"}</span>
+              <button class="btn text" data-tip="Take one track over the other, so trains never wait to cross" onClick={() => setFlying(true)}>
+                Build a flyover
+              </button>
+            </div>
+          </>}
         </>
       )}
       {info && moves.length > 0 && (

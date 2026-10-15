@@ -131,7 +131,7 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
   let focusSeen = activeCity.peek();
   let cellsP: Promise<CityCells | null> | null = null;
   let stationAsk = 0;
-  let last: { r: StationRiders; dv: DemandView } | null = null;
+  let last: { r: StationRiders; dv: DemandView | null } | null = null;
   let marks: { near: Float32Array; far: Float32Array; nearN: Float32Array; farN: Float32Array; side: "home" | "work"; anchor: Anchor } | null = null;
   const clear = () => {
     marks = null;
@@ -160,7 +160,9 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
     const dv = demandView.value;
     stationSide.value;
     purposeFilter.value;
-    if (sel?.kind !== "station" || !dv) {
+    // with nothing shown yet the riders are still asked for (T-327): the answer is in hand when the
+    // first estimate shows
+    if (sel?.kind !== "station") {
       stationAsk++;
       last = null;
       stationView.value = null;
