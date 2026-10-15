@@ -449,7 +449,8 @@ notes/T-420.md has the tables.
   border rule for every country pair; inside the EU (Schengen, one currency, Eurostar) it cuts
   London - Paris to 9,600 trips a day both ways, against about 30,000 by Eurostar alone, and
   Japan's residents go abroad 6x too often; the ground curve comes from one dense, car-owning
-  region. Check: each country's national travel survey by distance band (MiD Germany, ENTD France,
+  region; attraction is people, so a giant metro takes most of a smaller neighbour's 80-300 km trips
+  (New York - Philadelphia about 2.5-6x plausible, notes/T-379.md, T-438). Check: each country's national travel survey by distance band (MiD Germany, ENTD France,
   NTS England, Japan's Inter-Regional Travel Survey) and its cross-border counts; a factor per
   country pair where they disagree (with country tailoring).
 - **Attraction inside a pack** (T-377). `population + 2 x jobs` rescaled to the pack's people, so

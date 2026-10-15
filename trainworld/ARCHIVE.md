@@ -1,5 +1,9 @@
 ﻿# Archive
 
+- T-379 [P3] T-362 stage 5: Northeast checks. Done 2026-10-15: table re-run after air; New York - Philadelphia 301k over 80 km is core to core (seam 2k), not a double count; NEC FUTURE also cuts at 50 miles. Destination choice by people is high, left for T-438. notes/T-379.md.
+
+- T-299 [P3] Compare the market's trips over 80 km with NEC FUTURE. Done 2026-10-15 in T-379: the seam's short trips are not the gap; New York - Philadelphia 6.2x NEC FUTURE's weekday figure. notes/T-379.md.
+
 - T-378 [P2] T-362 stage 4: air as a third mode; the inspector's mode split. Done 2026-10-15: far places with airports fly door to door (60 min at airports, $50 base, set on the rail-air curve); London - New York all air, London - Paris 39% air with no rail; real save final unchanged. notes/T-378.md.
 
 - T-401 [P3] Profile one period's round by layer natively on the real save. Done 2026-10-15: a New York solve is commute pair loop 36.5%, its scatter 13.2%, strategy skims 12.2%, everyday 20%, market 10%; every pass costs the same, rounds are 75%. Next: T-433 to T-435. notes/T-401.md.
