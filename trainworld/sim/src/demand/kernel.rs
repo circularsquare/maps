@@ -18,6 +18,7 @@
 //!    departure frequency, while route nodes follow their best ride or alight edge.
 //! 7. Crowding: penalty per segment from the loads, repeat 4-6, average loads (MSA).
 
+use super::lanes::{F4, F8};
 use super::network::Network;
 use super::pack::{City, PackGravity};
 use std::cmp::Reverse;
@@ -25,6 +26,8 @@ use std::collections::{BinaryHeap, HashMap};
 
 /// Stations kept per cell and per subzone.
 pub const K: usize = 6;
+/// Dummy slots after each row of the commute pair loop, one per lane and egress step (T-036).
+const PADS: usize = 8 * K;
 const NONE: u32 = u32::MAX;
 
 #[derive(Clone, Debug)]
@@ -1872,6 +1875,10 @@ pub struct ModeOut {
 /// back onto access stations once per subzone: od[a, t] += Y_u[t] w_a ER[a, t]. With rides
 /// (T-371) an origin has a second row, B_u, over its walks and rides at the cheapest of either's
 /// offset, used for the commutes `ride_offered`, with its own Y.
+///
+/// An origin first lists its pairs within the walk bound, then takes them eight at a time in
+/// `lanes::F8` (T-036): every lane runs the scalar expressions in their order and every sum keeps
+/// its order, so the results are those of one pair at a time to the bit (`trip::pair_choice`).
 pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize, p: &Params) -> ModeOut {
     let share = p.period_share as f64;
     let th = p.station_theta;
@@ -1939,47 +1946,49 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
     let zmin = |j: usize| acc_m[sz.zd[sz.zd_off[j] as usize] as usize];
     dzones.sort_by_key(|&j| ((zmin(j) * 0.1) as u32, j));
     let dstep: Vec<u32> = dzones.iter().map(|&j| (zmin(j) * 0.1) as u32).collect();
-    // Everything the pair loop reads about a destination, packed in visiting order (T-036's
-    // "packed per-destination layout"): per zone, then per subzone, then its egress stations.
+    // how many of them origin subzone u visits: past this, the cheapest walk there takes every
+    // pair over `pair_walk_max` (u's own cheapest walk, or walk or ride when it has rides)
+    let reach = |u: usize| {
+        let lim = p.pair_walk_max - if sz.ride(u).is_empty() { acc_m[u] } else { ride_m[u] };
+        dstep.partition_point(|&m| m as f32 * 10.0 <= lim)
+    };
+    // Everything the pair loop reads about a destination, packed in visiting order: per zone,
+    // then per subzone, then its egress stations.
     struct DZone {
         key: i32,
         reg: u8,
         zid: u32,
         min: f32,
+        max: f32,
         dv: f32,
         q0: u32,
         q1: u32,
     }
-    #[derive(Clone, Copy)]
-    struct Dst {
-        x: f32,
-        y: f32,
-        loc: (f32, f32),
-        park: f32,
-        dv: f32,
-        m: f32,
-        e0: u32,
-        e1: u32,
-    }
     let mut dz: Vec<DZone> = Vec::with_capacity(dzones.len());
-    let mut dst: Vec<Dst> = Vec::with_capacity(sz.zd.len());
-    // egress stations and their weights; `eg_k` is each one's index in `Subzones::acc_st`
-    let (mut eg_st, mut eg_e, mut eg_k): (Vec<u32>, Vec<f32>, Vec<u32>) = (vec![], vec![], vec![]);
+    // per destination: [x, y, local streets, main roads], [parking, trips factor, walk, -]
+    let mut dd: Vec<[[f32; 4]; 2]> = Vec::with_capacity(sz.zd.len());
+    // and its egress stations, their weights and `Subzones::acc_st` entries, padded to K with
+    // station `s` (read as a dummy past the row's end, 0) at weight 0: a pad adds exactly 0 to
+    // every sum it enters, so eight destinations go through the same steps
+    let (mut eg_st, mut eg_e, mut eg_k, mut eg_n): (Vec<[u32; K]>, Vec<[f32; K]>, Vec<[u32; K]>, Vec<u8>) = (vec![], vec![], vec![], vec![]);
     for &j in &dzones {
-        let q0 = dst.len() as u32;
+        let q0 = dd.len() as u32;
         let mut dvz = 0.0f32;
         for &v in &sz.zd[sz.zd_off[j] as usize..sz.zd_off[j + 1] as usize] {
             let v = v as usize;
-            let e0 = eg_st.len() as u32;
-            for k in sz.walk(v) {
-                eg_st.push(sz.acc_st[k]);
-                eg_e.push(acc_e[k]);
-                eg_k.push(k as u32);
+            let (mut st, mut e, mut kk) = ([s as u32; K], [0f32; K], [0u32; K]);
+            for (n, k) in sz.walk(v).enumerate() {
+                (st[n], e[n], kk[n]) = (sz.acc_st[k], acc_e[k], k as u32);
             }
+            eg_st.push(st);
+            eg_e.push(e);
+            eg_k.push(kk);
+            eg_n.push(sz.walk(v).len() as u8);
             dvz += dv[v];
-            dst.push(Dst { x: sz.cx[v], y: sz.cy[v], loc: local[v], park: park[v], dv: dv[v], m: acc_m[v], e0, e1: eg_st.len() as u32 });
+            dd.push([[sz.cx[v], sz.cy[v], local[v].0, local[v].1], [park[v], dv[v], acc_m[v], 0.0]]);
         }
-        dz.push(DZone { key: gr.key(z, j), reg: z.region[j], zid: j as u32, min: zmin(j), dv: dvz, q0, q1: dst.len() as u32 });
+        let q1 = dd.len() as u32;
+        dz.push(DZone { key: gr.key(z, j), reg: z.region[j], zid: j as u32, min: zmin(j), max: dd[q1 as usize - 1][1][2], dv: dvz, q0, q1 });
     }
     // the decay and the walk share by zone offset side by side: one lookup per zone pair
     let fw: Vec<[f32; 2]> = gr.ftab.iter().enumerate().map(|(k, &f)| [f, if gr.wtab.is_empty() { 0.0 } else { gr.wtab[k] }]).collect();
@@ -1988,22 +1997,28 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
     let mut fz = vec![[0f32, 0.0, p.road_detour, 0.0]; dz.len()];
     let routed_walk = gr.wroutes.is_some();
     let routed_drive = p.routes.as_ref().is_some_and(|r| r.has_drive());
-    let mut a_row = vec![0f32; s];
-    let mut y_row = vec![0f32; s];
-    let (mut b_row, mut yb_row) = (vec![0f32; s], vec![0f32; s]);
-    // per destination (position in `dst`): rail trips over the logsum, for the origin at hand
-    let mut gq = vec![0f32; dst.len()];
-    // destinations given rail trips by the current origin
-    let mut touched: Vec<u32> = Vec::with_capacity(dst.len());
+    // the origin's two rows (walks; walks and rides) one after the other, each followed by
+    // `PADS` dummies (0), and their rail trips by egress station the same way
+    let h = s + PADS;
+    let mut ab_row = vec![0f32; 2 * h];
+    let mut ab_y = vec![0f32; 2 * h];
+    // rail trips reaching each destination's egress entries, by its egress step
+    let mut acc_q = vec![[[0f32; 4]; 2]; dd.len()];
+    // the origin's pairs within the walk bound, in visiting order: destination, and the zone
+    // visit (`visit`: [trips at the origin x decay, 1 - walk share, road factor, origin walk]),
+    // its top bit set for the walk-and-ride row
+    let mut cand: Vec<[u32; 2]> = Vec::with_capacity(dd.len() + 7);
+    let mut visit: Vec<[f32; 4]> = Vec::with_capacity(dz.len());
     let mut walksum = [0f64; N_WALKSUM];
     for &i in &ozones {
         let base = gr.base(z, i);
         let us = &sz.zo[sz.zo_off[i] as usize..sz.zo_off[i + 1] as usize];
         let ou_zone: f32 = us.iter().map(|&u| ou[u as usize]).sum();
-        // the decay (times the region factor) and walk share to every destination zone, once
-        // for all of this zone's origins
+        // the decay (times the region factor) and walk share to every destination zone one of
+        // this zone's origins reaches, once for all of them
         let ri = z.region[i];
-        for (o, zj) in fz.iter_mut().zip(&dz) {
+        let nzi = us.iter().map(|&u| reach(u as usize)).max().unwrap_or(0);
+        for (o, zj) in fz[..nzi].iter_mut().zip(&dz) {
             let k = (base + zj.key) as usize;
             let [f, w] = fw[k];
             let long = ride_offered(z, p, i, zj.zid as usize) as u32 as f32;
@@ -2025,28 +2040,31 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
             let rides = !ride.is_empty();
             // the walk entries' weight at the rides' offset
             let c_u = if walk.is_empty() { 0.0 } else { fast_exp(-th * (m_u - m_r)) };
-            a_row.iter_mut().for_each(|v| *v = 0.0);
-            for k in walk.clone() {
-                let (a, w) = (sz.acc_st[k] as usize, acc_e[k]);
-                for (av, &e) in a_row.iter_mut().zip(&er[a * s..(a + 1) * s]) {
-                    *av += w * e;
-                }
-            }
-            // the row with the rides too, for the long commutes
-            if rides {
-                for (bv, &av) in b_row.iter_mut().zip(&a_row) {
-                    *bv = c_u * av;
-                }
-                for k in ride.clone() {
+            {
+                let (a_row, b_row) = ab_row.split_at_mut(h);
+                let (a_row, b_row) = (&mut a_row[..s], &mut b_row[..s]);
+                a_row.fill(0.0);
+                for k in walk.clone() {
                     let (a, w) = (sz.acc_st[k] as usize, acc_e[k]);
-                    for (bv, &e) in b_row.iter_mut().zip(&er[a * s..(a + 1) * s]) {
-                        *bv += w * e;
+                    for (av, &e) in a_row.iter_mut().zip(&er[a * s..(a + 1) * s]) {
+                        *av += w * e;
                     }
                 }
-                yb_row.iter_mut().for_each(|v| *v = 0.0);
+                // the row with the rides too, for the long commutes
+                if rides {
+                    for (bv, &av) in b_row.iter_mut().zip(a_row.iter()) {
+                        *bv = c_u * av;
+                    }
+                    for k in ride.clone() {
+                        let (a, w) = (sz.acc_st[k] as usize, acc_e[k]);
+                        for (bv, &e) in b_row.iter_mut().zip(&er[a * s..(a + 1) * s]) {
+                            *bv += w * e;
+                        }
+                    }
+                }
             }
-            y_row.iter_mut().for_each(|v| *v = 0.0);
-            let (ux, uy, lu) = (sz.cx[u], sz.cy[u], local[u]);
+            ab_y.fill(0.0);
+            let (ux8, uy8, lu08, lu18) = (F8::splat(sz.cx[u]), F8::splat(sz.cy[u]), F8::splat(local[u].0), F8::splat(local[u].1));
             let mut rail_sum = 0.0f32;
             let mut all_sum = 0.0f32;
             let mut n_pairs = 0usize;
@@ -2054,10 +2072,10 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
             // by walk or ride)
             let wmax = p.pair_walk_max - m_u;
             let wmax_r = p.pair_walk_max - m_r;
-            let nz = dstep.partition_point(|&m| m as f32 * 10.0 <= if rides { wmax_r } else { wmax });
+            let nz = reach(u);
             for (zj, &[f, pw, df, long]) in dz[..nz].iter().zip(&fz) {
                 let by_ride = rides && long > 0.0;
-                let (row, m_o, wmax) = if by_ride { (&b_row, m_r, wmax_r) } else { (&a_row, m_u, wmax) };
+                let (m_o, wmax) = if by_ride { (m_r, wmax_r) } else { (m_u, wmax) };
                 if zj.min > wmax {
                     continue;
                 }
@@ -2071,48 +2089,99 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
                 let tu = ou[u] * f;
                 all_sum += tu * zj.dv;
                 // cheapest walk first: past the bound, every later one is too
-                let ds = &dst[zj.q0 as usize..zj.q1 as usize];
-                let nv = if ds[ds.len() - 1].m <= wmax { ds.len() } else { ds.partition_point(|d| d.m <= wmax) };
-                n_pairs += nv;
-                for (qi, dd) in ds[..nv].iter().enumerate() {
-                    let mut ssum = 0.0f32;
-                    for k in dd.e0 as usize..dd.e1 as usize {
-                        ssum += row[eg_st[k] as usize] * eg_e[k];
-                    }
-                    if ssum < 1e-30 {
-                        continue; // no rail route (or only the same station at both ends)
-                    }
-                    let d = ((ux - dd.x).powi(2) + (uy - dd.y).powi(2)).sqrt();
-                    let road = p.drive_min_f(d, df, lu, dd.loc) * p.w_drive + dd.park;
-                    let rail = m_o + dd.m + p.fare_min - fast_ln(ssum) / th;
-                    let util = p.beta * (road - rail) + p.asc_rail;
-                    let x = tu * dd.dv * (1.0 - pw) / (1.0 + fast_exp(-util));
-                    rail_sum += x;
-                    // kept per destination and spread onto egress stations after the loop:
-                    // scattering here chains each pair to the last through y_row
-                    let q = zj.q0 as usize + qi;
-                    gq[q] = x / ssum;
-                    touched.push(q as u32 | (by_ride as u32) << 31);
-                }
+                let nv = if zj.max <= wmax { zj.q1 - zj.q0 } else { dd[zj.q0 as usize..zj.q1 as usize].partition_point(|d| d[1][2] <= wmax) as u32 };
+                n_pairs += nv as usize;
+                let zv = visit.len() as u32 | (by_ride as u32) << 31;
+                visit.push([tu, 1.0 - pw, df, m_o]);
+                cand.extend((zj.q0..zj.q0 + nv).map(|q| [q, zv]));
             }
             out.pairs += n_pairs as u64;
-            for &qf in &touched {
-                let (q, by_ride) = ((qf & 0x7fff_ffff) as usize, qf >> 31 != 0);
-                let dd = &dst[q];
-                let g = gq[q];
-                let (row, yr, m_o) = if by_ride { (&b_row, &mut yb_row, m_r) } else { (&a_row, &mut y_row, m_u) };
-                let mut x = 0.0f32;
-                for k in dd.e0 as usize..dd.e1 as usize {
-                    let t = eg_st[k] as usize;
-                    let y = g * eg_e[k];
-                    yr[t] += y;
-                    let yw = y * row[t];
-                    out.acc_work[eg_k[k] as usize] += yw;
-                    x += yw;
-                }
-                walksum[(((m_o + dd.m) * (1.0 / WALKSUM_BAND_MIN)) as usize).min(N_WALKSUM - 1)] += x as f64;
+            // The pairs eight at a time, each lane the scalar expressions in their order
+            // (`trip::pair_choice` gives the same bits one pair at a time), then each pair's rail
+            // trips onto its egress stations, lane by lane in the pairs' order.
+            let n_cand = cand.len();
+            while cand.len() % 8 != 0 {
+                cand.push(cand[0]);
             }
-            touched.clear();
+            let (mut wb, mut wacc) = (0, walksum[0]);
+            for (ci, c) in cand.chunks_exact(8).enumerate() {
+                let q: [usize; 8] = std::array::from_fn(|l| c[l][0] as usize);
+                let ro: [u32; 8] = std::array::from_fn(|l| if c[l][1] >> 31 != 0 { h as u32 } else { 0 });
+                let kn = q.iter().map(|&q| eg_n[q]).max().unwrap() as usize;
+                let mut ix = [[0u32; 8]; K];
+                let mut ev = [F8::splat(0.0); K];
+                let mut rv = [F8::splat(0.0); K];
+                let mut ssum = F8::splat(0.0);
+                for k in 0..kn {
+                    // a pad goes to its own dummy (lane and step), so pads chain nothing
+                    ix[k] = std::array::from_fn(|l| {
+                        let t = eg_st[q[l]][k] as usize;
+                        (if t == s { s + l * K + k } else { t }) as u32 + ro[l]
+                    });
+                    ev[k] = F8::new(std::array::from_fn(|l| eg_e[q[l]][k]));
+                    rv[k] = F8::gather(&ab_row, &ix[k]);
+                    ssum = ssum + rv[k] * ev[k];
+                }
+                // no rail route (or only the same station at both ends) where under 1e-30
+                let ok = ((1u32 << (n_cand - 8 * ci).min(8)) - 1) & !ssum.lt_mask(F8::splat(1e-30));
+                if ok == 0 {
+                    continue;
+                }
+                let [x8, y8, l08, l18] = F8::transpose(std::array::from_fn(|l| dd[q[l]][0]));
+                let [park8, dv8, m8, _] = F8::transpose(std::array::from_fn(|l| dd[q[l]][1]));
+                let [tu8, dpw8, df8, mo8] = F8::transpose(std::array::from_fn(|l| visit[(c[l][1] & 0x7fff_ffff) as usize]));
+                let (dx, dy) = (ux8 - x8, uy8 - y8);
+                let d = (dx * dx + dy * dy).sqrt();
+                // `Params::drive_min_f`
+                let rd = d * F8::splat(0.001) * df8;
+                let e = (F8::splat(0.5) * rd).min(F8::splat(p.road_local_km));
+                let main = rd - F8::splat(2.0) * e;
+                let k = (F8::splat(0.5) * main).min(F8::splat(p.road_end_km));
+                let drive = e * (lu08 + l08) + k * (lu18 + l18) + (main - F8::splat(2.0) * k) * F8::splat(60.0) / F8::splat(p.road_open_kmh);
+                let road = drive * F8::splat(p.w_drive) + park8;
+                let rail = mo8 + m8 + F8::splat(p.fare_min) - ssum.ln() / F8::splat(th);
+                let util = F8::splat(p.beta) * (road - rail) + F8::splat(p.asc_rail);
+                let x = tu8 * dv8 * dpw8 / (F8::splat(1.0) + util.neg().exp());
+                let g = x / ssum;
+                // trips by egress station y, and y x the row: what reaches each egress entry
+                let mut ya = [[0f32; 8]; K];
+                let mut yw = [F8::splat(0.0); 8];
+                let mut xw = F8::splat(0.0);
+                for k in 0..kn {
+                    let y = g * ev[k];
+                    yw[k] = y * rv[k];
+                    xw = xw + yw[k];
+                    ya[k] = y.to_array();
+                }
+                // y x the row by lane, egress steps 0-3 and 4-7 (zeros past each list's end)
+                let yw_lo = F8::by_lane([yw[0], yw[1], yw[2], yw[3]]);
+                let yw_hi = if kn > 4 { F8::by_lane([yw[4], yw[5], yw[6], yw[7]]) } else { yw_lo };
+                let (xa, xwa, ma, moa) = (x.to_array(), xw.to_array(), m8.to_array(), mo8.to_array());
+                for l in 0..8 {
+                    if ok >> l & 1 == 0 {
+                        continue;
+                    }
+                    rail_sum += xa[l];
+                    for k in 0..eg_n[q[l]] as usize {
+                        ab_y[ix[k][l] as usize] += ya[k][l];
+                    }
+                    let a = &mut acc_q[q[l]];
+                    a[0] = (F4::new(a[0]) + yw_lo[l]).to_array();
+                    if kn > 4 {
+                        a[1] = (F4::new(a[1]) + yw_hi[l]).to_array();
+                    }
+                    // the band's running sum held while the band stays the same: the same adds
+                    let b = (((moa[l] + ma[l]) * (1.0 / WALKSUM_BAND_MIN)) as usize).min(N_WALKSUM - 1);
+                    if b != wb {
+                        walksum[wb] = wacc;
+                        (wb, wacc) = (b, walksum[b]);
+                    }
+                    wacc += xwa[l] as f64;
+                }
+            }
+            walksum[wb] = wacc;
+            cand.clear();
+            visit.clear();
             out.trips_access += all_sum as f64;
             if rail_sum == 0.0 {
                 continue;
@@ -2121,6 +2190,7 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
             out.rail_by_sub[u] = rail_sum;
             // split this subzone's rail trips back onto its access stations: a walk entry carries
             // its share of both rows' trips, a ride entry of the long commutes' only
+            let (y_row, yb_row) = (&ab_y[..s], &ab_y[h..h + s]);
             for k in walk.start..ride.end {
                 let (a, w) = (sz.acc_st[k] as usize, acc_e[k]);
                 let row = &mut out.od[a * s..(a + 1) * s];
@@ -2128,20 +2198,20 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
                 let er_a = &er[a * s..(a + 1) * s];
                 if k < walk.end {
                     if rides {
-                        for (((o, &y), &yb), &e) in row.iter_mut().zip(&y_row).zip(&yb_row).zip(er_a) {
+                        for (((o, &y), &yb), &e) in row.iter_mut().zip(y_row).zip(yb_row).zip(er_a) {
                             let f = (y + c_u * yb) * w * e;
                             *o += f;
                             tot += f;
                         }
                     } else {
-                        for ((o, &y), &e) in row.iter_mut().zip(&y_row).zip(er_a) {
+                        for ((o, &y), &e) in row.iter_mut().zip(y_row).zip(er_a) {
                             let f = y * w * e;
                             *o += f;
                             tot += f;
                         }
                     }
                 } else {
-                    for ((o, &yb), &e) in row.iter_mut().zip(&yb_row).zip(er_a) {
+                    for ((o, &yb), &e) in row.iter_mut().zip(yb_row).zip(er_a) {
                         let f = yb * w * e;
                         *o += f;
                         tot += f;
@@ -2150,6 +2220,11 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
                 out.acc_home[k] += tot;
                 out.rail_band[dist_band(sz.acc_d[k])] += tot as f64;
             }
+        }
+    }
+    for (q, a) in acc_q.iter().enumerate() {
+        for k in 0..eg_n[q] as usize {
+            out.acc_work[eg_k[q][k] as usize] = a[k / 4][k % 4];
         }
     }
     // rail trips by work subzone: what its egress stations took

@@ -19,7 +19,8 @@ tests natively.
   (`DemandApi`, the demand workers' API), `intercity.rs` (the regional market), `warm.rs` (the
   everyday warm-up demand worker 0 runs at startup, T-173), `days.rs` (the weekend's factors per
   purpose and period, T-260), `routes.rs` (routed walks round water and drives over OSM roads from
-  the pack, T-275), `trip.rs` (the trip explorer's query, T-195).
+  the pack, T-275), `trip.rs` (the trip explorer's query, T-195), `lanes.rs` (f32 lanes, wasm
+  SIMD or SSE2, for the commute pair loop, T-036).
   `cargo test --release --features demand nyc_day -- --ignored --nocapture` solves a day on the
   real pack natively. notes/T-026.md.
 
@@ -121,7 +122,8 @@ never autosave), `?demandWorkers=N`, `?perfOff=...` / `?perfTry=...` (CPU A/B sw
 
 ### Build
 
-`npm run build --prefix app` = wasm-pack twice (Cargo profile `wasm`), type check, `app/dist/`
+`npm run build --prefix app` = wasm-pack twice (Cargo profile `wasm`, `+simd128` from
+`sim/.cargo/config.toml`), type check, `app/dist/`
 (city packs copied into `dist/packs/` by `vite.config.ts`), which serve.py serves at
 `localhost:8800/trainworld/` (from the snapshot worktree, see CLAUDE.md). `npm run wasm --prefix
 app` rebuilds only the WASM. `npm run check --prefix app` type-checks.

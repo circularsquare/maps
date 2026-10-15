@@ -89,7 +89,9 @@ Web first, so it can be shared as a link.
   model, lines, money, the boarding account, autosave) and a pool of demand workers. The crate
   builds two WASM modules, the clock worker's and the demand workers', so each downloads only its
   own; the main thread loads neither. Both at opt-level 3 (the pair loop is the recompute;
-  notes/T-051.md). Flat typed arrays, transferable between threads without copying.
+  notes/T-051.md) and with 128-bit WASM SIMD (`+simd128`, set for the wasm target in
+  `sim/.cargo/config.toml`, so both wasm-pack builds take it; Chrome 91, Firefox 89, Safari 16.4
+  and later; T-036). Flat typed arrays, transferable between threads without copying.
 - **The demand pool** [T-149, T-173, `workers/demandClient.ts`][T-381]: 3 solving workers on 12 or more
   logical threads, 2 on 6 to 11, 1 on fewer; then `navigator.deviceMemory` 4 GB or less gives 1, and
   unreported memory at most 2. The Settings "Use more cores" restores half the threads less one, 1 to 5

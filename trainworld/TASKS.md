@@ -175,13 +175,7 @@ World sampler (T-286, research/world-sampler.md). All waiting for Anita's review
   whole state (round trip 130-214 ms). Send what an edit changed (edges, nodes, lines by id)
   instead of the whole state, keep stroke buffers per edge in the worker, upload sub-ranges.
   notes/T-063.md.
-- T-036 [P3] Faster pair loop: ~35 ns per subzone pair native against ~21 before the logsum. A
-  packed per-destination layout (done in T-090) or wasm SIMD over egress stations could make
-  10-minute walk bands (2.4x the pairs, every error a fifth smaller) fit the recompute budget.
-  Since T-090 a third more origin subzones each build a row over all stations and visit the
-  destination zones though few pairs survive there: about 10% of a stage. T-401: on the real
-  save the commute pair loop is 36.5% of a solve (42 ns a pair) and its scatter 13.2%; the
-  everyday pair loop 10.7%. notes/T-020.md, notes/T-090.md, notes/T-401.md.
+- T-439 [P3] Commute pair loop after T-036 (about 37 ns a pair native): the scatter into the y rows (10 ns, scalar to keep each station's sum in order), the zone walk (6 ns) and the per-origin-zone decay row (`fz`, 4% of a solve, rebuilt every period and round) are what is left; the everyday pair loop (10.7%) has the same shape and could take `lanes.rs`. Open; notes/T-036.md.
 - T-044 [P3] Merge sparse res-9 cells into their res-8 parent (wanted, Anita 2026-10-15). Design and measurements done 2026-10-15 (at 1k trip ends: New York 43% fewer cells, -21 MB a worker, packs -35%; 0.6-2.6% of stations move over 5%); four decisions for Anita, then about 2 days in 3 stages. notes/T-044.md.
 - T-168 [P3] Add a newly viewed city without re-solving the whole network: a city with no construction needs only its own walk and drive figures, but a pan to one re-solves everything (seconds on a big save, in the background). Open; notes/T-149.md.
 - T-419 [P3] A worker's set-up state after T-398: New York's everyday `edge_pair` (28 MB) and pairs (20 MB) and the market's set-up (23 MB: pairs, index, access lists) are now the largest fixed items. Open; notes/T-398.md.

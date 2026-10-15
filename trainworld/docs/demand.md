@@ -597,7 +597,13 @@ works on two levels:
    their cheapest walk, so an origin stops at the first that is too far. That bound is what holds
    the pairs where the 2.5 km edge had them: hand-made network 4.2M pairs (4.1M before T-090;
    with the 4 km reach and no pair bound 9.3M), real network 13.8M (13.6M; 31.8M). What a pair
-   reads about its destination is packed in visiting order. Rail trips go back onto access
+   reads about its destination is packed in visiting order, its egress list padded to 6 with
+   weight-0 entries. An origin first lists its pairs within the bound, zone by zone, then takes
+   them eight at a time in SIMD lanes (`lanes.rs`, T-036: wasm SIMD in the browser, SSE2
+   natively), logsum, drive, logit and the spread of each pair's rail trips onto its egress
+   stations in one pass. Each lane does the scalar expressions in their order, a pad adds exactly
+   0, and every sum keeps the pairs' order, so the results are those of one pair at a time to the
+   bit (the trip explorer's `pair_choice` still computes one pair alone). Rail trips go back onto access
    stations once per origin subzone and are kept by station pair (over the stations in the city's
    access lists only, since no other station starts or ends a commute: a city a few stations reach
    keeps a few rows, not the whole network's, T-398), and by subzone and access

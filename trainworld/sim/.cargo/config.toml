@@ -1,0 +1,5 @@
+# T-036: 128-bit wasm SIMD in both wasm modules (the commute pair loop's lanes, and LLVM's own
+# vectorising elsewhere). wasm-pack runs cargo in this folder, so both `npm run wasm` builds read
+# it. Chrome 91, Firefox 89 and Safari 16.4 and later run it.
+[target.wasm32-unknown-unknown]
+rustflags = ["-C", "target-feature=+simd128"]
