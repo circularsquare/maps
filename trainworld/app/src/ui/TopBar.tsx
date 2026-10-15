@@ -5,7 +5,7 @@
 import type { ComponentChildren } from "preact";
 import { clock, SPEEDS } from "../game/clock";
 import { activeCity, cityById, viewedZone } from "../game/cities";
-import { demandView, modeRides, modeSplit, viewUpdating } from "../game/demand";
+import { demandView, modeRides, modeSplit, viewFinal, viewUpdating } from "../game/demand";
 import { clockTime, count, dayOf, money, moneyExact } from "../game/format";
 import { weekdayName, weekdayOf } from "../game/days";
 import { shownDay } from "../game/ui";
@@ -94,7 +94,7 @@ export function TopBar() {
   // T-342: the shares are of rides (trip legs) a day; the train's count beside its share, all in the hover
   const rides = modeRides.value;
   const where = `${city ? "in " + city.name + " " : ""}${shownDay.value ? "at weekends" : "on weekdays"}`;
-  const note = demandView.value && !demandView.value.final ? " (an early estimate)" : demandView.value?.version === CACHE_VERSION ? " (from the last time this game was open)" : viewUpdating.value ? " (before your last change)" : "";
+  const note = demandView.value && !viewFinal.value ? " (an early estimate)" : demandView.value?.version === CACHE_VERSION ? " (from the last time this game was open)" : viewUpdating.value ? " (before your last change)" : "";
   // T-406: walking and driving are icons; each has its own hover with the share and its rides
   const modeTip = (name: string, share: number, n: number | undefined) =>
     `${name}: ${pct(share)} of rides a day ${where}${rides && n !== undefined ? ` (${count(n)} of ${count(rides.all)})` : ""}${note}`;

@@ -39,7 +39,7 @@ PATH, `npm run build --prefix maps/.tw-snap/trainworld/app` (a few minutes; back
 
 
 
-- T-421 [P3] A game load's card and clock could go at the viewed zone's final (found in T-402): since T-402 a Toronto save's Toronto figures are final in about 6 s, but the card (HOLD_ROUND) still waits for the whole solve's final (about 31 s with New York's network). Releasing it earlier lets the clock run while other zones are still solved; Anita decides. Open; notes/T-402.md.
+- T-421 [P3] A game load's card and clock could go at the viewed zone's final (found in T-402): since T-402 a Toronto save's Toronto figures are final in about 6 s, but the card (HOLD_ROUND) still waits for the whole solve's final (about 31 s with New York's network). Releasing it earlier lets the clock run while other zones are still solved; Anita decides. Open; notes/T-402.md. The status tag and the split's "early estimate" hover part is done (they follow the zone in view's cluster, `viewFinal` in game/demand.ts); the card waits on Anita.
 
 ## In progress (batch 25, 2026-10-14)
 

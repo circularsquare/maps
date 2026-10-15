@@ -120,6 +120,12 @@ export const demandStep = signal({ done: 0, of: 4 });
 export const demandSolving = signal<Set<CityId> | null>(null);
 /** A solve is running that will still change the figures of the zone in view. */
 export const viewUpdating = computed(() => demandUpdating.value && (demandSolving.value?.has(activeCity.value) ?? true));
+/** T-421: the figures shown for the zone in view are final: the shown result is, or (T-402) the
+ * zone's cluster has its final while other clusters still solve and the view is not yet the solve's */
+export const viewFinal = computed(() => {
+  const v = demandView.value;
+  return !!v && (v.final || (!viewUpdating.value && cityDemandViews.value.has(activeCity.value)));
+});
 
 /** The mode-split bar's numbers: the viewed zone's own figures (a solve's, or the bare pass's for a
  * zone no station reaches), null until it has them and over dead space (T-318). */

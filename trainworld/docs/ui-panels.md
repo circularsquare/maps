@@ -94,7 +94,9 @@ below 700 px the bar takes two rows (name, cash, time and speed over the split).
   demand 2/4…" and the split faded, the figures held [T-232]; a zone the edit does not touch, or
   whose cluster is already done, shows neither [T-392]; and the same while a reload shows the cached
   figures from the last time the game was open, with a hover saying so [T-328]; during startup's
-  refinement "Estimate, refining 2/4…"; a city loading later "Loading data" with a thin bar after it
+  refinement "Estimate, refining 2/4…", which goes once the zone in view's own cluster has its final,
+  though other clusters still solve, and the split's hover then stops saying "an early estimate"
+  [T-421]; a city loading later "Loading data" with a thin bar after it
   (Loading, below).
 - **Cash**, to the dollar, moving as fares are paid and running costs drain [T-284]. Fixed width
   (room for "-$99,999,999,999") with the digits left-aligned after the $ in tabular figures, so a
@@ -243,7 +245,7 @@ centre and zoom, or over New York with none [T-310].
   going back.
 - A city opened later (a pan, construction) shows its estimate at once and the crowding rounds
   refine it with the clock running; the status says "Estimate, refining 2/4…" (hover: the figures
-  are an early estimate).
+  are an early estimate) until the zone in view's cluster has its final [T-421].
 - **After an edit** nothing changes until the new solve's final round: split, riders, bubbles and
   the boarding account keep the last finished forecast, the split faded and the status "Updating
   demand 2/4…", then all change at once [T-232]. Queries asked meanwhile (a catchment, a bubble

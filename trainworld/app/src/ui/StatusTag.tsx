@@ -2,7 +2,7 @@
 // small tag on the map's top row, to the right of the demand buttons. It appears and goes in one step.
 // Its hover says more.
 
-import { demandStep, demandView, viewUpdating } from "../game/demand";
+import { demandStep, demandView, viewFinal, viewUpdating } from "../game/demand";
 import { cityNames, demandIdle, loadFailure, loadProgress } from "../game/loading";
 import { CACHE_VERSION } from "../workers/demandCache";
 import { LoadBar, loadingCardShown } from "./LoadingScreen";
@@ -20,12 +20,13 @@ export function StatusTag() {
     : load ? "Loading data"
     : !demandView.value ? (demandIdle.value ? null : "Loading data…") // T-318: nothing to load over dead space
     // T-232: figures before a solve's final round are shown only where nothing final is, and say so
-    : !demandView.value.final ? `Estimate, refining ${Math.min(step.done + 1, step.of)}/${step.of}…`
+    // T-421: and the zone in view counts as final once its own cluster is, whatever else still solves
+    : !viewFinal.value ? `Estimate, refining ${Math.min(step.done + 1, step.of)}/${step.of}…`
     : viewUpdating.value ? `Updating demand ${Math.min(step.done + 1, step.of)}/${step.of}…` : null;
   if (!busy) return null;
   const tip = loadFailure.value ?? (load && !loadingCardShown() ? `Loading ${cityNames(load.cities)}, ${Math.floor(load.fraction * 100)}%. ${load.step}`
     : !demandView.value ? busy
-    : !demandView.value.final ? "These figures are an early estimate. They settle when the forecast is finished."
+    : !viewFinal.value ? "These figures are an early estimate. They settle when the forecast is finished."
     // T-328: the figures kept from the last time this game was open, while it is worked out again
     : demandView.value.version === CACHE_VERSION ? "These figures are from the last time this game was open. They are being worked out again."
     : "These figures are for the network before your last change. They change once the new forecast is finished.");
