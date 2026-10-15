@@ -535,6 +535,7 @@ mod tests {
 
     #[test]
     fn purpose_parts_add_up_to_loads_and_cell_modes() {
+        CHECK_LANES.with(|c| c.set(true));
         let (h, b) = university_fixture(4000.0);
         let mut a = EverydayApi::new(&h, &b).unwrap();
         network(&mut a, 4000.0, [12.0; 3]);
@@ -579,12 +580,33 @@ mod tests {
         check(&a);
     }
 
+    /// T-433: the one walk for every purpose gives each purpose's loads as the kernel's assignment
+    /// of that purpose alone, to the bit (`check_lanes`), free flow and two crowded rounds.
+    #[test]
+    fn lanes_match_the_kernel_assignment() {
+        CHECK_LANES.with(|c| c.set(true));
+        let (h, b) = university_fixture(4000.0);
+        let mut a = EverydayApi::new(&h, &b).unwrap();
+        network(&mut a, 4000.0, [12.0; 3]);
+        for q in 0..5 {
+            assert!(a.solve(q));
+        }
+        for factor in [500.0, 2000.0] {
+            for q in 0..5 {
+                let shared: Vec<_> = a.seg(q).iter().map(|v| v * factor).collect();
+                assert!(a.crowd_with_external(q, &shared));
+            }
+        }
+        assert!(a.seg(0).iter().sum::<f32>() > 0.0, "riders to compare");
+    }
+
     /// T-158: the real New York pack's everyday layer on the real network (nyc_real_track.json),
     /// one period, free flow and a crowding round, with timings; the per-purpose loads must add up
     /// to the total. `cargo test --release --features demand everyday_real_network -- --ignored --nocapture`
     #[test]
     #[ignore]
     fn everyday_real_network() {
+        CHECK_LANES.with(|c| c.set(true));
         let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
         let (h, b) = pack::load_raw(&format!("{root}/data/packs/nyc.json")).unwrap();
         let t = now_ms();
@@ -620,12 +642,11 @@ mod tests {
             let t = now_ms();
             a.solve(q);
             let free = now_ms() - t;
-            let (by_purpose, combined) = ASSIGN_MS.with(|c| c.get());
             let total: Vec<f32> = a.seg(q).iter().map(|v| v * 3.0).collect();
             let t = now_ms();
             a.crowd_with_external(q, &total);
             let round = now_ms() - t;
-            println!("period {q}: free flow {free:.0} ms (assignment by purpose {by_purpose:.0} ms, one summed assignment would be {combined:.0} ms), crowding round {round:.0} ms, rail {:.0}", a.summary(q)[2]);
+            println!("period {q}: free flow {free:.0} ms, crowding round {round:.0} ms, rail {:.0}", a.summary(q)[2]);
             let parts = a.part_loads(q);
             let (seg, board, alight) = (a.seg(q), a.board(q), a.alight(q));
             let nr = seg.len();
@@ -1000,7 +1021,7 @@ mod tests {
     #[ignore]
     fn every_pack_everyday() {
         let root = concat!(env!("CARGO_MANIFEST_DIR"), "/../data/packs");
-        for city in ["nyc", "phl", "bos", "wdc", "bal", "pvd", "nhv", "hfd", "spf", "tor", "lon", "par", "sha", "mum", "ber", "tyo"] {
+        for city in ["nyc", "phl", "bos", "wdc", "bal", "pvd", "nhv", "hfd", "spf", "tor", "lon", "par", "sha", "mum", "ber", "tyo", "osa", "ngo", "fuk", "spk", "sdj", "hij"] {
             let (h, b) = pack::load_raw(&format!("{root}/{city}.json")).unwrap();
             let t = now_ms();
             let a = EverydayApi::new(&h, &b).unwrap();
@@ -1074,11 +1095,284 @@ fn add_loads(total: &mut Loads, l: &Loads) {
     total.pax_min += l.pax_min;
 }
 
+/// One lane per purpose kind in the everyday assignment (T-433); `RATE` has six kinds.
+const LANES: usize = 8;
+type Lanes = [f32; LANES];
+const ZERO: Lanes = [0.0; LANES];
+
+#[inline(always)]
+fn add_lanes(a: &mut Lanes, b: &Lanes) {
+    for k in 0..LANES {
+        a[k] += b[k];
+    }
+}
+
+/// Each purpose's station-pair trips by destination station (T-433): for kind k and destination
+/// b, entries `off[k][b]..off[k][b + 1]` of `src` and `trips`, origins ascending. `off[k]` is
+/// empty for a kind with no trips.
+struct Columns {
+    off: Vec<Vec<u32>>,
+    src: Vec<u32>,
+    trips: Vec<f32>,
+    /// (destination, origin, trips) in origin order, while packing
+    tmp: Vec<(u32, u32, f32)>,
+    /// The origin rows of `od` written since the last `pack`.
+    rows: Vec<bool>,
+}
+
+impl Columns {
+    fn new(kinds: usize, s: usize) -> Columns {
+        Columns { off: vec![vec![]; kinds], src: vec![], trips: vec![], tmp: vec![], rows: vec![false; s] }
+    }
+    /// Moves one kind's trips out of `od` (`od[a * s + b]`), leaving it zero.
+    fn pack(&mut self, od: &mut [f32], s: usize, kind: usize) {
+        debug_assert!(self.off[kind].is_empty(), "the pairs are stored purpose by purpose");
+        let mut off = vec![0u32; s + 1];
+        self.tmp.clear();
+        for (a, row) in od.chunks_exact_mut(s).enumerate() {
+            if !std::mem::take(&mut self.rows[a]) {
+                continue;
+            }
+            for (b, v) in row.iter_mut().enumerate() {
+                if *v != 0.0 {
+                    self.tmp.push((b as u32, a as u32, *v));
+                    off[b + 1] += 1;
+                    *v = 0.0;
+                }
+            }
+        }
+        let base = self.src.len() as u32;
+        off[0] = base;
+        for b in 0..s {
+            off[b + 1] += off[b];
+        }
+        self.src.resize(base as usize + self.tmp.len(), 0);
+        self.trips.resize(self.src.len(), 0.0);
+        let mut at = off.clone();
+        for &(b, a, v) in &self.tmp {
+            let j = at[b as usize] as usize;
+            (self.src[j], self.trips[j]) = (a, v);
+            at[b as usize] += 1;
+        }
+        self.off[kind] = off;
+    }
+}
+
+/// `Loads` with a lane per purpose kind.
+struct LaneLoads {
+    seg: Vec<Lanes>,
+    board: Vec<Lanes>,
+    alight: Vec<Lanes>,
+    rn_board: Vec<Lanes>,
+    rn_alight: Vec<Lanes>,
+    entry: Vec<Lanes>,
+    exit: Vec<Lanes>,
+    pax_min: [f64; LANES],
+}
+
+impl LaneLoads {
+    fn zero(s: usize, nr: usize) -> LaneLoads {
+        LaneLoads { seg: vec![ZERO; nr], board: vec![ZERO; s], alight: vec![ZERO; s], rn_board: vec![ZERO; nr], rn_alight: vec![ZERO; nr], entry: vec![ZERO; s], exit: vec![ZERO; s], pax_min: [0.0; LANES] }
+    }
+    fn lane(&self, k: usize) -> Loads {
+        let f = |v: &[Lanes]| v.iter().map(|x| x[k]).collect();
+        Loads { seg: f(&self.seg), board: f(&self.board), alight: f(&self.alight), rn_board: f(&self.rn_board), rn_alight: f(&self.rn_alight), entry: f(&self.entry), exit: f(&self.exit), pax_min: self.pax_min[k] }
+    }
+}
+
+trait NodeIx: Copy {
+    fn ix(self) -> usize;
+}
+impl NodeIx for u16 {
+    #[inline(always)]
+    fn ix(self) -> usize {
+        self as usize
+    }
+}
+impl NodeIx for u32 {
+    #[inline(always)]
+    fn ix(self) -> usize {
+        self as usize
+    }
+}
+
+/// As `kernel::accepted`.
+#[inline(always)]
+fn accepted_tph(bits: &[u64], g: &Graph, r: usize) -> f32 {
+    if bits[r >> 6] >> (r & 63) & 1 == 1 { g.rn_tph[r] } else { 0.0 }
+}
+
+/// `kernel::assign_with_transfers` for every purpose in one walk of each destination's strategy
+/// (T-433): each lane does the kernel's `DestWalk` arithmetic in its order, so lane k is the
+/// assignment of kind k's trips alone to the bit (`lanes_match_the_kernel_assignment` checks it;
+/// a change to `DestWalk` is made here too). The transfers count every purpose's riders together,
+/// their lanes summed before the split onto departures (DECISIONS.md, T-433).
+fn assign_lanes(g: &Graph, sk: &Skims, cols: &Columns, ix: &XferIndex, xfer: &mut [f32]) -> LaneLoads {
+    let (s, n) = (sk.s, sk.n);
+    let mut l = LaneLoads::zero(s, n - s);
+    let mut flow = vec![ZERO; n];
+    let counting = !(cfg!(test) && XFER_OFF.load(std::sync::atomic::Ordering::Relaxed));
+    let mut head = if counting { vec![NONE; s] } else { vec![] };
+    let mut rec: Vec<(u32, f32, u32)> = vec![];
+    let mut use_k: Vec<(u32, f32)> = vec![];
+    let used: Vec<(usize, &[u32])> = cols.off.iter().enumerate().filter(|(_, o)| !o.is_empty()).map(|(k, o)| (k, &o[..])).collect();
+    for dst in 0..s {
+        let mut total = ZERO;
+        for &(k, off) in &used {
+            for j in off[dst] as usize..off[dst + 1] as usize {
+                let (src, v) = (cols.src[j] as usize, cols.trips[j]);
+                flow[src][k] = v;
+                l.entry[src][k] += v;
+                total[k] += v;
+            }
+        }
+        add_lanes(&mut l.exit[dst], &total);
+        let slot = sk.slot[dst];
+        debug_assert!(total == ZERO || slot != NONE, "flow towards station {dst}, which was not searched");
+        if total != ZERO && slot != NONE {
+            let slot = slot as usize;
+            if counting {
+                head.fill(NONE);
+                rec.clear();
+            }
+            let mut w = LaneWalk { g, s, n, dst, bits: &sk.board[slot][..], flow: &mut flow, l: &mut l, head: &mut head, rec: &mut rec, use_k: &mut use_k, xfer: if counting { Some((ix, &mut *xfer)) } else { None } };
+            match (&sk.next[slot], &sk.order[slot]) {
+                (NodeIds::Short(next), NodeIds::Short(order)) => w.run(next, order),
+                (NodeIds::Long(next), NodeIds::Long(order)) => w.run(next, order),
+                _ => unreachable!("a destination's ids in two widths"),
+            }
+        }
+        // the walk leaves zero every node it took flow from; the rest set here
+        flow[dst] = ZERO;
+        for &(_, off) in &used {
+            for j in off[dst] as usize..off[dst + 1] as usize {
+                flow[cols.src[j] as usize] = ZERO;
+            }
+        }
+        debug_assert!(flow.iter().all(|f| *f == ZERO));
+    }
+    l
+}
+
+struct LaneWalk<'a> {
+    g: &'a Graph,
+    s: usize,
+    n: usize,
+    dst: usize,
+    bits: &'a [u64],
+    flow: &'a mut [Lanes],
+    l: &'a mut LaneLoads,
+    head: &'a mut [u32],
+    rec: &'a mut Vec<(u32, f32, u32)>,
+    use_k: &'a mut Vec<(u32, f32)>,
+    xfer: Option<(&'a XferIndex, &'a mut [f32])>,
+}
+
+impl LaneWalk<'_> {
+    #[inline(always)]
+    fn run<I: NodeIx>(&mut self, next: &[I], order: &[I]) {
+        let LaneWalk { g, s, n, dst, bits, ref mut flow, ref mut l, ref mut head, ref mut rec, ref mut use_k, ref mut xfer } = *self;
+        for &v in order.iter().skip(1).rev() {
+            let v = v.ix();
+            let f = flow[v];
+            if f == ZERO {
+                continue;
+            }
+            flow[v] = ZERO;
+            if v < s {
+                let edges = g.adj_off[v] as usize..g.adj_off[v + 1] as usize;
+                let sum: f32 = edges.clone().map(|e| accepted_tph(bits, g, g.adj_to[e] as usize - s)).sum();
+                if sum == 0.0 {
+                    continue;
+                }
+                add_lanes(&mut l.board[v], &f);
+                for e in edges.clone() {
+                    let to = g.adj_to[e] as usize;
+                    let a = accepted_tph(bits, g, to - s);
+                    let share: Lanes = std::array::from_fn(|k| f[k] * a / sum);
+                    add_lanes(&mut flow[to], &share);
+                    add_lanes(&mut l.rn_board[to - s], &share);
+                }
+                if head.get(v).is_some_and(|&h| h != NONE) {
+                    use_k.clear();
+                    for (k, e) in edges.clone().enumerate() {
+                        let b = accepted_tph(bits, g, g.adj_to[e] as usize - s);
+                        if b > 0.0 {
+                            use_k.push((k as u32, b / sum));
+                        }
+                    }
+                    let x = &mut xfer.as_mut().unwrap().1;
+                    let mut i = head[v];
+                    while i != NONE {
+                        let (at, fin, nx) = rec[i as usize];
+                        for &(k, share) in use_k.iter() {
+                            x[(at + k) as usize] += fin * share;
+                        }
+                        i = nx;
+                    }
+                }
+            } else {
+                let to = next[v].ix();
+                if to >= n {
+                    continue;
+                }
+                add_lanes(&mut flow[to], &f);
+                if to >= s {
+                    add_lanes(&mut l.seg[v - s], &f);
+                    let ride = g.rn_ride[v - s];
+                    for k in 0..LANES {
+                        l.pax_min[k] += (f[k] * ride) as f64;
+                    }
+                } else {
+                    add_lanes(&mut l.alight[g.rn_station[v - s] as usize], &f);
+                    add_lanes(&mut l.rn_alight[v - s], &f);
+                    if to != dst {
+                        if let Some((ix, _)) = xfer.as_ref() {
+                            let e = (g.adj_off[v] as usize..g.adj_off[v + 1] as usize).find(|&e| g.adj_to[e] as usize == to).unwrap();
+                            rec.push((ix.at[e], f.iter().fold(0.0, |a, &b| a + b), head[to]));
+                            head[to] = (rec.len() - 1) as u32;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 thread_local! {
-    /// Test probe (T-158): ms spent assigning by purpose in the last pass, and what one assignment
-    /// of the summed trips would have taken.
-    static ASSIGN_MS: std::cell::Cell<(f64, f64)> = const { std::cell::Cell::new((0.0, 0.0)) };
+    /// Test switch (T-433): every pass also assigns each purpose alone with the kernel and
+    /// compares.
+    static CHECK_LANES: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+}
+
+/// Lane k of `lanes` against `kernel::assign` of kind k's trips alone, to the bit; the transfers
+/// against the kernel's, purpose after purpose, to f32 rounding.
+#[cfg(test)]
+fn check_lanes(g: &Graph, sk: &Skims, cols: &Columns, ix: &XferIndex, lanes: &LaneLoads, xfer: &[f32]) {
+    let s = sk.s;
+    let mut want = vec![0.0f32; ix.len];
+    for (k, off) in cols.off.iter().enumerate() {
+        if off.is_empty() {
+            continue;
+        }
+        let mut od = vec![0.0f32; s * s];
+        for b in 0..s {
+            for j in off[b] as usize..off[b + 1] as usize {
+                od[cols.src[j] as usize * s + b] = cols.trips[j];
+            }
+        }
+        let r = assign_with_transfers(g, sk, &od, ix, &mut want);
+        let got = lanes.lane(k);
+        let bits = |v: &[f32]| v.iter().map(|x| x.to_bits()).collect::<Vec<_>>();
+        for (name, a, b) in [("seg", &r.seg, &got.seg), ("board", &r.board, &got.board), ("alight", &r.alight, &got.alight), ("rn_board", &r.rn_board, &got.rn_board), ("rn_alight", &r.rn_alight, &got.rn_alight), ("entry", &r.entry, &got.entry), ("exit", &r.exit, &got.exit)] {
+            assert_eq!(bits(a), bits(b), "kind {k}: {name}");
+        }
+        assert_eq!(r.pax_min.to_bits(), got.pax_min.to_bits(), "kind {k}: pax_min");
+    }
+    for (a, b) in want.iter().zip(xfer) {
+        assert!((a - b).abs() <= 1e-5 * a.abs().max(1e-3), "transfers {a} against {b}");
+    }
 }
 
 struct Period {
@@ -1276,30 +1570,15 @@ impl EverydayApi {
         }
         let (loads, parts) = with_skims(g, p, &want, |sk| {
             let er = station_exp(sk, p);
-            // One station-pair matrix, assigned and cleared each time the pairs' purpose changes
-            // (they are stored purpose by purpose), so each purpose's loads are kept apart for the
-            // display filter (T-158) without a matrix per purpose. Their sum is the total.
+            // One station-pair matrix, filled by one purpose's pairs (they are
+            // stored purpose by purpose) and packed into its columns; then one walk of each
+            // destination's strategy assigns every purpose, each kept apart for the display filter
+            // (T-158, T-433). Their sum is the total.
+            assert!(kinds <= LANES);
             let mut od = vec![0.0; s * s];
-            let mut parts: Vec<Loads> = (0..kinds).map(|_| Loads::zero(s, g.n - s)).collect();
+            let mut cols = Columns::new(kinds, s);
             let mut od_kind = usize::MAX;
             let mut od_used = false;
-            #[cfg(test)]
-            let mut probe = (vec![0.0f32; s * s], 0.0f64);
-            #[cfg_attr(not(test), allow(unused_mut))]
-            let mut flush = |od: &mut Vec<f32>, kind: usize, parts: &mut Vec<Loads>| {
-                #[cfg(test)]
-                let t = now_ms();
-                let l = assign_with_transfers(g, sk, od, ix, &mut xfer);
-                #[cfg(test)]
-                {
-                    probe.1 += now_ms() - t;
-                    for (a, b) in probe.0.iter_mut().zip(od.iter()) {
-                        *a += b;
-                    }
-                }
-                add_loads(&mut parts[kind], &l);
-                od.fill(0.0);
-            };
             let th = p.station_theta;
             // per subzone: the cheapest walk and each walk's weight at it; and for a home with
             // rides (T-389), the cheapest of walks and rides and every entry's weight at that
@@ -1327,7 +1606,7 @@ impl EverydayApi {
             for (i, pair) in self.pairs.iter().enumerate() {
                 if pair.kind as usize != od_kind {
                     if od_used {
-                        flush(&mut od, od_kind, &mut parts);
+                        cols.pack(&mut od, s, od_kind);
                     }
                     od_kind = pair.kind as usize;
                     od_used = false;
@@ -1386,6 +1665,7 @@ impl EverydayApi {
                     let trips = pair.trips * share * pr / sum;
                     od_used = true;
                     for ka in a.clone() {
+                        cols.rows[sz.acc_st[ka] as usize] = true;
                         for kb in b.clone() {
                             let ia = sz.acc_st[ka] as usize;
                             let ib = sz.acc_st[kb] as usize;
@@ -1395,14 +1675,15 @@ impl EverydayApi {
                 }
             }
             if od_used {
-                flush(&mut od, od_kind, &mut parts);
+                cols.pack(&mut od, s, od_kind);
             }
+            drop(od);
+            let lanes = assign_lanes(g, sk, &cols, ix, &mut xfer);
             #[cfg(test)]
-            {
-                let t = now_ms();
-                let _ = assign(g, sk, &probe.0);
-                ASSIGN_MS.with(|c| c.set((probe.1, now_ms() - t)));
+            if CHECK_LANES.with(|c| c.get()) {
+                check_lanes(g, sk, &cols, ix, &lanes, &xfer);
             }
+            let parts: Vec<Loads> = (0..kinds).map(|k| lanes.lane(k)).collect();
             let mut total = Loads::zero(s, g.n - s);
             for l in &parts {
                 add_loads(&mut total, l);

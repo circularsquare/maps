@@ -1,5 +1,6 @@
 ﻿# Archive
 
+- T-433 [P2] Everyday assignment in one pass for all purposes. Done 2026-10-15: one strategy walk with a lane per purpose, loads identical to the bit (transfers to float rounding); assignment about a third of before, New York's everyday pass 6.8-8.0 to 5.1-5.2 s native; pair loop lanes tried, slower, dropped. notes/T-433.md.
 - T-431 [P2] Japan stage 2a: Keihanshin (`osa`) and Chukyo (`ngo`). Done 2026-10-15: 18.2M and 11.3M people within 0.01% of the census, jobs exact, Tokyo's curve ties the best fit on both; merged, in the world market (Osaka homes: Nagoya 162k, Tokyo 80k long trips a day); browser checks pass. notes/T-431.md.
 - T-372 [P2] T-295 stage 3: park-and-ride fit with T-380's parking. Done 2026-10-15: `p_ride` 15; real New York commutes 17.3% to 20.6% rail (ACS 20.3), county error 4.4 to 2.8 points, Kings 35.7 to 42.7%; real save 7.60M to 7.94M rail trips. notes/T-372.md.
 - T-380 [P2] Parking cost by job density against real prices. Done 2026-10-15: built in T-372 (log of jobs per km² of land, a free-parking share, Manhattan and London congestion charges) for local commutes; everyday and regional layers in T-440. notes/T-380.md.

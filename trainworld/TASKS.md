@@ -8,7 +8,7 @@ sampler cities (Paris, Shanghai, Mumbai, Berlin), park-and-ride with T-380's par
 with air (T-375 to T-379), the crossover tool, the NIMBY-style drawing, cell merging and a dozen
 performance tasks. Next, in order: 1. the approved crowding change (T-434: each period stops once a
 round moves its loads under 1%, at most 3); 2. T-440 (the new parking rule in the everyday and
-regional layers) once T-433 is in; 3. Japan stage 3 (prefecture zones for the rest of Japan, T-420's
+regional layers; T-433 is in, so it can start); 3. Japan stage 3 (prefecture zones for the rest of Japan, T-420's
 line; fetch all e-Stat meshes once); 4. the leftovers in "Performance" by the ranking in
 notes/perf-survey.md and notes/T-401.md (T-439, T-435, T-419); 5. T-422 when Anita has tried the
 new drawing (retire Corners); 6. a design for game modes and money, not yet a task (a far line costs
@@ -21,8 +21,7 @@ Keihanshin, Chukyo, Fukuoka, Sapporo, Sendai and Hiroshima, all in one world mar
 and air. Real save's demand final: 7,937,750 rail trips a day (after T-372's parking). History is in
 ARCHIVE.md.
 
-**Handoff for the next orchestrator (2026-10-15).** Nothing is in flight except possibly T-433 (the
-everyday layer's one-pass assignment and SIMD pair loop): check `git status` and ARCHIVE.md first.
+**Handoff for the next orchestrator (2026-10-15).** Nothing is in flight; check `git status` and ARCHIVE.md first.
 Asks for Anita go in the final message or notes/for-anita.md, never TODO.md. **After each commit**:
 `node trainworld/checks/smoke.mjs`, commit explicit paths, rebuild 8800 (`git -C maps/.tw-snap
 checkout --detach <commit>`, then with `CARGO_TARGET_DIR=maps/.tw-snap-target`, `CARGO_BUILD_JOBS=3`
@@ -177,11 +176,10 @@ World sampler (T-286, research/world-sampler.md). All waiting for Anita's review
   whole state (round trip 130-214 ms). Send what an edit changed (edges, nodes, lines by id)
   instead of the whole state, keep stroke buffers per edge in the worker, upload sub-ranges.
   notes/T-063.md.
-- T-439 [P3] Commute pair loop after T-036 (about 37 ns a pair native): the scatter into the y rows (10 ns, scalar to keep each station's sum in order), the zone walk (6 ns) and the per-origin-zone decay row (`fz`, 4% of a solve, rebuilt every period and round) are what is left; the everyday pair loop (10.7%) has the same shape and could take `lanes.rs`. Open; notes/T-036.md.
+- T-439 [P3] Commute pair loop after T-036 (about 37 ns a pair native): the scatter into the y rows (10 ns, scalar to keep each station's sum in order), the zone walk (6 ns) and the per-origin-zone decay row (`fz`, 4% of a solve, rebuilt every period and round) are what is left. The everyday pair loop was tried in `lanes.rs` lanes (T-433) and was 15-20% slower: it waits on memory (25 station-pair reads and writes a direction), so what would help there is fewer terms, not lanes. Open; notes/T-036.md, notes/T-433.md.
 - T-168 [P3] Add a newly viewed city without re-solving the whole network: a city with no construction needs only its own walk and drive figures, but a pan to one re-solves everything (seconds on a big save, in the background). Open; notes/T-149.md.
 - T-419 [P3] A worker's set-up state after T-398: New York's everyday `edge_pair` (28 MB) and pairs (20 MB) and the market's set-up (23 MB: pairs, index, access lists) are now the largest fixed items. Open; notes/T-398.md.
 - T-414 [P3] Set-up order and the first solve in WASM (found in T-405): set up in registry order, each worker's first round-0 solve of the real save is 2-3 s slower in the browser (New York's commutes 5-6 s against 2-3 s), same heap size, nothing natively; set up in pack-open order and solved in registry order it was fastest (29.3 s). Find why (likely first-touched memory) and whether a set-up order rule helps every save. Open; notes/T-405.md.
-- T-433 [P2] Everyday assignment in one pass for all purposes (found in T-401): the layer assigns once per purpose, 8.6% of a New York solve (12.6% on a 2,000-station network); carry a flow per purpose through one walk of each destination's strategy. Open; notes/T-401.md.
 - T-434 [P2] How much the crowding rounds change (found in T-401). Measured 2026-10-15: round 3 still moves New York visibly (fullest train 124% to 96% of crush, 11 lines over 2%), so 2 rounds is out and no other averaging saves a round; proposed: each period stops once a round moves its loads under 1% (peaks keep 3), 15-20% less solve work, no visible change. Approved by Anita 2026-10-15: build it (per period, 1% tolerance, at most 3 rounds). notes/T-434.md.
 - T-436 [P3] Start an edit's crowding rounds from the solve before instead of free flow (found in T-434): might need one or two rounds after a small edit, but figures would depend on edit history (an undo would not restore them). Not measured; Anita decides whether that is acceptable. notes/T-434.md.
 - T-435 [P3] Market zone pair loop (found in T-401): 7.9% of a New York solve, f64 exp and a random S x S lookup per access pair, about 165 ms a pass; f32 exp and skipping pairs with no finite rail cost should roughly halve it. Open; notes/T-401.md.
