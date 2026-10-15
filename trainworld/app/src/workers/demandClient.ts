@@ -55,6 +55,7 @@ import {
   type StationDemand,
   type StationRiders,
   type ZoneRiders,
+  demandSolving,
 } from "../game/demand";
 import { makeFrame } from "../game/frame";
 import { demandIdle, loadComplete, loadFailed, loadProgress, startup, takeGameLoadHold, zoneLoads } from "../game/loading";
@@ -222,6 +223,9 @@ interface Solve {
   showEstimates: boolean;
   /** T-326: the last worker's clusters kept and solved */
   clusters?: [number, number];
+  /** T-392: each cluster published ahead of the solve's final, by its cities: its results per
+   * period as they come in, then when it was shown */
+  clusterRes?: Map<string, { res: (Result | null)[]; at?: number }>;
 }
 
 /** When one item (a city or the market) was asked for, downloaded and open in every worker:
@@ -377,6 +381,9 @@ class DemandClient {
   private periodTable: number[] = [];
   private version = 0;
   private cur: Solve | null = null;
+  /** T-392: zones whose shown figures come from a cluster published ahead of a newer solve's final
+   * (the version they came from); questions about them go to that solve */
+  private cityVersion = new Map<CityId, number>();
   /** a service waiting for the pool to start */
   private waiting: { svc: Service; arrivedAt: number } | null = null;
   private lastKey = "";
@@ -391,7 +398,7 @@ class DemandClient {
   private focusCity = activeCity.peek();
   private focusFrame = worldFrameEpoch.peek();
   private cellsP: Promise<CityCells | null> | null = null;
-  private modesP: { version: number; round: number; day: DayKind; p: Promise<CellModes | null> } | null = null;
+  private modesP: { version: number; round: number; day: DayKind; src?: number; p: Promise<CellModes | null> } | null = null;
   /** T-260 `day_factors()` from the first worker: load factor per kind of day, purpose and
    * period, then each day's trip rate per purpose (sim/src/demand/days.rs) */
   private dayTable: number[] = [];
@@ -1154,6 +1161,23 @@ class DemandClient {
       if (msg.clusters) s.clusters = msg.clusters; // ?debug=1's log: clusters kept and solved
       return;
     }
+    if (msg.kind === "plan") {
+      if (i === 0) demandSolving.value = new Set(msg.solving.flat());
+      return;
+    }
+    if (msg.cluster) {
+      // T-392: one cluster solved ahead of the rest: shown once every period of it is in
+      const key = msg.cluster.cities.join(",");
+      const m = (s.clusterRes ??= new Map());
+      let e = m.get(key);
+      if (!e) m.set(key, (e = { res: PERIODS.map(() => null) }));
+      e.res[msg.period] = msg;
+      if (e.res.every(Boolean) && e.at === undefined) {
+        e.at = performance.now();
+        this.publishCluster(s, e.res as Result[], msg.cluster);
+      }
+      return;
+    }
     const results = s.byRound[msg.summary[0]];
     if (!results) return;
     results[msg.period] = msg;
@@ -1227,7 +1251,8 @@ class DemandClient {
     demandStep.value = { done: 0, of: ROUNDS + 1 };
     // T-327: rounds in step only where clicks are answered by round (`target`): it costs the final
     // about 0.7 s on the real save
-    const msg: ToDemand = { kind: "solve", version, net, rounds: ROUNDS, barrier: (showEstimates || !!this.hold) && !perfOff("ahead"), ...(perfOff("clusters") ? { whole: true } : {}) };
+    demandSolving.value = null;
+    const msg: ToDemand = { kind: "solve", version, net, rounds: ROUNDS, barrier: (showEstimates || !!this.hold) && !perfOff("ahead"), first: activeCity.peek(), ...(perfOff("clusters") ? { whole: true } : {}) };
     for (const w of this.workers) w.postMessage(msg);
     this.progress(); // T-243: a held game's solve shows its progress even with nothing to load
   }
@@ -1269,13 +1294,16 @@ class DemandClient {
       // has the round after the published one, or will
       return { version: s.version, round: s.published + 1, view: dv.version, wait: true, solve: s };
     }
+    // T-392: a zone shown from a cluster solved ahead of its solve's final is asked about there
+    const cv = this.cityVersion.get(activeCity.peek());
+    if (cv !== undefined) return { version: cv, round: ROUNDS, view: dv.version, wait: false, solve: this.log.find((x) => x.version === cv) };
     return { version: dv.version, round: dv.round, view: dv.version, wait: false, solve: this.log.find((x) => x.version === dv.version) };
   }
 
   /** The answer asked for at `t` still goes with what is shown. */
   private still(t: Target): boolean {
     const v = demandView.peek()?.version;
-    return t.wait ? this.cur?.version === t.version && (v === undefined || v === t.view || v === t.version) : v === t.version;
+    return t.wait ? this.cur?.version === t.version && (v === undefined || v === t.view || v === t.version) : v === t.view;
   }
 
   /**
@@ -1348,7 +1376,9 @@ class DemandClient {
     if (version === undefined) return Promise.resolve(null);
     const round = demandView.peek()?.round ?? 0;
     const day = shownDay.peek();
-    const key = `${version}:${round}:${day}:${purpose}`;
+    const src = this.cityVersion.get(other ?? activeCity.peek()); // T-392, as in cellModes
+    const at: Target = src !== undefined ? { version: src, round: ROUNDS, view: version, wait: false } : { version, round, view: version, wait: false };
+    const key = `${version}:${round}:${day}:${purpose}:${src ?? ''}`;
     const cached = other === undefined ? this.purposeP.get(key) : undefined;
     if (cached) return cached;
     const p = (async (): Promise<CellModes | null> => {
@@ -1369,7 +1399,7 @@ class DemandClient {
           continue;
         }
         let mask = 0;
-        for (const r of byMask(await this.ask((id) => ({ kind: "purposeModes", id, version, purpose: kind }), undefined, [], other))) {
+        for (const r of byMask(await this.ask((id) => ({ kind: "purposeModes", id, version: at.version, purpose: kind }), undefined, [], other, at))) {
           if (r.kind !== "purposeModes" || !r.modes) return null;
           mask |= r.mask;
           if (r.modes.length === modes.length) for (let k = 0; k < modes.length; k++) modes[k] += r.modes[k];
@@ -1398,7 +1428,10 @@ class DemandClient {
     // cached per solve and crowding round (T-084: the dot map asks again for the refined result)
     const round = demandView.peek()?.round ?? 0;
     const day = shownDay.peek();
-    if (everydayToo && other === undefined && this.modesP?.version === version && this.modesP.round === round && this.modesP.day === day) return this.modesP.p;
+    // T-392: a zone shown from a cluster solved ahead of its solve's final is asked about there
+    const src = this.cityVersion.get(other ?? activeCity.peek());
+    const at: Target = src !== undefined ? { version: src, round: ROUNDS, view: version, wait: false } : { version, round, view: version, wait: false };
+    if (everydayToo && other === undefined && this.modesP?.version === version && this.modesP.round === round && this.modesP.day === day && this.modesP.src === src) return this.modesP.p;
     // T-328: the cached result's bubbles, when it kept this zone's for this day
     const kept = this.cachedModes;
     if (version === CACHE_VERSION && everydayToo && other === undefined && day === 0 && kept?.city === activeCity.peek()) {
@@ -1413,8 +1446,8 @@ class DemandClient {
       let extra: Float32Array | null = null;
       // every worker sent its sums with the round (no question to a worker busy with the next
       // round); asked for only when one is missing. A weekend's are always asked for (T-260).
-      const sent = day === 0 ? this.pushed.get(`${version}:${round}:${city}`) : undefined;
-      const parts: { mask: number; sums: Float32Array | null; everyday: Float32Array | null }[] = sent && sent.length === this.computeN ? sent : (await this.ask((id) => ({ kind: "subSums", id, version }), undefined, [], other)).map((r) => (r.kind === "subSums" ? r : { mask: 0, sums: null, everyday: null }));
+      const sent = day === 0 ? this.pushed.get(`${at.version}:${at.round}:${city}`) : undefined;
+      const parts: { mask: number; sums: Float32Array | null; everyday: Float32Array | null }[] = sent && sent.length === this.computeN ? sent : (await this.ask((id) => ({ kind: "subSums", id, version: at.version }), undefined, [], other, at)).map((r) => (r.kind === "subSums" ? r : { mask: 0, sums: null, everyday: null }));
       // in worker (period) order, not arrival order, so the same result gives the same bubbles to
       // the bit (T-328: the cached bubbles are compared with the fresh ones)
       for (const r of [...parts].sort((a, b) => a.mask - b.mask)) {
@@ -1428,7 +1461,7 @@ class DemandClient {
         }
       }
       if (!sums || mask !== ALL_PERIODS) return null;
-      const [r] = await this.ask((id) => ({ kind: "cellModes", id, version, sums: sums! }), [this.computeN], [sums.buffer], other);
+      const [r] = await this.ask((id) => ({ kind: "cellModes", id, version: at.version, sums: sums! }), [this.computeN], [sums.buffer], other, at);
       if (r?.kind !== "cellModes" || !r.modes) return null;
       if ((other === undefined && activeCity.peek() !== city) || demandView.peek()?.version !== version || demandView.peek()?.round !== round || shownDay.peek() !== day) return null;
       // Bubbles now count trip legs at each home/activity pair, both directions.
@@ -1440,7 +1473,7 @@ class DemandClient {
       return { version, day, homeRail: b(0), homeWalk: b(1), homeDrive: b(2), workRail: b(3), workWalk: b(4), workDrive: b(5) };
     })();
     if (!everydayToo || other !== undefined) return p; // cached by purposeModes, or a nearby zone's
-    this.modesP = { version, round, day, p };
+    this.modesP = { version, round, day, src, p };
     p.then((v) => {
       if (!v && this.modesP?.p === p) this.modesP = null; // not cached when it failed
     });
@@ -1827,8 +1860,10 @@ class DemandClient {
     if (final) {
       s.refinedAt = performance.now();
       this.aheadP.clear();
+      this.cityVersion.clear();
       if (s === this.cur) {
         demandUpdating.value = false;
+        demandSolving.value = null;
         void this.writeCache(s); // T-328
       }
     }
@@ -1875,6 +1910,55 @@ class DemandClient {
       }
       return { ...d, view: { ...d.view, lines, stations, purposes } };
     });
+  }
+
+  /**
+   * T-392: a cluster's final figures, solved ahead of the rest of the solve, put in the shown result:
+   * its lines and their stations, its zones' views, and the regional market's if it is in it. The
+   * other figures stay as they are, the network-wide totals among them, until the solve's final;
+   * the view keeps the shown version, and questions about the cluster's zones go to this solve
+   * (`cityVersion`), whose workers hold it.
+   */
+  private publishCluster(s: Solve, res: Result[], c: { cities: CityId[]; market: boolean; lines: Uint32Array }) {
+    if (s !== this.cur || s.showEstimates) return;
+    const days = demandByDay.peek();
+    if (!days[0].view) return;
+    const fresh = Array.from(c.lines, (l) => s.layout[l]).filter(Boolean);
+    const part = { ...s, layout: fresh };
+    const ids = new Set(s.layout.map((l) => l.id));
+    demandByDay.value = days.map((d, k) => {
+      const day = k as DayKind;
+      if (!d.view) return d;
+      const est = this.dayDemand(part, ROUNDS, true, day, day === 0 ? res : res.map((r, q) => this.dayResult(r, q, day)));
+      const lines = new Map(d.view.lines), stations = new Map(d.view.stations);
+      // lines the network no longer has go too
+      for (const id of lines.keys()) if (!ids.has(id)) lines.delete(id);
+      for (const [id, l] of est.view!.lines) lines.set(id, l);
+      for (const [id, v] of est.view!.stations) stations.set(id, v);
+      let purposes = d.view.purposes;
+      if (est.view!.purposes) {
+        purposes = new Map(purposes);
+        for (const [key, p] of est.view!.purposes) {
+          const old = purposes.get(key);
+          const pl = new Map(old?.lines), ps = new Map(old?.stations);
+          for (const [id, l] of p.lines) pl.set(id, l);
+          for (const [id, v] of p.stations) ps.set(id, v);
+          purposes.set(key, { lines: pl, stations: ps });
+        }
+      }
+      const view = { ...d.view, lines, stations, purposes };
+      const cities = new Map<CityId, DemandView>();
+      for (const [id, v] of d.cities) cities.set(id, { ...v, lines, stations, purposes });
+      for (const id of c.cities) {
+        const v = est.cities.get(id);
+        if (v) cities.set(id, { ...view, tripsPerDay: v.tripsPerDay, railTripsPerDay: v.railTripsPerDay, trainShareByPeriod: v.trainShareByPeriod, split: v.split });
+      }
+      return { view, cities, intercity: c.market ? est.intercity : d.intercity };
+    });
+    for (const id of c.cities) this.cityVersion.set(id, s.version);
+    const left = new Set(demandSolving.peek() ?? []);
+    for (const id of c.cities) left.delete(id);
+    demandSolving.value = left;
   }
 
   /**

@@ -1,15 +1,19 @@
-// Which city packs a network can change (T-149). A city's local trips can ride only from a station
-// within the walk's 4 km bound of one of its cells (SPEC 4.3, `walk_cutoff_m`); with none, every
-// one of its trips walks or drives, it puts no riders on any line, and leaving its pack unloaded
-// changes no number anywhere else. So a pack is needed when a built station lies inside its exact
-// footprint (packs/<id>.boundary.geojson) or within REACH_M of it. The margin over 4 km covers
-// cell centres a little outside the boundary (blocks are spread over the H3 cells they touch)
-// and the packs' equirectangular frames.
+// Which city packs a network can change (T-149). A city's local trips ride a line only between two
+// stations of its own pack: the home end may ride up to 15 km to a station (`ride_max_m`), but the
+// work or activity end walks (`walk_cutoff_m`, 3 km), so a station near its cells is always needed.
+// With none, every one of its trips walks or drives, it puts no riders on any line, and leaving its
+// pack unloaded changes no number anywhere else. So a pack is needed when a built station lies
+// inside its exact footprint (packs/<id>.boundary.geojson) or within REACH_M of it. A station only
+// a ride away from a pack adds no rider from it (T-394, notes/T-394.md); the regional market, not
+// the pack, carries riders between zones.
 
 import type { FeatureCollection, MultiPolygon, Polygon } from "geojson";
 import { CITIES, type CityId } from "../game/cities";
 import { cityBoundary } from "../game/boundaries";
 
+/** The 3 km walk plus a margin: cell centres lie a little outside the boundary (blocks are spread
+ * over the H3 cells they touch) and the packs' equirectangular frames differ slightly from this
+ * test's. */
 export const REACH_M = 4500;
 const M_PER_DEG = 111_320;
 

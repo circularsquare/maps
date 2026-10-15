@@ -3,7 +3,10 @@
 One line per city task, added when its retrospective is in (docs/adding-a-city.md 12). Weighted
 tokens from `checks/token_usage.py` (cache reads 0.1, writes 1.25, output 5, input 1); wall time
 from first to last call. Calibration: 45% to 46% of Anita's weekly limit over about 9.5M weighted
-tokens (2026-10-14, coarse: the meter shows whole percents).
+tokens (2026-10-14, coarse: the meter shows whole percents). Second point: 51% on the morning of
+2026-10-15, after the overnight run (T-363, three cities, park-and-ride T-371/T-389/T-373/T-374,
+T-338, T-391, T-327, T-326 stage 1, T-380, T-394, and T-392 still running): 43.7M weighted in
+all, orchestrator 2.3M of it. If the run started near 46%, about 9M a percent, as before.
 
 | City | Task | Model | Wall | Weighted tokens | Biggest cost | Notes |
 |---|---|---|---|---|---|---|

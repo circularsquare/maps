@@ -5,7 +5,7 @@
 import type { ComponentChildren } from "preact";
 import { clock, SPEEDS } from "../game/clock";
 import { activeCity, cityById, viewedZone } from "../game/cities";
-import { demandUpdating, demandView, modeRides, modeSplit } from "../game/demand";
+import { demandView, modeRides, modeSplit, viewUpdating } from "../game/demand";
 import { clockTime, count, dayOf, money, moneyExact } from "../game/format";
 import { weekdayName, weekdayOf } from "../game/days";
 import { shownDay } from "../game/ui";
@@ -99,7 +99,7 @@ export function TopBar() {
       {/* T-341: every part has a fixed width; a long name is cut short, the whole name on hover */}
       <div class="city" data-tip={city?.name}>{city?.name}</div>
       <div class="split">
-        <div data-tip={`Rides a day ${city ? "in " + city.name + " " : ""}${shownDay.value ? "at weekends" : "on weekdays"}: ${rides ? `Train ${pct(s.train)} (${count(rides.train)}), Walking ${pct(s.walk)} (${count(rides.walk)}), Driving ${pct(s.drive)} (${count(rides.drive)}), all ${count(rides.all)} rides` : `Train ${pct(s.train)}, Walking ${pct(s.walk)}, Driving ${pct(s.drive)}`}${demandView.value && !demandView.value.final ? " (an early estimate)" : demandView.value?.version === CACHE_VERSION ? " (from the last time this game was open)" : demandUpdating.value ? " (before your last change)" : ""}`} class={"split-row" + (demandUpdating.value ? " updating" : "")}>
+        <div data-tip={`Rides a day ${city ? "in " + city.name + " " : ""}${shownDay.value ? "at weekends" : "on weekdays"}: ${rides ? `Train ${pct(s.train)} (${count(rides.train)}), Walking ${pct(s.walk)} (${count(rides.walk)}), Driving ${pct(s.drive)} (${count(rides.drive)}), all ${count(rides.all)} rides` : `Train ${pct(s.train)}, Walking ${pct(s.walk)}, Driving ${pct(s.drive)}`}${demandView.value && !demandView.value.final ? " (an early estimate)" : demandView.value?.version === CACHE_VERSION ? " (from the last time this game was open)" : viewUpdating.value ? " (before your last change)" : ""}`} class={"split-row" + (viewUpdating.value ? " updating" : "")}>
           <span class="bar-box">
             <span class="bar">
               <i class="seg seg-train" style={{ width: s.train + "%" }} />

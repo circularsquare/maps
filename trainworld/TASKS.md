@@ -7,9 +7,9 @@ P3 = later. Finished or abandoned tasks move to `ARCHIVE.md`.
 1. London stage b (T-360, done 2026-10-15); 2. sampler cities Paris, Shanghai, Mumbai (T-289, T-291,
 T-292), from tonight, one at a time; 3. park-and-ride (T-380 parking check, then T-372 and T-374;
 T-370, T-371, T-389, T-373 done); 4. worldwide long trips (T-362: T-375 to T-379); 5. the crossover tool (T-338);
-6. responsiveness leftovers (T-326; T-327 done); 7. a demand-realism batch (T-270, T-271, T-272);
-8. a design for game modes, not yet a task. Other performance work stays parked until she
-reports a problem. Anita plans hundreds of metros: cost per city matters (notes/city-costs.md).
+6. responsiveness leftovers (T-326, T-327 done); 7. a demand-realism batch (T-270, T-271, T-272);
+8. a design for game modes, not yet a task. Performance is open work from 2026-10-15: measured,
+ranked by impact and by what lets the game scale (notes/perf-survey.md). Anita plans hundreds of metros: cost per city matters (notes/city-costs.md).
 
 **Where things stand (2026-10-14).** One save spans the Earth (Mercator frame, local time); the
 Northeast (nine cities, four county zones, commutes between them), Toronto and London (tier 0)
@@ -39,10 +39,7 @@ PATH, `npm run build --prefix maps/.tw-snap/trainworld/app` (a few minutes; back
 
 
 
-- T-326 [P2] Loading fix 3 (T-303 item 3): separate clusters (Toronto vs the Northeast) solve separately, an edit re-solves only its own cluster, the viewed one first. Three stages; stage 1 done 2026-10-15 (workers split the network and keep unchanged clusters' results: a Toronto edit's final 28.5 s to 4.5 s, figures identical to the bit). notes/T-326.md.
-  - T-392 [P2] T-326 stage 2: per-cluster publishing and answers (each cluster's final published as it lands; clicks on a cluster not being solved answered at once from its kept state; status for the cluster being solved). Open; notes/T-326.md.
-  - T-393 [P2] T-326 stage 3: the viewed or selected cluster solved first when several are dirty; spec. After T-392. Open.
-- T-394 [P2] Pack reach predates rides (found in T-326): `workers/cityReach.ts` opens a zone's pack for a station within 4.5 km of its outline (the walk), but since T-371/T-389 homes ride to a station up to 15 km away, so a station 5-15 km outside an unopened zone gets none of its riders. Widen REACH_M (about 25 km, as demandClusters.ts's 30 km from cells) or test reach from the cells, and check the bare-zone rule (T-325) against it. Open.
+- T-402 [P3] Per-cluster finals in the startup and zone-opening solves (found in T-392): solves with T-327's round barrier still step every cluster round by round, so a London or Toronto save's viewed city gets its final with New York's (about 30 s). Needs rounds counted per cluster on the page. Open; notes/T-326.md.
 
 ## In progress (batch 25, 2026-10-14)
 
@@ -162,7 +159,7 @@ World sampler (T-286, research/world-sampler.md). All waiting for Anita's review
   Use `shaderData.vertexShaderPrelude` (`projectTile`) with per-tile projection data, keeping
   centimetre precision at street zoom. notes/T-018.md.
 
-## Parked: performance (until Anita reports a problem)
+## Performance (open since 2026-10-15; ranked in notes/perf-survey.md)
 
 - T-301 [P3] Zone packs never close (T-276): nearby zones' bubbles open each zone on screen in every solving worker (Philadelphia about 90 MB of WASM memory a worker, New Haven and Springfield together 57), so a long pan round the region grows every worker and every solve. Close packs that are neither viewed, nearby nor reached, or open nearby zones commute-only in the auxiliary worker. Parked until it matters; DECISIONS 2026-10-13 (T-276 agent).
 - T-302 [P3] Zones' files on demand (docs/zones.md 6, 8): the clock worker loads every registered zone's water mask at startup and every boundary is fetched for the reach test and outlines; with four non-city zones that is four small masks more (0.04-0.15 MB), but a world of zones needs them fetched for the zones on screen or reached only. Measure startup with `checks/startup-timing.mjs` before and after. Open.
@@ -189,3 +186,10 @@ World sampler (T-286, research/world-sampler.md). All waiting for Anita's review
   of smaller machines. notes/T-119.md.
 - T-178 [P3] Everyday layer memory per open city: a worker holding all nine cities' everyday layers uses about 496 MiB of WASM memory (278 MiB before T-142, 475 before its airports and medical visits), mostly destination samples and their pair indices (u32 each, cells x 16 for four purposes, x 2 for airport and medical). Only saves with construction in many cities pay it. Parked until it matters (Anita: performance only on report). Open; notes/T-142.md "Opening cost".
 - T-168 [P3] Add a newly viewed city without re-solving the whole network: a city with no construction needs only its own walk and drive figures, but a pan to one re-solves everything (seconds on a big save, in the background). Open; notes/T-149.md.
+- T-395 [P2] Everyday destination slots only for cells with a budget for that purpose (an offset per purpose): 48% of the 68 slots a cell are dead today, so New York's samples and `edge_pair` go from 113 to 59 MB a worker, a nine-city save about -200 MB a worker; results identical (bit check). Open; notes/perf-survey.md 3.
+- T-396 [P2] Requirement on T-377: the world market must not make the world one cluster. Replace the MARKET node's join (every station within 200 km of any market zone, `demandClusters.ts`) by splitting the market's pairs by the network components their stations reach (a pair with no rail path solved once), and open the market only when a market zone is reached (today 14 MB and +45 MB a worker for every save). Loose coupling by background loads: notes/perf-survey.md 5. Open.
+- T-397 [P3] Everyday samples per cell scaled to its trips (2 to 16 instead of 16): slots fall to 23-33% of today's (New York about -80 MB a worker after T-395's cut), opening about half as long; a little more sampling noise in sparse cells. After T-395. Open; notes/perf-survey.md 3.
+- T-398 [P2] T-361 item 2: lower a demand worker's set-up peak (drop the old network's state before building the new, size the everyday pair list and index up front, one reused buffer for strategy skims): estimated 80-150 MB a worker. Open; notes/T-361.md.
+- T-399 [P3] T-361 item 3: one commute engine per city instead of two (the everyday layer opens its own): New York 15-30 MB a worker and a second `set_network` (0.45 s native). Open; notes/T-361.md, notes/perf-survey.md.
+- T-400 [P3] With T-302, the other startup costs that grow with registered zones: one GeoJSON source and line layer per zone (`cityBoundaries.ts`), every footprint and outside polygon built at startup, and every zone's place list (1.3 MB now, 15-30 MB at 200 zones) on the first search or station tool. Open; notes/perf-survey.md 2.
+- T-401 [P3] Profile one period's round by layer natively on the real save (commute pair loop, everyday pass, market, skims, assignment), the basis for T-036 and T-124: only free flow is split so far (commutes 1.5 s, everyday 0.5-0.8 s native). Open; notes/perf-survey.md 1.

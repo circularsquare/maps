@@ -678,8 +678,11 @@ workers first. Skipping zone pairs under 0.2-0.5 trips cuts pairs 1.1-4x but dro
 10-minute walk bands are the accuracy lever: 2.4x the pairs, every error about a fifth smaller.
 
 **Which cities are open** (T-149). A worker holds only the city packs the game needs: the viewed
-city and every city with a built station inside its footprint or within 4.5 km of it (the walk's
-4 km bound plus a margin for edge cells and pack frames, `app/src/workers/cityReach.ts`). Any
+city and every city with a built station inside its footprint or within 4.5 km of it (the 3 km
+walk plus a margin for edge cells and pack frames, `app/src/workers/cityReach.ts`). The ride's
+15 km does not widen it: a pack's trips run between two stations of its own pack and the work or
+activity end walks, so a station only a ride from the pack carries none of its riders (T-394; the
+regional market carries riders between zones). Any
 other city has no subzone with a station, so all its trips walk or drive and it adds nothing to
 any line's load, fare or crowding: leaving it unloaded changes no number elsewhere. A worker
 check solved a Midtown line with all nine packs open and with New York alone; every line load,
@@ -952,8 +955,8 @@ no figure; solves after an edit run without it. A click then waits at most one s
 figures are at most one crowding round ahead of the bubbles; the answer for the next round is
 asked for at once, so each publish finds its answer waiting, and the final replaces it as always.
 A worker already past the round asked about answers nothing and the question goes to the newer
-round. After an edit questions wait for the final (the workers hold a network the map does not
-show yet). `?perfOff=ahead` turns all of this off. T-327, notes/T-327.md.
+round. After an edit questions about a zone being solved wait for its final (the workers hold a
+network the map does not show yet); others are answered at once ("Clusters" below). `?perfOff=ahead` turns all of this off. T-327, notes/T-327.md.
 
 **Clusters** (T-326, `workers/demandClusters.ts`). Each worker splits the network into clusters
 that share no rider and solves each on its own sub-network: the cluster's stations (in snapshot
@@ -972,6 +975,23 @@ sub-network, populations and rounds are unchanged since keeps its result untouch
 only the clusters it touched are solved, and the others' figures are read from their populations
 as they stand. Every worker splits the same way from the same inputs. `?perfOff=clusters` solves
 everything as one cluster, as before T-326.
+
+After an edit (a solve without the round barrier) the clusters to solve go one after another, the
+zone in view's first (T-393), each to its last round; each but the last is sent as soon as it is
+done, as one result per period with that cluster's figures alone (`result.cluster`), and the page
+puts its lines, their stations, its zones' views and, if the market is in it, the regional market's
+into the shown result at once. The network-wide totals wait for the solve's final: once every
+cluster is done, the solve's result for every round is the final figures, read once (after an
+edit only the final is shown, and new lines take round 0's, T-324). A cluster's network
+is set up only when its turn comes, so until then it still holds the shown result's. A worker keeps
+the clusters of its last six networks, and answers a question about any of them at once while the
+asked zone's cluster holds that network solved to its last round, whatever it is solving
+meanwhile: a click in a zone whose cluster is kept, or already published, needs no wait. Questions
+about a published cluster's zones go to its solve. The status tag and the top bar's "before your
+last change" speak only for a zone still being solved (`plan`, `demandSolving`). With the barrier
+(startup, a zone just opened) all clusters still step through the rounds together. The worker adds
+cities up in the registry's order, never the order their packs opened in, so a network's figures
+are the same to the bit however it was loaded. T-392, T-393, notes/T-326.md.
 
 **Cost on the real combined network** (T-119: the 109-line New York save plus one Philadelphia
 line, 875 demand stations, 5,039 subzones, 13.9M subzone pairs a period; native, one period, free

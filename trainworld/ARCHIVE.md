@@ -1,5 +1,11 @@
 # Archive
 
+- T-392 [P2] T-326 stages 2 and 3 (T-393 with it). Done 2026-10-15: after an edit clusters solve one by one, the viewed one first, each published as it lands; clicks on a cluster not being solved answer at once (0.4-0.6 s, 28 s before); status tag only for the zone being solved; Toronto edit 2.3 s. notes/T-326.md.
+
+- T-326 [P2] Loading fix 3 (T-303 item 3). Done 2026-10-15 in three stages: separate clusters solve separately (stage 1: unchanged clusters keep their result, a Toronto edit's final 28.5 s to 4.5 s), stages 2 and 3 as T-392; figures identical to the bit. notes/T-326.md.
+
+- T-394 [P2] Pack reach and the ride. Closed 2026-10-15 with no code change: a station only a ride (5-15 km) from an unopened zone adds none of its riders (work end walks), so the 4.5 km reach stays; comments and docs corrected. notes/T-394.md.
+
 - T-327 [P2] Loading fix 4 (T-303 item 4). Done 2026-10-15: clicks during the startup solve are answered at the next round boundary (station clicks 4-6 s, 9-10 s before the first estimate, instead of 17-28 s), startup rounds in step across workers; finals unchanged. notes/T-327.md.
 
 - T-391 [P3] Crossover polish. Done 2026-10-15: a diagonal's inspector is titled Crossover with no corner or level controls and prices both diagonals; Construct on either builds both (sim); no flyover offer at a crossover end; delete hover draws both red. docs/ui-building.md.

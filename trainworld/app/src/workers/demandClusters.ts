@@ -25,6 +25,8 @@ export interface Cluster {
   market: boolean;
   /** its own network: the cluster's stations (ascending snapshot order) and lines (snapshot order) */
   net: DemandNetwork;
+  /** its lines' indices in the whole network (ascending) */
+  lines: Uint32Array;
   /** snapshot station -> station of `net`, or -1 */
   stLocal: Int32Array;
   /** route node of `net` -> route node of the whole network */
@@ -182,5 +184,5 @@ function subNetwork(n: DemandNetwork, lineOff: Uint32Array, cities: CityId[], ma
   });
   const net: DemandNetwork = { frame: n.frame, stXY, complex, lineN, stops, times, tph, cars, fare: n.fare, hopKm };
   const sig = hashOf([`${cities.join(",")}|${market}|${rounds}|${n.fare.base}|${n.fare.perKm}|${frameKey}`, stXY, complex, lineN, stops, times, tph, cars, hopKm]);
-  return { cities, market, net, stLocal, nodeGlobal, nodeLocal, sig };
+  return { cities, market, net, lines: Uint32Array.from(lines), stLocal, nodeGlobal, nodeLocal, sig };
 }

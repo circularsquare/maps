@@ -112,7 +112,9 @@ Web first, so it can be shared as a link.
 - **Only final results replace final results** [T-232, T-324]: after an edit every figure keeps the
   last finished forecast until the new solve's last round lands; earlier rounds are shown only where
   nothing final is (startup, a whole-game load, a city just opened), and for lines new or changed by
-  the edit, which take the free-flow estimate's riders as soon as it lands. What the player sees:
+  the edit, which take the free-flow estimate's riders as soon as it lands. A cluster solved ahead
+  of the rest of its solve replaces its own figures with its final as soon as it is done [T-392].
+  What the player sees:
   [ui-panels.md](ui-panels.md) "Loading".
 - **Loading and readiness** [T-149, T-172, T-180, T-243, T-347, T-351]: input is never blocked. A
   loaded game holds only the clock until every needed city is open and the fresh solve's final

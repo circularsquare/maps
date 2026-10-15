@@ -115,6 +115,11 @@ export const demandUpdating = signal(false);
 /** How far that solve has got: results published so far (the free-flow estimate, then each
  * crowding round) of all it will publish. */
 export const demandStep = signal({ done: 0, of: 4 });
+/** T-392: the zones the running solve has still to finish (each cluster's land as it is solved);
+ * null until the workers say, then read as every zone */
+export const demandSolving = signal<Set<CityId> | null>(null);
+/** A solve is running that will still change the figures of the zone in view. */
+export const viewUpdating = computed(() => demandUpdating.value && (demandSolving.value?.has(activeCity.value) ?? true));
 
 /** The mode-split bar's numbers: the viewed zone's own figures (a solve's, or the bare pass's for a
  * zone no station reaches), null until it has them and over dead space (T-318). */

@@ -87,8 +87,9 @@ rows (name, cash, time and speed over the split).
   the buttons stay at the top left). It appears and goes in one step and moves nothing; the whole
   text is its hover. On a map column under 520 px the tag takes a second row under the buttons,
   kept whether or not it shows, with the search glass, the stations full alert and the selection bar
-  under it. While a solve runs after an edit, "Updating demand
-  2/4…" and the split faded, the figures held [T-232], and the same while a reload shows the cached
+  under it. While a solve runs after an edit that changes the zone in view's figures, "Updating
+  demand 2/4…" and the split faded, the figures held [T-232]; a zone the edit does not touch, or
+  whose cluster is already done, shows neither [T-392]; and the same while a reload shows the cached
   figures from the last time the game was open, with a hover saying so [T-328]; during startup's
   refinement "Estimate, refining 2/4…"; a city loading later "Loading data" with a thin bar after it
   (Loading, below).

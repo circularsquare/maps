@@ -122,8 +122,8 @@ packs, `..\venv\Scripts\python.exe`). Details and build orders: `docs/code-map.m
   rule updates its entry in `docs/demand-worldwide.md`.
 - **Intercity demand**: retune plus commutes between cities (2026-10-13, option 2 of
   `research/intercity-review.md`), in a world of zones (T-276). Plausible is the bar.
-- **Content first** (2026-10-10). Pick content and gameplay; performance work stays parked until
-  Anita reports a problem (open report: a bubble click waits for a running re-solve, T-122).
+- **Performance is open work** (2026-10-15, replacing "content first"): quantify each item's impact
+  and do the high-impact ones and those that let the game scale to hundreds of cities first.
 - **Live feel** (2026-10-13): a figure that would change often if every train and passenger were
   simulated (money, riders, waiting counts) moves smoothly, not once an hour.
 - **Every drawn quantity has a tooltip** (2026-10-12): anything encoding a number on the map or in

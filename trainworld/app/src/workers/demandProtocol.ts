@@ -62,7 +62,9 @@ export type ToDemand =
       /** T-327: start each crowding round only once `go` allows it */
       barrier?: boolean;
       /** T-326 `?perfOff=clusters`: solve the network as one cluster */
-      whole?: boolean }
+      whole?: boolean;
+      /** T-393: the city in view: its cluster is solved first */
+      first?: CityId }
   /** T-327: every worker has finished `round - 1` of `version`, so this worker may start `round`.
    * A worker ahead waits at the boundary holding its last round, so every worker holds the round
    * after the published one at some moment, and a question about it can be answered (the final
@@ -183,7 +185,14 @@ export type FromDemand =
       ms: number;
       setupMs: number;
       memBytes: number;
+      /** T-392: one cluster's final figures alone, sent the moment it is solved while the solve goes
+       * on with other clusters: its cities (only theirs in `citySummary`), whether the market is in it
+       * (else the intercity fields are empty), its lines (indices into the network's); every array
+       * still the whole network's, zero off the cluster */
+      cluster?: { cities: CityId[]; market: boolean; lines: Uint32Array };
     }
+  /** T-392: at a solve's start, the cities of each cluster it solves (in order) and of those it keeps */
+  | { kind: "plan"; version: number; solving: CityId[][]; kept: CityId[] }
   /** `clusters` (T-326): how many kept their result, and how many were solved */
   | { kind: "done"; version: number; memBytes: number; clusters?: [number, number] }
   /** a worker's `sub_sums` for one city once all its periods have `round` (sent unasked, T-119) */

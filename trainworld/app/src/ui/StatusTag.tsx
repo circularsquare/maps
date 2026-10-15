@@ -2,7 +2,7 @@
 // small tag on the map's top row, to the right of the demand buttons. It appears and goes in one step.
 // Its hover says more.
 
-import { demandStep, demandUpdating, demandView } from "../game/demand";
+import { demandStep, demandView, viewUpdating } from "../game/demand";
 import { cityNames, demandIdle, loadFailure, loadProgress } from "../game/loading";
 import { CACHE_VERSION } from "../workers/demandCache";
 import { LoadBar, loadingCardShown } from "./LoadingScreen";
@@ -21,7 +21,7 @@ export function StatusTag() {
     : !demandView.value ? (demandIdle.value ? null : "Loading data…") // T-318: nothing to load over dead space
     // T-232: figures before a solve's final round are shown only where nothing final is, and say so
     : !demandView.value.final ? `Estimate, refining ${Math.min(step.done + 1, step.of)}/${step.of}…`
-    : demandUpdating.value ? `Updating demand ${Math.min(step.done + 1, step.of)}/${step.of}…` : null;
+    : viewUpdating.value ? `Updating demand ${Math.min(step.done + 1, step.of)}/${step.of}…` : null;
   if (!busy) return null;
   const tip = loadFailure.value ?? (load && !loadingCardShown() ? `Loading ${cityNames(load.cities)}, ${Math.floor(load.fraction * 100)}%. ${load.step}`
     : !demandView.value ? busy
