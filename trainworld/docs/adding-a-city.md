@@ -43,7 +43,8 @@ Logs, check outputs and images go in `../artifacts/trainworld/` (from the maps r
 - **Reference figures with sources**, gathered before the build, never from memory: population
   (census), jobs in the core and in all, the commute mode share, one real line's daily riders.
   Look for population and jobs by district (for the `population` and `jobs` hooks) before the
-  first build too: Shanghai found its jobs table late and built twice (T-291).
+  first build too, and print GHSL's total in each unit against its census figure: Shanghai found
+  its jobs table late and Mumbai its mismatched talukas late, and each built twice (T-291, T-292).
 - Take the task line in TASKS.md (`taking, <date>`), start `notes/T-###.md`.
 
 ## 2. Back up
@@ -281,7 +282,7 @@ real pack in notes/T-287.md):
 | Home end | LODES RAC x ACS work from home | commuters by tract of residence (98-10-0480-01) plus at-home workers commuting again | population x commuters a resident |
 | Work from home | ACS 2019-2023 by tract and industry | Labour Force Survey May 2024 (24.7%, Toronto CMA), at both ends | one national share from the config (default 0) |
 | Everyday destinations | LODES retail, service, food, leisure sectors | OSM shops and services; restaurants, bars, venues, hotels (Geofabrik extract) | the same OSM places, per cell |
-| Gravity curve | fitted on LODES OD (T-198) | fitted on census flows between municipalities (98-10-0459-01; `notes/t277_fit.py`) | power 1.4 with the length fitted to a published median or mean commute (`tier0.fit_curve`), or borrowed from a fitted city; a country's flow table, fitted (London) |
+| Gravity curve | fitted on LODES OD (T-198) | fitted on census flows between municipalities (98-10-0459-01; `notes/t277_fit.py`) | power 1.4 with the length fitted to a published median or mean commute (`tier0.fit_curve`), or borrowed from a fitted city; a country's flow table, fitted (London); both parameters fitted to commuters by distance band (`tier0.fit_curve_bands`, Mumbai) |
 | Regions, border | states, 0.23 | provinces, factor 1 | one region, factor 1 |
 | Drawn boundary | TIGER/Line counties, water included (T-352) | cartographic census subdivisions, clipped at the shore (hugs Lake Ontario) | the config's district polygons (a GeoJSON, or a callable that writes one: London's whole ITL3 units, `england.itl3_boundary`) |
 | Water | TIGER AREAWATER and states | StatCan lakes and rivers; land = cartographic municipalities plus US states | OSM: `osm_water.source([extracts])` as the config's `water_source` (below) |
@@ -350,6 +351,15 @@ Baoshan) are rebuilt from admin_level 8 units or as the province's remainder. Po
 jobs are scaled to district tables from the city statistics bureau's census bulletins (the
 economic census's bulletin no. 1 has employment by district): look for both before the first
 build. Places show `name:en` or pinyin where OSM has it (`"latin_names"`).
+
+Mumbai (`mum`, T-292, `pipeline/india.py`) took about 40 minutes: the western zone extract read in
+38 s (features) and 64 s (water), the build 3 minutes, `routes.py` 96 s. Units are OSM district
+and taluka relations by name; the census tables (Primary Census Abstract per district, A-2, B-28)
+are on censusindia.gov.in/nada (certificate checks off for that host only). Compare GHSL with each
+unit's census total on the first build's log: where OSM's lines between units do not follow the
+census's, scale those units as one group. A census table of commuters by distance band fits both
+curve parameters (`"curve": {"bands": ..., "road_factor": ...}`, `tier0.fit_curve_bands`, about
+100 s in the build).
 
 What was hard, for the next country:
 

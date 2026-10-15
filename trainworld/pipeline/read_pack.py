@@ -197,6 +197,15 @@ WATER_TESTS = {
         False: {"People's Square": (121.4737, 31.2304), "Lujiazui": (121.5050, 31.2400), "Pudong airport": (121.8080, 31.1500),
                 "Hongqiao station": (121.3200, 31.1940), "Chongming, Chengqiao": (121.3990, 31.6250), "Hengsha island": (121.84, 31.33)},
     },
+    "mum": {  # T-292: OSM water (Geofabrik India western zone), points taken from the water cache
+        True: {"Mumbai Harbour": (72.8800, 18.9300), "Thane Creek off Vashi": (72.9810, 19.0400),
+               "Thane Creek at Airoli": (72.9750, 19.1290), "Vasai Creek": (72.8300, 19.3260),
+               "Ulhas river at Kalyan": (73.1130, 19.2360), "Vihar Lake": (72.9131, 19.1547), "Powai Lake": (72.9062, 19.1277),
+               "Dharamtar creek": (72.9950, 18.7310), "Arabian Sea off Marine Drive": (72.8100, 18.9400)},
+        False: {"Dadar station": (72.8428, 19.0192), "CSMT": (72.8355, 18.9400), "Thane station": (72.9762, 19.1860),
+                "Vashi station": (72.9989, 19.0632), "Kalyan station": (73.1305, 19.2355), "Panvel": (73.1210, 18.9894),
+                "Mumbai airport": (72.8656, 19.0896)},
+    },
 }
 
 

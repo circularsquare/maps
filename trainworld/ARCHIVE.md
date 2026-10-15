@@ -1,5 +1,6 @@
 # Archive
 
+- T-292 [P2] Mumbai. Done 2026-10-15: 2 districts and 15 talukas tier 0, 28.3M people (2011 census grown by district), proxy jobs half on population, curve d^-1.65 exp(-d/32.7 km) fitted to B-28 bands; Western line test 1.83M riders; outside the market. notes/T-292.md.
 - T-291 [P2] Shanghai. Done 2026-10-15: 16 districts tier 0, population and jobs scaled to the 2020 census and 2023 economic census by district, curve d^-1.4 exp(-d/18.2 km) to the 10.2 km mean; Line 2 test 1.19M riders; outside the market. notes/T-291.md.
 - T-289 [P2] Paris. Done 2026-10-15: Ile-de-France tier 0 with INSEE 2022 jobs by commune (5.99M) and a curve fitted on its commune flows, d^-1.3 exp(-d/20 km); Ligne 1 test 641k riders; outside the market. notes/T-289.md.
 - T-364 [P3] One browser check for tier 0 cities. Done 2026-10-15: `checks/city-browser.mjs <id>` with a row per city (London, Paris) replaces `t288-browser.mjs`. notes/T-289.md.

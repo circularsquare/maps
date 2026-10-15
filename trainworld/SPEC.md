@@ -87,11 +87,15 @@ that equals a solve's to the bit, so panning never re-solves [T-325].
   (the municipality's 16 districts, Chongming included: 24.9M people), tier 0 with population
   and jobs scaled to each district's census totals (2020 population census, 2023 economic census)
   and the curve's length fitted to the published mean commute, place names in Latin script where
-  OSM has them, on UTC+8, outside the market [T-291].
+  OSM has them, on UTC+8, outside the market [T-291]; **Mumbai** (the metropolitan region as
+  Mumbai's two districts and 15 whole talukas: 28.3M people), tier 0 with population scaled to
+  2011 census sub-district totals grown to 2020 by district, half the jobs proxy on population
+  (informal work), the census's no-travel workers at home, and both curve parameters fitted to
+  the 2011 census commute distance bands, on UTC+5, outside the market [T-292].
 - **Non-city zones**: Worcester, Windham, New London and Litchfield Counties. Modelled space stays
   between city zones, with no ring round each city, for now (Anita, T-300).
 - **City additions** in the US are paused; a **sampler of other countries' cities** comes next
-  (London, Paris and Shanghai built; Mumbai, Berlin next), each a low-fidelity first pass from general sources
+  (London, Paris, Shanghai and Mumbai built; Berlin next), each a low-fidelity first pass from general sources
   (`research/world-sampler.md`). **Cells** are H3 resolution 9 (about 0.1 km²).
 
 ## 4. Demand: local trips

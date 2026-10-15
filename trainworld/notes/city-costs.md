@@ -12,3 +12,4 @@ tokens (2026-10-14, coarse: the meter shows whole percents).
 | London | T-360 stage b | Opus | 74 min | 3.53M | six wakes after idle waits, 36% | England's official inputs; found the zones_of bug |
 | Paris | T-289 | Opus | 32 min | about 2.8M | one wake after a 10-minute foreground browser check (261k) | tier 0 plus INSEE jobs and curve; first city after T-363 |
 | Shanghai | T-291 | Opus | 31 min | about 3.5M | built twice (district jobs found after the first build); one 276k wake | tier 0 plus census population and economic census jobs by district |
+| Mumbai | T-292 | Opus | 32 min | about 3.2M | built twice (OSM talukas off the 2011 lines) | tier 0, 2011 census grown to 2020, curve fitted on B-28 bands |

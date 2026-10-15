@@ -147,6 +147,31 @@ Tier 0 with district totals; notes/T-291.md has the tables.
 - **OSM is thinner**: 10 airport terminals, one hospital with beds, 18k job points and 22k job areas
   for 25M people, 551 medical sites; medical and everyday destinations are likely short; not checked.
 
+## India (Mumbai, `pipeline/india.py`, T-292, 2026-10-15)
+
+Tier 0 with sub-district totals and a curve fitted to distance bands; notes/T-292.md has the tables.
+
+- **Units**: OSM boundary relations by name, districts at admin_level 5 and talukas at 6. OSM's lines
+  between neighbouring talukas need not follow the 2011 ones (Kalyan, Bhiwandi, Ulhasnagar and
+  Ambarnath): where GHSL's share of a unit is far off its census share but a group's sum agrees,
+  the group is scaled as one (`india.GROUPS`). SHRUG's PC11 polygons are non-commercial: checks only.
+- **Population**: the latest census is 2011. Its Primary Census Abstract by sub-district (one
+  workbook a district on censusindia.gov.in/nada), grown to 2020 by each district's 2001-2011
+  growth (table A-2), GHSL inside each. GHSL's total is within 3% of that, but it has the island
+  city 14% high and the fast-growing Thane suburbs 10-24% low.
+- **Jobs**: no workplace table; the proxy with population 0.5 of the blend (`job_blend`) for
+  informal and home-based work. It gives Greater Mumbai 45% of jobs, below its 52% share of the
+  2011 workers by residence, and overdraws port and industrial talukas (Uran, Khalapur, Palghar).
+- **Curve**: Census 2011 table B-28 ('other workers' by distance band and mode, by district) for
+  the pack's districts; both parameters fitted (`tier0.fit_curve_bands`), the reported distances
+  read as travel distance and divided by 1.3: d^-1.65 exp(-d/32.7 km). Every Indian district has
+  this table, so this is the rule for India.
+- **Work from home**: B-28's 'no travel' share of other workers (20.1% in Mumbai's districts).
+- **Airports**: the operator's yearly total via the press (passengers / 2) through `boardings`.
+- **Names**: OSM `name` is usually already Latin in Maharashtra (12 places of 1,460 had `name:en`).
+- **OSM is thin**: 803 school sites for 6.2M pupils, one hospital with beds (so every hospital takes
+  the median), a median drive factor of 1.62 between near zones (creeks and hills).
+
 ## Homes (docs/demand.md 4.1)
 
 - **People in institutions are not homes** (T-234). The US packs take the 2020 census's

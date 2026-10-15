@@ -50,6 +50,12 @@ VIEWS = {
         ("Dianshan Lake, Qingpu", 120.98, 31.12, 12.0),
         ("Pudong's coast and Dishui Lake", 121.90, 30.92, 16.0),
     ],
+    "mum": [  # T-292
+        ("Mumbai Harbour and the island city", 72.88, 18.96, 16.0),
+        ("Thane Creek, Vashi to Thane", 72.98, 19.10, 14.0),
+        ("Vasai Creek and the Ulhas river to Kalyan", 73.00, 19.27, 24.0),
+        ("Powai, Vihar and Tulsi lakes", 72.91, 19.16, 8.0),
+    ],
 }
 
 

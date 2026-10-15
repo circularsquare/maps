@@ -294,6 +294,28 @@ CITIES = {
         "region_name": "Shanghai",
         "latin_names": True,  # places.py: name:en, then name:zh-Latn-pinyin, then name (T-291)
     },
+    "mum": {
+        "tier0": True,
+        "origin": (72.8428, 19.0192),  # Dadar station
+        "water": {"cell_m": 25.0, "min_width_px": 2},
+        "boundary_notes": "notes/T-292.md",
+        # Mumbai City and Suburban districts and 15 talukas of Thane, Palghar and Raigad, whole (india.MUMBAI)
+        "boundary_file": lambda: __import__("india").boundary_file("mum"),
+        "population": lambda city, boundary, sig: __import__("india").census_population(city, boundary, sig),
+        # informal and home-based work: half the proxy by population (T-292)
+        "job_blend": {"nres": 0.2, "osm": 0.3, "pop": 0.5},
+        # B-28's 'no travel' share of other workers in the four districts (T-292)
+        "wfh": 0.201,
+        "water_source": lambda bbox: __import__("osm_water").source(["asia/india/western-zone"])(bbox),
+        "extract": "asia/india/western-zone",
+        "iso2": "IN",
+        # both parameters fitted to Census 2011 B-28 distance bands, taken as road distance (T-292)
+        "curve": {"bands": lambda: __import__("india").b28_bands("mum"), "road_factor": 1.3},
+        # MIAL's calendar 2025 total via the press (notes/T-292.md): passengers / 2
+        "boardings": {"VABB": (55500000 / 2, "2025, MIAL via press")},
+        "region_name": "Mumbai",
+        "latin_names": True,
+    },
     # T-276: non-city zones (docs/zones.md 2): one county each, the counties that touch two city
     # zones. Same sources and cells as a city; `kind` "zone" in the registry.
     "wor": {

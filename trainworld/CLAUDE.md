@@ -78,7 +78,8 @@ Briefs carry only the task; these hold for every agent.
   the rest as tasks, hand back. Compacting means the task was sized too big.
 - **Keep your context lean** (T-288's retrospective): each step re-reads your whole conversation,
   and waking after more than about 5 idle minutes re-caches all of it (29% of London's cost). Wait
-  for a long job with one background wait, not progress polling, and never wait in the foreground
+  for a long job with one background wait on the process ending (not on a log line, which a script
+  may never print: T-292), not progress polling, and never wait in the foreground
   for more than about 4 minutes (T-289, T-291: each such wait cost about 270k); do other work meanwhile. Start
   independent long jobs together and wait once (T-360: six separate waits were still 36%). Write
   long logs to a file and read summaries; read doc sections, not whole files; grep TASKS.md.
@@ -102,8 +103,8 @@ packs, `..\venv\Scripts\python.exe`). Details and build orders: `docs/code-map.m
 ## Working here (Anita's decisions)
 
 - **The goal is the whole world; demand realism is core** (2026-10-13). New US cities stay paused.
-  Instead a sampler of other countries' cities (Toronto done; London, Paris and Shanghai at tier 0
-  with their country's inputs; Mumbai next, then Berlin) to learn which demand methods work everywhere. Each is a
+  Instead a sampler of other countries' cities (Toronto done; London, Paris, Shanghai and Mumbai at tier 0
+  with their country's inputs; Berlin next) to learn which demand methods work everywhere. Each is a
   low-fidelity first pass: missing data (medical, say) is left out, extents pragmatic, basic
   checks, no deep calibration. The global build is the baseline everywhere; the reach goal is
   tailoring country by country, first for likely-popular countries (China, Japan, the UK, Germany

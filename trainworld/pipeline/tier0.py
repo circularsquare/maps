@@ -38,7 +38,9 @@ census or registers then upgrade single inputs by replacing one function. What e
   water).
 - Gravity curve: the config's "decay_pow"/"decay_km" if given (borrowed from a fitted city), else
   the length fitted so the model's median commute (straight line between 2 km zones) matches the
-  config's published figure ("curve": {"median_km" or "mean_km", "pow"}), fit_curve below.
+  config's published figure ("curve": {"median_km" or "mean_km", "pow"}), fit_curve below; or
+  both parameters fitted to a census table of commuters by distance band ("curve": {"bands",
+  "road_factor"}), fit_curve_bands.
 - Regions: one region, no border factor.
 
 Config keys (a CITIES entry with "tier0": True): origin, water, boundary_file (GeoJSON, any
@@ -49,7 +51,8 @@ working at home, optional), jobs (callable (city, boundary, signals, proxy weigh
 inside each area by the proxy; jobs_url), population (callable (city, boundary, signals) ->
 (people per signal cell, source name), optional: census counts by small area), od_share ({OurAirports ident: share}, optional), boardings ({OurAirports
 ident: (boardings a year, "year, source")}, optional: a national figure in place of Wikidata's), curve or
-decay_pow/decay_km, region_name (optional), epoch (GHSL epoch, default 2020).
+decay_pow/decay_km, region_name (optional), epoch (GHSL epoch, default 2020), job_blend (the proxy's
+blend in place of JOB_BLEND, optional: a larger population share where much work is informal).
 """
 import os
 os.environ.setdefault("OMP_NUM_THREADS", "2")
@@ -475,6 +478,65 @@ def fit_curve(x_m, y_m, home, work, target, pw=DEFAULT_CURVE_POW):
     return pw, round(km, 1)
 
 
+def fit_curve_bands(x_m, y_m, home, work, target):
+    """Both parameters (power, length) fitted to a census table of commuters by distance band
+    (T-292, India's B-28): the model's share of trips in each band against the table's, by the
+    Kullback-Leibler divergence, between 2 km zones. target["bands"]: a callable returning (band
+    edges in km, commuters per band, ...); target["road_factor"] divides reported (travel)
+    distances into straight-line ones (default 1, for a table already straight-line)."""
+    edges, counts = target["bands"]()[:2]
+    edges = np.asarray(edges, np.float64) / target.get("road_factor", 1.0)
+    obs = np.asarray(counts, np.float64) / sum(counts)
+    zone, gx, gy = zones_of(x_m, y_m)
+    H = np.bincount(zone, weights=home)
+    J = np.bincount(zone, weights=work)
+    d = zone_distances(gx, gy)
+    band = np.clip(np.searchsorted(edges, d.ravel(), side="right") - 1, 0, len(obs) - 1)
+
+    def shares(pw, km):
+        w = gravity(H, J, d, pw, km).ravel().astype(np.float64)
+        return np.bincount(band, weights=w, minlength=len(obs)) / w.sum()
+
+    def kl(pw, km):
+        m = np.maximum(shares(pw, km), 1e-12)
+        return float((obs * np.log(obs / m)).sum())
+
+    def best_km(pw):
+        g = (math.sqrt(5) - 1) / 2
+        a, c = math.log(2.0), math.log(300.0)
+        x1, x2 = c - g * (c - a), a + g * (c - a)
+        f1, f2 = kl(pw, math.exp(x1)), kl(pw, math.exp(x2))
+        for _ in range(14):
+            if f1 < f2:
+                c, x2, f2 = x2, x1, f1
+                x1 = c - g * (c - a)
+                f1 = kl(pw, math.exp(x1))
+            else:
+                a, x1, f1 = x1, x2, f2
+                x2 = a + g * (c - a)
+                f2 = kl(pw, math.exp(x2))
+        km = math.exp((a + c) / 2)
+        return km, kl(pw, km)
+
+    fits = {round(pw, 2): best_km(pw) for pw in np.arange(0.2, 2.41, 0.2)}
+    p0 = min(fits, key=lambda p: fits[p][1])
+    for pw in np.arange(p0 - 0.15, p0 + 0.151, 0.05):
+        if pw > 0 and round(pw, 2) not in fits:
+            fits[round(pw, 2)] = best_km(pw)
+    for pw in sorted(fits):
+        print(f"  bands fit: d^-{pw:g} best length {fits[pw][0]:.1f} km, KL {fits[pw][1]:.4f}", flush=True)
+    pw = min(fits, key=lambda p: fits[p][1])
+    km = fits[pw][0]
+    if DEFAULT_CURVE_POW not in fits:
+        fits[DEFAULT_CURVE_POW] = best_km(DEFAULT_CURVE_POW)
+    for label, (p, k) in (("fitted", (pw, km)), (f"power {DEFAULT_CURVE_POW:g}", (DEFAULT_CURVE_POW, fits[DEFAULT_CURVE_POW][0]))):
+        mean, med = trip_stats(gravity(H, J, d, p, k), d)
+        print(f"curve {label}: d^-{p:g} exp(-d/{k:.1f} km), KL {kl(p, k):.4f}, band shares "
+              + " ".join(f"{s:.3f}" for s in shares(p, k)) + f" against " + " ".join(f"{s:.3f}" for s in obs)
+              + f"; model mean {mean:.1f} km, median {med:.1f} km over {len(H):,} zones", flush=True)
+    return float(pw), round(km, 1)
+
+
 # ---------------------------------------------------------------- build
 
 def main(city):
@@ -491,16 +553,17 @@ def main(city):
         sig["pop"], pop_name = cfg["population"](city, boundary, sig)
     P = float(sig["pop"].sum())
     wfh = cfg.get("wfh", 0.0)
-    blend = ", ".join(f"{k} {v:.0%}" for k, v in JOB_BLEND.items())
+    job_blend = cfg.get("job_blend", JOB_BLEND)
+    blend = ", ".join(f"{k} {v:.0%}" for k, v in job_blend.items())
     proxy = f"spread by {blend} (GHSL GHS-BUILT-V NRES x (height / 10 m)^{HEIGHT_POW}, OSM job places, population)"
     if cfg.get("jobs"):
-        jobs, jobs_name = cfg["jobs"](city, boundary, sig, jobs_from(sig, 1.0))
+        jobs, jobs_name = cfg["jobs"](city, boundary, sig, jobs_from(sig, 1.0, job_blend))
         jobs_name += f", {proxy} inside each unit"
         J = float(jobs.sum())
         jpr = J / P
     else:
         J = P * jpr
-        jobs = jobs_from(sig, J)
+        jobs = jobs_from(sig, J, job_blend)
         jobs_name = f"tier 0 proxy: population x {jpr:.3f} jobs a resident (World Bank SL.EMP.TOTL.SP.ZS x 15+ share, {wb_year}), {proxy}"
     pop = sig["pop"]
     work_c = jobs * (1 - wfh)
@@ -514,7 +577,9 @@ def main(city):
     y = b.R_EARTH * np.radians(sig["lat"][keep] - lat0)
     print(f"tier 0: {len(cells):,} cells, pop {P:,.0f}, jobs {J:,.0f} ({jpr:.3f} a resident, World Bank {wb_year}), "
           f"commuters {work_c.sum():,.0f} (work from home {wfh:.1%})", flush=True)
-    if "decay_km" not in cfg:
+    if "decay_km" not in cfg and "bands" in cfg["curve"]:
+        cfg["decay_pow"], cfg["decay_km"] = fit_curve_bands(x, y, home_c[keep], work_c[keep], cfg["curve"])
+    elif "decay_km" not in cfg:
         cfg["decay_pow"], cfg["decay_km"] = fit_curve(x, y, home_c[keep], work_c[keep], cfg["curve"], cfg["curve"].get("pow", DEFAULT_CURVE_POW))
     cfg.setdefault("border_factor", 1.0)
     totals = {"pop": int(round(P)), "jobs": int(round(jobs.sum())),

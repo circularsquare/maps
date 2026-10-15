@@ -287,6 +287,22 @@
       "localTrips": 60497535.0
     },
     {
+      "id": "mum",
+      "name": "Mumbai",
+      "origin": {
+        "lon": 72.8428,
+        "lat": 19.0192
+      },
+      "center": [
+        72.8428,
+        19.0192
+      ],
+      "zoom": 11.2,
+      "utcOffset": 5,
+      "market": -1,
+      "localTrips": 60785715.0
+    },
+    {
       "id": "wor",
       "name": "Worcester County",
       "kind": "zone",

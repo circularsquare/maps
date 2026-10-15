@@ -44,6 +44,18 @@ const CITIES = {
       ['Lujiazui', 121.4981, 31.2401], ['Century Avenue', 121.5228, 31.2310], ['Science and Technology Museum', 121.5387, 31.2219],
       ['Century Park', 121.5467, 31.2108], ['Longyang Road', 121.5535, 31.2052]],
   },
+  mum: {
+    // T-292: the Western line from Churchgate to Andheri at its OSM station nodes (Santacruz placed
+    // by hand); the water pair across Thane Creek, Mankhurd to Vashi, checked on the water cache
+    task: 'T-292', name: 'Mumbai', centre: [72.8428, 19.0192], water: [[72.9400, 19.0500], [73.0000, 19.0700]],
+    lineName: 'Western line test', colour: '#e4002b', view: [72.84, 19.03],
+    line: [['Churchgate', 72.8272, 18.9355], ['Marine Lines', 72.8237, 18.9458], ['Charni Road', 72.8182, 18.9518],
+      ['Grant Road', 72.8158, 18.9634], ['Mumbai Central', 72.8193, 18.9696], ['Mahalaxmi', 72.8242, 18.9825],
+      ['Lower Parel', 72.8303, 18.9957], ['Prabhadevi', 72.8359, 19.0075], ['Dadar', 72.8428, 19.0192],
+      ['Matunga Road', 72.8467, 19.0278], ['Mahim', 72.8466, 19.0407], ['Bandra', 72.8402, 19.0550],
+      ['Khar Road', 72.8400, 19.0682], ['Santacruz', 72.8410, 19.0810], ['Vile Parle', 72.8440, 19.0999],
+      ['Andheri', 72.8464, 19.1197]],
+  },
 };
 
 async function playwright() {
