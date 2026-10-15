@@ -1,5 +1,7 @@
 # Archive
 
+- T-403 [P2] Worker checks stale since T-326/T-392. Done 2026-10-15: `t066-worker-check` and `t149-worker-check` take the solve's final (results without `cluster`), and t066 also checks the plan, the cluster results' count and that their figures match the final's per city.
+
 - T-395 [P2] Everyday destination slots only where a purpose has a budget. Done 2026-10-15: samples and `edge_pair` New York 108 to 57 MB natively, nine cities' everyday heap 448 to 276 MB a worker; every output identical to the byte. notes/perf-survey.md 3.
 
 - T-178 [P3] Everyday layer memory per open city. Closed 2026-10-15: covered by T-395 (done, -172 MB a nine-city worker natively) and T-397 (open, fewer samples in sparse cells).

@@ -64,7 +64,9 @@ const BY_ROUND = new Set<Query["kind"]>(["station", "flowRail", "purposes", "icS
 type Population = DemandApi | EverydayApi | IntercityApi;
 /** T-326: the network in hand's clusters, each with its populations (cities, their everyday
  * layers, the market: the order their loads are added in), and the whole network's route nodes */
-type JobCluster = Cluster & { pops: Population[] };
+/** `pops` in the order their figures are added up; `solveOrder` the same populations in the order
+ * they are set up and solved (it changes no figure) */
+type JobCluster = Cluster & { pops: Population[]; solveOrder: Population[] };
 let jobClusters: JobCluster[] = [];
 let jobNodes = 0;
 /** T-326: the cluster `sig` each population holds every one of this worker's periods solved for,
@@ -576,6 +578,13 @@ async function run() {
         ...c.cities.map((id) => cities.get(id)!),
         ...jobEveryday.filter(([id]) => c.cities.includes(id)).map(([, e]) => e),
         ...(c.market && regional ? [regional] : []),
+      ], solveOrder: [
+        // the order the packs opened in (the viewed zone's first): solved in registry order instead,
+        // the real save's startup took 8-9 s longer (T-392), through the caches the populations of
+        // a worker share (routed walks, strategy skims; T-405); the order changes no figure
+        ...[...cities.keys()].filter((id) => c.cities.includes(id)).map((id) => cities.get(id)!),
+        ...[...everyday.keys()].filter((id) => c.cities.includes(id) && jobCities.has(id)).map((id) => everyday.get(id)!),
+        ...(c.market && regional ? [regional] : []),
       ] }));
       const dirty = jobClusters.filter((c) => c.pops.some((p) => held.get(p) !== c.sig));
       // T-393: the cluster of the city in view first
@@ -591,7 +600,7 @@ async function run() {
       const late = job.barrier ? dirty : [];
       const setUp = (c: JobCluster) => {
         const m = c.net;
-        for (const p of c.pops) {
+        for (const p of c.solveOrder) {
           held.delete(p);
           const city = p === regional ? null : c.cities.find((id) => cities.get(id) === p || everyday.get(id) === p)!;
           const xy = m.stXY.slice();
@@ -641,7 +650,7 @@ async function run() {
           total = new Float32Array(3 * nr);
           total.set(sum(c, a => a.seg(q)), 0); total.set(sum(c, a => a.board(q)), nr); total.set(sum(c, a => a.alight(q)), 2 * nr);
         }
-        for (const a of c.pops) {
+        for (const a of c.solveOrder) {
           if (total === null) a.solve(q);
           else if (!a.crowd_with_external(q, total)) throw new Error("shared crowding layout disagrees");
           // a population's pass is up to a second of one call: let a waiting query or a newer
@@ -722,7 +731,8 @@ async function run() {
         setupMs = 0;
       }
       if (!stale) for (const c of late) setUp(c);
-      for (let round = 0; round <= job.rounds && !stale; round++) {
+      // with the barrier only: without it the results were sent just above
+      for (let round = 0; job.barrier && round <= job.rounds && !stale; round++) {
         // T-327: a worker ahead holds its last round until every worker has finished it
         while (job.barrier && round > 0 && !pending && !(go.version > job.version || (go.version === job.version && go.round >= round))) {
           await new Promise<void>((r) => (wake = r));

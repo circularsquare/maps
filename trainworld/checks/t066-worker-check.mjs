@@ -40,8 +40,34 @@ const net={frame:{kind:'equirectangular',lon:-73.985,lat:40.758},stXY:new Float3
 w.postMessage({kind:'solve',version:1,net,rounds:1});
 await next(m=>m.kind==='done'||m.kind==='failed');
 const failure=messages.find(m=>m.kind==='failed');assert(!failure,failure?.error);
-const results=messages.filter(m=>m.kind==='result'&&m.summary[0]===1);
+// A solve sends the plan, then one cluster result per period for each cluster but the last (T-392),
+// then the final: results without `cluster`, one per period and round, then done. The worker
+// currently sends the final's rounds twice (the generic round loop runs after the early path), so the
+// last result of each period stands for the final.
+const finalMsgs=messages.filter(m=>m.kind==='result'&&!m.cluster&&m.version===1&&m.summary[0]===1);
+const results=[...new Map(finalMsgs.map(m=>[m.period,m])).values()];
 assert.equal(results.length,5);
+const plan=messages.find(m=>m.kind==='plan'&&m.version===1);
+assert(plan&&plan.solving.length>0,'no plan');
+const perCluster=messages.filter(m=>m.kind==='result'&&m.cluster&&m.version===1);
+assert.equal(perCluster.length,5*(plan.solving.length-1),'one cluster result per period for each cluster but the last');
+// per period the cluster results are disjoint and each one's figures are the final's for its cities;
+// with the last cluster (sent only in the final) they cover every city of the final
+for(const final of results){
+  const mine=perCluster.filter(m=>m.period===final.period);
+  const seen=new Set();
+  for(const m of mine){
+    for(const c of m.cluster.cities){assert(!seen.has(c),`period ${final.period}: ${c} in two clusters`);seen.add(c);assert.deepEqual(m.citySummary[c],final.citySummary[c],`period ${final.period} ${c}`);}
+    assert.deepEqual(Object.keys(m.citySummary).sort(),[...m.cluster.cities].sort());
+    if(m.cluster.market)assert.deepEqual(m.intercitySummary,final.intercitySummary);else assert.equal(m.intercitySummary.length,0);
+    const sum=Object.values(m.citySummary).reduce((a,v)=>a+v[1],0)+(m.cluster.market?m.intercitySummary[1]:0);
+    assert(Math.abs(sum-m.summary[1])<1e-6,`period ${final.period}: cluster total ${m.summary[1]} against ${sum}`);
+  }
+  for(const c of plan.solving.at(-1))assert(!seen.has(c),`period ${final.period}: ${c} is in the last cluster and also sent early`);
+  const finalCities=Object.keys(final.citySummary).sort(),covered=[...seen,...plan.solving.at(-1)].sort();
+  assert.deepEqual(covered.filter(c=>finalCities.includes(c)),finalCities,`period ${final.period}: clusters cover the final's cities`);
+}
+assert.equal(messages.find(m=>m.kind==='done'&&m.version===1).clusters?.[1],plan.solving.length);
 // Every city has the six everyday purposes since T-142 (New York since T-066/T-140/T-152): for
 // each, a selection's purpose/mode/period counts reconcile with its bubble cell sums. The test
 // line is in Manhattan, so the other cities' trips walk or drive.

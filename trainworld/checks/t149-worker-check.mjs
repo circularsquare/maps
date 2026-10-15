@@ -45,7 +45,9 @@ const market = readFileSync(new URL(`../data/packs/${registry.market.pack}.json`
 const times = new Float32Array(18); for (let lev = 0; lev < 3; lev++) { times[lev * 3] = 60; times[lev * 3 + 1] = 60; times[(lev + 3) * 3 + 1] = 60; times[(lev + 3) * 3 + 2] = 60; }
 const net = { frame: { kind: 'equirect', lon: -73.985, lat: 40.758 }, stXY: new Float32Array([0, 0, 4000, 0, 8000, 0]), lineN: new Uint32Array([3]), stops: new Uint32Array([0, 1, 2]), times, tph: new Float32Array([12, 12, 12]), cars: new Float32Array([4]), fare: { base: 1, perKm: .1 }, hopKm: new Float32Array([4, 4, 0, 0, 4, 4]) };
 const ROUNDS = 2;
-const results = (msgs, version) => msgs.filter((m) => m.kind === 'result' && m.version === version && m.summary[0] === ROUNDS).sort((a, b) => a.period - b.period);
+// the solve's final: cluster results (T-392) are the early figures of single clusters; the last
+// result of each period stands for it (the worker sends the final's rounds twice at present)
+const results = (msgs, version) => [...new Map(msgs.filter((m) => m.kind === 'result' && !m.cluster && m.version === version && m.summary[0] === ROUNDS).map((m) => [m.period, m])).values()].sort((a, b) => a.period - b.period);
 const t = () => performance.now();
 
 // before T-149: every pack at init
