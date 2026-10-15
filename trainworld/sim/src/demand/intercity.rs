@@ -24,6 +24,7 @@ use crate::track::{
 };
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
+use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 
 pub const SHARES: [f32; PERIODS] = [0.20, 0.35, 0.25, 0.15, 0.05];
@@ -190,6 +191,15 @@ struct CPair {
 fn commute_params() -> Params {
     Params::default()
 }
+/// The longer trips' choice (`IntercityApi::base` before any fare is set).
+fn market_params() -> Params {
+    Params {
+        beta: 0.025,
+        asc_rail: 0.,
+        fare_min: 0.,
+        ..Params::default()
+    }
+}
 struct Period {
     net: super::network::Network,
     p: Params,
@@ -246,11 +256,13 @@ struct Pass {
     /// laid out by the `XferIndex` the pass was given
     xfer: Vec<f32>,
 }
+/// T-409: the pack's own data is shared (`Rc`) by every market `beside` it; the rest is one
+/// network's.
 #[wasm_bindgen]
 pub struct IntercityApi {
-    city: City,
-    zones: Vec<Zone>,
-    cell_zone: Vec<usize>,
+    city: Rc<City>,
+    zones: Rc<Vec<Zone>>,
+    cell_zone: Rc<Vec<usize>>,
     /// The zone pairs between zones some station serves (T-174), both directions, in the order
     /// the whole market lists them (by lower zone, then higher). Built by `set_network`.
     pairs: Vec<Pair>,
@@ -261,7 +273,7 @@ pub struct IntercityApi {
     /// (origin zone, destination zone) to its index in `pairs`.
     pair_index: HashMap<(u32, u32), u32>,
     /// The all-pairs figures: from the pack, or derived at opening (`from_pack` false).
-    derived: Derived,
+    derived: Rc<Derived>,
     from_pack: bool,
     /// T-128: zone distances on the ground (the pack names its frame), else in its plane
     ground: bool,
@@ -278,13 +290,13 @@ pub struct IntercityApi {
     access_c_walk: Vec<Vec<(usize, f32)>>,
     /// T-373: the sites' 2 km zones (homes and jobs, as the local layer's), whose centres the
     /// rides start from (`access_options`), and those centres
-    kz: Zones,
-    kplace: Vec<(usize, f32, f32)>,
+    kz: Rc<Zones>,
+    kplace: Rc<Vec<(usize, f32, f32)>>,
     /// T-276: commutes between zones: (home zone, work zone, commuters a day), from the pack
-    commutes: Vec<(u32, u32, f32)>,
+    commutes: Rc<Vec<(u32, u32, f32)>>,
     /// per zone, its commutes as the home end and as the work end (CSR offsets and `commutes` indices)
-    c_home: (Vec<u32>, Vec<u32>),
-    c_work: (Vec<u32>, Vec<u32>),
+    c_home: Rc<(Vec<u32>, Vec<u32>)>,
+    c_work: Rc<(Vec<u32>, Vec<u32>)>,
     /// per corridor, commute legs a day (both legs of every commuter)
     c_corridor: Vec<f64>,
     /// the commutes between served zones (built with `pairs`), and each commute's index in it
@@ -299,9 +311,13 @@ pub struct IntercityApi {
     markets: usize,
     daily: f64,
     /// Site of a 600 m square of a market, to find the sites a selection of local cells holds.
-    site_key: HashMap<(i32, i32, usize), usize>,
+    site_key: Rc<HashMap<(i32, i32, usize), usize>>,
     /// The complex of each station of the next `set_network` (T-161, `DemandApi::set_complexes`).
     complex_in: Vec<u32>,
+    /// T-409: per served zone (`served` order), the track components its stations lie in
+    /// (ascending, each named by its lowest demand station): a pair is built only when its zones
+    /// share one, since without a path no rail trip is possible.
+    served_comp: Vec<Vec<u32>>,
 }
 
 impl IntercityApi {
@@ -429,26 +445,31 @@ impl IntercityApi {
     fn per(&self, q: usize) -> Option<&Period> {
         self.per.get(q).and_then(|v| v.as_ref())
     }
-    /// The pairs between the `served` zones (ascending), in the whole market's order (T-174).
-    fn set_served(&mut self, served: Vec<usize>) {
+    /// The pairs between the `served` zones (ascending) joined by track, in the whole market's
+    /// order (T-174, T-409). `comp` is `served_comp` for them.
+    fn set_served(&mut self, served: Vec<usize>, comp: Vec<Vec<u32>>) {
+        let joined = |i: usize, k: usize| comp[i].iter().any(|c| comp[k].binary_search(c).is_ok());
         let mut pairs = vec![];
+        let mut later = vec![];
         for (i, &a) in served.iter().enumerate() {
-            pair_row(&self.zones, self.ground, &self.derived.totals, self.rate, &self.corridor_of, self.markets, a, &served[i + 1..], &mut pairs);
+            later.clear();
+            later.extend((i + 1..served.len()).filter(|&k| joined(i, k)).map(|k| served[k]));
+            pair_row(&self.zones, self.ground, &self.derived.totals, self.rate, &self.corridor_of, self.markets, a, &later, &mut pairs);
         }
         pairs.shrink_to_fit();
         self.pair_index = pairs.iter().enumerate().map(|(i, p)| ((p.a as u32, p.b as u32), i as u32)).collect();
         self.pairs = pairs;
         // T-276: the commutes between served zones, in the pack's order
-        let mut is_served = vec![false; self.zones.len()];
-        for &z in &served {
-            is_served[z] = true;
+        let mut at = vec![u32::MAX; self.zones.len()];
+        for (k, &z) in served.iter().enumerate() {
+            at[z] = k as u32;
         }
         let pc = commute_params();
         self.cpairs.clear();
         self.cpair_of = vec![u32::MAX; self.commutes.len()];
         for (c, &(h, w, _)) in self.commutes.iter().enumerate() {
             let (h, w) = (h as usize, w as usize);
-            if !is_served[h] || !is_served[w] {
+            if at[h] == u32::MAX || at[w] == u32::MAX || !joined(at[h] as usize, at[w] as usize) {
                 continue;
             }
             let (zh, zw) = (&self.zones[h], &self.zones[w]);
@@ -459,11 +480,9 @@ impl IntercityApi {
             self.cpairs.push(CPair { c: c as u32, car, corridor, ride: km >= pc.ride_min_km });
         }
         self.cpairs.shrink_to_fit();
-        self.served_at = vec![u32::MAX; self.zones.len()];
-        for (k, &z) in served.iter().enumerate() {
-            self.served_at[z] = k as u32;
-        }
+        self.served_at = at;
         self.served = served;
+        self.served_comp = comp;
     }
     /// Every pair of the market, as the served pairs would be with every zone served.
     #[cfg(test)]
@@ -600,6 +619,75 @@ mod tests {
         let x = a.exits(0);
         assert!(e[0] > e[1], "origins follow homes: {e:?}");
         assert!(x[1] > x[0], "destinations favour jobs: {x:?}");
+    }
+    /// T-409: two lines with no track between them, 300 km apart, on one network or each alone.
+    fn two_lines(api: &mut IntercityApi, which: [bool; 2]) {
+        let (mut xy, mut n, mut stops, mut times, mut tph) = (vec![], vec![], vec![], vec![], vec![]);
+        for (i, x0) in [0f32, 300000.].into_iter().enumerate().filter(|(i, _)| which[*i]) {
+            let s = xy.len() as u32 / 2;
+            xy.extend([x0, 0., x0 + 60000., 0.]);
+            n.push(2);
+            stops.extend([s, s + 1]);
+            let mut t = [0f32; 12];
+            for lev in 0..3 {
+                t[lev * 2] = 1800. + 300. * i as f32;
+                t[(3 + lev) * 2 + 1] = 1800. + 300. * i as f32;
+            }
+            times.extend(t);
+            tph.extend([6f32, 6., 6.]);
+        }
+        let cars = vec![4f32; n.len()];
+        api.set_network(&xy, &n, &stops, &times, &tph, &cars).unwrap();
+        api.set_fares(1., 0.1, &vec![30.; 2 * stops.len()]).unwrap();
+    }
+    #[test]
+    fn markets_beside_split_by_network_and_pairs_need_track() {
+        let header = r#"{"zone_m":6000,"trip_rate":0.015,"sites":[[0,0,100000,50000,0],[60000,0,80000,40000,1],[300000,0,90000,50000,2],[360000,0,70000,30000,2]]}"#;
+        let solved = |a: &mut IntercityApi| {
+            for q in 0..PERIODS {
+                assert!(a.solve(q));
+                let big = vec![3e5f32; 3 * a.seg(q).len()];
+                assert!(a.crowd_with_external(q, &big));
+            }
+        };
+        let mut both = IntercityApi::new(header).unwrap();
+        two_lines(&mut both, [true, true]);
+        solved(&mut both);
+        let mut parts = [both.beside(), both.beside()];
+        for (k, p) in parts.iter_mut().enumerate() {
+            two_lines(p, [k == 0, k == 1]);
+            solved(p);
+        }
+        // a part beside equals a market opened alone on the same network, to the bit
+        let mut alone = IntercityApi::new(header).unwrap();
+        two_lines(&mut alone, [false, true]);
+        solved(&mut alone);
+        for q in 0..PERIODS {
+            assert_eq!(parts[1].summary(q)[1..4], alone.summary(q)[1..4]);
+            assert_eq!(parts[1].seg(q), alone.seg(q));
+            assert_eq!(parts[1].corridor_summary(q), alone.corridor_summary(q));
+        }
+        assert_eq!(parts[1].station_flows(0), alone.station_flows(0));
+        // every zone is served on the joint network, but the pairs across have no track: none built
+        assert_eq!(both.served.len(), 4);
+        let (p0, p1) = (parts[0].pair_counts()[0], parts[1].pair_counts()[0]);
+        assert!(p0 > 0. && p1 > 0.);
+        assert_eq!(both.pair_counts()[0], p0 + p1);
+        // the joint network's rail is the parts' together; its trips are each part's (not added)
+        for q in 0..PERIODS {
+            let (j, a, b) = (both.summary(q), parts[0].summary(q), parts[1].summary(q));
+            assert!(a[2] > 0. && b[2] > 0.);
+            assert!((j[2] - (a[2] + b[2])).abs() <= 1e-9 * j[2], "{j:?} {a:?} {b:?}");
+            assert_eq!((j[1], a[1]), (b[1], b[1]));
+        }
+        // a selection's answer: one part's whole, the other's rail added
+        for (sel, m) in [([0f32, 0.], 0u32), ([300000., 0.], 2)] {
+            let j = both.selection_flows_day(m, &sel, &[1.], 0);
+            let a = parts[0].selection_flows_day(m, &sel, &[1.], 0);
+            let b = parts[1].selection_rail_day(m, &sel, &[1.], 0);
+            assert!(j.iter().zip(a.iter().zip(&b)).all(|(j, (a, b))| (j - (a + b)).abs() <= 1e-9 * j.abs().max(1.)), "{j:?}\n{a:?}\n{b:?}");
+            assert!(b.iter().any(|v| *v > 0.) == (m == 2));
+        }
     }
     fn solve_all(a: &mut IntercityApi) {
         for q in 0..PERIODS {
@@ -1177,7 +1265,7 @@ mod tests {
         }
         // a moved origin makes the block stale
         let mut pack: serde_json::Value = serde_json::from_str(&format!("{{{frame},{body}}}")).unwrap();
-        pack["derived"] = serde_json::to_value(&ground.derived).unwrap();
+        pack["derived"] = serde_json::to_value(&*ground.derived).unwrap();
         pack["frame"]["lat"] = 41.0.into();
         assert_eq!(IntercityApi::new(&pack.to_string()).unwrap().info()[3], 0.);
         for bad in [r#""frame":{"kind":"mercator","lon":0,"lat":0}"#, r#""frame":{"kind":"equirect","lon":0,"lat":95}"#, r#""frame":{"lon":0,"lat":0}"#] {
@@ -1366,6 +1454,26 @@ fn pair_row(zones: &[Zone], ground: bool, totals: &[f64], rate: f64, corridor_of
         out.push(Pair { a, b, trips, drive: car_min(d, zones[b].park), corridor });
         out.push(Pair { a: b, b: a, trips, drive: car_min(d, zones[a].park), corridor });
     }
+}
+/// Each station's component of the graph (edges taken both ways), named by its lowest station.
+fn station_components(g: &Graph) -> Vec<u32> {
+    let mut parent: Vec<u32> = (0..g.n as u32).collect();
+    fn find(p: &mut [u32], mut i: u32) -> u32 {
+        while p[i as usize] != i {
+            p[i as usize] = p[p[i as usize] as usize];
+            i = p[i as usize];
+        }
+        i
+    }
+    for a in 0..g.n {
+        for e in g.adj_off[a] as usize..g.adj_off[a + 1] as usize {
+            let (ra, rb) = (find(&mut parent, a as u32), find(&mut parent, g.adj_to[e]));
+            if ra != rb {
+                parent[ra.max(rb) as usize] = ra.min(rb);
+            }
+        }
+    }
+    (0..g.n_st as u32).map(|s| find(&mut parent, s)).collect()
 }
 /// Zone `z`'s pairs with every other zone, partner ascending, as (partner, trips each way); the
 /// order the whole market's pairs of one zone have. Out of line like `decay_row`.
@@ -1647,12 +1755,7 @@ impl IntercityApi {
             );
             site_key.entry(key).or_insert(c);
         }
-        let base = Params {
-            beta: 0.025,
-            asc_rail: 0.,
-            fare_min: 0.,
-            ..Params::default()
-        };
+        let base = market_params();
         // T-276: each zone's commutes from its homes and to its jobs, and each corridor's legs
         let csr = |end: fn(&(u32, u32, f32)) -> u32| {
             let mut off = vec![0u32; zones.len() + 1];
@@ -1679,17 +1782,17 @@ impl IntercityApi {
             c_corridor[corridor_of[a.min(b) * markets + a.max(b)]] += 2. * n as f64;
         }
         Ok(Self {
-            city,
-            zones,
-            cell_zone,
+            city: Rc::new(city),
+            zones: Rc::new(zones),
+            cell_zone: Rc::new(cell_zone),
             access_c: vec![],
             access_cw: vec![],
             access_c_walk: vec![],
-            kz,
-            kplace,
-            commutes,
-            c_home,
-            c_work,
+            kz: Rc::new(kz),
+            kplace: Rc::new(kplace),
+            commutes: Rc::new(commutes),
+            c_home: Rc::new(c_home),
+            c_work: Rc::new(c_work),
             c_corridor,
             cpairs: vec![],
             cpair_of: vec![],
@@ -1698,7 +1801,7 @@ impl IntercityApi {
             served_at: vec![],
             pair_index: HashMap::new(),
             daily: derived.daily,
-            derived,
+            derived: Rc::new(derived),
             from_pack,
             ground,
             rate,
@@ -1713,9 +1816,54 @@ impl IntercityApi {
             fare_per_km: 0.,
             corridors,
             markets,
-            site_key,
+            site_key: Rc::new(site_key),
             complex_in: vec![],
+            served_comp: vec![],
         })
+    }
+    /// T-409: the same market with no network yet, sharing this one's pack (no copy of its sites,
+    /// zones or commutes), for a network of its own: one per cluster the market reaches. Solved on
+    /// a network it gives exactly what a market opened from the pack gives on it.
+    pub fn beside(&self) -> IntercityApi {
+        Self {
+            city: self.city.clone(),
+            zones: self.zones.clone(),
+            cell_zone: self.cell_zone.clone(),
+            access_c: vec![],
+            access_cw: vec![],
+            access_c_walk: vec![],
+            kz: self.kz.clone(),
+            kplace: self.kplace.clone(),
+            commutes: self.commutes.clone(),
+            c_home: self.c_home.clone(),
+            c_work: self.c_work.clone(),
+            c_corridor: self.c_corridor.clone(),
+            cpairs: vec![],
+            cpair_of: vec![],
+            pairs: vec![],
+            served: vec![],
+            served_at: vec![],
+            pair_index: HashMap::new(),
+            daily: self.daily,
+            derived: self.derived.clone(),
+            from_pack: self.from_pack,
+            ground: self.ground,
+            rate: self.rate,
+            corridor_of: self.corridor_of.clone(),
+            base: market_params(),
+            svc: None,
+            access: vec![],
+            access_work: vec![],
+            want: vec![],
+            per: (0..PERIODS).map(|_| None).collect(),
+            fare_km: vec![],
+            fare_per_km: 0.,
+            corridors: self.corridors.clone(),
+            markets: self.markets,
+            site_key: self.site_key.clone(),
+            complex_in: vec![],
+            served_comp: vec![],
+        }
     }
     /// The station complexes of the networks `set_network` is given from now on (T-161), as
     /// `DemandApi::set_complexes`.
@@ -1731,6 +1879,20 @@ impl IntercityApi {
     /// leave the map (T-276).
     pub fn info(&self) -> Vec<f64> {
         vec![self.city.len() as f64, self.zones.len() as f64, self.daily, self.from_pack as u8 as f64, self.derived.leaving]
+    }
+    /// T-409: per zone, the box its sites lie in (west, south, east, north metres in the pack's
+    /// frame): a station far from a zone's box is in no access list of that zone.
+    pub fn zone_boxes(&self) -> Vec<f32> {
+        let mut out = vec![f32::INFINITY, f32::INFINITY, f32::NEG_INFINITY, f32::NEG_INFINITY].repeat(self.zones.len());
+        for c in 0..self.city.len() {
+            let b = &mut out[4 * self.cell_zone[c]..4 * self.cell_zone[c] + 4];
+            let (x, y) = (self.city.x[c], self.city.y[c]);
+            b[0] = b[0].min(x);
+            b[1] = b[1].min(y);
+            b[2] = b[2].max(x);
+            b[3] = b[3].max(y);
+        }
+        out
     }
     /// The zone pairs the network's stations serve (T-174), and the market's whole count.
     pub fn pair_counts(&self) -> Vec<f64> {
@@ -1855,8 +2017,25 @@ impl IntercityApi {
         let served: Vec<usize> = (0..self.zones.len())
             .filter(|&z| !self.access[z].is_empty() || !self.access_work[z].is_empty())
             .collect();
-        if served != self.served {
-            self.set_served(served);
+        // T-409: and only pairs whose zones reach one track component (the graph's every edge,
+        // at any frequency: a superset of each period's paths)
+        let comp = station_components(&build_graph(&net, &self.base));
+        let comp: Vec<Vec<u32>> = served
+            .iter()
+            .map(|&z| {
+                let mut v: Vec<u32> = [&self.access, &self.access_work, &self.access_c, &self.access_cw, &self.access_c_walk]
+                    .iter()
+                    .filter_map(|l| l.get(z))
+                    .flatten()
+                    .map(|&(st, _)| comp[st])
+                    .collect();
+                v.sort_unstable();
+                v.dedup();
+                v
+            })
+            .collect();
+        if served != self.served || comp != self.served_comp {
+            self.set_served(served, comp);
         }
     }
     pub fn station_map(&self) -> Vec<u32> {
@@ -2223,7 +2402,7 @@ impl IntercityApi {
                 _ => 0.,
             };
             for (end, weights) in [(0usize, &pop_w), (1usize, &job_w)] {
-                let (off, items) = if end == 0 { &self.c_home } else { &self.c_work };
+                let (off, items) = if end == 0 { &*self.c_home } else { &*self.c_work };
                 for (z, &w) in weights.iter().enumerate().filter(|(_, w)| **w > 0.) {
                     for &c in &items[off[z] as usize..off[z + 1] as usize] {
                         let (h, wz, n) = self.commutes[c as usize];
@@ -2232,6 +2411,32 @@ impl IntercityApi {
                         add(far, end, n * legs, n * rail_legs * frac(c));
                     }
                 }
+            }
+        }
+        out
+    }
+    /// T-409: `selection_flows_day` with only its rail numbers, the rest zero: what a market beside
+    /// another adds to that one's answer (the all-mode trips and the zones are the same in both).
+    pub fn selection_rail_day(&self, market: u32, xy: &[f32], share: &[f32], day: u32) -> Vec<f64> {
+        let mut out = self.selection_flows_day(market, xy, share, day);
+        let (m, nz) = (self.markets, self.zones.len());
+        let (head, tail) = (1 + 8 * m, 1 + 8 * m + 7 * nz);
+        let rail = |i: usize| {
+            if i == 0 {
+                false
+            } else if i < head {
+                (i - 1) % 4 == 1
+            } else if i < head + 4 * nz {
+                (i - head) % 2 == 1
+            } else if i < tail {
+                false
+            } else {
+                (i - tail) % 2 == 1
+            }
+        };
+        for (i, v) in out.iter_mut().enumerate() {
+            if !rail(i) {
+                *v = 0.;
             }
         }
         out

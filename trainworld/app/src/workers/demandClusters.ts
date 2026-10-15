@@ -5,7 +5,7 @@
 // not changed keeps its result (docs/demand.md "Clusters"). Reach is judged generously: joining two
 // clusters that share nothing costs only time, splitting two that share riders would change figures.
 
-import { CITIES, getWorldFrame, worldToCity, zoneBox, type CityId } from "../game/cities";
+import { CITIES, worldToCity, worldToMarket, zoneBox, type CityId } from "../game/cities";
 import { PERIODS } from "../game/periods";
 import type { DemandNetwork } from "./demandProtocol";
 
@@ -24,7 +24,7 @@ export const JOIN_M = 1_000;
 const MARKET_BOXES = CITIES.filter((c) => c.market >= 0).map(zoneBox);
 
 /** T-396: whether the regional market's riders can use a station at (lon, lat): within
- * `MARKET_REACH_M` of a market zone's box. Also what opens the market (workers/demandClient.ts). */
+ * `MARKET_REACH_M` of a market zone's box. What opens the market (workers/demandClient.ts). */
 export function marketReaches(lon: number, lat: number): boolean {
   const dy = MARKET_REACH_M / 111_320, dx = dy / Math.cos((lat * Math.PI) / 180);
   return MARKET_BOXES.some(([w, s, e, n]) => lon >= w - dx && lon <= e + dx && lat >= s - dy && lat <= n + dy);
@@ -35,6 +35,9 @@ export interface Cluster {
   cities: CityId[];
   /** the regional market's riders can reach it */
   market: boolean;
+  /** T-409: the market's own zones whose stations are in it, ascending, joined by commas (the
+   * market's part for this cluster is kept by it); "" for the market no station reaches */
+  marketKey: string;
   /** its own network: the cluster's stations (ascending snapshot order) and lines (snapshot order) */
   net: DemandNetwork;
   /** its lines' indices in the whole network (ascending) */
@@ -84,14 +87,17 @@ function hashOf(parts: (ArrayBufferView | string)[]): string {
 
 /**
  * The network's clusters, each holding at least one population. `whole` (`?perfOff=clusters`)
- * gives one cluster of everything, the network as it came. Lines and stations no population can
+ * gives one cluster of everything, the network as it came; `oneMarket` (`?perfOff=split`) joins the
+ * market's zones into one node. Lines and stations no population can
  * reach belong to no cluster: nobody rides them, so their figures are zero.
  */
-export function splitClusters(n: DemandNetwork, cities: { id: CityId; box: Box }[], market: boolean, rounds: number, whole = false): Cluster[] {
+export function splitClusters(n: DemandNetwork, cities: { id: CityId; box: Box }[], marketZones: Float32Array | null, rounds: number, whole = false, oneMarket = false): Cluster[] {
+  const market = !!marketZones;
   const S = n.stXY.length / 2, L = n.lineN.length, P = cities.length;
   const lineOff = new Uint32Array(L + 1);
   for (let l = 0; l < L; l++) lineOff[l + 1] = lineOff[l] + n.lineN[l];
-  const parent = new Int32Array(S + P + 1).map((_, i) => i);
+  const M = marketZones ? marketZones.length / 4 : 0;
+  const parent = new Int32Array(S + P + Math.max(M, 1)).map((_, i) => i);
   const find = (i: number) => {
     while (parent[i] !== i) i = parent[i] = parent[parent[i]];
     return i;
@@ -100,9 +106,12 @@ export function splitClusters(n: DemandNetwork, cities: { id: CityId; box: Box }
     const ra = find(a), rb = find(b);
     if (ra !== rb) parent[Math.max(ra, rb)] = Math.min(ra, rb);
   };
+  // T-409: one node per zone of the market (`IntercityApi.zone_boxes`, its 6 km zones), joined to
+  // the stations within `MARKET_REACH_M` of its sites: every station in its access lists. So every
+  // zone's stations are in one cluster, and the market's pairs split by cluster exactly
   const MARKET = S + P;
   if (whole) {
-    for (let i = 1; i < S + P + 1; i++) join(0, i);
+    for (let i = 1; i < parent.length; i++) join(0, i);
   } else {
     for (let l = 0; l < L; l++) for (let k = lineOff[l] + 1; k < lineOff[l + 1]; k++) join(n.stops[k - 1], n.stops[k]);
     if (n.complex && n.complex.length === S) {
@@ -134,21 +143,51 @@ export function splitClusters(n: DemandNetwork, cities: { id: CityId; box: Box }
         if (p.x >= box[0] - CITY_REACH_M && p.x <= box[2] + CITY_REACH_M && p.y >= box[1] - CITY_REACH_M && p.y <= box[3] + CITY_REACH_M) join(s, S + i);
       }
     });
-    const frame = getWorldFrame();
-    if (market) for (let s = 0; s < S; s++) {
-      const [lon, lat] = frame.toLonLat(n.stXY[2 * s], n.stXY[2 * s + 1]);
-      if (marketReaches(lon, lat)) join(s, MARKET);
+    if (marketZones && S) {
+      const G = MARKET_REACH_M, cells = new Map<string, number[]>();
+      for (let z = 0; z < M; z++) {
+        const [w, so, e, no] = marketZones.subarray(4 * z, 4 * z + 4);
+        if (!(w <= e)) continue;
+        for (let gx = Math.floor((w - G) / G); gx <= Math.floor((e + G) / G); gx++) for (let gy = Math.floor((so - G) / G); gy <= Math.floor((no + G) / G); gy++) {
+          const k = `${gx},${gy}`, c = cells.get(k);
+          if (c) c.push(z); else cells.set(k, [z]);
+        }
+      }
+      for (let s = 0; s < S; s++) {
+        const { x, y } = worldToMarket(n.stXY[2 * s], n.stXY[2 * s + 1]);
+        for (const z of cells.get(`${Math.floor(x / G)},${Math.floor(y / G)}`) ?? []) {
+          const b = 4 * z;
+          if (x >= marketZones[b] - G && x <= marketZones[b + 2] + G && y >= marketZones[b + 1] - G && y <= marketZones[b + 3] + G) join(s, MARKET + z);
+        }
+      }
     }
+    // `?perfOff=split`: the market's zones as one node, as before T-409
+    if (oneMarket) for (let k = 1; k < M; k++) join(MARKET, MARKET + k);
   }
   // the clusters, in the order of their first population
-  const byRoot = new Map<number, { cities: CityId[]; market: boolean }>();
+  const byRoot = new Map<number, { cities: CityId[]; market: boolean; zones: number[] }>();
   const of = (r: number) => {
     let c = byRoot.get(r);
-    if (!c) byRoot.set(r, (c = { cities: [], market: false }));
+    if (!c) byRoot.set(r, (c = { cities: [], market: false, zones: [] }));
     return c;
   };
   cities.forEach(({ id }, i) => of(find(S + i)).cities.push(id));
-  if (market) of(find(MARKET)).market = true;
+  if (market) {
+    // a market zone no station reaches is in no cluster (its pairs carry no rail trip); if none
+    // is reached, the market is a cluster of its own with no lines
+    const railed = new Set<number>();
+    for (let s = 0; s < S; s++) railed.add(find(s));
+    let any = whole;
+    for (let z = 0; z < M; z++) {
+      const r = find(MARKET + z);
+      if (!whole && !railed.has(r)) continue;
+      const c = of(r);
+      c.market = true;
+      if (!whole) c.zones.push(z);
+      any = true;
+    }
+    if (!any) of(find(MARKET)).market = true;
+  }
   const out: Cluster[] = [];
   const frameKey = JSON.stringify(n.frame);
   for (const [root, c] of byRoot) {
@@ -156,12 +195,12 @@ export function splitClusters(n: DemandNetwork, cities: { id: CityId; box: Box }
     for (let s = 0; s < S; s++) if (find(s) === root) stations.push(s);
     const lines: number[] = [];
     for (let l = 0; l < L; l++) if (whole || (n.lineN[l] > 0 && find(n.stops[lineOff[l]]) === root)) lines.push(l);
-    out.push(subNetwork(n, lineOff, c.cities, c.market, stations, lines, rounds, frameKey));
+    out.push(subNetwork(n, lineOff, c.cities, c.market, c.zones.join(","), stations, lines, rounds, frameKey));
   }
   return out;
 }
 
-function subNetwork(n: DemandNetwork, lineOff: Uint32Array, cities: CityId[], market: boolean, stations: number[], lines: number[], rounds: number, frameKey: string): Cluster {
+function subNetwork(n: DemandNetwork, lineOff: Uint32Array, cities: CityId[], market: boolean, marketKey: string, stations: number[], lines: number[], rounds: number, frameKey: string): Cluster {
   const S = n.stXY.length / 2;
   const stLocal = new Int32Array(S).fill(-1);
   stations.forEach((s, i) => (stLocal[s] = i));
@@ -196,7 +235,7 @@ function subNetwork(n: DemandNetwork, lineOff: Uint32Array, cities: CityId[], ma
     o += m;
   });
   const net: DemandNetwork = { frame: n.frame, stXY, complex, lineN, stops, times, tph, cars, fare: n.fare, hopKm };
-  const head = `${cities.join(",")}|${market}|${rounds}|${n.fare.base}|${n.fare.perKm}|${frameKey}`;
+  const head = `${cities.join(",")}|${market}|${marketKey}|${rounds}|${n.fare.base}|${n.fare.perKm}|${frameKey}`;
   const sig = hashOf([head, stXY, complex, lineN, stops, times, tph, cars, hopKm]);
   const levelSig = [0, 1, 2].map((lev) => {
     const lt = new Float32Array(2 * nStops), lp = new Float32Array(lines.length);
@@ -210,5 +249,5 @@ function subNetwork(n: DemandNetwork, lineOff: Uint32Array, cities: CityId[], ma
     return hashOf([`${head}|level ${lev}`, stXY, complex, lineN, stops, lt, lp, cars, hopKm]);
   });
   const psig = PERIODS.map((p) => levelSig[LEVEL[p.demand]]);
-  return { cities, market, net, lines: Uint32Array.from(lines), stLocal, nodeGlobal, nodeLocal, sig, psig };
+  return { cities, market, marketKey, net, lines: Uint32Array.from(lines), stLocal, nodeGlobal, nodeLocal, sig, psig };
 }

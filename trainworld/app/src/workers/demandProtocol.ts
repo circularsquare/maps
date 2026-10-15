@@ -63,6 +63,8 @@ export type ToDemand =
       barrier?: boolean;
       /** T-326 `?perfOff=clusters`: solve the network as one cluster */
       whole?: boolean;
+      /** T-409 `?perfOff=split`: the market's zones as one, so its clusters merge through it */
+      oneMarket?: boolean;
       /** T-124 `?perfOff=periods`: a cluster solved solves every period, none kept */
       fresh?: boolean;
       /** T-393: the city in view: its cluster is solved first */

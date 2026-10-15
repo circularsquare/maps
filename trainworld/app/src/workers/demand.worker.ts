@@ -35,8 +35,15 @@ let jobCities = new Set<CityId>();
 const everyday = new Map<CityId, EverydayApi>();
 const EVERYDAY_PURPOSES = EVERYDAY_NAMES;
 let intercity: IntercityApi | null = null;
+/** T-409: the market's parts by `Cluster.marketKey`, one per cluster the market reaches, each on its
+ * cluster's network alone (`IntercityApi.beside`, sharing the pack); `intercity` is the first. A
+ * part whose key is gone is reused for a new key, the rest are freed (`intercity` waits in `idle`) */
+const marketParts = new Map<string, IntercityApi>();
+let idle: IntercityApi | null = null;
+/** the market's zones' boxes (`IntercityApi.zone_boxes`), which its clusters are joined by */
+let marketZones: Float32Array | null = null;
 let mine: number[] = [];
-let pending: { version: number; net: DemandNetwork; rounds: number; barrier?: boolean; whole?: boolean; fresh?: boolean; first?: CityId } | null = null;
+let pending: { version: number; net: DemandNetwork; rounds: number; barrier?: boolean; whole?: boolean; oneMarket?: boolean; fresh?: boolean; first?: CityId } | null = null;
 let busy = false;
 /** the version whose network `api` holds (queries about any other get nulls) */
 let current = -1;
@@ -78,7 +85,8 @@ type Population = DemandApi | EverydayApi | IntercityApi;
 /** `pops` in the order their figures are added up; `solveOrder` the same populations in the order
  * they are set up and solved (it changes no figure) */
 /** `reuse`: this worker's periods (bit q) kept from the last solve, set when it is set up (T-124) */
-type JobCluster = Cluster & { pops: Population[]; solveOrder: Population[]; reuse: number };
+/** `part`: the market's part for the cluster's network (T-409), among `pops` */
+type JobCluster = Cluster & { pops: Population[]; solveOrder: Population[]; reuse: number; part: IntercityApi | null };
 let jobClusters: JobCluster[] = [];
 let jobNodes = 0;
 /** T-326: the cluster `sig` each population holds every one of this worker's periods solved for,
@@ -326,9 +334,11 @@ function query(msg: Query) {
   const live = !!a && msg.kind !== "cells" && (atRound(cl) || (kept && msg.round === at!.rounds));
   // the network's subzones, whatever round (cellModes, flows)
   const sameNet = msg.kind !== "cells" && ((msg.version === current && (!cl || !groupOf.has(cl) || ready.has(cl))) || kept);
-  // the regional market's state at the round asked about (its cluster may not be the city's)
-  const mc = at?.clusters.find((c) => c.market);
-  const marketLive = msg.kind !== "cells" && (atRound(mc) || (!!mc && isHeld(mc) && msg.round === at!.rounds));
+  // the regional market's state at the round asked about (its clusters may not be the city's):
+  // every part of it for a selection, the station's own for a station
+  const clusterLive = (c: JobCluster) => msg.kind !== "cells" && (atRound(c) || (isHeld(c) && msg.round === at!.rounds));
+  const mcs = at?.clusters.filter((c) => c.part) ?? [];
+  const marketLive = mcs.length > 0 && mcs.every(clusterLive);
   // T-260: the kind of day asked about (0 weekday, 1 weekend); every answer weighs its periods by it
   const day = (msg as { day?: number }).day ?? 0;
   try {
@@ -385,13 +395,20 @@ function query(msg: Query) {
       // open bare in the aux worker comes with its squares (this worker does not hold the zone)
       const ok = marketLive && (!!msg.sq || !!a) && !!intercity && MARKET_OF[msg.city] >= 0;
       const sq = !ok ? null : msg.sq ?? selectionSquares(msg.city, a!, msg.end, msg.cells);
-      const packed = sq ? Float64Array.from(intercity!.selection_flows_day(MARKET_OF[msg.city], sq.xy, sq.share, day)) : null;
-      sendMessage({ kind: "icSel", id: msg.id, version: msg.version, mask: ok ? intercity!.solved_mask() : 0, packed }, packed ? [packed.buffer] : []);
+      // T-409: the all-mode trips and the zones once, every part's rail
+      let packed: Float64Array | null = null;
+      if (sq) for (const c of mcs) {
+        const v = packed ? c.part!.selection_rail_day(MARKET_OF[msg.city], sq.xy, sq.share, day) : null;
+        if (!v) packed = Float64Array.from(c.part!.selection_flows_day(MARKET_OF[msg.city], sq.xy, sq.share, day));
+        else for (let i = 0; i < v.length; i++) packed![i] += v[i];
+      }
+      const mask = ok ? mcs.reduce((m, c) => m & c.part!.solved_mask(), 31) : 0;
+      sendMessage({ kind: "icSel", id: msg.id, version: msg.version, mask, packed }, packed ? [packed.buffer] : []);
     } else if (msg.kind === "icStation") {
-      const inMarket = (mc?.stLocal[msg.station] ?? -1) >= 0;
-      const ok = live && (!inMarket || marketLive) && !!intercity;
-      const packed = ok ? Float64Array.from(marketStationFlows(at!, intercity!, msg.station, day)) : null;
-      sendMessage({ kind: "icStation", id: msg.id, version: msg.version, mask: ok ? intercity!.solved_mask() : 0, packed: packed && packed.length ? packed : null }, packed ? [packed.buffer] : []);
+      const sc = mcs.find((c) => (c.stLocal[msg.station] ?? -1) >= 0);
+      const ok = live && (!sc || clusterLive(sc)) && !!intercity;
+      const packed = ok ? Float64Array.from(marketStationFlows(at!, sc, intercity!, msg.station, day)) : null;
+      sendMessage({ kind: "icStation", id: msg.id, version: msg.version, mask: ok ? (sc?.part ?? intercity!).solved_mask() : 0, packed: packed && packed.length ? packed : null }, packed ? [packed.buffer] : []);
     } else if (msg.kind === "purposeModes") {
       // one everyday purpose's legs (T-158); a city without that purpose answers empty, not null
       const layer = live ? everyday.get(msg.city) : undefined;
@@ -511,12 +528,39 @@ function stationRiders(at: Version, c: JobCluster | undefined, a: DemandApi, sta
   if (ls >= 0) return a.station_riders_day(ls, day);
   return at.railed && station < at.stations ? new Float32Array(4 + 2 * a.info()[1]) : new Float32Array(0);
 }
-/** The same for the market's longer trips (`IntercityApi.station_flows_day`). */
-function marketStationFlows(at: Version, m: IntercityApi, station: number, day: number): Float64Array {
-  const c = at.clusters.find((c) => c.market);
+/** The same for the market's longer trips (`IntercityApi.station_flows_day`), from the part of
+ * the station's cluster `c` (T-409); `m` answers for a station in no market cluster. */
+function marketStationFlows(at: Version, c: JobCluster | undefined, m: IntercityApi, station: number, day: number): Float64Array {
   const ls = c ? c.stLocal[station] ?? -1 : -1;
-  if (ls >= 0) return m.station_flows_day(ls, day);
+  if (ls >= 0) return c!.part!.station_flows_day(ls, day);
   return station < at.stations ? m.no_station_flows() : new Float64Array(0);
+}
+
+/**
+ * T-409: the market's figures in period q over its parts (`jobClusters` order). Each part's rail
+ * is its own network's; the trips, pairs and corridor trips need no network and are the same in
+ * every part, so they are taken once. One part gives its own figures as they are.
+ */
+function marketFigures(parts: IntercityApi[], q: number) {
+  const of = (read: (p: IntercityApi) => Float64Array, rail: (i: number) => boolean) => {
+    let out: number[] = [];
+    for (const p of parts) {
+      const v = read(p);
+      if (!v.length) continue;
+      if (!out.length) out = Array.from(v);
+      else for (let i = 0; i < v.length; i++) if (rail(i)) out[i] += v[i];
+    }
+    return out;
+  };
+  // round, trips, rail, 0, ms, pairs, segments over seats, then the worst loads: the largest part's
+  const summary = of((p) => p.summary(q), (i) => i === 2 || i === 4 || i === 6);
+  if (parts.length > 1 && summary.length) for (const i of [7, 8, 9]) summary[i] = Math.max(...parts.map((p) => p.summary(q)[i] ?? 0));
+  return {
+    summary,
+    parts: of((p) => p.part_summary(q), (i) => i % 2 === 1),
+    corridors: of((p) => p.corridor_summary(q), (i) => i % 4 === 3),
+    commuteCorridors: of((p) => p.commute_corridors(q), (i) => i % 2 === 1),
+  };
 }
 /** A `DemandApi.trip` answer's route nodes (trip.ts `PAIR_LEN`, `LEG_LEN`) from its cluster's
  * network to the whole network's, the ones the client reads. */
@@ -539,7 +583,7 @@ function tripNodesGlobal(v: Float64Array, nodeGlobal: Uint32Array) {
  * longer trips. They add up to the result's totals; crowding is never split. Each cluster's route
  * nodes go to their place in the whole network's (T-326).
  */
-function purposeParts(q: number, nr: number, clusters: typeof jobClusters, regional: IntercityApi | null) {
+function purposeParts(q: number, nr: number, clusters: typeof jobClusters, regional: boolean) {
   const days = clusters.flatMap((c) => c.pops.filter((p): p is EverydayApi => p instanceof EverydayApi));
   const kinds = Math.min(EVERYDAY_KEYS.length, Math.max(0, ...days.map((e) => e.purpose_count())));
   const keys: string[] = ["work", ...EVERYDAY_KEYS.slice(0, kinds)];
@@ -558,11 +602,11 @@ function purposeParts(q: number, nr: number, clusters: typeof jobClusters, regio
       if (v.length !== 3 * e.purpose_count() * m) continue;
       for (let k = 0; k < k1; k++) { add(seg, 1 + k, v, 3 * k * m); add(board, 1 + k, v, (3 * k + 1) * m); add(alight, 1 + k, v, (3 * k + 2) * m); }
     }
-    if (regional && c.pops.includes(regional)) {
-      const at = keys.length - 1;
-      add(seg, at, regional.seg(q)); add(board, at, regional.board(q)); add(alight, at, regional.alight(q));
+    if (regional && c.part) {
+      const at = keys.length - 1, part = c.part;
+      add(seg, at, part.seg(q)); add(board, at, part.board(q)); add(alight, at, part.alight(q));
       // T-276: the regional layer's commutes between zones are work: moved from longer trips to it
-      const v = regional.commute_loads(q);
+      const v = part.commute_loads(q);
       if (v.length === 3 * m) {
         for (let r = 0; r < m; r++) {
           const g = map[r];
@@ -574,6 +618,26 @@ function purposeParts(q: number, nr: number, clusters: typeof jobClusters, regio
     }
   }
   return { keys, seg, board, alight };
+}
+
+/**
+ * T-409: a market part for every market cluster's key: the part that had the key, else one whose
+ * key is gone (set up afresh), else a new one beside `regional`. Parts left over are freed.
+ */
+function assignParts(regional: IntercityApi, split: Cluster[]) {
+  const keys = [...new Set(split.filter((c) => c.market).map((c) => c.marketKey))];
+  const spare = [...marketParts].filter(([k]) => !keys.includes(k)).map(([k, p]) => (marketParts.delete(k), p));
+  if (!marketParts.size && !spare.length) idle = regional;
+  // the part the market opened as goes first, so a single market keeps that instance
+  if (idle) spare.unshift(idle);
+  idle = null;
+  for (const k of keys) if (!marketParts.has(k)) marketParts.set(k, spare.shift() ?? regional.beside());
+  for (const p of spare) {
+    held.delete(p);
+    heldQ.delete(p);
+    if (p === regional) idle = p;
+    else p.free();
+  }
 }
 
 async function run() {
@@ -596,18 +660,21 @@ async function run() {
       // T-326: each cluster on its own network; one this worker has solved on the same network
       // keeps its populations' results, untouched
       for (const [id, a] of jobLocal) if (!boxes.has(id)) boxes.set(id, cellBox(a.cell_xy()));
-      const split = splitClusters(n, jobLocal.map(([id]) => ({ id, box: boxes.get(id) ?? null })), !!regional, job.rounds, job.whole);
-      jobClusters = split.map((c) => ({ ...c, pops: [
+      if (regional && !marketZones) marketZones = regional.zone_boxes();
+      const split = splitClusters(n, jobLocal.map(([id]) => ({ id, box: boxes.get(id) ?? null })), regional ? marketZones : null, job.rounds, job.whole, job.oneMarket);
+      if (regional) assignParts(regional, split);
+      const partOf = (c: Cluster) => (c.market && regional ? [marketParts.get(c.marketKey)!] : []);
+      jobClusters = split.map((c) => ({ ...c, part: partOf(c)[0] ?? null, pops: [
         ...c.cities.map((id) => cities.get(id)!),
         ...jobEveryday.filter(([id]) => c.cities.includes(id)).map(([, e]) => e),
-        ...(c.market && regional ? [regional] : []),
+        ...partOf(c),
       ], solveOrder: [
         // the order the packs opened in (the viewed zone's first); the order changes no figure. Set
         // up in registry order instead, the real save's first round-0 solve on each worker is ~1 s
         // slower in WASM (T-405, notes/T-405.md; the skim cache no longer depends on the order)
         ...[...cities.keys()].filter((id) => c.cities.includes(id)).map((id) => cities.get(id)!),
         ...[...everyday.keys()].filter((id) => c.cities.includes(id) && jobCities.has(id)).map((id) => everyday.get(id)!),
-        ...(c.market && regional ? [regional] : []),
+        ...partOf(c),
       ], reuse: 0 }));
       const dirty = jobClusters.filter((c) => c.pops.some((p) => held.get(p) !== c.sig));
       // T-393: the cluster of the city in view first
@@ -633,7 +700,7 @@ async function run() {
         const m = c.net;
         for (const p of c.solveOrder) {
           held.delete(p);
-          const city = p === regional ? null : c.cities.find((id) => cities.get(id) === p || everyday.get(id) === p)!;
+          const city = p instanceof IntercityApi ? null : c.cities.find((id) => cities.get(id) === p || everyday.get(id) === p)!;
           const xy = m.stXY.slice();
           for (let k = 0; k < xy.length; k += 2) {
             const w = city ? worldToCity(xy[k], xy[k + 1], city) : worldToMarket(xy[k], xy[k + 1]);
@@ -719,14 +786,15 @@ async function run() {
       const figures = (q: number, round: number, ms: number, cs: JobCluster[]) => {
         // in the job's order: the summary adds the cities up in it
         const ids = jobLocal.map(([id]) => id).filter((id) => cs.some((c) => c.cities.includes(id)));
-        const market = regional && cs.some((c) => c.market) ? regional : null;
+        // the market's figures are all its parts' as they stand, whichever clusters are asked for
+        const market = regional && cs.some((c) => c.market) ? marketFigures(jobClusters.flatMap((c) => c.part ? [c.part] : []), q) : null;
         const seg = sumAll(cs, a => a.seg(q)), board = sumAll(cs, a => a.board(q)), alight = sumAll(cs, a => a.alight(q)), loadOfCrush = sumAll(cs, a => a.load_of_crush(q));
         const citySummary = Object.fromEntries(ids.map((id) => [id, Array.from(cities.get(id)!.summary(q))])) as Record<CityId, number[]>;
         for (const [id, a] of jobEveryday) if (citySummary[id]) { const v = a.summary(q); for (const k of [1, 2, 3, 5]) citySummary[id][k] += v[k] ?? 0; }
-        const intercitySummary = market ? Array.from(market.summary(q)) : [];
+        const intercitySummary = market ? market.summary : [];
         const summary = [round, 0, 0, 0, ms, 0, 0, 0, 0, 0];
         for (const v of [...Object.values(citySummary), intercitySummary]) for (const k of [1, 2, 3, 5]) summary[k] += v[k] ?? 0;
-        const parts = purposeParts(q, jobNodes, cs, market);
+        const parts = purposeParts(q, jobNodes, cs, !!market);
         // T-260: each city's trips, rail and walked trips by purpose, `parts.keys` order less the
         // market, so the main thread can work out a weekend's mode split
         const local = parts.keys.length - (market ? 1 : 0);
@@ -737,7 +805,7 @@ async function run() {
           if (e) for (let k = 0; k < Math.min(e.length, 3 * (local - 1)); k++) v[3 + k] = e[k];
           return [id, v];
         })) as Record<CityId, number[]>;
-        const msg = { version: job.version, period: q, summary, citySummary, cityParts, intercitySummary, intercityParts: market ? Array.from(market.part_summary(q)) : [], corridors: market ? Array.from(market.corridor_summary(q)) : [], commuteCorridors: market ? Array.from(market.commute_corridors(q)) : [], seg, board, alight, loadOfCrush, parts, ms, setupMs, memBytes: wasm_memory_bytes() };
+        const msg = { version: job.version, period: q, summary, citySummary, cityParts, intercitySummary, intercityParts: market ? market.parts : [], corridors: market ? market.corridors : [], commuteCorridors: market ? market.commuteCorridors : [], seg, board, alight, loadOfCrush, parts, ms, setupMs, memBytes: wasm_memory_bytes() };
         return { msg, transfer: [seg.buffer, board.buffer, alight.buffer, loadOfCrush.buffer, parts.seg.buffer, parts.board.buffer, parts.alight.buffer] };
       };
       for (const c of early) {

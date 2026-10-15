@@ -811,9 +811,11 @@ there, T-296). Measurements on the real New York network: notes/T-276.md.
 **The market opens without its zone pairs** (T-174). The figures that need all pairs (each zone's row normaliser, the day's
 trips, each corridor's trips, the pair count) come from the pack's `derived` block, written by
 the same Rust code natively (`bin/market_pack.rs`, run by `pipeline/intercity.py`; 0.46 s), and
-`set_network` builds the pairs only between zones some station serves (any other pair has no
-access at one end, so no rail trip): 127,646 of 2.26M on the real New York save, in the whole
-list's order, so every rail figure is the same sum. All-mode trips for a selection are
+`set_network` builds the pairs only between zones some station serves whose stations share a track
+component (any other pair has no access at one end, or no path, so no rail trip; T-409: the
+components are the rail graph's, every line and walking transfer at any frequency, and the
+commutes between zones follow the same rule): 127,646 of 2.26M on the real New York save, in the
+whole list's order, so every rail figure is the same sum. All-mode trips for a selection are
 computed row by row for its zones when asked (one row is every other zone, about 0.1 ms).
 The block carries its formula name, the decay at four distances (to 1e-9: the pipeline's exp
 and powf are the platform's, the browser's Rust's own) and a checksum of the zones; if any
@@ -994,13 +996,20 @@ result and answer. A cluster is joined up from populations, stations and lines: 
 stations; a station complex joins its stations; stations within 1 km join (merged platforms are
 100 m, walking transfers 300 m); a city joins every station within 30 km of its cells' bounding box
 (the 4 km walk and the 15 km ride from a home group's centre); the regional market, when open,
-joins every station within 30 km of a market zone's registry box (its sites are those zones' cells,
-its rides reach about 17 km; `MARKET_REACH_M`, T-396). Clusters are worked out afresh for every
-network, so a station or the market that reaches two of them merges them. The market is one
-population, so two networks with no track between them that both lie within its reach share one
-cluster; splitting its pairs by the networks their ends reach needs the market split in the
-kernel (T-409). A market no station reaches is a cluster of its own with no lines: solved once
-and kept. Lines and stations no population reaches are in no cluster and carry nobody.
+joins each of its own 6 km zones to every station within 30 km of the box of that zone's sites
+(its rides reach about 17 km; `MARKET_REACH_M`, `IntercityApi.zone_boxes`), one node per zone, so
+every station in a zone's access lists is in that zone's cluster, and two networks meet through
+the market only where one 6 km zone reaches both (T-409). Clusters are
+worked out afresh for every network, so a station or a population that reaches two of them merges
+them. Each cluster the market reaches holds a part of the market of its own (`IntercityApi.beside`,
+sharing the pack's sites and zones, kept by the cluster's market zones), set on the cluster's
+network alone: its pairs are those between zones its own stations serve, and a pair whose ends lie
+in two clusters is in neither, its trips fixed in the pack's totals like any other pair with no
+rail path. The market's figures are its parts' added up: rail from each, the trips, pairs and
+corridor trips (which need no network) once. A market zone no station reaches is in no cluster;
+with none reached the market is a cluster of its own with no lines, solved once and kept. Lines and
+stations no population reaches are in no cluster and carry nobody. `?perfOff=split` joins the
+market's zones into one node, as before T-409.
 Every population of a cluster crowds on the cluster's own loads, which are the whole network's
 there, since no other population puts a rider on its lines; so the figures are the same as one
 solve of everything. A worker keeps what each population last solved, and a cluster whose
