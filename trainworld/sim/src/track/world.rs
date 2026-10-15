@@ -91,6 +91,8 @@ impl TrackWorld {
     /// Solve headways from a fixed whole-line fleet and the capacity-adjusted round trip.
     /// A positive derivative bound damps feedback from shared resources.
     /// Runs on edits only, with a bounded number of global capacity solves.
+    /// Levels share no capacity, so each level settles on its own and a level already within
+    /// tolerance is left alone to the bit: demand keeps its periods only then (T-124, T-415).
     fn settle_train_counts(&mut self) -> Vec<u32> {
         let ids: Vec<u32> = (0..self.net.line_count() as u32)
             .filter(|&l| self.net.line_ok(l) && self.net.line_trains[l as usize].is_some() && self.svc.lines[l as usize].ok).collect();
@@ -100,29 +102,28 @@ impl TrackWorld {
         for _ in 0..80 {
             let trips: Vec<[f64; 3]> = ids.iter().map(|&id| self.svc.lines[id as usize].round_trip).collect();
             let rates: Vec<[f32; 3]> = ids.iter().map(|&id| self.net.line_tph[id as usize]).collect();
-            let mut initial_error = 0.0f64;
+            let mut active = [false; LEVELS];
             for (j, &id) in ids.iter().enumerate() {
                 let counts = self.net.line_trains[id as usize].unwrap();
-                for lev in 0..LEVELS { initial_error = initial_error.max((rates[j][lev] as f64 * trips[j][lev] / 3600.0 - counts[lev] as f64).abs()); }
+                for lev in 0..LEVELS {
+                    if (rates[j][lev] as f64 * trips[j][lev] / 3600.0 - counts[lev] as f64).abs() >= 0.0001 { active[lev] = true; }
+                }
             }
-            if initial_error < 0.0001 { break; }
-            // A common 1% upward probe measures the sum of positive congestion derivatives.
+            if !active.contains(&true) { break; }            // A common 1% upward probe measures the sum of positive congestion derivatives.
             // Dividing by this bound damps shared-track feedback even close to saturation.
             for &id in &ids {
-                for lev in 0..LEVELS { self.net.line_tph[id as usize][lev] *= 1.01; }
+                for lev in (0..LEVELS).filter(|&lev| active[lev]) { self.net.line_tph[id as usize][lev] *= 1.01; }
             }
             let d = self.svc.update_scoped(&self.net, &[], &ids, true, Some((&[], &[])));
             affected.extend(d.recomputed);
-            let mut error = 0.0f64;
             for (j, &id) in ids.iter().enumerate() {
                 let i = id as usize;
                 let counts = self.net.line_trains[i].unwrap();
-                for lev in 0..LEVELS {
+                for lev in (0..LEVELS).filter(|&lev| active[lev]) {
                     let trip = trips[j][lev];
                     let rise = ((self.svc.lines[i].round_trip[lev] - trip) / 0.01).max(0.0);
                     let old = rates[j][lev] as f64;
                     let residual = old * trip - counts[lev] as f64 * 3600.0;
-                    error = error.max(residual.abs() / 3600.0);
                     self.net.line_tph[i][lev] = (if counts[lev] == 0 || trip <= 0.0 { 0.0 } else {
                         (old - residual / (trip + rise)).max(0.0)
                     }) as f32;
@@ -130,7 +131,6 @@ impl TrackWorld {
             }
             let d = self.svc.update_scoped(&self.net, &[], &ids, true, Some((&[], &[])));
             affected.extend(d.recomputed);
-            if error < 0.0001 { break; }
         }
         for &id in &ids { self.svc.lines[id as usize].trains = self.net.line_trains[id as usize].unwrap(); }
         affected.extend(ids.into_iter().filter(|&id| before[id as usize] != self.net.line_tph[id as usize]));

@@ -476,6 +476,49 @@ fn whole_line_counts_include_congestion_and_odd_fleets() {
     }
 }
 
+#[test]
+fn a_count_edit_at_one_level_leaves_the_others_to_the_bit() {
+    // T-415: two fleets sharing track; editing the high level must not move medium or low
+    let mut w = world();
+    let a = node(&mut w, 0.0, 0.0, 0);
+    let b = node(&mut w, 1000.0, 0.0, 0);
+    let c = node(&mut w, 2500.0, 0.0, 0);
+    edge(&mut w, a, b, &[], 0).unwrap();
+    edge(&mut w, b, c, &[], 0).unwrap();
+    station(&mut w, a, 200); station(&mut w, b, 200); station(&mut w, c, 200);
+    let first = line(&mut w, &[a, b, c], [8.0, 5.0, 2.0]);
+    let second = line(&mut w, &[a, b], [8.0, 5.0, 2.0]);
+    for id in [first, second] {
+        let tph = w.net.line_tph[id as usize];
+        w.apply(Op::TrainCounts { id, trains: Some([11, 7, 3]), tph }).unwrap();
+    }
+    let figures = |w: &TrackWorld| -> Vec<(u32, u32, Vec<f64>)> {
+        let mut v = vec![];
+        for id in [first, second] {
+            for lev in 1..LEVELS {
+                for r in 0..2 {
+                    let mut f = w.svc.lines[id as usize].stop_to_stop(r, lev);
+                    f.push(w.svc.lines[id as usize].round_trip[lev]);
+                    v.push((w.net.line_tph[id as usize][lev].to_bits(), lev as u32, f));
+                }
+            }
+        }
+        v
+    };
+    for n in [13, 12, 14, 11] {
+        let before = figures(&w);
+        let high = w.net.line_tph[first as usize][0];
+        let tph = w.net.line_tph[first as usize];
+        w.apply(Op::TrainCounts { id: first, trains: Some([n, 7, 3]), tph }).unwrap();
+        assert_ne!(w.net.line_tph[first as usize][0], high);
+        let after = figures(&w);
+        for (x, y) in before.iter().zip(&after) {
+            assert_eq!(x.0, y.0, "level {} trains an hour moved", x.1);
+            assert!(x.2.iter().zip(&y.2).all(|(p, q)| p.to_bits() == q.to_bits()), "level {} times moved", x.1);
+        }
+    }
+}
+
 
 #[test]
 #[ignore = "native schedule edit timing"]

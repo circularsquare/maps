@@ -106,7 +106,7 @@ try {
   };
   await settle();
   out.stages.prep = await sig();
-  // (a) the high level's trains on one line (the first also moves the medium level: T-415)
+  // (a) the high level's trains on one line
   for (let i = 0; i < REPS + 1; i++) {
     await settle();
     const t = await timed({ op: 'setTrainCount', line: nyLine, trains: i % 2 ? [20, 12, 6] : [22, 12, 6] });

@@ -192,7 +192,9 @@ One line alone has no queueing delay (its trains are evenly spaced) until it is 
 **Settled in the clock worker before demand runs.** Whole-line train allocations derive their
 frequencies from capacity-adjusted round trips with a bounded, damped solve on edits (T-104).
 Delays and derived frequencies feed back until settled, with at most 80 iterations and continuous
-delays on resources used by count schedules. Legacy fixed-frequency schedules retain one
+delays on resources used by count schedules. Each level settles on its own (levels share no
+capacity): a level whose fleets already match their counts within 0.0001 trains is not stepped,
+so its rates and run times stay the same to the bit (T-415). Legacy fixed-frequency schedules retain one
 capacity pass: delay lengthens their round trips and raises fleet needs without changing rate.
 The underlying capacity pass is incremental: an edit
 rebuilds only the resources around the edges, nodes and lines it touched and re-solves those and

@@ -1,5 +1,7 @@
 # Archive
 
+- T-415 [P3] A count edit at one level no longer moves other levels' figures. Done 2026-10-15: the fleet settle loop steps only levels outside tolerance, so the New York save's first high-level edit lands in 11.5 s instead of 20.8. notes/T-415.md.
+
 - T-416 [P2] Markers at loose ends and draggable points. Done 2026-10-15: round markers on every loose end with the track or station tool, square ones on draggable blueprint points with the select tool (`map/endMarkers.ts`); the existing node snap does the rest.
 
 - T-417 [P2] Colours on the labels that stay on segments. Done 2026-10-15: curve labels (radius, speed) sit on the speed colour at half strength, in drawing, reshaping and node drag. The game has no per-segment length label.
