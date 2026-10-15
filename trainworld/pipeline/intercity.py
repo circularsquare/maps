@@ -1,28 +1,18 @@
-"""T-117, T-276: the regional market's pack, data/packs/intercity.json.
+"""T-117, T-276: the Northeast's sites and commutes between zones, data/packs/intercity.json.
 
-Endpoint sites from every registered zone pack's cells (600 m squares; 6 km zones form the market's
-gravity), each site's parking for an arriving car (the local layer's rule), and the outside world:
-everyone living in no zone (pipeline/outside.py, Kontur), so a share of each zone's longer trips
-leaves the map. The trip rate and the distance curve are fitted to NHTS 2017
-(research/intercity/market_fit.py, docs/zones.md 5). Mercer County is in New York's pack since
-T-276; its market place (id 2) keeps its name and has no sites.
+Endpoint sites from the Northeast's zone packs (the registry's cities with a `market`: 600 m squares
+in the New York equirectangular frame, `origin`; 6 km zones), each site's parking for an arriving
+car (the local layer's rule), then the joint commute gravity, which reads these sites and writes
+the commutes between zones into the same file. Mercer County is in New York's pack since T-276;
+its market place (id 2) keeps its name and has no sites.
 
-    python pipeline/outside.py              first, when a zone is added (the outside world)
-    python pipeline/intercity.py            sites from the city packs, the joint commute gravity
-                                            (rewrites every zone pack's gravity, T-276), then
-                                            the derived block; --no-joint skips the gravity
-    python pipeline/intercity.py --derive   only the derived block, on the pack as it is
+    python pipeline/intercity.py            the sites, the joint commute gravity (rewrites every
+                                            Northeast pack's gravity, T-276), then every zone's
+                                            market pack (pipeline/market_zones.py, T-377);
+                                            --no-joint skips the gravity
 
-The derived block (T-174) holds the figures that need every zone pair (each zone's gravity
-normaliser, the day's trips, each corridor's), computed by the sim crate's own market code
-(`market_pack`, seconds), so the game never visits all pairs when it opens the market. Run
-`--derive` after changing the market's zone-pair formula in sim/src/demand/intercity.rs (its
-`FORMULA`); a pack whose block is stale still opens, deriving it in every worker (slow).
-
-The sites' x and y are metres in the New York equirectangular frame (`origin`). The pack names
-that frame (`frame`, T-128), and the game takes zone distances and drive times through it on the
-ground (great circles) instead of straight in the plane. `--derive` adds `frame` to a pack written
-before T-128 (its sites are in the same frame); without it the game keeps the plane distances.
+The game no longer reads this file (T-377): pipeline/market_zones.py takes the Northeast's sites
+and commutes from it into each zone's own market pack, `data/packs/<id>.market.json`.
 """
 import json
 import math
@@ -86,22 +76,9 @@ def sites():
     return out, parks
 
 
-def outside_points(site_rows):
-    """The outside world (pipeline/outside.py) in the sites' frame, each point's people times the
-    represented places' attraction per person (people + 2 x jobs, over people)."""
-    src = json.loads((ROOT / "data/work/outside.json").read_text(encoding="utf-8"))
-    zones = {c["id"] for c in REGISTRY["cities"] if c["market"] >= 0}
-    if set(src["zones"]) != zones:
-        sys.exit(f"data/work/outside.json was made for zones {sorted(src['zones'])}, the registry has {sorted(zones)}: run pipeline/outside.py")
-    s = np.array(site_rows, float)
-    alpha = (s[:, 2] + 2 * s[:, 3]).sum() / s[:, 2].sum()
-    p = np.array(src["points"], float)
-    x, y = lonlat_to_market(p[:, 0], p[:, 1])
-    return [[round(float(a), 0), round(float(b), 0), round(float(alpha * w), 1)] for a, b, w in zip(x, y, p[:, 2])], alpha
-
 def joint():
     """T-276: one commute gravity over every zone pack (`joint_gravity`): rewrites each pack's
-    gravity factors and the market pack's commutes between zones. About two minutes."""
+    gravity factors and the market pack's commutes between zones. About a minute (T-297)."""
     cargo_bin("joint_gravity", "--root", str(ROOT), "--threads", os.environ.get("OMP_NUM_THREADS", "3"),
               "--report", str(ROOT / "data/work/joint_report.json"))
 
@@ -118,62 +95,23 @@ def cargo_bin(name, *args):
                     "--manifest-path", str(ROOT / "sim/Cargo.toml"), "--", *args], env=env, check=True)
 
 
-def derive(path):
-    """Write the pack's derived block with the sim crate's `market_pack` (T-174)."""
-    env = dict(os.environ)
-    env["PATH"] = os.path.join(os.path.expanduser("~"), ".cargo", "bin") + os.pathsep + env.get("PATH", "")
-    env.setdefault("CARGO_BUILD_JOBS", "2")
-    # build_city.py's target dir: the pipeline never waits on (or blocks) the app's wasm builds
-    env["CARGO_TARGET_DIR"] = str(ROOT / "data/work/target")
-    cargo = shutil.which("cargo", path=env["PATH"])
-    if not cargo:
-        sys.exit("cargo not found: install Rust (rustup) or put ~/.cargo/bin on PATH")
-    subprocess.run([cargo, "run", "--quiet", "--release", "--features", "demand", "--bin", "market_pack",
-                    "--manifest-path", str(ROOT / "sim/Cargo.toml"), "--", str(path)], env=env, check=True)
-
-
 def frame():
     """The frame the sites are in (T-128), as the registry writes frames."""
     return {"kind": "equirect", "lon": ORIGIN[0], "lat": ORIGIN[1]}
 
 
-def name_frame(path):
-    """Give a pack written before T-128 its `frame` (and format 2); the block is rewritten after."""
-    data = json.loads(path.read_text(encoding="utf-8"))
-    if "frame" in data:
-        return
-    o = data.get("origin", {"lon": ORIGIN[0], "lat": ORIGIN[1]})
-    if (o["lon"], o["lat"]) != tuple(ORIGIN):
-        sys.exit(f"{path}: sites at origin {o}, not {ORIGIN}: rebuild with pipeline/intercity.py")
-    out = {}
-    for k, v in data.items():
-        if k == "derived":
-            continue
-        out[k] = 2 if k == "format" else v
-        if k == "origin":
-            out["frame"] = frame()
-    out.setdefault("frame", frame())
-    path.write_text(json.dumps(out, separators=(",", ":")), encoding="utf-8")
-    print(path, "now names its frame", out["frame"])
-
-
 if __name__ == "__main__":
     path = ROOT / "data/packs/intercity.json"
-    if "--derive" in sys.argv[1:]:
-        name_frame(path)
-    else:
-        site_rows, site_park = sites()
-        outside, alpha = outside_points(site_rows)
-        data = {"format": 2, "origin": {"lon": ORIGIN[0], "lat": ORIGIN[1]}, "frame": frame(),
-                "markets": MARKETS,
-                "zone_m": 6000, "trip_rate": TRIP_RATE,
-                "description": f"{TRIP_RATE} weekday non-commute departures per resident (NHTS 2017, Northeast, fitted with the distance curve: research/intercity/market_fit.py), shared among every zone and the outside world (attraction {alpha:.3f} per outside person).",
-                "sources": ["2020 Census block population less institutional group quarters (T-234)", "LODES 2023/2022 jobs", "registered zone-pack cells",
-                            "NHTS 2017 trips by distance", "Kontur Population 2023 (the outside world)"],
-                "sites": site_rows, "site_park": site_park, "outside": outside}
-        path.write_text(json.dumps(data, separators=(",", ":")), encoding="utf-8")
-        print(path, len(site_rows), "sites", len(outside), "outside points", path.stat().st_size, "bytes")
-        if "--no-joint" not in sys.argv[1:]:
-            joint()
-    derive(path)
+    site_rows, site_park = sites()
+    data = {"format": 2, "origin": {"lon": ORIGIN[0], "lat": ORIGIN[1]}, "frame": frame(),
+            "markets": MARKETS, "zone_m": 6000, "trip_rate": TRIP_RATE,
+            "description": "The Northeast's endpoint sites and commutes between zones; the game reads each zone's market pack instead (T-377, pipeline/market_zones.py).",
+            "sources": ["2020 Census block population less institutional group quarters (T-234)", "LODES 2023/2022 jobs", "registered zone-pack cells"],
+            "sites": site_rows, "site_park": site_park}
+    path.write_text(json.dumps(data, separators=(",", ":")), encoding="utf-8")
+    print(path, len(site_rows), "sites", path.stat().st_size, "bytes")
+    if "--no-joint" not in sys.argv[1:]:
+        joint()
+    import market_zones
+    market_zones.main([])
 

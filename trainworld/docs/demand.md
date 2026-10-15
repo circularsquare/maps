@@ -708,17 +708,16 @@ pack (16 ms New York, 1-7 ms the others, natively); the cost is each city's ever
 (natively New York 0.6 s, Washington 0.3 s, Philadelphia 0.2 s, Boston 0.2 s, Baltimore 0.1 s,
 the four small ones 0.02-0.06 s, since T-397's sample counts; in Chrome, measured before T-397
 with about twice the samples, New York 1.3-1.9 s in each of five workers, Philadelphia 1.1-1.2 s
-and Washington 1.7-1.8 s); the
-regional market was 1.0 s natively and 1.2-1.6 s in Chrome until
-T-174, and is now 0.09 s natively and 0.1-0.4 s in Chrome (reading its sites). The market is
-opened (T-396) once a market zone is viewed, beside the view or reached, or a built station lies
-within its reach (30 km of a market zone's box); before that no solve waits for it
-or covers it, and a solve sent without it is sent again once it opens. A save with nothing near
-the Northeast never downloads it. **Packs close when nobody needs them** (T-301): a zone that is
+and Washington 1.7-1.8 s). A zone's **market pack** (T-377, `<id>.market.json`) opens in the
+solving workers once the zone is viewed, beside the view or reached, or a built station lies
+within 30 km of its box (T-396's rule, per zone); before that no solve waits for it or covers it,
+and a solve sent without a market pack open since is sent again. The workers compose the market
+from the packs they hold (`MarketPacks.market`) whenever one opens or closes. **Packs close when
+nobody needs them** (T-301): a zone that is
 neither viewed, beside the view, reached by a station nor part of the load in hand closes in every
 worker (bare or not) once it has been so for 60 s, or at once when more than two such zones are
-open (the least recently needed first); the market closes 60 s after none of its zones is in those
-sets and no station is in its reach. A closed zone carries no rider on any line, so the shown
+open (the least recently needed first); a zone's market pack closes 60 s after the zone is in none
+of those sets and no station is in its reach. A closed zone carries no rider on any line, so the shown
 figures stand (a bare zone's city figures stay shown); the next solve leaves it out, and a worker
 solving with it closes it when that solve ends. It reopens as it first opened (download, mostly
 from the browser's cache, and opening). The bare copy of a zone that a shown solve covers closes at
@@ -798,15 +797,16 @@ until it is ready (`demandClient.ts` `held`). Compiled code is shared by a page'
 they all open on optimised code: New York 1.3-1.8 s in every worker in 10 of 10 page loads,
 against 3.4-7.3 s in 7 of 10 without (`?perfOff=stagger`, same build).
 
-**The market since T-276** (docs/zones.md 4-5, [regional.md](regional.md) 5.1). Longer trips: 0.107 weekday departures
-a resident, onset 25-50 km, `max(d, 25)^-2.37`, an outside world in every zone's normaliser
-(`MarketPack::outside`, pipeline/outside.py: Kontur people in no zone, 6,037 points of H3
-resolution 5 to 3 by distance, cut at 5,000 km), so the `derived` block also holds the departures
-that leave the map (0.76M of 5.13M with the 13 zones). The car's perceived minutes add 15 cents a road km and the
+**The world market** (T-377, [regional.md](regional.md) 5.1, docs/zones.md 4-5). Longer trips
+follow T-376's rule: ground and tail departures, each over its own normaliser against the world
+field, both stored per 6 km zone in the place's pack, so the departures to places with no zone
+(`info()[4]`) need no outside world. The car's perceived minutes add 15 cents a road km and the
 destination zone's parking (`site_park`: the local rule at each site's 2 km zone, job-weighted),
-both halved for two occupants (`car_min`). Commutes between zones: `commute_home`, `commute_work`
-(a site of each 6 km zone) and `commute_trips` from `bin/joint_gravity.rs`; at opening merged by
-zone pair, at `set_network` kept between served zones (`cpairs`), and in each period's pass chosen
+both halved for two occupants (`car_min`). Commutes between zones: in the home place's pack,
+`commute_home` (its 6 km zone), `commute_place` and `commute_work` (the work place and its zone)
+and `commute_trips`, from `bin/joint_gravity.rs` by way of `data/packs/intercity.json`
+(pipeline/market_zones.py); at opening merged by zone pair, at `set_network` kept between served
+zones (`cpairs`), and in each period's pass chosen
 once per commuter on its home-to-work station pairs (logit 0.05, drive x 1.33 + parking at work,
 access weights at that scale, the home end with rides, [regional.md](regional.md) 5.3), outward legs at `TO_WORK[q]`, the trip home at `TO_HOME[q]` on the
 same pairs reversed; their own assignment (`c_avg`) is the work purpose's share of the market's
@@ -817,30 +817,30 @@ working there by home zone). A station's far-zone rows hold both parts and take 
 weekend factor (a known approximation: commuters are counted 1.58x rather than 0.30x on a weekend
 there, T-296). Measurements on the real New York network: notes/T-276.md.
 
-**The market opens without its zone pairs** (T-174). The figures that need all pairs (each zone's row normaliser, the day's
-trips, each corridor's trips, the pair count) come from the pack's `derived` block, written by
-the same Rust code natively (`bin/market_pack.rs`, run by `pipeline/intercity.py`; 0.46 s), and
-`set_network` builds the pairs only between zones some station serves whose stations share a track
-component (any other pair has no access at one end, or no path, so no rail trip; T-409: the
-components are the rail graph's, every line and walking transfer at any frequency, and the
-commutes between zones follow the same rule): 127,646 of 2.26M on the real New York save, in the
-whole list's order, so every rail figure is the same sum. All-mode trips for a selection are
-computed row by row for its zones when asked (one row is every other zone, about 0.1 ms).
-The block carries its formula name, the decay at four distances (to 1e-9: the pipeline's exp
-and powf are the platform's, the browser's Rust's own) and a checksum of the zones; if any
-disagrees the game derives it at opening instead, with the same result
-(`intercity_real_network_outputs`; in WASM within 1.2e-7 relative, the libm difference,
-`checks/t174-market-check.mjs`).
+**A composition opens without its zone pairs** (T-174, T-377). A market is the world (the
+registry's frame, rule and every place's row) plus the packs of the places a worker holds
+(`MarketPacks`, each parsed once). The figures that need all pairs (the day's trips, each
+corridor's, the departures to places with no zone) come from the rows, the same in every
+composition, so opening one parses its packs and visits no pair (all 20 places: 0.66 s natively).
+`set_network_ll` takes stations as longitude and latitude; each place's sites see them in the
+place's own frame for access and rides (each place on its own, so its figures never depend on which
+other packs are open), the graph in the first place's. It builds pairs only between zones some
+station serves whose stations share a track component (T-409: the rail graph's, every line and
+walking transfer at any frequency; the commutes between zones follow the same rule) on one
+landmass, in the composition's zone order, so every rail figure is the same sum. All-mode trips
+for a selection are computed row by row for its zones when asked, against every open zone and, by
+place, every place not open (`selection_all_day`, over any periods: the worker asks it of the
+composition of every pack it holds and adds each part's rail, `selection_rail_day`). Answers lay
+out every place and every 6 km zone of the world (`zone_count`, the rows' zone counts in place
+order); a zone not open has no figures of its own and sits at its place's centre. Positions the
+app reads are in the market frame (the New York equirectangular one) whatever the place.
 
-**The market's distances are on the ground** (T-128). Its sites and zones stay in the New York
-equirectangular pack frame (their x and y, the 600 m site squares and every position the app
-reads are unchanged), but the pack names that frame (`"frame": {"kind": "equirect", ...}`, format
-2), and the kernel takes each zone centre through it to the unit sphere and measures zone pairs
-by great circle (`zone_km`; the same as `track::frame::great_circle`, which the world frame's
-lengths are checked against). The decay and the drive time follow. Site lon/lat are not stored:
-the frame is affine in lon/lat, so the plane's weighted zone centre is exactly the weighted centre
-of the sites' lon/lat. A pack without `frame` keeps plane distances under the old formula name.
-`pipeline/intercity.py --derive` adds `frame` to an older pack.
+**The market's distances are on the ground** (T-128). Each zone centre goes through its pack's
+frame to the unit sphere and zone pairs are measured by great circle (`zone_km`; the same as
+`track::frame::great_circle`); far places by their centres'. The decay and the drive time follow.
+An old single pack (`sites` with a market column: the Northeast's `data/packs/intercity.json`,
+which the joint commute gravity reads and writes, and the tests' fixtures) opens as a closed world
+over its own zones with the ground curve alone.
 
 The Northeast recomputes every open city population and the separate regional market on service or
 fare changes; per-city dirty filtering remains future work. At each period's crowding round, the
@@ -868,7 +868,8 @@ and exits. A period's regional solve costs about 8 ms on the small real-pack pro
 
 Each solving worker holds both local APIs and the regional API; stations transform from the loaded
 game's world frame (T-125) through longitude and latitude into each pack's own frame (the regional
-market's is the New York pack frame; its zone distances are great circles, T-128). Line and station loads and fares include all
+market takes longitude and latitude and puts them in each place's frame, T-377; its zone distances
+are great circles, T-128). Line and station loads and fares include all
 populations. The top bar's denominator and the cell, flow and station-catchment queries remain the
 focused city's local commutes. Query XY is returned in world coordinates; cell and zone ids remain
 pack-local. Focus changes reset caches, layers and commuter selections, and reject late replies,
@@ -1011,8 +1012,9 @@ every station in a zone's access lists is in that zone's cluster, and two networ
 the market only where one 6 km zone reaches both (T-409). Clusters are
 worked out afresh for every network, so a station or a population that reaches two of them merges
 them. Each cluster the market reaches holds a part of the market of its own (`IntercityApi.beside`,
-sharing the pack's sites and zones, kept by the cluster's market zones), set on the cluster's
-network alone: its pairs are those between zones its own stations serve, and a pair whose ends lie
+sharing the composition's sites and zones, kept by the cluster's market zones' world ids; a part
+keeps the composition it was made from while its key lasts, so a pack opened elsewhere re-solves
+nothing), set on the cluster's network alone: its pairs are those between zones its own stations serve, and a pair whose ends lie
 in two clusters is in neither, its trips fixed in the pack's totals like any other pair with no
 rail path. The market's figures are its parts' added up: rail from each, the trips, pairs and
 corridor trips (which need no network) once. A market zone no station reaches is in no cluster;

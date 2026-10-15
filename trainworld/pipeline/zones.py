@@ -11,7 +11,8 @@
    far-zoomed bubble of a zone the game has not opened.
 
 Run after building a zone pack and after pipeline/intercity.py (the joint gravity changes what each
-pack keeps). Then pipeline/outside.py and pipeline/intercity.py again when zones were added.
+pack keeps). Then pipeline/intercity.py again when Northeast zones were added, or
+pipeline/market_zones.py for any other zone (T-377).
 """
 import json
 import os

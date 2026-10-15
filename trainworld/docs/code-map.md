@@ -138,8 +138,8 @@ Run from the maps root (`node trainworld/checks/<file>`).
   `--experimental-strip-types`), `t066-wasm-check` (demand WASM contract), `t066-worker-check` and
   `t149-worker-check` (the real demand worker in Node, a few minutes each), `t325-bare-check` (a
   zone opened bare against the same zone solved, bubbles and bubble clicks, to the bit; `ZONE=tor`
-  for another), `t174-market-check`
-  (the regional market's derived block), `t409-worker-check` (two networks with no track between
+  for another), `t377-world` (the real save, then lines in Toronto and London:
+  startup, edits per cluster, memory, London's longer trips by place), `t409-worker-check` (two networks with no track between
   them solve as two clusters, each as it would alone, to the bit; about a minute), `t301-worker-check`
   (packs and the market closed and reopened, also mid-solve and bare: figures to the bit).
 - Browser and timing (Playwright, `PLAYWRIGHT_MODULE`): `startup-timing.mjs` with
@@ -211,10 +211,10 @@ The runtime needs `build_city.py` outputs for all registered zones: cities `nyc`
 since T-276), `phl`, `bos`, `wdc`, `bal`, `pvd`, `nhv`, `hfd`, `spf`; non-city zones `wor`, `wnd`,
 `nlc`, `lit` (docs/zones.md). Then in order: `zones.py` (registers built non-city zones and
 writes every entry's `box` through `zone_boxes.py`, which also runs alone, T-302),
-`outside.py` (the market's outside world, Kontur), `intercity.py` (the market's sites, then the
-joint commute gravity `joint_gravity`, which rewrites every zone pack's gravity factors and the
-market's commute list, about 12 minutes, then the `derived` block with `market_pack`; `--derive`
-does only that, seconds: rerun it after changing `FORMULA` in `intercity.rs`, T-174),
+`intercity.py` (the Northeast's sites, then the joint commute gravity `joint_gravity`, which
+rewrites every Northeast pack's gravity factors and the commute list, then `market_zones.py`),
+`market_zones.py [ids]` (each zone's market pack against the world field, then `market_pack`'s
+registry rows; seconds a zone, T-377),
 `zones.py --trips`, and last `routes.py <ids>` for any pack whose zones changed (T-275).
 
 Vite serves and copies all registered packs. Zone packs stay separate; demand workers share a

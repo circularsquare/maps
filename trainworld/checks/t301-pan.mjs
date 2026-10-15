@@ -1,4 +1,4 @@
-﻿// T-301: a long pan across the Northeast and on to Toronto, then back, with the commuter bubbles on
+// T-301: a long pan across the Northeast and on to Toronto, then back, with the commuter bubbles on
 // (so the zones beside the view open too). Samples every worker's WASM memory and the packs open,
 // and times how long each zone in view takes to be open after the view arrives (a zone closed on the
 // way out reopens on the way back).
@@ -61,8 +61,8 @@ const state = () => page.evaluate(() => {
   return {
     t: performance.now(),
     mem: mem.map((m, i) => Math.max(m, solveMem[i] ?? 0)),
-    full: [...c.opened].filter((x) => x !== 'market').sort(),
-    market: c.opened.has('market'),
+    full: [...c.opened].filter((x) => !x.startsWith('market:')).sort(),
+    market: [...c.opened].filter((x) => x.startsWith('market:')).length,
     bare: [...c.bareOpen.keys()].sort(),
     view: d.activeCity.peek(),
     nearby: d.nearby ? d.nearby() : null,

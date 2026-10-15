@@ -42,25 +42,28 @@ export interface DemandNetwork {
   hopKm: Float32Array;
 }
 
+/** T-377: a zone's part of the world market (`data/packs/<id>.market.json`). */
+export interface MarketPack { id: CityId; pack: string | Uint8Array }
+
 export type ToDemand =
-  /** start the WASM with the periods this worker solves; city packs (header text and .bin) and the
-   * regional market may come here or in `open`s after it (T-149) */
-  | { kind: "init"; packs: { id: CityId; header: string; bin: ArrayBuffer }[]; intercity?: string | Uint8Array; periods: number[]; aux?: boolean;
+  /** start the WASM with the periods this worker solves; city packs (header text and .bin) and
+   * zones' market packs may come here or in `open`s after it (T-149) */
+  | { kind: "init"; packs: { id: CityId; header: string; bin: ArrayBuffer }[]; intercity?: MarketPack[]; periods: number[]; aux?: boolean;
       /** T-173: open a small synthetic everyday layer first (`everyday_warm_up`), before `ready` */
       warmEveryday?: boolean;
       /** T-325, the aux worker: each solving worker's periods, in worker order, so a zone it holds
        * alone answers period group by period group as the solving workers would */
       groups?: number[][] }
-  /** open more city packs and/or the regional market (T-149); answered by `opened`. The market is
-   * the pack's text or, from the page, its UTF-8 bytes (T-180: decoded in the worker; the aux
-   * worker, which never opens it, gets none). `bare` (T-325, aux worker only): a zone no station
-   * reaches, opened for its bubbles and city figures alone (no rail, so no solve needs it); a
-   * later `open` of the same pack without `bare` adds it to the solves as well */
-  | { kind: "open"; packs: { id: CityId; header: string; bin: ArrayBuffer }[]; intercity?: string | Uint8Array; bare?: boolean }
-  /** T-301: close city packs (and the market) no longer needed, freeing their WASM memory for the
-   * next pack; `bare`: the aux worker's bare copies. A pack the solve in hand covers closes when that
-   * solve ends, unless an `open` of it comes first. Answered by `closed`. */
-  | { kind: "close"; ids: CityId[]; market?: boolean; bare?: boolean }
+  /** open more city packs and/or zones' market packs (T-149, T-377); answered by `opened`. A
+   * market pack is its text or, from the page, its UTF-8 bytes (T-180: decoded in the worker; the
+   * aux worker, which never opens one, gets empty bytes). `bare` (T-325, aux worker only): a zone
+   * no station reaches, opened for its bubbles and city figures alone (no rail, so no solve needs
+   * it); a later `open` of the same pack without `bare` adds it to the solves as well */
+  | { kind: "open"; packs: { id: CityId; header: string; bin: ArrayBuffer }[]; intercity?: MarketPack[]; bare?: boolean }
+  /** T-301: close city packs and zones' market packs (`markets`) no longer needed, freeing their
+   * WASM memory for the next pack; `bare`: the aux worker's bare copies. A pack the solve in hand
+   * covers closes when that solve ends, unless an `open` of it comes first. Answered by `closed`. */
+  | { kind: "close"; ids: CityId[]; markets?: CityId[]; bare?: boolean }
   /** solve every period of this worker on `net`: free flow, then `rounds` crowding rounds */
   | { kind: "solve"; version: number; net: DemandNetwork; rounds: number;
       /** T-327: start each crowding round only once `go` allows it */
@@ -155,8 +158,8 @@ export type FromDemand =
       /** WASM linear memory, bytes */
       memBytes: number;
     }
-  /** an `open` is done: its cities' info as `ready`'s, and whether it opened the market */
-  | { kind: "opened"; cityInfo: Record<CityId, number[]>; market: boolean; openMs: number; warmMs: number; memBytes: number;
+  /** an `open` is done: its cities' info as `ready`'s, and the zones whose market packs it opened */
+  | { kind: "opened"; cityInfo: Record<CityId, number[]>; markets: CityId[]; openMs: number; warmMs: number; memBytes: number;
       /** T-325: the packs were opened bare (aux worker), with each one's figures */
       bare?: Record<CityId, BareFigures> }
   /** T-301: a `close` is done (WASM memory never shrinks: the freed space is reused) */

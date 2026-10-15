@@ -2,50 +2,66 @@
 
 # 5. Demand: the regional layer
 
-The regional layer carries what crosses zones or goes far [T-117, T-276]: **inter-region trips**
-(visits, business, leisure, 25 km and more) within and between every zone, and **commutes between
-zones**. The design and its reasons are in [zones.md](zones.md); the kernel's side
-(`sim/src/demand/intercity.rs`: the `derived` block, served pairs, queries) in [demand.md](demand.md)
-4.4 "The market since T-276" and after. Market ids are stable and new zones append; Trenton's id
-(2) stays with no sites since Mercer joined New York.
+The regional layer carries what crosses zones or goes far [T-117, T-276, T-377]: **inter-region
+trips** (visits, business, leisure, 25 km and more) within and between every zone of the world,
+and **commutes between zones**. The design and its reasons are in [zones.md](zones.md) and
+notes/T-362.md; the kernel's side (`sim/src/demand/intercity.rs`: compositions, served pairs,
+queries) in [demand.md](demand.md) 4.4 "The world market" and after. Every registered zone is a
+**place** of the market (`place` in the registry); place ids are stable and new zones append;
+Trenton's (2) stays with no sites since Mercer joined New York.
 
 ## 5.1 The total travel market, then rail's share
 
 Generate **total** all-mode trips, then let the player's network earn rail's share.
 
 - **Sites**: population- and job-weighted endpoint sites at 600 m grain from every zone pack,
-  grouped into zones of 6 km.
-- **Inter-region trips**: each resident makes 0.107 departures a weekday, shared by attraction
-  `population + 2 * jobs` x an onset from 0 at 25 km to 1 at 50 km x `max(distance, 25 km)^-2.37`
-  among every zone **and an outside world** (Kontur population living in no zone, at the zones'
-  attraction per person), so a share of trips leaves the map and adding a zone later moves only the
-  trips that went where it now is. Rate and curve are fitted to NHTS 2017 Northeast weekday trips by
-  ground of 50-1,000 km (`research/intercity/market_fit.py`). Distances are great circles between
-  zone centres [T-128]. Opposite zone-pair totals are averaged; tiny pairs are pruned. Local
+  grouped into zones of 6 km, each zone's in its own pack, `data/packs/<id>.market.json`
+  (`pipeline/market_zones.py`; the Northeast's in the market frame, every other zone's in its own
+  pack frame).
+- **Inter-region trips** (T-376's rule, constants in `pipeline/longhaul.json`, copied into the
+  registry's `market.rule`): a resident makes two kinds of departures a weekday, each shared by its
+  own normaliser over the **world field** (T-375: Kontur H3 cells with country, GDP per head and
+  landmass), never over the zone list, so adding a zone moves only the trips that went where it now
+  is:
+  - *ground*: `0.107 x s` departures, weight `a_j x b x onset(25-50 km) x max(d, 25)^-2.37`;
+  - *tail*: `0.00473 x s x u^0.503 / 1.2413` departures, weight
+    `a_j x u_j^0.75 x min(y_j / y_i, 1) x b x onset(300-700 km) x max(d, 171)^-0.703`;
+
+  with `s = min(y / y_US, 1)^0.7` (GDP per head at PPP), `u` the people of the site's H3 r5 cell
+  over 100,000, `a_j` people times `s_j` (inside a pack its `population + 2 x jobs`, rescaled to
+  the pack's people), and `b` 1 within a country, else `0.26 x min(y_i / y_US, 1)^1.5` (the
+  origin's income). Each 6 km zone's two normalisers are computed offline at its centre.
+- **Pairs**: places whose centres are under **250 km** apart pair 6 km zone to 6 km zone at their
+  own distance; farther places pair at the distance between the places' centres, so their 6 km
+  pairs add up to the places' trips exactly, each end's share by its zones' departures over the
+  normalisers and its attraction (DECISIONS 2026-10-15, T-377). Opposite totals are averaged;
+  pairs under 0.01 trips a day each way are pruned. Distances are great circles [T-128]. Local
   outings taper over 40-80 km, so the two layers meet without a gap or double count.
+- **Registry rows**: each place's row (`marketRow`: its zones' sums, centre, country, income,
+  landmass, and its trips with every place under 250 km, every zone pair added up) gives any pair
+  of places its trips with no pack open; `bin/market_pack.rs` writes them from every place's pack.
 - **Commutes between zones**: the cross-pack part of the joint commute gravity
   ([demand.md](demand.md) 4.4, [zones.md](zones.md) 4), spread from 2 km gravity zones to the
   market's zones and kept where at least one a day travels between two 6 km zones (each home zone's
   dropped commuters given to its kept pairs). They travel at the local commute's timing (70/12/6/4/8%
   to work, the return 2/18/58/16/6% on the same station pair reversed) and 0.30 of a weekday's at
   the weekend.
-- **Offline figures**: what needs every zone pair (each zone's normaliser with the outside world,
-  the day's trips, each corridor's, the departures leaving) is computed offline by the game's own
-  code into the pack's `derived` block [T-174]. The game builds pairs only between zones a station
-  serves (the only ones that can carry a rail trip), and a selection's or far zone's all-mode trips
-  row by row on demand. The block names its formula and is ignored if stale (derived at opening
-  instead, same result); `pipeline/intercity.py --derive` refreshes it in seconds.
+- **What is solved**: pairs are built only between 6 km zones some station serves, whose stations
+  share a track component, on one landmass (T-375's, fixed links joined). Every other pair's trips
+  are fixed: counted in the totals, shown, never in the solve. The market's day and its corridors
+  (place pairs) come from the rows, the same in every part of it.
 
 **Mode choice.** Inter-region trips compete with driving through a logit at 0.025 per perceived
 minute. The car takes 15 minutes plus 1.25 times the great-circle distance at 85 km/h, plus 15
 cents a road km and the local layer's parking at the destination, both split over two occupants,
-at 3 perceived minutes a dollar; no tolls (T-270). Commutes between zones choose as local commutes
+at 3 perceived minutes a dollar; no tolls (T-270). There is no car between landmasses: those
+trips stay fixed until air is a mode (T-378). Commutes between zones choose as local commutes
 do: 0.05 per perceived minute, the drive weighted 1.33 plus the work end's parking. Fares, service,
 transfers and shared crowding affect rail; the commutes' loads are the work purpose's [T-158].
 Inter-region trips' period shares are 20/35/25/15/5%; their weekend factor 1.58.
 
-Not modelled yet: air, coach, induced travel, routed drives between zones (T-279; routes inside
-packs are T-275's).
+Not modelled yet: air (T-378), coach, induced travel, routed drives between zones (T-279; routes
+inside packs are T-275's).
 
 ## 5.2 Where a long-distance trip starts and ends
 
@@ -62,7 +78,9 @@ local cells is mapped to the market through its 600 m squares: the sites were bu
 cells, so each selected cell falls in one site's square; a square counts the selected share of its
 people (homes) or attraction (destinations), and a site's share of its zone's departures is its
 population over the zone's (of arrivals, its attraction over the zone's). The numbers are the
-market's own, summed from its zone pairs. A station's riders come from the same assignment that
+market's own, summed from its zone pairs; a place whose pack is not open is counted by place only
+(a far one exactly, a near one as the places' trips times the selected zones' shares of their
+place's departures and attraction). A station's riders come from the same assignment that
 loads the lines, so they add up to its entries and exits.
 
 ## 5.3 Park-and-ride
@@ -87,7 +105,10 @@ within the ride's reach. Player-built feeder lines take part in regional routing
 
 ## 5.4 Size
 
-The regional pack holds its sites, the outside world's points and the commute list (about 14 MB).
-It runs in the same worker pool as the zone packs, periods divided among workers. Each period
-advances all populations from one frozen aggregate flow vector per crowding round. Details and
-checks: [T-117](../notes/T-117.md), [T-276](../notes/T-276.md).
+A place's market pack holds its sites, its 6 km zones' normalisers and its commutes to other
+places (New York's 3.4 MB, Toronto's 1.1 MB). The solving workers open it with the zone (viewed,
+beside the view, reached, or a station within 30 km of its box) and close it as they close the
+zone; a worker composes the market from the packs it holds. It runs in the same worker pool as the
+zone packs, periods divided among workers. Each period advances all populations from one frozen
+aggregate flow vector per crowding round. Details and checks: [T-117](../notes/T-117.md),
+[T-276](../notes/T-276.md), [T-377](../notes/T-377.md).

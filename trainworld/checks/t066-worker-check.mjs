@@ -32,7 +32,8 @@ const next=(predicate)=>new Promise((resolve,reject)=>{
 await next(m=>m.kind==='boot');
 const registry=JSON.parse(readFileSync(new URL('../app/src/game/registry.json',import.meta.url)));
 const packs=registry.cities.map(({id})=>({id,header:readFileSync(new URL(`../data/packs/${id}.json`,import.meta.url),'utf8'),bin:Uint8Array.from(readFileSync(new URL(`../data/packs/${id}.bin`,import.meta.url))).buffer}));
-w.postMessage({kind:'init',packs,intercity:readFileSync(new URL(`../data/packs/${registry.market.pack}.json`,import.meta.url),'utf8'),periods:[0,1,2,3,4]});
+// T-377: every zone's market pack with its city pack
+w.postMessage({kind:'init',packs,intercity:registry.cities.map(({id})=>({id,pack:readFileSync(new URL(`../data/packs/${id}.market.json`,import.meta.url),'utf8')})),periods:[0,1,2,3,4]});
 const ready=await next(m=>m.kind==='ready'||m.kind==='failed');assert.equal(ready.kind,'ready',ready.error);
 assert.equal(Object.keys(ready.cityInfo).length,registry.cities.length);
 const times=new Float32Array(18);for(let lev=0;lev<3;lev++){times[lev*3]=60;times[lev*3+1]=60;times[(lev+3)*3+1]=60;times[(lev+3)*3+2]=60;}

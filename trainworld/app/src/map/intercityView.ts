@@ -49,7 +49,7 @@ export const intercityPick = signal<{ sel: Selection; data: IntercitySelection; 
 /** A selected station's, for the station inspector. */
 export const intercityStationView = signal<IntercityStation | null>(null);
 
-const marketOf = (id: string) => cityById(id).market;
+const marketOf = (id: string) => cityById(id).place;
 
 /** Regional views show the complete place totals, rather than scattered endpoint specks. */
 export const CITY_BUBBLE_ZOOM = 9.5;
@@ -167,18 +167,13 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       return { all, rail };
     };
     const own = selected ? cityById(selected) : null;
-    // a city outside the regional market (market -1: Toronto, T-277) has no longer trips to show
-    if (own && own.market < 0) {
-      view.setDiscs("inter", null);
-      return;
-    }
     // T-276: zoomed out, a zone is one bubble as if it were one place: its local trips (the city
     // view's, or with no rail the pipeline's count for a zone not opened) and the regional
     // layer's trips to and from it (commutes between zones and longer trips)
     const local = cityDemandViews.peek();
-    const points = CITIES.filter((c) => c.market >= 0).map((c) => {
+    const points = CITIES.map((c) => {
       const isOwn = c === own;
-      let t = !own || isOwn ? total(c.market) : pair(own.market, c.market);
+      let t = !own || isOwn ? total(c.place) : pair(own.place, c.place);
       if (!own) {
         const v = local.get(c.id);
         t = { all: t.all + (v ? v.tripsPerDay : c.localTrips ?? 0), rail: t.rail + (v ? v.railTripsPerDay : 0) };
@@ -235,7 +230,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     const regional = map.getZoom() <= CITY_BUBBLE_ZOOM;
     const a = anchor();
     const points = regional ? current.flows.places.filter(p => p.all > 0 && p.place !== current!.own).map(p => {
-      const city = CITIES.find(c => c.market === p.place);
+      const city = CITIES.find(c => c.place === p.place);
       const ll = city?.center ?? packToLngLat(p.x, p.y);
       return { ...p, ll, name: INTERCITY_PLACES[p.place] };
     }) : current.flows.zones.filter(z => z.all > 0 && z.place !== current!.own).map(z => ({...z, ll: packToLngLat(z.x, z.y), name: ""}));

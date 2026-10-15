@@ -1,4 +1,4 @@
-// T-301: closing and reopening packs in the real demand worker (Node, as t409-worker-check.mjs).
+﻿// T-301: closing and reopening packs in the real demand worker (Node, as t409-worker-check.mjs).
 // A worker holding the market, Boston and Philadelphia solves a line in each; then
 //   - Philadelphia closed, the Boston line alone: the same figures to the bit as a worker that kept
 //     Philadelphia open (unreached, it carries nobody), Philadelphia's summary gone;
@@ -45,7 +45,8 @@ function start() {
 }
 const registry = JSON.parse(readFileSync(new URL('../app/src/game/registry.json', import.meta.url)));
 const pack = (id) => ({ id, header: readFileSync(new URL(`../data/packs/${id}.json`, import.meta.url), 'utf8'), bin: Uint8Array.from(readFileSync(new URL(`../data/packs/${id}.bin`, import.meta.url))).buffer });
-const market = readFileSync(new URL(`../data/packs/${registry.market.pack}.json`, import.meta.url), 'utf8');
+// T-377: zones' market packs, opened and closed with their city packs as the page does
+const market = (ids) => ids.map((id) => ({ id, pack: readFileSync(new URL(`../data/packs/${id}.market.json`, import.meta.url), 'utf8') }));
 const FRAME = { kind: 'equirect', lon: -73.985, lat: 40.758 }, R = 6371008.8, RAD = Math.PI / 180;
 const xyOf = ([lon, lat]) => [R * (lon - FRAME.lon) * RAD * Math.cos(FRAME.lat * RAD), R * (lat - FRAME.lat) * RAD];
 const LINES = {
@@ -71,7 +72,7 @@ function network(ids, tph = { bos: [12, 10, 6], phl: [12, 10, 6] }) {
 }
 const ROUNDS = 3;
 const finals = (msgs, version) => [...new Map(msgs.filter((m) => m.kind === 'result' && !m.cluster && m.version === version && m.summary[0] === ROUNDS).map((m) => [m.period, m])).values()].sort((a, b) => a.period - b.period);
-async function worker(init = { packs: [pack('bos'), pack('phl')], intercity: market, periods: [0, 1, 2, 3, 4] }) {
+async function worker(init = { packs: [pack('bos'), pack('phl')], intercity: market(['bos', 'phl']), periods: [0, 1, 2, 3, 4] }) {
   const k = start(); await k.next((m) => m.kind === 'boot');
   k.w.postMessage({ kind: 'init', ...init });
   const r = await k.next((m) => m.kind === 'ready' || m.kind === 'failed'); assert.equal(r.kind, 'ready', r.error);
@@ -109,11 +110,11 @@ await kr.w.terminate();
 const k = await worker();
 const both = await solve(k, 1, network(['bos', 'phl']));
 out.mem.opened = MiB(both.mem);
-await send(k, { kind: 'close', ids: ['phl'] }, 'closed');
+await send(k, { kind: 'close', ids: ['phl'], markets: ['phl'] }, 'closed');
 const bosOnly = await solve(k, 2, network(['bos']));
 sameFinals(bosOnly.results, refBos.results, ['bos'], 'phl closed, bos line');
 assert(bosOnly.results.every((r) => !r.citySummary.phl), 'a closed pack has no summary');
-await send(k, { kind: 'open', packs: [pack('phl')] }, 'opened');
+await send(k, { kind: 'open', packs: [pack('phl')], intercity: market(['phl']) }, 'opened');
 const again = await solve(k, 3, network(['bos', 'phl']));
 sameFinals(again.results, both.results, ['bos', 'phl'], 'phl reopened');
 out.mem.reopened = MiB(again.mem);
@@ -123,7 +124,7 @@ out.mem.reopened = MiB(again.mem);
   const from = k.messages.length;
   k.w.postMessage({ kind: 'solve', version: 4, net: network(['bos', 'phl'], { bos: [14, 10, 6], phl: [12, 10, 6] }), rounds: ROUNDS });
   await k.next((m) => m.kind === 'plan' && m.version === 4, from);
-  k.w.postMessage({ kind: 'close', ids: ['phl'] });
+  k.w.postMessage({ kind: 'close', ids: ['phl'], markets: ['phl'] });
   const done = await k.next((m) => (m.kind === 'done' && m.version === 4) || m.kind === 'failed', from);
   assert.equal(done.kind, 'done', done.error);
   assert(finals(k.messages.slice(from), 4).every((r) => r.citySummary.phl), 'the solve in hand still covers it');
@@ -132,24 +133,24 @@ out.mem.reopened = MiB(again.mem);
   assert(r.results.every((x) => !x.citySummary.phl), 'closed once the solve ended');
 }
 // a close cancelled by a reopen before the solve in hand ends
-await send(k, { kind: 'open', packs: [pack('phl')] }, 'opened');
+await send(k, { kind: 'open', packs: [pack('phl')], intercity: market(['phl']) }, 'opened');
 await solve(k, 6, network(['bos', 'phl']));
 {
   const from = k.messages.length;
   k.w.postMessage({ kind: 'solve', version: 7, net: network(['bos', 'phl'], { bos: [14, 10, 6], phl: [12, 10, 6] }), rounds: ROUNDS });
   await k.next((m) => m.kind === 'plan' && m.version === 7, from);
-  k.w.postMessage({ kind: 'close', ids: ['phl'] });
-  k.w.postMessage({ kind: 'open', packs: [pack('phl')] });
+  k.w.postMessage({ kind: 'close', ids: ['phl'], markets: ['phl'] });
+  k.w.postMessage({ kind: 'open', packs: [pack('phl')], intercity: market(['phl']) });
   const done = await k.next((m) => (m.kind === 'done' && m.version === 7) || m.kind === 'failed', from);
   assert.equal(done.kind, 'done', done.error);
   const r = await solve(k, 8, network(['bos', 'phl']));
   sameFinals(r.results, both.results, ['bos', 'phl'], 'close cancelled by a reopen');
 }
 // the market
-await send(k, { kind: 'close', ids: [], market: true }, 'closed');
+await send(k, { kind: 'close', ids: [], markets: ['bos', 'phl'] }, 'closed');
 const noMarket = await solve(k, 9, network(['bos', 'phl']));
 assert(noMarket.results.every((r) => r.intercitySummary.length === 0), 'no market figures while closed');
-await send(k, { kind: 'open', packs: [], intercity: market }, 'opened');
+await send(k, { kind: 'open', packs: [], intercity: market(['bos', 'phl']) }, 'opened');
 const marketBack = await solve(k, 10, network(['bos', 'phl']));
 sameFinals(marketBack.results, both.results, ['bos', 'phl'], 'market reopened');
 out.mem.end = MiB(marketBack.mem);

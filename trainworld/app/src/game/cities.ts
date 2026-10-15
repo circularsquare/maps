@@ -17,14 +17,16 @@ export type CityId = string;
  * `utcOffset`: its whole-hour standard time offset from UTC, no daylight saving (T-309). */
 /** `box`: [west, south, east, north] in degrees round its boundary and water mask
  * (pipeline/zone_boxes.py, T-302), so where a zone is is known without fetching its files. */
-export interface City { id: CityId; name: string; kind?: "city" | "zone"; origin: { lon: number; lat: number }; center: [number, number]; zoom: number; utcOffset?: number; market: number; localTrips?: number; box?: [number, number, number, number] }
+/** T-377: `place`, the zone's place in the world market (every zone has one; `market` is the
+ * Northeast joint commute gravity's, -1 outside it); `marketRow`, its row (pipeline/market_zones.py). */
+export interface City { id: CityId; name: string; kind?: "city" | "zone"; origin: { lon: number; lat: number }; center: [number, number]; zoom: number; utcOffset?: number; market: number; place: number; marketRow?: unknown; localTrips?: number; box?: [number, number, number, number] }
 interface Registry {
   world: string;
   /** T-309: the UTC offset the game clock counts world time in (game/localTime.ts) */
   clockUtcOffset: number;
   frame: FrameSpec;
   legacyFrame: FrameSpec;
-  market: { pack: string; frame: FrameSpec; places: { name: string; regionName: string }[] };
+  market: { frame: FrameSpec; rule: unknown; places: { name: string; regionName: string }[] };
   cities: City[];
 }
 export const REGISTRY = registryJson as unknown as Registry;
@@ -36,9 +38,10 @@ export const HOME_CITY: CityId = CITIES[0].id;
 /** The frame of new games, and of every save made before T-125. */
 export const NEW_GAME_FRAME: FrameSpec = REGISTRY.frame;
 export const LEGACY_FRAME: FrameSpec = REGISTRY.legacyFrame;
-/** The pack the regional market keeps its sites in. */
-export const MARKET_PACK = REGISTRY.market.pack;
+/** The frame the market reports positions in. */
 export const MARKET_FRAME = makeFrame({ ...REGISTRY.market.frame, kind: "equirect" });
+/** T-377: the world market's frame, rule, places and every zone's row, as `MarketPacks` reads it. */
+export const MARKET_WORLD = JSON.stringify({ frame: REGISTRY.market.frame, rule: REGISTRY.market.rule, places: REGISTRY.market.places.length, rows: CITIES.flatMap((c) => (c.marketRow ? [c.marketRow] : [])) });
 
 export const activeCity = signal<CityId>(HOME_CITY);
 export const cityById = (id: CityId) => CITIES.find(c => c.id === id)!;
@@ -86,9 +89,15 @@ export function worldToMarket(x: number, y: number): { x: number; y: number } {
 export function marketToWorld(x: number, y: number): { x: number; y: number } {
   return convert(x, y, MARKET_FRAME, world);
 }
-/** A city pack's metres to the regional market pack's. */
+/** A city pack's metres to its market pack's (`<id>.market.json`): the Northeast's sites are in
+ * the market frame, as the joint commute gravity names them (T-276), every other zone's in its
+ * own pack frame (T-377). */
 export function cityToMarket(x: number, y: number, id: CityId): { x: number; y: number } {
-  return convert(x, y, packFrame(id), MARKET_FRAME);
+  return cityById(id).market >= 0 ? convert(x, y, packFrame(id), MARKET_FRAME) : { x, y };
+}
+/** World metres to longitude and latitude. */
+export function worldToLonLat(x: number, y: number): [number, number] {
+  return world.toLonLat(x, y);
 }
 
 /** The nearest registered city or zone by centre, at any distance (a lookup that needs some zone,

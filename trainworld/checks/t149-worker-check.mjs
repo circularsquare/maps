@@ -40,7 +40,8 @@ function start() {
 }
 const registry = JSON.parse(readFileSync(new URL('../app/src/game/registry.json', import.meta.url)));
 const pack = (id) => ({ id, header: readFileSync(new URL(`../data/packs/${id}.json`, import.meta.url), 'utf8'), bin: Uint8Array.from(readFileSync(new URL(`../data/packs/${id}.bin`, import.meta.url))).buffer });
-const market = readFileSync(new URL(`../data/packs/${registry.market.pack}.json`, import.meta.url), 'utf8');
+// T-377: zones' market packs (the world market's rows are in the registry the worker bundles)
+const market = (ids) => ids.map((id) => ({ id, pack: readFileSync(new URL(`../data/packs/${id}.market.json`, import.meta.url), 'utf8') }));
 // a three-station line across Midtown (world frame = the New York pack's origin, equirectangular)
 const times = new Float32Array(18); for (let lev = 0; lev < 3; lev++) { times[lev * 3] = 60; times[lev * 3 + 1] = 60; times[(lev + 3) * 3 + 1] = 60; times[(lev + 3) * 3 + 2] = 60; }
 const net = { frame: { kind: 'equirect', lon: -73.985, lat: 40.758 }, stXY: new Float32Array([0, 0, 4000, 0, 8000, 0]), lineN: new Uint32Array([3]), stops: new Uint32Array([0, 1, 2]), times, tph: new Float32Array([12, 12, 12]), cars: new Float32Array([4]), fare: { base: 1, perKm: .1 }, hopKm: new Float32Array([4, 4, 0, 0, 4, 4]) };
@@ -53,7 +54,7 @@ const t = () => performance.now();
 // before T-149: every pack at init
 const all = start(); await all.next((m) => m.kind === 'boot');
 let a0 = t();
-all.w.postMessage({ kind: 'init', packs: registry.cities.map(({ id }) => pack(id)), intercity: market, periods: [0, 1, 2, 3, 4] });
+all.w.postMessage({ kind: 'init', packs: registry.cities.map(({ id }) => pack(id)), intercity: market(registry.cities.map(({ id }) => id)), periods: [0, 1, 2, 3, 4] });
 const readyAll = await all.next((m) => m.kind === 'ready' || m.kind === 'failed'); assert.equal(readyAll.kind, 'ready', readyAll.error);
 const openAllMs = t() - a0;
 all.w.postMessage({ kind: 'solve', version: 1, net, rounds: ROUNDS });
@@ -65,11 +66,11 @@ await all.w.terminate();
 const lazy = start(); await lazy.next((m) => m.kind === 'boot');
 a0 = t();
 lazy.w.postMessage({ kind: 'init', packs: [], periods: [0, 1, 2, 3, 4] });
-lazy.w.postMessage({ kind: 'open', packs: [], intercity: market });
+lazy.w.postMessage({ kind: 'open', packs: [], intercity: market(['nyc']) });
 lazy.w.postMessage({ kind: 'open', packs: [pack('nyc')] });
 const ready = await lazy.next((m) => m.kind === 'ready' || m.kind === 'failed'); assert.equal(ready.kind, 'ready', ready.error);
 assert.deepEqual(Object.keys(ready.cityInfo), []);
-const openedMarket = await lazy.next((m) => m.kind === 'opened' && m.market);
+const openedMarket = await lazy.next((m) => m.kind === 'opened' && m.markets.length);
 const openedNyc = await lazy.next((m) => m.kind === 'opened' && m.cityInfo.nyc);
 const openNycMs = t() - a0;
 // cells, zones, trips, walk share (the fifth is the opening's ms)
@@ -94,7 +95,7 @@ lazy.w.postMessage({ kind: 'cells', id: 7, city: 'bos', frame: net.frame });
 const cells = await lazy.next((m) => m.kind === 'cells' && m.id === 7); assert.equal(cells.xy.length, 0);
 // Philadelphia opens after the solve: it answers nothing until a solve covers it
 let from = lazy.messages.length;
-lazy.w.postMessage({ kind: 'open', packs: [pack('phl')] });
+lazy.w.postMessage({ kind: 'open', packs: [pack('phl')], intercity: market(['phl']) });
 await lazy.next((m) => m.kind === 'opened' && m.cityInfo.phl, from);
 lazy.w.postMessage({ kind: 'purposes', id: 8, city: 'phl', version: 1, round: ROUNDS, end: 0, cells: new Uint32Array([0]) });
 const before = await lazy.next((m) => m.kind === 'purposes' && m.id === 8); assert.equal(before.work, null);

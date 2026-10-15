@@ -40,7 +40,8 @@ function start() {
 }
 const registry = JSON.parse(readFileSync(new URL('../app/src/game/registry.json', import.meta.url)));
 const pack = (id) => ({ id, header: readFileSync(new URL(`../data/packs/${id}.json`, import.meta.url), 'utf8'), bin: Uint8Array.from(readFileSync(new URL(`../data/packs/${id}.bin`, import.meta.url))).buffer });
-const market = readFileSync(new URL(`../data/packs/${registry.market.pack}.json`, import.meta.url), 'utf8');
+// T-377: the zones' market packs (the world market's rows are in the registry the worker bundles)
+const market = ['bos', 'phl'].map((id) => ({ id, pack: readFileSync(new URL(`../data/packs/${id}.market.json`, import.meta.url), 'utf8') }));
 const FRAME = { kind: 'equirect', lon: -73.985, lat: 40.758 }, R = 6371008.8, RAD = Math.PI / 180;
 const xyOf = ([lon, lat]) => [R * (lon - FRAME.lon) * RAD * Math.cos(FRAME.lat * RAD), R * (lat - FRAME.lat) * RAD];
 const LINES = {

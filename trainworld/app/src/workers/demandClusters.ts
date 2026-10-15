@@ -5,7 +5,7 @@
 // not changed keeps its result (docs/demand.md "Clusters"). Reach is judged generously: joining two
 // clusters that share nothing costs only time, splitting two that share riders would change figures.
 
-import { CITIES, worldToCity, worldToMarket, zoneBox, type CityId } from "../game/cities";
+import { CITIES, worldToCity, worldToLonLat, zoneBox, type CityId } from "../game/cities";
 import { PERIODS } from "../game/periods";
 import type { DemandNetwork } from "./demandProtocol";
 
@@ -21,13 +21,13 @@ export const MARKET_REACH_M = 30_000;
  * transfers (300 m) lie well inside it. */
 export const JOIN_M = 1_000;
 
-const MARKET_BOXES = CITIES.filter((c) => c.market >= 0).map(zoneBox);
+const MARKET_BOXES = CITIES.map((c) => [c.id, zoneBox(c)] as const);
 
-/** T-396: whether the regional market's riders can use a station at (lon, lat): within
- * `MARKET_REACH_M` of a market zone's box. What opens the market (workers/demandClient.ts). */
-export function marketReaches(lon: number, lat: number): boolean {
+/** T-396, T-377: the zones whose market riders can use a station at (lon, lat): within
+ * `MARKET_REACH_M` of the zone's box. What opens a zone's market pack (workers/demandClient.ts). */
+export function marketZonesNear(lon: number, lat: number): CityId[] {
   const dy = MARKET_REACH_M / 111_320, dx = dy / Math.cos((lat * Math.PI) / 180);
-  return MARKET_BOXES.some(([w, s, e, n]) => lon >= w - dx && lon <= e + dx && lat >= s - dy && lat <= n + dy);
+  return MARKET_BOXES.filter(([, [w, s, e, n]]) => lon >= w - dx && lon <= e + dx && lat >= s - dy && lat <= n + dy).map(([id]) => id);
 }
 
 export interface Cluster {
@@ -35,8 +35,9 @@ export interface Cluster {
   cities: CityId[];
   /** the regional market's riders can reach it */
   market: boolean;
-  /** T-409: the market's own zones whose stations are in it, ascending, joined by commas (the
-   * market's part for this cluster is kept by it); "" for the market no station reaches */
+  /** T-409: the market's 6 km zones (their world ids, T-377) whose stations are in it, ascending,
+   * joined by commas (the market's part for this cluster is kept by it); "" for the market no
+   * station reaches */
   marketKey: string;
   /** its own network: the cluster's stations (ascending snapshot order) and lines (snapshot order) */
   net: DemandNetwork;
@@ -91,12 +92,13 @@ function hashOf(parts: (ArrayBufferView | string)[]): string {
  * market's zones into one node. Lines and stations no population can
  * reach belong to no cluster: nobody rides them, so their figures are zero.
  */
-export function splitClusters(n: DemandNetwork, cities: { id: CityId; box: Box }[], marketZones: Float32Array | null, rounds: number, whole = false, oneMarket = false): Cluster[] {
+export function splitClusters(n: DemandNetwork, cities: { id: CityId; box: Box }[], marketZones: Float64Array | null, rounds: number, whole = false, oneMarket = false): Cluster[] {
   const market = !!marketZones;
   const S = n.stXY.length / 2, L = n.lineN.length, P = cities.length;
   const lineOff = new Uint32Array(L + 1);
   for (let l = 0; l < L; l++) lineOff[l + 1] = lineOff[l] + n.lineN[l];
-  const M = marketZones ? marketZones.length / 4 : 0;
+  // T-377: per open 6 km zone its world id, then its sites' box in degrees (`IntercityApi.zone_boxes`)
+  const M = marketZones ? marketZones.length / 5 : 0;
   const parent = new Int32Array(S + P + Math.max(M, 1)).map((_, i) => i);
   const find = (i: number) => {
     while (parent[i] !== i) i = parent[i] = parent[parent[i]];
@@ -144,20 +146,26 @@ export function splitClusters(n: DemandNetwork, cities: { id: CityId; box: Box }
       }
     });
     if (marketZones && S) {
-      const G = MARKET_REACH_M, cells = new Map<string, number[]>();
+      // a grid of `GD` degrees; each zone's box widened by the reach at its own latitude
+      const GD = 0.5, dyR = MARKET_REACH_M / 111_320, cells = new Map<string, number[]>();
+      const pad = (z: number) => {
+        const lat = Math.min(85, Math.max(Math.abs(marketZones[5 * z + 2]), Math.abs(marketZones[5 * z + 4])));
+        return [dyR / Math.cos((lat * Math.PI) / 180), dyR];
+      };
       for (let z = 0; z < M; z++) {
-        const [w, so, e, no] = marketZones.subarray(4 * z, 4 * z + 4);
+        const [w, so, e, no] = marketZones.subarray(5 * z + 1, 5 * z + 5);
         if (!(w <= e)) continue;
-        for (let gx = Math.floor((w - G) / G); gx <= Math.floor((e + G) / G); gx++) for (let gy = Math.floor((so - G) / G); gy <= Math.floor((no + G) / G); gy++) {
+        const [dx, dy] = pad(z);
+        for (let gx = Math.floor((w - dx) / GD); gx <= Math.floor((e + dx) / GD); gx++) for (let gy = Math.floor((so - dy) / GD); gy <= Math.floor((no + dy) / GD); gy++) {
           const k = `${gx},${gy}`, c = cells.get(k);
           if (c) c.push(z); else cells.set(k, [z]);
         }
       }
       for (let s = 0; s < S; s++) {
-        const { x, y } = worldToMarket(n.stXY[2 * s], n.stXY[2 * s + 1]);
-        for (const z of cells.get(`${Math.floor(x / G)},${Math.floor(y / G)}`) ?? []) {
-          const b = 4 * z;
-          if (x >= marketZones[b] - G && x <= marketZones[b + 2] + G && y >= marketZones[b + 1] - G && y <= marketZones[b + 3] + G) join(s, MARKET + z);
+        const [x, y] = worldToLonLat(n.stXY[2 * s], n.stXY[2 * s + 1]);
+        for (const z of cells.get(`${Math.floor(x / GD)},${Math.floor(y / GD)}`) ?? []) {
+          const b = 5 * z, [dx, dy] = pad(z);
+          if (x >= marketZones[b + 1] - dx && x <= marketZones[b + 3] + dx && y >= marketZones[b + 2] - dy && y <= marketZones[b + 4] + dy) join(s, MARKET + z);
         }
       }
     }
@@ -183,7 +191,7 @@ export function splitClusters(n: DemandNetwork, cities: { id: CityId; box: Box }
       if (!whole && !railed.has(r)) continue;
       const c = of(r);
       c.market = true;
-      if (!whole) c.zones.push(z);
+      if (!whole) c.zones.push(marketZones![5 * z]);
       any = true;
     }
     if (!any) of(find(MARKET)).market = true;
@@ -195,7 +203,7 @@ export function splitClusters(n: DemandNetwork, cities: { id: CityId; box: Box }
     for (let s = 0; s < S; s++) if (find(s) === root) stations.push(s);
     const lines: number[] = [];
     for (let l = 0; l < L; l++) if (whole || (n.lineN[l] > 0 && find(n.stops[lineOff[l]]) === root)) lines.push(l);
-    out.push(subNetwork(n, lineOff, c.cities, c.market, c.zones.join(","), stations, lines, rounds, frameKey));
+    out.push(subNetwork(n, lineOff, c.cities, c.market, c.zones.sort((a, b) => a - b).join(","), stations, lines, rounds, frameKey));
   }
   return out;
 }

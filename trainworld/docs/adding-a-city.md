@@ -19,8 +19,9 @@ Logs, check outputs and images go in `../artifacts/trainworld/` (from the maps r
 - **Where.** Anywhere between 85 S and 85 N: new games are in the Mercator world frame, whose
   track lengths are ground lengths everywhere (T-306, docs/world.md), and the renderer anchors to
   the view (T-307). Games saved in the Northeast conic (TWT5) or the legacy frame are converted to
-  Mercator when they load (T-308). The market keeps its sites in an equirectangular New York frame
-  but measures zone distances on the ground (T-128); a city outside it is `market: -1`.
+  Mercator when they load (T-308). A zone's market pack keeps its sites in its own pack frame
+  (the Northeast's in the New York one) and the market measures distances on the ground (T-128,
+  T-377).
 - **Footprint.** Whole county-level units: US 2020 counties (`cb_2020_us_county_500k` GEOIDs;
   Connecticut's old counties), Canadian census divisions, the country's equivalent elsewhere. The
   metro area (OMB, BLS's list, StatCan's CMA) trimmed or widened by judgement to whole units; no
@@ -167,11 +168,11 @@ the clock worker fetches a zone's mask only where the view or track comes near i
   the pack's frame), `center` (usually the origin), `zoom` 11.2, `utcOffset`, `market`.
 - `utcOffset` (T-309): the city's standard time offset from UTC in whole hours, no daylight
   saving; round a half hour down (India's +5:30 is +5). Its periods, weekends and fares run on it.
-- `market` is the city's index in `market.places`, or **-1 for a city outside the regional
-  market** (Toronto, until T-276 places it; `intercity.py`, `outside.py`, the city bubbles and the
-  worker's longer-trip selection skip it). To join the market, append to `market.places`:
-  `{"name": "Worcester", "regionName": "Worcester region"}`. **Market ids are positions in this
-  list: append only, never reorder or renumber.**
+- `market` is the Northeast's joint commute gravity's place for the zone (`intercity.py` and
+  `joint_gravity` take the cities with one), **-1 for every other zone**. Every zone's place in the
+  world market, `place`, and its row, `marketRow`, are written by `pipeline/market_zones.py`
+  (step 7), which appends the zone to `market.places`. **Place ids are positions in that list:
+  append only, never reorder or renumber.**
 
 Vite then serves and copies the packs (`vite.config.ts`), the clock worker loads the city's water
 mask when it is needed, `cityReach.ts` and the map read the boundary file, and saves list the
@@ -179,20 +180,20 @@ registry's cities in their header (an old save's list stays a subset, so it load
 
 ## 7. Regional market and zones
 
-Every registered zone is in the market (docs/zones.md). A city's registry `market` is its place
-id (append a place, step 6). Its pack header should name its country (`"country"`, ISO 3166
-alpha-2; absent means US), which the joint commute gravity reads for border factors
-(`pipeline/borders.json`: add the country's admin-1 default and its national pairs). Then, in order:
+Every registered zone is in the world market (docs/regional.md 5.1, T-377). Its pack header
+should name its country (`"country"`, ISO 3166 alpha-2; absent means US), which the joint commute
+gravity reads for border factors (`pipeline/borders.json`: add the country's admin-1 default and
+its national pairs); the market takes the country from the world field. Then, in order:
 
-    venv\Scripts\python.exe trainworld\pipeline\zones.py           (non-city zones: registers built ones)
-    venv\Scripts\python.exe trainworld\pipeline\outside.py         (the outside world, seconds)
-    venv\Scripts\python.exe trainworld\pipeline\intercity.py       (sites, joint gravity ~12 min, derived block)
-    venv\Scripts\python.exe trainworld\pipeline\zones.py --trips   (each zone's local trips, for the overview)
+    venv\Scripts\python.exe trainworld\pipeline\zones.py             (non-city zones: registers built ones)
+    venv\Scripts\python.exe trainworld\pipeline\market_zones.py <id> (its market pack and every row, seconds)
+    venv\Scripts\python.exe trainworld\pipeline\zones.py --trips     (each zone's local trips, for the overview)
     cd trainworld & ..env\Scripts\python.exe pipelineoutes.py <id>   (last: T-275's routes, for new packs)
 
-`intercity.py` rewrites every zone pack's gravity factors (the joint solve), so existing packs
-change here too: record the commuters between packs it prints and each corridor's trips before
-and after. A non-city zone is a `CITIES` entry in `build_city.py` with `"kind": "zone"` and a
+A zone in the Northeast's joint commute gravity (`market` set) runs `intercity.py` instead of
+`market_zones.py`: it rewrites every Northeast pack's gravity factors (the joint solve), so
+existing packs change here too: record the commuters between packs it prints and each corridor's
+trips before and after. A non-city zone is a `CITIES` entry in `build_city.py` with `"kind": "zone"` and a
 `"name"`, one county-sized unit (docs/zones.md 2).
 
 ## 8. Tests that list cities
@@ -211,7 +212,6 @@ Native and Node (`npm run wasm --prefix trainworld/app` only if Rust changed):
     npm run check --prefix trainworld/app
     node trainworld/checks/t066-worker-check.mjs
     node trainworld/checks/t149-worker-check.mjs
-    node trainworld/checks/t174-market-check.mjs      (a city in the market)
 
 `every_pack_everyday` prints each city's per-resident outings: school about 0.11-0.15, university
 0.02-0.08, errands and social at New York's rates by construction (Toronto: school 0.128,

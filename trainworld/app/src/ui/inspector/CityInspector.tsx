@@ -16,8 +16,8 @@ export function CityInspector({ id }: { id: string }) {
   if (!city) return null;
   const byPlace = new Map<number, { all: number; rail: number }>();
   for (const c of market?.corridors ?? []) {
-    if (c.from === c.to || (c.from !== city.market && c.to !== city.market)) continue;
-    const other = c.from === city.market ? c.to : c.from;
+    if (c.from === c.to || (c.from !== city.place && c.to !== city.place)) continue;
+    const other = c.from === city.place ? c.to : c.from;
     const p = byPlace.get(other) ?? { all: 0, rail: 0 };
     p.all += c.trips;
     p.rail += c.rail;

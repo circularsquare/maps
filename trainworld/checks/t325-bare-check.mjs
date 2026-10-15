@@ -44,7 +44,8 @@ function start() {
 const registry = JSON.parse(readFileSync(new URL('../app/src/game/registry.json', import.meta.url)));
 const ZONE = process.env.ZONE ?? 'phl';
 const pack = (id) => ({ id, header: readFileSync(new URL(`../data/packs/${id}.json`, import.meta.url), 'utf8'), bin: Uint8Array.from(readFileSync(new URL(`../data/packs/${id}.bin`, import.meta.url))).buffer });
-const market = readFileSync(new URL(`../data/packs/${registry.market.pack}.json`, import.meta.url), 'utf8');
+// T-377: every zone's market pack, as the page opens them for a viewed zone
+const market = registry.cities.map(({ id }) => ({ id, pack: readFileSync(new URL(`../data/packs/${id}.market.json`, import.meta.url), 'utf8') }));
 // a three-station line across Midtown, as t149-worker-check.mjs
 const times = new Float32Array(18); for (let lev = 0; lev < 3; lev++) { times[lev * 3] = 60; times[lev * 3 + 1] = 60; times[(lev + 3) * 3 + 1] = 60; times[(lev + 3) * 3 + 2] = 60; }
 const net = { frame: { kind: 'equirect', lon: -73.985, lat: 40.758 }, stXY: new Float32Array([0, 0, 4000, 0, 8000, 0]), complex: new Uint32Array([0, 1, 2]), lineN: new Uint32Array([3]), stops: new Uint32Array([0, 1, 2]), times, tph: new Float32Array([12, 12, 12]), cars: new Float32Array([4]), fare: { base: 1, perKm: .1 }, hopKm: new Float32Array([4, 4, 0, 0, 4, 4]) };

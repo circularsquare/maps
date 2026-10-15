@@ -80,31 +80,31 @@ lines; an edit re-solves only the clusters it touched, the others keep their fig
   Jefferson County WV), Baltimore, Providence, New Haven, Hartford and Springfield, in one regional
   market [T-116, T-134, T-137]; **Toronto** (the Greater Toronto and Hamilton Area), the first
   outside the US, built from Statistics Canada by Canadian adapters with its own fitted commute
-  curve, outside the regional market (`market: -1`) [T-277]; **London** (Greater London and
+  curve [T-277]; **London** (Greater London and
   every ITL3 unit touching it, with Gatwick's and Medway's: 14.5M people), the first sampler city,
   built by tier 0 with England's own inputs in place of its proxies (BRES jobs, Census 2021
-  population by LSOA, GIAS schools, a curve fitted on the 2011 census flows), on UTC+0, outside
-  the market [T-288, T-360]; **Paris** (Ile-de-France, its 8 départements: 12.5M people), tier 0
+  population by LSOA, GIAS schools, a curve fitted on the 2011 census flows), on UTC+0 [T-288,
+  T-360]; **Paris** (Ile-de-France, its 8 départements: 12.5M people), tier 0
   with INSEE's jobs by commune of work and a curve fitted on its 2022 commune flows, population
-  scaled to each commune's legal population, on UTC+1, outside the market [T-289]; **Shanghai**
+  scaled to each commune's legal population, on UTC+1 [T-289]; **Shanghai**
   (the municipality's 16 districts, Chongming included: 24.9M people), tier 0 with population
   and jobs scaled to each district's census totals (2020 population census, 2023 economic census)
   and the curve's length fitted to the published mean commute, place names in Latin script where
-  OSM has them, on UTC+8, outside the market [T-291]; **Mumbai** (the metropolitan region as
+  OSM has them, on UTC+8 [T-291]; **Mumbai** (the metropolitan region as
   Mumbai's two districts and 15 whole talukas: 28.3M people), tier 0 with population scaled to
   2011 census sub-district totals grown to 2020 by district, half the jobs proxy on population
   (informal work), the census's no-travel workers at home, and both curve parameters fitted to
-  the 2011 census commute distance bands, on UTC+5, outside the market [T-292]; **Berlin** (Berlin,
+  the 2011 census commute distance bands, on UTC+5 [T-292]; **Berlin** (Berlin,
   Potsdam, the eight Landkreise touching Berlin, Brandenburg an der Havel and Frankfurt (Oder):
   5.5M people), tier 0 with the Zensus 2022 100 m grid scaled to each Gemeinde's population, the
-  Länder's Pendlerrechnung for jobs by Gemeinde of work and a curve fitted on its flows, on UTC+1,
-  outside the market [T-290]; **Tokyo** (Greater Tokyo: Tokyo, Kanagawa, Saitama and Chiba
-  prefectures whole, Tokyo's Izu and Ogasawara islands left out: 36.9M people), the first stage of
+  Länder's Pendlerrechnung for jobs by Gemeinde of work and a curve fitted on its flows, on UTC+1
+  [T-290]; **Tokyo** (Greater Tokyo: Tokyo, Kanagawa, Saitama, Chiba and
+  Ibaraki prefectures whole, Tokyo's Izu and Ogasawara islands left out: 39.8M people), the first stage of
   covering all of Japan, tier 0 with the 2020 census 500 m mesh population, the 2021 economic
   census 500 m mesh jobs scaled to the census's workers by municipality of work, a curve fitted on
   the census's municipality flows, the census's at-home workers plus a telework share, KSJ school
-  points, and place names in romaji (OSM's, else made from the kana reading), on UTC+9, outside
-  the market [T-420, research/japan.md].
+  points, and place names in romaji (OSM's, else made from the kana reading or a kanji reading
+  dictionary), on UTC+9 [T-420, T-426, research/japan.md].
 - **Non-city zones**: Worcester, Windham, New London and Litchfield Counties. Modelled space stays
   between city zones, with no ring round each city, for now (Anita, T-300).
 - **City additions** in the US are paused; a **sampler of other countries' cities** comes next
@@ -145,13 +145,17 @@ Detail: [docs/demand.md](docs/demand.md).
 The regional layer carries what crosses zones or goes far [T-117, T-276]. Detail:
 [docs/regional.md](docs/regional.md).
 
-- **5.1 The market**: total all-mode trips first, then the network earns rail's share.
-  **Inter-region trips** (visits, business and leisure of 25 km and more): 0.107 departures per
-  resident a weekday among every zone and an outside world (Kontur population in no zone), fitted
-  to NHTS 2017, against a car that pays for time, running cost and parking. **Commutes between
-  zones**: the joint gravity's cross-pack part, at commute timing and mode choice. Figures needing
-  every zone pair are computed offline into the pack's `derived` block; the game builds pairs only
-  between zones a station serves [T-174].
+- **5.1 The market**: total all-mode trips first, then the network earns rail's share. One
+  **world market** with every zone in it [T-362, T-377]. **Inter-region trips** (visits, business
+  and leisure of 25 km and more): a ground curve fitted to NHTS 2017 and a long-haul tail (T-376),
+  both scaled by GDP per head and shared over the world field (Kontur people with country,
+  income and landmass), so trips to places with no zone leave the map; a border factor between
+  countries; zones under 250 km apart pair 6 km zone to 6 km zone, farther ones place to place.
+  Against a car that pays for time, running cost and parking, and no car between landmasses (those
+  trips stay fixed until air, T-378). **Commutes between zones**: the joint gravity's cross-pack
+  part, at commute timing and mode choice. Each zone's own pack holds its part; a registry row per
+  zone gives every pair of zones its trips with nothing opened; the game builds pairs only between
+  zones a station serves on one track network [T-174, T-409].
 - **5.2 Access**: the same walks and rides to stations as local demand, so feeder lines and
   transfers carry real loads; nothing bypasses the player's local network.
 - **5.3 Park-and-ride** [T-295, T-371, T-389, T-373]: a commute or everyday trip of 5 km or more
@@ -163,7 +167,8 @@ The regional layer carries what crosses zones or goes far [T-117, T-276]. Detail
   station's inspector splits the commuters who live nearby into those who walked and those who
   drove, and the trip explorer shows a ride access as a drive [T-374]; the split covers
   commutes only.
-- **5.4 Size**: the market pack runs in the same worker pool as the zone packs.
+- **5.4 Size**: a zone's market pack opens and closes with the zone, in the same worker pool as
+  the zone packs.
 
 ## 6. Building and running
 

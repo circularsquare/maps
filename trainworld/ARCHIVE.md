@@ -1,4 +1,6 @@
-# Archive
+﻿# Archive
+
+- T-377 [P2] T-362 stage 3: the world market. Done 2026-10-15: every zone a place, its own market pack with world-field normalisers, registry rows, far pairs place to place; London - New York 5,163 a day; real save final +0.08%, timings unchanged. notes/T-377.md.
 
 - T-297 [P3] A faster joint commute gravity. Done 2026-10-15: Anderson-mixed Furness per group of joined packs, to 1e-8; Northeast 1,156 s to 64, Japan-sized 65k zones about 2,400 s to 189; today's factors were up to 3.5% unconverged. notes/T-297.md.
 

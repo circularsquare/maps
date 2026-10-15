@@ -19,11 +19,11 @@
 // T-301: `close` frees packs (and the market) the page no longer needs; one the solve in hand
 // covers goes when that solve ends.
 
-import init, { DemandApi, EverydayApi, IntercityApi, day_factors, demand_periods, everyday_warm_up, release_skims, wasm_memory_bytes } from "../wasm/demand/sim"; // demand only (T-051)
-import { CITIES, cityToMarket, cityToWorld, HOME_CITY, setWorldFrame, worldToCity, worldToMarket, type CityId } from "../game/cities";
+import init, { DemandApi, EverydayApi, IntercityApi, MarketPacks, day_factors, demand_periods, everyday_warm_up, release_skims, wasm_memory_bytes } from "../wasm/demand/sim"; // demand only (T-051)
+import { CITIES, cityToMarket, cityToWorld, HOME_CITY, MARKET_WORLD, setWorldFrame, worldToCity, worldToLonLat, type CityId } from "../game/cities";
 import { EVERYDAY_KEYS, EVERYDAY_NAMES } from "../game/purposes";
 import { PERIODS } from "../game/periods";
-import type { BareFigures, DemandNetwork, FromDemand, ToDemand } from "./demandProtocol";
+import type { BareFigures, DemandNetwork, FromDemand, MarketPack, ToDemand } from "./demandProtocol";
 import { cellBox, splitClusters, type Box, type Cluster } from "./demandClusters";
 
 /** WASM started (and the market opened if `init` carried it): `open` and solves wait for this. */
@@ -37,14 +37,18 @@ const cities = new Map<CityId, DemandApi>();
 let jobCities = new Set<CityId>();
 const everyday = new Map<CityId, EverydayApi>();
 const EVERYDAY_PURPOSES = EVERYDAY_NAMES;
+/** T-377: the zones' market packs open here, and `intercity` the market composed of all of them
+ * (composed again whenever one opens or closes); it answers every question's all-mode part */
+let marketPacks: MarketPacks | null = null;
 let intercity: IntercityApi | null = null;
 /** T-409: the market's parts by `Cluster.marketKey`, one per cluster the market reaches, each on its
- * cluster's network alone (`IntercityApi.beside`, sharing the pack); `intercity` is the first. A
- * part whose key is gone is reused for a new key, the rest are freed (`intercity` waits in `idle`) */
+ * cluster's network alone (`IntercityApi.beside`). A part keeps the composition it was made from
+ * while its key lasts (its zones' packs are in it); a part whose key is gone is reused for a new
+ * key when it is of the newest composition, the rest are freed */
 const marketParts = new Map<string, IntercityApi>();
-let idle: IntercityApi | null = null;
-/** the market's zones' boxes (`IntercityApi.zone_boxes`), which its clusters are joined by */
-let marketZones: Float32Array | null = null;
+/** the market's open 6 km zones' world ids and boxes (`IntercityApi.zone_boxes`), which its
+ * clusters are joined by */
+let marketZones: Float64Array | null = null;
 let mine: number[] = [];
 let pending: { version: number; net: DemandNetwork; rounds: number; barrier?: boolean; whole?: boolean; oneMarket?: boolean; fresh?: boolean; first?: CityId } | null = null;
 let busy = false;
@@ -131,7 +135,7 @@ function yieldNow(): Promise<void> {
  * carrying the everyday arrays gets the layer (every registered city since T-142); a pack
  * without them stays commute-only.
  */
-function openPacks(packs: { id: CityId; header: string; bin: ArrayBuffer }[], market: string | Uint8Array | undefined, isBare = false) {
+function openPacks(packs: { id: CityId; header: string; bin: ArrayBuffer }[], market: MarketPack[] | undefined, isBare = false) {
   for (const pack of packs) {
     if (isBare) {
       if (!bare.has(pack.id)) bare.set(pack.id, openBare(pack));
@@ -145,12 +149,18 @@ function openPacks(packs: { id: CityId; header: string; bin: ArrayBuffer }[], ma
     // T-399: the everyday layer shares the commutes' cells, zones, gravity and routes
     if (!aux && hasEveryday(pack.header)) everyday.set(pack.id, EverydayApi.beside(a, pack.header, bin));
   }
-  if (market !== undefined && intercity) closeLater.market = false;
-  if (market !== undefined && !aux && !intercity) {
-    // T-180: the page sends the pack's bytes; decoding 8 MB here keeps it off the main thread
-    intercity = new IntercityApi(typeof market === "string" ? market : new TextDecoder().decode(market));
-    // T-174: without a current derived block every worker visits all zone pairs (seconds)
-    if (intercity.info()[3] !== 1) console.warn("regional market pack: derived block missing or stale, derived at opening; run pipeline/intercity.py --derive");
+  if (market?.length && !aux) {
+    marketPacks ??= new MarketPacks(MARKET_WORLD);
+    const have = new Set(marketPacks.places());
+    let added = false;
+    for (const m of market) {
+      closeLater.markets.delete(m.id);
+      if (have.has(MARKET_OF[m.id])) continue;
+      // T-180: the page sends the pack's bytes; decoding here keeps it off the main thread
+      marketPacks.add(typeof m.pack === "string" ? m.pack : new TextDecoder().decode(m.pack));
+      added = true;
+    }
+    if (added) recompose();
   }
   return Object.fromEntries(packs.map(({ id }) => {
     const b = isBare ? bare.get(id) : undefined;
@@ -202,7 +212,16 @@ function openBare(pack: { id: CityId; header: string; bin: ArrayBuffer }) {
 }
 
 /** T-301: closes of packs the solve in hand covers, applied once it has ended */
-const closeLater = { ids: new Set<CityId>(), market: false };
+const closeLater = { ids: new Set<CityId>(), markets: new Set<CityId>() };
+
+/** T-377: the market of every open market pack, in place of the last. That one is freed unless a
+ * part still holds it (its zones' packs are in it; it carries on until its key goes). */
+function recompose() {
+  const old = intercity;
+  intercity = marketPacks && marketPacks.places().length ? marketPacks.market() : null;
+  marketZones = null;
+  if (old && ![...marketParts.values()].includes(old)) forget([old]);
+}
 
 /** T-301: take populations out of every kept network's clusters, then free them. */
 function forget(pops: Population[]) {
@@ -226,11 +245,16 @@ function dropCity(id: CityId) {
   forget(e ? [e, a] : [a]);
 }
 
-function dropMarket() {
-  if (!intercity) return;
-  const parts = [...new Set([intercity, ...marketParts.values(), ...(idle ? [idle] : [])])];
+/** T-377: close zones' market packs; with none left, the market and all its parts go. */
+function dropMarkets(ids: CityId[]) {
+  if (!marketPacks) return;
+  let changed = false;
+  for (const id of ids) changed = marketPacks.remove(MARKET_OF[id]) || changed;
+  if (!changed) return;
+  if (marketPacks.places().length) return recompose();
+  const parts = [...new Set([...(intercity ? [intercity] : []), ...marketParts.values()])];
   marketParts.clear();
-  idle = intercity = null;
+  intercity = null;
   marketZones = null;
   forget(parts);
 }
@@ -247,7 +271,7 @@ function closePacks(msg: Extract<ToDemand, { kind: "close" }>) {
     }
   } else {
     for (const id of msg.ids) if (busy && jobCities.has(id)) closeLater.ids.add(id); else dropCity(id);
-    if (msg.market) { if (busy) closeLater.market = true; else dropMarket(); }
+    if (msg.markets?.length) { if (busy) for (const id of msg.markets) closeLater.markets.add(id); else dropMarkets(msg.markets); }
   }
   sendMessage({ kind: "closed", memBytes: wasm_memory_bytes() });
 }
@@ -255,8 +279,8 @@ function closePacks(msg: Extract<ToDemand, { kind: "close" }>) {
 function closeDeferred() {
   for (const id of closeLater.ids) dropCity(id);
   closeLater.ids.clear();
-  if (closeLater.market) dropMarket();
-  closeLater.market = false;
+  if (closeLater.markets.size) dropMarkets([...closeLater.markets]);
+  closeLater.markets.clear();
 }
 
 /** Warm-up solves on the first city a worker opens, so V8 has optimised the kernel before the first real one. */
@@ -302,7 +326,7 @@ onmessage = (e: MessageEvent<ToDemand>) => {
         const openMs = performance.now() - t0;
         const warmMs = warmUp();
         const figures = isBare ? Object.fromEntries(msg.packs.map(({ id }) => [id, bare.get(id)!.figures])) : undefined;
-        sendMessage({ kind: "opened", cityInfo, market: msg.intercity !== undefined, openMs, warmMs, memBytes: wasm_memory_bytes(), ...(figures ? { bare: figures } : {}) });
+        sendMessage({ kind: "opened", cityInfo, markets: (msg.intercity ?? []).map((m) => m.id), openMs, warmMs, memBytes: wasm_memory_bytes(), ...(figures ? { bare: figures } : {}) });
       } catch (err) {
         sendMessage({ kind: "failed", error: String(err) });
       }
@@ -371,8 +395,8 @@ function selectionSquares(id: CityId, a: DemandApi, end: number, cells: Uint32Ar
   }
   return { xy, share };
 }
-/** The market (IntercityApi's) of a local city. */
-const MARKET_OF: Record<CityId, number> = Object.fromEntries(CITIES.map(c => [c.id, c.market]));
+/** A zone's place in the world market (T-377: every zone has one). */
+const MARKET_OF: Record<CityId, number> = Object.fromEntries(CITIES.map(c => [c.id, c.place]));
 const CITY_ORDER = new Map(CITIES.map((c, i) => [c.id, i]));
 
 /** The demand views' queries (T-078). They run between periods, never inside a solve. */
@@ -460,16 +484,20 @@ function query(msg: Query) {
       const packed = a && sameNet ? a.flows_day(msg.end, msg.cells, msg.sums, day) : null;
       sendMessage({ kind: "flows", id: msg.id, version: msg.version, packed: packed && packed.length ? packed : null }, packed ? [packed.buffer] : []);
     } else if (msg.kind === "icSel") {
-      // a city outside the regional market (market -1, T-277) has no longer trips. T-336: a zone
-      // open bare in the aux worker comes with its squares (this worker does not hold the zone)
-      const ok = marketLive && (!!msg.sq || !!a) && !!intercity && MARKET_OF[msg.city] >= 0;
+      // T-336: a zone open bare in the aux worker comes with its squares (this worker does not hold
+      // the zone)
+      const ok = marketLive && (!!msg.sq || !!a) && !!intercity;
       const sq = !ok ? null : msg.sq ?? selectionSquares(msg.city, a!, msg.end, msg.cells);
-      // T-409: the all-mode trips and the zones once, every part's rail
+      // T-409, T-377: the all-mode trips and the zones once, from the market of every open pack,
+      // then every part's rail
       let packed: Float64Array | null = null;
-      if (sq) for (const c of mcs) {
-        const v = packed ? c.part!.selection_rail_day(MARKET_OF[msg.city], sq.xy, sq.share, day) : null;
-        if (!v) packed = Float64Array.from(c.part!.selection_flows_day(MARKET_OF[msg.city], sq.xy, sq.share, day));
-        else for (let i = 0; i < v.length; i++) packed![i] += v[i];
+      if (sq) {
+        const place = MARKET_OF[msg.city];
+        packed = Float64Array.from(intercity!.selection_all_day(place, sq.xy, sq.share, day, mine.reduce((m, q) => m | (1 << q), 0)));
+        for (const c of mcs) {
+          const v = c.part!.selection_rail_day(place, sq.xy, sq.share, day);
+          for (let i = 0; i < v.length; i++) packed[i] += v[i];
+        }
       }
       const mask = ok ? mcs.reduce((m, c) => m & c.part!.solved_mask(), 31) : 0;
       sendMessage({ kind: "icSel", id: msg.id, version: msg.version, mask, packed }, packed ? [packed.buffer] : []);
@@ -526,7 +554,7 @@ function query(msg: Query) {
     } else if (msg.kind === "bareSquares") {
       // T-336: the solving workers hold the market but not the zone: its squares come from here
       const b = bare.get(msg.city);
-      const sq = b && MARKET_OF[msg.city] >= 0 ? selectionSquares(msg.city, b.a, msg.end, msg.cells) : null;
+      const sq = b ? selectionSquares(msg.city, b.a, msg.end, msg.cells) : null;
       sendMessage({ kind: "bareSquares", id: msg.id, xy: sq?.xy ?? null, share: sq?.share ?? null });
     }
   } catch (err) {
@@ -690,22 +718,27 @@ function purposeParts(q: number, nr: number, clusters: typeof jobClusters, regio
 }
 
 /**
- * T-409: a market part for every market cluster's key: the part that had the key, else one whose
- * key is gone (set up afresh), else a new one beside `regional`. Parts left over are freed.
+ * T-409: a market part for every market cluster's key: the part that had the key, else one of the
+ * newest composition whose key is gone (set up afresh), the composed market itself first, else a
+ * new one beside it. Parts left over are freed (never the composed market itself).
  */
 function assignParts(regional: IntercityApi, split: Cluster[]) {
   const keys = [...new Set(split.filter((c) => c.market).map((c) => c.marketKey))];
   const spare = [...marketParts].filter(([k]) => !keys.includes(k)).map(([k, p]) => (marketParts.delete(k), p));
-  if (!marketParts.size && !spare.length) idle = regional;
-  // the part the market opened as goes first, so a single market keeps that instance
-  if (idle) spare.unshift(idle);
-  idle = null;
-  for (const k of keys) if (!marketParts.has(k)) marketParts.set(k, spare.shift() ?? regional.beside());
-  for (const p of spare) {
+  const used = new Set(marketParts.values());
+  const usable = spare.filter((p) => p !== regional && regional.same_market(p));
+  if (!used.has(regional)) usable.unshift(regional);
+  for (const k of keys) {
+    if (marketParts.has(k)) continue;
+    const p = usable.shift() ?? regional.beside();
+    marketParts.set(k, p);
+    used.add(p);
+  }
+  for (const p of new Set(spare)) {
+    if (used.has(p) || p === regional) continue;
     held.delete(p);
     heldQ.delete(p);
-    if (p === regional) idle = p;
-    else p.free();
+    p.free();
   }
 }
 
@@ -770,14 +803,21 @@ async function run() {
         const m = c.net;
         for (const p of c.solveOrder) {
           held.delete(p);
-          const city = p instanceof IntercityApi ? null : c.cities.find((id) => cities.get(id) === p || everyday.get(id) === p)!;
-          const xy = m.stXY.slice();
-          for (let k = 0; k < xy.length; k += 2) {
-            const w = city ? worldToCity(xy[k], xy[k + 1], city) : worldToMarket(xy[k], xy[k + 1]);
-            xy[k] = w.x; xy[k + 1] = w.y;
-          }
           p.set_complexes(m.complex);
-          setupMs += p.set_network(xy, m.lineN, m.stops, m.times, m.tph, m.cars);
+          if (p instanceof IntercityApi) {
+            // T-377: the market takes stations as longitude and latitude, each zone in its own frame
+            const ll = new Float64Array(m.stXY.length);
+            for (let k = 0; k < ll.length; k += 2) [ll[k], ll[k + 1]] = worldToLonLat(m.stXY[k], m.stXY[k + 1]);
+            setupMs += p.set_network_ll(ll, m.lineN, m.stops, m.times, m.tph, m.cars);
+          } else {
+            const city = c.cities.find((id) => cities.get(id) === p || everyday.get(id) === p)!;
+            const xy = m.stXY.slice();
+            for (let k = 0; k < xy.length; k += 2) {
+              const w = worldToCity(xy[k], xy[k + 1], city);
+              xy[k] = w.x; xy[k + 1] = w.y;
+            }
+            setupMs += p.set_network(xy, m.lineN, m.stops, m.times, m.tph, m.cars);
+          }
           p.set_fares(m.fare.base, m.fare.perKm, m.hopKm);
         }
         // T-124: a period is kept only if every population kept it (its inputs are unchanged: the
