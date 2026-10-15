@@ -42,12 +42,16 @@ pub const RETURN: [[f32; 5]; 6] = [
     [0.08, 0.60, 0.25, 0.05, 0.02],
 ];
 const AIRPORT: usize = 4;
-/// Destination samples per cell, by purpose (T-142). Airports are a handful of destinations, so
-/// four samples spread a cell's trips over them; medical visits go to many places but nobody
-/// looks at one cell's medical trips alone, so eight. Sixteen for the four older purposes, whose
-/// samples are unchanged. Fewer samples keep the opening cheap (each costs the same at opening
-/// and in `set_network`).
+/// Most destination samples a cell holds, by purpose (T-142): airports are a handful of
+/// destinations and nobody looks at one cell's medical trips alone, so two. Each sample costs the
+/// same at opening and in `set_network`.
 const SAMPLES: [usize; 6] = [K, K, K, K, 2, 2];
+
+/// A cell's destination samples for a purpose: one per 8 of its trips a day for it, 2 to the
+/// purpose's `SAMPLES` (T-397: station boardings within 5% of sixteen with 31% of the slots).
+fn sample_count(kind: usize, trips: f32) -> usize {
+    ((trips as f64 / 8.0).ceil() as usize).clamp(2, SAMPLES[kind])
+}
 /// No airport trip ends this close to a terminal (its own jobs are not its passengers' ends).
 const AIRPORT_CLEAR_M: f32 = 1500.0;
 /// T-196: the share of the social/leisure attraction that is parks (the pack's `park_draw`, OSM
@@ -74,10 +78,11 @@ fn unit(mut x: u32) -> f64 {
 /// line, so the browser optimises them; see `DecayTable::cdf`).
 struct Sampler<'a> {
     kind: usize,
-    /// samples per cell for this purpose (`SAMPLES`)
-    k: usize,
-    /// each cell's row of samples in this purpose's slice, NONE for a cell with no budget
+    /// each cell's index in this purpose's `live` and `first`, NONE for a cell with no budget
     row: &'a [u32],
+    /// this purpose's `first`, less `base` (where its slice starts in `destinations`)
+    first: &'a [u32],
+    base: usize,
     h3: &'a [u64],
     x: &'a [f32],
     y: &'a [f32],
@@ -89,16 +94,17 @@ struct Sampler<'a> {
 }
 
 impl Sampler<'_> {
-    /// `self.k` stratified destinations for each cell of one origin zone, from that zone's `cdf`
-    /// over `zones`, into `out` (this purpose's slice of the destinations).
+    /// Each cell's stratified destinations for one origin zone, from that zone's `cdf` over
+    /// `zones`, into `out` (this purpose's slice of the destinations).
     #[inline(never)]
     fn sample(&self, cells: &[usize], cdf: &[f64], total: f64, out: &mut [u32]) {
-        let n_k = self.k;
         for &c in cells {
             let row = self.row[c];
             if row == NONE {
                 continue;
             }
+            let at = self.first[row as usize] as usize - self.base;
+            let n_k = self.first[row as usize + 1] as usize - self.base - at;
             let seed = (self.h3[c] ^ (self.h3[c] >> 32)) as u32 ^ (self.kind as u32).wrapping_mul(0x9e3779b9);
             let offset = unit(seed);
             for k in 0..n_k {
@@ -111,7 +117,7 @@ impl Sampler<'_> {
                 let distance = ((self.x[c] - self.x[d]).powi(2) + (self.y[c] - self.y[d]).powi(2)).sqrt();
                 // Excluded trips vanish, including from all-mode denominators. No replacement.
                 if distance >= MIN_DISTANCE_M && local_share(distance) > 0.0 {
-                    out[row as usize * n_k + k] = d as u32;
+                    out[at + k] = d as u32;
                 }
             }
         }
@@ -397,7 +403,7 @@ mod tests {
                 school_edges += 1;
             }
         }
-        assert_eq!(school_edges, K);
+        assert_eq!(school_edges, sample_count(2, 90.0));
         network(&mut a, 4000.0, [12.0; 3]);
         for q in 0..5 {
             assert!(a.solve(q));
@@ -740,6 +746,9 @@ mod tests {
 
     /// T-142: one home cell, facilities at `x[1..]` with the given airport trips and medical sizes.
     fn facility_fixture(x: &[f32], airport: Option<&[f32]>, medical: Option<&[f32]>) -> (String, Vec<u8>) {
+        facility_fixture_of(x, airport, medical, 100.0)
+    }
+    fn facility_fixture_of(x: &[f32], airport: Option<&[f32]>, medical: Option<&[f32]>, residents: f32) -> (String, Vec<u8>) {
         let n = x.len();
         let one = |v: f32| (0..n).map(|c| if c == 0 { v } else { 0.0 }).collect::<Vec<f32>>();
         let city = pack::City {
@@ -747,7 +756,7 @@ mod tests {
             h3: (1..=n as u64).collect(),
             x: x.to_vec(),
             y: vec![0.0; n],
-            pop: one(100.0),
+            pop: one(residents),
             jobs: one(100.0),
             region: vec![],
             gravity: None,
@@ -842,7 +851,8 @@ mod tests {
     #[test]
     fn parks_share_the_social_destinations() {
         let x = [0.0, 3000.0];
-        let (h0, b0) = facility_fixture(&x, None, None);
+        // enough residents for sixteen social samples (`sample_count`)
+        let (h0, b0) = facility_fixture_of(&x, None, None, 1000.0);
         let old = EverydayApi::new(&h0, &b0).unwrap();
         let (h, b) = with_array(&h0, b0.clone(), "park_draw", &[0.0, 0.0]);
         assert_eq!(EverydayApi::new(&h, &b).unwrap().destinations, old.destinations);
@@ -851,7 +861,7 @@ mod tests {
         // errands unchanged; social outings that reach the park are the only ones over 150 m
         assert_eq!(&a.destinations[..a.start[1]], &old.destinations[..old.start[1]]);
         assert_eq!(old.totals[1], 0.0, "home, jobs and leisure all in the one cell: under 150 m");
-        assert!(a.totals[1] > 0.0 && a.totals[1] < 0.25 * 100.0 * RATE[1] as f64, "{}", a.totals[1]);
+        assert!(a.totals[1] > 0.0 && a.totals[1] < 0.25 * 1000.0 * RATE[1] as f64, "{}", a.totals[1]);
         for k in a.start[1]..a.start[2] {
             if let Some((kind, home, site, _, _)) = a.edge(k) {
                 assert_eq!((kind, home, site), (1, 0, 1));
@@ -1110,12 +1120,17 @@ pub struct EverydayApi {
     /// cell's airport trips are `airport_origin[c] x airport_scale[zone]`. Empty without airports.
     airport_origin: Vec<f32>,
     airport_scale: Vec<f64>,
-    /// Where each purpose's samples start in `destinations` (one more entry than purposes): a
-    /// purpose holds `SAMPLES[kind]` for each of its `live` cells, purpose by purpose.
+    /// Where each purpose's samples start in `destinations` (one more entry than purposes),
+    /// purpose by purpose.
     start: Vec<usize>,
     /// Per purpose, the cells with a budget for it (ascending), the only ones holding samples
     /// (T-395: about half of all cells x purposes have none).
     live: Vec<Vec<u32>>,
+    /// Per purpose, where each `live` cell's samples start in `destinations`, and one more entry
+    /// (T-397: `sample_count` of them).
+    first: Vec<Vec<u32>>,
+    /// The last `owner` answer: the sample loops go in order, so the next is that one or close.
+    at: std::cell::Cell<(usize, usize)>,
 }
 
 impl EverydayApi {
@@ -1142,7 +1157,7 @@ impl EverydayApi {
     #[inline(never)]
     fn index_edges(&mut self, r: std::ops::Range<usize>, index: &mut PairIndex) {
         for k in r {
-            let Some((kind, c, d)) = self.ends(k) else {
+            let Some((kind, c, d, per)) = self.ends(k) else {
                 continue;
             };
             let Some(sz) = &self.engine.sz else { return };
@@ -1153,7 +1168,7 @@ impl EverydayApi {
                 continue;
             }
             let distance = self.distance(c, d);
-            let (w, pw) = self.weight(kind, c, d, distance);
+            let (w, pw) = self.weight(kind, per, c, d, distance);
             let i = index.find_or_push(&mut self.pairs, kind as u32, u, v);
             if self.edge_pair.is_empty() {
                 self.edge_pair.resize(self.destinations.len(), NONE);
@@ -1176,29 +1191,46 @@ impl EverydayApi {
         let city = &self.engine.city;
         ((city.x[c] - city.x[d]).powi(2) + (city.y[c] - city.y[d]).powi(2)).sqrt()
     }
-    /// Destination sample `k`'s purpose, home cell and activity cell.
-    fn ends(&self, k: usize) -> Option<(usize, usize, usize)> {
+    /// Destination sample `k`'s purpose, home cell, activity cell and its cell's sample count.
+    fn ends(&self, k: usize) -> Option<(usize, usize, usize, usize)> {
         let d = self.destinations[k];
         if d == NONE {
             return None;
         }
-        // at most six purposes: a short scan
-        let mut kind = 0;
+        let (kind, i) = self.owner(k);
+        let fixed = self.live[kind][i] as usize;
+        let per = (self.first[kind][i + 1] - self.first[kind][i]) as usize;
+        Some(if site_anchored(kind) { (kind, d as usize, fixed, per) } else { (kind, fixed, d as usize, per) })
+    }
+    /// Sample `k`'s purpose and its fixed cell's index in `live`.
+    fn owner(&self, k: usize) -> (usize, usize) {
+        let (mut kind, mut i) = self.at.get();
+        if k < self.first[kind][i] as usize {
+            (kind, i) = (0, 0);
+        }
         while self.start[kind + 1] <= k {
             kind += 1;
+            i = 0;
         }
-        let fixed = self.live[kind][(k - self.start[kind]) / SAMPLES[kind]] as usize;
-        Some(if site_anchored(kind) { (kind, d as usize, fixed) } else { (kind, fixed, d as usize) })
+        let f = &self.first[kind];
+        if f[i + 1] as usize <= k {
+            i += 1;
+            if f[i + 1] as usize <= k {
+                i = f.partition_point(|&x| x as usize <= k) - 1;
+            }
+        }
+        self.at.set((kind, i));
+        (kind, i)
     }
-    /// A sample's trips and walking share, from its ends and their distance.
-    fn weight(&self, kind: usize, c: usize, d: usize, distance: f32) -> (f32, f32) {
+    /// A sample's trips and walking share, from its ends, their distance and its cell's samples.
+    fn weight(&self, kind: usize, per: usize, c: usize, d: usize, distance: f32) -> (f32, f32) {
         let budget = match kind {
             2 => self.school_enrollment[d],
             3 => self.university_enrollment[d],
             AIRPORT => (self.airport_origin[c] as f64 * self.airport_scale[self.engine.z.cell_zone[c] as usize]) as f32,
             _ => self.engine.city.pop[c],
         };
-        let weight = budget * RATE[kind] / SAMPLES[kind] as f32 * local_share(distance);
+        let weight = budget * RATE[kind] / per as f32 * local_share(distance);
         // T-275: the walk goes around water between the two cells' zones
         let walk_f = match &self.engine.gr.wroutes {
             Some(r) => r.walk_factor(self.engine.z.cell_zone[c] as usize, self.engine.z.cell_zone[d] as usize),
@@ -1207,8 +1239,8 @@ impl EverydayApi {
         (weight, self.engine.base.walk_share(distance * walk_f / 1000.0))
     }
     fn edge(&self, k: usize) -> Option<(usize, usize, usize, f32, f32)> {
-        let (kind, c, d) = self.ends(k)?;
-        let (w, pw) = self.weight(kind, c, d, self.distance(c, d));
+        let (kind, c, d, per) = self.ends(k)?;
+        let (w, pw) = self.weight(kind, per, c, d, self.distance(c, d));
         Some((kind, c, d, w, pw))
     }
     /// Also returns the transfers, every purpose together, laid out by `ix` (T-176).
@@ -1509,10 +1541,19 @@ impl EverydayApi {
         };
         let mut start = vec![0usize];
         let mut live: Vec<Vec<u32>> = vec![];
+        let mut first: Vec<Vec<u32>> = vec![];
         for kind in 0..kinds {
             let budget = budget_of(kind);
             live.push((0..n as u32).filter(|&c| budget.get(c as usize).is_some_and(|&b| !(b <= 0.0))).collect());
-            start.push(start[kind] + live[kind].len() * SAMPLES[kind]);
+            let mut f = Vec::with_capacity(live[kind].len() + 1);
+            let mut at = start[kind];
+            f.push(at as u32);
+            for &c in &live[kind] {
+                at += sample_count(kind, budget[c as usize] * RATE[kind]);
+                f.push(at as u32);
+            }
+            first.push(f);
+            start.push(at);
         }
         let mut destinations = vec![NONE; start[kinds]];
         let mut row = vec![NONE; n];
@@ -1540,8 +1581,9 @@ impl EverydayApi {
             }
             let s = Sampler {
                 kind,
-                k: SAMPLES[kind],
                 row: &row,
+                first: &first[kind],
+                base: start[kind],
                 h3: &engine.city.h3,
                 x: &engine.city.x,
                 y: &engine.city.y,
@@ -1581,6 +1623,8 @@ impl EverydayApi {
             airport_scale,
             start,
             live,
+            first,
+            at: std::cell::Cell::new((0, 0)),
         };
         for r in chunks(api.destinations.len()) {
             api.add_totals(r);
@@ -2055,11 +2099,9 @@ impl EverydayApi {
             // the samples' fixed end: the home for outings, the site for site-anchored purposes
             let fixed_is_near = (end == 0) != site_anchored(kind);
             if fixed_is_near {
-                let per = SAMPLES[kind];
                 for &c in &sorted {
                     if let Ok(i) = self.live[kind].binary_search(&(c as u32)) {
-                        let k0 = a + i * per;
-                        for k in k0..k0 + per {
+                        for k in self.first[kind][i] as usize..self.first[kind][i + 1] as usize {
                             visit(k);
                         }
                     }

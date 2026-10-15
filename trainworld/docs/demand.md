@@ -107,9 +107,10 @@ The pipeline spreads original sector locations by the same block land-area metho
 office/headquarters commute corrections do not relocate these customer weights.
 
 Destination gravity is origin-constrained: zone attraction times exp(-distance/scale), normalized
-per origin zone, with scales 3 km errands and 6 km social; same-zone distance is 1.04 km. Sixteen
-deterministic stratified destination samples per resident cell/purpose (none kept for a cell
-with no budget for that purpose) integrate that distribution,
+per origin zone, with scales 3 km errands and 6 km social; same-zone distance is 1.04 km.
+Deterministic stratified destination samples per cell/purpose integrate that distribution: one
+per 8 of the cell's trips a day for the purpose, rounded up, 2 to 16 (T-397; none for a cell
+with no budget for that purpose),
 then choose an actual res-9 destination cell by attraction weight. This is an approximation to
 continuous demand, not sampled individual travellers. It is stable across networks and reloads.
 **Everyday trips below 150 m cell-centre distance vanish entirely**, with no replacement or
@@ -150,7 +151,7 @@ under-fives, approximating ages 3–4, spread by block land area across all the 
 Missing shares use full-state county FIPS fallbacks, or the pack's age share for Connecticut gaps.
 The New York pack contains about 3.87 million estimated child-home weights. Each destination cell generates
 0.9 attendance outings per enrolled pupil on a typical school day. This attendance factor is
-provisional. Sixteen deterministic home samples per school cell use child weights and a 2.5 km
+provisional. Deterministic home samples per school cell (one per 8 attendance trips, 2 to 16) use child weights and a 2.5 km
 distance-decay scale. Unlike customer trips, school demand is destination-constrained by
 enrollment. The same 150 m exclusion, local-distance taper and directional assignment apply.
 
@@ -704,11 +705,10 @@ client sends one only when every city its network needs is open in every worker.
 construction reaches later joins at the next solve, which the client sends at once; a city only
 viewed or on screen opens bare instead (below). Opening is cheap for a commute
 pack (16 ms New York, 1-7 ms the others, natively); the cost is each city's everyday purposes
-(New York 0.9-1.1 s natively, 1.3-1.9 s in each of five Chrome workers, 5.0 s before T-172;
-since T-142 the other cities too: Washington 0.6 s natively and 1.4-1.6 s from download to open in
-three Chrome workers, Philadelphia 0.4 s and 0.9-1.0 s, Boston 0.3 s, Baltimore 0.24 s, the four
-small ones 0.05-0.13 s; T-142's airports and medical visits add 5-15% natively, two samples a
-cell each, and in Chrome Philadelphia measured 1.1-1.2 s and Washington 1.7-1.8 s); the
+(natively New York 0.6 s, Washington 0.3 s, Philadelphia 0.2 s, Boston 0.2 s, Baltimore 0.1 s,
+the four small ones 0.02-0.06 s, since T-397's sample counts; in Chrome, measured before T-397
+with about twice the samples, New York 1.3-1.9 s in each of five workers, Philadelphia 1.1-1.2 s
+and Washington 1.7-1.8 s); the
 regional market was 1.0 s natively and 1.2-1.6 s in Chrome until
 T-174, and is now 0.09 s natively and 0.1-0.4 s in Chrome (reading its sites). The market is
 opened (T-396) once a market zone is viewed, beside the view or reached, or a built station lies
@@ -717,13 +717,14 @@ or covers it, and a solve sent without it is sent again once it opens. A save wi
 the Northeast never downloads it. A new game
 opens only New York; a save with construction in several cities pays
 each of their openings once, in every worker. Only the cells with a budget for a purpose hold its
-destination samples and their pair indices (T-395; about half of all cells x purposes have none):
-natively New York's everyday layer holds 57 MB of them and all nine cities' 207 MB. A sample's
+destination samples and their pair indices (T-395; about half of all cells x purposes have none),
+and a cell holds one sample per 8 of its trips (T-397): natively New York's everyday layer holds
+2.3M samples, about 18 MB with their pair indices. A sample's
 pair index is held only once a network gives its layer a pair, written in place on the next
 network, and the pairs are found through a 4-byte-a-slot table sized from the last network's count
-(T-398). Natively a solving worker on the real save holding three periods has about 222 MB of heap
-after a solve and 256 MB at its peak; with all nine Northeast cities open, 420 and 458 MB
-(notes/T-398.md).
+(T-398). Natively a solving worker on the real save holding three periods has about 166 MB of heap
+after a solve and 198 MB at its peak; with all nine Northeast cities open, 315 and 350 MB
+(notes/T-397.md).
 T-172 made the everyday opening cheap: zone centres sit on the zone grid, so the destination
 gravity's decay comes from one table per purpose by grid offset instead of a square root and an
 exp per zone pair (the sampled destinations agree with before to 7 significant figures in every
@@ -974,7 +975,8 @@ just before that round's last result, so the client holds every answer when it p
 round. Such a solve is sent with `barrier`: a worker starts a crowding round only on `go`, which
 the client sends to every solving worker as it publishes the round before, so a worker with fewer
 periods (the default pool splits five periods 2, 2, 1) waits at the boundary holding its round
-instead of running ahead past the round asked about. That costs the final about 0.7 s and changes
+instead of running ahead past the round asked about (rounds counted per group of clusters, T-402:
+"Clusters" below). That costs the final about 0.7 s and changes
 no figure; solves after an edit run without it. A click then waits at most one stage, and its
 figures are at most one crowding round ahead of the bubbles; the answer for the next round is
 asked for at once, so each publish finds its answer waiting, and the final replaces it as always.
@@ -1031,7 +1033,16 @@ asked zone's cluster holds that network solved to its last round, whatever it is
 meanwhile: a click in a zone whose cluster is kept, or already published, needs no wait. Questions
 about a published cluster's zones go to its solve. The status tag and the top bar's "before your
 last change" speak only for a zone still being solved (`plan`, `demandSolving`). With the barrier
-(startup, a zone just opened) all clusters still step through the rounds together. The worker adds
+(startup, a zone just opened) the clusters to solve go in two groups when there are two or more and
+the zone in view's is one of them (T-402): that cluster alone first, through every round, each
+round sent as its own cluster result and shown where the solve's estimates are (a view of the
+cluster alone when nothing else is shown, else only its final, put in as after an edit); then the
+other clusters together, round by round, whose results are the solve's, with the first group's
+figures read from its populations. Each group counts its own rounds: `go` names the group
+(`plan.ahead` tells the page which cluster is first), and a worker tells which group a question
+means by its zone, so a question about a zone in the second group waits for that group's round
+and one about the first group's zone after its final is answered at once. Otherwise all clusters
+step through the rounds together. The worker adds
 cities up in the registry's order, never the order their packs opened in, so a network's figures
 are the same to the bit however it was loaded. T-392, T-393, notes/T-326.md.
 

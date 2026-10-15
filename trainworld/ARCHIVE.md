@@ -1,5 +1,6 @@
 # Archive
 
+- T-397 [P3] Everyday samples per cell scaled to its trips. Done 2026-10-15: one per 8 trips a day, 2 to 16; New York worker peak 259 to 198 MB natively, opening 1.09 to 0.66 s; no station moves over 5%; smoke final 7,596,985. notes/T-397.md.
 - T-402 [P3] Per-cluster finals in the startup and zone-opening solves. Done 2026-10-15: the zone in view's cluster is solved alone through its rounds first; Toronto's final at a Toronto-viewed load 32 s to 5.7 s, the whole final unchanged, figures identical. notes/T-402.md.
 
 - T-398 [P2] Lower a demand worker's memory peak (T-361 item 2). Done 2026-10-15: natively on the real save a worker's peak 353 to 256 MB, steady 281 to 222; nine cities 698 to 458; outputs identical to the byte, times unchanged. notes/T-398.md.
