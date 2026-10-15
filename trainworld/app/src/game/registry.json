@@ -252,7 +252,23 @@
       "zoom": 11.2,
       "utcOffset": 0,
       "market": -1,
-      "localTrips": 30704274.0
+      "localTrips": 33416584.0
+    },
+    {
+      "id": "par",
+      "name": "Paris",
+      "origin": {
+        "lon": 2.3488,
+        "lat": 48.8534
+      },
+      "center": [
+        2.3488,
+        48.8534
+      ],
+      "zoom": 11.2,
+      "utcOffset": 1,
+      "market": -1,
+      "localTrips": 28035227.0
     },
     {
       "id": "wor",

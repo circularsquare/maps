@@ -5,6 +5,7 @@ reasoning and what it replaced.
 
 ## 2026-10-15
 
+- **Paris: jobs from INSEE's flow table, work from home 0.12** (T-289). Jobs are the 2022 flows' destination totals by commune (one file serves jobs and the curve; workers living abroad left out), 5.99M against the RP 2023 dossier's 6.03M. Work from home is France's Eurostat share (11.1% usually, 24.4% sometimes, judged at 0.6 and 0.2 of their days), though Ile-de-France works at home more than the country.
 - **The OSM feature cache reproduces GDAL's hiding of relation members** (T-363). A closed way in a multipolygon relation is dropped from a read that also returns the relation, even with tags of its own (a hospital inside a campus relation); `osm_features.read` keeps that so packs match the old per-city reads exactly. Counting every such way instead is one line in `read`, at the risk of counting an area twice.
 
 ## 2026-10-14

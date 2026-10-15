@@ -250,6 +250,27 @@ CITIES = {
         "decay_pow": 1.85, "decay_km": 30.0,
         "region_name": "England",
     },
+    "par": {
+        "tier0": True,
+        "origin": (2.3488, 48.8534),  # point zéro, parvis de Notre-Dame
+        "water": {"cell_m": 25.0, "min_width_px": 2},
+        "boundary_notes": "notes/T-289.md",
+        "departements": ["75", "77", "78", "91", "92", "93", "94", "95"],  # Ile-de-France
+        "boundary_file": lambda: __import__("france").departements_boundary("par", CITIES["par"]["departements"]),
+        "population": lambda city, boundary, sig: __import__("france").commune_population(city, boundary, sig, CITIES["par"]["departements"]),
+        "jobs": lambda city, boundary, sig, w: __import__("france").insee_jobs(city, boundary, sig, w, CITIES["par"]["departements"]),
+        "jobs_url": "https://www.insee.fr/fr/statistiques/8582949",
+        "water_source": lambda bbox: __import__("osm_water").source(["europe/france/ile-de-france"])(bbox),
+        "extract": "europe/france/ile-de-france",
+        "iso2": "FR",
+        # Eurostat LFS lfsa_ehomp, France 2025, employed 15-64: 11.1% usually work from home, 24.4%
+        # sometimes; judged at about 0.6 and 0.2 of their days (T-289)
+        "wfh": 0.12,
+        "od_share": {"LFPG": 0.75},  # Charles de Gaulle's transfer passengers, judgement as Pearson's
+        # fitted on INSEE's 2022 commune flows with this pack's own homes and jobs (notes/t289_curve.py)
+        "decay_pow": 1.3, "decay_km": 20.0,
+        "region_name": "Ile-de-France",
+    },
     # T-276: non-city zones (docs/zones.md 2): one county each, the counties that touch two city
     # zones. Same sources and cells as a city; `kind` "zone" in the registry.
     "wor": {
@@ -891,6 +912,7 @@ def boundary_only(ids):
 
 
 if __name__ == "__main__":
+    sys.stdout.reconfigure(encoding="utf-8")  # place names outside English; a redirected log is cp1252 on Windows (T-289)
     if "--boundary-only" in sys.argv:
         boundary_only([a for a in sys.argv[1:] if not a.startswith("--")])
     else:

@@ -1,5 +1,7 @@
 # Archive
 
+- T-289 [P2] Paris. Done 2026-10-15: Ile-de-France tier 0 with INSEE 2022 jobs by commune (5.99M) and a curve fitted on its commune flows, d^-1.3 exp(-d/20 km); Ligne 1 test 641k riders; outside the market. notes/T-289.md.
+- T-364 [P3] One browser check for tier 0 cities. Done 2026-10-15: `checks/city-browser.mjs <id>` with a row per city (London, Paris) replaces `t288-browser.mjs`. notes/T-289.md.
 - T-363 [P2] Read a region's OSM once. Done 2026-10-15: `osm_features.py` caches an extract's points and areas (England 6 minutes); tier0, canada and places.py read it; London rebuilt from it gives a byte-identical lon.bin. notes/T-363.md.
 - T-360 [P2] London stage b. Done 2026-10-15: BRES jobs (8.64M), Census 2021 LSOA population, GIAS schools, curve d^-1.85 exp(-d/30 km) from WU01EW; Central test 262k to 533k; tier 0's blend and fallback power retuned, `zones_of` fixed. HESA is T-382. notes/T-288.md.
 - T-288 [P2] London, the first sampler city. Done 2026-10-15: tier 0 build (stage a) then England's inputs (stage b, T-360); playable, outside the market. notes/T-288.md.

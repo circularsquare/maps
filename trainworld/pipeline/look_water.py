@@ -38,6 +38,12 @@ VIEWS = {
         ("Staines reservoirs and Heathrow", -0.48, 51.45, 7.5),
         ("Lee Valley reservoirs", -0.03, 51.62, 5.0),
     ],
+    "par": [  # T-289
+        ("Central Paris, the Seine and its islands", 2.335, 48.858, 4.5),
+        ("Seine loops west: Boulogne to Gennevilliers", 2.24, 48.88, 9.0),
+        ("Marne and Seine meeting, Charenton", 2.43, 48.81, 6.0),
+        ("Saint-Quentin-en-Yvelines", 2.03, 48.79, 5.0),
+    ],
 }
 
 

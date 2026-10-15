@@ -81,11 +81,13 @@ that equals a solve's to the bit, so panning never re-solves [T-325].
   every ITL3 unit touching it, with Gatwick's and Medway's: 14.5M people), the first sampler city,
   built by tier 0 with England's own inputs in place of its proxies (BRES jobs, Census 2021
   population by LSOA, GIAS schools, a curve fitted on the 2011 census flows), on UTC+0, outside
-  the market [T-288, T-360].
+  the market [T-288, T-360]; **Paris** (Ile-de-France, its 8 départements: 12.5M people), tier 0
+  with INSEE's jobs by commune of work and a curve fitted on its 2022 commune flows, population
+  scaled to each commune's legal population, on UTC+1, outside the market [T-289].
 - **Non-city zones**: Worcester, Windham, New London and Litchfield Counties. Modelled space stays
   between city zones, with no ring round each city, for now (Anita, T-300).
 - **City additions** in the US are paused; a **sampler of other countries' cities** comes next
-  (London first, then Paris, Berlin, Shanghai, Mumbai), each a low-fidelity first pass from general sources
+  (London and Paris built; Shanghai, Mumbai, Berlin next), each a low-fidelity first pass from general sources
   (`research/world-sampler.md`). **Cells** are H3 resolution 9 (about 0.1 km²).
 
 ## 4. Demand: local trips

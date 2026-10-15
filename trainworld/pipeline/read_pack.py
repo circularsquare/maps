@@ -184,6 +184,13 @@ WATER_TESTS = {
                 "Mudchute, Isle of Dogs": (-0.0110, 51.4920), "Heathrow": (-0.4543, 51.4700),
                 "Stratford station": (-0.0035, 51.5416), "Greenwich Observatory": (-0.0015, 51.4769)},
     },
+    "par": {  # T-289: OSM water (Geofabrik Ile-de-France)
+        True: {"Seine by the Pont des Arts": (2.3375, 48.8582), "Seine by the Pont d'Iena": (2.2925, 48.8605),
+               "Bassin de la Villette": (2.3761, 48.8867), "Etang de Saint-Quentin": (2.0180, 48.7870),
+               "Lac Inferieur, Bois de Boulogne": (2.2611, 48.8635)},
+        False: {"Notre-Dame": (2.3499, 48.8530), "Eiffel Tower": (2.2945, 48.8584), "Place de la Concorde": (2.3212, 48.8656),
+                "Gare du Nord": (2.3553, 48.8809), "Chateau de Versailles": (2.1204, 48.8049), "Roissy CDG terminal 2": (2.5700, 49.0040)},
+    },
 }
 
 

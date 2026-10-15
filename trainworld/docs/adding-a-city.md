@@ -195,7 +195,8 @@ and after. A non-city zone is a `CITIES` entry in `build_city.py` with `"kind": 
 - `sim/src/demand/everyday.rs`, test `every_pack_everyday`: its city list is hardcoded; add the id.
 - `checks/t066-worker-check.mjs` reads the registry (since T-277 it asserts
   `registry.cities.length`, not 9).
-- Write a browser check for the new city or batch; `checks/t277-browser.mjs` (Toronto) is a template.
+- Add the city's row to `checks/city-browser.mjs` (centre, two points either side of a river,
+  a test line's stations) and run `node trainworld/checks/city-browser.mjs <id>` (T-364).
 
 ## 9. Checks
 
@@ -212,7 +213,9 @@ Native and Node (`npm run wasm --prefix trainworld/app` only if Rust changed):
 university 0.033).
 
 Browser (own Vite with HMR and watching off, `checks/dev-nowatch.mjs`; headless Chrome through Playwright with its own
-profile directory; never touch app/dist). A new game, then for each new city:
+profile directory; never touch app/dist): `node trainworld/checks/city-browser.mjs <id>` (add the
+city's row), run in the background with one wait, since a 10-minute foreground run let the cache
+expire (T-289). A new game, then for each new city:
 
 - jump to its centre: it becomes the active city, its pack opens (`twDemand.client.start.loads`),
   its boundary layer `tw-city-boundary-<id>` exists; Homes bubbles show; screenshot to
@@ -329,6 +332,14 @@ What London taught, for the next tier 0 city:
   has them (demand-worldwide.md).
 - **Measure each upgrade against tier 0 before switching** (`notes/t360_*.py`); a 2 km zone
   difference is what the game feels.
+
+Paris (`par`, T-289, `pipeline/france.py`) took about an hour of wall time: Ile-de-France's
+extract read in 72 s (features) and a few minutes (water), the build 66 s, `routes.py` 3 minutes.
+One INSEE file (the 2022 flows, every flow, 12 MB) gave both the jobs by commune of work and the
+curve fit (`notes/t289_curve.py`, which also makes the signals cache, so the build that follows
+reuses it). Communes and their legal populations come from geo.api.gouv.fr in one request a
+département. Take water test places from the water cache's own polygons, not from memory (three
+of five guessed points missed).
 
 What was hard, for the next country:
 

@@ -100,6 +100,27 @@ building Toronto from tier 0 against the real pack (notes/T-287.md has every tab
   Census 2021 districts (T-288).
 - **Airports**: Wikidata's patronage matched StatCan's within 0.3% for Toronto's three airports.
 
+## France (Paris, `pipeline/france.py`, T-289, 2026-10-15)
+
+Tier 0 with two INSEE upgrades; notes/T-289.md has the tables.
+
+- **Jobs**: INSEE's census flows (Mobilités professionnelles 2022, every flow, Paris by
+  arrondissement) summed by commune of work, spread inside each commune by tier 0's blend. The
+  census counts teleworkers at their usual workplace, so no lockdown correction. Communes are the
+  finest unit published; inside Paris an arrondissement is 0.9-16 km². Tier 0's proxy alone gives
+  Paris 60% of its INSEE jobs (the 8th arrondissement a quarter) and Ile-de-France 89%, but
+  misplaces 17% between 2 km zones, better than in London (27.5%): Paris's core is closer to the
+  proxy than London's, and still well short.
+- **Population**: the legal population by commune (geo.api.gouv.fr serves the latest), GHSL
+  inside each commune. Filosofi's 200 m squares would refine it (T-384).
+- **Curve**: fitted on the same flows, d^-1.3 exp(-d/20 km). The surface is flat near it:
+  Toronto's curve scores the same, tier 0's one-parameter rule (power 1.4, length to the flows'
+  median of 6.3 km) within half a point, London's d^-1.85 two points worse and the US curve five.
+- **Work from home**: one national share, 0.12, from Eurostat's LFS (lfsa_ehomp: 11.1% usually,
+  24.4% sometimes, France 2025), judged at 0.6 and 0.2 of their days. Ile-de-France works at home
+  more than France as a whole; not modelled.
+- **Schools**: tier 0's OSM sites; the ministry's files with pupils are T-385.
+
 ## Homes (docs/demand.md 4.1)
 
 - **People in institutions are not homes** (T-234). The US packs take the 2020 census's
