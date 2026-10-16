@@ -78,6 +78,9 @@ BORDER_FACTOR_US = 0.23
 # curve (Toronto's "decay_pow"/"decay_km") opens from its shipped factors too.
 DECAY_POW_US = 0.8
 DECAY_KM_US = 30.0
+# Japan's telework share of the workers not at home, outside the three big metros: MLIT 2024, 16.8%
+# of employed, at 2 days in 5 (research/japan.md)
+TELEWORK_JP = 0.168 * 0.4
 
 CITIES = {
     "bal": {
@@ -425,10 +428,11 @@ CITIES = {
         "water_source": lambda bbox: __import__("osm_water").source(["asia/japan/kanto"])(bbox),
         "extract": "asia/japan/kanto",
         "iso2": "JP",
-        # 2020 census: 9.5% of workers by place of work work at home (table 4); of the rest, MLIT's
-        # 2024 telework survey has 37.5% of Greater Tokyo's employed teleworking, judged at 2 days in 5
-        # (research/japan.md): 0.095 + 0.905 x 0.15
-        "wfh": 0.23,
+        # at home by municipality of work (2020 census table 4, T-465); of the rest, MLIT's 2024
+        # telework survey has 37.5% of Greater Tokyo's employed teleworking, judged at 2 days in 5
+        # (research/japan.md)
+        "telework": 0.15,
+        "at_home": lambda lat, lon: __import__("japan").at_home_share(lat, lon, CITIES["tyo"]["prefectures"]),
         # fitted on the 2020 census municipality flows with this pack's own homes and jobs
         # (notes/t420_curve.py); flat from power 1.85 (London's) to 2.3, and only the steep end keeps
         # the census's 33.5% working in their own municipality
@@ -455,9 +459,10 @@ CITIES = {
         "water_source": lambda bbox: __import__("osm_water").source(["asia/japan/kansai", "asia/japan/chubu"])(bbox),
         "extract": "asia/japan/kansai",
         "iso2": "JP",
-        # 2020 census: 8.1% of workers by place of work at home (table 4); MLIT 2024 telework, Kinki
-        # 24.4% of employed, 2 days in 5 as Tokyo: 0.081 + 0.919 x 0.098
-        "wfh": 0.17,
+        # at home by municipality of work (table 4, T-465); MLIT 2024 telework, Kinki 24.4% of
+        # employed, 2 days in 5 as Tokyo
+        "telework": 0.098,
+        "at_home": lambda lat, lon: __import__("japan").at_home_share(lat, lon, CITIES["osa"]["prefectures"]),
         # Tokyo's curve: ties the best fit on the 2020 census flows with this pack's margins (17.7%
         # misplaced, notes/t420_curve.py) and keeps the census's 41% in their own municipality
         "decay_pow": 2.2, "decay_km": 80.0,
@@ -483,9 +488,10 @@ CITIES = {
         "water_source": lambda bbox: __import__("osm_water").source(["asia/japan/chubu", "asia/japan/kansai"])(bbox),
         "extract": ["asia/japan/chubu", "asia/japan/kansai"],
         "iso2": "JP",
-        # 2020 census: 8.8% of workers by place of work at home (table 4); MLIT 2024 telework, Chukyo
-        # 19.6% of employed, 2 days in 5 as Tokyo: 0.088 + 0.912 x 0.078
-        "wfh": 0.16,
+        # at home by municipality of work (table 4, T-465); MLIT 2024 telework, Chukyo 19.6% of
+        # employed, 2 days in 5 as Tokyo
+        "telework": 0.078,
+        "at_home": lambda lat, lon: __import__("japan").at_home_share(lat, lon, CITIES["ngo"]["prefectures"]),
         # Tokyo's curve: ties the best fit on the 2020 census flows with this pack's margins (12.6%
         # misplaced, notes/t420_curve.py) and keeps the census's 51% in their own municipality
         "decay_pow": 2.2, "decay_km": 80.0,
@@ -494,8 +500,8 @@ CITIES = {
         "kana_romaji": True,
     },
     # T-432: Japan's regional metros, whole prefectures (Sapporo: Ishikari subprefecture), Tokyo's
-    # inputs; wfh is the census's at-home share plus MLIT's 2024 telework share outside the three big
-    # metros (16.8% of employed) at 2 days in 5 on the rest; curves in notes/T-432.md
+    # inputs; telework is MLIT's 2024 share outside the three big metros (TELEWORK_JP); curves in
+    # notes/T-432.md
     "fuk": {
         "tier0": True,
         "origin": (130.4207, 33.5897),  # Hakata Station
@@ -512,7 +518,8 @@ CITIES = {
         "water_source": lambda bbox: __import__("osm_water").source(["asia/japan/kyushu", "asia/japan/chugoku"])(bbox),
         "extract": "asia/japan/kyushu",
         "iso2": "JP",
-        "wfh": 0.15,  # census at home 8.6%
+        "telework": TELEWORK_JP,  # census at home 8.6%
+        "at_home": lambda lat, lon: __import__("japan").at_home_share(lat, lon, CITIES["fuk"]["prefectures"]),
         "decay_pow": 2.0, "decay_km": 32.0,  # fitted, notes/t420_curve.py
         "region_name": "Fukuoka",
         "latin_names": True,
@@ -536,7 +543,8 @@ CITIES = {
         "water_source": lambda bbox: __import__("osm_water").source(["asia/japan/hokkaido"])(bbox),
         "extract": "asia/japan/hokkaido",
         "iso2": "JP",
-        "wfh": 0.13,  # census at home 6.8%
+        "telework": TELEWORK_JP,  # census at home 6.8%
+        "at_home": lambda lat, lon: __import__("japan").at_home_share(lat, lon, CITIES["spk"]["prefectures"]),
         "decay_pow": 2.2, "decay_km": 80.0,  # Tokyo's: ties the best fit (notes/t420_curve.py) and keeps the own-municipality share
         "region_name": "Sapporo",
         "latin_names": True,
@@ -558,7 +566,8 @@ CITIES = {
         "water_source": lambda bbox: __import__("osm_water").source(["asia/japan/tohoku"])(bbox),
         "extract": "asia/japan/tohoku",
         "iso2": "JP",
-        "wfh": 0.16,  # census at home 9.5%
+        "telework": TELEWORK_JP,  # census at home 9.5%
+        "at_home": lambda lat, lon: __import__("japan").at_home_share(lat, lon, CITIES["sdj"]["prefectures"]),
         "decay_pow": 1.8, "decay_km": 50.0,  # fitted, notes/t420_curve.py
         "region_name": "Sendai",
         "latin_names": True,
@@ -580,7 +589,8 @@ CITIES = {
         "water_source": lambda bbox: __import__("osm_water").source(["asia/japan/chugoku", "asia/japan/shikoku"])(bbox),
         "extract": "asia/japan/chugoku",
         "iso2": "JP",
-        "wfh": 0.14,  # census at home 8.2%
+        "telework": TELEWORK_JP,  # census at home 8.2%
+        "at_home": lambda lat, lon: __import__("japan").at_home_share(lat, lon, CITIES["hij"]["prefectures"]),
         "decay_pow": 1.9, "decay_km": 32.0,  # fitted, notes/t420_curve.py
         "region_name": "Hiroshima",
         "latin_names": True,
@@ -625,9 +635,8 @@ CITIES = {
 
 def _japan_zone(zid, z):
     """T-420 stage 3: a Japanese prefecture zone (or merged Hokkaido subprefectures) from
-    pipeline/japan_zones.json, Japan's inputs as the metro packs'. wfh is the census's at-home share
-    plus MLIT's 16.8% telework outside the big three metros at 2 days in 5; the curve is the zone's
-    own fit (notes/t420s3_curve.py) on the census flows."""
+    pipeline/japan_zones.json, Japan's inputs as the metro packs'; the curve is the zone's own fit
+    (notes/t420s3_curve.py) on the census flows."""
     units, nb = z["units"], z["neighbours"]
     return {
         "tier0": True, "kind": "zone", "name": z["name"],
@@ -644,7 +653,8 @@ def _japan_zone(zid, z):
         "water_source": lambda bbox: __import__("osm_water").source(z["water_extracts"])(bbox),
         "extract": z["extract"],
         "iso2": "JP",
-        "wfh": z["wfh"],
+        "telework": TELEWORK_JP,
+        "at_home": lambda lat, lon: __import__("japan").at_home_share(lat, lon, units),
         "decay_pow": z.get("decay_pow", 2.2), "decay_km": z.get("decay_km", 80.0),
         "region_name": z["name"],
         "utc_offset": 9,
@@ -1019,6 +1029,8 @@ def write_cells(city, cfg, cells, totals, sources, mask=None, mask_info=None, co
         header["commute"] = commute
     if regions is not None:
         header["regions"] = regions
+    if cfg.get("iso2"):  # a tier 0 pack's country, for the joint commute gravity's border factors
+        header["country"] = cfg["iso2"]
     stem = os.path.join(WORK, f"{city}.cells")
     with open(stem + ".bin.part", "wb") as f:
         f.write(buf)

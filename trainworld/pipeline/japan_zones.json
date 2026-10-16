@@ -70,14 +70,15 @@
    "water_cell_m": 25.0,
    "census_at_home": 0.1478,
    "wfh": 0.205,
-   "decay_pow": 1.4,
-   "decay_km": 16.0,
+   "decay_pow": 1.8,
+   "decay_km": 32.0,
    "curve_fit": {
-    "misplaced": 0.0631,
-    "own": 0.7522,
+    "misplaced": 0.0599,
+    "own": 0.7697,
     "own_census": 0.7674,
     "commuters": 495158,
-    "mean_km": 5.948
+    "mean_km": null,
+    "task": "T-463"
    }
   },
   "iwt": {
@@ -135,14 +136,15 @@
    "water_cell_m": 25.0,
    "census_at_home": 0.138,
    "wfh": 0.196,
-   "decay_pow": 1.4,
-   "decay_km": 16.0,
+   "decay_pow": 1.6,
+   "decay_km": 32.0,
    "curve_fit": {
-    "misplaced": 0.0537,
-    "own": 0.8206,
+    "misplaced": 0.0464,
+    "own": 0.8085,
     "own_census": 0.8106,
     "commuters": 389282,
-    "mean_km": 6.0903
+    "mean_km": null,
+    "task": "T-463"
    }
   },
   "ygt": {
@@ -240,14 +242,15 @@
    "water_cell_m": 25.0,
    "census_at_home": 0.1174,
    "wfh": 0.177,
-   "decay_pow": 1.8,
-   "decay_km": 50.0,
+   "decay_pow": 1.4,
+   "decay_km": 16.0,
    "curve_fit": {
-    "misplaced": 0.0805,
-    "own": 0.667,
+    "misplaced": 0.0787,
+    "own": 0.6507,
     "own_census": 0.6587,
     "commuters": 729889,
-    "mean_km": 7.1043
+    "mean_km": null,
+    "task": "T-463"
    }
   },
   "gnm": {
@@ -275,7 +278,7 @@
    ],
    "water_cell_m": 25.0,
    "census_at_home": 0.1075,
-   "wfh": 0.167,
+   "wfh": 0.168,
    "decay_pow": 2.0,
    "decay_km": 160.0,
    "curve_fit": {
@@ -446,14 +449,15 @@
    "water_cell_m": 25.0,
    "census_at_home": 0.1462,
    "wfh": 0.204,
-   "decay_pow": 1.4,
-   "decay_km": 16.0,
+   "decay_pow": 1.6,
+   "decay_km": 32.0,
    "curve_fit": {
-    "misplaced": 0.0851,
-    "own": 0.5229,
+    "misplaced": 0.0817,
+    "own": 0.5234,
     "own_census": 0.5225,
     "commuters": 320628,
-    "mean_km": 5.4996
+    "mean_km": null,
+    "task": "T-463"
    }
   },
   "ngn": {
@@ -690,13 +694,14 @@
    "census_at_home": 0.0983,
    "wfh": 0.159,
    "decay_pow": 2.0,
-   "decay_km": 160.0,
+   "decay_km": 80.0,
    "curve_fit": {
-    "misplaced": 0.0788,
-    "own": 0.6344,
+    "misplaced": 0.077,
+    "own": 0.6467,
     "own_census": 0.6461,
     "commuters": 737102,
-    "mean_km": 6.778
+    "mean_km": null,
+    "task": "T-463"
    }
   },
   "ymg": {
@@ -759,13 +764,14 @@
    "census_at_home": 0.1417,
    "wfh": 0.199,
    "decay_pow": 1.6,
-   "decay_km": 32.0,
+   "decay_km": 50.0,
    "curve_fit": {
-    "misplaced": 0.0712,
-    "own": 0.6182,
+    "misplaced": 0.0651,
+    "own": 0.5982,
     "own_census": 0.6121,
     "commuters": 266795,
-    "mean_km": 5.8925
+    "mean_km": null,
+    "task": "T-463"
    }
   },
   "kgw": {
@@ -827,7 +833,7 @@
    ],
    "water_cell_m": 25.0,
    "census_at_home": 0.1247,
-   "wfh": 0.184,
+   "wfh": 0.183,
    "decay_pow": 1.8,
    "decay_km": 32.0,
    "curve_fit": {
@@ -922,14 +928,15 @@
    "water_cell_m": 25.0,
    "census_at_home": 0.1136,
    "wfh": 0.173,
-   "decay_pow": 1.8,
-   "decay_km": 32.0,
+   "decay_pow": 1.6,
+   "decay_km": 16.0,
    "curve_fit": {
-    "misplaced": 0.0537,
-    "own": 0.8138,
+    "misplaced": 0.0424,
+    "own": 0.8092,
     "own_census": 0.8107,
     "commuters": 524609,
-    "mean_km": 5.4052
+    "mean_km": null,
+    "task": "T-463"
    }
   },
   "kmm": {
@@ -956,13 +963,14 @@
    "census_at_home": 0.1367,
    "wfh": 0.195,
    "decay_pow": 2.0,
-   "decay_km": 50.0,
+   "decay_km": 32.0,
    "curve_fit": {
-    "misplaced": 0.103,
-    "own": 0.5689,
+    "misplaced": 0.1003,
+    "own": 0.5743,
     "own_census": 0.5709,
     "commuters": 670718,
-    "mean_km": 5.4542
+    "mean_km": null,
+    "task": "T-463"
    }
   },
   "oit": {
@@ -1052,14 +1060,15 @@
    "water_cell_m": 50.0,
    "census_at_home": 0.1173,
    "wfh": 0.177,
-   "decay_pow": 1.4,
-   "decay_km": 16.0,
+   "decay_pow": 1.8,
+   "decay_km": 32.0,
    "curve_fit": {
-    "misplaced": 0.0476,
-    "own": 0.8253,
+    "misplaced": 0.0447,
+    "own": 0.8475,
     "own_census": 0.8435,
     "commuters": 630663,
-    "mean_km": 6.3148
+    "mean_km": null,
+    "task": "T-463"
    }
   },
   "oka": {
@@ -1081,13 +1090,14 @@
    "census_at_home": 0.0759,
    "wfh": 0.138,
    "decay_pow": 1.8,
-   "decay_km": 50.0,
+   "decay_km": 32.0,
    "curve_fit": {
-    "misplaced": 0.092,
-    "own": 0.536,
+    "misplaced": 0.087,
+    "own": 0.5506,
     "own_census": 0.5568,
     "commuters": 507044,
-    "mean_km": 8.7598
+    "mean_km": null,
+    "task": "T-463"
    }
   },
   "kmk": {
@@ -1117,14 +1127,15 @@
    "water_cell_m": 25.0,
    "census_at_home": 0.1333,
    "wfh": 0.192,
-   "decay_pow": 2.4,
-   "decay_km": 50.0,
+   "decay_pow": 2.0,
+   "decay_km": 80.0,
    "curve_fit": {
-    "misplaced": 0.0641,
-    "own": 0.8954,
+    "misplaced": 0.04,
+    "own": 0.8909,
     "own_census": 0.8955,
     "commuters": 234336,
-    "mean_km": 6.3572
+    "mean_km": null,
+    "task": "T-463"
    }
   },
   "sor": {
@@ -1150,14 +1161,15 @@
    "water_cell_m": 25.0,
    "census_at_home": 0.1629,
    "wfh": 0.219,
-   "decay_pow": 2.0,
-   "decay_km": 160.0,
+   "decay_pow": 1.6,
+   "decay_km": 16.0,
    "curve_fit": {
-    "misplaced": 0.081,
-    "own": 0.7709,
+    "misplaced": 0.0737,
+    "own": 0.7719,
     "own_census": 0.768,
     "commuters": 95142,
-    "mean_km": 4.6645
+    "mean_km": null,
+    "task": "T-463"
    }
   },
   "ibr": {
@@ -1188,13 +1200,14 @@
    "census_at_home": 0.1014,
    "wfh": 0.162,
    "decay_pow": 1.8,
-   "decay_km": 50.0,
+   "decay_km": 80.0,
    "curve_fit": {
-    "misplaced": 0.0634,
-    "own": 0.8217,
+    "misplaced": 0.0551,
+    "own": 0.8211,
     "own_census": 0.8251,
     "commuters": 180054,
-    "mean_km": 6.2186
+    "mean_km": null,
+    "task": "T-463"
    }
   },
   "okh": {
@@ -1223,14 +1236,15 @@
    "water_cell_m": 25.0,
    "census_at_home": 0.1752,
    "wfh": 0.231,
-   "decay_pow": 2.4,
-   "decay_km": 160.0,
+   "decay_pow": 1.6,
+   "decay_km": 16.0,
    "curve_fit": {
-    "misplaced": 0.072,
-    "own": 0.9064,
+    "misplaced": 0.0495,
+    "own": 0.9056,
     "own_census": 0.9061,
     "commuters": 133547,
-    "mean_km": 6.5887
+    "mean_km": null,
+    "task": "T-463"
    }
   },
   "tkc": {
@@ -1257,14 +1271,15 @@
    "water_cell_m": 25.0,
    "census_at_home": 0.1638,
    "wfh": 0.22,
-   "decay_pow": 2.0,
-   "decay_km": 80.0,
+   "decay_pow": 1.8,
+   "decay_km": 50.0,
    "curve_fit": {
-    "misplaced": 0.0562,
-    "own": 0.7619,
+    "misplaced": 0.0429,
+    "own": 0.7568,
     "own_census": 0.7618,
     "commuters": 154180,
-    "mean_km": 6.0097
+    "mean_km": null,
+    "task": "T-463"
    }
   },
   "ksr": {
@@ -1289,14 +1304,15 @@
    "water_cell_m": 25.0,
    "census_at_home": 0.1168,
    "wfh": 0.176,
-   "decay_pow": 2.4,
-   "decay_km": 16.0,
+   "decay_pow": 2.2,
+   "decay_km": 50.0,
    "curve_fit": {
-    "misplaced": 0.0579,
-    "own": 0.8619,
+    "misplaced": 0.0356,
+    "own": 0.8753,
     "own_census": 0.8747,
     "commuters": 84713,
-    "mean_km": 4.2227
+    "mean_km": null,
+    "task": "T-463"
    }
   },
   "osh": {
@@ -1322,14 +1338,15 @@
    "water_cell_m": 25.0,
    "census_at_home": 0.1238,
    "wfh": 0.183,
-   "decay_pow": 1.8,
-   "decay_km": 80.0,
+   "decay_pow": 1.6,
+   "decay_km": 32.0,
    "curve_fit": {
-    "misplaced": 0.0375,
-    "own": 0.8165,
+    "misplaced": 0.0314,
+    "own": 0.8177,
     "own_census": 0.815,
     "commuters": 155667,
-    "mean_km": 5.4037
+    "mean_km": null,
+    "task": "T-463"
    }
   }
  }

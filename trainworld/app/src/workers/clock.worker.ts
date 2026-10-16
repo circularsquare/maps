@@ -14,7 +14,7 @@ import { frameKindName, frameKindNumber, makeFrame, mercK, type Frame, type Fram
 import { PERIODS, periodAt } from "../game/periods";
 import { DAY_KINDS, dayKindAt } from "../game/days";
 import { timeZoneTable } from "../game/localTime";
-import { networkFromState } from "../map/network";
+import { networkFromState, newNetCache } from "../map/network";
 import { buildComplexes } from "../game/complexes";
 import { decodeSave, encodeSave, isNortheastSave, trackFrameKind, readStored, SAVE_FORMAT, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, deleteSlot, leaseSlot, ORIGINAL_SLOT, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader } from "./saveFile";
 import type { ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FromClock, MoneyState, NetworkSnapshot, PiInput, RouteEnd, ToClock } from "./protocol";
@@ -22,8 +22,8 @@ import type { ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FromClock, Mo
 /** Run 0 of each line is resampled this often (m) for the renderer's line texture. */
 const SAMPLE_STEP = 50;
 const SNAPSHOT_DEBOUNCE_MS = 500;
-/** SPEC 6.4: US$6B to start, in US$M. */
-const START_CASH = 6000;
+/** SPEC 6.4: US$3B to start, in US$M. */
+const START_CASH = 3000;
 /** Whole trains on a new line across both directions, high/medium/low demand. */
 const NEW_LINE_TRAINS: [number, number, number] = [0, 0, 0];
 /** Default fare curve (T-028): US$ a ride plus US$ a km. */
@@ -64,7 +64,10 @@ let hourLedger: HourLedger[] = [];
 let incomePerHour: number[][] = DAY_KINDS.map(() => PERIODS.map(() => 0));
 /** the same per line id (T-293), for each line's fares taken today */
 let lineIncome = new Map<number, number[][]>();
-let clk ={ t: START_CLOCK, rate: 0, at: Date.now() };
+/** Wall ms on the clock both threads read (`ToClock` "clock"): Date.now() drifts from it, and the
+ * worker running ahead of the main thread's clock pulled money time back across midnight (T-488). */
+const wallNow = () => performance.timeOrigin + performance.now();
+let clk = { t: START_CLOCK, rate: 0, at: wallNow() };
 /** T-284: money is settled up to this game second, not by whole hours, so the cash moves as fares
  * land. `partHour` is the hour being settled and `partFare`, `partCost` the shares of its fares and
  * running cost already in the cash (each reaches 1 as the hour ends, so an hour still pays its whole
@@ -418,35 +421,53 @@ function buildState(): ClockState {
 // ---------------------------------------------------------------- money (T-028)
 
 function gameNow(): number {
-  return clk.t + Math.max(0, (Date.now() - clk.at) / 1000) * clk.rate;
+  return clk.t + Math.max(0, (wallNow() - clk.at) / 1000) * clk.rate;
 }
 
-/** Today's ledger entry (game day `day`), made if missing; the ledger keeps LEDGER_DAYS days. */
+/** Money's now: the clock, or the time settled up to if the clock has been set back behind it, so
+ * a charge or the day shown never lands on a day already closed (T-488). */
+function moneyNow(): number {
+  return Math.max(gameNow(), settledT);
+}
+
+/** The entry for `key` in a ledger kept in order of `at`, made if missing (in its place, so a day or
+ * hour is never listed twice, T-488); the ledger keeps the newest `cap`. */
+function entryIn<T extends { fares: number; running: number; trains: number; build: number }>(list: T[], at: (e: T) => number, key: number, make: () => T, cap: number): T {
+  let i = list.length;
+  while (i > 0 && at(list[i - 1]) > key) i--;
+  if (i > 0 && at(list[i - 1]) === key) return list[i - 1];
+  const e = make();
+  list.splice(i, 0, e);
+  if (list.length > cap) list.splice(0, list.length - cap);
+  return e;
+}
+
+/** Game day `day`'s ledger entry; the ledger keeps LEDGER_DAYS days. */
 function dayEntry(day: number): DayLedger {
-  let d = ledger[ledger.length - 1];
-  if (!d || d.day !== day) {
-    d = { day, fares: 0, running: 0, trains: 0, build: 0 };
-    ledger.push(d);
-    if (ledger.length > LEDGER_DAYS) ledger.splice(0, ledger.length - LEDGER_DAYS);
-  }
-  return d;
+  return entryIn(ledger, (d) => d.day, day, () => ({ day, fares: 0, running: 0, trains: 0, build: 0 }), LEDGER_DAYS);
 }
 
-/** The hour's entry in the hourly ledger (T-447), made if missing; it keeps LEDGER_HOURS hours. */
+/** The hour's entry in the hourly ledger (T-447); it keeps LEDGER_HOURS hours. */
 function hourEntry(hour: number): HourLedger {
-  let d = hourLedger[hourLedger.length - 1];
-  if (!d || d.hour !== hour) {
-    d = { hour, fares: 0, running: 0, trains: 0, build: 0 };
-    hourLedger.push(d);
-    if (hourLedger.length > LEDGER_HOURS) hourLedger.splice(0, hourLedger.length - LEDGER_HOURS);
+  return entryIn(hourLedger, (d) => d.hour, hour, () => ({ hour, fares: 0, running: 0, trains: 0, build: 0 }), LEDGER_HOURS);
+}
+
+/** A saved ledger in order with one entry per day or hour: saves written before T-488 can list a
+ * day twice, the second time empty, which merging adds back where it belongs. */
+function mergeLedger<T extends { fares: number; running: number; trains: number; build: number }>(list: T[] | undefined, at: (e: T) => number): T[] {
+  const by = new Map<number, T>();
+  for (const e of list ?? []) {
+    const k = at(e), d = by.get(k);
+    if (!d) by.set(k, { ...e });
+    else { d.fares += e.fares; d.running += e.running; d.trains += e.trains; d.build += e.build; }
   }
-  return d;
+  return [...by.values()].sort((a, b) => at(a) - at(b));
 }
 
 function moneyState(): MoneyState {
   const a = api!;
-  dayEntry(Math.floor(gameNow() / 86400));
-  hourEntry(Math.floor(gameNow() / 3600));
+  dayEntry(Math.floor(moneyNow() / 86400));
+  hourEntry(Math.floor(moneyNow() / 3600));
   return {
     cash: a.cash(),
     fleet: a.fleet(),
@@ -470,7 +491,7 @@ function sendMoney() {
 
 /** T-284: the cash and today's ledger, if either moved since last sent. */
 function sendCash() {
-  const cash = api!.cash(), today = dayEntry(Math.floor(gameNow() / 86400)), hour = hourEntry(Math.floor(gameNow() / 3600));
+  const cash = api!.cash(), today = dayEntry(Math.floor(moneyNow() / 86400)), hour = hourEntry(Math.floor(moneyNow() / 3600));
   if (cash === sentCash && today.fares === sentFares) return;
   sentCash = cash;
   sentFares = today.fares;
@@ -562,7 +583,7 @@ function lineDaysAt(now: number, closed: boolean, shift?: number, past = false):
   const out: LineDay[] = [];
   let i = 1;
   for (let k = 0; k < count; k++) {
-    const id = v[i], n = v[i + 1], spans = v[i + 6], len = 9 + 2 * spans + n;
+    const id = v[i], n = v[i + 1], spans = v[i + 6], len = 13 + 2 * spans + n;
     const sh = a.line_shift(id);
     if (shift === undefined || sh === shift) {
       const per = lineIncome.get(id);
@@ -881,8 +902,8 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file"): Promise<b
   api!.set_cash(h.cash);
   api!.set_fleet(h.fleet ?? 0);
   fares = { ...START_FARES, ...h.fares };
-  ledger = (h.ledger ?? []).map((d) => ({ ...d }));
-  hourLedger = (h.hours ?? []).map((d) => ({ ...d }));
+  ledger = mergeLedger(h.ledger, (d) => d.day);
+  hourLedger = mergeLedger(h.hours, (d) => d.hour);
   convertedOnLoad = converted;
   restart(h.clock, from);
   return converted;
@@ -908,7 +929,7 @@ function newGame() {
 
 /** After a load or a new game: the clock, fresh state, a new snapshot for demand. */
 function restart(t: number, from: "autosave" | "file" | "new") {
-  clk = { t, rate: clk.rate, at: Date.now() };
+  clk = { t, rate: clk.rate, at: wallNow() };
   // T-284: the loaded hour counts as paid up to the clock, evenly (its trains' timing is not known yet)
   settledT = t;
   partHour = Math.floor(t / 3600);
@@ -926,6 +947,9 @@ function restart(t: number, from: "autosave" | "file" | "new") {
   send({ kind: "snapshot", snapshot: buildSnapshot() });
 }
 
+/** the last build's pieces of the renderer's buffers (T-496) */
+const netCache = newNetCache();
+
 /** `service`: only the service changed (a train count, T-229): the renderer's buffers are not built
  * again, which was about half the edit's time on New York's real network. */
 function sendState(service = false) {
@@ -942,7 +966,7 @@ function sendState(service = false) {
     return;
   }
   // The renderer's buffers are built here too, so the main thread only uploads them (T-063).
-  const n = networkFromState(s);
+  const n = networkFromState(s, netCache);
   s.net = n;
   s.ms = [t1 - t0, performance.now() - t1];
   timing.state = t1 - t0;
@@ -1317,8 +1341,8 @@ async function handle(msg: ToClock) {
     if (r === 0) {
       dirty = true;
       if (charge > 0) {
-        const d = dayEntry(Math.floor(gameNow() / 86400));
-        const e = hourEntry(Math.floor(gameNow() / 3600));
+        const d = dayEntry(Math.floor(moneyNow() / 86400));
+        const e = hourEntry(Math.floor(moneyNow() / 3600));
         const trains = api.last_train_charge();
         d.trains += trains;
         d.build += charge - trains;
@@ -1354,7 +1378,7 @@ async function handle(msg: ToClock) {
       : q.what === "edgePis" ? api.edge_pis(q.edge)
       : q.what === "flyover" ? new Float64Array([api.flyover_cost(q.node)])
       : q.what === "lineAccount" ? api.line_account(q.line, q.day ?? 0)
-      : q.what === "lineLevels" ? api.line_levels(q.line, q.day)
+      : q.what === "linePeriods" ? api.line_periods(q.line, q.day)
       : q.what === "today" ? today()
       : q.what === "yesterday" ? yesterday()
       : api.line_delays(q.line, q.level);

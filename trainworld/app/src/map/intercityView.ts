@@ -41,6 +41,7 @@ import type { Selection } from "../game/types";
 import { DISC } from "../workers/commutersProtocol";
 import { CATCH_STEP, caughtUp, tripsDone } from "./catchUp";
 import { anchorVersion } from "./anchorVersion";
+import { modeBar } from "./modeBar";
 import { addFinder, discAt, pointerAt } from "./demandHover";
 import type { DemandOverlay } from "./demandOverlay";
 import { anchor, EARTH_C, kAtLat, toLocal, toLngLat, type Anchor } from "./geo";
@@ -67,6 +68,8 @@ export const OVERVIEW_ZOOM = 8.5;
 /** The busiest city's bubble in the overview, and the selected city's, px radius before the size
  * slider. Larger than a selection's 19 px city circles: here nothing local is drawn beside it. */
 const OVERVIEW_PX = 28;
+/** Most place labels on screen at once, the biggest first (T-493). */
+const MAX_LABELS = 8;
 
 /** The city bubbles are drawn in place of the focused city's own: zoomed far out, or a city
  * selected (T-186). The commuter view hides its bubbles and leaves clicks and hover to these. */
@@ -80,6 +83,8 @@ interface Marks {
   tags: string[][];
   /** per disc, the city it stands for, in the city view (T-186) */
   cities?: string[];
+  /** the disc whose label is placed first (the selected city's) */
+  first?: number;
 }
 
 const PLACES = INTERCITY_PLACES.length;
@@ -108,20 +113,23 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
   map.getContainer().appendChild(labels);
   const placeLabels = () => {
     const used: { x: number; y: number; w: number; h: number }[] = [];
-    Array.from(labels.children).forEach((child, i) => {
-      const el = child as HTMLElement;
-      if (!marks) return;
+    if (!marks) return;
+    // discs run biggest first, so the cap keeps the biggest on screen (T-493)
+    const order = Array.from(labels.children, (_, i) => i);
+    if (marks.first !== undefined && marks.first > 0) order.unshift(...order.splice(marks.first, 1));
+    for (const i of order) {
+      const el = labels.children[i] as HTMLElement;
       const p = map.project(toLngLat(marks.discs[i * DISC], marks.discs[i * DISC + 1], marks.anchor));
       const r = marks.discs[i * DISC + 2] * (512 * 2 ** map.getZoom() / EARTH_C) * view.bubbleSize;
       const w = el.offsetWidth, h = el.offsetHeight;
       const positions = [[p.x + r + 5, p.y - h / 2], [p.x - w - r - 5, p.y - h / 2], [p.x - w / 2, p.y + r + 5], [p.x - w / 2, p.y - h - r - 5]];
-      const at = positions.find(([x, y]) => x >= 0 && y >= 0 && x + w <= map.getContainer().clientWidth && y + h <= map.getContainer().clientHeight && !used.some(a => x < a.x + a.w + 4 && x + w + 4 > a.x && y < a.y + a.h + 4 && y + h + 4 > a.y));
+      const at = used.length >= MAX_LABELS ? undefined : positions.find(([x, y]) => x >= 0 && y >= 0 && x + w <= map.getContainer().clientWidth && y + h <= map.getContainer().clientHeight && !used.some(a => x < a.x + a.w + 4 && x + w + 4 > a.x && y < a.y + a.h + 4 && y + h + 4 > a.y));
       el.style.visibility = at ? "" : "hidden";
       if (at) {
         el.style.transform = `translate(${Math.round(at[0])}px, ${Math.round(at[1])}px)`;
         used.push({x: at[0], y: at[1], w, h});
       }
-    });
+    }
   };
   const label = (text: string) => {
     const el = document.createElement("div");
@@ -182,12 +190,20 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
         const v = local.get(c.id);
         t = { all: t.all + (v ? v.tripsPerDay : c.localTrips ?? 0), rail: t.rail + (v ? v.railTripsPerDay : 0), air: t.air };
       }
-      const modes = [`${count(t.rail)} by train`, ...(t.air >= 0.5 ? [`${count(t.air)} by plane`] : [])];
+      // T-494: a zone's local and inter-region trips are two figures, each with a mode bar
+      const day = shownDayPhrase.peek();
+      const v = local.get(c.id);
+      const localAll = v ? v.tripsPerDay : c.localTrips ?? 0;
+      const localLine = `${count(localAll)} trips ${day} within ${c.name}`;
+      const localBar = v ? modeBar(v.railTripsPerDay, (localAll * v.split.walk) / 100, (localAll * v.split.drive) / 100) : "";
+      const inter = !own || isOwn ? total(c.place) : t;
+      const interLine = `${count(inter.all)} inter-region trips ${day} to and from ${c.name}`;
+      const interBar = modeBar(inter.rail, 0, Math.max(0, inter.all - inter.rail));
       const tag = !own
-        ? [`${count(t.all)} trips ${shownDayPhrase.peek()} in and from ${c.name}`, ...modes]
+        ? [localLine, localBar, interLine, interBar]
         : isOwn
-          ? [`${count(t.all)} trips ${shownDayPhrase.peek()} between ${c.name} and other places`, ...modes]
-          : [`${count(t.all)} trips ${shownDayPhrase.peek()} between ${own.name} and ${c.name}`, ...modes];
+          ? [interLine, interBar, `(${localLine})`]
+          : [`${count(t.all)} trips ${day} between ${own.name} and ${c.name}`, interBar];
       return { ...t, city: c, isOwn, tag };
     }).filter((p) => p.isOwn || (p.all > 0 && !(!own && zoneLoads.peek().has(p.city.id)))); // T-421: a zone still loading has its bar instead
     points.sort((a, b) => b.all - a.all);
@@ -206,7 +222,8 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       discs.set([x, y, r, c[0] / 255, c[1] / 255, c[2] / 255, BUBBLE_ALPHA, p.isOwn ? 2 : 1], i * DISC);
       label(`${p.city.name} · ${count(p.all)} trips/day`);
     });
-    marks = { discs, anchor: a, tags: points.map((p) => p.tag), cities: points.map((p) => p.city.id) };
+    const first = points.findIndex((p) => p.isOwn);
+    marks = { discs, anchor: a, tags: points.map((p) => p.tag), cities: points.map((p) => p.city.id), first: first >= 0 ? first : undefined };
     view.setDiscs("inter", discs, a);
     placeLabels();
   };
@@ -259,8 +276,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       const r = unscaledRadius * INTERCITY_RADIUS_SCALE;
       discs.set([x, y, r, c[0] / 255, c[1] / 255, c[2] / 255, BUBBLE_ALPHA, 1], i * DISC);
       const place = z.name || "here";
-      const air = "air" in z ? (z.air as number) : 0;
-      tags.push(railOnly ? [`${count(z.rail)} riders ${shownDayPhrase.peek()} on inter-region trips ${verb} ${place}`] : [`${count(z.all)} inter-region trips ${shownDayPhrase.peek()} ${verb} ${place}`, `${count(z.rail)} by train`, ...(air >= 0.5 ? [`${count(air)} by plane`] : [])]);
+      tags.push(railOnly ? [`${count(z.rail)} riders ${shownDayPhrase.peek()} on inter-region trips ${verb} ${place}`] : [`${count(z.all)} inter-region trips ${shownDayPhrase.peek()} ${verb} ${place}`, modeBar(z.rail, 0, Math.max(0, z.all - z.rail))]);
       if (regional) label(`${z.name} · ${count(z.all)} ${railOnly ? "riders" : "trips"}/day`);
     });
     marks = { discs, anchor: a, tags };

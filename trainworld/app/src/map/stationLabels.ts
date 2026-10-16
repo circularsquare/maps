@@ -13,8 +13,8 @@
 
 import type { FeatureCollection } from "geojson";
 import type { GeoJSONSource, Map as MlMap } from "maplibre-gl";
-import { buildComplexes } from "../game/complexes";
-import { groundScale } from "../game/coords";
+import type { Complexes } from "../game/complexes";
+import { complexes } from "../game/complexView";
 import type { StationInput, WorldView } from "../game/types";
 import { anchor, toLocal } from "./geo";
 import type { Overlay } from "./overlay";
@@ -129,18 +129,33 @@ export class StationLabels {
     const key = `${anchor().version}\n` + stations.map((s) => `${s.id}|${s.name}|${s.built}|${s.lng}|${s.lat}|${s.heading}|${s.length}|${[...(lines.get(s.id) ?? [])].join(",")}`).join("\n") + "\n" + links.join("|");
     if (key === this.key) return;
     this.key = key;
-    const names = labelGroups(stations, lines, links);
-    this.plane.textContent = "";
+    // the world's complexes (game/complexView.ts), built once for every user of this world
+    const names = labelGroups(stations, lines, complexes.peek());
     this.needsPlacement = true;
+    // A label whose text and look are unchanged keeps its element and measured size (T-496): a new
+    // station then costs one new element, not a rebuild and a layout of every name. Shown labels
+    // never overlap, so their order in the DOM draws nothing differently.
+    const spare = new Map<string, Label[]>();
+    for (const l of this.labels) {
+      const k = l.el.className + "\u0000" + l.el.textContent;
+      const v = spare.get(k);
+      if (v) v.push(l);
+      else spare.set(k, [l]);
+    }
     this.labels = names.map((g) => {
+      const cls = "stn-label" + (g.built ? "" : " plan");
+      const [x, y] = toLocal(g.lng, g.lat);
+      const below = Math.abs(Math.cos(g.heading)) > Math.abs(Math.sin(g.heading));
+      const old = spare.get(cls + "\u0000" + g.name)?.pop();
+      if (old) return { ...old, x, y, below };
       const el = document.createElement("div");
-      el.className = "stn-label" + (g.built ? "" : " plan");
+      el.className = cls;
       if (LAYERED) el.style.willChange = "transform"; // ?perfTry=labelLayers (T-045)
       el.textContent = g.name;
       this.plane.appendChild(el);
-      const [x, y] = toLocal(g.lng, g.lat);
-      return { el, x, y, below: Math.abs(Math.cos(g.heading)) > Math.abs(Math.sin(g.heading)), w: 0, h: 0 };
+      return { el, x, y, below, w: 0, h: 0 };
     });
+    for (const v of spare.values()) for (const l of v) l.el.remove();
     this.shadow = {
       type: "FeatureCollection",
       features: names.map((g, i) => ({
@@ -179,7 +194,7 @@ export class StationLabels {
       if (!show) this.onPlace?.();
     }
     if (!show || !this.overlay.camMatrix) return;
-    const W = this.overlay.canvas.clientWidth, H = this.overlay.canvas.clientHeight;
+    const W = this.overlay.cssW, H = this.overlay.cssH;
     const m = this.overlay.camMatrix;
     const prev = this.placedMatrix;
     // A flat mercator pan changes only translation. Zoom, rotation, pitch, padding and resize
@@ -256,8 +271,7 @@ interface NameGroup {
  * with the most lines; differently named members keep their own. Most important first: most
  * lines, then constructed, then save order. The player's links count, as everywhere a complex is
  * used (T-197, T-209). */
-function labelGroups(stations: readonly StationInput[], lines: ReadonlyMap<string, ReadonlySet<string>>, links: readonly (readonly [string, string])[] = []): NameGroup[] {
-  const cx = buildComplexes(stations, links, groundScale);
+function labelGroups(stations: readonly StationInput[], lines: ReadonlyMap<string, ReadonlySet<string>>, cx: Complexes): NameGroup[] {
   const groups = new Map<string, StationInput[]>();
   for (const s of stations) {
     const k = `${cx.of.get(s.id)}\u0000${s.name}`;

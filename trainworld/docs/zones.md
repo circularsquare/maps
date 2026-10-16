@@ -116,10 +116,18 @@ over every job in reach, in its own zone or another, so moving a zone line moves
   homes (at the home end) and jobs (at the work end) in each, and shipped in the market pack as a
   list of home zone, work zone and commuters a day.
 - **The balance** (T-297) is solved per group of packs joined by any pair within the cut (groups
-  share no commuter: Japan's packs would balance apart from the Northeast's). Each group runs Furness
-  steps with Anderson mixing of the last 12 steps, until every zone's jobs are met to 1e-8 relative
-  (its homes exactly), about 40 steps. The tolerance is tight because weakly joined packs and regions
-  leave slow modes: a looser residual leaves factors percents off (notes/T-297.md).
+  share no commuter). Each group runs Furness steps with Anderson mixing of the last 12 steps, until
+  every zone's jobs are met to 1e-8 relative (its homes exactly), about 40 steps. The tolerance is
+  tight because weakly joined packs and regions leave slow modes: a looser residual leaves factors
+  percents off (notes/T-297.md).
+- **Two groups are built**: the Northeast (`pipeline/intercity.py`, the registry's cities with a
+  `market` id; cross-pack commutes through `data/packs/intercity.json`) and Japan's 45 packs
+  (`intercity.py --group jp`, T-463: distances in a conic at the packs' mean origin, border factor
+  0.4 from `borders.json`; cross-pack commutes by 6 km square of each pack's own frame in
+  `data/work/jp.joint_commutes.json`, which `market_zones.py` writes into each zone's market pack).
+  Japan's balance stops at about 8e-4, all of it in Okinawa's outlying islands, a block joined to
+  little else; the best of 150 steps is kept (notes/T-463.md). A tier 0 pack's single region is its
+  own, and its header names its country.
 
 **Fitting and checking.** The curve and the factors are each pack's fitted values, so nothing new
 is fitted for commutes between zones in the US. LODES OD 2023 is the check, not an input: commuters

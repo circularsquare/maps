@@ -66,13 +66,20 @@ shown, the larger of the days, so a weekend's or the average's lines are thinner
 change as the periods pass. At zoom 15 the widest line is 44 px. Stations keep their own width
 [T-239].
 
-## Station demand circles
+## Station use circles
 
-[T-144, T-146, T-209, T-213] Off by default; checkboxes at the top of the Stations tab. Large
-translucent circles behind stations, area by boardings plus alightings a day. They do not enlarge
-the station's click target. With "One circle per station complex" (on by default) a complex has
-one circle at the mean position of its constructed stations, grouped exactly as the complexes are,
-the player's links included.
+[T-144, T-146, T-209, T-213, T-482; `game/stationUse.ts`] A choice at the top of the Stations tab,
+"Station circles": None (default), Origins, Transfers or Total, remembered per browser. Large
+translucent circles behind stations, area by riders a day, up to 75,000: **origins** are riders
+starting their rail trip at the station, **transfers** riders changing lines there, **total** every
+boarding there (origins plus transfers). From the demand solve shown, for the day the demand bar
+picks, every purpose whatever the purpose filter: boardings are the solve's per station, transfers
+its transfer pairs over every station (`complexTransfers`) counted at the station the rider boards,
+origins the rest. Origins and Transfers keep the last split while a new solve's is asked for. The
+circle's hover and the station's say the figure ("12,400 riders start a rail trip here on an
+average day"). They do not enlarge the station's click target. With "One circle per station
+complex" (on by default, shown while circles are) a complex has one circle at the mean position of
+its constructed stations, grouped exactly as the complexes are, the player's links included.
 
 ## Local trip bubbles
 
@@ -87,8 +94,11 @@ the player's links included.
 - **Colour mixes the mode colours by share**, at 80% opacity times the Opacity setting (90% by
   default, T-470), biggest bubbles under smaller ones.
   Drawn over the network and capacity tags, under station names.
-- **Hover**: local trip legs there, both directions, and their split; lean, with no station list
-  [T-323].
+- **Hover** [T-323, T-494]: "422 trips a day on average from here" (Homes; "to here" for
+  Destinations, a purpose's name before "trips" under a filter), then a thin **mode bar**
+  (`map/modeBar.ts`): train blue, walking green, driving red, widths by share, no numbers. A far-end
+  bubble adds "Click to explore this trip". Every demand hover with a mode split uses the bar (the
+  airport badges too).
 - **Airports** [T-448, `map/airportMarks.ts`]: a white circle with a plane, 20 px at every zoom, on
   each airport's busiest terminal cell, so on its biggest bubble. Shown with Destinations under All
   purposes or Airport, for the focused zone and the nearby zones, hidden while a bubble or station
@@ -199,10 +209,11 @@ away round it. The catchment counts commuters only.
 - Above zoom 9.5 every far 6 km zone with trips is a disc at its position, on its own relative
   scale (the busiest covers 0.15 of a zone's area). At 9.5 and below they become one labelled bubble
   per other zone at its registry centre (the largest 19 px radius before the size slider), names and
-  daily totals as labels that avoid each other and stay on screen. Area is total travellers with no
+  daily totals as labels that avoid each other and stay on screen, at most eight at once, the biggest
+  first (T-493). Area is total travellers with no
   floor; colour is blue for train and red for the rest (car and plane), mixed by share (a station's
-  riders are all blue). They lie under the local discs; hover names the place and the direction
-  and gives the trips by train and, per place, by plane.
+  riders are all blue). They lie under the local discs; hover names the place and the direction,
+  with a mode bar (train blue, the rest red, plane included).
 - A selection survives a pan to another zone.
 
 ## Zoomed far out: one bubble per zone
@@ -212,13 +223,18 @@ Destinations on and no bubble or station selection, every zone in the regional m
 one included, is one bubble at its registry centre in place of the focused zone's own bubbles:
 all its trips a day (its local trips, from the open zone's view or the pipeline's no-rail count in
 `zones.json`, plus the regional layer's to and from it), coloured by train share, labelled
-"Philadelphia · 187k trips/day" ("… trips a day in and from Philadelphia" on hover). Sized against
+"Philadelphia · 187k trips/day" (at most eight labels on screen, the biggest first [T-493]). The hover
+has two lines, each with a mode bar [T-494]: "1.6m trips a day on average within Yamanashi" (bar from
+the zone's modelled split, none for a zone not opened) and "120k inter-region trips a day on
+average to and from Yamanashi" (train blue, the rest red). Sized against
 the busiest zone on screen, 28 px radius before the size slider; a bigger one off screen is drawn
 at the scale. Homes and Destinations look the same. Under a local purpose the focused zone's own
 bubbles stay instead. Toronto (`market: -1`) has none.
 
 A click on one selects the zone (a `city` selection, kept at any zoom): it is outlined, with one
-bubble per other zone for the regional trips between the two, on the same scale, and the city
+bubble per other zone for the regional trips between the two, on the same scale (the selected
+zone's hover: the inter-region line and its bar first, the local figure in brackets under it; the
+others: "N trips a day between A and B" and a bar), and the city
 inspector (`ui/inspector/CityInspector.tsx`) lists its trips by place, all modes and by train, car
 and plane as a selection's do, then "Elsewhere" (both directions, as every row), with
 a "Go to Philadelphia" button that moves the camera to its centre and clears the selection

@@ -46,13 +46,17 @@ key.
   column (names A to Z, figures biggest first, Near nearest first), a second reverses it, the sorted
   column has a small arrow, and each header's hover says what it sorts by. Names sort naturally, ties
   by name. Lines default to by name. The sort is kept while the page is open and re-runs each game hour.
-- **Trains to add** [T-472]: a row's train count (the trains its level needs now) turns orange
-  when a fifth of the trains in service now are packed full somewhere on their trip, red from
-  half; otherwise muted. Hover "4 of 12 trains running now are packed full on their trip". In
-  service means from leaving the first stop until it could leave again from the far end (the
-  trip plus half the line's turning time), from the boarding account (`Boarding::under_way`, the
-  last two numbers of each `past_day` block), so it moves as trains leave. Text the player should
-  act on is coloured this way elsewhere too (`crowdClass` in `game/today.ts`).
+- **Trains to add** [T-472, T-491]: a row's train count (the trains its level needs now) is
+  coloured by the crowding score of the line's period now, otherwise muted. The score is the
+  average rider's extra wait for a train with room (rider-minutes spent on the platform after a
+  full train left them, each waiting the gap to the next departure, over riders arriving in the
+  period) divided by the square root of their average ride on the line (rider-minutes aboard over
+  riders, at least 5 min): `crowding` in `game/today.ts`. Grades (`CROWD_GRADES`): yellow from
+  0.1, orange from 0.3, red from 0.6, so 2 min on a 10 min ride is red and so is 4 min on a 40
+  min ride; orange and red colour the count (`crowdClass`). Hover "Morning peak: riders wait 1.8
+  min on average for a train with room", then "4/12 trains running now are packed full on their
+  trip" (trains from leaving the first stop until they could leave again from the far end,
+  `Boarding::under_way`). The figures end each `past_day` block (`Boarding::crowding`).
 - **Scope and Near** [T-332; `game/listScope.ts`, `ScopeToggle` in `ui/tabs.tsx`]: beside New line
   (and above the Stations list) a toggle between the viewed place (a pin and its name, hover "Only
   <name>") and the whole world (a globe); one setting for both tabs, kept while the page is open, the
@@ -77,14 +81,15 @@ key.
   [track-and-service.md](track-and-service.md) 6.3; hovering High, Medium or Low gives that
   level's times of day in the line's local time, from the period table in `game/periods.ts`:
   "High demand: 06:00 to 10:00, 16:00 to 20:00"; weekends use the same hours) [T-406]; on a
-  running line a dot before each level's name grades its trains over its hours of today's kind of
-  day in the boarding account (`Boarding::line_levels`) [T-477]: green when none is packed full,
-  yellow under a fifth, orange from a fifth, red from half; hover "12 of 96 trains are packed full.
-  A full train leaves 4,100 of 98,000 riders behind (4%)." (riders arriving in those hours, and
-  those who could not get on the first train to come); Today for a running line:
+  running line a dot per period before each level's name (High has the morning and evening
+  peaks, in time order) grades that period on today's kind of day by the crowding score above,
+  green below 0.1 (`Boarding::line_periods`) [T-477, T-491]; hover "Morning peak, 06:00 to 10:00:
+  riders wait 4.0 min on average for a train with room", then "12/96 trains are packed full";
+  Today for a running line:
   riders by purpose,
   fares, running cost so far, its fullest train so far ("100%" when one left packed full, else "N%
-  full"), how many trains left full and when (spans under half an hour apart, at the stop where
+  full"), how many trains left full as "x/y" of the trips that reached a stop in the 24 hours
+  (the fourth number from the end of each `past_day` block) [T-481] and when (spans under half an hour apart, at the stop where
   each is fullest) and riders left behind [T-230, T-239, T-293]; the block's heading is a Past 24 h /
   Yesterday switch (the Segmented pattern of Settings; the choice is kept while the page is open)
   and Yesterday gives the same figures for the last complete day in the line's local time, running
@@ -109,8 +114,9 @@ key.
 
 ## Stations tab and the station inspector
 
-- **The Stations tab** has, above its list, "Station demand circles" and "One circle per station
-  complex" (the circles described in the checkbox's hover) [T-213]. The list sorts like the Lines
+- **The Stations tab** has, above its list, the "Station circles" choice (None, Origins, Transfers,
+  Total, each described in its hover) and, while circles are drawn, "One circle per station
+  complex" [T-213, T-482; [ui-demand-views.md](ui-demand-views.md)]. The list sorts like the Lines
   tab's [T-310], by Name, 24 h (boardings in the past 24 hours) or Near, boardings by default. The scope
   toggle and distance column are the Lines tab's (above); the footer reads "N of M stations" when
   only the viewed place is listed.

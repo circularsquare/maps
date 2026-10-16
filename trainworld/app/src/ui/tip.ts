@@ -9,6 +9,8 @@
 // the game does not write (MapLibre's attribution button), a `title` met under the pointer is moved
 // to `data-tip` at once, before the browser's own tooltip would show.
 
+import { hoverHeld, isModifierKey } from "./blurHold";
+
 export function startTips() {
   const tag = document.createElement("div");
   tag.className = "tool-tag ui-tag";
@@ -77,7 +79,6 @@ export function startTips() {
   document.addEventListener("pointerdown", hide, true);
   document.addEventListener("wheel", hide, { capture: true, passive: true });
   document.addEventListener("scroll", hide, true);
-  document.addEventListener("keydown", hide, true);
-  document.documentElement.addEventListener("pointerleave", hide);
-  window.addEventListener("blur", hide);
+  document.addEventListener("keydown", (e) => isModifierKey(e) || hide(), true);
+  document.documentElement.addEventListener("pointerleave", () => hoverHeld() || hide());
 }

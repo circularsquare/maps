@@ -13,8 +13,9 @@ and everything below is national.
   industries, government included (e-Stat T001162), spread inside each mesh by tier0's proxy, then
   scaled per municipality to the 2020 census's employed people 15+ by place of work (table 4,
   which also counts farmers, household services and those working at home).
-- **Work at home**: the census's "working at home" share of workers by place of work, plus the
-  pack's telework share of the remaining workers on a given day (config).
+- **Work at home**: per cell, the census's "working at home" share of workers by place of work in
+  the cell's municipality (T-465), plus the pack's telework share of the rest on a given day
+  (config `telework`).
 - **Curve**: the same census table, municipality to municipality (notes/t420_curve.py).
 - **Schools**: KSJ P29 (2023) elementary, junior high, compulsory and secondary schools as points;
   each mesh's children 0-14 x tier0.SCHOOL_ENROL go to the nearest such school.
@@ -425,6 +426,22 @@ def workers_at_work(prefs):
     allw = t[t.h == "all"].groupby("w").n.sum()
     home = t[t.h == "home"].n.sum()
     return allw.to_dict(), float(home / allw.sum())
+
+
+def at_home_share(lat, lon, prefs):
+    """Per cell, the census's share of workers by place of work who work at home, by the cell's
+    municipality (table 4's "home" rows, T-465: 0.5% in Chiyoda, 21% in Suginami); the units' mean
+    for a cell in no municipality or one with no figure."""
+    import england
+    t = flows(prefs)
+    allw = t[t.h == "all"].groupby("w").n.sum()
+    home = t[t.h == "home"].groupby("w").n.sum().reindex(allw.index, fill_value=0.0)
+    mean = float(home.sum() / allw.sum())
+    share = (home / allw.where(allw > 0)).fillna(mean).to_dict()
+    ms = municipalities(prefs)
+    idx, _ = england.cell_units(np.asarray(lat), np.asarray(lon), [(m[0], m[3]) for m in ms])
+    by_unit = np.array([share.get(m[0], mean) for m in ms] + [mean])
+    return by_unit[np.where(idx >= 0, idx, len(ms))]
 
 
 def census_jobs(city, boundary, sig, weight, prefs, neighbours):

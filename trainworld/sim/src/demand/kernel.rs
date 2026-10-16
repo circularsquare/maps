@@ -68,6 +68,9 @@ pub struct Params {
     /// Logit scale per perceived minute, and the per-city rail propensity.
     pub beta: f32,
     pub asc_rail: f32,
+    /// Cost damping (T-495, `mode_beta`): past this many perceived minutes of the car's trip the
+    /// mode choice's scale falls as the square root of the car's minutes.
+    pub damp_min: f32,
     /// Driving door to door (T-090), the alternative for the whole trip: the road is
     /// `road_detour` x the straight line; its first and last `road_local_km` (at most half the
     /// road each) are local streets, at `road_town_kmh` in open country, and the rest is main
@@ -179,6 +182,7 @@ impl Default for Params {
             fare_min: 6.0,
             beta: 0.05,
             asc_rail: 0.0,
+            damp_min: 90.0,
             road_detour: 1.3,
             road_local_km: 2.0,
             road_end_km: 8.0,
@@ -232,6 +236,7 @@ impl Params {
         match k {
             "station_theta" => self.station_theta = v,
             "asc_rail" => self.asc_rail = v,
+            "damp_min" => self.damp_min = v,
             "walk_mps" => self.walk_mps = v,
             "walk_cutoff_m" => self.walk_cutoff_m = v,
             "w_wait" => self.w_wait = v,
@@ -334,15 +339,22 @@ impl Params {
         let (fixed, paid, free) = self.park_parts(z, j);
         fixed + (1.0 - free) * paid
     }
-    /// Rail's share against the car, `util` being rail's utility against a driver who parks free:
-    /// drivers parking free and those paying `paid` for a space choose apart (T-380), the same
-    /// expressions as `mode_choice`'s lanes.
-    pub fn rail_share_parked(&self, util: f32, paid: f32, free: f32) -> f32 {
+    /// The mode choice's logit scale for a trip whose car costs `car` perceived minutes (the
+    /// regional layer's car even where none can go, so rail against air never depends on it): `beta` up to `damp_min`, then `beta` x sqrt(`damp_min` / `car`), so a
+    /// minute weighs less on a long trip (T-495). The same expressions as `mode_choice`'s lanes.
+    #[inline]
+    pub fn mode_beta(&self, car: f32) -> f32 {
+        self.beta * (self.damp_min / car).min(1.0).sqrt()
+    }
+    /// Rail's share against the car, `util` being rail's utility against a driver who parks free
+    /// at scale `beta` (`mode_beta`): drivers parking free and those paying `paid` for a space
+    /// choose apart (T-380), the same expressions as `mode_choice`'s lanes.
+    pub fn rail_share_parked(&self, util: f32, beta: f32, paid: f32, free: f32) -> f32 {
         let r0 = 1.0 / (1.0 + fast_exp(-util));
         if paid < 1e-30 {
             return r0;
         }
-        let r1 = 1.0 / (1.0 + fast_exp(-(util + self.beta * paid)));
+        let r1 = 1.0 / (1.0 + fast_exp(-(util + beta * paid)));
         r0 + (1.0 - free) * (r1 - r0)
     }
     /// Real minutes of the walk between two stations on a transfer, `d_m` metres straight line.
@@ -2247,7 +2259,9 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
                 let drive = e * (lu08 + l08) + k * (lu18 + l18) + (main - F8::splat(2.0) * k) * F8::splat(60.0) / F8::splat(p.road_open_kmh);
                 let road = drive * F8::splat(p.w_drive) + park8;
                 let rail = mo8 + m8 + F8::splat(p.fare_min) - ssum.ln() / F8::splat(th);
-                let util = F8::splat(p.beta) * (road - rail) + F8::splat(p.asc_rail);
+                // `Params::mode_beta`
+                let bt = F8::splat(p.beta) * (F8::splat(p.damp_min) / road).min(F8::splat(1.0)).sqrt();
+                let util = bt * (road - rail) + F8::splat(p.asc_rail);
                 // T-380: rail's share among drivers parking free, and among those paying for a
                 // space (`rail_share_parked`; where no lane pays, the second share equals the first)
                 let r0 = F8::splat(1.0) / (F8::splat(1.0) + util.neg().exp());
@@ -2255,7 +2269,7 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
                     r0
                 } else {
                     let [free8, _, _, _] = F8::transpose(std::array::from_fn(|l| dd[q[l]][2]));
-                    let r1 = F8::splat(1.0) / (F8::splat(1.0) + (util + F8::splat(p.beta) * paid8).neg().exp());
+                    let r1 = F8::splat(1.0) / (F8::splat(1.0) + (util + bt * paid8).neg().exp());
                     r0 + (F8::splat(1.0) - free8) * (r1 - r0)
                 };
                 let x = tu8 * dv8 * dpw8 * r;
@@ -2877,8 +2891,8 @@ mod tests {
         assert!(in_ring(ring("London"), -0.089, 51.513) && in_ring(ring("London"), -0.142, 51.515));
         assert!(!in_ring(ring("London"), -0.024, 51.505));
         for util in [-3.0f32, 0.0, 2.5] {
-            assert_eq!(p.rail_share_parked(util, 0.0, 0.3), 1.0 / (1.0 + fast_exp(-util)));
-            let r = p.rail_share_parked(util, 20.0, 0.3);
+            assert_eq!(p.rail_share_parked(util, p.beta, 0.0, 0.3), 1.0 / (1.0 + fast_exp(-util)));
+            let r = p.rail_share_parked(util, p.beta, 20.0, 0.3);
             let (r0, r1) = (1.0 / (1.0 + fast_exp(-util)), 1.0 / (1.0 + fast_exp(-(util + p.beta * 20.0))));
             assert!(r > r0 && r < r1 && (r - (0.3 * r0 + 0.7 * r1)).abs() < 1e-6);
         }

@@ -33,6 +33,7 @@ import { aggregate, discs, type Groups } from "./bubbles";
 import { CATCH_STEP, CATCH_WALL_MS, caughtUp, tripsDone } from "./catchUp";
 import { cityOverview } from "./intercityView";
 import { anchorVersion } from "./anchorVersion";
+import { modeBar } from "./modeBar";
 import { addFinder, discAt, pointerAt, pointerLocal, type Pointer } from "./demandHover";
 import { bubbleLevel, type DemandOverlay } from "./demandOverlay";
 import { anchor, anchorShift, kAtY, toLocal, type Anchor } from "./geo";
@@ -50,10 +51,10 @@ export const commuterPick = signal<{ sel: Selection; totals: [number, number, nu
   /** the selection's centre, longitude and latitude (T-323) */
   at?: [number, number] } | null>(null);
 
-/** "local trips", or the purpose filter's trips (T-158), for the hover tags. */
+/** "trips", or the purpose filter's trips (T-158), for the hover tags. */
 const tripWords = () => {
   const p = purposeFilter.peek();
-  return p === "all" ? "local trips" : `${purposeWords(p)} trips`;
+  return p === "all" ? "trips" : `${purposeWords(p)} trips`;
 };
 
 /** A selection's far end under the purpose filter (T-158); null: none of that purpose. */
@@ -69,11 +70,6 @@ export const commuterStats = { nearbyMs: 0, nearbyBuilds: 0, nearbyShown: {} as 
   /** ?debug=1 (T-317): the city's bubbles on show, with the anchor their positions are relative to */
   probe: null as null | (() => { anchor: Anchor; levels: { discs: Float32Array; group: Uint32Array }[] } | null) };
 
-const pct = (v: number, all: number) => (all > 0 ? Math.round((100 * v) / all) : 0);
-const modeLine = (t: number, w: number, d: number) => {
-  const all = t + w + d;
-  return `Train ${pct(t, all)}%, walking ${pct(w, all)}%, driving ${pct(d, all)}%`;
-};
 
 export function startCommuterView(map: MlMap, view: DemandOverlay) {
   let focusSeen = activeCity.peek(), focusEpoch = 0, frameSeen = worldFrameEpoch.peek();
@@ -395,22 +391,23 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   effect(() => view.setBubbleOpacity(display.value.bubbleOpacity));
 
   // ---- hover ----
-  const endWord = (end: "home" | "work") => (end === "home" ? "at homes" : "at destinations");
+  const endWord = (end: "home" | "work") => (end === "home" ? "from here" : "to here");
+  const bubbleTag = (end: "home" | "work", t: number, w: number, d: number, ...rest: string[]) => [`${count(t + w + d)} ${tripWords()} ${shownDayPhrase.peek()} ${endWord(end)}`, modeBar(t, w, d), ...rest];
   addFinder(10, (p) => {
     if (!shown || !display.peek().commuters || cityOverview.peek()) return null;
     const sel = selection.peek();
     if (sel?.kind === "station") return null;
     if (sel?.kind === "commuters") {
       let i = discAt(nearDiscs, p, nearAnchor, view.bubbleSize);
-      if (i >= 0 && near) return [`${count(near.train[i] + near.walk[i] + near.drive[i])} ${tripWords()} ${shownDayPhrase.peek()} ${endWord(sel.end)} here`, "Outward and return legs included.", modeLine(near.train[i], near.walk[i], near.drive[i])];
+      if (i >= 0 && near) return bubbleTag(sel.end, near.train[i], near.walk[i], near.drive[i]);
       i = discAt(farDiscs, p, farAnchor, view.bubbleSize);
-      if (i >= 0 && far) return [`${count(far.train[i] + far.walk[i] + far.drive[i])} ${tripWords()} ${shownDayPhrase.peek()} ${endWord(sel.end === "home" ? "work" : "home")} here`, `${sel.end === "home" ? "Their homes" : "Their destinations"} are in the selected area.`, modeLine(far.train[i], far.walk[i], far.drive[i]), "Click to explore this trip"];
+      if (i >= 0 && far) return bubbleTag(sel.end === "home" ? "work" : "home", far.train[i], far.walk[i], far.drive[i], "Click to explore this trip");
       return null;
     }
     const L = shown.bubbles.levels[bubbleLevel(map.getZoom())];
     const i = discAt(L.discs, p, shown.bubbles.anchor, view.bubbleSize);
     if (i < 0) return null;
-    return [`${count(L.train[i] + L.walk[i] + L.drive[i])} ${tripWords()} ${shownDayPhrase.peek()} ${endWord(shown.end)} here`, "Outward and return legs included.", modeLine(L.train[i], L.walk[i], L.drive[i])];
+    return bubbleTag(shown.end, L.train[i], L.walk[i], L.drive[i]);
   });
   /** A nearby zone's bubble under the point (T-276): drawn under the focused zone's, shown with them. */
   const nearbyAt = (p: Pointer): { id: CityId; s: ZoneShown; i: number } | null => {
@@ -428,7 +425,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     const hit = nearbyAt(p);
     if (!hit) return null;
     const L = hit.s.bubbles.levels[bubbleLevel(map.getZoom())], i = hit.i;
-    return [`${count(L.train[i] + L.walk[i] + L.drive[i])} ${tripWords()} ${shownDayPhrase.peek()} ${endWord(hit.s.end)} here`, "Outward and return legs included.", modeLine(L.train[i], L.walk[i], L.drive[i])];
+    return bubbleTag(hit.s.end, L.train[i], L.walk[i], L.drive[i]);
   });
 
   // ---- selecting bubbles ----

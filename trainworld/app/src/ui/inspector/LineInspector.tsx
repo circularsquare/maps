@@ -12,7 +12,7 @@ import { clockTime, count, distance, duration, headway, money } from "../../game
 import { LINE_PALETTE } from "../../game/palette";
 import { levelHours, PERIODS, periodAt } from "../../game/periods";
 import { signal } from "@preact/signals";
-import { crowdClass, today, useToday, useYesterday, yesterday } from "../../game/today";
+import { crowdGrade, crowding, today, useToday, useYesterday, waitText, yesterday } from "../../game/today";
 import { accountVersion } from "../../game/boarding";
 import { dayKindAt } from "../../game/days";
 import { DEMAND_INDEX, DEMANDS, type Demand, type LineInput, type LineStats } from "../../game/types";
@@ -139,7 +139,7 @@ function LineToday({ l, st }: { l: LineInput; st: LineStats }) {
         <Row label="Fares">{money(d.fares)}</Row>
         <Row label="Running trains">{money(-(yest ? d.running : runningToday(l, st)))}</Row>
         <Row label="Fullest train">{d.fullTrains > 0 ? "100%" : `${fullest}% full`}</Row>
-        {d.fullTrains > 0 && <Row label="Trains leaving full">{count(d.fullTrains)}</Row>}
+        {d.fullTrains > 0 && <Row label="Trains leaving full"><span data-tip={`${count(d.fullTrains)}/${count(d.trains)} trains left packed full`}>{count(d.fullTrains)}/{count(d.trains)}</span></Row>}
         {d.spans.length > 0 && <Row label="When">{spansText(d.spans)}</Row>}
         <Row label="Riders left on the platform">{count(d.leftBehind)}</Row>
       </ul>}
@@ -147,17 +147,26 @@ function LineToday({ l, st }: { l: LineInput; st: LineStats }) {
   );
 }
 
-/** T-477: how crowded a demand level's trains are over its hours of the day, from the boarding
- * account (`TrackApi.line_levels`: per level trains, packed full, riders arriving, left behind):
- * green with none packed full, then yellow, orange and red as `crowdClass` grades the share. */
-function CrowdDot({ v, lev }: { v: Float64Array; lev: number }) {
-  const [trains, full, arrived, left] = [v[lev * 4], v[lev * 4 + 1], v[lev * 4 + 2], v[lev * 4 + 3]];
-  if (!(trains > 0)) return null;
-  const cls = full === 0 ? "c0" : ({ "": "c1", "crowd-warn": "c2", "crowd-bad": "c3" } as const)[crowdClass(full, trains)];
-  const pct = arrived > 0 ? Math.round((100 * left) / arrived) : 0;
-  const tip = `${count(full)} of ${count(trains)} trains are packed full. `
-    + (left >= 1 ? `A full train leaves ${count(left)} of ${count(arrived)} riders behind (${pct < 1 ? "under 1" : pct}%).` : `All ${count(arrived)} riders get on the first train.`);
-  return <i class={"crowd-dot " + cls} data-tip={tip} />;
+/** Numbers per period in `TrackApi.line_periods` (`PERIOD_STRIDE` in boarding.rs). */
+const PERIOD_STRIDE = 6;
+
+/** T-477, T-491: a dot per period of a demand level, in time order, graded by `crowding` (the
+ * riders' wait for a train with room against their ride) from the boarding account. */
+function CrowdDots({ v, d }: { v: Float64Array; d: Demand }) {
+  const t = (h: number) => clockTime((h * 60) % 1440);
+  const ps = PERIODS.map((p, i) => ({ p, i })).filter(({ p }) => p.demand === d).sort((a, b) => a.p.from - b.p.from);
+  return (
+    <>
+      {ps.map(({ p, i }) => {
+        const o = i * PERIOD_STRIDE;
+        const [trains, full, arrived, wait, ride] = [v[o], v[o + 1], v[o + 2], v[o + 4], v[o + 5]];
+        if (!(trains > 0)) return null;
+        const c = crowding(wait, arrived, ride);
+        const tip = `${p.name}, ${t(p.from)} to ${t(p.to)}: riders wait ${waitText(c.wait)} on average for a train with room\n${count(full)}/${count(trains)} trains are packed full`;
+        return <i class={"crowd-dot c" + crowdGrade(c.score)} data-tip={tip} />;
+      })}
+    </>
+  );
 }
 
 /** One stop's boardings in the past 24 hours (T-446), in the stops list. */
@@ -198,14 +207,14 @@ export function LineInspector({ id }: { id: string }) {
       on = false;
     };
   }, [l?.num, w?.version, lev]);
-  // T-477: crowding by demand level on today's kind of day, asked again as the account changes
+  // T-477, T-491: crowding by period on today's kind of day, asked again as the account changes
   const kind = dayKindAt(clock.hour.value * 3600 + (w?.lineStats[id]?.shift ?? 0));
-  const [levels, setLevels] = useState<Float64Array | null>(null);
+  const [periods, setPeriods] = useState<Float64Array | null>(null);
   const acct = accountVersion.value;
   useEffect(() => {
     if (!l) return;
     let on = true;
-    void queryClock({ what: "lineLevels", line: l.num, day: kind }).then((d) => on && setLevels(d && d.length ? d : null));
+    void queryClock({ what: "linePeriods", line: l.num, day: kind }).then((d) => on && setPeriods(d && d.length ? d : null));
     return () => { on = false; };
   }, [l?.num, w?.version, acct, kind]);
   // its day so far (T-293), kept fresh while the panel is open
@@ -328,7 +337,7 @@ export function LineInspector({ id }: { id: string }) {
         </tr>
         {DEMANDS.map((d) => (
           <tr class={d === now ? "now" : ""}>
-            <td>{st.status === "running" && levels && <CrowdDot v={levels} lev={DEMAND_INDEX[d]} />}<span data-tip={levelTimes(d)}>{DEMAND_LABEL[d]}</span></td>
+            <td>{st.status === "running" && periods && <CrowdDots v={periods} d={d} />}<span data-tip={levelTimes(d)}>{DEMAND_LABEL[d]}</span></td>
             <td>
               <Stepper value={(trainsShown(l.id) ?? st.trainsNeeded)[DEMAND_INDEX[d]]} label="trains on the entire line" onStep={(s) => stepTrainCount(l.id, d, s)} />
             </td>

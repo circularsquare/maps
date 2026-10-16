@@ -59,7 +59,8 @@ Briefs carry only the task; these hold for every agent.
 
 - **Your own Vite**: `node trainworld/checks/dev-nowatch.mjs <port>` (from the maps root; a port in
   6100-6199 nobody else uses), watching and HMR off so others' edits do not reload your page;
-  restart it after editing the app. What Anita opens goes through 8800 (`serve.py`), never yours.
+  restart it after editing the app. What Anita opens goes through 8800 (`serve.py`), never yours;
+  run checks on your own Vite, and never long sweeps against 8800 while she may be playing.
 - **Headless Chrome** through Playwright with its own temporary `--user-data-dir`. Stop only the
   PIDs you started; never kill browsers or node broadly.
 - **The real save** is `T-007-real-nyc.save` (New York, 109 lines). `?new=1` never writes a slot.

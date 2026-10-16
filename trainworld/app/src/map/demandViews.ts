@@ -2,7 +2,7 @@
 // needs them, never pushed (DECISIONS 2026-10-09): a view asks again when `demandView` changes,
 // keeps showing its last answer meanwhile, and treats a null answer as "the workers moved on".
 //
-// - Network layers (line width, station size, train fill): map/demandLayers.ts, rebuilt when the
+// - Network layers (line width, station use circles, train fill): map/demandLayers.ts, rebuilt when the
 //   network, the world, the demand result, the period in force or a setting changes.
 // - Commuter bubbles and a bubble selection: map/commuterView.ts; they catch up over a game day
 //   after a new result (T-156, map/catchUp.ts).
@@ -22,6 +22,7 @@ import { count, wholeDistance } from "../game/format";
 import { CATCHMENT_COLOUR, DESTINATION_ALPHA, DESTINATION_COLOUR, rgb } from "../game/palette";
 import { compass } from "../game/places";
 import { periodAt } from "../game/periods";
+import { stationUse, useFigure } from "../game/stationUse";
 import { tripOpenedFrom } from "../game/trip";
 import type { Selection } from "../game/types";
 import { display, purposeFilter, selection, stopEditing } from "../game/ui";
@@ -88,14 +89,16 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
     const d = display.peek();
     // stop editing (T-233) draws plain widths and no station circles: the demand is out of the way
     const editing = stopEditing.peek();
-    const on = { lineLoad: d.trackColour === "traffic" && !editing, stationRiders: d.stationRiders && !editing, trainLoad: d.trainLoad, trainLoadBasis: d.trainLoadBasis,
+    const dv = demandView.peek(), mode = editing ? "none" : d.stationUse;
+    const on = { lineLoad: d.trackColour === "traffic" && !editing, stationFigure: mode === "none" ? null : (id: string) => useFigure(dv, mode, id),
+      trainLoad: d.trainLoad, trainLoadBasis: d.trainLoadBasis,
       complexes: d.complexView ? complexes.peek() : null, purpose: purposeFilter.peek(), days: demandByDay.peek().map((x) => x.view) };
     // an edit changes the network and then the world: one build for both when nothing else moved
-    const now = [n, w, demandView.peek(), period.peek(), on.lineLoad, on.stationRiders, on.trainLoad, on.trainLoadBasis, on.complexes, on.purpose];
+    const now = [n, w, dv, period.peek(), on.lineLoad, mode, mode === "origins" || mode === "transfers" ? stationUse.peek() : null, on.trainLoad, on.trainLoadBasis, on.complexes, on.purpose];
     if (now.every((v, i) => v === inputs[i])) return;
     inputs = now;
     const t0 = performance.now();
-    renderer.setLayers(buildLayers(n, w, demandView.peek(), period.peek(), on));
+    renderer.setLayers(buildLayers(n, w, dv, period.peek(), on));
     viewStats.layersMs = performance.now() - t0;
     viewStats.layerBuilds++;
     netSeen = n;
@@ -117,7 +120,8 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
     demandView.value;
     period.value;
     const d = display.value;
-    void [d.stationRiders, d.trainLoad, d.trainLoadBasis, d.trackColour, d.complexView];
+    void [d.stationUse, d.trainLoad, d.trainLoadBasis, d.trackColour, d.complexView];
+    stationUse.value;
     purposeFilter.value;
     stopEditing.value;
     schedule();

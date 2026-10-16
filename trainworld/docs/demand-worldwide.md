@@ -294,14 +294,22 @@ notes/T-420.md has the tables.
   shorter, each its own (T-432): Fukuoka d^-2.0 exp(-d/32), Sendai d^-1.8 exp(-d/50), Hiroshima
   d^-1.9 exp(-d/32); Sapporo ties Tokyo's curve and keeps it. Their best fits misplace 8-12% of
   commuters between municipalities, where Tokyo's curve misplaces 9-12%. Each non-city zone fits
-  its own over a fixed grid (power 1.2-2.4, length 16-160 km; `japan_zones.fit`): most fit flatter
-  and shorter still (d^-1.4 exp(-d/16) the commonest), with 52-91% working in their own
-  municipality, and misplace 4-11%.
-- **Work from home**: the census's share working at home, plus MLIT's 2024 telework survey share of
-  the region's employed, judged at 2 days in 5, on the rest: Greater Tokyo 0.23 (9.7% and 37.5%),
-  Keihanshin 0.17 (8.1% and Kinki's 24.4%), Chukyo 0.16 (8.8% and 19.6%); elsewhere MLIT's
-  16.8%: Fukuoka 0.15 (8.6%), Sapporo 0.13 (6.8%), Sendai 0.16 (9.5%), Hiroshima 0.14 (8.2%),
-  and the non-city zones 0.138 (Okinawa) to 0.231 (Okhotsk).
+  its own over a fixed grid (power 1.2-2.4, length 16-160 km; `japan_zones.fit`) on its
+  at-home-corrected margins: most fit flatter and shorter still (d^-1.4 exp(-d/16) the
+  commonest), with 52-91% working in their own municipality, and misplace 3-11%.
+- **Work from home**, per cell: the census's share working at home in the cell's municipality of
+  work (table 4; 0.5% in Chiyoda, 21% in Suginami: shopkeepers and farmers work at home in the
+  suburbs, office workers do not, T-465), then MLIT's 2024 telework survey share of the region's
+  employed, judged at 2 days in 5, on the rest: Greater Tokyo 0.15 (37.5%), Keihanshin 0.098
+  (Kinki's 24.4%), Chukyo 0.078 (19.6%), every other pack 0.067 (16.8% outside the three). A pack's
+  mean comes to Greater Tokyo 0.23, Keihanshin 0.17, the zones 0.14-0.23.
+- **Commutes between packs**: Japan's 45 packs are one joint commute gravity (docs/zones.md 4), each
+  pair across packs on the home pack's curve, cut at 150 km, times 0.4: fitted so the commuters
+  between packs match the 2020 census's between the same prefectures less telework (at 1 the
+  gravity sent 1.9 times as many). Prefecture lines inside a pack take no factor, as the curves
+  were fitted. 1.6% of Japan's commuters cross a pack line; the spread over pack pairs is a quarter
+  off the census's (a symmetric crow-flies gravity: Shiga's one-way pull into Kyoto and Osaka comes
+  out at a third, Shiga to Nagoya over the Suzuka range at 3x).
 - **Schools**: KSJ P29 points (no pupil counts); each 500 m mesh's children 0-14 x 0.9 go to the
   nearest elementary, junior high, compulsory or secondary school. Universities stay tier 0 (where
   no campus has a Wikidata count, as in Fukuoka, the national total is split by campus area).
@@ -379,6 +387,15 @@ notes/T-420.md has the tables.
 
 ## Mode choice
 
+- **Cost damping** (T-495, docs/demand.md 4.3). The logit's 0.05 a perceived minute falls as
+  sqrt(90 / T) past T = 90, T the car's perceived minutes (even where no car can go), in every
+  layer. The form and power follow UK WebTAG's cost damping and long-distance mode choice studies;
+  set on European and US rail-air shares, not fitted. Why it may not carry over: the car's minutes
+  are the US car's (speed, fuel, occupancy), so where long drives are slower (India, Lagos) a
+  trip's scale falls further than its distance warrants; tastes for long trips (luggage, families
+  driving) differ by country. Check: rail, air and car shares on a few corridors per country
+  (MLIT's Inter-Regional Travel Survey, Eurostat, NEC FUTURE) at two lengths, so the slope as well
+  as the level is seen.
 - **Driving alternative.** Drive times and costs assume US car ownership and parking. Car
   ownership varies by a factor of five or more between cities (Manhattan vs Houston vs Tokyo vs
   Lagos); without it, transit share is wrong everywhere outside the US Northeast. Check: a car
@@ -584,13 +601,14 @@ notes/T-420.md has the tables.
   (T-378); near ones (under 250 km) keep their trips fixed; a ferry is no link.
 - **Air door to door** (T-378, docs/regional.md 5.1). Between far places (250 km and more) that both
   have airports: drives to the airports, 60 minutes there, 750 km/h plus 30 minutes, 60 more with
-  no direct flight, $50 + 9 cents a km; the terminal time and the base fare were set so rail holds
-  about 80% of rail and air at 3 hours on the train and half near 4 (European studies, notes/T-378.md).
+  no direct flight, $50 + 9 cents a km; with the damped logit rail holds about 73% of rail and air
+  at 3 hours on the train, half near 4 and 28% at 5 (European studies: 70%, half, a fifth;
+  notes/T-378.md, T-495.md).
   Airports from OurAirports (global, public domain), their size and direct routes from FR24 (two
   days in May 2026, offline). Why it may not carry over: fares (low-cost carriers in Europe and
   India, dear domestic flights in Japan, subsidised routes), airport times (US security is slower
-  than a Japanese domestic flight), the steep logit (no distance scaling: Paris - Berlin's car is
-  0% beside the plane, real about a tenth), and a single 1M-passenger floor. Check: each country's
+  than a Japanese domestic flight), the long car's cost (Paris - Berlin's car is 0.2% beside the
+  plane even with cost damping, real about a tenth), and a single 1M-passenger floor. Check: each country's
   air and rail share on its big corridors (MLIT for Japan, Eurostat's air O-D counts, DB1B), a fare
   per country or region where they disagree.
 - **The longer trip's car** (T-276). Drive 15 min + 1.25 x the great circle at 85 km/h, plus 15

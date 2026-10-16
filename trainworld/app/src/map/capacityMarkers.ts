@@ -13,6 +13,7 @@ import { duration } from "../game/format";
 import type { Selection, WorldView } from "../game/types";
 import { selection, tool } from "../game/ui";
 import { hoverAt } from "./demandHover";
+import { hoverHeld } from "../ui/blurHold";
 import { toLocal } from "./geo";
 import type { Overlay } from "./overlay";
 import { perfOff, perfTry } from "../perfFlags";
@@ -42,6 +43,7 @@ export class CapacityMarkers {
   private placedMatrix: number[] | null = null;
   private placedSize = "";
   private placedLabels = -1;
+  private key = "";
 
   private tip: HTMLDivElement;
 
@@ -81,11 +83,17 @@ export class CapacityMarkers {
   }
 
   set(w: WorldView, level: number) {
+    // Keep the worst bottlenecks when several compete for the same screen space.
+    const sorted = [...(w.capacity[level] ?? [])].sort((a, b) => b.delayS - a.delayS || b.rho - a.rho || a.kind - b.kind || a.x - b.x || a.y - b.y);
+    const junctions = sorted.map((m) => (m.kind === 4 ? nearestJunction(w, m.x, m.y) : null));
+    // most edits leave the tags as they were: keep them then, no rebuild and no layout (T-496)
+    const key = level + "|" + sorted.map((m, i) => `${m.kind},${m.rho},${m.delayS},${m.x},${m.y},${junctions[i]}`).join("|");
+    if (key === this.key) return;
+    this.key = key;
     this.box.textContent = "";
     this.tip.style.display = "none";
     this.placedMatrix = null;
-    // Keep the worst bottlenecks when several compete for the same screen space.
-    this.items = [...(w.capacity[level] ?? [])].sort((a, b) => b.delayS - a.delayS || b.rho - a.rho || a.kind - b.kind || a.x - b.x || a.y - b.y).map((m) => {
+    this.items = sorted.map((m, i) => {
       const el = document.createElement("div");
       el.className = "cap-mark " + (m.rho > 1 ? "over" : m.rho >= 0.9 ? "near" : "busy");
       if (perfTry("labelLayers")) el.style.willChange = "transform"; // T-045 measurement
@@ -95,7 +103,7 @@ export class CapacityMarkers {
       const tip = [`${KIND[m.kind] ?? "Track"} at ${Math.round(m.rho * 100)}% of capacity`, d >= 2 ? `Each train waits ${duration(d)} here at ${DEMAND[level] ?? "this"} demand` : "Trains do not wait here yet"];
       let junction: number | null = null;
       if (m.kind === 4) {
-        const node = nearestJunction(w, m.x, m.y);
+        const node = junctions[i];
         if (node !== null) {
           junction = node;
           el.classList.add("link");
@@ -137,7 +145,7 @@ export class CapacityMarkers {
       };
       el.onmouseenter = hover;
       el.onmousemove = hover;
-      el.onmouseleave = () => (this.tip.style.display = "none");
+      el.onmouseleave = () => hoverHeld() || (this.tip.style.display = "none");
       this.box.appendChild(el);
       return { el, x: m.x, y: m.y, w: 0, h: 0 };
     });
@@ -161,7 +169,7 @@ export class CapacityMarkers {
     }
     const m = this.overlay.camMatrix;
     if (!m) return;
-    const W = this.overlay.canvas.clientWidth, H = this.overlay.canvas.clientHeight;
+    const W = this.overlay.cssW, H = this.overlay.cssH;
     const size = `${W},${H},${zoom < 14}`;
     const labelsAt = this.labels?.version ?? 0;
     if (size === this.placedSize && labelsAt === this.placedLabels && this.placedMatrix?.every((v, i) => v === m[i])) return;

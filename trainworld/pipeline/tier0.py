@@ -49,7 +49,8 @@ census or registers then upgrade single inputs by replacing one function. What e
 Config keys (a CITIES entry with "tier0": True): origin, water, boundary_file (GeoJSON, any
 polygons, dissolved; or a callable returning its path, as england.itl3_boundary), water_source, extract (Geofabrik path), iso2 (World Bank country),
 admin_totals (callable boundary -> [(name, shapely geometry, population)], optional), wfh (share
-working at home, optional), jobs (callable (city, boundary, signals, proxy weight per cell) ->
+working at home, optional; or per cell: at_home, callable (lat, lon) -> census at-home share, with
+telework, the share of the rest teleworking on a day), jobs (callable (city, boundary, signals, proxy weight per cell) ->
 (jobs per signal cell, source name), optional: a country's workplace counts by small area, spread
 inside each area by the proxy; jobs_url), population (callable (city, boundary, signals) ->
 (people per signal cell, source name), optional: census counts by small area), od_share ({OurAirports ident: share}, optional), boardings ({OurAirports
@@ -693,6 +694,14 @@ def everyday_pack(city, stem=None):
 
 # ---------------------------------------------------------------- build
 
+def work_rule(cfg, wfh):
+    """The pack header's line for the work end of the commute."""
+    if cfg.get("at_home"):
+        return (f"tier 0 jobs x (1 - the census's at-home share of the municipality of work) x (1 - {cfg['telework']:.3f} "
+                f"teleworking); {wfh:.3f} of jobs in all")
+    return f"tier 0 jobs x (1 - {wfh:.3f} working at home)"
+
+
 def main(city):
     t0 = time.time()
     cfg = b.CITIES[city]
@@ -720,7 +729,13 @@ def main(city):
         jobs = jobs_from(sig, J, job_blend)
         jobs_name = f"tier 0 proxy: population x {jpr:.3f} jobs a resident (World Bank SL.EMP.TOTL.SP.ZS x 15+ share, {wb_year}), {proxy}"
     pop = sig["pop"]
-    work_c = jobs * (1 - wfh)
+    if cfg.get("at_home"):  # per cell (T-465): at home by municipality of work, then telework on the rest
+        h = cfg["at_home"](sig["lat"], sig["lon"])
+        wfh_cell = h + (1 - h) * cfg["telework"]
+        work_c = jobs * (1 - wfh_cell)
+        wfh = 1 - work_c.sum() / max(J, 1.0)
+    else:
+        work_c = jobs * (1 - wfh)
     home_c = pop * (work_c.sum() / P)
     errand = sig["osm_errand"] * (ERRAND_SHARE * J / max(sig["osm_errand"].sum(), 1.0))
     leisure = sig["osm_leisure"] * (LEISURE_SHARE * J / max(sig["osm_leisure"].sum(), 1.0))
@@ -748,7 +763,7 @@ def main(city):
         {"what": "water", "name": mask_info.get("source", ""), "url": ""},
     ]
     commute = {"home": "population x commuters per resident (no source of where workers live)",
-               "work": f"tier 0 jobs x (1 - {wfh:.3f} working at home)", "region_share": wfh}
+               "work": work_rule(cfg, wfh), "region_share": wfh}
     region_block = {"level": "admin-1", "ids": ["00"], "names": [cfg.get("region_name", city.upper())],
                     "source": "tier 0: one region for the whole pack, no border factor"}
     cells_json = b.write_cells(city, cfg, {"h3": cells, "x_m": x, "y_m": y, "pop": pop[keep], "jobs": jobs[keep],

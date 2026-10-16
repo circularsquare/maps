@@ -209,7 +209,10 @@ counts from either end, so other zones need no rerun; `--air` redoes only every 
 A zone in the Northeast's joint commute gravity (`market` set) runs `intercity.py` instead of
 `market_zones.py`: it rewrites every Northeast pack's gravity factors (the joint solve), so
 existing packs change here too: record the commuters between packs it prints and each corridor's
-trips before and after. A non-city zone is a `CITIES` entry in `build_city.py` with `"kind": "zone"` and a
+trips before and after. A Japanese pack is in Japan's joint gravity (T-463): after its own build,
+`merge_cells.py <every Japan id> --undo`, `intercity.py --group jp --no-market` (about 5 minutes
+with `OMP_NUM_THREADS=8`; it rewrites every Japan pack's factors), `merge_cells.py` on them again,
+then `register.py <every Japan id> --market --trips`. A non-city zone is a `CITIES` entry in `build_city.py` with `"kind": "zone"` and a
 `"name"`, one county-sized unit (docs/zones.md 2).
 
 ## 8. Tests that list cities

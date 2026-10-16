@@ -136,8 +136,9 @@ pub(crate) fn pair_choice(api: &DemandApi, p: &Params, sk: &Skims, u: usize, v: 
     };
     let (rail, util, r) = if why == RAIL_OFFERED {
         let rail = m_u + m_v + p.fare_min - fast_ln(ssum) / th;
-        let util = p.beta * (road_free - rail) + p.asc_rail;
-        (rail, util, p.rail_share_parked(util, paid, free))
+        let bt = p.mode_beta(road_free);
+        let util = bt * (road_free - rail) + p.asc_rail;
+        (rail, util, p.rail_share_parked(util, bt, paid, free))
     } else {
         (f32::INFINITY, f32::NEG_INFINITY, 0.0)
     };

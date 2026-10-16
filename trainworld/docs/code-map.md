@@ -62,10 +62,12 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 - `mapView.ts` (the MapLibre map), `basemap.ts` (the Positron style: faint repaint, labels in Zen
   Maru Gothic from `public/fonts/`), `overlay.ts` (the overlay canvas and frame loop,
   notes/T-015.md), `renderer.ts` (WebGL2 track, stations, trains), `network.ts` (the renderer's
-  buffers), `geo.ts` (the draw anchor, T-307), `anchorVersion.ts` (its version as a signal, T-317),
+  buffers, built in the clock worker from per-edge, line and station pieces kept between edits,
+  T-496), `geo.ts` (the draw anchor, T-307), `anchorVersion.ts` (its version as a signal, T-317),
   `live.ts` (the live map objects for UI code, set by main.ts), `synth.ts` (stress network).
 - Stations: `stationGeometry.ts` (platform shapes along the track for drawing, picking and the
-  ghost, T-189, T-254), `stationLabels.ts`, `capacityMarkers.ts`, `labelLayout.ts` (shared spacing
+  ghost, T-189, T-254), `stationLabels.ts` (names
+  keep their elements across edits unless their text changes, T-496), `capacityMarkers.ts`, `labelLayout.ts` (shared spacing
   for names and tags).
 - Tools: `pick.ts`, `tools.ts` (drawing track, placing stations and crossovers, the line tool), `edgeEdit.ts`
   (dragging blueprint track's PIs, T-064, T-092), `nodeDrag.ts` (dragging blueprint nodes, T-093), `endMarkers.ts` (loose-end and draggable-point markers, T-416), `curveCircle.ts` (the circle of the segment being drawn, T-418),
@@ -74,11 +76,11 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 - Trains and trips: `trainFollow.ts` (a selected train followed onto its next trip, T-245),
   `tripView.ts` (the trip explorer's route, T-195; its panel is `ui/inspector/TripInspector.tsx`).
 - Demand views (T-084, T-097): `demandViews.ts` (wiring, a station's catchment), `demandLayers.ts`
-  (line width, station size, train fill), `commuterView.ts` and `bubbles.ts` (commuter bubbles and
+  (line width, station use circles, train fill; the figures from `game/stationUse.ts`, T-482), `commuterView.ts` and `bubbles.ts` (commuter bubbles and
   bubble selections), `intercityView.ts` (longer trips of a selection or station, one bubble per
   far zone, T-118, T-120; one per city zoomed far out, T-186), `catchUp.ts` (the bubbles catching
   up over a game day, T-156), `demandOverlay.ts` (their canvas, over the network's),
-  `demandHover.ts` (the count tag by the pointer), `airportMarks.ts` (the plane badge on an
+  `demandHover.ts` (the count tag by the pointer), `modeBar.ts` (the tag's mode bar, T-494), `airportMarks.ts` (the plane badge on an
   airport's bubble, T-448; paths shared with the icons in `glyphs.ts`).
 - Tags and outlines: `trackHover.ts` and `networkTips.ts` (the hover tags on track, trains and
   stations, T-157, T-194), `cityBoundaries.ts` and `boundaryGeometry.ts` (the metro outlines, one
@@ -97,6 +99,7 @@ per selection kind: `others.tsx` holds station, train, track, junction and cell 
 the screen when demand cannot load, T-149, T-172, T-180); `Search.tsx` (T-148); `StationsFull.tsx`
 (the "N stations full" button, T-231); `keys.ts` (which keys a focused control keeps, T-183);
 `tip.ts` (the hover tag for every panel and control, from `data-tip`, never `title`, T-210);
+`blurHold.ts` (every hover kept up through a window blur until the pointer moves, T-483);
 `style.css` (theme tokens).
 
 ### src/workers/
@@ -135,6 +138,9 @@ Run from the maps root (`node trainworld/checks/<file>`).
 
 - `smoke.mjs [url]`: the pre-commit smoke check (CLAUDE.md "Before a commit").
 - `dev-nowatch.mjs <port>`: the app's Vite with watching and HMR off, for an agent's own loop.
+- `every-pack-opens.mjs [url] [zone ...]`: every registered zone, in a fresh new game, opens for
+  the view and solves a three-station line across its centre without a demand error (T-484; about
+  16 s a zone, 18 minutes for all).
 - Node, no browser: `t133-picking-check` (picking order), `t144-check` (station geometry, line
   widths), `t145-check` (the route preview contract), `t146-check` (complexes), `t125-frame-check`
   (world frames against PROJ), `t116-save-check` (save format), `t285-merge-check` (needs
@@ -153,7 +159,12 @@ Run from the maps root (`node trainworld/checks/<file>`).
   `?perfOff=split`), `t301-pan.mjs` (a long pan, Washington to Toronto and back, bubbles on: worker
   memory, open packs, reopening times; `SAVE=1` on the real save), `t124-periods.mjs`
   (the real save: a one-level train-count edit and an every-level edit timed to their final, hashed
-  against `?perfOff=periods`),
+  against `?perfOff=periods`), `t488-money-days.mjs` (the real save's clock run fast and pulled back
+  across midnight: money days and hours one each, in order, none empty; uses the app's Vite, port
+  6135 by default), `t486-click-on-top.mjs` (a click on a blueprint point's square over a bubble
+  selects the track, beside it the bubble), `t496-edit-latency.mjs` (the real save: click to drawn
+  for placing stations; `MODE=visual` hashes the renderer's buffers after a series of edits against
+  an older network.ts),
   `t328-cache-check.mjs` (the demand cache on reload: timing, cached
   against fresh final to the bit, a changed build, pack or network shows none), `t348-lag.mjs`
   (main-thread long tasks and frame gaps while demand loads: startup, pans, a re-solve, a zone
@@ -223,7 +234,8 @@ since T-276), `phl`, `bos`, `wdc`, `bal`, `pvd`, `nhv`, `hfd`, `spf`; non-city z
 `nlc`, `lit` (docs/zones.md). Then in order: `zones.py` (registers built non-city zones and
 writes every entry's `box` through `zone_boxes.py`, which also runs alone, T-302),
 `intercity.py` (the Northeast's sites, then the joint commute gravity `joint_gravity`, which
-rewrites every Northeast pack's gravity factors and the commute list, then `market_zones.py`),
+rewrites every Northeast pack's gravity factors and the commute list, then `market_zones.py`;
+`--group jp` the same over Japan's packs, `joint_gravity --packs`, T-463),
 `market_zones.py [ids]` (each zone's market pack against the world field, then `market_pack`'s
 registry rows; seconds a zone, T-377),
 `zones.py --trips`, `routes.py <ids>` for any pack whose zones changed (T-275), and last

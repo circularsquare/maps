@@ -1,23 +1,23 @@
-// The network tag's text for trains, stations, platform crowds and the station demand circles
+// The network tag's text for trains, stations, platform crowds and the station use circles
 // (T-194, Anita: "we probably shouldn't have much that is drawn but does not have a tooltip
 // explaining quantitatively what is drawn"). trackHover.ts shows it, after the same rest as the
 // track's: each says in words the number the drawing stands for.
 //
 // - A train: its line, and the riders aboard against seats and packed full (the gauge its core is
 //   filled with), from the boarding account as the train inspector counts them.
-// - A station: its name; with demand circles on, the boardings and alightings a day its circle
-//   stands for (its complex's in complex view); where platform crowds are drawn, the riders
+// - A station: its name; with use circles on, the riders a day its circle stands for (its
+//   complex's in complex view); where platform crowds are drawn, the riders
 //   waiting per line and direction and how full the platform is drawn (T-219: the crowd is inside
 //   the box now, so the station's own hover covers it). Zoomed out, a complex's one dot is its
 //   busiest station's, and says so (T-217).
-// - A demand circle away from any station: the same count, for the circle's station or complex.
+// - A use circle away from any station: the same count, for the circle's station or complex.
 
 import { crowdAt, QUEUE_STRIDE, tripLoad } from "../game/boarding";
 import { clock } from "../game/clock";
 import { complexes } from "../game/complexView";
-import { demandView, stationRidersFor } from "../game/demand";
+import { demandView } from "../game/demand";
 import { PERIODS, periodAt } from "../game/periods";
-import { purposeName } from "../game/purposes";
+import { useFigure } from "../game/stationUse";
 import type { LineInput, WorldView } from "../game/types";
 import { display, purposeFilter, shownDayPhrase } from "../game/ui";
 import { stationScale } from "./demandLayers";
@@ -40,18 +40,21 @@ function lineShortName(l: LineInput): string {
   return l.name.replace(/^(?:\p{Ll}+|Line)\s+(?=\S)/u, "");
 }
 
-/** "12,400 boardings and alightings a day", with what the purpose filter counts. */
+/** "12,400 riders start a rail trip here a day" (T-482), as the station use selector counts. The
+ * circles count every purpose, whatever the purpose filter says. */
 function circleLines(riders: number, members: number): string[] {
-  const p = purposeFilter.peek();
-  const where = members > 1 ? `, at the complex's ${members} stations` : "";
-  const out = [`${forecast(riders)} boardings and alightings ${shownDayPhrase.peek()}${where}`];
-  if (p !== "all") out.push(`${purposeName(p)} trips only`);
+  const m = display.peek().stationUse;
+  const here = members > 1 ? `at the complex's ${members} stations` : "here";
+  const what = m === "origins" ? `riders start a rail trip ${here}` : m === "transfers" ? `riders change lines ${here}` : `boardings ${here}`;
+  const out = [`${forecast(riders)} ${what} ${shownDayPhrase.peek()}`];
+  if (purposeFilter.peek() !== "all") out.push("All purposes");
   return out;
 }
 
-/** The demand circle's members and riders for station `id`: its complex's in complex view. */
+/** The use circle's members and riders for station `id`: its complex's in complex view; null
+ * while the figure is not known. */
 function circleOf(w: WorldView, id: string): { members: string[]; riders: number } | null {
-  const dv = demandView.peek();
+  const dv = demandView.peek(), mode = display.peek().stationUse;
   if (!dv) return null;
   const built = new Set(w.save.stations.filter((s) => s.built).map((s) => s.id));
   let members = [id];
@@ -60,12 +63,12 @@ function circleOf(w: WorldView, id: string): { members: string[]; riders: number
     const k = cx.of.get(id);
     if (k !== undefined) members = cx.members[k].filter((m) => built.has(m));
   }
-  let riders = 0;
+  let riders = 0, known = false;
   for (const m of members) {
-    const d = stationRidersFor(dv, m, purposeFilter.peek());
-    if (d) riders += d.boardings + d.alightings;
+    const v = useFigure(dv, mode, m);
+    if (v !== undefined) (riders += v), (known = true);
   }
-  return { members, riders };
+  return known ? { members, riders } : null;
 }
 
 /** The tag for a train (`pick`'s train hit). */
@@ -149,7 +152,7 @@ export function stationTip(ov: Overlay, w: WorldView, i: number): string[] | nul
   const names = [...new Set(w.save.lines.filter((l) => l.stops.some((st) => members.has(st))).map(lineShortName))];
   if (names.length) out.push(names.join(", "));
   if (!s.built) out.push("Blueprint");
-  else if (display.peek().stationRiders) {
+  else if (display.peek().stationUse !== "none") {
     const c = circleOf(w, id);
     out.push(...(c ? circleLines(c.riders, c.members.length) : ["Calculating demand"]));
   }
@@ -157,10 +160,10 @@ export function stationTip(ov: Overlay, w: WorldView, i: number): string[] | nul
   return out;
 }
 
-/** The tag for a station demand circle under the point (circles are behind the network), or null. */
+/** The tag for a station use circle under the point (circles are behind the network), or null. */
 export function circleTip(ov: Overlay, w: WorldView, px: number, py: number, zoom: number): string[] | null {
-  const net = ov.renderer.net, dv = demandView.peek();
-  if (!net || !dv || !display.peek().stationRiders) return null;
+  const net = ov.renderer.net, dv = demandView.peek(), mode = display.peek().stationUse;
+  if (!net || !dv || mode === "none") return null;
   const R = stationHaloRadius(zoom);
   const index = new Map(net.stationIds.map((id, i) => [id, i]));
   const names = new Map(w.save.stations.map((s) => [s.id, s.name]));
@@ -188,6 +191,6 @@ export function circleTip(ov: Overlay, w: WorldView, px: number, py: number, zoo
     if (f <= bestF) [best, bestF] = [c, f];
   }
   if (!best) return null;
-  const busiest = best.members.map((m) => ({ m, d: stationRidersFor(dv, m) })).sort((a, b) => (b.d ? b.d.boardings + b.d.alightings : 0) - (a.d ? a.d.boardings + a.d.alightings : 0))[0];
+  const busiest = best.members.map((m) => ({ m, v: useFigure(dv, mode, m) ?? 0 })).sort((a, b) => b.v - a.v)[0];
   return [names.get(busiest.m) ?? "Station", ...circleLines(best.riders, best.members.length)];
 }

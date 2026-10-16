@@ -34,7 +34,9 @@ bars); the network takes the line colours ([ui-map.md](ui-map.md)).
 - **One tag, never the browser's tooltip** [T-210, `ui/tip.ts`]: every hover outside the map
   canvas (panels, top bar, buttons, the complex and junction maps, DOM markers) is the map tags'
   look, shown at once under the pointer, below right of it and flipped to stay in the window; a
-  press, scroll, key or the pointer leaving the page hides it. Text lives in `data-tip` (SVG shapes
+  press, scroll, key (not a modifier alone) or the pointer leaving the page hides it. When the
+  window loses focus (Win+Shift+S for a screenshot) every hover, the map's too, stays up until the
+  pointer next moves over the page, leaving ignored till then [T-483, `ui/blurHold.ts`]. Text lives in `data-tip` (SVG shapes
   too); no `title` attribute is written anywhere, and one met under the pointer (MapLibre's
   controls) is turned into the tag first.
 - **Every drawn quantity has a tooltip** (Anita) [T-194, notes/T-194.md]: bubbles, catchments,
@@ -202,7 +204,7 @@ Cash; yesterday and today (fares, running trains, new trains, construction, net)
 open) over two charts. The first has fares (accent) and running costs (grey) as lines, scaled to
 the larger of the two, and one-off costs (new trains and construction) as pale bars on the same
 scale, cut at the top with a dark cap when larger, so a build day does not flatten the lines
-[T-452]; the top's figure at the right. Then net as bars up or down from zero (losses red). Days are the ledger's, up to the past 30;
+[T-452]; the top's figure at the right. Then net as bars up or down from zero (losses red). Days are the ledger's, one each in order (T-488), up to the past 30;
 hours up to the past 48; a young game's few sit at the right of at least 7 days or 12 hours. The
 day or hour now is drawn as it fills (a dashed last segment, a paler bar) and moves as fares land.
 Hovering a column gives its day or hour ("Fri 5", "Sat 6, 04:00", "so far" for now) with fares,
@@ -231,7 +233,7 @@ lines need; the value of the track and stations built. Rules: [track-and-service
   "Autosave is off in this test page. Save a copy to keep the game.", a `?new=1` page marks no
   card Playing, and Save as a copy gives the game a slot of its own, which autosaves from then on.
 
-**A new game** starts on day 1 at 07:00 in an empty New York with $6B. Opening the page continues
+**A new game** starts on day 1 at 07:00 in an empty New York with $3B. Opening the page continues
 the last game. The URL's view says only which city or zone; the map starts at that city's registry
 centre and zoom, or over New York with none [T-310].
 

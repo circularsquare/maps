@@ -10,6 +10,9 @@ its market place (id 2) keeps its name and has no sites.
                                             Northeast pack's gravity, T-276), then every zone's
                                             market pack (pipeline/market_zones.py, T-377);
                                             --no-joint skips the gravity
+    python pipeline/intercity.py --group jp  a country's packs as their own joint gravity group
+                                            (T-463, Japan), then their market packs; --no-market
+                                            stops after the gravity
 
 The game no longer reads this file (T-377): pipeline/market_zones.py takes the Northeast's sites
 and commutes from it into each zone's own market pack, `data/packs/<id>.market.json`.
@@ -121,6 +124,19 @@ def joint():
               "--report", str(ROOT / "data/work/joint_report.json"))
 
 
+def group(iso2):
+    """T-463: one joint commute gravity over a country's registered packs (Japan's), apart from the
+    Northeast: each pack's factors, data/work/<iso2>.joint_commutes.json, then their market packs."""
+    ids = [c["id"] for c in REGISTRY["cities"] if CITIES.get(c["id"], {}).get("iso2") == iso2.upper()]
+    work = ROOT / "data/work"
+    # Japan's columns stall at about 8e-4 from step ~90, all in Okinawa's outlying islands (weakly
+    # joined to anything; notes/T-463.md): the best step is kept, so 150 steps are as good as 500
+    cargo_bin("joint_gravity", "--root", str(ROOT), "--threads", os.environ.get("OMP_NUM_THREADS", "3"), "--max-iters", "150",
+              "--packs", ",".join(ids), "--out", str(work / f"{iso2.lower()}.joint_commutes.json"),
+              "--report", str(work / f"{iso2.lower()}.joint_report.json"))
+    return ids
+
+
 def cargo_bin(name, *args):
     env = dict(os.environ)
     env["PATH"] = os.path.join(os.path.expanduser("~"), ".cargo", "bin") + os.pathsep + env.get("PATH", "")
@@ -139,6 +155,12 @@ def frame():
 
 
 if __name__ == "__main__":
+    if "--group" in sys.argv:
+        ids = group(sys.argv[sys.argv.index("--group") + 1])
+        if "--no-market" not in sys.argv:
+            import market_zones
+            market_zones.main(ids)
+        sys.exit()
     path = ROOT / "data/packs/intercity.json"
     site_rows, site_park = sites()
     data = {"format": 2, "origin": {"lon": ORIGIN[0], "lat": ORIGIN[1]}, "frame": frame(),

@@ -13,7 +13,8 @@ from data/packs/intercity.json, the sites the joint commute gravity names, in th
 other zone's in its own pack frame), each site's parking for an arriving car and the people of its
 H3 r5 cell (the long-haul tail's density, notes/T-376.md), its 6 km zones with their two normalisers
 against the world field (T-375: ground and tail, constants in pipeline/longhaul.json), and the
-commutes from it to other zones (the Northeast's, from the same intercity.json), and (T-378) the
+commutes from it to other zones (the Northeast's, from the same intercity.json; a joint gravity
+group's, from data/work/<group>.joint_commutes.json, T-463), and (T-378) the
 airports its people fly from with the zones each flies to directly.
 """
 import csv
@@ -200,6 +201,48 @@ class Northeast:
                          np.array(p.get("commute_trips", []), np.float64))
 
 
+class Groups:
+    """Commutes between the packs of a joint gravity group outside the Northeast (T-463: Japan's),
+    data/work/<group>.joint_commutes.json from bin/joint_gravity.rs --packs: by 6 km square of each
+    pack's own frame, matched here to the squares of the zone files' 6 km zones."""
+    def __init__(self, reg):
+        self.reg = {c["id"]: c for c in reg["cities"]}
+        self.rows, self.source, self.keys = {}, {}, {}
+        for path in sorted((ROOT / "data/work").glob("*.joint_commutes.json")):
+            g = json.loads(path.read_text(encoding="utf-8"))
+            ids = g["packs"]
+            hp = np.array(g["home_pack"], np.int64)
+            for i, cid in enumerate(ids):
+                mine = np.nonzero(hp == i)[0]
+                self.rows[cid] = [(tuple(g["home_zone"][k]), ids[g["work_pack"][k]], tuple(g["work_zone"][k]), g["trips"][k]) for k in mine]
+                self.source[cid] = g["source"]
+
+    def zone_keys(self, cid):
+        """A pack's 6 km zones' squares, in its zone file's order."""
+        if cid not in self.keys:
+            o = self.reg[cid]["origin"]
+            self.keys[cid] = zones_of(own_sites(cid, {"kind": "equirect", "lon": o["lon"], "lat": o["lat"]})[0])[0]
+        return self.keys[cid]
+
+    @staticmethod
+    def index(keys, at, k):
+        """The zone of square k, or of the nearest square (a merged cell can cross a 6 km line)."""
+        if k in at:
+            return at[k]
+        return int(np.argmin([(a - k[0]) ** 2 + (b - k[1]) ** 2 for a, b in keys]))
+
+    def commutes(self, cid, keys):
+        at = {k: i for i, k in enumerate(keys)}
+        ats = {}
+        agg = {}
+        for hk, wid, wk, t in self.rows.get(cid, []):
+            wkeys = self.zone_keys(wid)
+            wat = ats.setdefault(wid, {k: i for i, k in enumerate(wkeys)})
+            k = (self.index(keys, at, hk), self.reg[wid]["place"], self.index(wkeys, wat, wk))
+            agg[k] = agg.get(k, 0.0) + t
+        return sorted(agg.items())
+
+
 def zones_of(sites):
     """The 6 km zones of a zone's sites in first-seen order (the kernel's grouping), each site's zone,
     and each zone's centre weighted as the kernel weights it (people plus attraction)."""
@@ -257,11 +300,19 @@ def build(cid, reg, F, ne, air):
         out["commute_work"] = [int(v) for v in wz]
         out["commute_trips"] = [float(v) for v in t]
         out["sources"].append("commutes between zones: bin/joint_gravity.rs (T-276), from data/packs/intercity.json")
+    elif cid in groups.rows:
+        rows = groups.commutes(cid, keys)
+        out["commute_home"] = [k[0] for k, _ in rows]
+        out["commute_place"] = [int(k[1]) for k, _ in rows]
+        out["commute_work"] = [k[2] for k, _ in rows]
+        out["commute_trips"] = [round(float(t), 3) for _, t in rows]
+        out["sources"].append("commutes between zones: " + groups.source[cid])
     return out
 
 
 zone_index = {}       # Northeast market id -> each of its sites' 6 km zone (local)
 place_of_market = {}  # Northeast market id -> place
+groups = None         # Groups, set in main
 
 
 def cargo_bin(name, *args):
@@ -321,6 +372,8 @@ def main(ids=None):
         ids = [a for a in args if not a.startswith("--")] or [c["id"] for c in reg["cities"]]
     F = Field() if ids else None
     ne = Northeast()
+    global groups
+    groups = Groups(reg)
     for c in reg["cities"]:
         if c.get("market", -1) >= 0:
             place_of_market[c["market"]] = c["place"]

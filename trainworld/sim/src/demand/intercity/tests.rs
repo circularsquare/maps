@@ -866,15 +866,22 @@ fn legacy_northeast_pack_opens() {
 #[ignore]
 fn real_far_lines_share_rail_with_air() {
     let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
-    for (a, b, sa, sb, km, hours) in [
-        ("lon", "par", (-0.1263, 51.5306), (2.3553, 48.8809), 492f32, [2.27f32, 3., 4.]),
-        ("nyc", "wdc", (-73.9935, 40.7506), (-77.0064, 38.8973), 362., [2.75, 3.5, 4.5]),
-    ] {
+    // T-495: and the pairs notes/T-495.md compares with published shares, at today's train times
+    let pairs: [(&str, &str, (f64, f64), (f64, f64), f32, &[f32]); 6] = [
+        ("lon", "par", (-0.1263, 51.5306), (2.3553, 48.8809), 492f32, &[2.27f32, 3., 4.]),
+        ("nyc", "wdc", (-73.9935, 40.7506), (-77.0064, 38.8973), 362., &[2.75, 3.5, 4.5]),
+        ("nyc", "phl", (-73.9935, 40.7506), (-75.1817, 39.9557), 146., &[1.2]),
+        ("nyc", "bos", (-73.9935, 40.7506), (-71.0552, 42.3523), 370., &[3.75]),
+        ("par", "ber", (2.3592, 48.8768), (13.3695, 52.5251), 1090., &[8., 4.]),
+        ("tyo", "osa", (139.7671, 35.6812), (135.5003, 34.7334), 553., &[2.5]),
+    ];
+    for (a, b, sa, sb, km, hours) in pairs {
         let mut api = IntercityApi::new(&real_world(root, Some(&[a, b]))).unwrap();
         let (pa, pb) = (api.m.places.iter().position(|p| p.zone == a).unwrap(), api.m.places.iter().position(|p| p.zone == b).unwrap());
         let c = api.m.corridor(pa, pb);
         let (air, car) = (api.corridor_modes()[2 * c], api.corridor_modes()[2 * c + 1]);
-        for h in hours {
+        eprintln!("{a} - {b} with no rail: plane {:.1}%, car {:.1}% of the trips not by rail", 100. * air, 100. * car);
+        for &h in hours {
             let s = h * 3600.;
             let times = [s, 0., s, 0., s, 0., 0., s, 0., s, 0., s];
             api.set_network_ll(&[sa.0, sa.1, sb.0, sb.1], &[2], &[0, 1], &times, &[2., 2., 2.], &[16.]).unwrap();

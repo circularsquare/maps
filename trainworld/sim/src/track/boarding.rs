@@ -168,6 +168,8 @@ struct Tally {
     left: f64,
     fullest: f64,
     full: Vec<f64>,
+    /// trips that reach a stop in the window, the count `full` is out of (T-481)
+    trains: f64,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -522,7 +524,10 @@ impl Boarding {
     /// train, the fullest train's riders as a share of crush, the number of spans of full trains,
     /// per span its first and last time (s into the day), then boardings at each stop in the
     /// line's own stop order (both directions), then its trains in service at `t` and how many
-    /// of them are packed full on their trip (`under_way`, T-472).
+    /// of them are packed full on their trip (`under_way`, T-472), then the trips counted, the
+    /// number the full ones are out of (T-481), then for the period now on `t`'s kind of day the
+    /// rider-seconds waited after full trains, riders arriving and rider-seconds aboard
+    /// (`crowding`, T-491).
     ///
     /// A stop's boardings since midnight telescope: the riders who have arrived by its last
     /// departure, less those still waiting after it, less the same at its last departure before
@@ -555,30 +560,53 @@ impl Boarding {
         (on, packed)
     }
 
-    /// A line's day by demand level (T-477), on a kind of day: per level (`HIGH`, `MEDIUM`,
-    /// `LOW`) trains leaving in its hours, those packed full somewhere on their trip, riders
-    /// arriving at its platforms in its hours, and riders a full train left behind then.
-    /// Empty without an account.
-    pub fn line_levels(&self, svc: &Service, l: usize, day: usize) -> Vec<f64> {
+    /// A line's day by period (T-477, T-491), on a kind of day: per period `PERIOD_STRIDE`
+    /// numbers (`crowding`). Empty without an account.
+    pub fn line_periods(&self, svc: &Service, l: usize, day: usize) -> Vec<f64> {
         let Some(Some(acc)) = self.accounts[self.kind(day)].get(l) else { return vec![] };
         let Some(ls) = svc.lines.get(l) else { return vec![] };
+        Self::crowding(acc, ls).concat()
+    }
+
+    /// Per period: trains leaving in it, those packed full somewhere on their trip, riders
+    /// arriving at the line's platforms, riders a full train left behind, rider-seconds spent
+    /// waiting for a later train after a full one (each left behind waits the gap to the next
+    /// departure), and rider-seconds aboard (T-491: the ride the wait is weighed against).
+    fn crowding(acc: &LineAccount, ls: &LineSvc) -> [[f64; PERIOD_STRIDE]; PERIODS] {
         let cap = CRUSH_PER_CAR * ls.cars.max(1) as f64;
-        let mut out = vec![0.0f64; LEVELS * 4];
+        let mut out = [[0.0f64; PERIOD_STRIDE]; PERIODS];
         for ra in &acc.runs {
-            let n = ra.n;
-            for j in 0..ra.deps.len() {
-                let lv = ra.levels[j] as usize;
-                out[lv * 4] += 1.0;
-                if ra.load[j * n..(j + 1) * n].iter().any(|&v| v as f64 >= cap - 0.5) {
-                    out[lv * 4 + 1] += 1.0;
+            let (n, m) = (ra.n, ra.deps.len());
+            if m == 0 {
+                continue;
+            }
+            for j in 0..m {
+                let p = &mut out[period_at(ra.deps[j])];
+                p[0] += 1.0;
+                let load = &ra.load[j * n..(j + 1) * n];
+                if load.iter().any(|&v| v as f64 >= cap - 0.5) {
+                    p[1] += 1.0;
+                }
+                let sd = &ra.stop_dep[ra.levels[j] as usize];
+                for k in 0..n.saturating_sub(1).min(sd.len().saturating_sub(1)) {
+                    p[5] += load[k] as f64 * (sd[k + 1] - sd[k]).max(0.0);
                 }
             }
             for k in 0..n {
-                for p in 0..PERIODS {
-                    out[PERIOD_LEVEL[p] * 4 + 2] += ra.arrivals[k].per[p];
+                for (p, o) in out.iter_mut().enumerate() {
+                    o[2] += ra.arrivals[k].per[p];
                 }
                 for h in 0..24 {
-                    out[PERIOD_LEVEL[period_at(h as f64 * 3600.0)] * 4 + 3] += ra.left_h[k * 24 + h] as f64;
+                    out[period_at(h as f64 * 3600.0)][3] += ra.left_h[k * 24 + h] as f64;
+                }
+                let ts = &ra.order_t[k * m..(k + 1) * m];
+                let ord = &ra.order[k * m..(k + 1) * m];
+                for i in 0..m {
+                    let q = ra.q_after[ord[i] as usize * n + k] as f64;
+                    if q > 0.0 {
+                        let gap = if i + 1 < m { ts[i + 1] - ts[i] } else { ts[0] + DAY - ts[i] };
+                        out[period_at(ts[i])][4] += q * gap.max(0.0);
+                    }
                 }
             }
         }
@@ -612,7 +640,7 @@ impl Boarding {
                 }
             }
             self.tally(acc, ls, f64::NEG_INFINITY, tod, 0.0, &mut w);
-            let Tally { stops, boarded, left, fullest, mut full } = w;
+            let Tally { stops, boarded, left, fullest, mut full, trains } = w;
             full.sort_by(f64::total_cmp);
             let mut spans: Vec<(f64, f64)> = vec![];
             for &s in &full {
@@ -627,7 +655,9 @@ impl Boarding {
             }
             out.extend(stops);
             let (on, packed) = Self::under_way(acc, ls, tod);
-            out.extend([on, packed]);
+            out.extend([on, packed, trains]);
+            let c = Self::crowding(acc, ls)[period_at(tod)];
+            out.extend([c[4], c[2], c[5]]);
             count += 1;
         }
         out[0] = count as f64;
@@ -671,13 +701,14 @@ impl Boarding {
             // trains: the fullest stretch each has reached in the window (a trip from before
             // midnight counts at the stops it reaches after it)
             for j in 0..m {
-                let (mut best, mut at_t) = (0.0f64, f64::NAN);
+                let (mut best, mut at_t, mut seen) = (0.0f64, f64::NAN, false);
                 for k in 0..n {
                     let o = ra.stop_dep[ra.levels[j] as usize].get(k).copied().unwrap_or(0.0);
                     let s = (ra.deps[j] + o).rem_euclid(DAY);
                     if s > to || s <= from {
                         continue;
                     }
+                    seen = true;
                     let v = ra.load[j * n + k] as f64;
                     if v > best {
                         best = v;
@@ -685,6 +716,9 @@ impl Boarding {
                     }
                 }
                 w.fullest = w.fullest.max(best / cap);
+                if seen {
+                    w.trains += 1.0;
+                }
                 if best >= cap - 0.5 && !at_t.is_nan() {
                     w.full.push(at_t + off);
                 }
@@ -704,6 +738,8 @@ impl Boarding {
 }
 
 pub const QUEUE_STRIDE: usize = 10;
+/// Numbers per period in `Boarding::line_periods` (T-491).
+pub const PERIOD_STRIDE: usize = 6;
 
 impl RunAccount {
     /// The account's index of a trip leaving its first stop at game time `dep` (any day).
@@ -1110,15 +1146,26 @@ mod tests {
         b2.ensure(&w2.net, &w2.svc);
         let s2 = b2.line_summary(&w2.svc, l2 as usize);
         assert!(s2[0] < 0.1 && s2[1] == 0.0 && s2[2] < 1e-3 && s2[4] == 0.0, "{s2:?}");
-        // T-477: by level, the full trains and riders left behind fall in the peak's level
-        let v = b.line_levels(&w.svc, l as usize, 0);
-        assert!(v[HIGH * 4 + 1] >= 60.0 && v[HIGH * 4 + 3] > 10000.0, "{v:?}");
-        assert!(v[LOW * 4 + 1] == 0.0 && v[LOW * 4] > 0.0, "{v:?}");
-        assert!(b2.line_levels(&w2.svc, l2 as usize, 0).chunks(4).all(|c| c[1] == 0.0 && c[3] < 1e-3));
+        // T-477, T-491: by period, the full trains, riders left behind and their wait fall in the
+        // morning peak, spilling into midday while the queue clears; none at night
+        let v = b.line_periods(&w.svc, l as usize, 0);
+        let p = |p: usize, i: usize| v[p * PERIOD_STRIDE + i];
+        assert!(p(0, 1) >= 60.0 && p(0, 3) > 10000.0, "{v:?}");
+        assert!(p(4, 1) == 0.0 && p(4, 0) > 0.0 && p(4, 4) == 0.0, "{v:?}");
+        // the average morning rider waits minutes for a train with room; everyone rides
+        assert!(p(0, 4) / p(0, 2) > 300.0 && p(0, 5) > 0.0, "{v:?}");
+        assert!(p(1, 4) > 0.0, "{v:?}");
+        let v2 = b2.line_periods(&w2.svc, l2 as usize, 0);
+        assert!(v2.chunks(PERIOD_STRIDE).all(|c| c[1] == 0.0 && c[3] < 1e-3 && c[4] < 1e-3 && c[5] > 0.0), "{v2:?}");
         // T-472: at 08:00 the trains in service are about the line's peak trains, every one full
         let v = b.past_day(&w.svc, 2.0 * DAY + 8.0 * 3600.0);
-        let (on, packed) = (v[v.len() - 2], v[v.len() - 1]);
+        // T-491: the period now's wait, arrivals and ride end the block
+        let (wait, arrived) = (v[v.len() - 3], v[v.len() - 2]);
+        assert!((wait - p(0, 4)).abs() < 1e-6 && (arrived - p(0, 2)).abs() < 1e-6);
+        let (on, packed, trains) = (v[v.len() - 6], v[v.len() - 5], v[v.len() - 4]);
         assert!(on > 0.0 && (on - w.svc.lines[l as usize].trains[HIGH] as f64).abs() <= 2.0 && packed == on, "{on} {packed}");
+        // T-481: the full trains are counted out of every trip in the 24 hours
+        assert!(trains >= v[4] && trains > 100.0, "{trains} trips, {} full", v[4]);
     }
 
     #[test]

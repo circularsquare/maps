@@ -30,9 +30,9 @@ Positron, repainted faint (`map/basemap.ts`), so the network reads first.
   - **Line**: uniform width in the line colours.
   - **Line + traffic thickness** (the default): width by riders over the day shown
     ([ui-demand-views.md](ui-demand-views.md) "Line width by riders").
-  - **Height**: the track coloured by level, warm above ground, green at ground, blue-green to
-    indigo below: +3 #c2351c, +2 #ee7a1a, +1 #f0b928, 0 #58b04a, -1 #16a39a, -2 #2f6fd0, -3 #4a2c9a
-    (`LEVEL_COLOURS`, T-413, T-478; neighbours at least 30 apart in CIELAB). The same table colours
+  - **Height**: the track coloured by level, blue-green to indigo above ground (open sky), green
+    at ground, warm below (deep): +3 #4a2c9a, +2 #2f6fd0, +1 #16a39a, 0 #58b04a, -1 #f0b928, -2 #ee7a1a,
+    -3 #c2351c (`LEVEL_COLOURS`, T-413, T-478, T-480; neighbours at least 30 apart in CIELAB). The same table colours
     the Build tab's level buttons and the Settings key.
   - **Max speed**: the geometry's allowed speed at each section, curve limits included, capped at
     160 km/h (not a train's speed), keyed 40/80/120/160 km/h from warm red through ochre and green
@@ -192,8 +192,17 @@ at most once a game second, only while drawn.
 
 ## Picking
 
-Picking follows drawing order [`map/pick.ts`]: demand discs above trains, then stations, lines,
-junctions and track; within a layer the last drawn wins; hidden layers do not intercept. Network
+Clicks reach only what is drawn on top [T-486]: a click never acts on something drawn beneath
+another clickable thing. Picking follows drawing order [`map/pick.ts`, `main.ts` `selectAt`], top
+first: editing handles (a selected stretch's corner squares, which take their own presses, and the
+select tool's squares on blueprint points, which pass over the bubbles, their hover tags and the
+trains beneath, `map/endMarkers.ts`); the selected station (cut out of the bubbles); demand
+discs (commuter bubbles over longer-trip discs, then a station's catchment); capacity tags (under
+the discs; one that opens nothing selects what is under it); trains (the selected one first), then
+stations, lines, junctions and track; within a layer the last drawn wins; hidden layers do not
+intercept. Station names, airport badges and the stop editor's markers take no clicks: a click on
+one reaches what is under it (a badge sits on its own airport's bubble; the stop markers' station
+is picked by the stop tool). Network
 hits reach 7 px from the centre line, or half the drawn width where a line is wider [T-227].
 Clicking the line already selected selects the track under it. Clicking a selection's far end or a
 station's catchment keeps the parent selection. Selected editing handles stay draggable above the

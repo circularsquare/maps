@@ -10,18 +10,18 @@ import type { Level } from "./types";
 export const LINE_PALETTE = ["#d7263d", "#1f6fd1", "#1a9a4a", "#f08a00", "#8a3fb8", "#f2c200", "#8f5a2a", "#0e9a9a",
   "#74797e", "#9ccb19", "#f59dc6", "#e62aa6", "#5cc3f0"];
 
-/** Track colour by height: red-orange, orange and yellow above ground, green at ground, then
- * blue-green, blue and indigo going down (T-413: grey was hard to see on the basemap; T-478: spread
- * so that neighbours are at least 30 apart in CIELAB, was 20). The one source for the drawn track,
- * the build ghost, the Build tab's level buttons and the Height key. */
+/** Track colour by height: blue-green, blue and indigo going up (open sky), green at ground, then
+ * yellow, orange and red-orange going down (deep; T-480). Neighbours are at least 30 apart in
+ * CIELAB (T-478). The one source for the drawn track, the build ghost, the Build tab's level
+ * buttons and the Height key. */
 export const LEVEL_COLOURS: Record<Level, string> = {
-  3: "#c2351c",
-  2: "#ee7a1a",
-  1: "#f0b928",
+  3: "#4a2c9a",
+  2: "#2f6fd0",
+  1: "#16a39a",
   0: "#58b04a",
-  [-1]: "#16a39a",
-  [-2]: "#2f6fd0",
-  [-3]: "#4a2c9a",
+  [-1]: "#f0b928",
+  [-2]: "#ee7a1a",
+  [-3]: "#c2351c",
 };
 
 /** The Max speed display's key, km/h and colour; renderer.ts's stroke shader blends the same stops. */

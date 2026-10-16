@@ -33,6 +33,8 @@ let near: Complexes = { of: new Map(), members: [] };
  * more between its two stations' dots (T-313, map/renderer.ts `syncGroups`). The same object while
  * no station moved, appeared or changed length. */
 export const dotGroups = computed(() => {
+  // with no links the two are the same grouping: built once (T-496)
+  if (!(world.value?.save.links ?? []).length) return complexes.value;
   const st = world.value?.save.stations ?? [];
   const k = getWorldFrame().kind + st.map((s) => `${s.id}:${s.x}:${s.y}:${s.heading}:${s.length}`).join("|");
   if (k !== nearKey) {

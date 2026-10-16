@@ -1667,7 +1667,8 @@ impl EverydayApi {
                     ) * p.w_drive
                         + fixed;
                     let rail = ma + mb + p.fare_min - fast_ln(sum) / th;
-                    let pr = (1.0 - pair.walk) * p.rail_share_parked(p.beta * (road - rail) + p.asc_rail, paid, free);
+                    let bt = p.mode_beta(road);
+                    let pr = (1.0 - pair.walk) * p.rail_share_parked(bt * (road - rail) + p.asc_rail, bt, paid, free);
                     probability[i][direction] = pr;
                     let share = if direction == 0 {
                         OUTWARD[pair.kind() as usize][q]

@@ -16,6 +16,8 @@ export const THEMES: Theme[] = ["pink", "blue", "green"];
 /** names used before 2026-10-09, so a remembered choice survives the rename */
 const OLD_THEME: Record<string, Theme> = { cream: "pink", sky: "blue", matcha: "green" };
 
+export type StationUseMode = "none" | "origins" | "transfers" | "total";
+
 export interface DisplaySettings {
   /** Track display: plain lines, traffic-weighted lines, height, or geometry speed limit. */
   trackColour: "line" | "traffic" | "height" | "speed";
@@ -23,8 +25,9 @@ export interface DisplaySettings {
   stationNames: boolean;
   capacity: boolean;
   basemapLabels: boolean;
-  /** explicit analytical view: translucent circles behind platforms, area by daily entries/exits */
-  stationRiders: boolean;
+  /** station use circles (T-482): translucent circles behind platforms, area by the riders a day
+   * starting a rail trip there, changing lines there, or both (all boardings); or none */
+  stationUse: StationUseMode;
   /** station complexes (T-146): the station inspector and the demand circles take each complex
    * (stations whose platforms nearly touch, game/complexes.ts) as one */
   complexView: boolean;
@@ -65,7 +68,7 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   stationNames: true,
   capacity: true,
   basemapLabels: true,
-  stationRiders: false,
+  stationUse: "none",
   // T-192 (Anita): one circle per station complex by default
   complexView: true,
   trainLoad: true,
@@ -103,9 +106,10 @@ function load(): Partial<{ tab: Tab; theme: Theme; display: Partial<DisplaySetti
 }
 const saved = load();
 // Migrate the former Line + separate width checkbox into the four-way display choice.
-const oldDisplay = saved.display as (Partial<DisplaySettings> & { lineLoad?: boolean; intercity?: boolean }) | undefined;
-// `intercity` (hide the longer-trip bubbles) is no longer a setting (T-222): dropped from storage
-const { lineLoad: legacyLineLoad, intercity: _intercity, ...migratedDisplay } = oldDisplay ?? {};
+const oldDisplay = saved.display as (Partial<DisplaySettings> & { lineLoad?: boolean; intercity?: boolean; stationRiders?: boolean }) | undefined;
+// `intercity` (hide the longer-trip bubbles) is no longer a setting (T-222), nor `stationRiders`
+// (the demand circles, T-482): dropped from storage
+const { lineLoad: legacyLineLoad, intercity: _intercity, stationRiders: _stationRiders, ...migratedDisplay } = oldDisplay ?? {};
 if ((saved.v ?? 1) < 2) delete migratedDisplay.complexView;
 const trackColour = oldDisplay?.trackColour === "line" && legacyLineLoad !== undefined
   ? legacyLineLoad === false ? "line" : "traffic"

@@ -16,7 +16,9 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
   multiplier and price per km, single, double or quad track [T-255], and the platform length for
   new stations.
   The level, the single, double or quad choice and the keep placing switch are remembered per
-  browser (localStorage with the other panel settings, not in the save) [T-468].
+  browser (localStorage with the other panel settings, not in the save) [T-468]. Caps Lock only
+  changes the switch when its state changes after the page loads, so a stored setting wins over a
+  Caps Lock left on or off [T-487].
   The number keys work from any tab and open the Build tab; the key of the tool already on does
   nothing. Each button shows its key. There is no button for plain selecting: clicking the active tool again or
   leaving it with Esc returns to selecting. The trip tool (key T) is in
@@ -168,7 +170,9 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   crossover's, which keeps its shape [T-338]); any blueprint track end, junction or station can be
   dragged, except a node at a crossover's end. The cursor is a grab cursor over a node or square
   that can, and a grabbing one anywhere while dragging [T-474]. A draggable node takes the drag
-  over a demand bubble (a press without a drag still selects the bubble).
+  over a demand bubble. A click on a node's square (drawn over the bubbles) acts on the point, never
+  the bubble [T-486]; a blueprint station has no square, so a click on one under a bubble selects
+  the bubble.
   With the select tool every blueprint track end, corner and junction without a station shows the
   same white square as a corner [T-416; `map/endMarkers.ts`], so draggable points can be seen.
   A drag previews the new shape with each curve's radius and speed (or why not); letting go is one

@@ -17,6 +17,8 @@ type Kind = "loose" | "drag";
 /** below this zoom the markers would only crowd the map */
 const MIN_ZOOM = 9;
 const MAX_MARKS = 400;
+/** a point's reach for a click, px: nodeDrag's, so a press that drags and one that clicks agree */
+const HIT_PX = 9;
 
 export class EndMarkers {
   private box: HTMLDivElement;
@@ -59,13 +61,28 @@ export class EndMarkers {
     }
   }
 
+  /** Whether a select tool's square is drawn within `HIT_PX` of a screen point: drawn over the demand
+   * bubbles, so a click there acts on the point, not the bubble (T-486). */
+  at(px: number, py: number): boolean {
+    if (this.wanted() !== "drag" || !this.shown()) return false;
+    this.refresh("drag");
+    for (const p of this.pts) {
+      const [x, y] = this.overlay.toScreen(p.lx, p.ly);
+      if ((x - px) ** 2 + (y - py) ** 2 < HIT_PX * HIT_PX) return true;
+    }
+    return false;
+  }
+
+  private shown(): boolean {
+    return this.map.getZoom() >= MIN_ZOOM && !live.nodeDrag?.dragging;
+  }
+
   place() {
     const kind = this.wanted();
     let k = 0;
-    if (kind && this.map.getZoom() >= MIN_ZOOM && !live.nodeDrag?.dragging) {
+    if (kind && this.shown()) {
       this.refresh(kind);
-      const el = this.map.getContainer();
-      const w = el.clientWidth, h = el.clientHeight;
+      const w = this.overlay.cssW, h = this.overlay.cssH;
       for (const p of this.pts) {
         const [x, y] = this.overlay.toScreen(p.lx, p.ly);
         if (x < -8 || y < -8 || x > w + 8 || y > h + 8) continue;

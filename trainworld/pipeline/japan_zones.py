@@ -13,7 +13,8 @@ named after its most populous unit; its origin is the centre of its most populou
 **Per zone.** As the metro packs (notes/T-420.md): census mesh population, economic census jobs
 scaled to the census's workers by place of work, P29 schools, OSM from the Geofabrik region
 extract whose .poly holds the outline (water from every region near the box). Work at home: the
-census's at-home share plus MLIT's 16.8% telework outside the three big metros at 2 days in 5. The
+census's at-home share by municipality of work plus MLIT's 16.8% telework outside the three big
+metros at 2 days in 5 (`wfh` in the JSON is the zone's mean, for reference). The
 curve is fitted on the census's municipality flows with the pack's own margins over a fixed grid
 (fit below), the lowest misplaced share, ties within 0.3 points going to the own-municipality
 share closest to the census's. A box over 150M pixels at 25 m takes 50 m water pixels.
@@ -60,7 +61,7 @@ HOKKAIDO = {"01-kamikawa": "Kamikawa", "01-sorachi": "Sorachi", "01-iburi": "Ibu
 METRO = ["08", "11", "12", "13", "14", "26", "27", "28", "29", "21", "23", "24", "40", "04", "34", "01-ishikari", "01-01203"]
 REGIONS = ["hokkaido", "tohoku", "kanto", "chubu", "kansai", "chugoku", "shikoku", "kyushu"]
 MIN_POP = 100_000
-TELEWORK = 0.168 * 0.4  # MLIT 2024, outside the three big metros; 2 days in 5 (research/japan.md)
+TELEWORK = b.TELEWORK_JP
 GRID = [(pw, km) for pw in (1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4) for km in (16.0, 32.0, 50.0, 80.0, 160.0)]
 
 
@@ -208,7 +209,8 @@ def fit(zid, cfg, boundary, sig):
     li, near = england.cell_units(sig["lat"], sig["lon"], [(m[0], m[3]) for m in ms])
     pop, _ = japan.mesh_population(zid, boundary, sig, units, nb)
     jobs, _ = japan.census_jobs(zid, boundary, sig, tier0.jobs_from(sig, 1.0), units, nb)
-    work_c = jobs * (1 - cfg["wfh"])
+    h = cfg["at_home"](sig["lat"], sig["lon"])
+    work_c = jobs * (1 - h) * (1 - cfg["telework"])
     home_c = pop * work_c.sum() / pop.sum()
     li = np.where(li < 0, 0, li)
     for u, p in near.items():

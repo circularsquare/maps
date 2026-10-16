@@ -62,10 +62,10 @@ assert.deepEqual(groups(buildComplexes(far,[['4','3'],['2','3']])),['1,2,3,4'],'
 
 // one demand circle per complex
 const net={stationCount:4,stationIds:['1','2','3','4'],stations:new Float32Array([0,0,0, 10,0,0, 20,0,2, 500,0,0])};
-const dv={stations:new Map([['1',{boardings:1000,alightings:1000}],['2',{boardings:2000,alightings:2000}],['4',{boardings:500,alightings:500}]])};
+const use=new Map([['1',2000],['2',4000],['4',1000]]);
 const cx={of:new Map([['1',0],['2',0],['3',0],['4',1]]),members:[['1','2','3'],['4']]};
 const size=new Float32Array([0,stationScale(2000),0,stationScale(4000),0,0,0,stationScale(1000)]);
-const halo=complexCircles(net,dv,cx,size);
+const halo=complexCircles(net,(id)=>use.get(id),cx,size);
 near(size[1],stationScale(6000),'the complex circle sums its stations');
 near(size[3],0,'other stations draw none');near(size[5],0,'blueprint none');
 near(size[7],stationScale(1000),'a station on its own keeps its circle');

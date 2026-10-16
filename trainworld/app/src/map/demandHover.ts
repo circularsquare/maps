@@ -4,6 +4,7 @@
 import type { Map as MlMap } from "maplibre-gl";
 import { DISC } from "../workers/commutersProtocol";
 import { toLocal, type Anchor } from "./geo";
+import { hoverHeld } from "../ui/blurHold";
 
 /** Where the pointer is on the ground. Each disc set is in the local units of its own draw anchor
  * (T-317, map/geo.ts), so a finder turns the pointer into those (`discAt`, `pointerLocal`). */
@@ -72,7 +73,7 @@ export function startHover(map: MlMap) {
     if (e.buttons) return hide();
     const t = hoverAt(map, px, py);
     if (!t) return hide();
-    const html = t.map((s) => `<div>${s}</div>`).join("");
+    const html = t.filter(Boolean).map((s) => (s.startsWith("<div") ? s : `<div>${s}</div>`)).join("");
     if (html !== last) {
       tag.innerHTML = html;
       last = html;
@@ -88,6 +89,6 @@ export function startHover(map: MlMap) {
     const r = map.getContainer().getBoundingClientRect();
     show(e, e.clientX - r.left, e.clientY - r.top);
   });
-  map.getContainer().addEventListener("mouseleave", hide);
+  map.getContainer().addEventListener("mouseleave", () => hoverHeld() || hide());
   map.on("movestart", hide);
 }

@@ -59,7 +59,7 @@ import {
   demandSolving,
 } from "../game/demand";
 import { makeFrame } from "../game/frame";
-import { demandIdle, loadComplete, loadFailed, loadProgress, startup, takeGameLoadHold, zoneLoads } from "../game/loading";
+import { demandIdle, loadComplete, loadFailed, loadProgress, startup, takeGameLoadHold, zoneFailures, zoneLoads } from "../game/loading";
 import { PERIODS, periodsMatch } from "../game/periods";
 import { EVERYDAY_KEYS, membersOf, PURPOSES, shownKey, type PurposeFilter, type PurposeKey } from "../game/purposes";
 import { perfOff } from "../perfFlags";
@@ -289,6 +289,11 @@ interface Download { got: number; total: number; at: number }
  * rest of the bar.
  */
 const OPEN_MS_PER_MB = { city: 130, market: 60 };
+/** T-484: the waits before each new try of a failed pack download, and, once those are spent, before
+ * the zone is tried again (the last repeating) */
+const RETRY_MS = [500, 1500, 4000];
+const BROKEN_RETRY_MS = [10000, 30000, 60000];
+const sameBytes = (a: Uint8Array, b: Uint8Array) => a.length === b.length && a.every((v, i) => v === b[i]);
 const SOLVE_MS = { base: 600, perStop: 2.2 };
 const STEP_CAP = 0.98;
 /** a pack whose size is not known yet (its download has not started): about a mid-sized city */
@@ -577,7 +582,7 @@ class DemandClient {
 
   /** T-318: the viewed zone alone; empty over dead space, where nothing loads for the view. */
   private viewedSet(): Set<CityId> {
-    return new Set(viewedZone.peek() ? [activeCity.peek()] : []);
+    return this.withoutBroken(new Set(viewedZone.peek() ? [activeCity.peek()] : []));
   }
 
   /** T-318: a network is in hand and neither the view nor any station needs a pack: nothing to
@@ -602,11 +607,11 @@ class DemandClient {
    * Null while that is not known yet (the footprints are still loading). */
   private needed(svc: Service | null): Set<CityId> | null {
     const out = this.viewedSet();
-    if (!svc) return out;
+    if (!svc) return this.withoutBroken(out);
     const reached = this.reachedSet(svc);
     if (!reached) return null;
     for (const id of reached) out.add(id);
-    return out;
+    return this.withoutBroken(out);
   }
 
   /** The cities `svc`'s stations reach; null while that is not known (no network yet, or the
@@ -664,7 +669,7 @@ class DemandClient {
     const out = new Set(reached);
     // (T-351: not a zone opened ahead of a station that does not reach it yet)
     for (const id of this.fetching) if (!isMarket(id) && !this.prefetched.has(id as CityId)) out.add(id as CityId);
-    return out;
+    return this.withoutBroken(out);
   }
 
   /** Open in every worker, or bare in the aux worker (T-325). */
@@ -696,7 +701,7 @@ class DemandClient {
   private marketWanted: CityId[] = [];
   private wantsMarket(svc: Service | null, need: Set<CityId>): CityId[] {
     const out = new Set<CityId>([...need, ...nearbyZones.peek(), ...(svc ? this.nearOf(svc).markets : [])]);
-    this.marketWanted = CITIES.map((c) => c.id).filter((id) => out.has(id));
+    this.marketWanted = CITIES.map((c) => c.id).filter((id) => out.has(id) && !this.broken.has(marketItem(id)));
     return this.marketWanted;
   }
 
@@ -817,14 +822,39 @@ class DemandClient {
   /** Fetch `id` to open in every worker (`full`), bare in the aux worker (false), or (null: the
    * reach is not known yet) either, decided once downloaded; unless already. */
   private want(id: CityId, full: boolean | null) {
-    if (this.fetching.has(id) || this.fetchingUndecided.has(id)) return;
+    if (this.fetching.has(id) || this.fetchingUndecided.has(id) || this.broken.has(id)) return;
     if (full) this.fetchCity(id, "full");
     else if (full === null) this.fetchCity(id, this.fetchingBare.has(id) || perfOff("bareStart") ? "full" : "undecided");
     else if (!this.fetchingBare.has(id)) this.fetchCity(id, "bare");
   }
 
-  /** Download one pack file, counting its bytes as they arrive. */
+  /** Download one pack file, tried again after a failure (T-484: a server restarting or a pack
+   * being replaced fails a fetch for a moment). */
   private async download(file: string): Promise<Uint8Array> {
+    for (let attempt = 0; ; attempt++) {
+      try {
+        return await this.downloadOnce(file);
+      } catch (err) {
+        if (attempt >= RETRY_MS.length) throw err;
+        await new Promise((r) => setTimeout(r, RETRY_MS[attempt]));
+      }
+    }
+  }
+
+  /** A city pack's header and .bin from the same build of it: the header is read again after the
+   * .bin and they are fetched again if it changed meanwhile (T-484: a pack rewritten mid-load). */
+  private async downloadPack(id: CityId): Promise<[Uint8Array, Uint8Array]> {
+    for (let attempt = 0; ; attempt++) {
+      const [header, bin] = await Promise.all([this.download(`${id}.json`), this.download(`${id}.bin`)]);
+      const again = await this.download(`${id}.json`);
+      if (sameBytes(header, again)) return [header, bin];
+      if (attempt >= RETRY_MS.length) throw new Error(`${id}.json kept changing while it loaded`);
+      await new Promise((r) => setTimeout(r, RETRY_MS[attempt]));
+    }
+  }
+
+  /** Download one pack file once, counting its bytes as they arrive. */
+  private async downloadOnce(file: string): Promise<Uint8Array> {
     const r = await fetch(new URL(`packs/${file}`, document.baseURI));
     if (!r.ok) throw new Error(`${r.status} ${r.url}`);
     const d: Download = { got: 0, total: Number(r.headers.get("Content-Length")) || 0, at: performance.now() };
@@ -887,8 +917,9 @@ class DemandClient {
     else this.fetchingUndecided.add(id);
     const log: LoadLog = { item: id, requestedAt: performance.now(), ...(mode === "bare" ? { bare: true } : {}) };
     this.start.loads.push(log);
-    Promise.all([this.download(`${id}.json`), this.download(`${id}.bin`)]).then(([header, bin]) => {
+    this.downloadPack(id).then(([header, bin]) => {
       log.downloadedAt = performance.now();
+      this.recovered(id);
       // T-351: fetched before the reach was known: bare if it is known now and leaves the zone out,
       // else in every worker (a save's network comes after its viewed pack, which then opens as before)
       let bare = mode === "bare";
@@ -907,7 +938,7 @@ class DemandClient {
       if (!bare) return this.post({ pack });
       const msg: ToDemand = { kind: "open", packs: [pack], bare: true };
       this.workers[this.computeN].postMessage(msg, [own]);
-    }).catch((err) => this.fail(`city pack ${id}: ${String(err)}`));
+    }).catch((err) => this.unreachable(id, id, `city pack ${id}: ${String(err)}`));
   }
 
   /** T-377: a zone's market pack, to every solving worker. */
@@ -918,10 +949,60 @@ class DemandClient {
     this.start.loads.push(log);
     this.download(`${id}.market.json`).then((bytes) => {
       log.downloadedAt = performance.now();
+      this.recovered(item);
       this.bytes.set(item, bytes.byteLength);
       this.hashPack(item, [bytes]);
       this.post({ intercity: { id, bytes } });
-    }).catch((err) => this.fail(`market pack ${id}: ${String(err)}`));
+    }).catch((err) => this.unreachable(item, id, `market pack ${id}: ${String(err)}`));
+  }
+
+  // --- T-484: a pack that could not be downloaded --------------------------------------------------
+
+  /** Items (a city id or "market:<id>") whose download failed, with when to try again. Demand
+   * carries on without them: they are left out of what is needed, waited for and solved. */
+  private broken = new Map<string, { tries: number; timer: number }>();
+
+  /** `item` (of zone `zone`) could not be downloaded even after its retries: leave it out, say so for
+   * its zone, and try again later (BROKEN_RETRY_MS) if it is still needed then. */
+  private unreachable(item: string, zone: CityId, why: string) {
+    if (this.status.startsWith("failed")) return;
+    console.warn("demand:", why);
+    this.fetching.delete(item);
+    this.fetchingBare.delete(item as CityId);
+    this.fetchingUndecided.delete(item as CityId);
+    this.prefetched.delete(item as CityId);
+    this.onOpen = this.onOpen.filter((w) => (w.item === item ? (w.f(false), false) : true));
+    const tries = (this.broken.get(item)?.tries ?? 0) + 1;
+    const wait = BROKEN_RETRY_MS[Math.min(tries, BROKEN_RETRY_MS.length) - 1];
+    const timer = setTimeout(() => {
+      this.broken.delete(item);
+      this.ensure();
+    }, wait) as unknown as number;
+    this.broken.set(item, { tries, timer });
+    const failures = new Map(zoneFailures.peek());
+    failures.set(zone, why);
+    zoneFailures.value = failures;
+    this.ensure();
+    // a game load's hold may have been waiting for this zone alone
+    this.checkHold();
+  }
+
+  /** `item` downloaded: whatever failed before for it is over. */
+  private recovered(item: string) {
+    const b = this.broken.get(item);
+    if (b) clearTimeout(b.timer);
+    this.broken.delete(item);
+    const zone = (isMarket(item) ? marketZone(item) : item) as CityId;
+    if (!zoneFailures.peek().has(zone) || this.broken.has(zone) || this.broken.has(marketItem(zone))) return;
+    const failures = new Map(zoneFailures.peek());
+    failures.delete(zone);
+    zoneFailures.value = failures;
+  }
+
+  /** `ids` without the zones whose pack is waiting to be tried again. */
+  private withoutBroken(ids: Set<CityId>): Set<CityId> {
+    for (const id of ids) if (this.broken.has(id)) ids.delete(id);
+    return ids;
   }
 
   /** A worker opened `item`: once all have, waiting solves and queries may go. */
@@ -1073,7 +1154,8 @@ class DemandClient {
     const viewed = activeCity.peek();
     // T-325: a city the solves must cover is loaded when open in every worker; another, when open bare
     const sn = this.solveNeed(this.latest());
-    const loaded = (item: string) => (isMarket(item) || sn === null || sn.has(item as CityId) ? this.opened.has(item) : this.isOpen(item));
+    // (T-484: a pack waiting to be tried again counts as done: the load does not wait for it)
+    const loaded = (item: string) => this.broken.has(item) || (isMarket(item) || sn === null || sn.has(item as CityId) ? this.opened.has(item) : this.isOpen(item));
     const marketsMissing = this.marketWanted.map(marketItem).filter((item) => !this.opened.has(item));
     // T-328: a zone the shown cached result covers has its figures; it loads unseen (T-347: not
     // while a game load's card is up, which counts everything to the fresh final)

@@ -210,13 +210,14 @@ renderer.selectedStation=-1;
  assert.equal(topSeg(ov,seg,1,50,5,slop,undefined,0,undefined,F([0.5]),6.6)[0],0,'a thin line keeps the 7 px reach');
 }
 
-// --- station circles by demand
+// --- station use circles (T-482)
 const world={save:{lines:[]},edges:[]};
-const demand={lines:new Map(),stations:new Map([['under',{boardings:150000,alightings:0}],['over',{boardings:37500,alightings:0}]])};
-const switches={lineLoad:false,stationRiders:true,trainLoad:false};
+const demand={lines:new Map(),stations:new Map()};
+const use=new Map([['under',75000],['over',18750]]);
+const switches={lineLoad:false,stationFigure:(id)=>use.get(id),trainLoad:false};
 const layers=buildLayers(net,world,demand,0,switches);
 near(layers.stationSize[1],1);near(layers.stationSize[3],.5);
-near(layers.stationSize[1]**2,4*layers.stationSize[3]**2,'circle area proportional to daily demand');
-assert.ok(buildLayers(net,world,demand,0,{...switches,stationRiders:false}).stationSize.every(v=>v===0));
+near(layers.stationSize[1]**2,4*layers.stationSize[3]**2,'circle area proportional to riders a day');
+assert.ok(buildLayers(net,world,demand,0,{...switches,stationFigure:null}).stationSize.every(v=>v===0));
 near(stationScale(0),0);near(stationScale(300000),1);
 console.log('T-144/T-189/T-204/T-205 checks passed: platform along its track (straight, curved, dead end), true length, one shape at every zoom, covers its lines at the box zoom, dots zoomed out, hidden further out but for the selected, curved picking, no growth when selected, selected on top, deterministic platform, blueprint flag, demand circles; T-217 bridges between linked platforms, one outline round selected platforms and their bridge; T-313 a dot per station zoomed out, picked one by one, joined by connectors within a group and along links; T-227 linear line widths and picking across a wide line; T-254 boxes follow the track (S-curve, straight unchanged, dead end, short edge).');

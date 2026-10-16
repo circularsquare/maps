@@ -232,6 +232,7 @@ export class Tools {
     this.hover = t === "line" ? null : this.snap(e.point.x, e.point.y, e.lngLat, t !== "crossover");
     if (t === "track" && this.start) this.requestPreview();
     if (t === "crossover") this.checkCrossover();
+    if (t === "station") this.nameAhead(e.point.x, e.point.y);
     this.place();
   }
 
@@ -390,13 +391,34 @@ export class Tools {
 
   // ---------------------------------------------------------------- stations
 
+  /** The name a station placed where the pointer rests would get, worked out while it rests, so a
+   * click does not wait 10-20 ms for it (T-496); used only if the view, world and tiles are as they
+   * were, so it is the name the click would have found. */
+  private named: { key: string; name: Promise<string> } | null = null;
+  private namedTimer = 0;
+  private nameKey(px: number, py: number) {
+    const c = this.map.getCenter();
+    return `${px},${py},${c.lng},${c.lat},${this.map.getZoom()},${this.map.getBearing()},${this.map.getPitch()},${world.peek()?.version}`;
+  }
+  private nameAhead(px: number, py: number) {
+    clearTimeout(this.namedTimer);
+    this.namedTimer = setTimeout(() => {
+      if (tool.peek() !== "station" || !this.map.areTilesLoaded()) return;
+      const key = this.nameKey(px, py);
+      if (this.named?.key !== key) this.named = { key, name: this.nameFor(px, py) };
+    }, 150) as unknown as number;
+  }
+
   private async stationClick(e: MapMouseEvent) {
     const s = this.snap(e.point.x, e.point.y, e.lngLat);
     if (s.kind === "free") {
       say("Click on track to put a station there.");
       return;
     }
-    const name = await this.nameFor(e.point.x, e.point.y);
+    const key = this.nameKey(e.point.x, e.point.y);
+    const ahead = this.named?.key === key && this.map.areTilesLoaded() ? this.named.name : null;
+    this.named = null;
+    const name = await (ahead ?? this.nameFor(e.point.x, e.point.y));
     const at = s.kind === "node" ? { kind: "node" as const, node: s.node } : { kind: "edge" as const, edge: s.edge, ...this.pack(s.lx, s.ly) };
     const a = await edit({ op: "addStation", at, platform: buildPlatform.peek(), name });
     if (a.ok) {

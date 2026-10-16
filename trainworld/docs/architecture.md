@@ -69,7 +69,8 @@ Web first, so it can be shared as a link.
   T-033). Track, stations and trains are drawn by our own WebGL2 renderer on a **separate canvas
   over the map**: not GeoJSON sources (per-frame `setData` pins a core) and not a MapLibre custom
   layer (that repaints the whole basemap on every train frame). Track buffers are built in the clock
-  worker and replaced on each edit; trains are instanced and positioned on the GPU from keyframes
+  worker and replaced on each edit, made from per-edge, per-line and per-station pieces the worker
+  keeps and rebuilds only when their inputs change (`NetCache` in map/network.ts, T-496); trains are instanced and positioned on the GPU from keyframes
   and the clock. World coordinates and the moving draw anchor: [world.md](world.md).
 - **Staying in step with the basemap** [T-075; notes/T-015.md, notes/T-075.md]: an empty MapLibre
   custom layer hands over the camera matrix on every frame MapLibre draws, and the overlay is drawn
@@ -134,6 +135,12 @@ Web first, so it can be shared as a link.
   (`game/boundaries.ts`). The clock worker is ready without any water mask: masks, outlines, place
   lists and boundaries are fetched per zone as the view, track or a search needs them (T-302,
   T-400, T-404; docs/zones.md 6).
+  A pack download that fails is tried again after 0.5, 1.5 and 4 s, and a city pack's header is
+  read again after its .bin and both fetched again if it changed (a pack rewritten mid-load). A
+  zone whose pack still cannot be downloaded is left out (not needed, waited for or held for),
+  its failure shows on the status tag while it is in view, and it is tried again after 10, 30 and
+  then every 60 s; demand everywhere else carries on (T-484). Only a worker error stops the pool
+  ("Demand could not load").
   `game/loading.ts`; timings in notes/T-172.md, frame times in notes/T-180.md.
 - **Threads talk by snapshots**: a worker transfers a finished buffer with a version number; the
   main thread swaps it in. Works on any host. SharedArrayBuffer is a later option; it needs

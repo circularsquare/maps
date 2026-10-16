@@ -19,6 +19,7 @@ import type { WorldView } from "../game/types";
 import { ask, display, purposeFilter, selection, shownDayPhrase, tool } from "../game/ui";
 import { world } from "../game/world";
 import { hoverAt } from "./demandHover";
+import { hoverHeld } from "../ui/blurHold";
 import { live } from "./live";
 import type { NetworkBuffers } from "./network";
 import { circleTip, stationTip, trainTip } from "./networkTips";
@@ -210,6 +211,7 @@ export function startTrackHover(map: MlMap, ov: Overlay) {
   });
   box.addEventListener("mousedown", () => hide());
   box.addEventListener("mouseleave", () => {
+    if (hoverHeld()) return;
     at = null;
     hide();
   });

@@ -209,7 +209,7 @@ The clock worker owns edits (with undo for reversible changes), capacity, fleet,
 the boarding account. Fares are paid into the cash as trains pick up riders and running costs
 drain evenly [T-284]; the economy runs at 100x real days [T-081]. Changing a line's trains moves no
 running train: added ones enter at a terminal, removed ones leave at one [T-206]. A new game starts
-with $6B in an empty New York.
+with $3B in an empty New York.
 
 Detail: [docs/track-and-service.md](docs/track-and-service.md) (6.1 track and stations, 6.2
 capacity, 6.3 trains and schedules, 6.4 costs and money, 6.5 edits, 6.6 the boarding account).
@@ -238,7 +238,7 @@ no explanatory notes [T-253]. **Everything drawn that encodes a number has a hov
 game's own tag, never a browser tooltip [T-194, T-210]. No CSS transitions; trains are the only
 motion. **Panels count the past 24 hours, not a forecast** [T-293, T-446]: the line and station panels
 count the past 24 hours from the boarding account, while the map's demand views (Homes and Destinations bubbles
-coloured by mode share, line widths by riders, station circles, inter-region trips) show demand's
+coloured by mode share, line widths by riders, station use circles, inter-region trips) show demand's
 whole day, the clock's day by default. On the map, lines sharing track are drawn over each other,
 stations are dots from zoom 11 and their true platforms from 15, and trains fill like a gauge with
 their riders.

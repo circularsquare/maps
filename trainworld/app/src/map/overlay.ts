@@ -138,9 +138,9 @@ export class Overlay {
   }
 
   /** The canvas size in CSS px, kept from the last resize: reading clientWidth in `toScreen` forced
-   * a layout per call while DOM labels were being rebuilt (T-063). */
-  private cssW = 0;
-  private cssH = 0;
+   * a layout per call while DOM labels were being rebuilt (T-063). DOM markers read it too (T-496). */
+  cssW = 0;
+  cssH = 0;
 
   /** Draw now with the camera MapLibre last drew. */
   draw() {

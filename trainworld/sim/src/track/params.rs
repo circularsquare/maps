@@ -78,9 +78,9 @@ pub const WATER_STEP: f64 = 12.5;
 pub const CAR_PRICE: f64 = 2.5;
 /// Running cost per car-km, US$. Set for play, not realism (Anita, 2026-10-09): T-028's real-ish
 /// 6 (New York's subway spends about 9 a car-km all in) made running costs beat fares even at
-/// 100x, so the real New York network lost $0.65B a game day. A quarter of that leaves it about
-/// $1.1B a day ahead and a well-filled line paying back in days.
-pub const RUN_COST_CAR_KM: f64 = 1.5;
+/// 100x, so the real New York network lost $0.65B a game day. A quarter of that left it about
+/// $1.1B a day ahead; raised by half to 2.25 in T-485 (Anita, 2026-10-16).
+pub const RUN_COST_CAR_KM: f64 = 2.25;
 /// The economy runs at 100x (T-081; Anita, 2026-10-09, as Subway Builder does): fares and running
 /// costs per game day are this many times the real figures, so a line pays back in about a game
 /// week. Construction and train prices stay real. The one constant: running costs here, fares in

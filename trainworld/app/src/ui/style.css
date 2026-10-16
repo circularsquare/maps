@@ -451,6 +451,7 @@ rect.now { fill-opacity: .45; }
 .stn-label.plan { opacity: 0.6; }
 .track-modes .group { display: grid; grid-template-columns: 1fr 1fr; }
 .track-modes .btn { white-space: normal; height: auto; min-height: 40px; line-height: 1.35; padding: 4px 6px; }
+.station-use { margin-bottom: 6px; }
 .speed-key { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 8px; font-size: 12px; }
 .speed-key li { display: flex; align-items: center; gap: 6px; }
 .speed-key i { display: inline-block; width: 16px; height: 4px; }
@@ -518,6 +519,8 @@ rect.now { fill-opacity: .45; }
 .demand-tag { position: absolute; left: 0; top: 0; z-index: 4; pointer-events: none; white-space: nowrap !important; }
 /* T-305: the network tag wraps at 320 px (a complex's line list is long); a short tag is as wide as its text */
 .track-tag { width: max-content; max-width: 320px; white-space: normal !important; }
+.mode-bar { display: flex; height: 3px; margin: 2px 0 3px; }
+.mode-bar i { display: block; height: 100%; }
 .demand-box { position: absolute; z-index: 4; pointer-events: none; border: 1px solid var(--net-ink);
               background: color-mix(in srgb, var(--net-ink) 8%, transparent); }
 .intercity-labels { position: absolute; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; }

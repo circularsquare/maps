@@ -342,7 +342,14 @@ driving for the remaining trips by **generalised cost** in minutes. Buses are ou
   priority) + its cost
 
 Rail share = logistic in the difference (0.05 per perceived minute), plus a **per-city rail
-propensity** constant instead of income: it absorbs car ownership, parking, habit and income in one
+propensity** constant. **Cost damping** (T-495, `Params::mode_beta`): past 90 perceived minutes of
+the car's trip T, the scale is 0.05 x sqrt(90 / T), so a minute counts for less on a long trip
+(0.035 at 3 hours, 0.017 at 13); one rule for commutes, everyday trips and the regional layer
+(docs/regional.md 5.1), T the car's perceived minutes door to door including parking, never the
+rail's, so the scale does not change with the network. In the local layers only the choice
+between modes is damped (the walks and station pairs behind rail's cost are weighed at 0.05, since
+they are shared by every destination); the regional layer damps the whole rail trip, access
+included. The propensity is not scaled. The propensity stands in for income: it absorbs car ownership, parking, habit and income in one
 number, set so a realistic network gives roughly realistic mode share. New York's is 0 (T-078):
 rail and driving are judged on perceived time and cost alone. **Catchment is soft** (T-090): there
 is no circle the player sees. A farther station makes the walk, and so the whole trip, worse, and
@@ -857,7 +864,7 @@ plane's, with no car), and the split of the rest by plane and car is the pair's
 and `commute_trips`, from `bin/joint_gravity.rs` by way of `data/packs/intercity.json`
 (pipeline/market_zones.py); at opening merged by zone pair, at `set_network` kept between served
 zones (`cpairs`), and in each period's pass chosen
-once per commuter on its home-to-work station pairs (logit 0.05, drive x 1.33 + parking at work,
+once per commuter on its home-to-work station pairs (logit 0.05 damped as in 4.3, drive x 1.33 + parking at work,
 access weights at that scale, the home end with rides, [regional.md](regional.md) 5.3), outward legs at `TO_WORK[q]`, the trip home at `TO_HOME[q]` on the
 same pairs reversed; their own assignment (`c_avg`) is the work purpose's share of the market's
 loads (`commute_loads`; the worker moves it from longer trips to work), with their own corridors

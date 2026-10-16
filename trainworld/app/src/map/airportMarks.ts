@@ -15,6 +15,7 @@ import type { DemandDay } from "../game/days";
 import { nearbyZones } from "../game/zones";
 import { display, purposeFilter, selection, shownDay, shownDayPhrase } from "../game/ui";
 import { addFinder } from "./demandHover";
+import { modeBar } from "./modeBar";
 import { cityOverview } from "./intercityView";
 import { PLANE_PATH } from "./glyphs";
 import type { Overlay } from "./overlay";
@@ -35,7 +36,6 @@ const MIN_LEGS = 500;
 const SIZE = 20;
 const HOVER_PX = 12;
 
-const pct = (v: number, all: number) => (all > 0 ? Math.round((100 * v) / all) : 0);
 
 export function startAirportMarks(map: MlMap, overlay: Overlay) {
   const box = document.createElement("div");
@@ -173,8 +173,7 @@ export function startAirportMarks(map: MlMap, overlay: Overlay) {
       const all = a.train + a.walk + a.drive;
       return [
         `${count(all)} airport trips ${shownDayPhrase.peek()} here`,
-        "Outward and return legs included.",
-        `Train ${pct(a.train, all)}%, walking ${pct(a.walk, all)}%, driving ${pct(a.drive, all)}%`,
+        modeBar(a.train, a.walk, a.drive),
       ];
     }
     return null;

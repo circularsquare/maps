@@ -42,6 +42,7 @@ import { BlueprintBox } from "./map/blueprintBox";
 import { bpPicked, clearBpPicked } from "./game/blueprintPick";
 import { NodeDrag } from "./map/nodeDrag";
 import { EndMarkers } from "./map/endMarkers";
+import { hoverAbove } from "./map/demandHover";
 import { CapacityMarkers } from "./map/capacityMarkers";
 import { startTrackHover } from "./map/trackHover";
 import { perfOff, perfTry } from "./perfFlags";
@@ -199,7 +200,14 @@ effect(() => {
 const nodeDrag = new NodeDrag(map, overlay, client);
 live.nodeDrag = nodeDrag;
 // Markers on loose ends (track and station tools) and on draggable blueprint points (T-416).
-new EndMarkers(map, overlay);
+const endMarks = new EndMarkers(map, overlay);
+// T-486: clicks reach only what is drawn on top. The points' squares are drawn over the demand
+// bubbles, so there neither the bubbles' clicks nor their hover tags answer, and the trains drawn
+// under the squares are passed over too.
+const onMark = (x: number, y: number) => endMarks.at(x, y);
+const prevAbove = hoverAbove.at;
+hoverAbove.at = (x, y) => onMark(x, y) || !!prevAbove?.(x, y);
+const demandOnTop = (x: number, y: number, add: boolean) => (onMark(x, y) ? undefined : demandClick?.(x, y, add));
 
 // Selection and display settings change what the overlay draws.
 effect(() => {
@@ -215,7 +223,7 @@ effect(() => {
 });
 effect(() => labels.setVisible(display.value.stationNames && !SYNTH));
 const capacity = new CapacityMarkers(map.getContainer(), overlay, map, labels); // tags keep off names (T-184)
-capacity.demandClick = (x, y, add) => demandClick?.(x, y, add);
+capacity.demandClick = demandOnTop;
 capacity.tripClick = (x, y) => tripTool.clickAt(x, y); // T-221
 effect(() => {
   const w = world.value;
@@ -250,7 +258,7 @@ function selectAt(x: number, y: number, add: boolean) {
   // linking a station into a complex (T-197): the station clicked is the other end
   if (linking.peek() !== null) void linkPicked(pick(overlay, x, y, false, selection.peek()));
   // commuter bubbles first while they are shown (T-097), then the network
-  else selection.value = demandClick?.(x, y, add) ?? pick(overlay, x, y, display.peek().trains, selection.peek());
+  else selection.value = demandOnTop(x, y, add) ?? pick(overlay, x, y, display.peek().trains && !onMark(x, y), selection.peek());
 }
 capacity.selectClick = selectAt;
 // Linking stops when its station is no longer the selection or a tool is picked.

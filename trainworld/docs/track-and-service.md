@@ -356,11 +356,14 @@ multiplier per level (Anita, 2026-10-08; all construction prices halved 2026-10-
   owned (a construct that starts a line, a larger allocation, longer trains, or an undo) buys
   the difference with it, and is refused with nothing changed if construction plus trains is
   more than the cash. Cars are never sold: spares serve the next line that needs them.
-- **Running cost** US$1.50 per car-km (trains an hour each way x line length x cars; set for play,
-  a quarter of a real figure, T-091), and **fares**,
+- **Running cost** US$2.25 per car-km (trains an hour each way x line length x cars; set for play,
+  well under a real figure, T-091, T-485), and **fares**,
   are settled by the clock worker into the cash and a ledger per day (30 kept) and per hour (48
-  kept, T-447) as the game runs, not once an
-  hour (T-284): each game hour's fares are paid as that hour's trains pick up riders (the boarding
+  kept, T-447) as the game runs, not once an hour (T-284). The ledgers hold one entry per day or
+  hour, in order; a load merges any day or hour an older save lists twice. Money time never goes
+  back: a clock set behind the time already settled adds nothing until it passes it, and a charge
+  meanwhile lands on the latest day. Both threads time the clock on `performance.timeOrigin +
+  performance.now()`, never `Date.now()`, which drifts from it (T-488). Each game hour's fares are paid as that hour's trains pick up riders (the boarding
   account's trains leaving platforms, 6.6, weighted by the riders each takes; evenly in an hour
   without one), its running cost drains evenly, and both are paid in full by the hour's end, so a
   day's totals are those of whole-hour settling. The worker settles and sends the cash and today's
@@ -371,13 +374,12 @@ multiplier per level (Anita, 2026-10-08; all construction prices halved 2026-10-
   demand's riders and passenger-km per period (`app/src/game/money.ts`). Changing the fare
   recalculates demand: higher prices can lose riders (T-067). Running costs can take the cash below zero; edits that cost nothing still
   work then. notes/T-028.md.
-- **Starting money $6B**, sized in T-008 for one real first line and rechecked in T-028: a 20 km
-  line at -2 with 18 stations is US$1.89B plus about US$0.43B of trains, leaving room for several
-  more lines.
+- **Starting money $3B** (T-485): the build price of one real first line, about a 20 km line at -2
+  with 18 stations plus its trains, leaves room for a few more lines.
 - **Economy at 100x** (Anita, 2026-10-09, as Subway Builder does; T-081): fares and running costs
   per game day count 100 times the real figures (`ECONOMY` in `sim/src/track/params.rs`, the one
   constant; running costs scale in the track model, fares in `app/src/game/money.ts`), so a game
-  day earns and spends what a hundred real days would. The fare the player sets and the US$1.50 a
+  day earns and spends what a hundred real days would. The fare the player sets and the US$2.25 a
   car-km shown are the figures before that scaling; construction and train prices are not scaled. The
   Money tab says so in the hover of "A day at this schedule".
 
@@ -387,11 +389,13 @@ The clock worker owns the network. The main thread sends edit operations (each w
 for undo); the worker answers with the new state, then the edit's answer (or the reasons it was
 refused). The alignment being drawn is previewed by the worker as a trial edit, applied, measured
 and rolled back, so the preview knows everything an edit would refuse (0.4 ms a round trip). The
-worker sends the whole network state after an edit, with the renderer's buffers already built
-(it redraws only the edges and lines the edit dirtied, keeping the rest between edits); the main
-thread uploads them. At 2,000 route-km an edit's round trip is 26-36 ms with 3-6 ms of it on the
-main thread; at 10,000 km 130-214 ms and 23-36 ms, where sending only what changed is T-070
-(notes/T-063.md). An edit dirties only what it touched:
+worker sends the whole network state after an edit, with the renderer's buffers already built;
+the main thread uploads them. Both sides redo only what the edit changed (T-496): the worker keeps
+each edge's, line's and station's piece of the buffers from the last build and reuses any whose
+inputs are bit for bit the same, then lays the pieces end to end; on the main thread station names
+keep their elements and measured sizes unless their text or look changed, capacity tags are rebuilt
+only when one changed, complexes are built once for every user, and DOM markers read the overlay's
+kept size instead of forcing a layout (docs/architecture.md). An edit dirties only what it touched:
 render tiles (zoom-12 grid) of the old and new extent, crossings of the touched edges, the
 resources on them, and the lines whose path uses them, then the other lines sharing those
 resources. Count schedules then settle their derived rates against changed round trips before
@@ -476,8 +480,8 @@ per person and does not change who travels: demand still decides that (SPEC 4).
 - **What the panels show** (T-230): every train-fullness figure is the account's: the gauge on
   trains, the train tag and inspector, the line inspector's "Trains today" (`Boarding::line_summary`:
   fullest train, trains leaving full and when, riders left behind a day, longest wait), the Lines
-  tab's train count (`Boarding::under_way`, T-472), the schedule's crowding dots
-  (`Boarding::line_levels`, T-477) and the platforms. Demand's busiest-hour average train is not shown: on the real New York save 28 of the
+  tab's train count and the schedule's crowding dots (riders' extra wait after full trains
+  against their ride, `Boarding::crowding`, T-491) and the platforms. Demand's busiest-hour average train is not shown: on the real New York save 28 of the
   93 lines it put under 100% leave riders behind in the account (the L: 87%, yet 13 trains leave
   full 17:51-18:34 and 4,300 are left behind), because riders arrive fastest mid-peak.
 

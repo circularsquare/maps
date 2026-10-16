@@ -20,8 +20,10 @@ export interface LineToday {
   stops: number[];
   /** fares taken, US$ */
   fares: number;
-  /** trains that left packed full, the fullest one's share of crush, riders left behind */
+  /** trains that left packed full, out of `trains` that ran (T-481), the fullest one's share of
+   * crush, riders left behind */
   fullTrains: number;
+  trains: number;
   fullest: number;
   leftBehind: number;
   /** spans of full trains (s from the line's local midnight; negative for yesterday's) */
@@ -31,14 +33,34 @@ export interface LineToday {
   /** T-472: trains in service now, and how many of them are packed full somewhere on their trip */
   trainsNow: number;
   fullNow: number;
+  /** T-491: the period now: rider-seconds waited after full trains, riders arriving, rider-seconds aboard */
+  crowdWait: number;
+  crowdRiders: number;
+  crowdRide: number;
 }
 
-/** T-472, T-477: the text class for `full` trains packed full out of `of`: none below a fifth,
- * orange from a fifth, red from half (DECISIONS 2026-10-16). */
-export function crowdClass(full: number, of: number): "" | "crowd-warn" | "crowd-bad" {
-  const s = of > 0 ? full / of : 0;
-  return s >= 0.5 ? "crowd-bad" : s >= 0.2 ? "crowd-warn" : "";
+/** T-491: how much crowding costs a line's riders: the average rider's extra wait for a train
+ * with room (min), and that wait against the square root of their average ride (min, at least 5),
+ * so ten minutes weigh more on a short ride than on a long one. */
+export function crowding(waitS: number, riders: number, rideS: number): { wait: number; ride: number; score: number } {
+  if (!(riders > 0)) return { wait: 0, ride: 0, score: 0 };
+  const wait = waitS / riders / 60, ride = rideS / riders / 60;
+  return { wait, ride, score: wait / Math.sqrt(Math.max(5, ride)) };
 }
+
+/** T-491 grades of `crowding`'s score (DECISIONS 2026-10-16): 0 none to speak of, 1 some, 2 orange,
+ * 3 red. */
+export const CROWD_GRADES = [0.1, 0.3, 0.6];
+export function crowdGrade(score: number): 0 | 1 | 2 | 3 {
+  return score >= CROWD_GRADES[2] ? 3 : score >= CROWD_GRADES[1] ? 2 : score >= CROWD_GRADES[0] ? 1 : 0;
+}
+/** Text the player should act on (T-472): orange and red grades. */
+export function crowdClass(score: number): "" | "crowd-warn" | "crowd-bad" {
+  const g = crowdGrade(score);
+  return g === 3 ? "crowd-bad" : g === 2 ? "crowd-warn" : "";
+}
+/** "2.3 min", or "under 0.1 min" */
+export const waitText = (min: number) => (min < 0.05 ? "under 0.1 min" : `${min < 10 ? min.toFixed(1) : Math.round(min)} min`);
 
 /** Per line id; empty until the first answer (and for a line with no riders yet). */
 export const today = signal<Map<string, LineToday>>(new Map());
@@ -58,9 +80,9 @@ export function readToday(d: Float64Array): Map<string, LineToday> {
     for (let s = 0; s < nSpans; s++) spans.push([d[i + 7 + 2 * s], d[i + 8 + 2 * s]]);
     const stops = Array.from(d.subarray(i + 7 + 2 * nSpans, i + 7 + 2 * nSpans + n));
     const e = i + 7 + 2 * nSpans + n;
-    const t: LineToday = { riders: d[i + 2], fullTrains: d[i + 3], leftBehind: d[i + 4], fullest: d[i + 5], spans, stops, fares: 0, running: 0, trainsNow: d[e], fullNow: d[e + 1] };
+    const t: LineToday = { riders: d[i + 2], fullTrains: d[i + 3], leftBehind: d[i + 4], fullest: d[i + 5], spans, stops, fares: 0, running: 0, trainsNow: d[e], fullNow: d[e + 1], trains: d[e + 2], crowdWait: d[e + 3], crowdRiders: d[e + 4], crowdRide: d[e + 5] };
     at.push({ id: String(id), t });
-    i = e + 2;
+    i = e + 6;
   }
   at.forEach((a, k) => { a.t.fares = (d[i + k] ?? 0) * 1e6; a.t.running = d[i + at.length + k] ?? 0; out.set(a.id, a.t); });
   return out;

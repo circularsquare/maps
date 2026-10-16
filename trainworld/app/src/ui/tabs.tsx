@@ -3,20 +3,21 @@
 // city, and Explore a trip is at the bottom of Settings.
 
 import { clock, demandAt } from "../game/clock";
+import { PERIODS, periodAt } from "../game/periods";
 import { useState } from "preact/hooks";
 import { createLine } from "../game/lineActions";
 import type { JSX } from "preact";
 import { count, distUnit, length, levelLabel, money, moneyExact, perDistance, perKmFrom, shortDistance } from "../game/format";
 import { inkOn, LEVEL_COLOURS } from "../game/palette";
 import { DEMAND_INDEX, LEVELS, type Level } from "../game/types";
-import { buildLevel, buildPlatform, display, keepPlacing, lineSort, selection, setDisplay, stationSort, trackCount, tool, type ListSort, type Tool } from "../game/ui";
+import { buildLevel, buildPlatform, display, keepPlacing, lineSort, selection, setDisplay, stationSort, trackCount, tool, type ListSort, type StationUseMode, type Tool } from "../game/ui";
 import type { Signal } from "@preact/signals";
 import { linesAt, setFares, world } from "../game/world";
 import { liveMoney, moneyState } from "../game/money";
 import { cityById, viewedZone } from "../game/cities";
 import { listScope, scopedLists } from "../game/listScope";
 import { accountVersion } from "../game/boarding";
-import { crowdClass, stationsToday, today, todayLoaded, useToday } from "../game/today";
+import { crowdClass, crowding, stationsToday, today, todayLoaded, useToday, waitText } from "../game/today";
 import type { DayLedger } from "../workers/protocol";
 import { live } from "../map/live";
 import { Check, Chip, Icon, Row, Segmented, Stepper } from "./widgets";
@@ -168,11 +169,14 @@ function RidersToday({ line }: { line: string }) {
   return <span class="val w-riders" data-tip={d ? `${count(d.riders)} riders in the past 24 hours` : undefined}>{d ? count(d.riders) : ""}</span>;
 }
 
-/** T-472: a line's trains now, coloured by how many of those in service are packed full on their trip. */
-function TrainsNow({ line, n }: { line: string; n: number }) {
+/** T-472, T-491: a line's trains now, coloured by its riders' wait for a train with room in the period now. */
+function TrainsNow({ line, n, period }: { line: string; n: number; period: string }) {
   const d = today.value.get(line);
-  const cls = d ? crowdClass(d.fullNow, d.trainsNow) : "";
-  const tip = d && d.trainsNow > 0 ? `${count(d.fullNow)} of ${count(d.trainsNow)} trains running now are packed full on their trip` : undefined;
+  const c = d ? crowding(d.crowdWait, d.crowdRiders, d.crowdRide) : null;
+  const cls = c ? crowdClass(c.score) : "";
+  const tip = d && c && d.crowdRiders > 0
+    ? `${period}: riders wait ${waitText(c.wait)} on average for a train with room` + (d.trainsNow > 0 ? `\n${count(d.fullNow)}/${count(d.trainsNow)} trains running now are packed full on their trip` : "")
+    : undefined;
   return <span class={"val w-trains " + (cls || "muted")} data-tip={tip}>{n} {n === 1 ? "train" : "trains"}</span>;
 }
 
@@ -243,7 +247,7 @@ export function LinesTab() {
               ) : (
                 <>
                   <RidersToday line={l.id} />
-                  <TrainsNow line={l.id} n={st.trainsNeeded[levOf(l.id)]} />
+                  <TrainsNow line={l.id} n={st.trainsNeeded[levOf(l.id)]} period={PERIODS[periodAt(hour * 3600 + (st.shift ?? 0))]?.name ?? ""} />
                 </>
               )}
               {key === "near" && <Near m={sc.lineDist.get(l.id)} />}
@@ -277,14 +281,23 @@ export function StationsTab() {
     <>
       <div class="line-list-actions"><ScopeToggle /></div>
       {/* T-213: the stations' own map setting sits with them, above the list */}
-      <div class="checks">
-        <Check checked={d.stationRiders} onChange={(v) => setDisplay("stationRiders", v)}>
-          <span data-tip="Circle area shows daily entries and exits, up to 150,000">Station demand circles</span>
-        </Check>
-        {d.stationRiders && <Check checked={d.complexView} onChange={(v) => setDisplay("complexView", v)}>
+      {/* T-482: station use circles, in place of the demand circles */}
+      <div class="h">Station circles</div>
+      <div class="station-use"><Segmented<StationUseMode>
+        options={[
+          ["none", "None"],
+          ["origins", <span data-tip="Riders starting a rail trip at the station, a day">Origins</span>],
+          ["transfers", <span data-tip="Riders changing lines at the station, a day">Transfers</span>],
+          ["total", <span data-tip="Every boarding at the station, a day: origins and transfers">Total</span>],
+        ]}
+        value={d.stationUse}
+        onChange={(v) => setDisplay("stationUse", v)}
+      /></div>
+      {d.stationUse !== "none" && <div class="checks">
+        <Check checked={d.complexView} onChange={(v) => setDisplay("complexView", v)}>
           One circle per station complex
-        </Check>}
-      </div>
+        </Check>
+      </div>}
       {st.length === 0 && <p class="muted">{w.save.stations.length === 0 ? "No stations yet." : "No stations here."}</p>}
       {st.length > 0 && <SortHead sort={stationSort} cols={[
         { key: "name", label: "Name", tip: "Sort by name", first: 1 },

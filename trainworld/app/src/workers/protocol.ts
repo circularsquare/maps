@@ -104,7 +104,8 @@ export type ToClock =
    * a full state */
   | { kind: "anchor"; lng: number; lat: number; version: number }
   /** the game clock (main thread, game/clock.ts) whenever it is set, paused, resumed or changes
-   * speed: game seconds `t` at wall time `at` (Date.now()), moving `rate` game s per wall s (0
+   * speed: game seconds `t` at wall time `at` (performance.timeOrigin + performance.now(), the
+   * clock game/clock.ts runs on, never Date.now(): T-488), moving `rate` game s per wall s (0
    * when stopped). The worker settles money by the game hour from it (T-028). */
   | { kind: "clock"; t: number; rate: number; at: number }
   /** fare income in force, US$M per game hour for each of the five periods (from demand riders,
@@ -130,7 +131,7 @@ export type ToClock =
   | {
       kind: "query";
       seq: number;
-      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "lineAccount"; line: number; day: number } | { what: "lineLevels"; line: number; day: number } | { what: "today" } | { what: "yesterday" };
+      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "lineAccount"; line: number; day: number } | { what: "linePeriods"; line: number; day: number } | { what: "today" } | { what: "yesterday" };
     };
 
 /** Money as the worker keeps it (T-028), US$M unless said. */
