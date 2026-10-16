@@ -9,7 +9,8 @@ Positron, repainted faint (`map/basemap.ts`), so the network reads first. In the
 same Positron layers are repainted in Dark Matter's manner (near-black land, darker water, roads a
 little lighter than the land, place names faint grey), by paint properties only, so switching
 theme reloads no style or tiles [T-039]. The light and dark map colours (land, water, park, labels,
-the casing, the map ink) are one table, `game/shades.ts`.
+the casing, the map ink, a switched-off blueprint, the shade outside the focused city, the save
+thumbnail's track) are one table, `game/shadeTable.ts` (read through `game/shades.ts`) [T-543].
 
 ## Zoom bands
 
@@ -50,9 +51,11 @@ the casing, the map ink) are one table, `game/shades.ts`.
   track view: a light blue middle (#a9cdf3) between dark blue rails (#2f62b3). The whole width is 75%
   of what T-322 drew (a line plus a rail of 16% of a line width, at least 1 px, either side), the
   rails never under 1 px: 6.5 px at zoom 15 (4.5 middle), 4.4 at zoom 12. A line planned along it
-  fills the middle, not a full line width. **Switched off** [T-333]: grey rails (#9aa3ae) round a
-  nearly white middle (#f2f4f7), and a station at 30% instead of 60%; in Elevation and Max speed the
-  colour is mixed 80% towards white instead of 45%. **Picked** with the blueprint tool: an ink band
+  fills the middle, not a full line width. **Switched off** [T-333, T-543]: grey rails (#9aa3ae) round a
+  nearly white middle (#f2f4f7) in the light theme, a dim middle (#383e46) between lighter grey rails
+  (#6c747e) in the dark one, and a station at 30% instead of 60%; in Elevation and Max speed, and for
+  a line planned along it, the colour is mixed 80% towards white (towards #383e46 in the dark theme)
+  instead of 45% towards white. **Picked** with the blueprint tool: an ink band
   3 px beyond the rails, drawn under the track, and the stations' selection outline. All rails are drawn before any middle, as the casing is, so curves
   and joints join cleanly. In Elevation and Max speed the middle keeps the view's colour mixed 45%
   towards white; a selected blueprint's middle is the selection ink mixed the same way. A line
@@ -137,8 +140,9 @@ change; only links are saved. Riders change between any two stations of a comple
   changed its stops) is drawn striped in the line colour and white, never solid, and its tag says
   "Calculating demand".
 - **Selected** [T-242]: drawn over every other train, unchanged, inside a halo round the whole
-  consist: a dark outline, a white band, a dark ring of the train's shape 6 px out and a soft glow,
-  so it reads even at zoom 11-13. A click tries the selected train first. It is followed onto its
+  consist: an outline in the map ink (dark, light in the dark theme), a band in the casing's colour
+  (white, near-black in the dark theme), a ring of the train's shape 6 px out in the ink and a soft
+  glow, so it reads even at zoom 11-13 [T-543]. A click tries the selected train first. It is followed onto its
   next trip [T-245, [ui-inspectors.md](ui-inspectors.md)].
 
 ## Platform crowds

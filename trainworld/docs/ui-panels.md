@@ -20,7 +20,9 @@ bars); the network takes the line colours ([ui-map.md](ui-map.md)).
   No paper texture. **Light or dark** [T-039], each with **three colours**: pink (cream, sakura
   accent), blue (cornflower), green (matcha); in dark the background is a near-black tinted towards
   the colour and the accent a little lighter. The map's own colours (`--map-land`, `--map-ink` for
-  the map's tags and names, the basemap, the line casing) come from one table, `game/shades.ts`;
+  the map's tags and names, the basemap, the line casing, a selected train's halo, the shade outside
+  the focused city) come from one table, `game/shades.ts`, and the stop editing markers' greys are
+  CSS tokens (`--mk-*`);
   TS code that draws on the map takes its colours from there, never from `if dark` checks. Line,
   mode, level, speed and purpose colours are the same in both themes (`game/palette.ts`).
   Switching is instant and redraws only: no demand solve, no pack or style reload.
@@ -233,7 +235,8 @@ lines need; the value of the track and stations built. Rules: [track-and-service
 - The floppy disk button left of the gear, or the top bar's Autosave off notice, opens a centred
   panel over a dimmed page, closed by Esc, its close button or a click outside.
 - One card per browser slot: a 192 x 128 picture of its network (track grey, each line in its
-  colour, drawn when the slot is saved, at twice that resolution), its name, "Autosaved 2 min ago"
+  colour, on the land colour of the theme the slot was saved in, drawn when the slot is saved, at
+  twice that resolution) [T-543], its name, "Autosaved 2 min ago"
   for the game being played or "Saved ..." for the others (exact time on hover), the game day, the
   cities its stations are in, lines, stations and cash. The game being played is marked Playing;
   every other card has Open (closes the panel and loads it) and Delete (asked first); every card

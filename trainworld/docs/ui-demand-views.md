@@ -148,7 +148,7 @@ second. Inspectors, selections and the top bar are the current forecast at once.
   still without its final after the card went at the zone in view's (its figures, if any, estimates
   or the cache's), is grey inside its boundary.
   It is the one grey of "not the zone in view" [T-350]: the shade outside the focused zone
-  (`map/cityBoundaries.ts`, `SHADE_PAINT`) is the same colour and opacity, so a loading zone looks
+  (`map/cityBoundaries.ts`, `shadePaint`; #182536 at 7.5% in the light theme, black at 35% in the dark one, T-543) is the same colour and opacity, so a loading zone looks
   like an unselected one. Only the zone in view gets the loading fill (over the basemap, under the
   labels and the network, whether or not a demand view is on); every other loading zone already lies
   under the outside shade, and a second fill would darken it. A thin bar sits a little under the zone's centre, kept inside the zone's on-screen part,

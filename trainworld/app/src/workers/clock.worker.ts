@@ -12,6 +12,7 @@ import { anchor, makeAnchor, setAnchor, toLocal } from "../map/geo";
 import { CITIES, cityWithin, HOME_CITY, NEW_GAME_FRAME, WORLD_ID, zoneBox, zonesTouching } from "../game/cities";
 import { frameKindName, frameKindNumber, makeFrame, mercK, type Frame, type FrameSpec } from "../game/frame";
 import { PERIODS, periodAt } from "../game/periods";
+import { SHADES } from "../game/shadeTable";
 import { DAY_KINDS, dayKindAt } from "../game/days";
 import { timeZoneTable } from "../game/localTime";
 import { networkFromState, newNetCache, runsTrains } from "../map/network";
@@ -783,6 +784,8 @@ function saveBytes(): Promise<Uint8Array> {
  * awaits (call it straight after saveBytes); a failure leaves the picture out, never the save. */
 // T-251: drawn at twice the size the saves panel shows it (192 x 128), for sharp lines on high-density screens
 const THUMB_W = 384, THUMB_H = 256, THUMB_PAD = 16;
+/** the theme the page is in (main.ts sends it): a thumbnail is drawn on that theme's land (T-543) */
+let thumbShade: "light" | "dark" = "light";
 async function slotSummary(): Promise<SlotSummary> {
   const a = api!;
   // stations and the cities they are in
@@ -842,7 +845,9 @@ async function slotSummary(): Promise<SlotSummary> {
     const canvas = new OffscreenCanvas(THUMB_W, THUMB_H);
     const ctx = canvas.getContext("2d")!;
     ctx.lineCap = ctx.lineJoin = "round";
-    const stroke = (xy: ArrayLike<number>) => {
+    ctx.fillStyle = SHADES[thumbShade].land;
+    ctx.fillRect(0, 0, THUMB_W, THUMB_H);
+    const stroke =(xy: ArrayLike<number>) => {
       ctx.beginPath();
       let lx = NaN, ly = NaN;
       for (let k = 0; k < xy.length; k += 2) {
@@ -853,7 +858,7 @@ async function slotSummary(): Promise<SlotSummary> {
       }
       ctx.stroke();
     };
-    ctx.strokeStyle = "#b9b4ad";
+    ctx.strokeStyle = SHADES[thumbShade].thumbTrack;
     ctx.lineWidth = 2.5;
     track.forEach(stroke);
     ctx.lineWidth = 4.5;
@@ -1273,7 +1278,11 @@ onmessage = (e: MessageEvent<ToClock>) => {
     void viewMasks();
     return;
   }
-  messages = messages.then(() => processMessage(msg)).catch(err => send({ kind: "error", message: String(err) }));
+  if (msg.kind === "shade") {
+    thumbShade = msg.shade;
+    return;
+  }
+  messages =messages.then(() => processMessage(msg)).catch(err => send({ kind: "error", message: String(err) }));
 };
 async function processMessage(msg: ToClock) {
   if (msg.kind === "init") {

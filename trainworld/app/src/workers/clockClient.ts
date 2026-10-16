@@ -219,6 +219,11 @@ export class ClockClient {
     this.post({ kind: "view", w, s, e, n });
   }
 
+  /** The theme in use (T-543): the worker draws save thumbnails in it. */
+  setShade(shade: "light" | "dark") {
+    this.post({ kind: "shade", shade });
+  }
+
   /** The anchor of `version`, as the worker reported it. */
   private anchorOf(spec: { lng: number; lat: number; version: number }): Anchor {
     let a = this.anchors.get(spec.version);

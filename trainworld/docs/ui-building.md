@@ -209,7 +209,8 @@ route, keeping the existing stop order; removing a stop leaves the others in ord
   the line can carry on over, T-237) are drawn on top at 80% of a stop's size, white inside a
   plain grey ring with none of the line's colour (T-476); stations reachable
   only by changing the route are 65% and grey; unreachable ones (no track, or only by turning back)
-  the same size and greyer. The tiers come from the clock worker trying each station with the same
+  the same size and greyer. In the dark theme the greys are dark discs with lighter rings that fade
+  into the land, the unreachable ones dimmest (CSS tokens `--mk-*`, T-543). The tiers come from the clock worker trying each station with the same
   insertion search a click makes (`TrackApi::stop_tiers`), so a marker always says what its click
   does; until the answer lands an estimate from the track graph shows.
 - Hover says "Click to add a stop", "Click to add a stop and change the route", "Click to remove the

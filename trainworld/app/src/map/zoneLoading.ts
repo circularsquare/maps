@@ -2,7 +2,7 @@
 // "nothing known here yet" rather than "no demand", with a small bar over it filling as it loads
 // (hover: "Loading Toronto, 40%"). Grey: every zone being loaded (game/loading.ts `zoneLoads`), and
 // a nearby zone whose bubbles would show but has not been opened yet (it opens after the startup
-// load). T-350: the grey is the outside shade's own (SHADE_PAINT), filled only on the zone in view,
+// load). T-350: the grey is the outside shade's own (`shadePaint`), filled only on the zone in view,
 // since every other zone already lies under the outside shade. The shade goes in one step when the
 // zone's figures arrive. A zone re-solving after an
 // edit keeps its figures and is never grey. The bars hide while the startup card is up, which says
@@ -19,7 +19,7 @@ import { loadFailure, zoneLoads } from "../game/loading";
 import { nearbyZones } from "../game/zones";
 import { LoadBar, loadingCardShown } from "../ui/LoadingScreen";
 import { cityGeometry } from "./boundaryGeometry";
-import { SHADE_PAINT } from "./cityBoundaries";
+import { followShade, shadePaint } from "./cityBoundaries";
 
 const SHADE = "tw-zone-loading";
 /** how far a bar keeps from the map's edges, px */
@@ -111,7 +111,7 @@ export function startZoneLoading(map: MlMap): () => void {
       const before = map.getStyle().layers.find((l) => l.type === "symbol")?.id;
       map.addLayer({
         id: SHADE, type: "fill", source: SHADE,
-        paint: { ...SHADE_PAINT },
+        paint: shadePaint(),
       }, before);
     }
     draw();
@@ -134,9 +134,11 @@ export function startZoneLoading(map: MlMap): () => void {
     draw();
   });
 
+  const disposeShade = followShade(map, SHADE);
   return () => {
     alive = false;
     dispose();
+    disposeShade();
     map.off("style.load", add);
     map.off("move", place);
     map.off("resize", place);

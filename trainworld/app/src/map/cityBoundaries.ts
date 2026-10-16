@@ -8,6 +8,8 @@ import type { Feature, FeatureCollection, MultiPolygon } from "geojson";
 import type { GeoJSONSource, Map as MlMap } from "maplibre-gl";
 import { cityBoundary } from "../game/boundaries";
 import { activeCity, zonesTouching } from "../game/cities";
+import { outsidePaint, SHADES, shadeColours } from "../game/shades";
+import { shade } from "../game/ui";
 import { cityGeometry, outsideCity } from "./boundaryGeometry";
 
 const SHADE = "tw-city-outside";
@@ -20,8 +22,18 @@ const OUTLINE_MAX_ZOOM = 10.5;
 /** below this zoom a view spans so many zones that their outlines are not fetched for it */
 const OUTLINE_MIN_ZOOM = 5;
 const empty: FeatureCollection = { type: "FeatureCollection", features: [] };
-/** The one grey of "not the zone in view": outside the focused zone, and (T-350) a zone still loading. */
-export const SHADE_PAINT = { "fill-color": "#182536", "fill-opacity": 0.075, "fill-antialias": false } as const;
+/** The one shade of "not the zone in view": outside the focused zone, and (T-350) a zone still
+ * loading; the theme's own (game/shades.ts, T-543). */
+export const shadePaint = () => ({ ...outsidePaint(shadeColours()) });
+/** Keeps layer `id`'s fill in the current theme's shade, from now on. */
+export function followShade(map: MlMap, id: string): () => void {
+  return effect(() => {
+    const paint = outsidePaint(SHADES[shade.value]);
+    if (!map.getLayer(id)) return;
+    map.setPaintProperty(id, "fill-color", paint["fill-color"]);
+    map.setPaintProperty(id, "fill-opacity", paint["fill-opacity"]);
+  });
+}
 
 export function startCityBoundaries(map: MlMap): () => void {
   let alive = true;
@@ -95,7 +107,7 @@ export function startCityBoundaries(map: MlMap): () => void {
     if (!map.getSource(SHADE)) map.addSource(SHADE, { type: "geojson", data: empty });
     if (!map.getLayer(SHADE)) map.addLayer({
       id: SHADE, type: "fill", source: SHADE,
-      paint: { ...SHADE_PAINT },
+      paint: shadePaint(),
     }, before);
     if (!map.getSource(OUTLINES)) map.addSource(OUTLINES, { type: "geojson", data: { type: "FeatureCollection", features: [...outlines.values()] } });
     if (!map.getLayer(OUTLINES)) map.addLayer({
@@ -131,10 +143,12 @@ export function startCityBoundaries(map: MlMap): () => void {
     const id = activeCity.value;
     if (map.getSource(SHADE)) void focus(id);
   });
+  const disposeShade = followShade(map, SHADE);
   return () => {
     alive = false;
     request++;
     dispose();
+    disposeShade();
     map.off("style.load", add);
     map.off("moveend", follow);
     const ids = [INNER, OUTER, FOCUS, SHADE, OUTLINES];

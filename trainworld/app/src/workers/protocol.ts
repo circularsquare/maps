@@ -83,6 +83,8 @@ export type ToClock =
   | { kind: "init"; city: string; pack: string; fresh?: boolean; testPage?: boolean; slot?: string }
   /** the view's bounds in degrees after a move (T-302): water masks near it are fetched ahead */
   | { kind: "view"; w: number; s: number; e: number; n: number }
+  /** the theme the player is in (T-543): a save's thumbnail is drawn in it */
+  | { kind: "shade"; shade: "light" | "dark" }
   | { kind: "edit"; seq: number; op: EditOp }
   /** what a route would cost and whether it can be built; answered with "preview" */
   | { kind: "preview"; seq: number; from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean; through?: boolean }

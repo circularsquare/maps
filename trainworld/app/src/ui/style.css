@@ -15,6 +15,10 @@
 :root[data-shade="dark"][data-theme="green"] { --bg: #22241d; --text: #e3e6d8; --accent: #9dbb68; }
 :root { --bad: #b23a3a; --warn: #c0661c; --map-land: #f2f2ef; --map-ink: #2b2b2b; }
 :root[data-shade="dark"] { color-scheme: dark; --bad: #ec7b7b; --warn: #eb9a52; }
+/* stop editing's grey markers (map/stopMarkers.ts, T-543): a station the line reaches by track it
+   already uses, one it reaches by a new route, one it cannot reach; dark ones fade into the land */
+:root { --mk-route-ring: #7d7872; --mk-reroute-fill: #e6e3df; --mk-reroute-ring: #a8a39d; --mk-cut-fill: #d6d3cf; --mk-cut-ring: #b9b5b0; }
+:root[data-shade="dark"] { --mk-route-ring: #a39e97; --mk-reroute-fill: #34373c; --mk-reroute-ring: #8d8983; --mk-cut-fill: #2a2c30; --mk-cut-ring: #66635f; }
 
 :root {
   --font: "Zen Maru Gothic", system-ui, sans-serif;
@@ -494,11 +498,11 @@ rect.now { fill-opacity: .45; }
    NEAR_SCALE in stopMarkers.ts */
 .stop-mark.route { width: calc(var(--ms) * 0.8); height: calc(var(--ms) * 0.8);
              margin: calc(var(--ms) * -0.4) 0 0 calc(var(--ms) * -0.4);
-             border: 2px solid #7d7872; box-shadow: none; }
+             border: 2px solid var(--mk-route-ring); box-shadow: none; }
 .stop-mark.reroute, .stop-mark.cut { width: calc(var(--ms) * 0.65); height: calc(var(--ms) * 0.65);
-             margin: calc(var(--ms) * -0.325) 0 0 calc(var(--ms) * -0.325); background: #e6e3df; border: 2px solid #a8a39d;
+             margin: calc(var(--ms) * -0.325) 0 0 calc(var(--ms) * -0.325); background: var(--mk-reroute-fill); border: 2px solid var(--mk-reroute-ring);
              box-shadow: none; opacity: 0.8; z-index: 1; }
-.stop-mark.cut { background: #d6d3cf; border-color: #b9b5b0; opacity: 0.6; z-index: 0; }
+.stop-mark.cut { background: var(--mk-cut-fill); border-color: var(--mk-cut-ring); opacity: 0.6; z-index: 0; }
 .stop-edit-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .stop-tag { position: absolute; left: 0; top: 0; z-index: 4; pointer-events: none; white-space: nowrap !important; }
 

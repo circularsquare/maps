@@ -32,10 +32,6 @@ const BP_RAIL_SHARE = 0.16;
 /** T-331 (Anita on T-322: "maybe overshot just a little bit"): the whole blueprint track, rails
  * included, is this share of T-322's width; the rails stay at least a pixel. */
 const BP_NARROW = 0.75;
-/** A blueprint switched off (T-333): cold grey rails round a nearly white middle, so it reads as
- * not part of the next construction without leaving the map. */
-const BP_OFF_MID_RGB = rgb("#f2f4f7").map((v) => v / 255);
-const BP_OFF_RAIL_RGB = rgb("#9aa3ae").map((v) => v / 255);
 /** Seats and crush load per 20 m car, for the gauge (map/demandLayers.ts `gauge`, T-083). */
 const SEATS_PER_CAR = 44, CRUSH_PER_CAR = 160;
 /** A train's width on screen by zoom, CSS px, pills and cars alike (T-199: 75% of T-107's 5/8/12,
@@ -99,8 +95,9 @@ uniform vec3 u_sel;
 uniform vec2 u_bp;           // blueprint track (T-322): its middle's width and each rail's (px)
 uniform vec3 u_bp_mid;       // its middle, light blue
 uniform vec3 u_bp_rail;      // its two rails, dark blue
-uniform vec3 u_bp_off_mid;   // the same switched off (T-333)
-uniform vec3 u_bp_off_rail;
+uniform vec3 u_bp_off_mid;   // the same switched off (T-333): cold grey rails round a nearly white
+uniform vec3 u_bp_off_rail;  // middle in the light theme, dim in the dark one (game/shades.ts)
+uniform vec3 u_bp_off_fade;  // what its other colours are mixed towards
 uniform highp sampler2D u_line_colours;
 in vec4 a_seg;
 in uint a_colour;
@@ -170,7 +167,7 @@ void main() {
   else if (u_kind == 0) v_color = sel ? u_sel : u_track;
   else v_color = texelFetch(u_line_colours, ivec2(int(a_colour) % ${LINES_W}, int(a_colour) / ${LINES_W}), 0).rgb;
   // other blueprint colours (a planned line, a selected blueprint, by height or speed) lighter
-  if (bp && !bpMid && u_casing <= 0.0) v_color = mix(v_color, vec3(1.0), swOff ? 0.8 : 0.45);
+  if (bp && !bpMid && u_casing <= 0.0) v_color = swOff ? mix(v_color, u_bp_off_fade, 0.8) : mix(v_color, vec3(1.0), 0.45);
 }`;
 
 const STROKE_FS = `#version 300 es
@@ -681,6 +678,7 @@ uniform float u_dpr;
 uniform vec3 u_bad;
 uniform highp int u_pass;
 uniform vec3 u_ink;
+uniform vec3 u_band;
 out vec4 o;
 ${SHAPE_GLSL}
 void main() {
@@ -690,8 +688,9 @@ void main() {
   vec2 q = abs(p) - (v_px * 0.5 - r);
   float d = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
   if (u_pass == 1) {
-    // the selected train's halo (T-242), from the train out: a dark outline as a selected station
-    // has (T-189), a white band, a dark ring of the same shape, and a soft glow beyond it
+    // the selected train's halo (T-242), from the train out: an outline in the map ink as a
+    // selected station has (T-189), a band in the casing's colour, a ring of the same shape in the
+    // ink, and a soft glow beyond it; dark, then white, in the light theme (T-543)
     float ol = ${SEL_OUTLINE_PX.toFixed(1)} * u_dpr, gap = ${SEL_RING_GAP_PX.toFixed(1)} * u_dpr, gw = ${SEL_GLOW_PX.toFixed(1)} * u_dpr;
     float edge = clamp(ol + 0.5 - d, 0.0, 1.0);
     float ring = clamp(1.25 * u_dpr + 0.5 - abs(d - gap), 0.0, 1.0);
@@ -699,7 +698,7 @@ void main() {
     float glow = d > gap ? 0.35 * (1.0 - t) * (1.0 - t) : 0.0;
     float white = d > ol && d < gap ? 0.9 : 0.0;
     float s = max(max(edge, ring), glow);
-    o = vec4(u_ink, 1.0) * s + vec4(1.0) * white * (1.0 - s);
+    o = vec4(u_ink, 1.0) * s + vec4(u_band, 1.0) * white * (1.0 - s);
     return;
   }
   float a = clamp(0.5 - d, 0.0, 1.0) * v_alpha;
@@ -1057,14 +1056,14 @@ export class NetworkRenderer {
     this.stationProg = compile(gl, STATION_VS, STATION_FS);
     this.trainProg = compile(gl, TRAIN_VS, TRAIN_FS);
     this.hasStencil = (gl.getParameter(gl.STENCIL_BITS) ?? 0) > 0;
-    this.strokeU = uniforms(gl, this.strokeProg, ["u_matrix", "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_edge", "u_only_sel", "u_dim", "u_by_level", "u_by_speed", "u_px_per_unit", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_line_colours"]);
+    this.strokeU = uniforms(gl, this.strokeProg, ["u_matrix", "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_edge", "u_only_sel", "u_dim", "u_by_level", "u_by_speed", "u_px_per_unit", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours"]);
     this.stationU = uniforms(gl, this.stationProg, ["u_matrix", "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass", "u_layer", "u_halo", "u_halo_radius", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_hair", "u_plat", "u_mask", "u_stline"]);
     this.bridgeProg = compile(gl, BRIDGE_VS, STATION_FS);
     this.bridgeU = uniforms(gl, this.bridgeProg, ["u_matrix", "u_viewport", "u_ring", "u_bridge", "u_pass", "u_layer", "u_halo", "u_ink", "u_bad", "u_crowd_rgb", "u_mask"]);
     this.selProg = compile(gl, SEL_VS, SEL_FS);
     this.selU = uniforms(gl, this.selProg, ["u_bbox", "u_css", "u_shapes", "u_count", "u_dpr", "u_height", "u_ink", "u_outline", "u_glow"]);
     this.selTex = this.texture(this.selData, "rgba32f", SEL_MAX * SEL_STRIDE, []);
-    this.trainU = uniforms(gl, this.trainProg, ["u_matrix", "u_viewport", "u_time", "u_px_per_unit", "u_min_px", "u_phases", "u_meta", "u_samples", "u_lines", "u_line_colours", "u_fill", "u_bad", "u_detail", "u_dpr", "u_cars", "u_loads", "u_stretch", "u_sel_line", "u_dim", "u_sel_trip", "u_pass", "u_ink", "u_psi0"]);
+    this.trainU = uniforms(gl, this.trainProg, ["u_matrix", "u_viewport", "u_time", "u_px_per_unit", "u_min_px", "u_phases", "u_meta", "u_samples", "u_lines", "u_line_colours", "u_fill", "u_bad", "u_detail", "u_dpr", "u_cars", "u_loads", "u_stretch", "u_sel_line", "u_dim", "u_sel_trip", "u_pass", "u_ink", "u_band", "u_psi0"]);
     this.timerExt = gl.getExtension("EXT_disjoint_timer_query_webgl2");
     this.tripBuf = gl.createBuffer();
     this.endBuf = gl.createBuffer();
@@ -1407,8 +1406,9 @@ export class NetworkRenderer {
     gl.uniform2f(u.u_bp, bpMid, bpRail);
     gl.uniform3fv(u.u_bp_mid, BP_MID_RGB);
     gl.uniform3fv(u.u_bp_rail, BP_RAIL_RGB);
-    gl.uniform3fv(u.u_bp_off_mid, BP_OFF_MID_RGB);
-    gl.uniform3fv(u.u_bp_off_rail, BP_OFF_RAIL_RGB);
+    gl.uniform3fv(u.u_bp_off_mid, rgb(shades.offMid).map((v) => v / 255));
+    gl.uniform3fv(u.u_bp_off_rail, rgb(shades.offRail).map((v) => v / 255));
+    gl.uniform3fv(u.u_bp_off_fade, rgb(shades.offFade).map((v) => v / 255));
     gl.activeTexture(gl.TEXTURE2);
     gl.bindTexture(gl.TEXTURE_2D, this.tex.colours);
     gl.uniform1i(u.u_line_colours, 2);
@@ -1661,7 +1661,9 @@ export class NetworkRenderer {
       // pill; then the selected train over it (T-242)
       const sel = opt.selTrain;
       gl.uniform2f(this.trainU.u_sel_trip, sel ? sel.profile : -1, sel ? sel.dep - this.tripEpoch : 0);
-      gl.uniform3fv(this.trainU.u_ink, this.ink);
+      const halo = shadeColours();
+      gl.uniform3fv(this.trainU.u_ink, rgb(halo.mapInk).map((v) => v / 255));
+      gl.uniform3fv(this.trainU.u_band, rgb(halo.casing).map((v) => v / 255));
       gl.uniform1i(this.trainU.u_pass, 0);
       const drawTrains = () => gl.drawArraysInstanced(this.detailedTrains ? gl.TRIANGLES : gl.TRIANGLE_STRIP, 0, this.detailedTrains ? 6 * this.maxCars : 4, this.tripCount);
       drawTrains();

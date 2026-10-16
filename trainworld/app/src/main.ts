@@ -243,6 +243,7 @@ map.on("load", () => {
   effect(() => setBasemapLabels(map, display.value.basemapLabels));
   effect(() => setBasemapShade(map, shade.value));
 });
+effect(() => client.setShade(shade.value)); // save thumbnails are drawn in it (T-543)
 // T-039: the network's casing and inks come from game/shades.ts at each draw
 effect(() => {
   shade.value;
