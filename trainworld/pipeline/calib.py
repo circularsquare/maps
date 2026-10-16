@@ -1,7 +1,7 @@
 """T-509: calibration targets, runs and the objective, per city.
 
     python pipeline/calib.py targets nyc                 # -> data/work/calib/nyc/targets.json
-    python pipeline/calib.py run nyc [--tag t] [--set k=v,..] [--params p.json] [--rounds 3]
+    python pipeline/calib.py run nyc [--tag t] [--set k=v,..] [--params p.json] [--rounds 3] [--pack p.json]
     python pipeline/calib.py score <run.json> [--city nyc] [--top 15]
 
 `run` runs the `calib` bin (sim/src/bin/calib.rs; built with `cargo build --release --features
@@ -82,6 +82,12 @@ def targets_nyc():
 
 
 TARGETS = {"nyc": targets_nyc}
+TARGETS["seo"] = lambda: __import__("calib_seo").targets()
+TARGETS["sdj"] = lambda: __import__("calib_sdj").targets()
+TARGETS["tor"] = lambda: __import__("calib_tor").targets()
+TARGETS["tyo"] = lambda: __import__("calib_tyo").targets()
+TARGETS["lon"] = lambda: __import__("calib_lon").targets()
+TARGETS["par"] = lambda: __import__("calib_par").targets()
 
 
 def cmd_targets():
@@ -134,22 +140,24 @@ def score(run, tg, top=15, say=print):
     # operators
     ops = run["operators"]
     olr = {k: float(np.log(max(ops.get(k, 0.0), 1.0) / v)) for k, v in tg["operators"].items()}
-    parts["operators"] = float(np.mean([v ** 2 for v in olr.values()]))
-    # areas
-    ar = np.array(run["areas"]["rail"])
-    at = np.array(run["areas"]["trips"])
-    w = np.array([a["commuters"] for a in tg["areas"]])
-    meas_share = np.array([a["rail_share"] for a in tg["areas"]])
+    parts["operators"] = float(np.mean([v ** 2 for v in olr.values()])) if olr else 0.0  # Paris has no line counts
+    # areas (none where no census mode table is on disk: Seoul)
+    ra = run.get("areas") or {"rail": [], "trips": []}
+    ar = np.array(ra["rail"], float)
+    at = np.array(ra["trips"], float)
+    w = np.array([a["commuters"] for a in tg["areas"]], float)
+    ws = max(w.sum(), 1e-9)
+    meas_share = np.array([a["rail_share"] for a in tg["areas"]], float)
     mod_share = ar / np.maximum(at, 1e-9)
     dl = logit(mod_share) - logit(meas_share)
-    parts["areas"] = float((w * dl ** 2).sum() / w.sum())
+    parts["areas"] = float((w * dl ** 2).sum() / ws)
     total = sum(parts.values())
     out = {"total": total, "parts": parts, "station_level": st_level, "station_spread": float(np.std(lr[~hub])),
            "n_stations": int((~hub).sum()), "n_hubs": int(hub.sum()),
            "hubs_log_ratio": float(np.mean(lr[hub])) if hub.any() else None,
            "operators": {k: {"model": ops.get(k, 0.0), "measured": v, "log_ratio": olr[k]} for k, v in tg["operators"].items()},
            "operators_info": {k: {"model": ops.get(k, 0.0), "measured": v} for k, v in tg.get("operators_info", {}).items()},
-           "rail_share_model": float((mod_share * w).sum() / w.sum()), "rail_share_measured": float((meas_share * w).sum() / w.sum()),
+           "rail_share_model": float((mod_share * w).sum() / ws), "rail_share_measured": float((meas_share * w).sum() / ws),
            "day": run["day"], "ms": run["ms"], "set": run.get("set", {})}
     say(f"score {total:.3f} = stations {parts['stations']:.3f} + operators {parts['operators']:.3f} + areas {parts['areas']:.3f}")
     say(f"stations: {out['n_stations']} scored (>= {tg.get('station_min', 0):,.0f} entries), mean log ratio {st_level:+.2f} "
@@ -166,7 +174,7 @@ def score(run, tg, top=15, say=print):
     for k, v in out["operators_info"].items():
         say(f"  {k:10s} rough     {v['measured']:10,.0f}  model {v['model']:10,.0f}  (not scored)")
     say(f"\nRail share of commuters by home area (measured {out['rail_share_measured']:.1%}, model {out['rail_share_model']:.1%}); biggest misses:")
-    contrib = w * dl ** 2 / w.sum()
+    contrib = w * dl ** 2 / ws
     for i in np.argsort(-contrib)[:top]:
         a = tg["areas"][i]
         say(f"  {a['name']:14s} measured {meas_share[i]:6.1%}  model {mod_share[i]:6.1%}  share of the part {contrib[i] / max(parts['areas'], 1e-12):.0%}")
@@ -189,6 +197,10 @@ def cmd_run():
     d = os.path.join(CALIB, city)
     out = os.path.join(d, f"run_{tag}.json")
     cmd = [BIN, "--net", tg["net"], "--out", out, "--rounds", opt(args, "--rounds", "3")]
+    # a pack other than data/packs/<net's pack>.json: --pack, else the targets' "pack" (a copy
+    # kept fixed while packs are being rebuilt)
+    if opt(args, "--pack") or tg.get("pack"):
+        cmd += ["--pack", opt(args, "--pack") or tg["pack"]]
     if tg.get("areas_file"):
         cmd += ["--areas", tg["areas_file"]]
     for k in ("--set", "--params", "--fares"):

@@ -627,6 +627,10 @@ impl DemandApi {
             base.routes = Some(Arc::new(r));
             gr.set_walk(&z, &base);
         }
+        // T-511: each cell's share of residents without a car
+        if let (Some(nc), Some(pop)) = (pack::cell_weights(header, bin, "nocar", city.len())?, pack::cell_weights(header, bin, "pop", city.len())?) {
+            base.nocar = Some(Arc::new(nc.iter().zip(&pop).map(|(&n, &p)| if p > 0.0 { (n / p).min(1.0) } else { 0.0 }).collect()));
+        }
         let (walk_home_zone, walk_work_zone) = gr.walk_trips_by_zone(&z);
         let walk_all = walk_home_zone.iter().sum();
         let (home_k, work_k) = zone_trip_factors(&city, &z, &gr, gravity_from_pack);

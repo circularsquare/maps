@@ -352,8 +352,9 @@ the car's trip T, the scale is 0.05 x sqrt(60 / T), so a minute counts for less 
 rail's, so the scale does not change with the network. In the local layers only the choice
 between modes is damped (the walks and station pairs behind rail's cost are weighed at 0.05, since
 they are shared by every destination); the regional layer damps the whole rail trip, access
-included. The propensity is not scaled. The propensity stands in for income: it absorbs car ownership, parking, habit and income in one
-number, set so a realistic network gives roughly realistic mode share. New York's is 0 (T-078):
+included. The propensity is not scaled. The propensity stands in for income: it absorbs parking,
+habit and income in one number (car ownership is its own input, below), set so a realistic network
+gives roughly realistic mode share. New York's is 0 (T-078):
 rail and driving are judged on perceived time and cost alone. **Catchment is soft** (T-090): there
 is no circle the player sees. A farther station makes the walk, and so the whole trip, worse, and
 the station loses riders where that trip gets worse than driving. Value of time is per country so
@@ -500,6 +501,21 @@ only. Car parks are automatic and unlimited. `p_ride`, `d_drop` and `w_walk` are
 New York network (T-372: about 55-65% of commuter rail riders ride to their station).
 The regional layer's rides (commutes between zones, inter-region trips at both ends) come from the
 same function, `access_options` ([regional.md](regional.md) 5.3).
+
+**Homes without a car** (Anita, 2026-10-16, T-511). Each cell carries the people living in a
+household with no car (the pack's `nocar`, `pipeline/nocar.py`); a home subzone's share is their
+share of its homes. In the commutes and the everyday layer that share of each origin's trips
+cannot drive: it chooses rail against walking the whole way, by the same logit (the walk 15
+perceived minutes a km, `walk_trip_min`: the drive's road at 6 km/h weighed 1.5, and the scale
+damped on the walk's minutes as on the car's), with the same propensity, and it walks to
+stations at the home end too (no ride; where the home has rides, its rail is priced on the
+walks alone, and a home with no station on foot gets no rail for it). The walking share reserved
+by distance stays as it is for everyone. Rail's share of a pair's trips that do not walk is
+`(1 - c) r_car + c r_walk`, c the home's share without a car; the people with a car choose as above.
+The regional layer has no such group yet. Shares by country: the US by tract (ACS B08201),
+England by LSOA (Census 2021 TS045), Japan by prefecture (AIRIA cars per household), elsewhere
+national cars per 1,000 people and household size (docs/demand-worldwide.md "Driving
+alternative"). A pack without `nocar` has everyone able to drive.
 
 Two **computational bounds** keep the work down and are set where little rail is left: stations
 are looked for within 3 km straight line of a walk (`walk_cutoff_m`), and a pair of places is

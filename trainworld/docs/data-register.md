@@ -24,13 +24,13 @@ P3 task for anything marked N. A new country gets a row in every table before it
 |---|---|---|---|
 | United States | nyc phl bos wdc bal pvd nhv hfd spf wor wnd nlc lit | A | docs/demand.md, notes/T-142.md |
 | Canada | tor | A | notes/T-277.md |
-| England (UK) | lon | A | notes/T-288.md (T-360 part) |
-| France | par | A, by commune | notes/T-289.md |
+| England (UK) | lon | A | notes/T-288.md (T-360 part); calibration (T-509): U TfL NUMBAT 2024 station entries and line boarders, U ORR Table 1410 station usage 2024-25, U Census 2011 QS701EW travel to work by MSOA (2021 TS061 skip: lockdown), U GB-wide GTFS (aubin.app, Transitous) for National Rail; G Network Rail and RDG timetable feeds (login) |
+| France | par | A, by commune | notes/T-289.md; calibration (T-509): U IDFM GTFS, U IDFM validations per ZdC per day, U INSEE RP 2022 transit share to work by commune (no rail split); G EGT 2018-20 result tables (omnil.fr 403 to scripts) |
 | Germany | ber | A, by Gemeinde | notes/T-290.md |
-| Japan | tyo osa ngo fuk spk sdj hij, 38 zones | A | notes/T-420.md, T-432, T-463 |
+| Japan | tyo osa ngo fuk spk sdj hij, 38 zones | A | notes/T-420.md, T-432, T-463; calibration (T-509): U KSJ S12 station counts, U 2020 census table 18 rail share by municipality of residence (e-Stat e18.xlsx) |
 | Brazil | sao | B | notes/T-458.md |
 | China | sha | C, curve from a mean | notes/T-291.md |
-| South Korea | seo | C, curve from a mean | notes/T-457.md |
+| South Korea | seo | C, curve from a mean | notes/T-457.md; calibration (T-509): U seoulriders' timetable, card gate and KRIC station counts; G census commuting mode by si-gun-gu (KOSIS) |
 | India | mum | C, curve from bands | notes/T-292.md |
 | Nigeria | lag | D | notes/T-459.md |
 
@@ -87,6 +87,26 @@ days of people with a workplace. Several countries have one figure for both.
 | South Korea | G 2020 census commuting by si-gun-gu (KOSIS: no account without a Korean ID; browser download only), T-504; U mobile-data mean commute (Statistics Korea, 20.4 km) | ? KTDB household survey, not checked | U 0 (no figure checked) | U 0 |
 | India | U Census 2011 B-28 distance bands by district, both parameters fitted | - | U B-28 "no travel" (20.1%) | - |
 | Nigeria | - none; U Mumbai's curve borrowed | - (one 2010 paper's mean trip, too weak to fit) | U 0 | U 0 |
+
+## Car ownership
+
+People living in a household with no car, per cell (T-511, `pipeline/nocar.py`; the rule in
+demand.md 4.3). Where only cars per household are known, households without a car come from one
+curve fitted on US tracts and English LSOAs (demand-worldwide.md "Driving alternative").
+
+| Country | Homes without a car |
+|---|---|
+| United States | U ACS 2019-23 B08201 by tract, people in no-vehicle households (nearest populated block's tract) |
+| Canada | U StatCan light-duty registrations 2023 per 1,000 x census household size, national; - census asks no vehicle question |
+| England | U Census 2021 TS045 by LSOA (households, made people) |
+| France | U Eurostat passenger cars per 1,000 (2024) x household size, national; N INSEE census housing base by commune or IRIS, T-512 |
+| Germany | U Eurostat passenger cars per 1,000 (2024) x household size, national |
+| Japan | U AIRIA private cars per household by prefecture (March 2025); - no small-area figure found |
+| Brazil | U Senatran automóveis per 1,000 (2024) x household size, national; ? OD 2017 survey's car ownership, T-512 |
+| China | U Ministry of Public Security cars (2024) per 1,000 x household size, national; ? Shanghai yearbook cars per 100 households, T-512 |
+| South Korea | U MOLIT passenger cars per 1,000 (2024) x household size, national; G KOSIS small areas, T-504 |
+| India | U MoRTH cars, jeeps and taxis per 1,000 (2022) x household size, national |
+| Nigeria | U NBS private vehicles per 1,000 (2018) x household size, national |
 
 ## Destinations
 

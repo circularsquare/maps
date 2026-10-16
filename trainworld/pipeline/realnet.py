@@ -76,6 +76,10 @@ MTA_GROUP = {"csv": MTA_STATIONS, "stop": "GTFS Stop ID", "group": "Complex ID",
              "lon": "GTFS Longitude", "lat": "GTFS Latitude", "prefix": "mta"}
 NJT_LIGHT = {"4": "light_rail", "13": "light_rail", "17": "light_rail"}
 
+PAR_TRAM = ["IDFM:C02317", "IDFM:C01843", "IDFM:C01684", "IDFM:C01999", "IDFM:C01794", "IDFM:C01795", "IDFM:C01679", "IDFM:C01391",
+            "IDFM:C01774", "IDFM:C01389", "IDFM:C01390", "IDFM:C02344", "IDFM:C02528", "IDFM:C02529", "IDFM:C02732"]
+PAR_RER = {"IDFM:C01742": "a", "IDFM:C01743": "b", "IDFM:C01727": "c", "IDFM:C01728": "d", "IDFM:C01729": "e"}
+
 # Train length in metres per route (cars x car length), for the game's 20 m cars. Subway: A
 # division 51 ft cars (10, the 7 11), B division 60 ft (600 ft trains; J, Z, M, L 480 ft; G 300 ft),
 # shuttles short; SIR 4 x 75 ft. PATH 7 x 51 ft. Commuter rail: 10 x 85 ft as a typical peak train.
@@ -104,8 +108,126 @@ CITIES = {
         "out": os.path.join(WORK, "sdj_real.json"),
         "what": "Sendai's rail network from OSM route relations (T-509, rough)",
         "count_point": [140.8823, 38.2601],  # Sendai station
-        "sources": [{"name": "osm", "adapter": "osm", "file": os.path.join(RAW, "t509", "osm_sdj.json"), "min_share": 0.05, "min_trips": 4}],
+        # No relation has interval tags: weekday trains an hour each way (peak, midday, first hour)
+        # by line from JR East's and the city's timetables as remembered, rough (T-509 stage 3);
+        # the Shinkansen and limited expresses (not tagged high speed) dropped by name. Trains: JR
+        # locals 4 cars, rural lines and the private lines 2, Namboku 4 x 20 m, Tozai 4 x 15 m.
+        "sources": [{"name": "osm", "adapter": "osm", "file": os.path.join(RAW, "t509", "osm_sdj.json"), "min_share": 0.05, "min_trips": 4,
+                     "skip_name": r"新幹線|Shinkansen|列車|つばさ|ひたち|Hitachi|アテルイ|臨海鉄道",
+                     "lines": [
+                         (r"r12465875|r12465877", {"tph": (1.5, 1, 0.5), "kmh": 50, "train_m": 80, "operator": "jr"}),  # Shiroishi-Sendai locals
+                         (r"南北線", {"tph": (15, 8.5, 4), "kmh": 32, "train_m": 80, "operator": "subway"}),
+                         (r"東西線", {"tph": (12, 8, 4), "kmh": 32, "train_m": 60, "operator": "subway"}),
+                         (r"空港|Aiport|Airport", {"tph": (4, 2.5, 1), "kmh": 42, "train_m": 80, "operator": "jr"}),
+                         (r"仙石東北", {"tph": (0.5, 0.5, 0), "kmh": 50, "train_m": 80, "operator": "jr"}),  # two relations a direction
+                         (r"仙石線", {"tph": (5, 3, 1), "kmh": 40, "train_m": 80, "operator": "jr"}),
+                         (r"仙山線.*Local", {"tph": (2.5, 1.5, 0.5), "kmh": 43, "train_m": 80, "operator": "jr"}),
+                         (r"仙山線", {"tph": (1, 1, 0), "kmh": 55, "train_m": 80, "operator": "jr"}),  # rapids
+                         (r"利府", {"tph": (2, 1, 0.5), "kmh": 40, "train_m": 80, "operator": "jr"}),
+                         (r"東北本線|東北線|Tohoku", {"tph": (2.5, 1.5, 0.5), "kmh": 50, "train_m": 80, "operator": "jr"}),
+                         (r"常磐線", {"tph": (1.5, 1, 0.5), "kmh": 50, "train_m": 80, "operator": "jr"}),
+                         (r"阿武隈急行", {"tph": (2, 1, 0.5), "kmh": 45, "train_m": 40, "operator": "abukuma"}),
+                         (r"飯坂線", {"tph": (4, 2, 1), "kmh": 35, "train_m": 40, "operator": "iizaka"}),
+                         (r".", {"tph": (1.5, 1, 0.5), "kmh": 45, "train_m": 40, "operator": "jr"}),  # JR rural lines
+                     ]}],
     },
+    # Seoul: seoulriders' weekday timetable for all its lines (pipeline/calib_seo.py trips). Stops
+    # are seoulriders' station complexes, which the card counts use; the source is named like its
+    # group prefix so each station's `target` is its complex id. Train length from seoulriders'
+    # rated capacity at 160 a car; everything is one operator, since a journey taps in once.
+    "seo": {
+        "pack": "seo",
+        "out": os.path.join(WORK, "seo_real.json"),
+        "what": "Seoul's rail network from the seoulriders weekday timetable (T-509)",
+        "count_point": [126.9707, 37.5547],  # Seoul station
+        "sources": [{"name": "seo", "adapter": "trips", "file": os.path.join(WORK, "seo_trips.csv"), "group": {"prefix": "seo"},
+                     "min_share": 0.05, "min_trips": 4, "operator": "rail", "kind": "metro",
+                     "train_m": {"_": 200, "5": 160, "6": 160, "7": 160, "8": 120, "9": 120, "SN": 120, "AR": 120, "SH": 120, "GG": 120,
+                                 "GC": 160, "I1": 160, "UI": 40, "SL": 40, "I2": 40, "GP": 40, "UJ": 40},
+                     "route_kind": {**{r: "light_rail" for r in ("UI", "SL", "I2", "GP", "UJ")}, **{r: "commuter" for r in ("GJ", "GC", "GG", "SH", "AR")}}}],
+    },
+    # Toronto, the hold-out (pipeline/calib_tor.py): TTC rail (subway, Lines 5-6, 5xx streetcars,
+    # since the census counts streetcars with rail), GO rail, UP Express. Each TTC line is its own
+    # operator, as the TTC's per-line boardings count. Trains: TTC 6 x 23 m (Line 4 4 cars),
+    # Flexity LRVs 2 x 30 m, streetcars 30 m, GO 12 bilevels, UP 3 DMUs.
+    "tor": {
+        "pack": "tor",
+        "out": os.path.join(WORK, "tor_real.json"),
+        "what": "Toronto's rail network from TTC, GO and UP Express GTFS (T-509)",
+        "count_point": [-79.3807, 43.6453],  # Union
+        "sources": [
+            gtfs("ttc", os.path.join(RAW, "t509", "tor", "ttc"), "https://open.toronto.ca/dataset/ttc-routes-and-schedules/", 0.15, 20,
+                 {"_": 30, "1": 138, "2": 138, "4": 92, "5": 60, "6": 60}, "tram",
+                 route_kind={"1": "metro", "2": "metro", "4": "metro", "5": "light_rail", "6": "light_rail"},
+                 route_operator={**{r: "ttc_l" + r for r in "12456"}, **{r: "ttc_streetcar" for r in ("501", "503", "504", "505", "506", "507", "508", "509", "510", "511", "512")}},
+                 group={"csv": os.path.join(WORK, "tor_ttc_groups.csv"), "stop": "stop_id", "group": "group", "name": "name", "lon": "lon", "lat": "lat", "prefix": "ttc"}),
+            gtfs("go", os.path.join(RAW, "t509", "tor", "go_rail"), "https://assets.metrolinx.com/raw/upload/Documents/Metrolinx/Open%20Data/GO-GTFS.zip", 0.05, 4, {"_": 310}, "commuter"),
+            gtfs("up", os.path.join(RAW, "t509", "tor", "up"), "https://assets.metrolinx.com/raw/upload/Documents/Metrolinx/Open%20Data/UP-GTFS.zip", 0.05, 4, {"_": 78}, "commuter"),
+        ],
+    },
+    # London: TfL rail from londonriders (pipeline/calib_lon.py trips), stops already NUMBAT
+    # stations; each line is its own operator, named by NUMBAT's line code, so operator totals
+    # are NUMBAT's line boarders (Circle with H&C, as NUMBAT counts it). Train lengths: stock x cars.
+    "lon": {
+        "pack": "lon",
+        "out": os.path.join(WORK, "lon_real.json"),
+        "what": "London's rail network: TfL from londonriders' timetables (T-509)",
+        "sources": [{"name": "tfl", "adapter": "trips", "file": os.path.join(RAW, "t509", "lon_tfl_trips.csv"), "group": {"prefix": "numbat"},
+                     "min_share": 0.05, "min_trips": 4,
+                     "train_m": {"BAK": 113, "CEN": 133, "CIR": 117, "HAM": 117, "DIS": 117, "MET": 133, "JUB": 126, "NOR": 108, "PIC": 106,
+                                 "VIC": 133, "WAC": 64, "DLR": 87, "EZL": 205, "WAG": 83, "GOB": 83, "WEL": 83, "URL": 83, "_": 104},
+                     "route_kind": {"DLR": "light_rail", "EZL": "commuter", "WAG": "commuter", "GOB": "commuter", "WEL": "commuter", "URL": "commuter",
+                                    "NLL": "commuter", "ELL": "commuter"},
+                     "route_operator": {"BAK": "BAK", "CEN": "CEN", "CIR": "HAM", "HAM": "HAM", "DIS": "DIS", "MET": "MET", "JUB": "JUB", "NOR": "NOR",
+                                        "PIC": "PIC", "VIC": "VIC", "WAC": "WAC", "DLR": "DLR", "EZL": "EZL", "WAG": "WAG", "GOB": "GOB", "WEL": "WEL",
+                                        "URL": "URL", "NLL": "NLL", "ELL": "ELL"}},
+                    # National Rail (calib_lon.py nr): one GTFS route per operator, so the share is small;
+                    # stations are CRS codes (ORR's counts); 10-car trains as a typical peak suburban train
+                    gtfs("nr", os.path.join(RAW, "t509", "gb", "nr_lse"), "https://beta.aubin.app/gtfs/great_britain_gtfs.zip", 0.008, 12, {"_": 200, "HX": 120, "GX": 240},
+                         "commuter", group={"csv": os.path.join(RAW, "t509", "gb", "nr_lse", "crs_groups.csv"), "stop": "stop_id", "group": "crs", "name": "name",
+                                            "lon": "lon", "lat": "lat", "prefix": "crs"}, operator="nr")],
+        "merge_m": 200.0,
+    },
+    # Paris: IDFM's GTFS cut to rail (pipeline/calib_par.py gtfs); stations are the parent stops,
+    # IDFM's zones de correspondance, which the validation counts use. Train lengths: Metro 5 cars
+    # (75 m) except 1 and 14, 3B and 7B 3 cars; RER and Transilien double units (220 m).
+    "par": {
+        "pack": "par",
+        "out": os.path.join(WORK, "par_real.json"),
+        "what": "Paris's rail network from IDFM's GTFS (T-509)",
+        "count_point": [2.3470, 48.8585],  # Chatelet
+        "sources": [
+            gtfs("idfm", os.path.join(RAW, "t509", "idfm", "rail"), "https://eu.ftp.opendatasoft.com/stif/GTFS/IDFM-gtfs.zip", 0.05, 4,
+                 {**{f"IDFM:C0{r}": 75 for r in range(1371, 1388)}, "IDFM:C01371": 90, "IDFM:C01384": 120, "IDFM:C01386": 45, "IDFM:C01387": 45,
+                  **{r: 40 for r in PAR_TRAM}, "IDFM:C01388": 34, "IDFM:C00563": 26, "_": 220}, "commuter",
+                 group={"csv": os.path.join(RAW, "t509", "idfm", "rail", "zdc_groups.csv"), "stop": "stop_id", "group": "zdc", "name": "name",
+                        "lon": "lon", "lat": "lat", "prefix": "zdc"},
+                 route_kind={**{f"IDFM:C0{r}": "metro" for r in range(1371, 1388)}, **{r: "tram" for r in PAR_TRAM}, "IDFM:C01388": "light_rail", "IDFM:C00563": "light_rail"},
+                 route_operator={**{f"IDFM:C0{r}": "metro" for r in range(1371, 1388)}, **{r: "tram" for r in PAR_TRAM}, "IDFM:C01388": "val", "IDFM:C00563": "val",
+                                 **{r: "rer_" + n for r, n in PAR_RER.items()}}, operator="transilien"),
+        ],
+    },
+}
+
+
+def _tyo_routes():
+    """Tokyo's lines from the 2015 transport census (pipeline/calib_tyo.py trips writes the trips
+    and this per-route kind, operator and train length); stops are S12 station groups."""
+    p = os.path.join(WORK, "tyo_routes.json")
+    meta = json.load(open(p, encoding="utf-8")) if os.path.exists(p) else {}
+    return {"name": "s12", "adapter": "trips", "file": os.path.join(WORK, "tyo_trips.csv"), "group": {"prefix": "s12"},
+            "min_share": 0.05, "min_trips": 4, "kind": "commuter",
+            "route_kind": {r: m["kind"] for r, m in meta.items()}, "route_operator": {r: m["op"] for r, m in meta.items()},
+            "train_m": {"_": 200, **{r: m["train_m"] for r, m in meta.items()}}}
+
+
+CITIES["tyo"] = {
+    "pack": "tyo",
+    "out": os.path.join(WORK, "tyo_real.json"),
+    "what": "Tokyo's rail network from the 2015 transport census lines, default frequencies (T-509, rough)",
+    "count_point": [139.7671, 35.6812],  # Tokyo station
+    "merge_m": 0.0,  # one source; stations are already S12 groups
+    "sources": [_tyo_routes()],
 }
 CAR_M = 20.0
 LEVEL_WINDOWS = {0: [(7, 9), (17, 19)], 1: [(10, 16)], 2: [(0, 6)]}
@@ -144,6 +266,7 @@ def boundary(pack="nyc"):
     from shapely.geometry import shape
     g = json.load(open(os.path.join(PACKS, pack + ".boundary.geojson")))
     geoms = [shape(f["geometry"]) for f in g["features"]] if "features" in g else [shape(g)]
+    geoms = [x if x.is_valid else x.buffer(0) for x in geoms]  # London's has a self-touching ring
     from shapely import union_all
     return union_all(geoms).buffer(0.01)  # ~1 km in degrees
 
@@ -246,9 +369,10 @@ def load_gtfs(src, inside):
     return {k: v for k, v in stations.items() if k in keep}, out, dict(zip(r["route_id"], r[col]))
 
 
-def osm_interval_tph(tags, kind):
+def osm_interval_tph(tags, kind, default=None):
     """Trains per hour each way, by hour of the day (24 values), from a route relation's
-    `interval` and `interval:conditional` tags (minutes, "mm" or "hh:mm"), else OSM_TPH."""
+    `interval` and `interval:conditional` tags (minutes, "mm" or "hh:mm"), else `default`
+    (peak, midday, first hour) or OSM_TPH."""
     def minutes(v):
         v = v.strip()
         try:
@@ -258,13 +382,14 @@ def osm_interval_tph(tags, kind):
             return float(v)
         except ValueError:
             return None
-    peak, mid, first = OSM_TPH[kind]
+    d = default or OSM_TPH[kind]
+    peak, mid, first = d
     base = minutes(tags["interval"]) if tags.get("interval") else None
     if base:
-        # `interval` is the usual (midday) headway; the peak keeps the kind's peak-to-midday ratio
-        # unless conditional intervals say otherwise
+        # `interval` is the usual (midday) headway; the peak keeps the default's peak-to-midday
+        # ratio unless conditional intervals say otherwise
         mid = 60.0 / base
-        peak = mid if tags.get("interval:conditional") else mid * OSM_TPH[kind][0] / OSM_TPH[kind][1]
+        peak = mid if tags.get("interval:conditional") else mid * d[0] / d[1]
         first = mid / 2
     tph = [0.0] * 5 + [first] + [mid] * 16 + [mid / 2] * 2
     for h in (7, 8, 17, 18):
@@ -316,11 +441,25 @@ def load_osm(src, inside):
             return e["center"]["lon"], e["center"]["lat"]
         return None
     skip = set(src.get("skip_service", ["high_speed", "long_distance", "night", "tourism"]))
+    import re
+
+    def label(r):
+        t = r["tags"]
+        return f"{t.get('name', '')} | {t.get('name:en', '')} | {t.get('ref', '')} | r{r['id']}"
+
+    def override(r):
+        """A source's `lines`: [(regex on "name | name:en | ref | r<relation id>", {"tph": (peak,
+        midday, first), "kmh", "train_m", "operator"})], the first match, for relations with no
+        interval tags (Sendai)."""
+        return next((v for p, v in src.get("lines", []) if re.search(p, label(r))), {})
     raw = []  # (relation, kind, [(member key, name, lon, lat)])
     for r in rels:
         t = r["tags"]
         kind = OSM_KIND.get(t.get("route"))
         if not kind or t.get("service") in skip or t.get("highspeed") == "yes":
+            continue
+        # relations not tagged as high speed or long distance that are (`skip_name`, a regex)
+        if src.get("skip_name") and re.search(src["skip_name"], label(r)):
             continue
         stops = [m for m in r["members"] if m["role"] in ("stop", "stop_entry_only", "stop_exit_only")]
         if not stops:
@@ -365,6 +504,7 @@ def load_osm(src, inside):
     keep = {k for k, (_, lon, lat) in stations.items() if inside(lon, lat)}
     xy = {k: to_xy(lon, lat, o) for k, (_, lon, lat) in stations.items()}
     trips, names = [], {}
+    n_rel = Counter(f"m{masters[r['id']]['id']}" if r["id"] in masters else f"r{r['id']}" for r, _, _ in raw)
     for r, kind, pts in raw:
         t = r["tags"]
         m = masters.get(r["id"])
@@ -377,19 +517,26 @@ def load_osm(src, inside):
                 ks.append(k)
         if len(ks) < 2:
             continue
-        hop = [float(np.hypot(xy[ks[i + 1]][0] - xy[ks[i]][0], xy[ks[i + 1]][1] - xy[ks[i]][1])) * OSM_DETOUR / (OSM_KMH[kind] / 3.6) for i in range(len(ks) - 1)]
-        at = np.concatenate([[0.0], np.cumsum(hop)])
-        dr = "0" if ks[0] <= ks[-1] else "1"
-        acc = 0.0
-        for h, n in enumerate(osm_interval_tph(t, kind)):
-            acc += n
-            k = int(acc)
-            acc -= k
-            for j in range(k):
-                dep = h * 3600 + (j + 0.5) * 3600 / k
-                trips.append((route, dr, ks, [int(dep + v) for v in at]))
+        ov = override(r)
+        if ov.get("operator"):
+            src.setdefault("route_operator", {})[route] = ov["operator"]
+        kmh = ov.get("kmh", OSM_KMH[kind])
+        hop = [float(np.hypot(xy[ks[i + 1]][0] - xy[ks[i]][0], xy[ks[i + 1]][1] - xy[ks[i]][1])) * OSM_DETOUR / (kmh / 3.6) for i in range(len(ks) - 1)]
+        runs = [(ks, np.concatenate([[0.0], np.cumsum(hop)]))]
+        if n_rel[route] == 1:  # only one direction mapped: the trains run back the same way
+            runs.append((ks[::-1], np.concatenate([[0.0], np.cumsum(hop[::-1])])))
+        for ks, at in runs:
+            dr = "0" if ks[0] <= ks[-1] else "1"
+            acc = 0.0
+            for h, n in enumerate(osm_interval_tph(t, kind, ov.get("tph"))):
+                acc += n
+                k = int(acc)
+                acc -= k
+                for j in range(k):
+                    dep = h * 3600 + (j + 0.5) * 3600 / k
+                    trips.append((route, dr, ks, [int(dep + v) for v in at]))
         src.setdefault("route_kind", {})[route] = kind
-        src.setdefault("train_m", {"_": OSM_TRAIN_M["metro"]}).setdefault(route, OSM_TRAIN_M[kind])
+        src.setdefault("train_m", {"_": OSM_TRAIN_M["metro"]}).setdefault(route, ov.get("train_m", OSM_TRAIN_M[kind]))
     print(f"{src['name']}: {len(raw)} route relations, {len(trips)} trips made up, {len(keep)} of {len(stations)} stations inside")
     return {k: v for k, v in stations.items() if k in keep}, trips, names
 
@@ -399,15 +546,17 @@ def load_trips_csv(src, inside):
     route, direction, trip, stop, name, lon, lat, time (h:mm:ss or seconds), in stop order per
     trip; optional route_name."""
     t = pd.read_csv(src["file"], dtype=str, keep_default_na=False)
+    # `group: {"prefix": p}`: the CSV's stops are already the counts' stations (London's NUMBAT codes)
+    pre = src["group"]["prefix"] if src.get("group") else src["name"]
     stations = {}
     for r in t.drop_duplicates("stop").itertuples():
-        stations[src["name"] + ":" + r.stop] = (r.name, float(r.lon), float(r.lat))
+        stations[pre + ":" + r.stop] = (r.name, float(r.lon), float(r.lat))
     keep = {k for k, (_, lon, lat) in stations.items() if inside(lon, lat)}
     trips = []
     for _, g in t.groupby("trip", sort=False):
         ks, ts = [], []
         for s, tm in zip(g["stop"], g["time"]):
-            k = src["name"] + ":" + s
+            k = pre + ":" + s
             if k not in keep:
                 continue
             v = secs(tm) if ":" in tm else int(float(tm))
@@ -573,7 +722,11 @@ def cmd_net(city=None):
             sa, sb = stations[a], stations[b]
             if sa["feed"] != sb["feed"] and (sa["x"] - sb["x"]) ** 2 + (sa["y"] - sb["y"]) ** 2 < merge_m ** 2:
                 ra, rb = alias.get(a, a), alias.get(b, b)
-                if ra != rb:
+                # never chain two stations of one source together (London: Cannon Street NR
+                # near both Cannon Street and Bank would make one stop of them)
+                fa = {stations[k]["feed"] for k in [ra] + [k for k, v in alias.items() if v == ra]}
+                fb = {stations[k]["feed"] for k in [rb] + [k for k, v in alias.items() if v == rb]}
+                if ra != rb and not (fa & fb):
                     alias[rb] = ra
                     for k, v in list(alias.items()):
                         if v == rb:
@@ -1032,13 +1185,18 @@ def cmd_geom():
     """Track geometry for the save (T-007): per line, a node per stop on the line's own GTFS shape
     nearest its station, and the shape between consecutive stops, simplified to 15 m. A hop with no
     shape near both ends is a straight line."""
-    o = origin()
-    net = json.load(open(os.path.join(WORK, "nyc_real.json")))
+    city = sys.argv[2] if len(sys.argv) > 2 else "nyc"
+    o = origin(CITIES[city]["pack"])
+    net = json.load(open(CITIES[city]["out"]))
     st = net["stations"]
     shapes_by_route = {}
-    for src in CITIES["nyc"]["sources"]:
+    for src in CITIES[city]["sources"]:
+        if src.get("adapter", "gtfs") != "gtfs":  # no shapes: straight hops
+            continue
         name, folder = src["name"], src["folder"]
         sh = read(folder, "shapes.txt", usecols=["shape_id", "shape_pt_lat", "shape_pt_lon", "shape_pt_sequence"])
+        if sh is None:  # London's National Rail cut has none: straight hops
+            continue
         sh["seq"] = sh["shape_pt_sequence"].astype(float)
         sh = sh.sort_values(["shape_id", "seq"])
         x, y = to_xy(sh["shape_pt_lon"].astype(float).to_numpy(), sh["shape_pt_lat"].astype(float).to_numpy(), o)
@@ -1119,7 +1277,7 @@ def cmd_geom():
     for g, lv in zip(out, levels):
         g["level"] = lv
     print(f"{sum(1 for (i, j) in cross if i < j)} crossing line pairs; {left} crossing points left on one level")
-    p = os.path.join(WORK, "nyc_real_geom.json")
+    p = os.path.join(WORK, f"{city}_real_geom.json")
     json.dump({"lines": out}, open(p, "w"))
     print(f"{len(out)} lines, {n_straight} hops straight for want of a shape -> {p}")
 
@@ -1130,13 +1288,17 @@ def cmd_gamesave():
     lines need, the starting fares."""
     import gzip
     import struct
-    track = open(os.path.join(WORK, "nyc_real.twt2"), "rb").read()
-    tj = json.load(open(os.path.join(WORK, "nyc_real_track.json")))
-    header = {"game": "anitabuilder", "format": 1, "city": "nyc", "clock": 86400 + 7 * 3600, "cash": 6000.0,
+    city = sys.argv[2] if len(sys.argv) > 2 else "nyc"
+    track = open(os.path.join(WORK, f"{city}_real.twt2"), "rb").read()
+    tj = json.load(open(os.path.join(WORK, f"{city}_real_track.json"), encoding="utf-8"))
+    # a save's "city" is the world's first registry city whatever city it shows (saveFile.ts
+    # isNortheastSave refuses anything else)
+    reg = json.load(open(os.path.join(ROOT, "app", "src", "game", "registry.json"), encoding="utf-8"))
+    header = {"game": "anitabuilder", "format": 1, "city": reg["cities"][0]["id"], "clock": 86400 + 7 * 3600, "cash": 6000.0,
               "fleet": int(tj["fleet"]), "fares": {"base": 1.5, "perKm": 0.1}, "ledger": []}
     hj = json.dumps(header).encode()
     raw = b"TWG1" + struct.pack("<I", len(hj)) + hj + track
-    p = os.path.join(ROOT, "T-007-real-nyc.save")
+    p = os.path.join(ROOT, "T-007-real-nyc.save") if city == "nyc" else os.path.join(WORK, f"{city}_real.save")
     with open(p, "wb") as f:
         f.write(gzip.compress(raw, mtime=0))
     print(f"{len(raw):,} bytes raw, {os.path.getsize(p):,} gzipped, fleet {header['fleet']:,} cars -> {p}")

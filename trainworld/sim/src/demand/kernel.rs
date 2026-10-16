@@ -155,6 +155,10 @@ pub struct Params {
     pub ride_min_km: f32,
     pub ride_max_m: f32,
     pub ride_lines: usize,
+    /// Per cell, the share of its residents living in a household with no car (the pack's
+    /// `nocar` over `pop`, T-511). None: everyone can drive. In the local layers their choice is
+    /// rail, walking to stations, against walking the whole way (`walk_trip_min`).
+    pub nocar: Option<std::sync::Arc<Vec<f32>>>,
 }
 
 impl Default for Params {
@@ -226,6 +230,7 @@ impl Default for Params {
             ride_min_km: 5.0,
             ride_max_m: 15_000.0,
             ride_lines: 6,
+            nocar: None,
         }
     }
 }
@@ -278,6 +283,12 @@ impl Params {
             "cordon" => {
                 if let Some(c) = &self.cordon {
                     self.cordon = Some(std::sync::Arc::new(c.iter().map(|x| x * v).collect()));
+                }
+            }
+            // scales every cell's share without a car (0: everyone drives); before `set_network`
+            "nocar" => {
+                if let Some(c) = &self.nocar {
+                    self.nocar = Some(std::sync::Arc::new(c.iter().map(|x| (x * v).min(1.0)).collect()));
                 }
             }
             // the drive before T-090: one speed everywhere
@@ -367,6 +378,12 @@ impl Params {
         }
         let r1 = 1.0 / (1.0 + fast_exp(-(util + beta * paid)));
         r0 + (1.0 - free) * (r1 - r0)
+    }
+    /// Perceived minutes a km of walking the whole trip, the alternative of those without a car
+    /// (T-511): along the drive's road, at `walk_mps` and `w_walk_far`.
+    #[inline]
+    pub fn walk_trip_min(&self) -> f32 {
+        self.w_walk_far * 1000.0 / (60.0 * self.walk_mps)
     }
     /// Real minutes of the walk between two stations on a transfer, `d_m` metres straight line.
     pub fn xfer_min(&self, d_m: f32) -> f32 {
@@ -1022,6 +1039,8 @@ pub struct Subzones {
     pub jobs: Vec<f32>,
     pub cx: Vec<f32>,
     pub cy: Vec<f32>,
+    /// Share of its homes without a car (`Params::nocar`, home-weighted; T-511).
+    pub nocar: Vec<f32>,
     /// CSR access list, per subzone its walk entries (`walk`) then its ride entries (`ride`,
     /// T-371): station, perceived minutes, the distance in metres and the real minutes. A walk
     /// entry's minutes are the members' `Params::access_cost` (a pop/jobs-weighted logsum) and
@@ -1314,6 +1333,7 @@ pub fn build_subzones_on(city: &City, home_w: &[f32], work_w: &[f32], zones: &Zo
         jobs: vec![0.0; ns],
         cx: vec![0.0; ns],
         cy: vec![0.0; ns],
+        nocar: vec![0.0; ns],
         acc_off: vec![0],
         acc_mid: vec![],
         acc_st: vec![],
@@ -1345,7 +1365,11 @@ pub fn build_subzones_on(city: &City, home_w: &[f32], work_w: &[f32], zones: &Zo
             y += wt * city.y[c] as f64;
             sz.pop[s] += home_w[c];
             sz.jobs[s] += jobs;
+            if let Some(nc) = &p.nocar {
+                sz.nocar[s] += home_w[c] * nc[c];
+            }
         }
+        sz.nocar[s] = if sz.pop[s] > 0.0 { (sz.nocar[s] / sz.pop[s]).min(1.0) } else { 0.0 };
         sz.cx[s] = (x / wsum) as f32;
         sz.cy[s] = (y / wsum) as f32;
         if !walks {
@@ -2127,6 +2151,7 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
     let routed_walk = gr.wroutes.is_some();
     let drive = p.routes.as_deref().filter(|r| r.has_drive());
     let ride_min2 = (p.ride_min_km * 1000.0).powi(2);
+    let kw = p.walk_trip_min();
     // the origin's two rows (walks; walks and rides) one after the other, each followed by
     // `PADS` dummies (0), and their rail trips by egress station the same way
     let h = s + PADS;
@@ -2207,6 +2232,9 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
             // by walk or ride)
             let wmax = p.pair_walk_max - m_u;
             let wmax_r = p.pair_walk_max - m_r;
+            // T-511: the share of this origin's homes without a car
+            let cu = sz.nocar[u];
+            let wmax_n = F8::splat(wmax);
             let nz = reach(u);
             for (zj, &[f, pw, df, long]) in dz[..nz].iter().zip(&fz) {
                 let by_ride = rides && long > 0.0;
@@ -2288,15 +2316,65 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
                     let r1 = F8::splat(1.0) / (F8::splat(1.0) + (util + bt * paid8).neg().exp());
                     r0 + (F8::splat(1.0) - free8) * (r1 - r0)
                 };
+                // T-511: those without a car choose rail, walking to stations, against walking
+                // the whole way; a lane on the rides' row prices their rail on the walks' row
+                let ride_l: u32 = (0..8).fold(0, |m, l| m | ((ro[l] != 0) as u32) << l);
+                let split = cu > 0.0 && ride_l != 0;
+                let mut ix0 = [[0u32; 8]; K];
+                let mut rv0 = [F8::splat(0.0); K];
+                // their share choosing rail, and their logsum's sum on the walks' row
+                let mut rn = F8::splat(0.0);
+                let mut sn = ssum;
+                let mut okn = 0xffu32;
+                let r = if cu > 0.0 {
+                    let mut rail_n = rail;
+                    if split {
+                        sn = F8::splat(0.0);
+                        for k in 0..kn {
+                            ix0[k] = std::array::from_fn(|l| ix[k][l] - ro[l]);
+                            rv0[k] = F8::gather(&ab_row, &ix0[k]);
+                            sn = sn + rv0[k] * ev[k];
+                        }
+                        let rw = (F8::splat(m_u) + m8 + F8::splat(p.fare_min) - sn.ln() / F8::splat(th)).to_array();
+                        let ra = rail.to_array();
+                        rail_n = F8::new(std::array::from_fn(|l| if ride_l >> l & 1 != 0 { rw[l] } else { ra[l] }));
+                        // walks over the bound, or no station on foot: no rail for them
+                        okn = !(ride_l & (wmax_n.lt_mask(m8) | sn.lt_mask(F8::splat(1e-30)))) & 0xff;
+                    }
+                    // `Params::walk_trip_min` along the drive's road, `mode_beta` on its cost
+                    let wk = rd * F8::splat(kw);
+                    let btn = F8::splat(p.beta) * (F8::splat(p.damp_min) / wk).min(F8::splat(1.0)).sqrt();
+                    let un = btn * (wk - rail_n) + F8::splat(p.asc_rail);
+                    let pn = (F8::splat(1.0) / (F8::splat(1.0) + un.neg().exp())).to_array();
+                    rn = F8::new(std::array::from_fn(|l| if okn >> l & 1 != 0 { pn[l] } else { 0.0 }));
+                    r + F8::splat(cu) * (rn - r)
+                } else {
+                    r
+                };
                 let x = tu8 * dv8 * dpw8 * r;
-                let g = x / ssum;
+                // on a rides' lane their trips go on the walks' row, the rest on the rides'
+                let (g, gn) = if split {
+                    let xn = tu8 * dv8 * dpw8 * (F8::splat(cu) * rn);
+                    let (xna, sna) = (xn.to_array(), sn.to_array());
+                    let gn = F8::new(std::array::from_fn(|l| if ride_l >> l & 1 != 0 && okn >> l & 1 != 0 { xna[l] / sna[l] } else { 0.0 }));
+                    let xr = F8::new(std::array::from_fn(|l| if ride_l >> l & 1 != 0 { xna[l] } else { 0.0 }));
+                    ((x - xr) / ssum, gn)
+                } else {
+                    (x / ssum, F8::splat(0.0))
+                };
                 // trips by egress station y, and y x the row: what reaches each egress entry
                 let mut ya = [[0f32; 8]; K];
+                let mut yna = [[0f32; 8]; K];
                 let mut yw = [F8::splat(0.0); 8];
                 let mut xw = F8::splat(0.0);
                 for k in 0..kn {
                     let y = g * ev[k];
                     yw[k] = y * rv[k];
+                    if split {
+                        let yn = gn * ev[k];
+                        yw[k] = yw[k] + yn * rv0[k];
+                        yna[k] = yn.to_array();
+                    }
                     xw = xw + yw[k];
                     ya[k] = y.to_array();
                 }
@@ -2314,6 +2392,11 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
                     // pads add 0 to their own dummies: the block's one count predicts well
                     for k in 0..kn {
                         ab_y[ix[k][l] as usize] += ya[k][l];
+                    }
+                    if split && ride_l >> l & 1 != 0 {
+                        for k in 0..kn {
+                            ab_y[ix0[k][l] as usize] += yna[k][l];
+                        }
                     }
                     let a = &mut acc_q[q[l]];
                     a[0] = (F4::new(a[0]) + yw_lo[l]).to_array();

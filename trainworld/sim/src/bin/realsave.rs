@@ -1,6 +1,6 @@
 //! T-007: New York's real network as a track-model save, and the snapshot demand would get from it.
 //!
-//!   cargo run --release --features demand --bin realsave -- [--dir data/work/realnet]
+//!   cargo run --release --features demand --bin realsave -- [--dir data/work/realnet] [--city nyc]
 //!
 //! Reads `nyc_real.json` (stations, lines, trains per hour, cars: `pipeline/realnet.py net`) and
 //! `nyc_real_geom.json` (per line a node per stop and the GTFS shape between stops, simplified, and
@@ -26,9 +26,12 @@ fn main() {
     let get = |k: &str| args.iter().position(|a| a == k).map(|i| args[i + 1].clone());
     let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
     let dir = get("--dir").unwrap_or(format!("{root}/data/work/realnet"));
-    let net_j: Value = serde_json::from_str(&std::fs::read_to_string(format!("{dir}/nyc_real.json")).unwrap()).unwrap();
-    let geo_j: Value = serde_json::from_str(&std::fs::read_to_string(format!("{dir}/nyc_real_geom.json")).unwrap()).unwrap();
-    let pack: Value = serde_json::from_str(&std::fs::read_to_string(format!("{root}/data/packs/nyc.json")).unwrap()).unwrap();
+    // any realnet.py city (T-509): <city>_real.json, <city>_real_geom.json, its pack's origin
+    let city = get("--city").unwrap_or("nyc".into());
+    let net_j: Value = serde_json::from_str(&std::fs::read_to_string(format!("{dir}/{city}_real.json")).unwrap()).unwrap();
+    let geo_j: Value = serde_json::from_str(&std::fs::read_to_string(format!("{dir}/{city}_real_geom.json")).unwrap()).unwrap();
+    let pack_name = net_j["pack"].as_str().unwrap_or(&city).to_string();
+    let pack: Value = serde_json::from_str(&std::fs::read_to_string(format!("{root}/data/packs/{pack_name}.json")).unwrap()).unwrap();
     let (lon0, lat0) = (pack["origin"]["lon"].as_f64().unwrap(), pack["origin"]["lat"].as_f64().unwrap());
     let stations = net_j["stations"].as_array().unwrap();
     let lines = net_j["lines"].as_array().unwrap();
@@ -104,7 +107,12 @@ fn main() {
         line_ids.push(id);
     }
     let bytes = save::encode(&net);
-    std::fs::write(format!("{dir}/nyc_real.twt2"), &bytes).unwrap();
+    std::fs::write(format!("{dir}/{city}_real.twt2"), &bytes).unwrap();
+    // the game converts a legacy-frame save to its Mercator frame on load, and refuses it silently
+    // when that fails
+    if let Err(e) = save::convert_frame(&bytes, trainworld_sim::track::frame::FrameKind::Merc) {
+        eprintln!("the save does not convert to the game's frame: {e}");
+    }
     let t0 = std::time::Instant::now();
     let w = TrackWorld::new(save::decode(&bytes).unwrap());
     eprintln!("save: {} bytes, {} nodes, {} lines set ({} ok); load + derive {:.0} ms", bytes.len(), node_key.len(), lines.len(), n_lines_ok, t0.elapsed().as_secs_f64() * 1000.0);
@@ -174,6 +182,6 @@ fn main() {
         "fleet": fleet,
         "demand": {"st_xy": st_xy, "line_n": line_n, "stops": stops, "times": times, "tph": tph, "cars": cars},
     });
-    std::fs::write(format!("{dir}/nyc_real_track.json"), serde_json::to_string(&out).unwrap()).unwrap();
-    eprintln!("-> {dir}/nyc_real.twt2, {dir}/nyc_real_track.json");
+    std::fs::write(format!("{dir}/{city}_real_track.json"), serde_json::to_string(&out).unwrap()).unwrap();
+    eprintln!("-> {dir}/{city}_real.twt2, {dir}/{city}_real_track.json");
 }

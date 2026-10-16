@@ -1642,6 +1642,10 @@ impl EverydayApi {
                 };
                 let x = pair.v as usize;
                 let (xr, xm) = (sz.walk(x), min[x]);
+                // T-511: the home's people without a car walk to stations, and their other
+                // choice is walking the whole way
+                let cu = sz.nocar[h];
+                let by_ride = pair.distance >= ride_m && min_r[h].is_finite();
                 for direction in 0..2 {
                     let ((a, ma, wa), (b, mb, wb)) = if direction == 0 {
                         ((hr.clone(), hm, hw), (xr.clone(), xm, &acc))
@@ -1673,22 +1677,61 @@ impl EverydayApi {
                         + fixed;
                     let rail = ma + mb + p.fare_min - fast_ln(sum) / th;
                     let bt = p.mode_beta(road);
-                    let pr = (1.0 - pair.walk) * p.rail_share_parked(bt * (road - rail) + p.asc_rail, bt, paid, free);
+                    let r_car = p.rail_share_parked(bt * (road - rail) + p.asc_rail, bt, paid, free);
+                    // those without a car: on a ride trip their rail is on the home's walks
+                    let (mut r, mut r_n) = (r_car, 0.0f32);
+                    let mut walks: Option<((std::ops::Range<usize>, &[f32]), (std::ops::Range<usize>, &[f32]), f32)> = None;
+                    if cu > 0.0 {
+                        let mut rail_n = Some(rail);
+                        if by_ride {
+                            let home = (sz.walk(h), min[h], &acc);
+                            let ((a2, ma2, wa2), (b2, mb2, wb2)) = if direction == 0 { (home, (b.clone(), mb, wb)) } else { ((a.clone(), ma, wa), home) };
+                            rail_n = None;
+                            if ma2 + mb2 <= p.pair_walk_max {
+                                let mut sum_n = 0.0;
+                                for ka in a2.clone() {
+                                    for kb in b2.clone() {
+                                        sum_n += wa2[ka] * wb2[kb] * er[sz.acc_st[ka] as usize * s + sz.acc_st[kb] as usize];
+                                    }
+                                }
+                                if sum_n >= 1e-30 {
+                                    rail_n = Some(ma2 + mb2 + p.fare_min - fast_ln(sum_n) / th);
+                                    walks = Some(((a2, &wa2[..]), (b2, &wb2[..]), sum_n));
+                                }
+                            }
+                        }
+                        if let Some(rail_n) = rail_n {
+                            let wk = pair.distance * 0.001 * p.drive_factor(sz.zone[u] as usize, sz.zone[v] as usize) * p.walk_trip_min();
+                            let bn = p.mode_beta(wk);
+                            r_n = 1.0 / (1.0 + fast_exp(-(bn * (wk - rail_n) + p.asc_rail)));
+                        }
+                        r = r_car + cu * (r_n - r_car);
+                    }
+                    let pr = (1.0 - pair.walk) * r;
                     probability[i][direction] = pr;
                     let share = if direction == 0 {
                         OUTWARD[pair.kind() as usize][q]
                     } else {
                         RETURN[pair.kind() as usize][q]
                     };
-                    let trips = pair.trips * share * pr / sum;
                     od_used = true;
-                    for ka in a.clone() {
-                        cols.rows[sz.acc_st[ka] as usize] = true;
-                        for kb in b.clone() {
-                            let ia = sz.acc_st[ka] as usize;
-                            let ib = sz.acc_st[kb] as usize;
-                            od[ia * s + ib] += trips * wa[ka] * wb[kb] * er[ia * s + ib];
+                    let mut add = |a: std::ops::Range<usize>, wa: &[f32], b: std::ops::Range<usize>, wb: &[f32], trips: f32| {
+                        for ka in a.clone() {
+                            cols.rows[sz.acc_st[ka] as usize] = true;
+                            for kb in b.clone() {
+                                let ia = sz.acc_st[ka] as usize;
+                                let ib = sz.acc_st[kb] as usize;
+                                od[ia * s + ib] += trips * wa[ka] * wb[kb] * er[ia * s + ib];
+                            }
                         }
+                    };
+                    match walks {
+                        Some(((a2, wa2), (b2, wb2), sum_n)) => {
+                            let base = pair.trips * share * (1.0 - pair.walk);
+                            add(a.clone(), wa, b.clone(), wb, base * (r - cu * r_n) / sum);
+                            add(a2, wa2, b2, wb2, base * (cu * r_n) / sum_n);
+                        }
+                        None => add(a.clone(), wa, b.clone(), wb, pair.trips * share * pr / sum),
                     }
                 }
             }

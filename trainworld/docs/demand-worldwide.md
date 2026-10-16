@@ -399,11 +399,24 @@ notes/T-420.md has the tables.
   driving) differ by country. Check: rail, air and car shares on a few corridors per country
   (MLIT's Inter-Regional Travel Survey, Eurostat, NEC FUTURE) at two lengths, so the slope as well
   as the level is seen.
-- **Driving alternative.** Drive times and costs assume US car ownership and parking. Car
-  ownership varies by a factor of five or more between cities (Manhattan vs Houston vs Tokyo vs
-  Lagos); without it, transit share is wrong everywhere outside the US Northeast. Check: a car
-  ownership or motorisation rate per country or city, and whether the driving alternative should
-  be unavailable to a share of people.
+- **Driving alternative and homes without a car** (T-511, docs/demand.md 4.3). Drive times and
+  costs are the US car's; the people living in a household with no car (per cell, `nocar`) cannot
+  drive and choose rail against walking the whole way. Sources, finest first: census car-free
+  households by small area (US ACS B08201 by tract, people directly; England Census 2021 TS045 by
+  LSOA); else cars per household `c` by region or country, households with no car
+  `exp(-1.30 c^1.33)` (fitted on US tracts and English LSOAs together, each country alone within
+  0.06 of it; rmse 0.04), Japan by prefecture (AIRIA), others by national passenger cars per
+  1,000 people times household size (`pipeline/nocar.py` COUNTRIES); households become people at
+  a no-car household 0.693 times the size of a car household (ACS national). Why it may not carry
+  over: the curve is two rich countries' (where cars are concentrated in fewer households, as in
+  Brazil, India or Nigeria, it puts too few without one: Brazil's 36% of households against about
+  half in its household survey); national figures miss the city (Paris's own 65% of households
+  without a car against France's 17%, Seoul and Shanghai likewise); registers that never retire
+  cars (Brazil, China) overcount; the alternative of those without a car is walking, since buses
+  are out of scope, so where buses carry them (New York's outer boroughs, London, Sao Paulo) rail
+  takes riders the bus has. Check: a city's car-free share against its own survey (INSEE IRIS
+  for France, KOSIS for Korea, city yearbooks), and rail share of commuters by area where the
+  census has mode (T-509).
 - **Routed drives** (T-275, docs/demand.md 4.3). A drive's road is the straight line times a
   per-pack routed factor over OSM roads (every public road but service ways, shortest distance),
   times one scale, 1.3 / 1.210, that puts New York's commute-weighted factor back at the 1.3 its

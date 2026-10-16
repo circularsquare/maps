@@ -201,6 +201,9 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   res-8 parent within a zone, and touching sparse children of busier parents together (T-466), the
   res-9 pack kept in `data/work/res9/`; `--undo` puts it back
   before any step that rewrites a pack (enrichments, routes, `intercity.py`), `--stats` only counts.
+- `nocar.py <ids> | --all` adds `nocar` (people in households with no car, per cell; T-511) to
+  the res-9 copy and the merged pack, append-only; rerun it after anything that rebuilds a pack
+  (its sources: docs/data-register.md "Car ownership").
 - `osm_water.py` is the water source for cities outside the US (OSM coastline sea plus Geofabrik
   inland water, T-041; `source(extracts)` for a config's `water_source`, `mask <id>` for a
   water-only pack in `data/work/osm_water/`; docs/adding-a-city.md).

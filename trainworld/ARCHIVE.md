@@ -1,5 +1,6 @@
 ﻿# Archive
 
+- T-511 [P2] Homes without a car. Done 2026-10-16: `nocar` per cell in all 67 packs (ACS tracts, England LSOAs, Japan prefectures, else national cars per household); they choose rail against walking. Real save rail about 8.35M to 11.48M a day; New York counties overshoot (no bus). notes/T-511.md.
 - T-466 [P2] Merge more sparse cells. Done 2026-10-16: in busy parents, touching children under 1,250 trip ends merge; packs carry zone land (`zone_cells9`). All 67 packs 1.34M to 1.09M cells (-19%); busy stations past 5% 0.4-2.9%; real save +0.08%. notes/T-466.md.
 - T-500 [P2] Commutes matched by industry. Dropped 2026-10-16 after the design: Tokyo misplaced 16.5% to 15.8% with two groups and their own curves, the centre unchanged (office workers live everywhere); the destination term went to T-438. notes/T-500.md.
 - T-502 [P2] Cost damping from 60 car-minutes; "on average" dropped from hovers. Done 2026-10-16: real save rail trips 8,346,628 to 8,343,085 (-0.04%), regional boardings 68,301 to 151,704 (T-495's first step took them from 259,376), work -0.9%, big lines within 1.5%. notes/T-495.md.
