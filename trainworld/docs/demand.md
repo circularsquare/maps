@@ -337,7 +337,7 @@ worker). Weekday results are bit-identical to before (notes/T-170.md).
 
 Per OD pair and period, reserve the short-trip walking share first, then compare rail with
 driving for the remaining trips by **generalised cost** in minutes. Buses are out of scope
-(Anita, 2026-10-09).
+(Anita, 2026-10-09), except as part of "other", the choice of homes without a car (below).
 
 - rail = walk to a station + wait (half the headway, capped) + ride + transfers x penalty + walk
   from station + fare / value of time
@@ -505,13 +505,26 @@ same function, `access_options` ([regional.md](regional.md) 5.3).
 **Homes without a car** (Anita, 2026-10-16, T-511). Each cell carries the people living in a
 household with no car (the pack's `nocar`, `pipeline/nocar.py`); a home subzone's share is their
 share of its homes. In the commutes and the everyday layer that share of each origin's trips
-cannot drive: it chooses rail against walking the whole way, by the same logit (the walk 15
-perceived minutes a km, `walk_trip_min`: the drive's road at 6 km/h weighed 1.5, and the scale
-damped on the walk's minutes as on the car's), with the same propensity, and it walks to
-stations at the home end too (no ride; where the home has rides, its rail is priced on the
-walks alone, and a home with no station on foot gets no rail for it). The walking share reserved
-by distance stays as it is for everyone. Rail's share of a pair's trips that do not walk is
-`(1 - c) r_car + c r_walk`, c the home's share without a car; the people with a car choose as above.
+cannot drive. It chooses among three by one logit (`Params::nocar_choice`), with the same
+propensity on rail:
+- **rail**, walking to stations at the home end too (no ride; where the home has rides, its rail
+  is priced on the walks alone, and a home with no station on foot gets no rail for it);
+- **walking the whole way**, 15 perceived minutes a km of the drive's road (`walk_trip_min`: 6
+  km/h weighed 1.5);
+- **other** (Anita, 2026-10-16, T-513), standing in for bus, taxi and bike: the drive's road at
+  12 km/h door to door (`other_kmh`, 5 minutes a km) plus a wait of 8 minutes weighed 1.37
+  (`other_wait_min`, `w_wait`: 11 perceived) plus `other_asc`, no parking. The speed and wait are
+  fixed for every city (a city bus's average speed with stops, and half a 15-minute headway with
+  some walk to the stop); `other_asc` is the one constant fitted (T-509), 10 perceived minutes
+  until then (`kernel::OTHER_ASC`, set on New York's boroughs against ACS).
+
+The scale is damped on other's minutes, as the car's on the car's. The walking share reserved by
+distance stays as it is for everyone. Rail's share of a pair's trips that do not walk is
+`(1 - c) r_car + c r_nocar`, c the home's share without a car; the people with a car choose as
+above. Trips by other are counted with driving in every view (docs/ui-demand-views.md); the sim keeps
+them apart (`summary` index 10, per layer: trips by other with no rail, from the zone pairs or the
+everyday samples, less the no-car rail trips times other's share of the non-rail choice, which
+in a logit is the same with or without rail).
 The regional layer has no such group yet. Shares by country: the US by tract (ACS B08201),
 England by LSOA (Census 2021 TS045), Japan by prefecture (AIRIA cars per household), elsewhere
 national cars per 1,000 people and household size (docs/demand-worldwide.md "Driving

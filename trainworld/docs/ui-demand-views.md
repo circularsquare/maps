@@ -27,6 +27,9 @@ and the regional layer. Changing zone clears cell-indexed selections and cached 
 **Mode colours**, Subway Builder's (Anita) [T-097, T-099; `game/palette.ts`]: driving red #e61e1e,
 train blue #1e3ce6, walking green #1eaa3c, near-pure so a mix reads as RGB (all car red, all train
 blue, half and half magenta). A selected station's own cells #c2185b, its far end #3a3f8f.
+Trips by "other" (bus, taxi and bike for homes without a car, T-513, [demand.md](demand.md) 4.3)
+count as driving in every bar, split, bubble and hover, with no colour of their own; the sim
+reports them apart only as a total (`summary` index 10).
 
 **Purpose colours** [T-142, T-143, T-192]: work blue, school and university blue-green,
 social/leisure purple, shopping/errands red, airport olive, medical pink (CIEDE2000 22 apart at the

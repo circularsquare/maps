@@ -170,7 +170,8 @@ export type FromDemand =
       kind: "result";
       version: number;
       period: number;
-      /** DemandApi.summary(): round, trips, rail, walk, ms, pairs, crowding stats */
+      /** DemandApi.summary(): round, trips, rail, walk, ms, pairs, crowding stats, then at 10 the
+       * trips by other (T-513), which every view counts with driving (trips less rail and walk) */
       summary: number[];
       citySummary: Record<CityId, number[]>;
       /** T-260: per city, trips, rail trips and walked trips of each purpose (`parts.keys` order,

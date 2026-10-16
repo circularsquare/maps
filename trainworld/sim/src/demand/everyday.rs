@@ -1404,6 +1404,8 @@ struct Period {
     trips: f64,
     rail: f64,
     walk: f64,
+    /// What rail takes from other (T-513), averaged like the loads.
+    other_lost: f64,
     /// Transfers platform to platform, every purpose together (T-176), averaged like the loads.
     xi: XferIndex,
     xfer: Vec<f32>,
@@ -1418,6 +1420,8 @@ pub struct EverydayApi {
     per: Vec<Option<Period>>,
     totals: Vec<f64>,
     walks: Vec<f64>,
+    /// Trips by other with no rail by purpose (T-513), with the walks; the parameters as at opening.
+    others: Vec<f64>,
     /// trip kilometres by purpose, for `info` (summed once at opening, T-172)
     km: Vec<f64>,
     /// Optional enrollment budgets: school generation samples homes FROM each activity site.
@@ -1458,10 +1462,20 @@ impl EverydayApi {
     /// `chunks`).
     #[inline(never)]
     fn add_totals(&mut self, r: std::ops::Range<usize>) {
+        let p = &self.engine.base;
+        let oq = p.nocar.is_some().then(|| OtherShare::new(p));
         for k in r {
             if let Some((kind, c, d, w, pw)) = self.edge(k) {
                 self.totals[kind] += w as f64;
                 self.walks[kind] += (w * pw) as f64;
+                // T-513: the home's people without a car, other against walking the whole way
+                if let (Some(nc), Some(oq)) = (&p.nocar, &oq) {
+                    if nc[c] > 0.0 {
+                        let z = &self.engine.z.cell_zone;
+                        let q = oq.at(self.distance(c, d) * 0.001 * p.drive_factor(z[c] as usize, z[d] as usize));
+                        self.others[kind] += (w * (1.0 - pw) * nc[c] * q) as f64;
+                    }
+                }
                 self.km[kind] += self.distance(c, d) as f64 * w as f64 / 1000.0;
             }
         }
@@ -1557,14 +1571,16 @@ impl EverydayApi {
         Some((kind, c, d, w, pw))
     }
     /// Also returns the transfers, every purpose together, laid out by `ix` (T-176).
-    fn pass(&self, g: &Graph, p: &Params, q: usize, ix: &XferIndex) -> (Vec<[f32; 2]>, Loads, Vec<Part>, Vec<f32>) {
+    /// Also what rail takes from other (T-513, as `kernel::ModeOut::other_lost`).
+    fn pass(&self, g: &Graph, p: &Params, q: usize, ix: &XferIndex) -> (Vec<[f32; 2]>, Loads, Vec<Part>, Vec<f32>, f64) {
         let mut probability = vec![[0.0; 2]; self.pairs.len()];
         let s = g.n_st;
         let kinds = self.totals.len();
         let mut xfer = vec![0.0; ix.len];
+        let mut other_lost = 0.0f64;
         let Some(sz) = &self.engine.sz else {
             let zero = Loads::zero(s, g.n - s);
-            return (probability, zero.clone(), vec![Part::of(&zero); kinds], xfer);
+            return (probability, zero.clone(), vec![Part::of(&zero); kinds], xfer, 0.0);
         };
         // Outward AND homeward destinations: every station either end of a pair can reach (T-142:
         // not every station, so a city with no pairs near the network, open in a worker beside
@@ -1585,7 +1601,7 @@ impl EverydayApi {
         }
         if !want.contains(&true) {
             let zero = Loads::zero(s, g.n - s);
-            return (probability, zero.clone(), vec![Part::of(&zero); kinds], xfer);
+            return (probability, zero.clone(), vec![Part::of(&zero); kinds], xfer, 0.0);
         }
         let (loads, parts) = with_skims(g, p, &want, |sk| {
             let er = station_exp(sk, p);
@@ -1642,8 +1658,8 @@ impl EverydayApi {
                 };
                 let x = pair.v as usize;
                 let (xr, xm) = (sz.walk(x), min[x]);
-                // T-511: the home's people without a car walk to stations, and their other
-                // choice is walking the whole way
+                // T-511, T-513: the home's people without a car walk to stations, and their
+                // other choices are walking the whole way and other
                 let cu = sz.nocar[h];
                 let by_ride = pair.distance >= ride_m && min_r[h].is_finite();
                 for direction in 0..2 {
@@ -1679,7 +1695,7 @@ impl EverydayApi {
                     let bt = p.mode_beta(road);
                     let r_car = p.rail_share_parked(bt * (road - rail) + p.asc_rail, bt, paid, free);
                     // those without a car: on a ride trip their rail is on the home's walks
-                    let (mut r, mut r_n) = (r_car, 0.0f32);
+                    let (mut r, mut r_n, mut lost_q) = (r_car, 0.0f32, 0.0f32);
                     let mut walks: Option<((std::ops::Range<usize>, &[f32]), (std::ops::Range<usize>, &[f32]), f32)> = None;
                     if cu > 0.0 {
                         let mut rail_n = Some(rail);
@@ -1700,12 +1716,12 @@ impl EverydayApi {
                                 }
                             }
                         }
-                        if let Some(rail_n) = rail_n {
-                            let wk = pair.distance * 0.001 * p.drive_factor(sz.zone[u] as usize, sz.zone[v] as usize) * p.walk_trip_min();
-                            let bn = p.mode_beta(wk);
-                            r_n = 1.0 / (1.0 + fast_exp(-(bn * (wk - rail_n) + p.asc_rail)));
-                        }
+                        // T-513: and other (`Params::nocar_choice`)
+                        let rk = pair.distance * 0.001 * p.drive_factor(sz.zone[u] as usize, sz.zone[v] as usize);
+                        let qn;
+                        (r_n, qn) = p.nocar_choice(rk * p.walk_trip_min(), rk * p.other_min_km() + p.other_wait(), rail_n);
                         r = r_car + cu * (r_n - r_car);
+                        lost_q = cu * r_n * qn;
                     }
                     let pr = (1.0 - pair.walk) * r;
                     probability[i][direction] = pr;
@@ -1714,6 +1730,7 @@ impl EverydayApi {
                     } else {
                         RETURN[pair.kind() as usize][q]
                     };
+                    other_lost += (pair.trips * share * (1.0 - pair.walk) * lost_q) as f64;
                     od_used = true;
                     let mut add = |a: std::ops::Range<usize>, wa: &[f32], b: std::ops::Range<usize>, wb: &[f32], trips: f32| {
                         for ka in a.clone() {
@@ -1751,7 +1768,7 @@ impl EverydayApi {
             }
             (total, parts.iter().map(Part::of).collect::<Vec<_>>())
         });
-        (probability, loads, parts, xfer)
+        (probability, loads, parts, xfer, other_lost)
     }
     fn mode_totals(&self, q: usize, probability: &[[f32; 2]]) -> (f64, f64, f64) {
         let mut trips = 0.0;
@@ -1955,6 +1972,7 @@ impl EverydayApi {
             per: (0..PERIODS).map(|_| None).collect(),
             totals: vec![0.0; kinds],
             walks: vec![0.0; kinds],
+            others: vec![0.0; kinds],
             km: vec![0.0; kinds],
             school_enrollment: school_enrollment.unwrap_or_default(),
             university_enrollment: university_enrollment.unwrap_or_default(),
@@ -2064,9 +2082,10 @@ impl EverydayApi {
         let fac = vec![1.0; g.rn_ride.len()];
         set_crowding(&mut g, &fac);
         let xi = xfer_index(&g);
-        let (probability, loads, parts, xfer) = self.pass(&g, &p, q, &xi);
+        let (probability, loads, parts, xfer, other_lost) = self.pass(&g, &p, q, &xi);
         let (trips, rail, walk) = self.mode_totals(q, &probability);
         self.per[q] = Some(Period {
+            other_lost,
             net,
             p,
             g,
@@ -2102,7 +2121,8 @@ impl EverydayApi {
             st.fac = fac;
             set_crowding(&mut st.g, &st.fac);
             st.g.rn_left = left;
-            let (probability, loads, parts, xfer) = self.pass(&st.g, &st.p, q, &st.xi);
+            let (probability, loads, parts, xfer, other_lost) = self.pass(&st.g, &st.p, q, &st.xi);
+            st.other_lost += (other_lost - st.other_lost) / (st.round as f64 + 1.0);
             for (old, new) in st.probability.iter_mut().zip(&probability) {
                 msa(old, new, st.round);
             }
@@ -2127,11 +2147,13 @@ impl EverydayApi {
         self.per[q] = Some(st);
         true
     }
+    /// As `DemandApi::summary`, without the crowding figures (0); trips by other at 10 (T-513).
     pub fn summary(&self, q: usize) -> Vec<f64> {
         self.per
             .get(q)
             .and_then(|v| v.as_ref())
             .map_or(vec![], |s| {
+                let other: f64 = (0..self.others.len()).map(|k| self.others[k] * (OUTWARD[k][q] + RETURN[k][q]) as f64).sum::<f64>() - s.other_lost;
                 vec![
                     s.round as f64,
                     s.trips,
@@ -2143,6 +2165,7 @@ impl EverydayApi {
                     0.0,
                     0.0,
                     0.0,
+                    other,
                 ]
             })
     }

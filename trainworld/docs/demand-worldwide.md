@@ -401,7 +401,9 @@ notes/T-420.md has the tables.
   as the level is seen.
 - **Driving alternative and homes without a car** (T-511, docs/demand.md 4.3). Drive times and
   costs are the US car's; the people living in a household with no car (per cell, `nocar`) cannot
-  drive and choose rail against walking the whole way. Sources, finest first: census car-free
+  drive and choose among rail, walking the whole way and "other" (T-513: bus, taxi and bike as one
+  mode, the drive's road at a fixed 12 km/h door to door plus an 8-minute wait at the platform
+  wait's weight, plus one fitted constant `other_asc`, no parking). Sources, finest first: census car-free
   households by small area (US ACS B08201 by tract, people directly; England Census 2021 TS045 by
   LSOA); else cars per household `c` by region or country, households with no car
   `exp(-1.30 c^1.33)` (fitted on US tracts and English LSOAs together, each country alone within
@@ -412,9 +414,13 @@ notes/T-420.md has the tables.
   Brazil, India or Nigeria, it puts too few without one: Brazil's 36% of households against about
   half in its household survey); national figures miss the city (Paris's own 65% of households
   without a car against France's 17%, Seoul and Shanghai likewise); registers that never retire
-  cars (Brazil, China) overcount; the alternative of those without a car is walking, since buses
-  are out of scope, so where buses carry them (New York's outer boroughs, London, Sao Paulo) rail
-  takes riders the bus has. Check: a city's car-free share against its own survey (INSEE IRIS
+  cars (Brazil, China) overcount. Other's speed and wait are one bus network's everywhere: bus
+  speeds run from about 10 km/h (Manhattan, central London, Lagos traffic) to 20 and more
+  (suburban and BRT routes), headways from 3 minutes on trunk routes to an hour in rural areas
+  and small towns, so other is too good where buses are sparse (rural Japan, US suburbs, where
+  car-free homes are few anyway) and too poor where minibuses, motorbike taxis or cycling carry
+  most trips (Lagos, Mumbai, Dutch and Japanese cycling cities); one `other_asc` cannot tell them
+  apart. Check: a city's car-free share against its own survey (INSEE IRIS
   for France, KOSIS for Korea, city yearbooks), and rail share of commuters by area where the
   census has mode (T-509).
 - **Routed drives** (T-275, docs/demand.md 4.3). A drive's road is the straight line times a

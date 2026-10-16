@@ -200,7 +200,7 @@ function openBare(pack: { id: CityId; header: string; bin: ArrayBuffer }) {
     e?.solve(q);
     const own = Array.from(a.summary(q)), s = own.slice();
     const v = e?.summary(q);
-    if (v) for (const k of [1, 2, 3, 5]) s[k] += v[k] ?? 0;
+    if (v) for (const k of [1, 2, 3, 5, 10]) s[k] += v[k] ?? 0;
     const p = new Array(3 * keys.length).fill(0);
     for (let k = 0; k < 3; k++) p[k] = own[1 + k] ?? 0;
     const kt = e?.kind_totals(q);
@@ -903,7 +903,7 @@ async function run() {
         const market = regional && cs.some((c) => c.market) ? marketFigures(jobClusters.flatMap((c) => c.part ? [c.part] : []), q) : null;
         const seg = sumAll(cs, a => a.seg(q)), board = sumAll(cs, a => a.board(q)), alight = sumAll(cs, a => a.alight(q)), loadOfCrush = sumAll(cs, a => a.load_of_crush(q));
         const citySummary = Object.fromEntries(ids.map((id) => [id, Array.from(cities.get(id)!.summary(q))])) as Record<CityId, number[]>;
-        for (const [id, a] of jobEveryday) if (citySummary[id]) { const v = a.summary(q); for (const k of [1, 2, 3, 5]) citySummary[id][k] += v[k] ?? 0; }
+        for (const [id, a] of jobEveryday) if (citySummary[id]) { const v = a.summary(q); for (const k of [1, 2, 3, 5, 10]) citySummary[id][k] += v[k] ?? 0; }
         const intercitySummary = market ? market.summary : [];
         const summary = [round, 0, 0, 0, ms, 0, 0, 0, 0, 0];
         for (const v of [...Object.values(citySummary), intercitySummary]) for (const k of [1, 2, 3, 5]) summary[k] += v[k] ?? 0;
