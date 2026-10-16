@@ -122,9 +122,12 @@ key.
   complex" [T-213, T-482; [ui-demand-views.md](ui-demand-views.md)]. The list sorts like the Lines
   tab's [T-310], by Name, 24 h (boardings in the past 24 hours) or Near, boardings by default. The scope
   toggle and distance column are the Lines tab's (above); the footer reads "N of M stations" when
-  only the viewed place is listed. A row's name is cut with "..." before its line bullets are: at
-  least 3 always show whole, more while the row has room, and the bullets sit close to the
-  ridership figure [T-521].
+  only the viewed place is listed. A row is a station complex [T-530]: the name of its member with
+  the most lines, every line stopping at any member, boardings summed over the members, and a
+  click selects the complex as a click on the map does; a station on its own is its own row, and
+  M counts complexes. A row's name is cut with "..." before its line bullets are: at least 3
+  always show whole, more while the row has room; the rest are hidden behind a "+" whose hover
+  lists their lines [T-521, T-530]. The bullets sit close to the ridership figure.
 - **Line bullets** [T-521]: one component (`Chip` in `ui/widgets.tsx`), drawn the same everywhere.
   Hovering one gives the line's name and a click selects the line, except in the selected line's
   own panel (its title bullet opens the colour and symbol editor) and on a search row that is the

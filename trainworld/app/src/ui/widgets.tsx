@@ -55,15 +55,15 @@ export const Icon = {
 
 /** A line's bullet (T-521). Everywhere it is drawn a hover names the line and a click selects it,
  * except `plain` (the selected line's own panel, a search row that is the line). `pick` replaces
- * the selecting. */
-export function Chip({ line, size = "", plain, pick }: { line: LineInput; size?: "" | "sm" | "lg"; plain?: boolean; pick?: (l: LineInput) => void }) {
+ * the selecting. `gone`: hidden but keeping its space (a station row's bullets past its "+", T-530). */
+export function Chip({ line, size = "", plain, pick, gone }: { line: LineInput; size?: "" | "sm" | "lg"; plain?: boolean; pick?: (l: LineInput) => void; gone?: boolean }) {
   const click = plain ? undefined : (e: MouseEvent) => {
     e.stopPropagation();
     if (pick) pick(line);
     else selection.value = { kind: "line", line: line.id };
   };
   return (
-    <span class={"chip " + size + (plain ? "" : " link")} style={{ "--c": line.colour, "--ct": inkOn(line.colour) }}
+    <span class={"chip " + size + (plain ? "" : " link")} style={{ "--c": line.colour, "--ct": inkOn(line.colour), visibility: gone ? "hidden" : undefined }}
       data-tip={plain ? undefined : line.name} onClick={click}>
       <span>{line.letter}</span>
     </span>

@@ -61,10 +61,10 @@ T-422]. The geometry is in [track-and-service.md](track-and-service.md) 6.1.
   placing, the circle the segment's curve lies on is drawn faint grey (red when refused)
   [`map/curveCircle.ts`]; none for a straight segment. A click beyond the 1,796 m circle gets that
   circle's curve then a straight to the click [T-471].
-- **Curve labels**: while drawing, the start shows as a square and the curve its radius and speed
-  limit, on the speed colour at half strength [T-417] (one label for a curve split into several
-  corners); the same labels show while a selected blueprint stretch is reshaped or a node dragged
-  (`setCurveLabel`, `map/tools.ts`).
+- **Curve labels**: while drawing, the start shows as a square and the curve its speed limit, on
+  the speed colour at half strength [T-417; no radius since T-530] (one label for a curve split
+  into several corners); the same labels show while a selected blueprint stretch is reshaped or a
+  node dragged (`setCurveLabel`, `map/tools.ts`).
 - **Loose ends** [T-416; `map/endMarkers.ts`]: while the track or station tool is on, a small white
   circle with a dark border marks every loose end (a node with one piece of track and no
   station), blueprint or built. A track click on one starts or continues the route from it; the
@@ -177,7 +177,7 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   the bubble.
   With the select tool every blueprint track end, corner and junction without a station shows the
   same white square as a corner [T-416; `map/endMarkers.ts`], so draggable points can be seen.
-  A drag previews the new shape with each curve's radius and speed (or why not); letting go is one
+  A drag previews the new shape with each curve's speed (or why not); letting go is one
   undoable edit, Escape puts it back.
 - **The track inspector** lists the corners with each curve's speed, a radius stepper (100 to 1,500
   m, then auto), an elevation stepper and Remove; Add corner inserts one midway along the selected

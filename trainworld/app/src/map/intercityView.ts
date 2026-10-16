@@ -65,13 +65,18 @@ const INTERCITY_RADIUS_SCALE = 0.5;
  * Philadelphia and Hartford on screen. The focused city's own bubbles are 6 km apart there.
  */
 export const OVERVIEW_ZOOM = 8.5;
-/** The overview's one scale (T-525): trips a day per pixel of bubble area, before the size slider,
- * the same at every zoom and whatever is on screen. Greater Tokyo's 60M is a 55 px radius, a
- * 1.6M prefecture 9 px. */
-const TRIPS_PER_PX2 = 20000;
+/** The overview's scale (T-525, T-530): trips a day per pixel of bubble area at `SCALE_ZOOM`, before
+ * the size slider; it depends on the zoom only, never on what is on screen. New York's 71M is a 34 px
+ * radius there (the Northeast on screen; before T-525 the busiest zone on screen was 28 px), a 1.6M
+ * prefecture 5 px. */
+const TRIPS_PER_PX2 = 60000;
 /** The same for a selected zone's inter-region trips only, which are far fewer: New York's own 1.6M
- * is a 44 px radius, Philadelphia's 783k 31 px, a 15k partner 4 px. */
-const SELECTED_TRIPS_PER_PX2 = 800;
+ * is a 33 px radius at `SCALE_ZOOM`, Philadelphia's 796k 24 px, a 15k partner 3 px. */
+const SELECTED_TRIPS_PER_PX2 = 1400;
+/** Bubbles' screen radius doubles every 1 / ZOOM_GROWTH zoom levels in (T-530, by eye: smaller
+ * zoomed out, about as before T-525 at zooms 4-7, but far less than the map itself). */
+const SCALE_ZOOM = 6.5;
+const ZOOM_GROWTH = 0.35;
 /** The lines from a selected zone to the others (T-520). */
 const ZONE_LINE_ALPHA = 0.5;
 /** Most place labels on screen at once, the biggest first (T-493). */
@@ -213,12 +218,14 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       return { ...t, city: c, isOwn, tag };
     }).filter((p) => p.isOwn || (p.all > 0 && !(!own && zoneLoads.peek().has(p.city.id)))); // T-421: a zone still loading has its bar instead
     points.sort((a, b) => b.all - a.all);
-    const pxPerUnit = 512 * 2 ** map.getZoom() / EARTH_C;
+    const zoom = map.getZoom();
+    const pxPerUnit = 512 * 2 ** zoom / EARTH_C;
+    const zoomScale = 2 ** (ZOOM_GROWTH * (zoom - SCALE_ZOOM));
     const discs = new Float32Array(points.length * DISC);
     points.forEach((p, i) => {
       const [x, y] = toLocal(p.city.center[0], p.city.center[1], a);
       const c = modeMix(p.rail, 0, Math.max(0, p.all - p.rail));
-      const r = Math.sqrt(p.all / (own ? SELECTED_TRIPS_PER_PX2 : TRIPS_PER_PX2)) / pxPerUnit;
+      const r = Math.sqrt(p.all / (own ? SELECTED_TRIPS_PER_PX2 : TRIPS_PER_PX2)) * zoomScale / pxPerUnit;
       discs.set([x, y, r, c[0] / 255, c[1] / 255, c[2] / 255, BUBBLE_ALPHA, p.isOwn ? 2 : 1], i * DISC);
       label(`${p.city.name} · ${count(p.all)} trips/day`);
     });

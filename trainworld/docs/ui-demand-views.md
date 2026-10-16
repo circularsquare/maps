@@ -234,16 +234,19 @@ all its trips a day (its local trips, from the open zone's view or the pipeline'
 "Philadelphia · 187k trips/day" (at most eight labels on screen, the biggest first [T-493]). The hover
 has two lines, each with a mode bar [T-494]: "1.6m trips a day on average within Yamanashi" (bar from
 the zone's modelled split, none for a zone not opened) and "120k inter-region trips a day on
-average to and from Yamanashi" (train blue, the rest red). One fixed scale [T-525]: 20,000 trips a
-day per px² of bubble area (`TRIPS_PER_PX2`), the same at every zoom and whatever is on screen,
-before the size slider: Greater Tokyo's 67M is a 58 px radius, a 1.6M prefecture 9 px. Homes and Destinations look the same. Under a local purpose the focused zone's own
+average to and from Yamanashi" (train blue, the rest red). One scale that depends on the zoom
+alone, never on what is on screen [T-525, T-530]: 60,000 trips a day per px² of bubble area at
+zoom 6.5 (`TRIPS_PER_PX2`, `SCALE_ZOOM`), before the size slider, the radius times
+2^(0.35 x (zoom - 6.5)) (`ZOOM_GROWTH`), so bubbles shrink somewhat as the map zooms out: New
+York's 71M is a 34 px radius at 6.5, 55 px at 8.5 and 21 px at 4.5, a 1.6M prefecture 5 px at
+6.5. Homes and Destinations look the same. Under a local purpose the focused zone's own
 bubbles stay instead. Toronto (`market: -1`) has none.
 
 A click on one selects the zone (a `city` selection, kept at any zoom): it is outlined, with one
-bubble per other zone for the regional trips between the two, on a scale of its own that is also
-fixed [T-525]: 800 trips a day per px² (`SELECTED_TRIPS_PER_PX2`), so the selected zone's own
-inter-region trips (New York's 1.56M) are a 44 px radius, Philadelphia's 783k 31 px, a 15k partner
-4 px and a few hundred a dot (the selected zone's hover: the inter-region line and its bar first, the local figure in brackets under it; the
+bubble per other zone for the regional trips between the two, on a scale of its own that changes
+with the zoom the same way [T-525, T-530]: 1,400 trips a day per px² at zoom 6.5
+(`SELECTED_TRIPS_PER_PX2`), so there the selected zone's own inter-region trips (New York's 1.57M)
+are a 33 px radius, Philadelphia's 796k 24 px, a 15k partner 3 px and a few hundred a dot (the selected zone's hover: the inter-region line and its bar first, the local figure in brackets under it; the
 others: "N trips a day between A and B" and a bar), a 1 px line in the network ink, 30% opaque,
 from its bubble's edge to each other bubble's edge, under the bubbles with no hover, so the
 selection shows from afar [T-520], and the city

@@ -1,5 +1,6 @@
 ﻿# Archive
 
+- T-530 [P2] Three interface fixes. Done 2026-10-16: Stations tab rows are complexes (lead member's name, all lines, summed boardings) with a "+" hover for hidden bullets; inter-region bubbles scale with zoom only (radius x 2^(0.35(z-6.5))); curve labels show speed only.
 - T-509 [P2] Calibration. Done 2026-10-16: six cities' real networks fitted jointly (`asc_rail` 0.4, everyday 1.1 lower, everyday walk centre 1.9 km), Japan +0.5 by country, every pack checked on a test cross; long trips are T-528. notes/T-509.md.
 - T-303 [P2] Demand loading and responsiveness. Closed 2026-10-16 (doc tidy): the approved proposal was built as T-324 to T-328, all done by 2026-10-15. notes/T-303.md.
 - T-355 [P2] Startup CPU headroom. Closed 2026-10-16 (doc tidy): folded into T-361, whose worker rule (T-381, 3 workers on 16 threads) and memory cut (T-398) settled it. notes/T-348.md.

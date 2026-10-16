@@ -30,9 +30,8 @@ stage 6). History is in ARCHIVE.md.
 
 **Handoff for the next orchestrator (2026-10-16, evening).** Nothing is in flight; last commit
 0e6d738 is on 8800. Check `git status`, the taking marks here and ARCHIVE.md first. Anita's playtest
-notes land in TODO.md (hers; read it, file new items as tasks, never edit it). Open questions she
-has not answered are only playtest checks (keep or drop the rays to a selected bubble, "+n" for
-clipped line bullets, curve labels' metres while placing). CPU: at most 5 cores for all agents together (CLAUDE.md). Asks for Anita go in
+notes land in TODO.md (hers; read it, file new items as tasks, never edit it). Her open playtest
+questions (rays to a selection, clipped line bullets, curve labels' metres) were answered in T-530. CPU: at most 5 cores for all agents together (CLAUDE.md). Asks for Anita go in
 the final message or notes/for-anita.md, never TODO.md. **After each commit**:
 `node trainworld/checks/smoke.mjs`, commit explicit paths, rebuild 8800 (`git -C maps/.tw-snap
 checkout --detach <commit>`, then with `CARGO_TARGET_DIR=maps/.tw-snap-target`, `CARGO_BUILD_JOBS=3`

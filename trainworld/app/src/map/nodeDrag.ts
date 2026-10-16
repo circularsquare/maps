@@ -198,7 +198,7 @@ export class NodeDrag {
       }
       const [x, y] = this.overlay.toScreen(c.x, c.y);
       l.style.display = "";
-      setCurveLabel(l, c.radius, c.kmh);
+      setCurveLabel(l, c.kmh);
       l.style.transform = `translate(${Math.round(x + 8)}px, ${Math.round(y + 6)}px)`;
     });
     for (let i = labels.length; i < this.labels.length; i++) this.labels[i].style.display = "none";

@@ -23,7 +23,7 @@ import { effect } from "@preact/signals";
 import type { Map as MlMap, MapMouseEvent } from "maplibre-gl";
 import { lngLatToPack } from "../game/coords";
 import { describeIssues } from "../game/issues";
-import { count, distance, length, money, moneyShort, speed, unitMetres, unitShort } from "../game/format";
+import { count, distance, money, moneyShort, speed, unitMetres, unitShort } from "../game/format";
 import { activeCity, getWorldFrame, worldFrameEpoch } from "../game/cities";
 import { cellModes, cityCells, demandView } from "../game/demand";
 import { speedColour } from "../game/palette";
@@ -893,7 +893,7 @@ export class Tools {
       if (pv) {
         for (const c of curveLabels(pv.verts)) {
           const m = this.el(k++, "pi-label");
-          setCurveLabel(m, c.radius, c.kmh);
+          setCurveLabel(m, c.kmh);
           put(m, c.x, c.y, 8, 6);
         }
       }
@@ -997,13 +997,14 @@ export interface CurveLabel {
   kmh: number;
 }
 
-/** A curve label's content (T-417): the radius and speed limit on the speed colour, as the track
- * tool's tag colours the speed. Set only when it changes, since the labels are placed every frame. */
-export function setCurveLabel(el: HTMLElement, radius: number, kmh: number) {
-  const key = `${radius}:${kmh}`;
+/** A curve label's content (T-417; the radius left out, T-530): the speed limit on the speed colour,
+ * as the track tool's tag colours the speed. Set only when it changes, since the labels are placed
+ * every frame. */
+export function setCurveLabel(el: HTMLElement, kmh: number) {
+  const key = String(kmh);
   if (el.dataset.curve === key && el.firstChild) return;
   el.dataset.curve = key;
-  el.replaceChildren(chip(`${length(radius)}, ${speed(kmh)}`, speedColour(kmh)));
+  el.replaceChildren(chip(speed(kmh), speedColour(kmh)));
 }
 
 /**

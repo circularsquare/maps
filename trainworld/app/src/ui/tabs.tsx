@@ -4,15 +4,17 @@
 
 import { clock, demandAt } from "../game/clock";
 import { PERIODS, periodAt } from "../game/periods";
-import { useState } from "preact/hooks";
+import { useLayoutEffect, useRef, useState } from "preact/hooks";
 import { createLine } from "../game/lineActions";
 import type { JSX } from "preact";
 import { count, distUnit, length, levelLabel, money, moneyExact, perDistance, perKmFrom, shortDistance } from "../game/format";
 import { inkOn, LEVEL_COLOURS } from "../game/palette";
-import { DEMAND_INDEX, LEVELS, type Level, type LineInput } from "../game/types";
+import { DEMAND_INDEX, LEVELS, type Level, type LineInput, type StationInput } from "../game/types";
+import { complexes } from "../game/complexView";
+import { membersOf } from "../game/complexes";
 import { buildLevel, buildPlatform, display, keepPlacing, lineSort, selection, setDisplay, stationSort, trackCount, tool, type ListSort, type StationUseMode, type Tool } from "../game/ui";
 import type { Signal } from "@preact/signals";
-import { linesAt, setFares, world } from "../game/world";
+import { setFares, world } from "../game/world";
 import { liveMoney, moneyState } from "../game/money";
 import { cityById, viewedZone } from "../game/cities";
 import { listScope, scopedLists } from "../game/listScope";
@@ -188,9 +190,11 @@ function TotalToday() {
   return <span class="muted">{count(n)} riders in the past 24 hours</span>;
 }
 
-/** T-446: one station's boardings in the past 24 hours. */
-function StationToday({ id }: { id: string }) {
-  const n = stationsToday.value.get(id) ?? null;
+/** T-446: a station's or complex's boardings in the past 24 hours. */
+function StationToday({ ids }: { ids: string[] }) {
+  const by = stationsToday.value;
+  let n: number | null = null;
+  for (const id of ids) { const v = by.get(id); if (v !== undefined) n = (n ?? 0) + v; }
   return <span class="val w-num" data-tip={n !== null ? `${count(n)} boardings in the past 24 hours` : undefined}>{n !== null ? count(n) : ""}</span>;
 }
 
@@ -262,15 +266,93 @@ export function LinesTab() {
   );
 }
 
-/** T-521: a station row's bullets. At least 3 stay whole, the rest give way when the row is full
- * (the name is cut first). */
+/** Width kept for the "+" after a row's last whole bullet, px. */
+const PLUS_W = 10;
+const fitters = new WeakMap<Element, () => void>();
+let chipsObserver: ResizeObserver | null = null;
+function watchSize(el: Element, f: () => void) {
+  chipsObserver ??= new ResizeObserver((es) => { for (const e of es) fitters.get(e.target)?.(); });
+  fitters.set(el, f);
+  chipsObserver.observe(el);
+  return () => { chipsObserver?.unobserve(el); fitters.delete(el); };
+}
+
+/** T-521, T-530: a station row's bullets. At least 3 stay whole (the name is cut first); bullets
+ * that do not fit are hidden behind a "+" whose hover names them. Hidden ones keep their space, so
+ * the row's layout never depends on how many show. */
 function Chips({ lines }: { lines: LineInput[] }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const [fit, setFit] = useState<{ shown: number; left: number }>({ shown: lines.length, left: 0 });
+  const key = lines.map((l) => l.id).join(",");
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const measure = () => {
+      const chips = el.querySelectorAll<HTMLElement>(":scope > .chip");
+      const right = (i: number) => chips[i].offsetLeft + chips[i].offsetWidth;
+      const w = el.clientWidth;
+      let shown = chips.length;
+      if (shown && right(shown - 1) > w) {
+        shown = 0;
+        while (shown < chips.length && right(shown) + 2 + PLUS_W <= w) shown++;
+      }
+      const left = shown < chips.length && shown > 0 ? right(shown - 1) + 2 : 0;
+      setFit((f) => (f.shown === shown && f.left === left ? f : { shown, left }));
+    };
+    measure();
+    return watchSize(el, measure);
+  }, [key]);
   const n = Math.min(lines.length, 3);
+  const shown = Math.min(fit.shown, lines.length);
+  const min = n ? n * 18 + (n - 1) * 2 + (lines.length > 3 ? 2 + PLUS_W : 0) : 0;
   return (
-    <span class="chips" style={{ minWidth: n ? `${n * 18 + (n - 1) * 2}px` : undefined }}>
-      {lines.map((l) => <Chip line={l} size="sm" />)}
+    <span class="chips" ref={ref} style={{ minWidth: min ? `${min}px` : undefined }}>
+      {lines.map((l, i) => <Chip line={l} size="sm" gone={i >= shown} />)}
+      {shown < lines.length && <span class="chips-more" style={{ left: `${fit.left}px` }}
+        data-tip={[...new Set(lines.slice(shown).map((l) => l.name))].join("\n")}>+</span>}
     </span>
   );
+}
+
+/** A Stations tab row: a station complex (T-530), or a station on its own. */
+interface StationRow {
+  /** the member a click selects, whose name the row takes: most lines, then constructed, then save order */
+  lead: StationInput;
+  members: string[];
+  lines: LineInput[];
+  built: boolean;
+  dist: number | undefined;
+}
+
+/** The Stations tab's rows: one per complex with a member in `stations` (T-530, Anita: Times Sq's
+ * platforms were rows of one bullet each), its lines and numbers over the whole complex. */
+function stationRows(stations: readonly StationInput[], all: readonly StationInput[], lines: readonly LineInput[], dist: Map<string, number>): StationRow[] {
+  const cx = complexes.value;
+  const byId = new Map(all.map((s) => [s.id, s]));
+  const lineIdx = new Map<string, number[]>();
+  lines.forEach((l, i) => { for (const id of l.stops) { const a = lineIdx.get(id); if (!a) lineIdx.set(id, [i]); else if (a[a.length - 1] !== i) a.push(i); } });
+  const seen = new Set<number | string>();
+  const rows: StationRow[] = [];
+  for (const s of stations) {
+    const k = cx.of.get(s.id) ?? s.id;
+    if (seen.has(k)) continue;
+    seen.add(k);
+    const members = membersOf(cx, s.id);
+    const at = new Set<number>();
+    let lead = s, leadLines = -1, built = false, d: number | undefined;
+    for (const id of members) {
+      const m = byId.get(id);
+      if (!m) continue;
+      const li = lineIdx.get(id) ?? [];
+      for (const i of li) at.add(i);
+      if (li.length > leadLines || (li.length === leadLines && m.built && !lead.built)) { lead = m; leadLines = li.length; }
+      built ||= m.built;
+      const dm = dist.get(id);
+      if (dm !== undefined && (d === undefined || dm < d)) d = dm;
+    }
+    rows.push({ lead, members, lines: [...at].sort((a, b) => a - b).map((i) => lines[i]), built, dist: d });
+  }
+  return rows;
 }
 
 export function StationsTab() {
@@ -283,10 +365,11 @@ export function StationsTab() {
   const by = stationsToday.peek();
   const { key, dir } = stationSort.value;
   const sc = scopedLists(w.save.stations, w.save.lines, (k, id) => k === "station" && sel?.kind === "station" && sel.station === id);
-  const st = [...sc.stations].sort((a, b) =>
-    (key === "riders" ? ((by.get(a.id) ?? 0) - (by.get(b.id) ?? 0)) * dir
-      : key === "near" ? byNear(sc.stationDist.get(a.id), sc.stationDist.get(b.id), dir) : 0)
-    || a.name.localeCompare(b.name) * (key === "name" ? dir : 1));
+  const riders = (r: StationRow) => r.members.reduce((t, id) => t + (by.get(id) ?? 0), 0);
+  const st = stationRows(sc.stations, w.save.stations, w.save.lines, sc.stationDist).sort((a, b) =>
+    (key === "riders" ? (riders(a) - riders(b)) * dir
+      : key === "near" ? byNear(a.dist, b.dist, dir) : 0)
+    || a.lead.name.localeCompare(b.lead.name) * (key === "name" ? dir : 1));
   const d = display.value;
   return (
     <>
@@ -316,18 +399,18 @@ export function StationsTab() {
         { key: "near", label: "Near", tip: "Sort by distance from the centre of the screen", first: 1, cls: key === "near" ? "w-near" : "near-off" },
       ]} />}
       <ul class="rows pick stations">
-        {st.map((s) => (
-          <li class={sel?.kind === "station" && sel.station === s.id ? "on" : ""} onClick={() => (selection.value = { kind: "station", station: s.id })}>
-            <span class={"grow" + (s.built ? "" : " muted")}>{s.name}</span>
-            <Chips lines={linesAt(s.id)} />
-            {s.built ? <StationToday id={s.id} /> : <span class="val w-num">Plan</span>}
-            {key === "near" && <Near m={sc.stationDist.get(s.id)} />}
+        {st.map((r) => (
+          <li class={sel?.kind === "station" && r.members.includes(sel.station) ? "on" : ""} onClick={() => (selection.value = { kind: "station", station: r.lead.id })}>
+            <span class={"grow" + (r.built ? "" : " muted")}>{r.lead.name}</span>
+            <Chips lines={r.lines} />
+            {r.built ? <StationToday ids={r.members} /> : <span class="val w-num">Plan</span>}
+            {key === "near" && <Near m={r.dist} />}
           </li>
         ))}
       </ul>
       {st.length > 0 && (
         <div class="pane-foot">
-          <span class="muted">{sc.zone ? `${st.length} of ${sc.total.stations}` : st.length} stations, boardings in the past 24 hours</span>
+          <span class="muted">{sc.zone ? `${st.length} of ${complexes.value.members.length}` : st.length} stations, boardings in the past 24 hours</span>
         </div>
       )}
     </>
