@@ -1,5 +1,15 @@
 ﻿# Archive
 
+- T-509 [P2] Calibration. Done 2026-10-16: six cities' real networks fitted jointly (`asc_rail` 0.4, everyday 1.1 lower, everyday walk centre 1.9 km), Japan +0.5 by country, every pack checked on a test cross; long trips are T-528. notes/T-509.md.
+- T-303 [P2] Demand loading and responsiveness. Closed 2026-10-16 (doc tidy): the approved proposal was built as T-324 to T-328, all done by 2026-10-15. notes/T-303.md.
+- T-355 [P2] Startup CPU headroom. Closed 2026-10-16 (doc tidy): folded into T-361, whose worker rule (T-381, 3 workers on 16 threads) and memory cut (T-398) settled it. notes/T-348.md.
+- T-362 [P2] A worldwide baseline for long trips. Done 2026-10-15 as T-375 to T-379 (world field, tail fit, world market, air, Northeast checks); follow-ups T-427 to T-429, T-437, T-438 stay open. notes/T-362.md.
+- T-418 [P2] Track drawing like NIMBY Rails. Done 2026-10-15/16: through points (stage 1), T-422 Corners retired, T-423 quad, T-442 half turns, T-471 past the cap; T-430 stays open. notes/T-418.md.
+- T-295 [P2] Park-and-ride. Done 2026-10-15 as T-370 (long drives), T-371 (ride access), T-372 (fit with T-380's parking) and T-440 (everyday and regional layers); T-390 stays open. notes/T-295.md.
+- T-272 [P3] Everyday rail about 1.4x the commute's. Superseded 2026-10-16 (doc tidy): T-509 stages 5-6 fit the everyday rail constant (-1.1 below commutes) against NHTS New York's everyday shares. notes/T-509.md.
+- T-011 [P3] Northeast long-distance data. Superseded 2026-10-16 (doc tidy): the world market (T-375 to T-379) is fitted on NHTS 2017, flies air and was checked against NEC FUTURE.
+- T-012 [P3] GHSL non-residential layer as the tier 0 jobs proxy. Done in T-287 and T-360: the proxy's blend is fitted on Toronto's census and London's BRES (docs/demand-worldwide.md); no LODES comparison needed.
+
 - T-526 [P2] Track hover and construction layering. Done 2026-10-16: the track tag shows at once in select and build tools, with elevation and speed rows (icons, display colours; `map/trackTagRows.ts`), no lines row when none runs; player text says elevation; build tools draw the demand views beneath the network.
 - T-524 [P2] Rays to a selection. Done 2026-10-16: each ray takes its source bubble's colour and an opacity in proportion to its drawn radius (full at 8 px), fading out over 6% of the screen; the inter-region lines run from each zone bubble the same way (`LINE` 11 floats in `map/demandOverlay.ts`).
 - T-523 [P2] Settings icon. Done 2026-10-16: a toothed gear outline with a hub circle (`Icon.gear`, `ui/widgets.tsx`).

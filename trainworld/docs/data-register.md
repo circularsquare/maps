@@ -27,7 +27,7 @@ P3 task for anything marked N. A new country gets a row in every table before it
 | England (UK) | lon | A | notes/T-288.md (T-360 part); calibration (T-509): U TfL NUMBAT 2024 station entries and line boarders, U ORR Table 1410 station usage 2024-25, U Census 2011 QS701EW travel to work by MSOA (2021 TS061 skip: lockdown), U GB-wide GTFS (aubin.app, Transitous) for National Rail; G Network Rail and RDG timetable feeds (login) |
 | France | par | A, by commune | notes/T-289.md; calibration (T-509): U IDFM GTFS, U IDFM validations per ZdC per day, U INSEE RP 2022 transit share to work by commune (no rail split); G EGT 2018-20 result tables (omnil.fr 403 to scripts) |
 | Germany | ber | A, by Gemeinde | notes/T-290.md |
-| Japan | tyo osa ngo fuk spk sdj hij, 38 zones | A | notes/T-420.md, T-432, T-463; calibration (T-509): U KSJ S12 station counts, U 2020 census table 18 rail share by municipality of residence (e-Stat e18.xlsx) |
+| Japan | tyo osa ngo fuk spk sdj hij, 38 zones | A | notes/T-420.md, T-432, T-463; calibration (T-509): U KSJ S12 station counts, U 2020 census table 18 rail share by municipality of residence (e-Stat e18.xlsx); from them a country rail constant of +0.5 on every Japanese pack (Sendai's fit; docs/demand-worldwide.md Japan) |
 | Brazil | sao | B | notes/T-458.md |
 | China | sha | C, curve from a mean | notes/T-291.md |
 | South Korea | seo | C, curve from a mean | notes/T-457.md; calibration (T-509): U seoulriders' timetable, card gate and KRIC station counts; G census commuting mode by si-gun-gu (KOSIS) |

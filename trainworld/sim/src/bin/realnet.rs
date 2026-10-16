@@ -72,7 +72,7 @@ fn main() {
     {
         let p = api.params_mut();
         if let Some(v) = get("--asc") {
-            p.asc_rail = v.parse().unwrap();
+            p.set_extra("asc_rail", v.parse().unwrap()).unwrap();
         }
         if let Some(v) = get("--theta") {
             p.station_theta = v.parse().unwrap();

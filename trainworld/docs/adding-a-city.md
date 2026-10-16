@@ -130,6 +130,10 @@ It prints the cells before and after (41-57% fewer in a metro outside the US, 65
 over 70% in a rural pack). Every other step reads and writes the res-9 pack: to rerun one on a merged pack,
 `merge_cells.py wor --undo` first, then the step, then `merge_cells.py wor` again (it refuses a
 merged pack some step has changed since). `merge_cells.py --all` remerges every registered pack.
+Then `nocar.py wor` (homes without a car, T-511; a new country needs its row in `nocar.py`'s
+`COUNTRIES`, docs/data-register.md "Car ownership") and `everyday_rates.py wor` (the country's
+everyday rates, T-509; a worldwide median without a survey), seconds each; both write the merged
+pack and its res-9 copy, so rerun them after any step that rebuilds the pack.
 The market's zone file (`market_zones.py`, section 7) is made after the merge.
 
 Time: about 1 minute for Worcester (1M people) with everything cached; T-134's Washington took

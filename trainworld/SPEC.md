@@ -26,9 +26,9 @@ in `DECISIONS.md`, finished work in `ARCHIVE.md`, measurements in `notes/`. Wher
 
 ## 1. Priorities, in order
 
-When two goals conflict, the higher one wins. **Current focus (Anita): content and gameplay.**
-Performance is adequate; the principles below stay architectural constraints, and optimisation is
-parked until Anita reports a concrete problem.
+When two goals conflict, the higher one wins. **Current focus (Anita): the whole world, with demand
+realism at the core.** Performance is open work (2026-10-15): each item's impact is measured, and
+those with high impact or that let the game scale to hundreds of cities come first.
 
 1. **The game never freezes.** The main thread draws and handles input, nothing else. Anything
    that can take more than a few milliseconds runs in a worker, and the UI keeps showing the last
@@ -127,30 +127,45 @@ lines; an edit re-solves only the clusters it touched, the others keep their fig
   people with the metros' inputs and each zone's own fitted curve [T-420 stage 3,
   `pipeline/japan_zones.py`].
 - **City additions** in the US are paused; a **sampler of other countries' cities** comes next
-  (London, Paris, Shanghai, Mumbai, Lagos, São Paulo, Berlin, Seoul and Tokyo built), each a low-fidelity first pass from general sources
-  (`research/world-sampler.md`). **Cells** are H3 resolution 9 (about 0.1 km²).
+  (London, Paris, Shanghai, Mumbai, Lagos, São Paulo, Berlin, Seoul and all of Japan built: 67
+  zones in all), each a low-fidelity first pass from general sources (`research/world-sampler.md`).
+  **Cells** are H3 resolution 9 (about 0.1 km²); sparse ones merge [T-044, T-466]: a res-8 parent
+  under 2,500 trip ends a weekday becomes one cell, and in busier parents touching children under
+  1,250 each merge ([docs/demand.md](docs/demand.md) 4.1).
 
 ## 4. Demand: local trips
 
 Each zone's local layer models seven purposes from the same national and global sources [T-066,
-T-140, T-142, T-150, T-152, T-181]: **commutes** (a doubly constrained gravity from LODES homes to
-jobs), **shopping and errands** and **social and leisure** outings (retail, food and recreation
-jobs, population, and OSM parks for 8% of leisure, T-196; how many and how far from each
-country's national travel survey, T-509), **school** (NCES public schools),
+T-140, T-142, T-150, T-152, T-181] (the US sources are named here; elsewhere tier 0's equivalents,
+[docs/demand-worldwide.md](docs/demand-worldwide.md)): **commutes** (a doubly constrained gravity
+from LODES homes to jobs), **shopping and errands** and **social and leisure** outings (retail,
+food and recreation jobs, population, and OSM parks for 8% of leisure, T-196; outside the US the
+same sectors' jobs by small area where published, else each 2 km zone's jobs blended with OSM's
+shops and leisure places, T-453; how many and how far from each country's national travel survey,
+a worldwide median where it has none, T-509), **school** (NCES public schools),
 **university** (IPEDS), **airport** ground trips (FAA boardings less connecting passengers) and
 **medical** visits (OSM facilities). Private schools are not modelled yet. **Homes leave out
 institutions** (prisons, nursing homes and the like, T-234).
 
-- **Commutes are one gravity over every zone** [T-276], solved offline (`joint_gravity`); the
-  cross-pack part travels in the regional layer. Each pack carries its own distance curve (US
-  d^-0.8 exp(-d / 30 km), T-198) and border factor (US states 0.23, Washington 0.45; abroad,
-  national borders only, T-181).
+- **Commutes are one gravity over each group of zones that commute to each other** [T-276,
+  T-463] (the Northeast; Japan's 45 packs), solved offline (`joint_gravity`); the cross-pack part
+  travels in the regional layer. Each pack carries its own distance curve (US
+  d^-0.8 exp(-d / 30 km), T-198) and border factor (US states 0.23, Washington 0.45; Japan's packs
+  0.4; abroad, national borders only, T-181).
 - **Mode choice** recomputes after service or fare changes: station access, destination-specific
   common-line strategies, fare-sensitive choice between rail and driving, and up to three crowding
   rounds that price crowded trains and riders left behind by full ones [T-188]; a period stops
   once a round moves its loads under 1% [T-434]. Each round uses
   the combined loads of every zone, the everyday layer and the regional market. A distance-based
-  walking share is reserved first, so useful rail never removes a short trip's walk.
+  walking share is reserved first (centred at 1.7 km for commutes, 1.9 km for everyday trips), so
+  useful rail never removes a short trip's walk. The rail constant `asc_rail`, 0.4 (plus a country
+  constant where one is fitted: Japan +0.5) and 1.1 lower for everyday trips, is fitted jointly on six cities'
+  real networks [T-509]. Past 60 perceived car-minutes a minute weighs less (0.05 x sqrt(60 / T)),
+  in every layer [T-495, T-502].
+- **Homes without a car** [T-511, T-513]: each cell carries the people in households with no car
+  (census by tract, LSOA or prefecture, else the national rate); they choose between rail, walking
+  and "other" (bus, taxi and bike as one mode, on the road at 12 km/h plus a wait), shown as
+  driving.
 - **Walks and drives follow real paths** [T-275] round water and over OSM roads. Riders walk
   between stations within 300 m after a ride, and between any two stations of a complex [T-161].
 - **Weekdays and weekends** [T-260]: days 6 and 7 of each week are the weekend, worked out from the
@@ -173,8 +188,9 @@ The regional layer carries what crosses zones or goes far [T-117, T-276]. Detail
   both scaled by GDP per head and shared over the world field (Kontur people with country,
   income and landmass), so trips to places with no zone leave the map; a border factor between
   countries; zones under 250 km apart pair 6 km zone to 6 km zone, farther ones place to place.
-  Against a car that pays for time, running cost and parking, and no car between landmasses (those
-  trips stay fixed until air, T-378). **Commutes between zones**: the joint gravity's cross-pack
+  Rail competes with a car that pays for time, running cost and parking (only within a landmass)
+  and, between places 250 km or more apart that both have airports, a plane (T-378); other pairs
+  stay fixed. **Commutes between zones**: the joint gravity's cross-pack
   part, at commute timing and mode choice. Each zone's own pack holds its part; a registry row per
   zone gives every pair of zones its trips with nothing opened; the game builds pairs only between
   zones a station serves on one track network [T-174, T-409].
@@ -198,19 +214,22 @@ The regional layer carries what crosses zones or goes far [T-117, T-276]. Detail
 
 ## 6. Building and running
 
-The player draws curved track (straights and circular arcs, single, double or quad, at levels -3 to
-+3) two clicks per segment, each segment one curve through the click leaving along the track, up
+The player draws curved track (straights and circular arcs, single, double or quad, at elevations
+-3 to +3, "levels" in the code) two clicks per segment, each segment one curve through the click leaving along the track, up
 to 350 degrees round [T-418, T-422, T-442], places stations, and makes lines, all as
 **blueprints** that are free to edit and undo, then pays to **construct** them. A segment is one
 piece of track [T-244]. A crossover, placed with one click, joins a track to the track beside it (quad's
 other pair, or a route alongside) in an X, 120 m long, 50 km/h, priced as two junctions, so lines
 can change pairs mid-stretch [T-338]. Lines set a whole number of trains for high, medium and low demand; capacity and
-junction conflicts add delay, computed from the schedules in the clock worker before demand runs.
+junction conflicts add delay, computed from the schedules in the clock worker before demand runs,
+and no track, platform or junction carries more trains than its capacity: a line's fleet past that
+waits at its ends [T-517].
 The clock worker owns edits (with undo for reversible changes), capacity, fleet, costs, money and
 the boarding account. Fares are paid into the cash as trains pick up riders and running costs
 drain evenly [T-284]; the economy runs at 100x real days [T-081]. Changing a line's trains moves no
 running train: added ones enter at a terminal, removed ones leave at one [T-206]. A new game starts
-with $3B in an empty New York.
+with $3B in an empty New York [T-485]; double track costs a base of US$45M a km times a
+multiplier per elevation (US$13.5M at grade) [T-467], and running costs are US$2.25 a car-km.
 
 Detail: [docs/track-and-service.md](docs/track-and-service.md) (6.1 track and stations, 6.2
 capacity, 6.3 trains and schedules, 6.4 costs and money, 6.5 edits, 6.6 the boarding account).
@@ -240,7 +259,7 @@ game's own tag, never a browser tooltip [T-194, T-210]. No CSS transitions; trai
 motion. **Panels count the past 24 hours, not a forecast** [T-293, T-446]: the line and station panels
 count the past 24 hours from the boarding account, while the map's demand views (Homes and Destinations bubbles
 coloured by mode share, line widths by riders, station use circles, inter-region trips) show demand's
-whole day, the clock's day by default. On the map, lines sharing track are drawn over each other,
+whole day: the average day by default, or a weekday or a weekend day [T-464]. On the map, lines sharing track are drawn over each other,
 stations are dots from zoom 11 and their true platforms from 15, and trains fill like a gauge with
 their riders.
 
@@ -248,24 +267,27 @@ their riders.
 
 Rough on purpose: the bar is the right order (section 1).
 
-- **Real-network test** [T-007, notes/T-007.md]: New York's real rail network (867 stations, 109
-  lines, from the operators' GTFS) solved natively through the app's `DemandApi`
-  (`pipeline/realnet.py`), against ACS rail commute share by county, MTA subway entries by period,
-  the busiest subway links and operator totals. Latest (T-370's long drives, notes/T-295.md;
-  commutes only, three rounds): rail 18.4% of commutes against ACS's 20.3%, county error 2.2
-  points, until T-371's ride access and T-372's fit. Known gaps
-  are open tasks (PATH low, T-270; commuter rail high, T-271, T-272; subway peak loads, T-216).
+- **Calibration on real networks** [T-007, T-509, notes/T-509.md]: a city's real rail network (the
+  operators' GTFS, else OSM routes; `realnet.py net <city>`) is solved natively through the sim's
+  demand code (the `calib` bin) and scored by `calib.py` against census rail shares by area, station
+  entries and line counts where published, and NHTS's New York everyday rail shares. New York (at
+  half weight), London, Paris, Seoul, Tokyo and Sendai are fitted jointly and Toronto is held out;
+  the fit sets the rail constants and the everyday walking centre (section 4). The bar is
+  plausible: a moderate overshoot where real riders shun transit (New York) is accepted. Known gaps
+  are open tasks (Tokyo's commute rail share, T-509; PATH low, T-270; commuter rail high, T-271;
+  subway peak loads, T-216).
 - **Tier-2 check** against LODES OD: commute lengths and county pairs (notes/T-198.md).
-- To do: mode share per city against published figures; long-distance rail share on corridors
-  with known rail and air numbers (Northeast Corridor first).
+- To do: long-distance rail share on corridors with known rail and air numbers (Northeast
+  Corridor first).
 
 ## 10. Milestones
 
 - **M0, spikes** and **M1, New York sandbox**: done.
-- **M2, Northeast** (under way): nine cities, the regional market, zones and commutes between them
-  are in; park-and-ride remains.
-- **M3, world**: packs for many metros at tiers 0 and 1, world view, per-city dirty flags under
-  load. The sampler of other countries' cities starts it.
+- **M2, Northeast**: nine cities, the regional market, zones, commutes between them and
+  park-and-ride are in; water between packs for intercity track remains (T-358).
+- **M3, world** (under way): packs for many metros at tiers 0 and 1, world view, per-city dirty
+  flags under load. In so far: the sampler of other countries' cities, all of Japan, the world
+  market with air, and clusters that re-solve only what an edit touched.
 - **M4**: POIs, the look pass, sharing saves by link, accounts.
 
 ## 11. Saves and accounts

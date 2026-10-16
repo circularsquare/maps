@@ -322,6 +322,13 @@ notes/T-420.md has the tables.
   proper nouns, reads a split-off first 上 下 東 西 南 北 中 新 元 小 as in place names, a final 町
   as cho, ケ between kanji as ga, and writes a block as "N-chome"; about one name in four or five
   it gives is misread (against `name:en`, T-426). The kanji stays as a search alias.
+- **Rail constant** (T-509 stage 7, Anita 2026-10-16): every Japanese pack adds 0.5 to the
+  worldwide `asc_rail` (so 0.9 for commutes and -0.2 for everyday trips), in the regional layer's
+  commutes from Japanese zones too. It is Sendai's own fitted value; Tokyo alone wants 1.5, and at
+  +0.5 its commuters ride rail 35% against the 2020 census's 52% (Sendai 18% against 18%). Why it
+  may not carry over: the gap is a city's rail habit more than a country's (bikes to stations,
+  which count as rail in the census, are not in the game for homes without a car); smaller
+  Japanese cities have no counts to check it on.
 
 ## Homes (docs/demand.md 4.1)
 
@@ -407,13 +414,15 @@ notes/T-420.md has the tables.
   six cities fitted alone puts everyday trips 1.25-1.65 below commutes, and leaving any one out
   moves the joint values by at most 0.4 (rail) and 0.2 (everyday). The level is what differs by
   country: fitted alone, New York wants a constant of -0.9, London and Seoul -0.3 to -0.4, Paris
-  0.7, Sendai 0.8, Tokyo 1.5. After the fit the model is still over on New York's entries (x2.1),
-  London's (x1.6) and Seoul's (x1.4) and under on Tokyo's (x0.6) and Sendai's (x0.8); held out,
-  Toronto went from x1.0 to x0.8. Why it may not carry over: the constant stands for habit,
-  income, bus competition and what the car is good for, which differ by country (no bus in the
-  game: Seoul's and London's bus riders take the train); Japan's rail lead is the largest gap left.
-  Check: a new country's station entries against the model's level, and its census rail share by
-  area where it has one; a country setting for the level (Japan first) waits on Anita.
+  0.7, Sendai 0.8, Tokyo 1.5. A country's own constant goes on top where its cities show the gap
+  (`api::COUNTRY_ASC_RAIL`, by the pack's `country`, every layer's commutes and everyday trips):
+  **Japan +0.5** (Anita, 2026-10-16), Sendai's own value; see the Japan section. With it the model
+  is over on New York's entries (x2.1), London's (x1.6) and Seoul's (x1.4) and under on Tokyo's
+  (x0.8); held out, Toronto went from x1.0 to x0.8. Why it may not carry over: the constant stands
+  for habit, income, bus competition and what the car is good for, which differ by country (no bus
+  in the game: Seoul's and London's bus riders take the train). Check: a new country's station
+  entries against the model's level, and its census rail share by area where it has one; a country
+  constant only where a real network's counts show a gap the worldwide value cannot close.
 - **Driving alternative and homes without a car** (T-511, docs/demand.md 4.3). Drive times and
   costs are the US car's; the people living in a household with no car (per cell, `nocar`) cannot
   drive and choose among rail, walking the whole way and "other" (T-513: bus, taxi and bike as one

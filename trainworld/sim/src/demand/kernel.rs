@@ -67,9 +67,12 @@ pub struct Params {
     pub platform_wait_cap_min: f32,
     pub transfer_min: f32,
     pub fare_min: f32,
-    /// Logit scale per perceived minute, and the per-city rail propensity.
+    /// Logit scale per perceived minute, and the rail propensity: the worldwide value plus
+    /// `country_asc_rail`, which `set_extra` keeps in step (setting `asc_rail` by name sets the
+    /// worldwide part).
     pub beta: f32,
     pub asc_rail: f32,
+    pub country_asc_rail: f32,
     /// Cost damping (T-495, `mode_beta`): past this many perceived minutes of the car's trip the
     /// mode choice's scale falls as the square root of the car's minutes.
     pub damp_min: f32,
@@ -204,6 +207,7 @@ impl Default for Params {
             fare_min: 6.0,
             beta: 0.05,
             asc_rail: super::api::ASC_RAIL,
+            country_asc_rail: 0.0,
             damp_min: 60.0,
             road_detour: 1.3,
             road_local_km: 2.0,
@@ -267,7 +271,11 @@ impl Params {
     pub fn set_extra(&mut self, k: &str, v: f32) -> Result<(), String> {
         match k {
             "station_theta" => self.station_theta = v,
-            "asc_rail" => self.asc_rail = v,
+            "asc_rail" => self.asc_rail = v + self.country_asc_rail,
+            "country_asc_rail" => {
+                self.asc_rail += v - self.country_asc_rail;
+                self.country_asc_rail = v;
+            }
             "beta" => self.beta = v,
             "w_drive" => self.w_drive = v,
             "park_min" => self.park_min = v,
@@ -312,10 +320,10 @@ impl Params {
                     self.cordon = Some(std::sync::Arc::new(c.iter().map(|x| x * v).collect()));
                 }
             }
-            // scales every cell's share without a car (0: everyone drives); before `set_network`
             "other_asc" => self.other_asc = v,
             "everyday_asc_rail" => self.everyday_asc_rail = v,
             "everyday_walk_d0_km" => self.everyday_walk_d0_km = v,
+            // scales every cell's share without a car (0: everyone drives); before `set_network`
             "nocar" => {
                 if let Some(c) = &self.nocar {
                     self.nocar = Some(std::sync::Arc::new(c.iter().map(|x| (x * v).min(1.0)).collect()));
@@ -3135,6 +3143,18 @@ mod tests {
         assert_eq!((p.everyday_rate[1], p.everyday_decay_m[5]), (0.42, 3500.0));
         assert_eq!(p.everyday_rate[0], super::super::everyday::RATE[0]);
         assert!(p.set_extra("rate_shopping", 0.1).is_err());
+    }
+
+    /// Setting the worldwide rail constant by name keeps the country's part on top.
+    #[test]
+    fn country_rail_constant() {
+        let mut p = Params::default();
+        p.set_extra("country_asc_rail", super::super::api::country_asc_rail("JP")).unwrap();
+        assert_eq!(p.asc_rail, super::super::api::ASC_RAIL + 0.5);
+        p.set_extra("asc_rail", 0.0).unwrap();
+        assert_eq!(p.asc_rail, 0.5);
+        p.set_extra("country_asc_rail", super::super::api::country_asc_rail("US")).unwrap();
+        assert_eq!(p.asc_rail, 0.0);
     }
 
     /// T-380's parking: by jobs per km² of land, the paid price, the free share and the cordon;

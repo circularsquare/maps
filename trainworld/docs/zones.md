@@ -144,7 +144,9 @@ leaving then, from h to w, and C(h, w) x the share of trips home, on the same st
 reversed: the local layer's 70/12/6/4/8 and 2/18/58/16/6. Mode choice is the local commute's: a
 logit at 0.05 per perceived minute, driving weighted 1.33 plus parking at the work end (3 minutes
 plus the work zone's parking, the local rule's mean over drivers, `site_park` job-weighted over the 6 km zone), against
-the best rail strategy with its walks, waits, transfers and fares. The weekend has 0.30 of a
+the best rail strategy with its walks, waits, transfers and fares, with the local commute's rail
+constant: `asc_rail` 0.4 plus the home zone's country's (Japan +0.5; demand.md 4.3; T-509). The
+longer trips keep a constant of 0 until they are fitted on corridor counts. The weekend has 0.30 of a
 weekday's commutes with the weekend's work timing (days.rs `WORK`). Their loads join the
 work purpose's (T-158), so the purpose filter's "Work" shows them.
 

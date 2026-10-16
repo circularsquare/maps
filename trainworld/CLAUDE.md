@@ -109,18 +109,21 @@ packs, `..\venv\Scripts\python.exe`). Details and build orders: `docs/code-map.m
 ## Working here (Anita's decisions)
 
 - **The goal is the whole world; demand realism is core** (2026-10-13). New US cities stay paused.
-  Instead a sampler of other countries' cities (Toronto done; London, Paris, Shanghai, Mumbai, São Paulo, Berlin, Seoul and
-  Tokyo, Osaka, Nagoya, Fukuoka, Sapporo, Sendai and Hiroshima, with the rest of Japan as 38 prefecture zones, all at tier 0 with their country's inputs) to learn which demand methods work everywhere. Each is a
+  Instead a sampler of other countries' cities (Toronto done; London, Paris, Shanghai, Mumbai, São Paulo, Lagos, Berlin, Seoul and
+  Tokyo, Osaka, Nagoya, Fukuoka, Sapporo, Sendai and Hiroshima, with the rest of Japan as 38 prefecture zones, all at tier 0 with their country's inputs; 67 zones in all) to learn which demand methods work everywhere. Each is a
   low-fidelity first pass: missing data (medical, say) is left out, extents pragmatic, basic
   checks, no deep calibration. The global build is the baseline everywhere; the reach goal is
   tailoring country by country, first for likely-popular countries (China, Japan, the UK, Germany
   and the like) (2026-10-14). Whole-world estimate, 2026-10-14: about 40-60 agent hours (robust
   unattended tier 0, a few sampler cities, automatic city and zone choice, runtime scaling), then
-  days of machine time for the build. In tokens (London measured, notes/city-costs.md): a tier 0
-  city cost about 6.8M weighted with first-time tooling; perhaps 3M once T-363 and the lean-context
-  rules land, so 200 metros about 600M, very roughly two thirds of one week's limit in all.
-- **No precise demand calibration yet** (2026-10-15): balancing and calibrating demand waits until
-  more cities give more data points; a city's checks catch what is badly wrong, nothing finer.
+  days of machine time for the build. In tokens (notes/city-costs.md): London's tier 0 city cost
+  about 6.8M weighted with first-time tooling; the Japanese batches since came to 1.6-3.4M a pack
+  with a country module, so 200 metros about 300-700M, a quarter to three quarters of one week's
+  limit in all.
+- **Calibration** (2026-10-16, replacing "not yet" of 2026-10-15): T-509's design, approved by
+  Anita, fits mode choice jointly on six cities' real networks with Toronto held out; the aim is
+  plausible, not exact, and a moderate overshoot of measured rail where transit carries a stigma
+  (New York) is acceptable (DECISIONS 2026-10-16).
 - **General sources and methods only** (2026-10-12, stressed 2026-10-13). Prefer global sources
   (OSM, GHSL, Kontur, WorldPop) or a method any national census can feed. A one-city source is
   worth it only if very easy; one for a minor city never is. Research briefs say this.

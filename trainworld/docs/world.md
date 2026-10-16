@@ -206,7 +206,8 @@ player is looking.
   "Today" kind of day are the local time at the view's centre (`viewShift`, updated as the map
   moves). A line's inspector and the Lines tab show each line's level in its own local time.
 - **Not yet local** (T-321): the money ledger's days, the catch-up of the demand bubbles over a
-  day, and the regional market's longer trips between zones of different offsets (none today).
+  day, and the world market's longer trips between zones of different offsets (London - Paris,
+  Tokyo - New York), which take no period rule yet.
 
 ### NIMBY Rails
 

@@ -357,7 +357,10 @@ constant, one worldwide value: **`asc_rail` 0.4** for commutes and **0.4 - 1.1 =
 trips** (`everyday_asc_rail` -1.1; T-509, fitted jointly on New York, London, Paris, Seoul, Tokyo
 and Sendai's real networks): an errand or a visit takes the train less often than a commute
 between the same places (New York's survey: 5-7% of errand and social legs by rail against 21%
-of work legs). **Cost damping** (T-495, `Params::mode_beta`): past 60 perceived minutes of
+of work legs). A country can add its own constant on top (`api::COUNTRY_ASC_RAIL`, read by the
+pack's `country`; set by name, `asc_rail` is the worldwide part): **Japan +0.5**, in its
+commutes, everyday trips and the regional layer's commutes from its zones (T-509 stage 7).
+**Cost damping** (T-495, `Params::mode_beta`): past 60 perceived minutes of
 the car's trip T, the scale is 0.05 x sqrt(60 / T), so a minute counts for less on a long trip
 (0.029 at 3 hours, 0.014 at 13); one rule for commutes, everyday trips and the regional layer
 (docs/regional.md 5.1), T the car's perceived minutes door to door including parking, never the
