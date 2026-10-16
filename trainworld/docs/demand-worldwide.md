@@ -174,8 +174,8 @@ Tier 0 with sub-district totals and a curve fitted to distance bands; notes/T-29
 - **Work from home**: B-28's 'no travel' share of other workers (20.1% in Mumbai's districts).
 - **Airports**: the operator's yearly total via the press (passengers / 2) through `boardings`.
 - **Names**: OSM `name` is usually already Latin in Maharashtra (12 places of 1,460 had `name:en`).
-- **OSM is thin**: 803 school sites for 6.2M pupils, one hospital with beds (so every hospital takes
-  the median), a median drive factor of 1.62 between near zones (creeks and hills).
+- **OSM is thin**: 803 school sites for 6.2M pupils, one hospital with beds (the rest sized by the
+  "Medical" rule below), a median drive factor of 1.62 between near zones (creeks and hills).
 
 ## Nigeria (Lagos, `pipeline/nigeria.py`, T-459, 2026-10-16)
 
@@ -202,7 +202,8 @@ Tier 0 from global sources alone, the data-poor test; notes/T-459.md has the tab
   model mean 8.7 km (a 2010 survey's mean trip, Osoba, 12 km by road).
 - **Work from home**: 0 (no source); informal work near home is in the population share instead.
 - **Universities**: the World Bank's tertiary rate is from 2011 (0.0088 a resident).
-- **Medical**: no OSM hospital carries beds; every hospital takes the median or its floor area.
+- **Medical**: no OSM hospital carries beds; all are sized by the "Medical" rule below, to Nigeria's
+  World Bank figure of 2004.
 
 ## Brazil (Sao Paulo, `pipeline/brazil.py`, T-458, 2026-10-16)
 
@@ -603,8 +604,25 @@ notes/T-420.md has the tables.
   parks) in one city per country for the size and population terms.
 - **School and university.** NCES and IPEDS are US-only. Abroad: national school registers where
   they exist, OSM school and university points with an enrolment estimate otherwise.
-- **Airport and medical** (T-142): FAA enplanements are US-only; OurAirports and OSM hospitals
-  are global but need a passenger or visit figure.
+- **Airport** (T-142): FAA enplanements are US-only; OurAirports is global but needs a passenger
+  figure.
+- **Medical** (T-142, T-387; `enrich_medical.py`, numbers in `pipeline/hospital_beds.json`). OSM
+  hospitals, clinics, doctors and dentists everywhere; a hospital draws 1,000 visits a year a bed.
+  Beds are OSM's `beds` where tagged; else 0.588 x the square root of the site's floor area in m²
+  (its buildings' footprint x levels, 6.34 levels where a building has neither levels nor height,
+  or 1.139 m² of floor per m² of site where the site's area gives more), between 20 and 1,500; else,
+  for a hospital mapped as a point, 45. Those numbers pool the packs where OSM tags beds well
+  (Baltimore, Boston, Philadelphia, Springfield, Washington), New York held out to check them.
+  Every pack's hospitals are then scaled together to the World Bank's hospital beds per 1,000
+  people (SH.MED.BEDS.ZS, the country's latest year; the world figure where the country has none,
+  as for Taiwan) times the pack's population, and no site keeps more than 5% of the pack's beds or
+  1,500, whichever is more, and never over 4,000 (the excess goes to the others in proportion).
+  The scale sets hospitals against clinics and doctors; the shape only shares beds among
+  hospitals. Why it may not carry over: floor area is a weak guide, little better than giving
+  every hospital the same size (notes/T-387.md); point hospitals are small private ones in Mumbai and Lagos but large ones in New York;
+  some countries' latest World Bank year is old (Nigeria 2004, 0.5); and a national rate
+  undercounts a city that holds its region's referral hospitals. Check: a national register of
+  beds by hospital where one is open (Brazil's CNES, T-506).
 - **Trip timing.** Period shares and departure profiles come from US data (ACS B08302, NHTS).
   Work hours, siesta patterns, school hours and late evenings differ by country.
 - **Weekends** (T-260, docs/demand.md 4.2). A weekend day's trips per weekday trip by purpose come

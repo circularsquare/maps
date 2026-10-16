@@ -200,6 +200,10 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
 - `enrich_all.py phl bos` adds the non-work inputs (everyday sectors, NCES schools, IPEDS
   universities, airports from FAA/BTS/OurAirports, medical and parks from OSM) to finished packs
   in place, about 0.5-2 minutes a city plus Overpass time (T-142).
+- `hospital_beds.py pool` writes `pipeline/hospital_beds.json`, the pooled hospital-size numbers
+  and World Bank beds per 1,000 that `enrich_medical.py` reads (T-387); `check nyc` is the
+  held-out check, `survey` every pack's beds under the rule. Rerun `pool` before re-enriching
+  if packs with well-tagged beds change.
 - `routes.py <ids>` adds routed walking and driving to finished packs (OSM from Geofabrik, cached
   in `data/raw/osm/`; the sim's `pack_walk` bin; 1-8 minutes a pack; rerun after anything that
   changes a pack's zones, `--check` lists stale ones; T-275).

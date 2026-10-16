@@ -136,17 +136,35 @@ a country without one takes the surveys' median.
 | England | U GIAS | N HESA Table 1 by provider, T-382 | U OSM | U Wikidata; Heathrow 0.7 by judgement |
 | France | N ministry directory with pupils, T-385 | ? ministry students by site, T-505 | U OSM | U Wikidata; CDG 0.75 by judgement |
 | Germany | U tier 0 OSM (school files per Land) | ? Destatis 21311 by institution, T-505 | U OSM | U Wikidata |
-| Japan | U KSJ P29 points, mesh children 0-14 | U tier 0 (short in some zones, T-462) | U OSM, beds almost never tagged (T-387) | U Wikidata; Narita 0.8 by judgement |
+| Japan | U KSJ P29 points, mesh children 0-14 | U tier 0 (short in some zones, T-462) | U OSM, beds almost never tagged (sized by rule, T-387) | U Wikidata; Narita 0.8 by judgement |
 | Brazil | U tier 0 OSM; ? INEP school census, T-506 | U tier 0 | U OSM; ? CNES beds by establishment, T-506 | U GRU via the press, Congonhas Wikidata |
-| China | U tier 0 OSM | U tier 0 | U OSM, one hospital with beds (T-387) | U CAAC bulletin via the press |
-| South Korea | U tier 0 OSM | U tier 0 (3 of 217 sites with Wikidata counts) | U OSM, no beds tagged (T-387) | U Wikidata; Incheon 0.85 by judgement |
-| India | U tier 0 OSM; G UDISE+ enrolment (behind the portal) | U tier 0 | U OSM, one hospital with beds (T-387) | U the operator's total via the press |
+| China | U tier 0 OSM | U tier 0 | U OSM, one hospital with beds (sized by rule, T-387) | U CAAC bulletin via the press |
+| South Korea | U tier 0 OSM | U tier 0 (3 of 217 sites with Wikidata counts) | U OSM, no beds tagged (sized by rule, T-387) | U Wikidata; Incheon 0.85 by judgement |
+| India | U tier 0 OSM; G UDISE+ enrolment (behind the portal) | U tier 0 | U OSM, one hospital with beds (sized by rule, T-387) | U the operator's total via the press |
 | Nigeria | U tier 0 OSM; ? GRID3 schools, T-507 | U tier 0 (World Bank rate from 2011) | U OSM, no beds; ? GRID3 health facilities, T-507 | U FAAN via the press |
 
 Everywhere: places and parks from OSM, water from OSM (TIGER and StatCan in the US and Canada),
-world market from the packs. ? Overture Places as a second place source where c is under 0.3
+world market from the packs. U hospital beds per 1,000 people from the World Bank (SH.MED.BEDS.ZS,
+CC BY 4.0, the country's latest year, cached in `pipeline/hospital_beds.json`; none for Taiwan,
+which takes the world figure) scale every pack's hospital beds (T-387). ? Overture Places as a second place source where c is under 0.3
 (Brazil, China, India, Nigeria), T-508. Tier 0 alone covers any input marked tier 0 above; its rules are in
 demand-worldwide.md "Tier 0".
+
+## Every country: the world plan
+
+Which metros get a pack and which units each holds (`pipeline/world_plan.py`, T-536; the rule in
+adding-a-city.md 1). Downloads in `data/raw/worldplan/`, fetched when missing.
+
+| Input | Source | Terms |
+|---|---|---|
+| Which cities | U GHSL Urban Centre Database R2024A, 2025 population (11,422 centres), from `citybrowser/data/` | EC reuse with acknowledgement |
+| Commuting areas | U GHS-FUA R2019A (`GHS_FUA_UCDB2015_GLOBE_R2019A_54009_1K_V1_0`, 9,031 areas, 2015 epoch; still the latest release, checked 2026-10-16) | "Reuse of this data is authorised with proper acknowledgment of the source" (GHSL datasets page; EC reuse policy) |
+| People | U GHS-POP E2025 1 km, Mollweide (R2023A) | as above |
+| Units, Europe | U NUTS-3 2024 (Eurostat GISCO, 1:3M; EU, EFTA, candidates); U ONS ITL3 January 2025 for the UK | NUTS: "© EuroGeographics for the administrative boundaries"; GISCO's own download clauses not read yet (they restrict some admin datasets to non-commercial use), check before publishing |
+| Units, elsewhere | U geoBoundaries gbOpen, simplified, ADM1-4 (the level per country is in `world_plan.json` `unit_sources`, with each file's licence: CC BY, ODbL or public domain) | per country; GADM ruled out (non-commercial) |
+| Country of a centre | U Natural Earth admin 0, 1:10M | public domain |
+| Extracts | U Geofabrik `index-v1.json` | ODbL (OSM) |
+| Time zones | U timezonefinder 6.6 (offline, timezone-boundary-builder) | MIT; data ODbL |
 
 ## Archetypes
 

@@ -1,5 +1,6 @@
 ﻿# Archive
 
+- T-387 [P2] Tier 0 hospital sizes (pipeline stage 2). Done 2026-10-16: beds from the square root of floor area pooled over five US packs, scaled to World Bank beds per 1,000, one site capped; New York held out 20.1% misplaced by 2 km zone (target 20%); Mumbai, Shanghai, Lagos re-enriched. notes/T-387.md.
 - T-039 [P2] Themes, stage 1. Done 2026-10-16: Settings, Theme picks Light or Dark beside the three colours; dark panels from CSS tokens, Positron repainted Dark Matter-like, near-black line casing, map inks from `game/shades.ts`; switching redraws only. Legibility after Anita's look: T-543.
 - T-460 [P2] Tier 0's land-use cap as the default. Done 2026-10-16: 1 km2 cap, 0.003 degree spread in every build; London and Toronto 2 km zone jobs misplaced 26.06 to 25.99% and 18.83 to 18.01%; Lagos rebuilt byte-identical; builds print an `osm_signal:` line. notes/T-460.md.
 - T-510 [P3] Merge lone sparse cells across parents. Done 2026-10-16: a lone cell under 1,250 joins the lightest touching merged cell of its zone (700 m reach cap). All 67 packs 1.09M to 0.92M cells (-15%); busy stations past 5% 0.1-1.3%; real save +0.002%. notes/T-510.md.

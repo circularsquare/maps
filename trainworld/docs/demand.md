@@ -248,9 +248,9 @@ and connecting passengers are not modelled. Per city: [T-142](../notes/T-142.md)
 dentists; staff are commuters already. `pipeline/enrich_medical.py <city>` takes OSM
 `amenity=hospital|clinic|doctors|dentist` (or the same `healthcare=*`) in the pack's counties and
 sizes each in visits a year (judgement scaled to national figures): a hospital 1,000 per bed
-(OSM `beds`, else its site's building floor area, footprint x levels, at the pack's own tagged
-hospitals' beds per floor square metre, about one bed per 190 m² in New York, else their
-median), a clinic 10,000, a doctors' practice 4,000, a dentist 3,000. A hospital mapped twice
+(beds by T-387's worldwide rule, docs/demand-worldwide.md "Medical": OSM `beds`, else from the
+site's floor area, else a pooled median, all scaled to the World Bank's national beds per 1,000
+people), a clinic 10,000, a doctors' practice 4,000, a dentist 3,000. A hospital mapped twice
 (a building or point inside its campus) counts once. Residents make 0.04 medical outings a day
 (0.08 legs, against NHTS 2022's 0.091 medical/dental legs per person a day: 4.02% of 2.27 trips),
 to these places by size and a 5 km exponential decay, origin-constrained like errands but with

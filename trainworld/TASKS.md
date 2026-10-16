@@ -28,7 +28,7 @@ costs $2.25 a car-km (T-467, T-485). Real save's demand final: about 9.78M rail 
 stage 6). History is in ARCHIVE.md.
 
 **Handoff for the next orchestrator (2026-10-16, evening).** Nothing is in flight; last commit
-ad9dc5d is on 8800. Check `git status`, the taking marks here and ARCHIVE.md first. Anita's playtest
+c693f7b is on 8800. Check `git status`, the taking marks here and ARCHIVE.md first. Anita's playtest
 notes land in TODO.md (hers; read it, file new items as tasks, never edit it). Her open playtest
 questions (rays to a selection, clipped line bullets, curve labels' metres) were answered in T-530. CPU: at most 5 cores for all agents together (CLAUDE.md). Asks for Anita go in
 the final message or notes/for-anita.md, never TODO.md. **After each commit**:
@@ -121,7 +121,7 @@ Tier 0 and country sources: docs/demand-worldwide.md, docs/data-register.md.
 - T-315 [P3] Tier 0 universities: few OSM campuses carry a Wikidata id (4 of 63 in Toronto), so most are sized by area (+20% students in Toronto, 10.7% misplaced). Try matching OSM campus names to Wikidata universities with coordinates in the boundary, and splitting a multi-campus institution's count. Open.
 - T-316 [P3] Tier 0 boundaries from global admin units (geoBoundaries ADM2-3, NUTS-3/ITL3) instead of a hand-made GeoJSON, and district population totals from the same units where a national source publishes them. Open.
 - T-462 [P3] Japan zone tooling from T-420 stage 3's retrospective: `japan_zones.py plan` fails when table 4's municipality codes differ from N03's (Hamamatsu's redrawn wards cost a rebuild); `build` refits when the zone changed after its curve was folded; `japan.municipalities` tests "land of no municipality" by distance, not by buffering the union (53 minutes for 47 prefectures); Tokachi's 2,542 university students against about 12k at the national rate. Open; notes/T-420.md.
-- T-387 [P2] (pipeline stage 2, notes/T-535.md) Tier 0 hospitals where OSM tags beds on almost none (Shanghai 1, Mumbai 1 of 1,827, Keihanshin 1 of 1,390 at 1,063 beds, T-431): every untagged hospital takes the one tagged median (Mumbai 2,844 beds each, so clinics get almost no medical visits). Size by building floor area or a per-country beds-per-resident total instead. Open; notes/T-292.md.
+- T-544 [P3] Re-enrich the other 64 packs' medical visits with T-387's hospital rule (`merge_cells.py <ids> --undo`, `enrich_medical.py`, `merge_cells.py`, `nocar.py`, `everyday_rates.py`; Overpass caches exist, minutes in all); until then only Mumbai, Shanghai and Lagos use it. Rerun `hospital_beds.py pool` after T-203 if it brings back tagged campuses. Open; notes/T-387.md.
 - T-388 [P3] Mumbai jobs by place of work: the 6th Economic Census (2013) has employment by district and Greater Mumbai by ward; through tier0's `jobs` hook if open, since the proxy gives Greater Mumbai 45% of jobs against 52% of the 2011 workers by residence. Open; notes/T-292.md.
 - T-386 [P3] tier0's signals log prints GHSL totals for the whole box, which over sea include nodata (Shanghai's nres_v 34.7e12 against 1.6e9 inside); print the totals inside the boundary. Small. Open; notes/T-291.md.
 - T-503 [P3] Everyday destinations from sector totals by larger unit under T-456's fallback (notes/T-453.md 5): Paris from INSEE Flores 2021, commune x A38 (trade mixed with wholesale, so check the concentration test in central Paris, notes/T-456.md 7); Shanghai from the economic census by district and sector if the bulletins have it (not checked). docs/data-register.md. Open.
