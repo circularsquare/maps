@@ -440,6 +440,8 @@ struct Period {
     ms: f64,
     fac: Vec<f32>,
     uniform: bool,
+    /// `kernel::settled` (T-434)
+    seen: Vec<f32>,
     xi: XferIndex,
     xfer: Vec<f32>,
 }
@@ -1513,23 +1515,26 @@ impl IntercityApi {
         let w = 2 * nz;
         let col = &self.served_at;
         let mut st = vec![0f32; s * w];
+        let mut terms: Vec<(u32, u32, f64)> = vec![];
         for (pi, pair) in self.pairs.iter().enumerate() {
             let trips = pair.trips * SHARES[q] as f64;
             let (a, b) = (&self.access[pair.a], &self.access_work[pair.b]);
-            let mut terms = Vec::with_capacity(a.len() * b.len());
+            terms.clear();
             let mut sum = 0f64;
             for &(sa, wa) in a {
+                let row = &sk.r[sa * s..(sa + 1) * s];
                 for &(sb, wb) in b {
                     if sa == sb {
                         continue;
                     } // A rail journey must actually board a train.
-                    let cost = sk.r[sa * s + sb] + p.fare_min;
+                    let cost = row[sb] + p.fare_min;
                     if !cost.is_finite() {
                         continue;
                     }
-                    let v = wa as f64 * wb as f64 * ((-p.beta * (cost - pair.drive)).clamp(-80., 80.) as f64).exp();
+                    // f32 exp: the figures move by about 1e-8 against f64 (T-435)
+                    let v = wa as f64 * wb as f64 * (-p.beta * (cost - pair.drive)).clamp(-80., 80.).exp() as f64;
                     sum += v;
-                    terms.push((sa * s + sb, v));
+                    terms.push((sa as u32, sb as u32, v));
                 }
             }
             let fraction = sum / (pair.rest as f64 + sum);
@@ -1538,12 +1543,13 @@ impl IntercityApi {
             cor[pair.corridor] += r;
             pair_rail[pi] = r as f32;
             if sum > 0. {
-                for (k, v) in terms {
-                    let rr = r * v / sum;
-                    od[k] += rr as f32;
-                    let (sa, sb) = (k / s, k % s);
-                    st[sa * w + col[pair.b] as usize] += rr as f32;
-                    st[sb * w + nz + col[pair.a] as usize] += rr as f32;
+                let (ca, cb) = (nz + col[pair.a] as usize, col[pair.b] as usize);
+                for &(sa, sb, v) in &terms {
+                    let (sa, sb) = (sa as usize, sb as usize);
+                    let rr = (r * v / sum) as f32;
+                    od[sa * s + sb] += rr;
+                    st[sa * w + cb] += rr;
+                    st[sb * w + ca] += rr;
                 }
             }
         }
@@ -1950,6 +1956,7 @@ impl IntercityApi {
             ms: now_ms() - t,
             fac: no_crowding,
             uniform: true,
+            seen: vec![],
             xi,
             xfer: pass.xfer,
         });
@@ -1962,7 +1969,7 @@ impl IntercityApi {
         };
         let t = now_ms();
         let mut st = self.per[q].take().unwrap();
-        if st.uniform && fac == st.fac && left == st.g.rn_left && !legacy() {
+        if settled(&mut st.seen, &total[..st.g.rn_line.len()]) || (st.uniform && fac == st.fac && left == st.g.rn_left && !legacy()) {
             st.round += 1;
             st.ms = now_ms() - t;
             self.per[q] = Some(st);

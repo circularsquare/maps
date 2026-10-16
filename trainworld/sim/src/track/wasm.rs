@@ -160,6 +160,10 @@ impl TrackApi {
     pub fn today(&self, t: f64) -> Vec<f64> {
         self.boarding.today(&self.w.svc, t)
     }
+    /// Every line's past 24 hours at game time `t` (T-446, `Boarding::past_day`).
+    pub fn past_day(&self, t: f64) -> Vec<f64> {
+        self.boarding.past_day(&self.w.svc, t)
+    }
     /// Forget the riders (a game was loaded: its demand comes later).
     pub fn clear_riders(&mut self) {
         self.boarding.clear();
@@ -996,13 +1000,12 @@ impl TrackApi {
         let beside_b = if quad && through { quad_beside(&self.w.net, rb.node).filter(|b| b.1 == -side) } else { None };
         let tangent = through && rb.dirs.is_empty() && (!quad || beside_a.is_some());
         if let (true, Some(dir)) = (tangent, nearer_dir(&ra, next_a)) {
-            let (pi, circle) = tangent_arc(ra.x, ra.y, ra.level, dir, next_a, scaled);
+            let (pi, circle) = tangent_arc(ra.x, ra.y, ra.level, rb.level, dir, next_a, scaled);
             if let Some(c) = circle {
                 self.route_arc = c.to_vec();
             }
             match pi {
-                Ok(Some(p)) => verts.push(p),
-                Ok(None) => {}
+                Ok(p) => verts.extend(p),
                 Err(()) => {
                     self.release(&new_nodes, &new_edges);
                     return Err(Issue::Geom { edge: u32::MAX, issue: GeomIssue::Reversal(1) });
@@ -2651,22 +2654,28 @@ fn nearer_dir(r: &Resolved, toward: (f64, f64)) -> Option<f64> {
     r.dirs.iter().copied().min_by(|a, b| geom::wrap(a - want).abs().total_cmp(&geom::wrap(b - want).abs()))
 }
 
-/// The furthest off its start's heading a tangent segment's end may be (T-418).
-const TANGENT_MAX_OFF: f64 = 85.0 * PI / 180.0;
+/// The furthest off its start's heading a tangent segment's end may be (T-442): a turn of up to
+/// 350 degrees; right behind the start the circle grows without bound.
+const TANGENT_MAX_OFF: f64 = 175.0 * PI / 180.0;
 
-/// T-418: the PI that makes a segment from (x, y), leaving on heading `dir`, one circular arc
-/// through `to`. For a chord d at angle a off the heading it lies d / (2 cos a) along the heading,
-/// so both legs are that long and the auto radius, which may use an end leg whole, is
-/// d / (2 sin a). None where `to` is on the heading; Err where it is more than `TANGENT_MAX_OFF`
-/// off it. Also the arc's circle (centre x, y, ground radius), the capped curve's when the arc
-/// would be wider than `R_CAP`; None for a straight.
+/// T-418: the PIs that make a segment from (x, y), leaving on heading `dir`, one circular arc
+/// through `to`. For a chord d at angle a off the heading the arc turns 2a with radius
+/// d / (2 sin a). Up to a quarter turn that is one PI d / (2 cos a) along the heading, both legs
+/// that long, so the auto radius, which may use an end leg whole, is the arc's. A wider turn
+/// (T-442) is split into n equal corners of at most 90 degrees, each PI r tan(2a / 2n) from the
+/// arc's tangent points: the legs between are twice that, of which the auto radius uses half, so
+/// it is the arc's again; the express pair of quad track offsets each corner concentric, which it
+/// cannot do for one corner turning back. Empty where `to` is on the heading; Err where it is more
+/// than `TANGENT_MAX_OFF` off it. Also the arc's circle (centre x, y, ground radius), the capped
+/// curve's when the arc would be wider than `R_CAP` (None when a split arc is: the cap leaves
+/// straights between its corners); None for a straight.
 #[allow(clippy::type_complexity)]
-fn tangent_arc(x: f64, y: f64, level: i8, dir: f64, to: (f64, f64), scaled: bool) -> (Result<Option<Pi>, ()>, Option<[f64; 3]>) {
+fn tangent_arc(x: f64, y: f64, level: i8, level_to: i8, dir: f64, to: (f64, f64), scaled: bool) -> (Result<Vec<Pi>, ()>, Option<[f64; 3]>) {
     let (dx, dy) = (to.0 - x, to.1 - y);
     let d = dx.hypot(dy);
     let off = geom::wrap(dy.atan2(dx) - dir);
     if d < 1.0 || off.abs() < 0.002 {
-        return (Ok(None), None);
+        return (Ok(vec![]), None);
     }
     let a = off.abs();
     let k = kk(scaled, y);
@@ -2674,18 +2683,35 @@ fn tangent_arc(x: f64, y: f64, level: i8, dir: f64, to: (f64, f64), scaled: bool
     let (nx, ny) = (-uy * off.signum(), ux * off.signum());
     let r = d / (2.0 * a.sin());
     let rc = R_CAP * k;
+    let n = (2.0 * a / (PI / 2.0) - 1e-9).ceil().max(1.0) as usize;
     let circle = if r <= rc || a > TANGENT_MAX_OFF {
-        [x + nx * r, y + ny * r, r / k]
-    } else {
+        Some([x + nx * r, y + ny * r, r / k])
+    } else if n == 1 {
         // the capped curve starts this far along the heading
         let s0 = d / (2.0 * a.cos()) - rc * a.tan();
-        [x + ux * s0 + nx * rc, y + uy * s0 + ny * rc, R_CAP]
+        Some([x + ux * s0 + nx * rc, y + uy * s0 + ny * rc, R_CAP])
+    } else {
+        None
     };
     if a > TANGENT_MAX_OFF {
-        return (Err(()), Some(circle));
+        return (Err(()), circle);
     }
-    let t = d / (2.0 * a.cos());
-    (Ok(Some(Pi::new(x + ux * t, y + uy * t, 0.0, level).quantised())), Some(circle))
+    if n == 1 {
+        let t = d / (2.0 * a.cos());
+        return (Ok(vec![Pi::new(x + ux * t, y + uy * t, 0.0, level).quantised()]), circle);
+    }
+    let step = 2.0 * off / n as f64;
+    let t = r * (step.abs() / 2.0).tan();
+    let (mut px, mut py) = (x + ux * t, y + uy * t);
+    let mut pis = vec![Pi::new(px, py, 0.0, level).quantised()];
+    for j in 1..n {
+        let h = dir + step * j as f64;
+        px += 2.0 * t * h.cos();
+        py += 2.0 * t * h.sin();
+        // a level change ramps on the middle leg (2t), not the short last one
+        pis.push(Pi::new(px, py, 0.0, if j < n / 2 { level } else { level_to }).quantised());
+    }
+    (Ok(pis), circle)
 }
 
 /// A lead-in PI leaving (x, y) on heading `dir` towards `toward` (`lead_in`), or None when the
@@ -3768,6 +3794,15 @@ mod tests {
         a.set_route_tangent(true);
         (a, east)
     }
+    /// T-442: the same straight in quad track, and its drawn pair's east end.
+    fn quad_start() -> (TrackApi, u32) {
+        let mut a = api();
+        a.set_route_tangent(true);
+        let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(1000.0, 0.0).iter()).copied().collect();
+        assert_eq!(a.add_route(&ends, &[], 4, false), 0);
+        let end = a.route_end();
+        (a, end)
+    }
     fn from_node(n: u32, x: f64, y: f64) -> Vec<f64> {
         vec![1.0, n as f64, 0.0, 0.0, 0.0, 0.0, 0.0, x, y, 0.0]
     }
@@ -3824,6 +3859,53 @@ mod tests {
         assert!(f.radius[1] < 450.0, "old lead-in: {}", f.radius[1]);
     }
 
+    /// T-442: a click beyond a quarter turn is still one arc of radius d / (2 sin a) through it,
+    /// up to 350 degrees, split into corners of at most 90 degrees; on quad track the express pair
+    /// is concentric all the way round; a level change finds room on a hairpin.
+    #[test]
+    fn a_tangent_segment_turns_past_a_half_turn() {
+        for tracks in [2u8, 4] {
+            for (d, deg) in [(400.0, 84.0), (400.0, -100.0), (300.0, 150.0), (200.0, -170.0), (60.0, 174.0), (4000.0, 120.0)] {
+                let (mut a, east) = if tracks == 4 { quad_start() } else { tangent_start() };
+                let off: f64 = (deg as f64).to_radians();
+                let (x, y) = (1000.0 + d * off.cos(), d * off.sin());
+                let ends = from_node(east, x, y);
+                let pv = a.preview_route(&ends, &[], tracks, false);
+                assert_eq!(pv[0], 1.0, "{tracks} tracks, {d} m at {deg}: {}", a.issue_kinds());
+                let f = a.w.net.fit(&a.route_vertices);
+                let (ex, ey, eh) = geom::pos_at(&f.pieces, f.len);
+                assert!((ex - x).hypot(ey - y) < 0.01, "{d} m at {deg}: ends at {ex}, {ey}");
+                assert!(geom::wrap(eh - 2.0 * off).abs() < 1e-4, "{d} m at {deg}: leaves on {eh}");
+                let want = d / (2.0 * off.abs().sin());
+                if want <= R_CAP {
+                    for i in 1..a.route_vertices.len() - 1 {
+                        assert!((f.radius[i] - want).abs() < 0.01 * want, "{d} m at {deg}: corner {i} radius {} against {want}", f.radius[i]);
+                    }
+                    assert!(f.pieces.iter().all(|p| p.k != 0.0 || p.len < 0.05), "{d} m at {deg}: one arc, no straight");
+                    assert!((a.route_arc()[2] - want).abs() < 0.5);
+                } else {
+                    assert!(a.route_arc().is_empty(), "a capped split arc has no one circle");
+                }
+                if tracks == 4 {
+                    let ex = a.w.net.fit(&a.route_express);
+                    let (qx, qy, qh) = geom::pos_at(&ex.pieces, ex.len);
+                    assert!(((qx - x).hypot(qy - y) - QUAD_SPACING).abs() < 0.05, "{d} m at {deg}: express ends 8 m beside");
+                    assert!(geom::wrap(qh - eh).abs() < 1e-3, "{d} m at {deg}: express parallel at the end");
+                }
+                assert_eq!(a.add_route(&ends, &[], tracks, false), 0, "{tracks} tracks, {d} m at {deg}: {}", a.issues());
+            }
+        }
+        // a hairpin of 300 degrees going up a level ramps on its middle leg
+        let (mut a, east) = tangent_start();
+        let off: f64 = 150f64.to_radians();
+        let (x, y) = (1000.0 + 400.0 * off.cos(), 400.0 * off.sin());
+        let mut ends = from_node(east, x, y);
+        ends[9] = 1.0;
+        ends[5] = 0.0;
+        assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+        assert_eq!(a.w.net.node_level[a.route_end() as usize], 1);
+    }
+
     /// T-418: a click too close and too far off to the side is refused, the ghost and circle
     /// still drawn; one behind the end is refused with its circle.
     #[test]
@@ -3840,7 +3922,7 @@ mod tests {
         let fr = a.w.net.fit(&a.route_vertices).radius[1];
         assert!((fr - r).abs() < 0.5, "the ghost's curve is the circle's: {fr} against {r}");
         assert_ne!(a.add_route(&ends, &[], 2, false), 0);
-        let back = from_node(east, 900.0, 400.0);
+        let back = from_node(east, 600.0, 5.0);
         assert_eq!(a.preview_route(&back, &[], 2, false)[0], 0.0);
         assert!(a.issue_kinds().contains("Reversal"), "{}", a.issue_kinds());
         assert_eq!(a.route_arc().len(), 3);

@@ -380,9 +380,11 @@ of two logit results, one against the free driver and one against the paying one
 that share, not one result at the mean price. Congestion charges (`kernel::CORDONS`, a place's
 charging area and its charge, half the day's charge at 3 minutes a dollar) apply to the share of a
 zone's jobs inside the area: Manhattan south of 60th Street 13.5 minutes ($9), central London 35.1
-(£18); nowhere else. A ride to a station pays the mean over drivers there. The everyday and regional
-layers still charge the rule before T-380 (3 + jobs per km² of the whole square / 2,500, capped at
-40) until T-440.
+(£18); nowhere else. A ride to a station pays the mean over drivers there. The same rule serves all
+three layers: the commutes and the everyday layer call `park_parts` (the everyday layer takes the
+mix of two logit results per pair, `rail_share_parked`); the regional layer's market pack holds each
+site's mean over drivers (`site_park`), written by `pipeline/intercity.py park_by_cell`, which
+mirrors `park_parts` and `cordon_by_zone` and is used for every zone's pack.
 
 **Routed walking and driving** (T-275, notes/T-275.md). Walks and drives go round water and
 over bridges, from data that exists for any city: OpenStreetMap roads and bridges (Geofabrik
@@ -652,13 +654,17 @@ works on two levels:
    successive averages). Each round costs as much as the first pass. The riders projects worked
    this out; read memory `reference_transit_crowding_assignment.md` (in
    `~/.claude/projects/c--Users-anita-projects-maps/memory/`) first: the penalty starts where seats
-   run out, never saturates, and averaging is what stops it ringing. **Three rounds** (T-022): the
-   first round leaves the segment that takes the overflow at its worst (963% of crush on the real
-   New York network against 310% before it), and a player-sized network moves under 1% by the
-   third. No crush cap: an overloaded line is the player's signal (notes/T-022.md). A round in
-   which no segment is over its seats has the free-flow estimate's factors (all one), so it would
-   solve the same pass again: it is skipped, with exactly the same result (T-119; the real
-   network is crowded in every period, so this only shortens small networks).
+   run out, never saturates, and averaging is what stops it ringing. **At most three rounds**
+   (T-022): the first round leaves the segment that takes the overflow at its worst (963% of crush
+   on the real New York network against 310% before it). No crush cap: an overloaded line is the
+   player's signal (notes/T-022.md). **Each period stops early once settled** (T-434,
+   `kernel::settled`): a round is skipped when the round before moved the period's summed segment
+   loads (every population's, rider weighted: the sum of the changes over the sum of the loads) by
+   under 1%. The first crowding round always runs; the peaks keep all three, quiet periods stop
+   after one or two (notes/T-434.md). A round in which no segment is over its seats has the
+   free-flow estimate's factors (all one), so it would solve the same pass again: it is skipped,
+   with exactly the same result (T-119). A skipped round still counts as a round, so every period
+   reports the same round numbers.
 
    **Riders left behind** (T-188, `kernel::left_behind`, `round_costs`). Each round also prices
    the wait for full trains. From the same frozen loads (every population's segment loads,
@@ -829,7 +835,7 @@ follow T-376's rule: ground and tail departures, each over its own normaliser ag
 field, both stored per 6 km zone in the place's pack, so the departures to places with no zone
 (`info()[4]`, by place `elsewhere(q)`, a selection's in its last two numbers) need no outside
 world. The car's perceived minutes add 15 cents a road km and the destination zone's parking
-(`site_park`: the local rule at each site's 2 km zone, job-weighted), both halved for two occupants
+(`site_park`: the local parking rule's mean over drivers at each site's 2 km zone, job-weighted), both halved for two occupants
 (`car_min`). T-378: the plane (`air_min`, [regional.md](regional.md) 5.1) is priced per pair of
 places when the market is built (`PairRule`: car or not, the plane's share of the trips not by
 rail, the weight of every mode but rail against the reference, the reference's minutes with no

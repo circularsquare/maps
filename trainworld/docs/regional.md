@@ -59,8 +59,8 @@ Generate **total** all-mode trips, then let the player's network earn rail's sha
 minute, at 3 perceived minutes a dollar [T-378].
 
 - *Car*: 15 minutes plus 1.25 times the great-circle distance at 85 km/h, plus 15 cents a road km
-  and the destination's parking (the local rule before T-380, baked into the market pack's
-  `site_park` until T-440), both split over two occupants; no tolls (T-270). Only within a
+  and the destination's parking (the local rule, docs/demand.md 4.3, baked into the market pack's
+  `site_park`), both split over two occupants; no tolls (T-270). Only within a
   landmass.
 - *Plane*: between places whose centres are at least 250 km apart (the far pairs) and that both
   have airports. Door to door: the drive to an airport at each end (the car's drive time,

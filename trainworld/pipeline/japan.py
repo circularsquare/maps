@@ -55,9 +55,24 @@ FINEST = {"0", "2", "3"}
 MIN_PART_DEG2 = 2e-6
 ISLANDS = 13360         # Tokyo codes from here on are the Izu and Ogasawara islands
 # Units smaller than a prefecture (T-432), usable wherever a prefecture code is: Hokkaido's
-# subprefectures by their N03 name (N03_002), or one municipality as "<pref>-<code>"
+# subprefectures by their N03 name (N03_002), or one municipality as "<pref>-<code>"; "~<code>"
+# after a unit leaves that municipality out (stage 3: Shiribeshi less Otaru, which is Sapporo's)
 SUBPREFECTURES = {"01-ishikari": "石狩振興局", "01-shiribeshi": "後志総合振興局", "01-sorachi": "空知総合振興局",
-                  "01-iburi": "胆振総合振興局", "01-rumoi": "留萌振興局"}
+                  "01-iburi": "胆振総合振興局", "01-rumoi": "留萌振興局", "01-kamikawa": "上川総合振興局",
+                  "01-soya": "宗谷総合振興局", "01-okhotsk": "オホーツク総合振興局", "01-tokachi": "十勝総合振興局",
+                  "01-kushiro": "釧路総合振興局", "01-nemuro": "根室振興局", "01-hidaka": "日高振興局",
+                  "01-oshima": "渡島総合振興局", "01-hiyama": "檜山振興局"}
+# N03 lists the six villages of the Russian-administered southern Kurils under Nemuro; the census
+# counts no one there, so no zone draws them (T-420 stage 3)
+NOT_ADMINISTERED = {"01695", "01696", "01697", "01698", "01699", "01700"}
+# Stage 3 outlines leave out uninhabited far islets (Takeshima, the Senkakus): parts under
+# FAR_ISLET_KM2 more than FAR_ISLET_KM from every larger part of the zone
+FAR_ISLET_KM2, FAR_ISLET_KM = 5.0, 50.0
+# Wards redrawn between the 2020 census and N03 2025 (Hamamatsu, 2024: seven wards became three,
+# old Kita-ku split): both sides are read as the whole city
+CITY_OF_WARD = {**{c: "22130" for c in ("22131", "22132", "22133", "22134", "22135", "22136", "22137",
+                                        "22138", "22139", "22140")}}
+CITY_NAME = {"22130": "浜松市"}
 
 
 def _real(unit):
@@ -72,7 +87,20 @@ def raw(*p):
 
 
 def _get(url, path):
-    return england._get(url, path)
+    """Download once through curl: KSJ's server can stall a Python request for good while curl
+    gets the same file in seconds (T-432, T-441). A read slower than 1 kB/s for a minute aborts."""
+    if not os.path.exists(path):
+        import subprocess
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        for attempt in range(3):
+            r = subprocess.run(["curl", "-sSfL", "--retry", "2", "--connect-timeout", "30", "--speed-limit", "1000",
+                                "--speed-time", "60", "-A", b.UA["User-Agent"], "-o", path + ".part", url])
+            if r.returncode == 0:
+                break
+        else:
+            raise RuntimeError(f"curl failed ({r.returncode}) for {url}")
+        os.replace(path + ".part", path)
+    return path
 
 
 # ---------------------------------------------------------------- mesh codes
@@ -163,19 +191,28 @@ def municipalities(prefs):
     """[(code, name, prefecture, polygon)], designated cities by ward, Tokyo's islands left out.
     Cached as one GeoJSON per prefecture set."""
     path = raw(f"municipalities_{'_'.join(prefs)}.geojson")
+    if not os.path.exists(path) and len(prefs) > 1:  # one cache per unit, joined (stage 3: 38 zones share them)
+        return [m for p in prefs for m in municipalities([p])]
     if not os.path.exists(path):
         feats = []
         for pref in prefs:
-            df = _n03(_real(pref))
-            df = df[df.code.str.match(r"^\d{5}$")]
-            if pref in SUBPREFECTURES:
-                df = df[df["sub"] == SUBPREFECTURES[pref]]
-            elif len(pref) > 2:
-                df = df[df.code == pref[3:]]
+            base, *excl = pref.split("~")  # "01-shiribeshi~01203": the subprefecture less Otaru
+            df = _n03(_real(base))
+            df = df[df.code.str.match(r"^\d{5}$") & ~df.code.isin(excl)]
+            if base in SUBPREFECTURES:
+                df = df[df["sub"] == SUBPREFECTURES[base]]
+            elif len(base) > 2:
+                df = df[df.code == base[3:]]
             if df.empty:
                 raise ValueError(f"N03 has no municipality for unit {pref}")
             if pref == "13":
                 df = df[df.code.astype(int) < ISLANDS]
+            df = df[~df.code.isin(NOT_ADMINISTERED)]
+            merged = df.code.isin(CITY_OF_WARD)
+            if merged.any():
+                df = df.copy()
+                df.loc[merged, "name"] = df.loc[merged, "code"].map(CITY_OF_WARD).map(CITY_NAME)
+                df.loc[merged, "code"] = df.loc[merged, "code"].map(CITY_OF_WARD)
             named = df[~df.code.str.endswith("000")]
             near = union_all([make_valid(x) for x in named.geometry if x is not None]).buffer(0.02)
             for code, g in df.groupby("code"):
@@ -196,9 +233,25 @@ def municipalities(prefs):
             for ft in fc["features"]]
 
 
-def boundary_file(city, prefs):
+def _drop_far_islets(parts):
+    """Parts under FAR_ISLET_KM2 farther than FAR_ISLET_KM from every larger part go."""
+    k = math.cos(math.radians(union_all(parts).centroid.y))
+    km2 = [q.area * 111.32 ** 2 * k for q in parts]
+    big = [q for q, a in zip(parts, km2) if a >= FAR_ISLET_KM2]
+    tree = STRtree(big)
+    keep = []
+    for q, a in zip(parts, km2):
+        if a < FAR_ISLET_KM2 and big:
+            near = big[tree.nearest(q)]
+            if near.distance(q) * 111.32 * k > FAR_ISLET_KM:  # degrees to km, conservatively (east-west scale)
+                continue
+        keep.append(q)
+    return keep
+
+
+def boundary_file(city, prefs, far_islets=True):
     """The prefectures, each dissolved from its municipalities, as one GeoJSON for tier0's
-    `boundary_file`; its path."""
+    `boundary_file`; its path. far_islets=False (stage 3 zones) leaves out uninhabited far islets."""
     out = raw(f"{city}_prefectures.geojson")
     if os.path.exists(out):
         return out
@@ -207,7 +260,10 @@ def boundary_file(city, prefs):
     for p in prefs:
         g = union_all([m[3] for m in ms if m[2] == p]).buffer(0)
         # N03 draws every pier, breakwater and rock apart: parts under about 0.02 km² go
-        g = union_all([q for q in getattr(g, "geoms", [g]) if q.area >= MIN_PART_DEG2])
+        parts = [q for q in getattr(g, "geoms", [g]) if q.area >= MIN_PART_DEG2]
+        if not far_islets:
+            parts = _drop_far_islets(parts)
+        g = union_all(parts)
         feats.append({"type": "Feature", "properties": {"pref": p}, "geometry": mapping(g)})
     with open(out + ".part", "w", encoding="utf-8") as f:
         json.dump({"type": "FeatureCollection", "features": feats}, f)
@@ -351,7 +407,11 @@ def flows_table(pref):
         os.makedirs(os.path.dirname(cache), exist_ok=True)
         t.to_csv(cache + ".part", index=False)
         os.replace(cache + ".part", cache)
-    return pd.read_csv(cache, dtype={"w": str, "h": str})
+    t = pd.read_csv(cache, dtype={"w": str, "h": str})
+    if t.w.isin(CITY_OF_WARD).any() or t.h.isin(CITY_OF_WARD).any():
+        t["w"], t["h"] = t.w.replace(CITY_OF_WARD), t.h.replace(CITY_OF_WARD)
+        t = t.groupby(["w", "h"], as_index=False, sort=False).n.sum()
+    return t
 
 
 def flows(prefs):

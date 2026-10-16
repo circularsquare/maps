@@ -51,8 +51,6 @@ export interface DisplaySettings {
   usUnits: boolean;
   /** T-381: demand workers by the old rule (half the threads less one, up to 5); read at the next load */
   moreCores: boolean;
-  /** T-418: the track tool draws through each click, one curve per segment (else corner to corner) */
-  drawThrough: boolean;
 }
 
 /** T-247: the UI scale setting's steps */
@@ -77,7 +75,6 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   dayShown: "today",
   usUnits: false,
   moreCores: false,
-  drawThrough: true,
 };
 
 const STORE = "trainworld-ui";
@@ -144,6 +141,9 @@ export const buildPlatform = signal(200);
 export const buildLevel = signal<Level>(0);
 /** Track the drawing tool lays: single, double, or quad (two doubles side by side, T-255). */
 export const trackCount = signal<1 | 2 | 4>(2);
+/** T-445: the track tool starts each segment where the last ended. The Build tab's button and
+ * Caps Lock set it; Shift continues a run for one click without it. */
+export const keepPlacing = signal(false);
 
 /** The kind of day every demand view shows (T-260, T-266): the setting, or the clock's day. */
 export const shownDay = computed<DayKind>(() => {

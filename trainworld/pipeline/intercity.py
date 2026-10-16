@@ -35,8 +35,50 @@ MARKETS = [p["name"] for p in REGISTRY["market"]["places"]]
 
 # T-276: the market's trips a weekday per resident (fitted with its curve, research/intercity/market_fit.py)
 TRIP_RATE = 0.107
-# the local layer's parking (sim kernel `Params`: park_min, park_jobs_per_km2_per_min, park_cost_cap_min)
-PARK_MIN, PARK_JOBS_PER_KM2_PER_MIN, PARK_CAP_MIN = 3.0, 2500.0, 40.0
+# the local layer's parking (sim kernel `Params` defaults: park_min, park_paid_min, park_paid_d0,
+# park_paid_cap_min, park_free_d; `CELL_KM2`)
+PARK_MIN, PARK_PAID_MIN, PARK_PAID_D0, PARK_PAID_CAP_MIN, PARK_FREE_D = 3.0, 15.0, 3000.0, 50.0, 8000.0
+CELL_KM2 = 0.1053
+# kernel `CORDONS` (congestion charges, perceived minutes a one-way trip): lon/lat rings, charge
+CORDONS = [
+    (13.5, [(-74.020, 40.700), (-74.016, 40.715), (-74.012, 40.730), (-74.009, 40.745), (-74.002, 40.760), (-73.994, 40.774), (-73.959, 40.759), (-73.968, 40.748), (-73.972, 40.738), (-73.974, 40.726), (-73.978, 40.711), (-73.999, 40.707), (-74.012, 40.701)]),
+    (35.1, [(-0.159, 51.513), (-0.163, 51.520), (-0.126, 51.528), (-0.105, 51.530), (-0.088, 51.526), (-0.077, 51.524), (-0.072, 51.515), (-0.075, 51.5055), (-0.100, 51.495), (-0.125, 51.487), (-0.144, 51.495), (-0.152, 51.503)]),
+]
+
+
+def in_ring(ring, x, y):
+    inside = np.zeros(len(x), bool)
+    j = len(ring) - 1
+    for i in range(len(ring)):
+        (xi, yi), (xj, yj) = ring[i], ring[j]
+        with np.errstate(divide="ignore", invalid="ignore"):
+            cross = (yi > y) != (yj > y)
+            inside ^= cross & (x < (xj - xi) * (y - yi) / (yj - yi) + xi)
+        j = i
+    return inside
+
+
+def park_by_cell(h, a, lon, lat):
+    """Each cell's parking for an arriving car, perceived minutes: the mean over drivers in its
+    2 km zone. Mirrors the sim kernel's `Params::park_mean` over `park_parts` (T-380, T-440) with
+    `cordon_by_zone`: 3 to park and the zone's congestion charge for everyone, a paid space
+    15 ln(d / 3,000) more (at most 50) for the share 1 - 1 / (1 + d / 8,000), d the zone's jobs
+    per km² of land (res-9 cells, a merged res-8 cell counts 7, at most the square)."""
+    nz, zone = h["zones"], a["zone"].astype(np.int64)
+    jobs = a["jobs"].astype(np.float64)
+    res8 = ((a["h3"] >> np.uint64(52)) & np.uint64(0xF)) == 8
+    ncell = np.bincount(zone, np.where(res8, 7.0, 1.0), nz)
+    land = np.minimum(np.maximum(ncell, 1) * CELL_KM2, (h["gravity"]["zone_m"] / 1000.0) ** 2)
+    zj = np.bincount(zone, jobs, nz)
+    d = zj / land
+    paid = np.minimum(PARK_PAID_MIN * np.log(np.maximum(d, PARK_PAID_D0) / PARK_PAID_D0), PARK_PAID_CAP_MIN)
+    free = 1.0 / (1.0 + d / PARK_FREE_D)
+    charged = np.zeros(nz)
+    for charge, ring in CORDONS:
+        inside = in_ring(ring, lon, lat) & (jobs > 0)
+        charged += np.bincount(zone[inside], jobs[inside] * charge, nz)
+    cordon = np.where(zj > 0, charged / np.maximum(zj, 1e-12), 0.0)
+    return (PARK_MIN + cordon + (1.0 - free) * paid)[zone]
 
 
 def lonlat_to_market(lon, lat):
@@ -52,11 +94,7 @@ def sites():
         o = h["origin"]
         lat = o["lat"] + np.degrees(a["y_m"] / R_EARTH)
         lon = o["lon"] + np.degrees(a["x_m"] / (R_EARTH * math.cos(math.radians(o["lat"]))))
-        # T-276: parking as the local layer charges it at a destination: its 2 km gravity zone's
-        # jobs per km² (kernel `mode_choice`)
-        zm = h["gravity"]["zone_m"] / 1000.0
-        zj = np.bincount(a["zone"], a["jobs"].astype(float), h["zones"])
-        park = PARK_MIN + np.minimum(zj[a["zone"]] / zm ** 2 / PARK_JOBS_PER_KM2_PER_MIN, PARK_CAP_MIN)
+        park = park_by_cell(h, a, lon, lat)
         rows.append((market, lon, lat, a["pop"], a["jobs"], park))
     out, parks = [], []
     for market, lon, lat, pop, jobs, park in rows:

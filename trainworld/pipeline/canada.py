@@ -263,12 +263,29 @@ def place_kind(shop, amenity, tourism, leisure):
     return "job"
 
 
-def osm_places(city, boundary, extract=OSM_EXTRACT, cache=None):
+def _land_rows(geom, w, spread_deg):
+    """A land area's weight on its representative point, or with spread_deg split over a grid of
+    points that far apart inside it (T-459)."""
+    c = geom.representative_point()
+    if not spread_deg:
+        return [("land", c.y, c.x, w)]
+    x0, y0, x1, y1 = geom.bounds
+    gx, gy = np.meshgrid(np.arange(x0 + spread_deg / 2, x1, spread_deg), np.arange(y0 + spread_deg / 2, y1, spread_deg))
+    gx, gy = gx.ravel(), gy.ravel()
+    ok = shapely.contains_xy(geom, gx, gy) if len(gx) else np.zeros(0, bool)
+    if not ok.any():
+        return [("land", c.y, c.x, w)]
+    return [("land", y, x, w / int(ok.sum())) for x, y in zip(gx[ok], gy[ok])]
+
+
+def osm_places(city, boundary, extract=OSM_EXTRACT, cache=None, land_cap_m2=None, land_spread_deg=None):
     """Per OSM place: kind (errand, leisure, job; or land, commercial or industrial land in units
     of LANDUSE_M2_PER_PLACE), point and weight. From the extract's cached features (osm_features;
     T-277 first tried Overpass in 0.3 degree tiles, and the public servers took minutes a tile and
     answered 504 on others), cached as a small CSV. Any country's extract works (tier0.py passes
-    its own `cache` path)."""
+    its own `cache` path). land_cap_m2 caps one land area's weight and land_spread_deg spreads it
+    over its area (T-459: Lagos's 23 km2 refinery outweighed every OSM shop and office in the city);
+    both off by default, which is every pack built before them."""
     cache = cache or os.path.join(RAW_CA, f"osm_jobs_{city}.csv.gz")
     if os.path.exists(cache):
         out = pd.read_csv(cache)
@@ -296,7 +313,10 @@ def osm_places(city, boundary, extract=OSM_EXTRACT, cache=None):
         for r in mp.itertuples():
             c = r.geometry.representative_point()
             if r.landuse in ("industrial", "commercial", "retail") and not (r.shop or r.amenity or r.office):
-                rows.append(("land", c.y, c.x, overpass.area_m2(r.geometry) / LANDUSE_M2_PER_PLACE))
+                m2 = overpass.area_m2(r.geometry)
+                if land_cap_m2:
+                    m2 = min(m2, land_cap_m2)
+                rows += _land_rows(r.geometry, m2 / LANDUSE_M2_PER_PLACE, land_spread_deg)
                 continue
             shop, am, tour, lei = (v if isinstance(v, str) else "" for v in (r.shop, r.amenity, r.tourism, r.leisure))
             work = isinstance(r.office, str) or isinstance(r.craft, str)

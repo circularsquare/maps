@@ -26,3 +26,5 @@ metros are 300-700M, a quarter to three quarters of a week.
 | Keihanshin, Chukyo | T-431 pair | Opus | about 170 min | 6.85M (3.4M a pack) | seven wakes after long idles 2.2M (32%); e-Stat and N03 downloads slow beside T-432's (20-24 minutes a pack); osa built twice (an invalid school polygon) | two packs, one module; curves 39 minutes side by side, builds 12, routes 10 and 13 |
 | Berlin | T-290 | Opus | 25 min | about 2.95M | one build; jobs and flows found first, per the playbook | tier 0 plus Zensus 2022, the Pendlerrechnung's jobs and flows |
 | Mumbai | T-292 | Opus | 32 min | about 3.2M | built twice (OSM talukas off the 2011 lines) | tier 0, 2011 census grown to 2020, curve fitted on B-28 bands |
+| Lagos | T-459 | Opus | 36 min | about 3.2M | built twice (a refinery's land use lumped 6.5% of jobs in one cell) | tier 0 from global sources alone, OSM LGA outline, Mumbai's curve |
+| Sao Paulo | T-458 | Opus | 35 min | about 3.9M | test-line stations (two Overpass failures) 0.95M; built three times (World Bank timeout, a degenerate curve fit) | tier 0, 2022 census tracts, OD 2017 survey for jobs, work from home and curve |

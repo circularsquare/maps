@@ -10,10 +10,10 @@
 
 import type { EdgeId, Level, NodeId } from "../game/types";
 import type { FrameSpec } from "../game/frame";
-import type { DayLedger, SaveSlot } from "./saveFile";
+import type { DayLedger, HourLedger, SaveSlot } from "./saveFile";
 import type { NetworkBuffers } from "../map/network";
 
-export type { DayLedger };
+export type { DayLedger, HourLedger };
 
 // ---------- clock worker: owns the network, run times, capacity, keyframes (T-025) ----------
 
@@ -146,6 +146,8 @@ export interface MoneyState {
   /** recent game days, oldest first; the last is today so far (as of the last whole hour; the
    * "cash" message carries today as fares land, T-284) */
   ledger: DayLedger[];
+  /** recent game hours, oldest first, the last this hour so far (T-447) */
+  hours: HourLedger[];
 }
 
 export interface ClockEdge {
@@ -318,7 +320,7 @@ export type FromClock =
   | { kind: "money"; money: MoneyState }
   /** T-284: the cash and today's ledger as fares land and running costs drain, several times a wall
    * second while the clock runs; the rest of MoneyState comes with "money" when an hour turns */
-  | { kind: "cash"; cash: number; today: MoneyState["ledger"][number] }
+  | { kind: "cash"; cash: number; today: MoneyState["ledger"][number]; hour: HourLedger }
   /** a game was loaded or started (`from`), at game time `clock`; a failed import says why in
    * `error` and changes nothing */
   /** `frame`: the game now in the worker; `converted`: its save was in an older frame and was

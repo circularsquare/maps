@@ -103,8 +103,8 @@ fn main() {
                 match k {
                     "w_drive" => p.w_drive = x,
                     "park_min" => p.park_min = x,
-                    "park_cost_cap_min" => p.park_cost_cap_min = x,
-                    "park_jobs_per_km2_per_min" => p.park_jobs_per_km2_per_min = x,
+                    "park_paid_min" => p.park_paid_min = x,
+                    "park_free_d" => p.park_free_d = x,
                     "fare_min" => p.fare_min = x,
                     "beta" => p.beta = x,
                     "transfer_min" => p.transfer_min = x,

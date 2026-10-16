@@ -28,6 +28,15 @@ export interface DayLedger {
   build: number;
 }
 
+/** One game hour's money, US$M (T-447); `hour` counts from day 0 00:00. */
+export interface HourLedger {
+  hour: number;
+  fares: number;
+  running: number;
+  trains: number;
+  build: number;
+}
+
 export interface SaveHeader {
   game: "anitabuilder";
   format: number;
@@ -45,6 +54,8 @@ export interface SaveHeader {
   fares: { base: number; perKm: number };
   /** recent days, oldest first (today last) */
   ledger: DayLedger[];
+  /** recent hours, oldest first (T-447; absent in older saves) */
+  hours?: HourLedger[];
 }
 
 /**

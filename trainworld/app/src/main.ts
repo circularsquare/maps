@@ -20,7 +20,7 @@ import { ask, display, selection, stopEditing, tab, tool } from "./game/ui";
 import { complexOf, dotGroups, inComplexView } from "./game/complexView";
 import { cancelLink, linkPicked, linking } from "./game/links";
 import { pickTool, TOOL_KEYS, TRIP_KEY } from "./ui/tabs";
-import { keyIsTheirs, releaseSelectsAfterMousePick } from "./ui/keys";
+import { followCapsLock, keyIsTheirs, releaseSelectsAfterMousePick } from "./ui/keys";
 import { redo, undo, world } from "./game/world";
 import { lastSaved, moneyState } from "./game/money";
 import { live } from "./map/live";
@@ -277,6 +277,7 @@ if (!SYNTH && !perfOff("hover")) // ?perfOff=hover: T-045 measurement only
 // The focused control's own keys stay with it: all of them in a text field, the arrows, Enter and
 // Space in a select (ui/keys.ts, T-183, the same rule as the search box's "/").
 releaseSelectsAfterMousePick();
+followCapsLock();
 window.addEventListener("keydown", (e) => {
   if (keyIsTheirs(e)) return;
   // Esc, one thing at a time (T-096): a question waiting above the bottom bar is answered no; a
@@ -293,8 +294,8 @@ window.addEventListener("keydown", (e) => {
   }
   // 1, 2, 3: draw track, place stations, delete, from any tab (T-096); the Build tab opens. The
   // key of the tool already on does nothing (Esc is the way out), so a half-drawn route survives.
-  // 4: the trip explorer (T-195), from any tab; the tab stays (the inspector shows the trip)
-  if (e.key === TRIP_KEY && !e.ctrlKey && !e.metaKey && !e.altKey && !e.repeat) {
+  // T: the trip explorer (T-195, T-444), from any tab; the tab stays (the inspector shows the trip)
+  if (e.key.toLowerCase() === TRIP_KEY &&!e.ctrlKey && !e.metaKey && !e.altKey && !e.repeat) {
     e.preventDefault();
     nodeDrag.cancel();
     edgeEditor.cancel();

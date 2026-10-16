@@ -42,7 +42,7 @@ STATUS = "https://overpass-api.de/api/status"
 KINDS = ["city", "town", "borough", "suburb", "quarter", "village", "neighbourhood", "hamlet"]
 OTHER_NAMES = ["alt_name", "short_name", "old_name", "official_name", "name:en"]
 DEDUP_M = 2000.0
-LATIN_NAMES = ["name:en", "name:zh-Latn-pinyin", "name:zh_pinyin", "name:ja-Latn"]  # a city's "latin_names" (T-291)
+LATIN_NAMES = ["name:en", "name:zh-Latn-pinyin", "name:zh_pinyin", "name:ja-Latn", "name:ko-Latn"]  # a city's "latin_names" (T-291)
 KANA_NAMES = ["name:ja-Hira", "name:ja-Kana", "name:ja_kana"]  # readings for "kana_romaji" (T-420)
 
 

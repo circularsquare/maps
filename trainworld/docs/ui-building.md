@@ -12,12 +12,11 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
 
 - **Tools**: draw track (key 1), station (2), crossover (6, below), delete (3), select blueprints
   (5, below), three buttons on the first row and two on the second; then the level with its
-  multiplier and price per km, single, double or quad track [T-255], the drawing mode ("Through
-  points" or "Corners", below; remembered with the display settings, Through points by default)
-  [T-418], and the platform length for new stations.
+  multiplier and price per km, single, double or quad track [T-255], and the platform length for
+  new stations.
   The number keys work from any tab and open the Build tab; the key of the tool already on does
   nothing. Each button shows its key. There is no button for plain selecting: clicking the active tool again or
-  leaving it with Esc returns to selecting. The trip tool (key 4) is in
+  leaving it with Esc returns to selecting. The trip tool (key T) is in
   [ui-inspectors.md](ui-inspectors.md).
 - **At the bottom of the pane**, fixed while the settings above scroll: the blueprint total, undo
   and redo, and "Construct blueprints", which builds every blueprint that is not disabled
@@ -36,47 +35,48 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
 
 ## Drawing track
 
-[T-023, T-085, T-092, T-244, T-311, T-322, T-418]
+[T-023, T-085, T-092, T-244, T-311, T-322, T-418, T-422, T-442]
 
-Two modes, picked in the Build tab, for single, double and quad track alike [T-423]. The geometry
-of both is in [track-and-service.md](track-and-service.md) 6.1.
+Track is drawn through points, single, double and quad alike [T-418, T-423; Corners retired with
+T-422]. The geometry is in [track-and-service.md](track-and-service.md) 6.1.
 
-- **Through points** [T-418]: the first click is the start, the second places a segment ending at
-  it at once (one undo step), the track passing through the click. A click with Shift held places
-  the segment and starts the next one at its end; without Shift the tool is ready for a new start.
-  To carry on later, click the loose end (on quad, either pair's). Backspace while chaining undoes the last segment and
-  draws on from its start; Escape or Enter stops. A click whose segment cannot be built (a curve
-  under 100 m, more than 85 degrees off the track's heading, water, too little room for a ramp)
-  is refused by the edit, its reason at the bottom left; the ghost was red already. While placing,
-  the circle the segment's curve lies on is drawn faint grey (red when refused) [`map/curveCircle.ts`];
-  none for a straight segment.
-- **Corners**: clicks place corners at the level selected. While drawing, the clicked points show as squares and each curve its radius and speed
-  limit, on the speed colour at half strength [T-417]; the same labels show while a selected
-  blueprint stretch is reshaped or a node dragged (`setCurveLabel`, `map/tools.ts`).
+- **Clicks**: the first click is the start, the second places a segment ending at it at once (one
+  undo step), the track passing through the click, at the level selected. A click with Shift held
+  places the segment and starts the next one at its end; without Shift the tool is ready for a new
+  start. The **keep placing** button (an icon beside the Single, Double and Quad choice) does the
+  same for every click until it is switched off, and so does Caps Lock, which is the same switch
+  (the button shows it) [T-445]. A double click, Escape or Enter ends the run (the first click of
+  the double places the last segment); the button stays on. To carry on later, click the loose end
+  (on quad, either pair's). Backspace while chaining undoes the last segment and draws on from its
+  start. A segment may turn
+  up to 350 degrees, so a loop or hairpin is one click [T-442]. A click whose segment cannot be
+  built (a curve under 100 m, a click straight behind the start, water, too little room for a
+  ramp) is refused by the edit, its reason at the bottom left; the ghost was red already. While
+  placing, the circle the segment's curve lies on is drawn faint grey (red when refused)
+  [`map/curveCircle.ts`]; none for a straight segment, nor for a turn past 90 degrees wider than
+  the 1,796 m cap.
+- **Curve labels**: while drawing, the start shows as a square and the curve its radius and speed
+  limit, on the speed colour at half strength [T-417] (one label for a curve split into several
+  corners); the same labels show while a selected blueprint stretch is reshaped or a node dragged
+  (`setCurveLabel`, `map/tools.ts`).
 - **Loose ends** [T-416; `map/endMarkers.ts`]: while the track or station tool is on, a small white
   circle with a dark border marks every loose end (a node with one piece of track and no
   station), blueprint or built. A track click on one starts or continues the route from it; the
   station tool's pointer snaps to it, so the station goes at the line's end. The markers take no
   presses, and show from zoom 9.
-- **The tag by the cursor** [T-411] has two lines: the stretch's length, average cost
+- **The tag by the cursor** [T-411] has two lines: the segment's length, average cost
   multiplier, price and tightest curve ("1.5 km, cost 1.33x, $25.5M, 401 m curve"; no curve, no
-  radius), then the level being placed and the route's lowest speed limit ("Level +2, max speed
+  radius), then the level being placed and the segment's lowest speed limit ("Level +2, max speed
   67 km/h"). The multiplier sits on yellow above 1x, deeper up to 2.5x, plain at 1x and below; the
   level on its Height colour and the speed on its Max speed colour (`speedColour`,
-  `game/palette.ts`), each at half strength behind dark text. Where the route could not be built
+  `game/palette.ts`), each at half strength behind dark text. Where the segment could not be built
   ending at the cursor, the reason comes first, in red, and the cost line is left out.
-- **A refused click** (corners) [T-410]: a click that adds a corner where the route, if it ended there,
-  could not be built (a curve under 100 m, ground track over water, too little room for a ramp) is
-  refused with the reason at the bottom left, and the tag adds "Shift-click to place it anyway".
-  The answer is the hover's preview for that spot, or one asked for the click when the pointer's
-  answer is for another spot; a shift-click places the corner without asking. Clicks that finish on
-  track or a node, and the first click, are not checked here (the edit itself refuses those). With
-  a tool on, MapLibre's shift-drag zoom is off so the shift-click reaches the tool.
+- **Shift**: with a tool on, MapLibre's shift-drag zoom is off so a shift-click reaches the tool.
 - **The ghost** is solid with a dark casing: white in the Line and traffic views, coloured by the
   Height or Max speed view from the preview's fitted geometry; red when invalid.
 - **Placed blueprint track** is drawn as blue rails ([ui-map.md](ui-map.md) "Lines and track").
-- A finished route is one piece per corner, a through-points segment one piece; the delete tool,
-  Construct and the track inspector act on one piece [T-244].
+- A segment is one piece (each pair's on quad); the delete tool, Construct and the track
+  inspector act on one piece [T-244].
 
 ## Placing stations
 

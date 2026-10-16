@@ -159,7 +159,7 @@ search glass.
 
 ## Keys and focus
 
-[T-183, `ui/keys.ts`] One rule for the game's keys (1-4, Esc, Space, Ctrl+Z/Y, the line tool's
+[T-183, `ui/keys.ts`] One rule for the game's keys (the tool numbers, T, Esc, Space, Ctrl+Z/Y, the line tool's
 Enter and Backspace) and search's `/`, Ctrl+K and Ctrl+F. A text field keeps every key (search's
 own box gives Ctrl+K and Ctrl+F to selecting its text). Another form control keeps only its own
 keys (arrows, Home, End, Page Up and Down, Enter, Space, and in a select a letter); the rest reach
@@ -192,7 +192,16 @@ hover says it counts from the next load ([architecture.md](architecture.md) 7).
 
 ## Money tab
 
-Cash; yesterday and today (fares, running trains, new trains, construction, net); the fare curve
+Cash; yesterday and today (fares, running trains, new trains, construction, net); History
+[T-447, `ui/MoneyHistory.tsx`]: a Days / Hours switch (Days by default, kept while the game is
+open) over two charts. The first has fares (accent) and running costs (grey) as lines, scaled to
+the larger of the two, and one-off costs (new trains and construction) as pale bars on the same
+scale, cut at the top with a dark cap when larger, so a build day does not flatten the lines
+[T-452]; the top's figure at the right. Then net as bars up or down from zero (losses red). Days are the ledger's, up to the past 30;
+hours up to the past 48; a young game's few sit at the right of at least 7 days or 12 hours. The
+day or hour now is drawn as it fills (a dashed last segment, a paler bar) and moves as fares land.
+Hovering a column gives its day or hour ("Fri 5", "Sat 6, 04:00", "so far" for now) with fares,
+costs and their parts, or net. Days and hours are the game clock's (T-321); the fare curve
 (each ride, each km, and what a 10 km ride costs); cars owned (prices in its hover) and cars the
 lines need; the value of the track and stations built. Rules: [track-and-service.md](track-and-service.md)
 6.4. The economy's 100x scaling is in the hover of "A day at this schedule".

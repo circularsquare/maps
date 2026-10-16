@@ -1,10 +1,10 @@
-// Today so far (T-293, Anita: "lets not even show the whole day forecast cuz it shows stuff in
-// the future. lets only show so far today, and call it 'today'"). The line and station panels
-// count the day from midnight to now: riders carried, boardings at each stop, fares taken, trains
-// that left packed full and riders they left behind. Counted by the clock worker from the boarding
-// account's departures up to now (`TrackApi.today`, sim/src/track/boarding.rs) and each line's
-// fares as the worker pays them (T-284); asked again four times a wall second while a panel shows
-// them and the clock runs, as the cash moves.
+// The past 24 hours (T-446; before it, today so far, T-293: Anita wanted counts, not a forecast
+// with the future in it, and then no reset at midnight). The line and station panels count the
+// day up to now: riders carried, boardings at each stop, fares taken, trains that left packed full
+// and riders they left behind. Counted by the clock worker from the boarding account's departures
+// (`TrackApi.past_day`, sim/src/track/boarding.rs) and each line's fares as the worker pays them
+// (T-284); asked again four times a wall second while a panel shows them and the clock runs, as
+// the cash moves. The names say "today" from T-293.
 
 import { computed, signal } from "@preact/signals";
 import { useEffect } from "preact/hooks";
@@ -14,7 +14,7 @@ import { queryClock } from "../workers/clockClient";
 import { accountVersion } from "./boarding";
 
 export interface LineToday {
-  /** riders boarded since midnight (a change of line boards again), the line's own stops */
+  /** riders boarded in the past 24 hours, or yesterday (a change of line boards again), the line's own stops */
   riders: number;
   /** boardings at each stop, in the line's stop order */
   stops: number[];
@@ -24,7 +24,7 @@ export interface LineToday {
   fullTrains: number;
   fullest: number;
   leftBehind: number;
-  /** spans of full trains (s into the day) */
+  /** spans of full trains (s from the line's local midnight; negative for yesterday's) */
   spans: [number, number][];
   /** running cost of the trains over the day, US$; only for a whole day (yesterday's) */
   running: number;
@@ -55,7 +55,7 @@ export function readToday(d: Float64Array): Map<string, LineToday> {
   return out;
 }
 
-/** Boardings today per station id (stations with a counted line), summed once per answer. */
+/** Boardings in the past 24 hours per station id (stations with a counted line), summed once per answer. */
 export const stationsToday = computed(() => {
   const out = new Map<string, number>();
   const t = today.value, w = world.peek();

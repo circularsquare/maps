@@ -9,6 +9,8 @@
 // A select picked with the mouse also gives its focus up (releaseSelectsAfterMousePick), so the
 // next Space pauses rather than opening the list again.
 
+import { keepPlacing } from "../game/ui";
+
 /** Input types that are buttons: they keep no keys, like a <button>. */
 const BUTTONS = new Set(["button", "submit", "reset", "image"]);
 /** Input types that take no typing: they keep only their own keys. */
@@ -31,6 +33,21 @@ export function keyIsTheirs(e: KeyboardEvent): boolean {
   if (!select && !(t instanceof HTMLInputElement && CONTROLS.has(t.type))) return false;
   if (CONTROL_KEYS.has(e.key)) return true;
   return select && !e.ctrlKey && !e.metaKey && !e.altKey && /^\p{L}$/u.test(e.key);
+}
+
+/** Caps Lock is the same switch as the Build tab's keep-placing button (T-445): each change of its
+ * state, seen on any key or press, sets `keepPlacing`; the button sets it too and the two follow
+ * whichever moved last. */
+export function followCapsLock() {
+  let last = false;
+  const sync = (e: Event) => {
+    if (!(e instanceof KeyboardEvent) && !(e instanceof MouseEvent)) return;
+    const on = e.getModifierState("CapsLock");
+    if (on === last) return;
+    last = on;
+    keepPlacing.value = on;
+  };
+  for (const type of ["keydown", "keyup", "pointerdown"]) window.addEventListener(type, sync, true);
 }
 
 /** After a pick made with the mouse, a <select> gives up its focus, so the game's keys work at

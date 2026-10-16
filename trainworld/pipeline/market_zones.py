@@ -33,14 +33,13 @@ sys.path.insert(0, str(Path(__file__).parent))
 import world_field as W
 from read_pack import load_pack
 from build_city import R_EARTH
+from intercity import park_by_cell
 
 ROOT = Path(__file__).resolve().parents[1]
 REG = ROOT / "app/src/game/registry.json"
 PACKS = ROOT / "data/packs"
 RULE = json.loads((Path(__file__).parent / "longhaul.json").read_text(encoding="utf-8"))
 SITE_M, ZONE_M = 600, 6000
-# the local layer's parking (sim kernel `Params`: park_min, park_jobs_per_km2_per_min, park_cost_cap_min)
-PARK_MIN, PARK_JOBS_PER_KM2_PER_MIN, PARK_CAP_MIN = 3.0, 2500.0, 40.0
 # T-378: a zone's airports are OurAirports' large and medium ones with scheduled service within
 # AIR_RADIUS_KM of its centre carrying AIR_MIN_PAX passengers a year (the biggest AIR_MAX); a route
 # of DIRECT_MIN_PAX a year is a direct flight. Passengers and routes from the flights project's
@@ -162,9 +161,7 @@ def own_sites(cid, frame):
     o = h["origin"]
     _, pack_ll = equirect(o["lon"], o["lat"])
     lon, lat = pack_ll(a["x_m"].astype(np.float64), a["y_m"].astype(np.float64))
-    zm = h["gravity"]["zone_m"] / 1000.0
-    zj = np.bincount(a["zone"], a["jobs"].astype(float), h["zones"])
-    park = PARK_MIN + np.minimum(zj[a["zone"]] / zm ** 2 / PARK_JOBS_PER_KM2_PER_MIN, PARK_CAP_MIN)
+    park = park_by_cell(h, a, lon, lat)
     to_xy, _ = equirect(frame["lon"], frame["lat"])
     x, y = to_xy(lon, lat)
     groups = {}

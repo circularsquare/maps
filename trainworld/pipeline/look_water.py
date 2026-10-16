@@ -56,6 +56,17 @@ VIEWS = {
         ("Vasai Creek and the Ulhas river to Kalyan", 73.00, 19.27, 24.0),
         ("Powai, Vihar and Tulsi lakes", 72.91, 19.16, 8.0),
     ],
+    "sao": [  # T-458
+        ("Central Sao Paulo, the Tiete and the Pinheiros", -46.66, -23.55, 16.0),
+        ("Billings and Guarapiranga reservoirs", -46.66, -23.75, 24.0),
+        ("Alto Tiete reservoirs east of Mogi", -46.25, -23.60, 20.0),
+    ],
+    "lag": [  # T-459
+        ("Lagos Island, the harbour and the lagoon's west end", 3.41, 6.47, 14.0),
+        ("Lagos Lagoon to Ikorodu", 3.52, 6.53, 20.0),
+        ("Lekki and Epe lagoons", 4.05, 6.52, 30.0),
+        ("Badagry Creek and Ologe Lagoon", 2.95, 6.46, 30.0),
+    ],
     "tyo": [  # T-420
         ("Central Tokyo, the Sumida and the bay shore", 139.78, 35.68, 8.0),
         ("Arakawa, Edogawa and the Tokyo Bay landfill", 139.86, 35.66, 14.0),
@@ -68,6 +79,11 @@ VIEWS = {
         ("Havel lakes: Spandau, Wannsee, Tegeler See", 13.20, 52.48, 16.0),
         ("Mueggelsee and the Dahme", 13.62, 52.43, 10.0),
         ("Potsdam's lakes", 13.03, 52.38, 12.0),
+    ],
+    "seo": [  # T-457
+        ("Central Seoul and the Han", 126.98, 37.53, 12.0),
+        ("Paldang Lake", 127.30, 37.52, 10.0),
+        ("Incheon and its coast", 126.62, 37.45, 20.0),
     ],
     "osa": [  # T-431
         ("Central Osaka, the Yodo and the bay shore", 135.47, 34.69, 12.0),

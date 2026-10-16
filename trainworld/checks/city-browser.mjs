@@ -56,6 +56,29 @@ const CITIES = {
       ['Khar Road', 72.8400, 19.0682], ['Santacruz', 72.8410, 19.0810], ['Vile Parle', 72.8440, 19.0999],
       ['Andheri', 72.8464, 19.1197]],
   },
+  lag: {
+    // T-459: the Red Line, Agbado to Oyingbo, on to the Blue Line's Marina, at their OSM station
+    // nodes; the water pair across the Lagos Lagoon, Ebute Metta to Ikoyi
+    task: 'T-459', name: 'Lagos', centre: [3.3786, 6.5158], water: [[3.3920, 6.4990], [3.4300, 6.4600]],
+    lineName: 'Red line test', colour: '#d7262b', view: [3.36, 6.53],
+    line: [['Agbado', 3.3031, 6.6871], ['Iju', 3.3193, 6.6621], ['Agege', 3.3262, 6.6195], ['Ikeja', 3.3373, 6.5919],
+      ['Oshodi', 3.3514, 6.5573], ['Mushin', 3.3614, 6.5325], ['Yaba', 3.3700, 6.5115],
+      ['Mobolaji Johnson', 3.3737, 6.5018], ['Oyingbo', 3.3815, 6.4834], ['Marina', 3.3950, 6.4462]],
+  },
+  sao: {
+    // T-458: Metro Line 1, Tucuruvi to Jabaquara, at its OSM station nodes (Luz at the Line 4 node);
+    // the water pair across the Guarapiranga reservoir, checked on the water cache
+    task: 'T-458', name: 'São Paulo', centre: [-46.6339, -23.5503], water: [[-46.7600, -23.7000], [-46.7000, -23.7000]],
+    lineName: 'Line 1 test', colour: '#0455a1', view: [-46.63, -23.56],
+    line: [['Tucuruvi', -46.6033, -23.4801], ['Parada Inglesa', -46.6089, -23.4870],
+      ['Jardim São Paulo', -46.6170, -23.4924], ['Santana', -46.6251, -23.5024], ['Carandiru', -46.6252, -23.5091],
+      ['Portuguesa-Tietê', -46.6254, -23.5162], ['Armênia', -46.6289, -23.5251], ['Tiradentes', -46.6325, -23.5309],
+      ['Luz', -46.6344, -23.5354], ['São Bento', -46.6343, -23.5440], ['Sé', -46.6334, -23.5504],
+      ['Japão-Liberdade', -46.6359, -23.5552], ['São Joaquim', -46.6387, -23.5618], ['Vergueiro', -46.6399, -23.5688],
+      ['Paraíso', -46.6410, -23.5754], ['Ana Rosa', -46.6384, -23.5814], ['Vila Mariana', -46.6347, -23.5892],
+      ['Santa Cruz', -46.6367, -23.5990], ['Praça da Árvore', -46.6379, -23.6106], ['Saúde', -46.6392, -23.6184],
+      ['São Judas', -46.6408, -23.6256], ['Conceição', -46.6413, -23.6350], ['Jabaquara', -46.6410, -23.6463]],
+  },
   tyo: {
     // T-420: the Ginza line, Shibuya to Asakusa (positions to about 100 m); the water pair across
     // the Sumida by the Azuma bridge
@@ -79,6 +102,22 @@ const CITIES = {
       ['Hauptbahnhof', 13.3695, 52.5251], ['Friedrichstrasse', 13.3870, 52.5203], ['Hackescher Markt', 13.4022, 52.5225],
       ['Alexanderplatz', 13.4114, 52.5215], ['Jannowitzbruecke', 13.4180, 52.5150], ['Ostbahnhof', 13.4344, 52.5104],
       ['Warschauer Strasse', 13.4491, 52.5059], ['Ostkreuz', 13.4694, 52.5031]],
+  },
+  seo: {
+    // T-457: Line 2 from City Hall east and south round to Sadang, 26 of the loop's 43 stations
+    // (from the OSM extract; the whole loop costs more than a new game's money);
+    // the water pair across the Han between Ichon and Banpo
+    task: 'T-457', name: 'Seoul', centre: [126.9780, 37.5665], water: [[126.9960, 37.5250], [126.9960, 37.5050]],
+    lineName: 'Line 2 test', colour: '#00a84d', view: [126.98, 37.53],
+    line: [['City Hall', 126.9771, 37.5655], ['Euljiro 1-ga', 126.9826, 37.5659], ['Euljiro 3-ga', 126.9925, 37.5663],
+      ['Euljiro 4-ga', 126.9982, 37.5666], ['Dongdaemun History and Culture Park', 127.0081, 37.5653], ['Sindang', 127.0163, 37.5654],
+      ['Sangwangsimni', 127.0293, 37.5644], ['Wangsimni', 127.0372, 37.5612], ['Hanyang Univ.', 127.0437, 37.5557],
+      ['Ttukseom', 127.0474, 37.5472], ['Seongsu', 127.0561, 37.5446], ['Konkuk Univ.', 127.0709, 37.5404],
+      ['Guui', 127.0862, 37.5372], ['Gangbyeon', 127.0947, 37.5351], ['Jamsillaru', 127.1038, 37.5207],
+      ['Jamsil', 127.1001, 37.5132], ['Jamsilsaenae', 127.0856, 37.5116], ['Sports Complex', 127.0737, 37.5111],
+      ['Samseong', 127.0631, 37.5088], ['Seolleung', 127.0490, 37.5045], ['Yeoksam', 127.0370, 37.5008],
+      ['Gangnam', 127.0276, 37.4979], ['Seoul Nat. Univ. of Education', 127.0137, 37.4937], ['Seocho', 127.0077, 37.4918],
+      ['Bangbae', 126.9977, 37.4815], ['Sadang', 126.9817, 37.4766]],
   },
   fuk: {
     // T-432: the Kuko line, Meinohama to Fukuoka Airport (positions to about 150 m); the water pair
@@ -143,6 +182,34 @@ const CITIES = {
       ['Umeda', 135.4976, 34.7034], ['Yodoyabashi', 135.5010, 34.6916], ['Hommachi', 135.5007, 34.6835],
       ['Shinsaibashi', 135.5004, 34.6745], ['Namba', 135.5003, 34.6662], ['Daikokucho', 135.4979, 34.6562],
       ['Dobutsuen-mae', 135.5045, 34.6488], ['Tennoji', 135.5153, 34.6461]],
+  },
+  ttr: {
+    // T-420 stage 3: a row made from the pack: the water pair across the mask's
+    // nearest water to the origin, a 9-stop test line 1.2 km apart on the most populous heading
+    task: 'T-420s3', name: 'Tottori', centre: [134.1719, 35.5187], water: [[134.1664, 35.5156], [134.1664, 35.5218]],
+    lineName: 'Tottori test', colour: '#2a7ab0', view: [134.1719, 35.5187],
+    line: [['Tottori 1', 134.2231, 35.5075], ['Tottori 2', 134.2103, 35.5103], ['Tottori 3', 134.1975, 35.5131], ['Tottori 4', 134.1847, 35.5159], ['Tottori 5', 134.1719, 35.5187], ['Tottori 6', 134.1591, 35.5215], ['Tottori 7', 134.1463, 35.5243], ['Tottori 8', 134.1335, 35.5271]],
+  },
+  kmk: {
+    // T-420 stage 3: a row made from the pack: the water pair across the mask's
+    // nearest water to the origin, a 9-stop test line 1.2 km apart on the most populous heading
+    task: 'T-420s3', name: 'Kamikawa', centre: [142.3844, 43.7521], water: [[142.3604, 43.777], [142.3604, 43.7797]],
+    lineName: 'Kamikawa test', colour: '#2a7ab0', view: [142.3844, 43.7521],
+    line: [['Kamikawa 1', 142.4143, 43.7147], ['Kamikawa 2', 142.4068, 43.7241], ['Kamikawa 3', 142.3993, 43.7334], ['Kamikawa 4', 142.3919, 43.7428], ['Kamikawa 5', 142.3844, 43.7521], ['Kamikawa 6', 142.3769, 43.7614], ['Kamikawa 7', 142.3695, 43.7708], ['Kamikawa 8', 142.362, 43.7801], ['Kamikawa 9', 142.3545, 43.7895]],
+  },
+  oka: {
+    // T-420 stage 3: a row made from the pack: the water pair across the mask's
+    // nearest water to the origin, a 9-stop test line 1.2 km apart on the most populous heading
+    task: 'T-420s3', name: 'Okinawa', centre: [127.7031, 26.2021], water: [[127.6805, 26.1965], [127.6875, 26.1965]],
+    lineName: 'Okinawa test', colour: '#2a7ab0', view: [127.7031, 26.2021],
+    line: [['Okinawa 1', 127.7031, 26.1589], ['Okinawa 2', 127.7031, 26.1697], ['Okinawa 3', 127.7031, 26.1805], ['Okinawa 4', 127.7031, 26.1913], ['Okinawa 5', 127.7031, 26.2021], ['Okinawa 6', 127.7031, 26.2129], ['Okinawa 7', 127.7031, 26.2237], ['Okinawa 8', 127.7031, 26.2345], ['Okinawa 9', 127.7031, 26.2453]],
+  },
+  szo: {
+    // T-420 stage 3: a row made from the pack: the water pair across the mask's
+    // nearest water to the origin, a 9-stop test line 1.2 km apart on the most populous heading
+    task: 'T-420s3', name: 'Shizuoka', centre: [138.3781, 34.9729], water: [[138.3565, 34.9758], [138.362, 34.9758]],
+    lineName: 'Shizuoka test', colour: '#2a7ab0', view: [138.3781, 34.9729],
+    line: [['Shizuoka 1', 138.3645, 34.9312], ['Shizuoka 2', 138.3679, 34.9416], ['Shizuoka 3', 138.3713, 34.9521], ['Shizuoka 4', 138.3747, 34.9625], ['Shizuoka 5', 138.3781, 34.9729], ['Shizuoka 6', 138.3815, 34.9833], ['Shizuoka 7', 138.3849, 34.9937], ['Shizuoka 8', 138.3883, 35.0042], ['Shizuoka 9', 138.3917, 35.0146]],
   },
 };
 

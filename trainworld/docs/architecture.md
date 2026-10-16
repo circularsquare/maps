@@ -154,7 +154,7 @@ Web first, so it can be shared as a link.
 ## 11. Saves
 
 A save is the player's inputs only: track, stations, lines, schedules, fares, money (cash, cars
-owned, the last 30 days' ledger), clock, empty line drafts, custom badge symbols, the line-name
+owned, the ledger's last 30 days and 48 hours, T-447), clock, empty line drafts, custom badge symbols, the line-name
 counter, and the player's station links. Population, jobs and travel come from versioned packs;
 all results are recomputed. About 100 KB compressed per 10,000 route-km (T-040).
 

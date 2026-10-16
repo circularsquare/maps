@@ -16,7 +16,7 @@ import { DAY_KINDS, dayKindAt } from "../game/days";
 import { timeZoneTable } from "../game/localTime";
 import { networkFromState } from "../map/network";
 import { buildComplexes } from "../game/complexes";
-import { decodeSave, encodeSave, isNortheastSave, trackFrameKind, readStored, SAVE_FORMAT, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, deleteSlot, leaseSlot, ORIGINAL_SLOT, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type SaveHeader } from "./saveFile";
+import { decodeSave, encodeSave, isNortheastSave, trackFrameKind, readStored, SAVE_FORMAT, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, deleteSlot, leaseSlot, ORIGINAL_SLOT, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader } from "./saveFile";
 import type { ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FromClock, MoneyState, NetworkSnapshot, PiInput, RouteEnd, ToClock } from "./protocol";
 
 /** Run 0 of each line is resampled this often (m) for the renderer's line texture. */
@@ -31,8 +31,9 @@ const START_FARES = { base: 1.5, perKm: 0.1 };
 /** Autosave (T-029): this long after the last one if anything changed, wall ms; at once after a
  * construct or other paid edit, and when the page is hidden. */
 const AUTOSAVE_MS = 60_000;
-/** Days of money kept in the ledger. */
+/** Days of money kept in the ledger, and hours in the hourly one (T-447). */
 const LEDGER_DAYS = 30;
+const LEDGER_HOURS = 48;
 const LEVEL_OF = { high: 0, medium: 1, low: 2 } as const;
 
 let api: TrackApi | null = null;
@@ -57,6 +58,7 @@ let timing: Record<string, number> = {};
 // hour at a time from that.
 let fares = { ...START_FARES };
 let ledger: DayLedger[] = [];
+let hourLedger: HourLedger[] = [];
 /** fare income per game hour in each period, US$M (from the main thread's demand results), per
  * kind of day (T-260, game/days.ts) */
 let incomePerHour: number[][] = DAY_KINDS.map(() => PERIODS.map(() => 0));
@@ -430,9 +432,21 @@ function dayEntry(day: number): DayLedger {
   return d;
 }
 
+/** The hour's entry in the hourly ledger (T-447), made if missing; it keeps LEDGER_HOURS hours. */
+function hourEntry(hour: number): HourLedger {
+  let d = hourLedger[hourLedger.length - 1];
+  if (!d || d.hour !== hour) {
+    d = { hour, fares: 0, running: 0, trains: 0, build: 0 };
+    hourLedger.push(d);
+    if (hourLedger.length > LEDGER_HOURS) hourLedger.splice(0, hourLedger.length - LEDGER_HOURS);
+  }
+  return d;
+}
+
 function moneyState(): MoneyState {
   const a = api!;
   dayEntry(Math.floor(gameNow() / 86400));
+  hourEntry(Math.floor(gameNow() / 3600));
   return {
     cash: a.cash(),
     fleet: a.fleet(),
@@ -443,6 +457,7 @@ function moneyState(): MoneyState {
     fares: { ...fares },
     runningPerHour: [0, 1, 2].map((l) => a.running_cost(l)) as [number, number, number],
     ledger: ledger.map((d) => ({ ...d })),
+    hours: hourLedger.map((d) => ({ ...d })),
   };
 }
 
@@ -455,11 +470,11 @@ function sendMoney() {
 
 /** T-284: the cash and today's ledger, if either moved since last sent. */
 function sendCash() {
-  const cash = api!.cash(), today = dayEntry(Math.floor(gameNow() / 86400));
+  const cash = api!.cash(), today = dayEntry(Math.floor(gameNow() / 86400)), hour = hourEntry(Math.floor(gameNow() / 3600));
   if (cash === sentCash && today.fares === sentFares) return;
   sentCash = cash;
   sentFares = today.fares;
-  send({ kind: "cash", cash, today: { ...today } });
+  send({ kind: "cash", cash, today: { ...today }, hour: { ...hour } });
 }
 
 /** T-309: the running lines grouped by the local time they run on, each group's running cost per
@@ -514,6 +529,9 @@ function settle(): boolean {
     const d = dayEntry(Math.floor(t / 86400));
     d.fares += fare * df;
     d.running += cost * dc;
+    const e = hourEntry(h);
+    e.fares += fare * df;
+    e.running += cost * dc;
     settledT = full ? t + 3600 : end;
     if (full) { ended = true; hourShape.delete(h); closeDay(t + 3600); }
   }
@@ -522,12 +540,12 @@ function settle(): boolean {
   return ended;
 }
 
-/** T-293: every line's day so far (`TrackApi.today`, its layout), then each listed line's fares
- * taken today, US$M, in the same order: its fare for each hour since midnight, the hour now by the
- * share already paid, as `settle` pays the network's. */
+/** T-446: every line's past 24 hours (`TrackApi.past_day`, `today`'s layout), then each listed
+ * line's fares taken in them, US$M, in the same order: the hour now by the share already paid, as
+ * `settle` pays the network's, and the hour a day ago by the rest. */
 function today(): Float64Array {
   if (settle()) sendMoney();
-  return packDays(lineDaysAt(Math.min(gameNow(), settledT), false));
+  return packDays(lineDaysAt(Math.min(gameNow(), settledT), false, undefined, true));
 }
 
 /** One line's day, in `TrackApi.today`'s per-line layout, with its fares (US$M) and, for a whole
@@ -536,10 +554,11 @@ interface LineDay { id: number; block: ArrayLike<number>; fare: number; run: num
 
 /** Every line's block of `TrackApi.today(now)` with its fares taken: each hour since the line's
  * local midnight (T-309), at its local period and day, by the share already paid (`closed`: the
- * day is over, every hour paid whole). `shift` keeps the lines on one local time. */
-function lineDaysAt(now: number, closed: boolean, shift?: number): LineDay[] {
+ * day is over, every hour paid whole). `shift` keeps the lines on one local time. `past`: the past
+ * 24 hours instead (T-446). */
+function lineDaysAt(now: number, closed: boolean, shift?: number, past = false): LineDay[] {
   const a = api!;
-  const v = a.today(now), count = v[0], hNow = Math.floor(now / 3600);
+  const v = past ? a.past_day(now) : a.today(now), count = v[0], hNow = Math.floor(now / 3600);
   const out: LineDay[] = [];
   let i = 1;
   for (let k = 0; k < count; k++) {
@@ -548,9 +567,10 @@ function lineDaysAt(now: number, closed: boolean, shift?: number): LineDay[] {
     if (shift === undefined || sh === shift) {
       const per = lineIncome.get(id);
       let f = 0;
-      const h0 = Math.floor((now + sh) / 86400) * 24 - sh / 3600;
+      const h0 = past ? hNow - 24 : Math.floor((now + sh) / 86400) * 24 - sh / 3600;
+      const wNow = closed ? 1 : hNow === partHour ? partFare : 0;
       if (per) for (let h = h0; h <= hNow; h++) {
-        const t = h * 3600 + sh, w = closed || h < hNow ? 1 : h === partHour ? partFare : 0;
+        const t = h * 3600 + sh, w = h === hNow ? wNow : past && h === h0 ? 1 - wNow : 1;
         f += ((per[dayKindAt(t)] ?? per[0])?.[periodAt(t)] ?? 0) * w;
       }
       out.push({ id, block: v.subarray(i, i + len), fare: f, run: 0 });
@@ -655,7 +675,7 @@ function shapeHour(epoch: number, b: Float32Array) {
 // ---------------------------------------------------------------- saves (T-029)
 
 function header(): SaveHeader {
-  return { game: "anitabuilder", format: SAVE_FORMAT, city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), fleet: api!.fleet(), fares: { ...fares }, ledger: ledger.map((d) => ({ ...d })) };
+  return { game: "anitabuilder", format: SAVE_FORMAT, city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), fleet: api!.fleet(), fares: { ...fares }, ledger: ledger.map((d) => ({ ...d })), hours: hourLedger.map((d) => ({ ...d })) };
 }
 
 /** The game as file bytes. The network and header are taken at once, before anything awaits. */
@@ -862,6 +882,7 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file"): Promise<b
   api!.set_fleet(h.fleet ?? 0);
   fares = { ...START_FARES, ...h.fares };
   ledger = (h.ledger ?? []).map((d) => ({ ...d }));
+  hourLedger = (h.hours ?? []).map((d) => ({ ...d }));
   convertedOnLoad = converted;
   restart(h.clock, from);
   return converted;
@@ -881,6 +902,7 @@ function newGame() {
   api!.set_fleet(0);
   fares = { ...START_FARES };
   ledger = [];
+  hourLedger = [];
   restart(START_CLOCK, "new");
 }
 
@@ -1293,9 +1315,12 @@ async function handle(msg: ToClock) {
       dirty = true;
       if (charge > 0) {
         const d = dayEntry(Math.floor(gameNow() / 86400));
+        const e = hourEntry(Math.floor(gameNow() / 3600));
         const trains = api.last_train_charge();
         d.trains += trains;
         d.build += charge - trains;
+        e.trains += trains;
+        e.build += charge - trains;
       }
       forget();
       const demand = api.dirty_demand_lines();

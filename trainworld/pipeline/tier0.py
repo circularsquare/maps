@@ -52,7 +52,9 @@ inside each area by the proxy; jobs_url), population (callable (city, boundary, 
 (people per signal cell, source name), optional: census counts by small area), od_share ({OurAirports ident: share}, optional), boardings ({OurAirports
 ident: (boardings a year, "year, source")}, optional: a national figure in place of Wikidata's), curve or
 decay_pow/decay_km, region_name (optional), epoch (GHSL epoch, default 2020), job_blend (the proxy's
-blend in place of JOB_BLEND, optional: a larger population share where much work is informal).
+blend in place of JOB_BLEND, optional: a larger population share where much work is informal),
+land_cap_km2 and land_spread_deg (optional: cap one OSM industrial or commercial area's job-place
+weight and spread it over its area, where few other places are mapped; T-459).
 """
 import os
 os.environ.setdefault("OMP_NUM_THREADS", "2")
@@ -360,7 +362,9 @@ def signals(city, cfg, boundary, mask):
         print(f"  GHSL {kind}: {arr.shape[1]} x {arr.shape[0]} pixels, {arr.sum():,.0f} in the box, {len(grids[kind]):,} cells; "
               f"{time.time() - t0:.0f} s", flush=True)
     import canada
-    places = canada.osm_places(city, boundary, cfg["extract"], cache=raw(f"osm_jobs_{city}.csv.gz"))
+    lc = cfg.get("land_cap_km2")
+    places = canada.osm_places(city, boundary, cfg["extract"], cache=raw(f"osm_jobs_{city}.csv.gz"),
+                               land_cap_m2=lc * 1e6 if lc else None, land_spread_deg=cfg.get("land_spread_deg"))
     pids = np.fromiter((h3.str_to_int(h3.latlng_to_cell(la, lo, 9)) for la, lo in zip(places.lat, places.lon)), np.uint64, len(places))
     cells = np.unique(np.concatenate([np.fromiter(g.keys(), np.uint64) for g in grids.values()] + [pids]))
     ok, ll = inside(cells, boundary)
@@ -679,7 +683,11 @@ def wikidata_students(qids):
         part = need[i:i + 200]
         q = ("SELECT ?item ?v ?t WHERE { VALUES ?item { " + " ".join(f"wd:{x}" for x in part) + " } "
              "?item p:P2196 ?s. ?s ps:P2196 ?v. OPTIONAL { ?s pq:P585 ?t } }")
-        r = requests.post(WIKIDATA, data={"query": q, "format": "json"}, headers=b.UA, timeout=120)
+        for wait in (10, 30, 60, 120, 0):  # 429 when several builds query at once (T-420 stage 3)
+            r = requests.post(WIKIDATA, data={"query": q, "format": "json"}, headers=b.UA, timeout=120)
+            if r.status_code != 429 or not wait:
+                break
+            time.sleep(wait)
         r.raise_for_status()
         best = {}
         for row in r.json()["results"]["bindings"]:
@@ -690,8 +698,11 @@ def wikidata_students(qids):
                 best[qid] = (v, t)
         for qid in part:
             have[qid] = best.get(qid, (None, ""))
-    with open(path, "w") as f:
-        json.dump(have, f)
+    if need:  # several builds may run at once (T-420 stage 3): write whole files only
+        tmp = f"{path}.{os.getpid()}.part"
+        with open(tmp, "w") as f:
+            json.dump(have, f)
+        os.replace(tmp, path)
     return {q: tuple(have[q]) for q in qids if q in have}
 
 
@@ -745,7 +756,9 @@ def education_osm(city, boundary, kids):
     known_students = known.students.to_numpy() * share
     dens = known.groupby("wikidata").apply(lambda g: g.students.iloc[0] / max(g.m2.sum(), 1.0))
     # students a square metre of campus; with no counted campus, by area alone (the national total below sets the level, T-432)
-    per_m2 = float(np.median(dens[dens < 1].values)) if len(dens) else 0.01
+    # (also when every counted one is denser than 1 a m², as Shizuoka's and Aomori's single ones)
+    dens = np.asarray(dens, float).ravel() if len(known) else np.zeros(0)
+    per_m2 = float(np.median(dens[dens < 1])) if (dens < 1).any() else 0.01
     unknown = uni[uni.students.isna() & (uni.m2 > 0)]
     unk_students = unknown.m2.to_numpy() * per_m2
     rows = pd.concat([known, unknown])

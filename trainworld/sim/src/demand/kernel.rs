@@ -96,9 +96,6 @@ pub struct Params {
     /// A congestion charge per zone (`cordon_by_zone`), perceived minutes a one-way trip, paid
     /// by every driver arriving there. None: no charge anywhere.
     pub cordon: Option<std::sync::Arc<Vec<f32>>>,
-    /// The parking rule before T-380, still read by the everyday layer (`everyday.rs`, T-440).
-    pub park_cost_cap_min: f32,
-    pub park_jobs_per_km2_per_min: f32,
     pub period: usize,
     /// Share of all home->work trips in this period.
     pub period_share: f32,
@@ -198,8 +195,6 @@ impl Default for Params {
             park_paid_cap_min: 50.0,
             park_free_d: 8000.0,
             cordon: None,
-            park_cost_cap_min: 40.0,
-            park_jobs_per_km2_per_min: 2500.0,
             period: 0,
             period_share: 0.45,
             period_hours: 3.0,
@@ -464,6 +459,10 @@ pub fn cordon_by_zone(city: &City, z: &Zones, origin: (f64, f64)) -> Option<Vec<
 /// Zone ids in order of each zone's first cell, so a pack with one region gets the zones it had
 /// before regions.
 pub fn build_zones(city: &City, zone_m: f32) -> Zones {
+    if city.len() == 0 {
+        // the extent folds below would be infinite and w * h overflow (T-449)
+        return Zones { zone_m, n: 0, cell_zone: vec![], gx: vec![], gy: vec![], region: vec![], w: 0, h: 0, x0: 0., y0: 0., pop: vec![], jobs: vec![], ncell: vec![] };
+    }
     let minx = city.x.iter().cloned().fold(f32::INFINITY, f32::min);
     let miny = city.y.iter().cloned().fold(f32::INFINITY, f32::min);
     let maxx = city.x.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
@@ -2771,10 +2770,45 @@ pub fn round_costs(g: &Graph, net: &Network, p: &Params, total: &[f32]) -> Optio
     Some((fac, left))
 }
 
+/// A period's crowding rounds stop once one moves its summed segment loads by under this share,
+/// rider weighted (T-434); the driver caps them at three.
+pub const SETTLED: f64 = 0.01;
+
+/// Whether a period's next crowding round is skipped (T-434): `seg`, the segment loads it would be
+/// priced on, is within `SETTLED` of those the round before was priced on, kept in `seen`. The first
+/// crowding round always runs, as `seen` starts empty. Every population of a cluster gets the same
+/// loads, so they all stop together.
+pub fn settled(seen: &mut Vec<f32>, seg: &[f32]) -> bool {
+    if seen.len() == seg.len() {
+        let (mut moved, mut base) = (0f64, 0f64);
+        for (a, b) in seg.iter().zip(seen.iter()) {
+            moved += (a - b).abs() as f64;
+            base += *b as f64;
+        }
+        if moved < SETTLED * base {
+            return true;
+        }
+    }
+    seen.clear();
+    seen.extend_from_slice(seg);
+    false
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::demand::{network, synth};
+
+    /// T-434: the first round always runs; a later one is skipped once the loads move under 1%.
+    #[test]
+    fn crowding_rounds_stop_once_settled() {
+        let mut seen = vec![];
+        assert!(!settled(&mut seen, &[100.0, 100.0]));
+        assert!(!settled(&mut seen, &[100.0, 98.0]));
+        assert!(settled(&mut seen, &[100.0, 96.5]));
+        assert!(seen == [100.0, 98.0]);
+        assert!(!settled(&mut seen, &[100.0, 95.0]));
+    }
 
     fn common_test_net(lines: &[&[u32]], tph: &[f32], ride: &[f32]) -> Network {
         let mut net = Network {

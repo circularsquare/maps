@@ -9,44 +9,43 @@ Full design, numbers and sources: `notes/T-008.md`.
 - **One track type**, anywhere: over roads at normal cost, over water dearer (6.4). No buildings to
   demolish, no yards, no depots. Ground is flat (no terrain in M1).
 - **Geometry: straights and circular arcs**, tangent-continuous, no transition curves or splines
-  (exact lengths, one speed per curve, parallel tracks stay arcs). **The points the player clicks
-  are points of intersection (PIs)**: the track runs straight between them and cuts the corner at
-  each with a circular curve (Anita, 2026-10-09; T-092). A PI's radius is auto unless set: the largest that fits half of each adjacent leg (the
-  whole leg next to an end), capped at what the top speed needs (1,796 m). A curve under the
-  minimum radius is refused ("The curve is too tight"). A route starting or ending on existing
-  track gets a lead-in PI on that track's heading, so it leaves like a turnout and its first curve
-  starts at the node (it never runs on top of the main line). Track drawn while the track ran
-  through the clicks (T-079, saves from that day) keeps its shape; the points it was drawn through
-  are kept with it, and its first reshape makes them its PIs (auto radius) like on any other track.
-- **Drawing** (T-023, T-092): click where the track should turn, at the level selected; the first
-  click may start on a track end, a node or track (a new junction, built flat), and a click on a
-  node or track finishes the route there; a click on the last point, a double click or Enter
-  finishes at that point; Backspace takes a point back, Escape drops the route. **A click leaves
-  the track drawn before it alone**: everything up to where the curve at the previous click starts
-  stays exactly as it was, that curve keeps its corner and can only get tighter (when the leg to
-  the cursor was what limited it, since that leg is now shared with the new click's curve), and
-  the new click becomes a curve as the cursor moves on (tested, notes/T-092.md). While drawing, the
-  clicked points show as squares, each curve its radius and speed limit, and the cursor the
-  stretch's length, average cost multiplier (level and water over its length), price and tightest
-  curve, the level placed and the lowest speed limit (T-085, T-411), or why it cannot be built. A
-  click adding a corner is refused when the route would be unbuildable if it ended there; a
-  shift-click places it anyway (T-410, [ui-building.md](ui-building.md)). This is the "Corners"
-  mode.
-- **Drawing through points** (T-418, the Build tab's default; Anita 2026-10-15): two clicks per
-  segment, placed at once and never changed by later clicks; Shift held chains the next segment from
-  its end. A segment from a track end, a node or track to open ground is **one circular arc through
-  the click, leaving along the track's heading** (a tangent arc; from a node or track, in the
-  direction nearer the click): for a click d away at an angle a off the heading, an edge with one
-  auto-radius PI on the heading d / (2 cos a) from the start, so both legs are equal end legs and
-  the radius is d / (2 sin a), the largest any single curve through the click can have; the track
-  arrives at the click on heading 2a. One wider than the 1,796 m cap is straight, capped curve,
-  straight, still through the click on 2a. A segment from a free point is straight. A segment
-  ending on track or a node joins it like a turnout, so it has today's shape (a lead-in PI at each
-  end). Refused: a curve under 100 m (the ghost and circle red), a click more than 85 degrees off
-  the heading ("turn back on itself"), and anything the edit refuses (water, a ramp, 200 m per
-  level, that does not fit the second leg). The preview gives the arc's circle (centre and radius,
-  `TrackApi::route_arc`) and an edit the segment's end node (`route_end`) to chain from. Segment ends
-  are plain joints, like those between pieces. **Quad drawn through points** (T-423): a segment
+  (exact lengths, one speed per curve, parallel tracks stay arcs). **Track is stored as points of
+  intersection (PIs)**: it runs straight between them and cuts the corner at each with a circular
+  curve (Anita, 2026-10-09; T-092). A PI's radius is auto unless set: the largest that fits half of
+  each adjacent leg (the whole leg next to an end), capped at what the top speed needs (1,796 m). A
+  curve under the minimum radius is refused ("The curve is too tight"). A route starting or ending
+  on existing track gets a lead-in PI on that track's heading, so it leaves like a turnout and its
+  first curve starts at the node (it never runs on top of the main line). Track drawn while the
+  track ran through the clicks (T-079, saves from that day) keeps its shape; the points it was drawn
+  through are kept with it, and its first reshape makes them its PIs (auto radius) like on any other
+  track.
+- **Drawing through points** (T-418; the only way to draw since T-422, Anita 2026-10-15): click
+  where the track starts (open ground, a track end, a node, or track: a new junction, built flat),
+  then where it goes, at the level selected. The second click places the segment at once and later
+  clicks never change it; Shift held chains the next segment from its end, Backspace takes the last
+  segment of a chain back (one undo step each), Escape or Enter stops. While drawing, the ghost
+  shows the segment with its curve's radius and speed limit, the curve's whole circle faintly, and
+  the cursor the segment's length, average cost multiplier (level and water over its length),
+  price and tightest curve, the level placed and the lowest speed limit (T-085, T-411), or why it
+  cannot be built; a click on a refused segment does nothing.
+- **The segment's shape**: from a track end, a node or track to open ground it is **one circular
+  arc through the click, leaving along the track's heading** (a tangent arc; from a node or track,
+  in the direction nearer the click). For a click d away at an angle a off the heading the radius
+  is d / (2 sin a), the largest any single curve through the click can have, and the track arrives
+  on heading 2a. Up to a quarter turn the edge has one auto-radius PI on the heading d / (2 cos a)
+  from the start, so both legs are equal end legs. **A wider turn, up to 350 degrees** (a loop or
+  hairpin past a half turn, T-442), is split into equal corners of at most 90 degrees, each PI
+  r tan(turn / 2n) from the arc's tangent points, so every leg between two corners is shared
+  exactly and the auto radius is the arc's at each; a level change ramps on the middle leg. A
+  quarter turn or less wider than the 1,796 m cap is straight, capped curve, straight, still
+  through the click on 2a; a wider turn over the cap has straights between its capped corners and
+  no one circle. A segment from a free point is straight. A segment ending on track or a node joins
+  it like a turnout, so it has the lead-in shape (a lead-in PI at each end). Refused: a curve under
+  100 m (the ghost and circle red), a click within 5 degrees of straight behind the start ("turn
+  back on itself": the circle grows without bound), and anything the edit refuses (water, crossing
+  other track at its level, a ramp, 200 m per level, that does not fit). The preview gives the arc's
+  circle (centre and radius, `TrackApi::route_arc`) and an edit the segment's end node (`route_end`)
+  to chain from. Segment ends are plain joints. **Quad drawn through points** (T-423): a segment
   ending on open ground leaves each pair its own loose end, the express pair's 8 m to its side; a
   segment from a loose quad end (the other pair's end within 4-12 m beside it, level with it and
   facing the same way) carries both pairs on with no swing-out or junction: the drawn pair from the
@@ -55,18 +54,14 @@ Full design, numbers and sources: `notes/T-008.md`.
   free point is two straights side by side. From other track or a node the express pair swings
   out as below, which needs a straight, so that segment keeps the lead-in shape (curve then
   straight); one ending on track or a node has both pairs meet there.
-- **One piece per corner** (T-244, Anita: deleting one stretch should not delete the whole
-  path): a finished route is several edges, one per corner clicked, joined at plain nodes (two
-  edge ends, no station) in the middle of the leg between two corners. The leg middle is on the
-  straight, so each corner stays a PI of its own piece with the same auto radius (a corner next to
-  an end may use the whole leg, which is now the half leg it had anyway), and the track is exactly
-  where it was drawn: same length, price, curves, speed limits and run times (tested against the
-  same route as one edge). A leg that changes level is not cut (its ramp is centred between its
-  corners and a node sits at a whole level), nor one under 40 m. A route with one corner or none
-  stays one edge. Drawing it is one undo step; the delete tool, Construct in the track inspector
-  and the track inspector itself act on one piece, and removing a piece leaves its neighbours with
-  track ends where it was. The joints are not drawn and cost nothing; trains pass them with no
-  speed limit or delay (a track section runs on through a plain node, 6.2). A station placed
+- **One piece per segment** (T-244, Anita: deleting one stretch should not delete the whole
+  path): each segment drawn is one edge (each pair's, on quad track), joined to the next at a
+  plain node (two edge ends, no station). The route edit still accepts clicked corners (`pis`) and
+  then makes one piece per corner, cut in the middle of the leg between two corners, the shape
+  unchanged; the drawing tool no longer sends any. The delete tool, Construct in the track
+  inspector and the track inspector itself act on one piece, and removing a piece leaves its
+  neighbours with track ends where it was. The joints are not drawn and cost nothing; trains pass
+  them with no speed limit or delay (a track section runs on through a plain node, 6.2). A station placed
   within half a platform of joints first joins the pieces there into one edge, joint after joint
   until the platform has room (a long platform over several short segments; T-418), the shape
   unchanged.
@@ -359,13 +354,14 @@ multiplier per level (Anita, 2026-10-08):
   more than the cash. Cars are never sold: spares serve the next line that needs them.
 - **Running cost** US$1.50 per car-km (trains an hour each way x line length x cars; set for play,
   a quarter of a real figure, T-091), and **fares**,
-  are settled by the clock worker into the cash and a per-day ledger as the game runs, not once an
+  are settled by the clock worker into the cash and a ledger per day (30 kept) and per hour (48
+  kept, T-447) as the game runs, not once an
   hour (T-284): each game hour's fares are paid as that hour's trains pick up riders (the boarding
   account's trains leaving platforms, 6.6, weighted by the riders each takes; evenly in an hour
   without one), its running cost drains evenly, and both are paid in full by the hour's end, so a
   day's totals are those of whole-hour settling. The worker settles and sends the cash and today's
-  ledger four times a wall second while the clock runs; the top bar shows the cash to the dollar,
-  and only it and the Money tab's cash and Today column re-render. Fare per ride
+  and this hour's ledger four times a wall second while the clock runs; the top bar shows the cash to the dollar,
+  and only it and the Money tab's cash, Today column and History re-render. Fare per ride
   = a base plus a rate per km of the ride, one curve for the network, set in the Money tab ($1.50
   + $0.10 a km to start); a ride that changes lines pays the base once. Fare income comes from
   demand's riders and passenger-km per period (`app/src/game/money.ts`). Changing the fare

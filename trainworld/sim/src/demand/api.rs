@@ -219,6 +219,8 @@ pub(crate) struct Period {
     /// the loads already averaged in, so the round is skipped (T-119).
     fac: Vec<f32>,
     uniform: bool,
+    /// The segment loads the last crowding round was priced on (`kernel::settled`, T-434).
+    seen: Vec<f32>,
     /// Transfers platform to platform (T-176): the slots of `g`, averaged like the loads.
     xi: XferIndex,
     xfer: Vec<f32>,
@@ -786,7 +788,7 @@ impl DemandApi {
         } else {
             (0.0, 0.0, Loads::zero(g.n_st, g.n - g.n_st), 0, SubOut::empty())
         };
-        self.per[q] = Some(Period { net, p, g, avg, rail, walk: walk0 - rail_walk, trips, round: 0, ms: now_ms() - t0, pairs, sub, fac: no_crowding, uniform: true, xi, xfer });
+        self.per[q] = Some(Period { net, p, g, avg, rail, walk: walk0 - rail_walk, trips, round: 0, ms: now_ms() - t0, pairs, sub, fac: no_crowding, uniform: true, seen: vec![], xi, xfer });
         true
     }
 
@@ -808,9 +810,9 @@ impl DemandApi {
         let t0 = now_ms();
         let Some(mut st) = self.per.get_mut(q).and_then(|p| p.take()) else { return false };
         if self.sz.is_some() {
-            if st.uniform && fac == st.fac && left == st.g.rn_left && !legacy() {
-                // Nothing is crowded enough to change a cost, so this round would solve what the
-                // round before did and average in the same loads: exactly nothing changes (T-119).
+            if settled(&mut st.seen, &total[..st.g.rn_line.len()]) || (st.uniform && fac == st.fac && left == st.g.rn_left && !legacy()) {
+                // The period's loads have settled (T-434), or nothing is crowded enough to change a
+                // cost, so this round would solve what the round before did (T-119).
                 st.round += 1;
                 st.ms = now_ms() - t0;
                 self.per[q] = Some(st);

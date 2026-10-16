@@ -94,11 +94,21 @@ lines; an edit re-solves only the clusters it touched, the others keep their fig
   Mumbai's two districts and 15 whole talukas: 28.3M people), tier 0 with population scaled to
   2011 census sub-district totals grown to 2020 by district, half the jobs proxy on population
   (informal work), the census's no-travel workers at home, and both curve parameters fitted to
-  the 2011 census commute distance bands, on UTC+5 [T-292]; **Berlin** (Berlin,
+  the 2011 census commute distance bands, on UTC+5 [T-292]; **Lagos** (Lagos State's 20 LGAs and
+  Ado-Odo/Ota, Ifo and Obafemi Owode in Ogun: 13.8M people), tier 0 from global sources alone
+  (GHSL unscaled, half the jobs proxy on population, OSM land use capped at 1 km² an area and
+  spread over it, Mumbai's curve), a data-poor test, on UTC+1 [T-459]; **São Paulo** (the 39
+  municipalities of the metropolitan region: 20.7M people), tier 0 with the 2022 census by tract,
+  jobs, work from home and both curve parameters from the Metro's 2017 origin-destination survey
+  (workers by zone of work, home-to-job distances), Portuguese place names, on UTC-3 [T-458];
+  **Berlin** (Berlin,
   Potsdam, the eight Landkreise touching Berlin, Brandenburg an der Havel and Frankfurt (Oder):
   5.5M people), tier 0 with the Zensus 2022 100 m grid scaled to each Gemeinde's population, the
   Länder's Pendlerrechnung for jobs by Gemeinde of work and a curve fitted on its flows, on UTC+1
-  [T-290]; **Tokyo** (Greater Tokyo: Tokyo, Kanagawa, Saitama, Chiba and
+  [T-290]; **Seoul** (the Seoul Capital Area: Seoul, Incheon less Ongjin's islands and Gyeonggi
+  whole, 26.0M people), tier 0 with population scaled to each si-gun-gu's resident registration
+  count (November 2020), the jobs proxy, the curve's length fitted to Statistics Korea's mean
+  commute, on UTC+9 [T-457]; **Tokyo** (Greater Tokyo: Tokyo, Kanagawa, Saitama, Chiba and
   Ibaraki prefectures whole, Tokyo's Izu and Ogasawara islands left out: 39.8M people), the first stage of
   covering all of Japan, tier 0 with the 2020 census 500 m mesh population, the 2021 economic
   census 500 m mesh jobs scaled to the census's workers by municipality of work, a curve fitted on
@@ -111,9 +121,13 @@ lines; an edit re-solves only the clusters it touched, the others keep their fig
   **Hiroshima** (the prefecture, 2.8M), with the same inputs, each its own fitted curve
   (Sapporo Tokyo's) and the telework share of Japan outside the three big metros [T-432].
 - **Non-city zones**: Worcester, Windham, New London and Litchfield Counties. Modelled space stays
-  between city zones, with no ring round each city, for now (Anita, T-300).
+  between city zones, with no ring round each city, for now (Anita, T-300), except in Japan, which
+  is covered whole: the 31 prefectures outside the metro packs are a zone each (Okinawa included)
+  and Hokkaido's other subprefectures 8 zones after the under-100k rule, 38 zones and 46.6M
+  people with the metros' inputs and each zone's own fitted curve [T-420 stage 3,
+  `pipeline/japan_zones.py`].
 - **City additions** in the US are paused; a **sampler of other countries' cities** comes next
-  (London, Paris, Shanghai, Mumbai, Berlin and Tokyo built), each a low-fidelity first pass from general sources
+  (London, Paris, Shanghai, Mumbai, Lagos, São Paulo, Berlin, Seoul and Tokyo built), each a low-fidelity first pass from general sources
   (`research/world-sampler.md`). **Cells** are H3 resolution 9 (about 0.1 km²).
 
 ## 4. Demand: local trips
@@ -131,8 +145,9 @@ institutions** (prisons, nursing homes and the like, T-234).
   d^-0.8 exp(-d / 30 km), T-198) and border factor (US states 0.23, Washington 0.45; abroad,
   national borders only, T-181).
 - **Mode choice** recomputes after service or fare changes: station access, destination-specific
-  common-line strategies, fare-sensitive choice between rail and driving, and three crowding
-  rounds that price crowded trains and riders left behind by full ones [T-188]. Each round uses
+  common-line strategies, fare-sensitive choice between rail and driving, and up to three crowding
+  rounds that price crowded trains and riders left behind by full ones [T-188]; a period stops
+  once a round moves its loads under 1% [T-434]. Each round uses
   the combined loads of every zone, the everyday layer and the regional market. A distance-based
   walking share is reserved first, so useful rail never removes a short trip's walk.
 - **Walks and drives follow real paths** [T-275] round water and over OSM roads. Riders walk
@@ -181,10 +196,11 @@ The regional layer carries what crosses zones or goes far [T-117, T-276]. Detail
 
 ## 6. Building and running
 
-The player draws curved track (straights and circular arcs through the corners clicked, single,
-double or quad, at levels -3 to +3), places stations, and makes lines, all as **blueprints** that
-are free to edit and undo, then pays to **construct** them. A drawn route is one piece of track per
-corner [T-244]. A crossover, placed with one click, joins a track to the track beside it (quad's
+The player draws curved track (straights and circular arcs, single, double or quad, at levels -3 to
++3) two clicks per segment, each segment one curve through the click leaving along the track, up
+to 350 degrees round [T-418, T-422, T-442], places stations, and makes lines, all as
+**blueprints** that are free to edit and undo, then pays to **construct** them. A segment is one
+piece of track [T-244]. A crossover, placed with one click, joins a track to the track beside it (quad's
 other pair, or a route alongside) in an X, 120 m long, 50 km/h, priced as two junctions, so lines
 can change pairs mid-stretch [T-338]. Lines set a whole number of trains for high, medium and low demand; capacity and
 junction conflicts add delay, computed from the schedules in the clock worker before demand runs.
@@ -219,8 +235,8 @@ moves. The top bar holds the mode split (the goal number), the cash, the local d
 demand level, pause and three speeds. **Panels show what can change**: labels, numbers and states,
 no explanatory notes [T-253]. **Everything drawn that encodes a number has a hover**, always the
 game's own tag, never a browser tooltip [T-194, T-210]. No CSS transitions; trains are the only
-motion. **Panels count today, not a forecast** [T-293]: the line and station panels count the day
-so far from the boarding account, while the map's demand views (Homes and Destinations bubbles
+motion. **Panels count the past 24 hours, not a forecast** [T-293, T-446]: the line and station panels
+count the past 24 hours from the boarding account, while the map's demand views (Homes and Destinations bubbles
 coloured by mode share, line widths by riders, station circles, inter-region trips) show demand's
 whole day, the clock's day by default. On the map, lines sharing track are drawn over each other,
 stations are dots from zoom 11 and their true platforms from 15, and trains fill like a gauge with

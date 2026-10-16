@@ -85,6 +85,12 @@ the player's links included.
   Drawn over the network and capacity tags, under station names.
 - **Hover**: local trip legs there, both directions, and their split; lean, with no station list
   [T-323].
+- **Airports** [T-448, `map/airportMarks.ts`]: a white circle with a plane, 20 px at every zoom, on
+  each airport's busiest terminal cell, so on its biggest bubble. Shown with Destinations under All
+  purposes or Airport, for the focused zone and the nearby zones, hidden while a bubble or station
+  is selected and in the city overview. Airports are the cells that receive the airport purpose's
+  legs (500 a day or more), terminal cells within 2.5 km sharing one badge. The badge takes no
+  clicks; its hover says "149k airport trips a day here" with the mode split.
 - There is no corner summary box: the zone's split is in the top bar, local splits in hovers and
   the inspector.
 

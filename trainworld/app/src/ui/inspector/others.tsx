@@ -59,7 +59,7 @@ interface ComplexRow {
   full: boolean;
   /** the forecast's boardings a day: only the rows' order and the station a click opens */
   boardings: number;
-  /** boardings today so far (T-293), null before the first count */
+  /** boardings in the past 24 hours (T-446), null before the first count */
   today: number | null;
   tip: string;
   waitTip: string;
@@ -155,7 +155,7 @@ function ComplexSummary({ id, members }: { id: string; members: string[] }) {
 
 /** The complex's lines (T-246, T-250, Anita: "show on top the component stations ... one row per
  * line"), one row per line name with its branches and directions summed: riders waiting now and
- * boardings today (T-293). A click opens the line's busiest station there on its own. Its own
+ * boardings in the past 24 hours (T-293, T-446). A click opens the line's busiest station there on its own. Its own
  * component, re-rendered as today's counts move. */
 function ComplexLines({ id, members, lines, byId, now }: { id: string; members: string[]; lines: LineInput[]; byId: Map<string, StationInput>; now: ComplexNow | null }) {
   const rows = complexRows(members, lines, byId, now, today.value);
@@ -164,21 +164,21 @@ function ComplexLines({ id, members, lines, byId, now }: { id: string; members: 
       <li class="cols muted small">
         <span class="grow">Lines</span>
         <span class="val">Waiting</span>
-        <span class="val">Today</span>
+        <span class="val">24 h</span>
       </li>
       {rows.map((r) => (
         <li class={r.stations.includes(id) ? "on" : ""} onClick={() => openStation(r.open)} data-tip={r.tip}>
           {r.line && <Chip line={r.line} size="sm" />}
           <span class={"grow" + (r.built ? "" : " muted")}>{r.name}</span>
           <span class={"val" + (r.full ? " bad" : "")} data-tip={r.waitTip}>{r.waiting !== null ? count(r.waiting) : ""}</span>
-          <span class="val" data-tip={r.today !== null ? `${count(r.today)} boardings today` : undefined}>{r.today !== null ? count(r.today) : ""}</span>
+          <span class="val" data-tip={r.today !== null ? `${count(r.today)} boardings in the past 24 hours` : undefined}>{r.today !== null ? count(r.today) : ""}</span>
         </li>
       ))}
     </ul>
   );
 }
 
-/** A station's or complex's boardings today (T-293) under a "Today" heading, with the purpose
+/** A station's or complex's boardings in the past 24 hours (T-446), with the purpose
  * shares; `at`: the stops of each line counted. Its own component, re-rendered as counts move. */
 function BoardingsToday({ lines, at }: { lines: LineInput[]; at: (l: LineInput) => number[] }) {
   const t = today.value;
@@ -186,7 +186,7 @@ function BoardingsToday({ lines, at }: { lines: LineInput[]; at: (l: LineInput) 
   const total = lines.reduce((a, l) => a + at(l).reduce((b, k) => b + (t.get(l.id)?.stops[k] ?? 0), 0), 0);
   return (
     <>
-      <div class="h"><span data-tip="Since midnight">Today</span></div>
+      <div class="h">Past 24 h</div>
       <ul class="rows pick">
         <Row label="Boardings" bold>
           {known ? count(total) : ""}
@@ -200,7 +200,7 @@ function BoardingsToday({ lines, at }: { lines: LineInput[]; at: (l: LineInput) 
 export function StationInspector({ id }: { id: string }) {
   const w = world.value;
   const [editing, setEditing] = useState(false);
-  useToday(); // T-293: boardings today, kept fresh while the panel is open
+  useToday(); // T-446: boardings in the past 24 hours, kept fresh while the panel is open
   const s = w?.save.stations.find((s) => s.id === id);
   if (!w || !s) return null;
   // a station complex (T-146): the switch shows only when there is more than this station
@@ -324,7 +324,7 @@ function StationDetails({ s, lines, props, construct, remove }: {
   s: StationInput; lines: LineInput[];
   props: (platform: number) => void; construct: () => void; remove: () => void;
 }) {
-  // T-293: each line's boardings here today (re-rendered as they move: a small part of the panel)
+  // T-446: each line's boardings here in the past 24 hours (re-rendered as they move: a small part of the panel)
   const t = today.value;
   const here = lines.map((l) => [l, t.get(l.id)?.stops[l.stops.indexOf(s.id)] ?? 0] as const);
   return (
@@ -336,13 +336,13 @@ function StationDetails({ s, lines, props, construct, remove }: {
           <Stepper value={length(s.length)} wide label="platform length" onStep={(d) => props(Math.max(60, Math.min(400, s.length + d * 20)))} />
         </li>
       </ul>
-      {lines.length > 0 && <div class="h">Lines<span class="right muted small">boardings today</span></div>}
+      {lines.length > 0 && <div class="h">Lines<span class="right muted small">boardings, past 24 h</span></div>}
       <ul class="rows pick">
         {here.map(([l, b]) => (
           <li onClick={() => (selection.value = { kind: "line", line: l.id })}>
             <Chip line={l} />
             <span class="grow">{l.name}</span>
-            <span class="val">{t.has(l.id) ? count(b) : ""}</span>
+            <span class="val" data-tip={t.has(l.id) ? `${count(b)} boardings on ${l.name} in the past 24 hours` : undefined}>{t.has(l.id) ? count(b) : ""}</span>
           </li>
         ))}
       </ul>

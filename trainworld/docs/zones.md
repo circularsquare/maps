@@ -48,7 +48,12 @@ Neighbouring zones share exact simplified borders, so their boundaries do not ov
 **touches two different city zones**: it lies between them. Today that is Worcester MA, Windham CT,
 New London CT and Litchfield CT in New England. Modelled space stays between cities for now (Anita,
 2026-10-14, T-300): no ring of units round each city (in the Northeast that ring would be about 30
-more counties and 9 million people). Everything not modelled is dead space.
+more counties and 9 million people). Everything not modelled is dead space. **Japan is modelled
+whole** (research/japan.md decision 2): every prefecture outside the metro packs is a zone, and in
+Hokkaido each subprefecture is a unit under the 100,000 rule (Hiyama joins Oshima; Rumoi and Soya
+join Kamikawa; Hidaka joins Tokachi; Nemuro joins Okhotsk; Shiribeshi less Otaru joins Iburi), 38
+zones from `pipeline/japan_zones.json` (T-420 stage 3). Their outlines leave out the
+Russian-administered southern Kurils and uninhabited islets more than 50 km from other land.
 
 **Mercer County (Trenton) is part of New York's city zone**, not a non-city zone (Anita leaned
 this way). Reasons: it is in the New York combined statistical area; LODES holds 175,000 jobs
@@ -130,7 +135,7 @@ station serves, as the market's pairs are. Each period carries C(h, w) x the sha
 leaving then, from h to w, and C(h, w) x the share of trips home, on the same station pairs
 reversed: the local layer's 70/12/6/4/8 and 2/18/58/16/6. Mode choice is the local commute's: a
 logit at 0.05 per perceived minute, driving weighted 1.33 plus parking at the work end (3 minutes
-plus the work zone's jobs per km² / 2,500, at most 40, job-weighted over the 6 km zone), against
+plus the work zone's parking, the local rule's mean over drivers, `site_park` job-weighted over the 6 km zone), against
 the best rail strategy with its walks, waits, transfers and fares. The weekend has 0.30 of a
 weekday's commutes with the weekend's work timing (days.rs `WORK`). Their loads join the
 work purpose's (T-158), so the purpose filter's "Work" shows them.

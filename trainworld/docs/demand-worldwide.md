@@ -172,6 +172,56 @@ Tier 0 with sub-district totals and a curve fitted to distance bands; notes/T-29
 - **OSM is thin**: 803 school sites for 6.2M pupils, one hospital with beds (so every hospital takes
   the median), a median drive factor of 1.62 between near zones (creeks and hills).
 
+## Nigeria (Lagos, `pipeline/nigeria.py`, T-459, 2026-10-16)
+
+Tier 0 from global sources alone, the data-poor test; notes/T-459.md has the tables.
+
+- **Units**: OSM local government areas (admin_level 6), every one in the config's states plus named
+  ones beyond. Holes in the dissolved outline are lagoon no LGA covers, so they are filled.
+- **Population**: GHSL E2020 unscaled (13.8M). The last census is 2006 and the state's own figures
+  (20M and more) are not credible; UN WUP 2018 (14.4M for 2020) and Africapolis (13.8M Lagos plus
+  1.6M Ikorodu) bracket GHSL within about 10%, so scaling would only move it inside that range.
+  GHSL lags the fast fringe (Ikorodu LGA 0.7M against Africapolis's 1.6M agglomeration): use the
+  latest epoch once the game moves past 2020.
+- **Jobs**: the proxy with population 0.5 of the blend (as Mumbai). **Where OSM maps few places,
+  land use dominates the OSM signal** (Lagos: 81% of it), and one big industrial area becomes one
+  huge job lump at its centroid (the 23 km² Dangote refinery took 425k jobs, 6.5% of the city). Rule
+  for thin-OSM cities: `land_cap_km2` 1 and `land_spread_deg` 0.003 (cap one area's weight at 1 km²,
+  spread it over a ~330 m grid inside it). Not yet the default (T-460). Markets (Balogun, Alaba,
+  Oshodi) get almost nothing from buildings or OSM; their jobs come only from the population share.
+- **Everyday destinations**: OSM has 0.09 errand and 0.04 leisure places per 1,000 residents
+  (Mumbai 0.29 and 0.19, London 5.9 and 4.0), in 2% of cells holding 7% of the people, gathered in
+  Lekki, Victoria Island and Ikeja. Shopping is drawn to the formal, mapped districts, not the
+  markets: the per-cell OSM count is not usable below about 1 place per 1,000 residents (T-456's
+  fallback).
+- **Curve**: no flows or distance table; Mumbai's fitted curve borrowed, d^-1.65 exp(-d/32.7 km),
+  model mean 8.7 km (a 2010 survey's mean trip, Osoba, 12 km by road).
+- **Work from home**: 0 (no source); informal work near home is in the population share instead.
+- **Universities**: the World Bank's tertiary rate is from 2011 (0.0088 a resident).
+- **Medical**: no OSM hospital carries beds; every hospital takes the median or its floor area.
+
+## Brazil (Sao Paulo, `pipeline/brazil.py`, T-458, 2026-10-16)
+
+Tier 0 with census tracts and a household travel survey; notes/T-458.md has the tables.
+
+- **Units, population**: IBGE's 2022 census tracts with their people (the "malha com atributos"
+  GeoPackage, one per state, open); the pack's municipalities by code, the outline their tracts
+  dissolved. GHSL is within 5% of the census in most municipalities but 15-23% low in the
+  fast-growing western suburbs (Barueri, Cajamar, Cotia, Santana de Parnaiba).
+- **Jobs, work from home, curve: a household travel survey** (the Metro's OD 2017 microdata), the
+  rule for any city with one: workers by survey zone of their first job, scaled from the survey's
+  population to the census's, spread inside each zone by the proxy; work from home is the share of
+  workers whose job is at home (9.1%); both curve parameters fitted to workers' home-to-job
+  straight-line distances, with the bands under 4 km as one (2 km zones cannot split them):
+  d^-1.8 exp(-d/19 km), mean 8.5 km as the survey's. Other Brazilian metros have published OD
+  surveys (the odbr R package gathers them); IBGE's census has no workplace table by small area.
+- **Everyday trips against the survey** (weekday, home-based): the game's errands run 6.6 km
+  against 4.8 and social outings 10.8 km against 4.9; social outings to the centre are twice the
+  survey's share from the rest of the city (18% against 9%). The survey's rates are far below New
+  York's (errands 0.09 a resident against 0.30, social 0.04 against 0.20). Not calibrated
+  (Anita 2026-10-15); evidence for T-450's per-pack rates and the everyday scales.
+- **Names**: OSM `name` is Portuguese; no `latin_names`.
+
 ## Germany (Berlin, `pipeline/germany.py`, T-290, 2026-10-15)
 
 Tier 0 with three national upgrades; notes/T-290.md has the tables.
@@ -199,6 +249,26 @@ Tier 0 with three national upgrades; notes/T-290.md has the tables.
 - **OSM is rich**: 70k job points and 190k job areas, 1,737 school sites, 4,024 medical sites; a
   median drive factor of 1.42 between near zones (lakes and forests).
 
+## South Korea (Seoul, `pipeline/korea.py`, T-457, 2026-10-16)
+
+Tier 0 with one national upgrade; notes/T-457.md has the sources.
+
+- **Units**: si-gun-gu, with the non-autonomous gu of the large si, as OSM relations matched by
+  Korean name inside their province. OSM follows boundary changes within months (Incheon's July
+  2026 gu), so a table from an earlier year needs its units mapped onto today's.
+- **Population**: the Ministry of the Interior and Safety's resident registration count by
+  si-gun-gu (monthly, open CSV, down to eup-myeon-dong), the census month's. Registered foreigners
+  are left out. GHSL is off by more than 50% in the new towns of the 2010s (Hanam +65%, Gimpo
+  +57%, Gwangju +62%) and 15-27% high in old dense districts: district totals matter here.
+- **Jobs**: tier 0's proxy (the Census on Establishments by si-gun-gu is on KOSIS only, behind a
+  key or the interactive site).
+- **Curve**: length fitted to Statistics Korea's mobile-data mean commute (20.4 km in the capital
+  area, read as one way along the route, 15.7 km straight-line): at tier 0's power 1.4 that needs
+  a 156 km length, close to a pure power curve.
+- **Work from home**: 0 (telework is uncommon; no figure checked).
+- **Universities**: Wikidata has student counts for only 3 of 217 sites; the national tertiary
+  rate scales the total, so only the spread by site area is weak.
+
 ## Japan (Tokyo, `pipeline/japan.py`, T-420, 2026-10-15)
 
 Tier 0 with Japan's national inputs, written to serve every Japanese pack (research/japan.md);
@@ -208,6 +278,9 @@ notes/T-420.md has the tables.
   the census's unit); in Hokkaido, subprefectures (N03's 振興局 names, `japan.SUBPREFECTURES`), and
   a single municipality where the flows say it belongs (Otaru with Sapporo). N03 draws every pier and rock apart; parts under about 0.02 km² are dropped
   from the outline, and land of no municipality only where it touches one (Tokyo Bay's landfill).
+  The 38 non-city zones (T-420 stage 3) also leave out the Russian-administered southern Kurils
+  and uninhabited parts under 5 km² more than 50 km from other land. Wards redrawn since the 2020
+  census (Hamamatsu, 2024) are read as their whole city on both sides (`japan.CITY_OF_WARD`).
 - **Population**: the 2020 census 500 m mesh, each mesh spread over its cells by GHSL; a mesh the
   outline cuts on land keeps its share of land inside. Suppressed meshes are already counted in
   their neighbour, so the mesh totals are the census's (Greater Tokyo within 0.01%).
@@ -222,11 +295,15 @@ notes/T-420.md has the tables.
   any other (T-431), so it is Japan's metro curve. The regional metros fit a little flatter and
   shorter, each its own (T-432): Fukuoka d^-2.0 exp(-d/32), Sendai d^-1.8 exp(-d/50), Hiroshima
   d^-1.9 exp(-d/32); Sapporo ties Tokyo's curve and keeps it. Their best fits misplace 8-12% of
-  commuters between municipalities, where Tokyo's curve misplaces 9-12%.
+  commuters between municipalities, where Tokyo's curve misplaces 9-12%. Each non-city zone fits
+  its own over a fixed grid (power 1.2-2.4, length 16-160 km; `japan_zones.fit`): most fit flatter
+  and shorter still (d^-1.4 exp(-d/16) the commonest), with 52-91% working in their own
+  municipality, and misplace 4-11%.
 - **Work from home**: the census's share working at home, plus MLIT's 2024 telework survey share of
   the region's employed, judged at 2 days in 5, on the rest: Greater Tokyo 0.23 (9.7% and 37.5%),
   Keihanshin 0.17 (8.1% and Kinki's 24.4%), Chukyo 0.16 (8.8% and 19.6%); elsewhere MLIT's
-  16.8%: Fukuoka 0.15 (8.6%), Sapporo 0.13 (6.8%), Sendai 0.16 (9.5%), Hiroshima 0.14 (8.2%).
+  16.8%: Fukuoka 0.15 (8.6%), Sapporo 0.13 (6.8%), Sendai 0.16 (9.5%), Hiroshima 0.14 (8.2%),
+  and the non-city zones 0.138 (Okinawa) to 0.231 (Okhotsk).
 - **Schools**: KSJ P29 points (no pupil counts); each 500 m mesh's children 0-14 x 0.9 go to the
   nearest elementary, junior high, compulsory or secondary school. Universities stay tier 0 (where
   no campus has a Wikidata count, as in Fukuoka, the national total is split by campus area).
@@ -329,7 +406,8 @@ notes/T-420.md has the tables.
   slower, and a sprawling metro whose dense core is wider than 10 km (Mexico City, Jakarta) is
   slow for longer. Check: a few typical door-to-door drives of 50-130 km per new country against
   the model's (notes/T-295.md has the US, Toronto and London ones).
-- **Parking** (T-380, T-372, docs/demand.md 4.3). In minutes, not money: 3 to park, plus for a paid
+- **Parking** (T-380, T-372, T-440, docs/demand.md 4.3). One rule for the commute, everyday and
+  regional layers. In minutes, not money: 3 to park, plus for a paid
   space 15 x ln(d / 3,000) per one-way trip (capped at 50), d the destination zone's jobs per km²
   of land; a share 1 / (1 + d / 8,000) parks free; congestion charges from a short list of
   charging areas (`kernel::CORDONS`: Manhattan, central London). Checked against real prices in New
@@ -377,6 +455,9 @@ notes/T-420.md has the tables.
   hugely between and within countries (see Anita's "income dependence" idea in her TODO).
 - **Waiting, transfer and crowding penalties.** From transit literature that is mostly US and
   European. Riders in Tokyo or Mumbai tolerate crowding very differently.
+- **Crowding rounds** (T-434). At most three, and a period stops once a round moves its loads
+  under 1%. Measured on New York and Tokyo-sized grids, where the peaks still move a few percent at
+  round three; a far more crowded network (Mumbai) may need a fourth peak round.
 - **Riders left behind** (T-188, docs/demand.md 4.4 step 7). A boarding's cost includes the
   average extra wait for full trains, worked out per period with the boarding account's rule:
   arrivals peaking mid-period at the US busiest-hour factors, trains taking riders up to crush
@@ -490,7 +571,7 @@ notes/T-420.md has the tables.
   air and rail share on its big corridors (MLIT for Japan, Eurostat's air O-D counts, DB1B), a fare
   per country or region where they disagree.
 - **The longer trip's car** (T-276). Drive 15 min + 1.25 x the great circle at 85 km/h, plus 15
-  US cents a road km (AAA 2024 fuel and upkeep) and the local layer's parking at the destination,
+  US cents a road km (AAA 2024 fuel and upkeep) and the local parking rule at the destination,
   both split over two occupants, at 3 perceived minutes a dollar. Fuel prices, tolls (T-270),
   motorway speeds, occupancy and car ownership all vary by country; Europe's fuel costs about twice
   the US's per km, so cars there would cost more. Check: a fuel price and toll regime per country.

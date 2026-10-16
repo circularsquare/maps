@@ -230,6 +230,27 @@ table.ledger th { font-weight: 400; color: var(--muted); font-size: 12px; text-a
 table.ledger td { text-align: right; padding: 3px 0; border-bottom: 1px dotted var(--rule); white-space: nowrap; }
 table.ledger td:first-child { text-align: left; }
 table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
+/* T-447: the money history charts */
+.hist-title { display: flex; align-items: baseline; margin: 8px 0 2px; }
+.hist-title .right { margin-left: auto; }
+.hist-title .hist-fares { color: var(--accent); }
+.hist-title .hist-costs { color: var(--muted); }
+.hist-title .hist-oneoff { color: color-mix(in srgb, var(--text) 45%, var(--bg)); }
+rect.hist-oneoff, path.hist-oneoff { fill: color-mix(in srgb, var(--text) 18%, var(--bg)); stroke: none; }
+path.hist-oneoff.cap { fill: var(--muted); }
+svg.hist { width: 100%; height: auto; stroke-width: 1.5; }
+.hist-axis { stroke: var(--rule); stroke-width: 1; }
+path.hist-fares { stroke: var(--accent); }
+path.hist-costs { stroke: var(--muted); }
+circle.hist-fares { fill: var(--accent); stroke: none; }
+circle.hist-costs { fill: var(--muted); stroke: none; }
+.hist-gain { fill: var(--accent); stroke: none; }
+.hist-loss { fill: #b23a3a; stroke: none; }
+path.now { stroke-dasharray: 3 3; }
+rect.now { fill-opacity: .45; }
+.hist-col { fill: var(--text); fill-opacity: 0; stroke: none; }
+.hist-col:hover { fill-opacity: .07; }
+.hist-x { display: flex; justify-content: space-between; margin-top: 2px; }
 
 .stepper { display: inline-flex; vertical-align: middle; }
 .stepper .btn { height: 24px; min-width: 24px; width: 24px; padding: 0; }
@@ -383,6 +404,7 @@ table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
 @container map-column (max-width: 1350px) { .blueprint-bar { top: 46px; } }
 @container map-column (max-width: 680px) { .blueprint-bar { top: 80px; } }
 .bp-box { position: absolute; z-index: 3; pointer-events: none; border: 1.5px dashed var(--net-ink); background: color-mix(in srgb, var(--net-ink) 10%, transparent); }
+.track-row { display: flex; align-items: center; gap: 8px; }
 .btn.lv { min-width: 32px; padding: 0 4px; font-variant-numeric: tabular-nums; }
 /* five tools: three on the first row, two on the second (T-338) */
 .tool-pick { display: flex; flex-wrap: wrap; }
@@ -472,6 +494,11 @@ table.ledger tr.b td { font-weight: 700; border-bottom: 0; }
 .mk { width: 10px; height: 10px; border-radius: 50%; flex: none; display: inline-block; }
 .h .mk { margin-right: 6px; align-self: center; }
 /* T-097: the tag by the pointer over a bubble, and the box of a long press and drag */
+/* T-448: a plane badge on each airport bubble */
+.airport-marks { position: absolute; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; }
+.airport-mark { position: absolute; left: 0; top: 0; width: 20px; height: 20px; margin: -10px 0 0 -10px; display: grid; place-items: center;
+                background: #fff; border: 1px solid var(--net-ink); border-radius: 50%; color: var(--net-ink); }
+.airport-mark svg { width: 14px; height: 14px; fill: currentColor; stroke: none; }
 .demand-tag { position: absolute; left: 0; top: 0; z-index: 4; pointer-events: none; white-space: nowrap !important; }
 /* T-305: the network tag wraps at 320 px (a complex's line list is long); a short tag is as wide as its text */
 .track-tag { width: max-content; max-width: 320px; white-space: normal !important; }

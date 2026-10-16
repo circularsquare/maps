@@ -1,7 +1,7 @@
 // The line inspector: name and colour, whether it runs (and what constructing the rest costs), the
-// schedule by demand level with headway and trains needed (SPEC 6.3), its day so far (riders,
-// fares, running cost and its trains, T-293), the stops with each stop's time from the start of
-// the line and boardings today, and the round
+// schedule by demand level with headway and trains needed (SPEC 6.3), its past 24 hours (riders,
+// fares, running cost and its trains, T-293, T-446), the stops with each stop's time from the start
+// of the line and boardings in the past 24 hours, and the round
 // trip split into running, dwell, turning and waiting, with where it waits (T-031).
 
 import { useEffect, useRef, useState } from "preact/hooks";
@@ -90,29 +90,29 @@ function RoundTrip({ st, lev, stops, spots }: { st: LineStats; lev: number; stop
 
 /** Times of day for the full-train spans: "07:40 to 08:50, 17:35 to 18:45". */
 function spansText(spans: [number, number][]): string {
-  const t = (s: number) => clockTime(Math.round(s / 60) % 1440);
+  const t = (s: number) => clockTime(((Math.round(s / 60) % 1440) + 1440) % 1440);
   return spans.map(([a, b]) => (b - a < 60 ? t(a) : `${t(a)} to ${t(b)}`)).join(", ");
 }
 
-/** US$ of running cost since midnight (T-293): each hour's trains at its demand level, the hour
- * now in part, as the worker drains the cash (T-284). */
+/** US$ of running cost over the past 24 hours (T-446): each hour's trains at its demand level, the
+ * hours at either end in part, as the worker drains the cash (T-284). */
 function runningToday(l: LineInput, st: LineStats): number {
   const m = moneyState.value;
   if (!m) return 0;
-  // T-309: in the line's own local time, from its midnight
-  const now = clock.now() + st.shift, h0 = Math.floor(now / 86400) * 24, t = now / 3600;
+  // T-309: in the line's own local time
+  const t = (clock.now() + st.shift) / 3600, t0 = t - 24;
   const tph = { high: l.tph.high, medium: l.tph.medium, low: l.tph.low };
   let cost = 0;
-  for (let h = h0; h < t; h++) {
+  for (let h = Math.floor(t0); h < t; h++) {
     const lev = PERIODS[periodAt(h * 3600)].demand;
-    cost += tph[lev] * 2 * st.km * st.cars * m.runCostCarKm * m.economy * Math.min(1, t - h);
+    cost += tph[lev] * 2 * st.km * st.cars * m.runCostCarKm * m.economy * (Math.min(h + 1, t) - Math.max(h, t0));
   }
   return cost;
 }
 
-/** The line's day so far (T-293, game/today.ts): riders, fares and running cost, and its trains
- * from the boarding account (T-230): how many left packed full and when, the fullest, and who
- * was left on the platform. Its own component: it re-renders as the counts move. */
+/** The line's past 24 hours (T-446, game/today.ts) or yesterday: riders, fares and running cost,
+ * and its trains from the boarding account (T-230): how many left packed full and when, the
+ * fullest, and who was left on the platform. Its own component: it re-renders as the counts move. */
 function LineToday({ l, st }: { l: LineInput; st: LineStats }) {
   const yest = dayShown.value === "yesterday";
   useYesterday(yest);
@@ -124,7 +124,7 @@ function LineToday({ l, st }: { l: LineInput; st: LineStats }) {
       <div class="h">
         <Segmented<"today" | "yesterday">
           options={[
-            ["today", <span data-tip="Since midnight, counted train by train. Whoever does not fit on a full train waits for the next one.">Today</span>],
+            ["today", <span data-tip="The past 24 hours, counted train by train. Whoever does not fit on a full train waits for the next one.">Past 24 h</span>],
             ["yesterday", <span data-tip="The last complete day, midnight to midnight in the line's local time">Yesterday</span>],
           ]}
           value={dayShown.value}
@@ -145,10 +145,10 @@ function LineToday({ l, st }: { l: LineInput; st: LineStats }) {
   );
 }
 
-/** One stop's boardings today (T-293), in the stops list. */
+/** One stop's boardings in the past 24 hours (T-446), in the stops list. */
 function StopToday({ line, i }: { line: string; i: number }) {
   const d = today.value.get(line);
-  return <span class="n num" data-tip={d ? `${count(d.stops[i] ?? 0)} boardings today` : undefined}>{d ? count(d.stops[i] ?? 0) : ""}</span>;
+  return <span class="n num" data-tip={d ? `${count(d.stops[i] ?? 0)} boardings in the past 24 hours` : undefined}>{d ? count(d.stops[i] ?? 0) : ""}</span>;
 }
 
 export function LineInspector({ id }: { id: string }) {
@@ -315,7 +315,7 @@ export function LineInspector({ id }: { id: string }) {
       {st.status === "running" && <LineToday l={l} st={st} />}
 
       <div class="h">
-        Stops<span class="right muted small">boardings today</span>
+        Stops<span class="right muted small">boardings, past 24 h</span>
       </div>
       <div class="line-stop-actions">
         <button class={"btn text" + (editingStops ? " on" : "")} onClick={addStops}><Icon.pencil />{editingStops ? "Done editing stops" : "Edit stops"}</button>

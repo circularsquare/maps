@@ -316,6 +316,70 @@ CITIES = {
         "region_name": "Mumbai",
         "latin_names": True,
     },
+    "sao": {
+        "tier0": True,
+        "origin": (-46.6339, -23.5503),  # Praca da Se
+        "water": {"cell_m": 25.0, "min_width_px": 2},
+        "boundary_notes": "notes/T-458.md",
+        # the 39 municipalities of the Regiao Metropolitana de Sao Paulo, whole (brazil.RMSP)
+        "boundary_file": lambda: __import__("brazil").boundary_file("sao"),
+        "population": lambda city, boundary, sig: __import__("brazil").census_population(city, boundary, sig),
+        "jobs": lambda city, boundary, sig, w: __import__("brazil").survey_jobs(city, boundary, sig, w),
+        "jobs_url": "https://transparencia.metrosp.com.br/dataset/pesquisa-origem-e-destino",
+        # OD 2017: workers whose first job is at home (T-458)
+        "wfh": 0.091,
+        "water_source": lambda bbox: __import__("osm_water").source(["south-america/brazil/sudeste"])(bbox),
+        "extract": "south-america/brazil/sudeste",
+        "iso2": "BR",
+        # both parameters fitted to OD 2017 workers' home-to-job straight-line distances (T-458)
+        "curve": {"bands": lambda: __import__("brazil").survey_bands("sao"), "road_factor": 1.0},
+        # GRU Airport's 2025 total via CAPA (notes/T-458.md): passengers / 2; a hub, so O&D by judgement
+        "boardings": {"SBGR": (47188000 / 2, "2025, GRU Airport via CAPA")},
+        "od_share": {"SBGR": 0.75},
+        "region_name": "São Paulo",  # place names stay OSM's Portuguese `name`
+    },
+    # T-457: the Seoul Capital Area, Seoul, Incheon (less Ongjin's islands) and Gyeonggi whole;
+    # South Korea's inputs from pipeline/korea.py
+    "seo": {
+        "tier0": True,
+        "origin": (126.9780, 37.5665),  # Seoul City Hall
+        "water": {"cell_m": 25.0, "min_width_px": 2},
+        "boundary_notes": "notes/T-457.md",
+        "boundary_file": lambda: __import__("korea").boundary_file("seo"),
+        "population": lambda city, boundary, sig: __import__("korea").registered_population(city, boundary, sig),
+        "water_source": lambda bbox: __import__("osm_water").source(["asia/south-korea"])(bbox),
+        "extract": "asia/south-korea",
+        "iso2": "KR",
+        # Statistics Korea with SK Telecom (2023-12): capital-area commuters travel 20.4 km on average,
+        # taken as one-way route distance over a road factor of 1.3 (notes/T-457.md)
+        "curve": {"mean_km": 15.7},
+        "od_share": {"RKSI": 0.85},  # Incheon's transfer passengers, judgement
+        "region_name": "Seoul Capital Area",
+        "latin_names": True,
+    },
+    # T-459: Lagos, a data-poor tier 0 test from global sources only (notes/T-459.md)
+    "lag": {
+        "tier0": True,
+        "origin": (3.3786, 6.5158),  # Yaba
+        "water": {"cell_m": 25.0, "min_width_px": 2},
+        "boundary_notes": "notes/T-459.md",
+        # Lagos State's 20 LGAs and Ado-Odo/Ota, Ifo and Obafemi Owode (Ogun), whole (nigeria.UNITS)
+        "boundary_file": lambda: __import__("nigeria").boundary_file("lag"),
+        # mostly informal work: half the proxy by population, as Mumbai's (T-292)
+        "job_blend": {"nres": 0.2, "osm": 0.3, "pop": 0.5},
+        # OSM land use is 80% of the OSM signal here (few shops and offices mapped): one area's weight
+        # capped at 1 km2 and spread over it, or the 23 km2 Dangote refinery takes 6% of all jobs (T-459)
+        "land_cap_km2": 1.0, "land_spread_deg": 0.003,
+        "water_source": lambda bbox: __import__("osm_water").source(["africa/nigeria"])(bbox),
+        "extract": "africa/nigeria",
+        "iso2": "NG",
+        # no commute flows or distance table: Mumbai's curve, fitted on Census 2011 B-28 (T-292)
+        "decay_pow": 1.65, "decay_km": 32.7,
+        # FAAN's 2024 harmonised report via Daily Trust: 3,006,102 international and 4,134,211
+        # domestic passengers at Murtala Muhammed; passengers / 2
+        "boardings": {"DNMM": (7140313 / 2, "2024, FAAN via Daily Trust")},
+        "region_name": "Lagos",
+    },
     "ber": {
         "tier0": True,
         "origin": (13.3777, 52.5163),  # Brandenburger Tor
@@ -548,6 +612,42 @@ CITIES = {
         "counties": {"09005": "Litchfield CT"},
     },
 }
+
+
+def _japan_zone(zid, z):
+    """T-420 stage 3: a Japanese prefecture zone (or merged Hokkaido subprefectures) from
+    pipeline/japan_zones.json, Japan's inputs as the metro packs'. wfh is the census's at-home share
+    plus MLIT's 16.8% telework outside the big three metros at 2 days in 5; the curve is the zone's
+    own fit (notes/t420s3_curve.py) on the census flows."""
+    units, nb = z["units"], z["neighbours"]
+    return {
+        "tier0": True, "kind": "zone", "name": z["name"],
+        "origin": tuple(z["origin"]),
+        "water": {"cell_m": z["water_cell_m"], "min_width_px": 2},
+        "boundary_notes": "notes/T-420.md",
+        "prefectures": units, "neighbours": nb,
+        "boundary_file": lambda: __import__("japan").boundary_file(zid, units, far_islets=False),
+        "population": lambda city, boundary, sig: __import__("japan").mesh_population(city, boundary, sig, units, nb),
+        "jobs": lambda city, boundary, sig, w: __import__("japan").census_jobs(city, boundary, sig, w, units, nb),
+        "jobs_url": "https://www.e-stat.go.jp/gis/statmap-search?type=1",
+        "schools": lambda boundary: __import__("japan").p29_schools(boundary, units, nb),
+        "water_source": lambda bbox: __import__("osm_water").source(z["water_extracts"])(bbox),
+        "extract": z["extract"],
+        "iso2": "JP",
+        "wfh": z["wfh"],
+        "decay_pow": z.get("decay_pow", 2.2), "decay_km": z.get("decay_km", 80.0),
+        "region_name": z["name"],
+        "utc_offset": 9,
+        "latin_names": True,
+        "kana_romaji": True,
+    }
+
+
+_JZ = os.path.join(os.path.dirname(os.path.abspath(__file__)), "japan_zones.json")
+if os.path.exists(_JZ):
+    with open(_JZ, encoding="utf-8") as _f:
+        for _zid, _z in json.load(_f)["zones"].items():
+            CITIES[_zid] = _japan_zone(_zid, _z)
 
 
 # ---------------------------------------------------------------- downloads
@@ -942,7 +1042,8 @@ def add_gravity(cells_json, city, extra=None):
     if not cargo:
         sys.exit("cargo not found: install Rust (rustup) or put ~/.cargo/bin on PATH")
     cmd = [cargo, "run", "--quiet", "--release", "--features", "demand", "--bin", "pack_gravity",
-           "--manifest-path", os.path.join(ROOT, "sim", "Cargo.toml"), "--", cells_json, out_json,
+           # TW_SIM_DIR: a copy of sim/ to build from while the tree's own is mid-edit (as routes.py)
+           "--manifest-path", os.path.join(os.environ.get("TW_SIM_DIR", os.path.join(ROOT, "sim")), "Cargo.toml"), "--", cells_json, out_json,
            "--border-factor", str(factor), "--decay-pow", str(decay_pow), "--decay-km", str(decay_km)] + list(extra or [])
     subprocess.run(cmd, env=env, check=True)
     with open(os.path.join(PACKS, f"{city}.bin"), "rb") as f:

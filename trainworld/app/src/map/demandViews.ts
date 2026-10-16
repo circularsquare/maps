@@ -27,6 +27,7 @@ import type { Selection } from "../game/types";
 import { display, purposeFilter, selection, stopEditing } from "../game/ui";
 import { world } from "../game/world";
 import { DISC } from "../workers/commutersProtocol";
+import { startAirportMarks } from "./airportMarks";
 import { commuterStats, startCommuterView } from "./commuterView";
 import { buildLayers } from "./demandLayers";
 import { anchorVersion } from "./anchorVersion";
@@ -124,6 +125,7 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
 
   // ---- commuter bubbles ----
   const commuters = startCommuterView(map, view);
+  startAirportMarks(map, overlay);
   // ---- longer trips of a selection or a station (T-118) ----
   const intercity = startIntercityView(view, map);
 

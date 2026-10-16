@@ -2,6 +2,7 @@
 
 import type { ComponentChildren } from "preact";
 import { inkOn } from "../game/palette";
+import { PLANE_PATH } from "../map/glyphs";
 import type { LineInput } from "../game/types";
 
 export const Icon = {
@@ -14,6 +15,8 @@ export const Icon = {
   play3: () => <svg viewBox="0 0 16 16"><path class="solid" d="M1.5 5l4 3-4 3zM6 5l4 3-4 3zM10.5 5l4 3-4 3z" /></svg>,
   track: () => <svg viewBox="0 0 16 16"><path d="M2.5 10.5l8-8M5.5 13.5l8-8M3 9l4 4M6 6l4 4M9 3l4 4" /></svg>,
   station: () => <svg viewBox="0 0 16 16"><path d="M1.5 8h3.5M11 8h3.5" /><circle cx="8" cy="8" r="3" /></svg>,
+  // T-445: a run of segments, each starting where the last ended
+  keepPlacing: () => <svg viewBox="0 0 16 16"><path d="M2 12.5l4-6 3 3 5-6.5" /><circle class="solid" cx="6" cy="6.5" r="1.4" /><circle class="solid" cx="9" cy="9.5" r="1.4" /><circle class="solid" cx="14" cy="3" r="1.4" /></svg>,
   // T-338: two parallel tracks joined by an X
   crossover: () => <svg viewBox="0 0 16 16"><path d="M1.5 3.5h13M1.5 12.5h13M4.5 3.5l7 9M11.5 3.5l-7 9" /></svg>,
   pointer: () => <svg viewBox="0 0 16 16"><path d="M4 2.5v10l3-2.8 2 4.3 1.8-.8-2-4.2 4-.3z" /></svg>,
@@ -40,7 +43,7 @@ export const Icon = {
   ride: () => <svg viewBox="0 0 16 16"><path d="M1.8 11.2V8.4l1.6-3.4h9.2l1.6 3.4v2.8zM1.8 8.4h12.4" /><circle cx="4.8" cy="11.4" r="1.3" class="bg" /><circle cx="11.2" cy="11.4" r="1.3" class="bg" /></svg>,
   // T-378: an inter-region trip's modes (with `ride` for the car)
   train: () => <svg viewBox="0 0 16 16"><rect x="3.8" y="1.8" width="8.4" height="9.7" rx="2" /><path d="M3.8 7h8.4M6 14.2l1-2.7M10 14.2l-1-2.7" /></svg>,
-  plane: () => <svg viewBox="0 0 16 16"><path d="M14.2 8c0-.6-.6-1-1.4-1H9.7L6.6 2.3H5.2L6.8 7H3.7L2.5 5.5h-1l.8 2.5-.8 2.5h1l1.2-1.5h3.1L5.2 13.7h1.4L9.7 9h3.1c.8 0 1.4-.4 1.4-1z" /></svg>,
+  plane: () => <svg viewBox="0 0 16 16"><path d={PLANE_PATH} /></svg>,
   gear: () => (
     <svg viewBox="0 0 16 16">
       <circle cx="8" cy="8" r="2.2" />

@@ -2,14 +2,14 @@
 // Construction controls and the blueprint quote live together in Build (T-100).
 
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
-import { ask, display, lineDraft, selection, tool, type Tool } from "../game/ui";
+import { ask, lineDraft, selection, tool, type Tool } from "../game/ui";
 import { notice, world } from "../game/world";
 import { live } from "../map/live";
 
 const HINT: Record<Tool, string> = {
   select: "",
   // T-253: hints say what a click does now, in as few words as will do
-  track: "Click where the track turns. Click the last point or press Enter to finish; Backspace takes one back.",
+  track: "Click where the track starts, then where it goes. Hold Shift to carry on from there, or switch on keep placing; a double click ends the run, Backspace takes one back.",
   station: "Click on track to put a station there.",
   crossover: "Click on track beside other track to join the two with a crossover.",
   line: "Click the circles to add or remove stops. Press Enter or Escape to finish editing.",
@@ -17,8 +17,6 @@ const HINT: Record<Tool, string> = {
   trip: "Click where a trip starts, or a station.",
   blueprint: "Drag a box round blueprint track and stations. Shift adds to the selection. Right drag moves the map.",
 };
-/** the track tool drawing through points (T-418) */
-const THROUGH_HINT = "Click where the track starts, then where it goes. Hold Shift to carry on from there; Backspace takes one back.";
 
 /** Native modal keeps map input blocked and traps/restores focus; Escape answers no. */
 function Ask() {
@@ -75,7 +73,6 @@ function Notice() {
   const sel = selection.value;
   const hint = t === "line" && draft.stops.length === 1 ? "Now click the next station."
     : t === "trip" && sel?.kind === "trip" && !sel.to ? "Now click where the trip ends, or a station."
-    : t === "track" && display.value.drawThrough ? THROUGH_HINT
     : HINT[t];
   const show = n && performance.now() - n.at < NOTICE_MS;
   if (!show && !hint) return null;

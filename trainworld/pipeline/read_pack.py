@@ -206,6 +206,22 @@ WATER_TESTS = {
                 "Vashi station": (72.9989, 19.0632), "Kalyan station": (73.1305, 19.2355), "Panvel": (73.1210, 18.9894),
                 "Mumbai airport": (72.8656, 19.0896)},
     },
+    "sao": {  # T-458: OSM water (Geofabrik Sudeste), points taken from the water cache
+        True: {"Represa Billings": (-46.6329, -23.7702), "Represa de Guarapiranga": (-46.7285, -23.7186),
+               "Represa do Rio Taiacupeba": (-46.2780, -23.5826), "Rio Tiete at Penha": (-46.5400, -23.5000),
+               "Rio Pinheiros at Morumbi": (-46.6957, -23.5995), "Atlantic off Bertioga": (-46.10, -23.90)},
+        False: {"Se station": (-46.6334, -23.5504), "Trianon-Masp station": (-46.6542, -23.5633),
+                "Tatuape station": (-46.5766, -23.5403), "Tucuruvi station": (-46.6033, -23.4801),
+                "Jabaquara station": (-46.6410, -23.6463), "Palmeiras-Barra Funda station": (-46.6675, -23.5255)},
+    },
+    "lag": {  # T-459: OSM water (Geofabrik Nigeria), lagoon points taken from the water cache
+        True: {"Lagos Lagoon": (3.4492, 6.5129), "Lekki Lagoon": (4.1425, 6.5375), "Badagry Creek": (2.7562, 6.4473),
+               "Epe Lagoon": (4.0384, 6.5529), "Ologe Lagoon": (3.1048, 6.4790), "Commodore Channel": (3.4002, 6.4148),
+               "Atlantic off Victoria Island": (3.4200, 6.3950)},
+        False: {"Yaba": (3.3786, 6.5158), "Ikeja": (3.3373, 6.5919), "Marina station": (3.3950, 6.4462),
+                "Victoria Island": (3.4219, 6.4281), "Ikorodu": (3.5076, 6.6194), "Ota": (3.1977, 6.6894),
+                "Murtala Muhammed airport": (3.3211, 6.5774), "Epe": (3.9841, 6.5841)},
+    },
     "tyo": {  # T-420: OSM water (Geofabrik Kanto), river and lake points taken from the water cache
         True: {"Tokyo Bay off Kisarazu and Haneda": (139.90, 35.50), "Sumida at Oku": (139.73781, 35.77691),
                "Sumida at Kanegafuchi": (139.80253, 35.73861), "Tama at Futako-Tamagawa": (139.54408, 35.63761),
@@ -226,6 +242,13 @@ WATER_TESTS = {
         False: {"Brandenburger Tor": (13.3777, 52.5163), "Alexanderplatz": (13.4132, 52.5219), "Tempelhofer Feld": (13.4030, 52.4730),
                 "Potsdam Hauptbahnhof": (13.0667, 52.3917), "BER terminal 1": (13.5104, 52.3644),
                 "Frankfurt (Oder) station": (14.5465, 52.3365)},
+    },
+    "seo": {  # T-457: OSM water (Geofabrik South Korea), points by polylabel on the water cache
+        True: {"Han by Yeouido": (126.94011, 37.53012), "Han at Jamsil": (127.09354, 37.52554),
+               "Han by Hangang Bridge": (126.96542, 37.51516), "Paldang Lake": (127.29064, 37.50886),
+               "Han at Gimpo": (126.78416, 37.61760), "Seokchon Lake": (127.10423, 37.51069)},
+        False: {"Seoul City Hall": (126.9780, 37.5665), "Gangnam station": (127.0276, 37.4979),
+                "Yeouido": (126.9240, 37.5250), "Ichon, north bank": (126.9960, 37.5250), "Banpo, south bank": (126.9960, 37.5050)},
     },
     "osa": {  # T-431: OSM water (Geofabrik Kansai and Chubu), river and lake points taken from the water cache
         True: {"Osaka Bay off Sakai": (135.30, 34.55), "Lake Biwa (south basin)": (135.88944, 35.02554),
@@ -346,6 +369,11 @@ def check(city):
             assert abs(v.sum() - header["totals"][k]) < 1.0, k
         print(f"  commute: {h.sum():,.0f} home-end ({h.sum() / a['pop'].sum():.1%} of people), {w.sum():,.0f} "
               f"work-end ({w.sum() / a['jobs'].sum():.1%} of jobs); OK")
+    uni = header.get("university")
+    if uni and uni.get("sites"):  # T-441: Fukuoka's first build had 73 campuses and no students
+        s = float(a["university_enrollment"].astype(np.float64).sum()) if "university_enrollment" in a else 0.0
+        assert s > 0, f"{uni['sites']} university sites but no students"
+        print(f"  university: {uni['sites']} sites, {s:,.0f} students; OK")
     check_gravity(header, a)
     check_water(city, header, a)
     return header, a

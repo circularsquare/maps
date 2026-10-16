@@ -78,7 +78,8 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   bubble selections), `intercityView.ts` (longer trips of a selection or station, one bubble per
   far zone, T-118, T-120; one per city zoomed far out, T-186), `catchUp.ts` (the bubbles catching
   up over a game day, T-156), `demandOverlay.ts` (their canvas, over the network's),
-  `demandHover.ts` (the count tag by the pointer).
+  `demandHover.ts` (the count tag by the pointer), `airportMarks.ts` (the plane badge on an
+  airport's bubble, T-448; paths shared with the icons in `glyphs.ts`).
 - Tags and outlines: `trackHover.ts` and `networkTips.ts` (the hover tags on track, trains and
   stations, T-157, T-194), `cityBoundaries.ts` and `boundaryGeometry.ts` (the metro outlines, one
   layer for the zones near the view, and the outside shade, T-131, T-139, T-400), `zoneLoading.ts` (zones still loading drawn grey with a loading
@@ -87,7 +88,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 ### src/ui/: Preact components
 
 `Dock.tsx` (the dock, its icon tabs and resizing, T-252); `tabs.tsx` (Build, Lines, Stations and
-Money); `SettingsTab.tsx`; `SavesPanel.tsx` (saved games, T-251); `widgets.tsx` (chips, steppers,
+Money); `MoneyHistory.tsx` (the Money tab's history charts, T-447); `SettingsTab.tsx`; `SavesPanel.tsx` (saved games, T-251); `widgets.tsx` (chips, steppers,
 checkboxes and the inline SVG icons); `TopBar.tsx`; `StatusTag.tsx` (the demand status tag on the map's top row); `Toolbar.tsx` (tool hints and the confirmation
 dialog); `DemandSelector.tsx` (None/Homes/Destinations and the purpose filter); `Blueprint.tsx`
 (Build's quote and Construct, and the Select tool's selection bar on the map, T-353); `Debug.tsx` (the `?debug=1` readout); `inspector/` (one inspector
@@ -205,7 +206,12 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
 - `tier0.py`: the adapter from global sources only (T-287); `canada.py`: Canada's adapters;
   `england.py`: England's inputs for a tier 0 city (ITL3 outline, Census 2021 district totals;
   T-288; England's census upgrades go here, T-360); `france.py`: France's (départements
-  dissolved from communes, legal population by commune, INSEE jobs by commune of work; T-289).
+  dissolved from communes, legal population by commune, INSEE jobs by commune of work; T-289);
+  `japan.py`: Japan's (census meshes, N03, table 4, P29; T-420); `japan_zones.py`: Japan's 38
+  non-city zones planned (`japan_zones.json`, which `build_city.py` turns into configs), fitted and
+  built as a batch (T-420 stage 3).
+- `register.py <ids> [--market] [--trips]`: a built batch's registry entries, boxes, market packs
+  and local trips in one call (T-441).
 - Basemap glyph tiles (`app/public/fonts/`, checked in): `glyphs.py` rebuilds them, after a
   one-off `cargo install build_pbf_glyphs --locked` (on Windows set `CFLAGS` to a libz-sys zlib
   folder first, notes/T-056.md). Only needed to change the font, weights or fallback.

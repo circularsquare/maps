@@ -11,25 +11,29 @@ cell or zone). The track and junction inspectors are in [ui-building.md](ui-buil
 [track-and-service.md](track-and-service.md) 6.2; a bubble selection's and a city's (their
 inter-region trips by train, car and plane) in [ui-demand-views.md](ui-demand-views.md).
 
-## Today, not a forecast
+## The past 24 hours, not a forecast
 
-[T-293] The line and station panels and the Lines and Stations tabs count the day so far from
-local midnight, not a whole-day forecast: riders, boardings, fares, running cost, trains that left
-full, riders left behind. They are counted by the clock worker from the boarding account's
-departures up to now (`TrackApi.today`: a stop's boardings since midnight are the riders arrived
-by its last departure less those still waiting, less the same at midnight), on today's kind of
-day; fares are each line's hourly fare paid as the cash is [T-284]. Asked four times a wall second
+[T-293, T-446] The line and station panels and the Lines and Stations tabs count the past 24
+hours, not a whole-day forecast, so nothing resets at midnight: riders, boardings, fares, running
+cost, trains that left full (with when), riders left behind. Labels say "Past 24 h" or "24 h";
+hovers say "in the past 24 hours". They are counted by the clock worker from the boarding
+account's departures (`TrackApi.past_day`: the rest of yesterday from the time of day now, on
+yesterday's kind of day, then today so far on today's; a stop's boardings in a stretch are the
+riders arrived by its last departure in it less those still waiting, less the same at the
+departure before it). Fares are each line's hourly fare, the hour now by the share paid as the
+cash is [T-284] and the hour a day ago by the rest; running cost is each hour's trains, the hours
+at either end in part. Asked four times a wall second
 while a panel shows them and the clock runs (`game/today.ts`); only the components showing them
 re-render. The map's demand views stay demand's whole-day picture.
 
 **Yesterday** [T-408, `workers/clock.worker.ts` `closeDay`, `yesterday`]: at each line's local
-midnight the clock worker keeps that line's whole day (the same counts as Today, evaluated at the
-day's last second, fares paid whole). A game loaded since the day ended has none kept, and shows
+midnight the clock worker keeps that line's whole day (`TrackApi.today` evaluated at the day's
+last second, fares paid whole). A game loaded since the day ended has none kept, and shows
 the day worked out again on the network as it is now (the account is the same for every day of a
 kind). Lines built after the day ended show nothing. Kept days are not saved.
 
-**Riders by purpose** [T-165, `ui/inspector/PurposeSplit.tsx`]: under a line's riders today and a
-station's (or complex's) boardings today, a thin stacked bar in the purpose colours, in the
+**Riders by purpose** [T-165, `ui/inspector/PurposeSplit.tsx`]: under a line's riders and a
+station's (or complex's) boardings in the past 24 hours, a thin stacked bar in the purpose colours, in the
 purpose filter's order, with a key of names and rounded shares ("<1%" for a sliver); hovering a
 segment or key entry gives the share ("Work: 48% of riders"). Every purpose is listed, those with
 none here muted. Under the purpose filter the purpose drawn is ringed in the bar and bold in the
@@ -38,7 +42,7 @@ key.
 ## Lines tab and the line inspector
 
 - **The Lines tab** has New line above its list (actions go above lists of any length). The list
-  sorts by clicking a column header [T-310]: Name, Riders (today), Trains and Near. A click sorts by that
+  sorts by clicking a column header [T-310]: Name, Riders (past 24 hours), Trains and Near. A click sorts by that
   column (names A to Z, figures biggest first, Near nearest first), a second reverses it, the sorted
   column has a small arrow, and each header's hover says what it sorts by. Names sort naturally, ties
   by name. Lines default to by name. The sort is kept while the page is open and re-runs each game hour.
@@ -69,11 +73,11 @@ key.
   riders by purpose,
   fares, running cost so far, its fullest train so far ("100%" when one left packed full, else "N%
   full"), how many trains left full and when (spans under half an hour apart, at the stop where
-  each is fullest) and riders left behind [T-230, T-239, T-293]; the block's heading is a Today /
+  each is fullest) and riders left behind [T-230, T-239, T-293]; the block's heading is a Past 24 h /
   Yesterday switch (the Segmented pattern of Settings; the choice is kept while the page is open)
   and Yesterday gives the same figures for the last complete day in the line's local time, running
   cost over its 24 hours at the trains it has now [T-408]; the stops with their time from
-  the start and boardings today; the round trip split into running, dwell, turning and waiting,
+  the start and boardings in the past 24 hours; the round trip split into running, dwell, turning and waiting,
   naming where it waits most [T-031].
 - A line's riders count every line actually boarded, transfers included; inter-region trips show
   only in its purpose split [T-182].
@@ -95,7 +99,7 @@ key.
 
 - **The Stations tab** has, above its list, "Station demand circles" and "One circle per station
   complex" (the circles described in the checkbox's hover) [T-213]. The list sorts like the Lines
-  tab's [T-310], by Name, Today (boardings so far today) or Near, boardings by default. The scope
+  tab's [T-310], by Name, 24 h (boardings in the past 24 hours) or Near, boardings by default. The scope
   toggle and distance column are the Lines tab's (above); the footer reads "N of M stations" when
   only the viewed place is listed.
 - **A click on a station selects its whole complex** [T-249]: complex view, whatever was selected
@@ -104,13 +108,13 @@ key.
 - **Complex view**, under the name and "Complex of 16 stations":
   - **Its lines** [T-246, T-250]: one row per line name, branches and patterns summed, with chip,
     name, riders waiting now (red when one of its platforms is full or its last train left riders
-    behind) and boardings today, busiest by the forecast first so the order holds through the day.
+    behind) and boardings in the past 24 hours, busiest by the forecast first so the order holds through the day.
     The row's hover gives line, station and where its trains go; each number has its own hover. A
     click opens that line's busiest station there alone in station view (`openAlone`,
     `singleStation` in `game/complexView.ts`): its own inspector, outline and catchment, its
     subtitle ending with "Complex of 16 stations" as a link back. Any new selection, the same
     station included, shows the complex again.
-  - **The complex map** (below), then the complex's boardings today with their purpose split.
+  - **The complex map** (below), then the complex's boardings in the past 24 hours with their purpose split.
   - **Closest stations** [T-312, T-323; `ui/inspector/ClosestStations.tsx`, `game/walks.ts`]: the
     three other stations with the shortest walk, built or blueprint (blueprint muted and marked),
     each with the chips of its lines (six at most, then "+n") and walking minutes ("7 min", the
@@ -130,8 +134,8 @@ key.
     (walk icon, the walk colour) against drove (car icon, the drive colour), shares in the key
     and counts in the hovers ("Drove, took a bus or cycled"). They are the model's commutes
     at the home end (`walked` and `rode` of `StationRiders`, from `DemandApi.station_riders_day`);
-    everyday trips and the regional layer are not split. Not part of Today's purpose split, which
-    counts boardings so far today.
+    everyday trips and the regional layer are not split. Not part of the past 24 hours' purpose split, which
+    counts boardings.
   - **Inter-region trips**: rail riders starting and ending there, by place [T-118, T-120].
 - **Station view** (one station opened alone) has its level under the name, then in place of the
   complex's lines and map the station's own lines, platform settings, Construct and Remove, and
@@ -199,7 +203,7 @@ model's side in [demand.md](demand.md) 4.4 "The trip explorer"]
 How the demand model's people would make one trip, read as a commute from a home at the start to
 work at the end.
 
-- **Starting it**: key 4 from any tab, or Explore a trip at the bottom of Settings, turns on the trip
+- **Starting it**: the T key from any tab [T-444], or Explore a trip at the bottom of Settings, turns on the trip
   tool (a crosshair; a second press or Esc leaves it). Clicks alternate between start and end, a
   third starting a new trip; the hint at the bottom left says which is next.
 - **Stations as ends** [T-221]: a click on a station (a hand cursor over one) takes the station's

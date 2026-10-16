@@ -2,22 +2,15 @@
 // stops to a line. Selecting (picking) is map/pick.ts; main.ts routes clicks here when a tool is
 // on.
 //
-// Track, drawing through points (T-418, the Build tab's default): the second click places a
+// Track, drawn through points (T-418; the only way since T-422): the second click places a
 // segment from the first, one curve leaving along the track there and passing through the click,
-// at once and never changed by later clicks; with Shift held the next segment starts at its end.
-// Backspace takes the last segment of a chain back, Escape or Enter stops. On quad track a
-// segment from a loose quad end carries both pairs on (T-423).
-//
-// Track, by corners: click where the track turns (T-023, T-092): each click is a point of intersection (PI)
-// and the track cuts the corner there with a circular curve, auto radius (SPEC 6.1), so a new
-// click leaves the track before the previous click's curve as it was. The first click may start
-// on a track end or on track (a new junction, flat, T-080), and a click on track or a track end
-// finishes the route there. A click on the last point (or a double click), or Enter, finishes at
-// that point. Backspace takes the last point back, Escape drops the route. Each point takes the
-// level selected when it was placed. While drawing, the worker previews the route (one request in
-// flight): its cost, whether it can be built and why not, and the radius and speed of every curve.
-// The worker makes the finished route one piece of track per corner (T-244), so the delete tool
-// removes one piece.
+// at once and never changed by later clicks; with Shift held or keepPlacing on (T-445) the next
+// segment starts at its end, until a double click, Escape or Enter.
+// The first click may start on a track end or on track (a new junction, flat, T-080); a click on
+// track or a node joins it there. Backspace takes the last segment of a chain back, Escape or
+// Enter stops. On quad track a segment from a loose quad end carries both pairs on (T-423). While
+// drawing, the worker previews the segment (one request in flight): its cost, whether it can be
+// built and why not, and the radius and speed of its curve.
 //
 // Delete (T-096): hovering shows what a click removes (a station or flyover ringed, a stretch of
 // track drawn red, its name by the cursor); a click removes blueprint at once and asks first for
@@ -36,12 +29,12 @@ import { cellModes, cityCells, demandView } from "../game/demand";
 import { LEVEL_COLOURS, rgb, speedColour } from "../game/palette";
 import type { Level } from "../game/types";
 import { metresBetween } from "../game/walks";
-import { ask, buildLevel, buildPlatform, display, lineDraft, selection, trackCount, tool } from "../game/ui";
+import { ask, buildLevel, buildPlatform, keepPlacing, lineDraft, selection, trackCount, tool } from "../game/ui";
 import { describeRemovable, removeThing, type Removable } from "../game/remove";
 import { loadPlacesAt, placesNear } from "../game/placeList";
 import { compass } from "../game/places";
 import { edit, say, world } from "../game/world";
-import type { PiInput, RouteEnd } from "../workers/protocol";
+import type { RouteEnd } from "../workers/protocol";
 import type { ClockClient, CrossoverAnswer, PreviewAnswer } from "../workers/clockClient";
 import { toLngLat, toLocal } from "./geo";
 import { circleOnScreen } from "./curveCircle";
@@ -66,11 +59,12 @@ interface Placed {
 
 export class Tools {
   private start: Placed | null = null;
-  private pis: { pi: PiInput; lx: number; ly: number }[] = [];
-  /** drawing through points (T-418): the starts of the segments placed with Shift, for Backspace */
+  /** the starts of the segments placed with Shift, for Backspace (T-418) */
   private chain: Placed[] = [];
   /** a segment's edit in flight: clicks wait for it */
   private placing = false;
+  /** a double click's second click came while the segment was still being placed (T-445) */
+  private endRun = false;
   private hover: Snap | null = null;
   /** the delete tool: what a click would remove, and the pointer (map px) */
   private delHover: (Removable & { lx: number; ly: number }) | null = null;
@@ -78,8 +72,6 @@ export class Tools {
   private lastPreview: PreviewAnswer | null = null;
   /** the request `lastPreview` answers, as JSON */
   private previewKey = "";
-  /** a placement click waiting for its preview (T-410), by request key */
-  private clickWait: string | null = null;
   /** where the last station of this session was placed (lng, lat), T-312 */
   private lastPlaced: [number, number] | null = null;
   private box: HTMLDivElement;
@@ -107,7 +99,6 @@ export class Tools {
     // fetched when the station tool is picked, not at startup (T-400)
     effect(() => { if (tool.value === "station") { const c = this.map.getCenter(); void loadPlacesAt(c.lng, c.lat); } });
     effect(() => { buildLevel.value; trackCount.value; if (tool.peek() === "track" && this.start) this.requestPreview(); });
-    effect(() => { display.value.drawThrough; if (this.start) this.reset(); });
     effect(() => {
       const active = tool.value === "line" ? lineDraft.value.line : null;
       const w = world.value;
@@ -213,26 +204,13 @@ export class Tools {
       else this.exit();
       return true;
     }
-    if (t === "track" && this.start && this.through()) {
+    if (t === "track" && this.start) {
       if (e.key === "Backspace") {
         void this.takeBackSegment();
         return true;
       }
       if (e.key === "Enter") {
         this.reset();
-        return true;
-      }
-    }
-    if (t === "track" && this.start) {
-      if (e.key === "Backspace") {
-        if (this.pis.length) this.pis.pop();
-        else this.reset();
-        this.requestPreview();
-        this.place();
-        return true;
-      }
-      if (e.key === "Enter") {
-        this.finishAtLast();
         return true;
       }
     }
@@ -256,12 +234,10 @@ export class Tools {
   /** Drop the route being drawn (and what the delete tool points at). */
   reset() {
     this.start = null;
-    this.pis = [];
     this.chain = [];
     this.delHover = null;
     this.lastPreview = null;
     this.previewKey = "";
-    this.clickWait = null;
     this.cross = null;
     this.crossKey = "";
     this.overlay.renderer.setPreview(null);
@@ -272,6 +248,12 @@ export class Tools {
   // ---------------------------------------------------------------- track
 
   private trackClick(e: MapMouseEvent) {
+    // T-445: a double click ends a run; its first click placed the last segment
+    if (e.originalEvent.detail >= 2 && (this.placing || this.chain.length)) {
+      if (this.placing) this.endRun = true;
+      else this.reset();
+      return;
+    }
     const s = this.snap(e.point.x, e.point.y, e.lngLat);
     if (!this.start) {
       this.start = { end: this.endOf(s), lx: s.lx, ly: s.ly };
@@ -279,61 +261,25 @@ export class Tools {
       this.place();
       return;
     }
-    if (this.through()) {
-      void this.segmentClick(e, s);
-      return;
-    }
-    if (s.kind !== "free") {
-      void this.finish(this.endOf(s));
-      return;
-    }
-    // A click on the last point (the second click of a double click lands here too) finishes.
-    const last = this.pis[this.pis.length - 1] ?? this.start;
-    const [lx, ly] = this.screen(last.lx, last.ly);
-    if (Math.hypot(lx - e.point.x, ly - e.point.y) < 6) {
-      this.finishAtLast();
-      return;
-    }
-    const p = this.pack(s.lx, s.ly);
-    const pt = { pi: { x: p.x, y: p.y, level: buildLevel.peek() }, lx: s.lx, ly: s.ly };
-    if (e.originalEvent.shiftKey) return this.addPi(pt);
-    // T-410: refused when the route would be unbuildable if it ended at this click, by the same
-    // preview the hover shows (asked again only when the pointer's answer is not for this spot)
-    const req = this.routeReq({ kind: "free", ...pt.pi });
-    const key = JSON.stringify(req);
-    if (key === this.previewKey && this.lastPreview) return this.decide(pt, this.lastPreview);
-    this.clickWait = key;
-    const start = this.start, n = this.pis.length;
-    this.client.preview(req, (a) => {
-      if (this.clickWait !== key) return;
-      this.clickWait = null;
-      if (this.start === start && this.pis.length === n) {
-        this.showPreview(a, key);
-        this.decide(pt, a);
-      }
-      this.requestPreview();
-    });
+    void this.segmentClick(e, s);
   }
 
-  /** Drawing through points (T-418; quad too since T-423). */
-  private through() {
-    return display.peek().drawThrough;
-  }
-
-  /** Place the segment from the start to this click; with Shift, the next starts at its end. */
+  /** Place the segment from the start to this click; with Shift held or keepPlacing on, the next
+   * starts at its end. */
   private async segmentClick(e: MapMouseEvent, s: Snap) {
     const from = this.start;
     if (!from || this.placing) return;
     const [sx, sy] = this.screen(from.lx, from.ly);
-    if (Math.hypot(sx - e.point.x, sy - e.point.y) < 6) return; // the start itself, or a double click's second click
-    const chain = e.originalEvent.shiftKey;
+    if (Math.hypot(sx - e.point.x, sy - e.point.y) < 6) return; // the start itself
+    const chain = e.originalEvent.shiftKey || keepPlacing.peek();
     const p = this.lastPreview;
     this.placing = true;
+    this.endRun = false;
     const a = await edit({ op: "route", ...this.routeReq(this.endOf(s)) });
     this.placing = false;
     if (!a.ok || this.start !== from) return;
     say(p ? `Blueprint added: ${distance(p.lengthM)}, ${money(p.cost * 1e6)} to construct.` : "Blueprint added.");
-    if (!chain || a.node === undefined) {
+    if (!chain || this.endRun || a.node === undefined) {
       this.reset();
       return;
     }
@@ -365,36 +311,8 @@ export class Tools {
     this.place();
   }
 
-  private addPi(pt: { pi: PiInput; lx: number; ly: number }) {
-    this.pis.push(pt);
-    this.requestPreview();
-    this.place();
-  }
-
-  private decide(pt: { pi: PiInput; lx: number; ly: number }, a: PreviewAnswer) {
-    if (a.ok) this.addPi(pt);
-    else say(describeIssues(a.issues) || "Cannot be built here.", true);
-  }
-
   private routeReq(to: RouteEnd) {
-    const through = this.through();
-    return { from: this.start!.end, to, pis: through ? [] : this.pis.map((p) => p.pi), single: trackCount.peek() === 1, quad: trackCount.peek() === 4, through };
-  }
-
-  private finishAtLast() {
-    const last = this.pis.pop();
-    if (!last) return;
-    void this.finish({ kind: "free", x: last.pi.x, y: last.pi.y, level: last.pi.level });
-  }
-
-  private async finish(to: RouteEnd) {
-    if (!this.start) return;
-    const a = await edit({ op: "route", from: this.start.end, to, pis: this.pis.map((p) => p.pi), single: trackCount.peek() === 1, quad: trackCount.peek() === 4 });
-    if (a.ok) {
-      const p = this.lastPreview;
-      say(p ? `Blueprint added: ${distance(p.lengthM)}, ${money(p.cost * 1e6)} to construct.` : "Blueprint added.");
-      this.reset();
-    }
+    return { from: this.start!.end, to, pis: [], single: trackCount.peek() === 1, quad: trackCount.peek() === 4, through: true };
   }
 
   private requestPreview() {
@@ -403,11 +321,9 @@ export class Tools {
     if (se.kind === "node" && !world.peek()?.nodes.has(se.node)) return this.reset(); // undone meanwhile
     const h = this.hover;
     if (!h) return;
-    // Nothing to show while the pointer is on the last point placed.
-    const last = this.pis[this.pis.length - 1] ?? this.start;
-    const [ax, ay] = this.screen(last.lx, last.ly), [bx, by] = this.screen(h.lx, h.ly);
+    // Nothing to show while the pointer is on the start.
+    const [ax, ay] = this.screen(this.start.lx, this.start.ly), [bx, by] = this.screen(h.lx, h.ly);
     if (Math.hypot(ax - bx, ay - by) < 3) return;
-    if (this.clickWait) return; // a click's own preview is in the queue and must not be replaced
     const req = this.routeReq(this.endOf(h));
     const key = JSON.stringify(req);
     this.client.preview(req, (a) => {
@@ -893,7 +809,6 @@ export class Tools {
     const t = tool.peek();
     if (t === "track" && this.start) {
       put(this.el(k++, "pi-mark"), this.start.lx, this.start.ly);
-      for (const p of this.pis) put(this.el(k++, "pi-mark"), p.lx, p.ly);
       const pv = this.lastPreview;
       if (pv) {
         for (const c of curveLabels(pv.verts)) {
@@ -904,7 +819,7 @@ export class Tools {
       }
     }
     for (let i = k; i < this.marks.length; i++) this.marks[i].style.display = "none";
-    this.curveCircle(t === "track" && this.start && this.through() ? this.lastPreview : null);
+    this.curveCircle(t === "track" && this.start ? this.lastPreview : null);
 
     // the platform ghost shows only while the station tool snaps (below)
     if (this.ghost) this.ghost.style.display = "none";
@@ -943,7 +858,7 @@ export class Tools {
     } else if (t === "track" && this.start && h && pv) {
       this.tag.style.display = "";
       this.tag.className = "tool-tag";
-      this.tag.replaceChildren(...placementTag(pv, buildLevel.peek(), h.kind === "free" && !this.through()));
+      this.tag.replaceChildren(...placementTag(pv, buildLevel.peek()));
       put(this.tag, h.lx, h.ly, 14, 12);
     } else if (t === "station" && h && h.kind !== "free" && this.ghostOk === false) {
       // why a click here would be refused (T-311)
@@ -1034,11 +949,10 @@ function chip(text: string, colour: string | null, alpha = 0.5): HTMLSpanElement
 /**
  * The track tool's tag (T-411): length, cost multiplier, price and the tightest curve; then the
  * level being placed and the route's lowest speed limit, the multiplier, level and speed on their
- * colours (yellow growing above 1x; the Height and Max speed displays' colours). When the route
- * could not be built ending here, why first, and (T-410) that shift-click places the point anyway
- * when the click would add a point (`free`).
+ * colours (yellow growing above 1x; the Height and Max speed displays' colours). When the segment
+ * could not be built ending here, why first.
  */
-function placementTag(pv: PreviewAnswer, level: number, free: boolean): HTMLDivElement[] {
+function placementTag(pv: PreviewAnswer, level: number): HTMLDivElement[] {
   const div = (...kids: (string | Node)[]) => {
     const d = document.createElement("div");
     d.append(...kids);
@@ -1062,7 +976,6 @@ function placementTag(pv: PreviewAnswer, level: number, free: boolean): HTMLDivE
       `, ${moneyShort(pv.cost * 1e6)}`, ...(radius < Infinity ? [`, ${length(radius)} curve`] : [])));
   }
   out.push(div(chip(`Level ${levelLabel(level)}`, LEVEL_COLOURS[level as Level] ?? null), ", max speed ", chip(speed(top), speedColour(top))));
-  if (!pv.ok && free) out.push(div("Shift-click to place it anyway"));
   return out;
 }
 

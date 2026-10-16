@@ -32,7 +32,8 @@ def register(reg):
     have = {c["id"] for c in reg["cities"]}
     added = []
     for cid, cfg in CITIES.items():
-        if cfg.get("kind") != "zone" or cid in have or not (ROOT / f"data/packs/{cid}.json").exists():
+        # tier 0 zones (Japan's) stay out of the Northeast's market ids: pipeline/register.py adds them
+        if cfg.get("kind") != "zone" or cfg.get("tier0") or cid in have or not (ROOT / f"data/packs/{cid}.json").exists():
             continue
         lon, lat = cfg["origin"]
         reg["market"]["places"].append({"name": cfg["name"], "regionName": cfg["name"]})

@@ -172,6 +172,9 @@ only once the pack, its boundary and its water mask exist**: the demand pool's r
 every registered boundary, and the Node checks open every registered pack. Then run
 `python pipeline/zone_boxes.py`, which gives every entry its `box` (boundary and water mask extent);
 the clock worker fetches a zone's mask only where the view or track comes near its box (T-302).
+For a batch outside the Northeast, `python pipeline/register.py <ids> --market --trips` does this
+section and section 7's market and local-trips steps in one call, with no need to read the
+registry (T-441).
 
 - Append to `cities`: `id`, `name`, `origin` (**exactly** the `build_city.py` origin, since it is
   the pack's frame), `center` (usually the origin), `zoom` 11.2, `utcOffset`, `market`.
@@ -300,7 +303,7 @@ real pack in notes/T-287.md):
 | Home end | LODES RAC x ACS work from home | commuters by tract of residence (98-10-0480-01) plus at-home workers commuting again | population x commuters a resident |
 | Work from home | ACS 2019-2023 by tract and industry | Labour Force Survey May 2024 (24.7%, Toronto CMA), at both ends | one national share from the config (default 0) |
 | Everyday destinations | LODES retail, service, food, leisure sectors | OSM shops and services; restaurants, bars, venues, hotels (Geofabrik extract) | the same OSM places, per cell |
-| Gravity curve | fitted on LODES OD (T-198) | fitted on census flows between municipalities (98-10-0459-01; `notes/t277_fit.py`) | power 1.4 with the length fitted to a published median or mean commute (`tier0.fit_curve`), or borrowed from a fitted city; a country's flow table, fitted (London); both parameters fitted to commuters by distance band (`tier0.fit_curve_bands`, Mumbai) |
+| Gravity curve | fitted on LODES OD (T-198) | fitted on census flows between municipalities (98-10-0459-01; `notes/t277_fit.py`) | power 1.4 with the length fitted to a published median or mean commute (`tier0.fit_curve`), or borrowed from a fitted city; a country's flow table, fitted (London); both parameters fitted to commuters by distance band (`tier0.fit_curve_bands`, Mumbai; a travel survey's home-to-job distances, Sao Paulo) |
 | Regions, border | states, 0.23 | provinces, factor 1 | one region, factor 1 |
 | Drawn boundary | TIGER/Line counties, water included (T-352) | cartographic census subdivisions, clipped at the shore (hugs Lake Ontario) | the config's district polygons (a GeoJSON, or a callable that writes one: London's whole ITL3 units, `england.itl3_boundary`) |
 | Water | TIGER AREAWATER and states | StatCan lakes and rivers; land = cartographic municipalities plus US states | OSM: `osm_water.source([extracts])` as the config's `water_source` (below) |
@@ -380,6 +383,21 @@ census's, scale those units as one group. A census table of commuters by distanc
 curve parameters (`"curve": {"bands": ..., "road_factor": ...}`, `tier0.fit_curve_bands`, about
 100 s in the build).
 
+Sao Paulo (`sao`, T-458, `pipeline/brazil.py`) took about an hour: Brazil's Sudeste extract (860
+MB) downloaded and read in 6 minutes (features) and 5 (water), the build 2 minutes, `routes.py` 5.
+IBGE's 2022 tracts with their people are one GeoPackage a state; a household travel survey's
+microdata (the Metro's OD 2017) gives jobs by zone, work from home and the curve in one file:
+look for a city's survey first. Merge the curve's bands under 4 km (2 km zones cannot split them).
+The World Bank API can time out: fetch its three JSON files into `data/raw/tier0/` with curl.
+
+Lagos (`lag`, T-459, `pipeline/nigeria.py`) took about 36 minutes from global sources alone:
+Nigeria's extract (711 MB) downloaded in 4 minutes and read in 7 (features) and 30 s (water), the
+build 80 s, `routes.py` 3 minutes. `nigeria.py probe <id>` lists the admin relations in the box and
+`nigeria.py <id>` prints GHSL by unit before any build. Where OSM maps few shops and offices, check
+the OSM signal's largest single places on the first build: land use dominates it, and one big
+industrial area becomes a job lump (the `land_cap_km2` and `land_spread_deg` keys). Run Python with
+`PYTHONIOENCODING=utf-8`, or OSM names with tone marks stop a print.
+
 Berlin (`ber`, T-290, `pipeline/germany.py`) took about 50 minutes: Brandenburg's extract (which
 includes Berlin: never add Geofabrik's Berlin extract beside it, the features would count twice)
 read in 97 s (features) and 107 s (water), the curve script with the signals 4 minutes, the build
@@ -402,9 +420,24 @@ the `osm_*_<id>` files under `data/raw/`, `<id>_prefectures.geojson`) must go fi
 extent's are reused. Fukuoka, Sapporo, Sendai and Hiroshima (T-432) were a batch of config rows:
 a Hokkaido pack names subprefectures (`japan.SUBPREFECTURES`) or one municipality (`"01-01203"`);
 each regional metro fits its own curve (4-12 minutes, before the build); builds 2-5 minutes,
-`routes.py` 1-3. KSJ's server sometimes stalls a Python download for good while curl gets the
-same file in seconds: if `japan.py fetch` prints nothing for 10 minutes, fetch the N03 zip by hand
-into `data/raw/tier0/japan/n03/`.
+`routes.py` 1-3. Japanese downloads go through curl (`japan._get`, T-441): KSJ's server, and
+Geofabrik's on a bad night, stall a Python request for good. The rest of Japan (T-420 stage 3) is
+38 non-city zones built as one batch by `pipeline/japan_zones.py`: `plan` (zones, neighbours,
+extracts, origin, wfh into `japan_zones.json`), `build <id>` (outline, a curve fitted over a fixed
+grid in a few minutes, the pack, places, routes, merge, `read_pack`, water picture) and `run
+<ids> --jobs 4` (a process a zone, a log and status line each); 2-76 minutes a zone. Build the few
+zones least like each other first (an island zone, a big one, a merged one): a batch finds a
+tier 0 bug 9 times over. Check table 4's municipality codes against N03's before building (wards
+redrawn since 2020 starve a municipality of jobs).
+
+Seoul (`seo`, T-457, `pipeline/korea.py`) took about an hour: South Korea's extract read in 3
+minutes (features) and 1 (water), the build 7, `routes.py` 5. Population is the resident
+registration count by si-gun-gu from jumin.mois.go.kr (`korea.py fetch`, one POST a province, no
+key); districts are OSM relations by name inside their province, the admin areas cached in
+`data/raw/tier0/korea/<id>_admin.fgb` (the extract's multipolygon read takes 5 minutes). Check the
+district names against OSM first: units renamed or split since the table's year need a mapping
+(`REGIONS[...]["osm_names"]`). A test line costs about 200 a station, so a new game's 6,000 builds
+about 29.
 
 What was hard, for the next country:
 

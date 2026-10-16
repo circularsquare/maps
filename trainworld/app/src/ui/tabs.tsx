@@ -8,7 +8,7 @@ import { createLine } from "../game/lineActions";
 import type { JSX } from "preact";
 import { count, distUnit, length, levelLabel, money, moneyExact, perDistance, perKmFrom, shortDistance } from "../game/format";
 import { DEMAND_INDEX, LEVELS, type Level } from "../game/types";
-import { buildLevel, buildPlatform, display, lineSort, selection, setDisplay, stationSort, trackCount, tool, type ListSort, type Tool } from "../game/ui";
+import { buildLevel, buildPlatform, display, keepPlacing, lineSort, selection, setDisplay, stationSort, trackCount, tool, type ListSort, type Tool } from "../game/ui";
 import type { Signal } from "@preact/signals";
 import { linesAt, setFares, world } from "../game/world";
 import { liveMoney, moneyState } from "../game/money";
@@ -20,6 +20,7 @@ import type { DayLedger } from "../workers/protocol";
 import { live } from "../map/live";
 import { Check, Chip, Icon, Row, Segmented, Stepper } from "./widgets";
 import { BlueprintBreakdown, BlueprintControls, BlueprintPick } from "./Blueprint";
+import { MoneyHistory } from "./MoneyHistory";
 
 const STATUS: Record<string, string> = { running: "", planned: "Planned", broken: "Broken" };
 
@@ -51,8 +52,9 @@ const TOOLS: [Tool, string, () => JSX.Element, string, string][] = [
 
 /** The tool each number key picks (T-096). */
 export const TOOL_KEYS: Record<string, Tool> = { "1": "track", "2": "station", "3": "delete", "5": "blueprint", "6": "crossover" };
-/** The trip explorer's key (T-195); unlike the build tools it leaves the tab as it is. */
-export const TRIP_KEY = "4";
+/** The trip explorer's key (T-195, a letter since T-444: the numbers are for building); unlike the
+ * build tools it leaves the tab as it is. Compared lowercase, so Caps Lock does not matter. */
+export const TRIP_KEY = "t";
 
 /** Pick a build tool; the one in use again, or Select, goes back to selecting. */
 export function pickTool(v: Tool) {
@@ -89,16 +91,12 @@ export function BuildTab() {
           {LEVEL_NAME[lv]} at ${Math.round(perDistance(BASE_M_PER_KM * MULT[lv]))}M per {distUnit()} ({MULT[lv].toFixed(1)}x)
         </p>
         <div class="h">Track</div>
-        <Segmented<1 | 2 | 4> options={[[1, "Single"], [2, "Double"], [4, "Quad"]]} value={trackCount.value} onChange={(v) => (trackCount.value = v)} />
-        <div class="h">Drawing</div>
-        <Segmented<boolean>
-          options={[
-            [true, <span data-tip="Each click ends a curve through that point. Hold Shift to carry on from it">Through points</span>],
-            [false, <span data-tip="Each click is a corner the track cuts with a curve">Corners</span>],
-          ]}
-          value={display.value.drawThrough}
-          onChange={(v) => setDisplay("drawThrough", v)}
-        />
+        <div class="track-row">
+          <Segmented<1 | 2 | 4> options={[[1, "Single"], [2, "Double"], [4, "Quad"]]} value={trackCount.value} onChange={(v) => (trackCount.value = v)} />
+          <button class={"btn icon" + (keepPlacing.value ? " on" : "")} aria-label="Keep placing track" aria-pressed={keepPlacing.value}
+            data-tip="Keep placing track (Caps Lock). Double click or press Esc to stop."
+            onClick={() => (keepPlacing.value = !keepPlacing.peek())}><Icon.keepPlacing /></button>
+        </div>
         <div class="h">New stations</div>
         <ul class="rows">
           <li>
@@ -163,10 +161,10 @@ function Near({ m }: { m: number | undefined }) {
 const byNear = (a: number | undefined, b: number | undefined, dir: number) =>
   a === undefined || b === undefined ? (a === undefined ? 1 : 0) - (b === undefined ? 1 : 0) : (a - b) * dir;
 
-/** T-293: one line's riders today, its own component so only it re-renders as the count moves. */
+/** T-446: one line's riders in the past 24 hours, its own component so only it re-renders as the count moves. */
 function RidersToday({ line }: { line: string }) {
   const d = today.value.get(line);
-  return <span class="val w-riders" data-tip={d ? `${count(d.riders)} riders today` : undefined}>{d ? count(d.riders) : ""}</span>;
+  return <span class="val w-riders" data-tip={d ? `${count(d.riders)} riders in the past 24 hours` : undefined}>{d ? count(d.riders) : ""}</span>;
 }
 
 function TotalToday() {
@@ -174,18 +172,18 @@ function TotalToday() {
   if (!t.size) return null;
   let n = 0;
   for (const d of t.values()) n += d.riders;
-  return <span class="muted">{count(n)} riders today</span>;
+  return <span class="muted">{count(n)} riders in the past 24 hours</span>;
 }
 
-/** T-293: one station's boardings today. */
+/** T-446: one station's boardings in the past 24 hours. */
 function StationToday({ id }: { id: string }) {
   const n = stationsToday.value.get(id) ?? null;
-  return <span class="val w-num" data-tip={n !== null ? `${count(n)} boardings today` : undefined}>{n !== null ? count(n) : ""}</span>;
+  return <span class="val w-num" data-tip={n !== null ? `${count(n)} boardings in the past 24 hours` : undefined}>{n !== null ? count(n) : ""}</span>;
 }
 
 export function LinesTab() {
   const [creating, setCreating] = useState(false);
-  useToday(); // T-293: riders today, kept fresh while the tab is open
+  useToday(); // T-446: riders in the past 24 hours, kept fresh while the tab is open
   void accountVersion.value; // re-sorted each game hour; the counts themselves move on their own
   void todayLoaded.value;
   const w = world.value;
@@ -219,7 +217,7 @@ export function LinesTab() {
       {lines.length === 0 && <p class="muted">{w.save.lines.length === 0 ? "No lines yet." : "No lines here."}</p>}
       {w.save.lines.length > 0 && <SortHead sort={lineSort} cols={[
         { key: "name", label: "Name", tip: "Sort by name", first: 1 },
-        { key: "riders", label: "Riders", tip: "Sort by riders today", first: -1, cls: "w-riders" },
+        { key: "riders", label: "Riders", tip: "Sort by riders in the past 24 hours", first: -1, cls: "w-riders" },
         { key: "trains", label: "Trains", tip: "Sort by trains needed", first: -1, cls: "w-trains" },
         { key: "near", label: "Near", tip: "Sort by distance from the centre of the screen, by the nearest stop", first: 1, cls: key === "near" ? "w-near" : "near-off" },
       ]} />}
@@ -281,7 +279,7 @@ export function StationsTab() {
       {st.length === 0 && <p class="muted">{w.save.stations.length === 0 ? "No stations yet." : "No stations here."}</p>}
       {st.length > 0 && <SortHead sort={stationSort} cols={[
         { key: "name", label: "Name", tip: "Sort by name", first: 1 },
-        { key: "riders", label: "Today", tip: "Sort by boardings today", first: -1, cls: "w-num" },
+        { key: "riders", label: "24 h", tip: "Sort by boardings in the past 24 hours", first: -1, cls: "w-num" },
         { key: "near", label: "Near", tip: "Sort by distance from the centre of the screen", first: 1, cls: key === "near" ? "w-near" : "near-off" },
       ]} />}
       <ul class="rows pick">
@@ -298,7 +296,7 @@ export function StationsTab() {
       </ul>
       {st.length > 0 && (
         <div class="pane-foot">
-          <span class="muted">{sc.zone ? `${st.length} of ${sc.total.stations}` : st.length} stations, boardings today</span>
+          <span class="muted">{sc.zone ? `${st.length} of ${sc.total.stations}` : st.length} stations, boardings in the past 24 hours</span>
         </div>
       )}
     </>
@@ -366,6 +364,7 @@ export function MoneyTab() {
           <TodayCell v={ledgerNet} />
         </tr>
       </table>
+      <MoneyHistory />
       <div class="h">Fare</div>
       <ul class="rows">
         <li>

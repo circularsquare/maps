@@ -1021,7 +1021,7 @@ mod tests {
     #[ignore]
     fn every_pack_everyday() {
         let root = concat!(env!("CARGO_MANIFEST_DIR"), "/../data/packs");
-        for city in ["nyc", "phl", "bos", "wdc", "bal", "pvd", "nhv", "hfd", "spf", "tor", "lon", "par", "sha", "mum", "ber", "tyo", "osa", "ngo", "fuk", "spk", "sdj", "hij"] {
+        for city in ["nyc", "phl", "bos", "wdc", "bal", "pvd", "nhv", "hfd", "spf", "tor", "lon", "par", "sha", "mum", "lag", "sao", "ber", "seo", "tyo", "osa", "ngo", "fuk", "spk", "sdj", "hij"] {
             let (h, b) = pack::load_raw(&format!("{root}/{city}.json")).unwrap();
             let t = now_ms();
             let a = EverydayApi::new(&h, &b).unwrap();
@@ -1387,6 +1387,8 @@ struct Period {
     ms: f64,
     fac: Vec<f32>,
     uniform: bool,
+    /// `kernel::settled` (T-434)
+    seen: Vec<f32>,
     trips: f64,
     rail: f64,
     walk: f64,
@@ -1603,6 +1605,7 @@ impl EverydayApi {
             }
             let ride_m = p.ride_min_km * 1000.0;
             let density = self.engine.z.density();
+            let park: Vec<(f32, f32, f32)> = (0..self.engine.z.n).map(|j| p.park_parts(&self.engine.z, j)).collect();
             for (i, pair) in self.pairs.iter().enumerate() {
                 if pair.kind as usize != od_kind {
                     if od_used {
@@ -1643,19 +1646,16 @@ impl EverydayApi {
                     if sum < 1e-30 {
                         continue;
                     }
+                    let (fixed, paid, free) = park[sz.zone[v] as usize];
                     let road = p.drive_min_f(
                         pair.distance,
                         p.drive_factor(sz.zone[u] as usize, sz.zone[v] as usize),
                         p.place_min_per_km(density[sz.zone[u] as usize]),
                         p.place_min_per_km(density[sz.zone[v] as usize]),
                     ) * p.w_drive
-                        + p.park_min
-                        + (self.engine.z.jobs[sz.zone[v] as usize] as f32
-                            / (self.engine.z.zone_m / 1000.0).powi(2)
-                            / p.park_jobs_per_km2_per_min)
-                            .min(p.park_cost_cap_min);
+                        + fixed;
                     let rail = ma + mb + p.fare_min - fast_ln(sum) / th;
-                    let pr = (1.0 - pair.walk) / (1.0 + fast_exp(-(p.beta * (road - rail) + p.asc_rail)));
+                    let pr = (1.0 - pair.walk) * p.rail_share_parked(p.beta * (road - rail) + p.asc_rail, paid, free);
                     probability[i][direction] = pr;
                     let share = if direction == 0 {
                         OUTWARD[pair.kind as usize][q]
@@ -2016,6 +2016,7 @@ impl EverydayApi {
             ms: now_ms() - t,
             fac,
             uniform: true,
+            seen: vec![],
             trips,
             rail,
             walk,
@@ -2035,7 +2036,7 @@ impl EverydayApi {
         let t = now_ms();
         let mut st = self.per[q].take().unwrap();
         st.round += 1;
-        if !st.uniform || fac != st.fac || left != st.g.rn_left {
+        if !settled(&mut st.seen, &total[..st.g.rn_line.len()]) && (!st.uniform || fac != st.fac || left != st.g.rn_left) {
             st.uniform = false;
             st.fac = fac;
             set_crowding(&mut st.g, &st.fac);

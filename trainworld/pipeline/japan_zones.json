@@ -1,0 +1,1336 @@
+{
+ "task": "T-420 stage 3",
+ "rule": "Every prefecture outside the seven metro packs is one zone; Hokkaido's subprefectures\noutside Sapporo's pack (Ishikari and Otaru) are units of which any under 100,000 people joins the\nneighbouring zone it shares the longest border with (docs/zones.md 2), smallest first. A zone is\nnamed after its most populous unit; its origin is the centre of its most populous 500 m mesh.",
+ "unit_population": {
+  "02": 1225822,
+  "03": 1207754,
+  "05": 956703,
+  "06": 1066256,
+  "07": 1831991,
+  "09": 1934100,
+  "10": 1938815,
+  "15": 2191377,
+  "16": 1029617,
+  "17": 1124781,
+  "18": 761908,
+  "19": 810083,
+  "20": 2048219,
+  "22": 3622655,
+  "25": 1412322,
+  "30": 913504,
+  "31": 550411,
+  "32": 663764,
+  "33": 1878521,
+  "35": 1319848,
+  "36": 715113,
+  "37": 939604,
+  "38": 1316241,
+  "39": 682802,
+  "41": 808990,
+  "42": 1269256,
+  "43": 1720906,
+  "44": 1114289,
+  "45": 1065087,
+  "46": 1562240,
+  "47": 1445707,
+  "01-kamikawa": 481939,
+  "01-sorachi": 281950,
+  "01-iburi": 379338,
+  "01-rumoi": 41593,
+  "01-soya": 59072,
+  "01-okhotsk": 272343,
+  "01-tokachi": 332608,
+  "01-kushiro": 221130,
+  "01-nemuro": 69064,
+  "01-hidaka": 60888,
+  "01-oshima": 370541,
+  "01-hiyama": 32269,
+  "01-shiribeshi~01203": 85274
+ },
+ "zones": {
+  "aom": {
+   "name": "Aomori",
+   "units": [
+    "02"
+   ],
+   "population": 1225822,
+   "neighbours": [
+    "03",
+    "05"
+   ],
+   "origin": [
+    140.7281,
+    40.8062
+   ],
+   "extract": "asia/japan/tohoku",
+   "water_extracts": [
+    "asia/japan/hokkaido",
+    "asia/japan/tohoku"
+   ],
+   "water_cell_m": 25.0,
+   "census_at_home": 0.1478,
+   "wfh": 0.205,
+   "decay_pow": 1.4,
+   "decay_km": 16.0,
+   "curve_fit": {
+    "misplaced": 0.0631,
+    "own": 0.7522,
+    "own_census": 0.7674,
+    "commuters": 495158,
+    "mean_km": 5.948
+   }
+  },
+  "iwt": {
+   "name": "Iwate",
+   "units": [
+    "03"
+   ],
+   "population": 1207754,
+   "neighbours": [
+    "02",
+    "05",
+    "04"
+   ],
+   "origin": [
+    141.1406,
+    39.7063
+   ],
+   "extract": "asia/japan/tohoku",
+   "water_extracts": [
+    "asia/japan/tohoku"
+   ],
+   "water_cell_m": 25.0,
+   "census_at_home": 0.1321,
+   "wfh": 0.19,
+   "decay_pow": 1.4,
+   "decay_km": 16.0,
+   "curve_fit": {
+    "misplaced": 0.0506,
+    "own": 0.7581,
+    "own_census": 0.7469,
+    "commuters": 504939,
+    "mean_km": 6.1504
+   }
+  },
+  "akt": {
+   "name": "Akita",
+   "units": [
+    "05"
+   ],
+   "population": 956703,
+   "neighbours": [
+    "02",
+    "03",
+    "06",
+    "04"
+   ],
+   "origin": [
+    140.1219,
+    39.7146
+   ],
+   "extract": "asia/japan/tohoku",
+   "water_extracts": [
+    "asia/japan/tohoku"
+   ],
+   "water_cell_m": 25.0,
+   "census_at_home": 0.138,
+   "wfh": 0.196,
+   "decay_pow": 1.4,
+   "decay_km": 16.0,
+   "curve_fit": {
+    "misplaced": 0.0537,
+    "own": 0.8206,
+    "own_census": 0.8106,
+    "commuters": 389282,
+    "mean_km": 6.0903
+   }
+  },
+  "ygt": {
+   "name": "Yamagata",
+   "units": [
+    "06"
+   ],
+   "population": 1066256,
+   "neighbours": [
+    "05",
+    "07",
+    "15",
+    "04"
+   ],
+   "origin": [
+    140.3281,
+    38.2437
+   ],
+   "extract": "asia/japan/tohoku",
+   "water_extracts": [
+    "asia/japan/tohoku",
+    "asia/japan/chubu"
+   ],
+   "water_cell_m": 25.0,
+   "census_at_home": 0.1468,
+   "wfh": 0.204,
+   "decay_pow": 1.2,
+   "decay_km": 16.0,
+   "curve_fit": {
+    "misplaced": 0.055,
+    "own": 0.6719,
+    "own_census": 0.679,
+    "commuters": 446165,
+    "mean_km": 6.4334
+   }
+  },
+  "fks": {
+   "name": "Fukushima",
+   "units": [
+    "07"
+   ],
+   "population": 1831991,
+   "neighbours": [
+    "06",
+    "09",
+    "10",
+    "15",
+    "08",
+    "04"
+   ],
+   "origin": [
+    140.3719,
+    37.4021
+   ],
+   "extract": "asia/japan/tohoku",
+   "water_extracts": [
+    "asia/japan/tohoku",
+    "asia/japan/kanto",
+    "asia/japan/chubu"
+   ],
+   "water_cell_m": 25.0,
+   "census_at_home": 0.1206,
+   "wfh": 0.18,
+   "decay_pow": 1.4,
+   "decay_km": 16.0,
+   "curve_fit": {
+    "misplaced": 0.057,
+    "own": 0.7485,
+    "own_census": 0.7488,
+    "commuters": 730897,
+    "mean_km": 6.5134
+   }
+  },
+  "tcg": {
+   "name": "Tochigi",
+   "units": [
+    "09"
+   ],
+   "population": 1934100,
+   "neighbours": [
+    "07",
+    "10",
+    "08",
+    "11"
+   ],
+   "origin": [
+    139.8969,
+    36.5562
+   ],
+   "extract": "asia/japan/kanto",
+   "water_extracts": [
+    "asia/japan/tohoku",
+    "asia/japan/kanto"
+   ],
+   "water_cell_m": 25.0,
+   "census_at_home": 0.1174,
+   "wfh": 0.177,
+   "decay_pow": 1.8,
+   "decay_km": 50.0,
+   "curve_fit": {
+    "misplaced": 0.0805,
+    "own": 0.667,
+    "own_census": 0.6587,
+    "commuters": 729889,
+    "mean_km": 7.1043
+   }
+  },
+  "gnm": {
+   "name": "Gunma",
+   "units": [
+    "10"
+   ],
+   "population": 1938815,
+   "neighbours": [
+    "07",
+    "09",
+    "15",
+    "20",
+    "11"
+   ],
+   "origin": [
+    139.0094,
+    36.3271
+   ],
+   "extract": "asia/japan/kanto",
+   "water_extracts": [
+    "asia/japan/tohoku",
+    "asia/japan/kanto",
+    "asia/japan/chubu"
+   ],
+   "water_cell_m": 25.0,
+   "census_at_home": 0.1075,
+   "wfh": 0.167,
+   "decay_pow": 2.0,
+   "decay_km": 160.0,
+   "curve_fit": {
+    "misplaced": 0.0582,
+    "own": 0.6247,
+    "own_census": 0.6243,
+    "commuters": 767943,
+    "mean_km": 6.1595
+   }
+  },
+  "nig": {
+   "name": "Niigata",
+   "units": [
+    "15"
+   ],
+   "population": 2191377,
+   "neighbours": [
+    "06",
+    "07",
+    "10",
+    "16",
+    "20"
+   ],
+   "origin": [
+    139.0656,
+    37.9063
+   ],
+   "extract": "asia/japan/chubu",
+   "water_extracts": [
+    "asia/japan/tohoku",
+    "asia/japan/kanto",
+    "asia/japan/chubu"
+   ],
+   "water_cell_m": 25.0,
+   "census_at_home": 0.1091,
+   "wfh": 0.169,
+   "decay_pow": 1.8,
+   "decay_km": 32.0,
+   "curve_fit": {
+    "misplaced": 0.0693,
+    "own": 0.6904,
+    "own_census": 0.678,
+    "commuters": 942008,
+    "mean_km": 6.0088
+   }
+  },
+  "tym": {
+   "name": "Toyama",
+   "units": [
+    "16"
+   ],
+   "population": 1029617,
+   "neighbours": [
+    "15",
+    "17",
+    "20",
+    "21"
+   ],
+   "origin": [
+    137.2219,
+    36.6896
+   ],
+   "extract": "asia/japan/chubu",
+   "water_extracts": [
+    "asia/japan/chubu"
+   ],
+   "water_cell_m": 25.0,
+   "census_at_home": 0.0884,
+   "wfh": 0.15,
+   "decay_pow": 1.6,
+   "decay_km": 32.0,
+   "curve_fit": {
+    "misplaced": 0.0437,
+    "own": 0.6894,
+    "own_census": 0.6843,
+    "commuters": 462805,
+    "mean_km": 6.2371
+   }
+  },
+  "isk": {
+   "name": "Ishikawa",
+   "units": [
+    "17"
+   ],
+   "population": 1124781,
+   "neighbours": [
+    "16",
+    "18",
+    "21"
+   ],
+   "origin": [
+    136.6844,
+    36.5521
+   ],
+   "extract": "asia/japan/chubu",
+   "water_extracts": [
+    "asia/japan/chubu"
+   ],
+   "water_cell_m": 25.0,
+   "census_at_home": 0.0961,
+   "wfh": 0.157,
+   "decay_pow": 1.6,
+   "decay_km": 50.0,
+   "curve_fit": {
+    "misplaced": 0.0539,
+    "own": 0.6755,
+    "own_census": 0.6707,
+    "commuters": 486107,
+    "mean_km": 6.1487
+   }
+  },
+  "fki": {
+   "name": "Fukui",
+   "units": [
+    "18"
+   ],
+   "population": 761908,
+   "neighbours": [
+    "17",
+    "25",
+    "26",
+    "21"
+   ],
+   "origin": [
+    136.2281,
+    36.0771
+   ],
+   "extract": "asia/japan/chubu",
+   "water_extracts": [
+    "asia/japan/chubu",
+    "asia/japan/kansai"
+   ],
+   "water_cell_m": 25.0,
+   "census_at_home": 0.1021,
+   "wfh": 0.162,
+   "decay_pow": 1.6,
+   "decay_km": 50.0,
+   "curve_fit": {
+    "misplaced": 0.0452,
+    "own": 0.6821,
+    "own_census": 0.6806,
+    "commuters": 342697,
+    "mean_km": 6.2903
+   }
+  },
+  "yns": {
+   "name": "Yamanashi",
+   "units": [
+    "19"
+   ],
+   "population": 810083,
+   "neighbours": [
+    "20",
+    "22",
+    "11",
+    "13",
+    "14"
+   ],
+   "origin": [
+    138.5344,
+    35.6646
+   ],
+   "extract": "asia/japan/chubu",
+   "water_extracts": [
+    "asia/japan/kanto",
+    "asia/japan/chubu"
+   ],
+   "water_cell_m": 25.0,
+   "census_at_home": 0.1462,
+   "wfh": 0.204,
+   "decay_pow": 1.4,
+   "decay_km": 16.0,
+   "curve_fit": {
+    "misplaced": 0.0851,
+    "own": 0.5229,
+    "own_census": 0.5225,
+    "commuters": 320628,
+    "mean_km": 5.4996
+   }
+  },
+  "ngn": {
+   "name": "Nagano",
+   "units": [
+    "20"
+   ],
+   "population": 2048219,
+   "neighbours": [
+    "10",
+    "15",
+    "16",
+    "19",
+    "22",
+    "11",
+    "21",
+    "23"
+   ],
+   "origin": [
+    138.2031,
+    36.6563
+   ],
+   "extract": "asia/japan/chubu",
+   "water_extracts": [
+    "asia/japan/kanto",
+    "asia/japan/chubu"
+   ],
+   "water_cell_m": 25.0,
+   "census_at_home": 0.1394,
+   "wfh": 0.197,
+   "decay_pow": 1.4,
+   "decay_km": 16.0,
+   "curve_fit": {
+    "misplaced": 0.0733,
+    "own": 0.661,
+    "own_census": 0.6713,
+    "commuters": 859278,
+    "mean_km": 6.3481
+   }
+  },
+  "szo": {
+   "name": "Shizuoka",
+   "units": [
+    "22"
+   ],
+   "population": 3622655,
+   "neighbours": [
+    "19",
+    "20",
+    "14",
+    "23"
+   ],
+   "origin": [
+    138.3781,
+    34.9729
+   ],
+   "extract": "asia/japan/chubu",
+   "water_extracts": [
+    "asia/japan/kanto",
+    "asia/japan/chubu"
+   ],
+   "water_cell_m": 25.0,
+   "census_at_home": 0.1035,
+   "wfh": 0.164,
+   "decay_pow": 2.0,
+   "decay_km": 160.0,
+   "curve_fit": {
+    "misplaced": 0.0681,
+    "own": 0.683,
+    "own_census": 0.6837,
+    "commuters": 1568642,
+    "mean_km": 6.495
+   }
+  },
+  "shg": {
+   "name": "Shiga",
+   "units": [
+    "25"
+   ],
+   "population": 1412322,
+   "neighbours": [
+    "18",
+    "26",
+    "21",
+    "24"
+   ],
+   "origin": [
+    135.9469,
+    35.0021
+   ],
+   "extract": "asia/japan/kansai",
+   "water_extracts": [
+    "asia/japan/chubu",
+    "asia/japan/kansai"
+   ],
+   "water_cell_m": 25.0,
+   "census_at_home": 0.0863,
+   "wfh": 0.148,
+   "decay_pow": 1.8,
+   "decay_km": 80.0,
+   "curve_fit": {
+    "misplaced": 0.1114,
+    "own": 0.5958,
+    "own_census": 0.5993,
+    "commuters": 521408,
+    "mean_km": 6.4713
+   }
+  },
+  "wky": {
+   "name": "Wakayama",
+   "units": [
+    "30"
+   ],
+   "population": 913504,
+   "neighbours": [
+    "27",
+    "29",
+    "24"
+   ],
+   "origin": [
+    135.1969,
+    34.2104
+   ],
+   "extract": "asia/japan/kansai",
+   "water_extracts": [
+    "asia/japan/kansai",
+    "asia/japan/shikoku"
+   ],
+   "water_cell_m": 25.0,
+   "census_at_home": 0.1489,
+   "wfh": 0.206,
+   "decay_pow": 1.8,
+   "decay_km": 50.0,
+   "curve_fit": {
+    "misplaced": 0.0785,
+    "own": 0.7166,
+    "own_census": 0.7155,
+    "commuters": 328004,
+    "mean_km": 5.6889
+   }
+  },
+  "ttr": {
+   "name": "Tottori",
+   "units": [
+    "31"
+   ],
+   "population": 550411,
+   "neighbours": [
+    "32",
+    "33",
+    "28",
+    "34"
+   ],
+   "origin": [
+    134.1719,
+    35.5187
+   ],
+   "extract": "asia/japan/chugoku",
+   "water_extracts": [
+    "asia/japan/kansai",
+    "asia/japan/chugoku"
+   ],
+   "water_cell_m": 25.0,
+   "census_at_home": 0.1152,
+   "wfh": 0.175,
+   "decay_pow": 1.4,
+   "decay_km": 32.0,
+   "curve_fit": {
+    "misplaced": 0.0552,
+    "own": 0.757,
+    "own_census": 0.7543,
+    "commuters": 223181,
+    "mean_km": 6.0563
+   }
+  },
+  "smn": {
+   "name": "Shimane",
+   "units": [
+    "32"
+   ],
+   "population": 663764,
+   "neighbours": [
+    "31",
+    "35",
+    "34"
+   ],
+   "origin": [
+    133.0469,
+    35.4854
+   ],
+   "extract": [
+    "asia/japan/chugoku"
+   ],
+   "water_extracts": [
+    "asia/japan/chugoku",
+    "asia/japan/shikoku"
+   ],
+   "water_cell_m": 25.0,
+   "census_at_home": 0.1094,
+   "wfh": 0.169,
+   "decay_pow": 1.4,
+   "decay_km": 16.0,
+   "curve_fit": {
+    "misplaced": 0.0402,
+    "own": 0.8724,
+    "own_census": 0.8677,
+    "commuters": 281056,
+    "mean_km": 5.5831
+   }
+  },
+  "oky": {
+   "name": "Okayama",
+   "units": [
+    "33"
+   ],
+   "population": 1878521,
+   "neighbours": [
+    "31",
+    "37",
+    "28",
+    "34"
+   ],
+   "origin": [
+    133.9156,
+    34.6479
+   ],
+   "extract": "asia/japan/chugoku",
+   "water_extracts": [
+    "asia/japan/kansai",
+    "asia/japan/chugoku",
+    "asia/japan/shikoku"
+   ],
+   "water_cell_m": 25.0,
+   "census_at_home": 0.0983,
+   "wfh": 0.159,
+   "decay_pow": 2.0,
+   "decay_km": 160.0,
+   "curve_fit": {
+    "misplaced": 0.0788,
+    "own": 0.6344,
+    "own_census": 0.6461,
+    "commuters": 737102,
+    "mean_km": 6.778
+   }
+  },
+  "ymg": {
+   "name": "Yamaguchi",
+   "units": [
+    "35"
+   ],
+   "population": 1319848,
+   "neighbours": [
+    "32",
+    "38",
+    "40",
+    "34"
+   ],
+   "origin": [
+    131.8094,
+    34.0479
+   ],
+   "extract": "asia/japan/chugoku",
+   "water_extracts": [
+    "asia/japan/chugoku",
+    "asia/japan/shikoku",
+    "asia/japan/kyushu"
+   ],
+   "water_cell_m": 25.0,
+   "census_at_home": 0.0888,
+   "wfh": 0.15,
+   "decay_pow": 1.8,
+   "decay_km": 50.0,
+   "curve_fit": {
+    "misplaced": 0.0446,
+    "own": 0.795,
+    "own_census": 0.7935,
+    "commuters": 538095,
+    "mean_km": 6.3586
+   }
+  },
+  "tks": {
+   "name": "Tokushima",
+   "units": [
+    "36"
+   ],
+   "population": 715113,
+   "neighbours": [
+    "37",
+    "38",
+    "39",
+    "28"
+   ],
+   "origin": [
+    134.5281,
+    34.0771
+   ],
+   "extract": "asia/japan/shikoku",
+   "water_extracts": [
+    "asia/japan/kansai",
+    "asia/japan/shikoku"
+   ],
+   "water_cell_m": 25.0,
+   "census_at_home": 0.1417,
+   "wfh": 0.199,
+   "decay_pow": 1.6,
+   "decay_km": 32.0,
+   "curve_fit": {
+    "misplaced": 0.0712,
+    "own": 0.6182,
+    "own_census": 0.6121,
+    "commuters": 266795,
+    "mean_km": 5.8925
+   }
+  },
+  "kgw": {
+   "name": "Kagawa",
+   "units": [
+    "37"
+   ],
+   "population": 939604,
+   "neighbours": [
+    "33",
+    "36",
+    "38"
+   ],
+   "origin": [
+    134.0531,
+    34.3313
+   ],
+   "extract": "asia/japan/shikoku",
+   "water_extracts": [
+    "asia/japan/kansai",
+    "asia/japan/chugoku",
+    "asia/japan/shikoku"
+   ],
+   "water_cell_m": 25.0,
+   "census_at_home": 0.1042,
+   "wfh": 0.164,
+   "decay_pow": 1.6,
+   "decay_km": 32.0,
+   "curve_fit": {
+    "misplaced": 0.0553,
+    "own": 0.6869,
+    "own_census": 0.6813,
+    "commuters": 378488,
+    "mean_km": 5.9186
+   }
+  },
+  "ehm": {
+   "name": "Ehime",
+   "units": [
+    "38"
+   ],
+   "population": 1316241,
+   "neighbours": [
+    "35",
+    "36",
+    "37",
+    "39",
+    "34"
+   ],
+   "origin": [
+    132.7594,
+    33.8521
+   ],
+   "extract": "asia/japan/shikoku",
+   "water_extracts": [
+    "asia/japan/chugoku",
+    "asia/japan/shikoku",
+    "asia/japan/kyushu"
+   ],
+   "water_cell_m": 25.0,
+   "census_at_home": 0.1247,
+   "wfh": 0.184,
+   "decay_pow": 1.8,
+   "decay_km": 32.0,
+   "curve_fit": {
+    "misplaced": 0.0476,
+    "own": 0.8303,
+    "own_census": 0.828,
+    "commuters": 504762,
+    "mean_km": 5.2311
+   }
+  },
+  "kch": {
+   "name": "Kochi",
+   "units": [
+    "39"
+   ],
+   "population": 682802,
+   "neighbours": [
+    "36",
+    "38"
+   ],
+   "origin": [
+    133.5469,
+    33.5437
+   ],
+   "extract": "asia/japan/shikoku",
+   "water_extracts": [
+    "asia/japan/chugoku",
+    "asia/japan/shikoku"
+   ],
+   "water_cell_m": 25.0,
+   "census_at_home": 0.1385,
+   "wfh": 0.196,
+   "decay_pow": 1.6,
+   "decay_km": 50.0,
+   "curve_fit": {
+    "misplaced": 0.0664,
+    "own": 0.7199,
+    "own_census": 0.7234,
+    "commuters": 254164,
+    "mean_km": 6.2723
+   }
+  },
+  "sag": {
+   "name": "Saga",
+   "units": [
+    "41"
+   ],
+   "population": 808990,
+   "neighbours": [
+    "42",
+    "40"
+   ],
+   "origin": [
+    130.2969,
+    33.2604
+   ],
+   "extract": "asia/japan/kyushu",
+   "water_extracts": [
+    "asia/japan/kyushu"
+   ],
+   "water_cell_m": 25.0,
+   "census_at_home": 0.1266,
+   "wfh": 0.185,
+   "decay_pow": 1.4,
+   "decay_km": 16.0,
+   "curve_fit": {
+    "misplaced": 0.0734,
+    "own": 0.684,
+    "own_census": 0.6856,
+    "commuters": 306976,
+    "mean_km": 5.6855
+   }
+  },
+  "ngs": {
+   "name": "Nagasaki",
+   "units": [
+    "42"
+   ],
+   "population": 1269256,
+   "neighbours": [
+    "41"
+   ],
+   "origin": [
+    129.7156,
+    33.1729
+   ],
+   "extract": "asia/japan/kyushu",
+   "water_extracts": [
+    "asia/japan/chugoku",
+    "asia/japan/kyushu"
+   ],
+   "water_cell_m": 25.0,
+   "census_at_home": 0.1136,
+   "wfh": 0.173,
+   "decay_pow": 1.8,
+   "decay_km": 32.0,
+   "curve_fit": {
+    "misplaced": 0.0537,
+    "own": 0.8138,
+    "own_census": 0.8107,
+    "commuters": 524609,
+    "mean_km": 5.4052
+   }
+  },
+  "kmm": {
+   "name": "Kumamoto",
+   "units": [
+    "43"
+   ],
+   "population": 1720906,
+   "neighbours": [
+    "44",
+    "45",
+    "46",
+    "40"
+   ],
+   "origin": [
+    130.7281,
+    32.7937
+   ],
+   "extract": "asia/japan/kyushu",
+   "water_extracts": [
+    "asia/japan/kyushu"
+   ],
+   "water_cell_m": 25.0,
+   "census_at_home": 0.1367,
+   "wfh": 0.195,
+   "decay_pow": 2.0,
+   "decay_km": 50.0,
+   "curve_fit": {
+    "misplaced": 0.103,
+    "own": 0.5689,
+    "own_census": 0.5709,
+    "commuters": 670718,
+    "mean_km": 5.4542
+   }
+  },
+  "oit": {
+   "name": "Oita",
+   "units": [
+    "44"
+   ],
+   "population": 1114289,
+   "neighbours": [
+    "43",
+    "45",
+    "40"
+   ],
+   "origin": [
+    131.6156,
+    33.2396
+   ],
+   "extract": "asia/japan/kyushu",
+   "water_extracts": [
+    "asia/japan/chugoku",
+    "asia/japan/shikoku",
+    "asia/japan/kyushu"
+   ],
+   "water_cell_m": 25.0,
+   "census_at_home": 0.107,
+   "wfh": 0.167,
+   "decay_pow": 1.4,
+   "decay_km": 16.0,
+   "curve_fit": {
+    "misplaced": 0.0522,
+    "own": 0.8247,
+    "own_census": 0.8339,
+    "commuters": 445909,
+    "mean_km": 5.8347
+   }
+  },
+  "mzk": {
+   "name": "Miyazaki",
+   "units": [
+    "45"
+   ],
+   "population": 1065087,
+   "neighbours": [
+    "43",
+    "44",
+    "46"
+   ],
+   "origin": [
+    131.4281,
+    31.9271
+   ],
+   "extract": "asia/japan/kyushu",
+   "water_extracts": [
+    "asia/japan/kyushu"
+   ],
+   "water_cell_m": 25.0,
+   "census_at_home": 0.134,
+   "wfh": 0.192,
+   "decay_pow": 1.4,
+   "decay_km": 16.0,
+   "curve_fit": {
+    "misplaced": 0.048,
+    "own": 0.8288,
+    "own_census": 0.8305,
+    "commuters": 416429,
+    "mean_km": 5.216
+   }
+  },
+  "kgs": {
+   "name": "Kagoshima",
+   "units": [
+    "46"
+   ],
+   "population": 1562240,
+   "neighbours": [
+    "43",
+    "45"
+   ],
+   "origin": [
+    130.5469,
+    31.5813
+   ],
+   "extract": "asia/japan/kyushu",
+   "water_extracts": [
+    "asia/japan/kyushu"
+   ],
+   "water_cell_m": 50.0,
+   "census_at_home": 0.1173,
+   "wfh": 0.177,
+   "decay_pow": 1.4,
+   "decay_km": 16.0,
+   "curve_fit": {
+    "misplaced": 0.0476,
+    "own": 0.8253,
+    "own_census": 0.8435,
+    "commuters": 630663,
+    "mean_km": 6.3148
+   }
+  },
+  "oka": {
+   "name": "Okinawa",
+   "units": [
+    "47"
+   ],
+   "population": 1445707,
+   "neighbours": [],
+   "origin": [
+    127.7031,
+    26.2021
+   ],
+   "extract": "asia/japan/kyushu",
+   "water_extracts": [
+    "asia/japan/kyushu"
+   ],
+   "water_cell_m": 50.0,
+   "census_at_home": 0.0759,
+   "wfh": 0.138,
+   "decay_pow": 1.8,
+   "decay_km": 50.0,
+   "curve_fit": {
+    "misplaced": 0.092,
+    "own": 0.536,
+    "own_census": 0.5568,
+    "commuters": 507044,
+    "mean_km": 8.7598
+   }
+  },
+  "kmk": {
+   "name": "Kamikawa",
+   "units": [
+    "01-kamikawa",
+    "01-soya",
+    "01-rumoi"
+   ],
+   "population": 582604,
+   "neighbours": [
+    "01-sorachi",
+    "01-iburi",
+    "01-okhotsk",
+    "01-tokachi",
+    "01-hidaka",
+    "01-ishikari"
+   ],
+   "origin": [
+    142.3844,
+    43.7521
+   ],
+   "extract": "asia/japan/hokkaido",
+   "water_extracts": [
+    "asia/japan/hokkaido"
+   ],
+   "water_cell_m": 25.0,
+   "census_at_home": 0.1333,
+   "wfh": 0.192,
+   "decay_pow": 2.4,
+   "decay_km": 50.0,
+   "curve_fit": {
+    "misplaced": 0.0641,
+    "own": 0.8954,
+    "own_census": 0.8955,
+    "commuters": 234336,
+    "mean_km": 6.3572
+   }
+  },
+  "sor": {
+   "name": "Sorachi",
+   "units": [
+    "01-sorachi"
+   ],
+   "population": 281950,
+   "neighbours": [
+    "01-kamikawa",
+    "01-iburi",
+    "01-rumoi",
+    "01-ishikari"
+   ],
+   "origin": [
+    141.7844,
+    43.0521
+   ],
+   "extract": "asia/japan/hokkaido",
+   "water_extracts": [
+    "asia/japan/hokkaido"
+   ],
+   "water_cell_m": 25.0,
+   "census_at_home": 0.1629,
+   "wfh": 0.219,
+   "decay_pow": 2.0,
+   "decay_km": 160.0,
+   "curve_fit": {
+    "misplaced": 0.081,
+    "own": 0.7709,
+    "own_census": 0.768,
+    "commuters": 95142,
+    "mean_km": 4.6645
+   }
+  },
+  "ibr": {
+   "name": "Iburi",
+   "units": [
+    "01-iburi",
+    "01-shiribeshi~01203"
+   ],
+   "population": 464612,
+   "neighbours": [
+    "01-kamikawa",
+    "01-sorachi",
+    "01-hidaka",
+    "01-oshima",
+    "01-hiyama",
+    "01-ishikari",
+    "01-01203"
+   ],
+   "origin": [
+    141.5781,
+    42.6271
+   ],
+   "extract": "asia/japan/hokkaido",
+   "water_extracts": [
+    "asia/japan/hokkaido"
+   ],
+   "water_cell_m": 25.0,
+   "census_at_home": 0.1014,
+   "wfh": 0.162,
+   "decay_pow": 1.8,
+   "decay_km": 50.0,
+   "curve_fit": {
+    "misplaced": 0.0634,
+    "own": 0.8217,
+    "own_census": 0.8251,
+    "commuters": 180054,
+    "mean_km": 6.2186
+   }
+  },
+  "okh": {
+   "name": "Okhotsk",
+   "units": [
+    "01-okhotsk",
+    "01-nemuro"
+   ],
+   "population": 341407,
+   "neighbours": [
+    "01-kamikawa",
+    "01-soya",
+    "01-tokachi",
+    "01-kushiro"
+   ],
+   "origin": [
+    143.8719,
+    43.8062
+   ],
+   "extract": [
+    "asia/japan/hokkaido"
+   ],
+   "water_extracts": [
+    "asia/japan/hokkaido"
+   ],
+   "water_cell_m": 25.0,
+   "census_at_home": 0.1752,
+   "wfh": 0.231,
+   "decay_pow": 2.4,
+   "decay_km": 160.0,
+   "curve_fit": {
+    "misplaced": 0.072,
+    "own": 0.9064,
+    "own_census": 0.9061,
+    "commuters": 133547,
+    "mean_km": 6.5887
+   }
+  },
+  "tkc": {
+   "name": "Tokachi",
+   "units": [
+    "01-tokachi",
+    "01-hidaka"
+   ],
+   "population": 393496,
+   "neighbours": [
+    "01-kamikawa",
+    "01-iburi",
+    "01-okhotsk",
+    "01-kushiro"
+   ],
+   "origin": [
+    143.1781,
+    42.9021
+   ],
+   "extract": "asia/japan/hokkaido",
+   "water_extracts": [
+    "asia/japan/hokkaido"
+   ],
+   "water_cell_m": 25.0,
+   "census_at_home": 0.1638,
+   "wfh": 0.22,
+   "decay_pow": 2.0,
+   "decay_km": 80.0,
+   "curve_fit": {
+    "misplaced": 0.0562,
+    "own": 0.7619,
+    "own_census": 0.7618,
+    "commuters": 154180,
+    "mean_km": 6.0097
+   }
+  },
+  "ksr": {
+   "name": "Kushiro",
+   "units": [
+    "01-kushiro"
+   ],
+   "population": 221130,
+   "neighbours": [
+    "01-okhotsk",
+    "01-tokachi",
+    "01-nemuro"
+   ],
+   "origin": [
+    144.3969,
+    43.0146
+   ],
+   "extract": "asia/japan/hokkaido",
+   "water_extracts": [
+    "asia/japan/hokkaido"
+   ],
+   "water_cell_m": 25.0,
+   "census_at_home": 0.1168,
+   "wfh": 0.176,
+   "decay_pow": 2.4,
+   "decay_km": 16.0,
+   "curve_fit": {
+    "misplaced": 0.0579,
+    "own": 0.8619,
+    "own_census": 0.8747,
+    "commuters": 84713,
+    "mean_km": 4.2227
+   }
+  },
+  "osh": {
+   "name": "Oshima",
+   "units": [
+    "01-oshima",
+    "01-hiyama"
+   ],
+   "population": 402810,
+   "neighbours": [
+    "01-iburi",
+    "01-shiribeshi~01203"
+   ],
+   "origin": [
+    140.7469,
+    41.8104
+   ],
+   "extract": "asia/japan/hokkaido",
+   "water_extracts": [
+    "asia/japan/hokkaido",
+    "asia/japan/tohoku"
+   ],
+   "water_cell_m": 25.0,
+   "census_at_home": 0.1238,
+   "wfh": 0.183,
+   "decay_pow": 1.8,
+   "decay_km": 80.0,
+   "curve_fit": {
+    "misplaced": 0.0375,
+    "own": 0.8165,
+    "own_census": 0.815,
+    "commuters": 155667,
+    "mean_km": 5.4037
+   }
+  }
+ }
+}

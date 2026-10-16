@@ -121,13 +121,13 @@ function UiScale() {
   );
 }
 
-/** The trip explorer's button (T-220: here since the City tab went; key 4 from anywhere). */
+/** The trip explorer's button (T-220: here since the City tab went; the T key from anywhere). */
 function TripStart() {
   const on = tool.value === "trip";
   return (
     <div class="pane-foot trip-start">
-      <button class={"btn text" + (on ? " on" : "")} data-tip={`Click two places or stations on the map to see how people would travel between them (${TRIP_KEY})`} onClick={() => pickTool("trip")}>
-        Explore a trip<span class="key muted">{TRIP_KEY}</span>
+      <button class={"btn text" + (on ? " on" : "")} data-tip={`Click two places or stations on the map to see how people would travel between them (${TRIP_KEY.toUpperCase()})`} onClick={() => pickTool("trip")}>
+        Explore a trip<span class="key muted">{TRIP_KEY.toUpperCase()}</span>
       </button>
     </div>
   );
