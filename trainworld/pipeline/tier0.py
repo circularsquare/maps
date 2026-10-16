@@ -57,8 +57,8 @@ inside each area by the proxy; jobs_url), population (callable (city, boundary, 
 ident: (boardings a year, "year, source")}, optional: a national figure in place of Wikidata's), curve or
 decay_pow/decay_km, region_name (optional), epoch (GHSL epoch, default 2020), job_blend (the proxy's
 blend in place of JOB_BLEND, optional: a larger population share where much work is informal),
-land_cap_km2 and land_spread_deg (optional: cap one OSM industrial or commercial area's job-place
-weight and spread it over its area, where few other places are mapped; T-459), everyday (callable
+land_cap_km2 and land_spread_deg (optional, default LAND_CAP_KM2 and LAND_SPREAD_DEG, 0 for none: the
+cap on one OSM industrial or commercial area's job-place weight and the grid it is spread over; T-459, T-460), everyday (callable
 (city, lat, lon, jobs per pack cell) -> {"errand" and/or "leisure": (sector jobs per cell, source
 name[, the pack the concentration test was passed on])}, optional: a country's jobs by sector by
 small area; the third item makes the pack run only the level test, for a source judged on the
@@ -99,6 +99,7 @@ WIKIDATA = "https://query.wikidata.org/sparql"
 # (T-360, notes/T-288.md); both cities are in-sample.
 JOB_BLEND = {"nres": 0.3, "osm": 0.5, "pop": 0.2}
 HEIGHT_POW = 2.0
+LAND_CAP_KM2, LAND_SPREAD_DEG = 1.0, 0.003   # OSM industrial or commercial land: cap per area, spread grid (T-460)
 ERRAND_SHARE, LEISURE_SHARE = 0.15, 0.08
 SCHOOL_ENROL = 0.9                    # pupils per child aged 0-14 (judgement; UNESCO rates would refine)
 DEFAULT_CURVE_POW = 1.4               # between Toronto's fit (1.2) and London's (1.5-1.85); only the length is fitted (T-360)
@@ -370,9 +371,9 @@ def signals(city, cfg, boundary, mask):
         print(f"  GHSL {kind}: {arr.shape[1]} x {arr.shape[0]} pixels, {arr.sum():,.0f} in the box, {len(grids[kind]):,} cells; "
               f"{time.time() - t0:.0f} s", flush=True)
     import canada
-    lc = cfg.get("land_cap_km2")
+    lc = cfg.get("land_cap_km2", LAND_CAP_KM2)
     places = canada.osm_places(city, boundary, cfg["extract"], cache=raw(f"osm_jobs_{city}.csv.gz"),
-                               land_cap_m2=lc * 1e6 if lc else None, land_spread_deg=cfg.get("land_spread_deg"))
+                               land_cap_m2=lc * 1e6 if lc else None, land_spread_deg=cfg.get("land_spread_deg", LAND_SPREAD_DEG))
     pids = np.fromiter((h3.str_to_int(h3.latlng_to_cell(la, lo, 9)) for la, lo in zip(places.lat, places.lon)), np.uint64, len(places))
     cells = np.unique(np.concatenate([np.fromiter(g.keys(), np.uint64) for g in grids.values()] + [pids]))
     ok, ll = inside(cells, boundary)
@@ -420,6 +421,41 @@ def jobs_from(sig, total, blend=None, height_pow=HEIGHT_POW):
     osm = sig["osm_errand"] + sig["osm_leisure"] + sig["osm_job"] + sig["osm_land"]
     parts = {"nres": nres_signal(sig, height_pow), "osm": osm, "pop": sig["pop"]}
     return total * sum(blend[k] * parts[k] / max(parts[k].sum(), 1e-9) for k in blend)
+
+
+def osm_signal_line(city, sig, jobs, blend=None):
+    """The OSM job-place signal's make-up and its largest single place, as one line the pack gate
+    reads (T-460, docs/adding-a-city.md): `osm_signal: key=value ...`, values without spaces, the
+    place name last and percent-encoded. A place is one OSM area (its spread rows together, when the
+    cached rows carry the area's id), else one row; its jobs share is what it brings through the
+    OSM part of the blend."""
+    import urllib.parse
+    blend = blend or JOB_BLEND
+    kinds = {k: float(sig["osm_" + k].sum()) for k in ("errand", "leisure", "job", "land")}
+    total = max(sum(kinds.values()), 1e-9)
+    top = {"id": "", "name": "", "w": 0.0}
+    path = raw(f"osm_jobs_{city}.csv.gz")
+    if os.path.exists(path):
+        pl = pd.read_csv(path, keep_default_na=False)
+        cells = set(sig["h3"].tolist())
+        pid = [int(h3.str_to_int(h3.latlng_to_cell(la, lo, 9))) for la, lo in zip(pl.lat, pl.lon)]
+        pl = pl[[c in cells for c in pid]].reset_index(drop=True)
+        ref = pl["ref"].astype(str) if "ref" in pl else pd.Series([""] * len(pl))
+        key = np.where(ref.to_numpy() != "", ref.to_numpy(), np.char.add(np.char.add(pl.lat.round(5).astype(str).to_numpy(), ","),
+                                                                    pl.lon.round(5).astype(str).to_numpy()))
+        w = pl.groupby(key, sort=False).w.sum()
+        if len(w):
+            top["id"], top["w"] = str(w.idxmax()), float(w.max())
+            if "name" in pl:
+                nm = pl.name.astype(str).to_numpy()[key == top["id"]]
+                top["name"] = next((n for n in nm if n), "")
+    j = np.asarray(jobs, float)
+    ic = int(np.argmax(j))
+    return ("osm_signal: " + " ".join(f"{k}={v:.0f}" for k, v in kinds.items())
+            + f" land_share={kinds['land'] / total:.4f} top_place={top['id'] or '-'}"
+            + f" top_place_jobs_share={blend['osm'] * top['w'] / total:.5f}"
+            + f" top_cell={sig['lat'][ic]:.4f},{sig['lon'][ic]:.4f} top_cell_jobs_share={j[ic] / max(j.sum(), 1e-9):.5f}"
+            + f" top_place_name={urllib.parse.quote(top['name']) or '-'}")
 
 
 # ---------------------------------------------------------------- the curve without flows
@@ -728,6 +764,7 @@ def main(city):
         J = P * jpr
         jobs = jobs_from(sig, J, job_blend)
         jobs_name = f"tier 0 proxy: population x {jpr:.3f} jobs a resident (World Bank SL.EMP.TOTL.SP.ZS x 15+ share, {wb_year}), {proxy}"
+    print(osm_signal_line(city, sig, jobs, job_blend), flush=True)
     pop = sig["pop"]
     if cfg.get("at_home"):  # per cell (T-465): at home by municipality of work, then telework on the rest
         h = cfg["at_home"](sig["lat"], sig["lon"])

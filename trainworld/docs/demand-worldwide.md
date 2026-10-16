@@ -55,7 +55,10 @@ building Toronto from tier 0 against the real pack (notes/T-287.md has every tab
 - **Jobs** are a proxy: population x the World Bank employment rate, spread 30% by GHSL
   non-residential volume weighted by height^2, 50% by OSM job places, 20% by population (T-360:
   the best joint fit on Toronto's census and London's BRES, both in-sample; 18.1% and 26.1% of
-  jobs misplaced between 2 km zones). A country with workplace counts by small area (England's
+  jobs misplaced between 2 km zones). OSM industrial, commercial and retail land counts one job
+  place per 5,000 m², one area's weight capped at 1 km² (`land_cap_km2`) and spread over a 0.003
+  degree (~330 m) grid inside it (`land_spread_deg`), in every build (T-460); a config may set
+  either to 0 or another value. A country with workplace counts by small area (England's
   BRES by LSOA) replaces the total and the proxy only spreads each area's count (tier0's `jobs`
   hook). Why it may not carry over: an old mid-rise centre with a large commuter shed defeats it.
   London's proxy gives Westminster and the City a third of their BRES jobs (483k against 1.51M)
@@ -186,10 +189,10 @@ Tier 0 from global sources alone, the data-poor test; notes/T-459.md has the tab
   GHSL lags the fast fringe (Ikorodu LGA 0.7M against Africapolis's 1.6M agglomeration): use the
   latest epoch once the game moves past 2020.
 - **Jobs**: the proxy with population 0.5 of the blend (as Mumbai). **Where OSM maps few places,
-  land use dominates the OSM signal** (Lagos: 81% of it), and one big industrial area becomes one
-  huge job lump at its centroid (the 23 km² Dangote refinery took 425k jobs, 6.5% of the city). Rule
-  for thin-OSM cities: `land_cap_km2` 1 and `land_spread_deg` 0.003 (cap one area's weight at 1 km²,
-  spread it over a ~330 m grid inside it). Not yet the default (T-460). Markets (Balogun, Alaba,
+  land use dominates the OSM signal** (Lagos: 81% of it), and one big industrial area would be one
+  huge job lump at its centroid (the 23 km² Dangote refinery would take 425k jobs, 6.5% of the
+  city). The tier 0 default for every city (T-460) caps one area's weight at 1 km² and spreads it
+  over a 0.003 degree grid (~330 m) inside it, as in "Tier 0" above. Markets (Balogun, Alaba,
   Oshodi) get almost nothing from buildings or OSM; their jobs come only from the population share.
 - **Everyday destinations**: OSM has 0.09 errand and 0.04 leisure places per 1,000 residents
   (Mumbai 0.29 and 0.19, London 5.9 and 4.0), in 2% of cells holding 7% of the people, gathered in

@@ -263,19 +263,25 @@ def place_kind(shop, amenity, tourism, leisure):
     return "job"
 
 
-def _land_rows(geom, w, spread_deg):
+def _land_rows(geom, w, spread_deg, ref="", name=""):
     """A land area's weight on its representative point, or with spread_deg split over a grid of
-    points that far apart inside it (T-459)."""
+    points that far apart inside it (T-459). Every row carries the area's OSM `ref` and `name`."""
     c = geom.representative_point()
     if not spread_deg:
-        return [("land", c.y, c.x, w)]
+        return [("land", c.y, c.x, w, ref, name)]
     x0, y0, x1, y1 = geom.bounds
     gx, gy = np.meshgrid(np.arange(x0 + spread_deg / 2, x1, spread_deg), np.arange(y0 + spread_deg / 2, y1, spread_deg))
     gx, gy = gx.ravel(), gy.ravel()
     ok = shapely.contains_xy(geom, gx, gy) if len(gx) else np.zeros(0, bool)
     if not ok.any():
-        return [("land", c.y, c.x, w)]
-    return [("land", y, x, w / int(ok.sum())) for x, y in zip(gx[ok], gy[ok])]
+        return [("land", c.y, c.x, w, ref, name)]
+    return [("land", y, x, w / int(ok.sum()), ref, name) for x, y in zip(gx[ok], gy[ok])]
+
+
+def _osm_ref(r):
+    """An area's OSM id as a short text: r<relation> or w<way>."""
+    rel = getattr(r, "osm_id", None)
+    return f"r{rel}" if isinstance(rel, str) and rel else f"w{getattr(r, 'osm_way_id', '')}"
 
 
 def osm_places(city, boundary, extract=OSM_EXTRACT, cache=None, land_cap_m2=None, land_spread_deg=None):
@@ -305,10 +311,10 @@ def osm_places(city, boundary, extract=OSM_EXTRACT, cache=None, land_cap_m2=None
             lei = t["leisure"] if t["leisure"] in LEISURE_LEISURE else ""
             if not (t["shop"] or am or tour or lei or t["office"] or t["craft"]):
                 continue
-            rows.append((place_kind(t["shop"], am, tour, lei), g.y, g.x, 1.0))
+            rows.append((place_kind(t["shop"], am, tour, lei), g.y, g.x, 1.0, "", ""))
         n_pts = len(rows)
         cols = ["shop", "amenity", "office", "craft", "tourism", "leisure", "landuse"]
-        mp = osm_features.read(extract, "multipolygons", columns=cols, bbox=(w, s, e, n),
+        mp = osm_features.read(extract, "multipolygons", columns=cols + ["osm_id", "osm_way_id", "name"], bbox=(w, s, e, n),
                                where=" OR ".join(f"{k} IS NOT NULL" for k in cols))
         for r in mp.itertuples():
             c = r.geometry.representative_point()
@@ -316,7 +322,8 @@ def osm_places(city, boundary, extract=OSM_EXTRACT, cache=None, land_cap_m2=None
                 m2 = overpass.area_m2(r.geometry)
                 if land_cap_m2:
                     m2 = min(m2, land_cap_m2)
-                rows += _land_rows(r.geometry, m2 / LANDUSE_M2_PER_PLACE, land_spread_deg)
+                rows += _land_rows(r.geometry, m2 / LANDUSE_M2_PER_PLACE, land_spread_deg,
+                                   _osm_ref(r), r.name if isinstance(r.name, str) else "")
                 continue
             shop, am, tour, lei = (v if isinstance(v, str) else "" for v in (r.shop, r.amenity, r.tourism, r.leisure))
             work = isinstance(r.office, str) or isinstance(r.craft, str)
@@ -325,8 +332,8 @@ def osm_places(city, boundary, extract=OSM_EXTRACT, cache=None, land_cap_m2=None
             lei = lei if lei in LEISURE_LEISURE else ""  # parks are their own layer, not job places
             if not (shop or am or tour or lei or work):
                 continue
-            rows.append((place_kind(shop, am, tour, lei), c.y, c.x, 1.0))
-        out = pd.DataFrame(rows, columns=["kind", "lat", "lon", "w"])
+            rows.append((place_kind(shop, am, tour, lei), c.y, c.x, 1.0, "", ""))
+        out = pd.DataFrame(rows, columns=["kind", "lat", "lon", "w", "ref", "name"])
         os.makedirs(os.path.dirname(cache), exist_ok=True)
         out.to_csv(cache, index=False)
         print(f"  OSM job places: {n_pts:,} points, {len(mp):,} areas, {time.time() - t0:.0f} s", flush=True)

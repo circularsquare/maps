@@ -372,9 +372,6 @@ CITIES = {
         "boundary_file": lambda: __import__("nigeria").boundary_file("lag"),
         # mostly informal work: half the proxy by population, as Mumbai's (T-292)
         "job_blend": {"nres": 0.2, "osm": 0.3, "pop": 0.5},
-        # OSM land use is 80% of the OSM signal here (few shops and offices mapped): one area's weight
-        # capped at 1 km2 and spread over it, or the 23 km2 Dangote refinery takes 6% of all jobs (T-459)
-        "land_cap_km2": 1.0, "land_spread_deg": 0.003,
         "water_source": lambda bbox: __import__("osm_water").source(["africa/nigeria"])(bbox),
         "extract": "africa/nigeria",
         "iso2": "NG",

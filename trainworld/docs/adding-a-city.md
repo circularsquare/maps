@@ -323,6 +323,25 @@ real pack in notes/T-287.md):
 | Airports | FAA enplanements, DB1B connecting share | StatCan 23-10-0253-01 enplaned; connecting share by judgement (Pearson 0.75) | OurAirports + Wikidata patronage / 2; connecting share by judgement; pack share from GHSL population |
 | Medical, parks, places | OSM (Overpass) | the same scripts, OSM from the extract | the same, from the extract |
 
+**Land use in the OSM signal and the `osm_signal` line (T-460).** Every tier 0 build counts OSM
+industrial, commercial and retail land as job places (one per 5,000 m²), each area's weight capped
+at 1 km² (`land_cap_km2`) and spread over a 0.003 degree grid inside it (`land_spread_deg`); a
+config sets either to 0 to turn it off, or to another value. The rows cached in
+`data/raw/tier0/osm_jobs_<id>.csv.gz` keep the settings they were made with: delete the file to
+remake them. Where few shops are mapped, land use dominates the signal (Lagos 71%), and uncapped
+one refinery took 6.5% of all jobs. Every build prints one line for the gate (`checks/pack_gate.py`):
+
+    osm_signal: errand=1101 leisure=527 job=2464 land=10232 land_share=0.7143 top_place=w732895785 top_place_jobs_share=0.00419 top_cell=6.4348,3.3586 top_cell_jobs_share=0.00288 top_place_name=-
+
+Read it by splitting on spaces, then each field on its first `=`: values hold no spaces. `errand`,
+`leisure`, `job`, `land`: the summed OSM weights in the pack's cells (land in 5,000 m² units);
+`land_share`: land over all four. `top_place`: the largest place by OSM weight, `w<id>` an OSM way,
+`r<id>` a relation (an area's spread rows count together), or `<lat>,<lon>` for a single row when the
+cached rows have no OSM id (caches made before T-460); `top_place_jobs_share`: the jobs it brings
+through the OSM part of the blend over all jobs; `top_cell`: `<lat>,<lon>` of the cell with the most
+jobs and `top_cell_jobs_share` its share of all jobs; `top_place_name`: percent-encoded, `-` when the
+place has none. Printed once, after the jobs are set, before the cells are written.
+
 **Water outside the US (T-041).** `pipeline/osm_water.py` gives any city a water mask from
 OpenStreetMap: the sea from osmdata.openstreetmap.de's coastline polygons
 (`data/raw/osmdata/water-polygons-split-4326.zip`, 906 MB, downloaded once for the world and kept;
@@ -404,9 +423,8 @@ The World Bank API can time out: fetch its three JSON files into `data/raw/tier0
 Lagos (`lag`, T-459, `pipeline/nigeria.py`) took about 36 minutes from global sources alone:
 Nigeria's extract (711 MB) downloaded in 4 minutes and read in 7 (features) and 30 s (water), the
 build 80 s, `routes.py` 3 minutes. `nigeria.py probe <id>` lists the admin relations in the box and
-`nigeria.py <id>` prints GHSL by unit before any build. Where OSM maps few shops and offices, check
-the OSM signal's largest single places on the first build: land use dominates it, and one big
-industrial area becomes a job lump (the `land_cap_km2` and `land_spread_deg` keys). Run Python with
+`nigeria.py <id>` prints GHSL by unit before any build. Where OSM maps few shops and offices, read
+the build's `osm_signal` line (above): land use dominates the signal. Run Python with
 `PYTHONIOENCODING=utf-8`, or OSM names with tone marks stop a print.
 
 Berlin (`ber`, T-290, `pipeline/germany.py`) took about 50 minutes: Brandenburg's extract (which
