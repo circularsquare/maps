@@ -1,6 +1,6 @@
 // The standing smoke check (T-329): run before every commit. Prints one PASS or FAIL line per check
 // and exits 1 if any failed. A few minutes.
-//   node trainworld/checks/smoke.mjs [url]       (from the maps root)
+//   node trainworld/checks/smoke.mjs [url]       (from the maps root; SMOKE_SHADE=dark for the dark theme)
 // With no url it starts its own Vite (checks/dev-nowatch.mjs, port SMOKE_PORT or 6190) and stops it
 // at the end; or pass a running one, e.g. http://localhost:8800/trainworld/ for the served build.
 // Headless Chrome with a throwaway profile (deleted afterwards); Playwright from PLAYWRIGHT_MODULE,
@@ -79,7 +79,8 @@ async function browserChecks(BASE) {
   try {
     const page = await ctx.newPage();
     // the demand final is a weekday's, comparable across runs since T-464 made the average day the default view
-    await page.addInitScript(() => { try { localStorage.setItem('trainworld-ui', JSON.stringify({ display: { dayShown: 'weekday' }, v: 2 })); } catch {} });
+    // SMOKE_SHADE=dark runs it all in the dark theme (T-039)
+    await page.addInitScript((shade) => { try { localStorage.setItem('trainworld-ui', JSON.stringify({ shade, display: { dayShown: 'weekday' }, v: 2 })); } catch {} }, process.env.SMOKE_SHADE ?? 'light');
     page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
     page.on('console', (m) => { if (m.type() === 'error' && !IGNORE.test(m.text())) errors.push(m.text()); });
     const sep = BASE.includes('?') ? '&' : '?';

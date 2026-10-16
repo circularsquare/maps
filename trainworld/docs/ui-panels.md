@@ -15,9 +15,15 @@ bars); the network takes the line colours ([ui-map.md](ui-map.md)).
   faint grey, from glyph tiles hosted beside the app (`app/public/fonts/`, `pipeline/glyphs.py`,
   Noto Sans merged in for other scripts); kana and kanji are drawn in the system font for now
   [T-057, notes/T-056.md].
-- **Few colour tokens**: background, text, one accent, as CSS variables (`ui/style.css`), so a
-  theme is a token swap. Light and soft, no paper texture. **Three themes**: pink (cream, sakura
-  accent), blue (cornflower), green (matcha); dark later [T-039].
+- **Few colour tokens**: background, text, one accent, plus `--bad` and `--warn` for warnings, as
+  CSS variables (`ui/style.css`); everything else is mixed from them, so a theme is a token swap.
+  No paper texture. **Light or dark** [T-039], each with **three colours**: pink (cream, sakura
+  accent), blue (cornflower), green (matcha); in dark the background is a near-black tinted towards
+  the colour and the accent a little lighter. The map's own colours (`--map-land`, `--map-ink` for
+  the map's tags and names, the basemap, the line casing) come from one table, `game/shades.ts`;
+  TS code that draws on the map takes its colours from there, never from `if dark` checks. Line,
+  mode, level, speed and purpose colours are the same in both themes (`game/palette.ts`).
+  Switching is instant and redraws only: no demand solve, no pack or style reload.
 - **Square buttons**, 1 px borders, small line icons as inline SVG (`ui/widgets.tsx`). No
   decoration that does nothing: section headings are plain text.
 - **No motion but trains.** Instant state changes, no CSS transitions. Camera moves the game makes
@@ -184,7 +190,7 @@ dismissed, and the map and tools are blocked meanwhile.
 commuter and longer-trip bubbles, not station discs), Track display (four modes with their key,
 [ui-map.md](ui-map.md)), Show (trains, station names, capacity markers, map labels), Riders on trains
 and platforms ("How full each train is", "How full each platform is", both on by default)
-[T-164], the theme, Panel and text size, Units and performance, and Explore a trip at the bottom [T-220]. Station demand
+[T-164], Theme (Light or Dark, light by default, over Pink, Blue or Green) [T-039], Panel and text size, Units and performance, and Explore a trip at the bottom [T-220]. Station demand
 circles are at the top of the Stations tab instead [T-213].
 
 **Panel and text size** [T-247]: 80% to 120% in 5% steps, 100% by default, no reset button. It

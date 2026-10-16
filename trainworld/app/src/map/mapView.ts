@@ -10,7 +10,7 @@ import { cityById, cityWithin, hashView } from "../game/cities";
 
 maplibregl.setWorkerUrl(workerUrl);
 
-export { setBasemapLabels } from "./basemap";
+export { setBasemapLabels, setBasemapShade } from "./basemap";
 
 /** T-310: a reload does not restore the exact view in the URL hash. If the hash holds a view, the
  * map starts at the registry centre and zoom of the city or zone it is in; with no hash (a new

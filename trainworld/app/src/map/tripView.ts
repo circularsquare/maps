@@ -14,6 +14,7 @@ import { lngLatToPack, packToLngLat } from "../game/coords";
 import { demandView } from "../game/demand";
 import { count, distance } from "../game/format";
 import { NET_INK } from "../game/palette";
+import { shadeColours } from "../game/shades";
 import { periodAt } from "../game/periods";
 import { askTrip, stationName, stationPoint, tripKey, tripPeriod, tripView, type TripLeg, type TripPeriod, type TripRoute } from "../game/trip";
 import { selection } from "../game/ui";
@@ -88,12 +89,13 @@ export function startTripView(map: MlMap, overlay: Overlay): TripTool {
     // out from the lines they ride
     if (drawn?.parts.length) {
       ctx.globalAlpha = VEIL;
-      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--map-land").trim() || "#f4f1ea";
+      ctx.fillStyle = shadeColours().land;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.globalAlpha = 1;
     }
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
+    const shades = shadeColours();
     for (const p of drawn?.parts ?? []) {
       const pts = p.pts.map(screenLocal);
       if (pts.length < 2) continue;
@@ -105,11 +107,11 @@ export function startTripView(map: MlMap, overlay: Overlay): TripTool {
       };
       if (p.dash) {
         ctx.setLineDash([4, 4]);
-        ctx.strokeStyle = "#ffffff";
+        ctx.strokeStyle = shades.casing;
         ctx.lineWidth = p.width + 2;
         path();
         ctx.stroke();
-        ctx.strokeStyle = p.colour;
+        ctx.strokeStyle = p.colour === NET_INK ? shades.mapInk : p.colour;
         ctx.lineWidth = p.width;
         path();
         ctx.stroke();

@@ -1,11 +1,20 @@
-/* trainworld UI. Three colour tokens per theme (--bg, --text, --accent); everything else in the
-   UI is mixed from them. Themes change the UI only: the network has its own fixed colours
-   (game/palette.ts). Zen Maru Gothic; sizes 12, 14, 18 px; weights 400 and 700. No transitions. */
+/* trainworld UI. Three colour tokens per colour theme and light or dark (--bg, --text, --accent),
+   two for warnings (--bad, --warn); everything else in the UI is mixed from them. The map's own
+   light and dark colours (--map-land, --map-ink) are set from game/shades.ts. Line, mode and level
+   colours never change (game/palette.ts). Zen Maru Gothic; sizes 12, 14, 18 px; weights 400 and
+   700. No transitions. */
 
 :root,
 :root[data-theme="pink"]  { --bg: #fbf7f0; --text: #4b403a; --accent: #d9788e; }
 :root[data-theme="blue"]  { --bg: #f6f9fb; --text: #2f4255; --accent: #4f8ac6; }
 :root[data-theme="green"] { --bg: #f6f6ec; --text: #3d4535; --accent: #7f9f4f; }
+/* T-039: the dark theme, each colour's background a near-black tinted towards it */
+:root[data-shade="dark"],
+:root[data-shade="dark"][data-theme="pink"]  { --bg: #262120; --text: #ebe3de; --accent: #e08aa0; }
+:root[data-shade="dark"][data-theme="blue"]  { --bg: #1d232a; --text: #dfe7ef; --accent: #6fa3da; }
+:root[data-shade="dark"][data-theme="green"] { --bg: #22241d; --text: #e3e6d8; --accent: #9dbb68; }
+:root { --bad: #b23a3a; --warn: #c0661c; --map-land: #f2f2ef; --map-ink: #2b2b2b; }
+:root[data-shade="dark"] { color-scheme: dark; --bad: #ec7b7b; --warn: #eb9a52; }
 
 :root {
   --font: "Zen Maru Gothic", system-ui, sans-serif;
@@ -13,8 +22,7 @@
   --rule: color-mix(in srgb, var(--text) 22%, var(--bg));
   --shade: color-mix(in srgb, var(--text) 6%, var(--bg));
   --tint: color-mix(in srgb, var(--accent) 18%, var(--bg));
-  --net-ink: #2b2b2b;
-  --map-land: #f2f2ef;
+  --net-ink: #2b2b2b; /* station rims, in both themes */
   --dock-w: clamp(304px, 24vw, 352px);
   --bar-h: 46px; /* T-349: one centre line; the status lies under the bar */
 }
@@ -146,6 +154,7 @@ body.resizing, body.resizing * { user-select: none; }
 .slider input::-webkit-slider-thumb { appearance: none; width: 3px; height: 14px; margin-top: -5.5px; background: var(--accent); }
 .slider input::-moz-range-thumb { width: 3px; height: 14px; border: 0; border-radius: 0; background: var(--accent); }
 .checks { display: flex; flex-direction: column; gap: 6px; margin-top: 2px; }
+.stack { display: grid; justify-items: start; gap: 6px; }
 .check { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
 .check input { appearance: none; width: 14px; height: 14px; margin: 0; flex: none;
                border: 1px solid var(--rule); background: var(--bg); display: grid; place-items: center; }
@@ -180,7 +189,7 @@ body.resizing, body.resizing * { user-select: none; }
 .line-identity { margin-top: 8px; }
 .line-identity label { display: flex; align-items: center; gap: 8px; }
 .line-identity input { width: 100px; min-width: 0; padding: 3px 5px; }
-.btn.danger { color: #b23a3a; }
+.btn.danger { color: var(--bad); }
 .confirmation { width: min(380px, calc(100vw - 40px)); box-sizing: border-box; padding: 20px;
   border: 1px solid var(--rule); background: var(--bg); color: var(--text); font: inherit; }
 .confirmation::backdrop { background: rgb(0 0 0 / 28%); }
@@ -208,8 +217,8 @@ table.sched th:first-child, table.sched td:first-child { text-align: left; }
 table.sched td { text-align: right; padding: 3px 0; border-bottom: 1px dotted var(--rule); }
 table.sched tr.now td:first-child { font-weight: 700; }
 /* T-472, T-477: text the player should act on, and each demand level's crowding */
-.crowd-warn { color: #c0661c; }
-.crowd-bad { color: #b23a3a; }
+.crowd-warn { color: var(--warn); }
+.crowd-bad { color: var(--bad); }
 .crowd-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
 .crowd-dot.c0 { background: #4f9a4f; }
 .crowd-dot.c1 { background: #d8b425; }
@@ -222,14 +231,14 @@ svg.junction-map { display: block; margin: 8px auto 2px; width: 112px; height: 1
 .complex-map p { margin: 4px 0 0; }
 .complex-map-platform { cursor: pointer; }
 .complex-map text { font-size: 12px; stroke: var(--map-land); stroke-width: 3px; stroke-linejoin: round; paint-order: stroke; }
-.complex-map-label { fill: var(--net-ink); }
+.complex-map-label { fill: var(--map-ink); }
 .complex-map-scale { fill: var(--muted); }
 /* T-249: back to the complex from a station opened on its own, a link in the subtitle */
 .sub .btn.inline { display: inline; min-height: 0; height: auto; padding: 0; border: 0; background: none; font: inherit; color: var(--accent); cursor: pointer; text-decoration: underline; }
 /* T-246, T-250: the complex's lines on top, waiting now and boardings a day */
 .complex-stations { margin-top: 6px; }
 .complex-stations .val { min-width: 48px; }
-.complex-stations .val.bad { color: #b23a3a; }
+.complex-stations .val.bad { color: var(--bad); }
 .rows.pick.complex-stations > li.cols { cursor: default; background: none; min-height: 20px; }
 .moves > li { align-items: flex-start; padding: 3px 0; }
 .load-bar { position: relative; display: block; height: 10px; border: 1px solid var(--rule); margin-right: 8px; }
@@ -239,7 +248,7 @@ svg.junction-map { display: block; margin: 8px auto 2px; width: 112px; height: 1
 /* T-164: a station's waiting riders, a line and direction a row */
 .rows.waiting > li { align-items: flex-start; padding: 3px 0; }
 .rows.waiting .what { display: flex; flex-direction: column; gap: 1px; }
-.rows.waiting .bad, .rows.waiting .val { color: #b23a3a; }
+.rows.waiting .bad, .rows.waiting .val { color: var(--bad); }
 table.ledger { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; margin-top: 6px; }
 table.ledger th { font-weight: 400; color: var(--muted); font-size: 12px; text-align: right; padding: 0 0 2px; }
 table.ledger td { text-align: right; padding: 3px 0; border-bottom: 1px dotted var(--rule); white-space: nowrap; }
@@ -260,7 +269,7 @@ path.hist-costs { stroke: var(--muted); }
 circle.hist-fares { fill: var(--accent); stroke: none; }
 circle.hist-costs { fill: var(--muted); stroke: none; }
 .hist-gain { fill: var(--accent); stroke: none; }
-.hist-loss { fill: #b23a3a; stroke: none; }
+.hist-loss { fill: var(--bad); stroke: none; }
 path.now { stroke-dasharray: 3 3; }
 rect.now { fill-opacity: .45; }
 .hist-col { fill: var(--text); fill-opacity: 0; stroke: none; }
@@ -352,7 +361,7 @@ rect.now { fill-opacity: .45; }
   display: flex; flex-direction: column; align-items: flex-start; gap: 6px; pointer-events: none; }
 .map-top-left > * { pointer-events: auto; }
 .demand-selector { display: flex; flex-wrap: wrap; max-width: 100%; }
-.stations-full { font-size: 12px; padding: 4px 8px; color: #b23a3a; border-color: #b23a3a; background: var(--bg); }
+.stations-full { font-size: 12px; padding: 4px 8px; color: var(--bad); border-color: var(--bad); background: var(--bg); }
 .demand-selector .btn { font-size: 12px; padding: 4px 8px; }
 .demand-selector .btn + .btn { margin-left: -1px; }
 /* T-158: one trip purpose on the map; a swatch in its purpose colour while one is chosen */
@@ -392,7 +401,7 @@ rect.now { fill-opacity: .45; }
 #map .maplibregl-control-container { position: relative; z-index: 3; }
 .stn-labels { position: absolute; inset: 0; z-index: 2; pointer-events: none; overflow: hidden; }
 .stn-label-plane { position: absolute; inset: 0; }
-.stn-label { position: absolute; left: 0; top: 0; font-size: 12px; color: var(--net-ink); white-space: nowrap;
+.stn-label { position: absolute; left: 0; top: 0; font-size: 12px; color: var(--map-ink); white-space: nowrap;
              text-shadow: 0 0 2px var(--map-land), 0 0 2px var(--map-land), 0 0 3px var(--map-land); }
 
 #tools {
@@ -404,7 +413,7 @@ rect.now { fill-opacity: .45; }
 .blueprint-panel { margin-top: 14px; }
 .blueprint-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .blueprint-head { margin-bottom: 6px; }
-.blueprint-head .num.bad { color: #b23a3a; }
+.blueprint-head .num.bad { color: var(--bad); }
 .blueprint-breakdown summary { cursor: pointer; font-size: 12px; color: var(--muted); margin-top: 8px; }
 .blueprint-category { margin-top: 8px; }
 .blueprint-items > li { padding: 4px 0; align-items: flex-start; }
@@ -419,7 +428,7 @@ rect.now { fill-opacity: .45; }
 .blueprint-bar .count { min-width: 76px; }
 @container map-column (max-width: 1350px) { .blueprint-bar { top: 46px; } }
 @container map-column (max-width: 680px) { .blueprint-bar { top: 80px; } }
-.bp-box { position: absolute; z-index: 3; pointer-events: none; border: 1.5px dashed var(--net-ink); background: color-mix(in srgb, var(--net-ink) 10%, transparent); }
+.bp-box { position: absolute; z-index: 3; pointer-events: none; border: 1.5px dashed var(--map-ink); background: color-mix(in srgb, var(--map-ink) 10%, transparent); }
 .track-row { display: flex; align-items: center; gap: 8px; }
 /* T-478: each level button carries its level's track colour (--lc, palette.ts), the chosen one in full */
 .btn.lv { min-width: 32px; padding: 0 4px; font-variant-numeric: tabular-nums;
@@ -438,14 +447,14 @@ rect.now { fill-opacity: .45; }
 #tool-notes.ask { display: flex; align-items: center; gap: 10px; }
 .tool-pick > .btn { padding: 0 6px; gap: 4px; }
 .tool-pick .key { margin-left: 2px; }
-#tool-notes .bad, .tool-tag.bad { color: #b23a3a; }
+#tool-notes .bad, .tool-tag.bad { color: var(--bad); }
 
 /* drawing tool markers on the map */
 .tool-marks { position: absolute; inset: 0; z-index: 2; pointer-events: none; overflow: hidden; }
 .tool-marks > div { position: absolute; left: 0; top: 0; white-space: nowrap; }
 .pi-mark { width: 9px; height: 9px; margin: -5px 0 0 -5px; background: #fff; border: 2px solid var(--net-ink); z-index: 1; }
 .end-mark { width: 9px; height: 9px; margin: -5px 0 0 -5px; background: #fff; border: 2px solid var(--net-ink); border-radius: 50%; z-index: 1; }
-.pi-label, .tool-tag { font-size: 12px; color: var(--net-ink); background: color-mix(in srgb, var(--map-land) 88%, transparent);
+.pi-label, .tool-tag { font-size: 12px; color: var(--map-ink); background: color-mix(in srgb, var(--map-land) 88%, transparent);
                        padding: 0 4px; border: 1px solid var(--rule); }
 .tool-tag { max-width: 340px; white-space: normal !important; }
 /* T-210: the same tag for the panels and controls (ui/tip.ts), over everything, never in the way */
@@ -537,8 +546,8 @@ rect.now { fill-opacity: .45; }
 .tag-icon { width: calc(12px * var(--ui, 1)); height: calc(12px * var(--ui, 1)); flex: none; }
 .mode-bar { display: flex; height: 3px; margin: 2px 0 3px; }
 .mode-bar i { display: block; height: 100%; }
-.demand-box { position: absolute; z-index: 4; pointer-events: none; border: 1px solid var(--net-ink);
-              background: color-mix(in srgb, var(--net-ink) 8%, transparent); }
+.demand-box { position: absolute; z-index: 4; pointer-events: none; border: 1px solid var(--map-ink);
+              background: color-mix(in srgb, var(--map-ink) 8%, transparent); }
 .intercity-labels { position: absolute; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; }
 .intercity-label { position: absolute; left: 0; top: 0; white-space: nowrap; font-size: 12px;
   padding: 2px 5px; background: var(--bg); color: var(--text); border: 1px solid var(--rule); }
@@ -550,6 +559,9 @@ rect.now { fill-opacity: .45; }
 }
 
 .maplibregl-ctrl-attrib, .maplibregl-ctrl-attrib-button { border-radius: 0 !important; }
+:root[data-shade="dark"] .maplibregl-ctrl-attrib { background: var(--bg) !important; color: var(--muted); }
+:root[data-shade="dark"] .maplibregl-ctrl-attrib a { color: var(--muted); }
+:root[data-shade="dark"] .maplibregl-ctrl-attrib-button { filter: invert(1); }
 .maplibregl-ctrl-bottom-right .maplibregl-ctrl { margin: 0 !important; }
 
 /* The dock is resizable, so adapt to the map column rather than the browser width. */
@@ -663,10 +675,10 @@ rect.now { fill-opacity: .45; }
 .station-ghost path { stroke-width: 2px; stroke-linejoin: round; }
 /* T-312: 1 km and 2 km round the station being placed */
 .station-rings { position: absolute; left: 0; top: 0; overflow: visible; }
-.station-rings circle { fill: none; stroke: var(--net-ink); stroke-opacity: .35; stroke-width: 1px; }
-.station-rings text { fill: var(--net-ink); fill-opacity: .6; font-size: calc(11px * var(--ui, 1)); text-anchor: middle; paint-order: stroke; stroke: var(--map-land); stroke-width: 3px; stroke-opacity: .8; }
+.station-rings circle { fill: none; stroke: var(--map-ink); stroke-opacity: .35; stroke-width: 1px; }
+.station-rings text { fill: var(--map-ink); fill-opacity: .6; font-size: calc(11px * var(--ui, 1)); text-anchor: middle; paint-order: stroke; stroke: var(--map-land); stroke-width: 3px; stroke-opacity: .8; }
 .curve-circle { position: absolute; left: 0; top: 0; overflow: visible; }
-.curve-circle circle { fill: none; stroke: var(--net-ink); stroke-opacity: .35; stroke-width: 1px; }
+.curve-circle circle { fill: none; stroke: var(--map-ink); stroke-opacity: .35; stroke-width: 1px; }
 .curve-circle.bad circle { stroke: #d42a2a; stroke-opacity: .7; }
 .station-ghost.ok path { fill: #2f6fe0a6; stroke: #1c4fb8; }
 .station-ghost.bad path { fill: #e03c3ca6; stroke: #b91f1f; }

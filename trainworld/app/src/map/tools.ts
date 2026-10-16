@@ -980,7 +980,7 @@ function placementTag(pv: PreviewAnswer, level: number): HTMLDivElement[] {
   const out: HTMLDivElement[] = [];
   if (!pv.ok) {
     const why = div(describeIssues(pv.issues) || "Cannot be built here.");
-    why.style.color = "#b23a3a"; // style.css's `.tool-tag.bad`, for this line only
+    why.style.color = "var(--bad)"; // style.css's `.tool-tag.bad`, for this line only
     out.push(why);
   }
   const nv = pv.verts.length / 4;

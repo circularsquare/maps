@@ -16,7 +16,7 @@ import { h, render } from "preact";
 import { clock, SPEEDS, startClock } from "./game/clock";
 import { getWorldFrame } from "./game/cities";
 import { packToLngLat, lngLatToPack } from "./game/coords";
-import { ask, display, isBuildTool, selection, stopEditing, tab, tool } from "./game/ui";
+import { ask, display, isBuildTool, selection, shade, stopEditing, tab, tool } from "./game/ui";
 import { complexOf, dotGroups, inComplexView } from "./game/complexView";
 import { cancelLink, linkPicked, linking } from "./game/links";
 import { pickTool, TOOL_KEYS, TRIP_KEY } from "./ui/tabs";
@@ -24,7 +24,7 @@ import { followCapsLock, keyIsTheirs, releaseSelectsAfterMousePick } from "./ui/
 import { redo, undo, world } from "./game/world";
 import { lastSaved, moneyState } from "./game/money";
 import { live } from "./map/live";
-import { createMap, setBasemapLabels } from "./map/mapView";
+import { createMap, setBasemapLabels, setBasemapShade } from "./map/mapView";
 import { startCityBoundaries } from "./map/cityBoundaries";
 import { startZoneLoading } from "./map/zoneLoading";
 import { startZoneFocus } from "./map/zoneFocus";
@@ -241,6 +241,13 @@ effect(() => capacity.setVisible(display.value.capacity && !SYNTH));
 startTrackHover(map, overlay);
 map.on("load", () => {
   effect(() => setBasemapLabels(map, display.value.basemapLabels));
+  effect(() => setBasemapShade(map, shade.value));
+});
+// T-039: the network's casing and inks come from game/shades.ts at each draw
+effect(() => {
+  shade.value;
+  overlay.invalidate();
+  map.triggerRepaint();
 });
 
 // While a tool is on, double clicks finish a route instead of zooming.
@@ -458,7 +465,7 @@ if (DEBUG) {
   };
 
   (window as any).tw = {
-    map, overlay, renderer, clock, world, selection, display, tools, client, checkPrecision, moneyState, lastSaved, pick, tripAt,
+    map, overlay, renderer, clock, world, selection, display, shade, tools, client, checkPrecision, moneyState, lastSaved, pick, tripAt,
     // the current draw anchor (T-307), mercator 0..1, and conversions with it
     get originMerc() { return anchor().merc; },
     anchor, toLocal, toLngLat,

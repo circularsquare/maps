@@ -7,7 +7,8 @@
 // changes. While the game plays with the camera still it is never touched.
 
 import type { Map as MlMap } from "maplibre-gl";
-import { NET_INK, rgb } from "../game/palette";
+import { rgb } from "../game/palette";
+import { shadeColours } from "../game/shades";
 import { DISC } from "../workers/commutersProtocol";
 import { anchor, EARTH_C, localToMercMatrix, mul4, type Anchor } from "./geo";
 import type { Overlay } from "./overlay";
@@ -465,7 +466,7 @@ export class DemandOverlay {
     gl.useProgram(this.prog);
     gl.uniform2f(this.u.u_viewport, this.canvas.width, this.canvas.height);
     gl.uniform1f(this.u.u_px_per_unit, pxPerUnit);
-    gl.uniform3fv(this.u.u_ink, rgb(NET_INK).map((v) => v / 255));
+    gl.uniform3fv(this.u.u_ink, rgb(shadeColours().mapInk).map((v) => v / 255));
     gl.uniform1f(this.u.u_dpr, dpr);
     gl.uniform1f(this.u.u_rscale, this.bubbleSize);
     gl.uniform1f(this.u.u_opacity, this.bubbleOpacity);

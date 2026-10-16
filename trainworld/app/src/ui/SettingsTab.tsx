@@ -8,11 +8,12 @@
 import { levelLabel, speed } from "../game/format";
 import { LEVEL_COLOURS, SPEED_STOPS } from "../game/palette";
 import { LEVELS } from "../game/types";
-import { display, setDisplay, theme, THEMES, tool, UI_SCALES, uiScale, type Theme } from "../game/ui";
+import { display, setDisplay, shade, SHADE_NAMES, theme, THEMES, tool, UI_SCALES, uiScale, type Shade, type Theme } from "../game/ui";
 import { pickTool, TRIP_KEY } from "./tabs";
 import { Check, Segmented, Stepper } from "./widgets";
 
 const THEME_NAME: Record<Theme, string> = { pink: "Pink", blue: "Blue", green: "Green" };
+const SHADE_NAME: Record<Shade, string> = { light: "Light", dark: "Dark" };
 
 export function SettingsTab() {
   const d = display.value;
@@ -86,7 +87,10 @@ export function SettingsTab() {
         </Check>
       </div>
       <div class="h">Theme</div>
-      <Segmented options={THEMES.map((t) => [t, THEME_NAME[t]] as [Theme, string])} value={theme.value} onChange={(v) => (theme.value = v)} />
+      <div class="stack">
+        <Segmented options={SHADE_NAMES.map((s) => [s, SHADE_NAME[s]] as [Shade, string])} value={shade.value} onChange={(v) => (shade.value = v)} />
+        <Segmented options={THEMES.map((t) => [t, THEME_NAME[t]] as [Theme, string])} value={theme.value} onChange={(v) => (theme.value = v)} />
+      </div>
       <UiScale />
       <div class="h">Units and performance</div>
       <div class="checks">

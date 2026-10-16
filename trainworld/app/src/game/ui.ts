@@ -13,6 +13,9 @@ export type Tab = "build" | "lines" | "stations" | "money" | "settings";
 const TABS: Tab[] = ["build", "lines", "stations", "money", "settings"];
 export type Theme = "pink" | "blue" | "green";
 export const THEMES: Theme[] = ["pink", "blue", "green"];
+/** The light or dark theme (T-039); the colours above apply to either. Map colours: game/shades.ts. */
+export type Shade = "light" | "dark";
+export const SHADE_NAMES: Shade[] = ["light", "dark"];
 /** names used before 2026-10-09, so a remembered choice survives the rename */
 const OLD_THEME: Record<string, Theme> = { cream: "pink", sky: "blue", matcha: "green" };
 
@@ -97,7 +100,7 @@ export interface DockLayout {
  * and the new default applies. */
 const VERSION = 2;
 
-function load(): Partial<{ tab: Tab; theme: Theme; display: Partial<DisplaySettings>; dock: DockLayout; build: Partial<{ level: Level; tracks: 1 | 2 | 4; keep: boolean }>; v: number }> {
+function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partial<DisplaySettings>; dock: DockLayout; build: Partial<{ level: Level; tracks: 1 | 2 | 4; keep: boolean }>; v: number }> {
   try {
     return JSON.parse(localStorage.getItem(STORE) || "{}");
   } catch {
@@ -121,6 +124,7 @@ export const display = signal<DisplaySettings>({ ...DEFAULT_DISPLAY, ...migrated
 export const dockLayout = signal<DockLayout>({ dockW: saved.dock?.dockW ?? null, paneH: saved.dock?.paneH ?? null });
 const savedTheme = OLD_THEME[saved.theme as string] ?? saved.theme;
 export const theme = signal<Theme>(THEMES.includes(savedTheme as Theme) ? (savedTheme as Theme) : "pink");
+export const shade = signal<Shade>(saved.shade === "dark" ? "dark" : "light");
 
 /** What a click on the map does: select (pick), draw track, place a station, add stops to a line,
  * remove what is clicked (T-096), pick a trip's two ends (T-195). */
@@ -171,6 +175,7 @@ export function setDisplay<K extends keyof DisplaySettings>(k: K, v: DisplaySett
 
 effect(() => {
   document.documentElement.dataset.theme = theme.value;
+  document.documentElement.dataset.shade = shade.value;
 });
 /** T-247: the UI scale as a CSS variable; style.css zooms the panels and sizes the map's tags by it */
 export const uiScale = computed(() => {
@@ -181,7 +186,7 @@ effect(() => {
   document.documentElement.style.setProperty("--ui", String(uiScale.value));
 });
 effect(() => {
-  const s = { tab: tab.value, theme: theme.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, tracks: trackCount.value, keep: keepPlacing.value }, v: VERSION };
+  const s = { tab: tab.value, theme: theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, tracks: trackCount.value, keep: keepPlacing.value }, v: VERSION };
   try {
     localStorage.setItem(STORE, JSON.stringify(s));
   } catch {

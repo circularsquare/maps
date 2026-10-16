@@ -5,7 +5,11 @@
 
 Track, stations and trains are drawn by our own WebGL2 renderer on a canvas over the basemap
 (`map/renderer.ts`; why and how in [architecture.md](architecture.md) 7). The basemap is
-Positron, repainted faint (`map/basemap.ts`), so the network reads first.
+Positron, repainted faint (`map/basemap.ts`), so the network reads first. In the dark theme the
+same Positron layers are repainted in Dark Matter's manner (near-black land, darker water, roads a
+little lighter than the land, place names faint grey), by paint properties only, so switching
+theme reloads no style or tiles [T-039]. The light and dark map colours (land, water, park, labels,
+the casing, the map ink) are one table, `game/shades.ts`.
 
 ## Zoom bands
 
@@ -22,7 +26,8 @@ Positron, repainted faint (`map/basemap.ts`), so the network reads first.
 ## Lines and track
 
 - **Widths** [T-191, T-205]: a line is 0.85 px at zoom 9, 3.9 at 12 and 6.6 at 15 (linear between,
-  held outside); bare track 0.4, 1.8 and 3; a white casing 0.6-2.4 px wider, drawn as a fixed margin
+  held outside); bare track 0.4, 1.8 and 3; a casing 0.6-2.4 px wider (white, near-black #141517 in
+  the dark theme [T-039]; line colours are the same in both), drawn as a fixed margin
   under the stroke and not part of a traffic width [T-267]; a selected line or track 0.5-3 px wider
   still. A stroke thinner than a device pixel is drawn a pixel wide and that much fainter.
 - **Lines sharing track are drawn over each other** [T-190, T-533]: interlining is not represented.
@@ -60,7 +65,7 @@ Positron, repainted faint (`map/basemap.ts`), so the network reads first.
 
 ## Stations
 
-- **Dots, zoom 9 to 15** [T-189, T-313, T-322, T-542; `map/stationGeometry.ts`]: white with a dark rim at
+- **Dots, zoom 9 to 15** [T-189, T-313, T-322, T-542; `map/stationGeometry.ts`]: white with a dark rim (in both themes, T-039) at
   the platform's middle. Radius 1.7/4.3/5/7.4 px at zoom 9/11/12/15 for an ordinary station, 2.4/5.6/6.6/9.5
   px for one served by more than one line (`stationRadii`; linear between, held outside), never narrower than the lines through
   it, the rim 1.5 px at zoom 13. A complex's dots are one shape: every dark disc is drawn first,

@@ -28,7 +28,7 @@ costs $2.25 a car-km (T-467, T-485). Real save's demand final: about 9.78M rail 
 stage 6). History is in ARCHIVE.md.
 
 **Handoff for the next orchestrator (2026-10-16, evening).** Nothing is in flight; last commit
-cbc34e2 is on 8800. Check `git status`, the taking marks here and ARCHIVE.md first. Anita's playtest
+ad9dc5d is on 8800. Check `git status`, the taking marks here and ARCHIVE.md first. Anita's playtest
 notes land in TODO.md (hers; read it, file new items as tasks, never edit it). Her open playtest
 questions (rays to a selection, clipped line bullets, curve labels' metres) were answered in T-530. CPU: at most 5 cores for all agents together (CLAUDE.md). Asks for Anita go in
 the final message or notes/for-anita.md, never TODO.md. **After each commit**:
@@ -99,7 +99,7 @@ TASKS.md and ARCHIVE.md before adding one). New packs end with `merge_cells.py <
 - T-430 [P3] T-418's straight-then-arc fallback for a click too tight for one tangent arc (left out of T-423). Open idea, only if wanted.
 - T-294 [P3] Fares across a period's hours (from T-284): each hour of a period is paid the period's fares spread evenly, while the boarding account's riders peak mid-period, so 07:00 earns as much as 08:00. Weight the period's hours by the account's boardings each hour, keeping the period's total (the worker already reads each hour's slice, `shapeHour`). Small; open; notes/T-284.md.
 - T-166 [P3] A station's riders by purpose on the map: under the purpose filter a selected station's catchment shows commuters only (hidden for other purposes). Everyday and school catchments need per-purpose station queries from `EverydayApi`. Open; notes/T-158.md.
-- T-039 [P2] Themes (Anita 2026-10-16: "themes", not dark mode): a dark theme beside today's light one, chosen in Settings; basemap, panels, tags, line and demand colours (SPEC 8). Stage 1 builds it behind the setting with screenshots for Anita; legibility fixes after her look. Open.
+- T-543 [P2] Themes stage 2: dark theme legibility after Anita's look at T-039's screenshots (t039-dark-*.png). Known candidates: switched-off blueprint's near-white middle (#f2f4f7) and blueprint mixed towards white, stop editing's grey markers, the city shade outside a focused city (#182536 at 7.5%, near invisible on dark), the save thumbnails (clock.worker, light only), the train halo's dark rings. Open.
 - T-201 [P3] The trip explorer for the everyday purposes (T-195 shows a trip as a commute): the same query on `EverydayApi` (its walk share and drive distance from the cells, its own subzone averages), and a purpose choice in the panel. Needs a small accessor in everyday.rs. Open.
 - T-057 [P3] Kana and kanji on the basemap in Zen Maru Gothic (for cities in Japan, M3): MapLibre draws them in the browser's
   system font today (they never come from glyph tiles). MapLibre 6's style `font-faces` can pin a

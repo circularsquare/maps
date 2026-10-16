@@ -59,13 +59,14 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 - Other: `money.ts` (cash and ledger from the worker, fare income from riders, T-028),
   `regionMoney.ts` (each line's and each construction's split between regions, the region ledgers, T-531), `issues.ts`
   (the track model's refusals in plain words), `loading.ts` (what is loading, the startup gate and
-  the clock hold, T-149, T-172), `palette.ts`, `format.ts`.
+  the clock hold, T-149, T-172), `palette.ts`, `shades.ts` (the light and dark themes' map
+  colours: basemap, line casing, map ink, T-039), `format.ts`.
 - The `WorldView` is built from the clock worker's states in `workers/clockClient.ts`.
 
 ### src/map/: the map and what is drawn on it
 
-- `mapView.ts` (the MapLibre map), `basemap.ts` (the Positron style: faint repaint, labels in Zen
-  Maru Gothic from `public/fonts/`), `overlay.ts` (the overlay canvas and frame loop,
+- `mapView.ts` (the MapLibre map), `basemap.ts` (the Positron style: faint repaint, light or dark,
+  labels in Zen Maru Gothic from `public/fonts/`), `overlay.ts` (the overlay canvas and frame loop,
   notes/T-015.md), `renderer.ts` (WebGL2 track, stations, trains), `network.ts` (the renderer's
   buffers, built in the clock worker from per-edge, line and station pieces kept between edits,
   T-496), `geo.ts` (the draw anchor, T-307), `anchorVersion.ts` (its version as a signal, T-317),

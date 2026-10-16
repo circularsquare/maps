@@ -250,8 +250,9 @@ Detail: [docs/architecture.md](docs/architecture.md) 7; file layout in `docs/cod
 
 ## 8. Look and UI
 
-A light pastel style in Zen Maru Gothic with three colour themes, for the UI only; the network takes
-the line colours. One dock on the left holds the icon tabs (Build, Lines, Stations, Money), the
+A pastel style in Zen Maru Gothic, light or dark (Settings, Theme) with three colours each [T-039].
+Panels take CSS tokens (`ui/style.css`); the map's light and dark colours (basemap, line casing, map
+ink) are one table, `game/shades.ts`. The network takes the line colours, the same in both themes. One dock on the left holds the icon tabs (Build, Lines, Stations, Money), the
 saved games button and the Settings gear, with the inspector under them, whose top edge never
 moves. The top bar holds the mode split (the goal number), the cash, the local day and time, the
 demand level, pause and three speeds. **Panels show what can change**: labels, numbers and states,
