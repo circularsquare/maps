@@ -375,8 +375,8 @@ CITIES = {
         "water_source": lambda bbox: __import__("osm_water").source(["africa/nigeria"])(bbox),
         "extract": "africa/nigeria",
         "iso2": "NG",
-        # no commute flows or distance table: Mumbai's curve, fitted on Census 2011 B-28 (T-292)
-        "decay_pow": 1.65, "decay_km": 32.7,
+        # no commute flows or distance table: tier0.borrowed_curve (T-314)
+        "curve": "borrowed",
         # FAAN's 2024 harmonised report via Daily Trust: 3,006,102 international and 4,134,211
         # domestic passengers at Murtala Muhammed; passengers / 2
         "boardings": {"DNMM": (7140313 / 2, "2024, FAAN via Daily Trust")},
@@ -1047,6 +1047,8 @@ def add_gravity(cells_json, city, extra=None):
     arguments (a later --border-factor wins)."""
     factor = CITIES[city].get("border_factor", BORDER_FACTOR_US)
     # a pack's own fitted curve (T-277: Toronto's, from the census commuting flows), else the US one
+    if CITIES[city].get("curve") == "borrowed" and "decay_km" not in CITIES[city]:
+        CITIES[city]["decay_pow"], CITIES[city]["decay_km"] = __import__("tier0").borrowed_curve()
     decay_pow = CITIES[city].get("decay_pow", DECAY_POW_US)
     decay_km = CITIES[city].get("decay_km", DECAY_KM_US)
     env = dict(os.environ)

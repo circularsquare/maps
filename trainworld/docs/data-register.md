@@ -86,7 +86,7 @@ days of people with a workplace. Several countries have one figure for both.
 | China | - no open flows; U published mean commute (10.2 km, Shanghai survey via press; CAUPD-Baidu report for about 45 cities) | U the survey's mean only | U 0 | U 0 |
 | South Korea | G 2020 census commuting by si-gun-gu (KOSIS: no account without a Korean ID; browser download only), T-504; U mobile-data mean commute (Statistics Korea, 20.4 km) | ? KTDB household survey, not checked | U 0 (no figure checked) | U 0 |
 | India | U Census 2011 B-28 distance bands by district, both parameters fitted | - | U B-28 "no travel" (20.1%) | - |
-| Nigeria | - none; U Mumbai's curve borrowed | - (one 2010 paper's mean trip, too weak to fit) | U 0 | U 0 |
+| Nigeria | - none; U the borrowed curve (T-314) | - (one 2010 paper's mean trip, too weak to fit) | U 0 | U 0 |
 
 ## Car ownership
 
@@ -185,8 +185,8 @@ Four procedures are in use. Each names what it needs; everything else comes from
   proxy with a larger population share where work is informal. Worked examples: Shanghai, Mumbai,
   Seoul.
 - **D. Global only.** Nothing national is credible or open. GHSL population unscaled, the jobs
-  proxy with population 0.5 and the land cap, a borrowed curve (the most similar fitted city's,
-  T-314), work at home 0. Worked example: Lagos.
+  proxy with population 0.5 and the land cap, a borrowed curve (`"curve": "borrowed"`,
+  `tier0.borrowed_curve`, T-314), work at home 0. Worked example: Lagos.
 
 **Deciding for a new country.** Fill its row in every table first (an hour of searching at most;
 look for mirrors when an official server walls, and never take a source from memory). Then take

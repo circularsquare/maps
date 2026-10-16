@@ -71,17 +71,20 @@ building Toronto from tier 0 against the real pack (notes/T-287.md has every tab
   the proxy's core against any published central job count.
 - **Where workers live** is population x one rate (no source by residence): 3.8% misplaced
   between municipalities in Toronto. Student and retiree areas send too many commuters.
-- **The distance curve without flows**: the length is fitted at power 1.4 (between Toronto's
-  fitted 1.2 and London's 1.5-1.85, T-360) so the model's median straight-line commute between
-  2 km zones matches a published median. Fitted that way to each city's own census median, the
-  rule comes within a point of the city's own fitted curve (London 14.8% of commutes misplaced
-  between districts against 13.9%; Toronto 5.3% against 4.9%), and beats borrowing another
-  city's (Toronto's curve in London 18.2%, the US curve 31.7%). The catch is the median's
-  definition: published medians are often of exact home-to-work distances or by road, and run
-  well above the zone-model median (Toronto's published 10.5 km against 7.2 km in the census
-  flows between zones), which fits far too flat a curve (T-287's 95 km). Divide a road-distance
-  median by about 1.3, and check the figure against any flow table before trusting it. Where a
-  distance distribution exists (India's census bands), fit both parameters.
+- **The distance curve without flows**: with no flow table and no distance bands, the city
+  borrows one curve (`"curve": "borrowed"`, `tier0.borrowed_curve`): of the fitted cities'
+  curves (`pipeline/fitted_curves.json`, 59 packs in 8 countries), the one that misplaces the
+  fewest commuters beyond each city's own, averaged by country; today d^-1.8 exp(-d/80 km).
+  Held out a country at a time it costs 2.9 points on average by country, against 3.3-3.9 for
+  nearest by population and vehicles, by income group, a world median or a length scaled to the
+  city's size (T-314). Why it may not carry over: no fitted country has the US's flat d^-0.8
+  curve, and the US packs lose 4-14 points under any borrowed curve, so a sprawling car city
+  would be served worst. Where a distance distribution exists (India's census bands, a travel
+  survey), fit both parameters; reported (road) distances are divided by 1.3, which matches the
+  routed drive factor of Mumbai's commutes at the band edges (1.30-1.45; the near zone pairs'
+  unweighted median of 1.62 is not the commuters' factor). A published median or mean alone fits
+  only the length at power 1.4 (`tier0.fit_curve`); medians are often of exact or road distances
+  and fit too flat a curve (Toronto's 10.5 km gave 95 km), so check one against any flow table.
 - **Schools** are OSM sites sized by the square root of site area with pupils from the national
   share aged 0-14 (-6% in Toronto, 5.3% misplaced; London -8% against GIAS's pupils on roll,
   which include sixth forms, but 21% misplaced between 2 km zones and 14% between districts:
@@ -198,8 +201,9 @@ Tier 0 from global sources alone, the data-poor test; notes/T-459.md has the tab
   (Mumbai 0.29 and 0.19, London 5.9 and 4.0), in 2% of cells holding 7% of the people, gathered in
   Lekki, Victoria Island and Ikeja, so the destinations rest almost wholly on jobs and residents
   (completeness 0.02, "Everyday destinations" below).
-- **Curve**: no flows or distance table; Mumbai's fitted curve borrowed, d^-1.65 exp(-d/32.7 km),
-  model mean 8.7 km (a 2010 survey's mean trip, Osoba, 12 km by road).
+- **Curve**: no flows or distance table; borrowed by the rule (T-314), d^-1.8 exp(-d/80 km).
+  The shipped pack still carries Mumbai's d^-1.65 exp(-d/32.7 km) (model mean 8.7 km; a 2010
+  survey's mean trip, Osoba, 12 km by road) until its gravity is re-solved.
 - **Work from home**: 0 (no source); informal work near home is in the population share instead.
 - **Universities**: the World Bank's tertiary rate is from 2011 (0.0088 a resident).
 - **Medical**: no OSM hospital carries beds; all are sized by the "Medical" rule below, to Nigeria's

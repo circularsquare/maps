@@ -237,7 +237,8 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   about 6 minutes) and writes `pipeline/longhaul.json`, the parameters stage 3 reads.
 - `frame_fixture.py` writes PROJ's values for the world frame (`app/src/game/frame.fixture.json`),
   which `checks/t125-frame-check.mjs` and the Rust frame test compare with.
-- `tier0.py`: the adapter from global sources only (T-287); `canada.py`: Canada's adapters;
+- `tier0.py`: the adapter from global sources only (T-287), its borrowed curve read from
+  `fitted_curves.json` (written by `notes/t314_loo.py table`, T-314); `canada.py`: Canada's adapters;
   `england.py`: England's inputs for a tier 0 city (ITL3 outline, Census 2021 district totals;
   T-288; England's census upgrades go here, T-360); `france.py`: France's (départements
   dissolved from communes, legal population by commune, INSEE jobs by commune of work; T-289);
