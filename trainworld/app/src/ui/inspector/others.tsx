@@ -244,7 +244,7 @@ export function StationInspector({ id }: { id: string }) {
       {/* a click on a station always shows its complex (T-249); a station opened on its own from
           the complex's list goes back to it from here, the Station / Complex switch is gone */}
       <div class="sub muted">
-        {asComplex ? `Complex of ${members.length} stations` : `Level ${levelLabel(s.level)}`}
+        {asComplex ? `Complex of ${members.length} stations` : `Elevation ${levelLabel(s.level)}`}
         {!asComplex && members.length > 1 && (
           <>
             {" · "}
@@ -587,8 +587,8 @@ function Shape({ edge, version }: { edge: number; version: number }) {
               <Stepper value={pis[i].used > 0 ? length(pis[i].used) : "none"} wide label={`corner ${i + 1} radius`} onStep={(d) => step(i, d)} />
             </div>
             <div class="corner-row">
-              <span class="grow">Level</span>
-              <Stepper value={levelLabel(pis[i].level)} label={`corner ${i + 1} level`} onStep={d => {
+              <span class="grow">Elevation</span>
+              <Stepper value={levelLabel(pis[i].level)} label={`corner ${i + 1} elevation`} onStep={d => {
                 const next = Math.max(-3, Math.min(3, pis[i].level + d));
                 if (next !== pis[i].level) void put(pis.map((p, k) => k === i ? { ...p, level: next } : p));
               }} />
@@ -597,7 +597,7 @@ function Shape({ edge, version }: { edge: number; version: number }) {
           </fieldset>}
         </>)}
       </div>
-      {pis.length > 0 && <><div class="h">Level of the stretch</div>
+      {pis.length > 0 && <><div class="h">Elevation of the stretch</div>
       <div class="group levels">
         {[3, 2, 1, 0, -1, -2, -3].map((l) => (
           <button disabled={busy} class={"btn" + (l === level ? " on" : "")} onClick={() => void edit({ op: "edgeLevel", edge, level: l as Level })}>
@@ -614,7 +614,7 @@ export function TrackInspector({ edge }: { edge: number }) {
   const e = w?.edges.find((e) => e.id === edge);
   if (!w || !e) return null;
   const lines = w.save.lines.filter((l) => e.lines.includes(l.id));
-  const lv = e.levelMin === e.levelMax ? `Level ${levelLabel(e.levelMin)}` : `Levels ${levelLabel(e.levelMin)} to ${levelLabel(e.levelMax)}`;
+  const lv = e.levelMin === e.levelMax ? `Elevation ${levelLabel(e.levelMin)}` : `Elevation ${levelLabel(e.levelMin)} to ${levelLabel(e.levelMax)}`;
   // a crossover is one thing: both diagonals are priced, built and removed together (T-391)
   const other = e.crossover ? w.edges.find((x) => x.id === e.partner) : undefined;
   const cost = e.cost + (other?.cost ?? 0);
@@ -784,7 +784,7 @@ export function JunctionInspector({ node }: { node: number }) {
         <span class="name">Junction</span>
       </div>
       <div class="sub muted">
-        Level {levelLabel(n.level)}, {n.ports} tracks meet{n.flying ? ", with a flyover" : ""}
+        Elevation {levelLabel(n.level)}, {n.ports} tracks meet{n.flying ? ", with a flyover" : ""}
       </div>
       <Built built={built} what="The junction" />
       {n.flying ? (

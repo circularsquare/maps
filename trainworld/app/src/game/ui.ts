@@ -126,6 +126,8 @@ export const theme = signal<Theme>(THEMES.includes(savedTheme as Theme) ? (saved
  * remove what is clicked (T-096), pick a trip's two ends (T-195). */
 export type Tool = "select" | "track" | "station" | "crossover" | "line" | "delete" | "trip" | "blueprint";
 export const tool = signal<Tool>("select");
+/** The Build tab's tools: while one is on, the demand views draw beneath the network (T-526). */
+export const isBuildTool = (t: Tool) => t === "track" || t === "station" || t === "crossover" || t === "delete" || t === "blueprint";
 /** A question waiting in a centered modal (T-096/T-113: removing something
  * constructed): `run` on the yes button, nothing on the no button or Esc. */
 export const ask = signal<{ text: string; yes: string; no: string; run: () => void } | null>(null);

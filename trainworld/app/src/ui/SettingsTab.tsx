@@ -38,7 +38,7 @@ export function SettingsTab() {
         options={[
           ["line", "Line"],
           ["traffic", "Line + traffic thickness"],
-          ["height", "Height"],
+          ["height", "Elevation"],
           ["speed", "Max speed"],
         ]}
         value={d.trackColour}

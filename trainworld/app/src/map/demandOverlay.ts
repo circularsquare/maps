@@ -105,13 +105,18 @@ void main() {
 }`;
 
 /** Floats per line instance: x0, y0, r0, x1, y1, r1 (local units, radii before the bubble size),
- * a stub flag and alpha. A line runs edge to edge between the two discs; a stub runs from the
- * first disc's edge toward the second and fades out over `STUB_SCREEN` of the screen (T-520). */
-export const LINE = 8;
+ * a stub flag, alpha, and the colour r, g, b (the first disc's own). A line runs edge to edge
+ * between the two discs; a stub runs from the first disc's edge toward the second and fades out
+ * over `STUB_SCREEN` of the screen (T-520). Its alpha is scaled by the first disc's drawn size
+ * (T-524). */
+export const LINE = 11;
 /** A stub's length as a share of the map's longer side. */
-const STUB_SCREEN = 0.1;
+const STUB_SCREEN = 0.06;
 /** Line width, CSS px. */
 const LINE_PX = 1;
+/** A line's source disc drawn at this radius (CSS px) or more gives the line its full alpha;
+ * smaller ones give it in proportion to the radius. */
+const LINE_FULL_PX = 8;
 
 const LINE_VS = `#version 300 es
 precision highp float;
@@ -121,13 +126,16 @@ uniform float u_px_per_unit;
 uniform float u_rscale;
 uniform float u_stub;     // device px
 uniform float u_width;    // device px
+uniform float u_full;     // device px: the source radius that gives the full alpha
 in vec3 a_from;
 in vec3 a_to;
 in vec2 a_style;          // stub, alpha
+in vec3 a_col;
 out float v_t;
 out float v_across;
 out float v_alpha;
 out float v_stub;
+out vec3 v_col;
 void main() {
   vec4 c0 = u_matrix * vec4(a_from.xy, 0.0, 1.0);
   vec4 c1 = u_matrix * vec4(a_to.xy, 0.0, 1.0);
@@ -147,23 +155,24 @@ void main() {
   gl_Position = s1 > s0 ? vec4(p / u_viewport * 2.0 - 1.0, 0.0, 1.0) : vec4(2.0, 2.0, 2.0, 1.0);
   v_t = (gl_VertexID & 1) == 1 ? 1.0 : 0.0;
   v_across = side * half_w;
-  v_alpha = a_style.y;
+  v_alpha = a_style.y * clamp(s0 / u_full, 0.0, 1.0);
   v_stub = a_style.x;
+  v_col = a_col;
 }`;
 
 const LINE_FS = `#version 300 es
 precision highp float;
-uniform vec3 u_ink;
 uniform float u_width;
 in float v_t;
 in float v_across;
 in float v_alpha;
 in float v_stub;
+in vec3 v_col;
 out vec4 o;
 void main() {
   float a = v_alpha * clamp(u_width * 0.5 - abs(v_across) + 0.5, 0.0, 1.0);
   if (v_stub > 0.5) a *= 1.0 - v_t;
-  o = vec4(u_ink * a, a);
+  o = vec4(v_col * a, a);
 }`;
 
 function compile(gl: WebGL2RenderingContext, vs: string, fs: string): WebGLProgram {
@@ -357,14 +366,14 @@ export class DemandOverlay {
     const gl = this.gl;
     if (!this.lineProg) {
       this.lineProg = compile(gl, LINE_VS, LINE_FS);
-      for (const n of ["u_matrix", "u_viewport", "u_px_per_unit", "u_rscale", "u_stub", "u_width", "u_ink"]) this.lineU[n] = gl.getUniformLocation(this.lineProg, n);
+      for (const n of ["u_matrix", "u_viewport", "u_px_per_unit", "u_rscale", "u_stub", "u_width", "u_full"]) this.lineU[n] = gl.getUniformLocation(this.lineProg, n);
     }
     const buf = gl.createBuffer()!;
     const vao = gl.createVertexArray()!;
     gl.bindVertexArray(vao);
     gl.bindBuffer(gl.ARRAY_BUFFER, buf);
     gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
-    ([["a_from", 3, 0], ["a_to", 3, 12], ["a_style", 2, 24]] as const).forEach(([name, n, off]) => {
+    ([["a_from", 3, 0], ["a_to", 3, 12], ["a_style", 2, 24], ["a_col", 3, 32]] as const).forEach(([name, n, off]) => {
       const loc = gl.getAttribLocation(this.lineProg!, name);
       gl.enableVertexAttribArray(loc);
       gl.vertexAttribPointer(loc, n, gl.FLOAT, false, LINE * 4, off);
@@ -384,7 +393,7 @@ export class DemandOverlay {
     gl.uniform1f(u.u_rscale, this.bubbleSize);
     gl.uniform1f(u.u_stub, STUB_SCREEN * Math.max(this.canvas.width, this.canvas.height));
     gl.uniform1f(u.u_width, LINE_PX * dpr);
-    gl.uniform3fv(u.u_ink, rgb(NET_INK).map((v) => v / 255));
+    gl.uniform1f(u.u_full, LINE_FULL_PX * dpr);
     for (const s of this.lines.values()) {
       let m = matrices.get(s.anchor.version);
       if (!m) matrices.set(s.anchor.version, (m = mul4(m0, localToMercMatrix(s.anchor))));

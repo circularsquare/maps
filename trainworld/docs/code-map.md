@@ -87,7 +87,8 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   `demandHover.ts` (the count tag by the pointer), `modeBar.ts` (the tag's mode bar, T-494), `airportMarks.ts` (the plane badge on an
   airport's bubble, T-448; paths shared with the icons in `glyphs.ts`).
 - Tags and outlines: `trackHover.ts` and `networkTips.ts` (the hover tags on track, trains and
-  stations, T-157, T-194), `cityBoundaries.ts` and `boundaryGeometry.ts` (the metro outlines, one
+  stations, T-157, T-194), `trackTagRows.ts` (the elevation and speed rows with icons, shared with
+  the track tool's tag, T-526), `cityBoundaries.ts` and `boundaryGeometry.ts` (the metro outlines, one
   layer for the zones near the view, and the outside shade, T-131, T-139, T-400), `zoneLoading.ts` (zones still loading drawn grey with a loading
   bar, T-343).
 

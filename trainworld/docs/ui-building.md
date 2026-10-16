@@ -11,11 +11,12 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
 [T-100; `ui/tabs.tsx`, `ui/Blueprint.tsx`; tools in `map/tools.ts`]
 
 - **Tools**: draw track (key 1), station (2), crossover (6, below), delete (3), select blueprints
-  (5, below), three buttons on the first row and two on the second; then the level (seven buttons
-  tinted in their Height colours, the chosen one solid with a dark outline, T-478) with its
+  (5, below), three buttons on the first row and two on the second; then the elevation (seven buttons
+  tinted in their Elevation colours, the chosen one solid with a dark outline, T-478) with its
   multiplier and price per km, single, double or quad track [T-255], and the platform length for
   new stations.
-  The level, the single, double or quad choice and the keep placing switch are remembered per
+  Everything the player reads says elevation, never level (code keeps `level`) [T-526].
+  The elevation, the single, double or quad choice and the keep placing switch are remembered per
   browser (localStorage with the other panel settings, not in the save) [T-468]. Caps Lock only
   changes the switch when its state changes after the page loads, so a stored setting wins over a
   Caps Lock left on or off [T-487].
@@ -25,7 +26,7 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
   [ui-inspectors.md](ui-inspectors.md).
 - **At the bottom of the pane**, fixed while the settings above scroll: the blueprint total, undo
   and redo, and "Construct blueprints", which builds every blueprint that is not disabled
-  ([below](#disabling-blueprint)). The total includes the new
+  ([below](#disabling-blueprint)). The total is red when it is more than the cash on hand [T-527]. It includes the new
   train cars that constructing starts, after spare cars. An expandable cost breakdown shows track
   by priced level, single or double, land or water and ramps (charged at the dearer end), stations,
   junction switches, flyovers and flat crossings, with lengths, counts and prices from the track
@@ -69,16 +70,17 @@ T-422]. The geometry is in [track-and-service.md](track-and-service.md) 6.1.
   station), blueprint or built. A track click on one starts or continues the route from it; the
   station tool's pointer snaps to it, so the station goes at the line's end. The markers take no
   presses, and show from zoom 9.
-- **The tag by the cursor** [T-411] has two lines: the segment's length, average cost
-  multiplier, price and tightest curve ("1.5 km, cost 1.33x, $12.8M, 401 m curve"; no curve, no
-  radius), then the level being placed and the segment's lowest speed limit ("Level +2, max speed
-  67 km/h"). The multiplier sits on yellow above 1x, deeper up to 2.5x, plain at 1x and below; the
-  level on its Height colour and the speed on its Max speed colour (`speedColour`,
-  `game/palette.ts`), each at half strength behind dark text. Where the segment could not be built
-  ending at the cursor, the reason comes first, in red, and the cost line is left out.
+- **The tag by the cursor** [T-411, T-526] has two lines: the segment's length, average cost
+  multiplier and price ("1.5 km, cost 1.33x, $12.8M"), then the elevation being placed and the
+  segment's lowest speed limit with the track tag's icons and colours ("↕ +2  » 67 km/h",
+  `map/trackTagRows.ts`; [ui-map.md](ui-map.md) "Hover tags on the network"). The multiplier sits
+  on yellow above 1x, deeper up to 2.5x, plain at 1x and below. Where the segment could not be
+  built ending at the cursor, the reason comes first, in red, and the cost line is left out. The
+  build tools' tags are drawn over the bubbles' tags; the track tag shows above the pointer when
+  it is on existing track.
 - **Shift**: with a tool on, MapLibre's shift-drag zoom is off so a shift-click reaches the tool.
 - **The ghost** is solid with a dark casing: white in the Line and traffic views, coloured by the
-  Height or Max speed view from the preview's fitted geometry; red when invalid.
+  Elevation or Max speed view from the preview's fitted geometry; red when invalid.
 - **Placed blueprint track** is drawn as blue rails ([ui-map.md](ui-map.md) "Lines and track").
 - A segment is one piece (each pair's on quad); the delete tool, Construct and the track
   inspector act on one piece [T-244].
@@ -178,11 +180,11 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   A drag previews the new shape with each curve's radius and speed (or why not); letting go is one
   undoable edit, Escape puts it back.
 - **The track inspector** lists the corners with each curve's speed, a radius stepper (100 to 1,500
-  m, then auto), a level stepper and Remove; Add corner inserts one midway along the selected
-  interval; it can put all corners on one level. It has Construct and the level buttons for its
-  piece [T-244], and Remove.
+  m, then auto), an elevation stepper and Remove; Add corner inserts one midway along the selected
+  interval; it can put all corners at one elevation ("Elevation of the stretch"). It has Construct
+  and the elevation buttons for its piece [T-244], and Remove.
 - **On a crossover's diagonal** [T-391] the track inspector is titled "Crossover" and drops the
-  corners and level controls; it shows the slowest curve, the price of both diagonals, Construct
+  corners and elevation controls; it shows the slowest curve, the price of both diagonals, Construct
   (builds both) and Remove crossover.
 - **The junction inspector** [T-031, T-080] draws the junction as a small diagram with its moves,
   says in plain words that it is flat, and offers "Build a flyover" with its price and the waiting

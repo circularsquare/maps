@@ -81,7 +81,7 @@ export function BuildTab() {
             </button>
           ))}
         </div>
-        <div class="h">Level</div>
+        <div class="h">Elevation</div>
         <div class="group levels">
           {LEVELS.map((l) => (
             <button class={"btn lv" + (l === lv ? " on" : "")} style={{ "--lc": LEVEL_COLOURS[l], "--lk": inkOn(LEVEL_COLOURS[l]) }} data-tip={LEVEL_NAME[l]} aria-pressed={l === lv} onClick={() => (buildLevel.value = l)}>

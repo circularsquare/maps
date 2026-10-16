@@ -404,6 +404,7 @@ rect.now { fill-opacity: .45; }
 .blueprint-panel { margin-top: 14px; }
 .blueprint-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .blueprint-head { margin-bottom: 6px; }
+.blueprint-head .num.bad { color: #b23a3a; }
 .blueprint-breakdown summary { cursor: pointer; font-size: 12px; color: var(--muted); margin-top: 8px; }
 .blueprint-category { margin-top: 8px; }
 .blueprint-items > li { padding: 4px 0; align-items: flex-start; }
@@ -525,6 +526,14 @@ rect.now { fill-opacity: .45; }
 .demand-tag { position: absolute; left: 0; top: 0; z-index: 4; pointer-events: none; white-space: nowrap !important; }
 /* T-305: the network tag wraps at 320 px (a complex's line list is long); a short tag is as wide as its text */
 .track-tag { width: max-content; max-width: 320px; white-space: normal !important; }
+/* T-526: the track hover and a build tool's tag are never under a bubble's tag; with a build tool
+   on, the demand views are drawn beneath the network */
+.track-tag, .build-tag { z-index: 5; }
+.build-tag { position: absolute; left: 0; top: 0; pointer-events: none; }
+.building #map canvas.overlay.demand, .building .airport-marks, .building .intercity-labels { z-index: 0; }
+.tag-facts { display: flex; gap: 8px; align-items: center; }
+.tag-fact { display: inline-flex; gap: 3px; align-items: center; }
+.tag-icon { width: calc(12px * var(--ui, 1)); height: calc(12px * var(--ui, 1)); flex: none; }
 .mode-bar { display: flex; height: 3px; margin: 2px 0 3px; }
 .mode-bar i { display: block; height: 100%; }
 .demand-box { position: absolute; z-index: 4; pointer-events: none; border: 1px solid var(--net-ink);

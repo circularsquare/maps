@@ -164,7 +164,7 @@ key.
     everyday trips and the regional layer are not split. Not part of the past 24 hours' purpose split, which
     counts boardings.
   - **Inter-region trips**: rail riders starting and ending there, by place [T-118, T-120].
-- **Station view** (one station opened alone) has its level under the name, then in place of the
+- **Station view** (one station opened alone) has its elevation under the name ("Elevation +1"), then in place of the
   complex's lines and map the station's own lines, platform settings, Construct and Remove, and
   **Waiting now** [T-164, T-238]: each line and direction ("To Norwood-205 St") with the riders on the
   platform now in red; under it, in red, how many full trains left riders behind this hour and the

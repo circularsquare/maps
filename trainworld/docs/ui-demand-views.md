@@ -171,10 +171,14 @@ second. Inspectors, selections and the top bar are the current forecast at once.
   biggest about its hexagon's area) and coloured by their own mix (`flows`) [T-098]. A click on a
   far-end bubble opens the trip explorer for the pair [T-208].
 - **Lines to the selection** [T-520, on trial: `LINES_TO_SELECTION` in `map/commuterView.ts`
-  turns them off]: from each far-end bubble's edge a 1 px line in the network ink, 45% opaque,
-  points at the selection's centre (its bubbles' centres weighted by area) and fades out over a
-  tenth of the map's longer side, stopping at the selected bubble's edge when there is one. Under
-  every bubble, no hover (`setLines` in `map/demandOverlay.ts`).
+  turns them off]: from each far-end bubble's edge a 1 px line in that bubble's own colour, up to
+  50% opaque, points at the selection's centre (its bubbles' centres weighted by area) and fades
+  out over 6% of the map's longer side, stopping at the selected bubble's edge when there is one.
+  Opacity scales with the source bubble's drawn radius: full at 8 CSS px or more, in proportion
+  below, so a bubble too small to see has no visible line [T-524]. A selected zone's lines to the
+  other zone bubbles are the same (in each zone bubble's colour, running from that
+  bubble toward the selected one). Under every bubble, no hover (`setLines` in
+  `map/demandOverlay.ts`).
 - **The inspector** (`ui/inspector/CommutersInspector.tsx`): the selection's local trip legs and
   split; the top eight far-end places, each named by the nearest station within 3 km, else by
   distance and direction; for a single area the closest stations from its trip-weighted centre
@@ -230,14 +234,16 @@ all its trips a day (its local trips, from the open zone's view or the pipeline'
 "Philadelphia · 187k trips/day" (at most eight labels on screen, the biggest first [T-493]). The hover
 has two lines, each with a mode bar [T-494]: "1.6m trips a day on average within Yamanashi" (bar from
 the zone's modelled split, none for a zone not opened) and "120k inter-region trips a day on
-average to and from Yamanashi" (train blue, the rest red). Sized against
-the busiest zone on screen, 28 px radius before the size slider; a bigger one off screen is drawn
-at the scale. Homes and Destinations look the same. Under a local purpose the focused zone's own
+average to and from Yamanashi" (train blue, the rest red). One fixed scale [T-525]: 20,000 trips a
+day per px² of bubble area (`TRIPS_PER_PX2`), the same at every zoom and whatever is on screen,
+before the size slider: Greater Tokyo's 67M is a 58 px radius, a 1.6M prefecture 9 px. Homes and Destinations look the same. Under a local purpose the focused zone's own
 bubbles stay instead. Toronto (`market: -1`) has none.
 
 A click on one selects the zone (a `city` selection, kept at any zoom): it is outlined, with one
-bubble per other zone for the regional trips between the two, on the same scale (the selected
-zone's hover: the inter-region line and its bar first, the local figure in brackets under it; the
+bubble per other zone for the regional trips between the two, on a scale of its own that is also
+fixed [T-525]: 800 trips a day per px² (`SELECTED_TRIPS_PER_PX2`), so the selected zone's own
+inter-region trips (New York's 1.56M) are a 44 px radius, Philadelphia's 783k 31 px, a 15k partner
+4 px and a few hundred a dot (the selected zone's hover: the inter-region line and its bar first, the local figure in brackets under it; the
 others: "N trips a day between A and B" and a bar), a 1 px line in the network ink, 30% opaque,
 from its bubble's edge to each other bubble's edge, under the bubbles with no hover, so the
 selection shows from afar [T-520], and the city

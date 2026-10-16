@@ -1,5 +1,11 @@
 ﻿# Archive
 
+- T-526 [P2] Track hover and construction layering. Done 2026-10-16: the track tag shows at once in select and build tools, with elevation and speed rows (icons, display colours; `map/trackTagRows.ts`), no lines row when none runs; player text says elevation; build tools draw the demand views beneath the network.
+- T-524 [P2] Rays to a selection. Done 2026-10-16: each ray takes its source bubble's colour and an opacity in proportion to its drawn radius (full at 8 px), fading out over 6% of the screen; the inter-region lines run from each zone bubble the same way (`LINE` 11 floats in `map/demandOverlay.ts`).
+- T-523 [P2] Settings icon. Done 2026-10-16: a toothed gear outline with a hub circle (`Icon.gear`, `ui/widgets.tsx`).
+- T-525 [P2] Fixed inter-region bubble scale. Done 2026-10-16: `TRIPS_PER_PX2` 20,000 in `map/intercityView.ts`, same at every zoom and whatever is on screen (Tokyo 67M is 58 px, a 1.6M prefecture 9 px); a selected zone's inter-region view has its own fixed scale, `SELECTED_TRIPS_PER_PX2` 800.
+- T-527 [P2] Red blueprint cost. Done 2026-10-16: the Build tab total takes the alert red (#b23a3a) when it is more than the cash on hand.
+
 - T-450 [P3] Japan's everyday rates from the Tokyo PT survey. Done 2026-10-16 in T-509 stage 4: every pack takes its country's survey rates and scales (Japan errands 0.273, social 0.122, medical 0.037). notes/T-509.md section 12.
 
 - T-517 [P2] A floor on headway. Done 2026-10-16: whole-line fleets are cut so no resource exceeds 100% (progressive filling); surplus trains wait at the ends; section base 90 s to 70 s (34 trains/h at 80 km/h); red map marker and line panel callout. docs/track-and-service.md 6.2.

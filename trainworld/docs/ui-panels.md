@@ -52,7 +52,7 @@ exceptions). One dock on the left [T-252, `ui/Dock.tsx`]:
 
 - A row of icon tabs, names in their hovers: **Build** (a wrench), **Lines** (a route with stops),
   **Stations** (a platform under its canopy), **Money** (a bill and a coin); at the row's right end
-  the saved games button (a floppy disk) [T-251] and the **Settings** gear, which opens in the tab
+  the saved games button (a floppy disk) [T-251] and the **Settings** gear (a toothed wheel outline with a hub circle) [T-523], which opens in the tab
   area like a tab. There is no City tab [T-220]; a browser that last had it open starts on Lines.
 - Under the tab content, the **inspector** ([ui-inspectors.md](ui-inspectors.md)). The tab area has
   a fixed height and scrolls, so the inspector's top edge never moves when the tab changes.

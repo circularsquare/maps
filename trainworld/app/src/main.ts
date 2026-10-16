@@ -16,7 +16,7 @@ import { h, render } from "preact";
 import { clock, SPEEDS, startClock } from "./game/clock";
 import { getWorldFrame } from "./game/cities";
 import { packToLngLat, lngLatToPack } from "./game/coords";
-import { ask, display, selection, stopEditing, tab, tool } from "./game/ui";
+import { ask, display, isBuildTool, selection, stopEditing, tab, tool } from "./game/ui";
 import { complexOf, dotGroups, inComplexView } from "./game/complexView";
 import { cancelLink, linkPicked, linking } from "./game/links";
 import { pickTool, TOOL_KEYS, TRIP_KEY } from "./ui/tabs";
@@ -206,7 +206,13 @@ const endMarks = new EndMarkers(map, overlay);
 // under the squares are passed over too.
 const onMark = (x: number, y: number) => endMarks.at(x, y);
 const prevAbove = hoverAbove.at;
-hoverAbove.at = (x, y) => onMark(x, y) || !!prevAbove?.(x, y);
+// T-526: with a build tool on, the demand views are drawn beneath the network, so the network and
+// the tool's own tag come before a bubble's tag
+const buildAbove = (x: number, y: number) => isBuildTool(tool.peek()) && (tools.tagShown || !!pick(overlay, x, y, display.peek().trains));
+hoverAbove.at = (x, y) => onMark(x, y) || buildAbove(x, y) || !!prevAbove?.(x, y);
+effect(() => {
+  document.documentElement.classList.toggle("building", isBuildTool(tool.value));
+});
 const demandOnTop = (x: number, y: number, add: boolean) => (onMark(x, y) ? undefined : demandClick?.(x, y, add));
 
 // Selection and display settings change what the overlay draws.

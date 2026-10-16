@@ -30,23 +30,23 @@ Positron, repainted faint (`map/basemap.ts`), so the network reads first.
   - **Line**: uniform width in the line colours.
   - **Line + traffic thickness** (the default): width by riders over the day shown
     ([ui-demand-views.md](ui-demand-views.md) "Line width by riders").
-  - **Height**: the track coloured by level, blue-green to indigo above ground (open sky), green
+  - **Elevation** (`height` in code): the track coloured by elevation (a level in code), blue-green to indigo above ground (open sky), green
     at ground, warm below (deep): +3 #4a2c9a, +2 #2f6fd0, +1 #16a39a, 0 #58b04a, -1 #f0b928, -2 #ee7a1a,
     -3 #c2351c (`LEVEL_COLOURS`, T-413, T-478, T-480; neighbours at least 30 apart in CIELAB). The same table colours
-    the Build tab's level buttons and the Settings key.
+    the Build tab's elevation buttons, the Settings key and the elevation in the track tags.
   - **Max speed**: the geometry's allowed speed at each section, curve limits included, capped at
     160 km/h (not a train's speed), keyed 40/80/120/160 km/h from warm red through ochre and green
     to blue (`SPEED_STOPS`, the stroke shader blends the same stops).
-  In Height and Max speed the width is uniform and trains keep their line colours.
+  In Elevation and Max speed the width is uniform and trains keep their line colours.
 - **Blueprint track** [T-311, T-322, T-331, T-333] is drawn solid and opaque as two rails in every
   track view: a light blue middle (#a9cdf3) between dark blue rails (#2f62b3). The whole width is 75%
   of what T-322 drew (a line plus a rail of 16% of a line width, at least 1 px, either side), the
   rails never under 1 px: 6.5 px at zoom 15 (4.5 middle), 4.4 at zoom 12. A line planned along it
   fills the middle, not a full line width. **Switched off** [T-333]: grey rails (#9aa3ae) round a
-  nearly white middle (#f2f4f7), and a station at 30% instead of 60%; in Height and Max speed the
+  nearly white middle (#f2f4f7), and a station at 30% instead of 60%; in Elevation and Max speed the
   colour is mixed 80% towards white instead of 45%. **Picked** with the blueprint tool: an ink band
   3 px beyond the rails, drawn under the track, and the stations' selection outline. All rails are drawn before any middle, as the casing is, so curves
-  and joints join cleanly. In Height and Max speed the middle keeps the view's colour mixed 45%
+  and joints join cleanly. In Elevation and Max speed the middle keeps the view's colour mixed 45%
   towards white; a selected blueprint's middle is the selection ink mixed the same way. A line
   planned along blueprint track fills the middle in its colour mixed 45% towards white. Lines that
   do not run stay see-through at 55%.
@@ -166,18 +166,23 @@ at most once a game second, only while drawn.
 
 ## Hover tags on the network
 
-- **Track** [T-157, `map/trackHover.ts`]: with the select tool, resting on a line or track for 0.1 s
-  shows a tag by the pointer saying what the track display draws there. Line: the name. Traffic:
+- **Track** [T-157, T-526, `map/trackHover.ts`]: with the select tool or a build tool, the pointer on
+  a line or track shows a tag at once saying what the track display draws there. Line: the name. Traffic:
   the name and "41,200 forecast riders a day in both directions" (or "No forecast riders on this
   stretch") on that stop-to-stop stretch for the day shown (counts to the nearest 100 above
   1,000), with a third line under the purpose filter
-  ("Shopping and errands trips only"). Whatever the display [T-473], the tag also carries the level
-  ("Tunnel at level −2", "Ground level") and "Max speed 120 km/h" at that point, and on bare track
-  the lines using it ("Lines: subway 5, subway 7", or "No line runs here"). A planned line adds
+  ("Shopping and errands trips only"). Whatever the display [T-473], the tag also carries a row
+  for the elevation at that point (an up and down arrow, then "+1" on its Elevation colour) and one
+  for the speed limit (two right chevrons, then "120 km/h" on its Max speed colour), each colour at
+  half strength behind dark text (`map/trackTagRows.ts`), and on bare track the lines using it
+  ("Lines: subway 5, subway 7"; no row when none runs there). A planned line adds
   "Not running yet", a broken one "Not running"; before the first solve the traffic view says
-  "Calculating demand". The tag follows the pointer along the track; leaving, pressing, dragging, zooming or
-  picking a tool hides it. It follows the pick order, so bubbles, capacity tags and handles above
-  the network keep it hidden; junctions say nothing.
+  "Calculating demand". The tag follows the pointer along the track; leaving, pressing, dragging or
+  zooming hides it. It follows the pick order: with the select tool, bubbles, capacity tags and
+  handles above the network keep it hidden; with a build tool it sits above the pointer, clear of
+  the tool's own tag below, and leaves out the station demand circles. Junctions say nothing. The
+  stop editor and the trip tool have no track tag. The track tag and the build tools' tags are
+  drawn over the bubbles' tags.
 - **Trains and stations** [T-194, T-305, T-313; `map/networkTips.ts`]: the same tag (wrapping at 320
   px). A train: "Line 1 train", "340 riders aboard" and "352 seats, 1,280 packed full". A station:
   its name, then its lines by symbol or by name without a leading mode word ("subway 6X" is "6X"),
@@ -207,6 +212,12 @@ hits reach 7 px from the centre line, or half the drawn width where a line is wi
 Clicking the line already selected selects the track under it. Clicking a selection's longer-trip discs keeps the
 parent selection. Selected editing handles stay draggable above the
 demand view.
+
+**While building** [T-526]: with a build tool on (track, station, crossover, delete, blueprint),
+the demand views (bubbles, inter-region bubbles, airport badges and their labels) are drawn
+beneath the network, blueprints and stations, since the tool is about track. The tools' clicks
+never pick a bubble, and a bubble's tag shows only where no network and no tool tag is under the
+pointer.
 
 ## Zone outlines
 

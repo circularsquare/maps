@@ -65,11 +65,15 @@ const INTERCITY_RADIUS_SCALE = 0.5;
  * Philadelphia and Hartford on screen. The focused city's own bubbles are 6 km apart there.
  */
 export const OVERVIEW_ZOOM = 8.5;
-/** The busiest city's bubble in the overview, and the selected city's, px radius before the size
- * slider. Larger than a selection's 19 px city circles: here nothing local is drawn beside it. */
-const OVERVIEW_PX = 28;
+/** The overview's one scale (T-525): trips a day per pixel of bubble area, before the size slider,
+ * the same at every zoom and whatever is on screen. Greater Tokyo's 60M is a 55 px radius, a
+ * 1.6M prefecture 9 px. */
+const TRIPS_PER_PX2 = 20000;
+/** The same for a selected zone's inter-region trips only, which are far fewer: New York's own 1.6M
+ * is a 44 px radius, Philadelphia's 783k 31 px, a 15k partner 4 px. */
+const SELECTED_TRIPS_PER_PX2 = 800;
 /** The lines from a selected zone to the others (T-520). */
-const ZONE_LINE_ALPHA = 0.3;
+const ZONE_LINE_ALPHA = 0.5;
 /** Most place labels on screen at once, the biggest first (T-493). */
 const MAX_LABELS = 8;
 
@@ -209,18 +213,12 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       return { ...t, city: c, isOwn, tag };
     }).filter((p) => p.isOwn || (p.all > 0 && !(!own && zoneLoads.peek().has(p.city.id)))); // T-421: a zone still loading has its bar instead
     points.sort((a, b) => b.all - a.all);
-    // one scale: the busiest zone on screen in the overview (T-276: with local trips counted New
-    // York's bubble would dwarf every other zone's), the selected zone when one is
-    const bounds = map.getBounds();
-    const onScreen = points.filter((p) => bounds.contains(p.city.center));
-    const max = (own ? points.find((p) => p.isOwn)?.all : (onScreen[0] ?? points[0])?.all) || 1;
     const pxPerUnit = 512 * 2 ** map.getZoom() / EARTH_C;
     const discs = new Float32Array(points.length * DISC);
     points.forEach((p, i) => {
       const [x, y] = toLocal(p.city.center[0], p.city.center[1], a);
       const c = modeMix(p.rail, 0, Math.max(0, p.all - p.rail));
-      // a zone off screen bigger than the scale is drawn at the scale (T-276)
-      const r = OVERVIEW_PX * Math.sqrt(Math.min(1, p.all / max)) / pxPerUnit;
+      const r = Math.sqrt(p.all / (own ? SELECTED_TRIPS_PER_PX2 : TRIPS_PER_PX2)) / pxPerUnit;
       discs.set([x, y, r, c[0] / 255, c[1] / 255, c[2] / 255, BUBBLE_ALPHA, p.isOwn ? 2 : 1], i * DISC);
       label(`${p.city.name} · ${count(p.all)} trips/day`);
     });
@@ -232,7 +230,8 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       const lines = new Float32Array((points.length - 1) * LINE);
       const o = first * DISC;
       for (let i = 0, k = 0; i < points.length; i++) {
-        if (i !== first) lines.set([discs[o], discs[o + 1], discs[o + 2], discs[i * DISC], discs[i * DISC + 1], discs[i * DISC + 2], 0, ZONE_LINE_ALPHA], k++ * LINE);
+        const s = i * DISC;
+        if (i !== first) lines.set([discs[s], discs[s + 1], discs[s + 2], discs[o], discs[o + 1], discs[o + 2], 1, ZONE_LINE_ALPHA, discs[s + 3], discs[s + 4], discs[s + 5]], k++ * LINE);
       }
       view.setLines("inter", lines, a);
     }
@@ -304,8 +303,6 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     render();
   });
   map.on("zoom", render);
-  // the overview is scaled to the zones on screen (T-276)
-  map.on("moveend", () => { if (cityOverview.peek()) render(); });
   map.on("move", placeLabels);
   map.on("resize", placeLabels);
 

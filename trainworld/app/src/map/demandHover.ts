@@ -81,7 +81,8 @@ export function startHover(map: MlMap) {
     tag.style.display = "";
     tag.style.transform = `translate(${Math.round(px + 14)}px, ${Math.round(py + 14)}px)`;
   };
-  map.on("mousemove", (e) => show(e.originalEvent, e.point.x, e.point.y));
+  // after the move's other handlers, so a build tool's tag is up to date (main.ts, T-526)
+  map.on("mousemove", (e) => queueMicrotask(() => show(e.originalEvent, e.point.x, e.point.y)));
   // A lower capacity tag is a DOM target even when an upper demand disc covers it. MapLibre
   // canvas events need not fire there, so use the actual pointer for those targets too.
   map.getContainer().addEventListener("mousemove", (e) => {

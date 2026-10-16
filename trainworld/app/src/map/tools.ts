@@ -23,11 +23,10 @@ import { effect } from "@preact/signals";
 import type { Map as MlMap, MapMouseEvent } from "maplibre-gl";
 import { lngLatToPack } from "../game/coords";
 import { describeIssues } from "../game/issues";
-import { count, distance, length, levelLabel, money, moneyShort, speed, unitMetres, unitShort } from "../game/format";
+import { count, distance, length, money, moneyShort, speed, unitMetres, unitShort } from "../game/format";
 import { activeCity, getWorldFrame, worldFrameEpoch } from "../game/cities";
 import { cellModes, cityCells, demandView } from "../game/demand";
-import { LEVEL_COLOURS, rgb, speedColour } from "../game/palette";
-import type { Level } from "../game/types";
+import { speedColour } from "../game/palette";
 import { metresBetween } from "../game/walks";
 import { ask, buildLevel, buildPlatform, keepPlacing, lineDraft, selection, shownDayPhrase, trackCount, tool } from "../game/ui";
 import { describeRemovable, removeThing, type Removable } from "../game/remove";
@@ -42,6 +41,7 @@ import { strokesFromParts, strokesFromPreview } from "./network";
 import { PLATFORM_HALF_M, platformShape, reversed, stationPath, stationShape, waysFrom } from "./stationGeometry";
 import type { Overlay } from "./overlay";
 import type { StopMarkers } from "./stopMarkers";
+import { chip, elevationFact, factRow, speedFact } from "./trackTagRows";
 
 const SNAP_NODE_PX = 12;
 const SNAP_EDGE_PX = 10;
@@ -91,10 +91,13 @@ export class Tools {
     this.box.className = "tool-marks";
     map.getContainer().appendChild(this.box);
     this.tag = document.createElement("div");
-    this.tag.className = "tool-tag";
-    this.ring = document.createElement("div");
+    this.tag.className = "tool-tag build-tag";
+    this.tag.style.display = "none";
+    this.ring =document.createElement("div");
     this.ring.className = "snap-ring";
-    this.box.append(this.tag, this.ring);
+    this.box.append(this.ring);
+    // outside the marks' layer, so no demand tag covers it (T-526)
+    map.getContainer().appendChild(this.tag);
     overlay.afterMapFrame.push(() => this.place());
     effect(() => { buildPlatform.value; if (tool.value === "station") this.place(); });
     // the place lists name stations where the tiles have no streets (T-065); the view's zones' are
@@ -121,6 +124,11 @@ export class Tools {
 
   get drawing() {
     return this.start !== null;
+  }
+
+  /** The tool's own tag is by the pointer (the track hover moves above it, T-526). */
+  get tagShown() {
+    return this.tag.style.display !== "none";
   }
 
   // ---------------------------------------------------------------- snapping
@@ -905,7 +913,7 @@ export class Tools {
       } else this.ring.style.display = "none";
       if (what) {
         this.tag.style.display = "";
-        this.tag.className = "tool-tag";
+        this.tag.className = "tool-tag build-tag";
         this.tag.textContent = `Remove ${what.what}`;
         this.tag.style.transform = `translate(${Math.round(this.delAt[0] + 14)}px, ${Math.round(this.delAt[1] + 12)}px)`;
       } else this.tag.style.display = "none";
@@ -924,18 +932,18 @@ export class Tools {
     const cx = this.cross;
     if (t === "crossover" && h && h.kind === "edge" && cx) {
       this.tag.style.display = "";
-      this.tag.className = "tool-tag" + (cx.ok ? "" : " bad");
+      this.tag.className = "tool-tag build-tag" + (cx.ok ? "" : " bad");
       this.tag.textContent = cx.ok ? moneyShort(cx.cost * 1e6) : describeIssues(cx.issues) || "Cannot be built here.";
       put(this.tag, h.lx, h.ly, 14, 12);
     } else if (t === "track" && this.start && h && pv) {
       this.tag.style.display = "";
-      this.tag.className = "tool-tag";
+      this.tag.className = "tool-tag build-tag";
       this.tag.replaceChildren(...placementTag(pv, buildLevel.peek()));
       put(this.tag, h.lx, h.ly, 14, 12);
     } else if (t === "station" && h && h.kind !== "free" && this.ghostOk === false) {
       // why a click here would be refused (T-311)
       this.tag.style.display = "";
-      this.tag.className = "tool-tag bad";
+      this.tag.className = "tool-tag build-tag bad";
       this.tag.textContent = this.ghostWhy;
       put(this.tag, h.lx, h.ly, 14, 12);
     } else if (t === "station" && h && h.kind !== "free") {
@@ -947,7 +955,7 @@ export class Tools {
       if (trips) lines.push(trips);
       if (lines.length) {
         this.tag.style.display = "";
-        this.tag.className = "tool-tag";
+        this.tag.className = "tool-tag build-tag";
         this.tag.replaceChildren(...lines.map((s) => Object.assign(document.createElement("div"), { textContent: s })));
         put(this.tag, h.lx, h.ly, 14, 12);
       } else this.tag.style.display = "none";
@@ -1005,24 +1013,10 @@ export function setCurveLabel(el: HTMLElement, radius: number, kmh: number) {
 const TRIPS_RADIUS_M = 800;
 const M_PER_HALF_MILE = 804.672;
 
-/** A value in the placement tag with its colour behind it (T-411). */
-function chip(text: string, colour: string | null, alpha = 0.5): HTMLSpanElement {
-  const s = document.createElement("span");
-  s.textContent = text;
-  if (colour) {
-    const [r, g, b] = rgb(colour);
-    s.style.background = `rgba(${r},${g},${b},${alpha})`;
-    s.style.padding = "0 3px";
-    s.style.borderRadius = "2px";
-  }
-  return s;
-}
-
 /**
- * The track tool's tag (T-411): length, cost multiplier, price and the tightest curve; then the
- * level being placed and the route's lowest speed limit, the multiplier, level and speed on their
- * colours (yellow growing above 1x; the Height and Max speed displays' colours). When the segment
- * could not be built ending here, why first.
+ * The track tool's tag (T-411, T-526): length, cost multiplier and price; then the elevation being
+ * placed and the route's lowest speed limit (trackTagRows.ts). The multiplier is on yellow growing
+ * above 1x. When the segment could not be built ending here, why first.
  */
 function placementTag(pv: PreviewAnswer, level: number): HTMLDivElement[] {
   const div = (...kids: (string | Node)[]) => {
@@ -1036,18 +1030,17 @@ function placementTag(pv: PreviewAnswer, level: number): HTMLDivElement[] {
     why.style.color = "#b23a3a"; // style.css's `.tool-tag.bad`, for this line only
     out.push(why);
   }
-  let radius = Infinity;
   const nv = pv.verts.length / 4;
-  for (let i = 1; i < nv - 1; i++) if (pv.verts[i * 4 + 2] > 0) radius = Math.min(radius, pv.verts[i * 4 + 2]);
   let top = TOP_KMH;
-  if (pv.speeds?.length) for (const v of pv.speeds) if (v >= 0) top = Math.min(top, v);
-  else for (let i = 1; i < nv - 1; i++) if (pv.verts[i * 4 + 2] > 0) top = Math.min(top, pv.verts[i * 4 + 3]);
+  if (pv.speeds?.length) {
+    for (const v of pv.speeds) if (v >= 0) top = Math.min(top, v);
+  } else for (let i = 1; i < nv - 1; i++) if (pv.verts[i * 4 + 2] > 0) top = Math.min(top, pv.verts[i * 4 + 3]);
   if (pv.ok) {
     const dear = Math.min(1, (pv.mult - 1) / 1.5);
     out.push(div(`${distance(pv.lengthM)}, cost `, chip(`${pv.mult.toFixed(2)}x`, pv.mult > 1.005 ? COST_YELLOW : null, 0.2 + 0.6 * dear),
-      `, ${moneyShort(pv.cost * 1e6)}`, ...(radius < Infinity ? [`, ${length(radius)} curve`] : [])));
+      `, ${moneyShort(pv.cost * 1e6)}`));
   }
-  out.push(div(chip(`Level ${levelLabel(level)}`, LEVEL_COLOURS[level as Level] ?? null), ", max speed ", chip(speed(top), speedColour(top))));
+  out.push(factRow(elevationFact(level), speedFact(top)));
   return out;
 }
 

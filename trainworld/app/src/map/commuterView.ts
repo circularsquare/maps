@@ -60,7 +60,7 @@ const tripWords = () => {
 /** With a bubble selection, a short faint line from each far-end bubble toward the selection
  * (T-520, Anita: to try and maybe undo; false turns them off). */
 const LINES_TO_SELECTION = true;
-const STUB_ALPHA = 0.45;
+const STUB_ALPHA = 0.5;
 
 /** One stub per far disc (`LINE` floats, relative to `farA`), pointing at the selection's centre:
  * its discs' centres weighted by area. A single selected disc's edge stops the stub. */
@@ -75,7 +75,7 @@ function linesToward(near: Float32Array | null, nearA: Anchor, far: Float32Array
   const [dx, dy] = anchorShift(nearA, farA);
   const tx = sx / sw + dx, ty = sy / sw + dy, tr = near.length === DISC ? near[2] : 0;
   const n = far.length / DISC, out = new Float32Array(n * LINE);
-  for (let i = 0; i < n; i++) out.set([far[i * DISC], far[i * DISC + 1], far[i * DISC + 2], tx, ty, tr, 1, STUB_ALPHA], i * LINE);
+  for (let i = 0; i < n; i++) out.set([far[i * DISC], far[i * DISC + 1], far[i * DISC + 2], tx, ty, tr, 1, STUB_ALPHA, far[i * DISC + 3], far[i * DISC + 4], far[i * DISC + 5]], i * LINE);
   return out;
 }
 
