@@ -26,10 +26,14 @@ the res-9 pack. A merged cell sums every weight, keeps the parent's H3 index (a 
 edge gives two cells with one index) and sits at its cells' trip-end-weighted centre. In a parent at
 or over 2,500, the children under 1,250 trip ends each that touch each other inside one zone merge
 into one cell the same way, keeping the res-9 index of their busiest child, while the busy children
-stay at res 9 (T-466). A group stays unmerged if its centre falls on water or outside its zone
-square. The pack carries each zone's res-9 cell count (`zone_cells9`), which the sim takes as the
-zone's land. Together the two rules remove 41-57% of the cells of a metro outside the US, 65-73% of
-a US one, about half to 60% of a Japanese prefecture and 72-74% of a rural US county. Enrichments and routes run on the res-9 pack,
+stay at res 9 (T-466). A cell under 1,250 that neither rule merged joins, across its parent's
+edge, the touching merged cell of its zone with the fewest trip ends; such cells that touch only
+each other merge among themselves under the busiest one's index (T-510). Joining is one pass (no
+cell joins a joiner), and no group a lone cell joins may reach more than 700 m from its centre; a
+group past that gives up its farthest joiners. A group stays unmerged if its centre falls on water
+or outside its zone square. The pack carries each zone's res-9 cell count (`zone_cells9`), which the sim takes as the
+zone's land. Together the rules remove 47-68% of the cells of a metro outside the US, 70-78% of
+a US one, 56-70% of a Japanese prefecture and 78-79% of a rural US county. Enrichments and routes run on the res-9 pack,
 kept in `data/work/res9/`.
 
 Subway Builder also uses gravity: LODES gives it homes and jobs, then a distance-based gravity

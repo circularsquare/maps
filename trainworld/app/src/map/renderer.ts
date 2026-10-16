@@ -1,4 +1,4 @@
-import { boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, bridgeShape, connectorHalfPx, dotRing, spanningPairs, insideStation, PLATFORM_POINTS, platformPoints, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, shapePoints, STATION_BOX_ZOOM, STATIONS_ZOOM, stationHaloRadius, stationRadii, stationRing, stationShape, type PlatformShape, type Project, type StationShape, type StationStyle } from "./stationGeometry";
+import { boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, bridgeShape, connectorHalfPx, dotRing, spanningPairs, insideStation, PLATFORM_POINTS, platformPoints, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, shapePoints, STATION_BOX_ZOOM, STATIONS_ZOOM, TRAINS_ZOOM, stationHaloRadius, stationRadii, stationRing, stationShape, type PlatformShape, type Project, type StationShape, type StationStyle } from "./stationGeometry";
 // WebGL2 network renderer: track and line strokes (one instanced quad per polyline segment, white
 // casing under the colour; blueprint solid, lighter and without casing, T-311), stations (platforms along the track, or
 // dots zoomed out, T-189), the drawing tool's preview,
@@ -12,6 +12,7 @@ import { boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, bridgeShape, connectorHalfPx, dotRi
 // re-uploaded. Phase tables change only on edits.
 
 import { LEVEL_COLOURS, NET_INK, PLATFORM_BLUE, rgb } from "../game/palette";
+import { shadeColours } from "../game/shades";
 import { platformRoom, readBoardHour, QUEUE_STRIDE, type BoardHour } from "../game/boarding";
 import { anchor, anchorPsi, EARTH_C, localToMercMatrix, mul4, PSI_PER_UNIT } from "./geo";
 import { lineAt, type NetworkBuffers, type Strokes } from "./network";
@@ -22,7 +23,6 @@ const LINES_W = 1024;
 export const EPOCH_S = 3600;
 const TRACK_RGB = rgb("#77746f").map((v) => v / 255);
 const BAD_RGB = rgb("#d23c3c").map((v) => v / 255);
-const SEL_RGB = rgb(NET_INK).map((v) => v / 255);
 /** Blueprint track (T-322, Anita: "light blue", "slightly wider", "like two parallel rails"): a
  * light blue middle as wide as a line, with a dark blue rail this share of a line width (at least
  * a pixel) along each edge. */
@@ -40,7 +40,7 @@ const BP_OFF_RAIL_RGB = rgb("#9aa3ae").map((v) => v / 255);
 const SEATS_PER_CAR = 44, CRUSH_PER_CAR = 160;
 /** A train's width on screen by zoom, CSS px, pills and cars alike (T-199: 75% of T-107's 5/8/12,
  * about 1.4 lines wide from zoom 12); its true 3 m is wider only from about zoom 19. */
-const TRAIN_PX: [number, number][] = [[9, 3.75], [12, 6], [15, 9]];
+const TRAIN_PX: [number, number][] = [[10, 3], [11, 5.25], [12, 6], [15, 9]];
 /** A line's width on screen by zoom, CSS px: 60% of T-084's from zoom 12 (T-191), and further out
  * thinning to 40% of T-191's 2.1 px at zoom 9 (T-205, Anita: "lower min line thickness like 40%").
  * Bare track, the casing and a selected line's extra width follow the same steps. */
@@ -81,7 +81,8 @@ precision highp int;
 uniform mat4 u_matrix;
 uniform vec2 u_viewport;
 uniform vec3 u_width;        // normal, extra when selected, (unused)
-uniform float u_casing;      // extra px for the white casing pass, 0 for the colour pass
+uniform float u_casing;      // extra px for the casing pass, 0 for the colour pass
+uniform vec3 u_casing_rgb;   // white, or dark in the dark theme (game/shades.ts)
 uniform float u_cap;         // > 0: no wider than this (px), the track drawn through stations (T-236)
 uniform int u_kind;          // 0 track, 1 lines, 2 preview
 uniform int u_sel_line;
@@ -154,7 +155,7 @@ void main() {
   v_alpha = (!placement && !bp && (flags & 2) != 0 ? 0.55 : 1.0) * faint * (u_kind == 1 && !sel ? u_dim : 1.0);
   vec3 lc = u_level_colours[clamp(3 - int(round(a_level)), 0, 6)];
   bool bpMid = false;
-  if (u_casing > 0.0) v_color = bpTrack ? (swOff ? u_bp_off_rail : u_bp_rail) : placement ? u_sel : vec3(1.0);
+  if (u_casing > 0.0) v_color = bpTrack ? (swOff ? u_bp_off_rail : u_bp_rail) : placement ? u_sel : u_casing_rgb;
   else if ((flags & 16) != 0) v_color = u_bad;
   else if ((u_kind == 2 && !placement) || u_by_level == 1) v_color = lc;
   else if (u_by_speed == 1) {
@@ -1056,7 +1057,7 @@ export class NetworkRenderer {
     this.stationProg = compile(gl, STATION_VS, STATION_FS);
     this.trainProg = compile(gl, TRAIN_VS, TRAIN_FS);
     this.hasStencil = (gl.getParameter(gl.STENCIL_BITS) ?? 0) > 0;
-    this.strokeU = uniforms(gl, this.strokeProg, ["u_matrix", "u_viewport", "u_width", "u_casing", "u_cap", "u_kind", "u_sel_line", "u_sel_edge", "u_only_sel", "u_dim", "u_by_level", "u_by_speed", "u_px_per_unit", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_line_colours"]);
+    this.strokeU = uniforms(gl, this.strokeProg, ["u_matrix", "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_edge", "u_only_sel", "u_dim", "u_by_level", "u_by_speed", "u_px_per_unit", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_line_colours"]);
     this.stationU = uniforms(gl, this.stationProg, ["u_matrix", "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass", "u_layer", "u_halo", "u_halo_radius", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_hair", "u_plat", "u_mask", "u_stline"]);
     this.bridgeProg = compile(gl, BRIDGE_VS, STATION_FS);
     this.bridgeU = uniforms(gl, this.bridgeProg, ["u_matrix", "u_viewport", "u_ring", "u_bridge", "u_pass", "u_layer", "u_halo", "u_ink", "u_bad", "u_crowd_rgb", "u_mask"]);
@@ -1397,7 +1398,9 @@ export class NetworkRenderer {
     gl.uniform3fv(u.u_level_colours, this.levelColours);
     gl.uniform3fv(u.u_track, TRACK_RGB);
     gl.uniform3fv(u.u_bad, BAD_RGB);
-    gl.uniform3fv(u.u_sel, SEL_RGB);
+    const shades = shadeColours();
+    gl.uniform3fv(u.u_sel, rgb(shades.mapInk).map((v) => v / 255));
+    gl.uniform3fv(u.u_casing_rgb, rgb(shades.casing).map((v) => v / 255));
     // blueprint track (T-322): a line-wide light blue middle between two thin dark blue rails
     const bpRail = Math.max(1, BP_NARROW * Math.max(1, BP_RAIL_SHARE * wLine / dpr)) * dpr;
     const bpMid = Math.max(0, BP_NARROW * (wLine + 2 * Math.max(1, BP_RAIL_SHARE * wLine / dpr) * dpr) - 2 * bpRail);
@@ -1622,7 +1625,7 @@ export class NetworkRenderer {
     }
 
     // No trains zoomed far out (T-205).
-    this.trainsHidden = zoom < STATIONS_ZOOM;
+    this.trainsHidden = zoom < TRAINS_ZOOM;
     if (opt.showTrains && this.tripCount && !this.trainsHidden) {
       this.detailedTrains = zoom >= 15;
       const tw = interp(zoom, TRAIN_PX) * dpr;

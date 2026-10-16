@@ -145,7 +145,7 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   is. Track between two moved nodes keeps its shape; track to a node that stays bends as in a node
   drag (`TrackApi.move_nodes`). One undoable edit. A press there without a drag is a click.
 - **Left drag** elsewhere draws a box. It picks the blueprint track it touches and the blueprint stations
-  inside it (stations only from zoom 11, where they are drawn); the pick follows the box live.
+  inside it (stations only from zoom 9, where they are drawn); the pick follows the box live.
   **Shift+drag adds** to the pick. A click picks the piece under the pointer, Shift+click adds it or
   takes it out again, a click on nothing clears the pick. Constructed track and stations are never
   picked.

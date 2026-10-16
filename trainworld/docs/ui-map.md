@@ -9,11 +9,12 @@ Positron, repainted faint (`map/basemap.ts`), so the network reads first.
 
 ## Zoom bands
 
-- **Below zoom 11** (more than a city such as Manhattan with its neighbours, about 30 km) only the
-  lines are drawn [T-205, `STATIONS_ZOOM`]. Stations and trains are neither drawn nor picked, so a
-  click or hover finds the line. A selected station or complex is still drawn and clickable.
-  Demand drawings and capacity tags are unchanged.
-- **Zoom 11 to 15**: every station is its own dot; trains are pills.
+- **Below zoom 9** (about 160 km across, a whole region) only the lines are drawn [T-205, T-542,
+  `STATIONS_ZOOM`]. Stations and trains are neither drawn nor picked, so a click or hover finds the
+  line. A selected station or complex is still drawn and clickable. Demand drawings and capacity
+  tags are unchanged.
+- **Zoom 9 to 10**: every station is its own dot, drawn and picked; trains are not.
+- **Zoom 10 to 15** [`TRAINS_ZOOM`]: stations are dots; trains are pills, drawn and picked from 10.
 - **From zoom 15** (`STATION_BOX_ZOOM`): a station is its platform, trains show their cars, and
   platform crowds are drawn.
 - Station names and capacity tags hide below zoom 12 [T-101].
@@ -59,9 +60,9 @@ Positron, repainted faint (`map/basemap.ts`), so the network reads first.
 
 ## Stations
 
-- **Dots, zoom 11 to 15** [T-189, T-313, T-322; `map/stationGeometry.ts`]: white with a dark rim at
-  the platform's middle. Radius 4.3/5/7.4 px at zoom 11/12/15 for an ordinary station, 5.6/6.6/9.5
-  px for one served by more than one line (`stationRadii`), never narrower than the lines through
+- **Dots, zoom 9 to 15** [T-189, T-313, T-322, T-542; `map/stationGeometry.ts`]: white with a dark rim at
+  the platform's middle. Radius 1.7/4.3/5/7.4 px at zoom 9/11/12/15 for an ordinary station, 2.4/5.6/6.6/9.5
+  px for one served by more than one line (`stationRadii`; linear between, held outside), never narrower than the lines through
   it, the rim 1.5 px at zoom 13. A complex's dots are one shape: every dark disc is drawn first,
   then every white, so overlapping dots have one outline. Dots that do not touch are joined by a
   **connector**: a straight band centre to centre with the dots' rim along both sides and white 30%
@@ -112,9 +113,9 @@ change; only links are saved. Riders change between any two stations of a comple
 
 ## Trains
 
-- **Shape** [T-103, T-107, T-189, T-199]: not drawn below zoom 11; pills from 11, separate 20 m cars
+- **Shape** [T-103, T-107, T-189, T-199]: not drawn below zoom 10 [T-542, `TRAINS_ZOOM`]; pills from 10, separate 20 m cars
   from 15, in a darker shade of the line colour with a white rim blended over a pixel, antialiased.
-  Width 3.75 px at zoom 9, 6 at 12, 9 at 15 (linear between, held outside; true width only from
+  Width 3 px at zoom 10, 5.25 at 11, 6 at 12, 9 at 15 (linear between, held outside; true width only from
   about zoom 19), shared by pills and cars so the switch never shrinks a train. A pill is never
   shorter than 11, 17.6 and 26.4 px at those zooms and bends with its track along the circle
   through its ends and middle. Each car is turned along the chord between its ends, so the consist

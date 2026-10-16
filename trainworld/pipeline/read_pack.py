@@ -353,7 +353,8 @@ def check(city):
         else:
             worst = max(worst, abs(x - a["x_m"][i]), abs(y - a["y_m"][i]))
     assert worst < 1.0, f"x_m/y_m off by {worst:.2f} m from the h3 centre"
-    assert worst8 < 500.0, f"a merged cell {worst8:.0f} m from its parent's centre"
+    # T-510: lone cells from across the parent's edge can pull it out to about two res-9 cells
+    assert worst8 < 900.0, f"a merged cell {worst8:.0f} m from its parent's centre"
     assert worst9 < 700.0, f"merged siblings {worst9:.0f} m from their index's centre"
     if mb is not None and "zone_cells9" in a:
         assert int(a["zone_cells9"].astype(np.int64).sum()) == mb["cells_before"], "zone_cells9 does not sum to the res-9 cells"

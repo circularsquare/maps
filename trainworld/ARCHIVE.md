@@ -1,5 +1,8 @@
 ﻿# Archive
 
+- T-510 [P3] Merge lone sparse cells across parents. Done 2026-10-16: a lone cell under 1,250 joins the lightest touching merged cell of its zone (700 m reach cap). All 67 packs 1.09M to 0.92M cells (-15%); busy stations past 5% 0.1-1.3%; real save +0.002%. notes/T-510.md.
+- T-542 [P2] Stations and trains further out. Done 2026-10-16: dots drawn and picked from zoom 9 (`STATIONS_ZOOM`), trains from 10 (`TRAINS_ZOOM`); dots and train width shrink going out, unchanged from 11. Draw cost within noise of before (queued CPU +0.1 ms at zoom 9).
+
 - T-535 [P2] The unattended city pipeline, design. Done 2026-10-16: approved by Anita with all eight recommendations (UK, then Europe, first); ten stages filed as T-460, T-387, T-314, T-536 to T-541 and T-060. notes/T-535.md.
 
 - T-531 [P2] Money by region. Done 2026-10-16: the clock worker keeps day and hour ledgers per zone; the Money tab's yesterday, today and History follow the lists' place-or-world toggle. Lines split by boardings, passenger-km and route km; construction by new track's cost. `game/regionMoney.ts`.

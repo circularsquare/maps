@@ -7,7 +7,7 @@
 // the track, as the trains stop at its middle there (sim service.rs). Its width is fixed on the
 // ground too (T-204), so the box keeps one shape at every zoom. Zoomed out (below
 // STATION_BOX_ZOOM) every station is its own dot instead, a complex's dots joined by connectors under
-// one outline (T-313, renderer.ts), and below STATIONS_ZOOM stations are not drawn (T-205).
+// one outline (T-313, renderer.ts), and below STATIONS_ZOOM stations are not drawn (T-205, T-542).
 // Selection never changes the size: a selected station gets an outline and a glow (T-189). The
 // player's links are drawn as thin bridges between two platforms (T-217, `bridgeEnds`,
 // `bridgeShape`).
@@ -20,11 +20,12 @@ export type Project = (x: number, y: number) => [number, number];
  * T-204 moved it from 13, Anita: "turn into them sooner, around ~4x more zoomed in"). At 15 a pixel
  * is about 1.8 m at New York's latitude, so a 150-200 m platform is 80-110 px long. */
 export const STATION_BOX_ZOOM = 15;
-/** Below this zoom neither stations nor trains are drawn or picked, only the lines (T-205,
- * Anita: "hide trains and stations when zoomed out"). At 11 the screen holds about 30 km, a city
- * such as Manhattan with its neighbours; further out the dots and pills crowd the lines. A selected
- * station is still drawn. */
-export const STATIONS_ZOOM = 11;
+/** Below this zoom no station dot is drawn or picked, only the lines (T-205; T-542 moved it from 11
+ * to 9, Anita: dots 4x further out). A selected station is still drawn. */
+export const STATIONS_ZOOM = 9;
+/** Below this zoom no train is drawn or picked (T-205; T-542 moved it from 11 to 10, Anita: trains
+ * 2x further out). */
+export const TRAINS_ZOOM = 10;
 /** Half a platform's true width, m: two tracks either side of an island platform, about 12 m in
  * all. The drawn box is wider (T-204): as wide on the ground as a plain line and its rim are at
  * STATION_BOX_ZOOM, less a quarter (T-239), about 16 m at New York's latitude. */
@@ -170,7 +171,7 @@ export function waysFrom(p: ArrayLike<number>, x: number, y: number): [Float32Ar
 const DOT_GROW = 1.65 * 0.8;
 /** Dot radius in CSS px, ordinary and transfer stations; a dot also covers the lines through it. */
 export function stationRadii(zoom: number): [number, number] {
-  return [DOT_GROW * interpolate(zoom, [[9, 2.2], [12, 3.8], [15, 5.6]]), DOT_GROW * interpolate(zoom, [[9, 2.8], [12, 5], [15, 7.2]])];
+  return [DOT_GROW * interpolate(zoom, [[9, 1.3], [11, 3.2667], [12, 3.8], [15, 5.6]]), DOT_GROW * interpolate(zoom, [[9, 1.8], [11, 4.2667], [12, 5], [15, 7.2]])];
 }
 /** Zoomed out, a connector between two dots (T-313): its white is this share of an ordinary dot's
  * white radius, either side of its middle, with the dots' own rim along both sides (0.35 in T-313,

@@ -125,9 +125,10 @@ region's OSM roads are thin).
 Last, merge the sparse cells (T-044, docs/demand.md 4.1): `venv\Scripts\python.exe
 trainworld\pipeline\merge_cells.py wor`, seconds. It keeps the res-9 pack in
 `data/work/res9/wor.json/.bin` and writes the merged one to `data/packs`: sparse res-8 parents
-become one cell, and in busier parents the sparse children that touch merge among themselves (T-466).
-It prints the cells before and after (41-57% fewer in a metro outside the US, 65-73% in a US one,
-over 70% in a rural pack). Every other step reads and writes the res-9 pack: to rerun one on a merged pack,
+become one cell, in busier parents the sparse children that touch merge among themselves (T-466), and
+a sparse cell left alone joins a touching merged cell of its zone across its parent's edge (T-510).
+It prints the cells before and after (47-68% fewer in a metro outside the US, 70-78% in a US one,
+about 78% in a rural pack). Every other step reads and writes the res-9 pack: to rerun one on a merged pack,
 `merge_cells.py wor --undo` first, then the step, then `merge_cells.py wor` again (it refuses a
 merged pack some step has changed since). `merge_cells.py --all` remerges every registered pack.
 Then `nocar.py wor` (homes without a car, T-511; a new country needs its row in `nocar.py`'s

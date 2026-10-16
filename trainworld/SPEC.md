@@ -129,9 +129,10 @@ lines; an edit re-solves only the clusters it touched, the others keep their fig
 - **City additions** in the US are paused; a **sampler of other countries' cities** comes next
   (London, Paris, Shanghai, Mumbai, Lagos, São Paulo, Berlin, Seoul and all of Japan built: 67
   zones in all), each a low-fidelity first pass from general sources (`research/world-sampler.md`).
-  **Cells** are H3 resolution 9 (about 0.1 km²); sparse ones merge [T-044, T-466]: a res-8 parent
-  under 2,500 trip ends a weekday becomes one cell, and in busier parents touching children under
-  1,250 each merge ([docs/demand.md](docs/demand.md) 4.1).
+  **Cells** are H3 resolution 9 (about 0.1 km²); sparse ones merge [T-044, T-466, T-510]: a res-8
+  parent under 2,500 trip ends a weekday becomes one cell, in busier parents touching children under
+  1,250 each merge, and a cell under 1,250 left alone joins a touching merged cell of its zone
+  across its parent's edge ([docs/demand.md](docs/demand.md) 4.1).
 
 ## 4. Demand: local trips
 
@@ -260,7 +261,7 @@ motion. **Panels count the past 24 hours, not a forecast** [T-293, T-446]: the l
 count the past 24 hours from the boarding account, while the map's demand views (Homes and Destinations bubbles
 coloured by mode share, line widths by riders, station use circles, inter-region trips) show demand's
 whole day: the average day by default, or a weekday or a weekend day [T-464]. On the map, lines sharing track are drawn over each other,
-stations are dots from zoom 11 and their true platforms from 15, and trains fill like a gauge with
+stations are dots from zoom 9 and their true platforms from 15, and trains fill like a gauge with
 their riders.
 
 ## 9. Checking the demand model

@@ -10,9 +10,12 @@ A res-8 parent whose present children make under THRESHOLD trip ends a weekday m
 children inside one 2 km zone merge together (a parent cut by a zone edge gives one merged cell
 per zone, all with the parent's index), so every zone's sums, the commute gravity and the routes
 are unchanged. In a parent over THRESHOLD, children under CHILD trip ends that touch each other and
-share a zone merge together (T-466), keeping the res-9 index of their busiest child. A merged cell
-sums every per-cell weight and sits at its children's trip-end-weighted centre. A group stays
-unmerged if that centre would leave its zone square or stand on water. The merged pack also carries
+share a zone merge together (T-466), keeping the res-9 index of their busiest child. A cell under
+CHILD left alone by both joins the touching merged cell of its zone with the fewest trip ends, across
+its parent's edge, and lone cells touching only each other merge among themselves (T-510), so long as
+no member ends up over REACH from the group's centre. A merged cell sums every per-cell weight and
+sits at its children's trip-end-weighted centre. A group stays unmerged if that centre would leave
+its zone square or stand on water. The merged pack also carries
 `zone_cells9`, each zone's res-9 cells, since a merged cell's index no longer gives its land.
 
 The res-9 pack is kept in data/work/res9/<id>.json/.bin: the first merge of a pack copies it there,
@@ -36,6 +39,7 @@ WORK = os.path.join(ROOT, "data", "work", "res9")
 REGISTRY = os.path.join(ROOT, "app", "src", "game", "registry.json")
 THRESHOLD = 2500.0  # trip ends a weekday per res-8 parent (DECISIONS 2026-10-16, T-453)
 CHILD = THRESHOLD / 2  # per res-9 child of a busier parent (T-466)
+REACH = 700.0  # m, a lone cell's group at most this far from its centre: about a merged parent's own (T-510)
 RES_MASK = np.uint64(0xF) << np.uint64(52)
 INT_SAME = ("zone", "region")  # integer per-cell arrays, equal within a zone
 
@@ -142,11 +146,124 @@ def _place(header, a, e, cells, inv, cand=None):
     return mx32, my32, first, size, off_sq, wet
 
 
+def _touching(h3, cand):
+    """Pairs (i, j) of rows: present cell j touches cell i, for each i in `cand`."""
+    from h3.api import basic_int as H
+    order = np.argsort(h3, kind="stable")
+    sh = h3[order]
+    src, nb = [], []
+    for i in cand:
+        ring = H.grid_ring(int(h3[i]), 1)
+        src += [i] * len(ring)
+        nb += ring
+    src, nb = np.array(src, np.int64), np.array(nb, np.uint64)
+    k = np.minimum(np.searchsorted(sh, nb), len(sh) - 1)
+    hit = sh[k] == nb
+    return src[hit], order[k[hit]]
+
+
+def _spread(a, cells, inv, gx, gy):
+    """Each of `cells`' distance (m) from its group's centre."""
+    return np.hypot(a["x_m"][cells].astype(np.float64) - gx[inv], a["y_m"][cells].astype(np.float64) - gy[inv])
+
+
+def _join_lone(header, a, e, h3, head, nx, ny, merged, lone):
+    """T-510: a cell under the sparse-child threshold that neither rule merged joins the touching
+    merged cell of its zone with the fewest trip ends (which moves demand least), across its
+    parent's edge; lone cells that touch only other lone cells of their zone merge among themselves,
+    with the busiest one's index. One pass: a cell joins only a group as it was, never another
+    joiner. A grown group over REACH sheds its farthest joiner until it fits; a new group over REACH
+    stays apart, and either stays as it was if its centre would leave its zone square or stand on
+    water. Writes head, nx and ny in place; returns a summary and the joined."""
+    n = len(h3)
+    li = np.nonzero(lone)[0]
+    joined = np.zeros(n, bool)
+    why = np.zeros(n, np.int8)  # a lone cell kept alone by: 1 its square, 2 water, 3 reach
+    info = {"lone": int(len(li)), "lone_joined": 0, "lone_groups": 0, "lone_grouped": 0, "lone_group_max": 0}
+    if not len(li):
+        return dict(info, lone_kept_square=0, lone_kept_water=0, lone_kept_reach=0), joined
+    zone = a["zone"]
+    i, j = _touching(h3, li)
+    same = zone[i] == zone[j]
+    i, j = i[same], j[same]
+    # 1. into a touching merged cell: the lightest, ties to the lowest row
+    ue = np.bincount(head, weights=e, minlength=n)
+    s = merged[j]
+    ia, ua = i[s], head[j[s]]
+    o = np.lexsort((ua, ue[ua], ia))
+    ia, ua = ia[o], ua[o]
+    keep1 = np.r_[True, ia[1:] != ia[:-1]] if len(ia) else np.zeros(0, bool)
+    ia, ua = ia[keep1], ua[keep1]
+    while len(ia):
+        grow = np.zeros(n, bool)
+        grow[ua] = True
+        members = np.nonzero(grow[head])[0]
+        cells = np.r_[members, ia]
+        units = np.r_[head[members], ua]
+        uniq, inv = np.unique(units, return_inverse=True)
+        inv = inv.ravel()
+        gx, gy, _, _, sq, wet = _place(header, a, e, cells, inv)
+        d = _spread(a, cells, inv, gx, gy)
+        reach = np.zeros(len(uniq))
+        np.maximum.at(reach, inv, d)
+        if not (reach > REACH).any():
+            break
+        # a group spread too wide gives up its joiner farthest from its centre, then tries again
+        gj = inv[len(members):]
+        o = np.lexsort((-d[len(members):], gj))
+        farthest = o[np.r_[0, np.nonzero(np.diff(gj[o]))[0] + 1]]
+        drop = np.zeros(len(ia), bool)
+        drop[farthest[reach[gj[farthest]] > REACH]] = True
+        why[ia[drop]] = 3
+        ia, ua = ia[~drop], ua[~drop]
+    if len(ia):
+        ok = ~sq & ~wet
+        g = np.searchsorted(uniq, ua)
+        go = ok[g]
+        why[ia] = np.where(sq[g], 1, np.where(wet[g], 2, 0))
+        head[ia[go]] = ua[go]
+        joined[ia[go]] = True
+        nx[uniq[ok]], ny[uniq[ok]] = gx[ok], gy[ok]
+    # 2. the rest among themselves, one cell per touching set
+    rest = lone & ~joined
+    s = rest[i] & rest[j]
+    if s.any():
+        from scipy.sparse import coo_matrix
+        from scipy.sparse.csgraph import connected_components
+        _, comp = connected_components(coo_matrix((np.ones(int(s.sum())), (i[s], j[s])), shape=(n, n)), directed=False)
+        c2 = np.nonzero(rest)[0]
+        _, cinv, cnt = np.unique(comp[c2], return_inverse=True, return_counts=True)
+        c2 = c2[cnt[cinv.ravel()] > 1]
+        _, sinv = np.unique(comp[c2], return_inverse=True)
+        sinv = sinv.ravel()
+        gx, gy, _, size, sq, wet = _place(header, a, e, c2, sinv)
+        reach = np.zeros(len(gx))
+        np.maximum.at(reach, sinv, _spread(a, c2, sinv, gx, gy))
+        wide = reach > REACH
+        ok = ~sq & ~wet & ~wide
+        why[c2] = np.where(sq, 1, np.where(wet, 2, np.where(wide, 3, 0)))[sinv]
+        order = np.lexsort((h3[c2], -e[c2], sinv))
+        busiest = c2[order][np.r_[0, np.nonzero(np.diff(sinv[order]))[0] + 1]]
+        go = ok[sinv]
+        head[c2[go]] = busiest[sinv[go]]
+        nx[busiest[ok]], ny[busiest[ok]] = gx[ok], gy[ok]
+        joined[c2[go]] = True
+        info["lone_groups"] = int(ok.sum())
+        info["lone_grouped"] = int(go.sum())
+        info["lone_group_max"] = int(size[ok].max()) if ok.any() else 0
+    info["lone_joined"] = int(joined.sum()) - info["lone_grouped"]
+    left = why[lone & ~joined]
+    for k, name in ((1, "square"), (2, "water"), (3, "reach")):
+        info[f"lone_kept_{name}"] = int((left == k).sum())
+    return info, joined
+
+
 def merge(header, a, threshold=THRESHOLD, child=None):
-    """The merged pack's cell arrays {name: array} and a summary. Two rules (docs/demand.md 4.1):
+    """The merged pack's cell arrays {name: array} and a summary. Three rules (docs/demand.md 4.1):
     a res-8 parent under `threshold` trip ends merges its children within each zone (T-044);
     in a busier parent, children under `child` trip ends that touch merge among themselves
-    (T-466), the merged cell keeping the index of its busiest child."""
+    (T-466), the merged cell keeping the index of its busiest child; such a child left alone
+    joins a touching group across its parent's edge (T-510, `_join_lone`)."""
     child = CHILD if child is None else child
     n = header["cells"]
     assert header["h3_res"] == 9 and "merged" not in header, "merge from a res-9 pack"
@@ -197,6 +314,7 @@ def merge(header, a, threshold=THRESHOLD, child=None):
     nh3[m2c], nx[m2c], ny[m2c] = h3[busiest[m2g]], sx[m2g], sy[m2g]
     m2 = np.zeros(n, bool)
     m2[m2c] = True
+    lone_info, m3 = _join_lone(header, a, e, h3, head, nx, ny, m1 | m2, sparse & ~m2)
     # one output row per unit
     keep = head == allc
     row = np.cumsum(keep) - 1
@@ -220,8 +338,9 @@ def merge(header, a, threshold=THRESHOLD, child=None):
     info = {"cells_before": n, "cells": m, "parents": int(want.sum()), "cells_merged": int(m1.sum()),
             "sparse_groups": int(ok.sum()), "sparse_cells_merged": int(m2.sum()),
             "sparse_child_trip_ends": float(child),
-            "ends_merged": float(e[m1 | m2].sum() / max(e.sum(), 1e-30)),
-            "kept_square": kept_sq + int(s_sq.sum()), "kept_water": kept_wet + int((~s_sq & s_wet).sum())}
+            "ends_merged": float(e[m1 | m2 | m3].sum() / max(e.sum(), 1e-30)),
+            "kept_square": kept_sq + int(s_sq.sum()), "kept_water": kept_wet + int((~s_sq & s_wet).sum()),
+            **lone_info}
     return out, info
 
 
@@ -286,15 +405,20 @@ def run(city, stats=False, child=None):
     cells, info = merge(header, a, child=child)
     line = (f"{city}: {info['cells_before']:,} -> {info['cells']:,} cells ({1 - info['cells'] / info['cells_before']:.0%} fewer), "
             f"{info['parents']:,} merged parents from {info['cells_merged']:,}, {info['sparse_groups']:,} merged siblings "
-            f"from {info['sparse_cells_merged']:,}, {info['ends_merged']:.1%} of trip ends; "
-            f"left alone: {info['kept_square']} off their square, {info['kept_water']} on water")
+            f"from {info['sparse_cells_merged']:,}; of {info['lone']:,} lone sparse cells {info['lone_joined']:,} joined a "
+            f"neighbour and {info['lone_grouped']:,} made {info['lone_groups']:,} groups (largest {info['lone_group_max']}); "
+            f"{info['ends_merged']:.1%} of trip ends; "
+            f"groups left alone: {info['kept_square']} off their square, {info['kept_water']} on water; lone cells left "
+            f"alone: {info['lone_kept_square']} off their square, {info['lone_kept_water']} on water, "
+            f"{info['lone_kept_reach']} too wide")
     if stats:
         print(line)
         return info
-    block = {"task": "T-044, T-466", "rule": "res-8 parents under the threshold of weekday trip ends (commutes and everyday "
-             "outings, both ends) merge, children within one zone together, at their trip-end-weighted centre; in a "
-             "busier parent, touching children within one zone each under the sparse-child threshold merge together, "
-             "with their busiest child's index",
+    block = {"task": "T-044, T-466, T-510", "rule": "res-8 parents under the threshold of weekday trip ends (commutes and "
+             "everyday outings, both ends) merge, children within one zone together, at their trip-end-weighted centre; "
+             "in a busier parent, touching children within one zone each under the sparse-child threshold merge "
+             "together, with their busiest child's index; a cell under that threshold left alone joins the touching "
+             "merged cell of its zone with the fewest trip ends, or merges with touching lone cells of its zone",
              "threshold_trip_ends": THRESHOLD, **info,
              "source": stamp(src, city)}
     size9 = os.path.getsize(os.path.join(src, f"{city}.bin"))
