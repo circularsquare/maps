@@ -77,7 +77,7 @@ for(const {id:city} of registry.cities){
   const sums=messages.find(m=>m.kind==='sums'&&m.city===city&&m.round===1);
   assert(sums.everyday?.length>0,`${city}: no everyday sums`);
   const n=sums.everyday.length/6;
-  const cells=city==='nyc'?new Uint32Array([80000,80001,80002]):new Uint32Array([Math.floor(n*.3),Math.floor(n*.5),Math.floor(n*.5)+1,Math.floor(n*.7)]);
+  const cells=city==='nyc'?new Uint32Array([58000,58001,58002]):new Uint32Array([Math.floor(n*.3),Math.floor(n*.5),Math.floor(n*.5)+1,Math.floor(n*.7)]);
   w.postMessage({kind:'purposes',id,city,version:1,round:1,end:1,cells});
   const purpose=await next(m=>m.kind==='purposes'&&m.id===id);id++;
   assert.equal(purpose.mask,31);

@@ -3,13 +3,17 @@
     python pipeline/merge_cells.py <id> [<id> ...]   merge these packs
     python pipeline/merge_cells.py --all             every registered pack in data/packs
     python pipeline/merge_cells.py <id> --stats      counts only, nothing written
+    python pipeline/merge_cells.py <id> --stats --child 500   the same with another sparse-child threshold
     python pipeline/merge_cells.py <id> --undo       put the res-9 pack back in data/packs
 
 A res-8 parent whose present children make under THRESHOLD trip ends a weekday merges; only the
 children inside one 2 km zone merge together (a parent cut by a zone edge gives one merged cell
 per zone, all with the parent's index), so every zone's sums, the commute gravity and the routes
-are unchanged. A merged cell sums every per-cell weight and sits at its children's trip-end-weighted
-centre. A group stays unmerged if that centre would leave its zone square or stand on water.
+are unchanged. In a parent over THRESHOLD, children under CHILD trip ends that touch each other and
+share a zone merge together (T-466), keeping the res-9 index of their busiest child. A merged cell
+sums every per-cell weight and sits at its children's trip-end-weighted centre. A group stays
+unmerged if that centre would leave its zone square or stand on water. The merged pack also carries
+`zone_cells9`, each zone's res-9 cells, since a merged cell's index no longer gives its land.
 
 The res-9 pack is kept in data/work/res9/<id>.json/.bin: the first merge of a pack copies it there,
 and a rerun (or --undo) starts from it. Steps that rewrite a pack (enrichments, routes.py) run on
@@ -31,6 +35,7 @@ from read_pack import PACKS, ROOT, load_pack
 WORK = os.path.join(ROOT, "data", "work", "res9")
 REGISTRY = os.path.join(ROOT, "app", "src", "game", "registry.json")
 THRESHOLD = 2500.0  # trip ends a weekday per res-8 parent (DECISIONS 2026-10-16, T-453)
+CHILD = THRESHOLD / 2  # per res-9 child of a busier parent (T-466)
 RES_MASK = np.uint64(0xF) << np.uint64(52)
 INT_SAME = ("zone", "region")  # integer per-cell arrays, equal within a zone
 
@@ -75,8 +80,74 @@ def on_water(header, a, x, y):
     return out
 
 
-def merge(header, a, threshold=THRESHOLD):
-    """The merged pack's cell arrays {name: array} and a summary."""
+def _components():
+    """For each set of a parent's children (a 7-bit mask of H3 digits), each child's component
+    label (its lowest digit) among the set's children that touch, -1 for a child outside the set
+    or alone. The centre child (0) touches all six; the ring runs 4-6-2-3-1-5-4."""
+    touch = {(0, d) for d in range(1, 7)} | {(4, 6), (2, 6), (2, 3), (1, 3), (1, 5), (4, 5)}
+    nb = {d: set() for d in range(7)}
+    for i, j in touch:
+        nb[i].add(j)
+        nb[j].add(i)
+    lab = np.full((128, 7), -1, np.int64)
+    for mask in range(128):
+        seen = set()
+        for d in range(7):
+            if not mask >> d & 1 or d in seen:
+                continue
+            comp, todo = {d}, [d]
+            while todo:
+                for k in nb[todo.pop()]:
+                    if mask >> k & 1 and k not in comp:
+                        comp.add(k)
+                        todo.append(k)
+            seen |= comp
+            if len(comp) > 1:
+                lab[mask, sorted(comp)] = d
+    return lab
+
+
+COMPONENTS = _components()
+
+
+def _place(header, a, e, cells, inv, cand=None):
+    """Trip-end-weighted centres (f32) of the groups `inv` labels over `cells`, each group's first
+    cell, and which groups (of `cand`, default all) may not merge: the centre leaves its zone's
+    square, or stands on water."""
+    ng = int(inv.max()) + 1 if len(inv) else 0
+    size = np.bincount(inv, minlength=ng)
+    w = e[cells]
+    x, y = a["x_m"][cells].astype(np.float64), a["y_m"][cells].astype(np.float64)
+    ws = np.bincount(inv, weights=w, minlength=ng)
+    # a plain mean for a group without trip ends
+    mx = np.where(ws > 0, np.bincount(inv, weights=x * w, minlength=ng) / np.maximum(ws, 1e-30),
+                  np.bincount(inv, weights=x, minlength=ng) / np.maximum(size, 1))
+    my = np.where(ws > 0, np.bincount(inv, weights=y * w, minlength=ng) / np.maximum(ws, 1e-30),
+                  np.bincount(inv, weights=y, minlength=ng) / np.maximum(size, 1))
+    mx32, my32 = mx.astype(np.float32), my.astype(np.float32)
+    first = np.full(ng, len(cells), np.int64)
+    np.minimum.at(first, inv, np.arange(len(cells)))
+    first = cells[first]
+    # the gravity's own square test, in f32 as read_pack.py makes it
+    g = header["gravity"]
+    zm, (x0, y0) = g["zone_m"], g["grid_origin_m"]
+    zg = a["zone"].astype(np.int64)[first]
+    gx, gy = a["zone_gx"].astype(np.int64)[zg], a["zone_gy"].astype(np.int64)[zg]
+    cx = ((mx32 - np.float32(x0)) / np.float32(zm)).astype(np.int64)
+    cy = ((my32 - np.float32(y0)) / np.float32(zm)).astype(np.int64)
+    off_sq = (cx != gx) | (cy != gy)
+    wet = np.zeros(ng, bool)
+    idx = np.nonzero(~off_sq & (True if cand is None else cand))[0]
+    wet[idx] = on_water(header, a, mx32[idx].astype(np.float64), my32[idx].astype(np.float64))
+    return mx32, my32, first, size, off_sq, wet
+
+
+def merge(header, a, threshold=THRESHOLD, child=None):
+    """The merged pack's cell arrays {name: array} and a summary. Two rules (docs/demand.md 4.1):
+    a res-8 parent under `threshold` trip ends merges its children within each zone (T-044);
+    in a busier parent, children under `child` trip ends that touch merge among themselves
+    (T-466), the merged cell keeping the index of its busiest child."""
+    child = CHILD if child is None else child
     n = header["cells"]
     assert header["h3_res"] == 9 and "merged" not in header, "merge from a res-9 pack"
     cell = [e for e in header["arrays"] if e.get("per") == "cell"]
@@ -92,50 +163,52 @@ def merge(header, a, threshold=THRESHOLD):
     pends = np.bincount(pinv.ravel(), weights=e)[pinv.ravel()]
     _, ginv = np.unique(np.stack([par, zone], 1), axis=0, return_inverse=True)
     ginv = ginv.ravel()
+    allc = np.arange(n)
     ng = int(ginv.max()) + 1
-    size = np.bincount(ginv, minlength=ng)
     want = np.zeros(ng, bool)
-    want[ginv[(pends < threshold)]] = True
-    want &= size > 1
-    # each group's centre, trip-end weighted (a plain mean if it has none)
-    x, y = a["x_m"].astype(np.float64), a["y_m"].astype(np.float64)
-    ws = np.bincount(ginv, weights=e, minlength=ng)
-    mx = np.where(ws > 0, np.bincount(ginv, weights=x * e, minlength=ng) / np.maximum(ws, 1e-30),
-                  np.bincount(ginv, weights=x, minlength=ng) / np.maximum(size, 1))
-    my = np.where(ws > 0, np.bincount(ginv, weights=y * e, minlength=ng) / np.maximum(ws, 1e-30),
-                  np.bincount(ginv, weights=y, minlength=ng) / np.maximum(size, 1))
-    mx32, my32 = mx.astype(np.float32), my.astype(np.float32)
-    # the gravity's own square test, in f32 as read_pack.py makes it
-    g = header["gravity"]
-    zm, (x0, y0) = g["zone_m"], g["grid_origin_m"]
-    first = np.full(ng, n, np.int64)
-    np.minimum.at(first, ginv, np.arange(n))
-    zg = a["zone"].astype(np.int64)[first.clip(max=n - 1)]
-    gx, gy = a["zone_gx"].astype(np.int64)[zg], a["zone_gy"].astype(np.int64)[zg]
-    cx = ((mx32 - np.float32(x0)) / np.float32(zm)).astype(np.int64)
-    cy = ((my32 - np.float32(y0)) / np.float32(zm)).astype(np.int64)
-    out_sq = want & ((cx != gx) | (cy != gy))
-    want &= ~out_sq
-    idx = np.nonzero(want)[0]
-    wet = np.zeros(ng, bool)
-    wet[idx] = on_water(header, a, mx32[idx].astype(np.float64), my32[idx].astype(np.float64))
-    want &= ~wet
-    merged = want[ginv]
-    # one output row per unmerged cell and per merged group
-    keep = ~merged
-    keep[first[want]] = True
+    want[ginv[pends < threshold]] = True
+    want &= np.bincount(ginv, minlength=ng) > 1
+    mx, my, first, size, out_sq, wet = _place(header, a, e, allc, ginv, want)
+    kept_sq, kept_wet = int((want & out_sq).sum()), int((want & ~out_sq & wet).sum())
+    want &= ~out_sq & ~wet
+    m1 = want[ginv]
+    # every cell's unit: its own, its parent group's, or its touching sparse siblings'
+    head = allc.copy()
+    nh3, nx, ny = h3.copy(), a["x_m"].copy(), a["y_m"].copy()
+    head[m1] = first[ginv[m1]]
+    nh3[m1], nx[m1], ny[m1] = par[m1], mx[ginv[m1]], my[ginv[m1]]
+    # T-466: sparse children of a parent left unmerged
+    digit = ((h3 >> np.uint64(18)) & np.uint64(7)).astype(np.int64)
+    sparse = ~m1 & (e < child)
+    gmask = np.zeros(ng, np.int64)
+    np.bitwise_or.at(gmask, ginv[sparse], np.left_shift(1, digit[sparse]))
+    lab = COMPONENTS[gmask[ginv], digit]
+    c2 = np.nonzero(sparse & (lab >= 0))[0]
+    _, sinv = np.unique(ginv[c2] * 8 + lab[c2], return_inverse=True)
+    sinv = sinv.ravel()
+    sx, sy, _, ssize, s_sq, s_wet = _place(header, a, e, c2, sinv)
+    ok = ~s_sq & ~s_wet
+    # the busiest child gives the merged cell its index (ties: the lowest index)
+    order = np.lexsort((h3[c2], -e[c2], sinv))
+    busiest = c2[order][np.r_[0, np.nonzero(np.diff(sinv[order]))[0] + 1]] if len(c2) else c2
+    m2c = c2[ok[sinv]]
+    m2g = sinv[ok[sinv]]
+    head[m2c] = busiest[m2g]
+    nh3[m2c], nx[m2c], ny[m2c] = h3[busiest[m2g]], sx[m2g], sy[m2g]
+    m2 = np.zeros(n, bool)
+    m2[m2c] = True
+    # one output row per unit
+    keep = head == allc
     row = np.cumsum(keep) - 1
-    target = np.where(merged, row[first[ginv]], row)
+    target = row[head]
     m = int(keep.sum())
     out = {}
     for spec in cell:
         k, v = spec["name"], a[spec["name"]]
         if k == "h3":
-            nv = np.where(merged[keep], par[keep], v[keep])
+            nv = nh3[keep]
         elif k in ("x_m", "y_m"):
-            nv = v[keep].copy()
-            mg = merged[keep]
-            nv[mg] = (mx32 if k == "x_m" else my32)[ginv[keep][mg]]
+            nv = (nx if k == "x_m" else ny)[keep]
         elif k in INT_SAME:
             nv = v[keep]
             assert np.array_equal(nv[target], v), f"{k} differs inside a zone"
@@ -144,9 +217,11 @@ def merge(header, a, threshold=THRESHOLD):
         out[k] = np.ascontiguousarray(nv)
     order = np.lexsort((out["zone"], out["h3"] & ~RES_MASK))
     out = {k: v[order] for k, v in out.items()}
-    info = {"cells_before": n, "cells": m, "parents": int(want.sum()), "cells_merged": int(merged.sum()),
-            "ends_merged": float(e[merged].sum() / max(e.sum(), 1e-30)),
-            "kept_square": int(out_sq.sum()), "kept_water": int(wet.sum())}
+    info = {"cells_before": n, "cells": m, "parents": int(want.sum()), "cells_merged": int(m1.sum()),
+            "sparse_groups": int(ok.sum()), "sparse_cells_merged": int(m2.sum()),
+            "sparse_child_trip_ends": float(child),
+            "ends_merged": float(e[m1 | m2].sum() / max(e.sum(), 1e-30)),
+            "kept_square": kept_sq + int(s_sq.sum()), "kept_water": kept_wet + int((~s_sq & s_wet).sum())}
     return out, info
 
 
@@ -205,21 +280,28 @@ def written(city):
         return json.load(f)
 
 
-def run(city, stats=False):
+def run(city, stats=False, child=None):
     src = res9_copy(city, copy=not stats)
     header, a = load_pack(city, src)
-    cells, info = merge(header, a)
+    cells, info = merge(header, a, child=child)
     line = (f"{city}: {info['cells_before']:,} -> {info['cells']:,} cells ({1 - info['cells'] / info['cells_before']:.0%} fewer), "
-            f"{info['parents']:,} merged cells from {info['cells_merged']:,}, {info['ends_merged']:.1%} of trip ends; "
+            f"{info['parents']:,} merged parents from {info['cells_merged']:,}, {info['sparse_groups']:,} merged siblings "
+            f"from {info['sparse_cells_merged']:,}, {info['ends_merged']:.1%} of trip ends; "
             f"left alone: {info['kept_square']} off their square, {info['kept_water']} on water")
     if stats:
         print(line)
         return info
-    block = {"task": "T-044", "rule": "res-8 parents under the threshold of weekday trip ends (commutes and everyday "
-             "outings, both ends) merge, children within one zone together, at their trip-end-weighted centre",
+    block = {"task": "T-044, T-466", "rule": "res-8 parents under the threshold of weekday trip ends (commutes and everyday "
+             "outings, both ends) merge, children within one zone together, at their trip-end-weighted centre; in a "
+             "busier parent, touching children within one zone each under the sparse-child threshold merge together, "
+             "with their busiest child's index",
              "threshold_trip_ends": THRESHOLD, **info,
              "source": stamp(src, city)}
     size9 = os.path.getsize(os.path.join(src, f"{city}.bin"))
+    # the zones' land, which a merged cell's index no longer gives (the sim's zone density)
+    header = json.loads(json.dumps(header))
+    header["arrays"].append({"name": "zone_cells9", "dtype": "u32", "per": "zone"})
+    a = dict(a, zone_cells9=np.bincount(a["zone"].astype(np.int64), minlength=header["zones"]).astype(np.uint32))
     size = write_pack(os.path.join(PACKS, city), header, a, cells, block)
     with open(os.path.join(WORK, f"{city}.merged.json"), "w") as f:
         json.dump(stamp(PACKS, city), f)
@@ -245,11 +327,18 @@ def registered():
 
 if __name__ == "__main__":
     args = sys.argv[1:]
+    child = None
+    if "--child" in args:  # --stats only: another sparse-child threshold
+        i = args.index("--child")
+        child = float(args.pop(i + 1))
+        args.pop(i)
     ids = registered() if "--all" in args else [x for x in args if not x.startswith("--")]
     if not ids:
         sys.exit(__doc__)
+    if child is not None and "--stats" not in args:
+        sys.exit("--child is for --stats")
     for cid in ids:
         if "--undo" in args:
             undo(cid)
         else:
-            run(cid, stats="--stats" in args)
+            run(cid, stats="--stats" in args, child=child)

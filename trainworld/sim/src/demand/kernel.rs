@@ -686,6 +686,9 @@ pub fn zones_from_pack(city: &City, pg: &PackGravity) -> Zones {
         z.pop[zi] += city.pop[c] as f64;
         z.jobs[zi] += city.jobs[c] as f64;
     }
+    if pg.cells9.len() == n {
+        z.ncell.clone_from(&pg.cells9);
+    }
     z
 }
 
@@ -745,6 +748,7 @@ pub fn to_pack_gravity(z: &Zones, g: &Gravity, p: &Params) -> PackGravity {
         home: vec![],
         work: vec![],
         joint: None,
+        cells9: vec![],
     }
 }
 

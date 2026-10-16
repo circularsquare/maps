@@ -1,5 +1,7 @@
 ﻿# Archive
 
+- T-466 [P2] Merge more sparse cells. Done 2026-10-16: in busy parents, touching children under 1,250 trip ends merge; packs carry zone land (`zone_cells9`). All 67 packs 1.34M to 1.09M cells (-19%); busy stations past 5% 0.4-2.9%; real save +0.08%. notes/T-466.md.
+- T-500 [P2] Commutes matched by industry. Dropped 2026-10-16 after the design: Tokyo misplaced 16.5% to 15.8% with two groups and their own curves, the centre unchanged (office workers live everywhere); the destination term went to T-438. notes/T-500.md.
 - T-502 [P2] Cost damping from 60 car-minutes; "on average" dropped from hovers. Done 2026-10-16: real save rail trips 8,346,628 to 8,343,085 (-0.04%), regional boardings 68,301 to 151,704 (T-495's first step took them from 259,376), work -0.9%, big lines within 1.5%. notes/T-495.md.
 - T-501 [P2] A data register by country. Done 2026-10-16: docs/data-register.md, eleven countries by input with status marks, four archetypes (census flows, travel survey, district totals, global only) and how to pick one; filed T-503 to T-508.
 - T-498 [P2] Gravity weighted partly by real-world travel time. Abandoned 2026-10-16 after the design prototype: misplaced 16.5% to 15.9% in Tokyo, 14.0% to 13.9% in London, the centre's pull slightly worse; Anita chose industry matching (T-500) instead. notes/T-498.md.

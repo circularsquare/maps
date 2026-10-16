@@ -49,7 +49,7 @@ capped at 1 (errands / leisure). It decides how far the everyday fallback trusts
 | Japan | U 2020 census 500 m mesh | U KSJ N03 municipalities | Tokyo 0.56 / 0.68; other packs about 0.33-1 |
 | Brazil | U IBGE 2022 census tracts | U IBGE tracts dissolved | 0.24 / 0.17 |
 | China | U 2020 census by district (city bulletin), GHSL inside | U OSM admin_level 6; skip geoBoundaries ADM2 (1:4M) | 0.07 / 0.13 |
-| South Korea | U resident registration by si-gun-gu (MOIS, open CSV); skip eup-myeon-dong (same file, little gain at 2 km); G 2020 census table (KOSIS key) | U OSM relations by Korean name | 0.51 / 0.93 |
+| South Korea | U resident registration by si-gun-gu (MOIS, open CSV); skip eup-myeon-dong (same file, little gain at 2 km); G 2020 census table (KOSIS: no account without a Korean ID; browser download only) | U OSM relations by Korean name | 0.51 / 0.93 |
 | India | U Census 2011 by sub-district, grown by district to 2020; 2027 census not out | U OSM admin_level 5 and 6 by name; G SHRUG polygons (non-commercial, checks only) | 0.04 / 0.05 |
 | Nigeria | U GHSL alone; - no credible count (census 2006); ? GRID3 100 m estimates, T-507 | U OSM LGAs | 0.02 / 0.01 |
 
@@ -65,7 +65,7 @@ capped at 1 (errands / leisure). It decides how far the everyday fallback trusts
 | Japan | U 2021 economic census 500 m mesh, scaled to census workers by municipality of work (public service left out, T-461) | U the same mesh by major industry, 9-1B splits by municipality | N 2020 census industry by municipality of residence, T-500 |
 | Brazil | U OD 2017 survey, workers by zone of first job | ? survey's job sector, not checked | ? survey's job sector, not checked |
 | China | U 5th economic census by district (legal-person units) | ? economic census by district x sector, T-503 | - |
-| South Korea | tier 0 proxy; G Census on Establishments by si-gun-gu (KOSIS key), T-504 | G the same census by sector, T-504 | - |
+| South Korea | tier 0 proxy; G Census on Establishments by si-gun-gu (KOSIS: no account without a Korean ID; browser download only), T-504 | G the same census by sector, T-504 | - |
 | India | tier 0 proxy (population 0.5); N 6th Economic Census 2013 by ward, T-388 | - | - |
 | Nigeria | tier 0 proxy (population 0.5, land cap) | - | - |
 
@@ -84,7 +84,7 @@ days of people with a workplace. Several countries have one figure for both.
 | Japan | U 2020 census table 4, municipality flows, fitted; joint gravity across packs | N 2018 Tokyo person trip survey (everyday rates), T-450, waits on calibration | U census table 4, share by municipality of work | U MLIT 2024 telework survey by region |
 | Brazil | - no census flows; U OD 2017 home-to-job distances, fitted | U Metro OD 2017 microdata; its everyday rates are T-450's evidence | U survey (9.1%) | in the survey |
 | China | - no open flows; U published mean commute (10.2 km, Shanghai survey via press; CAUPD-Baidu report for about 45 cities) | U the survey's mean only | U 0 | U 0 |
-| South Korea | G 2020 census commuting by si-gun-gu (KOSIS key), T-504; U mobile-data mean commute (Statistics Korea, 20.4 km) | ? KTDB household survey, not checked | U 0 (no figure checked) | U 0 |
+| South Korea | G 2020 census commuting by si-gun-gu (KOSIS: no account without a Korean ID; browser download only), T-504; U mobile-data mean commute (Statistics Korea, 20.4 km) | ? KTDB household survey, not checked | U 0 (no figure checked) | U 0 |
 | India | U Census 2011 B-28 distance bands by district, both parameters fitted | - | U B-28 "no travel" (20.1%) | - |
 | Nigeria | - none; U Mumbai's curve borrowed | - (one 2010 paper's mean trip, too weak to fit) | U 0 | U 0 |
 

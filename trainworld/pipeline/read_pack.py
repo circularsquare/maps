@@ -340,23 +340,30 @@ def check(city):
         s = float(a[k].astype(np.float64).sum())
         assert abs(s - header["totals"][k]) < 0.5, f"{k}: arrays sum {s} vs header {header['totals'][k]}"
     lon0, lat0 = header["origin"]["lon"], header["origin"]["lat"]
-    worst = worst8 = 0.0
+    worst = worst8 = worst9 = 0.0
     for i in sample:
         lat, lon = h3.cell_to_latlng(h3.int_to_str(int(ids[i])))
         x = R_EARTH * math.radians(lon - lon0) * math.cos(math.radians(lat0))
         y = R_EARTH * math.radians(lat - lat0)
         if is8[i]:  # a merged cell sits at its children's weighted centre, inside the parent
             worst8 = max(worst8, math.hypot(x - a["x_m"][i], y - a["y_m"][i]))
+        elif mb and mb.get("sparse_groups") and max(abs(x - a["x_m"][i]), abs(y - a["y_m"][i])) >= 1.0:
+            # T-466: touching sparse siblings merged under their busiest child's index
+            worst9 = max(worst9, math.hypot(x - a["x_m"][i], y - a["y_m"][i]))
         else:
             worst = max(worst, abs(x - a["x_m"][i]), abs(y - a["y_m"][i]))
     assert worst < 1.0, f"x_m/y_m off by {worst:.2f} m from the h3 centre"
     assert worst8 < 500.0, f"a merged cell {worst8:.0f} m from its parent's centre"
+    assert worst9 < 700.0, f"merged siblings {worst9:.0f} m from their index's centre"
+    if mb is not None and "zone_cells9" in a:
+        assert int(a["zone_cells9"].astype(np.int64).sum()) == mb["cells_before"], "zone_cells9 does not sum to the res-9 cells"
     print(f"{city}: format {header['format']}, {n:,} cells, pop {header['totals']['pop']:,}, "
           f"jobs {header['totals']['jobs']:,}; x {a['x_m'].min() / 1e3:.0f}..{a['x_m'].max() / 1e3:.0f} km, "
           f"y {a['y_m'].min() / 1e3:.0f}..{a['y_m'].max() / 1e3:.0f} km; max x/y error {worst:.3f} m; OK")
     if mb is not None:
-        print(f"  merged (T-044): {mb['cells_before']:,} res-{res} cells -> {n:,}, {mb['parents']:,} res-{res - 1} cells; "
-              f"furthest from its parent's centre {worst8:.0f} m; OK")
+        print(f"  merged (T-044): {mb['cells_before']:,} res-{res} cells -> {n:,}, {mb['parents']:,} res-{res - 1} cells, "
+              f"{mb.get('sparse_groups', 0):,} merged siblings (T-466); furthest from its parent's centre {worst8:.0f} m, "
+              f"from its index's {worst9:.0f} m; OK")
     if "commute_home" in a or "commute_work" in a:
         h, w = a["commute_home"].astype(np.float64), a["commute_work"].astype(np.float64)
         assert len(h) == n and len(w) == n and h.min() >= 0 and w.min() >= 0

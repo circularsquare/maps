@@ -75,6 +75,9 @@ pub struct PackGravity {
     pub work: Vec<f64>,
     /// T-276: the joint solve's header block (`gravity.joint`), kept as it is
     pub joint: Option<Value>,
+    /// Per zone, its res-9 cells before merging (`zone_cells9`, T-466): a merged cell's land is
+    /// not in its index. Empty: counted from the cells (`kernel::res9_cells`).
+    pub cells9: Vec<u32>,
 }
 
 fn dtype_size(dtype: &str) -> Result<usize, String> {
@@ -151,7 +154,7 @@ pub fn parse(header: &str, bin: &[u8]) -> Result<City, String> {
     let mut city = City { name, h3: vec![], x: vec![], y: vec![], pop: vec![], jobs: vec![], region: vec![], gravity: None };
     let (mut cz, mut gx, mut gy, mut row, mut col, mut zr) = (vec![], vec![], vec![], vec![], vec![], vec![]);
     let (mut ch, mut cw) = (vec![], vec![]);
-    let (mut zhome, mut zwork) = (vec![], vec![]);
+    let (mut zhome, mut zwork, mut zc9) = (vec![], vec![], vec![]);
     for a in v["arrays"].as_array().ok_or("header has no arrays")? {
         let aname = a["name"].as_str().unwrap_or("");
         let dtype = a["dtype"].as_str().unwrap_or("");
@@ -160,7 +163,7 @@ pub fn parse(header: &str, bin: &[u8]) -> Result<City, String> {
         let count = a["count"].as_u64().unwrap_or(0) as usize;
         let known = match per {
             "cell" => matches!(aname, "h3" | "x_m" | "y_m" | "pop" | "jobs" | "zone" | "commute_home" | "commute_work" | "region"),
-            "zone" => matches!(aname, "zone_gx" | "zone_gy" | "zone_row" | "zone_col" | "zone_region" | "zone_home" | "zone_work"),
+            "zone" => matches!(aname, "zone_gx" | "zone_gy" | "zone_row" | "zone_col" | "zone_region" | "zone_home" | "zone_work" | "zone_cells9"),
             _ => false,
         };
         if !known {
@@ -190,6 +193,7 @@ pub fn parse(header: &str, bin: &[u8]) -> Result<City, String> {
             "zone_col" => col = read_f64s(bin, off, count, dtype)?,
             "zone_home" => zhome = read_f64s(bin, off, count, dtype)?,
             "zone_work" => zwork = read_f64s(bin, off, count, dtype)?,
+            "zone_cells9" => zc9 = read_ints(bin, off, count, dtype)?.into_iter().map(|v| v.max(0) as u32).collect(),
             "region" | "zone_region" => {
                 let v = read_ints(bin, off, count, dtype)?;
                 if v.iter().any(|&r| !(0..=255).contains(&r)) {
@@ -269,6 +273,7 @@ pub fn parse(header: &str, bin: &[u8]) -> Result<City, String> {
             home: zhome,
             work: zwork,
             joint: g.get("joint").cloned(),
+            cells9: zc9,
         });
     }
     Ok(city)
@@ -309,7 +314,7 @@ pub fn with_gravity(header: &str, bin: &[u8], g: &PackGravity) -> Result<(String
     if !g.zone_region.is_empty() && g.zone_region.len() != nz {
         return Err(format!("{} zone regions for {nz} zones", g.zone_region.len()));
     }
-    let gravity_array = |a: &Value| matches!(a["name"].as_str().unwrap_or(""), "zone" | "zone_gx" | "zone_gy" | "zone_row" | "zone_col" | "zone_region" | "zone_home" | "zone_work");
+    let gravity_array = |a: &Value| matches!(a["name"].as_str().unwrap_or(""), "zone" | "zone_gx" | "zone_gy" | "zone_row" | "zone_col" | "zone_region" | "zone_home" | "zone_work" | "zone_cells9");
     if !g.home.is_empty() && (g.home.len() != nz || g.work.len() != nz) {
         return Err(format!("{} zone_home and {} zone_work for {nz} zones", g.home.len(), g.work.len()));
     }
@@ -500,6 +505,7 @@ mod tests {
             home: vec![],
             work: vec![],
             joint: None,
+            cells9: vec![],
         }
     }
 

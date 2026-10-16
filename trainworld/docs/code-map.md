@@ -194,7 +194,8 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   in `data/raw/osm/`; the sim's `pack_walk` bin; 1-8 minutes a pack; rerun after anything that
   changes a pack's zones, `--check` lists stale ones; T-275).
 - `merge_cells.py <ids> | --all` is every pack's last step (T-044): sparse res-9 cells into their
-  res-8 parent within a zone, the res-9 pack kept in `data/work/res9/`; `--undo` puts it back
+  res-8 parent within a zone, and touching sparse children of busier parents together (T-466), the
+  res-9 pack kept in `data/work/res9/`; `--undo` puts it back
   before any step that rewrites a pack (enrichments, routes, `intercity.py`), `--stats` only counts.
 - `osm_water.py` is the water source for cities outside the US (OSM coastline sea plus Geofabrik
   inland water, T-041; `source(extracts)` for a config's `water_source`, `mask <id>` for a
