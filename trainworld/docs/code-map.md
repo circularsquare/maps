@@ -23,6 +23,10 @@ tests natively.
   SIMD or SSE2, for the commute pair loop, T-036).
   `cargo test --release --features demand nyc_day -- --ignored --nocapture` solves a day on the
   real pack natively. notes/T-026.md.
+- `src/bin/`: native tools behind feature `demand`, built in `data/work/target`: `realnet` (a day
+  of commutes on a test network, T-007), `zones_day` (every layer on New York, T-276), `calib`
+  (T-509: a weekday on a city's real network with a parameter set, for `pipeline/calib.py`),
+  `realsave`, `pack_gravity`, `pack_walk`, `market_pack`, `joint_gravity`, `zone_summary`.
 
 ## app/: the browser game
 
@@ -224,6 +228,14 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   built as a batch (T-420 stage 3).
 - `register.py <ids> [--market] [--trips]`: a built batch's registry entries, boxes, market packs
   and local trips in one call (T-441).
+- Real networks and calibration (T-007, T-509): `realnet.py net <city>` turns a city's sources
+  (GTFS, OSM route relations from `realnet.py fetch-osm <city>`, or a CSV of timetabled trips;
+  `CITIES` lists each city's) into a demand test network in `data/work/realnet/`; `realnet.py`
+  also has New York's older targets, `compare`, and the save (`geom`, `gamesave`). `calib.py
+  targets <city>` writes the city's targets (`data/work/calib/<city>/`), `calib.py run <city>
+  [--set k=v,..] [--params p.json] [--tag t]` runs the sim's `calib` bin (a weekday, commutes and
+  everyday, 3 crowding rounds, about 22 s for New York) and scores it (station entries, operator
+  totals, rail share by home area); `calib.py score <run.json>` rescores. notes/T-509.md.
 - Basemap glyph tiles (`app/public/fonts/`, checked in): `glyphs.py` rebuilds them, after a
   one-off `cargo install build_pbf_glyphs --locked` (on Windows set `CFLAGS` to a libz-sys zlib
   folder first, notes/T-056.md). Only needed to change the font, weights or fallback.

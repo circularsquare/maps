@@ -542,6 +542,18 @@ impl DemandApi {
         self.reusable = false;
         &mut self.base
     }
+    /// Rebuild the walk shares from `walk_d0_km` and `walk_s_km` after changing them through
+    /// `params_mut` (the gravity holds them from `new`); before `EverydayApi::beside`.
+    pub fn refresh_walk(&mut self) {
+        let mut gr = (*self.gr).clone();
+        gr.set_walk(&self.z, &self.base);
+        let (home, work) = gr.walk_trips_by_zone(&self.z);
+        self.walk_all = home.iter().sum();
+        self.walk_home_zone = home;
+        self.walk_work_zone = work;
+        self.gr = Arc::new(gr);
+        self.reusable = false;
+    }
     /// The same city on other home and work weights (the everyday layer's residents and jobs,
     /// T-399): the cells, zone grid, gravity and routes are shared, the zones' sums are its own,
     /// and station access and subzones are built on these weights. Its network starts unset.

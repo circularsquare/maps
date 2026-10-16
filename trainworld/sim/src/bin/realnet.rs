@@ -117,6 +117,9 @@ fn main() {
         }
         eprintln!("params: {:?}", p);
     }
+    if get("--set").is_some_and(|v| v.contains("walk_d0_km") || v.contains("walk_s_km")) {
+        api.refresh_walk();
+    }
     let info = api.info();
     eprintln!("open {:.0} ms: {} cells, {} zones, {:.0} commutes a day", now_ms() - t0, info[0], info[1], info[2]);
 

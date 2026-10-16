@@ -1,6 +1,7 @@
-"""T-007: New York's real rail network as a demand test set, and the measured numbers to check it.
+"""T-007, T-509: a city's real rail network as a demand test set, and the measured numbers to check it.
 
-    python pipeline/realnet.py net        # GTFS -> data/work/realnet/nyc_real.json
+    python pipeline/realnet.py net [city]          # sources -> the network JSON (CITIES[city]["out"])
+    python pipeline/realnet.py fetch-osm <city>    # OSM route relations in the pack's box -> data/raw/t509/
     python pipeline/realnet.py targets    # measured ridership and mode share -> targets.json
     python pipeline/realnet.py counties   # county of every pack cell -> cell_county.u8
     (the sim crate's `realnet` bin solves a day on a network: notes/T-007.md)
@@ -9,23 +10,35 @@
     python pipeline/realnet.py geom       # track geometry from GTFS shapes, for the `realsave` bin
     python pipeline/realnet.py gamesave   # the `realsave` output as a game file (T-007-real-nyc.save)
 
-The network is built from the operators' GTFS (weekday schedule): New York City Subway with the
-Staten Island Railway, PATH, LIRR, Metro-North and NJ Transit rail. Stations: the MTA's station
-complexes for the subway (one station per complex, so in-complex transfers are free of walking,
-as the MTA's own counts treat them); one station per stop elsewhere, stops of different
-operators within 150 m merged (Penn Station, Hoboken, Newark Penn). Stations outside the city
-boundary are dropped.
+The converter (T-509): each city in CITIES lists its sources; an adapter turns each source into
+stations and trips (route, direction, stops, departure times), and the rest is common. Adapters:
+`gtfs` (a feed's weekday, a Wednesday with the most trips), `osm` (route relations from
+`fetch-osm`: stop order from the relation, trains per hour from its `interval` tag or a default
+by kind of line, run times from distance at a speed by kind), `trips` (a CSV of timetabled
+trips any other source can be written to: route, direction, trip, stop, name, lon, lat, time).
+A source's `group` table puts its stops into the stations the city's counts use (New York: the
+MTA's station complexes, so in-complex transfers are free of walking, as the MTA's own counts
+treat them); each station keeps that group id as `target`. Stations of different sources within
+`merge_m` are merged (Penn Station, Hoboken, Newark Penn), except sources marked `merge: False`.
+Stations outside the pack boundary (+1 km) are dropped.
+
+New York's sources: the operators' GTFS (weekday schedule) for New York City Subway with the
+Staten Island Railway, PATH, LIRR, Metro-North and NJ Transit rail and light rail.
 
 Lines: per route, the weekday daytime stopping patterns. A pattern with at least `min_share` of
 its route's trips (and `min_trips` a day) is its own line; a pattern that is a contiguous piece of
 a kept one (a short turn) adds its trips to that line; anything else goes to the kept pattern it
 overlaps most. Trains per hour per demand level: high = the mean of 7-9 and 17-19, medium =
-10-16, low = 0-6, counted at each trip's stop nearest Midtown, both directions halved. Run times:
+10-16, low = 0-6, counted at each trip's stop nearest the city's count point (New York: Midtown,
+the pack origin), both directions halved. Run times:
 per consecutive station pair, the median of every trip of the route that runs it in the level's
 hours (departure to departure, so a stop's dwell is in the hop that leaves it).
 
 Raw GTFS: the subway feed is maps/riders/nycriders/data/gtfs_subway (MTA, Feb 2026); the others in
-data/raw/gtfs/ (downloaded once, see FEEDS).
+data/raw/gtfs/ (downloaded once, see CITIES).
+
+Adding a city: an entry in CITIES (pack, out, sources, optionally count_point [lon, lat] and
+merge_m), then `net <city>`. The calibration run on it: the `calib` bin and pipeline/calib.py.
 """
 import os
 os.environ.setdefault("OMP_NUM_THREADS", "2")
@@ -45,37 +58,73 @@ PACKS = os.path.join(ROOT, "data", "packs")
 R_EARTH = 6371008.8
 
 NYCRIDERS = os.path.join(MAPS, "riders", "nycriders")
-FEEDS = {
-    # name: (folder, url it came from, min_share, min_trips, merge group)
-    "subway": (os.path.join(NYCRIDERS, "data", "gtfs_subway"), "http://web.mta.info/developers/data/nyct/subway/google_transit.zip", 0.15, 20),
-    "path": (os.path.join(RAW, "gtfs", "path-nj-us"), "http://data.trilliumtransit.com/gtfs/path-nj-us/path-nj-us.zip", 0.15, 20),
-    "lirr": (os.path.join(RAW, "gtfs", "gtfslirr"), "https://rrgtfsfeeds.s3.amazonaws.com/gtfslirr.zip", 0.05, 4),
-    "mnr": (os.path.join(RAW, "gtfs", "gtfsmnr"), "https://rrgtfsfeeds.s3.amazonaws.com/gtfsmnr.zip", 0.05, 4),
-    "njt": (os.path.join(RAW, "gtfs", "njt_rail"), "https://www.njtransit.com/rail_data.zip", 0.05, 4),
-}
 MTA_STATIONS = os.path.join(MAPS, "data", "nystreets", "MTA_Subway_Stations.csv")
 OD_SUBWAY = os.path.join(NYCRIDERS, "data", "od_wednesday_oct.csv")
 NYCRIDERS_STATS = os.path.join(NYCRIDERS, "stats.json")
 
+
+def gtfs(name, folder, url, min_share, min_trips, train_m, kind, **kw):
+    """A GTFS source. `train_m`: train length in metres per route ("_" the rest); `kind`: metro,
+    commuter, light_rail, tram or monorail (`route_kind` per route overrides); `operator` (the
+    source name if absent; `route_operator` per route) is what operator totals are summed by."""
+    return {"name": name, "adapter": "gtfs", "folder": folder, "url": url, "min_share": min_share,
+            "min_trips": min_trips, "train_m": train_m, "kind": kind, **kw}
+
+
+# a group table: stop id -> the station the city's counts use (name joined, position averaged)
+MTA_GROUP = {"csv": MTA_STATIONS, "stop": "GTFS Stop ID", "group": "Complex ID", "name": "Stop Name",
+             "lon": "GTFS Longitude", "lat": "GTFS Latitude", "prefix": "mta"}
+NJT_LIGHT = {"4": "light_rail", "13": "light_rail", "17": "light_rail"}
+
 # Train length in metres per route (cars x car length), for the game's 20 m cars. Subway: A
 # division 51 ft cars (10, the 7 11), B division 60 ft (600 ft trains; J, Z, M, L 480 ft; G 300 ft),
 # shuttles short; SIR 4 x 75 ft. PATH 7 x 51 ft. Commuter rail: 10 x 85 ft as a typical peak train.
-TRAIN_M = {
-    "subway": {"1": 155, "2": 155, "3": 155, "4": 155, "5": 155, "5X": 155, "6": 155, "6X": 155,
-               "7": 171, "7X": 171, "GS": 93, "FS": 37, "H": 73, "G": 91, "J": 146, "Z": 146,
-               "M": 146, "L": 146, "SI": 91, "_": 183},
-    "path": {"_": 109},
-    # NJT's feed also has its light rail: Hudson-Bergen (route 4) 2-car, Newark (13) 2-car trains
-    "lirr": {"_": 260}, "mnr": {"_": 260}, "njt": {"_": 260, "4": 60, "13": 56, "17": 60},
+# NJT's feed also has its light rail: Hudson-Bergen (route 4) 2-car, Newark (13) 2-car trains.
+CITIES = {
+    "nyc": {
+        "pack": "nyc",
+        "out": os.path.join(WORK, "nyc_real.json"),
+        "what": "New York's rail network from GTFS (T-007)",
+        "merge_m": 150.0,
+        "sources": [
+            gtfs("subway", os.path.join(NYCRIDERS, "data", "gtfs_subway"), "http://web.mta.info/developers/data/nyct/subway/google_transit.zip", 0.15, 20,
+                 {"1": 155, "2": 155, "3": 155, "4": 155, "5": 155, "5X": 155, "6": 155, "6X": 155, "7": 171, "7X": 171, "GS": 93, "FS": 37, "H": 73,
+                  "G": 91, "J": 146, "Z": 146, "M": 146, "L": 146, "SI": 91, "_": 183}, "metro", group=MTA_GROUP, merge=False),
+            gtfs("path", os.path.join(RAW, "gtfs", "path-nj-us"), "http://data.trilliumtransit.com/gtfs/path-nj-us/path-nj-us.zip", 0.15, 20, {"_": 109}, "metro"),
+            gtfs("lirr", os.path.join(RAW, "gtfs", "gtfslirr"), "https://rrgtfsfeeds.s3.amazonaws.com/gtfslirr.zip", 0.05, 4, {"_": 260}, "commuter"),
+            gtfs("mnr", os.path.join(RAW, "gtfs", "gtfsmnr"), "https://rrgtfsfeeds.s3.amazonaws.com/gtfsmnr.zip", 0.05, 4, {"_": 260}, "commuter"),
+            gtfs("njt", os.path.join(RAW, "gtfs", "njt_rail"), "https://www.njtransit.com/rail_data.zip", 0.05, 4, {"_": 260, "4": 60, "13": 56, "17": 60}, "commuter",
+                 route_kind=NJT_LIGHT, route_operator={r: "njt_light" for r in NJT_LIGHT}),
+        ],
+    },
+    # T-509's small city: a first rough network from OSM only (stage 3 adds the station join to
+    # S12 and the city's subway counts, and checks frequencies against timetables)
+    "sdj": {
+        "pack": "sdj",
+        "out": os.path.join(WORK, "sdj_real.json"),
+        "what": "Sendai's rail network from OSM route relations (T-509, rough)",
+        "count_point": [140.8823, 38.2601],  # Sendai station
+        "sources": [{"name": "osm", "adapter": "osm", "file": os.path.join(RAW, "t509", "osm_sdj.json"), "min_share": 0.05, "min_trips": 4}],
+    },
 }
 CAR_M = 20.0
 LEVEL_WINDOWS = {0: [(7, 9), (17, 19)], 1: [(10, 16)], 2: [(0, 6)]}
 DAY = (6, 20)
 MERGE_M = 150.0
 
+# OSM sources (T-509): a weekday's trains per hour each way by kind of line where the relation has
+# no `interval` tag, (peak 7-9 and 17-19, the rest of 6-22, the first hour 5-6); average speed
+# between stations with the dwell, km/h; train length, metres. Judgement, to be checked per city
+# against a few timetables.
+OSM_TPH = {"metro": (20, 10, 4), "commuter": (8, 4, 2), "light_rail": (10, 6, 3), "tram": (10, 7, 3), "monorail": (12, 8, 3)}
+OSM_KMH = {"metro": 32, "commuter": 40, "light_rail": 22, "tram": 16, "monorail": 30}
+OSM_TRAIN_M = {"metro": 120, "commuter": 200, "light_rail": 60, "tram": 30, "monorail": 60}
+OSM_KIND = {"subway": "metro", "train": "commuter", "light_rail": "light_rail", "tram": "tram", "monorail": "monorail"}
+OSM_DETOUR = 1.15
 
-def origin():
-    h = json.load(open(os.path.join(PACKS, "nyc.json")))
+
+def origin(pack="nyc"):
+    h = json.load(open(os.path.join(PACKS, pack + ".json")))
     return h["origin"]["lon"], h["origin"]["lat"]
 
 
@@ -91,9 +140,9 @@ def secs(t):
     return int(h) * 3600 + int(m) * 60 + int(s)
 
 
-def boundary():
+def boundary(pack="nyc"):
     from shapely.geometry import shape
-    g = json.load(open(os.path.join(PACKS, "nyc.boundary.geojson")))
+    g = json.load(open(os.path.join(PACKS, pack + ".boundary.geojson")))
     geoms = [shape(f["geometry"]) for f in g["features"]] if "features" in g else [shape(g)]
     from shapely import union_all
     return union_all(geoms).buffer(0.01)  # ~1 km in degrees
@@ -136,38 +185,38 @@ def service_ids(folder):
     return best
 
 
-def load_feed(name, o, inside):
-    """Stations and trips of one feed: (stations {key: (name, lon, lat)}, trips [(route, dir,
-    [keys], [dep secs])])."""
-    folder = FEEDS[name][0]
+def group_table(g):
+    """A source's group table: (stop -> group, group -> (name, lon, lat)). Names of a group's
+    stops are joined with "/", positions averaged."""
+    t = pd.read_csv(g["csv"], dtype=str)
+    cx = dict(zip(t[g["stop"]], t[g["group"]]))
+    cname = t.groupby(g["group"])[g["name"]].agg(lambda s: "/".join(dict.fromkeys(s)))
+    cpos = t.assign(lon=t[g["lon"]].astype(float), lat=t[g["lat"]].astype(float)).groupby(g["group"])[["lon", "lat"]].mean()
+    return cx, {c: (cname[c], float(cpos.loc[c, "lon"]), float(cpos.loc[c, "lat"])) for c in cname.index}
+
+
+def load_gtfs(src, inside):
+    """Stations and trips of one GTFS feed: (stations {key: (name, lon, lat)}, trips [(route,
+    dir, [keys], [dep secs])], route names)."""
+    name, folder = src["name"], src["folder"]
     date, sids = service_ids(folder)
     stops = read(folder, "stops.txt")
     parent = {}
     if "parent_station" in stops:
         parent = {r.stop_id: r.parent_station for r in stops.itertuples() if r.parent_station}
     pos = {r.stop_id: (r.stop_name, float(r.stop_lon), float(r.stop_lat)) for r in stops.itertuples()}
-    if name == "subway":
-        mta = pd.read_csv(MTA_STATIONS, dtype=str)
-        cx = dict(zip(mta["GTFS Stop ID"], mta["Complex ID"]))
-        cname = mta.groupby("Complex ID")["Stop Name"].agg(lambda s: "/".join(dict.fromkeys(s)))
-        cpos = mta.assign(lon=mta["GTFS Longitude"].astype(float), lat=mta["GTFS Latitude"].astype(float)).groupby("Complex ID")[["lon", "lat"]].mean()
+    cx, cst = group_table(src["group"]) if src.get("group") else ({}, {})
+    prefix = src["group"]["prefix"] if src.get("group") else None
 
-        def key(sid):
-            p = parent.get(sid, sid)
-            c = cx.get(p)
-            return ("mta:" + c) if c else ("subway:" + p)
-        stations = {}
-        for sid in pos:
-            k = key(sid)
-            if k.startswith("mta:"):
-                c = k[4:]
-                stations[k] = (cname[c], float(cpos.loc[c, "lon"]), float(cpos.loc[c, "lat"]))
-            else:
-                stations[k] = pos[parent.get(sid, sid)]
-    else:
-        def key(sid):
-            return name + ":" + parent.get(sid, sid)
-        stations = {key(s): pos[parent.get(s, s)] for s in pos}
+    def key(sid):
+        p = parent.get(sid, sid)
+        c = cx.get(p)
+        return (prefix + ":" + c) if c else (name + ":" + p)
+    stations = {}
+    for sid in pos:
+        k = key(sid)
+        c = cx.get(parent.get(sid, sid))
+        stations[k] = cst[c] if c else pos[parent.get(sid, sid)]
     keep = {k for k, (_, lon, lat) in stations.items() if inside(lon, lat)}
     trips = read(folder, "trips.txt")
     trips = trips[trips["service_id"].isin(sids)]
@@ -192,7 +241,189 @@ def load_feed(name, o, inside):
             r, d = tinfo[tid]
             out.append((r, d, ks, ts))
     print(f"{name}: {date.date()}, {len(sids)} services, {len(out)} trips, {len(keep)} of {len(stations)} stations inside")
-    return {k: v for k, v in stations.items() if k in keep}, out
+    r = read(folder, "routes.txt")
+    col = "route_short_name" if "route_short_name" in r and (r["route_short_name"] != "").all() else "route_long_name"
+    return {k: v for k, v in stations.items() if k in keep}, out, dict(zip(r["route_id"], r[col]))
+
+
+def osm_interval_tph(tags, kind):
+    """Trains per hour each way, by hour of the day (24 values), from a route relation's
+    `interval` and `interval:conditional` tags (minutes, "mm" or "hh:mm"), else OSM_TPH."""
+    def minutes(v):
+        v = v.strip()
+        try:
+            if ":" in v:
+                h, m = v.split(":")[:2]
+                return int(h) * 60 + int(m)
+            return float(v)
+        except ValueError:
+            return None
+    peak, mid, first = OSM_TPH[kind]
+    base = minutes(tags["interval"]) if tags.get("interval") else None
+    if base:
+        # `interval` is the usual (midday) headway; the peak keeps the kind's peak-to-midday ratio
+        # unless conditional intervals say otherwise
+        mid = 60.0 / base
+        peak = mid if tags.get("interval:conditional") else mid * OSM_TPH[kind][0] / OSM_TPH[kind][1]
+        first = mid / 2
+    tph = [0.0] * 5 + [first] + [mid] * 16 + [mid / 2] * 2
+    for h in (7, 8, 17, 18):
+        tph[h] = peak
+    # "00:05 @ (Mo-Fr 07:00-09:00); 00:10 @ (Mo-Fr 09:00-17:00)": weekday or undated parts
+    import re
+    for part in (tags.get("interval:conditional") or "").split(";"):
+        if "@" not in part:
+            continue
+        v, cond = part.split("@", 1)
+        m = minutes(v)
+        if not m or (re.search(r"\b(Sa|Su|PH)\b", cond) and not re.search(r"\b(Mo|Tu|We|Th|Fr)\b", cond)):
+            continue
+        for a, b in re.findall(r"(\d{1,2}):\d{2}\s*-\s*(\d{1,2}):\d{2}", cond):
+            for h in range(int(a), min(int(b), 24)):
+                tph[h] = 60.0 / m
+    return tph
+
+
+def load_osm(src, inside):
+    """Stations and trips from OSM route relations (`fetch-osm`'s file). Each relation is one
+    direction of a route (its route_master, else itself); its stops are its stop members in order
+    (platforms where it has no stops). A station is the stop_area a stop belongs to, else the
+    stops of one name within `name_m`. Trips are made up hour by hour from the trains per hour,
+    run times from the straight-line hop x OSM_DETOUR at the kind's speed."""
+    d = json.load(open(src["file"], encoding="utf-8"))
+    el = {(e["type"], e["id"]): e for e in d["elements"]}
+    rels = [e for e in d["elements"] if e["type"] == "relation" and e.get("tags", {}).get("type") == "route"]
+    masters = {}
+    area_of = {}
+    for e in d["elements"]:
+        if e["type"] != "relation":
+            continue
+        t = e.get("tags", {})
+        if t.get("type") == "route_master":
+            for m in e["members"]:
+                masters[m["ref"]] = e
+        if t.get("public_transport") == "stop_area":
+            for m in e["members"]:
+                area_of.setdefault((m["type"], m["ref"]), e)
+
+    def pos(m):
+        e = el.get((m["type"], m["ref"]))
+        if not e:
+            return None
+        if "lat" in e:
+            return e["lon"], e["lat"]
+        if "center" in e:
+            return e["center"]["lon"], e["center"]["lat"]
+        return None
+    skip = set(src.get("skip_service", ["high_speed", "long_distance", "night", "tourism"]))
+    raw = []  # (relation, kind, [(member key, name, lon, lat)])
+    for r in rels:
+        t = r["tags"]
+        kind = OSM_KIND.get(t.get("route"))
+        if not kind or t.get("service") in skip or t.get("highspeed") == "yes":
+            continue
+        stops = [m for m in r["members"] if m["role"] in ("stop", "stop_entry_only", "stop_exit_only")]
+        if not stops:
+            stops = [m for m in r["members"] if m["role"] in ("platform", "platform_entry_only", "platform_exit_only")]
+        pts = []
+        for m in stops:
+            p = pos(m)
+            if p is None:
+                continue
+            e = el.get((m["type"], m["ref"]), {})
+            pts.append(((m["type"], m["ref"]), e.get("tags", {}).get("name", ""), p[0], p[1]))
+        if len(pts) >= 2:
+            raw.append((r, kind, pts))
+    # stations: the stop_area, else one per name within name_m (a greedy cluster), else the stop
+    name_m = src.get("name_m", 400.0)
+    o = origin(src["pack"])
+    key_of, members = {}, defaultdict(list)
+    by_name = defaultdict(list)  # name -> [(key, x, y)]
+    for _, _, pts in raw:
+        for mk, nm, lon, lat in pts:
+            if mk in key_of:
+                continue
+            a = area_of.get(mk)
+            if a:
+                k = f"osm:a{a['id']}"
+                nm = a.get("tags", {}).get("name", nm)
+            elif nm:
+                x, y = to_xy(lon, lat, o)
+                k = None
+                for kk, xx, yy in by_name[nm]:
+                    if (xx - x) ** 2 + (yy - y) ** 2 < name_m ** 2:
+                        k = kk
+                        break
+                if k is None:
+                    k = f"osm:{mk[0][0]}{mk[1]}"
+                    by_name[nm].append((k, float(x), float(y)))
+            else:
+                k = f"osm:{mk[0][0]}{mk[1]}"
+            key_of[mk] = k
+            members[k].append((nm, lon, lat))
+    stations = {k: (v[0][0], float(np.mean([p[1] for p in v])), float(np.mean([p[2] for p in v]))) for k, v in members.items()}
+    keep = {k for k, (_, lon, lat) in stations.items() if inside(lon, lat)}
+    xy = {k: to_xy(lon, lat, o) for k, (_, lon, lat) in stations.items()}
+    trips, names = [], {}
+    for r, kind, pts in raw:
+        t = r["tags"]
+        m = masters.get(r["id"])
+        route = f"m{m['id']}" if m else f"r{r['id']}"
+        names[route] = (m or r).get("tags", {}).get("ref") or (m or r).get("tags", {}).get("name") or route
+        ks = []
+        for mk, *_ in pts:
+            k = key_of[mk]
+            if k in keep and (not ks or ks[-1] != k):
+                ks.append(k)
+        if len(ks) < 2:
+            continue
+        hop = [float(np.hypot(xy[ks[i + 1]][0] - xy[ks[i]][0], xy[ks[i + 1]][1] - xy[ks[i]][1])) * OSM_DETOUR / (OSM_KMH[kind] / 3.6) for i in range(len(ks) - 1)]
+        at = np.concatenate([[0.0], np.cumsum(hop)])
+        dr = "0" if ks[0] <= ks[-1] else "1"
+        acc = 0.0
+        for h, n in enumerate(osm_interval_tph(t, kind)):
+            acc += n
+            k = int(acc)
+            acc -= k
+            for j in range(k):
+                dep = h * 3600 + (j + 0.5) * 3600 / k
+                trips.append((route, dr, ks, [int(dep + v) for v in at]))
+        src.setdefault("route_kind", {})[route] = kind
+        src.setdefault("train_m", {"_": OSM_TRAIN_M["metro"]}).setdefault(route, OSM_TRAIN_M[kind])
+    print(f"{src['name']}: {len(raw)} route relations, {len(trips)} trips made up, {len(keep)} of {len(stations)} stations inside")
+    return {k: v for k, v in stations.items() if k in keep}, trips, names
+
+
+def load_trips_csv(src, inside):
+    """Stations and trips from a CSV of timetabled trips (any timetable written out): columns
+    route, direction, trip, stop, name, lon, lat, time (h:mm:ss or seconds), in stop order per
+    trip; optional route_name."""
+    t = pd.read_csv(src["file"], dtype=str, keep_default_na=False)
+    stations = {}
+    for r in t.drop_duplicates("stop").itertuples():
+        stations[src["name"] + ":" + r.stop] = (r.name, float(r.lon), float(r.lat))
+    keep = {k for k, (_, lon, lat) in stations.items() if inside(lon, lat)}
+    trips = []
+    for _, g in t.groupby("trip", sort=False):
+        ks, ts = [], []
+        for s, tm in zip(g["stop"], g["time"]):
+            k = src["name"] + ":" + s
+            if k not in keep:
+                continue
+            v = secs(tm) if ":" in tm else int(float(tm))
+            if ks and ks[-1] == k:
+                ts[-1] = v
+                continue
+            ks.append(k)
+            ts.append(v)
+        if len(ks) >= 2:
+            trips.append((g["route"].iloc[0], g["direction"].iloc[0], ks, ts))
+    names = dict(zip(t["route"], t["route_name"])) if "route_name" in t else {}
+    print(f"{src['name']}: {len(trips)} trips, {len(keep)} of {len(stations)} stations inside")
+    return {k: v for k, v in stations.items() if k in keep}, trips, names
+
+
+ADAPTERS = {"gtfs": load_gtfs, "osm": load_osm, "trips": load_trips_csv}
 
 
 def is_piece(small, big):
@@ -201,8 +432,9 @@ def is_piece(small, big):
     return any(tuple(big[i:i + n]) == tuple(small) for i in range(len(big) - n + 1))
 
 
-def build_lines(name, trips, xy):
-    _, _, min_share, min_trips = FEEDS[name]
+def build_lines(src, trips, xy, cxy=(0.0, 0.0)):
+    """Lines of one source from its trips; `xy` station positions, `cxy` the count point."""
+    name, min_share, min_trips = src["name"], src.get("min_share", 0.05), src.get("min_trips", 4)
     lines = []
     by_route = defaultdict(list)
     for t in trips:
@@ -215,8 +447,8 @@ def build_lines(name, trips, xy):
             canon.append(c)
         mid_t = []
         for (_, _, ks, tt) in ts:
-            # time at the stop nearest Midtown (the pack origin)
-            dist = [xy[k][0] ** 2 + xy[k][1] ** 2 for k in ks]
+            # time at the stop nearest the count point
+            dist = [(xy[k][0] - cxy[0]) ** 2 + (xy[k][1] - cxy[1]) ** 2 for k in ks]
             mid_t.append(tt[int(np.argmin(dist))] / 3600.0 % 24)
         day = [DAY[0] <= h < DAY[1] for h in mid_t]
         cnt = Counter(c for c, dd in zip(canon, day) if dd)
@@ -292,48 +524,54 @@ def build_lines(name, trips, xy):
                     t1[lv][i + 1] = b or f or 0.0
             if not ok:
                 print(f"  {name} {route}: a hop has no time in one direction; mirrored")
-            m = TRAIN_M[name]
+            m = src["train_m"]
             cars = max(1, round(m.get(route, m["_"]) / CAR_M))
             lines.append({"feed": name, "route": route, "stops": list(k), "tph": tph, "t0": t0, "t1": t1, "cars": cars,
-                          "trips_day": sum(1 for c in canon if assign.get(c) == k)})
+                          "trips_day": sum(1 for c in canon if assign.get(c) == k),
+                          "operator": src.get("route_operator", {}).get(route, src.get("operator", name)),
+                          "kind": src.get("route_kind", {}).get(route, src.get("kind", "metro"))})
     return lines
 
 
-def route_names(name):
-    r = read(FEEDS[name][0], "routes.txt")
-    col = "route_short_name" if "route_short_name" in r and (r["route_short_name"] != "").all() else "route_long_name"
-    return dict(zip(r["route_id"], r[col]))
-
-
-def cmd_net():
-    os.makedirs(WORK, exist_ok=True)
-    o = origin()
+def cmd_net(city=None):
+    city = city or (sys.argv[2] if len(sys.argv) > 2 else "nyc")
+    cfg = CITIES[city]
+    os.makedirs(os.path.dirname(cfg["out"]), exist_ok=True)
+    o = origin(cfg["pack"])
+    cxy = tuple(float(v) for v in to_xy(*cfg["count_point"], o)) if cfg.get("count_point") else (0.0, 0.0)
+    merge_m = cfg.get("merge_m", MERGE_M)
     from shapely import prepared
     from shapely.geometry import Point
-    bnd = prepared.prep(boundary())
+    bnd = prepared.prep(boundary(cfg["pack"]))
 
     def inside(lon, lat):
         return bnd.contains(Point(lon, lat))
     stations, lines = {}, []
-    for name in FEEDS:
-        st, trips = load_feed(name, o, inside)
+    no_merge = set()
+    for src in cfg["sources"]:
+        src = {**src, "pack": cfg["pack"]}
+        name = src["name"]
+        st, trips, rn = ADAPTERS[src["adapter"]](src, inside)
+        group_prefix = src["group"]["prefix"] + ":" if src.get("group") else None
         for k, (nm, lon, lat) in st.items():
             x, y = to_xy(lon, lat, o)
-            stations[k] = {"key": k, "name": nm, "feed": name, "lon": lon, "lat": lat, "x": float(x), "y": float(y)}
+            stations[k] = {"key": k, "name": nm, "feed": name, "lon": lon, "lat": lat, "x": float(x), "y": float(y),
+                           "target": k[len(group_prefix):] if group_prefix and k.startswith(group_prefix) else None}
+            if src.get("merge", True) is False:
+                no_merge.add(k)
         xy = {k: (v["x"], v["y"]) for k, v in stations.items()}
-        ls = build_lines(name, trips, xy)
-        rn = route_names(name)
+        ls = build_lines(src, trips, xy, cxy)
         for l in ls:
             l["name"] = rn.get(l["route"], l["route"])
         print(f"  {name}: {len(ls)} lines from {len(set(l['route'] for l in ls))} routes")
         lines += ls
-    # merge stations of different non-subway feeds within MERGE_M (one interchange)
-    keys = [k for k in stations if not k.startswith("mta:") and not k.startswith("subway:")]
+    # merge stations of different sources within merge_m (one interchange)
+    keys = [k for k in stations if k not in no_merge]
     alias = {}
     for i, a in enumerate(keys):
         for b in keys[i + 1:]:
             sa, sb = stations[a], stations[b]
-            if sa["feed"] != sb["feed"] and (sa["x"] - sb["x"]) ** 2 + (sa["y"] - sb["y"]) ** 2 < MERGE_M ** 2:
+            if sa["feed"] != sb["feed"] and (sa["x"] - sb["x"]) ** 2 + (sa["y"] - sb["y"]) ** 2 < merge_m ** 2:
                 ra, rb = alias.get(a, a), alias.get(b, b)
                 if ra != rb:
                     alias[rb] = ra
@@ -372,10 +610,11 @@ def cmd_net():
                 times += run[lv]
         tph += l["tph"]
         cars.append(l["cars"])
-    out = {"what": "New York's rail network from GTFS (T-007)", "feeds": {k: v[1] for k, v in FEEDS.items()},
+    out = {"what": cfg.get("what", f"{city}'s rail network (T-509)"), "city": city, "pack": cfg["pack"],
+           "feeds": {s["name"]: s.get("url") or s.get("file") for s in cfg["sources"]},
            "stations": st_list, "lines": lines,
            "demand": {"st_xy": st_xy, "line_n": line_n, "stops": stops, "times": times, "tph": tph, "cars": cars}}
-    p = os.path.join(WORK, "nyc_real.json")
+    p = cfg["out"]
     json.dump(out, open(p, "w"))
     by = Counter(l["feed"] for l in lines)
     print(f"{len(st_list)} stations, {len(lines)} lines {dict(by)} -> {p}")
@@ -797,8 +1036,8 @@ def cmd_geom():
     net = json.load(open(os.path.join(WORK, "nyc_real.json")))
     st = net["stations"]
     shapes_by_route = {}
-    for name in FEEDS:
-        folder = FEEDS[name][0]
+    for src in CITIES["nyc"]["sources"]:
+        name, folder = src["name"], src["folder"]
         sh = read(folder, "shapes.txt", usecols=["shape_id", "shape_pt_lat", "shape_pt_lon", "shape_pt_sequence"])
         sh["seq"] = sh["shape_pt_sequence"].astype(float)
         sh = sh.sort_values(["shape_id", "seq"])
@@ -938,6 +1177,38 @@ def cmd_compare():
     print("\nheadline:", json.dumps({k: (round(v, 4) if isinstance(v, float) else v) for k, v in h.items() if k != "entries_by_feed"}))
 
 
+OVERPASS = "https://overpass-api.de/api/interpreter"
+
+
+def cmd_fetch_osm():
+    """Rail route relations (train, subway, light rail, tram, monorail) in the pack's boundary box,
+    with their stops, platforms (as centres), route masters and stop areas -> data/raw/t509/osm_<pack>.json."""
+    import requests
+    city = sys.argv[2]
+    pack = CITIES[city]["pack"] if city in CITIES else city
+    w, s, e, n = boundary(pack).bounds
+    q = f"""[out:json][timeout:300];
+rel["type"="route"]["route"~"^(train|subway|light_rail|tram|monorail)$"]({s},{w},{n},{e})->.r;
+.r out body;
+node(r.r)->.n;
+.n out body;
+way(r.r:"platform")->.w;
+.w out center tags;
+rel(br.r)["type"="route_master"];
+out body;
+rel(bn.n)["public_transport"="stop_area"];
+out body;
+rel(bw.w)["public_transport"="stop_area"];
+out body;"""
+    r = requests.post(OVERPASS, data={"data": q}, headers={"User-Agent": "trainworld-pipeline/1.0 (rail network test sets)"}, timeout=400)
+    r.raise_for_status()
+    p = os.path.join(RAW, "t509", f"osm_{pack}.json")
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    open(p, "wb").write(r.content)
+    d = r.json()
+    print(f"{len(d['elements'])} elements ({sum(1 for x in d['elements'] if x.get('tags', {}).get('type') == 'route')} routes) -> {p}")
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "net"
-    {"net": cmd_net, "counties": cmd_counties, "targets": cmd_targets, "compare": cmd_compare, "single": cmd_single, "geom": cmd_geom, "gamesave": cmd_gamesave}[cmd]()
+    {"net": cmd_net, "fetch-osm": cmd_fetch_osm, "counties": cmd_counties, "targets": cmd_targets, "compare": cmd_compare, "single": cmd_single, "geom": cmd_geom, "gamesave": cmd_gamesave}[cmd]()

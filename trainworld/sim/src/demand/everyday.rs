@@ -1446,6 +1446,11 @@ impl EverydayApi {
     pub fn params_mut(&mut self) -> &mut Params {
         self.engine.params_mut()
     }
+    /// Rail trips starting at each demand station (first boarding) in period `q`, every purpose
+    /// (checks: T-509's station entries).
+    pub fn entries(&self, q: usize) -> Vec<f32> {
+        self.per.get(q).and_then(|v| v.as_ref()).map_or(vec![], |s| s.loads.entry.clone())
+    }
 }
 
 impl EverydayApi {

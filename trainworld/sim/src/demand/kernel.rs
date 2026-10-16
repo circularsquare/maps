@@ -236,6 +236,17 @@ impl Params {
         match k {
             "station_theta" => self.station_theta = v,
             "asc_rail" => self.asc_rail = v,
+            "beta" => self.beta = v,
+            "w_drive" => self.w_drive = v,
+            "park_min" => self.park_min = v,
+            "fare_min" => self.fare_min = v,
+            "transfer_min" => self.transfer_min = v,
+            "crowd_alpha" => self.crowd_alpha = v,
+            "xfer_walk_m" => self.xfer_walk_m = v,
+            "station_merge_m" => self.station_merge_m = v,
+            // the gravity holds the walk curve: `DemandApi::refresh_walk` after these
+            "walk_d0_km" => self.walk_d0_km = v,
+            "walk_s_km" => self.walk_s_km = v,
             "damp_min" => self.damp_min = v,
             "walk_mps" => self.walk_mps = v,
             "walk_cutoff_m" => self.walk_cutoff_m = v,
@@ -508,6 +519,7 @@ pub fn build_zones(city: &City, zone_m: f32) -> Zones {
     z
 }
 
+#[derive(Clone)]
 pub struct Gravity {
     /// T_IJ = row[I] * col[J] * f(I, J) * k(I, J), with row = A_I O_I and col = B_J D_J, and k
     /// = `border` when zones I and J are in different regions, else 1 (`Gravity::k`, T-162).

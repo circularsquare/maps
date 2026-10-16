@@ -83,6 +83,12 @@ name = "zones_day"
 path = "src/bin/zones_day.rs"
 required-features = ["demand"]
 
+# T-509: one calibration run, a weekday on a city's real network with a parameter set.
+[[bin]]
+name = "calib"
+path = "src/bin/calib.rs"
+required-features = ["demand"]
+
 [profile.release]
 opt-level = 3
 lto = true
