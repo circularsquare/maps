@@ -5,9 +5,14 @@ P3 = later. Finished or abandoned tasks move to `ARCHIVE.md`.
 
 **Direction** (Anita; details in CLAUDE.md "Working here"). The whole world, with demand realism
 at the core: a sampler of other countries' cities shows which demand methods carry everywhere, then
-tailoring goes country by country. Calibration (T-509) has its six-city fit; stage 7 applies it to
-every pack. Performance is open work, ranked in notes/perf-survey.md. Game modes wait (Anita
-2026-10-15: not yet). Anita plans hundreds of metros, so cost per city matters (notes/city-costs.md,
+tailoring goes country by country. Calibration's in-city part is done (T-509, archived; Japan's
+country rail constant +0.5). **Next, in order (Anita 2026-10-16):** 1. robustness: T-492 (a pack
+that fails to open stops all demand), T-490 (8800 refusing connections under load), T-510 (lone
+sparse cells); 2. the unattended city pipeline: a new city from docs/data-register.md to a checked
+pack without agent judgement, automatic city and zone choice, with T-314 (borrowing a curve), T-460
+(land-use cap default), T-387 (hospital sizes) and T-060 (packs on R2) as its parts; design first,
+to Anita; 3. long-trip calibration (T-528); 4. more cities. Performance is open work, ranked in
+notes/perf-survey.md. Game modes wait (Anita 2026-10-15: not yet). Anita plans hundreds of metros, so cost per city matters (notes/city-costs.md,
 about 1.6-3.4M tokens a pack).
 
 **Where things stand (2026-10-16).** 67 zones play in one world market with rail, car and air: the
@@ -17,13 +22,17 @@ gravity). Since 2026-10-15: homes without a car choose rail, walking or "other" 
 T-511, T-513); everyday rates and distances come from each country's travel survey, and everyday
 attraction from jobs outside the US (T-509 stage 4, T-453); sparse cells merge harder (T-466); cost
 damping starts at 60 car-minutes (T-502); mode choice is fitted on six real networks (T-509 stages
-5-6: `asc_rail` 0.4, everyday trips 1.1 lower, everyday walking centred at 1.9 km); track capacity
+5-6: `asc_rail` 0.4, everyday trips 1.1 lower, everyday walking centred at 1.9 km; stage 7 checked
+all 67 packs and added Japan's +0.5); track capacity
 caps trains an hour (T-517); a new game has $3B, construction costs half what they did and running
 costs $2.25 a car-km (T-467, T-485). Real save's demand final: about 9.78M rail trips a day (T-509
 stage 6). History is in ARCHIVE.md.
 
-**Handoff for the next orchestrator (2026-10-16).** Check `git status`, the taking marks here and
-ARCHIVE.md first. CPU: at most 5 cores for all agents together (CLAUDE.md). Asks for Anita go in
+**Handoff for the next orchestrator (2026-10-16, evening).** Nothing is in flight; last commit
+0e6d738 is on 8800. Check `git status`, the taking marks here and ARCHIVE.md first. Anita's playtest
+notes land in TODO.md (hers; read it, file new items as tasks, never edit it). Open questions she
+has not answered are only playtest checks (keep or drop the rays to a selected bubble, "+n" for
+clipped line bullets, curve labels' metres while placing). CPU: at most 5 cores for all agents together (CLAUDE.md). Asks for Anita go in
 the final message or notes/for-anita.md, never TODO.md. **After each commit**:
 `node trainworld/checks/smoke.mjs`, commit explicit paths, rebuild 8800 (`git -C maps/.tw-snap
 checkout --detach <commit>`, then with `CARGO_TARGET_DIR=maps/.tw-snap-target`, `CARGO_BUILD_JOBS=3`
