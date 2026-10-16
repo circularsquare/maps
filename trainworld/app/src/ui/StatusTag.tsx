@@ -13,7 +13,7 @@ export function StatusTag() {
   // T-149, T-172: a city loading (at startup, after a pan, or construction reaching it) says how
   // far it has got
   const load = loadProgress.value;
-  // T-484: the zone in view could not load (the others carry on); it is tried again
+  // T-484, T-492: the zone in view could not load (the others carry on); its text says whether it is tried again
   const zoneFailure = viewedZone.value ? zoneFailures.value.get(activeCity.value) : undefined;
   const busy = loadFailure.value ? "Demand could not load"
     : zoneFailure ? `${cityById(activeCity.value).name} could not load`
@@ -28,7 +28,7 @@ export function StatusTag() {
     : !viewFinal.value ? `Estimate, refining ${Math.min(step.done + 1, step.of)}/${step.of}…`
     : viewUpdating.value ? `Updating demand ${Math.min(step.done + 1, step.of)}/${step.of}…` : null;
   if (!busy) return null;
-  const tip = loadFailure.value ?? (zoneFailure ? `${zoneFailure}. It is tried again within a minute.` : load && !loadingCardShown() ? `Loading ${cityNames(load.cities)}, ${Math.floor(load.fraction * 100)}%. ${load.step}`
+  const tip = loadFailure.value ?? (zoneFailure ? zoneFailure : load && !loadingCardShown() ? `Loading ${cityNames(load.cities)}, ${Math.floor(load.fraction * 100)}%. ${load.step}`
     : !demandView.value ? busy
     : !viewFinal.value ? "These figures are an early estimate. They settle when the forecast is finished."
     // T-328: the figures kept from the last time this game was open, while it is worked out again

@@ -12,7 +12,7 @@ import type { Map as MlMap } from "maplibre-gl";
 import { clock } from "../game/clock";
 import { demandView, lineLoadsFor, type DemandView } from "../game/demand";
 import { purposeName, type PurposeFilter } from "../game/purposes";
-import type { WorldView } from "../game/types";
+import type { LineInput, WorldView } from "../game/types";
 import { ask, display, isBuildTool, purposeFilter, selection, shownDayPhrase, tool } from "../game/ui";
 import { world } from "../game/world";
 import { hoverAt } from "./demandHover";
@@ -22,7 +22,7 @@ import type { NetworkBuffers } from "./network";
 import { circleTip, stationTip, trainTip } from "./networkTips";
 import type { Overlay } from "./overlay";
 import { pick, SLOP_PX, topSeg } from "./pick";
-import { elevationFact, factRow, speedFact } from "./trackTagRows";
+import { elevationFact, factRow, lineBullets, speedFact } from "./trackTagRows";
 
 /** A line of the tag: plain text, or a row of facts with icons. */
 type TipLine = string | HTMLElement;
@@ -102,15 +102,15 @@ export function trackTip(ov: Overlay, px: number, py: number, zoom = 12): TipLin
   if (!facts.length) return null;
   // T-473: always the elevation, speed and lines on it, whatever the track display; no lines row
   // where none runs (T-526). Track under a bundle of lines loses to the lines, except at its edges.
-  const names = linesOn(w, hit.edge);
-  if (names.length) return [...facts, `Lines: ${names.slice(0, 4).join(", ")}${names.length > 4 ? ` and ${names.length - 4} more` : ""}`];
+  const on = linesOn(w, hit.edge);
+  if (on.length) return [...facts, lineBullets(on)];
   return !w && lineOnEdge(n, hit.edge) ? [...facts, "A line runs here"] : facts;
 }
 
-/** Names of the lines whose path uses an edge. */
-function linesOn(w: WorldView | null, edge: number): string[] {
+/** The lines whose path uses an edge, in the save's order. */
+function linesOn(w: WorldView | null, edge: number): LineInput[] {
   const e = w?.edges.find((x) => x.id === edge);
-  return e ? w!.save.lines.filter((l) => e.lines.includes(l.id)).map((l) => l.name) : [];
+  return e ? w!.save.lines.filter((l) => e.lines.includes(l.id)) : [];
 }
 
 /** The elevation and speed limit at a point of an edge's track stroke, a row each (T-473,

@@ -24,8 +24,10 @@ Positron, repainted faint (`map/basemap.ts`), so the network reads first.
   held outside); bare track 0.4, 1.8 and 3; a white casing 0.6-2.4 px wider, drawn as a fixed margin
   under the stroke and not part of a traffic width [T-267]; a selected line or track 0.5-3 px wider
   still. A stroke thinner than a device pixel is drawn a pixel wide and that much fainter.
-- **Lines sharing track are drawn over each other** [T-190]: interlining is not represented; the
-  line with the highest id is on top and wins a click there.
+- **Lines sharing track are drawn over each other** [T-190, T-533]: interlining is not represented.
+  One order for all lines: a line with no trains (fleet zero) goes under every line that runs
+  trains; within each group the shorter route (end to end, one direction) is on top, ties to the
+  higher id. The line on top wins a click. It is rebuilt when lines or fleets change.
 - **Track display** [T-105; Settings], four choices, remembered per browser:
   - **Line**: uniform width in the line colours.
   - **Line + traffic thickness** (the default): width by riders over the day shown
@@ -175,7 +177,8 @@ at most once a game second, only while drawn.
   for the elevation at that point (an up and down arrow, then "+1" on its Elevation colour) and one
   for the speed limit (two right chevrons, then "120 km/h" on its Max speed colour), each colour at
   half strength behind dark text (`map/trackTagRows.ts`), and on bare track the lines using it
-  ("Lines: subway 5, subway 7"; no row when none runs there). A planned line adds
+  as their line bullets, in the save's order, wrapping (the markup and CSS of the `Chip` in
+  `ui/widgets.tsx`, built as plain DOM by `lineBullets`; no row when none runs there) [T-532]. A planned line adds
   "Not running yet", a broken one "Not running"; before the first solve the traffic view says
   "Calculating demand". The tag follows the pointer along the track; leaving, pressing, dragging or
   zooming hides it. It follows the pick order: with the select tool, bubbles, capacity tags and

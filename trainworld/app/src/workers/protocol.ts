@@ -113,6 +113,11 @@ export type ToClock =
   /** fare income per game hour in each period, per kind of day (US$M); `lines` the same per line
    * (T-293: each line's fares taken today) */
   | { kind: "income"; perHour: number[][]; lines?: { line: number; perHour: number[][] }[] }
+  /** T-531: each running line's fares and running cost by region, [region, share] pairs
+   * (game/regionMoney.ts) */
+  | { kind: "regionShares"; lines: { line: number; fare: [string, number][]; run: [string, number][] }[] }
+  /** T-531: how edit `seq`'s charge divides between regions */
+  | { kind: "chargeShares"; seq: number; build: [string, number][]; trains: [string, number][] }
   /** demand's riders for the boarding account (T-164): `TrackApi.set_riders`'s packing, built by
    * game/boarding.ts `packRiders` from the demand result, for one kind of day (T-260) */
   | { kind: "riders"; packed: Float32Array; day: number }
@@ -134,6 +139,9 @@ export type ToClock =
       q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "lineHeld"; line: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "lineAccount"; line: number; day: number } | { what: "linePeriods"; line: number; day: number } | { what: "today" } | { what: "yesterday" };
     };
 
+/** T-531: each region's today and this hour, as the "cash" message carries them. */
+export type RegionNow = Record<string, { today: DayLedger; hour: HourLedger }>;
+
 /** Money as the worker keeps it (T-028), US$M unless said. */
 export interface MoneyState {
   cash: number;
@@ -153,6 +161,8 @@ export interface MoneyState {
   ledger: DayLedger[];
   /** recent game hours, oldest first, the last this hour so far (T-447) */
   hours: HourLedger[];
+  /** T-531: the same per region (a zone id; "" outside every zone) */
+  regions: Record<string, { ledger: DayLedger[]; hours: HourLedger[] }>;
 }
 
 export interface ClockEdge {
@@ -329,7 +339,7 @@ export type FromClock =
   | { kind: "money"; money: MoneyState }
   /** T-284: the cash and today's ledger as fares land and running costs drain, several times a wall
    * second while the clock runs; the rest of MoneyState comes with "money" when an hour turns */
-  | { kind: "cash"; cash: number; today: MoneyState["ledger"][number]; hour: HourLedger }
+  | { kind: "cash"; cash: number; today: MoneyState["ledger"][number]; hour: HourLedger; regions: RegionNow }
   /** a game was loaded or started (`from`), at game time `clock`; a failed import says why in
    * `error` and changes nothing */
   /** `frame`: the game now in the worker; `converted`: its save was in an older frame and was

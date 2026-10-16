@@ -56,7 +56,8 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   zoomed-out dot groups; T-217, T-249), `links.ts` (the player's links, T-197), `lineActions.ts`
   (new and copied lines), `remove.ts` (removing things, with the question asked before removing
   anything constructed, T-096).
-- Other: `money.ts` (cash and ledger from the worker, fare income from riders, T-028), `issues.ts`
+- Other: `money.ts` (cash and ledger from the worker, fare income from riders, T-028),
+  `regionMoney.ts` (each line's and each construction's split between regions, the region ledgers, T-531), `issues.ts`
   (the track model's refusals in plain words), `loading.ts` (what is loading, the startup gate and
   the clock hold, T-149, T-172), `palette.ts`, `format.ts`.
 - The `WorldView` is built from the clock worker's states in `workers/clockClient.ts`.
@@ -70,7 +71,8 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   T-496), `geo.ts` (the draw anchor, T-307), `anchorVersion.ts` (its version as a signal, T-317),
   `live.ts` (the live map objects for UI code, set by main.ts), `synth.ts` (stress network).
 - Stations: `stationGeometry.ts` (platform shapes along the track for drawing, picking and the
-  ghost, T-189, T-254), `stationLabels.ts` (names
+  ghost, T-189, T-254), `stationNames.ts` (a station's name suggestions: cross street,
+  neighbourhood, city or town, T-534), `stationLabels.ts` (names
   keep their elements across edits unless their text changes, T-496), `capacityMarkers.ts`, `labelLayout.ts` (shared spacing
   for names and tags).
 - Tools: `pick.ts`, `tools.ts` (drawing track, placing stations and crossovers, the line tool), `edgeEdit.ts`
@@ -100,7 +102,7 @@ checkboxes and the inline SVG icons); `TopBar.tsx`; `StatusTag.tsx` (the demand 
 dialog); `DemandSelector.tsx` (None/Homes/Destinations and the purpose filter); `Blueprint.tsx`
 (Build's quote and Construct, and the Select tool's selection bar on the map, T-353); `Debug.tsx` (the `?debug=1` readout); `inspector/` (one inspector
 per selection kind: `others.tsx` holds station, train, track, junction and cell or zone;
-`ComplexMap.tsx` the complex map); `LoadingScreen.tsx` (the clock hold at startup, the loading card,
+`ComplexMap.tsx` the complex map; `NameEdit.tsx` a station's or line's name edited in place, T-534); `LoadingScreen.tsx` (the clock hold at startup, the loading card,
 the screen when demand cannot load, T-149, T-172, T-180); `Search.tsx` (T-148); `StationsFull.tsx`
 (the "N stations full" button, T-231); `keys.ts` (which keys a focused control keeps, T-183);
 `tip.ts` (the hover tag for every panel and control, from `data-tip`, never `title`, T-210);
@@ -167,7 +169,9 @@ Run from the maps root (`node trainworld/checks/<file>`).
   against `?perfOff=periods`), `t488-money-days.mjs` (the real save's clock run fast and pulled back
   across midnight: money days and hours one each, in order, none empty; uses the app's Vite, port
   6135 by default), `t486-click-on-top.mjs` (a click on a blueprint point's square over a bubble
-  selects the track, beside it the bubble), `t496-edit-latency.mjs` (the real save: click to drawn
+  selects the track, beside it the bubble), `t533-draw-order.mjs` (the real save: the shorter line
+  on top where lines share ground, a line with no trains under; port 6130 by default),
+  `t496-edit-latency.mjs` (the real save: click to drawn
   for placing stations; `MODE=visual` hashes the renderer's buffers after a series of edits against
   an older network.ts),
   `t328-cache-check.mjs` (the demand cache on reload: timing, cached
@@ -199,7 +203,8 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   in `data/raw/osm/`; the sim's `pack_walk` bin; 1-8 minutes a pack; rerun after anything that
   changes a pack's zones, `--check` lists stale ones; T-275).
 - `merge_cells.py <ids> | --all` is every pack's last step (T-044): sparse res-9 cells into their
-  res-8 parent within a zone, and touching sparse children of busier parents together (T-466), the
+  res-8 parent within a zone, touching sparse children of busier parents together (T-466), and
+  sparse cells still alone into a touching merged cell across the parent's edge (T-510), the
   res-9 pack kept in `data/work/res9/`; `--undo` puts it back
   before any step that rewrites a pack (enrichments, routes, `intercity.py`), `--stats` only counts.
 - `nocar.py <ids> | --all` adds `nocar` (people in households with no car, per cell; T-511) to

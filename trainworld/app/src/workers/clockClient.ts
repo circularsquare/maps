@@ -8,6 +8,7 @@ import { clock, SPEEDS } from "../game/clock";
 import { HOME_CITY, setWorldFrame } from "../game/cities";
 import { holdForGameLoad } from "../game/loading";
 import { incomeByDay, lastSaved, liveMoney, setMoneyState } from "../game/money";
+import { chargeShares, lineShares } from "../game/regionMoney";
 import { DAY_KINDS } from "../game/days";
 import { demandByDay } from "../game/demand";
 import { accountVersion, packRiders } from "../game/boarding";
@@ -269,6 +270,16 @@ export class ClockClient {
         this.post({ kind: "income", perHour: per, lines });
       }
     });
+    // T-531: each line's money by region, whenever lines, riders or zone boundaries change it
+    let lastShares = "";
+    effect(() => {
+      const lines = [...lineShares.value].map(([line, s]) => ({ line, ...s }));
+      const key = JSON.stringify(lines);
+      if (key !== lastShares) {
+        lastShares = key;
+        this.post({ kind: "regionShares", lines });
+      }
+    });
     // Demand's riders for the boarding account (T-164): each new result, every kind of day's
     // (T-260); the trains and platforms of each hour read their own day's.
     effect(() => {
@@ -283,6 +294,8 @@ export class ClockClient {
   }
 
   private cityId: string;
+  /** the world before the last state, for the edit that state answers (T-531) */
+  private worldBefore: WorldView | null = null;
   /** `?new=1`, `?synth=1` or `?demandTest=1`: no autosave until a copy is saved (T-320) */
   private testPage: boolean;
 
@@ -308,6 +321,7 @@ export class ClockClient {
         if (moved) setAnchor(a);
         if (msg.state.net) msg.state.net.anchor = a;
         setMoneyState(msg.state.money);
+        this.worldBefore = world.value;
         world.value = toWorld(msg.state, this.city);
         this.onState(msg.state);
         if (moved) {
@@ -321,7 +335,7 @@ export class ClockClient {
         setMoneyState(msg.money);
         break;
       case "cash": // T-284: fares landing, running costs draining
-        liveMoney.value = { cash: msg.cash, today: msg.today, hour: msg.hour };
+        liveMoney.value = { cash: msg.cash, today: msg.today, hour: msg.hour, regions: msg.regions };
         break;
       case "loaded":
         // the game now in the worker may be in the other frame (T-125); first, before anything reads positions
@@ -384,6 +398,8 @@ export class ClockClient {
         this.pending.delete(msg.seq);
         this.editLog.push({ worker: msg.ms, stateMs: this.lastStateMs });
         if (this.editLog.length > 40) this.editLog.shift();
+        // T-531: the world before and after this edit's state say where its money went
+        if (msg.ok && msg.charge > 0 && world.value) this.post({ kind: "chargeShares", seq: msg.seq, ...chargeShares(this.worldBefore, world.value, msg.line) });
         f?.({ ok: msg.ok, issues: msg.issues, charge: msg.charge, line: msg.line, node: msg.node });
         break;
       }

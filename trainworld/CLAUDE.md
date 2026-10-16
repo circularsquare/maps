@@ -71,6 +71,7 @@ Briefs carry only the task; these hold for every agent.
 - **Rust**: `CARGO_BUILD_JOBS=3`; keep the crate compiling between edits, since others build it
   too. Shells started before Rust was installed lack it on PATH: prepend `%USERPROFILE%\.cargo\bin`.
 - **CPU**: at most 5 of 16 cores in all, every agent together (Anita, 2026-10-16); she is using the machine.
+  Overnight batches she has approved (a run started for the night) may use up to 12 (Anita, 2026-10-16, T-535).
 - **Bash**: one simple command per call (no `&&`, pipes or loops); scripts go in a file in your
   scratchpad folder, not heredocs.
 - **Screenshots and diagnostics** go in `../artifacts/trainworld/`, never in this folder.

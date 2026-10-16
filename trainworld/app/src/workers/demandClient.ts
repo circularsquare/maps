@@ -66,7 +66,7 @@ import { perfOff } from "../perfFlags";
 import { marketZonesNear } from "./demandClusters";
 import { citiesReached, footprintOf, loadFootprints, REACH_M, zonesNearStations, type Footprint } from "./cityReach";
 import { nearbyZones } from "../game/zones";
-import type { BareFigures, DemandNetwork, FromDemand, ToDemand } from "./demandProtocol";
+import type { BareFigures, DemandNetwork, FromDemand, OpenRejected, ToDemand } from "./demandProtocol";
 import { readTripPeriod, setTripQuery, tripKey, type RouteNodes, type Trip } from "../game/trip";
 import { demandTestSnapshot } from "./demandTest";
 import { mergeEveryday } from "./selectionMerge";
@@ -964,7 +964,7 @@ class DemandClient {
 
   /** `item` (of zone `zone`) could not be downloaded even after its retries: leave it out, say so for
    * its zone, and try again later (BROKEN_RETRY_MS) if it is still needed then. */
-  private unreachable(item: string, zone: CityId, why: string) {
+  private unreachable(item: string, zone: CityId, why: string, retry = true) {
     if (this.status.startsWith("failed")) return;
     console.warn("demand:", why);
     this.fetching.delete(item);
@@ -974,24 +974,47 @@ class DemandClient {
     this.onOpen = this.onOpen.filter((w) => (w.item === item ? (w.f(false), false) : true));
     const tries = (this.broken.get(item)?.tries ?? 0) + 1;
     const wait = BROKEN_RETRY_MS[Math.min(tries, BROKEN_RETRY_MS.length) - 1];
-    const timer = setTimeout(() => {
+    const timer = retry ? setTimeout(() => {
       this.broken.delete(item);
       this.ensure();
-    }, wait) as unknown as number;
+    }, wait) as unknown as number : 0;
     this.broken.set(item, { tries, timer });
     const failures = new Map(zoneFailures.peek());
-    failures.set(zone, why);
+    failures.set(zone, `${why}. ${retry ? "It is tried again within a minute." : "It stays out until the page is reloaded."}`);
     zoneFailures.value = failures;
     this.ensure();
     // a game load's hold may have been waiting for this zone alone
     this.checkHold();
   }
 
-  /** `item` downloaded: whatever failed before for it is over. */
+  /** T-492: items a worker could not open, with how many times: the zone stays flagged until the
+   * item opens. The first failure is tried again once (the pack may have been rewritten while it
+   * downloaded); a second one is final, since a pack that downloads whole and does not open twice is
+   * broken, not caught mid-write. */
+  private openFails = new Map<string, number>();
+
+  /** A worker could not open a pack of the `open` it was sent: it is left out as a pack that could not
+   * be downloaded is. Every worker is told to drop it (another may have opened it), and the first
+   * worker's word is taken for all (the same pack fails the same way in each). */
+  private openRejected(r: OpenRejected, bare: boolean) {
+    const item = r.market ? marketItem(r.id) : r.id;
+    if (this.broken.has(item)) return;
+    const fails = (this.openFails.get(item) ?? 0) + 1;
+    this.openFails.set(item, fails);
+    if (!bare) {
+      for (const w of this.workers) w.postMessage({ kind: "close", ids: r.market ? [] : [r.id], ...(r.market ? { markets: [r.id] } : {}) } satisfies ToDemand);
+      this.opened.delete(item);
+      this.acks.delete(item);
+    }
+    this.unreachable(item, r.id, `${r.market ? "market pack" : "city pack"} ${r.id} would not open: ${r.error}`, fails < 2);
+  }
+
+  /** `item` downloaded: whatever failed before for it is over, unless it also did not open. */
   private recovered(item: string) {
     const b = this.broken.get(item);
     if (b) clearTimeout(b.timer);
     this.broken.delete(item);
+    if (this.openFails.has(item)) return;
     const zone = (isMarket(item) ? marketZone(item) : item) as CityId;
     if (!zoneFailures.peek().has(zone) || this.broken.has(zone) || this.broken.has(marketItem(zone))) return;
     const failures = new Map(zoneFailures.peek());
@@ -1007,10 +1030,12 @@ class DemandClient {
 
   /** A worker opened `item`: once all have, waiting solves and queries may go. */
   private openedBy(item: string) {
+    if (this.broken.has(item)) return; // T-492: another worker could not open it
     const n = (this.acks.get(item) ?? 0) + 1;
     this.acks.set(item, n);
     if (n < this.workers.length) return;
     this.opened.add(item);
+    if (this.openFails.delete(item)) this.recovered(item);
     const log = lastLoad(this.start.loads, (l) => l.item === item && !l.bare);
     if (log && log.openedAt === undefined) log.openedAt = performance.now();
     this.settleWaiters();
@@ -1021,6 +1046,7 @@ class DemandClient {
     for (const [id, f] of Object.entries(figures)) {
       this.bareOpen.set(id, f);
       this.bareKept.delete(id);
+      if (this.openFails.delete(id)) this.recovered(id);
       const log = lastLoad(this.start.loads, (l) => l.item === id && !!l.bare);
       if (log && log.openedAt === undefined) log.openedAt = performance.now();
     }
@@ -1477,6 +1503,7 @@ class DemandClient {
     if (msg.kind === "opened") {
       const w = this.start.workers[i];
       if (w) { w.openMs += msg.openMs; w.warmMs += msg.warmMs; w.memBytes = msg.memBytes; }
+      for (const r of msg.rejected ?? []) this.openRejected(r, !!msg.bare);
       if (msg.bare) {
         this.bareOpened(msg.bare);
         this.progress();

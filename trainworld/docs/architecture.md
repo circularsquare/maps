@@ -139,8 +139,14 @@ Web first, so it can be shared as a link.
   read again after its .bin and both fetched again if it changed (a pack rewritten mid-load). A
   zone whose pack still cannot be downloaded is left out (not needed, waited for or held for),
   its failure shows on the status tag while it is in view, and it is tried again after 10, 30 and
-  then every 60 s; demand everywhere else carries on (T-484). Only a worker error stops the pool
-  ("Demand could not load").
+  then every 60 s; demand everywhere else carries on (T-484). A pack that downloads whole and
+  does not open in a worker (a parse or WASM error, or a market pack whose zone count disagrees
+  with the registry's row) is treated the same way: the worker answers its `open` naming the pack
+  in `rejected`, every worker drops it, the zone is left out and flagged, and it is tried again
+  once after 10 s; a second failure is final until the page is reloaded (T-492). A market pack
+  mismatched with its row, as in a snapshot built mid pack rebuild, is isolated per zone like any
+  other. Only an error outside opening a pack stops the pool ("Demand could not load").
+  `checks/every-pack-opens.mjs --broken` serves a broken city pack and market pack.
   `game/loading.ts`; timings in notes/T-172.md, frame times in notes/T-180.md.
 - **Threads talk by snapshots**: a worker transfers a finished buffer with a version number; the
   main thread swaps it in. Works on any host. SharedArrayBuffer is a later option; it needs

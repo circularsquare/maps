@@ -22,6 +22,7 @@ import { edit, linesAt, renameLine, say, setLineColour, stepTrainCount, trainsSh
 import { live } from "../../map/live";
 import { Chip, Icon, Row, Segmented, Stepper } from "../widgets";
 import { PurposeSplit } from "./PurposeSplit";
+import { NameEdit } from "./NameEdit";
 
 const DEMAND_LABEL: Record<Demand, string> = { high: "High", medium: "Medium", low: "Low" };
 
@@ -197,11 +198,6 @@ function StopToday({ line, i }: { line: string; i: number }) {
 
 export function LineInspector({ id }: { id: string }) {
   const w = world.value;
-  const [editing, setEditing] = useState(false);
-  const nameInput = useRef<HTMLInputElement>(null);
-  const nameCommitted = useRef(false);
-  const [nameDraft, setNameDraft] = useState("");
-  useEffect(() => { if (editing) { nameCommitted.current = false; nameInput.current?.focus(); nameInput.current?.select(); } }, [editing]);
   const [colours, setColours] = useState(false);
   const [copying, setCopying] = useState(false);
   const [spots, setSpots] = useState<{ text: string; s: number }[]>([]);
@@ -212,13 +208,6 @@ export function LineInspector({ id }: { id: string }) {
   // T-309: the demand level now in the line's own local time
   const now = demandAt(clock.hour.value * 3600 + (w?.lineStats[id]?.shift ?? 0));
   const lev = DEMAND_INDEX[now];
-  useEffect(() => {
-    if (renameLinePrompt.value === id) {
-      setNameDraft(l?.name ?? "");
-      setEditing(true);
-      renameLinePrompt.value = null;
-    }
-  }, [id, renameLinePrompt.value]);
   // where it loses time to busy track, asked again after every edit and when the level turns
   useEffect(() => {
     if (!l) return;
@@ -252,12 +241,6 @@ export function LineInspector({ id }: { id: string }) {
   const times = st.fromStartByLevel[lev] ?? st.fromStartS;
   const editingStops = tool.value === "line" && lineDraft.value.line === l.num;
 
-  const commit = (e: Event) => {
-    if (nameCommitted.current) return;
-    nameCommitted.current = true;
-    renameLine(l.id, (e.target as HTMLInputElement).value);
-    setEditing(false);
-  };
   const build = async () => {
     const a = await edit({ op: "constructLine", line: l.num });
     if (a.ok) say(`${l.name} constructed for ${money(a.charge * 1e6)}. Its trains start with the next departure.`);
@@ -305,24 +288,7 @@ export function LineInspector({ id }: { id: string }) {
     <>
       <div class="title">
         <button class={"badge-edit" + (colours ? " on" : "")} data-tip="Edit line colour and symbol" aria-label="Edit line colour and symbol" onClick={() => setColours(!colours)}><Chip line={l} size="lg" plain /></button>
-        {editing ? (
-          <input
-            class="name-edit"
-            value={nameDraft}
-            onInput={e => setNameDraft(e.currentTarget.value)}
-            ref={nameInput}
-            onBlur={commit}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") commit(e);
-              if (e.key === "Escape") { nameCommitted.current = true; setEditing(false); }
-            }}
-          />
-        ) : (
-          <span class="name">{l.name}</span>
-        )}
-        <button class="btn icon" data-tip="Rename" aria-label="Rename" onClick={() => { setNameDraft(l.name); setEditing(true); }}>
-          <Icon.pencil />
-        </button>
+        <NameEdit key={l.id} name={l.name} onRename={(n) => renameLine(l.id, n)} prompt={renameLinePrompt.value === id} onPrompted={() => { renameLinePrompt.value = null; }} />
       </div>
       {colours && (
         <div class="line-identity">

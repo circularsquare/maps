@@ -46,8 +46,8 @@ key.
   column (names A to Z, figures biggest first, Near nearest first), a second reverses it, the sorted
   column has a small arrow, and each header's hover says what it sorts by. Names sort naturally, ties
   by name. Lines default to by name. The sort is kept while the page is open and re-runs each game hour.
-- **Trains to add** [T-472, T-491]: a row's train count (the trains its level needs now) is
-  coloured by the crowding score of the line's period now, otherwise muted. The score is the
+- **Trains to add** [T-472, T-491]: a row's train count (the trains its level needs now, the bare
+  number under the "Trains" header [T-532]) is coloured by the crowding score of the line's period now, otherwise muted. The score is the
   average rider's extra wait for a train with room (rider-minutes spent on the platform after a
   full train left them, each waiting the gap to the next departure, over riders arriving in the
   period) divided by the square root of their average ride on the line (rider-minutes aboard over
@@ -176,7 +176,16 @@ key.
   longest wait, or else the riders arriving this hour and the longest wait. The counts drop the
   moment a train leaves with whoever fitted (a timer set for the station's next departure) and grow
   with arrivals each game minute. The rest (closest stations, links, commuters, inter-region
-  trips) is as in complex view, for the station alone. A double click on the name renames it.
+  trips) is as in complex view, for the station alone.
+- **Renaming** [T-534, `ui/inspector/NameEdit.tsx`]: a station's and a line's name both edit in
+  place from a double click on the name or the pencil beside it (hover "Rename, or double click the
+  name"), its text selected; Enter or leaving the box keeps it, Escape drops it, an empty name is
+  ignored. A station's title also has the cycle button (two arrows, hover "Next suggested name"):
+  each click renames it to the next of its suggestions, the cross street, the neighbourhood and the
+  city or town, wrapping round, worked out then from where it stands (map/stationNames.ts,
+  [track-and-service.md](track-and-service.md) "Placing stations"). The cross street needs the
+  station on screen at zoom 13 or closer; with nothing else to offer it says "No other name is
+  suggested here."
 
 ## The complex map
 

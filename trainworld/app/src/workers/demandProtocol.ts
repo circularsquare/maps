@@ -45,6 +45,9 @@ export interface DemandNetwork {
 /** T-377: a zone's part of the world market (`data/packs/<id>.market.json`). */
 export interface MarketPack { id: CityId; pack: string | Uint8Array }
 
+/** T-492: a pack a worker could not open: the zone, whether it was its market pack, and why */
+export interface OpenRejected { id: CityId; market: boolean; error: string }
+
 export type ToDemand =
   /** start the WASM with the periods this worker solves; city packs (header text and .bin) and
    * zones' market packs may come here or in `open`s after it (T-149) */
@@ -162,7 +165,9 @@ export type FromDemand =
   /** an `open` is done: its cities' info as `ready`'s, and the zones whose market packs it opened */
   | { kind: "opened"; cityInfo: Record<CityId, number[]>; markets: CityId[]; openMs: number; warmMs: number; memBytes: number;
       /** T-325: the packs were opened bare (aux worker), with each one's figures */
-      bare?: Record<CityId, BareFigures> }
+      bare?: Record<CityId, BareFigures>;
+      /** T-492: packs of this `open` that did not open (left out of `cityInfo`, `markets`, `bare`) */
+      rejected?: OpenRejected[] }
   /** T-301: a `close` is done (WASM memory never shrinks: the freed space is reused) */
   | { kind: "closed"; memBytes: number }
   | { kind: "failed"; error: string }

@@ -56,6 +56,8 @@ export interface SaveHeader {
   ledger: DayLedger[];
   /** recent hours, oldest first (T-447; absent in older saves) */
   hours?: HourLedger[];
+  /** T-531: the same two per region (a zone id; "" outside every zone); absent in older saves */
+  regions?: Record<string, { ledger: DayLedger[]; hours: HourLedger[] }>;
 }
 
 /**

@@ -18,7 +18,7 @@ import { DAY_KINDS } from "./days";
 import { demandByDay, type DemandView } from "./demand";
 import { PERIODS } from "./periods";
 import { world } from "./world";
-import type { MoneyState } from "../workers/protocol";
+import type { MoneyState, RegionNow } from "../workers/protocol";
 import type { DayLedger, HourLedger } from "../workers/saveFile";
 
 export type { MoneyState };
@@ -28,7 +28,7 @@ export const moneyState = signal<MoneyState | null>(null);
  * runs (the worker's "cash" message; also set from every `moneyState`). Only the figures that show
  * them read it (the top bar's cash, the Money tab's cash and today), each its own small component,
  * so nothing else re-renders as fares land. */
-export const liveMoney = signal<{ cash: number; today: DayLedger | null; hour: HourLedger | null }>({ cash: 0, today: null, hour: null });
+export const liveMoney = signal<{ cash: number; today: DayLedger | null; hour: HourLedger | null; regions?: RegionNow }>({ cash: 0, today: null, hour: null });
 export function setMoneyState(m: MoneyState) {
   moneyState.value = m;
   liveMoney.value = { cash: m.cash, today: m.ledger[m.ledger.length - 1] ?? null, hour: m.hours[m.hours.length - 1] ?? null };

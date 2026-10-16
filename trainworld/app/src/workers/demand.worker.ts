@@ -23,7 +23,7 @@ import init, { DemandApi, EverydayApi, IntercityApi, MarketPacks, day_factors, d
 import { CITIES, cityToMarket, cityToWorld, HOME_CITY, MARKET_WORLD, setWorldFrame, worldToCity, worldToLonLat, type CityId } from "../game/cities";
 import { EVERYDAY_KEYS, EVERYDAY_NAMES } from "../game/purposes";
 import { PERIODS } from "../game/periods";
-import type { BareFigures, DemandNetwork, FromDemand, MarketPack, ToDemand } from "./demandProtocol";
+import type { BareFigures, DemandNetwork, FromDemand, MarketPack, OpenRejected, ToDemand } from "./demandProtocol";
 import { cellBox, splitClusters, type Box, type Cluster } from "./demandClusters";
 
 /** WASM started (and the market opened if `init` carried it): `open` and solves wait for this. */
@@ -135,34 +135,61 @@ function yieldNow(): Promise<void> {
  * carrying the everyday arrays gets the layer (every registered city since T-142); a pack
  * without them stays commute-only.
  */
-function openPacks(packs: { id: CityId; header: string; bin: ArrayBuffer }[], market: MarketPack[] | undefined, isBare = false) {
+function openPacks(packs: { id: CityId; header: string; bin: ArrayBuffer }[], market: MarketPack[] | undefined, isBare = false, rejected: OpenRejected[] = []) {
+  // T-492: a pack that does not open is left out and reported; the pool carries on
+  const reject = (id: CityId, isMarket: boolean, err: unknown) => rejected.push({ id, market: isMarket, error: String(err) });
   for (const pack of packs) {
-    if (isBare) {
-      if (!bare.has(pack.id)) bare.set(pack.id, openBare(pack));
-      continue;
+    try {
+      if (isBare) {
+        if (!bare.has(pack.id)) bare.set(pack.id, openBare(pack));
+        continue;
+      }
+      // (T-301: reopened before its close took effect: it stays)
+      if (cities.has(pack.id)) { closeLater.ids.delete(pack.id); continue; }
+      const bin = new Uint8Array(pack.bin);
+      const a = new DemandApi(pack.header, bin);
+      // T-399: the everyday layer shares the commutes' cells, zones, gravity and routes
+      let e: EverydayApi | null = null;
+      try {
+        if (!aux && hasEveryday(pack.header)) e = EverydayApi.beside(a, pack.header, bin);
+      } catch (err) {
+        a.free();
+        throw err;
+      }
+      cities.set(pack.id, a);
+      if (e) everyday.set(pack.id, e);
+    } catch (err) {
+      reject(pack.id, false, err);
     }
-    // (T-301: reopened before its close took effect: it stays)
-    if (cities.has(pack.id)) { closeLater.ids.delete(pack.id); continue; }
-    const bin = new Uint8Array(pack.bin);
-    const a = new DemandApi(pack.header, bin);
-    cities.set(pack.id, a);
-    // T-399: the everyday layer shares the commutes' cells, zones, gravity and routes
-    if (!aux && hasEveryday(pack.header)) everyday.set(pack.id, EverydayApi.beside(a, pack.header, bin));
   }
   if (market?.length && !aux) {
     marketPacks ??= new MarketPacks(MARKET_WORLD);
     const have = new Set(marketPacks.places());
-    let added = false;
+    const added: CityId[] = [];
     for (const m of market) {
       closeLater.markets.delete(m.id);
       if (have.has(MARKET_OF[m.id])) continue;
-      // T-180: the page sends the pack's bytes; decoding here keeps it off the main thread
-      marketPacks.add(typeof m.pack === "string" ? m.pack : new TextDecoder().decode(m.pack));
-      added = true;
+      try {
+        // T-180: the page sends the pack's bytes; decoding here keeps it off the main thread
+        marketPacks.add(typeof m.pack === "string" ? m.pack : new TextDecoder().decode(m.pack));
+        added.push(m.id);
+      } catch (err) {
+        reject(m.id, true, err);
+      }
     }
-    if (added) recompose();
+    if (added.length) {
+      try {
+        recompose();
+      } catch (err) {
+        // composing checks each pack against the registry's row for its zone (the zone count) and
+        // names no pack: the ones just added are taken out again, the market stays as it was
+        for (const id of added) { marketPacks.remove(MARKET_OF[id]); reject(id, true, err); }
+        recompose();
+      }
+    }
   }
-  return Object.fromEntries(packs.map(({ id }) => {
+  const failed = new Set(rejected.filter((r) => !r.market).map((r) => r.id));
+  return Object.fromEntries(packs.filter(({ id }) => !failed.has(id)).map(({ id }) => {
     const b = isBare ? bare.get(id) : undefined;
     const info = Array.from((b?.a ?? cities.get(id)!).info());
     // Auxiliary worker only serves commute allocation; compute workers report all local demand
@@ -189,7 +216,18 @@ const hasEveryday = (header: string) => JSON.parse(header).arrays.some((a: {name
 function openBare(pack: { id: CityId; header: string; bin: ArrayBuffer }) {
   const bin = new Uint8Array(pack.bin);
   const a = new DemandApi(pack.header, bin);
-  const e = hasEveryday(pack.header) ? EverydayApi.beside(a, pack.header, bin) : null;
+  let e: EverydayApi | null = null;
+  try {
+    e = hasEveryday(pack.header) ? EverydayApi.beside(a, pack.header, bin) : null;
+    return solveBare(a, e);
+  } catch (err) {
+    e?.free();
+    a.free();
+    throw err;
+  }
+}
+
+function solveBare(a: DemandApi, e: EverydayApi | null) {
   const f0 = new Float32Array(0), u0 = new Uint32Array(0);
   a.set_network(f0, u0, u0, f0, f0, f0);
   e?.set_network(f0, u0, u0, f0, f0, f0);
@@ -322,11 +360,13 @@ onmessage = (e: MessageEvent<ToDemand>) => {
       try {
         const t0 = performance.now();
         const isBare = !!msg.bare && aux;
-        const cityInfo = openPacks(msg.packs, msg.intercity, isBare);
+        const rejected: OpenRejected[] = [];
+        const cityInfo = openPacks(msg.packs, msg.intercity, isBare, rejected);
         const openMs = performance.now() - t0;
         const warmMs = warmUp();
-        const figures = isBare ? Object.fromEntries(msg.packs.map(({ id }) => [id, bare.get(id)!.figures])) : undefined;
-        sendMessage({ kind: "opened", cityInfo, markets: (msg.intercity ?? []).map((m) => m.id), openMs, warmMs, memBytes: wasm_memory_bytes(), ...(figures ? { bare: figures } : {}) });
+        const figures = isBare ? Object.fromEntries(msg.packs.filter(({ id }) => bare.has(id)).map(({ id }) => [id, bare.get(id)!.figures])) : undefined;
+        const markets = (msg.intercity ?? []).map((m) => m.id).filter((id) => !rejected.some((r) => r.market && r.id === id));
+        sendMessage({ kind: "opened", cityInfo, markets, openMs, warmMs, memBytes: wasm_memory_bytes(), ...(figures ? { bare: figures } : {}), ...(rejected.length ? { rejected } : {}) });
       } catch (err) {
         sendMessage({ kind: "failed", error: String(err) });
       }

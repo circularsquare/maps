@@ -6,12 +6,11 @@ P3 = later. Finished or abandoned tasks move to `ARCHIVE.md`.
 **Direction** (Anita; details in CLAUDE.md "Working here"). The whole world, with demand realism
 at the core: a sampler of other countries' cities shows which demand methods carry everywhere, then
 tailoring goes country by country. Calibration's in-city part is done (T-509, archived; Japan's
-country rail constant +0.5). **Next, in order (Anita 2026-10-16):** 1. robustness: T-492 (a pack
-that fails to open stops all demand), T-490 (8800 refusing connections under load), T-510 (lone
-sparse cells); 2. the unattended city pipeline: a new city from docs/data-register.md to a checked
-pack without agent judgement, automatic city and zone choice, with T-314 (borrowing a curve), T-460
-(land-use cap default), T-387 (hospital sizes) and T-060 (packs on R2) as its parts; design first,
-to Anita; 3. long-trip calibration (T-528); 4. more cities. Performance is open work, ranked in
+country rail constant +0.5). **Next, in order (Anita 2026-10-16):** 1. robustness: T-510 (lone
+sparse cells); 2. the unattended city pipeline
+(T-535's design approved 2026-10-16; stages T-460, T-387, T-314, T-536 to T-541): a new city from docs/data-register.md to a checked pack without agent judgement,
+automatic city and zone choice, with T-314 (borrowing a curve), T-460 (land-use cap default), T-387
+(hospital sizes) and T-060 (packs on R2) as its parts; design first, to Anita; 3. long-trip calibration (T-528); 4. more cities. Performance is open work, ranked in
 notes/perf-survey.md. Game modes wait (Anita 2026-10-15: not yet). Anita plans hundreds of metros, so cost per city matters (notes/city-costs.md,
 about 1.6-3.4M tokens a pack).
 
@@ -29,7 +28,7 @@ costs $2.25 a car-km (T-467, T-485). Real save's demand final: about 9.78M rail 
 stage 6). History is in ARCHIVE.md.
 
 **Handoff for the next orchestrator (2026-10-16, evening).** Nothing is in flight; last commit
-5581eb0 is on 8800. Check `git status`, the taking marks here and ARCHIVE.md first. Anita's playtest
+cbc34e2 is on 8800. Check `git status`, the taking marks here and ARCHIVE.md first. Anita's playtest
 notes land in TODO.md (hers; read it, file new items as tasks, never edit it). Her open playtest
 questions (rays to a selection, clipped line bullets, curve labels' metres) were answered in T-530. CPU: at most 5 cores for all agents together (CLAUDE.md). Asks for Anita go in
 the final message or notes/for-anita.md, never TODO.md. **After each commit**:
@@ -47,7 +46,7 @@ TASKS.md and ARCHIVE.md before adding one). New packs end with `merge_cells.py <
 - T-514 [P3] "Other" per cell (T-513): the sim keeps trips by other apart only as a total (`summary` index 10); showing them apart in bubbles and hovers needs other by home and work cell (commutes: `other_trips_by_zone`'s per-zone vectors less `other_lost` by home and work subzone; everyday: a second per-pair share, which doubles `probability`'s memory). Open.
 - T-528 [P2] Fit the regional layer's longer trips (T-509's last part, Anita's design 2026-10-16): their rail constant (0 now; commutes between zones take the local 0.4 plus the country's) and damping, on corridor counts (MLIT's Inter-Regional Travel Survey, NEC FUTURE, Eurostat) at two lengths per country. Open; notes/T-509.md section 15.
 - T-529 [P3] Bikes to stations for homes without a car in Japan (T-509 stages 6-7): car-free homes can only walk to a station, while Tokyo's cyclists who ride to the station count as rail in the census, part of why Tokyo's commute rail is 35% against 52% even with Japan's +0.5. A bike access mode (ride range, station parking) where a country's survey shows it; a code change in the access search. Open; notes/T-509.md sections 14-15.
-- T-510 [P3] Merge lone sparse cells across parents: after T-466, a sparse res-9 child alone in its busy parent stays split; in Tokyo 888 of 2,555 such cells touch a sparse child of another parent and 918 a merged parent (same zone). Join them to the neighbour group, measure as notes/T-466.md. Open.
+- T-510 [P3] Merge lone sparse cells across parents: after T-466, a sparse res-9 child alone in its busy parent stays split; in Tokyo 888 of 2,555 such cells touch a sparse child of another parent and 918 a merged parent (same zone). Join them to the neighbour group, measure as notes/T-466.md. Taking, 2026-10-16.
 - T-497 [P3] Japan's joint commute gravity, what is left (notes/T-463.md): the spread over pack pairs is a quarter off the census (a symmetric crow-flies curve: Shiga sends 64k into Keihanshin and takes 31k, the model about 24k each way; Shiga to Chukyo over the Suzuka range 3.4x, Kagawa to Okayama 6x), which wants a travel-time cost; and the balance stalls at 8e-4 in Okinawa's outlying islands (try solving Okinawa apart to measure the mainland's residual). Open.
 - T-479 [P3] The Northeast's market sites come from `data/packs/intercity.json`, made from the packs merged at 1,000; T-453's re-merge at 2,500 moved some merged cells' centres, so those 600 m sites are slightly off the packs' cells (zone sums equal). Rerun `intercity.py` (its joint gravity rewrites every Northeast pack's gravity) at the next Northeast rebuild. Open.
 - T-461 [P3] Japan's jobs total uses economic census mesh column 023 (all industries less S, public service, about 3-5% of jobs); 022 is all industries, and `japan.census_jobs`'s comment on the columns is off by one. Decide whether packs should count public service; notes/T-456.md section 8. Open.
@@ -96,8 +95,6 @@ TASKS.md and ARCHIVE.md before adding one). New packs end with `merge_cells.py <
 - T-340 [P3] Quad track's rest (from T-257): a station on a quad stroke's own end node is refused when that end is new track; the express pair is always left of the drawn direction. Open.
 
 ## Interface
-- T-490 [P3] 8800 refused connections at least once on 2026-10-16 while agents ran long checks against it (T-484 saw net::ERR_CONNECTION_REFUSED; Anita's two "city pack shg: Failed to fetch" fit that), though serve.py (the maps root's, shared) is threaded and never restarted. 8800 serves the snapshot's copied packs, not data/packs live (T-484), so pack rewrites are not the cause. Find whether serve.py drops connections under load (listen backlog, `request_queue_size` default 5) and fix it in serve.py if so. T-484 already makes one failed fetch affect only its zone and retry. Open.
-- T-492 [P2] After T-484, a pack that downloads but fails to open in a worker (or a market pack whose zone count disagrees with the build's registry row) still stops the whole demand pool; isolate it per zone as T-484 did for downloads. Also: 8800's snapshot copies data/packs at build time beside the commit's registry, so a snapshot built mid pack rebuild can mismatch. Open.
 - T-330 [P3] Line chips without a symbol show the first letter of the name, so in the real save every subway chip reads "S" and PATH "P" (seen in T-323). Default a chip to the line's short name (`lineShortName` in map/networkTips.ts, T-305: "subway 6X" to "6X"), cut to fit, when the player has set no symbol. Open.
 - T-424 [P3] City checks' test-line stations from OSM (T-290 retrospective): keep `railway=station` points in osm_features' point cache and let `checks/city-browser.mjs` rows name stations that are looked up there, instead of hand-placed coordinates; and water test points by polylabel on the cached water polygons, skipping channels under about 50 m wide. Open.
 - T-430 [P3] T-418's straight-then-arc fallback for a click too tight for one tangent arc (left out of T-423). Open idea, only if wanted.
@@ -113,12 +110,20 @@ TASKS.md and ARCHIVE.md before adding one). New packs end with `merge_cells.py <
 ## World, tier 0 and countries
 Tier 0 and country sources: docs/demand-worldwide.md, docs/data-register.md.
 
+- The unattended city pipeline (T-535's design, approved 2026-10-16; notes/T-535.md "Stages" has each stage's done criteria). Stages 1-3 are T-460, T-387 and T-314, side by side; then:
+- T-536 [P2] Pipeline stage 4, the world plan: `world_plan.py` with GHSL urban centres over 1M (functional urban areas over 1M in Europe), extents snapped to whole admin units (T-316), order UK first then the rest of Europe, then by size. Can start beside stages 1-3. Open; notes/T-535.md.
+- T-537 [P2] Pipeline stage 5, generated config and a generic OSM outline (`osm_units.py`, generalising `nigeria.py`): Lagos built from its plan row alone. After T-536. Open; notes/T-535.md.
+- T-538 [P2] Pipeline stage 6, the gate (`checks/pack_gate.py`, with T-424): all 67 packs through it. Can start beside T-536. Open; notes/T-535.md.
+- T-539 [P2] Pipeline stage 7, automatic joint commute gravity groups (`intercity.py --group auto`). Open; notes/T-535.md.
+- T-540 [P2] Pipeline stage 8, the runner (`world_run.py`) and a 5-city pilot no agent touches. Needs stages 1-7. Open; notes/T-535.md.
+- T-541 [P2] Pipeline stage 10, the first batch of about 20 cities (UK first), with a batch retrospective. After T-540; publishing past the current set needs T-060 and Anita's word. Open; notes/T-535.md.
+
 - T-314 [P2] Tier 0's curve without flows: `tier0.fit_curve` fitted only the length to one published median and came out far too flat on Toronto (17.5% of commutes misplaced against 11.3% with Toronto's own curve, 22% fewer riders on a test line; notes/T-287.md). Both parameters are now fitted where a distance-band table exists (`tier0.fit_curve_bands`, Mumbai's B-28, T-292: d^-1.65 exp(-d/32.7 km), KL 0.017 against 0.023 for the best length at power 1.4; the surface is flat between powers 1.6 and 1.75, and 2 km zones cannot separate the 0-1 and 2-5 km bands). Open: write the rule for borrowing the most similar fitted city's curve, and whether a band table's road factor should be the pack's own measured drive factor (Mumbai's near pairs 1.62, against the 1.3 assumed). Open.
 - T-315 [P3] Tier 0 universities: few OSM campuses carry a Wikidata id (4 of 63 in Toronto), so most are sized by area (+20% students in Toronto, 10.7% misplaced). Try matching OSM campus names to Wikidata universities with coordinates in the boundary, and splitting a multi-campus institution's count. Open.
 - T-316 [P3] Tier 0 boundaries from global admin units (geoBoundaries ADM2-3, NUTS-3/ITL3) instead of a hand-made GeoJSON, and district population totals from the same units where a national source publishes them. Open.
 - T-462 [P3] Japan zone tooling from T-420 stage 3's retrospective: `japan_zones.py plan` fails when table 4's municipality codes differ from N03's (Hamamatsu's redrawn wards cost a rebuild); `build` refits when the zone changed after its curve was folded; `japan.municipalities` tests "land of no municipality" by distance, not by buffering the union (53 minutes for 47 prefectures); Tokachi's 2,542 university students against about 12k at the national rate. Open; notes/T-420.md.
 - T-460 [P2] Tier 0's OSM land use as a default rule: cap one industrial or commercial area's job-place weight and spread it over its area (`land_cap_km2` 1, `land_spread_deg` 0.003, opt-in since T-459, where Lagos's 23 km2 refinery took 6.5% of all jobs at one cell). Measure the change on Toronto and London's tier 0 builds before making it the default; existing packs keep their cached rows until rebuilt. Open; notes/T-459.md.
-- T-387 [P3] Tier 0 hospitals where OSM tags beds on almost none (Shanghai 1, Mumbai 1 of 1,827, Keihanshin 1 of 1,390 at 1,063 beds, T-431): every untagged hospital takes the one tagged median (Mumbai 2,844 beds each, so clinics get almost no medical visits). Size by building floor area or a per-country beds-per-resident total instead. Open; notes/T-292.md.
+- T-387 [P2] (pipeline stage 2, notes/T-535.md) Tier 0 hospitals where OSM tags beds on almost none (Shanghai 1, Mumbai 1 of 1,827, Keihanshin 1 of 1,390 at 1,063 beds, T-431): every untagged hospital takes the one tagged median (Mumbai 2,844 beds each, so clinics get almost no medical visits). Size by building floor area or a per-country beds-per-resident total instead. Open; notes/T-292.md.
 - T-388 [P3] Mumbai jobs by place of work: the 6th Economic Census (2013) has employment by district and Greater Mumbai by ward; through tier0's `jobs` hook if open, since the proxy gives Greater Mumbai 45% of jobs against 52% of the 2011 workers by residence. Open; notes/T-292.md.
 - T-386 [P3] tier0's signals log prints GHSL totals for the whole box, which over sea include nodata (Shanghai's nres_v 34.7e12 against 1.6e9 inside); print the totals inside the boundary. Small. Open; notes/T-291.md.
 - T-503 [P3] Everyday destinations from sector totals by larger unit under T-456's fallback (notes/T-453.md 5): Paris from INSEE Flores 2021, commune x A38 (trade mixed with wholesale, so check the concentration test in central Paris, notes/T-456.md 7); Shanghai from the economic census by district and sector if the bulletins have it (not checked). docs/data-register.md. Open.

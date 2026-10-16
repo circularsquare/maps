@@ -17,7 +17,8 @@ import type { Signal } from "@preact/signals";
 import { setFares, world } from "../game/world";
 import { liveMoney, moneyState } from "../game/money";
 import { cityById, viewedZone } from "../game/cities";
-import { listScope, scopedLists } from "../game/listScope";
+import { listScope, scopedLists, scopeZone } from "../game/listScope";
+import { regionLedger } from "../game/regionMoney";
 import { accountVersion } from "../game/boarding";
 import { crowdClass, crowding, stationsToday, today, todayLoaded, useToday, waitText } from "../game/today";
 import type { DayLedger } from "../workers/protocol";
@@ -138,14 +139,15 @@ function SortHead<K extends string>({ sort, cols }: { sort: Signal<ListSort<K>>;
   );
 }
 
-/** T-332: the viewed place or the whole world. Over dead space only the world is on offer. */
-function ScopeToggle() {
+/** T-332: the viewed place or the whole world. Over dead space only the world is on offer. `tip`
+ * adds a line to the place's hover (T-531). */
+function ScopeToggle({ tip }: { tip?: string }) {
   const zone = viewedZone.value;
   const name = zone ? cityById(zone).name : null;
   const here = listScope.value === "here" && !!zone;
   return (
     <div class="group scope">
-      <button class={"btn" + (here ? " on" : "")} disabled={!zone} data-tip={name ? `Only ${name}` : "Nothing modelled here"}
+      <button class={"btn" + (here ? " on" : "")} disabled={!zone} data-tip={name ? `Only ${name}` + (tip ? "\n" + tip : "") : "Nothing modelled here"}
         onClick={() => (listScope.value = "here")}>
         <Icon.pin />{name}
       </button>
@@ -179,7 +181,7 @@ function TrainsNow({ line, n, period }: { line: string; n: number; period: strin
   const tip = d && c && d.crowdRiders > 0
     ? `${period}: riders wait ${waitText(c.wait)} on average for a train with room` + (d.trainsNow > 0 ? `\n${count(d.fullNow)}/${count(d.trainsNow)} trains running now are packed full on their trip` : "")
     : undefined;
-  return <span class={"val w-trains " + (cls || "muted")} data-tip={tip}>{n} {n === 1 ? "train" : "trains"}</span>;
+  return <span class={"val w-trains " + (cls || "muted")} data-tip={tip}>{n}</span>;
 }
 
 function TotalToday() {
@@ -433,19 +435,26 @@ function LiveCash() {
   return <>{moneyExact(liveMoney.value.cash * 1e6)}</>;
 }
 
-/** T-284: one figure of today's column as fares land. */
-function TodayCell({ v }: { v: (d: DayLedger) => number }) {
-  const d = liveMoney.value.today;
+/** T-284: one figure of today's column as fares land; the network's or a region's (T-531). */
+function TodayCell({ v, zone }: { v: (d: DayLedger) => number; zone: string | null }) {
+  const d = regionLedger(zone).today;
   return <td class="num">{d ? money(v(d) * 1e6) : ""}</td>;
 }
+
+/** T-531: how a region's money is counted, in the scope toggle's hover. */
+const REGION_SPLIT = "A line's fares count where its riders board and travel, its running costs where its trains run. Construction counts where it was built.";
 
 export function MoneyTab() {
   const w = world.value;
   const m = moneyState.value;
   if (!w || !m) return null;
   // T-284: the cash and today's column follow fares as they land (`liveMoney`, own components)
+  // T-531: the ledger is the viewed region's unless the whole world is chosen, as in the lists
+  const zone = scopeZone();
   const todayDay = m.ledger[m.ledger.length - 1]?.day ?? 0;
-  const prev = m.ledger.find((d) => d.day === todayDay - 1) ?? null;
+  const prevAll = m.ledger.find((d) => d.day === todayDay - 1) ?? null;
+  const prev = zone === null || !prevAll ? prevAll
+    : regionLedger(zone).ledger.find((d) => d.day === todayDay - 1) ?? { day: todayDay - 1, fares: 0, running: 0, trains: 0, build: 0 };
   const cell = (d: DayLedger | null, v: (d: DayLedger) => number) => <td class="num">{d ? money(v(d) * 1e6) : ""}</td>;
   const f = m.fares;
   return (
@@ -457,37 +466,37 @@ export function MoneyTab() {
       </ul>
       <table class="ledger">
         <tr>
-          <th />
+          <th style={{ textAlign: "left" }}><ScopeToggle tip={REGION_SPLIT} /></th>
           <th>Yesterday</th>
           <th>Today</th>
         </tr>
         <tr>
           <td>Fares</td>
           {cell(prev, (d) => d.fares)}
-          <TodayCell v={(d) => d.fares} />
+          <TodayCell zone={zone} v={(d) => d.fares} />
         </tr>
         <tr>
           <td>Running trains</td>
           {cell(prev, (d) => -d.running)}
-          <TodayCell v={(d) => -d.running} />
+          <TodayCell zone={zone} v={(d) => -d.running} />
         </tr>
         <tr>
           <td>New trains</td>
           {cell(prev, (d) => -d.trains)}
-          <TodayCell v={(d) => -d.trains} />
+          <TodayCell zone={zone} v={(d) => -d.trains} />
         </tr>
         <tr>
           <td>Construction</td>
           {cell(prev, (d) => -d.build)}
-          <TodayCell v={(d) => -d.build} />
+          <TodayCell zone={zone} v={(d) => -d.build} />
         </tr>
         <tr class="b">
           <td>Net</td>
           {cell(prev, ledgerNet)}
-          <TodayCell v={ledgerNet} />
+          <TodayCell zone={zone} v={ledgerNet} />
         </tr>
       </table>
-      <MoneyHistory />
+      <MoneyHistory zone={zone} />
       <div class="h">Fare</div>
       <ul class="rows">
         <li>

@@ -10,6 +10,8 @@ export const Icon = {
   minus: () => <svg viewBox="0 0 16 16"><path d="M4 8h8" /></svg>,
   plus: () => <svg viewBox="0 0 16 16"><path d="M4 8h8M8 4v8" /></svg>,
   pencil: () => <svg viewBox="0 0 16 16"><path d="M10.5 3l2.5 2.5L6 12.5H3.5V10z" /></svg>,
+  // T-534: the station name's suggestions, round and round
+  cycle: () => <svg viewBox="0 0 16 16"><path d="M12.8 6.5A5 5 0 004 5M3.2 9.5A5 5 0 0012 11M4 2v3h3M12 14v-3H9" /></svg>,
   pause: () => <svg viewBox="0 0 16 16"><path class="stroke2" d="M5.5 3.5v9M10.5 3.5v9" /></svg>,
   play1: () => <svg viewBox="0 0 16 16"><path class="solid" d="M5 3.5l7 4.5-7 4.5z" /></svg>,
   play2: () => <svg viewBox="0 0 16 16"><path class="solid" d="M2.5 4l5.5 4-5.5 4zM8 4l5.5 4L8 12z" /></svg>,

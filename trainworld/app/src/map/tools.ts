@@ -18,7 +18,6 @@
 //
 // Everything drawn is blueprint until constructed (SPEC 6.4).
 
-import type { Geometry } from "geojson";
 import { effect } from "@preact/signals";
 import type { Map as MlMap, MapMouseEvent } from "maplibre-gl";
 import { lngLatToPack } from "../game/coords";
@@ -30,8 +29,8 @@ import { speedColour } from "../game/palette";
 import { metresBetween } from "../game/walks";
 import { ask, buildLevel, buildPlatform, keepPlacing, lineDraft, selection, shownDayPhrase, trackCount, tool } from "../game/ui";
 import { describeRemovable, removeThing, type Removable } from "../game/remove";
-import { loadPlacesAt, placesNear } from "../game/placeList";
-import { compass } from "../game/places";
+import { loadPlacesAt } from "../game/placeList";
+import { newStationName, trackDirection } from "./stationNames";
 import { edit, say, world } from "../game/world";
 import type { RouteEnd } from "../workers/protocol";
 import type { ClockClient, CrossoverAnswer, PreviewAnswer } from "../workers/clockClient";
@@ -542,61 +541,14 @@ export class Tools {
     return best;
   }
 
-  /**
-   * A name for a new station: from zoom 13, where the basemap's tiles carry street names, the
-   * nearest named street within 400 m (shortened New York style); else the nearest place on the
-   * city's OSM place list (T-065, game/placeList.ts); else a place on the loaded tiles; else
-   * "Station N". Names already in use are skipped, so a second station on Broadway takes its
-   * cross street and a second one in Williamsburg the next neighbourhood or "North Williamsburg".
-   */
-  private async nameFor(px: number, py: number): Promise<string> {
-    let taken = new Set(world.peek()?.save.stations.map((s) => s.name) ?? []);
-    const at = this.map.unproject([px, py]);
-    const kx = 111320 * Math.cos((at.lat * Math.PI) / 180), ky = 110540;
-    const dist = (g: Geometry): number => {
-      const lines: number[][][] = g.type === "LineString" ? [g.coordinates] : g.type === "MultiLineString" ? g.coordinates : g.type === "Point" ? [[g.coordinates]] : [];
-      let best = Infinity;
-      for (const l of lines) {
-        const pts = l.map((c) => [(c[0] - at.lng) * kx, (c[1] - at.lat) * ky]);
-        if (pts.length === 1) best = Math.min(best, Math.hypot(pts[0][0], pts[0][1]));
-        for (let i = 0; i + 1 < pts.length; i++) {
-          const [ax, ay] = pts[i], [bx, by] = pts[i + 1];
-          const dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy;
-          const t = l2 ? Math.max(0, Math.min(1, (-ax * dx - ay * dy) / l2)) : 0;
-          best = Math.min(best, Math.hypot(ax + t * dx, ay + t * dy));
-        }
-      }
-      return best;
-    };
-    const pickFrom = (sourceLayer: string, maxM: number, ok: (p: Record<string, any>) => boolean): string | null => {
-      const layer = this.map.getStyle()?.layers.find((l) => (l as any)["source-layer"] === sourceLayer) as any;
-      if (!layer) return null;
-      let feats: { geometry: Geometry; properties: Record<string, any> }[] = [];
-      try {
-        feats = this.map.querySourceFeatures(layer.source, { sourceLayer }) as any;
-      } catch {
-        return null;
-      }
-      const best = new Map<string, number>();
-      for (const f of feats) {
-        const raw = (f.properties?.["name:latin"] || f.properties?.name_en || f.properties?.name) as string | undefined;
-        if (!raw || !ok(f.properties)) continue;
-        const name = shorten(raw);
-        const d = dist(f.geometry);
-        if (d <= maxM && d < (best.get(name) ?? Infinity)) best.set(name, d);
-      }
-      return [...best].sort((a, b) => a[1] - b[1]).map((e) => e[0]).find((n) => !taken.has(n)) ?? null;
-    };
-    // below zoom 13 the tiles hold only the bigger roads, so the nearest one shown is not the nearest
-    const street = this.map.getZoom() >= STREET_NAME_ZOOM ? pickFrom("transportation_name", 400, (p) => p.class !== "motorway") : null;
-    if (street) return street;
-    const near = await placesNear(at.lng, at.lat).catch(() => []);
-    taken = new Set(world.peek()?.save.stations.map((s) => s.name) ?? []); // a station added meanwhile counts
-    const listed = placeName(near, taken);
-    if (listed) return listed;
-    const place = pickFrom("place", 1200, (p) => ["neighbourhood", "quarter", "suburb", "village", "hamlet", "town"].includes(p.class));
-    if (place) return place;
-    for (let k = 1; ; k++) if (!taken.has(`Station ${k}`)) return `Station ${k}`;
+  /** A name for a new station where the pointer is (map/stationNames.ts): the cross street, a
+   * small neighbourhood, or the fallbacks, skipping names in use. */
+  private nameFor(px: number, py: number): Promise<string> {
+    const s = this.snap(px, py, this.map.unproject([px, py]));
+    const [lng, lat] = toLngLat(s.lx, s.ly);
+    const net = this.overlay.renderer.net;
+    const track = net ? trackDirection(net, ...toLocal(lng, lat, net.anchor)) : null;
+    return newStationName(this.map, lng, lat, track, () => new Set(world.peek()?.save.stations.map((st) => st.name) ?? []));
   }
 
   // ---------------------------------------------------------------- delete (T-096)
@@ -1048,44 +1000,4 @@ function placementTag(pv: PreviewAnswer, level: number): HTMLDivElement[] {
 /** The M1 train's top speed, km/h: straight track's limit (track-and-service.md 6.1). */
 const TOP_KMH = 160;
 const COST_YELLOW = "#f2c200";
-
-/** From this zoom the basemap's tiles carry street names (T-065). */
-const STREET_NAME_ZOOM = 13;
-/** A taken nearest place gives way to an untaken one at most this much further away. */
-const PLACE_SLACK_M = 800;
-
-/**
- * A station's name from the places near it (nearest first, game/placeList.ts): the nearest, or
- * if that name is taken another within PLACE_SLACK_M further, or the nearest with the way the
- * station lies from it ("North Williamsburg"), or with a number ("Williamsburg 2"). Null when no
- * place is near.
- */
-export function placeName(near: { place: { name: string }; d: number; dx: number; dy: number }[], taken: Set<string>): string | null {
-  if (!near.length) return null;
-  const first = near[0];
-  const free = near.find((n) => n.d <= first.d + PLACE_SLACK_M && !taken.has(n.place.name));
-  if (free) return free.place.name;
-  if (first.d > 150) {
-    const way = compass(first.dx, first.dy);
-    const named = `${way[0].toUpperCase()}${way.slice(1)} ${first.place.name}`;
-    if (!taken.has(named)) return named;
-  }
-  for (let k = 2; ; k++) if (!taken.has(`${first.place.name} ${k}`)) return `${first.place.name} ${k}`;
-}
-
-/** "West 42nd Street" -> "W 42nd St". */
-function shorten(n: string): string {
-  return n
-    .replace(/\bWest\b/g, "W")
-    .replace(/\bEast\b/g, "E")
-    .replace(/\bNorth\b/g, "N")
-    .replace(/\bSouth\b/g, "S")
-    .replace(/\bStreet\b/g, "St")
-    .replace(/\bAvenue\b/g, "Av")
-    .replace(/\bBoulevard\b/g, "Blvd")
-    .replace(/\bRoad\b/g, "Rd")
-    .replace(/\bParkway\b/g, "Pkwy")
-    .replace(/\bPlace\b/g, "Pl")
-    .replace(/\bExpressway\b/g, "Expy");
-}
 

@@ -95,14 +95,26 @@ Full design, numbers and sources: `notes/T-008.md`.
   **Several nodes together** (T-475, `move_nodes`, the Select tool's pick): each moves by the same
   offset; an edge between two of them shifts whole, PIs included; an edge to a node that stays
   follows the one-node rule above. All must be movable, or nothing moves.
-- **Placing stations**: click on track (it is split there) or on a node. A new station is named
-  after the nearest street on the basemap within 400 m ("W 42nd St"), skipping names in use, when
-  the map is at zoom 13 or closer (further out the tiles hold only the bigger roads). Otherwise,
-  or with no street that near, it takes the nearest place on the city's OSM place list (T-065,
-  `game/placeList.ts`; neighbourhoods within 2.5 km of their label point, towns 5 km): if that
-  name is in use, another place at most 800 m further, else the way the station lies from it
-  ("North Williamsburg"), else a number ("Williamsburg 2"). Failing that, a place on the loaded
-  tiles, else "Station N". The player can rename it. Before the click, the placement ghost
+- **Placing stations**: click on track (it is split there) or on a node. A station's name
+  suggestions (T-534, `map/stationNames.ts`, worked out when asked and never stored) are:
+  - **the cross street**: the nearest named street on the basemap within 400 m ("W 42nd St"), when
+    the map is at zoom 13 or closer (further out the tiles hold only the bigger roads), skipping
+    any street whose direction where it comes nearest is within 30° of the track's there (the
+    street the line runs along, or one nearly parallel) and names in use;
+  - **the neighbourhood**: the nearest OSM neighbourhood, quarter or suburb on the city's place
+    list (T-065, `game/placeList.ts`) that is small: another place of its kind lies within 3 km
+    of its label, and its OSM population, if given, is at most 200,000 (so never "Manhattan" or
+    "Brooklyn"). It reaches 1.5 times as far from its label as that nearest fellow, at least 800 m;
+  - **the city or town**: the OSM city, town, village or hamlet whose label is nearest relative to
+    its reach (hamlet 3 km, village 4, town 5, city 6 km or 4.5 km times the square root of its
+    population in millions, at most 20; New York's is 13 km).
+
+  A new station takes the cross street, else the neighbourhood, else the nearest place of any kind
+  on the place list (neighbourhoods within 2.5 km of their label point, towns 5 km), else a place
+  on the loaded tiles, else "Station N". A place name in use gives way to another place at most
+  800 m further, else the way the station lies from it ("North Williamsburg"), else a number
+  ("Williamsburg 2"). The player can rename it or cycle through the suggestions
+  ([ui-inspectors.md](ui-inspectors.md) "Renaming"). Before the click, the placement ghost
   ([ui-building.md](ui-building.md)) shows whether it would work: the clock worker tries the same `addStation`
   and rolls it back (`TrackApi.preview_station`, T-311), so the ghost and the click cannot
   disagree, cash included.
@@ -393,6 +405,18 @@ multiplier per level (Anita, 2026-10-08; all construction prices halved 2026-10-
   demand's riders and passenger-km per period (`app/src/game/money.ts`). Changing the fare
   recalculates demand: higher prices can lose riders (T-067). Running costs can take the cash below zero; edits that cost nothing still
   work then. notes/T-028.md.
+- **Money by region** (T-531, `app/src/game/regionMoney.ts`): beside the network's, the worker
+  keeps both ledgers per region, a region being a zone as `stationZone` places it (the Lines and
+  Stations tabs' place), and "" for anything outside every zone, so the regions add up to the
+  network. Settling divides each running line's hour: fares by the line's day of riders, the base
+  part by the region of each boarding stop and the per-km part by passenger-km, each stretch
+  between two stops half to each stop's region; running cost by route km, split the same way.
+  A paid edit's construction goes to regions by the cost of the track it newly built in each
+  (track midpoint's region; with no track, its new stations' regions, evenly); its new trains by the
+  route km of the line the edit names, else as its construction. The main thread works out these
+  shares (it has the zone boundaries) and sends them; a charge waits under "" until its shares
+  arrive. Cash, the fleet and the fare curve stay network-wide. Saved in the header (`regions`);
+  older saves start empty.
 - **Starting money $3B** (T-485): the build price of one real first line, about a 20 km line at -2
   with 18 stations plus its trains, leaves room for a few more lines.
 - **Economy at 100x** (Anita, 2026-10-09, as Subway Builder does; T-081): fares and running costs

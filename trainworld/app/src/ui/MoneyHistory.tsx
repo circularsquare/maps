@@ -1,11 +1,13 @@
 // The Money tab's history (T-447): fares against costs, then net, per game day over the ledger's 30
 // days or per game hour over its 48 (the clock worker keeps both and saves them). Days and hours are
 // the game clock's (T-321). The day and hour now are drawn so far, moving as fares land (T-284).
+// The network's, or the region the Money tab is set to (T-531).
 
 import { signal } from "@preact/signals";
 import { clockTime, money } from "../game/format";
 import { weekdayName } from "../game/days";
-import { liveMoney, moneyState } from "../game/money";
+import { moneyState } from "../game/money";
+import { regionLedger } from "../game/regionMoney";
 import { Segmented } from "./widgets";
 
 /** Days or hours, kept while the game is open. */
@@ -29,12 +31,12 @@ function when(e: Entry, hours: boolean): string {
   return `${weekdayName(day)} ${day}, ${clockTime((e.at % 24) * 60)}`;
 }
 
-/** The ledger's entries with the day or hour now replaced by the live one. */
-function entries(hours: boolean): Entry[] {
-  const m = moneyState.value, live = liveMoney.value;
-  if (!m) return [];
-  const list: Entry[] = hours ? m.hours.map((h) => ({ ...h, at: h.hour })) : m.ledger.map((d) => ({ ...d, at: d.day }));
-  const now = hours ? (live.hour && { ...live.hour, at: live.hour.hour }) : (live.today && { ...live.today, at: live.today.day });
+/** The ledger's entries (the network's, or a region's: T-531) with the day or hour now replaced by the live one. */
+function entries(hours: boolean, zone: string | null): Entry[] {
+  if (!moneyState.value) return [];
+  const r = regionLedger(zone);
+  const list: Entry[] = hours ? r.hours.map((h) => ({ ...h, at: h.hour })) : r.ledger.map((d) => ({ ...d, at: d.day }));
+  const now = hours ? (r.hour && { ...r.hour, at: r.hour.hour }) : (r.today && { ...r.today, at: r.today.day });
   if (now) {
     const last = list[list.length - 1];
     if (last && last.at === now.at) list[list.length - 1] = now;
@@ -43,9 +45,9 @@ function entries(hours: boolean): Entry[] {
   return list;
 }
 
-export function MoneyHistory() {
+export function MoneyHistory({ zone }: { zone: string | null }) {
   const hours = span.value === "hour";
-  const list = entries(hours);
+  const list = entries(hours, zone);
   if (!list.length) return null;
   const slots = Math.max(list.length, MIN_SLOTS[span.value]);
   const col = W / slots;

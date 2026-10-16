@@ -2,8 +2,8 @@
 // placing tag write them the same way, an icon then the value on its display colour.
 
 import { levelLabel, speed } from "../game/format";
-import { LEVEL_COLOURS, rgb, speedColour } from "../game/palette";
-import type { Level } from "../game/types";
+import { inkOn, LEVEL_COLOURS, rgb, speedColour } from "../game/palette";
+import type { Level, LineInput } from "../game/types";
 
 /** An up and down arrow: elevation. */
 const ELEVATION_PATH = "M8 1.8v12.4M5 4.8l3-3 3 3M5 11.2l3 3 3-3";
@@ -49,6 +49,23 @@ export function speedFact(kmh: number): HTMLSpanElement {
   s.className = "tag-fact";
   s.append(icon(SPEED_PATH, "Speed limit"), chip(speed(kmh), speedColour(kmh)));
   return s;
+}
+
+/** A row of line bullets: the markup and CSS of ui/widgets.tsx's Chip (a tag is plain DOM, not Preact). */
+export function lineBullets(lines: LineInput[]): HTMLDivElement {
+  const d = document.createElement("div");
+  d.className = "tag-lines";
+  for (const l of lines) {
+    const c = document.createElement("span");
+    c.className = "chip";
+    c.style.setProperty("--c", l.colour);
+    c.style.setProperty("--ct", inkOn(l.colour));
+    const t = document.createElement("span");
+    t.textContent = l.letter;
+    c.append(t);
+    d.append(c);
+  }
+  return d;
 }
 
 /** One line of the tag holding `facts`. */

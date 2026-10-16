@@ -1,5 +1,14 @@
 ﻿# Archive
 
+- T-535 [P2] The unattended city pipeline, design. Done 2026-10-16: approved by Anita with all eight recommendations (UK, then Europe, first); ten stages filed as T-460, T-387, T-314, T-536 to T-541 and T-060. notes/T-535.md.
+
+- T-531 [P2] Money by region. Done 2026-10-16: the clock worker keeps day and hour ledgers per zone; the Money tab's yesterday, today and History follow the lists' place-or-world toggle. Lines split by boardings, passenger-km and route km; construction by new track's cost. `game/regionMoney.ts`.
+- T-534 [P2] Station names and renaming. Done 2026-10-16: a new station takes the cross street (never one within 30° of the track), else a small neighbourhood (peer spacing at most 3 km, population at most 200,000), else the old fallbacks; a cycle button steps through cross street, neighbourhood and city; stations and lines both rename by double click or pencil. `map/stationNames.ts`.
+- T-492 [P2] A pack that fails to open stops all demand. Done 2026-10-16: a worker reports a pack it cannot open (`rejected`); the zone is left out and flagged like a failed download, tried once more, then final until reload. docs/architecture.md; `every-pack-opens.mjs --broken`.
+- T-532 [P2] Small interface fixes. Done 2026-10-16: the four tab buttons share the bar's width equally; the Lines tab's trains column shows the bare number; the track hover lists lines as line bullets (`lineBullets` in map/trackTagRows.ts, the Chip's markup and CSS).
+- T-533 [P2] Interlined draw order. Done 2026-10-16: lines drawn (and clicked) in one global order, no-train lines under, then longest route to shortest on top, ties by higher id; `lineDrawOrder` in map/network.ts, rebuilt when a line gains its first or loses its last train. `checks/t533-draw-order.mjs`.
+- T-490 [P3] 8800 refusing connections. Done 2026-10-16: Windows refuses connections past a full listen backlog, and serve.py had the default 5 (241 of 600 answered in a 200-connection burst); `request_queue_size` 128 answered 600 of 600. Takes effect when 8800 restarts.
+
 - T-530 [P2] Three interface fixes. Done 2026-10-16: Stations tab rows are complexes (lead member's name, all lines, summed boardings) with a "+" hover for hidden bullets; inter-region bubbles scale with zoom only (radius x 2^(0.35(z-6.5))); curve labels show speed only.
 - T-509 [P2] Calibration. Done 2026-10-16: six cities' real networks fitted jointly (`asc_rail` 0.4, everyday 1.1 lower, everyday walk centre 1.9 km), Japan +0.5 by country, every pack checked on a test cross; long trips are T-528. notes/T-509.md.
 - T-303 [P2] Demand loading and responsiveness. Closed 2026-10-16 (doc tidy): the approved proposal was built as T-324 to T-328, all done by 2026-10-15. notes/T-303.md.

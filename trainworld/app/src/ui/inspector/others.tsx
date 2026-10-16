@@ -24,7 +24,9 @@ import { removeThing } from "../../game/remove";
 import { tripAt } from "../../map/network";
 import { nextLeavingAt, platformsAt, tripLoad } from "../../game/boarding";
 import { today, useToday, type LineToday } from "../../game/today";
-import { Chip, Row, Segmented, Stepper } from "../widgets";
+import { Chip, Icon, Row, Segmented, Stepper } from "../widgets";
+import { nextSuggestion } from "../../map/stationNames";
+import { NameEdit } from "./NameEdit";
 import { StationRiders } from "./StationRiders";
 import { StationLongerTrips } from "./LongerTrips";
 import { ComplexMap } from "./ComplexMap";
@@ -199,7 +201,7 @@ function BoardingsToday({ lines, at }: { lines: LineInput[]; at: (l: LineInput) 
 
 export function StationInspector({ id }: { id: string }) {
   const w = world.value;
-  const [editing, setEditing] = useState(false);
+  const [cycling, setCycling] = useState(false);
   useToday(); // T-446: boardings in the past 24 hours, kept fresh while the panel is open
   const s = w?.save.stations.find((s) => s.id === id);
   if (!w || !s) return null;
@@ -209,10 +211,20 @@ export function StationInspector({ id }: { id: string }) {
   const scope = asComplex ? members.join(",") : id;
   const lines = linesAt(id);
   const props = (platform: number, name = s.name) => void edit({ op: "stationProps", node: s.num, platform, name });
-  const commit = (e: Event) => {
-    const n = (e.target as HTMLInputElement).value.trim();
-    if (n && n !== s.name) props(s.length, n);
-    setEditing(false);
+  // T-534: the next of the station's suggested names, worked out now from where it stands
+  const cycle = async () => {
+    if (cycling || !live.map) return;
+    setCycling(true);
+    try {
+      const others = () => new Set(world.peek()?.save.stations.filter((o) => o.id !== id).map((o) => o.name) ?? []);
+      const next = await nextSuggestion(live.map, s.lng, s.lat, s.name, others, live.overlay?.renderer.net ?? null);
+      const now = world.peek()?.save.stations.find((o) => o.id === id);
+      if (!now) return;
+      if (next) void edit({ op: "stationProps", node: now.num, platform: now.length, name: next });
+      else say("No other name is suggested here.");
+    } finally {
+      setCycling(false);
+    }
   };
   const construct = async () => {
     const a = await edit({ op: "construct", edges: [], stations: [s.num] });
@@ -224,22 +236,11 @@ export function StationInspector({ id }: { id: string }) {
     <>
       <div class="title">
         <StationGlyph />
-        {editing ? (
-          <input
-            class="name-edit"
-            value={s.name}
-            ref={(el) => el?.focus()}
-            onBlur={commit}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") commit(e);
-              if (e.key === "Escape") setEditing(false);
-            }}
-          />
-        ) : (
-          <span class="name" onDblClick={() => setEditing(true)} data-tip="Double click to rename">
-            {s.name}
-          </span>
-        )}
+        <NameEdit key={id} name={s.name} onRename={(n) => props(s.length, n)}>
+          <button class="btn icon" data-tip="Next suggested name" aria-label="Next suggested name" onClick={() => void cycle()}>
+            <Icon.cycle />
+          </button>
+        </NameEdit>
       </div>
       {/* a click on a station always shows its complex (T-249); a station opened on its own from
           the complex's list goes back to it from here, the Station / Complex switch is gone */}

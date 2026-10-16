@@ -14,10 +14,10 @@ import { frameKindName, frameKindNumber, makeFrame, mercK, type Frame, type Fram
 import { PERIODS, periodAt } from "../game/periods";
 import { DAY_KINDS, dayKindAt } from "../game/days";
 import { timeZoneTable } from "../game/localTime";
-import { networkFromState, newNetCache } from "../map/network";
+import { networkFromState, newNetCache, runsTrains } from "../map/network";
 import { buildComplexes } from "../game/complexes";
 import { decodeSave, encodeSave, isNortheastSave, trackFrameKind, readStored, SAVE_FORMAT, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, deleteSlot, leaseSlot, ORIGINAL_SLOT, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader } from "./saveFile";
-import type { ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FromClock, MoneyState, NetworkSnapshot, PiInput, RouteEnd, ToClock } from "./protocol";
+import type { ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FromClock, MoneyState, NetworkSnapshot, PiInput, RegionNow, RouteEnd, ToClock } from "./protocol";
 
 /** Run 0 of each line is resampled this often (m) for the renderer's line texture. */
 const SAMPLE_STEP = 50;
@@ -64,6 +64,13 @@ let hourLedger: HourLedger[] = [];
 let incomePerHour: number[][] = DAY_KINDS.map(() => PERIODS.map(() => 0));
 /** the same per line id (T-293), for each line's fares taken today */
 let lineIncome = new Map<number, number[][]>();
+/** T-531: each region's ledgers, kept as the network's (a zone id; "" outside every zone or not yet
+ * placed, so the regions add up to the network) */
+let regions = new Map<string, { days: DayLedger[]; hours: HourLedger[] }>();
+/** T-531: each running line's fares and running cost by region, [region, share] (game/regionMoney.ts) */
+let lineShares = new Map<number, { fare: [string, number][]; run: [string, number][] }>();
+/** T-531: paid edits' charges, held under "" until the main thread says how each divides */
+const heldCharges = new Map<number, { day: number; hour: number; build: number; trains: number }>();
 /** Wall ms on the clock both threads read (`ToClock` "clock"): Date.now() drifts from it, and the
  * worker running ahead of the main thread's clock pulled money time back across midnight (T-488). */
 const wallNow = () => performance.timeOrigin + performance.now();
@@ -452,6 +459,69 @@ function hourEntry(hour: number): HourLedger {
   return entryIn(hourLedger, (d) => d.hour, hour, () => ({ hour, fares: 0, running: 0, trains: 0, build: 0 }), LEDGER_HOURS);
 }
 
+/** T-531: a region's entries for game day `day` and hour `hour`, made if missing. */
+function regionEntries(zone: string, day: number, hour: number): [DayLedger, HourLedger] {
+  let r = regions.get(zone);
+  if (!r) regions.set(zone, (r = { days: [], hours: [] }));
+  return [
+    entryIn(r.days, (d) => d.day, day, () => ({ day, fares: 0, running: 0, trains: 0, build: 0 }), LEDGER_DAYS),
+    entryIn(r.hours, (d) => d.hour, hour, () => ({ hour, fares: 0, running: 0, trains: 0, build: 0 }), LEDGER_HOURS),
+  ];
+}
+
+/** T-531: every region's today and this hour that has an entry today. */
+function regionNow(): RegionNow {
+  const day = Math.floor(moneyNow() / 86400), hour = Math.floor(moneyNow() / 3600), out: RegionNow = {};
+  for (const [k, r] of regions) {
+    const d = r.days[r.days.length - 1], h = r.hours[r.hours.length - 1];
+    if (d?.day === day) out[k] = { today: { ...d }, hour: h?.hour === hour ? { ...h } : { hour, fares: 0, running: 0, trains: 0, build: 0 } };
+  }
+  return out;
+}
+
+/** T-531: the running lines' money by region for settling: each line's fare income tables and its
+ * running cost per game hour at each demand level (as `running_cost`), with its local time. */
+function regionLines() {
+  const a = api!, li = a.lines_info(), unit = moneyParams[1] * moneyParams[2] / 1e6;
+  const costs: { shift: number; run: number[]; shares: [string, number][] }[] = [];
+  for (let i = 0; i < li.length; i += 22) {
+    if (li[i + 3] !== 1) continue;
+    const id = li[i], km = li[i + 9] / 1000, cars = li[i + 21] || li[i + 8];
+    costs.push({ shift: a.line_shift(id), run: [0, 1, 2].map((l) => li[i + 5 + l] * 2 * km * cars * unit), shares: lineShares.get(id)?.run ?? [] });
+  }
+  const fares = [...lineIncome].map(([id, per]) => ({ shift: a.line_shift(id), per, shares: lineShares.get(id)?.fare ?? [] }));
+  return { costs, fares };
+}
+
+/** T-531: hour `t`'s fares and running cost (US$M) in each region. A line not yet placed counts under "". */
+function regionHour(t: number, rl: ReturnType<typeof regionLines>): Map<string, [number, number]> {
+  const out = new Map<string, [number, number]>();
+  const spread = (shares: [string, number][], v: number, k: 0 | 1) => {
+    if (!v) return;
+    for (const [z, s] of shares.length ? shares : [["", 1] as [string, number]]) {
+      let e = out.get(z);
+      if (!e) out.set(z, (e = [0, 0]));
+      e[k] += v * s;
+    }
+  };
+  for (const f of rl.fares) {
+    const tl = t + f.shift;
+    spread(f.shares, (f.per[dayKindAt(tl)] ?? f.per[0])?.[periodAt(tl)] ?? 0, 0);
+  }
+  for (const c of rl.costs) spread(c.shares, c.run[LEVEL_OF[PERIODS[periodAt(t + c.shift)].demand]], 1);
+  return out;
+}
+
+/** T-531: a region's saved ledgers, as `mergeLedger` makes the network's. */
+function loadRegions(saved: SaveHeader["regions"]) {
+  regions = new Map(Object.entries(saved ?? {}).map(([k, r]) => [k, { days: mergeLedger(r.ledger, (d) => d.day), hours: mergeLedger(r.hours, (d) => d.hour) }]));
+  heldCharges.clear();
+}
+
+function savedRegions(): NonNullable<SaveHeader["regions"]> {
+  return Object.fromEntries([...regions].map(([k, r]) => [k, { ledger: r.days.map((d) => ({ ...d })), hours: r.hours.map((d) => ({ ...d })) }]));
+}
+
 /** A saved ledger in order with one entry per day or hour: saves written before T-488 can list a
  * day twice, the second time empty, which merging adds back where it belongs. */
 function mergeLedger<T extends { fares: number; running: number; trains: number; build: number }>(list: T[] | undefined, at: (e: T) => number): T[] {
@@ -479,6 +549,7 @@ function moneyState(): MoneyState {
     runningPerHour: [0, 1, 2].map((l) => a.running_cost(l)) as [number, number, number],
     ledger: ledger.map((d) => ({ ...d })),
     hours: hourLedger.map((d) => ({ ...d })),
+    regions: savedRegions(),
   };
 }
 
@@ -495,7 +566,7 @@ function sendCash() {
   if (cash === sentCash && today.fares === sentFares) return;
   sentCash = cash;
   sentFares = today.fares;
-  send({ kind: "cash", cash, today: { ...today }, hour: { ...hour } });
+  send({ kind: "cash", cash, today: { ...today }, hour: { ...hour }, regions: regionNow() });
 }
 
 /** T-309: the running lines grouped by the local time they run on, each group's running cost per
@@ -528,7 +599,7 @@ function settle(): boolean {
     partFare = partCost = 0;
   }
   if (now <= settledT) return false;
-  const groups = localGroups();
+  const groups = localGroups(), rl = regionLines();
   let cash = api.cash(), ended = false;
   while (settledT < now) {
     const h = Math.floor(settledT / 3600);
@@ -553,6 +624,9 @@ function settle(): boolean {
     const e = hourEntry(h);
     e.fares += fare * df;
     e.running += cost * dc;
+    for (const [z, [f, c]] of regionHour(t, rl)) {
+      for (const r of regionEntries(z, d.day, h)) { r.fares += f * df; r.running += c * dc; }
+    }
     settledT = full ? t + 3600 : end;
     if (full) { ended = true; hourShape.delete(h); closeDay(t + 3600); }
   }
@@ -696,7 +770,7 @@ function shapeHour(epoch: number, b: Float32Array) {
 // ---------------------------------------------------------------- saves (T-029)
 
 function header(): SaveHeader {
-  return { game: "anitabuilder", format: SAVE_FORMAT, city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), fleet: api!.fleet(), fares: { ...fares }, ledger: ledger.map((d) => ({ ...d })), hours: hourLedger.map((d) => ({ ...d })) };
+  return { game: "anitabuilder", format: SAVE_FORMAT, city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), fleet: api!.fleet(), fares: { ...fares }, ledger: ledger.map((d) => ({ ...d })), hours: hourLedger.map((d) => ({ ...d })), regions: savedRegions() };
 }
 
 /** The game as file bytes. The network and header are taken at once, before anything awaits. */
@@ -904,6 +978,7 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file"): Promise<b
   fares = { ...START_FARES, ...h.fares };
   ledger = mergeLedger(h.ledger, (d) => d.day);
   hourLedger = mergeLedger(h.hours, (d) => d.hour);
+  loadRegions(h.regions);
   convertedOnLoad = converted;
   restart(h.clock, from);
   return converted;
@@ -924,6 +999,7 @@ function newGame() {
   fares = { ...START_FARES };
   ledger = [];
   hourLedger = [];
+  loadRegions(undefined);
   restart(START_CLOCK, "new");
 }
 
@@ -949,6 +1025,8 @@ function restart(t: number, from: "autosave" | "file" | "new") {
 
 /** the last build's pieces of the renderer's buffers (T-496) */
 const netCache = newNetCache();
+/** the lines with trains at the last full build */
+let runningLines = "";
 
 /** `service`: only the service changed (a train count, T-229): the renderer's buffers are not built
  * again, which was about half the edit's time on New York's real network. */
@@ -956,7 +1034,9 @@ function sendState(service = false) {
   const t0 = performance.now();
   const s = buildState();
   const t1 = performance.now();
-  if (service) {
+  // a line gaining its first train or losing its last changes the draw order (T-533)
+  const running = s.lines.filter((l) => l.ok && runsTrains(l)).map((l) => l.id).join();
+  if (service && running === runningLines) {
     s.service = true;
     s.ms = [t1 - t0, 0];
     timing.state = t1 - t0;
@@ -966,6 +1046,7 @@ function sendState(service = false) {
     return;
   }
   // The renderer's buffers are built here too, so the main thread only uploads them (T-063).
+  runningLines = running;
   const n = networkFromState(s, netCache);
   s.net = n;
   s.ms = [t1 - t0, performance.now() - t1];
@@ -1348,6 +1429,8 @@ async function handle(msg: ToClock) {
         d.build += charge - trains;
         e.trains += trains;
         e.build += charge - trains;
+        for (const x of regionEntries("", d.day, e.hour)) { x.trains += trains; x.build += charge - trains; }
+        heldCharges.set(msg.seq, { day: d.day, hour: e.hour, build: charge - trains, trains });
       }
       forget();
       const demand = api.dirty_demand_lines();
@@ -1362,6 +1445,23 @@ async function handle(msg: ToClock) {
   } else if (msg.kind === "income") {
     incomePerHour = msg.perHour.map((p) => p.slice(0, PERIODS.length));
     lineIncome = new Map((msg.lines ?? []).map((l) => [l.line, l.perHour]));
+  } else if (msg.kind === "regionShares") {
+    lineShares = new Map(msg.lines.map((l) => [l.line, { fare: l.fare, run: l.run }]));
+  } else if (msg.kind === "chargeShares") {
+    // T-531: move a paid edit's charge from "" to the regions it was spent in
+    const c = heldCharges.get(msg.seq);
+    heldCharges.delete(msg.seq);
+    if (c) {
+      const move = (shares: [string, number][], v: number, k: "build" | "trains") => {
+        if (!v || !shares.length) return;
+        for (const x of regionEntries("", c.day, c.hour)) x[k] -= v;
+        for (const [z, s] of shares) for (const x of regionEntries(z, c.day, c.hour)) x[k] += v * s;
+      };
+      move(msg.build, c.build, "build");
+      move(msg.trains, c.trains, "trains");
+      dirty = true;
+      sendMoney();
+    }
   } else if (msg.kind === "riders") {
     // a new demand result: the boarding account follows it (T-164), a few lines at a time, one
     // kind of day's riders a message (T-260)

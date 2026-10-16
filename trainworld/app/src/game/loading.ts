@@ -37,8 +37,8 @@ export const startup = signal<"loading" | "ready" | "failed">("loading");
 export const demandIdle = signal(false);
 /** Why demand could not load (the pool is stopped); null while it works. */
 export const loadFailure = signal<string | null>(null);
-/** T-484: zones whose pack could not be downloaded, with why. Demand carries on without them and
- * the download is tried again (workers/demandClient.ts); a zone leaves once its pack arrives. */
+/** T-484, T-492: zones whose pack could not be downloaded or opened, with why and whether it is tried
+ * again. Demand carries on without them (workers/demandClient.ts); a zone leaves once its pack opens. */
 export const zoneFailures = signal<ReadonlyMap<CityId, string>>(new Map());
 
 /** The clock waits for the next game's demand: set at startup and by every whole-game load. */

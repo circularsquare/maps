@@ -51,7 +51,8 @@ bars); the network takes the line colours ([ui-map.md](ui-map.md)).
 exceptions). One dock on the left [T-252, `ui/Dock.tsx`]:
 
 - A row of icon tabs, names in their hovers: **Build** (a wrench), **Lines** (a route with stops),
-  **Stations** (a platform under its canopy), **Money** (a bill and a coin); at the row's right end
+  **Stations** (a platform under its canopy), **Money** (a bill and a coin), sharing the row's width
+  equally [T-532]; at the row's right end
   the saved games button (a floppy disk) [T-251] and the **Settings** gear (a toothed wheel outline with a hub circle) [T-523], which opens in the tab
   area like a tab. There is no City tab [T-220]; a browser that last had it open starts on Lines.
 - Under the tab content, the **inspector** ([ui-inspectors.md](ui-inspectors.md)). The tab area has
@@ -199,7 +200,11 @@ hover says it counts from the next load ([architecture.md](architecture.md) 7).
 
 ## Money tab
 
-Cash; yesterday and today (fares, running trains, new trains, construction, net); History
+Cash (always the whole network's); yesterday and today (fares, running trains, new trains,
+construction, net), headed by the Lines and Stations tabs' place-or-world toggle (T-332, one setting
+for all three): with the place on, these figures and History are that region's (T-531; the
+place's hover adds how a region's money is counted), with the globe the network's. A region with
+nothing in it shows $0. History
 [T-447, `ui/MoneyHistory.tsx`]: a Days / Hours switch (Days by default, kept while the game is
 open) over two charts. The first has fares (accent) and running costs (grey) as lines, scaled to
 the larger of the two, and one-off costs (new trains and construction) as pale bars on the same
@@ -208,7 +213,8 @@ scale, cut at the top with a dark cap when larger, so a build day does not flatt
 hours up to the past 48; a young game's few sit at the right of at least 7 days or 12 hours. The
 day or hour now is drawn as it fills (a dashed last segment, a paler bar) and moves as fares land.
 Hovering a column gives its day or hour ("Fri 5", "Sat 6, 04:00", "so far" for now) with fares,
-costs and their parts, or net. Days and hours are the game clock's (T-321); the fare curve
+costs and their parts, or net. Days and hours are the game clock's (T-321). Then, for the whole
+network whatever the toggle: the fare curve
 (each ride, each km, and what a 10 km ride costs); cars owned (prices in its hover) and cars the
 lines need; the value of the track and stations built. Rules: [track-and-service.md](track-and-service.md)
 6.4. The economy's 100x scaling is in the hover of "A day at this schedule".

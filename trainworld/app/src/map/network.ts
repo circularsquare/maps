@@ -158,11 +158,20 @@ class StrokeBuilder {
   }
 }
 
+/** Whether a line has any train assigned (its fleet is above zero). */
+export const runsTrains = (l: { trains: ArrayLike<number> }) => l.trains[0] + l.trains[1] + l.trains[2] > 0;
+
 /**
- * The lines on each edge, by id. Lines sharing track are drawn on top of each other, the last
- * line (highest id) on top: T-062 drew them side by side, which T-190 dropped (Anita: "for now
+ * The order lines sharing track are drawn in, bottom first (T-533; picking follows the same order).
+ * Lines with no trains go under all that run trains; within each group the shorter route is on
+ * top, ties to the higher id. T-062 drew them side by side, which T-190 dropped (Anita: "for now
  * lets not try to represent interlining. its a hard problem").
  */
+export function lineDrawOrder<L extends { id: number; lengthM: number; trains: ArrayLike<number> }>(lines: readonly L[]): L[] {
+  return [...lines].sort((a, b) => Number(runsTrains(a)) - Number(runsTrains(b)) || b.lengthM - a.lengthM || a.id - b.id);
+}
+
+/** The lines on each edge, by id. */
 function linesOnEdges(s: ClockState) {
   const onEdge = new Map<number, number[]>();
   for (const l of [...s.lines].sort((a, b) => a.id - b.id)) {
@@ -304,8 +313,8 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
   const edgeLen = new Map(s.edges.map((e) => [e.id, e.lengthM]));
   const edgeEnds = new Map(s.edges.map((e) => [e.id, e]));
   const sampleStroke = new Int32Array(r.samples.length / 2).fill(-1);
-  for (const l of s.lines) {
-    lineColours.set([...rgb(l.colour), 255], l.id * 4);
+  for (const l of s.lines) lineColours.set([...rgb(l.colour), 255], l.id * 4);
+  for (const l of lineDrawOrder(s.lines)) {
     if (!l.ok) continue;
     lineIds.push(String(l.id));
     let c = cache.lines.get(l.id);
