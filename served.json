@@ -38,5 +38,15 @@
     "name": "isochrone",
     "folder": "C:/Users/anita/projects/maps/isochrone",
     "about": "Walking time from anywhere in the world"
+  },
+  {
+    "name": "diskmap",
+    "folder": "diskmap",
+    "about": "What is filling the C: drive"
+  },
+  {
+    "name": "drymonths",
+    "folder": "C:/Users/anita/projects/maps/drymonths",
+    "about": "dry-summer (Mediterranean) map from IMERG monthly rain"
   }
 ]

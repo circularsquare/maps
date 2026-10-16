@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Disk map</title>
+<style>
+:root {
+  --bg: #f6f5f2; --ink: #222; --muted: #6b6b6b; --line: #d8d6d0; --panel: #fff;
+  --rest: #cfccc4; --gap: #8a8780; --free: #e9e7e1;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #17181a; --ink: #e8e6e1; --muted: #9a978f; --line: #34363a; --panel: #202124;
+          --rest: #3a3b3e; --gap: #5a5854; --free: #2a2b2e; }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--bg); color: var(--ink); font: 13px/1.35 system-ui, "Segoe UI", sans-serif;
+       display: flex; flex-direction: column; }
+header { padding: 10px 16px 8px; display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; }
+header h1 { font-size: 15px; font-weight: 600; margin: 0; }
+.usage { flex: 1 1 260px; min-width: 200px; }
+.usagebar { height: 8px; background: var(--free); border-radius: 4px; overflow: hidden; display: flex; }
+.usagebar div { height: 100%; }
+.usage small { color: var(--muted); }
+.modes button { font: inherit; border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+                padding: 3px 9px; cursor: pointer; }
+.modes button:first-child { border-radius: 4px 0 0 4px; }
+.modes button:last-child { border-radius: 0 4px 4px 0; margin-left: -1px; }
+.modes button.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+nav { padding: 0 16px 6px; display: flex; flex-wrap: wrap; gap: 2px; align-items: baseline; }
+nav a { color: var(--ink); text-decoration: none; padding: 1px 4px; border-radius: 3px; cursor: pointer; }
+nav a:hover { background: var(--line); }
+nav span.sep { color: var(--muted); }
+nav .here { font-weight: 600; }
+nav .sz { color: var(--muted); margin-left: 8px; }
+main { flex: 1; display: flex; min-height: 0; padding: 0 16px 16px; gap: 14px; }
+#map { position: relative; flex: 1; min-width: 0; background: var(--panel); border: 1px solid var(--line); }
+#map .b { position: absolute; overflow: hidden; border: 1px solid rgba(0,0,0,.25); cursor: pointer;
+          color: #111; padding: 2px 4px; font-size: 12px; white-space: nowrap; }
+#map .b.d1 { border-color: rgba(0,0,0,.55); font-weight: 600; }
+#map .b.d2 { font-weight: 400; }
+#map .b:hover { outline: 2px solid var(--ink); outline-offset: -2px; z-index: 2; }
+#map .b .s { opacity: .7; margin-left: 5px; font-weight: 400; }
+#map .b.rest { background: var(--rest) !important; color: var(--ink);
+  background-image: repeating-linear-gradient(45deg, transparent 0 5px, rgba(0,0,0,.06) 5px 10px) !important; }
+#map .b.gap { background: var(--gap) !important; color: #fff; }
+aside { width: 340px; flex: none; overflow: auto; background: var(--panel); border: 1px solid var(--line);
+        padding: 8px 10px; }
+aside h2 { font-size: 13px; font-weight: 600; margin: 4px 0 6px; }
+aside ol { list-style: none; margin: 0 0 12px; padding: 0; }
+aside li { display: flex; gap: 8px; padding: 3px 0; border-top: 1px solid var(--line); cursor: pointer; }
+aside li:hover { background: var(--bg); }
+aside li .s { flex: none; width: 62px; text-align: right; font-variant-numeric: tabular-nums; }
+aside li .p { flex: 1; min-width: 0; overflow-wrap: anywhere; color: var(--muted); }
+aside li .p b { color: var(--ink); font-weight: 400; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-bottom: 10px; color: var(--muted); }
+.legend i { display: inline-block; width: 11px; height: 11px; vertical-align: -1px; margin-right: 4px;
+            border: 1px solid rgba(0,0,0,.3); }
+#tip { position: fixed; pointer-events: none; background: var(--panel); color: var(--ink);
+       border: 1px solid var(--line); padding: 6px 8px; max-width: 460px; display: none; z-index: 10;
+       box-shadow: 0 2px 8px rgba(0,0,0,.2); overflow-wrap: anywhere; }
+#tip .p { font-weight: 600; margin-bottom: 2px; }
+#tip .m { color: var(--muted); }
+#empty { padding: 30px; color: var(--muted); }
+@media (max-width: 800px) {
+  main { flex-direction: column; }
+  aside { width: auto; max-height: 40vh; }
+  #map { min-height: 60vh; }
+}
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title">Disk map</h1>
+  <div class="usage"><div class="usagebar" id="ubar"></div><small id="utext"></small></div>
+  <div class="modes">
+    <button id="m-folder" class="on" title="One colour per folder at this level">By folder</button><button id="m-age" title="Colour by when most of the bytes inside were last changed">By age</button>
+  </div>
+</header>
+<nav id="crumbs"></nav>
+<main>
+  <div id="map"></div>
+  <aside>
+    <div class="legend" id="legend"></div>
+    <h2>Biggest files here</h2>
+    <ol id="files"></ol>
+  </aside>
+</main>
+<div id="tip"></div>
+<script src="data.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script>
+const D = window.DISK;
+const GB = 2 ** 30;
+const fmt = b => b >= 100 * GB ? (b / GB).toFixed(0) + ' GB' : b >= GB ? (b / GB).toFixed(1) + ' GB'
+  : (b / 2 ** 20).toFixed(0) + ' MB';
+const day = 86400;
+const ago = m => {
+  const d = (D.scanned - m) / day;
+  if (d < 2) return 'today';
+  if (d < 60) return `${Math.round(d)} days ago`;
+  if (d < 730) return `${Math.round(d / 30.4)} months ago`;
+  return `${(d / 365).toFixed(0)} years ago`;
+};
+const ageText = m => m ? 'last changed ' + ago(m) : '';
+const FOLDER = ['#8fb8de', '#f2b880', '#9ccc9a', '#e59a9a', '#c0a6dc', '#e6d17e', '#86c9c4', '#d9a7c4',
+                '#b8b07a', '#a4b4c8', '#d7b49e', '#a9d18e'];
+const AGE = [[30, '#3d8f5a', 'under a month'], [182, '#8cc07a', '1-6 months'], [365, '#e2d47e', '6-12 months'],
+             [730, '#e9a46a', '1-2 years'], [Infinity, '#d0716a', 'over 2 years']];
+const ageColor = m => { const d = (D.scanned - m) / day; return AGE.find(a => d < a[0])[1]; };
+
+let mode = 'folder';
+let stack = [D.tree];  // current path from root
+
+function pathOf(nodes) {
+  let p = nodes[0].n;
+  for (const n of nodes.slice(1)) p = p.replace(/\\$/, '') + '\\' + n.n;
+  return p;
+}
+
+function header() {
+  const k = D.disk;
+  document.getElementById('title').textContent = `Disk map of ${D.root}`;
+  const pct = x => (100 * x / k.total) + '%';
+  const scanned = D.scannedBytes, gap = Math.max(0, k.used - scanned);
+  document.getElementById('ubar').innerHTML =
+    `<div style="width:${pct(scanned)};background:#7c9cc0"></div><div style="width:${pct(gap)};background:var(--gap)"></div>`;
+  const when = new Date(D.scanned * 1000).toLocaleString(undefined, {dateStyle: 'medium', timeStyle: 'short'});
+  document.getElementById('utext').textContent =
+    `${fmt(k.used)} used, ${fmt(k.free)} free of ${fmt(k.total)}. Scanned ${when}` +
+    (D.cloudOnly > GB ? `; ${fmt(D.cloudOnly)} of OneDrive files are online only and left out` : '') + '.';
+}
+
+function crumbs() {
+  const el = document.getElementById('crumbs');
+  el.innerHTML = '';
+  stack.forEach((n, i) => {
+    if (i) el.insertAdjacentHTML('beforeend', '<span class="sep">\\</span>');
+    const a = document.createElement('a');
+    a.textContent = i ? n.n : n.n.replace(/\\$/, '');
+    if (i === stack.length - 1) a.className = 'here';
+    a.onclick = () => { stack = stack.slice(0, i + 1); draw(); };
+    el.appendChild(a);
+  });
+  const cur = stack[stack.length - 1];
+  el.insertAdjacentHTML('beforeend', `<span class="sz">${fmt(cur.s)}, ${cur.f.toLocaleString()} files</span>`);
+}
+
+function legend() {
+  const el = document.getElementById('legend');
+  if (mode === 'age') {
+    el.innerHTML = AGE.map(a => `<span><i style="background:${a[1]}"></i>${a[2]}</span>`).join('');
+  } else {
+    el.innerHTML = '<span><i style="background:var(--rest)"></i>smaller items</span>' +
+      (stack.length === 1 ? '<span><i style="background:var(--gap)"></i>not readable</span>' : '');
+  }
+  el.insertAdjacentHTML('beforeend', '<span>Click a box to go in. Right click or Esc to go back.</span>');
+}
+
+function fileList() {
+  const cur = pathOf(stack).replace(/\\$/, '') + '\\';
+  const lc = cur.toLowerCase();
+  const rows = D.big.filter(f => f.p.toLowerCase().startsWith(lc)).slice(0, 40);
+  document.getElementById('files').innerHTML = rows.length ? rows.map(f => {
+    const rel = f.p.slice(cur.length), cut = rel.lastIndexOf('\\');
+    return `<li title="Click to copy the full path\n${ageText(f.m)}" data-p="${encodeURIComponent(f.p)}">` +
+      `<span class="s">${fmt(f.s)}</span><span class="p">${cut >= 0 ? rel.slice(0, cut + 1) : ''}<b>${rel.slice(cut + 1)}</b></span></li>`;
+  }).join('') : '<li><span class="p">None of the 300 biggest files on the drive are in here.</span></li>';
+}
+document.getElementById('files').onclick = e => {
+  const li = e.target.closest('li[data-p]');
+  if (li) navigator.clipboard && navigator.clipboard.writeText(decodeURIComponent(li.dataset.p));
+};
+
+const tip = document.getElementById('tip');
+function showTip(e, chain) {
+  const n = chain[chain.length - 1];
+  const p = n.gap || n.rest ? (n.rest ? pathOf(chain.slice(0, -1)) + ' (' + n.n + ')' : n.n) : pathOf(chain);
+  tip.innerHTML = `<div class="p"></div><div>${fmt(n.s)}${n.f ? `, ${n.f.toLocaleString()} files` : ''}</div>` +
+    (n.file ? `<div class="m">${ageText(n.m)}</div>`
+      : n.a ? `<div class="m">most of it changed around ${ago(n.a)}${n.m ? `, newest file ${ago(n.m)}` : ''}</div>` : '');
+  tip.querySelector('.p').textContent = p;
+  tip.style.display = 'block';
+  const x = Math.min(e.clientX + 14, innerWidth - tip.offsetWidth - 8);
+  const y = e.clientY + 16 + tip.offsetHeight > innerHeight ? e.clientY - tip.offsetHeight - 10 : e.clientY + 16;
+  tip.style.left = x + 'px'; tip.style.top = y + 'px';
+}
+
+function draw() {
+  crumbs(); legend(); fileList();
+  const map = document.getElementById('map');
+  map.innerHTML = '';
+  const cur = stack[stack.length - 1];
+  if (!cur.c) { map.innerHTML = '<div id="empty">Nothing in here is big enough to draw on its own.</div>'; return; }
+  const W = map.clientWidth, H = map.clientHeight;
+  // two levels at a time; every node already carries its own total
+  const root = d3.hierarchy(cur, d => d.c);
+  root.each(d => { if (d.depth >= 2) d.children = null; });
+  root.eachAfter(d => { d.value = d.children ? d3.sum(d.children, c => c.value) : d.data.s; });
+  d3.treemap().size([W, H]).tile(d3.treemapSquarify.ratio(1.3))
+    .paddingOuter(d => d.depth ? 2 : 0).paddingTop(d => d.depth === 1 && d.children ? 18 : 0).paddingInner(1)
+    .round(true)(root);  root.children.forEach((c, i) => c.hue = FOLDER[i % FOLDER.length]);
+  const frag = document.createDocumentFragment();
+  root.descendants().slice(1).forEach(d => {
+    const w = d.x1 - d.x0, h = d.y1 - d.y0;
+    if (w < 1 || h < 1) return;
+    const n = d.data, top = d.depth === 1 ? d : d.parent;
+    const el = document.createElement('div');
+    el.className = `b d${d.depth}` + (n.rest ? ' rest' : '') + (n.gap ? ' gap' : '');
+    el.style.cssText = `left:${d.x0}px;top:${d.y0}px;width:${w}px;height:${h}px`;
+    let bg = mode === 'age' && n.a ? ageColor(n.a) : top.hue;
+    if (mode === 'folder' && d.depth === 2) bg = d3.color(bg).brighter(0.35).formatHex();
+    el.style.background = bg;
+    if (w > 46 && h > 15) {
+      el.innerHTML = '<span class="n"></span><span class="s"></span>';
+      el.firstChild.textContent = n.n;
+      el.lastChild.textContent = fmt(n.s);
+    }
+    const chain = d.ancestors().reverse().map(a => a.data);
+    el.onmousemove = e => { e.stopPropagation(); showTip(e, stack.concat(chain.slice(1))); };
+    el.onclick = e => {
+      e.stopPropagation();
+      // go into the clicked box if it holds anything; else into its parent box
+      const target = chain.slice(1);
+      while (target.length && !target[target.length - 1].c) target.pop();
+      if (target.length) { stack = stack.concat(target); tip.style.display = 'none'; draw(); }
+    };
+    frag.appendChild(el);
+  });
+  map.appendChild(frag);
+}
+document.getElementById('map').onmouseleave = () => tip.style.display = 'none';
+const up = () => { if (stack.length > 1) { stack.pop(); tip.style.display = 'none'; draw(); } };
+document.getElementById('map').oncontextmenu = e => { e.preventDefault(); up(); };
+addEventListener('keydown', e => { if (e.key === 'Escape' || e.key === 'Backspace') up(); });
+for (const m of ['folder', 'age']) document.getElementById('m-' + m).onclick = () => {
+  mode = m;
+  document.querySelectorAll('.modes button').forEach(b => b.classList.toggle('on', b.id === 'm-' + m));
+  draw();
+};
+let rt; new ResizeObserver(() => { clearTimeout(rt); rt = setTimeout(draw, 100); })
+  .observe(document.getElementById('map'));
+header(); draw();
+</script>
+</body>
+</html>

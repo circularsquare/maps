@@ -1,0 +1,62 @@
+[
+ {
+  "t": 81,
+  "tag": null,
+  "card": false,
+  "note": "",
+  "vfinal": null,
+  "ver": null,
+  "sver": null,
+  "active": null
+ },
+ {
+  "t": 215,
+  "tag": null,
+  "card": true,
+  "note": "",
+  "vfinal": null,
+  "ver": null,
+  "sver": null,
+  "active": "nyc"
+ },
+ {
+  "t": 1654,
+  "tag": null,
+  "card": true,
+  "note": "(before your last change)",
+  "vfinal": null,
+  "ver": null,
+  "sver": null,
+  "active": "nyc"
+ },
+ {
+  "t": 9363,
+  "tag": null,
+  "card": true,
+  "note": "(an early estimate)",
+  "vfinal": false,
+  "ver": 1,
+  "sver": 1,
+  "active": "nyc"
+ },
+ {
+  "t": 25482,
+  "tag": null,
+  "card": true,
+  "note": "(36M), all 47.5M rides",
+  "vfinal": false,
+  "ver": 1,
+  "sver": 1,
+  "active": "nyc"
+ },
+ {
+  "t": 25909,
+  "tag": null,
+  "card": false,
+  "note": "(36M), all 47.5M rides",
+  "vfinal": true,
+  "ver": 1,
+  "sver": 1,
+  "active": "nyc"
+ }
+]

@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dry summers</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; height: 100%; background: #111; color: #ccc; font: 14px Nunito, sans-serif; overflow: hidden; }
+  #wrap { position: absolute; inset: 0; cursor: grab; }
+  #wrap.drag { cursor: grabbing; }
+  #map { position: absolute; left: 0; top: 0; transform-origin: 0 0; image-rendering: auto; user-select: none; -webkit-user-drag: none; }
+  #title { position: absolute; left: 16px; top: 12px; font-size: 20px; font-weight: 700; color: #ddd; pointer-events: none; }
+  #bar { position: absolute; left: 16px; top: 46px; display: flex; gap: 6px; }
+  #bar button { background: none; border: 1px solid #555; color: #ccc; font: inherit; padding: 4px 10px; border-radius: 4px; cursor: pointer; }
+  #bar button.active { border-color: #6889a8; color: #fff; background: #6889a8; }
+  .panel { position: absolute; background: rgba(10,10,10,.85); border: 1px solid #333; border-radius: 8px; padding: 10px 12px; }
+  #legend { left: 16px; bottom: 16px; width: 340px; max-width: calc(100vw - 90px); box-sizing: border-box; }
+  #legend .ramp { height: 10px; border-radius: 2px; }
+  #legend .ends { position: relative; height: 16px; color: #888; font-size: 12px; margin-top: 4px; }
+  #legend .sub { display: flex; justify-content: space-between; color: #888; font-size: 12px; }
+  #hover { display: none; pointer-events: none; width: 220px; }
+  #hover .where { color: #888; font-size: 12px; font-variant-numeric: tabular-nums; }
+  #hover .ratio { color: #aaa; font-size: 12px; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  #hover svg { display: block; margin-top: 6px; }
+  #info { position: absolute; right: 16px; bottom: 16px; width: 30px; height: 30px; background: none; border: 1px solid #555; color: #ccc; border-radius: 4px; cursor: pointer; font: 700 14px Nunito, sans-serif; }
+  #infopanel { display: none; right: 16px; bottom: 56px; width: 320px; line-height: 1.45; }
+  #infopanel p { margin: 0 0 8px; }
+  #infopanel p:last-child { margin: 0; }
+  a { color: #89b4fa; }
+</style>
+</head>
+<body>
+<div id="wrap"><img id="map" src="season.png" alt="Map of summer against winter rainfall" draggable="false"></div>
+<div id="title">Dry summers</div>
+<div id="bar">
+  <button data-view="season" class="active">Summer vs winter</button>
+  <button data-view="annual">Annual</button>
+</div>
+<div id="legend" class="panel">
+  <div class="ramp"></div>
+  <div class="ends"></div>
+  <div class="sub"></div>
+</div>
+<div id="hover" class="panel"><div class="where"></div><div class="ratio"></div><svg width="196" height="70"></svg></div>
+<button id="info" title="About">i</button>
+<div id="infopanel" class="panel">
+  <p>Average rain and snow per month, 2001 to 2022, from NASA's <a href="https://gpm.nasa.gov/data/imerg/precipitation-climatology">IMERG monthly climatology</a> (0.1&deg; grid).</p>
+  <p>Summer vs winter compares June to August with December to February, swapped south of the equator, and faded to even within 3&deg; of it. Its colours fade where the year has under about 400 mm.</p>
+  <p>The sea is dimmed in both views.</p>
+</div>
+<script>
+// Legend ramps match build.py. Positions are 0..1 along the bar; annual is log10(mm) from 30 to 7000.
+// Season bar: log2 ratio -4..4 fills the middle 76%; 4..6 (16x to 64x) gets 12% at each end.
+const pos = x => Math.abs(x) <= 4 ? .5 + x / 4 * .38 : .5 + Math.sign(x) * (.38 + (Math.abs(x) - 4) / 2 * .12);
+const lg = mm => (Math.log10(mm) - Math.log10(30)) / (Math.log10(7000) - Math.log10(30));
+const LEGEND = {
+  season: {
+    stops: [[-6,[95,30,15]],[-4,[150,55,20]],[-2.4,[205,110,40]],[-1,[225,185,120]],[0,[200,200,195]],
+            [1,[130,195,200]],[2.4,[40,140,185]],[4,[25,65,150]],[6,[30,30,95]]].map(([x, c]) => [pos(x), c]),
+    labels: [[0, '64×'], [pos(-4), '16×'], [pos(-2), '4×'], [.5, 'even'], [pos(2), '4×'], [pos(4), '16×'], [1, '64×']],
+    sub: ['drier summer', 'wetter summer'],
+  },
+  annual: {
+    stops: [[30,[45,38,30]],[150,[100,82,55]],[400,[145,140,70]],[900,[75,165,95]],[1800,[40,170,170]],[3500,[110,190,240]],[7000,[235,245,255]]]
+      .map(([mm, c]) => [lg(mm), c]),
+    labels: [[0, '30 mm a year'], [lg(1000), '1,000'], [1, '7,000']],
+  },
+};
+const ramp = document.querySelector('#legend .ramp'), ends = document.querySelector('#legend .ends'),
+  sub = document.querySelector('#legend .sub');
+
+let view = 'season';
+const img = document.getElementById('map'), wrap = document.getElementById('wrap');
+function setView(v) {
+  view = v;
+  img.src = v + '.png';
+  document.querySelectorAll('#bar button').forEach(b => b.classList.toggle('active', b.dataset.view === v));
+  const L = LEGEND[v];
+  ramp.style.background = 'linear-gradient(to right,' + L.stops.map(([t, c]) => `rgb(${c}) ${t * 100}%`).join(',') + ')';
+  ends.innerHTML = L.labels.map(([t, text]) => {
+    const align = t < .1 ? 'left:0' : t > .9 ? 'right:0' : `left:${t * 100}%;transform:translateX(-50%)`;
+    return `<span style="position:absolute;${align};white-space:nowrap">${text}</span>`;
+  }).join('');
+  sub.style.display = L.sub ? '' : 'none';
+  if (L.sub) sub.innerHTML = L.sub.map(t => `<span>${t}</span>`).join('');
+}
+document.querySelectorAll('#bar button').forEach(b => b.onclick = () => setView(b.dataset.view));
+setView('season');
+
+// Pan and zoom: the image is 3600x1800; scale s maps image px to screen px.
+let s, tx, ty;
+function fit() {
+  s = Math.max(innerWidth / 3600, innerHeight / 1800 * 0.9);
+  tx = (innerWidth - 3600 * s) / 2; ty = (innerHeight - 1800 * s) / 2;
+  apply();
+}
+function clamp() {
+  const w = 3600 * s, h = 1800 * s;
+  tx = w <= innerWidth ? (innerWidth - w) / 2 : Math.min(0, Math.max(innerWidth - w, tx));
+  ty = h <= innerHeight ? (innerHeight - h) / 2 : Math.min(0, Math.max(innerHeight - h, ty));
+}
+function apply() { clamp(); img.style.transform = `translate(${tx}px,${ty}px) scale(${s})`; }
+addEventListener('resize', fit);
+fit();
+const minS = () => Math.min(innerWidth / 3600, innerHeight / 1800);
+wrap.addEventListener('wheel', e => {
+  e.preventDefault();
+  const k = Math.exp(-e.deltaY * 0.0015), ns = Math.min(4, Math.max(minS(), s * k));
+  tx = e.clientX - (e.clientX - tx) * ns / s; ty = e.clientY - (e.clientY - ty) * ns / s; s = ns;
+  apply();
+}, { passive: false });
+let drag = null;
+wrap.addEventListener('pointerdown', e => { drag = [e.clientX - tx, e.clientY - ty]; wrap.classList.add('drag'); wrap.setPointerCapture(e.pointerId); });
+wrap.addEventListener('pointerup', () => { drag = null; wrap.classList.remove('drag'); });
+
+// Hover chart from months.bin: 12 x 360 x 720 uint16, mm/month at 0.5 deg, 65535 = no data.
+let months = null;
+fetch('months.bin').then(r => r.arrayBuffer()).then(b => months = new Uint16Array(b));
+const hover = document.getElementById('hover'), svg = hover.querySelector('svg');
+const MN = 'JFMAMJJASOND';
+wrap.addEventListener('pointermove', e => {
+  if (drag) { tx = e.clientX - drag[0]; ty = e.clientY - drag[1]; apply(); hover.style.display = 'none'; return; }
+  const ix = (e.clientX - tx) / s, iy = (e.clientY - ty) / s;
+  if (!months || ix < 0 || iy < 0 || ix >= 3600 || iy >= 1800) { hover.style.display = 'none'; return; }
+  const col = Math.floor(ix / 5), row = Math.floor(iy / 5);
+  const v = []; for (let m = 0; m < 12; m++) v.push(months[m * 259200 + row * 720 + col]);
+  if (v[0] === 65535) { hover.style.display = 'none'; return; }
+  const lat = 90 - iy / 10, lon = ix / 10 - 180;
+  const total = v.reduce((a, b) => a + b, 0);
+  hover.querySelector('.where').textContent =
+    `${Math.abs(lat).toFixed(1)}°${lat >= 0 ? 'N' : 'S'} ${Math.abs(lon).toFixed(1)}°${lon >= 0 ? 'E' : 'W'} · ${total.toLocaleString()} mm a year`;
+  const north = lat >= 0, jja = v[5] + v[6] + v[7], djf = v[11] + v[0] + v[1];
+  const [sum, win] = north ? [jja, djf] : [djf, jja];
+  const r = (sum + 15) / (win + 15), ratioEl = hover.querySelector('.ratio');
+  ratioEl.style.display = view === 'season' ? '' : 'none';
+  ratioEl.textContent = r >= 1 ? `Summer ${r.toFixed(1)}× wetter` : `Summer ${(1 / r).toFixed(1)}× drier`;
+  const max = Math.max(...v, 1), bw = 196 / 12;
+  // Summer side in the accent, winter side in light grey, other months dim; annual shows all alike.
+  const jjaSide = m => m >= 5 && m <= 7, djfSide = m => m === 11 || m <= 1;
+  const fill = view === 'season'
+    ? (m => (north ? jjaSide(m) : djfSide(m)) ? '#6889a8' : (north ? djfSide(m) : jjaSide(m)) ? '#999' : '#444')
+    : (() => '#6889a8');
+  svg.innerHTML = v.map((x, m) => {
+    const h = x / max * 52;
+    return `<rect x="${m * bw + 1}" y="${54 - h}" width="${bw - 2}" height="${h}" fill="${fill(m)}"/>` +
+      `<text x="${m * bw + bw / 2}" y="68" fill="#888" font-size="10" text-anchor="middle">${MN[m]}</text>`;
+  }).join('');
+  hover.style.display = 'block';
+  const px = e.clientX + 16 + 246 > innerWidth ? e.clientX - 262 : e.clientX + 16;
+  const py = e.clientY + 16 + 110 > innerHeight ? e.clientY - 126 : e.clientY + 16;
+  hover.style.left = px + 'px'; hover.style.top = py + 'px';
+});
+wrap.addEventListener('pointerleave', () => hover.style.display = 'none');
+
+const ip = document.getElementById('infopanel');
+document.getElementById('info').onclick = () => ip.style.display = ip.style.display === 'block' ? 'none' : 'block';
+</script>
+</body>
+</html>

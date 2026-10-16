@@ -1,0 +1,62 @@
+[
+ {
+  "t": 86,
+  "tag": null,
+  "card": false,
+  "note": "",
+  "vfinal": null,
+  "ver": null,
+  "sver": null,
+  "active": null
+ },
+ {
+  "t": 213,
+  "tag": null,
+  "card": true,
+  "note": "",
+  "vfinal": null,
+  "ver": null,
+  "sver": null,
+  "active": "tor"
+ },
+ {
+  "t": 1484,
+  "tag": null,
+  "card": true,
+  "note": "(before your last change)",
+  "vfinal": null,
+  "ver": null,
+  "sver": null,
+  "active": "tor"
+ },
+ {
+  "t": 3752,
+  "tag": null,
+  "card": true,
+  "note": "(an early estimate)",
+  "vfinal": false,
+  "ver": 1,
+  "sver": 1,
+  "active": "tor"
+ },
+ {
+  "t": 3994,
+  "tag": null,
+  "card": true,
+  "note": "(13.4M), all 15.5M rides",
+  "vfinal": false,
+  "ver": 1,
+  "sver": 1,
+  "active": "tor"
+ },
+ {
+  "t": 26370,
+  "tag": null,
+  "card": false,
+  "note": "(13.4M), all 15.5M rides",
+  "vfinal": true,
+  "ver": 1,
+  "sver": 1,
+  "active": "tor"
+ }
+]
