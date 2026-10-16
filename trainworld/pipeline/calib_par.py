@@ -153,7 +153,10 @@ def targets():
     return {"city": "par", "net": rn.CITIES["par"]["out"], "areas_file": os.path.join(CALIB, "cell_area.u8"),
             "pack": os.path.join(d["pack"], "par.json"), "station_min": 2000.0, "hub_m": 300.0,
             "stations": d["stations"], "hubs": hubs, "operators": {}, "operators_info": {},
-            "areas": d["areas"], "sources": d["sources"]}
+            "areas": d["areas"], "sources": d["sources"],
+            # the census share includes the bus: the model's rail should come out at or below it,
+            # so only an overshoot is scored (T-509 stage 6)
+            "areas_upper": True}
 
 
 if __name__ == "__main__":

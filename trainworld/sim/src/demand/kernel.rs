@@ -29,7 +29,7 @@ pub const K: usize = 6;
 /// Dummy slots after each row of the commute pair loop, one per lane and egress step (T-036).
 const PADS: usize = 8 * K;
 const NONE: u32 = u32::MAX;
-/// `Params::other_asc`'s default, perceived minutes (T-513: notes/T-513.md; T-509 fits it).
+/// `Params::other_asc`'s default, perceived minutes (T-513: notes/T-513.md; T-509's joint fit kept it).
 pub const OTHER_ASC: f32 = 10.0;
 
 #[derive(Clone, Debug)]
@@ -172,6 +172,11 @@ pub struct Params {
     /// 4). Read when `EverydayApi::beside` opens; the pack's `everyday` block sets them.
     pub everyday_rate: [f32; 6],
     pub everyday_decay_m: [f32; 6],
+    /// The everyday layer's own mode choice (T-509): its rail constant is `asc_rail` plus this,
+    /// and its walk share curve takes this `walk_d0_km` (with `walk_s_km`). Read when
+    /// `EverydayApi::beside` opens.
+    pub everyday_asc_rail: f32,
+    pub everyday_walk_d0_km: f32,
 }
 
 impl Default for Params {
@@ -198,7 +203,7 @@ impl Default for Params {
             transfer_min: 5.0,
             fare_min: 6.0,
             beta: 0.05,
-            asc_rail: 0.0,
+            asc_rail: super::api::ASC_RAIL,
             damp_min: 60.0,
             road_detour: 1.3,
             road_local_km: 2.0,
@@ -250,6 +255,9 @@ impl Default for Params {
             other_asc: OTHER_ASC,
             everyday_rate: super::everyday::RATE,
             everyday_decay_m: super::everyday::DECAY,
+            // T-509, with `asc_rail`
+            everyday_asc_rail: -1.1,
+            everyday_walk_d0_km: 1.9,
         }
     }
 }
@@ -306,6 +314,8 @@ impl Params {
             }
             // scales every cell's share without a car (0: everyone drives); before `set_network`
             "other_asc" => self.other_asc = v,
+            "everyday_asc_rail" => self.everyday_asc_rail = v,
+            "everyday_walk_d0_km" => self.everyday_walk_d0_km = v,
             "nocar" => {
                 if let Some(c) = &self.nocar {
                     self.nocar = Some(std::sync::Arc::new(c.iter().map(|x| (x * v).min(1.0)).collect()));
@@ -444,6 +454,9 @@ impl Params {
     /// Share of all trips over `d_km` reserved for walking, independent of rail service.
     pub fn walk_share(&self, d_km: f32) -> f32 {
         1.0 / (1.0 + ((d_km - self.walk_d0_km) / self.walk_s_km).exp())
+    }
+    pub fn everyday_walk_share(&self, d_km: f32) -> f32 {
+        1.0 / (1.0 + ((d_km - self.everyday_walk_d0_km) / self.walk_s_km).exp())
     }
 }
 

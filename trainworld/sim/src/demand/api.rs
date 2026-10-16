@@ -34,10 +34,9 @@ pub const PEAK_HOUR_FACTOR: [f32; PERIODS] = [1.4, 1.15, 1.4, 1.3, 1.5];
 /// A 20 m car: seats and riders at crush load (a New York subway car: ~44 seats, ~160 at crush).
 pub const SEATS_PER_CAR: f32 = 44.0;
 pub const CRUSH_PER_CAR: f32 = 160.0;
-/// The per-city rail propensity (SPEC 4.3). 0 for New York since the fast walk (T-078): rail and
-/// driving are judged on perceived time and cost alone, which puts the real network's rail share
-/// at 20.5% against ACS's 20.3% with T-090's soft reach and drive (notes/T-090.md).
-pub const ASC_RAIL: f32 = 0.0;
+/// The rail propensity (docs/demand.md 4.3), one worldwide value fitted on six cities' real
+/// networks (T-509, notes/T-509.md section 14); the everyday layer adds `Params::everyday_asc_rail`.
+pub const ASC_RAIL: f32 = 0.4;
 /// US value of time: $20/hour, or 3 perceived minutes per dollar (T-067).
 pub const FARE_MIN_PER_USD: f32 = 3.0;
 /// `flows` leaves out the far cells holding this share of the selection's commuters, the
@@ -1808,6 +1807,8 @@ mod tests {
         let run = |left_behind: bool, tph_b: f32, cars_b: f32| {
             let (mut api, xy, n, stops, times, mut tph, mut cars) = small();
             api.params_mut().left_behind = left_behind;
+            // the 5% below is set where rail and the car are judged on time alone (T-509 raised it)
+            api.params_mut().asc_rail = 0.0;
             tph[3] = tph_b;
             cars[1] = cars_b;
             // line a with room to spare (with rides to stations, T-371, 20 cars leave riders

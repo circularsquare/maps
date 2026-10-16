@@ -398,6 +398,22 @@ notes/T-420.md has the tables.
   driving) differ by country. Check: rail, air and car shares on a few corridors per country
   (MLIT's Inter-Regional Travel Survey, Eurostat, NEC FUTURE) at two lengths, so the slope as well
   as the level is seen.
+- **Rail propensity and the everyday walk share** (T-509, docs/demand.md 4.3). One worldwide rail
+  constant, `asc_rail` 0.4 (8 perceived minutes), with everyday trips 1.1 lower (-0.7 in all) and
+  their walking share curve centred at 1.9 km instead of the commutes' 1.7, fitted jointly on the
+  real networks of New York, London, Paris, Seoul, Tokyo and Sendai (station entries, line or
+  operator totals, census rail share of commuters by area, NHTS's New York rail and walk shares by
+  purpose), New York at half weight since its better-off riders avoid the subway. Every one of the
+  six cities fitted alone puts everyday trips 1.25-1.65 below commutes, and leaving any one out
+  moves the joint values by at most 0.4 (rail) and 0.2 (everyday). The level is what differs by
+  country: fitted alone, New York wants a constant of -0.9, London and Seoul -0.3 to -0.4, Paris
+  0.7, Sendai 0.8, Tokyo 1.5. After the fit the model is still over on New York's entries (x2.1),
+  London's (x1.6) and Seoul's (x1.4) and under on Tokyo's (x0.6) and Sendai's (x0.8); held out,
+  Toronto went from x1.0 to x0.8. Why it may not carry over: the constant stands for habit,
+  income, bus competition and what the car is good for, which differ by country (no bus in the
+  game: Seoul's and London's bus riders take the train); Japan's rail lead is the largest gap left.
+  Check: a new country's station entries against the model's level, and its census rail share by
+  area where it has one; a country setting for the level (Japan first) waits on Anita.
 - **Driving alternative and homes without a car** (T-511, docs/demand.md 4.3). Drive times and
   costs are the US car's; the people living in a household with no car (per cell, `nocar`) cannot
   drive and choose among rail, walking the whole way and "other" (T-513: bus, taxi and bike as one

@@ -352,18 +352,20 @@ driving for the remaining trips by **generalised cost** in minutes. Buses are ou
 - driving = door-to-door road time (below; a few constants, real road travel times are not a
   priority) + its cost
 
-Rail share = logistic in the difference (0.05 per perceived minute), plus a **per-city rail
-propensity** constant. **Cost damping** (T-495, `Params::mode_beta`): past 60 perceived minutes of
+Rail share = logistic in the difference (0.05 per perceived minute), plus a **rail propensity**
+constant, one worldwide value: **`asc_rail` 0.4** for commutes and **0.4 - 1.1 = -0.7 for everyday
+trips** (`everyday_asc_rail` -1.1; T-509, fitted jointly on New York, London, Paris, Seoul, Tokyo
+and Sendai's real networks): an errand or a visit takes the train less often than a commute
+between the same places (New York's survey: 5-7% of errand and social legs by rail against 21%
+of work legs). **Cost damping** (T-495, `Params::mode_beta`): past 60 perceived minutes of
 the car's trip T, the scale is 0.05 x sqrt(60 / T), so a minute counts for less on a long trip
 (0.029 at 3 hours, 0.014 at 13); one rule for commutes, everyday trips and the regional layer
 (docs/regional.md 5.1), T the car's perceived minutes door to door including parking, never the
 rail's, so the scale does not change with the network. In the local layers only the choice
 between modes is damped (the walks and station pairs behind rail's cost are weighed at 0.05, since
 they are shared by every destination); the regional layer damps the whole rail trip, access
-included. The propensity is not scaled. The propensity stands in for income: it absorbs parking,
-habit and income in one number (car ownership is its own input, below), set so a realistic network
-gives roughly realistic mode share. New York's is 0 (T-078):
-rail and driving are judged on perceived time and cost alone. **Catchment is soft** (T-090): there
+included. The propensity is not scaled. It absorbs habit, income and what the car is good for
+(trip chains, shopping) in one number (car ownership is its own input, below). **Catchment is soft** (T-090): there
 is no circle the player sees. A farther station makes the walk, and so the whole trip, worse, and
 the station loses riders where that trip gets worse than driving. Value of time is per country so
 fares compare across countries. The US uses $20/hour (3 perceived minutes per dollar, a gameplay
@@ -372,7 +374,8 @@ actual track length. Distance fare affects route choice as well as mode choice, 
 multiplies ride time without multiplying fare (T-067).
 
 **Walking.** A share of all trips is reserved for walking by distance:
-`w = 1 / (1 + exp((d - 1.7 km) / 0.4 km))`; rail and driving then compete for `1 - w`.
+`w = 1 / (1 + exp((d - d0) / 0.4 km))`, d0 1.7 km for commutes and 1.9 km for everyday trips
+(`everyday_walk_d0_km`, T-509); rail and driving then compete for `1 - w`.
 Thus `walk = w`, `rail = (1 - w) * r`, and `drive = (1 - w) * (1 - r)`, where `r` is the
 rail-versus-road result. This prevents attractive rail or expensive parking from taking the
 walk share of very short trips. Commutes use the gravity's 2 km zone-centre distance, so a short
@@ -523,8 +526,8 @@ propensity on rail:
   12 km/h door to door (`other_kmh`, 5 minutes a km) plus a wait of 8 minutes weighed 1.37
   (`other_wait_min`, `w_wait`: 11 perceived) plus `other_asc`, no parking. The speed and wait are
   fixed for every city (a city bus's average speed with stops, and half a 15-minute headway with
-  some walk to the stop); `other_asc` is the one constant fitted (T-509), 10 perceived minutes
-  until then (`kernel::OTHER_ASC`, set on New York's boroughs against ACS).
+  some walk to the stop); `other_asc` is 10 perceived minutes (`kernel::OTHER_ASC`, set on New
+  York's boroughs against ACS; T-509's joint fit of six cities kept it).
 
 The scale is damped on other's minutes, as the car's on the car's. The walking share reserved by
 distance stays as it is for everyone. Rail's share of a pair's trips that do not walk is

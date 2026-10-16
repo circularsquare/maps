@@ -17,8 +17,9 @@ The objective (notes/T-509.md section 4), each part a mean so every city weighs 
 - operators: mean squared log ratio of trips using each operator (boardings less changes within
   it, as operators count; T-171); per-line totals where a city has them go in the same list;
 - areas: rail share of commuters by home area, squared difference of logits weighted by
-  commuters.
-The total is the sum of the three. Fixed-value penalties come with the fit (stage 6).
+  commuters (one-sided where the targets say `areas_upper`: Paris's census share includes the bus);
+- everyday (New York only, NHTS): rail and walk shares of everyday legs by purpose, logits.
+The total is the sum of the parts. Fixed-value penalties come with the fit (stage 6).
 
 Targets file (any city): {"city", "net", "areas_file", "station_min", "stations": [{"target",
 "name", "entries"}], "hubs": [target ids], "operators": {operator: trips}, "operators_info":
@@ -43,8 +44,18 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 
 def logit(p):
-    p = np.clip(np.asarray(p, float), 1e-4, 1 - 1e-4)
+    # floored at 1%: below it a share is noise for a rail game, and near-zero rural areas
+    # (Sendai's Kesennuma, 0.1% against 1.8%) otherwise dominate a city's area part (T-509 stage 5)
+    p = np.clip(np.asarray(p, float), 0.01, 0.99)
     return np.log(p / (1 - p))
+
+
+# NHTS 2017 weekday legs of New York CBSA households by the game's purposes (notes/t509_nhts.py):
+# rail (TRPTRANS 15, 16) and walk shares, weights the legs per person
+NHTS_NY = {"errands": {"rail": 0.047, "walk": 0.260, "w": 1.111},
+           "social": {"rail": 0.072, "walk": 0.351, "w": 0.978},
+           "medical": {"rail": 0.105, "walk": 0.120, "w": 0.096}}
+KINDS = ["errands", "social", "school", "university", "airport", "medical"]
 
 
 # ---------------------------------------------------------------- targets
@@ -76,7 +87,8 @@ def targets_nyc():
         "operators": {"subway": ops["subway"] + ops["sir"], "path": ops["path"], "lirr": ops["lirr"], "mnr": ops["mnr"]},
         "operators_info": {"njt": ops["njt_rough"]},
         "areas": areas,
-        "sources": {"stations": tg["sources"]["subway_od"], "operators": tg["sources"]["operators"] + " (NJ Transit rough, not scored)",
+        "everyday": NHTS_NY,
+        "sources": {"stations": tg["sources"]["subway_od"], "everyday": "NHTS 2017 weekday, New York CBSA households, legs by purpose", "operators": tg["sources"]["operators"] + " (NJ Transit rough, not scored)",
                     "areas": tg["sources"]["acs"] + "; rail = subway, commuter rail and light rail over workers less those working from home"},
     }
 
@@ -150,7 +162,25 @@ def score(run, tg, top=15, say=print):
     meas_share = np.array([a["rail_share"] for a in tg["areas"]], float)
     mod_share = ar / np.maximum(at, 1e-9)
     dl = logit(mod_share) - logit(meas_share)
+    if tg.get("areas_upper"):
+        # the measured share is an upper bound (Paris: transit with the bus): only an overshoot counts
+        dl = np.maximum(dl, 0.0)
     parts["areas"] = float((w * dl ** 2).sum() / ws)
+    # everyday rail and walk shares by purpose where a survey gives them (New York: NHTS)
+    ev_rows = {}
+    kt = run["day"].get("everyday_kinds") or []
+    wa = run["day"].get("everyday_walks_all") or []
+    if tg.get("everyday") and kt and wa:
+        num = den = 0.0
+        for k, m in tg["everyday"].items():
+            i = KINDS.index(k)
+            trips, rail = kt[3 * i], kt[3 * i + 1]
+            mr, mw = rail / max(trips, 1e-9), wa[i] / max(trips, 1e-9)
+            d2 = ((logit(mr) - logit(m["rail"])) ** 2 + (logit(mw) - logit(m["walk"])) ** 2) / 2
+            num += m["w"] * d2
+            den += m["w"]
+            ev_rows[k] = {"rail": mr, "walk": mw, "rail_measured": m["rail"], "walk_measured": m["walk"]}
+        parts["everyday"] = float(num / den)
     total = sum(parts.values())
     out = {"total": total, "parts": parts, "station_level": st_level, "station_spread": float(np.std(lr[~hub])),
            "n_stations": int((~hub).sum()), "n_hubs": int(hub.sum()),
@@ -158,8 +188,11 @@ def score(run, tg, top=15, say=print):
            "operators": {k: {"model": ops.get(k, 0.0), "measured": v, "log_ratio": olr[k]} for k, v in tg["operators"].items()},
            "operators_info": {k: {"model": ops.get(k, 0.0), "measured": v} for k, v in tg.get("operators_info", {}).items()},
            "rail_share_model": float((mod_share * w).sum() / ws), "rail_share_measured": float((meas_share * w).sum() / ws),
-           "day": run["day"], "ms": run["ms"], "set": run.get("set", {})}
-    say(f"score {total:.3f} = stations {parts['stations']:.3f} + operators {parts['operators']:.3f} + areas {parts['areas']:.3f}")
+           "day": run["day"], "ms": run["ms"], "set": run.get("set", {}), "everyday_rows": ev_rows}
+    say(f"score {total:.3f} = stations {parts['stations']:.3f} + operators {parts['operators']:.3f} + areas {parts['areas']:.3f}"
+        + (f" + everyday {parts['everyday']:.3f}" if "everyday" in parts else ""))
+    for k, v in ev_rows.items():
+        say(f"  everyday {k}: rail {v['rail']:.1%} (survey {v['rail_measured']:.1%}), walk {v['walk']:.1%} (survey {v['walk_measured']:.1%})")
     say(f"stations: {out['n_stations']} scored (>= {tg.get('station_min', 0):,.0f} entries), mean log ratio {st_level:+.2f} "
         f"(x{np.exp(st_level):.2f}), spread {out['station_spread']:.2f}; {out['n_hubs']} hubs apart, mean log ratio "
         f"{out['hubs_log_ratio'] if out['hubs_log_ratio'] is None else round(out['hubs_log_ratio'], 2)}")

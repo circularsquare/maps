@@ -148,9 +148,11 @@ fn main() {
     let t2 = now_ms();
     let (mut ent_c, mut ent_e, mut ent_am) = (vec![], vec![], vec![]);
     let (mut board, mut area_rail, mut area_trips) = (vec![], vec![0f64; n_area], vec![0f64; n_area]);
+    let mut seg_all: Vec<f64> = vec![];
     // trips, rail, walked, other (T-513)
     let (mut c_tot, mut e_tot) = ([0f64; 4], [0f64; 4]);
     let mut kinds: Vec<f64> = vec![];
+    let mut walks_all: Vec<f64> = vec![];
     let mut periods = vec![];
     for q in 0..PERIODS {
         api.solve(q);
@@ -192,12 +194,19 @@ fn main() {
             for (a, x) in kinds.iter_mut().zip(&kt) {
                 *a += x;
             }
+            let wa = e.kind_walks_all(q);
+            if walks_all.len() < wa.len() { walks_all.resize(wa.len(), 0.0); }
+            for (a, x) in walks_all.iter_mut().zip(&wa) {
+                *a += x;
+            }
         }
         add(&mut ent_c, &api.entries(q));
         add(&mut board, &api.board(q));
+        add(&mut seg_all, &api.seg(q));
         if let Some(e) = &ev {
             add(&mut ent_e, &e.entries(q));
             add(&mut board, &e.board(q));
+            add(&mut seg_all, &e.seg(q));
         }
         if q == 0 {
             add(&mut ent_am, &api.entries(q));
@@ -236,6 +245,12 @@ fn main() {
         line_board[rn_line[r]] += v;
         *ops.entry(op_of[rn_line[r]].clone()).or_default() += v;
     }
+    // riders over each hop, summed by line, and x the hop's km (express against local, crowding)
+    let (mut line_load, mut line_pkm) = (vec![0f64; n_lines], vec![0f64; n_lines]);
+    for (r, &v) in seg_all.iter().enumerate() {
+        line_load[rn_line[r]] += v;
+        line_pkm[rn_line[r]] += v * hop_km.get(r).copied().unwrap_or(0.0) as f64;
+    }
     for t in xf.chunks_exact(3) {
         let (li, lo) = (rn_line[t[0] as usize], rn_line[t[1] as usize]);
         if li == lo {
@@ -264,12 +279,13 @@ fn main() {
         "rounds": rounds,
         "params": format!("{:?}", api.params_mut()),
         "ms": {"open": t_open, "network": t_net, "solve": t_solve, "all": t_all},
-        "day": {"commute": c_tot, "everyday": e_tot, "everyday_kinds": kinds},
+        // everyday_kinds: trips, rail, reserved walks by purpose; everyday_walks_all: every walk
+        "day": {"commute": c_tot, "everyday": e_tot, "everyday_kinds": kinds, "everyday_walks_all": walks_all},
         // `EverydayApi::info`: by purpose, outings, walking share, mean km (T-509 stage 4)
         "everyday_info": ev.as_ref().map(|e| e.info()),
         "st_map": api.station_map(),
         "entries": {"commute": r1(&ent_c), "everyday": r1(&ent_e), "am": r1(&ent_am)},
-        "lines": {"board": r1(&line_board), "same_line_changes": r1(&same_line)},
+        "lines": {"board": r1(&line_board), "same_line_changes": r1(&same_line), "load": r1(&line_load), "pkm": r1(&line_pkm)},
         "operators": ops,
         "areas": {"rail": r1(&area_rail), "trips": r1(&area_trips)},
         "periods": periods,
