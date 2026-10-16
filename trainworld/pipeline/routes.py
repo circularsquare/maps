@@ -808,7 +808,7 @@ def main(argv):
         # which packs have routes for their present zones (the game ignores stale ones)
         import glob
         names = cities or sorted(os.path.basename(p)[:-5] for p in glob.glob(os.path.join(PACKS, "*.json"))
-                                 if not p.endswith((".places.json", ".boundary.json")) and "intercity" not in p)
+                                 if "." not in os.path.basename(p)[:-5] and "intercity" not in p)
         for c in names:
             header, a = load_pack(c, PACKS)
             if "zones" not in header or "zone_gx" not in a:

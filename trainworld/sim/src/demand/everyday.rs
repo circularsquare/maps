@@ -156,14 +156,14 @@ impl PairIndex {
         loop {
             let at = self.slots[i];
             if at == NONE {
-                pairs.push(Pair { u, v, kind, trips: 0.0, walk: 0.0, distance: 0.0 });
+                pairs.push(Pair::new(kind, u, v));
                 let n = (pairs.len() - 1) as u32;
                 self.slots[i] = n;
                 self.len += 1;
                 return n;
             }
             let q = &pairs[at as usize];
-            if q.u == u && q.v == v && q.kind == kind {
+            if q.uk == kind << 28 | u && q.v == v {
                 return at;
             }
             i = (i + 1) & mask;
@@ -173,7 +173,7 @@ impl PairIndex {
         self.slots = vec![NONE; 2 * self.slots.len()];
         let mask = self.slots.len() - 1;
         for (n, q) in pairs.iter().enumerate() {
-            let mut i = self.start(Self::key(q.kind, q.u, q.v));
+            let mut i = self.start(Self::key(q.kind(), q.u(), q.v));
             while self.slots[i] != NONE {
                 i = (i + 1) & mask;
             }
@@ -1054,12 +1054,24 @@ fn local_share(d: f32) -> f32 {
 }
 #[derive(Clone, Copy)]
 struct Pair {
-    u: u32,
+    /// the purpose in the top 4 bits, the home subzone below (T-419: 20 bytes a pair)
+    uk: u32,
     v: u32,
-    kind: u32,
     trips: f32,
     walk: f32,
     distance: f32,
+}
+impl Pair {
+    fn new(kind: u32, u: u32, v: u32) -> Pair {
+        debug_assert!(kind < 16 && u < 1 << 28);
+        Pair { uk: kind << 28 | u, v, trips: 0.0, walk: 0.0, distance: 0.0 }
+    }
+    fn u(&self) -> u32 {
+        self.uk & 0x0fff_ffff
+    }
+    fn kind(&self) -> u32 {
+        self.uk >> 28
+    }
 }
 /// One purpose's share of a period's loads (T-158), per route node. The purposes' parts add up
 /// to the period's `loads` (assignment is linear in the trips for fixed strategies); only the
@@ -1557,7 +1569,7 @@ impl EverydayApi {
         // 1 an activity end, 2 a home end (walks and rides: the trip home alights there, T-389)
         let mut used = vec![0u8; sz.n];
         for pair in &self.pairs {
-            used[pair.u as usize] |= 2;
+            used[pair.u() as usize] |= 2;
             used[pair.v as usize] |= 1;
         }
         for u in (0..sz.n).filter(|&u| used[u] != 0) {
@@ -1607,17 +1619,17 @@ impl EverydayApi {
             let density = self.engine.z.density();
             let park: Vec<(f32, f32, f32)> = (0..self.engine.z.n).map(|j| p.park_parts(&self.engine.z, j)).collect();
             for (i, pair) in self.pairs.iter().enumerate() {
-                if pair.kind as usize != od_kind {
+                if pair.kind() as usize != od_kind {
                     if od_used {
                         cols.pack(&mut od, s, od_kind);
                     }
-                    od_kind = pair.kind as usize;
+                    od_kind = pair.kind() as usize;
                     od_used = false;
                 }
                 // the home end: its walks, or on a trip of `ride_min_km` or more its walks and
                 // rides (T-389, as the commute's `ride_offered` but on the pair's own distance);
                 // the activity end walks
-                let h = pair.u as usize;
+                let h = pair.u() as usize;
                 let (hr, hm, hw) = if pair.distance >= ride_m && min_r[h].is_finite() {
                     (sz.acc_off[h] as usize..sz.acc_off[h + 1] as usize, min_r[h], &acc_r)
                 } else {
@@ -1658,9 +1670,9 @@ impl EverydayApi {
                     let pr = (1.0 - pair.walk) * p.rail_share_parked(p.beta * (road - rail) + p.asc_rail, paid, free);
                     probability[i][direction] = pr;
                     let share = if direction == 0 {
-                        OUTWARD[pair.kind as usize][q]
+                        OUTWARD[pair.kind() as usize][q]
                     } else {
-                        RETURN[pair.kind as usize][q]
+                        RETURN[pair.kind() as usize][q]
                     };
                     let trips = pair.trips * share * pr / sum;
                     od_used = true;
@@ -1703,8 +1715,8 @@ impl EverydayApi {
         }
         for (i, pair) in self.pairs.iter().enumerate() {
             let r = pair.trips as f64
-                * (OUTWARD[pair.kind as usize][q] as f64 * probability[i][0] as f64
-                    + RETURN[pair.kind as usize][q] as f64 * probability[i][1] as f64);
+                * (OUTWARD[pair.kind() as usize][q] as f64 * probability[i][0] as f64
+                    + RETURN[pair.kind() as usize][q] as f64 * probability[i][1] as f64);
             rail += r;
         }
         (trips, rail, walk.max(0.0))
@@ -2179,8 +2191,8 @@ impl EverydayApi {
         }
         for (i, pair) in self.pairs.iter().enumerate() {
             let pr = st.probability[i];
-            out[3 * pair.kind as usize + 1] += pair.trips as f64
-                * (OUTWARD[pair.kind as usize][q] as f64 * pr[0] as f64 + RETURN[pair.kind as usize][q] as f64 * pr[1] as f64);
+            out[3 * pair.kind() as usize + 1] += pair.trips as f64
+                * (OUTWARD[pair.kind() as usize][q] as f64 * pr[0] as f64 + RETURN[pair.kind() as usize][q] as f64 * pr[1] as f64);
         }
         out
     }

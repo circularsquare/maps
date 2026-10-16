@@ -18,8 +18,11 @@ census or registers then upgrade single inputs by replacing one function. What e
   informal or home-based work should raise the population share.
 - Commuters: jobs x (1 - work from home), the config's one national share (default 0), at both
   ends; the home end in proportion to population (no small-area source of where workers live).
-- Everyday destinations: OSM shops and services (errands) and food, venues and hotels (leisure)
-  per cell, scaled to 15% and 8% of jobs (as Canada's).
+- Everyday destinations (T-453): jobs in the customer-facing sectors where a country publishes
+  them by small area (the config's `everyday` hook) and they pass sector_check; otherwise
+  everyday_fallback, each 2 km zone's jobs (and, for errands, residents) blended with its OSM
+  shops and services or food, venues and hotels as far as the pack's OSM is complete. Set after
+  the gravity (everyday_pack), scaled to 15% and 8% of jobs.
 - Schools: OSM amenity=school sites; pupils = population x the national share aged 0-14 (World
   Bank) x SCHOOL_ENROL, spread over the sites by the square root of their area (points take the
   median site). Children are the same share of every cell's people.
@@ -54,7 +57,11 @@ ident: (boardings a year, "year, source")}, optional: a national figure in place
 decay_pow/decay_km, region_name (optional), epoch (GHSL epoch, default 2020), job_blend (the proxy's
 blend in place of JOB_BLEND, optional: a larger population share where much work is informal),
 land_cap_km2 and land_spread_deg (optional: cap one OSM industrial or commercial area's job-place
-weight and spread it over its area, where few other places are mapped; T-459).
+weight and spread it over its area, where few other places are mapped; T-459), everyday (callable
+(city, lat, lon, jobs per pack cell) -> {"errand" and/or "leisure": (sector jobs per cell, source
+name[, the pack the concentration test was passed on])}, optional: a country's jobs by sector by
+small area; the third item makes the pack run only the level test, for a source judged on the
+country's best-mapped metro, since sparse packs' OSM misses roadside malls and resorts).
 """
 import os
 os.environ.setdefault("OMP_NUM_THREADS", "2")
@@ -541,6 +548,149 @@ def fit_curve_bands(x_m, y_m, home, work, target):
     return float(pw), round(km, 1)
 
 
+# ---------------------------------------------------------------- everyday destinations (T-453, T-456)
+
+EVERYDAY_SHARE = {"errand": ERRAND_SHARE, "leisure": LEISURE_SHARE}
+# OSM places per 1,000 residents at which a pack's OSM counts are taken as complete (notes/T-456.md 6)
+EVERYDAY_R = {"errand": 5.0, "leisure": 3.0}
+# residents' part of the base beside jobs (DECISIONS 2026-10-16)
+EVERYDAY_B = {"errand": 0.25, "leisure": 0.0}
+# a published sector source's plausible share of all jobs, and its concentration limit (notes/T-456.md 7)
+SECTOR_LEVEL = {"errand": (0.08, 0.20), "leisure": (0.04, 0.15)}
+SECTOR_CONC, SECTOR_CONC_MIN_C = 0.05, 0.3
+EVERYDAY_OSM = {"errand": "OSM shops and services", "leisure": "OSM restaurants, bars, venues and hotels"}
+
+
+def osm_completeness(kind, pop, osm):
+    return min(1.0, 1000.0 * float(osm.sum()) / max(float(pop.sum()), 1.0) / EVERYDAY_R[kind])
+
+
+def everyday_fallback(kind, pop, jobs, zone, osm):
+    """Per cell, the purpose's attraction (sum 1) where no sector source is used: each 2 km zone's
+    jobs share (with EVERYDAY_B of residents) blended geometrically with its OSM places (one
+    pseudo-place a zone) as far as OSM is complete; inside a zone by OSM places, else jobs."""
+    c = osm_completeness(kind, pop, osm)
+    n = int(zone.max()) + 1
+    P, J, O = (np.bincount(zone, weights=v, minlength=n) for v in (pop, jobs, osm))
+    present = np.bincount(zone, minlength=n) > 0
+    bb = EVERYDAY_B[kind]
+    base = (1 - bb) * J / max(J.sum(), 1e-30) + bb * P / max(P.sum(), 1e-30)
+    oz = np.where(present, O + 1.0, 0.0)
+    oz /= oz.sum()
+    w = base ** (1 - c / 2) * oz ** (c / 2)
+    w /= w.sum()
+    by = np.where(O[zone] > 0, osm, np.where(J[zone] > 0, jobs, np.where(P[zone] > 0, pop, 1.0)))
+    s = np.bincount(zone, weights=by, minlength=n)
+    return w[zone] * by / s[zone], c
+
+
+def sector_check(kind, S, unit, pop, osm, jobs, c):
+    """T-456 7's two tests on a published sector source (per cell S), the concentration test over
+    the pack's 2 km zones (`unit`; T-453: at LSOAs it failed BRES on noise, at zones it fails only
+    Japan's mesh with wholesale left in): (reason it fails or None, share of jobs, concentrated share
+    or None)."""
+    level = float(S.sum() / max(jobs.sum(), 1e-30))
+    lo, hi = SECTOR_LEVEL[kind]
+    if not lo <= level <= hi:
+        return f"{level:.1%} of jobs, outside {lo:.0%}-{hi:.0%}", level, None
+    if c < SECTOR_CONC_MIN_C:
+        return None, level, None
+    ok = unit >= 0
+    n = int(unit.max()) + 1
+    Su, Pu, Ou = (np.bincount(unit[ok], weights=v[ok], minlength=n) for v in (S, pop, osm))
+    Ou = np.where(np.bincount(unit[ok], minlength=n) > 0, Ou + 1.0, 0.0)
+    s, p, o = Su / Su.sum(), Pu / max(Pu.sum(), 1e-30), Ou / Ou.sum()
+    conc = float(s[(s > 3 * p) & (s > 3 * o)].sum())
+    if conc >= SECTOR_CONC:
+        return f"{conc:.1%} of it in units with over 3 times their share of residents and of OSM places", level, conc
+    return None, level, conc
+
+
+def osm_on_cells(city, cells):
+    """OSM errand and leisure places per pack cell: tier 0's signal cache, else the city's OSM
+    place list (Canada's) counted by res-9 cell."""
+    npz = os.path.join(b.WORK, f"{city}.tier0_signals.npz")
+    out = {k: np.zeros(len(cells)) for k in ("errand", "leisure")}
+    if os.path.exists(npz):
+        z = np.load(npz)
+        idx = {int(c): i for i, c in enumerate(z["h3"])}
+        rows = np.array([idx.get(int(c), -1) for c in cells])
+        for k in out:
+            out[k][rows >= 0] = z["osm_" + k][rows[rows >= 0]]
+        return out
+    import canada
+    places = pd.read_csv(os.path.join(canada.RAW_CA, f"osm_jobs_{city}.csv.gz"))
+    pids = np.fromiter((h3.str_to_int(h3.latlng_to_cell(la, lo, 9)) for la, lo in zip(places.lat, places.lon)), np.uint64, len(places))
+    idx = {int(c): i for i, c in enumerate(cells)}
+    rows = np.array([idx.get(int(c), -1) for c in pids], np.int64)
+    for k in out:
+        sel = (places.kind.to_numpy() == k) & (rows >= 0)
+        np.add.at(out[k], rows[sel], places.w.to_numpy()[sel])
+    return out
+
+
+def everyday_pack(city, stem=None):
+    """T-453: the pack's errand_jobs and leisure_jobs from jobs, rewritten in place (the pack at
+    `stem`, default data/packs/<city>, a res-9 pack with its 2 km zones). Per purpose: the config's
+    `everyday` sector source where it passes sector_check, else everyday_fallback; scaled to
+    EVERYDAY_SHARE of the pack's jobs (scale only, the kernel normalises)."""
+    import canada
+    cfg = b.CITIES[city]
+    stem = stem or os.path.join(b.PACKS, city)
+    with open(stem + ".json") as f:
+        header = json.load(f)
+    with open(stem + ".bin", "rb") as f:
+        buf = bytearray(f.read())
+    assert "merged" not in header, f"{city}: everyday attraction is set on the res-9 pack"
+    from read_pack import DTYPES
+    arr = {a["name"]: a for a in header["arrays"]}
+
+    def get(k):
+        a = arr[k]
+        return np.frombuffer(buf, DTYPES[a["dtype"]], a["count"], a["offset"])
+    cells = get("h3").astype(np.uint64)
+    pop, jobs = get("pop").astype(np.float64), get("jobs").astype(np.float64)
+    zone = get("zone").astype(np.int64)
+    ll = np.array([h3.cell_to_latlng(h3.int_to_str(int(c))) for c in cells])
+    osm = osm_on_cells(city, cells)
+    sectors = cfg["everyday"](city, ll[:, 0], ll[:, 1], jobs) if cfg.get("everyday") else {}
+    J = float(jobs.sum())
+    texts, tot = [], {}
+    for kind, name in (("errand", "errand_jobs"), ("leisure", "leisure_jobs")):
+        c = osm_completeness(kind, pop, osm[kind])
+        label = "errands" if kind == "errand" else "leisure"
+        w, why = None, None
+        if kind in sectors:
+            S, src, *judged = sectors[kind]
+            why, level, conc = sector_check(kind, S, zone, pop, osm[kind], jobs, c)
+            if judged and conc is not None:
+                why, src = None, f"{src} (concentration judged on {judged[0]})"
+            print(f"  everyday {label}: {src}: {level:.1%} of jobs, concentrated {'-' if conc is None else f'{conc:.1%}'}"
+                  f"{'; not used: ' + why if why else ''}", flush=True)
+            if why is None:
+                w = S
+                texts.append(f"{label}: {src}, {level:.1%} of jobs")
+        if w is None:
+            w, c = everyday_fallback(kind, pop, jobs, zone, osm[kind])
+            bb = EVERYDAY_B[kind]
+            base = f"jobs {1 - bb:.0%} and residents {bb:.0%}" if bb else "jobs"
+            texts.append(f"{label}: each 2 km zone's {base} blended with {EVERYDAY_OSM[kind]} at completeness "
+                         f"{c:.2f} ({1000 * osm[kind].sum() / max(pop.sum(), 1):.2f} a 1,000 residents), inside a zone by those places"
+                         + (f" (sector source not used: {why})" if why else ""))
+        v = (w * (EVERYDAY_SHARE[kind] * J / max(w.sum(), 1e-30))).astype("<f4")
+        a = arr[name]
+        assert a["dtype"] == "f32" and a["count"] == len(v)
+        buf[a["offset"]:a["offset"] + v.nbytes] = v.tobytes()
+        tot[name] = float(v.sum(dtype=np.float64))
+    src = "; ".join(texts) + f"; scaled to {ERRAND_SHARE:.0%} and {LEISURE_SHARE:.0%} of jobs (T-453)"
+    header["everyday"] = {**header.get("everyday", {}), "enabled": True, "source": src, **tot}
+    for s in header.get("sources", []):
+        if s.get("what") == "everyday destinations":
+            s["name"] = src
+    canada.rewrite(stem, header, bytes(buf))
+    return src
+
+
 # ---------------------------------------------------------------- build
 
 def main(city):
@@ -620,12 +770,7 @@ def finish(city, kids=None):
     cfg.setdefault("border_factor", 1.0)
     b.add_gravity(os.path.join(b.WORK, f"{city}.cells.json"), city)
     import canada
-    stem, header, buf, cells = canada.pack_cells(city)
-    arr = {a["name"]: a for a in header["arrays"]}
-    tot = {n: float(np.frombuffer(buf, "<f4", arr[n]["count"], arr[n]["offset"]).sum(dtype=np.float64)) for n in ("errand_jobs", "leisure_jobs")}
-    header["everyday"] = {"enabled": True, "source": "OpenStreetMap shops and services (errands); restaurants, bars, venues, hotels "
-                          f"(leisure); per cell, scaled to {ERRAND_SHARE:.0%} and {LEISURE_SHARE:.0%} of jobs (tier 0)", **tot}
-    canada.rewrite(stem, header, bytes(buf))
+    print("everyday:", everyday_pack(city), flush=True)  # needs the gravity's 2 km zones
     boundary = build_boundary(city, cfg)
     education_osm(city, boundary, kids)
     # the Overpass-shaped caches (terminals, medical, parks) from the extract, before the readers

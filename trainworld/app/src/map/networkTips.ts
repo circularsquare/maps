@@ -19,7 +19,7 @@ import { demandView, stationRidersFor } from "../game/demand";
 import { PERIODS, periodAt } from "../game/periods";
 import { purposeName } from "../game/purposes";
 import type { LineInput, WorldView } from "../game/types";
-import { display, purposeFilter } from "../game/ui";
+import { display, purposeFilter, shownDayPhrase } from "../game/ui";
 import { stationScale } from "./demandLayers";
 import { tripAt } from "./network";
 import type { Overlay } from "./overlay";
@@ -44,7 +44,7 @@ function lineShortName(l: LineInput): string {
 function circleLines(riders: number, members: number): string[] {
   const p = purposeFilter.peek();
   const where = members > 1 ? `, at the complex's ${members} stations` : "";
-  const out = [`${forecast(riders)} boardings and alightings a day${where}`];
+  const out = [`${forecast(riders)} boardings and alightings ${shownDayPhrase.peek()}${where}`];
   if (p !== "all") out.push(`${purposeName(p)} trips only`);
   return out;
 }

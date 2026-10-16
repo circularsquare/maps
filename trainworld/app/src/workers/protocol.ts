@@ -47,6 +47,8 @@ export type EditOp =
   | { op: "edgePis"; edge: EdgeId; pis: PiInput[] }
   /** move a blueprint node (T-093) to pack metres x, y; the blueprint track there follows */
   | { op: "moveNode"; node: NodeId; x: number; y: number }
+  /** move several blueprint nodes together by dx, dy pack metres (T-475) */
+  | { op: "moveNodes"; nodes: NodeId[]; dx: number; dy: number }
   /** a whole blueprint stretch on one level, shape kept */
   | { op: "edgeLevel"; edge: EdgeId; level: Level }
   | { op: "flying"; node: NodeId; flying: boolean }
@@ -88,6 +90,8 @@ export type ToClock =
   | { kind: "previewEdge"; seq: number; edge: EdgeId; pis: PiInput[] }
   /** what moving a blueprint node would do (T-093); answered with "preview", one part per edge */
   | { kind: "previewNode"; seq: number; node: NodeId; x: number; y: number }
+  /** the same for several nodes moved together (T-475) */
+  | { kind: "previewNodes"; seq: number; nodes: NodeId[]; dx: number; dy: number }
   /** whether `addStation` with these arguments would succeed, nothing changed (T-311, the
    * placement ghost's colour); answered with "stationCheck" */
   | { kind: "previewStation"; seq: number; at: StationAt; platform: number }
@@ -126,7 +130,7 @@ export type ToClock =
   | {
       kind: "query";
       seq: number;
-      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "lineAccount"; line: number; day: number } | { what: "today" } | { what: "yesterday" };
+      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "lineAccount"; line: number; day: number } | { what: "lineLevels"; line: number; day: number } | { what: "today" } | { what: "yesterday" };
     };
 
 /** Money as the worker keeps it (T-028), US$M unless said. */

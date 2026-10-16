@@ -83,7 +83,7 @@ below 700 px the bar takes two rows (name, cash, time and speed over the split).
   icon's own hover its share and rides. The player's job is
   to make the train share grow. It shows "–" and an empty bar until the zone has figures of its own
   (a solve's, or the bare pass's for a zone no station reaches; not the no-rail split a pack gives
-  before that), and over dead space [T-318]. The hover says "on weekdays" or "at weekends" for the
+  before that), and over dead space [T-318]. The hover says "on a weekday", "on a weekend day" or "on average" for the
   day shown. The zone named is the focused zone ([ui-demand-views.md](ui-demand-views.md)).
 - **Status** [T-349, `ui/StatusTag.tsx`]: a small tag (small type style, background, thin border)
   on the map's top row, to the right of the demand buttons and centred with them (`ui/DemandSelector.tsx`;
@@ -112,11 +112,15 @@ below 700 px the bar takes two rows (name, cash, time and speed over the split).
 - An **Autosave off** notice when this tab cannot autosave (saves, below); a click opens the saved
   games.
 
-**Demand shown for** [T-260, T-266; Settings, display setting `dayShown`]: Today (the default:
-the clock's day, switching as the clock enters and leaves a weekend), Weekdays or Weekends. It
-sets the day every demand view shows, the split included. There is no other mark of it. A switch
-of day shows at once (the bubbles' catch-up is for a new forecast, not another day). The trains,
-platforms and the panels' Today counts always follow the clock.
+**Demand shown for** [T-260, T-266, T-464; `ui/DemandSelector.tsx`, display setting `dayShown`]: a
+dropdown at the end of the demand bar, after the purpose filter: Average day (the default),
+Weekday or Weekend. The average is 5 weekdays and 2 weekend days over 7 ([demand.md](demand.md)
+4.2). It sets the day every demand view shows, the split included, and does not follow the clock,
+so nothing jumps when the clock enters a weekend. The control takes the accent border when it is
+not the average. Hovers state the day beside every demand figure ("12,400 trip legs a day on
+average", "a weekday", "a weekend day": `shownDayPhrase` in `game/ui.ts`). A switch of day shows at
+once (the bubbles' catch-up is for a new forecast, not another day). The trains, platforms, the
+past 24 hours' riders and the panels' Today counts always follow the clock.
 
 ## Stations full
 
@@ -172,8 +176,9 @@ dismissed, and the map and tools are blocked meanwhile.
 
 ## Settings
 
-`ui/SettingsTab.tsx`, remembered per browser, in order: Bubble size (only while Homes or
-Destinations is on; 0.5-2x, [T-099]), Demand shown for, Track display (four modes with their key,
+`ui/SettingsTab.tsx`, remembered per browser, in order: Demand bubbles, two sliders: Size
+(0.5-2x, [T-099]) and Opacity (20-100% of the built alpha, default 90%, [T-470]; for the
+commuter and longer-trip bubbles, not station discs), Track display (four modes with their key,
 [ui-map.md](ui-map.md)), Show (trains, station names, capacity markers, map labels), Riders on trains
 and platforms ("How full each train is", "How full each platform is", both on by default)
 [T-164], the theme, Panel and text size, Units and performance, and Explore a trip at the bottom [T-220]. Station demand

@@ -393,12 +393,12 @@ struct Market {
 /// `drive` is the reference alternative's perceived minutes (the car's, or with no car the
 /// plane's) and `rest` the weight of every mode but rail against it (T-378).
 struct Pair {
-    a: usize,
-    b: usize,
+    a: u32,
+    b: u32,
     trips: f64,
     drive: f32,
     rest: f32,
-    corridor: usize,
+    corridor: u32,
 }
 /// T-276: a commute between two zones some station serves: its index in `commutes`, and the
 /// car's perceived minutes from home to work (the local layer's commute rule).
@@ -1451,13 +1451,12 @@ fn station_components(g: &Graph) -> Vec<u32> {
 #[wasm_bindgen]
 pub struct IntercityApi {
     m: Rc<Market>,
-    /// The zone pairs between zones some station serves (T-174), both directions, by lower zone.
+    /// The zone pairs between zones some station serves (T-174), two by two: (lower zone, higher
+    /// zone), then the same reversed, in the order of (lower, higher) (`pair_at` searches it).
     pairs: Vec<Pair>,
     /// The zones `pairs` was built for (ascending), and each zone's place in it (`u32::MAX` if not).
     served: Vec<usize>,
     served_at: Vec<u32>,
-    /// (origin zone, destination zone) to its index in `pairs`.
-    pair_index: HashMap<(u32, u32), u32>,
     base: Params,
     svc: Option<Service>,
     access: Vec<Vec<(usize, f32)>>,
@@ -1483,7 +1482,6 @@ impl IntercityApi {
             pairs: vec![],
             served: vec![],
             served_at: vec![],
-            pair_index: HashMap::new(),
             base: market_params(),
             svc: None,
             access: vec![],
@@ -1518,7 +1516,7 @@ impl IntercityApi {
         let mut terms: Vec<(u32, u32, f64)> = vec![];
         for (pi, pair) in self.pairs.iter().enumerate() {
             let trips = pair.trips * SHARES[q] as f64;
-            let (a, b) = (&self.access[pair.a], &self.access_work[pair.b]);
+            let (a, b) = (&self.access[pair.a as usize], &self.access_work[pair.b as usize]);
             terms.clear();
             let mut sum = 0f64;
             for &(sa, wa) in a {
@@ -1540,10 +1538,10 @@ impl IntercityApi {
             let fraction = sum / (pair.rest as f64 + sum);
             let r = trips * fraction;
             rail += r;
-            cor[pair.corridor] += r;
+            cor[pair.corridor as usize] += r;
             pair_rail[pi] = r as f32;
             if sum > 0. {
-                let (ca, cb) = (nz + col[pair.a] as usize, col[pair.b] as usize);
+                let (ca, cb) = (nz + col[pair.a as usize] as usize, col[pair.b as usize] as usize);
                 for &(sa, sb, v) in &terms {
                     let (sa, sb) = (sa as usize, sb as usize);
                     let rr = (r * v / sum) as f32;
@@ -1615,6 +1613,18 @@ impl IntercityApi {
     fn per(&self, q: usize) -> Option<&Period> {
         self.per.get(q).and_then(|v| v.as_ref())
     }
+    /// The index in `pairs` of the pair from zone a to zone b, `u32::MAX` if none.
+    fn pair_at(&self, a: usize, b: usize) -> u32 {
+        let key = (a.min(b) as u32, a.max(b) as u32);
+        let at = |m: usize| (self.pairs[2 * m].a, self.pairs[2 * m].b);
+        let n = self.pairs.len() / 2;
+        let (mut k, mut hi) = (0, n);
+        while k < hi {
+            let m = (k + hi) / 2;
+            if at(m) < key { k = m + 1 } else { hi = m }
+        }
+        if a != b && k < n && at(k) == key { (2 * k + (a > b) as usize) as u32 } else { u32::MAX }
+    }
     /// The pairs between the `served` zones (ascending) joined by track, with a car or a plane to
     /// compete with, in the whole market's order (T-174, T-409, T-377). `comp` is `served_comp`.
     fn set_served(&mut self, served: Vec<usize>, comp: Vec<Vec<u32>>) {
@@ -1637,14 +1647,14 @@ impl IntercityApi {
                     continue;
                 }
                 let d = m.zone_km(za, zb) as f32;
-                let corridor = m.corridor(za.place, zb.place);
+                let corridor = m.corridor(za.place, zb.place) as u32;
                 let drive = |park: f32| if r.car { car_min(d, park) } else { r.refm };
+                let (a, b) = (a as u32, b as u32);
                 pairs.push(Pair { a, b, trips, drive: drive(zb.park), rest: r.rest, corridor });
                 pairs.push(Pair { a: b, b: a, trips, drive: drive(za.park), rest: r.rest, corridor });
             }
         }
         pairs.shrink_to_fit();
-        self.pair_index = pairs.iter().enumerate().map(|(i, p)| ((p.a as u32, p.b as u32), i as u32)).collect();
         self.pairs = pairs;
         let mut at = vec![u32::MAX; m.zones.len()];
         for (k, &z) in served.iter().enumerate() {
@@ -2170,7 +2180,7 @@ impl IntercityApi {
         // its trips with every place, as `Market::leaving_by` is a place's
         let mut away_z: HashMap<usize, f64> = HashMap::new();
         for z in (0..nz).filter(|&z| pop_w[z] > 0. || attr_w[z] > 0.) {
-            let at = |a: usize, b: usize| self.pair_index.get(&(a as u32, b as u32)).copied().unwrap_or(NONE);
+            let at = |a: usize, b: usize| self.pair_at(a, b);
             let row: Vec<_> = m.zone_row(z).into_iter().map(|(b, trips)| (b as u32, at(z, b), at(b, z), trips)).collect();
             let far: Vec<_> = closed.iter().map(|&p| (p, m.zone_place_eachway(&m.zones[z], p))).filter(|(_, t)| *t > 0.).collect();
             let known = row.iter().map(|r| r.3).sum::<f64>() + far.iter().map(|f| f.1).sum::<f64>();

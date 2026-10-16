@@ -153,7 +153,8 @@ institutions** (prisons, nursing homes and the like, T-234).
 - **Walks and drives follow real paths** [T-275] round water and over OSM roads. Riders walk
   between stations within 300 m after a ride, and between any two stations of a complex [T-161].
 - **Weekdays and weekends** [T-260]: days 6 and 7 of each week are the weekend, worked out from the
-  weekday's solve per purpose and period (NHTS 2017 rates). The same trains run every day;
+  weekday's solve per purpose and period (NHTS 2017 rates). The demand views show the average day
+  (5 weekdays and 2 weekend days over 7) unless a weekday or a weekend day is chosen [T-464]. The same trains run every day;
   **open** (T-261): whether weekends get their own.
 - **Demand rules must hold up worldwide**: every demand rule has an entry in
   [docs/demand-worldwide.md](docs/demand-worldwide.md).

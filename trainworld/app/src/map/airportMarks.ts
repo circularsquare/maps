@@ -11,9 +11,9 @@ import type { Map as MlMap } from "maplibre-gl";
 import { activeCity, getWorldFrame, worldFrameEpoch, type CityId } from "../game/cities";
 import { cellModes, cityCells, demandView } from "../game/demand";
 import { count } from "../game/format";
-import type { DayKind } from "../game/days";
+import type { DemandDay } from "../game/days";
 import { nearbyZones } from "../game/zones";
-import { display, purposeFilter, selection, shownDay } from "../game/ui";
+import { display, purposeFilter, selection, shownDay, shownDayPhrase } from "../game/ui";
 import { addFinder } from "./demandHover";
 import { cityOverview } from "./intercityView";
 import { PLANE_PATH } from "./glyphs";
@@ -72,7 +72,7 @@ export function startAirportMarks(map: MlMap, overlay: Overlay) {
     return out;
   };
 
-  const load = async (zone: CityId, focus: boolean, day: DayKind) => {
+  const load = async (zone: CityId, focus: boolean, day: DemandDay) => {
     const key = `${zone}:${day}`;
     if (known.has(key) || asked.has(key)) return;
     asked.add(key);
@@ -172,7 +172,7 @@ export function startAirportMarks(map: MlMap, overlay: Overlay) {
       if (Math.hypot(m.x - at.x, m.y - at.y) > HOVER_PX) continue;
       const all = a.train + a.walk + a.drive;
       return [
-        `${count(all)} airport trips a day here`,
+        `${count(all)} airport trips ${shownDayPhrase.peek()} here`,
         "Outward and return legs included.",
         `Train ${pct(a.train, all)}%, walking ${pct(a.walk, all)}%, driving ${pct(a.drive, all)}%`,
       ];

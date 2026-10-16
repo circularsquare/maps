@@ -36,7 +36,7 @@ import { cityDemandViews, demandView, intercityDemand, INTERCITY_PLACES, interci
 import { selectedScope } from "../game/complexView";
 import { count } from "../game/format";
 import { BUBBLE_ALPHA, modeMix } from "../game/palette";
-import { display, purposeFilter, selection } from "../game/ui";
+import { display, purposeFilter, selection, shownDayPhrase } from "../game/ui";
 import type { Selection } from "../game/types";
 import { DISC } from "../workers/commutersProtocol";
 import { CATCH_STEP, caughtUp, tripsDone } from "./catchUp";
@@ -184,10 +184,10 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       }
       const modes = [`${count(t.rail)} by train`, ...(t.air >= 0.5 ? [`${count(t.air)} by plane`] : [])];
       const tag = !own
-        ? [`${count(t.all)} trips a day in and from ${c.name}`, ...modes]
+        ? [`${count(t.all)} trips ${shownDayPhrase.peek()} in and from ${c.name}`, ...modes]
         : isOwn
-          ? [`${count(t.all)} trips a day between ${c.name} and other places`, ...modes]
-          : [`${count(t.all)} trips a day between ${own.name} and ${c.name}`, ...modes];
+          ? [`${count(t.all)} trips ${shownDayPhrase.peek()} between ${c.name} and other places`, ...modes]
+          : [`${count(t.all)} trips ${shownDayPhrase.peek()} between ${own.name} and ${c.name}`, ...modes];
       return { ...t, city: c, isOwn, tag };
     }).filter((p) => p.isOwn || (p.all > 0 && !(!own && zoneLoads.peek().has(p.city.id)))); // T-421: a zone still loading has its bar instead
     points.sort((a, b) => b.all - a.all);
@@ -260,7 +260,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       discs.set([x, y, r, c[0] / 255, c[1] / 255, c[2] / 255, BUBBLE_ALPHA, 1], i * DISC);
       const place = z.name || "here";
       const air = "air" in z ? (z.air as number) : 0;
-      tags.push(railOnly ? [`${count(z.rail)} riders a day on inter-region trips ${verb} ${place}`] : [`${count(z.all)} inter-region trips a day ${verb} ${place}`, `${count(z.rail)} by train`, ...(air >= 0.5 ? [`${count(air)} by plane`] : [])]);
+      tags.push(railOnly ? [`${count(z.rail)} riders ${shownDayPhrase.peek()} on inter-region trips ${verb} ${place}`] : [`${count(z.all)} inter-region trips ${shownDayPhrase.peek()} ${verb} ${place}`, `${count(z.rail)} by train`, ...(air >= 0.5 ? [`${count(air)} by plane`] : [])]);
       if (regional) label(`${z.name} · ${count(z.all)} ${railOnly ? "riders" : "trips"}/day`);
     });
     marks = { discs, anchor: a, tags };

@@ -1,6 +1,7 @@
 import { useState } from "preact/hooks";
 import type { PurposeTrips } from "../../game/demand";
 import { count } from "../../game/format";
+import { shownDayPhrase } from "../../game/ui";
 import { purposeColour, shownName } from "../../game/purposes";
 
 const LABELS = ["6–10", "10–16", "16–20", "20–24", "0–6"];
@@ -12,7 +13,7 @@ function PurposePie({ rows, total, unit }: { rows: Row[]; total: number; unit: s
   let angle = 0;
   const pct = (n: number) => (total > 0 ? Math.round(100 * n / total) : 0);
   // T-194: every slice and key entry gives its count, not only its share
-  const words = (p: Row) => `${p.name}: ${count(p.total)} ${unit} a day, ${pct(p.total)}%`;
+  const words = (p: Row) => `${p.name}: ${count(p.total)} ${unit} ${shownDayPhrase.value}, ${pct(p.total)}%`;
   return <div class="purpose-summary">
     <svg class="purpose-pie" viewBox="0 0 100 100" role="img" aria-label={total > 0 ? `Purpose shares: ${rows.map(p => `${p.name} ${pct(p.total)}%`).join(", ")}` : "No trips in this scope"}>
       {total <= 0 ? <circle cx="50" cy="50" r="48" fill="var(--shade)" /> : rows.filter(p => p.total > 0).map(p => {
@@ -92,7 +93,7 @@ export function PurposeBreakdown({ purposes }: { purposes?: PurposeTrips[] }) {
       <button type="button" aria-pressed={railOnly} class={railOnly ? "on" : ""} onClick={() => setRailOnly(true)}>Train only</button>
     </div>
     {!rows ? <p class="muted">Working it out.</p> : <>
-      <p class="muted small" data-tip="Bars above each line are departures an hour toward the destination, bars below it departures home">{count(all)} {railOnly ? "train" : "local"} trip legs a day</p>
+      <p class="muted small" data-tip="Bars above each line are departures an hour toward the destination, bars below it departures home">{count(all)} {railOnly ? "train" : "local"} trip legs {shownDayPhrase.value}</p>
       <PurposePie rows={rows} total={all} unit={unit} />
       {rows.map(p => <div class="purpose-item" key={p.name}>
         <div class="purpose-heading"><span data-tip={coverage(p.name)}><i class="sw" style={{background: purposeColour(p.name)}} /> {p.name}</span><span>{count(p.total)} · {all>0 ? Math.round(100*p.total/all) : 0}%</span></div>

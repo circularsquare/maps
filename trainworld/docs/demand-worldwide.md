@@ -31,9 +31,8 @@ What Canada's data changed, rule by rule (sources in notes/T-277.md, the adapter
   centred city, as the "distance curve shape" entry below predicted), partly the lockdown: the
   commuters of May 2021 were the ones still going in, more local than office commuters. Recheck
   on the 2026 census flows.
-- **Everyday destinations** are OSM places counted per dissemination area (shops and services for
-  errands; restaurants, bars, venues and hotels for leisure), not jobs by sector: a place is a
-  place whatever its size. Where OSM is thin, so is the draw.
+- **Everyday destinations** are jobs by sector by census tract of work (98-10-0492-01, NAICS 44-45
+  and 81, 71 and 72; T-453), with the lockdown caveat of the jobs above.
 - **Job places within a tract** are 80% OSM job places (with commercial and industrial land at one
   place per 5,000 m², judgement) and 20% population.
 - **Airports** have no connecting share from a national source (no DB1B): Pearson takes 0.75 by
@@ -191,9 +190,8 @@ Tier 0 from global sources alone, the data-poor test; notes/T-459.md has the tab
   Oshodi) get almost nothing from buildings or OSM; their jobs come only from the population share.
 - **Everyday destinations**: OSM has 0.09 errand and 0.04 leisure places per 1,000 residents
   (Mumbai 0.29 and 0.19, London 5.9 and 4.0), in 2% of cells holding 7% of the people, gathered in
-  Lekki, Victoria Island and Ikeja. Shopping is drawn to the formal, mapped districts, not the
-  markets: the per-cell OSM count is not usable below about 1 place per 1,000 residents (T-456's
-  fallback).
+  Lekki, Victoria Island and Ikeja, so the destinations rest almost wholly on jobs and residents
+  (completeness 0.02, "Everyday destinations" below).
 - **Curve**: no flows or distance table; Mumbai's fitted curve borrowed, d^-1.65 exp(-d/32.7 km),
   model mean 8.7 km (a 2010 survey's mean trip, Osoba, 12 km by road).
 - **Work from home**: 0 (no source); informal work near home is in the population share instead.
@@ -474,12 +472,37 @@ notes/T-420.md has the tables.
 ## Other purposes
 
 - **Everyday trip rates.** Shopping/errands 0.299 and social/leisure 0.200 outings per resident a
-  day, New York's rates applied everywhere (T-142). Destinations from LODES sector jobs (NAICS
-  retail, food, entertainment), population and parks (social 46 / 46 / 8%, T-196). ATUS 2023
+  day, New York's rates applied everywhere (T-142). Social destinations are population, leisure
+  jobs and parks (46 / 46 / 8%, T-196). ATUS 2023
   puts only 23% of US leisure outings at someone else's home against the model's 46% population
   draw (the population draw also stands for neighbourhood leisure LODES misses), worth a look
-  with any non-US survey. Rates and destination proxies need a non-US source (national
-  travel surveys; OSM shops and amenities as destinations where no jobs-by-sector exist).
+  with any non-US survey. The rates need a non-US source (national travel surveys).
+- **Everyday destinations** (T-453, notes/T-453.md and T-456.md). Errands are drawn by jobs in
+  retail and personal services, leisure by jobs in food, accommodation, arts and recreation (LODES
+  CNS07 + CNS19 and CNS17 + CNS18), as relative weights scaled to 15% and 8% of the pack's jobs.
+  - *Where a country publishes jobs by sector by small area* (the config's `everyday` hook): a
+    cell's jobs x its unit's sector share. Japan: the economic census 2021 500 m mesh's persons
+    employed in I, M and N, I split to retail (56-61) and N to 78-79 and 80 by the municipality's
+    table 9-1B, head-office units left out. England: BRES by LSOA, SIC 45, 47, 95, 96 and 55, 56,
+    90-93 (94 left out: professional bodies' offices in central London). Canada: the census's
+    usual place of work by census tract of work, NAICS 44-45, 81 and 71, 72.
+  - *A source is used only if plausible* (T-456 section 7): its total 8-20% of the pack's jobs for
+    errands, 4-15% for leisure; and under 5% of it in 2 km zones holding over 3 times their share
+    of both residents and the purpose's OSM places (+1 a zone), skipped where OSM is under 30%
+    complete. Japan's mesh with wholesale left in fails the second (11% in Tokyo); at LSOAs the
+    test failed BRES on noise, so it runs on 2 km zones. A country's source is judged on its
+    best-mapped metro (Japan's on Tokyo) and its sparser packs run only the level test, since
+    their OSM misses roadside malls and resort hotels. Toronto's retail and other services fail
+    it (suburban business parks with retail jobs), so Toronto's errands use the fallback.
+  - *Elsewhere* (Paris, Berlin, Shanghai, Mumbai, Seoul, Sao Paulo, Lagos): per purpose, c =
+    min(1, OSM places per 1,000 residents / R), R = 5 errands, 3 leisure; each 2 km zone's base =
+    0.75 x its share of jobs + 0.25 x its share of residents for errands (jobs alone for leisure);
+    weight = base^(1 - c/2) x (OSM places + 1)^(c/2), normalised; inside a zone by OSM places,
+    else jobs. Thin OSM (Lagos c = 0.02) leaves the base; complete OSM gives the geometric mean.
+  - Why it may not carry over: small-area counts are rounded or suppressed; a sector table can mix
+    wholesale or head offices into retail (the check catches the big cases); the fallback's base
+    is the jobs proxy where a country has no workplace counts, and its OSM half follows mapping
+    effort. Check: a household travel survey's shopping destinations by zone (Sao Paulo's OD 2017).
 - **Parks** (T-196). OSM parks take 8% of the social/leisure destination draw, from ATUS 2023
   (7.6% of US leisure outings end outdoors away from home); each place draws sqrt(area) x
   D / (D + 2,000), D the residents per km² within 2 km of its edge; nature reserves count fully only when

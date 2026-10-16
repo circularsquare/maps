@@ -579,7 +579,8 @@ def finish(city):
     t0 = time.time()
     cfg = b.CITIES[city]
     b.add_gravity(os.path.join(b.WORK, f"{city}.cells.json"), city)
-    everyday_header(city)
+    import tier0
+    print("everyday:", tier0.everyday_pack(city))
     schools(city)
     universities(city)
     enrich_osm(city)
@@ -644,17 +645,52 @@ def origin_array(city, cells, name):
     return out
 
 
-def everyday_header(city):
-    stem, header, buf, cells = pack_cells(city)
-    arr = {a["name"]: a for a in header["arrays"]}
-    tot = {}
-    for name in ("errand_jobs", "leisure_jobs"):
-        a = arr[name]
-        tot[name] = float(np.frombuffer(buf, "<f4", a["count"], a["offset"]).sum(dtype=np.float64))
-    header["everyday"] = {"enabled": True, "source": "OpenStreetMap: shops and services (errands); restaurants, bars, venues, "
-                          f"hotels (leisure); counted per dissemination area, scaled to {ERRAND_SHARE:.0%} and {LEISURE_SHARE:.0%} of jobs",
-                          **tot}
-    rewrite(stem, header, bytes(buf))
+# T-453: 2021 census, usual place of work by census tract of work x NAICS sector (25% sample);
+# errands as LODES's CNS07 + CNS19 (44-45, 81), leisure CNS17 + CNS18 (71, 72)
+CT_SECTORS = {"errand": ["44-45", "81"], "leisure": ["71", "72"]}
+
+
+def ct_sector_table():
+    """DataFrame CT DGUID x NAICS sector of usual-place-of-work workers (98-10-0492-01), every CT in
+    Canada, from the 194 MB zip (3.8 GB inside) streamed once into a small CSV."""
+    path = os.path.join(RAW_CA, "98100492_ct_sector_usual.csv")
+    if not os.path.exists(path):
+        import csv
+        import io
+        key = "Total - Work activity during the reference year,Total - Age,Total - Gender,"
+        with statcan("98100492").open("98100492.csv") as f, open(path + ".part", "w", newline="", encoding="utf-8") as g:
+            w = csv.writer(g)
+            w.writerow(["dguid", "sector", "usual"])
+            for line in io.TextIOWrapper(f, encoding="utf-8-sig"):
+                if key in line and ",2021S0507" in line:
+                    r = next(csv.reader([line]))
+                    w.writerow([r[2], r[6].split(" ")[0], r[12]])
+        os.replace(path + ".part", path)
+    t = pd.read_csv(path, dtype=str)
+    t["usual"] = num(t.usual)
+    return t.pivot_table(index="dguid", columns="sector", values="usual", aggfunc="sum").fillna(0.0)
+
+
+def ct_sectors(city, lat, lon, jobs):
+    """tier0's `everyday` hook for a Canadian pack: per cell, its jobs x its census tract of work's
+    share of usual-place-of-work workers in the sectors (CT_SECTORS); cells in no tract take the
+    pack's tracts' share."""
+    cfg = b.CITIES[city]
+    ct = arcgis.features(f"{SUB}ct_on_{'_'.join(cds(cfg))}", CT_LAYER, where="PRUID='35'", fields="CTUID,DGUID,FID",
+                         bbox=(lon.min(), lat.min(), lon.max(), lat.max()))
+    units = [(f["properties"]["DGUID"], make_valid(shape(f["geometry"]))) for f in ct]
+    import england
+    idx, _ = england.cell_units(lat, lon, units)
+    t = ct_sector_table()
+    code = pd.Series([units[i][0] if i >= 0 else "" for i in idx])
+    here = t.index.isin(code)
+    out = {}
+    for kind, cols in CT_SECTORS.items():
+        s = t[cols].sum(1)
+        share = (s / t["Total"].where(t["Total"] > 0)).clip(upper=1.0)
+        v = code.map(share).fillna(s[here].sum() / t["Total"][here].sum()).to_numpy()
+        out[kind] = (jobs * v, f"StatCan 2021 census 98-10-0492-01, usual place of work by census tract of work x NAICS {', '.join(cols)}")
+    return out
 
 
 # ---------------------------------------------------------------- schools and universities

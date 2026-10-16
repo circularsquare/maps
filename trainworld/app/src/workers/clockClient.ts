@@ -8,6 +8,7 @@ import { clock, SPEEDS } from "../game/clock";
 import { HOME_CITY, setWorldFrame } from "../game/cities";
 import { holdForGameLoad } from "../game/loading";
 import { incomeByDay, lastSaved, liveMoney, setMoneyState } from "../game/money";
+import { DAY_KINDS } from "../game/days";
 import { demandByDay } from "../game/demand";
 import { accountVersion, packRiders } from "../game/boarding";
 import { lineDraft, selection, tool } from "../game/ui";
@@ -271,7 +272,7 @@ export class ClockClient {
     // Demand's riders for the boarding account (T-164): each new result, every kind of day's
     // (T-260); the trains and platforms of each hour read their own day's.
     effect(() => {
-      demandByDay.value.forEach((d, day) => {
+      demandByDay.value.slice(0, DAY_KINDS.length).forEach((d, day) => {
         const packed = d.view ? packRiders(d.view) : null;
         if (packed) this.post({ kind: "riders", packed, day }, [packed.buffer]);
       });
@@ -446,6 +447,10 @@ export class ClockClient {
   /** What moving a blueprint node to pack metres (x, y) would do (T-093); the same queue. */
   previewNode(node: number, x: number, y: number, cb: (a: PreviewAnswer) => void) {
     this.ask((seq) => ({ kind: "previewNode", seq, node, x, y }), cb);
+  }
+
+  previewNodes(nodes: number[], dx: number, dy: number, cb: (a: PreviewAnswer) => void) {
+    this.ask((seq) => ({ kind: "previewNodes", seq, nodes, dx, dy }), cb);
   }
 
   /** Whether a station could be placed here (T-311): the worker tries `addStation` and rolls it

@@ -156,6 +156,10 @@ impl TrackApi {
     pub fn line_account(&self, line: u32, day: u32) -> Vec<f64> {
         self.boarding.line_summary_day(&self.w.svc, line as usize, day as usize)
     }
+    /// A line's day by demand level (T-477, `Boarding::line_levels`), on a kind of day.
+    pub fn line_levels(&self, line: u32, day: u32) -> Vec<f64> {
+        self.boarding.line_levels(&self.w.svc, line as usize, day as usize)
+    }
     /// Every line's day so far at game time `t` (T-293, `Boarding::today` has the layout).
     pub fn today(&self, t: f64) -> Vec<f64> {
         self.boarding.today(&self.w.svc, t)
@@ -833,6 +837,10 @@ impl TrackApi {
                 return vec![0.0; 3];
             }
         };
+        self.preview_moved(op, shapes)
+    }
+
+    fn preview_moved(&mut self, op: Op, shapes: Vec<Vec<Pi>>) -> Vec<f64> {
         let r = self.w.trial(op);
         let (ok, cost) = match &r {
             Ok(r) => (1.0, r.cost_after - r.cost_before),
@@ -858,66 +866,120 @@ impl TrackApi {
 
     /// The edit moving `node` to (x, y) (`move_node`), and each changed edge's vertices.
     fn moved(&self, node: u32, x: f64, y: f64) -> Result<(Op, Vec<Vec<Pi>>), Issue> {
+        let Some(nd) = self.w.net.node_data(node) else { return Err(Issue::NoSuchNode { node }) };
+        self.moved_by(&[node], quant(x) - nd.x, quant(y) - nd.y)
+    }
+
+    /// Move several blueprint nodes together by (dx, dy) (T-475), as one undoable edit: track
+    /// between two of them keeps its shape, shifted whole; track from one of them to a node that
+    /// stays reshapes as `move_node` does. Every node must be movable (`move_node`'s rule).
+    pub fn move_nodes(&mut self, nodes: &[u32], dx: f64, dy: f64) -> u32 {
+        match self.moved_by(nodes, dx, dy) {
+            Ok((op, _)) => self.run(op),
+            Err(i) => self.refuse(i),
+        }
+    }
+
+    /// What `move_nodes` would do, laid out as `preview_move_node`'s answer.
+    pub fn preview_move_nodes(&mut self, nodes: &[u32], dx: f64, dy: f64) -> Vec<f64> {
+        let (op, shapes) = match self.moved_by(nodes, dx, dy) {
+            Ok(v) => v,
+            Err(i) => {
+                self.refuse(i);
+                return vec![0.0; 3];
+            }
+        };
+        self.preview_moved(op, shapes)
+    }
+
+    /// The edit moving `nodes` by (dx, dy), and each changed edge's vertices.
+    fn moved_by(&self, nodes: &[u32], dx: f64, dy: f64) -> Result<(Op, Vec<Vec<Pi>>), Issue> {
         let net = &self.w.net;
-        let Some(mut nd) = net.node_data(node) else { return Err(Issue::NoSuchNode { node }) };
-        let i = node as usize;
-        if net.built_ports(node) > 0 || (net.node_platform[i] > 0 && net.node_built[i]) {
-            return Err(Issue::NodeInUse { node });
+        let mut ops = vec![];
+        let mut moves: Vec<(u32, f64, f64)> = vec![];
+        for &node in nodes {
+            let Some(mut nd) = net.node_data(node) else { return Err(Issue::NoSuchNode { node }) };
+            let i = node as usize;
+            if net.built_ports(node) > 0 || (net.node_platform[i] > 0 && net.node_built[i]) {
+                return Err(Issue::NodeInUse { node });
+            }
+            if let Some(&c) = net.node_ports[i].ends().iter().find(|&&c| net.edge_crossover[(c >> 1) as usize]) {
+                return Err(Issue::Crossover { edge: c >> 1 });
+            }
+            if moves.iter().any(|m| m.0 == node) {
+                continue;
+            }
+            nd.x = quant(nd.x + dx);
+            nd.y = quant(nd.y + dy);
+            moves.push((node, nd.x, nd.y));
+            ops.push(Op::Node { id: node, data: Some(nd) });
         }
-        if let Some(&c) = net.node_ports[i].ends().iter().find(|&&c| net.edge_crossover[(c >> 1) as usize]) {
-            return Err(Issue::Crossover { edge: c >> 1 });
-        }
-        let (x, y) = (quant(x), quant(y));
-        let (dx, dy) = (x - nd.x, y - nd.y);
-        let ports = net.node_ports[i];
-        let h = net.node_heading[i];
-        // A node where two or more edge ends meet keeps its heading; a track end's follows.
-        let keep = ports.n >= 2;
-        nd.x = x;
-        nd.y = y;
-        let mut ops = vec![Op::Node { id: node, data: Some(nd.clone()) }];
+        let moving = |n: u32| moves.iter().any(|m| m.0 == n);
         let mut shapes = vec![];
-        for (k, &c) in ports.ends().iter().enumerate() {
-            let (e, which) = (c >> 1, c & 1);
-            let Some(mut d) = self.editable(e) else { continue };
-            let far = net.end_node(e, 1 - which);
-            let fi = far as usize;
-            let (fx, fy) = (net.node_x[fi], net.node_y[fi]);
-            let far_keep = net.node_ports[fi].n >= 2;
-            // PIs from the moved node outwards
-            let mut v = std::mem::take(&mut d.pis);
-            if which == 1 {
-                v.reverse();
-            }
-            let leave = if ports.side[k] == 1 { h } else { h + PI };
-            if keep && (v.len() >= 2 || (v.len() == 1 && !far_keep)) {
-                // its first PI holds the heading: it moves with the node
-                v[0].x = quant(v[0].x + dx);
-                v[0].y = quant(v[0].y + dy);
-            } else {
-                if v.is_empty() && far_keep {
-                    let fp = &net.node_ports[fi];
-                    let side = fp.find(e, 1 - which).map_or(1, |q| fp.side[q]);
-                    let fdir = if side == 1 { net.node_heading[fi] } else { net.node_heading[fi] + PI };
-                    if let Some(p) = lead_in_along(fx, fy, net.node_level[fi], fdir, (x, y), net.frame().scaled()) {
-                        v.push(p);
+        let mut done: Vec<u32> = vec![];
+        for &(node, x, y) in &moves {
+            let i = node as usize;
+            let ports = net.node_ports[i];
+            let h = net.node_heading[i];
+            // A node where two or more edge ends meet keeps its heading; a track end's follows.
+            let keep = ports.n >= 2;
+            for (k, &c) in ports.ends().iter().enumerate() {
+                let (e, which) = (c >> 1, c & 1);
+                if done.contains(&e) {
+                    continue;
+                }
+                done.push(e);
+                let Some(mut d) = self.editable(e) else { continue };
+                if moving(net.end_node(e, 1 - which)) {
+                    // both ends move: the whole stretch shifts
+                    for p in &mut d.pis {
+                        p.x = quant(p.x + dx);
+                        p.y = quant(p.y + dy);
+                    }
+                    d.thru.clear();
+                    shapes.push(vertices_of(net, &d, &moves));
+                    ops.push(Op::Edge { id: e, data: Some(d) });
+                    continue;
+                }
+                let far = net.end_node(e, 1 - which);
+                let fi = far as usize;
+                let (fx, fy) = (net.node_x[fi], net.node_y[fi]);
+                let far_keep = net.node_ports[fi].n >= 2;
+                // PIs from the moved node outwards
+                let mut v = std::mem::take(&mut d.pis);
+                if which == 1 {
+                    v.reverse();
+                }
+                let leave = if ports.side[k] == 1 { h } else { h + PI };
+                if keep && (v.len() >= 2 || (v.len() == 1 && !far_keep)) {
+                    // its first PI holds the heading: it moves with the node
+                    v[0].x = quant(v[0].x + dx);
+                    v[0].y = quant(v[0].y + dy);
+                } else {
+                    if v.is_empty() && far_keep {
+                        let fp = &net.node_ports[fi];
+                        let side = fp.find(e, 1 - which).map_or(1, |q| fp.side[q]);
+                        let fdir = if side == 1 { net.node_heading[fi] } else { net.node_heading[fi] + PI };
+                        if let Some(p) = lead_in_along(fx, fy, net.node_level[fi], fdir, (x, y), net.frame().scaled()) {
+                            v.push(p);
+                        }
+                    }
+                    if keep {
+                        let toward = v.first().map_or((fx, fy), |p| (p.x, p.y));
+                        if let Some(p) = lead_in_along(x, y, net.node_level[i], leave, toward, net.frame().scaled()) {
+                            v.insert(0, p);
+                        }
                     }
                 }
-                if keep {
-                    let toward = v.first().map_or((fx, fy), |p| (p.x, p.y));
-                    if let Some(p) = lead_in_along(x, y, nd.level, leave, toward, net.frame().scaled()) {
-                        v.insert(0, p);
-                    }
+                if which == 1 {
+                    v.reverse();
                 }
+                d.pis = v;
+                d.thru.clear();
+                relax_radii(net, &mut d, &moves, &|_, _| true);
+                shapes.push(vertices_of(net, &d, &moves));
+                ops.push(Op::Edge { id: e, data: Some(d) });
             }
-            if which == 1 {
-                v.reverse();
-            }
-            d.pis = v;
-            d.thru.clear();
-            relax_radii(net, &mut d, &[(node, x, y)], &|_, _| true);
-            shapes.push(vertices_of(net, &d, &[(node, x, y)]));
-            ops.push(Op::Edge { id: e, data: Some(d) });
         }
         Ok((Op::Batch(ops), shapes))
     }
@@ -2666,9 +2728,8 @@ const TANGENT_MAX_OFF: f64 = 175.0 * PI / 180.0;
 /// arc's tangent points: the legs between are twice that, of which the auto radius uses half, so
 /// it is the arc's again; the express pair of quad track offsets each corner concentric, which it
 /// cannot do for one corner turning back. Empty where `to` is on the heading; Err where it is more
-/// than `TANGENT_MAX_OFF` off it. Also the arc's circle (centre x, y, ground radius), the capped
-/// curve's when the arc would be wider than `R_CAP` (None when a split arc is: the cap leaves
-/// straights between its corners); None for a straight.
+/// than `TANGENT_MAX_OFF` off it. An arc wider than `R_CAP` becomes the capped curve then a
+/// straight (T-471). Also the curve's circle (centre x, y, ground radius); None for a straight.
 #[allow(clippy::type_complexity)]
 fn tangent_arc(x: f64, y: f64, level: i8, level_to: i8, dir: f64, to: (f64, f64), scaled: bool) -> (Result<Vec<Pi>, ()>, Option<[f64; 3]>) {
     let (dx, dy) = (to.0 - x, to.1 - y);
@@ -2683,25 +2744,26 @@ fn tangent_arc(x: f64, y: f64, level: i8, level_to: i8, dir: f64, to: (f64, f64)
     let (nx, ny) = (-uy * off.signum(), ux * off.signum());
     let r = d / (2.0 * a.sin());
     let rc = R_CAP * k;
-    let n = (2.0 * a / (PI / 2.0) - 1e-9).ceil().max(1.0) as usize;
-    let circle = if r <= rc || a > TANGENT_MAX_OFF {
-        Some([x + nx * r, y + ny * r, r / k])
-    } else if n == 1 {
-        // the capped curve starts this far along the heading
-        let s0 = d / (2.0 * a.cos()) - rc * a.tan();
-        Some([x + ux * s0 + nx * rc, y + uy * s0 + ny * rc, R_CAP])
-    } else {
-        None
-    };
     if a > TANGENT_MAX_OFF {
-        return (Err(()), circle);
+        return (Err(()), Some([x + nx * r, y + ny * r, r / k]));
     }
-    if n == 1 {
+    // T-471: one round curve however far the click; at r = rc the straight is nil, so the shape
+    // does not jump as the click crosses the cap
+    let (radius, turn) = if r <= rc {
+        (r, 2.0 * a)
+    } else {
+        let (fx, fy) = (d * a.cos(), d * a.sin() - rc); // the click from the circle's centre
+        let reach = fx.hypot(fy);
+        (rc, (fy.atan2(fx) + PI / 2.0 - (rc / reach).min(1.0).acos()).rem_euclid(2.0 * PI))
+    };
+    let circle = Some([x + nx * radius, y + ny * radius, radius / k]);
+    let n = (turn / (PI / 2.0) - 1e-9).ceil().max(1.0) as usize;
+    if n == 1 && r <= rc {
         let t = d / (2.0 * a.cos());
         return (Ok(vec![Pi::new(x + ux * t, y + uy * t, 0.0, level).quantised()]), circle);
     }
-    let step = 2.0 * off / n as f64;
-    let t = r * (step.abs() / 2.0).tan();
+    let step = turn * off.signum() / n as f64;
+    let t = radius * (step.abs() / 2.0).tan();
     let (mut px, mut py) = (x + ux * t, y + uy * t);
     let mut pis = vec![Pi::new(px, py, 0.0, level).quantised()];
     for j in 1..n {
@@ -3003,10 +3065,10 @@ mod tests {
         let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(3000.0, 0.0).iter()).copied().collect();
         let pv = a.preview_route(&ends, &[], 2, false);
         assert_eq!(pv[0], 1.0, "{}", a.issues());
-        assert!((pv[1] - 3.0 * 27.0).abs() < 0.5, "cost {}", pv[1]);
+        assert!((pv[1] - 3.0 * 13.5).abs() < 0.5, "cost {}", pv[1]);
         assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
         assert_eq!(a.built_cost(), 0.0);
-        assert!((a.blueprint_cost() - 81.0).abs() < 0.5);
+        assert!((a.blueprint_cost() - 40.5).abs() < 0.5);
         let nodes = a.nodes_info();
         let (n0, n1) = (nodes[0] as u32, nodes[10] as u32);
         let e = a.edges_info()[0] as u32;
@@ -3040,8 +3102,8 @@ mod tests {
         // Construction plus the trains its busiest schedule needs (T-028).
         assert_eq!(a.fleet(), a.cars_needed());
         assert!((a.fleet() as f64 * CAR_PRICE - trains).abs() < 1e-9);
-        assert!((6000.0 - a.cash() - (81.0 + 30.0 + trains)).abs() < 0.5, "paid {}", 6000.0 - a.cash());
-        assert!((a.last_charge() - (81.0 + 30.0 + trains)).abs() < 0.5);
+        assert!((6000.0 - a.cash() - (40.5 + 15.0 + trains)).abs() < 0.5, "paid {}", 6000.0 - a.cash());
+        assert!((a.last_charge() - (40.5 + 15.0 + trains)).abs() < 0.5);
         assert!(!a.can_undo(), "construct is final");
         // More trains an hour buys more trains; short of money it is refused and nothing changes.
         let (fleet, cash) = (a.fleet(), a.cash());
@@ -3097,7 +3159,7 @@ mod tests {
         assert_eq!(a.set_blueprint_off(&edges[1..], &[], true), 0, "{}", a.issues());
         assert_eq!(a.off_edges(), edges[1..].to_vec());
         let quote: f64 = a.blueprint_cost_items().chunks_exact(7).map(|r| r[6]).sum();
-        assert!(quote < first - 50.0, "{quote} vs {first}");
+        assert!(quote < first - 25.0, "{quote} vs {first}");
         // the same again changes nothing; switching the station off drops its price too
         assert_eq!(a.set_blueprint_off(&edges[1..], &[], true), 1);
         assert_eq!(a.set_blueprint_off(&[], &[n0], true), 0);
@@ -3330,6 +3392,56 @@ mod tests {
             assert!(after.radius[prev + 1] > 0.0, "click {k}");
         }
         assert!(tighter >= 1 && same >= 3, "both cases covered: {tighter} tighter, {same} unchanged");
+    }
+
+    /// T-475: several blueprint nodes dragged together: track between two of them shifts whole,
+    /// track to a node that stays bends; one undo puts all back.
+    #[test]
+    fn drag_several_blueprint_nodes() {
+        let mut a = api();
+        let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(6000.0, 0.0).iter()).copied().collect();
+        assert_eq!(a.add_route(&ends, &[], 2, false), 0);
+        let e = a.edges_info()[0];
+        assert_eq!(a.add_station(2, e as u32, 4500.0, 0.0, 200, "Middle".into()), 0, "{}", a.issues());
+        let ends = [2.0, e, 1500.0, 0.0, 0.0, 0.0, 0.0, 3500.0, 1500.0, 0.0];
+        assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+        let node_at = |a: &TrackApi, x: f64, y: f64| a.nodes_info().chunks(10).find(|c| (c[1] - x).abs() < 1.0 && (c[2] - y).abs() < 1.0).unwrap()[0] as u32;
+        let (w, s, east, b) = (node_at(&a, 0.0, 0.0), node_at(&a, 4500.0, 0.0), node_at(&a, 6000.0, 0.0), node_at(&a, 3500.0, 1500.0));
+        let j = a.nodes_info().chunks(10).find(|c| c[4] == 3.0).unwrap()[0] as u32;
+        let l1 = a.new_line_id();
+        assert_eq!(a.add_station(1, w, 0.0, 0.0, 200, "W".into()), 0, "{}", a.issues());
+        assert_eq!(a.add_station(1, east, 0.0, 0.0, 200, "E".into()), 0, "{}", a.issues());
+        assert_eq!(a.set_line(l1, &[w, s, east], 12.0, 8.0, 4.0, 30.0, 180.0, 0, 0xff0000, "Main".into()), 0, "{}", a.issues());
+        let at = |a: &TrackApi, n: u32| (a.w.net.node_x[n as usize], a.w.net.node_y[n as usize]);
+        let edge_between = |a: &TrackApi, p: u32, q: u32| live_edges(a).into_iter().find(|&e| { let (ea, eb) = (a.w.net.edge_a[e as usize], a.w.net.edge_b[e as usize]); (ea == p && eb == q) || (ea == q && eb == p) }).unwrap();
+        let (js, jb) = (edge_between(&a, j, s), edge_between(&a, j, b));
+        let len = |a: &TrackApi, e: u32| a.w.net.edge_len[e as usize];
+        let (ljs, ljb, lwj) = (len(&a, js), len(&a, jb), len(&a, edge_between(&a, w, j)));
+        let pis_jb = a.edge_pis(jb);
+        let before: Vec<(f64, f64)> = [w, j, s, east, b].iter().map(|&n| at(&a, n)).collect();
+        let (dx, dy) = (120.0, 250.0);
+        let pv = a.preview_move_nodes(&[j, s, b], dx, dy);
+        assert_eq!(pv[0], 1.0, "{}", a.issues());
+        assert_eq!(pv[2], 4.0, "four edges change");
+        assert_eq!(at(&a, j), before[1], "a preview changes nothing");
+        assert_eq!(a.move_nodes(&[j, s, b], dx, dy), 0, "{}", a.issues());
+        for (k, &n) in [j, s, b].iter().enumerate() {
+            let (x0, y0) = before[[1, 2, 4][k]];
+            assert!((at(&a, n).0 - x0 - dx).abs() < 0.01 && (at(&a, n).1 - y0 - dy).abs() < 0.01, "node {n} moved by the offset");
+        }
+        assert_eq!(at(&a, w), before[0], "unselected nodes stay");
+        assert!((len(&a, js) - ljs).abs() < 0.01 && (len(&a, jb) - ljb).abs() < 0.01, "track between moved nodes keeps its shape");
+        let shifted = a.edge_pis(jb);
+        assert_eq!(shifted.len(), pis_jb.len());
+        for c in 0..(pis_jb.len() - 1) / 8 {
+            let (i, k) = (1 + c * 8, 2 + c * 8);
+            assert!((shifted[i] - pis_jb[i] - dx).abs() < 0.01 && (shifted[k] - pis_jb[k] - dy).abs() < 0.01, "corners shift too");
+        }
+        assert!((len(&a, edge_between(&a, w, j)) - lwj).abs() > 1.0, "track to a node that stays bends");
+        assert_eq!(a.lines_info()[2], 1.0, "the line still works");
+        assert_eq!(a.undo(), 0);
+        let after: Vec<(f64, f64)> = [w, j, s, east, b].iter().map(|&n| at(&a, n)).collect();
+        assert_eq!(after, before, "one undo puts all back");
     }
 
     /// T-093: dragging blueprint nodes.
@@ -3736,7 +3848,7 @@ mod tests {
                         let off = live_edges(&a).iter().map(|&k| a.w.net.project(k, q[0], q[1]).1).fold(f64::INFINITY, f64::min);
                         assert!(off < 0.01, "split at {s}: {off} m off");
                     }
-                    let station = 10.0 * (0.4 + 0.6 * 200.0 / 200.0) * 1.0;
+                    let station = 5.0 * (0.4 + 0.6 * 200.0 / 200.0) * 1.0;
                     assert!((a.total_cost() - cost - station).abs() < 0.05, "split at {s}: {} against {}", a.total_cost() - station, cost);
                     assert_eq!(a.undo(), 0);
                     assert_eq!(a.edge_render(e), before);
@@ -3807,9 +3919,21 @@ mod tests {
         vec![1.0, n as f64, 0.0, 0.0, 0.0, 0.0, 0.0, x, y, 0.0]
     }
 
+    /// T-471: a click past the cap: the capped curve from the start, its circle's, then one
+    /// straight to the click.
+    fn capped_then_straight(f: &geom::Fit, arc: &[f64], start: (f64, f64), what: &str) {
+        let curves: Vec<_> = f.pieces.iter().filter(|p| p.k != 0.0).collect();
+        assert!(curves.iter().all(|p| (p.radius() - R_CAP).abs() < 1.0), "{what}: every curve capped");
+        assert!(f.pieces[0].k != 0.0 || f.pieces[0].len < 0.05, "{what}: the curve starts at the start, not after {}", f.pieces[0].len);
+        let straights: Vec<_> = f.pieces.iter().filter(|p| p.k == 0.0 && p.len > 1.0).collect();
+        assert_eq!(straights.len(), 1, "{what}: one straight");
+        assert_eq!(f.pieces.last().unwrap().k, 0.0, "{what}: the straight last");
+        assert!((arc[2] - R_CAP).abs() < 1e-6 && ((arc[0] - start.0).hypot(arc[1] - start.1) - R_CAP).abs() < 0.5, "{what}: circle {arc:?}");
+    }
+
     /// T-418: from a track end, a click d away at a off the heading is one arc of radius
-    /// d / (2 sin a) ending at the click on heading 2a; one wider than the cap is straight, capped
-    /// curve, straight, still through the click on 2a. The circle is the arc's.
+    /// d / (2 sin a) ending at the click on heading 2a; one wider than the cap is the capped curve
+    /// then a straight to the click (T-471). The circle is the curve's.
     #[test]
     fn a_tangent_segment_is_one_arc_through_the_click() {
         let (mut a, east) = tangent_start();
@@ -3821,18 +3945,16 @@ mod tests {
             let f = a.w.net.fit(&a.route_vertices);
             let (ex, ey, eh) = geom::pos_at(&f.pieces, f.len);
             assert!((ex - x).hypot(ey - y) < 0.01, "{d} m at {deg}: ends at {ex}, {ey}");
-            assert!(geom::wrap(eh - 2.0 * off).abs() < 1e-4, "{d} m at {deg}: leaves on {eh}");
             let want = d / (2.0 * off.abs().sin());
             let arc = a.route_arc();
             let (cx, cy) = (arc[0], arc[1]);
             if want <= R_CAP {
+                assert!(geom::wrap(eh - 2.0 * off).abs() < 1e-4, "{d} m at {deg}: leaves on {eh}");
                 assert!((f.radius[1] - want).abs() < 0.01 * want, "{d} m at {deg}: radius {} against {want}", f.radius[1]);
                 assert!(f.pieces.iter().all(|p| p.k != 0.0 || p.len < 0.05), "{d} m at {deg}: one arc, no straight");
                 assert!(((cx - 1000.0).hypot(cy) - want).abs() < 0.5 && ((cx - x).hypot(cy - y) - want).abs() < 0.5, "{d} m at {deg}: circle {arc:?}");
             } else {
-                assert_eq!(f.radius[1], R_CAP, "{d} m at {deg}");
-                assert_eq!(f.pieces.iter().filter(|p| p.k == 0.0 && p.len > 1.0).count(), 2, "{d} m at {deg}: straight, curve, straight");
-                assert!((arc[2] - R_CAP).abs() < 1e-6 && ((cx - x).hypot(cy - y) - R_CAP).abs() > 1.0);
+                capped_then_straight(&f, &arc, (1000.0, 0.0), &format!("{d} m at {deg}"));
             }
         }
         // placed, the end node comes back, and the next segment leaves along this one
@@ -3865,7 +3987,7 @@ mod tests {
     #[test]
     fn a_tangent_segment_turns_past_a_half_turn() {
         for tracks in [2u8, 4] {
-            for (d, deg) in [(400.0, 84.0), (400.0, -100.0), (300.0, 150.0), (200.0, -170.0), (60.0, 174.0), (4000.0, 120.0)] {
+            for (d, deg) in [(400.0, 84.0), (400.0, -100.0), (300.0, 150.0), (200.0, -170.0), (60.0, 174.0), (4000.0, 120.0), (3600.0, 170.0), (9000.0, -100.0), (5000.0, 40.0)] {
                 let (mut a, east) = if tracks == 4 { quad_start() } else { tangent_start() };
                 let off: f64 = (deg as f64).to_radians();
                 let (x, y) = (1000.0 + d * off.cos(), d * off.sin());
@@ -3875,16 +3997,16 @@ mod tests {
                 let f = a.w.net.fit(&a.route_vertices);
                 let (ex, ey, eh) = geom::pos_at(&f.pieces, f.len);
                 assert!((ex - x).hypot(ey - y) < 0.01, "{d} m at {deg}: ends at {ex}, {ey}");
-                assert!(geom::wrap(eh - 2.0 * off).abs() < 1e-4, "{d} m at {deg}: leaves on {eh}");
                 let want = d / (2.0 * off.abs().sin());
                 if want <= R_CAP {
+                    assert!(geom::wrap(eh - 2.0 * off).abs() < 1e-4, "{d} m at {deg}: leaves on {eh}");
                     for i in 1..a.route_vertices.len() - 1 {
                         assert!((f.radius[i] - want).abs() < 0.01 * want, "{d} m at {deg}: corner {i} radius {} against {want}", f.radius[i]);
                     }
                     assert!(f.pieces.iter().all(|p| p.k != 0.0 || p.len < 0.05), "{d} m at {deg}: one arc, no straight");
                     assert!((a.route_arc()[2] - want).abs() < 0.5);
                 } else {
-                    assert!(a.route_arc().is_empty(), "a capped split arc has no one circle");
+                    capped_then_straight(&f, &a.route_arc(), (1000.0, 0.0), &format!("{tracks} tracks, {d} m at {deg}"));
                 }
                 if tracks == 4 {
                     let ex = a.w.net.fit(&a.route_express);

@@ -46,6 +46,13 @@ key.
   column (names A to Z, figures biggest first, Near nearest first), a second reverses it, the sorted
   column has a small arrow, and each header's hover says what it sorts by. Names sort naturally, ties
   by name. Lines default to by name. The sort is kept while the page is open and re-runs each game hour.
+- **Trains to add** [T-472]: a row's train count (the trains its level needs now) turns orange
+  when a fifth of the trains in service now are packed full somewhere on their trip, red from
+  half; otherwise muted. Hover "4 of 12 trains running now are packed full on their trip". In
+  service means from leaving the first stop until it could leave again from the far end (the
+  trip plus half the line's turning time), from the boarding account (`Boarding::under_way`, the
+  last two numbers of each `past_day` block), so it moves as trains leave. Text the player should
+  act on is coloured this way elsewhere too (`crowdClass` in `game/today.ts`).
 - **Scope and Near** [T-332; `game/listScope.ts`, `ScopeToggle` in `ui/tabs.tsx`]: beside New line
   (and above the Stations list) a toggle between the viewed place (a pin and its name, hover "Only
   <name>") and the whole world (a globe); one setting for both tabs, kept while the page is open, the
@@ -69,7 +76,12 @@ key.
 - **Sections**, in order: Schedule (trains for each demand level, with the resulting headway;
   [track-and-service.md](track-and-service.md) 6.3; hovering High, Medium or Low gives that
   level's times of day in the line's local time, from the period table in `game/periods.ts`:
-  "High demand: 06:00 to 10:00, 16:00 to 20:00"; weekends use the same hours) [T-406]; Today for a running line:
+  "High demand: 06:00 to 10:00, 16:00 to 20:00"; weekends use the same hours) [T-406]; on a
+  running line a dot before each level's name grades its trains over its hours of today's kind of
+  day in the boarding account (`Boarding::line_levels`) [T-477]: green when none is packed full,
+  yellow under a fifth, orange from a fifth, red from half; hover "12 of 96 trains are packed full.
+  A full train leaves 4,100 of 98,000 riders behind (4%)." (riders arriving in those hours, and
+  those who could not get on the first train to come); Today for a running line:
   riders by purpose,
   fares, running cost so far, its fullest train so far ("100%" when one left packed full, else "N%
   full"), how many trains left full and when (spans under half an hour apart, at the stop where

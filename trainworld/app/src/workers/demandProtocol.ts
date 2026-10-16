@@ -86,7 +86,8 @@ export type ToDemand =
    * Queries for the demand views (T-078, notes/T-078.md), answered between periods. `id` matches
    * the reply; `version` is the solve they ask about: a worker that has moved on to a newer
    * network answers with nulls. Every query also carries `day` (T-260, game/ui.ts `shownDay`,
-   * 0 when absent): the kind of day its answer weighs the periods for. A question that reads the
+   * 0 when absent): the day its answer weighs the periods for (0 weekday, 1 weekend, 2 the
+   * average day, T-464). A question that reads the
    * periods' state may also carry `wait` (T-327): if this worker has not yet reached `round` of
    * `version`, it is answered as soon as it has, just before that round's last `result`.
    */

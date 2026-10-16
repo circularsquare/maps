@@ -28,6 +28,16 @@ export interface LineToday {
   spans: [number, number][];
   /** running cost of the trains over the day, US$; only for a whole day (yesterday's) */
   running: number;
+  /** T-472: trains in service now, and how many of them are packed full somewhere on their trip */
+  trainsNow: number;
+  fullNow: number;
+}
+
+/** T-472, T-477: the text class for `full` trains packed full out of `of`: none below a fifth,
+ * orange from a fifth, red from half (DECISIONS 2026-10-16). */
+export function crowdClass(full: number, of: number): "" | "crowd-warn" | "crowd-bad" {
+  const s = of > 0 ? full / of : 0;
+  return s >= 0.5 ? "crowd-bad" : s >= 0.2 ? "crowd-warn" : "";
 }
 
 /** Per line id; empty until the first answer (and for a line with no riders yet). */
@@ -47,9 +57,10 @@ export function readToday(d: Float64Array): Map<string, LineToday> {
     const spans: [number, number][] = [];
     for (let s = 0; s < nSpans; s++) spans.push([d[i + 7 + 2 * s], d[i + 8 + 2 * s]]);
     const stops = Array.from(d.subarray(i + 7 + 2 * nSpans, i + 7 + 2 * nSpans + n));
-    const t: LineToday = { riders: d[i + 2], fullTrains: d[i + 3], leftBehind: d[i + 4], fullest: d[i + 5], spans, stops, fares: 0, running: 0 };
+    const e = i + 7 + 2 * nSpans + n;
+    const t: LineToday = { riders: d[i + 2], fullTrains: d[i + 3], leftBehind: d[i + 4], fullest: d[i + 5], spans, stops, fares: 0, running: 0, trainsNow: d[e], fullNow: d[e + 1] };
     at.push({ id: String(id), t });
-    i += 7 + 2 * nSpans + n;
+    i = e + 2;
   }
   at.forEach((a, k) => { a.t.fares = (d[i + k] ?? 0) * 1e6; a.t.running = d[i + at.length + k] ?? 0; out.set(a.id, a.t); });
   return out;

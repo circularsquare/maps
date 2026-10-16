@@ -123,8 +123,8 @@ region's OSM roads are thin).
 Last, merge the sparse cells (T-044, docs/demand.md 4.1): `venv\Scripts\python.exe
 trainworld\pipeline\merge_cells.py wor`, seconds. It keeps the res-9 pack in
 `data/work/res9/wor.json/.bin` and writes the merged one to `data/packs`; it prints the cells
-before and after (a quarter fewer in a dense Asian or European metro, half in a US one, 70% in a
-rural pack). Every other step reads and writes the res-9 pack: to rerun one on a merged pack,
+before and after (a third to a half fewer in a dense Asian or European metro, 52-69% in a US one,
+over 70% in a rural pack). Every other step reads and writes the res-9 pack: to rerun one on a merged pack,
 `merge_cells.py wor --undo` first, then the step, then `merge_cells.py wor` again (it refuses a
 merged pack some step has changed since). `merge_cells.py --all` remerges every registered pack.
 The market's zone file (`market_zones.py`, section 7) is made after the merge.
@@ -302,7 +302,7 @@ real pack in notes/T-287.md):
 | Jobs at work | LODES WAC by block | census usual place of work by census tract of work (98-10-0498-01), at-home workers put back by income band, no fixed workplace added; to DAs by OSM job places and population | population x jobs a resident (World Bank: ILO employment-to-population 15+ x share 15+), spread 30% by GHSL non-residential built-up volume (GHS-BUILT-V NRES) x height^2, 50% OSM job places, 20% population; or a country's workplace counts by small area spread by that blend (`jobs` hook) |
 | Home end | LODES RAC x ACS work from home | commuters by tract of residence (98-10-0480-01) plus at-home workers commuting again | population x commuters a resident |
 | Work from home | ACS 2019-2023 by tract and industry | Labour Force Survey May 2024 (24.7%, Toronto CMA), at both ends | one national share from the config (default 0) |
-| Everyday destinations | LODES retail, service, food, leisure sectors | OSM shops and services; restaurants, bars, venues, hotels (Geofabrik extract) | the same OSM places, per cell |
+| Everyday destinations | LODES retail, service, food, leisure sectors | the same sectors by census tract of work (98-10-0492-01) | each 2 km zone's jobs (errands also 25% residents) blended with its OSM shops and services, or restaurants, bars, venues and hotels, as far as the pack's OSM is complete; or a country's jobs by sector by small area that pass the plausibility check (`everyday` hook: Japan's mesh, England's BRES); set after the gravity (`tier0.everyday_pack`, T-453) |
 | Gravity curve | fitted on LODES OD (T-198) | fitted on census flows between municipalities (98-10-0459-01; `notes/t277_fit.py`) | power 1.4 with the length fitted to a published median or mean commute (`tier0.fit_curve`), or borrowed from a fitted city; a country's flow table, fitted (London); both parameters fitted to commuters by distance band (`tier0.fit_curve_bands`, Mumbai; a travel survey's home-to-job distances, Sao Paulo) |
 | Regions, border | states, 0.23 | provinces, factor 1 | one region, factor 1 |
 | Drawn boundary | TIGER/Line counties, water included (T-352) | cartographic census subdivisions, clipped at the shore (hugs Lake Ontario) | the config's district polygons (a GeoJSON, or a callable that writes one: London's whole ITL3 units, `england.itl3_boundary`) |

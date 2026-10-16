@@ -8,7 +8,8 @@
 `map/demandHover.ts`]
 
 **Two kinds of figure.** Line widths, station circles and bubbles are demand's whole-day forecast
-from the latest solve, for the day shown ([ui-panels.md](ui-panels.md) "Demand shown for"). Train
+from the latest solve, for the day shown: the average day unless the demand bar's day choice says a
+weekday or a weekend day ([ui-panels.md](ui-panels.md) "Demand shown for"); every hover says which. Train
 fill and platform crowds are the boarding account ([track-and-service.md](track-and-service.md)
 6.6): made from that forecast but counted train by train as the trains run, so they follow the
 hour and the clock's own day ([ui-map.md](ui-map.md)).
@@ -36,6 +37,8 @@ closest pair), the same in the pie, bars, filter swatch and purpose split.
 - **None / Homes / Destinations** [T-132, `ui/DemandSelector.tsx`], always at the map's upper left,
   remembered per browser. Destinations is every activity end (work, shopping, social, school and
   university, airport, medical).
+- **Day** [T-464]: a dropdown after the purpose filter, Average day (default), Weekday or Weekend;
+  see "Demand shown for" in [ui-panels.md](ui-panels.md). Remembered per browser.
 - **Readiness** [T-143]: while the focused zone has no published result, Homes and Destinations fade
   (their text only), keeping the stored choice, with "Calculating demand" on hover; while its pack
   is still loading the hover says "Loading Boston, 37%" [T-149]. Over dead space they say "Nothing
@@ -59,7 +62,7 @@ closest pair), the same in the pie, bars, filter swatch and purpose split.
 [T-227, T-267, T-274] In Line + traffic thickness, each stretch between two stops is as wide as
 its riders over the whole day shown, both directions together, linear: 0.5 times the normal width
 with no riders up to 6.6 times for the network's busiest stretch-day (`busiestDay`: the purpose
-shown, the larger of weekday and weekend, so a weekend's lines are thinner). The width does not
+shown, the larger of the days, so a weekend's or the average's lines are thinner). The width does not
 change as the periods pass. At zoom 15 the widest line is 44 px. Stations keep their own width
 [T-239].
 
@@ -81,7 +84,8 @@ the player's links included.
 - **Area is trip legs**, outward and return, at a fixed density: 50,000 legs/km² for homes and
   160,000 for destinations, times the Bubble size setting (0.5-2x width). No minimum size; nobody
   means no bubble.
-- **Colour mixes the mode colours by share**, at 80% opacity, biggest bubbles under smaller ones.
+- **Colour mixes the mode colours by share**, at 80% opacity times the Opacity setting (90% by
+  default, T-470), biggest bubbles under smaller ones.
   Drawn over the network and capacity tags, under station names.
 - **Hover**: local trip legs there, both directions, and their split; lean, with no station list
   [T-323].
@@ -147,7 +151,8 @@ second. Inspectors, selections, catchments and the top bar are the current forec
 
 - **Selecting**: a click selects a bubble, Shift+click adds one, and holding the mouse still 0.4 s
   then dragging draws a box selecting every bubble whose centre is in it. Visible bubbles take
-  priority over stations and trains for clicks, hover and starting a box. Escape or an empty click
+  priority over stations and trains for clicks, hover and starting a box, but not over dragging a
+  blueprint point [T-474]. Escape or an empty click
   clears it.
 - **On the map**: the other bubbles hide; the selected ones are outlined, and their far end
   (destinations for Homes, homes for Destinations) is drawn as bubbles sized among themselves (the

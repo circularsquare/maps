@@ -22,7 +22,8 @@ def main(cities):
         print(f"=== {city}", flush=True)
         if b.CITIES[city].get("country") == "ca":  # T-277: Canadian adapters, pipeline/canada.py
             import canada
-            canada.everyday_header(city)
+            import tier0
+            tier0.everyday_pack(city)
             canada.schools(city)
             canada.universities(city)
             canada.enrich_osm(city)  # airports, medical, parks with OSM from the Geofabrik extract

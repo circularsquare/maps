@@ -14,6 +14,7 @@
 // so a line pays back in about a game week. The fare the player sets stays a real fare.
 
 import { computed, signal } from "@preact/signals";
+import { DAY_KINDS } from "./days";
 import { demandByDay, type DemandView } from "./demand";
 import { PERIODS } from "./periods";
 import { world } from "./world";
@@ -48,8 +49,9 @@ export interface Income {
   lines: Map<string, LineMoney>;
 }
 
-/** Fare income on each kind of day; the worker settles each hour by its own day's (T-260). */
-export const incomeByDay = computed<Income[]>(() => demandByDay.value.map((d) => incomeFor(d.view)));
+/** Fare income on each kind of day; the worker settles each hour by its own day's (T-260). The
+ * average day (T-464) is a view only, so it has none. */
+export const incomeByDay = computed<Income[]>(() => demandByDay.value.slice(0, DAY_KINDS.length).map((d) => incomeFor(d.view)));
 
 function incomeFor(dv: DemandView | null): Income {
   const w = world.value, m = moneyState.value;

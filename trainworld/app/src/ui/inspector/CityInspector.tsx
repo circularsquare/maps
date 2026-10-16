@@ -8,7 +8,7 @@ import { cityById, type CityId } from "../../game/cities";
 import { intercityDemand, INTERCITY_PLACES } from "../../game/demand";
 import { zoneLoads } from "../../game/loading";
 import { BUBBLE_ALPHA, modeMix } from "../../game/palette";
-import { purposeFilter } from "../../game/ui";
+import { purposeFilter, shownDayPhrase } from "../../game/ui";
 import { goTo } from "../Search";
 import { bySize, ElsewhereRow, ModeCells, ModeHead } from "./LongerTrips";
 
@@ -50,7 +50,7 @@ export function CityInspector({ id }: { id: string }) {
           <ul class="rows">
             <ModeHead what="Trips" />
             <li class="b">
-              <span class="grow">Trips a day</span>
+              <span class="grow">Trips {shownDayPhrase.value}</span>
               <ModeCells s={total} what="trips" />
             </li>
           </ul>

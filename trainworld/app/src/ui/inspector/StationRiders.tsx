@@ -7,7 +7,7 @@ import { demandView } from "../../game/demand";
 import { count } from "../../game/format";
 import { CATCHMENT_COLOUR, DESTINATION_ALPHA, DESTINATION_COLOUR, MODE_COLOURS } from "../../game/palette";
 import { purposeWords } from "../../game/purposes";
-import { purposeFilter } from "../../game/ui";
+import { purposeFilter, shownDayPhrase } from "../../game/ui";
 import { stationSide, stationView, type StationView } from "../../map/demandViews";
 import { Icon, Row } from "../widgets";
 
@@ -29,7 +29,7 @@ function AccessSplit({ v }: { v: StationView }) {
     { n: v.rode, icon: Icon.ride, colour: MODE_COLOURS.drive, cls: "seg-drive", what: "Drove, took a bus or cycled" },
   ];
   const exact = (n: number) => Math.round(n).toLocaleString("en");
-  const tip = (p: (typeof parts)[number]) => `${p.what}: ${pct(p.n, all)}, ${exact(p.n)} of the ${exact(all)} commuters a day who live nearby`;
+  const tip = (p: (typeof parts)[number]) => `${p.what}: ${pct(p.n, all)}, ${exact(p.n)} of the ${exact(all)} commuters ${shownDayPhrase.value} who live nearby`;
   return (
     <ul class="rows">
       <li class="purpose-split">
@@ -59,7 +59,7 @@ export function StationRiders({ id, scope = id }: { id: string; scope?: string }
   return (
     <>
       <div class="h">
-        Commuters<span class="right muted small">a day</span>
+        Commuters<span class="right muted small">{shownDayPhrase.value}</span>
       </div>
       <ul class="rows pick">
         <li class={side === "home" ? "on" : ""} onClick={() => (stationSide.value = "home")}>

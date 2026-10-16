@@ -13,7 +13,7 @@
 
 import type { CityId } from "../game/cities";
 import type { DayDemand, DemandView, IntercityDemand, LineDemand, PurposeDemand, StationDemand } from "../game/demand";
-import type { DayKind } from "../game/days";
+import type { DemandDay } from "../game/days";
 import type { PurposeKey } from "../game/purposes";
 import type { ModeSplit } from "../game/types";
 
@@ -121,7 +121,7 @@ export function fromStored(stored: StoredDemand, ids: { stationIds: string[]; li
   return stored.days.map((d, day) => {
     const v = d.view;
     const view: DemandView = {
-      version: CACHE_VERSION, day: day as DayKind, round: stored.round, final: true,
+      version: CACHE_VERSION, day: day as DemandDay, round: stored.round, final: true,
       split: v.split, trainShareByPeriod: v.trainShareByPeriod, peakHourFactor: v.peakHourFactor, tripsPerDay: v.tripsPerDay, railTripsPerDay: v.railTripsPerDay,
       lines: new Map(v.lines.map(([i, l]) => [ids.lineIds[i], l])),
       stations: stations(v.stations),

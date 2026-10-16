@@ -462,6 +462,83 @@ def census_jobs(city, boundary, sig, weight, prefs, neighbours):
                  "the 2020 Population Census's employed people 15+ by place of work (table 4)")
 
 
+# ---------------------------------------------------------------- everyday destinations (T-453)
+
+# T001162: 001-021 establishments, 022-042 persons employed in the same order (notes/T-456.md 8)
+MESH_ALL, MESH_I, MESH_M, MESH_N = "022", "032", "036", "037"
+# economic census 2021, table 9-1B: persons employed by minor industry by municipality
+EC_9_1B_URL = "https://www.e-stat.go.jp/stat-search/file-download?statInfId=000040067885&fileKind=0"
+# JSIC divisions: I's retail (56-61), M's customer part (75-77), N's 78-79 and 80; head-office units
+# (three-digit codes ending 0) left out
+SPLITS = {"ret": [str(c) for c in range(56, 62)], "m2": ["75", "76", "77"], "p78": ["78", "79"], "p80": ["80"]}
+# the source passed tier0.sector_check's concentration test on Tokyo (DECISIONS 2026-10-16, T-453);
+# sparser packs fail it on roadside malls and resort hotels their OSM lacks, so they run the level test only
+SECTOR_JUDGED = {"errand": "Tokyo, 2.5%", "leisure": "Tokyo, 2.6%"}
+
+
+def sector_splits():
+    """Per municipality code (and '00000', the country): persons employed in I, M, N and in the
+    customer-facing parts (SPLITS) from table 9-1B, cached as a small CSV."""
+    cache = raw("ec2021_9-1B_splits.csv")
+    if not os.path.exists(cache):
+        import openpyxl
+        wb = openpyxl.load_workbook(_get(EC_9_1B_URL, raw("ec2021_9-1B.xlsx")), read_only=True)
+        rows = list(wb.worksheets[0].iter_rows(values_only=True))
+        head = [h.split("_")[0] if isinstance(h, str) else "" for h in rows[5]]
+        cols = {k: [j for j, h in enumerate(head) if h == k] for k in ("I", "M", "N")}
+        for k, codes in SPLITS.items():
+            two = [j for j, h in enumerate(head) if h in codes]
+            adm = [j for j, h in enumerate(head) if len(h) == 3 and h.endswith("0") and h[:2] in codes]
+            cols[k], cols[k + "_adm"] = two, adm
+        assert all(cols.values()), {k: v for k, v in cols.items() if not v}
+        num = lambda v: float(v) if isinstance(v, (int, float)) else 0.0
+        out = []
+        for r in rows[9:]:
+            if isinstance(r[1], str) and "_" in r[1]:
+                out.append({"code": r[1].split("_")[0], **{k: sum(num(r[j]) for j in js) for k, js in cols.items()}})
+        t = pd.DataFrame(out)
+        for k in SPLITS:
+            t[k] = (t[k] - t.pop(k + "_adm")).clip(lower=0.0)
+        t.to_csv(cache + ".part", index=False)
+        os.replace(cache + ".part", cache)
+    t = pd.read_csv(cache, dtype={"code": str})
+    t["code"] = t.code.replace(CITY_OF_WARD)
+    return t.groupby("code").sum()
+
+
+def mesh_sectors(city, lat, lon, jobs, prefs):
+    """tier0's `everyday` hook: per cell, its jobs x its 500 m mesh's share of persons employed in
+    I (wholesale and retail), M and N (T001162), I split to retail and N to 78-79 and 80 by the
+    municipality's table 9-1B shares; errands = retail + 78-79, leisure = M's customer part + 80."""
+    t = mesh_table(JOBS_MESH, first_meshes((lon.min(), lat.min(), lon.max(), lat.max())))
+    col = lambda k: t[JOBS_MESH + k]
+    AS = col(MESH_ALL)
+    cm = mesh_of(lat, lon)
+    share = {}
+    for k, c in (("I", MESH_I), ("M", MESH_M), ("N", MESH_N)):
+        s = (col(c) / AS.where(AS > 0)).dropna()
+        share[k] = pd.Series(cm).map(s).fillna(col(c).sum() / AS.sum()).to_numpy()
+    ms = municipalities(prefs)
+    idx, _ = england.cell_units(lat, lon, [(m[0], m[3]) for m in ms])
+    sp = sector_splits()
+    ratio = sp[list(SPLITS)].div(sp[["I", "M", "N", "N"]].to_numpy()).fillna(0.0)
+    ratio.columns = list(SPLITS)
+    nat = ratio.loc["00000"]
+    code = np.array([ms[i][0] if i >= 0 else "" for i in idx])
+    r = ratio.reindex(code)
+    miss = r.ret.isna().to_numpy()
+    r = r.fillna(nat)
+    f = lambda k: r[k].to_numpy()
+    if miss.any():
+        print(f"  9-1B: {miss.mean():.2%} of cells with no municipal row, national shares", flush=True)
+    errand = jobs * (share["I"] * f("ret") + share["N"] * f("p78"))
+    leisure = jobs * (share["M"] * f("m2") + share["N"] * f("p80"))
+    src = ("2021 Economic Census for Business Activity, persons employed by 500 m mesh (e-Stat T001162; {}), split by "
+           "municipality by table 9-1B")
+    return {"errand": (errand, src.format("retail and personal services, JSIC 56-61 and 78-79"), SECTOR_JUDGED["errand"]),
+            "leisure": (leisure, src.format("accommodation, eating and drinking, JSIC 75-77, and amusement, 80"), SECTOR_JUDGED["leisure"])}
+
+
 # ---------------------------------------------------------------- schools
 
 def p29_schools(boundary, prefs, neighbours):

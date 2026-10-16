@@ -28,7 +28,7 @@
 import { effect } from "@preact/signals";
 import { activeCity, CITIES, cityById, getWorldFrame, HOME_CITY, LEGACY_FRAME, marketToWorld, viewedZone, worldFrameEpoch, type CityId } from "../game/cities";
 import type { FrameSpec } from "../game/frame";
-import { DAY_KINDS, type DayKind } from "../game/days";
+import { DEMAND_DAYS, type DemandDay } from "../game/days";
 import { display, shownDay, tool } from "../game/ui";
 import {
   cityDemandViews, demandByDay, intercityDemand,
@@ -467,7 +467,7 @@ class DemandClient {
   private focusCity = activeCity.peek();
   private focusFrame = worldFrameEpoch.peek();
   private cellsP: Promise<CityCells | null> | null = null;
-  private modesP: { version: number; round: number; day: DayKind; src?: number; p: Promise<CellModes | null> } | null = null;
+  private modesP: { version: number; round: number; day: DemandDay; src?: number; p: Promise<CellModes | null> } | null = null;
   /** T-260 `day_factors()` from the first worker: load factor per kind of day, purpose and
    * period, then each day's trip rate per purpose (sim/src/demand/days.rs) */
   private dayTable: number[] = [];
@@ -1227,7 +1227,7 @@ class DemandClient {
    * its final round replaces it whole. */
   private applyCache(svc: Service, ids: ReturnType<typeof canonical>, stored: StoredDemand, hash: string, cities: CityId[]) {
     const days = fromStored(stored, ids);
-    if (days.length !== DAY_KINDS.length) throw new Error("days");
+    if (days.length !== DEMAND_DAYS.length) throw new Error("days");
     const now = performance.now();
     // a solve entry for it, so its layout and zones are known as a shown solve's are (T-324, T-325);
     // first in the log, so the newest solve stays last
@@ -1756,7 +1756,7 @@ class DemandClient {
   /** T-325: `cellModes` of a zone open bare, from the aux worker's no-rail pass: the commuters by
    * mode (no rail) and each solving worker's periods' everyday legs, added up as `cellModes` adds
    * the workers' answers for a solved city. */
-  private async bareModes(city: CityId, everydayToo: boolean, version: number, round: number, day: DayKind, other: CityId | undefined): Promise<CellModes | null> {
+  private async bareModes(city: CityId, everydayToo: boolean, version: number, round: number, day: DemandDay, other: CityId | undefined): Promise<CellModes | null> {
     const [r] = await this.ask((id) => ({ kind: "bare", id, version, purpose: everydayToo ? -1 : -2 }), [this.computeN], [], other);
     if (r?.kind !== "bare" || !r.commute || !r.commute.length) return null;
     let extra: Float32Array | null = null;
@@ -2133,7 +2133,7 @@ class DemandClient {
       return;
     }
     // T-260: the weekday is the solve itself; a weekend is worked out from it, purpose by purpose
-    demandByDay.value = DAY_KINDS.map((day) => this.dayDemand(s, round, final, day, day === 0 ? res : res.map((r, q) => this.dayResult(r, q, day))));
+    demandByDay.value = DEMAND_DAYS.map((day) => this.dayDemand(s, round, final, day, day === 0 ? res : res.map((r, q) => this.dayResult(r, q, day))));
     if (final) {
       s.refinedAt = performance.now();
       this.aheadP.clear();
@@ -2171,7 +2171,7 @@ class DemandClient {
     s.earlyAt = performance.now();
     s.earlyLines = fresh.map((l) => l.id);
     demandByDay.value = days.map((d, k) => {
-      const day = k as DayKind;
+      const day = k as DemandDay;
       if (!d.view) return d;
       const est = this.dayDemand(part, 0, false, day, day === 0 ? res : res.map((r, q) => this.dayResult(r, q, day))).view!;
       const lines = new Map(d.view.lines), stations = new Map(d.view.stations);
@@ -2209,17 +2209,17 @@ class DemandClient {
     const days = demandByDay.peek();
     const fresh = Array.from(c.lines, (l) => s.layout[l]).filter(Boolean);
     const part = { ...s, layout: fresh };
-    const of = (day: DayKind, final: boolean) => this.dayDemand(part, round, final, day, day === 0 ? res : res.map((r, q) => this.dayResult(r, q, day)));
+    const of = (day: DemandDay, final: boolean) => this.dayDemand(part, round, final, day, day === 0 ? res : res.map((r, q) => this.dayResult(r, q, day)));
     // T-402: with nothing shown yet, or only this solve's own figures of the cluster, a view of the
     // cluster alone, which the solve's own results replace (its totals are the cluster's, so never
     // the solve's final); its rounds before the last only where the solve's estimates are shown
     const alone = !days[0].view || days[0].view.version === s.version;
     if (!final && (!s.showEstimates || !alone)) return;
-    if (alone) demandByDay.value = DAY_KINDS.map((day) => of(day, false));
+    if (alone) demandByDay.value = DEMAND_DAYS.map((day) => of(day, false));
     else {
       const ids = new Set(s.layout.map((l) => l.id));
       demandByDay.value = days.map((d, k) => {
-        const day = k as DayKind;
+        const day = k as DemandDay;
         if (!d.view) return d;
         const est = of(day, final);
         const lines = new Map(d.view.lines), stations = new Map(d.view.stations);
@@ -2259,7 +2259,7 @@ class DemandClient {
    * T-325: a bare zone's view of one kind of day, worked out from its figures exactly as
    * `dayResult` and `dayDemand` work out a solved city's (the figures are what a solve gives it).
    */
-  private bareView(id: CityId, day: DayKind, network: DemandView): DemandView {
+  private bareView(id: CityId, day: DemandDay, network: DemandView): DemandView {
     const b = (this.bareOpen.get(id) ?? this.bareKept.get(id))!;
     let trips = 0, rail = 0, walk = 0;
     const trainShareByPeriod: [string, number][] = PERIODS.map((period, q) => {
@@ -2296,14 +2296,14 @@ class DemandClient {
       if (!add.length) return d;
       changed = true;
       const cities = new Map(d.cities);
-      for (const id of add) cities.set(id, this.bareView(id, k as DayKind, d.view));
+      for (const id of add) cities.set(id, this.bareView(id, k as DemandDay, d.view));
       return { ...d, cities };
     });
     if (changed) demandByDay.value = next;
   }
 
   /** A kind of day's load factor for purpose `key` in period `q` (sim/src/demand/days.rs). */
-  private factor(day: DayKind, key: string, q: number): number {
+  private factor(day: DemandDay, key: string, q: number): number {
     const p = PURPOSE_INDEX[key as PurposeKey] ?? 0;
     return this.dayTable[(day * PURPOSE_INDEX_COUNT + p) * PERIODS.length + q] ?? 1;
   }
@@ -2314,7 +2314,7 @@ class DemandClient {
    * market's trips and corridors by its own factor. The busiest-hour load of crush follows the
    * segment's riders. Route and mode choices are the weekday's (docs/demand.md 4.2).
    */
-  private dayResult(r: Result, q: number, day: DayKind): Result {
+  private dayResult(r: Result, q: number, day: DemandDay): Result {
     const p = r.parts;
     if (!p || !this.dayTable.length) return r;
     const nr = r.seg.length;
@@ -2358,7 +2358,7 @@ class DemandClient {
   }
 
   /** The views of one kind of day from its period results. */
-  private dayDemand(s: Solve, round: number, final: boolean, day: DayKind, res: Result[]): DayDemand {
+  private dayDemand(s: Solve, round: number, final: boolean, day: DemandDay, res: Result[]): DayDemand {
     let trips = 0, rail = 0, walk = 0;
     const byPeriod: [string, number][] = [];
     res.forEach((r, q) => {

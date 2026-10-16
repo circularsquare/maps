@@ -58,15 +58,15 @@ pub const BRAKE: f64 = 0.9;
 
 // ---- costs, US$M (SPEC 6.4) ----
 
-/// Per route-km of double track at multiplier 1.
-pub const BASE_COST_PER_KM: f64 = 90.0;
+/// Per route-km of double track at multiplier 1 (halved in T-467).
+pub const BASE_COST_PER_KM: f64 = 45.0;
 /// Multiplier per level, index `level + 3` (-3 .. +3). Anita, 2026-10-08 (+2 and +3 lowered from
 /// 1.4 and 2.0 the same day).
 pub const LEVEL_MULT: [f64; 7] = [1.2, 1.1, 1.0, 0.3, 0.8, 1.3, 1.8];
 pub const SINGLE_TRACK_COST: f64 = 0.6;
 pub const WATER_COST: f64 = 2.0;
 /// 200 m station with two platform tracks, per level, index `level + 3`.
-pub const STATION_COST_200: [f64; 7] = [140.0, 100.0, 60.0, 10.0, 30.0, 40.0, 50.0];
+pub const STATION_COST_200: [f64; 7] = [70.0, 50.0, 30.0, 5.0, 15.0, 20.0, 25.0];
 pub const SINGLE_TRACK_STATION: f64 = 0.7;
 pub const JUNCTION_KM: f64 = 0.25;
 pub const FLYOVER_KM: f64 = 0.6;

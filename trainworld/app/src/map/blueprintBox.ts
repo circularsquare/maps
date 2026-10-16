@@ -9,16 +9,23 @@
 
 import type { Map as MlMap } from "maplibre-gl";
 import { bpPicked, switchPicked, unionPicked, type BpPicked } from "../game/blueprintPick";
+import { lngLatToPack } from "../game/coords";
+import { describeIssues } from "../game/issues";
 import { tool } from "../game/ui";
-import { world } from "../game/world";
+import { edit, say, world } from "../game/world";
+import type { ClockClient } from "../workers/clockClient";
 import { effect } from "@preact/signals";
+import { toLocal } from "./geo";
 import { strokesFromEdges } from "./network";
+import { previewStrokes, setGrabbing } from "./nodeDrag";
 import type { Overlay } from "./overlay";
 import { topSeg } from "./pick";
 import { STATIONS_ZOOM } from "./stationGeometry";
 
 /** A click, not a drag: the pointer moved less than this (px). */
 const CLICK_PX = 4;
+/** how near a picked node a press grabs the pick (px), as for one node (map/nodeDrag.ts) */
+const NODE_PX = 9;
 
 type Rect = [number, number, number, number];
 
@@ -45,8 +52,10 @@ export class BlueprintBox {
   private box: HTMLDivElement;
   private drag: { x0: number; y0: number; x: number; y: number; add: boolean; base: BpPicked; pan: boolean; moved: boolean } | null = null;
   private frame = 0;
+  /** T-475: a press on a picked node or picked track moves every movable node of the pick */
+  private move: { x0: number; y0: number; nodes: number[]; at: { x: number; y: number }; dx: number; dy: number; moved: boolean; ok: boolean; issues: string[] } | null = null;
 
-  constructor(private map: MlMap, private overlay: Overlay) {
+  constructor(private map: MlMap, private overlay: Overlay, private client: ClockClient) {
     this.box = document.createElement("div");
     this.box.className = "bp-box";
     this.box.style.display = "none";
@@ -73,11 +82,52 @@ export class BlueprintBox {
   }
 
   get dragging() {
-    return this.drag !== null && !this.drag.pan;
+    return (this.drag !== null && !this.drag.pan) || this.move !== null;
+  }
+
+  /** The pick's nodes that can move (every edge there blueprint, no crossover, station not
+   * constructed), when a press at (x, y) px is on one of them or on picked track; else null. */
+  private grabAt(x: number, y: number): number[] | null {
+    const w = world.peek(), p = bpPicked.peek();
+    if (!w || (!p.edges.length && !p.stations.length)) return null;
+    const ids = new Set(p.stations);
+    for (const e of w.edges) if (p.edges.includes(e.id)) ids.add(e.a), ids.add(e.b);
+    const fixed = new Set<number>();
+    for (const e of w.edges) if (e.crossover) fixed.add(e.a), fixed.add(e.b);
+    const built = new Set(w.save.stations.filter((s) => s.built).map((s) => s.num));
+    const nodes: number[] = [];
+    let near = false;
+    for (const id of ids) {
+      const n = w.nodes.get(id);
+      if (!n || n.builtPorts > 0 || fixed.has(id) || built.has(id)) continue;
+      nodes.push(id);
+      const [sx, sy] = this.overlay.toScreen(...toLocal(n.lng, n.lat));
+      if ((sx - x) ** 2 + (sy - y) ** 2 < NODE_PX * NODE_PX) near = true;
+    }
+    if (!nodes.length) return null;
+    if (near) return nodes;
+    const under = this.under(x, y).edges[0];
+    return under !== undefined && p.edges.includes(under) ? nodes : null;
+  }
+
+  /** Esc while dragging the pick: it goes back, nothing changes. */
+  private cancelMove(): boolean {
+    if (!this.move) return false;
+    this.move = null;
+    this.client.dropPreview();
+    this.endMove();
+    return true;
+  }
+
+  private endMove() {
+    setGrabbing(false);
+    this.overlay.renderer.setPreview(null);
+    this.overlay.invalidate();
   }
 
   /** Esc while dragging a box: the box goes away and the pick goes back. */
   cancel(): boolean {
+    if (this.cancelMove()) return true;
     const d = this.drag;
     if (!d) return false;
     this.drag = null;
@@ -110,9 +160,14 @@ export class BlueprintBox {
   }
 
   private onDown(e: PointerEvent) {
-    if (tool.peek() !== "blueprint" || this.drag) return;
+    if (tool.peek() !== "blueprint" || this.drag || this.move) return;
     const [x, y] = this.point(e);
-    if (e.button === 0) {
+    const grab = e.button === 0 && !e.shiftKey ? this.grabAt(x, y) : null;
+    if (grab) {
+      e.preventDefault();
+      const ll = this.map.unproject([x, y]);
+      this.move = { x0: x, y0: y, nodes: grab, at: lngLatToPack(ll.lng, ll.lat), dx: 0, dy: 0, moved: false, ok: true, issues: [] };
+    } else if (e.button === 0) {
       e.preventDefault();
       this.drag = { x0: x, y0: y, x, y, add: e.shiftKey, base: e.shiftKey ? bpPicked.peek() : { edges: [], stations: [] }, pan: false, moved: false };
     } else if (e.button === 1 || e.button === 2) {
@@ -122,8 +177,17 @@ export class BlueprintBox {
   }
 
   private onMove(e: PointerEvent) {
+    const m = this.move;
+    if (m) return this.moveTo(m, ...this.point(e));
     const d = this.drag;
-    if (!d) return;
+    if (!d) {
+      // the grab cursor over what a press would drag (T-474)
+      if (tool.peek() === "blueprint" && e.buttons === 0 && e.target === this.map.getCanvas()) {
+        const c = this.grabAt(...this.point(e)) ? "grab" : "crosshair";
+        if (this.map.getCanvas().style.cursor !== c) this.map.getCanvas().style.cursor = c;
+      }
+      return;
+    }
     const [x, y] = this.point(e);
     if (d.pan) {
       this.map.panBy([d.x - x, d.y - y], { animate: false });
@@ -145,7 +209,38 @@ export class BlueprintBox {
       });
   }
 
-  private onUp(e: PointerEvent) {
+  private moveTo(m: NonNullable<BlueprintBox["move"]>, x: number, y: number) {
+    if (!m.moved && Math.hypot(x - m.x0, y - m.y0) < CLICK_PX) return;
+    if (!m.moved) setGrabbing(true);
+    m.moved = true;
+    const ll = this.map.unproject([x, y]);
+    const p = lngLatToPack(ll.lng, ll.lat);
+    m.dx = p.x - m.at.x;
+    m.dy = p.y - m.at.y;
+    this.client.previewNodes(m.nodes, m.dx, m.dy, (a) => {
+      if (this.move !== m) return;
+      m.ok = a.ok;
+      m.issues = a.issues;
+      this.overlay.renderer.setPreview(previewStrokes(a));
+      this.overlay.invalidate();
+    });
+  }
+
+  private async onUp(e: PointerEvent) {
+    const m = this.move;
+    if (m) {
+      this.move = null;
+      if (!m.moved) {
+        // a press without a drag is a click, as without the pick under it
+        this.drag = { x0: m.x0, y0: m.y0, x: m.x0, y: m.y0, add: false, base: { edges: [], stations: [] }, pan: false, moved: false };
+      } else {
+        this.client.dropPreview();
+        const a = await edit({ op: "moveNodes", nodes: m.nodes, dx: m.dx, dy: m.dy });
+        if (!a.ok && !a.issues.length) say(m.issues.length ? describeIssues(m.issues) : "This cannot be moved there.", true);
+        this.endMove();
+        return;
+      }
+    }
     const d = this.drag;
     if (!d) return;
     this.drag = null;

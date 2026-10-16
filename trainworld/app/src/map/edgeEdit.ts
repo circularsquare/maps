@@ -19,6 +19,7 @@ import type { Level } from "../game/types";
 import { toLocal } from "./geo";
 import { live } from "./live";
 import { strokesFromPreview } from "./network";
+import { setGrabbing } from "./nodeDrag";
 import { curveLabels, setCurveLabel } from "./tools";
 import type { Overlay } from "./overlay";
 
@@ -135,6 +136,7 @@ export class EdgeEditor {
     e.stopPropagation();
     this.drag = { i, moved: false, from: { ...this.shape.pis[i] } };
     this.map.dragPan.disable();
+    setGrabbing(true);
   }
 
   private onMove(e: PointerEvent) {
@@ -167,6 +169,7 @@ export class EdgeEditor {
 
   private endPreview() {
     this.map.dragPan.enable();
+    setGrabbing(false);
     this.preview = null;
     this.overlay.renderer.setPreview(null);
     this.overlay.invalidate();

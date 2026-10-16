@@ -7,6 +7,8 @@
 //! times `load_factor(WEEKEND, purpose, q)`, and the queries (bubbles, catchments, selections)
 //! weigh each period the same way. The weekend keeps the weekday's crowded route and mode
 //! choices (fewer riders at the weekend would crowd less), and the same trains run every day.
+//! The average day (T-464) is 5 weekdays and 2 weekend days over 7, taken on the shares and rates,
+//! so every figure that is linear in them is the same blend.
 //!
 //! Sources (national, so every US city alike): NHTS 2017 person trips by purpose, weekday
 //! (Mon-Fri) against Saturday and Sunday pooled, person-weighted, linked trips; England's NTS
@@ -22,9 +24,13 @@ use super::intercity::SHARES;
 use super::network::PERIODS;
 use wasm_bindgen::prelude::*;
 
-pub const DAY_KINDS: usize = 2;
+/// The days a query can be asked for: the two kinds, then the average over a week (T-464).
+pub const DAY_KINDS: usize = 3;
 pub const WEEKDAY: usize = 0;
 pub const WEEKEND: usize = 1;
+pub const AVERAGE: usize = 2;
+/// Weekdays and weekend days in a week, the average's weights.
+const WEEK: [f32; 2] = [5.0 / 7.0, 2.0 / 7.0];
 /// Purposes as the demand results split them (demand.worker.ts `purposeParts`): work, the
 /// everyday layer's six in its own order (shopping, social, school, university, airport,
 /// medical), then the regional market's longer trips.
@@ -73,26 +79,34 @@ fn weekday_shares(p: usize, q: usize) -> (f32, f32) {
 
 /// Trips of purpose `p` a day on `day` per trip on a weekday.
 pub fn day_rate(day: usize, p: usize) -> f32 {
-    if day == WEEKDAY { 1.0 } else { WEEKEND_RATE[p] }
+    match day {
+        WEEKDAY => 1.0,
+        AVERAGE => WEEK[0] + WEEK[1] * WEEKEND_RATE[p],
+        _ => WEEKEND_RATE[p],
+    }
 }
 
 /// Outward trips of purpose `p` departing in period `q` on `day`, as a share of a weekday's
 /// outward trips: on a weekday exactly the model's own table.
 pub fn share_out(day: usize, p: usize, q: usize) -> f32 {
     let wd = weekday_shares(p, q).0;
-    if day == WEEKDAY {
-        return wd;
+    let we = || WEEKEND_RATE[p] * WEEKEND_OUT[p].map_or(wd, |s| s[q]);
+    match day {
+        WEEKDAY => wd,
+        AVERAGE => WEEK[0] * wd + WEEK[1] * we(),
+        _ => we(),
     }
-    WEEKEND_RATE[p] * WEEKEND_OUT[p].map_or(wd, |s| s[q])
 }
 
 /// As `share_out` for the trips home.
 pub fn share_ret(day: usize, p: usize, q: usize) -> f32 {
     let wd = weekday_shares(p, q).1;
-    if day == WEEKDAY {
-        return wd;
+    let we = || WEEKEND_RATE[p] * WEEKEND_RET[p].map_or(wd, |s| s[q]);
+    match day {
+        WEEKDAY => wd,
+        AVERAGE => WEEK[0] * wd + WEEK[1] * we(),
+        _ => we(),
     }
-    WEEKEND_RATE[p] * WEEKEND_RET[p].map_or(wd, |s| s[q])
 }
 
 /// Riders of purpose `p` in period `q` on `day` per rider on a weekday, both directions
@@ -156,6 +170,17 @@ mod tests {
                 we += (o + r) * load_factor(WEEKEND, p, q);
             }
             assert!((we / wd - WEEKEND_RATE[p]).abs() < 1e-4, "purpose {p}");
+        }
+    }
+
+    #[test]
+    fn the_average_day_is_five_weekdays_and_two_weekend_days_over_seven() {
+        for p in 0..PURPOSES {
+            assert!((day_rate(AVERAGE, p) - (5.0 + 2.0 * WEEKEND_RATE[p]) / 7.0).abs() < 1e-6, "purpose {p}");
+            for q in 0..PERIODS {
+                let want = (5.0 + 2.0 * load_factor(WEEKEND, p, q)) / 7.0;
+                assert!((load_factor(AVERAGE, p, q) - want).abs() < 1e-5, "purpose {p} period {q}");
+            }
         }
     }
 }

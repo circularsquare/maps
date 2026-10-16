@@ -2058,6 +2058,10 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
         dv: f32,
         q0: u32,
         q1: u32,
+        // its square and drive supercell, for the zone pair's factors without reading `z`
+        gx: i32,
+        gy: i32,
+        sup: u16,
     }
     let mut dz: Vec<DZone> = Vec::with_capacity(dzones.len());
     // per destination: [x, y, local streets, main roads], [parking every driver pays, trips
@@ -2085,7 +2089,7 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
             dd.push([[sz.cx[v], sz.cy[v], local[v].0, local[v].1], [fixed, dv[v], acc_m[v], paid], [free, 0.0, 0.0, 0.0]]);
         }
         let q1 = dd.len() as u32;
-        dz.push(DZone { key: gr.key(z, j), reg: z.region[j], zid: j as u32, min: zmin(j), max: dd[q1 as usize - 1][1][2], dv: dvz, q0, q1 });
+        dz.push(DZone { key: gr.key(z, j), reg: z.region[j], zid: j as u32, min: zmin(j), max: dd[q1 as usize - 1][1][2], dv: dvz, q0, q1, gx: z.gx[j], gy: z.gy[j], sup: p.routes.as_ref().map_or(0, |r| r.sup_of(j)) });
     }
     // the decay and the walk share by zone offset side by side: one lookup per zone pair
     let fw: Vec<[f32; 2]> = gr.ftab.iter().enumerate().map(|(k, &f)| [f, if gr.wtab.is_empty() { 0.0 } else { gr.wtab[k] }]).collect();
@@ -2093,7 +2097,8 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
     // fourth, 1 where the commute is long enough for the ride (T-371)
     let mut fz = vec![[0f32, 0.0, p.road_detour, 0.0]; dz.len()];
     let routed_walk = gr.wroutes.is_some();
-    let routed_drive = p.routes.as_ref().is_some_and(|r| r.has_drive());
+    let drive = p.routes.as_deref().filter(|r| r.has_drive());
+    let ride_min2 = (p.ride_min_km * 1000.0).powi(2);
     // the origin's two rows (walks; walks and rides) one after the other, each followed by
     // `PADS` dummies (0), and their rail trips by egress station the same way
     let h = s + PADS;
@@ -2115,10 +2120,14 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
         // this zone's origins reaches, once for all of them
         let ri = z.region[i];
         let nzi = us.iter().map(|&u| reach(u as usize)).max().unwrap_or(0);
+        let (gxi, gyi) = (z.gx[i], z.gy[i]);
         for (o, zj) in fz[..nzi].iter_mut().zip(&dz) {
             let k = (base + zj.key) as usize;
             let [f, w] = fw[k];
-            let long = ride_offered(z, p, i, zj.zid as usize) as u32 as f32;
+            // `ride_offered`
+            let (dx, dy) = (zj.gx - gxi, zj.gy - gyi);
+            let (fx, fy) = (dx as f32, dy as f32);
+            let long = ((fx * fx + fy * fy) * z.zone_m * z.zone_m >= ride_min2) as u32 as f32;
             *o = [f, w, o[2], long];
             if zj.reg != ri {
                 o[0] *= gr.border;
@@ -2126,8 +2135,9 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
             if routed_walk && w > 0.0 {
                 o[1] = gr.walk_share_at(i, zj.zid as usize, k);
             }
-            if routed_drive {
-                o[2] = p.drive_factor(i, zj.zid as usize);
+            if let Some(r) = drive {
+                // `Params::drive_factor`
+                o[2] = r.drive_factor_by(i, dx, dy, zj.reg, zj.sup) * p.road_routed_scale;
             }
         }
         for (ui, &u) in us.iter().enumerate() {
@@ -2263,13 +2273,16 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
                 // y x the row by lane, egress steps 0-3 and 4-7 (zeros past each list's end)
                 let yw_lo = F8::by_lane([yw[0], yw[1], yw[2], yw[3]]);
                 let yw_hi = if kn > 4 { F8::by_lane([yw[4], yw[5], yw[6], yw[7]]) } else { yw_lo };
-                let (xa, xwa, ma, moa) = (x.to_array(), xw.to_array(), m8.to_array(), mo8.to_array());
+                let (xa, xwa) = (x.to_array(), xw.to_array());
+                // each lane's walk-sum band, as the scalar (walk at home + at work) / band
+                let bw = ((mo8 + m8) * F8::splat(1.0 / WALKSUM_BAND_MIN)).to_array();
                 for l in 0..8 {
                     if ok >> l & 1 == 0 {
                         continue;
                     }
                     rail_sum += xa[l];
-                    for k in 0..eg_n[q[l]] as usize {
+                    // pads add 0 to their own dummies: the block's one count predicts well
+                    for k in 0..kn {
                         ab_y[ix[k][l] as usize] += ya[k][l];
                     }
                     let a = &mut acc_q[q[l]];
@@ -2278,7 +2291,7 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
                         a[1] = (F4::new(a[1]) + yw_hi[l]).to_array();
                     }
                     // the band's running sum held while the band stays the same: the same adds
-                    let b = (((moa[l] + ma[l]) * (1.0 / WALKSUM_BAND_MIN)) as usize).min(N_WALKSUM - 1);
+                    let b = (bw[l] as usize).min(N_WALKSUM - 1);
                     if b != wb {
                         walksum[wb] = wacc;
                         (wb, wacc) = (b, walksum[b]);

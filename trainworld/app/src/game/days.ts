@@ -11,6 +11,15 @@ import { signal } from "@preact/signals";
 export type DayKind = 0 | 1;
 export const DAY_KINDS: DayKind[] = [0, 1];
 export const DAY_KIND_NAME = ["Weekday", "Weekend"] as const;
+
+/** The days a demand view can show (T-464): the two kinds, then the average day (5 weekdays and 2
+ * weekend days over 7, sim/src/demand/days.rs). The index into `demandByDay` and the `day` of every
+ * demand query. The clock and the boarding account only ever see the two kinds. */
+export type DemandDay = DayKind | 2;
+export const DEMAND_DAYS: DemandDay[] = [0, 1, 2];
+export const AVERAGE_DAY = 2;
+/** How a figure for the day shown ends: "12,400 trip legs a day on average". */
+export const DEMAND_DAY_PHRASE = ["a weekday", "a weekend day", "a day on average"] as const;
 const WEEKDAY_NAME = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 /** Day of the week of game day `day`, 0 Monday. */
@@ -22,5 +31,5 @@ export const dayKindOf = (day: number): DayKind => (weekdayOf(day) >= 5 ? 1 : 0)
 export const dayKindAt = (t: number): DayKind => dayKindOf(Math.floor(t / 86400));
 
 /** The kind of day it is in the local time in view (T-309), kept by game/clock.ts as the minutes
- * pass and the view pans (main thread only). The demand views show it unless the player chose one (game/ui.ts `shownDay`, T-266). */
+ * pass and the view pans (main thread only). */
 export const currentDay = signal<DayKind>(0);

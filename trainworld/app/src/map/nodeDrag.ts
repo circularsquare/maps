@@ -31,9 +31,12 @@ interface Hit {
   movable: boolean;
 }
 
+/** The grabbing cursor everywhere while something is dragged (T-474), so it holds off the handle. */
+export function setGrabbing(on: boolean) {
+  document.documentElement.classList.toggle("grabbing", on);
+}
+
 export class NodeDrag {
-  /** Visible demand discs cover ordinary nodes; selected edit handles remain draggable. */
-  obscuredAt: (x: number, y: number) => boolean = () => false;
   private box: HTMLDivElement;
   private ring: HTMLDivElement;
   private tag: HTMLDivElement;
@@ -98,8 +101,7 @@ export class NodeDrag {
     const px = e.clientX - r.left, py = e.clientY - r.top;
     const h = this.hit(px, py);
     if (!h || (!h.movable && !this.selected(h.node))) return;
-    if (!this.selected(h.node) && this.obscuredAt(px, py)) return;
-    // ours: the map must not pan; a press without a drag still reaches MapLibre as a click
+    // ours, over a demand bubble too (T-474): the map must not pan; a press without a drag still reaches MapLibre as a click
     this.map.dragPan.disable();
     this.press = { ...h, px, py };
   }
@@ -118,6 +120,7 @@ export class NodeDrag {
         return;
       }
       this.drag = { node: p.node, x: 0, y: 0, lx: 0, ly: 0 };
+      setGrabbing(true);
       live.edgeEditor?.place(); // its squares hide while a node moves
     }
     const ll = this.map.unproject([px, py]);
@@ -160,6 +163,7 @@ export class NodeDrag {
   }
 
   private clear() {
+    setGrabbing(false);
     this.preview = null;
     this.overlay.renderer.setPreview(null);
     this.overlay.invalidate();
@@ -202,7 +206,7 @@ export class NodeDrag {
 }
 
 /** One stroke set from a preview of several alignments (`parts`), red when it cannot be built. */
-function previewStrokes(a: PreviewAnswer): Strokes | null {
+export function previewStrokes(a: PreviewAnswer): Strokes | null {
   const parts = a.parts ?? new Uint32Array([0, a.pts.length / 3]);
   const all: Strokes[] = [];
   for (let k = 0; k + 1 < parts.length; k++) {

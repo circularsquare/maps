@@ -3,9 +3,9 @@
 // may be unavailable (private window), so every read and write is guarded.
 
 import { computed, effect, signal } from "@preact/signals";
-import { currentDay, type DayKind } from "./days";
+import { AVERAGE_DAY, DEMAND_DAY_PHRASE, type DemandDay } from "./days";
 import type { PurposeFilter } from "./purposes";
-import type { Level, Selection } from "./types";
+import { LEVELS, type Level, type Selection } from "./types";
 
 export type Tab = "build" | "lines" | "stations" | "money" | "settings";
 /** Tabs a remembered choice can name: the City tab is gone (T-220), so a browser that last had it
@@ -42,11 +42,14 @@ export interface DisplaySettings {
   commuterEnd: "home" | "work";
   /** commuter bubbles' size, as a multiple of their width (T-099; 1 = BUBBLE_DENSITY's sizes) */
   bubbleSize: number;
+  /** bubbles' opacity as a multiple of the built alpha (T-470); the default is 10% under it */
+  bubbleOpacity: number;
   /** T-247: the size of the page's panels and text, 0.8-1.2 (UI_SCALES); the map itself is not scaled */
   uiScale: number;
-  /** T-266: the day the demand views show: the clock's own (`today`), or always a weekday or a
-   * weekend day. The trains and platforms follow the clock whatever this says. */
-  dayShown: "today" | "weekday" | "weekend";
+  /** T-464: the day the demand views show: the average day, a weekday or a weekend day. A stored
+   * "today" (T-266's old default) reads as the average. The trains and platforms follow the clock
+   * whatever this says. */
+  dayShown: "average" | "weekday" | "weekend";
   /** T-381: miles, mph and feet instead of kilometres, km/h and metres (the game itself is metric) */
   usUnits: boolean;
   /** T-381: demand workers by the old rule (half the threads less one, up to 5); read at the next load */
@@ -71,8 +74,9 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   commuters: false,
   commuterEnd: "home",
   bubbleSize: 1,
+  bubbleOpacity: 0.9,
   uiScale: 1,
-  dayShown: "today",
+  dayShown: "average",
   usUnits: false,
   moreCores: false,
 };
@@ -90,7 +94,7 @@ export interface DockLayout {
  * and the new default applies. */
 const VERSION = 2;
 
-function load(): Partial<{ tab: Tab; theme: Theme; display: Partial<DisplaySettings>; dock: DockLayout; v: number }> {
+function load(): Partial<{ tab: Tab; theme: Theme; display: Partial<DisplaySettings>; dock: DockLayout; build: Partial<{ level: Level; tracks: 1 | 2 | 4; keep: boolean }>; v: number }> {
   try {
     return JSON.parse(localStorage.getItem(STORE) || "{}");
   } catch {
@@ -138,18 +142,22 @@ export const stationSort = signal<ListSort<"name" | "riders" | "near">>({ key: "
  * load starts on all purposes, so nobody returns to a map that silently leaves riders out. */
 export const purposeFilter = signal<PurposeFilter>("all");
 export const buildPlatform = signal(200);
-export const buildLevel = signal<Level>(0);
+/** T-468: the three Build tab track settings below are remembered per browser with the rest of the
+ * UI state; anything unreadable falls back to the defaults. */
+export const buildLevel = signal<Level>(LEVELS.includes(saved.build?.level as Level) ? (saved.build!.level as Level) : 0);
 /** Track the drawing tool lays: single, double, or quad (two doubles side by side, T-255). */
-export const trackCount = signal<1 | 2 | 4>(2);
+export const trackCount = signal<1 | 2 | 4>([1, 2, 4].includes(saved.build?.tracks as number) ? saved.build!.tracks! : 2);
 /** T-445: the track tool starts each segment where the last ended. The Build tab's button and
  * Caps Lock set it; Shift continues a run for one click without it. */
-export const keepPlacing = signal(false);
+export const keepPlacing = signal(saved.build?.keep === true);
 
-/** The kind of day every demand view shows (T-260, T-266): the setting, or the clock's day. */
-export const shownDay = computed<DayKind>(() => {
+/** The day every demand view shows (T-260, T-464): the setting, the average day by default. */
+export const shownDay = computed<DemandDay>(() => {
   const s = display.value.dayShown;
-  return s === "weekday" ? 0 : s === "weekend" ? 1 : currentDay.value;
+  return s === "weekday" ? 0 : s === "weekend" ? 1 : AVERAGE_DAY;
 });
+/** The shown day as a hover ends a figure: "a weekday", "a weekend day", "a day on average". */
+export const shownDayPhrase = computed(() => DEMAND_DAY_PHRASE[shownDay.value]);
 
 export function setDisplay<K extends keyof DisplaySettings>(k: K, v: DisplaySettings[K]) {
   display.value = { ...display.value, [k]: v };
@@ -167,7 +175,7 @@ effect(() => {
   document.documentElement.style.setProperty("--ui", String(uiScale.value));
 });
 effect(() => {
-  const s = { tab: tab.value, theme: theme.value, display: display.value, dock: dockLayout.value, v: VERSION };
+  const s = { tab: tab.value, theme: theme.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, tracks: trackCount.value, keep: keepPlacing.value }, v: VERSION };
   try {
     localStorage.setItem(STORE, JSON.stringify(s));
   } catch {

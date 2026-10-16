@@ -3,7 +3,7 @@ import { cityDemandViews } from "../game/demand";
 import { loadProgress } from "../game/loading";
 import { asFilter, FILTER_PURPOSES, purposeColour } from "../game/purposes";
 import { useState } from "preact/hooks";
-import { display, purposeFilter } from "../game/ui";
+import { display, purposeFilter, setDisplay } from "../game/ui";
 import { StationsFull } from "./StationsFull";
 import { StatusTag } from "./StatusTag";
 
@@ -38,7 +38,24 @@ export function DemandSelector() {
           display.value = value === "none" ? { ...current, commuters: false } : { ...current, commuters: true, commuterEnd: value };
         }}>{label}</button>)}
     <PurposeSelect />
+    <DaySelect />
   </div>;
+}
+
+const DAY_OPTIONS = [["average", "Average day"], ["weekday", "Weekday"], ["weekend", "Weekend"]] as const;
+
+/** The day the demand views are for (T-464): the average day, a weekday or a weekend day. */
+function DaySelect() {
+  const day = display.value.dayShown === "weekday" || display.value.dayShown === "weekend" ? display.value.dayShown : "average";
+  const [mouse, setMouse] = useState(false);
+  return <label class={`purpose-filter${day !== "average" ? " on" : ""}${mouse ? " mouse" : ""}`}
+    data-tip="The day the demand figures are for. The average counts 5 weekdays and 2 weekend days over 7. Trains, platforms and riders over the past 24 hours follow the clock.">
+    <select aria-label="Day the demand is for" value={day}
+      onPointerDown={() => setMouse(true)} onKeyDown={() => setMouse(false)} onBlur={() => setMouse(false)}
+      onChange={(e) => setDisplay("dayShown", (e.currentTarget as HTMLSelectElement).value as typeof day)}>
+      {DAY_OPTIONS.map(([v, name]) => <option key={v} value={v}>{name}</option>)}
+    </select>
+  </label>;
 }
 
 /** The purpose filter (T-158): every demand drawing on the map narrowed to one trip purpose. */

@@ -26,7 +26,7 @@ import { tripOpenedFrom } from "../game/trip";
 import { compass } from "../game/places";
 import { purposeWords, type PurposeFilter } from "../game/purposes";
 import type { Selection } from "../game/types";
-import { display, purposeFilter, selection, tool } from "../game/ui";
+import { display, purposeFilter, selection, shownDayPhrase, tool } from "../game/ui";
 import { world } from "../game/world";
 import { BUBBLE_DENSITY, RES_AREA_M2, type Bubbles, type FromCommuters, type Moved, type Ready, type Summed, type ToCommuters } from "../workers/commutersProtocol";
 import { aggregate, discs, type Groups } from "./bubbles";
@@ -392,6 +392,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
 
   // the size slider in the settings pane scales every commuter bubble on the GPU (T-099)
   effect(() => view.setBubbleSize(display.value.bubbleSize));
+  effect(() => view.setBubbleOpacity(display.value.bubbleOpacity));
 
   // ---- hover ----
   const endWord = (end: "home" | "work") => (end === "home" ? "at homes" : "at destinations");
@@ -401,15 +402,15 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     if (sel?.kind === "station") return null;
     if (sel?.kind === "commuters") {
       let i = discAt(nearDiscs, p, nearAnchor, view.bubbleSize);
-      if (i >= 0 && near) return [`${count(near.train[i] + near.walk[i] + near.drive[i])} ${tripWords()} a day ${endWord(sel.end)} here`, "Outward and return legs included.", modeLine(near.train[i], near.walk[i], near.drive[i])];
+      if (i >= 0 && near) return [`${count(near.train[i] + near.walk[i] + near.drive[i])} ${tripWords()} ${shownDayPhrase.peek()} ${endWord(sel.end)} here`, "Outward and return legs included.", modeLine(near.train[i], near.walk[i], near.drive[i])];
       i = discAt(farDiscs, p, farAnchor, view.bubbleSize);
-      if (i >= 0 && far) return [`${count(far.train[i] + far.walk[i] + far.drive[i])} ${tripWords()} a day ${endWord(sel.end === "home" ? "work" : "home")} here`, `${sel.end === "home" ? "Their homes" : "Their destinations"} are in the selected area.`, modeLine(far.train[i], far.walk[i], far.drive[i]), "Click to explore this trip"];
+      if (i >= 0 && far) return [`${count(far.train[i] + far.walk[i] + far.drive[i])} ${tripWords()} ${shownDayPhrase.peek()} ${endWord(sel.end === "home" ? "work" : "home")} here`, `${sel.end === "home" ? "Their homes" : "Their destinations"} are in the selected area.`, modeLine(far.train[i], far.walk[i], far.drive[i]), "Click to explore this trip"];
       return null;
     }
     const L = shown.bubbles.levels[bubbleLevel(map.getZoom())];
     const i = discAt(L.discs, p, shown.bubbles.anchor, view.bubbleSize);
     if (i < 0) return null;
-    return [`${count(L.train[i] + L.walk[i] + L.drive[i])} ${tripWords()} a day ${endWord(shown.end)} here`, "Outward and return legs included.", modeLine(L.train[i], L.walk[i], L.drive[i])];
+    return [`${count(L.train[i] + L.walk[i] + L.drive[i])} ${tripWords()} ${shownDayPhrase.peek()} ${endWord(shown.end)} here`, "Outward and return legs included.", modeLine(L.train[i], L.walk[i], L.drive[i])];
   });
   /** A nearby zone's bubble under the point (T-276): drawn under the focused zone's, shown with them. */
   const nearbyAt = (p: Pointer): { id: CityId; s: ZoneShown; i: number } | null => {
@@ -427,7 +428,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     const hit = nearbyAt(p);
     if (!hit) return null;
     const L = hit.s.bubbles.levels[bubbleLevel(map.getZoom())], i = hit.i;
-    return [`${count(L.train[i] + L.walk[i] + L.drive[i])} ${tripWords()} a day ${endWord(hit.s.end)} here`, "Outward and return legs included.", modeLine(L.train[i], L.walk[i], L.drive[i])];
+    return [`${count(L.train[i] + L.walk[i] + L.drive[i])} ${tripWords()} ${shownDayPhrase.peek()} ${endWord(hit.s.end)} here`, "Outward and return legs included.", modeLine(L.train[i], L.walk[i], L.drive[i])];
   });
 
   // ---- selecting bubbles ----
@@ -636,11 +637,9 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     cx /= n || 1;
     cy /= n || 1;
     const byName = new Map<string, number>();
-    // the 40 biggest areas are plenty for the 8 places listed, and keep this a millisecond
-    const top = Array.from(a.group, (_, i) => i)
-      .sort((p, q) => a.train[q] + a.walk[q] + a.drive[q] - (a.train[p] + a.walk[p] + a.drive[p]))
-      .slice(0, 40);
-    for (const i of top) {
+    // every area, not the biggest few: a row totals all the areas named for it (T-465)
+    for (let i = 0; i < a.group.length; i++) {
+      if (a.train[i] + a.walk[i] + a.drive[i] <= 0) continue;
       let best = Infinity, name = "";
       for (const s of st) {
         const dd = Math.hypot(s.at[0] - a.x[i], s.at[1] - a.y[i]);

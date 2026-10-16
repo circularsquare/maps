@@ -15,6 +15,19 @@ fn intercity_prunes_symmetric_pairs_after_averaging() {
     assert!(drop.all_pairs().is_empty());
     assert_eq!(drop.m.daily, 0.);
 }
+#[test]
+fn pair_at_finds_every_pair() {
+    let mut a = api();
+    let n = a.m.zones.len();
+    a.set_served((0..n).collect(), vec![vec![0u32]; n]);
+    assert!(!a.pairs.is_empty());
+    for x in 0..n {
+        for y in 0..n {
+            let want = a.pairs.iter().position(|p| (p.a as usize, p.b as usize) == (x, y)).map_or(u32::MAX, |i| i as u32);
+            assert_eq!(a.pair_at(x, y), want);
+        }
+    }
+}
 fn api() -> IntercityApi {
     let header = r#"{"zone_m":6000,"trip_rate":0.015,"sites":[[0,0,100000,50000,0],[120000,0,100000,50000,1],[60000,0,40000,20000,2]]}"#;
     IntercityApi::new(header).unwrap()
@@ -177,10 +190,10 @@ fn intercity_selection_places_conserve_and_rail_is_within_all() {
     let all = a.selection_flows(0, &[0., 0.], &[1.]);
     assert_eq!(all[0], 1.);
     let pairs = a.all_pairs();
-    let want: f64 = pairs.iter().filter(|p| a.m.zones[p.a].place == 0).map(|p| p.trips).sum();
+    let want: f64 = pairs.iter().filter(|p| a.m.zones[p.a as usize].place == 0).map(|p| p.trips).sum();
     assert!(want > 0.);
     assert!((sum_markets(&all, 0) - want).abs() < 1e-6 * want.max(1.), "{all:?} vs {want}");
-    let want_in: f64 = pairs.iter().filter(|p| a.m.zones[p.b].place == 0).map(|p| p.trips).sum();
+    let want_in: f64 = pairs.iter().filter(|p| a.m.zones[p.b as usize].place == 0).map(|p| p.trips).sum();
     assert!((sum_markets(&all, 4) - want_in).abs() < 1e-6 * want_in.max(1.));
     for m in 0..MARKETS {
         for e in [0, 4] {
@@ -543,11 +556,11 @@ fn world_market_serves_zones_in_every_frame_and_no_car_keeps_trips_fixed() {
     assert_eq!(served_places.into_iter().collect::<Vec<_>>(), vec![0, 1, 2, 3], "each frame's zones are reached");
     // pairs: 0-1 joined by track; 2 apart (no track); 3 joined by track but across the sea (no car)
     for p in &a.pairs {
-        let (i, j) = (m.zones[p.a].place, m.zones[p.b].place);
+        let (i, j) = (m.zones[p.a as usize].place, m.zones[p.b as usize].place);
         assert!(i != 2 && j != 2, "no track to place 2");
         assert!((i == 3) == (j == 3), "no pair across the sea: {i}-{j}");
     }
-    assert!(a.pairs.iter().any(|p| m.zones[p.a].place == 0 && m.zones[p.b].place == 1));
+    assert!(a.pairs.iter().any(|p| m.zones[p.a as usize].place == 0 && m.zones[p.b as usize].place == 1));
     let rail: f64 = (0..PERIODS).map(|q| a.summary(q)[2]).sum();
     assert!(rail > 0.);
     // a selection in place 3: all its trips to place 0 are shown, none by rail
@@ -650,7 +663,7 @@ fn air_flies_far_pairs_by_place_and_rail_takes_its_share_by_the_curve() {
         assert!(a.solve(0));
         let (za, zb) = (a.m.places[0].off as usize, a.m.places[2].off as usize);
         let (za, zb) = (a.m.comp_of_gid[za] as usize, a.m.comp_of_gid[zb] as usize);
-        let i = a.pair_index[&(za as u32, zb as u32)] as usize;
+        let i = a.pair_at(za, zb) as usize;
         let rail = a.per(0).unwrap().pair_rail[i] as f64 / (a.pairs[i].trips * SHARES[0] as f64);
         let air = (1. - rail) * a.m.pr(0, 2).air as f64;
         rail / (rail + air)
@@ -872,7 +885,7 @@ fn real_far_lines_share_rail_with_air() {
             let rest = trips - rail;
             // the zone pair the line serves best: its stations' own zones
             let per = api.per(1).unwrap();
-            let best = api.pairs.iter().enumerate().filter(|(_, p)| api.m.zones[p.a].place == pa && api.m.zones[p.b].place == pb).map(|(i, p)| per.pair_rail[i] as f64 / (p.trips * SHARES[1] as f64)).fold(0., f64::max);
+            let best = api.pairs.iter().enumerate().filter(|(_, p)| api.m.zones[p.a as usize].place == pa && api.m.zones[p.b as usize].place == pb).map(|(i, p)| per.pair_rail[i] as f64 / (p.trips * SHARES[1] as f64)).fold(0., f64::max);
             eprintln!(
                 "{a} - {b}, {h} h on the train: {:.0} trips in the period, rail {:.1}%, car {:.1}%, plane {:.1}%, rail of rail and plane {:.0}%; best-served zone pair rail {:.0}%, of rail and plane {:.0}%",
                 trips, 100. * rail / trips, 100. * rest * car as f64 / trips, 100. * rest * air as f64 / trips, 100. * rail / (rail + rest * air as f64),

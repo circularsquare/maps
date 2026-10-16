@@ -29,7 +29,7 @@ import { cellModes, cityCells, demandView } from "../game/demand";
 import { LEVEL_COLOURS, rgb, speedColour } from "../game/palette";
 import type { Level } from "../game/types";
 import { metresBetween } from "../game/walks";
-import { ask, buildLevel, buildPlatform, keepPlacing, lineDraft, selection, trackCount, tool } from "../game/ui";
+import { ask, buildLevel, buildPlatform, keepPlacing, lineDraft, selection, shownDayPhrase, trackCount, tool } from "../game/ui";
 import { describeRemovable, removeThing, type Removable } from "../game/remove";
 import { loadPlacesAt, placesNear } from "../game/placeList";
 import { compass } from "../game/places";
@@ -45,6 +45,8 @@ import type { StopMarkers } from "./stopMarkers";
 
 const SNAP_NODE_PX = 12;
 const SNAP_EDGE_PX = 10;
+/** tracks this much further from the pointer than the nearest still count as overlapping it (T-469) */
+const OVERLAP_PX = 4;
 
 type Snap =
   | { kind: "node"; node: number; lx: number; ly: number }
@@ -144,21 +146,68 @@ export class Tools {
       }
     }
     if (hit) return hit;
-    best = SNAP_EDGE_PX * SNAP_EDGE_PX;
+    // each edge's nearest point within reach, px squared
+    const near: { d: number; hit: Snap }[] = [];
     for (const [edge, pts] of n.edgePts) {
+      let eb = SNAP_EDGE_PX * SNAP_EDGE_PX, eh: Snap | null = null;
       for (let k = 0; k + 5 < pts.length; k += 3) {
         const [x0, y0] = this.screen(pts[k], pts[k + 1]);
         const [x1, y1] = this.screen(pts[k + 3], pts[k + 4]);
         const dx = x1 - x0, dy = y1 - y0, l2 = dx * dx + dy * dy;
         const t = l2 ? Math.max(0, Math.min(1, ((px - x0) * dx + (py - y0) * dy) / l2)) : 0;
         const d = (x0 + t * dx - px) ** 2 + (y0 + t * dy - py) ** 2;
-        if (d < best) {
-          best = d;
-          hit = { kind: "edge", edge, lx: pts[k] + (pts[k + 3] - pts[k]) * t, ly: pts[k + 1] + (pts[k + 4] - pts[k + 1]) * t };
+        if (d < eb) {
+          eb = d;
+          eh = { kind: "edge", edge, lx: pts[k] + (pts[k + 3] - pts[k]) * t, ly: pts[k + 1] + (pts[k + 4] - pts[k + 1]) * t };
         }
       }
+      if (eh) near.push({ d: Math.sqrt(eb), hit: eh });
     }
-    return hit ?? { kind: "free", lx: fx, ly: fy };
+    if (!near.length) return { kind: "free", lx: fx, ly: fy };
+    near.sort((a, b) => a.d - b.d);
+    if (tool.peek() !== "station") return near[0].hit;
+    // T-469: where tracks overlap, the track the last station went on, then blueprint over built
+    const close = near.filter((c) => c.d <= near[0].d + OVERLAP_PX);
+    if (close.length === 1) return close[0].hit;
+    const onLast = this.lastStationTrack();
+    const built = new Map(w.edges.map((e) => [e.id, e.built]));
+    const rank = (c: { hit: Snap }) => {
+      const e = (c.hit as { edge: number }).edge;
+      return (onLast.has(e) ? 0 : 2) + (built.get(e) ? 1 : 0);
+    };
+    return close.reduce((a, b) => (rank(b) < rank(a) ? b : a)).hit;
+  }
+
+  /** The edges of the track the last station placed this session is on (T-469): from its node
+   * along the track both ways, through plain joints and stations, up to junctions. */
+  private lastStationTrack(): Set<number> {
+    const out = new Set<number>();
+    const w = world.peek();
+    const at = this.lastPlaced;
+    if (!w || !at) return out;
+    let start: number | null = null, bd = 2; // metres
+    for (const n of w.nodes.values()) {
+      if (n.platform <= 0) continue;
+      const d = metresBetween(at[0], at[1], n.lng, n.lat);
+      if (d < bd) bd = d, start = n.id;
+    }
+    if (start === null) return out;
+    const byNode = new Map<number, number[]>();
+    for (const e of w.edges) for (const k of [e.a, e.b]) (byNode.get(k) ?? byNode.set(k, []).get(k)!).push(e.id);
+    const edges = new Map(w.edges.map((e) => [e.id, e]));
+    const todo = [start];
+    const seen = new Set(todo);
+    while (todo.length && out.size < 2000) {
+      const k = todo.pop()!;
+      for (const id of byNode.get(k) ?? []) {
+        if (out.has(id)) continue;
+        out.add(id);
+        const e = edges.get(id)!;
+        const o = e.a === k ? e.b : e.a;
+        if (!seen.has(o) && (w.nodes.get(o)?.ports ?? 0) <= 2) seen.add(o), todo.push(o);
+      }
+    }
+    return out;
   }
 
   private pack(lx: number, ly: number) {
@@ -446,7 +495,8 @@ export class Tools {
     const p = 10 ** Math.max(0, Math.floor(Math.log10(Math.max(sum, 1))) - 1), r2 = Math.round(sum / p) * p;
     const n = sum < 50 ? null : r2 >= 10000 ? count(r2) : r2.toLocaleString("en-US");
     const within = unitMetres() === 1000 ? `${TRIPS_RADIUS_M} m` : "half a mile";
-    return n ? `About ${n} trips a day start or end within ${within}` : `Under 50 trips a day start or end within ${within}`;
+    const when = shownDayPhrase.peek();
+    return n ? `About ${n} trips ${when} start or end within ${within}` : `Under 50 trips ${when} start or end within ${within}`;
   }
 
   /** The station placed last in this session (T-312), found by its position so a rename shows. */

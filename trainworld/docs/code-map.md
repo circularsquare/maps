@@ -69,7 +69,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   for names and tags).
 - Tools: `pick.ts`, `tools.ts` (drawing track, placing stations and crossovers, the line tool), `edgeEdit.ts`
   (dragging blueprint track's PIs, T-064, T-092), `nodeDrag.ts` (dragging blueprint nodes, T-093), `endMarkers.ts` (loose-end and draggable-point markers, T-416), `curveCircle.ts` (the circle of the segment being drawn, T-418),
-  `blueprintBox.ts` (the Select tool's drag box, T-333; its state is `game/blueprintPick.ts`),
+  `blueprintBox.ts` (the Select tool's drag box, T-333, and dragging its pick, T-475; its state is `game/blueprintPick.ts`),
   `stopMarkers.ts` (the toggle markers of stop editing, T-233).
 - Trains and trips: `trainFollow.ts` (a selected train followed onto its next trip, T-245),
   `tripView.ts` (the trip explorer's route, T-195; its panel is `ui/inspector/TripInspector.tsx`).

@@ -291,42 +291,42 @@ mod tests {
 
     #[test]
     fn spec_worked_example_20km_at_minus2_with_18_stations() {
-        // SPEC 6.4: a 20 km line at -2 with 18 stations is about 3.8B.
+        // SPEC 6.4: a 20 km line at -2 with 18 stations is about 1.9B.
         let vert = [[0.0, -16.0], [20000.0, -16.0]];
         let track = track_cost(20000.0, &vert, &[], 2);
-        assert!((track - 1980.0).abs() < 1e-9);
+        assert!((track - 990.0).abs() < 1e-9);
         let stations = 18.0 * station_cost(-2, 200, 2, false);
-        assert!((stations - 1800.0).abs() < 1e-9);
+        assert!((stations - 900.0).abs() < 1e-9);
         let total = track + stations;
-        assert!((total - 3780.0).abs() < 1e-9, "{total}");
+        assert!((total - 1890.0).abs() < 1e-9, "{total}");
     }
 
     #[test]
     fn multipliers_ramps_water_single() {
         let flat0 = [[0.0, 0.0], [1000.0, 0.0]];
-        assert!((track_cost(1000.0, &flat0, &[], 2) - 27.0).abs() < 1e-9);
-        assert!((track_cost(1000.0, &flat0, &[], 1) - 16.2).abs() < 1e-9);
-        // +1 viaduct over 500 m of water: 72 x 0.5 + 144 x 0.5
+        assert!((track_cost(1000.0, &flat0, &[], 2) - 13.5).abs() < 1e-9);
+        assert!((track_cost(1000.0, &flat0, &[], 1) - 8.1).abs() < 1e-9);
+        // +1 viaduct over 500 m of water: 36 x 0.5 + 72 x 0.5
         let v1 = [[0.0, 8.0], [1000.0, 8.0]];
-        assert!((track_cost(1000.0, &v1, &[[250.0, 750.0]], 2) - 108.0).abs() < 1e-9);
+        assert!((track_cost(1000.0, &v1, &[[250.0, 750.0]], 2) - 54.0).abs() < 1e-9);
         // 0 -> -2 ramp over 400 m in a 1000 m edge: 300 m at 0.3, 400 m at 1.1 (dearer), 300 m at 1.1.
         let ramp = [[0.0, 0.0], [300.0, 0.0], [700.0, -16.0], [1000.0, -16.0]];
-        let want = 90.0 * (0.3 * 0.3 + 0.4 * 1.1 + 0.3 * 1.1);
+        let want = 45.0 * (0.3 * 0.3 + 0.4 * 1.1 + 0.3 * 1.1);
         assert!((track_cost(1000.0, &ramp, &[], 2) - want).abs() < 1e-9);
         // Ramp +1 -> -1 is priced at the dearer end level (-1: 1.0), not at 0.
         let r2 = [[0.0, 8.0], [400.0, -8.0]];
-        assert!((track_cost(400.0, &r2, &[], 2) - 36.0).abs() < 1e-9);
+        assert!((track_cost(400.0, &r2, &[], 2) - 18.0).abs() < 1e-9);
     }
 
     #[test]
     fn stations_junctions_crossings() {
-        assert!((station_cost(0, 200, 2, false) - 10.0).abs() < 1e-12);
-        assert!((station_cost(-2, 100, 2, false) - 70.0).abs() < 1e-9);
-        assert!((station_cost(-2, 400, 2, false) - 160.0).abs() < 1e-9);
-        assert!((junction_cost(0, false, false) - 0.25 * 27.0).abs() < 1e-9);
-        assert!((junction_cost(0, true, false) - (6.75 + 0.6 * 72.0)).abs() < 1e-9);
-        assert!((junction_cost(-2, true, false) - (0.25 * 99.0 + 0.6 * 108.0)).abs() < 1e-9);
-        assert!((crossing_cost(0, false) - 2.7).abs() < 1e-9);
+        assert!((station_cost(0, 200, 2, false) - 5.0).abs() < 1e-12);
+        assert!((station_cost(-2, 100, 2, false) - 35.0).abs() < 1e-9);
+        assert!((station_cost(-2, 400, 2, false) - 80.0).abs() < 1e-9);
+        assert!((junction_cost(0, false, false) - 0.25 * 13.5).abs() < 1e-9);
+        assert!((junction_cost(0, true, false) - (3.375 + 0.6 * 36.0)).abs() < 1e-9);
+        assert!((junction_cost(-2, true, false) - (0.25 * 49.5 + 0.6 * 54.0)).abs() < 1e-9);
+        assert!((crossing_cost(0, false) - 1.35).abs() < 1e-9);
     }
 
     #[test]
@@ -338,7 +338,7 @@ mod tests {
         assert_eq!(rows.iter().filter(|r| r.1).map(|r| r.3).sum::<f64>(), 400.0);
         assert_eq!(rows.iter().filter(|r| r.2).map(|r| r.3).sum::<f64>(), 400.0);
         assert!(rows.iter().filter(|r| r.2).all(|r| r.0 == -2));
-        assert!((rows.iter().map(|r| r.4).sum::<f64>() - 70.2).abs() < 1e-9);
+        assert!((rows.iter().map(|r| r.4).sum::<f64>() - 35.1).abs() < 1e-9);
     }
 
     #[test]

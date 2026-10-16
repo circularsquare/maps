@@ -7,7 +7,7 @@
 
 import { computed, signal } from "@preact/signals";
 import { activeCity, REGISTRY, viewedZone, type CityId } from "./cities";
-import { DAY_KINDS, type DayKind } from "./days";
+import { DEMAND_DAYS, type DemandDay } from "./days";
 import { shownDay } from "./ui";
 import type { PurposeFilter, PurposeKey } from "./purposes";
 import type { ModeSplit } from "./types";
@@ -41,8 +41,8 @@ export interface StationDemand {
 export interface DemandView {
   /** the demand client's solve number this came from */
   version: number;
-  /** the kind of day it is for (T-260): a weekend is worked out from the weekday's solve */
-  day: DayKind;
+  /** the day it is for (T-260, T-464): a weekend and the average are worked out from the weekday's solve */
+  day: DemandDay;
   /** crowding rounds every period has had: 0 = the free-flow first estimate */
   round: number;
   /** the solve's last round: its figures are final. Earlier rounds are shown only as estimates,
@@ -102,10 +102,10 @@ export interface DayDemand {
   intercity: IntercityDemand | null;
 }
 const noDay = (): DayDemand => ({ view: null, cities: new Map(), intercity: null });
-/** The newest finished solve for each kind of day, `DayKind` order. */
-export const demandByDay = signal<DayDemand[]>(DAY_KINDS.map(noDay));
+/** The newest finished solve for each day, `DemandDay` order: weekday, weekend, average. */
+export const demandByDay = signal<DayDemand[]>(DEMAND_DAYS.map(noDay));
 
-/** The newest finished solve on the shown kind of day (`shownDay`); null until the first lands. */
+/** The newest finished solve on the day shown (`shownDay`); null until the first lands. */
 export const demandView = computed<DemandView | null>(() => demandByDay.value[shownDay.value]?.view ?? null);
 /** Local purpose shares (everyday trips included), separate from network-wide totals. */
 export const cityDemandViews = computed<Map<CityId, DemandView>>(() => demandByDay.value[shownDay.value]?.cities ?? new Map());
@@ -173,8 +173,8 @@ export interface CityCells {
 export interface CellModes {
   /** the `DemandView.version` these belong to */
   version: number;
-  /** and its kind of day (T-260) */
-  day: DayKind;
+  /** and its day (T-260, T-464) */
+  day: DemandDay;
   /** living in the cell: by rail, walking the whole way, driving (car, bus, taxi) */
   homeRail: Float32Array;
   homeWalk: Float32Array;

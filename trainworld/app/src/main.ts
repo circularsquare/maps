@@ -180,7 +180,7 @@ if (SYNTH) {
 }
 const tools = new Tools(map, overlay, client);
 // The blueprint tool: a drag box picks blueprint track and stations to switch off or on (T-333).
-const blueprintBox = new BlueprintBox(map, overlay);
+const blueprintBox = new BlueprintBox(map, overlay, client);
 live.tools = tools;
 // Stop editing (T-233): a toggle marker on every station; the page class hides the demand views
 tools.stops = new StopMarkers(map, overlay, (station) => tools.toggleStop(station));
@@ -197,7 +197,6 @@ effect(() => {
 });
 // Dragging blueprint nodes: track ends, junctions, stations (T-093).
 const nodeDrag = new NodeDrag(map, overlay, client);
-nodeDrag.obscuredAt = (x, y) => !!demandHover?.(x, y);
 live.nodeDrag = nodeDrag;
 // Markers on loose ends (track and station tools) and on draggable blueprint points (T-416).
 new EndMarkers(map, overlay);
@@ -270,7 +269,8 @@ if (!SYNTH && !perfOff("hover")) // ?perfOff=hover: T-045 measurement only
     }
     if (tool.peek() === "blueprint") return;
     if (tool.peek() !== "select") return tools.move(e);
-    const cur = linking.peek() !== null ? (pick(overlay, e.point.x, e.point.y, false)?.kind === "station" ? "pointer" : "crosshair") : demandHover?.(e.point.x, e.point.y) ? "pointer" : nodeDrag.hit(e.point.x, e.point.y)?.movable ? "move" : pick(overlay, e.point.x, e.point.y, display.peek().trains) ? "pointer" : "";
+    // a blueprint point drags even over a demand bubble (T-474), so its grab cursor comes first
+    const cur = linking.peek() !== null ? (pick(overlay, e.point.x, e.point.y, false)?.kind === "station" ? "pointer" : "crosshair") : nodeDrag.hit(e.point.x, e.point.y)?.movable ? "grab" : demandHover?.(e.point.x, e.point.y) ? "pointer" : pick(overlay, e.point.x, e.point.y, display.peek().trains) ? "pointer" : "";
     // ?perfTry=hoverCursor (T-045): write the cursor only when it changes
     if (!HOVER_CURSOR || map.getCanvas().style.cursor !== cur) map.getCanvas().style.cursor = cur;
   });

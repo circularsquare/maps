@@ -168,9 +168,9 @@ def cell_units(lat, lon, units):
     """Index into units ([(code, polygon)]) of the unit holding each point, -1 for none; and for
     each unit holding no point, the point nearest its representative point (so no total is lost)."""
     pts = shapely.points(lon, lat)
-    tree = STRtree([g for _, g in units])
     idx = np.full(len(pts), -1)
-    pi, ui = tree.query(pts, predicate="within")
+    # the polygons as the query side, so they are prepared (T-453: 100 times faster on N03's coasts)
+    ui, pi = STRtree(pts).query([g for _, g in units], predicate="contains")
     idx[pi] = ui
     empty = np.setdiff1d(np.arange(len(units)), idx)
     near = STRtree(pts).nearest([units[u][1].representative_point() for u in empty]) if len(empty) else []
@@ -204,6 +204,52 @@ def bres_jobs(city, boundary, sig, weight):
     out = spread_totals(sig["lat"], sig["lon"], units, jobs, weight)
     print(f"  BRES {year} employment: {len(units):,} LSOAs, {out.sum():,.0f} jobs", flush=True)
     return out, f"ONS Business Register and Employment Survey {year}, employment by LSOA 2021 (Nomis NM_189_1)"
+
+
+# T-453: BRES by LSOA and SIC 2007 division; errands as LODES's CNS07 + CNS19, leisure CNS17 + CNS18
+# (94, membership organisations, left out: in central London they are professional bodies' offices)
+BRES_SIC = {"errand": ["45", "47", "95", "96"], "leisure": ["55", "56", "90", "91", "92", "93"]}
+BRES_SIC_IDS = {"45": 146800685, "47": 146800687, "55": 146800695, "56": 146800696, "90": 146800730, "91": 146800731,
+                "92": 146800732, "93": 146800733, "94": 146800734, "95": 146800735, "96": 146800736}
+BRES_SIC_URL = ("https://www.nomisweb.co.uk/api/v01/dataset/NM_189_1.data.csv?date=latest&geography=2092957699TYPE151"
+                "&industry=" + ",".join(str(v) for v in BRES_SIC_IDS.values()) +
+                "&employment_status=4&measure=1&measures=20100&select=date_name,geography_code,industry_code,obs_value&recordoffset={}")
+
+
+def bres_sic_lsoa():
+    """BRES employment by LSOA 2021 x SIC division (BRES_SIC_IDS): DataFrame LSOA x division. All England."""
+    path = raw("bres_lsoa_sic2_england.csv")
+    if not os.path.exists(path):
+        parts, off = [], 0
+        while True:
+            r = requests.get(BRES_SIC_URL.format(off), headers=b.UA, timeout=600)
+            r.raise_for_status()
+            parts.append(pd.read_csv(io.StringIO(r.text), dtype={"INDUSTRY_CODE": str}))
+            if len(parts[-1]) < NOMIS_PAGE:
+                break
+            off += len(parts[-1])
+        pd.concat(parts).to_csv(path + ".part", index=False)
+        os.replace(path + ".part", path)
+    t = pd.read_csv(path, dtype={"INDUSTRY_CODE": str})
+    return t.pivot_table(index="GEOGRAPHY_CODE", columns="INDUSTRY_CODE", values="OBS_VALUE", aggfunc="sum").fillna(0.0), str(t.DATE_NAME.iloc[0])
+
+
+def bres_sectors(city, lat, lon, jobs):
+    """tier0's `everyday` hook: per cell, its jobs x its LSOA's BRES share of employment in the
+    customer-facing divisions (BRES_SIC); cells in no LSOA take the pack's share."""
+    units = lsoas(city, shapely.box(lon.min() - 0.01, lat.min() - 0.01, lon.max() + 0.01, lat.max() + 0.01))
+    idx, _ = cell_units(lat, lon, units)
+    w, year = bres_sic_lsoa()
+    tot = pd.Series(bres_lsoa()[0])
+    code = pd.Series([units[i][0] if i >= 0 else "" for i in idx])
+    out = {}
+    for kind, cols in BRES_SIC.items():
+        s = w[cols].sum(1).reindex(tot.index).fillna(0.0)
+        here = tot.index.isin(code)
+        share = (s / tot.where(tot > 0)).clip(upper=1.0)
+        v = code.map(share).fillna(s[here].sum() / tot[here].sum()).to_numpy()
+        out[kind] = (jobs * v, f"ONS BRES {year} employment by LSOA 2021 x SIC 2007 division ({', '.join(cols)}; Nomis NM_189_1)")
+    return out
 
 
 def itl3_boundary(city, units):

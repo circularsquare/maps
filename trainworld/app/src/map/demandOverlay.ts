@@ -54,6 +54,7 @@ uniform mat4 u_matrix;
 uniform vec2 u_viewport;
 uniform float u_px_per_unit;
 uniform float u_rscale;   // the player's bubble size (T-099); 1 for a station's discs
+uniform float u_opacity;  // the player's bubble opacity (T-470); 1 for a station's discs
 in vec3 a_geo;    // x, y, radius (local units)
 in vec4 a_col;    // r, g, b, a
 in float a_edge;
@@ -71,7 +72,7 @@ void main() {
   v_p = off;
   v_r = r;
   v_edge = a_edge;
-  v_col = a_col;
+  v_col = vec4(a_col.rgb, a_col.a * u_opacity);
 }`;
 
 const DISC_FS = `#version 300 es
@@ -175,7 +176,7 @@ export class DemandOverlay {
     if (!gl) throw new Error("no WebGL2");
     this.gl = gl;
     this.prog = compile(gl, DISC_VS, DISC_FS);
-    for (const n of ["u_matrix", "u_viewport", "u_px_per_unit", "u_ink", "u_dpr", "u_rscale"]) this.u[n] = gl.getUniformLocation(this.prog, n);
+    for (const n of ["u_matrix", "u_viewport", "u_px_per_unit", "u_ink", "u_dpr", "u_rscale", "u_opacity"])this.u[n] = gl.getUniformLocation(this.prog, n);
     this.timerExt = gl.getExtension("EXT_disjoint_timer_query_webgl2");
     this.size();
     map.on("resize", () => {
@@ -253,6 +254,14 @@ export class DemandOverlay {
     this.invalidate();
   }
 
+  /** Commuter and longer-trip bubbles' alpha as a multiple of the built one (the settings slider, T-470). */
+  bubbleOpacity = 1;
+  setBubbleOpacity(o: number) {
+    if (o === this.bubbleOpacity) return;
+    this.bubbleOpacity = o;
+    this.invalidate();
+  }
+
   /** Show or hide the city's bubbles (kept on the GPU while hidden). */
   setBubblesVisible(v: boolean) {
     if (v === this.showBubbles) return;
@@ -290,16 +299,18 @@ export class DemandOverlay {
     }
     // each set with its radius scale: the player's bubble size for commuter bubbles, 1 for a
     // station's discs
-    const list: [DiscSet, number][] = [];
+    const list: [DiscSet, number, number][] = [];
+    const op = this.bubbleOpacity;
     if (this.showBubbles) for (const sets of this.nearby.values()) {
       const n = sets[level];
-      if (n) list.push([n, this.bubbleSize]);
+      if (n) list.push([n, this.bubbleSize, op]);
     }
     const b = this.showBubbles ? this.bubbles[level] : null;
-    if (b) list.push([b, this.bubbleSize]);
+    if (b) list.push([b, this.bubbleSize, op]);
     for (const l of LAYERS) {
       const s = this.sets.get(l);
-      if (s) list.push([s, l === "far" || l === "near" || l === "inter" ? this.bubbleSize : 1]);
+      const bubble = l === "far" || l === "near" || l === "inter";
+      if (s) list.push([s, bubble ? this.bubbleSize : 1, bubble ? op : 1]);
     }
     if (!list.length) {
       // clear once, then leave the canvas alone
@@ -334,7 +345,7 @@ export class DemandOverlay {
     gl.uniform1f(this.u.u_dpr, dpr);
     this.discsDrawn = 0;
     let uploaded = -1;
-    for (const [s, rs] of list) {
+    for (const [s, rs, opacity] of list) {
       if (s.anchor.version !== uploaded) {
         uploaded = s.anchor.version;
         let m = matrices.get(uploaded);
@@ -342,6 +353,7 @@ export class DemandOverlay {
         gl.uniformMatrix4fv(this.u.u_matrix, false, m);
       }
       gl.uniform1f(this.u.u_rscale, rs);
+      gl.uniform1f(this.u.u_opacity, opacity);
       gl.bindVertexArray(s.vao);
       gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, s.count);
       this.discsDrawn += s.count;

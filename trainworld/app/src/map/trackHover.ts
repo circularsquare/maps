@@ -1,7 +1,8 @@
 // Hovering track (T-157): rest the pointer on a stretch of track for DWELL_MS and a tag by the
 // pointer says what the current track display draws there: the line's name (Line), its forecast
 // riders a day on that stop-to-stop stretch (Line + traffic thickness), the level (Height) or the
-// geometry's speed limit (Max speed). The tag is the demand views' (demandHover.ts) and follows the
+// geometry's speed limit (Max speed), and always the level and speed limit there plus the lines on
+// the track (T-473). The tag is the demand views' (demandHover.ts) and follows the
 // map's pick order (T-133): demand bubbles, capacity tags and editing handles above the network
 // hide it; trains, stations, platform crowds and station demand circles have tags of their own
 // (T-194, networkTips.ts). Select tool only: the other tools have tags of their own.
@@ -15,7 +16,7 @@ import { demandView, lineLoadsFor, type DemandView } from "../game/demand";
 import { levelLabel, speed } from "../game/format";
 import { purposeName, type PurposeFilter } from "../game/purposes";
 import type { WorldView } from "../game/types";
-import { ask, display, purposeFilter, selection, tool } from "../game/ui";
+import { ask, display, purposeFilter, selection, shownDayPhrase, tool } from "../game/ui";
 import { world } from "../game/world";
 import { hoverAt } from "./demandHover";
 import { live } from "./live";
@@ -83,7 +84,7 @@ function lineTip(n: NetworkBuffers, w: WorldView | null, dv: DemandView | null, 
   const purpose = purposeFilter.peek();
   const day = dailyRiders(dv, l.id, l.stops.length, k, purpose);
   if (day === null) return [name, "Calculating demand"];
-  const count = day < 0.5 ? "No forecast riders on this stretch" : `${riders(day)} forecast riders a day in both directions`;
+  const count = day < 0.5 ? "No forecast riders on this stretch" : `${riders(day)} forecast riders ${shownDayPhrase.peek()} in both directions`;
   // the purpose filter (T-158) says what it counted
   return purpose === "all" ? [name, count] : [name, count, `${purposeName(purpose)} trips only`];
 }
@@ -113,17 +114,32 @@ export function trackTip(ov: Overlay, px: number, py: number, zoom = 12): string
     const wide = ov.renderer.lineWidths, widePx = ov.renderer.slotPx;
     let [i] = sel?.kind === "line" ? topSeg(ov, L.seg, L.count, px, py, slop, undefined, 0, (j) => String(L.colour[j]) === sel.line, wide, widePx) : [-1];
     if (i < 0) [i] = topSeg(ov, L.seg, L.count, px, py, slop, undefined, 0, (j) => String(L.colour[j]) === hit.line, wide, widePx);
-    return i < 0 ? null : lineTip(n, w, demandView.peek(), d.trackColour === "traffic", i);
+    if (i < 0) return null;
+    // T-473: the track under the line says its level and speed too
+    return [...lineTip(n, w, demandView.peek(), d.trackColour === "traffic", i), ...trackFacts(ov, w, L.edge[i], px, py, slop)];
   }
   if (hit.kind !== "track") return null;
-  const T = n.track;
-  const [i] = topSeg(ov, T.seg, T.count, px, py, slop, undefined, 0, (j) => T.edge[j] === hit.edge);
-  if (i < 0) return null;
-  if (d.trackColour === "height") return [levelText(T.level[i])];
-  if (d.trackColour === "speed") return T.speed?.[i] !== undefined ? [speedText(T.speed[i])] : null;
-  // Line views: bare track. Track under a bundle of lines loses to the lines, except at its edges.
-  const used = w ? (w.edges.find((e) => e.id === hit.edge)?.lines.length ?? 0) > 0 : lineOnEdge(n, hit.edge);
-  return used ? null : ["No line runs here"];
+  const facts = trackFacts(ov, w, hit.edge, px, py, slop);
+  if (!facts.length) return null;
+  // T-473: always the level, speed and lines on it, whatever the track display. Track under a
+  // bundle of lines loses to the lines, except at its edges.
+  const names = linesOn(w, hit.edge);
+  const used = w ? names.length > 0 : lineOnEdge(n, hit.edge);
+  return [...facts, used ? (names.length ? `Lines: ${names.slice(0, 4).join(", ")}${names.length > 4 ? ` and ${names.length - 4} more` : ""}` : "A line runs here") : "No line runs here"];
+}
+
+/** Names of the lines whose path uses an edge. */
+function linesOn(w: WorldView | null, edge: number): string[] {
+  const e = w?.edges.find((x) => x.id === edge);
+  return e ? w!.save.lines.filter((l) => e.lines.includes(l.id)).map((l) => l.name) : [];
+}
+
+/** The level and speed limit at a point of an edge's track stroke (T-473); none off the stroke. */
+function trackFacts(ov: Overlay, w: WorldView | null, edge: number, px: number, py: number, slop: number): string[] {
+  const T = ov.renderer.net!.track;
+  const [i] = topSeg(ov, T.seg, T.count, px, py, slop, undefined, 0, (j) => T.edge[j] === edge);
+  if (i < 0) return [];
+  return T.speed?.[i] !== undefined ? [levelText(T.level[i]), speedText(T.speed[i])] : [levelText(T.level[i])];
 }
 
 function lineOnEdge(n: NetworkBuffers, edge: number): boolean {

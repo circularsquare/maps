@@ -93,7 +93,7 @@ export function TopBar() {
   const pct = (v: number) => (known ? v.toFixed(1) + "%" : "–");
   // T-342: the shares are of rides (trip legs) a day; the train's count beside its share, all in the hover
   const rides = modeRides.value;
-  const where = `${city ? "in " + city.name + " " : ""}${shownDay.value ? "at weekends" : "on weekdays"}`;
+  const where = `${city ? "in " + city.name + " " : ""}${["on a weekday", "on a weekend day", "on average"][shownDay.value]}`;
   const note = demandView.value && !viewFinal.value ? " (an early estimate)" : demandView.value?.version === CACHE_VERSION ? " (from the last time this game was open)" : viewUpdating.value ? " (before your last change)" : "";
   // T-406: walking and driving are icons; each has its own hover with the share and its rides
   const modeTip = (name: string, share: number, n: number | undefined) =>

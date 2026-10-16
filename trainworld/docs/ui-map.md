@@ -30,9 +30,10 @@ Positron, repainted faint (`map/basemap.ts`), so the network reads first.
   - **Line**: uniform width in the line colours.
   - **Line + traffic thickness** (the default): width by riders over the day shown
     ([ui-demand-views.md](ui-demand-views.md) "Line width by riders").
-  - **Height**: the track coloured by level, warm above ground, green at ground, cool below: +3
-    #c2410c, +2 #ea7a1a, +1 #f2b134, 0 #4caf50, -1 #5aa3d8, -2 #2f6fbf, -3 #23408e
-    (`LEVEL_COLOURS`, T-413).
+  - **Height**: the track coloured by level, warm above ground, green at ground, blue-green to
+    indigo below: +3 #c2351c, +2 #ee7a1a, +1 #f0b928, 0 #58b04a, -1 #16a39a, -2 #2f6fd0, -3 #4a2c9a
+    (`LEVEL_COLOURS`, T-413, T-478; neighbours at least 30 apart in CIELAB). The same table colours
+    the Build tab's level buttons and the Settings key.
   - **Max speed**: the geometry's allowed speed at each section, curve limits included, capped at
     160 km/h (not a train's speed), keyed 40/80/120/160 km/h from warm red through ochre and green
     to blue (`SPEED_STOPS`, the stroke shader blends the same stops).
@@ -170,10 +171,11 @@ at most once a game second, only while drawn.
   the name and "41,200 forecast riders a day in both directions" (or "No forecast riders on this
   stretch") on that stop-to-stop stretch for the day shown (counts to the nearest 100 above
   1,000), with a third line under the purpose filter
-  ("Shopping and errands trips only"). Height: "Tunnel at level −2", "Ground level" and so on. Max
-  speed: "Max speed 120 km/h". A planned line adds "Not running yet", a broken one "Not running";
-  bare track says "No line runs here"; before the first solve the traffic view says "Calculating
-  demand". The tag follows the pointer along the track; leaving, pressing, dragging, zooming or
+  ("Shopping and errands trips only"). Whatever the display [T-473], the tag also carries the level
+  ("Tunnel at level −2", "Ground level") and "Max speed 120 km/h" at that point, and on bare track
+  the lines using it ("Lines: subway 5, subway 7", or "No line runs here"). A planned line adds
+  "Not running yet", a broken one "Not running"; before the first solve the traffic view says
+  "Calculating demand". The tag follows the pointer along the track; leaving, pressing, dragging, zooming or
   picking a tool hides it. It follows the pick order, so bubbles, capacity tags and handles above
   the network keep it hidden; junctions say nothing.
 - **Trains and stations** [T-194, T-305, T-313; `map/networkTips.ts`]: the same tag (wrapping at 320

@@ -562,7 +562,7 @@ function lineDaysAt(now: number, closed: boolean, shift?: number, past = false):
   const out: LineDay[] = [];
   let i = 1;
   for (let k = 0; k < count; k++) {
-    const id = v[i], n = v[i + 1], spans = v[i + 6], len = 7 + 2 * spans + n;
+    const id = v[i], n = v[i + 1], spans = v[i + 6], len = 9 + 2 * spans + n;
     const sh = a.line_shift(id);
     if (shift === undefined || sh === shift) {
       const per = lineIncome.get(id);
@@ -1079,6 +1079,8 @@ function apply(op: EditOp): { r: number; line?: number; node?: number } {
       return { r: a.set_edge_pis(op.edge, pisArr(op.pis)) };
     case "moveNode":
       return { r: a.move_node(op.node, op.x, op.y) };
+    case "moveNodes":
+      return { r: a.move_nodes(new Uint32Array(op.nodes), op.dx, op.dy) };
     case "edgeLevel":
       return { r: a.set_edge_level(op.edge, op.level) };
     case "removeEdge":
@@ -1230,7 +1232,7 @@ async function processMessage(msg: ToClock) {
     if (msg.kind === "edit") send({ kind: "edited", seq: msg.seq, ok: false, issues: ["Internal"], charge: 0 });
     if (msg.kind === "previewStation") send({ kind: "stationCheck", seq: msg.seq, ok: false, issues: ["Internal"] });
     if (msg.kind === "previewCrossover") send({ kind: "crossoverCheck", seq: msg.seq, ok: false, issues: ["Internal"], cost: 0, parts: [] });
-    if (msg.kind === "preview" || msg.kind === "previewEdge" || msg.kind === "previewNode") send({ kind: "preview", seq: msg.seq, ok: false, cost: 0, lengthM: 0, mult: 0, issues: ["Internal"], verts: new Float64Array(0), pts: new Float32Array(0) });
+    if (msg.kind === "preview" || msg.kind === "previewEdge" || msg.kind === "previewNode" || msg.kind === "previewNodes") send({ kind: "preview", seq: msg.seq, ok: false, cost: 0, lengthM: 0, mult: 0, issues: ["Internal"], verts: new Float64Array(0), pts: new Float32Array(0) });
   }
 };
 
@@ -1276,6 +1278,7 @@ async function masksFor(op: EditOp) {
   if (op.op === "route") await withMasks(() => (a.set_route_tangent(!!op.through), a.preview_route(new Float64Array([...endArr(op.from), ...endArr(op.to)]), pisArr(op.pis), op.single ? 1 : op.quad ? 4 : 2, false)), routePoints);
   else if (op.op === "edgePis") await withMasks(() => a.preview_edge(op.edge, pisArr(op.pis)), routePoints);
   else if (op.op === "moveNode") await withMasks(() => a.preview_move_node(op.node, op.x, op.y), nodePoints);
+  else if (op.op === "moveNodes") await withMasks(() => a.preview_move_nodes(new Uint32Array(op.nodes), op.dx, op.dy), nodePoints);
 }
 
 async function handle(msg: ToClock) {
@@ -1351,6 +1354,7 @@ async function handle(msg: ToClock) {
       : q.what === "edgePis" ? api.edge_pis(q.edge)
       : q.what === "flyover" ? new Float64Array([api.flyover_cost(q.node)])
       : q.what === "lineAccount" ? api.line_account(q.line, q.day ?? 0)
+      : q.what === "lineLevels" ? api.line_levels(q.line, q.day)
       : q.what === "today" ? today()
       : q.what === "yesterday" ? yesterday()
       : api.line_delays(q.line, q.level);
@@ -1375,6 +1379,9 @@ async function handle(msg: ToClock) {
   } else if (msg.kind === "previewNode") {
     const a = api;
     sendNodePreview(msg.seq, await withMasks(() => a.preview_move_node(msg.node, msg.x, msg.y), nodePoints));
+  } else if (msg.kind === "previewNodes") {
+    const a = api;
+    sendNodePreview(msg.seq, await withMasks(() => a.preview_move_nodes(new Uint32Array(msg.nodes), msg.dx, msg.dy), nodePoints));
   } else if (msg.kind === "preview" || msg.kind === "previewEdge") {
     const a = api;
     const out = await withMasks(() => msg.kind === "preview"

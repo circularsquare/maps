@@ -19,25 +19,20 @@ export function SettingsTab() {
   return (
     <>
       {/* T-169: the slider is the section's only control, so the heading goes with it */}
-      {d.commuters && <>
-        <div class="h">Local trips on the map</div>
-        <label class="slider">
-          <span>Bubble size</span>
-          <input type="range" min="0.5" max="2" step="0.05" value={d.bubbleSize} onInput={(e) => setDisplay("bubbleSize", Number((e.target as HTMLInputElement).value))} />
-        </label>
-      </>}
+      <div class="h">Demand bubbles</div>
+      {/* T-470: the opacity applies to every bubble, so the section is always there */}
+      <label class="slider">
+        <span>Size</span>
+        <input type="range" min="0.5" max="2" step="0.05" value={d.bubbleSize} data-tip={`Bubbles at ${Math.round(d.bubbleSize * 100)}% of their usual size`}
+          onInput={(e) => setDisplay("bubbleSize", Number((e.target as HTMLInputElement).value))} />
+      </label>
+      <label class="slider">
+        <span>Opacity</span>
+        <input type="range" min="0.2" max="1" step="0.05" value={d.bubbleOpacity} data-tip={`Bubbles at ${Math.round(d.bubbleOpacity * 100)}% of their full opacity`}
+          onInput={(e) => setDisplay("bubbleOpacity", Number((e.target as HTMLInputElement).value))} />
+      </label>
       {/* T-222: longer-trip bubbles are always drawn; their setting is gone */}
-      {/* T-266: the day every demand view shows; the trains and platforms always follow the clock */}
-      <div class="h" data-tip="Riders, bubbles, the mode split and fares in the panels. Trains and platforms follow the clock.">Demand shown for</div>
-      <Segmented<"today" | "weekday" | "weekend">
-        options={[
-          ["today", <span data-tip="The clock's day: weekdays, then Saturday and Sunday">Today</span>],
-          ["weekday", "Weekdays"],
-          ["weekend", "Weekends"],
-        ]}
-        value={d.dayShown ?? "today"}
-        onChange={(v) => setDisplay("dayShown", v)}
-      />
+      {/* T-464: the day the demand views show is chosen in the demand bar (ui/DemandSelector.tsx) */}
       <div class="h">Track display</div>
       <div class="track-modes"><Segmented<"line" | "traffic" | "height" | "speed">
         options={[

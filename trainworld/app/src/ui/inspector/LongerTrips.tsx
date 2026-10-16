@@ -5,6 +5,7 @@
 import type { ComponentChildren } from "preact";
 import { demandView, intercityPlaceName, type PlaceFlows } from "../../game/demand";
 import { count } from "../../game/format";
+import { shownDayPhrase } from "../../game/ui";
 import { MODE_COLOURS } from "../../game/palette";
 import { intercityPick, intercityStationView } from "../../map/intercityView";
 import { Icon, Row } from "../widgets";
@@ -27,7 +28,7 @@ export function ModeHead({ what }: { what: string }) {
   return (
     <li class="muted small">
       <span class="grow" />
-      <span class="val w-num" data-tip={`${what} a day, every mode`}>All</span>
+      <span class="val w-num" data-tip={`${what} ${shownDayPhrase.value}, every mode`}>All</span>
       {MODES.map((m) => (
         <span class="val w-mode" data-tip={`${what} ${m.by}`}>
           <span class="mode-icon" style={{ color: m.colour }}>{m.icon()}</span>
@@ -41,7 +42,7 @@ export function ModeHead({ what }: { what: string }) {
 export function ModeCells({ s, what }: { s: Split; what: string }) {
   return (
     <>
-      <span class="val w-num" data-tip={`${exact(s.all)} ${what} a day`}>{count(s.all)}</span>
+      <span class="val w-num" data-tip={`${exact(s.all)} ${what} ${shownDayPhrase.value}`}>{count(s.all)}</span>
       {MODES.map((m) => (
         <span class="val w-mode" data-tip={`${exact(s[m.key])} ${m.by}, ${pct(s[m.key], s.all)} of ${exact(s.all)}`}>{count(s[m.key])}</span>
       ))}
@@ -55,7 +56,7 @@ export function ElsewhereRow({ n, label = "Elsewhere" }: { n: number; label?: Co
   return (
     <li>
       <span class="grow" data-tip="Places outside every zone of the game; how these trips travel is not modelled">{label}</span>
-      <span class="val w-num" data-tip={`${exact(n)} trips a day`}>{count(n)}</span>
+      <span class="val w-num" data-tip={`${exact(n)} trips ${shownDayPhrase.value}`}>{count(n)}</span>
       {MODES.map(() => <span class="val w-mode" />)}
     </li>
   );
@@ -116,7 +117,7 @@ function Head({ tip }: { tip?: string }) {
   return (
     <div class="h">
       <span data-tip={tip ?? "Visits, shopping and business, not commutes"}>Inter-region trips</span>
-      <span class="right muted small">a day</span>
+      <span class="right muted small">{shownDayPhrase.value}</span>
     </div>
   );
 }
@@ -156,7 +157,7 @@ export function StationLongerTrips({ id, scope = id }: { id: string; scope?: str
       <>
         <Head />
         <ul class="rows">
-          <Row label="Riders a day">0</Row>
+          <Row label={`Riders ${shownDayPhrase.value}`}>0</Row>
         </ul>
       </>
     );

@@ -1,5 +1,24 @@
 ﻿# Archive
 
+- T-475 [P2] Drag a selection. Done 2026-10-16: with the Select tool, a drag starting on picked track or a picked node moves every movable node of the pick by one offset (`TrackApi.move_nodes`, test `drag_several_blueprint_nodes`), one undo step. docs/ui-building.md.
+
+- T-478 [P2] Track level colours. Done 2026-10-16: palette spread (+3 red-orange, +2 orange, +1 yellow, 0 green, -1 blue-green, -2 blue, -3 indigo; neighbours 30+ apart, was 20), and the Build tab's seven level buttons carry them, the chosen one solid with a dark outline. docs/ui-map.md.
+- T-476 [P2] Stop editing candidates. Done 2026-10-16: stations a stop can be added at are white with a plain grey ring, none of the line's colour; stops keep the line-colour disc. docs/ui-building.md.
+- T-473 [P2] Track hover. Done 2026-10-16: always the level and max speed at the point, plus the lines on bare track, in every track display and under a line's own tag. docs/ui-map.md.
+- T-470 [P2] Bubble opacity slider. Done 2026-10-16: Settings "Demand bubbles" has Size and Opacity (20-100% of the built alpha, default 90%), stored in the display settings object; station discs unchanged. docs/ui-panels.md.
+- T-469 [P2] Placing a station where tracks overlap. Done 2026-10-16: among tracks within 4 px of the nearest, the station tool takes the last station's track (to the next junctions), then blueprint over built. docs/ui-building.md "Overlapping track".
+
+- T-474 [P2] Dragging track points. Done 2026-10-16: grab cursor over draggable nodes and corner squares, grabbing anywhere mid-drag; a blueprint node takes the drag over a demand bubble (a plain click still selects the bubble). docs/ui-building.md.
+- T-471 [P2] Turning back drew a square or pentagon. Done 2026-10-16: past the 1,796 m cap a drawn segment is the capped curve from the start then a straight to the click, double and quad. DECISIONS 2026-10-16; notes/T-418.md 10.
+
+- T-453 [P2] Everyday attraction from jobs outside the US. Done 2026-10-16: sector jobs in Japan's 45 packs, London and Toronto's leisure; T-456's fallback elsewhere; every pack re-merged at 2,500 trip ends (1.59M to 1.34M cells). notes/T-453.md.
+- T-477 [P2] A line's schedule shows crowding per demand level. Done 2026-10-16: a dot per level (green, yellow, orange, red by share of trains packed full) from `Boarding::line_levels`, hover with trains full and riders left behind. docs/ui-inspectors.md.
+- T-472 [P2] Lines tab colours train counts by trains full now. Done 2026-10-16: orange from a fifth, red from half of the trains in service packed full on their trip (`Boarding::under_way`), hover "1 of 2 trains running now...". DECISIONS 2026-10-16.
+- T-467 [P2] Construction costs down by half. Done 2026-10-16: base track price 90 to 45 US$M a km and the station table halved in `sim/src/track/params.rs` (the Build tab's price line in `tabs.tsx` follows); a 0.77 km level 0 double segment now quotes $10.4M.
+- T-468 [P2] Remember the Build tab's track settings. Done 2026-10-16: level, single/double/quad and keep placing are stored with the other UI settings in localStorage (`game/ui.ts`), not in the save; unreadable values fall back to the old defaults.
+- T-439 [P3] Commute pair loop leftovers. Done 2026-10-16: the decay row packed and branchless, the scatter run to each block's longest list; mode_choice -6.6% natively, bit-identical. Caching the row rejected (83 MB a worker). notes/T-439.md.
+- T-419 [P3] A worker's set-up state. Done 2026-10-16: the market's pair HashMap replaced by binary search, its pairs 32 bytes, everyday pairs 20; -11.4 MB a New York worker, bit-identical. notes/T-419.md.
+- T-464 [P2] Demand views by kind of day. Done 2026-10-16: a day dropdown in the demand bar, Average day (default, 5 weekdays and 2 weekend days over 7), Weekday or Weekend; the average is a third day in `days.rs` and `demandByDay`, and demand hovers name the day. Replaces Settings' "Demand shown for".
 - T-420 [P2] All of Japan. Done 2026-10-16: stage 3 adds 38 non-city zones (31 prefectures, Okinawa included; Hokkaido's subprefectures as 8), 46.6M people, every prefecture within 0.22% of the 2020 census; all 47 prefectures play. Checks and smoke pass. notes/T-420.md.
 - T-441 [P3] Japan pack tooling. Done 2026-10-16: curl downloads in japan.py, `read_pack.py` fails a pack with campuses and no students, `pipeline/register.py` registers a batch with its market and trips. notes/T-420.md.
 

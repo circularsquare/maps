@@ -11,9 +11,12 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
 [T-100; `ui/tabs.tsx`, `ui/Blueprint.tsx`; tools in `map/tools.ts`]
 
 - **Tools**: draw track (key 1), station (2), crossover (6, below), delete (3), select blueprints
-  (5, below), three buttons on the first row and two on the second; then the level with its
+  (5, below), three buttons on the first row and two on the second; then the level (seven buttons
+  tinted in their Height colours, the chosen one solid with a dark outline, T-478) with its
   multiplier and price per km, single, double or quad track [T-255], and the platform length for
   new stations.
+  The level, the single, double or quad choice and the keep placing switch are remembered per
+  browser (localStorage with the other panel settings, not in the save) [T-468].
   The number keys work from any tab and open the Build tab; the key of the tool already on does
   nothing. Each button shows its key. There is no button for plain selecting: clicking the active tool again or
   leaving it with Esc returns to selecting. The trip tool (key T) is in
@@ -53,8 +56,8 @@ T-422]. The geometry is in [track-and-service.md](track-and-service.md) 6.1.
   built (a curve under 100 m, a click straight behind the start, water, too little room for a
   ramp) is refused by the edit, its reason at the bottom left; the ghost was red already. While
   placing, the circle the segment's curve lies on is drawn faint grey (red when refused)
-  [`map/curveCircle.ts`]; none for a straight segment, nor for a turn past 90 degrees wider than
-  the 1,796 m cap.
+  [`map/curveCircle.ts`]; none for a straight segment. A click beyond the 1,796 m circle gets that
+  circle's curve then a straight to the click [T-471].
 - **Curve labels**: while drawing, the start shows as a square and the curve its radius and speed
   limit, on the speed colour at half strength [T-417] (one label for a curve split into several
   corners); the same labels show while a selected blueprint stretch is reshaped or a node dragged
@@ -65,7 +68,7 @@ T-422]. The geometry is in [track-and-service.md](track-and-service.md) 6.1.
   station tool's pointer snaps to it, so the station goes at the line's end. The markers take no
   presses, and show from zoom 9.
 - **The tag by the cursor** [T-411] has two lines: the segment's length, average cost
-  multiplier, price and tightest curve ("1.5 km, cost 1.33x, $25.5M, 401 m curve"; no curve, no
+  multiplier, price and tightest curve ("1.5 km, cost 1.33x, $12.8M, 401 m curve"; no curve, no
   radius), then the level being placed and the segment's lowest speed limit ("Level +2, max speed
   67 km/h"). The multiplier sits on yellow above 1x, deeper up to 2.5x, plain at 1x and below; the
   level on its Height colour and the speed on its Max speed colour (`speedColour`,
@@ -88,6 +91,9 @@ T-422]. The geometry is in [track-and-service.md](track-and-service.md) 6.1.
   answer comes from the clock worker trying the real edit (`TrackApi.preview_station`; one request
   in flight, asked when the spot, platform length or network changes, the last answer kept
   meanwhile), so the ghost and the click cannot disagree.
+- **Overlapping track** [T-469]: where several tracks lie within 4 px of the nearest under the
+  pointer, the station goes on the track the last station of the session went on (from its node
+  along the track to the next junctions), else on blueprint over built, else the nearest.
 - **Placement help** [T-312, T-412]: with the pointer snapped to track the tag says how far the
   spot is, in a straight line, from the station placed last in this session ("1.2 km from W 46th
   St"; nothing before the first), then roughly how many local trips a day start or end within 800 m
@@ -106,7 +112,7 @@ T-422]. The geometry is in [track-and-service.md](track-and-service.md) 6.1.
 [T-338; `map/tools.ts`, rules in [track-and-service.md](track-and-service.md) 6.1] The crossover
 tool (key 6, an X between two rails) snaps to track only, never to a node. With the pointer on
 track the ghost is the crossover's X as the click would place it, drawn like the track tool's
-ghost (red where it would be refused), and the tag says its price ("$49.5M") or why not ("A
+ghost (red where it would be refused), and the tag says its price ("$24.8M") or why not ("A
 crossover needs other track alongside within 15 m, with 60 m of plain track each way."). The
 answer comes from the clock worker trying the real edit (`TrackApi.preview_crossover`, one request
 in flight). A click places it as blueprint, one undoable edit; a click off track says to click on
@@ -129,7 +135,12 @@ disabled: Construct and the blueprint total leave a disabled piece out, and it i
 ([ui-map.md](ui-map.md) "Lines and track"). It is a tool of its own because a plain drag on the map
 is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
 
-- **Left drag** draws a box. It picks the blueprint track it touches and the blueprint stations
+- **Dragging the pick** [T-475]: a left drag that starts on picked track or within 9 px of one
+  of its nodes (a grab cursor there) moves every movable node of the pick (the ends of picked
+  track and picked stations; not a crossover's ends) by the same offset, previewed as a node drag
+  is. Track between two moved nodes keeps its shape; track to a node that stays bends as in a node
+  drag (`TrackApi.move_nodes`). One undoable edit. A press there without a drag is a click.
+- **Left drag** elsewhere draws a box. It picks the blueprint track it touches and the blueprint stations
   inside it (stations only from zoom 11, where they are drawn); the pick follows the box live.
   **Shift+drag adds** to the pick. A click picks the piece under the pointer, Shift+click adds it or
   takes it out again, a click on nothing clears the pick. Constructed track and stations are never
@@ -155,7 +166,9 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
 
 - With the select tool, a selected blueprint stretch shows its corners as squares (not a
   crossover's, which keeps its shape [T-338]); any blueprint track end, junction or station can be
-  dragged, except a node at a crossover's end. The cursor is a move cursor over a node that can.
+  dragged, except a node at a crossover's end. The cursor is a grab cursor over a node or square
+  that can, and a grabbing one anywhere while dragging [T-474]. A draggable node takes the drag
+  over a demand bubble (a press without a drag still selects the bubble).
   With the select tool every blueprint track end, corner and junction without a station shows the
   same white square as a corner [T-416; `map/endMarkers.ts`], so draggable points can be seen.
   A drag previews the new shape with each curve's radius and speed (or why not); letting go is one
@@ -187,7 +200,8 @@ route, keeping the existing stop order; removing a stop leaves the others in ord
 - A round toggle marker on every station, over everything: a stop is a disc in the line's colour
   inside a white ring inside a dark one; other stations are hollow. Stations a stop can be added at
   without changing the line's path (on track the route passes over, or past either end on track
-  the line can carry on over, T-237) are drawn on top at 80% of a stop's size; stations reachable
+  the line can carry on over, T-237) are drawn on top at 80% of a stop's size, white inside a
+  plain grey ring with none of the line's colour (T-476); stations reachable
   only by changing the route are 65% and grey; unreachable ones (no track, or only by turning back)
   the same size and greyer. The tiers come from the clock worker trying each station with the same
   insertion search a click makes (`TrackApi::stop_tiers`), so a marker always says what its click

@@ -30,7 +30,7 @@ from read_pack import PACKS, ROOT, load_pack
 
 WORK = os.path.join(ROOT, "data", "work", "res9")
 REGISTRY = os.path.join(ROOT, "app", "src", "game", "registry.json")
-THRESHOLD = 1000.0  # trip ends a weekday per res-8 parent (DECISIONS 2026-10-15, notes/T-044.md)
+THRESHOLD = 2500.0  # trip ends a weekday per res-8 parent (DECISIONS 2026-10-16, T-453)
 RES_MASK = np.uint64(0xF) << np.uint64(52)
 INT_SAME = ("zone", "region")  # integer per-cell arrays, equal within a zone
 

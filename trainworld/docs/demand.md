@@ -19,13 +19,14 @@ with people or jobs. Resolution 8 (about 0.74 km², Kontur's) is too coarse for 
 half a cell is about 4 minutes of walking. Each census block is spread over the cells its polygon
 covers, by land area (T-013). Grain matters most in city centres (Anita): res 9 where it is dense,
 **res 8 where it is sparse** (T-044, `pipeline/merge_cells.py`, the last pipeline step): a res-8
-parent whose cells make under 1,000 trip ends a weekday (commutes and the everyday rates of 4.1's
+parent whose cells make under 2,500 trip ends a weekday (commutes and the everyday rates of 4.1's
 purposes, both ends) becomes one cell, merging only the cells inside one 2 km zone, so a parent cut
 by a zone edge is one cell per zone and every zone's sums, the gravity and the routes are those of
 the res-9 pack. A merged cell sums every weight, keeps the parent's H3 index (a parent cut by a zone
 edge gives two cells with one index) and sits at its cells' trip-end-weighted centre; a group stays
-at res 9 if that centre falls on water or outside its zone square. It removes 25-35% of the cells
-of a dense Asian or European metro, 40-65% of a US one and 70% of a rural pack. Enrichments and
+at res 9 if that centre falls on water or outside its zone square. It removes 33-46% of the cells
+of a dense Asian or European metro, 52-69% of a US one, 39-58% of a Japanese prefecture and over 70%
+of a rural US county. Enrichments and
 routes run on the res-9 pack, kept in `data/work/res9/`.
 
 Subway Builder also uses gravity: LODES gives it homes and jobs, then a distance-based gravity
@@ -88,10 +89,15 @@ commute-only. Per-city inputs and totals, and per-capita checks against New York
 **Everyday outings (T-066).** All resident population generates home-based shopping/
 errands (0.3 outings/person/day) and social/leisure (0.2), each with an outward and return leg.
 These are partial, provisional activity budgets, not survey estimates or a commute-share target.
-Shopping attracts trips by LODES retail and other-service employment (CNS07+CNS19). Social
+Shopping attracts trips by retail and other-service employment (LODES CNS07+CNS19). Social
 destinations mix three independently normalized draws: population (visits to friends and family)
 46%, food/recreation jobs (CNS17+CNS18) 46%, and **parks 8%** (T-196; a pack without parks keeps
-50/50). Employees are relative draw, never customer capacity.
+50/50). Employees are relative draw, never customer capacity. Outside the US (T-453) the same
+sectors come from a country's jobs by sector by small area where published and plausible (Japan's
+economic census mesh, England's BRES by LSOA, Canada's census tracts of work); elsewhere each 2 km
+zone's jobs (errands: 75% jobs, 25% residents) blended with its OSM shops or food and leisure places
+as far as the pack's OSM is complete ([demand-worldwide.md](demand-worldwide.md), "Everyday
+destinations").
 
 **Parks (T-196).** `pipeline/enrich_parks.py <city>` takes OpenStreetMap's parks, commons,
 recreation grounds, beach resorts, botanical gardens and named beaches in the pack's boundary,
@@ -311,6 +317,11 @@ their weekday timing (too few weekend trips in NHTS to shape them):
 | Social outward | 7.6% | 47.8% | 30.7% | 13.4% | 0.5% |
 | Social return | 1.5% | 38.8% | 38.1% | 18.2% | 3.4% |
 | Longer trips | 15.1% | 34.9% | 23.5% | 23.9% | 2.6% |
+
+**The average day** (T-464) is a third day the views and queries can be asked for: 5 weekdays and
+2 weekend days over 7, taken on each purpose's rate and period shares (`days.rs` `AVERAGE`), so
+every figure linear in them is the same blend of the weekday's and the weekend's. It is the demand
+views' default; the clock, the money and the boarding account know only the two kinds.
 
 On New York's real network a weekend day has 0.77 of a weekday's local rail legs (6.39M against
 8.29M; commutes 1.04M against 3.46M, social 2.60M against 1.62M), its busiest period is midday,

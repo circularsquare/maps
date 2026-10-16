@@ -7,6 +7,7 @@ import { useState } from "preact/hooks";
 import { createLine } from "../game/lineActions";
 import type { JSX } from "preact";
 import { count, distUnit, length, levelLabel, money, moneyExact, perDistance, perKmFrom, shortDistance } from "../game/format";
+import { inkOn, LEVEL_COLOURS } from "../game/palette";
 import { DEMAND_INDEX, LEVELS, type Level } from "../game/types";
 import { buildLevel, buildPlatform, display, keepPlacing, lineSort, selection, setDisplay, stationSort, trackCount, tool, type ListSort, type Tool } from "../game/ui";
 import type { Signal } from "@preact/signals";
@@ -15,7 +16,7 @@ import { liveMoney, moneyState } from "../game/money";
 import { cityById, viewedZone } from "../game/cities";
 import { listScope, scopedLists } from "../game/listScope";
 import { accountVersion } from "../game/boarding";
-import { stationsToday, today, todayLoaded, useToday } from "../game/today";
+import { crowdClass, stationsToday, today, todayLoaded, useToday } from "../game/today";
 import type { DayLedger } from "../workers/protocol";
 import { live } from "../map/live";
 import { Check, Chip, Icon, Row, Segmented, Stepper } from "./widgets";
@@ -29,7 +30,7 @@ const STATUS: Record<string, string> = { running: "", planned: "Planned", broken
 const natural = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" }).compare;
 
 // SPEC 6.4. A display copy: the track model (sim/src/track/params.rs) owns the real price list.
-const BASE_M_PER_KM = 90;
+const BASE_M_PER_KM = 45;
 const MULT: Record<Level, number> = { 3: 1.8, 2: 1.3, 1: 0.8, 0: 0.3, [-1]: 1.0, [-2]: 1.1, [-3]: 1.2 };
 const LEVEL_NAME: Record<Level, string> = {
   3: "High viaduct",
@@ -82,13 +83,13 @@ export function BuildTab() {
         <div class="h">Level</div>
         <div class="group levels">
           {LEVELS.map((l) => (
-            <button class={"btn lv" + (l === lv ? " on" : "")} onClick={() => (buildLevel.value = l)}>
+            <button class={"btn lv" + (l === lv ? " on" : "")} style={{ "--lc": LEVEL_COLOURS[l], "--lk": inkOn(LEVEL_COLOURS[l]) }} data-tip={LEVEL_NAME[l]} aria-pressed={l === lv} onClick={() => (buildLevel.value = l)}>
               {levelLabel(l)}
             </button>
           ))}
         </div>
         <p class="muted small price">
-          {LEVEL_NAME[lv]} at ${Math.round(perDistance(BASE_M_PER_KM * MULT[lv]))}M per {distUnit()} ({MULT[lv].toFixed(1)}x)
+          {LEVEL_NAME[lv]} at ${Math.round(perDistance(BASE_M_PER_KM * MULT[lv]) * 10) / 10}M per {distUnit()} ({MULT[lv].toFixed(1)}x)
         </p>
         <div class="h">Track</div>
         <div class="track-row">
@@ -167,6 +168,14 @@ function RidersToday({ line }: { line: string }) {
   return <span class="val w-riders" data-tip={d ? `${count(d.riders)} riders in the past 24 hours` : undefined}>{d ? count(d.riders) : ""}</span>;
 }
 
+/** T-472: a line's trains now, coloured by how many of those in service are packed full on their trip. */
+function TrainsNow({ line, n }: { line: string; n: number }) {
+  const d = today.value.get(line);
+  const cls = d ? crowdClass(d.fullNow, d.trainsNow) : "";
+  const tip = d && d.trainsNow > 0 ? `${count(d.fullNow)} of ${count(d.trainsNow)} trains running now are packed full on their trip` : undefined;
+  return <span class={"val w-trains " + (cls || "muted")} data-tip={tip}>{n} {n === 1 ? "train" : "trains"}</span>;
+}
+
 function TotalToday() {
   const t = today.value;
   if (!t.size) return null;
@@ -234,7 +243,7 @@ export function LinesTab() {
               ) : (
                 <>
                   <RidersToday line={l.id} />
-                  <span class="val muted w-trains">{st.trainsNeeded[levOf(l.id)]} {st.trainsNeeded[levOf(l.id)] === 1 ? "train" : "trains"}</span>
+                  <TrainsNow line={l.id} n={st.trainsNeeded[levOf(l.id)]} />
                 </>
               )}
               {key === "near" && <Near m={sc.lineDist.get(l.id)} />}

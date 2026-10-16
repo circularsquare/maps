@@ -78,6 +78,8 @@ async function browserChecks(BASE) {
   const errors = [];
   try {
     const page = await ctx.newPage();
+    // the demand final is a weekday's, comparable across runs since T-464 made the average day the default view
+    await page.addInitScript(() => { try { localStorage.setItem('trainworld-ui', JSON.stringify({ display: { dayShown: 'weekday' }, v: 2 })); } catch {} });
     page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
     page.on('console', (m) => { if (m.type() === 'error' && !IGNORE.test(m.text())) errors.push(m.text()); });
     const sep = BASE.includes('?') ? '&' : '?';

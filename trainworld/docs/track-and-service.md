@@ -36,10 +36,11 @@ Full design, numbers and sources: `notes/T-008.md`.
   from the start, so both legs are equal end legs. **A wider turn, up to 350 degrees** (a loop or
   hairpin past a half turn, T-442), is split into equal corners of at most 90 degrees, each PI
   r tan(turn / 2n) from the arc's tangent points, so every leg between two corners is shared
-  exactly and the auto radius is the arc's at each; a level change ramps on the middle leg. A
-  quarter turn or less wider than the 1,796 m cap is straight, capped curve, straight, still
-  through the click on 2a; a wider turn over the cap has straights between its capped corners and
-  no one circle. A segment from a free point is straight. A segment ending on track or a node joins
+  exactly and the auto radius is the arc's at each; a level change ramps on the middle leg. **Where
+  that arc would be wider than the 1,796 m cap** (T-471), the segment is the capped curve from the
+  start, turning until it faces the click, then a straight to the click: one round curve of any
+  turn, still through the click but arriving on its own heading rather than 2a. At r = 1,796 m the
+  straight is nil, so the shape grows out of the arc without a jump. A segment from a free point is straight. A segment ending on track or a node joins
   it like a turnout, so it has the lead-in shape (a lead-in PI at each end). Refused: a curve under
   100 m (the ghost and circle red), a click within 5 degrees of straight behind the start ("turn
   back on itself": the circle grows without bound), and anything the edit refuses (water, crossing
@@ -91,6 +92,9 @@ Full design, numbers and sources: `notes/T-008.md`.
   lead-in PI as in drawing. A track end's heading follows its edge. Lines over it keep their stops
   and paths; their times change. A constructed node, or one where constructed track meets, stays
   put (dragging it when it is selected says so; otherwise the map pans as usual). notes/T-093.md.
+  **Several nodes together** (T-475, `move_nodes`, the Select tool's pick): each moves by the same
+  offset; an edge between two of them shifts whole, PIs included; an edge to a node that stays
+  follows the one-node rule above. All must be movable, or nothing moves.
 - **Placing stations**: click on track (it is split there) or on a node. A new station is named
   after the nearest street on the basemap within 400 m ("W 42nd St"), skipping names in use, when
   the map is at zoom 13 or closer (further out the tiles hold only the bigger roads). Otherwise,
@@ -309,19 +313,19 @@ busy track, and names the places it waits most (notes/T-031.md).
 
 Money is present, not tight, as in NIMBY Rails: construction, train purchase, operating cost per
 car-km, a player-set fare curve by distance. One price list worldwide. Track costs a **base of
-US$90M per route-km of double track** (single track 0.6x; ramps at the dearer level) times a
-multiplier per level (Anita, 2026-10-08):
+US$45M per route-km of double track** (single track 0.6x; ramps at the dearer level) times a
+multiplier per level (Anita, 2026-10-08; all construction prices halved 2026-10-16, T-467):
 
 | Level | +3 | +2 | +1 | 0 | -1 | -2 | -3 |
 |---|---|---|---|---|---|---|---|
 | Multiplier | 1.8 | 1.3 | 0.8 | 0.3 | 1.0 | 1.1 | 1.2 |
-| US$M per km | 162 | 117 | 72 | 27 | 90 | 99 | 108 |
+| US$M per km | 81 | 58.5 | 36 | 13.5 | 45 | 49.5 | 54 |
 
 - **Over or under water: 2x** the level's price. **Level 0 cannot be built over water.** Water
   comes from a mask in the pack (T-030).
 - The Build tab shows only the multiplier and price of the level currently selected, not the
   whole table.
-- Stations (200 m, two platform tracks): 10 at grade, 30/40/50 at +1/+2/+3, 60/100/140 at
+- Stations (200 m, two platform tracks): 5 at grade, 15/20/25 at +1/+2/+3, 30/50/70 at
   -1/-2/-3; scaled by `0.4 + 0.6 x length / 200`.
 - Junction: 0.25 km of track at its level; a flyover adds 0.6 km one level away; flat
   crossing 0.1 km (cheap to build, dear in delay). A crossover: two junctions, all told (6.1,
@@ -368,13 +372,13 @@ multiplier per level (Anita, 2026-10-08):
   recalculates demand: higher prices can lose riders (T-067). Running costs can take the cash below zero; edits that cost nothing still
   work then. notes/T-028.md.
 - **Starting money $6B**, sized in T-008 for one real first line and rechecked in T-028: a 20 km
-  line at -2 with 18 stations is US$3.78B plus about US$0.43B of trains, leaving room for a short
-  second line.
+  line at -2 with 18 stations is US$1.89B plus about US$0.43B of trains, leaving room for several
+  more lines.
 - **Economy at 100x** (Anita, 2026-10-09, as Subway Builder does; T-081): fares and running costs
   per game day count 100 times the real figures (`ECONOMY` in `sim/src/track/params.rs`, the one
   constant; running costs scale in the track model, fares in `app/src/game/money.ts`), so a game
   day earns and spends what a hundred real days would. The fare the player sets and the US$1.50 a
-  car-km shown are the figures before that scaling; construction and train prices stay real. The
+  car-km shown are the figures before that scaling; construction and train prices are not scaled. The
   Money tab says so in the hover of "A day at this schedule".
 
 ### 6.5 Edits
@@ -471,8 +475,9 @@ per person and does not change who travels: demand still decides that (SPEC 4).
   usually sits between seated and crush loads.
 - **What the panels show** (T-230): every train-fullness figure is the account's: the gauge on
   trains, the train tag and inspector, the line inspector's "Trains today" (`Boarding::line_summary`:
-  fullest train, trains leaving full and when, riders left behind a day, longest wait) and the
-  platforms. Demand's busiest-hour average train is not shown: on the real New York save 28 of the
+  fullest train, trains leaving full and when, riders left behind a day, longest wait), the Lines
+  tab's train count (`Boarding::under_way`, T-472), the schedule's crowding dots
+  (`Boarding::line_levels`, T-477) and the platforms. Demand's busiest-hour average train is not shown: on the real New York save 28 of the
   93 lines it put under 100% leave riders behind in the account (the L: 87%, yet 13 trains leave
   full 17:51-18:34 and 4,300 are left behind), because riders arrive fastest mid-peak.
 

@@ -1,6 +1,7 @@
 // Stop editing on the map (T-233, docs/ui-building.md): while a line's stops are being edited every
 // station carries a round toggle marker over everything else. A stop is a disc in the line's
-// colour inside a white ring inside a dark one (no check, T-239); the others are hollow. Stations
+// colour inside a white ring inside a dark one (no check, T-239); the others are hollow, with no
+// line colour at all (a plain grey ring, T-476). Stations
 // a stop can be added at without changing the line's path (on it, or past an end on track it can
 // carry on over, T-237) are drawn on top, a little smaller than the stops. The tiers are the clock
 // worker's, from the line tool's own search (`TrackApi::stop_tiers`). The rest

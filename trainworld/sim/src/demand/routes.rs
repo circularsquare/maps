@@ -434,6 +434,22 @@ impl Routes {
         }
     }
 
+    /// `drive_factor` from zone j's square less zone i's (dx, dy), j's region and supercell
+    /// (`sup_of`), with no branch between the tables (T-439). Needs `has_drive`.
+    #[inline]
+    pub fn drive_factor_by(&self, i: usize, dx: i32, dy: i32, reg_j: u8, sup_j: u16) -> f32 {
+        let w = self.drive_win;
+        let near = dx.abs() <= w && dy.abs() <= w;
+        let slots = ((2 * w + 1) * (2 * w + 1)) as usize;
+        let a = self.drive_near[(i * slots + Self::slot(dx.clamp(-w, w), dy.clamp(-w, w), w)) * self.nreg + reg_j as usize];
+        let b = self.drive_far[self.sup[i] as usize * self.nsup + sup_j as usize];
+        self.exp[if near { a } else { b } as usize]
+    }
+
+    pub fn sup_of(&self, j: usize) -> u16 {
+        self.sup.get(j).copied().unwrap_or(0)
+    }
+
     /// The walk's detour factor between zones i and j (1 beyond the window or without tables).
     #[inline]
     pub fn walk_factor(&self, i: usize, j: usize) -> f32 {

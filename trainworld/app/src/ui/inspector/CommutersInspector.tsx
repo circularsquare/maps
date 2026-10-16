@@ -2,6 +2,7 @@
 // how they travel, and where they work (or live), the far end drawn on the map as bubbles too.
 
 import { count } from "../../game/format";
+import { shownDayPhrase } from "../../game/ui";
 import { BUBBLE_ALPHA, modeMix } from "../../game/palette";
 import { purposeWords } from "../../game/purposes";
 import { commuterPick } from "../../map/commuterView";
@@ -27,7 +28,7 @@ function Modes({ totals }: { totals: [number, number, number] }) {
   ];
   return (
     <ul class="rows">
-      <Row label="Local trip legs a day" bold>
+      <Row label={`Local trip legs ${shownDayPhrase.value}`} bold>
         {count(all)}
       </Row>
       {rows.map(([name, v, m]) => (
@@ -61,7 +62,7 @@ export function CommutersInspector() {
       <PurposeBreakdown purposes={p.purposes} />
       <div class="h">
         {home ? "Where they go" : "Where their homes are"}
-        <span class="right muted small">{p.far ? "trip legs a day" : ""}</span>
+        <span class="right muted small">{p.far ? `trip legs ${shownDayPhrase.value}` : ""}</span>
       </div>
       {p.far ? (
         <ul class="rows">

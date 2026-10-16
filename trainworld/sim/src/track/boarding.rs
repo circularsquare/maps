@@ -521,7 +521,8 @@ impl Boarding {
     /// count `n`, riders boarded, trains that left packed full, riders left behind by a full
     /// train, the fullest train's riders as a share of crush, the number of spans of full trains,
     /// per span its first and last time (s into the day), then boardings at each stop in the
-    /// line's own stop order (both directions).
+    /// line's own stop order (both directions), then its trains in service at `t` and how many
+    /// of them are packed full on their trip (`under_way`, T-472).
     ///
     /// A stop's boardings since midnight telescope: the riders who have arrived by its last
     /// departure, less those still waiting after it, less the same at its last departure before
@@ -529,6 +530,59 @@ impl Boarding {
     /// the train before and is still waiting).
     pub fn today(&self, svc: &Service, t: f64) -> Vec<f64> {
         self.window(svc, t, false)
+    }
+
+    /// Trains of a line on the move or turning at local time of day `tod`, and how many of them
+    /// are packed full somewhere on their trip (T-472). A trip counts from its departure until the
+    /// next one could leave the far end, so the count is about the line's trains in service.
+    fn under_way(acc: &LineAccount, ls: &LineSvc, tod: f64) -> (f64, f64) {
+        let cap = CRUSH_PER_CAR * ls.cars.max(1) as f64;
+        let (mut on, mut packed) = (0.0, 0.0);
+        for (r, ra) in acc.runs.iter().enumerate() {
+            let n = ra.n;
+            for j in 0..ra.deps.len() {
+                let lv = ra.levels[j] as usize;
+                let turn = ((ls.round_trip[lv] - ls.runs[0].prof[lv].duration - ls.runs[1].prof[lv].duration) / 2.0).max(0.0);
+                if (tod - ra.deps[j]).rem_euclid(DAY) >= ls.runs[r].prof[lv].duration + turn {
+                    continue;
+                }
+                on += 1.0;
+                if ra.load[j * n..(j + 1) * n].iter().any(|&v| v as f64 >= cap - 0.5) {
+                    packed += 1.0;
+                }
+            }
+        }
+        (on, packed)
+    }
+
+    /// A line's day by demand level (T-477), on a kind of day: per level (`HIGH`, `MEDIUM`,
+    /// `LOW`) trains leaving in its hours, those packed full somewhere on their trip, riders
+    /// arriving at its platforms in its hours, and riders a full train left behind then.
+    /// Empty without an account.
+    pub fn line_levels(&self, svc: &Service, l: usize, day: usize) -> Vec<f64> {
+        let Some(Some(acc)) = self.accounts[self.kind(day)].get(l) else { return vec![] };
+        let Some(ls) = svc.lines.get(l) else { return vec![] };
+        let cap = CRUSH_PER_CAR * ls.cars.max(1) as f64;
+        let mut out = vec![0.0f64; LEVELS * 4];
+        for ra in &acc.runs {
+            let n = ra.n;
+            for j in 0..ra.deps.len() {
+                let lv = ra.levels[j] as usize;
+                out[lv * 4] += 1.0;
+                if ra.load[j * n..(j + 1) * n].iter().any(|&v| v as f64 >= cap - 0.5) {
+                    out[lv * 4 + 1] += 1.0;
+                }
+            }
+            for k in 0..n {
+                for p in 0..PERIODS {
+                    out[PERIOD_LEVEL[p] * 4 + 2] += ra.arrivals[k].per[p];
+                }
+                for h in 0..24 {
+                    out[PERIOD_LEVEL[period_at(h as f64 * 3600.0)] * 4 + 3] += ra.left_h[k * 24 + h] as f64;
+                }
+            }
+        }
+        out
     }
 
     /// The past 24 hours to game time `t` (T-446), in `today`'s layout: the rest of yesterday from
@@ -572,6 +626,8 @@ impl Boarding {
                 out.extend([a, b]);
             }
             out.extend(stops);
+            let (on, packed) = Self::under_way(acc, ls, tod);
+            out.extend([on, packed]);
             count += 1;
         }
         out[0] = count as f64;
@@ -1054,6 +1110,15 @@ mod tests {
         b2.ensure(&w2.net, &w2.svc);
         let s2 = b2.line_summary(&w2.svc, l2 as usize);
         assert!(s2[0] < 0.1 && s2[1] == 0.0 && s2[2] < 1e-3 && s2[4] == 0.0, "{s2:?}");
+        // T-477: by level, the full trains and riders left behind fall in the peak's level
+        let v = b.line_levels(&w.svc, l as usize, 0);
+        assert!(v[HIGH * 4 + 1] >= 60.0 && v[HIGH * 4 + 3] > 10000.0, "{v:?}");
+        assert!(v[LOW * 4 + 1] == 0.0 && v[LOW * 4] > 0.0, "{v:?}");
+        assert!(b2.line_levels(&w2.svc, l2 as usize, 0).chunks(4).all(|c| c[1] == 0.0 && c[3] < 1e-3));
+        // T-472: at 08:00 the trains in service are about the line's peak trains, every one full
+        let v = b.past_day(&w.svc, 2.0 * DAY + 8.0 * 3600.0);
+        let (on, packed) = (v[v.len() - 2], v[v.len() - 1]);
+        assert!(on > 0.0 && (on - w.svc.lines[l as usize].trains[HIGH] as f64).abs() <= 2.0 && packed == on, "{on} {packed}");
     }
 
     #[test]
