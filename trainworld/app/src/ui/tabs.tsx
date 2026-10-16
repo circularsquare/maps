@@ -277,38 +277,47 @@ function watchSize(el: Element, f: () => void) {
   return () => { chipsObserver?.unobserve(el); fitters.delete(el); };
 }
 
-/** T-521, T-530: a station row's bullets. At least 3 stay whole (the name is cut first); bullets
- * that do not fit are hidden behind a "+" whose hover names them. Hidden ones keep their space, so
- * the row's layout never depends on how many show. */
-function Chips({ lines }: { lines: LineInput[] }) {
+/** T-521, T-530: a station row's bullets, laid out with the row's name (`.grow > span`, its sibling)
+ * in the room the fixed columns leave (Anita: the name comes first). Every bullet shows when the
+ * whole name fits beside them; otherwise as many as fit beside the whole name, never fewer than 3,
+ * and only then is the name cut. Bullets left out sit behind a "+" whose hover names their lines;
+ * they stay in the box, clipped, so their widths can be measured. */
+function Chips({ lines, name }: { lines: LineInput[]; name: string }) {
   const ref = useRef<HTMLSpanElement>(null);
-  const [fit, setFit] = useState<{ shown: number; left: number }>({ shown: lines.length, left: 0 });
+  const [fit, setFit] = useState<{ shown: number; width: number }>({ shown: lines.length, width: -1 });
   const key = lines.map((l) => l.id).join(",");
   useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el) return;
+    const el = ref.current, row = el?.parentElement;
+    if (!el || !row) return;
     const measure = () => {
       const chips = el.querySelectorAll<HTMLElement>(":scope > .chip");
+      const n = chips.length;
       const right = (i: number) => chips[i].offsetLeft + chips[i].offsetWidth;
-      const w = el.clientWidth;
-      let shown = chips.length;
-      if (shown && right(shown - 1) > w) {
-        shown = 0;
-        while (shown < chips.length && right(shown) + 2 + PLUS_W <= w) shown++;
+      const cs = getComputedStyle(row);
+      const gap = parseFloat(cs.columnGap) || 0;
+      let room = row.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) - gap * (row.children.length - 1);
+      let nameW = 0;
+      for (const c of row.children) {
+        if (c === el) continue;
+        if (c.classList.contains("grow")) nameW = (c.firstElementChild as HTMLElement | null)?.offsetWidth ?? 0;
+        else room -= (c as HTMLElement).offsetWidth;
       }
-      const left = shown < chips.length && shown > 0 ? right(shown - 1) + 2 : 0;
-      setFit((f) => (f.shown === shown && f.left === left ? f : { shown, left }));
+      let shown = n;
+      if (n && nameW + right(n - 1) > room) {
+        shown = Math.min(3, n);
+        for (let k = n - 1; k > 3; k--) if (nameW + right(k - 1) + 2 + PLUS_W <= room) { shown = k; break; }
+      }
+      const width = n ? right(Math.max(shown, 1) - 1) + (shown < n ? 2 + PLUS_W : 0) : 0;
+      setFit((f) => (f.shown === shown && f.width === width ? f : { shown, width }));
     };
     measure();
-    return watchSize(el, measure);
-  }, [key]);
-  const n = Math.min(lines.length, 3);
+    return watchSize(row, measure);
+  }, [key, name]);
   const shown = Math.min(fit.shown, lines.length);
-  const min = n ? n * 18 + (n - 1) * 2 + (lines.length > 3 ? 2 + PLUS_W : 0) : 0;
   return (
-    <span class="chips" ref={ref} style={{ minWidth: min ? `${min}px` : undefined }}>
+    <span class="chips" ref={ref} style={{ width: fit.width >= 0 ? `${fit.width}px` : undefined }}>
       {lines.map((l, i) => <Chip line={l} size="sm" gone={i >= shown} />)}
-      {shown < lines.length && <span class="chips-more" style={{ left: `${fit.left}px` }}
+      {shown < lines.length && <span class="chips-more" style={{ left: `${fit.width - PLUS_W}px` }}
         data-tip={[...new Set(lines.slice(shown).map((l) => l.name))].join("\n")}>+</span>}
     </span>
   );
@@ -401,8 +410,8 @@ export function StationsTab() {
       <ul class="rows pick stations">
         {st.map((r) => (
           <li class={sel?.kind === "station" && r.members.includes(sel.station) ? "on" : ""} onClick={() => (selection.value = { kind: "station", station: r.lead.id })}>
-            <span class={"grow" + (r.built ? "" : " muted")}>{r.lead.name}</span>
-            <Chips lines={r.lines} />
+            <span class={"grow" + (r.built ? "" : " muted")}><span>{r.lead.name}</span></span>
+            <Chips lines={r.lines} name={r.lead.name} />
             {r.built ? <StationToday ids={r.members} /> : <span class="val w-num">Plan</span>}
             {key === "near" && <Near m={r.dist} />}
           </li>

@@ -125,9 +125,11 @@ key.
   only the viewed place is listed. A row is a station complex [T-530]: the name of its member with
   the most lines, every line stopping at any member, boardings summed over the members, and a
   click selects the complex as a click on the map does; a station on its own is its own row, and
-  M counts complexes. A row's name is cut with "..." before its line bullets are: at least 3
-  always show whole, more while the row has room; the rest are hidden behind a "+" whose hover
-  lists their lines [T-521, T-530]. The bullets sit close to the ridership figure.
+  M counts complexes. The boardings figure is a fixed column, right-aligned. The name comes first
+  [T-530, Anita]: every bullet shows when the whole name fits beside them; otherwise as many as fit
+  beside the whole name, never fewer than 3, and only then is the name cut with "...". Bullets left
+  out sit behind a "+" whose hover lists their lines [T-521, T-530]. The bullets sit against the
+  boardings column.
 - **Line bullets** [T-521]: one component (`Chip` in `ui/widgets.tsx`), drawn the same everywhere.
   Hovering one gives the line's name and a click selects the line, except in the selected line's
   own panel (its title bullet opens the colour and symbol editor) and on a search row that is the
