@@ -1,5 +1,8 @@
 ﻿# Archive
 
+- T-502 [P2] Cost damping from 60 car-minutes; "on average" dropped from hovers. Done 2026-10-16: real save rail trips 8,346,628 to 8,343,085 (-0.04%), regional boardings 68,301 to 151,704 (T-495's first step took them from 259,376), work -0.9%, big lines within 1.5%. notes/T-495.md.
+- T-501 [P2] A data register by country. Done 2026-10-16: docs/data-register.md, eleven countries by input with status marks, four archetypes (census flows, travel survey, district totals, global only) and how to pick one; filed T-503 to T-508.
+- T-498 [P2] Gravity weighted partly by real-world travel time. Abandoned 2026-10-16 after the design prototype: misplaced 16.5% to 15.9% in Tokyo, 14.0% to 13.9% in London, the centre's pull slightly worse; Anita chose industry matching (T-500) instead. notes/T-498.md.
 - T-496 [P2] Edits rebuild only what they touched. Done 2026-10-16: click to drawn 162 to 96 ms median paused, 91 at 960x (real save); per-piece buffer cache in the worker, labels and tags kept, name worked out ahead; buffers bit-identical. Rest is T-499. notes/T-496.md.
 - T-463 [P2] Commutes between Japan's packs. Done 2026-10-16: the 45 packs are one joint gravity (`intercity.py --group jp`), border factor 0.4 fitted on census prefecture flows; 1.6% of commuters cross a pack line; 17 zone curves refit. notes/T-463.md.
 - T-465 [P1] Tokyo commutes to the centre look far too few. Done 2026-10-16: work at home by municipality of work (census table 4) times each pack's telework, every Japan pack; Tokyo's west to the five central wards 23% to 26% (census 29%). notes/T-465.md.

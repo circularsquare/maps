@@ -93,17 +93,17 @@ export function TopBar() {
   const pct = (v: number) => (known ? v.toFixed(1) + "%" : "–");
   // T-342: the shares are of rides (trip legs) a day; the train's count beside its share, all in the hover
   const rides = modeRides.value;
-  const where = `${city ? "in " + city.name + " " : ""}${["on a weekday", "on a weekend day", "on average"][shownDay.value]}`;
+  const where = [city ? " in " + city.name : "", [" on a weekday", " on a weekend day", ""][shownDay.value]].join("");
   const note = demandView.value && !viewFinal.value ? " (an early estimate)" : demandView.value?.version === CACHE_VERSION ? " (from the last time this game was open)" : viewUpdating.value ? " (before your last change)" : "";
   // T-406: walking and driving are icons; each has its own hover with the share and its rides
   const modeTip = (name: string, share: number, n: number | undefined) =>
-    `${name}: ${pct(share)} of rides a day ${where}${rides && n !== undefined ? ` (${count(n)} of ${count(rides.all)})` : ""}${note}`;
+    `${name}: ${pct(share)} of rides a day${where}${rides && n !== undefined ? ` (${count(n)} of ${count(rides.all)})` : ""}${note}`;
   return (
     <><header id="topbar">
       {/* T-341: every part has a fixed width; a long name is cut short, the whole name on hover */}
       <div class="city" data-tip={city?.name}>{city?.name}</div>
       <div class="split">
-        <div data-tip={`Rides a day ${where}: ${rides ? `Train ${pct(s.train)} (${count(rides.train)}), Walking ${pct(s.walk)} (${count(rides.walk)}), Driving ${pct(s.drive)} (${count(rides.drive)}), all ${count(rides.all)} rides` : `Train ${pct(s.train)}, Walking ${pct(s.walk)}, Driving ${pct(s.drive)}`}${note}`} class={"split-row" + (viewUpdating.value ? " updating" : "")}>
+        <div data-tip={`Rides a day${where}:${rides ? `Train ${pct(s.train)} (${count(rides.train)}), Walking ${pct(s.walk)} (${count(rides.walk)}), Driving ${pct(s.drive)} (${count(rides.drive)}), all ${count(rides.all)} rides` : `Train ${pct(s.train)}, Walking ${pct(s.walk)}, Driving ${pct(s.drive)}`}${note}`} class={"split-row" + (viewUpdating.value ? " updating" : "")}>
           <span class="bar-box">
             <span class="bar">
               <i class="seg seg-train" style={{ width: s.train + "%" }} />

@@ -16,6 +16,8 @@ Logs, check outputs and images go in `../artifacts/trainworld/` (from the maps r
 
 ## 1. Choose the city and its footprint
 
+- **A new country first: fill its row in `docs/data-register.md` and pick the procedure
+  (archetype) before building.** The archetype names the worked example below to follow.
 - **Where.** Anywhere between 85 S and 85 N: new games are in the Mercator world frame, whose
   track lengths are ground lengths everywhere (T-306, docs/world.md), and the renderer anchors to
   the view (T-307). Games saved in the Northeast conic (TWT5) or the legacy frame are converted to

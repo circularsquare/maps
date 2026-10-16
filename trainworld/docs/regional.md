@@ -57,8 +57,8 @@ Generate **total** all-mode trips, then let the player's network earn rail's sha
 
 **Mode choice.** Inter-region trips choose rail, car and plane in one logit at 3 perceived minutes
 a dollar [T-378], damped by the trip's length as every trip is ([demand.md](demand.md) 4.3,
-T-495): 0.05 x sqrt(90 / T) per perceived minute, T the car's perceived minutes over the zone
-pair's distance, even across a sea where no car goes (so rail against air never depends on it), so about 0.035 at 3 hours by car and 0.017 at 13. The scale covers the whole
+T-495): 0.05 x sqrt(60 / T) per perceived minute, T the car's perceived minutes over the zone
+pair's distance, even across a sea where no car goes (so rail against air never depends on it), so about 0.029 at 3 hours by car and 0.014 at 13. The scale covers the whole
 rail trip: each zone's access weights (built at 0.05, 5.3) are raised to the power of the pair's
 scale over 0.05, so a long walk to the station weighs less on a long trip as well. On the
 market's own costs rail then holds about 93%, 73%, 48% and 28% of rail and air at 2, 3, 4 and 5

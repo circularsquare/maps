@@ -7,6 +7,9 @@ ownership or income? Each entry says what the game does now, what it was fitted 
 not carry over, and what would check it. Add entries as new rules appear; strike through (do not
 delete) ones that have been checked, with the date and outcome.
 
+Which sources each country has, which are used, and which procedure its packs follow:
+`docs/data-register.md`. The sections below hold the rules those sources feed.
+
 ## The first country outside the US: Canada (Toronto, T-277, 2026-10-13)
 
 What Canada's data changed, rule by rule (sources in notes/T-277.md, the adapter in
@@ -388,7 +391,7 @@ notes/T-420.md has the tables.
 ## Mode choice
 
 - **Cost damping** (T-495, docs/demand.md 4.3). The logit's 0.05 a perceived minute falls as
-  sqrt(90 / T) past T = 90, T the car's perceived minutes (even where no car can go), in every
+  sqrt(60 / T) past T = 60, T the car's perceived minutes (even where no car can go), in every
   layer. The form and power follow UK WebTAG's cost damping and long-distance mode choice studies;
   set on European and US rail-air shares, not fitted. Why it may not carry over: the car's minutes
   are the US car's (speed, fuel, occupancy), so where long drives are slower (India, Lagos) a

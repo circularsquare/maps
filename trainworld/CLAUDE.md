@@ -8,7 +8,7 @@ Read this, then `SPEC.md`, then `TASKS.md`. Everything else on demand; where cod
 | File | Holds | Who edits |
 |---|---|---|
 | `SPEC.md` | What the game is and how it works, **as of now**, in summary | agents, rewritten in place |
-| `docs/` | The spec in detail, one file per area: `demand.md`, `regional.md`, `track-and-service.md`, `architecture.md`, `world.md`, `zones.md`, the interface in `ui-*.md` (index: `interface.md`); also `demand-worldwide.md`, `adding-a-city.md`, `code-map.md` | agents |
+| `docs/` | The spec in detail, one file per area: `demand.md`, `regional.md`, `track-and-service.md`, `architecture.md`, `world.md`, `zones.md`, the interface in `ui-*.md` (index: `interface.md`); also `demand-worldwide.md`, `adding-a-city.md`, `code-map.md`, and `data-register.md` (each country's sources by input, their status, and its procedure) | agents |
 | `TASKS.md` | Open agent work, by priority | agents |
 | `DECISIONS.md` | Dated choices someone might revisit, and why | agents, add only |
 | `ARCHIVE.md` | Finished and abandoned tasks, newest first | agents, add only |
@@ -52,6 +52,8 @@ Read this, then `SPEC.md`, then `TASKS.md`. Everything else on demand; where cod
   once their task is done; scripts worth keeping go to `checks/`. Check outputs (.json, .log) go in
   `../artifacts/trainworld/`, never notes/.
 - **Project knowledge lives here**, not in Claude's memory. Adding a city: `docs/adding-a-city.md`.
+- **The data register** (`docs/data-register.md`): a city or data task that uses, finds or rules
+  out a source updates that country's cell, and files a P3 task for a source usable but not used.
 
 ## Agent working rules
 

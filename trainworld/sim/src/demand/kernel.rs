@@ -182,7 +182,7 @@ impl Default for Params {
             fare_min: 6.0,
             beta: 0.05,
             asc_rail: 0.0,
-            damp_min: 90.0,
+            damp_min: 60.0,
             road_detour: 1.3,
             road_local_km: 2.0,
             road_end_km: 8.0,

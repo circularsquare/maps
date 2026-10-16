@@ -342,9 +342,9 @@ driving for the remaining trips by **generalised cost** in minutes. Buses are ou
   priority) + its cost
 
 Rail share = logistic in the difference (0.05 per perceived minute), plus a **per-city rail
-propensity** constant. **Cost damping** (T-495, `Params::mode_beta`): past 90 perceived minutes of
-the car's trip T, the scale is 0.05 x sqrt(90 / T), so a minute counts for less on a long trip
-(0.035 at 3 hours, 0.017 at 13); one rule for commutes, everyday trips and the regional layer
+propensity** constant. **Cost damping** (T-495, `Params::mode_beta`): past 60 perceived minutes of
+the car's trip T, the scale is 0.05 x sqrt(60 / T), so a minute counts for less on a long trip
+(0.029 at 3 hours, 0.014 at 13); one rule for commutes, everyday trips and the regional layer
 (docs/regional.md 5.1), T the car's perceived minutes door to door including parking, never the
 rail's, so the scale does not change with the network. In the local layers only the choice
 between modes is damped (the walks and station pairs behind rail's cost are weighed at 0.05, since

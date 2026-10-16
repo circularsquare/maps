@@ -160,7 +160,7 @@ export const shownDay = computed<DemandDay>(() => {
   const s = display.value.dayShown;
   return s === "weekday" ? 0 : s === "weekend" ? 1 : AVERAGE_DAY;
 });
-/** The shown day as a hover ends a figure: "a weekday", "a weekend day", "a day on average". */
+/** The shown day as a hover ends a figure: "a weekday", "a weekend day", "a day". */
 export const shownDayPhrase = computed(() => DEMAND_DAY_PHRASE[shownDay.value]);
 
 export function setDisplay<K extends keyof DisplaySettings>(k: K, v: DisplaySettings[K]) {

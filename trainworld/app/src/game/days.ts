@@ -18,8 +18,8 @@ export const DAY_KIND_NAME = ["Weekday", "Weekend"] as const;
 export type DemandDay = DayKind | 2;
 export const DEMAND_DAYS: DemandDay[] = [0, 1, 2];
 export const AVERAGE_DAY = 2;
-/** How a figure for the day shown ends: "12,400 trip legs a day on average". */
-export const DEMAND_DAY_PHRASE = ["a weekday", "a weekend day", "a day on average"] as const;
+/** How a figure for the day shown ends: "12,400 trip legs a day". The Day choice names the day. */
+export const DEMAND_DAY_PHRASE = ["a weekday", "a weekend day", "a day"] as const;
 const WEEKDAY_NAME = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 /** Day of the week of game day `day`, 0 Monday. */
