@@ -666,6 +666,11 @@ if os.path.exists(_JZ):
         for _zid, _z in json.load(_f)["zones"].items():
             CITIES[_zid] = _japan_zone(_zid, _z)
 
+# T-537: the world plan's planned cities, configs generated from their rows (pipeline/plan_config.py)
+import plan_config  # noqa: E402
+for _cid, _cfg in plan_config.planned().items():
+    CITIES.setdefault(_cid, _cfg)
+
 
 # ---------------------------------------------------------------- downloads
 

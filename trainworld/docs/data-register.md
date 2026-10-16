@@ -165,6 +165,8 @@ adding-a-city.md 1). Downloads in `data/raw/worldplan/`, fetched when missing.
 | Country of a centre | U Natural Earth admin 0, 1:10M | public domain |
 | Extracts | U Geofabrik `index-v1.json` | ODbL (OSM) |
 | Time zones | U timezonefinder 6.6 (offline, timezone-boundary-builder) | MIT; data ODbL |
+| Outline of a planned city | U OSM `boundary=administrative` relations from the row's Geofabrik extracts, matched to the plan's units (`osm_units.py`, T-537) | ODbL |
+| Informal work (jobs blend) | U ILO modelled vulnerable employment, World Bank SL.EMP.VULN.ZS (T-537); - informal employment SL.ISV.IFRM.ZS, archived by the World Bank | CC BY 4.0 |
 
 ## Archetypes
 

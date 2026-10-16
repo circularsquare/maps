@@ -3,6 +3,9 @@ and which whole admin units each one holds.
 
     python pipeline/world_plan.py           plan, write pipeline/world_plan.json and the extents
     python pipeline/world_plan.py check     the same, then the eight-pack test and the next-50 picture
+    python pipeline/world_plan.py row <pack> <out.json>
+                                            one existing pack's metro planned as if the pack did not
+                                            exist, as a one-row plan file (T-537's test build)
 
 The rules are docs/adding-a-city.md "Which cities, and where their edges go". Downloads land in
 data/raw/worldplan/ when missing; extents as GeoJSON in data/work/worldplan/. Everything is computed
@@ -803,18 +806,30 @@ def outline_of(us, taken, before):
     return polygonal(g)
 
 
-def finish(st, rows):
+def iso2s():
+    """ISO 3166 alpha-3 (as countries() codes them) to alpha-2, from Natural Earth."""
+    df = pyogrio.read_dataframe(f"zip://{NE}", columns=["ISO_A3", "ADM0_A3", "ISO_A2_EH"], read_geometry=False)
+    out = {}
+    for iso, adm, a2 in zip(df.ISO_A3, df.ADM0_A3, df.ISO_A2_EH):
+        code = iso if iso != "-99" else adm
+        out[NE_FIX.get(adm, NE_FIX.get(code, code))] = a2
+    return out
+
+
+def finish(st, rows, taken=None):
     """Order, ids, names, origins, time zones, extracts, archetypes; the rows as JSON."""
     from timezonefinder import TimezoneFinder
     tf = TimezoneFinder()
     ex, kids = geofabrik()
+    a2 = iso2s()
+    taken = st["packs"] if taken is None else taken
     rank = {"uk": 0, "europe": 1, "world": 2}
     rows.sort(key=lambda r: (rank[r["metro"]["region"]], -r["people"]))
     used = set(st["packs"]) | {c["id"] for c in json.loads(REGISTRY.read_text(encoding="utf-8"))["cities"]}
     out, feats, before = [], [], []
     for n, r in enumerate(rows, 1):
         m = r["metro"]
-        g = outline_of(r["units"], st["packs"], before)
+        g = outline_of(r["units"], taken, before)
         before.append(g)
         x, y, _ = r["core"]
         lon, lat = INV.transform(x, y)
@@ -824,13 +839,14 @@ def finish(st, rows):
         by = collections.Counter()
         for u in r["units"]:
             by[u.iso] += u.pop
-        arch, module = ARCHETYPE.get(by.most_common(1)[0][0], ("D", None))
+        main_iso = by.most_common(1)[0][0]
+        arch, module = ARCHETYPE.get(main_iso, ("D", None))
         if module == "england" and not all(u.id[:3] in ("TLC", "TLD", "TLE", "TLF", "TLG", "TLH", "TLI", "TLJ", "TLK")
                                            for u in r["units"]):
             arch, module = "D", None
         cid = make_id(r["name"], used)
         row = {"order": n, "id": cid, "name": r["name"], "status": "planned", "region": m["region"],
-               "countries": isos, "people": round(r["people"]),
+               "countries": isos, "iso2": a2.get(main_iso), "people": round(r["people"]),
                "origin": [round(lon, 4), round(lat, 4)], "tz": tz, "utc_offset": std_offset(tz),
                "extracts": extracts(ll, ex, kids), "archetype": arch, "module": module,
                "units": {iso: [u.id for u in r["units"] if u.iso == iso] for iso in isos},
@@ -927,6 +943,24 @@ def picture(feats, pk, n=50):
     log(f"picture: {path}")
 
 
+def test_row(st, pid, out):
+    """The row an existing pack's metro gets when planned as if the pack did not exist, written as
+    a one-row plan file. `test_of` names the pack, so its outline is not cut along it."""
+    taken = {k: v for k, v in st["packs"].items() if k != pid}
+    rows, _ = plan(st, taken)
+    best = max(rows, key=lambda r: sum(u.pop * u.pshare.get(pid, 0) for u in r["units"]))
+    done, _ = finish(st, rows, taken)
+    row = next(r for r in done if r["name"] == best["name"] and r["people"] == round(best["people"]))
+    row["test_of"] = pid
+    doc = {"note": f"T-537: pack {pid}'s metro planned as if the pack did not exist (world_plan.py row)",
+           "built": str(datetime.now().date()),
+           "unit_sources": {iso: st["sources"][iso] for iso in row["countries"]}, "metros": [row]}
+    Path(out).parent.mkdir(parents=True, exist_ok=True)
+    Path(out).write_text(json.dumps(doc, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+    log(f"{pid}: {row['name']} as {row['id']}, {row['people'] / 1e6:.2f}M people, "
+        f"{sum(len(v) for v in row['units'].values())} units; {out}")
+
+
 def main(argv):
     import pickle
     cache = WORK / "state.pkl"  # the units and their shares; --fresh rebuilds it
@@ -937,6 +971,8 @@ def main(argv):
         st = build()
         WORK.mkdir(parents=True, exist_ok=True)
         cache.write_bytes(pickle.dumps({k: v for k, v in st.items() if k != "pop"}))
+    if argv and argv[0] == "row":
+        return test_row(st, argv[1], argv[2])
     rows, dropped = plan(st, st["packs"])
     out, feats = finish(st, rows)
     write(st, out, feats, dropped)

@@ -1,5 +1,6 @@
 ﻿# Archive
 
+- T-537 [P2] Pipeline stage 5, generated config and a generic OSM outline. Done 2026-10-16: `plan_config.py`, `osm_units.py`; Lagos from its plan row, jobs by 2 km zone 0.3% misplaced on the shared area, 6.9% whole (the plan drops Ikorodu and Epe: T-556). notes/T-537.md.
 - T-545 [P2] Lagos's gravity on the borrowed curve. Done 2026-10-16 (Anita's go-ahead): d^-1.8 exp(-d/80 km), mean trip 8.97 km; 67 packs open, smoke 9,775,704 rail trips a day; registry trip totals refreshed after T-544. Backup in data/work/pre-T545/.
 
 - T-549 [P2] Interface from Anita's notes. Done 2026-10-16: bubbles have no outline unless selected; "Counts as" hover sums the first route term by term; the line view ends with average speed and each transfer stop shows its top two other lines plus a "+".

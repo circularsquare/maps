@@ -66,7 +66,10 @@ building Toronto from tier 0 against the real pack (notes/T-287.md has every tab
   fixes it without wrecking Toronto, whose centre is towers (the height weight that finds
   Toronto's core misses London's). The total is the residents' rate, so a pack that draws
   commuters from beyond its edge is short (London -19%; Toronto +9%). Where much work is informal
-  or at home (Mumbai), buildings miss it, so raise the population share; where industry is
+  or at home (Mumbai), buildings miss it, so the population share rises: in a planned city it is
+  the country's ILO vulnerable employment share held to 0.2-0.5, the other two shares moving with
+  it to 0.2 and 0.3 at the top (T-537; a national figure with farming in it, so it overstates a
+  middle-income city's informal work); where industry is
   large, industrial land overdraws (Brampton +40%). Check, for the next big old centre (Paris):
   the proxy's core against any published central job count.
 - **Where workers live** is population x one rate (no source by residence): 3.8% misplaced

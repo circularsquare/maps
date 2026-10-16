@@ -28,7 +28,7 @@ costs $2.25 a car-km (T-467, T-485). Real save's demand final: about 9.78M rail 
 stage 6). History is in ARCHIVE.md.
 
 **Handoff for the next orchestrator (2026-10-16, evening).** Nothing is in flight; last commit
-ec82d76 is on 8800. Check `git status`, the taking marks here and ARCHIVE.md first. Anita's playtest
+c83cb00 is on 8800. Check `git status`, the taking marks here and ARCHIVE.md first. Anita's playtest
 notes land in TODO.md (hers; read it, file new items as tasks, never edit it). Her open playtest
 questions (rays to a selection, clipped line bullets, curve labels' metres) were answered in T-530. CPU: at most 5 cores for all agents together (CLAUDE.md). Asks for Anita go in
 the final message or notes/for-anita.md, never TODO.md. **After each commit**:
@@ -115,8 +115,9 @@ TASKS.md and ARCHIVE.md before adding one). New packs end with `merge_cells.py <
 Tier 0 and country sources: docs/demand-worldwide.md, docs/data-register.md.
 
 - The unattended city pipeline (T-535's design, approved 2026-10-16; notes/T-535.md "Stages" has each stage's done criteria). Stages 1-3 are T-460, T-387 and T-314, side by side; then:
-- T-537 [P2] Pipeline stage 5, generated config and a generic OSM outline (`osm_units.py`, generalising `nigeria.py`): Lagos built from its plan row alone. After T-536. Taking, 2026-10-16; notes/T-535.md.
 - T-538 [P2] Pipeline stage 6, the gate (`checks/pack_gate.py`, with T-424): all 67 packs through it. Can start beside T-536. Taking, 2026-10-16; notes/T-535.md.
+- T-555 [P2] Country modules in the generated config: `plan_config.py` builds every planned row from global sources, so the UK's first rows would skip England's census hooks (and France, Germany, Japan, India, Brazil, China, Korea theirs). Give each module one `plan_hooks(row)` returning config keys, applied by `plan_config`. Before the UK batch. Open; notes/T-537.md.
+- T-556 [P2] The world plan misses growth since 2015: GHS-FUA R2019A's Lagos area leaves out Ikorodu (0.77M) and Epe, which the hand pack and Africapolis include, so Lagos from its plan row misplaces 6.9% of jobs against the hand pack (0.3% on the shared area). Consider a unit joining when its people are in the 2025 urban centre's built-up reach as well as the 2015 FUA; recheck the eight-pack test. Open; notes/T-537.md.
 - T-539 [P2] Pipeline stage 7, automatic joint commute gravity groups (`intercity.py --group auto`). Open; notes/T-535.md.
 - T-540 [P2] Pipeline stage 8, the runner (`world_run.py`) and a 5-city pilot no agent touches. Needs stages 1-7. Open; notes/T-535.md.
 - T-541 [P2] Pipeline stage 10, the first batch of about 20 cities (UK first), with a batch retrospective. After T-540; publishing past the current set needs T-060 and Anita's word. Open; notes/T-535.md.

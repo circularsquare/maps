@@ -122,6 +122,8 @@ def build(city):
     if not os.path.exists(os.path.join(RAW, f"osm_places_{city}.json")):
         extract = cfg.get("extract")
     latin = cfg.get("latin_names", False)
+    if callable(latin):  # a planned city decides from its units' OSM names (osm_units.latin_names, T-537)
+        latin = latin()
     ja = __import__("japan") if cfg.get("kana_romaji") else None
     n_latin, name_src = 0, {}
     data = from_extract(extract, bbox) if extract else fetch(city, bbox)

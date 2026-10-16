@@ -56,7 +56,8 @@ inside each area by the proxy; jobs_url), population (callable (city, boundary, 
 (people per signal cell, source name), optional: census counts by small area), od_share ({OurAirports ident: share}, optional), boardings ({OurAirports
 ident: (boardings a year, "year, source")}, optional: a national figure in place of Wikidata's), curve or
 decay_pow/decay_km, region_name (optional), epoch (GHSL epoch, default 2020), job_blend (the proxy's
-blend in place of JOB_BLEND, optional: a larger population share where much work is informal),
+blend in place of JOB_BLEND, or a callable returning it, optional: a larger population share where
+much work is informal),
 land_cap_km2 and land_spread_deg (optional, default LAND_CAP_KM2 and LAND_SPREAD_DEG, 0 for none: the
 cap on one OSM industrial or commercial area's job-place weight and the grid it is spread over; T-459, T-460), everyday (callable
 (city, lat, lon, jobs per pack cell) -> {"errand" and/or "leisure": (sector jobs per cell, source
@@ -775,8 +776,10 @@ def main(city):
         sig["pop"], pop_name = cfg["population"](city, boundary, sig)
     P = float(sig["pop"].sum())
     wfh = cfg.get("wfh", 0.0)
+    if callable(cfg.get("job_blend")):  # a planned city's rule (plan_config.job_blend, T-537)
+        cfg["job_blend"] = cfg["job_blend"]()
     job_blend = cfg.get("job_blend", JOB_BLEND)
-    blend = ", ".join(f"{k} {v:.0%}" for k, v in job_blend.items())
+    blend =", ".join(f"{k} {v:.0%}" for k, v in job_blend.items())
     proxy = f"spread by {blend} (GHSL GHS-BUILT-V NRES x (height / 10 m)^{HEIGHT_POW}, OSM job places, population)"
     if cfg.get("jobs"):
         jobs, jobs_name = cfg["jobs"](city, boundary, sig, jobs_from(sig, 1.0, job_blend))
