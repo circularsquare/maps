@@ -204,6 +204,10 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
 - `nocar.py <ids> | --all` adds `nocar` (people in households with no car, per cell; T-511) to
   the res-9 copy and the merged pack, append-only; rerun it after anything that rebuilds a pack
   (its sources: docs/data-register.md "Car ownership").
+- `everyday_rates.py <ids> | --all` writes the `everyday` header block (the country's survey
+  outing rates and distance scales by purpose, T-509 stage 4; table `SURVEYS`, worldwide median
+  otherwise) into the merged pack and its res-9 copy; rerun it after anything that rebuilds a pack
+  header. `show` prints the table.
 - `osm_water.py` is the water source for cities outside the US (OSM coastline sea plus Geofabrik
   inland water, T-041; `source(extracts)` for a config's `water_source`, `mask <id>` for a
   water-only pack in `data/work/osm_water/`; docs/adding-a-city.md).

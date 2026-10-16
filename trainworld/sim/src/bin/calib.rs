@@ -6,6 +6,7 @@
 //!   cargo run --release --features demand --bin calib -- --net data/work/realnet/nyc_real.json
 //!       --out run.json [--pack data/packs/nyc.json] [--rounds 3] [--areas cell_area.u8]
 //!       [--params p.json] [--set name=value,..] [--fares 1.5,0.1 | --no-fares] [--no-everyday]
+//!       [--info-only]
 //!
 //! The pack defaults to the network's `pack`. Parameters: `--params` a JSON object of
 //! `Params::set_extra` names, then `--set` on top; both layers get them. Fares default to the
@@ -82,6 +83,12 @@ fn main() {
     // the everyday layer takes the commutes' parameters and walk curve as they are now
     let mut ev = if has("--no-everyday") { None } else { Some(EverydayApi::beside(&api, &h, &b).unwrap()) };
     let t_open = now_ms() - t0;
+    // the everyday outings and their mean km by purpose only, no network (T-509 stage 4's decay fit)
+    if has("--info-only") {
+        let info = ev.as_ref().map(|e| e.info());
+        std::fs::write(&out_path, json!({"everyday_info": info}).to_string()).unwrap();
+        return;
+    }
 
     let d = &net["demand"];
     let (st_xy, line_n, stops, times, tph, cars) = (arr_f32(d, "st_xy"), arr_u32(d, "line_n"), arr_u32(d, "stops"), arr_f32(d, "times"), arr_f32(d, "tph"), arr_f32(d, "cars"));
@@ -258,6 +265,8 @@ fn main() {
         "params": format!("{:?}", api.params_mut()),
         "ms": {"open": t_open, "network": t_net, "solve": t_solve, "all": t_all},
         "day": {"commute": c_tot, "everyday": e_tot, "everyday_kinds": kinds},
+        // `EverydayApi::info`: by purpose, outings, walking share, mean km (T-509 stage 4)
+        "everyday_info": ev.as_ref().map(|e| e.info()),
         "st_map": api.station_map(),
         "entries": {"commute": r1(&ent_c), "everyday": r1(&ent_e), "am": r1(&ent_am)},
         "lines": {"board": r1(&line_board), "same_line_changes": r1(&same_line)},

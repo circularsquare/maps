@@ -655,6 +655,14 @@ impl DemandApi {
         if let (Some(nc), Some(pop)) = (pack::cell_weights(header, bin, "nocar", city.len())?, pack::cell_weights(header, bin, "pop", city.len())?) {
             base.nocar = Some(Arc::new(nc.iter().zip(&pop).map(|(&n, &p)| if p > 0.0 { (n / p).min(1.0) } else { 0.0 }).collect()));
         }
+        // T-509 stage 4: the everyday rates and decay lengths of the pack's country
+        for (what, key) in [("rate", "rate"), ("decay", "decay_m")] {
+            for (kind, v) in h["everyday"][key].as_object().into_iter().flatten() {
+                if let Some(x) = v.as_f64() {
+                    base.set_extra(&format!("{what}_{kind}"), x as f32)?;
+                }
+            }
+        }
         let (walk_home_zone, walk_work_zone) = gr.walk_trips_by_zone(&z);
         let walk_all = walk_home_zone.iter().sum();
         let other_all = other_all(&city, &z, &gr, &base);

@@ -89,10 +89,15 @@ else. A pack without these arrays opens
 commute-only. Per-city inputs and totals, and per-capita checks against New York:
 [T-142](../notes/T-142.md).
 
-**Everyday outings (T-066).** All resident population generates home-based shopping/
-errands (0.3 outings/person/day) and social/leisure (0.2), each with an outward and return leg.
-These are partial, provisional activity budgets, not survey estimates or a commute-share target.
-Shopping attracts trips by retail and other-service employment (LODES CNS07+CNS19). Social
+**Everyday outings (T-066; rates T-509).** All residents generate home-based shopping/errands,
+social/leisure and medical outings, each an outward and return leg, at their country's weekday
+rates from its national travel survey, a worldwide median where it has none
+(`pipeline/everyday_rates.py`, written into the pack's `everyday` header block; the sim's defaults
+0.3, 0.2 and 0.04 only for a pack without one). The US's, from NHTS 2017: errands 0.577, social
+0.424, medical 0.044 a resident a weekday. A survey's legs for a purpose, the leg home counted
+under the activity it leaves, are halved into outings, so its legs are kept whatever its trip
+chains. Errands are shopping, personal business and escorting; social is leisure, visits, meals
+out and religious; business trips have no game purpose. Shopping attracts trips by retail and other-service employment (LODES CNS07+CNS19). Social
 destinations mix three independently normalized draws: population (visits to friends and family)
 46%, food/recreation jobs (CNS17+CNS18) 46%, and **parks 8%** (T-196; a pack without parks keeps
 50/50). Employees are relative draw, never customer capacity. Outside the US (T-453) the same
@@ -124,7 +129,10 @@ The pipeline spreads original sector locations by the same block land-area metho
 office/headquarters commute corrections do not relocate these customer weights.
 
 Destination gravity is origin-constrained: zone attraction times exp(-distance/scale), normalized
-per origin zone, with scales 3 km errands and 6 km social; same-zone distance is 1.04 km.
+per origin zone, with the pack's country's scales (US: errands 2.15 km, social 2.42 km, medical
+3.53 km), each set so the game's mean outing length matches the survey's mean straight-line leg
+under 46 km (the game's mean is about 0.7 + 1.7 x the scale at 2 km zones in every pack);
+same-zone distance is 1.04 km.
 Deterministic stratified destination samples per cell/purpose integrate that distribution: one
 per 8 of the cell's trips a day for the purpose, rounded up, 2 to 16 (T-397; none for a cell
 with no budget for that purpose),
@@ -136,7 +144,7 @@ journeys are not separately represented. Existing commuting behavior stays uncha
 Local weight tapers smoothly from 1 at 40 km to 0 at 80 km; trips at 80 km or more disappear
 from this layer. Only within-pack everyday outings are generated here. Since T-276 the regional
 market's longer trips start at 25 km (docs/zones.md 5), so the two overlap from 25 to 80 km; the
-local outings' 3-6 km decays leave under 2% of social outings past 25 km, so the double count is
+local outings' 1.3-3.7 km decays leave under 2% of social outings past 25 km, so the double count is
 negligible, and airport trips (20 km decay), which the market does not place at airports, keep
 their reach (decision T-276).
 

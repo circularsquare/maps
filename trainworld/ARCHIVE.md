@@ -1,5 +1,7 @@
 ﻿# Archive
 
+- T-450 [P3] Japan's everyday rates from the Tokyo PT survey. Done 2026-10-16 in T-509 stage 4: every pack takes its country's survey rates and scales (Japan errands 0.273, social 0.122, medical 0.037). notes/T-509.md section 12.
+
 - T-517 [P2] A floor on headway. Done 2026-10-16: whole-line fleets are cut so no resource exceeds 100% (progressive filling); surplus trains wait at the ends; section base 90 s to 70 s (34 trains/h at 80 km/h); red map marker and line panel callout. docs/track-and-service.md 6.2.
 - T-520 [P2] Lines to the selection. Done 2026-10-16: a selected zone has faint 1 px lines to every other zone bubble; a bubble selection's far-end bubbles each get a stub toward it fading out over a tenth of the screen (`LINES_TO_SELECTION` in `map/commuterView.ts` turns them off).
 - T-519 [P2] A station selection no longer changes the map. Done 2026-10-16: the catchment discs and the station's inter-region discs are gone; bubbles, overview and airport badges stay; the station inspector keeps its commuters and places.

@@ -216,11 +216,10 @@ Tier 0 with census tracts and a household travel survey; notes/T-458.md has the 
   straight-line distances, with the bands under 4 km as one (2 km zones cannot split them):
   d^-1.8 exp(-d/19 km), mean 8.5 km as the survey's. Other Brazilian metros have published OD
   surveys (the odbr R package gathers them); IBGE's census has no workplace table by small area.
-- **Everyday trips against the survey** (weekday, home-based): the game's errands run 6.6 km
-  against 4.8 and social outings 10.8 km against 4.9; social outings to the centre are twice the
-  survey's share from the rest of the city (18% against 9%). The survey's rates are far below New
-  York's (errands 0.09 a resident against 0.30, social 0.04 against 0.20). Not calibrated
-  (Anita 2026-10-15); evidence for T-450's per-pack rates and the everyday scales.
+- **Everyday rates and scales** (T-509) are Brazil's from the OD 2017 microdata ("Everyday trip
+  rates" below): errands 0.106, social 0.057, medical 0.044 outings a resident, scales 2.3, 1.9
+  and 3.7 km. Before them the game's social outings ran 10.8 km against the survey's 4.9 and sent
+  twice its share to the centre.
 - **Names**: OSM `name` is Portuguese; no `latin_names`.
 
 ## Germany (Berlin, `pipeline/germany.py`, T-290, 2026-10-15)
@@ -510,12 +509,29 @@ notes/T-420.md has the tables.
 
 ## Other purposes
 
-- **Everyday trip rates.** Shopping/errands 0.299 and social/leisure 0.200 outings per resident a
-  day, New York's rates applied everywhere (T-142). Social destinations are population, leisure
-  jobs and parks (46 / 46 / 8%, T-196). ATUS 2023
+- **Everyday trip rates and distance scales** (T-509 stage 4, `pipeline/everyday_rates.py`, the
+  pack's `everyday` block; notes/T-509.md section 12). Each country's weekday outings a resident
+  from its national travel survey: legs by purpose, the leg home under the activity it leaves,
+  halved (surveys with a "return home" purpose spread those trips over the purposes first),
+  errands = shopping, personal business and escorting, social = leisure, visits, meals out and
+  exercise, business left out. US (NHTS 2017) 0.577 / 0.424 / 0.044 (errands / social / medical),
+  England (NTS) 0.554 / 0.291, France (EMP 2019) 0.497 / 0.375, Germany (MiD 2017) 0.518 / 0.365,
+  Japan (Tokyo PT 2018) 0.273 / 0.122 / 0.037, Korea (KTDB 2016) 0.189 / 0.110, Brazil (Sao
+  Paulo OD 2017) 0.106 / 0.057 / 0.044; elsewhere (Canada, China, India, Nigeria) the median,
+  0.497 / 0.291 / 0.044. Each scale is set so the game's mean outing length equals the survey's
+  mean straight-line leg (errands 1.3-2.3 km, social 1.9-3.0 km, medical 1.7-3.7 km; median
+  2.06 / 2.34 / 3.53 km). Why it may not carry over: surveys differ in what they count (short
+  walks, trip chains, ages 5 or 6 and up, a weekday or the whole week), medical is split out only
+  in the US, Brazil and Japan (elsewhere 0.044 is taken out of errands), most lengths are
+  reported road distance made straight line at 1.3, and one metro stands for each country's
+  scales; poorer countries' surveys (Sao Paulo 2.0 trips a resident) run far below rich ones', so
+  the median is a rich-country default for Lagos or Mumbai. Check: a new country's national
+  survey by purpose, and its rail share by purpose against the game's everyday rail share
+  (New York's NHTS legs: errands 4.7%, social 7.2%, against the game's 13%).
+- **Social destinations** are population, leisure jobs and parks (46 / 46 / 8%, T-196). ATUS 2023
   puts only 23% of US leisure outings at someone else's home against the model's 46% population
   draw (the population draw also stands for neighbourhood leisure LODES misses), worth a look
-  with any non-US survey. The rates need a non-US source (national travel surveys).
+  with any non-US survey.
 - **Everyday destinations** (T-453, notes/T-453.md and T-456.md). Errands are drawn by jobs in
   retail and personal services, leisure by jobs in food, accommodation, arts and recreation (LODES
   CNS07 + CNS19 and CNS17 + CNS18), as relative weights scaled to 15% and 8% of the pack's jobs.

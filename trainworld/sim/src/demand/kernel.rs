@@ -167,6 +167,11 @@ pub struct Params {
     pub other_kmh: f32,
     pub other_wait_min: f32,
     pub other_asc: f32,
+    /// The everyday layer's outings per resident (per enrolled student for school and
+    /// university) and destination decay lengths in metres, by `everyday::KINDS` (T-509 stage
+    /// 4). Read when `EverydayApi::beside` opens; the pack's `everyday` block sets them.
+    pub everyday_rate: [f32; 6],
+    pub everyday_decay_m: [f32; 6],
 }
 
 impl Default for Params {
@@ -243,6 +248,8 @@ impl Default for Params {
             other_kmh: 12.0,
             other_wait_min: 8.0,
             other_asc: OTHER_ASC,
+            everyday_rate: super::everyday::RATE,
+            everyday_decay_m: super::everyday::DECAY,
         }
     }
 }
@@ -303,6 +310,13 @@ impl Params {
                 if let Some(c) = &self.nocar {
                     self.nocar = Some(std::sync::Arc::new(c.iter().map(|x| (x * v).min(1.0)).collect()));
                 }
+            }
+            // the everyday layer's, by purpose (`rate_errands`, `decay_social` in metres); before
+            // `EverydayApi::beside`
+            _ if k.starts_with("rate_") || k.starts_with("decay_") => {
+                let (what, kind) = k.split_once('_').unwrap();
+                let i = super::everyday::KINDS.iter().position(|&n| n == kind).ok_or(format!("unknown parameter {k}"))?;
+                if what == "rate" { self.everyday_rate[i] = v } else { self.everyday_decay_m[i] = v }
             }
             // the drive before T-090: one speed everywhere
             "road_kmh" => {
@@ -3098,6 +3112,16 @@ mod tests {
 
     fn common_test_params() -> Params {
         Params { xfer_walk_m: 0.0, w_wait: 1.0, w_home_wait: 1.0, platform_wait_cap_min: 100.0, ..Params::default() }
+    }
+
+    #[test]
+    fn everyday_rates_by_name() {
+        let mut p = Params::default();
+        p.set_extra("rate_social", 0.42).unwrap();
+        p.set_extra("decay_medical", 3500.0).unwrap();
+        assert_eq!((p.everyday_rate[1], p.everyday_decay_m[5]), (0.42, 3500.0));
+        assert_eq!(p.everyday_rate[0], super::super::everyday::RATE[0]);
+        assert!(p.set_extra("rate_shopping", 0.1).is_err());
     }
 
     /// T-380's parking: by jobs per km² of land, the paid price, the free share and the cordon;

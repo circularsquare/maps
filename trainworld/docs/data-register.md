@@ -108,6 +108,25 @@ curve fitted on US tracts and English LSOAs (demand-worldwide.md "Driving altern
 | India | U MoRTH cars, jeeps and taxis per 1,000 (2022) x household size, national |
 | Nigeria | U NBS private vehicles per 1,000 (2018) x household size, national |
 
+## Travel surveys
+
+Everyday outing rates and distance scales by purpose (T-509 stage 4, `pipeline/everyday_rates.py`);
+a country without one takes the surveys' median.
+
+| Country | Rates | Lengths |
+|---|---|---|
+| United States | U NHTS 2017 microdata, weekday legs by purpose (on disk); N NHTS 2022 | U NHTS New York CBSA legs under 46 km, road miles / 1.3 |
+| Canada | - (TTS is Toronto-only, not opened); worldwide | worldwide |
+| England (UK) | U NTS0504b weekday trips by purpose, 2015-19; G NTS and LTDS microdata (UKDS) | U NTS0413 London residents' errand lengths; social worldwide (no cut-off in the published means) |
+| France | U EMP 2019 weekday motifs table (SDES); N EMP microdata (open, media/5052) for medical and exact lengths; G EGT 2018-20 (omnil.fr 403) | U EMP declared km x the Paris area factor |
+| Germany | U MiD 2017 Ergebnisbericht by Zweck, made weekday; G MiD tables tool (login) | U SrV 2018 Berlin Steckbrief |
+| Japan | U Tokyo PT 2018 press tables (private split); U national survey 2021 (MLIT Excel) as a check; G Tokyo PT tabulations (application form, login) | U Tokyo welfare bureau 2021, straight-line km by purpose |
+| Brazil | U Sao Paulo OD 2017 microdata | U the same, straight line |
+| China | -; worldwide | worldwide |
+| South Korea | U KTDB 2016 national O/D report, capital-area sample counts; G KTDB 2021 survey (account) | U Gyeonggi transport DB 2016 bands (Seoul, Gyeonggi) |
+| India | -; worldwide | worldwide |
+| Nigeria | -; worldwide | worldwide |
+
 ## Destinations
 
 | Country | Schools | Universities | Medical | Airports |

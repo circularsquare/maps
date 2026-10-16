@@ -135,7 +135,8 @@ lines; an edit re-solves only the clusters it touched, the others keep their fig
 Each zone's local layer models seven purposes from the same national and global sources [T-066,
 T-140, T-142, T-150, T-152, T-181]: **commutes** (a doubly constrained gravity from LODES homes to
 jobs), **shopping and errands** and **social and leisure** outings (retail, food and recreation
-jobs, population, and OSM parks for 8% of leisure, T-196), **school** (NCES public schools),
+jobs, population, and OSM parks for 8% of leisure, T-196; how many and how far from each
+country's national travel survey, T-509), **school** (NCES public schools),
 **university** (IPEDS), **airport** ground trips (FAA boardings less connecting passengers) and
 **medical** visits (OSM facilities). Private schools are not modelled yet. **Homes leave out
 institutions** (prisons, nursing homes and the like, T-234).

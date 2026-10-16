@@ -20,8 +20,12 @@ pub const MIN_DISTANCE_M: f32 = 150.0;
 /// Kinds 0, 1 and 5 are outings per resident; 2 and 3 attendance per enrolled student (samples
 /// drawn from the site); 4 the airport's own daily ground trips (`airport_trips`), its homes and
 /// visitors' ends drawn from each origin cell but normalised per airport.
-const RATE: [f32; 6] = [0.3, 0.2, 0.9, 0.6, 1.0, 0.04];
-const DECAY: [f32; 6] = [3000.0, 6000.0, 2500.0, 6000.0, 20000.0, 5000.0];
+/// The defaults of `Params::everyday_rate` and `everyday_decay_m`; a pack's `everyday` block
+/// (its country's survey, T-509 stage 4) overrides them.
+pub const RATE: [f32; 6] = [0.3, 0.2, 0.9, 0.6, 1.0, 0.04];
+pub const DECAY: [f32; 6] = [3000.0, 6000.0, 2500.0, 6000.0, 20000.0, 5000.0];
+/// The purposes' names in `set_extra` (`rate_errands`) and the pack's `everyday` block.
+pub const KINDS: [&str; 6] = ["errands", "social", "school", "university", "airport", "medical"];
 pub const OUTWARD: [[f32; 5]; 6] = [
     [0.10, 0.55, 0.30, 0.04, 0.01],
     [0.05, 0.35, 0.42, 0.17, 0.01],
@@ -225,8 +229,8 @@ impl DecayTable {
 /// origin cells sample airports by. An origin cell then sends `origin x` the sum over airports of
 /// mass x decay from its zone, and every airport receives exactly its trips (before the 150 m
 /// exclusion and the 40-80 km taper, which apply to every purpose).
-fn airport_draw(z: &Zones, members: &[Vec<usize>], origin: &[f32], trips: &[f32]) -> Vec<f32> {
-    let table = DecayTable::new(&z.gx, &z.gy, z.zone_m, DECAY[AIRPORT]);
+fn airport_draw(z: &Zones, members: &[Vec<usize>], origin: &[f32], trips: &[f32], decay_m: f32) -> Vec<f32> {
+    let table = DecayTable::new(&z.gx, &z.gy, z.zone_m, decay_m);
     let w: Vec<f64> = members.iter().map(|m| m.iter().map(|&c| origin[c] as f64).sum()).collect();
     let zones: Vec<usize> = (0..z.n).filter(|&k| w[k] > 0.0).collect();
     let zx: Vec<i32> = zones.iter().map(|&k| z.gx[k]).collect();
@@ -1443,6 +1447,8 @@ pub struct EverydayApi {
     first: Vec<Vec<u32>>,
     /// The last `owner` answer: the sample loops go in order, so the next is that one or close.
     at: std::cell::Cell<(usize, usize)>,
+    /// `Params::everyday_rate` as at opening: the samples and totals were drawn with it.
+    rate: [f32; 6],
 }
 
 impl EverydayApi {
@@ -1557,7 +1563,7 @@ impl EverydayApi {
             AIRPORT => (self.airport_origin[c] as f64 * self.airport_scale[self.engine.z.cell_zone[c] as usize]) as f32,
             _ => self.engine.pop()[c],
         };
-        let weight = budget * RATE[kind] / per as f32 * local_share(distance);
+        let weight = budget * self.rate[kind] / per as f32 * local_share(distance);
         // T-275: the walk goes around water between the two cells' zones
         let walk_f = match &self.engine.gr.wroutes {
             Some(r) => r.walk_factor(self.engine.z.cell_zone[c] as usize, self.engine.z.cell_zone[d] as usize),
@@ -1847,6 +1853,7 @@ impl EverydayApi {
         // Access centroids and road density use real residents/employment, not commuter weights.
         let jobs = pack::cell_weights(header, bin, "jobs", n)?.ok_or("missing jobs")?;
         let engine = commutes.with_weights(pop, jobs);
+        let (rate, decay) = (engine.base.everyday_rate, engine.base.everyday_decay_m);
         let nz = engine.z.n;
         let mut members = vec![vec![]; nz];
         for c in 0..n {
@@ -1872,7 +1879,7 @@ impl EverydayApi {
                         *o = 0.0;
                     }
                 }
-                let mass = airport_draw(&engine.z, &members, &origin, trips);
+                let mass = airport_draw(&engine.z, &members, &origin, trips, decay[AIRPORT]);
                 (origin, Some(mass))
             }
             None => (vec![], None),
@@ -1905,7 +1912,7 @@ impl EverydayApi {
             let mut at = start[kind];
             f.push(at as u32);
             for &c in &live[kind] {
-                at += sample_count(kind, budget[c as usize] * RATE[kind]);
+                at += sample_count(kind, budget[c as usize] * rate[kind]);
                 f.push(at as u32);
             }
             first.push(f);
@@ -1929,7 +1936,7 @@ impl EverydayApi {
             let zx: Vec<i32> = zones.iter().map(|&z| engine.z.gx[z]).collect();
             let zy: Vec<i32> = zones.iter().map(|&z| engine.z.gy[z]).collect();
             let zmass: Vec<f64> = zones.iter().map(|&z| mass[z]).collect();
-            let table = DecayTable::new(&engine.z.gx, &engine.z.gy, engine.z.zone_m, DECAY[kind]);
+            let table = DecayTable::new(&engine.z.gx, &engine.z.gy, engine.z.zone_m, decay[kind]);
             let budget = budget_of(kind);
             row.fill(NONE);
             for (i, &c) in live[kind].iter().enumerate() {
@@ -1982,6 +1989,7 @@ impl EverydayApi {
             live,
             first,
             at: std::cell::Cell::new((0, 0)),
+            rate,
         };
         for r in chunks(api.destinations.len()) {
             api.add_totals(r);
