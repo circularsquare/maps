@@ -70,8 +70,10 @@ Briefs carry only the task; these hold for every agent.
   orchestrator builds and commits. `npm run wasm --prefix app` is fine when Rust changed.
 - **Rust**: `CARGO_BUILD_JOBS=3`; keep the crate compiling between edits, since others build it
   too. Shells started before Rust was installed lack it on PATH: prepend `%USERPROFILE%\.cargo\bin`.
-- **CPU**: at most 5 of 16 cores in all, every agent together (Anita, 2026-10-16); she is using the machine.
-  Overnight batches she has approved (a run started for the night) may use up to 12 (Anita, 2026-10-16, T-535).
+- **CPU**: at most 6 of 16 cores in all, every agent together, while Anita is using the machine;
+  up to 12 overnight (Anita, 2026-10-16).
+- **Calibration of new cities** (Anita, 2026-10-16): cities added through the world plan need no
+  calibration beyond the pipeline's gate; a deep calibration comes once everything is in.
 - **Bash**: one simple command per call (no `&&`, pipes or loops); scripts go in a file in your
   scratchpad folder, not heredocs.
 - **Screenshots and diagnostics** go in `../artifacts/trainworld/`, never in this folder.

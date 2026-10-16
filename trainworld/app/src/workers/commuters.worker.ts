@@ -82,7 +82,7 @@ function build(end: "home" | "work", train: Float32Array, walk: Float32Array, dr
   const out: BubbleLevel[] = levels.map((g) => {
     const a = aggregate(g, cellX, cellY, null, train, walk, drive);
     const s = reorder(a, biggestFirst(a));
-    return { discs: discs(s, 1 / BUBBLE_DENSITY[end], BUBBLE_ALPHA, 1, cur!), group: s.group, train: s.train, walk: s.walk, drive: s.drive };
+    return { discs: discs(s, 1 / BUBBLE_DENSITY[end], BUBBLE_ALPHA, 0, cur!), group: s.group, train: s.train, walk: s.walk, drive: s.drive };
   });
   return { levels: out, totals, anchor: cur! };
 }

@@ -48,8 +48,8 @@ void main() {
   o = vec4(0.0, 0.0, 0.0, 1.0 - clamp((d - u_outline) / u_glow, 0.0, 1.0));
 }`;
 
-// A disc per instance: radius in local units, colour and alpha, and an edge (0 none, 1 a white
-// edge of 1 px, 2 a dark outline of 2 px). No minimum size: a tiny count is a tiny disc.
+// A disc per instance: radius in local units, colour and alpha, and an edge (0 none, 2 a dark
+// outline of 2 px, a selected bubble's). No minimum size: a tiny count is a tiny disc.
 const DISC_VS = `#version 300 es
 precision highp float;
 uniform mat4 u_matrix;
@@ -97,9 +97,6 @@ void main() {
     float t = clamp(d - (v_r - 2.0 * u_dpr) + 0.5, 0.0, 1.0);
     col = mix(col, u_ink, t);
     a = mix(a, 1.0, t);
-  } else if (v_edge > 0.5 && v_r > 3.0 * u_dpr) {
-    float t = clamp(d - (v_r - u_dpr) + 0.5, 0.0, 1.0);
-    col = mix(col, vec3(1.0), t);
   }
   a *= cover;
   o = vec4(col * a, a);

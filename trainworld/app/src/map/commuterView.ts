@@ -633,7 +633,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
       // sized among themselves: the biggest about the area of a bubble's hexagon
       let max = 0;
       for (let i = 0; i < far.group.length; i++) max = Math.max(max, far.train[i] + far.walk[i] + far.drive[i]);
-      farDiscs = discs(far, max > 0 ? (0.6 * RES_AREA_M2[level]) / max : 0, BUBBLE_ALPHA, 1, farAnchor);
+      farDiscs = discs(far, max > 0 ? (0.6 * RES_AREA_M2[level]) / max : 0, BUBBLE_ALPHA, 0, farAnchor);
       view.setDiscs("far", farDiscs, farAnchor);
     } else {
       far = farDiscs = null;

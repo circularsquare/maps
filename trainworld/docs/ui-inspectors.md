@@ -97,8 +97,12 @@ key.
   Yesterday switch (the Segmented pattern of Settings; the choice is kept while the page is open)
   and Yesterday gives the same figures for the last complete day in the line's local time, running
   cost over its 24 hours at the trains it has now [T-408]; the stops with their time from
-  the start and boardings in the past 24 hours; the round trip split into running, dwell, turning and waiting,
-  naming where it waits most [T-031].
+  the start and boardings in the past 24 hours, each transfer stop (any station of its complex
+  served by another line) showing the two other lines with most boardings there in the past
+  24 hours as bullets and, when there are more, a "+" whose hover names the rest [T-549]; the round trip split into running, dwell, turning and waiting,
+  naming where it waits most [T-031]; and last the average speed, both ways over the round trip
+  less the turning at the ends, so stops and waiting at busy track count (hover gives the
+  distance and time) [T-549].
 - A line's riders count every line actually boarded, transfers included; inter-region trips show
   only in its purpose split [T-182].
 
@@ -263,7 +267,12 @@ work at the end.
   walk from the last station; each row's minutes its wait and ride; a ride access [T-374] reads
   "Drive to" with its drive minutes, its hover adding the ride's fixed cost and the station's
   parking or drop-off), door to door, its drive, walk, wait
-  and ride minutes, the fare and the perceived minutes against driving, then the share of the trip's
+  and ride minutes, the fare and the perceived minutes against driving ("Counts as"; its hover is
+  the first route's sum, one term a line with the trip's own numbers: walk, wait, ride and walks
+  between stations as minutes times their weight, changes times the 5 minute penalty, the fare in
+  dollars times 3, then the total, a line saying that the figure shown averages the stations and
+  routes people use when it differs from that total, and one line naming the weights; the terms are
+  the worker's perceived minutes per leg, `routeTerms` in `game/trip.ts`) [T-549], then the share of the trip's
   train riders taking it, with up to four "Other routes" and their shares. Under "By car" the drive,
   its parking and perceived minutes. "Train by period": a row a period with the train's chance, a
   click showing that period. Without a train it says why (no station in reach, walks too long, no

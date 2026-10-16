@@ -8,12 +8,13 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { nearestStation } from "../../game/places";
 import { queryClock } from "../../workers/clockClient";
 import { clock, demandAt } from "../../game/clock";
-import { clockTime, count, distance, duration, headway, money } from "../../game/format";
+import { clockTime, count, distance, duration, headway, money, speed } from "../../game/format";
 import { LINE_PALETTE } from "../../game/palette";
 import { levelHours, PERIODS, periodAt } from "../../game/periods";
 import { signal } from "@preact/signals";
 import { crowdGrade, crowding, today, useToday, useYesterday, waitText, yesterday } from "../../game/today";
 import { accountVersion } from "../../game/boarding";
+import { complexOf } from "../../game/complexView";
 import { dayKindAt } from "../../game/days";
 import { DEMAND_INDEX, DEMANDS, type Demand, type LineInput, type LineStats } from "../../game/types";
 import { ask, lineDraft, renameLinePrompt, selection, tool } from "../../game/ui";
@@ -108,6 +109,22 @@ function RoundTrip({ st, lev, stops, spots }: { st: LineStats; lev: number; stop
   );
 }
 
+/** The line's average speed end to end: the distance both ways over the round trip less the turning
+ * at the ends, so it counts the stops and the waiting at busy track but not the layover. */
+function AverageSpeed({ st, lev }: { st: LineStats; lev: number }) {
+  const s = (st.roundTripByLevel[lev] ?? st.roundTripS) - 2 * st.turnaroundS;
+  if (!(s > 0) || !(st.km > 0)) return null;
+  const kmh = (2 * st.km) / (s / 3600);
+  return (
+    <ul class="rows">
+      <li data-tip={`${distance(2 * st.km * 1000)} there and back in ${duration(s)}, the round trip less the turning at the ends. Dwell at stops and waiting at busy track are in it, so it is the average speed of both directions together.`}>
+        <span class="grow">Average speed</span>
+        <span class="val">{speed(kmh)}</span>
+      </li>
+    </ul>
+  );
+}
+
 /** Times of day for the full-train spans: "07:40 to 08:50, 17:35 to 18:45". */
 function spansText(spans: [number, number][]): string {
   const t = (s: number) => clockTime(((Math.round(s / 60) % 1440) + 1440) % 1440);
@@ -188,6 +205,28 @@ function CrowdDots({ v, d }: { v: Float64Array; d: Demand }) {
   const tip = `Riders wait ${waitText(avg.wait)} on average for a train with room\n${count(full)}/${count(trains)} trains are packed full`
     + (worst && crowdGrade(worst.score) > grade ? `\n${worst.name}: ${waitText(worst.wait)}` : "");
   return <i class={"crowd-dot c" + grade} data-tip={tip} />;
+}
+
+/** Bullets shown at a transfer stop; the rest sit behind a "+". */
+const STOP_CHIPS = 2;
+
+/** The other lines at a stop's station complex (T-549), the busiest two as bullets by their
+ * boardings there in the past 24 hours, the rest behind a "+" whose hover names them. */
+function StopTransfers({ line, stop }: { line: string; stop: string }) {
+  const w = world.value;
+  const members = new Set(complexOf(stop));
+  const d = today.value;
+  const riders = (o: LineInput) => o.stops.reduce((n, s, i) => n + (members.has(s) ? (d.get(o.id)?.stops[i] ?? 0) : 0), 0);
+  const others = (w?.save.lines ?? []).filter((o) => o.id !== line && o.stops.some((s) => members.has(s)))
+    .map((o) => ({ o, n: riders(o) })).sort((a, b) => b.n - a.n).map((x) => x.o);
+  if (!others.length) return null;
+  const rest = others.slice(STOP_CHIPS);
+  return (
+    <>
+      {others.slice(0, STOP_CHIPS).map((o) => <Chip line={o} size="sm" />)}
+      {rest.length > 0 && <span class="stop-more" data-tip={[...new Set(rest.map((o) => o.name))].join("\n")}>+</span>}
+    </>
+  );
 }
 
 /** One stop's boardings in the past 24 hours (T-446), in the stops list. */
@@ -364,18 +403,16 @@ export function LineInspector({ id }: { id: string }) {
       </div>
       <ul class="stops" style={{ "--c": l.colour }}>
         {l.stops.map((s, i) => {
-          const others = linesAt(s).filter((o) => o.id !== l.id);
+          const xfer = complexOf(s).some((m) => linesAt(m).some((o) => o.id !== l.id));
           return (
-            <li class={others.length ? "xfer" : ""}>
+            <li class={xfer ? "xfer" : ""}>
               <span class="grow">
                 <span class="stop-name" onClick={() => (selection.value = { kind: "station", station: s })}>
                   {name.get(s)}
                 </span>
                 {i > 0 && times[i] !== undefined && <span class="t muted num">{duration(times[i])}</span>}
               </span>
-              {others.map((o) => (
-                <Chip line={o} size="sm" />
-              ))}
+              <StopTransfers line={l.id} stop={s} />
               <StopToday line={l.id} i={i} />
               {editingStops && (
                 <button class="btn icon mini danger" data-tip="Take this stop out of the line" aria-label={`Remove stop ${name.get(s)}`} onClick={() => removeStop(i)}>
@@ -387,6 +424,7 @@ export function LineInspector({ id }: { id: string }) {
         })}
       </ul>
       {st.status !== "broken" && l.stops.length >= 2 && <RoundTrip st={st} lev={lev} stops={l.stops.length} spots={spots} />}
+      {st.status !== "broken" && l.stops.length >= 2 && <AverageSpeed st={st} lev={lev} />}
     </>
   );
 }

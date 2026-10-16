@@ -202,8 +202,7 @@ Tier 0 from global sources alone, the data-poor test; notes/T-459.md has the tab
   Lekki, Victoria Island and Ikeja, so the destinations rest almost wholly on jobs and residents
   (completeness 0.02, "Everyday destinations" below).
 - **Curve**: no flows or distance table; borrowed by the rule (T-314), d^-1.8 exp(-d/80 km).
-  The shipped pack still carries Mumbai's d^-1.65 exp(-d/32.7 km) (model mean 8.7 km; a 2010
-  survey's mean trip, Osoba, 12 km by road) until its gravity is re-solved.
+  Model mean 9.0 km (a 2010 survey's mean trip, Osoba, 12 km by road).
 - **Work from home**: 0 (no source); informal work near home is in the population share instead.
 - **Universities**: the World Bank's tertiary rate is from 2011 (0.0088 a resident).
 - **Medical**: no OSM hospital carries beds; all are sized by the "Medical" rule below, to Nigeria's

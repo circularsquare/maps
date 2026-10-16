@@ -94,7 +94,8 @@ its constructed stations, grouped exactly as the complexes are, the player's lin
   160,000 for destinations, times the Bubble size setting (0.5-2x width). No minimum size; nobody
   means no bubble.
 - **Colour mixes the mode colours by share**, at 80% opacity times the Opacity setting (90% by
-  default, T-470), biggest bubbles under smaller ones.
+  default, T-470), biggest bubbles under smaller ones. Bubbles have no outline; only a selected
+  one has its dark outline [T-549].
   Drawn over the network and capacity tags, under station names.
 - **Hover** [T-323, T-494]: "422 trips a day on average from here" (Homes; "to here" for
   Destinations, a purpose's name before "trips" under a filter), then a thin **mode bar**

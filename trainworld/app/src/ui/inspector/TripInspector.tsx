@@ -7,7 +7,7 @@ import { count, distance } from "../../game/format";
 import { MODE_COLOURS } from "../../game/palette";
 import { PERIODS } from "../../game/periods";
 import { WALK_KMH } from "../../game/walks";
-import { routeTotals, stationName, tripOpenedFrom, tripPeriod, tripView, type TripPeriod, type TripRoute } from "../../game/trip";
+import { CHANGE_MIN, routeTerms, routeTotals, stationName, tripOpenedFrom, tripPeriod, tripView, type TripPeriod, type TripRoute } from "../../game/trip";
 import { selection, tool } from "../../game/ui";
 import { world } from "../../game/world";
 import { shownPeriod } from "../../map/tripView";
@@ -23,6 +23,30 @@ const NO_RAIL: Record<string, string> = {
   walksTooLong: "The walks to and from the nearest stations are too long for anyone to take the train.",
   noRoute: "No train runs between the stations near the two ends in this period.",
 };
+
+const num = (v: number) => String(Math.round(v * 10) / 10);
+const weight = (v: number) => String(Math.round(v * 100) / 100);
+
+/** The "Counts as" hover: the first route's perceived total term by term (the worker's own
+ * perceived minutes), then what the weights are. The shown figure averages the routes. */
+function countsAsTip(t: TripPeriod, r: TripRoute): string {
+  const terms = routeTerms(t, r).filter((x) => x.perceived !== 0 || x.unit === "usd");
+  const p = (v: number) => Math.round(v * 10) / 10;
+  const total = terms.reduce((s, x) => s + p(x.perceived), 0);
+  const lines = terms.map((x) => {
+    const w = Math.abs(x.weight - 1) < 0.005 && x.unit === "min" ? "" : ` × ${weight(x.weight)}`;
+    const real = x.unit === "usd" ? `$${x.real.toFixed(2)}` : x.unit === "change" ? `${x.real}` : x.real > 0 ? `${num(x.real)} min` : "";
+    return `${x.label}${real ? " " + real : ""}${w} = ${p(x.perceived).toFixed(1)}`;
+  });
+  const avg = Math.abs(total - t.railPerceived) >= 0.5;
+  return [
+    "The route listed first, in the minutes the model weighs against driving:",
+    ...lines,
+    `Total ${total.toFixed(1)}`,
+    ...(avg ? [`The ${Math.round(t.railPerceived)} shown pools the stations and routes people near here use, so it can be lower than any one route.`] : []),
+    `Walks and waits count for more than a minute on board, crowding stretches the ride, a change is a ${CHANGE_MIN} minute penalty for changing between trains, the wait is half the time between trains, and a dollar of fare counts as ${weight(t.minPerUsd)} minutes.`,
+  ].join("\n");
+}
 
 function ModeBar({ t }: { t: TripPeriod }) {
   const parts: [string, number, string][] = [["Train", t.pTrain, "seg-train"], ["Walk", t.pWalk, "seg-walk"], ["Drive", t.pDrive, "seg-drive"]];
@@ -226,7 +250,7 @@ export function TripInspector() {
               <span class="grow">Fare</span>
               <span class="val">{usd(tot.fareUsd)}</span>
             </li>
-            <li data-tip={`What the model weighs against driving, in minutes: walks count 1.5 times, waits 1.37 times, crowding stretches the ride, each change adds 5 and each dollar 3. Averaged over the stations and routes people near here use: the shortest walks ${t.walkStartPerceived.toFixed(1)} and ${t.walkEndPerceived.toFixed(1)} min, the base fare ${t.baseFarePerceived.toFixed(1)} min, the rest ${(t.railPerceived - t.walkStartPerceived - t.walkEndPerceived - t.baseFarePerceived).toFixed(1)} min.`}>
+            <li data-tip={countsAsTip(t, main)}>
               <span class="grow">Counts as</span>
               <span class="val">{min(t.railPerceived)}</span>
             </li>

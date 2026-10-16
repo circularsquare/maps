@@ -1,5 +1,8 @@
 ﻿# Archive
 
+- T-545 [P2] Lagos's gravity on the borrowed curve. Done 2026-10-16 (Anita's go-ahead): d^-1.8 exp(-d/80 km), mean trip 8.97 km; 67 packs open, smoke 9,775,704 rail trips a day; registry trip totals refreshed after T-544. Backup in data/work/pre-T545/.
+
+- T-549 [P2] Interface from Anita's notes. Done 2026-10-16: bubbles have no outline unless selected; "Counts as" hover sums the first route term by term; the line view ends with average speed and each transfer stop shows its top two other lines plus a "+".
 - T-544 [P3] Re-enrich the other packs with T-387's hospital rule. Done 2026-10-16: 63 packs (Shiga, `shg`, still to do: T-548); Japan's beds 2.35M to 1.57M, the US 176k to 129k; no site over its cap; smoke demand 9,783,506 to 9,775,704. notes/T-387.md.
 - T-536 [P2] Pipeline stage 4, the world plan. Done 2026-10-16: `world_plan.py` writes `pipeline/world_plan.json`, 515 metros (UK 11, Europe 74, elsewhere 430); eight packs planned from scratch hold 85-100% of their people. notes/T-536.md.
 - T-316 [P3] Tier 0 boundaries from global admin units. Done 2026-10-16 inside T-536: NUTS-3, ITL3 and geoBoundaries ADM1-4 per country by rule; district totals stay with country modules. notes/T-536.md.

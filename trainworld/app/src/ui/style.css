@@ -298,6 +298,7 @@ rect.now { fill-opacity: .45; }
 .stops li.xfer::after { left: 3px; margin-top: -7px; width: 10px; height: 10px; }
 .stops .grow { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .stops .t { margin-left: 8px; }
+.stops .stop-more { flex: none; width: 10px; font-size: 12px; text-align: center; color: var(--muted); }
 .stops .n { width: 40px; text-align: right; }
 
 /* ---------- main: top bar, map, tools ---------- */
