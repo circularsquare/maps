@@ -29,7 +29,7 @@ costs $2.25 a car-km (T-467, T-485). Real save's demand final: about 9.78M rail 
 stage 6). History is in ARCHIVE.md.
 
 **Handoff for the next orchestrator (2026-10-16, evening).** Nothing is in flight; last commit
-0e6d738 is on 8800. Check `git status`, the taking marks here and ARCHIVE.md first. Anita's playtest
+5581eb0 is on 8800. Check `git status`, the taking marks here and ARCHIVE.md first. Anita's playtest
 notes land in TODO.md (hers; read it, file new items as tasks, never edit it). Her open playtest
 questions (rays to a selection, clipped line bullets, curve labels' metres) were answered in T-530. CPU: at most 5 cores for all agents together (CLAUDE.md). Asks for Anita go in
 the final message or notes/for-anita.md, never TODO.md. **After each commit**:
