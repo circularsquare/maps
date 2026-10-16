@@ -1,5 +1,8 @@
 ﻿# Archive
 
+- T-536 [P2] Pipeline stage 4, the world plan. Done 2026-10-16: `world_plan.py` writes `pipeline/world_plan.json`, 515 metros (UK 11, Europe 74, elsewhere 430); eight packs planned from scratch hold 85-100% of their people. notes/T-536.md.
+- T-316 [P3] Tier 0 boundaries from global admin units. Done 2026-10-16 inside T-536: NUTS-3, ITL3 and geoBoundaries ADM1-4 per country by rule; district totals stay with country modules. notes/T-536.md.
+
 - T-314 [P2] Tier 0's curve without flows (pipeline stage 3). Done 2026-10-16: `tier0.borrowed_curve`, the fitted curve losing least by country (d^-1.8 exp(-d/80 km); +2.9 points held out by country, worst +14.2); road factor stays 1.3; Lagos's re-solve is T-545. notes/T-314.md.
 - T-387 [P2] Tier 0 hospital sizes (pipeline stage 2). Done 2026-10-16: beds from the square root of floor area pooled over five US packs, scaled to World Bank beds per 1,000, one site capped; New York held out 20.1% misplaced by 2 km zone (target 20%); Mumbai, Shanghai, Lagos re-enriched. notes/T-387.md.
 - T-039 [P2] Themes, stage 1. Done 2026-10-16: Settings, Theme picks Light or Dark beside the three colours; dark panels from CSS tokens, Positron repainted Dark Matter-like, near-black line casing, map inks from `game/shades.ts`; switching redraws only. Legibility after Anita's look: T-543.
