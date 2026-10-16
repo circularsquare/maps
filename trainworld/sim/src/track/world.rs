@@ -103,10 +103,14 @@ impl TrackWorld {
             let trips: Vec<[f64; 3]> = ids.iter().map(|&id| self.svc.lines[id as usize].round_trip).collect();
             let rates: Vec<[f32; 3]> = ids.iter().map(|&id| self.net.line_tph[id as usize]).collect();
             let mut active = [false; LEVELS];
+            let worst = self.svc.cap.bottlenecks(self.net.line_count());
             for (j, &id) in ids.iter().enumerate() {
                 let counts = self.net.line_trains[id as usize].unwrap();
                 for lev in 0..LEVELS {
-                    if (rates[j][lev] as f64 * trips[j][lev] / 3600.0 - counts[lev] as f64).abs() >= 0.0001 { active[lev] = true; }
+                    let short = counts[lev] as f64 - rates[j][lev] as f64 * trips[j][lev] / 3600.0;
+                    // T-517: a line short of its fleet's rate is settled when a track it uses is full
+                    let held = short > 0.0 && (worst[id as usize][lev].0 - 1.0).abs() <= 1.0 - FULL_RHO;
+                    if short.abs() >= 0.0001 && !held { active[lev] = true; }
                 }
             }
             if !active.contains(&true) { break; }            // A common 1% upward probe measures the sum of positive congestion derivatives.
@@ -127,6 +131,13 @@ impl TrackWorld {
                     self.net.line_tph[i][lev] = (if counts[lev] == 0 || trip <= 0.0 { 0.0 } else {
                         (old - residual / (trip + rise)).max(0.0)
                     }) as f32;
+                }
+            }
+            // T-517: no track carries more trains than its capacity; a fleet's surplus waits at the ends
+            for lev in (0..LEVELS).filter(|&lev| active[lev]) {
+                let want: Vec<(u32, f64)> = ids.iter().map(|&id| (id, self.net.line_tph[id as usize][lev] as f64)).collect();
+                for (&id, got) in ids.iter().zip(self.svc.cap.fill(&self.net, &want, lev)) {
+                    self.net.line_tph[id as usize][lev] = got as f32;
                 }
             }
             let d = self.svc.update_scoped(&self.net, &[], &ids, true, Some((&[], &[])));

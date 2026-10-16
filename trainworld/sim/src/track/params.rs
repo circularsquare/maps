@@ -93,7 +93,8 @@ pub fn level_mult(level: i8) -> f64 {
 
 // ---- capacity (SPEC 6.2) ----
 
-pub const SECTION_BASE_S: f64 = 90.0;
+/// With `v / SIGNAL_BRAKE`, the most trains an hour a track takes (T-517: published maxima).
+pub const SECTION_BASE_S: f64 = 70.0;
 /// Signalling braking rate behind the block length term `v / 0.6`.
 pub const SIGNAL_BRAKE: f64 = 0.6;
 pub const SINGLE_TRACK_MARGIN_S: f64 = 60.0;
@@ -104,6 +105,8 @@ pub const CONFLICT_S: f64 = 90.0;
 pub const KINGMAN_C0: f64 = 0.2;
 pub const RHO_KNEE: f64 = 0.9;
 pub const OVERLOAD_WINDOW_S: f64 = 3600.0;
+/// A resource at this utilisation counts as full: count schedules are cut to fit (T-517).
+pub const FULL_RHO: f64 = 0.9999;
 /// Delays are rounded to whole seconds; under this they are dropped.
 pub const HOLD_MIN_S: f64 = 2.0;
 /// A hold point closer than this to the previous stop becomes extra dwell there.

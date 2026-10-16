@@ -138,8 +138,8 @@ T-307).
 Built (T-307, T-317): `map/geo.ts` (`anchor()`, `anchorWanted`, `kAtY`), `ClockClient.followView`
 and the "anchor" message, the renderer drawing each network at its own anchor, `u_psi0` for k in
 the train shader. The demand views follow the anchor the same way (T-317): every disc set (the
-city's bubbles, a nearby zone's, a selection's near and far ends, a station's catchment, longer
-trips) is built relative to the anchor in force and carries it; `DemandOverlay` draws each set
+city's bubbles, a nearby zone's, a selection's near and far ends, longer trips, the lines to a
+selection) is built relative to the anchor in force and carries it; `DemandOverlay` draws each set
 with its own anchor's matrix, so an old set stays put while its replacement is built; the hover
 finders get the pointer as longitude and latitude (`discAt(discs, pointer, anchor)`); the bubble
 workers keep each cell's longitude and latitude, are told the anchor with their cells and again

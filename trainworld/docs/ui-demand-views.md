@@ -18,15 +18,15 @@ hour and the clock's own day ([ui-map.md](ui-map.md)).
 result changes and keeps its last answer meanwhile. After an edit only the final round is shown
 [T-232], so views rebuild once; at startup, a game load or a city just opened each estimate shows.
 
-**Scope.** Bubbles and selections cover the focused zone's modelled local trips; station
-catchments count its commuters. Line widths, station totals and train fill include every open zone
+**Scope.** Bubbles and selections cover the focused zone's modelled local trips; a station
+inspector's commuters are its commuters. Line widths, station totals and train fill include every open zone
 and the regional layer. Changing zone clears cell-indexed selections and cached layers.
 
 ## Colours
 
 **Mode colours**, Subway Builder's (Anita) [T-097, T-099; `game/palette.ts`]: driving red #e61e1e,
 train blue #1e3ce6, walking green #1eaa3c, near-pure so a mix reads as RGB (all car red, all train
-blue, half and half magenta). A selected station's own cells #c2185b, its far end #3a3f8f.
+blue, half and half magenta).
 Trips by "other" (bus, taxi and bike for homes without a car, T-513, [demand.md](demand.md) 4.3)
 count as driving in every bar, split, bubble and hover, with no colour of their own; the sim
 reports them apart only as a total (`summary` index 10).
@@ -55,8 +55,7 @@ closest pair), the same in the pie, bars, filter swatch and purpose split.
   homes here"), a selection's own and far-end bubbles, the track tag. Scales stay as they are, so
   purposes stay comparable. Work is every zone's commutes (commutes between zones included); the
   others are each zone's everyday layer. Inter-region trips are not an option: they show only
-  under All purposes, and so does a station's commuter catchment (also under Work; the station
-  inspector then says the commuters are not drawn). Train fill and crowding always count everyone.
+  under All purposes. Train fill and crowding always count everyone.
   A selection's counts and far-end places follow the filter; its pie and timing charts keep every
   purpose. Switching purpose clears the bubbles until that purpose's are ready. Not remembered.
 
@@ -72,7 +71,7 @@ change as the periods pass. At zoom 15 the widest line is 44 px. Stations keep t
 ## Station use circles
 
 [T-144, T-146, T-209, T-213, T-482; `game/stationUse.ts`] A choice at the top of the Stations tab,
-"Station circles": None (default), Origins, Transfers or Total, remembered per browser. Large
+"Show station ridership": None (default), Origins, Transfers or Total, remembered per browser. Large
 translucent circles behind stations, area by riders a day, up to 75,000: **origins** are riders
 starting their rail trip at the station, **transfers** riders changing lines there, **total** every
 boarding there (origins plus transfers). From the demand solve shown, for the day the demand bar
@@ -104,8 +103,8 @@ its constructed stations, grouped exactly as the complexes are, the player's lin
   airport badges too).
 - **Airports** [T-448, `map/airportMarks.ts`]: a white circle with a plane, 20 px at every zoom, on
   each airport's busiest terminal cell, so on its biggest bubble. Shown with Destinations under All
-  purposes or Airport, for the focused zone and the nearby zones, hidden while a bubble or station
-  is selected and in the city overview. Airports are the cells that receive the airport purpose's
+  purposes or Airport, for the focused zone and the nearby zones, hidden while a bubble is
+  selected and in the city overview. Airports are the cells that receive the airport purpose's
   legs (500 a day or more), terminal cells within 2.5 km sharing one badge. The badge takes no
   clicks; its hover says "149k airport trips a day here" with the mode split.
 - There is no corner summary box: the zone's split is in the top bar, local splits in hovers and
@@ -120,7 +119,7 @@ peaks and are caught up after 24 game hours; paused, nothing moves. A result lan
 starts a new one from what is shown; during startup's estimates the refined rounds carry on the
 first estimate's. The first result, a change of purpose or zone, and a result landing while the
 clock is held show at once. Rebuilt in their worker when f has moved 0.01, at most four times a
-second. Inspectors, selections, catchments and the top bar are the current forecast at once.
+second. Inspectors, selections and the top bar are the current forecast at once.
 
 ## The focused zone and nearby zones
 
@@ -171,6 +170,11 @@ second. Inspectors, selections, catchments and the top bar are the current forec
   (destinations for Homes, homes for Destinations) is drawn as bubbles sized among themselves (the
   biggest about its hexagon's area) and coloured by their own mix (`flows`) [T-098]. A click on a
   far-end bubble opens the trip explorer for the pair [T-208].
+- **Lines to the selection** [T-520, on trial: `LINES_TO_SELECTION` in `map/commuterView.ts`
+  turns them off]: from each far-end bubble's edge a 1 px line in the network ink, 45% opaque,
+  points at the selection's centre (its bubbles' centres weighted by area) and fades out over a
+  tenth of the map's longer side, stopping at the selected bubble's edge when there is one. Under
+  every bubble, no hover (`setLines` in `map/demandOverlay.ts`).
 - **The inspector** (`ui/inspector/CommutersInspector.tsx`): the selection's local trip legs and
   split; the top eight far-end places, each named by the nearest station within 3 km, else by
   distance and direction; for a single area the closest stations from its trip-weighted centre
@@ -186,13 +190,11 @@ second. Inspectors, selections, catchments and the top bar are the current forec
   direction's day. Weekdays only.
 - Then the selection's **inter-region trips** (below).
 
-## A selected station's catchment
+## A selected station
 
-Over the network, the chosen end's cells ("Live nearby" or "Work nearby" in the inspector) are
-opaque discs, the busiest a cell's area, and the far end (up to 20 gravity zones) filled discs at
-55% below them, the busiest half a zone wide; no minimum size. Hover gives riders; a click on a
-far-end disc opens the trip explorer [T-208]. A selected station hides the bubbles and they are cut
-away round it. The catchment counts commuters only.
+[T-519] Selecting a station leaves the demand views as they were: the bubbles, the zoomed-out
+overview and the airport badges stay, and the bubbles are cut away round the station (T-189). Its
+commuters and inter-region riders are in its inspector only ([ui-inspectors.md](ui-inspectors.md)).
 
 ## Inter-region trips
 
@@ -205,24 +207,23 @@ away round it. The catchment counts commuters only.
   an "Elsewhere" row for trips with places that have no zone (all modes only; counted in the
   direction's total); its own zone's row reads "Other New York places". A station lists rail
   riders starting and ending there by place.
-- On the map they are always drawn (no setting), except under a local purpose filter. A selection
-  draws the far end of its own end (Homes: where the trips go; Destinations: where they come from);
-  a station where its starting riders go [T-120]. Only zones other than the focused one are drawn;
+- On the map a bubble selection's are always drawn (no setting), except under a local purpose
+  filter: the far end of its own end (Homes: where the trips go; Destinations: where they come
+  from). A station's are not drawn [T-519]. Only zones other than the focused one are drawn;
   same-zone counts stay in the inspector [T-139].
 - Above zoom 9.5 every far 6 km zone with trips is a disc at its position, on its own relative
   scale (the busiest covers 0.15 of a zone's area). At 9.5 and below they become one labelled bubble
   per other zone at its registry centre (the largest 19 px radius before the size slider), names and
   daily totals as labels that avoid each other and stay on screen, at most eight at once, the biggest
   first (T-493). Area is total travellers with no
-  floor; colour is blue for train and red for the rest (car and plane), mixed by share (a station's
-  riders are all blue). They lie under the local discs; hover names the place and the direction,
+  floor; colour is blue for train and red for the rest (car and plane), mixed by share. They lie under the local discs; hover names the place and the direction,
   with a mode bar (train blue, the rest red, plane included).
 - A selection survives a pan to another zone.
 
 ## Zoomed far out: one bubble per zone
 
 [T-186, T-276; `OVERVIEW_ZOOM` 8.5 in `map/intercityView.ts`] At zoom 8.5 and below, with Homes or
-Destinations on and no bubble or station selection, every zone in the regional market, the focused
+Destinations on and no bubble selection, every zone in the regional market, the focused
 one included, is one bubble at its registry centre in place of the focused zone's own bubbles:
 all its trips a day (its local trips, from the open zone's view or the pipeline's no-rail count in
 `zones.json`, plus the regional layer's to and from it), coloured by train share, labelled
@@ -237,7 +238,9 @@ bubbles stay instead. Toronto (`market: -1`) has none.
 A click on one selects the zone (a `city` selection, kept at any zoom): it is outlined, with one
 bubble per other zone for the regional trips between the two, on the same scale (the selected
 zone's hover: the inter-region line and its bar first, the local figure in brackets under it; the
-others: "N trips a day between A and B" and a bar), and the city
+others: "N trips a day between A and B" and a bar), a 1 px line in the network ink, 30% opaque,
+from its bubble's edge to each other bubble's edge, under the bubbles with no hover, so the
+selection shows from afar [T-520], and the city
 inspector (`ui/inspector/CityInspector.tsx`) lists its trips by place, all modes and by train, car
 and plane as a selection's do, then "Elsewhere" (both directions, as every row), with
 a "Go to Philadelphia" button that moves the camera to its centre and clears the selection

@@ -78,14 +78,6 @@ export function modeMix(train: number, walk: number, drive: number): [number, nu
 let MIX: [number, number, number][] | null = null;
 const MIX_TOP = Math.max(...rgb(MODE_COLOURS.train), ...rgb(MODE_COLOURS.walk), ...rgb(MODE_COLOURS.drive));
 
-/**
- * A selected station's riders on the map (T-084, T-097): the cells they live or work in, opaque on
- * top, and the places at the other end of their trip, filled and partly see-through below them
- * (`DESTINATION_ALPHA`). Both drawn over the network.
- */
-export const CATCHMENT_COLOUR = "#c2185b";
-export const DESTINATION_COLOUR = "#3a3f8f";
-export const DESTINATION_ALPHA = 0.55;
 /** Commuter bubbles are this opaque, so the network shows through where they pile up. */
 export const BUBBLE_ALPHA = 0.8;
 

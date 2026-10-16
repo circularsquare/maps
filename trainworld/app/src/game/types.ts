@@ -192,7 +192,7 @@ export interface WorldView {
   /** the clock worker's state version */
   version: number;
   /** busy resources per demand level (SPEC 6.2), local units */
-  capacity: { x: number; y: number; rho: number; delayS: number; kind: number }[][];
+  capacity: { x: number; y: number; rho: number; delayS: number; kind: number; tph: number; held: boolean }[][];
   save: Save;
   lineStats: Record<LineId, LineStats>;
   edges: TrackEdge[];

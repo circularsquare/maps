@@ -385,9 +385,9 @@ function buildState(): ClockState {
   const markers = [0, 1, 2].map((lev) => {
     const m = a.markers(lev);
     const out: ClockState["markers"][number] = [];
-    for (let k = 0; k < m.length; k += 5) {
+    for (let k = 0; k < m.length; k += 7) {
       const [x, y] = packLocal(m[k], m[k + 1]);
-      out.push({ x, y, rho: m[k + 2], delayS: m[k + 3], kind: m[k + 4] });
+      out.push({ x, y, rho: m[k + 2], delayS: m[k + 3], kind: m[k + 4], tph: m[k + 5], held: m[k + 6] > 0 });
     }
     return out;
   });
@@ -1381,6 +1381,7 @@ async function handle(msg: ToClock) {
       : q.what === "linePeriods" ? api.line_periods(q.line, q.day)
       : q.what === "today" ? today()
       : q.what === "yesterday" ? yesterday()
+      : q.what === "lineHeld" ? api.line_held(q.line)
       : api.line_delays(q.line, q.level);
     send({ kind: "answer", seq: msg.seq, data }, [data.buffer]);
   } else if (msg.kind === "previewStation") {

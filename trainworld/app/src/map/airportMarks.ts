@@ -103,7 +103,7 @@ export function startAirportMarks(map: MlMap, overlay: Overlay) {
     const sel = selection.peek()?.kind;
     const p = purposeFilter.peek();
     return display.peek().commuters && display.peek().commuterEnd === "work" && (p === "all" || p === "airport")
-      && !cityOverview.peek() && sel !== "commuters" && sel !== "station";
+      && !cityOverview.peek() && sel !== "commuters";
   };
 
   let epoch = -1;

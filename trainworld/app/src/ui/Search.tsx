@@ -186,7 +186,7 @@ export function Search() {
           {hits.map((hit, i) => (
             <li id={`map-search-${i}`} role="option" aria-selected={i === cur} class={i === cur ? "on" : ""}
               onMouseDown={(e) => e.preventDefault()} onMouseMove={() => i !== cur && setAt(i)} onClick={() => pick(hit)}>
-              <Row hit={hit} />
+              <Row hit={hit} pickLine={(line) => pick({ kind: "line", line, name: line.name })} />
             </li>
           ))}
         </ul>
@@ -195,10 +195,10 @@ export function Search() {
   );
 }
 
-function Row({ hit }: { hit: SearchHit }) {
+function Row({ hit, pickLine }: { hit: SearchHit; pickLine: (l: LineInput) => void }) {
   if (hit.kind === "line")
     return <>
-      <Chip line={hit.line} size="sm" />
+      <Chip line={hit.line} size="sm" plain />
       <span class="grow">{hit.name}</span>
       <span class="muted small">Line</span>
     </>;
@@ -218,7 +218,7 @@ function Row({ hit }: { hit: SearchHit }) {
     <i class="search-mark" />
     {/* a same-named result's tag goes on a line of its own, so a long name's ellipsis never hides it */}
     <span class={"grow" + (hit.built ? "" : " muted")}>{hit.name}{hit.tag && <><br /><span class="muted small">{hit.tag}</span></>}</span>
-    {hit.lines.length ? chips(hit.lines).map((l) => <Chip line={l} size="sm" />) : <span class="muted small">Station</span>}
+    {hit.lines.length ? chips(hit.lines).map((l) => <Chip line={l} size="sm" pick={pickLine} />) : <span class="muted small">Station</span>}
   </>;
 }
 

@@ -193,8 +193,10 @@ route conflict with every move on the other.
 **Resources and utilisation.** Everything shared has an occupancy `s` per train, and per period
 `rho = sum(trains per hour x s) / 3600` from the scheduled frequencies:
 
-- track section (a run with the same set of lines), per direction: `s = 90 s + v / 0.6 m/s²`, so
-  33 trains/h at 40 km/h, 28 at 80, 22 at 160, 15 at 320
+- track section (a run with the same set of lines), per direction: `s = 70 s + v / 0.6 m/s²`
+  (v the top speed reached on it), so at most 41 trains/h at 40 km/h, 34 at 80, 29 at 120, 25 at
+  160, 16 at 320: the published maxima of the Victoria line, Chuo Rapid, Thameslink and the
+  Tokaido Shinkansen (T-517)
 - single-track section between passing points: run time + 60 s, counting both directions
 - platform track: dwell + 60 s per stopping train, 40 s per passing one, turnaround + 60 s
   for a short-turn ending at a through station. A single-track platform shares both directions.
@@ -217,6 +219,17 @@ trains are timetabled:
 One line alone has no queueing delay (its trains are evenly spaced) until it is over capacity. A
 90 s junction shared by two equal lines: 27 s at 75%, 81 s at 90%, ~3 min at 100%, ~7 min at 110%.
 
+**No resource carries more trains than its capacity** (T-517). Whole-line fleets are cut to fit:
+on every resource but a station crossover (whose load counts through trains that never meet),
+`rho` stops at 100%. Where the lines a resource carries want more, each line's rate is scaled down
+in proportion to the rate its fleet would give, until the first resource it uses is full
+(progressive filling, `Capacity::fill`). The trains that do not fit wait at the ends of the line
+(the hand-over below sends them out of service), so a fleet past capacity buys no shorter headway
+and no rider waits longer than at 100%. So the shortest headway a line can have is its fullest
+resource's `s`, 1m47s on track at 80 km/h. A count level held this way counts as settled, so
+an edit elsewhere leaves it to the bit. Legacy fixed-frequency schedules are not cut: past 100% they
+keep the delay and fluid queue above.
+
 **Settled in the clock worker before demand runs.** Whole-line train allocations derive their
 frequencies from capacity-adjusted round trips with a bounded, damped solve on edits (T-104).
 Delays and derived frequencies feed back until settled, with at most 80 iterations and continuous
@@ -233,11 +246,16 @@ and starting again there would cost, otherwise a stop in front of it. So trains 
 queue at a tangle.
 
 **Shown** on the map as markers on resources at 75-90% (busy), 90-100% (near full) and over 100%
-(overloaded), with the delay per train, for the demand level in force; nothing shows below 75%.
+or full with some line's trains waiting for room (overloaded, red), with the delay per train, for
+the demand level in force; nothing shows below 75%.
 A marker reads "+1:03" (each train's wait there) or, with no wait yet, "81%"; hovering it shows
-a tooltip in plain words ("Junction at 104% of capacity", "Each train waits 1m03s here at high
-demand", and for a junction "Click to see the junction and its flyover"). Markers sit over the
-network and under the demand views' bubbles and catchment (T-099). Like station names, they hide
+a tooltip in plain words ("Junction at 104% of capacity", "31 trains an hour each way against a
+limit of 34", for a full one "Trains beyond the limit wait at the ends of their lines", "Each train
+waits 1m03s here at high demand", and for a junction "Click to see the junction and its flyover").
+A line whose fleet is cut shows a callout under its schedule naming the full resource ("Track full
+near Grand Central") and, per demand level, how many of its trains wait at the ends, with the
+resource's limit in trains an hour on hover (`TrackApi.line_held`). Markers sit over the
+network and under the demand views' bubbles (T-099). Like station names, they hide
 below zoom 12 and reserve space around each tag (48 px horizontally / 28 px vertically before
 zoom 14, then 20 / 12 px). Larger delays win collisions, then higher utilisation (T-102).
 Markers never cover a station name: each takes the first spot around its resource that is clear
@@ -270,6 +288,7 @@ busy track, and names the places it waits most (notes/T-031.md).
   zero means no new departures. The panel shows the integer allocation and resulting headway.
   Frequency is derived from the capacity-adjusted round trip, with a bounded solve on edits;
   extending track or changing congestion adjusts the headway while preserving the allocation.
+  It never exceeds what the line's track can carry (6.2): trains beyond that wait at the ends.
   Resources used by count schedules keep continuous delays so rounding cannot make the solve
   oscillate. Legacy saves preserve their original frequencies until a schedule is edited.
 - **Departures** (`Service::run_deps`): per period of the line's local time (T-309: its first

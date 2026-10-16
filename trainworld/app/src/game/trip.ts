@@ -189,8 +189,7 @@ export const askTrip = (from: [number, number], to: [number, number]): Promise<T
 
 /** The trip shown (asked for by map/tripView.ts when the selection or the demand result changes). */
 export const tripView = signal<{ key: string; trip: Trip | null; asking: boolean } | null>(null);
-/** A trip opened from a bubble selection or a station's catchment by clicking a far-end bubble
- * (T-208): the trip selection and the one it came from, for the inspector's way back. */
+/** A trip opened from a bubble selection by clicking a far-end bubble (T-208): the trip selection and the one it came from, for the inspector's way back. */
 export const tripOpenedFrom = signal<{ trip: Selection; from: Selection; what: string } | null>(null);
 /** The period the explorer shows: null follows the clock. */
 export const tripPeriod = signal<number | null>(null);

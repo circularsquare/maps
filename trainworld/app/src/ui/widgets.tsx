@@ -4,6 +4,7 @@ import type { ComponentChildren } from "preact";
 import { inkOn } from "../game/palette";
 import { PLANE_PATH } from "../map/glyphs";
 import type { LineInput } from "../game/types";
+import { selection } from "../game/ui";
 
 export const Icon = {
   minus: () => <svg viewBox="0 0 16 16"><path d="M4 8h8" /></svg>,
@@ -52,22 +53,34 @@ export const Icon = {
   ),
 };
 
-export function Chip({ line, size = "" }: { line: LineInput; size?: "" | "sm" | "lg" }) {
+/** A line's bullet (T-521). Everywhere it is drawn a hover names the line and a click selects it,
+ * except `plain` (the selected line's own panel, a search row that is the line). `pick` replaces
+ * the selecting. */
+export function Chip({ line, size = "", plain, pick }: { line: LineInput; size?: "" | "sm" | "lg"; plain?: boolean; pick?: (l: LineInput) => void }) {
+  const click = plain ? undefined : (e: MouseEvent) => {
+    e.stopPropagation();
+    if (pick) pick(line);
+    else selection.value = { kind: "line", line: line.id };
+  };
   return (
-    <span class={"chip " + size} style={{ "--c": line.colour, "--ct": inkOn(line.colour) }}>
+    <span class={"chip " + size + (plain ? "" : " link")} style={{ "--c": line.colour, "--ct": inkOn(line.colour) }}
+      data-tip={plain ? undefined : line.name} onClick={click}>
       <span>{line.letter}</span>
     </span>
   );
 }
 
-export function Stepper(p: { value: ComponentChildren; onStep: (d: number) => void; wide?: boolean; label: string }) {
+/** `jump`: Shift-click steps by 5 and Ctrl-click by 20 (T-516), the buttons' hover says so. */
+export function Stepper(p: { value: ComponentChildren; onStep: (d: number) => void; wide?: boolean; label: string; jump?: boolean }) {
+  const by = (e: MouseEvent) => (p.jump ? (e.ctrlKey ? 20 : e.shiftKey ? 5 : 1) : 1);
+  const tip = p.jump ? "Shift-click for 5, Ctrl-click for 20" : undefined;
   return (
     <span class={"stepper" + (p.wide ? " wide" : "")}>
-      <button class="btn" aria-label={"Less " + p.label} onClick={() => p.onStep(-1)}>
+      <button class="btn" aria-label={"Less " + p.label} data-tip={tip} onClick={(e) => p.onStep(-by(e))}>
         <Icon.minus />
       </button>
       <span class="v">{p.value}</span>
-      <button class="btn" aria-label={"More " + p.label} onClick={() => p.onStep(1)}>
+      <button class="btn" aria-label={"More " + p.label} data-tip={tip} onClick={(e) => p.onStep(by(e))}>
         <Icon.plus />
       </button>
     </span>

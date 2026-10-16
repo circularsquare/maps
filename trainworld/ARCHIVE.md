@@ -1,5 +1,12 @@
 ﻿# Archive
 
+- T-517 [P2] A floor on headway. Done 2026-10-16: whole-line fleets are cut so no resource exceeds 100% (progressive filling); surplus trains wait at the ends; section base 90 s to 70 s (34 trains/h at 80 km/h); red map marker and line panel callout. docs/track-and-service.md 6.2.
+- T-520 [P2] Lines to the selection. Done 2026-10-16: a selected zone has faint 1 px lines to every other zone bubble; a bubble selection's far-end bubbles each get a stub toward it fading out over a tenth of the screen (`LINES_TO_SELECTION` in `map/commuterView.ts` turns them off).
+- T-519 [P2] A station selection no longer changes the map. Done 2026-10-16: the catchment discs and the station's inter-region discs are gone; bubbles, overview and airport badges stay; the station inspector keeps its commuters and places.
+- T-521 [P2] Line bullets. Done 2026-10-16: one `Chip` component; hover names the line, click selects it (not in the line's own title, not on a search row that is the line); station rows cut the name first, keep at least 3 bullets, tighter gaps.
+- T-518 [P2] Stations tab control renamed "Show station ridership". Done 2026-10-16.
+- T-516 [P2] Train steppers: Shift-click 5, Ctrl-click 20, hover says so. Done 2026-10-16.
+- T-515 [P2] Schedule crowding: one dot per demand level, periods averaged by riders; hover adds the worst period only when its grade is worse. Done 2026-10-16.
 - T-513 [P1] "Other" for homes without a car. Done 2026-10-16: bus, taxi and bike as one choice (road at 12 km/h, 8-minute wait, `other_asc` 10, the one fitted constant); shown as driving. Real save rail 11.48M to 9.32M a day; Manhattan 52% (ACS 51%), Hackney 51% (29%). notes/T-513.md.
 - T-511 [P2] Homes without a car. Done 2026-10-16: `nocar` per cell in all 67 packs (ACS tracts, England LSOAs, Japan prefectures, else national cars per household); they choose rail against walking. Real save rail about 8.35M to 11.48M a day; New York counties overshoot (no bus). notes/T-511.md.
 - T-466 [P2] Merge more sparse cells. Done 2026-10-16: in busy parents, touching children under 1,250 trip ends merge; packs carry zone land (`zone_cells9`). All 67 packs 1.34M to 1.09M cells (-19%); busy stations past 5% 0.4-2.9%; real save +0.08%. notes/T-466.md.

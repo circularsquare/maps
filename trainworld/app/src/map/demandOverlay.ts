@@ -1,5 +1,6 @@
 // The demand views' map layer (T-084, T-097, SPEC 8): commuter bubbles, a bubble selection's far
-// end and a selected station's catchment, as discs on a canvas of their own over the network
+// end and longer trips, as discs on a canvas of their own over the network, with thin lines to a
+// selection under them (T-520)
 // (Anita: in a demand view the demand is what you want to see, on top). Nothing here moves with
 // the clock, so the canvas is drawn only on MapLibre's frames (the camera moved:
 // `Overlay.afterMapFrame`, same frame and matrix as the basemap, T-015) and once after its data
@@ -53,8 +54,8 @@ precision highp float;
 uniform mat4 u_matrix;
 uniform vec2 u_viewport;
 uniform float u_px_per_unit;
-uniform float u_rscale;   // the player's bubble size (T-099); 1 for a station's discs
-uniform float u_opacity;  // the player's bubble opacity (T-470); 1 for a station's discs
+uniform float u_rscale;   // the player's bubble size (T-099)
+uniform float u_opacity;  // the player's bubble opacity (T-470)
 in vec3 a_geo;    // x, y, radius (local units)
 in vec4 a_col;    // r, g, b, a
 in float a_edge;
@@ -103,6 +104,68 @@ void main() {
   o = vec4(col * a, a);
 }`;
 
+/** Floats per line instance: x0, y0, r0, x1, y1, r1 (local units, radii before the bubble size),
+ * a stub flag and alpha. A line runs edge to edge between the two discs; a stub runs from the
+ * first disc's edge toward the second and fades out over `STUB_SCREEN` of the screen (T-520). */
+export const LINE = 8;
+/** A stub's length as a share of the map's longer side. */
+const STUB_SCREEN = 0.1;
+/** Line width, CSS px. */
+const LINE_PX = 1;
+
+const LINE_VS = `#version 300 es
+precision highp float;
+uniform mat4 u_matrix;
+uniform vec2 u_viewport;  // device px
+uniform float u_px_per_unit;
+uniform float u_rscale;
+uniform float u_stub;     // device px
+uniform float u_width;    // device px
+in vec3 a_from;
+in vec3 a_to;
+in vec2 a_style;          // stub, alpha
+out float v_t;
+out float v_across;
+out float v_alpha;
+out float v_stub;
+void main() {
+  vec4 c0 = u_matrix * vec4(a_from.xy, 0.0, 1.0);
+  vec4 c1 = u_matrix * vec4(a_to.xy, 0.0, 1.0);
+  vec2 p0 = (c0.xy / c0.w * 0.5 + 0.5) * u_viewport;
+  vec2 p1 = (c1.xy / c1.w * 0.5 + 0.5) * u_viewport;
+  vec2 d = p1 - p0;
+  float len = length(d);
+  vec2 u = len > 0.0 ? d / len : vec2(1.0, 0.0);
+  float s0 = a_from.z * u_rscale * u_px_per_unit;
+  float s1 = len - a_to.z * u_rscale * u_px_per_unit;
+  if (a_style.x > 0.5) s1 = min(s1, s0 + u_stub);
+  float along = (gl_VertexID & 1) == 1 ? s1 : s0;
+  float side = gl_VertexID < 2 ? -1.0 : 1.0;
+  float half_w = u_width * 0.5 + 1.0;
+  vec2 p = p0 + u * along + vec2(-u.y, u.x) * side * half_w;
+  // nothing left between the two edges: off screen
+  gl_Position = s1 > s0 ? vec4(p / u_viewport * 2.0 - 1.0, 0.0, 1.0) : vec4(2.0, 2.0, 2.0, 1.0);
+  v_t = (gl_VertexID & 1) == 1 ? 1.0 : 0.0;
+  v_across = side * half_w;
+  v_alpha = a_style.y;
+  v_stub = a_style.x;
+}`;
+
+const LINE_FS = `#version 300 es
+precision highp float;
+uniform vec3 u_ink;
+uniform float u_width;
+in float v_t;
+in float v_across;
+in float v_alpha;
+in float v_stub;
+out vec4 o;
+void main() {
+  float a = v_alpha * clamp(u_width * 0.5 - abs(v_across) + 0.5, 0.0, 1.0);
+  if (v_stub > 0.5) a *= 1.0 - v_t;
+  o = vec4(u_ink * a, a);
+}`;
+
 function compile(gl: WebGL2RenderingContext, vs: string, fs: string): WebGLProgram {
   const prog = gl.createProgram()!;
   for (const [type, src] of [[gl.VERTEX_SHADER, vs], [gl.FRAGMENT_SHADER, fs]] as const) {
@@ -127,9 +190,9 @@ export function bubbleLevel(z: number): number {
 }
 
 /** Disc layers, drawn in this order. */
-export type DiscLayer = "inter" | "far" | "near" | "stationFar" | "stationNear";
-// "inter": a selection's or a station's longer trips (T-118), under the commuters' discs
-const LAYERS: DiscLayer[] = ["inter", "far", "near", "stationFar", "stationNear"];
+export type DiscLayer = "inter" | "far" | "near";
+// "inter": a selection's longer trips (T-118), under the commuters' discs
+const LAYERS: DiscLayer[] = ["inter", "far", "near"];
 
 interface DiscSet {
   vao: WebGLVertexArrayObject;
@@ -166,6 +229,9 @@ export class DemandOverlay {
   cutouts: (() => StationShape[]) | null = null;
   private cutProg: WebGLProgram | null = null;
   private cutU: Record<string, WebGLUniformLocation | null> = {};
+  private lineProg: WebGLProgram | null = null;
+  private lineU: Record<string, WebGLUniformLocation | null> = {};
+  private lines = new Map<DiscLayer, DiscSet>();
 
   constructor(private map: MlMap, private overlay: Overlay) {
     this.canvas = document.createElement("canvas");
@@ -269,13 +335,64 @@ export class DemandOverlay {
     this.invalidate();
   }
 
-  /** One of the small disc layers (a selection's ends, a station's catchment), built relative to
-   * anchor `a` (T-317); null clears it. */
+  /** One of the small disc layers (a selection's ends, longer trips), built relative to anchor `a`
+   * (T-317); null clears it. */
   setDiscs(layer: DiscLayer, data: Float32Array | null, a: Anchor = anchor()) {
     this.dropSet(this.sets.get(layer));
     this.sets.delete(layer);
     if (data && data.length) this.sets.set(layer, this.makeSet(data, a));
     this.invalidate();
+  }
+
+  /** Lines toward a selection that go with a disc layer (`LINE` floats each), drawn under every
+   * disc, relative to anchor `a`; null clears them. */
+  setLines(layer: DiscLayer, data: Float32Array | null, a: Anchor = anchor()) {
+    this.dropSet(this.lines.get(layer));
+    this.lines.delete(layer);
+    if (data && data.length) this.lines.set(layer, this.makeLineSet(data, a));
+    this.invalidate();
+  }
+
+  private makeLineSet(data: Float32Array, a: Anchor): DiscSet {
+    const gl = this.gl;
+    if (!this.lineProg) {
+      this.lineProg = compile(gl, LINE_VS, LINE_FS);
+      for (const n of ["u_matrix", "u_viewport", "u_px_per_unit", "u_rscale", "u_stub", "u_width", "u_ink"]) this.lineU[n] = gl.getUniformLocation(this.lineProg, n);
+    }
+    const buf = gl.createBuffer()!;
+    const vao = gl.createVertexArray()!;
+    gl.bindVertexArray(vao);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+    ([["a_from", 3, 0], ["a_to", 3, 12], ["a_style", 2, 24]] as const).forEach(([name, n, off]) => {
+      const loc = gl.getAttribLocation(this.lineProg!, name);
+      gl.enableVertexAttribArray(loc);
+      gl.vertexAttribPointer(loc, n, gl.FLOAT, false, LINE * 4, off);
+      gl.vertexAttribDivisor(loc, 1);
+    });
+    gl.bindVertexArray(null);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    return { vao, buf, count: data.length / LINE, anchor: a };
+  }
+
+  private drawLines(m0: ArrayLike<number>,matrices: Map<number, Float32Array>, pxPerUnit: number, dpr: number) {
+    if (!this.lines.size || !this.lineProg) return;
+    const gl = this.gl, u = this.lineU;
+    gl.useProgram(this.lineProg);
+    gl.uniform2f(u.u_viewport, this.canvas.width, this.canvas.height);
+    gl.uniform1f(u.u_px_per_unit, pxPerUnit);
+    gl.uniform1f(u.u_rscale, this.bubbleSize);
+    gl.uniform1f(u.u_stub, STUB_SCREEN * Math.max(this.canvas.width, this.canvas.height));
+    gl.uniform1f(u.u_width, LINE_PX * dpr);
+    gl.uniform3fv(u.u_ink, rgb(NET_INK).map((v) => v / 255));
+    for (const s of this.lines.values()) {
+      let m = matrices.get(s.anchor.version);
+      if (!m) matrices.set(s.anchor.version, (m = mul4(m0, localToMercMatrix(s.anchor))));
+      gl.uniformMatrix4fv(u.u_matrix, false, m);
+      gl.bindVertexArray(s.vao);
+      gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, s.count);
+    }
+    gl.bindVertexArray(null);
   }
 
   /** Draw once on the next frame (data changed), with the camera of MapLibre's last frame. */
@@ -297,22 +414,18 @@ export class DemandOverlay {
       this.lastLevel = level;
       this.onLevel(level);
     }
-    // each set with its radius scale: the player's bubble size for commuter bubbles, 1 for a
-    // station's discs
-    const list: [DiscSet, number, number][] = [];
-    const op = this.bubbleOpacity;
+    const list: DiscSet[] = [];
     if (this.showBubbles) for (const sets of this.nearby.values()) {
       const n = sets[level];
-      if (n) list.push([n, this.bubbleSize, op]);
+      if (n) list.push(n);
     }
     const b = this.showBubbles ? this.bubbles[level] : null;
-    if (b) list.push([b, this.bubbleSize, op]);
+    if (b) list.push(b);
     for (const l of LAYERS) {
       const s = this.sets.get(l);
-      const bubble = l === "far" || l === "near" || l === "inter";
-      if (s) list.push([s, bubble ? this.bubbleSize : 1, bubble ? op : 1]);
+      if (s) list.push(s);
     }
-    if (!list.length) {
+    if (!list.length && !this.lines.size) {
       // clear once, then leave the canvas alone
       if (!this.blank) {
         gl.viewport(0, 0, this.canvas.width, this.canvas.height);
@@ -335,25 +448,27 @@ export class DemandOverlay {
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-    gl.useProgram(this.prog);
     // each set is drawn with the matrix of the anchor it was built at (T-317, map/geo.ts); most
     // draws have one anchor, a switch has two for a moment
     const matrices = new Map<number, Float32Array>();
+    const pxPerUnit = ((512 * Math.pow(2, zoom)) / EARTH_C) * dpr;
+    this.drawLines(m0, matrices, pxPerUnit, dpr);
+    gl.useProgram(this.prog);
     gl.uniform2f(this.u.u_viewport, this.canvas.width, this.canvas.height);
-    gl.uniform1f(this.u.u_px_per_unit, ((512 * Math.pow(2, zoom)) / EARTH_C) * dpr);
+    gl.uniform1f(this.u.u_px_per_unit, pxPerUnit);
     gl.uniform3fv(this.u.u_ink, rgb(NET_INK).map((v) => v / 255));
     gl.uniform1f(this.u.u_dpr, dpr);
+    gl.uniform1f(this.u.u_rscale, this.bubbleSize);
+    gl.uniform1f(this.u.u_opacity, this.bubbleOpacity);
     this.discsDrawn = 0;
     let uploaded = -1;
-    for (const [s, rs, opacity] of list) {
+    for (const s of list) {
       if (s.anchor.version !== uploaded) {
         uploaded = s.anchor.version;
         let m = matrices.get(uploaded);
         if (!m) matrices.set(uploaded, (m = mul4(m0, localToMercMatrix(s.anchor))));
         gl.uniformMatrix4fv(this.u.u_matrix, false, m);
       }
-      gl.uniform1f(this.u.u_rscale, rs);
-      gl.uniform1f(this.u.u_opacity, opacity);
       gl.bindVertexArray(s.vao);
       gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, s.count);
       this.discsDrawn += s.count;

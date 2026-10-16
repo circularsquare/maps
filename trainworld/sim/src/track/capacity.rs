@@ -96,6 +96,95 @@ impl Capacity {
         let x = &self.res[r];
         &self.users[x.first as usize..(x.first + x.count) as usize]
     }
+
+    /// Whether the resource caps throughput (T-517). A station crossover's load counts through
+    /// trains that never conflict with each other, so it only delays.
+    pub fn limits(&self, r: usize) -> bool {
+        !matches!(self.tag[r], Tag::Turnback { .. })
+    }
+
+    /// Trains an hour through a resource at a level, each line direction once.
+    pub fn trains(&self, net: &Network, r: usize, lev: usize) -> f64 {
+        let mut seen: Vec<(u32, u8)> = vec![];
+        let mut n = 0.0;
+        for u in self.users_of(r) {
+            if !seen.contains(&(u.line, u.run)) {
+                seen.push((u.line, u.run));
+                n += net.line_tph[u.line as usize][lev] as f64;
+            }
+        }
+        n
+    }
+
+    /// Per line and level, its fullest limiting resource: (utilisation, resource), or (0, MAX).
+    pub fn bottlenecks(&self, lines: usize) -> Vec<[(f64, u32); 3]> {
+        let mut out = vec![[(0.0, u32::MAX); 3]; lines];
+        for r in (0..self.res.len()).filter(|&r| self.limits(r)) {
+            for u in self.users_of(r) {
+                let b = &mut out[u.line as usize];
+                for lev in 0..LEVELS {
+                    if self.rho[r][lev] > b[lev].0 {
+                        b[lev] = (self.rho[r][lev], r as u32);
+                    }
+                }
+            }
+        }
+        out
+    }
+
+    /// T-517: the rates `want` (line, trains an hour) at one level, cut so that no limiting
+    /// resource exceeds its capacity. Progressive filling: every line's rate grows in proportion
+    /// to its wanted rate until a resource it uses fills; its lines then stop there. Lines not in
+    /// `want` keep their rates and only take room. A rate that fits comes back unchanged.
+    pub fn fill(&self, net: &Network, want: &[(u32, f64)], lev: usize) -> Vec<f64> {
+        let mut slot = vec![u32::MAX; net.line_count()];
+        for (i, w) in want.iter().enumerate() {
+            slot[w.0 as usize] = i as u32;
+        }
+        // per limiting resource: utilisation from fixed lines, and per wanted line its share per train an hour
+        let mut res: Vec<(f64, Vec<(u32, f64)>)> = vec![];
+        for r in (0..self.res.len()).filter(|&r| self.limits(r)) {
+            let (mut fixed, mut coef) = (0.0, vec![]);
+            for u in self.users_of(r) {
+                match slot[u.line as usize] {
+                    u32::MAX => fixed += net.line_tph[u.line as usize][lev] as f64 * u.occ / 3600.0,
+                    s => match coef.iter_mut().find(|c: &&mut (u32, f64)| c.0 == s) {
+                        Some(c) => c.1 += u.occ / 3600.0,
+                        None => coef.push((s, u.occ / 3600.0)),
+                    },
+                }
+            }
+            if !coef.is_empty() {
+                res.push((fixed, coef));
+            }
+        }
+        let mut scale: Vec<Option<f64>> = vec![None; want.len()];
+        loop {
+            // the common scale at which each resource fills
+            let at: Vec<f64> = res.iter().map(|(fixed, coef)| {
+                let (mut used, mut grow) = (*fixed, 0.0);
+                for &(s, a) in coef {
+                    match scale[s as usize] {
+                        Some(x) => used += want[s as usize].1 * a * x,
+                        None => grow += want[s as usize].1 * a,
+                    }
+                }
+                if grow > 0.0 { ((1.0 - used) / grow).max(0.0) } else { f64::INFINITY }
+            }).collect();
+            let first = at.iter().copied().fold(f64::INFINITY, f64::min);
+            if first >= 1.0 {
+                break;
+            }
+            for (k, (_, coef)) in res.iter().enumerate() {
+                if at[k] <= first {
+                    for &(s, _) in coef {
+                        scale[s as usize].get_or_insert(first);
+                    }
+                }
+            }
+        }
+        want.iter().zip(&scale).map(|(w, x)| w.1 * x.unwrap_or(1.0)).collect()
+    }
 }
 
 /// Delay per train in seconds (SPEC 6.2): Kingman with a small variability term, a straight line
@@ -954,7 +1043,7 @@ mod tests {
     #[test]
     fn short_turn_counts_settle_against_shared_platform_and_crossover_delays() {
         let (mut w, _, through, short) = turnback_fixture(false, false);
-        for (id, counts) in [(through, [9, 4, 2]), (short, [5, 0, 0])] {
+        for (id, counts) in [(through, [4, 4, 2]), (short, [1, 0, 0])] {
             let tph = w.net.line_tph[id as usize];
             w.apply(Op::TrainCounts { id, trains: Some(counts), tph }).unwrap();
         }

@@ -8,9 +8,9 @@
 //   train. The map shows the far end of the selection's own end (homes: where the trips go; jobs:
 //   where they come from).
 // - A selected station asks `intercityStation(id)`: the longer-trip rail riders starting and ending
-//   there. The map shows the ones starting there (their home end is the station).
-// - Zoomed far out (OVERVIEW_ZOOM and below) with Homes or Destinations on and nothing of the
-//   above selected, every city is one bubble of its longer trips, the focused city too, in place
+//   there, for the station inspector only (T-519).
+// - Zoomed far out (OVERVIEW_ZOOM and below) with Homes or Destinations on and no bubble
+//   selection, every city is one bubble of its longer trips, the focused city too, in place
 //   of the focused city's own bubbles (T-186). A click on one selects the city (a `city`
 //   selection): it is drawn outlined, with one bubble per other city for the trips between them.
 //   These come from the market's corridors (`intercityDemand`), and catch up over a game day after
@@ -43,7 +43,7 @@ import { CATCH_STEP, caughtUp, tripsDone } from "./catchUp";
 import { anchorVersion } from "./anchorVersion";
 import { modeBar } from "./modeBar";
 import { addFinder, discAt, pointerAt } from "./demandHover";
-import type { DemandOverlay } from "./demandOverlay";
+import { LINE, type DemandOverlay } from "./demandOverlay";
 import { anchor, EARTH_C, kAtLat, toLocal, toLngLat, type Anchor } from "./geo";
 
 /** A bubble selection's longer trips, for the commuters inspector; null while unknown. */
@@ -68,6 +68,8 @@ export const OVERVIEW_ZOOM = 8.5;
 /** The busiest city's bubble in the overview, and the selected city's, px radius before the size
  * slider. Larger than a selection's 19 px city circles: here nothing local is drawn beside it. */
 const OVERVIEW_PX = 28;
+/** The lines from a selected zone to the others (T-520). */
+const ZONE_LINE_ALPHA = 0.3;
 /** Most place labels on screen at once, the biggest first (T-493). */
 const MAX_LABELS = 8;
 
@@ -107,7 +109,7 @@ function pairs(corridors: { from: number; to: number; trips: number; rail: numbe
 export function startIntercityView(view: DemandOverlay, map: MlMap) {
   let marks: Marks | null = null;
   /** what is on show, redrawn when the setting changes */
-  let current: { flows: PlaceFlows; verb: string; railOnly: boolean; own: number } | null = null;
+  let current: { flows: PlaceFlows; verb: string; own: number } | null = null;
   const labels = document.createElement("div");
   labels.className = "intercity-labels";
   map.getContainer().appendChild(labels);
@@ -157,7 +159,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
   const cityMode = (): "overview" | "selected" | null => {
     const sel = selection.peek();
     if (sel?.kind === "city") return "selected";
-    if (display.peek().commuters && map.getZoom() <= OVERVIEW_ZOOM && sel?.kind !== "commuters" && sel?.kind !== "station") return "overview";
+    if (display.peek().commuters && map.getZoom() <= OVERVIEW_ZOOM && sel?.kind !== "commuters") return "overview";
     return null;
   };
 
@@ -225,12 +227,22 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     const first = points.findIndex((p) => p.isOwn);
     marks = { discs, anchor: a, tags: points.map((p) => p.tag), cities: points.map((p) => p.city.id), first: first >= 0 ? first : undefined };
     view.setDiscs("inter", discs, a);
+    // a thin line from the selected zone to every other, so the selection shows from afar (T-520)
+    if (own && first >= 0) {
+      const lines = new Float32Array((points.length - 1) * LINE);
+      const o = first * DISC;
+      for (let i = 0, k = 0; i < points.length; i++) {
+        if (i !== first) lines.set([discs[o], discs[o + 1], discs[o + 2], discs[i * DISC], discs[i * DISC + 1], discs[i * DISC + 2], 0, ZONE_LINE_ALPHA], k++ * LINE);
+      }
+      view.setLines("inter", lines, a);
+    }
     placeLabels();
   };
 
   const render = () => {
     marks = null;
     labels.replaceChildren();
+    view.setLines("inter", null);
     // the regional market has no purposes: its bubbles show for all purposes only (T-158, T-305);
     // the inspector keeps the numbers
     const filter = purposeFilter.peek();
@@ -257,7 +269,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       return { ...p, ll, name: INTERCITY_PLACES[p.place] };
     }) : current.flows.zones.filter(z => z.all > 0 && z.place !== current!.own).map(z => ({...z, ll: packToLngLat(z.x, z.y), name: ""}));
     points.sort((a, b) => b.all - a.all);
-    const { verb, railOnly } = current;
+    const { verb } = current;
     const max = points[0]?.all || 1;
     const pxPerUnit = 512 * 2 ** map.getZoom() / EARTH_C;
     // biggest first, so the small ones draw on top of the big ones
@@ -276,8 +288,8 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       const r = unscaledRadius * INTERCITY_RADIUS_SCALE;
       discs.set([x, y, r, c[0] / 255, c[1] / 255, c[2] / 255, BUBBLE_ALPHA, 1], i * DISC);
       const place = z.name || "here";
-      tags.push(railOnly ? [`${count(z.rail)} riders ${shownDayPhrase.peek()} on inter-region trips ${verb} ${place}`] : [`${count(z.all)} inter-region trips ${shownDayPhrase.peek()} ${verb} ${place}`, modeBar(z.rail, 0, Math.max(0, z.all - z.rail))]);
-      if (regional) label(`${z.name} · ${count(z.all)} ${railOnly ? "riders" : "trips"}/day`);
+      tags.push([`${count(z.all)} inter-region trips ${shownDayPhrase.peek()} ${verb} ${place}`, modeBar(z.rail, 0, Math.max(0, z.all - z.rail))]);
+      if (regional) label(`${z.name} · ${count(z.all)} trips/day`);
     });
     marks = { discs, anchor: a, tags };
     view.setDiscs("inter", discs, a);
@@ -333,8 +345,8 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
   let seen: Selection = null;
   let seenScope = "";
   let ask = 0;
-  const show = (flows: PlaceFlows, verb: string, railOnly: boolean, own: number) => {
-    current = { flows, verb, railOnly, own };
+  const show = (flows: PlaceFlows, verb: string, own: number) => {
+    current = { flows, verb, own };
     render();
   };
   const clear = () => {
@@ -370,12 +382,11 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
         if (mine !== ask || !r || selection.peek() !== sel) return;
         intercityPick.value = { sel, data: r, own };
         // homes: where their trips go; jobs: where the trips to them come from
-        show(sel.end === "home" ? r.starts : r.ends, sel.end === "home" ? "to" : "from", false, own);
+        show(sel.end === "home" ? r.starts : r.ends, sel.end === "home" ? "to" : "from", own);
       } else {
         const r = await intercityStation(sel.station, (scope || sel.station).split(","));
         if (mine !== ask || !r || selection.peek() !== sel) return;
         intercityStationView.value = r;
-        show(r.starts, "to", true, marketOf(focus));
       }
     })();
   });

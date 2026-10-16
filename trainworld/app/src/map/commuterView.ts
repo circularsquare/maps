@@ -28,14 +28,14 @@ import { purposeWords, type PurposeFilter } from "../game/purposes";
 import type { Selection } from "../game/types";
 import { display, purposeFilter, selection, shownDayPhrase, tool } from "../game/ui";
 import { world } from "../game/world";
-import { BUBBLE_DENSITY, RES_AREA_M2, type Bubbles, type FromCommuters, type Moved, type Ready, type Summed, type ToCommuters } from "../workers/commutersProtocol";
+import { BUBBLE_DENSITY, DISC, RES_AREA_M2, type Bubbles, type FromCommuters, type Moved, type Ready, type Summed, type ToCommuters } from "../workers/commutersProtocol";
 import { aggregate, discs, type Groups } from "./bubbles";
 import { CATCH_STEP, CATCH_WALL_MS, caughtUp, tripsDone } from "./catchUp";
 import { cityOverview } from "./intercityView";
 import { anchorVersion } from "./anchorVersion";
 import { modeBar } from "./modeBar";
 import { addFinder, discAt, pointerAt, pointerLocal, type Pointer } from "./demandHover";
-import { bubbleLevel, type DemandOverlay } from "./demandOverlay";
+import { bubbleLevel, LINE, type DemandOverlay } from "./demandOverlay";
 import { anchor, anchorShift, kAtY, toLocal, type Anchor } from "./geo";
 
 
@@ -56,6 +56,28 @@ const tripWords = () => {
   const p = purposeFilter.peek();
   return p === "all" ? "trips" : `${purposeWords(p)} trips`;
 };
+
+/** With a bubble selection, a short faint line from each far-end bubble toward the selection
+ * (T-520, Anita: to try and maybe undo; false turns them off). */
+const LINES_TO_SELECTION = true;
+const STUB_ALPHA = 0.45;
+
+/** One stub per far disc (`LINE` floats, relative to `farA`), pointing at the selection's centre:
+ * its discs' centres weighted by area. A single selected disc's edge stops the stub. */
+function linesToward(near: Float32Array | null, nearA: Anchor, far: Float32Array, farA: Anchor): Float32Array | null {
+  if (!near || !near.length) return null;
+  let sx = 0, sy = 0, sw = 0;
+  for (let i = 0; i < near.length; i += DISC) {
+    const w = near[i + 2] ** 2;
+    (sx += near[i] * w), (sy += near[i + 1] * w), (sw += w);
+  }
+  if (!(sw > 0)) return null;
+  const [dx, dy] = anchorShift(nearA, farA);
+  const tx = sx / sw + dx, ty = sy / sw + dy, tr = near.length === DISC ? near[2] : 0;
+  const n = far.length / DISC, out = new Float32Array(n * LINE);
+  for (let i = 0; i < n; i++) out.set([far[i * DISC], far[i * DISC + 1], far[i * DISC + 2], tx, ty, tr, 1, STUB_ALPHA], i * LINE);
+  return out;
+}
 
 /** A selection's far end under the purpose filter (T-158); null: none of that purpose. */
 function farOf(f: Flows, purpose: PurposeFilter): FarEnd | null {
@@ -195,7 +217,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
       shown = built = null;
       catching = null;
       near = far = null; nearDiscs = farDiscs = null; farCells = null;
-      view.setBubbles([]); view.setDiscs("near", null); view.setDiscs("far", null);
+      view.setBubbles([]); view.setDiscs("near", null); view.setDiscs("far", null); view.setLines("far", null);
       if (adopted?.worker && adopted.city && adopted.cellsWorld) {
         worker = adopted.worker; city = adopted.city; cellsWorld = adopted.cellsWorld;
         workerReady = Promise.resolve(true);
@@ -213,9 +235,9 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     const dv = demandView.value;
     const updating = demandUpdating.value;
     const sel = selection.value;
-    // the city's bubbles give way to a selection's own (and to a station's catchment), and to
-    // the one bubble per city zoomed far out (T-186)
-    view.setBubblesVisible(d.commuters && sel?.kind !== "commuters" && sel?.kind !== "station" && !cityOverview.value);
+    // the city's bubbles give way to a selection's own, and to the one bubble per city zoomed far
+    // out (T-186)
+    view.setBubblesVisible(d.commuters && sel?.kind !== "commuters" && !cityOverview.value);
     // one purpose's legs only under the map's purpose filter (T-158)
     const purpose = purposeFilter.value;
     if (shown && shown.purpose !== purpose) {
@@ -396,7 +418,6 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   addFinder(10, (p) => {
     if (!shown || !display.peek().commuters || cityOverview.peek()) return null;
     const sel = selection.peek();
-    if (sel?.kind === "station") return null;
     if (sel?.kind === "commuters") {
       let i = discAt(nearDiscs, p, nearAnchor, view.bubbleSize);
       if (i >= 0 && near) return bubbleTag(sel.end, near.train[i], near.walk[i], near.drive[i]);
@@ -412,7 +433,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   /** A nearby zone's bubble under the point (T-276): drawn under the focused zone's, shown with them. */
   const nearbyAt = (p: Pointer): { id: CityId; s: ZoneShown; i: number } | null => {
     const sel = selection.peek()?.kind;
-    if (!display.peek().commuters || cityOverview.peek() || sel === "commuters" || sel === "station") return null;
+    if (!display.peek().commuters || cityOverview.peek() || sel === "commuters") return null;
     const level = bubbleLevel(map.getZoom());
     for (const [id, z] of zones) {
       if (!z.shown || id === activeCity.peek()) continue;
@@ -497,7 +518,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
 
   /** A click in the select tool: a bubble selection, or undefined to let the network have it. */
   const click = (px: number, py: number, add: boolean): Selection | undefined => {
-    if (!display.peek().commuters || !shown || selection.peek()?.kind === "station" || cityOverview.peek()) return undefined;
+    if (!display.peek().commuters || !shown || cityOverview.peek()) return undefined;
     const p = pointerAt(map, px, py);
     const sel = selection.peek();
     // A selection replaces the city's bubbles. Its near/far discs remain above the network,
@@ -534,7 +555,6 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     if (e.button !== 0 || tool.peek() !== "select" || !display.peek().commuters || !shown || cityOverview.peek()) return;
     const [x, y] = rel(e);
     const sel = selection.peek();
-    if (sel?.kind === "station") return;
     const at = pointerAt(map, x, y);
     // Start a bubble box only on a visible city/selected-home bubble. A long press on a train,
     // station, empty map or a destination disc should keep its ordinary interaction.
@@ -596,6 +616,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
       near = far = nearDiscs = farDiscs = null;
       view.setDiscs("near", null);
       view.setDiscs("far", null);
+      view.setLines("far", null);
       return;
     }
     const level = bubbleLevel(map.getZoom());
@@ -618,6 +639,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
       far = farDiscs = null;
       view.setDiscs("far", null);
     }
+    view.setLines("far", LINES_TO_SELECTION && farDiscs ? linesToward(nearDiscs, nearAnchor, farDiscs, farAnchor) : null, farAnchor);
   };
   view.onLevel = () => drawPick();
 

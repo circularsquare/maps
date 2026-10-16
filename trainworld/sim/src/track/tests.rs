@@ -429,50 +429,50 @@ fn write_bench_save() {
 fn whole_line_counts_survive_route_changes_save_and_undo() {
     let (mut w, nodes, _, id) = simple();
     let tph = w.net.line_tph[id as usize];
-    w.apply(Op::TrainCounts { id, trains: Some([9, 5, 0]), tph }).unwrap();
+    w.apply(Op::TrainCounts { id, trains: Some([5, 3, 0]), tph }).unwrap();
     for lev in 0..LEVELS {
-        assert_eq!(w.svc.lines[id as usize].trains[lev], [9, 5, 0][lev]);
+        assert_eq!(w.svc.lines[id as usize].trains[lev], [5, 3, 0][lev]);
         let implied = w.net.line_tph[id as usize][lev] as f64 * w.svc.lines[id as usize].round_trip[lev] / 3600.0;
-        assert!((implied - [9, 5, 0][lev] as f64).abs() < 0.001, "{implied}");
+        assert!((implied - [5, 3, 0][lev] as f64).abs() < 0.001, "{implied}");
     }
     let mut d = w.net.line_data(id).unwrap();
     d.stops = vec![nodes[0], nodes[2]];
     w.apply(Op::Line { id, data: Some(d) }).unwrap();
-    assert_eq!(w.svc.lines[id as usize].trains, [9, 5, 0]);
+    assert_eq!(w.svc.lines[id as usize].trains, [5, 3, 0]);
     let bytes = super::save::encode(&w.net);
     let reloaded = TrackWorld::new(super::save::decode(&bytes).unwrap());
-    assert_eq!(reloaded.net.line_trains[0], Some([9, 5, 0]));
-    assert_eq!(reloaded.svc.lines[0].trains, [9, 5, 0]);
+    assert_eq!(reloaded.net.line_trains[0], Some([5, 3, 0]));
+    assert_eq!(reloaded.svc.lines[0].trains, [5, 3, 0]);
     assert_eq!(super::save::encode(&reloaded.net), bytes);
     w.undo().unwrap().unwrap();
     w.undo().unwrap().unwrap();
     assert_eq!(w.net.line_trains[id as usize], None);
     assert_eq!(w.net.line_tph[id as usize], tph);
     w.redo().unwrap().unwrap();
-    assert_eq!(w.svc.lines[id as usize].trains, [9, 5, 0]);
+    assert_eq!(w.svc.lines[id as usize].trains, [5, 3, 0]);
 }
 
 #[test]
 fn whole_line_counts_include_congestion_and_odd_fleets() {
     let mut w = world();
     let a = node(&mut w, 0.0, 0.0, 0);
-    let b = node(&mut w, 1000.0, 0.0, 0);
+    let b = node(&mut w, 10000.0, 0.0, 0);
     edge(&mut w, a, b, &[], 0).unwrap();
     station(&mut w, a, 200); station(&mut w, b, 200);
     let first = line(&mut w, &[a, b], [8.0, 3.0, 1.0]);
-    w.apply(Op::TrainCounts { id: first, trains: Some([9, 3, 0]), tph: [8.0, 3.0, 1.0] }).unwrap();
+    w.apply(Op::TrainCounts { id: first, trains: Some([3, 1, 0]), tph: [8.0, 3.0, 1.0] }).unwrap();
     let free_hw = w.net.line_tph[first as usize][0];
     let second = line(&mut w, &[a, b], [8.0, 3.0, 1.0]);
-    w.apply(Op::TrainCounts { id: second, trains: Some([9, 3, 0]), tph: [8.0, 3.0, 1.0] }).unwrap();
+    w.apply(Op::TrainCounts { id: second, trains: Some([3, 1, 0]), tph: [8.0, 3.0, 1.0] }).unwrap();
     assert!(w.net.line_tph[first as usize][0] < free_hw);
     for id in [first, second] {
         let ls = &w.svc.lines[id as usize];
-        assert_eq!(ls.trains, [9, 3, 0]);
+        assert_eq!(ls.trains, [3, 1, 0]);
         let implied = w.net.line_tph[id as usize][0] as f64 * ls.round_trip[0] / 3600.0;
-        assert!((implied - 9.0).abs() < 0.001, "{implied}");
+        assert!((implied - 3.0).abs() < 0.001, "{implied}");
         let t = 8.0 * 3600.0 + 37.0;
         let trips = w.svc.trips(&w.net, t, t + 0.001);
-        assert_eq!(trips.iter().filter(|tr| tr.line == id).count(), 9, "odd whole-line fleet at steady demand");
+        assert_eq!(trips.iter().filter(|tr| tr.line == id).count(), 3, "odd whole-line fleet at steady demand");
     }
 }
 
@@ -481,16 +481,16 @@ fn a_count_edit_at_one_level_leaves_the_others_to_the_bit() {
     // T-415: two fleets sharing track; editing the high level must not move medium or low
     let mut w = world();
     let a = node(&mut w, 0.0, 0.0, 0);
-    let b = node(&mut w, 1000.0, 0.0, 0);
-    let c = node(&mut w, 2500.0, 0.0, 0);
+    let b = node(&mut w, 4000.0, 0.0, 0);
+    let c = node(&mut w, 10000.0, 0.0, 0);
     edge(&mut w, a, b, &[], 0).unwrap();
     edge(&mut w, b, c, &[], 0).unwrap();
     station(&mut w, a, 200); station(&mut w, b, 200); station(&mut w, c, 200);
     let first = line(&mut w, &[a, b, c], [8.0, 5.0, 2.0]);
     let second = line(&mut w, &[a, b], [8.0, 5.0, 2.0]);
-    for id in [first, second] {
+    for (id, trains) in [(first, [3, 2, 1]), (second, [1, 1, 1])] {
         let tph = w.net.line_tph[id as usize];
-        w.apply(Op::TrainCounts { id, trains: Some([11, 7, 3]), tph }).unwrap();
+        w.apply(Op::TrainCounts { id, trains: Some(trains), tph }).unwrap();
     }
     let figures = |w: &TrackWorld| -> Vec<(u32, u32, Vec<f64>)> {
         let mut v = vec![];
@@ -505,11 +505,11 @@ fn a_count_edit_at_one_level_leaves_the_others_to_the_bit() {
         }
         v
     };
-    for n in [13, 12, 14, 11] {
+    for n in [4, 3, 5, 2] {
         let before = figures(&w);
         let high = w.net.line_tph[first as usize][0];
         let tph = w.net.line_tph[first as usize];
-        w.apply(Op::TrainCounts { id: first, trains: Some([n, 7, 3]), tph }).unwrap();
+        w.apply(Op::TrainCounts { id: first, trains: Some([n, 2, 1]), tph }).unwrap();
         assert_ne!(w.net.line_tph[first as usize][0], high);
         let after = figures(&w);
         for (x, y) in before.iter().zip(&after) {
@@ -545,9 +545,10 @@ fn whole_line_count_edit_timing() {
 
 // ---- T-206: trains join and leave at the ends of a line
 
-/// A - B - C with a whole-line fleet of `n` at every level.
+/// Seven stations 2 km apart (room for 14 trains, T-517) with a whole-line fleet of `n` at every level.
 fn fleet_line(n: u32) -> (TrackWorld, u32) {
-    let (mut w, _, _, id) = simple();
+    let (mut w, ns) = corridor(7);
+    let id = line(&mut w, &ns, [12.0, 6.0, 3.0]);
     let tph = w.net.line_tph[id as usize];
     w.apply(Op::TrainCounts { id, trains: Some([n, n, n]), tph }).unwrap();
     (w, id)
@@ -707,4 +708,70 @@ fn every_window_hands_trains_over_alike() {
             assert!(b.iter().chain(&a).any(|u| u.run != t.run && (u.draw - t.end).abs() < 1e-6), "{t:?} stood for nothing");
         }
     }
+}
+
+// ---- T-517: no track carries more trains than its capacity
+
+/// `n` stations 2 km apart on double track.
+fn corridor(n: usize) -> (TrackWorld, Vec<u32>) {
+    let mut w = world();
+    let ns: Vec<u32> = (0..n).map(|i| node(&mut w, i as f64 * 2000.0, 0.0, 0)).collect();
+    for i in 0..n - 1 {
+        edge(&mut w, ns[i], ns[i + 1], &[], 0).unwrap();
+    }
+    for &n in &ns {
+        station(&mut w, n, 200);
+    }
+    (w, ns)
+}
+
+fn set_counts(w: &mut TrackWorld, id: u32, trains: [u32; 3]) {
+    let tph = w.net.line_tph[id as usize];
+    w.apply(Op::TrainCounts { id, trains: Some(trains), tph }).unwrap();
+}
+
+/// The fullest limiting resource at a level.
+fn fullest(w: &TrackWorld, lev: usize) -> f64 {
+    (0..w.svc.cap.res.len()).filter(|&r| w.svc.cap.limits(r)).map(|r| w.svc.cap.rho[r][lev]).fold(0.0, f64::max)
+}
+
+#[test]
+fn a_fleet_beyond_capacity_waits_at_the_ends() {
+    let (mut w, ns) = corridor(5);
+    let id = line(&mut w, &ns, [8.0, 3.0, 1.0]);
+    set_counts(&mut w, id, [20, 3, 0]);
+    let (rate, trip) = (w.net.line_tph[id as usize][HIGH], w.svc.lines[id as usize].round_trip[HIGH]);
+    assert!((fullest(&w, HIGH) - 1.0).abs() < 1e-4, "{}", fullest(&w, HIGH));
+    assert!(rate as f64 * trip / 3600.0 < 19.0, "the fleet is held by the track");
+    for n in [30, 300, 3000] {
+        set_counts(&mut w, id, [n, 3, 0]);
+        assert_eq!(w.net.line_tph[id as usize][HIGH].to_bits(), rate.to_bits(), "{n} trains");
+        assert_eq!(w.svc.lines[id as usize].round_trip[HIGH], trip, "surplus trains add no delay");
+        assert_eq!(w.svc.lines[id as usize].trains[HIGH], n);
+    }
+    // a fleet that fits runs at its own rate again
+    set_counts(&mut w, id, [4, 3, 0]);
+    let ls = &w.svc.lines[id as usize];
+    assert!((w.net.line_tph[id as usize][HIGH] as f64 * ls.round_trip[HIGH] / 3600.0 - 4.0).abs() < 1e-3);
+    assert!(fullest(&w, HIGH) < 0.9);
+}
+
+#[test]
+fn shared_track_splits_its_capacity() {
+    let (mut w, ns) = corridor(5);
+    let long = line(&mut w, &ns, [8.0, 3.0, 1.0]);
+    let short = line(&mut w, &ns[1..4], [8.0, 3.0, 1.0]);
+    set_counts(&mut w, long, [40, 4, 2]);
+    set_counts(&mut w, short, [40, 4, 2]);
+    assert!((fullest(&w, HIGH) - 1.0).abs() < 1e-4, "{}", fullest(&w, HIGH));
+    let rates = |w: &TrackWorld| [long, short].map(|id| w.net.line_tph[id as usize]);
+    let high = rates(&w);
+    assert!(high[0][HIGH] > 0.0 && high[1][HIGH] > 0.0, "{high:?}");
+    // editing another level leaves the held one to the bit
+    set_counts(&mut w, short, [40, 5, 2]);
+    assert_eq!(rates(&w).map(|r| r[HIGH].to_bits()), high.map(|r| r[HIGH].to_bits()));
+    // fewer trains on one line leave room for the other
+    set_counts(&mut w, long, [3, 4, 2]);
+    assert!(w.net.line_tph[short as usize][HIGH] > high[1][HIGH]);
+    assert!(fullest(&w, HIGH) <= 1.0 + 1e-4);
 }

@@ -2308,16 +2308,50 @@ impl TrackApi {
         vec![2.0 * stops * n.line_dwell[line as usize] as f64, 2.0 * n.line_turn[line as usize] as f64]
     }
 
-    /// Capacity markers for a level (SPEC 6.2 shows 75% and up): x, y, utilisation, delay s, kind.
+    /// Capacity markers for a level (SPEC 6.2 shows 75% and up): x, y, utilisation, delay s, kind,
+    /// trains an hour through it, and 1 when it is full and holds back some line's trains (T-517).
     pub fn markers(&self, level: usize) -> Vec<f32> {
+        let (cap, net) = (&self.w.svc.cap, &self.w.net);
         self.w
             .busy(level)
             .iter()
             .flat_map(|&(r, kind, rho, d)| {
-                let res = &self.w.svc.cap.res[r];
-                [res.x as f32, res.y as f32, rho as f32, d as f32, kind as u8 as f32]
+                let res = &cap.res[r];
+                let held = rho >= FULL_RHO && cap.limits(r) && cap.users_of(r).iter().any(|u| self.waiting(u.line, level) > 0.0);
+                [res.x as f32, res.y as f32, rho as f32, d as f32, kind as u8 as f32, cap.trains(net, r, level) as f32, held as u8 as f32]
             })
             .collect()
+    }
+
+    /// Trains of a whole-line fleet that full track keeps from running at a level (T-517), or 0.
+    fn waiting(&self, line: u32, level: usize) -> f64 {
+        let (n, svc) = (&self.w.net, &self.w.svc);
+        let (Some(Some(counts)), Some(ls)) = (n.line_trains.get(line as usize), svc.lines.get(line as usize)) else { return 0.0 };
+        let short = counts[level] as f64 - n.line_tph[line as usize][level] as f64 * ls.round_trip[level] / 3600.0;
+        if short > 0.01 { short } else { 0.0 }
+    }
+
+    /// Per level, where full track holds a line back (T-517): `[trains that wait, kind (ResKind
+    /// as u8), node or -1, x, y, trains an hour through it, the most it takes]`, all zero where the
+    /// line's whole fleet runs.
+    pub fn line_held(&self, line: u32) -> Vec<f64> {
+        let mut out = vec![0.0; 7 * LEVELS];
+        let cap = &self.w.svc.cap;
+        if line as usize >= self.w.net.line_count() {
+            return out;
+        }
+        let worst = cap.bottlenecks(self.w.net.line_count())[line as usize];
+        for lev in 0..LEVELS {
+            let (rho, r) = worst[lev];
+            let wait = self.waiting(line, lev);
+            if rho < FULL_RHO || r == u32::MAX || wait <= 0.0 {
+                continue;
+            }
+            let res = &cap.res[r as usize];
+            let tph = cap.trains(&self.w.net, r as usize, lev);
+            out[7 * lev..7 * lev + 7].copy_from_slice(&[wait, res.kind as u8 as f64, if res.node == u32::MAX { -1.0 } else { res.node as f64 }, res.x, res.y, tph, tph / rho]);
+        }
+        out
     }
 }
 

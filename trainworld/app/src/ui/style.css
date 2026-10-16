@@ -164,6 +164,12 @@ body.resizing, body.resizing * { user-select: none; }
   font-size: 12px; font-weight: 700; line-height: 1;
 }
 .chip > span { transform: translateY(-1px); }
+.chip.link { cursor: pointer; }
+/* T-521: a station row keeps at least 3 bullets, its name gives way */
+.rows.stations > li { gap: 4px; }
+.rows.stations .grow { flex: 1 1 auto; flex-shrink: 1000; min-width: 6em; }
+.rows.stations .w-num { width: auto; min-width: 0; }
+.chips { display: inline-flex; align-items: center; gap: 2px; flex: 0 1 auto; min-width: 56px; overflow: hidden; }
 .chip.lg { min-width: 30px; height: 30px; padding: 0 7px; font-size: 18px; }
 .chip.sm { min-width: 16px; height: 16px; padding: 0 4px; font-size: 12px; }
 .badge-edit { display: inline-flex; padding: 0; border: 0; background: transparent; cursor: pointer; flex: none; font: inherit; }

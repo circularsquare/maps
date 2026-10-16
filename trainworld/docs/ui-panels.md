@@ -39,7 +39,7 @@ bars); the network takes the line colours ([ui-map.md](ui-map.md)).
   pointer next moves over the page, leaving ignored till then [T-483, `ui/blurHold.ts`]. Text lives in `data-tip` (SVG shapes
   too); no `title` attribute is written anywhere, and one met under the pointer (MapLibre's
   controls) is turned into the tag first.
-- **Every drawn quantity has a tooltip** (Anita) [T-194, notes/T-194.md]: bubbles, catchments,
+- **Every drawn quantity has a tooltip** (Anita) [T-194, notes/T-194.md]: bubbles,
   inter-region and city bubbles, line widths and track colours, trains, stations, crowds, demand
   circles, capacity tags, and in the panels the purpose split, pie and timing bars, the trip
   explorer's bars, the complex map's lines and transfer curves, the junction map's routes and the
@@ -267,7 +267,7 @@ centre and zoom, or over New York with none [T-310].
   are an early estimate) until the zone in view's cluster has its final [T-421].
 - **After an edit** nothing changes until the new solve's final round: split, riders, bubbles and
   the boarding account keep the last finished forecast, the split faded and the status "Updating
-  demand 2/4…", then all change at once [T-232]. Queries asked meanwhile (a catchment, a bubble
+  demand 2/4…", then all change at once [T-232]. Queries asked meanwhile (a station's riders, a bubble
   selection, a trip) wait for that round. A line new or changed by the edit has no figures to keep,
   so it takes the free-flow estimate's riders as soon as that lands, as do stations only such
   lines serve [T-324]; until a running line has any figures its trains are striped

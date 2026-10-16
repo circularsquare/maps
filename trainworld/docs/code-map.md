@@ -79,7 +79,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   `stopMarkers.ts` (the toggle markers of stop editing, T-233).
 - Trains and trips: `trainFollow.ts` (a selected train followed onto its next trip, T-245),
   `tripView.ts` (the trip explorer's route, T-195; its panel is `ui/inspector/TripInspector.tsx`).
-- Demand views (T-084, T-097): `demandViews.ts` (wiring, a station's catchment), `demandLayers.ts`
+- Demand views (T-084, T-097): `demandViews.ts` (wiring, a station's riders for its inspector), `demandLayers.ts`
   (line width, station use circles, train fill; the figures from `game/stationUse.ts`, T-482), `commuterView.ts` and `bubbles.ts` (commuter bubbles and
   bubble selections), `intercityView.ts` (longer trips of a selection or station, one bubble per
   far zone, T-118, T-120; one per city zoomed far out, T-186), `catchUp.ts` (the bubbles catching

@@ -1,6 +1,6 @@
 // Commuter bubbles (T-097): per-cell counts summed into H3 parent areas, and the discs that draw
 // them. Pure functions, used by the bubble worker for whole-city views and on the main thread for
-// the small sets (a selection's far end, a station's catchment).
+// the small sets (a selection's own bubbles and far end).
 
 import { modeMix } from "../game/palette";
 import { DISC, type Grouping } from "../workers/commutersProtocol";

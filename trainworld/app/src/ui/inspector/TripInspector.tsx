@@ -176,7 +176,7 @@ export function TripInspector() {
   if (sel?.kind !== "trip") return null;
   const v = tripView.value;
   const q = shownPeriod.value;
-  // opened by clicking a far-end bubble of a bubble selection or a station's catchment (T-208)
+  // opened by clicking a far-end bubble of a bubble selection (T-208)
   const back = tripOpenedFrom.value;
   // an end picked at a station is named (T-221)
   const fromName = stationName(sel.fromStation), toName = stationName(sel.toStation);

@@ -11,8 +11,8 @@
 // state arrives, so the network drawn and every local-unit conversion change together. Caches in
 // local units rebuild with the world it comes with, or key on `anchor().version`.
 //
-// The demand views follow it too (T-317): every disc set (bubbles, a selection's ends, a station's
-// catchment, longer trips) is built relative to the anchor in force and keeps that anchor with it
+// The demand views follow it too (T-317): every disc set (bubbles, a selection's ends, longer
+// trips) is built relative to the anchor in force and keeps that anchor with it
 // (`DemandOverlay` draws each set with its own anchor's matrix, the hover finders turn the pointer
 // into each set's local units), and is rebuilt when `anchor().version` changes (the signal
 // `anchorVersion`, map/anchorVersion.ts). Disc sizes use k at the disc (`kAtY`, `kAtLat`).

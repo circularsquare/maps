@@ -197,15 +197,15 @@ another clickable thing. Picking follows drawing order [`map/pick.ts`, `main.ts`
 first: editing handles (a selected stretch's corner squares, which take their own presses, and the
 select tool's squares on blueprint points, which pass over the bubbles, their hover tags and the
 trains beneath, `map/endMarkers.ts`); the selected station (cut out of the bubbles); demand
-discs (commuter bubbles over longer-trip discs, then a station's catchment); capacity tags (under
+discs (commuter bubbles over longer-trip discs); capacity tags (under
 the discs; one that opens nothing selects what is under it); trains (the selected one first), then
 stations, lines, junctions and track; within a layer the last drawn wins; hidden layers do not
 intercept. Station names, airport badges and the stop editor's markers take no clicks: a click on
 one reaches what is under it (a badge sits on its own airport's bubble; the stop markers' station
 is picked by the stop tool). Network
 hits reach 7 px from the centre line, or half the drawn width where a line is wider [T-227].
-Clicking the line already selected selects the track under it. Clicking a selection's far end or a
-station's catchment keeps the parent selection. Selected editing handles stay draggable above the
+Clicking the line already selected selects the track under it. Clicking a selection's longer-trip discs keeps the
+parent selection. Selected editing handles stay draggable above the
 demand view.
 
 ## Zone outlines

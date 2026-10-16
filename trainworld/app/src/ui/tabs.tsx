@@ -9,7 +9,7 @@ import { createLine } from "../game/lineActions";
 import type { JSX } from "preact";
 import { count, distUnit, length, levelLabel, money, moneyExact, perDistance, perKmFrom, shortDistance } from "../game/format";
 import { inkOn, LEVEL_COLOURS } from "../game/palette";
-import { DEMAND_INDEX, LEVELS, type Level } from "../game/types";
+import { DEMAND_INDEX, LEVELS, type Level, type LineInput } from "../game/types";
 import { buildLevel, buildPlatform, display, keepPlacing, lineSort, selection, setDisplay, stationSort, trackCount, tool, type ListSort, type StationUseMode, type Tool } from "../game/ui";
 import type { Signal } from "@preact/signals";
 import { linesAt, setFares, world } from "../game/world";
@@ -262,6 +262,17 @@ export function LinesTab() {
   );
 }
 
+/** T-521: a station row's bullets. At least 3 stay whole, the rest give way when the row is full
+ * (the name is cut first). */
+function Chips({ lines }: { lines: LineInput[] }) {
+  const n = Math.min(lines.length, 3);
+  return (
+    <span class="chips" style={{ minWidth: n ? `${n * 18 + (n - 1) * 2}px` : undefined }}>
+      {lines.map((l) => <Chip line={l} size="sm" />)}
+    </span>
+  );
+}
+
 export function StationsTab() {
   useToday(); // T-293
   void accountVersion.value; // re-sorted each game hour, as the lines
@@ -282,7 +293,7 @@ export function StationsTab() {
       <div class="line-list-actions"><ScopeToggle /></div>
       {/* T-213: the stations' own map setting sits with them, above the list */}
       {/* T-482: station use circles, in place of the demand circles */}
-      <div class="h">Station circles</div>
+      <div class="h">Show station ridership</div>
       <div class="station-use"><Segmented<StationUseMode>
         options={[
           ["none", "None"],
@@ -304,13 +315,11 @@ export function StationsTab() {
         { key: "riders", label: "24 h", tip: "Sort by boardings in the past 24 hours", first: -1, cls: "w-num" },
         { key: "near", label: "Near", tip: "Sort by distance from the centre of the screen", first: 1, cls: key === "near" ? "w-near" : "near-off" },
       ]} />}
-      <ul class="rows pick">
+      <ul class="rows pick stations">
         {st.map((s) => (
           <li class={sel?.kind === "station" && sel.station === s.id ? "on" : ""} onClick={() => (selection.value = { kind: "station", station: s.id })}>
             <span class={"grow" + (s.built ? "" : " muted")}>{s.name}</span>
-            {linesAt(s.id).map((l) => (
-              <Chip line={l} size="sm" />
-            ))}
+            <Chips lines={linesAt(s.id)} />
             {s.built ? <StationToday id={s.id} /> : <span class="val w-num">Plan</span>}
             {key === "near" && <Near m={sc.stationDist.get(s.id)} />}
           </li>

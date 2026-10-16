@@ -81,10 +81,13 @@ key.
   [track-and-service.md](track-and-service.md) 6.3; hovering High, Medium or Low gives that
   level's times of day in the line's local time, from the period table in `game/periods.ts`:
   "High demand: 06:00 to 10:00, 16:00 to 20:00"; weekends use the same hours) [T-406]; on a
-  running line a dot per period before each level's name (High has the morning and evening
-  peaks, in time order) grades that period on today's kind of day by the crowding score above,
-  green below 0.1 (`Boarding::line_periods`) [T-477, T-491]; hover "Morning peak, 06:00 to 10:00:
-  riders wait 4.0 min on average for a train with room", then "12/96 trains are packed full";
+  running line one dot before each level's name grades the level on today's kind of day by the
+  crowding score above (the level's periods averaged by riders; High is its two peaks), green
+  below 0.1 (`Boarding::line_periods`) [T-477, T-491, T-515]; hover "Riders wait 4.0 min on
+  average for a train with room", then "12/96 trains are packed full" (all the level's periods),
+  and a last line naming the worst period and its wait when that period's grade is worse than the
+  level's; the trains steppers take Shift-click for 5 and Ctrl-click for 20 (their hover says so)
+  [T-516];
   Today for a running line:
   riders by purpose,
   fares, running cost so far, its fullest train so far ("100%" when one left packed full, else "N%
@@ -114,12 +117,18 @@ key.
 
 ## Stations tab and the station inspector
 
-- **The Stations tab** has, above its list, the "Station circles" choice (None, Origins, Transfers,
+- **The Stations tab** has, above its list, the "Show station ridership" choice (None, Origins, Transfers,
   Total, each described in its hover) and, while circles are drawn, "One circle per station
   complex" [T-213, T-482; [ui-demand-views.md](ui-demand-views.md)]. The list sorts like the Lines
   tab's [T-310], by Name, 24 h (boardings in the past 24 hours) or Near, boardings by default. The scope
   toggle and distance column are the Lines tab's (above); the footer reads "N of M stations" when
-  only the viewed place is listed.
+  only the viewed place is listed. A row's name is cut with "..." before its line bullets are: at
+  least 3 always show whole, more while the row has room, and the bullets sit close to the
+  ridership figure [T-521].
+- **Line bullets** [T-521]: one component (`Chip` in `ui/widgets.tsx`), drawn the same everywhere.
+  Hovering one gives the line's name and a click selects the line, except in the selected line's
+  own panel (its title bullet opens the colour and symbol editor) and on a search row that is the
+  line itself.
 - **A click on a station selects its whole complex** [T-249]: complex view, whatever was selected
   before (there is no Station / Complex switch). A station on its own is a complex of one. Complex
   rules: [ui-map.md](ui-map.md) "Station complexes".
@@ -129,7 +138,7 @@ key.
     behind) and boardings in the past 24 hours, busiest by the forecast first so the order holds through the day.
     The row's hover gives line, station and where its trains go; each number has its own hover. A
     click opens that line's busiest station there alone in station view (`openAlone`,
-    `singleStation` in `game/complexView.ts`): its own inspector, outline and catchment, its
+    `singleStation` in `game/complexView.ts`): its own inspector and outline, its
     subtitle ending with "Complex of 16 stations" as a link back. Any new selection, the same
     station included, shows the complex again.
   - **The complex map** (below), then the complex's boardings in the past 24 hours with their purpose split.
@@ -143,9 +152,9 @@ key.
   - **Linked by you**, then the buttons **Trip from here** [T-221] (the trip tool with the station
     as the start) and **Link to another station** (below).
   - **Commuters**: "Live nearby" and "Work nearby" (commuters a day who live, or work, within its
-    reach and ride from it); the larger is picked first, a click picks the other. Drawn on the map
-    as the station's catchment ([ui-demand-views.md](ui-demand-views.md)), with the top far-end
-    places listed. Commuters and inter-region trips cover the whole complex, each of the demand
+    reach and ride from it); the larger is picked first, a click picks the other; then the top
+    eight far-end places ("Where they work" or "Where they live"). Not drawn on the map [T-519,
+    [ui-demand-views.md](ui-demand-views.md)]. Commuters and inter-region trips cover the whole complex, each of the demand
     model's stations counted once.
   - **How they arrive** [T-374; `AccessSplit` in `ui/inspector/StationRiders.tsx`]: under the two
     rows, a bar and key in the purpose split's style for the commuters who live nearby, walked
@@ -228,12 +237,10 @@ work at the end.
   own cell as that end, and the inspector names it ("From a home by Bergen St to work by Grand
   Central-42 St"). Its own cell, because the model's subzones group cells by nearest station, so
   the trip mostly boards there. A station's **Trip from here** starts it from that station.
-- **From a selection** [T-208]: with a bubble selection or a station's catchment, a click on a
-  far-end bubble opens the trip for that pair (hovers end "Click to explore this trip"), homes to
-  destinations. A bubble selection's end is its busiest cell under the purpose filter, the far end
-  the clicked bubble's cell with most of the selection's trips; a station's end its catchment cell
-  with most riders, the far end the clicked zone's cell with most rail legs. The inspector then has
-  a Back button to that selection.
+- **From a selection** [T-208]: with a bubble selection, a click on a far-end bubble opens the
+  trip for that pair (hovers end "Click to explore this trip"), homes to destinations. The
+  selection's end is its busiest cell under the purpose filter, the far end the clicked bubble's
+  cell with most of the selection's trips. The inspector then has a Back button to that selection.
 - The trip is a selection: it stays after the tool is left, until Esc or an empty click, and while
   selected panning does not change the focused zone. It is asked again at each published round.
 - **The inspector**: the period, the distance, a bar and rows with the chance of train and driving

@@ -58,6 +58,23 @@ function spotsFrom(d: Float64Array): { text: string; s: number }[] {
   return out.sort((a, b) => b.s - a.s).slice(0, 3);
 }
 
+/** Where full track holds a line's fleet back, per level (T-517): from `TrackApi.line_held`. */
+interface Held { d: Demand; wait: number; place: string; tip: string }
+const FULL = ["Track full near", "Single track full near", "Platform full at", "Terminus full at", "Junction full near", "Crossing full near"];
+const TAKES = ["The track near", "The single track near", "The platform at", "The terminus at", "The junction near", "The crossing near"];
+const WAYS = [" each way", " both ways together"];
+function heldFrom(v: Float64Array): Held[] {
+  const st = new Map((world.value?.save.stations ?? []).map((s) => [s.num, s.name]));
+  const out: Held[] = [];
+  DEMANDS.forEach((d, lev) => {
+    const [wait, kind, node, x, y, , most] = v.subarray(7 * lev, 7 * lev + 7);
+    if (!(wait > 0)) return;
+    const name = (node >= 0 ? st.get(node) : undefined) ?? nearestStation(x, y)?.name ?? "";
+    out.push({ d, wait, place: `${FULL[kind] ?? FULL[0]} ${name}`, tip: `${TAKES[kind] ?? TAKES[0]} ${name} takes at most ${Math.round(most)} trains an hour${WAYS[kind] ?? ""}` });
+  });
+  return out;
+}
+
 /** The round trip at the level in force, split into running, dwell, turnaround and delay (T-031),
  * and where the delay is. */
 function RoundTrip({ st, lev, stops, spots }: { st: LineStats; lev: number; stops: number; spots: { text: string; s: number }[] }) {
@@ -150,23 +167,26 @@ function LineToday({ l, st }: { l: LineInput; st: LineStats }) {
 /** Numbers per period in `TrackApi.line_periods` (`PERIOD_STRIDE` in boarding.rs). */
 const PERIOD_STRIDE = 6;
 
-/** T-477, T-491: a dot per period of a demand level, in time order, graded by `crowding` (the
- * riders' wait for a train with room against their ride) from the boarding account. */
+/** T-477, T-515: one dot per demand level, graded by `crowding` (the riders' wait for a train with
+ * room against their ride) from the boarding account: the level's periods averaged by riders. */
 function CrowdDots({ v, d }: { v: Float64Array; d: Demand }) {
-  const t = (h: number) => clockTime((h * 60) % 1440);
-  const ps = PERIODS.map((p, i) => ({ p, i })).filter(({ p }) => p.demand === d).sort((a, b) => a.p.from - b.p.from);
-  return (
-    <>
-      {ps.map(({ p, i }) => {
-        const o = i * PERIOD_STRIDE;
-        const [trains, full, arrived, wait, ride] = [v[o], v[o + 1], v[o + 2], v[o + 4], v[o + 5]];
-        if (!(trains > 0)) return null;
-        const c = crowding(wait, arrived, ride);
-        const tip = `${p.name}, ${t(p.from)} to ${t(p.to)}: riders wait ${waitText(c.wait)} on average for a train with room\n${count(full)}/${count(trains)} trains are packed full`;
-        return <i class={"crowd-dot c" + crowdGrade(c.score)} data-tip={tip} />;
-      })}
-    </>
-  );
+  let trains = 0, full = 0, riders = 0, wait = 0, score = 0;
+  let worst: { name: string; wait: number; score: number } | null = null;
+  for (let i = 0; i < PERIODS.length; i++) {
+    if (PERIODS[i].demand !== d) continue;
+    const o = i * PERIOD_STRIDE;
+    if (!(v[o] > 0)) continue;
+    const c = crowding(v[o + 4], v[o + 2], v[o + 5]);
+    trains += v[o]; full += v[o + 1]; riders += v[o + 2];
+    wait += c.wait * v[o + 2]; score += c.score * v[o + 2];
+    if (!worst || c.score > worst.score) worst = { name: PERIODS[i].name, wait: c.wait, score: c.score };
+  }
+  if (!(trains > 0)) return null;
+  const avg = riders > 0 ? { wait: wait / riders, score: score / riders } : { wait: 0, score: 0 };
+  const grade = crowdGrade(avg.score);
+  const tip = `Riders wait ${waitText(avg.wait)} on average for a train with room\n${count(full)}/${count(trains)} trains are packed full`
+    + (worst && crowdGrade(worst.score) > grade ? `\n${worst.name}: ${waitText(worst.wait)}` : "");
+  return <i class={"crowd-dot c" + grade} data-tip={tip} />;
 }
 
 /** One stop's boardings in the past 24 hours (T-446), in the stops list. */
@@ -185,6 +205,7 @@ export function LineInspector({ id }: { id: string }) {
   const [colours, setColours] = useState(false);
   const [copying, setCopying] = useState(false);
   const [spots, setSpots] = useState<{ text: string; s: number }[]>([]);
+  const [held, setHeld] = useState<Held[]>([]);
   const l = w?.save.lines.find((l) => l.id === id);
   const [symbol, setSymbol] = useState("");
   useEffect(() => { setSymbol(l?.letter ?? ""); }, [l?.letter]);
@@ -207,6 +228,12 @@ export function LineInspector({ id }: { id: string }) {
       on = false;
     };
   }, [l?.num, w?.version, lev]);
+  useEffect(() => {
+    if (!l) return;
+    let on = true;
+    void queryClock({ what: "lineHeld", line: l.num }).then((d) => on && d && setHeld(heldFrom(d)));
+    return () => { on = false; };
+  }, [l?.num, w?.version]);
   // T-477, T-491: crowding by period on today's kind of day, asked again as the account changes
   const kind = dayKindAt(clock.hour.value * 3600 + (w?.lineStats[id]?.shift ?? 0));
   const [periods, setPeriods] = useState<Float64Array | null>(null);
@@ -277,7 +304,7 @@ export function LineInspector({ id }: { id: string }) {
   return (
     <>
       <div class="title">
-        <button class={"badge-edit" + (colours ? " on" : "")} data-tip="Edit line colour and symbol" aria-label="Edit line colour and symbol" onClick={() => setColours(!colours)}><Chip line={l} size="lg" /></button>
+        <button class={"badge-edit" + (colours ? " on" : "")} data-tip="Edit line colour and symbol" aria-label="Edit line colour and symbol" onClick={() => setColours(!colours)}><Chip line={l} size="lg" plain /></button>
         {editing ? (
           <input
             class="name-edit"
@@ -339,12 +366,24 @@ export function LineInspector({ id }: { id: string }) {
           <tr class={d === now ? "now" : ""}>
             <td>{st.status === "running" && periods && <CrowdDots v={periods} d={d} />}<span data-tip={levelTimes(d)}>{DEMAND_LABEL[d]}</span></td>
             <td>
-              <Stepper value={(trainsShown(l.id) ?? st.trainsNeeded)[DEMAND_INDEX[d]]} label="trains on the entire line" onStep={(s) => stepTrainCount(l.id, d, s)} />
+              <Stepper value={(trainsShown(l.id) ?? st.trainsNeeded)[DEMAND_INDEX[d]]} label="trains on the entire line" jump onStep={(s) => stepTrainCount(l.id, d, s)} />
             </td>
             <td>{headway(l.tph[d])}</td>
           </tr>
         ))}
       </table>
+      {st.status === "running" && held.length > 0 && (
+        <div class="callout bad">
+          <p>{held[0].place}</p>
+          <ul class="rows">
+            {held.map((h) => (
+              <Row label={`${DEMAND_LABEL[h.d]} demand`}>
+                <span data-tip={h.tip}>{Math.round(h.wait) > 1 ? `${count(Math.round(h.wait))} trains wait` : "1 train waits"} at the ends</span>
+              </Row>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {st.status === "running" && <LineToday l={l} st={st} />}
 

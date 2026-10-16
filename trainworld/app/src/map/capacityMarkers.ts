@@ -1,6 +1,6 @@
 // Capacity markers (SPEC 6.2, T-031): a tag on every resource at 75% and up for the demand level
 // in force, with the delay per train, coloured busy (75-90%), near full (90-100%) or overloaded
-// (over 100%). Nothing shows below 75% or zoom 12. Like station names, tags leave room around
+// (over 100%, or full with some line's trains waiting for room, T-517). Nothing shows below 75% or zoom 12. Like station names, tags leave room around
 // one another; the worst delays win collisions. DOM tags move on MapLibre's frames.
 // A junction's tag is a link to the junction's inspector, where a flyover can be built (T-080).
 // Hovering a tag says what it means (T-099). The tags sit under the demand views' canvas.
@@ -28,6 +28,8 @@ const GAP_X = 6, GAP_Y = 5, NAME_CLEAR = 3;
 
 const KIND = ["Track", "Single track", "Platform", "Terminus", "Junction", "Flat crossing"];
 const DEMAND = ["high", "medium", "low"];
+/** Which trains a kind's count covers: a section is one direction, single track both. */
+const WAYS = [" each way", " both ways together"];
 
 export class CapacityMarkers {
   /** Demand discs draw above these DOM tags; wired to the same select handler as the map. */
@@ -87,7 +89,7 @@ export class CapacityMarkers {
     const sorted = [...(w.capacity[level] ?? [])].sort((a, b) => b.delayS - a.delayS || b.rho - a.rho || a.kind - b.kind || a.x - b.x || a.y - b.y);
     const junctions = sorted.map((m) => (m.kind === 4 ? nearestJunction(w, m.x, m.y) : null));
     // most edits leave the tags as they were: keep them then, no rebuild and no layout (T-496)
-    const key = level + "|" + sorted.map((m, i) => `${m.kind},${m.rho},${m.delayS},${m.x},${m.y},${junctions[i]}`).join("|");
+    const key = level + "|" + sorted.map((m, i) => `${m.kind},${m.rho},${m.delayS},${m.tph},${m.held},${m.x},${m.y},${junctions[i]}`).join("|");
     if (key === this.key) return;
     this.key = key;
     this.box.textContent = "";
@@ -95,12 +97,17 @@ export class CapacityMarkers {
     this.placedMatrix = null;
     this.items = sorted.map((m, i) => {
       const el = document.createElement("div");
-      el.className = "cap-mark " + (m.rho > 1 ? "over" : m.rho >= 0.9 ? "near" : "busy");
+      el.className = "cap-mark " + (m.rho > 1 || m.held ? "over" : m.rho >= 0.9 ? "near" : "busy");
       if (perfTry("labelLayers")) el.style.willChange = "transform"; // T-045 measurement
       const d = Math.round(m.delayS);
       el.textContent = d >= 2 ? `+${Math.floor(d / 60)}:${String(d % 60).padStart(2, "0")}` : `${Math.round(m.rho * 100)}%`;
       // the tooltip (T-099): what the tag means, in plain words
-      const tip = [`${KIND[m.kind] ?? "Track"} at ${Math.round(m.rho * 100)}% of capacity`, d >= 2 ? `Each train waits ${duration(d)} here at ${DEMAND[level] ?? "this"} demand` : "Trains do not wait here yet"];
+      const tip = [`${KIND[m.kind] ?? "Track"} at ${Math.round(m.rho * 100)}% of capacity`];
+      // T-517: its trains an hour against the most it takes
+      if (m.rho > 0) tip.push(`${Math.round(m.tph)} trains an hour${WAYS[m.kind] ?? ""} against a limit of ${Math.round(m.tph / m.rho)}`);
+      if (m.held) tip.push("Trains beyond the limit wait at the ends of their lines");
+      if (d >= 2) tip.push(`Each train waits ${duration(d)} here at ${DEMAND[level] ?? "this"} demand`);
+      else if (!m.held) tip.push("Trains do not wait here yet");
       let junction: number | null = null;
       if (m.kind === 4) {
         const node = junctions[i];

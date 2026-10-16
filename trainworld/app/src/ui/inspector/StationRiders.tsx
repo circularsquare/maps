@@ -1,13 +1,10 @@
 // A station's commuters (T-084, T-097, SPEC 8): how many live or work within its reach and ride
-// from it, and where they go. The chosen end's cells are opaque discs on the map and the places at
-// the far end partly see-through ones below them (map/demandViews.ts); the swatches here are the
-// map's discs.
+// from it, and where they go. Listed here only; the map stays as it was (T-519).
 
 import { demandView } from "../../game/demand";
 import { count } from "../../game/format";
-import { CATCHMENT_COLOUR, DESTINATION_ALPHA, DESTINATION_COLOUR, MODE_COLOURS } from "../../game/palette";
-import { purposeWords } from "../../game/purposes";
-import { purposeFilter, shownDayPhrase } from "../../game/ui";
+import { MODE_COLOURS } from "../../game/palette";
+import { shownDayPhrase } from "../../game/ui";
 import { stationSide, stationView, type StationView } from "../../map/demandViews";
 import { Icon, Row } from "../widgets";
 
@@ -54,8 +51,6 @@ export function StationRiders({ id, scope = id }: { id: string; scope?: string }
   const v = stationView.value;
   const side = stationSide.value;
   if (!demandView.value || !v || v.stationId !== id || v.scope !== scope) return null;
-  const disc = <i class="mk" style={{ background: CATCHMENT_COLOUR }} />;
-  const blank = <i class="mk" />;
   return (
     <>
       <div class="h">
@@ -63,26 +58,18 @@ export function StationRiders({ id, scope = id }: { id: string; scope?: string }
       </div>
       <ul class="rows pick">
         <li class={side === "home" ? "on" : ""} onClick={() => (stationSide.value = "home")}>
-          {side === "home" ? disc : blank}
           <span class="grow">Live nearby</span>
           <span class="val">{count(v.home)}</span>
         </li>
         <li class={side === "work" ? "on" : ""} onClick={() => (stationSide.value = "work")}>
-          {side === "work" ? disc : blank}
           <span class="grow">Work nearby</span>
           <span class="val">{count(v.work)}</span>
         </li>
       </ul>
       <AccessSplit v={v} />
-      {purposeFilter.value !== "all" && purposeFilter.value !== "work" && (
-        <p class="muted small" data-tip={`The map shows ${purposeWords(purposeFilter.value)} trips only`}>Not drawn under this purpose filter.</p>
-      )}
       {v.places.length > 0 && (
         <>
-          <div class="h">
-            <i class="mk far" style={{ background: DESTINATION_COLOUR, opacity: DESTINATION_ALPHA }} />
-            {side === "home" ? "Where they work" : "Where they live"}
-          </div>
+          <div class="h">{side === "home" ? "Where they work" : "Where they live"}</div>
           <ul class="rows">
             {v.places.slice(0, PLACES).map((p) => (
               <Row label={p.name}>{count(p.riders)}</Row>
