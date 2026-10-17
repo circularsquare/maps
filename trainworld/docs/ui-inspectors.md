@@ -265,8 +265,8 @@ work at the end.
   cell with most of the selection's trips. The inspector then has a Back button to that selection.
 - The trip is a selection: it stays after the tool is left, until Esc or an empty click, and while
   selected panning does not change the focused zone. It is asked again at each published round.
-- **The inspector**: the period, the distance, a bar and rows with the chance of train and driving
-  (walking too when at least 0.5%). Under "By train" the main route as rows (walk to the first
+- **The inspector**: the period, the distance, a bar and rows with the chance of train and driving;
+  walking the whole way is a segment of the bar, its share in the segment's hover [T-558]. Under "By train" the main route as rows (walk to the first
   station, each line ridden with its chip and the station it goes to, each change and walk, the
   walk from the last station; each row's minutes its wait and ride; a ride access [T-374] reads
   "Drive to" with its drive minutes, its hover adding the ride's fixed cost and the station's

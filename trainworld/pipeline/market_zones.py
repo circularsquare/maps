@@ -320,12 +320,14 @@ def cargo_bin(name, *args):
     env["PATH"] = os.path.join(os.path.expanduser("~"), ".cargo", "bin") + os.pathsep + env.get("PATH", "")
     env.setdefault("CARGO_BUILD_JOBS", "3")
     # build_city.py's target dir: the pipeline never waits on (or blocks) the app's wasm builds
-    env["CARGO_TARGET_DIR"] = str(ROOT / "data/work/target")
+    env["CARGO_TARGET_DIR"] = os.environ.get("TW_CARGO_TARGET_DIR", str(ROOT / "data/work/target"))
     cargo = shutil.which("cargo", path=env["PATH"])
     if not cargo:
         sys.exit("cargo not found: install Rust (rustup) or put ~/.cargo/bin on PATH")
     subprocess.run([cargo, "run", "--quiet", "--release", "--features", "demand", "--bin", name,
-                    "--manifest-path", str(ROOT / "sim/Cargo.toml"), "--", *args], env=env, check=True)
+                    # TW_SIM_DIR: a copy of sim/ while the tree's own is mid-edit (as routes.py)
+                    "--manifest-path", os.path.join(os.environ.get("TW_SIM_DIR", str(ROOT / "sim")), "Cargo.toml"), "--", *args],
+                   env=env, check=True)
 
 
 def assign_places(reg):

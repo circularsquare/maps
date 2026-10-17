@@ -172,7 +172,9 @@ From the maps root, one city at a time, in the background, with `CARGO_BUILD_JOB
 
 (`build_city.py` puts `~/.cargo/bin` on PATH itself; `pack_gravity` runs from
 `data/work/target`. **The sim crate must compile**: another agent mid-edit in `sim/` stops the
-build at the gravity step. Canada's adapter has `canada.py <id> --finish` to resume from the
+build at the gravity step; then point `TW_SIM_DIR` at a copy of the committed crate (`git archive
+HEAD trainworld/sim`, with junctions to `data` and `app` beside it for `pack_gate.py`'s rates
+test), which `build_city.py`, `routes.py`, `market_zones.py`, `zones.py` and `pack_gate.py` honour. Canada's adapter has `canada.py <id> --finish` to resume from the
 cached cells; a US build reruns whole, about a minute.) It writes `data/packs/<id>.json`, `.bin`,
 `.boundary.geojson` (a US pack's: TIGER/Line 2020 counties with their water out to the state and
 county lines at sea, simplified topologically by `pipeline/tiger_counties.py`, so the outline and
@@ -304,10 +306,12 @@ counts from either end, so other zones need no rerun; `--air` redoes only every 
 A zone in the Northeast's joint commute gravity (`market` set) runs `intercity.py` instead of
 `market_zones.py`: it rewrites every Northeast pack's gravity factors (the joint solve), so
 existing packs change here too: record the commuters between packs it prints and each corridor's
-trips before and after. A Japanese pack is in Japan's joint gravity (T-463): after its own build,
-`merge_cells.py <every Japan id> --undo`, `intercity.py --group jp --no-market` (about 5 minutes
-with `OMP_NUM_THREADS=8`; it rewrites every Japan pack's factors), `merge_cells.py` on them again,
-then `register.py <every Japan id> --market --trips`. A non-city zone is a `CITIES` entry in `build_city.py` with `"kind": "zone"` and a
+trips before and after. Any other pack whose outline comes within 50 km of another registered
+pack's is in a joint gravity group with it (T-539; `intercity.py --groups` lists them, `--plan`
+with the world plan's metros too). Once it is registered: `merge_cells.py <every member> --undo`,
+`intercity.py --group auto <id> --no-market` (it rewrites every member's factors; Japan's 45 packs
+about 5 minutes with `OMP_NUM_THREADS=8`), `merge_cells.py` on them again, then `register.py
+<every member> --market --trips`. A pack with no neighbour that close needs none of this. A non-city zone is a `CITIES` entry in `build_city.py` with `"kind": "zone"` and a
 `"name"`, one county-sized unit (docs/zones.md 2).
 
 ## 8. Tests that list cities

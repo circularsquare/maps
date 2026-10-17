@@ -10,9 +10,16 @@ its market place (id 2) keeps its name and has no sites.
                                             Northeast pack's gravity, T-276), then every zone's
                                             market pack (pipeline/market_zones.py, T-377);
                                             --no-joint skips the gravity
-    python pipeline/intercity.py --group jp  a country's packs as their own joint gravity group
-                                            (T-463, Japan), then their market packs; --no-market
-                                            stops after the gravity
+    python pipeline/intercity.py --group auto [ids]
+                                            every joint gravity group (T-539: packs whose outlines
+                                            lie within GROUP_GAP_KM, chained), or the groups holding
+                                            the ids, then their market packs; --no-market stops after
+                                            the gravity; --dry writes only reports and factor dumps;
+                                            --root DIR reads a copy's registry and packs, --work DIR
+                                            takes the outputs (no market step then)
+    python pipeline/intercity.py --groups [--plan]
+                                            list the groups (with the world plan's planned metros
+                                            marked +)
 
 The game no longer reads this file (T-377): pipeline/market_zones.py takes the Northeast's sites
 and commutes from it into each zone's own market pack, `data/packs/<id>.market.json`.
@@ -23,6 +30,7 @@ import os
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 import numpy as np
 from read_pack import load_pack
@@ -38,6 +46,10 @@ MARKETS = [p["name"] for p in REGISTRY["market"]["places"]]
 
 # T-276: the market's trips a weekday per resident (fitted with its curve, research/intercity/market_fit.py)
 TRIP_RATE = 0.107
+GROUP_GAP_KM = 50.0
+# about 3x Japan's 68k zones (0.5 billion zone pairs, 25 minutes on one thread): over 1.5 billion
+# pairs, an hour or more a solve (notes/T-539.md); no group in the world plan comes near it
+MAX_GROUP_ZONES = 200_000
 # the local layer's parking (sim kernel `Params` defaults: park_min, park_paid_min, park_paid_d0,
 # park_paid_cap_min, park_free_d; `CELL_KM2`)
 PARK_MIN, PARK_PAID_MIN, PARK_PAID_D0, PARK_PAID_CAP_MIN, PARK_FREE_D = 3.0, 15.0, 3000.0, 50.0, 8000.0
@@ -117,36 +129,145 @@ def sites():
     return out, parks
 
 
-def joint():
+def joint(root=ROOT, work=None, dry=False):
     """T-276: one commute gravity over every zone pack (`joint_gravity`): rewrites each pack's
     gravity factors and the market pack's commutes between zones. About a minute (T-297)."""
-    cargo_bin("joint_gravity", "--root", str(ROOT), "--threads", os.environ.get("OMP_NUM_THREADS", "3"),
-              "--report", str(ROOT / "data/work/joint_report.json"))
+    work = work or root / "data/work"
+    extra = ["--dry", "--dump", str(work / "joint_dump.json")] if dry else []
+    cargo_bin("joint_gravity", "--root", str(root), "--threads", os.environ.get("OMP_NUM_THREADS", "3"),
+              "--report", str(work / "joint_report.json"), *extra)
 
 
-def group(iso2):
-    """T-463: one joint commute gravity over a country's registered packs (Japan's), apart from the
-    Northeast: each pack's factors, data/work/<iso2>.joint_commutes.json, then their market packs."""
-    ids = [c["id"] for c in REGISTRY["cities"] if CITIES.get(c["id"], {}).get("iso2") == iso2.upper()]
-    work = ROOT / "data/work"
+def solve_group(ids, name, root=ROOT, work=None, dry=False):
+    """T-463, T-539: one joint commute gravity over packs outside the Northeast: each pack's
+    factors, and the cross-pack commutes in <work>/<name>.joint_commutes.json for market_zones.py.
+    An older file holding any of these packs (another name for a group this one has grown from) is
+    removed, since market_zones.py reads every such file."""
+    work = work or root / "data/work"
+    out = work / f"{name}.joint_commutes.json"
+    extra = ["--dry", "--dump", str(work / f"{name}.joint_dump.json")] if dry else []
     # Japan's columns stall at about 8e-4 from step ~90, all in Okinawa's outlying islands (weakly
     # joined to anything; notes/T-463.md): the best step is kept, so 150 steps are as good as 500
-    cargo_bin("joint_gravity", "--root", str(ROOT), "--threads", os.environ.get("OMP_NUM_THREADS", "3"), "--max-iters", "150",
-              "--packs", ",".join(ids), "--out", str(work / f"{iso2.lower()}.joint_commutes.json"),
-              "--report", str(work / f"{iso2.lower()}.joint_report.json"))
-    return ids
+    cargo_bin("joint_gravity", "--root", str(root), "--threads", os.environ.get("OMP_NUM_THREADS", "3"), "--max-iters", "150",
+              "--packs", ",".join(ids), "--out", str(out), "--report", str(work / f"{name}.joint_report.json"), *extra)
+    if not dry:
+        for p in work.glob("*.joint_commutes.json"):
+            if p != out and set(json.loads(p.read_text(encoding="utf-8"))["packs"]) & set(ids):
+                print(f"removed {p.name}: its packs are now in {out.name}")
+                p.unlink()
+
+
+def solve_auto(only=(), root=ROOT, work=None, dry=False, gap=None):
+    """T-539: every joint gravity group of the registered packs (auto_groups), or those holding a
+    pack of `only`, solved in turn. The Northeast is solved its own way (its sites in
+    intercity.json, T-276), which needs every member to have a Northeast market place. Returns the
+    ids of the packs solved."""
+    reg = json.loads((root / "app/src/game/registry.json").read_text(encoding="utf-8"))
+    work = work or root / "data/work"
+    ne = {c["id"] for c in reg["cities"] if c.get("market", -1) >= 0}
+    solved = []
+    for g in auto_groups(reg, root, gap=gap):
+        if only and not set(g) & set(only):
+            continue
+        t0 = time.time()
+        nz = sum(json.loads((root / f"data/packs/{i}.json").read_text(encoding="utf-8"))["zones"] for i in g)
+        if nz > MAX_GROUP_ZONES:
+            sys.exit(f"group {g[0]} has {nz:,} gravity zones, over {MAX_GROUP_ZONES:,}: split it (notes/T-539.md)")
+        if set(g) & ne:
+            if set(g) != ne:
+                sys.exit(f"the Northeast's group is {'+'.join(g)}: {', '.join(sorted(set(g) ^ ne))} "
+                         "would need a Northeast market place (docs/adding-a-city.md 6), or the Northeast "
+                         "solved as a --packs group")
+            if not dry:
+                # the sites come from this tree's packs (sites() reads the module's registry)
+                assert root == ROOT, "the Northeast is solved for real only in this tree"
+                write_sites()
+            joint(root, work, dry)
+        else:
+            solve_group(g, g[0], root, work, dry)
+        print(f"group {g[0]} ({len(g)} packs: {' '.join(g)}) solved in {time.time() - t0:.0f} s", flush=True)
+        solved += g
+    for i in set(only) - set(solved):
+        print(f"{i}: no registered pack within {GROUP_GAP_KM:g} km, so no joint gravity")
+    return solved
+
+
+def outline(path):
+    """A GeoJSON file's polygons as one shape, lon/lat."""
+    import shapely
+    from shapely.geometry import shape
+    fc = json.loads(Path(path).read_text(encoding="utf-8"))
+    feats = fc["features"] if fc.get("type") == "FeatureCollection" else [fc]
+    return shapely.union_all([shapely.make_valid(shape(f["geometry"])) for f in feats])
+
+
+def gap_km(a, b):
+    """Shortest distance between two lon/lat shapes, in an equirectangular frame at their mean
+    latitude (under 1% off at the few hundred km this is asked for)."""
+    from shapely.ops import transform
+    k = math.cos(math.radians((a.centroid.y + b.centroid.y) / 2))
+    f = lambda x, y, z=None: (np.radians(x) * k * R_EARTH / 1000.0, np.radians(y) * R_EARTH / 1000.0)  # noqa: E731
+    return transform(f, a).distance(transform(f, b))
+
+
+def components(shapes, gap=None):
+    """Groups of packs whose outlines lie within `gap` km of each other, chained (T-539)."""
+    gap = GROUP_GAP_KM if gap is None else gap
+    import shapely
+    ids = list(shapes)
+    tree = shapely.STRtree([shapes[i] for i in ids])
+    parent = list(range(len(ids)))
+
+    def root(i):
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+    for i, a in enumerate(ids):
+        g = shapes[a]
+        lat = max(abs(g.bounds[1]), abs(g.bounds[3]))
+        dy = gap / 111.0
+        dx = dy / max(math.cos(math.radians(min(lat + dy, 89.0))), 0.01)
+        x0, y0, x1, y1 = g.bounds
+        for j in tree.query(shapely.box(x0 - dx, y0 - dy, x1 + dx, y1 + dy)):
+            if j > i and root(i) != root(j) and gap_km(g, shapes[ids[j]]) <= gap:
+                parent[root(i)] = root(j)
+    out = {}
+    for i, a in enumerate(ids):
+        out.setdefault(root(i), []).append(a)
+    return list(out.values())
+
+
+def auto_groups(reg, root=ROOT, plan=False, gap=None):
+    """T-539: the joint gravity groups of the registered packs (registry order), each two or more
+    packs; with `plan`, the world plan's planned metros join the grouping too (to see which
+    groups a batch will grow or join), marked with a leading '+'."""
+    shapes = {c["id"]: outline(root / f"data/packs/{c['id']}.boundary.geojson") for c in reg["cities"]}
+    if plan:
+        import shapely
+        from shapely.geometry import shape
+        ext = json.loads((root / "data/work/worldplan/extents.geojson").read_text(encoding="utf-8"))
+        for f in ext["features"]:
+            shapes.setdefault("+" + f["properties"]["id"], shapely.make_valid(shape(f["geometry"])))
+    order = {c["id"]: k for k, c in enumerate(reg["cities"])}
+    groups = [sorted(g, key=lambda i: (order.get(i, len(order)), i)) for g in components(shapes, gap)]
+    groups = [g for g in groups if len(g) >= 2]
+    return sorted(groups, key=lambda g: (order.get(g[0], len(order)), g[0]))
 
 
 def cargo_bin(name, *args):
     env = dict(os.environ)
     env["PATH"] = os.path.join(os.path.expanduser("~"), ".cargo", "bin") + os.pathsep + env.get("PATH", "")
     env.setdefault("CARGO_BUILD_JOBS", "2")
-    env["CARGO_TARGET_DIR"] = str(ROOT / "data/work/target")
+    # TW_SIM_DIR: a copy of sim/ to build from while the tree's own is mid-edit (as build_city.py),
+    # with its own TW_CARGO_TARGET_DIR so the shared binaries are not overwritten
+    env["CARGO_TARGET_DIR"] = os.environ.get("TW_CARGO_TARGET_DIR", str(ROOT / "data/work/target"))
     cargo = shutil.which("cargo", path=env["PATH"])
     if not cargo:
         sys.exit("cargo not found: install Rust (rustup) or put ~/.cargo/bin on PATH")
+    sim = Path(os.environ.get("TW_SIM_DIR", ROOT / "sim"))
     subprocess.run([cargo, "run", "--quiet", "--release", "--features", "demand", "--bin", name,
-                    "--manifest-path", str(ROOT / "sim/Cargo.toml"), "--", *args], env=env, check=True)
+                    "--manifest-path", str(sim / "Cargo.toml"), "--", *args], env=env, check=True)
 
 
 def frame():
@@ -154,13 +275,7 @@ def frame():
     return {"kind": "equirect", "lon": ORIGIN[0], "lat": ORIGIN[1]}
 
 
-if __name__ == "__main__":
-    if "--group" in sys.argv:
-        ids = group(sys.argv[sys.argv.index("--group") + 1])
-        if "--no-market" not in sys.argv:
-            import market_zones
-            market_zones.main(ids)
-        sys.exit()
+def write_sites():
     path = ROOT / "data/packs/intercity.json"
     site_rows, site_park = sites()
     data = {"format": 2, "origin": {"lon": ORIGIN[0], "lat": ORIGIN[1]}, "frame": frame(),
@@ -170,6 +285,30 @@ if __name__ == "__main__":
             "sites": site_rows, "site_park": site_park}
     path.write_text(json.dumps(data, separators=(",", ":")), encoding="utf-8")
     print(path, len(site_rows), "sites", path.stat().st_size, "bytes")
+
+
+def opt(name):
+    return Path(sys.argv[sys.argv.index(name) + 1]) if name in sys.argv else None
+
+
+if __name__ == "__main__":
+    if "--groups" in sys.argv:
+        for g in auto_groups(REGISTRY, plan="--plan" in sys.argv):
+            print(f"{len(g)} packs: {' '.join(g)}")
+        sys.exit()
+    if "--group" in sys.argv:
+        i = sys.argv.index("--group")
+        assert sys.argv[i + 1] == "auto", "--group takes auto (T-539)"
+        rest = sys.argv[i + 2:]
+        only = [a for k, a in enumerate(rest) if not a.startswith("--") and (k == 0 or rest[k - 1] not in ("--root", "--work"))]
+        root = (opt("--root") or ROOT).resolve()
+        dry = "--dry" in sys.argv
+        ids = solve_auto(only, root, opt("--work"), dry)
+        if not dry and root == ROOT and "--no-market" not in sys.argv:
+            import market_zones
+            market_zones.main(ids)
+        sys.exit()
+    write_sites()
     if "--no-joint" not in sys.argv[1:]:
         joint()
     import market_zones

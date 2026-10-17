@@ -108,16 +108,14 @@ fn main() {
                     "fare_min" => p.fare_min = x,
                     "beta" => p.beta = x,
                     "transfer_min" => p.transfer_min = x,
-                    "walk_d0_km" => p.walk_d0_km = x,
-                    "walk_s_km" => p.walk_s_km = x,
-
                     _ => p.set_extra(k, x).unwrap_or_else(|e| panic!("{e}")),
                 }
             }
         }
         eprintln!("params: {:?}", p);
     }
-    if get("--set").is_some_and(|v| v.contains("walk_d0_km") || v.contains("walk_s_km")) {
+    // the walk's costs and anything the zones' choice with no rail reads (parking, other)
+    if get("--set").is_some_and(|v| ["walk_", "asc_walk", "park_", "other_", "nocar", "cordon"].iter().any(|k| v.contains(k))) {
         api.refresh_walk();
     }
     let info = api.info();

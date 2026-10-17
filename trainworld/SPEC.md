@@ -157,9 +157,10 @@ institutions** (prisons, nursing homes and the like, T-234).
   common-line strategies, fare-sensitive choice between rail and driving, and up to three crowding
   rounds that price crowded trains and riders left behind by full ones [T-188]; a period stops
   once a round moves its loads under 1% [T-434]. Each round uses
-  the combined loads of every zone, the everyday layer and the regional market. A distance-based
-  walking share is reserved first (centred at 1.7 km for commutes, 1.9 km for everyday trips), so
-  useful rail never removes a short trip's walk. The rail constant `asc_rail`, 0.4 (plus a country
+  the combined loads of every zone, the everyday layer and the regional market. Walking the whole
+  way is a third mode in the same logit [T-558]: 1.5 perceived minutes a minute for 10 minutes,
+  then 4, with constants (2.86, everyday 3.21) holding the walking of before, so a good station
+  near a short trip takes some walkers and a long walk loses to the train. The rail constant `asc_rail`, 0.4 (plus a country
   constant where one is fitted: Japan +0.5) and 1.1 lower for everyday trips, is fitted jointly on six cities'
   real networks [T-509]. Past 60 perceived car-minutes a minute weighs less (0.05 x sqrt(60 / T)),
   in every layer [T-495, T-502].
@@ -274,7 +275,8 @@ Rough on purpose: the bar is the right order (section 1).
   demand code (the `calib` bin) and scored by `calib.py` against census rail shares by area, station
   entries and line counts where published, and NHTS's New York everyday rail shares. New York (at
   half weight), London, Paris, Seoul, Tokyo and Sendai are fitted jointly and Toronto is held out;
-  the fit sets the rail constants and the everyday walking centre (section 4). The bar is
+  the fit set the rail constants and the everyday walking of then, which T-558's walking constants
+  hold until the deep calibration fits them (section 4). The bar is
   plausible: a moderate overshoot where real riders shun transit (New York) is accepted. Known gaps
   are open tasks (Tokyo's commute rail share, T-509; PATH low, T-270; commuter rail high, T-271;
   subway peak loads, T-216).

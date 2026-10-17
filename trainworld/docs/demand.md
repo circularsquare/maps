@@ -347,8 +347,8 @@ worker). Weekday results are bit-identical to before (notes/T-170.md).
 
 ### 4.3 Mode choice and catchment
 
-Per OD pair and period, reserve the short-trip walking share first, then compare rail with
-driving for the remaining trips by **generalised cost** in minutes. Buses are out of scope
+Per OD pair and period, rail, driving and walking the whole way (below) compete in one logit by
+**generalised cost** in minutes. Buses are out of scope
 (Anita, 2026-10-09), except as part of "other", the choice of homes without a car (below).
 
 - rail = walk to a station + wait (half the headway, capped) + ride + walks between platforms +
@@ -380,19 +380,27 @@ judgement). The base fare is charged once per trip, including transfers; the per
 actual track length. Distance fare affects route choice as well as mode choice, and crowding
 multiplies ride time without multiplying fare (T-067).
 
-**Walking.** A share of all trips is reserved for walking by distance:
-`w = 1 / (1 + exp((d - d0) / 0.4 km))`, d0 1.7 km for commutes and 1.9 km for everyday trips
-(`everyday_walk_d0_km`, T-509); rail and driving then compete for `1 - w`.
-Thus `walk = w`, `rail = (1 - w) * r`, and `drive = (1 - w) * (1 - r)`, where `r` is the
-rail-versus-road result. This prevents attractive rail or expensive parking from taking the
-walk share of very short trips. Commutes use the gravity's 2 km zone-centre distance, so a short
-trip across a zone boundary can still inherit a coarse walking share. Everyday purposes use the
-sampled cell-centre distance. Either distance is times the two zones' walk factor where water
-lies between them (T-275, below), so a home across a river from its job is as far as the walk
-round by a bridge. The curve gives 84% walking within one 2 km zone, 32% to the next
-zone and 6% two zones away; the remainder is offered to rail and driving. With no rail 4.8% of
-New York's commutes walk (4.9% with the straight line; ACS: about 6%). Judgement until fitted.
-notes/T-153.md.
+**Walking** (Anita, T-558) is a third mode in the same logit, at the same scale (damped on the
+car's minutes, as rail): rail, the car and walking for those with a car (drivers parking free and
+those paying for a space choose apart, as for rail), rail, walking and other for those without
+(below). The walk's real minutes are its distance at 6 km/h along a path 1.3 times the straight
+line (13 minutes a straight km); each of the first 10 minutes weighs 1.5, each after that 4
+(`walk_trip_w`, `walk_trip_easy_min`, `walk_trip_w_far`), so 500 m costs 10 perceived minutes,
+1 km 27, 2 km 79 and 3 km 131. Its constant against the car (or other) is **`asc_walk` 2.86** for
+commutes and **2.86 + 0.35 = 3.21 for everyday trips** (`everyday_asc_walk`), in the logit's
+units: what a short drive costs beyond its road time (getting to the car, finding a space). They
+hold the walking New York and London had before T-558 (the curve T-509 fitted to New York's
+survey) to within 0.3 points in each layer, until the deep calibration fits them with the rail
+constants. Walks over 10 km straight
+line are not offered (`WALK_REACH_KM`, a computational bound). Commutes use the gravity's 2 km
+zone-centre distance, so a short trip across a zone boundary inherits a coarse walk; everyday
+purposes the sampled cell-centre distance (a pair of subzones its samples' mean distance). Either
+distance is times the two zones' walk factor where water lies between them (T-275, below), so a
+home across a river from its job is as far as the walk round by a bridge. Walking with no rail
+is summed once (`Gravity::no_rail_by_zone` over zone pairs for commutes, over the samples for
+everyday trips); a pair offered rail takes from walking rail's share times walking's share with no
+rail, as the logit does (`ModeOut::rail_walk`, `Params::car_choice`). A good station near a short
+trip can take walkers, and a long walk loses to the train.
 
 Weights (perceived minutes per real minute), from Subway Builder's published constants where they
 exist: riding 1.0, the walk to and from stations 1.5 (below), walking between platforms on a
@@ -479,7 +487,7 @@ supercells x supercells, supercells numbered in order of their first zone. The h
 block holds the windows, the supercell size, the zone count and `zones_check` (a sum over zones of
 position and region, `routes::zones_check`; the tables are used only when it matches).
 **Lookup**: `Params::drive_factor(i, j)` (`Routes::drive_factor` x `road_routed_scale`) and
-`Gravity::walk_share_pair(z, i, j)`. Across pack edges nothing is stored; the pipeline's
+`Gravity::walk_cost_pair(z, i, j)`. Across pack edges nothing is stored; the pipeline's
 `routes.drive_factors(lon, lat, extracts)` gives the same factor between any list of places from
 the same roads (unscaled).
 
@@ -527,8 +535,8 @@ cannot drive. It chooses among three by one logit (`Params::nocar_choice`), with
 propensity on rail:
 - **rail**, walking to stations at the home end too (no ride; where the home has rides, its rail
   is priced on the walks alone, and a home with no station on foot gets no rail for it);
-- **walking the whole way**, 15 perceived minutes a km of the drive's road (`walk_trip_min`: 6
-  km/h weighed 1.5);
+- **walking the whole way**, at the walk's cost and constant as everyone's (Walking, above;
+  T-558);
 - **other** (Anita, 2026-10-16, T-513), standing in for bus, taxi and bike: the drive's road at
   12 km/h door to door (`other_kmh`, 5 minutes a km) plus a wait of 8 minutes weighed 1.37
   (`other_wait_min`, `w_wait`: 11 perceived) plus `other_asc`, no parking. The speed and wait are
@@ -536,10 +544,9 @@ propensity on rail:
   some walk to the stop); `other_asc` is 10 perceived minutes (`kernel::OTHER_ASC`, set on New
   York's boroughs against ACS; T-509's joint fit of six cities kept it).
 
-The scale is damped on other's minutes, as the car's on the car's. The walking share reserved by
-distance stays as it is for everyone. Rail's share of a pair's trips that do not walk is
-`(1 - c) r_car + c r_nocar`, c the home's share without a car; the people with a car choose as
-above. Trips by other are counted with driving in every view (docs/ui-demand-views.md); the sim keeps
+The scale is damped on other's minutes, as the car's on the car's. Rail's share of a pair's
+trips is `(1 - c) r_car + c r_nocar`, c the home's share without a car; the people with a car
+choose as above. Trips by other are counted with driving in every view (docs/ui-demand-views.md); the sim keeps
 them apart (`summary` index 10, per layer: trips by other with no rail, from the zone pairs or the
 everyday samples, less the no-car rail trips times other's share of the non-rail choice, which
 in a logit is the same with or without rail).
@@ -645,10 +652,15 @@ works on two levels:
    wrong branches and off, slow, expensive or crowded alternatives add no useful frequency when
    they worsen that cost. Lines are offered to a station cheapest first by their cost from
    boarding, which includes the extra wait where full trains leave riders behind (step 7): a full
-   train is weighed after the lines that beat it, never kept ahead of them (T-552). Where that
-   wait is long enough (on a 5-minute line with 2-minute hops, 3 minutes: the ride out and back
-   and the second wait), riders ride the other way to a stop upstream and board there before
-   the train fills, as Tokyo riders do (notes/T-552.md). A rider leaving
+   train is weighed after the lines that beat it, never kept ahead of them (T-552). **A rider
+   never changes onto the line they left**, in either direction (Anita, T-575): where full trains
+   leave riders behind they wait at their station, and the trip explorer shows that wait in the
+   boarding, rather than ride the other way to board upstream. A station whose strategy boards a
+   line has a change node for riders reaching it off that line (by alighting or by a walk), with
+   its own strategy over the station's other lines; a station with no other line has none, and
+   the alighting there leads nowhere for this destination. A rider may still ride out on one line
+   and back on another (another line from the stop upstream, or one parallel to the full line), as
+   any change is allowed. A rider leaving
    a train may walk to another station within 300 m straight line and board there (walk at its
    weight; walk edges start only after a ride, so walking between stations is never a rail trip).
    Snapshot stations within 100 m of each other are one demand station (side-by-side platforms of
@@ -682,8 +694,9 @@ works on two levels:
    searched destinations gives way, and only to one with at least as many to search (a cheaper one
    is searched for that call alone), so the order populations are solved in does not change what
    is searched (T-405). A table is stations² costs plus, per searched destination, each node's next
-   node and the settle order (u16 ids below 65,535 nodes) and one bit per boarding route node for
-   the departures accepted there (their trains an hour are the graph's): about 4 bytes a node, 18 MB
+   node and the settle order (u16 ids below 65,535 nodes, change nodes included), one bit per
+   boarding route node for the departures accepted there (their trains an hour are the graph's),
+   and each change node's station and accepted route nodes: about 4 bytes a node, 18 MB
    for New York's on the real save (T-398).
 5. **Mode choice per subzone pair.** The access logit factorises: each origin subzone gets one row
    over all stations, the logsum of its access options followed by every station-to-station cost
@@ -721,7 +734,7 @@ works on two levels:
    sample of the city was weighed and every worker sent three numbers per cell per purpose
    (T-285, notes/T-285.md).
 6. **Loading**: each destination's strategy is walked from farthest settled nodes towards it.
-   Station flow splits by accepted departure frequency, retaining each line's individual segment
+   Station flow (and a change node's) splits by accepted departure frequency, retaining each line's individual segment
    loads and boarding/alighting counts (T-069). Transfers are counted beside the loads (T-176,
    "Transfers" below).
 7. **Crowding**: a penalty per segment from the loads, repeat 4-6, average the loads (method of
@@ -1045,10 +1058,10 @@ rounds, the market too; notes/T-147.md).
 between two points, as the commute model decides it in each period: `DemandApi.trip(q, from, to)`
 takes the cell nearest each point (within 600 m, else the point is outside the city), reads the
 trip as a commute from a home in the first to work in the second, and answers with the model's
-own numbers for that pair of subzones (4.4 step 5): the walk share (by the two zones' distance),
-the drive (real minutes between the subzones' centres, its parking, its perceived cost), the
+own numbers for that pair of subzones (4.4 step 5): the drive (real minutes between the subzones' centres, its parking, its perceived cost), the
 rail logsum over every pair of access and egress stations and each pair's share of the trip's
-rail riders, rail's utility against the road and the chance of walking, rail and driving. The
+rail riders, rail's utility against the road and the chance of walking (the whole way, by the
+two zones' distance; shown as one number in a hover), rail and driving. The
 expressions and their order are `mode_choice`'s, so the figures are the same f32 numbers, on the
 period's own graph (the costs of its last crowding round; the published loads are the rounds'
 average). Rail is a strategy, not one path: riders spread over the station pairs by the access
@@ -1077,7 +1090,7 @@ F from 7 Av to 47-50 Sts-Rockefeller Ctr with 17% of the trip's train riders, th
 neighbouring stations at both ends and the 42 St stations. Jersey City (Journal Square) to Wall
 St: train 62% (PATH to World Trade Center, then the 1 or a walk). Mineola to Hicksville: drive
 63%, train 37%. Everyday purposes choose the same way on the same rail and road costs but with
-the walk share and the drive's distance from the sampled cells, and their own subzone averages;
+the walk and the drive's distance from the sampled cells, and their own subzone averages;
 the explorer shows the commute.
 
 **The pool and the bubbles' chain** (T-119). The pool is half the logical cores less one, at most

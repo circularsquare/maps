@@ -274,18 +274,27 @@ impl SubOut {
     }
 }
 
-/// T-513: all-day trips by other with no rail (`Gravity::other_trips_by_zone`), each zone's share
-/// without a car its homes' (0 with no `Params::nocar`).
-fn other_all(city: &City, z: &Zones, gr: &Gravity, p: &Params) -> f64 {
-    let Some(nc) = &p.nocar else { return 0.0 };
-    let mut cz = vec![0f32; z.n];
-    for c in 0..city.len() {
-        let i = z.cell_zone[c] as usize;
-        if z.pop[i] > 0.0 {
-            cz[i] += (city.pop[c] as f64 * nc[c] as f64 / z.pop[i]) as f32;
+/// What the zone pairs' choice with no rail reads (`NoRail`): each zone's share without a car its
+/// homes' (0 with no `Params::nocar`).
+fn no_rail_ctx(city: &City, z: &Zones, p: &Params) -> NoRail {
+    let mut cz = vec![];
+    if let Some(nc) = &p.nocar {
+        cz = vec![0f32; z.n];
+        for c in 0..city.len() {
+            let i = z.cell_zone[c] as usize;
+            if z.pop[i] > 0.0 {
+                cz[i] += (city.pop[c] as f64 * nc[c] as f64 / z.pop[i]) as f32;
+            }
         }
     }
-    gr.other_trips_by_zone(z, p, &cz).0.iter().sum()
+    NoRail::new(z, p, cz)
+}
+
+/// T-513, T-558: all-day trips with no rail that walk, by home zone and by work zone, and all
+/// that take other (`Gravity::no_rail_by_zone`).
+fn no_rail_trips(z: &Zones, gr: &Gravity, p: &Params, nr: &NoRail) -> (Vec<f64>, Vec<f64>, f64) {
+    let [wh, ww, oh, _] = gr.no_rail_by_zone(z, p, nr);
+    (wh, ww, oh.iter().sum())
 }
 
 /// T-276: `DemandApi::home_k` and `work_k`. With a joint gravity shipped for these zones, each
@@ -312,12 +321,15 @@ pub struct DemandApi {
     /// `city.pop` and `city.jobs` (`with_weights`); None for the commutes.
     weights: Option<(Vec<f32>, Vec<f32>)>,
     pub(crate) base: Params,
-    /// All-day home -> work trips that would walk with no rail (`Gravity::walk_trips`), and the
-    /// same by home zone and by work zone.
+    /// What the zone pairs' choice with no rail reads (T-558): the commutes' walking with no
+    /// rail, by zone pair, for the totals and the pair loop alike.
+    pub(crate) nr: Arc<NoRail>,
+    /// All-day home -> work trips that would walk with no rail (`Gravity::no_rail_by_zone`), and
+    /// the same by home zone and by work zone.
     walk_all: f64,
     walk_home_zone: Vec<f64>,
     walk_work_zone: Vec<f64>,
-    /// T-513: all-day trips by other with no rail (`Gravity::other_trips_by_zone`).
+    /// T-513: all-day trips by other with no rail (`Gravity::no_rail_by_zone`).
     other_all: f64,
     /// T-276: per zone, the pack's trips a day per unit of home weight (`city.pop`) and of work
     /// weight (`city.jobs`). One number everywhere for a pack's own gravity; with a joint gravity
@@ -434,7 +446,7 @@ impl DemandApi {
         // the strategies are shared with the other populations on the same service (T-119)
         let (mo, l) = with_skims(g, p, &self.want, |sk| {
             let er = station_exp(sk, p);
-            let mo = mode_choice(&self.z, &self.gr, sz, &er, g.n_st, p);
+            let mo = mode_choice(&self.z, &self.gr, sz, &er, g.n_st, p, &self.nr);
             drop(er);
             // the trips home: the same station pairs reversed
             let s = g.n_st;
@@ -570,16 +582,18 @@ impl DemandApi {
         self.reusable = false;
         &mut self.base
     }
-    /// Rebuild the walk shares from `walk_d0_km` and `walk_s_km` after changing them through
-    /// `params_mut` (the gravity holds them from `new`); before `EverydayApi::beside`.
+    /// Rebuild the walk's costs and the trips walking and by other with no rail after changing
+    /// their parameters through `params_mut` (the gravity holds them from `new`); before
+    /// `EverydayApi::beside`.
     pub fn refresh_walk(&mut self) {
         let mut gr = (*self.gr).clone();
         gr.set_walk(&self.z, &self.base);
-        let (home, work) = gr.walk_trips_by_zone(&self.z);
+        self.nr = Arc::new(no_rail_ctx(&self.city, &self.z, &self.base));
+        let (home, work, other) = no_rail_trips(&self.z, &gr, &self.base, &self.nr);
         self.walk_all = home.iter().sum();
         self.walk_home_zone = home;
         self.walk_work_zone = work;
-        self.other_all = other_all(&self.city, &self.z, &gr, &self.base);
+        self.other_all = other;
         self.gr = Arc::new(gr);
         self.reusable = false;
     }
@@ -601,6 +615,7 @@ impl DemandApi {
             gr: self.gr.clone(),
             weights: Some((pop, jobs)),
             base: self.base.clone(),
+            nr: self.nr.clone(),
             walk_all: self.walk_all,
             walk_home_zone: self.walk_home_zone.clone(),
             walk_work_zone: self.walk_work_zone.clone(),
@@ -672,11 +687,11 @@ impl DemandApi {
         // the pack's country: the header's own, else the one its everyday block was written for
         let country = h["country"].as_str().or_else(|| h["everyday"]["country"].as_str()).unwrap_or("");
         base.set_extra("country_asc_rail", country_asc_rail(country))?;
-        let (walk_home_zone, walk_work_zone) = gr.walk_trips_by_zone(&z);
+        let nr = Arc::new(no_rail_ctx(&city, &z, &base));
+        let (walk_home_zone, walk_work_zone, other_all) = no_rail_trips(&z, &gr, &base, &nr);
         let walk_all = walk_home_zone.iter().sum();
-        let other_all = other_all(&city, &z, &gr, &base);
         let (home_k, work_k) = zone_trip_factors(&city, &z, &gr, gravity_from_pack);
-        Ok(DemandApi { city: Arc::new(city), z: Arc::new(z), gr: Arc::new(gr), weights: None, base, walk_all, walk_home_zone, walk_work_zone, other_all, home_k, work_k, svc: None, sz: None, want: vec![], od_st: vec![], od_at: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], open_ms: now_ms() - t0, complex_in: vec![], same: 0, layout_same: false, reusable: false })
+        Ok(DemandApi { city: Arc::new(city), z: Arc::new(z), gr: Arc::new(gr), weights: None, base, nr, walk_all, walk_home_zone, walk_work_zone, other_all, home_k, work_k, svc: None, sz: None, want: vec![], od_st: vec![], od_at: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], open_ms: now_ms() - t0, complex_in: vec![], same: 0, layout_same: false, reusable: false })
     }
 
     /// The station complex of each station of the networks `set_network` is given from now on
@@ -1413,7 +1428,8 @@ impl DemandApi {
         // the far end by zone: all commuters and those who would walk with no rail (the gravity),
         // and rail (from the far subzones)
         let (mut t_z, mut w_z, mut r_z) = (vec![0f64; nz], vec![0f64; nz], vec![0f64; nz]);
-        let wt = !self.gr.wtab.is_empty();
+        let wt = !self.gr.wctab.is_empty();
+        let nr = &self.nr;
         for a in 0..nz {
             if wz[a] <= 0.0 {
                 continue;
@@ -1424,8 +1440,8 @@ impl DemandApi {
                 let idx = (self.gr.base(&self.z, i) + self.gr.key(&self.z, j)) as usize;
                 let t = wz[a] * self.gr.row[i] * self.gr.col[j] * (self.gr.ftab[idx] * self.gr.k(&self.z, i, j)) as f64 * rate as f64;
                 t_z[b] += t;
-                if wt {
-                    w_z[b] += t * self.gr.walk_share_at(i, j, idx) as f64;
+                if wt && self.gr.wctab[idx] < NO_WALK {
+                    w_z[b] += t * nr.split(&self.gr, &self.base, i, j, idx).0 as f64;
                 }
             }
         }
@@ -1703,7 +1719,7 @@ mod tests {
         let sz = api.sz.as_ref().unwrap();
         let sk = kernel::skims(&st.g, &st.p);
         let er = kernel::station_exp(&sk, &st.p);
-        let mo = kernel::mode_choice(&api.z, &api.gr, sz, &er, st.g.n_st, &st.p);
+        let mo = kernel::mode_choice(&api.z, &api.gr, sz, &er, st.g.n_st, &st.p, &api.nr);
         let s = st.g.n_st;
         let (w, h) = (TO_WORK[0], TO_HOME[0]);
         let (fw, fh) = (w / (w + h), h / (w + h));
@@ -1974,7 +1990,9 @@ mod tests {
     }
 
     #[test]
-    fn short_commutes_reserve_walking_before_rail_choice() {
+    /// T-558: a short commute walks with no rail; an overwhelmingly attractive train takes its
+    /// walkers (walking is in the choice), and the views count what it leaves.
+    fn short_commutes_walk_unless_the_train_is_better() {
         let city = pack::City { name: "short".into(), h3: vec![1, 2],
             x: vec![0.0, 300.0], y: vec![0.0, 0.0],
             pop: vec![100.0, 0.0], jobs: vec![0.0, 100.0], region: vec![], gravity: None };
@@ -1982,23 +2000,23 @@ mod tests {
         let mut api = DemandApi::new(&h, &b).unwrap();
         let baseline = api.info()[3];
         assert!(baseline > 0.8, "same-zone trips overwhelmingly walk");
-        api.params_mut().asc_rail = 20.0; // even overwhelmingly attractive rail cannot take walkers
+        api.params_mut().asc_rail = 20.0;
         let times = [10.0,0.0,10.0,0.0,10.0,0.0,0.0,10.0,0.0,10.0,0.0,10.0];
         api.set_network(&[0.0,0.0,300.0,0.0], &[2], &[0,1], &times, &[60.0;3], &[4.0]).unwrap();
         api.set_fares(0.0, 0.0, &[0.3,0.0,0.0,0.3]).unwrap();
         for q in 0..5 {
             api.solve(q);
-            let v = api.summary(q);
-            assert!((v[3]/v[1]-baseline).abs()<1e-6);
-            assert!(v[2] > 0.0 && v[2]/v[1] <= 1.0-baseline+1e-5);
             api.crowd(q);
-            let crowded = api.summary(q);
-            assert!((crowded[3]/crowded[1]-baseline).abs()<1e-6);
+            for v in [api.summary(q)] {
+                let (rail, walk) = (v[2] / v[1], v[3] / v[1]);
+                assert!(rail > 0.9 && walk > -1e-6 && walk < 0.1 && rail + walk <= 1.0 + 1e-5, "rail {rail} walk {walk}");
+            }
         }
+        let v = api.summary(1);
         let sums = api.flow_rail(1, &[1]);
         let flows = api.flows(1, &[1], &sums);
-        assert!((flows[1] as f64/(flows[0]+flows[1]+flows[2]) as f64-baseline).abs()<1e-5);
-        println!("300m same-zone commute: walk {:.2}%, rail capped {:.2}%", baseline*100.0,(1.0-baseline)*100.0);
+        let tot = (flows[0] + flows[1] + flows[2]) as f64;
+        assert!((flows[1] as f64 / tot - v[3] / v[1]).abs() < 1e-3, "{} against {}", flows[1] as f64 / tot, v[3] / v[1]);
     }
 
     #[test]
@@ -2304,7 +2322,7 @@ mod tests {
             let er = kernel::station_exp(&sk, &st.p);
             let t_er = now_ms() - t;
             let t = now_ms();
-            let mo = kernel::mode_choice(&a.z, &a.gr, a.sz.as_ref().unwrap(), &er, g.n_st, &st.p);
+            let mo = kernel::mode_choice(&a.z, &a.gr, a.sz.as_ref().unwrap(), &er, g.n_st, &st.p, &a.nr);
             let t_mode = now_ms() - t;
             let t = now_ms();
             let _l = kernel::assign(&g, &sk, &mo.od);
@@ -2547,7 +2565,7 @@ mod tests {
         {
             let sk = kernel::skims_for(&st.g, &st.p, &a.want);
             let er = kernel::station_exp(&sk, &st.p);
-            let mo = kernel::mode_choice(&a.z, &a.gr, a.sz.as_ref().unwrap(), &er, st.g.n_st, &st.p);
+            let mo = kernel::mode_choice(&a.z, &a.gr, a.sz.as_ref().unwrap(), &er, st.g.n_st, &st.p, &a.nr);
             let (mut plain, mut counted) = (f64::INFINITY, f64::INFINITY);
             for _ in 0..7 {
                 let t = now_ms();

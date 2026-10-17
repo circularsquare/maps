@@ -42,7 +42,8 @@ Generate **total** all-mode trips, then let the player's network earn rail's sha
   under 250 km, every zone pair added up) gives any pair of places its trips and modes with no pack
   open; `bin/market_pack.rs` writes them from every place's pack.
 - **Commutes between zones**: the cross-pack part of the joint commute gravity
-  ([demand.md](demand.md) 4.4, [zones.md](zones.md) 4), spread from 2 km gravity zones to the
+  ([demand.md](demand.md) 4.4, [zones.md](zones.md) 4), solved over each group of packs whose
+  outlines come within 50 km of each other (T-539), spread from 2 km gravity zones to the
   market's zones and kept where at least one a day travels between two 6 km zones (each home zone's
   dropped commuters given to its kept pairs). They travel at the local commute's timing (70/12/6/4/8%
   to work, the return 2/18/58/16/6% on the same station pair reversed) and 0.30 of a weekday's at

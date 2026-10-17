@@ -288,7 +288,8 @@ since T-276), `phl`, `bos`, `wdc`, `bal`, `pvd`, `nhv`, `hfd`, `spf`; non-city z
 writes every entry's `box` through `zone_boxes.py`, which also runs alone, T-302),
 `intercity.py` (the Northeast's sites, then the joint commute gravity `joint_gravity`, which
 rewrites every Northeast pack's gravity factors and the commute list, then `market_zones.py`;
-`--group jp` the same over Japan's packs, `joint_gravity --packs`, T-463),
+`--group auto [ids]` every group of packs within 50 km of each other, the Northeast as above and
+the rest by `joint_gravity --packs`, T-463, T-539; `--groups` lists them),
 `market_zones.py [ids]` (each zone's market pack against the world field, then `market_pack`'s
 registry rows; seconds a zone, T-377),
 `zones.py --trips`, `routes.py <ids>` for any pack whose zones changed (T-275), and last

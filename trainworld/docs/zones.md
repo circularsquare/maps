@@ -120,14 +120,23 @@ over every job in reach, in its own zone or another, so moving a zone line moves
   every zone's jobs are met to 1e-8 relative (its homes exactly), about 40 steps. The tolerance is
   tight because weakly joined packs and regions leave slow modes: a looser residual leaves factors
   percents off (notes/T-297.md).
-- **Two groups are built**: the Northeast (`pipeline/intercity.py`, the registry's cities with a
-  `market` id; cross-pack commutes through `data/packs/intercity.json`) and Japan's 45 packs
-  (`intercity.py --group jp`, T-463: distances in a conic at the packs' mean origin, border factor
-  0.4 from `borders.json`; cross-pack commutes by 6 km square of each pack's own frame in
-  `data/work/jp.joint_commutes.json`, which `market_zones.py` writes into each zone's market pack).
+- **Groups form themselves** (T-539, `intercity.py --group auto [ids]`): two registered packs are in
+  one group when their outlines (`<id>.boundary.geojson`) come within 50 km of each other, chained,
+  across national borders too; a pack with no neighbour that close stands alone and is not solved.
+  Within a group the 150 km cut still applies. Today this gives two groups. The Northeast (the
+  registry's cities with a `market` id; cross-pack commutes through `data/packs/intercity.json`) is
+  solved its own way and must hold exactly those cities. Every other group runs `joint_gravity
+  --packs` (distances in a conic at the packs' mean origin; at most 150 steps, the best kept) and
+  writes its cross-pack commutes, by 6 km square of each pack's own frame, to
+  `data/work/<first member>.joint_commutes.json` (Japan's 45 packs: `tyo`), which `market_zones.py`
+  writes into each zone's market pack; an older file holding any of the same packs is removed.
   Japan's balance stops at about 8e-4, all of it in Okinawa's outlying islands, a block joined to
-  little else; the best of 150 steps is kept (notes/T-463.md). A tier 0 pack's single region is its
-  own, and its header names its country.
+  little else (notes/T-463.md). A tier 0 pack's single region is its own, and its header names its
+  country. A group's solve grows with its zone pairs (within packs plus across within the cut):
+  each Furness step sums every pair twice, about 100M pairs a second a thread, so Japan's 0.5
+  billion pairs take about 25 minutes on one thread and the Northeast's 0.2 billion 4 minutes.
+  `intercity.py` refuses a group over 200,000 zones (about three Japans); with outlines under the
+  gate's 40,000 km² no group in the world plan comes near it (notes/T-539.md).
 
 **Fitting and checking.** The curve and the factors are each pack's fitted values, so nothing new
 is fitted for commutes between zones in the US. LODES OD 2023 is the check, not an input: commuters

@@ -222,13 +222,13 @@ def main(city="nyc", dry=False):
         else:
             px, py = xy(r["lon"], r["lat"])
             geoms.append(Point(float(px), float(py)).buffer(np.sqrt(NODE_HA * 1e4 / np.pi)))
-    near = [g.buffer(NEAR_M, 8) for g in geoms]
+    near = np.array([g.buffer(NEAR_M, 8) for g in geoms], dtype=object)
     pi, ci = ctree.query(near, predicate="contains")
     P = np.bincount(pi, weights=pop[ci], minlength=len(kept))
     # the density of the ring around the place: its residents over the ring's land (the ring
     # without the place itself, inside the pack's boundary, whose county shapes stop at the shore)
     land = transform(lambda x, y: xy(x, y), boundary)
-    near_a, geoms_a = np.array(near, dtype=object), np.array(geoms, dtype=object)
+    near_a, geoms_a = near, np.array(geoms, dtype=object)
     ring_m2 = np.empty(len(kept))
     for i in range(0, len(kept), 1000):
         s = slice(i, i + 1000)
@@ -241,7 +241,7 @@ def main(city="nyc", dry=False):
     ring_km2 = np.maximum(ring_m2 / 1e6, 0.5)
     D = P / ring_km2
     draw = np.zeros(len(cells), np.float64)
-    ii, cc = ctree.query(geoms, predicate="contains")
+    ii, cc = ctree.query(geoms_a, predicate="contains")
     inside = {}
     for i, c in zip(ii, cc):
         inside.setdefault(int(i), []).append(int(c))
@@ -273,7 +273,9 @@ def main(city="nyc", dry=False):
         print(f"  {r['kind']:15} {r['ha']:9.1f} ha  pop near {r['pop_near']:>10,.0f} ({r['density_near']:>6,.0f}/km2)  draw {r['draw']:7.1f}  {r['name'][:50]}")
     if dry:
         return
-    if total <= 0 or draw.sum() / total < 0.95:
+    # T-579: a pack with no OSM parks (or none with people near) keeps a zero park_draw; the
+    # kernel then leaves parks out of its social attraction, and the gate judges the pack
+    if total > 0 and draw.sum() / total < 0.95:
         raise ValueError("park location coverage below 95%")
     stem = os.path.join(b.PACKS, city)
     with open(stem + ".json") as f:

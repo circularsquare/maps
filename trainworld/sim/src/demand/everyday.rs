@@ -426,7 +426,7 @@ mod tests {
         assert_eq!(a.totals[2], 0.0);
     }
     #[test]
-    fn short_everyday_trips_keep_walking_and_disaggregate_motorized_budgets() {
+    fn short_everyday_trips_walk_what_rail_leaves() {
         let city = pack::City { name: "short".into(), h3: vec![1,2,3],
             x: vec![0.0,100.0,400.0], y: vec![0.0;3],
             pop: vec![100.0,100.0,0.0], jobs: vec![0.0,0.0,100.0], region: vec![], gravity: None };
@@ -443,26 +443,27 @@ mod tests {
         assert!(a.pairs.len()<a.destinations.iter().filter(|&&v|v!=NONE).count());
         for q in 0..5 { a.solve(q); }
         let modes = a.cell_modes();
+        // T-558: with no rail these walk; a train this attractive takes walkers and drivers in
+        // proportion, so each cell walks its share of what rail leaves
         for c in 0..2 {
             let total = modes[c]+modes[3+c]+modes[6+c];
-            let pw = a.engine.base.everyday_walk_share((400.0-city.x[c])/1000.0);
-            assert!((modes[3+c]/total-pw).abs()<1e-5);
-            assert!(pw>0.96 && modes[c]/total<=1.0-pw+1e-5);
+            let pw = a.no_rail(c, 2, 400.0-city.x[c]).0;
+            assert!(pw>0.9, "{pw}");
+            assert!(modes[c]>0.1*total, "rail takes some of them");
+            assert!((modes[3+c]-(total-modes[c])*pw).abs()<1e-4*total, "cell {c}: walk {} rail {} total {total} pw {pw}", modes[3+c], modes[c]);
             assert!(modes[6+c]>=0.0);
         }
         let summaries: Vec<_>=(0..5).map(|q|a.summary(q)).collect();
         let rail: f64=summaries.iter().map(|v|v[2]).sum();
         assert!((rail-modes[..3].iter().sum::<f32>() as f64).abs()<1e-3);
-        let before=a.summary(0)[3];
-        let shared:Vec<_>=a.seg(0).iter().map(|v|v*1e6).collect();
-        a.crowd_with_external(0,&shared);
-        assert!((a.summary(0)[3]-before).abs()<1e-6);
+        let walk: f64=summaries.iter().map(|v|v[3]).sum();
+        let trips: f64=summaries.iter().map(|v|v[1]).sum();
+        assert!((walk-modes[3..6].iter().sum::<f32>() as f64).abs()<1e-5*trips, "{walk} against {}", modes[3..6].iter().sum::<f32>());
         let selected=a.selection(1,&[2]);
         for kind in 0..2 {
             let slice=&selected[kind*39..(kind+1)*39];
             assert!((slice[..30].iter().sum::<f32>()-slice[30..].iter().sum::<f32>()).abs()<1e-3);
         }
-        println!("Everyday baseline walking: 300m {:.2}%, 400m {:.2}%",a.engine.base.everyday_walk_share(0.3)*100.0,a.engine.base.everyday_walk_share(0.4)*100.0);
     }
 
     fn university_fixture(distance: f32) -> (String, Vec<u8>) {
@@ -715,9 +716,9 @@ mod tests {
                 if let Some(st) = &a.per[q] {
                     for direction in 0..2 {
                         let share = if direction == 0 { share_out(day, everyday(kind), q) } else { share_ret(day, everyday(kind), q) };
-                        let pr = if pi == NONE { 0.0 } else { st.probability[pi as usize][direction] * a.edge_motorized_scale(pi, pw) };
+                        let pr = if pi == NONE { 0.0 } else { st.probability[pi as usize][direction] };
                         let rail = w * share * pr;
-                        let walk = w * share * pw;
+                        let walk = (w * share - rail) * pw;
                         let drive = (w * share - walk - rail).max(0.0);
                         for (m, v) in [rail, walk, drive].into_iter().enumerate() {
                             out[base + direction * 15 + m * 5 + q] += v;
@@ -1238,9 +1239,10 @@ fn accepted_tph(bits: &[u64], g: &Graph, r: usize) -> f32 {
 fn assign_lanes(g: &Graph, sk: &Skims, cols: &Columns, ix: &XferIndex, xfer: &mut [f32]) -> LaneLoads {
     let (s, n) = (sk.s, sk.n);
     let mut l = LaneLoads::zero(s, n - s);
-    let mut flow = vec![ZERO; n];
+    let np = sk.most_change_nodes();
+    let mut flow = vec![ZERO; n + np];
     let counting = !(cfg!(test) && XFER_OFF.load(std::sync::atomic::Ordering::Relaxed));
-    let mut head = if counting { vec![NONE; s] } else { vec![] };
+    let mut head = if counting { vec![NONE; s + np] } else { vec![] };
     let mut rec: Vec<(u32, f32, u32)> = vec![];
     let mut use_k: Vec<(u32, f32)> = vec![];
     let used: Vec<(usize, &[u32])> = cols.off.iter().enumerate().filter(|(_, o)| !o.is_empty()).map(|(k, o)| (k, &o[..])).collect();
@@ -1263,7 +1265,7 @@ fn assign_lanes(g: &Graph, sk: &Skims, cols: &Columns, ix: &XferIndex, xfer: &mu
                 head.fill(NONE);
                 rec.clear();
             }
-            let mut w = LaneWalk { g, s, n, dst, bits: &sk.board[slot][..], flow: &mut flow, l: &mut l, head: &mut head, rec: &mut rec, use_k: &mut use_k, xfer: if counting { Some((ix, &mut *xfer)) } else { None } };
+            let mut w = LaneWalk { g, s, n, dst, bits: &sk.board[slot][..], cn: &sk.change[slot], flow: &mut flow, l: &mut l, head: &mut head, rec: &mut rec, use_k: &mut use_k, xfer: if counting { Some((ix, &mut *xfer)) } else { None } };
             match (&sk.next[slot], &sk.order[slot]) {
                 (NodeIds::Short(next), NodeIds::Short(order)) => w.run(next, order),
                 (NodeIds::Long(next), NodeIds::Long(order)) => w.run(next, order),
@@ -1288,6 +1290,7 @@ struct LaneWalk<'a> {
     n: usize,
     dst: usize,
     bits: &'a [u64],
+    cn: &'a ChangeNodes,
     flow: &'a mut [Lanes],
     l: &'a mut LaneLoads,
     head: &'a mut [u32],
@@ -1299,7 +1302,8 @@ struct LaneWalk<'a> {
 impl LaneWalk<'_> {
     #[inline(always)]
     fn run<I: NodeIx>(&mut self, next: &[I], order: &[I]) {
-        let LaneWalk { g, s, n, dst, bits, ref mut flow, ref mut l, ref mut head, ref mut rec, ref mut use_k, ref mut xfer } = *self;
+        let LaneWalk { g, s, n, dst, bits, cn, ref mut flow, ref mut l, ref mut head, ref mut rec, ref mut use_k, ref mut xfer } = *self;
+        let end = n + cn.len();
         for &v in order.iter().skip(1).rev() {
             let v = v.ix();
             let f = flow[v];
@@ -1307,30 +1311,33 @@ impl LaneWalk<'_> {
                 continue;
             }
             flow[v] = ZERO;
-            if v < s {
-                let edges = g.adj_off[v] as usize..g.adj_off[v + 1] as usize;
-                let sum: f32 = edges.clone().map(|e| accepted_tph(bits, g, g.adj_to[e] as usize - s)).sum();
+            if v < s || v >= n {
+                let (st, k) = if v < s { (v, NONE as usize) } else { (cn.st[v - n] as usize, v - n) };
+                let hx = if v < s { v } else { s + k };
+                let acc = |r: usize| if v < s { accepted_tph(bits, g, r) } else { cn.tph(g, k, r) };
+                let edges = g.adj_off[st] as usize..g.adj_off[st + 1] as usize;
+                let sum: f32 = edges.clone().map(|e| acc(g.adj_to[e] as usize - s)).sum();
                 if sum == 0.0 {
                     continue;
                 }
-                add_lanes(&mut l.board[v], &f);
+                add_lanes(&mut l.board[st], &f);
                 for e in edges.clone() {
                     let to = g.adj_to[e] as usize;
-                    let a = accepted_tph(bits, g, to - s);
+                    let a = acc(to - s);
                     let share: Lanes = std::array::from_fn(|k| f[k] * a / sum);
                     add_lanes(&mut flow[to], &share);
                     add_lanes(&mut l.rn_board[to - s], &share);
                 }
-                if head.get(v).is_some_and(|&h| h != NONE) {
+                if head.get(hx).is_some_and(|&h| h != NONE) {
                     use_k.clear();
                     for (k, e) in edges.clone().enumerate() {
-                        let b = accepted_tph(bits, g, g.adj_to[e] as usize - s);
+                        let b = acc(g.adj_to[e] as usize - s);
                         if b > 0.0 {
                             use_k.push((k as u32, b / sum));
                         }
                     }
                     let x = &mut xfer.as_mut().unwrap().1;
-                    let mut i = head[v];
+                    let mut i = head[hx];
                     while i != NONE {
                         let (at, fin, nx) = rec[i as usize];
                         for &(k, share) in use_k.iter() {
@@ -1341,11 +1348,11 @@ impl LaneWalk<'_> {
                 }
             } else {
                 let to = next[v].ix();
-                if to >= n {
+                if to >= end {
                     continue;
                 }
                 add_lanes(&mut flow[to], &f);
-                if to >= s {
+                if to >= s && to < n {
                     add_lanes(&mut l.seg[v - s], &f);
                     let ride = g.rn_ride[v - s];
                     for k in 0..LANES {
@@ -1354,11 +1361,12 @@ impl LaneWalk<'_> {
                 } else {
                     add_lanes(&mut l.alight[g.rn_station[v - s] as usize], &f);
                     add_lanes(&mut l.rn_alight[v - s], &f);
-                    if to != dst {
+                    let (st, hx) = if to < s { (to, to) } else { (cn.st[to - n] as usize, s + to - n) };
+                    if st != dst {
                         if let Some((ix, _)) = xfer.as_ref() {
-                            let e = (g.adj_off[v] as usize..g.adj_off[v + 1] as usize).find(|&e| g.adj_to[e] as usize == to).unwrap();
-                            rec.push((ix.at[e], f.iter().fold(0.0, |a, &b| a + b), head[to]));
-                            head[to] = (rec.len() - 1) as u32;
+                            let e = (g.adj_off[v] as usize..g.adj_off[v + 1] as usize).find(|&e| g.adj_to[e] as usize == st).unwrap();
+                            rec.push((ix.at[e], f.iter().fold(0.0, |a, &b| a + b), head[hx]));
+                            head[hx] = (rec.len() - 1) as u32;
                         }
                     }
                 }
@@ -1437,11 +1445,15 @@ pub struct EverydayApi {
     pairs: Vec<Pair>,
     per: Vec<Option<Period>>,
     totals: Vec<f64>,
+    /// Trips walking the whole way and by other with no rail, by purpose (T-513, T-558); the
+    /// parameters as at opening (`ep`).
     walks: Vec<f64>,
-    /// Trips by other with no rail by purpose (T-513), with the walks; the parameters as at opening.
     others: Vec<f64>,
-    /// Their trips walking the whole way with no rail, by purpose (T-509).
-    nocar_walks: Vec<f64>,
+    /// The everyday layer's parameters as at opening (`Params::everyday`), and per zone its
+    /// streets' and main roads' minutes a km and its parking: the samples' choice with no rail.
+    ep: Params,
+    wplace: Vec<(f32, f32)>,
+    wpark: Vec<(f32, f32, f32)>,
     /// trip kilometres by purpose, for `info` (summed once at opening, T-172)
     km: Vec<f64>,
     /// Optional enrollment budgets: school generation samples homes FROM each activity site.
@@ -1484,24 +1496,43 @@ impl EverydayApi {
     /// `chunks`).
     #[inline(never)]
     fn add_totals(&mut self, r: std::ops::Range<usize>) {
-        let p = &self.engine.base;
-        let oq = p.nocar.is_some().then(|| OtherShare::new(p));
         for k in r {
-            if let Some((kind, c, d, w, pw)) = self.edge(k) {
-                self.totals[kind] += w as f64;
-                self.walks[kind] += (w * pw) as f64;
-                // T-513: the home's people without a car, other against walking the whole way
-                if let (Some(nc), Some(oq)) = (&p.nocar, &oq) {
-                    if nc[c] > 0.0 {
-                        let z = &self.engine.z.cell_zone;
-                        let q = oq.at(self.distance(c, d) * 0.001 * p.drive_factor(z[c] as usize, z[d] as usize));
-                        self.others[kind] += (w * (1.0 - pw) * nc[c] * q) as f64;
-                        self.nocar_walks[kind] += (w * (1.0 - pw) * nc[c] * (1.0 - q)) as f64;
-                    }
-                }
-                self.km[kind] += self.distance(c, d) as f64 * w as f64 / 1000.0;
-            }
+            let Some((kind, c, d, per)) = self.ends(k) else { continue };
+            let distance = self.distance(c, d);
+            let (w, _) = self.weight(kind, per, c, d, distance);
+            let (walk, other) = self.no_rail(c, d, distance);
+            self.totals[kind] += w as f64;
+            self.walks[kind] += (w * walk) as f64;
+            self.others[kind] += (w * other) as f64;
+            self.km[kind] += distance as f64 * w as f64 / 1000.0;
         }
+    }
+    /// A sample's shares walking the whole way and taking other with no rail (T-558,
+    /// `Params::no_rail_split`), against the car each way (parking at the far end): the two
+    /// ways' mean.
+    fn no_rail(&self, c: usize, d: usize, distance: f32) -> (f32, f32) {
+        let p = &self.ep;
+        let z = &self.engine.z;
+        let (hz, az) = (z.cell_zone[c] as usize, z.cell_zone[d] as usize);
+        let cu = p.nocar.as_ref().map_or(0.0, |n| n[c]);
+        let cw = p.walk_trip_cost(distance * self.walk_factor(hz, az) / 1000.0);
+        if cw >= NO_WALK {
+            return (0.0, cu);
+        }
+        let mut out = (0.0, 0.0);
+        for (u, v) in [(hz, az), (az, hz)] {
+            let f = p.drive_factor(u, v);
+            let (fixed, paid, free) = self.wpark[v];
+            let road = p.drive_min_f(distance, f, self.wplace[u], self.wplace[v]) * p.w_drive + fixed;
+            let (w, o) = p.no_rail_split(cu, road, paid, free, distance * 0.001 * f, cw);
+            out.0 += 0.5 * w;
+            out.1 += 0.5 * o;
+        }
+        out
+    }
+    /// T-275: the walk goes around water between two zones.
+    fn walk_factor(&self, i: usize, j: usize) -> f32 {
+        self.engine.gr.wroutes.as_ref().map_or(1.0, |r| r.walk_factor(i, j))
     }
     /// Join destination samples `r` to the subzone pairs they fall in (for `set_network`).
     #[inline(never)]
@@ -1529,13 +1560,6 @@ impl EverydayApi {
             pair.walk += w * pw;
             pair.distance += w * distance;
         }
-    }
-    /// Pair probabilities are unconditional shares of all trips. Disaggregate rail by the
-    /// sampled cell edge's motorized budget, not its total: colocated subzones can contain
-    /// edges with very different walking shares. This preserves pair loads and cell totals.
-    fn edge_motorized_scale(&self, pi: u32, walk: f32) -> f32 {
-        let motorized = 1.0 - self.pairs[pi as usize].walk;
-        if motorized > 0.0 { (1.0 - walk) / motorized } else { 0.0 }
     }
     fn distance(&self, c: usize, d: usize) -> f32 {
         let city = &self.engine.city;
@@ -1572,7 +1596,8 @@ impl EverydayApi {
         self.at.set((kind, i));
         (kind, i)
     }
-    /// A sample's trips and walking share, from its ends, their distance and its cell's samples.
+    /// A sample's trips and walking share with no rail, from its ends, their distance and its
+    /// cell's samples.
     fn weight(&self, kind: usize, per: usize, c: usize, d: usize, distance: f32) -> (f32, f32) {
         let budget = match kind {
             2 => self.school_enrollment[d],
@@ -1581,12 +1606,7 @@ impl EverydayApi {
             _ => self.engine.pop()[c],
         };
         let weight = budget * self.rate[kind] / per as f32 * local_share(distance);
-        // T-275: the walk goes around water between the two cells' zones
-        let walk_f = match &self.engine.gr.wroutes {
-            Some(r) => r.walk_factor(self.engine.z.cell_zone[c] as usize, self.engine.z.cell_zone[d] as usize),
-            None => 1.0,
-        };
-        (weight, self.engine.base.everyday_walk_share(distance * walk_f / 1000.0))
+        (weight, self.no_rail(c, d, distance).0)
     }
     fn edge(&self, k: usize) -> Option<(usize, usize, usize, f32, f32)> {
         let (kind, c, d, per) = self.ends(k)?;
@@ -1686,6 +1706,8 @@ impl EverydayApi {
                 // other choices are walking the whole way and other
                 let cu = sz.nocar[h];
                 let by_ride = pair.distance >= ride_m && min_r[h].is_finite();
+                // T-558: walking the whole way, over the pair's mean distance
+                let cw = p.walk_trip_cost(pair.distance * self.walk_factor(sz.zone[h] as usize, sz.zone[x] as usize) / 1000.0);
                 for direction in 0..2 {
                     let ((a, ma, wa), (b, mb, wb)) = if direction == 0 {
                         ((hr.clone(), hm, hw), (xr.clone(), xm, &acc))
@@ -1717,9 +1739,9 @@ impl EverydayApi {
                         + fixed;
                     let rail = ma + mb + p.fare_min - fast_ln(sum) / th;
                     let bt = p.mode_beta(road);
-                    let r_car = p.rail_share_parked(bt * (road - rail) + p.asc_rail, bt, paid, free);
+                    let r_car = p.car_choice(bt * (road - rail) + p.asc_rail, bt * (road - cw) + p.asc_walk, bt, paid, free);
                     // those without a car: on a ride trip their rail is on the home's walks
-                    let (mut r, mut r_n, mut lost_q, mut lost_w) = (r_car, 0.0f32, 0.0f32, 0.0f32);
+                    let (mut r, mut r_n, mut lost_q) = (r_car, 0.0f32, 0.0f32);
                     let mut walks: Option<((std::ops::Range<usize>, &[f32]), (std::ops::Range<usize>, &[f32]), f32)> = None;
                     if cu > 0.0 {
                         let mut rail_n = Some(rail);
@@ -1743,20 +1765,21 @@ impl EverydayApi {
                         // T-513: and other (`Params::nocar_choice`)
                         let rk = pair.distance * 0.001 * p.drive_factor(sz.zone[u] as usize, sz.zone[v] as usize);
                         let qn;
-                        (r_n, qn) = p.nocar_choice(rk * p.walk_trip_min(), rk * p.other_min_km() + p.other_wait(), rail_n);
+                        (r_n, qn) = p.nocar_choice(cw, rk * p.other_min_km() + p.other_wait(), rail_n);
                         r = r_car + cu * (r_n - r_car);
                         lost_q = cu * r_n * qn;
-                        lost_w = cu * r_n * (1.0 - qn);
                     }
-                    let pr = (1.0 - pair.walk) * r;
+                    let pr = r;
                     probability[i][direction] = pr;
                     let share = if direction == 0 {
                         OUTWARD[pair.kind() as usize][q]
                     } else {
                         RETURN[pair.kind() as usize][q]
                     };
-                    other_lost += (pair.trips * share * (1.0 - pair.walk) * lost_q) as f64;
-                    walk_lost[pair.kind() as usize] += (pair.trips * share * (1.0 - pair.walk) * lost_w) as f64;
+                    other_lost += (pair.trips * share * lost_q) as f64;
+                    // T-558: rail takes its share of the pair's walking with no rail, as the
+                    // samples' sums and views have it
+                    walk_lost[pair.kind() as usize] += (pair.trips * share * pr * pair.walk) as f64;
                     od_used = true;
                     let mut add = |a: std::ops::Range<usize>, wa: &[f32], b: std::ops::Range<usize>, wb: &[f32], trips: f32| {
                         for ka in a.clone() {
@@ -1770,7 +1793,7 @@ impl EverydayApi {
                     };
                     match walks {
                         Some(((a2, wa2), (b2, wb2), sum_n)) => {
-                            let base = pair.trips * share * (1.0 - pair.walk);
+                            let base = pair.trips * share;
                             add(a.clone(), wa, b.clone(), wb, base * (r - cu * r_n) / sum);
                             add(a2, wa2, b2, wb2, base * (cu * r_n) / sum_n);
                         }
@@ -1796,14 +1819,15 @@ impl EverydayApi {
         });
         (probability, loads, parts, xfer, other_lost, walk_lost)
     }
-    fn mode_totals(&self, q: usize, probability: &[[f32; 2]]) -> (f64, f64, f64) {
+    /// Trips, rail trips and walking trips (less `walk_lost`, the walkers rail takes) in period `q`.
+    fn mode_totals(&self, q: usize, probability: &[[f32; 2]], walk_lost: &[f64]) -> (f64, f64, f64) {
         let mut trips = 0.0;
         let mut walk = 0.0;
         let mut rail = 0.0;
         for kind in 0..self.totals.len() {
             let share = (OUTWARD[kind][q] + RETURN[kind][q]) as f64;
             trips += self.totals[kind] * share;
-            walk += self.walks[kind] * share;
+            walk += self.walks[kind] * share - walk_lost[kind];
         }
         for (i, pair) in self.pairs.iter().enumerate() {
             let r = pair.trips as f64
@@ -1991,8 +2015,14 @@ impl EverydayApi {
                 }
             }
         }
+        let ep = engine.base.everyday();
+        let wplace = engine.z.density().iter().map(|&d| ep.place_min_per_km(d)).collect();
+        let wpark = (0..engine.z.n).map(|j| ep.park_parts(&engine.z, j)).collect();
         let mut api = EverydayApi {
             engine,
+            ep,
+            wplace,
+            wpark,
             destinations,
             edge_pair: vec![],
             pairs: vec![],
@@ -2000,7 +2030,6 @@ impl EverydayApi {
             totals: vec![0.0; kinds],
             walks: vec![0.0; kinds],
             others: vec![0.0; kinds],
-            nocar_walks: vec![0.0; kinds],
             km: vec![0.0; kinds],
             school_enrollment: school_enrollment.unwrap_or_default(),
             university_enrollment: university_enrollment.unwrap_or_default(),
@@ -2101,8 +2130,7 @@ impl EverydayApi {
             period_share: 1.0,
             period_hours: (h1 - h0) as f32,
             peak_hour_factor: PEAK_HOUR_FACTOR[q],
-            asc_rail: self.engine.base.asc_rail + self.engine.base.everyday_asc_rail,
-            ..self.engine.base.clone()
+            ..self.engine.base.everyday()
         };
         let net = DemandApi::period_net(svc, q);
         let mut g = build_graph(&net, &p);
@@ -2113,7 +2141,7 @@ impl EverydayApi {
         set_crowding(&mut g, &fac);
         let xi = xfer_index(&g);
         let (probability, loads, parts, xfer, other_lost, walk_lost) = self.pass(&g, &p, q, &xi);
-        let (trips, rail, walk) = self.mode_totals(q, &probability);
+        let (trips, rail, walk) = self.mode_totals(q, &probability, &walk_lost);
         self.per[q] = Some(Period {
             other_lost,
             walk_lost,
@@ -2172,7 +2200,7 @@ impl EverydayApi {
                 msa(&mut old.rn_board, &new.rn_board, st.round);
                 msa(&mut old.rn_alight, &new.rn_alight, st.round);
             }
-            let (trips, rail, walk) = self.mode_totals(q, &st.probability);
+            let (trips, rail, walk) = self.mode_totals(q, &st.probability, &st.walk_lost);
             st.trips = trips;
             st.rail = rail;
             st.walk = walk;
@@ -2293,7 +2321,7 @@ impl EverydayApi {
         for kind in 0..nk {
             let share = (OUTWARD[kind][q] + RETURN[kind][q]) as f64;
             out[3 * kind] = self.totals[kind] * share;
-            out[3 * kind + 2] = (self.walks[kind] * share).max(0.0);
+            out[3 * kind + 2] = (self.walks[kind] * share - st.walk_lost[kind]).max(0.0);
         }
         for (i, pair) in self.pairs.iter().enumerate() {
             let pr = st.probability[i];
@@ -2302,14 +2330,14 @@ impl EverydayApi {
         }
         out
     }
-    /// Trips walked the whole way in period `q` by purpose: the reserved walks and those without
-    /// a car who walk (T-509: survey walk shares).
+    /// Trips walked the whole way in period `q` by purpose (T-509: survey walk shares), as
+    /// `kind_totals` has them.
     pub fn kind_walks_all(&self, q: usize) -> Vec<f64> {
         let Some(Some(st)) = self.per.get(q) else {
             return vec![];
         };
         (0..self.totals.len())
-            .map(|k| ((self.walks[k] + self.nocar_walks[k]) * (OUTWARD[k][q] + RETURN[k][q]) as f64 - st.walk_lost[k]).max(0.0))
+            .map(|k| (self.walks[k] * (OUTWARD[k][q] + RETURN[k][q]) as f64 - st.walk_lost[k]).max(0.0))
             .collect()
     }
     /// `transfers` on a kind of day (T-260). The purposes' transfers are kept together, so each
@@ -2382,12 +2410,12 @@ impl EverydayApi {
                     total += w * (o + r);
                     if let (true, Some(st)) = (pi != NONE, &self.per[q]) {
                         let pr = st.probability[pi as usize];
-                        let scale = self.edge_motorized_scale(pi, pw);
-                        rail += w * scale * (o * pr[0] + r * pr[1]);
+                        rail += w * (o * pr[0] + r * pr[1]);
                     }
                 }
             }
-            let walk = total * pw;
+            // rail takes from walking and the car in proportion (T-558)
+            let walk = (total - rail) * pw;
             let drive = (total - walk - rail).max(0.0);
             for (mode, v) in [rail, walk, drive].into_iter().enumerate() {
                 out[mode * n + c] += v;
@@ -2491,9 +2519,9 @@ impl EverydayApi {
                     if let Some(st) = &self.per[q] {
                         for direction in 0..2 {
                             let share = if direction == 0 { share_out(day, everyday(kind), q) } else { share_ret(day, everyday(kind), q) };
-                            let pr = if pi == NONE { 0.0 } else { st.probability[pi as usize][direction] * self.edge_motorized_scale(pi, pw) };
+                            let pr = if pi == NONE { 0.0 } else { st.probability[pi as usize][direction] };
                             let rail = w * share * pr;
-                            let walk = w * share * pw;
+                            let walk = (w * share - rail) * pw;
                             let drive = (w * share - walk - rail).max(0.0);
                             for (m, v) in [rail, walk, drive].into_iter().enumerate() {
                                 timing[direction * 15 + m * 5 + q] += v;

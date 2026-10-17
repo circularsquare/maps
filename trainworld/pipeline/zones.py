@@ -50,10 +50,10 @@ def local_trips(reg):
     env = dict(os.environ)
     env["PATH"] = os.path.join(os.path.expanduser("~"), ".cargo", "bin") + os.pathsep + env.get("PATH", "")
     env.setdefault("CARGO_BUILD_JOBS", "2")
-    env["CARGO_TARGET_DIR"] = str(ROOT / "data/work/target")
+    env["CARGO_TARGET_DIR"] = os.environ.get("TW_CARGO_TARGET_DIR", str(ROOT / "data/work/target"))
     ids = [c["id"] for c in reg["cities"] if (ROOT / f"data/packs/{c['id']}.json").exists()]
     out = subprocess.run([shutil.which("cargo", path=env["PATH"]), "run", "--quiet", "--release", "--features", "demand",
-                          "--bin", "zone_summary", "--manifest-path", str(ROOT / "sim/Cargo.toml"), "--",
+                          "--bin", "zone_summary", "--manifest-path", os.path.join(os.environ.get("TW_SIM_DIR", str(ROOT / "sim")), "Cargo.toml"), "--",
                           *[str(ROOT / f"data/packs/{i}.json") for i in ids]], env=env, check=True, capture_output=True, text=True)
     trips = json.loads(out.stdout)
     for c in reg["cities"]:

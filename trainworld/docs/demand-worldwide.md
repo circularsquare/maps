@@ -55,7 +55,10 @@ building Toronto from tier 0 against the real pack (notes/T-287.md has every tab
 - **Jobs** are a proxy: population x the World Bank employment rate, spread 30% by GHSL
   non-residential volume weighted by height^2, 50% by OSM job places, 20% by population (T-360:
   the best joint fit on Toronto's census and London's BRES, both in-sample; 18.1% and 26.1% of
-  jobs misplaced between 2 km zones). OSM industrial, commercial and retail land counts one job
+  jobs misplaced between 2 km zones). The height in that weight stops at 40 m (`HEIGHT_CAP_M`,
+  T-573): above it a cell's weight grows with its volume alone, since GHSL's mean height on a
+  100 m pixel with one tower or hangar on little floor (Berlin's Treptowers, 70 m) otherwise gave
+  that cell a city's share. OSM industrial, commercial and retail land counts one job
   place per 5,000 m², one area's weight capped at 1 km² (`land_cap_km2`) and spread over a 0.003
   degree (~330 m) grid inside it (`land_spread_deg`), in every build (T-460); a config may set
   either to 0 or another value. A country with workplace counts by small area (England's
@@ -92,8 +95,14 @@ building Toronto from tier 0 against the real pack (notes/T-287.md has every tab
   share aged 0-14 (-6% in Toronto, 5.3% misplaced; London -8% against GIAS's pupils on roll,
   which include sixth forms, but 21% misplaced between 2 km zones and 14% between districts:
   OSM's school polygons are uneven, and site area is a weak guide to pupils). Public and
-  private alike. A country register with pupils and coordinates (England's GIAS) replaces the
-  sites and sizes (tier0's `schools` hook).
+  private alike. One site holds at most 3,000 pupils (`SCHOOL_SITE_MAX`, T-574, about a large
+  secondary school) and the sites in one pack cell 6,000 together (`SCHOOL_CELL_MAX`: a campus
+  mapped as several schools), the excess going to the other sites in proportion; where OSM maps too few
+  schools for that (Lagos 861 sites for 5.0M pupils, Mumbai 803 for 6.2M), the pupils no site
+  can hold go to school where they live, in proportion to children.
+  Why it may not carry over: a city whose schools OSM barely maps gets mostly local school trips,
+  which is right for primary pupils and short for secondary ones. A country register with pupils
+  and coordinates (England's GIAS) replaces the sites and sizes (tier0's `schools` hook).
 - **Population by small area**: GHSL scaled to district totals is already close at the game's
   scale in London (3.3% misplaced between 2 km zones against Census 2021 by LSOA, 13% between
   LSOAs), so finer census counts (tier0's `population` hook) matter little for commuting.
@@ -415,9 +424,10 @@ notes/T-420.md has the tables.
   driving) differ by country. Check: rail, air and car shares on a few corridors per country
   (MLIT's Inter-Regional Travel Survey, Eurostat, NEC FUTURE) at two lengths, so the slope as well
   as the level is seen.
-- **Rail propensity and the everyday walk share** (T-509, docs/demand.md 4.3). One worldwide rail
-  constant, `asc_rail` 0.4 (8 perceived minutes), with everyday trips 1.1 lower (-0.7 in all) and
-  their walking share curve centred at 1.9 km instead of the commutes' 1.7, fitted jointly on the
+- **Rail propensity** (T-509, docs/demand.md 4.3). One worldwide rail
+  constant, `asc_rail` 0.4 (8 perceived minutes), with everyday trips 1.1 lower (-0.7 in all)
+  (with the walking curve of then, centred at 1.9 km for everyday trips and 1.7 for commutes,
+  which T-558's walking constants now stand in for), fitted jointly on the
   real networks of New York, London, Paris, Seoul, Tokyo and Sendai (station entries, line or
   operator totals, census rail share of commuters by area, NHTS's New York rail and walk shares by
   purpose), New York at half weight since its better-off riders avoid the subway. Every one of the
@@ -531,8 +541,18 @@ notes/T-420.md has the tables.
   weights are fitted on New York only (T-372: 53-66% of commuter rail riders ride there). Check: the share of rail riders
   reaching the station by car or bus per sampler city (UK NTS for London, Metrolinx surveys for
   Toronto) against the model's home-end ride share (`realnet` prints it).
-- **Walking curve.** Fitted to New York (ACS B08301 walked, T-058/T-090). Walking tolerance
-  differs by climate, culture and street design.
+- **Walking the whole way** (T-558, docs/demand.md 4.3 "Walking"). A mode in the choice beside
+  rail and the car (or other), at 1.5 perceived minutes a minute for the first 10 minutes and 4
+  after, with one constant for commutes (`asc_walk` 2.86) and 0.35 more for everyday trips, set
+  so New York and London walk as they did under the curve T-509 fitted to New York's NHTS
+  everyday walk shares and ACS commuting (New York alone wants a higher constant than London in
+  both layers; the shared values leave each within 0.3 points of its walking). Why it may not carry over: walking tolerance differs by climate, culture,
+  street design and safety, and the constant also stands for how much a short drive costs
+  beyond its road time, which differs with car ownership and parking; the cost's shape keeps
+  more 1.5-2.5 km trips on foot than the old curve (London's 2-2.5 km band 3.7 points over) and
+  fewer of 3-5 km. Check: a country's travel survey walk shares by distance (NHTS, England's NTS,
+  France's EMP, Japan's person-trip surveys) and its census walk-to-work share; the deep
+  calibration fits the constants and the shape per country with the rail constants.
 - **Value of time and fare sensitivity.** One value for everyone, from US figures. Incomes differ
   hugely between and within countries (see Anita's "income dependence" idea in her TODO).
 - **Waiting and crowding penalties.** From transit literature that is mostly US and
@@ -545,10 +565,12 @@ notes/T-420.md has the tables.
   average extra wait for full trains, worked out per period with the boarding account's rule:
   arrivals peaking mid-period at the US busiest-hour factors, trains taking riders up to crush
   (160 a 20 m car, a New York car), the extra wait weighted like any platform wait (1.37) and
-  capped at 60 minutes. Where the wait is long, riders ride a stop or two the other way and board
-  before the train fills (T-552), as Tokyo riders do. Why it may not carry over: crush loads differ (Tokyo and Mumbai pack far
-  more than 160 into a car, pushers included, so "full" comes later, and so does riding back; many European systems run
-  emptier); where riders are routinely left behind (Mumbai suburban, Lagos, Chinese metros with
+  capped at 60 minutes. Riders left behind wait at their station: nobody changes onto the line
+  they left, so nobody rides a full line the other way to board upstream (Anita, T-575), though
+  Tokyo riders do (gyaku-nori), and riding out on another line and back stays open. Why it may
+  not carry over: crush loads differ (Tokyo and Mumbai pack far more than 160 into a car, pushers
+  included, so "full" comes later; many European systems run emptier); where riders are
+  routinely left behind (Mumbai suburban, Lagos, Chinese metros with
   queue control at the station entrance) they plan for it, and the perceived weight of that wait
   may be lower, while elsewhere one missed train feels much worse than its minutes; the peak
   shape within a period is US commute timing. Check: published crush capacities per car for the
@@ -729,6 +751,13 @@ notes/T-420.md has the tables.
   commuting crosses national borders freely (Schengen: Basel, Geneva, Luxembourg) 0.05 is far too
   strong; where a country's admin-1 lines do not cut commuting (T-181) the default is 1. Check: the
   country's census commuting flows between its zones.
+  **Which packs share a gravity** (T-539): those whose outlines come within 50 km of each other,
+  chained, formed by `intercity.py --group auto`. In today's two groups the pairs more than 50 km
+  apart carry 0.3% (Northeast) and 0.5% (Japan) of the commuters crossing a pack line. Why it may
+  not carry over: two cities 50-150 km apart with nothing between them exchange no one, and a pack
+  line between tier 0 packs in a country with no fitted factor takes 1, where Japan's census put
+  the line at 0.4 (a plain gravity sent 1.9 times the census's). Check: the country's census
+  commuting flows between the packs, when one is fitted.
 - **Zones** (T-276, docs/zones.md 2). Non-city zones are county-sized units touching two city zones;
   the unit (US county, Canadian census division, NUTS-3) differs in size by country, and where
   admin-2 units are tiny (French communes, Japanese municipalities) a coarser statistical unit is

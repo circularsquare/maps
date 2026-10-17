@@ -12,7 +12,7 @@ census or registers then upgrade single inputs by replacing one function. What e
 - Jobs (the jobs proxy, T-012): a total of population x jobs per resident (World Bank: ILO's
   employment-to-population ratio 15+ x the share aged 15+), spread over cells by a blend of three
   normalised signals: GHSL non-residential built-up volume (GHS-BUILT-V NRES) times the cell's
-  mean non-residential height (volume over GHS-BUILT-S NRES surface) to the power HEIGHT_POW, OSM
+  mean non-residential height (volume over GHS-BUILT-S NRES surface, at most HEIGHT_CAP_M) to the power HEIGHT_POW, OSM
   job places (shops, amenities, offices, crafts, commercial and industrial land;
   canada.osm_places) and population. The weights are JOB_BLEND (notes/T-287.md); a city with much
   informal or home-based work should raise the population share.
@@ -25,7 +25,8 @@ census or registers then upgrade single inputs by replacing one function. What e
   the gravity (everyday_pack), scaled to 15% and 8% of jobs.
 - Schools: OSM amenity=school sites; pupils = population x the national share aged 0-14 (World
   Bank) x SCHOOL_ENROL, spread over the sites by the square root of their area (points take the
-  median site). Children are the same share of every cell's people.
+  median site), no site over SCHOOL_SITE_MAX; pupils the mapped sites cannot hold go to school
+  where they live (by children). Children are the same share of every cell's people.
 - Universities: OSM amenity=university|college, each institution sized by its Wikidata student
   count (P2196) split over its sites by area; sites with no Wikidata count by area at the
   median students per hectare of those with one; points with no count left out. The total is
@@ -100,9 +101,12 @@ WIKIDATA = "https://query.wikidata.org/sparql"
 # (T-360, notes/T-288.md); both cities are in-sample.
 JOB_BLEND = {"nres": 0.3, "osm": 0.5, "pop": 0.2}
 HEIGHT_POW = 2.0
+HEIGHT_CAP_M = 40.0                   # the height weight stops here: one tall tower or hangar took Berlin's share (T-573)
 LAND_CAP_KM2, LAND_SPREAD_DEG = 1.0, 0.003   # OSM industrial or commercial land: cap per area, spread grid (T-460)
 ERRAND_SHARE, LEISURE_SHARE = 0.15, 0.08
 SCHOOL_ENROL = 0.9                    # pupils per child aged 0-14 (judgement; UNESCO rates would refine)
+SCHOOL_SITE_MAX = 3000.0              # pupils one OSM school site holds at most (T-574)
+SCHOOL_CELL_MAX = 6000.0              # ... and one pack cell's sites together (T-574: Vile Parle's campus of 8 schools)
 DEFAULT_CURVE_POW = 1.4               # between Toronto's fit (1.2) and London's (1.5-1.85); only the length is fitted (T-360)
 ZONE_M = 2000.0
 INTRAZONAL_KM = 1.04                  # the game's same-zone distance
@@ -407,12 +411,14 @@ def signals(city, cfg, boundary, mask):
     return out
 
 
-def nres_signal(sig, height_pow=HEIGHT_POW):
+def nres_signal(sig, height_pow=HEIGHT_POW, height_cap=HEIGHT_CAP_M):
     """GHSL non-residential volume weighted by the cell's mean non-residential height (volume over
-    surface) to the power height_pow: an office tower holds far more jobs per cubic metre than a
-    warehouse of the same volume."""
+    surface, at most height_cap) to the power height_pow: an office tower holds far more jobs per
+    cubic metre than a warehouse of the same volume. Above the cap jobs grow with volume alone."""
     v, s = sig["nres_v"], sig["nres_s"]
     h = np.where(s > 0, v / np.maximum(s, 1e-9), 0.0)
+    if height_cap:
+        h = np.minimum(h, height_cap)
     return v * np.power(np.maximum(h, 1e-9) / 10.0, height_pow)
 
 
@@ -780,7 +786,7 @@ def main(city):
         cfg["job_blend"] = cfg["job_blend"]()
     job_blend = cfg.get("job_blend", JOB_BLEND)
     blend =", ".join(f"{k} {v:.0%}" for k, v in job_blend.items())
-    proxy = f"spread by {blend} (GHSL GHS-BUILT-V NRES x (height / 10 m)^{HEIGHT_POW}, OSM job places, population)"
+    proxy = f"spread by {blend} (GHSL GHS-BUILT-V NRES x (height up to {HEIGHT_CAP_M:.0f} m / 10 m)^{HEIGHT_POW}, OSM job places, population)"
     if cfg.get("jobs"):
         jobs, jobs_name = cfg["jobs"](city, boundary, sig, jobs_from(sig, 1.0, job_blend))
         jobs_name += f", {proxy} inside each unit"
@@ -931,6 +937,36 @@ def wikidata_students(qids):
     return {q: tuple(have[q]) for q in qids if q in have}
 
 
+def school_site_pupils(pupils, sizes, cell=None, cap=SCHOOL_SITE_MAX, cell_cap=SCHOOL_CELL_MAX):
+    """Pupils per site in proportion to sizes, no site over cap and no cell's sites together over
+    cell_cap (one compound mapped as several schools): the excess to the other sites in proportion
+    (as T-387's hospitals). `cell` is each site's cell, -1 for none. Returns (per site, the rest no
+    site can hold), the rest where OSM maps too few schools for the children (Lagos: 861 sites for
+    5M pupils)."""
+    p = pupils * sizes / sizes.sum()
+    n = len(p)
+    cell = np.arange(-n, 0) if cell is None else np.where(np.asarray(cell) >= 0, cell, np.arange(-n, 0))
+    _, grp = np.unique(cell, return_inverse=True)
+    fixed = np.zeros(n, bool)
+    for _ in range(200):
+        over = (p > cap * (1 + 1e-9)) & ~fixed
+        p[over] = cap
+        fixed |= over
+        tot = np.bincount(grp, weights=p)
+        hot = tot > cell_cap * (1 + 1e-9)
+        if hot.any():
+            s = hot[grp]
+            p[s] *= (cell_cap / tot)[grp][s]
+            fixed |= s
+        if not (over.any() or hot.any()):
+            break
+        free = p[~fixed].sum()
+        if free <= 0:
+            break
+        p[~fixed] *= max(pupils - p[fixed].sum(), 0.0) / free
+    return p, max(pupils - float(p.sum()), 0.0)
+
+
 def education_osm(city, boundary, kids):
     import canada
     cfg = b.CITIES[city]
@@ -940,16 +976,16 @@ def education_osm(city, boundary, kids):
     pop = np.frombuffer(buf, "<f4", arr["pop"]["count"], arr["pop"]["offset"]).astype(np.float64)
     index = {int(c): i for i, c in enumerate(cells)}
 
-    def place(rows, values):
-        out = np.zeros(len(cells), "<f4")
+    def cell_of(rows):
         import enrich_airports as air
-        n = 0
-        for r, v in zip(rows.itertuples(), values):
-            c, _ = air.cell_of(index, r.lat, r.lon, 500.0)
-            if c is not None:
-                out[c] += v
-                n += 1
-        return out, n
+        return np.array([-1 if c is None else c for c in (air.cell_of(index, r.lat, r.lon, 500.0)[0] for r in rows.itertuples())], np.int64)
+
+    def place(rows, values, at=None):
+        at = cell_of(rows) if at is None else at
+        out = np.zeros(len(cells), "<f4")
+        ok = at >= 0
+        np.add.at(out, at[ok], np.asarray(values, float)[ok].astype("<f4"))
+        return out, int(ok.sum())
 
     # schools: pupils from the national child share, spread over sites by sqrt(area)
     shapely.prepare(boundary)
@@ -960,8 +996,10 @@ def education_osm(city, boundary, kids):
     sizes = np.where(sizes > 0, sizes, med)
     children = pop * kids
     pupils = children.sum() * SCHOOL_ENROL
+    near_home = 0.0
     coverage = ("tier 0: OSM amenity=school sites in the boundary (public and private), pupils = population x national share aged 0-14 "
-                f"x {SCHOOL_ENROL}, spread by the square root of site area")
+                f"x {SCHOOL_ENROL}, spread by the square root of site area, at most {SCHOOL_SITE_MAX:,.0f} a site and "
+                f"{SCHOOL_CELL_MAX:,.0f} a cell")
     school_src = ["https://www.openstreetmap.org/copyright", WORLDBANK.format(iso2=cfg["iso2"])]
     if cfg.get("schools"):
         sch, coverage, url = cfg["schools"](boundary)
@@ -969,7 +1007,12 @@ def education_osm(city, boundary, kids):
         pupils = float(sch.pupils.sum())
         enr, n_s = place(sch, sch.pupils.to_numpy(float))
     else:
-        enr, n_s = place(sch, pupils * sizes / sizes.sum())
+        at = cell_of(sch)
+        site, near_home = school_site_pupils(pupils, sizes, at)
+        enr, n_s = place(sch, site, at)
+        if near_home > 0:
+            enr = (enr + children * (near_home / max(children.sum(), 1e-9))).astype("<f4")
+            coverage += f"; the {near_home / pupils:.1%} of pupils the sites cannot hold by children, at school where they live"
     # universities and colleges: Wikidata students by institution, split over its sites by area
     uni = ed[ed.kind.isin(["university", "college"]).to_numpy() & inb].copy()
     wd = wikidata_students(uni.wikidata[uni.wikidata != ""].tolist())
@@ -1016,7 +1059,7 @@ def education_osm(city, boundary, kids):
     with open(os.path.join(b.WORK, city + ".universities.audit.json"), "w") as f:
         json.dump([dict(name=r.name, wikidata=r.wikidata, m2=r.m2, students=s) for r, s in
                    zip(rows.itertuples(), site_students)], f, indent=1)
-    print(f"schools: {len(sch):,} sites, {enr.sum():,.0f} pupils of {pupils:,.0f}; universities: {known.wikidata.nunique()} with Wikidata "
+    print(f"schools: {len(sch):,} sites, {enr.sum():,.0f} pupils of {pupils:,.0f} ({near_home:,.0f} near home); universities: {known.wikidata.nunique()} with Wikidata "
           f"counts ({len(known)} sites), {len(unknown)} sites by area at {per_m2 * 1e4:.0f} a hectare, {raw_total:,.0f} students before "
           f"scaling, {uenr.sum():,.0f} after" + (f" ({ter:.4f} a resident, {ter_year})" if ter else " (no national figure, unscaled)"), flush=True)
 

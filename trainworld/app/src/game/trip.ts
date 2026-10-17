@@ -83,7 +83,6 @@ export interface TripPeriod {
    * model groups the places into), metres */
   distM: number;
   driveDistM: number;
-  walkShare: number;
   driveMin: number;
   drivePerceived: number;
   parkPerceived: number;
@@ -95,6 +94,8 @@ export interface TripPeriod {
   /** the train's share of the trips that do not walk, and its utility against the road */
   railOfMotor: number;
   utility: number;
+  /** shares of all trips walking the whole way (T-558: walking is a mode in the choice), by
+   * train, and by car or other */
   pWalk: number;
   pTrain: number;
   pDrive: number;
@@ -157,7 +158,7 @@ export function readTripPeriod(v: Float64Array, at: RouteNodes): TripPeriod | nu
   }
   const offered = v[13] === 1;
   return {
-    round: v[1], from: [v[27], v[28]], to: [v[29], v[30]], distM: v[6], driveDistM: v[7], walkShare: v[8],
+    round: v[1], from: [v[27], v[28]], to: [v[29], v[30]], distM: v[6], driveDistM: v[7],
     driveMin: v[9], drivePerceived: v[10], parkPerceived: v[11], roadPerceived: v[12],
     railOffered: offered, why: WHY[v[26]] ?? "", railPerceived: offered ? v[14] : NaN, railOfMotor: v[15], utility: v[16],
     pWalk: v[17], pTrain: v[18], pDrive: v[19], baseFarePerceived: v[22], minPerUsd: v[23], walkStartPerceived: v[20], walkEndPerceived: v[21], pairs, routes, cut: v[31],

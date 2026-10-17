@@ -56,7 +56,7 @@ function ModeBar({ t }: { t: TripPeriod }) {
         {parts.map(([n, v, c]) => v > 0 && <i class={"seg " + c} style={{ width: `${100 * v}%` }} data-tip={`${n}: ${pct(v)} of the people making this trip`} />)}
       </div>
       <ul class="rows">
-        {parts.filter(([n, v]) => n !== "Walk" || v >= 0.005).map(([n, v]) => (
+        {parts.filter(([n]) => n !== "Walk").map(([n, v]) => (
           <li data-tip={`${n}: ${(100 * v).toFixed(1)}% of the people making this trip in this period`}>
             <i class="mk" style={{ background: MODE_COLOURS[n === "Train" ? "train" : n === "Walk" ? "walk" : "drive"] }} />
             <span class="grow">{n}</span>
@@ -236,7 +236,6 @@ export function TripInspector() {
       {head}
       <p class="muted small">{PERIODS[q].name}, {distance(t.distM)} apart{tripPeriod.value === null ? "" : " (picked below)"}</p>
       <ModeBar t={t} />
-      {t.walkShare >= 0.005 && <p class="muted small">Walking takes {pct(t.walkShare)} of trips this short whatever the trains do.</p>}
       <div class="h">By train</div>
       {!t.railOffered ? <p class="muted">{NO_RAIL[t.why] ?? "No train."}</p> : main && tot && pair ? (
         <>
