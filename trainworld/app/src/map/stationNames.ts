@@ -60,6 +60,12 @@ function features(map: MlMap, sourceLayer: string): { geometry: Geometry; proper
 
 const nameOf = (p: Record<string, any>) => (p?.["name:latin"] || p?.name_en || p?.name) as string | undefined;
 
+/** A name that ends in "station" ("Light Rail Station", "Penn Sta.", "Stn") is a stop's own label
+ * in OSM, and never a suggestion, unless it is a settlement's name (Huntington Station, a real
+ * place: `kind` city, town, village or hamlet; T-568). */
+const SETTLEMENT = new Set(["city", "town", "village", "hamlet"]);
+export const endsInStation = (n: string, kind?: string) => /\b(station|sta|stn)\.?\s*$/i.test(n) && !(kind && SETTLEMENT.has(kind));
+
 /** Metres from (lng, lat) to a geometry, and the direction of the line there (unit, east and
  * north; null for a point). */
 function nearestOn(g: Geometry, lng: number, lat: number): { d: number; dir: [number, number] | null } {
@@ -90,7 +96,7 @@ function crossStreet(map: MlMap, lng: number, lat: number, track: [number, numbe
   const best = new Map<string, { d: number; dir: [number, number] | null }>();
   for (const f of features(map, "transportation_name")) {
     const raw = nameOf(f.properties);
-    if (!raw || f.properties?.class === "motorway") continue;
+    if (!raw || f.properties?.class === "motorway" || endsInStation(raw)) continue;
     const name = shorten(raw), n = nearestOn(f.geometry, lng, lat);
     if (n.d <= STREET_M && n.d < (best.get(name)?.d ?? Infinity)) best.set(name, n);
   }
@@ -108,7 +114,7 @@ function tilePlace(map: MlMap, lng: number, lat: number, taken: Set<string>): st
   const best = new Map<string, number>();
   for (const f of features(map, "place")) {
     const raw = nameOf(f.properties);
-    if (!raw || !kinds.includes(f.properties?.class)) continue;
+    if (!raw || !kinds.includes(f.properties?.class) || endsInStation(raw, f.properties?.class)) continue;
     const name = shorten(raw), d = nearestOn(f.geometry, lng, lat).d;
     if (d <= 1200 && d < (best.get(name) ?? Infinity)) best.set(name, d);
   }
@@ -119,7 +125,9 @@ function tilePlace(map: MlMap, lng: number, lat: number, taken: Set<string>): st
  * other stations' names, which each suggestion avoids. */
 export async function suggestNames(map: MlMap, lng: number, lat: number, track: [number, number] | null, taken: () => Set<string>): Promise<Suggestions> {
   const street = crossStreet(map, lng, lat, track, taken());
-  const [near, towns] = await Promise.all([placesNear(lng, lat).catch(() => []), townsNear(lng, lat).catch(() => [])]);
+  const [listed, listedTowns] = await Promise.all([placesNear(lng, lat).catch(() => []), townsNear(lng, lat).catch(() => [])]);
+  const keep = (n: NearPlace) => !endsInStation(n.place.name, n.place.kind);
+  const near = listed.filter(keep), towns = listedTowns.filter(keep);
   const t = taken(); // a station added meanwhile counts
   return { street, hood: placeName(hoodsNear(near), t), town: placeName(towns, t), near };
 }

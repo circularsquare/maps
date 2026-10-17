@@ -114,10 +114,10 @@ export type ToClock =
    * game/money.ts), one table per kind of day (T-260, game/days.ts `DayKind` order) */
   /** fare income per game hour in each period, per kind of day (US$M); `lines` the same per line
    * (T-293: each line's fares taken today) */
-  | { kind: "income"; perHour: number[][]; lines?: { line: number; perHour: number[][] }[] }
-  /** T-531: each running line's fares and running cost by region, [region, share] pairs
+  | { kind: "income"; perHour: number[][]; rides: number[][]; lines?: { line: number; perHour: number[][]; rides: number[][] }[] }
+  /** T-531: each running line's fares, train rides and running cost by region, [region, share] pairs
    * (game/regionMoney.ts) */
-  | { kind: "regionShares"; lines: { line: number; fare: [string, number][]; run: [string, number][] }[] }
+  | { kind: "regionShares"; lines: { line: number; fare: [string, number][]; ride: [string, number][]; run: [string, number][] }[] }
   /** T-531: how edit `seq`'s charge divides between regions */
   | { kind: "chargeShares"; seq: number; build: [string, number][]; trains: [string, number][] }
   /** demand's riders for the boarding account (T-164): `TrackApi.set_riders`'s packing, built by

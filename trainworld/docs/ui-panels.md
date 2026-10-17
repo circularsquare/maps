@@ -212,7 +212,25 @@ Cash (always the whole network's); yesterday and today (fares, running trains, n
 construction, net), headed by the Lines and Stations tabs' place-or-world toggle (T-332, one setting
 for all three): with the place on, these figures and History are that region's (T-531; the
 place's hover adds how a region's money is counted), with the globe the network's. A region with
-nothing in it shows $0. **Cities** [T-550, `ui/Cities.tsx`], under that table whatever the
+nothing in it shows $0. History
+[T-447, `ui/MoneyHistory.tsx`]: a Days / Hours switch (Days by default, kept while the game is
+open) over three charts. The first has fares (accent) and running costs (grey) as lines, scaled to
+the larger of the two, and one-off costs (new trains and construction) as pale bars on the same
+scale, cut at the top with a dark cap when larger, so a build day does not flatten the lines
+[T-452]; the top's figure at the right. Then net as bars up or down from zero (losses red). Then
+train rides [T-565] as bars up from zero, the top's figure at the right (hover: it exactly), the
+region's with the place on and the network's with the globe, from the same ledger entries (rides
+are counted as in track-and-service.md 6.4; a day from a save made before T-565 has none). Days are the ledger's, one each in order (T-488), up to the past 30;
+hours up to the past 48; a young game's few sit at the right of at least 7 days or 12 hours. The
+day or hour now is drawn as it fills (a dashed last segment, a paler bar) and moves as fares land.
+Hovering a column gives its day or hour ("Fri 5", "Sat 6, 04:00", "so far" for now) with fares,
+costs and their parts, or net, or its train rides. Days and hours are the game clock's (T-321). The
+charts are saved with the game and are there after a reload [T-567]. Then, for the whole
+network whatever the toggle: the fare curve
+(each ride, each km, and what a 10 km ride costs); cars owned (prices in its hover) and cars the
+lines need; the value of the track and stations built. Rules: [track-and-service.md](track-and-service.md)
+6.4. The economy's 100x scaling is in the hover of "A day at this schedule".
+**Cities** [T-550, `ui/Cities.tsx`], last in the tab and whatever the
 toggle: a list of every region (the toggle's regions) with a built station, one row each: its name
 (hover: its station count), its mode split bar as the top bar draws it (the same colours and the
 same hover), its train rides a day and its money a day, fares less running trains (yesterday's, today so far
@@ -221,20 +239,8 @@ construction, left out of the figure, when there were any; losses red). Sorted b
 column (name, train share, rides, money) as in the Lines tab; a click on a row moves the camera to
 the region as search does, and the viewed region's row is tinted. It lives here and not in
 Stations because the row's money is this tab's region ledger and a click on a row changes the
-region the table above follows; a fifth dock tab button was ruled out by [T-532]. History
-[T-447, `ui/MoneyHistory.tsx`]: a Days / Hours switch (Days by default, kept while the game is
-open) over two charts. The first has fares (accent) and running costs (grey) as lines, scaled to
-the larger of the two, and one-off costs (new trains and construction) as pale bars on the same
-scale, cut at the top with a dark cap when larger, so a build day does not flatten the lines
-[T-452]; the top's figure at the right. Then net as bars up or down from zero (losses red). Days are the ledger's, one each in order (T-488), up to the past 30;
-hours up to the past 48; a young game's few sit at the right of at least 7 days or 12 hours. The
-day or hour now is drawn as it fills (a dashed last segment, a paler bar) and moves as fares land.
-Hovering a column gives its day or hour ("Fri 5", "Sat 6, 04:00", "so far" for now) with fares,
-costs and their parts, or net. Days and hours are the game clock's (T-321). Then, for the whole
-network whatever the toggle: the fare curve
-(each ride, each km, and what a 10 km ride costs); cars owned (prices in its hover) and cars the
-lines need; the value of the track and stations built. Rules: [track-and-service.md](track-and-service.md)
-6.4. The economy's 100x scaling is in the hover of "A day at this schedule".
+region the table above follows; a fifth dock tab button was ruled out by [T-532]. It sits at the
+bottom so the figures above come first; there is no list until a station is built.
 
 ## Saved games
 

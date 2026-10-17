@@ -46,6 +46,9 @@ key.
   column (names A to Z, figures biggest first, Near nearest first), a second reverses it, the sorted
   column has a small arrow, and each header's hover says what it sorts by. Names sort naturally, ties
   by name. Lines default to by name. The sort is kept while the page is open and re-runs each game hour.
+  A double click on a row fits the map to the line's stops (a jump, as search does) after the
+  single click selected it [T-569, `ui/locate.ts`]; the line inspector's locate button (cross
+  hairs, hover "Show on the map", beside the pencil) does the same.
 - **Trains to add** [T-472, T-491]: a row's train count (the trains its level needs now, the bare
   number under the "Trains" header [T-532]) is coloured by the crowding score of the line's period now, otherwise muted. The score is the
   average rider's extra wait for a train with room (rider-minutes spent on the platform after a
@@ -128,7 +131,8 @@ key.
   toggle and distance column are the Lines tab's (above); the footer reads "N of M stations" when
   only the viewed place is listed. A row is a station complex [T-530]: the name of its member with
   the most lines, every line stopping at any member, boardings summed over the members, and a
-  click selects the complex as a click on the map does; a station on its own is its own row, and
+  click selects the complex as a click on the map does and a double click also moves the map to
+  that member, to zoom 14 or closer so its platform boxes show [T-569]; a station on its own is its own row, and
   M counts complexes. The boardings figure is a fixed column, right-aligned. The name comes first
   [T-530, Anita]: every bullet shows when the whole name fits beside them; otherwise as many as fit
   beside the whole name, never fewer than 3, and only then is the name cut with "...". Bullets left
@@ -184,7 +188,8 @@ key.
 - **Renaming** [T-534, `ui/inspector/NameEdit.tsx`]: a station's and a line's name both edit in
   place from a double click on the name or the pencil beside it (hover "Rename, or double click the
   name"), its text selected; Enter or leaving the box keeps it, Escape drops it, an empty name is
-  ignored. A station's title also has the cycle button (two arrows, hover "Next suggested name"):
+  ignored. A station's title also has the locate button [T-569] (cross hairs, hover "Show on the map",
+  beside the pencil: the same move as a double click on its row) and the cycle button (two arrows, hover "Next suggested name"):
   each click renames it to the next of its suggestions, the cross street, the neighbourhood and the
   city or town, wrapping round, worked out then from where it stands (map/stationNames.ts,
   [track-and-service.md](track-and-service.md) "Placing stations"). The cross street needs the

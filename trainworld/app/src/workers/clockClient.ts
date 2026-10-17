@@ -268,11 +268,16 @@ export class ClockClient {
       const per = days.map((i) => i.perHour);
       // T-293: each line's too, for its fares taken today
       const ids = new Set(days.flatMap((i) => [...i.lines.keys()]));
-      const lines = [...ids].map((id) => ({ line: Number(id), perHour: days.map((i) => i.lines.get(id)?.perHour ?? (per[0] ?? []).map(() => 0)) }));
-      const key = JSON.stringify([per, lines]);
+      const lines = [...ids].map((id) => ({
+        line: Number(id),
+        perHour: days.map((i) => i.lines.get(id)?.perHour ?? (per[0] ?? []).map(() => 0)),
+        rides: days.map((i) => i.lines.get(id)?.rides ?? (per[0] ?? []).map(() => 0)),
+      }));
+      const rides = days.map((i) => i.rides);
+      const key = JSON.stringify([per, rides, lines]);
       if (key !== lastIncome) {
         lastIncome = key;
-        this.post({ kind: "income", perHour: per, lines });
+        this.post({ kind: "income", perHour: per, rides, lines });
       }
     });
     // T-531: each line's money by region, whenever lines, riders or zone boundaries change it

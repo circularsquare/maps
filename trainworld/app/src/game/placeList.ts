@@ -105,9 +105,9 @@ export async function placesNear(lng: number, lat: number): Promise<NearPlace[]>
 /** Kinds that divide a city; a station takes one's name only if the place is small. */
 const HOOD_KINDS = new Set(["neighbourhood", "quarter", "suburb"]);
 /** A subdivision is small when another place of its kind lies within this distance of its label:
- * places of one kind tile a city at about their own size, so this caps its size at about 3 km
- * across (DECISIONS 2026-10-16; Manhattan's nearest fellow suburb is 12 km off). */
-const HOOD_PEER_MAX_M = 3000;
+ * places of one kind tile a city at about their own size, so this caps its size at about 3.5 km
+ * across (DECISIONS 2026-10-16; Manhattan's nearest fellow suburb is 12 km off, Harlem's 3.4 km). */
+const HOOD_PEER_MAX_M = 3500;
 /** ...and when OSM gives a population, at most this many people. */
 const HOOD_POP_MAX = 200_000;
 /** A subdivision names stations within 1.5 times its peer spacing of its label (labels sit off

@@ -59,8 +59,9 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 - Other: `money.ts` (cash and ledger from the worker, fare income from riders, T-028),
   `regionMoney.ts` (each line's and each construction's split between regions, the region ledgers, T-531), `issues.ts`
   (the track model's refusals in plain words), `loading.ts` (what is loading, the startup gate and
-  the clock hold, T-149, T-172), `palette.ts`, `shades.ts` (the light and dark themes' map
-  colours: basemap, line casing, map ink, T-039), `format.ts`.
+  the clock hold, T-149, T-172), `palette.ts`, `shades.ts` over `shadeTable.ts` (the light and dark themes' map
+  colours: basemap, line casing, map ink, blueprint off, outside shade, thumbnails; the table has no
+  page behind it so the clock worker reads it, T-039, T-543), `format.ts`.
 - The `WorldView` is built from the clock worker's states in `workers/clockClient.ts`.
 
 ### src/map/: the map and what is drawn on it
@@ -98,14 +99,14 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 ### src/ui/: Preact components
 
 `Dock.tsx` (the dock, its icon tabs and resizing, T-252); `tabs.tsx` (Build, Lines, Stations and
-Money); `MoneyHistory.tsx` (the Money tab's history charts, T-447); `SettingsTab.tsx`; `SavesPanel.tsx` (saved games, T-251); `widgets.tsx` (chips, steppers,
+Money); `MoneyHistory.tsx` (the Money tab's history charts, T-447); `Cities.tsx` (its Cities list, T-550); `SettingsTab.tsx`; `SavesPanel.tsx` (saved games, T-251); `widgets.tsx` (chips, steppers,
 checkboxes and the inline SVG icons); `TopBar.tsx`; `StatusTag.tsx` (the demand status tag on the map's top row); `Toolbar.tsx` (tool hints and the confirmation
 dialog); `DemandSelector.tsx` (None/Homes/Destinations and the purpose filter); `Blueprint.tsx`
 (Build's quote and Construct, and the Select tool's selection bar on the map, T-353); `Debug.tsx` (the `?debug=1` readout); `inspector/` (one inspector
 per selection kind: `others.tsx` holds station, train, track, junction and cell or zone;
 `ComplexMap.tsx` the complex map; `NameEdit.tsx` a station's or line's name edited in place, T-534); `LoadingScreen.tsx` (the clock hold at startup, the loading card,
 the screen when demand cannot load, T-149, T-172, T-180); `Search.tsx` (T-148); `StationsFull.tsx`
-(the "N stations full" button, T-231); `keys.ts` (which keys a focused control keeps, T-183);
+(the "N stations full" button, T-231); `keys.ts` (which keys a focused control keeps, T-183); `locate.ts` (the camera to a station or a line: search picks, the tabs' double click, the inspectors' locate button, T-569);
 `tip.ts` (the hover tag for every panel and control, from `data-tip`, never `title`, T-210);
 `blurHold.ts` (every hover kept up through a window blur until the pointer moves, T-483);
 `style.css` (theme tokens).
@@ -182,8 +183,19 @@ Run from the maps root (`node trainworld/checks/<file>`).
   trace spent its time on), `t161-complexes.mjs` (the real save's complexes for the native
   comparison), `t125-fingerprint.mjs` (a save's derived geometry, before and after a frame
   change), `t277-browser.mjs` (Toronto; not rerun since T-277), `city-browser.mjs <id>` (a tier 0
-  city, London and Paris so far: open, boundary, the top bar's split, a water crossing refused, a
-  test line to a final solve; a new city adds a row to its table, T-364).
+  city: open, boundary, the top bar's split, a water crossing refused, a test line to a final solve,
+  T-364; a row from its table, or from the file in `ROW`, which `pack_gate.py` writes for any pack).
+- `pack_gate.py <id ...> [--all] [--browser] [--since snap] [--log id=build.log]` (Python, T-538):
+  the ship-or-park gate for a finished pack, pipeline stage 6 (notes/T-535.md). Every check a
+  number against `THRESHOLDS` at the top of the file: `read_pack.py`, OSM water points (polylabel on
+  the extract's water cache) in the mask and OSM stations (`railway=station|halt`, one cached
+  Overpass request a pack, `data/raw/stations/`) on land, `every_pack_everyday`'s rates (`TW_PACKS`),
+  the browser check on a row it makes (a test line along OSM stations near the centre, a water pair
+  from the mask), other packs unchanged against a `snapshot`, and the plausibility figures (people
+  against GHSL and the FUA, outline, jobs, commute, schools, hospitals, roads, T-460's OSM signal),
+  plus a WARN outside the fleet's range (`pack_gate_fleet.json`, from `fleet`). JSON a pack in
+  `../artifacts/trainworld/pack_gate/`; one summary line a pack. Thresholds and the 67-pack result:
+  notes/T-538.md.
 
 ## pipeline/: city packs (Python)
 
@@ -214,7 +226,8 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   before any step that rewrites a pack (enrichments, routes, `intercity.py`), `--stats` only counts.
 - `nocar.py <ids> | --all` adds `nocar` (people in households with no car, per cell; T-511) to
   the res-9 copy and the merged pack, append-only; rerun it after anything that rebuilds a pack
-  (its sources: docs/data-register.md "Car ownership").
+  (its sources: docs/data-register.md "Car ownership"); `--plan` prints every planned country's
+  share and source, writing nothing.
 - `everyday_rates.py <ids> | --all` writes the `everyday` header block (the country's survey
   outing rates and distance scales by purpose, T-509 stage 4; table `SURVEYS`, worldwide median
   otherwise) into the merged pack and its res-9 copy; rerun it after anything that rebuilds a pack
@@ -247,6 +260,14 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   built as a batch (T-420 stage 3).
 - `register.py <ids> [--market] [--trips]`: a built batch's registry entries, boxes, market packs
   and local trips in one call (T-441).
+- `world_plan.py [check] [--fresh]`: the world plan (T-536), which metros get a pack, in what
+  order, with which admin units, written to `pipeline/world_plan.json` (extents in
+  `data/work/worldplan/`); `check` adds the eight-pack test and the next-50 picture; `row <pack>
+  <out.json>` plans one existing pack's metro as if the pack did not exist (a test build, T-537).
+- `plan_config.py`: a planned row's `CITIES` config, every field from the row or a rule, then its
+  country module's `plan_hooks(row)` keys (T-555; `build_city.py` takes every planned row through
+  it); `osm_units.py <id>`: its outline from the
+  OSM admin relations matching the row's units (T-537, docs/adding-a-city.md 3).
 - Real networks and calibration (T-007, T-509): `realnet.py net <city>` turns a city's sources
   (GTFS, OSM route relations from `realnet.py fetch-osm <city>`, or a CSV of timetabled trips;
   `CITIES` lists each city's) into a demand test network in `data/work/realnet/`; `realnet.py`

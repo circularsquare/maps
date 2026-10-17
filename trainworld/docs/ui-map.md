@@ -225,6 +225,10 @@ intercept. Station names, airport badges and the stop editor's markers take no c
 one reaches what is under it (a badge sits on its own airport's bubble; the stop markers' station
 is picked by the stop tool). Network
 hits reach 7 px from the centre line, or half the drawn width where a line is wider [T-227].
+Demand discs
+drawn under 8 px in radius are hit within 8 px of their centre [T-566, `MIN_PICK_PX` in
+`map/demandHover.ts`; the hover tag follows the same test], unless a disc drawn above them holds
+the pointer; where those areas overlap the nearest centre wins.
 Clicking the line already selected selects the track under it. Clicking a selection's longer-trip discs keeps the
 parent selection. Selected editing handles stay draggable above the
 demand view.

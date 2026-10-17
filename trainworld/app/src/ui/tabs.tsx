@@ -26,6 +26,7 @@ import { Check, Chip, Icon, Row, Segmented, SortHead, Stepper } from "./widgets"
 import { CitiesList } from "./Cities";
 import { BlueprintBreakdown, BlueprintControls, BlueprintPick } from "./Blueprint";
 import { MoneyHistory } from "./MoneyHistory";
+import { locateLine, locateStation } from "./locate";
 
 const STATUS: Record<string, string> = { running: "", planned: "Planned", broken: "Broken" };
 
@@ -223,7 +224,7 @@ export function LinesTab() {
           const st = w.lineStats[l.id];
           const on = (sel?.kind === "line" || sel?.kind === "train") && sel.line === l.id;
           return (
-            <li class={on ? "on" : ""} onClick={() => (selection.value = { kind: "line", line: l.id })}>
+            <li class={on ? "on" : ""} onClick={() => (selection.value = { kind: "line", line: l.id })} onDblClick={() => locateLine(l.stops)}>
               <Chip line={l} />
               <span class="grow">{l.name}</span>
               {st.status !== "running" ? (
@@ -389,7 +390,7 @@ export function StationsTab() {
       ]} />}
       <ul class="rows pick stations">
         {st.map((r) => (
-          <li class={sel?.kind === "station" && r.members.includes(sel.station) ? "on" : ""} onClick={() => (selection.value = { kind: "station", station: r.lead.id })}>
+          <li class={sel?.kind === "station" && r.members.includes(sel.station) ? "on" : ""} onClick={() => (selection.value = { kind: "station", station: r.lead.id })} onDblClick={() => locateStation(r.lead.lng, r.lead.lat)}>
             <span class={"grow" + (r.built ? "" : " muted")}><span>{r.lead.name}</span></span>
             <Chips lines={r.lines} name={r.lead.name} />
             {r.built ? <StationToday ids={r.members} /> : <span class="val w-num">Plan</span>}
@@ -474,7 +475,6 @@ export function MoneyTab() {
           <TodayCell zone={zone} v={ledgerNet} />
         </tr>
       </table>
-      <CitiesList />
       <MoneyHistory zone={zone} />
       <div class="h">Fare</div>
       <ul class="rows">
@@ -496,6 +496,7 @@ export function MoneyTab() {
       <ul class="rows">
         <Row label="Track and stations built">{money(w.money.builtValue)}</Row>
       </ul>
+      <CitiesList />
     </>
   );
 }

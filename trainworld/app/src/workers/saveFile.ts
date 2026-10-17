@@ -4,7 +4,8 @@
 // File layout, gzip-compressed as a whole:
 //   "TWG1"                 magic
 //   u32 little-endian      length of the JSON header in bytes
-//   JSON header (UTF-8)    `SaveHeader`: city, clock, money, fares, the day ledger
+//   JSON header (UTF-8)    `SaveHeader`: city, clock, money, fares, the day and hour ledgers (the money
+//                          and train rides history charts), each also per region
 //   the rest               the track model's network save (`TrackApi.save()`: "TWT6" Mercator world frame since
 //                          T-306; older saves, "TWT5" conic since T-125, "TWT4" and TWT2/3 legacy frame, are
 //                          converted to Mercator when they load, T-308)
@@ -26,6 +27,8 @@ export interface DayLedger {
   running: number;
   trains: number;
   build: number;
+  /** train rides taken (T-565); absent in days saved before it, read as 0 */
+  rides?: number;
 }
 
 /** One game hour's money, US$M (T-447); `hour` counts from day 0 00:00. */
@@ -35,6 +38,8 @@ export interface HourLedger {
   running: number;
   trains: number;
   build: number;
+  /** train rides taken (T-565), as in `DayLedger` */
+  rides?: number;
 }
 
 export interface SaveHeader {

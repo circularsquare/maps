@@ -3,7 +3,7 @@
 
 import type { Map as MlMap } from "maplibre-gl";
 import { DISC } from "../workers/commutersProtocol";
-import { toLocal, type Anchor } from "./geo";
+import { EARTH_C, toLocal, type Anchor } from "./geo";
 import { hoverHeld } from "../ui/blurHold";
 
 /** Where the pointer is on the ground. Each disc set is in the local units of its own draw anchor
@@ -11,7 +11,11 @@ import { hoverHeld } from "../ui/blurHold";
 export interface Pointer {
   lng: number;
   lat: number;
+  /** local units per CSS px at the current zoom; without it discs have no minimum pick radius */
+  lpx?: number;
 }
+/** A disc drawn smaller than this radius (CSS px) is still hit within it (T-566). */
+export const MIN_PICK_PX = 8;
 /** A finder gets the pointer and answers the tag's lines, or null. */
 export type Finder = (p: Pointer) => string[] | null;
 const finders: { order: number; f: Finder }[] = [];
@@ -23,21 +27,36 @@ export function addFinder(order: number, f: Finder) {
 }
 
 /** The topmost disc of a set (drawn last, built relative to anchor `a`) containing the pointer,
- * or -1; radii times `scale`. */
+ * or -1; radii times `scale`. A disc drawn under MIN_PICK_PX counts as that wide, unless the
+ * topmost disc containing the pointer is drawn above it; where those wider areas overlap the
+ * nearest centre wins (T-566). */
 export function discAt(discs: Float32Array | null, p: Pointer, a: Anchor, scale = 1): number {
   if (!discs) return -1;
   const [x, y] = toLocal(p.lng, p.lat, a);
-  for (let i = discs.length / DISC - 1; i >= 0; i--) {
+  const n = discs.length / DISC, minR = (p.lpx ?? 0) * MIN_PICK_PX;
+  let top = -1;
+  for (let i = n - 1; i >= 0; i--) {
     const dx = discs[i * DISC] - x, dy = discs[i * DISC + 1] - y, r = discs[i * DISC + 2] * scale;
-    if (dx * dx + dy * dy <= r * r) return i;
+    if (dx * dx + dy * dy <= r * r) {
+      top = i;
+      break;
+    }
   }
-  return -1;
+  if (!minR) return top;
+  let best = top, bestD = Infinity;
+  for (let i = n - 1; i > top; i--) {
+    const r = discs[i * DISC + 2] * scale;
+    if (!(r > 0) || r >= minR || !(discs[i * DISC + 6] > 0)) continue;
+    const dx = discs[i * DISC] - x, dy = discs[i * DISC + 1] - y, d = dx * dx + dy * dy;
+    if (d <= minR * minR && d < bestD) (best = i), (bestD = d);
+  }
+  return best;
 }
 
 /** Pointer (CSS px in the map) to a place on the ground. */
 export function pointerAt(map: MlMap, px: number, py: number): Pointer {
   const ll = map.unproject([px, py]);
-  return { lng: ll.lng, lat: ll.lat };
+  return { lng: ll.lng, lat: ll.lat, lpx: EARTH_C / (512 * 2 ** map.getZoom()) };
 }
 
 /** The pointer in local units of anchor `a`. */

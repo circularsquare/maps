@@ -41,11 +41,15 @@ const PERIOD_HOURS = PERIODS.map((p) => p.to - p.from);
 export interface LineMoney {
   /** fare income per game hour in each period, US$M (the worker's fares taken today, T-293) */
   perHour: number[];
+  /** train rides per game hour in each period (T-565) */
+  rides: number[];
 }
 
 export interface Income {
   /** fare income per game hour in each period, US$M */
   perHour: number[];
+  /** train rides per game hour in each period, by the share of each period's passenger-km (T-565) */
+  rides: number[];
   lines: Map<string, LineMoney>;
 }
 
@@ -55,9 +59,9 @@ export const incomeByDay = computed<Income[]>(() => demandByDay.value.slice(0, D
 
 function incomeFor(dv: DemandView | null): Income {
   const w = world.value, m = moneyState.value;
-  const perPeriod = PERIODS.map(() => 0);
+  const perPeriod = PERIODS.map(() => 0), ridesPeriod = PERIODS.map(() => 0);
   const lines = new Map<string, LineMoney>();
-  if (!w || !m) return { perHour: perPeriod, lines };
+  if (!w || !m) return { perHour: perPeriod, rides: ridesPeriod, lines };
   const { base, perKm } = m.fares;
   const x = m.economy;
   const boardings = w.save.lines.reduce((a, l) => a + (dv?.lines.get(l.id)?.ridersPerDay ?? 0), 0);
@@ -65,7 +69,7 @@ function incomeFor(dv: DemandView | null): Income {
   for (const l of w.save.lines) {
     const st = w.lineStats[l.id];
     if (!st || st.status !== "running") continue;
-    const linePer = PERIODS.map(() => 0);
+    const linePer = PERIODS.map(() => 0), lineRides = PERIODS.map(() => 0);
     const dm = dv?.lines.get(l.id);
     const n = l.stops.length;
     if (dm && st.stopS[0]?.length === n && st.stopS[1]?.length === n) {
@@ -76,12 +80,15 @@ function incomeFor(dv: DemandView | null): Income {
       const total = pkm.reduce((a, b) => a + b, 0);
       const rides = dm.ridersPerDay * tripsPerBoarding;
       pkm.forEach((pk, p) => {
-        const r = (base * rides * (total > 0 ? pk / total : 0) + perKm * pk) * x;
+        const share = total > 0 ? pk / total : 0;
+        const r = (base * rides * share + perKm * pk) * x;
         perPeriod[p] += r;
         linePer[p] += r;
+        ridesPeriod[p] += rides * share;
+        lineRides[p] += rides * share;
       });
     }
-    lines.set(l.id, { perHour: linePer.map((v, p) => v / PERIOD_HOURS[p] / 1e6) });
+    lines.set(l.id, { perHour: linePer.map((v, p) => v / PERIOD_HOURS[p] / 1e6), rides: lineRides.map((v, p) => v / PERIOD_HOURS[p]) });
   }
-  return { perHour: perPeriod.map((v, p) => v / PERIOD_HOURS[p] / 1e6), lines };
+  return { perHour: perPeriod.map((v, p) => v / PERIOD_HOURS[p] / 1e6), rides: ridesPeriod.map((v, p) => v / PERIOD_HOURS[p]), lines };
 }

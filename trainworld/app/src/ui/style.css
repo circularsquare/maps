@@ -118,7 +118,7 @@ body.resizing, body.resizing * { user-select: none; }
 .rows > li:last-child { border-bottom: 0; }
 .rows .grow { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rows .val { font-variant-numeric: tabular-nums; text-align: right; }
-.rows.pick > li { cursor: pointer; padding: 0 6px; margin: 0 -6px; }
+.rows.pick > li { cursor: pointer; padding: 0 6px; margin: 0 -6px; user-select: none; }
 .rows.pick > li:hover { background: var(--shade); }
 .rows.pick > li.on { background: var(--tint); }
 .w-trains { width: 68px; }
@@ -281,6 +281,7 @@ circle.hist-fares { fill: var(--accent); stroke: none; }
 circle.hist-costs { fill: var(--muted); stroke: none; }
 .hist-gain { fill: var(--accent); stroke: none; }
 .hist-loss { fill: var(--bad); stroke: none; }
+.hist-rides { fill: var(--accent); stroke: none; }
 path.now { stroke-dasharray: 3 3; }
 rect.now { fill-opacity: .45; }
 .hist-col { fill: var(--text); fill-opacity: 0; stroke: none; }

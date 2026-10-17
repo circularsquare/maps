@@ -167,8 +167,9 @@ Web first, so it can be shared as a link.
 ## 11. Saves
 
 A save is the player's inputs only: track, stations, lines, schedules, fares, money (cash, cars
-owned, the ledger's last 30 days and 48 hours, T-447), clock, empty line drafts, custom badge symbols, the line-name
-counter, and the player's station links. Population, jobs and travel come from versioned packs;
+owned, the ledgers' last 30 days and 48 hours, for the network and for each region, which are the
+Money tab's history charts: fares, costs, net and train rides; T-447, T-531, T-565, T-567), clock,
+empty line drafts, custom badge symbols, the line-name counter, and the player's station links. Population, jobs and travel come from versioned packs;
 all results are recomputed. About 100 KB compressed per 10,000 route-km (T-040).
 
 - **Format** [T-029, `workers/saveFile.ts`]: `TWG1`, a JSON header and the track model's network
@@ -177,7 +178,11 @@ all results are recomputed. About 100 KB compressed per 10,000 route-km (T-040).
   magic; its origin fields keep the game's home origin, unused by the frame, and its radii are ground
   metres. Optional trailing blocks: TWT4 metadata (drafts, symbols, the counter, T-110/T-111) and
   `LNK1` for links, written only when there are any [T-197]. Every zone's track, service and money
-  is in the one network [T-116].
+  is in the one network [T-116]. The header's `ledger`, `hours` and `regions` (per zone id, "" for
+  outside every zone) hold the history charts' data, loaded back as they were, so a reload keeps the
+  charts; money is saved to the dollar and rides to a tenth, which gzips to about 60% of full
+  precision. An entry without `rides` (a save from before T-565) reads as 0 rides, and a save with
+  no `hours` or `regions` starts those empty. Sizes: notes/T-567.md.
 - **Older frames** [T-308; [world.md](world.md)]: a file or slot in TWT5 (the Northeast conic) or
   TWT4 and older (equirectangular) is converted to Mercator as it loads (`convert_save_frame` in the
   clock worker) and the slot written again at once in TWT6; the old bytes stay under a hidden key

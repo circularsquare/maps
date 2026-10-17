@@ -19,13 +19,12 @@ import type { LineInput } from "../game/types";
 import { world } from "../game/world";
 import { live } from "../map/live";
 import { keyIsTheirs } from "./keys";
+import { locateLine, locateStation } from "./locate";
 import { goToCity } from "./Cities";
 import { Chip } from "./widgets";
 
 /** T-400: a search showing fewer results than this asks for more zones' place lists. */
 const WANT = 5;
-/** Closest zoom a station result opens at, unless the map is already closer. */
-const STATION_ZOOM = 14;
 /** The zoom a town or neighbourhood opens at (T-177), by its OSM kind: a town whole, a
  * neighbourhood at street level. */
 const PLACE_ZOOM: Record<string, number> = {
@@ -54,25 +53,14 @@ export function goTo(hit: SearchHit) {
     return;
   }
   if (hit.kind === "station") {
-    map?.jumpTo({ center: [hit.lng, hit.lat], zoom: Math.max(map.getZoom(), STATION_ZOOM) });
-    activeCity.value = zoneAt(hit.lng, hit.lat);
+    locateStation(hit.lng, hit.lat);
     if (!selecting) return;
     // a name shared by several platforms of one complex selects the member with the most lines;
     // the Station / Complex setting stays as the player had it (Anita, T-182)
     selection.value = { kind: "station", station: hit.target };
     return;
   }
-  const w = world.peek();
-  const stops = (w?.save.stations ?? []).filter((s) => hit.line.stops.includes(s.id));
-  if (map && stops.length === 1) map.jumpTo({ center: [stops[0].lng, stops[0].lat], zoom: Math.max(map.getZoom(), STATION_ZOOM) });
-  else if (map && stops.length > 1) {
-    const lng = stops.map((s) => s.lng), lat = stops.map((s) => s.lat);
-    map.fitBounds([[Math.min(...lng), Math.min(...lat)], [Math.max(...lng), Math.max(...lat)]], { padding: 60, maxZoom: 15, duration: 0 });
-  }
-  if (stops.length) {
-    const c = map?.getCenter();
-    if (c) activeCity.value = zoneAt(c.lng, c.lat);
-  }
+  locateLine(hit.line.stops);
   if (selecting) selection.value = { kind: "line", line: hit.line.id };
 }
 

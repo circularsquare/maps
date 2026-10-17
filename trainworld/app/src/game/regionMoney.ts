@@ -28,10 +28,11 @@ function norm(m: Map<string, number>): Shares {
 }
 const add = (m: Map<string, number>, k: string, v: number) => m.set(k, (m.get(k) ?? 0) + v);
 
-/** Each running line's split of its fares and of its running cost between regions, by line number. */
+/** Each running line's split of its fares, its train rides (by where they board, T-565) and its
+ * running cost between regions, by line number. */
 export const lineShares = computed(() => {
   const w = world.value, m = moneyState.value;
-  const out = new Map<number, { fare: Shares; run: Shares }>();
+  const out = new Map<number, { fare: Shares; ride: Shares; run: Shares }>();
   if (!w || !m) return out;
   void zonesLoaded.value; // boundaries arriving re-place the stations
   const dv = demandByDay.value[0]?.view ?? null;
@@ -53,7 +54,7 @@ export const lineShares = computed(() => {
     const run = norm(km);
     // run 0's segments run stop k to k + 1, run 1's the stops in reverse (LineDemand.loads)
     const dm = dv?.lines.get(l.id);
-    let fare = run;
+    let fare = run, ride = run;
     if (dm && st.stopS[1]?.length === n) {
       const ends: [string, string, number][] = [];
       for (let r = 0; r < 2; r++) {
@@ -67,15 +68,17 @@ export const lineShares = computed(() => {
         ends.forEach(([a, b, d], k) => { const v = per[k] * d; add(pkm, a, v / 2); add(pkm, b, v / 2); pkmAll += v; });
       }
       dm.boardings.forEach((v, k) => add(board, z[k] ?? "", v));
+      const byBoarding = norm(board);
+      if (byBoarding.length) ride = byBoarding;
       const base = m.fares.base * dm.ridersPerDay * tripsPerBoarding, perKm = m.fares.perKm * pkmAll;
       if (base + perKm > 0) {
         const mix = new Map<string, number>();
-        for (const [k, v] of norm(board)) add(mix, k, v * base);
+        for (const [k, v] of byBoarding) add(mix, k, v * base);
         for (const [k, v] of norm(pkm)) add(mix, k, v * perKm);
         fare = norm(mix);
       }
     }
-    out.set(l.num, { fare, run });
+    out.set(l.num, { fare, ride, run });
   }
   return out;
 });
@@ -110,7 +113,7 @@ export function regionLedger(zone: string | null): { ledger: DayLedger[]; hours:
   const r = m.regions?.[zone], l = live.regions?.[zone];
   const day = live.today?.day ?? m.ledger.at(-1)?.day, hour = live.hour?.hour ?? m.hours.at(-1)?.hour;
   const lastDay = r?.ledger.at(-1), lastHour = r?.hours.at(-1);
-  const zero = { fares: 0, running: 0, trains: 0, build: 0 };
+  const zero = { fares: 0, running: 0, trains: 0, build: 0, rides: 0 };
   return {
     ledger: r?.ledger ?? [], hours: r?.hours ?? [],
     today: l?.today ?? (lastDay?.day === day ? lastDay! : day !== undefined ? { day, ...zero } : null),

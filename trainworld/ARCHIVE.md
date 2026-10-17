@@ -1,5 +1,10 @@
 ﻿# Archive
 
+- T-566 [P2] Small bubbles easier to click. Done 2026-10-16: a disc drawn under 8 px radius is hit within 8 px of its centre (`MIN_PICK_PX`, `discAt`), nearest centre wins, never through a disc drawn above it; the hover tag follows.
+- T-568 [P2] Suggested names never end in "station". Done 2026-10-16: `endsInStation` ("station", "sta", "stn", any case, optional dot) drops streets, neighbourhoods and tile labels so the next candidate shows; a city, town, village or hamlet keeps its name (Huntington Station).
+- T-569 [P2] Locate. Done 2026-10-16: a double click on a Stations or Lines row, and a locate button beside the pencil in both inspectors, jump the map to the station (zoom 14 or closer) or fit the line (`ui/locate.ts`, shared with search).
+- T-565 [P2] Cities list, part two. Done 2026-10-16: the list is last in the Money tab (it rendered in a fresh Osaka game, so likely only an older 8800 build or scrolled past); History has a train rides chart for the region or the network, hover per day. `ui/MoneyHistory.tsx`.
+- T-567 [P2] History across sessions. Done 2026-10-16: the ledgers were already in the save header, and now carry `rides`, rounded on save; old saves load (rides 0). 60 days + 48 hours adds about 5 KB to the real save. notes/T-567.md.
 - T-538 [P2] Pipeline stage 6, the pack gate. Done 2026-10-16: `checks/pack_gate.py`, thresholds settled on the 67 packs: 62 ship, 5 park on real faults (T-572-T-574); `every_pack_everyday` reads the registry. notes/T-538.md.
 - T-424 [P3] Test-line stations and water points from OSM. Done 2026-10-16 inside T-538: the gate's browser row follows OSM `railway=station|halt` near the centre (Overpass, cached), water points are polylabels on the water cache. notes/T-538.md.
 

@@ -27,6 +27,7 @@ import { today, useToday, type LineToday } from "../../game/today";
 import { Chip, Icon, Row, Segmented, Stepper } from "../widgets";
 import { nextSuggestion } from "../../map/stationNames";
 import { NameEdit } from "./NameEdit";
+import { locateStation } from "../locate";
 import { StationRiders } from "./StationRiders";
 import { StationLongerTrips } from "./LongerTrips";
 import { ComplexMap } from "./ComplexMap";
@@ -239,6 +240,9 @@ export function StationInspector({ id }: { id: string }) {
         <NameEdit key={id} name={s.name} onRename={(n) => props(s.length, n)}>
           <button class="btn icon" data-tip="Next suggested name" aria-label="Next suggested name" onClick={() => void cycle()}>
             <Icon.cycle />
+          </button>
+          <button class="btn icon" data-tip="Show on the map" aria-label="Show on the map" onClick={() => locateStation(s.lng, s.lat)}>
+            <Icon.locate />
           </button>
         </NameEdit>
       </div>

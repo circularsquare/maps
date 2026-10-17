@@ -102,12 +102,16 @@ Full design, numbers and sources: `notes/T-008.md`.
     any street whose direction where it comes nearest is within 30° of the track's there (the
     street the line runs along, or one nearly parallel) and names in use;
   - **the neighbourhood**: the nearest OSM neighbourhood, quarter or suburb on the city's place
-    list (T-065, `game/placeList.ts`) that is small: another place of its kind lies within 3 km
+    list (T-065, `game/placeList.ts`) that is small: another place of its kind lies within 3.5 km
     of its label, and its OSM population, if given, is at most 200,000 (so never "Manhattan" or
     "Brooklyn"). It reaches 1.5 times as far from its label as that nearest fellow, at least 800 m;
   - **the city or town**: the OSM city, town, village or hamlet whose label is nearest relative to
     its reach (hamlet 3 km, village 4, town 5, city 6 km or 4.5 km times the square root of its
     population in millions, at most 20; New York's is 13 km).
+
+  No street, neighbourhood or tile label ending in "station" ("Station", "Sta.", "Stn", any case:
+  a stop's own label in OSM) is suggested; the next candidate takes its place. A city, town,
+  village or hamlet keeps its name even then (Huntington Station is a place) [T-568].
 
   A new station takes the cross street, else the neighbourhood, else the nearest place of any kind
   on the place list (neighbourhoods within 2.5 km of their label point, towns 5 km), else a place
@@ -417,6 +421,11 @@ multiplier per level (Anita, 2026-10-08; all construction prices halved 2026-10-
   shares (it has the zone boundaries) and sends them; a charge waits under "" until its shares
   arrive. Cash, the fleet and the fare curve stay network-wide. Saved in the header (`regions`);
   older saves start empty.
+- **Train rides** (T-565): each day and hour entry of every ledger also counts the train rides
+  taken, the same rides the fares are charged on (a line's riders a day less rides that change
+  lines, as `money.ts` has them, not scaled by the economy). A period's rides are the line's by that
+  period's share of passenger-km, settled with the fares (an hour's rides count as its fares are
+  paid) and divided between regions by the region of each ride's boarding stop.
 - **Starting money $3B** (T-485): the build price of one real first line, about a 20 km line at -2
   with 18 stations plus its trains, leaves room for a few more lines.
 - **Economy at 100x** (Anita, 2026-10-09, as Subway Builder does; T-081): fares and running costs
