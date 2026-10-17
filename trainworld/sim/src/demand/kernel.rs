@@ -65,6 +65,8 @@ pub struct Params {
     pub w_home_wait: f32,
     /// Waiting beyond this many minutes (half headway) counts at `w_home_wait`.
     pub platform_wait_cap_min: f32,
+    /// A fixed penalty per change of train, perceived minutes. 0 (Anita, T-557): a change costs
+    /// its wait and any walk between platforms; kept for calibration runs (`realnet --set`).
     pub transfer_min: f32,
     pub fare_min: f32,
     /// Logit scale per perceived minute, and the rail propensity: the worldwide value plus
@@ -203,7 +205,7 @@ impl Default for Params {
             w_wait: 1.37,
             w_home_wait: 0.4,
             platform_wait_cap_min: 5.0,
-            transfer_min: 5.0,
+            transfer_min: 0.0,
             fare_min: 6.0,
             beta: 0.05,
             asc_rail: super::api::ASC_RAIL,
@@ -1940,8 +1942,24 @@ pub fn skims_extend(sk: &mut Skims, g: &Graph, p: &Params, want: &[bool]) {
         let mut board = vec![0u64; nr.div_ceil(64)].into_boxed_slice();
         dist[dst] = 0.0;
         heap.push(Reverse((0f32.to_bits(), dst as u32)));
-        while let Some(Reverse((_, v))) = heap.pop() {
-            let v = v as usize;
+        while let Some(Reverse((_, id))) = heap.pop() {
+            let id = id as usize;
+            if id >= n {
+                // a boarding onto a line that leaves riders behind, at its turn (T-552)
+                let v = id - n + s;
+                let from = g.rn_station[v - s] as usize;
+                let d = dist[v] + g.rn_left[v - s] * p.w_wait;
+                if !done[from] {
+                    if let Some(cost) = join_line(&mut frequency[from], &mut weighted[from], dist[from], g.rn_tph[v - s], d, p) {
+                        board[(v - s) >> 6] |= 1 << ((v - s) & 63);
+                        dist[from] = cost;
+                        next[from] = v as u32;
+                        heap.push(Reverse((cost.to_bits(), from as u32)));
+                    }
+                }
+                continue;
+            }
+            let v = id;
             if done[v] { continue; }
             done[v] = true;
             order.push(v as u32);
@@ -1953,13 +1971,15 @@ pub fn skims_extend(sk: &mut Skims, g: &Graph, p: &Params, want: &[bool]) {
                 let nd = if from < s && v >= s {
                     let f = g.rn_tph[v - s];
                     if f == 0.0 { continue; }
-                    // a line that leaves riders behind costs its boarders the extra wait (T-188)
-                    let d = d + g.rn_left[v - s] * p.w_wait;
-                    let sum = frequency[from] + f;
-                    let cost = (weighted[from] + f * d) / sum + board_cost(60.0 / sum, p);
-                    if cost >= dist[from] { continue; }
-                    frequency[from] = sum;
-                    weighted[from] += f * d;
+                    // Lines join a station's strategy in order of their cost from boarding, which
+                    // for a line leaving riders behind includes the extra wait (T-188): it waits
+                    // its turn, or a full train would join ahead of better lines and stay (T-552).
+                    let left = g.rn_left[v - s];
+                    if left > 0.0 {
+                        heap.push(Reverse(((d + left * p.w_wait).to_bits(), (n + v - s) as u32)));
+                        continue;
+                    }
+                    let Some(cost) = join_line(&mut frequency[from], &mut weighted[from], dist[from], f, d, p) else { continue };
                     board[(v - s) >> 6] |= 1 << ((v - s) & 63);
                     cost
                 } else { d + g.adj_cost[e] };
@@ -1978,6 +1998,21 @@ pub fn skims_extend(sk: &mut Skims, g: &Graph, p: &Params, want: &[bool]) {
             sk.r[src * s + dst] = if src == dst { 0.0 } else { dist[src] - p.transfer_min };
         }
     }
+}
+
+/// A line with `f` departures an hour and cost `d` from boarding joins a station's strategy if it
+/// lowers the expected cost there below `cur`: the new cost, with the station's pooled frequency
+/// and frequency-weighted cost updated.
+#[inline(always)]
+fn join_line(frequency: &mut f32, weighted: &mut f32, cur: f32, f: f32, d: f32, p: &Params) -> Option<f32> {
+    let sum = *frequency + f;
+    let cost = (*weighted + f * d) / sum + board_cost(60.0 / sum, p);
+    if cost >= cur {
+        return None;
+    }
+    *frequency = sum;
+    *weighted += f * d;
+    Some(cost)
 }
 
 /// Test switch (`TW_LEGACY=1` in api.rs's `northeast_profile`): behave as before T-119 (searches
@@ -3238,6 +3273,29 @@ mod tests {
             assert!((sk.r[1] - 7.0).abs() < 1e-5);
             assert_eq!(sk.board_tph(&g, 1)[4], 0.0);
         }
+    }
+
+    /// T-552: a line leaving riders behind joins a station's strategy at its cost with the extra
+    /// wait, so a full train ahead of better options is no longer kept. Line 0-1-2-3, 12 tph, 2
+    /// minutes a stop, riders 1 -> 3; the southbound at 1 leaves riders behind for 60 minutes.
+    #[test]
+    fn a_full_line_joins_at_its_cost_with_the_wait() {
+        let p = common_test_params();
+        let net = common_test_net(&[&[0, 1, 2, 3]], &[12.0], &[2.0]);
+        let mut g = build_graph(&net, &p);
+        let (south, north) = (1, 6);
+        g.rn_left[south] = 60.0;
+        let sk = skims(&g, &p);
+        let tph = sk.board_tph(&g, sk.slot[3] as usize);
+        // north to 0 and back: two waits of 2.5, 2 + 6 riding
+        assert!((sk.r[1 * 4 + 3] - 13.0).abs() < 1e-4, "{}", sk.r[1 * 4 + 3]);
+        assert_eq!((tph[south], tph[north]), (0.0, 12.0));
+        // a shorter wait leaves the direct train the better choice, the back ride unused
+        g.rn_left[south] = 2.0;
+        let sk = skims(&g, &p);
+        let tph = sk.board_tph(&g, sk.slot[3] as usize);
+        assert!((sk.r[1 * 4 + 3] - (2.0 + 2.5 + 4.0)).abs() < 1e-4, "{}", sk.r[1 * 4 + 3]);
+        assert_eq!((tph[south], tph[north]), (12.0, 0.0));
     }
 
     #[test]

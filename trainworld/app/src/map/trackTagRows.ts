@@ -51,20 +51,23 @@ export function speedFact(kmh: number): HTMLSpanElement {
   return s;
 }
 
-/** A row of line bullets: the markup and CSS of ui/widgets.tsx's Chip (a tag is plain DOM, not Preact). */
+/** One line bullet: the markup and CSS of ui/widgets.tsx's Chip (a tag is plain DOM, not Preact). */
+export function lineBullet(l: LineInput, small = false): HTMLSpanElement {
+  const c = document.createElement("span");
+  c.className = small ? "chip sm" : "chip";
+  c.style.setProperty("--c", l.colour);
+  c.style.setProperty("--ct", inkOn(l.colour));
+  const t = document.createElement("span");
+  t.textContent = l.letter;
+  c.append(t);
+  return c;
+}
+
+/** A row of line bullets. */
 export function lineBullets(lines: LineInput[]): HTMLDivElement {
   const d = document.createElement("div");
   d.className = "tag-lines";
-  for (const l of lines) {
-    const c = document.createElement("span");
-    c.className = "chip";
-    c.style.setProperty("--c", l.colour);
-    c.style.setProperty("--ct", inkOn(l.colour));
-    const t = document.createElement("span");
-    t.textContent = l.letter;
-    c.append(t);
-    d.append(c);
-  }
+  d.append(...lines.map((l) => lineBullet(l)));
   return d;
 }
 

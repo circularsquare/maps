@@ -19,13 +19,10 @@ import { hoverAt } from "./demandHover";
 import { hoverHeld } from "../ui/blurHold";
 import { live } from "./live";
 import type { NetworkBuffers } from "./network";
-import { circleTip, stationTip, trainTip } from "./networkTips";
+import { circleTip, stationTip, trainTip, type TipLine } from "./networkTips";
 import type { Overlay } from "./overlay";
 import { pick, SLOP_PX, topSeg } from "./pick";
 import { elevationFact, factRow, lineBullets, speedFact } from "./trackTagRows";
-
-/** A line of the tag: plain text, or a row of facts with icons. */
-type TipLine = string | HTMLElement;
 
 /** A forecast count, rounded so it does not claim more precision than a forecast has. */
 export function riders(n: number): string {
@@ -94,8 +91,9 @@ export function trackTip(ov: Overlay, px: number, py: number, zoom = 12): TipLin
     let [i] = sel?.kind === "line" ? topSeg(ov, L.seg, L.count, px, py, slop, undefined, 0, (j) => String(L.colour[j]) === sel.line, wide, widePx) : [-1];
     if (i < 0) [i] = topSeg(ov, L.seg, L.count, px, py, slop, undefined, 0, (j) => String(L.colour[j]) === hit.line, wide, widePx);
     if (i < 0) return null;
-    // T-473: the track under the line says its elevation and speed too
-    return [...lineTip(n, w, demandView.peek(), d.trackColour === "traffic", i), ...trackFacts(ov, L.edge[i], px, py, slop)];
+    // T-473: the track under the line says its elevation and speed too; T-559: and every line on it
+    const on = linesOn(w, L.edge[i]);
+    return [...lineTip(n, w, demandView.peek(), d.trackColour === "traffic", i), ...trackFacts(ov, L.edge[i], px, py, slop), ...(on.length ? [lineBullets(on)] : [])];
   }
   if (hit.kind !== "track") return null;
   const facts = trackFacts(ov, hit.edge, px, py, slop);

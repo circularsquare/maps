@@ -1,5 +1,12 @@
 ﻿# Archive
 
+- T-555 [P2] Country modules in the generated config. Done 2026-10-16: `plan_hooks(row)` in england, france, germany (outline, census population and jobs, work from home), brazil (tract population), canada (everyday); `{}` for china, india, korea, nigeria; one-city keys left out (DECISIONS). notes/T-555.md.
+- T-557 [P2] No change penalty. Done 2026-10-16: `transfer_min` 0 (a change costs its wait and platform walk), the explorer's "counts as" without a change term; no refit. Real save 9,777,718 to 10,433,452 rail trips a day (+6.7%).
+- T-559 [P2] Network hovers. Done 2026-10-16: a track hover lists every line on it as bullets; a station hover is its name, line bullets and a row per platform side (bullet, "to <terminus>", count, red when full); platform boxes, dot pies and the complex map go red when full, no longer for riders left behind (DECISIONS).
+- T-552 [P2] A trip that rides backwards. Done 2026-10-16: full southbound trains left riders behind at Tabata 6-chome, so riding back to board upstream is real; the fault was full lines joining a strategy ahead of better ones, now offered at their cost with the wait. Smoke 9,777,718 (+0.02%). notes/T-552.md.
+- T-553 [P2] Station boxes from zoom 14 and crowding as a pie in the dots. Done 2026-10-16: `STATION_BOX_ZOOM` 14, a box never under its zoom-15 width (7.5 px) on screen (`BOX_WIDTH_ZOOM`); a dot's white fills clockwise from 12 o'clock by its fullest platform's share, red if riders were left behind.
+- T-554 [P2] Platform crowds jump when a train comes in. Done 2026-10-16: riders changing lines reach their next platform a transfer walk after their train leaves, sized by demand's transfer pairs; hourly totals and the account unchanged. notes/T-554.md.
+- T-550 [P2] A cities section. Done 2026-10-16: a Cities list in the Money tab, one row per region with a built station: split bar, train rides a day, money a day (fares less running trains, yesterday's); sortable, a click moves the camera there. `ui/Cities.tsx`.
 - T-537 [P2] Pipeline stage 5, generated config and a generic OSM outline. Done 2026-10-16: `plan_config.py`, `osm_units.py`; Lagos from its plan row, jobs by 2 km zone 0.3% misplaced on the shared area, 6.9% whole (the plan drops Ikorodu and Epe: T-556). notes/T-537.md.
 - T-545 [P2] Lagos's gravity on the borrowed curve. Done 2026-10-16 (Anita's go-ahead): d^-1.8 exp(-d/80 km), mean trip 8.97 km; 67 packs open, smoke 9,775,704 rail trips a day; registry trip totals refreshed after T-544. Backup in data/work/pre-T545/.
 

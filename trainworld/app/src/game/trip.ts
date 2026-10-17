@@ -179,9 +179,6 @@ export function routeTotals(t: TripPeriod, r: TripRoute) {
   return { driveMin, walkMin, walkM, wait, ride, xfer, changes: Math.max(0, rides - 1), fareUsd: fare / t.minPerUsd, total: driveMin + walkMin + wait + ride + xfer };
 }
 
-/** The penalty for changing between trains, perceived minutes (the demand model's `transfer_min`, sim/src/demand/kernel.rs). */
-export const CHANGE_MIN = 5;
-
 /** One term of a route's perceived total: what it is, its real amount (minutes, or dollars for the
  * fare) with the weight it counts at, and its perceived minutes. */
 export interface CostTerm {
@@ -189,12 +186,12 @@ export interface CostTerm {
   real: number;
   weight: number;
   perceived: number;
-  unit: "min" | "usd" | "change";
+  unit: "min" | "usd";
 }
 
 /** A route's perceived total as terms, from the worker's own perceived minutes: the walks (or the
- * drive to the station), the waits, the rides with their crowding, the walks between stations, the
- * penalty per change and the fare. The first boarding is not a change; the base fare is in the fare. */
+ * drive to the station), the waits, the rides with their crowding, the walks between stations and
+ * the fare. A change costs its wait and walk only (T-557); the base fare is in the fare. */
 export function routeTerms(t: TripPeriod, r: TripRoute): CostTerm[] {
   const pair = t.pairs[r.pair];
   const tot = routeTotals(t, r);
@@ -213,7 +210,6 @@ export function routeTerms(t: TripPeriod, r: TripRoute): CostTerm[] {
   out.push({ label: "wait", real: tot.wait, weight: tot.wait > 0 ? waitP / tot.wait : 1, perceived: waitP, unit: "min" });
   out.push({ label: "ride", real: tot.ride, weight: tot.ride > 0 ? rideP / tot.ride : 1, perceived: rideP, unit: "min" });
   if (tot.xfer > 0) out.push({ label: "walk between stations", real: tot.xfer, weight: xferP / tot.xfer, perceived: xferP, unit: "min" });
-  if (tot.changes > 0) out.push({ label: tot.changes === 1 ? "change" : "changes", real: tot.changes, weight: CHANGE_MIN, perceived: tot.changes * CHANGE_MIN, unit: "change" });
   out.push({ label: "fare", real: tot.fareUsd, weight: t.minPerUsd, perceived: tot.fareUsd * t.minPerUsd, unit: "usd" });
   return out;
 }

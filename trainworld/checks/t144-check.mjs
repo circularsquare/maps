@@ -22,7 +22,7 @@ const output=(Array.isArray(bundle)?bundle[0]:bundle).output;
 globalThis.location??={search:''};
 globalThis.document??={documentElement:{dataset:{},style:{setProperty(){}}},addEventListener(){}};
 const mod=await import('data:text/javascript;base64,'+Buffer.from(output.find(o=>o.type==='chunk').code).toString('base64'));
-const {stationDistance,boxHalfPxAtBoxZoom,platformShape,waysFrom,stationShape,stationCoords,insideStation,stationPath,stationRadii,stationHaloRadius,STATION_BOX_ZOOM,STATIONS_ZOOM,plainBoxHalfPx,networkFromState,NetworkRenderer,buildLayers,stationScale}=await import('data:text/javascript;base64,'+Buffer.from(output.find(o=>o.type==='chunk').code).toString('base64'));
+const {stationDistance,boxHalfPxAtBoxZoom,platformShape,waysFrom,stationShape,stationCoords,insideStation,stationPath,stationRadii,stationHaloRadius,STATION_BOX_ZOOM,BOX_WIDTH_ZOOM,STATIONS_ZOOM,plainBoxHalfPx,networkFromState,NetworkRenderer,buildLayers,stationScale}=await import('data:text/javascript;base64,'+Buffer.from(output.find(o=>o.type==='chunk').code).toString('base64'));
 const F=a=>new Float32Array(a),near=(a,b,msg,eps=1e-4)=>assert.ok(Math.abs(a-b)<eps,`${msg??''} ${a} != ${b}`);
 
 // --- where a platform lies on its track
@@ -43,14 +43,15 @@ const [fwd,back]=waysFrom([0,0,0,100,0,0],30,1);
 assert.deepEqual([fwd[0],fwd[1],fwd[fwd.length-3]],[30,0,100]);assert.deepEqual([back[0],back[back.length-3]],[30,0]);
 
 // --- on screen (T-204: a box is fixed on the ground, so it has one shape at every zoom; T-239: as
-// wide as a plain line and its rim at STATION_BOX_ZOOM less a quarter, whatever width the lines
-// are drawn at in traffic mode)
-const U=40075016.686/(512*2**STATION_BOX_ZOOM); // local units per CSS px at STATION_BOX_ZOOM
-const zoomed=(k)=>(x,y)=>[k*x/U+10,k*y/U+20]; // the map k times as large as at STATION_BOX_ZOOM
+// wide as a plain line and its rim at BOX_WIDTH_ZOOM less a quarter, whatever width the lines
+// are drawn at in traffic mode; T-553: never thinner on screen than that, so it stays legible out
+// to STATION_BOX_ZOOM)
+const U=40075016.686/(512*2**BOX_WIDTH_ZOOM); // local units per CSS px at BOX_WIDTH_ZOOM
+const zoomed=(k)=>(x,y)=>[k*x/U+10,k*y/U+20]; // the map k times as large as at BOX_WIDTH_ZOOM
 const project=zoomed(1);
 const style={boxes:true,radius:stationRadii(15),linePx:4,ringPx:1.5,boxLinePx:6.6,boxRingPx:2};
 const straight={mx:0,my:0,ax:200,ay:0,phi:0};
-const HL=200/U; // half the platform on screen at STATION_BOX_ZOOM, px
+const HL=200/U; // half the platform on screen at BOX_WIDTH_ZOOM, px
 let s=stationShape(0,0,straight,1,project,style,false);
 const BOXW=0.75*(0.5*0.6*6.6+2+1); // T-239: a quarter narrower than a plain line and its rim, 3.735 px
 near(s.halfLength,HL,'true length');near(s.halfWidth,BOXW,'a quarter narrower than a plain line and its rim at the box zoom');
@@ -60,11 +61,18 @@ for (const k of [2,4,16]) {
  const z=stationShape(0,0,straight,1,zoomed(k),style,false);
  near(z.halfLength,k*HL,`length scales with the map x${k}`,1e-3);near(z.halfWidth,k*s.halfWidth,`width scales with the map x${k}`,1e-3);
 }
+// T-553: out to STATION_BOX_ZOOM a box is as long as the ground says but keeps its width on screen
+{
+ const k=2**(STATION_BOX_ZOOM-BOX_WIDTH_ZOOM),z=stationShape(0,0,straight,1,zoomed(k),style,false);
+ near(z.halfLength,k*HL,'out at the box zoom, length follows the ground',1e-3);near(z.halfWidth,BOXW,'width kept on screen',1e-3);
+ assert.ok(2*(z.halfWidth-style.ringPx)>=3&&z.halfLength>=15*z.halfWidth/2,'legible at the first box zoom: white at least 3 px wide, a platform at least 7 times as long as it is wide');
+ const w=stationShape(0,0,straight,1,zoomed(k/2),style,false);near(w.halfWidth,BOXW,'and further out still');
+}
 near(stationShape(0,0,straight,1,project,{...style,linePx:20,ringPx:3},false,1).halfWidth,s.halfWidth,'the lines as drawn now do not change a box');
 near(stationShape(0,0,straight,20*U,project,style,false,1).halfWidth,20,'true width when wider');
 near(stationShape(0,0,{...straight,ax:0,ay:1},1,project,style,false,1).halfLength,s.halfWidth,'never shorter than wide');
-near(boxHalfPxAtBoxZoom(style),BOXW,'the shader\'s width at the box zoom');
-near(plainBoxHalfPx(style,STATION_BOX_ZOOM),BOXW,'plain box for the labels');near(plainBoxHalfPx(style,STATION_BOX_ZOOM+2),4*BOXW);near(plainBoxHalfPx({...style,boxes:false},12),0);
+near(boxHalfPxAtBoxZoom(style),BOXW,'the shader\'s width at the width zoom');
+near(plainBoxHalfPx(style,BOX_WIDTH_ZOOM),BOXW,'plain box for the labels');near(plainBoxHalfPx(style,BOX_WIDTH_ZOOM+2),4*BOXW);near(plainBoxHalfPx(style,STATION_BOX_ZOOM),BOXW,'T-553: never thinner than at the width zoom');near(plainBoxHalfPx({...style,boxes:false},12),0);
 // rotated
 s=stationShape(0,0,{mx:0,my:0,ax:0,ay:200,phi:0},1,project,style,false);
 assert.ok(insideStation(s,10,20+HL-1));assert.ok(!insideStation(s,10+HL-1,20));
@@ -109,7 +117,7 @@ assert.ok(stationPath(s).startsWith('M'));
 s=stationShape(0,0,straight,1,project,{...style,boxes:false},true);
 near(s.dot,stationRadii(15)[1],'transfer dot');assert.ok(insideStation(s,10+s.dot-0.1,20));assert.ok(!insideStation(s,10+HL-1,20),'a dot is not the platform');
 near(stationShape(0,0,straight,1,project,{...style,boxes:false,linePx:40},false).dot,0.5*0.6*40+2.5,'a dot covers a plain line at its width now');
-assert.ok(STATION_BOX_ZOOM>=14.5&&STATION_BOX_ZOOM<=15.5,'boxes from about zoom 15');
+assert.equal(STATION_BOX_ZOOM,14,'boxes from zoom 14 (T-553)');assert.ok(BOX_WIDTH_ZOOM>=STATION_BOX_ZOOM,'the box width is set at or after the first box zoom');
 assert.ok(STATIONS_ZOOM>=9&&STATIONS_ZOOM<STATION_BOX_ZOOM,'stations hidden further out than the dots');
 near(stationRadii(11)[0],(2.2+1.6*2/3)*1.32,'T-313, T-322: 32% wider than T-189\'s');assert.ok(stationRadii(9)[0]<stationRadii(10)[0]&&stationRadii(10)[0]<stationRadii(11)[0],'T-542: dots shrink going out from 11');near(stationRadii(15)[0],5.6*1.32);near(stationHaloRadius(15),56);
 

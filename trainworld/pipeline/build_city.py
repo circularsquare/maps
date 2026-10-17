@@ -672,6 +672,19 @@ for _cid, _cfg in plan_config.planned().items():
     CITIES.setdefault(_cid, _cfg)
 
 
+class Cities(dict):
+    """CITIES; a planned city's country keys join its config on its first lookup (T-555)."""
+
+    def __getitem__(self, cid):
+        return plan_config.with_country_keys(dict.__getitem__(self, cid))
+
+    def get(self, cid, default=None):
+        return self[cid] if cid in self else default
+
+
+CITIES = Cities(CITIES)
+
+
 # ---------------------------------------------------------------- downloads
 
 def fetch(url, name=None):

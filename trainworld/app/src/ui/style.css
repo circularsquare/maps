@@ -129,6 +129,13 @@ body.resizing, body.resizing * { user-select: none; }
 .rows .val.w-mode svg { width: 14px; height: 14px; }
 .w-riders { width: 56px; }
 .w-near { width: 58px; white-space: nowrap; }
+/* T-550: the Money tab's Cities section: name, split bar, train rides a day, net money a day */
+.w-citybar { width: 64px; }
+.w-money { width: 76px; white-space: nowrap; }
+.rows.cities .w-riders, .rows.cities .w-money, .rows.cities .city-bar { flex: none; white-space: nowrap; }
+.rows.cities .city-bar { display: block; width: 64px; }
+.rows.cities .bar { height: 10px; }
+.rows.cities .val.neg { color: var(--bad); }
 .group.scope .btn { display: inline-flex; align-items: center; gap: 4px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .group.scope .btn svg { width: 14px; height: 14px; flex: none; }
 /* T-310: the Lines and Stations lists' column headers, one button a column; the sorted one is dark

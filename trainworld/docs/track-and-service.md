@@ -183,7 +183,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   other nodes along it; curved platforms are fine. Through a station the platform is centred on
   the node; at a dead end it runs from the node along the track and trains stop at its middle
   (`service.rs`). The map draws it there, at its true length and bent as the track is, from
-  zoom 15, as a box whose width is fixed on the ground too (16 m, a quarter narrower than a plain line and its rim, the same for every station and mode), so its shape is the same at every zoom
+  zoom 14, as a box whose width is fixed on the ground too (16 m, a quarter narrower than a plain line and its rim, the same for every station and mode; never under 7.5 px on screen), so its shape is the same at every zoom from 15 in
   ([ui-map.md](ui-map.md) "Stations"; T-189, T-204, T-239). Platform length caps train length (20 m cars).
   Platform tracks = the route's tracks. Riders change between stations up to 300 m apart on foot, and platforms within 100 m of each other count as one station (4.4). Stations whose platforms come within 50 m form a station complex, which a click on a station selects as one (T-249) and the demand circles can show as one (8, T-146); the player can link any two stations up to 1 km apart into one complex and unlink them (T-197, saved with the network as `Network::links`, not in the undo history). Riders change between any two stations of a complex on foot, however far apart (4.4, T-161).
 
@@ -495,12 +495,24 @@ per person and does not change who travels: demand still decides that (SPEC 4).
   works out again only the lines it changed; new riders redo every line, a few lines at a time
   between the clock worker's other messages (3 a step).
 - **Each game hour** the worker sends, with the hour's trips, each trip's riders per stop-to-stop
-  stretch and each platform's departures with the riders each left behind, its arrival rate, and
-  the hour's riders left behind and longest wait. The renderer reads the train's load for the
-  stretch it is drawn on (empty once at its last stop; packed to crush, drawn full with a red
-  edge, T-207, T-218), and a platform's crowd at any moment is what
-  the last train left plus who has arrived since, drawn as the platform filling up wherever
-  platforms are drawn (zoom 15 and in, T-189, T-204, T-219; [ui-map.md](ui-map.md)).
+  stretch and each platform's departures with the riders each left behind, its steady arrival
+  rate, its pulses of riders changing lines (below), and the hour's riders left behind and longest
+  wait. The renderer reads the train's load for the stretch it is drawn on (empty once at its last
+  stop; packed to crush, drawn full with a red edge, T-207, T-218), and a platform's crowd at any
+  moment is what the last train left plus who has arrived since, drawn as the platform filling up
+  wherever platforms are drawn (zoom 14 and in, T-189, T-204, T-219, T-553; [ui-map.md](ui-map.md)).
+- **Riders changing lines arrive with their train** (T-554, `Boarding::pulses`, notes/T-554.md):
+  in the drawn crowd, not the account. Demand's transfers a day between platforms (the solve
+  shown, every population; `platformTransfers`) give each platform the share of its boardings
+  that change there from each other platform. Each clock hour, that share of the hour's arrivals
+  is split over the feeding platform's trains leaving in the hour by the riders each has aboard
+  arriving, and reaches the platform a transfer walk after the train leaves (demand's: the
+  straight line between the two stations x 1.3 at 1.2 m/s; nothing at the same station). The
+  rest of the hour's arrivals, and the share of a feeding platform whose trains bring none or
+  under one rider each that hour, arrive steadily. Each platform's arrivals in the hour are the account's; the
+  account's loads, departures and riders left behind do not read the pulses, so they and
+  demand's crowding feedback stay one rule. The fares' timing within the hour (T-284) counts
+  the pulses with the steady arrivals.
 - **Room on a platform** (T-219, `platformRoom` in `game/boarding.ts`): what counts as a full
   platform for drawing. Each direction's riders wait on one side, 2.5 m of usable width (half a
   6 m island platform less the edge strip kept clear) along the platform's length, at 0.3 m² a
@@ -509,8 +521,9 @@ per person and does not change who travels: demand still decides that (SPEC 4).
   150 m platform holds 1,250 a side. Only the drawing uses it: the account still lets a crowd
   grow past it (nobody is turned away from a platform).
 - **Cost** on the real New York save (109 lines, 3,294 platforms): new riders 40-60 ms of the clock
-  worker in steps of at most about 5 ms; an hour's slice 1-2 ms and about 450 kB, transferred;
-  drawing the crowds 0.1-0.2 ms a frame on the main thread.
+  worker in steps of at most about 5 ms; an hour's slice about 11 ms (3-4 of them
+  without the pulses) and about 870 kB with its 48,000 pulses, transferred; drawing the crowds 0.2-0.5 ms each game second on the main thread;
+  the transfer pairs 12,000, asked of the demand workers once per result shown, about 20 ms.
 
 - **How full trains get** (T-207, notes/T-207.md). On the real New York save, of the trains leaving
   between 08:00 and 09:00 the median is at 48% of crush at its fullest stretch, the 90th

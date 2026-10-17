@@ -268,6 +268,27 @@ def itl3_boundary(city, units):
     return out
 
 
+# ONS Opinions and Lifestyle Survey (GB, 2022-23, "Who are the hybrid workers?", Nov 2024): 13% work
+# only from home, 28% hybrid; about half a hybrid worker's days at home
+WFH = 0.27
+
+
+def plan_hooks(row):
+    """T-555: London's country keys for any planned row of English ITL3 units. Not carried: the
+    curve (London's own fit on WU01EW), Heathrow's O&D share and the region name."""
+    cid, units = row["id"], row["units"]["GBR"]
+    return {
+        "boundary_file": lambda: itl3_boundary(cid, units),
+        "admin_totals": lad_totals,
+        "population": lsoa_population,
+        "jobs": bres_jobs,
+        "everyday": bres_sectors,
+        "jobs_url": "https://www.nomisweb.co.uk/datasets/newbres6pub",
+        "schools": gias_schools,
+        "wfh": WFH,
+    }
+
+
 def lad_totals(boundary):
     """[(district name, polygon, Census 2021 usual residents)] for the districts in the boundary."""
     with open(_get(LAD_URL, raw("lad_dec2023_uk_bgc.geojson")), encoding="utf-8") as f:

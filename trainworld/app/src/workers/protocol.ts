@@ -123,6 +123,9 @@ export type ToClock =
   /** demand's riders for the boarding account (T-164): `TrackApi.set_riders`'s packing, built by
    * game/boarding.ts `packRiders` from the demand result, for one kind of day (T-260) */
   | { kind: "riders"; packed: Float32Array; day: number }
+  /** demand's transfers between platforms (T-554): `TrackApi.set_transfers`'s packing, from
+   * `platformTransfers` for the solve shown */
+  | { kind: "transfers"; packed: Float32Array }
   /** write the autosave now if anything changed (the page is being hidden or closed) */
   | { kind: "flush" }
   /** the game as a file: answered with "exported" */

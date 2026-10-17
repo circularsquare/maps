@@ -351,8 +351,8 @@ Per OD pair and period, reserve the short-trip walking share first, then compare
 driving for the remaining trips by **generalised cost** in minutes. Buses are out of scope
 (Anita, 2026-10-09), except as part of "other", the choice of homes without a car (below).
 
-- rail = walk to a station + wait (half the headway, capped) + ride + transfers x penalty + walk
-  from station + fare / value of time
+- rail = walk to a station + wait (half the headway, capped) + ride + walks between platforms +
+  walk from station + fare / value of time (a change costs its wait and walk, no penalty: T-557)
 - driving = door-to-door road time (below; a few constants, real road travel times are not a
   priority) + its cost
 
@@ -639,10 +639,16 @@ works on two levels:
 4. **Station-to-station times**: one reverse strategy search per destination station over station
    nodes plus one node per stop per direction per line (T-069). At each station, useful lines
    share their departure frequency: boarding costs the weighted wait (half the combined headway:
-   the first 5 minutes at 1.37, beyond that at 0.4) plus their frequency-weighted downstream cost
-   and a transfer penalty, taken off once. A line joins only if it improves expected trip cost;
+   the first 5 minutes at 1.37, beyond that at 0.4) plus their frequency-weighted downstream cost.
+   A change has no penalty of its own (Anita, T-557): it costs its wait and any walk between
+   platforms (`transfer_min` 0). A line joins only if it improves expected trip cost;
    wrong branches and off, slow, expensive or crowded alternatives add no useful frequency when
-   they worsen that cost. A rider leaving
+   they worsen that cost. Lines are offered to a station cheapest first by their cost from
+   boarding, which includes the extra wait where full trains leave riders behind (step 7): a full
+   train is weighed after the lines that beat it, never kept ahead of them (T-552). Where that
+   wait is long enough (on a 5-minute line with 2-minute hops, 3 minutes: the ride out and back
+   and the second wait), riders ride the other way to a stop upstream and board there before
+   the train fills, as Tokyo riders do (notes/T-552.md). A rider leaving
    a train may walk to another station within 300 m straight line and board there (walk at its
    weight; walk edges start only after a ride, so walking between stations is never a rail trip).
    Snapshot stations within 100 m of each other are one demand station (side-by-side platforms of
@@ -651,10 +657,10 @@ works on two levels:
    over constructed stations only, with the player's links, T-197; `DemandApi.set_complexes`), and
    a rider leaving a train at one may walk to any other demand station of the same complex however
    far, at the same cost as any walking transfer: the centre-to-centre distance x 1.3 detour at
-   1.2 m/s, weighted 1.39, then the boarding's usual wait and 5-minute transfer penalty. No extra
-   fixed penalty: the 5 minutes already fall on every change, at one platform or after a walk, so
-   a walk of 120 m costs 3 perceived minutes more than a change across the platform and a linked
-   pair 1 km apart 25 more. The members stay separate demand stations joined by walk edges rather
+   1.2 m/s, weighted 1.39, then the boarding's usual wait. No fixed penalty, for a walk or a
+   change: platforms of one demand station (side by side or stacked) cost no walk, a walk of 120 m
+   costs 3 perceived minutes more than a change across the platform and a linked pair 1 km apart
+   25 more. The members stay separate demand stations joined by walk edges rather
    than one merged station: each keeps its own catchment and position, a long link is not a free
    teleport, and transfers stay counted platform to platform for the complex map (T-176). The
    trip explorer shows such a change as a walk between the two stations. On the real New York save

@@ -151,6 +151,13 @@ def census_jobs(city, boundary, sig, weight):
                  "(Shanghai Statistics Bureau bulletin no. 1, table 1-5; individual businesses not included)")
 
 
+def plan_hooks(row):
+    """T-555: none for a planned Chinese row. Shanghai's district tables (census population, economic
+    census jobs), its OSM district names and its survey's mean commute are Shanghai's alone; another
+    city needs its own tables entered first."""
+    return {}
+
+
 if __name__ == "__main__":
     city = sys.argv[1]
     ds = districts(city)

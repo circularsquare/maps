@@ -7,7 +7,7 @@ import { count, distance } from "../../game/format";
 import { MODE_COLOURS } from "../../game/palette";
 import { PERIODS } from "../../game/periods";
 import { WALK_KMH } from "../../game/walks";
-import { CHANGE_MIN, routeTerms, routeTotals, stationName, tripOpenedFrom, tripPeriod, tripView, type TripPeriod, type TripRoute } from "../../game/trip";
+import { routeTerms, routeTotals, stationName, tripOpenedFrom, tripPeriod, tripView, type TripPeriod, type TripRoute } from "../../game/trip";
 import { selection, tool } from "../../game/ui";
 import { world } from "../../game/world";
 import { shownPeriod } from "../../map/tripView";
@@ -35,7 +35,7 @@ function countsAsTip(t: TripPeriod, r: TripRoute): string {
   const total = terms.reduce((s, x) => s + p(x.perceived), 0);
   const lines = terms.map((x) => {
     const w = Math.abs(x.weight - 1) < 0.005 && x.unit === "min" ? "" : ` × ${weight(x.weight)}`;
-    const real = x.unit === "usd" ? `$${x.real.toFixed(2)}` : x.unit === "change" ? `${x.real}` : x.real > 0 ? `${num(x.real)} min` : "";
+    const real = x.unit === "usd" ? `$${x.real.toFixed(2)}` : x.real > 0 ? `${num(x.real)} min` : "";
     return `${x.label}${real ? " " + real : ""}${w} = ${p(x.perceived).toFixed(1)}`;
   });
   const avg = Math.abs(total - t.railPerceived) >= 0.5;
@@ -44,7 +44,7 @@ function countsAsTip(t: TripPeriod, r: TripRoute): string {
     ...lines,
     `Total ${total.toFixed(1)}`,
     ...(avg ? [`The ${Math.round(t.railPerceived)} shown pools the stations and routes people near here use, so it can be lower than any one route.`] : []),
-    `Walks and waits count for more than a minute on board, crowding stretches the ride, a change is a ${CHANGE_MIN} minute penalty for changing between trains, the wait is half the time between trains, and a dollar of fare counts as ${weight(t.minPerUsd)} minutes.`,
+    `Walks and waits count for more than a minute on board, crowding stretches the ride, the wait is half the time between trains, and a dollar of fare counts as ${weight(t.minPerUsd)} minutes.`,
   ].join("\n");
 }
 

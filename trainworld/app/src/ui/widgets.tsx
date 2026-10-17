@@ -4,7 +4,8 @@ import type { ComponentChildren } from "preact";
 import { inkOn } from "../game/palette";
 import { PLANE_PATH } from "../map/glyphs";
 import type { LineInput } from "../game/types";
-import { selection } from "../game/ui";
+import { selection, type ListSort } from "../game/ui";
+import type { Signal } from "@preact/signals";
 
 export const Icon = {
   minus: () => <svg viewBox="0 0 16 16"><path d="M4 8h8" /></svg>,
@@ -108,6 +109,28 @@ export function Check(p: { checked: boolean; onChange: (v: boolean) => void; chi
       <input type="checkbox" checked={p.checked} onChange={(e) => p.onChange((e.target as HTMLInputElement).checked)} />
       {p.children}
     </label>
+  );
+}
+
+/** T-310: a list's column headers. A click sorts by the column (numbers biggest first), a second
+ * click reverses it, and the sorted column carries a small arrow. A column with a `cls` is a
+ * right-aligned number column of that width; the arrow sits before its label so the label stays
+ * over the figures. */
+export function SortHead<K extends string>({ sort, cols }: { sort: Signal<ListSort<K>>; cols: { key: K; label: string; tip: string; first: 1 | -1; cls?: string }[] }) {
+  const s = sort.value;
+  return (
+    <div class="sort-head">
+      {cols.map((c) => {
+        const on = s.key === c.key;
+        const arrow = <i class={"sort-arrow" + (on ? (s.dir > 0 ? " up" : " down") : "")} />;
+        return (
+          <button class={"sort-btn" + (c.cls ? " val " + c.cls : " grow") + (on ? " on" : "")} data-tip={c.tip}
+            onClick={() => (sort.value = on ? { key: c.key, dir: s.dir === 1 ? -1 : 1 } : { key: c.key, dir: c.first })}>
+            {c.cls && arrow}{c.label}{!c.cls && arrow}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 

@@ -19,6 +19,7 @@
 use super::net::Network;
 use super::params::*;
 use super::service::{LineSvc, Service, Trip};
+use std::collections::HashMap;
 
 /// Seats and riders at crush load per 20 m car: the demand kernel's `SEATS_PER_CAR` and
 /// `CRUSH_PER_CAR` (sim/src/demand/api.rs, a New York subway car).
@@ -194,7 +195,24 @@ pub struct Boarding {
     pub accounts: [Vec<Option<LineAccount>>; DAY_KINDS],
     /// lines worked out again since `take_redone`
     redone: usize,
+    /// Riders a day changing onto each platform (line, run, stop in the run's order) from other
+    /// platforms (T-554, `set_transfers`). Only the timing of drawn crowds reads them.
+    pub xfer: HashMap<(u32, u8, u32), Vec<Feeder>>,
 }
+
+/// A platform riders change from, and riders a day making that change (T-554).
+#[derive(Clone, Copy, Debug)]
+pub struct Feeder {
+    pub line: u32,
+    pub run: u8,
+    pub stop: u32,
+    pub riders: f64,
+}
+
+/// Demand's transfer walk (kernel `Params::walk_detour`, `xfer_mps`): detour on the straight line
+/// and walking speed, m/s.
+const XFER_DETOUR: f64 = 1.3;
+const XFER_MPS: f64 = 1.2;
 
 struct Hash(u64);
 impl Hash {
@@ -255,12 +273,27 @@ impl Boarding {
         }
     }
 
+    /// Demand's transfers between platforms (T-554): per pair 7 numbers, the line, run and stop
+    /// (in the run's travel order) riders leave a train at, the same for the platform they board
+    /// at, and riders a day.
+    pub fn set_transfers(&mut self, packed: &[f32]) {
+        self.xfer.clear();
+        for c in packed.chunks_exact(7) {
+            let to = (c[3] as u32, c[4] as u8, c[5] as u32);
+            let f = Feeder { line: c[0] as u32, run: c[1] as u8, stop: c[2] as u32, riders: c[6] as f64 };
+            if f.riders > 0.0 && (f.line, f.run, f.stop) != to {
+                self.xfer.entry(to).or_default().push(f);
+            }
+        }
+    }
+
     pub fn clear(&mut self) {
         for d in 0..DAY_KINDS {
             self.generation[d] += 1;
             self.riders[d].clear();
             self.accounts[d].clear();
         }
+        self.xfer.clear();
     }
 
     pub fn has_riders(&self) -> bool {
@@ -361,20 +394,24 @@ impl Boarding {
     /// The trips drawn in `[epoch, epoch + 3600)` (`Service::trips`, in its order) with their
     /// loads, and the platforms' crowds that hour. One flat array:
     ///
-    /// `[trips, loads, queues, events, then per trip the index of its first load or -1 and the
-    /// seconds from its departure to its last stop, then the loads, then per queue QUEUE_STRIDE
-    /// numbers, then per event 2]`.
+    /// `[trips, loads, queues, events, pulses, then per trip the index of its first load or -1 and
+    /// the seconds from its departure to its last stop, then the loads, then per queue
+    /// QUEUE_STRIDE numbers, then per event 2, then per pulse 2]`.
     ///
     /// A trip's loads are riders aboard on each stop-to-stop stretch, numbered as on run 0 (a
     /// run 1 trip's are reversed), so the renderer looks them up by the stretch it draws.
     /// A queue is one platform: one stop of one direction of one line: node, line, run, its
-    /// offset along run 0 (m), riders arriving a second at the middle of the hour, riders left
-    /// behind by a full train this hour, the longest wait for a train leaving this hour (s),
-    /// riders arriving this hour, first event, event count. Its events are the trains leaving
-    /// it from the last one before the hour to the first one after: seconds from `epoch`, and
-    /// riders left on the platform as it went. Between two, the crowd grows at the rate.
+    /// offset along run 0 (m), riders arriving steadily a second at the middle of the hour,
+    /// riders left behind by a full train this hour, the longest wait for a train leaving this
+    /// hour (s), riders arriving this hour, first event, event count, first pulse, pulse count.
+    /// Its events are the trains leaving it from the last one before the hour to the first one
+    /// after: seconds from `epoch`, and riders left on the platform as it went. Its pulses are
+    /// riders changing from other lines' trains (`pulses`): seconds from `epoch` and riders.
+    /// Between two events, the crowd grows at the steady rate plus the pulses.
     pub fn hour(&mut self, net: &Network, svc: &Service, epoch: f64) -> Vec<f32> {
         self.ensure(net, svc);
+        let game = epoch;
+        let mut pulses: Vec<(f32, f32)> = vec![];
         // the hour's kind of day (T-260) in each line's local time (T-309): every trip and
         // platform of the line reads that day's account, at its local hour
         let shift = |l: usize| svc.lines.get(l).map_or(0.0, |ls| ls.shift);
@@ -427,28 +464,106 @@ impl Boarding {
                     let node = run.nodes[run.stop_idx[k] as usize];
                     let d0 = if r == 0 { ls.runs[0].stop_s[k] } else { ls.runs[0].stop_s[ra.n - 1 - k] };
                     let mid = epoch + 1800.0;
+                    let p0 = pulses.len();
+                    let carried = self.pulses(net, svc, game, (l, r, k), arr, node, &mut pulses);
+                    // before the hour, only those still waiting when it starts
+                    let since = events[start * 2];
+                    let kept = p0 + pulses[p0..].partition_point(|p| p.0 <= since);
+                    pulses.drain(p0..kept);
                     queues.extend_from_slice(&[
                         node as f32,
                         l as f32,
                         r as f32,
                         d0 as f32,
-                        arr.rate(mid) as f32,
+                        (arr.rate(mid) * (1.0 - carried)) as f32,
                         ra.left_h[k * 24 + hour],
                         ra.wait_h[k * 24 + hour],
                         (arr.cum(epoch + 3600.0) - arr.cum(epoch)) as f32,
                         start as f32,
                         (events.len() / 2 - start) as f32,
+                        p0 as f32,
+                        (pulses.len() - p0) as f32,
                     ]);
                 }
             }
         }
-        let mut out = Vec::with_capacity(4 + offs.len() + loads.len() + queues.len() + events.len());
-        out.extend_from_slice(&[trips.len() as f32, loads.len() as f32, (queues.len() / QUEUE_STRIDE) as f32, (events.len() / 2) as f32]);
+        let mut out = Vec::with_capacity(5 + offs.len() + loads.len() + queues.len() + events.len() + pulses.len() * 2);
+        out.extend_from_slice(&[trips.len() as f32, loads.len() as f32, (queues.len() / QUEUE_STRIDE) as f32, (events.len() / 2) as f32, pulses.len() as f32]);
         out.extend_from_slice(&offs);
         out.extend_from_slice(&loads);
         out.extend_from_slice(&queues);
         out.extend_from_slice(&events);
+        for (t, v) in pulses {
+            out.extend([t, v]);
+        }
         out
+    }
+
+    /// The riders changing onto platform `q` (line, run, stop) from other lines' trains (T-554),
+    /// in the hour before game time `epoch` and the hour from it: each hour, a feeding
+    /// platform's share of `q`'s boardings (demand's transfers a day over its boardings a day) of
+    /// the riders arriving at `q` that hour, split over the trains leaving the feeding platform
+    /// by the riders each brings in, reaching `q` a transfer walk after the train leaves.
+    /// Pushed onto `out` in time order as (seconds from `epoch`, riders). Returns the share of
+    /// the hour's arrivals they carry; the rest arrive steadily. A feeding platform with no
+    /// train bringing riders in an hour, or under one rider a train, leaves its share steady.
+    fn pulses(&self, net: &Network, svc: &Service, epoch: f64, q: (usize, usize, usize), arr: &Arrivals, node: u32, out: &mut Vec<(f32, f32)>) -> f64 {
+        let (l, r, k) = q;
+        let Some(fs) = self.xfer.get(&(l as u32, r as u8, k as u32)) else { return 0.0 };
+        let Some(ls) = svc.lines.get(l) else { return 0.0 };
+        let local = epoch + ls.shift;
+        // shares of the platform's boardings, never more than all of them
+        let per = 1.0 / arr.day.max(fs.iter().map(|f| f.riders).sum());
+        let (x0, y0) = (net.node_x[node as usize], net.node_y[node as usize]);
+        let start = out.len();
+        let mut carried = 0.0;
+        let mut trains: Vec<(f64, f64)> = vec![];
+        for f in fs {
+            let fl = f.line as usize;
+            let Some(fls) = svc.lines.get(fl) else { continue };
+            let fe = epoch + fls.shift;
+            let Some(Some(acc)) = self.accounts[self.kind_at(fe)].get(fl) else { continue };
+            let ra = &acc.runs[(f.run as usize).min(1)];
+            let (m, n, kf) = (ra.deps.len(), ra.n, f.stop as usize);
+            // nobody arrives at a first stop
+            if m == 0 || kf == 0 || kf >= n {
+                continue;
+            }
+            let run = &fls.runs[(f.run as usize).min(1)];
+            let fnode = run.nodes[run.stop_idx[kf] as usize] as usize;
+            let d = (net.node_x[fnode] - x0).hypot(net.node_y[fnode] - y0) / net.k_at(y0);
+            let walk = d * XFER_DETOUR / XFER_MPS;
+            let ts = &ra.order_t[kf * m..(kf + 1) * m];
+            let ord = &ra.order[kf * m..(kf + 1) * m];
+            let h0 = fe.rem_euclid(DAY);
+            for a in [-3600.0, 0.0] {
+                // the trains whose riders reach `q` in [a, a + 3600), weighed by riders aboard
+                trains.clear();
+                let (lo, hi) = (h0 + a - walk, h0 + a + 3600.0 - walk);
+                for d in (lo / DAY).floor() as i64..=(hi / DAY).floor() as i64 {
+                    let off = d as f64 * DAY;
+                    let (i0, i1) = (ts.partition_point(|&t| t + off < lo), ts.partition_point(|&t| t + off < hi));
+                    for j in i0..i1 {
+                        let w = ra.load[ord[j] as usize * n + kf - 1] as f64;
+                        if w > 0.0 {
+                            trains.push((ts[j] + off - h0 + walk, w));
+                        }
+                    }
+                }
+                let wsum: f64 = trains.iter().map(|t| t.1).sum();
+                let riders = f.riders * per * (arr.cum(local + a + 3600.0) - arr.cum(local + a));
+                // under one rider a train would not show: kept steady, and the slice small
+                if wsum <= 0.0 || riders < trains.len() as f64 {
+                    continue;
+                }
+                out.extend(trains.iter().map(|&(t, w)| (t as f32, (riders * w / wsum) as f32)));
+                if a == 0.0 {
+                    carried += f.riders * per;
+                }
+            }
+        }
+        out[start..].sort_by(|a, b| a.0.total_cmp(&b.0));
+        carried
     }
 
     /// Append a trip's loads (run 0's stretch order) and return where they start, or -1 when it
@@ -737,7 +852,7 @@ impl Boarding {
     }
 }
 
-pub const QUEUE_STRIDE: usize = 10;
+pub const QUEUE_STRIDE: usize = 12;
 /// Numbers per period in `Boarding::line_periods` (T-491).
 pub const PERIOD_STRIDE: usize = 6;
 
@@ -992,7 +1107,7 @@ mod tests {
         let (h_sat, h_mon) = (b.hour(&w.net, &w.svc, sat), b.hour(&w.net, &w.svc, mon));
         let arriving = |h: &[f32]| {
             let (nt, nl, nq) = (h[0] as usize, h[1] as usize, h[2] as usize);
-            let q0 = 4 + 2 * nt + nl;
+            let q0 = 5 + 2 * nt + nl;
             (0..nq).map(|k| h[q0 + k * QUEUE_STRIDE + 7]).sum::<f32>()
         };
         // 8-9 in the morning peak: 500 an hour at each end on a weekday, 100 on Saturday
@@ -1278,7 +1393,7 @@ mod tests {
         b.set_riders_day(&we, 1);
         let arriving = |h: &[f32], l: u32| {
             let (nt, nl, nq) = (h[0] as usize, h[1] as usize, h[2] as usize);
-            let q0 = 4 + 2 * nt + nl;
+            let q0 = 5 + 2 * nt + nl;
             (0..nq).map(|k| &h[q0 + k * QUEUE_STRIDE..q0 + (k + 1) * QUEUE_STRIDE]).filter(|q| q[1] as u32 == l).map(|q| q[7]).sum::<f32>()
         };
         let at = |b: &mut Boarding, h: f64| b.hour(&w.net, &w.svc, day + h * 3600.0);
@@ -1376,6 +1491,90 @@ mod tests {
         println!("a week: {trips} trips, every hourly boarding slice and today's counts bit-identical");
     }
 
+    /// T-554: riders changing from a train reach their next platform a transfer walk after it
+    /// leaves, the hour's arrivals stay the same, and the account itself does not move.
+    #[test]
+    fn riders_changing_lines_arrive_with_their_train() {
+        // line 1 A - B - C every 6 minutes at the peak; line 2 E - F - G every 15, ending at G,
+        // 60 m from B
+        let (mut w, l1) = setup(10.0);
+        let e = node(&mut w, 3000.0, 6060.0, 0);
+        let f = node(&mut w, 3000.0, 3060.0, 0);
+        let g = node(&mut w, 3000.0, 60.0, 0);
+        edge(&mut w, e, f, &[], 0).unwrap();
+        edge(&mut w, f, g, &[], 0).unwrap();
+        for n in [e, f, g] {
+            station(&mut w, n, 200);
+        }
+        let l2 = line(&mut w, &[e, f, g], [4.0, 2.0, 1.0]);
+        let mut v = vec![1.0; PERIODS];
+        let hours = |p: usize| (PERIOD_HOURS[p].1 - PERIOD_HOURS[p].0) as f32;
+        v.extend([l1 as f32, 3.0]);
+        for p in 0..PERIODS {
+            let (x, y) = (300.0 * hours(p), 200.0 * hours(p));
+            v.extend([x, y, 0.0, x, y, 0.0, 0.0, 0.0, x + y, 0.0, 0.0, x + y]);
+        }
+        v.extend([l2 as f32, 3.0]);
+        for p in 0..PERIODS {
+            let z = 200.0 * hours(p);
+            v.extend([z, z, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.0 * z, 0.0, 0.0, 0.0]);
+        }
+        let day_b: f32 = (0..PERIODS).map(|p| 200.0 * hours(p)).sum();
+        let mut b = Boarding::default();
+        b.set_riders(&v);
+        let epoch = 3.0 * DAY + 8.0 * 3600.0;
+        let before = b.hour(&w.net, &w.svc, epoch);
+        // half of B's boarders each way come off line 2 at G
+        b.set_transfers(&[l2 as f32, 0.0, 2.0, l1 as f32, 0.0, 1.0, day_b / 2.0, l2 as f32, 0.0, 2.0, l1 as f32, 1.0, 1.0, day_b / 2.0]);
+        let after = b.hour(&w.net, &w.svc, epoch);
+        let parts = |h: &[f32]| {
+            let (nt, nl, nq, ne) = (h[0] as usize, h[1] as usize, h[2] as usize, h[3] as usize);
+            let q0 = 5 + 2 * nt + nl;
+            let e0 = q0 + nq * QUEUE_STRIDE;
+            (h[..q0].to_vec(), h[q0..e0].to_vec(), h[e0..e0 + 2 * ne].to_vec(), h[e0 + 2 * ne..].to_vec())
+        };
+        let (ta, qa, ea, pa) = parts(&before);
+        let (tb, qb, eb, pb) = parts(&after);
+        // the trains' loads and every train leaving a platform are as before
+        assert_eq!(ta[..4], tb[..4]);
+        assert_eq!(ta[5..], tb[5..]);
+        assert_eq!(ea, eb);
+        assert!(pa.is_empty() && !pb.is_empty());
+        let mut seen = 0;
+        for (x, y) in qa.chunks(QUEUE_STRIDE).zip(qb.chunks(QUEUE_STRIDE)) {
+            assert_eq!(x[..4], y[..4]);
+            assert_eq!(x[5..10], y[5..10]); // left behind, waits, the hour's arrivals, events
+            if x[1] as u32 != l1 || x[0] as u32 != w.svc.lines[l1 as usize].runs[0].nodes[w.svc.lines[l1 as usize].runs[0].stop_idx[1] as usize] {
+                assert_eq!(x[4], y[4]);
+                assert_eq!(y[11], 0.0);
+                continue;
+            }
+            seen += 1;
+            // at B: half arrive steadily, half in four pulses an hour, one per line 2 train
+            assert!((y[4] - x[4] / 2.0).abs() < 1e-6, "{} {}", x[4], y[4]);
+            let p = &pb[y[10] as usize * 2..(y[10] + y[11]) as usize * 2];
+            let hour: Vec<&[f32]> = p.chunks(2).filter(|c| c[0] >= 0.0 && c[0] < 3600.0).collect();
+            assert_eq!(hour.len(), 4);
+            let sum: f32 = hour.iter().map(|c| c[1]).sum();
+            assert!((sum - x[7] / 2.0).abs() < 0.01, "{sum} {}", x[7]);
+            // before the hour, only after the last train to leave before it
+            let since = eb[y[8] as usize * 2];
+            assert!(p.chunks(2).all(|c| c[0] > since && c[0] < 3600.0));
+            // each a 65 s walk (60 m x 1.3 at 1.2 m/s) after a line 2 train reaches G
+            let g_t: Vec<f64> = {
+                let ra = &b.accounts[0][l2 as usize].as_ref().unwrap().runs[0];
+                let m = ra.deps.len();
+                ra.order_t[2 * m..3 * m].to_vec()
+            };
+            let h0 = epoch.rem_euclid(DAY);
+            for c in &hour {
+                let t = c[0] as f64 - 65.0 + h0;
+                assert!(g_t.iter().any(|&x| (x - t).abs() < 0.01), "{}", c[0]);
+            }
+        }
+        assert_eq!(seen, 2);
+    }
+
     #[test]
     fn the_hour_lines_up_with_the_drawn_trips() {
         let (w, l) = setup(10.0);
@@ -1384,14 +1583,15 @@ mod tests {
         let epoch = 3.0 * DAY + 8.0 * 3600.0;
         let out = b.hour(&w.net, &w.svc, epoch);
         let trips = w.svc.trips(&w.net, epoch, epoch + 3600.0);
-        let (nt, nl, nq, ne) = (out[0] as usize, out[1] as usize, out[2] as usize, out[3] as usize);
+        let (nt, nl, nq, ne, np) = (out[0] as usize, out[1] as usize, out[2] as usize, out[3] as usize, out[4] as usize);
         assert_eq!(nt, trips.len());
-        assert_eq!(out.len(), 4 + 2 * nt + nl + nq * QUEUE_STRIDE + ne * 2);
-        let offs: Vec<f32> = out[4..4 + 2 * nt].chunks(2).map(|c| c[0]).collect();
+        assert_eq!(np, 0); // no transfers set
+        assert_eq!(out.len(), 5 + 2 * nt + nl + nq * QUEUE_STRIDE + ne * 2);
+        let offs: Vec<f32> = out[5..5 + 2 * nt].chunks(2).map(|c| c[0]).collect();
         assert!(offs.iter().all(|&o| o >= 0.0));
         let run_s = w.svc.lines[l as usize].runs[0].prof[HIGH].duration as f32;
-        assert!(out[4..4 + 2 * nt].chunks(2).all(|c| c[1] == run_s), "{:?} {run_s}", &out[4..8]);
-        let out = &out[nt..]; // the rest as if one number per trip
+        assert!(out[5..5 + 2 * nt].chunks(2).all(|c| c[1] == run_s), "{:?} {run_s}", &out[5..9]);
+        let out = &out[nt + 1..]; // the rest as if one number per trip and a 4-number header
         let loads = &out[4 + nt..4 + nt + nl];
         for (t, o) in trips.iter().zip(offs.iter().copied()) {
             let own = b.trip_account(t.line, t.run as usize, t.dep).unwrap();

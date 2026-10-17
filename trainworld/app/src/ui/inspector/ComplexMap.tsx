@@ -325,7 +325,6 @@ export function ComplexMap({ id, members, stations, lines, now, onOpen }: {
     let text = `${name}\n${count(total)} waiting on the platform now`;
     if (byName.size > 1) for (const [n, v] of [...byName].sort((a, b) => b[1] - a[1])) text += `\n${count(v)} for ${n}`;
     text += p.oneSide ? `\nRoom for ${count(p.room)} on the platform` : `\nRoom for ${count(p.room)} on each side`;
-    if (p.leftBehind[0] || p.leftBehind[1]) text += "\nThe last train left riders behind";
     return text;
   };
   const trainTip = (x: ComplexNow["trains"][number]) => {
@@ -430,19 +429,19 @@ export function ComplexMap({ id, members, stations, lines, now, onOpen }: {
                 <rect {...band(d, y, t.w, t.line ? STUB : 0)} fill={t.line ? t.line.colour : "#fff"} opacity={t.s.built ? 1 : 0.6} />
               ))}
               {/* each platform's riders waiting now (T-246), as the map fills its boxes: each
-                  direction's half from the middle out by its share of the room, red while the last
-                  train there left riders behind; then the platform's blue edges (T-236) */}
+                  direction's half from the middle out by its share of the room, red once full
+                  (T-559); then the platform's blue edges (T-236) */}
               {rows.filter(({ t }) => t.plat).map(({ t, y }) => {
                 const p = now?.platforms.get(t.s.id);
                 const half = d.len / 2 - 0.5, sg = Math.cos(t.s.heading - d.b.heading) >= 0 ? 0 : 1;
                 const fills = !p ? [] : p.oneSide
-                  ? [{ share: (p.side[0] + p.side[1]) / p.room, bad: p.leftBehind[0], y0: y + 0.5, h: PLAT_W - 1 }]
-                  : [0, 1].map((k) => ({ share: p.side[k ^ sg] / p.room, bad: p.leftBehind[k ^ sg], y0: y + 0.5 + k * (PLAT_W - 1) / 2, h: (PLAT_W - 1) / 2 }));
+                  ? [{ share: (p.side[0] + p.side[1]) / p.room, y0: y + 0.5, h: PLAT_W - 1 }]
+                  : [0, 1].map((k) => ({ share: p.side[k ^ sg] / p.room, y0: y + 0.5 + k * (PLAT_W - 1) / 2, h: (PLAT_W - 1) / 2 }));
                 return (
                   <g>
                     {fills.map((f) => {
                       const fl = Math.min(1, f.share) * half;
-                      return fl > 0.05 ? <rect x={-fl} y={f.y0} width={2 * fl} height={f.h} fill={f.bad ? FULL : CROWD} /> : null;
+                      return fl > 0.05 ? <rect x={-fl} y={f.y0} width={2 * fl} height={f.h} fill={f.share >= 1 ? FULL : CROWD} /> : null;
                     })}
                     <line x1={-half} x2={half} y1={y + 0.5} y2={y + 0.5} stroke={PLATFORM_BLUE} stroke-width="1" />
                     <line x1={-half} x2={half} y1={y + PLAT_W - 0.5} y2={y + PLAT_W - 0.5} stroke={PLATFORM_BLUE} stroke-width="1" />

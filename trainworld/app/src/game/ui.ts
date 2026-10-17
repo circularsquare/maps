@@ -147,6 +147,8 @@ export const renameLinePrompt = signal<string | null>(null);
 export interface ListSort<K extends string> { key: K; dir: 1 | -1 }
 export const lineSort = signal<ListSort<"name" | "riders" | "trains" | "near">>({ key: "name", dir: 1 });
 export const stationSort = signal<ListSort<"name" | "riders" | "near">>({ key: "riders", dir: -1 });
+/** The Money tab's Cities section (T-550): by name, train share, train rides a day or money a day. */
+export const citySort = signal<ListSort<"name" | "train" | "rides" | "money">>({ key: "rides", dir: -1 });
 /** Platform length for new stations, m. */
 /** The map's demand drawn for one trip purpose only, or all (T-158). Not remembered: a page
  * load starts on all purposes, so nobody returns to a map that silently leaves riders out. */

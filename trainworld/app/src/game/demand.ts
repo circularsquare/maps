@@ -359,6 +359,7 @@ export interface ComplexTransfers {
 
 export interface DemandQueries {
   transfers(members: string[]): Promise<ComplexTransfers | null>;
+  platformTransfers(): Promise<Float32Array | null>;
   cityCells(city?: CityId): Promise<CityCells | null>;
   cellModes(purpose?: PurposeFilter, city?: CityId): Promise<CellModes | null>;
   stationRiders(stationId: string, top?: number, members?: string[]): Promise<StationRiders | null>;
@@ -400,3 +401,7 @@ export const intercityStation = (stationId: string, members?: string[]): Promise
  * kB; asked when the complex map shows. Null while there is no solve or the workers moved on. */
 export const complexTransfers = (members: string[]): Promise<ComplexTransfers | null> =>
   queries?.transfers(members) ?? Promise.resolve(null);
+/** Every change between platforms a day, for the solve `demandView` shows (T-554): per pair the
+ * line, run and stop (in the run's order) riders leave, the same where they board, and riders, as
+ * `TrackApi.set_transfers` reads them. Null while there is no solve or the workers moved on. */
+export const platformTransfers = (): Promise<Float32Array | null> => queries?.platformTransfers() ?? Promise.resolve(null);

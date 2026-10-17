@@ -262,7 +262,7 @@ motion. **Panels count the past 24 hours, not a forecast** [T-293, T-446]: the l
 count the past 24 hours from the boarding account, while the map's demand views (Homes and Destinations bubbles
 coloured by mode share, line widths by riders, station use circles, inter-region trips) show demand's
 whole day: the average day by default, or a weekday or a weekend day [T-464]. On the map, lines sharing track are drawn over each other,
-stations are dots from zoom 9 and their true platforms from 15, and trains fill like a gauge with
+stations are dots from zoom 9 and their true platforms from 14, and trains fill like a gauge with
 their riders.
 
 ## 9. Checking the demand model

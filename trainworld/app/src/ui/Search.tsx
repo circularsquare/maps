@@ -19,6 +19,7 @@ import type { LineInput } from "../game/types";
 import { world } from "../game/world";
 import { live } from "../map/live";
 import { keyIsTheirs } from "./keys";
+import { goToCity } from "./Cities";
 import { Chip } from "./widgets";
 
 /** T-400: a search showing fewer results than this asks for more zones' place lists. */
@@ -41,10 +42,7 @@ export function goTo(hit: SearchHit) {
   const map = live.map;
   const selecting = tool.peek() === "select";
   if (hit.kind === "city") {
-    map?.jumpTo({ center: hit.city.center, zoom: hit.city.zoom });
-    activeCity.value = hit.city.id;
-    // a station or bubble selection back in the old city would hold the focus there (main.ts)
-    if (selecting) selection.value = null;
+    goToCity(hit.city);
     return;
   }
   if (hit.kind === "place") {

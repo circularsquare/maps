@@ -188,6 +188,13 @@ def registered_population(city, boundary, sig):
                  "jumin.mois.go.kr; registered foreigners not included), spread inside each by GHSL GHS-POP E2020")
 
 
+def plan_hooks(row):
+    """T-555: none for a planned Korean row. The registration population needs each city's provinces
+    and its renames since November 2020 mapped by hand (REGIONS: Incheon's 2026 gu; Gunwi moved from
+    Gyeongbuk to Daegu in 2023), and the mean commute is the capital area's."""
+    return {}
+
+
 if __name__ == "__main__":
     sys.stdout.reconfigure(encoding="utf-8")
     if sys.argv[1] == "fetch":

@@ -168,6 +168,13 @@ def census_population(city, boundary, sig):
                  "2001-2011 growth (table A-2), spread inside each by GHSL GHS-POP E2020")
 
 
+def plan_hooks(row):
+    """T-555: none for a planned Indian row. Mumbai's Census 2011 sub-district totals, A-2 growth and
+    B-28 bands (the curve, work from home) are typed in for its four districts alone; the informal
+    jobs blend comes from plan_config's rule."""
+    return {}
+
+
 if __name__ == "__main__":
     city = sys.argv[1]
     us = units(city)

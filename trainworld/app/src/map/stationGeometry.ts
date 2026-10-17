@@ -17,9 +17,13 @@ import { EARTH_C } from "./geo";
 export type Project = (x: number, y: number) => [number, number];
 
 /** From this zoom stations are drawn as platforms along the track, further out as dots (T-189;
- * T-204 moved it from 13, Anita: "turn into them sooner, around ~4x more zoomed in"). At 15 a pixel
- * is about 1.8 m at New York's latitude, so a 150-200 m platform is 80-110 px long. */
-export const STATION_BOX_ZOOM = 15;
+ * T-204 moved it from 13 to 15, T-553 to 14, Anita: "2x more zoomed out, would like to see more
+ * station boxes"). At 14 a pixel is about 3.6 m at New York's latitude, so a 150-200 m platform is
+ * 40-55 px long. */
+export const STATION_BOX_ZOOM = 14;
+/** The zoom a box's width is set at: its width on screen there is its width on the ground, and from
+ * there out to STATION_BOX_ZOOM it keeps that width on screen instead of thinning (T-553). */
+export const BOX_WIDTH_ZOOM = 15;
 /** Below this zoom no station dot is drawn or picked, only the lines (T-205; T-542 moved it from 11
  * to 9, Anita: dots 4x further out). A selected station is still drawn. */
 export const STATIONS_ZOOM = 9;
@@ -28,11 +32,11 @@ export const STATIONS_ZOOM = 9;
 export const TRAINS_ZOOM = 10;
 /** Half a platform's true width, m: two tracks either side of an island platform, about 12 m in
  * all. The drawn box is wider (T-204): as wide on the ground as a plain line and its rim are at
- * STATION_BOX_ZOOM, less a quarter (T-239), about 16 m at New York's latitude. */
+ * BOX_WIDTH_ZOOM, less a quarter (T-239), about 16 m at New York's latitude. */
 export const PLATFORM_HALF_M = 6;
-/** Local units per CSS px at STATION_BOX_ZOOM: a box's fixed width, set on screen there, in units
+/** Local units per CSS px at BOX_WIDTH_ZOOM: a box's fixed width, set on screen there, in units
  * on the ground (T-204). */
-const BOX_UNIT = EARTH_C / (512 * 2 ** STATION_BOX_ZOOM);
+const BOX_UNIT = EARTH_C / (512 * 2 ** BOX_WIDTH_ZOOM);
 
 /** Where a platform lies, from the station node, in local units (renderer's buffers). */
 export interface PlatformShape {
@@ -208,14 +212,14 @@ export interface StationStyle {
   /** a line's width; 0 when lines are not drawn (Height and Max speed show the track at it) */
   linePx: number;
   ringPx: number;
-  /** a line's width and the rim at STATION_BOX_ZOOM: they fix every box's width on the ground (T-204) */
+  /** a line's width and the rim at BOX_WIDTH_ZOOM: they fix every box's width on the ground (T-204) */
   boxLinePx: number;
   boxRingPx: number;
   /** zoomed out below STATIONS_ZOOM: only selected stations are drawn and picked (T-205) */
   hidden?: boolean;
 }
 
-/** A box is this share of the width that covers a plain line and its rim at STATION_BOX_ZOOM
+/** A box is this share of the width that covers a plain line and its rim at BOX_WIDTH_ZOOM
  * (T-239, Anita: "a bit too fat still, maybe 25% narrower"). Lines are not covered any more: in
  * traffic thickness mode (T-227) a line can be wider than the stations on it. */
 export const BOX_NARROW = 0.75;
@@ -223,8 +227,9 @@ export const BOX_NARROW = 0.75;
  * from, whatever the traffic mode draws (T-239). */
 const PLAIN_COVER = 0.6;
 
-/** A box's half width at STATION_BOX_ZOOM, CSS px (T-239): one value for every station, in every
- * mode; the shader's `u_fixed` and the CPU twin read it. */
+/** A box's half width at BOX_WIDTH_ZOOM, CSS px (T-239): one value for every station, in every
+ * mode; the shader's `u_fixed` and the CPU twin read it. It is also the least a box is ever wide on
+ * screen (T-553), so one stays legible from STATION_BOX_ZOOM to BOX_WIDTH_ZOOM. */
 export function boxHalfPxAtBoxZoom(st: Pick<StationStyle, "boxLinePx" | "boxRingPx">) {
   return BOX_NARROW * (0.5 * PLAIN_COVER * st.boxLinePx + st.boxRingPx + 1);
 }
@@ -238,7 +243,7 @@ function boxHalfLoc(st: StationStyle, halfWidth: number) {
 /** A plain station's box half width on screen at `zoom` on a flat map, CSS px; 0 for dots (where
  * station names go, stationLabels.ts). */
 export function plainBoxHalfPx(st: StationStyle, zoom: number) {
-  return st.boxes ? (boxHalfLoc(st, 0) / BOX_UNIT) * 2 ** (zoom - STATION_BOX_ZOOM) : 0;
+  return st.boxes ? Math.max((boxHalfLoc(st, 0) / BOX_UNIT) * 2 ** (zoom - BOX_WIDTH_ZOOM), boxHalfPxAtBoxZoom(st)) : 0;
 }
 
 /** A station on screen, CSS px: the CPU twin of STATION_VS. */
@@ -317,7 +322,7 @@ export function stationShape(x: number, y: number, sh: PlatformShape, halfWidth:
   const axisLoc = Math.hypot(sh.ax, sh.ay);
   const [ox, oy] = axisLoc > 1e-9 ? [0, 0] : project(mx + 1, my);
   const perLoc = axisLoc > 1e-9 ? len / axisLoc : Math.hypot(ox - cx, oy - cy);
-  const hw = boxHalfLoc(st, halfWidth) * perLoc;
+  const hw = Math.max(boxHalfLoc(st, halfWidth) * perLoc, st.boxes ? boxHalfPxAtBoxZoom(st) : 0);
   // a dot covers a plain line through it as drawn now (not a wider traffic line, T-239)
   const cover = 0.5 * PLAIN_COVER * st.linePx + st.ringPx + 1;
   // the track's own line along the platform (T-254), in the frame at its middle
@@ -365,10 +370,10 @@ export function insideStation(s: StationShape, x: number, y: number, padding = 0
 }
 
 /** A link's bridge (T-217, Anita: "if we manually link, this white shape should include a thin
- * bridge"): the white of it is this half width at STATION_BOX_ZOOM, CSS px, fixed on the ground like
+ * bridge"): the white of it is this half width at BOX_WIDTH_ZOOM, CSS px, fixed on the ground like
  * the boxes (a plain box's white is 2.5 px there), with the station rim along both sides. */
 export const BRIDGE_HALF_PX = 1.5;
-/** A bridge starts this far inside a platform's end, CSS px at STATION_BOX_ZOOM, so its white
+/** A bridge starts this far inside a platform's end, CSS px at BOX_WIDTH_ZOOM, so its white
  * crosses the box's rim there and the two shapes join without a seam. */
 const BRIDGE_INSET_PX = 6;
 

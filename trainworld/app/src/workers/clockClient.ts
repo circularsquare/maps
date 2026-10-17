@@ -10,7 +10,7 @@ import { holdForGameLoad } from "../game/loading";
 import { incomeByDay, lastSaved, liveMoney, setMoneyState } from "../game/money";
 import { chargeShares, lineShares } from "../game/regionMoney";
 import { DAY_KINDS } from "../game/days";
-import { demandByDay } from "../game/demand";
+import { demandByDay, demandView, platformTransfers } from "../game/demand";
 import { accountVersion, packRiders } from "../game/boarding";
 import { lineDraft, selection, tool } from "../game/ui";
 import { say, setEditSink, world } from "../game/world";
@@ -292,6 +292,27 @@ export class ClockClient {
         const packed = d.view ? packRiders(d.view) : null;
         if (packed) this.post({ kind: "riders", packed, day }, [packed.buffer]);
       });
+    });
+    // T-554: the changes between platforms of the solve shown, for when changing riders reach
+    // their next platform; one question at a time, asked again if the view moved on meanwhile
+    let xferAsked: unknown = null, xferBusy = false;
+    const askTransfers = () => {
+      const dv = demandView.peek();
+      if (xferBusy || !dv || dv === xferAsked) return;
+      xferBusy = true;
+      xferAsked = dv;
+      void platformTransfers().catch(() => null).then((packed) => {
+        xferBusy = false;
+        // a copy: the answer is cached for other askers of the same round
+        if (packed) {
+          const own = packed.slice();
+          this.post({ kind: "transfers", packed: own }, [own.buffer]);
+        } else xferAsked = null;
+        if (demandView.peek() !== dv) askTransfers();
+      });
+    };
+    effect(() => {
+      if (demandView.value) askTransfers();
     });
     // Hidden or closing: write the autosave now (T-029).
     document.addEventListener("visibilitychange", () => document.visibilityState === "hidden" && this.post({ kind: "flush" }));

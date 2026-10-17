@@ -1,4 +1,4 @@
-import { boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, bridgeShape, connectorHalfPx, dotRing, spanningPairs, insideStation, PLATFORM_POINTS, platformPoints, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, shapePoints, STATION_BOX_ZOOM, STATIONS_ZOOM, TRAINS_ZOOM, stationHaloRadius, stationRadii, stationRing, stationShape, type PlatformShape, type Project, type StationShape, type StationStyle } from "./stationGeometry";
+import { BOX_WIDTH_ZOOM, boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, bridgeShape, connectorHalfPx, dotRing, spanningPairs, insideStation, PLATFORM_POINTS, platformPoints, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, shapePoints, STATION_BOX_ZOOM, STATIONS_ZOOM, TRAINS_ZOOM, stationHaloRadius, stationRadii, stationRing, stationShape, type PlatformShape, type Project, type StationShape, type StationStyle } from "./stationGeometry";
 // WebGL2 network renderer: track and line strokes (one instanced quad per polyline segment, a
 // casing under the colour, the theme's (T-039); blueprint solid, lighter and without casing, T-311), stations (platforms along the track, or
 // dots zoomed out, T-189), the drawing tool's preview,
@@ -13,7 +13,7 @@ import { boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, bridgeShape, connectorHalfPx, dotRi
 
 import { LEVEL_COLOURS, NET_INK, PLATFORM_BLUE, rgb } from "../game/palette";
 import { shadeColours } from "../game/shades";
-import { platformRoom, readBoardHour, QUEUE_STRIDE, type BoardHour } from "../game/boarding";
+import { platformRoom, pulsesBetween, readBoardHour, QUEUE_STRIDE, type BoardHour } from "../game/boarding";
 import { anchor, anchorPsi, EARTH_C, localToMercMatrix, mul4, PSI_PER_UNIT } from "./geo";
 import { lineAt, type NetworkBuffers, type Strokes } from "./network";
 
@@ -42,8 +42,8 @@ const TRAIN_PX: [number, number][] = [[10, 3], [11, 5.25], [12, 6], [15, 9]];
  * Bare track, the casing and a selected line's extra width follow the same steps. */
 const LINE_PX: [number, number][] = [[9, 0.85], [12, 3.9], [15, 6.6]];
 /** Platform crowds (T-164, T-219): drawn from this zoom, where platforms are (T-204), as each side's
- * half of the box filling from its middle outwards in `CROWD_RGB`, red (BAD_RGB) while the last
- * train on that side left anyone behind. */
+ * half of the box filling from its middle outwards in `CROWD_RGB`, red (BAD_RGB) once that side is
+ * full (T-559). */
 export const CROWD_ZOOM = STATION_BOX_ZOOM;
 const CROWD_RGB = rgb("#77726d").map((v) => v / 255);
 const PLATFORM_RGB = rgb(PLATFORM_BLUE).map((v) => v / 255);
@@ -198,8 +198,8 @@ uniform vec2 u_radius;   // dot radius, ordinary and transfer (px)
 uniform float u_line;    // a line's width (px): a station covers the lines through it
 uniform float u_ring;    // its dark rim (px)
 uniform float u_boxes;   // 1: platforms along the track; 0: dots (zoomed out)
-uniform vec2 u_fixed;    // a box's half width (T-204, T-239): px at STATION_BOX_ZOOM, and local
-                         // units per px there
+uniform vec2 u_fixed;    // a box's half width (T-204, T-239): px at BOX_WIDTH_ZOOM, and local
+                         // units per px there; the width on the ground, and the least on screen (T-553)
 uniform highp int u_halo;
 uniform highp int u_pass; // stations: 0 every one but the selected, 1 the selected only
 uniform highp int u_layer; // 0 the dark shape, 1 the white inside the rim, 2 riders waiting (T-219),
@@ -213,19 +213,22 @@ in vec2 a_sz;            // (x unused since T-239), daily riders' square-root sc
 in vec2 a_halo;          // demand circle's offset, local units (a station complex's, T-146)
 in vec2 a_sel;           // drawn selected (x; y unused since T-313)
 in vec4 a_crowd;         // riders waiting (T-219): how full the platform's + and - side is (0-1),
-                         // and whether the last train on that side left anyone behind
+                         // and whether that side is full (zw)
 in vec2 a_dcrowd;        // zoomed out (T-228): the station's fullest platform side, 0-1, and 1 if
-                         // any train there left riders behind
+                         // it is full
 uniform highp sampler2D u_stline; // RG32F, per station ${PLATFORM_POINTS} texels: its track's centre line from the node (T-254)
 out vec2 v_p;            // in the platform's frame at its middle, px
 flat out vec3 v_size;    // half length, half width, (0); a demand circle's radius
 flat out float v_dot;    // the dot's radius, 0 for a platform
 flat out float v_alpha;
 flat out vec4 v_crowd;
+flat out vec4 v_scr;     // a dot's frame on the screen (T-553): where its x and y axes point, as
+                         // (x.x, y.x, x.y, y.y) with the screen's y up, so a pie can start at 12 o'clock
 // the centre line in the frame, px (T-254), two points to a vec4
 ${qVars("out")}
 void main() {
   v_dot = 0.0;
+  v_scr = vec4(1.0, 0.0, 0.0, 1.0);
   v_crowd = a_crowd;
   int flags = int(a_st.z + 0.5);
   v_alpha = (flags & 8) != 0 ? 0.3 : (flags & 2) != 0 ? 0.6 : 1.0; // 8: a blueprint switched off (T-333)
@@ -245,8 +248,8 @@ void main() {
   bool noCrowd = !boxes || (flags & 2) != 0 || max(a_crowd.x, a_crowd.y) <= 0.0;
   // the blue platform edges (u_layer 3, T-236) are drawn on platforms only
   if ((u_pass == 1) != sel || (u_layer == 2 && noCrowd) || (u_layer == 3 && !boxes)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
-  // zoomed out a dot is tinted by its platforms' crowd (T-228): the fullest side's share, and
-  // whether any train there left riders behind
+  // zoomed out a dot's pie is its platforms' crowd (T-228, T-553): the fullest side's share, and
+  // whether it is full
   if (!boxes) v_crowd = vec4(a_dcrowd, 0.0, 0.0);
   vec2 mid = a_st.xy + a_shape.xy;
   vec4 c = u_matrix * vec4(mid, 0.0, 1.0);
@@ -257,12 +260,13 @@ void main() {
   float len = length(axis);
   vec2 along = len > 1e-6 ? axis / len : vec2(1.0, 0.0);
   vec2 across = length(nrm) > 1e-6 ? normalize(nrm) : vec2(-along.y, along.x);
+  v_scr = vec4(along.x, across.x, along.y, across.y);
   float axisLoc = length(a_axis);
-  // a box is as wide on the ground as a plain line and its rim are at STATION_BOX_ZOOM less a
+  // a box is as wide on the ground as a plain line and its rim are at BOX_WIDTH_ZOOM less a
   // quarter, whatever lines are drawn wider (T-239), so its length and width scale together and
-  // it keeps one shape at every zoom (T-204)
+  // it keeps one shape from there in; further out it keeps that width on screen (T-553)
   float perLoc = axisLoc > 1e-9 ? len / axisLoc : 0.0;
-  float hw = max(a_shape.w, u_fixed.x * u_fixed.y) * perLoc;
+  float hw = max(max(a_shape.w, u_fixed.x * u_fixed.y) * perLoc, boxes ? u_fixed.x : 0.0);
   // a dot covers a plain line through it as drawn now
   float cover = 0.3 * u_line + u_ring + u_pixel;
   float hl = max(len, hw);
@@ -325,9 +329,11 @@ flat out vec3 v_size;
 flat out float v_dot;
 flat out float v_alpha;
 flat out vec4 v_crowd;
+flat out vec4 v_scr;
 ${qVars("out")}
 void main() {
   v_dot = 0.0;
+  v_scr = vec4(1.0, 0.0, 0.0, 1.0);
   v_crowd = vec4(0.0);
   v_alpha = a_bflag.y > 0.5 ? 0.6 : 1.0;
   vec2 half_vp = u_viewport * 0.5;
@@ -359,7 +365,7 @@ uniform vec3 u_crowd_rgb;
 uniform highp int u_halo;
 uniform highp int u_layer;
 uniform float u_hair;    // a CSS px in device px
-uniform float u_tint;    // 1: dots are tinted by their crowds (T-228)
+uniform float u_tint;    // 1: dots show their crowds as pies (T-228, T-553)
 uniform vec3 u_plat;     // the platforms' blue (T-236)
 uniform float u_mask;    // 1: the white only marks the stencil (the track drawn through it, T-236)
 in vec2 v_p;
@@ -367,6 +373,7 @@ flat in vec3 v_size;
 flat in float v_dot;
 flat in float v_alpha;
 flat in vec4 v_crowd;
+flat in vec4 v_scr;
 ${qVars("in")}
 out vec4 o;
 ${SHAPE_GLSL}
@@ -399,11 +406,17 @@ void main() {
       return;
     }
     float a = inner * v_alpha;
-    // a dot (zoomed out) tinted by its platforms' crowd (T-228): towards the crowd grey by the
-    // fullest side's share, at most 45%, or a pale red while a train there left riders behind
+    // a dot (zoomed out) shows its platforms' crowd as a pie (T-228, T-553): the white fills
+    // clockwise from 12 o'clock with the crowd grey by the fullest side's share, red once full
     vec3 col = vec3(1.0);
-    if (v_dot > 0.0 && u_tint > 0.5 && v_crowd.y > 0.5) col = mix(col, u_bad, 0.4);
-    else if (v_dot > 0.0 && u_tint > 0.5) col = mix(col, u_crowd_rgb, 0.45 * clamp(v_crowd.x, 0.0, 1.0));
+    float share = clamp(v_crowd.x, 0.0, 1.0);    if (v_dot > 0.0 && u_tint > 0.5 && share > 0.0) {
+      vec2 s = vec2(dot(v_p, v_scr.xy), dot(v_p, v_scr.zw));
+      float turn = atan(s.x, s.y);
+      if (turn < 0.0) turn += 6.2831853;
+      float r = length(s);
+      float cover = share > 0.995 ? 1.0 : clamp(share * 6.2831853 * r - turn * r + 0.5, 0.0, 1.0) * clamp(turn * r + 0.5, 0.0, 1.0);
+      col = mix(col, v_crowd.y > 0.5 ? u_bad : u_crowd_rgb, cover);
+    }
     o = vec4(col * a, a);
   } else if (u_layer == 3) {
     // the platform's two long edges as thin blue lines just inside its rim (T-236, Anita: "show
@@ -420,8 +433,7 @@ void main() {
     o = vec4(u_plat * a, a);
   } else {
     // riders waiting (T-219): each side's half of the platform fills from its middle outwards, as
-    // far as its share of the room to stand there, like a train's gauge; red while the last train
-    // on that side left anyone behind
+    // far as its share of the room to stand there, like a train's gauge; red once full (T-559)
     // white kept between the fill and the rim (a pixel and a half, or as far as the blue platform
     // edge, T-236), so the outline stays crisp
     vec2 p = f;
@@ -899,7 +911,7 @@ export class NetworkRenderer {
   private stationSizes: Float32Array = new Float32Array(0);
   private stationShapeBuf: WebGLBuffer | null = null;
   /** how the last draw sized stations, CSS px (picking, the cut-out above the demand bubbles) */
-  stationStyle: StationStyle = { boxes: false, radius: stationRadii(12), linePx: 0, ringPx: stationRing(12), boxLinePx: interp(STATION_BOX_ZOOM, LINE_PX), boxRingPx: stationRing(STATION_BOX_ZOOM) };
+  stationStyle: StationStyle = { boxes: false, radius: stationRadii(12), linePx: 0, ringPx: stationRing(12), boxLinePx: interp(BOX_WIDTH_ZOOM, LINE_PX), boxRingPx: stationRing(BOX_WIDTH_ZOOM) };
   /** zoomed out below STATIONS_ZOOM at the last draw: trains neither drawn nor picked (T-205) */
   trainsHidden = false;
   private selectedStation = -1;
@@ -1454,7 +1466,7 @@ export class NetworkRenderer {
       const hidden = zoom < STATIONS_ZOOM;
       // a dot's rim is thinner than a box's (T-322)
       const ring = boxes ? stationRing(zoom) : dotRing(zoom);
-      const boxLinePx = interp(STATION_BOX_ZOOM, LINE_PX), boxRingPx = stationRing(STATION_BOX_ZOOM);
+      const boxLinePx = interp(BOX_WIDTH_ZOOM, LINE_PX), boxRingPx = stationRing(BOX_WIDTH_ZOOM);
       this.stationStyle = { boxes, radius: stationRadii(zoom), linePx: wLine / dpr, ringPx: ring, boxLinePx, boxRingPx, hidden };
       this.syncGroups(n, opt.groups ?? null);
       const also = (opt.selStations ?? []).filter((i) => i >= 0 && i < n.stationCount);
@@ -1484,8 +1496,8 @@ export class NetworkRenderer {
       gl.bindTexture(gl.TEXTURE_2D, this.tex.stationLine);
       gl.uniform1i(su.u_stline, 11);
       gl.activeTexture(gl.TEXTURE0);
-      // local units per px at STATION_BOX_ZOOM (the box's width, T-204)
-      const unitAtBox = EARTH_C / (512 * 2 ** STATION_BOX_ZOOM * dpr);
+      // local units per px at BOX_WIDTH_ZOOM (the box's width, T-204)
+      const unitAtBox = EARTH_C / (512 * 2 ** BOX_WIDTH_ZOOM * dpr);
       gl.uniform2f(su.u_fixed, boxHalfPxAtBoxZoom({ boxLinePx, boxRingPx }) * dpr, unitAtBox);
       gl.bindVertexArray(this.stationVao);
       // Analytical circles behind the normal, still-selectable platform boxes.
@@ -1535,8 +1547,8 @@ export class NetworkRenderer {
         gl.bindVertexArray(this.connVao);
         gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, connectors);
       };
-      // Riders waiting on the platforms (T-164, T-219), where platforms are drawn; zoomed out a tint
-      // on each dot (T-228).
+      // Riders waiting on the platforms (T-164, T-219), where platforms are drawn; zoomed out a pie
+      // in each dot (T-228, T-553).
       this.crowdsShown = !!opt.crowds && !!this.board && !hidden;
       const any = this.crowdsShown && this.updateCrowds(n, uTime);
       const fills = any && boxes;
@@ -1581,7 +1593,7 @@ export class NetworkRenderer {
           if (!shapes.length) break;
           this.drawGlow(shapes, dpr, vp);
         }
-        // zoomed out the connectors' white goes under the dots' white, so a dot's crowd tint (T-228)
+        // zoomed out the connectors' white goes under the dots' white, so a dot's crowd pie (T-228)
         // stays whole (T-313)
         if (connectors) connDraw(pass, 0);
         layerDraw(pass, 0, true);
@@ -1627,7 +1639,7 @@ export class NetworkRenderer {
     // No trains zoomed far out (T-205).
     this.trainsHidden = zoom < TRAINS_ZOOM;
     if (opt.showTrains && this.tripCount && !this.trainsHidden) {
-      this.detailedTrains = zoom >= 15;
+      this.detailedTrains = zoom >= STATION_BOX_ZOOM;
       const tw = interp(zoom, TRAIN_PX) * dpr;
       gl.useProgram(this.trainProg);
       gl.uniformMatrix4fv(this.trainU.u_matrix, false, m);
@@ -1799,27 +1811,19 @@ export class NetworkRenderer {
     if (this.connPairs.length && this.connFlagBuf) this.rewrite(this.connFlagBuf, pairFlags(this.connPairs));
   }
 
-  /** How full station `i`'s platform is as last drawn (T-219): each side's share of the room to
-   * stand there (one share for the whole platform when only one side has trains), and the riders
-   * one side holds; null when it has no platforms in the account or crowds are not drawn. */
-  crowdShare(i: number): { shares: number[]; room: number } | null {
+  /** The share of the room to stand that the platform side of queue `q` of the trip buffer holds,
+   * as last drawn (0-1); null when crowds are not drawn or the queue has no platform. */
+  queueShare(q: number): number | null {
     const o = this.crowdOf;
-    if (!o || !this.crowdsShown || !this.net || o.net !== this.net) return null;
-    const sides = o.sides[i];
-    if (!sides) return null;
-    const room = platformRoom(this.net.stationLength?.[i] ?? 0);
-    const w = this.crowdWait;
-    return sides === 3
-      ? { shares: [w[i * 2] / room, w[i * 2 + 1] / room], room }
-      : { shares: [(w[i * 2] + w[i * 2 + 1]) / (2 * room)], room: 2 * room };
+    if (!o || !this.crowdsShown || !this.net || o.net !== this.net || q < 0 || q >= o.station.length || o.station[q] < 0) return null;
+    return this.crowds[o.station[q] * 4 + (o.side[q] > 0 ? 0 : 1)];
   }
 
-  /** Zoomed out, the crowd station `i`'s dot is tinted by (T-228): riders waiting at its platforms,
-   * its fullest platform side's share of the room there, and
-   * whether a train there left riders behind; null as platforms or when crowds are not drawn. */
-  dotCrowd(i: number): { waiting: number; share: number; leftBehind: boolean } | null {
+  /** Zoomed out, the crowd station `i`'s dot shows as a pie (T-228, T-553): riders waiting at its platforms
+   * and its fullest platform side's share of the room there; null as platforms or when crowds are not drawn. */
+  dotCrowd(i: number): { waiting: number; share: number } | null {
     if (!this.crowdsShown || this.stationStyle.boxes || i < 0 || i >= this.dotWait.length) return null;
-    return { waiting: this.dotWait[i], share: this.dotCrowds[i * 2], leftBehind: this.dotCrowds[i * 2 + 1] > 0 };
+    return { waiting: this.dotWait[i], share: this.dotCrowds[i * 2] };
   }
 
   /** The riders waiting on each station's two sides at `t` s into the trip buffer's hour (T-164):
@@ -1850,10 +1854,9 @@ export class NetworkRenderer {
         if (E[mid * 2] <= t) lo = mid;
         else hi = mid - 1;
       }
-      const left = E[lo * 2 + 1], waiting = left + Math.max(0, t - E[lo * 2]) * Q[base + 4];
+      const left = E[lo * 2 + 1], waiting = left + Math.max(0, t - E[lo * 2]) * Q[base + 4] + pulsesBetween(b, q, E[lo * 2], t);
       const k = side[q] > 0 ? 0 : 1;
       w[s * 2 + k] += waiting;
-      if (left >= 1) c[s * 4 + 2 + k] = 1;
       if (waiting >= 1) any = true;
     }
     for (let s = 0; s < n.stationCount; s++) {
@@ -1862,9 +1865,11 @@ export class NetworkRenderer {
       if (sides[s] === 3) {
         c[s * 4] = Math.min(1, w[s * 2] / room);
         c[s * 4 + 1] = Math.min(1, w[s * 2 + 1] / room);
+        c[s * 4 + 2] = c[s * 4] >= 1 ? 1 : 0;
+        c[s * 4 + 3] = c[s * 4 + 1] >= 1 ? 1 : 0;
       } else {
         // trains on one side only (a terminal): the whole platform is theirs
-        const f = Math.min(1, (w[s * 2] + w[s * 2 + 1]) / (2 * room)), bad = Math.max(c[s * 4 + 2], c[s * 4 + 3]);
+        const f = Math.min(1, (w[s * 2] + w[s * 2 + 1]) / (2 * room)), bad = f >= 1 ? 1 : 0;
         c.set([f, f, bad, bad], s * 4);
       }
     }
@@ -1876,7 +1881,7 @@ export class NetworkRenderer {
     for (let s = 0; s < n.stationCount; s++) {
       if (!sides[s]) continue;
       dc[s * 2] = Math.max(c[s * 4], c[s * 4 + 1]);
-      if (c[s * 4 + 2] > 0 || c[s * 4 + 3] > 0) dc[s * 2 + 1] = 1;
+      if (c[s * 4 + 2] > 0 || c[s * 4 + 3] > 0) dc[s * 2 + 1] = 1; // a full side
       dw[s] = w[s * 2] + w[s * 2 + 1];
     }
     if (this.dotCrowdBuf) this.rewrite(this.dotCrowdBuf, dc);

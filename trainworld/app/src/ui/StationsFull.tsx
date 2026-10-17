@@ -13,6 +13,7 @@ import { count } from "../game/format";
 import { selection } from "../game/ui";
 import { world } from "../game/world";
 import { live } from "../map/live";
+import { STATION_BOX_ZOOM } from "../map/stationGeometry";
 
 /** One complex that is full or leaving riders behind now. */
 export interface FullStation {
@@ -70,7 +71,7 @@ export function fullStations(now: number): FullStation[] {
 }
 
 /** Closest zoom a station is shown at from the alert: where platform crowds are drawn. */
-const ZOOM = 15;
+const ZOOM = STATION_BOX_ZOOM;
 
 export function StationsFull() {
   void clock.minute.value; // the crowds change each game minute

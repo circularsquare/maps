@@ -683,7 +683,23 @@ def ct_sectors(city, lat, lon, jobs):
     share of usual-place-of-work workers in the sectors (CT_SECTORS); cells in no tract take the
     pack's tracts' share."""
     cfg = b.CITIES[city]
-    ct = arcgis.features(f"{SUB}ct_on_{'_'.join(cds(cfg))}", CT_LAYER, where="PRUID='35'", fields="CTUID,DGUID,FID",
+    return _ct_sectors(f"{SUB}ct_on_{'_'.join(cds(cfg))}", "PRUID='35'", lat, lon, jobs)
+
+
+def plan_ct_sectors(city, lat, lon, jobs):
+    """ct_sectors for any planned Canadian city: the tracts of every province in the pack's box."""
+    return _ct_sectors(f"{SUB}ct_{city}", "1=1", lat, lon, jobs)
+
+
+def plan_hooks(row):
+    """T-555: Toronto's country keys that fit tier 0, for any planned Canadian row: everyday
+    destinations by census tract of work. Toronto's population by DA and jobs by tract of work run
+    in canada.main, not as tier 0 hooks, and its schools and campuses are Ontario's files."""
+    return {"everyday": plan_ct_sectors}
+
+
+def _ct_sectors(name, where, lat, lon, jobs):
+    ct = arcgis.features(name, CT_LAYER, where=where, fields="CTUID,DGUID,FID",
                          bbox=(lon.min(), lat.min(), lon.max(), lat.max()))
     units = [(f["properties"]["DGUID"], make_valid(shape(f["geometry"]))) for f in ct]
     import england

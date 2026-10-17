@@ -7,8 +7,8 @@
 //   filled with), from the boarding account as the train inspector counts them.
 // - A station: its name; with use circles on, the riders a day its circle stands for (its
 //   complex's in complex view); where platform crowds are drawn, the riders
-//   waiting per line and direction and how full the platform is drawn (T-219: the crowd is inside
-//   the box now, so the station's own hover covers it). Zoomed out, a complex's one dot is its
+//   waiting per line and direction, red where that platform side is full (T-219: the crowd is
+//   inside the box now, so the station's own hover covers it). Zoomed out, a complex's one dot is its
 //   busiest station's, and says so (T-217).
 // - A use circle away from any station: the same count, for the circle's station or complex.
 
@@ -18,12 +18,16 @@ import { complexes } from "../game/complexView";
 import { demandView } from "../game/demand";
 import { PERIODS, periodAt } from "../game/periods";
 import { useFigure } from "../game/stationUse";
-import type { LineInput, WorldView } from "../game/types";
+import type { WorldView } from "../game/types";
 import { display, purposeFilter, shownDayPhrase } from "../game/ui";
 import { stationScale } from "./demandLayers";
 import { tripAt } from "./network";
 import type { Overlay } from "./overlay";
 import { stationHaloRadius } from "./stationGeometry";
+import { factRow, lineBullet, lineBullets } from "./trackTagRows";
+
+/** A line of a tag: plain text, or a row built as DOM. */
+export type TipLine = string | HTMLElement;
 
 /** Seats and riders at crush load per 20 m car (sim/src/demand/api.rs; ui/inspector/others.tsx). */
 const SEATS_PER_CAR = 44, CRUSH_PER_CAR = 160;
@@ -31,14 +35,6 @@ const SEATS_PER_CAR = 44, CRUSH_PER_CAR = 160;
 const n0 = (v: number) => Math.round(v).toLocaleString("en-US");
 /** A forecast count, rounded as the track tag rounds one (trackHover.ts `riders`). */
 const forecast = (n: number) => (n >= 1000 ? Math.round(n / 100) * 100 : n >= 100 ? Math.round(n / 10) * 10 : Math.round(n)).toLocaleString("en-US");
-
-/** A line in a station's tag (T-305): the symbol the player set, else its name without a leading
- * mode or operator word ("subway 6X" is "6X", "lirr Port Washington Branch" "Port Washington
- * Branch", "Line 3" "3"). */
-function lineShortName(l: LineInput): string {
-  if (l.symbol) return l.symbol;
-  return l.name.replace(/^(?:\p{Ll}+|Line)\s+(?=\S)/u, "");
-}
 
 /** "12,400 riders start a rail trip here a day" (T-482), as the station use selector counts. The
  * circles count every purpose, whatever the purpose filter says. */
@@ -102,55 +98,60 @@ export function trainTip(ov: Overlay, w: WorldView, line: string, profile: numbe
   return [name, "Calculating demand"];
 }
 
-/** Riders waiting at station `i`'s platforms now, a line per line and direction with anyone, and
- * how full the platform is drawn (T-219). */
-function crowdLines(ov: Overlay, w: WorldView, id: string, i: number): string[] {
+/** A tag row of an optional line bullet, a label and a count, the count in the alert colour when
+ * `full` (T-559). */
+function waitRow(bullet: HTMLElement | null, label: string, count: string, full: boolean): HTMLDivElement {
+  const c = document.createElement("span");
+  c.textContent = count;
+  c.style.whiteSpace = "nowrap";
+  if (full) c.style.color = "var(--bad)";
+  const l = Object.assign(document.createElement("span"), { textContent: label });
+  l.style.minWidth = "0";
+  const d = factRow(...(bullet ? [bullet] : []), ...(label ? [l] : []), c);
+  d.style.gap = "5px";
+  return d;
+}
+
+/** Riders waiting at station `i`'s platforms now: a row per line and direction with anyone, its
+ * count red while that platform side is full (T-559). */
+function crowdLines(ov: Overlay, w: WorldView, id: string, i: number): TipLine[] {
   const r = ov.renderer, b = r.board;
   if (!b || display.peek().platformCrowds === "off" || !r.crowdsShown) return [];
-  // zoomed out, the dot's tint (T-228): everyone waiting at it and its fullest platform
+  // zoomed out, the dot's pie (T-228, T-553): everyone waiting at it and its fullest platform
   const dot = r.dotCrowd(i);
   if (dot) {
     if (dot.waiting < 1) return ["Nobody waiting on the platforms"];
     const fullest = dot.share >= 1 ? "full" : `${Math.round(dot.share * 100)}% full`;
-    const out = [`${n0(dot.waiting)} waiting`, `Fullest platform ${fullest}`];
-    if (dot.leftBehind) out.push("A full train left some behind");
-    return out;
+    return [waitRow(null, "", `${n0(dot.waiting)} waiting`, dot.share >= 1), `Fullest platform ${fullest}`];
   }
   const node = Number(id), t = clock.now() - r.tripsEpoch;
   const names = new Map(w.save.stations.map((s) => [s.id, s.name]));
-  const out: string[] = [];
+  const out: TipLine[] = [];
   for (let q = 0; q < b.queueCount; q++) {
     const base = q * QUEUE_STRIDE;
     if (b.queues[base] !== node) continue;
-    const { waiting, leftBehind } = crowdAt(b, q, t);
+    const { waiting } = crowdAt(b, q, t);
     if (waiting < 1) continue;
     const l = w.save.lines.find((x) => x.id === String(b.queues[base + 1]));
     if (!l) continue;
     const to = names.get(b.queues[base + 2] === 0 ? l.stops[l.stops.length - 1] : l.stops[0]) ?? "the end";
-    out.push(leftBehind ? `${n0(waiting)} waiting for ${l.name} to ${to} after a full train left some behind` : `${n0(waiting)} waiting for ${l.name} to ${to}`);
+    out.push(waitRow(lineBullet(l, true), `to ${to}`, `${n0(waiting)} waiting`,(r.queueShare(q) ?? 0) >= 1));
   }
-  if (!out.length) return ["Nobody waiting on the platforms"];
-  // the fill drawn: each side's share of the room to stand there
-  const share = r.crowdShare(i);
-  const full = (v: number) => (v >= 1 ? "full" : `${Math.round(v * 100)}% full`);
-  if (share?.shares.length === 2) out.push(`Platform ${full(share.shares[0])} on one side and ${full(share.shares[1])} on the other (room for ${forecast(share.room)} a side)`);
-  else if (share) out.push(`Platform ${full(share.shares[0])} (room for ${forecast(share.room)})`);
-  return out;
+  return out.length ? out : ["Nobody waiting on the platforms"];
 }
 
 /** The tag for station `i` of the network buffers. */
-export function stationTip(ov: Overlay, w: WorldView, i: number): string[] | null {
+export function stationTip(ov: Overlay, w: WorldView, i: number): TipLine[] | null {
   const net = ov.renderer.net;
   if (!net) return null;
   const id = net.stationIds[i];
   const s = w.save.stations.find((x) => x.id === id);
   if (!s) return null;
-  const out = [s.name];
+  const out: TipLine[] = [s.name];
   // T-305: the lines serving the station (zoomed out too, where every station is its own dot since
-  // T-313), by their symbols or short names (`lineShortName`), each once
-  const members = new Set([id]);
-  const names = [...new Set(w.save.lines.filter((l) => l.stops.some((st) => members.has(st))).map(lineShortName))];
-  if (names.length) out.push(names.join(", "));
+  // T-313), as bullets (T-559)
+  const serving = [...new Map(w.save.lines.filter((l) => l.stops.includes(id)).map((l) => [l.letter + l.colour, l])).values()];
+  if (serving.length) out.push(lineBullets(serving));
   if (!s.built) out.push("Blueprint");
   else if (display.peek().stationUse !== "none") {
     const c = circleOf(w, id);

@@ -745,17 +745,22 @@ function shareAt(h: number, s: number): number {
 function shapeHour(epoch: number, b: Float32Array) {
   const h = Math.round(epoch / 3600);
   for (const k of hourShape.keys()) if (k < partHour - 1) hourShape.delete(k);
-  const nt = b[0], nl = b[1], nq = b[2];
-  const q0 = 4 + 2 * nt + nl, e0 = q0 + nq * 10;
+  const nt = b[0], nl = b[1], nq = b[2], ne = b[3], S = 12;
+  const q0 = 5 + 2 * nt + nl, e0 = q0 + nq * S, p0 = e0 + ne * 2;
   const bins = new Float64Array(3600);
   let total = 0;
   for (let q = 0; q < nq; q++) {
-    const Q = q0 + q * 10, rate = b[Q + 4], first = b[Q + 8], n = b[Q + 9];
+    const Q = q0 + q * S, rate = b[Q + 4], first = b[Q + 8], n = b[Q + 9];
+    let p = b[Q + 10];
+    const pEnd = p + b[Q + 11];
     for (let j = first + 1; j < first + n; j++) {
       const t = b[e0 + j * 2];
-      if (!(t >= 0 && t < 3600)) continue;
       const tPrev = b[e0 + (j - 1) * 2], leftPrev = b[e0 + (j - 1) * 2 + 1];
-      const w = Math.max(0, leftPrev + rate * Math.max(0, t - tPrev) - b[e0 + j * 2 + 1]);
+      // riders changing from other lines' trains since the train before (T-554)
+      let changed = 0;
+      for (; p < pEnd && b[p0 + p * 2] <= t; p++) if (b[p0 + p * 2] > tPrev) changed += b[p0 + p * 2 + 1];
+      if (!(t >= 0 && t < 3600)) continue;
+      const w = Math.max(0, leftPrev + rate * Math.max(0, t - tPrev) + changed - b[e0 + j * 2 + 1]);
       bins[Math.floor(t)] += w;
       total += w;
     }
@@ -1476,6 +1481,10 @@ async function handle(msg: ToClock) {
     // kind of day's riders a message (T-260)
     api.set_riders(msg.packed, msg.day ?? 0);
     stepBoarding();
+  } else if (msg.kind === "transfers") {
+    // T-554: when riders changing lines reach their next platform; the account is unchanged
+    api.set_transfers(msg.packed);
+    sendTrips();
   } else if (msg.kind === "flush") {
     void autosave();
   } else if (msg.kind === "query") {

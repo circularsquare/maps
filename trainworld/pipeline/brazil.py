@@ -119,6 +119,66 @@ def census_population(city, boundary, sig):
     return out, "IBGE Census 2022 people by census tract (Agregados por setores censitarios), spread inside each by GHSL GHS-POP E2020"
 
 
+def unit_states(units):
+    """The states (UF) holding the plan's municipalities (geoBoundaries ADM2 ids), each by its
+    representative point in geoBoundaries ADM1, the files the world plan read."""
+    import world_plan as wp
+    feats = {}
+    for adm in ("ADM1", "ADM2"):
+        with open(wp.RAW / "geoboundaries" / f"BRA_{adm}.geojson", encoding="utf-8") as f:
+            feats[adm] = json.load(f)["features"]
+    want = set(units)
+    pts = [make_valid(shape(f["geometry"])).representative_point() for f in feats["ADM2"] if f["properties"]["shapeID"] in want]
+    if len(pts) != len(want):
+        raise ValueError(f"{len(want) - len(pts)} plan units not in geoBoundaries BRA ADM2")
+    return sorted({s["properties"]["shapeISO"][3:] for s in feats["ADM1"]
+                   if any(make_valid(shape(s["geometry"])).contains(p) for p in pts)})
+
+
+def plan_setores(city, boundary, ufs):
+    """The census tracts, from the states' files, whose representative point is in the boundary:
+    DataFrame CD_SETOR, v0001, geometry. Cached per city; the state files are shared between cities."""
+    import pyogrio
+    out = raw(city, f"{city}_plan_setores.gpkg")
+    if not os.path.exists(out):
+        import pandas as pd
+        frames = []
+        for uf in ufs:
+            src = os.path.join(b.RAW, "tier0", "brazil", f"{uf}_setores_CD2022.gpkg")
+            if not os.path.exists(src):
+                os.makedirs(os.path.dirname(src), exist_ok=True)
+                b.fetch(SETORES_URL.format(uf=uf), os.path.relpath(src, b.RAW))
+            df = pyogrio.read_dataframe(src, columns=["CD_SETOR", "v0001"], bbox=boundary.bounds)
+            df["geometry"] = df.geometry.make_valid()
+            shapely.prepare(boundary)
+            frames.append(df[shapely.contains(boundary, df.geometry.representative_point().to_numpy())])
+        df = pd.concat(frames, ignore_index=True)
+        df["v0001"] = df["v0001"].fillna(0).astype(float)
+        os.makedirs(os.path.dirname(out), exist_ok=True)
+        pyogrio.write_dataframe(df, out + ".part.gpkg")
+        os.replace(out + ".part.gpkg", out)
+        print(f"  census 2022 tracts: {len(df):,} in the outline from {', '.join(ufs)}", flush=True)
+    return pyogrio.read_dataframe(out)
+
+
+def plan_population(city, boundary, sig, ufs):
+    """Census 2022 people by tract, spread inside each tract by GHSL; tier0's `population` hook for
+    any planned Brazilian city (census_population's, with the tracts taken by the outline)."""
+    df = plan_setores(city, boundary, ufs)
+    out = england.spread_totals(sig["lat"], sig["lon"], list(zip(df.CD_SETOR, df.geometry.values)),
+                                dict(zip(df.CD_SETOR, df.v0001)), sig["pop_ghsl"])
+    print(f"  census 2022 by tract: {len(df):,} tracts, {df.v0001.sum():,.0f} people; GHSL {sig['pop_ghsl'].sum():,.0f}", flush=True)
+    return out, "IBGE Census 2022 people by census tract (Agregados por setores censitarios), spread inside each by GHSL GHS-POP E2020"
+
+
+def plan_hooks(row):
+    """T-555: Sao Paulo's country keys for any planned Brazilian row: population by census tract.
+    Not carried: jobs, work from home and the curve, which come from the Metro's OD 2017 survey of
+    Sao Paulo alone, and Guarulhos's boardings and O&D share."""
+    units = row["units"]["BRA"]
+    return {"population": lambda city, boundary, sig: plan_population(city, boundary, sig, unit_states(units))}
+
+
 # ---------------------------------------------------------------- the household travel survey
 
 def _survey_dir(city):

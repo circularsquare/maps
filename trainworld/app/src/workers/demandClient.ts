@@ -1978,6 +1978,46 @@ class DemandClient {
     return { version, round, scope: members.join(","), pairs: [...sum.values()].sort((x, y) => y.riders - x.riders) };
   }
 
+  /** Every change between platforms a day (T-554), for the timing of platform crowds:
+   * `TrackApi.set_transfers`'s packing, per pair the line, run and stop (in the run's order) a
+   * rider leaves, the same where they board, and riders. */
+  platformTransfers(): Promise<Float32Array | null> {
+    return this.viaRound("platformTransfers", (t) => this.platformTransfersAt(t));
+  }
+  private async platformTransfersAt(t: Target): Promise<Float32Array | null> {
+    const solve = t.solve;
+    if (!solve) return null;
+    // route node o + i is run 0's stop i, then run 1's stop i - n, each in its run's order
+    const at: [number, number, number][] = [];
+    for (const { id, o, n } of solve.layout) for (let i = 0; i < 2 * n; i++) at[o + i] = [Number(id), i < n ? 0 : 1, i < n ? i : i - n];
+    const nodes: number[] = [];
+    at.forEach((_, r) => nodes.push(r));
+    if (!nodes.length) return null;
+    const ids = Uint32Array.from(nodes);
+    const sum = new Map<number, number>();
+    let mask = 0;
+    for (const r of byMask(await this.ask((id) => ({ kind: "transfers", id, version: t.version, nodes: ids }), undefined, [], undefined, t))) {
+      if (r.kind !== "transfers" || !r.pairs) return null;
+      mask |= r.mask;
+      const v = r.pairs;
+      for (let k = 0; k + 2 < v.length; k += 3) {
+        if (!at[v[k]] || !at[v[k + 1]]) continue;
+        const key = v[k] * at.length + v[k + 1];
+        sum.set(key, (sum.get(key) ?? 0) + v[k + 2]);
+      }
+    }
+    if (mask !== ALL_PERIODS || !this.still(t)) return null;
+    const out = new Float32Array(sum.size * 7);
+    let i = 0;
+    for (const [key, riders] of sum) {
+      out.set(at[Math.floor(key / at.length)], i);
+      out.set(at[key % at.length], i + 3);
+      out[i + 6] = riders;
+      i += 7;
+    }
+    return out;
+  }
+
   /** The trip explorer (T-195; game/trip.ts): one trip from `from` to `to` (world metres) as a
    * commute, every period from the worker holding it. Null while there is no solve, or the
    * workers have moved on to a newer network or round. */
@@ -2580,7 +2620,7 @@ export function startDemand(city = HOME_CITY) {
   if (client) return client;
   const c = (client = new DemandClient(city));
   setTripQuery((from, to) => c.trip(from, to)); // T-195
-  setDemandQueries({ transfers: (members) => c.transfers(members), cityCells: (city) => c.cityCells(city), cellModes: (purpose, city) => c.purposeModes(purpose ?? "all", city), stationRiders: (id, top, members) => c.stationRiders(id, top, members), flows: (end, cells) => c.flows(end, cells), intercitySelection: (end, cells) => c.intercitySelection(end, cells), intercityStation: (id, members) => c.intercityStation(id, members) });
+  setDemandQueries({ transfers: (members) => c.transfers(members), platformTransfers: () => c.platformTransfers(), cityCells: (city) => c.cityCells(city), cellModes: (purpose, city) => c.purposeModes(purpose ?? "all", city), stationRiders: (id, top, members) => c.stationRiders(id, top, members), flows: (end, cells) => c.flows(end, cells), intercitySelection: (end, cells) => c.intercitySelection(end, cells), intercityStation: (id, members) => c.intercityStation(id, members) });
   if (TEST) c.submitNetwork(demandTestSnapshot());
   if (new URLSearchParams(location.search).get("debug") === "1") (window as any).twDemand = { client: c, log: c.log, days: () => demandByDay.peek(), start: c.start, resubmit: () => c.resubmit(), view: () => demandView.peek(), cities: () => cityDemandViews.peek(), nearby: () => nearbyZones.peek(), intercity: () => intercityDemand.peek(), activeCity, cellModes: () => c.cellModes(), stationRiders: (id: string) => c.stationRiders(id), cityCells: () => c.cityCells(), flows: (end: "home" | "work", cells: Uint32Array) => c.flows(end, cells), intercitySelection: (end: "home" | "work", cells: Uint32Array) => c.intercitySelection(end, cells), intercityStation: (id: string) => c.intercityStation(id), transfers: (members: string[]) => c.transfers(members), trip: (from: [number, number], to: [number, number]) => c.trip(from, to) };
   return c;

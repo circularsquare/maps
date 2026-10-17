@@ -9,6 +9,7 @@ import { demandView, modeRides, modeSplit, viewFinal, viewUpdating } from "../ga
 import { clockTime, count, dayOf, money, moneyExact } from "../game/format";
 import { weekdayName, weekdayOf } from "../game/days";
 import { shownDay } from "../game/ui";
+import { splitTip } from "../game/splitTip";
 
 const WEEKDAY_LONG = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 import { world } from "../game/world";
@@ -103,7 +104,7 @@ export function TopBar() {
       {/* T-341: every part has a fixed width; a long name is cut short, the whole name on hover */}
       <div class="city" data-tip={city?.name}>{city?.name}</div>
       <div class="split">
-        <div data-tip={`Rides a day${where}: ${rides ? `Train ${pct(s.train)} (${count(rides.train)}), Walking ${pct(s.walk)} (${count(rides.walk)}), Driving ${pct(s.drive)} (${count(rides.drive)}), all ${count(rides.all)} rides` : `Train ${pct(s.train)}, Walking ${pct(s.walk)}, Driving ${pct(s.drive)}`}${note}`} class={"split-row" + (viewUpdating.value ? " updating" : "")}>
+        <div data-tip={splitTip(where, known, rides, note)} class={"split-row" + (viewUpdating.value ? " updating" : "")}>
           <span class="bar-box">
             <span class="bar">
               <i class="seg seg-train" style={{ width: s.train + "%" }} />

@@ -1,6 +1,7 @@
 """T-537, pipeline stage 5: the build_city config of a planned city, generated from its world plan
 row (pipeline/world_plan.json). Every field comes from the row or a rule (docs/adding-a-city.md 3
-"A planned city"); build_city.CITIES takes every planned row whose id it does not already have.
+"A planned city"), and the row's country module (its `module`) puts its `plan_hooks(row)` keys over
+them (T-555); build_city.CITIES takes every planned row whose id it does not already have.
 
     python pipeline/plan_config.py <id> [plan.json]     print the generated config
 """
@@ -66,10 +67,40 @@ def water_cell(bbox):
     return 50.0 if px > 1.5e8 else 25.0
 
 
+def country_hooks(row):
+    """The keys the row's country module supplies (its `plan_hooks`, T-555); none without a module."""
+    if not row.get("module"):
+        return {}
+    import importlib
+    mod = importlib.import_module(row["module"])
+    if not hasattr(mod, "plan_hooks"):
+        raise SystemExit(f"{row['id']}: pipeline/{row['module']}.py has no plan_hooks(row)")
+    return mod.plan_hooks(row)
+
+
+def with_country_keys(cfg):
+    """cfg with its row's country keys put over the defaults, once: a planned config carries its row
+    ("plan_row") until then, since the country modules import build_city and so cannot be imported
+    while build_city makes CITIES (build_city.Cities merges on lookup)."""
+    row = cfg.pop("plan_row", None)
+    if row is not None:
+        hooks = country_hooks(row)
+        if "boundary_file" in hooks:
+            cfg.pop("latin_names")  # it reads osm_units' unit names, which a country's own outline does not write
+        cfg.update(hooks)
+    return cfg
+
+
 def config(row, sources):
-    """The CITIES entry for a planned row (tier 0, global sources only)."""
+    """The CITIES entry for a planned row: tier 0's global defaults, then the country module's keys."""
+    return with_country_keys(global_config(row, sources))
+
+
+def global_config(row, sources):
+    """The CITIES entry for a planned row from global sources only, carrying its row."""
     cid, ex = row["id"], list(row["extracts"])
     return {
+        "plan_row": row,
         "tier0": True,
         "origin": tuple(row["origin"]),
         "water": {"cell_m": water_cell(row["bbox"]), "min_width_px": 2},
@@ -87,11 +118,11 @@ def config(row, sources):
 
 
 def planned(path=PLAN):
-    """{id: config} for every planned row of the plan file."""
+    """{id: config} for every planned row of the plan file, the country keys not yet merged."""
     if not os.path.exists(path):
         return {}
     rows, sources = load(path)
-    return {r["id"]: config(r, sources) for r in rows if r.get("status") == "planned"}
+    return {r["id"]: global_config(r, sources) for r in rows if r.get("status") == "planned"}
 
 
 if __name__ == "__main__":
@@ -100,5 +131,6 @@ if __name__ == "__main__":
     row = next(r for r in rows if r["id"] == sys.argv[1])
     cfg = config(row, sources)
     cfg["job_blend"] = cfg["job_blend"]()
+    hooks, mark = country_hooks(row), f"  [{row['module']}]"
     for k, v in cfg.items():
-        print(f"  {k}: {'(callable)' if callable(v) else v}")
+        print(f"  {k}: {'(callable)' if callable(v) else v}{mark if k in hooks else ''}")

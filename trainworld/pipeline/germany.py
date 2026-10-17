@@ -143,6 +143,38 @@ def workplace_jobs(lands):
     return {r.ARS: float(r.EIP) + float(r.IOP) for r in t.itertuples()}
 
 
+# Eurostat LFS lfsa_ehomp, Germany 2025, employed 15-64: 13.0% usually work from home, 11.7% sometimes;
+# judged at about 0.6 and 0.2 of their days, as Paris's (T-290)
+WFH = 0.10
+
+
+def nuts_kreise(nuts_ids):
+    """The Kreise (5-digit ARS) of NUTS-3 units, by VG250's own NUTS column (a Kreis is a NUTS-3 unit)."""
+    import pyogrio
+    path = england._get(VG250_URL, raw(os.path.basename(VG250_URL)))
+    df = pyogrio.read_dataframe(f"/vsizip/{path}/{VG250_IN_ZIP}", layer="vg250_krs", columns=["ARS", "NUTS"],
+                                read_geometry=False, where="GF = 4")
+    by = dict(zip(df.NUTS, df.ARS.str[:5]))
+    missing = [u for u in nuts_ids if u not in by]
+    if missing:
+        raise ValueError(f"no Kreis in VG250 for NUTS {missing}")
+    return [by[u] for u in nuts_ids]
+
+
+def plan_hooks(row):
+    """T-555: Berlin's country keys for any planned row of German NUTS-3 units (Kreise). Not
+    carried: the curve (Berlin's own fit on the Pendlerrechnung's flows)."""
+    cid, units = row["id"], row["units"]["DEU"]
+    kreise = lambda: nuts_kreise(units)  # noqa: E731
+    return {
+        "boundary_file": lambda: kreise_boundary(cid, kreise()),
+        "population": lambda city, boundary, sig: zensus_population(city, boundary, sig, kreise()),
+        "jobs": lambda city, boundary, sig, w: pendler_jobs(city, boundary, sig, w, kreise()),
+        "jobs_url": "https://pendleratlas.statistikportal.de/",
+        "wfh": WFH,
+    }
+
+
 def pendler_jobs(city, boundary, sig, weight, kreise):
     """Jobs per signal cell: the Pendlerrechnung's employed people by Gemeinde of work, spread inside
     each Gemeinde by weight; tier0's `jobs` hook."""

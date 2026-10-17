@@ -87,6 +87,10 @@ def country_of(cid, header):
         return PACK_COUNTRY[cid]
     if os.path.exists(os.path.join(WORK, f"{cid}.blocks.csv.gz")):
         return "US"
+    import plan_config
+    row = next((r for r in plan_config.load()[0] if r["id"] == cid and r.get("status") == "planned"), None)
+    if row:  # a planned pack (T-555): England's module covers English rows only
+        return "GB-ENG" if row.get("module") == "england" else row["iso2"]
     sys.exit(f"{cid}: no country for the no-car share")
 
 
@@ -154,8 +158,8 @@ def share_us(cid, lat, lon):
     return s[i], src
 
 
-def share_england(lat, lon):
-    path = os.path.join(ROOT, "data", "raw", "tier0", "lsoa2021_bgc_lon.json")
+def share_england(cid, lat, lon):
+    path = os.path.join(ROOT, "data", "raw", "tier0", f"lsoa2021_bgc_{cid}.json")  # the build's (england.lsoas)
     with open(path, encoding="utf-8") as f:
         feats = json.load(f)
     from shapely import make_valid
@@ -186,10 +190,12 @@ def shares(cid, header, a):
     if country == "US":
         s, src = share_us(cid, lat, lon)
     elif country == "GB-ENG":
-        s, src = share_england(lat, lon)
+        s, src = share_england(cid, lat, lon)
     elif country == "JP":
         s, src = share_japan(cid, lat, lon)
     else:
+        if country not in COUNTRIES:
+            sys.exit(f"{cid}: no cars per 1,000 people for {country} in nocar.COUNTRIES")
         v, hh, ref = COUNTRIES[country]
         c = v / 1000.0 * hh
         s = np.full(len(lat), people_share(households_no_car(c)))

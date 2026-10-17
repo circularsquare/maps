@@ -12,8 +12,7 @@ import { inkOn, LEVEL_COLOURS } from "../game/palette";
 import { DEMAND_INDEX, LEVELS, type Level, type LineInput, type StationInput } from "../game/types";
 import { complexes } from "../game/complexView";
 import { membersOf } from "../game/complexes";
-import { buildLevel, buildPlatform, display, keepPlacing, lineSort, selection, setDisplay, stationSort, trackCount, tool, type ListSort, type StationUseMode, type Tool } from "../game/ui";
-import type { Signal } from "@preact/signals";
+import { buildLevel, buildPlatform, display, keepPlacing, lineSort, selection, setDisplay, stationSort, trackCount, tool, type StationUseMode, type Tool } from "../game/ui";
 import { setFares, world } from "../game/world";
 import { liveMoney, moneyState } from "../game/money";
 import { cityById, viewedZone } from "../game/cities";
@@ -23,7 +22,8 @@ import { accountVersion } from "../game/boarding";
 import { crowdClass, crowding, stationsToday, today, todayLoaded, useToday, waitText } from "../game/today";
 import type { DayLedger } from "../workers/protocol";
 import { live } from "../map/live";
-import { Check, Chip, Icon, Row, Segmented, Stepper } from "./widgets";
+import { Check, Chip, Icon, Row, Segmented, SortHead, Stepper } from "./widgets";
+import { CitiesList } from "./Cities";
 import { BlueprintBreakdown, BlueprintControls, BlueprintPick } from "./Blueprint";
 import { MoneyHistory } from "./MoneyHistory";
 
@@ -114,28 +114,6 @@ export function BuildTab() {
       </div>
       <BlueprintControls />
     </>
-  );
-}
-
-/** T-310: a list's column headers. A click sorts by the column (numbers biggest first), a second
- * click reverses it, and the sorted column carries a small arrow. A column with a `cls` is a
- * right-aligned number column of that width; the arrow sits before its label so the label stays
- * over the figures. */
-function SortHead<K extends string>({ sort, cols }: { sort: Signal<ListSort<K>>; cols: { key: K; label: string; tip: string; first: 1 | -1; cls?: string }[] }) {
-  const s = sort.value;
-  return (
-    <div class="sort-head">
-      {cols.map((c) => {
-        const on = s.key === c.key;
-        const arrow = <i class={"sort-arrow" + (on ? (s.dir > 0 ? " up" : " down") : "")} />;
-        return (
-          <button class={"sort-btn" + (c.cls ? " val " + c.cls : " grow") + (on ? " on" : "")} data-tip={c.tip}
-            onClick={() => (sort.value = on ? { key: c.key, dir: s.dir === 1 ? -1 : 1 } : { key: c.key, dir: c.first })}>
-            {c.cls && arrow}{c.label}{!c.cls && arrow}
-          </button>
-        );
-      })}
-    </div>
   );
 }
 
@@ -496,6 +474,7 @@ export function MoneyTab() {
           <TodayCell zone={zone} v={ledgerNet} />
         </tr>
       </table>
+      <CitiesList />
       <MoneyHistory zone={zone} />
       <div class="h">Fare</div>
       <ul class="rows">

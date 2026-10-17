@@ -116,6 +116,43 @@ def workplace_jobs():
     return dict(zip(t.w, t.n))
 
 
+DEPS_URL = "https://geo.api.gouv.fr/departements?fields=nom,code"
+# Eurostat LFS lfsa_ehomp, France 2025, employed 15-64: 11.1% usually work from home, 24.4% sometimes;
+# judged at about 0.6 and 0.2 of their days (T-289)
+WFH = 0.12
+
+
+def _name_key(s):
+    import unicodedata
+    return "".join(c for c in unicodedata.normalize("NFKD", s).lower() if c.isalnum())
+
+
+def nuts_departements(nuts_ids):
+    """The département codes of NUTS-3 2024 units (each a département), matched by name."""
+    import world_plan as wp
+    names = {f["properties"]["NUTS_ID"]: f["properties"]["NAME_LATN"]
+             for f in json.loads(wp.fetch(*wp.NUTS).read_text(encoding="utf-8"))["features"]}
+    codes = {_name_key(d["nom"]): d["code"] for d in _get_json(DEPS_URL, raw("departements.json"))}
+    out = [codes.get(_name_key(names.get(u, ""))) for u in nuts_ids]
+    if None in out:
+        raise ValueError(f"no département for NUTS {[u for u, c in zip(nuts_ids, out) if c is None]}")
+    return out
+
+
+def plan_hooks(row):
+    """T-555: Paris's country keys for any planned row of French NUTS-3 units (départements). Not
+    carried: the curve (Paris's own fit on the flows) and Charles de Gaulle's O&D share."""
+    cid, units = row["id"], row["units"]["FRA"]
+    deps = lambda: nuts_departements(units)  # noqa: E731
+    return {
+        "boundary_file": lambda: departements_boundary(cid, deps()),
+        "population": lambda city, boundary, sig: commune_population(city, boundary, sig, deps()),
+        "jobs": lambda city, boundary, sig, w: insee_jobs(city, boundary, sig, w, deps()),
+        "jobs_url": "https://www.insee.fr/fr/statistiques/8582949",
+        "wfh": WFH,
+    }
+
+
 def insee_jobs(city, boundary, sig, weight, deps):
     """Jobs per signal cell: INSEE 2022 workers by commune of work, spread inside each commune by
     weight; tier0's `jobs` hook."""

@@ -32,6 +32,12 @@ def raw(name):
     return os.path.join(b.RAW, "tier0", "nigeria", name)
 
 
+def plan_hooks(row):
+    """T-555: none. Lagos's keys are its outline (osm_units does the same for any row) and the
+    informal jobs blend (plan_config's rule)."""
+    return {}
+
+
 def _admin(city, levels):
     import pyogrio
     import routes

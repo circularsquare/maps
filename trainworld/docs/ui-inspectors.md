@@ -210,9 +210,8 @@ key.
 - The player's links are dashed lines between the two stations, their hover giving the distance.
 - **Now** [T-246, `game/complexLive.ts`]: after each station's lines its bundle has a 5 px platform
   strip, white between two lines of the platform blue, filling like the map's platform boxes (each
-  direction's half from the middle out by its riders' share of the room, grey or red); its hover
-  gives the riders waiting (by line name when more than one stops there), the room and whether the
-  last train left riders behind. Trains on their line's band in the darker train shade: one at the
+  direction's half from the middle out by its riders' share of the room, grey, or red once full); its hover
+  gives the riders waiting (by line name when more than one stops there) and the room. Trains on their line's band in the darker train shade: one at the
   platform along it, one pulling in (stopping within 60 game seconds) paler, coming in from its end,
   further along the sooner it stops; hover gives line, destination and seconds. Read from the
   renderer's hour of the boarding account; worked out every 10 game seconds, re-rendered only when
@@ -269,7 +268,7 @@ work at the end.
   parking or drop-off), door to door, its drive, walk, wait
   and ride minutes, the fare and the perceived minutes against driving ("Counts as"; its hover is
   the first route's sum, one term a line with the trip's own numbers: walk, wait, ride and walks
-  between stations as minutes times their weight, changes times the 5 minute penalty, the fare in
+  between stations as minutes times their weight (a change has no penalty of its own), the fare in
   dollars times 3, then the total, a line saying that the figure shown averages the stations and
   routes people use when it differs from that total, and one line naming the weights; the terms are
   the worker's perceived minutes per leg, `routeTerms` in `game/trip.ts`) [T-549], then the share of the trip's

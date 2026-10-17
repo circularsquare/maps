@@ -19,8 +19,8 @@ thumbnail's track) are one table, `game/shadeTable.ts` (read through `game/shade
   line. A selected station or complex is still drawn and clickable. Demand drawings and capacity
   tags are unchanged.
 - **Zoom 9 to 10**: every station is its own dot, drawn and picked; trains are not.
-- **Zoom 10 to 15** [`TRAINS_ZOOM`]: stations are dots; trains are pills, drawn and picked from 10.
-- **From zoom 15** (`STATION_BOX_ZOOM`): a station is its platform, trains show their cars, and
+- **Zoom 10 to 14** [`TRAINS_ZOOM`]: stations are dots; trains are pills, drawn and picked from 10.
+- **From zoom 14** (`STATION_BOX_ZOOM`, T-553): a station is its platform, trains show their cars, and
   platform crowds are drawn.
 - Station names and capacity tags hide below zoom 12 [T-101].
 
@@ -68,7 +68,7 @@ thumbnail's track) are one table, `game/shadeTable.ts` (read through `game/shade
 
 ## Stations
 
-- **Dots, zoom 9 to 15** [T-189, T-313, T-322, T-542; `map/stationGeometry.ts`]: white with a dark rim (in both themes, T-039) at
+- **Dots, zoom 9 to 14** [T-189, T-313, T-322, T-542; `map/stationGeometry.ts`]: white with a dark rim (in both themes, T-039) at
   the platform's middle. Radius 1.7/4.3/5/7.4 px at zoom 9/11/12/15 for an ordinary station, 2.4/5.6/6.6/9.5
   px for one served by more than one line (`stationRadii`; linear between, held outside), never narrower than the lines through
   it, the rim 1.5 px at zoom 13. A complex's dots are one shape: every dark disc is drawn first,
@@ -81,16 +81,19 @@ thumbnail's track) are one table, `game/shadeTable.ts` (read through `game/shade
 - **Each dot is its own station** [T-249, T-305]: a click picks the dot whose centre is nearest
   among those under the pointer and selects its complex; the delete and line tools take that
   station, and its tag lists its own lines.
-- **Crowd tint** [T-228]: with platform crowds on, a dot's white is tinted towards the crowd grey by
-  its fullest platform side's share of the room (at most 45% of the way, at full), or a pale red (40%
-  of the way to the over-full red) while a train at any of its platforms left riders behind.
-  Connectors stay white.
-- **Platforms, from zoom 15** [T-204, T-254, T-239]: a band along its track as long as the platform,
-  following the track's centre line sampled at 13 points (`platformShape`, `PLATFORM_POINTS`;
-  straight on past an edge that stops short), flat-ended, centred on the station node, or at a dead
-  end running from the node along the track. Its width is fixed on the ground like its length: a
-  quarter narrower than a plain line and its rim at zoom 15 (9 px there, about 16 m at New York's
-  latitude), so its shape never changes with zoom and it is never shorter than it is wide. The same
+- **Crowd pie** [T-228, T-553]: with platform crowds on, a dot's white fills like a pie chart,
+  clockwise from 12 o'clock on the screen, with the crowd grey (#77726d) in proportion to its fullest
+  platform side's share of the room (full circle at full), or the over-full red once that side is
+  full [T-559]. The rim stays; each dot of a complex is its own pie, and the
+  connectors stay white. The same colours in both themes.
+- **Platforms, from zoom 14** [T-204, T-254, T-239, T-553]: a band along its track as long as the
+  platform, following the track's centre line sampled at 13 points (`platformShape`,
+  `PLATFORM_POINTS`; straight on past an edge that stops short), flat-ended, centred on the station
+  node, or at a dead end running from the node along the track. Its width is fixed on the ground
+  like its length from zoom 15 (`BOX_WIDTH_ZOOM`): a quarter narrower than a plain line and its rim
+  there (7.5 px, about 16 m at New York's latitude), so its shape never changes with zoom and it is
+  never shorter than it is wide. Further out, to zoom 14, it keeps that 7.5 px on screen (white 3.5 px
+  across) while its length keeps shrinking with the ground, about 40-55 px at zoom 14. The same
   width in every mode: a wide traffic line can be wider than its stations. Everything that draws or
   tests a platform (box, edges, crowd fill, track stencil, picking, placement ghost, selection
   outline, the cut-out in the bubbles) uses that one line (`polyFrame` in the shaders,
@@ -122,7 +125,7 @@ change; only links are saved. Riders change between any two stations of a comple
 ## Trains
 
 - **Shape** [T-103, T-107, T-189, T-199]: not drawn below zoom 10 [T-542, `TRAINS_ZOOM`]; pills from 10, separate 20 m cars
-  from 15, in a darker shade of the line colour with a white rim blended over a pixel, antialiased.
+  from 14 (`STATION_BOX_ZOOM`), in a darker shade of the line colour with a white rim blended over a pixel, antialiased.
   Width 3 px at zoom 10, 5.25 at 11, 6 at 12, 9 at 15 (linear between, held outside; true width only from
   about zoom 19), shared by pills and cars so the switch never shrinks a train. A pill is never
   shorter than 11, 17.6 and 26.4 px at those zooms and bends with its track along the circle
@@ -147,15 +150,15 @@ change; only links are saved. Riders change between any two stations of a comple
 
 ## Platform crowds
 
-[T-164, T-219, T-236] From zoom 15 the white of each platform box fills with a dark warm grey
+[T-164, T-219, T-236, T-553] From zoom 14 the white of each platform box fills with a dark warm grey
 (#77726d, kept 1.5 px clear of the rim or the blue edge) as riders wait. Each direction of travel
 has its half of the box along its length; a platform whose trains all use one side (a terminal)
 fills as one. A side fills from the middle outwards by its riders' share of the room
 (`platformRoom`, [track-and-service.md](track-and-service.md) 6.6: 1,250 a side on 150 m), full to
-both ends at that or more. A side is red instead of grey while the last train on it left anyone
-behind. A standing train covers the box's middle; from zoom 16 the sides show beside it. The crowd
-grows between trains at the arrival rate and drops when one leaves, worked out on the main thread
-at most once a game second, only while drawn.
+both ends at that or more. A side is red instead of grey once it is full [T-559]. A standing train covers the box's middle; from zoom 16 the sides show beside it. The crowd
+grows between trains at the steady arrival rate, jumps a transfer walk after another line's train
+leaves with riders changing to it [T-554], and drops when one of its own leaves, worked out on the
+main thread at most once a game second, only while drawn.
 
 ## Station names and capacity tags
 
@@ -186,9 +189,10 @@ at most once a game second, only while drawn.
   ("Shopping and errands trips only"). Whatever the display [T-473], the tag also carries a row
   for the elevation at that point (an up and down arrow, then "+1" on its Elevation colour) and one
   for the speed limit (two right chevrons, then "120 km/h" on its Max speed colour), each colour at
-  half strength behind dark text (`map/trackTagRows.ts`), and on bare track the lines using it
-  as their line bullets, in the save's order, wrapping (the markup and CSS of the `Chip` in
-  `ui/widgets.tsx`, built as plain DOM by `lineBullets`; no row when none runs there) [T-532]. A planned line adds
+  half strength behind dark text (`map/trackTagRows.ts`), and last every line using the track as
+  line bullets, in the save's order, wrapping, over a line as over bare track (the markup and CSS of
+  the `Chip` in `ui/widgets.tsx`, built as plain DOM by `lineBullets`; no row when none runs
+  there) [T-532, T-559]. A planned line adds
   "Not running yet", a broken one "Not running"; before the first solve the traffic view says
   "Calculating demand". The tag follows the pointer along the track; leaving, pressing, dragging or
   zooming hides it. It follows the pick order: with the select tool, bubbles, capacity tags and
@@ -198,13 +202,12 @@ at most once a game second, only while drawn.
   drawn over the bubbles' tags.
 - **Trains and stations** [T-194, T-305, T-313; `map/networkTips.ts`]: the same tag (wrapping at 320
   px). A train: "Line 1 train", "340 riders aboard" and "352 seats, 1,280 packed full". A station:
-  its name, then its lines by symbol or by name without a leading mode word ("subway 6X" is "6X"),
-  each once (a station drawn as its own dot or box lists its own lines); with demand circles on,
-  "41,200 boardings and alightings a day"; where crowds are drawn a line per line and direction
-  with anyone waiting ("120 waiting for subway 1 to Van Cortlandt Park-242 St", "after a full train
-  left some behind" while red) or "Nobody waiting on the platforms", then the fill ("Platform 21%
-  full on one side and 4% on the other (room for 1,250 a side)"). On a dot, the crowd lines are its
-  tint's numbers ("1,257 waiting", "Fullest platform 45% full", "A full train left some behind"). A
+  its name, then its lines as bullets, each once (a station drawn as its own dot or box lists its
+  own lines) [T-559]; with demand circles on, "41,200 boardings and alightings a day"; where crowds
+  are drawn a row per line and direction with anyone waiting (the line's bullet, "to Van Cortlandt
+  Park-242 St", "120 waiting"), the count in the alert red while that platform side is full, or
+  "Nobody waiting on the platforms". On a dot, the crowd lines are its pie's numbers ("1,257
+  waiting", red when full, then "Fullest platform 45% full"). A
   demand circle away from any station gives its busiest station's name and count. Refreshed each
   game minute while shown.
 

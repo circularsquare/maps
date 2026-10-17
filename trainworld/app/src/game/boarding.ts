@@ -13,7 +13,7 @@ import type { DemandView } from "./demand";
 export const accountVersion = signal(0);
 
 /** Numbers per platform in an hour's slice (`QUEUE_STRIDE` in boarding.rs). */
-export const QUEUE_STRIDE = 10;
+export const QUEUE_STRIDE = 12;
 
 /** Demand's riders as `TrackApi.set_riders` reads them: the busiest-hour factors, then per line
  * its id, stop count and, per period, boardings then alightings at each route node. Null while a
@@ -48,22 +48,42 @@ export interface BoardHour {
   /** riders aboard per stop-to-stop stretch, numbered as on run 0 */
   loads: Float32Array;
   /** per platform QUEUE_STRIDE numbers: node, line, run, offset along run 0 (m), riders arriving
-   * a second at mid-hour, riders left behind this hour, longest wait this hour (s), riders arriving
-   * this hour, first event, events */
+   * steadily a second at mid-hour, riders left behind this hour, longest wait this hour (s),
+   * riders arriving this hour, first event, events, first pulse, pulses */
   queues: Float32Array;
   queueCount: number;
   /** per train leaving a platform: seconds from `epoch`, riders it left there */
   events: Float32Array;
+  /** per platform in time order, riders changing onto it from another line's train (T-554):
+   * seconds from `epoch` they reach it, riders */
+  pulses: Float32Array;
 }
 
 export function readBoardHour(epoch: number, b: Float32Array): BoardHour {
-  const [nt, nl, nq, ne] = [b[0], b[1], b[2], b[3]];
-  let i = 4;
+  const [nt, nl, nq, ne, np] = [b[0], b[1], b[2], b[3], b[4]];
+  let i = 5;
   const offs = b.subarray(i, (i += 2 * nt));
   const loads = b.subarray(i, (i += nl));
   const queues = b.subarray(i, (i += nq * QUEUE_STRIDE));
-  const events = b.subarray(i, i + ne * 2);
-  return { epoch, trips: nt, offs, loads, queues, queueCount: nq, events };
+  const events = b.subarray(i, (i += ne * 2));
+  const pulses = b.subarray(i, i + np * 2);
+  return { epoch, trips: nt, offs, loads, queues, queueCount: nq, events, pulses };
+}
+
+/** Riders who changed onto platform `q` from other lines' trains in (`t0`, `t`] (T-554). */
+export function pulsesBetween(h: BoardHour, q: number, t0: number, t: number): number {
+  const base = q * QUEUE_STRIDE, P = h.pulses;
+  let lo = h.queues[base + 10], hi = lo + h.queues[base + 11];
+  // the first pulse after t0
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (P[mid * 2] <= t0) lo = mid + 1;
+    else hi = mid;
+  }
+  const end = h.queues[base + 10] + h.queues[base + 11];
+  let sum = 0;
+  for (let p = lo; p < end && P[p * 2] <= t; p++) sum += P[p * 2 + 1];
+  return sum;
 }
 
 /** Riders waiting at platform `q` at `t` seconds from the hour's epoch, whether the last train
@@ -81,7 +101,8 @@ export function crowdAt(h: BoardHour, q: number, t: number): { waiting: number; 
     else hi = mid - 1;
   }
   const t0 = E[lo * 2], left = E[lo * 2 + 1];
-  return { waiting: left + Math.max(0, t - t0) * Q[base + 4], leftBehind: left >= 1, left };
+  const waiting = left + Math.max(0, t - t0) * Q[base + 4] + pulsesBetween(h, q, t0, t);
+  return { waiting, leftBehind: left >= 1, left };
 }
 
 /** Usable width one direction's riders wait on, m: half of a 6 m island platform less the edge

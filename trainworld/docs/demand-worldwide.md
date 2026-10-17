@@ -524,8 +524,9 @@ notes/T-420.md has the tables.
   differs by climate, culture and street design.
 - **Value of time and fare sensitivity.** One value for everyone, from US figures. Incomes differ
   hugely between and within countries (see Anita's "income dependence" idea in her TODO).
-- **Waiting, transfer and crowding penalties.** From transit literature that is mostly US and
-  European. Riders in Tokyo or Mumbai tolerate crowding very differently.
+- **Waiting and crowding penalties.** From transit literature that is mostly US and
+  European. Riders in Tokyo or Mumbai tolerate crowding very differently. A change has no penalty
+  beyond its wait and walk (Anita, T-557), where the literature puts 5-15 perceived minutes on one.
 - **Crowding rounds** (T-434). At most three, and a period stops once a round moves its loads
   under 1%. Measured on New York and Tokyo-sized grids, where the peaks still move a few percent at
   round three; a far more crowded network (Mumbai) may need a fourth peak round.
@@ -533,8 +534,9 @@ notes/T-420.md has the tables.
   average extra wait for full trains, worked out per period with the boarding account's rule:
   arrivals peaking mid-period at the US busiest-hour factors, trains taking riders up to crush
   (160 a 20 m car, a New York car), the extra wait weighted like any platform wait (1.37) and
-  capped at 60 minutes. Why it may not carry over: crush loads differ (Tokyo and Mumbai pack far
-  more than 160 into a car, pushers included, so "full" comes later; many European systems run
+  capped at 60 minutes. Where the wait is long, riders ride a stop or two the other way and board
+  before the train fills (T-552), as Tokyo riders do. Why it may not carry over: crush loads differ (Tokyo and Mumbai pack far
+  more than 160 into a car, pushers included, so "full" comes later, and so does riding back; many European systems run
   emptier); where riders are routinely left behind (Mumbai suburban, Lagos, Chinese metros with
   queue control at the station entrance) they plan for it, and the perceived weight of that wait
   may be lower, while elsewhere one missed train feels much worse than its minutes; the peak
@@ -658,13 +660,14 @@ notes/T-420.md has the tables.
 - **Complexes as transfer points** (T-161, with the player's links, T-197). Any two stations of a
   complex are a walking transfer however far apart, costed like every walk between stations:
   centre-to-centre distance x 1.3 detour at 1.2 m/s, weighted 1.39, plus the boarding's usual
-  wait and 5-minute transfer penalty, with no extra fixed penalty for the walk. Set by judgement
+  wait, with no fixed penalty for the walk or the change (T-557). Set by judgement
   to agree with the existing walks, not fitted; on New York's real save it moves nothing (every
   complex's demand stations are within the 300 m walk already). Why it may not carry over: in
   deep, crowded hubs (Shinjuku, Châtelet, Moscow's linked stations, London's Bank) a long
   interchange is slower than 1.2 m/s on the straight line x 1.3 (stairs, escalators, crowds), and
-  riders weigh it more heavily; in the other direction, a cross-platform design (Hong Kong,
-  Singapore) makes a change nearly free, which the flat 5 minutes misses. Check: published
+  riders weigh it more heavily. With no change penalty, a change across a platform costs only its
+  wait, as in a cross-platform design (Hong Kong, Singapore); riders elsewhere may dislike
+  changing more than its minutes (the literature's 5-15 perceived minutes a change). Check: published
   interchange times for a few big hubs (London's TfL interchange walk times, Tokyo station transfer
   guides) against what the rule gives for the same platforms.
 

@@ -140,7 +140,7 @@ full" counts the station complexes where, now, a platform side holds as many rid
 (`platformRoom`, [track-and-service.md](track-and-service.md) 6.6) or the last train to leave a
 platform was full and left riders behind (until the next train). Its hover lists them, most left
 behind first, with riders waiting and left behind (twelve at most, then "and 3 more"). A click
-selects the next one in that order and moves the map there at zoom 15 or closer, where crowds are
+selects the next one in that order and moves the map there at zoom 14 or closer, where crowds are
 drawn. Hidden when there are none; updated each game minute. On a narrow map it sits beside the
 search glass.
 
@@ -212,7 +212,16 @@ Cash (always the whole network's); yesterday and today (fares, running trains, n
 construction, net), headed by the Lines and Stations tabs' place-or-world toggle (T-332, one setting
 for all three): with the place on, these figures and History are that region's (T-531; the
 place's hover adds how a region's money is counted), with the globe the network's. A region with
-nothing in it shows $0. History
+nothing in it shows $0. **Cities** [T-550, `ui/Cities.tsx`], under that table whatever the
+toggle: a list of every region (the toggle's regions) with a built station, one row each: its name
+(hover: its station count), its mode split bar as the top bar draws it (the same colours and the
+same hover), its train rides a day and its money a day, fares less running trains (yesterday's, today so far
+until the game has a first full day; hover: fares and running trains, then new trains and
+construction, left out of the figure, when there were any; losses red). Sorted by rides, largest first; a click on a header sorts by that
+column (name, train share, rides, money) as in the Lines tab; a click on a row moves the camera to
+the region as search does, and the viewed region's row is tinted. It lives here and not in
+Stations because the row's money is this tab's region ledger and a click on a row changes the
+region the table above follows; a fifth dock tab button was ruled out by [T-532]. History
 [T-447, `ui/MoneyHistory.tsx`]: a Days / Hours switch (Days by default, kept while the game is
 open) over two charts. The first has fares (accent) and running costs (grey) as lines, scaled to
 the larger of the two, and one-off costs (new trains and construction) as pale bars on the same
