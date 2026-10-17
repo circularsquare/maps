@@ -72,7 +72,6 @@ orchestrator's commit recipe is in CLAUDE.md "Before a commit".
 - T-187 [P3] Trip chains: work to a nearby leisure place and then home. Whether and how to model it. Idea, not a priority (Anita 2026-10-12).
 
 ## Track and trains
-- T-624 [P2] Constructed track is never joined for a platform (`free_joint` refuses a built edge), so a station within half a platform of a joint on built track is refused ("the end of a piece of track"); likely Anita's Hakusan case. Decided: merge built pieces of the same kind (DECISIONS 2026-10-17). Taking 2026-10-17.
 - T-623 [P3] A station cut inside an arc, or a ramp overlapping a curve, still shifts the ramp (T-622 holds ramps on straights only). Open.
 - T-625 [P2] A line's train count set automatically from its headway (Anita's TODO 2026-10-17), as an option beside today's whole number per demand level. Open.
 - T-631 [P2] Trains cost money, bought automatically as a line's fleet grows (Anita's TODO 2026-10-17): a price per train or car, sold back or kept when the fleet shrinks. Open.

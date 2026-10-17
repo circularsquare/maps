@@ -67,8 +67,10 @@ Full design, numbers and sources: `notes/T-008.md`.
   until the platform has room (a long platform over several short segments; T-418), the shape
   unchanged. A joint between two different levels stays as a corner on the joined edge, since a
   ramp is centred between corners; a cut through a leg whose ramp lies on a straight puts a corner
-  at each end of the ramp on its side (T-622), so a station there does not move the ramp. Joints that cannot be joined
-  (constructed track, a different track count, built beside blueprint) stay, and a platform that
+  at each end of the ramp on its side (T-622), so a station there does not move the ramp. Two
+  constructed pieces join as two blueprint ones do (T-624): the joined edge stays constructed, with
+  no charge and no refund, and lines, trains, levels and curve radii carry over unchanged. Joints that cannot be joined
+  (a different track count, constructed beside blueprint, blueprint switched on beside off) stay, and a platform that
   reaches one is refused as "the end of a piece of track". A platform may not reach a crossing
   with track on the same level (a flat crossing, 6.2), within 1 m of its ends.
 - **Reshaping blueprint track** (T-064, T-092, T-071): a selected stretch of blueprint track shows its PIs

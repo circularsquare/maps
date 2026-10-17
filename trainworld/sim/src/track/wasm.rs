@@ -586,7 +586,7 @@ impl TrackApi {
                 if (near_old.x, near_old.y) == (near_new.x, near_new.y) || moved.iter().any(|m| m.0 == node) {
                     continue;
                 }
-                let Some((o, which, od, far, t)) = self.free_joint(node, id, near_old) else { continue };
+                let Some((o, which, od, far, t)) = self.free_joint(node, id, near_old, false) else { continue };
                 moved.push((node, quant(near_new.x + t * (far.x - near_new.x)), quant(near_new.y + t * (far.y - near_new.y))));
                 others.push((o, which, od));
             }
@@ -626,15 +626,16 @@ impl TrackApi {
     }
 
     /// The other piece at a joint of a stroke (T-244) that may follow a corner of `e` next to it
-    /// (`near`, before the edit): a node with no station where only `e` and one other blueprint
-    /// edge meet, on the straight between `near` and the other piece's corner next to it. Returns
+    /// (`near`, before the edit): a node with no station where only `e` and one other edge meet
+    /// (neither constructed unless `built_ok`), on the straight between `near` and the other
+    /// piece's corner next to it. Returns
     /// that edge, which of its ends is at the joint, its data, that corner (or its far node, if it
     /// has none) and how far along from `near` to it the joint lies (0..1).
-    fn free_joint(&self, node: u32, e: u32, near: Pi) -> Option<(u32, u32, EdgeData, Pi, f64)> {
+    fn free_joint(&self, node: u32, e: u32, near: Pi, built_ok: bool) -> Option<(u32, u32, EdgeData, Pi, f64)> {
         let net = &self.w.net;
         let i = node as usize;
         let p = &net.node_ports[i];
-        if p.n != 2 || net.node_platform[i] > 0 || net.built_ports(node) > 0 {
+        if p.n != 2 || net.node_platform[i] > 0 || (!built_ok && net.built_ports(node) > 0) {
             return None;
         }
         let (o, which) = p.ends().iter().map(|&c| (c >> 1, c & 1)).find(|&(o, _)| o != e)?;
@@ -663,7 +664,10 @@ impl TrackApi {
     /// Ops joining edge `e` with the pieces at its joints (T-244, `free_joint`) within `reach` of
     /// chainage `s`, so something placed at `s` has room; and where `s` is on the joined edge,
     /// which keeps `e`'s id and direction. The shape is unchanged (a radius the joined fit would
-    /// change is set to the one it had), lines through it follow. None if no joint is that near.
+    /// change is set to the one it had), lines through it follow. Pieces join when both are
+    /// constructed or both blueprint (switched alike), with the same track count (T-624); a built
+    /// piece's cost is derived from its shape, so the joined edge costs what the two did. None if
+    /// no joint is that near.
     fn unjoin_near(&self, e: u32, s: f64, reach: f64) -> Option<(Vec<Op>, f64)> {
         let net = &self.w.net;
         let d = net.edge_data(e)?;
@@ -680,8 +684,8 @@ impl TrackApi {
             let (mut node, mut gap, mut corner) = if k == 0 { (d.a, s, own[1]) } else { (d.b, len - s, own[own.len() - 2]) };
             let mut cur = e;
             while gap < reach {
-                let Some((o, which, od, _, _)) = self.free_joint(node, cur, corner) else { break };
-                if seen.contains(&o) || od.built != d.built || od.off != d.off || od.tracks != d.tracks {
+                let Some((o, which, od, _, _)) = self.free_joint(node, cur, corner, true) else { break };
+                if seen.contains(&o) || od.built != d.built || od.off != d.off || od.tracks != d.tracks || od.crossover || d.crossover {
                     break;
                 }
                 seen.push(o);
@@ -4371,12 +4375,13 @@ mod tests {
 
     #[test]
     fn a_joint_that_cannot_be_merged_says_so() {
-        // built beside blueprint, both built, single beside double track: the platform reaches
-        // the joint, which stays, and the answer names it (not "a junction or another station")
-        let cases: [(&str, Box<dyn Fn(&mut TrackApi, u32, u32)>, [u8; 2]); 3] = [
+        // built beside blueprint, single beside double track (blueprint or built): the platform
+        // reaches the joint, which stays, and the answer names it (not "a junction or another station")
+        let cases: [(&str, Box<dyn Fn(&mut TrackApi, u32, u32)>, [u8; 2]); 4] = [
             ("built | blueprint", Box::new(|a, e1, _| assert_eq!(a.construct(&[e1], &[]), 0, "{}", a.issues())), [2, 2]),
-            ("built | built", Box::new(|a, e1, e2| assert_eq!(a.construct(&[e1, e2], &[]), 0, "{}", a.issues())), [2, 2]),
+            ("blueprint | built", Box::new(|a, _, e2| assert_eq!(a.construct(&[e2], &[]), 0, "{}", a.issues())), [2, 2]),
             ("single | double", Box::new(|_, _, _| {}), [1, 2]),
+            ("built single | built double", Box::new(|a, e1, e2| assert_eq!(a.construct(&[e1, e2], &[]), 0, "{}", a.issues())), [1, 2]),
         ];
         for (what, setup, tracks) in cases {
             for (x, k) in joint_scan(&*setup, [0, 0, 0], tracks) {
@@ -4386,6 +4391,89 @@ mod tests {
                     _ => panic!("{what} at {x}: {k:?}"),
                 }
             }
+        }
+    }
+
+    /// T-624: two constructed pieces of one kind join under a platform as blueprint ones do.
+    #[test]
+    fn constructed_pieces_of_one_kind_are_merged_under_a_platform() {
+        for tracks in [[1, 1], [2, 2]] {
+            never(&joint_scan(&|a, e1, e2| assert_eq!(a.construct(&[e1, e2], &[]), 0, "{}", a.issues()), [0, 0, 0], tracks));
+        }
+        // a ramp in either piece stays where it was
+        for levels in [[0, 0, -1], [-1, 0, 0], [-1, -1, 0], [0, -1, -1]] {
+            never(&joint_scan(&|a, e1, e2| assert_eq!(a.construct(&[e1, e2], &[]), 0, "{}", a.issues()), levels, [2, 2]));
+        }
+    }
+
+    /// T-624: built double track in two pieces with a running line over both, a station placed
+    /// across the joint. The pieces become one edge (then split at the station); the line's
+    /// path, its trains, the money and the track's cost are as they were, and undo restores
+    /// the two pieces.
+    #[test]
+    fn a_station_across_a_built_joint_keeps_the_line_its_trains_and_the_money() {
+        for levels in [[0, 0, 0], [0, 0, -1], [-1, 0, 0]] {
+            let mut a = api();
+            a.set_cash(1e9);
+            let mut ends = free_at(0.0, 0.0, levels[0]);
+            ends.extend(free_at(1000.0, 0.0, levels[1]));
+            assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+            let joint = a.route_end();
+            let mut ends = vec![1.0, joint as f64, 0.0, 0.0, 0.0];
+            ends.extend(free_at(2000.0, 0.0, levels[2]));
+            assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+            let end = |t: &TrackApi, x: f64| t.nodes_info().chunks(10).find(|c| (c[1] - x).abs() < 1e-6).unwrap()[0] as u32;
+            let (w, east) = (end(&a, 0.0), end(&a, 2000.0));
+            for (n, x) in [(w, 0.0), (east, 2000.0)] {
+                assert_eq!(a.add_station(1, n, x, 0.0, 200, "S".into()), 0, "{}", a.issues());
+            }
+            let pieces = live_edges(&a);
+            assert_eq!(pieces.len(), 2);
+            assert_eq!(a.construct(&pieces, &[w, east]), 0, "{}", a.issues());
+            let id = a.new_line_id();
+            assert_eq!(a.set_line(id, &[w, east], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+            assert!(a.w.svc.lines[id as usize].running, "{levels:?}: the line runs");
+            a.set_now(40_000.0);
+            let snap = |t: &TrackApi| {
+                let trips = t.trips(40_000.0 - 1800.0);
+                let at: Vec<Vec<f64>> = (0..8).map(|k| t.train_at(id, 0, 0, 40_000.0 - 600.0, 40_000.0 + 90.0 * k as f64)).collect();
+                (t.cash, t.built_cost(), t.total_cost(), t.stop_times(id, 0, 0), t.stop_times(id, 1, 0), trips, at, t.line_summary(id))
+            };
+            let before = snap(&a);
+            let before_heights = heights(&a);
+            assert!(!before.5.is_empty(), "trains are running");
+            let len: f64 = pieces.iter().map(|&e| a.w.net.edge_len[e as usize]).sum();
+
+            let e = edge_under(&a, 960.0, 0.0);
+            assert_eq!(a.preview_station(2, e, 960.0, 0.0, 200), 0, "{levels:?}: {}", a.issues());
+            assert_eq!(a.add_station(2, e, 960.0, 0.0, 200, "Middle".into()), 0, "{levels:?}: {}", a.issues());
+            assert!(!a.w.net.node_ok(joint), "{levels:?}: the joint went");
+            let now = live_edges(&a);
+            assert_eq!(now.len(), 2, "joined, then split at the station");
+            assert!(now.iter().all(|&e| a.w.net.edge_built[e as usize]), "still constructed");
+            assert!((now.iter().map(|&e| a.w.net.edge_len[e as usize]).sum::<f64>() - len).abs() < 1e-6);
+            let l = a.w.net.line_path(id).to_vec();
+            assert!(l.iter().all(|&p| a.w.net.edge_ok(crate::track::net::path_edge(p))), "the path uses live edges");
+            assert!(!a.w.net.line_broken[id as usize] && a.w.svc.lines[id as usize].running);
+            assert_eq!(a.w.net.line_stops(id), &[w, east], "stops unchanged");
+            let after = snap(&a);
+            assert_eq!(before.0, after.0, "{levels:?}: cash");
+            assert!((before.1 - after.1).abs() < 1e-9, "{levels:?}: built cost {} {}", before.1, after.1);
+            assert_eq!((&before.3, &before.4, &before.5, &before.7), (&after.3, &after.4, &after.5, &after.7), "{levels:?}: timetable");
+            for (p, q) in before.6.iter().zip(&after.6) {
+                assert!((p[0] - q[0]).hypot(p[1] - q[1]) < 1e-3, "{levels:?}: a train moved: {p:?} {q:?}");
+            }
+            assert!(a.w.svc.eras_of(id as usize).is_empty() && a.w.svc.shifts[id as usize].is_empty(), "no train was moved or re-timed");
+            same_heights(&before_heights, &heights(&a), &format!("{levels:?}"));
+
+            assert_eq!(a.undo(), 0);
+            assert_eq!(live_edges(&a), pieces, "{levels:?}: the two pieces are back");
+            assert!(a.w.net.node_ok(joint) && pieces.iter().all(|&e| a.w.net.edge_built[e as usize]));
+            let undone = snap(&a);
+            assert_eq!(before.0, undone.0);
+            assert!((before.1 - undone.1).abs() < 1e-9);
+            assert_eq!((&before.3, &before.5), (&undone.3, &undone.5));
+            same_heights(&before_heights, &heights(&a), &format!("{levels:?} undone"));
         }
     }
 

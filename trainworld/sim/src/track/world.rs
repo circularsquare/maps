@@ -333,7 +333,8 @@ impl TrackWorld {
             cost_after,
             built_before,
             built_after,
-            charge: (built_after - built_before).max(0.0),
+            // below a millionth of a dollar is rounding from re-summing the same shapes (T-624)
+            charge: if built_after - built_before > 1e-9 { built_after - built_before } else { 0.0 },
         };
         Ok((r, inv))
     }

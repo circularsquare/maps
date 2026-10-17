@@ -1,5 +1,6 @@
 ﻿# Archive
 
+- T-624 [P2] Built track joins under a platform. Done 2026-10-17: a station within half a platform of a joint joins two constructed pieces of the same track count; money, lines, trains, levels and undo carry over unchanged; unlike track still refuses. notes/T-624.md.
 - T-622 [P2] Platform alerts that flipped with a nudge (Anita, Hakusan). Done 2026-10-17: the crossing check was right, but a station moved the ramp of the stretch it split (joins too), so a nudge moved the ramp under other track; cuts and joins now keep ramps in place, back-to-back curves fit at a cut, a joint that cannot be merged says so, the crossing alert says what to do. Eight sim tests.
 - T-595 [P3] Tokyo's calibration areas file. Done 2026-10-17 in T-621 stage 1: remade, with New York's and Toronto's (stale by a few cells) and Sendai's and Toronto's targets. notes/T-621.md "Stage 1".
 - T-611 [P2] The gate's top cell for proxy-job packs. Done 2026-10-17: cell jobs over the square root of thousand jobs, failing over 600, replaces the flat 1% (real centres reach 1.3-2%); Belfast (283) and Cardiff ship. notes/T-583.md.
