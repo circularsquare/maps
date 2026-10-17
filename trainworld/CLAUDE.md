@@ -124,7 +124,7 @@ packs, `..\venv\Scripts\python.exe`). Details and build orders: `docs/code-map.m
 
 ## Working here (Anita's decisions)
 
-- **The goal is the whole world; demand realism is core** (2026-10-13). New US cities stay paused.
+- **The goal is the whole world; sensible demand is core** (2026-10-13; "sensible" over "realistic" since 2026-10-17, below). New US cities stay paused.
   Instead a sampler of other countries' cities (Toronto done; London, Paris, Shanghai, Mumbai, São Paulo, Lagos, Berlin, Seoul and
   Tokyo, Osaka, Nagoya, Fukuoka, Sapporo, Sendai and Hiroshima, with the rest of Japan as 38 prefecture zones, all at tier 0 with their country's inputs; 67 zones in all) to learn which demand methods work everywhere. Each is a
   low-fidelity first pass: missing data (medical, say) is left out, extents pragmatic, basic
