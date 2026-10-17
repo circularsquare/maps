@@ -520,6 +520,52 @@ mod tests {
         let (h,b)=university_fixture(149.0);
         assert_eq!(EverydayApi::new(&h,&b).unwrap().totals[3],0.0);
     }
+    /// The pack with the named per-cell arrays set to zero (a place where OSM or the source has
+    /// no sites for that purpose).
+    fn zeroed(h: &str, b: &[u8], names: &[&str]) -> (String, Vec<u8>) {
+        let hv: serde_json::Value = serde_json::from_str(h).unwrap();
+        let mut b = b.to_vec();
+        for a in hv["arrays"].as_array().unwrap() {
+            if names.contains(&a["name"].as_str().unwrap()) {
+                let (o, n) = (a["offset"].as_u64().unwrap() as usize, a["count"].as_u64().unwrap() as usize);
+                b[o..o + 4 * n].fill(0);
+            }
+        }
+        (h.to_string(), b)
+    }
+    #[test]
+    fn a_purpose_with_no_sites_opens_empty() {
+        let (h, b) = university_fixture(4000.0);
+        let full = EverydayApi::new(&h, &b).unwrap();
+        let (zh, zb) = zeroed(&h, &b, &["university_adults", "university_enrollment"]);
+        let mut a = EverydayApi::new(&zh, &zb).unwrap();
+        assert_eq!(a.purpose_count(), 3, "the school slot stays, the empty university is trimmed");
+        assert_eq!(&a.info()[..9], &full.info()[..9]);
+        assert_eq!(&a.destinations[..], &full.destinations[..a.destinations.len()]);
+        network(&mut a, 4000.0, [12.0; 3]);
+        for q in 0..5 { assert!(a.solve(q)); }
+        assert!(a.selection(1, &[0]).iter().all(|v| v.is_finite()));
+        // university empty but airports after it: the university slot is zeros
+        let (fh, fb) = facility_fixture(&[0.0, 4000.0], Some(&[0.0, 50.0]), Some(&[0.0, 10.0]));
+        let (fh, fb) = zeroed(&fh, &fb, &["errand_jobs"]);
+        let mut a = EverydayApi::new(&fh, &fb).unwrap();
+        assert_eq!(a.purpose_count(), 6);
+        assert_eq!(a.totals[0], 0.0, "no errand sites: no errand trips");
+        let (oh, ob) = facility_fixture(&[0.0, 4000.0], Some(&[0.0, 50.0]), Some(&[0.0, 10.0]));
+        assert_eq!(a.totals[1], EverydayApi::new(&oh, &ob).unwrap().totals[1], "social is untouched");
+        network(&mut a, 4000.0, [12.0; 3]);
+        for q in 0..5 { assert!(a.solve(q)); }
+        assert!(a.selection(1, &[1]).iter().all(|v| v.is_finite()));
+        // no leisure sites: social falls back to residents, nothing divides by zero
+        let (lh, lb) = facility_fixture(&[0.0, 4000.0], Some(&[0.0, 50.0]), None);
+        let (lh, lb) = zeroed(&lh, &lb, &["leisure_jobs"]);
+        let a = EverydayApi::new(&lh, &lb).unwrap();
+        assert!(a.info().iter().all(|v| v.is_finite()));
+        // no residents is still an error
+        let (ph, pb) = facility_fixture(&[0.0, 4000.0], None, None);
+        let (eh, eb) = zeroed(&ph, &pb, &["pop"]);
+        assert!(EverydayApi::new(&eh, &eb).is_err());
+    }
     #[test]
     #[ignore] // Real source pack check, invoked explicitly by T-152.
     fn university_real_pack_preserves_existing_generation() {
@@ -1849,41 +1895,45 @@ impl EverydayApi {
             .ok_or("missing leisure attractors")?;
         let sum = |v: &[f32]| v.iter().map(|&x| x as f64).sum::<f64>();
         let (tp, tl) = (sum(&pop), sum(&leisure));
-        if tp <= 0.0 || tl <= 0.0 || sum(&retail) <= 0.0 {
+        if tp <= 0.0 {
             return Err("empty everyday weights".into());
         }
+        // T-582: a purpose with no sites in the pack (no retail, no leisure, no school or
+        // university, no airport, no medical) is an empty slot, not an error.
+        let nonzero = |v: Option<Vec<f32>>| v.filter(|v| sum(v) > 0.0);
+        let pair = |a: Option<Vec<f32>>, b: Option<Vec<f32>>, what: &str| -> Result<(Option<Vec<f32>>, Option<Vec<f32>>), String> {
+            if a.is_some() != b.is_some() {
+                return Err(format!("incomplete {what} inputs"));
+            }
+            Ok(match (a, b) {
+                (Some(a), Some(b)) if sum(&a) > 0.0 && sum(&b) > 0.0 => (Some(a), Some(b)),
+                _ => (None, None),
+            })
+        };
         // T-196: parks, where the pack has them, take PARK_SHARE of the social attraction
         let parks = pack::cell_weights(header, bin, "park_draw", n)?.filter(|v| sum(v) > 0.0);
-        let social: Vec<f32> = match &parks {
-            None => pop.iter().zip(&leisure).map(|(&p, &l)| (0.5 * p as f64 / tp + 0.5 * l as f64 / tl) as f32).collect(),
-            Some(park) => {
-                let (tk, half) = (sum(park), 0.5 * (1.0 - PARK_SHARE));
-                (0..n).map(|c| (half * pop[c] as f64 / tp + half * leisure[c] as f64 / tl + PARK_SHARE * park[c] as f64 / tk) as f32).collect()
-            }
-        };
-        let children = pack::cell_weights(header, bin, "school_children", n)?;
-        let school_enrollment = pack::cell_weights(header, bin, "school_enrollment", n)?;
-        if children.is_some() != school_enrollment.is_some() {
-            return Err("incomplete school inputs".into());
-        }
-        if let (Some(children), Some(enrollment)) = (&children, &school_enrollment) {
-            if sum(children) <= 0.0 || sum(enrollment) <= 0.0 {
-                return Err("empty school inputs".into());
-            }
-        }
-        let adults = pack::cell_weights(header, bin, "university_adults", n)?;
-        let university_enrollment = pack::cell_weights(header, bin, "university_enrollment", n)?;
-        if adults.is_some() != university_enrollment.is_some() {
-            return Err("incomplete university inputs".into());
-        }
-        if let (Some(adults), Some(enrollment)) = (&adults, &university_enrollment) {
-            if sum(adults) <= 0.0 || sum(enrollment) <= 0.0 {
-                return Err("empty university inputs".into());
-            }
-        }
+        let park_share = if parks.is_some() { PARK_SHARE } else { 0.0 };
+        let (half_pop, half_leisure) = if tl > 0.0 { (0.5 * (1.0 - park_share), 0.5 * (1.0 - park_share)) } else { (1.0 - park_share, 0.0) };
+        let tk = parks.as_ref().map_or(1.0, |p| sum(p));
+        let social: Vec<f32> = (0..n)
+            .map(|c| {
+                let leisure_part = if tl > 0.0 { half_leisure * leisure[c] as f64 / tl } else { 0.0 };
+                let park_part = parks.as_ref().map_or(0.0, |p| park_share * p[c] as f64 / tk);
+                (half_pop * pop[c] as f64 / tp + leisure_part + park_part) as f32
+            })
+            .collect();
+        let (children, school_enrollment) = pair(
+            pack::cell_weights(header, bin, "school_children", n)?,
+            pack::cell_weights(header, bin, "school_enrollment", n)?,
+            "school",
+        )?;
+        let (adults, university_enrollment) = pair(
+            pack::cell_weights(header, bin, "university_adults", n)?,
+            pack::cell_weights(header, bin, "university_enrollment", n)?,
+            "university",
+        )?;
         // T-142: airport ground trips per terminal cell and medical visit sizes per cell. A pack
         // without them (or with no airport, Springfield) leaves the purpose empty.
-        let nonzero = |v: Option<Vec<f32>>| v.filter(|v| sum(v) > 0.0);
         let airport_trips = nonzero(pack::cell_weights(header, bin, "airport_trips", n)?);
         let medical = nonzero(pack::cell_weights(header, bin, "medical_visits", n)?);
         // Access centroids and road density use real residents/employment, not commuter weights.
@@ -1904,7 +1954,7 @@ impl EverydayApi {
             Some(trips) => {
                 let tj = sum(engine.jobs()).max(1e-9);
                 let mut origin: Vec<f32> = (0..n)
-                    .map(|c| (0.5 * engine.pop()[c] as f64 / tp + 0.25 * engine.jobs()[c] as f64 / tj + 0.25 * leisure[c] as f64 / tl) as f32)
+                    .map(|c| (0.5 * engine.pop()[c] as f64 / tp + 0.25 * engine.jobs()[c] as f64 / tj + 0.25 * leisure[c] as f64 / tl.max(1e-9)) as f32)
                     .collect();
                 // the airport's own jobs are not where its passengers come from (a terminal's
                 // block holds tens of thousands of airport jobs): no ends within 1.5 km of one

@@ -161,7 +161,10 @@ trips. Local bubbles count **trip legs**, twice the former commute-person count 
 everyday travel; their purpose/timing queries reconcile to those same endpoint totals. Commute
 station catchments remain explicitly commuter counts. Source-neutral cell-weight names allow
 other countries' destination inputs later; runtime enables the layer for any pack that carries
-the arrays (`errand_jobs` and the rest).
+the arrays (`errand_jobs` and the rest). A purpose whose arrays hold no sites (no retail,
+leisure, school, university, airport or medical site; a school or university pair with either
+side zero) is an empty slot with no trips; with no leisure sites, social uses residents (and
+parks) alone. Residents must be positive, and a pair with only one of its two arrays is an error.
 
 **School attendance (T-140/T-150/T-181, metro public schools).** Every pack's schools are the
 NCES EDGE/CCD 2023-24 public schools in its counties (`pipeline/enrich_schools.py <city>`): 230

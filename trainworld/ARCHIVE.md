@@ -1,5 +1,6 @@
 ﻿# Archive
 
+- T-582 [P2] A pack with no university sites. Done 2026-10-17: `EverydayApi::new` opens a pack whose retail, leisure, school or university arrays hold no sites with that purpose empty (social falls back to residents without leisure); packs with inputs identical, test `a_purpose_with_no_sites_opens_empty`.
 - T-581 [P2] Cheaper change nodes. Done 2026-10-17: a queue holding each node once, change nodes' departures as bits, splits over accepted departures only; results identical to the bit (real save 10,541,788). New York's commute solve 29.4 to 25.8 s, about two thirds of T-575's cost back. notes/T-581.md.
 - T-580 [P3] A new pack beside the Northeast without a market id. Done 2026-10-16 by rule: the runner parks a pack within 50 km of a Northeast pack before its gate, with the reason; moving the Northeast onto the `--packs` solve waits for a row that needs it (US cities are paused). notes/T-540.md.
 - T-558 [P2] Walking that competes, stage 1. Done 2026-10-16: walking is a third mode in the logit (1.5 then 4 a minute, constants 2.86 and +0.35); New York and London walk within 0.3 points of before; real save 10,433,195 to 10,541,788 rail trips (+1.0%); commute solve +4%. Fitting per country waits for the deep calibration. notes/T-558.md.
