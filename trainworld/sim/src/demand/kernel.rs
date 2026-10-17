@@ -21,8 +21,7 @@
 use super::lanes::{F4, F8};
 use super::network::Network;
 use super::pack::{City, PackGravity};
-use std::cmp::Reverse;
-use std::collections::{BinaryHeap, HashMap};
+use std::collections::HashMap;
 
 /// Stations kept per cell and per subzone.
 pub const K: usize = 6;
@@ -1898,13 +1897,14 @@ pub struct Skims {
 /// A station as reached off one of the lines its own strategy boards (T-575): a rider never changes
 /// onto the line they left, in either direction, so arriving on that line they choose among the
 /// station's other lines. Change node k is node `n + k`; a route node of the line that leaves the
-/// train there, or walks there, has it as its next node. Each holds its station and the route
-/// nodes (from 0) whose departures it accepts, `acc[off[k]..off[k + 1]]`.
+/// train there, or walks there, has it as its next node. Each holds its station and a bit per
+/// boarding edge of the station for the departures it accepts, `bits[off[k]..off[k + 1]]` (bit i
+/// of word w is the station's edge 64 w + i).
 #[derive(Clone, Default)]
 pub struct ChangeNodes {
     pub st: Box<[u32]>,
     pub off: Box<[u32]>,
-    pub acc: Box<[u32]>,
+    pub bits: Box<[u64]>,
 }
 
 impl ChangeNodes {
@@ -1912,9 +1912,13 @@ impl ChangeNodes {
         self.st.len()
     }
     /// Departures an hour change node `k` accepts at route node `r`.
-    #[inline(always)]
     pub fn tph(&self, g: &Graph, k: usize, r: usize) -> f32 {
-        if self.acc[self.off[k] as usize..self.off[k + 1] as usize].contains(&(r as u32)) { g.rn_tph[r] } else { 0.0 }
+        let st = self.st[k] as usize;
+        let e0 = g.adj_off[st] as usize;
+        match (e0..g.adj_off[st + 1] as usize).position(|e| g.adj_to[e] as usize == g.n_st + r) {
+            Some(i) if self.bits[self.off[k] as usize + i / 64] >> (i % 64) & 1 == 1 => g.rn_tph[r],
+            _ => 0.0,
+        }
     }
 }
 
@@ -1996,34 +2000,11 @@ pub fn skims_for(g: &Graph, p: &Params, want: &[bool]) -> Skims {
 /// Search the destinations marked in `want` that `sk` does not have yet.
 pub fn skims_extend(sk: &mut Skims, g: &Graph, p: &Params, want: &[bool]) {
     let (s, n) = (g.n_st, g.n);
-    let nr = n - s;
     let todo: Vec<usize> = (0..s).filter(|&d| want.get(d).copied().unwrap_or(false) && sk.slot[d] == NONE).collect();
     if todo.is_empty() {
         return;
     }
-    let mut q = Search {
-        g,
-        p,
-        s,
-        n,
-        nr,
-        dist: vec![f32::INFINITY; n],
-        done: vec![false; n],
-        frequency: vec![0f32; s],
-        weighted: vec![0f32; s],
-        heap: BinaryHeap::with_capacity(n),
-        next: vec![NONE; n],
-        order: Vec::with_capacity(n),
-        board: Box::new([]),
-        offer: vec![f32::INFINITY; nr],
-        cn: vec![],
-        cn_of: vec![(0, 0); s],
-        cn_acc: vec![],
-        cn_feed: vec![],
-        lines: vec![],
-        feed: vec![],
-        cand: vec![],
-    };
+    let mut q = Search::new(g, p);
     for &dst in &todo {
         sk.slot[dst] = sk.next.len() as u32;
         q.run(dst);
@@ -2039,9 +2020,76 @@ pub fn skims_extend(sk: &mut Skims, g: &Graph, p: &Params, want: &[bool]) {
     }
 }
 
+/// The strategy search's queue (T-581): a 4-ary min-heap of (cost bits, id), each id in it at
+/// most once. A lower cost for an id already queued moves it up instead of adding a copy, so it
+/// pops the ids in the order a heap of copies did (by cost, then id; costs are never negative, so
+/// their bits sort as they do), with no stale copies to pop and skip.
+struct IdHeap {
+    h: Vec<u64>,
+    /// Each id's place in `h`, `NONE` when not queued.
+    pos: Vec<u32>,
+}
+
+impl IdHeap {
+    fn new(ids: usize) -> IdHeap {
+        IdHeap { h: Vec::with_capacity(ids), pos: vec![NONE; ids] }
+    }
+    #[inline(always)]
+    fn push(&mut self, cost: f32, id: u32) {
+        let x = (cost.to_bits() as u64) << 32 | id as u64;
+        let mut i = match self.pos[id as usize] {
+            NONE => {
+                self.h.push(x);
+                self.h.len() - 1
+            }
+            i if x < self.h[i as usize] => i as usize,
+            _ => return,
+        };
+        while i > 0 {
+            let up = (i - 1) / 4;
+            let y = self.h[up];
+            if y <= x { break; }
+            self.h[i] = y;
+            self.pos[y as u32 as usize] = i as u32;
+            i = up;
+        }
+        self.h[i] = x;
+        self.pos[id as usize] = i as u32;
+    }
+    #[inline(always)]
+    fn pop(&mut self) -> Option<usize> {
+        let top = *self.h.first()?;
+        self.pos[top as u32 as usize] = NONE;
+        let x = self.h.pop().unwrap();
+        let len = self.h.len();
+        if len > 0 {
+            let mut i = 0;
+            loop {
+                let c = 4 * i + 1;
+                if c >= len { break; }
+                let (mut m, mut y) = (c, self.h[c]);
+                for k in c + 1..(c + 4).min(len) {
+                    if self.h[k] < y {
+                        m = k;
+                        y = self.h[k];
+                    }
+                }
+                if y >= x { break; }
+                self.h[i] = y;
+                self.pos[y as u32 as usize] = i as u32;
+                i = m;
+            }
+            self.h[i] = x;
+            self.pos[x as u32 as usize] = i as u32;
+        }
+        Some(top as u32 as usize)
+    }
+}
+
 /// A change node being searched (`ChangeNodes`): its station and the line it was reached off, the
-/// pooled frequency and frequency-weighted cost of the lines it accepts, its cost, settled, and
-/// its arrivals (a range of `Search::cn_feed`: the station's incoming edges off that line).
+/// pooled frequency and frequency-weighted cost of the lines it accepts, its cost, settled, its
+/// arrivals (a range of `Search::cn_feed`: the station's incoming edges off that line) and where
+/// its accepted departures' bits start in `Search::cn_bits`.
 struct Change {
     st: u32,
     line: u32,
@@ -2050,6 +2098,7 @@ struct Change {
     dist: f32,
     done: bool,
     feed: (u32, u32),
+    bits: u32,
 }
 
 /// One destination's strategy search at a time (`skims_extend`). Heap ids: nodes below `n`; from
@@ -2065,7 +2114,7 @@ struct Search<'a> {
     done: Vec<bool>,
     frequency: Vec<f32>,
     weighted: Vec<f32>,
-    heap: BinaryHeap<Reverse<(u32, u32)>>,
+    heap: IdHeap,
     next: Vec<u32>,
     order: Vec<u32>,
     board: Box<[u64]>,
@@ -2074,16 +2123,69 @@ struct Search<'a> {
     cn: Vec<Change>,
     /// Each station's change nodes, a range of `cn`.
     cn_of: Vec<(u32, u32)>,
-    /// (change node, route node) for each departure a change node accepts.
-    cn_acc: Vec<(u32, u32)>,
+    /// The change nodes' accepted departures, a bit per boarding edge of their station.
+    cn_bits: Vec<u64>,
     cn_feed: Vec<u32>,
     lines: Vec<u32>,
     /// (index in `lines`, incoming edge) for a settling station's arrivals off its own lines.
     feed: Vec<(u32, u32)>,
     cand: Vec<(f32, u32)>,
+    /// Per station, the one line with departures from it, `MANY` for several, `NONE` for none.
+    lone: Vec<u32>,
+    /// Each route node's place among its station's boarding edges.
+    edge_ix: Vec<u32>,
 }
 
+const MANY: u32 = NONE - 1;
+
 impl Search<'_> {
+    fn new<'a>(g: &'a Graph, p: &'a Params) -> Search<'a> {
+        let (s, n) = (g.n_st, g.n);
+        let nr = n - s;
+        let mut edge_ix = vec![NONE; nr];
+        let mut lone = vec![NONE; s];
+        for v in 0..s {
+            let e0 = g.adj_off[v] as usize;
+            for e in e0..g.adj_off[v + 1] as usize {
+                let r = g.adj_to[e] as usize - s;
+                edge_ix[r] = (e - e0) as u32;
+                if g.rn_tph[r] > 0.0 {
+                    lone[v] = match lone[v] {
+                        NONE => g.rn_line[r],
+                        l if l == g.rn_line[r] => l,
+                        _ => MANY,
+                    };
+                }
+            }
+        }
+        Search {
+            g,
+            p,
+            s,
+            n,
+            nr,
+            dist: vec![f32::INFINITY; n],
+            done: vec![false; n],
+            frequency: vec![0f32; s],
+            weighted: vec![0f32; s],
+            // a change node per station and line its strategy boards: fewer than route nodes
+            heap: IdHeap::new(n + 2 * nr),
+            next: vec![NONE; n],
+            order: Vec::with_capacity(n),
+            board: Box::new([]),
+            offer: vec![f32::INFINITY; nr],
+            cn: vec![],
+            cn_of: vec![(0, 0); s],
+            cn_bits: vec![],
+            cn_feed: vec![],
+            lines: vec![],
+            feed: vec![],
+            cand: vec![],
+            lone,
+            edge_ix,
+        }
+    }
+
     fn run(&mut self, dst: usize) {
         let (g, p, s, n, nr) = (self.g, self.p, self.s, self.n, self.nr);
         self.dist.fill(f32::INFINITY);
@@ -2096,12 +2198,11 @@ impl Search<'_> {
         self.offer.fill(f32::INFINITY);
         self.cn.clear();
         self.cn_of.fill((0, 0));
-        self.cn_acc.clear();
+        self.cn_bits.clear();
         self.cn_feed.clear();
         self.dist[dst] = 0.0;
-        self.heap.push(Reverse((0f32.to_bits(), dst as u32)));
-        while let Some(Reverse((_, id))) = self.heap.pop() {
-            let id = id as usize;
+        self.heap.push(0.0, dst as u32);
+        while let Some(id) = self.heap.pop() {
             if id >= n + nr {
                 self.settle_change(id - n - nr);
                 continue;
@@ -2131,7 +2232,7 @@ impl Search<'_> {
                     // its turn, or a full train would join ahead of better lines and stay (T-552).
                     let left = g.rn_left[v - s];
                     if left > 0.0 {
-                        self.heap.push(Reverse(((d + left * p.w_wait).to_bits(), (n + v - s) as u32)));
+                        self.heap.push(d + left * p.w_wait, (n + v - s) as u32);
                     } else {
                         self.offer_line(v - s, d);
                     }
@@ -2148,7 +2249,7 @@ impl Search<'_> {
         if nd < self.dist[from] {
             self.dist[from] = nd;
             self.next[from] = to;
-            self.heap.push(Reverse((nd.to_bits(), from as u32)));
+            self.heap.push(nd, from as u32);
         }
     }
 
@@ -2163,19 +2264,20 @@ impl Search<'_> {
                 self.board[r >> 6] |= 1 << (r & 63);
                 self.dist[from] = cost;
                 self.next[from] = (self.s + r) as u32;
-                self.heap.push(Reverse((cost.to_bits(), from as u32)));
+                self.heap.push(cost, from as u32);
             }
             return;
         }
         let (a, b) = self.cn_of[from];
+        let i = self.edge_ix[r] as usize;
         for k in a as usize..b as usize {
             let c = &mut self.cn[k];
             // a line costing more from boarding than the pool does already never joins it
             if c.done || d >= c.dist || c.line == g.rn_line[r] { continue; }
             if let Some(cost) = join_line(&mut c.frequency, &mut c.weighted, c.dist, f, d, self.p) {
                 c.dist = cost;
-                self.cn_acc.push((k as u32, r as u32));
-                self.heap.push(Reverse((cost.to_bits(), (self.n + self.nr + k) as u32)));
+                self.cn_bits[c.bits as usize + i / 64] |= 1 << (i % 64);
+                self.heap.push(cost, (self.n + self.nr + k) as u32);
             }
         }
     }
@@ -2186,8 +2288,9 @@ impl Search<'_> {
     fn settle_station(&mut self, v: usize) {
         let (g, s) = (self.g, self.s);
         let d = self.dist[v];
+        let (e0, e1) = (g.adj_off[v] as usize, g.adj_off[v + 1] as usize);
         self.lines.clear();
-        for e in g.adj_off[v] as usize..g.adj_off[v + 1] as usize {
+        for e in e0..e1 {
             let r = g.adj_to[e] as usize - s;
             if self.board[r >> 6] >> (r & 63) & 1 == 1 && !self.lines.contains(&g.rn_line[r]) {
                 self.lines.push(g.rn_line[r]);
@@ -2204,34 +2307,38 @@ impl Search<'_> {
             }
         }
         let first = self.cn.len() as u32;
-        if !self.feed.is_empty() {
+        // a station with no other line has no change node
+        let lone = self.lone[v];
+        if !self.feed.is_empty() && lone != NONE {
             for li in 0..self.lines.len() {
                 let line = self.lines[li];
-                let others = (g.adj_off[v] as usize..g.adj_off[v + 1] as usize).any(|e| {
-                    let r = g.adj_to[e] as usize - s;
-                    g.rn_line[r] != line && g.rn_tph[r] > 0.0
-                });
-                if !others || !self.feed.iter().any(|f| f.0 == li as u32) { continue; }
+                if lone == line { continue; }
+                let f0 = self.cn_feed.len();
+                self.cn_feed.extend(self.feed.iter().filter(|f| f.0 == li as u32).map(|f| f.1));
+                if self.cn_feed.len() == f0 { continue; }
                 self.cand.clear();
-                for e in g.adj_off[v] as usize..g.adj_off[v + 1] as usize {
+                for e in e0..e1 {
                     let r = g.adj_to[e] as usize - s;
                     if g.rn_line[r] != line && self.offer[r].is_finite() {
                         self.cand.push((self.offer[r], r as u32));
                     }
                 }
-                self.cand.sort_unstable_by(|a, b| a.0.total_cmp(&b.0).then(a.1.cmp(&b.1)));
+                if self.cand.len() > 1 {
+                    self.cand.sort_unstable_by(|a, b| a.0.total_cmp(&b.0).then(a.1.cmp(&b.1)));
+                }
                 let k = self.cn.len();
-                let f0 = self.cn_feed.len() as u32;
-                self.cn_feed.extend(self.feed.iter().filter(|f| f.0 == li as u32).map(|f| f.1));
-                let mut c = Change { st: v as u32, line, frequency: 0.0, weighted: 0.0, dist: f32::INFINITY, done: false, feed: (f0, self.cn_feed.len() as u32) };
+                let b0 = self.cn_bits.len();
+                self.cn_bits.resize(b0 + (e1 - e0).div_ceil(64), 0);
+                let mut c = Change { st: v as u32, line, frequency: 0.0, weighted: 0.0, dist: f32::INFINITY, done: false, feed: (f0 as u32, self.cn_feed.len() as u32), bits: b0 as u32 };
                 for &(od, r) in &self.cand {
                     if let Some(cost) = join_line(&mut c.frequency, &mut c.weighted, c.dist, g.rn_tph[r as usize], od, self.p) {
                         c.dist = cost;
-                        self.cn_acc.push((k as u32, r));
+                        let i = self.edge_ix[r as usize] as usize;
+                        self.cn_bits[b0 + i / 64] |= 1 << (i % 64);
                     }
                 }
                 if c.dist.is_finite() {
-                    self.heap.push(Reverse((c.dist.to_bits(), (self.n + self.nr + k) as u32)));
+                    self.heap.push(c.dist, (self.n + self.nr + k) as u32);
                 }
                 self.cn.push(c);
             }
@@ -2255,19 +2362,11 @@ impl Search<'_> {
     }
 
     /// This destination's change nodes, settled or not (an unsettled one is nobody's next node).
-    fn change_nodes(&mut self) -> ChangeNodes {
-        self.cn_acc.sort_by_key(|x| x.0);
-        let mut off = vec![0u32; self.cn.len() + 1];
-        for &(k, _) in &self.cn_acc {
-            off[k as usize + 1] += 1;
-        }
-        for k in 0..self.cn.len() {
-            off[k + 1] += off[k];
-        }
+    fn change_nodes(&self) -> ChangeNodes {
         ChangeNodes {
             st: self.cn.iter().map(|c| c.st).collect(),
-            off: off.into(),
-            acc: self.cn_acc.iter().map(|x| x.1).collect(),
+            off: self.cn.iter().map(|c| c.bits).chain([self.cn_bits.len() as u32]).collect(),
+            bits: self.cn_bits.as_slice().into(),
         }
     }
 }
@@ -3093,6 +3192,7 @@ fn assign_inner(g: &Graph, sk: &Skims, od: &[f32], mut xf: Option<(&XferIndex, &
     let mut head = if counting { vec![NONE; s + np] } else { vec![] };
     let mut rec: Vec<(u32, f32, u32)> = vec![];
     let mut use_k: Vec<(u32, f32)> = vec![];
+    let mut dep: Vec<(u32, f32)> = vec![];
     for dst in 0..s {
         flow.fill(0.0);
         let mut total = 0.0;
@@ -3112,7 +3212,7 @@ fn assign_inner(g: &Graph, sk: &Skims, od: &[f32], mut xf: Option<(&XferIndex, &
             head.fill(NONE);
             rec.clear();
         }
-        let mut w = DestWalk { g, s, n, dst, bits, cn: &sk.change[slot], flow: &mut flow, l: &mut l, head: &mut head, rec: &mut rec, use_k: &mut use_k, xf: xf.as_mut().map(|(ix, x)| (*ix, &mut **x)) };
+        let mut w = DestWalk { g, s, n, dst, bits, cn: &sk.change[slot], flow: &mut flow, l: &mut l, head: &mut head, rec: &mut rec, use_k: &mut use_k, dep: &mut dep, xf: xf.as_mut().map(|(ix, x)| (*ix, &mut **x)) };
         match (&sk.next[slot], &sk.order[slot]) {
             (NodeIds::Short(next), NodeIds::Short(order)) => w.run(next, order),
             (NodeIds::Long(next), NodeIds::Long(order)) => w.run(next, order),
@@ -3135,13 +3235,46 @@ struct DestWalk<'a> {
     head: &'a mut [u32],
     rec: &'a mut Vec<(u32, f32, u32)>,
     use_k: &'a mut Vec<(u32, f32)>,
+    /// The departures a station or change node accepts, (edge, trains an hour), in edge order.
+    dep: &'a mut Vec<(u32, f32)>,
     xf: Option<(&'a XferIndex, &'a mut [f32])>,
+}
+
+/// The departures station or change node `v` accepts towards a destination, (boarding edge, trains
+/// an hour) in edge order, into `dep`; returns the station. The other edges' shares are 0 and add
+/// nothing, so these alone give the sums over every edge, to the bit (T-581).
+#[inline(always)]
+pub(crate) fn departures(g: &Graph, bits: &[u64], cn: &ChangeNodes, v: usize, dep: &mut Vec<(u32, f32)>) -> usize {
+    let s = g.n_st;
+    dep.clear();
+    if v < s {
+        for e in g.adj_off[v] as usize..g.adj_off[v + 1] as usize {
+            let a = accepted(bits, g, g.adj_to[e] as usize - s);
+            if a != 0.0 {
+                dep.push((e as u32, a));
+            }
+        }
+        v
+    } else {
+        let k = v - g.n;
+        let st = cn.st[k] as usize;
+        let e0 = g.adj_off[st] as usize;
+        for (w, &b) in cn.bits[cn.off[k] as usize..cn.off[k + 1] as usize].iter().enumerate() {
+            let mut b = b;
+            while b != 0 {
+                let e = e0 + 64 * w + b.trailing_zeros() as usize;
+                b &= b - 1;
+                dep.push((e as u32, g.rn_tph[g.adj_to[e] as usize - s]));
+            }
+        }
+        st
+    }
 }
 
 impl DestWalk<'_> {
     #[inline(always)]
     fn run<I: Id>(&mut self, next: &[I], order: &[I]) {
-        let DestWalk { g, s, n, dst, bits, cn, ref mut flow, ref mut l, ref mut head, ref mut rec, ref mut use_k, ref mut xf } = *self;
+        let DestWalk { g, s, n, dst, bits, cn, ref mut flow, ref mut l, ref mut head, ref mut rec, ref mut use_k, ref mut dep, ref mut xf } = *self;
         let end = n + cn.len();
         for &v in order.iter().skip(1).rev() {
             let v = v.ix();
@@ -3149,16 +3282,14 @@ impl DestWalk<'_> {
             if f == 0.0 { continue; }
             if v < s || v >= n {
                 // a station, or a change node boarding at its station (head slot s + k)
-                let (st, k) = if v < s { (v, NONE as usize) } else { (cn.st[v - n] as usize, v - n) };
-                let hx = if v < s { v } else { s + k };
-                let acc = |r: usize| if v < s { accepted(bits, g, r) } else { cn.tph(g, k, r) };
-                let edges = g.adj_off[st] as usize..g.adj_off[st + 1] as usize;
-                let sum: f32 = edges.clone().map(|e| acc(g.adj_to[e] as usize - s)).sum();
+                let st = departures(g, bits, cn, v, dep);
+                let hx = if v < s { v } else { s + v - n };
+                let sum: f32 = dep.iter().map(|x| x.1).sum();
                 if sum == 0.0 { continue; }
                 l.board[st] += f;
-                for e in edges.clone() {
-                    let to = g.adj_to[e] as usize;
-                    let share = f * acc(to - s) / sum;
+                for &(e, a) in dep.iter() {
+                    let to = g.adj_to[e as usize] as usize;
+                    let share = f * a / sum;
                     flow[to] += share;
                     l.rn_board[to - s] += share;
                 }
@@ -3166,10 +3297,9 @@ impl DestWalk<'_> {
                     // the riders who arrived here leave by the departures as everyone here does
                     // (only the useful ones: about half go the wrong way for this destination)
                     use_k.clear();
-                    for (k, e) in edges.clone().enumerate() {
-                        let b = acc(g.adj_to[e] as usize - s);
+                    for &(e, b) in dep.iter() {
                         if b > 0.0 {
-                            use_k.push((k as u32, b / sum));
+                            use_k.push((e - g.adj_off[st], b / sum));
                         }
                     }
                     let x = &mut xf.as_mut().unwrap().1;

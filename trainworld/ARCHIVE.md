@@ -1,5 +1,7 @@
 ﻿# Archive
 
+- T-581 [P2] Cheaper change nodes. Done 2026-10-17: a queue holding each node once, change nodes' departures as bits, splits over accepted departures only; results identical to the bit (real save 10,541,788). New York's commute solve 29.4 to 25.8 s, about two thirds of T-575's cost back. notes/T-581.md.
+- T-580 [P3] A new pack beside the Northeast without a market id. Done 2026-10-16 by rule: the runner parks a pack within 50 km of a Northeast pack before its gate, with the reason; moving the Northeast onto the `--packs` solve waits for a row that needs it (US cities are paused). notes/T-540.md.
 - T-558 [P2] Walking that competes, stage 1. Done 2026-10-16: walking is a third mode in the logit (1.5 then 4 a minute, constants 2.86 and +0.35); New York and London walk within 0.3 points of before; real save 10,433,195 to 10,541,788 rail trips (+1.0%); commute solve +4%. Fitting per country waits for the deep calibration. notes/T-558.md.
 - T-579 [P2] A tier 0 pack with no OSM parks. Done 2026-10-16: `enrich_parks.py` writes a zero `park_draw` (the kernel then leaves parks out) and skips the coverage check when there is no draw to place; Aboh builds in a scratch root, `read_pack` OK. notes/T-540.md.
 - T-539 [P2] Pipeline stage 7, automatic joint gravity groups. Done 2026-10-16: `intercity.py --group auto`, packs within 50 km chained; Northeast and Japan same members, Japan to f32 noise on its res-9 packs; three adjacent Nigerian test packs exchange 285k commuters. notes/T-539.md.

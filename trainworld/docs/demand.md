@@ -696,8 +696,11 @@ works on two levels:
    is searched (T-405). A table is stations² costs plus, per searched destination, each node's next
    node and the settle order (u16 ids below 65,535 nodes, change nodes included), one bit per
    boarding route node for the departures accepted there (their trains an hour are the graph's),
-   and each change node's station and accepted route nodes: about 4 bytes a node, 18 MB
-   for New York's on the real save (T-398).
+   and each change node's station and a bit per boarding edge of that station for the departures
+   it accepts: about 4 bytes a node and 16 a change node (T-398, T-581), 32 MB for New York's real
+   network searched towards all its 873 stations in a peak period. The search's queue holds each
+   node at most once (a lower cost moves it up) and pops by cost, then id, as a queue of copies
+   would (T-581).
 5. **Mode choice per subzone pair.** The access logit factorises: each origin subzone gets one row
    over all stations, the logsum of its access options followed by every station-to-station cost
    (at most 6 options x stations multiply-adds); each pair then multiplies that row into its

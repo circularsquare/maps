@@ -1225,12 +1225,6 @@ impl NodeIx for u32 {
     }
 }
 
-/// As `kernel::accepted`.
-#[inline(always)]
-fn accepted_tph(bits: &[u64], g: &Graph, r: usize) -> f32 {
-    if bits[r >> 6] >> (r & 63) & 1 == 1 { g.rn_tph[r] } else { 0.0 }
-}
-
 /// `kernel::assign_with_transfers` for every purpose in one walk of each destination's strategy
 /// (T-433): each lane does the kernel's `DestWalk` arithmetic in its order, so lane k is the
 /// assignment of kind k's trips alone to the bit (`lanes_match_the_kernel_assignment` checks it;
@@ -1245,6 +1239,7 @@ fn assign_lanes(g: &Graph, sk: &Skims, cols: &Columns, ix: &XferIndex, xfer: &mu
     let mut head = if counting { vec![NONE; s + np] } else { vec![] };
     let mut rec: Vec<(u32, f32, u32)> = vec![];
     let mut use_k: Vec<(u32, f32)> = vec![];
+    let mut dep: Vec<(u32, f32)> = vec![];
     let used: Vec<(usize, &[u32])> = cols.off.iter().enumerate().filter(|(_, o)| !o.is_empty()).map(|(k, o)| (k, &o[..])).collect();
     for dst in 0..s {
         let mut total = ZERO;
@@ -1265,7 +1260,7 @@ fn assign_lanes(g: &Graph, sk: &Skims, cols: &Columns, ix: &XferIndex, xfer: &mu
                 head.fill(NONE);
                 rec.clear();
             }
-            let mut w = LaneWalk { g, s, n, dst, bits: &sk.board[slot][..], cn: &sk.change[slot], flow: &mut flow, l: &mut l, head: &mut head, rec: &mut rec, use_k: &mut use_k, xfer: if counting { Some((ix, &mut *xfer)) } else { None } };
+            let mut w = LaneWalk { g, s, n, dst, bits: &sk.board[slot][..], cn: &sk.change[slot], flow: &mut flow, l: &mut l, head: &mut head, rec: &mut rec, use_k: &mut use_k, dep: &mut dep, xfer: if counting { Some((ix, &mut *xfer)) } else { None } };
             match (&sk.next[slot], &sk.order[slot]) {
                 (NodeIds::Short(next), NodeIds::Short(order)) => w.run(next, order),
                 (NodeIds::Long(next), NodeIds::Long(order)) => w.run(next, order),
@@ -1296,13 +1291,14 @@ struct LaneWalk<'a> {
     head: &'a mut [u32],
     rec: &'a mut Vec<(u32, f32, u32)>,
     use_k: &'a mut Vec<(u32, f32)>,
+    dep: &'a mut Vec<(u32, f32)>,
     xfer: Option<(&'a XferIndex, &'a mut [f32])>,
 }
 
 impl LaneWalk<'_> {
     #[inline(always)]
     fn run<I: NodeIx>(&mut self, next: &[I], order: &[I]) {
-        let LaneWalk { g, s, n, dst, bits, cn, ref mut flow, ref mut l, ref mut head, ref mut rec, ref mut use_k, ref mut xfer } = *self;
+        let LaneWalk { g, s, n, dst, bits, cn, ref mut flow, ref mut l, ref mut head, ref mut rec, ref mut use_k, ref mut dep, ref mut xfer } = *self;
         let end = n + cn.len();
         for &v in order.iter().skip(1).rev() {
             let v = v.ix();
@@ -1312,28 +1308,24 @@ impl LaneWalk<'_> {
             }
             flow[v] = ZERO;
             if v < s || v >= n {
-                let (st, k) = if v < s { (v, NONE as usize) } else { (cn.st[v - n] as usize, v - n) };
-                let hx = if v < s { v } else { s + k };
-                let acc = |r: usize| if v < s { accepted_tph(bits, g, r) } else { cn.tph(g, k, r) };
-                let edges = g.adj_off[st] as usize..g.adj_off[st + 1] as usize;
-                let sum: f32 = edges.clone().map(|e| acc(g.adj_to[e] as usize - s)).sum();
+                let st = departures(g, bits, cn, v, dep);
+                let hx = if v < s { v } else { s + v - n };
+                let sum: f32 = dep.iter().map(|x| x.1).sum();
                 if sum == 0.0 {
                     continue;
                 }
                 add_lanes(&mut l.board[st], &f);
-                for e in edges.clone() {
-                    let to = g.adj_to[e] as usize;
-                    let a = acc(to - s);
+                for &(e, a) in dep.iter() {
+                    let to = g.adj_to[e as usize] as usize;
                     let share: Lanes = std::array::from_fn(|k| f[k] * a / sum);
                     add_lanes(&mut flow[to], &share);
                     add_lanes(&mut l.rn_board[to - s], &share);
                 }
                 if head.get(hx).is_some_and(|&h| h != NONE) {
                     use_k.clear();
-                    for (k, e) in edges.clone().enumerate() {
-                        let b = acc(g.adj_to[e] as usize - s);
+                    for &(e, b) in dep.iter() {
                         if b > 0.0 {
-                            use_k.push((k as u32, b / sum));
+                            use_k.push((e - g.adj_off[st], b / sum));
                         }
                     }
                     let x = &mut xfer.as_mut().unwrap().1;
