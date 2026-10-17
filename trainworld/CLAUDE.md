@@ -136,10 +136,11 @@ packs, `..\venv\Scripts\python.exe`). Details and build orders: `docs/code-map.m
   about 6.8M weighted with first-time tooling; the Japanese batches since came to 1.6-3.4M a pack
   with a country module, so 200 metros about 300-700M, a quarter to three quarters of one week's
   limit in all.
-- **Calibration** (2026-10-16, replacing "not yet" of 2026-10-15): T-509's design, approved by
-  Anita, fits mode choice jointly on six cities' real networks with Toronto held out; the aim is
-  plausible, not exact, and a moderate overshoot of measured rail where transit carries a stigma
-  (New York) is acceptable (DECISIONS 2026-10-16).
+- **Demand is simple on purpose** (Anita, 2026-10-17, replacing T-509's fitted calibration): the
+  model aims at sensible and fun, so building rail matters, over fitting real cities. Her two
+  ceiling tests are the targets (rail of rail + car: A at least 85%, B at least 50%; notes/T-636.md);
+  real cities are loose checks. Think hard before adding any complicating factor to demand (a
+  constant per country or purpose, a fitted curve): propose it to Anita first.
 - **General sources and methods only** (2026-10-12, stressed 2026-10-13). Prefer global sources
   (OSM, GHSL, Kontur, WorldPop) or a method any national census can feed. A one-city source is
   worth it only if very easy; one for a minor city never is. Research briefs say this.
