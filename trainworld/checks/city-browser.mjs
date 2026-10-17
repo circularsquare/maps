@@ -3,14 +3,15 @@
 // and gives its no-rail split; ground-level track across a water crossing is refused and the same
 // route in a tunnel accepted; a test line through the centre (deep tunnel, constructed, 10 trains an
 // hour at the peak) reaches a final solve and carries riders of every purpose, purposes adding up;
-// no page errors. Cities are the table below: add one per new city.
+// no page errors. Cities are the table below, or a row file in ROW (checks/pack_gate.py --browser
+// makes one for any pack, T-538).
 //
 //     node trainworld/checks/city-browser.mjs <id>        (from the maps root)
 //
 // Needs a Vite dev server (BASE, default http://localhost:6125) and Playwright (PLAYWRIGHT_MODULE,
 // else `playwright`, else the npx cache). Screenshots artifacts/trainworld/<task>-<id>-homes.png and
 // -line.png; results <task>-<id>-browser.json (OUT and JSON_OUT override).
-import { writeFile, mkdtemp, readdir, rm } from 'node:fs/promises';
+import { writeFile, readFile, mkdtemp, readdir, rm } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -225,7 +226,8 @@ async function playwright() {
 }
 
 const id = process.argv[2];
-const C = CITIES[id];
+// T-538: checks/pack_gate.py writes a row (OSM stations, a water pair from the mask) for any pack
+const C = process.env.ROW ? JSON.parse(await readFile(process.env.ROW, 'utf8')) : CITIES[id];
 if (!C) { console.error(`usage: city-browser.mjs <${Object.keys(CITIES).join('|')}>`); process.exit(2); }
 const { chromium } = await playwright();
 const BASE = process.env.BASE ?? 'http://localhost:6125';

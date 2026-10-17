@@ -1,5 +1,8 @@
 ﻿# Archive
 
+- T-538 [P2] Pipeline stage 6, the pack gate. Done 2026-10-16: `checks/pack_gate.py`, thresholds settled on the 67 packs: 62 ship, 5 park on real faults (T-572-T-574); `every_pack_everyday` reads the registry. notes/T-538.md.
+- T-424 [P3] Test-line stations and water points from OSM. Done 2026-10-16 inside T-538: the gate's browser row follows OSM `railway=station|halt` near the centre (Overpass, cached), water points are polylabels on the water cache. notes/T-538.md.
+
 - T-562 [P2] Car ownership for every country. Done 2026-10-16: `nocar.national` takes a register, then DHS, Eurostat, a GDP-per-head fit; Wales, Scotland and Northern Ireland by census small area. All 132 planned countries covered, par and lon byte-identical. notes/T-562.md.
 - T-555 [P2] Country modules in the generated config. Done 2026-10-16: `plan_hooks(row)` in england, france, germany (outline, census population and jobs, work from home), brazil (tract population), canada (everyday); `{}` for china, india, korea, nigeria; one-city keys left out (DECISIONS). notes/T-555.md.
 - T-557 [P2] No change penalty. Done 2026-10-16: `transfer_min` 0 (a change costs its wait and platform walk), the explorer's "counts as" without a change term; no refit. Real save 9,777,718 to 10,433,452 rail trips a day (+6.7%).

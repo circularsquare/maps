@@ -1017,15 +1017,22 @@ mod tests {
         }
     }
 
-    /// T-142: every shipped city pack's everyday layer opens; prints its opening time and, per
+    /// T-142: every registered pack's everyday layer opens; prints its opening time and, per
     /// purpose, outings a day, walk share and mean km against the pack's residents (the per-capita
     /// check in notes/T-142.md). `cargo test --release --features demand every_pack_everyday --
-    /// --ignored --nocapture`
+    /// --ignored --nocapture`; `TW_PACKS=lag,seo` for some packs only. The `gate:` line is what
+    /// checks/pack_gate.py reads (T-538).
     #[test]
     #[ignore]
     fn every_pack_everyday() {
         let root = concat!(env!("CARGO_MANIFEST_DIR"), "/../data/packs");
-        for city in ["nyc", "phl", "bos", "wdc", "bal", "pvd", "nhv", "hfd", "spf", "tor", "lon", "par", "sha", "mum", "lag", "sao", "ber", "seo", "tyo", "osa", "ngo", "fuk", "spk", "sdj", "hij"] {
+        let registry = concat!(env!("CARGO_MANIFEST_DIR"), "/../app/src/game/registry.json");
+        let reg: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(registry).unwrap()).unwrap();
+        let mut ids: Vec<String> = reg["cities"].as_array().unwrap().iter().map(|c| c["id"].as_str().unwrap().to_string()).collect();
+        if let Ok(only) = std::env::var("TW_PACKS") {
+            ids = only.split(',').map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect();
+        }
+        for city in &ids {
             let (h, b) = pack::load_raw(&format!("{root}/{city}.json")).unwrap();
             let t = now_ms();
             let a = EverydayApi::new(&h, &b).unwrap();
@@ -1038,6 +1045,11 @@ mod tests {
                 .map(|v| format!("{:.0} ({:.3}/res, walk {:.1}%, {:.2} km)", v[0], v[0] / pop, 100.0 * v[1], v[2]))
                 .collect();
             println!("{city}: open {ms:.0} ms, {} cells, {} zones, residents {pop:.0}; {}", a.engine.city.len(), a.engine.z.n, per.join("; "));
+            let rate = |k: usize| info.get(3 * k).copied().unwrap_or(0.0) / pop;
+            println!(
+                "gate: {city} errands={:.4} social={:.4} school={:.4} university={:.5} medical={:.4} purposes={}",
+                rate(0), rate(1), rate(2), rate(3), rate(5), a.purpose_count()
+            );
             // the airports' own trips against what the 150 m exclusion and 40-80 km taper keep
             let input: f64 = pack::cell_weights(&h, &b, "airport_trips", a.engine.city.len()).unwrap().map_or(0.0, |v| v.iter().map(|&x| x as f64).sum());
             println!("  {city} airport: pack {input:.0} outings a day, kept {:.0}", a.totals.get(AIRPORT).copied().unwrap_or(0.0));

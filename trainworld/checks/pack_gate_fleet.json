@@ -1,0 +1,100 @@
+{
+ "task": "T-538",
+ "built": "2026-10-16",
+ "packs": 67,
+ "what": "each figure's min and max over the registered packs; the gate WARNs outside [min / 1.5, max x 1.5]",
+ "ranges": {
+  "water_points_in_water_other": [
+   0.825,
+   1.0
+  ],
+  "stations_on_land": [
+   0.9938271604938271,
+   1.0
+  ],
+  "school_rate": [
+   0.0697,
+   0.3269
+  ],
+  "university_rate": [
+   0.00204,
+   0.0468
+  ],
+  "everyday_purposes": [
+   6,
+   6
+  ],
+  "pop_vs_fua": [
+   0.784205652515678,
+   1.3673326909547245
+  ],
+  "pop_vs_ghsl_other": [
+   0.7322336246707275,
+   1.7763032579362117
+  ],
+  "near_main_piece_pop_share": [
+   0.9989690586009342,
+   1.0
+  ],
+  "area_km2": [
+   1351.0867798319812,
+   29489.51548716716
+  ],
+  "jobs_per_resident": [
+   0.3270509105562503,
+   0.5980182051939983
+  ],
+  "top_cell_jobs": [
+   798.1216430664062,
+   141028.9375
+  ],
+  "top_cell_jobs_share_other": [
+   0.0021283881695729335,
+   0.05184755108662712
+  ],
+  "top_zone_jobs_share": [
+   0.0184238257199323,
+   0.1500520491163181
+  ],
+  "mean_commute_km": [
+   3.3948185121514993,
+   18.92275977765733
+  ],
+  "top_school_cell_pupils": [
+   719.0999755859375,
+   154674.96875
+  ],
+  "largest_hospital_beds": [
+   87.66812570927704,
+   2986.5903210510605
+  ],
+  "drive_factor_median": [
+   1.2641184477534664,
+   1.8392814885417808
+  ],
+  "road_snap_median_m": [
+   39.6,
+   212.6
+  ],
+  "water_points_in_water": [
+   1.0,
+   1.0
+  ],
+  "osm_land_share": [
+   0.0913,
+   0.7913
+  ],
+  "top_cell_jobs_share": [
+   0.002884670798706314,
+   0.0088669272753523
+  ],
+  "osm_top_place_jobs_share": [
+   0.00094,
+   0.00885
+  ],
+  "pop_vs_ghsl": [
+   0.9114303825585282,
+   0.9114303825585282
+  ]
+ }
+}
