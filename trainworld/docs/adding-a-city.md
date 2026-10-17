@@ -18,6 +18,45 @@ Logs, check outputs and images go in `../artifacts/trainworld/` (from the maps r
 
 - **A new country first: fill its row in `docs/data-register.md` and pick the procedure
   (archetype) before building.** The archetype names the worked example below to follow.
+- **Which cities, and where their edges go: the world plan** (T-536, notes/T-535.md).
+  `python pipeline/world_plan.py` writes `pipeline/world_plan.json`, one row per metro in build
+  order with its units, origin, name, id, extracts, time zone and archetype, and the extents to
+  `data/work/worldplan/extents.geojson`; `check` adds the eight-pack test and the next-50 picture.
+  People are GHS-POP 2025 at 1 km, a pixel counted where its centre falls. The rule:
+  - **Metros.** Outside Europe and the US, GHSL urban centres (UCDB R2024A) over 1M people; a
+    centre's area is the centre, every functional urban area (GHS-FUA R2019A) it holds half the
+    people of, and the FUA around its population-weighted centre; centres sharing a FUA are one
+    metro. In Europe (geoBoundaries' continent: Russia in, Turkey out), FUAs over 1M instead.
+    A smaller urban centre outside every metro's area whose edge lies within 3 km of a metro's
+    own centres (in Europe, the centres inside its FUA) joins the nearest such metro's area, since
+    GHS-FUA gives a town grown up to a metro a FUA of its own (Ikorodu beside Lagos; T-556).
+  - **Order.** The UK, then the rest of Europe, then everywhere else, each largest first. A
+    rerun keeps each earlier row's order and id: a row inherits them from the previous plan's row
+    it shares the most people with; rows with none follow the last.
+  - **Units.** NUTS-3 2024 in Europe, ITL3 in the UK; elsewhere geoBoundaries gbOpen at the finest
+    of ADM2-4 where the median person's unit holds 20,000 people or more. A first-level unit that
+    level misses a tenth of the people of takes the finest level covering it (Moscow). No
+    geoBoundaries at all: the territory whole (Hong Kong, Macau).
+  - **Extent.** A unit is in when half its people live in the metro's area, the larger share
+    winning. A unit with half its people in an existing pack is taken, and an extent is cut along
+    every existing pack and every earlier row, so nothing overlaps. A metro left with no unit takes
+    the one at its area's densest free square km; one under 1M people after this is dropped, with
+    its reason, in the file's `dropped` list.
+  - **Over 40M people**, split along the coarsest admin level whose units fit, each piece grown
+    by adjacency, the first from the unit group nearest the metro's densest square km, the rest
+    from the most populous group left; a piece under 1M joins a touching piece it fits in, else is
+    dropped.
+  - **Name**: the centre's (or FUA's); a split piece or the rest of an existing pack's metro takes
+    its largest second-level unit's name; a name not in Latin script falls to the next that is.
+    **Id**: the first unused of the name's first three letters, then its first two with each later
+    letter, then its first with any two later letters.
+  - **Origin**: the densest 1 km of the extent. **Time zone** from the origin (timezonefinder),
+    `utc_offset` its standard offset rounded down.
+  - **Extracts** from Geofabrik's `index-v1.json`: from the continents down, the extract or set of
+    children covering the outline with the least total area; none inside another.
+  - **Archetype**: the country's in the register (England's A only for English units), else D.
+
+  The footprint bullet below is for packs made by hand.
 - **Where.** Anywhere between 85 S and 85 N: new games are in the Mercator world frame, whose
   track lengths are ground lengths everywhere (T-306, docs/world.md), and the renderer anchors to
   the view (T-307). Games saved in the Northeast conic (TWT5) or the legacy frame are converted to
@@ -60,7 +99,54 @@ pipeline code, rebuild one existing pack into a scratch folder (patch `build_cit
 
 ## 3. Pipeline config
 
-In `pipeline/build_city.py`, add to `CITIES`:
+**A planned city** (a world plan row, T-537) has no hand-written entry: `build_city.py` adds every
+`planned` row of `pipeline/world_plan.json` to `CITIES` through `pipeline/plan_config.py`
+(`plan_config.py <id>` prints one), so `build_city.py <id>` builds it at tier 0 from global
+sources. Each field comes from the row or a rule:
+
+- **Outline**, `pipeline/osm_units.py`: each plan unit takes the OSM `boundary=administrative`
+  relation (any admin level, from the row's extracts, cached in `data/raw/osm/<extract>.admin.fgb`)
+  whose overlap with it is at least half their union, both taken on land less inland water. A unit
+  with no such relation keeps the part of its own polygon no OSM unit covers, if that is at least
+  half of it. Units are clipped to the OSM coastline, holes filled, the outline cut along every
+  existing pack, and pieces under 0.05 km2 or with nobody in them (GHSL 100 m) dropped. Units with
+  their OSM names go to `data/work/<id>.units.geojson`, the outline to `.outline.geojson`;
+  `osm_units.py <id>` writes them and prints each unit's match.
+- **From the row**: origin, region name, `utc_offset`, `iso2`, the extracts (also the water
+  source's).
+- **Water cell** 25 m, or 50 m where the mask would pass 150M pixels (as `japan_zones.py`).
+- **Jobs blend**: the population share is ILO's modelled vulnerable employment share (World Bank
+  `SL.EMP.VULN.ZS`, cached per country), held to 0.2-0.5; the other two shares move with it from
+  tier 0's `JOB_BLEND` (population 0.2) to Mumbai's and Lagos's (0.2, 0.3, 0.5).
+- **Curve** borrowed (T-314); **work from home** 0; airports from Wikidata, O&D share 1; hospitals
+  and the land-use cap tier 0's defaults; **Latin place names** when most of the units' OSM names
+  are not in Latin script.
+- **Country keys** (T-555): when the row names a `module`, that module's `plan_hooks(row)` returns
+  the keys it supplies for any city in the country, put over the defaults above (a country outline
+  also drops the Latin names rule, which reads osm_units' names). A key a module has for one city
+  only (a typed-in table, a survey, a fitted curve, an airport's judgement) stays out. A module
+  without `plan_hooks` stops the config: add one, `{}` if nothing carries. The keys join on the
+  config's first lookup in `CITIES` (`build_city.Cities`), since the modules import build_city.
+  After the build, `nocar.py` and `everyday_rates.py` take a planned pack's country from its row
+  (England's LSOA car shares for an English row).
+
+  | Module | Keys | For |
+  |---|---|---|
+  | england | outline (whole ITL3 units, ONS BGC), district totals, population by LSOA, BRES jobs and sectors, GIAS schools, work from home 0.27 | English rows |
+  | france | outline (départements from their communes), population by commune, INSEE jobs by commune of work, work from home 0.12 | NUTS-3 units to départements by name |
+  | germany | outline (Kreise, VG250), Zensus 100 m population scaled to Gemeinden, Pendlerrechnung jobs, work from home 0.10 | NUTS-3 units to Kreise by VG250's `NUTS` |
+  | brazil | population by 2022 census tract | the states of the plan's municipalities |
+  | canada | everyday destinations by census tract of work | any province |
+  | china, india, korea, nigeria | none | |
+
+  A country outline is the plan's own units in the census's polygons, so it needs no cut along
+  packs: the plan gives every unit to one metro.
+
+To build an existing pack's metro as a test, `world_plan.py row <pack> <out.json>` plans it as if
+the pack did not exist, a one-row plan file whose row names the pack in `test_of` (the outline is
+not cut along it); build it into a scratch folder by patching `build_city.WORK` and `PACKS`.
+
+**A hand-made city**: in `pipeline/build_city.py`, add to `CITIES`:
 
 ```python
 "wor": {
@@ -131,8 +217,8 @@ It prints the cells before and after (47-68% fewer in a metro outside the US, 70
 about 78% in a rural pack). Every other step reads and writes the res-9 pack: to rerun one on a merged pack,
 `merge_cells.py wor --undo` first, then the step, then `merge_cells.py wor` again (it refuses a
 merged pack some step has changed since). `merge_cells.py --all` remerges every registered pack.
-Then `nocar.py wor` (homes without a car, T-511; a new country needs its row in `nocar.py`'s
-`COUNTRIES`, docs/data-register.md "Car ownership") and `everyday_rates.py wor` (the country's
+Then `nocar.py wor` (homes without a car, T-511; every country has a figure by T-562's rules,
+docs/data-register.md "Car ownership", and `nocar.py --plan` lists each planned country's) and `everyday_rates.py wor` (the country's
 everyday rates, T-509; a worldwide median without a survey), seconds each; both write the merged
 pack and its res-9 copy, so rerun them after any step that rebuilds the pack.
 The market's zone file (`market_zones.py`, section 7) is made after the merge.
@@ -167,9 +253,10 @@ What a US log should show (Worcester's figures):
     venv\Scripts\python.exe trainworld\pipeline\look_pack.py wor artifacts\trainworld\T-###-wor-pack.png
 
 `read_pack.py` must print OK on the cells, commute, gravity (worst row and column sums around
-1e-4 or better, zones split by state where it applies, the border factor) and water lines. Add
-water and land test points to `WATER_TESTS` in `read_pack.py` and close-ups to `VIEWS` in
-`look_water.py`, and look at the water image: rivers and lakes where they belong, nothing odd at
+1e-4 or better, zones split by state where it applies, the border factor) and water lines. Water
+and land test points need no hand list (T-424): the gate (section 8) tests OSM water polygons'
+polylabels and OSM stations against the mask; `WATER_TESTS` in `read_pack.py` keeps the older
+cities' hand points. Look at the water image: rivers and lakes where they belong, nothing odd at
 the edges. Record cells, population, jobs, commutes, zones and `.bin` raw and gzipped size.
 (`look_pack.py`'s titles say "2020 Census" and "LODES WAC" for every pack.)
 
@@ -225,11 +312,20 @@ then `register.py <every Japan id> --market --trips`. A non-city zone is a `CITI
 
 ## 8. Tests that list cities
 
-- `sim/src/demand/everyday.rs`, test `every_pack_everyday`: its city list is hardcoded; add the id.
-- `checks/t066-worker-check.mjs` reads the registry (since T-277 it asserts
-  `registry.cities.length`, not 9).
-- Add the city's row to `checks/city-browser.mjs` (centre, two points either side of a river,
-  a test line's stations) and run `node trainworld/checks/city-browser.mjs <id>` (T-364).
+- `sim/src/demand/everyday.rs`, test `every_pack_everyday`, and `checks/t066-worker-check.mjs`
+  read the registry: nothing to add.
+- The browser check needs no hand row: the gate (below) makes one from OSM stations and the mask.
+
+**The gate** (T-538), last, once the pack is registered and its routes are in, with your own Vite
+running:
+
+    set BASE=http://localhost:<port>
+    venv\Scripts\python.exe trainworld\checks\pack_gate.py wor --browser [--log wor=<build log>] [--since <snapshot>]
+
+It prints PASS, WARN, FAIL or SKIP a check and `wor SHIP` or `wor PARK` with the failures; a parked
+pack is not shipped until its fault is fixed. `pack_gate.py snapshot <file>` before the build makes
+`--since` check that no other pack changed beyond its own gravity group's factors. The thresholds
+and what each check catches: notes/T-538.md.
 
 ## 9. Checks
 
@@ -242,12 +338,13 @@ Native and Node (`npm run wasm --prefix trainworld/app` only if Rust changed):
 
 `every_pack_everyday` prints each city's per-resident outings: school about 0.11-0.15, university
 0.02-0.08, errands and social at New York's rates by construction (Toronto: school 0.128,
-university 0.033).
+university 0.033); the gate fails a pack outside school 0.06-0.35 or university 0.001-0.08.
 
 Browser (own Vite with HMR and watching off, `checks/dev-nowatch.mjs`; headless Chrome through Playwright with its own
-profile directory; never touch app/dist): `node trainworld/checks/city-browser.mjs <id>` (add the
-city's row), run in the background with one wait, since a 10-minute foreground run let the cache
-expire (T-289). A new game, then for each new city:
+profile directory; never touch app/dist): the gate's `--browser` (section 8) runs
+`checks/city-browser.mjs` on a row it makes, about half a minute a pack; run it in the background
+with one wait, since a 10-minute foreground run let the cache expire (T-289). A new game, then for
+each new city:
 
 - jump to its centre: it becomes the active city, its pack opens (`twDemand.client.start.loads`),
   its outline is the focus outline (`tw-city-focus`); Homes bubbles show; screenshot to
@@ -314,7 +411,7 @@ real pack in notes/T-287.md):
 | Home end | LODES RAC x ACS work from home | commuters by tract of residence (98-10-0480-01) plus at-home workers commuting again | population x commuters a resident |
 | Work from home | ACS 2019-2023 by tract and industry | Labour Force Survey May 2024 (24.7%, Toronto CMA), at both ends | one national share from the config (default 0) |
 | Everyday destinations | LODES retail, service, food, leisure sectors | the same sectors by census tract of work (98-10-0492-01) | each 2 km zone's jobs (errands also 25% residents) blended with its OSM shops and services, or restaurants, bars, venues and hotels, as far as the pack's OSM is complete; or a country's jobs by sector by small area that pass the plausibility check (`everyday` hook: Japan's mesh, England's BRES); set after the gravity (`tier0.everyday_pack`, T-453) |
-| Gravity curve | fitted on LODES OD (T-198) | fitted on census flows between municipalities (98-10-0459-01; `notes/t277_fit.py`) | power 1.4 with the length fitted to a published median or mean commute (`tier0.fit_curve`), or borrowed from a fitted city; a country's flow table, fitted (London); both parameters fitted to commuters by distance band (`tier0.fit_curve_bands`, Mumbai; a travel survey's home-to-job distances, Sao Paulo) |
+| Gravity curve | fitted on LODES OD (T-198) | fitted on census flows between municipalities (98-10-0459-01; `notes/t277_fit.py`) | power 1.4 with the length fitted to a published median or mean commute (`tier0.fit_curve`), or with none, `"curve": "borrowed"` (`tier0.borrowed_curve`, T-314); a country's flow table, fitted (London); both parameters fitted to commuters by distance band (`tier0.fit_curve_bands`, Mumbai; a travel survey's home-to-job distances, Sao Paulo) |
 | Regions, border | states, 0.23 | provinces, factor 1 | one region, factor 1 |
 | Drawn boundary | TIGER/Line counties, water included (T-352) | cartographic census subdivisions, clipped at the shore (hugs Lake Ontario) | the config's district polygons (a GeoJSON, or a callable that writes one: London's whole ITL3 units, `england.itl3_boundary`) |
 | Water | TIGER AREAWATER and states | StatCan lakes and rivers; land = cartographic municipalities plus US states | OSM: `osm_water.source([extracts])` as the config's `water_source` (below) |

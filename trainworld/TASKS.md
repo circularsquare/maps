@@ -28,7 +28,7 @@ costs $2.25 a car-km (T-467, T-485). Real save's demand final: about 9.78M rail 
 stage 6). History is in ARCHIVE.md.
 
 **Handoff for the next orchestrator (2026-10-16, evening).** Nothing is in flight; last commit
-a3f0532 is on 8800. Check `git status`, the taking marks here and ARCHIVE.md first. Anita's playtest
+72c7c3b is on 8800. Check `git status`, the taking marks here and ARCHIVE.md first. Anita's playtest
 notes land in TODO.md (hers; read it, file new items as tasks, never edit it). Her open playtest
 questions (rays to a selection, clipped line bullets, curve labels' metres) were answered in T-530. CPU: at most 5 cores for all agents together (CLAUDE.md). Asks for Anita go in
 the final message or notes/for-anita.md, never TODO.md. **After each commit**:
@@ -123,7 +123,6 @@ Tier 0 and country sources: docs/demand-worldwide.md, docs/data-register.md.
 - T-571 [P3] National figures in `nocar.COUNTRIES` for the larger countries on T-562's GDP rule (rmse 0.25 for middle incomes): Russia 16 rows, Mexico 10, Iraq 8, Iran 6, Saudi Arabia 5, Morocco 5, Argentina, Australia, Ukraine and Vietnam 4 each (Vietnam's 65% without a car is surely too low: motorbikes); a census household share first, else a register. Open; notes/T-562.md.
 - T-563 [P3] Fit an archetype A planned city's own curve from its country's flows at build time (T-555 left London's, Paris's and Berlin's fits out, so planned English, French and German cities borrow): England's WU01EW, INSEE's 2022 flows, the Pendlerrechnung, as `notes/t360_curve.py`, `t289_curve.py`, `t290_curve.py` do by hand; a `curve` mode in tier0 and the key in each module's `plan_hooks`. Open; notes/T-555.md.
 - T-564 [P3] Country hooks T-555 could not carry: Korea's registration population for any city (provinces from the outline, the renames since November 2020 mapped once for the country) and Canada's DA population and jobs by census tract of work as tier 0 hooks (they run inside canada.main today). Open; notes/T-555.md.
-- T-556 [P2] The world plan misses growth since 2015: GHS-FUA R2019A's Lagos area leaves out Ikorodu (0.77M) and Epe, which the hand pack and Africapolis include, so Lagos from its plan row misplaces 6.9% of jobs against the hand pack (0.3% on the shared area). Consider a unit joining when its people are in the 2025 urban centre's built-up reach as well as the 2015 FUA; recheck the eight-pack test. Open; notes/T-537.md.
 - T-539 [P2] Pipeline stage 7, automatic joint commute gravity groups (`intercity.py --group auto`). Open; notes/T-535.md.
 - T-540 [P2] Pipeline stage 8, the runner (`world_run.py`) and a 5-city pilot no agent touches. Needs stages 1-7. Open; notes/T-535.md.
 - T-541 [P2] Pipeline stage 10, the first batch of about 20 cities (UK first), with a batch retrospective. After T-540; publishing past the current set needs T-060 and Anita's word. Open; notes/T-535.md.

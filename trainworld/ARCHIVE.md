@@ -1,5 +1,6 @@
 ﻿# Archive
 
+- T-556 [P2] The world plan's towns grown up to a metro. Done 2026-10-16: smaller urban centres within 3 km of a metro's centres join it (Ikorodu, not growth since 2015, was the gap); Lagos test 93.0% to 98.1%, Europe +0.3% people, elsewhere +2.0%; rows keep order and ids. notes/T-556.md.
 - T-566 [P2] Small bubbles easier to click. Done 2026-10-16: a disc drawn under 8 px radius is hit within 8 px of its centre (`MIN_PICK_PX`, `discAt`), nearest centre wins, never through a disc drawn above it; the hover tag follows.
 - T-568 [P2] Suggested names never end in "station". Done 2026-10-16: `endsInStation` ("station", "sta", "stn", any case, optional dot) drops streets, neighbourhoods and tile labels so the next candidate shows; a city, town, village or hamlet keeps its name (Huntington Station).
 - T-569 [P2] Locate. Done 2026-10-16: a double click on a Stations or Lines row, and a locate button beside the pencil in both inspectors, jump the map to the station (zoom 14 or closer) or fit the line (`ui/locate.ts`, shared with search).

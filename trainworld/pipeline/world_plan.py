@@ -57,6 +57,7 @@ MIN_POP = 1_000_000      # a metro's people (decision 1)
 CAP = 40_000_000         # people a pack (decision 4)
 UNIT_SHARE = 0.5         # a unit is in when this share of its people live inside the area (decision 3)
 FUA_SHARE = 0.5          # a FUA joins an urban centre holding this share of its people
+SAT_GAP = 3000           # m: a smaller urban centre this close to a metro's centres joins it (T-556)
 MEDIAN_UNIT = 20_000     # the finest level where the median person's unit has this many people
 COUNTRY_SHARE = 0.02     # a country lends units to a metro holding this share of its area's people
 TESTS = ["tor", "lon", "par", "ber", "seo", "mum", "lag", "sao"]
@@ -248,9 +249,10 @@ def metros(pop, ne, europe):
     uc = pyogrio.read_dataframe(UCDB, layer=lay, columns=["ID_UC_G0", "GC_UCN_MAI_2025", "GC_POP_TOT_2025"])
     cen = pyogrio.read_dataframe(UCDB, layer="UC_centroids")
     cen = dict(zip(cen.ID_UC_G0, cen.geometry))
+    uc_iso = iso_at(ne, STRtree([g for _, g in ne]), [cen[i] for i in uc.ID_UC_G0])
     big = uc[uc.GC_POP_TOT_2025 >= MIN_POP].reset_index(drop=True)
     pts = [cen[i] for i in big.ID_UC_G0]
-    isos = iso_at(ne, STRtree([g for _, g in ne]), pts)
+    isos = [uc_iso[k] for k in np.nonzero(uc.GC_POP_TOT_2025.to_numpy() >= MIN_POP)[0]]
     ftree = STRtree(fgeom)
     world = []
     for k in range(len(big)):
@@ -292,6 +294,7 @@ def metros(pop, ne, europe):
                     "alt_names": [w["name"] for w in ws[1:]] + [fua.eFUA_name[i] for i in fu], "area": area})
     log(f"elsewhere: {len(big)} urban centres over {MIN_POP:,}, {sum(len(g) for g in groups.values())} outside "
         f"Europe and the US, {len(groups)} metros after merging")
+    satellites(out, uc, cen, uc_iso)
     for m in out:
         x, y, p = pop.inside(m["area"])
         m["px"] = (x, y, p)
@@ -300,6 +303,38 @@ def metros(pop, ne, europe):
         m["peak"] = shapely.Point(x[i], y[i])
         shapely.prepare(m["area"])
     return out
+
+
+def satellites(out, uc, cen, uc_iso):
+    """A smaller urban centre outside every metro's area, within SAT_GAP of a metro's own centres,
+    joins the nearest such metro's area: GHSL gives Ikorodu (0.86M, 2.2 km from Lagos) a FUA of
+    its own (T-556)."""
+    ids = [int(i) for i in uc.ID_UC_G0]
+    geom = [polygonal(g) for g in uc.geometry]
+    cpts = [cen[i] for i in uc.ID_UC_G0]
+    atree = STRtree([m["area"] for m in out])
+    pi, mi = atree.query(cpts, predicate="within")
+    inside = set(pi.tolist())
+    own = collections.defaultdict(list)
+    for a, k in zip(pi, mi):
+        if out[k]["region"] != "world" or ids[a] in out[k]["source"]["ucdb"]:
+            own[int(k)].append(geom[a])
+    centres = [union_all(own[k]) if own[k] else shapely.Polygon() for k in range(len(out))]
+    ctree = STRtree(centres)
+    add = collections.defaultdict(list)
+    for a in range(len(ids)):
+        if a in inside or uc.GC_POP_TOT_2025[a] >= MIN_POP or uc_iso[a] == "USA":
+            continue
+        near = ctree.query(geom[a], predicate="dwithin", distance=SAT_GAP)
+        if not len(near):
+            continue
+        k = int(min(near, key=lambda j: geom[a].distance(centres[j])))
+        add[k].append(geom[a])
+        out[k]["source"].setdefault("satellites", []).append(ids[a])
+        out[k]["alt_names"].append(uc.GC_UCN_MAI_2025[a])
+    for k, gs in add.items():
+        out[k]["area"] = polygonal(union_all([out[k]["area"]] + gs))
+    log(f"satellites: {sum(len(m['source'].get('satellites', [])) for m in out)} smaller centres join {len(add)} metros")
 
 
 def metro_countries(m, ne, netree):
@@ -579,9 +614,10 @@ def people(us, taken):
     return sum(u.pop * (1 - sum(f for pid, f in u.pshare.items() if pid in taken)) for u in us)
 
 
-def split(us, taken):
-    """Pieces of at most CAP people along the coarsest parent units that fit, grown from the
-    most populous by adjacency."""
+def split(us, taken, peak):
+    """Pieces of at most CAP people along the coarsest parent units that fit, grown by adjacency,
+    the first from the group nearest the metro's densest square km (so the core keeps its
+    suburbs: T-556's Jakarta), the rest from the most populous left."""
     def leaves(group, depth):
         if people(group, taken) <= CAP or depth >= len(group[0].parents):
             if people(group, taken) <= CAP or len(group) == 1:
@@ -601,8 +637,9 @@ def split(us, taken):
     pp = [people(l, taken) for l in ls]
     free = set(range(len(ls)))
     pieces = []
+    first = min(range(len(ls)), key=lambda i: min(u.geom.distance(peak) for u in ls[i]))
     while free:
-        seed = max(free, key=lambda i: pp[i])
+        seed = first if first in free else max(free, key=lambda i: pp[i])
         free.discard(seed)
         piece, tot, g = [seed], pp[seed], geo[seed]
         while True:
@@ -778,7 +815,7 @@ def plan(st, taken):
         if n < MIN_POP:
             dropped.append((m, f"{n / 1e6:.2f}M people outside existing packs"))
             continue
-        pieces = split(us, taken) if n > CAP else [us]
+        pieces = split(us, taken, m["peak"]) if n > CAP else [us]
         lost_core = any(q["geom"].contains(m["peak"]) for q in taken.values())
         # the piece nearest the area's densest square km keeps the metro's name
         near = min(range(len(pieces)), key=lambda k: min(u.geom.distance(m["peak"]) for u in pieces[k]))
@@ -816,8 +853,40 @@ def iso2s():
     return out
 
 
-def finish(st, rows, taken=None):
-    """Order, ids, names, origins, time zones, extracts, archetypes; the rows as JSON."""
+def keep_order(rows, prev):
+    """(order, id) for each row. A row keeps the order and id of the previous plan's row it shares
+    the most people with (each used once, the largest shares first); the others follow the last."""
+    old = {}
+    for j, o in enumerate(prev):
+        for us in o["units"].values():
+            for uid in us:
+                old[uid] = j
+    pairs = collections.Counter()
+    for i, r in enumerate(rows):
+        for u in r["units"]:
+            if u.id in old:
+                pairs[i, old[u.id]] += u.pop
+    got, taken_j = {}, set()
+    for (i, j), _ in pairs.most_common():
+        if i not in got and j not in taken_j:
+            got[i] = (prev[j]["order"], prev[j]["id"])
+            taken_j.add(j)
+    n = max((o["order"] for o in prev), default=0)
+    out = []
+    for i in range(len(rows)):
+        if i not in got:
+            n += 1
+            got[i] = (n, None)
+        out.append(got[i])
+    gone = [prev[j]["name"] for j in range(len(prev)) if j not in taken_j]
+    if gone:
+        log(f"previous rows with no successor (their order and id stay unused): {gone}")
+    return out
+
+
+def finish(st, rows, taken=None, prev=()):
+    """Order, ids, names, origins, time zones, extracts, archetypes; the rows as JSON. `prev`, the
+    previous plan's rows, keeps their order and ids (keep_order)."""
     from timezonefinder import TimezoneFinder
     tf = TimezoneFinder()
     ex, kids = geofabrik()
@@ -825,9 +894,13 @@ def finish(st, rows, taken=None):
     taken = st["packs"] if taken is None else taken
     rank = {"uk": 0, "europe": 1, "world": 2}
     rows.sort(key=lambda r: (rank[r["metro"]["region"]], -r["people"]))
+    keep = keep_order(rows, prev)
+    rows = [r for _, r in sorted(zip(keep, rows), key=lambda kr: kr[0][0])]
+    keep.sort()
     used = set(st["packs"]) | {c["id"] for c in json.loads(REGISTRY.read_text(encoding="utf-8"))["cities"]}
+    used |= {o["id"] for o in prev}
     out, feats, before = [], [], []
-    for n, r in enumerate(rows, 1):
+    for (n, cid), r in zip(keep, rows):
         m = r["metro"]
         g = outline_of(r["units"], taken, before)
         before.append(g)
@@ -844,7 +917,7 @@ def finish(st, rows, taken=None):
         if module == "england" and not all(u.id[:3] in ("TLC", "TLD", "TLE", "TLF", "TLG", "TLH", "TLI", "TLJ", "TLK")
                                            for u in r["units"]):
             arch, module = "D", None
-        cid = make_id(r["name"], used)
+        cid = cid or make_id(r["name"], used)
         row = {"order": n, "id": cid, "name": r["name"], "status": "planned", "region": m["region"],
                "countries": isos, "iso2": a2.get(main_iso), "people": round(r["people"]),
                "origin": [round(lon, 4), round(lat, 4)], "tz": tz, "utc_offset": std_offset(tz),
@@ -974,7 +1047,8 @@ def main(argv):
     if argv and argv[0] == "row":
         return test_row(st, argv[1], argv[2])
     rows, dropped = plan(st, st["packs"])
-    out, feats = finish(st, rows)
+    prev = [r for r in json.loads(OUT.read_text(encoding="utf-8"))["metros"] if r["status"] == "planned"] if OUT.exists() else []
+    out, feats = finish(st, rows, prev=prev)
     write(st, out, feats, dropped)
     if "check" in argv:
         log(f"largest overlap between planned extents or with a pack: {overlaps(feats, st['packs']):.3f} km2")
