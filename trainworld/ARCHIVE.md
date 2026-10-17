@@ -1,5 +1,6 @@
 ﻿# Archive
 
+- T-562 [P2] Car ownership for every country. Done 2026-10-16: `nocar.national` takes a register, then DHS, Eurostat, a GDP-per-head fit; Wales, Scotland and Northern Ireland by census small area. All 132 planned countries covered, par and lon byte-identical. notes/T-562.md.
 - T-555 [P2] Country modules in the generated config. Done 2026-10-16: `plan_hooks(row)` in england, france, germany (outline, census population and jobs, work from home), brazil (tract population), canada (everyday); `{}` for china, india, korea, nigeria; one-city keys left out (DECISIONS). notes/T-555.md.
 - T-557 [P2] No change penalty. Done 2026-10-16: `transfer_min` 0 (a change costs its wait and platform walk), the explorer's "counts as" without a change term; no refit. Real save 9,777,718 to 10,433,452 rail trips a day (+6.7%).
 - T-559 [P2] Network hovers. Done 2026-10-16: a track hover lists every line on it as bullets; a station hover is its name, line bullets and a row per platform side (bullet, "to <terminus>", count, red when full); platform boxes, dot pies and the complex map go red when full, no longer for riders left behind (DECISIONS).

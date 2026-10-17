@@ -92,7 +92,11 @@ days of people with a workplace. Several countries have one figure for both.
 
 People living in a household with no car, per cell (T-511, `pipeline/nocar.py`; the rule in
 demand.md 4.3). Where only cars per household are known, households without a car come from one
-curve fitted on US tracts and English LSOAs (demand-worldwide.md "Driving alternative").
+curve fitted on US tracts and English LSOAs (demand-worldwide.md "Driving alternative"). Every
+country has a figure (T-562): the rows below, then the three rule rows at the end in that order;
+`nocar.py --plan` prints each planned country's. No open world register exists: WHO's GHO counts
+all registered vehicles with motorcycles (2016, one total), the World Bank's IRF series stopped
+about 2011, OICA's vehicles-in-use pages are gone (404) with no licence stated.
 
 | Country | Homes without a car |
 |---|---|
@@ -106,7 +110,14 @@ curve fitted on US tracts and English LSOAs (demand-worldwide.md "Driving altern
 | China | U Ministry of Public Security cars (2024) per 1,000 x household size, national; ? Shanghai yearbook cars per 100 households, T-512 |
 | South Korea | U MOLIT passenger cars per 1,000 (2024) x household size, national; G KOSIS small areas, T-504 |
 | India | U MoRTH cars, jeeps and taxis per 1,000 (2022) x household size, national |
-| Nigeria | U NBS private vehicles per 1,000 (2018) x household size, national |
+| Nigeria | U NBS private vehicles per 1,000 (2018) x household size, national; N DHS 2024 by state, T-570 |
+| Wales | U Census 2021 TS045 by LSOA (Nomis, households, made people) |
+| Scotland | U Census 2022 UV405 by data zone 2022 (NRS topic tables zip; maps.gov.scot boundaries; OGL) |
+| Northern Ireland | U Census 2021 car or van availability by data zone 2021 (NISRA ArcGIS layer, counts people in households) |
+| Hong Kong, Singapore, Taiwan | U Transport Department, LTA, Highway Bureau private cars per 1,000 x household size, national (the GDP rule cannot hold for city states; Taiwan has no World Bank figures) |
+| Rule 1: DHS countries | U DHS API (open, no registration) HC_TRNS_H_CAR, households possessing a private car, national, latest survey from 2015 (rule 3: from 2010), 51 planned countries; N the same by region, T-570 |
+| Rule 2: Eurostat countries | U road_eqs_carhab cars per 1,000 x ilc_lvph01 household size, latest year (CC BY 4.0); 20 planned countries |
+| Rule 4: everything else | U households with a car from World Bank GDP per head PPP (NY.GDP.PCAP.PP.KD), logit fit (notes/t562_fit.py); no GDP (Cuba, North Korea, Venezuela): the World Bank income group's median; 46 planned countries, 116 rows; N census or register figures for the larger ones, T-571 (Mexico's INEGI 2020 car availability by municipality among them) |
 
 ## Travel surveys
 

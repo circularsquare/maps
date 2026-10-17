@@ -544,9 +544,9 @@ them apart (`summary` index 10, per layer: trips by other with no rail, from the
 everyday samples, less the no-car rail trips times other's share of the non-rail choice, which
 in a logit is the same with or without rail).
 The regional layer has no such group yet. Shares by country: the US by tract (ACS B08201),
-England by LSOA (Census 2021 TS045), Japan by prefecture (AIRIA cars per household), elsewhere
-national cars per 1,000 people and household size (docs/demand-worldwide.md "Driving
-alternative"). A pack without `nocar` has everyone able to drive.
+England and Wales by LSOA (Census 2021 TS045), Scotland and Northern Ireland by data zone, Japan
+by prefecture (AIRIA cars per household), elsewhere a national figure from a register, a household
+survey or GDP per head (docs/demand-worldwide.md "Driving alternative"). A pack without `nocar` has everyone able to drive.
 
 Two **computational bounds** keep the work down and are set where little rail is left: stations
 are looked for within 3 km straight line of a walk (`walk_cutoff_m`), and a pair of places is
