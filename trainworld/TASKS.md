@@ -7,7 +7,7 @@ P1 = now or blocking, P2 = this milestone, P3 = later. Finished or abandoned tas
 Next, in order (2026-10-17): 1. finish the unattended city pipeline: T-590 (old packs read as US
 in joint solves, done), T-610, T-611 with T-583, then T-613, the next batch (the rest of Europe,
 from pipeline/world_plan.json); 2. T-586 (the trip explorer matches its view); 3. bubble colours
-T-602, T-577 (Anita picks); 4. long-trip calibration (T-528); the deep calibration comes once the world's
+T-602; 4. long-trip calibration (T-528); the deep calibration comes once the world's
 cities are in (car ownership about $10 a day, the walk weight against 1, walking per country:
 DECISIONS 2026-10-16). Performance is open work (notes/perf-survey.md). Game modes wait.
 
@@ -78,7 +78,6 @@ orchestrator's commit recipe is in CLAUDE.md "Before a commit".
 ## Interface
 - T-586 [P2] The bubble hover and the trip explorer disagree (Anita 2026-10-17): Union Sq's hover reads mostly walking, the explorer says 61% train. The explorer takes the view's purpose and period (absorbs T-201). Open; notes/T-586.md.
 - T-602 [P2] Walk split for zones not opened (rest of T-576): `zone_summary` (sim) gives a walk count per zone, `pipeline/zones.py` `local_trips()` stores it as `localWalk` in registry.json beside `localTrips`, `intercityView.ts` draws it green. Open.
-- T-577 [P2] Bend the bubble colour weakly towards train blue inside `modeMix` (palette.ts). Three strengths ready (artifacts/trainworld/t577-*.png, one-line changes in notes/T-577.md); waits for Anita's pick.
 - T-561 [P3] Page freezes at 1,500x or faster in a fresh game with a line in each of Toronto and Boston (T-550's agent); not reproduced on 2026-10-16's tree. Open until seen again with exact steps; notes/T-561.md.
 - T-560 [P3] Crush load per country (found in T-552): every city's trains fill at `api::CRUSH_PER_CAR`'s 160 riders a 20 m car, stranding Tokyo's riders early; take published figures per stock from the pack. Open; notes/T-552.md.
 - T-330 [P3] Line chips without a symbol show the name's first letter (every New York subway chip reads "S"); default to the line's short name ("subway 6X" to "6X"). Open. Detail in notes/T-330.md.
@@ -97,7 +96,6 @@ Tier 0 and country sources: docs/demand-worldwide.md, docs/data-register.md. The
 - T-563 [P3] Fit an archetype A planned city's own curve from its country's flows at build time (England, France, Germany borrow now): a `curve` mode in tier0 and the key in `plan_hooks`. Open; notes/T-555.md.
 - T-564 [P3] Country hooks T-555 could not carry: Korea's registration population and Canada's DA population and jobs as tier 0 hooks. Open; notes/T-555.md.
 - T-583 [P2] OSM's largest place takes 5-15% of a small tier 0 pack's jobs (the gate fails over 1%): T-460's cap does not hold where OSM is thin. Findings done 2026-10-17, rule proposed, not built; notes/T-583.md.
-- T-593 [P1] Anita decides: re-merge the 13 Northeast packs from res-9 (`merge_cells.py nyc phl bos wdc bal pvd nhv hfd spf wor wnd nlc lit`) after a stray `intercity.py --help` re-solved their gravity on 2026-10-17 (demand final 10,406,013 to 10,464,106), or keep the new solve as the baseline. notes/T-540.md "T-590 and T-591".
 - T-594 [P3] `pipeline/intercity.py` runs the full Northeast solve on `--help` or any unknown flag; make it print usage instead.
 - T-592 [P3] world_run reads the next region's extract while this one gates and joins (reading is the largest phase: Portugal 5.2 of 12.9 minutes). notes/T-540.md.
 - T-610 [P1] Runner: a plan unit with no OSM match silently shrinks the pack (Cardiff: 2 of 3 NUTS3 units matched, 51% of plan people); fail the build or fall back to the plan polygon, re-run car. notes/T-541.md.
