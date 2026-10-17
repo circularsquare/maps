@@ -418,9 +418,10 @@ fn commute_params() -> Params {
     Params::default()
 }
 /// The longer trips' choice (`IntercityApi::base` before any fare is set): the local layer's, with
-/// no rail propensity; the length of the trip damps it (`Params::mode_beta`, T-495).
+/// no rail propensity; the length of the trip damps it (`Params::mode_beta`, T-495). Their car
+/// pays no ownership cost (T-528), so neither does a drive to their stations.
 fn market_params() -> Params {
-    Params { asc_rail: 0., fare_min: 0., ..Params::default() }
+    Params { asc_rail: 0., fare_min: 0., car_own_usd_trip: 0., car_own_usd_km: 0., ..Params::default() }
 }
 /// T-495: the scale of a trip whose car costs `drive` perceived minutes (`Params::mode_beta`), and
 /// the access weights `w` (exp(-beta x access), `add_access`) at that scale, so the damping
@@ -1689,7 +1690,7 @@ impl IntercityApi {
             }
             let (zh, zw) = (&m.zones[h], &m.zones[w]);
             let km = m.zone_km(zh, zw) as f32;
-            let car = drive_min(km) * pc.w_drive + zw.park + pc.car_own_min();
+            let car = drive_min(km) * pc.w_drive + zw.park + pc.car_own_min() + km * ROAD_DETOUR * pc.car_own_km_min();
             let corridor = m.corridor(zh.place, zw.place);
             self.cpair_of[c] = self.cpairs.len() as u32;
             let asc = pc.asc_rail + super::api::country_asc_rail(&m.countries[m.places[zh.place].country as usize]);

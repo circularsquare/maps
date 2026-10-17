@@ -300,7 +300,7 @@ def e17():
         tot = g.loc[g.m == "0", "n"].sum()
         unk = g.loc[g.m == "5", "n"].sum()
         rail = g.loc[g.m.isin(rail_modes), "n"].sum()
-        out[code] = (float(rail), float(tot - unk))
+        out[code] = (float(rail), float(tot - unk), float(g.loc[g.m == "1", "n"].sum()))
     return out
 
 
@@ -343,8 +343,9 @@ def targets():
     served = {ms[g][0] for g in gi}
     areas = []
     for code, name in ids:
-        rail, known = e.get(code, (0.0, 0.0))
-        areas.append({"name": f"{code} {name}", "rail_share": rail / known if known else 0.0, "commuters": known if code in served else 0.0})
+        rail, known, walk = e.get(code, (0.0, 0.0, 0.0))
+        areas.append({"name": f"{code} {name}", "rail_share": rail / known if known else 0.0, "commuters": known if code in served else 0.0,
+                      "walk_share": walk / known if known else 0.0})
     print(f"{len(served & {c for c, _ in ids})} of {len(ids)} municipalities have a station")
     miss = [c for c, _ in ids if c not in e]
     if miss:

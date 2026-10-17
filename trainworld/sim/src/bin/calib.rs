@@ -8,7 +8,8 @@
 //!       [--params p.json] [--set name=value,..] [--fares 1.5,0.1 | --no-fares] [--no-everyday]
 //!       [--info-only]
 //!
-//! The pack defaults to the network's `pack`. Parameters: `--params` a JSON object of
+//! The pack defaults to the network's `pack` under `TW_ROOT` (default the crate's parent; a
+//! binary built from a copy of sim/ points it at the main tree). Parameters: `--params` a JSON object of
 //! `Params::set_extra` names, then `--set` on top; both layers get them. Fares default to the
 //! game's starting fares ($1.50 plus $0.10 a km); `--no-fares` keeps the flat `fare_min`.
 //! `--areas`: one value per pack cell, the home area (u8, 255 none; or a .u16 file, 65535 none).
@@ -16,7 +17,7 @@
 //! Output: per demand station the day's entries (first boardings from the street) by layer and
 //! in 6-10; per line the day's boardings and changes between two trains of the same line; per
 //! operator (the lines' `operator`) trips using it, boardings less changes within it (T-171); per
-//! home area the commutes' rail trips and all trips; totals by layer; milliseconds by stage.
+//! home area the commutes' rail trips, walks and all trips; totals by layer; milliseconds by stage.
 
 use serde_json::{json, Map, Value};
 use std::collections::BTreeMap;
@@ -48,7 +49,7 @@ fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let get = |k: &str| args.iter().position(|a| a == k).map(|i| args[i + 1].clone());
     let has = |k: &str| args.iter().any(|a| a == k);
-    let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
+    let root = std::env::var("TW_ROOT").unwrap_or_else(|_| concat!(env!("CARGO_MANIFEST_DIR"), "/..").to_string());
     let net_path = get("--net").expect("--net <network json>");
     let out_path = get("--out").expect("--out <result json>");
     let rounds: usize = get("--rounds").map_or(3, |v| v.parse().unwrap());
@@ -147,7 +148,7 @@ fn main() {
 
     let t2 = now_ms();
     let (mut ent_c, mut ent_e, mut ent_am) = (vec![], vec![], vec![]);
-    let (mut board, mut area_rail, mut area_trips) = (vec![], vec![0f64; n_area], vec![0f64; n_area]);
+    let (mut board, mut area_rail, mut area_trips, mut area_walk) = (vec![], vec![0f64; n_area], vec![0f64; n_area], vec![0f64; n_area]);
     let mut seg_all: Vec<f64> = vec![];
     // trips, rail, walked, other (T-513)
     let (mut c_tot, mut e_tot) = ([0f64; 4], [0f64; 4]);
@@ -215,11 +216,12 @@ fn main() {
             }
         }
         if let Some((a, none)) = &areas {
-            let (rail, trips) = (api.rail_by_cell(q), api.trips_by_cell(q));
+            let (rail, trips, walk) = (api.rail_by_cell(q), api.trips_by_cell(q), api.walk_by_cell(q));
             for (c, &k) in a.iter().enumerate() {
                 if k != *none && c < rail.len() {
                     area_rail[k as usize] += rail[c] as f64;
                     area_trips[k as usize] += trips[c] as f64;
+                    area_walk[k as usize] += walk.get(c).copied().unwrap_or(0.0) as f64;
                 }
             }
         }
@@ -289,7 +291,7 @@ fn main() {
         "entries": {"commute": r1(&ent_c), "everyday": r1(&ent_e), "am": r1(&ent_am)},
         "lines": {"board": r1(&line_board), "same_line_changes": r1(&same_line), "load": r1(&line_load), "pkm": r1(&line_pkm)},
         "operators": ops,
-        "areas": {"rail": r1(&area_rail), "trips": r1(&area_trips)},
+        "areas": {"rail": r1(&area_rail), "trips": r1(&area_trips), "walk": r1(&area_walk)},
         "periods": periods,
     });
     std::fs::write(&out_path, serde_json::to_string(&out).unwrap()).unwrap();

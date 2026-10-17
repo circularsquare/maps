@@ -555,13 +555,15 @@ function query(msg: Query) {
       const pairs = live ? transfersAt(at!, msg.version === current && mine.every(q => roundsHeld[q] === msg.round), msg.nodes, day) : null;
       sendMessage({ kind: "transfers", id: msg.id, version: msg.version, mask: live ? a!.solved_mask() : 0, pairs }, pairs ? [pairs.buffer] : []);
     } else if (msg.kind === "trip") {
-      // T-195: the trip as a commute, each period this worker holds; the cells back in world metres
+      // T-195: the trip as a commute, or as an everyday purpose (T-586), each period this worker
+      // holds; the cells back in world metres
       const answers: Float64Array[] = [], periods: number[] = [];
       if (live) {
         const o = worldToCity(msg.from[0], msg.from[1], msg.city), d = worldToCity(msg.to[0], msg.to[1], msg.city);
         const c = cl;
+        const k = msg.purpose ?? -1, layer = everyday.get(msg.city);
         for (const q of mine) {
-          const v = a!.trip(q, o.x, o.y, d.x, d.y);
+          const v = k < 0 ? a!.trip(q, o.x, o.y, d.x, d.y) : layer && k < layer.purpose_count() ? layer.trip(k, q, o.x, o.y, d.x, d.y) : new Float64Array(35);
           if (v[0] === 1) {
             const p0 = cityToWorld(v[27], v[28], msg.city), p1 = cityToWorld(v[29], v[30], msg.city);
             v[27] = p0.x; v[28] = p0.y; v[29] = p1.x; v[30] = p1.y;
@@ -705,7 +707,7 @@ function marketFigures(parts: IntercityApi[], q: number) {
 /** A `DemandApi.trip` answer's route nodes (trip.ts `PAIR_LEN`, `LEG_LEN`) from its cluster's
  * network to the whole network's, the ones the client reads. */
 function tripNodesGlobal(v: Float64Array, nodeGlobal: Uint32Array) {
-  const HEAD = 33, PAIR_LEN = 14, LEG_LEN = 12;
+  const HEAD = 35, PAIR_LEN = 14, LEG_LEN = 12;
   const g = (i: number) => { if (v[i] >= 0) v[i] = nodeGlobal[v[i]]; };
   const np = v[24], nr = v[25];
   for (let k = 0; k < np; k++) { g(HEAD + k * PAIR_LEN + 2); g(HEAD + k * PAIR_LEN + 3); }

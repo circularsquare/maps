@@ -246,7 +246,8 @@ def targets():
     for c in groups:
         if c in m.index and m.loc[c, "total"] > 0:
             r = m.loc[c]
-            areas.append({"name": c, "rail_share": float((r["subway"] + r["lrt_cr"]) / r["total"]), "commuters": float(r["total"])})
+            areas.append({"name": c, "rail_share": float((r["subway"] + r["lrt_cr"]) / r["total"]), "commuters": float(r["total"]),
+                          "walk_share": float(r["walk"] / r["total"])})
         else:
             areas.append({"name": c, "rail_share": 0.0, "commuters": 0.0})
     return {

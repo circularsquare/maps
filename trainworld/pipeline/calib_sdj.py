@@ -108,7 +108,7 @@ def cell_areas(o):
 
 
 def census_rail(codes):
-    """{code: (rail share, commuters with a known means)} from table 18."""
+    """{code: (rail share, commuters with a known means, walking-only share)} from table 18."""
     import pandas as pd
     x = pd.read_excel(E18, header=None, dtype=str)
     x = x[x[2].astype(str).str[:5].isin(codes)]
@@ -117,7 +117,7 @@ def census_rail(codes):
         v = {r[3][:2]: float(str(r[4]).replace(",", "").replace("-", "0") or 0) for r in g.itertuples(index=False)}
         known = v["00"] - v.get("10", 0.0)
         if known > 0:
-            out[code] = (v["02"] / known, known)
+            out[code] = (v["02"] / known, known, v["01"] / known)
     return out
 
 
@@ -146,7 +146,7 @@ def targets():
     areas = []
     for code, name, pop in munis:
         if code in rail and pop >= 1.5 * rail[code][1]:
-            areas.append({"name": name, "code": code, "rail_share": rail[code][0], "commuters": rail[code][1]})
+            areas.append({"name": name, "code": code, "rail_share": rail[code][0], "commuters": rail[code][1], "walk_share": rail[code][2]})
         else:
             areas.append({"name": name, "code": code, "rail_share": 0.0, "commuters": 0.0})
     print(f"{n_joined} of {n_st} stations joined to S12; {sum(1 for a in areas if a['commuters'])} of {len(areas)} municipalities scored")

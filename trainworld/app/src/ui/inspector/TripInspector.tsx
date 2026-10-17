@@ -1,14 +1,16 @@
-// The trip explorer's inspector (T-195, docs/ui-inspectors.md): one trip between two points as the
-// demand model decides it, for one period: the chance of each mode, the train's main route with
-// its walks, waits, rides and changes, the other routes the train riders spread over, and the
-// drive. Every number is the model's (game/trip.ts); every drawn quantity has a hover with it.
+// The trip explorer's inspector (T-195, docs/ui-inspectors.md): the trips between two places by
+// mode as the view counts them (T-586), then one representative trip as the demand model decides
+// it, for one period: the train's main route with its walks, waits, rides and changes, the other
+// routes the train riders spread over, and the drive. Every number is the model's (game/trip.ts);
+// every drawn quantity has a hover with it.
 
 import { count, distance } from "../../game/format";
 import { MODE_COLOURS } from "../../game/palette";
 import { PERIODS } from "../../game/periods";
+import { purposeName, purposeWords, type PurposeFilter } from "../../game/purposes";
 import { WALK_KMH } from "../../game/walks";
-import { routeTerms, routeTotals, stationName, tripOpenedFrom, tripPeriod, tripView, type TripPeriod, type TripRoute } from "../../game/trip";
-import { selection, tool } from "../../game/ui";
+import { routeTerms, routeTotals, stationName, tripOpenedFrom, tripPeriod, tripView, type TripMix, type TripPeriod, type TripRoute } from "../../game/trip";
+import { purposeFilter, selection, shownDayPhrase, tool } from "../../game/ui";
 import { world } from "../../game/world";
 import { shownPeriod } from "../../map/tripView";
 import { Chip, Row } from "../widgets";
@@ -25,6 +27,7 @@ const NO_RAIL: Record<string, string> = {
 };
 
 const num = (v: number) => String(Math.round(v * 10) / 10);
+const exact = (n: number) => Math.round(n).toLocaleString("en");
 const weight = (v: number) => String(Math.round(v * 100) / 100);
 
 /** The "Counts as" hover: the first route's perceived total term by term (the worker's own
@@ -48,18 +51,26 @@ function countsAsTip(t: TripPeriod, r: TripRoute): string {
   ].join("\n");
 }
 
-function ModeBar({ t }: { t: TripPeriod }) {
-  const parts: [string, number, string][] = [["Train", t.pTrain, "seg-train"], ["Walk", t.pWalk, "seg-walk"], ["Drive", t.pDrive, "seg-drive"]];
+/** T-628: walking gets its own row when walking the whole way takes under this, real minutes. */
+const WALK_ROW_MIN = 30;
+
+/** The headline: the trips between the two places by mode as the view counts them (T-586), or,
+ * when the view counts none, the representative trip's chances in the period shown. */
+function ModeBar({ t, mix, of }: { t: TripPeriod; mix: TripMix | null; of: string }) {
+  const n = mix ? mix.rail + mix.walk + mix.drive : 0;
+  const [train, walk, drive] = n > 0 ? [mix!.rail / n, mix!.walk / n, mix!.drive / n] : [t.pTrain, t.pWalk, t.pDrive];
+  const parts: [string, number, string][] = [["Train", train, "seg-train"], ["Walk", walk, "seg-walk"], ["Drive", drive, "seg-drive"]];
+  const walkTip = `; walking the whole way takes about ${min(t.walkMin)}`;
   return (
     <div class="trip-modes">
       <div class="bar trip-bar" role="img" aria-label={parts.map(([n, v]) => `${n} ${pct(v)}`).join(", ")}>
-        {parts.map(([n, v, c]) => v > 0 && <i class={"seg " + c} style={{ width: `${100 * v}%` }} data-tip={`${n}: ${pct(v)} of the people making this trip`} />)}
+        {parts.map(([m, v, c]) => v > 0 && <i class={"seg " + c} style={{ width: `${100 * v}%` }} data-tip={`${m}: ${pct(v)} of ${of}${m === "Walk" ? walkTip : ""}`} />)}
       </div>
       <ul class="rows">
-        {parts.filter(([n]) => n !== "Walk").map(([n, v]) => (
-          <li data-tip={`${n}: ${(100 * v).toFixed(1)}% of the people making this trip in this period`}>
-            <i class="mk" style={{ background: MODE_COLOURS[n === "Train" ? "train" : n === "Walk" ? "walk" : "drive"] }} />
-            <span class="grow">{n}</span>
+        {parts.filter(([m]) => m !== "Walk" || t.walkMin < WALK_ROW_MIN).map(([m, v]) => (
+          <li data-tip={`${m}: ${(100 * v).toFixed(1)}% of ${of}${m === "Walk" ? walkTip : ""}`}>
+            <i class="mk" style={{ background: MODE_COLOURS[m === "Train" ? "train" : m === "Walk" ? "walk" : "drive"] }} />
+            <span class="grow">{m}</span>
             <span class="val w-num">{pct(v)}</span>
           </li>
         ))}
@@ -67,6 +78,14 @@ function ModeBar({ t }: { t: TripPeriod }) {
     </div>
   );
 }
+
+/** Where the trip goes, in "to work by Grand Central" (T-586: the purpose filter's). */
+const DEST: Record<PurposeFilter, string> = {
+  all: "a destination", work: "work", school: "school or university", university: "school or university", shopping: "shops and errands",
+  social: "social and leisure", medical: "medical care", airport: "the airport", longer: "a destination",
+};
+/** "shopping and errands trips", "trips" */
+const tripWords = (f: PurposeFilter) => (f === "all" ? "trips" : `${purposeWords(f)} trips`);
 
 function RouteLegs({ t, r }: { t: TripPeriod; r: TripRoute }) {
   const w = world.value!;
@@ -173,7 +192,7 @@ function mainNote(t: TripPeriod): string {
     (1 - main.share - same >= 0.005 ? " The rest use other stations or trains nearby." : "");
 }
 
-function ByPeriod({ periods }: { periods: (TripPeriod | null)[] }) {
+function ByPeriod({ periods, words }: { periods: (TripPeriod | null)[]; words: string }) {
   const q = shownPeriod.value;
   return (
     <>
@@ -183,7 +202,7 @@ function ByPeriod({ periods }: { periods: (TripPeriod | null)[] }) {
           const t = periods[i];
           return (
             <li class={i === q ? "on" : ""} onClick={() => (tripPeriod.value = i)}
-              data-tip={t ? `${p.name}: train ${pct(t.pTrain)}, drive ${pct(t.pDrive)}, walk ${pct(t.pWalk)}` : p.name}>
+              data-tip={t ? `${p.name}, one ${words} trip: train ${pct(t.pTrain)}, drive ${pct(t.pDrive)}, walk ${pct(t.pWalk)}` : p.name}>
               <span class="grow">{p.name}</span>
               <span class="trip-hbar"><i class="hbar" style={{ width: `${Math.round(60 * (t?.pTrain ?? 0))}px`, background: MODE_COLOURS.train }} /></span>
               <span class="val w-num">{t ? pct(t.pTrain) : ""}</span>
@@ -204,12 +223,13 @@ export function TripInspector() {
   const back = tripOpenedFrom.value;
   // an end picked at a station is named (T-221)
   const fromName = stationName(sel.fromStation), toName = stationName(sel.toStation);
+  const filter = purposeFilter.value;
   const sub = sel.to
-    ? `From a home ${fromName ? `by ${fromName}` : "at the open ring"} to work ${toName ? `by ${toName}` : fromName ? "at the filled disc" : "at the filled one"}`
+    ? `From a home ${fromName ? `by ${fromName}` : "at the open ring"} to ${DEST[filter]} ${toName ? `by ${toName}` : fromName ? "at the filled disc" : "at the filled one"}`
     // T-253: the next click is the trip tool's hint at the map's foot, not repeated here
     : fromName ? `From ${fromName}` : "Start picked";
   const tr = v?.trip;
-  const about = tr && !tr.outside ? `The demand model's figures${tr.round > 0 ? ` after ${count(tr.round)} crowding ${tr.round === 1 ? "round" : "rounds"}` : ", before crowding"}. It decides commutes area by area, so nearby places give the same answer.${fromName || toName ? " A station picked as an end stands for the homes or jobs right around it." : ""}` : undefined;
+  const about = tr && !tr.outside ? `The demand model's figures${tr.round > 0 ? ` after ${count(tr.round)} crowding ${tr.round === 1 ? "round" : "rounds"}` : ", before crowding"}. The model decides trips area by area, so nearby places give the same answer.${fromName || toName ? " A station picked as an end stands for the homes or places right around it." : ""}` : undefined;
   const head = (
     <>
       <div class="title"><span class="name" data-tip={about}>Trip</span></div>
@@ -231,12 +251,22 @@ export function TripInspector() {
   const main = t.routes[0];
   const tot = main ? routeTotals(t, main) : null;
   const pair = main ? t.pairs[main.pair] : null;
+  // T-586: the trips the view counts between the two places, and the trip the routes are read for
+  const mix = v!.mix;
+  const n = mix ? mix.rail + mix.walk + mix.drive : 0;
+  const day = shownDayPhrase.value;
+  const period = PERIODS[q].name;
+  const of = n > 0 ? `the ${count(n)} ${tripWords(filter)} ${day} between the two places` : `the people making this trip in the ${period.toLowerCase()}`;
+  const countTip = n > 0 ? [`${exact(n)} ${tripWords(filter)} ${day} between the two places, both ways`, ...(filter === "all" ? mix!.purposes.filter((p) => p.rail + p.walk + p.drive >= 0.5).map((p) => `${purposeName(p.key)}: ${exact(p.rail + p.walk + p.drive)}`) : [])].join("\n") : `${distance(t.distM)} in a straight line`;
+  const words = purposeWords(v!.purpose);
+  const picked = tripPeriod.value !== null;
+  const repTip = `The routes are one ${words} trip in the ${period.toLowerCase()}: ${filter === "all" ? "the purpose with most of the trips between these places" : "the purpose shown"}, and ${picked ? "the period picked below" : "the period with most of its trips"}`;
   return (
     <>
       {head}
-      <p class="muted small">{PERIODS[q].name}, {distance(t.distM)} apart{tripPeriod.value === null ? "" : " (picked below)"}</p>
-      <ModeBar t={t} />
-      <div class="h">By train</div>
+      <p class="muted small" data-tip={countTip}>{n > 0 ? `${count(n)} ${tripWords(filter)} ${day}` : period}, {distance(t.distM)} apart</p>
+      <ModeBar t={t} mix={mix} of={of} />
+      <div class="h">By train<span class="right muted small" data-tip={repTip}>{purposeName(v!.purpose)}, {period.toLowerCase()}</span></div>
       {!t.railOffered ? <p class="muted">{NO_RAIL[t.why] ?? "No train."}</p> : main && tot && pair ? (
         <>
           <RouteLegs t={t} r={main} />
@@ -279,7 +309,7 @@ export function TripInspector() {
           <span class="val">{min(t.roadPerceived)}</span>
         </li>
       </ul>
-      <ByPeriod periods={trip.periods} />
+      <ByPeriod periods={trip.periods} words={words} />
     </>
   );
 }

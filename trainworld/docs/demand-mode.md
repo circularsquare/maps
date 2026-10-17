@@ -95,9 +95,10 @@ that share, not one result at the mean price. Congestion charges (`kernel::CORDO
 charging area and its charge, half the day's charge at 3 minutes a dollar) apply to the share of a
 zone's jobs inside the area: Manhattan south of 60th Street 13.5 minutes ($9), central London 35.1
 (£18); nowhere else. A ride to a station pays the mean over drivers there. Owning a car adds
-`car_own_usd_day` / `car_trips_day` dollars to every car trip's cost (`car_own_min`, at 3 minutes a
-dollar, in `park_parts`' fixed part; not to a ride to a station, nor for homes without a car); the
-parameter exists and is 0 until the fit (T-621). The same rule serves all
+`car_own_usd_trip` dollars a car trip (`car_own_min`, in `park_parts`' fixed part) plus
+`car_own_usd_km` a km of the car's own road (`Params::car_drive`), at 3 minutes a dollar; a drive to
+a station pays both on its own road, parked or dropped off; homes without a car and the longer
+trips (`market_params`) pay none. Both are 0 until the fit is applied (T-621). The same rule serves all
 three layers: the commutes and the everyday layer call `park_parts` (the everyday layer takes the
 mix of two logit results per pair, `rail_share_parked`); the regional layer's market pack holds each
 site's mean over drivers (`site_park`), written by `pipeline/intercity.py park_by_cell`, which

@@ -125,9 +125,10 @@ export type ToDemand =
   /** transfers over this worker's periods (T-176), every population and purpose together, with
    * either end at one of `nodes` (route nodes, the result arrays' order) */
   | { kind: "transfers"; id: number; city: CityId; version: number; round: number; nodes: Uint32Array }
-  /** the trip explorer (T-195): one trip from `from` to `to` (world metres) as a commute, in every
-   * period this worker holds (`DemandApi.trip`) */
-  | { kind: "trip"; id: number; city: CityId; version: number; round: number; from: [number, number]; to: [number, number] }
+  /** the trip explorer (T-195): one trip from `from` to `to` (world metres) in every period this
+   * worker holds, as a commute (`DemandApi.trip`), or with `purpose` (T-586: an index into
+   * `EVERYDAY_KEYS`) as that everyday purpose (`EverydayApi.trip`; answers 0 for a city without it) */
+  | { kind: "trip"; id: number; city: CityId; version: number; round: number; from: [number, number]; to: [number, number]; purpose?: number }
   /** T-325, the aux worker: a bare zone's legs per cell with no rail, any version. `purpose` -1:
    * commutes and every everyday purpose, -2: commutes alone, k >= 0: everyday kind k alone */
   | { kind: "bare"; id: number; city: CityId; version: number; round: number; purpose: number }

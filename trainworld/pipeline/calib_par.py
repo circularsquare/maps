@@ -106,7 +106,7 @@ def cmd_targets():
     g = v.groupby("id_zdc").agg(v=("v", "sum"), name=("libelle_arret", "first"))
     st = [{"target": str(int(k)), "name": str(r["name"]).title(), "entries": float(r["v"]) / days} for k, r in g.iterrows()]
     e = pd.read_csv(zipfile.ZipFile(EMP).open("base-cc-caract_emp-2022.CSV"), sep=";", dtype={"CODGEO": str},
-                    usecols=["CODGEO", "P22_ACTOCC15P", "P22_ACTOCC15P_PASTRANS", "P22_ACTOCC15P_COMMUN"])
+                    usecols=["CODGEO", "P22_ACTOCC15P", "P22_ACTOCC15P_PASTRANS", "P22_ACTOCC15P_COMMUN", "P22_ACTOCC15P_MARCHE"])
     e = e.set_index("CODGEO")
     pk = sys.argv[sys.argv.index("--pack") + 1] if "--pack" in sys.argv else read_pack.PACKS
     header, a = read_pack.load_pack("par", pk)
@@ -132,7 +132,8 @@ def cmd_targets():
         if comm <= 0 or not cm.any():
             continue
         cell[cm] = len(areas)
-        areas.append({"name": name, "rail_share": float(s["P22_ACTOCC15P_COMMUN"]) / comm, "commuters": comm})
+        areas.append({"name": name, "rail_share": float(s["P22_ACTOCC15P_COMMUN"]) / comm, "commuters": comm,
+                      "walk_share": float(s["P22_ACTOCC15P_MARCHE"]) / comm})
     cell.tofile(os.path.join(CALIB, "cell_area.u8"))
     out = {"stations": st, "areas": areas, "pack": pk,
            "sources": {"stations": f"IDFM validations sur le réseau ferré, nombre de validations par jour, Q4 2025, by zone de correspondance, mean of {days} Tue-Thu days 7-16 Oct 2025 (every ticket type; entries without a validation, at ungated SNCF stations especially, are missing)",

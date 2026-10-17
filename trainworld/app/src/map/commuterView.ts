@@ -90,7 +90,8 @@ export const commuterStats = { nearbyMs: 0, nearbyBuilds: 0, nearbyShown: {} as 
    * bubble worker's sums came and the far end was handed to the overlay */
   pickAt: 0, flowsAt: 0, summedAt: 0, farAt: 0,
   /** ?debug=1 (T-317): the city's bubbles on show, with the anchor their positions are relative to */
-  probe: null as null | (() => { anchor: Anchor; levels: { discs: Float32Array; group: Uint32Array }[] } | null) };
+  probe: null as null | (() => { anchor: Anchor; levels: { discs: Float32Array; group: Uint32Array }[] } | null),
+  farProbe: null as null | (() => { anchor: Anchor; discs: Float32Array; group: Uint32Array; train: Float32Array; walk: Float32Array; drive: Float32Array } | null) };
 
 
 export function startCommuterView(map: MlMap, view: DemandOverlay) {
@@ -512,7 +513,10 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     const at = (c: number): [number, number] => [xy[c * 2], xy[c * 2 + 1]];
     const trip: Selection = sel.end === "home" ? { kind: "trip", from: at(own), to: at(to) } : { kind: "trip", from: at(to), to: at(own) };
     const what = sel.areas > 1 ? "From the selected bubbles" : sel.end === "home" ? "From the selected homes" : "From the selected destinations";
-    tripOpenedFrom.value = { trip, from: sel, what };
+    // T-586: the explorer counts the trips between the selection and every cell of the far bubble,
+    // as this bubble's hover does
+    const places = { end: sel.end, near: Uint32Array.from(sel.cells), far: g.members.slice(g.off[q], g.off[q + 1]) };
+    tripOpenedFrom.value = { trip, from: sel, what, places };
     return trip;
   };
 
@@ -642,6 +646,8 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     view.setLines("far", LINES_TO_SELECTION && farDiscs ? linesToward(nearDiscs, nearAnchor, farDiscs, farAnchor) : null, farAnchor);
   };
   view.onLevel = () => drawPick();
+  // ?debug=1 (T-586's check): the selection's far-end bubbles as drawn, with the anchor
+  commuterStats.farProbe = () => (far && farDiscs ? { anchor: farAnchor, discs: farDiscs, group: far.group, train: far.train, walk: far.walk, drive: far.drive } : null);
 
   /** The far end's places, named by the station nearest them. */
   const places = (fc: Groups[], A: Anchor): Place[] => {

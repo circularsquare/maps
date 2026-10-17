@@ -18,6 +18,8 @@ The objective (notes/T-509.md section 4), each part a mean so every city weighs 
   it, as operators count; T-171); per-line totals where a city has them go in the same list;
 - areas: rail share of commuters by home area, squared difference of logits weighted by
   commuters (one-sided where the targets say `areas_upper`: Paris's census share includes the bus);
+- walk (where the areas carry `walk_share`, T-621): the share of commuters walking the whole way
+  by home area, as the rail share's logits;
 - everyday (New York only, NHTS): rail and walk shares of everyday legs by purpose, logits.
 The total is the sum of the parts. Fixed-value penalties come with the fit (stage 6).
 
@@ -39,7 +41,8 @@ import numpy as np
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WORK = os.path.join(ROOT, "data", "work")
 CALIB = os.path.join(WORK, "calib")
-BIN = os.path.join(WORK, "target", "release", "calib.exe" if os.name == "nt" else "calib")
+# CALIB_BIN: a calib binary built elsewhere (T-621 built its own from a copy of sim/)
+BIN = os.environ.get("CALIB_BIN") or os.path.join(WORK, "target", "release", "calib.exe" if os.name == "nt" else "calib")
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -80,7 +83,8 @@ def targets_nyc():
     for f in rn.COUNTY_ORDER:
         a = tg["acs"][f]
         comm = a["001"] - a["021"]
-        areas.append({"name": rn.COUNTIES[f], "rail_share": (a["012"] + a["013"] + a["014"]) / comm, "commuters": comm})
+        areas.append({"name": rn.COUNTIES[f], "rail_share": (a["012"] + a["013"] + a["014"]) / comm, "commuters": comm,
+                      "walk_share": a["019"] / comm})
     return {
         "city": "nyc", "net": rn.CITIES["nyc"]["out"], "areas_file": os.path.join(rn.WORK, "cell_county.u8"),
         "station_min": 2000.0, "hub_m": 300.0, "stations": st, "hubs": hubs,
@@ -166,6 +170,14 @@ def score(run, tg, top=15, say=print):
         # the measured share is an upper bound (Paris: transit with the bus): only an overshoot counts
         dl = np.maximum(dl, 0.0)
     parts["areas"] = float((w * dl ** 2).sum() / ws)
+    # commutes walking the whole way by home area, where the census gives it and the run has it
+    # (T-621), as the rail share's logits
+    walk_rows = None
+    if "walk" in ra and ra["walk"] and all("walk_share" in a for a in tg["areas"]):
+        mw = np.array(ra["walk"], float) / np.maximum(at, 1e-9)
+        tw = np.array([a["walk_share"] for a in tg["areas"]], float)
+        parts["walk"] = float((w * (logit(mw) - logit(tw)) ** 2).sum() / ws)
+        walk_rows = {"model": float((mw * w).sum() / ws), "measured": float((tw * w).sum() / ws)}
     # everyday rail and walk shares by purpose where a survey gives them (New York: NHTS)
     ev_rows = {}
     kt = run["day"].get("everyday_kinds") or []
@@ -188,9 +200,12 @@ def score(run, tg, top=15, say=print):
            "operators": {k: {"model": ops.get(k, 0.0), "measured": v, "log_ratio": olr[k]} for k, v in tg["operators"].items()},
            "operators_info": {k: {"model": ops.get(k, 0.0), "measured": v} for k, v in tg.get("operators_info", {}).items()},
            "rail_share_model": float((mod_share * w).sum() / ws), "rail_share_measured": float((meas_share * w).sum() / ws),
-           "day": run["day"], "ms": run["ms"], "set": run.get("set", {}), "everyday_rows": ev_rows}
+           "day": run["day"], "ms": run["ms"], "set": run.get("set", {}), "everyday_rows": ev_rows, "walk_areas": walk_rows}
     say(f"score {total:.3f} = stations {parts['stations']:.3f} + operators {parts['operators']:.3f} + areas {parts['areas']:.3f}"
+        + (f" + walk {parts['walk']:.3f}" if "walk" in parts else "")
         + (f" + everyday {parts['everyday']:.3f}" if "everyday" in parts else ""))
+    if walk_rows:
+        say(f"  commutes walking by home area: model {walk_rows['model']:.1%}, census {walk_rows['measured']:.1%}")
     for k, v in ev_rows.items():
         say(f"  everyday {k}: rail {v['rail']:.1%} (survey {v['rail_measured']:.1%}), walk {v['walk']:.1%} (survey {v['walk_measured']:.1%})")
     say(f"stations: {out['n_stations']} scored (>= {tg.get('station_min', 0):,.0f} entries), mean log ratio {st_level:+.2f} "

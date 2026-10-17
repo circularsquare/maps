@@ -2019,12 +2019,13 @@ class DemandClient {
   }
 
   /** The trip explorer (T-195; game/trip.ts): one trip from `from` to `to` (world metres) as a
-   * commute, every period from the worker holding it. Null while there is no solve, or the
-   * workers have moved on to a newer network or round. */
-  trip(from: [number, number], to: [number, number]): Promise<Trip | null> {
-    return this.viaRound(`trip|${from}|${to}`, (t) => this.tripAt(t, from, to));
+   * commute, or as everyday purpose `purpose` (T-586, an index into `EVERYDAY_KEYS`), every period
+   * from the worker holding it. Null while there is no solve, or the workers have moved on to a
+   * newer network or round. */
+  trip(from: [number, number], to: [number, number], purpose = -1): Promise<Trip | null> {
+    return this.viaRound(`trip|${from}|${to}|${purpose}`, (t) => this.tripAt(t, from, to, purpose));
   }
-  private async tripAt(t: Target, from: [number, number], to: [number, number]): Promise<Trip | null> {
+  private async tripAt(t: Target, from: [number, number], to: [number, number], purpose: number): Promise<Trip | null> {
     const solve = t.solve, version = t.view, round = t.round;
     if (!solve) return null;
     const at: RouteNodes = [];
@@ -2032,7 +2033,7 @@ class DemandClient {
       for (let k = 0; k < n; k++) at[o + k] = at[o + 2 * n - 1 - k] = { station: stops[k], line: id, k };
     const periods: Trip["periods"] = PERIODS.map(() => null);
     let mask = 0, outside = false;
-    for (const r of await this.ask((id) => ({ kind: "trip", id, version: t.version, from, to }), undefined, [], undefined, t)) {
+    for (const r of await this.ask((id) => ({ kind: "trip", id, version: t.version, from, to, ...(purpose >= 0 ? { purpose } : {}) }), undefined, [], undefined, t)) {
       if (r.kind !== "trip" || !r.answers) return null;
       mask |= r.mask;
       r.periods.forEach((q, i) => {
@@ -2042,7 +2043,7 @@ class DemandClient {
       });
     }
     if (mask !== ALL_PERIODS || !this.still(t)) return null;
-    return { version, round, key: tripKey(from, to), periods, outside };
+    return { version, round, key: tripKey(from, to), purpose, periods, outside };
   }
 
   /** Where the commuters of a set of cells go (T-098; game/demand.ts `Flows`): every worker's rail
@@ -2619,10 +2620,10 @@ const NEW_GAME = !TEST && !perfOff("bareStart") && new URLSearchParams(location.
 export function startDemand(city = HOME_CITY) {
   if (client) return client;
   const c = (client = new DemandClient(city));
-  setTripQuery((from, to) => c.trip(from, to)); // T-195
+  setTripQuery((from, to, purpose) => c.trip(from, to, purpose)); // T-195
   setDemandQueries({ transfers: (members) => c.transfers(members), platformTransfers: () => c.platformTransfers(), cityCells: (city) => c.cityCells(city), cellModes: (purpose, city) => c.purposeModes(purpose ?? "all", city), stationRiders: (id, top, members) => c.stationRiders(id, top, members), flows: (end, cells) => c.flows(end, cells), intercitySelection: (end, cells) => c.intercitySelection(end, cells), intercityStation: (id, members) => c.intercityStation(id, members) });
   if (TEST) c.submitNetwork(demandTestSnapshot());
-  if (new URLSearchParams(location.search).get("debug") === "1") (window as any).twDemand = { client: c, log: c.log, days: () => demandByDay.peek(), start: c.start, resubmit: () => c.resubmit(), view: () => demandView.peek(), cities: () => cityDemandViews.peek(), nearby: () => nearbyZones.peek(), intercity: () => intercityDemand.peek(), activeCity, cellModes: () => c.cellModes(), stationRiders: (id: string) => c.stationRiders(id), cityCells: () => c.cityCells(), flows: (end: "home" | "work", cells: Uint32Array) => c.flows(end, cells), intercitySelection: (end: "home" | "work", cells: Uint32Array) => c.intercitySelection(end, cells), intercityStation: (id: string) => c.intercityStation(id), transfers: (members: string[]) => c.transfers(members), trip: (from: [number, number], to: [number, number]) => c.trip(from, to) };
+  if (new URLSearchParams(location.search).get("debug") === "1") (window as any).twDemand = { client: c, log: c.log, days: () => demandByDay.peek(), start: c.start, resubmit: () => c.resubmit(), view: () => demandView.peek(), cities: () => cityDemandViews.peek(), nearby: () => nearbyZones.peek(), intercity: () => intercityDemand.peek(), activeCity, cellModes: () => c.cellModes(), stationRiders: (id: string) => c.stationRiders(id), cityCells: () => c.cityCells(), flows: (end: "home" | "work", cells: Uint32Array) => c.flows(end, cells), intercitySelection: (end: "home" | "work", cells: Uint32Array) => c.intercitySelection(end, cells), intercityStation: (id: string) => c.intercityStation(id), transfers: (members: string[]) => c.transfers(members), trip: (from: [number, number], to: [number, number], purpose?: number) => c.trip(from, to, purpose) };
   return c;
 }
 

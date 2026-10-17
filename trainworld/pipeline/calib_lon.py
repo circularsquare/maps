@@ -167,7 +167,7 @@ def cmd_targets():
             continue
         cell[cm] = len(areas)
         areas.append({"name": name, "code": code, "rail_share": float(s[2] + s[3]) / comm, "commuters": comm,
-                      "underground_share": float(s[2]) / comm, "msoas": len(ms)})
+                      "underground_share": float(s[2]) / comm, "walk_share": float(s[10]) / comm, "msoas": len(ms)})
     cell.tofile(os.path.join(CALIB, "cell_lad.u8"))
     out = {"stations": st, "lines": lines, "areas": areas, "pack": pk,
            "sources": {"stations": "TfL NUMBAT 2024 (published Oct 2025), Station_Entries, typical autumn Tue-Thu, gateline entries at every LU, LO, DLR and Elizabeth line station",

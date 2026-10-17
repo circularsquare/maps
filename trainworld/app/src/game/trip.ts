@@ -1,13 +1,17 @@
-// The trip explorer (T-195; docs/demand.md "The trip explorer", docs/ui-inspectors.md). One trip
-// between two points on the map, read as a commute from a home at the first point to work at the
-// second, the way the demand model decides it: the train's routes through the model's strategies,
-// the drive, and the chance of each mode in each period. The numbers are the model's own
-// (`DemandApi.trip` in sim/src/demand/trip.rs, asked of the demand workers); this file only names
-// them. Main thread only.
+// The trip explorer (T-195; docs/demand-views.md "The trip explorer", docs/ui-inspectors.md). Trips
+// between two places on the map, from homes at the first to destinations at the second, as the
+// view it was opened from counts them (T-586): the purpose filter's trips a day by mode between
+// the two places (the same sums as the bubbles' hovers, `tripMix`), then one representative trip
+// the way the demand model decides it: the train's routes through the model's strategies, the
+// drive, and the chance of each mode in each period. The numbers are the model's own
+// (`DemandApi.trip` and `EverydayApi.trip` in sim/src/demand/trip.rs, and the selection's far end,
+// asked of the demand workers); this file only names them. Main thread only.
 
 import { signal } from "@preact/signals";
 import { lngLatToPack } from "./coords";
+import type { Flows } from "./demand";
 import { PERIODS } from "./periods";
+import { EVERYDAY_KEYS, FILTER_PURPOSES, shownKey, type PurposeFilter, type PurposeKey } from "./purposes";
 import type { Selection } from "./types";
 import { world } from "./world";
 
@@ -76,9 +80,14 @@ const WHY: NoRail[] = ["", "noStationStart", "noStationEnd", "walksTooLong", "no
 export interface TripPeriod {
   /** the crowding round the period's costs are from */
   round: number;
-  /** world metres of the cells the two points fell in */
+  /** world metres of the cells the two points fell in, and the cells (pack ids) */
   from: [number, number];
   to: [number, number];
+  cells: [number, number];
+  /** walking the whole way between the two cells, real minutes (T-628) */
+  walkMin: number;
+  /** an everyday purpose's trips a day between the two cells' areas (0: a commute, or none) */
+  pairTrips: number;
   /** straight line between the two cells, and the drive's distance (between the two areas the
    * model groups the places into), metres */
   distM: number;
@@ -117,6 +126,8 @@ export interface Trip {
   round: number;
   /** "x,y>x,y": the points asked about */
   key: string;
+  /** -1 a commute, else the everyday purpose (`EVERYDAY_KEYS` index) the trip was read as */
+  purpose: number;
   /** per period (game/periods.ts order); null where the trip could not be read */
   periods: (TripPeriod | null)[];
   /** a point is outside the city's cells */
@@ -127,7 +138,7 @@ export interface Trip {
  * (as `transfers`). */
 export type RouteNodes = { line: string; station: string; k: number }[];
 
-const HEAD = 33, PAIR_LEN = 14, LEG_LEN = 12;
+const HEAD = 35, PAIR_LEN = 14, LEG_LEN = 12;
 
 /** Read one period's packed answer (layout: `DemandApi.trip`). */
 export function readTripPeriod(v: Float64Array, at: RouteNodes): TripPeriod | null {
@@ -160,7 +171,7 @@ export function readTripPeriod(v: Float64Array, at: RouteNodes): TripPeriod | nu
   }
   const offered = v[13] === 1;
   return {
-    round: v[1], from: [v[27], v[28]], to: [v[29], v[30]], distM: v[6], driveDistM: v[7],
+    round: v[1], from: [v[27], v[28]], to: [v[29], v[30]], cells: [v[2], v[3]], walkMin: v[33], pairTrips: v[34], distM: v[6], driveDistM: v[7],
     driveMin: v[9], drivePerceived: v[10], parkPerceived: v[11], carOwnPerceived: v[32], roadPerceived: v[12],
     railOffered: offered, why: WHY[v[26]] ?? "", railPerceived: offered ? v[14] : NaN, railOfMotor: v[15], utility: v[16],
     pWalk: v[17], pTrain: v[18], pDrive: v[19], baseFarePerceived: v[22], minPerUsd: v[23], walkStartPerceived: v[20], walkEndPerceived: v[21], pairs, routes, cut: v[31],
@@ -217,19 +228,91 @@ export function routeTerms(t: TripPeriod, r: TripRoute): CostTerm[] {
   return out;
 }
 
-let query: ((from: [number, number], to: [number, number]) => Promise<Trip | null>) | null = null;
+let query: ((from: [number, number], to: [number, number], purpose: number) => Promise<Trip | null>) | null = null;
 /** Set by workers/demandClient.ts when the pool starts. */
 export function setTripQuery(q: typeof query) {
   query = q;
 }
-/** Ask the demand workers about a trip, for the solve `demandView` shows. */
-export const askTrip = (from: [number, number], to: [number, number]): Promise<Trip | null> => query?.(from, to) ?? Promise.resolve(null);
+/** Ask the demand workers about a trip as a commute (`purpose` -1) or as an everyday purpose
+ * (an `EVERYDAY_KEYS` index), for the solve `demandView` shows. */
+export const askTrip = (from: [number, number], to: [number, number], purpose = -1): Promise<Trip | null> => query?.(from, to, purpose) ?? Promise.resolve(null);
 
-/** The trip shown (asked for by map/tripView.ts when the selection or the demand result changes). */
-export const tripView = signal<{ key: string; trip: Trip | null; asking: boolean } | null>(null);
-/** A trip opened from a bubble selection by clicking a far-end bubble (T-208): the trip selection and the one it came from, for the inspector's way back. */
-export const tripOpenedFrom = signal<{ trip: Selection; from: Selection; what: string } | null>(null);
-/** The period the explorer shows: null follows the clock. */
+/** The two places the explorer counts trips between (T-586): the cells at the end the view
+ * counts by (a bubble selection's end, else the trip's start as homes), and the cells at the
+ * other end (pack cell ids). */
+export interface TripPlaces {
+  end: "home" | "work";
+  near: Uint32Array;
+  far: Uint32Array;
+}
+
+/** Trips a day (legs both ways) between two places by mode, under the purpose filter. */
+export interface TripMix {
+  rail: number;
+  walk: number;
+  drive: number;
+  /** each shown purpose's alone, biggest first; under one purpose, that one */
+  purposes: { key: PurposeKey; rail: number; walk: number; drive: number }[];
+}
+
+/** The far end of `f` (a selection's trips, every purpose and each on its own) summed over the far
+ * cells `far`, as the far-end bubbles and their hovers sum it. */
+export function tripMix(f: Flows, far: Uint32Array, filter: PurposeFilter): TripMix {
+  const inFar = new Set(far);
+  const sum = (fe: Pick<Flows, "cells" | "farRail" | "farWalk" | "farDrive">) => {
+    let rail = 0, walk = 0, drive = 0;
+    for (let i = 0; i < fe.cells.length; i++) if (inFar.has(fe.cells[i])) (rail += fe.farRail[i]), (walk += fe.farWalk[i]), (drive += fe.farDrive[i]);
+    return { rail, walk, drive };
+  };
+  const purposes: TripMix["purposes"] = [];
+  for (const { key } of FILTER_PURPOSES) {
+    if (filter !== "all" && key !== filter) continue;
+    const fe = f.byPurpose?.get(key);
+    if (fe) purposes.push({ key, ...sum(fe) });
+  }
+  purposes.sort((a, b) => b.rail + b.walk + b.drive - (a.rail + a.walk + a.drive));
+  const all = filter === "all" ? sum(f) : purposes[0] ?? { rail: 0, walk: 0, drive: 0 };
+  return { ...all, purposes };
+}
+
+/** The everyday purpose kinds a shown purpose counts (school counts university), in kind order. */
+export const kindsOf = (key: PurposeKey): number[] => EVERYDAY_KEYS.flatMap((k, i) => (shownKey(k) === key ? [i] : []));
+
+/** The period with most of a purpose's trips in a selection's far end (`Flows.purposes`: work
+ * first, then the everyday kinds in order), or null if it has none. The periods' shares are the
+ * purpose's own, the same for every pair of places. */
+export function busiestPeriod(f: Flows, key: PurposeKey): number | null {
+  const rows = key === "work" ? [f.purposes[0]] : kindsOf(key).map((k) => f.purposes[1 + k]);
+  let best = -1, most = 0;
+  for (let q = 0; q < PERIODS.length; q++) {
+    let n = 0;
+    for (const r of rows) if (r) for (let m = 0; m < 3; m++) n += (r.outward[m][q] ?? 0) + (r.returning[m][q] ?? 0);
+    if (n > most) (most = n), (best = q);
+  }
+  return best >= 0 ? best : null;
+}
+
+/** What the explorer shows: the trip's routes, the trips between the two places under the
+ * view's filter and day (null until counted, or when nothing counts them), and the purpose and
+ * period the routes are read for. */
+export interface TripShown {
+  key: string;
+  trip: Trip | null;
+  asking: boolean;
+  mix: TripMix | null;
+  /** the purpose the routes are read as */
+  purpose: PurposeKey;
+  /** the period with most of its trips (null: none counted) */
+  busiest: number | null;
+}
+
+/** The trip shown (asked for by map/tripView.ts when the selection, the purpose filter or the
+ * demand result changes). */
+export const tripView = signal<TripShown | null>(null);
+/** A trip opened from a bubble selection by clicking a far-end bubble (T-208): the trip selection,
+ * the one it came from (for the inspector's way back) and the two places it counts between. */
+export const tripOpenedFrom = signal<{ trip: Selection; from: Selection; what: string; places: TripPlaces } | null>(null);
+/** The period the explorer shows: null follows the busiest period of the purpose shown. */
 export const tripPeriod = signal<number | null>(null);
 export const PERIOD_NAMES = PERIODS.map((p) => p.name);
 

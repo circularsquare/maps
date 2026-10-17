@@ -533,6 +533,23 @@ impl DemandApi {
         let share = self.params(q).period_share;
         self.city.pop.iter().zip(&self.z.cell_zone).map(|(&v, &z)| v * self.home_k[z as usize] * share).collect()
     }
+    /// Trips walking the whole way in period `q` by home cell: the home zone's walking with no
+    /// rail spread by people, less what rail takes from each subzone (T-621's calibration).
+    pub fn walk_by_cell(&self, q: usize) -> Vec<f32> {
+        let Some(st) = self.period(q) else { return vec![] };
+        let share = self.params(q).period_share;
+        (0..self.city.len())
+            .map(|c| {
+                let z = self.z.cell_zone[c] as usize;
+                let walk = (self.walk_home_zone[z] / self.z.pop[z].max(1e-9)) as f32 * self.city.pop[c] * share;
+                let lost = match self.sz.as_ref().map(|sz| (sz, sz.cell[c])) {
+                    Some((sz, u)) if u != u32::MAX && sz.pop[u as usize] > 0.0 && !st.sub.walk_lost_home.is_empty() => st.sub.walk_lost_home[u as usize] * self.city.pop[c] / sz.pop[u as usize],
+                    _ => 0.0,
+                };
+                (walk - lost).max(0.0)
+            })
+            .collect()
+    }
     /// The route-node layout: per route node, its station and line (kernel order).
     pub fn route_nodes(&self, q: usize) -> (Vec<u32>, Vec<u32>) {
         self.period(q).map_or((vec![], vec![]), |st| (st.g.rn_station.clone(), st.g.rn_line.clone()))

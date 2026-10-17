@@ -1529,6 +1529,64 @@ impl EverydayApi {
     }
 }
 
+/// What the trip explorer reads of one everyday trip in a solved period (T-586, trip.rs
+/// `EverydayApi::trip`).
+pub(crate) struct TripInputs<'a> {
+    pub engine: &'a DemandApi,
+    pub g: &'a Graph,
+    pub p: &'a Params,
+    pub round: usize,
+    /// The purpose's subzone pair of the two cells, if any sample joins them: its mean distance
+    /// (metres) and trips a day, both directions.
+    pub pair: Option<(f32, f32)>,
+    /// The two cells' shares walking the whole way and by other with no rail (`no_rail`).
+    pub no_rail: (f32, f32),
+    /// The walk around water between the subzones' zones (T-275), as the pass weighs it.
+    pub walk_factor: f32,
+}
+
+impl EverydayApi {
+    pub(crate) fn engine(&self) -> &DemandApi {
+        &self.engine
+    }
+    /// Purpose `kind` from home cell `c` to activity cell `d` in period `q`; None unless solved.
+    pub(crate) fn trip_inputs(&self, kind: usize, q: usize, c: usize, d: usize) -> Option<TripInputs<'_>> {
+        let st = self.per.get(q)?.as_ref()?;
+        let sz = self.engine.sz.as_ref();
+        let (u, v) = sz.map_or((NONE, NONE), |s| (s.cell[c], s.cell[d]));
+        let pair = if u == NONE || v == NONE {
+            None
+        } else {
+            self.pairs.iter().find(|x| x.kind() as usize == kind && x.u() == u && x.v == v).map(|x| (x.distance, x.trips))
+        };
+        let z = &self.engine.z;
+        let walk_factor = match sz {
+            Some(s) if u != NONE && v != NONE => self.walk_factor(s.zone[u as usize] as usize, s.zone[v as usize] as usize),
+            _ => self.walk_factor(z.cell_zone[c] as usize, z.cell_zone[d] as usize),
+        };
+        Some(TripInputs { engine: &self.engine, g: &st.g, p: &st.p, round: st.round, pair, no_rail: self.no_rail(c, d, self.distance(c, d)), walk_factor })
+    }
+    /// One sample of every subzone pair: its purpose, home and activity cells, and the pair's
+    /// rail chance outward in period `q` (trip.rs's check).
+    #[cfg(test)]
+    pub(crate) fn pair_samples(&self, q: usize) -> Vec<(usize, usize, usize, f32)> {
+        let Some(st) = self.per.get(q).and_then(|v| v.as_ref()) else { return vec![] };
+        let mut seen = vec![false; self.pairs.len()];
+        let mut out = vec![];
+        for k in 0..self.edge_pair.len() {
+            let pi = self.edge_pair[k];
+            if pi == NONE || seen[pi as usize] {
+                continue;
+            }
+            seen[pi as usize] = true;
+            if let Some((kind, c, d, _, _)) = self.edge(k) {
+                out.push((kind, c, d, st.probability[pi as usize][0]));
+            }
+        }
+        out
+    }
+}
+
 impl EverydayApi {
     /// Trips, walking trips and trip kilometres by purpose, over destination samples `r` (see
     /// `chunks`).
@@ -1561,7 +1619,7 @@ impl EverydayApi {
         for (u, v) in [(hz, az), (az, hz)] {
             let f = p.drive_factor(u, v);
             let (fixed, paid, free) = self.wpark[v];
-            let road = p.drive_min_f(distance, f, self.wplace[u], self.wplace[v]) * p.w_drive + fixed;
+            let road = p.car_drive(p.drive_min_f(distance, f, self.wplace[u], self.wplace[v]), distance * 0.001 * f) + fixed;
             let (w, o) = p.no_rail_split(cu, road, paid, free, distance * 0.001 * f, cw);
             out.0 += 0.5 * w;
             out.1 += 0.5 * o;
@@ -1768,13 +1826,11 @@ impl EverydayApi {
                         continue;
                     }
                     let (fixed, paid, free) = park[sz.zone[v] as usize];
-                    let road = p.drive_min_f(
-                        pair.distance,
-                        p.drive_factor(sz.zone[u] as usize, sz.zone[v] as usize),
-                        p.place_min_per_km(density[sz.zone[u] as usize]),
-                        p.place_min_per_km(density[sz.zone[v] as usize]),
-                    ) * p.w_drive
-                        + fixed;
+                    let f = p.drive_factor(sz.zone[u] as usize, sz.zone[v] as usize);
+                    let road = p.car_drive(
+                        p.drive_min_f(pair.distance, f, p.place_min_per_km(density[sz.zone[u] as usize]), p.place_min_per_km(density[sz.zone[v] as usize])),
+                        pair.distance * 0.001 * f,
+                    ) + fixed;
                     let rail = ma + mb + p.fare_min - fast_ln(sum) / th;
                     let bt = p.mode_beta(road);
                     let r_car = p.car_choice(bt * (road - rail) + p.asc_rail, bt * (road - cw) + p.asc_walk, bt, paid, free);

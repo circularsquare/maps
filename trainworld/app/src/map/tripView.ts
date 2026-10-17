@@ -11,13 +11,14 @@ import { computed, effect } from "@preact/signals";
 import type { Map as MlMap, MapMouseEvent } from "maplibre-gl";
 import { clock } from "../game/clock";
 import { lngLatToPack, packToLngLat } from "../game/coords";
-import { demandView } from "../game/demand";
+import { demandView, flows } from "../game/demand";
 import { count, distance } from "../game/format";
 import { NET_INK } from "../game/palette";
 import { shadeColours } from "../game/shades";
 import { periodAt } from "../game/periods";
-import { askTrip, stationName, stationPoint, tripKey, tripPeriod, tripView, type TripLeg, type TripPeriod, type TripRoute } from "../game/trip";
-import { selection } from "../game/ui";
+import type { PurposeFilter, PurposeKey } from "../game/purposes";
+import { askTrip, busiestPeriod, kindsOf, stationName, stationPoint, tripKey, tripMix, tripOpenedFrom, tripPeriod, tripView, type Trip, type TripLeg, type TripPeriod, type TripPlaces, type TripRoute, type TripShown } from "../game/trip";
+import { purposeFilter, selection, shownDay } from "../game/ui";
 import { world } from "../game/world";
 import { addFinder } from "./demandHover";
 import { toLngLat, toLocal } from "./geo";
@@ -25,8 +26,9 @@ import type { NetworkBuffers } from "./network";
 import type { Overlay } from "./overlay";
 import { pick } from "./pick";
 
-/** The period the explorer shows: the player's pick, else the one in force on the clock. */
-export const shownPeriod = computed(() => tripPeriod.value ?? periodAt(clock.local.value * 60)); // T-309: local in view
+/** The period the explorer shows: the player's pick, else the one with most of the trips shown
+ * (T-586), else the one in force on the clock. */
+export const shownPeriod = computed(() => tripPeriod.value ?? tripView.value?.busiest ?? periodAt(clock.local.value * 60)); // T-309: local in view
 
 /** Hit distance for the hover, px. */
 const HIT_PX = 6;
@@ -160,11 +162,12 @@ export function startTripView(map: MlMap, overlay: Overlay): TripTool {
   let raf = 0;
   const redraw = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; draw(); }); };
 
-  // ---- asking: when the trip or the demand result changes ----
+  // ---- asking: when the trip, the purpose filter or the demand result (and its day) changes ----
   let asked = "";
   effect(() => {
     const sel = selection.value;
     const dv = demandView.value;
+    const filter = purposeFilter.value;
     if (sel?.kind !== "trip") {
       if (marks) { marks = null; drawn = null; redraw(); }
       tripView.value = null;
@@ -180,18 +183,21 @@ export function startTripView(map: MlMap, overlay: Overlay): TripTool {
       return;
     }
     const key = tripKey(sel.from, sel.to);
-    const ask = `${key}|${dv?.version}|${dv?.round}`;
+    const ask = `${key}|${dv?.version}|${dv?.round}|${shownDay.value}|${filter}`;
     if (ask === asked) return;
     asked = ask;
     // keep the last answer for the same points drawn while the next is on its way
     const last = tripView.peek();
-    tripView.value = { key, trip: last?.key === key ? last.trip : null, asking: true };
-    if (last?.key !== key) { drawn = null; redraw(); }
-    void askTrip(sel.from, sel.to).then((trip) => {
+    const same = last?.key === key;
+    if (!same) tripPeriod.value = null;
+    tripView.value = same ? { ...last!, asking: true } : { key, trip: null, asking: true, mix: null, purpose: "work", busiest: null };
+    if (!same) { drawn = null; redraw(); }
+    const opened = tripOpenedFrom.peek();
+    void explore(sel.from, sel.to, filter, opened?.trip === sel ? opened.places : null).then((shown) => {
       if (asked !== ask) return;
       // null: the workers moved on; the next result asks again
-      const now = tripView.peek();
-      tripView.value = { key, trip: trip ?? (now?.key === key ? now.trip : null), asking: !trip };
+      if (shown) tripView.value = { key, ...shown, asking: false };
+      else tripView.value = { ...tripView.peek()!, asking: true };
     });
   });
   // ---- drawing: the shown period's routes ----
@@ -260,6 +266,37 @@ export function startTripView(map: MlMap, overlay: Overlay): TripTool {
       return pick(overlay, x, y, false)?.kind === "station";
     },
   };
+}
+
+/**
+ * Everything the explorer shows for a trip from `from` to `to` under purpose filter `filter`
+ * (T-586): the trips a day between the two places by mode as the view counts them (`places`, the
+ * bubble pair it was opened from; else the two cells, as homes to destinations), the purpose with
+ * most of them (or the filter's), and its trip read by the model in every period. Null while the
+ * workers move on.
+ */
+async function explore(from: [number, number], to: [number, number], filter: PurposeFilter, places: TripPlaces | null): Promise<Omit<TripShown, "key" | "asking"> | null> {
+  // the commute first: cheap, and it names the two cells
+  const commute = await askTrip(from, to);
+  if (!commute) return null;
+  if (commute.outside) return { trip: commute, mix: null, purpose: "work", busiest: null };
+  const p0 = commute.periods.find((p) => p);
+  const at = places ?? (p0 ? { end: "home" as const, near: Uint32Array.of(p0.cells[0]), far: Uint32Array.of(p0.cells[1]) } : null);
+  const f = at ? await flows(at.end, at.near) : null;
+  if (at && !f) return null;
+  const mix = f && at ? tripMix(f, at.far, filter) : null;
+  const top = mix?.purposes[0];
+  const purpose: PurposeKey = filter !== "all" ? filter : top && top.rail + top.walk + top.drive > 0 ? top.key : "work";
+  let trip = commute;
+  if (purpose !== "work") {
+    // school counts university too: the kind with more trips between the two areas
+    const asked = await Promise.all(kindsOf(purpose).map((k) => askTrip(from, to, k)));
+    if (asked.some((t) => !t)) return null;
+    const trips = (t: Trip) => Math.max(0, ...t.periods.map((p) => p?.pairTrips ?? 0));
+    const best = (asked as Trip[]).filter((t) => t.periods.some((p) => p)).sort((a, b) => trips(b) - trips(a))[0];
+    if (best) trip = best;
+  }
+  return { trip, mix, purpose: trip.purpose < 0 ? "work" : purpose, busiest: f ? busiestPeriod(f, trip.purpose < 0 ? "work" : purpose) : null };
 }
 
 function segDist(x: number, y: number, a: [number, number], b: [number, number]): number {

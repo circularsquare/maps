@@ -246,11 +246,11 @@ demand counts a link once both are constructed.
 
 ## The trip explorer
 
-[T-195, T-208, T-221; `map/tripView.ts`, `ui/inspector/TripInspector.tsx`, `game/trip.ts`; the
-model's side in [demand-views.md](demand-views.md) "The trip explorer"]
+[T-195, T-208, T-221, T-586, T-628; `map/tripView.ts`, `ui/inspector/TripInspector.tsx`,
+`game/trip.ts`; the model's side in [demand-views.md](demand-views.md) "The trip explorer"]
 
-How the demand model's people would make one trip, read as a commute from a home at the start to
-work at the end.
+The trips between two places as the view it was opened from counts them, homes at the start to
+destinations at the end, and how the demand model's people would make one of them.
 
 - **Starting it**: the T key from any tab [T-444], or Explore a trip at the bottom of Settings, turns on the trip
   tool (a crosshair; a second press or Esc leaves it). Clicks alternate between start and end, a
@@ -262,11 +262,29 @@ work at the end.
 - **From a selection** [T-208]: with a bubble selection, a click on a far-end bubble opens the
   trip for that pair (hovers end "Click to explore this trip"), homes to destinations. The
   selection's end is its busiest cell under the purpose filter, the far end the clicked bubble's
-  cell with most of the selection's trips. The inspector then has a Back button to that selection.
+  cell with most of the selection's trips: the representative trip's two ends. The inspector then
+  has a Back button to that selection.
 - The trip is a selection: it stays after the tool is left, until Esc or an empty click, and while
-  selected panning does not change the focused zone. It is asked again at each published round.
-- **The inspector**: the period, the distance, a bar and rows with the chance of train and driving;
-  walking the whole way is a segment of the bar, its share in the segment's hover [T-558]. Under "By train" the main route as rows (walk to the first
+  selected panning does not change the focused zone. It is asked again at each published round,
+  and when the purpose filter or the day changes.
+- **The headline follows the view** [T-586]: under the purpose filter and the day shown, the trips
+  a day between the two places (a line "124 trips a day on average, 2.5 km apart"; its hover the
+  exact count and, under All purposes, each purpose's), then a bar and rows of their shares by
+  train, walking and driving. Opened from a far-end bubble the places are the selection and every
+  cell of that bubble, the same sums as the bubble's hover (`tripMix` over the selection's far end,
+  `flows`), so the two agree; from the trip tool, the start's cell as homes and the end's cell. The
+  walk row shows when walking the whole way takes under 30 minutes [T-628], else walking is only
+  the bar's segment. When the view counts no trips between them, the headline is the representative
+  trip's chances in the period shown.
+- **The representative trip**: everything below the headline is one trip read by the model: under
+  All purposes the purpose with most of the trips between the two places (work when none), else
+  the filter's (school and university: the kind with more trips between the two areas); a commute
+  through `DemandApi.trip`, an everyday purpose through `EverydayApi.trip`. Its period is the one
+  with most of that purpose's trips, until a "Train by period" row is clicked; a new pair of places
+  starts from the busiest again. "By train" names the purpose and period at its right, its hover
+  saying why those. The sub line names the filter's destination ("to shops and errands by Union
+  Sq").
+- **The inspector**: under "By train" the main route as rows (walk to the first
   station, each line ridden with its chip and the station it goes to, each change and walk, the
   walk from the last station; each row's minutes its wait and ride; a ride access [T-374] reads
   "Drive to" with its drive minutes, its hover adding the ride's fixed cost and the station's
@@ -278,8 +296,8 @@ work at the end.
   routes people use when it differs from that total, and one line naming the weights; the terms are
   the worker's perceived minutes per leg, `routeTerms` in `game/trip.ts`) [T-549], then the share of the trip's
   train riders taking it, with up to four "Other routes" and their shares. Under "By car" the drive,
-  its parking and perceived minutes. "Train by period": a row a period with the train's chance, a
-  click showing that period. Without a train it says why (no station in reach, walks too long, no
+  its parking and perceived minutes. "Train by period": a row a period with the representative
+  trip's chance of the train, a click showing that period. Without a train it says why (no station in reach, walks too long, no
   service in the period). Every row and bar segment has a hover with its figure and what it is made
   of.
 - **On the map**: a veil of the land colour at 60%; the start an open ring and the end a filled

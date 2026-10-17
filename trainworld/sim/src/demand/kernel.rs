@@ -98,11 +98,12 @@ pub struct Params {
     pub park_paid_d0: f32,
     pub park_paid_cap_min: f32,
     pub park_free_d: f32,
-    /// What owning a car costs a day, dollars, and the car trips a driver makes a day (T-620):
-    /// every car trip adds `car_own_usd_day` / `car_trips_day` dollars at `FARE_MIN_PER_USD`
-    /// perceived minutes a dollar (`car_own_min`), in `park_parts`' fixed part. 0 until fitted.
-    pub car_own_usd_day: f32,
-    pub car_trips_day: f32,
+    /// Owning a car, amortized over its trips (T-620, T-621): every car trip pays
+    /// `car_own_usd_trip` dollars (`car_own_min`, in `park_parts`' fixed part) plus
+    /// `car_own_usd_km` a km of its own road (`car_drive`), at `FARE_MIN_PER_USD` perceived
+    /// minutes a dollar; a drive to a station pays both on its own road.
+    pub car_own_usd_trip: f32,
+    pub car_own_usd_km: f32,
     /// A congestion charge per zone (`cordon_by_zone`), perceived minutes a one-way trip, paid
     /// by every driver arriving there. None: no charge anywhere.
     pub cordon: Option<std::sync::Arc<Vec<f32>>>,
@@ -260,8 +261,8 @@ impl Default for Params {
             park_paid_d0: 3000.0,
             park_paid_cap_min: 50.0,
             park_free_d: 8000.0,
-            car_own_usd_day: 0.0,
-            car_trips_day: 3.0,
+            car_own_usd_trip: 0.0,
+            car_own_usd_km: 0.0,
             cordon: None,
             period: 0,
             period_share: 0.45,
@@ -360,8 +361,8 @@ impl Params {
             "park_paid_d0" => self.park_paid_d0 = v,
             "park_paid_cap_min" => self.park_paid_cap_min = v,
             "park_free_d" => self.park_free_d = v,
-            "car_own_usd_day" => self.car_own_usd_day = v,
-            "car_trips_day" => self.car_trips_day = v,
+            "car_own_usd_trip" => self.car_own_usd_trip = v,
+            "car_own_usd_km" => self.car_own_usd_km = v,
             // scales every zone's cordon charge (0 turns them off)
             "cordon" => {
                 if let Some(c) = &self.cordon {
@@ -439,10 +440,21 @@ impl Params {
             _ => self.road_detour,
         }
     }
-    /// One car trip's share of the day's ownership cost, perceived minutes (T-620).
+    /// The ownership cost's part every car trip pays whatever its length, perceived minutes.
     #[inline]
     pub fn car_own_min(&self) -> f32 {
-        self.car_own_usd_day / self.car_trips_day.max(1.0) * super::api::FARE_MIN_PER_USD
+        self.car_own_usd_trip * super::api::FARE_MIN_PER_USD
+    }
+    /// The ownership cost's part a km of road, perceived minutes.
+    #[inline]
+    pub fn car_own_km_min(&self) -> f32 {
+        self.car_own_usd_km * super::api::FARE_MIN_PER_USD
+    }
+    /// A drive of `drive_min` real minutes over `road_km` of road, perceived: its time and the
+    /// ownership cost's part by distance (`mode_choice`'s lanes use the same expression).
+    #[inline]
+    pub fn car_drive(&self, drive_min: f32, road_km: f32) -> f32 {
+        drive_min * self.w_drive + road_km * self.car_own_km_min()
     }
     /// Parking at a destination in zone `j`, perceived minutes: what every driver pays (parking,
     /// any cordon charge and the ownership cost), what a paid space costs on top, and the share
@@ -605,7 +617,7 @@ impl NoRail {
         let d_km = gr.wdtab[k];
         let f = p.drive_factor(i, j);
         let (fixed, paid, free) = self.park[j];
-        (p.drive_min_f(d_km * 1000.0, f, self.place[i], self.place[j]) * p.w_drive + fixed, paid, free, d_km * f)
+        (p.car_drive(p.drive_min_f(d_km * 1000.0, f, self.place[i], self.place[j]), d_km * f) + fixed, paid, free, d_km * f)
     }
 }
 
@@ -1521,11 +1533,15 @@ pub fn access_options(zones: &Zones, net: &Network, p: &Params, places: &[(usize
     }
     let dens = zones.density();
     let place = |z: Option<usize>| p.place_min_per_km(z.map_or(0.0, |z| dens[z]));
-    // parking as at a destination, its mean over drivers; the ownership cost is the whole-trip
-    // car's alone (T-620)
+    // parking as at a destination, its mean over drivers (the ownership cost is the drive's, on
+    // its own road, whether the rider parks or is dropped off; none at the far end: T-621)
     let station_end = |z: Option<usize>| match end {
         End::Far => p.d_drop,
         End::Home => z.map_or(p.park_min, |z| p.park_mean(zones, z) - p.car_own_min()).min(p.d_drop),
+    };
+    let own = |road_km: f32| match end {
+        End::Far => 0.0,
+        End::Home => p.car_own_min() + road_km * p.car_own_km_min(),
     };
     let (sq_off, sq) = zones.by_square();
     let st_zone: Vec<Option<usize>> = (0..net.n_stations())
@@ -1565,7 +1581,7 @@ pub fn access_options(zones: &Zones, net: &Network, p: &Params, places: &[(usize
                 let j = st_zone[s];
                 let f = j.map_or(p.road_detour, |j| p.drive_factor(i, j));
                 let t = p.drive_min_f(d, f, a, place(j));
-                let cost = p.p_ride + p.w_drive * t + station_end(j);
+                let cost = p.p_ride + p.w_drive * t + own(d * 0.001 * f) + station_end(j);
                 for &l in &st_lines[s] {
                     let b = &mut best[l as usize];
                     if b.1 == NONE {
@@ -3074,7 +3090,8 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
                 let main = rd - F8::splat(2.0) * e;
                 let k = (F8::splat(0.5) * main).min(F8::splat(p.road_end_km));
                 let drive = e * (lu08 + l08) + k * (lu18 + l18) + (main - F8::splat(2.0) * k) * F8::splat(60.0) / F8::splat(p.road_open_kmh);
-                let road = drive * F8::splat(p.w_drive) + park8;
+                // `Params::car_drive`
+                let road = drive * F8::splat(p.w_drive) + rd * F8::splat(p.car_own_km_min()) + park8;
                 let rail = mo8 + m8 + F8::splat(p.fare_min) - ssum.ln() / F8::splat(th);
                 // `Params::mode_beta`
                 let bt = F8::splat(p.beta) * (F8::splat(p.damp_min) / road).min(F8::splat(1.0)).sqrt();
@@ -3856,28 +3873,28 @@ mod tests {
         }
     }
 
-    /// T-620: $10 a day over 3 car trips adds 10/3 dollars, FARE_MIN_PER_USD minutes each, to a
-    /// driver's cost; 0 changes nothing to the bit, and a driver's rail share falls.
+    /// T-621: ownership is dollars a trip in the destination's fixed part plus dollars a km of
+    /// road in the drive, FARE_MIN_PER_USD minutes a dollar; at 0 both change nothing to the bit.
     #[test]
-    fn car_ownership_adds_dollars_per_trip() {
+    fn car_ownership_adds_dollars_per_trip_and_km() {
         let z = Zones {
             zone_m: 2000.0, n: 1, cell_zone: vec![], gx: vec![0], gy: vec![0], region: vec![0], w: 1, h: 1, x0: 0.0, y0: 0.0,
             pop: vec![0.0], jobs: vec![0.0], ncell: vec![38],
         };
         let mut p = Params::default();
-        assert_eq!(p.car_own_min(), 0.0);
+        p.set_extra("car_own_usd_trip", 0.0).unwrap();
+        p.set_extra("car_own_usd_km", 0.0).unwrap();
         let base = p.park_parts(&z, 0);
-        p.car_own_usd_day = 10.0;
-        p.car_trips_day = 3.0;
-        let want = 10.0 / 3.0 * crate::demand::api::FARE_MIN_PER_USD;
-        assert!((p.car_own_min() - want).abs() < 1e-5 && (want - 10.0).abs() < 1e-5);
+        assert_eq!(p.car_drive(17.3, 12.1).to_bits(), (17.3f32 * p.w_drive).to_bits());
+        p.set_extra("car_own_usd_trip", 1.5).unwrap();
+        p.set_extra("car_own_usd_km", 0.1).unwrap();
+        let usd = crate::demand::api::FARE_MIN_PER_USD;
+        assert!((p.car_own_min() - 1.5 * usd).abs() < 1e-5);
         let with = p.park_parts(&z, 0);
-        assert!((with.0 - base.0 - want).abs() < 1e-5 && with.1 == base.1 && with.2 == base.2);
-        p.set_extra("car_own_usd_day", 0.0).unwrap();
-        assert_eq!(p.park_parts(&z, 0), base);
-        p.set_extra("car_own_usd_day", 10.0).unwrap();
-        p.set_extra("car_trips_day", 5.0).unwrap();
-        assert!((p.car_own_min() - 6.0).abs() < 1e-5);
+        assert!((with.0 - base.0 - 1.5 * usd).abs() < 1e-5 && with.1 == base.1 && with.2 == base.2);
+        // a 15 km road: $1.50 + $1.50 = 9 perceived minutes on top of the drive's time
+        assert!((p.car_drive(20.0, 15.0) - 20.0 * p.w_drive - 1.5 * usd).abs() < 1e-4);
+        assert!((p.car_own_min() + 15.0 * p.car_own_km_min() - 9.0).abs() < 1e-4);
     }
 
     #[test]

@@ -92,6 +92,14 @@ save in Chrome a trip is answered in 3-14 ms. Park Slope to Midtown in the morni
 F from 7 Av to 47-50 Sts-Rockefeller Ctr with 17% of the trip's train riders, the rest spread over
 neighbouring stations at both ends and the 42 St stations. Jersey City (Journal Square) to Wall
 St: train 62% (PATH to World Trade Center, then the 1 or a walk). Mineola to Hicksville: drive
-63%, train 37%. Everyday purposes choose the same way on the same rail and road costs but with
-the walk and the drive's distance from the sampled cells, and their own subzone averages;
-the explorer shows the commute.
+63%, train 37%.
+
+An everyday purpose's trip (T-586, T-201): `EverydayApi.trip(kind, q, from, to)` answers in the
+same layout as the everyday pass chooses, on its own period graph and parameters (its rail and
+walking constants): the subzone pair's mean distance over the purpose's samples (the two cells'
+distance when no sample joins the two subzones) prices the drive, the walk and whether the home end
+may ride, and walking is the two cells' own no-rail share less the share rail takes (the views'
+rule, T-558). The pair's rail chance equals the free-flow solve's to the bit for one sample of
+every pair (`everyday_choice_reproduces_the_pass`). The answer adds the whole walk's real minutes
+and the subzone pair's trips a day. The explorer's headline is not this answer but the selection's
+far end summed over the two places (ui-inspectors.md); this answer is its representative trip.

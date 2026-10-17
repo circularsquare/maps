@@ -173,6 +173,9 @@ Run from the maps root (`node trainworld/checks/<file>`).
   6135 by default), `t486-click-on-top.mjs` (a click on a blueprint point's square over a bubble
   selects the track, beside it the bubble), `t533-draw-order.mjs` (the real save: the shorter line
   on top where lines share ground, a line with no trains under; port 6130 by default),
+  `t586-trip-agrees.mjs` (New York's real save and a Mumbai test line: a far-end bubble's hover,
+  the trip explorer opened from it and the worker's far-end sums agree within 1 point under every
+  purpose filter and day; port 6196 by default),
   `t496-edit-latency.mjs` (the real save: click to drawn
   for placing stations; `MODE=visual` hashes the renderer's buffers after a series of edits against
   an older network.ts),
