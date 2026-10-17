@@ -220,6 +220,9 @@ pub enum Issue {
     PlatformLength { node: u32 },
     /// The platform reaches another node or another platform.
     PlatformTooLong { node: u32 },
+    /// The platform reaches the end of its piece of track at a plain joint that could not be
+    /// merged away (T-622: constructed track, a different track count or built state beside).
+    PlatformJoint { node: u32 },
     PlatformNotLevel { node: u32 },
     PlatformCrossing { node: u32 },
     StationGroundOverWater { node: u32 },
@@ -1374,7 +1377,8 @@ impl Network {
             let other = self.end_node(e, 1 - which);
             let other_reach = if self.node_platform[other as usize] > 0 { self.platform_reach(other) } else { 0.0 };
             if reach + other_reach > len - 1.0 {
-                out.push(Issue::PlatformTooLong { node: n });
+                let joint = self.node_platform[other as usize] == 0 && self.node_ports[other as usize].n == 2;
+                out.push(if joint { Issue::PlatformJoint { node: n } } else { Issue::PlatformTooLong { node: n } });
             }
             let (a, b) = if which == 0 { (0.0, reach) } else { (len - reach, len) };
             if geom::on_ramp(self.edge_vert(e), a, b) {
@@ -1770,12 +1774,57 @@ impl Network {
             } else {
                 f.piece_at_vertex[j] as usize
             };
-            p1 = v[..=i].to_vec();
+            // A PI at the split point (a joint kept for its level, T-622) is the node now.
+            let at_node = |p: &Pi| (p.x - node.x).hypot(p.y - node.y) < 0.01;
+            let drop_prev = i > 0 && at_node(&v[i]);
+            let drop_next = i + 1 < v.len() - 1 && at_node(&v[i + 1]);
+            p1 = v[..i + !drop_prev as usize].to_vec();
             p1.push(marker);
             p2 = vec![marker];
-            p2.extend_from_slice(&v[i + 1..]);
-            freeze(&mut p1, i, i);
-            freeze(&mut p2, 1, i + 1);
+            p2.extend_from_slice(&v[i + 1 + drop_next as usize..]);
+            if !drop_prev {
+                freeze(&mut p1, i, i);
+            }
+            if !drop_next {
+                freeze(&mut p2, 1, i + 1);
+            }
+            // T-622: a ramp is centred between the two vertices of the leg, so cutting the leg
+            // would move it. Where the ramp lies on one straight, a vertex at each end of it (on
+            // the track, no turn) holds it where it was, on whichever side of the cut it is.
+            if !drop_prev && !drop_next && v[i].level != v[i + 1].level {
+                let (l0, l1) = (v[i].level, v[i + 1].level);
+                let half = RAMP_PER_LEVEL * (l1 as f64 - l0 as f64).abs() / 2.0 + 0.01;
+                let c = (f.vert_s[i] + f.vert_s[i + 1]) / 2.0;
+                let (r0, r1) = (c - half, c + half);
+                let (j0, j1) = (geom::piece_at(&f.pieces, r0), geom::piece_at(&f.pieces, r1));
+                if r0 > 0.5 && r1 < f.len - 0.5 && j0 == j1 && f.pieces[j0].k == 0.0 {
+                    let at = |r: f64, level: i8| {
+                        let (x, y, _) = geom::pos_at(&f.pieces, r);
+                        Pi::new(quant(x), quant(y), 0.0, level)
+                    };
+                    let ramp = [at(r0, l0), at(r1, l1)];
+                    if r1 < s {
+                        p1.splice(p1.len() - 1..p1.len() - 1, ramp);
+                    } else if r0 > s {
+                        p2.splice(1..1, ramp);
+                    }
+                }
+            }
+        }
+        // T-622: two curves back to back (a joined pair of tangent arcs) have no straight between
+        // them to spare, and the new node and PIs sit on the millimetre grid, which turns the
+        // legs by a hair (a 1,796 m curve's tangent grew 24.413 to 24.426 m). A curve with a set
+        // radius that no longer fits gives up 0.05% of it until it does.
+        for part in [&mut p1, &mut p2] {
+            for _ in 0..10 {
+                let bad: Vec<usize> = self.fit(part).issues.iter().filter_map(|g| if let GeomIssue::ArcDoesNotFit(j) = g { Some(*j) } else { None }).collect();
+                if bad.is_empty() {
+                    break;
+                }
+                for j in bad {
+                    part[j].radius = (part[j].radius * 0.9995 / QUANT).floor() * QUANT;
+                }
+            }
         }
         let i = e as usize;
         let (tracks, built, off) = (self.edge_tracks[i], self.edge_built[i], self.edge_off[i]);

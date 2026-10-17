@@ -25,6 +25,7 @@ the permission check refuses a step, make it safer, review, retry; don't wait fo
 orchestrator's commit recipe is in CLAUDE.md "Before a commit".
 
 ## Demand and data
+- T-632 [P1] Walking feels too strong to play against (Anita 2026-10-17: about a quarter of demand walks and rail cannot win it back on short trips). The model walks at or under the surveys (New York's everyday legs 22-24% against NHTS 26-35%), so this is a design call for Anita: options in the orchestrator's message of 2026-10-17; bears on T-621 stage 2. Open.
 - T-551 [P2] Demand review for Anita (her playtest notes, 2026-10-16): measured, nothing changed (notes/T-551.md). Waits for Anita, who decides at the deep calibration.
 - T-514 [P3] "Other" per cell (T-513): the sim keeps trips by other only as a total, so bubbles and hovers cannot show them by cell; needs other by home and work cell. Open; notes/T-514.md.
 - T-621 [P1] The deep calibration (Anita 2026-10-17: start now): T-509's fit again with car ownership, the walk weight against 1, walking fitted per survey country. Stage 1 done 2026-10-17 (ownership a parameter at 0, a fresh seven-city baseline, fit.py updated); stage 2 waits on Anita's decisions. notes/T-621.md.
@@ -70,11 +71,19 @@ orchestrator's commit recipe is in CLAUDE.md "Before a commit".
 - T-187 [P3] Trip chains: work to a nearby leisure place and then home. Whether and how to model it. Idea, not a priority (Anita 2026-10-12).
 
 ## Track and trains
+- T-624 [P2] Constructed track is never joined for a platform (`free_joint` refuses a built edge), so a station within half a platform of a joint on built track is refused ("the end of a piece of track"); likely Anita's Hakusan case. Merge built pieces of the same kind (running trains and lines carried over), or say to place stations before Construct. Open.
+- T-623 [P3] A station cut inside an arc, or a ramp overlapping a curve, still shifts the ramp (T-622 holds ramps on straights only). Open.
+- T-625 [P2] A line's train count set automatically from its headway (Anita's TODO 2026-10-17), as an option beside today's whole number per demand level. Open.
+- T-631 [P2] Trains cost money, bought automatically as a line's fleet grows (Anita's TODO 2026-10-17): a price per train or car, sold back or kept when the fleet shrinks. Open.
+- T-629 [P2] An icon on the map wherever two tracks cross on the same level (a flat crossing) (Anita's TODO 2026-10-17); `crossings` in sim/src/track/net.rs already lists them. Open.
 - T-248 [P3] The track inspector's Construct and level buttons act on one piece of a drawn route; consider "this piece / the whole run between junctions and stations" if piece by piece is tedious. Open.
 - T-339 [P3] An express slowed by a local ahead of it on plain double track (Anita: "ideally... but thats whatever"); trains pass through each other at no cost. Low priority. Open.
 - T-340 [P3] Quad track's rest (from T-257): a station on a quad stroke's own end node is refused when that end is new track; the express pair is always left of the drawn direction. Open.
 
 ## Interface
+- T-626 [P2] Type a fare amount, not only step it (Anita's TODO 2026-10-17). Open.
+- T-627 [P2] "Platform full at Nerul Village, high demand, 1 train waits at the ends" made no sense to Anita (seen at headways under 4 minutes): say that the platform takes at most N trains an hour (boarding at high demand holds each train longer), so the rest wait at the line's ends, and what helps; `LineInspector.tsx` FULL/TAKES, `capacityMarkers.ts`. Open.
+- T-628 [P2] The trip explorer compares walking too, beside train and car, for trips whose walk is under about 30 minutes (Anita's TODO 2026-10-17); with T-586. Open.
 - T-586 [P2] The bubble hover and the trip explorer disagree (Anita 2026-10-17): Union Sq's hover reads mostly walking, the explorer says 61% train. The explorer takes the view's purpose and period (absorbs T-201). Open; notes/T-586.md.
 - T-602 [P2] Walk split for zones not opened (rest of T-576): `zone_summary` (sim) gives a walk count per zone, `pipeline/zones.py` `local_trips()` stores it as `localWalk` in registry.json beside `localTrips`, `intercityView.ts` draws it green. Open.
 - T-561 [P3] Page freezes at 1,500x or faster in a fresh game with a line in each of Toronto and Boston (T-550's agent); not reproduced on 2026-10-16's tree. Open until seen again with exact steps; notes/T-561.md.
@@ -128,6 +137,7 @@ Tier 0 and country sources: docs/demand-worldwide.md, docs/data-register.md. The
 - T-321 [P3] Local time's rest (T-309, docs/world.md "Local time"): the money ledger's days and the bubbles' catch-up follow the game clock, and market trips across offsets need a period rule. Open; notes/T-321.md.
 
 ## Performance (open since 2026-10-15; ranked in notes/perf-survey.md)
+- T-630 [P2] The game lags with station ridership shown, zoomed far out (Anita's TODO 2026-10-17): measure where the frame time goes, then cut what can be cut (fewer markers far out, say). Open.
 - T-499 [P3] Edits after T-496: click to drawn is 96 ms on the real save; left ~20 ms worker-to-main transfer (send only what changed, also T-070's idea), `buildState`, shadow name layer, GPU uploads. Open; notes/T-496.md "Left".
 - T-281 [P3] Opening a big save searches every station's walk round water per worker: 1.0 s for the real New York network's 867 stations; a tighter search or a 100 m raster would halve it. Open; notes/T-275.md.
 - T-076 [P3] Playing costs 13-15% of a core, nearly all Chrome presenting 60 frames a second; a lower frame rate when the fastest train moves under half a pixel a frame would halve it. Smoothness judgement for Anita. Open; notes/T-076.md.

@@ -65,7 +65,12 @@ Full design, numbers and sources: `notes/T-008.md`.
   them with no speed limit or delay (a track section runs on through a plain node, 6.2). A station placed
   within half a platform of joints first joins the pieces there into one edge, joint after joint
   until the platform has room (a long platform over several short segments; T-418), the shape
-  unchanged.
+  unchanged. A joint between two different levels stays as a corner on the joined edge, since a
+  ramp is centred between corners; a cut through a leg whose ramp lies on a straight puts a corner
+  at each end of the ramp on its side (T-622), so a station there does not move the ramp. Joints that cannot be joined
+  (constructed track, a different track count, built beside blueprint) stay, and a platform that
+  reaches one is refused as "the end of a piece of track". A platform may not reach a crossing
+  with track on the same level (a flat crossing, 6.2), within 1 m of its ends.
 - **Reshaping blueprint track** (T-064, T-092, T-071): a selected stretch of blueprint track shows its PIs
   as squares on the map; dragging one previews the new shape with each curve's radius and speed
   (or why it cannot be built), letting go applies it as one undoable edit, Escape puts it back. The
