@@ -3,6 +3,7 @@ import type { PurposeTrips } from "../../game/demand";
 import { count } from "../../game/format";
 import { shownDayPhrase } from "../../game/ui";
 import { purposeColour, shownName } from "../../game/purposes";
+import { Spinner } from "../Spinner";
 
 const LABELS = ["6–10", "10–16", "16–20", "20–24", "0–6"];
 const HOURS = [4, 6, 4, 4, 6];
@@ -92,7 +93,7 @@ export function PurposeBreakdown({ purposes }: { purposes?: PurposeTrips[] }) {
       <button type="button" aria-pressed={!railOnly} class={!railOnly ? "on" : ""} onClick={() => setRailOnly(false)}>All modes</button>
       <button type="button" aria-pressed={railOnly} class={railOnly ? "on" : ""} onClick={() => setRailOnly(true)}>Train only</button>
     </div>
-    {!rows ? <p class="muted">Working it out.</p> : <>
+    {!rows ? <p class="muted"><Spinner tip="Working out the purposes" /></p> : <>
       <p class="muted small" data-tip="Bars above each line are departures an hour toward the destination, bars below it departures home">{count(all)} {railOnly ? "train" : "local"} trip legs {shownDayPhrase.value}</p>
       <PurposePie rows={rows} total={all} unit={unit} />
       {rows.map(p => <div class="purpose-item" key={p.name}>

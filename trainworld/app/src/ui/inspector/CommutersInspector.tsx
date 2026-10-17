@@ -6,6 +6,7 @@ import { shownDayPhrase } from "../../game/ui";
 import { BUBBLE_ALPHA, modeMix } from "../../game/palette";
 import { purposeWords } from "../../game/purposes";
 import { commuterPick } from "../../map/commuterView";
+import { Spinner } from "../Spinner";
 import { Row } from "../widgets";
 import { ClosestStations } from "./ClosestStations";
 import { SelectionLongerTrips } from "./LongerTrips";
@@ -71,7 +72,7 @@ export function CommutersInspector() {
           ))}
         </ul>
       ) : (
-        <p class="muted">Working it out.</p>
+        <p class="muted"><Spinner tip="Working out where they go" /></p>
       )}
       <SelectionLongerTrips />
     </>

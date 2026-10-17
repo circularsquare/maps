@@ -1,4 +1,4 @@
-import { BOX_WIDTH_ZOOM, boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, bridgeShape, connectorHalfPx, dotRing, spanningPairs, insideStation, PLATFORM_POINTS, platformPoints, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, shapePoints, STATION_BOX_ZOOM, STATIONS_ZOOM, TRAINS_ZOOM, stationHaloRadius, stationRadii, stationRing, stationShape, type PlatformShape, type Project, type StationShape, type StationStyle } from "./stationGeometry";
+import { BOX_WIDTH_ZOOM, boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, bridgeShape, connectorHalfPx, CROWD_BULGE, dotRing, spanningPairs, insideStation, PLATFORM_POINTS, platformPoints, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, shapePoints, STATION_BOX_ZOOM, STATIONS_ZOOM, TRAINS_ZOOM, stationHaloRadius, stationRadii, stationRing, stationShape, type PlatformShape, type Project, type StationShape, type StationStyle } from "./stationGeometry";
 // WebGL2 network renderer: track and line strokes (one instanced quad per polyline segment, a
 // casing under the colour, the theme's (T-039); blueprint solid, lighter and without casing, T-311), stations (platforms along the track, or
 // dots zoomed out, T-189), the drawing tool's preview,
@@ -303,8 +303,10 @@ void main() {
     // never shorter than it is wide: the end stretches carry on
     float ext = hl - 0.5 * total;
     v_size = vec3(hl, hw, 0.0);
-    lo = mn.y - hw - ext - 1.0;
-    hi = mx.y + hw + ext + 1.0;
+    // a full side's red bar reaches past the box (T-652), so the crowd's quad is wider
+    float bulge = u_layer == 2 ? ${CROWD_BULGE.toFixed(2)} * hw : 0.0;
+    lo = mn.y - hw - ext - bulge - 1.0;
+    hi = mx.y + hw + ext + bulge + 1.0;
     xl = mn.x - hw - ext - 1.0;
     xh = mx.x + hw + ext + 1.0;
   }
@@ -443,6 +445,11 @@ void main() {
     float reach = v_size.x - u_ring - keep;
     float ap = inner * clamp(p.y + 0.5, 0.0, 1.0) * clamp(v_crowd.x * reach - abs(p.x) + 0.5, 0.0, 1.0);
     float am = inner * clamp(0.5 - p.y, 0.0, 1.0) * clamp(v_crowd.y * reach - abs(p.x) + 0.5, 0.0, 1.0);
+    // a full side's bar also stands out beyond the rim, on its own side (T-652)
+    float out_ = ${CROWD_BULGE.toFixed(2)} * v_size.y;
+    float wing = clamp(abs(p.y) - v_size.y + 0.5, 0.0, 1.0) * clamp(v_size.y + out_ - abs(p.y) + 0.5, 0.0, 1.0);
+    if (v_crowd.z > 0.5) ap = max(ap, wing * clamp(p.y + 0.5, 0.0, 1.0) * clamp(v_crowd.x * reach - abs(p.x) + 0.5, 0.0, 1.0));
+    if (v_crowd.w > 0.5) am = max(am, wing * clamp(0.5 - p.y, 0.0, 1.0) * clamp(v_crowd.y * reach - abs(p.x) + 0.5, 0.0, 1.0));
     o = vec4((v_crowd.z > 0.5 ? u_bad : u_crowd_rgb) * ap + (v_crowd.w > 0.5 ? u_bad : u_crowd_rgb) * am, ap + am);  }
 }`;
 

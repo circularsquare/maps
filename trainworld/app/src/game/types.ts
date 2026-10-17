@@ -139,6 +139,8 @@ export interface LineStats {
   /** per demand level: round trip s, trains needed, capacity delay over the round trip s */
   roundTripByLevel: [number, number, number];
   trainsNeeded: [number, number, number];
+  /** headway in seconds per level when the trains follow it (T-625, 0: no service), else null */
+  autoS: [number, number, number] | null;
   delayS: [number, number, number];
   cars: number;
   /** what constructing the rest of its track and stations costs, US$ (0 when running) */

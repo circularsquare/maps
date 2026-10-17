@@ -109,6 +109,7 @@ function toWorld(s: ClockState, city: { population: number; jobs: number }): Wor
       roundTripS: l.roundTrip[0],
       roundTripByLevel: l.roundTrip,
       trainsNeeded: l.trains,
+      autoS: l.auto,
       delayS: l.delay,
       cars: l.cars,
       buildCost: l.buildCost * 1e6,

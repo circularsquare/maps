@@ -39,6 +39,12 @@ body {
   overflow: hidden;
 }
 *, *::before, *::after { transition: none !important; animation: none !important; }
+/* T-647, Anita: the one exception to no animation, a small calm spinner for demand still loading */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { display: inline-block; flex: none; box-sizing: border-box; width: 8px; height: 8px; border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--muted) 30%, transparent); border-top-color: var(--muted); vertical-align: 1px; animation: spin 1.2s linear infinite !important; }
+.spin.row-dot { margin-right: 6px; }
+.status-tag .spin { width: 10px; height: 10px; vertical-align: 0; }
 * { scrollbar-width: thin; scrollbar-color: var(--rule) transparent; }
 .muted { color: var(--muted); }
 .big { font-size: 18px; font-weight: 700; }
@@ -294,6 +300,10 @@ rect.now { fill-opacity: .45; }
               border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
               font-variant-numeric: tabular-nums; }
 .stepper.wide .v { min-width: 52px; }
+.stepper button.v, .stepper input.v { font: inherit; color: var(--text); background: var(--bg); border-left: 0; border-right: 0; border-radius: 0; padding: 0 4px; box-sizing: border-box; margin: 0; }
+.stepper button.v { cursor: text; }
+.stepper button.v:hover { background: var(--shade); }
+.stepper input.v { width: 52px; min-width: 0; text-align: center; border-top-color: var(--accent); border-bottom-color: var(--accent); outline: 0; }
 
 /* stops strip, drawn in the line's colour */
 .stops { list-style: none; margin: 0; padding: 0; }
@@ -548,9 +558,8 @@ rect.now { fill-opacity: .45; }
 /* T-097: the tag by the pointer over a bubble, and the box of a long press and drag */
 /* T-448: a plane badge on each airport bubble */
 .airport-marks { position: absolute; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; }
-.airport-mark { position: absolute; left: 0; top: 0; width: 20px; height: 20px; margin: -10px 0 0 -10px; display: grid; place-items: center;
-                background: #fff; border: 1px solid var(--net-ink); border-radius: 50%; color: var(--net-ink); }
-.airport-mark svg { width: 14px; height: 14px; fill: currentColor; stroke: none; }
+.airport-mark { position: absolute; left: 0; top: 0; width: 14px; height: 14px; margin: -7px 0 0 -7px; display: grid; place-items: center; }
+.airport-mark svg { width: 14px; height: 14px; fill: #000; stroke: rgba(255, 255, 255, 0.85); stroke-width: 0.8; paint-order: stroke; }
 .demand-tag { position: absolute; left: 0; top: 0; z-index: 4; pointer-events: none; white-space: nowrap !important; }
 /* T-305: the network tag wraps at 320 px (a complex's line list is long); a short tag is as wide as its text */
 .track-tag { width: max-content; max-width: 320px; white-space: normal !important; }

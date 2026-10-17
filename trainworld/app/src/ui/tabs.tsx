@@ -480,18 +480,27 @@ export function MoneyTab() {
       <ul class="rows">
         <li>
           <span class="grow">Each ride</span>
-          <Stepper value={"$" + f.base.toFixed(2)} wide label="fare a ride" onStep={(s) => setFares(f.base + s * 0.25, f.perKm)} />
+          <Stepper value={"$" + f.base.toFixed(2)} wide label="fare a ride" onStep={(s) => setFares(f.base + s * 0.25, f.perKm)}
+            type={{ text: f.base.toFixed(2), set: (v) => setFares(v, f.perKm), tip: "The fare for boarding. Click to type an amount." }} />
         </li>
         <li>
           <span class="grow">Each {distUnit()}</span>
-          <Stepper value={"$" + perDistance(f.perKm).toFixed(2)} wide label={`fare a ${distUnit()}`} onStep={(s) => setFares(f.base, perKmFrom(Math.max(0, Math.round((perDistance(f.perKm) + s * 0.01) * 100) / 100)))} />
+          <Stepper value={"$" + perDistance(f.perKm).toFixed(2)} wide label={`fare a ${distUnit()}`} onStep={(s) => setFares(f.base, perKmFrom(Math.max(0, Math.round((perDistance(f.perKm) + s * 0.01) * 100) / 100)))}
+            type={{ text: perDistance(f.perKm).toFixed(2), set: (v) => setFares(f.base, perKmFrom(Math.max(0, Math.round(v * 100) / 100))), tip: `The fare added for each ${distUnit()} ridden. Click to type an amount.` }} />
         </li>
         <Row label={`A 10 ${distUnit()} ride`}>{"$" + (f.base + 10 * perDistance(f.perKm)).toFixed(2)}</Row>
       </ul>
       <div class="h">Trains</div>
       <ul class="rows">
-        <Row label={<span data-tip={`A car costs ${money(m.carPrice * 1e6)} and $${perDistance(m.runCostCarKm).toFixed(2)} a ${distUnit()} to run. Cars are bought when a line needs more than the spare ones.`}>Cars owned</span>}>{m.fleet}</Row>
-        <Row label="Cars the lines need">{m.carsNeeded}</Row>
+        <Row label={<span data-tip={`A car costs ${money(m.carPrice * 1e6)} and $${perDistance(m.runCostCarKm).toFixed(2)} a ${distUnit()} to run. Cars are bought when a line needs more than the spare ones.`}>Cars owned</span>}>
+          <span data-tip={`${m.fleet.toLocaleString("en-US")} cars bought at ${money(m.carPrice * 1e6)} each, ${money(m.fleet * m.carPrice * 1e6)} in all`}>{m.fleet}</span>
+        </Row>
+        <Row label="Cars the lines need">
+          <span data-tip="Cars on the running lines at the demand level that needs most">{m.carsNeeded}</span>
+        </Row>
+        <Row label="Spare cars">
+          <span data-tip="Cars kept in the depot after a line shrank. A line that grows uses them before any are bought.">{Math.max(0, m.fleet - m.carsNeeded)}</span>
+        </Row>
       </ul>
       <ul class="rows">
         <Row label="Track and stations built">{money(w.money.builtValue)}</Row>

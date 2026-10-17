@@ -1,6 +1,7 @@
 // Small shared pieces: line chip, stepper, segmented buttons, checkbox, icons (inline SVG).
 
 import type { ComponentChildren } from "preact";
+import { useRef, useState } from "preact/hooks";
 import { inkOn } from "../game/palette";
 import { PLANE_PATH } from "../map/glyphs";
 import type { LineInput } from "../game/types";
@@ -75,20 +76,56 @@ export function Chip({ line, size = "", plain, pick, gone }: { line: LineInput; 
   );
 }
 
-/** `jump`: Shift-click steps by 5 and Ctrl-click by 20 (T-516), the buttons' hover says so. */
-export function Stepper(p: { value: ComponentChildren; onStep: (d: number) => void; wide?: boolean; label: string; jump?: boolean }) {
+/** `jump`: Shift-click steps by 5 and Ctrl-click by 20 (T-516), the buttons' hover says so.
+ * `type` (T-626): a click on the value opens a box for typing it; Enter or leaving the box applies
+ * `set` with the number typed (anything else is dropped), Escape cancels. `text` is what the box
+ * starts with, `tip` the value's hover. */
+export function Stepper(p: { value: ComponentChildren; onStep: (d: number) => void; wide?: boolean; label: string; jump?: boolean; type?: { text: string; set: (v: number) => void; tip?: string }; tipDown?: string; tipUp?: string }) {
   const by = (e: MouseEvent) => (p.jump ? (e.ctrlKey ? 20 : e.shiftKey ? 5 : 1) : 1);
-  const tip = p.jump ? "Shift-click for 5, Ctrl-click for 20" : undefined;
+  const jump = p.jump ? "Shift-click for 5, Ctrl-click for 20" : undefined;
+  const tip = (own?: string) => (own && jump ? own + "\n" + jump : own ?? jump);
   return (
     <span class={"stepper" + (p.wide ? " wide" : "")}>
-      <button class="btn" aria-label={"Less " + p.label} data-tip={tip} onClick={(e) => p.onStep(-by(e))}>
+      <button class="btn" aria-label={"Less " + p.label} data-tip={tip(p.tipDown)} onClick={(e) => p.onStep(-by(e))}>
         <Icon.minus />
       </button>
-      <span class="v">{p.value}</span>
-      <button class="btn" aria-label={"More " + p.label} data-tip={tip} onClick={(e) => p.onStep(by(e))}>
+      {p.type ? <TypedValue label={p.label} type={p.type}>{p.value}</TypedValue> : <span class="v">{p.value}</span>}
+      <button class="btn" aria-label={"More " + p.label} data-tip={tip(p.tipUp)} onClick={(e) => p.onStep(by(e))}>
         <Icon.plus />
       </button>
     </span>
+  );
+}
+
+/** A stepper's value that opens a box on a click (T-626). */
+function TypedValue(p: { label: string; type: { text: string; set: (v: number) => void; tip?: string }; children: ComponentChildren }) {
+  const [draft, setDraft] = useState<string | null>(null);
+  const done = useRef(false);
+  const fresh = useRef(false);
+  // focused as the box appears, so what is typed next goes into it
+  const open = (el: HTMLInputElement | null) => {
+    if (!el || !fresh.current) return;
+    fresh.current = false;
+    el.focus();
+    el.select();
+  };
+  const commit = () => {
+    if (done.current) return;
+    done.current = true;
+    const v = parseFloat((draft ?? "").replace(/[^0-9.\-]/g, ""));
+    setDraft(null);
+    if (Number.isFinite(v)) p.type.set(v);
+  };
+  if (draft === null) {
+    return <button class="v typed" data-tip={p.type.tip} aria-label={"Type " + p.label} onClick={() => { done.current = false; fresh.current = true; setDraft(p.type.text); }}>{p.children}</button>;
+  }
+  return (
+    <input class="v typing" ref={open} value={draft} inputMode="decimal" aria-label={p.label}
+      onInput={(e) => setDraft(e.currentTarget.value)} onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") commit();
+        if (e.key === "Escape") { done.current = true; setDraft(null); }
+      }} />
   );
 }
 

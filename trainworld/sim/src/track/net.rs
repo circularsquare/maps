@@ -170,6 +170,9 @@ pub struct LineData {
     pub tph: [f32; 3],
     /// Whole trains allocated across both directions, or legacy frequency scheduling.
     pub trains: Option<[u32; 3]>,
+    /// T-625: headway in seconds for high, medium and low demand (0 = no service). When set the
+    /// whole-line counts follow it: the fewest trains that keep it over the round trip.
+    pub auto: Option<[u32; 3]>,
     pub dwell_s: f32,
     pub turnaround_s: f32,
     /// Cars per train; 0 = as many as the shortest platform allows.
@@ -327,6 +330,7 @@ pub struct Network {
     pub line_path: Vec<Span>,
     pub line_tph: Vec<[f32; 3]>,
     pub line_trains: Vec<Option<[u32; 3]>>,
+    pub line_auto: Vec<Option<[u32; 3]>>,
     pub line_dwell: Vec<f32>,
     pub line_turn: Vec<f32>,
     pub line_cars: Vec<u8>,
@@ -471,6 +475,7 @@ impl Network {
             line_path: vec![],
             line_tph: vec![],
             line_trains: vec![],
+            line_auto: vec![],
             line_dwell: vec![],
             line_turn: vec![],
             line_cars: vec![],
@@ -614,6 +619,7 @@ impl Network {
         self.line_path.push(Span::default());
         self.line_tph.push([0.0; 3]);
         self.line_trains.push(None);
+        self.line_auto.push(None);
         self.line_dwell.push(DEFAULT_DWELL_S);
         self.line_turn.push(DEFAULT_TURNAROUND_S);
         self.line_cars.push(0);
@@ -679,6 +685,7 @@ impl Network {
                 path: self.paths.get(self.line_path[i]).to_vec(),
                 tph: self.line_tph[i],
                 trains: self.line_trains[i],
+                auto: self.line_auto[i],
                 dwell_s: self.line_dwell[i],
                 turnaround_s: self.line_turn[i],
                 cars: self.line_cars[i],
@@ -913,6 +920,7 @@ impl Network {
                 self.line_path[i] = self.paths.replace(self.line_path[i], &d.path);
                 self.line_tph[i] = d.tph;
                 self.line_trains[i] = d.trains;
+                self.line_auto[i] = d.auto.filter(|_| d.trains.is_some());
                 self.line_dwell[i] = d.dwell_s;
                 self.line_turn[i] = d.turnaround_s;
                 self.line_cars[i] = d.cars;
@@ -945,6 +953,20 @@ impl Network {
         let old = self.line_tph[id as usize];
         self.line_tph[id as usize] = tph;
         self.line_trains[id as usize] = None;
+        self.line_auto[id as usize] = None;
+        self.touch.schedules.push(id);
+        Ok(old)
+    }
+
+    /// T-625: switch a line between a hand-set count and a headway per level, with the counts it
+    /// starts from. Returns the line's previous headways and counts.
+    pub fn set_auto(&mut self, id: u32, auto: Option<[u32; 3]>, trains: Option<[u32; 3]>) -> Result<(Option<[u32; 3]>, Option<[u32; 3]>), Issue> {
+        if !self.line_ok(id) {
+            return Err(Issue::NoSuchLine { line: id });
+        }
+        let old = (self.line_auto[id as usize], self.line_trains[id as usize]);
+        self.line_trains[id as usize] = trains;
+        self.line_auto[id as usize] = auto.filter(|_| trains.is_some());
         self.touch.schedules.push(id);
         Ok(old)
     }

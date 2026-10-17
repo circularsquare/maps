@@ -120,7 +120,7 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
 
   // ---- commuter bubbles ----
   const commuters = startCommuterView(map, view);
-  startAirportMarks(map, overlay);
+  startAirportMarks(map, overlay, view);
   // ---- longer trips of a selection (T-118) ----
   const intercity = startIntercityView(view, map);
 

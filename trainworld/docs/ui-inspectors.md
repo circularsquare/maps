@@ -81,7 +81,12 @@ key.
   quad track's express pair, opening stop editing at once; [track-and-service.md](track-and-service.md)
   6.1), and Delete line (asked first). Incomplete lines stay planned and run no trains.
 - **Sections**, in order: Schedule (trains for each demand level, with the resulting headway;
-  [track-and-service.md](track-and-service.md) 6.3; hovering High, Medium or Low gives that
+  [track-and-service.md](track-and-service.md) 6.3; a Trains / Headway switch in the heading
+  chooses what the player sets [T-625]: with Headway the headway column holds a stepper (30 s steps
+  under 5 minutes, 1 minute under 15, 5 above; none, or 1 to 120 minutes; a click on the number types
+  it in minutes) and the trains column the count it gives; each button's hover names the train
+  count it leads to and, on a running line, the cars it buys at the car price, takes from the
+  depot, or frees [T-631]; hovering High, Medium or Low gives that
   level's times of day in the line's local time, from the period table in `game/periods.ts`:
   "High demand: 06:00 to 10:00, 16:00 to 20:00"; weekends use the same hours) [T-406]; on a
   running line one dot before each level's name grades the level on today's kind of day by the

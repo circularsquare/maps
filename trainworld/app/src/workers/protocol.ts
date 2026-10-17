@@ -66,6 +66,8 @@ export type EditOp =
   | { op: "copyLine"; line: number; name?: string; express?: boolean }
   | { op: "setStops"; line: number; stops: NodeId[] }
   | { op: "setTrainCount"; line: number; trains: [number, number, number] }
+  /** T-625: the line's trains follow a headway in seconds per level (0: no service), or null: counts by hand */
+  | { op: "setHeadway"; line: number; seconds: [number, number, number] | null }
   | { op: "lineLook"; line: number; name: string; colour: string; letter?: string }
   | { op: "removeLine"; line: number }
   /** the fare curve (T-028): US$ a ride plus US$ a km; not undoable, a setting */
@@ -222,6 +224,8 @@ export interface ClockLine {
   lengthM: number;
   roundTrip: [number, number, number];
   trains: [number, number, number];
+  /** headway in seconds per level when the trains follow it (T-625), else null */
+  auto: [number, number, number] | null;
   delay: [number, number, number];
   dwell: number;
   turnaround: number;

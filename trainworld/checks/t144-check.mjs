@@ -53,8 +53,8 @@ const style={boxes:true,radius:stationRadii(15),linePx:4,ringPx:1.5,boxLinePx:6.
 const straight={mx:0,my:0,ax:200,ay:0,phi:0};
 const HL=200/U; // half the platform on screen at BOX_WIDTH_ZOOM, px
 let s=stationShape(0,0,straight,1,project,style,false);
-const BOXW=0.75*(0.5*0.6*6.6+2+1); // T-239: a quarter narrower than a plain line and its rim, 3.735 px
-near(s.halfLength,HL,'true length');near(s.halfWidth,BOXW,'a quarter narrower than a plain line and its rim at the box zoom');
+const BOXW=0.75*1.5*(0.5*0.6*6.6+2+1); // T-239, T-652: 1.125 times a plain line and its rim, 5.6025 px
+near(s.halfLength,HL,'true length');near(s.halfWidth,BOXW,'1.125 times a plain line and its rim at the box zoom');
 assert.ok(insideStation(s,10+HL-1,20),'the end of a long platform can be picked');
 assert.ok(!insideStation(s,10,20+s.halfWidth+2),'beside the box is not the box');
 for (const k of [2,4,16]) {
@@ -65,7 +65,7 @@ for (const k of [2,4,16]) {
 {
  const k=2**(STATION_BOX_ZOOM-BOX_WIDTH_ZOOM),z=stationShape(0,0,straight,1,zoomed(k),style,false);
  near(z.halfLength,k*HL,'out at the box zoom, length follows the ground',1e-3);near(z.halfWidth,BOXW,'width kept on screen',1e-3);
- assert.ok(2*(z.halfWidth-style.ringPx)>=3&&z.halfLength>=15*z.halfWidth/2,'legible at the first box zoom: white at least 3 px wide, a platform at least 7 times as long as it is wide');
+ assert.ok(2*(z.halfWidth-style.ringPx)>=3&&z.halfLength>=8*z.halfWidth/2,'legible at the first box zoom: white at least 3 px wide, a platform at least 4 times as long as it is wide (T-652: 7 times before the boxes grew 50% wider)');
  const w=stationShape(0,0,straight,1,zoomed(k/2),style,false);near(w.halfWidth,BOXW,'and further out still');
 }
 near(stationShape(0,0,straight,1,project,{...style,linePx:20,ringPx:3},false,1).halfWidth,s.halfWidth,'the lines as drawn now do not change a box');

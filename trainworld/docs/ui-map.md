@@ -106,9 +106,9 @@ thumbnail's track) are one table, `game/shadeTable.ts` (read through `game/shade
   platform, following the track's centre line sampled at 13 points (`platformShape`,
   `PLATFORM_POINTS`; straight on past an edge that stops short), flat-ended, centred on the station
   node, or at a dead end running from the node along the track. Its width is fixed on the ground
-  like its length from zoom 15 (`BOX_WIDTH_ZOOM`): a quarter narrower than a plain line and its rim
-  there (7.5 px, about 16 m at New York's latitude), so its shape never changes with zoom and it is
-  never shorter than it is wide. Further out, to zoom 14, it keeps that 7.5 px on screen (white 3.5 px
+  like its length from zoom 15 (`BOX_WIDTH_ZOOM`): 1.125 times a plain line and its rim
+  there (11.25 px, about 24 m at New York's latitude; `BOX_NARROW`, 50% wider since T-652), so its shape never changes with zoom and it is
+  never shorter than it is wide. Further out, to zoom 14, it keeps that 11.25 px on screen (white 7.25 px
   across) while its length keeps shrinking with the ground, about 40-55 px at zoom 14. The same
   width in every mode: a wide traffic line can be wider than its stations. Everything that draws or
   tests a platform (box, edges, crowd fill, track stencil, picking, placement ghost, selection
@@ -171,7 +171,7 @@ change; only links are saved. Riders change between any two stations of a comple
 has its half of the box along its length; a platform whose trains all use one side (a terminal)
 fills as one. A side fills from the middle outwards by its riders' share of the room
 (`platformRoom`, [track-and-service.md](track-and-service.md) 6.6: 1,250 a side on 150 m), full to
-both ends at that or more. A side is red instead of grey once it is full [T-559]. A standing train covers the box's middle; from zoom 16 the sides show beside it. The crowd
+both ends at that or more. A side is red instead of grey once it is full [T-559], and its bar then also stands out past the rim on its own side by half the box's half width (`CROWD_BULGE`) [T-652]. A standing train covers the box's middle; from zoom 16 the sides show beside it. The crowd
 grows between trains at the steady arrival rate, jumps a transfer walk after another line's train
 leaves with riders changing to it [T-554], and drops when one of its own leaves, worked out on the
 main thread at most once a game second, only while drawn.

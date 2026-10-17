@@ -114,7 +114,7 @@ export function TopBar() {
           </span>
           <span class="split-train">
             <i class="sw sw-train" />
-            Train <b class="lg pct">{pct(s.train)}</b>
+            <b class="lg pct">{pct(s.train)}</b>
             <span class="sm rides">{rides ? count(rides.train) + " rides" : ""}</span>
           </span>
           <span class="split-other sm" data-tip={modeTip("Walking", s.walk, rides?.walk)}>

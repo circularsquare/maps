@@ -224,7 +224,7 @@ to 350 degrees round [T-418, T-422, T-442], places stations, and makes lines, al
 **blueprints** that are free to edit and undo, then pays to **construct** them. A segment is one
 piece of track [T-244]. A crossover, placed with one click, joins a track to the track beside it (quad's
 other pair, or a route alongside) in an X, 120 m long, 50 km/h, priced as two junctions, so lines
-can change pairs mid-stretch [T-338]. Lines set a whole number of trains for high, medium and low demand; capacity and
+can change pairs mid-stretch [T-338]. Lines set a whole number of trains for high, medium and low demand, or a headway for each, run with the fewest trains that keep it [T-625]; capacity and
 junction conflicts add delay, computed from the schedules in the clock worker before demand runs,
 and no track, platform or junction carries more trains than its capacity: a line's fleet past that
 waits at its ends [T-517].
@@ -233,7 +233,9 @@ the boarding account. Fares are paid into the cash as trains pick up riders and 
 drain evenly [T-284]; the economy runs at 100x real days [T-081]. Changing a line's trains moves no
 running train: added ones enter at a terminal, removed ones leave at one [T-206]. A new game starts
 with $3B in an empty New York [T-485]; double track costs a base of US$45M a km times a
-multiplier per elevation (US$13.5M at grade) [T-467], and running costs are US$2.25 a car-km.
+multiplier per elevation (US$13.5M at grade) [T-467], a 20 m car costs US$2.5M, bought as a line's
+fleet grows and kept in the depot for any line when it shrinks [T-028, T-631], and running costs are
+US$2.25 a car-km. The fare is typed or stepped in the Money tab [T-626].
 
 Detail: [docs/track-and-service.md](docs/track-and-service.md) (6.1 track and stations, 6.2
 capacity, 6.3 trains and schedules, 6.4 costs and money, 6.5 edits, 6.6 the boarding account).

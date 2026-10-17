@@ -204,6 +204,16 @@ pub fn encode(net: &Network) -> Vec<u8> {
             w.u(node_id[b as usize] as u64);
         }
     }
+    // T-625: the lines whose train counts follow a headway, after LNK1 and only when there are any
+    let autos: Vec<(usize, [u32; 3])> = lines.iter().enumerate().filter_map(|(i, &l)| net.line_auto[l as usize].map(|a| (i, a))).collect();
+    if !autos.is_empty() {
+        w.0.extend_from_slice(b"LAU1");
+        w.u(autos.len() as u64);
+        for (i, a) in autos {
+            w.u(i as u64);
+            for s in a { w.u(s as u64); }
+        }
+    }
     w.0
 }
 
@@ -343,7 +353,7 @@ pub fn decode(bytes: &[u8]) -> Result<Network, String> {
             prev += v >> 1;
             path.push((prev as u32) << 1 | (v & 1) as u32);
         }
-        net.set_line(id, Some(LineData { symbol: String::new(), trains, name, colour, stops, path, tph, dwell_s, turnaround_s, cars })).map_err(|e| format!("{e:?}"))?;
+        net.set_line(id, Some(LineData { symbol: String::new(), trains, auto: None, name, colour, stops, path, tph, dwell_s, turnaround_s, cars })).map_err(|e| format!("{e:?}"))?;
     }
     net.next_line_number = n_lines as u32 + 1;
     if r.0.get(r.1..r.1 + 4) == Some(b"LUI1") {
@@ -358,6 +368,14 @@ pub fn decode(bytes: &[u8]) -> Result<Network, String> {
             let (a, b) = (r.u()? as u32, r.u()? as u32);
             // a pair naming no station is dropped rather than refusing the whole save
             net.link(a, b);
+        }
+    }
+    if r.0.get(r.1..r.1 + 4) == Some(b"LAU1") {
+        r.1 += 4;
+        for _ in 0..r.u()? {
+            let i = r.u()? as usize;
+            let auto = [r.u()? as u32, r.u()? as u32, r.u()? as u32];
+            if i < n_lines && net.line_trains[i].is_some() { net.line_auto[i] = Some(auto); }
         }
     }
     net.take_touch();

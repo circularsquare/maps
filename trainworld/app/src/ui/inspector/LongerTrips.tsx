@@ -8,6 +8,7 @@ import { count } from "../../game/format";
 import { shownDayPhrase } from "../../game/ui";
 import { MODE_COLOURS } from "../../game/palette";
 import { intercityPick, intercityStationView } from "../../map/intercityView";
+import { Spinner } from "../Spinner";
 import { Icon, Row } from "../widgets";
 
 const MODES = [
@@ -130,7 +131,7 @@ export function SelectionLongerTrips() {
     return (
       <>
         <Head />
-        <p class="muted">Working it out.</p>
+        <p class="muted"><Spinner tip="Working out longer trips" /></p>
       </>
     );
   }

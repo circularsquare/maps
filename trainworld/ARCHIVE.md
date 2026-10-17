@@ -1,5 +1,13 @@
 ﻿# Archive
 
+- T-647 [P2] Loading spinners. Done 2026-10-17 (`ui/Spinner.tsx`): on the status tag, in place of a line's crowding dots, and in a clicked bubble's panel while its far ends load; the only animation in the game.
+- T-649 [P2] Airports as bubbles. Done 2026-10-17: under All purposes an airport is a bubble of its own trips (same colour, size and zoom rules) with a black plane; under the Airport filter only the plane.
+- T-652 [P2] Station boxes 50% wider (7.5 to 11.25 px); a full side's red bar stands out past the box. Done 2026-10-17.
+- T-653 [P2] An even three-way mode mix reads grey, not white (`modeMix` pulls towards grey by the smallest share). Done 2026-10-17.
+- T-650 [P3] The top demand bar drops the word "Train". Done 2026-10-17.
+- T-631 [P2] Trains cost money. Done 2026-10-17: cars were already bought at US$2.5M (T-028) and kept in a depot when a fleet shrinks; now shown on the train buttons, a Spare cars row and Money tab hovers; price and no-refund rule in DECISIONS.
+- T-625 [P2] A line's train count from its headway. Done 2026-10-17: a Trains / Headway switch on the line panel; headway mode keeps the fewest trains over the round trip, recomputed on every edit, saved in an optional block.
+- T-626 [P2] Typed fare amounts. Done 2026-10-17: a click on a fare opens a box with the stepper's rounding and floor; Enter applies, Escape cancels.
 - T-656 [P2] Ground track across water becomes a bridge by itself (Anita). Done 2026-10-17: a level-0 segment over water rises to level 1 with 200 m ramps on land either side, shape unchanged, one undo; no room on land is refused ("There is not enough land for the bridge ramps"). Preview and edit share `track/bridge.rs`.
 - T-629 [P2] Flat junctions and crossings marked. Done 2026-10-17: on the map a badge (X a crossing, fork a junction) big and blue on blueprints and while drawing, small and quiet on built track, a red X for a refused crossing, hover tags (`gradeMarks.ts`); on the line panel's stops diagram, diamonds and crosses.
 - T-655 [P2] Ramps and tunnel portals drawn. Done 2026-10-17: a wedge where track climbs off level 0, a half disc where it drops, at the level-0 end, in the level's colour, also in the drawing preview.

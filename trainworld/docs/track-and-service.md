@@ -336,6 +336,19 @@ busy track, and names the places it waits most (notes/T-031.md).
   It never exceeds what the line's track can carry (6.2): trains beyond that wait at the ends.
   Resources used by count schedules keep continuous delays so rounding cannot make the solve
   oscillate. Legacy saves preserve their original frequencies until a schedule is edited.
+- **Headway mode** (T-625, `LineData::auto`, `Op::AutoTrains`): instead of a count per level a
+  line can keep a headway per level, in seconds (0 is no service; the panel offers 1 minute to 2
+  hours). Its counts are then derived: the fewest trains with round trip over headway, the round
+  trip being the capacity-adjusted one with running, dwell, turnaround and waiting (`auto_trains`;
+  the real headway may run 0.5% over the chosen one, so a few seconds of drift in the round trip
+  buy no train). Every edit that changes the line, its track or shared track settles the counts
+  again (`TrackWorld::settle_train_counts`: count from the round trip, settle the rates, repeat up
+  to 5 rounds), and whole trains that full track would keep waiting at the ends (6.2) are dropped,
+  so the fleet is what runs. A count that grows buys cars as any fleet growth does (6.4), and the
+  edit that grows it is refused with nothing changed if the cash is short. A hand-set count ends
+  the headways; switching to headways starts from the headway the current trains give. Saved in a
+  trailing `LAU1` block of the track save (line index and three headways, only when a line has
+  them); a save without it loads every line by hand.
 - **Departures** (`Service::run_deps`): per period of the line's local time (T-309: its first
   stop's region's, `Lattice::shift`; a New York to Toronto line is on one offset, a London to
   Paris line would run on London's), the first departure at the period's start and
@@ -418,9 +431,13 @@ multiplier per level (Anita, 2026-10-08; all construction prices halved 2026-10-
   undo history, so undo never builds or unbuilds anything for free.
 - **Trains** (T-028): a 20 m car costs US$2.5M. The network owns cars; the running lines need
   their busiest schedule's trains times their cars. Any edit that makes them need more than are
-  owned (a construct that starts a line, a larger allocation, longer trains, or an undo) buys
-  the difference with it, and is refused with nothing changed if construction plus trains is
-  more than the cash. Cars are never sold: spares serve the next line that needs them.
+  owned (a construct that starts a line, a larger allocation, a headway that needs more trains,
+  longer trains, or an undo) buys the difference with it, and is refused with nothing changed if
+  construction plus trains is more than the cash. Cars are never sold or refunded: those a line no
+  longer needs stay in the depot as spares and serve the next line that grows, any line's (T-631).
+  Loaded fleets count as already paid. The Money tab lists cars owned, needed and spare; the line
+  panel's train buttons say in their hover what a step buys or frees; the blueprint quote and a
+  planned line's Construct button include the cars.
 - **Running cost** US$2.25 per car-km (trains an hour each way x line length x cars; set for play,
   well under a real figure, T-091, T-485), and **fares**,
   are settled by the clock worker into the cash and a ledger per day (30 kept) and per hour (48

@@ -18,12 +18,29 @@ pub enum Op {
     Line { id: u32, data: Option<LineData> },
     Schedule { id: u32, tph: [f32; 3] },
     TrainCounts { id: u32, trains: Option<[u32; 3]>, tph: [f32; 3] },
+    /// T-625: set a line's headways in seconds per level (`None`: counts set by hand) with the
+    /// counts it starts from; the settle then keeps the counts to the headways.
+    AutoTrains { id: u32, auto: Option<[u32; 3]>, trains: Option<[u32; 3]> },
     /// Split `edge` at chainage `s` with a new node `node`; the far part becomes `new_edge`.
     /// Line paths through it are rewritten. Geometry does not change.
     Split { edge: u32, s: f64, node: u32, new_edge: u32 },
     /// Remove an edge; each line using it is rerouted by the fastest path or left broken.
     DeleteEdge { id: u32 },
     Batch(Vec<Op>),
+}
+
+/// Most rounds of "count from round trip, settle" a headway line's counts get per edit (T-625).
+const AUTO_ROUNDS: usize = 5;
+
+/// How far over the chosen headway the real one may run: a line's round trip moves a little with
+/// its own train count, and a train more for a few seconds would be noise (T-625).
+const AUTO_SLACK: f64 = 1.005;
+
+/// The fewest whole trains that keep a headway of `headway_s` over a round trip of `trip_s`
+/// (T-625); a headway of 0 is no service.
+pub fn auto_trains(trip_s: f64, headway_s: u32) -> u32 {
+    if headway_s == 0 || !(trip_s > 0.0) { return 0; }
+    ((trip_s / (headway_s as f64 * AUTO_SLACK) - 1e-6).ceil().max(0.0) as u32).min(9999)
 }
 
 /// What an edit touched (SPEC 6.5).
@@ -94,6 +111,65 @@ impl TrackWorld {
     /// Levels share no capacity, so each level settles on its own and a level already within
     /// tolerance is left alone to the bit: demand keeps its periods only then (T-124, T-415).
     fn settle_train_counts(&mut self) -> Vec<u32> {
+        if !self.net.line_auto.iter().any(|a| a.is_some()) {
+            return self.settle_counts();
+        }
+        // T-625: the counts of headway lines follow their round trips, which follow the counts
+        // through shared track, so settle and ask again until they hold still (a few rounds).
+        let mut affected = vec![];
+        let first = self.net.line_trains.clone();
+        for round in 0..AUTO_ROUNDS {
+            let moved = self.auto_counts(round + 1 == AUTO_ROUNDS);
+            affected.extend(self.settle_counts());
+            if !moved && round > 0 { break; }
+        }
+        // counts the full track would keep waiting at the ends are not bought
+        if self.trim_auto() { affected.extend(self.settle_counts()); }
+        affected.extend((0..self.net.line_count() as u32).filter(|&l| self.net.line_trains[l as usize] != first[l as usize]));
+        affected.sort_unstable(); affected.dedup(); affected
+    }
+
+    /// T-625: each headway line's counts, the fewest trains that keep its headway over the round
+    /// trip as it stands. `last`: no further rounds follow, so only counts that come down are taken
+    /// (a count that keeps rising round after round is on shared track that fills up).
+    fn auto_counts(&mut self, last: bool) -> bool {
+        let mut moved = false;
+        for l in 0..self.net.line_count() {
+            let (Some(auto), Some(old)) = (self.net.line_auto[l], self.net.line_trains[l]) else { continue };
+            if !self.net.line_ok(l as u32) || !self.svc.lines[l].ok { continue; }
+            let trip = self.svc.lines[l].round_trip;
+            let mut counts = old;
+            for lev in 0..LEVELS {
+                let want = auto_trains(trip[lev], auto[lev]);
+                if want < old[lev] || !last { counts[lev] = want; }
+            }
+            if counts != old {
+                self.net.line_trains[l] = Some(counts);
+                moved = true;
+            }
+        }
+        moved
+    }
+
+    /// T-625: drop from each headway line the whole trains that wait at the ends because the track
+    /// they use is full (`short` as in `TrackApi::waiting`).
+    fn trim_auto(&mut self) -> bool {
+        let mut trimmed = false;
+        for l in 0..self.net.line_count() {
+            let (Some(_), Some(mut counts)) = (self.net.line_auto[l], self.net.line_trains[l]) else { continue };
+            if !self.net.line_ok(l as u32) || !self.svc.lines[l].ok { continue; }
+            let trip = self.svc.lines[l].round_trip;
+            for lev in 0..LEVELS {
+                let short = counts[lev] as f64 - self.net.line_tph[l][lev] as f64 * trip[lev] / 3600.0;
+                let held = if short > 0.01 { short.floor() as u32 } else { 0 };
+                if held > 0 { counts[lev] -= held.min(counts[lev]); trimmed = true; }
+            }
+            self.net.line_trains[l] = Some(counts);
+        }
+        trimmed
+    }
+
+    fn settle_counts(&mut self) -> Vec<u32> {
         let ids: Vec<u32> = (0..self.net.line_count() as u32)
             .filter(|&l| self.net.line_ok(l) && self.net.line_trains[l as usize].is_some() && self.svc.lines[l as usize].ok).collect();
         if ids.is_empty() { return vec![]; }
@@ -384,7 +460,12 @@ impl TrackWorld {
                 let old = n.line_data(id).ok_or(Issue::NoSuchLine { line: id })?;
                 n.set_schedule(id, tph)?;
                 n.line_trains[id as usize] = trains;
+                n.line_auto[id as usize] = old.auto.filter(|_| trains.is_some());
                 Op::TrainCounts { id, trains: old.trains, tph: old.tph }
+            },
+            Op::AutoTrains { id, auto, trains } => {
+                let (old_auto, old_trains) = n.set_auto(id, auto, trains)?;
+                Op::AutoTrains { id, auto: old_auto, trains: old_trains }
             },
             Op::Split { edge, s, node, new_edge } => {
                 if n.node_ok(node) {

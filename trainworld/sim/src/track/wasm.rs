@@ -19,7 +19,7 @@ use super::net::{CrossKind, EdgeData, Issue, LineData, Network, NodeData, Statio
 use super::params::*;
 use super::profile;
 use super::save;
-use super::world::{ChargeError, EditResult, Op, TrackWorld};
+use super::world::{auto_trains, ChargeError, EditResult, Op, TrackWorld};
 use std::f64::consts::PI;
 use std::sync::Arc;
 use wasm_bindgen::prelude::*;
@@ -1887,7 +1887,7 @@ impl TrackApi {
         let Some(path) = self.w.net.route(stops) else {
             return self.refuse(Issue::LinePath { line: id });
         };
-        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: None, name, colour, stops: stops.to_vec(), path, tph: [high, medium, low], dwell_s, turnaround_s, cars }) })
+        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: None, auto: None, name, colour, stops: stops.to_vec(), path, tph: [high, medium, low], dwell_s, turnaround_s, cars }) })
     }
     /// Add a line with a whole-line fleet at each demand level.
     #[allow(clippy::too_many_arguments)]
@@ -1895,7 +1895,7 @@ impl TrackApi {
         let Some(path) = self.w.net.route(stops) else {
             return self.refuse(Issue::LinePath { line: id });
         };
-        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: Some([high, medium, low]), name, colour, stops: stops.to_vec(), path, tph: if stops.len() < 2 { [0.0; 3] } else { [6.0, 3.0, 1.0] }, dwell_s, turnaround_s, cars }) })
+        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: Some([high, medium, low]), auto: None, name, colour, stops: stops.to_vec(), path, tph: if stops.len() < 2 { [0.0; 3] } else { [6.0, 3.0, 1.0] }, dwell_s, turnaround_s, cars }) })
     }
     /// Change a line's stops, keeping everything else; the path is found again.
     pub fn set_stops(&mut self, id: u32, stops: &[u32]) -> u32 {
@@ -2000,7 +2000,32 @@ impl TrackApi {
     /// Allocate whole trains to the entire line, across both directions.
     pub fn set_train_counts(&mut self, id: u32, high: u32, medium: u32, low: u32) -> u32 {
         let Some(d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
+        if d.auto.is_some() {
+            return self.run(Op::AutoTrains { id, auto: None, trains: Some([high, medium, low]) });
+        }
         self.run(Op::TrainCounts { id, trains: Some([high, medium, low]), tph: d.tph })
+    }
+
+    /// T-625: the line's counts follow a headway in seconds per level (0 = no service): the
+    /// fewest trains that keep it over the round trip, worked out again after every edit.
+    pub fn set_auto_headway(&mut self, id: u32, high: u32, medium: u32, low: u32) -> u32 {
+        if !self.w.net.line_ok(id) { return self.refuse(Issue::NoSuchLine { line: id }) }
+        let auto = [high, medium, low];
+        let trip = self.w.svc.lines.get(id as usize).map_or([0.0; 3], |s| s.round_trip);
+        let trains = std::array::from_fn(|lev| auto_trains(trip[lev], auto[lev]));
+        self.run(Op::AutoTrains { id, auto: Some(auto), trains: Some(trains) })
+    }
+
+    /// T-625: back to counts set by hand, as they stand.
+    pub fn clear_auto_headway(&mut self, id: u32) -> u32 {
+        let Some(d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
+        self.run(Op::AutoTrains { id, auto: None, trains: d.trains })
+    }
+
+    /// The line's headways in seconds per level when its counts follow them, else empty (T-625).
+    pub fn line_auto(&self, id: u32) -> Vec<f64> {
+        if !self.w.net.line_ok(id) { return vec![]; }
+        self.w.net.line_auto[id as usize].map_or(vec![], |a| a.iter().map(|&s| s as f64).collect())
     }
 
     // ---- undo
@@ -3302,6 +3327,91 @@ mod tests {
         let mut b = api();
         assert!(b.load(&snapshot));
         assert_eq!(b.w.svc.lines[0].trains, [9, 4, 0]);
+    }
+
+    #[test]
+    fn auto_trains_is_the_fewest_that_hold_the_headway() {
+        assert_eq!(auto_trains(900.0, 300), 3);
+        assert_eq!(auto_trains(901.0, 300), 3, "half a percent over is the same headway");
+        assert_eq!(auto_trains(905.0, 300), 4);
+        assert_eq!(auto_trains(900.0, 0), 0);
+        assert_eq!(auto_trains(0.0, 300), 0);
+    }
+
+    #[test]
+    fn headway_lines_follow_their_round_trip() {
+        let mut a = api();
+        a.set_cash(6000.0);
+        let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(6000.0, 0.0).iter()).copied().collect();
+        assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+        let nodes = a.nodes_info();
+        let (n0, n1) = (nodes[0] as u32, nodes[10] as u32);
+        let e = a.edges_info()[0] as u32;
+        assert_eq!(a.add_station(1, n0, 0.0, 0.0, 200, "West".into()), 0);
+        assert_eq!(a.add_station(1, n1, 0.0, 0.0, 200, "East".into()), 0);
+        assert_eq!(a.add_station(2, e, 3000.0, 30.0, 200, "Middle".into()), 0, "{}", a.issues());
+        let mid = a.nodes_info().chunks(10).find(|c| (c[1] - 3000.0).abs() < 1.0).unwrap()[0] as u32;
+        let id = a.new_line_id();
+        assert_eq!(a.set_line_with_trains(id, &[n0, n1], 2, 2, 2, 30.0, 180.0, 0, 0xd7263d, "Line".into()), 0, "{}", a.issues());
+        assert_eq!(a.construct_all(), 0, "{}", a.issues());
+        assert!(a.line_auto(id).is_empty());
+        let manual = a.w.svc.lines[id as usize].trains;
+
+        // a headway that takes three trains over the round trip as it is now
+        let rt0 = a.w.svc.lines[id as usize].round_trip[0];
+        let h = (rt0 / 3.0).ceil() as u32;
+        assert_eq!(a.set_auto_headway(id, h, 0, 2 * h), 0, "{}", a.issues());
+        let s = &a.w.svc.lines[id as usize];
+        assert_eq!(s.trains[0], 3);
+        assert_eq!(s.trains[1], 0, "0 seconds is no service");
+        assert!(s.round_trip[0] / s.trains[0] as f64 <= h as f64 * 1.005 + 1e-6, "headway held");
+        assert!(s.round_trip[0] / (s.trains[0] - 1) as f64 > h as f64 * 1.005, "and with the fewest trains");
+        assert_eq!(a.line_auto(id), vec![h as f64, 0.0, 2.0 * h as f64]);
+        assert_eq!(a.fleet(), a.cars_needed(), "growing the fleet bought the cars");
+
+        // a stop in the middle lengthens the round trip, and the count follows it
+        let cash = a.cash();
+        let cars = a.w.svc.lines[id as usize].cars;
+        assert_eq!(a.set_stops(id, &[n0, mid, n1]), 0, "{}", a.issues());
+        let s = &a.w.svc.lines[id as usize];
+        assert!(s.round_trip[0] > rt0);
+        assert_eq!(s.trains[0], 4);
+        assert!(s.round_trip[0] / s.trains[0] as f64 <= h as f64 * 1.005 + 1e-6);
+        assert_eq!(a.line_auto(id).len(), 3, "an edit to the stops keeps the headways");
+        assert!((cash - a.cash() - cars as f64 * CAR_PRICE).abs() < 1e-6, "one more train, bought with the edit");
+
+        // short of money the edit is refused and nothing moves
+        let (fleet, trains) = (a.fleet(), a.w.svc.lines[id as usize].trains);
+        a.set_cash(1.0);
+        assert_eq!(a.set_auto_headway(id, h / 2, 0, 2 * h), 1, "{}", a.issues());
+        assert!(a.issue_kinds().starts_with("Money:"), "{}", a.issue_kinds());
+        assert_eq!((a.fleet(), a.w.svc.lines[id as usize].trains), (fleet, trains));
+        assert_eq!(a.line_auto(id)[0], h as f64, "the old headways stay");
+        // a longer headway needs fewer trains; the cars it frees stay owned
+        assert_eq!(a.set_auto_headway(id, 2 * h, 0, 2 * h), 0, "{}", a.issues());
+        assert!(a.w.svc.lines[id as usize].trains[0] < trains[0]);
+        assert_eq!(a.fleet(), fleet, "cars already owned are kept");
+
+        // the headways are saved; a manual line is saved as before
+        a.set_cash(6000.0);
+        let snapshot = a.save();
+        let mut b = api();
+        assert!(b.load(&snapshot));
+        assert_eq!(b.line_auto(0), vec![2.0 * h as f64, 0.0, 2.0 * h as f64]);
+        assert_eq!(b.w.svc.lines[0].trains, a.w.svc.lines[id as usize].trains);
+
+        // by hand again: the counts stay as they were, and undo goes back to headways
+        assert_eq!(a.clear_auto_headway(id), 0);
+        assert!(a.line_auto(id).is_empty());
+        assert!(!a.save().windows(4).any(|w| w == b"LAU1"));
+        assert_eq!(a.undo(), 0);
+        assert_eq!(a.line_auto(id).len(), 3);
+        assert_eq!(a.set_train_counts(id, 5, 5, 5), 0);
+        assert!(a.line_auto(id).is_empty(), "a hand-set count ends the headways");
+        assert_eq!(a.w.svc.lines[id as usize].trains, [5, 5, 5]);
+        assert_ne!(manual, [5, 5, 5]);
+        assert_eq!(a.undo(), 0);
+        assert_eq!(a.line_auto(id).len(), 3, "undo brings the headways back");
     }
 
     #[test]

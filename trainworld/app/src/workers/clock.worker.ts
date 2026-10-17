@@ -288,6 +288,11 @@ async function masksForLoaded(net: Uint8Array) {
 
 // ---------------------------------------------------------------- state for the main thread
 
+/** `TrackApi.line_auto`: a headway in seconds per level, or null for a line with counts by hand */
+function autoOf(v: ArrayLike<number>): [number, number, number] | null {
+  return v.length === 3 ? [v[0], v[1], v[2]] : null;
+}
+
 function hex(c: number) {
   return "#" + c.toString(16).padStart(6, "0");
 }
@@ -374,7 +379,7 @@ function buildState(): ClockState {
     const t3 = (k: number) => [li[i + k], li[i + k + 1], li[i + k + 2]] as [number, number, number];
     lines.push({
       id, name: a.line_name(id), letter: a.line_symbol(id), colour: hex(li[i + 1]), ok, running, broken: li[i + 4] === 1, tph: t3(5), cars: li[i + 21] || li[i + 8],
-      lengthM: li[i + 9], roundTrip: t3(10), trains: t3(13), delay: t3(16), dwell: li[i + 19], turnaround: li[i + 20],
+      lengthM: li[i + 9], roundTrip: t3(10), trains: t3(13), auto: autoOf(a.line_auto(id)), delay: t3(16), dwell: li[i + 19], turnaround: li[i + 20],
       stops: [...a.line_stops(id)], path: [...a.line_path(id)],
       fromStart: [0, 1, 2].map((lev) => [...a.stop_times(id, 0, lev)]),
       stopS: [[...a.line_stop_s(id, 0)], [...a.line_stop_s(id, 1)]],
@@ -1277,6 +1282,8 @@ function apply(op: EditOp): { r: number; line?: number; node?: number } {
       return { r: a.set_stops(op.line, new Uint32Array(op.stops)) };
     case "setTrainCount":
       return { r: a.set_train_counts(op.line, ...op.trains) };
+    case "setHeadway":
+      return { r: op.seconds ? a.set_auto_headway(op.line, ...op.seconds) : a.clear_auto_headway(op.line) };
     case "lineLook":
       return { r: op.letter === undefined
         ? a.set_line_look(op.line, op.name, colourInt(op.colour))
@@ -1486,7 +1493,7 @@ async function handle(msg: ToClock) {
       }
       forget();
       const demand = api.dirty_demand_lines();
-      sendState(msg.op.op === "setTrainCount");
+      sendState(msg.op.op === "setTrainCount" || msg.op.op === "setHeadway");
       if (demand.length || msg.op.op === "undo" || msg.op.op === "redo") scheduleSnapshot();
     }
     send({ kind: "edited", seq: msg.seq, ok: r === 0, issues: r === 0 ? [] : issues(), charge, line, node, ms: { apply: tB - tA, ...timing, total: performance.now() - tA } });

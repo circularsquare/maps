@@ -92,6 +92,94 @@ function setTrainCounts(id: LineId, t: [number, number, number]) {
   void send();
 }
 
+/** T-625: a line whose trains follow a headway. The headways asked for but not yet in `world`,
+ * folded like the train counts above. */
+export const pendingHeadway = signal<ReadonlyMap<LineId, [number, number, number]>>(new Map());
+const headwayEdits = new Map<LineId, { busy: boolean; next: [number, number, number] | null }>();
+
+/** Seconds per level the line keeps, as last set, or null when its trains are counted by hand. */
+export function headwayShown(id: LineId): [number, number, number] | null {
+  return pendingHeadway.value.get(id) ?? world.value?.lineStats[id]?.autoS ?? null;
+}
+
+/** The headway limits (0 is no service) and the step from one headway to the next: 30 s under 5
+ * minutes, 1 minute under 15, 5 minutes above; from no service the first step is 15 minutes. */
+export const HEADWAY_MIN_S = 60;
+export const HEADWAY_MAX_S = 7200;
+export function nextHeadway(s: number, dir: number): number {
+  if (dir > 0) return s <= 0 ? 900 :Math.min(HEADWAY_MAX_S, s + (s < 300 ? 30 : s < 900 ? 60 : 300));
+  return s <= HEADWAY_MIN_S ? 0 : Math.max(HEADWAY_MIN_S, s - (s <= 300 ? 30 : s <= 900 ? 60 : 300));
+}
+/** The fewest trains that keep a headway over a round trip, as the sim works it out. */
+export function autoTrainsFor(roundTripS: number, headwayS: number): number {
+  return headwayS > 0 && roundTripS > 0 ? Math.min(9999, Math.ceil(roundTripS / (headwayS * AUTO_SLACK) - 1e-6)) : 0;
+}
+/** `AUTO_SLACK` in sim/src/track/world.rs */
+const AUTO_SLACK = 1.005;
+/** A typed number of minutes as seconds, to 5 s inside the limits; 0 or less is no service. */
+export function headwayFromMinutes(min: number): number {
+  if (!(min > 0)) return 0;
+  return Math.max(HEADWAY_MIN_S, Math.min(HEADWAY_MAX_S, Math.round((min * 60) / 5) * 5));
+}
+
+export function setHeadway(id: LineId, demand: Demand, seconds: number) {
+  const base = headwayShown(id);
+  if (!base) return;
+  const h: [number, number, number] = [...base] as [number, number, number];
+  h[DEMAND_INDEX[demand]] = seconds;
+  const p = new Map(pendingHeadway.peek());
+  p.set(id, h);
+  pendingHeadway.value = p;
+  const job = headwayEdits.get(id) ?? { busy: false, next: null };
+  headwayEdits.set(id, job);
+  job.next = h;
+  if (job.busy) return;
+  const send = async () => {
+    job.busy = true;
+    while (job.next) {
+      const secs = job.next;
+      job.next = null;
+      const a = await edit({ op: "setHeadway", line: num(id), seconds: secs });
+      if (!a.ok) job.next = null; // refused (money): the line goes back to the world's headways
+    }
+    job.busy = false;
+    headwayEdits.delete(id);
+    const q = new Map(pendingHeadway.peek());
+    q.delete(id);
+    pendingHeadway.value = q;
+  };
+  void send();
+}
+
+export function stepHeadway(id: LineId, demand: Demand, dir: number) {
+  const base = headwayShown(id);
+  if (base) setHeadway(id, demand, nextHeadway(base[DEMAND_INDEX[demand]], dir));
+}
+
+/** Switch a line between counting its trains by hand and keeping a headway: it starts with the
+ * headway its trains give now, so no train comes or goes. */
+export function setAutoTrains(id: LineId, on: boolean) {
+  const st = world.value?.lineStats[id];
+  if (!st) return;
+  if (!on) {
+    void edit({ op: "setHeadway", line: num(id), seconds: null });
+    return;
+  }
+  const n = trainsShown(id) ?? st.trainsNeeded;
+  // the headway its trains give, rounded to the coarsest of 1 minute, 30, 10 or 5 seconds that keeps them
+  const seconds = n.map((k, lev) => {
+    const trip = st.roundTripByLevel[lev];
+    if (!(k > 0) || !(trip > 0)) return 0;
+    const exact = Math.ceil(trip / k);
+    for (const step of [60, 30, 10, 5]) {
+      const h = Math.ceil(exact / step) * step;
+      if (autoTrainsFor(trip, h) === k) return h;
+    }
+    return exact;
+  }) as [number, number, number];
+  void edit({ op: "setHeadway", line: num(id), seconds });
+}
+
 /** The fare curve for the whole network (T-028): US$ a ride plus US$ a km. */
 export function setFares(base: number, perKm: number) {
   const r = (v: number) => Math.max(0, Math.round(v * 100) / 100);

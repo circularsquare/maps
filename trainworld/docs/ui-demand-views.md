@@ -26,7 +26,9 @@ and the regional layer. Changing zone clears cell-indexed selections and cached 
 
 **Mode colours**, Subway Builder's (Anita) [T-097, T-099; `game/palette.ts`]: driving red #e61e1e,
 train blue #1e3ce6, walking green #1eaa3c, near-pure so a mix reads as RGB (all car red, all train
-blue, half and half magenta).
+blue, half and half magenta). A bubble's mix is pulled towards a grey (190, 190, 190) as its smallest
+mode share rises to a third (`modeMix`; fully grey at a third each, unchanged when a mode has none), so an
+even three-way mix is not white [T-653]. Bars and swatches by mode keep the true colours.
 Trips by "other" (bus, taxi and bike for homes without a car, T-513, [demand-mode.md](demand-mode.md) 4.3)
 count as driving in every bar, split, bubble and hover, with no colour of their own; the sim
 reports them apart only as a total (`summary` index 10).
@@ -102,12 +104,17 @@ its constructed stations, grouped exactly as the complexes are, the player's lin
   (`map/modeBar.ts`): train blue, walking green, driving red, widths by share, no numbers. A far-end
   bubble adds "Click to explore this trip". Every demand hover with a mode split uses the bar (the
   airport badges too).
-- **Airports** [T-448, `map/airportMarks.ts`]: a white circle with a plane, 20 px at every zoom, on
-  each airport's busiest terminal cell, so on its biggest bubble. Shown with Destinations under All
-  purposes or Airport, for the focused zone and the nearby zones, hidden while a bubble is
+- **Airports** [T-448, T-649, `map/airportMarks.ts`]: a small black plane (14 px, a thin white
+  halo) on each airport's busiest terminal cell, so on its biggest bubble. Under All purposes the
+  airport is also a bubble of its own there, the airport purpose's legs at the destination
+  density, in the bubbles' colour rule, opacity and size, scaling with zoom like them, drawn over
+  the destination bubbles (a disc layer of the demand canvas). Under Airport the destination
+  bubbles already are the airport's trips, so only the plane is added. Shown with Destinations
+  under All purposes or Airport, for the focused zone and the nearby zones, hidden while a bubble is
   selected and in the city overview. Airports are the cells that receive the airport purpose's
-  legs (500 a day or more), terminal cells within 2.5 km sharing one badge. The badge takes no
-  clicks; its hover says "149k airport trips a day here" with the mode split.
+  legs (500 a day or more), terminal cells within 2.5 km sharing one bubble. They take no
+  clicks (a click reaches the bubble under); the hover, over the plane or the airport's bubble,
+  says "149k airport trips a day here" with the mode split.
 - There is no corner summary box: the zone's split is in the top bar, local splits in hovers and
   the inspector.
 

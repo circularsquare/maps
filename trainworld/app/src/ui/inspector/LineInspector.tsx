@@ -20,12 +20,13 @@ import { DEMAND_INDEX, DEMANDS, type Demand, type LineInput, type LineStats } fr
 import { ask, lineDraft, renameLinePrompt, selection, tool } from "../../game/ui";
 import { moneyState } from "../../game/money";
 import { fullTip, fullTitle, heldText, heldTip } from "../../game/capacityKinds";
-import { edit, linesAt, renameLine, say, setLineColour, stepTrainCount, trainsShown, world } from "../../game/world";
+import { autoTrainsFor, edit, headwayFromMinutes, headwayShown, linesAt, nextHeadway, renameLine, say, setAutoTrains, setHeadway, setLineColour, stepHeadway, stepTrainCount, trainsShown, world } from "../../game/world";
 import { live } from "../../map/live";
 import { Chip, Icon, Row, Segmented, Stepper } from "../widgets";
 import { PurposeSplit } from "./PurposeSplit";
 import { NameEdit } from "./NameEdit";
 import { locateLine } from "../locate";
+import { demandPending, Spinner } from "../Spinner";
 
 const DEMAND_LABEL: Record<Demand, string> = { high: "High", medium: "Medium", low: "Low" };
 
@@ -266,6 +267,59 @@ function StopToday({ line, i }: { line: string; i: number }) {
   return <span class="n num" data-tip={d ? `${count(d.stops[i] ?? 0)} boardings in the past 24 hours` : undefined}>{d ? count(d.stops[i] ?? 0) : ""}</span>;
 }
 
+const carsText = (n: number) => `${n} ${n === 1 ? "car" : "cars"}`;
+
+/** What a stepper's button leads to: the train count, and for a running line the cars it needs
+ * beyond the line's busiest level, bought at the car price unless the depot has spare ones, or
+ * the cars it frees, which stay owned for any line to use (T-631). */
+function changeTip(counts: [number, number, number], lev: number, to: number, st: LineStats): string {
+  const head = `${to} ${to === 1 ? "train" : "trains"}`;
+  const m = moneyState.value;
+  if (!m || st.status !== "running" || !st.cars) return head;
+  const next = [...counts];
+  next[lev] = to;
+  const cars = (Math.max(...next) - Math.max(...counts)) * st.cars;
+  if (cars > 0) {
+    const bought = Math.max(0, cars - Math.max(0, m.fleet - m.carsNeeded));
+    return head + (bought > 0 ? `\nBuys ${carsText(bought)} for ${money(bought * m.carPrice * 1e6)}` : `\nUses ${carsText(cars)} from the depot`);
+  }
+  return cars < 0 ? head + `\nFrees ${carsText(-cars)}, which stay in the depot` : head;
+}
+
+const headwayText = (s: number) => (s > 0 ? `${+(s / 60).toFixed(2)} min` : "none");
+
+/** One demand level's trains and headway cells: a count stepper and the headway it gives, or (T-625)
+ * the headway stepper and the count it gives. */
+function LevelCells({ l, st, d, auto }: { l: LineInput; st: LineStats; d: Demand; auto: [number, number, number] | null }) {
+  const lev = DEMAND_INDEX[d];
+  const counts = auto ? st.trainsNeeded : (trainsShown(l.id) ?? st.trainsNeeded);
+  if (!auto) {
+    return (
+      <>
+        <td>
+          <Stepper value={counts[lev]} label="trains on the entire line" jump onStep={(s) => stepTrainCount(l.id, d, s)}
+            tipDown={changeTip(counts, lev, Math.max(0, counts[lev] - 1), st)} tipUp={changeTip(counts, lev, counts[lev] + 1, st)} />
+        </td>
+        <td>{headway(l.tph[d])}</td>
+      </>
+    );
+  }
+  const trip = st.roundTripByLevel[lev];
+  return (
+    <>
+      <td>
+        <span class="num" data-tip={`${counts[lev]} ${counts[lev] === 1 ? "train" : "trains"} on the entire line keep the headway over its round trip of ${duration(trip)}`}>{counts[lev]}</span>
+      </td>
+      <td>
+        <Stepper wide label="headway" value={headwayText(auto[lev])} onStep={(s) => stepHeadway(l.id, d, s)}
+          tipDown={changeTip(counts, lev, autoTrainsFor(trip, nextHeadway(auto[lev], -1)), st)}
+          tipUp={changeTip(counts, lev, autoTrainsFor(trip, nextHeadway(auto[lev], 1)), st)}
+          type={{ text: auto[lev] ? String(+(auto[lev] / 60).toFixed(2)) : "0", set: (v) => setHeadway(l.id, d, headwayFromMinutes(v)), tip: "Click to type a headway in minutes. 0 is no service." }} />
+      </td>
+    </>
+  );
+}
+
 export function LineInspector({ id }: { id: string }) {
   const w = world.value;
   const [colours, setColours] = useState(false);
@@ -312,6 +366,8 @@ export function LineInspector({ id }: { id: string }) {
   const name = new Map(w.save.stations.map((s) => [s.id, s.name]));
   const times = st.fromStartByLevel[lev] ?? st.fromStartS;
   const editingStops = tool.value === "line" && lineDraft.value.line === l.num;
+  const auto = headwayShown(l.id);
+  const canAuto = l.stops.length >= 2 && st.status !== "broken";
 
   const build = async () => {
     const a = await edit({ op: "constructLine", line: l.num });
@@ -397,7 +453,21 @@ export function LineInspector({ id }: { id: string }) {
         </div>
       )}
 
-      <div class="h">Schedule</div>
+      <div class="h">
+        Schedule
+        {canAuto && (
+          <span class="right">
+            <Segmented<boolean>
+              options={[
+                [false, <span data-tip="Set the number of trains on the entire line for each demand level">Trains</span>],
+                [true, <span data-tip="Set the headway for each demand level. The line runs the fewest trains that keep it over the round trip, and works them out again when the line or its track changes.">Headway</span>],
+              ]}
+              value={auto !== null}
+              onChange={(v) => setAutoTrains(l.id, v)}
+            />
+          </span>
+        )}
+      </div>
       <table class="sched">
         <tr>
           <th>Demand</th>
@@ -406,11 +476,8 @@ export function LineInspector({ id }: { id: string }) {
         </tr>
         {DEMANDS.map((d) => (
           <tr class={d === now ? "now" : ""}>
-            <td>{st.status === "running" && periods && <CrowdDots v={periods} d={d} />}<span data-tip={levelTimes(d)}>{DEMAND_LABEL[d]}</span></td>
-            <td>
-              <Stepper value={(trainsShown(l.id) ?? st.trainsNeeded)[DEMAND_INDEX[d]]} label="trains on the entire line" jump onStep={(s) => stepTrainCount(l.id, d, s)} />
-            </td>
-            <td>{headway(l.tph[d])}</td>
+            <td>{st.status === "running" && (periods ? <CrowdDots v={periods} d={d} /> : demandPending.value && <Spinner class="row-dot" tip="Crowding appears when demand has loaded" />)}<span data-tip={levelTimes(d)}>{DEMAND_LABEL[d]}</span></td>
+            <LevelCells l={l} st={st} d={d} auto={auto} />
           </tr>
         ))}
       </table>

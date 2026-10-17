@@ -7,6 +7,7 @@ import { activeCity, cityById, viewedZone } from "../game/cities";
 import { cityNames, demandIdle, loadFailure, loadProgress, zoneFailures } from "../game/loading";
 import { CACHE_VERSION } from "../workers/demandCache";
 import { LoadBar, loadingCardShown } from "./LoadingScreen";
+import { Spinner } from "./Spinner";
 
 export function StatusTag() {
   const step = demandStep.value;
@@ -35,6 +36,7 @@ export function StatusTag() {
     : demandView.value.version === CACHE_VERSION ? "These figures are from the last time this game was open. They are being worked out again."
     : "These figures are for the network before your last change. They change once the new forecast is finished.");
   return <div class="status-tag" role="status" data-tip={tip}>
+    {!loadFailure.value && !zoneFailure && <Spinner />}
     <span class="demand-busy">{busy}</span>
     {load && !loadFailure.value && !zoneFailure && <LoadBar fraction={load.fraction} step={load.step} thin />}
   </div>;

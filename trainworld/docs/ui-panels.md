@@ -89,7 +89,7 @@ below 700 px the bar takes two rows (name, cash, time and speed over the split).
 - **The goal number**: the focused zone's mode split as one bar (driving, train, walking, in the
   mode colours whatever the theme), the split of all its modelled local trip legs (commutes,
   everyday outings, school and university), so the shares are of rides a day, not people [T-342].
-  The labels after it give the train share with its rides a day ("Train 18.5% 8.81M rides") and the
+  The labels after it give the train share, after a blue mark, with its rides a day ("18.5% 8.81M rides"; no word "Train" [T-650]) and the
   walking and driving shares as icons; the hover gives all three counts and the total, and an
   icon's own hover its share and rides. The player's job is
   to make the train share grow. It shows "–" and an empty bar until the zone has figures of its own
@@ -227,8 +227,10 @@ Hovering a column gives its day or hour ("Fri 5", "Sat 6, 04:00", "so far" for n
 costs and their parts, or net, or its train rides. Days and hours are the game clock's (T-321). The
 charts are saved with the game and are there after a reload [T-567]. Then, for the whole
 network whatever the toggle: the fare curve
-(each ride, each km, and what a 10 km ride costs); cars owned (prices in its hover) and cars the
-lines need; the value of the track and stations built. Rules: [track-and-service.md](track-and-service.md)
+(each ride, each km, and what a 10 km ride costs; each amount steps with the buttons, or a click
+on it opens a box to type it, Enter or leaving the box applying and Escape cancelling, with
+the stepper's rounding to the cent and floor of $0 [T-626, `TypedValue` in `ui/widgets.tsx`]); cars
+owned (prices in its hover), cars the lines need and spare cars [T-631]; the value of the track and stations built. Rules: [track-and-service.md](track-and-service.md)
 6.4. The economy's 100x scaling is in the hover of "A day at this schedule".
 **Cities** [T-550, `ui/Cities.tsx`], last in the tab and whatever the
 toggle: a list of every region (the toggle's regions) with a built station, one row each: its name
@@ -284,7 +286,12 @@ centre and zoom, or over New York with none [T-310].
   hover ("42% loaded"). The bar counts to that final, so on the real New York save it fills
   for about 20 s. A slot whose cities are all open shows the bar for its solve alone. The card
   takes no input but the bar's hover (a press pans the map beneath), has no animation or spinner,
-  and goes when the clock starts. The figures behind it are the solve's estimates, or the last
+  and goes when the clock starts. Loading is the one place with motion [T-647, Anita; `ui/Spinner.tsx`,
+  `.spin`]: a small ring turning (1.2 s a turn, 8-10 px, grey) before the status tag's text, in place
+  of each line's crowding dot per demand level in the line panel until the line has figures
+  (while no final result is shown or a solve is updating it; not after a failure or over dead
+  space), and in a clicked bubble's panel in place of each line that waited ("Trip purposes", the far ends, "Inter-region trips") while they load.
+  Nothing else animates. The figures behind it are the solve's estimates, or the last
   final result kept beside the save when there is one (T-328; the split's hover ends "(from the
   last time this game was open)").
 - **The bar moves in proportion to time** [T-243, notes/T-243.md]: each step weighs as long as it

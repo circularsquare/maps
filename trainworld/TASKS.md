@@ -30,7 +30,7 @@ orchestrator's commit recipe is in CLAUDE.md "Before a commit".
 - T-633 [P2] Explain perceived minutes in the game (Anita 2026-10-17: the walk weight stays; communicate it better): where the trip explorer and hovers show "counts as" minutes, say plainly why a walk counts for more. Open.
 - T-551 [P2] Demand review for Anita (her playtest notes, 2026-10-16): measured, nothing changed (notes/T-551.md). Waits for Anita, who decides at the deep calibration.
 - T-514 [P3] "Other" per cell (T-513): the sim keeps trips by other only as a total, so bubbles and hovers cannot show them by cell; needs other by home and work cell. Open; notes/T-514.md.
-- T-637 [P2] Everyday trips run long: 17% under 2 km against NHTS's 43%, so everyday walking sits below the surveys (London social and education 18% against 41-44%) and rail takes errands a real network would not; check the everyday destination choice's distance against the surveys. notes/T-621.md "Stage 2", notes/T-636.md.
+- T-637 [P2] Everyday trips run long (errands 23% under 2 km against NHTS's 50%). Measured 2026-10-17; proposal W1 (one worldwide set of shorter decay scales, parking base 5 to 7 to hold test A) waits for Anita. notes/T-637.md.
 - T-638 [P3] Rebuild the market packs on the new parking base (they hold 3 minutes until rebuilt; about 2 minutes on long regional trips). notes/T-636.md.
 - T-634 [P2] Short trips need somewhere to go besides the car (a bike mode, or "other" fitted for short trips) before walking is refit on the census and surveys: the fit's lost walkers mostly drive (Paris commute car 46% to 57%, census 36%). notes/T-621.md "Stage 2".
 - T-635 [P3] Why Toronto wants more rail than the fitted cities (TTC platform counts, the 2021 lockdown census, worldwide everyday rates); a Canada rail constant only if it holds up. notes/T-621.md.
@@ -76,8 +76,6 @@ orchestrator's commit recipe is in CLAUDE.md "Before a commit".
 
 ## Track and trains
 - T-623 [P3] A station cut inside an arc, or a ramp overlapping a curve, still shifts the ramp (T-622 holds ramps on straights only). Open.
-- T-625 [P2] A line's train count set automatically from its headway (Anita's TODO 2026-10-17), as an option beside today's whole number per demand level. Open.
-- T-631 [P2] Trains cost money, bought automatically as a line's fleet grows (Anita's TODO 2026-10-17): a price per train or car, sold back or kept when the fleet shrinks. Open.
 - T-663 [P3] The select tool's drag handle covers a blueprint junction's fork badge; and check whether the quiet crossing marks get busy on a big built network (340 on the real save; `QUIET_R`, `QUIET_ZOOM` in gradeMarks.ts). Open.
 - T-658 [P3] Draw double track as its two tracks when zoomed far in, which needs lines and stations drawn with a minimum width in world units (the two tracks sit at slightly different places); helps reason about terminals and crossovers (Anita 2026-10-17: plan first, not now). Open.
 - T-666 [P3] An automatic bridge near a short first arc or inside a tight multi-corner turn is refused although the land is there (`bridge.rs` cuts an arc only around the ramp's two vertices; 14 such cases in its sweep). Open.
@@ -90,13 +88,7 @@ orchestrator's commit recipe is in CLAUDE.md "Before a commit".
 
 ## Interface
 - T-646 [P2] When editing stops, a button to add every station on the track between two clicked stops, with a preview of the stops it would add and confirm or cancel (Anita's TODO 2026-10-17). Open.
-- T-647 [P2] Loading shown while demand loads (Anita's TODO 2026-10-17; she asked for motion here, an exception to "no animations"): a small spinner in place of each line's crowding dot per demand level, a moving element on the top "loading demand" tag (easy to miss today), and one in a clicked bubble's panel while its far ends load. Open.
-- T-649 [P2] Airports drawn as demand bubbles (same colour and zoom scaling) with a small black airplane at the centre, instead of fixed-size icons (Anita's TODO 2026-10-17). Open.
-- T-650 [P3] The top demand bar drops the word "Train" before the ridership percent (Anita's TODO 2026-10-17). Open.
 - T-651 [P2] Zoomed out, zones not opened look fully red while opened ones look yellowish from their green walkers (Anita's TODO 2026-10-17): the same as T-602, give unopened zones their walk split. Open.
-- T-652 [P2] Station boxes about 50% wider (hard to see zoomed out, the waiting people vanish), and a full station's waiting bar may grow past the box (Anita's TODO 2026-10-17). Open.
-- T-653 [P2] The mode colour blend turns an even three-way mix white, which is hard to see: blend part way towards a light grey (#ddd or so) in `modeMix` (Anita's TODO 2026-10-17). Open.
-- T-626 [P2] Type a fare amount, not only step it (Anita's TODO 2026-10-17). Open.
 - T-602 [P2] Walk split for zones not opened (rest of T-576): `zone_summary` (sim) gives a walk count per zone, `pipeline/zones.py` `local_trips()` stores it as `localWalk` in registry.json beside `localTrips`, `intercityView.ts` draws it green. Open.
 - T-561 [P3] Page freezes at 1,500x or faster in a fresh game with a line in each of Toronto and Boston (T-550's agent); not reproduced on 2026-10-16's tree. Open until seen again with exact steps; notes/T-561.md.
 - T-560 [P3] Crush load per country (found in T-552): every city's trains fill at `api::CRUSH_PER_CAR`'s 160 riders a 20 m car, stranding Tokyo's riders early; take published figures per stock from the pack. Open; notes/T-552.md.

@@ -62,7 +62,8 @@ export const MODE_COLOURS = {
 
 /**
  * A bubble's colour for commuters by train, walking and driving, 0-255 rgb: the three mode colours
- * blended by share and scaled to full brightness (Anita chose this RGB mix, T-099). Nobody: grey
+ * blended by share and scaled to full brightness (Anita chose this RGB mix, T-099), then towards a
+ * light grey as all three modes near a third each. Nobody: grey
  * (never drawn, a bubble with nobody is left out).
  */
 export function modeMix(train: number, walk: number, drive: number): [number, number, number] {
@@ -73,8 +74,12 @@ export function modeMix(train: number, walk: number, drive: number): [number, nu
   const gg = (t[1] * train + w[1] * walk + d[1] * drive) / all;
   const b = (t[2] * train + w[2] * walk + d[2] * drive) / all;
   const k = MIX_TOP / Math.max(r, gg, b, 1);
-  return [Math.round(r * k), Math.round(gg * k), Math.round(b * k)];
+  // T-653: an even three-way mix would come out near white; the smallest share, from nothing up to a
+  // third, pulls the colour towards one grey (the same in both themes, so baked bubble colours stay valid)
+  const g = Math.min(1, 3 * Math.min(train, walk, drive) / all);
+  return [Math.round(r * k + (MIX_GREY - r * k) * g), Math.round(gg * k + (MIX_GREY - gg * k) * g), Math.round(b * k + (MIX_GREY - b * k) * g)];
 }
+const MIX_GREY = 190;
 let MIX: [number, number, number][] | null = null;
 const MIX_TOP = Math.max(...rgb(MODE_COLOURS.train), ...rgb(MODE_COLOURS.walk), ...rgb(MODE_COLOURS.drive));
 
