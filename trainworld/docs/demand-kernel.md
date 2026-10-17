@@ -80,7 +80,7 @@ works on two levels:
    searches only its new or moved stations and costs what it did, 31 ms in WASM with or without).
 3. **Access subzones**: the cells of one zone that share their nearest station. Each carries its
    perceived walk to each of its stations, averaged over its cells as the mode choice weighs them
-   (a logsum at its 0.05 scale: the walk's cost grows faster than its length, and the near cells
+   (a logsum at its 0.10 scale: the walk's cost grows faster than its length, and the near cells
    carry most of the rail), used at both ends of a trip. Cells with no station within 4 km are in
    no subzone: their commuters drive or walk. 2,750 subzones on the hand-made network, 5,032 on New
    York's real one (2,056 and 3,702 with the 2.5 km edge before T-090); access and subzones

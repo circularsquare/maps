@@ -126,13 +126,11 @@ pub struct Params {
     pub station_theta: f32,
     /// Walking the whole way, a mode in the choice beside rail and the car (or other) (T-558,
     /// `walk_trip_cost`): the walk's real minutes (its distance x `walk_detour` at `walk_mps`)
-    /// weigh `walk_trip_w` each up to `walk_trip_easy_min`, then `walk_trip_w_far`; its constant
-    /// `asc_walk` (the logit's units) stands for what a short drive costs beyond its road time.
+    /// weigh `walk_trip_w` each, at one rate. `walk_bonus_min`, in perceived minutes, is what the
+    /// car's trip costs beyond its road time against a walk (the logit's `asc_walk`, T-636).
     /// Walks over `WALK_REACH_KM` are not offered.
     pub walk_trip_w: f32,
-    pub walk_trip_easy_min: f32,
-    pub walk_trip_w_far: f32,
-    pub asc_walk: f32,
+    pub walk_bonus_min: f32,
     /// Commutes walk between cells, not zone centres (T-587): each zone's homes and its jobs are
     /// this many cells, at even steps of their weight, and a zone pair within `WALK_FINE_R`
     /// squares walks at the logsum (scale `beta`) of its cell pairs' walk costs
@@ -187,10 +185,9 @@ pub struct Params {
     /// 4). Read when `EverydayApi::beside` opens; the pack's `everyday` block sets them.
     pub everyday_rate: [f32; 6],
     pub everyday_decay_m: [f32; 6],
-    /// The everyday layer's own mode choice (T-509, T-558): its rail constant is `asc_rail` plus
-    /// this, its walking constant `asc_walk` plus `everyday_asc_walk` (`Params::everyday`).
+    /// The everyday layer's rail constant is `asc_rail` plus this (`Params::everyday`); 0: the
+    /// two layers share their constants (T-636), the gap kept for a later fit.
     pub everyday_asc_rail: f32,
-    pub everyday_asc_walk: f32,
 }
 
 /// Walks longer than this straight line (km, round water where the routes say) are not offered
@@ -207,8 +204,6 @@ pub const WALK_FINE_R: i32 = 3;
 pub struct WalkCost {
     min_per_km: f32,
     w: f32,
-    easy: f32,
-    far: f32,
 }
 
 impl WalkCost {
@@ -217,8 +212,7 @@ impl WalkCost {
         if d_km > WALK_REACH_KM {
             return NO_WALK;
         }
-        let t = d_km * self.min_per_km;
-        t.min(self.easy) * self.w + (t - self.easy).max(0.0) * self.far
+        d_km * self.min_per_km * self.w
     }
 }
 
@@ -242,7 +236,8 @@ impl Default for Params {
             w_walk: 1.5,
             transfer_min: 0.0,
             fare_min: 6.0,
-            beta: 0.05,
+            // T-636: Anita's set (notes/T-636.md)
+            beta: 0.10,
             asc_rail: super::api::ASC_RAIL,
             country_asc_rail: 0.0,
             damp_min: 60.0,
@@ -255,14 +250,14 @@ impl Default for Params {
             road_dens50: 5000.0,
             road_far_kmh: 80.0,
             w_drive: 1.33,
-            park_min: 3.0,
+            park_min: 5.0,
             // T-380: within about half of real prices from Croydon to Midtown (notes/T-380.md)
             park_paid_min: 15.0,
             park_paid_d0: 3000.0,
             park_paid_cap_min: 50.0,
             park_free_d: 8000.0,
-            car_own_usd_trip: 0.0,
-            car_own_usd_km: 0.0,
+            car_own_usd_trip: 1.5,
+            car_own_usd_km: 0.1,
             cordon: None,
             period: 0,
             period_share: 0.45,
@@ -279,9 +274,7 @@ impl Default for Params {
             // T-558: the cost as Anita approved it; the constants hold New York's and London's
             // walking as it was (notes/T-558.md; commutes refitted for the cells' walks, T-587)
             walk_trip_w: 1.5,
-            walk_trip_easy_min: 10.0,
-            walk_trip_w_far: 4.0,
-            asc_walk: 2.80,
+            walk_bonus_min: 10.0,
             walk_samples: 6,
             xfer_walk_m: 300.0,
             xfer_mps: 1.2,
@@ -303,9 +296,7 @@ impl Default for Params {
             other_asc: OTHER_ASC,
             everyday_rate: super::everyday::RATE,
             everyday_decay_m: super::everyday::DECAY,
-            // T-509, with `asc_rail`; everyday walking's constant stays 3.21 in all (T-558)
-            everyday_asc_rail: -1.1,
-            everyday_asc_walk: 0.41,
+            everyday_asc_rail: 0.0,
         }
     }
 }
@@ -330,11 +321,8 @@ impl Params {
             "station_merge_m" => self.station_merge_m = v,
             // the gravity holds the walk's costs: `DemandApi::refresh_walk` after these
             "walk_trip_w" => self.walk_trip_w = v,
-            "walk_trip_easy_min" => self.walk_trip_easy_min = v,
-            "walk_trip_w_far" => self.walk_trip_w_far = v,
-            "asc_walk" => self.asc_walk = v,
+            "walk_bonus_min" => self.walk_bonus_min = v,
             "walk_samples" => self.walk_samples = v as usize,
-            "everyday_asc_walk" => self.everyday_asc_walk = v,
             "damp_min" => self.damp_min = v,
             "walk_mps" => self.walk_mps = v,
             "walk_cutoff_m" => self.walk_cutoff_m = v,
@@ -440,6 +428,12 @@ impl Params {
             _ => self.road_detour,
         }
     }
+    /// The walking constant of the logit (units of `beta`): `walk_bonus_min` perceived minutes at
+    /// the undamped scale.
+    #[inline]
+    pub fn asc_walk(&self) -> f32 {
+        self.walk_bonus_min * self.beta
+    }
     /// The ownership cost's part every car trip pays whatever its length, perceived minutes.
     #[inline]
     pub fn car_own_min(&self) -> f32 {
@@ -496,11 +490,11 @@ impl Params {
         self.walk_cost().at(d_km)
     }
     pub fn walk_cost(&self) -> WalkCost {
-        WalkCost { min_per_km: self.walk_detour * 1000.0 / self.walk_mps / 60.0, w: self.walk_trip_w, easy: self.walk_trip_easy_min, far: self.walk_trip_w_far }
+        WalkCost { min_per_km: self.walk_detour * 1000.0 / self.walk_mps / 60.0, w: self.walk_trip_w }
     }
     /// The everyday layer's parameters: its rail and walking constants on top (T-509, T-558).
     pub fn everyday(&self) -> Params {
-        Params { asc_rail: self.asc_rail + self.everyday_asc_rail, asc_walk: self.asc_walk + self.everyday_asc_walk, ..self.clone() }
+        Params { asc_rail: self.asc_rail + self.everyday_asc_rail, ..self.clone() }
     }
     /// With a car, the choice among rail (`util`, its utility against a driver who parks free at
     /// scale `beta`, `mode_beta` of that driver's cost), walking (`uw`, the same against that
@@ -522,7 +516,7 @@ impl Params {
     #[inline]
     pub fn walk_no_rail(&self, road: f32, paid: f32, free: f32, cw: f32) -> f32 {
         let bt = self.mode_beta(road);
-        let uw = bt * (road - cw) + self.asc_walk;
+        let uw = bt * (road - cw) + self.asc_walk();
         let w0 = 1.0 / (1.0 + fast_exp(-uw));
         if paid < 1e-30 {
             return w0;
@@ -548,7 +542,7 @@ impl Params {
     pub fn nocar_choice(&self, cw: f32, oth: f32, rail: Option<f32>) -> (f32, f32) {
         let bt = self.mode_beta(oth);
         let oa = oth + self.other_asc;
-        let uw = bt * (oa - cw) + self.asc_walk;
+        let uw = bt * (oa - cw) + self.asc_walk();
         let q = 1.0 / (1.0 + fast_exp(uw));
         let r = rail.map_or(0.0, |rail| {
             let ur = bt * (oa - rail) + self.asc_rail;
@@ -875,12 +869,12 @@ impl Gravity {
                             sw += w;
                             so += o;
                             if x < NO_WALK {
-                                m0 += 1.0 / (1.0 + fast_exp(-(bt * (road - x) + p.asc_walk)));
+                                m0 += 1.0 / (1.0 + fast_exp(-(bt * (road - x) + p.asc_walk())));
                             }
                         }
                         let cw = if m0 > 0.0 {
                             let m0 = (m0 * w2).clamp(1e-7, 1.0 - 1e-6);
-                            road - ((m0 / (1.0 - m0)).ln() - p.asc_walk) / bt
+                            road - ((m0 / (1.0 - m0)).ln() - p.asc_walk()) / bt
                         } else {
                             NO_WALK
                         };
@@ -3097,7 +3091,7 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
                 let bt = F8::splat(p.beta) * (F8::splat(p.damp_min) / road).min(F8::splat(1.0)).sqrt();
                 let util = bt * (road - rail) + F8::splat(p.asc_rail);
                 // T-558: and walking the whole way, against the same driver
-                let uw = bt * (road - cw8) + F8::splat(p.asc_walk);
+                let uw = bt * (road - cw8) + F8::splat(p.asc_walk());
                 // T-380: rail's share among drivers parking free, and among those paying for a
                 // space (`Params::car_choice`; where no lane pays, the second share equals the first)
                 let e = (uw - util).exp();
@@ -3141,7 +3135,7 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
                     let oth = rd * F8::splat(ko) + F8::splat(kow);
                     let btn = F8::splat(p.beta) * (F8::splat(p.damp_min) / oth).min(F8::splat(1.0)).sqrt();
                     let oa = oth + F8::splat(p.other_asc);
-                    let uwn = btn * (oa - cw8) + F8::splat(p.asc_walk);
+                    let uwn = btn * (oa - cw8) + F8::splat(p.asc_walk());
                     qn = F8::splat(1.0) / (F8::splat(1.0) + uwn.exp());
                     let urn = btn * (oa - rail_n) + F8::splat(p.asc_rail);
                     let pn = (F8::splat(1.0) / (F8::splat(1.0) + urn.neg().exp() + (uwn - urn).exp())).to_array();
@@ -3825,11 +3819,12 @@ mod tests {
     #[test]
     fn country_rail_constant() {
         let mut p = Params::default();
-        p.set_extra("country_asc_rail", super::super::api::country_asc_rail("JP")).unwrap();
+        assert_eq!(super::super::api::country_asc_rail("JP"), 0.0);
+        p.set_extra("country_asc_rail", 0.5).unwrap();
         assert_eq!(p.asc_rail, super::super::api::ASC_RAIL + 0.5);
         p.set_extra("asc_rail", 0.0).unwrap();
         assert_eq!(p.asc_rail, 0.5);
-        p.set_extra("country_asc_rail", super::super::api::country_asc_rail("US")).unwrap();
+        p.set_extra("country_asc_rail", 0.0).unwrap();
         assert_eq!(p.asc_rail, 0.0);
     }
 
@@ -3849,7 +3844,7 @@ mod tests {
         let mut p = Params::default();
         let near = |a: f32, b: f32| (a - b).abs() < 0.05;
         let (f0, paid0, free0) = p.park_parts(&z, 0);
-        assert!(f0 == 3.0 && paid0 == 0.0 && near(free0, 0.8));
+        assert!(f0 == p.park_min + p.car_own_min() && paid0 == 0.0 && near(free0, 0.8));
         let (_, paid1, _) = p.park_parts(&z, 1);
         assert!(near(paid1, 15.0 * (10000.0f32 / 3000.0).ln()));
         assert_eq!(p.park_parts(&z, 2).1, 50.0);
@@ -3857,7 +3852,7 @@ mod tests {
         assert!(near(p.park_parts(&z, 3).1, paid1));
         assert!(near(p.park_parts(&z, 4).2, 0.5));
         p.cordon = Some(std::sync::Arc::new(vec![0.0, 0.0, 13.5, 0.0, 0.0]));
-        assert_eq!(p.park_parts(&z, 2).0, 16.5);
+        assert_eq!(p.park_parts(&z, 2).0, 13.5 + p.park_min + p.car_own_min());
         let ring = |name: &str| CORDONS.iter().find(|c| c.0 == name).unwrap().2;
         // Times Square and Wall St in, Downtown Brooklyn and the Upper East Side out
         assert!(in_ring(ring("Manhattan"), -73.985, 40.758) && in_ring(ring("Manhattan"), -74.009, 40.706));
@@ -3895,6 +3890,22 @@ mod tests {
         // a 15 km road: $1.50 + $1.50 = 9 perceived minutes on top of the drive's time
         assert!((p.car_drive(20.0, 15.0) - 20.0 * p.w_drive - 1.5 * usd).abs() < 1e-4);
         assert!((p.car_own_min() + 15.0 * p.car_own_km_min() - 9.0).abs() < 1e-4);
+    }
+
+    /// T-636: the walking constant is `walk_bonus_min` perceived minutes whatever the scale, and a
+    /// walk costs `walk_trip_w` a minute at every length.
+    #[test]
+    fn walk_constant_is_in_minutes_and_the_walk_cost_is_flat() {
+        let mut p = Params::default();
+        assert!((p.asc_walk() - 10.0 * p.beta).abs() < 1e-6);
+        p.set_extra("beta", 0.05).unwrap();
+        assert!((p.asc_walk() - 0.5).abs() < 1e-6);
+        p.set_extra("walk_bonus_min", 20.0).unwrap();
+        assert!((p.asc_walk() - 1.0).abs() < 1e-6);
+        // 1 km straight is 1.3 km at 6 km/h: 13 minutes, and 2 km twice that
+        let (a, b) = (p.walk_trip_cost(1.0), p.walk_trip_cost(2.0));
+        assert!((a - 13.0 * p.walk_trip_w).abs() < 1e-3 && (b - 2.0 * a).abs() < 1e-3);
+        assert_eq!(p.walk_trip_cost(WALK_REACH_KM + 0.1), NO_WALK);
     }
 
     #[test]

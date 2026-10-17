@@ -20,7 +20,7 @@ plane's, with no car), and the split of the rest by plane and car is the pair's
 and `commute_trips`, from `bin/joint_gravity.rs` by way of `data/packs/intercity.json`
 (pipeline/market_zones.py); at opening merged by zone pair, at `set_network` kept between served
 zones (`cpairs`), and in each period's pass chosen
-once per commuter on its home-to-work station pairs (logit 0.05 damped as in 4.3, drive x 1.33 + parking at work,
+once per commuter on its home-to-work station pairs (logit 0.10 damped as in 4.3, drive x 1.33 + parking at work,
 access weights at that scale, the home end with rides, [regional.md](regional.md) 5.3), outward legs at `TO_WORK[q]`, the trip home at `TO_HOME[q]` on the
 same pairs reversed; their own assignment (`c_avg`) is the work purpose's share of the market's
 loads (`commute_loads`; the worker moves it from longer trips to work), with their own corridors

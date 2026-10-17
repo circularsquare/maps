@@ -1,5 +1,8 @@
 ﻿# Archive
 
+- T-636 [P1] A simpler, more game-like demand model (Anita). Done 2026-10-17: her ceiling tests as targets, then her set as defaults: choice twice as sharp, no rail constants, a 10-minute walking bonus, walking a flat 1.5 a minute, parking base 5, ownership on; test A 86% (New York) and 85.5% (London) of rail + car, B 79%; real save 10.41M to 13.04M rail trips a day; station counts x3.1 and x2.0. notes/T-636.md.
+- T-620 [P2] Car ownership. Done 2026-10-17: $1.50 a car trip + $0.10/km, the drive to a station too, on by default with T-636. notes/T-621.md.
+- T-621 [P1] The deep calibration. Abandoned 2026-10-17: its fit (stage 2) was not applied; Anita chose a simpler model tuned to her ceiling tests instead (T-636). Its tooling and census walk targets stay. notes/T-621.md.
 - T-628 [P2] The trip explorer's walk row. Done 2026-10-17: walking is its own row beside train and drive when walking the whole way takes under 30 minutes. notes/T-586.md.
 - T-586 [P2] The bubble hover and the trip explorer agree. Done 2026-10-17: the explorer's headline is the view's own far-bubble sums (purpose filter, day); route detail is one representative trip (largest purpose, its busiest period; everyday trips through the new `EverydayApi.trip`, T-201's query); New York and Mumbai agree within 0.22 points (`checks/t586-trip-agrees.mjs`). notes/T-586.md.
 - T-624 [P2] Built track joins under a platform. Done 2026-10-17: a station within half a platform of a joint joins two constructed pieces of the same track count; money, lines, trains, levels and undo carry over unchanged; unlike track still refuses. notes/T-624.md.

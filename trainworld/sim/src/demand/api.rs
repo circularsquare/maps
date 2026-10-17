@@ -35,12 +35,13 @@ pub const PEAK_HOUR_FACTOR: [f32; PERIODS] = [1.4, 1.15, 1.4, 1.3, 1.5];
 pub const SEATS_PER_CAR: f32 = 44.0;
 pub const CRUSH_PER_CAR: f32 = 160.0;
 /// The rail propensity (docs/demand.md 4.3), one worldwide value fitted on six cities' real
-/// networks (T-509, notes/T-509.md section 14); the everyday layer adds `Params::everyday_asc_rail`.
-pub const ASC_RAIL: f32 = 0.4;
+/// networks (T-509), 0 since T-636 (the rail share comes from time and money alone); the everyday
+/// layer adds `Params::everyday_asc_rail`, 0 as well.
+pub const ASC_RAIL: f32 = 0.0;
 /// What a country adds to `ASC_RAIL` (ISO 3166-1 alpha-2, the pack's `country`), for its
 /// commutes, everyday trips and the regional layer's commutes from its zones; any other country
-/// adds 0. Japan's habit is Sendai's own fit (notes/T-509.md sections 14-15).
-pub const COUNTRY_ASC_RAIL: &[(&str, f32)] = &[("JP", 0.5)];
+/// adds 0. Empty since T-636 (Japan's +0.5 went); the hook stays for a later country fit.
+pub const COUNTRY_ASC_RAIL: &[(&str, f32)] = &[];
 pub fn country_asc_rail(country: &str) -> f32 {
     COUNTRY_ASC_RAIL.iter().find(|(c, _)| *c == country).map_or(0.0, |&(_, v)| v)
 }
@@ -1900,7 +1901,7 @@ mod tests {
         let run = |left_behind: bool, tph_b: f32, cars_b: f32| {
             let (mut api, xy, n, stops, times, mut tph, mut cars) = small();
             api.params_mut().left_behind = left_behind;
-            // the 5% below is set where rail and the car are judged on time alone (T-509 raised it)
+            // rail and the car judged on time and money alone
             api.params_mut().asc_rail = 0.0;
             tph[3] = tph_b;
             cars[1] = cars_b;
@@ -1933,8 +1934,8 @@ mod tests {
         assert!(lb_on > 5.0, "line b's riders wait {lb_on} minutes more at worst");
         assert_eq!(la_on, 0.0, "line a has room: {la_on}");
         assert!(b_off < b_full, "crowding alone: {b_off:.0} of {b_full:.0}");
-        // 4.4% fewer here
-        assert!(b_on < 0.97 * b_off, "line b keeps {b_on:.0} of {b_off:.0} riders");
+        // 0.8% fewer here (crowding alone has taken most of line b's riders already)
+        assert!(b_on < 0.995 * b_off, "line b keeps {b_on:.0} of {b_off:.0} riders");
         // line a loses the riders who changed from b; the rest drive
         assert!(rail_on < rail_off, "and some drive: rail {rail_on:.0} against {rail_off:.0}");
         println!("line b full {b_full:.0}; cut, crowding only {b_off:.0}, with the wait {b_on:.0} riders (worst extra wait {lb_on:.1} min); line a {a_off:.0} -> {a_on:.0}; rail {rail_off:.0} -> {rail_on:.0}");

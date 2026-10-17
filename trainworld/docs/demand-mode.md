@@ -15,23 +15,22 @@ Per OD pair and period, rail, driving and walking the whole way (below) compete 
 - driving = door-to-door road time (below; a few constants, real road travel times are not a
   priority) + its cost
 
-Rail share = logistic in the difference (0.05 per perceived minute), plus a **rail propensity**
-constant, one worldwide value: **`asc_rail` 0.4** for commutes and **0.4 - 1.1 = -0.7 for everyday
-trips** (`everyday_asc_rail` -1.1; T-509, fitted jointly on New York, London, Paris, Seoul, Tokyo
-and Sendai's real networks): an errand or a visit takes the train less often than a commute
-between the same places (New York's survey: 5-7% of errand and social legs by rail against 21%
-of work legs). A country can add its own constant on top (`api::COUNTRY_ASC_RAIL`, read by the
-pack's `country`; set by name, `asc_rail` is the worldwide part): **Japan +0.5**, in its
-commutes, everyday trips and the regional layer's commutes from its zones (T-509 stage 7).
+Rail share = logistic in the difference (**`beta` 0.10 per perceived minute**: 10 minutes cheaper
+is 73% of the trips, 20 minutes 88%; T-636), with **no rail propensity**: `asc_rail` is 0 in every
+country, so rail and the car are judged on time and money alone. There is a rail constant for the
+everyday layer apart from the commutes' (`everyday_asc_rail`, default 0, settable by `--set`), kept
+at 0 as a tool for a later fit; there is no country constant (`api::COUNTRY_ASC_RAIL` is an empty
+table). T-509 had fitted 0.4 (-0.7 for everyday trips, Japan +0.5) to six real networks; T-636
+dropped the fit so that the game is sensible and building a line has a clear effect, and the real
+cities are loose checks (notes/T-636.md).
 **Cost damping** (T-495, `Params::mode_beta`): past 60 perceived minutes of
-the car's trip T, the scale is 0.05 x sqrt(60 / T), so a minute counts for less on a long trip
-(0.029 at 3 hours, 0.014 at 13); one rule for commutes, everyday trips and the regional layer
+the car's trip T, the scale is 0.10 x sqrt(60 / T), so a minute counts for less on a long trip
+(0.058 at 3 hours, 0.028 at 13); one rule for commutes, everyday trips and the regional layer
 (docs/regional.md 5.1), T the car's perceived minutes door to door including parking, never the
 rail's, so the scale does not change with the network. In the local layers only the choice
-between modes is damped (the walks and station pairs behind rail's cost are weighed at 0.05, since
+between modes is damped (the walks and station pairs behind rail's cost are weighed at 0.10, since
 they are shared by every destination); the regional layer damps the whole rail trip, access
-included. The propensity is not scaled. It absorbs habit, income and what the car is good for
-(trip chains, shopping) in one number (car ownership is its own input, below). **Catchment is soft** (T-090): there
+included. **Catchment is soft** (T-090): there
 is no circle the player sees. A farther station makes the walk, and so the whole trip, worse, and
 the station loses riders where that trip gets worse than driving. Value of time is per country so
 fares compare across countries. The US uses $20/hour (3 perceived minutes per dollar, a gameplay
@@ -43,14 +42,13 @@ multiplies ride time without multiplying fare (T-067).
 car's minutes, as rail): rail, the car and walking for those with a car (drivers parking free and
 those paying for a space choose apart, as for rail), rail, walking and other for those without
 (below). The walk's real minutes are its distance at 6 km/h along a path 1.3 times the straight
-line (13 minutes a straight km); each of the first 10 minutes weighs 1.5, each after that 4
-(`walk_trip_w`, `walk_trip_easy_min`, `walk_trip_w_far`), so 500 m costs 10 perceived minutes,
-1 km 27, 2 km 79 and 3 km 131. Its constant against the car (or other) is **`asc_walk` 2.80** for
-commutes and **2.80 + 0.41 = 3.21 for everyday trips** (`everyday_asc_walk`), in the logit's
-units: what a short drive costs beyond its road time (getting to the car, finding a space). They
-hold the walking New York and London had before T-558 (the curve T-509 fitted to New York's
-survey) to within 0.3 points in each layer, until the deep calibration fits them with the rail
-constants. Walks over 10 km straight
+line (13 minutes a straight km); every minute weighs 1.5 (`walk_trip_w`, one rate), so 500 m costs
+10 perceived minutes, 1 km 19.5, 2 km 39 and 3 km 58.5. Against the car (or other) a walk gets a
+bonus of **10 perceived minutes** (`walk_bonus_min`; the logit's `asc_walk` is that times `beta`, so
+1.0 at 0.10, and it follows `beta`): what a short drive costs beyond its road time, which the car
+side does not otherwise carry (getting to the car, the walk from the space). One constant for
+commutes and everyday trips alike, and for every country (T-636; before it the constant was 2.80 and
+3.21, worth 56 minutes at 0.05, and the cost rose to 4 a minute after 10). Walks over 10 km straight
 line are not offered (`WALK_REACH_KM`, a computational bound).
 
 Commutes walk between cells (T-587, `Gravity::set_walk_fine`): each zone's homes and its jobs are
@@ -85,8 +83,8 @@ falling towards 15 km/h where it is dense, half way at 5,000 per km². So a dens
 own last 10 km: 3 km inside Manhattan takes about 13 minutes, Brooklyn to Midtown (10 km) about
 30, 25 km between suburbs about 28, and 60 km from a suburb into a 30,000/km² centre about 71.
 
-**Parking** (T-380, T-372; `Params::park_parts`). At the destination every driver pays 3 perceived
-minutes to park and any congestion charge there; a paid space costs `15 x ln(d / 3,000)` more per
+**Parking** (T-380, T-372; `Params::park_parts`). At the destination every driver pays `park_min`, 5
+perceived minutes (T-636; the base of every car trip, with the ownership cost below), to park and any congestion charge there; a paid space costs `15 x ln(d / 3,000)` more per
 one-way trip, capped at 50, with `d` the jobs per km² of land in the destination's 2 km zone (none
 below 3,000: 18 at 10,000, 40 at 42,000, 50 from 85,000). A share `1 / (1 + d / 8,000)` of the
 drivers to that zone park free (80% at 2,000, 50% at 8,000, 16% at 43,000). Rail's share is the mix
@@ -98,11 +96,13 @@ zone's jobs inside the area: Manhattan south of 60th Street 13.5 minutes ($9), c
 `car_own_usd_trip` dollars a car trip (`car_own_min`, in `park_parts`' fixed part) plus
 `car_own_usd_km` a km of the car's own road (`Params::car_drive`), at 3 minutes a dollar; a drive to
 a station pays both on its own road, parked or dropped off; homes without a car and the longer
-trips (`market_params`) pay none. Both are 0 until the fit is applied (T-621). The same rule serves all
+trips (`market_params`) pay none. The shipped values are $1.50 a trip and $0.10 a km (T-621,
+T-636), so a typical trip pays $2.20-4.00 and a driver's day about $10. The same rule serves all
 three layers: the commutes and the everyday layer call `park_parts` (the everyday layer takes the
 mix of two logit results per pair, `rail_share_parked`); the regional layer's market pack holds each
 site's mean over drivers (`site_park`), written by `pipeline/intercity.py park_by_cell`, which
-mirrors `park_parts` and `cordon_by_zone` and is used for every zone's pack.
+mirrors `park_parts` and `cordon_by_zone` and is used for every zone's pack (packs built before
+T-636 hold the earlier base of 3 minutes until they are next rebuilt).
 
 **Routed walking and driving** (T-275, notes/T-275.md). Walks and drives go round water and
 over bridges, from data that exists for any city: OpenStreetMap roads and bridges (Geofabrik

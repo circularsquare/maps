@@ -115,7 +115,7 @@ fn main() {
         eprintln!("params: {:?}", p);
     }
     // the walk's costs and anything the zones' choice with no rail reads (parking, other)
-    if get("--set").is_some_and(|v| ["walk_", "asc_walk", "park_", "other_", "nocar", "cordon"].iter().any(|k| v.contains(k))) {
+    if get("--set").is_some_and(|v| ["walk_", "beta", "park_", "other_", "nocar", "cordon"].iter().any(|k| v.contains(k))) {
         api.refresh_walk();
     }
     let info = api.info();

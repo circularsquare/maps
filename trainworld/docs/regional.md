@@ -58,10 +58,10 @@ Generate **total** all-mode trips, then let the player's network earn rail's sha
 
 **Mode choice.** Inter-region trips choose rail, car and plane in one logit at 3 perceived minutes
 a dollar [T-378], damped by the trip's length as every trip is ([demand-mode.md](demand-mode.md) 4.3,
-T-495): 0.05 x sqrt(60 / T) per perceived minute, T the car's perceived minutes over the zone
-pair's distance, even across a sea where no car goes (so rail against air never depends on it), so about 0.029 at 3 hours by car and 0.014 at 13. The scale covers the whole
-rail trip: each zone's access weights (built at 0.05, 5.3) are raised to the power of the pair's
-scale over 0.05, so a long walk to the station weighs less on a long trip as well. On the
+T-495): 0.10 x sqrt(60 / T) per perceived minute, T the car's perceived minutes over the zone
+pair's distance, even across a sea where no car goes (so rail against air never depends on it), so about 0.058 at 3 hours by car and 0.028 at 13. The scale covers the whole
+rail trip: each zone's access weights (built at 0.10, 5.3) are raised to the power of the pair's
+scale over 0.10, so a long walk to the station weighs less on a long trip as well. On the
 market's own costs rail then holds about 93%, 73%, 48% and 28% of rail and air at 2, 3, 4 and 5
 hours on the train.
 
@@ -84,7 +84,7 @@ against the zone pair's own car time with that split. A place's airports (`pipel
 OurAirports' large and medium airports with scheduled service within 150 km of its centre carrying
 at least 1M passengers a year, the biggest eight; a route of 50,000 passengers a year is a direct
 flight (both from the flights project's FR24 file, read offline only). Commutes between zones
-choose rail or car as local commutes do: 0.05 per perceived minute damped the same way, the drive
+choose rail or car as local commutes do: 0.10 per perceived minute damped the same way, the drive
 weighted 1.33 plus the work end's parking; their loads are the work purpose's [T-158]. Inter-region trips' period
 shares are 20/35/25/15/5%; their weekend factor 1.58.
 
@@ -125,7 +125,7 @@ station a cost that depends on the end:
 - **Inter-region trips**: at the home end as a commute's; at the far end a drop-off only
   (`d_drop`), since the traveller has no car there.
 
-A site's access at each end is its walks (the mean of their weights at 0.05 a minute, as
+A site's access at each end is its walks (the mean of their weights at 0.10 a minute, as
 before rides) nested with its zone's rides at the station choice's scale (0.2 per minute), so a
 ride dearer than the walk adds little, and a site beyond every walk is reached by its rides alone.
 Zones that only a ride reaches are served (5.1), so a lone intercity station draws on everyone

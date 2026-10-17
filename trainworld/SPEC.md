@@ -159,13 +159,13 @@ institutions** (prisons, nursing homes and the like, T-234).
   rounds that price crowded trains and riders left behind by full ones [T-188]; a period stops
   once a round moves its loads under 1% [T-434]. Each round uses
   the combined loads of every zone, the everyday layer and the regional market. Walking the whole
-  way is a third mode in the same logit [T-558]: 1.5 perceived minutes a minute for 10 minutes,
-  then 4, with constants (2.80, everyday 3.21) holding the walking of before, commutes walking
+  way is a third mode in the same logit [T-558]: 1.5 perceived minutes a minute at every length,
+  a bonus of 10 minutes against the car, commutes walking
   between sampled cells rather than zone centres [T-587], so a good station
-  near a short trip takes some walkers and a long walk loses to the train. The rail constant `asc_rail`, 0.4 (plus a country
-  constant where one is fitted: Japan +0.5) and 1.1 lower for everyday trips, is fitted jointly on six cities'
-  real networks [T-509]. Past 60 perceived car-minutes a minute weighs less (0.05 x sqrt(60 / T)),
-  in every layer [T-495, T-502].
+  near a short trip takes some walkers and a long walk loses to the train. The choice is
+  0.10 a perceived minute with no rail constant (time and money alone), car ownership $1.50 a trip
+  plus $0.10 a km and 5 minutes to park [T-636]. Past 60 perceived car-minutes a minute weighs less
+  (0.10 x sqrt(60 / T)), in every layer [T-495, T-502].
 - **Homes without a car** [T-511, T-513]: each cell carries the people in households with no car
   (census by tract, LSOA or prefecture, else the national rate); they choose between rail, walking
   and "other" (bus, taxi and bike as one mode, on the road at 12 km/h plus a wait), shown as

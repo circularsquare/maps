@@ -345,13 +345,11 @@ notes/T-420.md has the tables.
   proper nouns, reads a split-off first 上 下 東 西 南 北 中 新 元 小 as in place names, a final 町
   as cho, ケ between kanji as ga, and writes a block as "N-chome"; about one name in four or five
   it gives is misread (against `name:en`, T-426). The kanji stays as a search alias.
-- **Rail constant** (T-509 stage 7, Anita 2026-10-16): every Japanese pack adds 0.5 to the
-  worldwide `asc_rail` (so 0.9 for commutes and -0.2 for everyday trips), in the regional layer's
-  commutes from Japanese zones too. It is Sendai's own fitted value; Tokyo alone wants 1.5, and at
-  +0.5 its commuters ride rail 35% against the 2020 census's 52% (Sendai 18% against 18%). Why it
-  may not carry over: the gap is a city's rail habit more than a country's (bikes to stations,
-  which count as rail in the census, are not in the game for homes without a car); smaller
-  Japanese cities have no counts to check it on.
+- **Rail constant**: none since T-636 (Japan's +0.5 of T-509 stage 7 is gone with the worldwide one).
+  Japan's cycling to stations and its trains' share of commuting (Tokyo's 2020 census 52%) are not
+  in the time and money the choice reads; the packs' rail then falls short of the counts where
+  habit carries it (every Japanese test cross carries 0.4-0.7 of its rail trips against before).
+  Check: Tokyo's and Sendai's station entries against the model's level.
 
 ## Homes (docs/demand-sources.md 4.1)
 
@@ -419,7 +417,7 @@ notes/T-420.md has the tables.
 
 ## Mode choice
 
-- **Cost damping** (T-495, docs/demand-mode.md 4.3). The logit's 0.05 a perceived minute falls as
+- **Cost damping** (T-495, docs/demand-mode.md 4.3). The logit's 0.10 a perceived minute falls as
   sqrt(60 / T) past T = 60, T the car's perceived minutes (even where no car can go), in every
   layer. The form and power follow UK WebTAG's cost damping and long-distance mode choice studies;
   set on European and US rail-air shares, not fitted. Why it may not carry over: the car's minutes
@@ -428,25 +426,19 @@ notes/T-420.md has the tables.
   driving) differ by country. Check: rail, air and car shares on a few corridors per country
   (MLIT's Inter-Regional Travel Survey, Eurostat, NEC FUTURE) at two lengths, so the slope as well
   as the level is seen.
-- **Rail propensity** (T-509, docs/demand-mode.md 4.3). One worldwide rail
-  constant, `asc_rail` 0.4 (8 perceived minutes), with everyday trips 1.1 lower (-0.7 in all)
-  (with the walking curve of then, centred at 1.9 km for everyday trips and 1.7 for commutes,
-  which T-558's walking constants now stand in for), fitted jointly on the
-  real networks of New York, London, Paris, Seoul, Tokyo and Sendai (station entries, line or
-  operator totals, census rail share of commuters by area, NHTS's New York rail and walk shares by
-  purpose), New York at half weight since its better-off riders avoid the subway. Every one of the
-  six cities fitted alone puts everyday trips 1.25-1.65 below commutes, and leaving any one out
-  moves the joint values by at most 0.4 (rail) and 0.2 (everyday). The level is what differs by
-  country: fitted alone, New York wants a constant of -0.9, London and Seoul -0.3 to -0.4, Paris
-  0.7, Sendai 0.8, Tokyo 1.5. A country's own constant goes on top where its cities show the gap
-  (`api::COUNTRY_ASC_RAIL`, by the pack's `country`, every layer's commutes and everyday trips):
-  **Japan +0.5** (Anita, 2026-10-16), Sendai's own value; see the Japan section. With it the model
-  is over on New York's entries (x2.1), London's (x1.6) and Seoul's (x1.4) and under on Tokyo's
-  (x0.8); held out, Toronto went from x1.0 to x0.8. Why it may not carry over: the constant stands
-  for habit, income, bus competition and what the car is good for, which differ by country (no bus
-  in the game: Seoul's and London's bus riders take the train). Check: a new country's station
-  entries against the model's level, and its census rail share by area where it has one; a country
-  constant only where a real network's counts show a gap the worldwide value cannot close.
+- **Rail propensity** (T-636, docs/demand-mode.md 4.3). None: `asc_rail` is 0 everywhere, so rail
+  and the car are judged on time and money alone, at 0.10 a perceived minute. T-509 had fitted 0.4
+  (8 perceived minutes), everyday trips 1.1 lower and Japan +0.5 to six real networks; Anita chose a
+  sensible and clear model over fitting the real cities (DECISIONS 2026-10-17). A rail constant for
+  the everyday layer apart from the commutes' exists as a parameter at 0 (`everyday_asc_rail`), and
+  the country table (`api::COUNTRY_ASC_RAIL`) is empty. With the new values the model carries
+  x3.1 New York's station entries, x2.0 London's (the counts are the loose check; notes/T-636.md).
+  Why it may not carry over: with no constant, habit, income, bus competition and what the car is
+  good for show up only where time and money show them; countries where rail is the norm beyond
+  its minutes (Japan, Switzerland) will look low, and where bus riders crowd the train (Seoul,
+  London) high. Check: a new country's station entries against the model's level, and its census
+  rail share by area where it has one; a country constant only where a real network's counts show
+  a gap the worldwide value cannot close.
 - **Driving alternative and homes without a car** (T-511, docs/demand-mode.md 4.3). Drive times and
   costs are the US car's; the people living in a household with no car (per cell, `nocar`) cannot
   drive and choose among rail, walking the whole way and "other" (T-513: bus, taxi and bike as one
@@ -503,7 +495,8 @@ notes/T-420.md has the tables.
   slow for longer. Check: a few typical door-to-door drives of 50-130 km per new country against
   the model's (notes/T-295.md has the US, Toronto and London ones).
 - **Parking** (T-380, T-372, T-440, docs/demand-mode.md 4.3). One rule for the commute, everyday and
-  regional layers. In minutes, not money: 3 to park, plus for a paid
+  regional layers. In minutes, not money: 5 to park (T-636; with the car ownership of $1.50 a trip
+  and $0.10 a km, local layers only), plus for a paid
   space 15 x ln(d / 3,000) per one-way trip (capped at 50), d the destination zone's jobs per km²
   of land; a share 1 / (1 + d / 8,000) parks free; congestion charges from a short list of
   charging areas (`kernel::CORDONS`: Manhattan, central London). Checked against real prices in New
@@ -545,21 +538,19 @@ notes/T-420.md has the tables.
   weights are fitted on New York only (T-372: 53-66% of commuter rail riders ride there). Check: the share of rail riders
   reaching the station by car or bus per sampler city (UK NTS for London, Metrolinx surveys for
   Toronto) against the model's home-end ride share (`realnet` prints it).
-- **Walking the whole way** (T-558, docs/demand-mode.md 4.3 "Walking"). A mode in the choice beside
-  rail and the car (or other), at 1.5 perceived minutes a minute for the first 10 minutes and 4
-  after, with one constant for commutes (`asc_walk` 2.80) and 0.41 more for everyday trips, set
-  so New York and London walk as they did under the curve T-509 fitted to New York's NHTS
-  everyday walk shares and ACS commuting (New York alone wants a higher constant than London in
-  both layers; the shared values leave each within 0.3 points of its walking). A commute walks
-  between six home and six job cells of its zones, not their 2 km centres (T-587; 2.80 keeps
-  the two cities' commute walkers together where they were), so its walk shares by distance
-  follow the everyday layer's. Why it may not carry over: walking tolerance differs by climate, culture,
-  street design and safety, and the constant also stands for how much a short drive costs
-  beyond its road time, which differs with car ownership and parking; the cost's shape keeps
-  more 1.5-2.5 km trips on foot than the old curve (London's 2-2.5 km band 3.7 points over) and
-  fewer of 3-5 km. Check: a country's travel survey walk shares by distance (NHTS, England's NTS,
-  France's EMP, Japan's person-trip surveys) and its census walk-to-work share; the deep
-  calibration fits the constants and the shape per country with the rail constants.
+- **Walking the whole way** (T-558, T-636, docs/demand-mode.md 4.3 "Walking"). A mode in the choice
+  beside rail and the car (or other), at 1.5 perceived minutes a minute at every length, with a
+  bonus of 10 perceived minutes against the car (`walk_bonus_min`) for what a short drive costs beyond
+  its road time, one value for commutes and everyday trips and for every country. T-558's version
+  (2.80 and 3.21, worth 56 minutes at the old scale, and 4 a minute past 10 minutes) had been set to
+  keep New York and London walking as before; T-636 replaced it with pieces that can be explained.
+  A commute walks between six home and six job cells of its zones, not their 2 km centres (T-587),
+  so its walk shares by distance follow the everyday layer's. New York's real trips walk 58% within
+  2 km (NHTS 2017); the model walks 55% there with the rail network of the real save. Why it may not
+  carry over: walking tolerance differs by climate, culture, street design and safety, and the
+  bonus also stands for how much a short drive costs beyond its road time, which differs with car
+  ownership and parking. Check: a country's travel survey walk shares by distance (NHTS,
+  England's NTS, France's EMP, Japan's person-trip surveys) and its census walk-to-work share.
 - **Value of time and fare sensitivity.** One value for everyone, from US figures. Incomes differ
   hugely between and within countries (see Anita's "income dependence" idea in her TODO).
 - **Waiting and crowding penalties.** A wait counts as plain minutes, half the headway, with no

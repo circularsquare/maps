@@ -149,7 +149,7 @@ pub(crate) fn pair_choice(api: &DemandApi, p: &Params, sk: &Skims, u: usize, v: 
         RAIL_OFFERED
     };
     let bt = p.mode_beta(road_free);
-    let uw = bt * (road_free - cw) + p.asc_walk;
+    let uw = bt * (road_free - cw) + p.asc_walk();
     let (rail, util, r_car) = if why == RAIL_OFFERED {
         let rail = m_u + m_v + p.fare_min - fast_ln(ssum) / th;
         let util = bt * (road_free - rail) + p.asc_rail;
@@ -269,7 +269,7 @@ pub(crate) fn everyday_choice(ev: &TripInputs, sk: &Skims, u: usize, v: usize, c
         rail = m_u + m_v + p.fare_min - fast_ln(sum) / th;
         let bt = p.mode_beta(road_free);
         util = bt * (road_free - rail) + p.asc_rail;
-        let r_car = p.car_choice(util, bt * (road_free - cw) + p.asc_walk, bt, paid, free);
+        let r_car = p.car_choice(util, bt * (road_free - cw) + p.asc_walk(), bt, paid, free);
         r = r_car;
         let cu = sz.nocar[u];
         // those without a car on a ride trip: their rail is on the home's walks alone

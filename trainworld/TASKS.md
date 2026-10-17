@@ -3,12 +3,13 @@
 Open agent work, one line a task; detail in `notes/T-###.md`. Format and rules in `CLAUDE.md`.
 P1 = now or blocking, P2 = this milestone, P3 = later. Finished or abandoned tasks move to `ARCHIVE.md`.
 
-**Direction** (Anita; CLAUDE.md "Working here"). The whole world, with demand realism at the core.
-Next, in order (2026-10-17): 1. the deep calibration, T-621 (Anita: start now; stage 2 waits on her
-three decisions in notes/T-621.md); 2. cities: T-614 and T-615 (thin-OSM parks), then T-613, the
-rest of Europe (72 rows), then the rest of the world (432 rows); 3. T-586 (the trip explorer
-matches its view), T-602; 4. long-trip calibration (T-528). Performance is open work
-(notes/perf-survey.md). Game modes wait.
+**Direction** (Anita; CLAUDE.md "Working here"). The whole world, with a demand model that is
+sensible and makes building rail matter (2026-10-17: fun over fitting real cities; her two ceiling
+tests are the targets, real cities loose checks; DECISIONS 2026-10-17, T-636). Next, in order: 1.
+cities: T-614 and T-615 (thin-OSM parks), then T-613, the rest of Europe (72 rows), then the rest
+of the world (432 rows); 2. demand: T-637 (everyday trips too long), T-634 (somewhere for short
+trips besides the car); 3. interface: T-627, T-633, T-602, T-629; 4. long trips (T-528).
+Performance is open work (notes/perf-survey.md). Game modes wait.
 
 **Where things stand (2026-10-17).** 80 zones play, all shipping through the pack gate (T-538). The
 unattended runner `pipeline/world_run.py` shipped its 5-city pilot (T-540), the UK batch (T-541)
@@ -29,8 +30,8 @@ orchestrator's commit recipe is in CLAUDE.md "Before a commit".
 - T-633 [P2] Explain perceived minutes in the game (Anita 2026-10-17: the walk weight stays; communicate it better): where the trip explorer and hovers show "counts as" minutes, say plainly why a walk counts for more. Open.
 - T-551 [P2] Demand review for Anita (her playtest notes, 2026-10-16): measured, nothing changed (notes/T-551.md). Waits for Anita, who decides at the deep calibration.
 - T-514 [P3] "Other" per cell (T-513): the sim keeps trips by other only as a total, so bubbles and hovers cannot show them by cell; needs other by home and work cell. Open; notes/T-514.md.
-- T-621 [P1] The deep calibration (Anita 2026-10-17: start now): T-509's fit again with car ownership fixed (constant plus per km), the walk weight kept at 1.5, walking fitted per survey country. Stage 2 done 2026-10-17: fit stable but not applied (Toronto, held out, x0.99 to x0.48; walkers become drivers; everyday rail halves); Anita picks an option. notes/T-621.md "Stage 2".
-- T-620 [P2] Car ownership $1.50 a car trip + $0.10/km of its own road (built in T-621 stage 2, defaults 0 until T-621 applies a fit). notes/T-621.md.
+- T-637 [P2] Everyday trips run long: 17% under 2 km against NHTS's 43%, so everyday walking sits below the surveys (London social and education 18% against 41-44%) and rail takes errands a real network would not; check the everyday destination choice's distance against the surveys. notes/T-621.md "Stage 2", notes/T-636.md.
+- T-638 [P3] Rebuild the market packs on the new parking base (they hold 3 minutes until rebuilt; about 2 minutes on long regional trips). notes/T-636.md.
 - T-634 [P2] Short trips need somewhere to go besides the car (a bike mode, or "other" fitted for short trips) before walking is refit on the census and surveys: the fit's lost walkers mostly drive (Paris commute car 46% to 57%, census 36%). notes/T-621.md "Stage 2".
 - T-635 [P3] Why Toronto wants more rail than the fitted cities (TTC platform counts, the 2021 lockdown census, worldwide everyday rates); a Canada rail constant only if it holds up. notes/T-621.md.
 - T-528 [P2] Fit the regional layer's longer trips (T-509's last part, Anita's design 2026-10-16): rail constant and damping on corridor counts at two lengths per country. Open; notes/T-509.md section 15.

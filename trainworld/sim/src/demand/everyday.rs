@@ -1833,7 +1833,7 @@ impl EverydayApi {
                     ) + fixed;
                     let rail = ma + mb + p.fare_min - fast_ln(sum) / th;
                     let bt = p.mode_beta(road);
-                    let r_car = p.car_choice(bt * (road - rail) + p.asc_rail, bt * (road - cw) + p.asc_walk, bt, paid, free);
+                    let r_car = p.car_choice(bt * (road - rail) + p.asc_rail, bt * (road - cw) + p.asc_walk(), bt, paid, free);
                     // those without a car: on a ride trip their rail is on the home's walks
                     let (mut r, mut r_n, mut lost_q) = (r_car, 0.0f32, 0.0f32);
                     let mut walks: Option<((std::ops::Range<usize>, &[f32]), (std::ops::Range<usize>, &[f32]), f32)> = None;
