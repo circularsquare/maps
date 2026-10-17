@@ -1332,7 +1332,7 @@
    "order": 2,
    "id": "lee",
    "name": "Leeds",
-   "status": "planned",
+   "status": "shipped",
    "region": "uk",
    "countries": [
     "GBR"
@@ -1371,13 +1371,31 @@
     "fua": [
      4159
     ]
+   },
+   "run": {
+    "run_batch": "20261017-020506",
+    "steps": {
+     "build": 96.1,
+     "places": 2.6,
+     "routes": 24.6,
+     "merge": 0.5,
+     "nocar": 1.5,
+     "everyday": 0.7
+    },
+    "built": "2026-10-17T02:09:57",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10209596829582705"
+     ]
+    },
+    "shipped": "2026-10-17T02:17:08"
    }
   },
   {
    "order": 3,
    "id": "bir",
    "name": "Birmingham",
-   "status": "planned",
+   "status": "shipped",
    "region": "uk",
    "countries": [
     "GBR"
@@ -1415,13 +1433,32 @@
     "fua": [
      3799
     ]
+   },
+   "run": {
+    "run_batch": "20261017-020506",
+    "steps": {
+     "build": 38.8,
+     "places": 2.1,
+     "routes": 5.6,
+     "merge": 0.4,
+     "nocar": 1.2,
+     "everyday": 0.7
+    },
+    "built": "2026-10-17T02:19:01",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1282485163536001",
+      "fleet_range 1"
+     ]
+    },
+    "shipped": "2026-10-17T02:22:14"
    }
   },
   {
    "order": 4,
    "id": "not",
    "name": "Nottingham",
-   "status": "planned",
+   "status": "shipped",
    "region": "uk",
    "countries": [
     "GBR"
@@ -1459,13 +1496,29 @@
     "fua": [
      4767
     ]
+   },
+   "run": {
+    "run_batch": "20261017-020506",
+    "steps": {
+     "build": 89.7,
+     "places": 2.3,
+     "routes": 26.1,
+     "merge": 0.6,
+     "nocar": 1.8,
+     "everyday": 0.7
+    },
+    "built": "2026-10-17T02:09:52",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-17T02:17:08"
    }
   },
   {
    "order": 5,
    "id": "new",
    "name": "Newcastle upon Tyne",
-   "status": "planned",
+   "status": "shipped",
    "region": "uk",
    "countries": [
     "GBR"
@@ -1503,13 +1556,29 @@
     "fua": [
      4227
     ]
+   },
+   "run": {
+    "run_batch": "20261017-020506",
+    "steps": {
+     "build": 37.9,
+     "places": 2.1,
+     "routes": 27.2,
+     "merge": 0.6,
+     "nocar": 1.4,
+     "everyday": 0.7
+    },
+    "built": "2026-10-17T02:24:43",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-17T02:26:38"
    }
   },
   {
    "order": 6,
    "id": "gla",
    "name": "Glasgow",
-   "status": "planned",
+   "status": "shipped",
    "region": "uk",
    "countries": [
     "GBR"
@@ -1546,6 +1615,22 @@
     "fua": [
      955
     ]
+   },
+   "run": {
+    "run_batch": "20261017-020506",
+    "steps": {
+     "build": 55.8,
+     "places": 2.2,
+     "routes": 16.8,
+     "merge": 0.5,
+     "nocar": 10.1,
+     "everyday": 0.7
+    },
+    "built": "2026-10-17T02:33:41",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-17T02:35:50"
    }
   },
   {
@@ -1674,7 +1759,7 @@
    "order": 9,
    "id": "she",
    "name": "Sheffield",
-   "status": "planned",
+   "status": "shipped",
    "region": "uk",
    "countries": [
     "GBR"
@@ -1710,13 +1795,31 @@
     "fua": [
      4460
     ]
+   },
+   "run": {
+    "run_batch": "20261017-020506",
+    "steps": {
+     "build": 26.1,
+     "places": 1.4,
+     "routes": 7.4,
+     "merge": 0.4,
+     "nocar": 1.1,
+     "everyday": 0.7
+    },
+    "built": "2026-10-17T02:10:30",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.15524527922716708"
+     ]
+    },
+    "shipped": "2026-10-17T02:17:08"
    }
   },
   {
    "order": 10,
    "id": "car",
    "name": "Cardiff",
-   "status": "planned",
+   "status": "parked",
    "region": "uk",
    "countries": [
     "GBR"
@@ -1751,13 +1854,37 @@
     "fua": [
      2086
     ]
+   },
+   "run": {
+    "run_batch": "20261017-020506",
+    "steps": {
+     "build": 41.9,
+     "places": 1.7,
+     "routes": 7.2,
+     "merge": 0.5,
+     "nocar": 1.4,
+     "everyday": 0.7
+    },
+    "built": "2026-10-17T02:39:04",
+    "reason": "gate: pop_vs_plan 0.5094077072349348; pop_vs_fua 0.4896133654785385 1,141,469 in Cardiff; top_cell_jobs_share 0.01766963153115932 at [-3.2424, 51.4081]",
+    "gate": {
+     "fail": [
+      "pop_vs_plan 0.5094077072349348",
+      "pop_vs_fua 0.4896133654785385 1,141,469 in Cardiff",
+      "top_cell_jobs_share 0.01766963153115932 at [-3.2424, 51.4081]"
+     ],
+     "warn": [
+      "fleet_range 2"
+     ]
+    },
+    "parked": "2026-10-17T02:40:29"
    }
   },
   {
    "order": 11,
    "id": "bel",
    "name": "Belfast",
-   "status": "planned",
+   "status": "parked",
    "region": "uk",
    "countries": [
     "GBR"
@@ -1794,6 +1921,26 @@
     "fua": [
      242
     ]
+   },
+   "run": {
+    "run_batch": "20261017-020506",
+    "steps": {
+     "build": 58.9,
+     "places": 1.5,
+     "routes": 14.4,
+     "merge": 0.5,
+     "nocar": 1.6,
+     "everyday": 0.7
+    },
+    "built": "2026-10-17T02:48:15",
+    "reason": "gate: top_cell_jobs_share 0.01280398323667371 at [-5.9268, 54.6001]",
+    "gate": {
+     "fail": [
+      "top_cell_jobs_share 0.01280398323667371 at [-5.9268, 54.6001]"
+     ],
+     "warn": []
+    },
+    "parked": "2026-10-17T02:49:27"
    }
   },
   {

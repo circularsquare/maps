@@ -1,5 +1,6 @@
 ﻿# Archive
 
+- T-541 [P2] The first real runner batch, UK. Done 2026-10-17: 6 of 8 rows shipped in 44 minutes (Leeds, Birmingham, Nottingham, Newcastle, Glasgow, Sheffield); Cardiff (T-610) and Belfast (T-611) parked; no Northeast change, demand final unchanged. notes/T-541.md.
 - T-591 [P2] The gate catches a false border. Done 2026-10-17: pack_gate's `joint_borders` fails a joint report's border pair whose country differs from the registry's `marketRow.country`; FAIL on the old lon+por report, PASS on the new. notes/T-540.md.
 - T-590 [P2] Old packs read as US in joint solves. Done 2026-10-17: joint_gravity falls back on the registry's `marketRow.country`; runner guard removed; London and Portsmouth re-solved (1,089 to 17,179 commuters each way, factor 0.05 to 1). notes/T-540.md.
 - T-540 [P2] Pipeline stage 8, the runner and a 5-city pilot. Done 2026-10-17: `pipeline/world_run.py`; the pilot shipped Manchester, Liverpool, Portsmouth, Lisbon and Porto unattended in 28 minutes. Found T-590 (old packs read as US in joint solves). notes/T-540.md.

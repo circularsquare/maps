@@ -5,15 +5,16 @@ P1 = now or blocking, P2 = this milestone, P3 = later. Finished or abandoned tas
 
 **Direction** (Anita; CLAUDE.md "Working here"). The whole world, with demand realism at the core.
 Next, in order (2026-10-17): 1. finish the unattended city pipeline: T-590 (old packs read as US
-in joint solves), T-584, T-583, then T-541, the first batch (UK first, then the rest of Europe,
+in joint solves, done), T-584, T-610, T-611 with T-583, then T-613, the next batch (the rest of Europe,
 from pipeline/world_plan.json); 2. T-586 (the trip explorer matches its view); 3. bubble colours
 T-602, T-577 (Anita picks); 4. long-trip calibration (T-528); the deep calibration comes once the world's
 cities are in (car ownership about $10 a day, the walk weight against 1, walking per country:
 DECISIONS 2026-10-16). Performance is open work (notes/perf-survey.md). Game modes wait.
 
-**Where things stand (2026-10-17).** 72 zones play, all shipping through the pack gate (T-538). The
+**Where things stand (2026-10-17).** 78 zones play, all shipping through the pack gate (T-538). The
 unattended runner `pipeline/world_run.py` shipped its 5-city pilot (Manchester, Liverpool,
-Portsmouth, Lisbon, Porto) in 28 minutes (T-540); the first batch (T-541) waits on T-590.
+Portsmouth, Lisbon, Porto) in 28 minutes (T-540) and the UK batch (T-541: Leeds, Birmingham,
+Nottingham, Newcastle, Glasgow, Sheffield) in 44; Cardiff and Belfast parked (T-610, T-611).
 Anita's plain page on demand: docs/demand-plain.md (keep it current). History is in ARCHIVE.md.
 
 **For a task agent.** Check `git status` and the "taking" marks here first. Several agents work at once:
@@ -100,7 +101,10 @@ Tier 0 and country sources: docs/demand-worldwide.md, docs/data-register.md. The
 - T-593 [P1] Anita decides: re-merge the 13 Northeast packs from res-9 (`merge_cells.py nyc phl bos wdc bal pvd nhv hfd spf wor wnd nlc lit`) after a stray `intercity.py --help` re-solved their gravity on 2026-10-17 (demand final 10,406,013 to 10,464,106), or keep the new solve as the baseline. notes/T-540.md "T-590 and T-591".
 - T-594 [P3] `pipeline/intercity.py` runs the full Northeast solve on `--help` or any unknown flag; make it print usage instead.
 - T-592 [P3] world_run reads the next region's extract while this one gates and joins (reading is the largest phase: Portugal 5.2 of 12.9 minutes). notes/T-540.md.
-- T-541 [P2] Pipeline stage 10, the first batch of about 20 cities (UK first), with a batch retrospective. After T-590; publishing past the current set needs T-060 and Anita's word. Open; notes/T-535.md.
+- T-610 [P1] Runner: a plan unit with no OSM match silently shrinks the pack (Cardiff: 2 of 3 NUTS3 units matched, 51% of plan people); fail the build or fall back to the plan polygon, re-run car. notes/T-541.md.
+- T-611 [P2] The 1% top_cell_jobs_share cap parks Belfast (1.28%, the centre) and Cardiff (1.77%, an out-of-town retail lump): a cap per city size or a smoothing step for proxy jobs, then re-run bel. With T-583. notes/T-541.md.
+- T-612 [P3] Runner: delete a parked row's pack files once its reason is recorded.
+- T-613 [P2] The next runner batch, the rest of Europe from pipeline/world_plan.json (`plan --countries` first for the row count), after T-610, T-611 and T-584; publishing past the current set needs T-060 and Anita's word. notes/T-541.md retrospective.
 - T-546 [P3] Refit Mumbai's curve with B-28's 0-1 and 2-5 km bands merged, as Sao Paulo's are (d^-1.5 exp(-d/23.3 km) against the shipped d^-1.65 exp(-d/32.7 km)). Open; notes/T-314.md.
 - T-315 [P3] Tier 0 universities: few OSM campuses carry a Wikidata id (4 of 63 in Toronto), so most are sized by area; try matching campus names to Wikidata universities. Open; notes/T-315.md.
 - T-547 [P3] Read GISCO's download clauses for NUTS 2024 (some files are non-commercial only) before publishing any pack on NUTS-3 units; fall back to geoBoundaries if barred. Open; notes/T-536.md.
