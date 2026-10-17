@@ -84,8 +84,15 @@ orchestrator's commit recipe is in CLAUDE.md "Before a commit".
 - T-340 [P3] Quad track's rest (from T-257): a station on a quad stroke's own end node is refused when that end is new track; the express pair is always left of the drawn direction. Open.
 
 ## Interface
+- T-646 [P2] When editing stops, a button to add every station on the track between two clicked stops, with a preview of the stops it would add and confirm or cancel (Anita's TODO 2026-10-17). Open.
+- T-647 [P2] Loading shown while demand loads (Anita's TODO 2026-10-17; she asked for motion here, an exception to "no animations"): a small spinner in place of each line's crowding dot per demand level, a moving element on the top "loading demand" tag (easy to miss today), and one in a clicked bubble's panel while its far ends load. Open.
+- T-649 [P2] Airports drawn as demand bubbles (same colour and zoom scaling) with a small black airplane at the centre, instead of fixed-size icons (Anita's TODO 2026-10-17). Open.
+- T-650 [P3] The top demand bar drops the word "Train" before the ridership percent (Anita's TODO 2026-10-17). Open.
+- T-651 [P2] Zoomed out, zones not opened look fully red while opened ones look yellowish from their green walkers (Anita's TODO 2026-10-17): the same as T-602, give unopened zones their walk split. Open.
+- T-652 [P2] Station boxes about 50% wider (hard to see zoomed out, the waiting people vanish), and a full station's waiting bar may grow past the box (Anita's TODO 2026-10-17). Open.
+- T-653 [P2] The mode colour blend turns an even three-way mix white, which is hard to see: blend part way towards a light grey (#ddd or so) in `modeMix` (Anita's TODO 2026-10-17). Open.
 - T-626 [P2] Type a fare amount, not only step it (Anita's TODO 2026-10-17). Open.
-- T-627 [P2] "Platform full at Nerul Village, high demand, 1 train waits at the ends" made no sense to Anita (seen at headways under 4 minutes): say that the platform takes at most N trains an hour (boarding at high demand holds each train longer), so the rest wait at the line's ends, and what helps; `LineInspector.tsx` FULL/TAKES, `capacityMarkers.ts`. Open.
+- T-627 [P2] "Platform full at Nerul Village, high demand, 1 train waits at the ends" made no sense to Anita (seen at headways under 4 minutes): likely a line reversing on a through station's platform, which holds it for the turnaround plus 60 s (3 min + 1 = 4 min, 15 trains an hour; docs/track-and-service.md "Resources"): confirm, then say what limits and what helps (a shorter turnaround, a dead-end terminus with two platform tracks); `LineInspector.tsx` FULL/TAKES, `capacityMarkers.ts`. Open.
 - T-602 [P2] Walk split for zones not opened (rest of T-576): `zone_summary` (sim) gives a walk count per zone, `pipeline/zones.py` `local_trips()` stores it as `localWalk` in registry.json beside `localTrips`, `intercityView.ts` draws it green. Open.
 - T-561 [P3] Page freezes at 1,500x or faster in a fresh game with a line in each of Toronto and Boston (T-550's agent); not reproduced on 2026-10-16's tree. Open until seen again with exact steps; notes/T-561.md.
 - T-560 [P3] Crush load per country (found in T-552): every city's trains fill at `api::CRUSH_PER_CAR`'s 160 riders a 20 m car, stranding Tokyo's riders early; take published figures per stock from the pack. Open; notes/T-552.md.
@@ -138,6 +145,7 @@ Tier 0 and country sources: docs/demand-worldwide.md, docs/data-register.md. The
 - T-321 [P3] Local time's rest (T-309, docs/world.md "Local time"): the money ledger's days and the bubbles' catch-up follow the game clock, and market trips across offsets need a period rule. Open; notes/T-321.md.
 
 ## Performance (open since 2026-10-15; ranked in notes/perf-survey.md)
+- T-648 [P2] Adding a stop takes about 100 ms to respond and the map sometimes flashes (Anita's TODO 2026-10-17): measure with checks/t496-edit-latency.mjs, find the flash. Related T-499. Open.
 - T-630 [P2] The game lags with station ridership shown, zoomed far out (Anita's TODO 2026-10-17): measure where the frame time goes, then cut what can be cut (fewer markers far out, say). Open.
 - T-499 [P3] Edits after T-496: click to drawn is 96 ms on the real save; left ~20 ms worker-to-main transfer (send only what changed, also T-070's idea), `buildState`, shadow name layer, GPU uploads. Open; notes/T-496.md "Left".
 - T-281 [P3] Opening a big save searches every station's walk round water per worker: 1.0 s for the real New York network's 867 stations; a tighter search or a 100 m raster would halve it. Open; notes/T-275.md.
