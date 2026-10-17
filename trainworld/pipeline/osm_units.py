@@ -2,9 +2,10 @@
 (nigeria.py's method made generic). The rules are docs/adding-a-city.md 3 "A planned city".
 
 Each of the world plan row's units (geoBoundaries, NUTS-3 or ITL3, as the plan chose) takes the OSM
-boundary=administrative relation, at any admin level, that overlaps it best, when that overlap is
-at least MATCH of the two areas' union, both taken on land less inland water; an unmatched unit
-keeps the part of its own polygon left uncovered when that is at least INSIDE of it. Units are
+boundary=administrative relation, at any admin level, that overlaps it best, or the several relations
+(level 8 or coarser, mostly inside it) that overlap it better together, when that overlap is
+at least MATCH of the two areas' union, both taken on land less inland water; any part of a unit
+the relations leave uncovered keeps the unit's own polygon when that is at least REST_MIN of it. Units are
 clipped to land by the OSM coastline, holes filled, cut along every existing pack, and pieces
 under MIN_PART_KM2 or with nobody in them (GHSL 100 m) dropped. OSM's names are kept per unit.
 
@@ -26,7 +27,9 @@ from shapely.geometry import mapping, shape
 import build_city as b
 
 MATCH = 0.5            # overlap / union an OSM relation needs to stand for a plan unit
-INSIDE = 0.5           # share of an unmatched plan unit OSM must leave uncovered for its own polygon to stay
+INSIDE = 0.5           # share of an OSM relation that must lie inside a plan unit to be one of its several
+REST_MIN = 0.1         # share of a plan unit OSM leaves uncovered at which the unit's own polygon fills it
+MULTI_LEVEL = 8        # finest admin level that may combine into one plan unit
 SEA_PAD = 0.25         # degrees around the plan's box over which the OSM sea is read
 # inland water smaller than this is left out of the match's water: it cannot move an overlap much,
 # and Rotterdam's 66,000 ditches and canals (2.3M vertices) stalled the match for over 20 minutes
@@ -95,19 +98,41 @@ def _local(g, lat0):
 
 
 def match(units, admin, lat0):
-    """For each plan unit, (OSM row index or None, overlap / union)."""
+    """For each plan unit, ([OSM row indexes], overlap / union), the list empty when nothing matches.
+    A unit is one OSM relation, or several when together they overlap it better (a NUTS-3 unit is
+    often two or three districts: T-610)."""
     loc = [_local(make_valid(g), lat0) for g in admin.geometry]
     tree = STRtree(loc)
+    levels = [int(x) for x in admin.admin_level]
     out = []
     for _, _, g, _ in units:
         gl = _local(g, lat0)
         best = (None, 0.0)
-        for i in tree.query(gl, predicate="intersects"):
+        near = [int(i) for i in tree.query(gl, predicate="intersects")]
+        for i in near:
             inter = gl.intersection(loc[i]).area
             iou = inter / (gl.area + loc[i].area - inter)
             if iou > best[1]:
-                best = (int(i), iou)
-        out.append(best if best[1] >= MATCH else (None, best[1]))
+                best = (i, iou)
+        # coarsest levels first, a relation only when mostly inside the unit and not mostly under
+        # one already taken
+        inside = sorted((i for i in near if levels[i] <= MULTI_LEVEL and gl.intersection(loc[i]).area >= INSIDE * loc[i].area),
+                        key=lambda i: (levels[i], -loc[i].area))
+        taken, cover = [], shapely.Polygon()
+        for i in inside:
+            if loc[i].intersection(cover).area < INSIDE * loc[i].area:
+                taken.append(i)
+                cover = cover.union(loc[i])
+        multi = 0.0
+        if len(taken) > 1:
+            inter = gl.intersection(cover).area
+            multi = inter / (gl.area + cover.area - inter)
+        if multi > best[1] and multi >= MATCH:
+            out.append((taken, multi))
+        elif best[1] >= MATCH:
+            out.append(([best[0]], best[1]))
+        else:
+            out.append(([], best[1]))
     return out
 
 
@@ -169,18 +194,22 @@ def build(cid, row, sources):
         geoms.append(r.geometry)
         feats.append({"name": shown, "local": local, "plan_unit": uid, "source": f"OSM r{r.osm_id}",
                       "admin_level": r.admin_level, "match": round(iou, 3)})
-    for (uid, gname, _, _), (i, iou) in zip(units, picks):
-        if i is not None and i not in chosen:
-            take(i, uid, gname, iou)
-    # a unit OSM has no match for (a relation cut off at an extract's edge) keeps the part of its
-    # own polygon no OSM unit covers, when that is a real part of it
+    for (uid, gname, _, _), (idx, iou) in zip(units, picks):
+        for i in idx:
+            if i not in chosen:
+                take(i, uid, gname, iou)
+    # whatever of a unit no OSM relation covers (a relation cut off at an extract's edge, or none
+    # matching) keeps the plan's own polygon there, when it is a real part of the unit (T-610: a
+    # unit left out silently halved Cardiff)
     have = union_all(geoms) if geoms else shapely.Polygon()
-    for (uid, gname, g, kind), (i, iou) in zip(units, picks):
-        if i is None:
-            rest = make_valid(g.difference(have))
-            if _local(rest, lat0).area >= INSIDE * _local(g, lat0).area:
-                geoms.append(rest)
-                feats.append({"name": gname, "local": "", "plan_unit": uid, "source": kind, "match": round(iou, 3)})
+    for (uid, gname, g, kind), (idx, iou) in zip(units, picks):
+        rest = make_valid(g.difference(have))
+        share = _local(rest, lat0).area / _local(g, lat0).area
+        if share >= REST_MIN:
+            geoms.append(rest)
+            feats.append({"name": gname, "local": "", "plan_unit": uid, "source": kind, "match": round(iou, 3)})
+            print(f"  {cid}: {uid} {gname}: {share:.0%} of its land from the plan's polygon "
+                  f"({len(idx)} OSM relations, overlap {iou:.2f})", flush=True)
     out_units = [{"type": "Feature", "properties": props, "geometry": mapping(g)} for props, g in zip(feats, geoms)]
     whole = union_all([shape(f["geometry"]) for f in out_units]).buffer(0)
     whole = shapely.MultiPolygon([shapely.Polygon(p.exterior) for p in shapely.get_parts(whole)
@@ -194,7 +223,7 @@ def build(cid, row, sources):
         else:
             dropped.append(p)
     whole = shapely.MultiPolygon(keep)
-    print(f"{cid}: {len(units)} plan units, {sum(1 for i, _ in picks if i is not None)} matched to OSM; {len(chosen)} OSM units, "
+    print(f"{cid}: {len(units)} plan units, {sum(1 for i, _ in picks if i)} matched to OSM; {len(chosen)} OSM units, "
           f"{len(geoms) - len(chosen)} plan polygons; outline "
           f"{len(keep)} parts ({len(dropped)} dropped, {sum(km2(p, lat0) for p in dropped):.2f} km2), "
           f"{km2(whole, lat0):,.0f} km2", flush=True)

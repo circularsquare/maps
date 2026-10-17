@@ -61,7 +61,11 @@ building Toronto from tier 0 against the real pack (notes/T-287.md has every tab
   that cell a city's share. OSM industrial, commercial and retail land counts one job
   place per 5,000 m², one area's weight capped at 1 km² (`land_cap_km2`) and spread over a 0.003
   degree (~330 m) grid inside it (`land_spread_deg`), in every build (T-460); a config may set
-  either to 0 or another value. A country with workplace counts by small area (England's
+  either to 0 or another value. Where the jobs are this proxy alone (T-583), one OSM place takes at
+  most 0.75% of all jobs and one cell at most 500 x the square root of the jobs in thousands
+  (`PLACE_JOBS_CAP`, `CELL_JOBS_K`) through the two building parts; the jobs the caps leave over go
+  to the population part, and the pack's jobs source says how many. Only packs where OSM and GHSL
+  are thin reach them. A country with workplace counts by small area (England's
   BRES by LSOA) replaces the total and the proxy only spreads each area's count (tier0's `jobs`
   hook). Why it may not carry over: an old mid-rise centre with a large commuter shed defeats it.
   London's proxy gives Westminster and the City a third of their BRES jobs (483k against 1.51M)

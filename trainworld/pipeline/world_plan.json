@@ -1819,7 +1819,7 @@
    "order": 10,
    "id": "car",
    "name": "Cardiff",
-   "status": "parked",
+   "status": "shipped",
    "region": "uk",
    "countries": [
     "GBR"
@@ -1856,35 +1856,27 @@
     ]
    },
    "run": {
-    "run_batch": "20261017-020506",
+    "run_batch": "20261017-084624",
+    "built": "2026-10-17T08:48:11",
     "steps": {
-     "build": 41.9,
-     "places": 1.7,
-     "routes": 7.2,
-     "merge": 0.5,
-     "nocar": 1.4,
-     "everyday": 0.7
+     "build": 12.4,
+     "places": 2.2,
+     "routes": 9.5,
+     "merge": 0.6,
+     "nocar": 1.7,
+     "everyday": 0.8
     },
-    "built": "2026-10-17T02:39:04",
-    "reason": "gate: pop_vs_plan 0.5094077072349348; pop_vs_fua 0.4896133654785385 1,141,469 in Cardiff; top_cell_jobs_share 0.01766963153115932 at [-3.2424, 51.4081]",
     "gate": {
-     "fail": [
-      "pop_vs_plan 0.5094077072349348",
-      "pop_vs_fua 0.4896133654785385 1,141,469 in Cardiff",
-      "top_cell_jobs_share 0.01766963153115932 at [-3.2424, 51.4081]"
-     ],
-     "warn": [
-      "fleet_range 2"
-     ]
+     "warn": []
     },
-    "parked": "2026-10-17T02:40:29"
+    "shipped": "2026-10-17T08:49:39"
    }
   },
   {
    "order": 11,
    "id": "bel",
    "name": "Belfast",
-   "status": "parked",
+   "status": "shipped",
    "region": "uk",
    "countries": [
     "GBR"
@@ -1923,24 +1915,20 @@
     ]
    },
    "run": {
-    "run_batch": "20261017-020506",
+    "run_batch": "20261017-082936",
+    "built": "2026-10-17T08:38:19",
     "steps": {
-     "build": 58.9,
-     "places": 1.5,
-     "routes": 14.4,
-     "merge": 0.5,
-     "nocar": 1.6,
-     "everyday": 0.7
+     "build": 17.1,
+     "places": 1.8,
+     "routes": 16.0,
+     "merge": 0.6,
+     "nocar": 1.8,
+     "everyday": 0.8
     },
-    "built": "2026-10-17T02:48:15",
-    "reason": "gate: top_cell_jobs_share 0.01280398323667371 at [-5.9268, 54.6001]",
     "gate": {
-     "fail": [
-      "top_cell_jobs_share 0.01280398323667371 at [-5.9268, 54.6001]"
-     ],
      "warn": []
     },
-    "parked": "2026-10-17T02:49:27"
+    "shipped": "2026-10-17T08:39:52"
    }
   },
   {
@@ -13583,7 +13571,7 @@
    "order": 208,
    "id": "owe",
    "name": "Owerri",
-   "status": "planned",
+   "status": "parked",
    "region": "world",
    "countries": [
     "NGA"
@@ -13635,6 +13623,28 @@
     "fua": [
      6152
     ]
+   },
+   "run": {
+    "run_batch": "20261017-082936",
+    "steps": {
+     "build": 21.6,
+     "places": 1.2,
+     "routes": 16.5,
+     "merge": 0.5,
+     "nocar": 1.0,
+     "everyday": 0.7
+    },
+    "built": "2026-10-17T08:43:23",
+    "reason": "gate: browser None failed: ['the Gate test carries every purpose, purposes add up']",
+    "gate": {
+     "fail": [
+      "browser None failed: ['the Gate test carries every purpose, purposes add up']"
+     ],
+     "warn": [
+      "top_school_cell_pupils 6225.291015625"
+     ]
+    },
+    "parked": "2026-10-17T08:45:52"
    }
   },
   {
@@ -23827,7 +23837,7 @@
    "order": 401,
    "id": "aba",
    "name": "Aba",
-   "status": "planned",
+   "status": "parked",
    "region": "world",
    "countries": [
     "NGA"
@@ -23867,6 +23877,28 @@
     "fua": [
      6556
     ]
+   },
+   "run": {
+    "run_batch": "20261017-082936",
+    "steps": {
+     "build": 18.3,
+     "places": 0.8,
+     "routes": 6.0,
+     "merge": 0.5,
+     "nocar": 1.0,
+     "everyday": 0.8
+    },
+    "built": "2026-10-17T08:43:51",
+    "reason": "gate: university_rate 0.0",
+    "gate": {
+     "fail": [
+      "university_rate 0.0"
+     ],
+     "warn": [
+      "fleet_range 2"
+     ]
+    },
+    "parked": "2026-10-17T08:45:52"
    }
   },
   {
@@ -25080,7 +25112,7 @@
    "order": 425,
    "id": "abo",
    "name": "Aboh",
-   "status": "planned",
+   "status": "parked",
    "region": "world",
    "countries": [
     "NGA"
@@ -25124,6 +25156,29 @@
     "satellites": [
      7637
     ]
+   },
+   "run": {
+    "run_batch": "20261017-082936",
+    "steps": {
+     "build": 20.5,
+     "places": 1.1,
+     "routes": 6.7,
+     "merge": 0.5,
+     "nocar": 1.0,
+     "everyday": 0.8
+    },
+    "built": "2026-10-17T08:44:21",
+    "reason": "gate: university_rate 0.0; browser None failed: ['the Gate test carries every purpose, purposes add up']",
+    "gate": {
+     "fail": [
+      "university_rate 0.0",
+      "browser None failed: ['the Gate test carries every purpose, purposes add up']"
+     ],
+     "warn": [
+      "fleet_range 3"
+     ]
+    },
+    "parked": "2026-10-17T08:45:52"
    }
   },
   {

@@ -1,5 +1,8 @@
 ﻿# Archive
 
+- T-611 [P2] The gate's top cell for proxy-job packs. Done 2026-10-17: cell jobs over the square root of thousand jobs, failing over 600, replaces the flat 1% (real centres reach 1.3-2%); Belfast (283) and Cardiff ship. notes/T-583.md.
+- T-583 [P2] Proxy job lumps where OSM is thin. Done 2026-10-17: one OSM place at most 0.75% of jobs, one cell at most 500 x sqrt(thousand jobs), the excess to the population part; the Nigerian lumps gone, no other proxy pack changed. notes/T-583.md.
+- T-610 [P1] A plan unit with no OSM match shrank the pack. Done 2026-10-17: a unit may take several OSM relations, and what they leave uncovered keeps the plan's polygon (printed); Cardiff pop_vs_plan 0.51 to 0.996, shipped. notes/T-610.md.
 - T-593 [P1] Undo a stray Northeast re-solve. Done 2026-10-17 (Anita: re-merge): `merge_cells.py --undo` then a merge of the 13 Northeast packs from their res-9 copies; demand final back to 10,406,013. (A plain re-merge refuses a pack changed after merging, by design.)
 - T-577 [P2] Bend the bubble colour towards train blue. Abandoned 2026-10-17: Anita looked at three strengths beside today's and kept today's colour. notes/T-577.md.
 - T-584 [P2] Pack lines damped at 0.4 by default. Done 2026-10-17: borders.json `pack_line_default` 0.4 (a country's admin-1 default still wins); the GB group of 8 re-solved, commuters across pack lines 469,762 to 223,617 (0.48x); gate, every-pack-opens and smoke pass. notes/T-584.md.

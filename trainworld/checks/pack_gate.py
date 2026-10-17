@@ -63,7 +63,10 @@ THRESHOLDS = {
     "area_km2": {"fail": (None, 40000)},
     "jobs_per_resident": {"fail": (0.25, 0.7)},
     "top_cell_jobs": {"fail": (None, 50000)},                    # New York's densest cell 48,900, London's 44,200
-    "top_cell_jobs_share": {"fail": (None, 0.01)},               # tier 0 proxy jobs
+    # tier 0 proxy jobs: the densest cell's jobs over the square root of the pack's jobs in thousands.
+    # Real packs of 38 thousand to 18 million jobs run 100-575 (Birmingham 575, Liverpool 514, Belfast and
+    # Cardiff 283 and 290); a proxy with thin OSM and GHSL signals reached 850-2,600 (T-583, T-611).
+    "top_cell_jobs_vs_size": {"fail": (None, 600)},
     "top_cell_jobs_share_other": {"warn": (None, 0.03)},         # jobs from a table: one employer can be 5%
     "top_zone_jobs_share": {"fail": (None, 0.2), "warn": (None, 0.1)},
     "mean_commute_km": {"fail": (3, 25)},
@@ -74,7 +77,7 @@ THRESHOLDS = {
     "osm_land_share": {"warn": (None, 0.8)},
     "osm_top_place_jobs_share": {"fail": (None, 0.01)},          # tier 0 proxy jobs only
 }
-NEAR_KM = 20.0                # pieces of a city's outline this near its main one count with it
+NEAR_KM = 20.0               # pieces of a city's outline this near its main one count with it
 FLEET_WIDEN = 1.5             # a figure outside the fleet's [min / 1.5, max x 1.5] WARNs
 WATER_MIN_RADIUS_M = 40.0     # a water test point is the polylabel of a polygon at least 80 m across there
 WATER_MAX_POINTS = 40         # the largest water polygons in the outline, one point each
@@ -348,6 +351,7 @@ def figures(city, reg, logs):
     zone = a["zone"].astype(np.int64)
     out["jobs_per_resident"] = jobs.sum() / max(pop.sum(), 1.0)
     out["top_cell_jobs"] = float(jobs.max())
+    out["top_cell_jobs_vs_size"] = float(jobs.max() / math.sqrt(max(jobs.sum(), 1.0) / 1000.0))
     out["top_cell_jobs_share"] = jobs.max() / max(jobs.sum(), 1.0)
     ic = int(np.argmax(jobs))
     out["top_cell_at"] = [round(float(v), 4) for v in lonlat(header, a["x_m"][ic], a["y_m"][ic])]
@@ -517,8 +521,11 @@ def checks_of(city, f, rates, browser, changed, joint=None):
     c.append(judge("area_km2", f["area_km2"]))
     c.append(judge("jobs_per_resident", f["jobs_per_resident"]))
     c.append(judge("top_cell_jobs", f["top_cell_jobs"], f"at {f['top_cell_at']}"))
-    c.append(judge("top_cell_jobs_share" if f["proxy_jobs"] else "top_cell_jobs_share_other", f["top_cell_jobs_share"],
-                   f"at {f['top_cell_at']}"))
+    if f["proxy_jobs"]:
+        c.append(judge("top_cell_jobs_vs_size", f["top_cell_jobs_vs_size"],
+                       f"{f['top_cell_jobs']:,.0f} jobs, {f['top_cell_jobs_share']:.2%}, at {f['top_cell_at']}"))
+    else:
+        c.append(judge("top_cell_jobs_share_other", f["top_cell_jobs_share"], f"at {f['top_cell_at']}"))
     c.append(judge("top_zone_jobs_share", f["top_zone_jobs_share"], f"at {f['top_zone_at']}"))
     c.append(judge("mean_commute_km", f["mean_commute_km"]))
     c.append(judge("top_school_cell_pupils", f.get("top_school_cell_pupils")))

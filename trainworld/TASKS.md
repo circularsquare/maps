@@ -4,17 +4,15 @@ Open agent work, one line a task; detail in `notes/T-###.md`. Format and rules i
 P1 = now or blocking, P2 = this milestone, P3 = later. Finished or abandoned tasks move to `ARCHIVE.md`.
 
 **Direction** (Anita; CLAUDE.md "Working here"). The whole world, with demand realism at the core.
-Next, in order (2026-10-17): 1. finish the unattended city pipeline: T-590 (old packs read as US
-in joint solves, done), T-610, T-611 with T-583, then T-613, the next batch (the rest of Europe,
-from pipeline/world_plan.json); 2. T-586 (the trip explorer matches its view); 3. bubble colours
-T-602; 4. long-trip calibration (T-528); the deep calibration comes once the world's
-cities are in (car ownership about $10 a day, the walk weight against 1, walking per country:
-DECISIONS 2026-10-16). Performance is open work (notes/perf-survey.md). Game modes wait.
+Next, in order (2026-10-17): 1. the deep calibration, T-621 (Anita: start now; stage 2 waits on her
+three decisions in notes/T-621.md); 2. cities: T-614 and T-615 (thin-OSM parks), then T-613, the
+rest of Europe (72 rows), then the rest of the world (432 rows); 3. T-586 (the trip explorer
+matches its view), T-602; 4. long-trip calibration (T-528). Performance is open work
+(notes/perf-survey.md). Game modes wait.
 
-**Where things stand (2026-10-17).** 78 zones play, all shipping through the pack gate (T-538). The
-unattended runner `pipeline/world_run.py` shipped its 5-city pilot (Manchester, Liverpool,
-Portsmouth, Lisbon, Porto) in 28 minutes (T-540) and the UK batch (T-541: Leeds, Birmingham,
-Nottingham, Newcastle, Glasgow, Sheffield) in 44; Cardiff and Belfast parked (T-610, T-611).
+**Where things stand (2026-10-17).** 80 zones play, all shipping through the pack gate (T-538). The
+unattended runner `pipeline/world_run.py` shipped its 5-city pilot (T-540), the UK batch (T-541)
+and, after T-610 and T-611, Cardiff and Belfast; Owerri, Aba and Aboh park on T-614 and T-615.
 Anita's plain page on demand: docs/demand-plain.md (keep it current). History is in ARCHIVE.md.
 
 **For a task agent.** Check `git status` and the "taking" marks here first. Several agents work at once:
@@ -29,6 +27,8 @@ orchestrator's commit recipe is in CLAUDE.md "Before a commit".
 ## Demand and data
 - T-551 [P2] Demand review for Anita (her playtest notes, 2026-10-16): measured, nothing changed (notes/T-551.md). Waits for Anita, who decides at the deep calibration.
 - T-514 [P3] "Other" per cell (T-513): the sim keeps trips by other only as a total, so bubbles and hovers cannot show them by cell; needs other by home and work cell. Open; notes/T-514.md.
+- T-621 [P1] The deep calibration (Anita 2026-10-17: start now): T-509's fit again with car ownership, the walk weight against 1, walking fitted per survey country. Stage 1 taking 2026-10-17; stage 2 waits on Anita's three decisions. notes/T-621.md.
+- T-620 [P2] Car ownership cost, about $10 a day (Anita 2026-10-16, DECISIONS T-551), spread over a day's car trips; a parameter in T-621 stage 1, switched on by its fit. notes/T-621.md.
 - T-528 [P2] Fit the regional layer's longer trips (T-509's last part, Anita's design 2026-10-16): rail constant and damping on corridor counts at two lengths per country. Open; notes/T-509.md section 15.
 - T-529 [P3] Bikes to stations for car-free homes in Japan (T-509 stages 6-7): they only walk now, part of why Tokyo's commute rail is 35% against 52%. A bike access mode where a survey shows it. Open; notes/T-509.md sections 14-15.
 - T-497 [P3] Japan's joint commute gravity, what is left: the pair spread is a quarter off the census (wants a travel-time cost), and the balance stalls at 8e-4 in Okinawa's islands. Open; notes/T-463.md.
@@ -95,13 +95,14 @@ Tier 0 and country sources: docs/demand-worldwide.md, docs/data-register.md. The
 - T-571 [P3] National no-car figures in `nocar.COUNTRIES` for the larger countries on T-562's GDP rule (Russia, Mexico, Iraq, Iran and others; Vietnam's 65% is too low): census share first, else a register. Open; notes/T-562.md.
 - T-563 [P3] Fit an archetype A planned city's own curve from its country's flows at build time (England, France, Germany borrow now): a `curve` mode in tier0 and the key in `plan_hooks`. Open; notes/T-555.md.
 - T-564 [P3] Country hooks T-555 could not carry: Korea's registration population and Canada's DA population and jobs as tier 0 hooks. Open; notes/T-555.md.
-- T-583 [P2] OSM's largest place takes 5-15% of a small tier 0 pack's jobs (the gate fails over 1%): T-460's cap does not hold where OSM is thin. Findings done 2026-10-17, rule proposed, not built; notes/T-583.md.
 - T-594 [P3] `pipeline/intercity.py` runs the full Northeast solve on `--help` or any unknown flag; make it print usage instead.
 - T-592 [P3] world_run reads the next region's extract while this one gates and joins (reading is the largest phase: Portugal 5.2 of 12.9 minutes). notes/T-540.md.
-- T-610 [P1] Runner: a plan unit with no OSM match silently shrinks the pack (Cardiff: 2 of 3 NUTS3 units matched, 51% of plan people); fail the build or fall back to the plan polygon, re-run car. notes/T-541.md.
-- T-611 [P2] The 1% top_cell_jobs_share cap parks Belfast (1.28%, the centre) and Cardiff (1.77%, an out-of-town retail lump): a cap per city size or a smoothing step for proxy jobs, then re-run bel. With T-583. notes/T-541.md.
+- T-614 [P2] aba and abo park on `university_rate` 0 (OSM maps no university in the outline): pass a pack with none (T-582 opens it), or take universities from another source. Before T-613. notes/T-610.md.
+- T-615 [P2] owe and abo park on the browser check "carries every purpose" (the test line meets no medical or airport trips): pick a test line that reaches them, or relax it for thin packs. Before T-613. notes/T-610.md.
+- T-616 [P3] The runner reports a rates-test error (a sim copy without `data`/`app` junctions) as a pack fault: report it as a gate error, and add the junctions to the `TW_SIM_DIR` recipe. notes/T-610.md.
+- T-617 [P3] Rebuild gla, lis and pot on T-610's unit matching when next rebuilt (gla +5.6%; lis and pot move from plan polygons to OSM municipalities). notes/T-610.md.
 - T-612 [P3] Runner: delete a parked row's pack files once its reason is recorded.
-- T-613 [P2] The next runner batch, the rest of Europe from pipeline/world_plan.json (`plan --countries` first for the row count), after T-610 and T-611; publishing past the current set needs T-060 and Anita's word. notes/T-541.md retrospective.
+- T-613 [P2] The next runner batch, the rest of Europe from pipeline/world_plan.json (`plan --countries` first for the row count), after T-614 and T-615; publishing past the current set needs T-060 and Anita's word. notes/T-541.md retrospective.
 - T-546 [P3] Refit Mumbai's curve with B-28's 0-1 and 2-5 km bands merged, as Sao Paulo's are (d^-1.5 exp(-d/23.3 km) against the shipped d^-1.65 exp(-d/32.7 km)). Open; notes/T-314.md.
 - T-315 [P3] Tier 0 universities: few OSM campuses carry a Wikidata id (4 of 63 in Toronto), so most are sized by area; try matching campus names to Wikidata universities. Open; notes/T-315.md.
 - T-547 [P3] Read GISCO's download clauses for NUTS 2024 (some files are non-commercial only) before publishing any pack on NUTS-3 units; fall back to geoBoundaries if barred. Open; notes/T-536.md.

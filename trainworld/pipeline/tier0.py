@@ -103,6 +103,10 @@ JOB_BLEND = {"nres": 0.3, "osm": 0.5, "pop": 0.2}
 HEIGHT_POW = 2.0
 HEIGHT_CAP_M = 40.0                   # the height weight stops here: one tall tower or hangar took Berlin's share (T-573)
 LAND_CAP_KM2, LAND_SPREAD_DEG = 1.0, 0.003   # OSM industrial or commercial land: cap per area, spread grid (T-460)
+# A pack whose jobs are this proxy alone (T-583): one OSM place carries at most PLACE_JOBS_CAP of all
+# jobs, one cell at most cell_job_cap() jobs through the building parts; what the caps leave goes to
+# the population part. The gate's limits are 1% and 600 (checks/pack_gate.py).
+PLACE_JOBS_CAP, CELL_JOBS_K = 0.0075, 500.0
 ERRAND_SHARE, LEISURE_SHARE = 0.15, 0.08
 SCHOOL_ENROL = 0.9                    # pupils per child aged 0-14 (judgement; UNESCO rates would refine)
 SCHOOL_SITE_MAX = 3000.0              # pupils one OSM school site holds at most (T-574)
@@ -388,11 +392,17 @@ def signals(city, cfg, boundary, mask):
     for kind, g in grids.items():
         out[kind] = np.array([g.get(int(c), 0.0) for c in cells])
     pk = places.kind.to_numpy()
+    place_w = places.w.to_numpy()
+    blend_osm = cfg.get("job_blend", JOB_BLEND)
+    blend_osm = (blend_osm() if callable(blend_osm) else blend_osm)["osm"]
+    if not cfg.get("jobs") and blend_osm > 0:  # jobs from the proxy alone: T-583's place cap
+        in_pack = np.array([int(c) in index for c in pids])
+        place_w, out["osm_w0"], out["osm_wcap"] = cap_places(places, in_pack, blend_osm)
     for kind in ("errand", "leisure", "job", "land"):
         out["osm_" + kind] = np.zeros(len(cells))
         sel = pk == kind
         rows = np.array([index.get(int(c), -1) for c in pids[sel]], np.int64)
-        w = places.w.to_numpy()[sel]
+        w = place_w[sel]
         np.add.at(out["osm_" + kind], rows[rows >= 0], w[rows >= 0])
     out["pop_ghsl"] = out["pop"].copy()
     if cfg.get("admin_totals"):
@@ -422,12 +432,62 @@ def nres_signal(sig, height_pow=HEIGHT_POW, height_cap=HEIGHT_CAP_M):
     return v * np.power(np.maximum(h, 1e-9) / 10.0, height_pow)
 
 
-def jobs_from(sig, total, blend=None, height_pow=HEIGHT_POW):
-    """The jobs proxy: total jobs over cells by the blend of the three normalised signals."""
+def cell_job_cap(total):
+    """The most jobs one cell takes through the building parts: CELL_JOBS_K times the square root of
+    the pack's jobs in thousands (the densest cell of real packs, 38 thousand to 18 million jobs, is
+    100-575 times it)."""
+    return CELL_JOBS_K * (total / 1000.0) ** 0.5
+
+
+def place_keys(pl):
+    """One key per OSM place of a job-place table: the area's ref when the row has one (a land area's
+    spread rows share it), else its point."""
+    ref = pl["ref"].fillna("").astype(str).to_numpy() if "ref" in pl else np.full(len(pl), "")
+    own = np.char.add(np.char.add(pl.lat.round(5).astype(str).to_numpy(), ","), pl.lon.round(5).astype(str).to_numpy())
+    return np.where(ref != "", ref, own)
+
+
+def job_shares(sig, blend, height_pow=HEIGHT_POW, capped=False, total=1.0):
+    """Each part of the proxy per cell, as shares of all jobs (the three sum to 1). Capped (T-583):
+    the OSM part is read against the weight the pack's places had before `signals` capped each place,
+    a cell takes at most cell_job_cap(total) jobs through the two building parts, and what the caps
+    leave over goes to the population part."""
+    osm = sig["osm_errand"] + sig["osm_leisure"] + sig["osm_job"] + sig["osm_land"]
+    nres = nres_signal(sig, height_pow)
+    w0 = float(sig["osm_w0"]) if capped and "osm_w0" in sig else osm.sum()
+    s_nres = blend["nres"] * nres / max(nres.sum(), 1e-9)
+    s_osm = blend["osm"] * osm / max(w0, 1e-9)
+    s_pop = blend["pop"] * sig["pop"] / max(sig["pop"].sum(), 1e-9)
+    if capped:
+        build = s_nres + s_osm
+        cap = cell_job_cap(total) / total
+        k = np.where(build > cap, cap / np.maximum(build, 1e-12), 1.0)
+        s_nres, s_osm = s_nres * k, s_osm * k
+        s_pop = s_pop + (1.0 - s_nres.sum() - s_osm.sum() - s_pop.sum()) * sig["pop"] / max(sig["pop"].sum(), 1e-9)
+    return s_nres, s_osm, s_pop
+
+
+def jobs_from(sig, total, blend=None, height_pow=HEIGHT_POW, capped=False):
+    """The jobs proxy: total jobs over cells by the blend of the three normalised signals. `capped`
+    is for a pack whose jobs are this proxy alone (see job_shares); a proxy that only spreads a
+    table's jobs inside its units is not."""
     blend = blend or JOB_BLEND
+    if capped:
+        return total * sum(job_shares(sig, blend, height_pow, True, total))
     osm = sig["osm_errand"] + sig["osm_leisure"] + sig["osm_job"] + sig["osm_land"]
     parts = {"nres": nres_signal(sig, height_pow), "osm": osm, "pop": sig["pop"]}
     return total * sum(blend[k] * parts[k] / max(parts[k].sum(), 1e-9) for k in blend)
+
+
+def cap_places(places, in_pack, blend_osm):
+    """T-583: the weight of each OSM place, none above PLACE_JOBS_CAP of all jobs once the OSM part
+    is scaled by blend_osm; (the new weights, the pack's weight before capping, the cap in weight)."""
+    w = places.w.to_numpy(float).copy()
+    w0 = float(w[in_pack].sum())
+    cap_w = PLACE_JOBS_CAP / blend_osm * w0
+    tot = pd.Series(w[in_pack]).groupby(place_keys(places)[in_pack]).transform("sum").to_numpy()
+    w[in_pack] *= np.minimum(1.0, cap_w / np.maximum(tot, 1e-12))
+    return w, w0, cap_w
 
 
 def osm_signal_line(city, sig, jobs, blend=None):
@@ -451,6 +511,9 @@ def osm_signal_line(city, sig, jobs, blend=None):
         key = np.where(ref.to_numpy() != "", ref.to_numpy(), np.char.add(np.char.add(pl.lat.round(5).astype(str).to_numpy(), ","),
                                                                     pl.lon.round(5).astype(str).to_numpy()))
         w = pl.groupby(key, sort=False).w.sum()
+        if "osm_w0" in sig:  # signals capped each place at osm_wcap, against the weight before capping
+            w = w.clip(upper=float(sig["osm_wcap"]))
+            total = float(sig["osm_w0"])
         if len(w):
             top["id"], top["w"] = str(w.idxmax()), float(w.max())
             if "name" in pl:
@@ -794,8 +857,12 @@ def main(city):
         jpr = J / P
     else:
         J = P * jpr
-        jobs = jobs_from(sig, J, job_blend)
+        jobs = jobs_from(sig, J, job_blend, capped=True)
         jobs_name = f"tier 0 proxy: population x {jpr:.3f} jobs a resident (World Bank SL.EMP.TOTL.SP.ZS x 15+ share, {wb_year}), {proxy}"
+        s_nres, s_osm, _ = job_shares(sig, job_blend, capped=True, total=J)
+        moved = job_blend["nres"] + job_blend["osm"] - s_nres.sum() - s_osm.sum()
+        if moved >= 0.0005:
+            jobs_name += f"; {moved:.1%} of the jobs moved to population from places and cells over the caps"
     print(osm_signal_line(city, sig, jobs, job_blend), flush=True)
     pop = sig["pop"]
     if cfg.get("at_home"):  # per cell (T-465): at home by municipality of work, then telework on the rest

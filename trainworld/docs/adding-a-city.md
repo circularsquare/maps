@@ -151,9 +151,11 @@ sources. Each field comes from the row or a rule:
 
 - **Outline**, `pipeline/osm_units.py`: each plan unit takes the OSM `boundary=administrative`
   relation (any admin level, from the row's extracts, cached in `data/raw/osm/<extract>.admin.fgb`)
-  whose overlap with it is at least half their union, both taken on land less inland water. A unit
-  with no such relation keeps the part of its own polygon no OSM unit covers, if that is at least
-  half of it. Units are clipped to the OSM coastline, holes filled, the outline cut along every
+  whose overlap with it is at least half their union, both taken on land less inland water, or the
+  several relations of level 8 or coarser that lie mostly inside it when together they overlap it
+  better (a NUTS-3 unit is often two or three districts). Whatever of a unit no relation covers keeps
+  the unit's own polygon when that is at least a tenth of it, and the build prints each such unit
+  (T-610). Units are clipped to the OSM coastline, holes filled, the outline cut along every
   existing pack, and pieces under 0.05 km2 or with nobody in them (GHSL 100 m) dropped. Units with
   their OSM names go to `data/work/<id>.units.geojson`, the outline to `.outline.geojson`;
   `osm_units.py <id>` writes them and prints each unit's match.
@@ -463,7 +465,9 @@ Read it by splitting on spaces, then each field on its first `=`: values hold no
 cached rows have no OSM id (caches made before T-460); `top_place_jobs_share`: the jobs it brings
 through the OSM part of the blend over all jobs; `top_cell`: `<lat>,<lon>` of the cell with the most
 jobs and `top_cell_jobs_share` its share of all jobs; `top_place_name`: percent-encoded, `-` when the
-place has none. Printed once, after the jobs are set, before the cells are written.
+place has none. Printed once, after the jobs are set, before the cells are written. In a pack whose
+jobs are the proxy alone, a place's weight is capped before the cells are summed (T-583, so
+`top_place_jobs_share` is at most 0.0075) and the line's shares are of the weight before capping.
 
 **Water outside the US (T-041).** `pipeline/osm_water.py` gives any city a water mask from
 OpenStreetMap: the sea from osmdata.openstreetmap.de's coastline polygons

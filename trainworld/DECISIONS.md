@@ -3,6 +3,12 @@
 Newest first. One entry per decision: what, and why. The spec states the result; this keeps the
 reasoning and what it replaced.
 
+## 2026-10-17
+
+- **A plan unit may be several OSM relations, and what they leave uncovered keeps the plan's polygon** (T-610, notes/T-610.md). One relation per unit took Vale of Glamorgan for Cardiff's "Cardiff and Vale" unit and left Cardiff out, halving the pack; the build now takes the relations (level 8 or coarser, mostly inside the unit) that overlap it best together, fills a gap of a tenth of the unit or more from the plan's own polygon and prints it, rather than failing, since a cut-off relation at an extract edge (Monmouthshire) is common and the plan's polygon is a fair outline there.
+- **The proxy jobs have caps: one OSM place at most 0.75% of all jobs, one cell at most 500 x the square root of the jobs in thousands; the excess goes to the population part** (T-583, notes/T-583.md). Thin OSM and GHSL packs (Aba, Aboh, Owerri) put 3-15% of their jobs in one place or cell. A flat share does not fit all sizes, so the cell cap scales with the root of the jobs, as real packs' densest cells do (100-575 times it; the cap sits at 500, the gate at 600); no existing proxy pack (Belfast 283, Seoul 147) reaches it, so none changes.
+- **The gate's proxy top-cell check is the densest cell's jobs over the square root of the jobs in thousands, failing over 600, not a 1% share** (T-611). Belfast's centre at 1.28% is below real centres in cities of 0.5-1.7M jobs (Birmingham 1.68%, Liverpool 1.97%, Sheffield 1.31%); 1% was set when the proxy packs were all large cities. The new check still fails the Nigerian packs as they were before the caps (850-2,640).
+
 ## 2026-10-16
 
 - **Packs share a joint commute gravity when their outlines come within 50 km, chained, across borders too** (T-539, notes/T-539.md). Any gap from 25 to 200 km keeps today's Northeast and Japan; pairs of packs over 50 km apart carry 0.3-0.5% of the commuters crossing a pack line, while 150 km chains continents (London to Berlin, Japan with Korea). The Northeast keeps its own solve through `intercity.json`.
