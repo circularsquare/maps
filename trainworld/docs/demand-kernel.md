@@ -46,7 +46,9 @@ works on two levels:
    where a state-sized factor would be far too strong, as Washington shows. A country whose own
    OD data shows an admin-1 effect can still fit one. The mechanism is the same per-pack factor:
    a pack's `region` per cell becomes the country, and a pack spanning Schengen and non-Schengen
-   borders would need a factor per region pair (not built).
+   borders would need a factor per region pair (not built). Inside a pack the default stays 1;
+   the line between two packs of one country takes `pack_line_default` 0.4 (T-584, Japan's fit)
+   unless the country has its own value.
 
    **The curve** (T-198, from T-185's diagnosis). T-006 fitted d^-1 on New York; T-162 kept that
    shape and moved its length from 29 to 40 km to give back the trip length the border factor

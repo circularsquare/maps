@@ -754,20 +754,21 @@ notes/T-420.md has the tables.
   the US's per km, so cars there would cost more. Check: a fuel price and toll regime per country.
 - **Commutes between zones** (T-276, docs/zones.md 4). One gravity over every zone pack, each
   pack's own curve and border factor inside it, region pairs across packs from the pack holding
-  both, else the country's admin-1 default (US 0.23), national borders 0.05 (US-Canada, judgement).
+  both, else the country's admin-1 default (US 0.23, Japan 0.4), else the pack-line default 0.4
+  (`pack_line_default`, Japan's fit; T-584), national borders 0.05 (US-Canada, judgement).
   Checked, not fitted, against LODES jobs between packs: Baltimore - Washington 0.89x, Boston -
   Providence 0.82x, New Haven - New York 0.92x, Hartford - New Haven 0.99x, New York - Philadelphia
   0.56x (LODES counts long office-address links, notes/T-268.md). Why it may not carry over: where
   commuting crosses national borders freely (Schengen: Basel, Geneva, Luxembourg) 0.05 is far too
-  strong; where a country's admin-1 lines do not cut commuting (T-181) the default is 1. Check: the
-  country's census commuting flows between its zones.
+  strong; a country whose pack lines do not cut commuting as Japan's do would want a lower or
+  higher country value in `admin1_default`. Check: the country's census commuting flows between its zones.
   **Which packs share a gravity** (T-539): those whose outlines come within 50 km of each other,
   chained, formed by `intercity.py --group auto`. In today's two groups the pairs more than 50 km
   apart carry 0.3% (Northeast) and 0.5% (Japan) of the commuters crossing a pack line. Why it may
   not carry over: two cities 50-150 km apart with nothing between them exchange no one, and a pack
-  line between tier 0 packs in a country with no fitted factor takes 1, where Japan's census put
-  the line at 0.4 (a plain gravity sent 1.9 times the census's). Check: the country's census
-  commuting flows between the packs, when one is fitted.
+  line between packs in a country with no fitted factor takes Japan's 0.4 (T-584; a plain gravity
+  sent 1.9 times the census's). Check: the country's census commuting flows between the packs,
+  when one is fitted.
 - **Zones** (T-276, docs/zones.md 2). Non-city zones are county-sized units touching two city zones;
   the unit (US county, Canadian census division, NUTS-3) differs in size by country, and where
   admin-2 units are tiny (French communes, Japanese municipalities) a coarser statistical unit is

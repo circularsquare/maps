@@ -5,7 +5,7 @@ P1 = now or blocking, P2 = this milestone, P3 = later. Finished or abandoned tas
 
 **Direction** (Anita; CLAUDE.md "Working here"). The whole world, with demand realism at the core.
 Next, in order (2026-10-17): 1. finish the unattended city pipeline: T-590 (old packs read as US
-in joint solves, done), T-584, T-610, T-611 with T-583, then T-613, the next batch (the rest of Europe,
+in joint solves, done), T-610, T-611 with T-583, then T-613, the next batch (the rest of Europe,
 from pipeline/world_plan.json); 2. T-586 (the trip explorer matches its view); 3. bubble colours
 T-602, T-577 (Anita picks); 4. long-trip calibration (T-528); the deep calibration comes once the world's
 cities are in (car ownership about $10 a day, the walk weight against 1, walking per country:
@@ -27,7 +27,6 @@ the permission check refuses a step, make it safer, review, retry; don't wait fo
 orchestrator's commit recipe is in CLAUDE.md "Before a commit".
 
 ## Demand and data
-- T-584 [P2] Pack lines damped at 0.4 by default (Anita 2026-10-16, DECISIONS): joint gravity groups take Japan's 0.4 unless a country or pair has its own; rerun, measure crossing commuters. Open; notes/T-539.md.
 - T-551 [P2] Demand review for Anita (her playtest notes, 2026-10-16): measured, nothing changed (notes/T-551.md). Waits for Anita, who decides at the deep calibration.
 - T-514 [P3] "Other" per cell (T-513): the sim keeps trips by other only as a total, so bubbles and hovers cannot show them by cell; needs other by home and work cell. Open; notes/T-514.md.
 - T-528 [P2] Fit the regional layer's longer trips (T-509's last part, Anita's design 2026-10-16): rail constant and damping on corridor counts at two lengths per country. Open; notes/T-509.md section 15.
@@ -104,7 +103,7 @@ Tier 0 and country sources: docs/demand-worldwide.md, docs/data-register.md. The
 - T-610 [P1] Runner: a plan unit with no OSM match silently shrinks the pack (Cardiff: 2 of 3 NUTS3 units matched, 51% of plan people); fail the build or fall back to the plan polygon, re-run car. notes/T-541.md.
 - T-611 [P2] The 1% top_cell_jobs_share cap parks Belfast (1.28%, the centre) and Cardiff (1.77%, an out-of-town retail lump): a cap per city size or a smoothing step for proxy jobs, then re-run bel. With T-583. notes/T-541.md.
 - T-612 [P3] Runner: delete a parked row's pack files once its reason is recorded.
-- T-613 [P2] The next runner batch, the rest of Europe from pipeline/world_plan.json (`plan --countries` first for the row count), after T-610, T-611 and T-584; publishing past the current set needs T-060 and Anita's word. notes/T-541.md retrospective.
+- T-613 [P2] The next runner batch, the rest of Europe from pipeline/world_plan.json (`plan --countries` first for the row count), after T-610 and T-611; publishing past the current set needs T-060 and Anita's word. notes/T-541.md retrospective.
 - T-546 [P3] Refit Mumbai's curve with B-28's 0-1 and 2-5 km bands merged, as Sao Paulo's are (d^-1.5 exp(-d/23.3 km) against the shipped d^-1.65 exp(-d/32.7 km)). Open; notes/T-314.md.
 - T-315 [P3] Tier 0 universities: few OSM campuses carry a Wikidata id (4 of 63 in Toronto), so most are sized by area; try matching campus names to Wikidata universities. Open; notes/T-315.md.
 - T-547 [P3] Read GISCO's download clauses for NUTS 2024 (some files are non-commercial only) before publishing any pack on NUTS-3 units; fall back to geoBoundaries if barred. Open; notes/T-536.md.

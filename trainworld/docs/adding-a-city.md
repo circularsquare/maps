@@ -310,8 +310,9 @@ registry (T-441).
 
 Every registered zone is in the world market (docs/regional.md 5.1, T-377). Its pack header
 should name its country (`"country"`, ISO 3166 alpha-2; absent means US), which the joint commute
-gravity reads for border factors (`pipeline/borders.json`: add the country's admin-1 default and
-its national pairs); the market takes the country from the world field. Then, in order:
+gravity reads for border factors (`pipeline/borders.json`: add the country's admin-1 default
+only if its census shows a pack line other than the default 0.4 (`pack_line_default`, T-584), and its
+national pairs); the market takes the country from the world field. Then, in order:
 
     venv\Scripts\python.exe trainworld\pipeline\zones.py             (non-city zones: registers built ones)
     venv\Scripts\python.exe trainworld\pipeline\market_zones.py <id> (its market pack and every row, seconds)
