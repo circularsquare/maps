@@ -4,45 +4,50 @@ Open agent work. Format and rules in `CLAUDE.md`. P1 = now or blocking, P2 = thi
 P3 = later. Finished or abandoned tasks move to `ARCHIVE.md`.
 
 **Direction** (Anita; details in CLAUDE.md "Working here"). The whole world, with demand realism
-at the core: a sampler of other countries' cities shows which demand methods carry everywhere, then
-tailoring goes country by country. Calibration's in-city part is done (T-509, archived; Japan's
-country rail constant +0.5). **Next, in order (Anita 2026-10-16):** 1. robustness: T-510 (lone
-sparse cells, done); 2. the unattended city pipeline
-(T-535's design approved 2026-10-16; stages T-460, T-387, T-314, T-536 to T-541): a new city from docs/data-register.md to a checked pack without agent judgement,
-automatic city and zone choice, with T-314 (borrowing a curve), T-460 (land-use cap default), T-387
-(hospital sizes) and T-060 (packs on R2) as its parts; design first, to Anita; 3. long-trip calibration (T-528); 4. more cities. Performance is open work, ranked in
-notes/perf-survey.md. Game modes wait (Anita 2026-10-15: not yet). Anita plans hundreds of metros, so cost per city matters (notes/city-costs.md,
-about 1.6-3.4M tokens a pack).
+at the core. **Next, in order (2026-10-17):** 1. T-588, the doc tidy (P1); 2. finish the unattended
+city pipeline: T-540 stage B then the 5-city pilot (stage C), T-583 (thin-OSM job lumps, proposal
+in its note), then T-541, the first batch (UK first, then the rest of Europe, from
+pipeline/world_plan.json); 3. demand changes Anita decided: T-585 (waits as plain minutes), T-587
+(commute walking at a finer distance), T-584 (pack lines damped at 0.4), T-586 (the trip explorer
+matches the view it is opened from); 4. long-trip calibration (T-528); the deep calibration comes
+once the world's cities are in (car ownership about $10 a day, the walk weight against 1, walking per
+country: DECISIONS 2026-10-16). Performance is open work (notes/perf-survey.md). Game modes wait.
 
-**Where things stand (2026-10-16).** 67 zones play in one world market with rail, car and air: the
-Northeast (nine cities, four county zones), Toronto, London, Paris, Berlin, Shanghai, Mumbai, Seoul,
-Sao Paulo, Lagos and all of Japan (seven metro packs and 38 prefecture zones, one joint commute
-gravity). Since 2026-10-15: homes without a car choose rail, walking or "other" (bus, taxi, bike;
-T-511, T-513); everyday rates and distances come from each country's travel survey, and everyday
-attraction from jobs outside the US (T-509 stage 4, T-453); sparse cells merge harder (T-466); cost
-damping starts at 60 car-minutes (T-502); mode choice is fitted on six real networks (T-509 stages
-5-6: `asc_rail` 0.4, everyday trips 1.1 lower, everyday walking centred at 1.9 km; stage 7 checked
-all 67 packs and added Japan's +0.5); track capacity
-caps trains an hour (T-517); a new game has $3B, construction costs half what they did and running
-costs $2.25 a car-km (T-467, T-485). Real save's demand final: about 9.78M rail trips a day (T-509
-stage 6). History is in ARCHIVE.md.
+**Where things stand (2026-10-17).** 67 zones play, all shipping through the pack gate (T-538).
+Walking competes with rail and car (T-558); changes between trains carry no penalty (T-557); nobody
+rides back on a full line (T-575, T-581). The pipeline's stages 1-7 are built: world plan of 517
+metros (T-536, T-556), configs and outlines from a plan row (T-537, T-555), the gate, joint gravity
+groups within 50 km (T-539), car ownership everywhere (T-562), tier 0 caps (T-460, T-387, T-572 to
+T-574). Real save's demand final 10,541,788 rail trips a day. Anita's plain page on demand:
+docs/demand-plain.md (keep it current). History is in ARCHIVE.md.
 
-**Handoff for the next orchestrator (2026-10-16, evening).** Nothing is in flight; last commit
-1374ed8 is on 8800. Check `git status`, the taking marks here and ARCHIVE.md first. Anita's playtest
-notes land in TODO.md (hers; read it, file new items as tasks, never edit it). Her open playtest
-questions (rays to a selection, clipped line bullets, curve labels' metres) were answered in T-530. CPU: at most 5 cores for all agents together (CLAUDE.md). Asks for Anita go in
-the final message or notes/for-anita.md, never TODO.md. **After each commit**:
-`node trainworld/checks/smoke.mjs`, commit explicit paths, rebuild 8800 (`git -C maps/.tw-snap
-checkout --detach <commit>`, then with `CARGO_TARGET_DIR=maps/.tw-snap-target`, `CARGO_BUILD_JOBS=3`
-and `%USERPROFILE%\.cargo\bin` on PATH, `npm run build` there through `cmd /c` so PowerShell does not
-treat wasm-pack's stderr as an error), then run smoke again against `http://localhost:8800/trainworld/`
-(a build copies only the pack files vite.config.ts lists). Several agents at once work well when each
-owns named files; give every brief the others' files to leave alone, and allow ids to clash (grep
-TASKS.md and ARCHIVE.md before adding one). New packs end with `merge_cells.py <id>`, `nocar.py <id>`,
-`everyday_rates.py <id>`, then `market_zones.py <id>` (docs/adding-a-city.md). `data/work/pre-T*` and
-`data/work/res9/` wait for Anita's acceptance.
+**Handoff for the next orchestrator (2026-10-17, early morning).** Nothing is in flight. Last commit
+on 8800: 1374ed8; **later commits (bbdfcba T-581, b1394a2 T-582, and the handoff commit) are not
+on 8800 yet: rebuild it first.** **Uncommitted in the tree: T-540's stage B, stopped mid-way** when
+the session ended: pipeline/world_run.py (new), notes/T-540.md, and edits in build_city.py,
+plan_config.py, nocar.py, routes.py, world_plan.py, osm_units.py, market_zones.py,
+checks/pack_gate.py, docs/adding-a-city.md, docs/code-map.md, and five T-540 lines at the end of DECISIONS.md. Read notes/T-540.md and the diff, make
+it run (or set it aside with `git stash` and say so) before any other pipeline work; the scratch root
+is data/work/t540/. Check `git status` and the taking marks here first. Anita's playtest notes land
+in TODO.md (hers; read it, file new items as tasks, never edit it). CPU: 6 of 16 cores while Anita
+uses the machine, 12 overnight (CLAUDE.md). When the permission check refuses an agent's step, have
+the agent make it safer, review, retry; don't wait for Anita. Asks for Anita go in the final message
+or notes/for-anita.md, never TODO.md. **After each commit**: `node trainworld/checks/smoke.mjs`,
+commit explicit paths (check the staged diff right before committing: agents edit shared files
+while you stage), rebuild 8800 (`git -C maps/.tw-snap checkout --detach <commit>`, then with
+`CARGO_TARGET_DIR=maps/.tw-snap-target`, `CARGO_BUILD_JOBS=2` and `%USERPROFILE%\.cargo\bin` on
+PATH, `npm run build` there through `cmd /c` so PowerShell does not treat wasm-pack's stderr as an
+error), then smoke against `http://localhost:8800/trainworld/`, also with `SMOKE_SHADE=dark`.
+Several agents at once work well when each owns named files; give every brief the others' files to
+leave alone. Pack rebuilds: back up to data/work/pre-T###/ first. `data/work/pre-T*` and
+`data/work/res9/` wait for Anita's acceptance. serve.py (maps root) has an uncommitted one-line fix
+(listen backlog 128, T-490); 8800 runs it, started hidden in the background.
+
+## Docs
+- T-588 [P1] Doc tidy closing the milestone (Anita 2026-10-17; CLAUDE.md "each milestone ends with a doc tidy task"). TASKS.md is the costliest doc (every agent reads it; 104 open tasks, 91 P3, task lines averaging 350 characters against the one-line rule): (1) rewrite the header (direction, where things stand, handoff) to what is true now; (2) cut every task line to one line, context to notes/T-###.md; (3) close stale P3 tasks the work since has passed by, moving each to ARCHIVE.md as abandoned with a reason, and list every one closed in the final message so Anita can reopen any (Anita: the orchestrator may close them); (4) shrink docs/adding-a-city.md around the runner (`world_run.py`: the pipeline path first, the by-hand path for country tailoring after); (5) T-335's split of docs/demand.md, moving measurement trails to notes/; (6) delete finished one-off scripts in notes/ (CLAUDE.md); (7) check SPEC.md and docs/demand-plain.md against the code. DECISIONS.md stays as is (searched, not read); keep new entries to one or two sentences. Open.
 
 ## Demand and data
+- T-587 [P2] Commute walking at a finer distance (Anita 2026-10-17): commutes price walking (T-558) at the 2 km zone pair's centre distance, so a real 1 km commute across a zone line counts as about 2 km and walks too little, while everyday trips use their own samples' distance. Give commutes a finer walk distance (by subzone or sampled cell pairs, as the everyday layer does), keep the gravity's 2 km zones for everything else; refit the commute walking constant so total commute walking stays put; measure walking by distance band against before. Open.
 - T-584 [P2] Pack lines damped at 0.4 by default (Anita 2026-10-16, DECISIONS): every joint gravity group's pack-to-pack commuting takes Japan's fitted 0.4 unless a country or pair has its own factor; `borders.json` and the `joint_gravity` bin (notes/T-539.md); rerun the groups, measure crossing commuters before and after, smoke. Open.
 - T-585 [P2] Drop the platform wait weight (Anita 2026-10-16, DECISIONS): a wait is plain minutes (half the headway, no 1.37 for the first 5 minutes, no 0.4 after) in the strategy search, the mode choice and the trip explorer's "counts as" sum; no refit; demand final before and after. Open.
 - T-551 [P2] Demand review for Anita (her playtest notes, 2026-10-16): in New York rail takes 13% of all trips against walking's 17%, parking seems to make rail hopeless outside the centre, car ownership cost (about $10 a day) seems missing and car speeds seem slow. Measure, change nothing: a ceiling test (straight direct trains between every pair of cells: 140 km/h, no walk, no fare; and 100 km/h, 4-minute walks, $1 + $0.02/km) giving rail's share by purpose and distance, and the model's car costs, speeds and parking set against real figures. Review done 2026-10-16, nothing changed: notes/T-551.md (ceiling, car against NHTS, AAA and T-380, levers measured); waits for Anita, who decides at the deep calibration.
@@ -97,7 +102,7 @@ TASKS.md and ARCHIVE.md before adding one). New packs end with `merge_cells.py <
 - T-340 [P3] Quad track's rest (from T-257): a station on a quad stroke's own end node is refused when that end is new track; the express pair is always left of the drawn direction. Open.
 
 ## Interface
-- T-586 [P2] The bubble hover and the trip explorer disagree (Anita 2026-10-17, New York, dark theme): with Bleecker St's home bubble selected, Union Sq's hover bar reads mostly walking (All purposes, Average day), but opening the trip says 61% train, 11% drive (the explorer is always a commute at one period, here the evening peak). Make them agree: the explorer takes the view's purpose and period (needs T-201's everyday trip query) and the bubble's pair, or labels plainly which trips it shows; check also that T-558's "walkers rail takes" is counted the same in the view's bar and the explorer. Open.
+- T-586 [P2] The bubble hover and the trip explorer disagree (Anita 2026-10-17, New York, dark theme): with Bleecker St's home bubble selected, Union Sq's hover bar reads mostly walking (All purposes, Average day), but opening the trip says 61% train, 11% drive (the explorer is always a commute at one period, here the evening peak). Make them agree (Anita 2026-10-17: the explorer matches whatever view it was opened from): the explorer takes the view's purpose and period (needs T-201's everyday trip query, taken in here) and the bubble's pair; check also that T-558's "walkers rail takes" is counted the same in the view's bar and the explorer. Open.
 - T-576 [P2] Walking green in the zoomed-out zone bubbles (Anita: walking counts as green, never red or left out; she thought it already was). `intercityView.ts` (the zone bubbles, about l.227) and `CityInspector.tsx` l.36 call `modeMix(rail, 0, all - rail)`, so a zone's local walking is drawn red. Pass the local layer's walk legs as walk; for a zone not opened, find whether `zones.json`'s no-rail count carries a walk split, and add it if not. Inter-region trips have no walking, so those stay train and the rest. Open.
 - T-577 [P2] Bend the bubble colour slightly towards train blue (Anita: "quite weakly"), so a city at 30% rail reads bluer than today's pinkish red. One change inside `modeMix` (palette.ts), so every bubble keeps one colour function; the mode bars keep the true widths. Show Anita two or three strengths beside today's (a 30% zone, a New York cell close up) before choosing. After T-576. Open.
 - T-561 [P3] Page freezes at 1,500x or faster in a fresh game with a line in each of two far-apart cities (Toronto and Boston; found by T-550's agent); fine at normal speed and on the real New York save at 20,000x. Reproduce, find whether T-554's pulses, another change in the tree or old behaviour (55fe9df), fix if T-554's. Not reproduced on the tree of 2026-10-16 evening (T-550's own script, and 1,500x and 20,000x for 100 s each, at zoom 11 and 15 over Boston, also sped up before demand settled; a CDP pause was ready to name the loop): no freeze. T-554's pulses do nothing there (one line per city, no transfers). Open until someone sees it again with the exact steps.
@@ -123,7 +128,7 @@ Tier 0 and country sources: docs/demand-worldwide.md, docs/data-register.md.
 - T-563 [P3] Fit an archetype A planned city's own curve from its country's flows at build time (T-555 left London's, Paris's and Berlin's fits out, so planned English, French and German cities borrow): England's WU01EW, INSEE's 2022 flows, the Pendlerrechnung, as `notes/t360_curve.py`, `t289_curve.py`, `t290_curve.py` do by hand; a `curve` mode in tier0 and the key in each module's `plan_hooks`. Open; notes/T-555.md.
 - T-564 [P3] Country hooks T-555 could not carry: Korea's registration population for any city (provinces from the outline, the renames since November 2020 mapped once for the country) and Canada's DA population and jobs by census tract of work as tier 0 hooks (they run inside canada.main today). Open; notes/T-555.md.
 - T-583 [P2] OSM's largest place takes 5-15% of a small tier 0 pack's jobs (Owerri 5.4%, Aba 12.8%, Aboh 14.5%; the gate fails over 1%) and Aboh's top cell 69,000 jobs: T-460's cap does not hold where a pack's OSM signal is thin. Find what the places are and make the rule hold. T-540's scratch packs in `data/work/t540/trainworld/`. Findings done 2026-10-17 (ordinary land-use areas in a pack with 0.07-0.31 OSM units a 1,000 residents, and GHSL nres as thin); rule proposed, not built; next steps in notes/T-583.md.
-- T-540 [P2] Pipeline stage 8, the runner (`world_run.py`) and a 5-city pilot no agent touches. Needs stages 1-7. Taking, 2026-10-16; notes/T-540.md.
+- T-540 [P2] Pipeline stage 8, the runner (`world_run.py`) and a 5-city pilot no agent touches. Needs stages 1-7. Taking, 2026-10-16. Stages A (T-579) and B (the runner, tested in the scratch tree `data/work/t540/trainworld/`) done 2026-10-17; stage C, the pilot of man, liv, por, lis, pot, is next and ready to run from notes/T-540.md "Stage C".
 - T-541 [P2] Pipeline stage 10, the first batch of about 20 cities (UK first), with a batch retrospective. After T-540; publishing past the current set needs T-060 and Anita's word. Open; notes/T-535.md.
 
 - T-546 [P3] Refit Mumbai's curve with B-28's 0-1 and 2-5 km bands merged, as Sao Paulo's are (2 km zones cannot split them): d^-1.5 exp(-d/23.3 km) against the shipped d^-1.65 exp(-d/32.7 km); then `t314_loo.py score1 mum`, `table`. Open; notes/T-314.md.

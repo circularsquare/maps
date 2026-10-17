@@ -16,6 +16,7 @@ Read this, then `SPEC.md`, then `TASKS.md`. Everything else on demand; where cod
 | `checks/` | Standing checks, `smoke.mjs` first (code-map.md lists them) | agents |
 | `research/` | Background reports with sources, one file per topic | agents |
 | `TODO.md` | Anita's own list | Anita only; agents never edit it |
+| `docs/demand-plain.md` | How demand works in plain words, one page, for Anita | any agent that changes a demand rule it mentions |
 
 ## Doc rules
 
