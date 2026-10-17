@@ -28,6 +28,10 @@ export interface ShadeColours {
   outsideOpacity: number;
   /** the track's grey in a save's thumbnail, drawn over `land` */
   thumbTrack: string;
+  /** the crossing, junction, ramp and portal marks (T-629, T-655): the ink of those on built track
+   * and the ink of those on blueprint track and while drawing; their fill is `casing` */
+  markInk: string;
+  markBlueprint: string;
 }
 
 export const SHADES: Record<Shade, ShadeColours> = {
@@ -35,11 +39,13 @@ export const SHADES: Record<Shade, ShadeColours> = {
     land: "#f2f2ef", water: "#cbd8df", park: "#e3e8df", label: "#a9abad", basemapMix: NET_INK, casing: "#ffffff", mapInk: NET_INK,
     offRail: "#9aa3ae", offMid: "#f2f4f7", offFade: "#ffffff",
     outside: "#182536", outsideOpacity: 0.075, thumbTrack: "#b9b4ad",
+    markInk: NET_INK, markBlueprint: "#2f62b3",
   },
   dark: {
     land: "#202225", water: "#121820", park: "#212621", label: "#5b5f64", basemapMix: "#e8e6e3", casing: "#141517", mapInk: "#e6e4e0",
     offRail: "#6c747e", offMid: "#383e46", offFade: "#383e46",
     outside: "#000000", outsideOpacity: 0.35, thumbTrack: "#6f6b66",
+    markInk: "#e6e4e0", markBlueprint: "#8db6ee",
   },
 };
 

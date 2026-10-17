@@ -11,10 +11,11 @@
 //! platform are final (they clear the undo history). Money is US$M.
 
 use super::boarding::Boarding;
+use super::bridge;
 use super::cost::{GeoMask, NoWater, RunMask, TransformedMask, UnionMask, WaterMask};
 use super::frame::FrameKind;
 use super::geom::{self, GeomIssue, Pi};
-use super::net::{EdgeData, Issue, LineData, Network, NodeData, StationData};
+use super::net::{CrossKind, EdgeData, Issue, LineData, Network, NodeData, StationData};
 use super::params::*;
 use super::profile;
 use super::save;
@@ -41,6 +42,11 @@ pub struct TrackApi {
     route_vertices: Vec<Pi>,
     /// The express pair of the last quad route asked about (T-255), else empty.
     route_express: Vec<Pi>,
+    /// T-656: the last route's alignment once bridged over water (what is built and drawn), else
+    /// empty; `route_vertices` stays the shape the player drew.
+    route_bridged: Vec<Pi>,
+    /// T-656: the last route crossed water and had no room for a bridge's ramps.
+    bridge_refused: bool,
     /// T-418: a route from a heading to a free end is one tangent arc (`set_route_tangent`).
     route_tangent: bool,
     /// The last tangent route's circle: centre x, y and ground radius, else empty.
@@ -49,6 +55,11 @@ pub struct TrackApi {
     route_end: u32,
     /// Per rendered segment of the last route/edge preview, authoritative geometry speed km/h.
     preview_speeds: Vec<f32>,
+    /// Where the last preview's track makes a crossing or a flat junction (T-629): x, y, kind (0
+    /// crossing, 1 junction) per mark.
+    preview_marks: Vec<f64>,
+    /// The flat junctions the last route asked about makes: x, y per junction.
+    route_junctions: Vec<[f64; 2]>,
     /// The pack rasters installed with `add_pack_water`, kept so the water mask can be rebuilt
     /// when a loaded save is in another frame (T-125).
     rasters: Vec<PackWater>,
@@ -134,10 +145,14 @@ impl TrackApi {
             last_trains: 0.0,
             route_vertices: vec![],
             route_express: vec![],
+            route_bridged: vec![],
+            bridge_refused: false,
             route_tangent: false,
             route_arc: vec![],
             route_end: u32::MAX,
             preview_speeds: vec![],
+            preview_marks: vec![],
+            route_junctions: vec![],
             rasters: vec![],
             boarding: Boarding::default(),
             now: f64::NAN,
@@ -523,6 +538,7 @@ impl TrackApi {
     /// polyline includes the next pieces of the stroke where a joint moves with it (T-244).
     pub fn preview_edge(&mut self, id: u32, pis: &[f64]) -> Vec<f64> {
         self.preview_speeds.clear();
+        self.preview_marks.clear();
         let r = match self.reshaped(id, pis) {
             Ok(r) => r,
             Err(i) => {
@@ -531,7 +547,7 @@ impl TrackApi {
             }
         };
         let t = self.w.trial(r.op);
-        let mut out = self.preview_out(t, &r.verts, r.tracks);
+        let mut out = self.preview_out(t, &r.verts, &[], r.tracks);
         if r.before.is_empty() && r.after.is_empty() {
             return out;
         }
@@ -861,6 +877,7 @@ impl TrackApi {
 
     fn preview_moved(&mut self, op: Op, shapes: Vec<Vec<Pi>>) -> Vec<f64> {
         let r = self.w.trial(op);
+        self.preview_marks = trial_crossings(&r);
         let (ok, cost) = match &r {
             Ok(r) => (1.0, r.cost_after - r.cost_before),
             Err(_) => (0.0, 0.0),
@@ -1018,8 +1035,13 @@ impl TrackApi {
     /// [ok, cost, length, vertex count, cost multiplier (the track's price over its length at
     /// the base price: level and water averaged, T-085), per vertex x, y (the middle of its
     /// curve, or the vertex where it has none), radius used, km/h, then the polyline].
-    fn preview_out(&mut self, r: Result<EditResult, Vec<Issue>>, verts: &[Pi], tracks: u8) -> Vec<f64> {
-        let (f, track, _) = self.w.preview(verts, tracks);
+    ///
+    /// `shape` (T-656) is the alignment actually built where it differs from `verts`, the one the
+    /// player drew (a bridge over water): it gives the polyline, length and price; `verts` gives
+    /// the rows.
+    fn preview_out(&mut self, r: Result<EditResult, Vec<Issue>>, verts: &[Pi], shape: &[Pi], tracks: u8) -> Vec<f64> {
+        let (f, track, _) = self.w.preview(if shape.is_empty() { verts } else { shape }, tracks);
+        self.preview_marks = trial_crossings(&r);
         let (ok, cost) = match &r {
             Ok(r) => (1.0, r.cost_after - r.cost_before),
             Err(_) => (0.0, track),
@@ -1032,7 +1054,11 @@ impl TrackApi {
         }));
         self.last = None;
         let mut out = vec![ok, cost, f.len, verts.len() as f64, mult];
-        vertex_rows(&f, verts, &mut out);
+        if shape.is_empty() {
+            vertex_rows(&f, verts, &mut out);
+        } else {
+            vertex_rows(&self.w.net.fit(verts), verts, &mut out);
+        }
         render_samples(&f.pieces, &f.vert, &mut out);
         self.preview_speeds = render_speeds(&f.pieces, &f.vert);
         out
@@ -1066,6 +1092,8 @@ impl TrackApi {
         }
         self.route_end = rb.node;
         self.route_arc.clear();
+        self.route_bridged.clear();
+        self.bridge_refused = false;
         let mut verts: Vec<Pi> = vec![Pi::new(ra.x, ra.y, 0.0, ra.level)];
         let next_a = pis.first().map_or((rb.x, rb.y), |p| (p.x, p.y));
         let prev_b = pis.last().map_or((ra.x, ra.y), |p| (p.x, p.y));
@@ -1106,8 +1134,12 @@ impl TrackApi {
         // Quad track (T-255): the drawn pair, and an express pair beside it from end to end.
         let tracks = if quad { 2 } else { tracks };
         // One piece of track per corner clicked (T-244), joined at plain nodes, the shape unchanged.
-        let pieces = stroke_pieces(&verts, first_click, pis.len(), scaled);
+        // T-656: ground level over water is a bridge, raised over the water with ramps on land.
+        // Segments drawn through points only; the corners a player clicks keep their levels.
+        let bridged = if pis.is_empty() { self.bridged(&verts) } else { None };
+        let pieces = stroke_pieces(bridged.as_deref().unwrap_or(&verts), first_click, pis.len(), scaled);
         self.push_pieces(&pieces, ra.node, rb.node, tracks, &mut ops, &mut new_nodes, &mut new_edges);
+        self.route_bridged = bridged.unwrap_or_default();
         let mut express = vec![];
         if quad {
             // T-423: the express pair's own ends, at a loose quad end or (through points) open ground
@@ -1134,15 +1166,23 @@ impl TrackApi {
                     return Err(Issue::Geom { edge: u32::MAX, issue: GeomIssue::ZeroLeg(0) });
                 }
             };
-            let pieces = stroke_pieces(&ex, first, clicks, scaled);
+            // the express pair crosses the water on its own bridge, in one piece
+            let ex_bridged = if pis.is_empty() { self.bridged(&ex) } else { None };
+            let pieces = match &ex_bridged {
+                Some(b) => stroke_pieces(b, first, 0, scaled),
+                None => stroke_pieces(&ex, first, clicks, scaled),
+            };
             self.push_pieces(&pieces, own_a.map_or(ra.node, |o| o.0), own_b.map_or(rb.node, |o| o.0), tracks, &mut ops, &mut new_nodes, &mut new_edges);
-            express = ex;
+            express = ex_bridged.unwrap_or(ex);
         }
         // A junction this route makes (it had two edge ends, or it splits track) is flying if
         // the build setting says so; never one that already stands.
+        self.route_junctions.clear();
         for r in [&ra, &rb] {
             if flying && r.new_junction {
                 ops.push(Op::Node { id: r.node, data: Some(NodeData { x: r.x, y: r.y, level: r.level, flying: true }) });
+            } else if r.new_junction {
+                self.route_junctions.push([r.x, r.y]);
             }
         }
         self.route_express = express;
@@ -1204,6 +1244,20 @@ impl TrackApi {
         }
     }
 
+    /// T-656: `shape` as a bridge over any water it crosses at ground level, or None where it needs
+    /// none. With no room on land for the ramps it is left as drawn and `bridge_refused` set, so the
+    /// edit fails and says why (`bridge_refusal`).
+    fn bridged(&mut self, shape: &[Pi]) -> Option<Vec<Pi>> {
+        let scaled = self.w.net.frame().scaled();
+        match bridge::bridge(shape, scaled, self.w.net.water_mask.as_ref()) {
+            Ok(b) => b,
+            Err(bridge::NoRoom) => {
+                self.bridge_refused = true;
+                None
+            }
+        }
+    }
+
     fn release(&mut self, nodes: &[u32], edges: &[u32]) {
         for &n in nodes {
             self.w.net.release_node(n);
@@ -1219,6 +1273,7 @@ impl TrackApi {
     /// the problems when not ok.
     pub fn preview_route(&mut self, ends: &[f64], pis: &[f64], tracks: u8, flying: bool) -> Vec<f64> {
         self.preview_speeds.clear();
+        self.preview_marks.clear();
         let (op, verts, nn, ne) = match self.route_op(ends, pis, tracks, flying) {
             Ok(v) => v,
             Err(i) => {
@@ -1228,7 +1283,12 @@ impl TrackApi {
         };
         let r = self.w.trial(op);
         self.release(&nn, &ne);
-        let mut out = self.preview_out(r, &verts, tracks.min(2));
+        let r = if self.bridge_refused { r.map_err(bridge_refusal) } else { r };
+        let shape = std::mem::take(&mut self.route_bridged);
+        let mut out = self.preview_out(r, &verts, &shape, tracks.min(2));
+        for j in &self.route_junctions {
+            self.preview_marks.extend([j[0], j[1], 1.0]);
+        }
         if !self.route_express.is_empty() && out.len() > 5 {
             // a quad route's express pair, drawn on from the end back to the start (T-255)
             let mut back = self.route_express.clone();
@@ -1294,6 +1354,9 @@ impl TrackApi {
         let r = self.run(op);
         if r != 0 {
             self.release(&nn, &ne);
+            if self.bridge_refused && self.money_short.is_none() {
+                self.issues = bridge_refusal(std::mem::take(&mut self.issues));
+            }
         }
         r
     }
@@ -2053,6 +2116,28 @@ impl TrackApi {
         }
         out
     }
+    /// Per crossing of two edges at one height, 5 numbers: x, y, kind (0 flat, 1 bad), level (a
+    /// flat crossing's, else 0), built (1 when both its edges are constructed). For the map's
+    /// marks (T-629).
+    pub fn crossings_info(&self) -> Vec<f64> {
+        let n = &self.w.net;
+        let mut out = vec![];
+        for c in &n.crossings {
+            let (kind, level) = match c.kind {
+                CrossKind::Flat(l) => (0.0, l as f64),
+                CrossKind::Bad => (1.0, 0.0),
+                CrossKind::Overlap => continue,
+            };
+            let built = n.edge_built[c.e1 as usize] && n.edge_built[c.e2 as usize];
+            out.extend([c.x, c.y, kind, level, built as u8 as f64]);
+        }
+        out
+    }
+    /// Where the last route, edge or node-move preview makes a crossing or a flat junction:
+    /// x, y, kind (0 crossing, 1 junction) per mark (T-629).
+    pub fn preview_marks(&self) -> Vec<f64> {
+        self.preview_marks.clone()
+    }
     pub fn node_name(&self, id: u32) -> String {
         self.w.net.node_name.get(id as usize).cloned().unwrap_or_default()
     }
@@ -2313,7 +2398,7 @@ impl TrackApi {
         v.iter()
             .flat_map(|&(r, d)| {
                 let x = &cap.res[r];
-                [x.kind as u8 as f64, if x.node == u32::MAX { -1.0 } else { x.node as f64 }, x.x, x.y, d]
+                [cap.wire_kind(r) as f64, if x.node == u32::MAX { -1.0 } else { x.node as f64 }, x.x, x.y, d]
             })
             .collect()
     }
@@ -2334,10 +2419,10 @@ impl TrackApi {
         self.w
             .busy(level)
             .iter()
-            .flat_map(|&(r, kind, rho, d)| {
+            .flat_map(|&(r, _, rho, d)| {
                 let res = &cap.res[r];
                 let held = rho >= FULL_RHO && cap.limits(r) && cap.users_of(r).iter().any(|u| self.waiting(u.line, level) > 0.0);
-                [res.x as f32, res.y as f32, rho as f32, d as f32, kind as u8 as f32, cap.trains(net, r, level) as f32, held as u8 as f32]
+                [res.x as f32, res.y as f32, rho as f32, d as f32, cap.wire_kind(r) as f32, cap.trains(net, r, level) as f32, held as u8 as f32]
             })
             .collect()
     }
@@ -2368,7 +2453,63 @@ impl TrackApi {
             }
             let res = &cap.res[r as usize];
             let tph = cap.trains(&self.w.net, r as usize, lev);
-            out[7 * lev..7 * lev + 7].copy_from_slice(&[wait, res.kind as u8 as f64, if res.node == u32::MAX { -1.0 } else { res.node as f64 }, res.x, res.y, tph, tph / rho]);
+            out[7 * lev..7 * lev + 7].copy_from_slice(&[wait, cap.wire_kind(r as usize) as f64, if res.node == u32::MAX { -1.0 } else { res.node as f64 }, res.x, res.y, tph, tph / rho]);
+        }
+        out
+    }
+
+    /// The flat junctions (no flyover, no station) and flat crossings a line's route passes, in
+    /// route order (T-629): per mark `[4 junction | 5 crossing, the stop it follows, how far on
+    /// to the next stop 0..1, x, y, number of other lines there, those lines' numbers]`. Other
+    /// lines: those through the junction's node, or on the crossing edge.
+    pub fn line_marks(&self, line: u32) -> Vec<f64> {
+        use super::net::{path_dir, path_edge};
+        let (net, svc) = (&self.w.net, &self.w.svc);
+        let Some(ls) = svc.lines.get(line as usize).filter(|l| l.ok) else { return vec![] };
+        let run = &ls.runs[0];
+        if run.stop_idx.len() < 2 {
+            return vec![];
+        }
+        let stop_s: Vec<f64> = run.stop_idx.iter().map(|&k| run.node_s[k as usize]).collect();
+        let place = |s: f64| -> (usize, f64) {
+            let g = stop_s.partition_point(|&a| a <= s).saturating_sub(1).min(stop_s.len() - 2);
+            (g, ((s - stop_s[g]) / (stop_s[g + 1] - stop_s[g]).max(1e-9)).clamp(0.0, 1.0))
+        };
+        let others = |uses: &dyn Fn(&super::service::Run) -> bool| -> Vec<f64> {
+            (0..svc.lines.len()).filter(|&o| o != line as usize && svc.lines[o].ok && uses(&svc.lines[o].runs[0])).map(|o| o as f64).collect()
+        };
+        let mut marks: Vec<(f64, [f64; 5], Vec<f64>)> = vec![];
+        for k in 1..run.nodes.len().saturating_sub(1) {
+            let n = run.nodes[k];
+            let i = n as usize;
+            if net.node_ports[i].n < 3 || net.node_flying[i] || net.node_platform[i] > 0 {
+                continue;
+            }
+            let s = run.node_s[k];
+            if s <= stop_s[0] || s >= stop_s[stop_s.len() - 1] {
+                continue;
+            }
+            let (g, f) = place(s);
+            marks.push((s, [4.0, g as f64, f, net.node_x[i], net.node_y[i]], others(&|r| r.nodes.contains(&n))));
+        }
+        for c in net.crossings.iter().filter(|c| matches!(c.kind, CrossKind::Flat(_))) {
+            for (own, s_own, other) in [(c.e1, c.s1, c.e2), (c.e2, c.s2, c.e1)] {
+                let Some(j) = run.segs.iter().position(|&p| path_edge(p) == own) else { continue };
+                let len = net.edge_len[own as usize];
+                let s = run.seg_off[j] + if path_dir(run.segs[j]) == 0 { s_own } else { len - s_own };
+                if s <= stop_s[0] || s >= stop_s[stop_s.len() - 1] {
+                    continue;
+                }
+                let (g, f) = place(s);
+                marks.push((s, [5.0, g as f64, f, c.x, c.y], others(&|r| r.segs.iter().any(|&p| path_edge(p) == other))));
+            }
+        }
+        marks.sort_by(|a, b| a.0.total_cmp(&b.0));
+        let mut out = vec![];
+        for (_, head, lines) in marks {
+            out.extend_from_slice(&head);
+            out.push(lines.len() as f64);
+            out.extend(lines);
         }
         out
     }
@@ -2746,6 +2887,19 @@ fn crossover_partner(net: &Network, e: u32) -> Option<u32> {
     })
 }
 
+/// T-656: a segment that needed a bridge and had no room for the ramps fails ground over water;
+/// the player is told about the ramps instead.
+fn bridge_refusal(issues: Vec<Issue>) -> Vec<Issue> {
+    let mut out: Vec<Issue> = vec![];
+    for i in issues {
+        let i = if matches!(i, Issue::GroundOverWater { .. }) { Issue::BridgeNoRoom } else { i };
+        if !out.contains(&i) {
+            out.push(i);
+        }
+    }
+    out
+}
+
 /// Plane metres per ground metre at plane `y` in a scaled (Mercator) frame, else exactly 1.
 fn kk(scaled: bool, y: f64) -> f64 {
     if scaled { super::frame::merc_k(y) } else { 1.0 }
@@ -2876,6 +3030,21 @@ fn render_chainages(pieces: &[geom::Piece], vert: &[[f64; 2]]) -> Vec<f64> {
     ss.sort_by(|a, b| a.total_cmp(b));
     ss.dedup_by(|a, b| (*a - *b).abs() < 0.5);
     ss
+}
+
+/// The crossings a trial edit added or removed (an accepted edit), or the ones a refusal names,
+/// as `preview_marks` rows (x, y, 0). The refusal's are the bad ones.
+fn trial_crossings(r: &Result<EditResult, Vec<Issue>>) -> Vec<f64> {
+    let mut out = vec![];
+    match r {
+        Ok(r) => r.dirty.crossings.iter().for_each(|c| out.extend([c[0], c[1], 0.0])),
+        Err(is) => is.iter().for_each(|i| {
+            if let Issue::Crossing { x, y, overlap: false, .. } = i {
+                out.extend([*x, *y, 0.0]);
+            }
+        }),
+    }
+    out
 }
 
 fn render_samples(pieces: &[geom::Piece], vert: &[[f64; 2]], out: &mut Vec<f64>) {
@@ -3047,6 +3216,30 @@ mod tests {
         let loaded = super::super::world::TrackWorld::new(save::decode(&a.save()).unwrap());
         assert!(!loaded.svc.lines[0].running);
         assert!(loaded.net.line_stops(0).is_empty());
+    }
+
+    #[test]
+    fn crossing_and_junction_marks() {
+        let mut a = api();
+        let line = |x0: f64, y0: f64, x1: f64, y1: f64| -> Vec<f64> { free(x0, y0).iter().chain(free(x1, y1).iter()).copied().collect() };
+        assert_eq!(a.add_route(&line(0.0, 0.0, 1000.0, 0.0), &[], 2, false), 0);
+        // a route across it: the preview names the crossing, nothing is made
+        assert_eq!(a.preview_route(&line(500.0, -300.0, 500.0, 300.0), &[], 2, false)[0], 1.0);
+        let m = a.preview_marks();
+        assert_eq!(m.len(), 3, "{m:?}");
+        assert!((m[0] - 500.0).abs() < 1.0 && m[1].abs() < 1.0 && m[2] == 0.0);
+        assert!(a.crossings_info().is_empty());
+        assert_eq!(a.add_route(&line(500.0, -300.0, 500.0, 300.0), &[], 2, false), 0);
+        let c = a.crossings_info();
+        assert_eq!(c.len(), 5);
+        assert_eq!(&c[2..], &[0.0, 0.0, 0.0], "a flat crossing at level 0, not built");
+        // a route leaving the first track: a flat junction at its start, flying none
+        let e = a.edges_info()[0];
+        let from_edge = [2.0, e, 200.0, 0.0, 0.0];
+        let ends: Vec<f64> = from_edge.iter().chain(free(200.0, -600.0).iter()).copied().collect();
+        assert_eq!(a.preview_route(&ends, &[], 2, false)[0], 1.0);
+        let m = a.preview_marks();
+        assert!(m.chunks(3).any(|r| r[2] == 1.0 && (r[0] - 200.0).abs() < 1.0), "{m:?}");
     }
 
     #[test]
@@ -3321,6 +3514,11 @@ mod tests {
         assert!((dd[1] - 360.0).abs() < 1e-9);
         let worst = a.line_delays(l2, 0);
         assert!(worst.is_empty() || worst[4] > 0.0);
+        // the main line's route shows the flat junction between its two stops, with the branch line there
+        let m = a.line_marks(l1);
+        assert_eq!(m.len(), 7, "{m:?}");
+        assert_eq!((m[0], m[1], m[5], m[6]), (4.0, 0.0, 1.0, l2 as f64));
+        assert!(m[2] > 0.0 && m[2] < 1.0);
     }
 
     #[test]
@@ -3661,13 +3859,13 @@ mod tests {
         assert_eq!(a.edges_info().len() / 10, 1);
         assert_eq!(a.redo(), 0);
         assert_eq!(a.edges_info().len() / 10, 3);
-        // Ground level over water is refused with a kind the UI can word.
+        // A segment that ends in water has no land for a bridge (T-656): refused with a kind the UI can word.
         let mut w = api();
         w.w.net.set_water_mask(Box::new(|x: f64, _y: f64| x > 1000.0 && x < 1500.0));
         w.w.reload();
-        let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(3000.0, 0.0).iter()).copied().collect();
+        let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(1200.0, 0.0).iter()).copied().collect();
         assert_ne!(w.add_route(&ends, &[], 2, false), 0);
-        assert!(w.issue_kinds().contains("GroundOverWater"), "{}", w.issue_kinds());
+        assert!(w.issue_kinds().contains("BridgeNoRoom"), "{}", w.issue_kinds());
     }
 
     /// T-237: the stop markers' tiers come from the line tool's own search: a station past either
@@ -4818,6 +5016,317 @@ mod tests {
         assert_eq!(a.line_path(id).len(), 4);
     }
 }
+/// T-656: ground track across water becomes a bridge by itself.
+#[cfg(test)]
+mod bridge_tests {
+    use super::*;
+    use crate::track::geom::{height_at, pos_at};
+
+    fn api() -> TrackApi {
+        TrackApi::new(-73.985, 40.758, true)
+    }
+    /// A world frame (Mercator) network at the same place: plane metres are not ground metres.
+    fn merc() -> TrackApi {
+        let mut a = api();
+        a.w = TrackWorld::new(Network::new_in(FrameKind::Merc, -73.985, 40.758, true));
+        a
+    }
+    fn base(a: &TrackApi) -> (f64, f64) {
+        let p = a.from_lonlat(-73.985, 40.758);
+        (p[0], p[1])
+    }
+    /// Water where x (from `base`) lies in any of the bands.
+    fn water(a: &mut TrackApi, bands: &[(f64, f64)]) {
+        let (bx, _) = base(a);
+        let bands = bands.to_vec();
+        a.w.net.set_water_mask(Box::new(move |x: f64, _y: f64| bands.iter().any(|b| x > bx + b.0 && x < bx + b.1)));
+        a.w.reload();
+    }
+    fn ends(a: &TrackApi, from: (f64, f64), to: (f64, f64)) -> [f64; 10] {
+        let (bx, by) = base(a);
+        [0.0, 0.0, bx + from.0, by + from.1, 0.0, 0.0, 0.0, bx + to.0, by + to.1, 0.0]
+    }
+    fn alive(a: &TrackApi) -> Vec<u32> {
+        (0..a.w.net.edge_count() as u32).filter(|&e| a.w.net.edge_ok(e)).collect()
+    }
+    fn height(a: &TrackApi, e: u32, s: f64) -> f64 {
+        height_at(a.w.net.edge_vert(e), s)
+    }
+    /// Every sample over water is on the bridge and none of a ramp is over water.
+    fn bridge_ok(a: &TrackApi, e: u32) {
+        let net = &a.w.net;
+        let (pieces, len) = (net.edge_pieces(e), net.edge_len[e as usize]);
+        let (mut s, mut wet, mut ramp) = (0.0, 0, 0);
+        while s <= len {
+            let (x, y, _) = pos_at(pieces, s);
+            let h = height(a, e, s);
+            if net.water_mask.is_water(x, y) {
+                wet += 1;
+                assert!(h > 7.99, "edge {e} s {s}: {h} m over water");
+            }
+            if h > 0.01 && h < 7.99 {
+                ramp += 1;
+                assert!(!net.water_mask.is_water(x, y), "edge {e} s {s}: a ramp at {h} m over water");
+            }
+            s += 2.0;
+        }
+        assert!(wet > 0 && ramp > 0, "water {wet}, ramp {ramp}");
+    }
+    fn problems(a: &TrackApi) -> Vec<Issue> {
+        let nodes: Vec<u32> = (0..a.w.net.node_count() as u32).filter(|&n| a.w.net.node_ok(n)).collect();
+        a.w.net.validate(&alive(a), &nodes, &[])
+    }
+    fn first_edge_cost(a: &TrackApi) -> f64 {
+        alive(a).iter().map(|&e| a.w.net.edge_cost[e as usize]).sum()
+    }
+
+    #[test]
+    fn a_river_gets_a_bridge_and_the_preview_agrees() {
+        for world in [false, true] {
+            let mut a = if world { merc() } else { api() };
+            water(&mut a, &[(1000.0, 1500.0)]);
+            let e = ends(&a, (0.0, 0.0), (3000.0, 0.0));
+            let pv = a.preview_route(&e, &[], 2, false);
+            assert_eq!(pv[0], 1.0, "world {world}: {}", a.issue_kinds());
+            assert_eq!(a.add_route(&e, &[], 2, false), 0, "{}", a.issue_kinds());
+            let edges = alive(&a);
+            assert_eq!(edges.len(), 1, "one piece");
+            bridge_ok(&a, edges[0]);
+            assert!((pv[1] - first_edge_cost(&a)).abs() < 1e-6, "{} against {}", pv[1], first_edge_cost(&a));
+            // the ends stay on the ground; the same segment without water costs less
+            let len = a.w.net.edge_len[edges[0] as usize];
+            assert_eq!((height(&a, edges[0], 0.0), height(&a, edges[0], len)), (0.0, 0.0));
+            let mut dry = if world { merc() } else { api() };
+            assert_eq!(dry.add_route(&e, &[], 2, false), 0);
+            assert!(pv[1] > 1.5 * first_edge_cost(&dry), "bridge and water cost more: {} against {}", pv[1], first_edge_cost(&dry));
+            // one undo takes it all back
+            assert_eq!(a.undo(), 0);
+            assert!(alive(&a).is_empty());
+            assert_eq!(a.redo(), 0);
+            assert_eq!(alive(&a).len(), 1);
+        }
+    }
+
+    #[test]
+    fn each_crossing_gets_its_own_bridge_and_close_ones_share() {
+        let mut a = api();
+        water(&mut a, &[(1000.0, 1100.0), (3000.0, 3200.0)]);
+        let e = ends(&a, (0.0, 0.0), (5000.0, 0.0));
+        assert_eq!(a.add_route(&e, &[], 2, false), 0, "{}", a.issue_kinds());
+        let edges = alive(&a);
+        bridge_ok(&a, edges[0]);
+        assert_eq!(height(&a, edges[0], 2000.0), 0.0, "ground between the rivers");
+        assert_eq!(height(&a, edges[0], 1050.0), 8.0);
+        assert_eq!(height(&a, edges[0], 3100.0), 8.0);
+        // two rivers 200 m apart have no room for a ramp down and up: one bridge
+        let mut b = api();
+        water(&mut b, &[(1000.0, 1100.0), (1300.0, 1400.0)]);
+        let e = ends(&b, (0.0, 0.0), (3000.0, 0.0));
+        assert_eq!(b.add_route(&e, &[], 2, false), 0, "{}", b.issue_kinds());
+        let edge = alive(&b)[0];
+        bridge_ok(&b, edge);
+        assert_eq!(height(&b, edge, 1200.0), 8.0, "level between the two");
+    }
+
+    #[test]
+    fn no_room_on_land_is_refused_and_says_so() {
+        let mut a = api();
+        water(&mut a, &[(100.0, 300.0)]);
+        // water 100 m from the start
+        let e = ends(&a, (0.0, 0.0), (3000.0, 0.0));
+        let pv = a.preview_route(&e, &[], 2, false);
+        assert_eq!(pv[0], 0.0);
+        assert!(pv.len() > 20, "the ghost still has its shape");
+        assert_eq!(a.issue_kinds(), "BridgeNoRoom");
+        assert_ne!(a.add_route(&e, &[], 2, false), 0);
+        assert_eq!(a.issue_kinds(), "BridgeNoRoom");
+        assert!(alive(&a).is_empty());
+        // water 100 m before the end
+        let mut b = api();
+        water(&mut b, &[(2600.0, 2900.0)]);
+        let e = ends(&b, (0.0, 0.0), (3000.0, 0.0));
+        assert_ne!(b.add_route(&e, &[], 2, false), 0);
+        assert_eq!(b.issue_kinds(), "BridgeNoRoom");
+        // the end in the water
+        let e = ends(&b, (0.0, 0.0), (2700.0, 0.0));
+        assert_ne!(b.add_route(&e, &[], 2, false), 0);
+        assert_eq!(b.issue_kinds(), "BridgeNoRoom");
+        // just enough: 200 m of land each side
+        let mut c = api();
+        water(&mut c, &[(300.0, 400.0)]);
+        let e = ends(&c, (0.0, 0.0), (700.0, 0.0));
+        assert_eq!(c.add_route(&e, &[], 2, false), 0, "{}", c.issue_kinds());
+        bridge_ok(&c, alive(&c)[0]);
+    }
+
+    #[test]
+    fn water_near_a_station_leaves_no_room() {
+        let mut a = api();
+        water(&mut a, &[(2100.0, 2300.0)]);
+        assert_eq!(a.add_route(&ends(&a, (0.0, 0.0), (2000.0, 0.0)), &[], 2, false), 0);
+        let end = a.w.net.node_count() as u32;
+        let end = (0..end).find(|&n| a.w.net.node_ok(n) && (a.w.net.node_x[n as usize] - base(&a).0 - 2000.0).abs() < 1.0).unwrap();
+        assert_eq!(a.add_station(1, end, 0.0, 0.0, 100, "River".into()), 0, "{}", a.issue_kinds());
+        let e = [1.0, end as f64, 0.0, 0.0, 0.0, 0.0, 0.0, base(&a).0 + 4000.0, base(&a).1, 0.0];
+        assert_eq!(a.preview_route(&e, &[], 2, false)[0], 0.0);
+        assert_eq!(a.issue_kinds(), "BridgeNoRoom");
+        assert_ne!(a.add_route(&e, &[], 2, false), 0);
+        // water further out leaves the room, and the platform stays off the ramp
+        water(&mut a, &[(2400.0, 2600.0)]);
+        assert_eq!(a.add_route(&e, &[], 2, false), 0, "{}", a.issue_kinds());
+        assert!(problems(&a).is_empty(), "{:?}", problems(&a));
+    }
+
+    #[test]
+    fn other_levels_are_left_alone() {
+        // a viaduct is drawn as it is, a tunnel too, and neither gets ramps
+        for level in [1.0, -1.0] {
+            let mut a = api();
+            water(&mut a, &[(1000.0, 1500.0)]);
+            let mut e = ends(&a, (0.0, 0.0), (3000.0, 0.0));
+            (e[4], e[9]) = (level, level);
+            assert_eq!(a.add_route(&e, &[], 2, false), 0, "{}", a.issue_kinds());
+            let edges = alive(&a);
+            assert_eq!(edges.len(), 1);
+            assert_eq!(height(&a, edges[0], 1250.0), level * 8.0);
+            assert!(a.w.net.edge_vert(edges[0]).iter().all(|p| p[1] == level * 8.0), "flat at the level drawn");
+        }
+    }
+
+    #[test]
+    fn a_curve_keeps_its_shape_with_a_bridge_on_it() {
+        for world in [false, true] {
+            // track going east, then a tangent arc turning north-east across the river
+            let draw = |water_on: bool| {
+                let mut a = if world { merc() } else { api() };
+                if water_on {
+                    water(&mut a, &[(1300.0, 1450.0)]);
+                }
+                assert_eq!(a.add_route(&ends(&a, (0.0, 0.0), (600.0, 0.0)), &[], 2, false), 0);
+                let node = (0..a.w.net.node_count() as u32).find(|&n| a.w.net.node_ok(n) && (a.w.net.node_x[n as usize] - base(&a).0 - 600.0).abs() < 1.0).unwrap();
+                a.set_route_tangent(true);
+                let (bx, by) = base(&a);
+                let e = [1.0, node as f64, 0.0, 0.0, 0.0, 0.0, 0.0, bx + 2100.0, by + 1000.0, 0.0];
+                let pv = a.preview_route(&e, &[], 2, false);
+                assert_eq!(pv[0], 1.0, "world {world} water {water_on}: {}", a.issue_kinds());
+                assert_eq!(a.add_route(&e, &[], 2, false), 0, "{}", a.issue_kinds());
+                (a, pv)
+            };
+            let (dry, _) = draw(false);
+            let (wet, pv) = draw(true);
+            let edge = |a: &TrackApi| *alive(a).iter().max_by(|&&p, &&q| a.w.net.edge_len[p as usize].total_cmp(&a.w.net.edge_len[q as usize])).unwrap();
+            let (d, w) = (edge(&dry), edge(&wet));
+            bridge_ok(&wet, w);
+            let (len_d, len_w) = (dry.w.net.edge_len[d as usize], wet.w.net.edge_len[w as usize]);
+            assert!((len_d - len_w).abs() < 0.05, "same length: {len_d} {len_w}");
+            let mut s = 0.0;
+            while s < len_d {
+                let (p, q) = (pos_at(dry.w.net.edge_pieces(d), s), pos_at(wet.w.net.edge_pieces(w), s));
+                assert!((p.0 - q.0).hypot(p.1 - q.1) < 0.3, "world {world}: shape differs at {s}");
+                s += 20.0;
+            }
+            // the ghost showed the same thing: the same length, and a price above the dry one
+            assert!((pv[2] - len_w).abs() < 0.05);
+            assert!(pv[1] > first_edge_cost(&dry) * 0.99);
+            assert!(problems(&wet).is_empty());
+        }
+    }
+
+    /// Curves in both frames against many rivers: a bridge keeps the shape and the ramps stay on
+    /// land, or the segment is refused for want of room on land and nothing else.
+    #[test]
+    fn bridges_on_curves_hold_the_shape_wherever_the_water_is() {
+        let targets = [(2100.0, 1000.0), (1500.0, -1200.0), (2600.0, 300.0), (1100.0, 2400.0), (-300.0, 1800.0)];
+        let (mut built, mut refused) = (0, vec![]);
+        for world in [false, true] {
+            for &(tx, ty) in &targets {
+                let dry = {
+                    let mut a = if world { merc() } else { api() };
+                    assert_eq!(a.add_route(&ends(&a, (0.0, 0.0), (600.0, 0.0)), &[], 2, false), 0);
+                    let node = (0..a.w.net.node_count() as u32).find(|&n| a.w.net.node_ok(n) && (a.w.net.node_x[n as usize] - base(&a).0 - 600.0).abs() < 1.0).unwrap();
+                    a.set_route_tangent(true);
+                    let (bx, by) = base(&a);
+                    assert_eq!(a.add_route(&[1.0, node as f64, 0.0, 0.0, 0.0, 0.0, 0.0, bx + tx, by + ty, 0.0], &[], 2, false), 0, "{}", a.issue_kinds());
+                    a
+                };
+                let longest = |a: &TrackApi| *alive(a).iter().max_by(|&&p, &&q| a.w.net.edge_len[p as usize].total_cmp(&a.w.net.edge_len[q as usize])).unwrap();
+                let d = longest(&dry);
+                for from in (700..2400).step_by(130) {
+                    for width in [60.0, 200.0, 420.0] {
+                        let mut a = if world { merc() } else { api() };
+                        water(&mut a, &[(from as f64, from as f64 + width)]);
+                        assert_eq!(a.add_route(&ends(&a, (0.0, 0.0), (600.0, 0.0)), &[], 2, false), 0);
+                        let node = (0..a.w.net.node_count() as u32).find(|&n| a.w.net.node_ok(n) && (a.w.net.node_x[n as usize] - base(&a).0 - 600.0).abs() < 1.0).unwrap();
+                        a.set_route_tangent(true);
+                        let (bx, by) = base(&a);
+                        let e = [1.0, node as f64, 0.0, 0.0, 0.0, 0.0, 0.0, bx + tx, by + ty, 0.0];
+                        let pv = a.preview_route(&e, &[], 2, false);
+                        let r = a.add_route(&e, &[], 2, false);
+                        assert_eq!(pv[0] == 1.0, r == 0, "preview and edit agree");
+                        let name = format!("world {world} to ({tx}, {ty}), water {from} + {width}");
+                        if r != 0 {
+                            assert_eq!(a.issue_kinds(), "BridgeNoRoom", "{name}");
+                            refused.push(name);
+                            continue;
+                        }
+                        let w = longest(&a);
+                        if a.w.net.edge_water(w).is_empty() {
+                            continue; // the curve never reaches this water
+                        }
+                        built += 1;
+                        bridge_ok(&a, w);
+                        assert!(problems(&a).is_empty(), "{name}: {:?}", problems(&a));
+                        let len = dry.w.net.edge_len[d as usize];
+                        assert!((len - a.w.net.edge_len[w as usize]).abs() < 0.05, "{name}: length");
+                        let mut s = 0.0;
+                        while s < len {
+                            let (p, q) = (pos_at(dry.w.net.edge_pieces(d), s), pos_at(a.w.net.edge_pieces(w), s));
+                            assert!((p.0 - q.0).hypot(p.1 - q.1) < 0.3, "{name}: shape differs at {s}");
+                            s += 20.0;
+                        }
+                    }
+                }
+            }
+        }
+        // a curve cut short of room for its ramps (a short arc, a tight turn) is refused; most are built
+        assert!(built > 120 && built > refused.len(), "built {built}, refused {}", refused.len());
+    }
+
+    #[test]
+    fn a_bridge_off_constructed_track_and_quad_track() {
+        let mut a = api();
+        water(&mut a, &[(1200.0, 1500.0)]);
+        assert_eq!(a.add_route(&ends(&a, (0.0, 0.0), (800.0, 0.0)), &[], 2, false), 0);
+        assert_eq!(a.construct_all(), 0, "{}", a.issue_kinds());
+        let built = alive(&a)[0];
+        assert!(a.w.net.edge_built[built as usize]);
+        let node = (0..a.w.net.node_count() as u32).find(|&n| a.w.net.node_ok(n) && (a.w.net.node_x[n as usize] - base(&a).0 - 800.0).abs() < 1.0).unwrap();
+        let (bx, by) = base(&a);
+        let e = [1.0, node as f64, 0.0, 0.0, 0.0, 0.0, 0.0, bx + 3000.0, by, 0.0];
+        assert_eq!(a.add_route(&e, &[], 2, false), 0, "{}", a.issue_kinds());
+        let new = *alive(&a).iter().find(|&&x| x != built).unwrap();
+        assert!(!a.w.net.edge_built[new as usize], "the bridge is blueprint");
+        assert!(a.w.net.edge_built[built as usize]);
+        bridge_ok(&a, new);
+        // quad track: both pairs cross on a bridge
+        let mut q = api();
+        water(&mut q, &[(1000.0, 1300.0)]);
+        let e = ends(&q, (0.0, 0.0), (3000.0, 0.0));
+        let pv = q.preview_route(&e, &[], 4, false);
+        assert_eq!(pv[0], 1.0, "{}", q.issue_kinds());
+        assert_eq!(q.add_route(&e, &[], 4, false), 0, "{}", q.issue_kinds());
+        let edges = alive(&q);
+        assert!(edges.len() >= 2);
+        for &x in &edges {
+            if q.w.net.edge_water(x).is_empty() {
+                continue;
+            }
+            bridge_ok(&q, x);
+        }
+        assert!(problems(&q).is_empty());
+    }
+}
+
 #[cfg(test)]
 mod regional_water_tests {
     use super::*;
@@ -4924,7 +5433,7 @@ mod regional_water_tests {
             let [x, y] = world(&a, -74.7755, 40.2169);
             let ends: Vec<f64> = free(x - 200.0, y).into_iter().chain(free(x + 200.0, y)).collect();
             assert_eq!(a.preview_route(&ends, &[], 2, false)[0], 0.0, "ground-level Delaware crossing refused");
-            assert!(a.issue_kinds().contains("GroundOverWater"));
+            assert!(a.issue_kinds().contains("BridgeNoRoom"), "400 m is no room for the ramps");
         }
     }
 }

@@ -141,7 +141,7 @@ export type ToClock =
   | {
       kind: "query";
       seq: number;
-      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "lineHeld"; line: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "lineAccount"; line: number; day: number } | { what: "linePeriods"; line: number; day: number } | { what: "today" } | { what: "yesterday" };
+      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "lineHeld"; line: number } | { what: "lineMarks"; line: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "lineAccount"; line: number; day: number } | { what: "linePeriods"; line: number; day: number } | { what: "today" } | { what: "yesterday" };
     };
 
 /** T-531: each region's today and this hour, as the "cash" message carries them. */
@@ -257,7 +257,9 @@ export interface ClockRender {
 }
 
 /** A busy resource (SPEC 6.2: 75% and up), local units. `kind`: 0 track, 1 single track,
- * 2 platform, 3 terminus, 4 junction, 5 flat crossing (`ResKind` in sim/src/track/capacity.rs). */
+ * 2 platform, 3 terminus, 4 junction, 5 flat crossing, 6 a line turning on a through platform,
+ * 7 track several lines share, 8 a turn across the other track (`Capacity::wire_kind` in
+ * sim/src/track/capacity.rs; words in game/capacityKinds.ts). */
 export interface CapacityMarker {
   x: number;
   y: number;
@@ -288,6 +290,9 @@ export interface ClockState {
   /** stations the player linked into one complex (T-197): node id pairs, flat */
   links: number[];
   render: ClockRender;
+  /** where two tracks cross at one height (T-629), 5 numbers each: x, y (local units), kind (0
+   * flat, 1 bad), level, built (1 when both tracks are) */
+  crossings?: Float32Array;
   money: MoneyState;
   /** the renderer's buffers, built in the worker from the rest (T-063); the arrays are shared with
    * `render` */
@@ -330,6 +335,9 @@ export type FromClock =
       arc?: Float64Array;
       /** the draw anchor version `verts` and `pts` are relative to (T-307) */
       anchor?: number;
+      /** where the track makes a crossing or a flat junction (T-629): x, y (local units), kind (0
+       * crossing, 1 junction), per mark */
+      marks?: Float32Array;
     }
   | { kind: "state"; state: ClockState }
   /** trips drawn in [epoch, epoch + 3600): profile index, departure - epoch (notes/T-040.md);

@@ -35,11 +35,14 @@ function icon(path: string, name: string): SVGSVGElement {
 }
 
 /** The icon and chip for an elevation (a drawn stroke's level is rounded, as the shader colours it). */
-export function elevationFact(level: number): HTMLSpanElement {
-  const l = Math.max(-3, Math.min(3, Math.round(level))) as Level;
+export function elevationFact(level: number, ...also: number[]): HTMLSpanElement {
   const s = document.createElement("span");
   s.className = "tag-fact";
-  s.append(icon(ELEVATION_PATH, "Elevation"), chip(levelLabel(l), LEVEL_COLOURS[l]));
+  s.append(icon(ELEVATION_PATH, "Elevation"));
+  for (const v of [level, ...also]) {
+    const l = Math.max(-3, Math.min(3, Math.round(v))) as Level;
+    s.append(chip(levelLabel(l), LEVEL_COLOURS[l]));
+  }
   return s;
 }
 

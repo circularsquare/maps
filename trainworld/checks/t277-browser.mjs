@@ -47,9 +47,10 @@ try {
     const g = await t.client.edit({ op: 'route', from: { kind: 'free', x: a.x, y: a.y, level: 0 }, to: { kind: 'free', x: b.x, y: b.y, level: 0 }, pis: [], single: false });
     const u = await t.client.edit({ op: 'route', from: { kind: 'free', x: a.x, y: a.y, level: -2 }, to: { kind: 'free', x: b.x, y: b.y, level: -2 }, pis: [], single: false });
     if (u.ok) await t.client.edit({ op: 'undo' });
+    if (g.ok) await t.client.edit({ op: 'undo' });
     return { ground: g.ok ? 'accepted' : JSON.stringify(g).slice(0, 200), tunnel: u.ok };
   });
-  check('ground track across Toronto Harbour refused, a tunnel accepted', /GroundOverWater/.test(water.ground) && water.tunnel, water);
+  check('ground track across Toronto Harbour bridged (or refused for want of room), a tunnel accepted', (water.ground === 'accepted' || /BridgeNoRoom/.test(water.ground)) && water.tunnel, water);
 
   // 3. a Yonge Street subway, Union to Eglinton, constructed
   const before = await page.evaluate(() => window.twDemand.view()?.version ?? 0);

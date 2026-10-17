@@ -202,6 +202,9 @@ pub struct Crossing {
 pub enum Issue {
     Geom { edge: u32, issue: GeomIssue },
     GroundOverWater { edge: u32, s: f64 },
+    /// A segment drawn at ground level over water that has no room on land for a bridge's
+    /// ramps (T-656); the drawing tool words it in place of `GroundOverWater`.
+    BridgeNoRoom,
     Crossing { e1: u32, e2: u32, x: f64, y: f64, overlap: bool },
     NoSuchNode { node: u32 },
     NoSuchEdge { edge: u32 },

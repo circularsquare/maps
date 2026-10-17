@@ -16,6 +16,7 @@ import type { LineInput, WorldView } from "../game/types";
 import { ask, display, isBuildTool, purposeFilter, selection, shownDayPhrase, tool } from "../game/ui";
 import { world } from "../game/world";
 import { hoverAt } from "./demandHover";
+import { markAt, markTip } from "./gradeMarks";
 import { hoverHeld } from "../ui/blurHold";
 import { live } from "./live";
 import type { NetworkBuffers } from "./network";
@@ -66,8 +67,9 @@ function lineTip(n: NetworkBuffers, w: WorldView | null, dv: DemandView | null, 
 
 /** The tag's lines at a point (CSS px in the map), or null: what the current track display draws
  * on the line or track `pick` finds there; for a train, a station, a platform's crowd or a station
- * demand circle, what they stand for (T-194, networkTips.ts). Nothing for junctions, nor for the
- * station circles while a build tool has the demand views beneath the network. */
+ * demand circle, what they stand for (T-194, networkTips.ts); for a crossing, junction, ramp or
+ * portal mark, its name (T-629). Nothing for a junction without a mark, nor for the station
+ * circles while a build tool has the demand views beneath the network. */
 export function trackTip(ov: Overlay, px: number, py: number, zoom = 12): TipLine[] | null {
   const n = ov.renderer.net;
   if (!n || !ov.camMatrix) return null;
@@ -78,6 +80,11 @@ export function trackTip(ov: Overlay, px: number, py: number, zoom = 12): TipLin
   if (w && hit?.kind === "station") {
     const i = n.stationIds.indexOf(hit.station);
     return i < 0 ? null : stationTip(ov, w, i);
+  }
+  // the marks for crossings, junctions, ramps and portals sit on the track, under stations and trains (T-629)
+  if (n.marks) {
+    const i = markAt(ov, n.marks, px, py, zoom);
+    if (i >= 0) return markTip(n.marks, i);
   }
   // the demand circles are drawn under the network
   if (!hit) return w && !isBuildTool(tool.peek()) ? circleTip(ov, w, px, py, zoom) : null;

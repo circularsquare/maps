@@ -377,8 +377,8 @@ then for each new city:
 - jump to its centre: it becomes the active city, its pack opens (`twDemand.client.start.loads`),
   its outline is the focus outline (`tw-city-focus`); Homes bubbles show; screenshot to
   `artifacts/trainworld/T-###-<id>.png`;
-- ground-level track across water is refused with `GroundOverWater` and the same route in a
-  tunnel or on a viaduct accepted;
+- ground-level track across water is accepted as a bridge (or refused with `BridgeNoRoom` where
+  the crossing is too close to the segment's ends) and the same route in a tunnel accepted;
 - a test line through the centre, constructed: at round 3 it carries work, shopping, social,
   school and medical riders, and purposes add up to the line;
 - in the market: a bubble selection's longer trips match and reach other places;

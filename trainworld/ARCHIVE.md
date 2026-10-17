@@ -1,5 +1,10 @@
 ﻿# Archive
 
+- T-656 [P2] Ground track across water becomes a bridge by itself (Anita). Done 2026-10-17: a level-0 segment over water rises to level 1 with 200 m ramps on land either side, shape unchanged, one undo; no room on land is refused ("There is not enough land for the bridge ramps"). Preview and edit share `track/bridge.rs`.
+- T-629 [P2] Flat junctions and crossings marked. Done 2026-10-17: on the map a badge (X a crossing, fork a junction) big and blue on blueprints and while drawing, small and quiet on built track, a red X for a refused crossing, hover tags (`gradeMarks.ts`); on the line panel's stops diagram, diamonds and crosses.
+- T-655 [P2] Ramps and tunnel portals drawn. Done 2026-10-17: a wedge where track climbs off level 0, a half disc where it drops, at the level-0 end, in the level's colour, also in the drawing preview.
+- T-654 [P2] The chooser of lines on shared track in every display. Done 2026-10-17: a click on track with more than one line selects the track, whose "Lines on it" list picks the line (`pick.ts` `chooseShared`).
+- T-627 [P2] Capacity alerts name their kind and what helps. Done 2026-10-17: three new kinds from the sim (a turn on a through platform, track shared by lines, a turn across the other track); words in `game/capacityKinds.ts`; "Turning on the platform at X is full", "N trains held out of service".
 - T-636 [P1] A simpler, more game-like demand model (Anita). Done 2026-10-17: her ceiling tests as targets, then her set as defaults: choice twice as sharp, no rail constants, a 10-minute walking bonus, walking a flat 1.5 a minute, parking base 5, ownership on; test A 86% (New York) and 85.5% (London) of rail + car, B 79%; real save 10.41M to 13.04M rail trips a day; station counts x3.1 and x2.0. notes/T-636.md.
 - T-620 [P2] Car ownership. Done 2026-10-17: $1.50 a car trip + $0.10/km, the drive to a station too, on by default with T-636. notes/T-621.md.
 - T-621 [P1] The deep calibration. Abandoned 2026-10-17: its fit (stage 2) was not applied; Anita chose a simpler model tuned to her ceiling tests instead (T-636). Its tooling and census walk targets stay. notes/T-621.md.

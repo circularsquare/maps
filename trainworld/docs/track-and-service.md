@@ -190,6 +190,22 @@ Full design, numbers and sources: `notes/T-008.md`.
   pack; water narrower than ~50 m (creeks, ditches, small ponds) is not in it, since a railway
   crosses those at grade (notes/T-030.md). Ground level means within half a level (4 m) of the
   ground, so the low end of a ramp counts too: bridge and tunnel approaches start on land.
+- **A bridge by itself** (T-656, `track/bridge.rs`): a segment drawn through points at level 0
+  (every vertex level 0, no clicked corners) that crosses water is raised to level 1 over each
+  crossing. The ramp up (200 m) ends 14.5 m before the water and the ramp down starts 14.5 m after
+  it, so both lie on land; everything else stays level 0. Crossings less than 429 m apart share
+  one bridge, since the ramp down and the ramp up would not fit between them. The shape is
+  unchanged: a ramp is centred between two vertices of different levels, so each ramp gets a
+  vertex either side of it (at least 100 m from its centre, nearer an existing vertex where that
+  is one); on a straight that is a PI with no turn, on an arc the arc is cut into arcs of its own
+  radius, one PI each, and every PI of the segment gets its radius set. A ramp that a curve or a
+  vertex keeps off its place moves back along the segment in steps of 25 m, up to 400 m. Quad
+  track bridges each pair on its own. One edit and one undo step; the preview (`preview_route`)
+  and `add_route` share the code, so the ghost shows the bridge, its price and the elevation
+  reached (`0 +1` in the tag). Another level, or a segment with clicked corners, is left as drawn.
+  With no room on land (water within 200 m of the segment's start or end, so of a station or
+  junction it leaves, or one a curve leaves no vertex room for) the edit is refused as
+  `BridgeNoRoom`: "There is not enough land for the bridge ramps, which are 200 m long."
 - **Stations** are nodes on a route, platform length 60-400 m in 20 m steps, level and free of
   other nodes along it; curved platforms are fine. Through a station the platform is centred on
   the node; at a dead end it runs from the node along the track and trains stop at its middle
@@ -273,11 +289,17 @@ or full with some line's trains waiting for room (overloaded, red), with the del
 the demand level in force; nothing shows below 75%.
 A marker reads "+1:03" (each train's wait there) or, with no wait yet, "81%"; hovering it shows
 a tooltip in plain words ("Junction at 104% of capacity", "31 trains an hour each way against a
-limit of 34", for a full one "Trains beyond the limit wait at the ends of their lines", "Each train
-waits 1m03s here at high demand", and for a junction "Click to see the junction and its flyover").
-A line whose fleet is cut shows a callout under its schedule naming the full resource ("Track full
-near Grand Central") and, per demand level, how many of its trains wait at the ends, with the
-resource's limit in trains an hour on hover (`TrackApi.line_held`). Markers sit over the
+limit of 34", what limits it and what helps, for a full one "The line's extra trains are held out
+of service at its ends", "Each train waits 1m03s here at high demand", and for a junction "Click to
+see the junction and its flyover"). Each resource has a kind the app words by (`Capacity::wire_kind`,
+`game/capacityKinds.ts`): track, single track, platform, terminus, junction, flat crossing, a line
+turning on a through station's platform (the line ends there and holds the platform for its
+turnaround plus 60 s; helped by ending the line at a dead-end terminus), track several lines run
+over, and a turn across the other track at a through station. A line whose fleet is cut shows a
+callout under its schedule naming the full resource ("Turning on the platform at Nerul Village is
+full") and, per demand level, how many of its trains are held out of service (they wait at the
+ends of the line instead of running), with the resource's limit in trains an hour and what helps on
+hover (`TrackApi.line_held`). Markers sit over the
 network and under the demand views' bubbles (T-099). Like station names, they hide
 below zoom 12 and reserve space around each tag (48 px horizontally / 28 px vertically before
 zoom 14, then 20 / 12 px). Larger delays win collisions, then higher utilisation (T-102).
@@ -363,8 +385,9 @@ multiplier per level (Anita, 2026-10-08; all construction prices halved 2026-10-
 | Multiplier | 1.8 | 1.3 | 0.8 | 0.3 | 1.0 | 1.1 | 1.2 |
 | US$M per km | 81 | 58.5 | 36 | 13.5 | 45 | 49.5 | 54 |
 
-- **Over or under water: 2x** the level's price. **Level 0 cannot be built over water.** Water
-  comes from a mask in the pack (T-030).
+- **Over or under water: 2x** the level's price. **Level 0 cannot be built over water**; a
+  ground-level segment drawn across it becomes a bridge (6.1). Water comes from a mask in the
+  pack (T-030).
 - The Build tab shows only the multiplier and price of the level currently selected, not the
   whole table.
 - Stations (200 m, two platform tracks): 5 at grade, 15/20/25 at +1/+2/+3, 30/50/70 at

@@ -53,6 +53,8 @@ export interface PreviewAnswer {
   parts?: Uint32Array;
   /** a tangent route's circle (T-418): centre x, y (local units), ground radius m, 0 */
   arc?: Float64Array;
+  /** where it makes a crossing or a flat junction (T-629): x, y, kind (0 crossing, 1 junction) */
+  marks?: Float32Array;
 }
 
 /** A crossover preview (T-338): its cost US$M or why not, and its diagonals' centre lines. */
@@ -438,7 +440,7 @@ export class ClockClient {
         this.previewBusy = false;
         this.toCurrentAnchor(msg.anchor, msg.verts, msg.pts);
         if (msg.arc) this.toCurrentAnchor(msg.anchor, msg.arc, new Float32Array(0));
-        this.previewCb?.({ ok: msg.ok, cost: msg.cost, lengthM: msg.lengthM, mult: msg.mult, issues: msg.issues, verts: msg.verts, pts: msg.pts, speeds: msg.speeds, parts: msg.parts, arc: msg.arc });
+        this.previewCb?.({ ok: msg.ok, cost: msg.cost, lengthM: msg.lengthM, mult: msg.mult, issues: msg.issues, verts: msg.verts, pts: msg.pts, speeds: msg.speeds, parts: msg.parts, arc: msg.arc, marks: msg.marks });
         const n = this.previewNext;
         this.previewNext = null;
         if (n) this.ask(n.msg, n.cb);

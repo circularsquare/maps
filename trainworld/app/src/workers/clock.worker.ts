@@ -308,6 +308,17 @@ function forget(all = false) {
   for (const l of api!.dirty_lines()) lineDrawn.delete(l);
 }
 
+/** The track model's mark rows (`crossings_info`, `preview_marks`) with x, y moved to local units. */
+function markPoints(rows: Float64Array, stride: number): Float32Array {
+  const out = new Float32Array(rows.length);
+  for (let k = 0; k < rows.length; k += stride) {
+    const [x, y] = packLocal(rows[k], rows[k + 1]);
+    out.set([x, y], k);
+    for (let j = 2; j < stride; j++) out[k + j] = rows[k + j];
+  }
+  return out;
+}
+
 function buildState(): ClockState {
   const a = api!;
   const ei = a.edges_info();
@@ -402,9 +413,11 @@ function buildState(): ClockState {
     }
     return out;
   });
+  const crossings = markPoints(a.crossings_info(), 5);
   return {
     version: ++version,
     markers,
+    crossings,
     cash: a.cash(),
     builtCost: a.built_cost(),
     blueprintCost: a.blueprint_cost(),
@@ -1091,7 +1104,7 @@ function sendState(service = false) {
   const bufs = new Set<ArrayBufferLike>([r.edgePts.buffer, r.edgeOff.buffer, r.phases.buffer, r.meta.buffer, r.samples.buffer, r.lineTable.buffer]);
   if (r.edgeSpeed) bufs.add(r.edgeSpeed.buffer);
   for (const st of [n.track, n.lines]) for (const v of [st.seg, st.colour, st.edge, st.level, st.flags, st.dist, st.speed]) if (v) bufs.add(v.buffer);
-  for (const v of [n.lineColours, n.lineCars, n.stations, n.stationAxis, n.stationShape, n.junctions]) if (v) bufs.add(v.buffer);
+  for (const v of [n.lineColours, n.lineCars, n.stations, n.stationAxis, n.stationShape, n.junctions, n.marks]) if (v) bufs.add(v.buffer);
   send({ kind: "state", state: s }, [...bufs] as Transferable[]);
   sendTrips();
 }
@@ -1527,6 +1540,7 @@ async function handle(msg: ToClock) {
       : q.what === "today" ? today()
       : q.what === "yesterday" ? yesterday()
       : q.what === "lineHeld" ? api.line_held(q.line)
+      : q.what === "lineMarks" ? api.line_marks(q.line)
       : api.line_delays(q.line, q.level);
     send({ kind: "answer", seq: msg.seq, data }, [data.buffer]);
   } else if (msg.kind === "previewStation") {
@@ -1578,7 +1592,8 @@ async function handle(msg: ToClock) {
     // Explicit shape also permits type-checking before the track WASM declarations regenerate.
     const speeds = (api as TrackApi & { preview_render_speeds(): Float32Array }).preview_render_speeds();
     if (speeds.length !== Math.max(0, pts.length / 3 - 1)) throw new Error("Preview speed/point length mismatch");
-    send({ kind: "preview", seq: msg.seq, ok, cost: out[1], lengthM: out[2], mult: out[4], issues: ok ? [] : issues(), verts, pts, speeds, arc, anchor: anchor().version }, [verts.buffer, pts.buffer, speeds.buffer]);
+    const marks = markPoints((api as TrackApi & { preview_marks(): Float64Array }).preview_marks(), 3);
+    send({ kind: "preview", seq: msg.seq, ok, cost: out[1], lengthM: out[2], mult: out[4], issues: ok ? [] : issues(), verts, pts, speeds, arc, anchor: anchor().version, marks }, [verts.buffer, pts.buffer, speeds.buffer, marks.buffer]);
   } else if (msg.kind === "epoch") {
     if (msg.epoch !== epoch) {
       epoch = msg.epoch;
@@ -1608,5 +1623,6 @@ function sendNodePreview(seq: number, out: Float64Array) {
     parts.push(pts.length / 3);
   }
   const v = new Float64Array(verts), p = new Float32Array(pts), pa = new Uint32Array(parts);
-  send({ kind: "preview", seq, ok, cost: out[1], lengthM: 0, mult: 0, issues: ok ? [] : issues(), verts: v, pts: p, parts: pa, anchor: anchor().version }, [v.buffer, p.buffer, pa.buffer]);
+  const marks = markPoints((api as TrackApi & { preview_marks(): Float64Array }).preview_marks(), 3);
+  send({ kind: "preview", seq, ok, cost: out[1], lengthM: 0, mult: 0, issues: ok ? [] : issues(), verts: v, pts: p, parts: pa, anchor: anchor().version, marks }, [v.buffer, p.buffer, pa.buffer, marks.buffer]);
 }

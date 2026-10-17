@@ -4,6 +4,7 @@
 //! - `params`: every constant (speeds, levels, costs, capacity).
 //! - `geom`: PIs to arcs and straights, heights and ramps, positions, sampling.
 //! - `frame`: the world frames, planar metres to and from longitude and latitude (T-125).
+//! - `bridge`: a ground-level segment across water becomes a bridge with ramps on land (T-656).
 //! - `cost`: build costs and the water mask interface.
 //! - `cross`: exact intersections and the 1 km grid.
 //! - `net`: the network as flat arrays with stable ids, derived geometry, ports, crossings,
@@ -23,6 +24,7 @@
 #[cfg(any(not(target_arch = "wasm32"), feature = "track-bench"))]
 pub mod bench;
 pub mod boarding;
+pub mod bridge;
 pub mod capacity;
 pub mod cost;
 pub mod cross;

@@ -391,7 +391,7 @@ export class Tools {
   private showPreview(a: PreviewAnswer, key: string) {
     this.lastPreview = a;
     this.previewKey = key;
-    this.overlay.renderer.setPreview(a.pts.length >= 6 ? strokesFromPreview(a.pts, !a.ok, a.speeds, true) : null);
+    this.overlay.renderer.setPreview(a.pts.length >= 6 ? strokesFromPreview(a.pts, !a.ok, a.speeds, true, a.marks) : null);
     this.overlay.invalidate();
     this.place();
   }
@@ -993,7 +993,10 @@ function placementTag(pv: PreviewAnswer, level: number): HTMLDivElement[] {
     out.push(div(`${distance(pv.lengthM)}, cost `, chip(`${pv.mult.toFixed(2)}x`, pv.mult > 1.005 ? COST_YELLOW : null, 0.2 + 0.6 * dear),
       `, ${moneyShort(pv.cost * 1e6)}`));
   }
-  out.push(factRow(elevationFact(level), speedFact(top)));
+  // Ground track over water is raised to a bridge (T-656): the elevation it reaches follows the placed one.
+  let reached = level;
+  if (level === 0) for (let i = 2; i < pv.pts.length; i += 3) reached = Math.max(reached, Math.round(pv.pts[i] / 8));
+  out.push(factRow(reached > level ? elevationFact(level, reached) : elevationFact(level), speedFact(top)));
   return out;
 }
 

@@ -211,14 +211,16 @@ export function previewStrokes(a: PreviewAnswer): Strokes | null {
   const all: Strokes[] = [];
   for (let k = 0; k + 1 < parts.length; k++) {
     const pts = a.pts.subarray(parts[k] * 3, parts[k + 1] * 3);
-    if (pts.length >= 6) all.push(strokesFromPreview(pts, !a.ok));
+    // the track model's crossings and junctions belong to the whole preview: given to the first part
+    if (pts.length >= 6) all.push(strokesFromPreview(pts, !a.ok, undefined, false, all.length ? undefined : a.marks));
   }
   if (!all.length) return null;
   if (all.length === 1) return all[0];
+  const marks = all.flatMap((s) => (s.marks ? Array.from(s.marks) : []));
   const n = all.reduce((s, x) => s + x.count, 0);
   const out: Strokes = {
     seg: new Float32Array(n * 4), colour: new Uint32Array(n), edge: new Uint32Array(n), level: new Float32Array(n),
-    flags: new Float32Array(n), dist: new Float32Array(n), count: n,
+    flags: new Float32Array(n), dist: new Float32Array(n), count: n, marks: marks.length ? new Float32Array(marks) : undefined,
   };
   let o = 0;
   for (const s of all) {

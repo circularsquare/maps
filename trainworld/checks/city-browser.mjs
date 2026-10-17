@@ -270,15 +270,16 @@ try {
   check(`the top bar names ${C.name} and gives its split`, (result.noRail.topBar.city ?? '').includes(C.name) && /Walking/.test(result.noRail.topBar.split ?? ''), result.noRail);
   await page.screenshot({ path: out + 'homes.png' });
 
-  // 2. the water mask: ground track across the crossing refused, a tunnel accepted
+  // 2. the water mask: ground track across the crossing bridged or refused for room, a tunnel accepted
   const water = await page.evaluate(async ([p, q]) => {
     const t = window.tw, a = t.lngLatToPack(p[0], p[1]), b = t.lngLatToPack(q[0], q[1]);
     const g = await t.client.edit({ op: 'route', from: { kind: 'free', x: a.x, y: a.y, level: 0 }, to: { kind: 'free', x: b.x, y: b.y, level: 0 }, pis: [], single: false });
     const u = await t.client.edit({ op: 'route', from: { kind: 'free', x: a.x, y: a.y, level: -2 }, to: { kind: 'free', x: b.x, y: b.y, level: -2 }, pis: [], single: false });
     if (u.ok) await t.client.edit({ op: 'undo' });
+    if (g.ok) await t.client.edit({ op: 'undo' });
     return { ground: g.ok ? 'accepted' : JSON.stringify(g).slice(0, 200), tunnel: u.ok };
   }, C.water);
-  check('ground track across the water refused, a tunnel accepted', /GroundOverWater/.test(water.ground) && water.tunnel, water);
+  check('ground track across the water bridged (or refused for want of room), a tunnel accepted', (water.ground === 'accepted' || /BridgeNoRoom/.test(water.ground)) && water.tunnel, water);
 
   // 3. a test line through the centre, constructed
   const before = await page.evaluate(() => window.twDemand.view()?.version ?? 0);

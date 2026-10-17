@@ -11,6 +11,7 @@ const TEXT: Record<string, string | (() => string)> = {
   "Geom:RampTooShort": () => `Not enough room to change elevation. Each step up or down needs ${length(200)} of ramp.`,
   "Geom:LevelRange": "Elevation goes from −3 to +3.",
   GroundOverWater: "Track at ground level cannot cross water. Pick a viaduct or tunnel elevation.",
+  BridgeNoRoom: () => `There is not enough land for the bridge ramps, which are ${length(200)} long.`,
   Crossing: "The new track would cross other track less than one elevation step above or below it.",
   CrossingOverlap: "The new track would run on top of existing track.",
   NodeHeading: "Track has to leave a junction along the existing track.",

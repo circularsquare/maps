@@ -64,8 +64,11 @@ enum Tag {
     /// A section: its directed track keys (`edge * 2 + direction`, `edge * 2` on single track),
     /// a span of `Capacity::keys`.
     Section { first: u32, count: u32 },
-    /// A platform, terminus or junction move at `Resource::node`.
+    /// A terminus or junction move at `Resource::node`.
     Node,
+    /// A platform at `Resource::node`; `reverses` when some line ends there on a through station
+    /// and holds the platform for its turnaround.
+    Platform { reverses: bool },
     /// Station crossover: the first `turns` users reverse; through moves load it only while
     /// a reversing stream runs at the demand level being solved.
     Turnback { turns: u32 },
@@ -101,6 +104,22 @@ impl Capacity {
     /// trains that never conflict with each other, so it only delays.
     pub fn limits(&self, r: usize) -> bool {
         !matches!(self.tag[r], Tag::Turnback { .. })
+    }
+
+    /// The kind the app words alerts by (`ResKind as u8` for 0 to 5), finer where the cause differs:
+    /// 6 a line reversing on a through station's platform, 7 track several lines run over, 8 a
+    /// reversal crossing the other track at a through station.
+    pub fn wire_kind(&self, r: usize) -> u8 {
+        let kind = self.res[r].kind;
+        match self.tag[r] {
+            Tag::Platform { reverses: true } => 6,
+            Tag::Turnback { .. } => 8,
+            Tag::Section { .. } if kind == ResKind::Section => {
+                let users = self.users_of(r);
+                if users.iter().any(|u| u.line != users[0].line) { 7 } else { 0 }
+            }
+            _ => kind as u8,
+        }
     }
 
     /// Trains an hour through a resource at a level, each line direction once.
@@ -384,7 +403,7 @@ fn active_node_tracks(net: &Network, node: u32) -> u8 {
 /// Platforms, termini and junction moves at the nodes `in_n` accepts, from the runs of `cand`
 /// (which must hold every running line through those nodes).
 fn build_nodes(net: &Network, lines: &[LineSvc], cand: &[u32], in_n: &dyn Fn(u32) -> bool, cap: &mut Capacity) {
-    let mut plat: Vec<(u32, u8, u32, u8, i32, f64, f64)> = vec![]; // node, track, line, run, stop, at, occ
+    let mut plat: Vec<(u32, u8, u32, u8, i32, f64, f64, bool)> = vec![]; // node, track, line, run, stop, at, occ, reverses here
     let mut term: Vec<(u32, u32, u8, f64, f64)> = vec![]; // node, line, run, at, occ
     let mut moves: Vec<(u32, f64, f64, u32, u8, f64)> = vec![]; // node, pA, pB, line, run, at
     let mut turns: Vec<(u32, u8, u32, u8, f64)> = vec![]; // node, arrival track, line, incoming run, approach
@@ -411,7 +430,7 @@ fn build_nodes(net: &Network, lines: &[LineSvc], cand: &[u32], in_n: &dyn Fn(u32
                         Some(j) => (j as i32, run.stop_s[j], dwell + PLATFORM_MARGIN_S),
                         None => (-1, run.node_s[k] - hold_back(lines, l), PASSING_S),
                     };
-                    plat.push((n, track, l as u32, r as u8, stop, at, occ));
+                    plat.push((n, track, l as u32, r as u8, stop, at, occ, false));
                     if active_node_tracks(net, n) > 1 { through.push((n, track, l as u32, r as u8, stop, at)); }
                 }
                 if net.node_ports[n as usize].n >= 3 && !net.node_flying[n as usize] {
@@ -439,7 +458,7 @@ fn build_nodes(net: &Network, lines: &[LineSvc], cand: &[u32], in_n: &dyn Fn(u32
                     let prev = *run.segs.last().unwrap();
                     let side_in = net.port_side(path_edge(prev), 1 - path_dir(prev)).unwrap_or(0);
                     let track = if tracks == 1 { 0 } else { side_in };
-                    plat.push((n, track, l as u32, r as u8, -1, at, occ_s));
+                    plat.push((n, track, l as u32, r as u8, -1, at, occ_s, true));
                     if tracks > 1 { turns.push((n, track, l as u32, r as u8, at)); }
                 } else {
                     // A true dead end retains the pooled platform-track turnaround capacity.
@@ -455,7 +474,8 @@ fn build_nodes(net: &Network, lines: &[LineSvc], cand: &[u32], in_n: &dyn Fn(u32
         let end = plat[i..].partition_point(|x| (x.0, x.1) == (plat[i].0, plat[i].1)) + i;
         users = plat[i..end].iter().map(|x| User { line: x.2, run: x.3, owner: true, occ: x.6, at: x.5, stop: x.4 }).collect();
         let n = plat[i].0 as usize;
-        push_res(cap, ResKind::Platform, net.node_x[n], net.node_y[n], n as u32, u32::MAX, &users, Tag::Node);
+        let reverses = plat[i..end].iter().any(|x| x.7);
+        push_res(cap, ResKind::Platform, net.node_x[n], net.node_y[n], n as u32, u32::MAX, &users, Tag::Platform { reverses });
         i = end;
     }
     term.sort_by(|a, b| (a.0, a.1, a.2).cmp(&(b.0, b.1, b.2)));
@@ -716,7 +736,7 @@ impl Capacity {
                         false
                     }
                 }
-                Tag::Node | Tag::Turnback { .. } => flag(&dn, self.res[r].node),
+                Tag::Node | Tag::Platform { .. } | Tag::Turnback { .. } => flag(&dn, self.res[r].node),
                 Tag::Crossing { other } => flag(&de, self.res[r].edge) || flag(&de, other),
             };
             if dead {
@@ -966,6 +986,11 @@ mod tests {
         assert_eq!(platforms.len(), 2);
         let arrival = *platforms.iter().find(|&&r| cap.users_of(r).iter().any(|u| u.line == short)).unwrap();
         assert!((cap.rho[arrival][0] - (12.0 * (30.0 + PLATFORM_MARGIN_S) + 8.0 * (180.0 + TERMINUS_MARGIN_S)) / 3600.0).abs() < 1e-12);
+        assert_eq!(cap.wire_kind(arrival), 6, "a reversal on a through platform is its own kind");
+        assert!(platforms.iter().filter(|&&r| r != arrival).all(|&r| cap.wire_kind(r) == 2), "stopping trains alone are a plain platform");
+        assert_eq!(cap.wire_kind(crossing), 8);
+        assert!((0..cap.res.len()).any(|r| cap.res[r].kind == ResKind::Section && cap.wire_kind(r) == 7), "the stretch both lines run over");
+        assert!((0..cap.res.len()).any(|r| cap.res[r].kind == ResKind::Section && cap.wire_kind(r) == 0), "the stretch only one runs over");
         same_as_global(&w, "short turn start");
         w.apply(Op::Schedule { id: short, tph: [0.0; 3] }).unwrap();
         same_as_global(&w, "short turn off");

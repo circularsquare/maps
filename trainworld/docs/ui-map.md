@@ -65,6 +65,22 @@ thumbnail's track) are one table, `game/shadeTable.ts` (read through `game/shade
   palette, thirteen defaults: red, blue, green, orange, purple, yellow, brown, teal, gray,
   yellow-green, pink, magenta and light blue, every pair at least 19 apart in CIEDE2000; chips on
   the light ones take dark letters. A new line takes the first default no line uses.
+- **Marks on the track** [T-629, T-655; `map/gradeMarks.ts`, data in `map/markData.ts`], drawn by the
+  renderer over the track and under stations and trains, from zoom 9 (blueprint and drawing) or 11
+  (built):
+  - A **flat crossing** (an X) and a **flat junction** (a fork, a node with three or more track ends
+    and no station, not a flyover) in a round badge with a thin ring. On blueprint track and in the
+    drawing tool's preview (the crossings and junctions the new track would make, from the track
+    model) the badge is big and in the blueprint blue (light blue in the dark theme): radius 7 px at
+    zoom 9, 11 at 12, 15 at 15. On built track it is small and quiet in the map ink: 5 px at zoom 11,
+    6.5 at 13, 8.5 at 15, at 85% opacity. A junction is built once three of its ends are, a crossing
+    once both tracks are. A crossing the model refuses (under one elevation step apart, or on a
+    ramp) is a red X.
+  - A **ramp** (a wedge) where track climbs from level 0 and a **tunnel portal** (a half disc) where it
+    drops from level 0, at the ramp's level 0 end, pointing along the track, filled in the Elevation
+    colour of the level it reaches, from zoom 11 at 3.5 px radius, 5 at 13, 7 at 15. A ramp that
+    starts below ground or above level 1 (1 to 2, -1 to -2) has none.
+  The colours are `markInk` and `markBlueprint` in `game/shadeTable.ts`; the fill is the casing's.
 
 ## Stations
 
@@ -197,7 +213,9 @@ main thread at most once a game second, only while drawn.
   "Calculating demand". The tag follows the pointer along the track; leaving, pressing, dragging or
   zooming hides it. It follows the pick order: with the select tool, bubbles, capacity tags and
   handles above the network keep it hidden; with a build tool it sits above the pointer, clear of
-  the tool's own tag below, and leaves out the station demand circles. Junctions say nothing. The
+  the tool's own tag below, and leaves out the station demand circles. A mark on the track names itself
+  ("Flat crossing" or "Flat junction" with the elevation, "Ramp up to +1", "Tunnel portal down to −1",
+  "Blueprint" on blueprint track), over the track's own tag; a junction without a mark says nothing. The
   stop editor and the trip tool have no track tag. The track tag and the build tools' tags are
   drawn over the bubbles' tags.
 - **Trains and stations** [T-194, T-305, T-313; `map/networkTips.ts`]: the same tag (wrapping at 320
@@ -229,7 +247,9 @@ Demand discs
 drawn under 8 px in radius are hit within 8 px of their centre [T-566, `MIN_PICK_PX` in
 `map/demandHover.ts`; the hover tag follows the same test], unless a disc drawn above them holds
 the pointer; where those areas overlap the nearest centre wins.
-Clicking the line already selected selects the track under it. Clicking a selection's longer-trip discs keeps the
+Clicking the line already selected selects the track under it; a click on track several lines run
+over (one edge, more than one line on it) selects the track whose inspector lists those lines to
+choose from, in every track display [T-654, `pick`'s `chooseShared`]. Clicking a selection's longer-trip discs keeps the
 parent selection. Selected editing handles stay draggable above the
 demand view.
 

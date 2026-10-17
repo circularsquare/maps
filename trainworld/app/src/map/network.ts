@@ -9,6 +9,7 @@
 import { rgb } from "../game/palette";
 import type { ClockState } from "../workers/protocol";
 import { anchor, toLocal, type Anchor } from "./geo";
+import { M_BAD, M_CROSSING, M_JUNCTION, rampMarks } from "./markData";
 import { bridgeEnds, PLATFORM_HALF_M, PLATFORM_POINTS, platformPoints, platformShape, reversed } from "./stationGeometry";
 
 /** Colour index of bare track (not a line). */
@@ -40,6 +41,8 @@ export interface Strokes {
    * is on (stop k to k + 1), then 0, 1, 1 (T-062's slot on the edge, slots and side, unused since
    * T-190 drew lines sharing track on top of each other). */
   info?: Float32Array;
+  /** a preview only (T-629): its marks, `MARK_STRIDE` numbers each (map/markData.ts) */
+  marks?: Float32Array;
   count: number;
 }
 
@@ -72,6 +75,9 @@ export interface NetworkBuffers {
   /** junction nodes (3+ edge ends, no station): x, y per node, for picking */
   junctions: Float32Array;
   junctionIds: number[];
+  /** the marks for flat crossings, flat junctions, ramps and portals (T-629, T-655), `MARK_STRIDE`
+   * numbers each (map/markData.ts) */
+  marks?: Float32Array;
   // keyframes
   phases: Float32Array;
   meta: Float32Array;
@@ -185,7 +191,7 @@ function linesOnEdges(s: ClockState) {
   return onEdge;
 }
 
-export function strokesFromPreview(pts: Float32Array, bad: boolean, speed?: Float32Array, placement = false): Strokes {
+export function strokesFromPreview(pts: Float32Array, bad: boolean, speed?: Float32Array, placement = false, simMarks?: ArrayLike<number>): Strokes {
   const b = new StrokeBuilder();
   const flags = F_BLUEPRINT | (bad ? F_BAD : 0) | (placement ? F_PLACEMENT : 0);
   // a negative speed is a step with no track (between quad's two pairs' own ends, T-423): not drawn
@@ -200,6 +206,7 @@ export function strokesFromPreview(pts: Float32Array, bad: boolean, speed?: Floa
   }
   b.add(pts.subarray(from * 3), TRACK, 0xffffffff, flags);
   const strokes = b.build();
+  strokes.marks = previewMarks(pts, simMarks);
   if (speed) {
     if (speed.length !== strokes.count) throw new Error("Preview speed/segment length mismatch");
     strokes.speed = speed;
@@ -220,6 +227,16 @@ export function strokesFromEdges(lines: Float32Array[]): Strokes {
   const b = new StrokeBuilder();
   for (const pts of lines) b.add(pts, TRACK, 0xffffffff, F_PLACEMENT);
   return b.build();
+}
+
+/** A preview's marks (T-629): the ramps and portals of its track, then the crossings and flat
+ * junctions the track model found (`sim`: x, y, 0 crossing or 1 junction), all in the blueprint
+ * tier. */
+export function previewMarks(pts: ArrayLike<number>, sim?: ArrayLike<number>): Float32Array | undefined {
+  const m: number[] = [];
+  rampMarks(pts, 1, m);
+  if (sim) for (let k = 0; k + 2 < sim.length; k += 3) m.push(sim[k], sim[k + 1], sim[k + 2] === 1 ? M_JUNCTION : M_CROSSING, 0, 1, 0);
+  return m.length ? new Float32Array(m) : undefined;
 }
 
 /** Stroke sets laid end to end, into arrays of exactly their total size. */
@@ -264,7 +281,7 @@ const sameFloats = (a: Float32Array, b: Float32Array) => {
  * piece is exactly what a full build would make; entries not seen in a build are dropped.
  */
 export interface NetCache {
-  edges: Map<number, { pts: Float32Array; a: number; b: number; flags: number; strokes: Strokes }>;
+  edges: Map<number, { pts: Float32Array; a: number; b: number; flags: number; strokes: Strokes; ramps: number[] }>;
   lines: Map<number, { path: number[]; stops: number[]; running: boolean; strokes: Strokes; firstStroke: number[] }>;
   stations: Map<number, { platform: number; lat: number; first: number; ways: number[]; ax: number; ay: number; shape: [number, number, number, number]; line: ArrayLike<number> }>;
 }
@@ -284,6 +301,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
   const edgesSeen: NetCache["edges"] = new Map();
   const speeds = new Float32Array(Math.max(0, r.edgePts.length / 3 - s.edges.length));
   let speedAt = 0;
+  const marks: number[] = [];
   s.edges.forEach((e, i) => {
     const pts = r.edgePts.subarray(r.edgeOff[i] * 3, r.edgeOff[i + 1] * 3);
     edgePts.set(e.id, pts);
@@ -294,10 +312,13 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
     else {
       const b = new StrokeBuilder();
       b.add(pts, TRACK, e.id, flags);
-      c = { pts: pts.slice(), a: e.a, b: e.b, flags, strokes: b.build() };
+      const ramps: number[] = [];
+      rampMarks(pts, e.built ? 0 : 1, ramps);
+      c = { pts: pts.slice(), a: e.a, b: e.b, flags, strokes: b.build(), ramps };
     }
     edgesSeen.set(e.id, c);
     trackParts.push(c.strokes);
+    for (const v of c.ramps) marks.push(v);
     for (let k = r.edgeOff[i]; k < r.edgeOff[i + 1] - 1; k++) speeds[speedAt++] = r.edgeSpeed?.[k] ?? e.vminKmh;
   });
   cache.edges = edgesSeen;
@@ -429,6 +450,13 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
   const jn = s.nodes.filter((n) => n.ports >= 3 && n.platform === 0);
   const junctions = new Float32Array(jn.length * 2);
   jn.forEach((n, i) => junctions.set(nodeLocal.get(n.id) ?? lngLatLocal(n.lng, n.lat), i * 2));
+  // the marks (T-629): a junction at ground level (a flyover is not one) is built once three of its
+  // tracks are; a crossing once both of its are
+  jn.forEach((n, i) => {
+    if (!n.flying) marks.push(junctions[i * 2], junctions[i * 2 + 1], M_JUNCTION, 0, n.builtPorts >= 3 ? 0 : 1, n.level);
+  });
+  const cx = s.crossings;
+  if (cx) for (let k = 0; k + 4 < cx.length; k += 5) marks.push(cx[k], cx[k + 1], cx[k + 2] === 1 ? M_BAD : M_CROSSING, 0, cx[k + 4] === 1 ? 0 : 1, cx[k + 3]);
   return {
     track: { ...concatStrokes(trackParts, false), speed: speeds.subarray(0, speedAt) },
     lines: concatStrokes(lineParts, true),
@@ -443,6 +471,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
     stationLinks: new Float32Array(linkEnds),
     junctions,
     junctionIds: jn.map((n) => n.id),
+    marks: new Float32Array(marks),
     phases: r.phases,
     meta: r.meta,
     samples: r.samples,

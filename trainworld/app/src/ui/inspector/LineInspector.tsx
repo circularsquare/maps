@@ -19,6 +19,7 @@ import { dayKindAt } from "../../game/days";
 import { DEMAND_INDEX, DEMANDS, type Demand, type LineInput, type LineStats } from "../../game/types";
 import { ask, lineDraft, renameLinePrompt, selection, tool } from "../../game/ui";
 import { moneyState } from "../../game/money";
+import { fullTip, fullTitle, heldText, heldTip } from "../../game/capacityKinds";
 import { edit, linesAt, renameLine, say, setLineColour, stepTrainCount, trainsShown, world } from "../../game/world";
 import { live } from "../../map/live";
 import { Chip, Icon, Row, Segmented, Stepper } from "../widgets";
@@ -47,7 +48,7 @@ function spotsFrom(d: Float64Array): { text: string; s: number }[] {
     const near = nearestStation(x, y)?.name;
     const at = node >= 0 ? st.get(node) : undefined;
     const text =
-      (kind === 2 || kind === 3) && at
+      (kind === 2 || kind === 3 || kind === 6 || kind === 8) && at
         ? `At ${at}`
         : kind === 4
           ? `At the junction${near ? " near " + near : ""}`
@@ -63,9 +64,6 @@ function spotsFrom(d: Float64Array): { text: string; s: number }[] {
 
 /** Where full track holds a line's fleet back, per level (T-517): from `TrackApi.line_held`. */
 interface Held { d: Demand; wait: number; place: string; tip: string }
-const FULL = ["Track full near", "Single track full near", "Platform full at", "Terminus full at", "Junction full near", "Crossing full near"];
-const TAKES = ["The track near", "The single track near", "The platform at", "The terminus at", "The junction near", "The crossing near"];
-const WAYS = [" each way", " both ways together"];
 function heldFrom(v: Float64Array): Held[] {
   const st = new Map((world.value?.save.stations ?? []).map((s) => [s.num, s.name]));
   const out: Held[] = [];
@@ -73,9 +71,41 @@ function heldFrom(v: Float64Array): Held[] {
     const [wait, kind, node, x, y, , most] = v.subarray(7 * lev, 7 * lev + 7);
     if (!(wait > 0)) return;
     const name = (node >= 0 ? st.get(node) : undefined) ?? nearestStation(x, y)?.name ?? "";
-    out.push({ d, wait, place: `${FULL[kind] ?? FULL[0]} ${name}`, tip: `${TAKES[kind] ?? TAKES[0]} ${name} takes at most ${Math.round(most)} trains an hour${WAYS[kind] ?? ""}` });
+    out.push({ d, wait, place: fullTitle(kind, name), tip: fullTip(kind, most) });
   });
   return out;
+}
+
+/** A flat junction or flat crossing on the route (T-629): `TrackApi.line_marks`, after the stop
+ * `gap` and drawn on the stops diagram between it and the next. */
+interface RouteMark { crossing: boolean; gap: number; near: string; others: string[] }
+function marksFrom(d: Float64Array): RouteMark[] {
+  const lines = new Map((world.value?.save.lines ?? []).map((l) => [l.num, l.name]));
+  const out: RouteMark[] = [];
+  for (let i = 0; i + 5 < d.length; ) {
+    const n = d[i + 5];
+    const others = Array.from(d.subarray(i + 6, i + 6 + n), (o) => lines.get(o) ?? `Line ${o}`);
+    out.push({ crossing: d[i] === 5, gap: d[i + 1], near: nearestStation(d[i + 3], d[i + 4])?.name ?? "", others });
+    i += 6 + n;
+  }
+  return out;
+}
+
+/** The marks of one gap between stops, spread evenly down it: the diagram is not to scale. */
+function RouteMarks({ marks }: { marks: RouteMark[] }) {
+  return (
+    <>
+      {marks.map((m, k) => (
+        <span class={"route-mark " + (m.crossing ? "crossing" : "junction")} style={{ "--at": (k + 1) / (marks.length + 1) }} data-tip={markTip(m)} />
+      ))}
+    </>
+  );
+}
+
+function markTip(m: RouteMark): string {
+  const where = m.near ? ` near ${m.near}` : "";
+  if (m.crossing) return `Flat crossing${where}\n${m.others.length ? "Crosses " + m.others.join(", ") : "Crosses track no line uses"}`;
+  return `Flat junction${where}\n${m.others.length ? "Also used by " + m.others.join(", ") : "No other line uses it"}`;
 }
 
 /** The round trip at the level in force, split into running, dwell, turnaround and delay (T-031),
@@ -242,7 +272,8 @@ export function LineInspector({ id }: { id: string }) {
   const [copying, setCopying] = useState(false);
   const [spots, setSpots] = useState<{ text: string; s: number }[]>([]);
   const [held, setHeld] = useState<Held[]>([]);
-  const l = w?.save.lines.find((l) => l.id === id);
+  const [marks, setMarks] = useState<RouteMark[]>([]);
+  const l =w?.save.lines.find((l) => l.id === id);
   const [symbol, setSymbol] = useState("");
   useEffect(() => { setSymbol(l?.letter ?? ""); }, [l?.letter]);
   // T-309: the demand level now in the line's own local time
@@ -261,6 +292,7 @@ export function LineInspector({ id }: { id: string }) {
     if (!l) return;
     let on = true;
     void queryClock({ what: "lineHeld", line: l.num }).then((d) => on && d && setHeld(heldFrom(d)));
+    void queryClock({ what: "lineMarks", line: l.num }).then((d) => on && d && setMarks(marksFrom(d)));
     return () => { on = false; };
   }, [l?.num, w?.version]);
   // T-477, T-491: crowding by period on today's kind of day, asked again as the account changes
@@ -384,11 +416,11 @@ export function LineInspector({ id }: { id: string }) {
       </table>
       {st.status === "running" && held.length > 0 && (
         <div class="callout bad">
-          <p>{held[0].place}</p>
+          <p data-tip={held[0].tip}>{held[0].place}</p>
           <ul class="rows">
             {held.map((h) => (
               <Row label={`${DEMAND_LABEL[h.d]} demand`}>
-                <span data-tip={h.tip}>{Math.round(h.wait) > 1 ? `${count(Math.round(h.wait))} trains wait` : "1 train waits"} at the ends</span>
+                <span data-tip={(h.place === held[0].place ? "" : h.place + "\n") + h.tip + "\n" + heldTip}>{heldText(h.wait)}</span>
               </Row>
             ))}
           </ul>
@@ -419,6 +451,7 @@ export function LineInspector({ id }: { id: string }) {
               </span>
               <StopTransfers line={l.id} stop={s} />
               <StopToday line={l.id} i={i} />
+              <RouteMarks marks={marks.filter((m) => m.gap === i)} />
               {editingStops && (
                 <button class="btn icon mini danger" data-tip="Take this stop out of the line" aria-label={`Remove stop ${name.get(s)}`} onClick={() => removeStop(i)}>
                   <Icon.cross />

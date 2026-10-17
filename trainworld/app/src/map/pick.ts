@@ -83,7 +83,20 @@ export function topSeg(ov: Overlay, seg: Float32Array, count: number, px: number
   return [-1, best];
 }
 
-export function pick(ov: Overlay, px: number, py: number, trainsShown: boolean, current: Selection = null): Selection {
+/** How many different lines have strokes on an edge. */
+function linesOnEdge(s: { colour: Uint32Array; edge: Uint32Array; count: number }, edge: number): number {
+  let first = -1;
+  for (let i = 0; i < s.count; i++) {
+    if (s.edge[i] !== edge) continue;
+    if (first < 0) first = s.colour[i];
+    else if (s.colour[i] !== first) return 2;
+  }
+  return 1;
+}
+
+/** `chooseShared`: a click (not a hover) on track several lines share picks the track, whose
+ * inspector lists the lines, instead of the line drawn on top (T-654). */
+export function pick(ov: Overlay, px: number, py: number, trainsShown: boolean, current: Selection = null, chooseShared = false): Selection {
   const n = ov.renderer.net;
   if (!n || !ov.camMatrix) return null;
   const slop = SLOP_PX * SLOP_PX + 1;
@@ -137,7 +150,11 @@ export function pick(ov: Overlay, px: number, py: number, trainsShown: boolean, 
     : [-1];
   const [li] = selectedLi >= 0 ? [selectedLi] : ov.renderer.slotPx ? topSeg(ov, n.lines.seg, n.lines.count, px, py, slop, undefined, 0, undefined, wide, widePx) : [-1];
   const lineHit = li >= 0 ? String(n.lines.colour[li]) : null;
-  if (lineHit && !(current?.kind === "line" && current.line === lineHit)) return { kind: "line", line: lineHit };
+  if (lineHit && !(current?.kind === "line" && current.line === lineHit)) {
+    // track several lines run over opens the track's list of them rather than the line on top (T-654)
+    if (chooseShared && linesOnEdge(n.lines, n.lines.edge[li]) > 1) return { kind: "track", edge: n.lines.edge[li] };
+    return { kind: "line", line: lineHit };
+  }
 
   for (let i = n.junctionIds.length - 1; i >= 0; i--) {
     ov.toScreenInto(n.junctions[i * 2], n.junctions[i * 2 + 1], SCRATCH, 0);

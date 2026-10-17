@@ -71,7 +71,9 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   notes/T-015.md), `renderer.ts` (WebGL2 track, stations, trains), `network.ts` (the renderer's
   buffers, built in the clock worker from per-edge, line and station pieces kept between edits,
   T-496), `geo.ts` (the draw anchor, T-307), `anchorVersion.ts` (its version as a signal, T-317),
-  `live.ts` (the live map objects for UI code, set by main.ts), `synth.ts` (stress network).
+  `live.ts` (the live map objects for UI code, set by main.ts), `synth.ts` (stress network),
+  `markData.ts` and `gradeMarks.ts` (the crossing, junction, ramp and portal marks: their data, and
+  their draw pass, hit test and tag; T-629, T-655).
 - Stations: `stationGeometry.ts` (platform shapes along the track for drawing, picking and the
   ghost, T-189, T-254), `stationNames.ts` (a station's name suggestions: cross street,
   neighbourhood, city or town, T-534), `stationLabels.ts` (names

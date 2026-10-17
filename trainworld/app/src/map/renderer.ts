@@ -15,6 +15,7 @@ import { LEVEL_COLOURS, NET_INK, PLATFORM_BLUE, rgb } from "../game/palette";
 import { shadeColours } from "../game/shades";
 import { platformRoom, pulsesBetween, readBoardHour, QUEUE_STRIDE, type BoardHour } from "../game/boarding";
 import { anchor, anchorPsi, EARTH_C, localToMercMatrix, mul4, PSI_PER_UNIT } from "./geo";
+import { GradeMarks } from "./gradeMarks";
 import { lineAt, type NetworkBuffers, type Strokes } from "./network";
 
 const TEX_W = 2048;
@@ -856,6 +857,8 @@ export class NetworkRenderer {
   private trainU!: Record<string, WebGLUniformLocation | null>;
   private probeProg: WebGLProgram | null = null;
   private probeU: Record<string, WebGLUniformLocation | null> = {};
+  /** crossings, flat junctions, ramps and portals (T-629, T-655) */
+  readonly marks = new GradeMarks();
   private res: { del: () => void }[] = [];
   private previewRes: { del: () => void }[] = [];
   private track: StrokeVao | null = null;
@@ -1066,6 +1069,7 @@ export class NetworkRenderer {
     this.gl = gl;
     this.strokeProg = compile(gl, STROKE_VS, STROKE_FS);
     this.stationProg = compile(gl, STATION_VS, STATION_FS);
+    this.marks.init(gl);
     this.trainProg = compile(gl, TRAIN_VS, TRAIN_FS);
     this.hasStencil = (gl.getParameter(gl.STENCIL_BITS) ?? 0) > 0;
     this.strokeU = uniforms(gl, this.strokeProg, ["u_matrix", "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_edge", "u_only_sel", "u_dim", "u_by_level", "u_by_speed", "u_px_per_unit", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours"]);
@@ -1194,6 +1198,7 @@ export class NetworkRenderer {
     this.serviceRes = [];
     this.probeVao = null;
     this.net = n;
+    this.marks.setNetwork(n.marks);
     this.track = this.strokes(n.track);
     this.lines = this.strokes(n.lines);
     this.lineWidths = null;
@@ -1297,6 +1302,7 @@ export class NetworkRenderer {
     for (const r of this.previewRes) r.del();
     this.previewRes = [];
     this.preview = s && s.count ? this.strokes(s, this.previewRes) : null;
+    this.marks.setPreview(s?.marks);
   }
 
   /** The blueprint track picked by a drag selection (T-333), drawn as an ink band under the track, or null. */
@@ -1457,6 +1463,7 @@ export class NetworkRenderer {
     }
     trackStrokes();
     stroke(this.preview, 2, wLine, false);
+    this.marks.draw(m, vp, zoom, dpr, this.levelColours);
 
     if (n.stationCount) {
       // Platforms along the track from STATION_BOX_ZOOM, each one shape at every zoom (T-204), dots

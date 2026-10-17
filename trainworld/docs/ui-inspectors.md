@@ -102,7 +102,11 @@ key.
   cost over its 24 hours at the trains it has now [T-408]; the stops with their time from
   the start and boardings in the past 24 hours, each transfer stop (any station of its complex
   served by another line) showing the two other lines with most boardings there in the past
-  24 hours as bullets and, when there are more, a "+" whose hover names the rest [T-549]; the round trip split into running, dwell, turning and waiting,
+  24 hours as bullets and, when there are more, a "+" whose hover names the rest [T-549]; **flat junctions and
+  flat crossings on the route** [T-629, `TrackApi.line_marks`] as small marks on the diagram's bar between the
+  two stops they lie between, spread evenly in the gap (the diagram is not to scale): a white diamond for a
+  junction with no flyover and no station, a cross for a flat crossing, each with a hover naming it and
+  the lines that use or cross it ("Flat crossing near Harbour", "Crosses Cross"); the round trip split into running, dwell, turning and waiting,
   naming where it waits most [T-031]; and last the average speed, both ways over the round trip
   less the turning at the ends, so stops and waiting at busy track count (hover gives the
   distance and time) [T-549].

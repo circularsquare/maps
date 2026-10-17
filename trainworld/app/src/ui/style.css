@@ -308,6 +308,12 @@ rect.now { fill-opacity: .45; }
 .stops .t { margin-left: 8px; }
 .stops .stop-more { flex: none; width: 10px; font-size: 12px; text-align: center; color: var(--muted); }
 .stops .n { width: 40px; text-align: right; }
+/* flat junctions and crossings on the route (T-629): between the dot above and the next one */
+.stops .route-mark { position: absolute; left: 4px; top: calc(50% + var(--at) * 100%); width: 12px; height: 12px; margin-top: -6px; z-index: 1; }
+.stops .route-mark.junction::before { content: ""; position: absolute; left: 1px; top: 1px; width: 6px; height: 6px; background: #fff; border: 2px solid var(--net-ink); transform: rotate(45deg); }
+.stops .route-mark.crossing::before, .stops .route-mark.crossing::after { content: ""; position: absolute; left: 0; top: 4px; width: 12px; height: 4px; background: var(--net-ink); border-radius: 1px; box-shadow: 0 0 0 1px #fff; }
+.stops .route-mark.crossing::before { transform: rotate(45deg); }
+.stops .route-mark.crossing::after { transform: rotate(-45deg); }
 
 /* ---------- main: top bar, map, tools ---------- */
 

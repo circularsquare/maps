@@ -9,6 +9,7 @@
 // clear of every shown name and every tag already placed, and hides only when none is.
 
 import { effect } from "@preact/signals";
+import { CAPACITY_KINDS } from "../game/capacityKinds";
 import { duration } from "../game/format";
 import type { Selection, WorldView } from "../game/types";
 import { selection, tool } from "../game/ui";
@@ -26,10 +27,7 @@ const NO_MARKERS = perfOff("markers");
 /** px between a tag's corner and its resource, and kept clear around a station name (T-184). */
 const GAP_X = 6, GAP_Y = 5, NAME_CLEAR = 3;
 
-const KIND = ["Track", "Single track", "Platform", "Terminus", "Junction", "Flat crossing"];
 const DEMAND = ["high", "medium", "low"];
-/** Which trains a kind's count covers: a section is one direction, single track both. */
-const WAYS = [" each way", " both ways together"];
 
 export class CapacityMarkers {
   /** Demand discs draw above these DOM tags; wired to the same select handler as the map. */
@@ -102,10 +100,12 @@ export class CapacityMarkers {
       const d = Math.round(m.delayS);
       el.textContent = d >= 2 ? `+${Math.floor(d / 60)}:${String(d % 60).padStart(2, "0")}` : `${Math.round(m.rho * 100)}%`;
       // the tooltip (T-099): what the tag means, in plain words
-      const tip = [`${KIND[m.kind] ?? "Track"} at ${Math.round(m.rho * 100)}% of capacity`];
+      const text = CAPACITY_KINDS[m.kind] ?? CAPACITY_KINDS[0];
+      const tip = [`${text.name} at ${Math.round(m.rho * 100)}% of capacity`];
       // T-517: its trains an hour against the most it takes
-      if (m.rho > 0) tip.push(`${Math.round(m.tph)} trains an hour${WAYS[m.kind] ?? ""} against a limit of ${Math.round(m.tph / m.rho)}`);
-      if (m.held) tip.push("Trains beyond the limit wait at the ends of their lines");
+      if (m.rho > 0) tip.push(`${Math.round(m.tph)} trains an hour${text.ways} against a limit of ${Math.round(m.tph / m.rho)}`);
+      tip.push(text.cause, `Helps: ${text.help.charAt(0).toLowerCase()}${text.help.slice(1)}`);
+      if (m.held) tip.push("The line's extra trains are held out of service at its ends");
       if (d >= 2) tip.push(`Each train waits ${duration(d)} here at ${DEMAND[level] ?? "this"} demand`);
       else if (!m.held) tip.push("Trains do not wait here yet");
       let junction: number | null = null;

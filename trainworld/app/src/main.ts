@@ -272,7 +272,7 @@ function selectAt(x: number, y: number, add: boolean) {
   // linking a station into a complex (T-197): the station clicked is the other end
   if (linking.peek() !== null) void linkPicked(pick(overlay, x, y, false, selection.peek()));
   // commuter bubbles first while they are shown (T-097), then the network
-  else selection.value = demandOnTop(x, y, add) ?? pick(overlay, x, y, display.peek().trains && !onMark(x, y), selection.peek());
+  else selection.value = demandOnTop(x, y, add) ?? pick(overlay, x, y, display.peek().trains && !onMark(x, y), selection.peek(), true);
 }
 capacity.selectClick = selectAt;
 // Linking stops when its station is no longer the selection or a tool is picked.
