@@ -223,7 +223,7 @@ pub(crate) struct Leg {
     pub fare: f32,
     /// a ride's wait at its boarding station: real minutes (half the combined headway of the
     /// useful departures there, plus the line's average extra wait for full trains there, T-188)
-    /// and perceived minutes (`board_cost` less the transfer penalty, plus that extra wait)
+    /// and perceived minutes (the same, T-585)
     pub wait_min: f32,
     pub wait_perc: f32,
     /// stops ridden
@@ -284,7 +284,6 @@ fn walk(at: &At, v: usize, share: f32, legs: &mut Vec<Leg>, out: &mut Vec<(f32, 
     }
     let headway = 60.0 / sum;
     let wait_min = headway / 2.0;
-    let wait_perc = board_cost(headway, p) - p.transfer_min;
     for e in edges {
         let r0 = g.adj_to[e] as usize;
         let sh = share * acc(r0 - s) / sum;
@@ -308,7 +307,7 @@ fn walk(at: &At, v: usize, share: f32, legs: &mut Vec<Leg>, out: &mut Vec<(f32, 
         let here = g.rn_station[r - s];
         // and the extra wait where full trains leave riders behind (T-188)
         let left = g.rn_left[r0 - s];
-        legs.push(Leg { kind: 1, rn_from: (r0 - s) as u32, rn_to: (r - s) as u32, st_from: v as u32, st_to: here, min, perc, fare, wait_min: wait_min + left, wait_perc: wait_perc + left * p.w_wait, stops });
+        legs.push(Leg { kind: 1, rn_from: (r0 - s) as u32, rn_to: (r - s) as u32, st_from: v as u32, st_to: here, min, perc, fare, wait_min: wait_min + left, wait_perc: wait_min + left, stops });
         let mut pushed = 1;
         let to = if (nx as usize) < s { nx } else { cn.st[nx as usize - g.n] };
         if to != here {

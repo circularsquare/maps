@@ -1,15 +1,16 @@
 # Adding a city
 
-Written 2026-10-12 (T-179) from how Boston and Washington (T-134), the five-city batch (T-137), the
-non-work purposes (T-142), the border factor (T-162) and the market's derived block (T-174) were
-done. **Followed end to end once, for Toronto (T-277, 2026-10-13)**, the first city outside the US;
-that run rewrote it. Fix this file wherever the next run finds it wrong.
+Two ways. **A world plan row** goes through `pipeline/world_run.py` with no agent per city ("Running
+the pipeline", then sections 1 and 3 for the rules it applies). **By hand** is for a country that needs
+tailoring: a new country module, a typed-in table, a survey, a fitted curve (the steps in sections 1
+to 12, the substitution table and worked examples under "Outside the US"). Fix this file wherever the
+next run finds it wrong; timings and older worked-example detail are in
+`notes/adding-a-city-history.md`.
 
-Rules that apply: CLAUDE.md "City additions in delegated batches" (pragmatic metro extent, basic
-checks, no extent study or calibration) and "No city-specific data". A US city uses US national
-sources (LODES, Census blocks, ACS, TIGER, NCES, IPEDS, FAA). A city in another country needs that
-country's adapters first: section "Outside the US" at the end says what Canada's are and what the
-next country will need.
+Rules that apply: CLAUDE.md "Working here" (pragmatic metro extent, basic checks, no extent study or
+calibration for plan rows) and "General sources and methods only". A US city uses US national sources
+(LODES, Census blocks, ACS, TIGER, NCES, IPEDS, FAA). A city in another country uses tier 0 from global
+sources, with a country module replacing inputs one at a time ("Outside the US").
 
 Logs, check outputs and images go in `../artifacts/trainworld/` (from the maps root
 `artifacts/trainworld/`), never in `notes/`.
@@ -107,30 +108,21 @@ for the browser check (default 6360). Set `TW_SIM_DIR` and `TW_CARGO_TARGET_DIR`
     children covering the outline with the least total area; none inside another.
   - **Archetype**: the country's in the register (England's A only for English units), else D.
 
-  The footprint bullet below is for packs made by hand.
+  The rest of this section is for packs made by hand.
 - **Where.** Anywhere between 85 S and 85 N: new games are in the Mercator world frame, whose
   track lengths are ground lengths everywhere (T-306, docs/world.md), and the renderer anchors to
-  the view (T-307). Games saved in the Northeast conic (TWT5) or the legacy frame are converted to
-  Mercator when they load (T-308). A zone's market pack keeps its sites in its own pack frame
-  (the Northeast's in the New York one) and the market measures distances on the ground (T-128,
-  T-377).
+  the view (T-307). A zone's market pack keeps its sites in its own pack frame (the Northeast's in
+  the New York one) and the market measures distances on the ground (T-128, T-377).
 - **Footprint.** Whole county-level units: US 2020 counties (`cb_2020_us_county_500k` GEOIDs;
   Connecticut's old counties), Canadian census divisions, the country's equivalent elsewhere. The
   metro area (OMB, BLS's list, StatCan's CMA) trimmed or widened by judgement to whole units; no
   study. Whole units are also docs/zones.md's unit for non-city zones. **No unit may belong to
-  another pack**: compare with every `CITIES[*]["counties"]` in `build_city.py`. T-179's US
-  candidates, all disjoint from the packs:
-  - Worcester: 25027 Worcester MA, 09015 Windham CT
-  - Allentown: 42025 Carbon, 42077 Lehigh, 42095 Northampton, 34041 Warren NJ
-  - Albany: 36001 Albany, 36083 Rensselaer, 36091 Saratoga, 36093 Schenectady, 36095 Schoharie
-  - Pittsburgh: 42003, 42005, 42007, 42019, 42051, 42073, 42125, 42129
-  - Richmond: 51007, 51036, 51041, 51053, 51075, 51085, 51087, 51101, 51127, 51145, 51149,
-    51183, 51570, 51670, 51730, 51760 (the 2023 metro without Caroline and King and Queen)
+  another pack**: compare with every `CITIES[*]["counties"]` in `build_city.py`.
 - **A national border** inside the extent needs a factor (SPEC 4, "Borders outside the US") and,
   in the US, a water mask that knows the other side is land (Canada's adapter adds the US states;
   the US one treats everything outside the TIGER states as sea, so Buffalo or Detroit would need
   Canadian land added).
-- **Id.** Three lowercase letters, unused (`wor`, `abe`, `alb`, `pit`, `ric` were T-179's; `tor`).
+- **Id.** Three lowercase letters, unused.
 - **Draw the outline before any build** (T-288: Medway's hole cost a second build): a quick
   picture of the chosen units, checked for holes, islands and gaps against the neighbours.
 - **Reference figures with sources**, gathered before the build, never from memory: population
@@ -146,7 +138,7 @@ for the browser check (default 6360). Set `TW_SIM_DIR` and `TW_CARGO_TARGET_DIR`
 existing files a city addition overwrites). Existing city packs are never rebuilt by a city
 addition; take their sha256 now so you can show they did not change. If the batch edits shared
 pipeline code, rebuild one existing pack into a scratch folder (patch `build_city.PACKS` and
-`WORK`; T-277's `us_identity.py` did New Haven in 85 s) and show its arrays are bit-identical.
+`WORK`) and show its arrays are bit-identical.
 
 ## 3. Pipeline config
 
@@ -211,8 +203,8 @@ not cut along it); build it into a scratch folder by patching `build_city.WORK` 
 
 If a county is in a state not yet in `STATES` (FIPS to LODES abbreviation), add it there, and in
 `group_quarters.PL_STATES`. A pack with its own fitted gravity curve sets `"decay_pow"` and
-`"decay_km"` (the game uses the pack's shipped curve since T-277); its own border factor
-`"border_factor"`. Outside the US also `"country"` (section "Outside the US").
+`"decay_km"`; its own border factor `"border_factor"`. Outside the US also `"country"` (section
+"Outside the US").
 
 ## 4. Build each pack
 
@@ -221,29 +213,26 @@ From the maps root, one city at a time, in the background, with `CARGO_BUILD_JOB
 
     venv\Scripts\python.exe -u trainworld\pipeline\build_city.py wor > artifacts\trainworld\T-###-wor-build.log 2>&1
 
-(`build_city.py` puts `~/.cargo/bin` on PATH itself; `pack_gravity` runs from
-`data/work/target`. **The sim crate must compile**: another agent mid-edit in `sim/` stops the
-build at the gravity step; then point `TW_SIM_DIR` at a copy of the committed crate (`git archive
-HEAD trainworld/sim`, with junctions to `data` and `app` beside it for `pack_gate.py`'s rates
-test), which `build_city.py`, `routes.py`, `market_zones.py`, `zones.py` and `pack_gate.py` honour. Canada's adapter has `canada.py <id> --finish` to resume from the
-cached cells; a US build reruns whole, about a minute.) It writes `data/packs/<id>.json`, `.bin`,
-`.boundary.geojson` (a US pack's: TIGER/Line 2020 counties with their water out to the state and
-county lines at sea, simplified topologically by `pipeline/tiger_counties.py`, so the outline and
-shade run straight offshore and neighbouring packs share exact borders, T-352; the build itself
-filters by the shoreline-clipped cartographic counties; `build_city.py --boundary-only [ids]`
-rewrites only these files and each pack header's boundary source line) and intermediates in
-`data/work/<id>.*`, and runs every non-work purpose
-(schools, universities, everyday sectors, airports, medical visits, parks), so `enrich_all.py` is
-not needed for a new pack. Parks, medical and airport terminals query Overpass in the US path,
-which can be slow or down (T-196: an hour for nine packs on a bad evening). Tier 0 and Canada
-read every OSM point and area input (job places, schools and universities, terminals, medical,
-hospital buildings, parks, tier 0's place list) from the region's Geofabrik extract, read once
-by `pipeline/osm_features.py` into `data/raw/osm/<extract>.points.fgb` and `.areas.fgb`
-(T-363; England: 6 minutes in four processes, 920 MB; then seconds a city, London's job places
-40 s). A city gets the same rows as a GDAL read of the .pbf with its own filter. Each script
-still keeps its own small per-city file (`osm_jobs_<id>.csv.gz`, `osm_medical_<id>.json` and
-the like; tier 0's `data/work/<id>.tier0_signals.npz` holds the job places too); delete those to
-reread a city from the cache. The US path could use the same cache.
+`build_city.py` puts `~/.cargo/bin` on PATH itself; `pack_gravity` runs from `data/work/target`.
+**The sim crate must compile**: another agent mid-edit in `sim/` stops the build at the gravity step;
+then point `TW_SIM_DIR` at a copy of the committed crate (`git archive HEAD trainworld/sim`, with
+junctions to `data` and `app` beside it for `pack_gate.py`'s rates test), which `build_city.py`,
+`routes.py`, `market_zones.py`, `zones.py` and `pack_gate.py` honour. Canada's adapter has
+`canada.py <id> --finish` to resume from the cached cells.
+
+It writes `data/packs/<id>.json`, `.bin`, `.boundary.geojson` (a US pack's: TIGER/Line 2020
+counties with their water out to the state and county lines at sea, simplified topologically by
+`pipeline/tiger_counties.py`, T-352; `build_city.py --boundary-only [ids]` rewrites only these files
+and each pack header's boundary source line) and intermediates in `data/work/<id>.*`, and runs every
+non-work purpose (schools, universities, everyday sectors, airports, medical visits, parks), so
+`enrich_all.py` is not needed for a new pack. Tier 0 and Canada read every OSM point and area input
+(job places, schools and universities, terminals, medical, hospital buildings, parks, tier 0's place
+list) from the region's Geofabrik extract, read once by `pipeline/osm_features.py` into
+`data/raw/osm/<extract>.points.fgb` and `.areas.fgb` (T-363). Each script still keeps its own small
+per-city file (`osm_jobs_<id>.csv.gz`, `osm_medical_<id>.json` and the like; tier 0's
+`data/work/<id>.tier0_signals.npz` holds the job places too); delete those to reread a city from the
+cache. The US path queries Overpass for parks, medical and airport terminals, which can be slow or
+down.
 
 Then the place list for search and station names (T-177): `venv\Scripts\python.exe
 trainworld\pipeline\places.py wor` → `data/packs/wor.places.json` (it prints the count by kind).
@@ -252,52 +241,33 @@ request, cached in `data/raw/osm_places_wor.json` (used whenever it exists).
 
 Then routed walking and driving (T-275): `venv\Scripts\python.exe trainworld\pipeline\routes.py
 wor` adds the `walk` and `drive` arrays from the Geofabrik extract of each region (`EXTRACTS` in
-`routes.py`; Ontario is there, as region id 35 or ON; a US pack also takes every state its water
-grid touches). Run it last, after anything that changes the pack's zones (a gravity re-solve
-leaves the routes stale, and the game then ignores them); `routes.py --check` lists packs with
-missing or stale routes. 1-3 minutes for a small or mid-sized pack, 8 for New York, plus 1-2
-minutes to download and read a new extract; it needs the sim crate to compile (`pack_walk`), or
-`TW_SIM_DIR` pointing at a copy of `sim/` that does. Its log gives the near zone pairs' median drive
-factor (1.3-1.5 in the US packs) and the snapping distance (a median cell over about 300 m from a road means the
-region's OSM roads are thin).
+`routes.py`; `--extracts` names others; a US pack also takes every state its water grid touches).
+Run it last, after anything that changes the pack's zones (a gravity re-solve leaves the routes
+stale, and the game then ignores them); `routes.py --check` lists packs with missing or stale routes.
+It needs the sim crate to compile (`pack_walk`), or `TW_SIM_DIR`. Its log gives the near zone pairs'
+median drive factor (1.3-1.5 in the US packs) and the snapping distance (a median cell over about
+300 m from a road means the region's OSM roads are thin).
 
-Last, merge the sparse cells (T-044, docs/demand.md 4.1): `venv\Scripts\python.exe
+Last, merge the sparse cells (T-044, docs/demand-sources.md 4.1): `venv\Scripts\python.exe
 trainworld\pipeline\merge_cells.py wor`, seconds. It keeps the res-9 pack in
 `data/work/res9/wor.json/.bin` and writes the merged one to `data/packs`: sparse res-8 parents
 become one cell, in busier parents the sparse children that touch merge among themselves (T-466), and
 a sparse cell left alone joins a touching merged cell of its zone across its parent's edge (T-510).
-It prints the cells before and after (47-68% fewer in a metro outside the US, 70-78% in a US one,
-about 78% in a rural pack). Every other step reads and writes the res-9 pack: to rerun one on a merged pack,
+Every other step reads and writes the res-9 pack: to rerun one on a merged pack,
 `merge_cells.py wor --undo` first, then the step, then `merge_cells.py wor` again (it refuses a
 merged pack some step has changed since). `merge_cells.py --all` remerges every registered pack.
 Then `nocar.py wor` (homes without a car, T-511; every country has a figure by T-562's rules,
-docs/data-register.md "Car ownership", and `nocar.py --plan` lists each planned country's) and `everyday_rates.py wor` (the country's
-everyday rates, T-509; a worldwide median without a survey), seconds each; both write the merged
-pack and its res-9 copy, so rerun them after any step that rebuilds the pack.
-The market's zone file (`market_zones.py`, section 7) is made after the merge.
+docs/data-register.md "Car ownership", and `nocar.py --plan` lists each planned country's) and
+`everyday_rates.py wor` (the country's everyday rates, T-509; a worldwide median without a survey),
+seconds each; both write the merged pack and its res-9 copy, so rerun them after any step that
+rebuilds the pack. The market's zone file (`market_zones.py`, section 7) is made after the merge.
 
-Time: about 1 minute for Worcester (1M people) with everything cached; T-134's Washington took
-107 s; Toronto 10 minutes for the cells plus 22 for the rest (the 1 GB OSM extract read twice).
-US downloads are per county (TIGER PL block zips, AREAWATER zips) plus one NCES query per city;
-the state block DBFs, LODES WAC/RAC and the nationwide ACS `.dat` files (470 MB) are usually
-cached already. A state new to the game also fetches its 2020 redistricting summary file
-(`<st>2020.pl.zip`, 1-73 MB, T-234); `pipeline/group_quarters.py` keeps a small block table from it
-(`data/raw/pl2020_p5_<fips>.csv.gz`).
-
-What a US log should show (Worcester's figures):
-
-- `check pop: blocks ... vs Census estimates base 2020 ... (+0.000%)`: exact or within 0.1%.
-- `blocks <st>: ... N of them in institutions (T-234) -> ...`: about 0.5-1.5% of the people;
-  `job holders on blocks with institutions capped ...`: about 0.1-0.5% of LODES RAC.
-- `LODES blocks with no 2020 block centroid: 0 blocks, 0 jobs lost`.
-- `check jobs: LODES 2023 ... vs BLS QCEW 2023 ... (+0.9%)`: within about 5%; do not calibrate.
-- `work from home: ... blocks without a tract 0`.
-- `job adjustments (T-014): 0 blocks` (no city-specific moves for a new city).
-- `NCES schools: ... matched ... (100.00%) ... 0 omitted` (the build fails under 95%).
-- IPEDS block: `location_match_share` 1.0, a plausible institution count.
-- `gravity: ... decay d^-0.8 exp(-d/30 km) x 0.23 across regions` and, for a multi-state pack,
-  `trips between regions` of a few percent.
-- Top cells by jobs: a hospital or university lump is normal LODES; leave it (T-043).
+A state new to the game also fetches its 2020 redistricting summary file (`<st>2020.pl.zip`, T-234);
+`pipeline/group_quarters.py` keeps a small block table from it (`data/raw/pl2020_p5_<fips>.csv.gz`).
+A US build log should show the population check exact or within 0.1%, the jobs check within about 5%
+(do not calibrate), NCES schools matched at 95% or more (the build fails under it), and a hospital or
+university lump among the top cells by jobs as normal LODES (T-043); the rest is in
+`notes/adding-a-city-history.md`.
 
 ## 5. Check each pack
 
@@ -334,10 +304,6 @@ registry (T-441).
   (step 7), which appends the zone to `market.places`. **Place ids are positions in that list:
   append only, never reorder or renumber.**
 
-Vite then serves and copies the packs (`vite.config.ts`), the clock worker loads the city's water
-mask when it is needed, `cityReach.ts` and the map read the boundary file, and saves list the
-registry's cities in their header (an old save's list stays a subset, so it loads).
-
 ## 7. Regional market and zones
 
 Every registered zone is in the world market (docs/regional.md 5.1, T-377). Its pack header
@@ -348,7 +314,7 @@ its national pairs); the market takes the country from the world field. Then, in
     venv\Scripts\python.exe trainworld\pipeline\zones.py             (non-city zones: registers built ones)
     venv\Scripts\python.exe trainworld\pipeline\market_zones.py <id> (its market pack and every row, seconds)
     venv\Scripts\python.exe trainworld\pipeline\zones.py --trips     (each zone's local trips, for the overview)
-    cd trainworld & ..env\Scripts\python.exe pipelineoutes.py <id>   (last: T-275's routes, for new packs)
+    venv\Scripts\python.exe trainworld\pipeline\routes.py <id>       (last: T-275's routes, for new packs)
 
 `market_zones.py` also gives the zone's pack its airports and direct flights (T-378, from
 OurAirports and the flights project's FR24 file, `maps/flights/routes_fr24.json`; a direct flight
@@ -362,8 +328,10 @@ pack's is in a joint gravity group with it (T-539; `intercity.py --groups` lists
 with the world plan's metros too). Once it is registered: `merge_cells.py <every member> --undo`,
 `intercity.py --group auto <id> --no-market` (it rewrites every member's factors; Japan's 45 packs
 about 5 minutes with `OMP_NUM_THREADS=8`), `merge_cells.py` on them again, then `register.py
-<every member> --market --trips`. A pack with no neighbour that close needs none of this. A non-city zone is a `CITIES` entry in `build_city.py` with `"kind": "zone"` and a
-`"name"`, one county-sized unit (docs/zones.md 2).
+<every member> --market --trips`. A pack with no neighbour that close needs none of this.
+
+A non-city zone is a `CITIES` entry in `build_city.py` with `"kind": "zone"` and a `"name"`, one
+county-sized unit (docs/zones.md 2).
 
 ## 8. Tests that list cities
 
@@ -392,14 +360,14 @@ Native and Node (`npm run wasm --prefix trainworld/app` only if Rust changed):
     node trainworld/checks/t149-worker-check.mjs
 
 `every_pack_everyday` prints each city's per-resident outings: school about 0.11-0.15, university
-0.02-0.08, errands and social at New York's rates by construction (Toronto: school 0.128,
-university 0.033); the gate fails a pack outside school 0.06-0.35 or university 0.001-0.08.
+0.02-0.08, errands and social at New York's rates by construction; the gate fails a pack outside
+school 0.06-0.35 or university 0.001-0.08.
 
-Browser (own Vite with HMR and watching off, `checks/dev-nowatch.mjs`; headless Chrome through Playwright with its own
-profile directory; never touch app/dist): the gate's `--browser` (section 8) runs
-`checks/city-browser.mjs` on a row it makes, about half a minute a pack; run it in the background
-with one wait, since a 10-minute foreground run let the cache expire (T-289). A new game, then for
-each new city:
+Browser (own Vite with HMR and watching off, `checks/dev-nowatch.mjs`; headless Chrome through
+Playwright with its own profile directory; never touch app/dist): the gate's `--browser` (section 8)
+runs `checks/city-browser.mjs` on a row it makes, about half a minute a pack; run it in the
+background with one wait, since a 10-minute foreground run let the cache expire (T-289). A new game,
+then for each new city:
 
 - jump to its centre: it becomes the active city, its pack opens (`twDemand.client.start.loads`),
   its outline is the focus outline (`tw-city-focus`); Homes bubbles show; screenshot to
@@ -496,24 +464,25 @@ place has none. Printed once, after the jobs are set, before the cells are writt
 
 **Water outside the US (T-041).** `pipeline/osm_water.py` gives any city a water mask from
 OpenStreetMap: the sea from osmdata.openstreetmap.de's coastline polygons
-(`data/raw/osmdata/water-polygons-split-4326.zip`, 906 MB, downloaded once for the world and kept;
-a city's box is read out of the zip in about 10 s) and inland water areas (`natural=water`,
-`landuse=reservoir`, `waterway=riverbank|dock|canal`; not intermittent, covered or dry basins) from
-the region's Geofabrik extract, read once per extract into `data/raw/osm/<extract>.water.fgb`
-(England: 13 minutes, 115 MB; a US state 1-3 minutes). In a tier 0 config:
-`"water_source": osm_water.source(["europe/united-kingdom/england"])`; the extracts must cover the
-whole box, and must not overlap: check Geofabrik's region page first, since a region can contain
-another (Brandenburg includes Berlin, T-290), and two overlapping extracts count every feature twice. Neighbouring regions' polygons also overlap in a strip along their border (Japan's Kansai and Chubu, T-431): a config's `extract` may be a list, and `osm_features.read` then keeps an object found in two once; for water the overlap does no harm. To read an extract ahead, or to see a city's mask before its pack exists:
+(`data/raw/osmdata/water-polygons-split-4326.zip`, downloaded once for the world and kept) and
+inland water areas (`natural=water`, `landuse=reservoir`, `waterway=riverbank|dock|canal`; not
+intermittent, covered or dry basins) from the region's Geofabrik extract, read once per extract
+into `data/raw/osm/<extract>.water.fgb`. In a tier 0 config: `"water_source":
+osm_water.source(["europe/united-kingdom/england"])`; the extracts must cover the whole box, and
+must not overlap: check Geofabrik's region page first, since a region can contain another
+(Brandenburg includes Berlin, T-290), and two overlapping extracts count every feature twice.
+Neighbouring regions' polygons also overlap in a strip along their border (Japan's Kansai and
+Chubu, T-431): a config's `extract` may be a list, and `osm_features.read` then keeps an object found
+in two once; for water the overlap does no harm. To read an extract ahead, or to see a city's mask
+before its pack exists:
 
     venv\Scripts\python.exe trainworld\pipeline\osm_water.py read europe/france/ile-de-france
     venv\Scripts\python.exe trainworld\pipeline\osm_water.py mask par --extracts europe/france/ile-de-france --bbox w,s,e,n --origin lon,lat --png artifacts\trainworld\T-###-par-water.png
 
-`mask` writes a water-only pack, `data/work/osm_water/<id>.json/.bin` (the pack's water block and
-arrays only), draws it with `look_water.py` and runs `read_pack.py`'s water test places for that
-id (add them to `WATER_TESTS`, close-ups to `look_water.VIEWS`). On New York's grid it disagrees
-with TIGER on 0.56% of pixels and passes all 18 of T-030's test places (notes/T-041.md). The
-Geofabrik `.osm.pbf` can go once its `.water.fgb`, `.points.fgb`, `.areas.fgb` and `.ways2.npz`
-exist.
+`mask` writes a water-only pack, `data/work/osm_water/<id>.json/.bin`, draws it with `look_water.py`
+and runs `read_pack.py`'s water test places for that id (add them to `WATER_TESTS`, close-ups to
+`look_water.VIEWS`). The Geofabrik `.osm.pbf` can go once its `.water.fgb`, `.points.fgb`,
+`.areas.fgb` and `.ways2.npz` exist.
 
 A tier 0 city is a `CITIES` entry with `"tier0": True` (the keys are listed in `tier0.py`'s
 docstring); `build_city.py <id>` hands it to `tier0.main`. A country's census then replaces one
@@ -521,10 +490,9 @@ input at a time (the upgrades table in research/world-sampler.md), in a module p
 (`pipeline/england.py`), through tier0's `population`, `jobs` and `schools` hooks. London (`lon`,
 T-288 and T-360, notes/T-288.md) is the worked example: the outline as whole ITL3 units (ONS),
 Census 2021 population by LSOA, BRES jobs by LSOA, GIAS schools, the curve fitted on the 2011
-WU01EW flows (`notes/t360_curve.py`), work from home one national share. Time with England's
-extract already read (water 13 minutes, features 6, roads by `routes.py`): `build_city.py lon`
-about 7.5 minutes reading every OSM input from the feature cache, `routes.py lon --extracts
-europe/united-kingdom/england` 4, `places.py` seconds (T-363).
+WU01EW flows (`notes/t360_curve.py`), work from home one national share. The chain: read the
+extract's features and water, `build_city.py lon` (reads every OSM input from the feature cache),
+`routes.py lon --extracts europe/united-kingdom/england`, `places.py`.
 
 What London taught, for the next tier 0 city:
 
@@ -540,97 +508,70 @@ What London taught, for the next tier 0 city:
 - **Measure each upgrade against tier 0 before switching** (`notes/t360_*.py`); a 2 km zone
   difference is what the game feels.
 
-Paris (`par`, T-289, `pipeline/france.py`) took about an hour of wall time: Ile-de-France's
-extract read in 72 s (features) and a few minutes (water), the build 66 s, `routes.py` 3 minutes.
-One INSEE file (the 2022 flows, every flow, 12 MB) gave both the jobs by commune of work and the
-curve fit (`notes/t289_curve.py`, which also makes the signals cache, so the build that follows
-reuses it). Communes and their legal populations come from geo.api.gouv.fr in one request a
-département. Take water test places from the water cache's own polygons, not from memory (three
-of five guessed points missed).
+**Worked examples by country**, one per archetype, for the chain of commands (what each took and its
+timings: `notes/adding-a-city-history.md`; the notes of each task have the sources):
 
-Shanghai (`sha`, T-291, `pipeline/china.py`) took about 30 minutes: the extract read in seconds,
-the build 7 minutes, `routes.py` 1. Districts come from the extract's OSM admin_level 6
-relations clipped to land by the coastline; relations that GDAL cannot assemble (Jing'an,
-Baoshan) are rebuilt from admin_level 8 units or as the province's remainder. Population and
-jobs are scaled to district tables from the city statistics bureau's census bulletins (the
-economic census's bulletin no. 1 has employment by district): look for both before the first
-build. Places show `name:en` or pinyin where OSM has it (`"latin_names"`).
+- **Paris** (`par`, T-289, `pipeline/france.py`): one INSEE file (the 2022 flows, every flow) gives
+  both jobs by commune of work and the curve fit (`notes/t289_curve.py`, which also makes the signals
+  cache, so the build that follows reuses it). Communes and legal populations from geo.api.gouv.fr,
+  one request a département. Take water test places from the water cache's own polygons, never
+  from memory.
+- **Shanghai** (`sha`, T-291, `pipeline/china.py`): districts are the extract's OSM admin_level 6
+  relations clipped to land; relations GDAL cannot assemble (Jing'an, Baoshan) are rebuilt from
+  admin_level 8 units or as the province's remainder. Population and jobs scaled to district tables
+  from the statistics bureau's census bulletins (the economic census's bulletin no. 1 has employment
+  by district): look for both before the first build. Places show `name:en` or pinyin
+  (`"latin_names"`).
+- **Mumbai** (`mum`, T-292, `pipeline/india.py`): units are OSM district and taluka relations by
+  name; the census tables (Primary Census Abstract per district, A-2, B-28) are on
+  censusindia.gov.in/nada (certificate checks off for that host only). Compare GHSL with each
+  unit's census total in the first build's log; where OSM's lines between units do not follow the
+  census's, scale those units as one group. A table of commuters by distance band fits both curve
+  parameters (`"curve": {"bands": ..., "road_factor": ...}`, `tier0.fit_curve_bands`).
+- **Sao Paulo** (`sao`, T-458, `pipeline/brazil.py`): IBGE's 2022 tracts with their people are one
+  GeoPackage a state; a household travel survey's microdata (the Metro's OD 2017) gives jobs by
+  zone, work from home and the curve in one file: look for a city's survey first. Merge the curve's
+  bands under 4 km (2 km zones cannot split them). The World Bank API can time out: fetch its three
+  JSON files into `data/raw/tier0/` with curl.
+- **Lagos** (`lag`, T-459, `pipeline/nigeria.py`), from global sources alone: `nigeria.py probe <id>`
+  lists the admin relations in the box and `nigeria.py <id>` prints GHSL by unit before any build.
+  Where OSM maps few shops and offices, read the build's `osm_signal` line (above): land use
+  dominates the signal. Run Python with `PYTHONIOENCODING=utf-8`, or OSM names with tone marks stop
+  a print.
+- **Berlin** (`ber`, T-290, `pipeline/germany.py`): Brandenburg's extract includes Berlin, so never
+  add Geofabrik's Berlin extract beside it. BKG's VG250-EW gives Kreise, Gemeinden and their
+  population in one file; the Pendleratlas's CSVs (`/data/csv/<year>/<year>_<table>_L<Land>.csv`,
+  found in its JS bundle) give jobs by Gemeinde of work and the top flows for the curve. Water test
+  points must sit on a channel's middle (polylabel on the cached polygon); a canal under 50 m wide
+  is below the mask's 2-pixel width.
+- **Tokyo and Japan** (`tyo`, T-420, `pipeline/japan.py`): a Japanese pack is a config row:
+  `prefectures`, `neighbours` (the land beyond the outline, for meshes it cuts) and the region's
+  telework share. `python pipeline/japan.py fetch <id>` downloads the census meshes, N03, table 4 and
+  P29 first, and `japan.py outline <id>` draws the outline. Run `notes/t420_curve.py <id>` for the
+  curve before the build (it makes the signals cache). `routes.py tyo --extracts asia/japan/kanto`
+  (Japan is not in `routes.EXTRACTS`). Place names need fugashi and unidic-lite in the venv
+  (`japan.kanji_romaji`). A rebuilt pack's caches (`data/work/<id>.*`, the `osm_*_<id>` files under
+  `data/raw/`, `<id>_prefectures.geojson`) must go first, or the old extent's are reused. A Hokkaido
+  pack names subprefectures (`japan.SUBPREFECTURES`) or one municipality (`"01-01203"`); each
+  regional metro fits its own curve before the build. Japanese downloads go through curl
+  (`japan._get`, T-441): KSJ's server, and Geofabrik's on a bad night, stall a Python request for
+  good. The rest of Japan (T-420 stage 3) is 38 non-city zones built as one batch by
+  `pipeline/japan_zones.py`: `plan` (zones, neighbours, extracts, origin, wfh into
+  `japan_zones.json`), `build <id>` (outline, a curve fitted over a fixed grid, the pack, places,
+  routes, merge, `read_pack`, water picture) and `run <ids> --jobs 4` (a process a zone, a log and
+  status line each). Build the few zones least like each other first (an island zone, a big one, a
+  merged one): a batch finds a tier 0 bug 9 times over. Check table 4's municipality codes against
+  N03's before building (wards redrawn since 2020 starve a municipality of jobs).
+- **Seoul** (`seo`, T-457, `pipeline/korea.py`): population is the resident registration count by
+  si-gun-gu from jumin.mois.go.kr (`korea.py fetch`, one POST a province, no key); districts are OSM
+  relations by name inside their province, the admin areas cached in
+  `data/raw/tier0/korea/<id>_admin.fgb`. Check the district names against OSM first: units renamed or
+  split since the table's year need a mapping (`REGIONS[...]["osm_names"]`).
 
-Mumbai (`mum`, T-292, `pipeline/india.py`) took about 40 minutes: the western zone extract read in
-38 s (features) and 64 s (water), the build 3 minutes, `routes.py` 96 s. Units are OSM district
-and taluka relations by name; the census tables (Primary Census Abstract per district, A-2, B-28)
-are on censusindia.gov.in/nada (certificate checks off for that host only). Compare GHSL with each
-unit's census total on the first build's log: where OSM's lines between units do not follow the
-census's, scale those units as one group. A census table of commuters by distance band fits both
-curve parameters (`"curve": {"bands": ..., "road_factor": ...}`, `tier0.fit_curve_bands`, about
-100 s in the build).
-
-Sao Paulo (`sao`, T-458, `pipeline/brazil.py`) took about an hour: Brazil's Sudeste extract (860
-MB) downloaded and read in 6 minutes (features) and 5 (water), the build 2 minutes, `routes.py` 5.
-IBGE's 2022 tracts with their people are one GeoPackage a state; a household travel survey's
-microdata (the Metro's OD 2017) gives jobs by zone, work from home and the curve in one file:
-look for a city's survey first. Merge the curve's bands under 4 km (2 km zones cannot split them).
-The World Bank API can time out: fetch its three JSON files into `data/raw/tier0/` with curl.
-
-Lagos (`lag`, T-459, `pipeline/nigeria.py`) took about 36 minutes from global sources alone:
-Nigeria's extract (711 MB) downloaded in 4 minutes and read in 7 (features) and 30 s (water), the
-build 80 s, `routes.py` 3 minutes. `nigeria.py probe <id>` lists the admin relations in the box and
-`nigeria.py <id>` prints GHSL by unit before any build. Where OSM maps few shops and offices, read
-the build's `osm_signal` line (above): land use dominates the signal. Run Python with
-`PYTHONIOENCODING=utf-8`, or OSM names with tone marks stop a print.
-
-Berlin (`ber`, T-290, `pipeline/germany.py`) took about 50 minutes: Brandenburg's extract (which
-includes Berlin: never add Geofabrik's Berlin extract beside it, the features would count twice)
-read in 97 s (features) and 107 s (water), the curve script with the signals 4 minutes, the build
-3.5 minutes, `routes.py` 3. BKG's VG250-EW gives Kreise, Gemeinden and their population in one
-file; the Pendleratlas's CSVs (`/data/csv/<year>/<year>_<table>_L<Land>.csv`, found in its JS
-bundle) give jobs by Gemeinde of work and the top flows for the curve. Water test points must sit
-on a channel's middle (polylabel on the cached polygon); a canal under 50 m wide is below the
-mask's 2-pixel width.
-
-Tokyo (`tyo`, T-420, `pipeline/japan.py`) took about two hours, an hour of it the build (before
-T-425, parks 35 minutes and medical 15; now they take 2 minutes together; routes 13). A Japanese pack is a config
-row: `prefectures`, `neighbours` (the land beyond the outline, for meshes it cuts) and the region's
-telework share; `python pipeline/japan.py fetch <id>` downloads the census meshes, N03, table 4
-and P29 first, and `japan.py outline <id>` draws the outline. Run `notes/t420_curve.py <id>` for
-the curve before the build (it makes the signals cache; 25 minutes on Greater Tokyo's 4,900 zones).
-Rebuilt with Ibaraki (T-426): the extract's features and water 6 minutes, the build 10, `routes.py
-tyo --extracts asia/japan/kanto` 14 (Japan is not in `routes.EXTRACTS`). Place names need fugashi
-and unidic-lite in the venv (`japan.kanji_romaji`). A rebuilt pack's caches (`data/work/<id>.*`,
-the `osm_*_<id>` files under `data/raw/`, `<id>_prefectures.geojson`) must go first, or the old
-extent's are reused. Fukuoka, Sapporo, Sendai and Hiroshima (T-432) were a batch of config rows:
-a Hokkaido pack names subprefectures (`japan.SUBPREFECTURES`) or one municipality (`"01-01203"`);
-each regional metro fits its own curve (4-12 minutes, before the build); builds 2-5 minutes,
-`routes.py` 1-3. Japanese downloads go through curl (`japan._get`, T-441): KSJ's server, and
-Geofabrik's on a bad night, stall a Python request for good. The rest of Japan (T-420 stage 3) is
-38 non-city zones built as one batch by `pipeline/japan_zones.py`: `plan` (zones, neighbours,
-extracts, origin, wfh into `japan_zones.json`), `build <id>` (outline, a curve fitted over a fixed
-grid in a few minutes, the pack, places, routes, merge, `read_pack`, water picture) and `run
-<ids> --jobs 4` (a process a zone, a log and status line each); 2-76 minutes a zone. Build the few
-zones least like each other first (an island zone, a big one, a merged one): a batch finds a
-tier 0 bug 9 times over. Check table 4's municipality codes against N03's before building (wards
-redrawn since 2020 starve a municipality of jobs).
-
-Seoul (`seo`, T-457, `pipeline/korea.py`) took about an hour: South Korea's extract read in 3
-minutes (features) and 1 (water), the build 7, `routes.py` 5. Population is the resident
-registration count by si-gun-gu from jumin.mois.go.kr (`korea.py fetch`, one POST a province, no
-key); districts are OSM relations by name inside their province, the admin areas cached in
-`data/raw/tier0/korea/<id>_admin.fgb` (the extract's multipolygon read takes 5 minutes). Check the
-district names against OSM first: units renamed or split since the table's year need a mapping
-(`REGIONS[...]["osm_names"]`). A test line costs about 200 a station, so a new game's 6,000 builds
-about 29.
-
-What was hard, for the next country:
-
-- **Blocked downloads.** StatCan's geography server (www12) sits behind a bot check, so the
-  boundary and attribute files came from ArcGIS Online copies (Esri Canada's, and one user's copy
-  of the census tracts). Its tables server (www150) is open. Look for such mirrors early, and list
-  the official URLs for Anita.
-- **No jobs by small area in the standard tables.** The census publishes workers by tract of
-  work, but the latest census was taken in a lockdown: put the at-home workers back.
-- **Provincial, not national, education data.** A second province needs its own school and
-  college files.
-- **Overpass** was down for the whole area; reading the Geofabrik extract with GDAL was faster
-  and is the fallback for every OSM input.
-- **The fitted curve.** Toronto's fits much steeper than the US curve (d^-1.2 exp(-d/20 km));
-  the game now takes each pack's shipped curve rather than the US default.
+What was hard, for the next country (Toronto): a statistics office's geography server may sit
+behind a bot check (StatCan's www12), so look for mirrors early (ArcGIS Online copies) and list
+the official URLs for Anita; a census taken in a lockdown needs its at-home workers put back;
+education data may be provincial, not national, so a second province needs its own files; when
+Overpass is down, reading the Geofabrik extract with GDAL is the fallback for every OSM input; and a
+fitted curve can differ much from the US one (Toronto's d^-1.2 exp(-d/20 km)), which is why each
+pack ships its own.

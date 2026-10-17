@@ -88,7 +88,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   bubble selections), `intercityView.ts` (longer trips of a selection or station, one bubble per
   far zone, T-118, T-120; one per city zoomed far out, T-186), `catchUp.ts` (the bubbles catching
   up over a game day, T-156), `demandOverlay.ts` (their canvas, over the network's),
-  `demandHover.ts` (the count tag by the pointer), `modeBar.ts` (the tag's mode bar, T-494), `airportMarks.ts` (the plane badge on an
+  `demandHover.ts` (the count tag by the pointer), `modeBar.ts` (the tag's mode bar, T-494, and `localModes`, an open zone's local legs by mode, T-576), `airportMarks.ts` (the plane badge on an
   airport's bubble, T-448; paths shared with the icons in `glyphs.ts`).
 - Tags and outlines: `trackHover.ts` and `networkTips.ts` (the hover tags on track, trains and
   stations, T-157, T-194), `trackTagRows.ts` (the elevation and speed rows with icons, shared with

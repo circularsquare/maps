@@ -349,7 +349,7 @@ notes/T-420.md has the tables.
   which count as rail in the census, are not in the game for homes without a car); smaller
   Japanese cities have no counts to check it on.
 
-## Homes (docs/demand.md 4.1)
+## Homes (docs/demand-sources.md 4.1)
 
 - **People in institutions are not homes** (T-234). The US packs take the 2020 census's
   institutional group quarters (prisons and jails, juvenile facilities, nursing homes, other
@@ -370,7 +370,7 @@ notes/T-420.md has the tables.
   count prisoners at the prison, and is there an institutional population by small area; for one
   big prison per country, compare the population grid's cells over it with its capacity.
 
-## Commute flows (SPEC 4, docs/demand.md 4.4)
+## Commute flows (SPEC 4, docs/demand-kernel.md 4.4)
 
 - **Distance curve shape.** Work gravity uses d^-0.8 exp(-d/30 km) (T-198, from T-185; was
   d^-1 exp(-d/40 km), T-162), one value for the nine US packs, carried in each pack. What the nine
@@ -415,7 +415,7 @@ notes/T-420.md has the tables.
 
 ## Mode choice
 
-- **Cost damping** (T-495, docs/demand.md 4.3). The logit's 0.05 a perceived minute falls as
+- **Cost damping** (T-495, docs/demand-mode.md 4.3). The logit's 0.05 a perceived minute falls as
   sqrt(60 / T) past T = 60, T the car's perceived minutes (even where no car can go), in every
   layer. The form and power follow UK WebTAG's cost damping and long-distance mode choice studies;
   set on European and US rail-air shares, not fitted. Why it may not carry over: the car's minutes
@@ -424,7 +424,7 @@ notes/T-420.md has the tables.
   driving) differ by country. Check: rail, air and car shares on a few corridors per country
   (MLIT's Inter-Regional Travel Survey, Eurostat, NEC FUTURE) at two lengths, so the slope as well
   as the level is seen.
-- **Rail propensity** (T-509, docs/demand.md 4.3). One worldwide rail
+- **Rail propensity** (T-509, docs/demand-mode.md 4.3). One worldwide rail
   constant, `asc_rail` 0.4 (8 perceived minutes), with everyday trips 1.1 lower (-0.7 in all)
   (with the walking curve of then, centred at 1.9 km for everyday trips and 1.7 for commutes,
   which T-558's walking constants now stand in for), fitted jointly on the
@@ -443,11 +443,11 @@ notes/T-420.md has the tables.
   in the game: Seoul's and London's bus riders take the train). Check: a new country's station
   entries against the model's level, and its census rail share by area where it has one; a country
   constant only where a real network's counts show a gap the worldwide value cannot close.
-- **Driving alternative and homes without a car** (T-511, docs/demand.md 4.3). Drive times and
+- **Driving alternative and homes without a car** (T-511, docs/demand-mode.md 4.3). Drive times and
   costs are the US car's; the people living in a household with no car (per cell, `nocar`) cannot
   drive and choose among rail, walking the whole way and "other" (T-513: bus, taxi and bike as one
-  mode, the drive's road at a fixed 12 km/h door to door plus an 8-minute wait at the platform
-  wait's weight, plus one fitted constant `other_asc`, no parking). Sources, finest first: census car-free
+  mode, the drive's road at a fixed 12 km/h door to door plus an 8-minute wait in plain
+  minutes, plus one fitted constant `other_asc`, no parking). Sources, finest first: census car-free
   households by small area (US ACS B08201 by tract, people directly; England and Wales Census 2021
   TS045 by LSOA; Scotland's Census 2022 UV405 by data zone; Northern Ireland's Census 2021 by data
   zone, people directly); else cars per household `c` by region or country, households with no car
@@ -478,7 +478,7 @@ notes/T-420.md has the tables.
   apart. Check: a city's car-free share against its own survey (INSEE IRIS
   for France, KOSIS for Korea, city yearbooks), and rail share of commuters by area where the
   census has mode (T-509).
-- **Routed drives** (T-275, docs/demand.md 4.3). A drive's road is the straight line times a
+- **Routed drives** (T-275, docs/demand-mode.md 4.3). A drive's road is the straight line times a
   per-pack routed factor over OSM roads (every public road but service ways, shortest distance),
   times one scale, 1.3 / 1.210, that puts New York's commute-weighted factor back at the 1.3 its
   density speeds were fitted with. The nine US packs come to 1.17-1.26 before the scale. Why it
@@ -491,14 +491,14 @@ notes/T-420.md has the tables.
   a city across a strait has only its bridges and tunnels. Check: per new country, the
   commute-weighted factor the pipeline reports and the median snapping distance (US packs:
   94-213 m); a city's ACS-like car commute times against the model's, as T-090 did.
-- **Long drives** (T-370, docs/demand.md 4.3). Each end's density speeds last its own first 10 km
+- **Long drives** (T-370, docs/demand-mode.md 4.3). Each end's density speeds last its own first 10 km
   of road (2 local, 8 main); anything beyond is open highway at 100 km/h. Why it may not carry
   over: 100 km/h assumes a motorway between the ends (US, Canada, western Europe); where long
   roads are two-lane or congested end to end (much of India, Indonesia, Lagos) the middle is far
   slower, and a sprawling metro whose dense core is wider than 10 km (Mexico City, Jakarta) is
   slow for longer. Check: a few typical door-to-door drives of 50-130 km per new country against
   the model's (notes/T-295.md has the US, Toronto and London ones).
-- **Parking** (T-380, T-372, T-440, docs/demand.md 4.3). One rule for the commute, everyday and
+- **Parking** (T-380, T-372, T-440, docs/demand-mode.md 4.3). One rule for the commute, everyday and
   regional layers. In minutes, not money: 3 to park, plus for a paid
   space 15 x ln(d / 3,000) per one-way trip (capped at 50), d the destination zone's jobs per km²
   of land; a share 1 / (1 + d / 8,000) parks free; congestion charges from a short list of
@@ -521,7 +521,7 @@ notes/T-420.md has the tables.
   Barriers other than water (motorways, rail yards, gated estates, rivers in deep cuttings) are
   not barriers. Check: the probes in notes/T-275.md for a few crossings per city
   (`pack_walk --probe`).
-- **Walking and riding to a station** (T-371, T-389, docs/demand.md 4.3). The walk is 6 km/h on a
+- **Walking and riding to a station** (T-371, T-389, docs/demand-mode.md 4.3). The walk is 6 km/h on a
   path 1.3x the straight line at weight 1.5; a commute or everyday trip of 5 km or more may
   instead ride from home (car, bus, bike
   or a lift, one mode) to the cheapest station of each line within 15 km, at `p_ride` 15 + 1.33 x
@@ -541,12 +541,15 @@ notes/T-420.md has the tables.
   weights are fitted on New York only (T-372: 53-66% of commuter rail riders ride there). Check: the share of rail riders
   reaching the station by car or bus per sampler city (UK NTS for London, Metrolinx surveys for
   Toronto) against the model's home-end ride share (`realnet` prints it).
-- **Walking the whole way** (T-558, docs/demand.md 4.3 "Walking"). A mode in the choice beside
+- **Walking the whole way** (T-558, docs/demand-mode.md 4.3 "Walking"). A mode in the choice beside
   rail and the car (or other), at 1.5 perceived minutes a minute for the first 10 minutes and 4
-  after, with one constant for commutes (`asc_walk` 2.86) and 0.35 more for everyday trips, set
+  after, with one constant for commutes (`asc_walk` 2.80) and 0.41 more for everyday trips, set
   so New York and London walk as they did under the curve T-509 fitted to New York's NHTS
   everyday walk shares and ACS commuting (New York alone wants a higher constant than London in
-  both layers; the shared values leave each within 0.3 points of its walking). Why it may not carry over: walking tolerance differs by climate, culture,
+  both layers; the shared values leave each within 0.3 points of its walking). A commute walks
+  between six home and six job cells of its zones, not their 2 km centres (T-587; 2.80 keeps
+  the two cities' commute walkers together where they were), so its walk shares by distance
+  follow the everyday layer's. Why it may not carry over: walking tolerance differs by climate, culture,
   street design and safety, and the constant also stands for how much a short drive costs
   beyond its road time, which differs with car ownership and parking; the cost's shape keeps
   more 1.5-2.5 km trips on foot than the old curve (London's 2-2.5 km band 3.7 points over) and
@@ -555,16 +558,23 @@ notes/T-420.md has the tables.
   calibration fits the constants and the shape per country with the rail constants.
 - **Value of time and fare sensitivity.** One value for everyone, from US figures. Incomes differ
   hugely between and within countries (see Anita's "income dependence" idea in her TODO).
-- **Waiting and crowding penalties.** From transit literature that is mostly US and
-  European. Riders in Tokyo or Mumbai tolerate crowding very differently. A change has no penalty
-  beyond its wait and walk (Anita, T-557), where the literature puts 5-15 perceived minutes on one.
+- **Waiting and crowding penalties.** A wait counts as plain minutes, half the headway, with no
+  weight (Anita, T-585), where the literature (mostly US and European) weighs a platform wait
+  1.5-2.5 times a minute aboard and a long wait at home before a known departure less. The
+  crowding penalty is from that literature too; riders in Tokyo or Mumbai tolerate crowding very
+  differently. A change has no penalty beyond its wait and walk (Anita, T-557), where the
+  literature puts 5-15 perceived minutes on one. Why it may not carry over: where trains are
+  sparse and timetabled (rural lines, intercity) riders plan for the departure and the half
+  headway overstates the wait, while on unreliable or exposed platforms a minute feels longer.
+  Check: the deep calibration's fit on station entries, where a wait weight shows up as too much
+  or too little pull to frequent lines.
 - **Crowding rounds** (T-434). At most three, and a period stops once a round moves its loads
   under 1%. Measured on New York and Tokyo-sized grids, where the peaks still move a few percent at
   round three; a far more crowded network (Mumbai) may need a fourth peak round.
-- **Riders left behind** (T-188, docs/demand.md 4.4 step 7). A boarding's cost includes the
+- **Riders left behind** (T-188, docs/demand-kernel.md step 7). A boarding's cost includes the
   average extra wait for full trains, worked out per period with the boarding account's rule:
   arrivals peaking mid-period at the US busiest-hour factors, trains taking riders up to crush
-  (160 a 20 m car, a New York car), the extra wait weighted like any platform wait (1.37) and
+  (160 a 20 m car, a New York car), the extra wait in plain minutes like any wait (T-585) and
   capped at 60 minutes. Riders left behind wait at their station: nobody changes onto the line
   they left, so nobody rides a full line the other way to board upstream (Anita, T-575), though
   Tokyo riders do (gyaku-nori), and riding out on another line and back stays open. Why it may
@@ -666,7 +676,7 @@ notes/T-420.md has the tables.
   beds by hospital where one is open (Brazil's CNES, T-506).
 - **Trip timing.** Period shares and departure profiles come from US data (ACS B08302, NHTS).
   Work hours, siesta patterns, school hours and late evenings differ by country.
-- **Weekends** (T-260, docs/demand.md 4.2). A weekend day's trips per weekday trip by purpose come
+- **Weekends** (T-260, docs/demand-timing.md 4.2). A weekend day's trips per weekday trip by purpose come
   from NHTS 2017 (work 0.30, shopping and errands 1.22, social and leisure 1.60, school 0.08,
   university 0.22, medical 0.24, trips of 50 miles or more 1.58) and TSA checkpoint counts
   (airport 1.01); weekend timing is the weekday's shifted by NHTS's weekend/weekday ratio per

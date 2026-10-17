@@ -14,7 +14,7 @@ fill and platform crowds are the boarding account ([track-and-service.md](track-
 6.6): made from that forecast but counted train by train as the trains run, so they follow the
 hour and the clock's own day ([ui-map.md](ui-map.md)).
 
-**Data is asked for, not pushed** ([demand.md](demand.md) 4.4): each view asks again when the demand
+**Data is asked for, not pushed** ([demand-views.md](demand-views.md)): each view asks again when the demand
 result changes and keeps its last answer meanwhile. After an edit only the final round is shown
 [T-232], so views rebuild once; at startup, a game load or a city just opened each estimate shows.
 
@@ -27,7 +27,7 @@ and the regional layer. Changing zone clears cell-indexed selections and cached 
 **Mode colours**, Subway Builder's (Anita) [T-097, T-099; `game/palette.ts`]: driving red #e61e1e,
 train blue #1e3ce6, walking green #1eaa3c, near-pure so a mix reads as RGB (all car red, all train
 blue, half and half magenta).
-Trips by "other" (bus, taxi and bike for homes without a car, T-513, [demand.md](demand.md) 4.3)
+Trips by "other" (bus, taxi and bike for homes without a car, T-513, [demand-mode.md](demand-mode.md) 4.3)
 count as driving in every bar, split, bubble and hover, with no colour of their own; the sim
 reports them apart only as a total (`summary` index 10).
 
@@ -87,7 +87,7 @@ its constructed stations, grouped exactly as the complexes are, the player's lin
 
 [T-066, T-097, T-099, T-101]
 
-- **What**: every modelled trip leg at the chosen end (`cellModes`, [demand.md](demand.md) 4.4), the
+- **What**: every modelled trip leg at the chosen end (`cellModes`, [demand-views.md](demand-views.md)), the
   zone's res-9 cells summed into their H3 parent by zoom (resolution 9 from zoom 13.6 in, 8 from
   11.8, 7 from 10, 6 further out), each bubble at its trips' weighted centre.
 - **Area is trip legs**, outward and return, at a fixed density: 50,000 legs/km² for homes and
@@ -142,7 +142,7 @@ second. Inspectors, selections and the top bar are the current forecast at once.
   hold, with no top bar progress (only the bar over the zone, below); a solve never waits for it.
   A zone no station reaches (the usual nearby zone) opens bare in the auxiliary worker and starts
   no solve; one a station reaches opens in every worker and joins the next solve [T-325,
-  [demand.md](demand.md) "Bare zones"].
+  [demand-runtime.md](demand-runtime.md) "Bare zones"].
 - **A zone still loading is grey** [T-343, `map/zoneLoading.ts`, `zoneLoads` in `game/loading.ts`]:
   every zone fetched whose figures have not arrived (downloading, opening, bare or solved, or
   waiting for its first estimate), a nearby zone not opened yet, and (T-421) a loaded game's zone
@@ -231,7 +231,9 @@ commuters and inter-region riders are in its inspector only ([ui-inspectors.md](
 Destinations on and no bubble selection, every zone in the regional market, the focused
 one included, is one bubble at its registry centre in place of the focused zone's own bubbles:
 all its trips a day (its local trips, from the open zone's view or the pipeline's no-rail count in
-`zones.json`, plus the regional layer's to and from it), coloured by train share, labelled
+`zones.json`, plus the regional layer's to and from it), coloured by `modeMix` of train, walking
+and the rest [T-576: an open zone's walking is green, from its split; a zone not opened has no walk
+split, so its walking counts in the red; regional trips have no walking], labelled
 "Philadelphia · 187k trips/day" (at most eight labels on screen, the biggest first [T-493]). The hover
 has two lines, each with a mode bar [T-494]: "1.6m trips a day on average within Yamanashi" (bar from
 the zone's modelled split, none for a zone not opened) and "120k inter-region trips a day on
@@ -251,8 +253,11 @@ are a 33 px radius, Philadelphia's 796k 24 px, a 15k partner 3 px and a few hund
 others: "N trips a day between A and B" and a bar), a 1 px line in the network ink, 30% opaque,
 from its bubble's edge to each other bubble's edge, under the bubbles with no hover, so the
 selection shows from afar [T-520], and the city
-inspector (`ui/inspector/CityInspector.tsx`) lists its trips by place, all modes and by train, car
-and plane as a selection's do, then "Elsewhere" (both directions, as every row), with
+inspector (`ui/inspector/CityInspector.tsx`, T-600) has two figures, each with a thin mode bar
+under it (the game's mode colours; every segment and number has a hover with its count and share):
+"Within Philadelphia" (train, walking, car from the open zone's split; the count alone for a zone
+not opened) and "To other places" (the inter-region trips, both directions, train blue and the rest
+red), then the three places with the most trips, name and trips a day, and
 a "Go to Philadelphia" button that moves the camera to its centre and clears the selection
-[T-220]. The overview catches up over a game day like the local bubbles; a selection's
+[T-220]. No table of every place and no purpose split. The overview catches up over a game day like the local bubbles; a selection's
 inter-region bubbles do not.

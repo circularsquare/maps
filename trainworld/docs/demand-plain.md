@@ -22,14 +22,14 @@ the trips (a logistic curve).
 
 **By train**
 - Walk to the station: each minute counts 1.5.
-- Wait on the platform: half the time between trains. (Counted 1.37 for the first 5 minutes and
-  0.4 after; this is being dropped, so a wait will be plain minutes, T-585.)
+- Wait on the platform: half the time between trains, in plain minutes.
 - Ride: 1 a minute, stretched when the train is crowded.
 - Changing trains: the wait for the next train plus the walk between platforms. No extra penalty.
   Nobody changes back onto the line they just left: on a full line people wait at their station.
 - If the train is full when it arrives, the wait for one with room counts too.
 - Fare: in the US $1 counts as 3 minutes.
-- Or drive to the station: about 10 minutes to start, the drive, and parking there.
+- Or drive to the station: 15 minutes to start, the drive (counted 1.33 a minute), and the cheaper of
+  parking there or a 10 minute drop-off. Only for trips of 5 km or more.
 
 **By car**
 - Road time from the distance and the place: fast highways in the middle, slow streets at the ends
@@ -42,6 +42,8 @@ the trips (a logistic curve).
 **Walking the whole way**
 - 13 real minutes a km. The first 10 minutes count 1.5 each, the rest 4 each, so 1 km counts as
   27 minutes and 2 km as 79. Short trips walk; long ones don't.
+- A commute's distance for walking is between actual homes and jobs (six of each per 2 km zone),
+  not between zone centres, so a 1 km commute across a zone line walks like a 1 km one.
 
 **Homes without a car** choose train, walking or "other" (bus, taxi, bike), never the car.
 
@@ -60,14 +62,12 @@ that today's real systems carry about what they really carry.
 ## Why rail is hard to win in the suburbs
 
 The walk to and from the station. Mineola to Hicksville, both on the LIRR: the car counts as 27
-minutes, the train as 60, and 36 of those are the walks at each end. Rail gets 29%. Where parking
+minutes, the train as about 59, and 36 of those are the walks at each end. Rail gets about 30%. Where parking
 is paid, rail wins easily (Hempstead to Midtown 80%). With fast direct trains between every pair
 of places, rail would take about half of all trips that don't walk (notes/T-551.md).
 
 ## Coming next
 
-- T-585: waits as plain minutes.
-- T-587: short commutes walk at their own distance, not 2 km zone centres.
 - T-584: commuting between neighbouring cities damped at 0.4.
 - Deep calibration, later: a car ownership cost (about $10 a day), whether the walk's 1.5 should be
   1, and each country's walking fitted to its surveys.

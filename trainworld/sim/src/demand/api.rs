@@ -49,6 +49,8 @@ pub const FARE_MIN_PER_USD: f32 = 3.0;
 /// `flows` leaves out the far cells holding this share of the selection's commuters, the
 /// smallest first (they go to the cut totals), to keep the answer small (T-098).
 pub const FLOW_CUT: f64 = 0.01;
+/// Upper edges of `DemandApi::commute_walk_bands`'s distance bands, km (the everyday table's).
+pub const WALK_BANDS_KM: [f32; 8] = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 4.0, 5.0];
 
 /// One demand station for snapshot stations within `merge_m` of each other (single linkage), so
 /// two lines' platforms built side by side or on top of each other (a station node takes one
@@ -589,6 +591,7 @@ impl DemandApi {
         let mut gr = (*self.gr).clone();
         gr.set_walk(&self.z, &self.base);
         self.nr = Arc::new(no_rail_ctx(&self.city, &self.z, &self.base));
+        gr.set_walk_fine(&self.city, &self.z, &self.base, &self.nr);
         let (home, work, other) = no_rail_trips(&self.z, &gr, &self.base, &self.nr);
         self.walk_all = home.iter().sum();
         self.walk_home_zone = home;
@@ -596,6 +599,52 @@ impl DemandApi {
         self.other_all = other;
         self.gr = Arc::new(gr);
         self.reusable = false;
+    }
+    /// Commutes with no rail between zones within `WALK_FINE_R` squares, by the straight-line
+    /// distance of six cell pairs a zone pair (`walk_points`; bands `WALK_BANDS_KM`, then beyond):
+    /// trips, then those walking: each cell pair's own share when the pair walks between cells
+    /// (`Params::walk_samples`), the pair's when between centres (T-587's check).
+    pub fn commute_walk_bands(&self) -> Vec<f64> {
+        let (z, gr, p) = (&*self.z, &*self.gr, &self.base);
+        let nb = WALK_BANDS_KM.len() + 1;
+        let mut out = vec![0f64; 2 * nb];
+        let ns = 6;
+        let (home, work) = walk_points(&self.city, z, ns);
+        let fine = !gr.wf_off.is_empty();
+        let (sq_off, at) = z.by_square();
+        let r = WALK_FINE_R;
+        let (mut d, mut e) = (vec![0f32; ns * ns], vec![0f32; ns * ns]);
+        for i in 0..z.n {
+            if gr.row[i] == 0.0 || home[i * ns] == u32::MAX {
+                continue;
+            }
+            for gx in (z.gx[i] - r).max(0)..=(z.gx[i] + r).min(z.w - 1) {
+                for gy in (z.gy[i] - r).max(0)..=(z.gy[i] + r).min(z.h - 1) {
+                    let s = (gx * z.h + gy) as usize;
+                    for &j in &at[sq_off[s] as usize..sq_off[s + 1] as usize] {
+                        let j = j as usize;
+                        if work[j * ns] == u32::MAX {
+                            continue;
+                        }
+                        let k = (gr.base(z, i) + gr.key(z, j)) as usize;
+                        let t = gr.t(z, i, j) / (ns * ns) as f64;
+                        let w = self.nr.split(gr, p, i, j, k).0;
+                        let f = gr.walk_factor(i, j);
+                        let (road, paid, free, road_km) = self.nr.road(gr, p, i, j, k);
+                        for (n, (&a, &b)) in home[i * ns..(i + 1) * ns].iter().flat_map(|a| work[j * ns..(j + 1) * ns].iter().map(move |b| (a, b))).enumerate() {
+                            d[n] = cell_walk_m(&self.city, a, b) / 1000.0;
+                            e[n] = if fine { p.no_rail_split(self.nr.cz[i], road, paid, free, road_km, gr.wcost.at(d[n] * f)).0 } else { w };
+                        }
+                        for n in 0..ns * ns {
+                            let band = WALK_BANDS_KM.partition_point(|&b| b <= d[n]);
+                            out[band] += t;
+                            out[nb + band] += t * e[n] as f64;
+                        }
+                    }
+                }
+            }
+        }
+        out
     }
     /// The same city on other home and work weights (the everyday layer's residents and jobs,
     /// T-399): the cells, zone grid, gravity and routes are shared, the zones' sums are its own,
@@ -688,6 +737,7 @@ impl DemandApi {
         let country = h["country"].as_str().or_else(|| h["everyday"]["country"].as_str()).unwrap_or("");
         base.set_extra("country_asc_rail", country_asc_rail(country))?;
         let nr = Arc::new(no_rail_ctx(&city, &z, &base));
+        gr.set_walk_fine(&city, &z, &base, &nr);
         let (walk_home_zone, walk_work_zone, other_all) = no_rail_trips(&z, &gr, &base, &nr);
         let walk_all = walk_home_zone.iter().sum();
         let (home_k, work_k) = zone_trip_factors(&city, &z, &gr, gravity_from_pack);

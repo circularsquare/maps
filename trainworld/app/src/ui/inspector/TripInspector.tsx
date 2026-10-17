@@ -44,7 +44,7 @@ function countsAsTip(t: TripPeriod, r: TripRoute): string {
     ...lines,
     `Total ${total.toFixed(1)}`,
     ...(avg ? [`The ${Math.round(t.railPerceived)} shown pools the stations and routes people near here use, so it can be lower than any one route.`] : []),
-    `Walks and waits count for more than a minute on board, crowding stretches the ride, the wait is half the time between trains, and a dollar of fare counts as ${weight(t.minPerUsd)} minutes.`,
+    `Walks count for more than a minute on board, crowding stretches the ride, the wait is half the time between trains, and a dollar of fare counts as ${weight(t.minPerUsd)} minutes.`,
   ].join("\n");
 }
 

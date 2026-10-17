@@ -115,9 +115,9 @@ export function Dock() {
         onScrollCapture={(e) => { if (!restoring.current) scrolls.current[t] = (e.target as HTMLElement).scrollTop; }}>
         <Pane />
       </section>
-      <div class="pane-resize" data-tip="Drag to resize" onPointerDown={dragDivider} />
+      <div class="pane-resize"onPointerDown={dragDivider} />
       <Inspector />
-      <div class="dock-resize" data-tip="Drag to resize" onPointerDown={dragWidth} />
+      <div class="dock-resize"onPointerDown={dragWidth} />
     </aside>
   );
 }

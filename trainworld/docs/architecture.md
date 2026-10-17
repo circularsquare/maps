@@ -102,17 +102,17 @@ Web first, so it can be shared as a link.
   its own copy: the viewed zone first, and every zone with a built station inside its footprint or
   within 4.5 km of it, since only those can put a rider on a line (`workers/cityReach.ts`); a zone
   viewed or on screen that no station reaches opens bare in the auxiliary worker alone [T-325,
-  [demand.md](demand.md) "Bare zones"], the viewed zone of a new game from the start [T-351]. Solving
+  [demand-runtime.md](demand-runtime.md) "Bare zones"], the viewed zone of a new game from the start [T-351]. Solving
   workers also open the regional market once a market zone is viewed or reached or a station lies
   within its reach [T-396]. A solve waits until every pack it needs is open in
   every worker, so a published result never leaves out a constructed city. Each worker solves the
   network's clusters (populations and the lines they reach, sharing no rider) apart, and after an
-  edit only those it touched [T-326, [demand.md](demand.md) "Clusters"]. Worker 0 first opens a
+  edit only those it touched [T-326, [demand-runtime.md](demand-runtime.md) "Clusters"]. Worker 0 first opens a
   small synthetic everyday layer (`warm.rs`) and the others get packs only once it is ready, so
   every worker opens on optimised code [T-173]. The clock worker's network snapshot after each
   service change goes to every worker; a worker takes a newer one between populations. Messages:
-  `workers/demandProtocol.ts`; results land in `game/demand.ts`. Timings: [demand.md](demand.md)
-  4.4.
+  `workers/demandProtocol.ts`; results land in `game/demand.ts`. Timings: [demand-kernel.md](demand-kernel.md)
+  4.4, notes/demand-measurements.md.
 - **Only final results replace final results** [T-232, T-324]: after an edit every figure keeps the
   last finished forecast until the new solve's last round lands; earlier rounds are shown only where
   nothing final is (startup, a whole-game load, a city just opened), and for lines new or changed by
@@ -218,7 +218,7 @@ all results are recomputed. About 100 KB compressed per 10,000 route-km (T-040).
   the loading card stays up and the clock held until the fresh final (T-347), the cached figures
   drawn behind the card with the status "Updating demand" (hover text as before); the workers solve
   as before, their estimates not shown, other purposes' or days' bubbles wait for them, a click is
-  answered from the newest round the workers reach ([demand.md](demand.md) "The pool", T-327),
+  answered from the newest round the workers reach ([demand-runtime.md](demand-runtime.md) "The pool", T-327),
   and the fresh final replaces the cache in one step (it is bit for bit the same). A test page, `?new=1` and a tab without the slot never
   write it.
 - **Old saves are a nicety** (Anita, 2026-10-12): only Anita has saves, so no real effort goes into

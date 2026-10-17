@@ -477,7 +477,7 @@ per person and does not change who travels: demand still decides that (SPEC 4).
 
 - **Input**: per line, direction, stop and period, demand's boardings and alightings (transfers
   included), sent by the main thread with each demand result, and each period's busiest-hour
-  factor (docs/demand.md). One set per kind of day (T-260): a weekday's and a weekend's riders
+  factor (docs/demand-timing.md). One set per kind of day (T-260): a weekday's and a weekend's riders
   make two accounts of the same trains, and each game hour's trains and platforms read their own
   day's (`day_kind_at`; a kind with no riders yet reads the weekday's). A line's panel shows the
   day chosen in the top bar.
@@ -540,7 +540,7 @@ per person and does not change who travels: demand still decides that (SPEC 4).
   A player's Manhattan trunk (18 stops Harlem to Fulton St, 14 ten-car trains at the peaks) is
   packed full on every peak train. Trains reach crush mostly in the busiest half hour: arrivals
   peak at 1.8 times the period's mean at its middle, against demand's 1.4 for the busiest hour.
-  Demand's crowding penalty (docs/demand.md step 7) starts once seats run out, so its equilibrium
+  Demand's crowding penalty (docs/demand-kernel.md step 7) starts once seats run out, so its equilibrium
   usually sits between seated and crush loads.
 - **What the panels show** (T-230): every train-fullness figure is the account's: the gauge on
   trains, the train tag and inspector, the line inspector's "Trains today" (`Boarding::line_summary`:
@@ -552,7 +552,7 @@ per person and does not change who travels: demand still decides that (SPEC 4).
 
 Riders left behind feed back into demand (T-188): each crowding round runs this rule on the
 period's own trains and adds the average extra wait at each line, direction and stop to that
-boarding's cost (docs/demand.md 4.4 step 7), so a line that leaves people behind loses riders to
+boarding's cost (docs/demand-kernel.md step 7), so a line that leaves people behind loses riders to
 other routes or the car. The account itself is not read back: the clock worker's day and demand's
 periods give the same rule, but demand's is worked out inside the solve, so it settles with the
 crowding rounds. There are no signals (SPEC 2.1).

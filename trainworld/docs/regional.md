@@ -6,7 +6,7 @@ The regional layer carries what crosses zones or goes far [T-117, T-276, T-377]:
 trips** (visits, business, leisure, 25 km and more) within and between every zone of the world,
 and **commutes between zones**. The design and its reasons are in [zones.md](zones.md) and
 notes/T-362.md; the kernel's side (`sim/src/demand/intercity.rs`: compositions, served pairs,
-queries) in [demand.md](demand.md) 4.4 "The world market" and after. Every registered zone is a
+queries) in [demand-market.md](demand-market.md) "The world market" and after. Every registered zone is a
 **place** of the market (`place` in the registry); place ids are stable and new zones append;
 Trenton's (2) stays with no sites since Mercer joined New York.
 
@@ -42,7 +42,7 @@ Generate **total** all-mode trips, then let the player's network earn rail's sha
   under 250 km, every zone pair added up) gives any pair of places its trips and modes with no pack
   open; `bin/market_pack.rs` writes them from every place's pack.
 - **Commutes between zones**: the cross-pack part of the joint commute gravity
-  ([demand.md](demand.md) 4.4, [zones.md](zones.md) 4), solved over each group of packs whose
+  ([demand-kernel.md](demand-kernel.md) 4.4, [zones.md](zones.md) 4), solved over each group of packs whose
   outlines come within 50 km of each other (T-539), spread from 2 km gravity zones to the
   market's zones and kept where at least one a day travels between two 6 km zones (each home zone's
   dropped commuters given to its kept pairs). They travel at the local commute's timing (70/12/6/4/8%
@@ -57,7 +57,7 @@ Generate **total** all-mode trips, then let the player's network earn rail's sha
   trips with places that have no zone; shown, never solved, their modes not modelled.
 
 **Mode choice.** Inter-region trips choose rail, car and plane in one logit at 3 perceived minutes
-a dollar [T-378], damped by the trip's length as every trip is ([demand.md](demand.md) 4.3,
+a dollar [T-378], damped by the trip's length as every trip is ([demand-mode.md](demand-mode.md) 4.3,
 T-495): 0.05 x sqrt(60 / T) per perceived minute, T the car's perceived minutes over the zone
 pair's distance, even across a sea where no car goes (so rail against air never depends on it), so about 0.029 at 3 hours by car and 0.014 at 13. The scale covers the whole
 rail trip: each zone's access weights (built at 0.05, 5.3) are raised to the power of the pair's
@@ -66,7 +66,7 @@ market's own costs rail then holds about 93%, 73%, 48% and 28% of rail and air a
 hours on the train.
 
 - *Car*: 15 minutes plus 1.25 times the great-circle distance at 85 km/h, plus 15 cents a road km
-  and the destination's parking (the local rule, docs/demand.md 4.3, baked into the market pack's
+  and the destination's parking (the local rule, docs/demand-mode.md 4.3, baked into the market pack's
   `site_park`), both split over two occupants; no tolls (T-270). Only within a
   landmass.
 - *Plane*: between places whose centres are at least 250 km apart (the far pairs) and that both
@@ -113,7 +113,7 @@ loads the lines, so they add up to its entries and exits.
 
 ## 5.3 Park-and-ride
 
-The regional layer rides to stations as the local layer does ([demand.md](demand.md) 4.3, T-371),
+The regional layer rides to stations as the local layer does ([demand-mode.md](demand-mode.md) 4.3, T-371),
 through the same `kernel::access_options` [T-373]: from each 2 km zone of the market's sites
 (their homes and jobs, as a local zone's, give the drive's speeds and the parking), the cheapest
 station of each of the 6 cheapest lines within 15 km, at `p_ride` 15 + 1.33 x the drive + at the

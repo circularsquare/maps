@@ -120,7 +120,7 @@ straight segment of the platform's length along the track heading), or whose cen
 100 m (demand's merge distance), are linked, whatever their levels; a complex is everything linked
 directly or through others, plus the player's links [T-197]. Worked out whenever stations or links
 change; only links are saved. Riders change between any two stations of a complex on foot
-[T-161, [demand.md](demand.md) 4.4].
+[T-161, [demand-kernel.md](demand-kernel.md) 4.4].
 
 ## Trains
 

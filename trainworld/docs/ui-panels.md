@@ -125,7 +125,7 @@ below 700 px the bar takes two rows (name, cash, time and speed over the split).
 
 **Demand shown for** [T-260, T-266, T-464; `ui/DemandSelector.tsx`, display setting `dayShown`]: a
 dropdown at the end of the demand bar, after the purpose filter: Average day (the default),
-Weekday or Weekend. The average is 5 weekdays and 2 weekend days over 7 ([demand.md](demand.md)
+Weekday or Weekend. The average is 5 weekdays and 2 weekend days over 7 ([demand-timing.md](demand-timing.md)
 4.2). It sets the day every demand view shows, the split included, and does not follow the clock,
 so nothing jumps when the clock enters a weekend. The control takes the accent border when it is
 not the average. Hovers state the day beside every demand figure ("12,400 trip legs a day on

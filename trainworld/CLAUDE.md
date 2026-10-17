@@ -8,7 +8,7 @@ Read this, then `SPEC.md`, then `TASKS.md`. Everything else on demand; where cod
 | File | Holds | Who edits |
 |---|---|---|
 | `SPEC.md` | What the game is and how it works, **as of now**, in summary | agents, rewritten in place |
-| `docs/` | The spec in detail, one file per area: `demand.md`, `regional.md`, `track-and-service.md`, `architecture.md`, `world.md`, `zones.md`, the interface in `ui-*.md` (index: `interface.md`); also `demand-worldwide.md`, `adding-a-city.md`, `code-map.md`, and `data-register.md` (each country's sources by input, their status, and its procedure) | agents |
+| `docs/` | The spec in detail, one file per area: `demand.md` (index of the `demand-*.md` files), `regional.md`, `track-and-service.md`, `architecture.md`, `world.md`, `zones.md`, the interface in `ui-*.md` (index: `interface.md`); also `demand-worldwide.md`, `adding-a-city.md`, `code-map.md`, and `data-register.md` (each country's sources by input, their status, and its procedure) | agents |
 | `TASKS.md` | Open agent work, by priority | agents |
 | `DECISIONS.md` | Dated choices someone might revisit, and why | agents, add only |
 | `ARCHIVE.md` | Finished and abandoned tasks, newest first | agents, add only |
@@ -100,9 +100,21 @@ Briefs carry only the task; these hold for every agent.
 `node trainworld/checks/smoke.mjs [url]` from the maps root: Node checks, then a new game and the
 real save in headless Chrome (counts, demand final, station and train clicks, no console or GL
 errors). About half a minute with its own Vite; one PASS or FAIL line per check. After rebuilding
-8800's snapshot, run it once more against `http://localhost:8800/trainworld/`: a production build
-copies only the pack files `vite.config.ts` lists, and the dev server serves everything (T-377's
-market packs were missing there, 2026-10-15).
+8800's snapshot, run it once more against `http://localhost:8800/trainworld/`, also with
+`SMOKE_SHADE=dark`: a production build copies only the pack files `vite.config.ts` lists, and the dev
+server serves everything (T-377's market packs were missing there, 2026-10-15).
+
+After each commit, in order:
+1. Smoke on the dev server (above).
+2. Commit explicit paths only; check the staged diff right before committing, since agents edit shared
+   files while you stage.
+3. Rebuild 8800: `git -C maps/.tw-snap checkout --detach <commit>`, then in `.tw-snap` with
+   `CARGO_TARGET_DIR=maps/.tw-snap-target`, `CARGO_BUILD_JOBS=2` and `%USERPROFILE%\.cargo\bin` on PATH,
+   `npm run build` through `cmd /c` (PowerShell treats wasm-pack's stderr as an error).
+4. Smoke against `http://localhost:8800/trainworld/`, then again with `SMOKE_SHADE=dark`.
+
+Several agents at once work well when each owns named files; give every brief the others' files to
+leave alone.
 
 ## Build and run
 

@@ -73,7 +73,7 @@ reaches opens **bare** in one auxiliary worker, its figures, bubbles and clicks 
 that equals a solve's to the bit, so panning never re-solves [T-325]. Zones that share no rider
 (Toronto and the Northeast, London, Paris) fall into separate **clusters**, each solved on its own
 lines; an edit re-solves only the clusters it touched, the others keep their figures [T-326,
-[docs/demand.md](docs/demand.md) "Clusters"].
+[docs/demand-runtime.md](docs/demand-runtime.md) "Clusters"].
 
 - **City zones**: New York (with Mercer County since T-276), Philadelphia-Camden-Wilmington,
   Boston (with southern New Hampshire), Washington (with surrounding Maryland, Virginia and
@@ -132,7 +132,7 @@ lines; an edit re-solves only the clusters it touched, the others keep their fig
   **Cells** are H3 resolution 9 (about 0.1 km²); sparse ones merge [T-044, T-466, T-510]: a res-8
   parent under 2,500 trip ends a weekday becomes one cell, in busier parents touching children under
   1,250 each merge, and a cell under 1,250 left alone joins a touching merged cell of its zone
-  across its parent's edge ([docs/demand.md](docs/demand.md) 4.1).
+  across its parent's edge ([docs/demand-sources.md](docs/demand-sources.md) 4.1).
 
 ## 4. Demand: local trips
 
@@ -154,12 +154,14 @@ institutions** (prisons, nursing homes and the like, T-234).
   d^-0.8 exp(-d / 30 km), T-198) and border factor (US states 0.23, Washington 0.45; Japan's packs
   0.4; abroad, national borders only, T-181).
 - **Mode choice** recomputes after service or fare changes: station access, destination-specific
-  common-line strategies, fare-sensitive choice between rail and driving, and up to three crowding
+  common-line strategies (a wait is half the combined headway, in plain minutes [T-585]),
+  fare-sensitive choice between rail and driving, and up to three crowding
   rounds that price crowded trains and riders left behind by full ones [T-188]; a period stops
   once a round moves its loads under 1% [T-434]. Each round uses
   the combined loads of every zone, the everyday layer and the regional market. Walking the whole
   way is a third mode in the same logit [T-558]: 1.5 perceived minutes a minute for 10 minutes,
-  then 4, with constants (2.86, everyday 3.21) holding the walking of before, so a good station
+  then 4, with constants (2.80, everyday 3.21) holding the walking of before, commutes walking
+  between sampled cells rather than zone centres [T-587], so a good station
   near a short trip takes some walkers and a long walk loses to the train. The rail constant `asc_rail`, 0.4 (plus a country
   constant where one is fitted: Japan +0.5) and 1.1 lower for everyday trips, is fitted jointly on six cities'
   real networks [T-509]. Past 60 perceived car-minutes a minute weighs less (0.05 x sqrt(60 / T)),
@@ -172,8 +174,8 @@ institutions** (prisons, nursing homes and the like, T-234).
   between stations within 300 m after a ride, and between any two stations of a complex [T-161].
 - **Weekdays and weekends** [T-260]: days 6 and 7 of each week are the weekend, worked out from the
   weekday's solve per purpose and period (NHTS 2017 rates). The demand views show the average day
-  (5 weekdays and 2 weekend days over 7) unless a weekday or a weekend day is chosen [T-464]. The same trains run every day;
-  **open** (T-261): whether weekends get their own.
+  (5 weekdays and 2 weekend days over 7) unless a weekday or a weekend day is chosen [T-464]. The same trains run every day
+  (Anita, T-261: for now; a Saturday of its own is T-262).
 - **Demand rules must hold up worldwide**: every demand rule has an entry in
   [docs/demand-worldwide.md](docs/demand-worldwide.md).
 
@@ -205,7 +207,7 @@ The regional layer carries what crosses zones or goes far [T-117, T-276]. Detail
   their station; a lone station in a small city keeps nearly all its corridor riders without
   feeder lines, and New York's commuter rail without the subway keeps 29% of the city's rail
   commutes. The car pays parking by the destination's job density with a free-parking share, and
-  congestion charges in Manhattan and central London (T-380, docs/demand.md 4.3). The regional layer's commutes between zones ride at the home end and
+  congestion charges in Manhattan and central London (T-380, docs/demand-mode.md 4.3). The regional layer's commutes between zones ride at the home end and
   its inter-region trips at both ends, the far end a drop-off only, through the same
   `access_options`, so a lone station in a new city draws riders from beyond walking reach. A
   station's inspector splits the commuters who live nearby into those who walked and those who
@@ -278,7 +280,7 @@ Rough on purpose: the bar is the right order (section 1).
   the fit set the rail constants and the everyday walking of then, which T-558's walking constants
   hold until the deep calibration fits them (section 4). The bar is
   plausible: a moderate overshoot where real riders shun transit (New York) is accepted. Known gaps
-  are open tasks (Tokyo's commute rail share, T-509; PATH low, T-270; commuter rail high, T-271;
+  are open tasks (Tokyo's commute rail share, T-529; PATH low, T-270; commuter rail high, T-271;
   subway peak loads, T-216).
 - **Tier-2 check** against LODES OD: commute lengths and county pairs (notes/T-198.md).
 - To do: long-distance rail share on corridors with known rail and air numbers (Northeast
@@ -305,7 +307,5 @@ Keeping old saves loading is a nicety: only Anita has saves. Sharing by link and
 
 ## 12. Open questions
 
-- **Weekend service** (T-261, section 4): should weekends get their own trains per hour (or run a
-  lower level), at the cost of a weekend solve?
 - Open items in the detailed docs: border factor fade (T-273), how commutes between zones are
   labelled (T-298), automatic crossovers at quad stations (notes/T-334.md option B, on hold).

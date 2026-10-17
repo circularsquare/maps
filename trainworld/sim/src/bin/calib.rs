@@ -283,6 +283,8 @@ fn main() {
         "day": {"commute": c_tot, "everyday": e_tot, "everyday_kinds": kinds, "everyday_walks_all": walks_all},
         // `EverydayApi::info`: by purpose, outings, walking share, mean km (T-509 stage 4)
         "everyday_info": ev.as_ref().map(|e| e.info()),
+        // commutes with no rail by cell-pair distance: trips, walking (T-587)
+        "commute_walk_bands": api.commute_walk_bands(),
         "st_map": api.station_map(),
         "entries": {"commute": r1(&ent_c), "everyday": r1(&ent_e), "am": r1(&ent_am)},
         "lines": {"board": r1(&line_board), "same_line_changes": r1(&same_line), "load": r1(&line_load), "pkm": r1(&line_pkm)},

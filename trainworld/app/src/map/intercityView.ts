@@ -41,7 +41,7 @@ import type { Selection } from "../game/types";
 import { DISC } from "../workers/commutersProtocol";
 import { CATCH_STEP, caughtUp, tripsDone } from "./catchUp";
 import { anchorVersion } from "./anchorVersion";
-import { modeBar } from "./modeBar";
+import { localModes, modeBar } from "./modeBar";
 import { addFinder, discAt, pointerAt } from "./demandHover";
 import { LINE, type DemandOverlay } from "./demandOverlay";
 import { anchor, EARTH_C, kAtLat, toLocal, toLngLat, type Anchor } from "./geo";
@@ -196,17 +196,20 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     const local = cityDemandViews.peek();
     const points = CITIES.map((c) => {
       const isOwn = c === own;
-      let t = !own || isOwn ? total(c.place) : pair(own.place, c.place);
+      let t = { ...(!own || isOwn ? total(c.place) : pair(own.place, c.place)), walk: 0 };
       if (!own) {
+        // T-576: a zone's local walking is green; a zone not opened has no walk split (its walk is
+        // inside `all`, so it draws as the rest)
         const v = local.get(c.id);
-        t = { all: t.all + (v ? v.tripsPerDay : c.localTrips ?? 0), rail: t.rail + (v ? v.railTripsPerDay : 0), air: t.air };
+        t = { all: t.all + (v ? v.tripsPerDay : c.localTrips ?? 0), rail: t.rail + (v ? v.railTripsPerDay : 0), air: t.air, walk: localModes(v)?.walk ?? 0 };
       }
       // T-494: a zone's local and inter-region trips are two figures, each with a mode bar
       const day = shownDayPhrase.peek();
       const v = local.get(c.id);
       const localAll = v ? v.tripsPerDay : c.localTrips ?? 0;
       const localLine = `${count(localAll)} trips ${day} within ${c.name}`;
-      const localBar = v ? modeBar(v.railTripsPerDay, (localAll * v.split.walk) / 100, (localAll * v.split.drive) / 100) : "";
+      const lm = localModes(v);
+      const localBar = lm ? modeBar(lm.train, lm.walk, lm.drive) : "";
       const inter = !own || isOwn ? total(c.place) : t;
       const interLine = `${count(inter.all)} inter-region trips ${day} to and from ${c.name}`;
       const interBar = modeBar(inter.rail, 0, Math.max(0, inter.all - inter.rail));
@@ -224,7 +227,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     const discs = new Float32Array(points.length * DISC);
     points.forEach((p, i) => {
       const [x, y] = toLocal(p.city.center[0], p.city.center[1], a);
-      const c = modeMix(p.rail, 0, Math.max(0, p.all - p.rail));
+      const c = modeMix(p.rail, p.walk, Math.max(0, p.all - p.rail - p.walk));
       const r = Math.sqrt(p.all / (own ? SELECTED_TRIPS_PER_PX2 : TRIPS_PER_PX2)) * zoomScale / pxPerUnit;
       discs.set([x, y, r, c[0] / 255, c[1] / 255, c[2] / 255, BUBBLE_ALPHA, p.isOwn ? 2 : 1], i * DISC);
       label(`${p.city.name} · ${count(p.all)} trips/day`);

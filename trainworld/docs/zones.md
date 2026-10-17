@@ -66,7 +66,7 @@ market ids are never renumbered.
 
 **Data.** The same national sources as the country's city zones, at the same grain: in the US 2020
 census blocks less institutions (T-234), LODES WAC and RAC, NCES, IPEDS, FAA, OSM. Where a country
-has no small-area jobs (tier 0, docs/demand.md 4.1), population from Kontur (H3 resolution 8,
+has no small-area jobs (tier 0, docs/demand-sources.md 4.1), population from Kontur (H3 resolution 8,
 global, each hexagon spread over its seven resolution 9 children) or the national census, and jobs
 from the GHSL non-residential built-up layer (T-012). A country's non-city zones are built by that
 country's city adapter (Toronto's for Canada, T-277) with `kind: "zone"`.
@@ -154,7 +154,7 @@ reversed: the local layer's 70/12/6/4/8 and 2/18/58/16/6. Mode choice is the loc
 logit at 0.05 per perceived minute, driving weighted 1.33 plus parking at the work end (3 minutes
 plus the work zone's parking, the local rule's mean over drivers, `site_park` job-weighted over the 6 km zone), against
 the best rail strategy with its walks, waits, transfers and fares, with the local commute's rail
-constant: `asc_rail` 0.4 plus the home zone's country's (Japan +0.5; demand.md 4.3; T-509). The
+constant: `asc_rail` 0.4 plus the home zone's country's (Japan +0.5; demand-mode.md 4.3; T-509). The
 longer trips keep a constant of 0 until they are fitted on corridor counts. The weekend has 0.30 of a
 weekday's commutes with the weekend's work timing (days.rs `WORK`). Their loads join the
 work purpose's (T-158), so the purpose filter's "Work" shows them.
@@ -203,10 +203,10 @@ solve would give it), and no solve covers it or is started for it. A click on it
 far end as a solved zone's does (T-336): local trips from the auxiliary worker, longer trips and
 commutes between zones from the solving workers, which hold the market. A new game opens the
 viewed city bare from the start (T-351); a saved game's viewed city opens in every worker, since
-its pack downloads before the network's reach is known (docs/demand.md "Bare zones").
+its pack downloads before the network's reach is known (docs/demand-runtime.md "Bare zones").
 A station built within reach downloads the pack again and opens it in every worker; the next solve
 waits for it and covers it from then on, and its bare figures serve until a shown solve does.
-Detail: [demand.md](demand.md), "Bare zones".
+Detail: [demand-runtime.md](demand-runtime.md), "Bare zones".
 
 **Zoomed far out** (8.5 and below) every zone is one bubble, as if it were one place: its trips a
 day at homes (Homes) or at destinations (Destinations) in every layer, local trips, commutes
@@ -274,7 +274,7 @@ between them are place to place, and clusters merge only through track (T-362 de
   are fetched on demand (section 6). A mask installed while a big network is loaded reworks the
   whole network once (about 0.2 s on the real New York network). A zone opened only for its bubbles opens bare in the auxiliary worker (T-325):
   0.3-1.5 s, and its everyday layer once rather than in every solving worker.
-- **Closing** (T-301; demand.md "Which cities are open"). A zone nobody views, sees beside the view
+- **Closing** (T-301; demand-runtime.md "Which cities are open"). A zone nobody views, sees beside the view
   or reaches closes after 60 s, or at once beyond two such zones, so a long pan holds a few zones'
   packs at a time, not every zone it passed.
 

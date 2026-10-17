@@ -91,7 +91,7 @@ days of people with a workplace. Several countries have one figure for both.
 ## Car ownership
 
 People living in a household with no car, per cell (T-511, `pipeline/nocar.py`; the rule in
-demand.md 4.3). Where only cars per household are known, households without a car come from one
+demand-mode.md 4.3). Where only cars per household are known, households without a car come from one
 curve fitted on US tracts and English LSOAs (demand-worldwide.md "Driving alternative"). Every
 country has a figure (T-562): the rows below, then the three rule rows at the end in that order;
 `nocar.py --plan` prints each planned country's. No open world register exists: WHO's GHO counts

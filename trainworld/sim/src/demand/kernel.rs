@@ -60,10 +60,6 @@ pub struct Params {
     /// carries its factor (`PackGravity::border_factor`), so each country sets its own.
     pub border_factor: f32,
     pub w_walk: f32,
-    pub w_wait: f32,
-    pub w_home_wait: f32,
-    /// Waiting beyond this many minutes (half headway) counts at `w_home_wait`.
-    pub platform_wait_cap_min: f32,
     /// A fixed penalty per change of train, perceived minutes. 0 (Anita, T-557): a change costs
     /// its wait and any walk between platforms; kept for calibration runs (`realnet --set`).
     pub transfer_min: f32,
@@ -131,6 +127,11 @@ pub struct Params {
     pub walk_trip_easy_min: f32,
     pub walk_trip_w_far: f32,
     pub asc_walk: f32,
+    /// Commutes walk between cells, not zone centres (T-587): each zone's homes and its jobs are
+    /// this many cells, at even steps of their weight, and a zone pair within `WALK_FINE_R`
+    /// squares walks at the logsum (scale `beta`) of its cell pairs' walk costs
+    /// (`Gravity::set_walk`). 0: at the zone-centre distance.
+    pub walk_samples: usize,
     /// Walking transfers (SPEC 6.1): a rider leaving a train may walk to another station within
     /// this straight-line distance and board there, at the walk's perceived time plus the usual
     /// boarding cost. Only after a ride, so walking between two stations is never a rail trip.
@@ -169,7 +170,7 @@ pub struct Params {
     /// `nocar` over `pop`, T-511). None: everyone can drive. In the local layers their choice is
     /// rail, walking to stations, against walking the whole way (`walk_trip_cost`) and "other"
     /// (bus, taxi, bike; T-513): the drive's road at `other_kmh` door to door, plus a wait of
-    /// `other_wait_min` at `w_wait` and `other_asc`, no parking (`nocar_choice`). `other_kmh` and
+    /// `other_wait_min` and `other_asc`, no parking (`nocar_choice`). `other_kmh` and
     /// `other_wait_min` are fixed; `other_asc` is the one to fit.
     pub nocar: Option<std::sync::Arc<Vec<f32>>>,
     pub other_kmh: f32,
@@ -191,6 +192,9 @@ pub struct Params {
 pub const WALK_REACH_KM: f32 = 10.0;
 /// A walk's cost past `WALK_REACH_KM`: its share is 0 in every logit.
 pub const NO_WALK: f32 = 1e6;
+/// Zone pairs up to this many squares apart each way walk between cells (T-587); past it (cells
+/// at least 6 km apart for 2 km zones) almost nobody walks and the zone centres do.
+pub const WALK_FINE_R: i32 = 3;
 
 /// `Params::walk_trip_cost` as the gravity keeps it.
 #[derive(Clone, Copy, Debug, Default)]
@@ -230,9 +234,6 @@ impl Default for Params {
             border_factor: 1.0,
             // T-371, T-372: 1.5 rather than the usual 2.0 (notes/T-371.md, T-372.md)
             w_walk: 1.5,
-            w_wait: 1.37,
-            w_home_wait: 0.4,
-            platform_wait_cap_min: 5.0,
             transfer_min: 0.0,
             fare_min: 6.0,
             beta: 0.05,
@@ -268,11 +269,12 @@ impl Default for Params {
             pair_walk_max: 80.0,
             station_theta: 0.2,
             // T-558: the cost as Anita approved it; the constants hold New York's and London's
-            // walking as it was (notes/T-558.md)
+            // walking as it was (notes/T-558.md; commutes refitted for the cells' walks, T-587)
             walk_trip_w: 1.5,
             walk_trip_easy_min: 10.0,
             walk_trip_w_far: 4.0,
-            asc_walk: 2.86,
+            asc_walk: 2.80,
+            walk_samples: 6,
             xfer_walk_m: 300.0,
             xfer_mps: 1.2,
             w_xfer: 1.39,
@@ -293,9 +295,9 @@ impl Default for Params {
             other_asc: OTHER_ASC,
             everyday_rate: super::everyday::RATE,
             everyday_decay_m: super::everyday::DECAY,
-            // T-509, with `asc_rail`
+            // T-509, with `asc_rail`; everyday walking's constant stays 3.21 in all (T-558)
             everyday_asc_rail: -1.1,
-            everyday_asc_walk: 0.35,
+            everyday_asc_walk: 0.41,
         }
     }
 }
@@ -323,11 +325,11 @@ impl Params {
             "walk_trip_easy_min" => self.walk_trip_easy_min = v,
             "walk_trip_w_far" => self.walk_trip_w_far = v,
             "asc_walk" => self.asc_walk = v,
+            "walk_samples" => self.walk_samples = v as usize,
             "everyday_asc_walk" => self.everyday_asc_walk = v,
             "damp_min" => self.damp_min = v,
             "walk_mps" => self.walk_mps = v,
             "walk_cutoff_m" => self.walk_cutoff_m = v,
-            "w_wait" => self.w_wait = v,
             "w_walk" => self.w_walk = v,
             "walk_easy_min" => self.walk_easy_min = v,
             "w_walk_far" => self.w_walk_far = v,
@@ -501,15 +503,15 @@ impl Params {
         let w1 = 1.0 / (1.0 + fast_exp(-(uw + bt * paid)));
         w0 + (1.0 - free) * (w1 - w0)
     }
-    /// Perceived minutes a km of "other" along the drive's road, and its fixed part (the wait
-    /// at `w_wait`), T-513; `other_asc` apart.
+    /// Perceived minutes a km of "other" along the drive's road, and its fixed part (the wait),
+    /// T-513; `other_asc` apart.
     #[inline]
     pub fn other_min_km(&self) -> f32 {
         60.0 / self.other_kmh
     }
     #[inline]
     pub fn other_wait(&self) -> f32 {
-        self.w_wait * self.other_wait_min
+        self.other_wait_min
     }
     /// The choice of those without a car (T-511, T-513, T-558) among rail at `rail` perceived
     /// minutes (None: not offered), walking the whole way at `cw` (+ `asc_walk`) and other at
@@ -566,19 +568,29 @@ impl NoRail {
         let cz = if cz.is_empty() { vec![0.0; z.n] } else { cz };
         NoRail { place, park, cz }
     }
-    /// The shares walking and taking other between zones i (home) and j at table index k, over
-    /// the zone-centre distance (`Params::no_rail_split`).
+    /// The shares walking and taking other between zones i (home) and j at table index k
+    /// (`Params::no_rail_split`): a near pair's cell pairs' (`Gravity::set_walk_fine`), else at
+    /// the zone-centre distance.
     #[inline]
     pub fn split(&self, gr: &Gravity, p: &Params, i: usize, j: usize, k: usize) -> (f32, f32) {
+        if let Some(n) = gr.fine_at(i, j, k) {
+            return (gr.wf_s[n][0], gr.wf_s[n][1]);
+        }
         let cw = gr.walk_cost_at(i, j, k);
         if cw >= NO_WALK {
             return (0.0, self.cz[i]);
         }
+        let (road, paid, free, road_km) = self.road(gr, p, i, j, k);
+        p.no_rail_split(self.cz[i], road, paid, free, road_km, cw)
+    }
+    /// The drive between zone centres: perceived minutes to a driver parking free, a paid space's
+    /// extra and the share parking free, and the road's km.
+    #[inline]
+    pub fn road(&self, gr: &Gravity, p: &Params, i: usize, j: usize, k: usize) -> (f32, f32, f32, f32) {
         let d_km = gr.wdtab[k];
         let f = p.drive_factor(i, j);
         let (fixed, paid, free) = self.park[j];
-        let road = p.drive_min_f(d_km * 1000.0, f, self.place[i], self.place[j]) * p.w_drive + fixed;
-        p.no_rail_split(self.cz[i], road, paid, free, d_km * f, cw)
+        (p.drive_min_f(d_km * 1000.0, f, self.place[i], self.place[j]) * p.w_drive + fixed, paid, free, d_km * f)
     }
 }
 
@@ -741,6 +753,13 @@ pub struct Gravity {
     pub wdtab: Vec<f32>,
     pub wroutes: Option<std::sync::Arc<super::routes::Routes>>,
     pub wcost: WalkCost,
+    /// Walks between cells (T-587, `set_walk_fine`), per home zone CSR over the zones within
+    /// `WALK_FINE_R` squares, ascending: zone, the walk's cost for the choice with rail, and the
+    /// shares walking and taking other with no rail. Empty: zone centres only.
+    pub wf_off: Vec<u32>,
+    pub wf_j: Vec<u32>,
+    pub wf_c: Vec<f32>,
+    pub wf_s: Vec<[f32; 2]>,
     pub th: i32,
     pub offx: i32,
     pub offy: i32,
@@ -769,20 +788,116 @@ impl Gravity {
         self.row[i] * self.col[j] * (self.ftab[(self.base(z, i) + self.key(z, j)) as usize] * self.k(z, i, j)) as f64
     }
 
-    /// Fill `wctab` and `wdtab` from the zone-centre distances (the same ones `decay_table` uses).
+    /// Fill `wctab` and `wdtab` from the zone-centre distances (the same ones `decay_table` uses);
+    /// the walks between cells go (`set_walk_fine` after).
     pub fn set_walk(&mut self, z: &Zones, p: &Params) {
         let (_, dtab) = decay_table(z.w, z.h, z.zone_m, 1.0, 0.0);
         self.wcost = p.walk_cost();
         self.wctab = dtab.iter().map(|&d| self.wcost.at(d)).collect();
         self.wroutes = p.routes.clone().filter(|r| r.walk_window() > 0);
         self.wdtab = dtab;
+        self.wf_off.clear();
+        self.wf_j.clear();
+        self.wf_c.clear();
+        self.wf_s.clear();
+    }
+
+    /// `wf_*` (T-587): each near zone pair's commuters as the pairs of its zones' points
+    /// (`walk_points`), each walking `cell_walk_m` times the zones' walk factor round water. The
+    /// pair's shares walking and taking other with no rail are its cell pairs' mean
+    /// (`Params::no_rail_split`); its cost for the choice with rail is the one walk whose share
+    /// against a driver parking free is that mean.
+    pub fn set_walk_fine(&mut self, city: &City, z: &Zones, p: &Params, nr: &NoRail) {
+        let ns = p.walk_samples;
+        if ns == 0 || self.wctab.is_empty() || city.len() != z.cell_zone.len() {
+            return;
+        }
+        let (home, work) = walk_points(city, z, ns);
+        let (sq_off, at) = z.by_square();
+        let w2 = 1.0 / (ns * ns) as f32;
+        let r = WALK_FINE_R;
+        let mut row: Vec<(u32, f32, [f32; 2])> = vec![];
+        let mut c = vec![0f32; ns * ns];
+        for i in 0..z.n {
+            self.wf_off.push(self.wf_j.len() as u32);
+            let hi = &home[i * ns..(i + 1) * ns];
+            if hi[0] == NONE {
+                continue;
+            }
+            row.clear();
+            for gx in (z.gx[i] - r).max(0)..=(z.gx[i] + r).min(z.w - 1) {
+                for gy in (z.gy[i] - r).max(0)..=(z.gy[i] + r).min(z.h - 1) {
+                    let s = (gx * z.h + gy) as usize;
+                    for &j in &at[sq_off[s] as usize..sq_off[s + 1] as usize] {
+                        let wj = &work[j as usize * ns..(j as usize + 1) * ns];
+                        if wj[0] == NONE {
+                            continue;
+                        }
+                        let (ju, k) = (j as usize, (self.base(z, i) + self.key(z, j as usize)) as usize);
+                        let f = self.walk_factor(i, ju) * 0.001;
+                        for (n, &a) in hi.iter().enumerate() {
+                            for (m, &b) in wj.iter().enumerate() {
+                                c[n * ns + m] = self.wcost.at(cell_walk_m(city, a, b) * f);
+                            }
+                        }
+                        let (road, paid, free, road_km) = nr.road(self, p, i, ju, k);
+                        let bt = p.mode_beta(road);
+                        let (mut m0, mut sw, mut so) = (0f32, 0f32, 0f32);
+                        for &x in &c {
+                            let (w, o) = p.no_rail_split(nr.cz[i], road, paid, free, road_km, x);
+                            sw += w;
+                            so += o;
+                            if x < NO_WALK {
+                                m0 += 1.0 / (1.0 + fast_exp(-(bt * (road - x) + p.asc_walk)));
+                            }
+                        }
+                        let cw = if m0 > 0.0 {
+                            let m0 = (m0 * w2).clamp(1e-7, 1.0 - 1e-6);
+                            road - ((m0 / (1.0 - m0)).ln() - p.asc_walk) / bt
+                        } else {
+                            NO_WALK
+                        };
+                        row.push((j, cw, [sw * w2, so * w2]));
+                    }
+                }
+            }
+            row.sort_unstable_by_key(|x| x.0);
+            self.wf_j.extend(row.iter().map(|x| x.0));
+            self.wf_c.extend(row.iter().map(|x| x.1));
+            self.wf_s.extend(row.iter().map(|x| x.2));
+        }
+        self.wf_off.push(self.wf_j.len() as u32);
+    }
+
+    /// The entry of `wf_*` for zones i and j at table index `k`, if they are a near pair.
+    #[inline]
+    pub fn fine_at(&self, i: usize, j: usize, k: usize) -> Option<usize> {
+        if self.wf_off.is_empty() {
+            return None;
+        }
+        let (dx, dy) = (k as i32 / self.th - self.offx, k as i32 % self.th - self.offy);
+        if dx.abs() > WALK_FINE_R || dy.abs() > WALK_FINE_R {
+            return None;
+        }
+        let a = self.wf_off[i] as usize;
+        self.wf_j[a..self.wf_off[i + 1] as usize].binary_search(&(j as u32)).ok().map(|n| a + n)
+    }
+
+    /// The walk's factor round water between zones i and j (T-275), at least 1.
+    #[inline]
+    pub fn walk_factor(&self, i: usize, j: usize) -> f32 {
+        self.wroutes.as_ref().map_or(1.0, |r| r.walk_factor(i, j)).max(1.0)
     }
 
     /// The cost of walking the whole way between zones i and j at table index `k` (`base(i) +
-    /// key(j)`): `wctab`, or with the pack's routes (T-275) the walk around water between them,
-    /// the zone-centre distance times their walk factor.
+    /// key(j)`): between cells for near pairs (`wf_*`, T-587), else `wctab`, or with the pack's
+    /// routes (T-275) the walk around water between them, the zone-centre distance times their
+    /// walk factor.
     #[inline]
     pub fn walk_cost_at(&self, i: usize, j: usize, k: usize) -> f32 {
+        if let Some(n) = self.fine_at(i, j, k) {
+            return self.wf_c[n];
+        }
         if let Some(r) = &self.wroutes {
             let f = r.walk_factor(i, j);
             if f > 1.0 {
@@ -864,6 +979,60 @@ impl Gravity {
 /// Zone-centre distance; within a zone 0.52 x the zone side (mean distance between two random
 /// points of a square). The one definition of the decay: the pipeline's solve and the pack
 /// loader both use it, so shipped factors and rebuilt trips agree exactly.
+/// Each zone's homes and jobs as `ns` cells (`Params::walk_samples`, T-587): the cells where the
+/// cumulative commute weight, in pack order, crosses (s + 0.5) / ns of the zone's; NONE for a
+/// zone with no weight. Zone by zone, `ns` each.
+pub fn walk_points(city: &City, z: &Zones, ns: usize) -> (Vec<u32>, Vec<u32>) {
+    let mut off = vec![0u32; z.n + 1];
+    for &zi in &z.cell_zone {
+        off[zi as usize + 1] += 1;
+    }
+    for i in 0..z.n {
+        off[i + 1] += off[i];
+    }
+    let mut fill = off.clone();
+    let mut cells = vec![0u32; z.cell_zone.len()];
+    for (c, &zi) in z.cell_zone.iter().enumerate() {
+        cells[fill[zi as usize] as usize] = c as u32;
+        fill[zi as usize] += 1;
+    }
+    let points = |w: &[f32]| {
+        let mut out = vec![NONE; z.n * ns];
+        for i in 0..z.n {
+            let cs = &cells[off[i] as usize..off[i + 1] as usize];
+            let tot: f64 = cs.iter().map(|&c| w[c as usize] as f64).sum();
+            if tot <= 0.0 {
+                continue;
+            }
+            let (mut acc, mut s) = (0.0f64, 0usize);
+            for &c in cs {
+                acc += w[c as usize] as f64;
+                while s < ns && acc >= (s as f64 + 0.5) / ns as f64 * tot {
+                    out[i * ns + s] = c;
+                    s += 1;
+                }
+            }
+            // rounding can leave the last on no cell: the last cell with weight
+            let last = *cs.iter().rev().find(|&&c| w[c as usize] > 0.0).unwrap();
+            out[i * ns + s..(i + 1) * ns].fill(last);
+        }
+        out
+    };
+    (points(&city.pop), points(&city.jobs))
+}
+
+/// Straight-line metres between cells a and b; a cell to itself 0.52 of its square's side, the
+/// mean distance within a square.
+#[inline]
+pub fn cell_walk_m(city: &City, a: u32, b: u32) -> f32 {
+    let (a, b) = (a as usize, b as usize);
+    if a == b {
+        0.52 * (res9_cells(city, a) as f32 * CELL_KM2).sqrt() * 1000.0
+    } else {
+        (city.x[a] - city.x[b]).hypot(city.y[a] - city.y[b])
+    }
+}
+
 pub fn decay_table(w: i32, h: i32, zone_m: f32, decay_km: f32, decay_pow: f32) -> (Vec<f32>, Vec<f32>) {
     let (tw, th) = (2 * w - 1, 2 * h - 1);
     let (offx, offy) = (w - 1, h - 1);
@@ -947,6 +1116,9 @@ pub fn gravity_from_pack(z: &Zones, pg: &PackGravity) -> Gravity {
         wdtab: vec![],
         wroutes: None,
         wcost: WalkCost::default(),
+        wf_off: vec![],
+        wf_j: vec![],
+        wf_c: vec![], wf_s: vec![],
         th: 2 * z.h - 1,
         offx: z.w - 1,
         offy: z.h - 1,
@@ -1004,7 +1176,7 @@ pub fn gravity(z: &Zones, p: &Params, max_iters: usize, tol: f64) -> Gravity {
     let creg: Vec<u8> = cols.iter().map(|&j| z.region[j]).collect();
     // the factor by "regions differ" (index 0 same, 1 different)
     let kf = [1.0f64, p.border_factor as f64];
-    let mut g = Gravity { row: vec![0.0; z.n], col: z.jobs.clone(), border: p.border_factor, ftab, wctab: vec![], wdtab: vec![], wroutes: None, wcost: WalkCost::default(), th, offx, offy, iters: 0, max_err: 0.0, mean_km: 0.0, total: 0.0 };
+    let mut g = Gravity { row: vec![0.0; z.n], col: z.jobs.clone(), border: p.border_factor, ftab, wctab: vec![], wdtab: vec![], wroutes: None, wcost: WalkCost::default(), wf_off: vec![], wf_j: vec![], wf_c: vec![], wf_s: vec![], th, offx, offy, iters: 0, max_err: 0.0, mean_km: 0.0, total: 0.0 };
     let mut colc: Vec<f64> = cols.iter().map(|&j| g.col[j]).collect();
     let mut acc = vec![0f64; cols.len()];
     for it in 0..max_iters {
@@ -1713,7 +1885,7 @@ pub struct Graph {
     pub rn_tph: Vec<f32>,
     /// Average extra real minutes a rider boarding at this route node waits because full trains
     /// leave riders on the platform (T-188, `left_behind`); 0 at free flow. Added to the
-    /// boarding at the platform wait's weight.
+    /// boarding's cost.
     pub rn_left: Vec<f32>,
     /// Incoming edges, CSR, for destination-based strategy search.
     pub rev_off: Vec<u32>,
@@ -1726,9 +1898,9 @@ pub struct Graph {
     pub adj_seg: Vec<u32>,
 }
 
+/// A wait is plain minutes, half the headway (Anita, T-585).
 pub fn board_cost(headway_min: f32, p: &Params) -> f32 {
-    let half = headway_min / 2.0;
-    half.min(p.platform_wait_cap_min) * p.w_wait + (half - p.platform_wait_cap_min).max(0.0) * p.w_home_wait + p.transfer_min
+    headway_min / 2.0 + p.transfer_min
 }
 
 pub fn build_graph(net: &Network, p: &Params) -> Graph {
@@ -2187,7 +2359,7 @@ impl Search<'_> {
     }
 
     fn run(&mut self, dst: usize) {
-        let (g, p, s, n, nr) = (self.g, self.p, self.s, self.n, self.nr);
+        let (g, s, n, nr) = (self.g, self.s, self.n, self.nr);
         self.dist.fill(f32::INFINITY);
         self.done.fill(false);
         self.frequency.fill(0.0);
@@ -2210,7 +2382,7 @@ impl Search<'_> {
             if id >= n {
                 // a boarding onto a line that leaves riders behind, at its turn (T-552)
                 let r = id - n;
-                self.offer_line(r, self.dist[s + r] + g.rn_left[r] * p.w_wait);
+                self.offer_line(r, self.dist[s + r] + g.rn_left[r]);
                 continue;
             }
             let v = id;
@@ -2232,7 +2404,7 @@ impl Search<'_> {
                     // its turn, or a full train would join ahead of better lines and stay (T-552).
                     let left = g.rn_left[v - s];
                     if left > 0.0 {
-                        self.heap.push(d + left * p.w_wait, (n + v - s) as u32);
+                        self.heap.push(d + left, (n + v - s) as u32);
                     } else {
                         self.offer_line(v - s, d);
                     }
@@ -2417,17 +2589,17 @@ struct SkimKey {
     adj_cost: Vec<f32>,
     rn_tph: Vec<f32>,
     rn_left: Vec<f32>,
-    par: [f32; 4],
+    transfer_min: f32,
 }
 
 impl SkimKey {
     fn of(g: &Graph, p: &Params) -> SkimKey {
-        SkimKey { n_st: g.n_st, n: g.n, adj_off: g.adj_off.clone(), adj_to: g.adj_to.clone(), adj_cost: g.adj_cost.clone(), rn_tph: g.rn_tph.clone(), rn_left: g.rn_left.clone(), par: [p.platform_wait_cap_min, p.w_wait, p.w_home_wait, p.transfer_min] }
+        SkimKey { n_st: g.n_st, n: g.n, adj_off: g.adj_off.clone(), adj_to: g.adj_to.clone(), adj_cost: g.adj_cost.clone(), rn_tph: g.rn_tph.clone(), rn_left: g.rn_left.clone(), transfer_min: p.transfer_min }
     }
     fn same(&self, g: &Graph, p: &Params) -> bool {
         self.n_st == g.n_st
             && self.n == g.n
-            && self.par == [p.platform_wait_cap_min, p.w_wait, p.w_home_wait, p.transfer_min]
+            && self.transfer_min == p.transfer_min
             && self.adj_off == g.adj_off
             && self.adj_to == g.adj_to
             && self.adj_cost == g.adj_cost
@@ -2726,7 +2898,7 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
     let mut fz = vec![[0f32, 0.0, p.road_detour, 0.0]; dz.len()];
     // and the zone pair's walking with no rail (`NoRail::split`, T-558)
     let mut fzw = vec![0f32; dz.len()];
-    let routed_walk = gr.wroutes.is_some();
+    let pair_walk = gr.wroutes.is_some() || !gr.wf_off.is_empty();
     let drive = p.routes.as_deref().filter(|r| r.has_drive());
     let ride_min2 = (p.ride_min_km * 1000.0).powi(2);
     let (ko, kow) = (p.other_min_km(), p.other_wait());
@@ -2764,7 +2936,7 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
             if zj.reg != ri {
                 o[0] *= gr.border;
             }
-            if routed_walk && w < NO_WALK {
+            if pair_walk && w < NO_WALK {
                 o[1] = gr.walk_cost_at(i, zj.zid as usize, k);
             }
             if let Some(r) = drive {
@@ -3603,7 +3775,7 @@ mod tests {
     }
 
     fn common_test_params() -> Params {
-        Params { xfer_walk_m: 0.0, w_wait: 1.0, w_home_wait: 1.0, platform_wait_cap_min: 100.0, ..Params::default() }
+        Params { xfer_walk_m: 0.0, ..Params::default() }
     }
 
     #[test]
@@ -3727,7 +3899,7 @@ mod tests {
             let s = g.n_st;
             let tph = sk.board_tph(&g, sk.slot[3] as usize);
             // the direct train with its wait: 2.5 a headway, 60 for the full trains, 4 riding
-            let direct = 2.5 * p.w_wait + 60.0 * p.w_wait + 4.0;
+            let direct = 2.5 + 60.0 + 4.0;
             assert!((sk.r[1 * s + 3] - direct).abs() < 1e-3, "{} against {direct}", sk.r[1 * s + 3]);
             assert_eq!((tph[south], tph[north]), (12.0, 0.0));
             let mut od = vec![0.0; s * s];
@@ -3746,7 +3918,7 @@ mod tests {
             g.rn_left[south] = 2.0;
             let sk = skims(&g, &p);
             let tph = sk.board_tph(&g, sk.slot[3] as usize);
-            assert!((sk.r[1 * s + 3] - (2.5 * p.w_wait + 2.0 * p.w_wait + 4.0)).abs() < 1e-3, "{}", sk.r[1 * s + 3]);
+            assert!((sk.r[1 * s + 3] - (2.5 + 2.0 + 4.0)).abs() < 1e-3, "{}", sk.r[1 * s + 3]);
             assert_eq!((tph[south], tph[north]), (12.0, 0.0));
         }
     }

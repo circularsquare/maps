@@ -674,6 +674,9 @@ rect.now { fill-opacity: .45; }
 /* T-165: riders by purpose under a line's riders or a station's boardings; the purpose the map
    shows is ringed in the bar and bold in the key */
 .rows > li.purpose-split { display: block; padding: 6px 0 4px; }
+/* T-600: a selected zone's figure with its mode bar under it */
+.rows > li.zone-trips { display: block; padding: 6px 0 6px; }
+.zone-trips .line { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
 .split-bar { width: 100%; max-width: none; height: 8px; }
 .split-bar .seg.shown { outline: 2px solid var(--text); outline-offset: 0; position: relative; z-index: 1; }
 .split-key { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-wrap: wrap; column-gap: 12px; font-size: 12px; }
