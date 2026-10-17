@@ -1,5 +1,6 @@
 ﻿# Archive
 
+- T-595 [P3] Tokyo's calibration areas file. Done 2026-10-17 in T-621 stage 1: remade, with New York's and Toronto's (stale by a few cells) and Sendai's and Toronto's targets. notes/T-621.md "Stage 1".
 - T-611 [P2] The gate's top cell for proxy-job packs. Done 2026-10-17: cell jobs over the square root of thousand jobs, failing over 600, replaces the flat 1% (real centres reach 1.3-2%); Belfast (283) and Cardiff ship. notes/T-583.md.
 - T-583 [P2] Proxy job lumps where OSM is thin. Done 2026-10-17: one OSM place at most 0.75% of jobs, one cell at most 500 x sqrt(thousand jobs), the excess to the population part; the Nigerian lumps gone, no other proxy pack changed. notes/T-583.md.
 - T-610 [P1] A plan unit with no OSM match shrank the pack. Done 2026-10-17: a unit may take several OSM relations, and what they leave uncovered keeps the plan's polygon (printed); Cardiff pop_vs_plan 0.51 to 0.996, shipped. notes/T-610.md.

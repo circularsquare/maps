@@ -1689,7 +1689,7 @@ impl IntercityApi {
             }
             let (zh, zw) = (&m.zones[h], &m.zones[w]);
             let km = m.zone_km(zh, zw) as f32;
-            let car = drive_min(km) * pc.w_drive + zw.park;
+            let car = drive_min(km) * pc.w_drive + zw.park + pc.car_own_min();
             let corridor = m.corridor(zh.place, zw.place);
             self.cpair_of[c] = self.cpairs.len() as u32;
             let asc = pc.asc_rail + super::api::country_asc_rail(&m.countries[m.places[zh.place].country as usize]);

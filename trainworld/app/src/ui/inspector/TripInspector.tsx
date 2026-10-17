@@ -268,7 +268,13 @@ export function TripInspector() {
           <span class="grow">Parking</span>
           <span class="val">{min(t.parkPerceived)}</span>
         </li>
-        <li data-tip={`The drive counts 1.33 times (${t.drivePerceived.toFixed(1)} min) plus parking`}>
+        {t.carOwnPerceived > 0 && (
+          <li data-tip={`Owning a car costs ${usd(t.carOwnPerceived / t.minPerUsd)} a trip, which counts as ${t.carOwnPerceived.toFixed(1)} min`}>
+            <span class="grow">Car ownership</span>
+            <span class="val">{min(t.carOwnPerceived)}</span>
+          </li>
+        )}
+        <li data-tip={`The drive counts 1.33 times (${t.drivePerceived.toFixed(1)} min) plus parking${t.carOwnPerceived > 0 ? " and car ownership" : ""}`}>
           <span class="grow">Counts as</span>
           <span class="val">{min(t.roadPerceived)}</span>
         </li>

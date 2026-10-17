@@ -13,7 +13,8 @@ import sys
 from concurrent.futures import ThreadPoolExecutor
 
 # outputs (cache, logs, best.json) live with the check outputs, not beside the scripts
-HERE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "artifacts", "trainworld", "t509s56")
+# (FIT_DIR points a new fit at its own cache: runs cached before T-585/T-587 are stale)
+HERE = os.environ.get("FIT_DIR") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "artifacts", "trainworld", "t509s56")
 TW = r"C:\Users\anita\projects\maps\trainworld"
 PY = r"C:\Users\anita\projects\maps\venv\Scripts\python.exe"
 CALIB = os.path.join(TW, "data", "work", "calib")
@@ -27,10 +28,21 @@ WORKERS = int(os.environ.get("FIT_WORKERS", "7"))
 PARAMS = {
     "asc_rail": (0.0, 1.0),
     "everyday_asc_rail": (0.0, 1.0),
-    "everyday_walk_d0_km": (1.7, 0.5),
     "w_walk": (1.5, 0.5),
     "other_asc": (10.0, 10.0),
 }
+# T-621: walking's constants and weight (`everyday_walk_d0_km` went with T-558), fitted when named in
+# FIT_ADD (comma separated); value and range as PARAMS
+OPTIONAL = {
+    "asc_walk": (2.80, 1.0),
+    "everyday_asc_walk": (0.41, 0.5),
+    "walk_trip_w": (1.5, 0.5),
+}
+for _k in filter(None, os.environ.get("FIT_ADD", "").split(",")):
+    PARAMS[_k] = OPTIONAL[_k]
+# T-621: parameters held at a value in every run, not searched or penalised, e.g.
+# FIT_FIXED=car_own_usd_day=10,walk_trip_w=1 (they are part of each run's cache key)
+FIXED = {k: float(v) for k, v in (kv.split("=") for kv in filter(None, os.environ.get("FIT_FIXED", "").split(",")))}
 PENALTY = 0.05  # per parameter, per range moved, squared, summed over the fitted cities' mean
 
 
@@ -135,7 +147,9 @@ def objective(res, p, fit=FIT):
 
 
 def today():
-    return {k: v[0] for k, v in PARAMS.items()}
+    p = {k: v[0] for k, v in PARAMS.items()}
+    p.update(FIXED)
+    return p
 
 
 def table(res, say=print):
@@ -163,9 +177,11 @@ def cmd_eval():
     print(f"objective (fitted six, with penalty) {objective(res, p):.3f}; penalty {len(FIT) * penalty(p):.3f}")
 
 
-STEPS = {"everyday_asc_rail": [-1.5, -1.0, -0.5, -0.25, 0.25], "asc_rail": [-0.5, -0.25, 0.25, 0.5],
-         "everyday_walk_d0_km": [-0.3, 0.3, 0.6, 0.9], "w_walk": [-0.25, 0.25, 0.5],
-         "other_asc": [-5.0, 5.0, 10.0, 20.0]}
+_STEPS = {"everyday_asc_rail": [-1.5, -1.0, -0.5, -0.25, 0.25], "asc_rail": [-0.5, -0.25, 0.25, 0.5],
+          "w_walk": [-0.25, 0.25, 0.5], "other_asc": [-5.0, 5.0, 10.0, 20.0],
+          "asc_walk": [-1.0, -0.5, 0.5, 1.0], "everyday_asc_walk": [-0.5, -0.25, 0.25, 0.5],
+          "walk_trip_w": [-0.5, -0.25, 0.25, 0.5]}
+STEPS = {k: v for k, v in _STEPS.items() if k in PARAMS}
 
 
 def cmd_search():
@@ -242,11 +258,11 @@ def cmd_refine():
 
 
 def cmd_pts():
-    """Evaluate points given as JSON lists [asc_rail, everyday_asc_rail, everyday_walk_d0_km] (others today's)."""
+    """Evaluate points given as a JSON list of {name: value} (the rest today's)."""
     pts = []
     for a in json.loads(sys.argv[2]):
         p = today()
-        p["asc_rail"], p["everyday_asc_rail"], p["everyday_walk_d0_km"] = a
+        p.update(a)
         pts.append(p)
     evaluate(pts)
 

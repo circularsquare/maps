@@ -98,6 +98,11 @@ pub struct Params {
     pub park_paid_d0: f32,
     pub park_paid_cap_min: f32,
     pub park_free_d: f32,
+    /// What owning a car costs a day, dollars, and the car trips a driver makes a day (T-620):
+    /// every car trip adds `car_own_usd_day` / `car_trips_day` dollars at `FARE_MIN_PER_USD`
+    /// perceived minutes a dollar (`car_own_min`), in `park_parts`' fixed part. 0 until fitted.
+    pub car_own_usd_day: f32,
+    pub car_trips_day: f32,
     /// A congestion charge per zone (`cordon_by_zone`), perceived minutes a one-way trip, paid
     /// by every driver arriving there. None: no charge anywhere.
     pub cordon: Option<std::sync::Arc<Vec<f32>>>,
@@ -255,6 +260,8 @@ impl Default for Params {
             park_paid_d0: 3000.0,
             park_paid_cap_min: 50.0,
             park_free_d: 8000.0,
+            car_own_usd_day: 0.0,
+            car_trips_day: 3.0,
             cordon: None,
             period: 0,
             period_share: 0.45,
@@ -353,6 +360,8 @@ impl Params {
             "park_paid_d0" => self.park_paid_d0 = v,
             "park_paid_cap_min" => self.park_paid_cap_min = v,
             "park_free_d" => self.park_free_d = v,
+            "car_own_usd_day" => self.car_own_usd_day = v,
+            "car_trips_day" => self.car_trips_day = v,
             // scales every zone's cordon charge (0 turns them off)
             "cordon" => {
                 if let Some(c) = &self.cordon {
@@ -430,13 +439,19 @@ impl Params {
             _ => self.road_detour,
         }
     }
-    /// Parking at a destination in zone `j`, perceived minutes: what every driver pays (parking
-    /// and any cordon charge), what a paid space costs on top, and the share who park free.
+    /// One car trip's share of the day's ownership cost, perceived minutes (T-620).
+    #[inline]
+    pub fn car_own_min(&self) -> f32 {
+        self.car_own_usd_day / self.car_trips_day.max(1.0) * super::api::FARE_MIN_PER_USD
+    }
+    /// Parking at a destination in zone `j`, perceived minutes: what every driver pays (parking,
+    /// any cordon charge and the ownership cost), what a paid space costs on top, and the share
+    /// who park free.
     pub fn park_parts(&self, z: &Zones, j: usize) -> (f32, f32, f32) {
         let land = (z.ncell[j].max(1) as f32 * CELL_KM2).min((z.zone_m / 1000.0).powi(2));
         let d = z.jobs[j] as f32 / land;
         let paid = if d > self.park_paid_d0 { (self.park_paid_min * (d / self.park_paid_d0).ln()).min(self.park_paid_cap_min) } else { 0.0 };
-        let fixed = self.park_min + self.cordon.as_ref().and_then(|c| c.get(j)).map_or(0.0, |&c| c);
+        let fixed = self.park_min + self.car_own_min() + self.cordon.as_ref().and_then(|c| c.get(j)).map_or(0.0, |&c| c);
         (fixed, paid, 1.0 / (1.0 + d / self.park_free_d))
     }
     /// The mean of `park_parts` over drivers.
@@ -1506,10 +1521,11 @@ pub fn access_options(zones: &Zones, net: &Network, p: &Params, places: &[(usize
     }
     let dens = zones.density();
     let place = |z: Option<usize>| p.place_min_per_km(z.map_or(0.0, |z| dens[z]));
-    // parking as at a destination, its mean over drivers
+    // parking as at a destination, its mean over drivers; the ownership cost is the whole-trip
+    // car's alone (T-620)
     let station_end = |z: Option<usize>| match end {
         End::Far => p.d_drop,
-        End::Home => z.map_or(p.park_min, |z| p.park_mean(zones, z)).min(p.d_drop),
+        End::Home => z.map_or(p.park_min, |z| p.park_mean(zones, z) - p.car_own_min()).min(p.d_drop),
     };
     let (sq_off, sq) = zones.by_square();
     let st_zone: Vec<Option<usize>> = (0..net.n_stations())
@@ -3838,6 +3854,30 @@ mod tests {
             let (r0, r1) = (1.0 / (1.0 + fast_exp(-util)), 1.0 / (1.0 + fast_exp(-(util + p.beta * 20.0))));
             assert!(r > r0 && r < r1 && (r - (0.3 * r0 + 0.7 * r1)).abs() < 1e-6);
         }
+    }
+
+    /// T-620: $10 a day over 3 car trips adds 10/3 dollars, FARE_MIN_PER_USD minutes each, to a
+    /// driver's cost; 0 changes nothing to the bit, and a driver's rail share falls.
+    #[test]
+    fn car_ownership_adds_dollars_per_trip() {
+        let z = Zones {
+            zone_m: 2000.0, n: 1, cell_zone: vec![], gx: vec![0], gy: vec![0], region: vec![0], w: 1, h: 1, x0: 0.0, y0: 0.0,
+            pop: vec![0.0], jobs: vec![0.0], ncell: vec![38],
+        };
+        let mut p = Params::default();
+        assert_eq!(p.car_own_min(), 0.0);
+        let base = p.park_parts(&z, 0);
+        p.car_own_usd_day = 10.0;
+        p.car_trips_day = 3.0;
+        let want = 10.0 / 3.0 * crate::demand::api::FARE_MIN_PER_USD;
+        assert!((p.car_own_min() - want).abs() < 1e-5 && (want - 10.0).abs() < 1e-5);
+        let with = p.park_parts(&z, 0);
+        assert!((with.0 - base.0 - want).abs() < 1e-5 && with.1 == base.1 && with.2 == base.2);
+        p.set_extra("car_own_usd_day", 0.0).unwrap();
+        assert_eq!(p.park_parts(&z, 0), base);
+        p.set_extra("car_own_usd_day", 10.0).unwrap();
+        p.set_extra("car_trips_day", 5.0).unwrap();
+        assert!((p.car_own_min() - 6.0).abs() < 1e-5);
     }
 
     #[test]

@@ -30,7 +30,7 @@ const ROUTE_MIN: f32 = 0.005;
 const MAX_ROUTES: usize = 8;
 
 /// Numbers in the answer's head, per station pair, and per leg (`DemandApi::trip`).
-pub const HEAD: usize = 32;
+pub const HEAD: usize = 33;
 pub const PAIR_LEN: usize = 14;
 pub const LEG_LEN: usize = 12;
 
@@ -345,6 +345,7 @@ impl DemandApi {
         h[6] = ((city.x[o] - city.x[d]).powi(2) + (city.y[o] - city.y[d]).powi(2)).sqrt() as f64;
         h[22] = p.fare_min as f64;
         h[23] = FARE_MIN_PER_USD as f64;
+        h[32] = p.car_own_min() as f64;
         h[27] = city.x[o] as f64;
         h[28] = city.y[o] as f64;
         h[29] = city.x[d] as f64;
@@ -370,7 +371,7 @@ impl DemandApi {
             h[8] = pw as f64;
             h[9] = drive as f64;
             h[10] = (drive * p.w_drive) as f64;
-            h[11] = park as f64;
+            h[11] = (park - p.car_own_min()) as f64;
             h[12] = (drive * p.w_drive + park) as f64;
             h[17] = pw as f64;
             h[19] = (1.0 - pw) as f64;
@@ -393,7 +394,7 @@ impl DemandApi {
         h[8] = pc.pw as f64;
         h[9] = pc.drive_min as f64;
         h[10] = (pc.drive_min * p.w_drive) as f64;
-        h[11] = pc.park as f64;
+        h[11] = (pc.park - p.car_own_min()) as f64;
         h[12] = pc.road as f64;
         h[13] = (pc.why == RAIL_OFFERED) as u32 as f64;
         h[14] = if pc.rail.is_finite() { pc.rail as f64 } else { -1.0 };
@@ -469,7 +470,8 @@ impl DemandApi {
     /// chance of walking, rail and driving; the cheapest perceived walk at each end; the base
     /// fare (perceived minutes) and perceived minutes per dollar; station pairs, routes; why rail
     /// is not offered (`RAIL_OFFERED`..`NO_ROUTE`); the two cells' x, y; the share of the rail
-    /// riders on routes not listed.
+    /// riders on routes not listed; the car's ownership cost per trip (perceived minutes, T-620),
+    /// which the whole cost includes and the parking leaves out.
     ///
     /// Then per station pair, biggest share first, `PAIR_LEN` numbers: access and egress demand
     /// stations, a route node at each (-1 none), the access walk's straight-line metres and

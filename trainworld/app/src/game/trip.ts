@@ -86,6 +86,8 @@ export interface TripPeriod {
   driveMin: number;
   drivePerceived: number;
   parkPerceived: number;
+  /** the car's ownership cost per trip (T-620), included in `roadPerceived` */
+  carOwnPerceived: number;
   roadPerceived: number;
   railOffered: boolean;
   why: NoRail;
@@ -125,7 +127,7 @@ export interface Trip {
  * (as `transfers`). */
 export type RouteNodes = { line: string; station: string; k: number }[];
 
-const HEAD = 32, PAIR_LEN = 14, LEG_LEN = 12;
+const HEAD = 33, PAIR_LEN = 14, LEG_LEN = 12;
 
 /** Read one period's packed answer (layout: `DemandApi.trip`). */
 export function readTripPeriod(v: Float64Array, at: RouteNodes): TripPeriod | null {
@@ -159,7 +161,7 @@ export function readTripPeriod(v: Float64Array, at: RouteNodes): TripPeriod | nu
   const offered = v[13] === 1;
   return {
     round: v[1], from: [v[27], v[28]], to: [v[29], v[30]], distM: v[6], driveDistM: v[7],
-    driveMin: v[9], drivePerceived: v[10], parkPerceived: v[11], roadPerceived: v[12],
+    driveMin: v[9], drivePerceived: v[10], parkPerceived: v[11], carOwnPerceived: v[32], roadPerceived: v[12],
     railOffered: offered, why: WHY[v[26]] ?? "", railPerceived: offered ? v[14] : NaN, railOfMotor: v[15], utility: v[16],
     pWalk: v[17], pTrain: v[18], pDrive: v[19], baseFarePerceived: v[22], minPerUsd: v[23], walkStartPerceived: v[20], walkEndPerceived: v[21], pairs, routes, cut: v[31],
   };

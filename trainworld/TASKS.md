@@ -27,7 +27,7 @@ orchestrator's commit recipe is in CLAUDE.md "Before a commit".
 ## Demand and data
 - T-551 [P2] Demand review for Anita (her playtest notes, 2026-10-16): measured, nothing changed (notes/T-551.md). Waits for Anita, who decides at the deep calibration.
 - T-514 [P3] "Other" per cell (T-513): the sim keeps trips by other only as a total, so bubbles and hovers cannot show them by cell; needs other by home and work cell. Open; notes/T-514.md.
-- T-621 [P1] The deep calibration (Anita 2026-10-17: start now): T-509's fit again with car ownership, the walk weight against 1, walking fitted per survey country. Stage 1 taking 2026-10-17; stage 2 waits on Anita's three decisions. notes/T-621.md.
+- T-621 [P1] The deep calibration (Anita 2026-10-17: start now): T-509's fit again with car ownership, the walk weight against 1, walking fitted per survey country. Stage 1 done 2026-10-17 (ownership a parameter at 0, a fresh seven-city baseline, fit.py updated); stage 2 waits on Anita's decisions. notes/T-621.md.
 - T-620 [P2] Car ownership cost, about $10 a day (Anita 2026-10-16, DECISIONS T-551), spread over a day's car trips; a parameter in T-621 stage 1, switched on by its fit. notes/T-621.md.
 - T-528 [P2] Fit the regional layer's longer trips (T-509's last part, Anita's design 2026-10-16): rail constant and damping on corridor counts at two lengths per country. Open; notes/T-509.md section 15.
 - T-529 [P3] Bikes to stations for car-free homes in Japan (T-509 stages 6-7): they only walk now, part of why Tokyo's commute rail is 35% against 52%. A bike access mode where a survey shows it. Open; notes/T-509.md sections 14-15.
@@ -41,7 +41,6 @@ orchestrator's commit recipe is in CLAUDE.md "Before a commit".
 - T-427 [P3] Longer-trip answers sent only for zones with trips (a selection's answer is about 600 kB per worker at 5,894 zones). Open; notes/T-377.md.
 - T-428 [P3] `data/packs/intercity.json` (14 MB) is only the joint gravity's input and output, never read by the game since T-377: move it to data/work, out of what is published. Open; notes/T-428.md.
 - T-429 [P3] Cross-border long trips in Europe: T-376's one border rule gives London - Paris 9,600 a day (Eurostar alone about 30,000); a factor per country pair. Open; notes/T-377.md.
-- T-595 [P3] Remake Tokyo's calibration areas file (`tyo_cell_muni.u16` has 64,272 values, the pack 64,300 cells), so `calib.py run tyo` works again. Open.
 - T-605 [P3] Move the measurement trails still inside the demand-*.md paragraphs (before/after tables, how a figure was reached) to notes/, one file at a time, as each is next edited. Open.
 - T-283 [P3] Toronto's Yonge test line lost all its airport riders once routes were added (567 to none): are Pearson's terminals cut off from stations by routed walks or drives? May affect US airports. Open; notes/T-277.md.
 - T-279 [P2] Routed drives for the regional market and between packs: its car is still 1.25 x the great circle (docs/regional.md 5.1); new packs need `routes.py <id>`. Open; notes/T-275.md.
