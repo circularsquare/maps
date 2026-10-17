@@ -441,6 +441,8 @@ def checks_of(city, f, rates, browser, changed):
             c.append(skip(n, "Rust check not run"))
     elif city not in rates:
         c.append({"name": "everyday_rates", "status": "FAIL", "value": None, "detail": "every_pack_everyday gave no line"})
+    elif "error" in rates[city]:
+        c.append({"name": "everyday_rates", "status": "FAIL", "value": None, "detail": "the everyday layer does not open: " + rates[city]["error"]})
     else:
         r = rates[city]
         c.append(judge("school_rate", r["school"]))
@@ -524,7 +526,18 @@ def fleet_check(c):
 # ---------------------------------------------------------------- the Rust and browser checks
 
 def everyday_rates(ids):
-    """`every_pack_everyday` on these packs: {id: {school, university, ..., purposes}}."""
+    """`every_pack_everyday` on these packs: {id: {school, university, ..., purposes}}, or
+    {id: {"error": the panic}} for a pack whose everyday layer does not open. The test stops at
+    the first pack that panics, so the packs after it run again one at a time."""
+    rates = _everyday_rates(ids)
+    missing = [i for i in ids if i not in rates]
+    if rates and missing or len(ids) > 1 and not rates:
+        for i in missing:
+            rates.update(_everyday_rates([i]))
+    return rates
+
+
+def _everyday_rates(ids):
     env = dict(os.environ, TW_PACKS=",".join(ids), CARGO_BUILD_JOBS=os.environ.get("CARGO_BUILD_JOBS", "1"))
     env["PATH"] = os.path.join(os.path.expanduser("~"), ".cargo", "bin") + os.pathsep + env["PATH"]
     cmd = ["cargo", "test", "--release", "--features", "demand", "--lib", "--manifest-path",
@@ -537,6 +550,9 @@ def everyday_rates(ids):
             parts = ln.split()
             kv = dict(x.split("=", 1) for x in parts[2:])
             rates[parts[1]] = {k: (int(v) if k == "purposes" else float(v)) for k, v in kv.items()}
+    m = re.search(r"panicked at [^\n]*\n([^\n]+)", p.stdout + "\n" + p.stderr)
+    if len(ids) == 1 and ids[0] not in rates and m:
+        rates[ids[0]] = {"error": m.group(1).strip()[:300]}
     if not rates:
         print(p.stdout[-2000:], p.stderr[-3000:], flush=True)
     return rates
@@ -664,6 +680,16 @@ def browser_check(city, header, a, f, reg, out_dir):
 
 # ---------------------------------------------------------------- other packs unchanged
 
+def _round(v):
+    if isinstance(v, float):
+        return float(f"{v:.9g}")
+    if isinstance(v, dict):
+        return {k: _round(x) for k, x in v.items()}
+    if isinstance(v, list):
+        return [_round(x) for x in v]
+    return v
+
+
 def pack_hashes(city):
     """{item: sha} for one pack: each array of its .bin, its header without the arrays' offsets
     and the gravity block, the gravity block, and its outline."""
@@ -676,7 +702,14 @@ def pack_hashes(city):
         size = {"u64": 8, "f64": 8, "f32": 4, "u32": 4, "i32": 4, "u16": 2, "u8": 1}.get(arr["dtype"], 1)
         out[arr["name"]] = hashlib.sha1(buf[arr["offset"]:arr["offset"] + arr["count"] * size]).hexdigest()
     rest = {k: v for k, v in h.items() if k not in ("arrays", "gravity")}
-    out["header"] = hashlib.sha1(json.dumps(rest, sort_keys=True).encode()).hexdigest()
+    # the merge's stamp of the res-9 pack it came from changes with the res-9 pack's gravity (T-540)
+    stamp = (rest.get("merged") or {}).get("source") if isinstance(rest.get("merged"), dict) else None
+    if stamp is not None:
+        rest["merged"] = {k: v for k, v in rest["merged"].items() if k != "source"}
+    # figures to 9 significant digits: a re-merge recomputes shares in another order (T-540:
+    # Rotterdam's school location_match_share moved by one bit in its last place)
+    out["header"] = hashlib.sha1(json.dumps(_round(rest), sort_keys=True).encode()).hexdigest()
+    out["header:merged_source"] = hashlib.sha1(json.dumps(stamp, sort_keys=True).encode()).hexdigest()
     out["header:gravity"] = hashlib.sha1(json.dumps(h.get("gravity"), sort_keys=True).encode()).hexdigest()
     with open(os.path.join(PACKS, f"{city}.boundary.geojson"), "rb") as f:
         out["boundary"] = hashlib.sha1(f.read()).hexdigest()
@@ -702,7 +735,7 @@ def changed_since(city, header, path):
             bad.append(f"{other} gone")
             continue
         now = pack_hashes(other)
-        allowed = GRAVITY_ONLY | {"header:gravity"} if other in group else set()
+        allowed = GRAVITY_ONLY | {"header:gravity", "header:merged_source"} if other in group else set()
         diff = sorted(k for k in set(before) | set(now) if before.get(k) != now.get(k) and k not in allowed)
         if diff:
             bad.append(f"{other}: {', '.join(diff[:6])}")

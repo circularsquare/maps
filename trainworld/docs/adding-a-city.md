@@ -14,6 +14,57 @@ next country will need.
 Logs, check outputs and images go in `../artifacts/trainworld/` (from the maps root
 `artifacts/trainworld/`), never in `notes/`.
 
+## Running the pipeline
+
+A world plan row (section 1) needs no agent: `pipeline/world_run.py` (T-540) does sections 3 to 7
+and 11 for it, with the gate (section 8) deciding ship or park. From the maps root:
+
+    venv\Scripts\python.exe -I trainworld\pipeline\world_run.py plan --limit 20    what a run would do
+    venv\Scripts\python.exe -I trainworld\pipeline\world_run.py run --limit 20     the next 20 rows
+    venv\Scripts\python.exe -I trainworld\pipeline\world_run.py status             rows by status
+
+`--rows a,b` or `--countries GB,PT` instead of `--limit`; `--jobs N` the cores in all (default 2,
+up to 12 on an overnight run Anita approves; one city at a time per 3 cores); `--port` its own Vite
+for the browser check (default 6360). Set `TW_SIM_DIR` and `TW_CARGO_TARGET_DIR` when the tree's
+`sim/` may be mid-edit (section 4). Run it in the background and wait once for the process.
+
+- **Rows** go in plan order, a region at a time: rows sharing a Geofabrik extract, chained. The
+  region's extracts are downloaded (four tries) unless their caches or `.osm.pbf` are on disk, and
+  read once into the caches (`osm_features`, inland water, roads, admin relations).
+- **Per row**: `build_city`, `places`, `routes --keep-pbf`, `merge_cells`, `nocar`,
+  `everyday_rates`, each its own process and log; a failed step runs once more after a minute,
+  then the row parks. Status `built`.
+- **Gate**: a row within 50 km of a pack with a Northeast `market` id parks (T-580: the Northeast
+  is solved on its own sites). The rest are registered with their market packs (`register.py
+  --market`; the browser check needs them), a snapshot of every registered pack taken first, and
+  gated with `--browser --since` on the runner's own Vite, started after the registration (it
+  reads the registry once). A pack that ships stays registered; one that parks is taken out again
+  with its market pack, its market place left unused (place ids are positions), and its failing
+  checks are its reason.
+- **Joint gravity**: each group a shipped pack joined is solved once (members back to res-9,
+  `intercity.py --group auto <new> --no-market`, merged again) and gated again without the browser
+  or rates; a FAIL restores every member from the backup taken before and parks the group's new
+  packs. Then `register.py <shipped and changed> --market --trips` (or `market_zones.py --rows`
+  when only parks happened), and a check that every file `vite.config.ts` copies into a
+  production build exists for each shipped pack (it copies the registry's packs, so nothing more
+  needs listing). Status `shipped`.
+- **Clean up**: the region's `.osm.pbf` files and the OSM caches the runner made go once the
+  region is done (`--keep-downloads` keeps them); caches already on disk before, and the small
+  `.admin.fgb`, stay.
+- **Status** is each row's `status` in `pipeline/world_plan.json` (`planned`, `built`, `shipped`,
+  `parked`) with a `run` record: batch, seconds a step, gate warnings, a parked row's reason. A
+  batch's report (shipped, parked with reasons, warnings, times) and every log go to
+  `../artifacts/trainworld/world_run/<batch>/`.
+- **Stopping**: ctrl-c, or the file `data/work/world_run/STOP`; the city under way finishes its
+  steps (they run in their own process group, so ctrl-c does not reach them). Gating and joining
+  wait for the next run, which takes up `built` rows without rebuilding them and first takes any
+  unshipped row out of the registry.
+- **A scratch tree** (`--root data/work/<task>/trainworld`, with `data/raw` a junction to this
+  tree's, `sim/` a copy, a registry, the world plan, `borders.json`, `intercity.json`, the plan
+  extents and data/work's shared inputs: `world_field.*`, `outside.json`, `tiger_counties_simple.json`)
+  takes every step's paths into data/packs, data/work, app/ and the plan instead; the browser check
+  is off there. Remove the junction (`rmdir`) before deleting such a tree.
+
 ## 1. Choose the city and its footprint
 
 - **A new country first: fill its row in `docs/data-register.md` and pick the procedure

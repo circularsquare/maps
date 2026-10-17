@@ -268,6 +268,11 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   country module's `plan_hooks(row)` keys (T-555; `build_city.py` takes every planned row through
   it); `osm_units.py <id>`: its outline from the
   OSM admin relations matching the row's units (T-537, docs/adding-a-city.md 3).
+- `world_run.py plan|run|status [--rows ..|--countries ..|--limit N] [--jobs N] [--root dir]`: the
+  runner (T-540): world plan rows a region at a time through download, build, gate, registry,
+  joint gravity, market and clean up, each step its own `python -I` process; status and times in
+  each plan row, a report a batch in `../artifacts/trainworld/world_run/` (docs/adding-a-city.md
+  "Running the pipeline"). `--root` points every step at a scratch tree (`Redirect`).
 - Real networks and calibration (T-007, T-509): `realnet.py net <city>` turns a city's sources
   (GTFS, OSM route relations from `realnet.py fetch-osm <city>`, or a CSV of timetabled trips;
   `CITIES` lists each city's) into a demand test network in `data/work/realnet/`; `realnet.py`

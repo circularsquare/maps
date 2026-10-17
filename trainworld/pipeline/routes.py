@@ -676,7 +676,7 @@ def cargo_run(bin_name, args):
     cargo_bin = os.path.join(os.path.expanduser("~"), ".cargo", "bin")
     env["PATH"] = cargo_bin + os.pathsep + env.get("PATH", "")
     env.setdefault("CARGO_BUILD_JOBS", "2")
-    env["CARGO_TARGET_DIR"] = os.path.join(ROOT, "data", "work", "target")
+    env["CARGO_TARGET_DIR"] = os.environ.get("TW_CARGO_TARGET_DIR", os.path.join(ROOT, "data", "work", "target"))
     cargo = shutil.which("cargo", path=env["PATH"])
     if not cargo:
         sys.exit("cargo not found: install Rust (rustup) or put ~/.cargo/bin on PATH")

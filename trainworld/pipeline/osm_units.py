@@ -28,6 +28,9 @@ import build_city as b
 MATCH = 0.5            # overlap / union an OSM relation needs to stand for a plan unit
 INSIDE = 0.5           # share of an unmatched plan unit OSM must leave uncovered for its own polygon to stay
 SEA_PAD = 0.25         # degrees around the plan's box over which the OSM sea is read
+# inland water smaller than this is left out of the match's water: it cannot move an overlap much,
+# and Rotterdam's 66,000 ditches and canals (2.3M vertices) stalled the match for over 20 minutes
+WET_MIN_KM2 = 0.1
 MIN_PART_KM2 = 0.05  # outline pieces smaller than this are slivers left by the coastline clip
 OSM = os.path.join(b.RAW, "osm")
 PACKS = os.path.join(b.ROOT, "data", "packs")  # the real packs, which a new outline is cut along
@@ -143,14 +146,19 @@ def build(cid, row, sources):
     # (Lagos Island's relation is 161 km2, its land about 9)
     box = (w - SEA_PAD, s - SEA_PAD, e + SEA_PAD, n + SEA_PAD)
     sea = union_all(osm_water.sea(box))
-    wet = union_all([sea] + list(osm_water.inland(row["extracts"], box)))
+    wet = union_all([sea] + [g for g in osm_water.inland(row["extracts"], box) if km2(g, lat0) >= WET_MIN_KM2])
     shapely.prepare(sea)
-    shapely.prepare(wet)
     admin["geometry"] = [make_valid(g).difference(sea).buffer(0) for g in admin.geometry]
     units = [(uid, name, g.difference(sea).buffer(0), kind) for uid, name, g, kind in units]
+
+    def dried(g):  # the water within the shape's box only: a difference with all of it is slow
+        if g.is_empty:
+            return g
+        c = shapely.clip_by_rect(wet, *g.bounds)
+        return g.difference(c if c.is_valid else make_valid(c))
     dry = admin.copy()
-    dry["geometry"] = [g.difference(wet) for g in admin.geometry]
-    picks = match([(u[0], u[1], u[2].difference(wet), u[3]) for u in units], dry, lat0)
+    dry["geometry"] = [dried(g) for g in admin.geometry]
+    picks = match([(u[0], u[1], dried(u[2]), u[3]) for u in units], dry, lat0)
     feats, geoms, chosen = [], [], {}
 
     def take(i, uid, gname, iou):

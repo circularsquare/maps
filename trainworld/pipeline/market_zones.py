@@ -2,6 +2,7 @@
 
     python pipeline/market_zones.py [id ...]     every registered zone, or only those named
     python pipeline/market_zones.py --air        only every zone file's airports (T-378), then the rows
+    python pipeline/market_zones.py --rows       only the rows (after a zone left the registry)
 
 Writes `data/packs/<id>.market.json` per zone (seconds each), then runs the sim crate's `market_pack`
 over every zone's file, which adds up each zone's registry row and the trips between zones whose
@@ -370,6 +371,8 @@ def main(ids=None):
                     out["sources"].append(AIR_SOURCE)
                 write(path, out)
         ids = []
+    elif "--rows" in args:
+        ids = []  # T-540: only the market rows, after a zone left the registry
     else:
         ids = [a for a in args if not a.startswith("--")] or [c["id"] for c in reg["cities"]]
     F = Field() if ids else None

@@ -1075,7 +1075,8 @@ def add_gravity(cells_json, city, extra=None):
     env.setdefault("CARGO_BUILD_JOBS", "2")
     # its own target dir, so the pipeline never waits on (or blocks) the app's wasm builds
     # (from ROOT, not WORK: a scratch build that points WORK elsewhere still shares the compiled crate)
-    env["CARGO_TARGET_DIR"] = os.path.join(ROOT, "data", "work", "target")
+    # (TW_CARGO_TARGET_DIR: a target of its own for a TW_SIM_DIR copy, as intercity.py)
+    env["CARGO_TARGET_DIR"] = os.environ.get("TW_CARGO_TARGET_DIR", os.path.join(ROOT, "data", "work", "target"))
     out_json = os.path.join(PACKS, f"{city}.json")
     cargo = shutil.which("cargo", path=env["PATH"])  # Windows does not search env's PATH itself
     if not cargo:

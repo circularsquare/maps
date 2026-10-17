@@ -1047,8 +1047,17 @@ def main(argv):
     if argv and argv[0] == "row":
         return test_row(st, argv[1], argv[2])
     rows, dropped = plan(st, st["packs"])
-    prev = [r for r in json.loads(OUT.read_text(encoding="utf-8"))["metros"] if r["status"] == "planned"] if OUT.exists() else []
+    import plan_config
+    prev = [r for r in json.loads(OUT.read_text(encoding="utf-8"))["metros"] if plan_config.is_plan_row(r)] if OUT.exists() else []
     out, feats = finish(st, rows, prev=prev)
+    # T-540: a row the runner moved on keeps its status and record while its units are the same
+    was = {r["id"]: r for r in prev}
+    for r in out:
+        o = was.get(r["id"])
+        if o and o["status"] != "planned" and o["units"] == r["units"]:
+            r["status"] = o["status"]
+            if "run" in o:
+                r["run"] = o["run"]
     write(st, out, feats, dropped)
     if "check" in argv:
         log(f"largest overlap between planned extents or with a pack: {overlaps(feats, st['packs']):.3f} km2")

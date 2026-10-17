@@ -123,7 +123,7 @@ def country_of(cid, header):
     if os.path.exists(os.path.join(WORK, f"{cid}.blocks.csv.gz")):
         return "US"
     import plan_config
-    row = next((r for r in plan_config.load()[0] if r["id"] == cid and r.get("status") == "planned"), None)
+    row = next((r for r in plan_config.load()[0] if r["id"] == cid and plan_config.is_plan_row(r)), None)
     if row:  # a planned pack (T-555): England's module covers English rows only
         return plan_country(row)
     sys.exit(f"{cid}: no country for the no-car share")
@@ -433,7 +433,7 @@ def plan_report():
     import collections
     import plan_config
     sys.stdout.reconfigure(encoding="utf-8")
-    rows = [r for r in plan_config.load()[0] if r.get("status") == "planned"]
+    rows = [r for r in plan_config.load()[0] if plan_config.is_plan_row(r)]
     by = collections.Counter(plan_country(r) for r in rows)
     kinds = collections.Counter()
     for country in sorted(by):

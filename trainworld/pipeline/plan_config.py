@@ -16,6 +16,14 @@ WB_VULN = "https://api.worldbank.org/v2/country/{iso2}/indicator/SL.EMP.VULN.ZS?
 # The jobs proxy's population share follows the share of work that is informal, between tier0's
 # JOB_BLEND (pop 0.2) and the blend set by hand for Mumbai and Lagos (pop 0.5, T-292, T-459).
 INFORMAL_BLEND = {"nres": 0.2, "osm": 0.3, "pop": 0.5}
+# A plan row's status: planned (not built yet), built (pack written, not yet gated), shipped
+# (registered) or parked (left unregistered, its reason in `run`); world_run.py moves rows along.
+# The plan's entries for existing hand-made packs are "built" too, but have no units.
+ROW_STATES = ("planned", "built", "shipped", "parked")
+
+
+def is_plan_row(r):
+    return bool(r.get("units")) and r.get("status") in ROW_STATES
 
 
 def load(path=PLAN):
@@ -118,11 +126,12 @@ def global_config(row, sources):
 
 
 def planned(path=PLAN):
-    """{id: config} for every planned row of the plan file, the country keys not yet merged."""
+    """{id: config} for every row of the plan file, whatever its status, the country keys not yet
+    merged."""
     if not os.path.exists(path):
         return {}
     rows, sources = load(path)
-    return {r["id"]: global_config(r, sources) for r in rows if r.get("status") == "planned"}
+    return {r["id"]: global_config(r, sources) for r in rows if is_plan_row(r)}
 
 
 if __name__ == "__main__":
