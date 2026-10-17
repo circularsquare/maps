@@ -25,11 +25,12 @@ the permission check refuses a step, make it safer, review, retry; don't wait fo
 orchestrator's commit recipe is in CLAUDE.md "Before a commit".
 
 ## Demand and data
-- T-632 [P1] Walking feels too strong to play against (Anita 2026-10-17: about a quarter of demand walks and rail cannot win it back on short trips). The model walks at or under the surveys (New York's everyday legs 22-24% against NHTS 26-35%), so this is a design call for Anita: options in the orchestrator's message of 2026-10-17; bears on T-621 stage 2. Open.
+- T-632 [P3] Walking feels too strong to play against (Anita 2026-10-17): the model walks at or under the surveys; showing trips no train could win apart from the demand played against is parked (Anita: try later). notes/T-632.md.
+- T-633 [P2] Explain perceived minutes in the game (Anita 2026-10-17: the walk weight stays; communicate it better): where the trip explorer and hovers show "counts as" minutes, say plainly why a walk counts for more. Open.
 - T-551 [P2] Demand review for Anita (her playtest notes, 2026-10-16): measured, nothing changed (notes/T-551.md). Waits for Anita, who decides at the deep calibration.
 - T-514 [P3] "Other" per cell (T-513): the sim keeps trips by other only as a total, so bubbles and hovers cannot show them by cell; needs other by home and work cell. Open; notes/T-514.md.
-- T-621 [P1] The deep calibration (Anita 2026-10-17: start now): T-509's fit again with car ownership, the walk weight against 1, walking fitted per survey country. Stage 1 done 2026-10-17 (ownership a parameter at 0, a fresh seven-city baseline, fit.py updated); stage 2 waits on Anita's decisions. notes/T-621.md.
-- T-620 [P2] Car ownership cost, about $10 a day (Anita 2026-10-16, DECISIONS T-551), spread over a day's car trips; a parameter in T-621 stage 1, switched on by its fit. notes/T-621.md.
+- T-621 [P1] The deep calibration (Anita 2026-10-17: start now): T-509's fit again with car ownership fixed (constant plus per km), the walk weight kept at 1.5, walking fitted per survey country. Stage 1 done 2026-10-17; stage 2 taking 2026-10-17. notes/T-621.md.
+- T-620 [P2] Car ownership amortized per car trip, a constant plus per km (about $3 a typical trip, $10 a day), the drive to a station too (Anita 2026-10-17); built in T-621 stage 2. notes/T-621.md.
 - T-528 [P2] Fit the regional layer's longer trips (T-509's last part, Anita's design 2026-10-16): rail constant and damping on corridor counts at two lengths per country. Open; notes/T-509.md section 15.
 - T-529 [P3] Bikes to stations for car-free homes in Japan (T-509 stages 6-7): they only walk now, part of why Tokyo's commute rail is 35% against 52%. A bike access mode where a survey shows it. Open; notes/T-509.md sections 14-15.
 - T-497 [P3] Japan's joint commute gravity, what is left: the pair spread is a quarter off the census (wants a travel-time cost), and the balance stalls at 8e-4 in Okinawa's islands. Open; notes/T-463.md.
@@ -71,7 +72,7 @@ orchestrator's commit recipe is in CLAUDE.md "Before a commit".
 - T-187 [P3] Trip chains: work to a nearby leisure place and then home. Whether and how to model it. Idea, not a priority (Anita 2026-10-12).
 
 ## Track and trains
-- T-624 [P2] Constructed track is never joined for a platform (`free_joint` refuses a built edge), so a station within half a platform of a joint on built track is refused ("the end of a piece of track"); likely Anita's Hakusan case. Merge built pieces of the same kind (running trains and lines carried over), or say to place stations before Construct. Open.
+- T-624 [P2] Constructed track is never joined for a platform (`free_joint` refuses a built edge), so a station within half a platform of a joint on built track is refused ("the end of a piece of track"); likely Anita's Hakusan case. Decided: merge built pieces of the same kind (DECISIONS 2026-10-17). Taking 2026-10-17.
 - T-623 [P3] A station cut inside an arc, or a ramp overlapping a curve, still shifts the ramp (T-622 holds ramps on straights only). Open.
 - T-625 [P2] A line's train count set automatically from its headway (Anita's TODO 2026-10-17), as an option beside today's whole number per demand level. Open.
 - T-631 [P2] Trains cost money, bought automatically as a line's fleet grows (Anita's TODO 2026-10-17): a price per train or car, sold back or kept when the fleet shrinks. Open.
@@ -84,7 +85,7 @@ orchestrator's commit recipe is in CLAUDE.md "Before a commit".
 - T-626 [P2] Type a fare amount, not only step it (Anita's TODO 2026-10-17). Open.
 - T-627 [P2] "Platform full at Nerul Village, high demand, 1 train waits at the ends" made no sense to Anita (seen at headways under 4 minutes): say that the platform takes at most N trains an hour (boarding at high demand holds each train longer), so the rest wait at the line's ends, and what helps; `LineInspector.tsx` FULL/TAKES, `capacityMarkers.ts`. Open.
 - T-628 [P2] The trip explorer compares walking too, beside train and car, for trips whose walk is under about 30 minutes (Anita's TODO 2026-10-17); with T-586. Open.
-- T-586 [P2] The bubble hover and the trip explorer disagree (Anita 2026-10-17): Union Sq's hover reads mostly walking, the explorer says 61% train. The explorer takes the view's purpose and period (absorbs T-201). Open; notes/T-586.md.
+- T-586 [P2] The bubble hover and the trip explorer disagree (Anita 2026-10-17): Union Sq's hover reads mostly walking, the explorer says 61% train. The explorer takes the view's purpose and period (absorbs T-201). Taking 2026-10-17; notes/T-586.md.
 - T-602 [P2] Walk split for zones not opened (rest of T-576): `zone_summary` (sim) gives a walk count per zone, `pipeline/zones.py` `local_trips()` stores it as `localWalk` in registry.json beside `localTrips`, `intercityView.ts` draws it green. Open.
 - T-561 [P3] Page freezes at 1,500x or faster in a fresh game with a line in each of Toronto and Boston (T-550's agent); not reproduced on 2026-10-16's tree. Open until seen again with exact steps; notes/T-561.md.
 - T-560 [P3] Crush load per country (found in T-552): every city's trains fill at `api::CRUSH_PER_CAR`'s 160 riders a 20 m car, stranding Tokyo's riders early; take published figures per stock from the pack. Open; notes/T-552.md.
