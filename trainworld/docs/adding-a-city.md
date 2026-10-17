@@ -41,8 +41,10 @@ for the browser check (default 6360). Set `TW_SIM_DIR` and `TW_CARGO_TARGET_DIR`
   gated with `--browser --since` on the runner's own Vite, started after the registration (it
   reads the registry once). A pack that ships stays registered; one that parks is taken out again
   with its market pack, its market place left unused (place ids are positions), and its failing
-  checks are its reason.
-- **Joint gravity**: each group a shipped pack joined is solved once (members back to res-9,
+  checks are its reason. The browser check serves the main tree's app/, so whoever runs a batch
+  says who may rebuild app/ (its WASM) while it runs.
+- **Joint gravity**: a pack with no country in its header (tor, lon, par, sao) takes the registry's
+  `marketRow.country`. Each group a shipped pack joined is solved once (members back to res-9,
   `intercity.py --group auto <new> --no-market`, merged again) and gated again without the browser
   or rates; a FAIL restores every member from the backup taken before and parks the group's new
   packs. Then `register.py <shipped and changed> --market --trips` (or `market_zones.py --rows`

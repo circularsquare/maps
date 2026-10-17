@@ -1271,7 +1271,7 @@
    "order": 1,
    "id": "man",
    "name": "Manchester",
-   "status": "planned",
+   "status": "shipped",
    "region": "uk",
    "countries": [
     "GBR"
@@ -1310,6 +1310,22 @@
     "fua": [
      3304
     ]
+   },
+   "run": {
+    "run_batch": "20261017-005232",
+    "steps": {
+     "build": 108.3,
+     "places": 3.1,
+     "routes": 26.4,
+     "merge": 0.5,
+     "nocar": 1.6,
+     "everyday": 0.7
+    },
+    "built": "2026-10-17T00:57:06",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-17T01:02:58"
    }
   },
   {
@@ -1536,7 +1552,7 @@
    "order": 7,
    "id": "liv",
    "name": "Liverpool",
-   "status": "planned",
+   "status": "shipped",
    "region": "uk",
    "countries": [
     "GBR"
@@ -1576,13 +1592,31 @@
     "satellites": [
      2686
     ]
+   },
+   "run": {
+    "run_batch": "20261017-005232",
+    "steps": {
+     "build": 28.0,
+     "places": 1.8,
+     "routes": 7.2,
+     "merge": 0.6,
+     "nocar": 1.6,
+     "everyday": 1.0
+    },
+    "built": "2026-10-17T00:57:46",
+    "gate": {
+     "warn": [
+      "fleet_range 1"
+     ]
+    },
+    "shipped": "2026-10-17T01:02:58"
    }
   },
   {
    "order": 8,
    "id": "por",
    "name": "Portsmouth",
-   "status": "planned",
+   "status": "shipped",
    "region": "uk",
    "countries": [
     "GBR"
@@ -1618,6 +1652,22 @@
     "fua": [
      4867
     ]
+   },
+   "run": {
+    "run_batch": "20261017-005232",
+    "steps": {
+     "build": 36.9,
+     "places": 2.1,
+     "routes": 11.6,
+     "merge": 0.5,
+     "nocar": 1.3,
+     "everyday": 0.7
+    },
+    "built": "2026-10-17T01:04:40",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-17T01:07:34"
    }
   },
   {
@@ -2514,7 +2564,7 @@
    "order": 27,
    "id": "lis",
    "name": "Lisbon",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "PRT"
@@ -2548,6 +2598,22 @@
     "fua": [
      310
     ]
+   },
+   "run": {
+    "run_batch": "20261017-005232",
+    "steps": {
+     "build": 96.2,
+     "places": 3.8,
+     "routes": 20.0,
+     "merge": 0.6,
+     "nocar": 1.2,
+     "everyday": 0.8
+    },
+    "built": "2026-10-17T01:15:18",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-17T01:20:25"
    }
   },
   {
@@ -3423,7 +3489,7 @@
    "order": 49,
    "id": "pot",
    "name": "Porto",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "PRT"
@@ -3456,6 +3522,22 @@
     "fua": [
      1003
     ]
+   },
+   "run": {
+    "run_batch": "20261017-005232",
+    "steps": {
+     "build": 69.3,
+     "places": 3.4,
+     "routes": 25.9,
+     "merge": 0.6,
+     "nocar": 1.0,
+     "everyday": 0.8
+    },
+    "built": "2026-10-17T01:16:59",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-17T01:20:25"
    }
   },
   {

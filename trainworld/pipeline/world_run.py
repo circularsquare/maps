@@ -730,7 +730,7 @@ class Run:
         may change in the group only). A FAIL restores every member and parks the group's new packs."""
         tag = f"{L}.group-{g[0]}"
         print(f"  joint group {g[0]}: {' '.join(g)} (new: {' '.join(new)})", flush=True)
-        bak = Path(f"{tag}-backup")
+        bak =Path(f"{tag}-backup")
         self.backup(g, bak)
         steps = [("merge_cells", g + ["--undo"]), ("intercity", ["--group", "auto"] + new + ["--no-market"]),
                  ("merge_cells", g)]

@@ -2,7 +2,7 @@
 by numeric thresholds, so a city is built with no agent judgement.
 
     python checks/pack_gate.py <id> [<id> ...] [--all] [--browser] [--no-rust] [--log <id>=<build log>]
-                               [--since <snapshot.json>] [--out <dir>]
+                               [--since <snapshot.json>] [--out <dir>] [--work <dir of joint reports>]
     python checks/pack_gate.py snapshot <snapshot.json>   every pack's arrays hashed, before a build
     python checks/pack_gate.py fleet                      checks/pack_gate_fleet.json from the results in --out
 
@@ -421,8 +421,47 @@ def skip(name, why):
     return {"name": name, "status": "SKIP", "value": None, "detail": why}
 
 
-def checks_of(city, f, rates, browser, changed):
+def joint_borders(city, header, work=None):
+    """T-591: after a joint solve, every border pair in the group's joint report is between the
+    countries the registry gives its packs (`marketRow.country`). A pack whose header lacked a
+    country once read as US, a false national border to its neighbours (T-590)."""
+    work = work or WORK
+    group = (header.get("gravity", {}).get("joint") or {}).get("packs") or []
+    if len(group) < 2:
+        return skip("joint_borders", "not in a joint group")
+    reports = []
+    for p in sorted(glob.glob(os.path.join(work, "*joint_report.json"))):
+        with open(p, encoding="utf-8") as f:
+            r = json.load(f)
+        if set(r.get("packs", [])) == set(group):
+            reports.append((os.path.basename(p), r))
+    if not reports:
+        return skip("joint_borders", "no joint report for " + "+".join(group))
+    reg = registry()
+    want = {i: (reg.get(i, {}).get("marketRow") or {}).get("country") for i in group}
+    known = {v for v in want.values() if v}
+    bad = []
+    for name, r in reports:
+        seen = set()
+        for a, b, k in r.get("border_pairs", []):
+            for lab in (a, b):
+                cc, _, region = lab.partition("-")
+                seen.add(cc)
+                pack = region[5:] if region.startswith("pack ") else None
+                if pack in want and want[pack] and want[pack] != cc:
+                    bad.append(f"{lab} but {pack} is {want[pack]} in the registry")
+                elif known and cc not in known:
+                    bad.append(f"{lab}: {cc} is not a country of the group ({', '.join(sorted(known))})")
+        if known - seen:
+            bad.append(f"{name}: no border pair for {', '.join(sorted(known - seen))}")
+    return {"name": "joint_borders", "status": "FAIL" if bad else "PASS", "value": len(group),
+            "detail": "; ".join(dict.fromkeys(bad))[:300] or "+".join(group) + ": " + ", ".join(sorted(known))}
+
+
+def checks_of(city, f, rates, browser, changed, joint=None):
     c = []
+    if joint is not None:
+        c.append(joint)
     rp = f["read_pack"]
     c.append({"name": "read_pack", "status": "PASS" if rp["ok"] else "FAIL", "value": None, "detail": rp["detail"]})
     w = f.get("water")
@@ -762,7 +801,7 @@ def run(city, reg, logs, rates, opts):
         return {"city": city, "verdict": "park", "checks": checks}
     br = browser_check(city, header, a, f, reg, opts["out"]) if opts["browser"] else None
     changed = changed_since(city, header, opts["since"]) if opts["since"] else None
-    checks = checks_of(city, f, rates, br, changed)
+    checks = checks_of(city, f, rates, br, changed, joint_borders(city, header, opts.get("work")))
     verdict = "park" if any(c["status"] == "FAIL" for c in checks) else "ship"
     return {"city": city, "kind": reg.get("kind", "city"), "gated": datetime.datetime.now().isoformat(timespec="seconds"),
             "verdict": verdict, "checks": checks, "browser": br}
@@ -815,13 +854,13 @@ def main(argv):
     if argv and argv[0] == "fleet":
         return fleet(out)
     reg = registry()
-    valued = {i for i, x in enumerate(argv) if i and argv[i - 1] in ("--log", "--since", "--out")}
+    valued = {i for i, x in enumerate(argv) if i and argv[i - 1] in ("--log", "--since", "--out", "--work")}
     ids = list(reg) if "--all" in argv else [x for i, x in enumerate(argv) if not x.startswith("--") and i not in valued]
     if not ids:
         raise SystemExit(__doc__)
     logs = dict(x.split("=", 1) for i, x in enumerate(argv) if i and argv[i - 1] == "--log")
     rates = None if "--no-rust" in argv else everyday_rates(ids)
-    opts = {"browser": "--browser" in argv, "since": opt("--since"), "out": out}
+    opts = {"browser": "--browser" in argv, "since": opt("--since"), "out": out, "work": opt("--work")}
     lines = []
     for city in ids:
         if city not in reg:

@@ -4,16 +4,16 @@ Open agent work, one line a task; detail in `notes/T-###.md`. Format and rules i
 P1 = now or blocking, P2 = this milestone, P3 = later. Finished or abandoned tasks move to `ARCHIVE.md`.
 
 **Direction** (Anita; CLAUDE.md "Working here"). The whole world, with demand realism at the core.
-Next, in order (2026-10-17): 1. finish the unattended city pipeline: the 5-city pilot (T-540 stage C,
-running), T-583, then T-541, the first batch (UK first, then the rest of Europe, from
-pipeline/world_plan.json); 2. demand changes Anita decided: T-585, T-587, T-584, T-586; 3. bubble
-colours T-576, T-577; 4. long-trip calibration (T-528); the deep calibration comes once the world's
+Next, in order (2026-10-17): 1. finish the unattended city pipeline: T-590 (old packs read as US
+in joint solves), T-584, T-583, then T-541, the first batch (UK first, then the rest of Europe,
+from pipeline/world_plan.json); 2. T-586 (the trip explorer matches its view); 3. bubble colours
+T-602, T-577 (Anita picks); 4. long-trip calibration (T-528); the deep calibration comes once the world's
 cities are in (car ownership about $10 a day, the walk weight against 1, walking per country:
 DECISIONS 2026-10-16). Performance is open work (notes/perf-survey.md). Game modes wait.
 
-**Where things stand (2026-10-17).** 67 zones play, all shipping through the pack gate (T-538). The
-unattended runner `pipeline/world_run.py` (T-540 stage B) is committed (6dbae81) and 8800 serves it.
-The pipeline's stages 1-8 are built; the pilot (stage C) and the first batch (T-541) are what is left.
+**Where things stand (2026-10-17).** 72 zones play, all shipping through the pack gate (T-538). The
+unattended runner `pipeline/world_run.py` shipped its 5-city pilot (Manchester, Liverpool,
+Portsmouth, Lisbon, Porto) in 28 minutes (T-540); the first batch (T-541) waits on T-590.
 Anita's plain page on demand: docs/demand-plain.md (keep it current). History is in ARCHIVE.md.
 
 **For a task agent.** Check `git status` and the "taking" marks here first. Several agents work at once:
@@ -97,8 +97,10 @@ Tier 0 and country sources: docs/demand-worldwide.md, docs/data-register.md. The
 - T-563 [P3] Fit an archetype A planned city's own curve from its country's flows at build time (England, France, Germany borrow now): a `curve` mode in tier0 and the key in `plan_hooks`. Open; notes/T-555.md.
 - T-564 [P3] Country hooks T-555 could not carry: Korea's registration population and Canada's DA population and jobs as tier 0 hooks. Open; notes/T-555.md.
 - T-583 [P2] OSM's largest place takes 5-15% of a small tier 0 pack's jobs (the gate fails over 1%): T-460's cap does not hold where OSM is thin. Findings done 2026-10-17, rule proposed, not built; notes/T-583.md.
-- T-540 [P2] Pipeline stage 8, the runner and a 5-city pilot. Taking, 2026-10-16. Stages A (T-579) and B (runner, 6dbae81) done; stage C, the pilot of man, liv, por, lis, pot, is running; notes/T-540.md "Stage C".
-- T-541 [P2] Pipeline stage 10, the first batch of about 20 cities (UK first), with a batch retrospective. After T-540; publishing past the current set needs T-060 and Anita's word. Open; notes/T-535.md.
+- T-593 [P1] Anita decides: re-merge the 13 Northeast packs from res-9 (`merge_cells.py nyc phl bos wdc bal pvd nhv hfd spf wor wnd nlc lit`) after a stray `intercity.py --help` re-solved their gravity on 2026-10-17 (demand final 10,406,013 to 10,464,106), or keep the new solve as the baseline. notes/T-540.md "T-590 and T-591".
+- T-594 [P3] `pipeline/intercity.py` runs the full Northeast solve on `--help` or any unknown flag; make it print usage instead.
+- T-592 [P3] world_run reads the next region's extract while this one gates and joins (reading is the largest phase: Portugal 5.2 of 12.9 minutes). notes/T-540.md.
+- T-541 [P2] Pipeline stage 10, the first batch of about 20 cities (UK first), with a batch retrospective. After T-590; publishing past the current set needs T-060 and Anita's word. Open; notes/T-535.md.
 - T-546 [P3] Refit Mumbai's curve with B-28's 0-1 and 2-5 km bands merged, as Sao Paulo's are (d^-1.5 exp(-d/23.3 km) against the shipped d^-1.65 exp(-d/32.7 km)). Open; notes/T-314.md.
 - T-315 [P3] Tier 0 universities: few OSM campuses carry a Wikidata id (4 of 63 in Toronto), so most are sized by area; try matching campus names to Wikidata universities. Open; notes/T-315.md.
 - T-547 [P3] Read GISCO's download clauses for NUTS 2024 (some files are non-commercial only) before publishing any pack on NUTS-3 units; fall back to geoBoundaries if barred. Open; notes/T-536.md.
