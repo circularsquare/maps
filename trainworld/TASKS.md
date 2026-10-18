@@ -16,6 +16,14 @@ unattended runner `pipeline/world_run.py` shipped its 5-city pilot (T-540), the 
 and, after T-610 and T-611, Cardiff and Belfast; Owerri, Aba and Aboh park on T-614 and T-615.
 Anita's plain page on demand: docs/demand-plain.md (keep it current). History is in ARCHIVE.md.
 
+**Handoff (2026-10-17, evening; usage nearly spent).** Last commit on 8800: eed8d58. In flight when
+the session wound down: T-614, T-615 and T-613 (the Europe batch) by one agent; its files
+(registry.json, world_plan.json, checks/pack_gate.py, checks/city-browser.mjs, docs/adding-a-city.md,
+notes/T-613.md) may be uncommitted: read notes/T-613.md and `git status`, then smoke, commit and
+rebuild 8800, or finish the batch (the runner resumes). Waiting on Anita: T-637's proposal W1
+(notes/T-637.md), and whether a headway line short of cash refuses the edit (now) or runs fewer
+trains with a warning (T-625, DECISIONS 2026-10-17).
+
 **For a task agent.** Check `git status` and the "taking" marks here first. Several agents work at once:
 each owns named files, so leave others' alone. Anita's playtest notes land in TODO.md (hers; read it,
 file new items as tasks, never edit it). Asks for Anita go in the final message or notes/for-anita.md.
