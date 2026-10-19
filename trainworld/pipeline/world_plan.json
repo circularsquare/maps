@@ -2741,7 +2741,7 @@
    "order": 25,
    "id": "kyi",
    "name": "Kyiv",
-   "status": "parked",
+   "status": "held",
    "region": "europe",
    "countries": [
     "UKR"
@@ -2867,7 +2867,7 @@
     ]
    },
    "run": {
-    "reason": "extract europe/ukraine: [i:i + 1_000_000])\n  File \"C:\\Users\\anita\\projects\\maps\\venv\\lib\\site-packages\\shapely\\io.py\", line 320, in from_wkb\n    return lib.from_wkb(geometry, invalid_handler, **kwargs)\nshapely.errors.GEOSException: IllegalArgumentException: Invalid number of points in LinearRing found 2 - must be 0 or >= 4",
+    "reason": "held: later, Anita 2026-10-19",
     "parked": "2026-10-19T09:53:16"
    }
   },
@@ -3318,12 +3318,15 @@
     ]
    },
    "run": {
-    "run_batch": "20261019-114703",
+    "run_batch": "20261019-135759",
     "steps": {
-     "build": 5620.2
+     "build": 73.6,
+     "places": 4.5,
+     "routes": 41.2,
+     "merge": 0.6000000000000001
     },
-    "reason": "build failed: stopped after 90 minutes (STEP_LIMIT_S); last lines:   File \"C:\\Users\\anita\\projects\\maps\\trainworld\\pipeline\\world_run.py\", line 161 in run_main |   File \"C:\\Users\\anita\\projects\\maps\\trainworld\\pipeline\\world_run.py\", line 178 in step_main |   File \"C:\\Users\\anita\\projects\\maps\\trainworld\\pipeline\\world_run.py\", line 882 in <module>",
-    "parked": "2026-10-19T13:34:59"
+    "reason": "merge failed: ### 2026-10-19T14:00:03 merge_cells sto\nsto: per-cell array walk_part (u8) has no merge rule\n### 2026-10-19T14:01:03 merge_cells sto\nsto: per-cell array walk_part (u8) has no merge rule",
+    "parked": "2026-10-19T14:01:03"
    }
   },
   {
@@ -3365,14 +3368,15 @@
     ]
    },
    "run": {
-    "run_batch": "20261019-090725",
+    "run_batch": "20261019-135759",
     "steps": {
-     "build": 68.6,
-     "places": 3.6,
-     "routes": 58.9
+     "build": 28.0,
+     "places": 4.4,
+     "routes": 40.1,
+     "merge": 0.8
     },
-    "reason": "routes failed: tage)\n  File \"C:\\Users\\anita\\projects\\maps\\trainworld\\pipeline\\routes.py\", line 748, in build\n    walk_stage(city, t_all)\n  File \"C:\\Users\\anita\\projects\\maps\\trainworld\\pipeline\\routes.py\", line 758, in walk_stage\n    part = np.fromfile(out + \".part\", np.uint8)\nFileNotFoundError: [Errno 2] No such file or directory: 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld\\\\data\\\\work\\\\lil.walk_zone.u8.part'",
-    "parked": "2026-10-19T11:29:02"
+    "reason": "merge failed: ### 2026-10-19T14:05:21 merge_cells lil\nlil: per-cell array walk_part (u8) has no merge rule\n### 2026-10-19T14:06:22 merge_cells lil\nlil: per-cell array walk_part (u8) has no merge rule",
+    "parked": "2026-10-19T14:06:22"
    }
   },
   {
@@ -3414,14 +3418,15 @@
     ]
    },
    "run": {
-    "run_batch": "20261019-090725",
+    "run_batch": "20261019-135759",
     "steps": {
-     "build": 70.6,
-     "places": 2.8,
-     "routes": 74.0
+     "build": 24.0,
+     "places": 3.2,
+     "routes": 42.6,
+     "merge": 0.6
     },
-    "reason": "routes failed: tage)\n  File \"C:\\Users\\anita\\projects\\maps\\trainworld\\pipeline\\routes.py\", line 748, in build\n    walk_stage(city, t_all)\n  File \"C:\\Users\\anita\\projects\\maps\\trainworld\\pipeline\\routes.py\", line 758, in walk_stage\n    part = np.fromfile(out + \".part\", np.uint8)\nFileNotFoundError: [Errno 2] No such file or directory: 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld\\\\data\\\\work\\\\val.walk_zone.u8.part'",
-    "parked": "2026-10-19T11:34:20"
+    "reason": "merge failed: ### 2026-10-19T14:09:24 merge_cells val\nval: per-cell array walk_part (u8) has no merge rule\n### 2026-10-19T14:10:24 merge_cells val\nval: per-cell array walk_part (u8) has no merge rule",
+    "parked": "2026-10-19T14:10:25"
    }
   },
   {
@@ -3467,21 +3472,22 @@
     ]
    },
    "run": {
-    "run_batch": "20261019-090725",
+    "run_batch": "20261019-135759",
     "steps": {
-     "build": 83.2,
-     "places": 3.9,
-     "routes": 45.2
+     "build": 16.1,
+     "places": 4.2,
+     "routes": 25.7,
+     "merge": 0.6
     },
-    "reason": "routes failed: tage)\n  File \"C:\\Users\\anita\\projects\\maps\\trainworld\\pipeline\\routes.py\", line 748, in build\n    walk_stage(city, t_all)\n  File \"C:\\Users\\anita\\projects\\maps\\trainworld\\pipeline\\routes.py\", line 758, in walk_stage\n    part = np.fromfile(out + \".part\", np.uint8)\nFileNotFoundError: [Errno 2] No such file or directory: 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld\\\\data\\\\work\\\\stu.walk_zone.u8.part'",
-    "parked": "2026-10-19T11:40:13"
+    "reason": "merge failed: ### 2026-10-19T14:13:51 merge_cells stu\nstu: per-cell array walk_part (u8) has no merge rule\n### 2026-10-19T14:14:52 merge_cells stu\nstu: per-cell array walk_part (u8) has no merge rule",
+    "parked": "2026-10-19T14:14:52"
    }
   },
   {
    "order": 37,
    "id": "buc",
    "name": "Bucharest",
-   "status": "planned",
+   "status": "parked",
    "region": "europe",
    "countries": [
     "ROU"
@@ -3515,6 +3521,17 @@
     "fua": [
      2114
     ]
+   },
+   "run": {
+    "run_batch": "20261019-135759",
+    "steps": {
+     "build": 49.9,
+     "places": 1.9,
+     "routes": 10.7,
+     "merge": 0.6
+    },
+    "reason": "merge failed: ### 2026-10-19T14:15:56 merge_cells buc\nbuc: per-cell array walk_part (u8) has no merge rule\n### 2026-10-19T14:16:57 merge_cells buc\nbuc: per-cell array walk_part (u8) has no merge rule",
+    "parked": "2026-10-19T14:16:57"
    }
   },
   {
@@ -3576,7 +3593,7 @@
    "order": 39,
    "id": "min",
    "name": "Minsk",
-   "status": "planned",
+   "status": "held",
    "region": "europe",
    "countries": [
     "BLR"
@@ -3610,13 +3627,16 @@
     "fua": [
      799
     ]
+   },
+   "run": {
+    "reason": "held: later, Anita 2026-10-19"
    }
   },
   {
    "order": 40,
    "id": "cop",
    "name": "Copenhagen",
-   "status": "planned",
+   "status": "parked",
    "region": "europe",
    "countries": [
     "DNK"
@@ -3652,13 +3672,24 @@
     "fua": [
      537
     ]
+   },
+   "run": {
+    "run_batch": "20261019-135759",
+    "steps": {
+     "build": 106.0,
+     "places": 3.6,
+     "routes": 25.6,
+     "merge": 0.7
+    },
+    "reason": "merge failed: ### 2026-10-19T14:25:46 merge_cells cop\ncop: per-cell array walk_part (u8) has no merge rule\n### 2026-10-19T14:26:46 merge_cells cop\ncop: per-cell array walk_part (u8) has no merge rule",
+    "parked": "2026-10-19T14:26:47"
    }
   },
   {
    "order": 41,
    "id": "ams",
    "name": "Amsterdam",
-   "status": "planned",
+   "status": "parked",
    "region": "europe",
    "countries": [
     "NLD"
@@ -3694,13 +3725,24 @@
     "fua": [
      1427
     ]
+   },
+   "run": {
+    "run_batch": "20261019-135759",
+    "steps": {
+     "build": 101.4,
+     "places": 4.5,
+     "routes": 12.3,
+     "merge": 0.6
+    },
+    "reason": "merge failed: ### 2026-10-19T14:31:08 merge_cells ams\nams: per-cell array walk_part (u8) has no merge rule\n### 2026-10-19T14:32:09 merge_cells ams\nams: per-cell array walk_part (u8) has no merge rule",
+    "parked": "2026-10-19T14:32:09"
    }
   },
   {
    "order": 42,
    "id": "mar",
    "name": "Marseille",
-   "status": "planned",
+   "status": "parked",
    "region": "europe",
    "countries": [
     "FRA"
@@ -3733,6 +3775,17 @@
     "fua": [
      3911
     ]
+   },
+   "run": {
+    "run_batch": "20261019-135759",
+    "steps": {
+     "build": 72.6,
+     "places": 4.4,
+     "routes": 29.1,
+     "merge": 0.8
+    },
+    "reason": "merge failed: ### 2026-10-19T14:38:33 merge_cells mar\nmar: per-cell array walk_part (u8) has no merge rule\n### 2026-10-19T14:39:33 merge_cells mar\nmar: per-cell array walk_part (u8) has no merge rule",
+    "parked": "2026-10-19T14:39:34"
    }
   },
   {
@@ -3785,19 +3838,22 @@
     ]
    },
    "run": {
-    "run_batch": "20261017-193804",
+    "run_batch": "20261019-135759",
     "steps": {
-     "build": 58.699999999999996
+     "build": 67.1,
+     "places": 5.9,
+     "routes": 41.2,
+     "merge": 0.7
     },
-    "reason": "build failed:  in kreise}))\n  File \"C:\\Users\\anita\\projects\\maps\\trainworld\\pipeline\\germany.py\", line 143, in workplace_jobs\n    return {r.ARS: float(r.EIP) + float(r.IOP) for r in t.itertuples()}\n  File \"C:\\Users\\anita\\projects\\maps\\trainworld\\pipeline\\germany.py\", line 143, in <dictcomp>\n    return {r.ARS: float(r.EIP) + float(r.IOP) for r in t.itertuples()}\nValueError: could not convert string to float: '-'",
-    "parked": "2026-10-17T20:03:34"
+    "reason": "merge failed: ### 2026-10-19T14:51:28 merge_cells mah\nmah: per-cell array walk_part (u8) has no merge rule\n### 2026-10-19T14:52:29 merge_cells mah\nmah: per-cell array walk_part (u8) has no merge rule",
+    "parked": "2026-10-19T14:52:29"
    }
   },
   {
    "order": 44,
    "id": "beg",
    "name": "Belgrade",
-   "status": "planned",
+   "status": "parked",
    "region": "europe",
    "countries": [
     "SRB"
@@ -3830,13 +3886,24 @@
     "fua": [
      758
     ]
+   },
+   "run": {
+    "run_batch": "20261019-135759",
+    "steps": {
+     "build": 54.8,
+     "places": 2.1,
+     "routes": 16.8,
+     "merge": 0.7
+    },
+    "reason": "merge failed: ### 2026-10-19T14:58:23 merge_cells beg\nbeg: per-cell array walk_part (u8) has no merge rule\n### 2026-10-19T14:59:23 merge_cells beg\nbeg: per-cell array walk_part (u8) has no merge rule",
+    "parked": "2026-10-19T14:59:23"
    }
   },
   {
    "order": 45,
    "id": "zur",
    "name": "Zurich",
-   "status": "planned",
+   "status": "parked",
    "region": "europe",
    "countries": [
     "CHE"
@@ -3871,13 +3938,24 @@
     "fua": [
      1479
     ]
+   },
+   "run": {
+    "run_batch": "20261019-135759",
+    "steps": {
+     "build": 177.5,
+     "places": 5.0,
+     "routes": 27.5,
+     "merge": 0.7
+    },
+    "reason": "merge failed: ### 2026-10-19T15:12:04 merge_cells zur\nzur: per-cell array walk_part (u8) has no merge rule\n### 2026-10-19T15:13:04 merge_cells zur\nzur: per-cell array walk_part (u8) has no merge rule",
+    "parked": "2026-10-19T15:13:04"
    }
   },
   {
    "order": 46,
    "id": "sev",
    "name": "Seville",
-   "status": "planned",
+   "status": "parked",
    "region": "europe",
    "countries": [
     "ESP"
@@ -3910,13 +3988,24 @@
     "fua": [
      2008
     ]
+   },
+   "run": {
+    "run_batch": "20261019-135759",
+    "steps": {
+     "build": 68.9,
+     "places": 2.3,
+     "routes": 47.8,
+     "merge": 0.5
+    },
+    "reason": "merge failed: ### 2026-10-19T15:18:43 merge_cells sev\nsev: per-cell array walk_part (u8) has no merge rule\n### 2026-10-19T15:19:44 merge_cells sev\nsev: per-cell array walk_part (u8) has no merge rule",
+    "parked": "2026-10-19T15:19:44"
    }
   },
   {
    "order": 47,
    "id": "nov",
    "name": "Novosibirsk",
-   "status": "planned",
+   "status": "held",
    "region": "europe",
    "countries": [
     "RUS"
@@ -3953,13 +4042,16 @@
     "fua": [
      6191
     ]
+   },
+   "run": {
+    "reason": "held: later, Anita 2026-10-19"
    }
   },
   {
    "order": 48,
    "id": "lyo",
    "name": "Lyon",
-   "status": "planned",
+   "status": "parked",
    "region": "europe",
    "countries": [
     "FRA"
@@ -3992,6 +4084,17 @@
     "fua": [
      3718
     ]
+   },
+   "run": {
+    "run_batch": "20261019-135759",
+    "steps": {
+     "build": 74.6,
+     "places": 5.0,
+     "routes": 28.9,
+     "merge": 0.5
+    },
+    "reason": "merge failed: ### 2026-10-19T15:27:26 merge_cells lyo\nlyo: per-cell array walk_part (u8) has no merge rule\n### 2026-10-19T15:28:26 merge_cells lyo\nlyo: per-cell array walk_part (u8) has no merge rule",
+    "parked": "2026-10-19T15:28:27"
    }
   },
   {
@@ -4190,7 +4293,7 @@
    "order": 53,
    "id": "mal",
    "name": "Málaga",
-   "status": "planned",
+   "status": "parked",
    "region": "europe",
    "countries": [
     "ESP"
@@ -4223,6 +4326,17 @@
     "fua": [
      2822
     ]
+   },
+   "run": {
+    "run_batch": "20261019-135759",
+    "steps": {
+     "build": 76.6,
+     "places": 3.6,
+     "routes": 26.8,
+     "merge": 0.6
+    },
+    "reason": "merge failed: ### 2026-10-19T15:18:31 merge_cells mal\nmal: per-cell array walk_part (u8) has no merge rule\n### 2026-10-19T15:19:32 merge_cells mal\nmal: per-cell array walk_part (u8) has no merge rule",
+    "parked": "2026-10-19T15:19:32"
    }
   },
   {
@@ -4308,7 +4422,7 @@
    "order": 56,
    "id": "kha",
    "name": "Kharkiv",
-   "status": "parked",
+   "status": "held",
    "region": "europe",
    "countries": [
     "UKR"
@@ -4379,7 +4493,7 @@
     ]
    },
    "run": {
-    "reason": "extract europe/ukraine: [i:i + 1_000_000])\n  File \"C:\\Users\\anita\\projects\\maps\\venv\\lib\\site-packages\\shapely\\io.py\", line 320, in from_wkb\n    return lib.from_wkb(geometry, invalid_handler, **kwargs)\nshapely.errors.GEOSException: IllegalArgumentException: Invalid number of points in LinearRing found 2 - must be 0 or >= 4",
+    "reason": "held: later, Anita 2026-10-19",
     "parked": "2026-10-19T09:53:16"
    }
   },
@@ -4387,7 +4501,7 @@
    "order": 57,
    "id": "yek",
    "name": "Yekaterinburg",
-   "status": "planned",
+   "status": "held",
    "region": "europe",
    "countries": [
     "RUS"
@@ -4424,6 +4538,9 @@
     "fua": [
      5972
     ]
+   },
+   "run": {
+    "reason": "held: later, Anita 2026-10-19"
    }
   },
   {
@@ -4548,7 +4665,7 @@
    "order": 61,
    "id": "vol",
    "name": "Volgograd",
-   "status": "planned",
+   "status": "held",
    "region": "europe",
    "countries": [
     "RUS"
@@ -4585,6 +4702,9 @@
     "fua": [
      4937
     ]
+   },
+   "run": {
+    "reason": "held: later, Anita 2026-10-19"
    }
   },
   {
@@ -4676,7 +4796,7 @@
    "order": 64,
    "id": "niz",
    "name": "Nizhny Novgorod",
-   "status": "planned",
+   "status": "held",
    "region": "europe",
    "countries": [
     "RUS"
@@ -4710,13 +4830,16 @@
     "fua": [
      3736
     ]
+   },
+   "run": {
+    "reason": "held: later, Anita 2026-10-19"
    }
   },
   {
    "order": 65,
    "id": "sam",
    "name": "Samara",
-   "status": "planned",
+   "status": "held",
    "region": "europe",
    "countries": [
     "RUS"
@@ -4751,13 +4874,16 @@
     "fua": [
      5413
     ]
+   },
+   "run": {
+    "reason": "held: later, Anita 2026-10-19"
    }
   },
   {
    "order": 66,
    "id": "ros",
    "name": "Rostov-on-Don",
-   "status": "planned",
+   "status": "held",
    "region": "europe",
    "countries": [
     "RUS"
@@ -4793,13 +4919,16 @@
     "fua": [
      4034
     ]
+   },
+   "run": {
+    "reason": "held: later, Anita 2026-10-19"
    }
   },
   {
    "order": 67,
    "id": "don",
    "name": "Donetsk",
-   "status": "parked",
+   "status": "held",
    "region": "europe",
    "countries": [
     "UKR"
@@ -4854,7 +4983,7 @@
     ]
    },
    "run": {
-    "reason": "extract europe/ukraine: [i:i + 1_000_000])\n  File \"C:\\Users\\anita\\projects\\maps\\venv\\lib\\site-packages\\shapely\\io.py\", line 320, in from_wkb\n    return lib.from_wkb(geometry, invalid_handler, **kwargs)\nshapely.errors.GEOSException: IllegalArgumentException: Invalid number of points in LinearRing found 2 - must be 0 or >= 4",
+    "reason": "held: later, Anita 2026-10-19",
     "parked": "2026-10-19T09:53:16"
    }
   },
@@ -4862,7 +4991,7 @@
    "order": 68,
    "id": "che",
    "name": "Chelyabinsk",
-   "status": "planned",
+   "status": "held",
    "region": "europe",
    "countries": [
     "RUS"
@@ -4897,13 +5026,16 @@
     "fua": [
      6046
     ]
+   },
+   "run": {
+    "reason": "held: later, Anita 2026-10-19"
    }
   },
   {
    "order": 69,
    "id": "kaz",
    "name": "Kazan",
-   "status": "planned",
+   "status": "held",
    "region": "europe",
    "countries": [
     "RUS"
@@ -4937,6 +5069,9 @@
     "fua": [
      4829
     ]
+   },
+   "run": {
+    "reason": "held: later, Anita 2026-10-19"
    }
   },
   {
@@ -5314,7 +5449,7 @@
    "order": 77,
    "id": "oms",
    "name": "Omsk",
-   "status": "planned",
+   "status": "held",
    "region": "europe",
    "countries": [
     "RUS"
@@ -5348,13 +5483,16 @@
     "fua": [
      6167
     ]
+   },
+   "run": {
+    "reason": "held: later, Anita 2026-10-19"
    }
   },
   {
    "order": 78,
    "id": "sar",
    "name": "Saratov",
-   "status": "planned",
+   "status": "held",
    "region": "europe",
    "countries": [
     "RUS"
@@ -5389,13 +5527,16 @@
     "fua": [
      4854
     ]
+   },
+   "run": {
+    "reason": "held: later, Anita 2026-10-19"
    }
   },
   {
    "order": 79,
    "id": "ufa",
    "name": "Ufa",
-   "status": "planned",
+   "status": "held",
    "region": "europe",
    "countries": [
     "RUS"
@@ -5428,13 +5569,16 @@
     "fua": [
      5864
     ]
+   },
+   "run": {
+    "reason": "held: later, Anita 2026-10-19"
    }
   },
   {
    "order": 80,
    "id": "ode",
    "name": "Odesa",
-   "status": "parked",
+   "status": "held",
    "region": "europe",
    "countries": [
     "UKR"
@@ -5502,7 +5646,7 @@
     ]
    },
    "run": {
-    "reason": "extract europe/ukraine: [i:i + 1_000_000])\n  File \"C:\\Users\\anita\\projects\\maps\\venv\\lib\\site-packages\\shapely\\io.py\", line 320, in from_wkb\n    return lib.from_wkb(geometry, invalid_handler, **kwargs)\nshapely.errors.GEOSException: IllegalArgumentException: Invalid number of points in LinearRing found 2 - must be 0 or >= 4",
+    "reason": "held: later, Anita 2026-10-19",
     "parked": "2026-10-19T09:53:16"
    }
   },
@@ -5605,7 +5749,7 @@
    "order": 83,
    "id": "nic",
    "name": "Nice",
-   "status": "planned",
+   "status": "parked",
    "region": "europe",
    "countries": [
     "FRA"
@@ -5638,13 +5782,24 @@
     "fua": [
      4426
     ]
+   },
+   "run": {
+    "run_batch": "20261019-135759",
+    "steps": {
+     "build": 46.4,
+     "places": 2.9,
+     "routes": 10.8,
+     "merge": 0.6
+    },
+    "reason": "merge failed: ### 2026-10-19T14:37:47 merge_cells nic\nnic: per-cell array walk_part (u8) has no merge rule\n### 2026-10-19T14:38:47 merge_cells nic\nnic: per-cell array walk_part (u8) has no merge rule",
+    "parked": "2026-10-19T14:38:48"
    }
   },
   {
    "order": 84,
    "id": "krs",
    "name": "Krasnoyarsk",
-   "status": "planned",
+   "status": "held",
    "region": "europe",
    "countries": [
     "RUS"
@@ -5679,13 +5834,16 @@
     "fua": [
      6340
     ]
+   },
+   "run": {
+    "reason": "held: later, Anita 2026-10-19"
    }
   },
   {
    "order": 85,
    "id": "mak",
    "name": "Makhachkala",
-   "status": "planned",
+   "status": "held",
    "region": "europe",
    "countries": [
     "RUS"
@@ -5720,6 +5878,9 @@
     "fua": [
      5816
     ]
+   },
+   "run": {
+    "reason": "held: later, Anita 2026-10-19"
    }
   },
   {

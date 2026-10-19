@@ -22,12 +22,13 @@ Anita's plain page on demand: docs/demand-plain.md (keep it current). History is
 T-722, ARCHIVE.md; Anita's notes in notes/playtest-2026-10-19*.md). The last commit on 8800 holds
 the round's end (walking bands T-720, change cost 2 minutes T-717, regional route choice T-718
 with the long-trip softening on, circles and money T-722, bullets T-705, the pan check T-714).
-Still running when the session closed: T-613's runner (`world_run.py run --rows sto,lil,...`,
-started by its agent; its sim copy is in that session's scratchpad `t613\simroot`). If it is still
-running, wait for it; if not, `world_run.py status` shows where it stopped and the runner resumes.
-Then, in order: commit registry.json and world_plan.json (smoke and every-pack-opens on the new
-zones first, as CLAUDE.md "Before a commit"); add the batch's countries to docs/data-register.md
-and the T-613 retrospective (notes/T-613.md); T-700's walk rerun on every pack (notes/T-700.md, last
+T-613 was stopped cleanly at the session's end (nothing running; registry consistent, 109 zones,
+all committed). 15 Europe rows built and then parked on one cause, `merge_cells.py` having no rule
+for T-700's new per-cell `walk_part`: **T-725 first** (add the rule, then rerun those rows), then
+the 12 rows not yet built, with the resume command and its sim copy (`TW_SIM_DIR`, in that
+session's scratchpad `t613\simroot`, refresh it from HEAD) in notes/T-613.md. Russia, Belarus and
+Ukraine are held (status `held`). Then, in order: the data register rows and extract dates (T-726)
+and the retrospective's proposals (notes/T-613.md); T-700's walk rerun on every pack (notes/T-700.md, last
 step: `routes.py --stage walk --unparted`, back up first); T-638's market packs (park 7); T-602/T-651
 (zones not opened drawn with their walk split; writes registry.json, so after T-613); T-712 (with
 T-721); T-723 (Spain). Batch agents wait once on the runner's process, never on a timer (T-719: wake-ups
@@ -144,7 +145,9 @@ Tier 0 and country sources: docs/demand-worldwide.md, docs/data-register.md. The
 - T-616 [P3] The runner reports a rates-test error (a sim copy without `data`/`app` junctions) as a pack fault: report it as a gate error, and add the junctions to the `TW_SIM_DIR` recipe. notes/T-610.md.
 - T-617 [P3] Rebuild gla, lis and pot on T-610's unit matching when next rebuilt (gla +5.6%; lis and pot move from plan polygons to OSM municipalities). notes/T-610.md.
 - T-612 [P3] Runner: delete a parked row's pack files once its reason is recorded.
-- T-613 [P2] The next runner batch, the rest of Europe from pipeline/world_plan.json (`plan --countries` first for the row count), after T-614 and T-615; publishing past the current set needs T-060 and Anita's word. taking, 2026-10-19 (with T-614, T-615); notes/T-541.md retrospective.
+- T-613 [P2] The next runner batch, the rest of Europe from pipeline/world_plan.json (`plan --countries` first for the row count), after T-614 and T-615; publishing past the current set needs T-060 and Anita's word. Stopped 2026-10-19: 42 rows shipped in all, 15 parked on T-725 (no merge rule for walk_part), 18 Russia, Belarus and Ukraine rows held (later, Anita), the rest of Europe not built; resume command, state and retrospective so far in notes/T-613.md; notes/T-541.md retrospective.
+- T-725 [P1] merge_cells has no rule for `walk_part` (T-700's new per-cell u8), so every row built since routes.py wrote it parks at the merge step (15 rows: sto lil val stu buc cop ams mar nic mah beg zur sev mal lyo). Add the rule (a merged cell takes its busiest child's part, as for `walk_zone`?), then rerun those rows (T-613's notes). Also the rows shipped before T-700 have no walk_part: T-700's all-pack rerun covers them.
+- T-726 [P3] docs/data-register.md has no row for about 20 countries T-613 built (Spain, Italy, Austria, Belgium, Greece, Poland, Hungary, the Netherlands, Germany's new rows, Russia, Nigeria and others); add one each ("global sources only, archetype D" where true), and record each region's OSM extract date (the downloads are deleted) in the plan rows or the batch report.
 - T-546 [P3] Refit Mumbai's curve with B-28's 0-1 and 2-5 km bands merged, as Sao Paulo's are (d^-1.5 exp(-d/23.3 km) against the shipped d^-1.65 exp(-d/32.7 km)). Open; notes/T-314.md.
 - T-315 [P3] Tier 0 universities: few OSM campuses carry a Wikidata id (4 of 63 in Toronto), so most are sized by area; try matching campus names to Wikidata universities. Open; notes/T-315.md.
 - T-547 [P3] Read GISCO's download clauses for NUTS 2024 (some files are non-commercial only) before publishing any pack on NUTS-3 units; fall back to geoBoundaries if barred. Open; notes/T-536.md.
