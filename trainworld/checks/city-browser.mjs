@@ -2,7 +2,8 @@
 // centre: its pack opens, it becomes the active city with its boundary layer, the top bar names it
 // and gives its no-rail split; ground-level track across a water crossing is refused and the same
 // route in a tunnel accepted; a test line through the centre (deep tunnel, constructed, 10 trains an
-// hour at the peak) reaches a final solve and carries riders of every purpose, purposes adding up;
+// hour at the peak) reaches a final solve and carries riders of every purpose the row lists in
+// `purposes` (the gate lists those with sites within 1.5 km of a station, T-615), adding up;
 // no page errors. Cities are the table below, or a row file in ROW (checks/pack_gate.py --browser
 // makes one for any pack, T-538).
 //
@@ -315,7 +316,7 @@ try {
   }, C.lineName);
   result.line = sums;
   check(`the ${C.lineName} reaches a final solve with riders`, sums.final && sums.riders > 0, { final: sums.final, riders: sums.riders });
-  check(`the ${C.lineName} carries every purpose, purposes add up`, ['work', 'shopping', 'social', 'school', 'medical'].every(k => sums.by[k] > 0) && sums.worst < 1e-4, sums.by);
+  check(`the ${C.lineName} carries every purpose, purposes add up`, (C.purposes ?? ['work', 'shopping', 'social', 'school', 'medical']).every(k => sums.by[k] > 0) && sums.worst < 1e-4, { ...sums.by, required: C.purposes ?? 'all five' });
   await page.waitForTimeout(4000);
   result.withLine = { topBar: await topBar(page), cities: await page.evaluate(id => window.twDemand.cities().get(id) ?? null, id) };
   check(`${C.name} has a mode split with the line`, result.withLine.cities, result.withLine);

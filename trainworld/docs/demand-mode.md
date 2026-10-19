@@ -83,8 +83,8 @@ falling towards 15 km/h where it is dense, half way at 5,000 per km². So a dens
 own last 10 km: 3 km inside Manhattan takes about 13 minutes, Brooklyn to Midtown (10 km) about
 30, 25 km between suburbs about 28, and 60 km from a suburb into a 30,000/km² centre about 71.
 
-**Parking** (T-380, T-372; `Params::park_parts`). At the destination every driver pays `park_min`, 5
-perceived minutes (T-636; the base of every car trip, with the ownership cost below), to park and any congestion charge there; a paid space costs `15 x ln(d / 3,000)` more per
+**Parking** (T-380, T-372; `Params::park_parts`). At the destination every driver pays `park_min`, 7
+perceived minutes (T-636, T-637; the base of every car trip, with the ownership cost below), to park and any congestion charge there; a paid space costs `15 x ln(d / 3,000)` more per
 one-way trip, capped at 50, with `d` the jobs per km² of land in the destination's 2 km zone (none
 below 3,000: 18 at 10,000, 40 at 42,000, 50 from 85,000). A share `1 / (1 + d / 8,000)` of the
 drivers to that zone park free (80% at 2,000, 50% at 8,000, 16% at 43,000). Rail's share is the mix

@@ -68,7 +68,7 @@ const go = async (zone, center, zoom = 12) => {
 
 const out = { label: LABEL, errors };
 try {
-  await page.goto(`${BASE}?debug=1&v=${Date.now()}`);
+  await page.goto(`${BASE}?debug=1&continue=1&v=${Date.now()}`);
   await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 120000 });
   const bytes = await readFile('C:/Users/anita/projects/maps/trainworld/T-007-real-nyc.save');
   const saved = await page.evaluate(() => window.tw.lastSaved.peek());
@@ -78,7 +78,7 @@ try {
   await page.waitForFunction((b) => window.tw.lastSaved.peek() > b, saved, { timeout: 60000 });
   // startup: the reload to the real save's demand final
   const t0 = Date.now();
-  await page.goto(`${BASE}?debug=1&v=${Date.now()}`);
+  await page.goto(`${BASE}?debug=1&continue=1&v=${Date.now()}`);
   await page.waitForFunction(() => !!window.twDemand, undefined, { timeout: 60000 });
   await waitSolved();
   out.startupMs = Date.now() - t0;

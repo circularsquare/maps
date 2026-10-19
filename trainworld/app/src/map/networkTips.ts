@@ -88,11 +88,11 @@ export function trainTip(ov: Overlay, w: WorldView, line: string, profile: numbe
   const atEnd = at.s >= (stopS[n - 1] ?? Infinity) - 1;
   const own = r.board && i >= 0 ? tripLoad(r.board, i, run === 0 ? seg : n - 2 - seg) : null;
   const seats = SEATS_PER_CAR * st.cars, crush = CRUSH_PER_CAR * st.cars;
-  const cap = `${n0(seats)} seats, ${n0(crush)} packed full`;
-  // packed full: drawn with a red edge (T-207)
+  const cap = `${n0(seats)} seats, ${n0(crush)} full`;
+  // full: drawn with a red edge (T-207)
   // T-324: a new or changed line's first figures, from an estimate the solve is still refining
   const est = dv.lines.get(l.id)?.estimate ? " (estimate)" : "";
-  if (own !== null) return [name, `${n0(atEnd ? 0 : own)} riders aboard${!atEnd && own >= crush - 0.5 ? ", packed full" : ""}${est}`, cap];
+  if (own !== null) return [name, `${n0(atEnd ? 0 : own)} riders aboard${!atEnd && own >= crush - 0.5 ? ", full" : ""}${est}`, cap];
   // no account for this train yet (its line's stops just changed): no gauge either, and no
   // forecast average in its place (T-230, Anita)
   return [name, "Calculating demand"];

@@ -1,0 +1,191 @@
+// Life at stations (T-686): from the platforms' zoom, a train pulling in on a platform in view
+// makes a chime, pops as riders get off and on (map/stationSound.ts) and small faces rising from
+// the platform (map/faces.ts). Below that zoom, or with both switched off, nothing runs: no timer,
+// no canvas.
+//
+// An arrival is a train whose stop offset passed a station's between two samples, taken eight a
+// second. Only the lines stopping at a station in view are looked at, so a view over one complex
+// costs a few trains' arithmetic. The riders come from the boarding account the map is drawn from:
+// who gets off is what the train carried in, plus who got on, less what it carries on
+// (game/boarding.ts); who got on is the platform's crowd when the train came, plus who arrive
+// until it leaves, less who it leaves behind.
+//
+// A face is red when the platform's riders waited RED_WAIT_S or more: the time since the last
+// train left it, doubled when that train left riders behind (they sat through the headway before).
+
+import { effect } from "@preact/signals";
+import type { Map as MlMap } from "maplibre-gl";
+import { crowdAt, QUEUE_STRIDE, tripLoad, type BoardHour } from "../game/boarding";
+import { clock } from "../game/clock";
+import { display } from "../game/ui";
+import type { LineInput, StationInput } from "../game/types";
+import { world } from "../game/world";
+import { Faces } from "./faces";
+import { profileS } from "./network";
+import type { Overlay } from "./overlay";
+import { STATION_BOX_ZOOM } from "./stationGeometry";
+import { popsFor, StationSound } from "./stationSound";
+
+/** Samples a second. */
+const SAMPLE_MS = 125;
+/** A longer gap than this between samples (game seconds: a jump in time, a tab that slept) is not
+ * read as trains arriving. */
+const MAX_GAP_S = 150;
+/** Riders who waited this long or longer make red faces: ten minutes. */
+export const RED_WAIT_S = 600;
+/** One face per this many riders getting off. */
+const RIDERS_PER_FACE = 20;
+const MAX_FACES_PER_TRAIN = 4;
+
+interface VisLine {
+  line: LineInput;
+  num: number;
+  /** per run, the stops in view in that run's order: its index and station */
+  runs: [{ k: number; s: StationInput }[], { k: number; s: StationInput }[]];
+}
+
+const queueIndex = new WeakMap<BoardHour, Map<string, number>>();
+function queueOf(b: BoardHour, node: number, line: number, run: number): number {
+  let m = queueIndex.get(b);
+  if (!m) {
+    m = new Map();
+    for (let q = 0; q < b.queueCount; q++) {
+      const o = q * QUEUE_STRIDE;
+      m.set(`${b.queues[o]}|${b.queues[o + 1]}|${b.queues[o + 2]}`, q);
+    }
+    queueIndex.set(b, m);
+  }
+  return m.get(`${node}|${line}|${run}`) ?? -1;
+}
+
+/** Riders who got on at queue `q` when a train arrived at `t` (seconds from the hour's epoch), and
+ * how long the riders waiting had waited, s. */
+export function boardedAt(b: BoardHour, q: number, t: number): { boarded: number; waited: number } {
+  const Q = b.queues, E = b.events, o = q * QUEUE_STRIDE;
+  const first = Q[o + 8], end = first + Q[o + 9];
+  let e = first;
+  // events are departures; the one a train arriving at `t` makes comes a little after it
+  while (e < end && E[e * 2] < t - 8) e++;
+  const waiting = crowdAt(b, q, t).waiting;
+  const boarded = e < end ? Math.max(0, waiting + Q[o + 4] * Math.max(0, E[e * 2] - t) - E[e * 2 + 1]) : 0;
+  let waited = 0;
+  if (e - 1 >= first) {
+    waited = t - E[(e - 1) * 2];
+    if (E[(e - 1) * 2 + 1] >= 1 && e - 2 >= first) waited += E[(e - 1) * 2] - E[(e - 2) * 2];
+  }
+  return { boarded, waited };
+}
+
+export function startStationLife(map: MlMap, overlay: Overlay) {
+  const faces = new Faces(map, overlay);
+  const sound = new StationSound();
+  let timer = 0;
+  let prevT = NaN;
+  /** the time spent sampling, for ?debug=1 */
+  const stats = { n: 0, ms: 0, max: 0 };
+
+  const sample = () => {
+    const t0 = performance.now();
+    read();
+    const ms = performance.now() - t0;
+    stats.n++;
+    stats.ms += ms;
+    if (ms > stats.max) stats.max = ms;
+  };
+
+  const read = () => {
+    const d = display.peek();
+    const r = overlay.renderer, net = r.net, w = world.peek();
+    if (!net || !w || !r.tripCount || !clock.ticking) { prevT = NaN; return; }
+    const now = clock.now(), prev = prevT;
+    prevT = now;
+    if (!(now - prev > 0) || now - prev > MAX_GAP_S) return;
+
+    const bounds = map.getBounds();
+    const west = bounds.getWest(), east = bounds.getEast(), south = bounds.getSouth(), north = bounds.getNorth();
+    const inView = new Map<string, StationInput>();
+    for (const s of w.save.stations) {
+      if (s.built && s.lng >= west && s.lng <= east && s.lat >= south && s.lat <= north) inView.set(s.id, s);
+    }
+    if (!inView.size) return;
+    const lines = new Map<string, VisLine>();
+    for (const l of w.save.lines) {
+      if (!l.stops.some((id) => inView.has(id))) continue;
+      const run0: { k: number; s: StationInput }[] = [], run1: { k: number; s: StationInput }[] = [];
+      l.stops.forEach((id, k) => {
+        const s = inView.get(id);
+        if (!s) return;
+        run0.push({ k, s });
+        run1.push({ k: l.stops.length - 1 - k, s });
+      });
+      lines.set(l.id, { line: l, num: Number(l.id), runs: [run0, run1] });
+    }
+    if (!lines.size) return;
+
+    const trips = r.trips, epoch = r.tripsEpoch, board = r.board;
+    const speed = clock.speed.peek();
+    for (let i = 0; i < r.tripCount; i++) {
+      const profile = trips[i * 2];
+      const vl = lines.get(String(Math.floor(profile / 6)));
+      if (!vl) continue;
+      const dep = trips[i * 2 + 1] + epoch, tau = now - dep;
+      if (tau < 0) continue;
+      const run = Math.floor(profile / 3) % 2;
+      const S = w.lineStats[vl.line.id]?.stopS[run];
+      if (!S) continue;
+      const sNow = profileS(net, profile, tau), sPrev = profileS(net, profile, Math.max(0, prev - dep));
+      if (sNow <= sPrev) continue;
+      for (const { k, s } of vl.runs[run]) {
+        // the train's offset passes the stop's (the first stop is where the trip starts: not an arrival)
+        const at = S[k];
+        if (at === undefined || at <= 2 || sPrev >= at - 2 || sNow < at - 2) continue;
+        arrive(i, vl, run, k, s, now - epoch, board, d, speed);
+      }
+    }
+  };
+
+  const arrive = (i: number, vl: VisLine, run: number, k: number, s: StationInput, tEpoch: number, board: BoardHour | null, d: ReturnType<typeof display.peek>, speed: number) => {
+    let off = 0, on = 0, red = false;
+    if (board) {
+      const n = vl.line.stops.length;
+      const stretch = (seg: number) => (run === 0 ? seg : n - 2 - seg);
+      const before = k > 0 ? tripLoad(board, i, stretch(k - 1)) : 0;
+      const after = k < n - 1 ? tripLoad(board, i, stretch(k)) : 0;
+      const q = queueOf(board, s.num, vl.num, run);
+      if (before !== null && after !== null) {
+        const b = q >= 0 ? boardedAt(board, q, tEpoch) : { boarded: 0, waited: 0 };
+        on = b.boarded;
+        off = Math.max(0, before + on - after);
+        red = b.waited >= RED_WAIT_S;
+      }
+    }
+    if (d.sound) {
+      const p = map.project([s.lng, s.lat]);
+      sound.play({ pan: (p.x / Math.max(1, overlay.cssW)) * 2 - 1, zoom: map.getZoom(), volume: d.soundVolume, speed, off: popsFor(off), on: popsFor(on) });
+    }
+    if (d.faces && off >= 1) {
+      const count = Math.min(MAX_FACES_PER_TRAIN, Math.floor(off / RIDERS_PER_FACE + Math.random()));
+      if (count > 0) faces.spawn(s.id, s.lng, s.lat, s.length, s.heading, count, red);
+    }
+  };
+
+  const sync = () => {
+    const d = display.peek();
+    const on = map.getZoom() >= STATION_BOX_ZOOM && (d.sound || d.faces);
+    if (on && !timer) {
+      prevT = NaN;
+      timer = window.setInterval(sample, SAMPLE_MS);
+    } else if (!on && timer) {
+      window.clearInterval(timer);
+      timer = 0;
+      faces.clear();
+    }
+    if (!d.faces && faces.alive) faces.clear();
+  };
+  map.on("zoom", sync);
+  effect(() => {
+    display.value;
+    sync();
+  });
+  return { faces, sound, sample, stats };
+}

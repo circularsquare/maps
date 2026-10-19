@@ -4,6 +4,7 @@
 // of the line and boardings in the past 24 hours, and the round
 // trip split into running, dwell, turning and waiting, with where it waits (T-031).
 
+import type { ComponentChildren } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { nearestStation } from "../../game/places";
 import { queryClock } from "../../workers/clockClient";
@@ -11,27 +12,25 @@ import { clock, demandAt } from "../../game/clock";
 import { clockTime, count, distance, duration, headway, money, speed } from "../../game/format";
 import { LINE_PALETTE } from "../../game/palette";
 import { levelHours, PERIODS, periodAt } from "../../game/periods";
-import { signal } from "@preact/signals";
-import { crowdGrade, crowding, today, useToday, useYesterday, waitText, yesterday } from "../../game/today";
+import { crowdColour, crowdGrade, crowding, today, useToday, waitText } from "../../game/today";
 import { accountVersion } from "../../game/boarding";
 import { complexOf } from "../../game/complexView";
 import { dayKindAt } from "../../game/days";
 import { DEMAND_INDEX, DEMANDS, type Demand, type LineInput, type LineStats } from "../../game/types";
 import { ask, lineDraft, renameLinePrompt, selection, tool } from "../../game/ui";
-import { moneyState } from "../../game/money";
-import { fullTip, fullTitle, heldText, heldTip } from "../../game/capacityKinds";
-import { autoTrainsFor, edit, headwayFromMinutes, headwayShown, linesAt, nextHeadway, renameLine, say, setAutoTrains, setHeadway, setLineColour, stepHeadway, stepTrainCount, trainsShown, world } from "../../game/world";
+import { liveMoney, moneyState } from "../../game/money";
+import { fullParts, fullTip, fullTitle, heldText, heldTip } from "../../game/capacityKinds";
+import { toggleEditStops } from "../../game/lineActions";
+import { ColourPicker } from "../ColourPicker";
+import { AUTO_SLACK, autoTrainsFor, edit, headwayFromMinutes, headwayShown, linesAt, nextHeadway, refusedForCash, renameLine, say, setAutoTrains, setHeadway, stepHeadway, stepTrainCount, trainsShown, world } from "../../game/world";
 import { live } from "../../map/live";
 import { Chip, Icon, Row, Segmented, Stepper } from "../widgets";
 import { PurposeSplit } from "./PurposeSplit";
 import { NameEdit } from "./NameEdit";
-import { locateLine } from "../locate";
+import { locateLine, locateStation } from "../locate";
 import { demandPending, Spinner } from "../Spinner";
 
 const DEMAND_LABEL: Record<Demand, string> = { high: "High", medium: "Medium", low: "Low" };
-
-/** Which day the Today block shows (T-408), kept while the game is open. */
-const dayShown = signal<"today" | "yesterday">("today");
 
 /** When a demand level runs, in the line's local time (the hour spans of game/periods.ts): "High
  * demand: 06:00 to 10:00, 16:00 to 20:00". */
@@ -64,18 +63,36 @@ function spotsFrom(d: Float64Array): { text: string; s: number }[] {
 }
 
 /** Where full track holds a line's fleet back, per level (T-517): from `TrackApi.line_held`. */
-interface Held { d: Demand; wait: number; place: string; tip: string }
+interface Held { d: Demand; wait: number; place: string; head: string; name: string; tail: string; at: { lng: number; lat: number } | null; tip: string }
 function heldFrom(v: Float64Array): Held[] {
-  const st = new Map((world.value?.save.stations ?? []).map((s) => [s.num, s.name]));
+  const st = new Map((world.value?.save.stations ?? []).map((s) => [s.num, s]));
   const out: Held[] = [];
   DEMANDS.forEach((d, lev) => {
     const [wait, kind, node, x, y, , most] = v.subarray(7 * lev, 7 * lev + 7);
     if (!(wait > 0)) return;
-    const name = (node >= 0 ? st.get(node) : undefined) ?? nearestStation(x, y)?.name ?? "";
-    out.push({ d, wait, place: fullTitle(kind, name), tip: fullTip(kind, most) });
+    const s = (node >= 0 ? st.get(node) : undefined) ?? nearestStation(x, y);
+    const name = s?.name ?? "";
+    out.push({ d, wait, place: fullTitle(kind, name), ...fullParts(kind, name), name, at: s ? { lng: s.lng, lat: s.lat } : null, tip: fullTip(kind, most) });
   });
   return out;
 }
+
+/** What limits a line per level (T-679): its shortest headway in seconds with the other lines as
+ * they run, and the spot named as the capacity alerts name it ("Terminus at West"); null where
+ * nothing does. From the tail of `TrackApi.line_held`. */
+interface Limit { s: number; what: string }
+function limitsFrom(v: Float64Array): (Limit | null)[] {
+  const st = new Map((world.value?.save.stations ?? []).map((s) => [s.num, s]));
+  return DEMANDS.map((_, lev) => {
+    const [s, kind, node, x, y] = v.subarray(21 + 5 * lev, 26 + 5 * lev);
+    if (!(s > 0)) return null;
+    const name = ((node >= 0 ? st.get(node) : undefined) ?? nearestStation(x, y))?.name ?? "";
+    return { s, what: fullParts(kind, name).head + name };
+  });
+}
+
+/** "Terminus at West takes one train every 4m00s at most", or with no room left "... is full" */
+const limitText = (lim: Limit) => (Number.isFinite(lim.s) ? `${lim.what} takes one train every ${duration(lim.s)} at most` : `${lim.what} is full`);
 
 /** A flat junction or flat crossing on the route (T-629): `TrackApi.line_marks`, after the stop
  * `gap` and drawn on the stops diagram between it and the next. */
@@ -157,12 +174,6 @@ function AverageSpeed({ st, lev }: { st: LineStats; lev: number }) {
   );
 }
 
-/** Times of day for the full-train spans: "07:40 to 08:50, 17:35 to 18:45". */
-function spansText(spans: [number, number][]): string {
-  const t = (s: number) => clockTime(((Math.round(s / 60) % 1440) + 1440) % 1440);
-  return spans.map(([a, b]) => (b - a < 60 ? t(a) : `${t(a)} to ${t(b)}`)).join(", ");
-}
-
 /** US$ of running cost over the past 24 hours (T-446): each hour's trains at its demand level, the
  * hours at either end in part, as the worker drains the cash (T-284). */
 function runningToday(l: LineInput, st: LineStats): number {
@@ -179,37 +190,31 @@ function runningToday(l: LineInput, st: LineStats): number {
   return cost;
 }
 
-/** The line's past 24 hours (T-446, game/today.ts) or yesterday: riders, fares and running cost,
- * and its trains from the boarding account (T-230): how many left packed full and when, the
- * fullest, and who was left on the platform. Its own component: it re-renders as the counts move. */
+/** The line's past 24 hours (T-446, game/today.ts): riders, fares less running cost, and its trains
+ * from the boarding account (T-230): how many left full, and who was left on the platform. Its own
+ * component: it re-renders as the counts move. */
 function LineToday({ l, st }: { l: LineInput; st: LineStats }) {
-  const yest = dayShown.value === "yesterday";
-  useYesterday(yest);
-  const d = (yest ? yesterday : today).value.get(l.id);
-  if (!d && !yest) return null;
-  const fullest = d ? Math.round(100 * d.fullest) : 0;
+  const d = today.value.get(l.id);
+  if (!d) return null;
+  const run = runningToday(l, st);
   return (
     <>
       <div class="h">
-        <Segmented<"today" | "yesterday">
-          options={[
-            ["today", <span data-tip="The past 24 hours, counted train by train. Whoever does not fit on a full train waits for the next one.">Past 24 h</span>],
-            ["yesterday", <span data-tip="The last complete day, midnight to midnight in the line's local time">Yesterday</span>],
-          ]}
-          value={dayShown.value}
-          onChange={(v) => { dayShown.value = v; }}
-        />
+        <span data-tip="The past 24 hours, counted train by train. Whoever does not fit on a full train waits for the next one.">Past 24 hours</span>
       </div>
-      {d && <ul class="rows">
+      <ul class="rows">
         <Row label="Riders">{count(d.riders)}</Row>
         <PurposeSplit scope={[{ line: l.id }]} unit="riders" />
-        <Row label="Fares">{money(d.fares)}</Row>
-        <Row label="Running trains">{money(-(yest ? d.running : runningToday(l, st)))}</Row>
-        <Row label="Fullest train">{d.fullTrains > 0 ? "100%" : `${fullest}% full`}</Row>
-        {d.fullTrains > 0 && <Row label="Trains leaving full"><span data-tip={`${count(d.fullTrains)}/${count(d.trains)} trains left packed full`}>{count(d.fullTrains)}/{count(d.trains)}</span></Row>}
-        {d.spans.length > 0 && <Row label="When">{spansText(d.spans)}</Row>}
-        <Row label="Riders left on the platform">{count(d.leftBehind)}</Row>
-      </ul>}
+        <li data-tip={`Fares ${money(d.fares)} less running cost ${money(run)} for the trains: ${money(d.fares - run)} net`}>
+          <span class="grow">Profit</span>
+          <span class="val">{money(d.fares)} − <span class="crowd-bad">{money(run)}</span></span>
+        </li>
+        {d.fullTrains > 0 && <Row label="Trains leaving full"><span data-tip={`${count(d.fullTrains)}/${count(d.trains)} trains left full`}>{count(d.fullTrains)}/{count(d.trains)}</span></Row>}
+        <li data-tip={`${count(d.leftBehind)} of the ${count(d.riders + d.leftBehind)} riders who wanted a train were left on the platform by a full one`}>
+          <span class="grow">Riders left on the platform</span>
+          <span class="val">{count(d.leftBehind)}/{count(d.riders + d.leftBehind)}</span>
+        </li>
+      </ul>
     </>
   );
 }
@@ -234,9 +239,9 @@ function CrowdDots({ v, d }: { v: Float64Array; d: Demand }) {
   if (!(trains > 0)) return null;
   const avg = riders > 0 ? { wait: wait / riders, score: score / riders } : { wait: 0, score: 0 };
   const grade = crowdGrade(avg.score);
-  const tip = `Riders wait ${waitText(avg.wait)} on average for a train with room\n${count(full)}/${count(trains)} trains are packed full`
+  const tip = `Riders wait ${waitText(avg.wait)} on average for a train with room\n${count(full)}/${count(trains)} trains are full`
     + (worst && crowdGrade(worst.score) > grade ? `\n${worst.name}: ${waitText(worst.wait)}` : "");
-  return <i class={"crowd-dot c" + grade} data-tip={tip} />;
+  return <i class="crowd-dot" style={{ background: crowdColour(avg.score) }} data-tip={tip} />;
 }
 
 /** Bullets shown at a transfer stop; the rest sit behind a "+". */
@@ -288,33 +293,50 @@ function changeTip(counts: [number, number, number], lev: number, to: number, st
 
 const headwayText = (s: number) => (s > 0 ? `${+(s / 60).toFixed(2)} min` : "none");
 
+/** How long a refused edit's control shakes, ms (T-625; style.css `.shake`) */
+const SHAKE_MS = 300;
+
 /** One demand level's trains and headway cells: a count stepper and the headway it gives, or (T-625)
- * the headway stepper and the count it gives. */
-function LevelCells({ l, st, d, auto }: { l: LineInput; st: LineStats; d: Demand; auto: [number, number, number] | null }) {
+ * the headway stepper and the count it gives. A count an edit was refused for cash is red, and
+ * its control shakes once; a headway shorter than `limit` allows is red (T-625, T-679). */
+function LevelCells({ l, st, d, auto, limit }: { l: LineInput; st: LineStats; d: Demand; auto: [number, number, number] | null; limit: Limit | null }) {
   const lev = DEMAND_INDEX[d];
   const counts = auto ? st.trainsNeeded : (trainsShown(l.id) ?? st.trainsNeeded);
+  const trip = st.roundTripByLevel[lev];
+  const r = refusedForCash.value;
+  const refused = r && r.id === l.id && r.levs[lev] ? r : null;
+  const broke = refused !== null && liveMoney.value.cash < refused.need;
+  const shake = refused !== null && performance.now() - refused.at < SHAKE_MS;
+  const wrap = (child: ComponentChildren) => <span key={refused?.at ?? 0} class={shake ? "shake" : undefined}>{child}</span>;
+  const n = <span class={broke ? "bad" : undefined}>{counts[lev]}</span>;
   if (!auto) {
+    const over = limit !== null && counts[lev] > 0 && counts[lev] - trip / limit.s > 0.01;
     return (
       <>
         <td>
-          <Stepper value={counts[lev]} label="trains on the entire line" jump onStep={(s) => stepTrainCount(l.id, d, s)}
-            tipDown={changeTip(counts, lev, Math.max(0, counts[lev] - 1), st)} tipUp={changeTip(counts, lev, counts[lev] + 1, st)} />
+          {wrap(<Stepper value={n} label="trains on the entire line" jump onStep={(s) => stepTrainCount(l.id, d, s)}
+            tipDown={changeTip(counts, lev, Math.max(0, counts[lev] - 1), st)} tipUp={changeTip(counts, lev, counts[lev] + 1, st)} />)}
         </td>
-        <td>{headway(l.tph[d])}</td>
+        <td>{over ? <span class="bad" data-tip={`${limitText(limit)}, so the trains past that wait at the ends`}>{headway(l.tph[d])}</span> : headway(l.tph[d])}</td>
       </>
     );
   }
-  const trip = st.roundTripByLevel[lev];
+  const lim = limit?.s ?? 0;
+  const short = limit !== null && auto[lev] > 0 && auto[lev] * AUTO_SLACK < limit.s;
+  const real = l.tph[d] > 0 ? 3600 / l.tph[d] : 0;
+  const clamped = !short && limit !== null && auto[lev] > 0 && real > auto[lev] * AUTO_SLACK + 0.5;
+  const typeTip = "Click to type a headway in minutes. 0 is no service.";
   return (
     <>
       <td>
-        <span class="num" data-tip={`${counts[lev]} ${counts[lev] === 1 ? "train" : "trains"} on the entire line keep the headway over its round trip of ${duration(trip)}`}>{counts[lev]}</span>
+        <span class={"num" + (broke ? " bad" : "")} data-tip={`${counts[lev]} ${counts[lev] === 1 ? "train" : "trains"} on the entire line keep the headway over its round trip of ${duration(trip)}`}>{counts[lev]}</span>
       </td>
       <td>
-        <Stepper wide label="headway" value={headwayText(auto[lev])} onStep={(s) => stepHeadway(l.id, d, s)}
-          tipDown={changeTip(counts, lev, autoTrainsFor(trip, nextHeadway(auto[lev], -1)), st)}
-          tipUp={changeTip(counts, lev, autoTrainsFor(trip, nextHeadway(auto[lev], 1)), st)}
-          type={{ text: auto[lev] ? String(+(auto[lev] / 60).toFixed(2)) : "0", set: (v) => setHeadway(l.id, d, headwayFromMinutes(v)), tip: "Click to type a headway in minutes. 0 is no service." }} />
+        {clamped && <span class="hw-real" data-tip={`${limitText(limit)}, so ${counts[lev]} ${counts[lev] === 1 ? "train runs" : "trains run"} every ${duration(real)}`}>{headwayText(real)}</span>}
+        {wrap(<Stepper wide label="headway" value={short ? <span class="bad">{headwayText(auto[lev])}</span> : headwayText(auto[lev])} onStep={(s) => stepHeadway(l.id, d, s)}
+          tipDown={changeTip(counts, lev, autoTrainsFor(trip, nextHeadway(auto[lev], -1), lim), st)}
+          tipUp={changeTip(counts, lev, autoTrainsFor(trip, nextHeadway(auto[lev], 1), lim), st)}
+          type={{ text: auto[lev] ? String(+(auto[lev] / 60).toFixed(2)) : "0", set: (v) => setHeadway(l.id, d, headwayFromMinutes(v)), tip: short ? `${limitText(limit)}, so the trains past that wait at the ends.\n${typeTip}` : typeTip }} />)}
       </td>
     </>
   );
@@ -322,14 +344,42 @@ function LevelCells({ l, st, d, auto }: { l: LineInput; st: LineStats; d: Demand
 
 export function LineInspector({ id }: { id: string }) {
   const w = world.value;
-  const [colours, setColours] = useState(false);
+  // T-670: one editor for the name, symbol and colour; T-672: the colour a drag shows before the edit is sent
+  const [editFor, setEditFor] = useState<string | null>(null);
+  const [previewOf, setPreviewOf] = useState<{ id: string; hex: string } | null>(null);
+  const editing = editFor === id;
+  const setEditing = (open: boolean) => setEditFor(open ? id : null);
+  const preview = previewOf?.id === id ? previewOf.hex : null;
+  const setPreview = (hex: string | null) => setPreviewOf(hex === null ? null : { id, hex });
+  // T-672: while dragging, the line on the map follows with one edit every 0.2 s at most
+  const liveEdit = useRef({ hex: null as string | null, timer: 0, last: 0, busy: false, gap: 200 });
+  useEffect(() => () => clearTimeout(liveEdit.current.timer), []);
   const [copying, setCopying] = useState(false);
   const [spots, setSpots] = useState<{ text: string; s: number }[]>([]);
   const [held, setHeld] = useState<Held[]>([]);
+  const [limits, setLimits] = useState<(Limit | null)[]>([null, null, null]);
   const [marks, setMarks] = useState<RouteMark[]>([]);
   const l =w?.save.lines.find((l) => l.id === id);
   const [symbol, setSymbol] = useState("");
   useEffect(() => { setSymbol(l?.letter ?? ""); }, [l?.letter]);
+  useEffect(() => { if (preview !== null && l && l.colour.toLowerCase() === preview.toLowerCase()) setPreview(null); }, [l?.colour, preview]);
+  // a click away, or Esc outside the name box (it handles its own), closes the editor
+  useEffect(() => {
+    if (!editing) return;
+    const away = (e: PointerEvent) => { if (!(e.target as Element | null)?.closest?.("[data-line-edit]")) setEditing(false); };
+    const esc = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || (e.target as Element | null)?.closest?.(".name-edit")) return;
+      e.preventDefault();
+      e.stopPropagation();
+      setEditing(false);
+    };
+    window.addEventListener("pointerdown", away, true);
+    window.addEventListener("keydown", esc, true);
+    return () => {
+      window.removeEventListener("pointerdown", away, true);
+      window.removeEventListener("keydown", esc, true);
+    };
+  }, [editing]);
   // T-309: the demand level now in the line's own local time
   const now = demandAt(clock.hour.value * 3600 + (w?.lineStats[id]?.shift ?? 0));
   const lev = DEMAND_INDEX[now];
@@ -345,7 +395,11 @@ export function LineInspector({ id }: { id: string }) {
   useEffect(() => {
     if (!l) return;
     let on = true;
-    void queryClock({ what: "lineHeld", line: l.num }).then((d) => on && d && setHeld(heldFrom(d)));
+    void queryClock({ what: "lineHeld", line: l.num }).then((d) => {
+      if (!on || !d) return;
+      setHeld(heldFrom(d));
+      setLimits(limitsFrom(d));
+    });
     void queryClock({ what: "lineMarks", line: l.num }).then((d) => on && d && setMarks(marksFrom(d)));
     return () => { on = false; };
   }, [l?.num, w?.version]);
@@ -373,12 +427,32 @@ export function LineInspector({ id }: { id: string }) {
     const a = await edit({ op: "constructLine", line: l.num });
     if (a.ok) say(`${l.name} constructed for ${money(a.charge * 1e6)}. Its trains start with the next departure.`);
   };
-  const addStops = () => {
-    if (editingStops) { live.tools?.exit(); return; }
-    live.tools?.exit();
-    lineDraft.value = { line: l.num, stops: l.stops.map(Number) };
-    tool.value = "line";
-    selection.value = { kind: "line", line: l.id };
+  const sendLive = () => {
+    const s = liveEdit.current;
+    s.timer = 0;
+    if (s.hex === null) return;
+    if (s.busy) { s.timer = window.setTimeout(sendLive, 50); return; }
+    const hex = s.hex;
+    s.hex = null;
+    s.busy = true;
+    s.last = performance.now();
+    void edit({ op: "lineLook", line: l.num, name: l.name, colour: hex }, true).then(() => {
+      s.busy = false;
+      s.gap = Math.max(200, 6 * (performance.now() - s.last)); // a slow machine follows less often, so edits take a fraction of its time
+    });
+  };
+  const dragColour = (hex: string) => {
+    setPreview(hex);
+    const s = liveEdit.current;
+    s.hex = hex;
+    if (!s.timer) s.timer = window.setTimeout(sendLive, Math.max(0, s.gap - (performance.now() - s.last)));
+  };
+  const commitColour = (hex: string) => {
+    clearTimeout(liveEdit.current.timer);
+    liveEdit.current.timer = 0;
+    liveEdit.current.hex = null;
+    setPreview(hex);
+    void edit({ op: "lineLook", line: l.num, name: l.name, colour: hex }).then((a) => { if (!a.ok) setPreview(null); });
   };
   const removeStop = async (i: number) => {
     const stops = l.stops.filter((_, k) => k !== i).map(Number);
@@ -412,27 +486,55 @@ export function LineInspector({ id }: { id: string }) {
     } finally { setCopying(false); }
   };
 
+  const shown = preview ?? l.colour;
+  // T-670: the stops editor sits at the top while stops are being edited, else after the day's figures
+  const stopsBlock = (
+    <>
+      <div class="h">
+        Stops<span class="right muted small">boardings, past 24 h</span>
+      </div>
+      <ul class="stops" style={{ "--c": shown }}>
+        {l.stops.map((s, i) => {
+          const xfer = complexOf(s).some((m) => linesAt(m).some((o) => o.id !== l.id));
+          return (
+            <li class={xfer ? "xfer" : ""}>
+              <span class="grow">
+                <span class="stop-name" onClick={() => (selection.value = { kind: "station", station: s })}>
+                  {name.get(s)}
+                </span>
+                {i > 0 && times[i] !== undefined && <span class="t muted num">{duration(times[i])}</span>}
+              </span>
+              <StopTransfers line={l.id} stop={s} />
+              <StopToday line={l.id} i={i} />
+              <RouteMarks marks={marks.filter((m) => m.gap === i)} />
+              {editingStops && (
+                <button class="btn icon mini danger" data-tip="Take this stop out of the line" aria-label={`Remove stop ${name.get(s)}`} onClick={() => removeStop(i)}>
+                  <Icon.cross />
+                </button>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </>
+  );
+
   return (
     <>
-      <div class="title">
-        <button class={"badge-edit" + (colours ? " on" : "")} data-tip="Edit line colour and symbol" aria-label="Edit line colour and symbol" onClick={() => setColours(!colours)}><Chip line={l} size="lg" plain /></button>
-        <NameEdit key={l.id} name={l.name} onRename={(n) => renameLine(l.id, n)} prompt={renameLinePrompt.value === id} onPrompted={() => { renameLinePrompt.value = null; }}>
+      <div class="title" data-line-edit>
+        <button class={"badge-edit" + (editing ? " on" : "")} data-tip="Edit the name, symbol and colour (double click also opens it)" aria-label="Edit the name, symbol and colour"
+          onClick={() => setEditing(true)} onDblClick={() => setEditing(true)}><Chip line={{ ...l, colour: shown }} size="lg" plain /></button>
+        <NameEdit key={l.id} name={l.name} onRename={(n) => renameLine(l.id, n)} prompt={renameLinePrompt.value === id} onPrompted={() => { renameLinePrompt.value = null; }}
+          control={{ open: editing, set: setEditing }}>
           <button class="btn icon" data-tip="Show on the map" aria-label="Show on the map" onClick={() => locateLine(l.stops)}>
             <Icon.locate />
           </button>
         </NameEdit>
       </div>
-      {colours && (
-        <div class="line-identity">
+      {editing && (
+        <div class="line-identity" data-line-edit>
           <label>Symbol <input aria-label="Line symbol" value={symbol} onInput={e => setSymbol(e.currentTarget.value)} onChange={e => void edit({op:"lineLook",line:l.num,name:l.name,colour:l.colour,letter:e.currentTarget.value.trim()})} /></label>
-          <div class="palette">
-          {LINE_PALETTE.map((c) => (
-            <button class={"swatch" + (c === l.colour ? " on" : "")} style={{ "--c": c }} data-tip={c} aria-label={c} onClick={() => setLineColour(l.id, c)} />
-          ))}
-          <label class="swatch custom" data-tip="Any colour" style={{ "--c": l.colour }}>
-            <input type="color" value={l.colour} onChange={(e) => setLineColour(l.id, (e.target as HTMLInputElement).value)} />
-          </label>
-          </div>
+          <ColourPicker value={l.colour} presets={LINE_PALETTE} onPreview={dragColour} onCommit={commitColour} />
         </div>
       )}
       <div class="sub muted">
@@ -452,6 +554,14 @@ export function LineInspector({ id }: { id: string }) {
           <p>Broken: track it used is gone.</p>
         </div>
       )}
+
+      <div class="line-stop-actions">
+        <button class={"btn text" + (editingStops ? " on" : "")} data-tip={editingStops ? "Finish editing stops (L)" : "Click stations on the map to add stops to the line (L)"} onClick={() => toggleEditStops(l)}><Icon.pencil />{editingStops ? "Done editing stops" : "Edit stops"}</button>
+        <button class="btn text" onClick={() => void copy()} disabled={copying}>Copy line</button>
+        <button class="btn text" onClick={() => void copy(true)} disabled={copying} data-tip="Copy onto the express tracks where there are any, then click the stops it skips">Express copy</button>
+        <button class="btn text danger" onClick={remove}>Delete line</button>
+      </div>
+      {editingStops && stopsBlock}
 
       <div class="h">
         Schedule
@@ -477,13 +587,13 @@ export function LineInspector({ id }: { id: string }) {
         {DEMANDS.map((d) => (
           <tr class={d === now ? "now" : ""}>
             <td>{st.status === "running" && (periods ? <CrowdDots v={periods} d={d} /> : demandPending.value && <Spinner class="row-dot" tip="Crowding appears when demand has loaded" />)}<span data-tip={levelTimes(d)}>{DEMAND_LABEL[d]}</span></td>
-            <LevelCells l={l} st={st} d={d} auto={auto} />
+            <LevelCells l={l} st={st} d={d} auto={auto} limit={limits[DEMAND_INDEX[d]]} />
           </tr>
         ))}
       </table>
       {st.status === "running" && held.length > 0 && (
         <div class="callout bad">
-          <p data-tip={held[0].tip}>{held[0].place}</p>
+          <p data-tip={held[0].tip}>{held[0].head}{held[0].at ? <span class="place-link" onClick={() => locateStation(held[0].at!.lng, held[0].at!.lat)}>{held[0].name}</span> : held[0].name}{held[0].tail}</p>
           <ul class="rows">
             {held.map((h) => (
               <Row label={`${DEMAND_LABEL[h.d]} demand`}>
@@ -496,38 +606,7 @@ export function LineInspector({ id }: { id: string }) {
 
       {st.status === "running" && <LineToday l={l} st={st} />}
 
-      <div class="h">
-        Stops<span class="right muted small">boardings, past 24 h</span>
-      </div>
-      <div class="line-stop-actions">
-        <button class={"btn text" + (editingStops ? " on" : "")} onClick={addStops}><Icon.pencil />{editingStops ? "Done editing stops" : "Edit stops"}</button>
-        <button class="btn text" onClick={() => void copy()} disabled={copying}>Copy line</button>
-        <button class="btn text" onClick={() => void copy(true)} disabled={copying} data-tip="Copy onto the express tracks where there are any, then click the stops it skips">Express copy</button>
-        <button class="btn text danger" onClick={remove}>Delete line</button>
-      </div>
-      <ul class="stops" style={{ "--c": l.colour }}>
-        {l.stops.map((s, i) => {
-          const xfer = complexOf(s).some((m) => linesAt(m).some((o) => o.id !== l.id));
-          return (
-            <li class={xfer ? "xfer" : ""}>
-              <span class="grow">
-                <span class="stop-name" onClick={() => (selection.value = { kind: "station", station: s })}>
-                  {name.get(s)}
-                </span>
-                {i > 0 && times[i] !== undefined && <span class="t muted num">{duration(times[i])}</span>}
-              </span>
-              <StopTransfers line={l.id} stop={s} />
-              <StopToday line={l.id} i={i} />
-              <RouteMarks marks={marks.filter((m) => m.gap === i)} />
-              {editingStops && (
-                <button class="btn icon mini danger" data-tip="Take this stop out of the line" aria-label={`Remove stop ${name.get(s)}`} onClick={() => removeStop(i)}>
-                  <Icon.cross />
-                </button>
-              )}
-            </li>
-          );
-        })}
-      </ul>
+      {!editingStops && stopsBlock}
       {st.status !== "broken" && l.stops.length >= 2 && <RoundTrip st={st} lev={lev} stops={l.stops.length} spots={spots} />}
       {st.status !== "broken" && l.stops.length >= 2 && <AverageSpeed st={st} lev={lev} />}
     </>

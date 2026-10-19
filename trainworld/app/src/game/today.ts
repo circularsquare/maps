@@ -1,6 +1,6 @@
 // The past 24 hours (T-446; before it, today so far, T-293: Anita wanted counts, not a forecast
 // with the future in it, and then no reset at midnight). The line and station panels count the
-// day up to now: riders carried, boardings at each stop, fares taken, trains that left packed full
+// day up to now: riders carried, boardings at each stop, fares taken, trains that left full
 // and riders they left behind. Counted by the clock worker from the boarding account's departures
 // (`TrackApi.past_day`, sim/src/track/boarding.rs) and each line's fares as the worker pays them
 // (T-284); asked again four times a wall second while a panel shows them and the clock runs, as
@@ -20,16 +20,10 @@ export interface LineToday {
   stops: number[];
   /** fares taken, US$ */
   fares: number;
-  /** trains that left packed full, out of `trains` that ran (T-481), the fullest one's share of
-   * crush, riders left behind */
+  /** trains that left full, out of `trains` that ran (T-481), riders left behind */
   fullTrains: number;
   trains: number;
-  fullest: number;
   leftBehind: number;
-  /** spans of full trains (s from the line's local midnight; negative for yesterday's) */
-  spans: [number, number][];
-  /** running cost of the trains over the day, US$; only for a whole day (yesterday's) */
-  running: number;
   /** T-472: trains in service now, and how many of them are packed full somewhere on their trip */
   trainsNow: number;
   fullNow: number;
@@ -54,6 +48,20 @@ export const CROWD_GRADES = [0.1, 0.3, 0.6];
 export function crowdGrade(score: number): 0 | 1 | 2 | 3 {
   return score >= CROWD_GRADES[2] ? 3 : score >= CROWD_GRADES[1] ? 2 : score >= CROWD_GRADES[0] ? 1 : 0;
 }
+/** T-673: the crowding dot's colour runs smoothly with the score: green, yellow at 0.15, orange at
+ * 0.4, red at 0.7 and a deep red from 1.2 up, the same in both themes. */
+const CROWD_STOPS: [number, [number, number, number]][] = [[0, [0x4f, 0x9a, 0x4f]], [0.15, [0xd8, 0xb4, 0x25]], [0.4, [0xe0, 0x7a, 0x1f]], [0.7, [0xc4, 0x3c, 0x3c]], [1.2, [0xa0, 0x1c, 0x2c]]];
+export function crowdColour(score: number): string {
+  const s = CROWD_STOPS;
+  let c = s[s.length - 1][1];
+  for (let i = 1; i < s.length; i++) {
+    if (score > s[i][0]) continue;
+    const t = Math.max(0, (score - s[i - 1][0]) / (s[i][0] - s[i - 1][0]));
+    c = s[i - 1][1].map((v, k) => v + (s[i][1][k] - v) * t) as [number, number, number];
+    break;
+  }
+  return "#" + c.map((v) => Math.round(v).toString(16).padStart(2, "0")).join("");
+}
 /** Text the player should act on (T-472): orange and red grades. */
 export function crowdClass(score: number): "" | "crowd-warn" | "crowd-bad" {
   const g = crowdGrade(score);
@@ -64,8 +72,6 @@ export const waitText = (min: number) => (min < 0.05 ? "under 0.1 min" : `${min 
 
 /** Per line id; empty until the first answer (and for a line with no riders yet). */
 export const today = signal<Map<string, LineToday>>(new Map());
-/** each line's last complete day (T-408), asked for while a panel shows it */
-export const yesterday = signal<Map<string, LineToday>>(new Map());
 /** whether any line has counts: lists sorted by today's figures re-sort when it turns */
 export const todayLoaded = computed(() => today.value.size > 0);
 
@@ -75,16 +81,15 @@ export function readToday(d: Float64Array): Map<string, LineToday> {
   let i = 1;
   const at: { id: string; t: LineToday }[] = [];
   for (let k = 0; k < count; k++) {
+    // d[i + 5] is the fullest train and d[i + 7 ..] the spans of full trains, which nothing shows
     const id = d[i], n = d[i + 1], nSpans = d[i + 6];
-    const spans: [number, number][] = [];
-    for (let s = 0; s < nSpans; s++) spans.push([d[i + 7 + 2 * s], d[i + 8 + 2 * s]]);
     const stops = Array.from(d.subarray(i + 7 + 2 * nSpans, i + 7 + 2 * nSpans + n));
     const e = i + 7 + 2 * nSpans + n;
-    const t: LineToday = { riders: d[i + 2], fullTrains: d[i + 3], leftBehind: d[i + 4], fullest: d[i + 5], spans, stops, fares: 0, running: 0, trainsNow: d[e], fullNow: d[e + 1], trains: d[e + 2], crowdWait: d[e + 3], crowdRiders: d[e + 4], crowdRide: d[e + 5] };
+    const t: LineToday = { riders: d[i + 2], fullTrains: d[i + 3], leftBehind: d[i + 4], stops, fares: 0, trainsNow: d[e], fullNow: d[e + 1], trains: d[e + 2], crowdWait: d[e + 3], crowdRiders: d[e + 4], crowdRide: d[e + 5] };
     at.push({ id: String(id), t });
     i = e + 6;
   }
-  at.forEach((a, k) => { a.t.fares = (d[i + k] ?? 0) * 1e6; a.t.running = d[i + at.length + k] ?? 0; out.set(a.id, a.t); });
+  at.forEach((a, k) => { a.t.fares = (d[i + k] ?? 0) * 1e6; out.set(a.id, a.t); });
   return out;
 }
 
@@ -117,19 +122,6 @@ function ask(force = false) {
     if (!d) return;
     today.value = readToday(d);
   });
-}
-
-/** Ask for yesterday's figures while the calling panel shows them (T-408): again when the day turns
- * or the network or the riders change. */
-export function useYesterday(on: boolean) {
-  const key = (world.value?.version ?? -1) * 1e6 + accountVersion.value;
-  const day = Math.floor(clock.local.value / 1440);
-  useEffect(() => {
-    if (!on) return;
-    let live = true;
-    void queryClock({ what: "yesterday" }).then((d) => { if (live && d) yesterday.value = readToday(d); });
-    return () => { live = false; };
-  }, [on, key, day]);
 }
 
 /** Keep `today` fresh while the calling panel is shown. */

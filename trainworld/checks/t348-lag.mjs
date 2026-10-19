@@ -110,7 +110,7 @@ const windowStats = (from, to) => page.evaluate(([from, to]) => {
 const out = { mode: MODE, label: LABEL, base: BASE, bubbles: BUBBLES, errors };
 try {
   if (MODE === 'prepare') {
-    await page.goto(`${BASE}?debug=1${QS}&v=${Date.now()}`);
+    await page.goto(`${BASE}?debug=1&continue=1${QS}&v=${Date.now()}`);
     await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 120000 });
     const bytes = await readFile(new URL('../T-007-real-nyc.save', import.meta.url));
     const before = await page.evaluate(() => window.tw.lastSaved.peek());
@@ -124,7 +124,7 @@ try {
     log('save stored and solved');
   } else if (MODE === 'startup') {
     await traceStart();
-    await page.goto(`${BASE}?debug=1${QS}&v=${Date.now()}`);
+    await page.goto(`${BASE}?debug=1&continue=1${QS}&v=${Date.now()}`);
     await page.waitForFunction(() => !!window.twDemand, undefined, { timeout: 60000 });
     await waitSolved(240000);
     await page.waitForTimeout(3000);
@@ -143,7 +143,7 @@ try {
     log('startup', JSON.stringify({ ...out.loading, lt: undefined }), 'after', JSON.stringify({ ...out.after, lt: undefined }));
   } else if (MODE === 'resolve') {
     // the same network solved again once settled: the workers busy as at startup, nothing new opened
-    await page.goto(`${BASE}?debug=1${QS}&v=${Date.now()}`);
+    await page.goto(`${BASE}?debug=1&continue=1${QS}&v=${Date.now()}`);
     await page.waitForFunction(() => !!window.twDemand, undefined, { timeout: 60000 });
     await waitSolved(240000);
     await page.waitForTimeout(3000);
@@ -158,7 +158,7 @@ try {
   } else if (MODE === 'reach') {
     // the save solved, a jump to Toronto (opened bare), then a short line built there: Toronto is
     // fetched again for every worker, opened in all and solved with the rest (T-325)
-    await page.goto(`${BASE}?debug=1${QS}&v=${Date.now()}`);
+    await page.goto(`${BASE}?debug=1&continue=1${QS}&v=${Date.now()}`);
     await page.waitForFunction(() => !!window.twDemand, undefined, { timeout: 60000 });
     await waitSolved(240000);
     await page.evaluate(() => window.tw.map.jumpTo({ center: [-79.39, 43.67], zoom: 12 }));
@@ -190,7 +190,7 @@ try {
     out.reach.solves = await page.evaluate((t0) => window.twDemand.log.filter((s) => s.sentAt >= t0).map((s) => ({ v: s.version, cities: s.cities.join('+'), sent: Math.round(s.sentAt - t0), first: s.firstAt && Math.round(s.firstAt - t0), final: s.refinedAt && Math.round(s.refinedAt - t0) })), t0);
     log('reach', JSON.stringify({ ...out.reach, lt: out.reach.lt.map(([s, d]) => [Math.round(s - t0), d]) }));
   } else if (MODE === 'pan') {
-    await page.goto(`${BASE}?debug=1${QS}&v=${Date.now()}`);
+    await page.goto(`${BASE}?debug=1&continue=1${QS}&v=${Date.now()}`);
     await page.waitForFunction(() => !!window.twDemand, undefined, { timeout: 60000 });
     // EARLY=1: the pan starts once the network is drawn, while the startup solve runs
     if (process.env.EARLY === '1') await page.waitForFunction(() => window.tw?.world?.value, undefined, { timeout: 120000 });

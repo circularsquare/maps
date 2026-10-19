@@ -53,7 +53,7 @@ closest pair), the same in the pie, bars, filter swatch and purpose split.
   Medical, Airport. School and university are one shown purpose everywhere, though the model keeps
   them apart (`membersOf`). With one chosen, a swatch in its colour sits before the name, the
   control takes the accent border, and every demand drawing counts that purpose only: line widths,
-  station circles, the bubbles and their hovers ("12,400 school and university trips a day at
+  station circles, the bubbles and their hovers ("12,400 school and university trips per day at
   homes here"), a selection's own and far-end bubbles, the track tag. Scales stay as they are, so
   purposes stay comparable. Work is every zone's commutes (commutes between zones included); the
   others are each zone's everyday layer. Inter-region trips are not an option: they show only
@@ -74,7 +74,7 @@ change as the periods pass. At zoom 15 the widest line is 44 px. Stations keep t
 
 [T-144, T-146, T-209, T-213, T-482; `game/stationUse.ts`] A choice at the top of the Stations tab,
 "Show station ridership": None (default), Origins, Transfers or Total, remembered per browser. Large
-translucent circles behind stations, area by riders a day, up to 75,000: **origins** are riders
+translucent circles behind stations, area by riders per day, up to 75,000: **origins** are riders
 starting their rail trip at the station, **transfers** riders changing lines there, **total** every
 boarding there (origins plus transfers). From the demand solve shown, for the day the demand bar
 picks, every purpose whatever the purpose filter: boardings are the solve's per station, transfers
@@ -99,22 +99,25 @@ its constructed stations, grouped exactly as the complexes are, the player's lin
   default, T-470), biggest bubbles under smaller ones. Bubbles have no outline; only a selected
   one has its dark outline [T-549].
   Drawn over the network and capacity tags, under station names.
-- **Hover** [T-323, T-494]: "422 trips a day on average from here" (Homes; "to here" for
+- **Hover** [T-323, T-494]: "422 trips per day from here" (Homes; "to here" for
   Destinations, a purpose's name before "trips" under a filter), then a thin **mode bar**
   (`map/modeBar.ts`): train blue, walking green, driving red, widths by share, no numbers. A far-end
   bubble adds "Click to explore this trip". Every demand hover with a mode split uses the bar (the
-  airport badges too).
-- **Airports** [T-448, T-649, `map/airportMarks.ts`]: a small black plane (14 px, a thin white
-  halo) on each airport's busiest terminal cell, so on its biggest bubble. Under All purposes the
-  airport is also a bubble of its own there, the airport purpose's legs at the destination
-  density, in the bubbles' colour rule, opacity and size, scaling with zoom like them, drawn over
-  the destination bubbles (a disc layer of the demand canvas). Under Airport the destination
-  bubbles already are the airport's trips, so only the plane is added. Shown with Destinations
-  under All purposes or Airport, for the focused zone and the nearby zones, hidden while a bubble is
-  selected and in the city overview. Airports are the cells that receive the airport purpose's
-  legs (500 a day or more), terminal cells within 2.5 km sharing one bubble. They take no
-  clicks (a click reaches the bubble under); the hover, over the plane or the airport's bubble,
-  says "149k airport trips a day here" with the mode split.
+  airport badges too). Under All purposes the focused zone's bubble hover has a second thin
+  **purpose bar** below it [T-681], in the purpose colours, widths by each shown purpose's legs at
+  that end in the bubble's cells (work, school and university, shopping and errands, social and
+  leisure, medical, airport): a bubble over an airport terminal and its neighbouring job cells holds
+  both, and the mode bar cannot tell them apart. The purposes' legs are asked of the workers once
+  the result is final, so the bar is missing until then, and nearby zones' bubbles have none.
+- **Airports** [T-448, T-674, `map/airportMarks.ts`]: a small black plane (14 px, a thin white
+  halo) on each airport's busiest terminal cell, so on its biggest destination bubble; no bubble
+  of its own. Shown with Destinations under All purposes or Airport, for the focused zone and the
+  nearby zones, hidden while a bubble is selected and in the city overview. Airports are the cells
+  that receive the airport purpose's legs (500 a day or more), terminal cells within 2.5 km sharing
+  one plane. Planes take no clicks (a click reaches the bubble under); the hover, within 8 px of
+  the plane (the plane itself, so the job bubbles beside a terminal keep their own hover, T-681),
+  says "228k trips per day to and from this airport" with the mode split, the whole airport's
+  legs, read again with each demand result.
 - There is no corner summary box: the zone's split is in the top bar, local splits in hovers and
   the inspector.
 
@@ -192,7 +195,7 @@ second. Inspectors, selections and the top bar are the current forecast at once.
   distance and direction; for a single area the closest stations from its trip-weighted centre
   [T-312, [ui-inspectors.md](ui-inspectors.md)]; purpose counts and shares for Work, School and
   university, Shopping and errands, Social and leisure, Airport and Medical [T-142, T-192], with a
-  purpose pie and legend following All modes / Train only (hover: "Work: 12,400 trip legs a day,
+  purpose pie and legend following All modes / Train only (hover: "Work: 12,400 trip legs per day,
   48%"; a zero-trip scope shows an empty neutral disc); hovers state the scope (matched public
   schools and degree-granting colleges, commercial airports with connecting passengers and staff
   left out, OSM hospitals, clinics, doctors and dentists; private schools are not modelled).
@@ -242,8 +245,8 @@ all its trips a day (its local trips, from the open zone's view or the pipeline'
 and the rest [T-576: an open zone's walking is green, from its split; a zone not opened has no walk
 split, so its walking counts in the red; regional trips have no walking], labelled
 "Philadelphia · 187k trips/day" (at most eight labels on screen, the biggest first [T-493]). The hover
-has two lines, each with a mode bar [T-494]: "1.6m trips a day on average within Yamanashi" (bar from
-the zone's modelled split, none for a zone not opened) and "120k inter-region trips a day on
+has two lines, each with a mode bar [T-494]: "1.6m trips per day within Yamanashi" (bar from
+the zone's modelled split, none for a zone not opened) and "120k inter-region trips per day on
 average to and from Yamanashi" (train blue, the rest red). One scale that depends on the zoom
 alone, never on what is on screen [T-525, T-530]: 60,000 trips a day per px² of bubble area at
 zoom 6.5 (`TRIPS_PER_PX2`, `SCALE_ZOOM`), before the size slider, the radius times

@@ -6,7 +6,8 @@
 //   workers/  the clock worker (owns the network, T-025) and the demand pool (T-026)
 //
 // URL parameters: ?debug=1 (performance readout, window.tw probes), ?paused=1, ?new=1 (a new
-// game instead of the autosave, workers/clockClient.ts),
+// game that owns no slot, workers/clockClient.ts), ?continue=1 (the game opened last, no start
+// menu; ui/StartMenu.tsx),
 // ?synth=1&lines=500&trains=10000 (draw the synthetic stress network instead of the real one),
 // ?perfOff=labels,shadow,hover,clock,overlay,markers (measurement only, perfFlags.ts).
 
@@ -14,17 +15,19 @@ import "./ui/style.css";
 import { effect } from "@preact/signals";
 import { h, render } from "preact";
 import { clock, SPEEDS, startClock } from "./game/clock";
-import { getWorldFrame } from "./game/cities";
+import { getWorldFrame, HOME_CITY } from "./game/cities";
 import { packToLngLat, lngLatToPack } from "./game/coords";
 import { ask, display, isBuildTool, selection, shade, stopEditing, tab, tool } from "./game/ui";
 import { complexOf, dotGroups, inComplexView } from "./game/complexView";
 import { cancelLink, linkPicked, linking } from "./game/links";
-import { pickTool, TOOL_KEYS, TRIP_KEY } from "./ui/tabs";
+import { ACTION_KEYS, pickTool, TOOL_KEYS, TRIP_KEY } from "./ui/tabs";
+import { constructBlueprints, newLineKey, toggleEditStopsSelected } from "./game/lineActions";
 import { followCapsLock, keyIsTheirs, releaseSelectsAfterMousePick } from "./ui/keys";
 import { redo, undo, world } from "./game/world";
 import { lastSaved, moneyState } from "./game/money";
 import { live } from "./map/live";
 import { createMap, setBasemapLabels, setBasemapShade } from "./map/mapView";
+import { startRealNetwork } from "./map/realNetwork";
 import { startCityBoundaries } from "./map/cityBoundaries";
 import { startZoneLoading } from "./map/zoneLoading";
 import { startZoneFocus } from "./map/zoneFocus";
@@ -45,6 +48,7 @@ import { EndMarkers } from "./map/endMarkers";
 import { hoverAbove } from "./map/demandHover";
 import { CapacityMarkers } from "./map/capacityMarkers";
 import { startTrackHover } from "./map/trackHover";
+import { startStationLife } from "./map/stationLife";
 import { perfOff, perfTry } from "./perfFlags";
 import { DEMAND_INDEX, type Selection } from "./game/types";
 import { anchor, kAtY, toLngLat, toLocal } from "./map/geo";
@@ -57,6 +61,7 @@ import { BlueprintBar } from "./ui/Blueprint";
 import { startSearch } from "./ui/Search";
 import { startTips } from "./ui/tip";
 import { startLoadingGate } from "./ui/LoadingScreen";
+import { choiceFromUrl, showStartMenu } from "./ui/StartMenu";
 import { ClockClient, clockWorkerStatus, onNetworkSnapshot } from "./workers/clockClient";
 import { startDemand, submitNetwork } from "./workers/demandClient";
 import { startDemandViews, viewStats } from "./map/demandViews";
@@ -86,11 +91,15 @@ startClock(86400 + 7 * 3600);
 if (params.get("paused") === "1") clock.setRunning(false);
 // T-149, T-172: the clock is held until the viewed city's demand has its first estimate
 startLoadingGate();
+// T-677: which game opens. A URL switch may say (ui/StartMenu.tsx); otherwise the start menu goes up
+// once the page is set up, and the workers start with the pick (`startWorkers` below), the map
+// already drawn under it.
+const urlChoice = choiceFromUrl();
 // Demand pool (T-026) first: its downloads and pack opening are the longest part of startup, so
 // they start before the map is set up (T-172). The clock worker's network snapshots go to
 // `submitNetwork` below (workers/demandClient.ts); `?demandTest=1` solves T-005's hand-made
 // network instead.
-startDemand();
+if (urlChoice) startDemand(HOME_CITY, !!urlChoice.newGame);
 
 // ---- map and overlay ----
 const map = createMap(document.getElementById("map")!);
@@ -130,6 +139,7 @@ const overlay = new Overlay(map, renderer, () => {
       ...(n ? bpPicked.value.stations.map((id) => n.stationIds.indexOf(String(id))) : []),
     ],
     crowds: d.platformCrowds !== "off", // T-164, T-219
+    flatMarks: d.flatMarks,
     groups: dotGroups.peek(), // zoomed out, the stations the distance rule groups are one dot (T-217, T-225)
   };
 });
@@ -141,6 +151,7 @@ startZoneFocus(map);
 
 // ---- the clock worker: owns the network; its states and trips go to the renderer ----
 const client = new ClockClient();
+if (urlChoice) client.start(urlChoice);
 if (SYNTH) {
   const s = makeSynth(Math.round(num("lines", 500)), Math.round(num("trains", 10000)));
   renderer.setNetwork(s);
@@ -239,9 +250,13 @@ effect(() => {
 effect(() => capacity.setVisible(display.value.capacity && !SYNTH));
 // Resting the pointer on track says what the track display shows there (T-157).
 startTrackHover(map, overlay);
+// T-686: from the platforms' zoom, chimes, pops and faces as trains let riders off and on
+const stationLife = SYNTH ? null : startStationLife(map, overlay);
+if (DEBUG && stationLife) (window as any).twLife = stationLife;
 map.on("load", () => {
   effect(() => setBasemapLabels(map, display.value.basemapLabels));
   effect(() => setBasemapShade(map, shade.value));
+  startRealNetwork(map); // T-682
 });
 effect(() => client.setShade(shade.value)); // save thumbnails are drawn in it (T-543)
 // T-039: the network's casing and inks come from game/shades.ts at each draw
@@ -324,6 +339,17 @@ window.addEventListener("keydown", (e) => {
     if (tool.peek() !== "trip") pickTool("trip");
     return;
   }
+  // N new line, L edit stops of the selected line, C construct blueprints (T-670); not under a question
+  const act = ACTION_KEYS[e.key.toLowerCase()];
+  if (act && !e.ctrlKey && !e.metaKey && !e.altKey && !e.repeat && !ask.peek()) {
+    e.preventDefault();
+    nodeDrag.cancel();
+    edgeEditor.cancel();
+    if (act === "newLine") void newLineKey();
+    else if (act === "editStops") toggleEditStopsSelected();
+    else void constructBlueprints();
+    return;
+  }
   const k = TOOL_KEYS[e.key];
   if (k && !e.ctrlKey && !e.metaKey && !e.altKey && !e.repeat) {
     e.preventDefault();
@@ -378,8 +404,14 @@ render(h(Dock, null), document.getElementById("dock-root")!);
 render(h(TopBar, null), document.getElementById("topbar-root")!);
 render(h(Toolbar, null), document.getElementById("tools-root")!);
 
-// ---- demand (the pool started at the top) ----
+// ---- demand (the pool started at the top, or with the pick) ----
 onNetworkSnapshot(submitNetwork);
+
+// ---- T-677: the start menu; the pick starts demand, then the clock worker, in startup's order ----
+if (!urlChoice) showStartMenu((choice) => {
+  startDemand(HOME_CITY, !!choice.newGame);
+  client.start(choice);
+});
 
 // ---- ?debug=1: readout and probes ----
 if (DEBUG) {

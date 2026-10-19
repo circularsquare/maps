@@ -303,7 +303,7 @@ export function ComplexMap({ id, members, stations, lines, now, onOpen }: {
       })();
     const w = XMIN_W + (XMAX_W - XMIN_W) * Math.sqrt((c.ab + c.ba) / busiest);
     const name = (t: Stroke) => `${t.line!.name} at ${shortName(t.s.name)}`;
-    const title = `${count(c.ab + c.ba)} riders a day change between ${name(c.a)} and ${name(c.b)}\n` +
+    const title = `${count(c.ab + c.ba)} riders per day change between ${name(c.a)} and ${name(c.b)}\n` +
       `${count(c.ab)} from ${c.a.line!.name} to ${c.b.line!.name}, ${count(c.ba)} the other way`;
     return { path, w, title };
   });
@@ -336,7 +336,7 @@ export function ComplexMap({ id, members, stations, lines, now, onOpen }: {
     const name = t.s.name + (t.s.built ? "" : " (blueprint)");
     if (t.plat) return platTip(t);
     if (!t.line) return `${name}\nNo line stops here`;
-    let text = `${name}\n${t.line.name}` + (t.known ? `: ${count(t.boardings)} boardings, ${count(t.riders)} riders on its trains here a day` : "");
+    let text = `${name}\n${t.line.name}` + (t.known ? `: ${count(t.boardings)} boardings, ${count(t.riders)} riders on its trains here per day` : "");
     const m = partners.get(t);
     if (m) {
       const top = [...m].sort((x, y) => y[1] - x[1]);
@@ -493,7 +493,7 @@ export function ComplexMap({ id, members, stations, lines, now, onOpen }: {
         </g>
       </svg>
       {most > 0 && <p class="muted small">Each line is as wide as the riders on its trains at that platform a day.</p>}
-      {curves.length > 0 && <p class="muted small">Grey curves join the lines with the most riders changing between platforms, as wide as those riders a day.</p>}
+      {curves.length > 0 && <p class="muted small">Grey curves join the lines with the most riders changing between platforms, as wide as those riders per day.</p>}
       {links.length > 0 && <p class="muted small">Dashed lines join stations you linked.</p>}    </div>
   );
 }

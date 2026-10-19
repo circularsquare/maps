@@ -1,4 +1,5 @@
-// Startup (T-149, T-172, T-180, SPEC 8). The game is playable from the moment the map and network
+// Startup (T-149, T-172, T-180, SPEC 8). Before it, the start menu (ui/StartMenu.tsx, T-677).
+// The game is playable from the moment the map and network
 // are drawn: the player can look around, inspect and build while demand loads. Only the clock
 // waits (game/loading.ts). Meanwhile a card in the middle of the map says what is loading and how
 // far it has got ("Loading data", a filling bar and the step, T-212, T-243); it takes no pointer or key, and goes when the clock
@@ -6,7 +7,8 @@
 
 import { h, render } from "preact";
 import { clock } from "../game/clock";
-import { continueWithoutDemand, demandIdle, loadFailure, loadProgress, startup } from "../game/loading";
+import { choosing, continueWithoutDemand, demandIdle, loadFailure, loadProgress, startup } from "../game/loading";
+import { BunnyTrain } from "./Spinner";
 
 function LoadingScreen() {
   if (startup.value !== "failed") return null;
@@ -24,7 +26,7 @@ function LoadingScreen() {
 
 /** True while the loading card is up: a loaded game's clock waits for its demand (T-180). */
 export function loadingCardShown(): boolean {
-  return clock.held.value && !loadFailure.value && !demandIdle.value; // T-318: nothing to load over dead space
+  return clock.held.value && !loadFailure.value && !demandIdle.value && !choosing.value; // T-318: nothing to load over dead space
 }
 
 /** T-243: a bar filling as the load goes, in place of a percentage; the percentage is its hover.
@@ -38,13 +40,14 @@ export function LoadBar({ fraction, step, thin, tip }: { fraction: number; step:
 }
 
 /** T-180: while a loaded game's clock waits for its first demand estimate, a card in the middle of
- * the map. Pointer events pass through it to the map, except on the bar (its hover). No animation:
- * the bar's fill is the motion. */
+ * the map. Pointer events pass through it to the map, except on the bar (its hover). T-677: the
+ * bunny's train on top. */
 function LoadingCard() {
   if (!loadingCardShown()) return null;
   const load = loadProgress.value;
   return <div class="loading-card-wrap">
     <div class="loading-card" role="status">
+      <BunnyTrain />
       {/* T-212: "Loading data", not a list of the cities being loaded */}
       <p class="big">{load ? "Loading data" : "Calculating demand"}</p>
       {load && <LoadBar fraction={load.fraction} step={load.step} />}

@@ -81,8 +81,9 @@ export type ToClock =
   /** `pack`: the city pack's URL without extension (".../packs/nyc"), absolute. `fresh`: start a
    * new game even if there is an autosave (`?new=1`). `testPage`: the page is a check or stress
    * page (`?new=1`, `?synth=1`, `?demandTest=1`, T-320): it never writes a slot until the player
-   * saves a copy; `fresh` also does not read one. */
-  | { kind: "init"; city: string; pack: string; fresh?: boolean; testPage?: boolean; slot?: string }
+   * saves a copy; `fresh` also does not read one. `newSlot`: the start menu's New game beside
+   * saved games (T-677): an empty game in a new slot of that name, written once something changes. */
+  | { kind: "init"; city: string; pack: string; fresh?: boolean; testPage?: boolean; slot?: string; newSlot?: string }
   /** the view's bounds in degrees after a move (T-302): water masks near it are fetched ahead */
   | { kind: "view"; w: number; s: number; e: number; n: number }
   /** the theme the player is in (T-543): a save's thumbnail is drawn in it */
@@ -120,6 +121,11 @@ export type ToClock =
   /** T-531: each running line's fares, train rides and running cost by region, [region, share] pairs
    * (game/regionMoney.ts) */
   | { kind: "regionShares"; lines: { line: number; fare: [string, number][]; ride: [string, number][]; run: [string, number][] }[] }
+  /** T-684: each running line's points per game hour by region, `[region, perHour[dayKind][period]]`
+   * (game/points.ts) */
+  | { kind: "points"; lines: { line: number; regions: [string, number[][]][] }[] }
+  /** T-685: region `zone`'s rail share has reached the star's mark; kept from the first time */
+  | { kind: "star"; zone: string }
   /** T-531: how edit `seq`'s charge divides between regions */
   | { kind: "chargeShares"; seq: number; build: [string, number][]; trains: [string, number][] }
   /** demand's riders for the boarding account (T-164): `TrackApi.set_riders`'s packing, built by
@@ -143,7 +149,7 @@ export type ToClock =
   | {
       kind: "query";
       seq: number;
-      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "lineHeld"; line: number } | { what: "lineMarks"; line: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "lineAccount"; line: number; day: number } | { what: "linePeriods"; line: number; day: number } | { what: "today" } | { what: "yesterday" };
+      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "lineHeld"; line: number } | { what: "lineMarks"; line: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "lineAccount"; line: number; day: number } | { what: "linePeriods"; line: number; day: number } | { what: "today" };
     };
 
 /** T-531: each region's today and this hour, as the "cash" message carries them. */
@@ -170,6 +176,10 @@ export interface MoneyState {
   hours: HourLedger[];
   /** T-531: the same per region (a zone id; "" outside every zone) */
   regions: Record<string, { ledger: DayLedger[]; hours: HourLedger[] }>;
+  /** T-684: points since the game began, per region */
+  points: Record<string, number>;
+  /** T-685: stars earned, per region the game second it was earned */
+  stars: Record<string, number>;
 }
 
 export interface ClockEdge {
@@ -356,7 +366,7 @@ export type FromClock =
   | { kind: "money"; money: MoneyState }
   /** T-284: the cash and today's ledger as fares land and running costs drain, several times a wall
    * second while the clock runs; the rest of MoneyState comes with "money" when an hour turns */
-  | { kind: "cash"; cash: number; today: MoneyState["ledger"][number]; hour: HourLedger; regions: RegionNow }
+  | { kind: "cash"; cash: number; today: MoneyState["ledger"][number]; hour: HourLedger; regions: RegionNow; points: Record<string, number> }
   /** a game was loaded or started (`from`), at game time `clock`; a failed import says why in
    * `error` and changes nothing */
   /** `frame`: the game now in the worker; `converted`: its save was in an older frame and was

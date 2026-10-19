@@ -182,7 +182,7 @@ pub struct Params {
     pub other_asc: f32,
     /// The everyday layer's outings per resident (per enrolled student for school and
     /// university) and destination decay lengths in metres, by `everyday::KINDS` (T-509 stage
-    /// 4). Read when `EverydayApi::beside` opens; the pack's `everyday` block sets them.
+    /// 4). Read when `EverydayApi::beside` opens; the pack's `everyday` block sets the rates.
     pub everyday_rate: [f32; 6],
     pub everyday_decay_m: [f32; 6],
     /// The everyday layer's rail constant is `asc_rail` plus this (`Params::everyday`); 0: the
@@ -250,7 +250,7 @@ impl Default for Params {
             road_dens50: 5000.0,
             road_far_kmh: 80.0,
             w_drive: 1.33,
-            park_min: 5.0,
+            park_min: 7.0,
             // T-380: within about half of real prices from Croydon to Midtown (notes/T-380.md)
             park_paid_min: 15.0,
             park_paid_d0: 3000.0,

@@ -65,7 +65,7 @@ const timed = (edit) => page.evaluate(async (edit) => {
 
 const out = { label: LABEL, qs: QS, stages: {}, tor: [], ny: [], errors };
 try {
-  await page.goto(`${BASE}?debug=1&v=${Date.now()}`);
+  await page.goto(`${BASE}?debug=1&continue=1&v=${Date.now()}`);
   await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 120000 });
   const bytes = await readFile('C:/Users/anita/projects/maps/trainworld/T-007-real-nyc.save');
   const before = await page.evaluate(() => window.tw.lastSaved.peek());
@@ -73,7 +73,7 @@ try {
   await page.waitForFunction(() => (window.tw.world.value?.save?.lines?.length ?? 0) > 100, undefined, { timeout: 240000 });
   await page.evaluate(() => window.tw.client.post({ kind: 'flush' }));
   await page.waitForFunction((b) => window.tw.lastSaved.peek() > b, before, { timeout: 60000 });
-  await page.goto(`${BASE}?debug=1${QS}&v=${Date.now()}`);
+  await page.goto(`${BASE}?debug=1&continue=1${QS}&v=${Date.now()}`);
   await page.waitForFunction(() => !!window.twDemand, undefined, { timeout: 60000 });
   await waitSolved();
   out.stages.ny = await sig();

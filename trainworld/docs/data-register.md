@@ -121,20 +121,21 @@ about 2011, OICA's vehicles-in-use pages are gone (404) with no licence stated.
 
 ## Travel surveys
 
-Everyday outing rates and distance scales by purpose (T-509 stage 4, `pipeline/everyday_rates.py`);
-a country without one takes the surveys' median.
+Everyday outing rates by purpose (T-509 stage 4, `pipeline/everyday_rates.py`); a country without
+one takes the surveys' median. Trip lengths are one worldwide set (T-637), so a survey's mean
+lengths are not used; its share of trips under 2 km is the check (docs/demand-worldwide.md).
 
 | Country | Rates | Lengths |
 |---|---|---|
-| United States | U NHTS 2017 microdata, weekday legs by purpose (on disk); N NHTS 2022 | U NHTS New York CBSA legs under 46 km, road miles / 1.3 |
+| United States | U NHTS 2017 microdata, weekday legs by purpose (on disk); N NHTS 2022 | U NHTS New York CBSA legs by length band, the check behind the worldwide set (T-637) |
 | Canada | - (TTS is Toronto-only, not opened); worldwide | worldwide |
-| England (UK) | U NTS0504b weekday trips by purpose, 2015-19; G NTS and LTDS microdata (UKDS) | U NTS0413 London residents' errand lengths; social worldwide (no cut-off in the published means) |
-| France | U EMP 2019 weekday motifs table (SDES); N EMP microdata (open, media/5052) for medical and exact lengths; G EGT 2018-20 (omnil.fr 403) | U EMP declared km x the Paris area factor |
-| Germany | U MiD 2017 Ergebnisbericht by Zweck, made weekday; G MiD tables tool (login) | U SrV 2018 Berlin Steckbrief |
-| Japan | U Tokyo PT 2018 press tables (private split); U national survey 2021 (MLIT Excel) as a check; G Tokyo PT tabulations (application form, login) | U Tokyo welfare bureau 2021, straight-line km by purpose |
-| Brazil | U Sao Paulo OD 2017 microdata | U the same, straight line |
+| England (UK) | U NTS0504b weekday trips by purpose, 2015-19; G NTS and LTDS microdata (UKDS) | U LTDS 2024/25 London residents' trips by length band (Travel in London 2025), the check (T-637); skip NTS0413 mean errand lengths |
+| France | U EMP 2019 weekday motifs table (SDES); N EMP microdata (open, media/5052) for medical; G EGT 2018-20 (omnil.fr 403) | skip EMP declared km (means; T-637) |
+| Germany | U MiD 2017 Ergebnisbericht by Zweck, made weekday; G MiD tables tool (login) | skip SrV 2018 Berlin Steckbrief (means; T-637) |
+| Japan | U Tokyo PT 2018 press tables (private split); U national survey 2021 (MLIT Excel) as a check; G Tokyo PT tabulations (application form, login) | skip Tokyo welfare bureau 2021 straight-line km by purpose (means; T-637) |
+| Brazil | U Sao Paulo OD 2017 microdata | skip the same (means; T-637) |
 | China | -; worldwide | worldwide |
-| South Korea | U KTDB 2016 national O/D report, capital-area sample counts; G KTDB 2021 survey (account) | U Gyeonggi transport DB 2016 bands (Seoul, Gyeonggi) |
+| South Korea | U KTDB 2016 national O/D report, capital-area sample counts; G KTDB 2021 survey (account) | skip Gyeonggi transport DB 2016 bands (T-637) |
 | India | -; worldwide | worldwide |
 | Nigeria | -; worldwide | worldwide |
 

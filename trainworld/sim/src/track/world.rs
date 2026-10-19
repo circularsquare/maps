@@ -43,6 +43,18 @@ pub fn auto_trains(trip_s: f64, headway_s: u32) -> u32 {
     ((trip_s / (headway_s as f64 * AUTO_SLACK) - 1e-6).ceil().max(0.0) as u32).min(9999)
 }
 
+/// T-679: `want` trains for a headway of `headway_s`, clamped to the whole trains that fit when the
+/// line's track takes at most `most_tph` trains an hour and the headway is at that limit or within
+/// `AUTO_SLACK` of it: rounding up would cross the limit and hold a train out. At least one train
+/// runs. A headway well under the limit keeps its count, so the trains that do not fit wait at the
+/// ends and the panel warns.
+pub fn clamp_auto(want: u32, trip_s: f64, headway_s: u32, most_tph: f64) -> u32 {
+    if want == 0 || !(most_tph > 0.0) || !most_tph.is_finite() || headway_s as f64 * AUTO_SLACK < 3600.0 / most_tph {
+        return want;
+    }
+    want.min(((most_tph * trip_s / 3600.0 + 1e-6).floor() as u32).max(1))
+}
+
 /// What an edit touched (SPEC 6.5).
 #[derive(Clone, Debug, Default)]
 pub struct Dirty {
@@ -134,13 +146,14 @@ impl TrackWorld {
     /// (a count that keeps rising round after round is on shared track that fills up).
     fn auto_counts(&mut self, last: bool) -> bool {
         let mut moved = false;
+        let most = self.svc.cap.line_limits(&self.net);
         for l in 0..self.net.line_count() {
             let (Some(auto), Some(old)) = (self.net.line_auto[l], self.net.line_trains[l]) else { continue };
             if !self.net.line_ok(l as u32) || !self.svc.lines[l].ok { continue; }
             let trip = self.svc.lines[l].round_trip;
             let mut counts = old;
             for lev in 0..LEVELS {
-                let want = auto_trains(trip[lev], auto[lev]);
+                let want = clamp_auto(auto_trains(trip[lev], auto[lev]), trip[lev], auto[lev], most[l][lev].0);
                 if want < old[lev] || !last { counts[lev] = want; }
             }
             if counts != old {

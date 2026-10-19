@@ -66,6 +66,19 @@ export function setTrainCount(id: LineId, demand: Demand, trains: number) {
   setTrainCounts(id, t);
 }
 
+/** T-625: a train count or headway edit refused for want of cash: the line, the levels it changed,
+ * when (the panel shakes the control), and the US$M it needed. The panel paints those levels'
+ * train counts red until the cash covers it or another edit to the line goes through. */
+export const refusedForCash = signal<{ id: LineId; levs: boolean[]; at: number; need: number } | null>(null);
+function noteAnswer(id: LineId, a: EditAnswer, sent: number[], had: readonly number[] | null | undefined) {
+  if (a.ok) {
+    if (refusedForCash.peek()?.id === id) refusedForCash.value = null;
+    return;
+  }
+  const m = a.issues.find((k) => k.startsWith("Money:"));
+  if (m) refusedForCash.value = { id, levs: sent.map((v, i) => v !== had?.[i]), at: performance.now(), need: Number(m.split(":")[1]) };
+}
+
 function setTrainCounts(id: LineId, t: [number, number, number]) {
   const p = new Map(pendingTrains.peek());
   p.set(id, t);
@@ -79,7 +92,9 @@ function setTrainCounts(id: LineId, t: [number, number, number]) {
     while (job.next) {
       const trains = job.next;
       job.next = null;
+      const had = world.peek()?.lineStats[id]?.trainsNeeded;
       const a = await edit({ op: "setTrainCount", line: num(id), trains });
+      noteAnswer(id, a, trains, had);
       if (!a.ok) job.next = null; // refused (money): the stepper goes back to the world's count
     }
     job.busy = false;
@@ -110,12 +125,16 @@ export function nextHeadway(s: number, dir: number): number {
   if (dir > 0) return s <= 0 ? 900 :Math.min(HEADWAY_MAX_S, s + (s < 300 ? 30 : s < 900 ? 60 : 300));
   return s <= HEADWAY_MIN_S ? 0 : Math.max(HEADWAY_MIN_S, s - (s <= 300 ? 30 : s <= 900 ? 60 : 300));
 }
-/** The fewest trains that keep a headway over a round trip, as the sim works it out. */
-export function autoTrainsFor(roundTripS: number, headwayS: number): number {
-  return headwayS > 0 && roundTripS > 0 ? Math.min(9999, Math.ceil(roundTripS / (headwayS * AUTO_SLACK) - 1e-6)) : 0;
+/** The fewest trains that keep a headway over a round trip, as the sim works it out; with the
+ * line's shortest headway `limitS`, no more than fit when the headway is at that limit (T-679,
+ * `clamp_auto`). */
+export function autoTrainsFor(roundTripS: number, headwayS: number, limitS = 0): number {
+  const want = headwayS > 0 && roundTripS > 0 ? Math.min(9999, Math.ceil(roundTripS / (headwayS * AUTO_SLACK) - 1e-6)) : 0;
+  if (!(want > 0) || !(limitS > 0) || !Number.isFinite(limitS) || headwayS * AUTO_SLACK < limitS) return want;
+  return Math.min(want, Math.max(1, Math.floor(roundTripS / limitS + 1e-6)));
 }
 /** `AUTO_SLACK` in sim/src/track/world.rs */
-const AUTO_SLACK = 1.005;
+export const AUTO_SLACK = 1.005;
 /** A typed number of minutes as seconds, to 5 s inside the limits; 0 or less is no service. */
 export function headwayFromMinutes(min: number): number {
   if (!(min > 0)) return 0;
@@ -139,7 +158,9 @@ export function setHeadway(id: LineId, demand: Demand, seconds: number) {
     while (job.next) {
       const secs = job.next;
       job.next = null;
+      const had = world.peek()?.lineStats[id]?.autoS;
       const a = await edit({ op: "setHeadway", line: num(id), seconds: secs });
+      noteAnswer(id, a, secs, had);
       if (!a.ok) job.next = null; // refused (money): the line goes back to the world's headways
     }
     job.busy = false;

@@ -343,6 +343,9 @@ county-sized unit (docs/zones.md 2).
 - `sim/src/demand/everyday.rs`, test `every_pack_everyday`, and `checks/t066-worker-check.mjs`
   read the registry: nothing to add.
 - The browser check needs no hand row: the gate (below) makes one from OSM stations and the mask.
+  It requires the test line to carry work and social, and each of shopping, school and medical
+  that the pack has sites for within 1.5 km of a station; a purpose with no sites there is
+  listed in the gate's `browser` detail, not failed.
 
 **The gate** (T-538), last, once the pack is registered and its routes are in, with your own Vite
 running:
@@ -366,7 +369,8 @@ Native and Node (`npm run wasm --prefix trainworld/app` only if Rust changed):
 
 `every_pack_everyday` prints each city's per-resident outings: school about 0.11-0.15, university
 0.02-0.08, errands and social at New York's rates by construction; the gate fails a pack outside
-school 0.06-0.35 or university 0.001-0.08.
+school 0.06-0.35 or university 0.001-0.08. A pack with no university sites (OSM maps none in the
+outline) opens with that purpose empty and only WARNs.
 
 Browser (own Vite with HMR and watching off, `checks/dev-nowatch.mjs`; headless Chrome through
 Playwright with its own profile directory; never touch app/dist): the gate's `--browser` (section 8)

@@ -135,10 +135,12 @@ The pipeline spreads original sector locations by the same block land-area metho
 office/headquarters commute corrections do not relocate these customer weights.
 
 Destination gravity is origin-constrained: zone attraction times exp(-distance/scale), normalized
-per origin zone, with the pack's country's scales (US: errands 2.15 km, social 2.42 km, medical
-3.53 km), each set so the game's mean outing length matches the survey's mean straight-line leg
-under 46 km (the game's mean is about 0.7 + 1.7 x the scale at 2 km zones in every pack);
-same-zone distance is 1.04 km.
+per origin zone, with one worldwide set of scales (T-637, `everyday::DECAY`): errands 1.3 km,
+social 1.4 km, school 1.4 km, medical 2.0 km, university 3.5 km, airport 20 km. They are set for
+the share of short trips rather than the mean: a single exponential at 2 km zones gives trips
+whose mean is about 1.2 times their median, where surveys' means are about twice their medians, so
+no scale matches both, and the shorter scale is the better fit where most trips are
+([T-637](../notes/T-637.md)). Same-zone distance is 1.04 km.
 Deterministic stratified destination samples per cell/purpose integrate that distribution: one
 per 8 of the cell's trips a day for the purpose, rounded up, 2 to 16 (T-397; none for a cell
 with no budget for that purpose),
@@ -150,8 +152,8 @@ journeys are not separately represented. Existing commuting behavior stays uncha
 Local weight tapers smoothly from 1 at 40 km to 0 at 80 km; trips at 80 km or more disappear
 from this layer. Only within-pack everyday outings are generated here. Since T-276 the regional
 market's longer trips start at 25 km (docs/zones.md 5), so the two overlap from 25 to 80 km; the
-local outings' 1.3-3.7 km decays leave under 2% of social outings past 25 km, so the double count is
-negligible, and airport trips (20 km decay), which the market does not place at airports, keep
+local outings' 1.3-3.5 km decays leave under 0.3% of errand, social, school and medical outings
+past 20 km, so the double count is negligible, and airport trips (20 km decay), which the market does not place at airports, keep
 their reach (decision T-276).
 
 After station access is rebuilt, eligible cell edges aggregate into purpose-specific subzone
@@ -185,8 +187,8 @@ under-fives, approximating ages 3–4, spread by block land area across all the 
 Missing shares use full-state county FIPS fallbacks, or the pack's age share for Connecticut gaps.
 The New York pack contains about 3.87 million estimated child-home weights. Each destination cell generates
 0.9 attendance outings per enrolled pupil on a typical school day. This attendance factor is
-provisional. Deterministic home samples per school cell (one per 8 attendance trips, 2 to 16) use child weights and a 2.5 km
-distance-decay scale. Unlike customer trips, school demand is destination-constrained by
+provisional. Deterministic home samples per school cell (one per 8 attendance trips, 2 to 16) use child weights and a 1.4 km
+distance-decay scale (T-637). Unlike customer trips, school demand is destination-constrained by
 enrollment. The same 150 m exclusion, local-distance taper and directional assignment apply.
 
 School attendance joins bubbles, purpose/timing inspection, fares, loads and crowding as the
@@ -215,7 +217,7 @@ not campus-level allocation: a multi-campus institution with one UNITID (Norther
 Community College, Montgomery College, Community College of Rhode Island) sits at one point.
 
 Adult homes use block population multiplied by the ACS tract age-18+ share. A provisional 60%
-typical-day attendance factor, 6 km distance-decay scale and separate day/evening schedule produce
+typical-day attendance factor, 3.5 km distance-decay scale (T-637) and separate day/evening schedule produce
 about 1.0 million trip legs a day in New York. The purpose joins the same bubbles, fares, assignment, loads and
 crowding as other local trips as the model purpose University (shown with School as "School and
 university", T-192). Homes, attendance and timing are
@@ -258,7 +260,7 @@ site's floor area, else a pooled median, all scaled to the World Bank's national
 people), a clinic 10,000, a doctors' practice 4,000, a dentist 3,000. A hospital mapped twice
 (a building or point inside its campus) counts once. Residents make 0.04 medical outings a day
 (0.08 legs, against NHTS 2022's 0.091 medical/dental legs per person a day: 4.02% of 2.27 trips),
-to these places by size and a 5 km exponential decay, origin-constrained like errands but with
+to these places by size and a 2.0 km exponential decay (T-637), origin-constrained like errands but with
 two destination samples a home cell (the city's medical trips in aggregate are what the game
 shows; against sixteen, the walk share moves at most 0.3 points and the mean length 0.1 km). OSM's
 doctors and dentists are mapped unevenly; where they are missing, their visits go to the nearest

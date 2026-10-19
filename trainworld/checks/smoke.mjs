@@ -6,7 +6,8 @@
 // Headless Chrome with a throwaway profile (deleted afterwards); Playwright from PLAYWRIGHT_MODULE,
 // else `playwright`, else the npx cache.
 //
-// Browser: a ?new=1 game loads; the real save (T-007-real-nyc.save) imported into it has 109 lines,
+// Browser: a plain load shows the start menu and its New game starts a game (T-677); a ?new=1 game
+// (no menu) loads; the real save (T-007-real-nyc.save) imported into it has 109 lines,
 // 1,756 stations and about 4,498.6 km of track; demand reaches a final result; a click on a station
 // and on a train picks them; no console or page error, no GL error. Node: t133, t144, t145, t146.
 import { spawn } from 'node:child_process';
@@ -84,6 +85,19 @@ async function browserChecks(BASE) {
     page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
     page.on('console', (m) => { if (m.type() === 'error' && !IGNORE.test(m.text())) errors.push(m.text()); });
     const sep = BASE.includes('?') ? '&' : '?';
+
+    // 0. the start menu (T-677): a plain load waits on it with no worker started; New game starts one
+    try {
+      await page.goto(`${BASE}${sep}debug=1&v=${Date.now()}`);
+      await page.waitForSelector('.start-menu .start-new', { timeout: 60000 });
+      const before = await page.evaluate(() => performance.getEntriesByType('resource').filter((e) => /clock\.worker|demand\.worker/.test(e.name)).length);
+      await page.click('.start-menu .start-new');
+      await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client && !document.querySelector('.start-menu'), undefined, { timeout: 180000 });
+      const n = await page.evaluate(() => window.tw.world.value.save.stations.length);
+      report('start menu', before === 0 && n === 0, `(${before} workers before the pick, ${n} stations after New game)`);
+    } catch (e) {
+      report('start menu', false, e.message.split('\n')[0]);
+    }
 
     // 1. a new game
     try {

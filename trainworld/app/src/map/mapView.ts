@@ -36,11 +36,36 @@ export function createMap(container: HTMLElement): maplibregl.Map {
     pitchWithRotate: false,
   });
   map.touchZoomRotate.disableRotation();
+  wheelGapsByEventTime(map);
   loadBasemap(map);
   map.on("load", () => {
     document.querySelector(".maplibregl-ctrl-attrib")?.classList.remove("maplibregl-compact-show");
   });
   return map;
+}
+
+/** T-675: MapLibre's scroll zoom tells a mouse wheel from a trackpad by the time between wheel
+ * events, measured when each is handled (`performance.now()`), not when it happened. A main-thread
+ * stall as a scroll starts (a demand publish, 70-110 ms) queues its first two events, they are
+ * handled under a millisecond apart, and the mouse wheel is taken for a trackpad for the rest of
+ * the scroll: each frame then zooms straight to its target at 4.5 times the wheel's rate, about
+ * 3x as far and with no easing. A stall over 400 ms mid-scroll likewise reads as a new scroll.
+ * The handler is handed the gap between the events' own timestamps instead: it stores the last
+ * event's handling time in `_lastWheelEventTime` (MapLibre 6.13) and takes the gap from it, so
+ * that is set back by the real gap before each event. checks/t675-wheel-lag.mjs. */
+function wheelGapsByEventTime(map: maplibregl.Map) {
+  const h = map.scrollZoom as unknown as { wheel(e: WheelEvent): void; isEnabled(): boolean; _lastWheelEventTime?: number };
+  const wheel = h.wheel;
+  let lastStamp: number | null = null;
+  h.wheel = function (e: WheelEvent) {
+    if (h.isEnabled()) {
+      if (lastStamp !== null && typeof h._lastWheelEventTime === "number") {
+        h._lastWheelEventTime = performance.now() - Math.max(0, e.timeStamp - lastStamp);
+      }
+      lastStamp = e.timeStamp;
+    }
+    wheel.call(h, e);
+  };
 }
 
 export { maplibregl };

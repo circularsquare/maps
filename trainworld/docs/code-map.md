@@ -54,32 +54,37 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 - Stations and lines: `complexes.ts` (station complexes from platform geometry and the player's
   links, T-146), `complexView.ts` (a click selecting the complex, a station opened alone, the
   zoomed-out dot groups; T-217, T-249), `links.ts` (the player's links, T-197), `lineActions.ts`
-  (new and copied lines), `remove.ts` (removing things, with the question asked before removing
+  (new and copied lines, Edit stops, construct blueprints: the N, L and C keys, T-670), `remove.ts` (removing things, with the question asked before removing
   anything constructed, T-096).
 - Other: `money.ts` (cash and ledger from the worker, fare income from riders, T-028),
-  `regionMoney.ts` (each line's and each construction's split between regions, the region ledgers, T-531), `issues.ts`
+  `regionMoney.ts` (each line's and each construction's split between regions, the region ledgers, T-531), `points.ts`
+  (each line's points per hour by region, points a day, the star's mark, T-684, T-685), `issues.ts`
   (the track model's refusals in plain words), `loading.ts` (what is loading, the startup gate and
-  the clock hold, T-149, T-172), `palette.ts`, `shades.ts` over `shadeTable.ts` (the light and dark themes' map
+  the clock hold, T-149, T-172; whether the start menu is up, T-677), `palette.ts`, `shades.ts` over `shadeTable.ts` (the light and dark themes' map
   colours: basemap, line casing, map ink, blueprint off, outside shade, thumbnails; the table has no
   page behind it so the clock worker reads it, T-039, T-543), `format.ts`.
 - The `WorldView` is built from the clock worker's states in `workers/clockClient.ts`.
 
 ### src/map/: the map and what is drawn on it
 
-- `mapView.ts` (the MapLibre map), `basemap.ts` (the Positron style: faint repaint, light or dark,
-  labels in Zen Maru Gothic from `public/fonts/`), `overlay.ts` (the overlay canvas and frame loop,
+- `mapView.ts` (the MapLibre map; its scroll zoom told wheel gaps by event time, T-675), `basemap.ts` (the Positron style: warm paper repaint, three road weights, light or dark,
+  labels in Zen Maru Gothic from `public/fonts/`), `realNetwork.ts` (the Real network reference layer: noritetsu's
+  PMTiles per region, read from `../noritetsu/` or R2; vite.config.ts proxies `/noritetsu` to 8800 in dev, T-682),
+  `overlay.ts` (the overlay canvas and frame loop,
   notes/T-015.md), `renderer.ts` (WebGL2 track, stations, trains), `network.ts` (the renderer's
   buffers, built in the clock worker from per-edge, line and station pieces kept between edits,
   T-496), `geo.ts` (the draw anchor, T-307), `anchorVersion.ts` (its version as a signal, T-317),
   `live.ts` (the live map objects for UI code, set by main.ts), `synth.ts` (stress network),
   `markData.ts` and `gradeMarks.ts` (the crossing, junction, ramp and portal marks: their data, and
-  their draw pass, hit test and tag; T-629, T-655).
+  their draw pass, hit test and tag; T-629, T-655), `stationLife.ts` (from zoom 14, arrivals found
+  by a timer of eight samples a second, feeding `stationSound.ts`, the WebAudio chime and pops, and
+  `faces.ts`, the rising faces on a 2D canvas of its own; T-686).
 - Stations: `stationGeometry.ts` (platform shapes along the track for drawing, picking and the
   ghost, T-189, T-254), `stationNames.ts` (a station's name suggestions: cross street,
   neighbourhood, city or town, T-534), `stationLabels.ts` (names
   keep their elements across edits unless their text changes, T-496), `capacityMarkers.ts`, `labelLayout.ts` (shared spacing
   for names and tags).
-- Tools: `pick.ts`, `tools.ts` (drawing track, placing stations and crossovers, the line tool), `edgeEdit.ts`
+- Tools: `pick.ts`, `tools.ts` (drawing track, placing stations and crossovers, the line tool), `stationSnap.ts` (which overlapping track a station goes on, the end snap, T-671), `edgeEdit.ts`
   (dragging blueprint track's PIs, T-064, T-092), `nodeDrag.ts` (dragging blueprint nodes, T-093), `endMarkers.ts` (loose-end and draggable-point markers, T-416), `curveCircle.ts` (the circle of the segment being drawn, T-418),
   `blueprintBox.ts` (the Select tool's drag box, T-333, and dragging its pick, T-475; its state is `game/blueprintPick.ts`),
   `stopMarkers.ts` (the toggle markers of stop editing, T-233).
@@ -91,7 +96,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   far zone, T-118, T-120; one per city zoomed far out, T-186), `catchUp.ts` (the bubbles catching
   up over a game day, T-156), `demandOverlay.ts` (their canvas, over the network's),
   `demandHover.ts` (the count tag by the pointer), `modeBar.ts` (the tag's mode bar, T-494, and `localModes`, an open zone's local legs by mode, T-576), `airportMarks.ts` (the plane badge on an
-  airport's bubble, T-448; paths shared with the icons in `glyphs.ts`).
+  airport and its hover, T-448, T-674; paths shared with the icons in `glyphs.ts`).
 - Tags and outlines: `trackHover.ts` and `networkTips.ts` (the hover tags on track, trains and
   stations, T-157, T-194), `trackTagRows.ts` (the elevation and speed rows with icons, shared with
   the track tool's tag, T-526), `cityBoundaries.ts` and `boundaryGeometry.ts` (the metro outlines, one
@@ -102,12 +107,12 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 
 `Dock.tsx` (the dock, its icon tabs and resizing, T-252); `tabs.tsx` (Build, Lines, Stations and
 Money); `MoneyHistory.tsx` (the Money tab's history charts, T-447); `Cities.tsx` (its Cities list, T-550); `SettingsTab.tsx`; `SavesPanel.tsx` (saved games, T-251); `widgets.tsx` (chips, steppers,
-checkboxes and the inline SVG icons); `TopBar.tsx`; `StatusTag.tsx` (the demand status tag on the map's top row); `Toolbar.tsx` (tool hints and the confirmation
+checkboxes and the inline SVG icons); `ColourPicker.tsx` (the line colour picker: preview while dragging, one commit on release, T-672); `TopBar.tsx`; `StatusTag.tsx` (the demand status tag on the map's top row); `Toolbar.tsx` (tool hints and the confirmation
 dialog); `DemandSelector.tsx` (None/Homes/Destinations and the purpose filter); `Blueprint.tsx`
 (Build's quote and Construct, and the Select tool's selection bar on the map, T-353); `Debug.tsx` (the `?debug=1` readout); `inspector/` (one inspector
 per selection kind: `others.tsx` holds station, train, track, junction and cell or zone;
 `ComplexMap.tsx` the complex map; `NameEdit.tsx` a station's or line's name edited in place, T-534); `LoadingScreen.tsx` (the clock hold at startup, the loading card,
-the screen when demand cannot load, T-149, T-172, T-180); `Search.tsx` (T-148); `StationsFull.tsx`
+the screen when demand cannot load, T-149, T-172, T-180); `StartMenu.tsx` (the start menu and the URL switches that skip it, T-677); `Spinner.tsx` (the small spinner, T-647, and the bunny's train, T-677); `Search.tsx` (T-148); `StationsFull.tsx`
 (the "N stations full" button, T-231); `keys.ts` (which keys a focused control keeps, T-183); `locate.ts` (the camera to a station or a line: search picks, the tabs' double click, the inspectors' locate button, T-569);
 `tip.ts` (the hover tag for every panel and control, from `data-tip`, never `title`, T-210);
 `blurHold.ts` (every hover kept up through a window blur until the pointer moves, T-483);
@@ -129,8 +134,10 @@ T-285).
 
 `?debug=1` (readout; `window.tw` probes incl. `lagStart/lagStop`, `checkPrecision`; `window.twDemand`
 with demand timings and `client.qlog` per query; `window.twViews` with the demand views'),
-`?paused=1`, `?new=1` (a new game instead of the autosave; it owns no slot and never writes one
+`?paused=1`, `?new=1` (a new game; it owns no slot and never writes one
 until a copy is saved, T-320, so it is safe in a browser profile holding real games),
+`?continue=1` (the game opened last; checks that reopen a stored game use it), each of these and
+the two below skipping the start menu (T-677),
 `?synth=1&lines=500&trains=10000`, `?demandTest=1` (demand on T-005's hand-made network; both also
 never autosave), `?demandWorkers=N`, `?perfOff=...` / `?perfTry=...` (CPU A/B switches,
 `src/perfFlags.ts`, notes/T-045.md).
@@ -152,7 +159,7 @@ Run from the maps root (`node trainworld/checks/<file>`).
 - `every-pack-opens.mjs [url] [zone ...]`: every registered zone, in a fresh new game, opens for
   the view and solves a three-station line across its centre without a demand error (T-484; about
   16 s a zone, 18 minutes for all).
-- Node, no browser: `t133-picking-check` (picking order), `t144-check` (station geometry, line
+- Node, no browser: `t133-picking-check` (picking order), `t671-station-snap-check` (the station tool's choice among overlapping tracks), `t144-check` (station geometry, line
   widths), `t145-check` (the route preview contract), `t146-check` (complexes), `t125-frame-check`
   (world frames against PROJ), `t116-save-check` (save format), `t285-merge-check` (needs
   `--experimental-strip-types`), `t066-wasm-check` (demand WASM contract), `t066-worker-check` and
@@ -163,7 +170,8 @@ Run from the maps root (`node trainworld/checks/<file>`).
   them solve as two clusters, each as it would alone, to the bit; about a minute), `t301-worker-check`
   (packs and the market closed and reopened, also mid-solve and bare: figures to the bit).
 - Browser and timing (Playwright, `PLAYWRIGHT_MODULE`): `startup-timing.mjs` with
-  `static-serve.mjs` (startup marks on a scratch production build), `t303-measure.mjs` (demand
+  `static-serve.mjs` (startup marks on a scratch production build; `MENU=1` through the start
+  menu, timed from the pick), `t303-measure.mjs` (demand
   loading, clicks, pans), `t326-clusters.mjs` (the real save plus a Toronto line: edits in each cluster
   timed to their final, every final figure hashed against `?perfOff=clusters`), `t409-split.mjs` (a
   Boston and a Philadelphia line, in a new game or on the real save, edits timed, against
@@ -178,6 +186,14 @@ Run from the maps root (`node trainworld/checks/<file>`).
   `t586-trip-agrees.mjs` (New York's real save and a Mumbai test line: a far-end bubble's hover,
   the trip explorer opened from it and the worker's far-end sums agree within 1 point under every
   purpose filter and day; port 6196 by default),
+  `t674-airport-modes.mjs` (a new Tokyo game and a line to Haneda: the plane's hover follows the
+  worker's airport legs after the solve, and a game day later the destination bubble beside it
+  reads the same selected or not; port 6144 by default, about four minutes),
+  `t680-new-line-crowd.mjs` (a new game's Mumbai test line: its platforms are empty when its
+  trains start and fill no faster than riders arrive; also runs on a production build; port 6145
+  by default, about two minutes), `t684-points.mjs` (a new game's two Mumbai lines with a walk
+  between them at Dadar: points count each journey once and the loads' passenger-km, and a whole
+  hour's ledger points match the hour's table; dev server only, port 6153 by default, about two minutes),
   `t496-edit-latency.mjs` (the real save: click to drawn
   for placing stations; `MODE=visual` hashes the renderer's buffers after a series of edits against
   an older network.ts),
@@ -234,8 +250,8 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   (its sources: docs/data-register.md "Car ownership"); `--plan` prints every planned country's
   share and source, writing nothing.
 - `everyday_rates.py <ids> | --all` writes the `everyday` header block (the country's survey
-  outing rates and distance scales by purpose, T-509 stage 4; table `SURVEYS`, worldwide median
-  otherwise) into the merged pack and its res-9 copy; rerun it after anything that rebuilds a pack
+  outing rates by purpose, T-509 stage 4; table `SURVEYS`, worldwide median otherwise; the
+  distance scales are the sim's one worldwide set, `everyday::DECAY`, T-637) into the merged pack and its res-9 copy; rerun it after anything that rebuilds a pack
   header. `show` prints the table.
 - `osm_water.py` is the water source for cities outside the US (OSM coastline sea plus Geofabrik
   inland water, T-041; `source(extracts)` for a config's `water_source`, `mask <id>` for a

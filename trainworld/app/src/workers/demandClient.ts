@@ -2612,13 +2612,14 @@ const PURPOSE_INDEX_COUNT = 2 + EVERYDAY_KEYS.length;
 let client: DemandClient | null = null;
 
 const TEST = new URLSearchParams(location.search).get("demandTest") === "1";
-/** T-351: the page starts a new game (`?new=1`, workers/clockClient.ts): no stations, so the viewed
- * zone opens bare from the start. */
-const NEW_GAME = !TEST && !perfOff("bareStart") && new URLSearchParams(location.search).get("new") === "1";
+/** T-351: the page starts a new game (`?new=1`, or the start menu's New game, T-677): no stations,
+ * so the viewed zone opens bare from the start. */
+let NEW_GAME = false;
 
 /** Start the pool for a city. With `?demandTest=1` it solves T-005's hand-made network. */
-export function startDemand(city = HOME_CITY) {
+export function startDemand(city = HOME_CITY, newGame = false) {
   if (client) return client;
+  NEW_GAME = newGame && !TEST && !perfOff("bareStart");
   const c = (client = new DemandClient(city));
   setTripQuery((from, to, purpose) => c.trip(from, to, purpose)); // T-195
   setDemandQueries({ transfers: (members) => c.transfers(members), platformTransfers: () => c.platformTransfers(), cityCells: (city) => c.cityCells(city), cellModes: (purpose, city) => c.purposeModes(purpose ?? "all", city), stationRiders: (id, top, members) => c.stationRiders(id, top, members), flows: (end, cells) => c.flows(end, cells), intercitySelection: (end, cells) => c.intercitySelection(end, cells), intercityStation: (id, members) => c.intercityStation(id, members) });

@@ -88,6 +88,8 @@ LINE_TURN_DEG = 40.0          # ... turning no more than this
 LINE_MAX = 14
 LINE_KM = 24.0                # ... and the line no longer than this (a new game's money)
 LINE_MIN = 5                 # fewer: a made-up line of 9 stops 1.2 km apart on the most populous heading
+REACH_M = 1500.0              # a purpose is required of the test line when the pack has sites this near a station (T-615)
+REACH_ARRAYS = {"shopping": "errand_jobs", "school": "school_enrollment", "medical": "medical_visits"}
 GRAVITY_ONLY = {"zone_row", "zone_col", "zone_home", "zone_work"}  # what a group re-solve may change
 
 
@@ -364,6 +366,7 @@ def figures(city, reg, logs):
     out["mean_commute_km"] = header["gravity"].get("mean_trip_km")
     if "school_enrollment" in a:
         out["top_school_cell_pupils"] = float(a["school_enrollment"].max())
+    out["university_enrollment"] = float(a["university_enrollment"].astype(np.float64).sum()) if "university_enrollment" in a else 0.0
     if "drive_near" in a:
         q = a["drive_near"].astype(np.float64)
         q = q[q < 255]
@@ -489,15 +492,21 @@ def checks_of(city, f, rates, browser, changed, joint=None):
     else:
         r = rates[city]
         c.append(judge("school_rate", r["school"]))
-        c.append(judge("university_rate", r["university"]))
+        if f.get("university_enrollment", 1.0) <= 0:  # T-614: no sites is a pack without the purpose (T-582), not a rate of 0
+            c.append({"name": "university_rate", "status": "WARN", "value": r["university"],
+                      "detail": "no university sites in the pack, the purpose is empty"})
+        else:
+            c.append(judge("university_rate", r["university"]))
         c.append(judge("everyday_purposes", r["purposes"]))
     if browser is None:
         c.append(skip("browser", "not asked (--browser)"))
     else:
         bad = [k["name"] for k in browser.get("checks", []) if not k["ok"]]
         ok = browser.get("pass", False)
+        un = browser.get("unreached") or {}
+        note = "; not required of the test line: " + ", ".join(f"{k} ({v})" for k, v in un.items()) if un else ""
         c.append({"name": "browser", "status": "PASS" if ok else "FAIL", "value": None,
-                  "detail": "8 checks" if ok else f"failed: {bad or browser.get('error', 'no result')}"})
+                  "detail": ("8 checks" if ok else f"failed: {bad or browser.get('error', 'no result')}") + note})
     if changed is None:
         c.append(skip("other_packs_unchanged", "no snapshot (--since)"))
     else:
@@ -699,13 +708,35 @@ def water_pair(header, f, reg):
     return None
 
 
+def purposes_in_reach(header, a, line):
+    """T-615: the browser check's purposes the test line can carry: work and social always, the
+    others when the pack has sites of that purpose within REACH_M of a station of the line.
+    Returns (required, {purpose: why it is not required})."""
+    x, y = to_xy(header, [s[1] for s in line], [s[2] for s in line])
+    required, unreached = ["work", "social"], {}
+    for purpose, key in REACH_ARRAYS.items():
+        w = a[key].astype(np.float64) if key in a else None
+        if w is None or w.sum() <= 0:
+            unreached[purpose] = "the pack has no sites"
+            continue
+        near = np.zeros(len(w), bool)
+        for sx, sy in zip(x, y):
+            near |= np.hypot(a["x_m"] - sx, a["y_m"] - sy) < REACH_M
+        if (w[near] > 0).any():
+            required.append(purpose)
+        else:
+            unreached[purpose] = f"no sites within {REACH_M / 1000:g} km of the line ({int((w > 0).sum())} elsewhere)"
+    return required, unreached
+
+
 def browser_check(city, header, a, f, reg, out_dir):
     line, how = test_line(header, a, f, reg)
+    required, unreached = purposes_in_reach(header, a, line)
     pair = water_pair(header, f, reg) if f.get("mask") is not None else None
     if pair is None:
         return {"pass": False, "error": "no water run near the centre for the water pair"}
     row = {"task": "T-538", "name": reg["name"], "centre": reg["center"], "water": pair, "lineName": "Gate test",
-           "colour": "#2a7ab0", "view": reg["center"], "line": line}
+           "colour": "#2a7ab0", "view": reg["center"], "line": line, "purposes": required}
     rp = os.path.join(out_dir, f"{city}.row.json")
     with open(rp, "w", encoding="utf-8") as fh:
         json.dump(row, fh, ensure_ascii=False)
@@ -715,7 +746,7 @@ def browser_check(city, header, a, f, reg, out_dir):
     maps = os.path.dirname(ROOT)
     p = subprocess.run(["node", os.path.join(HERE, "city-browser.mjs"), city], cwd=maps, env=env,
                        capture_output=True, text=True, encoding="utf-8", errors="replace")
-    res = {"pass": p.returncode == 0, "line_from": how, "stations": len(line)}
+    res = {"pass": p.returncode == 0, "line_from": how, "stations": len(line), "unreached": unreached}
     if os.path.exists(jp):
         with open(jp, encoding="utf-8") as fh:
             res["checks"] = json.load(fh).get("checks", [])

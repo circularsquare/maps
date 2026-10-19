@@ -142,8 +142,9 @@ T-140, T-142, T-150, T-152, T-181] (the US sources are named here; elsewhere tie
 from LODES homes to jobs), **shopping and errands** and **social and leisure** outings (retail,
 food and recreation jobs, population, and OSM parks for 8% of leisure, T-196; outside the US the
 same sectors' jobs by small area where published, else each 2 km zone's jobs blended with OSM's
-shops and leisure places, T-453; how many and how far from each country's national travel survey,
-a worldwide median where it has none, T-509), **school** (NCES public schools),
+shops and leisure places, T-453; how many from each country's national travel survey, a worldwide
+median where it has none, T-509; how far by one worldwide set of distance scales, errands 1.3 km,
+social and school 1.4, medical 2.0, university 3.5, T-637), **school** (NCES public schools),
 **university** (IPEDS), **airport** ground trips (FAA boardings less connecting passengers) and
 **medical** visits (OSM facilities). Private schools are not modelled yet. **Homes leave out
 institutions** (prisons, nursing homes and the like, T-234).
@@ -164,7 +165,7 @@ institutions** (prisons, nursing homes and the like, T-234).
   between sampled cells rather than zone centres [T-587], so a good station
   near a short trip takes some walkers and a long walk loses to the train. The choice is
   0.10 a perceived minute with no rail constant (time and money alone), car ownership $1.50 a trip
-  plus $0.10 a km and 5 minutes to park [T-636]. Past 60 perceived car-minutes a minute weighs less
+  plus $0.10 a km and 7 minutes to park [T-636, T-637]. Past 60 perceived car-minutes a minute weighs less
   (0.10 x sqrt(60 / T)), in every layer [T-495, T-502].
 - **Homes without a car** [T-511, T-513]: each cell carries the people in households with no car
   (census by tract, LSOA or prefecture, else the national rate); they choose between rail, walking
@@ -224,7 +225,7 @@ to 350 degrees round [T-418, T-422, T-442], places stations, and makes lines, al
 **blueprints** that are free to edit and undo, then pays to **construct** them. A segment is one
 piece of track [T-244]. A crossover, placed with one click, joins a track to the track beside it (quad's
 other pair, or a route alongside) in an X, 120 m long, 50 km/h, priced as two junctions, so lines
-can change pairs mid-stretch [T-338]. Lines set a whole number of trains for high, medium and low demand, or a headway for each, run with the fewest trains that keep it [T-625]; capacity and
+can change pairs mid-stretch [T-338]. Lines set a whole number of trains for high, medium and low demand, or a headway for each, run with the fewest trains that keep it, or at the track's limit the most that fit [T-625, T-679]; capacity and
 junction conflicts add delay, computed from the schedules in the clock worker before demand runs,
 and no track, platform or junction carries more trains than its capacity: a line's fleet past that
 waits at its ends [T-517].
@@ -236,6 +237,10 @@ with $3B in an empty New York [T-485]; double track costs a base of US$45M a km 
 multiplier per elevation (US$13.5M at grade) [T-467], a 20 m car costs US$2.5M, bought as a line's
 fleet grows and kept in the depot for any line when it shrinks [T-028, T-631], and running costs are
 US$2.25 a car-km. The fare is typed or stepped in the Money tab [T-626].
+**Points** score each city: 20 a rail trip (a rider's whole journey, changes included, counted
+in the city it starts in) and 1 a passenger-km, landing as fares do and saved with the game; they
+unlock nothing yet [T-684]. A city whose train share reaches 10% earns a star in the Cities list,
+kept once earned [T-685].
 
 Detail: [docs/track-and-service.md](docs/track-and-service.md) (6.1 track and stations, 6.2
 capacity, 6.3 trains and schedules, 6.4 costs and money, 6.5 edits, 6.6 the boarding account).
@@ -247,7 +252,8 @@ MapLibre GL 6 for the basemap, with our own WebGL2 renderer on a canvas over it 
 stations and trains, drawn in the same frame as MapLibre's. Rust compiled to WebAssembly in Web
 Workers: one clock worker (track model, lines, money, boarding account, autosave) and a pool of
 demand workers that each own a fixed set of the five periods. Threads talk by transferring
-versioned snapshots. A loaded game holds only its clock, behind a loading card, until its
+versioned snapshots. The page opens on a start menu (New game, then the saved games); the workers
+start with the pick (T-677). A loaded game holds only its clock, behind a loading card, until its
 fresh demand solve's final result lands (T-347; the last final result kept beside the save, T-328,
 is drawn behind the card meanwhile); input is never blocked. City packs come from an offline Python pipeline. The simulation is a pure
 function of (save, pack versions, game time), bar the hour or two after a service edit [T-206].
@@ -257,7 +263,7 @@ Detail: [docs/architecture.md](docs/architecture.md) 7; file layout in `docs/cod
 
 A pastel style in Zen Maru Gothic, light or dark (Settings, Theme) with three colours each [T-039].
 Panels take CSS tokens (`ui/style.css`); the map's light and dark colours (basemap, line casing, map
-ink) are one table, `game/shades.ts`. The network takes the line colours, the same in both themes. One dock on the left holds the icon tabs (Build, Lines, Stations, Money), the
+ink) are one table, `game/shades.ts`, whose basemap palette is warm paper land, soft teal water and sage parks [T-676]. The network takes the line colours, the same in both themes. One dock on the left holds the icon tabs (Build, Lines, Stations, Money), the
 saved games button and the Settings gear, with the inspector under them, whose top edge never
 moves. The top bar holds the mode split (the goal number), the cash, the local day and time, the
 demand level, pause and three speeds. **Panels show what can change**: labels, numbers and states,

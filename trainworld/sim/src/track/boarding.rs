@@ -159,6 +159,10 @@ pub struct RunAccount {
     pub alighted: f64,
     /// Riders still waiting at a stop once the day's last train has left it.
     pub leftover: f64,
+    /// When the line's trains started, in its local time, if within this account's day (T-680):
+    /// its platforms are empty then. Departures by time of day before it are the day wrapping
+    /// round, not trains that ran. `NEG_INFINITY` otherwise.
+    pub open: f64,
 }
 
 /// One line's counts over a window of the day (`Boarding::window`).
@@ -461,6 +465,12 @@ impl Boarding {
                         events.push(t as f32);
                         events.push(ra.q_after[i * ra.n + k]);
                     }
+                    // T-680: empty when the line's trains started, and no train before then
+                    let open = ra.open - epoch;
+                    if (events[start * 2] as f64) < open {
+                        let after = (start..events.len() / 2).find(|&e| events[e * 2] as f64 >= open).unwrap_or(events.len() / 2);
+                        events.splice(start * 2..after * 2, [open as f32, 0.0]);
+                    }
                     let node = run.nodes[run.stop_idx[k] as usize];
                     let d0 = if r == 0 { ls.runs[0].stop_s[k] } else { ls.runs[0].stop_s[ra.n - 1 - k] };
                     let mid = epoch + 1800.0;
@@ -478,7 +488,7 @@ impl Boarding {
                         (arr.rate(mid) * (1.0 - carried)) as f32,
                         ra.left_h[k * 24 + hour],
                         ra.wait_h[k * 24 + hour],
-                        (arr.cum(epoch + 3600.0) - arr.cum(epoch)) as f32,
+                        (arr.cum(epoch + 3600.0) - arr.cum(epoch.max(ra.open).min(epoch + 3600.0))) as f32,
                         start as f32,
                         (events.len() / 2 - start) as f32,
                         p0 as f32,
@@ -750,11 +760,11 @@ impl Boarding {
             if past {
                 if let Some(Some(ya)) = self.accounts[self.kind_at(t - DAY)].get(l) {
                     if ya.runs[0].n == n {
-                        self.tally(ya, ls, tod, DAY, -DAY, &mut w);
+                        self.tally(ya, ls, tod, DAY, -DAY, t - tod - DAY, &mut w);
                     }
                 }
             }
-            self.tally(acc, ls, f64::NEG_INFINITY, tod, 0.0, &mut w);
+            self.tally(acc, ls, f64::NEG_INFINITY, tod, 0.0, t - tod, &mut w);
             let Tally { stops, boarded, left, fullest, mut full, trains } = w;
             full.sort_by(f64::total_cmp);
             let mut spans: Vec<(f64, f64)> = vec![];
@@ -783,7 +793,8 @@ impl Boarding {
     /// are shifted by `off`. A stop's boardings telescope: the riders who have arrived by its last
     /// departure in the window, less those still waiting after it, less the same at the departure
     /// before the window (the day's last, a day earlier, when `from` is before the first).
-    fn tally(&self, acc: &LineAccount, ls: &LineSvc, from: f64, to: f64, off: f64, w: &mut Tally) {
+    /// `day0` is the local time of the window's midnight.
+    fn tally(&self, acc: &LineAccount, ls: &LineSvc, from: f64, to: f64, off: f64, day0: f64, w: &mut Tally) {
         let cap = CRUSH_PER_CAR * ls.cars.max(1) as f64;
         let n = w.stops.len();
         for (r, ra) in acc.runs.iter().enumerate() {
@@ -791,6 +802,9 @@ impl Boarding {
             if m == 0 || ra.n != n {
                 continue;
             }
+            // T-680: nothing ran before the line's trains started
+            let open = ra.open - day0;
+            let from = if open > from { open - 1e-6 } else { from };
             for k in 0..n {
                 let arr = &ra.arrivals[k];
                 let ts = &ra.order_t[k * m..(k + 1) * m];
@@ -803,15 +817,21 @@ impl Boarding {
                 }
                 let (t_before, q_before) = if lo > 0 { (ts[lo - 1], q(lo - 1)) } else { (ts[m - 1] - DAY, q(m - 1)) };
                 let last = done - 1;
-                let b = ((arr.cum(ts[last]) - q(last)) - (arr.cum(t_before) - q_before)).max(0.0);
+                let mut b = (arr.cum(ts[last]) - q(last)) - (arr.cum(t_before) - q_before);
+                let (mut prev, mut q_prev) = (t_before, q_before);
+                for j in lo..done {
+                    let mut a = (arr.cum(ts[j]) - arr.cum(prev)).max(0.0);
+                    if prev < open && open <= ts[j] {
+                        // whoever was waiting then never was: the platform starts empty
+                        b -= q_prev + arr.cum(open) - arr.cum(prev);
+                        a = (arr.cum(ts[j]) - arr.cum(open)).max(0.0);
+                    }
+                    w.left += a.min(q(j));
+                    (prev, q_prev) = (ts[j], q(j));
+                }
+                let b = b.max(0.0);
                 w.stops[if r == 0 { k } else { n - 1 - k }] += b;
                 w.boarded += b;
-                let mut prev = t_before;
-                for j in lo..done {
-                    let a = (arr.cum(ts[j]) - arr.cum(prev)).max(0.0);
-                    w.left += a.min(q(j));
-                    prev = ts[j];
-                }
             }
             // trains: the fullest stretch each has reached in the window (a trip from before
             // midnight counts at the stops it reaches after it)
@@ -916,6 +936,10 @@ pub fn simulate(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRider
     let from = if warm { t0 - DAY } else { t0 };
     let mut trips: Vec<Trip> = vec![];
     svc.run_deps(net, l, r, from, t0 + DAY, &mut trips);
+    // T-680: a change from a pattern with no trains is when the line's trains started; nobody
+    // waited for them before it
+    let open = svc.eras_of(l).iter().rev().find(|e| e.lat.tph.iter().all(|&t| t <= 0.0)).map(|e| e.until).filter(|&u| u > t0);
+    let open = open.map_or(f64::NEG_INFINITY, |u| u + ls.shift);
     // T-309: from here on, times are the line's local time (its periods, hours and days)
     let t0 = t0 + ls.shift;
     for t in &mut trips {
@@ -954,6 +978,7 @@ pub fn simulate(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRider
         boarded: 0.0,
         alighted: 0.0,
         leftover: 0.0,
+        open,
     };
     let mut carry = vec![0.0f64; m];
     let mut order: Vec<usize> = (0..m).collect();
@@ -963,17 +988,25 @@ pub fn simulate(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRider
         let arr = &arrivals[k];
         let mut q = 0.0f64;
         let mut c_prev = f64::NAN;
+        let mut t_prev = f64::NEG_INFINITY;
         hist.clear();
         // Without the warm-up day the first train takes whoever arrived since the day's last
         // train, a day before (the platform empty then: `leftover` checks it).
         if !warm && m > 0 {
-            let last = time(order[m - 1], k) - DAY;
-            c_prev = arr.cum(last);
-            hist.push((last, c_prev));
+            t_prev = time(order[m - 1], k) - DAY;
+            c_prev = arr.cum(t_prev);
+            hist.push((t_prev, c_prev));
         }
         let mut head = 0usize;
         for &i in &order {
             let t = time(i, k);
+            if open > t_prev && open <= t {
+                q = 0.0;
+                c_prev = arr.cum(open);
+                hist.clear();
+                hist.push((open, c_prev));
+                head = 0;
+            }
             let c_now = arr.cum(t);
             let a = if c_prev.is_nan() { 0.0 } else { (c_now - c_prev).max(0.0) };
             let q_before = q + a;
@@ -1016,6 +1049,7 @@ pub fn simulate(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRider
             }
             hist.push((t, c_now));
             c_prev = c_now;
+            t_prev = t;
             q = q_after;
         }
         acc.leftover = acc.leftover.max(q);
@@ -1616,5 +1650,45 @@ mod tests {
             assert!(q[5] > 0.0);
             assert!((q[7] - 20000.0 * 1.0).abs() < 1.0); // flat shape: 20,000 this hour
         }
+    }
+
+    #[test]
+    fn a_new_lines_platforms_fill_from_when_its_trains_start() {
+        // T-680: trains set on a line at 08:20; its platforms are empty then and fill at the
+        // arrival rate, not with everyone who would have arrived in the six hours before
+        let (mut w, l) = setup(0.0);
+        let mut b = Boarding::default();
+        b.set_riders(&riders(l, [3000.0, 2000.0, 2000.0, 2000.0, 100.0]));
+        let now = 2.0 * DAY + 8.0 * 3600.0 + 1200.0;
+        let before = w.svc.before_edit(&w.net, now);
+        w.apply(crate::track::world::Op::Schedule { id: l, tph: [10.0, 5.0, 2.5] }).unwrap();
+        w.svc.note_changes(&w.net, &before, now);
+        let epoch = now - 1200.0;
+        let out = b.hour(&w.net, &w.svc, epoch);
+        let (nt, nl, nq) = (out[0] as usize, out[1] as usize, out[2] as usize);
+        let q0 = 5 + 2 * nt + nl;
+        let ev = &out[q0 + nq * QUEUE_STRIDE..];
+        assert_eq!(nq, 2);
+        for q in out[q0..q0 + nq * QUEUE_STRIDE].chunks(QUEUE_STRIDE) {
+            let (rate, first, count) = (q[4], q[8] as usize, q[9] as usize);
+            let e = &ev[first * 2..(first + count) * 2];
+            // as game/boarding.ts's crowdAt: the last train to leave at or before t, plus arrivals
+            let crowd = |t: f32| {
+                let j = e.chunks(2).rposition(|p| p[0] <= t).unwrap_or(0);
+                e[j * 2 + 1] + (t - e[j * 2]).max(0.0) * rate
+            };
+            let mut t = 1200.0f32;
+            while t <= 3600.0 {
+                assert!(crowd(t) <= rate * (t - 1200.0) + 1.0, "{} waiting at {t} s of the hour, {} a second", crowd(t), rate);
+                t += 30.0;
+            }
+            assert!(crowd(1199.0) < 1.0);
+            // riders arriving this hour: from 08:20 only
+            assert!((q[7] - 3000.0 * 40.0 / 60.0).abs() < 1.0, "{}", q[7]);
+        }
+        // the line's riders today: those since 08:20 at most
+        let today = b.today(&w.svc, now + 1800.0);
+        assert!(today[3] <= 2.0 * 3000.0 * 0.5 + 1.0, "{} riders today", today[3]);
+        assert!(today[3] > 0.0);
     }
 }

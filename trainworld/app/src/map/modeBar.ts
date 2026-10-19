@@ -4,10 +4,18 @@
 
 import type { DemandView } from "../game/demand";
 import { MODE_COLOURS } from "../game/palette";
+import { purposeColour, type PurposeKey } from "../game/purposes";
 
 export function modeBar(train: number, walk: number, drive: number): string {
   const part = (v: number, colour: string) => (v > 0 ? `<i style="flex-grow:${v};background:${colour}"></i>` : "");
   const inner = part(train, MODE_COLOURS.train) + part(walk, MODE_COLOURS.walk) + part(drive, MODE_COLOURS.drive);
+  return inner ? `<div class="mode-bar">${inner}</div>` : "";
+}
+
+/** The same thin bar by trip purpose, in the purpose colours (T-681), for a bubble's hover under All
+ * purposes; "" when nobody travels. */
+export function purposeBar(parts: { key: PurposeKey; n: number }[]): string {
+  const inner = parts.map((p) => (p.n > 0 ? `<i style="flex-grow:${p.n};background:${purposeColour(p.key)}"></i>` : "")).join("");
   return inner ? `<div class="mode-bar">${inner}</div>` : "";
 }
 

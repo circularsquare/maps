@@ -3,6 +3,7 @@ import { clearBpPicked, offTotals, pickedState, switchPicked } from "../game/blu
 import { liveMoney } from "../game/money";
 import { tool } from "../game/ui";
 import type { BlueprintItem, Level } from "../game/types";
+import { constructBlueprints } from "../game/lineActions";
 import { edit, redo, say, undo, world } from "../game/world";
 import { Icon } from "./widgets";
 
@@ -20,10 +21,6 @@ export function BlueprintControls() {
   const w = world.value;
   const items = w?.money.blueprintItems ?? [];
   const total = items.reduce((sum, r) => sum + r.cost, 0);
-  const construct = async () => {
-    const a = await edit({ op: "constructAll" });
-    if (a.ok) say(`Constructed for ${money(a.charge * 1e6)}.`);
-  };
   return (
     <div class="blueprint-controls">
       <div class="blueprint-head">
@@ -34,7 +31,7 @@ export function BlueprintControls() {
           <button class="btn icon" data-tip="Redo (Ctrl+Y)" aria-label="Redo" disabled={!w?.canRedo} onClick={() => void redo()}><Icon.redo /></button>
         </div>
       </div>
-      <button class="btn text blueprint-construct" disabled={total <= 0} onClick={construct}>Construct blueprints</button>
+      <button class="btn text blueprint-construct" data-tip="Construct every blueprint piece (C)" disabled={total <= 0} onClick={() => void constructBlueprints()}>Construct blueprints<span class="key muted">C</span></button>
     </div>
   );
 }

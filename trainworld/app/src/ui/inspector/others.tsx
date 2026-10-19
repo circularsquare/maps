@@ -19,6 +19,7 @@ import { display, selection, setDisplay, tool } from "../../game/ui";
 import { stationPoint } from "../../game/trip";
 import { pickTool } from "../tabs";
 import { edit, linesAt, say, world } from "../../game/world";
+import { createLine } from "../../game/lineActions";
 import { live } from "../../map/live";
 import { removeThing } from "../../game/remove";
 import { tripAt } from "../../map/network";
@@ -508,14 +509,14 @@ function OnBoard({ line, run, s, stopS, cars, profile, dep }: { line: LineInput;
   return (
     <>
       <div class="h">
-        <span data-tip="Counted train by train from the demand forecast: riders board at the forecast's rate until the train is packed full">On board</span><span class="right muted small">{PERIODS[p].name.toLowerCase()}{dm?.estimate && <span data-tip="First estimate for this new or changed line, refined when demand finishes updating">, estimate</span>}</span>
+        <span data-tip="Counted train by train from the demand forecast: riders board at the forecast's rate until the train is full">On board</span><span class="right muted small">{PERIODS[p].name.toLowerCase()}{dm?.estimate && <span data-tip="First estimate for this new or changed line, refined when demand finishes updating">, estimate</span>}</span>
       </div>
       <ul class="rows">
         <Row label="Riders aboard" bold>{Math.round(aboard).toLocaleString("en-US")}</Row>
         <Row label="Typical train this hour">{Math.round(average).toLocaleString("en-US")}</Row>
         <li>
           <span class="grow">
-            <span class="load-bar" data-tip={`${Math.round(aboard).toLocaleString("en-US")} riders aboard. The bar is full at ${crush.toLocaleString("en-US")} packed full, and the tick marks the ${seats.toLocaleString("en-US")} seats.`}>
+            <span class="load-bar" data-tip={`${Math.round(aboard).toLocaleString("en-US")} riders aboard. The bar is full at ${crush.toLocaleString("en-US")} riders, and the tick marks the ${seats.toLocaleString("en-US")} seats.`}>
               <i class="fill" style={{ width: Math.min(100, (aboard / crush) * 100) + "%" }} />
               <i class="seats" style={{ left: (seats / crush) * 100 + "%" }} />
             </span>
@@ -523,7 +524,7 @@ function OnBoard({ line, run, s, stopS, cars, profile, dep }: { line: LineInput;
           <span class="val">{state}</span>
         </li>
         <Row label="Seats">{seats.toLocaleString("en-US")}</Row>
-        <Row label="Packed full">{crush.toLocaleString("en-US")}</Row>
+        <Row label="Full at">{crush.toLocaleString("en-US")}</Row>
       </ul>
     </>
   );
@@ -644,6 +645,14 @@ export function TrackInspector({ edge }: { edge: number }) {
       </ul>
       {!e.built && !e.crossover && <Shape edge={e.id} version={w.version} />}
       {lines.length > 0 && <div class="h">Lines on it</div>}
+      {lines.length === 0 && (
+        <div class="h">
+          Lines on it
+          <span class="right">
+            <button class="btn icon" data-tip="New line, starting at the stations on this track (N)" aria-label="New line" onClick={() => void createLine(e)}><Icon.plus /></button>
+          </span>
+        </div>
+      )}
       <ul class="rows pick">
         {lines.map((l) => (
           <li onClick={() => (selection.value = { kind: "line", line: l.id })}>

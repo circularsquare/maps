@@ -24,7 +24,7 @@ import { count, wholeDistance } from "../game/format";
 import { BUBBLE_ALPHA } from "../game/palette";
 import { tripOpenedFrom } from "../game/trip";
 import { compass } from "../game/places";
-import { purposeWords, type PurposeFilter } from "../game/purposes";
+import { FILTER_PURPOSES, purposeWords, type PurposeFilter, type PurposeKey } from "../game/purposes";
 import type { Selection } from "../game/types";
 import { display, purposeFilter, selection, shownDayPhrase, tool } from "../game/ui";
 import { world } from "../game/world";
@@ -33,7 +33,7 @@ import { aggregate, discs, type Groups } from "./bubbles";
 import { CATCH_STEP, CATCH_WALL_MS, caughtUp, tripsDone } from "./catchUp";
 import { cityOverview } from "./intercityView";
 import { anchorVersion } from "./anchorVersion";
-import { modeBar } from "./modeBar";
+import { modeBar, purposeBar } from "./modeBar";
 import { addFinder, discAt, pointerAt, pointerLocal, type Pointer } from "./demandHover";
 import { bubbleLevel, LINE, type DemandOverlay } from "./demandOverlay";
 import { anchor, anchorShift, kAtY, toLocal, type Anchor } from "./geo";
@@ -56,6 +56,9 @@ const tripWords = () => {
   const p = purposeFilter.peek();
   return p === "all" ? "trips" : `${purposeWords(p)} trips`;
 };
+
+/** The purposes a bubble's hover bar splits its legs into (T-681). */
+const BAR_PURPOSES: PurposeKey[] = FILTER_PURPOSES.map((p) => p.key);
 
 /** With a bubble selection, a short faint line from each far-end bubble toward the selection
  * (T-520, Anita: to try and maybe undo; false turns them off). */
@@ -101,6 +104,9 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   let workerReady: Promise<boolean> | null = null;
   /** each cell's world metres (the trip explorer's points, T-208) */
   let cellsWorld: Float32Array | null = null;
+  /** each shown purpose's legs per cell at both ends, for the hover's purpose bar under All purposes (T-681) */
+  let legsByPurpose: { version: number; day: number; parts: { key: PurposeKey; home: Float32Array; work: Float32Array }[] } | null = null;
+  let legsAsked = 0;
   let nextId = 1;
   /** replies of every bubble worker (the focused zone's and the nearby zones'), by message id */
   const pending = new Map<number, (b: any) => void>();
@@ -216,6 +222,8 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
       focusSeen = focus; frameSeen = frameNow; focusEpoch++; wanted++;
       worker = null; workerReady = null; city = null; cellsWorld = null;
       shown = built = null;
+      legsByPurpose = null;
+      legsAsked++;
       catching = null;
       near = far = null; nearDiscs = farDiscs = null; farCells = null;
       view.setBubbles([]); view.setDiscs("near", null); view.setDiscs("far", null); view.setLines("far", null);
@@ -279,9 +287,25 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
       }
       if (ask !== wanted) return;
       showBubbles({ dv, end, purpose, bubbles: b, modes, from: f < 1 ? catching!.from : null, f });
+      if (purpose === "all" && dv.final) void loadPurposeLegs();
       if (selection.peek()?.kind === "commuters") refreshPick();
     })().finally(() => building--);
   });
+
+  /** Every shown purpose's legs per cell for the current final result (the hover's purpose bar);
+   * kept as one total per end, so six purposes cost little memory. */
+  const loadPurposeLegs = async () => {
+    const ask = ++legsAsked;
+    const got = await Promise.all(BAR_PURPOSES.map((k) => cellModes(k)));
+    const first = got[0];
+    if (ask !== legsAsked || !first || got.some((g) => !g || g.version !== first.version || g.day !== first.day)) return;
+    const total = (a: Float32Array, b: Float32Array, c: Float32Array) => a.map((v, i) => v + b[i] + c[i]);
+    legsByPurpose = {
+      version: first.version,
+      day: first.day,
+      parts: BAR_PURPOSES.map((key, i) => ({ key, home: total(got[i]!.homeRail, got[i]!.homeWalk, got[i]!.homeDrive), work: total(got[i]!.workRail, got[i]!.workWalk, got[i]!.workDrive) })),
+    };
+  };
 
   // ---- catching up over a game day (T-156) ----
   const MODE_KEYS = ["homeRail", "homeWalk", "homeDrive", "workRail", "workWalk", "workDrive"] as const;
@@ -429,8 +453,20 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     const L = shown.bubbles.levels[bubbleLevel(map.getZoom())];
     const i = discAt(L.discs, p, shown.bubbles.anchor, view.bubbleSize);
     if (i < 0) return null;
-    return bubbleTag(shown.end, L.train[i], L.walk[i], L.drive[i]);
+    return bubbleTag(shown.end, L.train[i], L.walk[i], L.drive[i], purposeTag(shown.end, L.group[i]));
   });
+  /** The purpose bar of the focused zone's bubble `group` under All purposes (T-681): a bubble over a
+   * terminal and its neighbouring job cells holds trips of several purposes the mode bar does not tell apart. */
+  const purposeTag = (end: "home" | "work", group: number): string => {
+    const s = legsByPurpose;
+    if (!s || !city || !shown || shown.purpose !== "all") return "";
+    const g = city.levels[bubbleLevel(map.getZoom())];
+    return purposeBar(s.parts.map((p) => {
+      let n = 0;
+      for (let k = g.off[group]; k < g.off[group + 1]; k++) n += p[end][g.members[k]] || 0;
+      return { key: p.key, n };
+    }));
+  };
   /** A nearby zone's bubble under the point (T-276): drawn under the focused zone's, shown with them. */
   const nearbyAt = (p: Pointer): { id: CityId; s: ZoneShown; i: number } | null => {
     const sel = selection.peek()?.kind;

@@ -52,7 +52,7 @@ GROUP_GAP_KM = 50.0
 MAX_GROUP_ZONES = 200_000
 # the local layer's parking (sim kernel `Params` defaults: park_min, park_paid_min, park_paid_d0,
 # park_paid_cap_min, park_free_d; `CELL_KM2`)
-PARK_MIN, PARK_PAID_MIN, PARK_PAID_D0, PARK_PAID_CAP_MIN, PARK_FREE_D = 5.0, 15.0, 3000.0, 50.0, 8000.0
+PARK_MIN, PARK_PAID_MIN, PARK_PAID_D0, PARK_PAID_CAP_MIN, PARK_FREE_D = 7.0, 15.0, 3000.0, 50.0, 8000.0
 CELL_KM2 = 0.1053
 # kernel `CORDONS` (congestion charges, perceived minutes a one-way trip): lon/lat rings, charge
 CORDONS = [
@@ -76,7 +76,7 @@ def in_ring(ring, x, y):
 def park_by_cell(h, a, lon, lat):
     """Each cell's parking for an arriving car, perceived minutes: the mean over drivers in its
     2 km zone. Mirrors the sim kernel's `Params::park_mean` over `park_parts` (T-380, T-440) with
-    `cordon_by_zone`: 5 to park (since T-636; the packs built before hold 3) and the zone's congestion charge for everyone, a paid space
+    `cordon_by_zone`: 7 to park (T-637; the packs built before T-636 hold 3, T-638) and the zone's congestion charge for everyone, a paid space
     15 ln(d / 3,000) more (at most 50) for the share 1 - 1 / (1 + d / 8,000), d the zone's jobs
     per km² of land (res-9 cells, a merged res-8 cell counts 7, at most the square)."""
     nz, zone = h["zones"], a["zone"].astype(np.int64)

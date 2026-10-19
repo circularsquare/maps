@@ -14,6 +14,7 @@ import { splitTip } from "../game/splitTip";
 const WEEKDAY_LONG = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 import { world } from "../game/world";
 import { liveMoney, moneyState } from "../game/money";
+import { pointsExact, pointsPerDay } from "../game/points";
 import { Icon } from "./widgets";
 import { perfOff } from "../perfFlags";
 import { saveSlotsState } from "../workers/clockClient";
@@ -52,6 +53,16 @@ function Cash() {
     <span class="cash-cur">{m ? "$" : ""}</span>
     <span class="cash-digits">{exact.replace(/^−?\$/, "")}</span>
   </div>;
+}
+
+/** The city's name, the whole of it and its points (T-684) on hover; its own component since the
+ * points move as fares land. */
+function CityName({ id, name }: { id: string | null; name: string }) {
+  const total = id ? liveMoney.value.points?.[id] : undefined;
+  const rate = id ? pointsPerDay.value.get(id)?.[shownDay.value] : undefined;
+  const lines = [name];
+  if (id && (total || rate)) lines.push(`${pointsExact(total ?? 0)} points`, `${pointsExact(rate ?? 0)} points ${["on a weekday", "on a weekend day", "a day"][shownDay.value]} with the riders now`);
+  return <div class="city" data-tip={id ? lines.join("\n") : undefined}>{name}</div>;
 }
 
 function Speed() {
@@ -98,11 +109,11 @@ export function TopBar() {
   const note = demandView.value && !viewFinal.value ? " (an early estimate)" : demandView.value?.version === CACHE_VERSION ? " (from the last time this game was open)" : viewUpdating.value ? " (before your last change)" : "";
   // T-406: walking and driving are icons; each has its own hover with the share and its rides
   const modeTip = (name: string, share: number, n: number | undefined) =>
-    `${name}: ${pct(share)} of rides a day${where}${rides && n !== undefined ? ` (${count(n)} of ${count(rides.all)})` : ""}${note}`;
+    `${name}: ${pct(share)} of rides per day${where}${rides && n !== undefined ? ` (${count(n)} of ${count(rides.all)})` : ""}${note}`;
   return (
     <><header id="topbar">
       {/* T-341: every part has a fixed width; a long name is cut short, the whole name on hover */}
-      <div class="city" data-tip={city?.name}>{city?.name}</div>
+      <CityName id={city?.id ?? null} name={city?.name ?? ""} />
       <div class="split">
         <div data-tip={splitTip(where, known, rides, note)} class={"split-row" + (viewUpdating.value ? " updating" : "")}>
           <span class="bar-box">

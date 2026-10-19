@@ -15,7 +15,7 @@ inter-region trips by train, car and plane) in [ui-demand-views.md](ui-demand-vi
 
 [T-293, T-446] The line and station panels and the Lines and Stations tabs count the past 24
 hours, not a whole-day forecast, so nothing resets at midnight: riders, boardings, fares, running
-cost, trains that left full (with when), riders left behind. Labels say "Past 24 h" or "24 h";
+cost, trains that left full, riders left behind. Labels say "Past 24 h" or "24 h";
 hovers say "in the past 24 hours". They are counted by the clock worker from the boarding
 account's departures (`TrackApi.past_day`: the rest of yesterday from the time of day now, on
 yesterday's kind of day, then today so far on today's; a stop's boardings in a stretch are the
@@ -26,23 +26,16 @@ at either end in part. Asked four times a wall second
 while a panel shows them and the clock runs (`game/today.ts`); only the components showing them
 re-render. The map's demand views stay demand's whole-day picture.
 
-**Yesterday** [T-408, `workers/clock.worker.ts` `closeDay`, `yesterday`]: at each line's local
-midnight the clock worker keeps that line's whole day (`TrackApi.today` evaluated at the day's
-last second, fares paid whole). A game loaded since the day ended has none kept, and shows
-the day worked out again on the network as it is now (the account is the same for every day of a
-kind). Lines built after the day ended show nothing. Kept days are not saved.
-
 **Riders by purpose** [T-165, `ui/inspector/PurposeSplit.tsx`]: under a line's riders and a
 station's (or complex's) boardings in the past 24 hours, a thin stacked bar in the purpose colours, in the
-purpose filter's order, with a key of names and rounded shares ("<1%" for a sliver); hovering a
-segment or key entry gives the share ("Work: 48% of riders"). Every purpose is listed, those with
-none here muted. Under the purpose filter the purpose drawn is ringed in the bar and bold in the
-key.
+purpose filter's order, with no key (T-669); hovering a segment gives the purpose and its share
+("Work: 48% of riders", "<1%" for a sliver). Purposes with none here have no segment. Under the
+purpose filter the purpose drawn is ringed in the bar.
 
 ## Lines tab and the line inspector
 
 - **The Lines tab** has New line above its list (actions go above lists of any length). The list
-  sorts by clicking a column header [T-310]: Name, Riders (past 24 hours), Trains and Near. A click sorts by that
+  sorts by clicking a column header [T-310]: Name, City (below), Riders (past 24 hours), Trains and Near. A click sorts by that
   column (names A to Z, figures biggest first, Near nearest first), a second reverses it, the sorted
   column has a small arrow, and each header's hover says what it sorts by. Names sort naturally, ties
   by name. Lines default to by name. The sort is kept while the page is open and re-runs each game hour.
@@ -57,7 +50,7 @@ key.
   riders, at least 5 min): `crowding` in `game/today.ts`. Grades (`CROWD_GRADES`): yellow from
   0.1, orange from 0.3, red from 0.6, so 2 min on a 10 min ride is red and so is 4 min on a 40
   min ride; orange and red colour the count (`crowdClass`). Hover "Morning peak: riders wait 1.8
-  min on average for a train with room", then "4/12 trains running now are packed full on their
+  min on average for a train with room", then "4/12 trains running now are full on their
   trip" (trains from leaving the first stop until they could leave again from the far end,
   `Boarding::under_way`). The figures end each `past_day` block (`Boarding::crowding`).
 - **Scope and Near** [T-332; `game/listScope.ts`, `ScopeToggle` in `ui/tabs.tsx`]: beside New line
@@ -70,41 +63,66 @@ key.
   its nearest stop's, hover "1.4 km from the centre of the screen"), rows without one last, and the
   column's width is given back to the names under any other sort. The centre is taken at each move end (`viewCentre`, set in
   `map/zoneFocus.ts`), so the order follows the view without moving while it is dragged.
+- **City column** [T-670]: with the whole world listed and the lines' first stops in two or more cities, a
+  City column follows Name (the first stop's city, named as the Cities list names it, `stationZone`;
+  hover "The first stop is in Toronto"). It sorts like the others and takes room from the Riders and
+  Trains columns.
 - **New line** [T-109 to T-112] selects an empty zero-train line, enters stop editing
   ([ui-building.md](ui-building.md)) and focuses its unique `Line N` name, text selected. N follows
-  saved creation order, copies included, skipping names in use.
-- **The badge**: a click edits its colour (palette swatches or a custom colour) and a persistent
-  symbol; several characters widen the rounded badge; a blank symbol restores name-derived
-  initials.
-- **Actions** above the stop list: Edit stops, Copy line (duplicates route and settings, then opens
+  saved creation order, copies included, skipping names in use. The N key does it from any tab
+  [T-670]; the same on a selected track no line runs on (its inspector's "Lines on it" heading
+  carries a plus button, hover "New line, starting at the stations on this track (N)") starts the
+  line with the stations at the track's two ends, else empty.
+- **The line editor** [T-670, T-672]: a double click on the badge, a click on it, a double click on the
+  name or the pencil open one editor under the title: the name box (focused), a Symbol box and the
+  colour picker (`ui/ColourPicker.tsx`, after languagedots' swatch editor: a saturation and brightness
+  area, a hue strip, a hex box with the colour beside it, the palette swatches). Leaving the name box
+  keeps the name and leaves the editor open; Enter in it, the check button (hover "Done") that
+  replaces the pencil, a click anywhere outside the title and editor, or Esc closes it (Esc in the name box
+  drops the typed name). A symbol with several characters widens the rounded badge; a blank symbol
+  restores name-derived initials. Dragging in the picker changes the badge and the stop dots in the
+  panel at once; the map's line follows by one colour edit every 0.2 s at most (longer on a slow
+  machine: 6 times the last edit's round trip), and the final colour goes as one edit on release, a
+  swatch click, an arrow key step or a typed hex.
+- **Actions** at the top, under the title and the planned or broken notice: Edit stops (hover and key L), Copy line (duplicates route and settings, then opens
   naming and editing), Express copy [T-255] ("<line> express" with stops moved to their twins on
   quad track's express pair, opening stop editing at once; [track-and-service.md](track-and-service.md)
-  6.1), and Delete line (asked first). Incomplete lines stay planned and run no trains.
+  6.1), and Delete line (asked first). While stops are being edited the Stops list (with a remove
+  button on each stop) follows them there, above Schedule; otherwise it sits after the day's figures.
+  Incomplete lines stay planned and run no trains.
 - **Sections**, in order: Schedule (trains for each demand level, with the resulting headway;
   [track-and-service.md](track-and-service.md) 6.3; a Trains / Headway switch in the heading
   chooses what the player sets [T-625]: with Headway the headway column holds a stepper (30 s steps
   under 5 minutes, 1 minute under 15, 5 above; none, or 1 to 120 minutes; a click on the number types
   it in minutes) and the trains column the count it gives; each button's hover names the train
   count it leads to and, on a running line, the cars it buys at the car price, takes from the
-  depot, or frees [T-631]; hovering High, Medium or Low gives that
+  depot, or frees [T-631]; a line whose track holds it just over the headway set shows the headway
+  it runs at, muted, left of the stepper, with a hover naming what limits it as the capacity alerts
+  name it ("Terminus at West takes one train every 4m00s at most, so 8 trains run every 4m07s",
+  from the tail of `TrackApi.line_held`) [T-679]; a headway shorter than that limit, or by hand more
+  trains than fit, is red, with the same hover; an edit refused for cash shakes its control for
+  300 ms and paints the level's train count red until the cash covers it or another edit to the
+  line goes through (`refusedForCash` in `game/world.ts`) [T-625]; hovering High, Medium or Low gives that
   level's times of day in the line's local time, from the period table in `game/periods.ts`:
   "High demand: 06:00 to 10:00, 16:00 to 20:00"; weekends use the same hours) [T-406]; on a
   running line one dot before each level's name grades the level on today's kind of day by the
-  crowding score above (the level's periods averaged by riders; High is its two peaks), green
-  below 0.1 (`Boarding::line_periods`) [T-477, T-491, T-515]; hover "Riders wait 4.0 min on
-  average for a train with room", then "12/96 trains are packed full" (all the level's periods),
+  crowding score above (the level's periods averaged by riders; High is its two peaks), its colour
+  running smoothly from green at 0 through yellow (0.15), orange (0.4) and red (0.7) to a deep red
+  from 1.2 (`crowdColour` in `game/today.ts`; `Boarding::line_periods`) [T-673] [T-477, T-491, T-515]; hover "Riders wait 4.0 min on
+  average for a train with room", then "12/96 trains are full" (all the level's periods),
   and a last line naming the worst period and its wait when that period's grade is worse than the
   level's; the trains steppers take Shift-click for 5 and Ctrl-click for 20 (their hover says so)
-  [T-516];
+  [T-516]; when full track holds trains back, a red box under the table names it ("Platform at
+  Akabane is full", the station name a link that moves the camera there [T-669]) with the trains
+  held per level;
   Today for a running line:
   riders by purpose,
-  fares, running cost so far, its fullest train so far ("100%" when one left packed full, else "N%
-  full"), how many trains left full as "x/y" of the trips that reached a stop in the 24 hours
-  (the fourth number from the end of each `past_day` block) [T-481] and when (spans under half an hour apart, at the stop where
-  each is fullest) and riders left behind [T-230, T-239, T-293]; the block's heading is a Past 24 h /
-  Yesterday switch (the Segmented pattern of Settings; the choice is kept while the page is open)
-  and Yesterday gives the same figures for the last complete day in the line's local time, running
-  cost over its 24 hours at the trains it has now [T-408]; the stops with their time from
+  one Profit row (fares, a minus sign, then the running cost over the 24 hours in red; the hover
+  gives fares, running cost and the net), how many trains left full as "x/y" of the trips that
+  reached a stop in the 24 hours (the fourth number from the end of each `past_day` block) [T-481]
+  and the riders left on the platform as "x/y", x those a full train left behind and y those who
+  wanted a train (boarded plus left behind) [T-230, T-239, T-293, T-669]; the block's heading is
+  "Past 24 hours" (no Yesterday view since T-669); the stops (above Schedule while being edited [T-670]) with their time from
   the start and boardings in the past 24 hours, each transfer stop (any station of its complex
   served by another line) showing the two other lines with most boardings there in the past
   24 hours as bullets and, when there are more, a "+" whose hover names the rest [T-549]; **flat junctions and
@@ -236,7 +254,7 @@ key.
   at 55% over a thin halo of the land colour), across the gap where the two lines' bands come
   nearest, or middle to middle when they cross or come within 16 px: the busiest 8, none under 2%
   of the complex's changes, 1.5 to 8 px by square root. Each curve bows gently to one side; two
-  middles at one spot get a small loop. Hover gives the riders a day and each direction. Changes
+  middles at one spot get a small loop. Hover gives the riders per day and each direction. Changes
   within one bundle and walks to stations outside the complex are not drawn. Why line to line:
   notes/T-147.md.
 - Two short notes under the map say what the widths and the curves are.
@@ -277,7 +295,7 @@ destinations at the end, and how the demand model's people would make one of the
   selected panning does not change the focused zone. It is asked again at each published round,
   and when the purpose filter or the day changes.
 - **The headline follows the view** [T-586]: under the purpose filter and the day shown, the trips
-  a day between the two places (a line "124 trips a day on average, 2.5 km apart"; its hover the
+  a day between the two places (a line "124 trips per day, 2.5 km apart"; its hover the
   exact count and, under All purposes, each purpose's), then a bar and rows of their shares by
   train, walking and driving. Opened from a far-end bubble the places are the selection and every
   cell of that bubble, the same sums as the bubble's hover (`tripMix` over the selection's far end,

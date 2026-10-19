@@ -69,8 +69,14 @@ export function SettingsTab() {
         <Check checked={d.capacity} onChange={(v) => setDisplay("capacity", v)}>
           Capacity markers
         </Check>
+        <Check checked={d.flatMarks} onChange={(v) => setDisplay("flatMarks", v)}>
+          <span data-tip="The round marks where track meets or crosses at one level">Flat junctions and crossings</span>
+        </Check>
         <Check checked={d.basemapLabels} onChange={(v) => setDisplay("basemapLabels", v)}>
           Map labels
+        </Check>
+        <Check checked={d.realNetwork} onChange={(v) => setDisplay("realNetwork", v)}>
+          <span data-tip="Real railways drawn faintly under yours, for reference: main lines, other passenger lines and metros. Appears once you zoom in to a region.">Real network</span>
         </Check>
       </div>
       {/* T-213: station demand circles and one circle per complex are in the Stations tab */}
@@ -86,6 +92,23 @@ export function SettingsTab() {
           <span data-tip="Grey fills a platform as riders wait, red when a full train leaves some behind. From street zooms.">How full each platform is</span>
         </Check>
       </div>
+      {/* T-686: both from the zoom where platforms are drawn */}
+      <div class="h">Stations up close</div>
+      <div class="checks">
+        <Check checked={d.faces} onChange={(v) => setDisplay("faces", v)}>
+          <span data-tip="A small face rises from the platform for every 20 or so riders who get off. Red where riders waited 10 minutes or more. From street zooms.">Faces</span>
+        </Check>
+        <Check checked={d.sound} onChange={(v) => setDisplay("sound", v)}>
+          <span data-tip="A chime as a train pulls in and soft pops as riders get on and off. From street zooms, louder the closer you are. Starts after your first click.">Sound</span>
+        </Check>
+      </div>
+      {d.sound && (
+        <label class="slider">
+          <span>Volume</span>
+          <input type="range" min="0.1" max="1" step="0.05" value={d.soundVolume} data-tip={`Station sounds at ${Math.round(d.soundVolume * 100)}% volume`}
+            onInput={(e) => setDisplay("soundVolume", Number((e.target as HTMLInputElement).value))} />
+        </label>
+      )}
       <div class="h">Theme</div>
       <div class="stack">
         <Segmented options={SHADE_NAMES.map((s) => [s, SHADE_NAME[s]] as [Shade, string])} value={shade.value} onChange={(v) => (shade.value = v)} />

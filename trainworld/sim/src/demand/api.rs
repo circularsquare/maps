@@ -743,12 +743,11 @@ impl DemandApi {
         if let (Some(nc), Some(pop)) = (pack::cell_weights(header, bin, "nocar", city.len())?, pack::cell_weights(header, bin, "pop", city.len())?) {
             base.nocar = Some(Arc::new(nc.iter().zip(&pop).map(|(&n, &p)| if p > 0.0 { (n / p).min(1.0) } else { 0.0 }).collect()));
         }
-        // T-509 stage 4: the everyday rates and decay lengths of the pack's country
-        for (what, key) in [("rate", "rate"), ("decay", "decay_m")] {
-            for (kind, v) in h["everyday"][key].as_object().into_iter().flatten() {
-                if let Some(x) = v.as_f64() {
-                    base.set_extra(&format!("{what}_{kind}"), x as f32)?;
-                }
+        // T-509 stage 4: the everyday rates of the pack's country; an older block's `decay_m` is
+        // ignored, the decay lengths being one worldwide set (T-637)
+        for (kind, v) in h["everyday"]["rate"].as_object().into_iter().flatten() {
+            if let Some(x) = v.as_f64() {
+                base.set_extra(&format!("rate_{kind}"), x as f32)?;
             }
         }
         // the pack's country: the header's own, else the one its everyday block was written for

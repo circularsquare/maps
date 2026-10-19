@@ -105,7 +105,7 @@ const waitSolved = (timeout = 180000) => page.waitForFunction(() => {
 
 /** one page load: events, the first final view's signature, the fresh final's */
 async function reload() {
-  await page.goto(`${BASE}?debug=1&v=${Date.now()}`);
+  await page.goto(`${BASE}?debug=1&continue=1&v=${Date.now()}`);
   await page.waitForFunction(() => !!window.twDemand, undefined, { timeout: 60000 });
   await waitSolved();
   await page.waitForTimeout(1500); // the cache write after the final
@@ -126,7 +126,7 @@ const out = { mode: MODE, label: LABEL, base: BASE, runs: [], errors };
 let ok = true;
 try {
   if (MODE === 'prepare') {
-    await page.goto(`${BASE}?debug=1&v=${Date.now()}`);
+    await page.goto(`${BASE}?debug=1&continue=1&v=${Date.now()}`);
     await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 120000 });
     const bytes = await readFile('C:/Users/anita/projects/maps/trainworld/T-007-real-nyc.save');
     const before = await page.evaluate(() => window.tw.lastSaved.peek());

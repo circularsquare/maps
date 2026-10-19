@@ -110,6 +110,7 @@ in float a_dist;
 in float a_wmul;            // width as a multiple of the line width (riders, T-084); 1 otherwise
 out vec3 v_color;
 out float v_alpha;
+out vec4 v_cap;             // px: along from the segment's start, along to its end, across, half the width
 void main() {
   int flags = int(a_flags + 0.5);
   bool sel = (u_kind == 1 && int(a_colour) == u_sel_line) || (u_kind == 0 && int(a_edge) == u_sel_edge);
@@ -146,6 +147,9 @@ void main() {
   vec2 off = nrm * side * w * 0.5 + dir * (along * 2.0 - 1.0) * w * 0.5;
   c.xy += off / half_vp * c.w;
   gl_Position = c;
+  // round caps (T-673): the quad runs half a width past each end; the fragment shader rounds it
+  float ext = (along * 2.0 - 1.0) * w * 0.5, ua = along * len + ext;
+  v_cap = vec4(ua, len - ua, side * w * 0.5, w * 0.5);
   // Blueprint is solid but lighter (T-311): the colour mixed towards white, opaque, because
   // segments overlap at every joint and see-through blueprint would show a bead there. Lines
   // that do not run (faded) stay see-through.
@@ -175,9 +179,12 @@ const STROKE_FS = `#version 300 es
 precision mediump float;
 in vec3 v_color;
 in float v_alpha;
+in vec4 v_cap;
 out vec4 o;
 void main() {
-  o = vec4(v_color * v_alpha, v_alpha);
+  float past = -min(v_cap.x, v_cap.y);
+  float a = past > 0.0 ? clamp(0.5 - (length(vec2(past, v_cap.z)) - v_cap.w), 0.0, 1.0) * v_alpha : v_alpha;
+  o = vec4(v_color * a, a);
 }`;
 
 // Stations (T-144, T-189, T-217): a platform is a band along its track at its true length, bent as
@@ -733,12 +740,10 @@ void main() {
     float w = max(2.0, 2.0 * u_dpr);
     core = mod(p.x + p.y, 2.0 * w) < w ? v_empty : vec3(1.0);
   }
-  // Window strips and a front cab read as a train once each car is large enough to see them.
+  // A front cab reads as a train once each car is large enough to see it.
   if (v_detail > 0.5 && v_px.x > 18.0 * u_dpr) {
-    bool window = abs(p.y) > v_px.y * 0.22 && abs(p.y) < v_px.y * 0.36
-      && abs(p.x) < v_px.x * 0.36 && mod(p.x + v_px.x * 0.5, 5.0 * u_dpr) < 3.0 * u_dpr;
     bool cab = v_cab > 0.5 && p.x * v_front > v_px.x * 0.30 && abs(p.y) < v_px.y * 0.30;
-    if (window || cab) core *= 0.55;
+    if (cab) core *= 0.55;
   }
   // a full train's red edge is wider than the white one, so it reads at a glance (T-207; T-218,
   // Anita: "not super noticeable", 50% thicker than T-207's 2.6 px)
@@ -825,6 +830,8 @@ export interface DrawOptions {
   selStations?: number[];
   /** riders waiting on platforms (T-164, T-219): each platform filling up as they wait */
   crowds?: boolean;
+  /** the marks on flat crossings and junctions (T-673); absent: shown */
+  flatMarks?: boolean;
   /** the stations the complex rule's distances group (T-313): zoomed out their dots are joined by
    * connectors; absent, only the player's links are */
   groups?: StationGroups | null;
@@ -1470,7 +1477,7 @@ export class NetworkRenderer {
     }
     trackStrokes();
     stroke(this.preview, 2, wLine, false);
-    this.marks.draw(m, vp, zoom, dpr, this.levelColours);
+    this.marks.draw(m, vp, zoom, dpr, this.levelColours, opt.flatMarks !== false);
 
     if (n.stationCount) {
       // Platforms along the track from STATION_BOX_ZOOM, each one shape at every zoom (T-204), dots

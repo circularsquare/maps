@@ -122,7 +122,7 @@ const out = { mode: MODE, label: LABEL, base: BASE, bubbles: BUBBLES, runs: [], 
 try {
   if (MODE === 'prepare') {
     // not ?new=1: since T-320 a ?new=1 page never writes the autosave
-    await page.goto(`${BASE}?debug=1&v=${Date.now()}`);
+    await page.goto(`${BASE}?debug=1&continue=1&v=${Date.now()}`);
     await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 120000 });
     const bytes = await readFile('C:/Users/anita/projects/maps/trainworld/T-007-real-nyc.save');
     const before = await page.evaluate(() => window.tw.lastSaved.peek());
@@ -135,7 +135,7 @@ try {
     const SECS = Number(process.env.SECS ?? 75);
     for (let i = 0; i < RUNS; i++) {
       requests.length = 0;
-      await page.goto(`${BASE}?debug=1${NEW ? '&new=1' : ''}&v=${Date.now()}`);
+      await page.goto(`${BASE}?debug=1&continue=1${NEW ? '&new=1' : ''}&v=${Date.now()}`);
       await page.waitForFunction(() => !!window.twDemand, undefined, { timeout: 60000 });
       await page.waitForTimeout(SECS * 1000);
       const r = await dump();
@@ -146,7 +146,7 @@ try {
   } else if (MODE === 'clicks') {
     const AT = (process.env.AT ?? '5,15,30,60').split(',').map(Number);
     for (let i = 0; i < RUNS; i++) for (const at of AT) {
-      await page.goto(`${BASE}?debug=1&v=${Date.now()}`);
+      await page.goto(`${BASE}?debug=1&continue=1&v=${Date.now()}`);
       await page.waitForFunction(() => !!window.twDemand && !!window.twViews, undefined, { timeout: 60000 });
       // PAN="lon,lat,zoom,seconds": the view moves there that many seconds after navigation
       if (process.env.PAN) {
@@ -174,7 +174,7 @@ try {
   } else if (MODE === 'toronto') {
     // the NYC save solved; then to Toronto and a new line there (Yonge St, Union to Eglinton).
     // SETTLE=1: wait for Toronto to open before building; else build straight away. QS: more query.
-    await page.goto(`${BASE}?debug=1${process.env.QS ?? ''}&v=${Date.now()}`);
+    await page.goto(`${BASE}?debug=1&continue=1${process.env.QS ?? ''}&v=${Date.now()}`);
     await page.waitForFunction(() => !!window.twDemand, undefined, { timeout: 60000 });
     await waitSolved();
     await page.waitForTimeout(2000);
@@ -254,7 +254,7 @@ try {
     log('solves', out.toronto.solves.map((s) => `v${s.v}[${s.cities}] arrived ${s.arrived} sent ${s.sent} first ${s.first} final ${s.refined}`).join(' | '));
   } else if (MODE === 'pan') {
     // the NYC save, solved, then a pan: Trenton, Philadelphia, Worcester, Toronto, then round the Northeast
-    await page.goto(`${BASE}?debug=1&v=${Date.now()}`);
+    await page.goto(`${BASE}?debug=1&continue=1&v=${Date.now()}`);
     await page.waitForFunction(() => !!window.twDemand, undefined, { timeout: 60000 });
     await waitSolved();
     await page.waitForTimeout(3000);

@@ -27,7 +27,11 @@ export interface DisplaySettings {
   trains: boolean;
   stationNames: boolean;
   capacity: boolean;
+  /** T-673: the marks on flat crossings and junctions (ramps, portals and refused crossings stay) */
+  flatMarks: boolean;
   basemapLabels: boolean;
+  /** T-682: faint real-world rail lines from noritetsu's tiles, under the network (map/realNetwork.ts) */
+  realNetwork: boolean;
   /** station use circles (T-482): translucent circles behind platforms, area by the riders a day
    * starting a rail trip there, changing lines there, or both (all boardings); or none */
   stationUse: StationUseMode;
@@ -42,6 +46,12 @@ export interface DisplaySettings {
   /** riders waiting on platforms (T-164), drawn as each platform filling up (T-219), or not
    * ("off"). "dots" is the T-164 option T-219 dropped, kept in older browsers' settings: on. */
   platformCrowds: "patch" | "dots" | "off";
+  /** T-686: sound at stations (a chime for an arriving train, pops for riders getting on and off),
+   * from the zoom where platforms are drawn; the volume, 0-1 */
+  sound: boolean;
+  soundVolume: number;
+  /** T-686: faces rising from a platform as riders get off, from the same zoom */
+  faces: boolean;
   /** the commuter dot map, coloured by how people get to work */
   commuters: boolean;
   /** the dot map's end of the commute: where commuters live, or where they work */
@@ -70,13 +80,18 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   trains: true,
   stationNames: true,
   capacity: true,
+  flatMarks: true,
   basemapLabels: true,
+  realNetwork: false,
   stationUse: "none",
   // T-192 (Anita): one circle per station complex by default
   complexView: true,
   trainLoad: true,
   trainLoadBasis: "busiest",
   platformCrowds: "patch",
+  sound: true,
+  soundVolume: 0.6,
+  faces: true,
   commuters: false,
   commuterEnd: "home",
   bubbleSize: 1,
@@ -145,10 +160,10 @@ export const renameLinePrompt = signal<string | null>(null);
 /** How the Lines and Stations lists are sorted: the column clicked and its direction (T-310). Kept
  * while the page is open, as the list sort always was. */
 export interface ListSort<K extends string> { key: K; dir: 1 | -1 }
-export const lineSort = signal<ListSort<"name" | "riders" | "trains" | "near">>({ key: "name", dir: 1 });
+export const lineSort = signal<ListSort<"name" | "city" | "riders" | "trains" | "near">>({ key: "name", dir: 1 });
 export const stationSort = signal<ListSort<"name" | "riders" | "near">>({ key: "riders", dir: -1 });
 /** The Money tab's Cities section (T-550): by name, train share, train rides a day or money a day. */
-export const citySort = signal<ListSort<"name" | "train" | "rides" | "money">>({ key: "rides", dir: -1 });
+export const citySort = signal<ListSort<"name" | "train" | "rides" | "money" | "points">>({ key: "rides", dir: -1 });
 /** Platform length for new stations, m. */
 /** The map's demand drawn for one trip purpose only, or all (T-158). Not remembered: a page
  * load starts on all purposes, so nobody returns to a map that silently leaves riders out. */
@@ -168,7 +183,7 @@ export const shownDay = computed<DemandDay>(() => {
   const s = display.value.dayShown;
   return s === "weekday" ? 0 : s === "weekend" ? 1 : AVERAGE_DAY;
 });
-/** The shown day as a hover ends a figure: "a weekday", "a weekend day", "a day". */
+/** The shown day as a hover ends a figure: "per weekday", "per weekend day", "per day". */
 export const shownDayPhrase = computed(() => DEMAND_DAY_PHRASE[shownDay.value]);
 
 export function setDisplay<K extends keyof DisplaySettings>(k: K, v: DisplaySettings[K]) {

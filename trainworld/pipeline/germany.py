@@ -140,7 +140,8 @@ def pendler(kind, lands, year=PA_YEAR):
 def workplace_jobs(lands):
     """{ARS: employed people working in the Gemeinde} = in-commuters + those working where they live."""
     t = pendler("EZ", lands)
-    return {r.ARS: float(r.EIP) + float(r.IOP) for r in t.itertuples()}
+    num = lambda v: float(v) if str(v).replace(".", "", 1).isdigit() else 0.0  # the table writes a suppressed count as "-"
+    return {r.ARS: num(r.EIP) + num(r.IOP) for r in t.itertuples()}
 
 
 # Eurostat LFS lfsa_ehomp, Germany 2025, employed 15-64: 13.0% usually work from home, 11.7% sometimes;

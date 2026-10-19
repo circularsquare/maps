@@ -37,7 +37,13 @@ export const CAPACITY_KINDS: CapacityKindText[] = [
 const kindText = (kind: number): CapacityKindText => CAPACITY_KINDS[kind] ?? CAPACITY_KINDS[0];
 
 /** "Turning on the platform at Nerul Village is full" */
-export const fullTitle = (kind: number, place: string) => { const k = kindText(kind); return `${k.title}${place ? ` ${k.prep} ${place}` : ""} is full`; };
+export const fullTitle = (kind: number, place: string) => { const p = fullParts(kind, place); return p.head + place + p.tail; };
+
+/** `fullTitle` around the station's name, so a panel can make the name a link. */
+export function fullParts(kind: number, place: string): { head: string; tail: string } {
+  const k = kindText(kind);
+  return { head: place ? `${k.title} ${k.prep} ` : k.title, tail: " is full" };
+}
 
 /** The hover of a full resource: what limits it, how many trains an hour it takes, what helps. */
 export function fullTip(kind: number, most: number): string {

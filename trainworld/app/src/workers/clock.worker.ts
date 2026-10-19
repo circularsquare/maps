@@ -73,6 +73,12 @@ let lineRides = new Map<number, number[][]>();
 let regions = new Map<string, { days: DayLedger[]; hours: HourLedger[] }>();
 /** T-531: each running line's fares and running cost by region, [region, share] (game/regionMoney.ts) */
 let lineShares = new Map<number, { fare: [string, number][]; ride: [string, number][]; run: [string, number][] }>();
+/** T-684: each running line's points per game hour by region and kind of day and period (game/points.ts) */
+let linePoints = new Map<number, [string, number[][]][]>();
+/** T-684: points since the game began, per region; T-685: stars, the game second each was earned */
+let pointsTotal = new Map<string, number>();
+let stars = new Map<string, number>();
+let sentPoints = NaN;
 /** T-531: paid edits' charges, held under "" until the main thread says how each divides */
 const heldCharges = new Map<number, { day: number; hour: number; build: number; trains: number }>();
 /** Wall ms on the clock both threads read (`ToClock` "clock"): Date.now() drifts from it, and the
@@ -98,6 +104,10 @@ let savedAt = Date.now();
 let saveInFlight: Promise<boolean> | null = null;
 let activeSlot = ORIGINAL_SLOT;
 let activeLease: SlotLease | null = null;
+/** the start menu's new game (T-677): its slot's name, given at its first write */
+let newSlotName: { key: string; name: string } | null = null;
+/** the active slot while nothing is stored under it (a new game's, T-677) */
+let unwritten: string | null = null;
 let storageReady = true;
 /** `?new=1`, `?synth=1`, `?demandTest=1` (T-320): no slot is written until "Save as a copy" gives
  * the game a slot of its own; a `?new=1` game has no active slot ("") and reads none */
@@ -556,17 +566,18 @@ function rounded<T extends object>(e: T): T {
   const out: Record<string, number> = { ...e } as Record<string, number>;
   for (const k of ["fares", "running", "trains", "build"]) if (typeof out[k] === "number") out[k] = Math.round(out[k] * 1e6) / 1e6;
   if (typeof out.rides === "number") out.rides = Math.round(out.rides * 10) / 10;
+  if (typeof out.points === "number") out.points = Math.round(out.points);
   return out as T;
 }
 
 /** A saved ledger in order with one entry per day or hour: saves written before T-488 can list a
  * day twice, the second time empty, which merging adds back where it belongs. */
-function mergeLedger<T extends { fares: number; running: number; trains: number; build: number; rides?: number }>(list: T[] | undefined, at: (e: T) => number): T[] {
+function mergeLedger<T extends { fares: number; running: number; trains: number; build: number; rides?: number; points?: number }>(list: T[] | undefined, at: (e: T) => number): T[] {
   const by = new Map<number, T>();
   for (const e of list ?? []) {
     const k = at(e), d = by.get(k);
-    if (!d) by.set(k, { ...e, rides: e.rides ?? 0 });
-    else { d.fares += e.fares; d.running += e.running; d.trains += e.trains; d.build += e.build; d.rides = (d.rides ?? 0) + (e.rides ?? 0); }
+    if (!d) by.set(k, { ...e, rides: e.rides ?? 0, points: e.points ?? 0 });
+    else { d.fares += e.fares; d.running += e.running; d.trains += e.trains; d.build += e.build; d.rides = (d.rides ?? 0) + (e.rides ?? 0); d.points = (d.points ?? 0) + (e.points ?? 0); }
   }
   return [...by.values()].sort((a, b) => at(a) - at(b));
 }
@@ -587,23 +598,35 @@ function moneyState(): MoneyState {
     ledger: ledger.map((d) => ({ ...d })),
     hours: hourLedger.map((d) => ({ ...d })),
     regions: savedRegions(),
+    points: Object.fromEntries(pointsTotal),
+    stars: Object.fromEntries(stars),
   };
+}
+
+/** T-684: the points of every region together. */
+function pointsAll(): number {
+  let t = 0;
+  for (const v of pointsTotal.values()) t += v;
+  return t;
 }
 
 function sendMoney() {
   const m = moneyState();
   sentCash = m.cash;
   sentFares = m.ledger[m.ledger.length - 1]?.fares ?? NaN;
+  sentPoints = pointsAll();
   send({ kind: "money", money: m });
 }
 
 /** T-284: the cash and today's ledger, if either moved since last sent. */
 function sendCash() {
   const cash = api!.cash(), today = dayEntry(Math.floor(moneyNow() / 86400)), hour = hourEntry(Math.floor(moneyNow() / 3600));
-  if (cash === sentCash && today.fares === sentFares) return;
+  const pts = pointsAll();
+  if (cash === sentCash && today.fares === sentFares && pts === sentPoints) return;
   sentCash = cash;
   sentFares = today.fares;
-  send({ kind: "cash", cash, today: { ...today }, hour: { ...hour }, regions: regionNow() });
+  sentPoints = pts;
+  send({ kind: "cash", cash, today: { ...today }, hour: { ...hour }, regions: regionNow(), points: Object.fromEntries(pointsTotal) });
 }
 
 /** T-309: the running lines grouped by the local time they run on, each group's running cost per
@@ -640,6 +663,7 @@ function settle(): boolean {
   }
   if (now <= settledT) return false;
   const groups = localGroups(), rl = regionLines();
+  const pl = [...linePoints].map(([id, regs]) => ({ shift: api!.line_shift(id), regs }));
   let cash = api.cash(), ended = false;
   while (settledT < now) {
     const h = Math.floor(settledT / 3600);
@@ -670,8 +694,20 @@ function settle(): boolean {
     for (const [z, [f, c, n]] of regionHour(t, rl)) {
       for (const r of regionEntries(z, d.day, h)) { r.fares += f * df; r.running += c * dc; r.rides = (r.rides ?? 0) + n * df; }
     }
+    // T-684: points land as fares do, each line's at its own local period and kind of day
+    if (df > 0) for (const { shift, regs } of pl) {
+      const tl = t + shift, k = dayKindAt(tl), p = periodAt(tl);
+      for (const [z, per] of regs) {
+        const v = ((per[k] ?? per[0])?.[p] ?? 0) * df;
+        if (!(v > 0)) continue;
+        d.points = (d.points ?? 0) + v;
+        e.points = (e.points ?? 0) + v;
+        for (const r of regionEntries(z, d.day, h)) r.points = (r.points ?? 0) + v;
+        pointsTotal.set(z, (pointsTotal.get(z) ?? 0) + v);
+      }
+    }
     settledT = full ? t + 3600 : end;
-    if (full) { ended = true; hourShape.delete(h); closeDay(t + 3600); }
+    if (full) { ended = true; hourShape.delete(h); }
   }
   api.set_cash(cash);
   dirty = true;
@@ -686,9 +722,8 @@ function today(): Float64Array {
   return packDays(lineDaysAt(Math.min(gameNow(), settledT), false, undefined, true));
 }
 
-/** One line's day, in `TrackApi.today`'s per-line layout, with its fares (US$M) and, for a whole
- * day, its running cost (US$). */
-interface LineDay { id: number; block: ArrayLike<number>; fare: number; run: number }
+/** One line's day, in `TrackApi.today`'s per-line layout, with its fares (US$M). */
+interface LineDay { id: number; block: ArrayLike<number>; fare: number }
 
 /** Every line's block of `TrackApi.today(now)` with its fares taken: each hour since the line's
  * local midnight (T-309), at its local period and day, by the share already paid (`closed`: the
@@ -711,7 +746,7 @@ function lineDaysAt(now: number, closed: boolean, shift?: number, past = false):
         const t = h * 3600 + sh, w = h === hNow ? wNow : past && h === h0 ? 1 - wNow : 1;
         f += ((per[dayKindAt(t)] ?? per[0])?.[periodAt(t)] ?? 0) * w;
       }
-      out.push({ id, block: v.subarray(i, i + len), fare: f, run: 0 });
+      out.push({ id, block: v.subarray(i, i + len), fare: f });
     }
     i += len;
   }
@@ -719,58 +754,15 @@ function lineDaysAt(now: number, closed: boolean, shift?: number, past = false):
 }
 
 /** The flat array the panels read (game/today.ts `readToday`): the line count, each line's block,
- * then each line's fares, then each line's running cost. */
+ * then each line's fares. */
 function packDays(items: LineDay[]): Float64Array {
   const len = items.reduce((s, d) => s + d.block.length, 1);
-  const out = new Float64Array(len + 2 * items.length);
+  const out = new Float64Array(len + items.length);
   out[0] = items.length;
   let i = 1;
   for (const d of items) { out.set(d.block, i); i += d.block.length; }
-  items.forEach((d, k) => { out[i + k] = d.fare; out[i + items.length + k] = d.run; });
+  items.forEach((d, k) => { out[i + k] = d.fare; });
   return out;
-}
-
-/** US$ a running line's trains cost over a whole day at the trains it has now, as the line panel
- * counts today's (`runningToday` in LineInspector). */
-function dayRunCosts(): Map<number, number> {
-  const li = api!.lines_info(), out = new Map<number, number>();
-  const unit = moneyParams[1] * moneyParams[2];
-  for (let i = 0; i < li.length; i += 22) {
-    if (li[i + 3] !== 1) continue;
-    let trains = 0;
-    for (let h = 0; h < 24; h++) trains += li[i + 5 + LEVEL_OF[PERIODS[periodAt(h * 3600)].demand]];
-    out.set(li[i], trains * 2 * (li[i + 9] / 1000) * (li[i + 21] || li[i + 8]) * unit);
-  }
-  return out;
-}
-
-/** T-408: each line's last complete day, kept at the line's local midnight (`day` is the local day
- * it covers): what the panel's Yesterday shows. Not saved. */
-const lineDays = new Map<number, LineDay & { day: number }>();
-
-function closeDay(tEnd: number) {
-  const a = api!;
-  for (const s of a.running_shifts()) {
-    if ((tEnd + s) % 86400 !== 0) continue;
-    const day = (tEnd + s) / 86400 - 1, run = dayRunCosts();
-    for (const d of lineDaysAt(tEnd - 1, true, s)) lineDays.set(d.id, { ...d, block: Float64Array.from(d.block), run: run.get(d.id) ?? 0, day });
-  }
-}
-
-/** Every running line's last complete local day. A line with a kept day shows it; a game loaded
- * since the day ended has none, and shows the day worked out again on the network as it is now. */
-function yesterday(): Float64Array {
-  const a = api!;
-  if (settle()) sendMoney();
-  const now = Math.min(gameNow(), settledT), run = dayRunCosts();
-  const items: LineDay[] = [];
-  for (const s of a.running_shifts()) {
-    const day = Math.floor((now + s) / 86400) - 1;
-    const kept = [...lineDays.values()].filter((d) => d.day === day && run.has(d.id) && a.line_shift(d.id) === s);
-    if (kept.length) items.push(...kept);
-    else for (const d of lineDaysAt((day + 1) * 86400 - s - 1, true, s)) items.push({ ...d, run: run.get(d.id) ?? 0 });
-  }
-  return packDays(items);
 }
 
 /** The share of hour `h`'s fares paid by `s` seconds into it (T-284). */
@@ -818,7 +810,7 @@ function shapeHour(epoch: number, b: Float32Array) {
 // ---------------------------------------------------------------- saves (T-029)
 
 function header(): SaveHeader {
-  return { game: "anitabuilder", format: SAVE_FORMAT, city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), fleet: api!.fleet(), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded) };
+  return { game: "anitabuilder", format: SAVE_FORMAT, city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), fleet: api!.fleet(), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), points: Object.fromEntries([...pointsTotal].map(([k, v]) => [k, Math.round(v)])), stars: Object.fromEntries(stars) };
 }
 
 /** The game as file bytes. The network and header are taken at once, before anything awaits. */
@@ -922,6 +914,11 @@ function autosave(): Promise<boolean> {
   if (saveInFlight) return saveInFlight.then(ok => dirty && ok ? autosave() : ok);
   if (!api || !dirty) return Promise.resolve(true);
   if (!activeLease) return Promise.resolve(false);
+  // T-677: a new game whose slot was never written is not kept while its network is empty
+  if (unwritten === activeSlot && !api.nodes_info().length && !api.lines_info().length) {
+    dirty = false;
+    return Promise.resolve(true);
+  }
   const key = activeSlot; // an in-flight write must never move to the next slot
   dirty = false;
   saveInFlight = (async () => {
@@ -933,7 +930,10 @@ function autosave(): Promise<boolean> {
       const encodeMs = performance.now() - t0;
       const summary = await summaryP;
       const at = Date.now();
-      await writeSlot(key, { bytes, at, day, city, ...summary });
+      const name = newSlotName?.key === key ? newSlotName.name : undefined;
+      await writeSlot(key, { bytes, at, day, city, ...summary, name });
+      if (name) newSlotName = null;
+      if (unwritten === key) unwritten = null;
       savedAt = at;
       saveFailure = undefined;
       send({ kind: "saved", at, bytes: bytes.length, encodeMs, totalMs: performance.now() - t0 });
@@ -1031,6 +1031,8 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file"): Promise<b
   ledger = mergeLedger(h.ledger, (d) => d.day);
   hourLedger = mergeLedger(h.hours, (d) => d.hour);
   loadRegions(h.regions);
+  pointsTotal = new Map(Object.entries(h.points ?? {}));
+  stars = new Map(Object.entries(h.stars ?? {}));
   convertedOnLoad = converted;
   restart(h.clock, from);
   return converted;
@@ -1052,6 +1054,8 @@ function newGame() {
   ledger = [];
   hourLedger = [];
   loadRegions(undefined);
+  pointsTotal = new Map();
+  stars = new Map();
   restart(START_CLOCK, "new");
 }
 
@@ -1063,9 +1067,9 @@ function restart(t: number, from: "autosave" | "file" | "new") {
   partHour = Math.floor(t / 3600);
   partFare = partCost = (t - partHour * 3600) / 3600;
   hourShape.clear();
-  lineDays.clear();
   incomePerHour =DAY_KINDS.map(() => PERIODS.map(() => 0)); // the main thread sends the new network's once demand lands
   ridesPerHour = DAY_KINDS.map(() => PERIODS.map(() => 0));
+  linePoints = new Map();
   api!.clear_riders(); // and its riders (T-164)
   forget(true);
   syncFrame();
@@ -1359,6 +1363,10 @@ async function processMessage(msg: ToClock) {
         // T-320: a new game for a check owns no slot, so nothing it does can reach a saved game
         activeSlot = "";
         activeLease = null;
+      } else if (msg.newSlot) {
+        activeSlot = "slot-" + crypto.randomUUID();
+        newSlotName = { key: activeSlot, name: msg.newSlot };
+        activeLease = await leaseSlot(activeSlot);
       } else {
         activeSlot = msg.slot?.startsWith("slot-") ? msg.slot : ORIGINAL_SLOT;
         if (activeSlot !== ORIGINAL_SLOT && !await readStored(activeSlot)) activeSlot = ORIGINAL_SLOT;
@@ -1366,7 +1374,8 @@ async function processMessage(msg: ToClock) {
         activeLease = msg.testPage ? null : await leaseSlot(activeSlot);
       }
       await publishSlots();
-      const stored = msg.fresh ? null : await readStored(activeSlot);
+      const stored = msg.fresh || msg.newSlot ? null : await readStored(activeSlot);
+      if (!stored && activeSlot) unwritten = activeSlot;
       if (stored) {
         try {
           if (await loadGame(stored.bytes, "autosave") && activeLease) await saveConverted(activeSlot, stored);
@@ -1508,6 +1517,14 @@ async function handle(msg: ToClock) {
     lineRides = new Map((msg.lines ?? []).map((l) => [l.line, l.rides]));
   } else if (msg.kind === "regionShares") {
     lineShares = new Map(msg.lines.map((l) => [l.line, { fare: l.fare, ride: l.ride, run: l.run }]));
+  } else if (msg.kind === "points") {
+    linePoints = new Map(msg.lines.map((l) => [l.line, l.regions]));
+  } else if (msg.kind === "star") {
+    if (!stars.has(msg.zone)) {
+      stars.set(msg.zone, Math.floor(gameNow()));
+      dirty = true;
+      sendMoney();
+    }
   } else if (msg.kind === "chargeShares") {
     // T-531: move a paid edit's charge from "" to the regions it was spent in
     const c = heldCharges.get(msg.seq);
@@ -1545,7 +1562,6 @@ async function handle(msg: ToClock) {
       : q.what === "lineAccount" ? api.line_account(q.line, q.day ?? 0)
       : q.what === "linePeriods" ? api.line_periods(q.line, q.day)
       : q.what === "today" ? today()
-      : q.what === "yesterday" ? yesterday()
       : q.what === "lineHeld" ? api.line_held(q.line)
       : q.what === "lineMarks" ? api.line_marks(q.line)
       : api.line_delays(q.line, q.level);

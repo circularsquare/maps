@@ -5,12 +5,30 @@
 
 Track, stations and trains are drawn by our own WebGL2 renderer on a canvas over the basemap
 (`map/renderer.ts`; why and how in [architecture.md](architecture.md) 7). The basemap is
-Positron, repainted faint (`map/basemap.ts`), so the network reads first. In the dark theme the
-same Positron layers are repainted in Dark Matter's manner (near-black land, darker water, roads a
-little lighter than the land, place names faint grey), by paint properties only, so switching
-theme reloads no style or tiles [T-039]. The light and dark map colours (land, water, park, labels,
-the casing, the map ink, a switched-off blueprint, the shade outside the focused city, the save
-thumbnail's track) are one table, `game/shadeTable.ts` (read through `game/shades.ts`) [T-543].
+Positron, repainted (`map/basemap.ts`) so the network reads first: warm paper land, soft teal
+water, sage parks and woods, place names faint grey. Roads have three weights (motorways, main
+roads, everything else), one colour and no casings; the smallest classes appear only from zoom 11
+(streets) and 14 (paths); minor road names, road shields and the basemap's railways are hidden.
+Positron has no shop or food icons, so the airport symbols are the only icons left. The dark theme
+is the same three hues deep and muted (dark warm brown-grey land, deep teal, dark sage), by paint
+properties only, so switching theme reloads no style or tiles [T-039, T-676]. The light and dark
+map colours (land, water, park, road, labels, the casing, the map ink, a switched-off blueprint,
+the shade outside the focused city, the save thumbnail's track) are one table,
+`game/shadeTable.ts`, whose named palette values at the top are the ones to retune by hand (read
+through `game/shades.ts`) [T-543].
+
+## Real network (reference layer)
+
+Settings > Show > **Real network**, off by default: faint lines where railways run in the real
+world, for reference, view only (`map/realNetwork.ts`, T-682). They sit above the basemap's
+roads and under its labels, so under our own network (which is drawn on the overlay canvas above
+everything). Three classes by colour and width, in both themes (`realMain`, `realOther`, `realMetro`
+in `game/shadeTable.ts`): main line, other passenger rail, metro. Trams, light rail, monorails,
+funiculars, narrow gauge, heritage lines and track no line runs over are not drawn. Lines appear
+from zoom 4; each region's tiles are added when the view first touches it, nearest first, and
+nothing is fetched while the setting is off. The lines are noritetsu's per-region tiles (OSM and
+the national registers, one `track` layer); the tiles carry no line type or name at low zoom, so
+there is no high-speed class and no hover yet.
 
 ## Zoom bands
 
@@ -30,7 +48,8 @@ thumbnail's track) are one table, `game/shadeTable.ts` (read through `game/shade
   held outside); bare track 0.4, 1.8 and 3; a casing 0.6-2.4 px wider (white, near-black #141517 in
   the dark theme [T-039]; line colours are the same in both), drawn as a fixed margin
   under the stroke and not part of a traffic width [T-267]; a selected line or track 0.5-3 px wider
-  still. A stroke thinner than a device pixel is drawn a pixel wide and that much fainter.
+  still. A stroke thinner than a device pixel is drawn a pixel wide and that much fainter. Line and
+  track ends, and the joints between a stroke's segments, are round, casing included [T-673].
 - **Lines sharing track are drawn over each other** [T-190, T-533]: interlining is not represented.
   One order for all lines: a line with no trains (fleet zero) goes under every line that runs
   trains; within each group the shorter route (end to end, one direction) is on top, ties to the
@@ -71,16 +90,18 @@ thumbnail's track) are one table, `game/shadeTable.ts` (read through `game/shade
   - A **flat crossing** (an X) and a **flat junction** (a fork, a node with three or more track ends
     and no station, not a flyover) in a round badge with a thin ring. On blueprint track and in the
     drawing tool's preview (the crossings and junctions the new track would make, from the track
-    model) the badge is big and in the blueprint blue (light blue in the dark theme): radius 7 px at
-    zoom 9, 11 at 12, 15 at 15. On built track it is small and quiet in the map ink: 5 px at zoom 11,
-    6.5 at 13, 8.5 at 15, at 85% opacity. A junction is built once three of its ends are, a crossing
+    model) the badge is big: radius 7 px at zoom 9, 11 at 12, 15 at 15. On built track it is small
+    and quiet: 5 px at zoom 11, 6.5 at 13, 8.5 at 15, at 85% opacity. Its ring and glyph are in the
+    Elevation colour of the level the meeting is on [T-673]. A junction is built once three of its ends are, a crossing
     once both tracks are. A crossing the model refuses (under one elevation step apart, or on a
     ramp) is a red X.
   - A **ramp** (a wedge) where track climbs from level 0 and a **tunnel portal** (a half disc) where it
     drops from level 0, at the ramp's level 0 end, pointing along the track, filled in the Elevation
     colour of the level it reaches, from zoom 11 at 3.5 px radius, 5 at 13, 7 at 15. A ramp that
     starts below ground or above level 1 (1 to 2, -1 to -2) has none.
-  The colours are `markInk` and `markBlueprint` in `game/shadeTable.ts`; the fill is the casing's.
+  The fill is the casing's. The Settings checkbox "Flat junctions and crossings" (on by default,
+  saved with the display settings) hides the crossings and junctions and their hover; ramps,
+  portals and refused crossings stay [T-673].
 
 ## Stations
 
@@ -176,6 +197,29 @@ grows between trains at the steady arrival rate, jumps a transfer walk after ano
 leaves with riders changing to it [T-554], and drops when one of its own leaves, worked out on the
 main thread at most once a game second, only while drawn.
 
+## Life at stations
+
+[T-686; `map/stationLife.ts`, `stationSound.ts`, `faces.ts`] From zoom 14 (`STATION_BOX_ZOOM`), with
+the clock running, a train pulling in at a built station in view is found by its stop offset passing
+the station's between two samples (eight a second; only the lines stopping in view are read). Below
+zoom 14, or with Faces and Sound both off, no timer runs and there is no canvas. The riders come
+from the boarding account: those who get on are the platform's crowd when the train arrives plus
+arrivals until it leaves, less those left behind; those who get off are the load carried in plus
+those who got on, less the load carried on.
+
+- **Faces**: one per 20 riders getting off (rounded at random), at most 4 per train, 5 per platform
+  and 36 in all. Each rises 30 px from a random point along the platform over 2 s and fades, 14 px
+  across at zoom 14 to 20 px at 17. Happy (pale yellow, blushing); red and frowning when the riders
+  waited 10 minutes or more (`RED_WAIT_S`): the time since the platform's last train left, doubled
+  when that train left riders behind. Two sprites on a 2D canvas over the network; a frame loop
+  runs only while a face is alive. Not in the demand views' way: the bubbles draw over them.
+- **Sound** (WebAudio, no files): a chime (G5 then E5) as the train pulls in, then pops (a short
+  falling blip) as riders get off (higher) and on (lower), 1 to 4 each by the rider count. Silent
+  until the first click or key. Volume is the setting times a zoom gain (a quarter at 14, full from
+  17), shared down by the arrivals sounding in the last second; a second one sounding together gets
+  the chime only, and none beyond 3; panned by where the station is on screen. At the second speed only the chime and two pops; none at the third.
+- Both are on by default and set in Settings (Stations up close).
+
 ## Station names and capacity tags
 
 - **Names** [T-032, T-074, T-101, T-169; `map/stationLabels.ts`]: DOM labels in the UI font above
@@ -199,9 +243,8 @@ main thread at most once a game second, only while drawn.
 
 - **Track** [T-157, T-526, `map/trackHover.ts`]: with the select tool or a build tool, the pointer on
   a line or track shows a tag at once saying what the track display draws there. Line: the name. Traffic:
-  the name and "41,200 forecast riders a day in both directions" (or "No forecast riders on this
-  stretch") on that stop-to-stop stretch for the day shown (counts to the nearest 100 above
-  1,000), with a third line under the purpose filter
+  the name and "41,200 riders per day" (or "0 riders per day") on that stop-to-stop stretch, both
+  directions together, for the day shown (counts to the nearest 100 above 1,000), with a third line under the purpose filter
   ("Shopping and errands trips only"). Whatever the display [T-473], the tag also carries a row
   for the elevation at that point (an up and down arrow, then "+1" on its Elevation colour) and one
   for the speed limit (two right chevrons, then "120 km/h" on its Max speed colour), each colour at
@@ -219,9 +262,9 @@ main thread at most once a game second, only while drawn.
   stop editor and the trip tool have no track tag. The track tag and the build tools' tags are
   drawn over the bubbles' tags.
 - **Trains and stations** [T-194, T-305, T-313; `map/networkTips.ts`]: the same tag (wrapping at 320
-  px). A train: "Line 1 train", "340 riders aboard" and "352 seats, 1,280 packed full". A station:
+  px). A train: "Line 1 train", "340 riders aboard" and "352 seats, 1,280 full". A station:
   its name, then its lines as bullets, each once (a station drawn as its own dot or box lists its
-  own lines) [T-559]; with demand circles on, "41,200 boardings and alightings a day"; where crowds
+  own lines) [T-559]; with demand circles on, "41,200 boardings and alightings per day"; where crowds
   are drawn a row per line and direction with anyone waiting (the line's bullet, "to Van Cortlandt
   Park-242 St", "120 waiting"), the count in the alert red while that platform side is full, or
   "Nobody waiting on the platforms". On a dot, the crowd lines are its pie's numbers ("1,257
@@ -240,7 +283,7 @@ discs (commuter bubbles over longer-trip discs); capacity tags (under
 the discs; one that opens nothing selects what is under it); trains (the selected one first), then
 stations, lines, junctions and track; within a layer the last drawn wins; hidden layers do not
 intercept. Station names, airport badges and the stop editor's markers take no clicks: a click on
-one reaches what is under it (a badge sits on its own airport's bubble; the stop markers' station
+one reaches what is under it (a badge sits on its airport's destination bubble; the stop markers' station
 is picked by the stop tool). Network
 hits reach 7 px from the centre line, or half the drawn width where a line is wider [T-227].
 Demand discs

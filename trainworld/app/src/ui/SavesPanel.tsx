@@ -36,30 +36,42 @@ function cityList(ids: string[]): string {
 
 const plural = (n: number, one: string, many: string) => `${n.toLocaleString("en-US")} ${n === 1 ? one : many}`;
 
-/** One saved game. */
-function SlotCard({ slot, playing, now, writable, onRename, onDelete }: { slot: SaveSlot; playing: boolean; now: number; writable: boolean; onRename: () => void; onDelete: () => void }) {
+/** A saved game's picture of its network (T-241). */
+export function SlotThumb({ slot }: { slot: SaveSlot }) {
+  return slot.thumb
+    ? <img class="save-thumb" src={slot.thumb} alt="" data-tip={`The network in "${slot.name}" when it was last saved`} />
+    : <div class="save-thumb empty muted small">{slot.lines !== undefined ? "Nothing built" : "No picture yet"}</div>;
+}
+
+/** When a saved game was saved, its day and cities, its lines, stations and cash; also the start
+ * menu's (T-677). */
+export function SlotFacts({ slot, now, autosaved }: { slot: SaveSlot; now: number; autosaved?: boolean }) {
   const when = savedWhen(slot.at, now);
   const exact = new Date(slot.at).toLocaleString([], { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
-  const hasSummary = slot.lines !== undefined;
+  return <>
+    <div class="small muted" data-tip={`Last saved ${exact}`}>{autosaved ? when.replace("Saved", "Autosaved") : when}</div>
+    <div class="small muted num">
+      <span data-tip={`Game day ${slot.day}`}>Day {slot.day}</span>
+      {slot.cities?.length ? <> · {cityList(slot.cities)}</> : null}
+    </div>
+    {slot.lines !== undefined && <div class="small muted num">
+      <span data-tip={`${slot.lines} lines`}>{plural(slot.lines!, "line", "lines")}</span>
+      {" · "}
+      <span data-tip={`${slot.stations} stations`}>{plural(slot.stations!, "station", "stations")}</span>
+      {" · "}
+      <span data-tip={`Cash when saved: ${money(slot.cash! * 1e6)}`}>{money(slot.cash! * 1e6)}</span>
+    </div>}
+  </>;
+}
+
+/** One saved game. */
+function SlotCard({ slot, playing, now, writable, onRename, onDelete }: { slot: SaveSlot; playing: boolean; now: number; writable: boolean; onRename: () => void; onDelete: () => void }) {
   return (
     <div class="save-card">
-      {slot.thumb
-        ? <img class="save-thumb" src={slot.thumb} alt="" data-tip={`The network in "${slot.name}" when it was last saved`} />
-        : <div class="save-thumb empty muted small">{hasSummary ? "Nothing built" : "No picture yet"}</div>}
+      <SlotThumb slot={slot} />
       <div class="save-info">
         <div class="save-slot-title"><strong>{slot.name}</strong>{playing && <span class="save-playing small">Playing</span>}</div>
-        <div class="small muted" data-tip={`Last saved ${exact}`}>{playing && writable ? when.replace("Saved", "Autosaved") : when}</div>
-        <div class="small muted num">
-          <span data-tip={`Game day ${slot.day}`}>Day {slot.day}</span>
-          {slot.cities?.length ? <> · {cityList(slot.cities)}</> : null}
-        </div>
-        {hasSummary && <div class="small muted num">
-          <span data-tip={`${slot.lines} lines`}>{plural(slot.lines!, "line", "lines")}</span>
-          {" · "}
-          <span data-tip={`${slot.stations} stations`}>{plural(slot.stations!, "station", "stations")}</span>
-          {" · "}
-          <span data-tip={`Cash when saved: ${money(slot.cash! * 1e6)}`}>{money(slot.cash! * 1e6)}</span>
-        </div>}
+        <SlotFacts slot={slot} now={now} autosaved={playing && writable} />
         <div class="save-actions">
           {!playing && <button class="btn text save-open" data-tip="Play this game. The game you are playing is saved first." onClick={() => { manageSaveSlot("open", slot.key); savesOpen.value = false; }}>Open</button>}
           <button class="btn text" onClick={onRename}>Rename</button>

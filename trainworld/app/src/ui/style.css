@@ -45,6 +45,24 @@ body {
   border: 2px solid color-mix(in srgb, var(--muted) 30%, transparent); border-top-color: var(--muted); vertical-align: 1px; animation: spin 1.2s linear infinite !important; }
 .spin.row-dot { margin-right: 6px; }
 .status-tag .spin { width: 10px; height: 10px; vertical-align: 0; }
+/* T-677: the bunny's train (ui/Spinner.tsx), the loading card's motion: wheels turn, the track runs
+   by, the train chugs, ears bob, steam puffs */
+.bunny-train { display: block; width: 104px; height: auto; margin: 0 auto 4px; overflow: visible; }
+.bunny-train.small { display: inline-block; flex: none; width: 26px; margin: 0; vertical-align: -3px; }
+.bt-rail, .bt-ties { stroke: var(--muted); }
+.bt-body { fill: color-mix(in srgb, var(--accent) 72%, #fff); }
+@keyframes bt-turn { to { transform: rotate(360deg); } }
+@keyframes bt-run { to { stroke-dashoffset: 12; } }
+@keyframes bt-chug { to { transform: translateY(-1.2px); } }
+@keyframes bt-bob { to { transform: rotate(-7deg); } }
+@keyframes bt-puff { from { transform: translate(0, 0) scale(.6); opacity: 1; } to { transform: translate(-14px, -10px) scale(1.4); opacity: 0; } }
+.bt-wheel { transform-box: fill-box; transform-origin: center; animation: bt-turn .7s linear infinite !important; }
+.bt-ties { animation: bt-run .35s linear infinite !important; }
+.bt-train { animation: bt-chug .35s steps(2, jump-none) infinite alternate !important; }
+.bt-ears { transform-box: fill-box; transform-origin: 50% 100%; animation: bt-bob .7s ease-in-out infinite alternate !important; }
+.bt-puff { transform-box: fill-box; transform-origin: center; animation: bt-puff 1.4s ease-out infinite !important; }
+.bt-puff.late { animation-delay: -.7s !important; }
+@media (prefers-reduced-motion: reduce) { .bunny-train * { animation-play-state: paused !important; } }
 * { scrollbar-width: thin; scrollbar-color: var(--rule) transparent; }
 .muted { color: var(--muted); }
 .big { font-size: 18px; font-weight: 700; }
@@ -135,11 +153,24 @@ body.resizing, body.resizing * { user-select: none; }
 .rows .val.w-mode svg { width: 14px; height: 14px; }
 .w-riders { width: 56px; }
 .w-near { width: 58px; white-space: nowrap; }
+/* T-670: the Lines list's city column, left aligned and cut to the room */
+.rows .val.w-city { width: 62px; flex: none; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sort-btn.val.w-city { justify-content: flex-start; width: 62px; }
+.with-city .w-riders { width: 48px; }
+.with-city .w-trains { width: 40px; }
 /* T-550: the Money tab's Cities section: name, split bar, train rides a day, net money a day */
 .w-citybar { width: 64px; }
 .w-money { width: 76px; white-space: nowrap; }
-.rows.cities .w-riders, .rows.cities .w-money, .rows.cities .city-bar { flex: none; white-space: nowrap; }
-.rows.cities .city-bar { display: block; width: 64px; }
+.w-points { width: 52px; white-space: nowrap; }
+.rows.cities .w-riders, .rows.cities .w-money, .rows.cities .w-points, .rows.cities .city-bar { flex: none; white-space: nowrap; }
+.rows.cities .city-star { display: inline-flex; flex: none; margin-right: 4px; color: var(--accent, currentColor); }
+.rows.cities .city-star svg { width: 13px; height: 13px; }
+.rows.cities .city-bar { display: block; width: 48px; }
+/* T-684: room for the points column and the name */
+.w-citybar.c-cities { width: 48px; }
+.w-riders.c-cities { width: 44px; }
+.w-money.c-cities { width: 62px; }
+.w-points.c-cities { width: 44px; }
 .rows.cities .bar { height: 10px; }
 .rows.cities .val.neg { color: var(--bad); }
 .group.scope .btn { display: inline-flex; align-items: center; gap: 4px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -190,6 +221,7 @@ body.resizing, body.resizing * { user-select: none; }
 }
 .chip > span { transform: translateY(-1px); }
 .chip.link { cursor: pointer; }
+.place-link { cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
 /* T-521: a station row keeps at least 3 bullets, its name gives way */
 .rows.stations > li { gap: 4px; }
 .rows.stations .grow { flex: 1 1 0; min-width: 0; }
@@ -203,6 +235,7 @@ body.resizing, body.resizing * { user-select: none; }
 .line-list-actions, .line-stop-actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
 .line-list-actions label { display: flex; align-items: center; gap: 5px; }
 .line-list-actions select, .line-identity input { font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--rule); }
+.line-stop-actions { justify-content: flex-start; }
 .line-identity { margin-top: 8px; }
 .line-identity label { display: flex; align-items: center; gap: 8px; }
 .line-identity input { width: 100px; min-width: 0; padding: 3px 5px; }
@@ -233,14 +266,17 @@ table.sched th { font-weight: 400; color: var(--muted); font-size: 12px; text-al
 table.sched th:first-child, table.sched td:first-child { text-align: left; }
 table.sched td { text-align: right; padding: 3px 0; border-bottom: 1px dotted var(--rule); }
 table.sched tr.now td:first-child { font-weight: 700; }
+/* T-625, T-679: a count refused for cash, a headway shorter than the track allows; the headway a
+   line runs at when its track holds it just over the one set; a refused edit's control shakes once */
+table.sched .bad { color: var(--bad); }
+table.sched .hw-real { color: var(--muted); margin-right: 6px; }
+.shake { display: inline-block; animation: shake 300ms linear; }
+@keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-3px); } 40%, 80% { transform: translateX(3px); } }
+@media (prefers-reduced-motion: reduce) { .shake { animation: none; } }
 /* T-472, T-477: text the player should act on, and each demand level's crowding */
 .crowd-warn { color: var(--warn); }
 .crowd-bad { color: var(--bad); }
 .crowd-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
-.crowd-dot.c0 { background: #4f9a4f; }
-.crowd-dot.c1 { background: #d8b425; }
-.crowd-dot.c2 { background: #e07a1f; }
-.crowd-dot.c3 { background: #c43c3c; }
 .rows.sub-rows > li { padding-left: 12px; color: var(--muted); min-height: 24px; }
 svg.junction-map { display: block; margin: 8px auto 2px; width: 112px; height: 112px; stroke-width: initial; }
 .complex-map { margin: 8px 0 4px; }
@@ -413,6 +449,25 @@ rect.now { fill-opacity: .45; }
 .loading-card { background: var(--bg); border: 1px solid var(--rule); padding: 14px 20px;
   min-width: min(260px, 100%); max-width: 100%; text-align: center; }
 .loading-card p + p { margin-top: 2px; }
+/* T-677: the start menu, over the bare map until the player picks a game; the game's own chrome
+   waits under it */
+.start-menu { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 16px;
+  background: color-mix(in srgb, var(--bg) 45%, transparent); }
+.start-box { background: var(--bg); border: 1px solid var(--rule); padding: 18px 20px 20px; min-width: min(240px, 100%);
+  max-height: calc(100vh - 32px); overflow-y: auto; display: flex; flex-direction: column; gap: 10px; zoom: var(--ui, 1); }
+.start-box:has(.start-saves) { width: min(460px, 100%); }
+.start-box h1 { margin: 0; }
+.start-new { align-self: flex-start; border-color: var(--accent); }
+.start-new:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.start-head { font-size: 14px; font-weight: 700; margin: 6px 0 0; }
+.start-saves { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.start-save { display: flex; gap: 12px; width: 100%; padding: 8px; text-align: left; font: inherit; color: inherit;
+  background: var(--bg); border: 1px solid var(--rule); cursor: pointer; }
+.start-save:hover, .start-save:focus-visible { border-color: var(--accent); background: var(--tint); }
+.start-save .save-thumb { width: 144px; height: 96px; }
+.start-save .save-info { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.choosing #dock-root, .choosing #topbar-root, .choosing #tools-root, .choosing .map-top-left, .choosing .map-search,
+.choosing .blueprint-bar, .choosing .maplibregl-ctrl-bottom-right { visibility: hidden; }
 /* T-243: the load's progress as a filling bar (its percentage on hover); the fill jumps, no transition */
 .load-bar { display: block; height: 8px; margin: 8px 0 6px; border: 1px solid var(--rule); background: var(--bg); pointer-events: auto; }
 .load-fill { display: block; height: 100%; background: var(--accent); }
@@ -532,11 +587,23 @@ rect.now { fill-opacity: .45; }
 .stop-tag { position: absolute; left: 0; top: 0; z-index: 4; pointer-events: none; white-space: nowrap !important; }
 
 /* inspector extras */
-.palette { display: flex; flex-wrap: wrap; gap: 4px; margin: 8px 0 0 40px; }
-.palette .swatch { width: 24px; height: 24px; }
 .swatch.on { border-color: var(--accent); }
-.swatch.custom { position: relative; display: inline-block; background: conic-gradient(#d7263d, #f2c200, #1a9a4a, #0e9a9a, #1f6fd1, #8a3fb8, #d7263d); }
-.swatch.custom input { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; border: 0; padding: 0; }
+/* T-672: the colour picker, after languagedots' swatch editor */
+.cpick { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.cpick-area, .cpick-hue { position: relative; border: 1px solid var(--rule); cursor: crosshair; touch-action: none; user-select: none; }
+.cpick-area { height: 112px; background: linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, var(--hue)); }
+.cpick-hue { height: 14px; background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00); }
+.cpick-area:focus-visible, .cpick-hue:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.cpick-dot { position: absolute; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; border: 2px solid #fff;
+             box-shadow: 0 0 0 1px #0007; pointer-events: none; }
+.cpick-hue .cpick-dot { top: 50%; }
+.cpick-row { display: flex; align-items: center; gap: 8px; }
+.cpick-now { width: 28px; height: 28px; border: 1px solid var(--rule); flex: none; }
+.cpick-hex { width: 88px; min-width: 0; padding: 3px 5px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px;
+             color: var(--text); background: var(--bg); border: 1px solid var(--rule); border-radius: 0; }
+.cpick-hex:focus { border-color: var(--accent); outline: 0; }
+.cpick-presets { display: grid; grid-template-columns: repeat(auto-fill, 24px); gap: 4px; }
+.cpick-presets .swatch { width: 24px; height: 24px; }
 .callout { margin-top: 10px; padding: 8px 10px; background: var(--tint); border: 1px solid var(--accent);
            display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
 .callout.bad { background: var(--shade); border-color: var(--rule); }

@@ -21,7 +21,10 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
   changes the switch when its state changes after the page loads, so a stored setting wins over a
   Caps Lock left on or off [T-487].
   The number keys work from any tab and open the Build tab; the key of the tool already on does
-  nothing. Each button shows its key. There is no button for plain selecting: clicking the active tool again or
+  nothing. Each button shows its key. Three letter keys work from any tab [T-670, `ACTION_KEYS` in
+  `ui/tabs.tsx`]: C constructs all blueprints (the same as "Construct blueprints" below, nothing when
+  there is nothing to build), N makes a new line and L starts or finishes editing the selected line's
+  stops; none fires while a text field has focus or a question is open. There is no button for plain selecting: clicking the active tool again or
   leaving it with Esc returns to selecting. The trip tool (key T) is in
   [ui-inspectors.md](ui-inspectors.md).
 - **At the bottom of the pane**, fixed while the settings above scroll: the blueprint total, undo
@@ -95,9 +98,19 @@ T-422]. The geometry is in [track-and-service.md](track-and-service.md) 6.1.
   answer comes from the clock worker trying the real edit (`TrackApi.preview_station`; one request
   in flight, asked when the spot, platform length or network changes, the last answer kept
   meanwhile), so the ghost and the click cannot disagree.
-- **Overlapping track** [T-469]: where several tracks lie within 4 px of the nearest under the
-  pointer, the station goes on the track the last station of the session went on (from its node
-  along the track to the next junctions), else on blueprint over built, else the nearest.
+- **What is under the pointer** [T-469, T-671]: the ghost and the click take the first spot the
+  track model would accept (the same trial edit as above), tried in this order: the nodes within
+  12 px (nearest first, at most 3), then the tracks within 4 px of the nearest, then the rest within
+  10 px (at most 5 tracks). Among the near tracks the order is: one where the station would not meet
+  a station (none within the two platforms' reaches along the track, up to a junction), blueprint
+  over built, the track the last station of the session went on (from its node along the track to
+  the next junctions), then the nearest (`map/stationSnap.ts`). A spot that would be refused never
+  wins over one that would be accepted; when none is accepted the ghost shows the first one's
+  reason.
+- **The end of the track** [T-671]: a spot refused only because the platform would run off the end
+  of its track (`PlatformTooLong`, `PlatformJoint`) is tried again at the node at the nearer end of
+  that track, as when the pointer is on the end node. Any other refusal (water, a crossing, a
+  station) stays and says why.
 - **Placement help** [T-312, T-412]: with the pointer snapped to track the tag says how far the
   spot is, in a straight line, from the station placed last in this session ("1.2 km from W 46th
   St"; nothing before the first), then roughly how many local trips a day start or end within 800 m

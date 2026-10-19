@@ -77,7 +77,8 @@ the split (bar, then its labels), cash, day and time, speed buttons. **Three typ
 styles only**: normal (14 px, regular, text colour: name, "Train", cash), figure (18 px, bold: the
 train share and the time) and small (12 px, regular, muted: rides, walking and driving shares,
 day, status). **Every part has a fixed width** [T-341], so no city name or status moves the split
-bar: the name box is cut with an ellipsis (the whole name on hover), the percentages and counts
+bar: the name box is cut with an ellipsis (the whole name on hover, with the city's points and
+points a day, T-684), the percentages and counts
 are in tabular figures in boxes of fixed width, and the split bar is centred in the bar with
 nothing under it: the status is a tag over the map (Status, below). The mode bar is the one
 flexible part [T-406]: it takes the width the fixed parts leave, so its length follows the window
@@ -88,8 +89,8 @@ below 700 px the bar takes two rows (name, cash, time and speed over the split).
 
 - **The goal number**: the focused zone's mode split as one bar (driving, train, walking, in the
   mode colours whatever the theme), the split of all its modelled local trip legs (commutes,
-  everyday outings, school and university), so the shares are of rides a day, not people [T-342].
-  The labels after it give the train share, after a blue mark, with its rides a day ("18.5% 8.81M rides"; no word "Train" [T-650]) and the
+  everyday outings, school and university), so the shares are of rides per day, not people [T-342].
+  The labels after it give the train share, after a blue mark, with its rides per day ("18.5% 8.81M rides"; no word "Train" [T-650]) and the
   walking and driving shares as icons; the hover gives all three counts and the total, and an
   icon's own hover its share and rides. The player's job is
   to make the train share grow. It shows "–" and an empty bar until the zone has figures of its own
@@ -128,8 +129,8 @@ dropdown at the end of the demand bar, after the purpose filter: Average day (th
 Weekday or Weekend. The average is 5 weekdays and 2 weekend days over 7 ([demand-timing.md](demand-timing.md)
 4.2). It sets the day every demand view shows, the split included, and does not follow the clock,
 so nothing jumps when the clock enters a weekend. The control takes the accent border when it is
-not the average. Hovers state the day beside every demand figure ("12,400 trip legs a day on
-average", "a weekday", "a weekend day": `shownDayPhrase` in `game/ui.ts`). A switch of day shows at
+not the average. Hovers state the day beside every demand figure ("12,400 trip legs per day",
+"per weekday", "per weekend day": `shownDayPhrase` in `game/ui.ts`). A switch of day shows at
 once (the bubbles' catch-up is for a new forecast, not another day). The trains, platforms, the
 past 24 hours' riders and the panels' Today counts always follow the clock.
 
@@ -174,7 +175,7 @@ search glass.
 
 ## Keys and focus
 
-[T-183, `ui/keys.ts`] One rule for the game's keys (the tool numbers, T, Esc, Space, Ctrl+Z/Y, the line tool's
+[T-183, `ui/keys.ts`] One rule for the game's keys (the tool numbers, T, N, L, C, Esc, Space, Ctrl+Z/Y, the line tool's
 Enter and Backspace) and search's `/`, Ctrl+K and Ctrl+F. A text field keeps every key (search's
 own box gives Ctrl+K and Ctrl+F to selecting its text). Another form control keeps only its own
 keys (arrows, Home, End, Page Up and Down, Enter, Space, and in a select a letter); the rest reach
@@ -190,9 +191,9 @@ dismissed, and the map and tools are blocked meanwhile.
 `ui/SettingsTab.tsx`, remembered per browser, in order: Demand bubbles, two sliders: Size
 (0.5-2x, [T-099]) and Opacity (20-100% of the built alpha, default 90%, [T-470]; for the
 commuter and longer-trip bubbles, not station discs), Track display (four modes with their key,
-[ui-map.md](ui-map.md)), Show (trains, station names, capacity markers, map labels), Riders on trains
+[ui-map.md](ui-map.md)), Show (trains, station names, capacity markers, flat junctions and crossings, map labels), Riders on trains
 and platforms ("How full each train is", "How full each platform is", both on by default)
-[T-164], Theme (Light or Dark, light by default, over Pink, Blue or Green) [T-039], Panel and text size, Units and performance, and Explore a trip at the bottom [T-220]. Station demand
+[T-164], Stations up close (Faces and Sound, both on by default, and a Volume slider while Sound is on; [ui-map.md](ui-map.md) Life at stations) [T-686], Theme (Light or Dark, light by default, over Pink, Blue or Green) [T-039], Panel and text size, Units and performance, and Explore a trip at the bottom [T-220]. Station demand
 circles are at the top of the Stations tab instead [T-213].
 
 **Panel and text size** [T-247]: 80% to 120% in 5% steps, 100% by default, no reset button. It
@@ -235,10 +236,14 @@ owned (prices in its hover), cars the lines need and spare cars [T-631]; the val
 **Cities** [T-550, `ui/Cities.tsx`], last in the tab and whatever the
 toggle: a list of every region (the toggle's regions) with a built station, one row each: its name
 (hover: its station count), its mode split bar as the top bar draws it (the same colours and the
-same hover), its train rides a day and its money a day, fares less running trains (yesterday's, today so far
+same hover), its train rides per day and its money a day, fares less running trains (yesterday's, today so far
 until the game has a first full day; hover: fares and running trains, then new trains and
-construction, left out of the figure, when there were any; losses red). Sorted by rides, largest first; a click on a header sorts by that
-column (name, train share, rides, money) as in the Lines tab; a click on a row moves the camera to
+construction, left out of the figure, when there were any; losses red), and its points since the
+game began, moving as they land (hover: the exact total, points a day with the riders now on the
+day shown, and the rule) [T-684]. A star after the name marks a region whose train share has
+reached 10% (hover: when it was earned, in the region's local time) [T-685]. The top bar's city
+name has the same points in its hover. Sorted by rides, largest first; a click on a header sorts by that
+column (name, train share, rides, money, points as of the last whole hour) as in the Lines tab; a click on a row moves the camera to
 the region as search does, and the viewed region's row is tinted. It lives here and not in
 Stations because the row's money is this tab's region ledger and a click on a row changes the
 region the table above follows; a fifth dock tab button was ruled out by [T-532]. It sits at the
@@ -265,9 +270,25 @@ bottom so the figures above come first; there is no list until a station is buil
   "Autosave is off in this test page. Save a copy to keep the game.", a `?new=1` page marks no
   card Playing, and Save as a copy gives the game a slot of its own, which autosaves from then on.
 
-**A new game** starts on day 1 at 07:00 in an empty New York with $3B. Opening the page continues
-the last game. The URL's view says only which city or zone; the map starts at that city's registry
+**A new game** starts on day 1 at 07:00 in an empty New York with $3B. Opening the page shows the
+start menu (below). The URL's view says only which city or zone; the map starts at that city's registry
 centre and zoom, or over New York with none [T-310].
+
+## Start menu
+
+[T-677; `ui/StartMenu.tsx`; the startup order in [architecture.md](architecture.md) "Loading and readiness"]
+
+- Every page load opens on a card over the bare map, in the loading card's look: "anitabuilder",
+  New game, then "Saved games", one button per browser slot, the most recent first, each with the
+  saves panel's picture (144 x 96) and facts (name, when saved, day, cities, lines, stations, cash).
+  With no saved game it is New game alone. The dock, top bar and map controls are hidden under it,
+  it takes every key outside itself, and nothing loads behind it but the map.
+- A click on a save opens that slot. New game with no saved game starts in the original slot (as
+  the first visit did before the menu); beside saved games it starts in a new slot named "Game N"
+  (N one more than the slots listed), so no saved game is replaced. Either way the slot is first
+  written once the network has something in it: a new game left empty leaves no card.
+- URL switches that already say which game skip it: `?new=1` (a new game owning no slot),
+  `?synth=1`, `?demandTest=1`, `?paused=1` and `?continue=1` (the game opened last).
 
 ## Loading
 
@@ -285,9 +306,11 @@ centre and zoom, or over New York with none [T-310].
   data, Opening city data, Calculating demand), naming no cities; the percentage is only the bar's
   hover ("42% loaded"). The bar counts to that final, so on the real New York save it fills
   for about 20 s. A slot whose cities are all open shows the bar for its solve alone. The card
-  takes no input but the bar's hover (a press pans the map beneath), has no animation or spinner,
-  and goes when the clock starts. Loading is the one place with motion [T-647, Anita; `ui/Spinner.tsx`,
-  `.spin`]: a small ring turning (1.2 s a turn, 8-10 px, grey) before the status tag's text, in place
+  takes no input but the bar's hover (a press pans the map beneath) and goes when the clock starts.
+  Loading is the one place with motion [T-647, T-677, Anita; `ui/Spinner.tsx`]: on top of the card a
+  drawn bunny rides a toy train in the theme's accent (104 px wide; wheels turn, the track's ties run
+  by, the train chugs, the ears bob, steam puffs), and a 26 px copy of
+  it before the status tag's text; a small ring turning (`.spin`, 1.2 s a turn, 8 px, grey) in place
   of each line's crowding dot per demand level in the line panel until the line has figures
   (while no final result is shown or a solve is updating it; not after a failure or over dead
   space), and in a clicked bubble's panel in place of each line that waited ("Trip purposes", the far ends, "Inter-region trips") while they load.

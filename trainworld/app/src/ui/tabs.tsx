@@ -16,7 +16,7 @@ import { buildLevel, buildPlatform, display, keepPlacing, lineSort, selection, s
 import { setFares, world } from "../game/world";
 import { liveMoney, moneyState } from "../game/money";
 import { cityById, viewedZone } from "../game/cities";
-import { listScope, scopedLists, scopeZone } from "../game/listScope";
+import { listScope, scopedLists, scopeZone, stationZone } from "../game/listScope";
 import { regionLedger } from "../game/regionMoney";
 import { accountVersion } from "../game/boarding";
 import { crowdClass, crowding, stationsToday, today, todayLoaded, useToday, waitText } from "../game/today";
@@ -61,6 +61,8 @@ export const TOOL_KEYS: Record<string, Tool> = { "1": "track", "2": "station", "
 /** The trip explorer's key (T-195, a letter since T-444: the numbers are for building); unlike the
  * build tools it leaves the tab as it is. Compared lowercase, so Caps Lock does not matter. */
 export const TRIP_KEY = "t";
+/** T-670: letter keys for new line, edit stops (the selected line's) and construct blueprints, from any tab. */
+export const ACTION_KEYS: Record<string, "newLine" | "editStops" | "construct"> = { n: "newLine", l: "editStops", c: "construct" };
 
 /** Pick a build tool; the one in use again, or Select, goes back to selecting. */
 export function pickTool(v: Tool) {
@@ -158,7 +160,7 @@ function TrainsNow({ line, n, period }: { line: string; n: number; period: strin
   const c = d ? crowding(d.crowdWait, d.crowdRiders, d.crowdRide) : null;
   const cls = c ? crowdClass(c.score) : "";
   const tip = d && c && d.crowdRiders > 0
-    ? `${period}: riders wait ${waitText(c.wait)} on average for a train with room` + (d.trainsNow > 0 ? `\n${count(d.fullNow)}/${count(d.trainsNow)} trains running now are packed full on their trip` : "")
+    ? `${period}: riders wait ${waitText(c.wait)} on average for a train with room` + (d.trainsNow > 0 ? `\n${count(d.fullNow)}/${count(d.trainsNow)} trains running now are full on their trip` : "")
     : undefined;
   return <span class={"val w-trains " + (cls || "muted")} data-tip={tip}>{n}</span>;
 }
@@ -201,20 +203,33 @@ export function LinesTab() {
   const { key, dir } = lineSort.value;
   // T-332: only the viewed place unless the world is chosen
   const sc = scopedLists(w.save.stations, w.save.lines, (k, id) => (k === "line" && (sel?.kind === "line" || sel?.kind === "train") && sel.line === id));
+  // T-670: on the whole world, a city column once lines start in two or more cities (a line's city is where its first stop is)
+  const cityOf = new Map<string, string>();
+  if (sc.zone === null) {
+    const at = new Map(w.save.stations.map((s) => [s.id, s]));
+    for (const l of sc.lines) {
+      const s = at.get(l.stops[0]), z = s ? stationZone(s) : null;
+      cityOf.set(l.id, z ? cityById(z).name : "");
+    }
+  }
+  const showCity = new Set([...cityOf.values()].filter(Boolean)).size >= 2;
   const lines = [...sc.lines].sort((a, b) =>
-    (key === "riders" ? ((t.get(a.id)?.riders ?? 0) - (t.get(b.id)?.riders ?? 0)) * dir
+    (key === "city" ? natural(cityOf.get(a.id) ?? "", cityOf.get(b.id) ?? "") * dir
+      : key === "riders" ? ((t.get(a.id)?.riders ?? 0) - (t.get(b.id)?.riders ?? 0)) * dir
       : key === "trains" ? (trains(a.id) - trains(b.id)) * dir
       : key === "near" ? byNear(sc.lineDist.get(a.id), sc.lineDist.get(b.id), dir) : 0)
     || natural(a.name, b.name) * (key === "name" ? dir : 1) || a.num - b.num);
   return (
     <>
       <div class="line-list-actions">
-        <button class="btn text" onClick={newLine} disabled={creating}><Icon.plus />New line</button>
+        <button class="btn text" data-tip="Make a new line (N)" onClick={newLine} disabled={creating}><Icon.plus />New line<span class="key muted">N</span></button>
         <ScopeToggle />
       </div>
       {lines.length === 0 && <p class="muted">{w.save.lines.length === 0 ? "No lines yet." : "No lines here."}</p>}
+      <div class={showCity ? "with-city" : undefined}>
       {w.save.lines.length > 0 && <SortHead sort={lineSort} cols={[
         { key: "name", label: "Name", tip: "Sort by name", first: 1 },
+        ...(showCity ? [{ key: "city" as const, label: "City", tip: "Sort by the city of the first stop", first: 1 as const, cls: "w-city", left: true }] : []),
         { key: "riders", label: "Riders", tip: "Sort by riders in the past 24 hours", first: -1, cls: "w-riders" },
         { key: "trains", label: "Trains", tip: "Sort by trains needed", first: -1, cls: "w-trains" },
         { key: "near", label: "Near", tip: "Sort by distance from the centre of the screen, by the nearest stop", first: 1, cls: key === "near" ? "w-near" : "near-off" },
@@ -227,6 +242,7 @@ export function LinesTab() {
             <li class={on ? "on" : ""} onClick={() => (selection.value = { kind: "line", line: l.id })} onDblClick={() => locateLine(l.stops)}>
               <Chip line={l} />
               <span class="grow">{l.name}</span>
+              {showCity && <span class="val muted w-city" data-tip={cityOf.get(l.id) ? `The first stop is in ${cityOf.get(l.id)}` : undefined}>{cityOf.get(l.id)}</span>}
               {st.status !== "running" ? (
                 <span class="val muted">{STATUS[st.status]}</span>
               ) : (
@@ -240,6 +256,7 @@ export function LinesTab() {
           );
         })}
       </ul>
+      </div>
       <div class="pane-foot">
         <TotalToday />
       </div>
@@ -370,8 +387,8 @@ export function StationsTab() {
       <div class="station-use"><Segmented<StationUseMode>
         options={[
           ["none", "None"],
-          ["origins", <span data-tip="Riders starting a rail trip at the station, a day">Origins</span>],
-          ["transfers", <span data-tip="Riders changing lines at the station, a day">Transfers</span>],
+          ["origins", <span data-tip="Riders starting a rail trip at the station, per day">Origins</span>],
+          ["transfers", <span data-tip="Riders changing lines at the station, per day">Transfers</span>],
           ["total", <span data-tip="Every boarding at the station, a day: origins and transfers">Total</span>],
         ]}
         value={d.stationUse}

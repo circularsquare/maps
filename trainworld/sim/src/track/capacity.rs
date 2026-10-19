@@ -151,6 +151,34 @@ impl Capacity {
         out
     }
 
+    /// T-679: per line and level, the most trains an hour it can run with every other line's rate
+    /// as it stands, and the limiting resource that sets it: (trains an hour, resource), or
+    /// (infinity, MAX) where nothing limits it. `fill` cuts a line at the same rate.
+    pub fn line_limits(&self, net: &Network) -> Vec<[(f64, u32); 3]> {
+        let mut out = vec![[(f64::INFINITY, u32::MAX); 3]; net.line_count()];
+        let mut own: Vec<(u32, f64)> = vec![];
+        for r in (0..self.res.len()).filter(|&r| self.limits(r)) {
+            own.clear();
+            for u in self.users_of(r) {
+                match own.iter_mut().find(|o| o.0 == u.line) {
+                    Some(o) => o.1 += u.occ / 3600.0,
+                    None => own.push((u.line, u.occ / 3600.0)),
+                }
+            }
+            for lev in 0..LEVELS {
+                let load: f64 = own.iter().map(|&(l, a)| net.line_tph[l as usize][lev] as f64 * a).sum();
+                for &(l, a) in own.iter().filter(|o| o.1 > 0.0) {
+                    let most = (net.line_tph[l as usize][lev] as f64 + (1.0 - load) / a).max(0.0);
+                    let b = &mut out[l as usize][lev];
+                    if most < b.0 {
+                        *b = (most, r as u32);
+                    }
+                }
+            }
+        }
+        out
+    }
+
     /// T-517: the rates `want` (line, trains an hour) at one level, cut so that no limiting
     /// resource exceeds its capacity. Progressive filling: every line's rate grows in proportion
     /// to its wanted rate until a resource it uses fills; its lines then stop there. Lines not in

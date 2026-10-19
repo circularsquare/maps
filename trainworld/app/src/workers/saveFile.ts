@@ -29,6 +29,8 @@ export interface DayLedger {
   build: number;
   /** train rides taken (T-565); absent in days saved before it, read as 0 */
   rides?: number;
+  /** points earned (T-684); absent before it, read as 0 */
+  points?: number;
 }
 
 /** One game hour's money, US$M (T-447); `hour` counts from day 0 00:00. */
@@ -40,6 +42,8 @@ export interface HourLedger {
   build: number;
   /** train rides taken (T-565), as in `DayLedger` */
   rides?: number;
+  /** points earned (T-684), as in `DayLedger` */
+  points?: number;
 }
 
 export interface SaveHeader {
@@ -63,6 +67,10 @@ export interface SaveHeader {
   hours?: HourLedger[];
   /** T-531: the same two per region (a zone id; "" outside every zone); absent in older saves */
   regions?: Record<string, { ledger: DayLedger[]; hours: HourLedger[] }>;
+  /** T-684: points earned since the game began, per region; absent in older saves (none yet) */
+  points?: Record<string, number>;
+  /** T-685: each region's star, the game second it was earned; absent in older saves */
+  stars?: Record<string, number>;
 }
 
 /**
@@ -209,13 +217,16 @@ export async function writeStored(key: string, v: StoredSave): Promise<boolean> 
   }
 }
 
-/** Metadata only leaves the worker; unreadable-save recovery copies are kept out of the list. */
+/** Metadata only leaves the worker; unreadable-save recovery copies are kept out of the list. Only
+ * the slots are read, not the demand caches beside them (several MB each, T-328). Also read by the
+ * start menu on the main thread (T-677). */
 export async function listSlots(): Promise<SaveSlot[]> {
   const s = await store("readonly");
-  const [keys, saves] = await Promise.all([req(s.getAllKeys()), req(s.getAll())]);
+  const keys = (await req(s.getAllKeys())).filter((k): k is string => typeof k === "string" && (k === ORIGINAL_SLOT || k.startsWith("slot-")));
+  const saves = await Promise.all(keys.map((k) => req(s.get(k)) as Promise<StoredSave>));
   return keys.flatMap((key, i) => {
-    if (typeof key !== "string" || !(key === ORIGINAL_SLOT || key.startsWith("slot-"))) return [];
-    const s = saves[i] as StoredSave;
+    const s = saves[i];
+    if (!s) return [];
     return [{ key, name: slotName(key, s), at: s.at, day: s.day, thumb: s.thumb, cities: s.cities, lines: s.lines, stations: s.stations, cash: s.cash }];
   }).sort((a, b) => b.at - a.at);
 }

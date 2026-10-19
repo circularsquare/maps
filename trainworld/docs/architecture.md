@@ -129,8 +129,14 @@ Web first, so it can be shared as a link.
   arrive, about 2.7 s after navigation instead of about 7 s (T-351). The cached result
   (section 11) is drawn behind the loading card without releasing it. A city opened later (a pan,
   construction) is a load without a hold and counts as done at its first estimate (`READY_ROUND`).
-  The demand pool starts before the map is
-  set up; the regional market goes to the workers as bytes and is decoded there; each zone's
+  **Startup order** (main.ts) [T-677]: the page sets up the map, overlay and UI, then waits on the
+  start menu ([ui-panels.md](ui-panels.md) "Start menu"); the pick starts the demand pool, then the
+  clock worker (`ClockClient.start`, which queues anything posted before it), so nothing but the
+  map loads under the menu and a load from the pick runs on a map already drawn. A URL switch that
+  chooses the game (`?new=1`, `?synth=1`, `?demandTest=1`, `?paused=1`, `?continue=1`;
+  `choiceFromUrl` in ui/StartMenu.tsx) skips the menu, and the pool then starts before the map is
+  set up, as it did before the menu. A new game, from the menu or `?new=1`, opens its viewed zone
+  bare (`startDemand`'s `newGame`). The regional market goes to the workers as bytes and is decoded there; each zone's
   boundary file is fetched once, shared by the reach test, the focus and the outlines
   (`game/boundaries.ts`). The clock worker is ready without any water mask: masks, outlines, place
   lists and boundaries are fetched per zone as the view, track or a search needs them (T-302,
@@ -182,7 +188,10 @@ all results are recomputed. About 100 KB compressed per 10,000 route-km (T-040).
   outside every zone) hold the history charts' data, loaded back as they were, so a reload keeps the
   charts; money is saved to the dollar and rides to a tenth, which gzips to about 60% of full
   precision. An entry without `rides` (a save from before T-565) reads as 0 rides, and a save with
-  no `hours` or `regions` starts those empty. Sizes: notes/T-567.md.
+  no `hours` or `regions` starts those empty. Sizes: notes/T-567.md. `points` (each region's points
+  since the game began, whole points; each ledger entry also has its `points`) and `stars` (each
+  region's star, the game second it was earned) are absent in saves before T-684 and T-685, which
+  start with none.
 - **Older frames** [T-308; [world.md](world.md)]: a file or slot in TWT5 (the Northeast conic) or
   TWT4 and older (equirectangular) is converted to Mercator as it loads (`convert_save_frame` in the
   clock worker) and the slot written again at once in TWT6; the old bytes stay under a hidden key
@@ -190,7 +199,8 @@ all results are recomputed. About 100 KB compressed per 10,000 route-km (T-040).
   true ground.
 - **When it saves**: the clock worker builds, compresses and writes to IndexedDB itself: at once
   after anything paid for, else once a wall minute if something changed, and when the page is
-  hidden. On start the last game loads. `?new=1` starts a game that reads no slot and owns none, and
+  hidden. On start the player picks a slot or New game on the start menu [T-677]; `?continue=1`
+  opens the slot opened last. `?new=1` starts a game that reads no slot and owns none, and
   does not autosave until "Save as a copy" gives it one [T-320]; `?synth=1` and `?demandTest=1`
   load the last game but never autosave it.
 - **Named browser slots** [T-068, T-241]: save the current game as a new copy, open another, rename,

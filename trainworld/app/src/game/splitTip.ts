@@ -15,5 +15,5 @@ export function splitTip(where: string, split: ModeSplit | null, rides: SplitRid
   const body = rides
     ? `Train ${pct(s.train)} (${count(rides.train)}), Walking ${pct(s.walk)} (${count(rides.walk)}), Driving ${pct(s.drive)} (${count(rides.drive)}), all ${count(rides.all)} rides`
     : `Train ${pct(s.train)}, Walking ${pct(s.walk)}, Driving ${pct(s.drive)}`;
-  return `Rides a day${where}: ${body}${note}`;
+  return `Rides per day${where}: ${body}${note}`;
 }

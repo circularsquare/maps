@@ -20,10 +20,11 @@ pub const MIN_DISTANCE_M: f32 = 150.0;
 /// Kinds 0, 1 and 5 are outings per resident; 2 and 3 attendance per enrolled student (samples
 /// drawn from the site); 4 the airport's own daily ground trips (`airport_trips`), its homes and
 /// visitors' ends drawn from each origin cell but normalised per airport.
-/// The defaults of `Params::everyday_rate` and `everyday_decay_m`; a pack's `everyday` block
-/// (its country's survey, T-509 stage 4) overrides them.
+/// The defaults of `Params::everyday_rate` and `everyday_decay_m`. A pack's `everyday` block (its
+/// country's survey, T-509 stage 4) overrides the rates; the decay lengths are one worldwide set
+/// (T-637), which no pack overrides.
 pub const RATE: [f32; 6] = [0.3, 0.2, 0.9, 0.6, 1.0, 0.04];
-pub const DECAY: [f32; 6] = [3000.0, 6000.0, 2500.0, 6000.0, 20000.0, 5000.0];
+pub const DECAY: [f32; 6] = [1300.0, 1400.0, 1400.0, 3500.0, 20000.0, 2000.0];
 /// The purposes' names in `set_extra` (`rate_errands`) and the pack's `everyday` block.
 pub const KINDS: [&str; 6] = ["errands", "social", "school", "university", "airport", "medical"];
 pub const OUTWARD: [[f32; 5]; 6] = [

@@ -341,7 +341,12 @@ busy track, and names the places it waits most (notes/T-031.md).
   hours). Its counts are then derived: the fewest trains with round trip over headway, the round
   trip being the capacity-adjusted one with running, dwell, turnaround and waiting (`auto_trains`;
   the real headway may run 0.5% over the chosen one, so a few seconds of drift in the round trip
-  buy no train). Every edit that changes the line, its track or shared track settles the counts
+  buy no train). At the track's limit the count is clamped (T-679, `clamp_auto`): when the headway
+  is no shorter than the line's shortest headway (6.2, with the other lines' rates as they stand,
+  `Capacity::line_limits`) or within the 0.5% of it, the line takes no more trains than fit, at least
+  one, so it runs just over the headway set (4:07 for 4:00, say) and no train is held out. A headway
+  well under the limit is not clamped: the trains past it wait at the ends and the panel warns.
+  Every edit that changes the line, its track or shared track settles the counts
   again (`TrackWorld::settle_train_counts`: count from the round trip, settle the rates, repeat up
   to 5 rounds), and whole trains that full track would keep waiting at the ends (6.2) are dropped,
   so the fleet is what runs. A count that grows buys cars as any fleet growth does (6.4), and the
@@ -473,6 +478,23 @@ multiplier per level (Anita, 2026-10-08; all construction prices halved 2026-10-
   lines, as `money.ts` has them, not scaled by the economy). A period's rides are the line's by that
   period's share of passenger-km, settled with the fares (an hour's rides count as its fares are
   paid) and divided between regions by the region of each ride's boarding stop.
+- **Points** (T-684, `app/src/game/points.ts`): a score per region, 20 a rail trip and 1 a
+  passenger-km, not scaled by the economy, unlocking nothing yet. A trip is a rider's whole rail
+  journey (changes of line and walks between stations within it included), counted in the region
+  it starts in: each region's rail trips a day are the solve's (its own demand's, plus half of each
+  regional corridor's at each end, all of one within a place), spread over the boardings at the
+  region's stations, so a region's day is exact and the hour follows its boardings (a region whose
+  riders all board at another region's stations scores no trips). Passenger-km are each line's
+  period loads times its stretches' lengths, carried by the period's boardings onto the line
+  (each boarding the line's average km), so they count where riders get on. The main thread sends
+  each line's points per game hour by region, kind of day and period; the worker settles them as
+  fares land (each line at its local period), into a `points` figure in every day and hour entry
+  and a total per region since the game began, saved in the header (`points`; older saves start
+  at zero). The Cities list shows the total, the top bar's city name its hover.
+- **Stars** (T-685): a region earns a star the first time a final solve's train share for it, on
+  the average day (the top bar's goal number as it shows by default; never the weekday or weekend
+  view, so switching the day shown earns nothing), reaches 10%. The header keeps the game second it was
+  earned (`stars`), and it stays if the share falls. Drawn stamps come later.
 - **Starting money $3B** (T-485): the build price of one real first line, about a 20 km line at -2
   with 18 stations plus its trains, leaves room for a few more lines.
 - **Economy at 100x** (Anita, 2026-10-09, as Subway Builder does; T-081): fares and running costs
@@ -546,8 +568,13 @@ per person and does not change who travels: demand still decides that (SPEC 4).
   the queue carries round. Departures are the drawn trips to the bit (`Service::run_deps`). While
   a line has eras (T-206) its day starts six hours before its latest change instead, so the
   account holds the departures actually drawn around the change: a train that has not entered
-  service carries nobody, and trains that left before the change keep their loads. Nothing
-  is saved: it follows from the service and the riders. Each line's inputs are hashed, so an edit
+  service carries nobody, and trains that left before the change keep their loads. When a
+  line's trains start within that day (a change from a pattern with no trains: a new line, or
+  trains set on one that had none; T-680, `RunAccount::open`), its platforms are empty at that
+  moment and riders arrive from then at the arrival rate; nobody who would have arrived earlier
+  waits for it (they went another way). The hour's crowds, "today" and the riders arriving in
+  the hour start there too: departures earlier by time of day are the account's day wrapping
+  round, not trains that ran. Nothing is saved: it follows from the service and the riders. Each line's inputs are hashed, so an edit
   works out again only the lines it changed; new riders redo every line, a few lines at a time
   between the clock worker's other messages (3 a step).
 - **Each game hour** the worker sends, with the hour's trips, each trip's riders per stop-to-stop

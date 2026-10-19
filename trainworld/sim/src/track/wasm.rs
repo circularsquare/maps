@@ -2462,12 +2462,23 @@ impl TrackApi {
 
     /// Per level, where full track holds a line back (T-517): `[trains that wait, kind (ResKind
     /// as u8), node or -1, x, y, trains an hour through it, the most it takes]`, all zero where the
-    /// line's whole fleet runs.
+    /// line's whole fleet runs. Then per level what limits the line (T-679): `[shortest headway s
+    /// with every other line as it runs (infinite with no room left), kind, node or -1, x, y]`,
+    /// all zero where nothing does.
     pub fn line_held(&self, line: u32) -> Vec<f64> {
-        let mut out = vec![0.0; 7 * LEVELS];
+        let mut out = vec![0.0; 12 * LEVELS];
         let cap = &self.w.svc.cap;
         if line as usize >= self.w.net.line_count() {
             return out;
+        }
+        let most = cap.line_limits(&self.w.net)[line as usize];
+        for lev in 0..LEVELS {
+            let (tph, r) = most[lev];
+            if r == u32::MAX {
+                continue;
+            }
+            let res = &cap.res[r as usize];
+            out[7 * LEVELS + 5 * lev..7 * LEVELS + 5 * lev + 5].copy_from_slice(&[if tph > 0.0 { 3600.0 / tph } else { f64::INFINITY },cap.wire_kind(r as usize) as f64, if res.node == u32::MAX { -1.0 } else { res.node as f64 }, res.x, res.y]);
         }
         let worst = cap.bottlenecks(self.w.net.line_count())[line as usize];
         for lev in 0..LEVELS {
@@ -3336,6 +3347,74 @@ mod tests {
         assert_eq!(auto_trains(905.0, 300), 4);
         assert_eq!(auto_trains(900.0, 0), 0);
         assert_eq!(auto_trains(0.0, 300), 0);
+    }
+
+    #[test]
+    fn clamp_auto_binds_only_at_the_limit() {
+        use crate::track::world::clamp_auto;
+        // a 4 minute limit (15 trains an hour) on a 2,000 s round trip: 8 trains fit, 9 do not
+        assert_eq!(auto_trains(2000.0, 240), 9);
+        assert_eq!(clamp_auto(9, 2000.0, 240, 15.0), 8, "at the limit, the count that fits");
+        assert_eq!(clamp_auto(auto_trains(2000.0, 239), 2000.0, 239, 15.0), 8, "half a percent under is still the limit");
+        assert_eq!(clamp_auto(auto_trains(2000.0, 238), 2000.0, 238, 15.0), 9, "past the slack the count is the player's");
+        assert_eq!(clamp_auto(17, 2000.0, 120, 15.0), 17, "well under: unclamped, so the panel warns");
+        assert_eq!(clamp_auto(auto_trains(2000.0, 300), 2000.0, 300, 15.0), 7, "a slower headway is untouched");
+        assert_eq!(clamp_auto(auto_trains(2400.0, 240), 2400.0, 240, 15.0), 10, "an exact fit keeps its last train");
+        // lines with one or two trains
+        assert_eq!(clamp_auto(auto_trains(300.0, 240), 300.0, 240, 15.0), 1, "two would cross the limit");
+        assert_eq!(clamp_auto(1, 200.0, 240, 15.0), 1, "at least one train runs");
+        assert_eq!(clamp_auto(1, 900.0, 1800, 15.0), 1);
+        assert_eq!(clamp_auto(2, 900.0, 450, 15.0), 2);
+        // nothing limits the line, or no room is left: no clamp
+        assert_eq!(clamp_auto(9, 2000.0, 240, f64::INFINITY), 9);
+        assert_eq!(clamp_auto(9, 2000.0, 240, 0.0), 9);
+        assert_eq!(clamp_auto(0, 2000.0, 0, 15.0), 0);
+    }
+
+    /// A 6 km double-track line between two dead-end termini, turning in 420 s: each terminus
+    /// pools its two platform tracks, (420 + 60) / 2 = 240 s a train, so the line's limit is 4:00.
+    fn four_minute_line() -> (TrackApi, u32) {
+        let mut a = api();
+        a.set_cash(6000.0);
+        let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(6000.0, 0.0).iter()).copied().collect();
+        assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+        let nodes = a.nodes_info();
+        let (n0, n1) = (nodes[0] as u32, nodes[10] as u32);
+        assert_eq!(a.add_station(1, n0, 0.0, 0.0, 200, "West".into()), 0);
+        assert_eq!(a.add_station(1, n1, 0.0, 0.0, 200, "East".into()), 0);
+        let id = a.new_line_id();
+        assert_eq!(a.set_line_with_trains(id, &[n0, n1], 2, 2, 2, 30.0, 420.0, 0, 0xd7263d, "Line".into()), 0, "{}", a.issues());
+        assert_eq!(a.construct_all(), 0, "{}", a.issues());
+        (a, id)
+    }
+
+    #[test]
+    fn a_headway_at_the_track_limit_holds_no_train_out() {
+        let (mut a, id) = four_minute_line();
+        let limit = &a.line_held(id)[7 * LEVELS..7 * LEVELS + 5];
+        assert!((limit[0] - 240.0).abs() < 0.01, "the terminus limits the line to 4:00: {limit:?}");
+        assert_eq!(limit[1], 3.0, "named as a terminus");
+        let trip = a.w.svc.lines[id as usize].round_trip[0];
+        let up = auto_trains(trip, 240);
+        assert!(trip / (up as f64) < 240.0 && trip / (up - 1) as f64 >= 240.0, "the fixture rounds up across the limit: {trip}");
+
+        // the cause: the rounded up count by hand holds part of a train out at the terminus
+        assert_eq!(a.set_train_counts(id, up, 1, 1), 0, "{}", a.issues());
+        assert!(a.line_held(id)[0] > 0.0, "rounding up crosses the limit");
+
+        // a headway typed at the limit takes the trains that fit, and none waits
+        assert_eq!(a.set_auto_headway(id, 240, 480, 0), 0, "{}", a.issues());
+        let s = &a.w.svc.lines[id as usize];
+        assert_eq!(s.trains[0], up - 1, "clamped at the limit");
+        assert!(s.round_trip[0] / s.trains[0] as f64 >= 240.0 - 1e-6, "the real headway is just over the typed one");
+        assert_eq!(s.trains[1], auto_trains(s.round_trip[1], 480), "a headway over the limit is untouched");
+        assert!(a.line_held(id)[..7 * LEVELS].iter().all(|&v| v == 0.0), "no train held out: {:?}", a.line_held(id));
+        assert_eq!(a.line_auto(id), vec![240.0, 480.0, 0.0], "the typed headway stays");
+
+        // well under the limit the count is the player's, and the panel warns
+        assert_eq!(a.set_auto_headway(id, 120, 480, 0), 0, "{}", a.issues());
+        assert!(a.w.svc.lines[id as usize].trains[0] >= up, "the whole trains that wait are dropped, the last part train is not");
+        assert!(a.line_held(id)[0] > 0.0, "trains held out at 2:00 against a 4:00 limit");
     }
 
     #[test]

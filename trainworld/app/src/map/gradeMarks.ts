@@ -1,8 +1,9 @@
 // Marks on the map for meeting and climbing track (T-629, T-655), drawn by the network renderer in
 // one instanced pass after the track and before stations and trains:
 //   - a flat crossing (an X) and a flat junction (a fork) in a round badge. Big on blueprint track
-//     and while drawing (the preview), in the blueprint blue; small and quiet on built track, in
-//     the map ink. They grow with zoom only part way, by far less than the track's width does.
+//     and while drawing (the preview); small and quiet on built track. Both are in the Elevation
+//     colour of the level they are on. They grow with zoom only part way, by far less than the
+//     track's width does.
 //   - a ramp (a wedge) where track climbs from level 0 and a tunnel portal (a half disc) where it
 //     drops from level 0, at the level 0 end, along the track, in the level's Elevation colour.
 // The data is `NetworkBuffers.marks` (map/markData.ts); the hover tag names a mark (`markTip`).
@@ -11,6 +12,7 @@ import { levelLabel } from "../game/format";
 import { rgb } from "../game/palette";
 import { perfOff } from "../perfFlags";
 import { shadeColours } from "../game/shades";
+import { display } from "../game/ui";
 import type { Overlay } from "./overlay";
 import { M_BAD, M_CROSSING, M_JUNCTION, M_PORTAL, M_RAMP, MARK_STRIDE } from "./markData";
 import type { TipLine } from "./networkTips";
@@ -53,6 +55,7 @@ precision highp float;
 uniform mat4 u_matrix;
 uniform vec2 u_viewport;
 uniform vec3 u_r;            // radius in device px: loud badge, quiet badge, ramp mark
+uniform float u_flat;        // 0: no marks on flat crossings and junctions
 in vec4 a_mark;              // x, y, shape, angle
 in vec2 a_style;             // tier (0 built, 1 blueprint), level
 out vec2 v_p;
@@ -63,6 +66,7 @@ void main() {
   int shape = int(a_mark.z + 0.5);
   bool ramp = shape == ${M_RAMP} || shape == ${M_PORTAL};
   float r = ramp ? u_r.z : (a_style.x > 0.5 ? u_r.x : u_r.y);
+  if (u_flat < 0.5 && (shape == ${M_CROSSING} || shape == ${M_JUNCTION})) r = 0.0;
   if (r <= 0.0) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   float rq = ramp ? 1.8 * r + 3.0 : r + 3.0;
   vec2 corner = vec2(float(gl_VertexID & 1), float(gl_VertexID >> 1)) * 2.0 - 1.0;
@@ -135,7 +139,7 @@ void main() {
   } else {
     glyph = cov(min(seg(v_p, vec2(-k, -k), vec2(k, k)), seg(v_p, vec2(-k, k), vec2(k, -k))) - g);
   }
-  if (shape == ${M_BAD}) ink = u_bad;
+  ink = shape == ${M_BAD} ? u_bad : u_level_colours[clamp(3 - int(round(v_s.y)), 0, 6)];
   vec3 col = mix(u_fill, ink, max(ring, glyph));
   float a = cov(d) * (blueprint ? 1.0 : u_quiet);
   o = vec4(col * a, a);
@@ -175,7 +179,7 @@ export class GradeMarks {
   init(gl: WebGL2RenderingContext) {
     this.gl = gl;
     this.prog = compile(gl, VS, FS);
-    for (const n of ["u_matrix", "u_viewport", "u_r", "u_ink", "u_bp", "u_fill", "u_bad", "u_dpr", "u_quiet", "u_level_colours"]) this.u[n] = gl.getUniformLocation(this.prog, n);
+    for (const n of ["u_matrix", "u_viewport", "u_r", "u_ink", "u_bp", "u_fill", "u_bad", "u_dpr", "u_quiet", "u_level_colours", "u_flat"]) this.u[n] = gl.getUniformLocation(this.prog, n);
   }
 
   private upload(old: Instances | null, data: Float32Array | undefined): Instances | null {
@@ -225,7 +229,7 @@ export class GradeMarks {
     this.drawing = this.upload(this.drawing, keep);
   }
 
-  draw(m: Float32List, vp: readonly [number, number], zoom: number, dpr: number, levelColours: Float32Array) {
+  draw(m: Float32List, vp: readonly [number, number], zoom: number, dpr: number, levelColours: Float32Array, flat = true) {
     if ((!this.built && !this.drawing) || NO_MARKS) return;
     const [loud, quiet, ramp] = markRadii(zoom);
     if (!loud && !quiet && !ramp) return;
@@ -241,6 +245,7 @@ export class GradeMarks {
     gl.uniform1f(u.u_dpr, dpr);
     gl.uniform1f(u.u_quiet, QUIET_ALPHA);
     gl.uniform3fv(u.u_level_colours, levelColours);
+    gl.uniform1f(u.u_flat, flat ? 1 : 0);
     for (const s of [this.built, this.drawing]) {
       if (!s) continue;
       gl.bindVertexArray(s.vao);
@@ -254,10 +259,12 @@ export class GradeMarks {
  * `marks`, or -1. The nearest of those the point is within. */
 export function markAt(ov: Overlay, marks: Float32Array, px: number, py: number, zoom: number): number {
   const [loud, quiet, ramp] = markRadii(zoom);
+  const flat = display.peek().flatMarks;
   let best = -1, bestD = Infinity;
   const at = new Float64Array(2);
   for (let i = 0; i < marks.length; i += MARK_STRIDE) {
     const shape = marks[i + 2], isRamp = shape === M_RAMP || shape === M_PORTAL;
+    if (!flat && (shape === M_CROSSING || shape === M_JUNCTION)) continue;
     const r = isRamp ? ramp : marks[i + 4] > 0.5 ? loud : quiet;
     if (r <= 0) continue;
     ov.toScreenInto(marks[i], marks[i + 1], at);

@@ -1,5 +1,7 @@
-// The basemap style (T-009 mock, T-056): OpenFreeMap Positron repainted neutral and faint so the
-// network reads first, the basemap's own railways and road shields hidden, and every label in Zen
+// The basemap style (T-009 mock, T-056, T-676): OpenFreeMap Positron repainted in the palette of
+// game/shadeTable.ts (warm paper, teal water, sage parks, faint labels) with roads cut to three
+// weights and no casings, so the network reads first; the basemap's own railways, road shields and
+// minor road names are hidden (Positron has no other POI layers), and every label in Zen
 // Maru Gothic from our own glyph tiles. Applied to the style JSON before MapLibre commits it, so
 // nothing draws in Positron's colours or fonts first.
 //
@@ -25,36 +27,51 @@ function mix(a: string, b: string, t: number) {
 
 type Paint = Record<string, Record<string, unknown>>;
 
+/** The three road weights (T-676), line width in pixels by zoom, the same in both themes. Roads
+ * are one colour with no casing, so only these tell a motorway from a lane. */
+const zoomWidth = (...stops: number[]) => ["interpolate", ["exponential", 1.4], ["zoom"], ...stops];
+const ROAD_WEIGHT = {
+  motorway: zoomWidth(4, 1, 8, 1.6, 12, 3, 16, 8, 20, 28),
+  main: zoomWidth(8, 0.6, 10, 1, 12, 2, 16, 6, 20, 20),
+  other: zoomWidth(12, 0.7, 14, 1.4, 16, 3.5, 20, 14),
+};
+const ROADS: Record<string, keyof typeof ROAD_WEIGHT> = {
+  highway_motorway_subtle: "motorway", highway_motorway_inner: "motorway", highway_motorway_bridge_inner: "motorway",
+  tunnel_motorway_inner: "motorway",
+  highway_major_subtle: "main", highway_major_inner: "main",
+  highway_minor: "other", highway_path: "other",
+};
+/** Roads of the smaller classes appear later than Positron has them. */
+const ROAD_MINZOOM: Record<string, number> = { highway_minor: 11, highway_path: 14 };
+/** Positron layers that only add clutter: road casings, the airfield casing, minor road names. */
+const HIDDEN = new Set([
+  "highway_major_casing", "highway_motorway_casing", "highway_motorway_bridge_casing", "tunnel_motorway_casing",
+  "aeroway-runway-casing", "highway-name-path", "highway-name-minor",
+]);
+
 /** Positron's layers repainted in one theme's colours. A layer or key the light theme leaves out
  * keeps Positron's own paint there. */
 function paintFor(c: ShadeColours, dark: boolean): Paint {
-  const { land, basemapMix: ink } = c;
+  const { land, basemapMix: warm } = c;
+  const air = mix(land, warm, dark ? 0.1 : 0.08);
   const p: Paint = {
     background: { "background-color": land },
     park: { "fill-color": c.park },
     landcover_wood: { "fill-color": c.park },
     water: { "fill-color": c.water },
     waterway: { "line-color": c.water },
-    landuse_residential: { "fill-color": mix(land, ink, 0.03) },
-    building: { "fill-color": mix(land, ink, 0.04), "fill-outline-color": mix(land, ink, 0.08) },
+    landuse_residential: { "fill-color": mix(land, warm, 0.03) },
+    building: { "fill-color": mix(land, warm, 0.04), "fill-outline-color": mix(land, warm, 0.08) },
     road_area_pier: { "fill-color": land },
     road_pier: { "line-color": land },
-    highway_minor: { "line-color": mix(land, ink, 0.07) },
-    highway_path: { "line-color": mix(land, ink, 0.05) },
+    "aeroway-taxiway": { "line-color": air },
+    "aeroway-runway": { "line-color": air },
+    "aeroway-area": { "fill-color": air },
+    landcover_ice_shelf: { "fill-color": mix(land, dark ? warm : "#ffffff", dark ? 0.08 : 0.55) },
   };
-  for (const id of ["highway_major_casing", "highway_motorway_casing", "highway_motorway_bridge_casing", "tunnel_motorway_casing"])
-    p[id] = { "line-color": mix(land, ink, dark ? 0.05 : 0.13) };
-  for (const id of ["boundary_2", "boundary_3", "boundary_disputed"]) p[id] = { "line-color": mix(land, ink, 0.25) };
-  if (dark) {
-    // Positron's white roads, runways and ice, a little lighter than the land as in Dark Matter
-    for (const id of ["highway_major_inner", "highway_motorway_inner", "highway_motorway_bridge_inner", "tunnel_motorway_inner"])
-      p[id] = { "line-color": mix(land, ink, 0.1) };
-    for (const id of ["highway_major_subtle", "highway_motorway_subtle", "aeroway-taxiway", "aeroway-runway-casing"])
-      p[id] = { "line-color": mix(land, ink, 0.06) };
-    p["aeroway-runway"] = { "line-color": mix(land, ink, 0.1) };
-    p["aeroway-area"] = { "fill-color": mix(land, ink, 0.05) };
-    p.landcover_ice_shelf = p.landcover_glacier = { "fill-color": mix(land, ink, 0.08) };
-  }
+  p.landcover_glacier = p.landcover_ice_shelf;
+  for (const [id, weight] of Object.entries(ROADS)) p[id] = { "line-color": c.road, "line-opacity": id === "tunnel_motorway_inner" ? 0.5 : 1, "line-width": ROAD_WEIGHT[weight] };
+  for (const id of ["boundary_2", "boundary_3", "boundary_disputed"]) p[id] = { "line-color": mix(land, warm, 0.25) };
   return p;
 }
 
@@ -81,10 +98,11 @@ function restyle(style: maplibregl.StyleSpecification): maplibregl.StyleSpecific
     const paint = ((layer as any).paint ??= {});
     const layout = ((layer as any).layout ??= {});
     // The player builds the rail: hide the basemap's own railways and road shields.
-    if (/^railway|shield/.test(layer.id)) {
+    if (/^railway|shield/.test(layer.id) || HIDDEN.has(layer.id)) {
       layout.visibility = "none";
       continue;
     }
+    if (layer.id in ROAD_MINZOOM) layer.minzoom = ROAD_MINZOOM[layer.id];
     const L = { ...light[layer.id] }, D = { ...dark[layer.id] };
     if (layer.type === "symbol") {
       basemapSymbols.push(layer.id);

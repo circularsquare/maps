@@ -41,6 +41,7 @@ import { PLATFORM_HALF_M, platformShape, reversed, stationPath, stationShape, wa
 import type { Overlay } from "./overlay";
 import type { StopMarkers } from "./stopMarkers";
 import { chip, elevationFact, factRow, speedFact } from "./trackTagRows";
+import { firstAccepted, fractionAlong, orderOverlapping } from "./stationSnap";
 
 const SNAP_NODE_PX = 12;
 const SNAP_EDGE_PX = 10;
@@ -51,6 +52,8 @@ type Snap =
   | { kind: "node"; node: number; lx: number; ly: number }
   | { kind: "edge"; edge: number; lx: number; ly: number }
   | { kind: "free"; lx: number; ly: number };
+
+type Spot = Exclude<Snap, { kind: "free" }>;
 
 interface Placed {
   end: RouteEnd;
@@ -141,18 +144,22 @@ export class Tools {
     const w = world.peek();
     const n = this.overlay.renderer.net;
     const [fx, fy] = toLocal(lngLat.lng, lngLat.lat);
+    const station = tool.peek() === "station";
+    if (station) this.alts = [];
     if (!w || !n) return { kind: "free", lx: fx, ly: fy };
     let best = SNAP_NODE_PX * SNAP_NODE_PX, hit: Snap | null = null;
+    const nodeHits: { d: number; hit: Spot }[] = [];
     for (const node of nodes ? w.nodes.values() : []) {
       const [lx, ly] = toLocal(node.lng, node.lat);
       const [x, y] = this.screen(lx, ly);
       const d = (x - px) ** 2 + (y - py) ** 2;
+      if (d < SNAP_NODE_PX * SNAP_NODE_PX && station) nodeHits.push({ d, hit: { kind: "node", node: node.id, lx, ly } });
       if (d < best) {
         best = d;
         hit = { kind: "node", node: node.id, lx, ly };
       }
     }
-    if (hit) return hit;
+    if (hit && !station) return hit;
     // each edge's nearest point within reach, px squared
     const near: { d: number; hit: Snap }[] = [];
     for (const [edge, pts] of n.edgePts) {
@@ -170,20 +177,21 @@ export class Tools {
       }
       if (eh) near.push({ d: Math.sqrt(eb), hit: eh });
     }
-    if (!near.length) return { kind: "free", lx: fx, ly: fy };
+    if (!near.length && !nodeHits.length) return { kind: "free", lx: fx, ly: fy };
     near.sort((a, b) => a.d - b.d);
-    if (tool.peek() !== "station") return near[0].hit;
-    // T-469: where tracks overlap, the track the last station went on, then blueprint over built
+    if (!station) return near[0].hit;
+    // T-469, T-671: what a click can place, in the order it is tried: the nodes in reach, then the
+    // tracks within 4 px of the nearest in orderOverlapping's order, then the rest by distance
+    nodeHits.sort((a, b) => a.d - b.d);
     const close = near.filter((c) => c.d <= near[0].d + OVERLAP_PX);
-    if (close.length === 1) return close[0].hit;
-    const onLast = this.lastStationTrack();
-    const built = new Map(w.edges.map((e) => [e.id, e.built]));
-    const rank = (c: { hit: Snap }) => {
-      const e = (c.hit as { edge: number }).edge;
-      return (onLast.has(e) ? 0 : 2) + (built.get(e) ? 1 : 0);
-    };
-    return close.reduce((a, b) => (rank(b) < rank(a) ? b : a)).hit;
+    const spots = close.map((c) => { const h = c.hit as Extract<Snap, { kind: "edge" }>; return { edge: h.edge, frac: fractionAlong(n.edgePts.get(h.edge)!, h.lx, h.ly) }; });
+    const order = close.length > 1 ? orderOverlapping(spots, buildPlatform.peek(), w.edges, w.nodes, this.lastStationTrack()) : close.map((_, i) => i);
+    this.alts = [...nodeHits.slice(0, 3).map((c) => c.hit), ...order.map((i) => close[i].hit as Spot), ...near.slice(close.length, 5).map((c) => c.hit as Spot)];
+    return this.alts[0];
   }
+
+  /** what the station tool would try at the pointer, in order (T-671) */
+  private alts: Spot[] = [];
 
   /** The edges of the track the last station placed this session is on (T-469): from its node
    * along the track both ways, through plain joints and stations, up to junctions. */
@@ -417,21 +425,24 @@ export class Tools {
   }
 
   private async stationClick(e: MapMouseEvent) {
-    const s = this.snap(e.point.x, e.point.y, e.lngLat);
-    if (s.kind === "free") {
+    const first = this.snap(e.point.x, e.point.y, e.lngLat);
+    if (first.kind === "free") {
       say("Click on track to put a station there.");
       return;
     }
+    // T-671: the spot the ghost settled on, else the first the track model takes of what is under the pointer
+    const tries = [...(this.chosen?.key === this.altsKey() ? [this.chosen.snap] : []), ...this.alts];
     const key = this.nameKey(e.point.x, e.point.y);
     const ahead = this.named?.key === key && this.map.areTilesLoaded() ? this.named.name : null;
     this.named = null;
     const name = await (ahead ?? this.nameFor(e.point.x, e.point.y));
-    const at = s.kind === "node" ? { kind: "node" as const, node: s.node } : { kind: "edge" as const, edge: s.edge, ...this.pack(s.lx, s.ly) };
-    const a = await edit({ op: "addStation", at, platform: buildPlatform.peek(), name });
-    if (a.ok) {
-      this.lastPlaced = toLngLat(s.lx, s.ly); // T-312: the hover tag's "km from" (found again by position)
+    const platform = buildPlatform.peek();
+    const stationAt = (p: Exclude<Snap, { kind: "free" }>) => ({ op: "addStation" as const, at: p.kind === "node" ? { kind: "node" as const, node: p.node } : { kind: "edge" as const, edge: p.edge, ...this.pack(p.lx, p.ly) }, platform, name });
+    const r = await firstAccepted(tries, async (p) => { const a = await edit(stationAt(p), true); return a.ok ? null : a.issues; }, (p) => (p.kind === "edge" ? this.endSnap(p) : null), () => false);
+    if (r.spot) {
+      this.lastPlaced = toLngLat(r.spot.lx, r.spot.ly); // T-312: the hover tag's "km from" (found again by position)
       say(`${name} added as a blueprint station.`);
-    }
+    } else if (r.issues.length) say(describeIssues(r.issues), true);
   }
 
   // ---------------------------------------------------------------- crossovers (T-338)
@@ -793,20 +804,51 @@ export class Tools {
   private ghostOk: boolean | null = null;
   private ghostWhy = "";
   private ghostKey = "";
-  private checkGhost(h: Exclude<Snap,{kind:"free"}>) {
+  private checkGhost(h: Spot) {
     const platform=buildPlatform.peek();
-    const key=`${h.kind==="node"?`n${h.node}`:`e${h.edge}`}:${h.lx.toFixed(1)}:${h.ly.toFixed(1)}:${platform}:${world.peek()?.version}`;
+    const key=this.altsKey(h);
     if (key===this.ghostKey) return;
     this.ghostKey=key;
-    const at=h.kind==="node"?{kind:"node" as const,node:h.node}:{kind:"edge" as const,edge:h.edge,...this.pack(h.lx,h.ly)};
-    this.client.checkStation(at,platform,(ok,issues)=>{
+    const spots=this.alts.length?this.alts:[h];
+    const atOf=(s:Spot)=>s.kind==="node"?{kind:"node" as const,node:s.node}:{kind:"edge" as const,edge:s.edge,...this.pack(s.lx,s.ly)};
+    // T-671: the first spot the track model takes among what is under the pointer; none: why the first is refused
+    void firstAccepted(spots,(s)=>new Promise<string[]|null>((res)=>this.client.checkStation(atOf(s),platform,(ok,issues)=>res(ok?null:issues))),(s)=>s.kind==="edge"?this.endSnap(s):null,()=>key!==this.ghostKey).then(({spot,issues})=>{
       if (key!==this.ghostKey) return; // a newer spot is already asked
-      const why=ok?"":describeIssues(issues)||"Cannot be built here.";
-      if (ok===this.ghostOk && why===this.ghostWhy) return;
-      this.ghostOk=ok;
-      this.ghostWhy=why;
-      if (tool.peek()==="station") this.place();
+      const ok=spot!==null, why=ok?"":describeIssues(issues)||"Cannot be built here.";
+      this.chosen=spot?{key,snap:spot}:null;
+      if (ok!==this.ghostOk || why!==this.ghostWhy || spot) {
+        this.ghostOk=ok;
+        this.ghostWhy=why;
+        if (tool.peek()==="station") this.place();
+      }
     });
+  }
+
+  /** the spots the pointer's candidates (`alts`) are tried at, and the world and platform they were tried in */
+  private altsKey(h: Spot | null = this.hover as Spot | null) {
+    const spots=this.alts.length?this.alts:h?[h]:[];
+    return spots.map((h)=>`${h.kind==="node"?`n${h.node}`:`e${h.edge}`}:${h.lx.toFixed(1)}:${h.ly.toFixed(1)}`).join("|")+`:${buildPlatform.peek()}:${world.peek()?.version}`;
+  }
+
+  /** the spot the track model took among them (T-671) */
+  private chosen: { key: string; snap: Spot } | null = null;
+
+  /** Where a station would go: the spot the track model took, once it has answered, else the first tried. */
+  private stationSpot(): Snap | null {
+    const h=this.hover;
+    if (!h || h.kind==="free") return h;
+    return this.chosen && this.chosen.key===this.altsKey(h) ? this.chosen.snap : h;
+  }
+
+  /** The node at the nearer end of the track under an edge spot (T-671). */
+  private endSnap(h: Extract<Snap,{kind:"edge"}>): Extract<Snap,{kind:"node"}> | null {
+    const w=world.peek(), pts=this.overlay.renderer.net?.edgePts.get(h.edge);
+    const e=w?.edges.find((x)=>x.id===h.edge);
+    if (!w || !e || !pts || pts.length<6) return null;
+    const id=fractionAlong(pts,h.lx,h.ly)<0.5?e.a:e.b, node=w.nodes.get(id);
+    if (!node) return null;
+    const [lx,ly]=toLocal(node.lng,node.lat);
+    return {kind:"node",node:id,lx,ly};
   }
 
   /** The faint circle the segment being placed curves along (T-418), red when it is refused. */
@@ -872,7 +914,7 @@ export class Tools {
       return;
     }
     // the snap ring and the cursor tag
-    const h = this.hover;
+    const h = t === "station" ? this.stationSpot() : this.hover;
     if ((t === "track" || t === "station" || t === "crossover") && h && h.kind !== "free") {
       this.ring.style.display = "";
       if (t === "station") {

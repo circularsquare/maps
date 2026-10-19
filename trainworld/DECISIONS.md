@@ -3,6 +3,19 @@
 Newest first. One entry per decision: what, and why. The spec states the result; this keeps the
 reasoning and what it replaced.
 
+## 2026-10-19
+
+- **Everyday trips take one worldwide set of shorter decay scales (W1) and the parking base goes from 5 to 7 minutes** (Anita, T-637): errands 1.3 km, social 1.4, school 1.4, medical 2.0, university 3.5, replacing each country's survey-fitted scale, which matched the survey's mean length but put too few trips under 2 km (New York 23% against NHTS's 50%). The parking base holds her test A at 85%. notes/T-637.md.
+- **A line's colour on the map follows a picker drag about every 0.2 s** (Anita, T-672): a middle path between every move (froze the game) and only on release.
+- **Destination bubbles catching up over a game day, still while paused, is fine as it is** (Anita, T-674).
+
+- **A headway line's train count is clamped at its track's limit** (Anita, T-679, proposal A of notes/T-679.md). Rounding the count up made a headway typed at the platform's limit (4 minutes) run a little under it, so a train was held out and an alert fired; now the line runs just over the typed headway (4:07, say) with no alert. A typed headway well under the limit still warns.
+- **An edit short of cash is refused, with a shake and the train count in red; a headway shorter than the track allows is shown in red** (Anita, T-625, confirming the 2026-10-17 entry below and adding how it looks).
+- **No adoption ramp for new lines** (Anita, T-680): the panels' past-24-hours counts are enough. Her complaint was a different one: 25,000 people waiting at once on a new line's platform (notes/T-680.md).
+- **Points: a transfer is one trip** (Anita, T-684), or a player could farm points by splitting a ride; points unlock nothing yet. Stars in the Cities list come before drawn stamps (T-685).
+- **Sound and faces on by default, only when zoomed in; happy faces too** (Anita, T-686).
+- **The real-world rail layer comes from noritetsu's tiles, view only first** (Anita, T-682).
+
 ## 2026-10-17
 
 - **Trains already cost money (T-028), so T-631 only made it visible: US$2.5M a 20 m car, a real metro car's US$2-3M (a New York R211 is about 2.6), and construction and car prices are the unscaled ones while fares and running costs run at the 100x economy** (T-631). A car costs about what 0.2 km of grade track does (US$13.5M a km of double), the same ratio as real life. Cars a line stops needing stay in the depot for any line to use, with no refund: it never punishes trying a smaller schedule, and a refund at some fraction would reward buying and selling.
@@ -2345,3 +2358,9 @@ reasoning and what it replaced.
 - 2026-10-17 (Anita, T-586): the trip explorer matches the view it was opened from: its headline is the far bubble's own sums (the selection's far end under the purpose filter and day), and the route detail is one representative trip, the purpose with most of those trips and that purpose's busiest period by default (agent's pick).
 - 2026-10-17 (T-621): car ownership is $1.50 a car trip plus $0.10 a km of its road, the fare's shape: NHTS 2017 weekday drivers make 2.9 car trips of 16.6 km, $9.20 a day, and the model's New York and London drivers come to about $10.40 and $8.20 (notes/T-621.md "Stage 2"). The sim defaults stay 0 until the deep calibration's fit is applied.
 - 2026-10-17 (Anita, T-636): the new model is the sim's default, final values: `beta` 0.10 (`damp_min` 60), `asc_rail` 0 (Japan's constant and the everyday walking constant removed; `everyday_asc_rail` stays as a parameter at 0), the walking constant `walk_bonus_min` 10 perceived minutes (the logit's `asc_walk` is that times `beta`), the whole-trip walk a flat 1.5 a minute, `park_min` 5, ownership $1.50 a trip + $0.10/km on. Her tests as rail of rail + car: A 86.3% New York, 85.5% London (target 85), B 79.3% and 78.9% (target 50); the real networks carry x3.1 New York's station counts and x2.0 London's (notes/T-636.md Round 2). Market packs keep the old parking base of 3 until rebuilt.
+
+- 2026-10-19 (T-670, T-672): keys N new line, L edit stops, C construct blueprints (E stays the blueprint pick key); during a colour drag the badge and stop dots follow every move and the map line follows by one edit at most every 0.2 s, longer on a slow machine (6 times the last edit's round trip), plus the final edit on release (one lineLook edit costs about 25 ms of main thread, 100 ms at 4x slowdown); the stops list moves to the top only while stops are being edited.
+
+- 2026-10-19 (T-677): the start menu's New game beside saved games starts in a new slot ("Game N", first written once its network is not empty, so an abandoned new game leaves no card) rather than replacing the remembered one; with no saves it uses the original slot. The map and UI are set up under the menu and only the workers wait for the pick; `?continue=1` (the game opened last, no menu) is the switch checks use to reopen a stored game.
+
+- 2026-10-19 (T-684, T-685): points count passenger-km in the region where riders board (each boarding carries its line's average km that period) rather than the journey's origin, which the solve does not keep per km; points are not scaled by the 100x economy; a star is earned from the average day's final train share only, never the weekday or weekend view, so switching the day shown cannot earn it.

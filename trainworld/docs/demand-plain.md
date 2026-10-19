@@ -10,7 +10,11 @@ Last updated 2026-10-17 (the T-636 model). The full rules are in demand.md; this
   Jobs come from official counts where they exist, otherwise from buildings, OSM places and
   population.
 - **Everyday trips.** Errands, visits, school, university, medical, airports. How often people make
-  them, and how far they go, comes from each country's travel survey.
+  them comes from each country's travel survey. How far they go is one rule for the whole world:
+  the chance of going somewhere halves about every 0.9 km for errands, 1.0 km for
+  visits and school, 1.4 km for medical, 2.4 km for university and 14 km for airports. Trips are
+  kept short on purpose: real surveys have about half of everyday trips under 2 km, and short trips
+  are the ones people walk.
 - **Between cities.** A world market of longer trips by rail, car and air, plus commuters between
   neighbouring cities. Where two cities meet, commuting across the line will be damped (0.4).
 
@@ -38,7 +42,7 @@ There is no built-in liking for the train. Rail and the car are compared on time
 - Road time from the distance and the place: fast highways in the middle, slow streets at the ends
   where it's dense (3 km inside Manhattan about 13 minutes).
 - Driving counts 1.33 a minute.
-- Parking: 5 minutes to park on every trip, plus a price where jobs are dense (none in suburbs, up
+- Parking: 7 minutes to park on every trip, plus a price where jobs are dense (none in suburbs, up
   to 50 perceived minutes in the densest centres), plus congestion charges (Manhattan, London).
 - Owning the car: $1.50 a trip plus $0.10 a km, at 3 minutes a dollar. A typical trip pays $2.20
   to $4.00, and a driver's day comes to about $10. Homes without a car pay none, and so do the
@@ -51,10 +55,10 @@ There is no built-in liking for the train. Rail and the car are compared on time
   and walking from the space, and this stands for them. It is one number for commutes and everyday
   trips and for every country.
 - Worked through: a 10 minute walk (0.77 km) against a 1 km drive in a dense district. The walk
-  counts 15. The drive is 4 minutes at 15 km/h, counted 1.33, so 5.3, plus 5 to park, plus 4.5 for
-  the $1.50, plus 0.3 for the $0.10 a km: 15.1. The walk is 10 ahead, so the difference is
-  15.1 - 15 + 10 = 10 minutes, and 10 minutes is 73%. About 7 in 10 people walk, and 3 in 10 drive.
-  At 0.5 km about 79% walk, at 1 km 67%, at 2 km 38%, at 3 km 15%. (With no train, free parking.)
+  counts 15. The drive is 4 minutes at 15 km/h, counted 1.33, so 5.3, plus 7 to park, plus 4.5 for
+  the $1.50, plus 0.3 for the $0.10 a km: 17.1. The walk is 10 ahead, so the difference is
+  17.1 - 15 + 10 = 12 minutes, and 12 minutes is 77%. About 3 in 4 people walk, and 1 in 4 drive.
+  At 0.5 km about 82% walk, at 1 km 72%, at 2 km 43%, at 3 km 18%. (With no train, free parking.)
   A train that is good for the trip takes its share from both.
 - A commute's distance for walking is between actual homes and jobs (six of each per 2 km zone),
   not between zone centres, so a 1 km commute across a zone line walks like a 1 km one.

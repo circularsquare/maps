@@ -63,5 +63,8 @@ export default defineConfig({
   // T-328: the app build, part of the demand cache's key: new at each build and dev-server start
   define: { __TW_BUILD__: JSON.stringify(Date.now().toString(36)) },
   build: { outDir: "dist", target: "es2022" },
+  // T-682: the real-network layer reads noritetsu's tiles beside the game (map/realNetwork.ts); 8800 serves them
+  // at /noritetsu/ and sends no CORS headers, so the dev server passes the path through
+  server: { proxy: { "/noritetsu": "http://localhost:8800" } },
   plugins: [packs()],
 });

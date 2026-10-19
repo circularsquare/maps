@@ -1,5 +1,5 @@
 // Hovering track (T-157): a tag by the pointer says what the current track display draws there:
-// the line's name (Line), its forecast riders a day on that stop-to-stop stretch (Line + traffic
+// the line's name (Line), its riders per day on that stop-to-stop stretch (Line + traffic
 // thickness), and always the elevation and speed limit there plus the lines on the track (T-473,
 // T-526). It shows at once. The tag follows the map's pick order (T-133): with the select tool,
 // demand bubbles, capacity tags and editing handles above the network hide it; with a build tool
@@ -60,7 +60,7 @@ function lineTip(n: NetworkBuffers, w: WorldView | null, dv: DemandView | null, 
   const purpose = purposeFilter.peek();
   const day = dailyRiders(dv, l.id, l.stops.length, k, purpose);
   if (day === null) return [name, "Calculating demand"];
-  const count = day < 0.5 ? "No forecast riders on this stretch" : `${riders(day)} forecast riders ${shownDayPhrase.peek()} in both directions`;
+  const count = `${day < 0.5 ? "0" : riders(day)} riders ${shownDayPhrase.peek()}`;
   // the purpose filter (T-158) says what it counted
   return purpose === "all" ? [name, count] : [name, count, `${purposeName(purpose)} trips only`];
 }

@@ -495,7 +495,7 @@ notes/T-420.md has the tables.
   slow for longer. Check: a few typical door-to-door drives of 50-130 km per new country against
   the model's (notes/T-295.md has the US, Toronto and London ones).
 - **Parking** (T-380, T-372, T-440, docs/demand-mode.md 4.3). One rule for the commute, everyday and
-  regional layers. In minutes, not money: 5 to park (T-636; with the car ownership of $1.50 a trip
+  regional layers. In minutes, not money: 7 to park (T-636, T-637; with the car ownership of $1.50 a trip
   and $0.10 a km, local layers only), plus for a paid
   space 15 x ln(d / 3,000) per one-way trip (capped at 50), d the destination zone's jobs per km²
   of land; a share 1 / (1 + d / 8,000) parks free; congestion charges from a short list of
@@ -593,16 +593,22 @@ notes/T-420.md has the tables.
   England (NTS) 0.554 / 0.291, France (EMP 2019) 0.497 / 0.375, Germany (MiD 2017) 0.518 / 0.365,
   Japan (Tokyo PT 2018) 0.273 / 0.122 / 0.037, Korea (KTDB 2016) 0.189 / 0.110, Brazil (Sao
   Paulo OD 2017) 0.106 / 0.057 / 0.044; elsewhere (Canada, China, India, Nigeria) the median,
-  0.497 / 0.291 / 0.044. Each scale is set so the game's mean outing length equals the survey's
-  mean straight-line leg (errands 1.3-2.3 km, social 1.9-3.0 km, medical 1.7-3.7 km; median
-  2.06 / 2.34 / 3.53 km). Why it may not carry over: surveys differ in what they count (short
-  walks, trip chains, ages 5 or 6 and up, a weekday or the whole week), medical is split out only
-  in the US, Brazil and Japan (elsewhere 0.044 is taken out of errands), most lengths are
-  reported road distance made straight line at 1.3, and one metro stands for each country's
-  scales; poorer countries' surveys (Sao Paulo 2.0 trips a resident) run far below rich ones', so
-  the median is a rich-country default for Lagos or Mumbai. Check: a new country's national
-  survey by purpose, and its rail share by purpose against the game's everyday rail share
-  (New York's NHTS legs: errands 4.7%, social 7.2%, against the game's 13%).
+  0.497 / 0.291 / 0.044. The distance scales are one worldwide set (T-637, `everyday::DECAY`;
+  a pack's block carries none): errands 1.3 km, social 1.4, school 1.4, medical 2.0, university
+  3.5, airport 20. They are set for the share of trips under 2 km, not the mean: one exponential
+  over 2 km zones cannot give surveys' many very short trips and their long tail at once, and
+  each country's scale fitted to its survey's mean put too few trips where people walk (New York
+  23% of errands under 2 km against NHTS's 50%; London's everyday trips walked 18-27% against
+  LTDS's 41-44%). Surveys agree on that shape (about half of everyday trips under 2 km in New
+  York and London alike), so one set stands everywhere. Why the rates may not carry over: surveys
+  differ in what they count (short walks, trip chains, ages 5 or 6 and up, a weekday or the whole
+  week), medical is split out only in the US, Brazil and Japan (elsewhere 0.044 is taken out of
+  errands), and poorer countries' surveys (Sao Paulo 2.0 trips a resident) run far below rich
+  ones', so the median is a rich-country default for Lagos or Mumbai. Why the scales may not: a
+  city where errands are a long drive (US exurbs, car-built new towns) has fewer short trips than
+  New York or London. Check: a new country's national survey by purpose and its share of
+  everyday trips under 2 km, and its rail share by purpose against the game's everyday rail
+  share (New York's NHTS legs: errands 4.7%, social 7.2%, against the game's 13%).
 - **Social destinations** are population, leisure jobs and parks (46 / 46 / 8%, T-196). ATUS 2023
   puts only 23% of US leisure outings at someone else's home against the model's 46% population
   draw (the population draw also stands for neighbourhood leisure LODES misses), worth a look

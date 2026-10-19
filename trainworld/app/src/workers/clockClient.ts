@@ -7,9 +7,10 @@ import { effect, signal } from "@preact/signals";
 import { clock, SPEEDS } from "../game/clock";
 import { HOME_CITY, setWorldFrame } from "../game/cities";
 import { holdForGameLoad } from "../game/loading";
-import { incomeByDay, lastSaved, liveMoney, setMoneyState } from "../game/money";
+import { incomeByDay, lastSaved, liveMoney, moneyState, setMoneyState } from "../game/money";
 import { chargeShares, lineShares } from "../game/regionMoney";
-import { DAY_KINDS } from "../game/days";
+import { linePoints, STAR_SHARE } from "../game/points";
+import { AVERAGE_DAY, DAY_KINDS } from "../game/days";
 import { demandByDay, demandView, platformTransfers } from "../game/demand";
 import { accountVersion, packRiders } from "../game/boarding";
 import { lineDraft, selection, tool } from "../game/ui";
@@ -167,8 +168,21 @@ export function queryClock(q: Extract<ToClock, { kind: "query" }>["q"]): Promise
   return current ? current.query(q) : Promise.resolve(null);
 }
 
+/** Which game the page opens (T-677). */
+export interface GameChoice {
+  /** `?new=1`: a new game that owns no slot (T-320) */
+  fresh?: boolean;
+  /** the slot to open; absent, the one opened last */
+  slot?: string;
+  /** the start menu's New game beside saved games: a new slot of this name */
+  newSlot?: string;
+  /** a new game: demand opens the viewed zone bare from the start (T-351) */
+  newGame?: boolean;
+}
+
 export class ClockClient {
-  private worker: Worker;
+  private worker: Worker | null = null;
+  private waiting: [ToClock, Transferable[]][] = [];
   private seq = 0;
   private pending = new Map<number, (a: EditAnswer) => void>();
   private stationBusy = false;
@@ -244,18 +258,26 @@ export class ClockClient {
     for (let i = 0; i < pts.length; i += 3) { pts[i] += dx; pts[i + 1] += dy; }
   }
 
-  constructor(cityId = HOME_CITY) {
+  /** Start the worker on the game chosen (T-677: the start menu's pick, or the URL's). Messages
+   * posted before this wait and follow the worker's init. */
+  start(choice: GameChoice) {
+    if (this.worker) return;
     this.worker = new Worker(new URL("./clock.worker.ts", import.meta.url), { type: "module" });
     this.worker.onmessage = (e: MessageEvent<FromClock>) => this.receive(e.data);
     this.worker.onerror = (e) => (clockWorkerStatus.value = "failed to load: " + (e.message ?? ""));
     const q = new URLSearchParams(location.search);
-    const fresh = q.get("new") === "1";
+    const fresh = !!choice.fresh;
     // T-320: a check or stress page never writes over a saved game
     this.testPage = fresh || q.get("synth") === "1" || q.get("demandTest") === "1";
+    let slot = choice.slot ?? "autosave";
+    if (!choice.slot) try { slot = localStorage.getItem("anitabuilder-save-slot") || slot; } catch { /* storage unavailable */ }
+    this.worker.postMessage({ kind: "init", city: this.cityId, pack: new URL("packs/" + this.cityId, document.baseURI).href, fresh, testPage: this.testPage, slot, newSlot: choice.newSlot } satisfies ToClock);
+    for (const [msg, transfer] of this.waiting) this.worker.postMessage(msg, transfer);
+    this.waiting = [];
+  }
+
+  constructor(cityId = HOME_CITY) {
     this.cityId = cityId;
-    let slot = "autosave";
-    try { slot = localStorage.getItem("anitabuilder-save-slot") || slot; } catch { /* storage unavailable */ }
-    this.post({ kind: "init", city: cityId, pack: new URL("packs/" + cityId, document.baseURI).href, fresh, testPage: this.testPage, slot });
     setEditSink((op) => this.edit(op));
     current = this;
     // The worker settles money from the clock (T-028, T-284): tell it each time the
@@ -291,6 +313,25 @@ export class ClockClient {
       if (key !== lastShares) {
         lastShares = key;
         this.post({ kind: "regionShares", lines });
+      }
+    });
+    // T-684: each line's points by region, whenever riders, lines or zone boundaries change them
+    let lastPoints = "";
+    effect(() => {
+      const lines = linePoints.value;
+      const key = JSON.stringify(lines);
+      if (key !== lastPoints) {
+        lastPoints = key;
+        this.post({ kind: "points", lines });
+      }
+    });
+    // T-685: a region's star, the first time its rail share on the average day (never the day
+    // shown, so switching it earns nothing) reaches the mark in a final result
+    effect(() => {
+      const m = moneyState.value;
+      if (!m) return;
+      for (const [id, v] of demandByDay.value[AVERAGE_DAY]?.cities ?? []) {
+        if (v.final && v.split.train >= STAR_SHARE && m.stars?.[id] === undefined) this.post({ kind: "star", zone: id });
       }
     });
     // Demand's riders for the boarding account (T-164): each new result, every kind of day's
@@ -331,10 +372,11 @@ export class ClockClient {
   /** the world before the last state, for the edit that state answers (T-531) */
   private worldBefore: WorldView | null = null;
   /** `?new=1`, `?synth=1` or `?demandTest=1`: no autosave until a copy is saved (T-320) */
-  private testPage: boolean;
+  private testPage = false;
 
   post(msg: ToClock, transfer: Transferable[] = []) {
-    this.worker.postMessage(msg, transfer);
+    if (this.worker) this.worker.postMessage(msg, transfer);
+    else this.waiting.push([msg, transfer]);
   }
 
   private receive(msg: FromClock) {
@@ -369,7 +411,7 @@ export class ClockClient {
         setMoneyState(msg.money);
         break;
       case "cash": // T-284: fares landing, running costs draining
-        liveMoney.value = { cash: msg.cash, today: msg.today, hour: msg.hour, regions: msg.regions };
+        liveMoney.value = { cash: msg.cash, today: msg.today, hour: msg.hour, regions: msg.regions, points: msg.points };
         break;
       case "loaded":
         // the game now in the worker may be in the other frame (T-125); first, before anything reads positions

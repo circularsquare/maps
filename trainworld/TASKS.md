@@ -7,8 +7,7 @@ P1 = now or blocking, P2 = this milestone, P3 = later. Finished or abandoned tas
 sensible and makes building rail matter (2026-10-17: fun over fitting real cities; her two ceiling
 tests are the targets, real cities loose checks; DECISIONS 2026-10-17, T-636). Next, in order: 1.
 cities: T-614 and T-615 (thin-OSM parks), then T-613, the rest of Europe (72 rows), then the rest
-of the world (432 rows); 2. demand: T-637 (everyday trips too long), T-634 (somewhere for short
-trips besides the car); 3. interface: T-627, T-633, T-602, T-629; 4. long trips (T-528).
+of the world (432 rows); 2. demand: T-634 (somewhere for short trips besides the car); 3. interface: T-627, T-633, T-602, T-629; 4. long trips (T-528).
 Performance is open work (notes/perf-survey.md). Game modes wait.
 
 **Where things stand (2026-10-17).** 80 zones play, all shipping through the pack gate (T-538). The
@@ -20,9 +19,7 @@ Anita's plain page on demand: docs/demand-plain.md (keep it current). History is
 the session wound down: T-614, T-615 and T-613 (the Europe batch) by one agent; its files
 (registry.json, world_plan.json, checks/pack_gate.py, checks/city-browser.mjs, docs/adding-a-city.md,
 notes/T-613.md) may be uncommitted: read notes/T-613.md and `git status`, then smoke, commit and
-rebuild 8800, or finish the batch (the runner resumes). Waiting on Anita: T-637's proposal W1
-(notes/T-637.md), and whether a headway line short of cash refuses the edit (now) or runs fewer
-trains with a warning (T-625, DECISIONS 2026-10-17).
+rebuild 8800, or finish the batch (the runner resumes). T-637's W1 applied 2026-10-19. T-625's cash question answered 2026-10-19 (refuse; DECISIONS).
 
 **For a task agent.** Check `git status` and the "taking" marks here first. Several agents work at once:
 each owns named files, so leave others' alone. Anita's playtest notes land in TODO.md (hers; read it,
@@ -38,8 +35,9 @@ orchestrator's commit recipe is in CLAUDE.md "Before a commit".
 - T-633 [P2] Explain perceived minutes in the game (Anita 2026-10-17: the walk weight stays; communicate it better): where the trip explorer and hovers show "counts as" minutes, say plainly why a walk counts for more. Open.
 - T-551 [P2] Demand review for Anita (her playtest notes, 2026-10-16): measured, nothing changed (notes/T-551.md). Waits for Anita, who decides at the deep calibration.
 - T-514 [P3] "Other" per cell (T-513): the sim keeps trips by other only as a total, so bubbles and hovers cannot show them by cell; needs other by home and work cell. Open; notes/T-514.md.
-- T-637 [P2] Everyday trips run long (errands 23% under 2 km against NHTS's 50%). Measured 2026-10-17; proposal W1 (one worldwide set of shorter decay scales, parking base 5 to 7 to hold test A) waits for Anita. notes/T-637.md.
-- T-638 [P3] Rebuild the market packs on the new parking base (they hold 3 minutes until rebuilt; about 2 minutes on long regional trips). notes/T-636.md.
+- T-638 [P3] Rebuild the market packs on the new parking base (they hold 3 minutes until rebuilt, `intercity.py`'s `PARK_MIN` is 7 since T-637; about 2 minutes on long regional trips). notes/T-636.md.
+- T-688 [P3] A distance decay inside the 2 km zone (an everyday destination is a zone, then any cell in it): the only way to the surveys' very short trips (NHTS 23% of errands under 0.5 km, the game 12% at best). Item 3 of notes/T-637.md "What Anita decides". Open.
+- T-690 [P3] Job-heavy, home-poor zones draw commuters from far (found in T-681): Haneda's biggest job zone takes 28% of its workers from within 10 km against a median of 78% for Tokyo's 200 biggest job zones, its balancing factor 33 times the median; 24 such zones in the Tokyo pack. A commute rule, so a proposal for Anita first. notes/T-681.md "A second thing".
 - T-634 [P2] Short trips need somewhere to go besides the car (a bike mode, or "other" fitted for short trips) before walking is refit on the census and surveys: the fit's lost walkers mostly drive (Paris commute car 46% to 57%, census 36%). notes/T-621.md "Stage 2".
 - T-635 [P3] Why Toronto wants more rail than the fitted cities (TTC platform counts, the 2021 lockdown census, worldwide everyday rates); a Canada rail constant only if it holds up. notes/T-621.md.
 - T-528 [P2] Fit the regional layer's longer trips (T-509's last part, Anita's design 2026-10-16): rail constant and damping on corridor counts at two lengths per country. Open; notes/T-509.md section 15.
@@ -83,18 +81,25 @@ orchestrator's commit recipe is in CLAUDE.md "Before a commit".
 - T-187 [P3] Trip chains: work to a nearby leisure place and then home. Whether and how to model it. Idea, not a priority (Anita 2026-10-12).
 
 ## Track and trains
+- T-691 [P3] A station tried on edges 997 and 1130 of the real save (an overlapping pair, 688/1075) is refused with a track-drawing reason ("The curve is too tight... would run on top of existing track"): find where the worker's station trial produces it and give the station's own reason. Found in T-671. Open.
 - T-623 [P3] A station cut inside an arc, or a ramp overlapping a curve, still shifts the ramp (T-622 holds ramps on straights only). Open.
 - T-663 [P3] The select tool's drag handle covers a blueprint junction's fork badge; and check whether the quiet crossing marks get busy on a big built network (340 on the real save; `QUIET_R`, `QUIET_ZOOM` in gradeMarks.ts). Open.
-- T-658 [P3] Draw double track as its two tracks when zoomed far in, which needs lines and stations drawn with a minimum width in world units (the two tracks sit at slightly different places); helps reason about terminals and crossovers (Anita 2026-10-17: plan first, not now). Open.
+- T-658 [P3] Draw double track as its two tracks when zoomed far in, which needs lines and stations drawn with a minimum width in world units (the two tracks sit at slightly different places); helps reason about terminals and crossovers (Anita 2026-10-17: plan first, not now). Reference NIMBY Rails (research/nimby-track-drawing.md: its double track is two single tracks, which it calls its main usability cost, so keep our one piece and offset each lane in drawing), but show little of it at medium and far zoom and keep the normal single-click default easy; odd setups possible but no priority (Anita 2026-10-18). Open.
 - T-666 [P3] An automatic bridge near a short first arc or inside a tight multi-corner turn is refused although the land is there (`bridge.rs` cuts an arc only around the ramp's two vertices; 14 such cases in its sweep). Open.
 - T-667 [P3] A segment sent with clicked corners (`pis`) is not bridged (the drawing tool never sends them; the edit API only). Open.
 - T-668 [P3] Reshaping or dragging a bridged segment still refuses ground over water: decide whether the drag rebuilds its ramps. Open.
-- T-657 [P3] Turnback capacity (Anita 2026-10-17: reversing on a through platform stays at 4 minutes): buildable ways to turn trains faster than reversing on a through platform (15 an hour): tail tracks (sidings beyond the platform) and loops, as real metros do for 2-2.5 minute headways; and whether a line's turnaround may go down to about 2 minutes (20 an hour on one platform, needs crews stepping back). Design first, then build. Open.
+- T-657 [P3] Turnback capacity (Anita 2026-10-17: reversing on a through platform stays at 4 minutes): buildable ways to turn trains faster than reversing on a through platform (15 an hour): tail tracks (sidings beyond the platform) and loops, as real metros do for 2-2.5 minute headways; and whether a line's turnaround may go down to about 2 minutes (20 an hour on one platform, needs crews stepping back). Design first, then build. Anita 2026-10-18: after a while, the first ten lines in a huge city are at capacity at once even at a 4 minute turnaround, which a 30 trains an hour terminal would solve; at 160 km/h top speed 25 an hour (2.5 minutes) is her reference. Open.
 - T-248 [P3] The track inspector's Construct and level buttons act on one piece of a drawn route; consider "this piece / the whole run between junctions and stations" if piece by piece is tedious. Open.
 - T-339 [P3] An express slowed by a local ahead of it on plain double track (Anita: "ideally... but thats whatever"); trains pass through each other at no cost. Low priority. Open.
 - T-340 [P3] Quad track's rest (from T-257): a station on a quad stroke's own end node is refused when that end is new track; the express pair is always left of the drawn direction. Open.
 
 ## Interface
+Anita's playtest of 2026-10-18 (her TODO.md "short term"), filed 2026-10-19. Plans in the notes.
+- T-676 [P2] A cuter base map (warm paper land, soft teal water, sage parks, 3 road weights, most POIs gone); the ground tinted by density as a switch, off. Anita judges the palette. Open: stage 1 done, palette waits on Anita; stage 2 (density tint) not built; notes/T-676.md.
+- T-678 [P3] Day and night tint on the base map, subtle. After T-676; notes/T-676.md.
+- T-682 [P3] Real-world rail layer for reference (noritetsu's tiles), then a trace tool that follows a real line. Stage 1 (view only, Settings > Real network) done 2026-10-19; the trace tool is next (T-682b); notes/T-682.md.
+- T-683 [P3] Accounts (optional, skippable), cloud saves and city ridership leaderboards on shonei-server. After T-684; notes/T-684.md.
+- T-685 [P3] City stamps at 10% rail share (the goal number): stars done (T-684's round, 2026-10-19), drawn stamps later. Open; notes/T-684.md.
 - T-646 [P2] When editing stops, a button to add every station on the track between two clicked stops, with a preview of the stops it would add and confirm or cancel (Anita's TODO 2026-10-17). Open.
 - T-651 [P2] Zoomed out, zones not opened look fully red while opened ones look yellowish from their green walkers (Anita's TODO 2026-10-17): the same as T-602, give unopened zones their walk split. Open.
 - T-602 [P2] Walk split for zones not opened (rest of T-576): `zone_summary` (sim) gives a walk count per zone, `pipeline/zones.py` `local_trips()` stores it as `localWalk` in registry.json beside `localTrips`, `intercityView.ts` draws it green. Open.
@@ -117,12 +122,10 @@ Tier 0 and country sources: docs/demand-worldwide.md, docs/data-register.md. The
 - T-564 [P3] Country hooks T-555 could not carry: Korea's registration population and Canada's DA population and jobs as tier 0 hooks. Open; notes/T-555.md.
 - T-594 [P3] `pipeline/intercity.py` runs the full Northeast solve on `--help` or any unknown flag; make it print usage instead.
 - T-592 [P3] world_run reads the next region's extract while this one gates and joins (reading is the largest phase: Portugal 5.2 of 12.9 minutes). notes/T-540.md.
-- T-614 [P2] aba and abo park on `university_rate` 0 (OSM maps no university in the outline): pass a pack with none (T-582 opens it), or take universities from another source. Before T-613. notes/T-610.md.
-- T-615 [P2] owe and abo park on the browser check "carries every purpose" (the test line meets no medical or airport trips): pick a test line that reaches them, or relax it for thin packs. Before T-613. notes/T-610.md.
 - T-616 [P3] The runner reports a rates-test error (a sim copy without `data`/`app` junctions) as a pack fault: report it as a gate error, and add the junctions to the `TW_SIM_DIR` recipe. notes/T-610.md.
 - T-617 [P3] Rebuild gla, lis and pot on T-610's unit matching when next rebuilt (gla +5.6%; lis and pot move from plan polygons to OSM municipalities). notes/T-610.md.
 - T-612 [P3] Runner: delete a parked row's pack files once its reason is recorded.
-- T-613 [P2] The next runner batch, the rest of Europe from pipeline/world_plan.json (`plan --countries` first for the row count), after T-614 and T-615; publishing past the current set needs T-060 and Anita's word. notes/T-541.md retrospective.
+- T-613 [P2] The next runner batch, the rest of Europe from pipeline/world_plan.json (`plan --countries` first for the row count), after T-614 and T-615; publishing past the current set needs T-060 and Anita's word. taking, 2026-10-19 (with T-614, T-615); notes/T-541.md retrospective.
 - T-546 [P3] Refit Mumbai's curve with B-28's 0-1 and 2-5 km bands merged, as Sao Paulo's are (d^-1.5 exp(-d/23.3 km) against the shipped d^-1.65 exp(-d/32.7 km)). Open; notes/T-314.md.
 - T-315 [P3] Tier 0 universities: few OSM campuses carry a Wikidata id (4 of 63 in Toronto), so most are sized by area; try matching campus names to Wikidata universities. Open; notes/T-315.md.
 - T-547 [P3] Read GISCO's download clauses for NUTS 2024 (some files are non-commercial only) before publishing any pack on NUTS-3 units; fall back to geoBoundaries if barred. Open; notes/T-536.md.
@@ -159,6 +162,7 @@ Tier 0 and country sources: docs/demand-worldwide.md, docs/data-register.md. The
 - T-436 [P3] Start an edit's crowding rounds from the solve before instead of free flow; figures would then depend on edit history, so Anita decides. Not measured; notes/T-434.md.
 - T-361 [P3] One demand engine per city, not two (T-361's item 3): the everyday layer builds its own commute engine copy; sharing saves 20-40 MB a worker, moderate risk. Open; notes/T-361.md.
 - T-356 [P3] A move far from the draw anchor (T-307) rebuilds the whole world on the main thread, about 50 ms per long pan (T-348); rebuild only what depends on the anchor. Open; notes/T-356.md.
+- T-689 [P3] Main-thread tasks as a wheel zoom starts, real save (T-675): the zoom's first frame 36 ms (`stationLabels.ts` and `capacityMarkers.ts` placing labels), the hover pick on the mousemove before it 30 ms (`pick.ts` topSeg, `trackHover.ts`). No demand publish or world rebuild landed in a 40 s zoom run. Open; notes/T-675.md.
 - T-354 [P3] Two smaller main-thread costs (T-348): a pack opening is copied per worker in one task (45-70 ms for New York), and a solve's final publish takes 70-110 ms; spread each. Open; notes/T-354.md.
 - T-359 [P3] After T-351: a bare start's card waits 2.0-2.2 s for New York's bare opening in the aux worker alone; splitting it over the pool could bring it to 1-1.5 s. Open; notes/T-351.md.
 - T-344 [P3] A zone's loading bar can stick near 99% (found in T-343) when the view moved to dead space before the viewed zone's first solve. Rare. Open; notes/T-344.md.
