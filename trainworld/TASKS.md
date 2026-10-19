@@ -6,20 +6,32 @@ P1 = now or blocking, P2 = this milestone, P3 = later. Finished or abandoned tas
 **Direction** (Anita; CLAUDE.md "Working here"). The whole world, with a demand model that is
 sensible and makes building rail matter (2026-10-17: fun over fitting real cities; her two ceiling
 tests are the targets, real cities loose checks; DECISIONS 2026-10-17, T-636). Next, in order: 1.
-cities: T-614 and T-615 (thin-OSM parks), then T-613, the rest of Europe (72 rows), then the rest
-of the world (432 rows); 2. demand: T-634 (somewhere for short trips besides the car); 3. interface: T-627, T-633, T-602, T-629; 4. long trips (T-528).
-Performance is open work (notes/perf-survey.md). Game modes wait.
+finish T-613 (the rest of Europe; Russia, Belarus and Ukraine held for later, Anita 2026-10-19), then
+the follow-ups below, then whole countries from now on, Spain first (T-723, notes/T-719.md), and the
+rest of the world; 2. demand: T-712 with T-721 (city pairs and regional rail against real figures,
+for discussion), then T-528 (fit the regional rail constant and damping); T-634; 3. interface:
+T-602/T-651, T-724, T-646; 4. game modes wait. Performance is open work (notes/perf-survey.md;
+`checks/t714-pan.mjs` guards panning).
 
 **Where things stand (2026-10-17).** 80 zones play, all shipping through the pack gate (T-538). The
 unattended runner `pipeline/world_run.py` shipped its 5-city pilot (T-540), the UK batch (T-541)
 and, after T-610 and T-611, Cardiff and Belfast; Owerri, Aba and Aboh park on T-614 and T-615.
 Anita's plain page on demand: docs/demand-plain.md (keep it current). History is in ARCHIVE.md.
 
-**State (2026-10-19).** 8800 serves master as of the T-715 commit (the Europe batch's first 29 zones,
-T-710, T-713, T-715, T-716). After T-613 hands back: commit its registry.json and world_plan.json, then T-700's walk
-rerun on every pack (notes/T-700.md, last step), then T-638's market packs. In flight: T-613, the Europe batch, by one agent; registry.json and
-world_plan.json were left out of that commit as the batch's own: commit them when it hands back.
-Market packs still hold the old parking base (T-638).
+**Handoff (2026-10-19, evening).** The 2026-10-18 and 2026-10-19 playtest rounds are done (T-669 to
+T-722, ARCHIVE.md; Anita's notes in notes/playtest-2026-10-19*.md). The last commit on 8800 holds
+the round's end (walking bands T-720, change cost 2 minutes T-717, regional route choice T-718
+with the long-trip softening on, circles and money T-722, bullets T-705, the pan check T-714).
+Still running when the session closed: T-613's runner (`world_run.py run --rows sto,lil,...`,
+started by its agent; its sim copy is in that session's scratchpad `t613\simroot`). If it is still
+running, wait for it; if not, `world_run.py status` shows where it stopped and the runner resumes.
+Then, in order: commit registry.json and world_plan.json (smoke and every-pack-opens on the new
+zones first, as CLAUDE.md "Before a commit"); add the batch's countries to docs/data-register.md
+and the T-613 retrospective (notes/T-613.md); T-700's walk rerun on every pack (notes/T-700.md, last
+step: `routes.py --stage walk --unparted`, back up first); T-638's market packs (park 7); T-602/T-651
+(zones not opened drawn with their walk split; writes registry.json, so after T-613); T-712 (with
+T-721); T-723 (Spain). Batch agents wait once on the runner's process, never on a timer (T-719: wake-ups
+were 75% of a batch's tokens).
 
 **For a task agent.** Check `git status` and the "taking" marks here first. Several agents work at once:
 each owns named files, so leave others' alone. Anita's playtest notes land in TODO.md (hers; read it,
@@ -94,7 +106,10 @@ orchestrator's commit recipe is in CLAUDE.md "Before a commit".
 ## Interface
 Anita's playtest of 2026-10-19 (the 9e466a4 build): notes/playtest-2026-10-19.md, a section a task.
 - T-700 [P2] Shanghai: a sharp line between bubbles walking about 25% and bubbles walking about 0%, as if some cells' walks were wrong. Cause (a bug): a 2 km zone astride the Huangpu got one walk factor blending both banks (x15-50), applied to same-bank walks too. Fixed in code (walk factors per bank, `walk_part`); Shanghai rebuilt and checked. Left: the other 109 packs' walk stage (`routes.py --stage walk --unparted`) after T-613 hands back. notes/T-700.md.
-- T-714 [P1] Panning a busy save (her "Original game") lags since the last rounds: measure frame time against earlier commits, find what costs (two-track passes, faces and sound sampler, real network, bullets, labels), fix. taking, 2026-10-19.
+- T-724 [P2] Station tool hover stalls on the real save: 40-50 ms when a new spot asks for a name (`stationNames.ts` crossStreet's querySourceFeatures), 15-35 ms in `tools.ts` snap (every node and edge point projected per move) and the hover pick under it. Found by T-714 (checks/t714-pan.mjs SETUP).
+- T-721 [P2] Regional rail levels after T-718: rail between cities fell by a half to four fifths (New York to Philadelphia on a test line 2.8% to 0.4% of the corridor's trips, Tokyo to Osaka 56% to 42%); check a few corridors against published rail shares and say whether anything needs changing (notes/T-717.md, regional table). To be done as part of T-712's spot check, which starts first after T-613.
+- T-719 [P2] Covering whole regions (all of Spain, as Japan) rather than lone metros, timings and speedups: note written 2026-10-19, waits on Anita's decisions (its last section); notes/T-719.md.
+- T-723 [P2] Whole-country cover, Spain as the pilot (Anita 2026-10-19; notes/T-719.md): zone rows in world_plan.py, the runner and plan_config.py taking them, countryside zones on a curve borrowed from Japan's fitted zones, joint gravity once per country; after T-613 hands back (the runner's files are in use). Open.
 - T-712 [P2] After the Europe batch (T-613): spot check the regional market's city pairs against real figures where published (rail, air and all-mode trips between pairs such as Madrid-Barcelona, London-Paris, Milan-Rome, Berlin-Hamburg, Tokyo-Osaka, the Northeast Corridor) and brainstorm what could improve the fit. Anita 2026-10-19: measure and discuss only, implement nothing. notes/T-712.md when started.
 Anita's second set of 2026-10-19 notes (the bfe93f9 build): notes/playtest-2026-10-19b.md, a section a task.
 - T-702 [P3] Station ghost leftovers after T-695: rare corrections on the real save's bundles of overlapping imported lines (refusals the page cannot see, T-691), jumps while sliding along them, one blink near a track end. notes/T-695.md "Left". Open.

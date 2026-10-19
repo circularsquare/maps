@@ -19,7 +19,8 @@ tests natively.
   (`DemandApi`, the demand workers' API), `intercity.rs` (the regional market), `warm.rs` (the
   everyday warm-up demand worker 0 runs at startup, T-173), `days.rs` (the weekend's factors per
   purpose and period, T-260), `routes.rs` (routed walks round water and drives over OSM roads from
-  the pack, T-275), `trip.rs` (the trip explorer's query, T-195), `lanes.rs` (f32 lanes, wasm
+  the pack, T-275), `trip.rs` (the trip explorer's query, T-195; its two cells' own trip, T-720, checked with the
+  walk bands in `t720.rs`), `lanes.rs` (f32 lanes, wasm
   SIMD or SSE2, for the commute pair loop, T-036).
   `cargo test --release --features demand nyc_day -- --ignored --nocapture` solves a day on the
   real pack natively. notes/T-026.md.
@@ -106,7 +107,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 ### src/ui/: Preact components
 
 `Dock.tsx` (the dock, its icon tabs and resizing, T-252); `tabs.tsx` (Build, Lines, Stations and
-Money); `MoneyHistory.tsx` (the Money tab's history charts, T-447); `Cities.tsx` (its Cities list, T-550); `SettingsTab.tsx`; `SavesPanel.tsx` (saved games, T-251); `bullet.ts` (`bulletShift`: the transform that centres a line bullet's text by its measured ink box and the font's baseline, per font, symbol and size, T-705; used by `Chip` and `lineBullet`); `widgets.tsx` (chips, steppers,
+Money); `MoneyHistory.tsx` (the Money tab's history charts, T-447); `Cities.tsx` (its Cities list, T-550); `SettingsTab.tsx`; `SavesPanel.tsx` (saved games, T-251); `bullet.ts` (`bulletText`, `bulletTextNode`: a line bullet's text as SVG text placed from its canvas-measured ink box, per font, symbol and size, T-705; the heights in it match `.chip` in style.css; used by `Chip` and `lineBullet`); `widgets.tsx` (chips, steppers,
 checkboxes and the inline SVG icons); `ColourPicker.tsx` (the line colour picker: preview while dragging, one commit on release, T-672); `TopBar.tsx`; `StatusTag.tsx` (the demand status tag on the map's top row); `Toolbar.tsx` (tool hints and the confirmation
 dialog); `DemandSelector.tsx` (None/Homes/Destinations and the purpose filter); `Blueprint.tsx`
 (Build's quote and Construct, and the Select tool's selection bar on the map, T-353); `Debug.tsx` (the `?debug=1` readout); `inspector/` (one inspector
@@ -209,7 +210,10 @@ Run from the maps root (`node trainworld/checks/<file>`).
   against fresh final to the bit, a changed build, pack or network shows none), `t348-lag.mjs`
   (main-thread long tasks and frame gaps while demand loads: startup, pans, a re-solve, a zone
   joining the solve; optional Chrome trace) with `t348-analyze.mjs` (what each long task in a
-  trace spent its time on), `t161-complexes.mjs` (the real save's complexes for the native
+  trace spent its time on), `t714-pan.mjs` (frame time while dragging and wheel-zooming the
+  real save at zoom 11-16 with the clock running: fails over 12 ms of main thread a frame or 5% of
+  frames over 50 ms; options for a throttled CPU, a trace per thread, settings, a tool),
+  `t161-complexes.mjs` (the real save's complexes for the native
   comparison), `t125-fingerprint.mjs` (a save's derived geometry, before and after a frame
   change), `t277-browser.mjs` (Toronto; not rerun since T-277), `city-browser.mjs <id>` (a tier 0
   city: open, boundary, the top bar's split, a water crossing refused, a test line to a final solve,

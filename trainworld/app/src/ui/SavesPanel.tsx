@@ -12,6 +12,7 @@ import { lastSaved } from "../game/money";
 import { exportGame, importGame, newGame, manageSaveSlot, saveSlotsState } from "../workers/clockClient";
 import type { SaveSlot } from "../workers/saveFile";
 import { Icon } from "./widgets";
+import { Money } from "./MoneyText";
 
 /** The saves panel is open. */
 export const savesOpen = signal(false);
@@ -59,7 +60,7 @@ export function SlotFacts({ slot, now, autosaved }: { slot: SaveSlot; now: numbe
       {" · "}
       <span data-tip={`${slot.stations} stations`}>{plural(slot.stations!, "station", "stations")}</span>
       {" · "}
-      <span data-tip={`Cash when saved: ${money(slot.cash! * 1e6)}`}>{money(slot.cash! * 1e6)}</span>
+      <span data-tip={`Cash when saved: ${money(slot.cash! * 1e6)}`}><Money dollars={slot.cash! * 1e6} /></span>
     </div>}
   </>;
 }

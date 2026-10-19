@@ -20,6 +20,18 @@ not kept, the numbers are below.
 | Frames | 13-15% of a core while playing, our draw 0.1-0.2 ms; long tasks while loading are the main thread descheduled (3-7 at 3 workers) | T-076, T-348 |
 | Main thread spikes | pack copy per worker 45-70 ms, final publish 70-110 ms, long pan 50 ms, edit round trip 130-214 ms on 10,000 km | T-354, T-356, T-070 |
 
+**Panning (T-714, 2026-10-19, `checks/t714-pan.mjs`, 1400x900, RX 6600, demand final, clock at 60x).**
+Main thread a frame over drags at zoom 12/14/16 in Manhattan and Brooklyn and a wheel zoom 11-16:
+de76ad3 (before 10-18) 5.6 ms, 9e466a4 5.3, bfe93f9 5.7, d931dcf 5.2, today's tree 4.7; 60 fps
+throughout, overlay draw 0.4-0.5 ms CPU and 1.3-1.4 ms GPU, camera at rest 8-12% of a core in all.
+With the main thread throttled 4x: 20.5-23.8 ms, 3-6% of frames over 50 ms, no trend by build. A
+5K framebuffer, the real network, bubbles with station circles, 960x and the track tool all left
+today within old's numbers; the station tool alone stalls on hover (T-724). Of the pan's main
+thread MapLibre's basemap is about 70%, our overlay plus per-frame placers about 20%. So no
+regression in our drawing; lag felt on 2026-10-19 coincided with the machine at 60% CPU from other
+work (three rustc and a pipeline python). `cityNear` (run on every map move) now scans instead of
+sorting every zone.
+
 **Per worker, New York, native** (cellbench): commute engine opens in 50 ms (+12.5 MB); the everyday
 layer in 1.2 s (+69 MB, peak +83), mostly destination sampling; its `set_network` 0.43-0.73 s
 (+88 MB: `edge_pair` 56 MB and the pair list); the commute engine's `set_network` 0.45 s. One

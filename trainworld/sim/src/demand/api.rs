@@ -165,6 +165,8 @@ pub(crate) struct Service {
     pub(crate) st_map: Vec<u32>,
     pub(crate) line_off: Vec<u32>,
     pub(crate) stops: Vec<u32>,
+    /// Each stop's platform, x and y: its snapshot station's position (`Network::stop_x`).
+    pub(crate) stop_xy: Vec<f32>,
     /// Seconds, 6 per stop: per run and level, `(run * 3 + level) * n + k` from the line's
     /// offset x 6. Run 0: stop k to k + 1 (0 at the last); run 1: stop k to k - 1 (0 at the first).
     pub(crate) times: Vec<f32>,
@@ -188,6 +190,7 @@ impl Service {
             && self.st_map == o.st_map
             && self.line_off == o.line_off
             && self.stops == o.stops
+            && same_bits(&self.stop_xy, &o.stop_xy)
             && same_bits(&self.cars, &o.cars)
             && self.group == o.group
     }
@@ -423,6 +426,8 @@ impl DemandApi {
             line_seats: svc.cars.iter().map(|&c| c * SEATS_PER_CAR).collect(),
             line_crush: svc.cars.iter().map(|&c| c * CRUSH_PER_CAR).collect(),
             st_group: svc.group.clone(),
+            stop_x: svc.stop_xy.iter().step_by(2).copied().collect(),
+            stop_y: svc.stop_xy.iter().skip(1).step_by(2).copied().collect(),
         };
         for l in 0..nl {
             let (a, b) = (svc.line_off[l] as usize, svc.line_off[l + 1] as usize);
@@ -806,6 +811,7 @@ impl DemandApi {
             st_map: st_map.clone(),
             line_off,
             stops: stops.iter().map(|&s| st_map[s as usize]).collect(),
+            stop_xy: stops.iter().flat_map(|&s| [st_xy[2 * s as usize], st_xy[2 * s as usize + 1]]).collect(),
             times: times.to_vec(),
             tph: tph.chunks_exact(3).map(|c| [c[0], c[1], c[2]]).collect(),
             cars: cars.to_vec(),

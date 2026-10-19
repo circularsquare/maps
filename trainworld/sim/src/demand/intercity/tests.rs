@@ -918,3 +918,25 @@ pub(crate) fn real_world(root: &str, ids: Option<&[&str]>) -> String {
     let world = serde_json::json!({"frame": m["frame"], "rule": m["rule"], "places": m["places"].as_array().unwrap().len(), "rows": rows});
     format!("{{\"world\":{},\"zones\":[{}]}}", world, packs.join(","))
 }
+/// T-718: the regional layer shares a trip's riders over station pairs at the local layers' scale
+/// for its band (T-710), and rail's cost is their logsum at that scale.
+#[test]
+fn regional_station_pairs_take_the_local_scale() {
+    // stations 0 and 1 near the home, 2 at work: 0 -> 2 costs 30, 1 -> 2 costs 33
+    let inf = f32::INFINITY;
+    let sk = Skims { s: 3, n: 3, r: vec![0., inf, 30., inf, 0., 33., inf, inf, 0.], slot: vec![], next: vec![], board: vec![], order: vec![], change: vec![] };
+    let p = Params::default();
+    // a pair whose car takes 60 perceived minutes, past 12 km: the band's scale, not softened
+    let th = p.soften(p.band_unsoftened(p.band_of_d2(20e3 * 20e3)), 60.);
+    assert!((th - 1. / 3.).abs() < 1e-6);
+    // 5 perceived minutes to either station
+    let w = (-p.beta * 5.0f32).exp();
+    let mut terms = vec![];
+    let (c, sum) = rail_logsum(&sk, 0., &[(0, w), (1, w)], &[(2, 1.)], p.beta, th, &mut terms);
+    let share = terms[0].2 / sum;
+    assert!((share - 1. / (1. + (-1f64).exp())).abs() < 1e-4, "3 minutes at a third: {share}");
+    let want = 5. + 30. - (1. + (-1f32).exp()).ln() / th;
+    assert!((c - want).abs() < 1e-3, "{c} against {want}");
+    let (c, sum) = rail_logsum(&sk, 0., &[(1, w)], &[(1, 1.)], p.beta, th, &mut terms);
+    assert!(c.is_infinite() && sum == 0. && terms.is_empty(), "no route");
+}

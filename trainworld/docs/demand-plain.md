@@ -1,7 +1,8 @@
 # How demand works, in plain words
 
 For Anita. One page, kept current: an agent who changes a rule here updates this page too.
-Last updated 2026-10-19 (the T-636 model, with T-710's route choice and crowding). The full rules are in demand.md; this is the gist.
+Last updated 2026-10-19 (the T-636 model, with T-710's route choice and crowding, T-717's cost of
+changing, T-718's route choice between cities and T-720's walking bands). The full rules are in demand.md; this is the gist.
 
 ## Who travels, and where to
 
@@ -28,19 +29,27 @@ The cheaper option wins more of the trips, smoothly. The curve is steeper than i
 There is no built-in liking for the train. Rail and the car are compared on time and money alone.
 
 **By train**
-- Walk to the station: each minute counts 1.5.
+- Walk to the station: each minute counts 1.5. To keep the sums quick, homes are priced in groups:
+  those in one 2 km square that share their nearest station and are within the same 15 minute
+  band of walking to it (0-15, 15-30, over 30) share one walk, an average leaning to the nearer
+  homes. Without the bands a short line's group could mix 2 and 28 minute walks, and rail came out
+  7-21% too high. The trip explorer works out its own two places exactly.
 - Wait on the platform: half the time between trains, in plain minutes.
 - Ride: 1 a minute, stretched once the train is 70% full: at crush load a minute counts 3, at 120%
   it counts 5.4. Below 70% nobody minds the crowd.
-- Changing trains: the wait for the next train plus the walk between platforms. No extra penalty.
-  Nobody changes back onto the line they just left: on a full line people wait at their station.
+- Changing trains: a fixed 2 minutes, plus the walk from the platform you arrive at to the one you
+  leave from (centre to centre, at an easy walking pace, each minute counted 1.39), plus the wait
+  for the next train. Platforms 80 m apart add 2 minutes; across one platform, nothing. Nobody
+  changes back onto the line they just left: on a full line people wait at their station.
 - If the train is full when it arrives, the wait for one with room counts too.
 - Fare: in the US $1 counts as 3 minutes.
 - Which stations: riders share the pairs of stations near each end by how much slower each option
   is compared with the trip's length. Of two options 1 minute apart the faster gets 66% on a short
-  trip and 58% on one of an hour or more; 5 minutes apart, 97% and 84%; 10 minutes apart, nearly
-  everyone takes the faster. From an hour on, a minute matters as much however long the trip. At a
-  station, riders take the first train that helps.
+  trip and 58% on one of an hour; 5 minutes apart, 97% and 84%; 10 minutes apart, nearly everyone
+  takes the faster. Past an hour a minute matters less still, with the square root of the trip's
+  length: on a 4 hour trip 5 minutes apart is 70%. The trips between cities choose their stations
+  the same way, their length being the drive's. At a station, riders take the first
+  train that helps.
 - Or drive to the station: 15 minutes to start, the drive (counted 1.33 a minute), and the cheaper of
   parking there or a 10 minute drop-off. Only for trips of 5 km or more.
 
@@ -85,8 +94,9 @@ and "other" are left out of the comparison; the figure is rail out of rail plus 
   New York 86%, London 85.5%. As a share of all trips, walks and the rest included: 79% and 75%.
 - **B**: 100 km/h, a 3 minute walk at each end, a fare of $1.50 plus $0.05 a km. Target at least 50%.
   New York 79%, London 79%. Of all trips: 71% and 67%.
-- The real networks, for comparison: New York's rail takes 21% of rail plus car (15% of all trips),
-  London's 30% (20%); before the route choice was sharpened (T-710), 23% and 32%. Short trips are where
+- The real networks, for comparison: New York's rail takes 20% of rail plus car (14% of all trips),
+  London's 29% (19%); before the route choice was sharpened (T-710) and changes cost 2 minutes
+  (T-717), 23% and 32%. Short trips are where
   the real systems fall short: coverage, not the choice, holds them down.
 
 Details and the settings that were tried: notes/T-636.md; the route choice, notes/T-710.md.
@@ -95,4 +105,4 @@ Details and the settings that were tried: notes/T-636.md; the route choice, note
 
 - T-584: commuting between neighbouring cities damped at 0.4.
 - Deep calibration, later: whether the walk's 1.5 should be 1, and what the real cities say about
-  the new numbers (the model carries about 2.5 times New York's station counts, 1.7 times London's).
+  the new numbers (the model carries about 2.4 times New York's station counts, 1.6 times London's).

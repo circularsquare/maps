@@ -155,12 +155,15 @@ institutions** (prisons, nursing homes and the like, T-234).
   d^-0.8 exp(-d / 30 km), T-198) and border factor (US states 0.23, Washington 0.45; Japan's packs
   0.4; abroad, national borders only, T-181).
 - **Mode choice** recomputes after service or fare changes: station access, destination-specific
-  common-line strategies (a wait is half the combined headway, in plain minutes [T-585]),
-  fare-sensitive choice between rail and driving, and up to three crowding
+  common-line strategies (a wait is half the combined headway, in plain minutes [T-585]; a change
+  of trains costs a fixed 2 perceived minutes, its wait and the walk between the two platforms'
+  centres [T-717]), fare-sensitive choice between rail and driving, and up to three crowding
   rounds that price crowded trains and riders left behind by full ones [T-188]; a period stops
   once a round moves its loads under 1% [T-434]. Riders choose among station pairs by how much
   slower an option is relative to the trip's length: the scale is 20 over the trip's rough length
-  in perceived minutes (25 + 3 a straight km), held from 60 minutes on, in four distance bands; a
+  in perceived minutes (25 + 3 a straight km), in four distance bands, the regional layer's trips
+  too [T-718]; past 60 minutes it softens further, times sqrt(60 / T) (T the car's perceived
+  minutes between cities, the band's length in a city), so a long trip minds a minute less; a
   train counts as crowded only from 70% of its crush load [T-710]. Each round uses
   the combined loads of every zone, the everyday layer and the regional market. Walking the whole
   way is a third mode in the same logit [T-558]: 1.5 perceived minutes a minute at every length,
@@ -176,6 +179,10 @@ institutions** (prisons, nursing homes and the like, T-234).
   driving.
 - **Walks and drives follow real paths** [T-275] round water and over OSM roads. Riders walk
   between stations within 300 m after a ride, and between any two stations of a complex [T-161].
+- **Homes and places are grouped for the choice**: the cells of a 2 km zone that share their
+  nearest station and lie in the same 15-minute band of walking to it share one walk per station
+  [T-090, T-720]. The trip explorer answers for its two cells' own walks, and its hovers give the
+  grouped figure the map's bubbles count where it differs [T-720].
 - **Weekdays and weekends** [T-260]: days 6 and 7 of each week are the weekend, worked out from the
   weekday's solve per purpose and period (NHTS 2017 rates). The demand views show the average day
   (5 weekdays and 2 weekend days over 7) unless a weekday or a weekend day is chosen [T-464]. The same trains run every day

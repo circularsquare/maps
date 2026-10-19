@@ -11,7 +11,8 @@ Per OD pair and period, rail, driving and walking the whole way (below) compete 
 (Anita, 2026-10-09), except as part of "other", the choice of homes without a car (below).
 
 - rail = walk to a station + wait (half the headway, capped) + ride + walks between platforms +
-  walk from station + fare / value of time (a change costs its wait and walk, no penalty: T-557)
+  walk from station + fare / value of time (a change costs a fixed 2 perceived minutes, its wait
+  and the walk between the two platforms' centres: T-717)
 - driving = door-to-door road time (below; a few constants, real road travel times are not a
   priority) + its cost
 
@@ -174,22 +175,30 @@ minutes (T-585) and the crowding loop (4.4) spreads riders, from 70% of a train'
 to each one) and the station to leave at, every pair of the two, by a logit on total cost, and
 rail as a whole is priced at the logsum, so a second usable station helps a little and a slightly
 better one does not take everyone. **The logit's scale follows the trip's length** (Anita, T-710):
-what counts is a difference against the trip, up to a 60 minute trip; past that a minute counts as
-on a 60 minute trip. The scale is `rel_gamma` 20 over the trip's rough rail length T = 25 + 3 x
-its straight-line km (perceived minutes, `rel_t0`, `rel_tkm`), T held at 60 (`rel_tmax`), in four
-bands of straight-line distance (`REL_EDGES`: zone centres for commutes, the pair's mean distance
-for everyday trips): under 3 km 0.68 a perceived minute, 3-7 km 0.50, 7-12 km 0.37, 12 km and over
-0.33. Of two options 1 minute apart the faster gets 66% under 3 km and 58% from 12 km; 5 minutes
-apart 97% and 84%; 10 minutes apart 99.9% and 97%. Each band's exp table is offset by 60 / scale
-perceived minutes, added back after the logsum, so every band keeps station-to-station costs from
-0 to 129 / scale minutes in f32 (387 from 12 km). The regional layer keeps `station_theta` 0.2.
+what counts is a difference against the trip, up to a 60 minute trip; past that a minute counts
+for less, as the square root (Anita, 2026-10-19, the mode choice's damping shape, T-495). The
+scale is `rel_gamma` 20 over the trip's rough rail length T = 25 + 3 x its straight-line km
+(perceived minutes, `rel_t0`, `rel_tkm`) up to 60 (`rel_tmax`), and past 60 it is 20 / 60 x
+sqrt(60 / T) (`rel_soft` 1, `Params::soften`; 0 holds it at 20 / 60). The local layers take it in
+four bands of straight-line distance (`REL_EDGES`: zone centres for commutes, the pair's mean
+distance for everyday trips), T at each band's centre: under 3 km 0.68 a perceived minute, 3-7 km
+0.50, 7-12 km 0.37, 12 km and over 0.29 (T 79). Of two options 1 minute apart the faster gets 66%
+under 3 km and 57% from 12 km; 5 minutes apart 97% and 81%; 10 minutes apart 99.9% and 95%. Each
+band's exp table is offset by 60 / scale perceived minutes, added back after the logsum, so every
+band keeps station-to-station costs from 0 to 129 / scale minutes in f32 (444 from 12 km). The
+regional layer takes the same rule with T the car's perceived minutes for the pair (T-718,
+docs/regional.md 5.1).
 
 **Walking to a station** (Anita, 2026-10-14, T-371). A true walk at both ends: **6 km/h along a
 path 1.3x the straight line, or round water by a bridge where one is in the way (above; 13 minutes
 a straight km), each minute weighing 1.5** (`w_walk`, fitted on New York in T-372;
 notes/T-372.md). So a station 500 m away costs 9.8
 perceived minutes, 1 km 19.5, 2 km 39. Between walks the logit above applies (a station 500 m
-further gets 0.1% of the nearer one's riders on a trip under 3 km, 4% from 12 km).
+further gets 0.1% of the nearer one's riders on a trip under 3 km, 4% from 12 km). The choice
+prices a group of cells at once, not each cell: the cells of a 2 km zone that share their nearest
+station and fall in the same **15-minute band** of walking to it (0-15, 15-30, 30 and over; Anita,
+T-720), their walk a logsum over the cells ([demand-kernel.md](demand-kernel.md) 4.4 step 3). The
+trip explorer prices its two cells' own walks.
 
 **Riding to a station** (Anita, 2026-10-14, T-295, T-371, T-389). Car, bus, bike or a lift are one
 mode, the ride, called driving in the game. It is offered only at the home end of a trip of at

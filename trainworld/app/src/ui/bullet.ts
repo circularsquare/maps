@@ -1,27 +1,38 @@
-// T-705: where a line bullet's text sits so its ink, not the font's line box, is centred in the
-// circle. Every bullet (ui/widgets.tsx's Chip, map/trackTagRows.ts's lineBullet) moves its text by
-// `bulletShift`. The ink box is measured on a canvas for the page's current font and the baseline
-// on a probe laid out with the chip's own CSS (a font's ascent and descent differ, and Nunito's
-// kana come from Zen Maru Gothic), once per font, text and size.
+// T-705: a line bullet's text, drawn as SVG text with its ink box centred in the circle. HTML text
+// sits by the font's line box (ascent and descent differ per font, and the browser rounds them at
+// the UI scale), so it read off centre. Here the ink box is measured on a canvas for the page's
+// current font (actualBoundingBox values, once per font, symbol and size) and the baseline is
+// placed from it, so no line box is involved. Used by ui/widgets.tsx's Chip and, as plain DOM, by
+// map/trackTagRows.ts's lineBullet.
 
 import { signal } from "@preact/signals";
 
 export type BulletSize = "" | "sm" | "lg";
-/** The chip's font size by size, as style.css sets it. */
+/** The chip's font size and height by size, as style.css sets them. */
 const FONT_PX: Record<BulletSize, number> = { "": 12, sm: 12, lg: 18 };
+const HEIGHT: Record<BulletSize, number> = { "": 20, sm: 16, lg: 30 };
 
 /** Bumped when the page font changes or finishes loading: components reading it draw again. */
 export const bulletEpoch = signal(0);
 
+export interface BulletText {
+  /** the text's advance width, which is the SVG's width */
+  w: number;
+  /** the text origin's x, so the ink is centred across `w` */
+  x: number;
+  /** the chip's height, which is the SVG's */
+  h: number;
+  /** the baseline's y, which centres the ink vertically */
+  y: number;
+}
+
 let ctx: CanvasRenderingContext2D | null = null;
 let family = "";
-const baselines = new Map<string, number>();
-const shifts = new Map<string, string>();
+const cache = new Map<string, BulletText | null>();
 
 function forget() {
   family = "";
-  baselines.clear();
-  shifts.clear();
+  cache.clear();
   bulletEpoch.value++;
 }
 if (typeof document !== "undefined") {
@@ -29,43 +40,46 @@ if (typeof document !== "undefined") {
   document.fonts?.addEventListener?.("loadingdone", forget);
 }
 
-/** The baseline's distance below the chip's centre for text of this size in the page font, px. */
-function baselineBelowCentre(px: number): number {
-  const hit = baselines.get(family + px);
-  if (hit !== undefined) return hit;
-  const chip = document.createElement("span");
-  chip.className = "chip " + (px > 12 ? "lg" : "");
-  chip.style.cssText = "position:absolute;left:-999px;top:0;visibility:hidden";
-  const t = document.createElement("span");
-  const mark = document.createElement("i");
-  mark.style.cssText = "display:inline-block;width:0;height:0";
-  t.append("x", mark);
-  chip.append(t);
-  document.body.append(chip);
-  const c = chip.getBoundingClientRect();
-  const m = mark.getBoundingClientRect();
-  chip.remove();
-  const v = m.bottom - (c.top + c.height / 2);
-  baselines.set(family + px, v);
-  return v;
-}
-
-/** The CSS `transform` that centres `text`'s ink in a bullet of this size. */
-export function bulletShift(text: string, size: BulletSize): string {
-  if (typeof document === "undefined" || !text) return "none";
+/** The placement of `text`, or null where it cannot be measured (the caller then uses plain text). */
+export function bulletText(text: string, size: BulletSize): BulletText | null {
+  if (typeof document === "undefined" || !text) return null;
   ctx ??= document.createElement("canvas").getContext("2d");
-  if (!ctx) return "none";
+  if (!ctx) return null;
   family ||= getComputedStyle(document.body).fontFamily;
-  const px = FONT_PX[size];
   const key = `${family}|${size}|${text}`;
-  const hit = shifts.get(key);
+  const hit = cache.get(key);
   if (hit !== undefined) return hit;
-  ctx.font = `700 ${px}px ${family}`;
+  ctx.font = `700 ${FONT_PX[size]}px ${family}`;
   ctx.textBaseline = "alphabetic";
   const m = ctx.measureText(text);
-  const x = m.width / 2 - (m.actualBoundingBoxRight - m.actualBoundingBoxLeft) / 2;
-  const inkMid = baselineBelowCentre(px) - (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2;
-  const v = Number.isFinite(x) && Number.isFinite(inkMid) ? `translate(${x.toFixed(2)}px,${(-inkMid).toFixed(2)}px)` : "none";
-  shifts.set(key, v);
-  return v;
+  const v: BulletText = {
+    w: m.width,
+    x: m.width / 2 - (m.actualBoundingBoxRight - m.actualBoundingBoxLeft) / 2,
+    h: HEIGHT[size],
+    y: HEIGHT[size] / 2 + (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2,
+  };
+  const ok = [v.w, v.x, v.y].every(Number.isFinite) && v.w > 0;
+  cache.set(key, ok ? v : null);
+  return ok ? v : null;
+}
+
+const SVG = "http://www.w3.org/2000/svg";
+
+/** The bullet's text as a DOM node (for the map's tags, which are not Preact). */
+export function bulletTextNode(text: string, size: BulletSize): Node {
+  const b = bulletText(text, size);
+  if (!b) {
+    const s = document.createElement("span");
+    s.textContent = text;
+    return s;
+  }
+  const svg = document.createElementNS(SVG, "svg");
+  svg.style.width = b.w + "px";
+  svg.style.height = b.h + "px";
+  const t = document.createElementNS(SVG, "text");
+  t.setAttribute("x", b.x.toFixed(2));
+  t.setAttribute("y", b.y.toFixed(2));
+  t.textContent = text;
+  svg.append(t);
+  return svg;
 }

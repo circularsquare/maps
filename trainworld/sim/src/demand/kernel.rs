@@ -60,8 +60,8 @@ pub struct Params {
     /// carries its factor (`PackGravity::border_factor`), so each country sets its own.
     pub border_factor: f32,
     pub w_walk: f32,
-    /// A fixed penalty per change of train, perceived minutes. 0 (Anita, T-557): a change costs
-    /// its wait and any walk between platforms; kept for calibration runs (`realnet --set`).
+    /// A fixed cost per change of train, perceived minutes (Anita, T-717): a change costs this, its
+    /// wait and the walk between the two platforms.
     pub transfer_min: f32,
     pub fare_min: f32,
     /// Logit scale per perceived minute, and the rail propensity: the worldwide value plus
@@ -123,7 +123,8 @@ pub struct Params {
     /// `walk_cutoff_m`, set where little rail is left).
     pub pair_walk_max: f32,
     /// Logit scale of the choice among access and egress stations (and access modes), per
-    /// perceived minute, where `rel_gamma` is 0, and in the regional layer. notes/T-020.md.
+    /// perceived minute, where `rel_gamma` is 0 (every layer then, the regional one too, T-718).
+    /// notes/T-020.md.
     pub station_theta: f32,
     /// T-710: the local layers' scale is `rel_gamma` / min(T, `rel_tmax`), T = `rel_t0` +
     /// `rel_tkm` x the straight-line km of the trip (a rough rail trip in perceived minutes), by
@@ -132,6 +133,9 @@ pub struct Params {
     pub rel_t0: f32,
     pub rel_tkm: f32,
     pub rel_tmax: f32,
+    /// Anita, 2026-10-19 (T-717): with 1, past `rel_tmax` the scale falls further as
+    /// sqrt(`rel_tmax` / T), so a long trip is less sensitive to a minute (`Params::soften`); 0 off.
+    pub rel_soft: f32,
     /// Walking the whole way, a mode in the choice beside rail and the car (or other) (T-558,
     /// `walk_trip_cost`): the walk's real minutes (its distance x `walk_detour` at `walk_mps`)
     /// weigh `walk_trip_w` each, at one rate. `walk_bonus_min`, in perceived minutes, is what the
@@ -239,13 +243,14 @@ impl Default for Params {
             walk_easy_min: 10.0,
             w_walk_far: 1.5,
             zone_m: 2000.0,
-            band_min: 0.0,
+            // T-720: a zone's cells 1 to 30 minutes from one station are not one walk
+            band_min: 15.0,
             decay_km: 30.0,
             decay_pow: 0.8,
             border_factor: 1.0,
             // T-371, T-372: 1.5 rather than the usual 2.0 (notes/T-371.md, T-372.md)
             w_walk: 1.5,
-            transfer_min: 0.0,
+            transfer_min: 2.0,
             fare_min: 6.0,
             // T-636: Anita's set (notes/T-636.md)
             beta: 0.10,
@@ -289,6 +294,7 @@ impl Default for Params {
             rel_t0: 25.0,
             rel_tkm: 3.0,
             rel_tmax: 60.0,
+            rel_soft: 1.0,
             // T-558: the cost as Anita approved it; the constants hold New York's and London's
             // walking as it was (notes/T-558.md; commutes refitted for the cells' walks, T-587)
             walk_trip_w: 1.5,
@@ -328,6 +334,7 @@ impl Params {
             "rel_t0" => self.rel_t0 = v,
             "rel_tkm" => self.rel_tkm = v,
             "rel_tmax" => self.rel_tmax = v,
+            "rel_soft" => self.rel_soft = v,
             "crowd_start" => self.crowd_start = v,
             "asc_rail" => self.asc_rail = v + self.country_asc_rail,
             "country_asc_rail" => {
@@ -430,8 +437,25 @@ impl Params {
         }
         let (lo, hi) = (REL_EDGES[b], REL_EDGES[b + 1]);
         let km = if hi.is_finite() { 0.5 * (lo + hi) } else { 1.5 * lo };
-        let th = self.rel_gamma / (self.rel_t0 + self.rel_tkm * km).min(self.rel_tmax);
+        let t = self.rel_t0 + self.rel_tkm * km;
+        let th = self.soften(self.band_unsoftened(b), t);
         (th, 60.0 / th)
+    }
+    /// Band `b`'s scale before `soften`, for a layer that softens by its own trip length (the
+    /// regional layer, by the car's minutes).
+    pub fn band_unsoftened(&self, b: usize) -> f32 {
+        if self.rel_gamma <= 0.0 {
+            return self.station_theta;
+        }
+        let (lo, hi) = (REL_EDGES[b], REL_EDGES[b + 1]);
+        let km = if hi.is_finite() { 0.5 * (lo + hi) } else { 1.5 * lo };
+        self.rel_gamma / (self.rel_t0 + self.rel_tkm * km).min(self.rel_tmax)
+    }
+    /// Scale `th` for a trip `t` perceived minutes long under `rel_soft`: from `rel_tmax` on,
+    /// times sqrt(`rel_tmax` / t) (the mode choice's damping shape, T-495). The local layers pass
+    /// their band's rough rail length, the regional layer the car's perceived minutes.
+    pub fn soften(&self, th: f32, t: f32) -> f32 {
+        if self.rel_soft > 0.0 && self.rel_gamma > 0.0 && t > self.rel_tmax { th * (self.rel_tmax / t).sqrt() } else { th }
     }
     /// Real minutes of the fast walk to a station `d_m` metres away in a straight line.
     pub fn walk_min(&self, d_m: f32) -> f32 {
@@ -1969,6 +1993,12 @@ pub struct Graph {
     /// leave riders on the platform (T-188, `left_behind`); 0 at free flow. Added to the
     /// boarding's cost.
     pub rn_left: Vec<f32>,
+    /// Each route node's platform less its station's position, metres (`Network::stop_x`): a change
+    /// of trains walks from the platform it arrives at to the one it leaves from (T-717).
+    pub rn_dx: Vec<f32>,
+    pub rn_dy: Vec<f32>,
+    /// Stations with a platform away from their position, where a change can walk.
+    pub st_spread: Vec<bool>,
     /// Incoming edges, CSR, for destination-based strategy search.
     pub rev_off: Vec<u32>,
     pub rev_from: Vec<u32>,
@@ -1991,6 +2021,9 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
     let mut rn_line = vec![];
     let mut rn_ride = vec![];
     let mut rn_next = vec![];
+    let (mut rn_dx, mut rn_dy) = (vec![], vec![]);
+    let mut st_spread = vec![false; s];
+    let platforms = net.stop_x.len() == net.line_stops.len() && net.stop_y.len() == net.line_stops.len();
     for l in 0..net.n_lines() {
         let (a, b) = (net.line_off[l] as usize, net.line_off[l + 1] as usize);
         for dir in 0..2 {
@@ -1998,8 +2031,15 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
             let len = b - a;
             for i in 0..len {
                 let k = if dir == 0 { a + i } else { b - 1 - i };
-                rn_station.push(net.line_stops[k]);
+                let st = net.line_stops[k] as usize;
+                rn_station.push(st as u32);
                 rn_line.push(l as u32);
+                let (dx, dy) = if platforms { (net.stop_x[k] - net.st_x[st], net.stop_y[k] - net.st_y[st]) } else { (0.0, 0.0) };
+                // under a metre is the merge's rounding, not a walk
+                let (dx, dy) = if dx.hypot(dy) < 1.0 { (0.0, 0.0) } else { (dx, dy) };
+                st_spread[st] |= dx != 0.0 || dy != 0.0;
+                rn_dx.push(dx);
+                rn_dy.push(dy);
                 let ride = if i + 1 < len {
                     if dir == 0 {
                         net.hop_min[k]
@@ -2028,20 +2068,17 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
         edges.push((node, st, 0.0, NONE));
     }
     // walking transfers: from each route node (having ridden) to the stations nearby, and to every
-    // other station of its complex however far (T-161), at the same walk cost by distance
+    // other station of its complex however far (T-161), from its platform to the other station's
+    // position
     let cut2 = p.xfer_walk_m * p.xfer_walk_m;
-    let walk = |a: usize, b: usize| {
-        let d2 = (net.st_x[b] - net.st_x[a]).powi(2) + (net.st_y[b] - net.st_y[a]).powi(2);
-        (d2, p.xfer_min(d2.sqrt()) * p.w_xfer)
-    };
-    let mut near: Vec<Vec<(u32, f32)>> = vec![vec![]; s];
+    let d2 = |a: usize, b: usize| (net.st_x[b] - net.st_x[a]).powi(2) + (net.st_y[b] - net.st_y[a]).powi(2);
+    let mut near: Vec<Vec<u32>> = vec![vec![]; s];
     if p.xfer_walk_m > 0.0 && s > 1 {
         let grid = StationGrid::new(net, p.xfer_walk_m, p.xfer_walk_m);
         for a in 0..s {
             grid.near(net.st_x[a], net.st_y[a], |b| {
-                let (d2, c) = walk(a, b as usize);
-                if b as usize != a && d2 <= cut2 {
-                    near[a].push((b, c));
+                if b as usize != a && d2(a, b as usize) <= cut2 {
+                    near[a].push(b);
                 }
             });
         }
@@ -2050,18 +2087,19 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
         for members in complex_members(&net.st_group) {
             for &a in &members {
                 for &b in &members {
-                    let (d2, c) = walk(a as usize, b as usize);
                     // within the walk limit the edge is there already
-                    if a != b && (p.xfer_walk_m <= 0.0 || d2 > cut2) {
-                        near[a as usize].push((b, c));
+                    if a != b && (p.xfer_walk_m <= 0.0 || d2(a as usize, b as usize) > cut2) {
+                        near[a as usize].push(b);
                     }
                 }
             }
         }
     }
     for (r, &st) in rn_station.iter().enumerate() {
-        for &(b, c) in &near[st as usize] {
-            edges.push(((s + r) as u32, b, c, NONE));
+        let (x, y) = (net.st_x[st as usize] + rn_dx[r], net.st_y[st as usize] + rn_dy[r]);
+        for &b in &near[st as usize] {
+            let d = ((net.st_x[b as usize] - x).powi(2) + (net.st_y[b as usize] - y).powi(2)).sqrt();
+            edges.push(((s + r) as u32, b, p.xfer_min(d) * p.w_xfer, NONE));
         }
     }
     edges.sort_by_key(|e| e.0);
@@ -2083,6 +2121,9 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
     }).collect();
     Graph {
         rn_left: vec![0.0; rn_ride.len()],
+        rn_dx,
+        rn_dy,
+        st_spread,
         rn_tph,
         rev_off,
         rev_from: incoming.iter().map(|x| x.1).collect(),
@@ -2388,6 +2429,8 @@ struct Search<'a> {
     lone: Vec<u32>,
     /// Each route node's place among its station's boarding edges.
     edge_ix: Vec<u32>,
+    /// The platforms (relative to the station) and frequencies a settling node boards (T-717).
+    pool: Vec<(f32, f32, f32)>,
 }
 
 const MANY: u32 = NONE - 1;
@@ -2437,6 +2480,7 @@ impl Search<'_> {
             cand: vec![],
             lone,
             edge_ix,
+            pool: vec![],
         }
     }
 
@@ -2550,6 +2594,16 @@ impl Search<'_> {
                 self.lines.push(g.rn_line[r]);
             }
         }
+        let spread = g.st_spread[v];
+        if spread {
+            self.pool.clear();
+            for e in e0..e1 {
+                let r = g.adj_to[e] as usize - s;
+                if self.board[r >> 6] >> (r & 63) & 1 == 1 {
+                    self.pool.push((g.rn_dx[r], g.rn_dy[r], g.rn_tph[r]));
+                }
+            }
+        }
         // one pass over the arrivals: those off other lines go on, those off its own wait
         self.feed.clear();
         for j in g.rev_off[v] as usize..g.rev_off[v + 1] as usize {
@@ -2557,7 +2611,10 @@ impl Search<'_> {
             if self.done[from] { continue; }
             match self.lines.iter().position(|&l| l == g.rn_line[from - s]) {
                 Some(li) => self.feed.push((li as u32, j as u32)),
-                None => self.relax(from, d + g.adj_cost[g.rev_edge[j] as usize], v as u32),
+                None => {
+                    let walk = if spread { platform_walk(g, self.p, &self.pool, from, v) } else { 0.0 };
+                    self.relax(from, d + g.adj_cost[g.rev_edge[j] as usize] + walk, v as u32)
+                }
             }
         }
         let first = self.cn.len() as u32;
@@ -2607,11 +2664,25 @@ impl Search<'_> {
         let id = (self.n + k) as u32;
         self.order.push(id);
         let (d, (f0, f1)) = (self.cn[k].dist, self.cn[k].feed);
+        let v = self.cn[k].st as usize;
+        let spread = g.st_spread[v];
+        if spread {
+            self.pool.clear();
+            let (s, e0, b0) = (self.s, g.adj_off[v] as usize, self.cn[k].bits as usize);
+            for e in e0..g.adj_off[v + 1] as usize {
+                let i = e - e0;
+                if self.cn_bits[b0 + i / 64] >> (i % 64) & 1 == 1 {
+                    let r = g.adj_to[e] as usize - s;
+                    self.pool.push((g.rn_dx[r], g.rn_dy[r], g.rn_tph[r]));
+                }
+            }
+        }
         for i in f0 as usize..f1 as usize {
             let j = self.cn_feed[i] as usize;
             let from = g.rev_from[j] as usize;
             if self.done[from] { continue; }
-            self.relax(from, d + g.adj_cost[g.rev_edge[j] as usize], id);
+            let walk = if spread { platform_walk(g, self.p, &self.pool, from, v) } else { 0.0 };
+            self.relax(from, d + g.adj_cost[g.rev_edge[j] as usize] + walk, id);
         }
     }
 
@@ -2638,6 +2709,36 @@ fn join_line(frequency: &mut f32, weighted: &mut f32, cur: f32, f: f32, d: f32, 
     *frequency = sum;
     *weighted += f * d;
     Some(cost)
+}
+
+/// Where a rider coming in by edge from route node `from` stands at station `v`, relative to its
+/// position: the platform they alighted at, or the station's position after a walk from another.
+#[inline]
+pub(crate) fn arrival_at(g: &Graph, from: usize, v: usize) -> (f32, f32) {
+    let r = from - g.n_st;
+    if g.rn_station[r] as usize == v { (g.rn_dx[r], g.rn_dy[r]) } else { (0.0, 0.0) }
+}
+
+/// Perceived minutes walking from (x, y) to the platform at (px, py), both relative to their
+/// station (T-717).
+#[inline]
+pub(crate) fn platform_walk_to(p: &Params, (x, y): (f32, f32), px: f32, py: f32) -> f32 {
+    if px == x && py == y { 0.0 } else { p.xfer_min(((px - x).powi(2) + (py - y).powi(2)).sqrt()) * p.w_xfer }
+}
+
+/// A change at a station of several platforms walks from where the rider arrives to the platform
+/// of the train they take: over `pool` (platform, departures an hour), the expected walk as the
+/// first departure decides (T-717). Added to the arrival's cost rather than to each line's in the
+/// pool, so which lines join the station's strategy does not depend on the platform arrived at.
+#[inline]
+fn platform_walk(g: &Graph, p: &Params, pool: &[(f32, f32, f32)], from: usize, v: usize) -> f32 {
+    let at = arrival_at(g, from, v);
+    let (mut w, mut f) = (0.0, 0.0);
+    for &(px, py, fr) in pool {
+        w += fr * platform_walk_to(p, at, px, py);
+        f += fr;
+    }
+    if f > 0.0 { w / f } else { 0.0 }
 }
 
 /// Test switch (`TW_LEGACY=1` in api.rs's `northeast_profile`): behave as before T-119 (searches
@@ -2671,17 +2772,21 @@ struct SkimKey {
     adj_cost: Vec<f32>,
     rn_tph: Vec<f32>,
     rn_left: Vec<f32>,
+    rn_dx: Vec<f32>,
+    rn_dy: Vec<f32>,
     transfer_min: f32,
 }
 
 impl SkimKey {
     fn of(g: &Graph, p: &Params) -> SkimKey {
-        SkimKey { n_st: g.n_st, n: g.n, adj_off: g.adj_off.clone(), adj_to: g.adj_to.clone(), adj_cost: g.adj_cost.clone(), rn_tph: g.rn_tph.clone(), rn_left: g.rn_left.clone(), transfer_min: p.transfer_min }
+        SkimKey { n_st: g.n_st, n: g.n, adj_off: g.adj_off.clone(), adj_to: g.adj_to.clone(), adj_cost: g.adj_cost.clone(), rn_tph: g.rn_tph.clone(), rn_left: g.rn_left.clone(), rn_dx: g.rn_dx.clone(), rn_dy: g.rn_dy.clone(), transfer_min: p.transfer_min }
     }
     fn same(&self, g: &Graph, p: &Params) -> bool {
         self.n_st == g.n_st
             && self.n == g.n
             && self.transfer_min == p.transfer_min
+            && self.rn_dx == g.rn_dx
+            && self.rn_dy == g.rn_dy
             && self.adj_off == g.adj_off
             && self.adj_to == g.adj_to
             && self.adj_cost == g.adj_cost
@@ -3896,7 +4001,7 @@ mod tests {
             hop_min: vec![], hop_back: vec![], line_speed_kmh: vec![0.0; lines.len()],
             line_headway_min: tph.iter().map(|t| [if *t > 0.0 { 60.0 / t } else { f32::INFINITY }; network::PERIODS]).collect(),
             line_seats: vec![100.0; lines.len()], line_crush: vec![200.0; lines.len()],
-            st_group: vec![],
+            st_group: vec![], stop_x: vec![], stop_y: vec![],
         };
         for (l, stops) in lines.iter().enumerate() {
             net.line_stops.extend_from_slice(stops);
@@ -3932,8 +4037,13 @@ mod tests {
         assert!((th0 - 20.0 / 29.5).abs() < 1e-6 && (off0 - 60.0 / th0).abs() < 1e-4);
         assert!((p.band(1).0 - 0.5).abs() < 1e-6);
         assert!((p.band(2).0 - 20.0 / 53.5).abs() < 1e-6);
-        // past 60 minutes a minute counts the same however long the trip
-        assert!((p.band(3).0 - 20.0 / 60.0).abs() < 1e-6);
+        // past 60 minutes the scale softens as sqrt(60 / T): the band from 12 km is 79 minutes
+        assert!((p.band(3).0 - 20.0 / 60.0 * (60.0f32 / 79.0).sqrt()).abs() < 1e-6);
+        assert_eq!(p.soften(0.5, 50.0), 0.5);
+        assert!((p.soften(1.0 / 3.0, 240.0) - 1.0 / 6.0).abs() < 1e-6);
+        // `rel_soft` 0: past 60 minutes a minute counts the same however long the trip
+        let hard = Params { rel_soft: 0.0, ..Params::default() };
+        assert!((hard.band(3).0 - 20.0 / 60.0).abs() < 1e-6 && hard.soften(0.5, 240.0) == 0.5);
         let off = Params { rel_gamma: 0.0, ..Params::default() };
         assert_eq!((off.n_bands(), off.band_of_d2(1e12), off.band(0)), (1, 0, (0.2, 0.0)));
     }
@@ -4153,10 +4263,11 @@ mod tests {
     /// T-575: a rider leaving a line at a station whose strategy boards that line's other direction
     /// changes there onto the station's other lines only. Line L 0-1-2 (12 tph, half a minute a
     /// stop), C 0-3 (4 tph, 2 minutes), M 2-3 (4 tph, 3.5 minutes); riders 1 -> 3. At 2 the
-    /// strategy pools M with L back towards C; a rider off L at 2 takes M alone.
+    /// strategy pools M with L back towards C; a rider off L at 2 takes M alone. Changes cost no
+    /// fixed minutes here, or the change onto C would keep L back out of the pool.
     #[test]
     fn a_change_off_a_line_takes_the_stations_other_lines() {
-        let p = common_test_params();
+        let p = Params { transfer_min: 0.0, ..common_test_params() };
         let net = common_test_net(&[&[0, 1, 2], &[0, 3], &[2, 3]], &[12.0, 4.0, 4.0], &[0.5, 2.0, 3.5]);
         let g = build_graph(&net, &p);
         let s = g.n_st;
@@ -4300,6 +4411,36 @@ mod tests {
         let mut out = vec![];
         transfer_pairs(&g, &ix, &x, &sel, &mut out);
         assert_eq!(out, vec![9.0, 4.0, 40.0]);
+    }
+
+    /// T-717: a change costs the fixed minutes, its wait and the walk between its two platforms.
+    #[test]
+    fn a_change_costs_fixed_minutes_and_the_walk_between_platforms() {
+        let p = common_test_params();
+        assert_eq!(p.transfer_min, 2.0);
+        // line A 0-1, B 1-2, 12 tph and 2 minutes each; riders 0 -> 2 change at 1
+        let mut net = common_test_net(&[&[0, 1], &[1, 2]], &[12.0, 12.0], &[2.0, 2.0]);
+        let s = net.n_stations();
+        let one_platform = skims(&build_graph(&net, &p), &p).r[2];
+        assert!((one_platform - (2.5 + 2.0 + 2.0 + 2.5 + 2.0)).abs() < 1e-4, "{one_platform}");
+        // station 1 is two platforms 80 m apart, A's at y 0 and B's at y 80, the station between
+        net.st_y[1] = 40.0;
+        net.stop_x = net.line_stops.iter().map(|&st| net.st_x[st as usize]).collect();
+        net.stop_y = vec![0.0, 0.0, 80.0, 0.0];
+        let g = build_graph(&net, &p);
+        assert!(g.st_spread[1] && !g.st_spread[0]);
+        let sk = skims(&g, &p);
+        let walk = p.xfer_min(80.0) * p.w_xfer;
+        assert!((sk.r[2] - (one_platform + walk)).abs() < 1e-4, "{} against {}", sk.r[2], one_platform + walk);
+        assert!((sk.r[s + 2] - 4.5).abs() < 1e-4, "a trip starting at the station walks no platform: {}", sk.r[s + 2]);
+        // the trip explorer: ride, the walk between the platforms, ride with the change's 2 minutes
+        let r = super::super::trip::routes(&g, &sk, &p, 0, 2, 0.005);
+        let legs = &r[0].1;
+        assert_eq!(legs.iter().map(|l| l.kind).collect::<Vec<_>>(), vec![1, 2, 1]);
+        assert!((legs[1].perc - walk).abs() < 1e-5 && legs[1].st_from == 1 && legs[1].st_to == 1);
+        assert_eq!((legs[0].change, legs[2].change), (0.0, 2.0));
+        let total: f32 = legs.iter().map(|l| l.perc + l.wait_perc + l.change).sum();
+        assert!((total - sk.r[2]).abs() < 1e-4, "the legs add up to the strategy: {total}");
     }
 
     /// T-161: stations of one complex are walking transfers whatever the distance, costed like any

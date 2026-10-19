@@ -60,10 +60,15 @@ Generate **total** all-mode trips, then let the player's network earn rail's sha
 a dollar [T-378], damped by the trip's length as every trip is ([demand-mode.md](demand-mode.md) 4.3,
 T-495): 0.10 x sqrt(60 / T) per perceived minute, T the car's perceived minutes over the zone
 pair's distance, even across a sea where no car goes (so rail against air never depends on it), so about 0.058 at 3 hours by car and 0.028 at 13. The scale covers the whole
-rail trip: each zone's access weights (built at 0.10, 5.3) are raised to the power of the pair's
-scale over 0.10, so a long walk to the station weighs less on a long trip as well. On the
-market's own costs rail then holds about 93%, 73%, 48% and 28% of rail and air at 2, 3, 4 and 5
-hours on the train.
+rail trip, access included. Rail's cost is chosen as in the local layers (T-718, demand-mode.md
+4.3, T-710): the pair's riders spread over its station pairs (up to 8 access stations at each end)
+by their whole cost, access and egress included, at the station choice's scale for the zones'
+distance (0.33 a perceived minute from 12 km, so nearly every pair), softened past 60 minutes by
+sqrt(60 / T) with T the car's perceived minutes (`rel_soft`: 0.19 at 3 hours by car, 0.12 at 8),
+so a long trip spreads over more of its stations, and rail is priced at that logsum before the
+damped mode choice. Each zone's access weights (built at 0.10, 5.3) are taken to
+that scale by raising them to the power of the scale over 0.10. On the market's own costs rail
+then holds about 93%, 73%, 48% and 28% of rail and air at 2, 3, 4 and 5 hours on the train.
 
 - *Car*: 15 minutes plus 1.25 times the great-circle distance at 85 km/h, plus 15 cents a road km
   and the destination's parking (the local rule, docs/demand-mode.md 4.3, baked into the market pack's
@@ -126,7 +131,8 @@ station a cost that depends on the end:
   (`d_drop`), since the traveller has no car there.
 
 A site's access at each end is its walks (the mean of their weights at 0.10 a minute, as
-before rides) nested with its zone's rides at the station choice's scale (0.2 per minute), so a
+before rides) nested with its zone's rides at the station choice's scale from 12 km (0.33 per
+minute, T-718), so a
 ride dearer than the walk adds little, and a site beyond every walk is reached by its rides alone.
 Zones that only a ride reaches are served (5.1), so a lone intercity station draws on everyone
 within the ride's reach. Player-built feeder lines take part in regional routing as before.

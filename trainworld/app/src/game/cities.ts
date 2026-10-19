@@ -104,8 +104,13 @@ export function worldToLonLat(x: number, y: number): [number, number] {
  * not a name for the place: for that see `cityWithin` and `placeAt` in game/zones.ts). */
 export function cityNear(lon: number, lat: number): CityId {
   const cosLat = Math.cos(lat * Math.PI / 180);
-  const dist = (c: City) => Math.hypot((lon - c.center[0]) * cosLat, lat - c.center[1]);
-  return [...CITIES].sort((a, b) => dist(a) - dist(b))[0].id;
+  // a scan, not a sort: it runs on every map move (localTime's shiftAt) over every registered zone
+  let best = CITIES[0], bd = Infinity;
+  for (const c of CITIES) {
+    const d = Math.hypot((lon - c.center[0]) * cosLat, lat - c.center[1]);
+    if (d < bd) { bd = d; best = c; }
+  }
+  return best.id;
 }
 
 /** T-318: how far from a zone's centre a place still counts as in it while its boundary is not

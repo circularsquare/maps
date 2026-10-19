@@ -207,7 +207,7 @@ function LineToday({ l, st }: { l: LineInput; st: LineStats }) {
         <PurposeSplit scope={[{ line: l.id }]} unit="riders" />
         <li data-tip={`Fares ${money(d.fares)} less running cost ${money(run)} for the trains: ${money(d.fares - run)} net`}>
           <span class="grow">Profit</span>
-          <span class="val">{money(d.fares)} − <span class="crowd-bad">{money(run)}</span></span>
+          <span class="val">{money(d.fares)} −<span class="crowd-bad">{money(run)}</span></span>
         </li>
         {d.fullTrains > 0 && <Row label="Trains leaving full"><span data-tip={`${count(d.fullTrains)}/${count(d.trains)} trains left full`}>{count(d.fullTrains)}/{count(d.trains)}</span></Row>}
         <li data-tip={`${count(d.leftBehind)} of the ${count(d.riders + d.leftBehind)} riders who wanted a train were left on the platform by a full one`}>

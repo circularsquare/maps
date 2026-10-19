@@ -558,8 +558,9 @@ notes/T-420.md has the tables.
   1.5-2.5 times a minute aboard and a long wait at home before a known departure less. The
   crowding penalty's shape is from that literature too, but it starts only at 70% of crush (Anita,
   T-710; the literature starts it where the seats run out, 27.5% of crush at 44 seats and 160
-  places a car); riders in Tokyo or Mumbai tolerate crowding very differently. A change has no penalty beyond its wait and walk (Anita, T-557), where the
-  literature puts 5-15 perceived minutes on one. Why it may not carry over: where trains are
+  places a car); riders in Tokyo or Mumbai tolerate crowding very differently. A change costs a
+  fixed 2 perceived minutes beyond its wait and walk (Anita, T-717), where the literature puts
+  5-15 perceived minutes on one, wait and walk often included. Why it may not carry over: where trains are
   sparse and timetabled (rural lines, intercity) riders plan for the departure and the half
   headway overstates the wait, while on unreliable or exposed platforms a minute feels longer.
   Check: the deep calibration's fit on station entries, where a wait weight shows up as too much
@@ -713,15 +714,16 @@ notes/T-420.md has the tables.
   stations; very large hubs (Shinjuku, Châtelet) have transfers over much longer underground walks.
 - **Complexes as transfer points** (T-161, with the player's links, T-197). Any two stations of a
   complex are a walking transfer however far apart, costed like every walk between stations:
-  centre-to-centre distance x 1.3 detour at 1.2 m/s, weighted 1.39, plus the boarding's usual
-  wait, with no fixed penalty for the walk or the change (T-557). Set by judgement
-  to agree with the existing walks, not fitted; on New York's real save it moves nothing (every
-  complex's demand stations are within the 300 m walk already). Why it may not carry over: in
-  deep, crowded hubs (Shinjuku, Châtelet, Moscow's linked stations, London's Bank) a long
-  interchange is slower than 1.2 m/s on the straight line x 1.3 (stairs, escalators, crowds), and
-  riders weigh it more heavily. With no change penalty, a change across a platform costs only its
-  wait, as in a cross-platform design (Hong Kong, Singapore); riders elsewhere may dislike
-  changing more than its minutes (the literature's 5-15 perceived minutes a change). Check: published
+  the distance between the platforms' centres (snapshot stations; within one demand station too,
+  T-717) x 1.3 detour at 1.2 m/s, weighted 1.39, plus the boarding's usual wait and the change's
+  fixed 2 perceived minutes (Anita, T-717: "mostly like the time it takes to walk between the
+  centers of the stations"). Set by judgement to agree with the existing walks, not fitted. Why it
+  may not carry over: in deep, crowded hubs (Shinjuku, Châtelet, Moscow's linked stations,
+  London's Bank) a long interchange is slower than 1.2 m/s on the straight line x 1.3 (stairs,
+  escalators, crowds, levels the plan view does not see), and riders weigh it more heavily. A
+  change across a platform costs its wait and the fixed 2, as in a cross-platform design (Hong
+  Kong, Singapore); riders elsewhere may dislike changing more than that (the literature's 5-15
+  perceived minutes a change). Check: published
   interchange times for a few big hubs (London's TfL interchange walk times, Tokyo station transfer
   guides) against what the rule gives for the same platforms.
 

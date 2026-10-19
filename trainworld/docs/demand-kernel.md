@@ -78,20 +78,24 @@ works on two levels:
    station's walk is searched once per position (0.6-1.2 ms a station: opening the real New York
    network's 867 stations costs 0.5-0.6 s native and 1.0 s in WASM, once per worker; an edit
    searches only its new or moved stations and costs what it did, 31 ms in WASM with or without).
-3. **Access subzones**: the cells of one zone that share their nearest station. Each carries its
-   perceived walk to each of its stations, averaged over its cells as the mode choice weighs them
-   (a logsum at its 0.10 scale: the walk's cost grows faster than its length, and the near cells
-   carry most of the rail), used at both ends of a trip. Cells with no station within 4 km are in
-   no subzone: their commuters drive or walk. 2,750 subzones on the hand-made network, 5,032 on New
-   York's real one (2,056 and 3,702 with the 2.5 km edge before T-090); access and subzones
-   together are rebuilt on every edit in 16-27 ms on the hand-made network and ~57 ms on the real
-   one in WASM.
+3. **Access subzones**: the cells of one zone that share their nearest station and whose walk to it
+   falls in the same 15-minute band (`band_min`, Anita, T-720: without bands one subzone on a short
+   line spanned walks of 1 to 30 minutes and overstated rail 7-21%; notes/T-720.md). Each carries
+   its perceived walk to each of its stations, averaged over its cells as the mode choice weighs
+   them (a logsum at its 0.10 scale: the walk's cost grows faster than its length, and the near
+   cells carry most of the rail), used at both ends of a trip. Cells with no station within 4 km
+   are in no subzone: their commuters drive or walk. 6,797 subzones on New York's real network
+   (4,450 without bands), which takes its commute pass from about 1.5 to 2.8 s native; the
+   everyday pass is over its samples and barely changes. Access and subzones together are rebuilt
+   on every edit in 16-27 ms on the hand-made network and ~57 ms on the real one in WASM (before
+   the bands).
 4. **Station-to-station times**: one reverse strategy search per destination station over station
    nodes plus one node per stop per direction per line (T-069). At each station, useful lines
    share their departure frequency: boarding costs the wait (half the combined headway, in plain
    minutes: T-585) plus their frequency-weighted downstream cost.
-   A change has no penalty of its own (Anita, T-557): it costs its wait and any walk between
-   platforms (`transfer_min` 0). A line joins only if it improves expected trip cost;
+   A change of trains costs a fixed 2 perceived minutes (`transfer_min`, Anita, T-717), its wait
+   and the walk between the two platforms' centres (below); the first boarding pays neither the
+   fixed cost nor a platform walk. A line joins only if it improves expected trip cost;
    wrong branches and off, slow, expensive or crowded alternatives add no useful frequency when
    they worsen that cost. Lines are offered to a station cheapest first by their cost from
    boarding, which includes the extra wait where full trains leave riders behind (step 7): a full
@@ -111,11 +115,17 @@ works on two levels:
    the clock worker sends each constructed station's complex with the snapshot (game/complexes.ts
    over constructed stations only, with the player's links, T-197; `DemandApi.set_complexes`), and
    a rider leaving a train at one may walk to any other demand station of the same complex however
-   far, at the same cost as any walking transfer: the centre-to-centre distance x 1.3 detour at
-   1.2 m/s, weighted 1.39, then the boarding's usual wait. No fixed penalty, for a walk or a
-   change: platforms of one demand station (side by side or stacked) cost no walk, a walk of 120 m
-   costs 3 perceived minutes more than a change across the platform and a linked pair 1 km apart
-   25 more. The members stay separate demand stations joined by walk edges rather
+   far, at the same cost as any walking transfer: from the platform left to the other station's
+   position, x 1.3 detour at 1.2 m/s, weighted 1.39, then the boarding's usual wait and the
+   change's fixed 2 minutes. **Walks between platforms** (T-717): a demand station keeps each
+   stop's platform (its snapshot station's position, `Network::stop_x`), and a change there walks
+   from the platform arrived at (or the station's position, after a walk from another station) to
+   the platform of the train taken, at the same speed and weight. Riders take the first useful
+   train, so the search adds the expected walk over the departures pooled there, by frequency, to
+   the arrival's cost (`platform_walk`), and which lines join the pool does not depend on the
+   platform arrived at; the trip explorer shows each route's own walk. A change across one
+   platform walks nothing, platforms 80 m apart cost 2.0 perceived minutes, 120 m 3.0 and a linked
+   pair 1 km apart 25, each with the fixed 2. The members stay separate demand stations joined by walk edges rather
    than one merged station: each keeps its own catchment and position, a long link is not a free
    teleport, and transfers stay counted platform to platform for the complex map (T-176). The
    trip explorer shows such a change as a walk between the two stations. On the real New York save

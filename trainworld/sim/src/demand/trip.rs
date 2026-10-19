@@ -35,7 +35,7 @@ const ROUTE_MIN: f32 = 0.005;
 const MAX_ROUTES: usize = 8;
 
 /// Numbers in the answer's head, per station pair, and per leg (`DemandApi::trip`).
-pub const HEAD: usize = 37;
+pub const HEAD: usize = 41;
 pub const PAIR_LEN: usize = 14;
 pub const LEG_LEN: usize = 12;
 
@@ -97,8 +97,7 @@ fn walk_cost(api: &DemandApi, i: usize, j: usize) -> f32 {
 /// The choice for subzones `u` (home) and `v` (work) with period parameters `p` and strategies
 /// `sk` (searched at least towards `v`'s egress stations). Same expressions, same order, same
 /// f32 results as `kernel::mode_choice`'s pair loop.
-pub(crate) fn pair_choice(api: &DemandApi, p: &Params, sk: &Skims, u: usize, v: usize) -> PairChoice {
-    let sz = api.sz.as_ref().expect("a network with subzones");
+pub(crate) fn pair_choice(api: &DemandApi, sz: &Subzones, p: &Params, sk: &Skims, u: usize, v: usize) -> PairChoice {
     let z = &api.z;
     let s = sk.s;
     let (i, j) = (sz.zone[u] as usize, sz.zone[v] as usize);
@@ -214,15 +213,16 @@ pub(crate) fn pair_choice(api: &DemandApi, p: &Params, sk: &Skims, u: usize, v: 
 /// The everyday layer's choice (T-586, T-201) for purpose inputs `ev`, home subzone `u` and
 /// activity subzone `v`, outward: the same expressions and order as `EverydayApi::pass`, on the
 /// subzone pair's mean distance (the cells' when no sample joins them), with the cells' own walk
-/// share, of which rail takes its share as the views have it.
-pub(crate) fn everyday_choice(ev: &TripInputs, sk: &Skims, u: usize, v: usize, cells_m: f32) -> PairChoice {
+/// share, of which rail takes its share as the views have it. With `cells` (`cell_subzones`), the
+/// two cells' own distance and walk factor.
+pub(crate) fn everyday_choice(ev: &TripInputs, sz: &Subzones, sk: &Skims, u: usize, v: usize, cells_m: f32, cells: bool) -> PairChoice {
     let api = ev.engine;
     let p = ev.p;
-    let sz = api.sz.as_ref().expect("a network with subzones");
     let z = &api.z;
     let s = sk.s;
     let (i, j) = (sz.zone[u] as usize, sz.zone[v] as usize);
-    let distance = ev.pair.map_or(cells_m, |x| x.0);
+    let distance = if cells { cells_m } else { ev.pair.map_or(cells_m, |x| x.0) };
+    let walk_factor = if cells { ev.walk_factor_cells } else { ev.walk_factor };
     // T-710: the pair's distance band, as the everyday pass takes it
     let (th, off) = p.band(p.band_of_d2(distance * distance));
     let ends = |r: std::ops::Range<usize>| {
@@ -258,7 +258,7 @@ pub(crate) fn everyday_choice(ev: &TripInputs, sk: &Skims, u: usize, v: usize, c
     let road_free = car + fixed;
     let park = fixed + (1.0 - free) * paid;
     let road = car + park;
-    let cw = p.walk_trip_cost(distance * ev.walk_factor / 1000.0);
+    let cw = p.walk_trip_cost(distance * walk_factor / 1000.0);
     let why = if m_u + m_v > p.pair_walk_max {
         WALKS_TOO_LONG
     } else if sum < 1e-30 {
@@ -345,6 +345,8 @@ pub(crate) struct Leg {
     pub wait_perc: f32,
     /// stops ridden
     pub stops: u32,
+    /// a ride's fixed cost of changing onto it (`Params::transfer_min`; 0 on the first ride)
+    pub change: f32,
 }
 
 /// Every route of the strategy from station `a` to station `t` carrying at least `min_share` of
@@ -363,7 +365,7 @@ pub(crate) fn routes(g: &Graph, sk: &Skims, p: &Params, a: usize, t: usize, min_
     }
     let mut legs = vec![];
     let at = At { g, p, next, board, cn: &sk.change[slot as usize], rep: &rep, t, min_share };
-    walk(&at, a, 1.0, &mut legs, &mut out);
+    walk(&at, a, None, 1.0, &mut legs, &mut out);
     out.sort_by(|x, y| y.0.partial_cmp(&x.0).unwrap());
     out
 }
@@ -380,8 +382,9 @@ struct At<'a> {
     min_share: f32,
 }
 
-/// From node `v`: a station, or a change node (T-575) boarding at its station.
-fn walk(at: &At, v: usize, share: f32, legs: &mut Vec<Leg>, out: &mut Vec<(f32, Vec<Leg>)>) {
+/// From node `v`: a station, or a change node (T-575) boarding at its station; `came` the route
+/// node the rider left by an alighting or a walk to it, None at the trip's start.
+fn walk(at: &At, v: usize, came: Option<usize>, share: f32, legs: &mut Vec<Leg>, out: &mut Vec<(f32, Vec<Leg>)>) {
     let At { g, p, next, board, cn, rep, t, min_share } = *at;
     if v == t {
         out.push((share, legs.clone()));
@@ -401,12 +404,16 @@ fn walk(at: &At, v: usize, share: f32, legs: &mut Vec<Leg>, out: &mut Vec<(f32, 
     }
     let headway = 60.0 / sum;
     let wait_min = headway / 2.0;
+    let arrived = came.map(|c| arrival_at(g, c, v));
     for e in edges {
         let r0 = g.adj_to[e] as usize;
         let sh = share * acc(r0 - s) / sum;
         if acc(r0 - s) == 0.0 || sh < min_share {
             continue;
         }
+        // T-717: a change walks to this train's platform, as part of the walk into the station if
+        // there was one
+        let plat = arrived.map_or(0.0, |a| platform_walk_to(p, a, g.rn_dx[r0 - s], g.rn_dy[r0 - s]));
         let (mut r, mut min, mut perc, mut fare, mut stops) = (r0, 0.0f32, 0.0f32, 0.0f32, 0u32);
         let mut nx = next[r];
         while nx != NONE && (nx as usize) >= s && (nx as usize) < g.n && stops as usize <= g.n {
@@ -421,20 +428,43 @@ fn walk(at: &At, v: usize, share: f32, legs: &mut Vec<Leg>, out: &mut Vec<(f32, 
         if nx == NONE {
             continue;
         }
+        // T-717: a change walks to this train's platform, within the walk into the station if
+        // there was one
+        let mut kept = None;
+        let mut pushed = 0;
+        if plat > 0.0 {
+            match legs.last_mut() {
+                Some(l) if l.kind == 2 && l.st_to as usize == v => {
+                    kept = Some(*l);
+                    l.min += plat / p.w_xfer;
+                    l.perc += plat;
+                    l.rn_to = (r0 - s) as u32;
+                }
+                _ => {
+                    let c = came.unwrap();
+                    legs.push(Leg { kind: 2, rn_from: (c - s) as u32, rn_to: (r0 - s) as u32, st_from: v as u32, st_to: v as u32, min: plat / p.w_xfer, perc: plat, fare: 0.0, wait_min: 0.0, wait_perc: 0.0, stops: 0, change: 0.0 });
+                    pushed += 1;
+                }
+            }
+        }
         let here = g.rn_station[r - s];
         // and the extra wait where full trains leave riders behind (T-188)
         let left = g.rn_left[r0 - s];
-        legs.push(Leg { kind: 1, rn_from: (r0 - s) as u32, rn_to: (r - s) as u32, st_from: v as u32, st_to: here, min, perc, fare, wait_min: wait_min + left, wait_perc: wait_min + left, stops });
-        let mut pushed = 1;
+        let change = if came.is_some() { p.transfer_min } else { 0.0 };
+        legs.push(Leg { kind: 1, rn_from: (r0 - s) as u32, rn_to: (r - s) as u32, st_from: v as u32, st_to: here, min, perc, fare, wait_min: wait_min + left, wait_perc: wait_min + left, stops, change });
+        pushed += 1;
         let to = if (nx as usize) < s { nx } else { cn.st[nx as usize - g.n] };
         if to != here {
             // a walking transfer from this route node to a station nearby
             let cost = (g.adj_off[r] as usize..g.adj_off[r + 1] as usize).find(|&k| g.adj_to[k] == to).map_or(0.0, |k| g.adj_cost[k]);
-            legs.push(Leg { kind: 2, rn_from: (r - s) as u32, rn_to: rep[to as usize], st_from: here, st_to: to, min: cost / p.w_xfer, perc: cost, fare: 0.0, wait_min: 0.0, wait_perc: 0.0, stops: 0 });
+            legs.push(Leg { kind: 2, rn_from: (r - s) as u32, rn_to: rep[to as usize], st_from: here, st_to: to, min: cost / p.w_xfer, perc: cost, fare: 0.0, wait_min: 0.0, wait_perc: 0.0, stops: 0, change: 0.0 });
             pushed += 1;
         }
-        walk(at, nx as usize, sh, legs, out);
+        walk(at, nx as usize, Some(r), sh, legs, out);
         legs.truncate(legs.len() - pushed);
+        if let Some(l) = kept {
+            *legs.last_mut().unwrap() = l;
+        }
     }
 }
 
@@ -449,6 +479,76 @@ impl DemandApi {
             }
         }
         best.1
+    }
+
+    /// T-720: cells `o` (home, in subzone `u`) and `d` (in `v`) as subzones 0 and 1 of their own,
+    /// as one subzone per cell (`Params::band_min` -1) builds them: each cell's own walk to its
+    /// `K` nearest stations, and the home's rides those of `u`. Drives go between the cells.
+    fn cell_subzones(&self, p: &Params, o: usize, u: usize, d: usize, v: usize) -> Subzones {
+        let (sz, city) = (self.sz.as_ref().unwrap(), &self.city);
+        let svc = self.svc.as_ref().unwrap();
+        let cut = p.walk_cutoff_m;
+        let walks = |c: usize| {
+            let (x, y) = (city.x[c], city.y[c]);
+            let mut w: Vec<(f32, u32, f32)> = vec![];
+            for s in 0..svc.st_x.len() {
+                let (sx, sy) = (svc.st_x[s], svc.st_y[s]);
+                let straight = ((sx - x).powi(2) + (sy - y).powi(2)).sqrt();
+                if straight > cut {
+                    continue;
+                }
+                let m = p.routes.as_ref().map_or(straight, |r| r.walk_to_cell(sx, sy, cut, c as u32, x, y));
+                if m <= cut {
+                    w.push((p.access_cost(m), s as u32, m));
+                }
+            }
+            w.sort_by(|a, b| a.2.total_cmp(&b.2));
+            w.truncate(K);
+            w
+        };
+        let home = self.pop()[o];
+        let nocar = p.nocar.as_ref().map_or(0.0, |n| if home > 0.0 { n[o].min(1.0) } else { 0.0 });
+        let mut cz = Subzones {
+            n: 2,
+            zone: vec![sz.zone[u], sz.zone[v]],
+            pop: vec![home, 0.0],
+            jobs: vec![0.0, self.jobs()[d]],
+            cx: vec![city.x[o], city.x[d]],
+            cy: vec![city.y[o], city.y[d]],
+            nocar: vec![nocar, 0.0],
+            acc_off: vec![0],
+            acc_mid: vec![],
+            acc_st: vec![],
+            acc_w: vec![],
+            acc_d: vec![],
+            acc_t: vec![],
+            home_off: vec![0, 0, 0],
+            home_zones: vec![],
+            zo_off: vec![],
+            zo: vec![],
+            zd_off: vec![],
+            zd: vec![],
+            cell: vec![],
+            mem_off: vec![0, 1, 2],
+            mem: vec![o as u32, d as u32],
+        };
+        for (c, rides) in [(o, sz.ride(u)), (d, 0..0)] {
+            for (w, st, m) in walks(c) {
+                cz.acc_st.push(st);
+                cz.acc_w.push(w);
+                cz.acc_d.push(m);
+                cz.acc_t.push(p.walk_min(m));
+            }
+            cz.acc_mid.push(cz.acc_st.len() as u32);
+            for k in rides {
+                cz.acc_st.push(sz.acc_st[k]);
+                cz.acc_w.push(sz.acc_w[k]);
+                cz.acc_d.push(sz.acc_d[k]);
+                cz.acc_t.push(sz.acc_t[k]);
+            }
+            cz.acc_off.push(cz.acc_st.len() as u32);
+        }
+        cz
     }
 
     /// The answer for cells `o` and `d` on period graph `g` with parameters `p` (`trip`'s layout),
@@ -504,23 +604,37 @@ impl DemandApi {
             h[35] = rk as f64;
             h[17] = pw as f64;
             h[19] = (1.0 - pw) as f64;
+            (h[37], h[39], h[40]) = (h[17], h[19], -1.0);
             h[26] = if u == NONE { NO_STATION_AT_START } else { NO_STATION_AT_END } as f64;
             h[31] = 1.0;
             return h;
         }
         let (u, v) = (u as usize, v as usize);
-        let sz = self.sz.as_ref().unwrap();
+        let grouped = self.sz.as_ref().unwrap();
+        // T-720: the trip is the two cells' own; the subzones' answer is what the views count
+        let cz = self.cell_subzones(p, o, u, d, v);
         // strategies towards the destination's egress stations only (each search is independent,
         // so they are the model's, T-119)
         let mut want = vec![false; g.n_st];
-        for k in sz.walk(v) {
-            want[sz.acc_st[k] as usize] = true;
+        for k in grouped.walk(v) {
+            want[grouped.acc_st[k] as usize] = true;
+        }
+        for k in cz.walk(1) {
+            want[cz.acc_st[k] as usize] = true;
         }
         let sk = skims_for(g, p, &want);
-        let pc = match m {
-            Model::Commute => pair_choice(self, p, &sk, u, v),
-            Model::Everyday(ev) => everyday_choice(ev, &sk, u, v, h[6] as f32),
+        let cells_m = h[6] as f32;
+        let choose = |zs: &Subzones, a: usize, b: usize, cells: bool| match m {
+            Model::Commute => pair_choice(self, zs, p, &sk, a, b),
+            Model::Everyday(ev) => everyday_choice(ev, zs, &sk, a, b, cells_m, cells),
         };
+        let gc = choose(grouped, u, v, false);
+        h[37] = gc.pw as f64;
+        h[38] = gc.r as f64;
+        h[39] = (1.0 - gc.pw - gc.r).max(0.0) as f64;
+        h[40] = grouped.walk(u).min_by(|&a, &b| grouped.acc_w[a].total_cmp(&grouped.acc_w[b])).map_or(-1.0, |k| grouped.acc_t[k] as f64);
+        let (sz, u, v) = (&cz, 0, 1);
+        let pc = choose(sz, u, v, true);
         let rail = pc.r;
         h[7] = pc.d_m as f64;
         h[8] = pc.pw as f64;
@@ -584,7 +698,7 @@ impl DemandApi {
         for (pi, share, legs) in &all {
             out.extend([*pi as f64, *share as f64, legs.len() as f64]);
             for l in legs {
-                out.extend([l.kind as f64, l.rn_from as f64, if l.rn_to == NONE { -1.0 } else { l.rn_to as f64 }, l.st_from as f64, l.st_to as f64, l.min as f64, l.perc as f64, l.fare as f64, l.wait_min as f64, l.wait_perc as f64, l.stops as f64, 0.0]);
+                out.extend([l.kind as f64, l.rn_from as f64, if l.rn_to == NONE { -1.0 } else { l.rn_to as f64 }, l.st_from as f64, l.st_to as f64, l.min as f64, l.perc as f64, l.fare as f64, l.wait_min as f64, l.wait_perc as f64, l.stops as f64, l.change as f64]);
             }
         }
         out
@@ -596,10 +710,12 @@ impl DemandApi {
     /// The trip explorer (T-195): one trip from (ox, oy) to (dx, dy), pack frame, as a commute
     /// from a home at the first to work at the second, in solved period `q`. Packed, f64:
     ///
+    /// Every figure is the two cells' own trip (T-720: each cell's own walks to stations, the drive
+    /// between the cells), except slots 37-40, the subzones' answer the demand views count.
+    ///
     /// `HEAD` numbers: status (1 answered; 0 period `q` not solved here; -1 a point has no cell
     /// within `NEAR_CELL_M`), the period's crowding round, the two cells, their subzones (-1 none),
-    /// the straight line between the cells and the drive's distance (between the subzones'
-    /// centres), metres; the walk share; the drive's real and perceived minutes, its parking and
+    /// the straight line between the cells and the drive's distance, metres; the walk share; the drive's real and perceived minutes, its parking and
     /// its whole cost (perceived); rail offered (1/0), rail's cost (the logsum, perceived, -1 if
     /// none), rail's share of the trips that do not walk, rail's utility against the road; the
     /// chance of walking, rail and driving; the cheapest perceived walk at each end; the base
@@ -608,7 +724,9 @@ impl DemandApi {
     /// riders on routes not listed; the car's ownership cost per trip (perceived minutes, T-620),
     /// which the whole cost includes and the parking leaves out; walking the whole way, real
     /// minutes (T-628); an everyday purpose's subzone pair's trips a day (0: a commute, or no
-    /// sample joins the two subzones); the drive's length by road, km, and the weight a minute of walking the whole way counts at (T-699).
+    /// sample joins the two subzones); the drive's length by road, km, and the weight a minute of walking the whole way counts at (T-699);
+    /// the subzones' chance of walking, rail and driving, and their cheapest walk at the home end,
+    /// real minutes (-1 none).
     ///
     /// Then per station pair, biggest share first, `PAIR_LEN` numbers: access and egress demand
     /// stations, a route node at each (-1 none), the access walk's straight-line metres and
@@ -620,9 +738,11 @@ impl DemandApi {
     /// fixed cost and the parking or drop-off at the station).
     ///
     /// Then per route, biggest first: its station pair's index, its share of the trip's rail
-    /// riders, its legs; then `LEG_LEN` numbers a leg: kind (1 ride, 2 walk between stations),
-    /// route nodes from and to, demand stations from and to, real minutes, perceived minutes,
-    /// distance fare (perceived minutes), wait (real and perceived minutes), stops ridden, 0.
+    /// riders, its legs; then `LEG_LEN` numbers a leg: kind (1 ride, 2 walk between stations or
+    /// between the platforms of one, T-717), route nodes from and to, demand stations from and
+    /// to, real minutes, perceived minutes, distance fare (perceived minutes), wait (real and
+    /// perceived minutes), stops ridden, a ride's fixed cost of the change onto it (perceived
+    /// minutes, 0 on the first ride).
     pub fn trip(&self, q: usize, ox: f32, oy: f32, dx: f32, dy: f32) -> Vec<f64> {
         let mut h = vec![0f64; HEAD];
         let Some(st) = self.period(q) else { return h };
@@ -772,7 +892,7 @@ mod tests {
                 let ev = e.trip_inputs(kind, q, c, d).unwrap();
                 assert!(ev.pair.is_some());
                 let cells_m = (api.city.x[c] - api.city.x[d]).hypot(api.city.y[c] - api.city.y[d]);
-                let pc = everyday_choice(&ev, &sk, sz.cell[c] as usize, sz.cell[d] as usize, cells_m);
+                let pc = everyday_choice(&ev, sz, &sk, sz.cell[c] as usize, sz.cell[d] as usize, cells_m, false);
                 worst = worst.max((pc.r - pr).abs());
                 rail += pc.r;
                 if pc.why == RAIL_OFFERED {
@@ -835,7 +955,7 @@ mod tests {
                         if sz.jobs[v] <= 0.0 || z.jobs[j] <= 0.0 {
                             continue;
                         }
-                        let pc = pair_choice(&api, p, &sk, u, v);
+                        let pc = pair_choice(&api, sz, p, &sk, u, v);
                         if pc.why != RAIL_OFFERED {
                             continue;
                         }
@@ -1043,7 +1163,7 @@ mod tests {
                 if sz.jobs[w] <= 0.0 || z.jobs[jz] <= 0.0 {
                     continue;
                 }
-                let pc = pair_choice(&a, &st.p, &sk, u, w);
+                let pc = pair_choice(&a, sz, &st.p, &sk, u, w);
                 if pc.why != RAIL_OFFERED {
                     continue;
                 }

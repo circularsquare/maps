@@ -28,6 +28,11 @@ pub struct Network {
     /// (game/complexes.ts, including the player's links, T-197), and a rider may change between any
     /// two of them on foot whatever the distance (`kernel::build_graph`). Empty: no complexes.
     pub st_group: Vec<u32>,
+    /// Where each stop's platform is (parallel to `line_stops`): the snapshot station the stop is
+    /// at, which for a demand station of several merged platforms is not its mean position. A
+    /// change of trains walks between platforms (T-717). Empty: every platform at its station.
+    pub stop_x: Vec<f32>,
+    pub stop_y: Vec<f32>,
 }
 
 #[derive(Clone, Copy)]
@@ -128,6 +133,8 @@ pub fn synth_network() -> Network {
         line_seats: vec![],
         line_crush: vec![],
         st_group: vec![],
+        stop_x: vec![],
+        stop_y: vec![],
     };
     for &(name, kind, pts) in LINES {
         let mut stops: Vec<u32> = vec![];

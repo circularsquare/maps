@@ -1546,6 +1546,8 @@ pub(crate) struct TripInputs<'a> {
     pub no_rail: (f32, f32),
     /// The walk around water between the subzones' zones (T-275), as the pass weighs it.
     pub walk_factor: f32,
+    /// The same between the two cells (T-720: the explorer's own trip).
+    pub walk_factor_cells: f32,
 }
 
 impl EverydayApi {
@@ -1566,7 +1568,8 @@ impl EverydayApi {
             Some(s) if u != NONE && v != NONE => self.walk_factor_sz(s, u as usize, v as usize),
             _ => self.walk_factor(c, d),
         };
-        Some(TripInputs { engine: &self.engine, g: &st.g, p: &st.p, round: st.round, pair, no_rail: self.no_rail(c, d, self.distance(c, d)), walk_factor })
+        let walk_factor_cells = self.walk_factor(c, d);
+        Some(TripInputs { engine: &self.engine, g: &st.g, p: &st.p, round: st.round, pair, no_rail: self.no_rail(c, d, self.distance(c, d)), walk_factor, walk_factor_cells })
     }
     /// One sample of every subzone pair: its purpose, home and activity cells, and the pair's
     /// rail chance outward in period `q` (trip.rs's check).

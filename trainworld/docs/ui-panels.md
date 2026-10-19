@@ -222,7 +222,11 @@ Cash (always the whole network's); yesterday and today (fares, running trains, n
 construction, net), headed by the Lines and Stations tabs' place-or-world toggle (T-332, one setting
 for all three): with the place on, these figures and History are that region's (T-531; the
 place's hover adds how a region's money is counted), with the globe the network's. A region with
-nothing in it shows $0. History
+nothing in it shows $0. Money figures
+in panels have three significant figures from a million up ("$22.4M", "$1.15B", "$233M"; thousands
+as "$450k"; under $500 "$0") and a negative one is in the alert red (`ui/MoneyText.tsx`, `money` in
+`game/format.ts`) [T-722]; the cash (top bar and this tab) has four ("$11.36B", "$893.6M"; to the dollar under a million) and is red
+with its minus when negative; hovers may give more. History
 [T-447, `ui/MoneyHistory.tsx`]: a Days / Hours switch (Days by default, kept while the game is
 open) over three charts. The first has fares (accent) and running costs (grey) as lines, scaled to
 the larger of the two, and one-off costs (new trains and construction) as pale bars on the same

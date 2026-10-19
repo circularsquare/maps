@@ -48,12 +48,14 @@ export function widthFor(ridersPerDay: number, busiest: number): number {
   return W_MIN + (W_MAX - W_MIN) * (busiest > 0 ? Math.min(1, Math.max(0, ridersPerDay) / busiest) : 0);
 }
 
-/** Station use circle area follows riders boarding a day (T-482: origins, transfers or both),
- * capped at STATION_FULL: half T-084's 150,000 boardings plus alightings, so the total's circles
- * keep their size. Platform boxes are unchanged. */
-export const STATION_FULL = 75000;
+/** Station use circle area is proportional to its riders a day (T-482: origins, transfers or both;
+ * T-722, no cap). The radius is `stationHaloRadius(zoom)` times this scale, so STATION_FULL riders
+ * have that radius at any zoom; a circle with any riders is never smaller than STATION_MIN_SCALE of
+ * it, so tiny stations stay visible. 140,000 puts the real New York save's biggest total (Penn
+ * Station's complex, 681,000) at 100 px radius at zoom 13 (Anita: the largest about 200 px across). */
+export const STATION_FULL = 140000, STATION_MIN_SCALE = 0.1;
 export function stationScale(ridersPerDay: number): number {
-  return Math.sqrt(Math.min(1, Math.max(0, ridersPerDay) / STATION_FULL));
+  return ridersPerDay > 0 ? Math.max(STATION_MIN_SCALE, Math.sqrt(ridersPerDay / STATION_FULL)) : 0;
 }
 
 /** Seats and crush load per 20 m car: as ui/inspector/others.tsx (T-083) and

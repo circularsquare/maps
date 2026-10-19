@@ -7,7 +7,7 @@ import { PERIODS, periodAt } from "../game/periods";
 import { useLayoutEffect, useRef, useState } from "preact/hooks";
 import { createLine } from "../game/lineActions";
 import type { JSX } from "preact";
-import { count, distUnit, length, levelLabel, money, moneyExact, perDistance, perKmFrom, shortDistance } from "../game/format";
+import { count, distUnit, length, levelLabel, money, perDistance, perKmFrom, shortDistance } from "../game/format";
 import { inkOn, LEVEL_COLOURS } from "../game/palette";
 import { DEMAND_INDEX, LEVELS, type Level, type LineInput, type StationInput } from "../game/types";
 import { complexes } from "../game/complexView";
@@ -23,6 +23,7 @@ import { crowdClass, crowding, stationsToday, today, todayLoaded, useToday, wait
 import type { DayLedger } from "../workers/protocol";
 import { live } from "../map/live";
 import { Check, Chip, Icon, Row, Segmented, SortHead, Stepper } from "./widgets";
+import { Money } from "./MoneyText";
 import { CitiesList } from "./Cities";
 import { BlueprintBreakdown, BlueprintControls, BlueprintPick } from "./Blueprint";
 import { MoneyHistory } from "./MoneyHistory";
@@ -387,9 +388,9 @@ export function StationsTab() {
       <div class="station-use"><Segmented<StationUseMode>
         options={[
           ["none", "None"],
-          ["origins", <span data-tip="Riders starting a rail trip at the station, per day">Origins</span>],
-          ["transfers", <span data-tip="Riders changing lines at the station, per day">Transfers</span>],
-          ["total", <span data-tip="Every boarding at the station, a day: origins and transfers">Total</span>],
+          ["origins", <span data-tip="Entries per day: riders starting a rail trip at the station">Origins</span>],
+          ["transfers", <span data-tip="Transfers per day: riders changing lines at the station">Transfers</span>],
+          ["total", <span data-tip="Entries and transfers per day: every boarding at the station">Total</span>],
         ]}
         value={d.stationUse}
         onChange={(v) => setDisplay("stationUse", v)}
@@ -428,13 +429,13 @@ const ledgerNet = (d: DayLedger) => d.fares - d.running - d.trains - d.build;
 
 /** T-284: the cash as fares land, to the dollar, as in the top bar. */
 function LiveCash() {
-  return <>{moneyExact(liveMoney.value.cash * 1e6)}</>;
+  return <Money dollars={liveMoney.value.cash * 1e6} cash />;
 }
 
 /** T-284: one figure of today's column as fares land; the network's or a region's (T-531). */
 function TodayCell({ v, zone }: { v: (d: DayLedger) => number; zone: string | null }) {
   const d = regionLedger(zone).today;
-  return <td class="num">{d ? money(v(d) * 1e6) : ""}</td>;
+  return <td class="num">{d ? <Money dollars={v(d) * 1e6} /> : ""}</td>;
 }
 
 /** T-531: how a region's money is counted, in the scope toggle's hover. */
@@ -451,7 +452,7 @@ export function MoneyTab() {
   const prevAll = m.ledger.find((d) => d.day === todayDay - 1) ?? null;
   const prev = zone === null || !prevAll ? prevAll
     : regionLedger(zone).ledger.find((d) => d.day === todayDay - 1) ?? { day: todayDay - 1, fares: 0, running: 0, trains: 0, build: 0 };
-  const cell = (d: DayLedger | null, v: (d: DayLedger) => number) => <td class="num">{d ? money(v(d) * 1e6) : ""}</td>;
+  const cell = (d: DayLedger | null, v: (d: DayLedger) => number) => <td class="num">{d ? <Money dollars={v(d) * 1e6} /> : ""}</td>;
   const f = m.fares;
   return (
     <>
@@ -520,7 +521,7 @@ export function MoneyTab() {
         </Row>
       </ul>
       <ul class="rows">
-        <Row label="Track and stations built">{money(w.money.builtValue)}</Row>
+        <Row label="Track and stations built"><Money dollars={w.money.builtValue} /></Row>
       </ul>
       <CitiesList />
     </>

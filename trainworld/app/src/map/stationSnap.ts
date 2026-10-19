@@ -21,8 +21,7 @@ const MAX_REACH = 400;
 /** Whether a station of `platform` metres at the spot would run into a station already on the
  * track: walking from the spot along the track through joints (stopping at junctions), a station
  * node closer than the two platforms' reaches. */
-export function stationHere(spot: Spot, platform: number, edges: readonly SnapEdge[], nodes: ReadonlyMap<number, SnapNode>, byNode = edgesByNode(edges)): boolean {
-  const byId = new Map(edges.map((e) => [e.id, e]));
+export function stationHere(spot: Spot, platform: number, edges: readonly SnapEdge[], nodes: ReadonlyMap<number, SnapNode>, byNode = edgesByNode(edges), byId: ReadonlyMap<number, SnapEdge> = new Map(edges.map((e) => [e.id, e]))): boolean {
   const e0 = byId.get(spot.edge);
   if (!e0) return false;
   const mine = platform / 2;
@@ -52,11 +51,10 @@ export function stationHere(spot: Spot, platform: number, edges: readonly SnapEd
 /** The indices of `candidates` (spots under the pointer, nearest first) in the order the station
  * tool tries them: a track where the station would not meet another station before one where it
  * would, then blueprint before built, then the track the last station went on (`onLast`), then
- * the nearest. The tool takes the first one the track model accepts (T-671). */
-export function orderOverlapping(candidates: readonly Spot[], platform: number, edges: readonly SnapEdge[], nodes: ReadonlyMap<number, SnapNode>, onLast: ReadonlySet<number>): number[] {
-  const byNode = edgesByNode(edges);
-  const built = new Map(edges.map((e) => [e.id, e.built]));
-  const rank = candidates.map((c) => (stationHere(c, platform, edges, nodes, byNode) ? 4 : 0) + (built.get(c.edge) ? 2 : 0) + (onLast.has(c.edge) ? 0 : 1));
+ * the nearest. The tool takes the first one the track model accepts (T-671). `lay`: the network's
+ * indexes when the caller keeps them (it runs on every pointer move, T-714). */
+export function orderOverlapping(candidates: readonly Spot[], platform: number, edges: readonly SnapEdge[], nodes: ReadonlyMap<number, SnapNode>, onLast: ReadonlySet<number>, lay: Pick<Layout, "byNode" | "byId"> = layoutOf(edges, nodes)): number[] {
+  const rank = candidates.map((c) => (stationHere(c, platform, edges, nodes, lay.byNode, lay.byId) ? 4 : 0) + (lay.byId.get(c.edge)?.built ? 2 : 0) + (onLast.has(c.edge) ? 0 : 1));
   return candidates.map((_, i) => i).sort((a, b) => rank[a] - rank[b] || a - b);
 }
 

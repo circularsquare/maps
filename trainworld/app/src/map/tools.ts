@@ -202,7 +202,7 @@ export class Tools {
     nodeHits.sort((a, b) => a.d - b.d);
     const close = near.filter((c) => c.d <= near[0].d + OVERLAP_PX);
     const spots = close.map((c) => { const h = c.hit as Extract<Snap, { kind: "edge" }>; return { edge: h.edge, frac: fractionAlong(n.edgePts.get(h.edge)!, h.lx, h.ly) }; });
-    const order = close.length > 1 ? orderOverlapping(spots, buildPlatform.peek(), w.edges, w.nodes, this.lastStationTrack()) : close.map((_, i) => i);
+    const order = close.length > 1 ? orderOverlapping(spots, buildPlatform.peek(), w.edges, w.nodes, this.lastStationTrack(), this.layout(w)) : close.map((_, i) => i);
     this.alts = [...nodeHits.slice(0, 3).map((c) => c.hit), ...order.map((i) => close[i].hit as Spot), ...near.slice(close.length, 5).map((c) => c.hit as Spot)];
     return this.alts[0];
   }
@@ -224,9 +224,7 @@ export class Tools {
       if (d < bd) bd = d, start = n.id;
     }
     if (start === null) return out;
-    const byNode = new Map<number, number[]>();
-    for (const e of w.edges) for (const k of [e.a, e.b]) (byNode.get(k) ?? byNode.set(k, []).get(k)!).push(e.id);
-    const edges = new Map(w.edges.map((e) => [e.id, e]));
+    const { byNode, byId: edges } = this.layout(w); // kept per network version: this runs per pointer move
     const todo = [start];
     const seen = new Set(todo);
     while (todo.length && out.size < 2000) {

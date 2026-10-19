@@ -2,7 +2,7 @@
 // placing tag write them the same way, an icon then the value on its display colour.
 
 import { levelLabel, speed } from "../game/format";
-import { bulletShift } from "../ui/bullet";
+import { bulletTextNode } from "../ui/bullet";
 import { inkOn, LEVEL_COLOURS, rgb, speedColour } from "../game/palette";
 import type { Level, LineInput } from "../game/types";
 
@@ -61,10 +61,7 @@ export function lineBullet(l: LineInput, small = false): HTMLSpanElement {
   c.className = small ? "chip sm" : "chip";
   c.style.setProperty("--c", l.colour);
   c.style.setProperty("--ct", inkOn(l.colour));
-  const t = document.createElement("span");
-  t.textContent = l.letter;
-  t.style.transform = bulletShift(l.letter, small ? "sm" : "");
-  c.append(t);
+  c.append(bulletTextNode(l.letter, small ? "sm" : ""));
   return c;
 }
 

@@ -60,8 +60,10 @@ rounds, the market too; notes/T-147.md).
 **The trip explorer** (T-195, `sim/src/demand/trip.rs`, the interface in [ui-inspectors.md](ui-inspectors.md)). One trip
 between two points, as the commute model decides it in each period: `DemandApi.trip(q, from, to)`
 takes the cell nearest each point (within 600 m, else the point is outside the city), reads the
-trip as a commute from a home in the first to work in the second, and answers with the model's
-own numbers for that pair of subzones (4.4 step 5): the drive (real minutes between the subzones' centres, its parking, its perceived cost), the
+trip as a commute from a home in the first to work in the second, and answers for **those two
+cells** as one subzone per cell would (Anita, T-720; `cell_subzones`): each cell's own walk to its
+6 nearest stations, the home's rides those of its subzone, the drive between the cells, and
+otherwise `mode_choice`'s expressions (4.4 step 5): the drive (real minutes, its parking, its perceived cost), the
 rail logsum over every pair of access and egress stations and each pair's share of the trip's
 rail riders, rail's utility against the road and the chance of walking (the whole way, by the
 two zones' distance; shown as one number in a hover), rail and driving. The
@@ -71,17 +73,22 @@ average). Rail is a strategy, not one path: riders spread over the station pairs
 logit and, at each station, over the useful departures by frequency. So the answer also walks the
 destination strategies `assign` loads, from each station pair carrying at least 0.5% of the
 trip's rail riders, and lists every route (a sequence of boardings, with a walk between stations
-where the strategy takes one) carrying at least 0.5%, at most eight, biggest first, each with
-its share, legs, waits (half the combined headway of the useful trains at the station),
-in-vehicle minutes with and without crowding, and distance fare. Strategies are searched towards
+where the strategy takes one, or between the platforms of one station, T-717) carrying at least
+0.5%, at most eight, biggest first, each with its share, legs, waits (half the combined headway of
+the useful trains at the station), in-vehicle minutes with and without crowding, distance fare
+and each change's fixed cost. Strategies are searched towards
 the destination's egress stations only (at most six searches, a few ms; each search is
 independent, so they are the solve's). It changes no state and is answered between stages, like
 the other queries: each solving worker answers for the periods it holds, only from a round that
 all its periods hold (`trip` message, the cells' positions in world metres). A trip whose end has
 no subzone (no station within 4 km), or whose cheapest walks pass `pair_walk_max`, or with no
 connecting service in the period gets no rail; its drive is priced between the two cells.
+The answer also carries the subzones' own chances of walking, rail and driving and their cheapest
+walk at the home end (the head's last four numbers): what the demand views count for the trip,
+which the explorer's hovers give where it differs from the cells' answer.
 
-Checks: over every destination subzone, an origin's rail trips from these pair choices add up to
+Checks: the explorer's walk to a station is the home cell's own, and with one subzone per cell
+its chances equal the subzones' to 1e-4 (`t720.rs`). Over every destination subzone, an origin's rail trips from these pair choices add up to
 the solve's own for that origin subzone, and the station pairs' shares to its station-pair
 matrix, within 1e-6 (f32 summation order) on the synthetic city, free flow and crowded
 (`pair_choice_reproduces_mode_choice`), and within 6e-6 for the three origins of
@@ -96,10 +103,10 @@ St: train 62% (PATH to World Trade Center, then the 1 or a walk). Mineola to Hic
 
 An everyday purpose's trip (T-586, T-201): `EverydayApi.trip(kind, q, from, to)` answers in the
 same layout as the everyday pass chooses, on its own period graph and parameters (its rail and
-walking constants): the subzone pair's mean distance over the purpose's samples (the two cells'
-distance when no sample joins the two subzones) prices the drive, the walk and whether the home end
-may ride, and walking is the two cells' own no-rail share less the share rail takes (the views'
-rule, T-558). The pair's rail chance equals the free-flow solve's to the bit for one sample of
-every pair (`everyday_choice_reproduces_the_pass`). The answer adds the whole walk's real minutes
+walking constants): the two cells' own distance and walks price the drive, the walk and whether
+the home end may ride (the subzones' answer, beside it, takes the subzone pair's mean distance over
+the purpose's samples), and walking is the two cells' own no-rail share less the share rail takes
+(the views' rule, T-558). The subzone pair's rail chance equals the free-flow solve's to the bit
+for one sample of every pair (`everyday_choice_reproduces_the_pass`). The answer adds the whole walk's real minutes
 and the subzone pair's trips a day. The explorer's headline is not this answer but the selection's
 far end summed over the two places (ui-inspectors.md); this answer is its representative trip.

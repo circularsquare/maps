@@ -401,6 +401,8 @@ struct Pair {
     corridor: u32,
     /// the car's perceived minutes even where no car can go, which set the scale (T-495)
     car: f32,
+    /// the station choice's band by the zones' distance (`Params::band`, T-718)
+    band: u8,
 }
 /// T-276: a commute between two zones some station serves: its index in `commutes`, and the
 /// car's perceived minutes from home to work (the local layer's commute rule).
@@ -412,6 +414,8 @@ struct CPair {
     ride: bool,
     /// the rail propensity, with the home place's country's part (`api::country_asc_rail`)
     asc: f32,
+    /// the station choice's band by the zones' distance (`Params::band`, T-718)
+    band: u8,
 }
 /// T-276: the commutes between zones are the local layer's commuters, so they choose as it does.
 fn commute_params() -> Params {
@@ -423,13 +427,41 @@ fn commute_params() -> Params {
 fn market_params() -> Params {
     Params { asc_rail: 0., fare_min: 0., car_own_usd_trip: 0., car_own_usd_km: 0., ..Params::default() }
 }
-/// T-495: the scale of a trip whose car costs `drive` perceived minutes (`Params::mode_beta`), and
-/// the access weights `w` (exp(-beta x access), `add_access`) at that scale, so the damping
-/// reaches the walks and rides to the stations as well as the ride.
-fn damped(p: &Params, drive: f32, w: &[(usize, f32)]) -> (f32, Vec<(usize, f64)>) {
-    let bt = p.mode_beta(drive);
-    let s = (bt / p.beta) as f64;
-    (bt, w.iter().map(|&(st, x)| (st, if s == 1. { x as f64 } else { (x as f64).powf(s) })).collect())
+/// T-718: rail between two zones as the local layers choose it (T-710): the station pairs from
+/// access list `a` to `b` (weights exp(-`beta` x access), `add_access`) at the station choice's
+/// scale `th`, each pair's weight into `terms`. Returns rail's perceived cost, their logsum (the
+/// first boarding's, access and egress included, as the mode choice then damps it, T-495), and the
+/// sum of the weights (0: no route).
+fn rail_logsum(sk: &Skims, fare: f32, a: &[(usize, f32)], b: &[(usize, f32)], beta: f32, th: f32, terms: &mut Vec<(u32, u32, f64)>) -> (f32, f64) {
+    terms.clear();
+    let (s, k) = (sk.s, (th / beta) as f64);
+    let mut top = f64::NEG_INFINITY;
+    for &(sa, wa) in a {
+        if wa <= 0. {
+            continue;
+        }
+        let la = k * (wa as f64).ln();
+        let row = &sk.r[sa * s..(sa + 1) * s];
+        for &(sb, wb) in b {
+            // a rail journey must actually board a train
+            let cost = row[sb] + fare;
+            if sa == sb || wb <= 0. || !cost.is_finite() {
+                continue;
+            }
+            let lw = la + k * (wb as f64).ln() - (th * cost) as f64;
+            top = top.max(lw);
+            terms.push((sa as u32, sb as u32, lw));
+        }
+    }
+    if terms.is_empty() {
+        return (f32::INFINITY, 0.);
+    }
+    let mut sum = 0f64;
+    for t in terms.iter_mut() {
+        t.2 = (t.2 - top).exp();
+        sum += t.2;
+    }
+    (-((top + sum.ln()) / th as f64) as f32, sum)
 }
 struct Period {
     net: super::network::Network,
@@ -1531,26 +1563,10 @@ impl IntercityApi {
         for (pi, pair) in self.pairs.iter().enumerate() {
             let trips = pair.trips * SHARES[q] as f64;
             let (a, b) = (&self.access[pair.a as usize], &self.access_work[pair.b as usize]);
-            terms.clear();
-            let mut sum = 0f64;
-            let (bt, wb_s) = damped(p, pair.car, b);
-            for (sa, wa) in damped(p, pair.car, a).1 {
-                let row = &sk.r[sa * s..(sa + 1) * s];
-                for &(sb, wb) in &wb_s {
-                    if sa == sb {
-                        continue;
-                    } // A rail journey must actually board a train.
-                    let cost = row[sb] + p.fare_min;
-                    if !cost.is_finite() {
-                        continue;
-                    }
-                    // f32 exp: the figures move by about 1e-8 against f64 (T-435)
-                    let v = wa * wb * (-bt * (cost - pair.drive)).clamp(-80., 80.).exp() as f64;
-                    sum += v;
-                    terms.push((sa as u32, sb as u32, v));
-                }
-            }
-            let fraction = sum / (pair.rest as f64 + sum);
+            let (rail_c, sum) = rail_logsum(sk, p.fare_min, a, b, p.beta, p.soften(p.band_unsoftened(pair.band as usize), pair.car), &mut terms);
+            let bt = p.mode_beta(pair.car);
+            let v_rail = if sum > 0. { ((-bt * (rail_c - pair.drive)).clamp(-80., 80.) as f64).exp() } else { 0. };
+            let fraction = v_rail / (pair.rest as f64 + v_rail);
             let r = trips * fraction;
             rail += r;
             cor[pair.corridor as usize] += r;
@@ -1572,38 +1588,24 @@ impl IntercityApi {
         let mut od_c = vec![0f32; if self.cpairs.is_empty() { 0 } else { s * s }];
         let (mut c_rail, mut c_frac) = (0f64, vec![0f32; self.cpairs.len()]);
         let mut c_cor = vec![0f64; self.m.corridors.len()];
-        let mut terms = vec![];
         for (ci, cp) in self.cpairs.iter().enumerate() {
             let (h, wg, n) = self.m.commutes[cp.c as usize];
             let (h, wz) = (h as usize, self.m.comp_of_gid[wg as usize] as usize);
             let (out, ret) = (n as f64 * TO_WORK[q] as f64, n as f64 * TO_HOME[q] as f64);
-            terms.clear();
-            let mut sum = 0f64;
             let home = if cp.ride { &self.access_c[h] } else { &self.access_c_walk[h] };
-            let (bt, wb_s) = damped(&pc, cp.car, &self.access_cw[wz]);
-            for (sa, wa) in damped(&pc, cp.car, home).1 {
-                for &(sb, wb) in &wb_s {
-                    if sa == sb {
-                        continue;
-                    }
-                    let cost = sk.r[sa * s + sb] + p.fare_min;
-                    if !cost.is_finite() {
-                        continue;
-                    }
-                    let v = wa * wb * ((-bt * (cost - cp.car) + cp.asc).clamp(-80., 80.) as f64).exp();
-                    sum += v;
-                    terms.push((sa, sb, v));
-                }
-            }
+            let (rail_c, sum) = rail_logsum(sk, p.fare_min, home, &self.access_cw[wz], pc.beta, p.soften(pc.band_unsoftened(cp.band as usize), cp.car), &mut terms);
             if sum <= 0. {
                 continue;
             }
-            let frac = sum / (1. + sum);
+            let bt = pc.mode_beta(cp.car);
+            let v_rail = ((-bt * (rail_c - cp.car) + cp.asc).clamp(-80., 80.) as f64).exp();
+            let frac = v_rail / (1. + v_rail);
             c_frac[ci] = frac as f32;
             let (ro, rr_) = (out * frac, ret * frac);
             c_rail += ro + rr_;
             c_cor[cp.corridor] += ro + rr_;
             for &(sa, sb, v) in &terms {
+                let (sa, sb) = (sa as usize, sb as usize);
                 let (a, b) = ((ro * v / sum) as f32, (rr_ * v / sum) as f32);
                 od_c[sa * s + sb] += a;
                 od_c[sb * s + sa] += b;
@@ -1666,8 +1668,9 @@ impl IntercityApi {
                 let corridor = m.corridor(za.place, zb.place) as u32;
                 let drive = |park: f32| if r.car { car_min(d, park) } else { r.refm };
                 let (a, b) = (a as u32, b as u32);
-                pairs.push(Pair { a, b, trips, drive: drive(zb.park), rest: r.rest, corridor, car: car_min(d, zb.park) });
-                pairs.push(Pair { a: b, b: a, trips, drive: drive(za.park), rest: r.rest, corridor, car: car_min(d, za.park) });
+                let band = self.base.band_of_d2(d * d * 1e6) as u8;
+                pairs.push(Pair { a, b, trips, drive: drive(zb.park), rest: r.rest, corridor, car: car_min(d, zb.park), band });
+                pairs.push(Pair { a: b, b: a, trips, drive: drive(za.park), rest: r.rest, corridor, car: car_min(d, za.park), band });
             }
         }
         pairs.shrink_to_fit();
@@ -1694,7 +1697,8 @@ impl IntercityApi {
             let corridor = m.corridor(zh.place, zw.place);
             self.cpair_of[c] = self.cpairs.len() as u32;
             let asc = pc.asc_rail + super::api::country_asc_rail(&m.countries[m.places[zh.place].country as usize]);
-            self.cpairs.push(CPair { c: c as u32, car, corridor, ride: km >= pc.ride_min_km, asc });
+            let band = pc.band_of_d2(km * km * 1e6) as u8;
+            self.cpairs.push(CPair { c: c as u32, car, corridor, ride: km >= pc.ride_min_km, asc, band });
         }
         self.cpairs.shrink_to_fit();
         self.served_at = at;
@@ -1721,7 +1725,9 @@ impl IntercityApi {
         let commuting = !m.commutes.is_empty();
         let (mut cw_home, mut cw_work, mut cw_walk) = (weights.clone(), weights.clone(), weights.clone());
         let beta_c = commute_params().beta;
-        let theta = self.base.station_theta;
+        // T-718: walks against rides to a station at the station choice's scale of the longest
+        // band, where nearly every trip between zones falls
+        let theta = self.base.band_unsoftened(self.base.n_bands() - 1);
         let mut walks: Vec<(usize, f32)> = Vec::with_capacity(K);
         for g in &m.groups {
             // the stations in this group's frame
@@ -1819,6 +1825,7 @@ impl IntercityApi {
             st_map: st_map.clone(),
             line_off: off,
             stops: stops.iter().map(|&s| st_map[s as usize]).collect(),
+            stop_xy: stops.iter().flat_map(|&s| [st_xy[2 * s as usize], st_xy[2 * s as usize + 1]]).collect(),
             times: times.to_vec(),
             tph: tph.chunks_exact(3).map(|v| [v[0], v[1], v[2]]).collect(),
             cars: cars.to_vec(),

@@ -6,7 +6,7 @@ import type { ComponentChildren } from "preact";
 import { clock, SPEEDS } from "../game/clock";
 import { activeCity, cityById, viewedZone } from "../game/cities";
 import { demandView, modeRides, modeSplit, viewFinal, viewUpdating } from "../game/demand";
-import { clockTime, count, dayOf, money, moneyExact } from "../game/format";
+import { clockTime, count, dayOf, money, moneyCash } from "../game/format";
 import { weekdayName, weekdayOf } from "../game/days";
 import { shownDay } from "../game/ui";
 import { splitTip } from "../game/splitTip";
@@ -46,9 +46,9 @@ function Cash() {
   const today = live.today;
   const tip = today ? `Today: fares ${money(today.fares * 1e6)}, running trains ${money(-today.running * 1e6)}` : undefined;
   // T-305: a box of fixed width, the minus then the $ at fixed places and the digits left-aligned after the $
-  const exact = m ? moneyExact(live.cash * 1e6) : "";
+  const exact = m ? moneyCash(live.cash * 1e6) : "";
   const neg = exact.startsWith("−");
-  return <div class="cash num" data-tip={m ? tip : undefined}>
+  return <div class={"cash num" + (neg ? " money-neg" : "")} data-tip={m ? tip : undefined}>
     <span class="cash-sign">{neg ? "−" : ""}</span>
     <span class="cash-cur">{m ? "$" : ""}</span>
     <span class="cash-digits">{exact.replace(/^−?\$/, "")}</span>

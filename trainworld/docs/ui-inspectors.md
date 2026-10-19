@@ -170,8 +170,8 @@ purpose filter the purpose drawn is ringed in the bar.
   Hovering one gives the line's name and a click selects the line, except in the selected line's
   own panel (its title bullet opens the colour and symbol editor) and on a search row that is the
   line itself. The map's tags draw the same bullet as plain DOM (`lineBullet`). In both, the
-  symbol is moved so its ink, not the font's line box, is centred in the circle (`ui/bullet.ts`,
-  T-705; measured to within 1 px in all four fonts).
+  symbol is SVG text placed from its measured ink box (`ui/bullet.ts`, T-705), so the ink, not the
+  font's line box, is centred in the circle, at any font and UI scale (within 1 px).
 - **A click on a station selects its whole complex** [T-249]: complex view, whatever was selected
   before (there is no Station / Complex switch). A station on its own is a complex of one. Complex
   rules: [ui-map.md](ui-map.md) "Station complexes".
@@ -322,7 +322,8 @@ destinations at the end, and how the demand model's people would make one of the
   hover the sum, "Walk 6.3 + wait 2.1 + ride 10.1 = 19 min") and **Effective time** [T-699, T-549]
   (the minutes the model weighs against the other methods; its hover is only the equation, the
   first route's terms in the rows' order, each real amount times its weight, "Walk 6.3 × 1.47 +
-  wait 2.1 + ride 10.1 × 1.1 + fare $1.92 × 3 − choice of routes 11.8 = 16 min"; the
+  wait 2.1 + ride 10.1 × 1.1 + change 2 + fare $1.92 × 3 − choice of routes 11.8 = 16 min", two
+  changes or more as "changes 2 × 2" [T-717]; the
   last term is what the model's pooled figure, over every station and route people use, is below
   this route's sum, so the equation always adds to the row, and one plain line under the equation
   says choice of routes is the time saved by having several ways to go; the terms are the worker's
@@ -340,7 +341,11 @@ destinations at the end, and how the demand model's people would make one of the
   walking the whole way); over 10 km it says walks are not offered. "Train by period": a row a period with the representative
   trip's chance of the train, a click showing that period. Without a train it says why (no station in reach, walks too long, no
   service in the period). Every row and bar segment has a hover with its figure and what it is made
-  of.
+  of. The trip is the two places' own (each one's walk to its stations, T-720); where the map's
+  bubbles count it differently, grouped with the homes and places near each end, the period rows'
+  hovers add that count ("Counted with the homes and places near here, as the map's bubbles count
+  it: train 62%, drive 30%, walk 8%") and the first walk's hover the group's walk when it is a
+  minute or more apart.
 - **On the map**: a veil of the land colour at 60%; the start an open ring and the end a filled
   disc; the main route over the veil in its lines' colours along their track (straight between
   stations only when the drawn network no longer matches the solve's), with a dark casing and the

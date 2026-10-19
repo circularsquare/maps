@@ -180,7 +180,7 @@ body.resizing, body.resizing * { user-select: none; }
 @container cities (max-width: 298px) { .cities-box .rows.cities .city-star { display: none; } }
 @container cities (max-width: 277px) { .cities-box .c-money { display: none; } }
 .rows.cities .bar { height: 10px; }
-.rows.cities .val.neg { color: var(--bad); }
+.rows.cities .val.neg, .money-neg { color: var(--bad); }
 .group.scope .btn { display: inline-flex; align-items: center; gap: 4px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .group.scope .btn svg { width: 14px; height: 14px; flex: none; }
 /* T-310: the Lines and Stations lists' column headers, one button a column; the sorted one is dark
@@ -227,6 +227,8 @@ body.resizing, body.resizing * { user-select: none; }
   background: var(--c); color: var(--ct, #fff);
   font-size: 12px; font-weight: 700; line-height: 1;
 }
+.chip > svg { display: block; overflow: visible; stroke: none; }
+.chip > svg text { fill: currentColor; }
 .chip.link { cursor: pointer; }
 .place-link { cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
 /* T-521: a station row keeps at least 3 bullets, its name gives way */

@@ -1,5 +1,15 @@
 ﻿# Archive
 
+- T-714 [P1] Pan lag on busy saves. Done 2026-10-19: not reproduced; the real save pans at 4.7-5.7 ms main thread a frame on all five builds of 10-18/19 (MapLibre most of it). Check `checks/t714-pan.mjs`; notes/perf-survey.md.
+
+- T-720 [P2] A walk to a station far too short (Fulton Mall, "10 min" from 2 km). Done 2026-10-19: the subzone's averaged walk; subzones now split by 15-minute walk bands (short lines' rail 7-21% over to 3-7%), and the trip explorer prices its two cells' own trip, hovers giving the bubbles' grouped figure. notes/T-720.md.
+
+- T-722 [P2] Station circles, circle hovers and money figures (Anita's playtest 2026-10-19). Done 2026-10-19: circle area proportional to riders, no cap (140,000 riders = the zoom's radius, so New York's biggest total is about 200 px across at zoom 13; floor a tenth of the radius); hovers read "N entries per day", "N transfers per day", "N entries and transfers per day"; money has three significant figures ("$22.4M"), the cash four ("$11.36B"), negatives red.
+
+- T-717 [P2] A cost for changing trains. Done 2026-10-19: a fixed 2 perceived minutes (Anita, after trying 3) plus the walk between the platforms' centres (within a merged station too) plus the wait; W 98 St to Houston St 0% to 56% on the 1 straight through, New York rail -4%, entries x2.52 to x2.39. notes/T-717.md.
+
+- T-718 [P2] The regional layer's route choice on T-710's rule. Done 2026-10-19: station pairs at the band scale, rail at their logsum; sim only, no market pack rebuild; regional rail falls a half to four fifths (T-721 checks the levels). notes/T-717.md.
+
 - T-715 [P1] Money on loading a save. Done 2026-10-19: a stale clock from the game open before charged the gap's running costs and froze the cash; clocks now carry the load count, loads refund ledger entries after the clock (bodega back to +893.6 US$M). notes/T-715.md, checks/t715-load-money.mjs.
 
 - T-716 [P3] Save file named after its slot. Done 2026-10-19: "Save to a file" downloads `anitabuilder-<slot name>-day-N.save` (lowercase, spaces to dashes, other characters dropped; the city id if nothing is left); in `workers/clockClient.ts`.
@@ -14,7 +24,7 @@
 
 - T-708 [P2] Quad track. Done 2026-10-19: Double up in the track inspector (whole run, blueprint, twins, swing-in at junctions); "the curve does not fit" was an artefact of nearly straight quad segments, lifted, text reworded; the station ghost shows the twin platform.
 
-- T-705 [P2] Line bullets' characters off centre. Done 2026-10-19: `ui/bullet.ts` moves every bullet's text (Chip and the map tags' `lineBullet`) so its measured ink box is centred; worst offset 2 px (4.5 px for g or j) before, 1 px at 1x and under 1 px at 2x after, in all four fonts.
+- T-705 [P2] Line bullets' characters off centre. Done 2026-10-19: `ui/bullet.ts` draws every bullet's text (Chip and the map tags' `lineBullet`) as SVG text placed from its measured ink box; worst offset 2 px (2 px high at 90% UI in Nunito) before, 1 px at 1x and 0.75 px at 2x after, in all four fonts at 100% and 90% UI.
 
 - T-709 [P2] Why the explorer's route carries few train users. Done 2026-10-19: the shown route is already the biggest; New York spreads users over 33 to 60 station pairs, so the main route has 5 to 12% and routes under 0.5% hold 47 to 80%; Toronto's single line 63 to 71%. The panel gets a "Smaller routes" row and a spread hover. notes/T-709.md.
 

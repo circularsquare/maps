@@ -15,7 +15,8 @@ import { EVERYDAY_KEYS, FILTER_PURPOSES, shownKey, type PurposeFilter, type Purp
 import type { Selection } from "./types";
 import { world } from "./world";
 
-/** One leg of a route: a ride on a line, or a walk between stations after a ride. */
+/** One leg of a route: a ride on a line, or a walk after a ride, to another station or between the
+ * platforms of one (T-717). */
 export interface TripLeg {
   kind: "ride" | "walk";
   /** the line ridden (a ride's) */
@@ -39,6 +40,8 @@ export interface TripLeg {
    * and perceived */
   waitMin: number;
   waitPerceived: number;
+  /** a ride's fixed cost of the change onto it, perceived minutes (0 on the first ride; T-717) */
+  changePerceived: number;
 }
 
 /** A sequence of boardings the train riders take, and its share of them. */
@@ -90,8 +93,7 @@ export interface TripPeriod {
   walkWeight: number;
   /** an everyday purpose's trips a day between the two cells' areas (0: a commute, or none) */
   pairTrips: number;
-  /** straight line between the two cells, and the drive's distance (between the two areas the
-   * model groups the places into), metres */
+  /** straight line between the two cells, and the drive's distance, metres */
   distM: number;
   driveDistM: number;
   /** the drive's length by road, km */
@@ -123,6 +125,13 @@ export interface TripPeriod {
   routes: TripRoute[];
   /** share of the train riders on routes too small to list */
   cut: number;
+  /** T-720: the same shares as the demand views count them, for the nearby homes and places the
+   * model groups the two cells with, and that group's walk to its nearest station at the start,
+   * real minutes (-1 none). Everything else is the two cells' own trip. */
+  groupWalk: number;
+  groupTrain: number;
+  groupDrive: number;
+  groupWalkStartMin: number;
 }
 
 export interface Trip {
@@ -142,7 +151,7 @@ export interface Trip {
  * (as `transfers`). */
 export type RouteNodes = { line: string; station: string; k: number }[];
 
-const HEAD = 37, PAIR_LEN = 14, LEG_LEN = 12;
+const HEAD = 41, PAIR_LEN = 14, LEG_LEN = 12;
 
 /** Read one period's packed answer (layout: `DemandApi.trip`). */
 export function readTripPeriod(v: Float64Array, at: RouteNodes): TripPeriod | null {
@@ -165,10 +174,10 @@ export function readTripPeriod(v: Float64Array, at: RouteNodes): TripPeriod | nu
       if (l[0] === 1) {
         const stations: string[] = [];
         for (let rn = l[1]; rn <= l[2]; rn++) stations.push(st(rn));
-        legs.push({ kind: "ride", line: at[l[1]]?.line ?? "", from: st(l[1]), to: st(l[2]), stations, k0: at[l[1]]?.k ?? -1, k1: at[l[2]]?.k ?? -1, stops: l[10], min: l[5], perceived: l[6], farePerceived: l[7], waitMin: l[8], waitPerceived: l[9] });
+        legs.push({ kind: "ride", line: at[l[1]]?.line ?? "", from: st(l[1]), to: st(l[2]), stations, k0: at[l[1]]?.k ?? -1, k1: at[l[2]]?.k ?? -1, stops: l[10], min: l[5], perceived: l[6], farePerceived: l[7], waitMin: l[8], waitPerceived: l[9], changePerceived: l[11] });
       } else {
         const from = st(l[1]), to = st(l[2]);
-        legs.push({ kind: "walk", line: "", from, to, stations: [from, to], k0: -1, k1: -1, stops: 0, min: l[5], perceived: l[6], farePerceived: 0, waitMin: 0, waitPerceived: 0 });
+        legs.push({ kind: "walk", line: "", from, to, stations: [from, to], k0: -1, k1: -1, stops: 0, min: l[5], perceived: l[6], farePerceived: 0, waitMin: 0, waitPerceived: 0, changePerceived: 0 });
       }
     }
     routes.push({ share, pair, legs });
@@ -179,6 +188,7 @@ export function readTripPeriod(v: Float64Array, at: RouteNodes): TripPeriod | nu
     driveMin: v[9], drivePerceived: v[10], parkPerceived: v[11], carOwnPerceived: v[32], roadPerceived: v[12],
     railOffered: offered, why: WHY[v[26]] ?? "", railPerceived: offered ? v[14] : NaN, railOfMotor: v[15], utility: v[16],
     pWalk: v[17], pTrain: v[18], pDrive: v[19], baseFarePerceived: v[22], minPerUsd: v[23], walkStartPerceived: v[20], walkEndPerceived: v[21], pairs, routes, cut: v[31],
+    groupWalk: v[37], groupTrain: v[38], groupDrive: v[39], groupWalkStartMin: v[40],
   };
 }
 
@@ -197,19 +207,20 @@ export function routeTotals(t: TripPeriod, r: TripRoute) {
   return { driveMin, walkMin, walkM, wait, ride, xfer, changes: Math.max(0, rides - 1), fareUsd: fare / t.minPerUsd, total: driveMin + walkMin + wait + ride + xfer };
 }
 
-/** One term of a route's perceived total: what it is, its real amount (minutes, or dollars for the
- * fare) with the weight it counts at, and its perceived minutes. */
+/** One term of a route's perceived total: what it is, its real amount (minutes, dollars for the
+ * fare, or a count of changes) with the weight it counts at, and its perceived minutes. */
 export interface CostTerm {
   label: string;
   real: number;
   weight: number;
   perceived: number;
-  unit: "min" | "usd";
+  unit: "min" | "usd" | "count";
 }
 
 /** A route's perceived total as terms, from the worker's own perceived minutes: the walks (or the
  * drive to the station), the waits, the rides with their crowding, the walks between stations and
- * the fare. A change costs its wait and walk only (T-557); the base fare is in the fare. */
+ * the fare. A change costs its wait, its walk and a fixed few minutes (T-717); the base fare is in
+ * the fare. */
 export function routeTerms(t: TripPeriod, r: TripRoute): CostTerm[] {
   const pair = t.pairs[r.pair];
   const tot = routeTotals(t, r);
@@ -220,14 +231,17 @@ export function routeTerms(t: TripPeriod, r: TripRoute): CostTerm[] {
     if (tot.walkMin > 0) out.push({ label: "walk", real: tot.walkMin, weight: walkPerc / tot.walkMin, perceived: walkPerc, unit: "min" });
     if (pair.accessRide) out.push({ label: "station", real: 0, weight: 1, perceived: pair.rideExtra, unit: "min" });
   }
-  let waitP = 0, rideP = 0, xferP = 0;
+  let waitP = 0, rideP = 0, xferP = 0, changeP = 0;
   for (const l of r.legs) {
-    if (l.kind === "ride") { waitP += l.waitPerceived; rideP += l.perceived; }
+    if (l.kind === "ride") { waitP += l.waitPerceived; rideP += l.perceived; changeP += l.changePerceived; }
     else xferP += l.perceived;
   }
   out.push({ label: "wait", real: tot.wait, weight: tot.wait > 0 ? waitP / tot.wait : 1, perceived: waitP, unit: "min" });
   out.push({ label: "ride", real: tot.ride, weight: tot.ride > 0 ? rideP / tot.ride : 1, perceived: rideP, unit: "min" });
   if (tot.xfer > 0) out.push({ label: "walk between stations", real: tot.xfer, weight: xferP / tot.xfer, perceived: xferP, unit: "min" });
+  if (changeP > 0) out.push(tot.changes > 1
+    ? { label: "changes", real: tot.changes, weight: changeP / tot.changes, perceived: changeP, unit: "count" }
+    : { label: "change", real: 0, weight: 1, perceived: changeP, unit: "min" });
   out.push({ label: "fare", real: tot.fareUsd, weight: t.minPerUsd, perceived: tot.fareUsd * t.minPerUsd, unit: "usd" });
   return out;
 }

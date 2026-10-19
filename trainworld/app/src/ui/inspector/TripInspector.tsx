@@ -85,6 +85,7 @@ function ModeBar({ t, mix, of }: { t: TripPeriod; mix: TripMix | null; of: strin
   const [train, walk, drive] = n > 0 ? [mix!.rail / n, mix!.walk / n, mix!.drive / n] : [t.pTrain, t.pWalk, t.pDrive];
   const parts: [string, number, string][] = [["Train", train, "seg-train"], ["Walk", walk, "seg-walk"], ["Drive", drive, "seg-drive"]];
   const walkTip = `; walking the whole way takes about ${min(t.walkMin)}`;
+  const note = n > 0 ? "" : groupNote(t);
   return (
     <div class="trip-modes">
       <div class="bar trip-bar" role="img" aria-label={parts.map(([n, v]) => `${n} ${pct(v)}`).join(", ")}>
@@ -92,7 +93,7 @@ function ModeBar({ t, mix, of }: { t: TripPeriod; mix: TripMix | null; of: strin
       </div>
       <ul class="rows">
         {parts.filter(([m]) => m !== "Walk" || t.walkMin < WALK_ROW_MIN).map(([m, v]) => (
-          <li data-tip={`${m}: ${(100 * v).toFixed(1)}% of ${of}${m === "Walk" ? walkTip : ""}`}>
+          <li data-tip={`${m}: ${(100 * v).toFixed(1)}% of ${of}${m === "Walk" ? walkTip : ""}${note}`}>
             <i class="mk" style={{ background: MODE_COLOURS[m === "Train" ? "train" : m === "Walk" ? "walk" : "drive"] }} />
             <span class="grow">{m}</span>
             <span class="val w-num">{pct(v)}</span>
@@ -123,7 +124,8 @@ function RouteLegs({ t, r }: { t: TripPeriod; r: TripRoute }) {
       {pair && first && (
         <li data-tip={pair.accessRide
           ? `Driving, a bus or a bike over ${distance(pair.accessM)} in a straight line, ${pair.accessMin.toFixed(1)} min on the road`
-          : `Walk ${distance(pair.accessM)} in a straight line, ${pair.accessMin.toFixed(1)} min at ${WALK_KMH} km/h`}>
+          : `Walk ${distance(pair.accessM)} in a straight line, ${pair.accessMin.toFixed(1)} min at ${WALK_KMH} km/h`
+            + (t.groupWalkStartMin >= 0 && Math.abs(t.groupWalkStartMin - pair.accessMin) >= 1 ? `\nThe map's bubbles count the homes near here at ${min(t.groupWalkStartMin)} to their nearest station` : "")}>
           <span class="grow">{pair.accessRide ? "Drive" : "Walk"} to {name(first.from)}</span>
           <span class="val">{min(pair.accessMin)}</span>
         </li>
@@ -231,6 +233,13 @@ function mainNote(t: TripPeriod): string {
   return `${pct(all)} of the train users on this trip take this route` + (1 - all >= 0.005 ? ", the rest use different routes." : ".");
 }
 
+/** T-720: the trip is the two places' own; the map's bubbles count it with the homes and places
+ * near each end, which can differ. Empty when they agree to the shown percent. */
+function groupNote(t: TripPeriod): string {
+  if (Math.abs(t.pTrain - t.groupTrain) < 0.005 && Math.abs(t.pWalk - t.groupWalk) < 0.005) return "";
+  return `\nCounted with the homes and places near here, as the map's bubbles count it: train ${pct(t.groupTrain)}, drive ${pct(t.groupDrive)}, walk ${pct(t.groupWalk)}`;
+}
+
 function ByPeriod({ periods, words }: { periods: (TripPeriod | null)[]; words: string }) {
   const q = shownPeriod.value;
   return (
@@ -241,7 +250,7 @@ function ByPeriod({ periods, words }: { periods: (TripPeriod | null)[]; words: s
           const t = periods[i];
           return (
             <li class={i === q ? "on" : ""} onClick={() => (tripPeriod.value = i)}
-              data-tip={t ? `${p.name}, one ${words} trip: train ${pct(t.pTrain)}, drive ${pct(t.pDrive)}, walk ${pct(t.pWalk)}` : p.name}>
+              data-tip={t ? `${p.name}, one ${words} trip: train ${pct(t.pTrain)}, drive ${pct(t.pDrive)}, walk ${pct(t.pWalk)}${groupNote(t)}` : p.name}>
               <span class="grow">{p.name}</span>
               <span class="trip-hbar"><i class="hbar" style={{ width: `${Math.round(60 * (t?.pTrain ?? 0))}px`, background: MODE_COLOURS.train }} /></span>
               <span class="val w-num">{t ? pct(t.pTrain) : ""}</span>

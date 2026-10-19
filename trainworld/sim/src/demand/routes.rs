@@ -620,6 +620,27 @@ impl Routes {
         });
         Some(v)
     }
+
+    /// The walking metres from a station at (sx, sy) to cell `c` at (x, y), as `station_walks`
+    /// and `walk_m` give them, without keeping a search made for this one cell (T-720: kept, it
+    /// would stand for the station's whole list).
+    pub fn walk_to_cell(&self, sx: f32, sy: f32, cut: f32, c: u32, x: f32, y: f32) -> f32 {
+        let s = ((x - sx).powi(2) + (y - sy).powi(2)).sqrt();
+        let Some(grid) = self.walk.as_ref() else { return s };
+        let key = (self.id, sx.to_bits(), sy.to_bits(), cut.to_bits());
+        if let Some(v) = STATION_WALKS.with(|m| m.borrow().get(&key).cloned()) {
+            return walk_m(Some(&v), c, s);
+        }
+        if s > cut {
+            return s;
+        }
+        match grid.field(sx, sy, cut).map(|f| f.eff(x, y, s)) {
+            None => s,
+            Some(None) => f32::INFINITY,
+            Some(Some(e)) if e > s * EXCEPTION => e,
+            Some(Some(_)) => s,
+        }
+    }
 }
 
 /// The walking metres from a station to cell `c`, `straight` metres away, given the station's

@@ -9,13 +9,27 @@ export function count(n: number): string {
   return String(Math.round(n));
 }
 
+/** Three significant figures from a million up (T-722): 22430000 -> "$22.4M", 1.153e9 -> "$1.15B",
+ * 233e6 -> "$233M"; thousands to the k; under $500 "$0". */
 export function money(n: number): string {
-  const a = Math.abs(n), s = n < 0 ? "−" : "";
-  if (a >= 1e9) return s + "$" + (a / 1e9).toFixed(2) + "B";
-  if (a >= 1e6) return s + "$" + (a / 1e6).toFixed(2) + "M";
+  const a = Math.abs(n);
   if (a < 500) return "$0";
-  return s + "$" + Math.round(a / 1000) + "k";
+  return moneyShort(n);
 }
+
+/** Four significant figures, for the cash (T-722): "$11.36B", "$893.6M"; to the dollar under a million. */
+export function moneyCash(n: number): string {
+  const a = Math.abs(n), s = n < 0 ? "−" : "";
+  if (a < 999.95e3) return moneyExact(n);
+  const sig = (v: number) => {
+    const r = Number(v.toPrecision(4));
+    return r >= 100 ? r.toFixed(1) : r >= 10 ? r.toFixed(2) : r.toFixed(3);
+  };
+  return a >= 999.95e6 ? s + "$" + sig(a / 1e9) + "B" : s + "$" + sig(a / 1e6) + "M";
+}
+
+/** Whether `money(n)` shows a minus, for the panels' red (T-722). */
+export const moneyNegative = (n: number): boolean => n < 0 && Math.abs(n) >= 500;
 
 /** To the dollar, for the cash (T-284: it moves as fares land): 5834215320 -> "$5,834,215,320". */
 export function moneyExact(n: number): string {
@@ -25,9 +39,13 @@ export function moneyExact(n: number): string {
 /** Three significant figures, for the drawing tag (T-085): "$25.5M", "$133M", "$1.33B". */
 export function moneyShort(n: number): string {
   const a = Math.abs(n), s = n < 0 ? "−" : "";
-  const sig = (v: number) => (v >= 100 ? Math.round(v).toString() : v >= 10 ? v.toFixed(1) : v.toFixed(2));
-  if (a >= 1e9) return s + "$" + sig(a / 1e9) + "B";
-  if (a >= 1e6) return s + "$" + sig(a / 1e6) + "M";
+  const sig = (v: number) => {
+    const r = Number(v.toPrecision(3));
+    return r >= 100 ? String(r) : r >= 10 ? r.toFixed(1) : r.toFixed(2);
+  };
+  // a figure that rounds up to the next unit (999.6k, 999.7M) is written in that unit
+  if (a >= 999.5e6) return s + "$" + sig(a / 1e9) + "B";
+  if (a >= 999.5e3) return s + "$" + sig(a / 1e6) + "M";
   return s + "$" + Math.round(a / 1000) + "k";
 }
 

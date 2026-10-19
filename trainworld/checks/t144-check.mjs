@@ -221,11 +221,14 @@ renderer.selectedStation=-1;
 // --- station use circles (T-482)
 const world={save:{lines:[]},edges:[]};
 const demand={lines:new Map(),stations:new Map()};
-const use=new Map([['under',75000],['over',18750]]);
+const use=new Map([['under',140000],['over',35000]]);
 const switches={lineLoad:false,stationFigure:(id)=>use.get(id),trainLoad:false};
 const layers=buildLayers(net,world,demand,0,switches);
 near(layers.stationSize[1],1);near(layers.stationSize[3],.5);
 near(layers.stationSize[1]**2,4*layers.stationSize[3]**2,'circle area proportional to riders a day');
 assert.ok(buildLayers(net,world,demand,0,{...switches,stationFigure:null}).stationSize.every(v=>v===0));
-near(stationScale(0),0);near(stationScale(300000),1);
+near(stationScale(0),0);
+// T-722: no cap (4 x the full riders is twice the radius), and a floor of a tenth of the radius for any riders
+near(stationScale(560000),2);near(stationScale(681200)**2,681200/140000,'area proportional to riders above the old cap');
+near(stationScale(100),.1);near(stationScale(1400),.1);near(stationScale(14000*1.21),Math.sqrt(1.21*.1),'just above the floor follows the root');
 console.log('T-144/T-189/T-204/T-205 checks passed: platform along its track (straight, curved, dead end), true length, one shape at every zoom, covers its lines at the box zoom, dots zoomed out, hidden further out but for the selected, curved picking, no growth when selected, selected on top, deterministic platform, blueprint flag, demand circles; T-217 bridges between linked platforms, one outline round selected platforms and their bridge; T-313 a dot per station zoomed out, picked one by one, joined by connectors within a group and along links; T-227 linear line widths and picking across a wide line; T-254 boxes follow the track (S-curve, straight unchanged, dead end, short edge).');

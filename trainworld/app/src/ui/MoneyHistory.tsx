@@ -9,6 +9,7 @@ import { weekdayName } from "../game/days";
 import { moneyState } from "../game/money";
 import { regionLedger } from "../game/regionMoney";
 import { Segmented } from "./widgets";
+import { Money } from "./MoneyText";
 
 /** Days or hours, kept while the game is open. */
 const span = signal<"day" | "hour">("day");
@@ -123,7 +124,7 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
         {list.map((e, i) => <circle class="hist-fares dot" cx={cx(i)} cy={y1(e.fares)} r={1.6} />)}
         {list.map((e, i) => <rect class="hist-col" x={x0 + i * col} y={0} width={col} height={H} data-tip={tip1(e, i)} />)}
       </svg>
-      <div class="hist-title small"><span>Net</span><span class="right muted" data-tip={`The chart runs from ${usd(lo)} to ${usd(hi)}`}>{usd(hi)}{lo < 0 ? ` to ${usd(lo)}` : ""}</span></div>
+      <div class="hist-title small"><span>Net</span><span class="right muted" data-tip={`The chart runs from ${usd(lo)} to ${usd(hi)}`}>{usd(hi)}{lo < 0 ? <> to <Money dollars={lo * 1e6} /></> : ""}</span></div>
       <svg class="hist" viewBox={`0 0 ${W} ${H}`}>
         <line class="hist-axis" x1={0} x2={W} y1={zero} y2={zero} />
         {list.map((e, i) => {

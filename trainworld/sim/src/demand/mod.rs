@@ -32,6 +32,8 @@ pub mod routes;
 pub mod synth;
 /// T-195: the trip explorer's query (one trip's route, costs and mode chances).
 pub mod trip;
+#[cfg(test)]
+mod t720;
 /// T-173: the everyday warm-up a demand worker runs at startup.
 pub mod warm;
 

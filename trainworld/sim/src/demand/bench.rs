@@ -36,7 +36,7 @@ impl Default for Opts {
     fn default() -> Self {
         Opts {
             zone_m: 2000.0,
-            band_min: 0.0,
+            band_min: Params::default().band_min,
             exact: false,
             edit: true,
             periods: true,

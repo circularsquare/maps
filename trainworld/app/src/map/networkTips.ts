@@ -36,12 +36,11 @@ const n0 = (v: number) => Math.round(v).toLocaleString("en-US");
 /** A forecast count, rounded as the track tag rounds one (trackHover.ts `riders`). */
 const forecast = (n: number) => (n >= 1000 ? Math.round(n / 100) * 100 : n >= 100 ? Math.round(n / 10) * 10 : Math.round(n)).toLocaleString("en-US");
 
-/** "12,400 riders start a rail trip here a day" (T-482), as the station use selector counts. The
- * circles count every purpose, whatever the purpose filter says. */
-function circleLines(riders: number, members: number): string[] {
+/** "12,400 entries per day" (T-482, T-722), as the station use selector counts, whatever the number
+ * of stations in a complex. The circles count every purpose, whatever the purpose filter says. */
+function circleLines(riders: number): string[] {
   const m = display.peek().stationUse;
-  const here = members > 1 ? `at the complex's ${members} stations` : "here";
-  const what = m === "origins" ? `riders start a rail trip ${here}` : m === "transfers" ? `riders change lines ${here}` : `boardings ${here}`;
+  const what = m === "origins" ? "entries" : m === "transfers" ? "transfers" : "entries and transfers";
   const out = [`${forecast(riders)} ${what} ${shownDayPhrase.peek()}`];
   if (purposeFilter.peek() !== "all") out.push("All purposes");
   return out;
@@ -155,7 +154,7 @@ export function stationTip(ov: Overlay, w: WorldView, i: number): TipLine[] | nu
   if (!s.built) out.push("Blueprint");
   else if (display.peek().stationUse !== "none") {
     const c = circleOf(w, id);
-    out.push(...(c ? circleLines(c.riders, c.members.length) : ["Calculating demand"]));
+    out.push(...(c ? circleLines(c.riders) : ["Calculating demand"]));
   }
   if (s.built) out.push(...crowdLines(ov, w, id, i));
   return out;
@@ -193,5 +192,5 @@ export function circleTip(ov: Overlay, w: WorldView, px: number, py: number, zoo
   }
   if (!best) return null;
   const busiest = best.members.map((m) => ({ m, v: useFigure(dv, mode, m) ?? 0 })).sort((a, b) => b.v - a.v)[0];
-  return [names.get(busiest.m) ?? "Station", ...circleLines(best.riders, best.members.length)];
+  return [names.get(busiest.m) ?? "Station", ...circleLines(best.riders)];
 }

@@ -77,14 +77,19 @@ change as the periods pass. At zoom 15 the widest line is 44 px. Stations keep t
 
 [T-144, T-146, T-209, T-213, T-482; `game/stationUse.ts`] A choice at the top of the Stations tab,
 "Show station ridership": None (default), Origins, Transfers or Total, remembered per browser. Large
-translucent circles behind stations, area by riders per day, up to 75,000: **origins** are riders
+translucent circles behind stations, area proportional to riders per day with no cap (the radius
+is the zoom's circle radius, 18 to 56 px, times the square root of riders over 140,000, so 140,000
+riders have that radius, the real New York save's biggest total (Penn Station's complex, 681,000)
+is about 200 px across at zoom 13, and a circle with any riders is never under a tenth of that
+radius) [T-722]: **origins** are riders
 starting their rail trip at the station, **transfers** riders changing lines there, **total** every
 boarding there (origins plus transfers). From the demand solve shown, for the day the demand bar
 picks, every purpose whatever the purpose filter: boardings are the solve's per station, transfers
 its transfer pairs over every station (`complexTransfers`) counted at the station the rider boards,
 origins the rest. Origins and Transfers keep the last split while a new solve's is asked for. The
-circle's hover and the station's say the figure ("12,400 riders start a rail trip here on an
-average day"). They do not enlarge the station's click target. With "One circle per station
+circle's hover and the station's say the figure and never the number of stations in a complex:
+"12,400 entries per day" (origins), "464,000 transfers per day", "476,400 entries and transfers per
+day" (total), "per weekday" or "per weekend day" for those days. They do not enlarge the station's click target. With "One circle per station
 complex" (on by default, shown while circles are) a complex has one circle at the mean position of
 its constructed stations, grouped exactly as the complexes are, the player's links included.
 

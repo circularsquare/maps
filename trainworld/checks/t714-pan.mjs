@@ -4,7 +4,11 @@
 // With no url it starts its own Vite (checks/dev-nowatch.mjs, port PAN_PORT or 6192) and stops it at the
 // end. Headless Chrome with a throwaway profile; Playwright as in smoke.mjs. About two minutes.
 // Env: LABEL (output name), OUT (default ../artifacts/trainworld/t714), CPUPROFILE=1 (a .cpuprofile per
-// pan), NOSOLVE=1 (pan without waiting for demand's final), PAN_REPS (drags per scene, default 2).
+// pan), NOSOLVE=1 (pan without waiting for demand's final), PAN_REPS (drags per scene, default 2),
+// THROTTLE=4 (the main thread 4x slower), TRACE=1 (busy ms a frame on the renderer, GPU and viz
+// threads), VIEW=WxH and DPR, DISPLAY (settings JSON), SETUP and PROBE (page expressions), SPEED, HOUR.
+// The overlay's GPU time comes from renderer.ts's timer query. Two still scenes (camera at rest,
+// clock running) are reported but not budgeted.
 //
 // Each scene: a jump, 2.5 s for tiles, then real mouse drags (press, 8 px per 16 ms one way and back)
 // or wheel zooms. Per scene: frames from requestAnimationFrame, the main thread's busy time from
@@ -24,9 +28,9 @@ const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const REPS = Number(process.env.PAN_REPS ?? 2);
 const [W, H] = (process.env.VIEW ?? '1400x900').split('x').map(Number);
 const DPR = Number(process.env.DPR ?? 1);
-/** The budget, over all drag scenes together: main-thread ms per drawn frame, and the share of frame
- * intervals over 50 ms. A 60 Hz frame is 16.7 ms; the busy save before T-714's regression measured
- * well under both (notes/perf-survey.md, T-714). */
+/** The budget, over the drag and zoom scenes together: main-thread ms per drawn frame, and the share
+ * of frame intervals over 50 ms. A 60 Hz frame is 16.7 ms; every build of 2026-10-18/19 measured
+ * 4.7-5.7 ms and 0-0.1% on Anita's machine (notes/perf-survey.md, T-714). */
 const BUDGET = { mainMsPerFrame: Number(process.env.BUDGET_MS ?? 12), slowShare: Number(process.env.BUDGET_SLOW ?? 0.05) };
 
 const SCENES = [
@@ -37,6 +41,9 @@ const SCENES = [
   { name: 'Brooklyn z14', at: [-73.985, 40.69], zoom: 14, drag: 'pan' },
   { name: 'Downtown Brooklyn z16', at: [-73.988, 40.692], zoom: 16, drag: 'pan' },
   { name: 'zoom 11-16 and back', at: [-73.98, 40.74], zoom: 11, drag: 'wheel' },
+  // the camera still, the clock running: what playing costs between pans (not in the budget)
+  { name: 'still z12', at: [-73.975, 40.76], zoom: 12, drag: 'still' },
+  { name: 'still z15', at: [-73.985, 40.75], zoom: 15, drag: 'still' },
 ];
 
 async function playwright() {
@@ -121,6 +128,8 @@ async function run(BASE) {
       const tick = (t) => { window.__frames.push(t); const g = window.tw?.renderer?.gpuMs; if (g != null) window.__gpu.push([t, g]); requestAnimationFrame(tick); };
       requestAnimationFrame(tick);
       window.__lt = [];
+      window.__fontLoads = 0;
+      document.fonts?.addEventListener?.('loadingdone', () => window.__fontLoads++);
       try { new PerformanceObserver((l) => { for (const e of l.getEntries()) window.__lt.push([e.startTime, e.duration]); }).observe({ type: 'longtask', buffered: true }); } catch { /* */ }
     }, JSON.parse(process.env.DISPLAY ?? '{}'));
     page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
@@ -148,6 +157,8 @@ async function run(BASE) {
       return { task: m.TaskDuration * 1000, script: m.ScriptDuration * 1000, layout: m.LayoutDuration * 1000, style: m.RecalcStyleDuration * 1000 };
     };
     const cx = W / 2, cy = H / 2;
+    // SETUP: a JS expression awaited in the page before the scenes (diagnostics: a tool, a selection)
+    if (process.env.SETUP) console.log('setup', await page.evaluate((x) => Promise.resolve((0, eval)(x)).then((v) => JSON.stringify(v ?? null)), process.env.SETUP));
     // SPEED=0|1|2: the clock's speed (60x, 240x, 960x) while panning; HOUR: the game hour to pan at
     if (process.env.SPEED) await page.evaluate((i) => window.tw.clock.setSpeed(i), Number(process.env.SPEED));
     if (process.env.HOUR) await page.evaluate((h) => window.tw.clock.set(Math.floor(window.tw.clock.now() / 86400) * 86400 + h * 3600), Number(process.env.HOUR));
@@ -175,6 +186,8 @@ async function run(BASE) {
             await page.waitForTimeout(150);
           }
         }
+      } else if (sc.drag === 'still') {
+        await page.waitForTimeout(6000);
       } else {
         for (let rep = 0; rep < REPS; rep++) {
           for (const dy of [-100, 100]) {
@@ -206,11 +219,15 @@ async function run(BASE) {
         p50: r1(pct(st.iv, 0.5)), p95: r1(pct(st.iv, 0.95)), max: Math.round(Math.max(0, ...st.iv)),
         over50: st.iv.filter((v) => v > 50).length, longTasks: st.longTasks, longMs: Math.round(st.longMs),
         overlayDrawMs: st.overlay ? r1(st.overlay.drawMs) : null, mapFrames: st.overlay?.mapFrames ?? null, overlayGpuMs: st.gpu === null ? null : Math.round(st.gpu * 100) / 100,
-        mainMs: m1.task - m0.task, intervals: st.iv.length,
+        mainMs: m1.task - m0.task, intervals: st.iv.length, still: sc.drag === 'still',
+        mainCorePct: Math.round((100 * (m1.task - m0.task)) / (t1 - t0)),
       };
       if (threads) s.threadMsPerFrame = Object.fromEntries(Object.entries(threads).map(([k, v]) => [k, r1(v / frames)]));
+      // PROBE: a JS expression evaluated in the page after each scene, logged (diagnostics)
+      if (process.env.PROBE) s.probe = await page.evaluate((x) => { try { return JSON.stringify((0, eval)(x)); } catch (e) { return 'probe error: ' + e.message; } }, process.env.PROBE);
+      if (s.probe) console.log('  probe', s.probe);
       out.scenes.push(s);
-      console.log(`${sc.name.padEnd(24)} fps ${String(s.fps).padStart(5)}  main ${String(s.mainMsPerFrame).padStart(5)} ms/frame (script ${s.scriptMsPerFrame})  p50 ${s.p50}  p95 ${s.p95}  max ${s.max}  >50ms ${s.over50}  long ${s.longTasks}/${s.longMs} ms  overlay ${s.overlayDrawMs} ms, gpu ${s.overlayGpuMs ?? '-'} ms${threads ? '  threads ' + JSON.stringify(s.threadMsPerFrame) : ''}`);
+      console.log(`${sc.name.padEnd(24)} fps ${String(s.fps).padStart(5)}  main ${String(s.mainMsPerFrame).padStart(5)} ms/frame (script ${s.scriptMsPerFrame}, ${s.mainCorePct}% of a core)  p50 ${s.p50}  p95 ${s.p95}  max ${s.max}  >50ms ${s.over50}  long ${s.longTasks}/${s.longMs} ms  overlay ${s.overlayDrawMs} ms, gpu ${s.overlayGpuMs ?? '-'} ms${threads ? '  threads ' + JSON.stringify(s.threadMsPerFrame) : ''}`);
     }
   } finally {
     await ctx.close();
@@ -227,7 +244,7 @@ try {
 } finally {
   if (vite) vite.child.kill();
 }
-const drags = out.scenes;
+const drags = out.scenes.filter((s) => !s.still);
 const frames = drags.reduce((a, s) => a + s.frames, 0);
 const mainMsPerFrame = drags.reduce((a, s) => a + s.mainMs, 0) / frames;
 const slowShare = drags.reduce((a, s) => a + s.over50, 0) / drags.reduce((a, s) => a + s.intervals, 0);
