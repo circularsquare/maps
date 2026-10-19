@@ -1,4 +1,4 @@
-import { copyFileSync, createReadStream, existsSync, mkdirSync, readFileSync, statSync } from "node:fs";
+import { copyFileSync, createReadStream, existsSync, mkdirSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig, type Plugin } from "vite";
@@ -52,6 +52,18 @@ function packs(): Plugin {
       const intercity = join(PACKS, REGISTRY.market.pack + ".json");
       if (existsSync(intercity)) copyFileSync(intercity, join(out, REGISTRY.market.pack + ".json"));
       else this.warn("intercity market missing: build pipeline/intercity.py");
+      // T-731: the real networks a sandbox can start from (pipeline/realnet.py ship)
+      const real = join(PACKS, "real");
+      if (existsSync(real)) {
+        mkdirSync(join(out, "real"), { recursive: true });
+        for (const f of readdirSync(real)) if (f.endsWith(".save")) copyFileSync(join(real, f), join(out, "real", f));
+      } else this.warn("real networks missing: run pipeline/realnet.py ship");
+      // T-727: the real network's routing graphs the track tool snaps along (pipeline/realgraph.py)
+      const graphs = join(PACKS, "realgraph");
+      if (existsSync(graphs)) {
+        mkdirSync(join(out, "realgraph"), { recursive: true });
+        for (const f of readdirSync(graphs)) if (f.endsWith(".rgr")) copyFileSync(join(graphs, f), join(out, "realgraph", f));
+      } else this.warn("real-network graphs missing: run pipeline/realgraph.py jp us gb fr de");
     },
   };
 }

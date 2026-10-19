@@ -19,14 +19,15 @@ through `game/shades.ts`) [T-543].
 
 ## Real network (reference layer)
 
-Settings > Show > **Real network**, off by default: faint lines (40% opaque, T-697) where railways run in the real
-world, for reference, view only (`map/realNetwork.ts`, T-682). They sit above the basemap's
+Settings > Show > **Real network**, on by default: faint lines (15% opaque, T-727) where railways run
+in the real world, for reference, view only; 40% (T-697) while the track tool snaps to them (the
+Build tab's snap switch, [ui-building.md](ui-building.md)), which also shows them with the setting off (`map/realNetwork.ts`, T-682). They sit above the basemap's
 roads and under its labels, so under our own network (which is drawn on the overlay canvas above
 everything). Three classes by colour and width, in both themes (`realMain`, `realOther`, `realMetro`
 in `game/shadeTable.ts`): main line, other passenger rail, metro. Trams, light rail, monorails,
 funiculars, narrow gauge, heritage lines and track no line runs over are not drawn. Lines appear
 from zoom 4; each region's tiles are added when the view first touches it, nearest first, and
-nothing is fetched while the setting is off. The lines are noritetsu's per-region tiles (OSM and
+nothing is fetched while it is hidden. The lines are noritetsu's per-region tiles (OSM and
 the national registers, one `track` layer); the tiles carry no line type or name at low zoom, so
 there is no high-speed class and no hover yet.
 
@@ -357,7 +358,7 @@ choose from, in every track display [T-654, `pick`'s `chooseShared`]. Clicking a
 parent selection. Selected editing handles stay draggable above the
 demand view.
 
-**While building** [T-526]: with a build tool on (track, station, crossover, delete, blueprint),
+**While building** [T-526]: with a build tool on (track, station, delete, blueprint),
 the demand views (bubbles, inter-region bubbles, airport badges and their labels) are drawn
 beneath the network, blueprints and stations, since the tool is about track. The tools' clicks
 never pick a bubble, and a bubble's tag shows only where no network and no tool tag is under the

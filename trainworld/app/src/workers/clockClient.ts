@@ -19,9 +19,10 @@ import type { LineInput, LineStats, StationInput, TrackEdge, TrackNode, WorldVie
 import type { ClockState, EditOp, FromClock, NetworkSnapshot, PiInput, RouteEnd, StationAt, ToClock } from "./protocol";
 import { anchorVersion } from "../map/anchorVersion";
 import { anchor, anchorWanted, EARTH_C, HOME_ANCHOR, makeAnchor, setAnchor, type Anchor } from "../map/geo";
+import type { NewGameSpec } from "./saveFile";
 
-export const saveSlotsState = signal<{ slots: import("./saveFile").SaveSlot[]; active: string; writable: boolean; at: number; reason?: string; error?: string }>({ slots: [], active: "autosave", writable: true, at: 0 });
-export function manageSaveSlot(action: "refresh" | "create" | "open" | "rename" | "delete", key?: string, name?: string) {
+export const saveSlotsState = signal<{ slots: import("./saveFile").SaveSlot[]; active: string; writable: boolean; at: number; reason?: string; error?: string; backups: import("./saveFile").SlotBackup[] }>({ slots: [], active: "autosave", writable: true, at: 0, backups: [] });
+export function manageSaveSlot(action: "refresh" | "create" | "open" | "rename" | "delete" | "restore", key?: string, name?: string) {
   current?.post({ kind: "saveSlot", action, key, name });
 }
 
@@ -113,6 +114,7 @@ function toWorld(s: ClockState, city: { population: number; jobs: number }): Wor
       autoS: l.auto,
       delayS: l.delay,
       cars: l.cars,
+      carsSet: l.carsSet,
       buildCost: l.buildCost * 1e6,
       trainCost: l.trainCost * 1e6,
       stopS: l.stopS,
@@ -154,14 +156,18 @@ let current: ClockClient | null = null;
 export function exportGame() {
   current?.post({ kind: "export" });
 }
-/** Load a save file the player picked. */
+/** Load a save file the player picked, into a new slot named after the file (T-743). */
 export async function importGame(file: File) {
   const bytes = await file.arrayBuffer();
-  current?.post({ kind: "import", bytes }, [bytes]);
+  current?.post({ kind: "import", bytes, name: file.name.replace(/\.save$/i, "") }, [bytes]);
 }
-/** Start again in an empty city. */
-export function newGame() {
-  current?.post({ kind: "newGame" });
+/** Start a new game in a new slot (T-743), named after its start (T-728) unless `name` is given. */
+export function newGame(game?: NewGameSpec, name = "") {
+  current?.post({ kind: "newGame", name, game }, game?.real ? [game.real] : []);
+}
+/** T-728: make the game a sandbox, for good. */
+export function makeSandbox() {
+  current?.post({ kind: "sandbox" });
 }
 /** Ask the clock worker an inspector question (T-031); null before the worker is there. */
 export function queryClock(q: Extract<ToClock, { kind: "query" }>["q"]): Promise<Float64Array | null> {
@@ -178,6 +184,8 @@ export interface GameChoice {
   newSlot?: string;
   /** a new game: demand opens the viewed zone bare from the start (T-351) */
   newGame?: boolean;
+  /** how the new game starts (T-728) */
+  game?: NewGameSpec;
 }
 
 export class ClockClient {
@@ -271,7 +279,8 @@ export class ClockClient {
     this.testPage = fresh || q.get("synth") === "1" || q.get("demandTest") === "1";
     let slot = choice.slot ?? "autosave";
     if (!choice.slot) try { slot = localStorage.getItem("anitabuilder-save-slot") || slot; } catch { /* storage unavailable */ }
-    this.worker.postMessage({ kind: "init", city: this.cityId, pack: new URL("packs/" + this.cityId, document.baseURI).href, fresh, testPage: this.testPage, slot, newSlot: choice.newSlot } satisfies ToClock);
+    const backupMs = Number(q.get("backupMs")) || undefined;
+    this.worker.postMessage({ kind: "init", city: this.cityId, pack: new URL("packs/" + this.cityId, document.baseURI).href, fresh, testPage: this.testPage, slot, newSlot: choice.newSlot, backupMs, game: choice.game } satisfies ToClock, choice.game?.real ? [choice.game.real] : []);
     for (const [msg, transfer] of this.waiting) this.worker.postMessage(msg, transfer);
     this.waiting = [];
   }
@@ -453,7 +462,7 @@ export class ClockClient {
       }
       case "saveSlots": {
         const before = saveSlotsState.value;
-        saveSlotsState.value = { slots: msg.slots, active: msg.active, writable: msg.writable, at: msg.at, reason: msg.reason, error: msg.error };
+        saveSlotsState.value = { slots: msg.slots, active: msg.active, writable: msg.writable, at: msg.at, reason: msg.reason, error: msg.error, backups: msg.backups };
         lastSaved.value = msg.at;
         // a test page does not make its slot the one the next page opens, until it changes (T-320)
         if (msg.active && ((!this.sawSlots && !this.testPage) || before.active !== msg.active)) {

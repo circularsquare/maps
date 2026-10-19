@@ -8,10 +8,10 @@ import { DEFAULT_FONT, FONT_KEYS, fontStack, loadFont, type FontKey } from "./fo
 import type { PurposeFilter } from "./purposes";
 import { LEVELS, type Level, type Selection } from "./types";
 
-export type Tab = "build" | "lines" | "stations" | "money" | "settings";
+export type Tab = "build" | "lines" | "stations" | "money" | "cities" | "settings";
 /** Tabs a remembered choice can name: the City tab is gone (T-220), so a browser that last had it
  * open starts on Lines. */
-const TABS: Tab[] = ["build", "lines", "stations", "money", "settings"];
+const TABS: Tab[] = ["build", "lines", "stations", "money", "cities", "settings"];
 export type Theme = "pink" | "blue" | "green";
 export const THEMES: Theme[] = ["pink", "blue", "green"];
 /** The light or dark theme (T-039); the colours above apply to either. Map colours: game/shades.ts. */
@@ -85,7 +85,8 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   capacity: true,
   flatMarks: true,
   basemapLabels: true,
-  realNetwork: false,
+  // T-727: faint by default, so the track to snap to is always in sight
+  realNetwork: true,
   stationUse: "none",
   // T-192 (Anita): one circle per station complex by default
   complexView: true,
@@ -115,11 +116,11 @@ export interface DockLayout {
 }
 
 /** The stored settings' version: 2 since complex view became the default (T-192), 3 since Nunito and
- * 90% did (T-703). Settings stored before a version had saved the old default with everything else,
+ * 90% did (T-703), 4 since the real network did (T-727). Settings stored before a version had saved the old default with everything else,
  * so that setting is dropped once and the new default applies. */
-const VERSION = 3;
+const VERSION = 4;
 
-function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partial<DisplaySettings>; dock: DockLayout; build: Partial<{ level: Level; tracks: 1 | 2 | 4; keep: boolean }>; v: number }> {
+function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partial<DisplaySettings>; dock: DockLayout; build: Partial<{ level: Level; tracks: 1 | 2 | 4; keep: boolean; snap: boolean }>; v: number }> {
   try {
     return JSON.parse(localStorage.getItem(STORE) || "{}");
   } catch {
@@ -136,6 +137,8 @@ if ((saved.v ?? 1) < 2) delete migratedDisplay.complexView;
 // T-703: the font and size defaults changed, and settings stored before had saved the old ones with
 // everything else, so both are dropped once
 if ((saved.v ?? 1) < 3) delete migratedDisplay.font, delete migratedDisplay.uiScale;
+// T-727: the real network became a default (faint), and the old default (off) was stored
+if ((saved.v ?? 1) < 4) delete migratedDisplay.realNetwork;
 const trackColour = oldDisplay?.trackColour === "line" && legacyLineLoad !== undefined
   ? legacyLineLoad === false ? "line" : "traffic"
   : oldDisplay?.trackColour ?? DEFAULT_DISPLAY.trackColour;
@@ -150,10 +153,10 @@ export const shade = signal<Shade>(saved.shade === "dark" ? "dark" : "light");
 
 /** What a click on the map does: select (pick), draw track, place a station, add stops to a line,
  * remove what is clicked (T-096), pick a trip's two ends (T-195). */
-export type Tool = "select" | "track" | "station" | "crossover" | "line" | "delete" | "trip" | "blueprint";
+export type Tool = "select" | "track" | "station" | "line" | "delete" | "trip" | "blueprint";
 export const tool = signal<Tool>("select");
 /** The Build tab's tools: while one is on, the demand views draw beneath the network (T-526). */
-export const isBuildTool = (t: Tool) => t === "track" || t === "station" || t === "crossover" || t === "delete" || t === "blueprint";
+export const isBuildTool = (t: Tool) => t === "track" || t === "station" || t === "delete" || t === "blueprint";
 /** A question waiting in a centered modal (T-096/T-113: removing something
  * constructed): `run` on the yes button, nothing on the no button or Esc. */
 export const ask = signal<{ text: string; yes: string; no: string; run: () => void } | null>(null);
@@ -179,11 +182,17 @@ export const buildPlatform = signal(200);
 /** T-468: the three Build tab track settings below are remembered per browser with the rest of the
  * UI state; anything unreadable falls back to the defaults. */
 export const buildLevel = signal<Level>(LEVELS.includes(saved.build?.level as Level) ? (saved.build!.level as Level) : 0);
-/** Track the drawing tool lays: single, double, or quad (two doubles side by side, T-255). */
-export const trackCount = signal<1 | 2 | 4>([1, 2, 4].includes(saved.build?.tracks as number) ? saved.build!.tracks! : 2);
+/** Track the drawing tool lays: double or quad (two doubles side by side, T-255). Single track is
+ * not offered (T-733), so a remembered 1 reads as double. */
+export const trackCount = signal<2 | 4>(saved.build?.tracks === 4 ? 4 : 2);
 /** T-445: the track tool starts each segment where the last ended. The Build tab's button and
  * Caps Lock set it; Shift continues a run for one click without it. */
 export const keepPlacing = signal(saved.build?.keep === true);
+/** T-727: the track tool snaps to the real network (noritetsu's lines); while it does, the layer is
+ * drawn at full strength */
+export const snapReal = signal(saved.build?.snap === true);
+/** the real network is being snapped to: the switch on and the track tool in hand */
+export const snapping = computed(() => snapReal.value && tool.value === "track");
 
 /** The day every demand view shows (T-260, T-464): the setting, the average day by default. */
 export const shownDay = computed<DemandDay>(() => {
@@ -218,7 +227,7 @@ effect(() => {
   void loadFont(k).then(() => document.dispatchEvent?.(new Event("tw-fontchange")));
 });
 effect(() => {
-  const s = { tab: tab.value, theme: theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, tracks: trackCount.value, keep: keepPlacing.value }, v: VERSION };
+  const s = { tab: tab.value, theme: theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, tracks: trackCount.value, keep: keepPlacing.value, snap: snapReal.value }, v: VERSION };
   try {
     localStorage.setItem(STORE, JSON.stringify(s));
   } catch {

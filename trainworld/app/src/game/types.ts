@@ -142,7 +142,9 @@ export interface LineStats {
   /** headway in seconds per level when the trains follow it (T-625, 0: no service), else null */
   autoS: [number, number, number] | null;
   delayS: [number, number, number];
+  /** cars per train it runs, and the length the player set (T-733: 0 for the most its shortest platform fits) */
   cars: number;
+  carsSet: number;
   /** what constructing the rest of its track and stations costs, US$ (0 when running) */
   buildCost: number;
   /** what the trains it needs will cost when it is constructed, after spare cars, US$ (T-028) */

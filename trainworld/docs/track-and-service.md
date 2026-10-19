@@ -139,11 +139,12 @@ Full design, numbers and sources: `notes/T-008.md`.
   where their heights differ by a level or more; at the same level they make a flat crossing; in
   between is invalid.
 - **What the player builds**: a **route** drawn as one stroke, **double track by default** (4 m
-  apart, trains keeping right everywhere, T-319), with **single track** as a setting: cheaper,
-  both directions sharing it, with sections split at stations. A single-track station has one
-  shared platform track; it does not automatically add a passing loop. (Anita, 2026-10-08; not NIMBY-style
-  individual tracks.)
-- **Quad track** (T-255): the third setting. The stroke draws the double track as usual and an
+  apart, trains keeping right everywhere, T-319). (Anita, 2026-10-08; not NIMBY-style individual
+  tracks.) **Single track** stays in the track model but the Build tab does not offer it (T-733;
+  it may come back for rural or regional lines): saves and imports that have it load and run.
+  It is cheaper, both directions share it, with sections split at stations; a single-track
+  station has one shared platform track and gets no passing loop.
+- **Quad track** (T-255): the other setting. The stroke draws the double track as usual and an
   express double track beside it, 8 m to the left of the drawn direction (centre to centre, so
   4 m between every pair of neighbouring tracks), from the same start node to the same end node:
   it leaves each end along the node's heading like a turnout and swings out over 150 m (less on a
@@ -160,6 +161,14 @@ Full design, numbers and sources: `notes/T-008.md`.
   other pair, in the same edit (on the other pair's loose end or joint when one is level with it,
   T-423): the local and express platforms, one complex and one label. If
   the twin cannot be built there, the station goes in alone.
+- **Crossovers past quad stations** (T-733, `TrackApi::with_crossovers`): a station and its twin
+  get one crossover (below) in the same edit and undo step, centred half the platform plus
+  `QUAD_CROSSOVER_CLEAR` (50 m) plus 60 m from the station, so its nearest end is 50 m clear of
+  the platform end (the platform can grow 100 m before meeting it). It goes off the station's first
+  track end, else its second; where neither has room (the crossover's rules below, or a check the
+  edit fails) the stations go in without one, and so they do when the cash covers them but not it.
+  Full price, two junctions. So between any two neighbouring quad stations a line can change pairs
+  once, either way. Removing the station leaves its crossover as track.
 - **Doubling up** (T-708, `TrackApi::double_up`): double track already placed, blueprint or
   built, becomes quad with one undoable edit that adds the express pair as blueprint (built track
   too: Construct pays for the pair as for any blueprint). It covers the run the selected piece is
@@ -168,12 +177,14 @@ Full design, numbers and sources: `notes/T-008.md`.
   8 m to the left of the selected piece's direction, or to the right where the left is refused
   (crossing other track, water), every corner concentric, one piece beside each piece with a joint
   beside each joint. Each station on the run gets its twin (same name and platform) on the joint
-  beside it. At a junction end the pair swings in to meet the junction (the T-255 taper), so lines
+  beside it, and a crossover past it as a quad station does (above), in the same edit; the
+  preview's price includes them. At a junction end the pair swings in to meet the junction (the T-255 taper), so lines
   can change pairs there; at any other end it has its own loose end beside the drawn pair's, or
   carries on from a loose end of the pair beside that is there already (quad drawn earlier). Refused
   on single track (`Tracks`), a crossover, and track with a pair beside it (`Alongside`).
-- **Crossovers** (T-338, design notes/T-334.md): the crossover tool joins a track to the track
-  running beside it, with a click. It finds the nearest other track whose centre line is 6-15 m
+- **Crossovers** (T-338, design notes/T-334.md): a crossover joins a track to the track running
+  beside it. The game places them past quad stations (above); the player has no tool for them
+  since T-733, but `TrackApi::add_crossover` stays and saves keep theirs. It finds the nearest other track whose centre line is 6-15 m
   from the click and parallel there (quad's other pair, or a separate route drawn alongside), splits
   both 60 m either side of the click (or uses a plain joint within 8 m of that point), and joins
   the four new nodes with two diagonals in an X, one each way, so a train can change track in
@@ -185,8 +196,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   meet there, and the flat crossing between the two diagonals is part of the price, so a crossover
   costs two junctions. Routing and capacity need nothing new: each end is a junction node whose
   moves the crossing rule (6.2) prices, the diagonals' own crossing is a flat crossing, and a line
-  takes a crossover when it is the fastest way to its next stop. Refused (in the tool's tag and on
-  the click) where nothing runs beside within 15 m, or where 60 m either way reaches a track end, a
+  takes a crossover when it is the fastest way to its next stop. Refused where nothing runs beside within 15 m, or where 60 m either way reaches a track end, a
   junction or a station. A crossover keeps its shape: no corners to drag, no level change, its end
   nodes cannot be moved or made a flyover, no station or junction on a diagonal. Deleting either
   diagonal deletes both (the four nodes stay as plain joints); constructing either builds both.
@@ -213,7 +223,9 @@ Full design, numbers and sources: `notes/T-008.md`.
   vertex keeps off its place moves back along the segment in steps of 25 m, up to 400 m. Quad
   track bridges each pair on its own. One edit and one undo step; the preview (`preview_route`)
   and `add_route` share the code, so the ghost shows the bridge, its price and the elevation
-  reached (`0 +1` in the tag). Another level, or a segment with clicked corners, is left as drawn.
+  reached (`0 +1` in the tag). Another level is left as drawn. A route through clicked corners (the
+  edit API's `pis`, as the real-network snap sends them, T-727) is bridged the same way when every
+  corner is at ground level, the bridge's vertices cut into pieces with the corners [T-667].
   With no room on land (water within 200 m of the segment's start or end, so of a station or
   junction it leaves, or one a curve leaves no vertex room for) the edit is refused as
   `BridgeNoRoom`: "There is not enough land for the bridge ramps, which are 200 m long."
@@ -223,6 +235,12 @@ Full design, numbers and sources: `notes/T-008.md`.
   (`service.rs`). The map draws it there, at its true length and bent as the track is, from
   zoom 14, as a box whose width is fixed on the ground too (16 m, a quarter narrower than a plain line and its rim, the same for every station and mode; never under 7.5 px on screen), so its shape is the same at every zoom from 15 in
   ([ui-map.md](ui-map.md) "Stations"; T-189, T-204, T-239). Platform length caps train length (20 m cars).
+- **Train length** (T-733, `TrackApi::set_line_cars`, `build_line` in `service.rs`): each line
+  stores its cars, 0 (a new line's default) for the most its shortest platform fits; a set length
+  runs as set, at most that cap. A platform later shortened below it caps the trains while the
+  setting stays, so lengthening the platform brings the set length back. Riders a train holds
+  (160 a car at crush), the cars the fleet needs and the running cost per car-km follow the cars
+  run. One undoable edit, buying any cars it needs as other fleet growth does (6.4).
   Platform tracks = the route's tracks. Riders change between stations up to 300 m apart on foot, and platforms within 100 m of each other count as one station (4.4). Stations whose platforms come within 50 m form a station complex, which a click on a station selects as one (T-249) and the demand circles can show as one (8, T-146); the player can link any two stations up to 1 km apart into one complex and unlink them (T-197, saved with the network as `Network::links`, not in the undo history). Riders change between any two stations of a complex on foot, however far apart (4.4, T-161).
 
 ### 6.2 Capacity and junctions
@@ -306,8 +324,8 @@ see the junction and its flyover"). Each resource has a kind the app words by (`
 `game/capacityKinds.ts`): track, single track, platform, terminus, junction, flat crossing, a line
 turning on a through station's platform (the line ends there and holds the platform for its
 turnaround plus 60 s; helped by ending the line at a dead-end terminus), track several lines run
-over, and a turn across the other track at a through station. A line whose fleet is cut shows a
-callout under its schedule naming the full resource ("Turning on the platform at Nerul Village is
+over, and a turn across the other track at a through station. A line whose fleet is cut shows an
+alert under its schedule naming the full resource ("Turning on the platform at Nerul Village is
 full") and, per demand level, how many of its trains are held out of service (they wait at the
 ends of the line instead of running), with the resource's limit in trains an hour and what helps on
 hover (`TrackApi.line_held`). Markers sit over the
@@ -342,7 +360,8 @@ busy track, and names the places it waits most (notes/T-031.md).
   both directions together, for **high, medium and low demand** (the column header is "Demand").
   High is the two peaks, medium midday and evening, low night. New lines start at 0 / 0 / 0;
   zero means no new departures. The panel shows the integer allocation and resulting headway.
-  Frequency is derived from the capacity-adjusted round trip, with a bounded solve on edits;
+  Frequency is derived from the capacity-adjusted round trip, with a bounded solve on edits (at
+  most 80 rounds, ending at the first round that changes no rate or round trip, T-747);
   extending track or changing congestion adjusts the headway while preserving the allocation.
   It never exceeds what the line's track can carry (6.2): trains beyond that wait at the ends.
   Resources used by count schedules keep continuous delays so rounding cannot make the solve
@@ -360,9 +379,12 @@ busy track, and names the places it waits most (notes/T-031.md).
   Every edit that changes the line, its track or shared track settles the counts
   again (`TrackWorld::settle_train_counts`: count from the round trip, settle the rates, repeat up
   to 5 rounds), and whole trains that full track would keep waiting at the ends (6.2) are dropped,
-  so the fleet is what runs. A count that grows buys cars as any fleet growth does (6.4), and the
+  so the fleet is what runs. On over-full track (other lines' fixed rates already past its
+  capacity) they are kept, held out of service, and a fleet short of its rate there counts as
+  settled (T-752). A count that grows buys cars as any fleet growth does (6.4), and the
   edit that grows it is refused with nothing changed if the cash is short. A hand-set count ends
-  the headways; switching to headways starts from the headway the current trains give. Saved in a
+  the headways; switching to headways starts from the headway the current trains give. Switching
+  either way buys and sells no train: that edit keeps the line's counts as they stand (T-752). Saved in a
   trailing `LAU1` block of the track save (line index and three headways, only when a line has
   them); a save without it loads every line by hand.
 - **Departures** (`Service::run_deps`): per period of the line's local time (T-309: its first
@@ -413,6 +435,9 @@ multiplier per level (Anita, 2026-10-08; all construction prices halved 2026-10-
 |---|---|---|---|---|---|---|---|
 | Multiplier | 1.8 | 1.3 | 0.8 | 0.3 | 1.0 | 1.1 | 1.2 |
 | US$M per km | 81 | 58.5 | 36 | 13.5 | 45 | 49.5 | 54 |
+
+In a **sandbox** game [T-728] every price, fare and cost is the same, but no edit is refused for
+money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-panels.md).
 
 - **Over or under water: 2x** the level's price. **Level 0 cannot be built over water**; a
   ground-level segment drawn across it becomes a bridge (6.1). Water comes from a mask in the

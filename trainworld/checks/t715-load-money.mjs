@@ -1,5 +1,4 @@
-// T-715: loading a game never charges or freezes its money. Part 1: the real save in the original
-// slot, a copy of it run on three game days, then the original opened from the saves panel while the
+// T-715: loading a game never charges or freezes its money. Part 1: the real save in a slot, a copy of it run on three game days, then the original opened from the saves panel while the
 // later copy is open, twice (before T-715 the later game's clock reached the worker after the load,
 // so the gap's running costs were charged with no fares and the money then stood still until the
 // clock caught up). Each time the cash must load as saved, move while the clock runs with fares coming
@@ -79,13 +78,16 @@ try {
     await page.waitForFunction(() => window.tw.client.lastLoad !== window.__load && window.tw.world.value.save.lines.length > 0, undefined, { timeout: 120000 });
   };
 
-  // Part 1: the real save in the original slot (the start menu's New game with no saves takes it)
+  // Part 1: the real save, loaded into a slot of its own (T-743)
   await page.goto(`${BASE}?debug=1`);
   await page.waitForSelector('.start-menu .start-new', { timeout: 60000 });
   await page.click('.start-menu .start-new');
+  await page.click('.start-menu .new-game-cities [data-city="nyc"]'); // T-728: the new game sheet
+  await page.click('.start-menu .new-game .start-new');
   await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });
   await importSave(await readFile(SAVE));
   await settled();
+  const realKey = await page.evaluate(async () => (await import('/src/workers/clockClient.ts')).saveSlotsState.value.active);
   await pause();
   await page.evaluate(() => window.tw.client.post({ kind: 'saveSlot', action: 'create', name: 'later' }));
   await wait(2000);
@@ -95,8 +97,8 @@ try {
   await page.evaluate(() => window.tw.clock.setSpeed(0));
   await pause();
   for (let round = 1; round <= 2; round++) {
-    const saved = await slotCash('autosave');
-    await open('autosave');
+    const saved = await slotCash(realKey);
+    await open(realKey);
     const a = await money();
     await page.evaluate(() => window.tw.clock.setRunning(true));
     await wait(3000);

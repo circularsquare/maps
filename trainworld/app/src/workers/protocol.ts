@@ -10,7 +10,7 @@
 
 import type { EdgeId, Level, NodeId } from "../game/types";
 import type { FrameSpec } from "../game/frame";
-import type { DayLedger, HourLedger, SaveSlot } from "./saveFile";
+import type { DayLedger, GameMode, HourLedger, NewGameSpec, SaveSlot, SlotBackup } from "./saveFile";
 import type { NetworkBuffers } from "../map/network";
 
 export type { DayLedger, HourLedger };
@@ -72,6 +72,8 @@ export type EditOp =
   | { op: "setHeadway"; line: number; seconds: [number, number, number] | null }
   | { op: "lineLook"; line: number; name: string; colour: string; letter?: string }
   | { op: "removeLine"; line: number }
+  /** a line's train length in cars, 0 for the most its shortest platform fits (T-733) */
+  | { op: "lineCars"; line: number; cars: number }
   /** the fare curve (T-028): US$ a ride plus US$ a km; not undoable, a setting */
   | { op: "fares"; base: number; perKm: number }
   /** link two stations into one complex, or undo a link (T-197): node ids; not undoable, a setting */
@@ -84,8 +86,10 @@ export type ToClock =
    * new game even if there is an autosave (`?new=1`). `testPage`: the page is a check or stress
    * page (`?new=1`, `?synth=1`, `?demandTest=1`, T-320): it never writes a slot until the player
    * saves a copy; `fresh` also does not read one. `newSlot`: the start menu's New game beside
-   * saved games (T-677): an empty game in a new slot of that name, written once something changes. */
-  | { kind: "init"; city: string; pack: string; fresh?: boolean; testPage?: boolean; slot?: string; newSlot?: string }
+   * saved games (T-677): an empty game in a new slot of that name, written once something changes.
+   * `backupMs`: wall ms between a slot's backups (T-744; `?backupMs=` for checks). `game`: how a
+   * new game (`fresh` or `newSlot`) starts (T-728). */
+  | { kind: "init"; city: string; pack: string; fresh?: boolean; testPage?: boolean; slot?: string; newSlot?: string; backupMs?: number; game?: NewGameSpec }
   /** the view's bounds in degrees after a move (T-302): water masks near it are fetched ahead */
   | { kind: "view"; w: number; s: number; e: number; n: number }
   /** the theme the player is in (T-543): a save's thumbnail is drawn in it */
@@ -144,11 +148,15 @@ export type ToClock =
   | { kind: "flush" }
   /** the game as a file: answered with "exported" */
   | { kind: "export" }
-  /** load a save file (T-029); answered with "loaded" */
-  | { kind: "import"; bytes: ArrayBuffer }
-  /** start again: empty city, $6B, day 1 07:00; answered with "loaded" */
-  | { kind: "newGame" }
-  | { kind: "saveSlot"; action: "refresh" | "create" | "open" | "rename" | "delete"; key?: string; name?: string }
+  /** load a save file (T-029); answered with "loaded". It and "newGame" start a slot named `name`
+   * (T-743): no slot is ever written over with another game */
+  | { kind: "import"; bytes: ArrayBuffer; name?: string }
+  /** start again: empty city (or `game.real`'s network), $3B, day 1 07:00; answered with "loaded" */
+  | { kind: "newGame"; name?: string; game?: NewGameSpec }
+  /** T-728: make this normal game a sandbox, for good */
+  | { kind: "sandbox" }
+  /** `restore`: `key` is a backup's (T-744) */
+  | { kind: "saveSlot"; action: "refresh" | "create" | "open" | "rename" | "delete" | "restore"; key?: string; name?: string }
   /** inspector queries (T-031), answered with "answer": a junction's moves
    * (`TrackApi.junction_info`), where a line waits at a demand level (`line_delays`), a blueprint
    * stretch's PIs with their curves (`edge_pis`, T-064), a flyover's price (`[US$M]`, T-080), or
@@ -157,7 +165,7 @@ export type ToClock =
   | {
       kind: "query";
       seq: number;
-      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "lineHeld"; line: number } | { what: "lineMarks"; line: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "doubleUp"; edge: number } | { what: "lineAccount"; line: number; day: number } | { what: "linePeriods"; line: number; day: number } | { what: "today" };
+      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "passedStations"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "lineHeld"; line: number } | { what: "lineMarks"; line: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "doubleUp"; edge: number } | { what: "lineAccount"; line: number; day: number } | { what: "linePeriods"; line: number; day: number } | { what: "today" };
     };
 
 /** T-531: each region's today and this hour, as the "cash" message carries them. */
@@ -166,6 +174,8 @@ export type RegionNow = Record<string, { today: DayLedger; hour: HourLedger }>;
 /** Money as the worker keeps it (T-028), US$M unless said. */
 export interface MoneyState {
   cash: number;
+  /** T-728: a sandbox refuses nothing for money and hides the cash */
+  mode: GameMode;
   /** cars owned, and the cars the running lines need */
   fleet: number;
   carsNeeded: number;
@@ -239,6 +249,8 @@ export interface ClockLine {
   broken: boolean;
   tph: [number, number, number];
   cars: number;
+  /** the train length the player set, cars, 0 for the most its shortest platform fits (T-733) */
+  carsSet: number;
   lengthM: number;
   roundTrip: [number, number, number];
   trains: [number, number, number];
@@ -390,7 +402,8 @@ export type FromClock =
   | { kind: "answer"; seq: number; data: Float64Array }
   /** an autosave was written (Date.now()), its size, and worker ms to encode and to write */
   | { kind: "saved"; at: number; bytes: number; encodeMs: number; totalMs: number }
-  | { kind: "saveSlots"; slots: SaveSlot[]; active: string; writable: boolean; at: number; reason?: string; error?: string }
+  /** `backups`: the active slot's (T-744), newest first */
+  | { kind: "saveSlots"; slots: SaveSlot[]; active: string; writable: boolean; at: number; reason?: string; error?: string; backups: SlotBackup[] }
   | { kind: "error"; message: string };
 
 // ---------- the network as demand sees it (T-025 -> T-026) ----------

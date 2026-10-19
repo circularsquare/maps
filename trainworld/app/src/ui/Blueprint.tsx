@@ -1,6 +1,6 @@
 import { distance, levelLabel, money } from "../game/format";
 import { clearBpPicked, offTotals, pickedState, switchPicked } from "../game/blueprintPick";
-import { liveMoney } from "../game/money";
+import { liveMoney, moneyState } from "../game/money";
 import { tool } from "../game/ui";
 import type { BlueprintItem, Level } from "../game/types";
 import { constructBlueprints } from "../game/lineActions";
@@ -25,7 +25,7 @@ export function BlueprintControls() {
     <div class="blueprint-controls">
       <div class="blueprint-head">
         <span class="b">Blueprint</span>
-        <b class={"num" + (total > liveMoney.value.cash * 1e6 ? " bad" : "")} data-total={total} data-tip="Total construction cost">{money(total)}</b>
+        <b class={"num" + (moneyState.value?.mode !== "sandbox" && total > liveMoney.value.cash * 1e6 ? " bad" : "")} data-total={total} data-tip="Total construction cost">{money(total)}</b>
         <div class="group">
           <button class="btn icon" data-tip="Undo (Ctrl+Z)" aria-label="Undo" disabled={!w?.canUndo} onClick={() => void undo()}><Icon.undo /></button>
           <button class="btn icon" data-tip="Redo (Ctrl+Y)" aria-label="Redo" disabled={!w?.canRedo} onClick={() => void redo()}><Icon.redo /></button>

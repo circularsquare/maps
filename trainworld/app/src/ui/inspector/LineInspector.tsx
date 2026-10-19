@@ -9,7 +9,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { nearestStation } from "../../game/places";
 import { queryClock } from "../../workers/clockClient";
 import { clock, demandAt } from "../../game/clock";
-import { clockTime, count, distance, duration, headway, money, speed } from "../../game/format";
+import { clockTime, count, distance, duration, headway, length, money, speed } from "../../game/format";
 import { LINE_PALETTE } from "../../game/palette";
 import { levelHours, PERIODS, periodAt } from "../../game/periods";
 import { crowdColour, crowdGrade, crowding, runningToday, today, useToday, waitText } from "../../game/today";
@@ -24,7 +24,7 @@ import { toggleEditStops } from "../../game/lineActions";
 import { ColourPicker } from "../ColourPicker";
 import { AUTO_SLACK, autoTrainsFor, edit, headwayFromMinutes, headwayShown, linesAt, nextHeadway, refusedForCash, renameLine, say, setAutoTrains, setHeadway, stepHeadway, stepTrainCount, trainsShown, world } from "../../game/world";
 import { live } from "../../map/live";
-import { Chip, Icon, Row, Segmented, Stepper } from "../widgets";
+import { Alert, Chip, Icon, Row, Segmented, Stepper } from "../widgets";
 import { PurposeSplit } from "./PurposeSplit";
 import { NameEdit } from "./NameEdit";
 import { locateLine, locateStation } from "../locate";
@@ -257,6 +257,8 @@ function StopToday({ line, i }: { line: string; i: number }) {
 }
 
 const carsText = (n: number) => `${n} ${n === 1 ? "car" : "cars"}`;
+/** riders a car holds at crush (sim boarding.rs) */
+const CRUSH_PER_CAR = 160;
 
 /** What a stepper's button leads to: the train count, and for a running line the cars it needs
  * beyond the line's busiest level, bought at the car price unless the depot has spare ones, or
@@ -273,6 +275,39 @@ function changeTip(counts: [number, number, number], lev: number, to: number, st
     return head + (bought > 0 ? `\nBuys ${carsText(bought)} for ${money(bought * m.carPrice * 1e6)}` : `\nUses ${carsText(cars)} from the depot`);
   }
   return cars < 0 ? head + `\nFrees ${carsText(-cars)}, which stay in the depot` : head;
+}
+
+/** Train length (T-733): 1 car up to what the line's shortest platform fits. At the cap the line
+ * stores 0, the most that fits, so it follows the platforms as a new line does. */
+function TrainLength({ l, st }: { l: LineInput; st: LineStats }) {
+  const stations = new Map((world.value?.save.stations ?? []).map((s) => [s.id, s]));
+  const plats = l.stops.map((s) => stations.get(s)).filter((s) => s !== undefined);
+  if (!plats.length || !st.cars) return null;
+  const short = plats.reduce((a, b) => (b.length < a.length ? b : a));
+  const cap = Math.max(1, Math.floor(short.length / 20));
+  const cars = Math.min(st.cars, cap);
+  const capText = `The ${length(short.length)} platform at ${short.name} fits ${carsText(cap)}`;
+  const tip = (to: number) => {
+    let t = `${carsText(to)}, ${(to * CRUSH_PER_CAR).toLocaleString("en-US")} riders a train at most`;
+    const m = moneyState.value, trains = Math.max(...st.trainsNeeded);
+    if (m && st.status === "running" && to > cars) {
+      const more = (to - cars) * trains, bought = Math.max(0, more - Math.max(0, m.fleet - m.carsNeeded));
+      t += bought > 0 ? `\nBuys ${carsText(bought)} for ${money(bought * m.carPrice * 1e6)}` : `\nUses ${carsText(more)} from the depot`;
+    }
+    return t + "\n" + capText;
+  };
+  const step = (d: number) => {
+    const to = Math.max(1, Math.min(cap, cars + d));
+    if (to !== cars) void edit({ op: "lineCars", line: l.num, cars: to >= cap ? 0 : to });
+  };
+  return (
+    <ul class="rows">
+      <li>
+        <span class="grow" data-tip={capText}>Train length</span>
+        <Stepper value={carsText(cars)} wide label="train length" onStep={step} tipDown={cars > 1 ? tip(cars - 1) : capText} tipUp={cars < cap ? tip(cars + 1) : capText} />
+      </li>
+    </ul>
+  );
 }
 
 const headwayText = (s: number) => (s > 0 ? `${+(s / 60).toFixed(2)} min` : "none");
@@ -397,6 +432,23 @@ export function LineInspector({ id }: { id: string }) {
     void queryClock({ what: "linePeriods", line: l.num, day: kind }).then((d) => on && setPeriods(d && d.length ? d : null));
     return () => { on = false; };
   }, [l?.num, w?.version, acct, kind]);
+  // T-646: while stops are edited, the stations the line passes between stops, and the gaps whose
+  // passed stations are shown as stops to add, waiting for Add or Cancel
+  const editingThis = tool.value === "line" && !!l && lineDraft.value.line === l.num;
+  const [passed, setPassed] = useState<{ gap: number; node: number }[]>([]);
+  const [pending, setPending] = useState<number[] | null>(null);
+  useEffect(() => {
+    setPending(null);
+    if (!l || !editingThis) return setPassed([]);
+    let on = true;
+    void queryClock({ what: "passedStations", line: l.num }).then((d) => {
+      if (!on || !d) return;
+      const out = [];
+      for (let i = 0; i + 1 < d.length; i += 2) out.push({ gap: d[i], node: d[i + 1] });
+      setPassed(out);
+    });
+    return () => { on = false; };
+  }, [l?.num, w?.version, editingThis]);
   // its day so far (T-293), kept fresh while the panel is open
   useToday();
   if (!w || !l) return null;
@@ -438,6 +490,15 @@ export function LineInspector({ id }: { id: string }) {
     setPreview(hex);
     void edit({ op: "lineLook", line: l.num, name: l.name, colour: hex }).then((a) => { if (!a.ok) setPreview(null); });
   };
+  const gaps = [...new Set(passed.map((p) => p.gap))];
+  const adding = pending ? passed.filter((p) => pending.includes(p.gap)) : [];
+  const addPassed = async () => {
+    const stops = l.stops.flatMap((s, i) => [Number(s), ...adding.filter((p) => p.gap === i).map((p) => p.node)]);
+    setPending(null);
+    const a = await edit({ op: "setStops", line: l.num, stops });
+    if (a.ok && lineDraft.peek().line === l.num) lineDraft.value = { line: l.num, stops };
+  };
+  const stationsText = (n: number) => `${n} ${n === 1 ? "station" : "stations"}`;
   const removeStop = async (i: number) => {
     const stops = l.stops.filter((_, k) => k !== i).map(Number);
     const a = await edit({ op: "setStops", line: l.num, stops });
@@ -475,10 +536,28 @@ export function LineInspector({ id }: { id: string }) {
       <div class="h divided">
         Stops<span class="right muted small">boardings, past 24 h</span>
       </div>
+      {editingStops && gaps.length > 1 && !pending && (
+        <button class="btn text mini passed-all" onClick={() => setPending(gaps)}>
+          <Icon.plus />Add all {stationsText(passed.length)} the line passes
+        </button>
+      )}
       <ul class="stops" style={{ "--c": shown }}>
         {l.stops.map((s, i) => {
           const xfer = complexOf(s).some((m) => linesAt(m).some((o) => o.id !== l.id));
-          return (
+          const here = editingStops ? passed.filter((p) => p.gap === i) : [];
+          const shownHere = pending?.includes(i);
+          const after = here.length > 0 && i + 1 < l.stops.length && (shownHere
+            ? here.map((p) => (
+              <li class="adding"><span class="grow"><span class="stop-name">+ {name.get(String(p.node)) ?? ""}</span></span></li>
+            ))
+            : !pending && (
+              <li class="passed">
+                <button class="btn text mini" data-tip={here.map((p) => name.get(String(p.node))).join(", ")} onClick={() => setPending([i])}>
+                  <Icon.plus />{stationsText(here.length)} passed
+                </button>
+              </li>
+            ));
+          return (<>
             <li class={xfer ? "xfer" : ""}>
               <span class="grow">
                 <span class="stop-name" onClick={() => (selection.value = { kind: "station", station: s })}>
@@ -495,9 +574,16 @@ export function LineInspector({ id }: { id: string }) {
                 </button>
               )}
             </li>
-          );
+            {after}
+          </>);
         })}
       </ul>
+      {editingStops && pending && adding.length > 0 && (
+        <div class="passed-confirm">
+          <button class="btn text" onClick={() => void addPassed()}>Add {stationsText(adding.length)}</button>
+          <button class="btn text" onClick={() => setPending(null)}>Cancel</button>
+        </div>
+      )}
     </>
   );
 
@@ -520,7 +606,7 @@ export function LineInspector({ id }: { id: string }) {
         </div>
       )}
       <div class="sub muted">
-        {l.stops.length} stops, {distance(st.km * 1000)}{st.cars ? `, ${st.cars} car trains` : ""}
+        {l.stops.length} stops, {distance(st.km * 1000)}
       </div>
       {l.stops.length < 2 && <p class="muted small">No route: fewer than two stops.</p>}
       {st.status === "planned" && l.stops.length >= 2 && (
@@ -532,9 +618,7 @@ export function LineInspector({ id }: { id: string }) {
         </div>
       )}
       {st.status === "broken" && (
-        <div class="callout bad">
-          <p>Broken: track it used is gone.</p>
-        </div>
+        <ul class="alerts"><Alert>Broken: track it used is gone.</Alert></ul>
       )}
 
       <div class="line-stop-actions">
@@ -572,17 +656,19 @@ export function LineInspector({ id }: { id: string }) {
           </tr>
         ))}
       </table>
+      {st.status !== "broken" && <TrainLength l={l} st={st} />}
       {st.status === "running" && held.length > 0 && (
-        <div class="callout bad">
-          <p data-tip={held[0].tip}>{held[0].head}{held[0].at ? <span class="place-link" onClick={() => locateStation(held[0].at!.lng, held[0].at!.lat)}>{held[0].name}</span> : held[0].name}{held[0].tail}</p>
-          <ul class="rows">
-            {held.map((h) => (
-              <Row label={`${DEMAND_LABEL[h.d]} demand`}>
-                <span data-tip={(h.place === held[0].place ? "" : h.place + "\n") + h.tip + "\n" + heldTip}>{heldText(h.wait)}</span>
-              </Row>
-            ))}
-          </ul>
-        </div>
+        <ul class="alerts">
+          {[...new Set(held.map((h) => h.place))].map((place) => {
+            const hs = held.filter((h) => h.place === place), h0 = hs[0];
+            return (
+              <Alert tip={h0.tip}>
+                {h0.head}{h0.at ? <span class="place-link" onClick={() => locateStation(h0.at!.lng, h0.at!.lat)}>{h0.name}</span> : h0.name}{h0.tail}
+                {hs.map((h) => <div class="detail" data-tip={h.tip + "\n" + heldTip}>{DEMAND_LABEL[h.d]} demand: {heldText(h.wait)}</div>)}
+              </Alert>
+            );
+          })}
+        </ul>
       )}
 
       {st.status === "running" && <LineToday l={l} st={st} />}

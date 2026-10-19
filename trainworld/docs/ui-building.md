@@ -10,14 +10,19 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
 
 [T-100; `ui/tabs.tsx`, `ui/Blueprint.tsx`; tools in `map/tools.ts`]
 
-- **Tools**: draw track (key 1), station (2), crossover (6, below), delete (3), select blueprints
-  (5, below), three buttons on the first row and two on the second; then the elevation (seven buttons
+- **Tools**: draw track (key 1), station (2), delete (3), select blueprints (5, below), three
+  buttons on the first row and one on the second; then the elevation (seven buttons
   tinted in their Elevation colours, the chosen one solid with a dark outline, a light one in the dark theme, T-478, T-692) with its
-  multiplier and price per km, single, double or quad track [T-255], and the platform length for
-  new stations.
+  multiplier and price per km, double or quad track [T-255; single track not offered since T-733],
+  and the platform length for new stations (a row under the track choice, no heading; the label's
+  hover says it is for new stations). There is no crossover tool: the game places
+  crossovers past quad stations [T-733, [track-and-service.md](track-and-service.md) 6.1].
   Everything the player reads says elevation, never level (code keeps `level`) [T-526].
-  The elevation, the single, double or quad choice and the keep placing switch are remembered per
-  browser (localStorage with the other panel settings, not in the save) [T-468]. Caps Lock only
+  Beside keep placing, the **snap switch** (a magnet, "Snap track to the real network") [T-727]: while
+  it is on and the track tool is in hand, the real network is drawn at full strength
+  ([ui-map.md](ui-map.md) "Real network"); the snapping itself is T-727d (notes/T-727.md).
+  The elevation, the double or quad choice, the keep placing switch and the snap switch are remembered per
+  browser; a remembered single (from before T-733) reads as double (localStorage with the other panel settings, not in the save) [T-468]. Caps Lock only
   changes the switch when its state changes after the page loads, so a stored setting wins over a
   Caps Lock left on or off [T-487].
   The number keys work from any tab and open the Build tab; the key of the tool already on does
@@ -46,13 +51,13 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
 
 [T-023, T-085, T-092, T-244, T-311, T-322, T-418, T-422, T-442]
 
-Track is drawn through points, single, double and quad alike [T-418, T-423; Corners retired with
+Track is drawn through points, double and quad alike [T-418, T-423; Corners retired with
 T-422]. The geometry is in [track-and-service.md](track-and-service.md) 6.1.
 
 - **Clicks**: the first click is the start, the second places a segment ending at it at once (one
   undo step), the track passing through the click, at the level selected. A click with Shift held
   places the segment and starts the next one at its end; without Shift the tool is ready for a new
-  start. The **keep placing** button (an icon beside the Single, Double and Quad choice) does the
+  start. The **keep placing** button (an icon beside the Double and Quad choice) does the
   same for every click until it is switched off, and so does Caps Lock, which is the same switch
   (the button shows it) [T-445]. A double click, Escape or Enter ends the run (the first click of
   the double places the last segment); the button stays on. A click on the start (within 6 px, or
@@ -146,16 +151,14 @@ T-422]. The geometry is in [track-and-service.md](track-and-service.md) 6.1.
 - How a new station is named: [track-and-service.md](track-and-service.md) 6.1. A double click on
   the name in its inspector renames it.
 
-## Placing crossovers
+## Crossovers
 
-[T-338; `map/tools.ts`, rules in [track-and-service.md](track-and-service.md) 6.1] The crossover
-tool (key 6, an X between two rails) snaps to track only, never to a node. With the pointer on
-track the ghost is the crossover's X as the click would place it, drawn like the track tool's
-ghost (red where it would be refused), and the tag says its price ("$24.8M") or why not ("A
-crossover needs other track alongside within 15 m, with 60 m of plain track each way."). The
-answer comes from the clock worker trying the real edit (`TrackApi.preview_crossover`, one request
-in flight). A click places it as blueprint, one undoable edit; a click off track says to click on
-track beside other track.
+[T-338, T-733; rules in [track-and-service.md](track-and-service.md) 6.1] The player does not place
+crossovers. A station placed on quad track, or doubling up through stations, adds one past each
+station in the same edit; the station ghost does not draw it, and it shows on the map as blueprint
+once placed, its price in the blueprint total and in the double-up button's price. A crossover is
+selected, constructed and removed whole like other track (below). The clock worker still answers
+`previewCrossover` and the `crossover` edit, for checks.
 
 ## Deleting
 
@@ -258,3 +261,10 @@ route, keeping the existing stop order; removing a stop leaves the others in ord
   and dragging work over them.
 - A panel at the map's lower left shows "Editing stops on <line>: N stops" and Done; Enter and
   Escape also leave. Red removal crosses show in the stop list while editing.
+- **Stations passed** [T-646, `TrackApi::passed_stations`]: while editing, the stop list shows,
+  between two stops whose stretch of the line's own path runs through other stations, a row
+  "+ 2 stations passed" (its hover names them); with stations passed in more than one gap, "Add
+  all 5 stations the line passes" heads the list. A click shows those stations in the list as
+  faint "+ Name" rows, in path order, with Add and Cancel under the list; Add makes them stops in
+  one undoable edit. Only stations on the line's path count: a quad twin on the pair beside, or a
+  station on a branch, is not offered.

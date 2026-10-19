@@ -368,6 +368,14 @@ export function stationShape(x: number, y: number, sh: PlatformShape, halfWidth:
   };
 }
 
+/** At least how far, CSS px, a station's shape reaches beyond its centre line's points: its half
+ * width or dot, with `halfWidth` its true half width (local units) and `perLoc` CSS px per local
+ * unit. A pick skips a station whose node is further than this plus its line's reach (T-724). */
+export function stationReachPx(st: StationStyle, halfWidth: number, perLoc: number): number {
+  const hw = Math.max(boxHalfLoc(st, halfWidth) * perLoc, boxHalfPxAtBoxZoom(st));
+  return 2 * Math.max(hw, st.radius[0], st.radius[1], 0.5 * PLAIN_COVER * st.linePx + st.ringPx + 1);
+}
+
 /** A point in a station's frame, CSS px: along its centre line from its middle, and across it
  * (towards +n). As SHAPE_GLSL's `polyFrame` (a platform, T-254) or `arc` (a bridge). */
 export function stationCoords(s: StationShape, px: number, py: number): [number, number] {

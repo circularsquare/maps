@@ -193,7 +193,13 @@ all results are recomputed. About 100 KB compressed per 10,000 route-km (T-040).
   absent in saves before T-684 and T-685, which start with none. A header `points` block (per region
   totals, written by builds between T-684 and T-694) is ignored. Ledger entries after the header's
   clock are dropped on load and their net returned to the cash ([track-and-service.md](track-and-service.md)
-  6.4, T-715).
+  6.4, T-715). `mode` (`normal` or `sandbox`), `start` (the start zone's id, absent for a start on
+  the world map) and `opened` (the zones opened in this game, in order: the start zone at first;
+  T-729 adds to it) are absent in saves before T-728, which read as normal with no start; the slot's
+  summary has `mode` too, for the saves cards.
+- **Sandbox** [T-728]: the track model's `set_unlimited` makes every money check pass (the edit
+  still pays, so the cash can go below zero); the clock worker sets it from the header's mode and on
+  the one-way `sandbox` message from Settings.
 - **Older frames** [T-308; [world.md](world.md)]: a file or slot in TWT5 (the Northeast conic) or
   TWT4 and older (equirectangular) is converted to Mercator as it loads (`convert_save_frame` in the
   clock worker) and the slot written again at once in TWT6; the old bytes stay under a hidden key
@@ -205,6 +211,28 @@ all results are recomputed. About 100 KB compressed per 10,000 route-km (T-040).
   opens the slot opened last. `?new=1` starts a game that reads no slot and owns none, and
   does not autosave until "Save as a copy" gives it one [T-320]; `?synth=1` and `?demandTest=1`
   load the last game but never autosave it.
+- **No slot is written over with another game** [T-743]: New game (the start menu's beside saved
+  games, and the saves panel's), Load a file and a backup's Restore as a copy each put the game in a
+  new slot, after saving the game being played, which keeps its slot. A new game's slot is named
+  after its start (`newGameName`: "Tokyo", "Tokyo sandbox", "World" for a map start, then " 2" and
+  on if taken; T-728) and written once something changes, or at once when it starts from a real
+  network; a loaded file's is
+  named after the file without `.save` and written at once; a restored backup's is the slot's name
+  and the backup's time. A tab without its slot's lock must save a copy before leaving a changed
+  game. On a test page the game is replaced in the page and owns no slot. A slot that cannot be
+  read on start stays as it is (its bytes also under `unreadable-<time>`) and the new game gets a
+  slot of its own ("Game N"). The start menu's New game always takes a new slot, even with nothing
+  saved (T-728); the original slot `autosave` is only ever an old one.
+- **Real networks** [T-731]: `packs/real/<id>.save` for New York, London, Paris, Tokyo, Seoul,
+  Toronto and Sendai (7-80 KB each, `pipeline/realnet.py ship` copies them from realnet's game
+  files into `data/packs/real/`, and the build copies that folder). A sandbox started from one loads
+  it as a new game: its network, fleet and fares, with the clock, cash, ledgers and stars of a new
+  game. They are in older frames and converted as they load (below).
+- **Backups** [T-744]: two per slot in the same store, `backup:<slot>:0` and `:1`, the slot's record
+  without its picture. An autosave at least 5 wall minutes after the slot's newest backup (or with
+  none) is also written over the older backup, so backups only follow changes. The saves panel lists
+  the playing slot's under its card, each with Restore as a copy. Deleting a slot deletes them.
+  `?backupMs=` shortens the interval for checks.
 - **Named browser slots** [T-068, T-241]: save the current game as a new copy, open another, rename,
   delete an inactive slot after confirmation. The selected slot is remembered; the original autosave
   stays at its key ("Original game"). Each slot write stores a `SlotSummary` beside the bytes: a 384

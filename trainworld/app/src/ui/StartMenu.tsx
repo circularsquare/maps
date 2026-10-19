@@ -1,43 +1,54 @@
 // T-677: the start menu. Every page load opens on it, unless a URL switch already says which game
-// (`choiceFromUrl`): New game, then the saved games in this browser, the most recent first, each a
-// card as in the saves panel. Nothing heavy has started under it: main.ts starts the clock and demand
+// (`choiceFromUrl`): New game (the new game sheet, T-728), then the saved games in this browser, the
+// most recent first, each a card as in the saves panel. Nothing heavy has started under it: main.ts starts the clock and demand
 // workers with the pick. It covers the page and takes every key until then.
 
 import { h, render } from "preact";
-import { useEffect, useRef } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
+import { CITIES, HOME_CITY } from "../game/cities";
 import { choosing } from "../game/loading";
-import { listSlots, ORIGINAL_SLOT, type SaveSlot } from "../workers/saveFile";
+import { listSlots, newGameName, type SaveSlot } from "../workers/saveFile";
 import type { GameChoice } from "../workers/clockClient";
-import { SlotFacts, SlotThumb } from "./SavesPanel";
+import { NewGameSheet } from "./NewGame";
+import { SlotFacts, SlotThumb, SlotTitle } from "./SavesPanel";
 
-/** The game the URL chooses, or null for the menu: `?new=1` a new game that owns no slot (T-320);
+/** The game the URL chooses, or null for the menu: `?new=1` a new game that owns no slot (T-320),
+ * normal in New York unless `&mode=sandbox` or `&city=<zone id>` say otherwise (T-728);
  * `?synth=1`, `?demandTest=1`, `?paused=1` and `?continue=1` the game opened last. */
 export function choiceFromUrl(): GameChoice | null {
   const q = new URLSearchParams(location.search);
   const on = (k: string) => q.get(k) === "1";
-  if (on("new")) return { fresh: true, newGame: true };
+  if (on("new")) {
+    const city = q.get("city");
+    return { fresh: true, newGame: true, game: { mode: q.get("mode") === "sandbox" ? "sandbox" : "normal", start: CITIES.some((c) => c.id === city) ? city! : HOME_CITY } };
+  }
   if (on("synth") || on("demandTest") || on("paused") || on("continue")) return {};
   return null;
 }
 
 function Menu({ slots, pick }: { slots: SaveSlot[]; pick: (c: GameChoice) => void }) {
   const first = useRef<HTMLButtonElement>(null);
-  useEffect(() => first.current?.focus(), []);
+  const [sheet, setSheet] = useState(false);
+  useEffect(() => { if (!sheet) first.current?.focus(); }, [sheet]);
   const now = Date.now();
-  // with no saved game the new one takes the original slot, as before the menu; beside saved games
-  // it gets a slot of its own, so no saved game is replaced
-  const fresh: GameChoice = slots.length ? { newGame: true, newSlot: `Game ${slots.length + 1}` } : { newGame: true, slot: ORIGINAL_SLOT };
+  // T-728: the new game sheet; its game gets a slot of its own named after its start, so no saved game is replaced
+  if (sheet) return <div class="start-menu" role="dialog" aria-modal="true" aria-labelledby="start-title">
+    <div class="start-box new-game-box">
+      <h1 id="start-title" class="big">New game</h1>
+      <NewGameSheet heading={false} onBack={() => setSheet(false)} onStart={(game) => pick({ newGame: true, newSlot: newGameName(slots, game), game })} />
+    </div>
+  </div>;
   return <div class="start-menu" role="dialog" aria-modal="true" aria-labelledby="start-title">
     <div class="start-box">
       <h1 id="start-title" class="big">anitabuilder</h1>
-      <button ref={first} class="btn start-new" onClick={() => pick(fresh)}>New game</button>
+      <button ref={first} class="btn start-new" onClick={() => setSheet(true)}>New game</button>
       {slots.length > 0 && <>
         <h2 class="start-head">Saved games</h2>
         <ul class="start-saves">
           {slots.map((s) => <li key={s.key}>
             <button class="start-save" data-slot={s.key} onClick={() => pick({ slot: s.key })}>
               <SlotThumb slot={s} />
-              <span class="save-info"><strong>{s.name}</strong><SlotFacts slot={s} now={now} /></span>
+              <span class="save-info"><SlotTitle slot={s} /><SlotFacts slot={s} now={now} /></span>
             </button>
           </li>)}
         </ul>

@@ -6,7 +6,7 @@
 //   workers/  the clock worker (owns the network, T-025) and the demand pool (T-026)
 //
 // URL parameters: ?debug=1 (performance readout, window.tw probes), ?paused=1, ?new=1 (a new
-// game that owns no slot, workers/clockClient.ts), ?continue=1 (the game opened last, no start
+// game that owns no slot, workers/clockClient.ts; with &mode=sandbox and &city=<zone id>, T-728), ?continue=1 (the game opened last, no start
 // menu; ui/StartMenu.tsx),
 // ?synth=1&lines=500&trains=10000 (draw the synthetic stress network instead of the real one),
 // ?perfOff=labels,shadow,hover,clock,overlay,markers (measurement only, perfFlags.ts).
@@ -19,6 +19,7 @@ import { getWorldFrame, HOME_CITY } from "./game/cities";
 import { packToLngLat, lngLatToPack } from "./game/coords";
 import { ask, display, isBuildTool, selection, shade, stopEditing, tab, tool } from "./game/ui";
 import { complexOf, dotGroups, inComplexView } from "./game/complexView";
+import { hot, onHot } from "./map/hovered";
 import { cancelLink, linkPicked, linking } from "./game/links";
 import { ACTION_KEYS, pickTool, TOOL_KEYS, TRIP_KEY } from "./ui/tabs";
 import { constructBlueprints, newLineKey, toggleEditStopsSelected } from "./game/lineActions";
@@ -63,6 +64,7 @@ import { startSearch } from "./ui/Search";
 import { startTips } from "./ui/tip";
 import { startLoadingGate } from "./ui/LoadingScreen";
 import { choiceFromUrl, showStartMenu } from "./ui/StartMenu";
+import { viewStart } from "./ui/NewGame";
 import { ClockClient, clockWorkerStatus, onNetworkSnapshot } from "./workers/clockClient";
 import { startDemand, submitNetwork } from "./workers/demandClient";
 import { startDemandViews, viewStats } from "./map/demandViews";
@@ -142,10 +144,15 @@ const overlay = new Overlay(map, renderer, () => {
     crowds: d.platformCrowds !== "off", // T-164, T-219
     flatMarks: d.flatMarks,
     groups: dotGroups.peek(), // zoomed out, the stations the distance rule groups are one dot (T-217, T-225)
+    hotLine: hot().line,
+    hotEdge: hot().edge,
+    hotStations: n ? hot().stations.map((id) => n.stationIds.indexOf(id)) : [],
   };
 });
+onHot(() => overlay.invalidate()); // T-730: what the pointer is on lightens
 live.map = map;
 live.overlay = overlay;
+if (params.has("city") && urlChoice?.game) viewStart(urlChoice.game.start); // T-728: `?new=1&city=tyo`
 // Panning follows the zone under the view, except while a bubble, station or trip selection holds
 // the focus; the zones beside it on screen show their bubbles too (T-276, map/zoneFocus.ts).
 startZoneFocus(map);
@@ -412,7 +419,9 @@ onNetworkSnapshot(submitNetwork);
 
 // ---- T-677: the start menu; the pick starts demand, then the clock worker, in startup's order ----
 if (!urlChoice) showStartMenu((choice) => {
-  startDemand(HOME_CITY, !!choice.newGame);
+  // T-728: a new game opens on its start city, or the world map; a real network (T-731) has stations, so it does not open bare
+  if (choice.game) viewStart(choice.game.start);
+  startDemand(HOME_CITY, !!choice.newGame && !choice.game?.real);
   client.start(choice);
 });
 

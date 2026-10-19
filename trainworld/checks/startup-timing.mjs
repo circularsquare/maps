@@ -40,7 +40,12 @@ const waitDone = () => page.waitForFunction(() => window.__t?.final !== undefine
 async function pick(which) {
   const sel = which === 'new' ? '.start-menu .start-new' : '.start-menu .start-save';
   await page.waitForSelector(sel, { timeout: 60000 });
-  await page.evaluate((sel) => { window.__t.pick = Math.round(performance.now()); document.querySelector(sel).click(); }, sel);
+  if (which === 'new') { // T-728: New game opens the sheet; the pick is its Start, New York
+    await page.click(sel);
+    await page.click('.start-menu .new-game-cities [data-city="nyc"]');
+  }
+  const go = which === 'new' ? '.start-menu .new-game .start-new' : sel;
+  await page.evaluate((sel) => { window.__t.pick = Math.round(performance.now()); document.querySelector(sel).click(); }, go);
 }
 const read = async () => {
   await page.waitForTimeout(1000); // r3, if it comes soon after

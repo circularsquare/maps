@@ -2,7 +2,8 @@
 // save button at the end of the dock's tab row (or the top bar's Autosave off notice), closed with
 // Esc, its close button or a click outside it. One card per browser slot: a picture of its network,
 // name, when it was saved, day, cities, lines, stations and cash; the game being played is marked,
-// every other has an Open button. Then save a copy, the files and a new game. T-253: no notes.
+// every other has an Open button; under the game being played, its backups (T-744). Then save a copy,
+// the files and a new game; a copy, a loaded file and a new game each get a new slot (T-743). T-253: no notes.
 
 import { signal } from "@preact/signals";
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
@@ -10,9 +11,10 @@ import { CITIES, cityById } from "../game/cities";
 import { money } from "../game/format";
 import { lastSaved } from "../game/money";
 import { exportGame, importGame, newGame, manageSaveSlot, saveSlotsState } from "../workers/clockClient";
-import type { SaveSlot } from "../workers/saveFile";
+import type { SaveSlot, SlotBackup } from "../workers/saveFile";
 import { Icon } from "./widgets";
 import { Money } from "./MoneyText";
+import { NewGameSheet, viewStart } from "./NewGame";
 
 /** The saves panel is open. */
 export const savesOpen = signal(false);
@@ -59,10 +61,17 @@ export function SlotFacts({ slot, now, autosaved }: { slot: SaveSlot; now: numbe
       <span data-tip={`${slot.lines} lines`}>{plural(slot.lines!, "line", "lines")}</span>
       {" · "}
       <span data-tip={`${slot.stations} stations`}>{plural(slot.stations!, "station", "stations")}</span>
-      {" · "}
-      <span data-tip={`Cash when saved: ${money(slot.cash! * 1e6)}`}><Money dollars={slot.cash! * 1e6} /></span>
+      {slot.mode !== "sandbox" && <>
+        {" · "}
+        <span data-tip={`Cash when saved: ${money(slot.cash! * 1e6)}`}><Money dollars={slot.cash! * 1e6} /></span>
+      </>}
     </div>}
   </>;
+}
+
+/** A saved game's name, with a mark when it is a sandbox (T-728); also the start menu's. */
+export function SlotTitle({ slot }: { slot: SaveSlot }) {
+  return <strong>{slot.name}{slot.mode === "sandbox" && <span class="save-sandbox small" data-tip="A sandbox game: nothing is refused for money">Sandbox</span>}</strong>;
 }
 
 /** One saved game. */
@@ -71,7 +80,7 @@ function SlotCard({ slot, playing, now, writable, onRename, onDelete }: { slot: 
     <div class="save-card">
       <SlotThumb slot={slot} />
       <div class="save-info">
-        <div class="save-slot-title"><strong>{slot.name}</strong>{playing && <span class="save-playing small">Playing</span>}</div>
+        <div class="save-slot-title"><SlotTitle slot={slot} />{playing && <span class="save-playing small">Playing</span>}</div>
         <SlotFacts slot={slot} now={now} autosaved={playing && writable} />
         <div class="save-actions">
           {!playing && <button class="btn text save-open" data-tip="Play this game. The game you are playing is saved first." onClick={() => { manageSaveSlot("open", slot.key); savesOpen.value = false; }}>Open</button>}
@@ -83,8 +92,20 @@ function SlotCard({ slot, playing, now, writable, onRename, onDelete }: { slot: 
   );
 }
 
-function Saves() {
-  const [confirm, setConfirm] = useState(false);
+/** The playing slot's backups (T-744), each restored into a new slot. */
+function Backups({ backups, now }: { backups: SlotBackup[]; now: number }) {
+  return <div class="save-backups">
+    {backups.map((b) => {
+      const exact = new Date(b.at).toLocaleString([], { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+      return <div class="save-backup small" data-backup={b.key}>
+        <span class="muted num" data-tip={`A backup of this game from ${exact}, game day ${b.day}`}>{savedWhen(b.at, now).replace("Saved", "Backup")} · Day {b.day}</span>
+        <button class="btn text" data-tip="Open this backup as a new saved game. The game you are playing is saved first." onClick={() => { manageSaveSlot("restore", b.key); savesOpen.value = false; }}>Restore as a copy</button>
+      </div>;
+    })}
+  </div>;
+}
+
+function Saves({ onNewGame }: { onNewGame: () => void }) {
   const [newName, setNewName] = useState("");
   const [rename, setRename] = useState<{ key: string; name: string } | null>(null);
   const [removing, setRemoving] = useState<string | null>(null);
@@ -115,6 +136,7 @@ function Saves() {
             <button class="btn text" type="button" onClick={() => setRename(null)}>Cancel</button>
           </form> : <SlotCard slot={slot} playing={slot.key === saves.active} now={Math.max(now, at)} writable={saves.writable}
             onRename={() => setRename({ key: slot.key, name: slot.name })} onDelete={() => setRemoving(slot.key)} />}
+          {slot.key === saves.active && saves.backups.length > 0 && <Backups backups={saves.backups} now={Math.max(now, at)} />}
           {removing === slot.key && <div class="callout bad">
             <p>Delete "{slot.name}" from this browser?</p>
             <div class="pane-foot"><button class="btn text" onClick={() => { manageSaveSlot("delete", slot.key); setRemoving(null); }}>Delete saved game</button><button class="btn text" onClick={() => setRemoving(null)}>Keep it</button></div>
@@ -127,18 +149,9 @@ function Saves() {
       </form>
       <div class="pane-foot save-files">
         <button class="btn text" data-tip="Download this game as a .save file" onClick={exportGame}>Save to a file</button>
-        <button class="btn text" onClick={pick}>Load a file</button>
-        {!confirm && <button class="btn text" onClick={() => setConfirm(true)}>New game</button>}
+        <button class="btn text" data-tip="Open a .save file as a new saved game. The game you are playing is saved first." onClick={pick}>Load a file</button>
+        <button class="btn text" data-tip="Start a new game as a new saved game. The game you are playing is saved first." onClick={onNewGame}>New game</button>
       </div>
-      {confirm && (
-        <div class="callout bad">
-          <p>Start again in an empty city? The game in this slot is replaced.</p>
-          <div class="pane-foot">
-            <button class="btn text" onClick={() => { setConfirm(false); newGame(); savesOpen.value = false; }}>Start a new game</button>
-            <button class="btn text" onClick={() => setConfirm(false)}>Keep playing</button>
-          </div>
-        </div>
-      )}
     </>
   );
 }
@@ -148,6 +161,9 @@ function Saves() {
 export function SavesPanel() {
   const open = savesOpen.value;
   const dialog = useRef<HTMLDialogElement>(null);
+  // T-728: New game shows the new game sheet in the panel's place
+  const [sheet, setSheet] = useState(false);
+  useEffect(() => { if (!open) setSheet(false); }, [open]);
   useLayoutEffect(() => {
     const el = dialog.current;
     if (!open || !el) return;
@@ -167,10 +183,12 @@ export function SavesPanel() {
       onKeyDown={(e) => { e.stopPropagation(); if (e.key === "Escape") { e.preventDefault(); savesOpen.value = false; } }}>
       <div class="saves-inner">
         <div class="saves-head">
-          <h2 id="saves-title">Saved games</h2>
+          <h2 id="saves-title">{sheet ? "New game" : "Saved games"}</h2>
           <button class="btn icon" aria-label="Close" data-tip="Close (Esc)" onClick={() => (savesOpen.value = false)}><Icon.cross /></button>
         </div>
-        <Saves />
+        {sheet
+          ? <NewGameSheet heading={false} onBack={() => setSheet(false)} onStart={(game) => { newGame(game); viewStart(game.start); savesOpen.value = false; }} />
+          : <Saves onNewGame={() => setSheet(true)} />}
       </div>
     </dialog>
   );

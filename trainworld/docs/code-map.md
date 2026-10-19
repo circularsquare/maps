@@ -15,6 +15,8 @@ tests natively.
   the clock worker's API, with the drawing tool's routes and the crossover tool's edit, T-338). In the default build.
   `cargo run --release --bin track_bench` times edits on a synthetic 2,000 km network; feature
   `track-bench` exports it to WASM. notes/T-040.md.
+- `src/track/trace.rs`: a real railway's line as corners within a tolerance (T-727c), for
+  `TrackApi::trace_route` and the real-network snap; notes/T-727.md.
 - `src/demand/`: the demand kernel, behind feature `demand` (on in the app's build): `api.rs`
   (`DemandApi`, the demand workers' API), `intercity.rs` (the regional market), `warm.rs` (the
   everyday warm-up demand worker 0 runs at startup, T-173), `days.rs` (the weekend's factors per
@@ -57,6 +59,8 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   zoomed-out dot groups; T-217, T-249), `links.ts` (the player's links, T-197), `lineActions.ts`
   (new and copied lines, Edit stops, construct blueprints: the N, L and C keys, T-670), `remove.ts` (removing things, with the question asked before removing
   anything constructed, T-096).
+- `realGraph.ts`: a region's real-network routing graph (`packs/realgraph/<cc>.rgr`, fetched once
+  and decoded), for snapping track to the real network (T-727).
 - Other: `money.ts` (cash and ledger from the worker, fare income from riders, T-028),
   `moneyTiming.ts` (each game hour's fares, rides, points and running cost from the period tables, T-736),
   `regionMoney.ts` (each line's and each construction's split between regions, the region ledgers, T-531), `points.ts`
@@ -86,7 +90,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   neighbourhood, city or town, T-534), `stationLabels.ts` (names
   keep their elements across edits unless their text changes, T-496), `capacityMarkers.ts`, `labelLayout.ts` (shared spacing
   for names and tags).
-- Tools: `pick.ts`, `tools.ts` (drawing track, placing stations and crossovers, the line tool), `stationSnap.ts` (which overlapping track a station goes on, the end snap, T-671), `edgeEdit.ts`
+- Tools: `pick.ts`, `tools.ts` (drawing track, placing stations, the line tool), `stationSnap.ts` (which overlapping track a station goes on, the end snap, T-671), `edgeEdit.ts`
   (dragging blueprint track's PIs, T-064, T-092), `nodeDrag.ts` (dragging blueprint nodes, T-093), `endMarkers.ts` (loose-end and draggable-point markers, T-416), `curveCircle.ts` (the circle of the segment being drawn, T-418),
   `blueprintBox.ts` (the Select tool's drag box, T-333, and dragging its pick, T-475; its state is `game/blueprintPick.ts`),
   `stopMarkers.ts` (the toggle markers of stop editing, T-233).
@@ -108,14 +112,14 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 
 ### src/ui/: Preact components
 
-`Dock.tsx` (the dock, its icon tabs and resizing, T-252); `tabs.tsx` (Build, Lines, Stations and
-Money); `MoneyHistory.tsx` (the Money tab's history charts, T-447); `Cities.tsx` (its Cities list, T-550); `SettingsTab.tsx`; `SavesPanel.tsx` (saved games, T-251); `bullet.ts` (`bulletText`, `bulletTextNode`: a line bullet's text as SVG text placed from its canvas-measured ink box, per font, symbol and size, T-705; the heights in it match `.chip` in style.css; used by `Chip` and `lineBullet`); `widgets.tsx` (chips, steppers,
+`Dock.tsx` (the dock, its icon tabs and resizing, T-252); `tabs.tsx` (Build, Lines, Stations, Money and the Cities tab);
+`MoneyHistory.tsx` (the Money tab's history charts, T-447); `Cities.tsx` (the Cities list, T-550, T-749); `SettingsTab.tsx`; `SavesPanel.tsx` (saved games, T-251); `bullet.ts` (`bulletText`, `bulletNode`: a line bullet as one SVG, its circle and its symbol placed from the canvas-measured ink box with the baseline on a whole device pixel, per font, symbol, size and scale, T-705, T-745; the sizes in it match `.chip` in style.css; used by `Chip` and `lineBullet`); `widgets.tsx` (chips, steppers,
 checkboxes and the inline SVG icons); `ColourPicker.tsx` (the line colour picker: preview while dragging, one commit on release, T-672); `TopBar.tsx`; `StatusTag.tsx` (the demand status tag on the map's top row); `Toolbar.tsx` (tool hints and the confirmation
 dialog); `DemandSelector.tsx` (None/Homes/Destinations and the purpose filter); `Blueprint.tsx`
 (Build's quote and Construct, and the Select tool's selection bar on the map, T-353); `Debug.tsx` (the `?debug=1` readout); `inspector/` (one inspector
 per selection kind: `others.tsx` holds station, train, track, junction and cell or zone;
 `ComplexMap.tsx` the complex map; `NameEdit.tsx` a station's or line's name edited in place, T-534); `LoadingScreen.tsx` (the clock hold at startup, the loading card,
-the screen when demand cannot load, T-149, T-172, T-180); `StartMenu.tsx` (the start menu and the URL switches that skip it, T-677); `Spinner.tsx` (the small spinner, T-647, and the bunny's train, T-677); `Search.tsx` (T-148); `StationsFull.tsx`
+the screen when demand cannot load, T-149, T-172, T-180); `StartMenu.tsx` (the start menu and the URL switches that skip it, T-677); `NewGame.tsx` (the new game sheet: mode, start city, search, real network; `START_CITIES`, `REAL_NETWORKS`, T-728, T-731); `Spinner.tsx` (the small spinner, T-647, and the bunny's train, T-677); `Search.tsx` (T-148); `StationsFull.tsx`
 (the "N stations full" button, T-231); `keys.ts` (which keys a focused control keeps, T-183); `locate.ts` (the camera to a station or a line: search picks, the tabs' double click, the inspectors' locate button, T-569);
 `tip.ts` (the hover tag for every panel and control, from `data-tip`, never `title`, T-210);
 `blurHold.ts` (every hover kept up through a window blur until the pointer moves, T-483);
@@ -125,7 +129,7 @@ the screen when demand cannot load, T-149, T-172, T-180); `StartMenu.tsx` (the s
 
 `protocol.ts` (edit ops, clock messages, the network snapshot for demand), `clock.worker.ts` (owns
 the network: `TrackApi`, notes/T-025.md; money and autosave too), `saveFile.ts` (the save format
-and IndexedDB, T-029), `clockClient.ts`, `demand.worker.ts`, `demandClient.ts`, `demandCache.ts`
+and IndexedDB, T-029; slots' backups, T-744), `clockClient.ts`, `demand.worker.ts`, `demandClient.ts`, `demandCache.ts`
 (the last final demand result kept beside the save, T-328),
 `demandProtocol.ts`, `demandClusters.ts` (the network split into clusters that share no rider,
 each a sub-network, T-326; `marketReaches`, which stations the market's riders use, T-396), `demandTest.ts`, `cityReach.ts` (which city packs a network's stations can
@@ -142,14 +146,14 @@ until a copy is saved, T-320, so it is safe in a browser profile holding real ga
 `?continue=1` (the game opened last; checks that reopen a stored game use it), each of these and
 the two below skipping the start menu (T-677),
 `?synth=1&lines=500&trains=10000`, `?demandTest=1` (demand on T-005's hand-made network; both also
-never autosave), `?demandWorkers=N`, `?perfOff=...` / `?perfTry=...` (CPU A/B switches,
+never autosave), `?backupMs=N` (wall ms between a slot's backups, T-744), `?demandWorkers=N`, `?perfOff=...` / `?perfTry=...` (CPU A/B switches,
 `src/perfFlags.ts`, notes/T-045.md).
 
 ### Build
 
 `npm run build --prefix app` = wasm-pack twice (Cargo profile `wasm`, `+simd128` from
 `sim/.cargo/config.toml`), type check, `app/dist/`
-(city packs copied into `dist/packs/` by `vite.config.ts`), which serve.py serves at
+(city packs, real networks and real-network graphs copied into `dist/packs/` by `vite.config.ts`), which serve.py serves at
 `localhost:8800/trainworld/` (from the snapshot worktree, see CLAUDE.md). `npm run wasm --prefix
 app` rebuilds only the WASM. `npm run check --prefix app` type-checks.
 
@@ -186,8 +190,19 @@ Run from the maps root (`node trainworld/checks/<file>`).
   6135 by default), `t715-load-money.mjs` (the real save opened from the saves panel while a later
   copy is open, twice: cash loads as saved and moves, no ledger day after the clock; a save with
   ledger days after its clock gets their running cost back; port 6165 by default),
+  `t728-newgame.mjs` (the new game sheet in a fresh profile: the search, a sandbox in Tokyo from
+  its real network, a normal London start, a map start, the real New York save turned sandbox from
+  Settings; slots left keep their bytes; screenshots t728-*.png; port 6150 by default),
+  `t743-slots.mjs` (through the saves panel: Load a file, New game and a backup's Restore as a copy
+  each open a new slot and leave every other slot's bytes as they were, the real save and
+  artifacts/trainworld/recovered-day26.save both; two backups rotate at `?backupMs=4000`; a deleted
+  slot's backups go; port 6150 by default),
   `t736-money-timing.mjs` (Node: a week's hours of `moneyTiming.ts` keep the period tables' fares,
   rides and running costs, with the largest hour-to-hour change beside the flat booking's),
+  `t745-bullets.mjs` (the real save's line bullets in the Lines tab, the line inspector and the map
+  tags, plus digits, two characters and kana, light and dark, 100% and 90% UI, pixel ratio 1 and 2:
+  each symbol's ink centred in its drawn circle within 0.6 device px, measured on the screenshot;
+  port 6160 by default, about four minutes),
   `t486-click-on-top.mjs` (a click on a blueprint point's square over a bubble
   selects the track, beside it the bubble), `t533-draw-order.mjs` (the real save: the shorter line
   on top where lines share ground, a line with no trains under; port 6130 by default),
@@ -315,11 +330,16 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
 - Real networks and calibration (T-007, T-509): `realnet.py net <city>` turns a city's sources
   (GTFS, OSM route relations from `realnet.py fetch-osm <city>`, or a CSV of timetabled trips;
   `CITIES` lists each city's) into a demand test network in `data/work/realnet/`; `realnet.py`
-  also has New York's older targets, `compare`, and the save (`geom`, `gamesave`). `calib.py
+  also has New York's older targets, `compare`, and the save (`geom`, `gamesave`; `ship` copies the
+  seven game files a sandbox starts from to `data/packs/real/<id>.save`, T-731). `calib.py
   targets <city>` writes the city's targets (`data/work/calib/<city>/`), `calib.py run <city>
   [--set k=v,..] [--params p.json] [--tag t]` runs the sim's `calib` bin (a weekday, commutes and
   everyday, 3 crowding rounds, about 22 s for New York) and scores it (station entries, operator
   totals, rail share by home area); `calib.py score <run.json>` rescores. notes/T-509.md.
+- `realgraph.py <cc ...> [--check]` (T-727b): the real network the layer draws as a routing graph
+  per noritetsu region, from noritetsu's extract and `ways.json` (read only), into
+  `data/packs/realgraph/<cc>.rgr` (gzip, layout in its docstring; 1.8-3.3 MB, about 15 s a region);
+  built so far for jp, us, gb, fr, de. Rerun after noritetsu rebuilds a region.
 - Basemap glyph tiles (`app/public/fonts/`, checked in): `glyphs.py` rebuilds them, after a
   one-off `cargo install build_pbf_glyphs --locked` (on Windows set `CFLAGS` to a libz-sys zlib
   folder first, notes/T-056.md). Only needed to change the font, weights or fallback.

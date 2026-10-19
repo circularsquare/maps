@@ -91,6 +91,8 @@ pub struct TrackWorld {
     pub svc: Service,
     undo: Vec<Op>,
     redo: Vec<Op>,
+    /// T-752: a line switching between counts and headways, whose counts this edit's settle keeps
+    switching: Option<u32>,
 }
 
 /// Why an edit that changes what is constructed was refused.
@@ -103,7 +105,7 @@ pub enum ChargeError {
 
 impl TrackWorld {
     pub fn new(net: Network) -> TrackWorld {
-        let mut w = TrackWorld { net, svc: Service::default(), undo: vec![], redo: vec![] };
+        let mut w = TrackWorld { net, svc: Service::default(), undo: vec![], redo: vec![], switching: None };
         w.reload();
         w
     }
@@ -149,7 +151,7 @@ impl TrackWorld {
         let most = self.svc.cap.line_limits(&self.net);
         for l in 0..self.net.line_count() {
             let (Some(auto), Some(old)) = (self.net.line_auto[l], self.net.line_trains[l]) else { continue };
-            if !self.net.line_ok(l as u32) || !self.svc.lines[l].ok { continue; }
+            if !self.net.line_ok(l as u32) || !self.svc.lines[l].ok || self.switching == Some(l as u32) { continue; }
             let trip = self.svc.lines[l].round_trip;
             let mut counts = old;
             for lev in 0..LEVELS {
@@ -165,14 +167,16 @@ impl TrackWorld {
     }
 
     /// T-625: drop from each headway line the whole trains that wait at the ends because the track
-    /// they use is full (`short` as in `TrackApi::waiting`).
+    /// they use is full (`short` as in `TrackApi::waiting`). Over-full track (other lines' rates
+    /// past its capacity) keeps them, held out of service (T-752).
     fn trim_auto(&mut self) -> bool {
         let mut trimmed = false;
+        let worst = self.svc.cap.bottlenecks(self.net.line_count());
         for l in 0..self.net.line_count() {
             let (Some(_), Some(mut counts)) = (self.net.line_auto[l], self.net.line_trains[l]) else { continue };
-            if !self.net.line_ok(l as u32) || !self.svc.lines[l].ok { continue; }
+            if !self.net.line_ok(l as u32) || !self.svc.lines[l].ok || self.switching == Some(l as u32) { continue; }
             let trip = self.svc.lines[l].round_trip;
-            for lev in 0..LEVELS {
+            for lev in (0..LEVELS).filter(|&lev| worst[l][lev].0 <= 2.0 - FULL_RHO) {
                 let short = counts[lev] as f64 - self.net.line_tph[l][lev] as f64 * trip[lev] / 3600.0;
                 let held = if short > 0.01 { short.floor() as u32 } else { 0 };
                 if held > 0 { counts[lev] -= held.min(counts[lev]); trimmed = true; }
@@ -198,7 +202,7 @@ impl TrackWorld {
                 for lev in 0..LEVELS {
                     let short = counts[lev] as f64 - rates[j][lev] as f64 * trips[j][lev] / 3600.0;
                     // T-517: a line short of its fleet's rate is settled when a track it uses is full
-                    let held = short > 0.0 && (worst[id as usize][lev].0 - 1.0).abs() <= 1.0 - FULL_RHO;
+                    let held = short > 0.0 && worst[id as usize][lev].0 >= FULL_RHO;
                     if short.abs() >= 0.0001 && !held { active[lev] = true; }
                 }
             }
@@ -231,6 +235,10 @@ impl TrackWorld {
             }
             let d = self.svc.update_scoped(&self.net, &[], &ids, true, Some((&[], &[])));
             affected.extend(d.recomputed);
+            // T-747: a round that ends where it began repeats itself to the cap, ~12 ms a round on
+            // 143 lines
+            let still = ids.iter().enumerate().all(|(j, &id)| self.net.line_tph[id as usize] == rates[j] && self.svc.lines[id as usize].round_trip == trips[j]);
+            if still { break; }
         }
         for &id in &ids { self.svc.lines[id as usize].trains = self.net.line_trains[id as usize].unwrap(); }
         affected.extend(ids.into_iter().filter(|&id| before[id as usize] != self.net.line_tph[id as usize]));
@@ -325,6 +333,22 @@ impl TrackWorld {
         Ok((r, value))
     }
 
+    /// Apply an edit with no services, undo or (unless `checked`) checks, to plan a follow-on edit
+    /// against the edited track (T-733). Returns the inverse, for `unsketch`; a checked sketch
+    /// with problems is rolled back.
+    pub(crate) fn sketch(&mut self, op: Op, checked: bool) -> Result<Op, Vec<Issue>> {
+        let (inv, t, der) = self.apply_and_derive(op)?;
+        let issues = if checked { self.check(&t, &der) } else { vec![] };
+        if issues.is_empty() {
+            return Ok(inv);
+        }
+        self.unsketch(inv);
+        Err(issues)
+    }
+    pub(crate) fn unsketch(&mut self, inv: Op) {
+        let _ = self.apply_and_derive(inv);
+    }
+
     pub fn undo(&mut self) -> Option<Result<EditResult, Vec<Issue>>> {
         let op = self.undo.pop()?;
         Some(match self.commit(op.clone()) {
@@ -357,6 +381,10 @@ impl TrackWorld {
         let cost_before = self.net.total_cost();
         let built_before = self.net.built_cost();
         let again = op.clone();
+        let switch = match &op {
+            Op::AutoTrains { id, auto, .. } if self.net.line_auto.get(*id as usize).is_some_and(|a| a.is_some() != auto.is_some()) => Some(*id),
+            _ => None,
+        };
         let (mut inv, mut t, mut der) = self.apply_and_derive(op)?;
         let issues = self.check(&t, &der);
         if !issues.is_empty() {
@@ -394,7 +422,10 @@ impl TrackWorld {
         cap_nodes.extend_from_slice(&t.stations);
         let mut svc = self.svc.update_scoped(&self.net, &lines, &t.schedules, cap_dirty, Some((&der.edges, &cap_nodes)));
         if cap_dirty || !lines.is_empty() || !t.schedules.is_empty() {
+            // T-752: a switch between counts and headways never buys or sells a train
+            self.switching = switch;
             let counts = self.settle_train_counts();
+            self.switching = None;
             for id in counts {
                 svc.demand.push(id);
                 svc.recomputed.push(id);

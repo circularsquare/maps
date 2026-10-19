@@ -12,7 +12,7 @@ import { inkOn, LEVEL_COLOURS } from "../game/palette";
 import { DEMAND_INDEX, LEVELS, type Level, type LineInput, type LineStats, type StationInput } from "../game/types";
 import { complexes } from "../game/complexView";
 import { membersOf } from "../game/complexes";
-import { buildLevel, buildPlatform, display, keepPlacing, lineSort, selection, setDisplay, stationSort, trackCount, tool, type StationUseMode, type Tool } from "../game/ui";
+import { buildLevel, buildPlatform, display, keepPlacing, lineSort, selection, setDisplay, snapReal, stationSort, trackCount, tool, type StationUseMode, type Tool } from "../game/ui";
 import { setFares, world } from "../game/world";
 import { liveMoney, moneyState } from "../game/money";
 import { cityById, viewedZone } from "../game/cities";
@@ -24,6 +24,7 @@ import type { DayLedger } from "../workers/protocol";
 import { live } from "../map/live";
 import { Check, Chip, Icon, Row, Segmented, SortHead, Stepper } from "./widgets";
 import { Money } from "./MoneyText";
+import { START_CASH } from "../workers/saveFile";
 import { CitiesList } from "./Cities";
 import { BlueprintBreakdown, BlueprintControls, BlueprintPick } from "./Blueprint";
 import { MoneyHistory } from "./MoneyHistory";
@@ -52,13 +53,12 @@ const LEVEL_NAME: Record<Level, string> = {
 const TOOLS: [Tool, string, () => JSX.Element, string, string][] = [
   ["track", "Track", Icon.track, "1", "Draw track"],
   ["station", "Station", Icon.station, "2", "Place stations"],
-  ["crossover", "Crossover", Icon.crossover, "6", "Click on track beside other track to join the two with a crossover"],
   ["delete", "Delete", Icon.bin, "3", "Delete track, stations and flyovers"],
   ["blueprint", "Select", Icon.marquee, "5", "Drag a box round blueprint track and stations to disable or enable them"],
 ];
 
 /** The tool each number key picks (T-096). */
-export const TOOL_KEYS: Record<string, Tool> = { "1": "track", "2": "station", "3": "delete", "5": "blueprint", "6": "crossover" };
+export const TOOL_KEYS: Record<string, Tool> = { "1": "track", "2": "station", "3": "delete", "5": "blueprint" };
 /** The trip explorer's key (T-195, a letter since T-444: the numbers are for building); unlike the
  * build tools it leaves the tab as it is. Compared lowercase, so Caps Lock does not matter. */
 export const TRIP_KEY = "t";
@@ -101,15 +101,17 @@ export function BuildTab() {
         </p>
         <div class="h">Track</div>
         <div class="track-row">
-          <Segmented<1 | 2 | 4> options={[[1, "Single"], [2, "Double"], [4, "Quad"]]} value={trackCount.value} onChange={(v) => (trackCount.value = v)} />
+          <Segmented<2 | 4> options={[[2, "Double"], [4, "Quad"]]} value={trackCount.value} onChange={(v) => (trackCount.value = v)} />
           <button class={"btn icon" + (keepPlacing.value ? " on" : "")} aria-label="Keep placing track" aria-pressed={keepPlacing.value}
             data-tip="Keep placing track (Caps Lock). Double click or press Esc to stop."
             onClick={() => (keepPlacing.value = !keepPlacing.peek())}><Icon.keepPlacing /></button>
+          <button class={"btn icon" + (snapReal.value ? " on" : "")} aria-label="Snap to the real network" aria-pressed={snapReal.value}
+            data-tip="Snap track to the real network"
+            onClick={() => (snapReal.value = !snapReal.peek())}><Icon.snapReal /></button>
         </div>
-        <div class="h">New stations</div>
         <ul class="rows">
           <li>
-            <span class="grow">Platform length</span>
+            <span class="grow" data-tip="Platform length for new stations">Platform length</span>
             <Stepper value={length(buildPlatform.value)} wide label="platform length" onStep={(s) => (buildPlatform.value = Math.max(60, Math.min(400, buildPlatform.value + s * 20)))} />
           </li>
         </ul>
@@ -241,7 +243,7 @@ export function LinesTab() {
         <ScopeToggle />
       </div>
       {lines.length === 0 && <p class="muted">{w.save.lines.length === 0 ? "No lines yet." : "No lines here."}</p>}
-      <div class={showCity ? "with-city" : undefined}>
+      <div class={"lines-box" + (showCity ? " with-city" : "") + (key === "near" ? " near-on" : "")}>
       {w.save.lines.length > 0 && <SortHead sort={lineSort} cols={[
         { key: "name", label: "Name", tip: "Sort by name", first: 1 },
         ...(showCity ? [{ key: "city" as const, label: "City", tip: "Sort by the city of the first stop", first: 1 as const, cls: "w-city", left: true }] : []),
@@ -257,7 +259,7 @@ export function LinesTab() {
           return (
             <li class={on ? "on" : ""} onClick={() => (selection.value = { kind: "line", line: l.id })} onDblClick={() => locateLine(l.stops)}>
               <Chip line={l} />
-              <span class="grow">{l.name}</span>
+              <span class="grow line-name">{l.name}</span>
               {showCity && <span class="val muted w-city" data-tip={cityOf.get(l.id) ? `The first stop is in ${cityOf.get(l.id)}` : undefined}>{cityOf.get(l.id)}</span>}
               {st.status !== "running" ? (
                 <span class="val muted">{STATUS[st.status]}</span>
@@ -473,9 +475,10 @@ export function MoneyTab() {
   return (
     <>
       <ul class="rows">
-        <Row label="Cash" bold>
-          <LiveCash />
-        </Row>
+        {m.mode === "sandbox"
+          // T-728: a sandbox's cash is not shown; its money since the start is
+          ? <Row label={<span data-tip="Sandbox: fares less running costs, trains and construction since day 1">Since day 1</span>} bold><Money dollars={(liveMoney.value.cash - START_CASH) * 1e6} /></Row>
+          : <Row label="Cash" bold><LiveCash /></Row>}
       </ul>
       <table class="ledger">
         <tr>
@@ -539,8 +542,12 @@ export function MoneyTab() {
       <ul class="rows">
         <Row label="Track and stations built"><Money dollars={w.money.builtValue} /></Row>
       </ul>
-      <CitiesList />
     </>
   );
+}
+
+/** T-749: the cities list, once a region has a station of the player's. */
+export function CitiesTab() {
+  return <CitiesList empty={<p class="muted">No stations yet.</p>} />;
 }
 

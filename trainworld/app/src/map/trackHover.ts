@@ -24,6 +24,8 @@ import type { NetworkBuffers } from "./network";
 import { circleTip, stationTip, trainTip, type TipLine } from "./networkTips";
 import type { Overlay } from "./overlay";
 import { pick, SLOP_PX, topSeg } from "./pick";
+import { setPointerNet, type Hot } from "./hovered";
+import { complexOf } from "../game/complexView";
 import { elevationFact, factRow, lineBullets, speedFact } from "./trackTagRows";
 
 /** A forecast count, rounded so it does not claim more precision than a forecast has. */
@@ -71,7 +73,7 @@ function lineTip(n: NetworkBuffers, w: WorldView | null, dv: DemandView | null, 
  * demand circle, what they stand for (T-194, networkTips.ts); for a crossing, junction, ramp or
  * portal mark, its name (T-629). Nothing for a junction without a mark, nor for the station
  * circles while a build tool has the demand views beneath the network. */
-export function trackTip(ov: Overlay, px: number, py: number, zoom = 12): TipLine[] | null {
+export function trackTip(ov: Overlay, px: number, py: number, zoom = 12, out?: { hot?: Partial<Hot> }): TipLine[] | null {
   const n = ov.renderer.net;
   if (!n || !ov.camMatrix) return null;
   const d = display.peek();
@@ -80,6 +82,7 @@ export function trackTip(ov: Overlay, px: number, py: number, zoom = 12): TipLin
   if (w && hit?.kind === "train") return trainTip(ov, w, hit.line, hit.profile, hit.dep);
   if (w && hit?.kind === "station") {
     const i = n.stationIds.indexOf(hit.station);
+    if (i >= 0 && out) out.hot = { stations: complexOf(hit.station) };
     return i < 0 ? null : stationTip(ov, w, i);
   }
   // the marks for crossings, junctions, ramps and portals sit on the track, under stations and trains (T-629)
@@ -100,6 +103,7 @@ export function trackTip(ov: Overlay, px: number, py: number, zoom = 12): TipLin
     let [i] = sel?.kind === "line" ? topSeg(ov, L.seg, L.count, px, py, slop, undefined, 0, (j) => String(L.colour[j]) === sel.line, wide, widePx) : [-1];
     if (i < 0) [i] = topSeg(ov, L.seg, L.count, px, py, slop, undefined, 0, (j) => String(L.colour[j]) === hit.line, wide, widePx);
     if (i < 0) return null;
+    if (out) out.hot = { line: L.colour[i] };
     // T-473: the track under the line says its elevation and speed too; T-559: and every line on it
     const on = linesOn(w, L.edge[i]);
     return [...lineTip(n, w, demandView.peek(), d.trackColour === "traffic", i), ...trackFacts(ov, L.edge[i], px, py, slop), ...(on.length ? [lineBullets(on)] : [])];
@@ -107,6 +111,7 @@ export function trackTip(ov: Overlay, px: number, py: number, zoom = 12): TipLin
   if (hit.kind !== "track") return null;
   const facts = trackFacts(ov, hit.edge, px, py, slop);
   if (!facts.length) return null;
+  if (out) out.hot = { edge: hit.edge };
   // T-473: always the elevation, speed and lines on it, whatever the track display; no lines row
   // where none runs (T-526). Track under a bundle of lines loses to the lines, except at its edges.
   const on = linesOn(w, hit.edge);
@@ -151,9 +156,11 @@ export function startTrackHover(map: MlMap, ov: Overlay) {
   const hide = () => {
     shown = false;
     tag.style.display = "none";
+    setPointerNet(null);
   };
   /** The tag's lines at the pointer, or null where something above the track is, or a tool
-   * without it is on (the stop editor and the trip tool). */
+   * without it is on (the stop editor and the trip tool). Lights what it names with the select
+   * tool only: a build tool's ghost is what matters there (T-730). */
   const tipAt = (px: number, py: number): TipLine[] | null => {
     const t = tool.peek();
     if (ask.peek()) return null;
@@ -162,7 +169,10 @@ export function startTrackHover(map: MlMap, ov: Overlay) {
       if (hoverAt(map, px, py)) return null; // a demand bubble above the network
       if (live.nodeDrag?.hit(px, py)?.movable) return null; // a blueprint node handle
     } else if (!isBuildTool(t)) return null;
-    return trackTip(ov, px, py, map.getZoom());
+    const out: { hot?: Partial<Hot> } = {};
+    const lines = trackTip(ov, px, py, map.getZoom(), out);
+    setPointerNet(lines && t === "select" ? out.hot ?? null : null);
+    return lines;
   };
   const show = (lines: TipLine[], px: number, py: number) => {
     const key = lines.map((s) => (typeof s === "string" ? s : s.outerHTML)).join("\n");

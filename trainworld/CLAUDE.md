@@ -93,7 +93,9 @@ Briefs carry only the task; these hold for every agent.
 - **Reports to the orchestrator are short**: what changed and where, check results, anything for
   Anita. Detail goes in notes/, not the report.
 - **open** in the spec means Anita decides. Otherwise decide, record why, and carry on; never ask
-  her to confirm rail facts.
+  her to confirm rail facts. Design questions with a sensible default (which cities to suggest, whether
+  a click moves the camera, how old saves migrate) are yours too: decide, record in DECISIONS.md and
+  tell her in the report (Anita, 2026-10-19). Ask only where the choice changes what the game is.
 
 ## Before a commit (orchestrator)
 

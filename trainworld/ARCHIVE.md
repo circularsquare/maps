@@ -1,5 +1,35 @@
 ﻿# Archive
 
+- T-646 [P2] Add the stations a line passes. Done 2026-10-19: while editing stops, each stretch between stops that passes stations offers them ("+ 2 stations passed", or add all), previewed in the stop list with Add or Cancel, one undo step; only the line's own path counts.
+
+- T-745 [P2] Line bullets still off centre after T-705. Done 2026-10-19: ink box measured at 240 px (canvas rounds to whole pixels), circle drawn in the bullet's SVG, baseline on a whole device pixel; worst 2.6 device px before, 0.55 after. `checks/t745-bullets.mjs`, notes/T-745.md.
+- T-731 [P2] Sandbox start from a city's real network. Done 2026-10-19: seven saves shipped as `packs/real/<id>.save` (`realnet.py ship`); the sheet's "Real network" box opens one as a new sandbox. notes/T-728.md stage 5.
+- T-728 [P2] New game sheet and sandbox mode. Done 2026-10-19: save header `mode`, `start`, `opened`; sandbox refuses nothing for money and hides the cash; one-way switch in Settings; the sheet (mode, five cities, search, map start) in the start menu and saves panel. `checks/t728-newgame.mjs`, notes/T-728.md.
+- T-727c [P2] Real line to corners. Done 2026-10-19: `track/trace.rs` and `TrackApi::trace_route` (25 m, 100 m floor, 108 quad); Tokyo-Shin-Osaka 460 corners in 31 ms, New York-Emeryville 5,688 in 0.8 s, both one edit. `stroke_pieces` eases centimetre overruns. notes/T-727.md.
+
+- T-667 [P3] Clicked corners not bridged. Done 2026-10-19 with T-727c: `route_op` bridges a ground-level route through corners too, the bridge cut into pieces with them.
+
+- T-727b [P2] Real-network graph files. Done 2026-10-19: `pipeline/realgraph.py` (the layer's ways, chains between OSM junctions, border nodes) to `data/packs/realgraph/` for jp us gb fr de, 1.8-3.3 MB, copied by the build; `game/realGraph.ts` decodes them in 90-280 ms. notes/T-727.md.
+
+- T-727a [P2] Snap switch and faint real network. Done 2026-10-19: Build tab magnet switch (remembered); the layer on by default at 0.15, 0.4 while the track tool snaps, shown then even with Settings off. Design and stages: notes/T-727.md.
+
+- T-752 [P2] Switching to headways dropped trains on over-full track. Done 2026-10-19: the switch keeps the line's counts both ways; over-full track holds trains instead of `trim_auto` selling them, and counts as full in `settle_counts`. M express keeps 34 / 24 / 8 (was 0 / 3 / 8); edit 160 ms in the browser.
+
+- T-733 (train length) [P2] Done 2026-10-19: a Train length stepper in cars in the line panel, capped by the shortest platform (hover names it); the default stays the most that fits; a shortened platform caps trains, the setting kept. Fleet and running cost follow. notes/T-733.md.
+- T-733 (crossovers and single track) [P2] Done 2026-10-19: quad stations and doubling up place a crossover past each station in the same edit where it fits (full price); no crossover tool and no single track in Build, saves keep both. Train length per line stays on T-733. notes/T-733.md.
+
+- T-747 [P2] Trains/headway switch took 3 s on the world save. Done 2026-10-19: `settle_counts` ran its 80-round cap on a fleet at rate 0 on over-full track; now stops when a round changes nothing (identical results), and the panel switches at once. 3 s to under 5 ms; notes/perf-survey.md.
+
+- T-746 [P2] Lines tab and line inspector spacing. Done 2026-10-19: the name keeps at least about 6 characters (columns as wide as their figures, Money hidden first by container query), more space above Edit stops.
+
+- T-748 [P2] Alerts as a plain list. Done 2026-10-19: no grey box; each alert has a red or yellow circled exclamation point (`Alert`, `Icon.alert`, `--yellow`), held trains grouped under the full place; the line inspector's two (held, broken) were the only boxes.
+
+- T-749 [P2] Cities as its own dock tab. Done 2026-10-19: skyline icon, the list out of Money, tabs at least 34 px (were 46) so six fit the narrowest dock.
+
+- T-743 [P1] New game and Load a file replaced the open slot's game. Done 2026-10-19: they, and a backup's restore, each open a new slot after saving the game being played; no confirm. `checks/t743-slots.mjs`.
+
+- T-744 [P1] Two rotating backups per slot. Done 2026-10-19: `backup:<slot>:0/1`, written with an autosave 5+ wall minutes after the newest; listed under the Playing card with Restore as a copy; deleted with the slot.
+
 - T-732 [P2] Overlapping things under the mouse. Done 2026-10-19: a 250 ms rest with the select tool lists what else is under the pointer (1 bubble, 1 station, 3 lines) under the hover tag; clicking an entry selects it. `map/hoverRest.ts`; map highlight on pointing is T-741.
 
 - T-736 [P2] Money graph steps and lockstep (Anita's playtest). Done 2026-10-19: hours follow the boarding account's in-period shape, fares land as rides end and running costs as trains run (a run-length window); whole days keep their totals. Also closes T-294. notes/T-736.md.

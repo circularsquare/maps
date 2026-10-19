@@ -13,8 +13,8 @@
 :root[data-shade="dark"][data-theme="pink"]  { --bg: #262120; --text: #ebe3de; --accent: #e08aa0; }
 :root[data-shade="dark"][data-theme="blue"]  { --bg: #1d232a; --text: #dfe7ef; --accent: #6fa3da; }
 :root[data-shade="dark"][data-theme="green"] { --bg: #22241d; --text: #e3e6d8; --accent: #9dbb68; }
-:root { --bad: #b23a3a; --warn: #c0661c; --map-land: #f2f2ef; --map-ink: #2b2b2b; }
-:root[data-shade="dark"] { color-scheme: dark; --bad: #ec7b7b; --warn: #eb9a52; }
+:root { --bad: #b23a3a; --warn: #c0661c; --yellow: #c9a01c; --map-land: #f2f2ef; --map-ink: #2b2b2b; }
+:root[data-shade="dark"] { color-scheme: dark; --bad: #ec7b7b; --warn: #eb9a52; --yellow: #e5c34a; }
 /* stop editing's grey markers (map/stopMarkers.ts, T-543): a station the line reaches by track it
    already uses, one it reaches by a new route, one it cannot reach; dark ones fade into the land */
 :root { --mk-route-ring: #7d7872; --mk-reroute-fill: #e6e3df; --mk-reroute-ring: #a8a39d; --mk-cut-fill: #d6d3cf; --mk-cut-ring: #b9b5b0; }
@@ -108,7 +108,7 @@ svg .stroke2 { stroke-width: 2; }
    the settings gear on the right */
 .tabs { display: flex; flex: none; background: var(--shade); border-bottom: 1px solid var(--rule); }
 .tab {
-  flex: 1 1 0; min-width: 46px; height: 36px; padding: 0; margin-bottom: -1px;
+  flex: 1 1 0; min-width: 34px; height: 36px; padding: 0; margin-bottom: -1px;
   border: 0; border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
   background: var(--shade); color: var(--muted); cursor: pointer; display: grid; place-items: center;
 }
@@ -159,11 +159,21 @@ body.resizing, body.resizing * { user-select: none; }
 /* T-670: the Lines list's city column, left aligned and cut to the room */
 .rows .val.w-city { width: 62px; flex: none; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sort-btn.val.w-city { justify-content: flex-start; width: 62px; }
-/* T-735: the Lines list's money column */
-.w-linemoney { width: 58px; white-space: nowrap; }
-.with-city .w-linemoney { width: 54px; }
-.with-city .w-riders { width: 48px; }
-.with-city .w-trains { width: 40px; }
+/* T-735, T-746: the Lines list. The name keeps about six characters (`.line-name`); the columns are
+   as wide as their figures, and the money column goes first when the dock is too narrow (each
+   width: the bullet, the columns before the name's 56 px and the 8 px gaps between them). */
+.lines-box { container-type: inline-size; container-name: lines; }
+.lines-box .w-riders { width: 40px; }
+.lines-box .w-linemoney { width: 54px; white-space: nowrap; }
+.lines-box .w-trains { width: 40px; }
+.lines-box .rows .grow.line-name, .lines-box .sort-btn.grow { min-width: 56px; }
+@container lines (max-width: 250px) { .lines-box .w-linemoney { display: none; } }
+@container lines (max-width: 308px) { .lines-box.with-city .w-linemoney { display: none; } }
+@container lines (max-width: 316px) { .lines-box.near-on .w-linemoney { display: none; } }
+@container lines (max-width: 374px) { .lines-box.with-city.near-on .w-linemoney { display: none; } }
+@container lines (max-width: 312px) { .lines-box.with-city.near-on .w-city { display: none; } }
+.lines-box.with-city .w-riders { width: 36px; }
+.lines-box.with-city .w-trains { width: 32px; }
 /* T-550: the Money tab's Cities section: name, split bar, train rides a day, net money a day */
 .w-citybar { width: 64px; }
 .w-money { width: 76px; white-space: nowrap; }
@@ -230,7 +240,11 @@ body.resizing, body.resizing * { user-select: none; }
   background: var(--c); color: var(--ct, #fff);
   font-size: 12px; font-weight: 700; line-height: 1;
 }
+/* T-745: a measured bullet draws its own circle in its SVG (ui/bullet.ts); the span's background is
+   only for a symbol that could not be measured */
+.chip:has(> svg), .chip.sm:has(> svg), .chip.lg:has(> svg) { background: none; padding: 0; }
 .chip > svg { display: block; overflow: visible; stroke: none; }
+.chip > svg rect { fill: var(--c); }
 .chip > svg text { fill: currentColor; }
 .chip.link { cursor: pointer; }
 .place-link { cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
@@ -247,7 +261,7 @@ body.resizing, body.resizing * { user-select: none; }
 .line-list-actions, .line-stop-actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
 .line-list-actions label { display: flex; align-items: center; gap: 5px; }
 .line-list-actions select, .line-identity input { font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--rule); }
-.line-stop-actions { justify-content: flex-start; }
+.line-stop-actions { justify-content: flex-start; margin-top: 12px; }
 .line-identity { margin-top: 8px; }
 .line-identity label { display: flex; align-items: center; gap: 8px; }
 .line-identity input { width: 100px; min-width: 0; padding: 3px 5px; }
@@ -366,6 +380,12 @@ rect.now { fill-opacity: .45; }
 .stops li::after { content: ""; position: absolute; left: 4px; top: 50%; margin-top: -6px;
                    width: 8px; height: 8px; border-radius: 50%; background: #fff; border: 2px solid var(--net-ink); }
 .stops li.xfer::after { left: 3px; margin-top: -7px; width: 10px; height: 10px; }
+/* T-646: the stations a line passes, offered as stops (no dot), and those about to be added (faint dot) */
+.stops li.passed::after { display: none; }
+.stops li.adding { color: var(--muted); }
+.stops li.adding::after { opacity: 0.45; }
+.passed-all { margin: 2px 0 4px; }
+.passed-confirm { display: flex; gap: 6px; margin: 6px 0 0 28px; }
 .stops .grow { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .stops .t { margin-left: 8px; }
 .stops .stop-more { flex: none; width: 10px; font-size: 12px; text-align: center; color: var(--muted); }
@@ -486,6 +506,20 @@ rect.now { fill-opacity: .45; }
 .start-save:hover, .start-save:focus-visible { border-color: var(--accent); background: var(--tint); }
 .start-save .save-thumb { width: 144px; height: 96px; }
 .start-save .save-info { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+/* T-728: the new game sheet, in the start menu's box or the saves panel */
+.new-game-box { width: min(440px, 100%); }
+.new-game { display: flex; flex-direction: column; gap: 12px; }
+.new-game-mode { align-self: flex-start; }
+.new-game-where { display: flex; flex-direction: column; gap: 6px; }
+.new-game-cities { display: flex; flex-wrap: wrap; gap: 6px; }
+.new-game-find { width: 100%; min-width: 0; padding: 4px 6px; border: 1px solid var(--rule); background: var(--bg); color: var(--text); font: inherit; }
+.new-game-hits { list-style: none; margin: 0; padding: 0; border: 1px solid var(--rule); }
+.new-game-hits li { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 3px 8px; cursor: pointer; }
+.new-game-hits li.on, .new-game-hits li:hover { background: var(--tint); }
+.new-game-foot { margin-top: 0; }
+.save-sandbox { margin-left: 6px; padding: 0 5px; border: 1px solid var(--rule); font-weight: 400; color: var(--muted); }
+.cash.sandbox { color: var(--muted); }
+.game-mode { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .choosing #dock-root, .choosing #topbar-root, .choosing #tools-root, .choosing .map-top-left, .choosing .map-search,
 .choosing .blueprint-bar, .choosing .maplibregl-ctrl-bottom-right { visibility: hidden; }
 /* T-243: the load's progress as a filling bar (its percentage on hover); the fill jumps, no transition */
@@ -629,6 +663,15 @@ rect.now { fill-opacity: .45; }
 .callout { margin-top: 10px; padding: 8px 10px; background: var(--tint); border: 1px solid var(--accent);
            display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
 .callout.bad { background: var(--shade); border-color: var(--rule); }
+/* T-748: alerts are a plain list, a red or yellow exclamation point to each */
+.alerts { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.alert { display: flex; gap: 8px; align-items: flex-start; }
+.alert-mark { flex: none; display: inline-flex; margin-top: 1px; }
+.alert-mark svg { width: 16px; height: 16px; }
+.alert.bad .alert-mark { color: var(--bad); }
+.alert.warn .alert-mark { color: var(--yellow); }
+.alert-body { min-width: 0; flex: 1; }
+.alert-body .detail { margin-top: 2px; color: var(--muted); }
 .btn.icon.mini { width: 20px; min-width: 20px; height: 20px; border: 0; background: transparent; }
 .btn.icon.mini svg { width: 12px; height: 12px; }
 .stop-name { cursor: pointer; }
@@ -761,6 +804,9 @@ rect.now { fill-opacity: .45; }
 .save-slots .pane-foot { margin-top: 6px; }
 .save-actions .save-open { border-color: var(--accent); }
 .save-files { flex-wrap: wrap; justify-content: flex-start; }
+/* T-744: the playing slot's backups, under its card */
+.save-backups { margin-top: 6px; padding-top: 4px; border-top: 1px solid var(--rule); }
+.save-backup { display: flex; gap: 8px; justify-content: space-between; align-items: baseline; }
 .purpose-scope { display: flex; gap: 6px; margin: 8px 0; }
 .purpose-scope button { background: transparent; border: 1px solid currentColor; border-radius: 4px; padding: 4px 8px; color: inherit; opacity: .65; cursor: pointer; }
 .purpose-scope button.on { opacity: 1; background: #8882; }

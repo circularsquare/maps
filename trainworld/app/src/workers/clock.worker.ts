@@ -14,18 +14,16 @@ import { frameKindName, frameKindNumber, makeFrame, mercK, type Frame, type Fram
 import { PERIODS } from "../game/periods";
 import { SHADES } from "../game/shadeTable";
 import { DAY_KINDS } from "../game/days";
-import { timeZoneTable } from "../game/localTime";
+import { shiftAt, timeZoneTable } from "../game/localTime";
 import { between, lagged, runLag, strengths, table, type PerHour } from "../game/moneyTiming";
 import { networkFromState, newNetCache, runsTrains } from "../map/network";
 import { buildComplexes } from "../game/complexes";
-import { decodeSave, encodeSave, isNortheastSave, trackFrameKind, readStored, SAVE_FORMAT, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, deleteSlot, leaseSlot, ORIGINAL_SLOT, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader } from "./saveFile";
+import { decodeSave, encodeSave, isNortheastSave, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, deleteSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, isBackupOf, nextGameName, newGameName, slotName, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader } from "./saveFile";
 import type { ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FromClock, MoneyState, NetworkSnapshot, PiInput, RegionNow, RouteEnd, ToClock } from "./protocol";
 
 /** Run 0 of each line is resampled this often (m) for the renderer's line texture. */
 const SAMPLE_STEP = 50;
 const SNAPSHOT_DEBOUNCE_MS = 500;
-/** SPEC 6.4: US$3B to start, in US$M. */
-const START_CASH = 3000;
 /** Whole trains on a new line across both directions, high/medium/low demand. */
 const NEW_LINE_TRAINS: [number, number, number] = [0, 0, 0];
 /** Default fare curve (T-028): US$ a ride plus US$ a km. */
@@ -33,6 +31,8 @@ const START_FARES = { base: 1.5, perKm: 0.1 };
 /** Autosave (T-029): this long after the last one if anything changed, wall ms; at once after a
  * construct or other paid edit, and when the page is hidden. */
 const AUTOSAVE_MS = 60_000;
+/** T-744: an autosave this long after the slot's newest backup is also written as a backup, wall ms */
+let backupMs = 5 * 60_000;
 /** Days of money kept in the ledger, and hours in the hourly one (T-447). */
 const LEDGER_DAYS = 30;
 const LEDGER_HOURS = 48;
@@ -125,23 +125,71 @@ let storageReady = true;
  * the game a slot of its own; a `?new=1` game has no active slot ("") and reads none */
 let testPage = false;
 let saveFailure: string | undefined;
+/** while the game is being swapped for another slot's (T-743): nothing autosaves */
+let switching = false;
+/** T-728: the game's mode, start zone and opened zones, kept in the save's header (`opened` absent
+ * in a save from before it) */
+let mode: GameMode = "normal";
+let startZone: string | undefined;
+let opened: string[] | undefined = [];
+function setMode(m: GameMode) {
+  mode = m;
+  api!.set_unlimited(m === "sandbox");
+}
 const slotChanges = typeof BroadcastChannel === "undefined" ? null : new BroadcastChannel("anitabuilder-save-slots");
 slotChanges?.addEventListener("message", () => { if (api) void publishSlots(); });
 
 async function publishSlots(error?: string) {
   let slots: Awaited<ReturnType<typeof listSlots>> = [];
-  try { slots = await listSlots(); storageReady = true; } catch { storageReady = false; }
+  let backups: SlotBackup[] = [];
+  try {
+    slots = await listSlots(); storageReady = true;
+    if (activeSlot) backups = await listBackups(activeSlot);
+  } catch { storageReady = false; }
   const writable = !!activeLease && storageReady && !saveFailure;
   const reason = saveFailure || (!storageReady ? "Browser storage is unavailable. Save to a file to keep this game."
     : !activeLease ? testPage ? "Autosave is off in this test page. Save a copy to keep the game."
       : navigator.locks ? "Autosave is off here because this slot was opened in another tab. Save to a new slot, or close the other tab and reload."
       : "This browser cannot protect save slots. Save to a file to keep this game." : undefined);
-  send({ kind: "saveSlots", slots, active: activeSlot, writable, at: slots.find(s => s.key === activeSlot)?.at ?? 0, reason, error });
+  send({ kind: "saveSlots", slots, active: activeSlot, writable, at: slots.find(s => s.key === activeSlot)?.at ?? 0, reason, error, backups });
 }
 
 async function flushBeforeSwitch() {
-  if (dirty && !activeLease) throw new Error("Save this game to a new slot before opening another slot. You can also download a file and reload this page.");
-  if (!await autosave()) throw new Error("This game could not be saved. Save to a file before opening another slot.");
+  if (dirty && !activeLease) throw new Error("Save this game to a new slot before leaving it. You can also download a file and reload this page.");
+  if (!await autosave()) throw new Error("This game could not be saved. Save to a file before leaving it.");
+}
+
+/** T-743: New game, Load a file and a backup's restore each put the game in a slot of its own,
+ * named `name`; the game being played is saved first and keeps its slot. `load` replaces the game
+ * (throwing changes nothing). A new game's slot is written once something changes, a loaded one's
+ * at once. A test page has no slot to keep: the game is replaced in the page and owns none. */
+async function intoNewSlot(name: string, load: () => Promise<unknown> | void, writeNow: boolean) {
+  if (testPage) {
+    await load();
+    activeLease?.release();
+    activeSlot = "";
+    activeLease = null;
+    dirty = writeNow;
+    await publishSlots();
+    return;
+  }
+  await flushBeforeSwitch();
+  const key = "slot-" + crypto.randomUUID();
+  const lease = await leaseSlot(key);
+  switching = true;
+  try {
+    await load();
+  } catch (err) { lease?.release(); throw err; } finally { switching = false; }
+  activeLease?.release();
+  activeSlot = key;
+  activeLease = lease;
+  unwritten = key;
+  newSlotName = { key, name };
+  saveFailure = undefined;
+  dirty = writeNow;
+  savedAt = Date.now();
+  if (!writeNow || !await autosave()) await publishSlots();
+  slotChanges?.postMessage({ key });
 }
 /** the empty network's save, for a new game (keeps the water mask) */
 let emptyTrack: Uint8Array | null = null;
@@ -400,7 +448,7 @@ function buildState(): ClockState {
     const ok = li[i + 2] === 1, running = li[i + 3] === 1;
     const t3 = (k: number) => [li[i + k], li[i + k + 1], li[i + k + 2]] as [number, number, number];
     lines.push({
-      id, name: a.line_name(id), letter: a.line_symbol(id), colour: hex(li[i + 1]), ok, running, broken: li[i + 4] === 1, tph: t3(5), cars: li[i + 21] || li[i + 8],
+      id, name: a.line_name(id), letter: a.line_symbol(id), colour: hex(li[i + 1]), ok, running, broken: li[i + 4] === 1, tph: t3(5), cars: li[i + 21] || li[i + 8], carsSet: li[i + 8],
       lengthM: li[i + 9], roundTrip: t3(10), trains: t3(13), auto: autoOf(a.line_auto(id)), delay: t3(16), dwell: li[i + 19], turnaround: li[i + 20],
       stops: [...a.line_stops(id)], path: [...a.line_path(id)],
       fromStart: [0, 1, 2].map((lev) => [...a.stop_times(id, 0, lev)]),
@@ -643,6 +691,7 @@ function moneyState(): MoneyState {
   hourEntry(Math.floor(moneyNow() / 3600));
   return {
     cash: a.cash(),
+    mode,
     fleet: a.fleet(),
     carsNeeded: a.cars_needed(),
     carPrice: moneyParams[0],
@@ -853,7 +902,7 @@ function shapeHour(epoch: number, b: Float32Array) {
 // ---------------------------------------------------------------- saves (T-029)
 
 function header(): SaveHeader {
-  return { game: "anitabuilder", format: SAVE_FORMAT, city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), fleet: api!.fleet(), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), stars: Object.fromEntries(stars), notes: Object.fromEntries(lineNotes) };
+  return { game: "anitabuilder", format: SAVE_FORMAT, city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), fleet: api!.fleet(), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), stars: Object.fromEntries(stars), notes: Object.fromEntries(lineNotes), mode, start: startZone, opened: opened && [...opened] };
 }
 
 /** The game as file bytes. The network and header are taken at once, before anything awaits. */
@@ -883,7 +932,7 @@ async function slotSummary(): Promise<SlotSummary> {
   }
   const cities = [...byCity].sort((x, y) => y[1] - x[1]).map(([c]) => c);
   const li = a.lines_info();
-  const summary: SlotSummary = { cities, lines: li.length / 22, stations, cash: a.cash() };
+  const summary: SlotSummary = { cities, lines: li.length / 22, stations, cash: a.cash(), mode };
   try {
     if (typeof OffscreenCanvas === "undefined") return summary;
     // track (grey) and each line's route (its colour), in local units: what the renderer draws
@@ -956,7 +1005,7 @@ async function slotSummary(): Promise<SlotSummary> {
 function autosave(): Promise<boolean> {
   if (saveInFlight) return saveInFlight.then(ok => dirty && ok ? autosave() : ok);
   if (!api || !dirty) return Promise.resolve(true);
-  if (!activeLease) return Promise.resolve(false);
+  if (!activeLease || switching) return Promise.resolve(false);
   // T-677: a new game whose slot was never written is not kept while its network is empty
   if (unwritten === activeSlot && !api.nodes_info().length && !api.lines_info().length) {
     dirty = false;
@@ -977,6 +1026,8 @@ function autosave(): Promise<boolean> {
       await writeSlot(key, { bytes, at, day, city, ...summary, name });
       if (name) newSlotName = null;
       if (unwritten === key) unwritten = null;
+      const backups = await listBackups(key).catch(() => null);
+      if (backups && !(at - (backups[0]?.at ?? -Infinity) < backupMs)) await writeBackup(key, { bytes, at, day, city, ...summary });
       savedAt = at;
       saveFailure = undefined;
       send({ kind: "saved", at, bytes: bytes.length, encodeMs, totalMs: performance.now() - t0 });
@@ -1025,7 +1076,8 @@ async function manageSlot(msg: Extract<ToClock, { kind: "saveSlot" }>) {
         if (!stored) throw new Error("That save slot no longer exists.");
         const decoded = await decodeSave(stored.bytes);
         if (!isNortheastSave(decoded.header)) throw new Error("This save is for another region.");
-        const converted = await loadGame(stored.bytes, "file");
+        switching = true;
+        const converted = await loadGame(stored.bytes, "file").finally(() => { switching = false; });
         activeLease?.release();
         activeSlot = key;
         activeLease = lease;
@@ -1034,6 +1086,14 @@ async function manageSlot(msg: Extract<ToClock, { kind: "saveSlot" }>) {
         savedAt = stored.at;
         if (converted) await saveConverted(key, stored);
       } catch (err) { lease?.release(); throw err; }
+    } else if (msg.action === "restore") {
+      const key = msg.key, from = activeSlot;
+      if (!key || !isBackupOf(key, from)) throw new Error("That backup no longer exists.");
+      const backup = await readStored(key), slot = await readStored(from);
+      if (!backup) throw new Error("That backup no longer exists.");
+      const time = new Date(backup.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      await intoNewSlot(`${slotName(from, slot)} at ${time}`, () => loadGame(backup.bytes, "file"), true);
+      return;
     } else {
       const key = msg.key;
       if (!key) throw new Error("Choose a save slot first.");
@@ -1057,9 +1117,14 @@ let convertedOnLoad = false;
  * track is not in the world frame is converted once, through longitude and latitude, and loaded in
  * it (T-308); the return value says so, and the caller then writes the slot again in the new
  * format. Money, fares and the ledger load as saved, but for anything settled after the clock
- * (`unsettleAfter`). */
-async function loadGame(bytes: Uint8Array, from: "autosave" | "file"): Promise<boolean> {
-  const { header: h, track } = await decodeSave(bytes);
+ * (`unsettleAfter`). With `fresh`, the save is a real network a new game starts from (T-731): only
+ * its network, fleet and fares are kept, the rest is a new game's. */
+async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fresh?: NewGameSpec): Promise<boolean> {
+  const decoded = await decodeSave(bytes);
+  const { track } = decoded;
+  const h: SaveHeader = fresh
+    ? { ...decoded.header, clock: startClock(fresh), cash: START_CASH, ledger: [], hours: [], regions: undefined, stars: undefined, notes: undefined, ...newGameHeader(fresh) }
+    : decoded.header;
   if (!isNortheastSave(h)) throw new Error("This save is for another region.");
   let net = track, converted = false;
   if (trackFrameKind(track) !== NEW_GAME_FRAME.kind) {
@@ -1077,9 +1142,31 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file"): Promise<b
   stars = new Map(Object.entries(h.stars ?? {}));
   lineNotes = new Map(Object.entries(h.notes ?? {}));
   api!.set_cash(h.cash + unsettleAfter(h.clock));
+  setMode(h.mode === "sandbox" ? "sandbox" : "normal");
+  startZone = h.start;
+  opened = h.opened;
   convertedOnLoad = converted;
   restart(h.clock, from);
   return converted;
+}
+
+/** A new game's clock (T-728): the first time from day 1 07:00 on the game clock at which it is
+ * 07:00 in the start city, so every start opens on its own morning peak (Tokyo: Tue 2 07:00 there). */
+function startClock(spec?: NewGameSpec): number {
+  const c = spec?.start ? CITIES.find((x) => x.id === spec.start) : undefined;
+  const ahead = c ? shiftAt(c.center[0], c.center[1]) : 0;
+  return START_CLOCK + (((-ahead % 86400) + 86400) % 86400);
+}
+
+/** A new game's mode, start and opened zones (T-728). */
+function newGameHeader(spec?: NewGameSpec): Pick<SaveHeader, "mode" | "start" | "opened"> {
+  return { mode: spec?.mode ?? "normal", start: spec?.start, opened: spec?.start ? [spec.start] : [] };
+}
+function setNewGame(spec?: NewGameSpec) {
+  const g = newGameHeader(spec);
+  setMode(g.mode!);
+  startZone = g.start;
+  opened = g.opened;
 }
 
 /** After a slot's save was converted on load: keep the old-format copy under a key the saves list
@@ -1090,7 +1177,13 @@ async function saveConverted(key: string, old: StoredSave) {
   await autosave();
 }
 
-function newGame() {
+/** A new game: empty, or from `spec.real`'s network (T-731). */
+async function newGame(spec?: NewGameSpec) {
+  if (spec?.real) {
+    await loadGame(new Uint8Array(spec.real), "new", spec);
+    return;
+  }
+  setNewGame(spec);
   api!.load(emptyTrack!);
   api!.set_cash(START_CASH);
   api!.set_fleet(0);
@@ -1100,7 +1193,7 @@ function newGame() {
   loadRegions(undefined);
   stars = new Map();
   lineNotes = new Map();
-  restart(START_CLOCK, "new");
+  restart(startClock(spec), "new");
 }
 
 /** After a load or a new game: the clock, fresh state, a new snapshot for demand. */
@@ -1344,6 +1437,8 @@ function apply(op: EditOp): { r: number; line?: number; node?: number } {
         : a.set_line_badge(op.line, op.name, colourInt(op.colour), op.letter.trim()) };
     case "removeLine":
       return { r: a.remove_line(op.line) };
+    case "lineCars":
+      return { r: a.set_line_cars(op.line, Math.max(0, Math.min(255, Math.round(op.cars)))) };
     case "fares":
       fares = { base: Math.max(0, op.base), perKm: Math.max(0, op.perKm) };
       return { r: 0 };
@@ -1417,6 +1512,7 @@ async function processMessage(msg: ToClock) {
       send({ kind: "ready", initMs: performance.now() - t0, frame: frameSpec() });
       // The last game, unless the page asked for a new one (T-029).
       testPage = !!(msg.fresh || msg.testPage);
+      if (msg.backupMs && msg.backupMs > 0) backupMs = msg.backupMs;
       if (msg.fresh) {
         // T-320: a new game for a check owns no slot, so nothing it does can reach a saved game
         activeSlot = "";
@@ -1434,13 +1530,38 @@ async function processMessage(msg: ToClock) {
       await publishSlots();
       const stored = msg.fresh || msg.newSlot ? null : await readStored(activeSlot);
       if (!stored && activeSlot) unwritten = activeSlot;
+      if (msg.fresh || msg.newSlot) {
+        // T-728, T-731: the start menu's choice; a real network is written to its slot at once
+        if (msg.game?.real) {
+          try {
+            await newGame(msg.game);
+            dirty = true;
+            void autosave();
+            return;
+          } catch (err) {
+            send({ kind: "loaded", from: "new", clock: START_CLOCK, error: "The real network could not be loaded. " + (err as Error).message, frame: frameSpec(), game });
+          }
+        }
+        const empty = msg.game && { ...msg.game, real: undefined };
+        // a start on another clock than New York's starts again at its own morning
+        if (startClock(empty) !== START_CLOCK) { await newGame(empty); return; }
+        setNewGame(empty);
+      }
       if (stored) {
         try {
           if (await loadGame(stored.bytes, "autosave") && activeLease) await saveConverted(activeSlot, stored);
           return;
         } catch (err) {
-          // Keep the unreadable save aside rather than overwrite it with the new game.
+          // Keep the unreadable save aside, and its slot as it is: the new game gets a slot of its own (T-743).
           await writeStored("unreadable-" + stored.at, stored);
+          if (activeLease) {
+            activeLease.release();
+            activeSlot = "slot-" + crypto.randomUUID();
+            newSlotName = { key: activeSlot, name: nextGameName(await listSlots().catch(() => [])) };
+            unwritten = activeSlot;
+            activeLease = await leaseSlot(activeSlot);
+            await publishSlots();
+          }
           send({ kind: "loaded", from: "new", clock: START_CLOCK, error: "The last game could not be loaded. " + (err as Error).message, frame: frameSpec(), game });
         }
       }
@@ -1487,19 +1608,18 @@ async function whole(msg: Extract<ToClock, { kind: "import" | "export" | "newGam
   if (msg.kind === "export") {
     const bytes = await saveBytes();
     send({ kind: "exported", bytes, day: Math.floor(gameNow() / 86400) }, [bytes.buffer]);
-  } else if (msg.kind === "import") {
-    try {
-      await loadGame(new Uint8Array(msg.bytes), "file");
-    } catch (err) {
-      send({ kind: "loaded", from: "file", clock: gameNow(), frame: frameSpec(), error: (err as Error).message, game });
-      return;
-    }
-    dirty = true;
-    await autosave();
   } else {
-    newGame();
-    dirty = true;
-    await autosave();
+    try {
+      const name = msg.name?.trim();
+      if (msg.kind === "import") await intoNewSlot(name || "Loaded game", () => loadGame(new Uint8Array(msg.bytes), "file"), true);
+      else {
+        const spec = msg.game;
+        await intoNewSlot(name || newGameName(await listSlots().catch(() => []), spec ?? { mode: "normal" }), () => newGame(spec), !!spec?.real);
+      }
+    } catch (err) {
+      // "file": the main thread keeps the game it has
+      send({ kind: "loaded", from: "file", clock: gameNow(), frame: frameSpec(), error: (err as Error).message, game });
+    }
   }
 }
 
@@ -1517,7 +1637,13 @@ async function handle(msg: ToClock) {
   if (settle()) sendMoney();
   // an edit's new departures start now; trains already running keep their places (T-206)
   api.set_now(gameNow());
-  if (msg.kind === "edit") {
+  if (msg.kind === "sandbox") {
+    if (mode === "sandbox") return;
+    setMode("sandbox");
+    dirty = true;
+    sendMoney();
+    void autosave(); // the slot's card shows the mark at once
+  } else if (msg.kind === "edit") {
     if (msg.op.op === "fares") {
       apply(msg.op);
       dirty = true;
@@ -1622,6 +1748,7 @@ async function handle(msg: ToClock) {
     const data =
       q.what === "insertStop" ? api.insert_stop(q.line, q.station)
       : q.what === "stopTiers" ? api.stop_tiers(q.line)
+      : q.what === "passedStations" ? api.passed_stations(q.line)
       : q.what === "junction" ? api.junction_info(q.node)
       : q.what === "edgePis" ? api.edge_pis(q.edge)
       : q.what === "flyover" ? new Float64Array([api.flyover_cost(q.node)])

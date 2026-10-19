@@ -28,6 +28,9 @@ pub const CROSSOVER_LEN: f64 = 120.0;
 pub const CROSSOVER_REACH: f64 = 15.0;
 pub const CROSSOVER_MIN_GAP: f64 = 6.0;
 pub const V_CROSSOVER: f64 = 50.0 / 3.6;
+/// The plain track left between a quad station's platform end and the crossover placed past it
+/// (T-733), m: room for the platform to grow by this much on that side.
+pub const QUAD_CROSSOVER_CLEAR: f64 = 50.0;
 
 // ---- levels (SPEC 6.1) ----
 

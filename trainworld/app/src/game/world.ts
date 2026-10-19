@@ -108,13 +108,15 @@ function setTrainCounts(id: LineId, t: [number, number, number]) {
 }
 
 /** T-625: a line whose trains follow a headway. The headways asked for but not yet in `world`,
- * folded like the train counts above. */
-export const pendingHeadway = signal<ReadonlyMap<LineId, [number, number, number]>>(new Map());
-const headwayEdits = new Map<LineId, { busy: boolean; next: [number, number, number] | null }>();
+ * folded like the train counts above; null is a switch back to counts set by hand (T-747). */
+export const pendingHeadway = signal<ReadonlyMap<LineId, [number, number, number] | null>>(new Map());
+const headwayEdits = new Map<LineId, { busy: boolean; next: [number, number, number] | null | undefined }>();
 
 /** Seconds per level the line keeps, as last set, or null when its trains are counted by hand. */
 export function headwayShown(id: LineId): [number, number, number] | null {
-  return pendingHeadway.value.get(id) ?? world.value?.lineStats[id]?.autoS ?? null;
+  const p = pendingHeadway.value;
+  if (p.has(id)) return p.get(id) ?? null;
+  return world.value?.lineStats[id]?.autoS ?? null;
 }
 
 /** The headway limits (0 is no service) and the step from one headway to the next: 30 s under 5
@@ -146,22 +148,27 @@ export function setHeadway(id: LineId, demand: Demand, seconds: number) {
   if (!base) return;
   const h: [number, number, number] = [...base] as [number, number, number];
   h[DEMAND_INDEX[demand]] = seconds;
+  queueHeadway(id, h);
+}
+
+/** Show `h` at once and send it, folded with any edit to the line's headways still in flight. */
+function queueHeadway(id: LineId, h: [number, number, number] | null) {
   const p = new Map(pendingHeadway.peek());
   p.set(id, h);
   pendingHeadway.value = p;
-  const job = headwayEdits.get(id) ?? { busy: false, next: null };
+  const job = headwayEdits.get(id) ?? { busy: false, next: undefined };
   headwayEdits.set(id, job);
   job.next = h;
   if (job.busy) return;
   const send = async () => {
     job.busy = true;
-    while (job.next) {
+    while (job.next !== undefined) {
       const secs = job.next;
-      job.next = null;
+      job.next = undefined;
       const had = world.peek()?.lineStats[id]?.autoS;
       const a = await edit({ op: "setHeadway", line: num(id), seconds: secs });
-      noteAnswer(id, a, secs, had);
-      if (!a.ok) job.next = null; // refused (money): the line goes back to the world's headways
+      if (secs) noteAnswer(id, a, secs, had);
+      if (!a.ok) job.next = undefined; // refused (money): the line goes back to the world's headways
     }
     job.busy = false;
     headwayEdits.delete(id);
@@ -183,7 +190,7 @@ export function setAutoTrains(id: LineId, on: boolean) {
   const st = world.value?.lineStats[id];
   if (!st) return;
   if (!on) {
-    void edit({ op: "setHeadway", line: num(id), seconds: null });
+    queueHeadway(id, null);
     return;
   }
   const n = trainsShown(id) ?? st.trainsNeeded;
@@ -198,7 +205,7 @@ export function setAutoTrains(id: LineId, on: boolean) {
     }
     return exact;
   }) as [number, number, number];
-  void edit({ op: "setHeadway", line: num(id), seconds });
+  queueHeadway(id, seconds);
 }
 
 /** The fare curve for the whole network (T-028): US$ a ride plus US$ a km. */

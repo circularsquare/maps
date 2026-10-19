@@ -18,6 +18,7 @@ import { pointsExact, pointsPast24h, pointsPerDay } from "../game/points";
 import { Icon } from "./widgets";
 import { perfOff } from "../perfFlags";
 import { saveSlotsState } from "../workers/clockClient";
+import { START_CASH } from "../workers/saveFile";
 import { CACHE_VERSION } from "../workers/demandCache";
 import { savesOpen } from "./SavesPanel";
 
@@ -45,6 +46,8 @@ function Cash() {
   const live = liveMoney.value, m = moneyState.value;
   const today = live.today;
   const tip = today ? `Today: fares ${money(today.fares * 1e6)}, running trains ${money(-today.running * 1e6)}` : undefined;
+  // T-728: a sandbox shows no cash; the hover has the money since the start
+  if (m?.mode === "sandbox") return <div class="cash sandbox" data-tip={["Sandbox: nothing is refused for money", `Since day 1: ${money((live.cash - START_CASH) * 1e6)}`, ...(tip ? [tip] : [])].join("\n")}>Sandbox</div>;
   // T-305: a box of fixed width, the minus then the $ at fixed places and the digits left-aligned after the $
   const exact = m ? moneyCash(live.cash * 1e6) : "";
   const neg = exact.startsWith("−");

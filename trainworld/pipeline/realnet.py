@@ -9,6 +9,7 @@
     python pipeline/realnet.py single     # the batch-3 single Manhattan line as a test network
     python pipeline/realnet.py geom       # track geometry from GTFS shapes, for the `realsave` bin
     python pipeline/realnet.py gamesave   # the `realsave` output as a game file (T-007-real-nyc.save)
+    python pipeline/realnet.py ship       # the game files a sandbox starts from -> data/packs/real/<id>.save (T-731)
 
 The converter (T-509): each city in CITIES lists its sources; an adapter turns each source into
 stations and trips (route, direction, stops, departure times), and the rest is common. Adapters:
@@ -228,6 +229,20 @@ CITIES["tyo"] = {
     "count_point": [139.7671, 35.6812],  # Tokyo station
     "merge_m": 0.0,  # one source; stations are already S12 groups
     "sources": [_tyo_routes()],
+}
+# T-737's stress test: every line in Japan from N02 (pipeline/realnet_n02.py), in Tokyo's frame
+N02_DIR = os.path.join(MAPS, "riders", "tokyoriders", "data", "N02-24", "UTF-8")
+CITIES["jpn"] = {
+    "pack": "tyo",
+    "boundary": False,
+    "out": os.path.join(WORK, "jpn_real.json"),
+    "what": "Japan's whole rail network from N02, frequencies from passing counts (T-737, rough)",
+    "count_point": [139.7671, 35.6812],
+    "merge_m": 0.0,
+    "sources": [{"name": "n02", "adapter": "n02", "stations": os.path.join(N02_DIR, "N02-24_Station.geojson"),
+                 "sections": os.path.join(N02_DIR, "N02-24_RailroadSection.geojson"),
+                 "density": os.path.join(MAPS, "riders", "japanriders", "data", "segments.geojson"),
+                 "min_share": 0.0, "min_trips": 1, "kind": "commuter"}],
 }
 CAR_M = 20.0
 LEVEL_WINDOWS = {0: [(7, 9), (17, 19)], 1: [(10, 16)], 2: [(0, 6)]}
@@ -572,7 +587,12 @@ def load_trips_csv(src, inside):
     return {k: v for k, v in stations.items() if k in keep}, trips, names
 
 
-ADAPTERS = {"gtfs": load_gtfs, "osm": load_osm, "trips": load_trips_csv}
+def load_n02(src, inside):
+    import realnet_n02
+    return realnet_n02.load(src, inside, osm_interval_tph)
+
+
+ADAPTERS = {"gtfs": load_gtfs, "osm": load_osm, "trips": load_trips_csv, "n02": load_n02}
 
 
 def is_piece(small, big):
@@ -691,10 +711,10 @@ def cmd_net(city=None):
     merge_m = cfg.get("merge_m", MERGE_M)
     from shapely import prepared
     from shapely.geometry import Point
-    bnd = prepared.prep(boundary(cfg["pack"]))
+    bnd = prepared.prep(boundary(cfg["pack"])) if cfg.get("boundary", True) else None
 
     def inside(lon, lat):
-        return bnd.contains(Point(lon, lat))
+        return bnd is None or bnd.contains(Point(lon, lat))
     stations, lines = {}, []
     no_merge = set()
     for src in cfg["sources"]:
@@ -712,10 +732,13 @@ def cmd_net(city=None):
         ls = build_lines(src, trips, xy, cxy)
         for l in ls:
             l["name"] = rn.get(l["route"], l["route"])
+            if l["route"] in src.get("shapes", {}):  # the n02 adapter's track, for `geom`
+                sx, sy = to_xy(*np.array(src["shapes"][l["route"]]).T, o)
+                l["shape"] = np.stack([sx, sy], 1).round(1).tolist()
         print(f"  {name}: {len(ls)} lines from {len(set(l['route'] for l in ls))} routes")
         lines += ls
     # merge stations of different sources within merge_m (one interchange)
-    keys = [k for k in stations if k not in no_merge]
+    keys = [k for k in stations if k not in no_merge] if merge_m > 0 else []
     alias = {}
     for i, a in enumerate(keys):
         for b in keys[i + 1:]:
@@ -1211,7 +1234,7 @@ def cmd_geom():
     out = []
     n_straight = 0
     for l in net["lines"]:
-        shapes = shapes_by_route.get((l["feed"], l["route"]), [])
+        shapes = [np.array(l["shape"])] if l.get("shape") else shapes_by_route.get((l["feed"], l["route"]), [])
         xy = [np.array([st[k]["x"], st[k]["y"]]) for k in l["stops"]]
         # the shape that passes nearest all stops of the line
         best, best_d = None, np.inf
@@ -1304,6 +1327,32 @@ def cmd_gamesave():
     print(f"{len(raw):,} bytes raw, {os.path.getsize(p):,} gzipped, fleet {header['fleet']:,} cars -> {p}")
 
 
+# T-731: the cities a sandbox can start from their real network (the app's REAL_NETWORKS, ui/NewGame.tsx)
+SHIPPED = ["nyc", "lon", "par", "tyo", "seo", "tor", "sdj"]
+
+
+def cmd_ship():
+    """Copy each shipped city's game file to data/packs/real/<id>.save, beside the packs the build
+    copies. Its header's "city" is set to the registry's first id (an older gamesave wrote the whole
+    registry entry there, which the app refuses)."""
+    import gzip
+    import struct
+    reg = json.load(open(os.path.join(ROOT, "app", "src", "game", "registry.json"), encoding="utf-8"))
+    out = os.path.join(ROOT, "data", "packs", "real")
+    os.makedirs(out, exist_ok=True)
+    for city in SHIPPED:
+        src = os.path.join(ROOT, "T-007-real-nyc.save") if city == "nyc" else os.path.join(WORK, f"{city}_real.save")
+        raw = gzip.decompress(open(src, "rb").read())
+        n = struct.unpack("<I", raw[4:8])[0]
+        header = json.loads(raw[8:8 + n])
+        header["city"] = reg["cities"][0]["id"]
+        hj = json.dumps(header).encode()
+        p = os.path.join(out, f"{city}.save")
+        with open(p, "wb") as f:
+            f.write(gzip.compress(b"TWG1" + struct.pack("<I", len(hj)) + hj + raw[8 + n:], mtime=0))
+        print(f"{city}: {os.path.getsize(p):,} bytes -> {p}")
+
+
 SINGLE_LINE = [  # the batch-3 test line: 12.4 km under Manhattan, 7 stations, 14 trains an hour
     ("Bowling Green", -74.0141, 40.7046), ("Canal St", -74.0005, 40.7190), ("Union Sq", -73.9903, 40.7347),
     ("Grand Central", -73.9772, 40.7520), ("59 St", -73.9672, 40.7626), ("86 St", -73.9555, 40.7795),
@@ -1373,4 +1422,4 @@ out body;"""
 
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "net"
-    {"net": cmd_net, "fetch-osm": cmd_fetch_osm, "counties": cmd_counties, "targets": cmd_targets, "compare": cmd_compare, "single": cmd_single, "geom": cmd_geom, "gamesave": cmd_gamesave}[cmd]()
+    {"net": cmd_net, "fetch-osm": cmd_fetch_osm, "counties": cmd_counties, "targets": cmd_targets, "compare": cmd_compare, "single": cmd_single, "geom": cmd_geom, "gamesave": cmd_gamesave, "ship": cmd_ship}[cmd]()

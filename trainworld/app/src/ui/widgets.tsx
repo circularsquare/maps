@@ -1,12 +1,12 @@
 // Small shared pieces: line chip, stepper, segmented buttons, checkbox, icons (inline SVG).
 
 import type { ComponentChildren } from "preact";
-import { useRef, useState } from "preact/hooks";
+import { useLayoutEffect, useRef, useState } from "preact/hooks";
 import { inkOn } from "../game/palette";
 import { PLANE_PATH } from "../map/glyphs";
 import { bulletEpoch, bulletText } from "./bullet";
 import type { LineInput } from "../game/types";
-import { selection, type ListSort } from "../game/ui";
+import { selection, uiScale, type ListSort } from "../game/ui";
 import type { Signal } from "@preact/signals";
 
 export const Icon = {
@@ -26,6 +26,8 @@ export const Icon = {
   station: () => <svg viewBox="0 0 16 16"><path d="M1.5 8h3.5M11 8h3.5" /><circle cx="8" cy="8" r="3" /></svg>,
   // T-445: a run of segments, each starting where the last ended
   keepPlacing: () => <svg viewBox="0 0 16 16"><path d="M2 12.5l4-6 3 3 5-6.5" /><circle class="solid" cx="6" cy="6.5" r="1.4" /><circle class="solid" cx="9" cy="9.5" r="1.4" /><circle class="solid" cx="14" cy="3" r="1.4" /></svg>,
+  // T-727: a magnet over a curving line
+  snapReal: () => <svg viewBox="0 0 16 16"><path d="M1.5 14.5c4-.5 9-3 13-8" /><path d="M5 2.5v3.5a3 3 0 006 0V2.5M5 4.5h2M9 4.5h2" /></svg>,
   // T-338: two parallel tracks joined by an X
   crossover: () => <svg viewBox="0 0 16 16"><path d="M1.5 3.5h13M1.5 12.5h13M4.5 3.5l7 9M11.5 3.5l-7 9" /></svg>,
   pointer: () => <svg viewBox="0 0 16 16"><path d="M4 2.5v10l3-2.8 2 4.3 1.8-.8-2-4.2 4-.3z" /></svg>,
@@ -53,6 +55,10 @@ export const Icon = {
   // T-378: an inter-region trip's modes (with `ride` for the car)
   train: () => <svg viewBox="0 0 16 16"><rect x="3.8" y="1.8" width="8.4" height="9.7" rx="2" /><path d="M3.8 7h8.4M6 14.2l1-2.7M10 14.2l-1-2.7" /></svg>,
   plane: () => <svg viewBox="0 0 16 16"><path d={PLANE_PATH} /></svg>,
+  // T-748: an alert's mark, a circled exclamation point, coloured by its severity
+  alert: () => <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.2" /><path d="M8 4.6v4" /><circle class="solid" cx="8" cy="11.1" r="0.5" /></svg>,
+  // T-749: the Cities tab, a skyline
+  cities: () => <svg viewBox="0 0 16 16"><path d="M1.5 14h13M3 14V7h3.5v7M6.5 14V2.5h3.5V14M10 14V8h3v6" /></svg>,
   // T-685: a city's star in the Cities list
   star: () => <svg viewBox="0 0 16 16"><path class="solid" d="M8 1.5l1.9 4.1 4.5.5-3.4 3 1 4.4L8 11.3l-4 2.2 1-4.4-3.4-3 4.5-.5z" /></svg>,
   gear: () => (
@@ -73,13 +79,34 @@ export function Chip({ line, size = "", plain, pick, gone }: { line: LineInput; 
     else selection.value = { kind: "line", line: line.id };
   };
   void bulletEpoch.value;
-  const b = bulletText(line.letter, size);
+  const zoom = useCssZoom();
+  const b = bulletText(line.letter, size, zoom.value);
   return (
-    <span class={"chip " + size + (plain ? "" : " link")} style={{ "--c": line.colour, "--ct": inkOn(line.colour), visibility: gone ? "hidden" : undefined }}
+    <span ref={zoom.ref} class={"chip " + size + (plain ? "" : " link")} style={{ "--c": line.colour, "--ct": inkOn(line.colour), visibility: gone ? "hidden" : undefined }}
       data-tip={plain ? undefined : line.name} onClick={click}>
-      {b ? <svg style={{ width: b.w + "px", height: b.h + "px" }}><text x={b.x} y={b.y}>{line.letter}</text></svg> : <span>{line.letter}</span>}
+      {b ? (
+        <svg style={{ width: b.w + "px", height: b.h + "px" }}>
+          <rect y={b.top} width={b.w} height={b.h} rx={b.h / 2} />
+          <text x={b.x} y={b.y}>{line.letter}</text>
+        </svg>
+      ) : <span>{line.letter}</span>}
     </span>
   );
+}
+
+/** The CSS zoom an element is drawn at (the panels are zoomed by the UI scale, T-247): the UI scale
+ * until it is in the page, then what the browser reports, so a bullet's baseline lands on a whole
+ * device pixel (ui/bullet.ts). */
+function useCssZoom() {
+  const ref = useRef<HTMLSpanElement>(null);
+  const guess = uiScale.value;
+  const [seen, setSeen] = useState<number | null>(null);
+  const value = seen ?? guess;
+  useLayoutEffect(() => {
+    const z = (ref.current as (HTMLElement & { currentCSSZoom?: number }) | null)?.currentCSSZoom;
+    if (typeof z === "number" && z > 0 && Math.abs(z - value) > 1e-6) setSeen(z);
+  });
+  return { ref, value };
 }
 
 /** `jump`: Shift-click steps by 5 and Ctrl-click by 20 (T-516), the buttons' hover says so.
@@ -176,6 +203,17 @@ export function SortHead<K extends string>({ sort, cols }: { sort: Signal<ListSo
         );
       })}
     </div>
+  );
+}
+
+/** T-748: one alert in a plain list (`<ul class="alerts">`): a red (bad) or yellow (warn)
+ * exclamation point, the text, and under it any detail lines. */
+export function Alert({ level = "bad", tip, children }: { level?: "bad" | "warn"; tip?: string; children: ComponentChildren }) {
+  return (
+    <li class={"alert " + level}>
+      <span class="alert-mark"><Icon.alert /></span>
+      <div class="alert-body" data-tip={tip}>{children}</div>
+    </li>
   );
 }
 

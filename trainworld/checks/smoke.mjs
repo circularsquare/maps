@@ -91,7 +91,10 @@ async function browserChecks(BASE) {
       await page.goto(`${BASE}${sep}debug=1&v=${Date.now()}`);
       await page.waitForSelector('.start-menu .start-new', { timeout: 60000 });
       const before = await page.evaluate(() => performance.getEntriesByType('resource').filter((e) => /clock\.worker|demand\.worker/.test(e.name)).length);
+      // T-728: New game opens the new game sheet; a normal game in New York, as before
       await page.click('.start-menu .start-new');
+      await page.click('.start-menu .new-game-cities [data-city="nyc"]');
+      await page.click('.start-menu .new-game .start-new');
       await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client && !document.querySelector('.start-menu'), undefined, { timeout: 180000 });
       const n = await page.evaluate(() => window.tw.world.value.save.stations.length);
       report('start menu', before === 0 && n === 0, `(${before} workers before the pick, ${n} stations after New game)`);

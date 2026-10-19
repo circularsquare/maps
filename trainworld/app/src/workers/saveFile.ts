@@ -11,7 +11,8 @@
 //                          converted to Mercator when they load, T-308)
 //
 // Nothing in it depends on wall time, so saving the same game twice gives the same bytes.
-// Autosaves live in IndexedDB (database "anitabuilder", store "saves", one key per slot; the original game keeps key "autosave").
+// Autosaves live in IndexedDB (database "anitabuilder", store "saves", one key per slot; the original game keeps key "autosave";
+// beside each slot its demand cache and two backups under keys the saves list does not show).
 
 import registry from "../game/registry.json";
 
@@ -19,6 +20,8 @@ export const SAVE_MAGIC = "TWG1";
 export const SAVE_FORMAT = 1;
 /** SPEC 8: a new game starts on day 1 at 07:00 (game seconds). */
 export const START_CLOCK = 86400 + 7 * 3600;
+/** SPEC 6.4: US$3B to start, in US$M; a sandbox's money since the start is the cash less this (T-728). */
+export const START_CASH = 3000;
 
 /** One game day's money, US$M (T-028). */
 export interface DayLedger {
@@ -72,7 +75,20 @@ export interface SaveHeader {
   /** T-706: each line's station note (semitones above C5) and the city it was chosen in, kept for the
    * line's life and after it so the others keep theirs; absent in older saves (map/stationLife.ts) */
   notes?: Record<string, [number, string]>;
+  /** T-728: absent in older saves, read as "normal" */
+  mode?: GameMode;
+  /** T-728: the zone the game started in; absent for a start on the world map and in older saves */
+  start?: string;
+  /** T-728, T-729: the zones opened in this game, in the order they were opened; absent in older saves */
+  opened?: string[];
 }
+
+/** T-728: a sandbox is the normal game with nothing refused for money and the cash not shown. */
+export type GameMode = "normal" | "sandbox";
+
+/** How a new game starts (T-728): its mode, its start zone (none for the world map), and for a
+ * sandbox the start zone's real network as save bytes (T-731). */
+export interface NewGameSpec { mode: GameMode; start?: string; real?: ArrayBuffer }
 
 /**
  * Whether this build can open the save: it names the registry's world (or none, as legacy NYC
@@ -149,6 +165,8 @@ export interface SlotSummary {
   stations: number;
   /** US$M */
   cash: number;
+  /** T-728; absent in slots written before it */
+  mode?: GameMode;
 }
 
 export interface StoredSave extends Partial<SlotSummary> {
@@ -228,7 +246,7 @@ export async function listSlots(): Promise<SaveSlot[]> {
   return keys.flatMap((key, i) => {
     const s = saves[i];
     if (!s) return [];
-    return [{ key, name: slotName(key, s), at: s.at, day: s.day, thumb: s.thumb, cities: s.cities, lines: s.lines, stations: s.stations, cash: s.cash }];
+    return [{ key, name: slotName(key, s), at: s.at, day: s.day, thumb: s.thumb, cities: s.cities, lines: s.lines, stations: s.stations, cash: s.cash, mode: s.mode }];
   }).sort((a, b) => b.at - a.at);
 }
 
@@ -254,9 +272,53 @@ export async function deleteSlot(key: string): Promise<void> {
   const s = await store("readwrite");
   const done = committed(s.transaction);
   await req(s.delete(key));
-  // and its demand cache (T-328)
-  for (const k of await req(s.getAllKeys())) if (typeof k === "string" && k.startsWith(`${DEMAND_PREFIX}${key}:`)) s.delete(k);
+  // and its demand cache (T-328) and backups (T-744)
+  for (const k of await req(s.getAllKeys())) if (typeof k === "string" && (k.startsWith(`${DEMAND_PREFIX}${key}:`) || k.startsWith(`${BACKUP_PREFIX}${key}:`))) s.delete(k);
   await done;
+}
+
+/** The first "Game N" no slot is called (T-677, T-743). */
+export function nextGameName(slots: { name: string }[]): string {
+  const names = new Set(slots.map((s) => s.name));
+  let n = slots.length + 1;
+  while (names.has(`Game ${n}`)) n++;
+  return `Game ${n}`;
+}
+
+/** A new game's slot name (T-728): its start city, or "World" for a map start, then " sandbox" for
+ * a sandbox, then " 2", " 3" and on if a slot already has the name. */
+export function newGameName(slots: { name: string }[], spec: NewGameSpec): string {
+  const base = (registry.cities.find((c) => c.id === spec.start)?.name ?? "World") + (spec.mode === "sandbox" ? " sandbox" : "");
+  const names = new Set(slots.map((s) => s.name));
+  let name = base;
+  for (let n = 2; names.has(name); n++) name = `${base} ${n}`;
+  return name;
+}
+
+// T-744: two backups of each slot, `backup:<slot>:0` and `:1`, the older one written over next. A
+// backup is the slot's record without its picture.
+const BACKUP_PREFIX = "backup:";
+export interface SlotBackup { key: string; at: number; day: number; }
+
+export async function listBackups(slot: string): Promise<SlotBackup[]> {
+  const out: SlotBackup[] = [];
+  for (const i of [0, 1]) {
+    const key = `${BACKUP_PREFIX}${slot}:${i}`, b = await readStored(key);
+    if (b) out.push({ key, at: b.at, day: b.day });
+  }
+  return out.sort((a, b) => b.at - a.at);
+}
+
+/** Write a slot's backup over its older one (or into an empty place). */
+export async function writeBackup(slot: string, v: StoredSave): Promise<boolean> {
+  const have = await listBackups(slot);
+  const free = [0, 1].map((i) => `${BACKUP_PREFIX}${slot}:${i}`).find((k) => !have.some((b) => b.key === k));
+  const { thumb: _, ...rest } = v;
+  return writeStored(free ?? have[have.length - 1].key, rest);
+}
+
+export function isBackupOf(key: string, slot: string): boolean {
+  return key.startsWith(`${BACKUP_PREFIX}${slot}:`);
 }
 
 // T-328: the last final demand result of each slot, kept beside it under `demand:<slot>:<network

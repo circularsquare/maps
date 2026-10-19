@@ -38,7 +38,8 @@ purpose filter the purpose drawn is ringed in the bar.
   sorts by clicking a column header [T-310]: Name, City (below), Riders (past 24 hours), Money (the line's fares less its running cost over the past 24 hours, in the money format with negatives red; its hover gives the fares, the running cost and the net) [T-735], Trains and Near. A click sorts by that
   column (names A to Z, figures biggest first, Near nearest first), a second reverses it, the sorted
   column has a small arrow, and each header's hover says what it sorts by. Names sort naturally, ties
-  by name. Lines default to by name. The sort is kept while the page is open and re-runs each game hour.
+  by name. The name keeps at least about six characters; the Money column goes first when the
+  dock is too narrow, then the City column beside Near [T-746]. Lines default to by name. The sort is kept while the page is open and re-runs each game hour.
   A double click on a row fits the map to the line's stops (a jump, as search does) after the
   single click selected it [T-569, `ui/locate.ts`]; the line inspector's locate button (cross
   hairs, hover "Show on the map", beside the pencil) does the same.
@@ -112,9 +113,17 @@ purpose filter the purpose drawn is ringed in the bar.
   average for a train with room", then "12/96 trains are full" (all the level's periods),
   and a last line naming the worst period and its wait when that period's grade is worse than the
   level's; the trains steppers take Shift-click for 5 and Ctrl-click for 20 (their hover says so)
-  [T-516]; when full track holds trains back, a red box under the table names it ("Platform at
+  [T-516]; under the table a **Train length** stepper in cars [T-733], 1 up to what the line's
+  shortest platform fits (platform / 20 m), each button's hover giving the length it leads to,
+  the riders a train then holds at crush ("7 cars, 1,120 riders a train at most"), the cars it
+  buys or takes from the depot on a running line, and the cap ("The 160 m platform at East fits
+  8 cars"), which the label's hover also gives; stepping up to the cap stores the default (the most
+  that fits, `cars` 0), so the trains follow the platforms again; when full track holds trains back, an alert under the table names it ("Platform at
   Akabane is full", the station name a link that moves the camera there [T-669]) with the trains
-  held per level;
+  held per level beneath it ("Medium demand: 1 train held out of service"), one alert for each
+  full place. Alerts are a plain list, each with a red (bad) or yellow (warning) circled
+  exclamation point (`Alert` in `ui/widgets.tsx`, `--bad`, `--yellow`), no box [T-748]; a broken
+  line's "Broken: track it used is gone." is one too;
   Today for a running line:
   riders by purpose,
   one Profit row (fares, a minus sign, then the running cost over the 24 hours in red; the hover
@@ -170,8 +179,11 @@ purpose filter the purpose drawn is ringed in the bar.
   Hovering one gives the line's name and a click selects the line, except in the selected line's
   own panel (its title bullet opens the colour and symbol editor) and on a search row that is the
   line itself. The map's tags draw the same bullet as plain DOM (`lineBullet`). In both, the
-  symbol is SVG text placed from its measured ink box (`ui/bullet.ts`, T-705), so the ink, not the
-  font's line box, is centred in the circle, at any font and UI scale (within 1 px).
+  circle and the symbol are one SVG (`ui/bullet.ts`, T-705, T-745): the symbol is SVG text placed
+  from its ink box (measured on a canvas at 240 px and scaled), its baseline on a whole device pixel
+  for the device pixel ratio and CSS zoom it is drawn at, and the circle moved with it, so the ink,
+  not the font's line box, is centred in the circle at any font, UI scale and pixel ratio, within
+  half a device pixel (`checks/t745-bullets.mjs` measures it on the rendered pixels).
 - **A click on a station selects its whole complex** [T-249]: complex view, whatever was selected
   before (there is no Station / Complex switch). A station on its own is a complex of one. Complex
   rules: [ui-map.md](ui-map.md) "Station complexes".

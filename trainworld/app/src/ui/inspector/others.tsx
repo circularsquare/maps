@@ -632,7 +632,7 @@ function DoubleUp({ edge, version }: { edge: number; version: number }) {
     };
   }, [edge, version]);
   if (!answer) return null;
-  const tip = "price" in answer ? `Double up to quad track for ${money(answer.price * 1e6)} (blueprint)\nThe express pair runs beside it to the next junction or track end each way` : answer.why;
+  const tip = "price" in answer ? `Double up to quad track for ${money(answer.price * 1e6)} (blueprint)\nThe express pair runs beside it to the next junction or track end each way\nThe price includes a crossover past each station where one fits` : answer.why;
   return (
     <button class="btn icon" disabled={"why" in answer} data-tip={tip} aria-label="Double up" onClick={() => void edit({ op: "doubleUp", edge })}>
       <svg viewBox="0 0 16 16"><path d="M1.5 3h13M1.5 6h13M8 9v6M5 12h6" /></svg>

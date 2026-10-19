@@ -33,6 +33,8 @@ pub struct TrackApi {
     money_short: Option<(f64, f64)>,
     /// Cash, US$M (SPEC 6.4: $6B to start).
     cash: f64,
+    /// A sandbox game (T-728): nothing is refused for money; the cash still pays and may go negative.
+    unlimited: bool,
     /// Cars the network owns (T-028). Running lines need `cars_needed`; an edit that needs more
     /// buys them, spare cars stay for later.
     fleet: u32,
@@ -141,6 +143,7 @@ impl TrackApi {
             issues: vec![],
             money_short: None,
             cash: 6000.0,
+            unlimited: false,
             fleet: 0,
             last_trains: 0.0,
             route_vertices: vec![],
@@ -351,6 +354,13 @@ impl TrackApi {
     pub fn set_cash(&mut self, v: f64) {
         self.cash = v;
     }
+    pub fn set_unlimited(&mut self, on: bool) {
+        self.unlimited = on;
+    }
+    /// What an edit may spend: the cash, or anything in a sandbox.
+    fn spendable(&self) -> f64 {
+        if self.unlimited { f64::INFINITY } else { self.cash }
+    }
     /// Cars owned (T-028).
     pub fn fleet(&self) -> u32 {
         self.fleet
@@ -459,7 +469,8 @@ impl TrackApi {
     fn run(&mut self, op: Op) -> u32 {
         let fleet = self.fleet;
         let before = self.w.svc.before_edit(&self.w.net, self.now);
-        let r = self.w.apply_paid(op, self.cash, false, &|w| trains_to_buy(w, fleet));
+        let cash = self.spendable();
+        let r = self.w.apply_paid(op, cash, false, &|w| trains_to_buy(w, fleet));
         self.settle(r, &before)
     }
 
@@ -467,7 +478,8 @@ impl TrackApi {
     fn run_charged(&mut self, op: Op) -> u32 {
         let fleet = self.fleet;
         let before = self.w.svc.before_edit(&self.w.net, self.now);
-        let r = self.w.apply_paid(op, self.cash, true, &|w| trains_to_buy(w, fleet));
+        let cash = self.spendable();
+        let r = self.w.apply_paid(op, cash, true, &|w| trains_to_buy(w, fleet));
         self.settle(r, &before)
     }
 
@@ -1135,9 +1147,14 @@ impl TrackApi {
         let tracks = if quad { 2 } else { tracks };
         // One piece of track per corner clicked (T-244), joined at plain nodes, the shape unchanged.
         // T-656: ground level over water is a bridge, raised over the water with ramps on land.
-        // Segments drawn through points only; the corners a player clicks keep their levels.
-        let bridged = if pis.is_empty() { self.bridged(&verts) } else { None };
-        let pieces = stroke_pieces(bridged.as_deref().unwrap_or(&verts), first_click, pis.len(), scaled);
+        // Clicked corners at ground level too (T-667, the real-network snap's routes, T-727): the
+        // corners the bridge adds are cut into pieces like the clicked ones.
+        let bridged = self.bridged(&verts);
+        let cut = |b: &Option<Vec<Pi>>, n: usize, clicks: usize| match b {
+            Some(b) if clicks > 0 => (clicks + b.len()).saturating_sub(n),
+            _ => clicks,
+        };
+        let pieces = stroke_pieces(bridged.as_deref().unwrap_or(&verts), first_click, cut(&bridged, verts.len(), pis.len()), scaled);
         self.push_pieces(&pieces, ra.node, rb.node, tracks, &mut ops, &mut new_nodes, &mut new_edges);
         self.route_bridged = bridged.unwrap_or_default();
         let mut express = vec![];
@@ -1167,9 +1184,10 @@ impl TrackApi {
                 }
             };
             // the express pair crosses the water on its own bridge, in one piece
-            let ex_bridged = if pis.is_empty() { self.bridged(&ex) } else { None };
+            let ex_bridged = self.bridged(&ex);
             let pieces = match &ex_bridged {
-                Some(b) => stroke_pieces(b, first, 0, scaled),
+                Some(b) if pis.is_empty() => stroke_pieces(b, first, 0, scaled),
+                Some(b) => stroke_pieces(b, first, cut(&ex_bridged, ex.len(), clicks), scaled),
                 None => stroke_pieces(&ex, first, clicks, scaled),
             };
             self.push_pieces(&pieces, own_a.map_or(ra.node, |o| o.0), own_b.map_or(rb.node, |o| o.0), tracks, &mut ops, &mut new_nodes, &mut new_edges);
@@ -1323,6 +1341,23 @@ impl TrackApi {
         self.route_arc.clone()
     }
 
+    /// A real railway's line as corners for `add_route` (T-727, `trace.rs`): `lonlat` the line as
+    /// lon, lat pairs from one end to the other, `tol` how far the track may lie from it (ground
+    /// m), quad track (`tracks` 4) keeping its inner pair at 100 m. Returns [worst, mean distance
+    /// (m), corner count, then each corner's x, y, radius (0 auto), level], or empty if it cannot
+    /// be fitted.
+    pub fn trace_route(&self, lonlat: &[f64], tol: f64, tracks: u8, level: i8) -> Vec<f64> {
+        let f = self.w.net.frame();
+        let line: Vec<(f64, f64)> = lonlat.chunks_exact(2).map(|p| f.from_lonlat(p[0], p[1])).collect();
+        let r_min = if tracks == 4 { MIN_RADIUS + QUAD_SPACING } else { MIN_RADIUS };
+        let Some(t) = super::trace::trace(&line, f.scaled(), tol, r_min, level) else { return vec![] };
+        let mut out = vec![t.worst, t.mean, t.pis.len() as f64];
+        for p in &t.pis {
+            out.extend_from_slice(&[p.x, p.y, p.radius, p.level as f64]);
+        }
+        out
+    }
+
     /// The node the last `add_route` ended at, so the next segment can start from it (T-418).
     pub fn route_end(&self) -> u32 {
         self.route_end
@@ -1391,7 +1426,7 @@ impl TrackApi {
                 let need = r.charge + trains;
                 self.issues.clear();
                 self.money_short = None;
-                if need > 1e-9 && need > self.cash + 1e-6 {
+                if need > 1e-9 && need > self.spendable() + 1e-6 {
                     self.money_short = Some((need, self.cash));
                     return 1;
                 }
@@ -1444,13 +1479,16 @@ impl TrackApi {
     /// Stations splitting edges at chainages, one undoable edit (`add_station`). The joints of a
     /// drawn route (T-244, T-418) within a platform's reach go first: the pieces become one edge
     /// again, so the platform has room. `(u32::MAX, node)` puts one on an existing node instead.
+    /// Two stations are a quad complex: a crossover goes in past the first where it fits (T-733).
     fn station_ops(&mut self, at: &[(u32, f64)], st: &StationData, dry: bool) -> u32 {
         let mut ops = vec![];
         let (mut nodes, mut edges) = (vec![], vec![]);
+        let mut first = None;
         for &(e, s) in at {
             if e == u32::MAX {
                 // an existing node, `s` its id
                 ops.push(Op::Station { node: s as u32, data: Some(st.clone()) });
+                first.get_or_insert(s as u32);
                 continue;
             }
             let (more, s) =self.unjoin_near(e, s, st.platform as f64 / 2.0 + 2.0).unwrap_or((vec![], s));
@@ -1458,13 +1496,78 @@ impl TrackApi {
             let (node, new_edge) = (self.w.net.alloc_node(), self.w.net.alloc_edge());
             nodes.push(node);
             edges.push(new_edge);
+            first.get_or_insert(node);
             ops.extend([Op::Split { edge: e, s, node, new_edge }, Op::Station { node, data: Some(st.clone()) }]);
         }
-        let r = self.attempt(Op::Batch(ops), dry);
+        let base = Op::Batch(ops);
+        let mut r = 1;
+        if at.len() == 2 {
+            let (op, nn, ne) = self.with_crossovers(base.clone(), &[first.unwrap()]);
+            if !ne.is_empty() {
+                r = self.attempt(op, dry);
+                if r != 0 || dry {
+                    self.release(&nn, &ne);
+                }
+            }
+        }
+        if r != 0 {
+            // without the crossover: one that will not fit, or the cash short for it, is skipped
+            r = self.attempt(base, dry);
+        }
         if r != 0 || dry {
             self.release(&nodes, &edges);
         }
         r
+    }
+
+    /// `base` and one crossover just past each of `stations` (nodes `base` leaves on quad track)
+    /// where it fits, as one edit (T-733); also the ids the crossovers claim (none: `base` alone).
+    fn with_crossovers(&mut self, base: Op, stations: &[u32]) -> (Op, Vec<u32>, Vec<u32>) {
+        if stations.is_empty() {
+            return (base, vec![], vec![]);
+        }
+        let Ok(inv) = self.w.sketch(base.clone(), false) else { return (base, vec![], vec![]) };
+        let (mut ops, mut invs, mut nn, mut ne) = (vec![base], vec![], vec![], vec![]);
+        for &n in stations {
+            if let Some((op, back, n2, e2)) = self.crossover_past(n) {
+                ops.push(op);
+                invs.push(back);
+                nn.extend(n2);
+                ne.extend(e2);
+            }
+        }
+        for back in invs.into_iter().rev() {
+            self.w.unsketch(back);
+        }
+        self.w.unsketch(inv);
+        (Op::Batch(ops), nn, ne)
+    }
+
+    /// A crossover past station `n` on the sketched track, left sketched (with its inverse): off
+    /// the station's first end, else its second; None where neither has room.
+    #[allow(clippy::type_complexity)]
+    fn crossover_past(&mut self, n: u32) -> Option<(Op, Op, Vec<u32>, Vec<u32>)> {
+        let d = self.w.net.platform_reach(n) + QUAD_CROSSOVER_CLEAR + CROSSOVER_LEN / 2.0;
+        let ends = self.w.net.node_ports[n as usize].ends().to_vec();
+        for c in ends {
+            let net = &self.w.net;
+            let (e, which) = (c >> 1, c & 1);
+            let s = if which == 0 { d } else { net.edge_len[e as usize] - d };
+            let (edge, x, y) = match locate(net, e, s) {
+                Some(Loc::Split(e, s)) => {
+                    let (x, y, _) = geom::pos_at(net.edge_pieces(e), s);
+                    (e, x, y)
+                }
+                Some(Loc::Node(m)) => (net.node_ports[m as usize].ends()[0] >> 1, net.node_x[m as usize], net.node_y[m as usize]),
+                None => continue,
+            };
+            let Ok((op, nn, ne, _)) = self.crossover_op(edge, x, y) else { continue };
+            match self.w.sketch(op.clone(), true) {
+                Ok(back) => return Some((op, back, nn, ne)),
+                Err(_) => self.release(&nn, &ne),
+            }
+        }
+        None
     }
 
     /// The track beside edge `e` at chainage `s` on quad track (T-255): another edge running
@@ -1506,29 +1609,47 @@ impl TrackApi {
 
     /// Double up: an express pair beside double track, as blueprint, making it quad. One undoable
     /// edit. The rules are in docs/track-and-service.md 6.1 ("Doubling up").
+    /// A crossover goes in past each station on the run where it fits (T-733); without them when
+    /// the cash covers only the doubling.
     pub fn double_up(&mut self, edge: u32) -> u32 {
-        let (op, nn, ne) = match self.double_up_op(edge) {
+        let (op, nn, ne, stations) = match self.double_up_op(edge) {
             Ok(v) => v,
             Err(i) => return self.refuse(i),
         };
-        let r = self.run(op);
+        let mut r = 1;
+        let (full, n2, e2) = self.with_crossovers(op.clone(), &stations);
+        if !e2.is_empty() {
+            r = self.run(full);
+            if r != 0 {
+                self.release(&n2, &e2);
+            }
+        }
+        if r != 0 {
+            r = self.run(op);
+        }
         if r != 0 {
             self.release(&nn, &ne);
         }
         r
     }
 
-    /// What `double_up` would add to the blueprint, US$M, or -1 when it would be refused
-    /// (`issue_kinds()` says why).
+    /// What `double_up` would add to the blueprint, crossovers included, US$M, or -1 when it would
+    /// be refused (`issue_kinds()` says why).
     pub fn preview_double_up(&mut self, edge: u32) -> f64 {
-        let (op, nn, ne) = match self.double_up_op(edge) {
+        let (op, nn, ne, stations) = match self.double_up_op(edge) {
             Ok(v) => v,
             Err(i) => {
                 self.refuse(i);
                 return -1.0;
             }
         };
-        let r = self.w.trial(op);
+        let (full, n2, e2) = self.with_crossovers(op.clone(), &stations);
+        let with = if e2.is_empty() { None } else { self.w.trial(full).ok() };
+        self.release(&n2, &e2);
+        let r = match with {
+            Some(r) => Ok(r),
+            None => self.w.trial(op),
+        };
         self.release(&nn, &ne);
         let cost = r.as_ref().map_or(-1.0, |r| r.cost_after - r.cost_before);
         self.done(r.map(|mut r| {
@@ -1540,15 +1661,20 @@ impl TrackApi {
     }
 
     /// The double-up edit on the left of the piece's own direction, else on its right where the
-    /// left is refused; the left's problems when both are.
-    fn double_up_op(&mut self, edge: u32) -> Result<(Op, Vec<u32>, Vec<u32>), Issue> {
+    /// left is refused; the left's problems when both are. Also the run's stations.
+    #[allow(clippy::type_complexity)]
+    fn double_up_op(&mut self, edge: u32) -> Result<(Op, Vec<u32>, Vec<u32>, Vec<u32>), Issue> {
         let (run, nodes) = self.double_run(edge)?;
+        let mut stations: Vec<u32> = nodes.iter().copied().filter(|&n| self.w.net.is_station(n)).collect();
+        if stations.len() > 1 && stations.first() == stations.last() {
+            stations.pop(); // a ring ends where it starts
+        }
         let mut first_err = None;
         for side in [1.0, -1.0] {
             let (op, nn, ne) = self.double_side(&run, &nodes, side)?;
             let r = self.w.trial(op.clone());
             match r {
-                Ok(_) => return Ok((op, nn, ne)),
+                Ok(_) => return Ok((op, nn, ne, stations)),
                 Err(e) => {
                     self.release(&nn, &ne);
                     first_err.get_or_insert(e);
@@ -2091,6 +2217,22 @@ impl TrackApi {
         d.name = name; d.colour = colour; d.symbol = symbol;
         self.run(Op::Line { id, data: Some(d) })
     }
+    /// A line's train length in cars (T-733), 0 for the most its shortest platform fits. Kept as
+    /// set; while a platform is shorter the trains run at what it fits (`build_line`).
+    pub fn set_line_cars(&mut self, id: u32, cars: u8) -> u32 {
+        let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
+        d.cars = cars;
+        self.run(Op::Line { id, data: Some(d) })
+    }
+    /// The most cars `line`'s shortest platform fits, and the station with that platform (T-733).
+    pub fn line_cars_cap(&self, line: u32) -> Vec<u32> {
+        let net = &self.w.net;
+        if !net.line_ok(line) {
+            return vec![];
+        }
+        let Some(&s) = net.line_stops(line).iter().min_by_key(|&&s| net.node_platform[s as usize]) else { return vec![] };
+        vec![((net.node_platform[s as usize] as f64 / CAR_LEN).floor().max(1.0)) as u32, s]
+    }
     pub fn copy_line(&mut self, source: u32, id: u32, name: String) -> u32 {
         let Some(mut d) = self.w.net.line_data(source) else { return self.refuse(Issue::NoSuchLine { line: source }) };
         d.name = name;
@@ -2108,6 +2250,31 @@ impl TrackApi {
     /// Try every insertion slot using the same turn-valid route as set_stops.
     pub fn insert_stop(&self, line: u32, station: u32) -> Vec<f64> {
         best_insert(&self.w.net, line, station, &mut HopMemo::new()).map_or(vec![], |(stops, _)| stops.iter().map(|&s| s as f64).collect())
+    }
+
+    /// The stations a line passes without stopping (T-646): `[gap, node]` pairs in path order, gap
+    /// i lying between stop i and stop i + 1. Only stations on the line's own path count, not
+    /// those on a quad pair beside it; each once.
+    pub fn passed_stations(&self, line: u32) -> Vec<f64> {
+        let net = &self.w.net;
+        if !net.line_ok(line) {
+            return vec![];
+        }
+        let stops = net.line_stops(line);
+        let path = net.line_path(line);
+        let Some(&first) = path.first() else { return vec![] };
+        let mut nodes = vec![net.end_node(first >> 1, first & 1)];
+        nodes.extend(path.iter().map(|&p| net.end_node(p >> 1, 1 - (p & 1))));
+        let (mut gap, mut out, mut seen) = (0usize, vec![], vec![]);
+        for n in nodes {
+            if gap + 1 < stops.len() && n == stops[gap + 1] {
+                gap += 1;
+            } else if net.is_station(n) && !stops.contains(&n) && !seen.contains(&n) && gap + 1 < stops.len() {
+                seen.push(n);
+                out.extend([gap as f64, n as f64]);
+            }
+        }
+        out
     }
 
     /// How every station stands to a line while its stops are edited (T-233, T-237): per station
@@ -2161,12 +2328,18 @@ impl TrackApi {
     }
 
     /// T-625: the line's counts follow a headway in seconds per level (0 = no service): the
-    /// fewest trains that keep it over the round trip, worked out again after every edit.
+    /// fewest trains that keep it over the round trip, worked out again after every edit. Switching
+    /// to headways keeps the trains the line has (T-752).
     pub fn set_auto_headway(&mut self, id: u32, high: u32, medium: u32, low: u32) -> u32 {
         if !self.w.net.line_ok(id) { return self.refuse(Issue::NoSuchLine { line: id }) }
         let auto = [high, medium, low];
-        let trip = self.w.svc.lines.get(id as usize).map_or([0.0; 3], |s| s.round_trip);
-        let trains = std::array::from_fn(|lev| auto_trains(trip[lev], auto[lev]));
+        let svc = self.w.svc.lines.get(id as usize);
+        let trip = svc.map_or([0.0; 3], |s| s.round_trip);
+        let trains = match (self.w.net.line_auto[id as usize], self.w.net.line_trains[id as usize]) {
+            (None, Some(t)) => t,
+            (None, None) => svc.map_or([0; 3], |s| s.trains),
+            _ => std::array::from_fn(|lev| auto_trains(trip[lev], auto[lev])),
+        };
         self.run(Op::AutoTrains { id, auto: Some(auto), trains: Some(trains) })
     }
 
@@ -2198,7 +2371,8 @@ impl TrackApi {
     fn step(&mut self, redo: bool) -> u32 {
         let fleet = self.fleet;
         let before = self.w.svc.before_edit(&self.w.net, self.now);
-        match self.w.step_paid(redo, self.cash, &|w| trains_to_buy(w, fleet)) {
+        let cash = self.spendable();
+        match self.w.step_paid(redo, cash, &|w| trains_to_buy(w, fleet)) {
             Some(r) => self.settle(r, &before),
             None => {
                 self.money_short = None;
@@ -2866,6 +3040,20 @@ fn stroke_pieces(verts: &[Pi], first: usize, clicks: usize, scaled: bool) -> Vec
             let g = start + j;
             if f.radius[g] > 0.0 && (pf.radius[j] - f.radius[g]).abs() > 0.01 {
                 p[j].radius = quant(f.radius[g]);
+            }
+        }
+        // T-727: in the Mercator frame a curve that ended exactly at the cut can overrun it by a
+        // centimetre once its radius is set (the scale is taken at the arc's middle), so it is
+        // eased by a hundredth of a percent at a time until it fits
+        for _ in 0..4 {
+            let over: Vec<usize> = geom::fit_in(&p, scaled).issues.iter().filter_map(|g| if let GeomIssue::ArcDoesNotFit(j) = g { Some(*j) } else { None }).collect();
+            if over.is_empty() {
+                break;
+            }
+            for j in over {
+                if p[j].radius > 0.0 {
+                    p[j].radius = quant(p[j].radius * (1.0 - 1e-4));
+                }
             }
         }
         out.push(p);
@@ -3562,7 +3750,10 @@ mod tests {
         assert_eq!(a.set_train_counts(id, up, 1, 1), 0, "{}", a.issues());
         assert!(a.line_held(id)[0] > 0.0, "rounding up crosses the limit");
 
-        // a headway typed at the limit takes the trains that fit, and none waits
+        // a headway typed at the limit takes the trains that fit, and none waits (the switch to
+        // headways first, which keeps the trains, T-752)
+        assert_eq!(a.set_auto_headway(id, 300, 480, 0), 0, "{}", a.issues());
+        assert_eq!(a.w.svc.lines[id as usize].trains[0], up, "the switch keeps the trains");
         assert_eq!(a.set_auto_headway(id, 240, 480, 0), 0, "{}", a.issues());
         let s = &a.w.svc.lines[id as usize];
         assert_eq!(s.trains[0], up - 1, "clamped at the limit");
@@ -3575,6 +3766,37 @@ mod tests {
         assert_eq!(a.set_auto_headway(id, 120, 480, 0), 0, "{}", a.issues());
         assert!(a.w.svc.lines[id as usize].trains[0] >= up, "the whole trains that wait are dropped, the last part train is not");
         assert!(a.line_held(id)[0] > 0.0, "trains held out at 2:00 against a 4:00 limit");
+    }
+
+    /// T-752: on track another line's fixed rate already overfills, switching between counts and
+    /// headways buys and sells no train; the trains that cannot run are held out of service.
+    #[test]
+    fn switching_to_headways_on_overfull_track_keeps_every_train() {
+        let (mut a, id) = four_minute_line();
+        let stops = a.line_stops(id).to_vec();
+        let other = a.new_line_id();
+        // 20 an hour by rate against the termini's 15: over-full before the counted line runs at all
+        assert_eq!(a.set_line(other, &stops, 20.0, 4.0, 2.0, 30.0, 420.0, 0, 0x2a7de1, "Rate".into()), 0, "{}", a.issues());
+        assert_eq!(a.set_train_counts(id, 6, 2, 2), 0, "{}", a.issues());
+        let (trains, fleet) = (a.w.svc.lines[id as usize].trains, a.fleet());
+        assert_eq!(trains, [6, 2, 2]);
+        assert!(a.line_held(id)[0] > 0.0, "the high level's trains wait at the ends");
+        let trip = a.w.svc.lines[id as usize].round_trip;
+        let h: [u32; 3] = std::array::from_fn(|lev| (trip[lev] / trains[lev] as f64).ceil() as u32);
+        assert_eq!(a.set_auto_headway(id, h[0], h[1], h[2]), 0, "{}", a.issues());
+        assert_eq!(a.line_auto(id).len(), 3);
+        assert_eq!(a.w.svc.lines[id as usize].trains, trains, "no train sold by the switch");
+        assert_eq!(a.w.net.line_trains[id as usize], Some(trains));
+        assert!(a.line_held(id)[0] > 0.0, "held out of service instead");
+        assert_eq!(a.clear_auto_headway(id), 0, "{}", a.issues());
+        assert_eq!(a.w.svc.lines[id as usize].trains, trains, "and none by the switch back");
+        assert_eq!(a.fleet(), fleet, "no train bought");
+        // another edit on the headway line keeps the held trains too: the track is over-full
+        assert_eq!(a.set_auto_headway(id, h[0], h[1], h[2]), 0, "{}", a.issues());
+        assert_eq!(a.set_schedule(other, 21.0, 4.0, 2.0), 0, "{}", a.issues());
+        let s = &a.w.svc.lines[id as usize];
+        assert_eq!(s.trains[0], auto_trains(s.round_trip[0], h[0]), "the headway's count, with no train trimmed on over-full track");
+        assert!(a.line_held(id)[0] > 0.0);
     }
 
     #[test]
@@ -3599,6 +3821,8 @@ mod tests {
         // a headway that takes three trains over the round trip as it is now
         let rt0 = a.w.svc.lines[id as usize].round_trip[0];
         let h = (rt0 / 3.0).ceil() as u32;
+        assert_eq!(a.set_auto_headway(id, 2 * h, 2 * h, 2 * h), 0, "{}", a.issues());
+        assert_eq!(a.w.svc.lines[id as usize].trains, manual, "the switch to headways keeps the trains (T-752)");
         assert_eq!(a.set_auto_headway(id, h, 0, 2 * h), 0, "{}", a.issues());
         let s = &a.w.svc.lines[id as usize];
         assert_eq!(s.trains[0], 3);
@@ -3706,9 +3930,13 @@ mod tests {
         assert_eq!(a.set_schedule(id, 30.0, 8.0, 4.0), 1);
         assert!(a.issue_kinds().starts_with("Money:"), "{}", a.issue_kinds());
         assert_eq!((a.fleet(), a.lines_info()[5]), (fleet, 12.0));
-        a.set_cash(cash);
+        // A sandbox (T-728) refuses nothing for money; the cash still pays, into the red.
+        a.set_unlimited(true);
         assert_eq!(a.set_schedule(id, 30.0, 8.0, 4.0), 0, "{}", a.issues());
         assert!(a.fleet() > fleet && a.last_train_charge() > 0.0);
+        assert!((a.cash() - (1.0 - a.last_train_charge())).abs() < 1e-9 && a.cash() < 0.0);
+        a.set_unlimited(false);
+        a.set_cash(cash - a.last_train_charge());
         // Fewer trains keeps the cars; going back up again is free, and so is undo / redo.
         let (fleet, cash) = (a.fleet(), a.cash());
         assert_eq!(a.set_schedule(id, 12.0, 8.0, 4.0), 0);
@@ -5245,6 +5473,10 @@ mod tests {
         for x in [500.0, 3500.0] {
             assert_eq!(a.add_station(2, edge_at(&a, x, 0.0), x, 0.0, 120, format!("S{x}")), 0, "{}", a.issues());
         }
+        // the crossovers placed past them (T-733) out of the way, to place one by hand
+        while let Some(&x) = a.crossover_edges().first() {
+            assert_eq!(a.delete_edge(x), 0, "{}", a.issues());
+        }
         let (w_local, e_express) = (station_at(&a, 500.0, 0.0), station_at(&a, 3500.0, QUAD_SPACING));
         assert!((a.w.net.node_y[e_express as usize] - QUAD_SPACING).abs() < 0.1);
         let id = a.new_line_id();
@@ -5441,6 +5673,73 @@ mod bridge_tests {
             assert!(alive(&a).is_empty());
             assert_eq!(a.redo(), 0);
             assert_eq!(alive(&a).len(), 1);
+        }
+    }
+
+    /// T-667, T-727: a route through clicked corners at ground level is bridged over water too, the
+    /// bridge cut into pieces with the corners, all high over the water and one undo.
+    #[test]
+    fn clicked_corners_over_a_river_get_a_bridge() {
+        for world in [false, true] {
+            let mut a = if world { merc() } else { api() };
+            water(&mut a, &[(1000.0, 1500.0)]);
+            let (bx, by) = base(&a);
+            let e = ends(&a, (0.0, 0.0), (6000.0, 0.0));
+            let pis = [bx + 1250.0, by + 150.0, 0.0, 0.0, bx + 3000.0, by - 300.0, 0.0, 0.0, bx + 4500.0, by + 200.0, 0.0, 0.0];
+            let pv = a.preview_route(&e, &pis, 2, false);
+            assert_eq!(pv[0], 1.0, "world {world}: {}", a.issue_kinds());
+            assert_eq!(a.add_route(&e, &pis, 2, false), 0, "{}", a.issue_kinds());
+            let edges = alive(&a);
+            // a leg that ramps, or that a bridge's curve fills, is not cut
+            assert!(edges.len() >= 2, "pieces {}", edges.len());
+            let mut over = 0;
+            for &ed in &edges {
+                let len = a.w.net.edge_len[ed as usize];
+                let mut s = 0.0;
+                while s <= len {
+                    let (x, _, _) = pos_at(a.w.net.edge_pieces(ed), s);
+                    if x > bx + 1000.0 && x < bx + 1500.0 {
+                        over += 1;
+                        assert!(height(&a, ed, s) >= LEVEL_H - 1e-6, "world {world}: low over water at x {}", x - bx);
+                    }
+                    s += 10.0;
+                }
+            }
+            assert!(over > 25, "{over} samples over the water");
+            assert!((pv[1] - first_edge_cost(&a)).abs() < 1e-6, "{} against {}", pv[1], first_edge_cost(&a));
+            assert_eq!(a.undo(), 0);
+            assert!(alive(&a).is_empty());
+        }
+    }
+
+    /// T-727: a real line traced into corners goes in as one route, double or quad.
+    #[test]
+    fn a_traced_line_goes_in_as_one_route() {
+        for tracks in [2u8, 4] {
+            let mut a = merc();
+            let (bx, by) = base(&a);
+            // a straight, a 400 m curve through 120 degrees, a straight, sampled every 5 m
+            let mut xy: Vec<(f64, f64)> = (0..=300).map(|i| (bx + i as f64 * 5.0, by)).collect();
+            let r = 400.0;
+            for i in 1..=167 {
+                let t = i as f64 * 5.0 / r;
+                xy.push((bx + 1500.0 + r * t.sin(), by + r - r * t.cos()));
+            }
+            let (ex, ey) = *xy.last().unwrap();
+            let h = 2.0 * PI / 3.0;
+            for i in 1..=300 {
+                xy.push((ex + i as f64 * 5.0 * h.cos(), ey + i as f64 * 5.0 * h.sin()));
+            }
+            let lonlat: Vec<f64> = xy.iter().flat_map(|&(x, y)| a.to_lonlat(x, y)).collect();
+            let t = a.trace_route(&lonlat, 25.0, tracks, 0);
+            assert!(!t.is_empty());
+            assert!(t[0] <= 25.0, "worst {}", t[0]);
+            let n = t[2] as usize;
+            assert!(n >= 1 && n <= 8, "{n} corners");
+            let (sx, sy) = xy[0];
+            let (fx, fy) = *xy.last().unwrap();
+            let e = [0.0, 0.0, sx, sy, 0.0, 0.0, 0.0, fx, fy, 0.0];
+            assert_eq!(a.add_route(&e, &t[3..], tracks, false), 0, "{}", a.issue_kinds());
         }
     }
 
@@ -5867,11 +6166,22 @@ mod quad_edit_tests {
         let price = a.preview_double_up(local[0]);
         assert!(price > 0.0, "{}", a.issues());
         let before = a.total_cost();
+        let mut old = TrackApi::new(-73.985, 40.758, true);
+        assert!(old.load(&a.save()));
         assert_eq!(a.double_up(local[2]), 0, "{}", a.issues());
         assert!((a.total_cost() - before - price).abs() < 1e-6);
-        let ex: Vec<u32> = live(&a).into_iter().filter(|e| !local.contains(e)).collect();
-        assert_eq!(ex.len(), 3, "one express piece per piece");
-        beside(&a, &ex, &local, 0.0);
+        // T-733: a crossover past the station, splitting each pair twice
+        assert_eq!(a.crossover_edges().len(), 2, "a crossover past the station");
+        let on_old = |e: u32| {
+            let r = a.edge_render(e);
+            let k = r.len() / 6 * 3;
+            local.iter().any(|&l| old.w.net.project(l, r[k], r[k + 1]).1 < 1.0)
+        };
+        let plain: Vec<u32> = live(&a).into_iter().filter(|&e| !a.w.net.edge_crossover[e as usize]).collect();
+        let ex: Vec<u32> = plain.iter().copied().filter(|&e| !on_old(e)).collect();
+        let now_local: Vec<u32> = plain.iter().copied().filter(|&e| on_old(e)).collect();
+        assert_eq!((ex.len(), now_local.len()), (5, 5), "one express piece per piece, and the crossover's two splits on each pair");
+        beside(&a, &ex, &now_local, 0.0);
         assert_eq!(named(&a, "Mid"), 2, "the station's twin");
         let ends = (0..a.w.net.node_count() as u32).filter(|&k| a.w.net.node_ok(k) && a.w.net.node_ports[k as usize].n == 1).count();
         assert_eq!(ends, 4, "loose ends beside both ends");
@@ -5907,10 +6217,11 @@ mod quad_edit_tests {
         let price = a.preview_double_up(local[1]);
         let cash = a.cash;
         assert_eq!(a.double_up(local[1]), 0, "{}", a.issues());
-        assert_eq!(a.cash, cash, "blueprint costs nothing until constructed");
+        // the crossover splits constructed track: re-summed shapes, rounding only (T-624)
+        assert!((a.cash - cash).abs() < 1e-6, "blueprint costs nothing until constructed");
         let ex: Vec<u32> = live(&a).into_iter().filter(|e| !built.contains(e)).collect();
-        assert_eq!(ex.len(), 3);
-        assert!(ex.iter().all(|&e| !a.w.net.edge_built[e as usize]));
+        assert_eq!(ex.len(), 9, "five express pieces, two splits of the local pair and two diagonals");
+        assert_eq!(ex.iter().filter(|&&e| !a.w.net.edge_built[e as usize]).count(), 7, "the express pieces and the crossover are blueprint");
         assert!(price > 0.0);
     }
 
@@ -5951,5 +6262,196 @@ mod quad_edit_tests {
         assert_eq!(ends, 4, "the two pairs' ends at each end, none left between");
         let ex: Vec<u32> = live(&a).into_iter().filter(|e| !quad.contains(e) && *e != piece).collect();
         beside(&a, &ex, &[piece], 0.0);
+    }
+
+    /// The plain track nearest (x, y): a station's spot.
+    fn track_at(a: &TrackApi, x: f64, y: f64) -> u32 {
+        live(a).into_iter().filter(|&e| !a.w.net.edge_crossover[e as usize]).min_by(|&p, &q| a.w.net.project(p, x, y).1.total_cmp(&a.w.net.project(q, x, y).1)).unwrap()
+    }
+    fn stations(a: &TrackApi, name: &str) -> Vec<u32> {
+        (0..a.w.net.node_count() as u32).filter(|&k| a.w.net.node_ok(k) && a.w.net.node_platform[k as usize] > 0 && a.w.net.node_name[k as usize] == name).collect()
+    }
+
+    /// T-733: a station on quad track gets a crossover just past it, clear of the platform, at
+    /// the full price of two junctions, in the same undo step; a line changes pairs over it.
+    #[test]
+    fn quad_station_gets_a_crossover_past_it() {
+        let mut a = TrackApi::new(-73.985, 40.758, true);
+        a.set_route_tangent(true);
+        route(&mut a, [0.0, 0.0, 0.0, 0.0, 0.0], 3000.0, 0.0, 4);
+        let edges0 = live(&a).len();
+        assert_eq!(a.preview_station(2, track_at(&a, 800.0, 0.0), 800.0, 0.0, 200), 0, "{}", a.issues());
+        assert_eq!(live(&a).len(), edges0, "a preview changes nothing");
+        let cost0 = a.total_cost();
+        assert_eq!(a.add_station(2, track_at(&a, 800.0, 0.0), 800.0, 0.0, 200, "West".into()), 0, "{}", a.issues());
+        assert_eq!(stations(&a, "West").len(), 2);
+        let xs = a.crossover_edges();
+        assert_eq!(xs.len(), 2, "one crossover");
+        // its ends clear of the platform (100 m each way) by QUAD_CROSSOVER_CLEAR, and no farther than the crossover's length beyond
+        for &x in &xs {
+            for n in [a.w.net.edge_a[x as usize], a.w.net.edge_b[x as usize]] {
+                let off = (a.w.net.node_x[n as usize] - 800.0).abs();
+                assert!(off > 100.0 + QUAD_CROSSOVER_CLEAR - 1.0 && off < 100.0 + QUAD_CROSSOVER_CLEAR + CROSSOVER_LEN + 1.0, "end {off} m from the station");
+            }
+        }
+        // full price: deleting it takes off two junctions
+        let with = a.total_cost();
+        assert_eq!(a.delete_edge(xs[0]), 0, "{}", a.issues());
+        let two_junctions = 2.0 * crate::track::cost::junction_cost(0, false, false);
+        assert!((with - a.total_cost() - two_junctions).abs() < 1e-6, "{} not {two_junctions}", with - a.total_cost());
+        assert_eq!(a.undo(), 0);
+        // one undo takes the stations and the crossover together
+        assert_eq!(a.undo(), 0);
+        assert!(stations(&a, "West").is_empty() && a.crossover_edges().is_empty());
+        assert_eq!(live(&a).len(), edges0);
+        assert!((a.total_cost() - cost0).abs() < 1e-6);
+        assert_eq!(a.redo(), 0);
+        assert_eq!(a.crossover_edges().len(), 2);
+        // a second station: a line from the local pair at one to the express pair at the other
+        assert_eq!(a.add_station(2, track_at(&a, 2200.0, 0.0), 2200.0, 0.0, 200, "East".into()), 0, "{}", a.issues());
+        assert_eq!(a.crossover_edges().len(), 4);
+        let pick = |a: &TrackApi, name: &str, y: f64| *stations(a, name).iter().min_by(|&&p, &&q| (a.w.net.node_y[p as usize] - y).abs().total_cmp(&(a.w.net.node_y[q as usize] - y).abs())).unwrap();
+        let (local, express) = (pick(&a, "West", 0.0), pick(&a, "East", QUAD_SPACING));
+        assert!(a.w.net.node_y[express as usize].abs() > 1.0, "the express pair's station");
+        let id = a.new_line_id();
+        assert_eq!(a.set_line(id, &[local, express], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "X".into()), 0, "{}", a.issues());
+        let xs = a.crossover_edges();
+        assert!(a.line_path(id).iter().any(|p| xs.contains(&(p >> 1))), "across a crossover");
+    }
+
+    /// T-733: where there is no room past a quad station (its track ends within reach both ways),
+    /// the stations go in without a crossover.
+    #[test]
+    fn quad_station_without_room_has_no_crossover() {
+        let mut a = TrackApi::new(-73.985, 40.758, true);
+        a.set_route_tangent(true);
+        route(&mut a, [0.0, 0.0, 0.0, 0.0, 0.0], 500.0, 0.0, 4);
+        assert_eq!(a.add_station(2, track_at(&a, 250.0, 0.0), 250.0, 0.0, 200, "Short".into()), 0, "{}", a.issues());
+        assert_eq!(stations(&a, "Short").len(), 2, "both stations");
+        assert!(a.crossover_edges().is_empty());
+        assert_eq!(a.undo(), 0);
+        assert!(stations(&a, "Short").is_empty());
+        // plain double track gets none either
+        let mut b = TrackApi::new(-73.985, 40.758, true);
+        route(&mut b, [0.0, 0.0, 0.0, 0.0, 0.0], 3000.0, 0.0, 2);
+        assert_eq!(b.add_station(2, track_at(&b, 800.0, 0.0), 800.0, 0.0, 200, "Plain".into()), 0, "{}", b.issues());
+        assert!(b.crossover_edges().is_empty());
+    }
+
+    /// T-646: the stations a line passes, by gap and in path order; on quad track only those on
+    /// the line's own pair; adding them is one set_stops edit.
+    #[test]
+    fn passed_stations_in_path_order() {
+        for tracks in [2u8, 4] {
+            let mut a = TrackApi::new(-73.985, 40.758, true);
+            a.set_route_tangent(true);
+            route(&mut a, [0.0, 0.0, 0.0, 0.0, 0.0], 6000.0, 0.0, tracks);
+            let xs = [500.0, 1700.0, 2900.0, 4100.0, 5500.0];
+            for (k, &x) in xs.iter().enumerate() {
+                assert_eq!(a.add_station(2, track_at(&a, x, 0.0), x, 0.0, 120, format!("S{k}")), 0, "{}", a.issues());
+            }
+            let on_drawn = |a: &TrackApi, k: usize| *stations(a, &format!("S{k}")).iter().min_by(|&&p, &&q| a.w.net.node_y[p as usize].abs().total_cmp(&a.w.net.node_y[q as usize].abs())).unwrap();
+            let s: Vec<u32> = (0..xs.len()).map(|k| on_drawn(&a, k)).collect();
+            let id = a.new_line_id();
+            assert_eq!(a.set_line(id, &[s[0], s[2], s[4]], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+            let passed: Vec<(u32, u32)> = a.passed_stations(id).chunks(2).map(|c| (c[0] as u32, c[1] as u32)).collect();
+            assert_eq!(passed, vec![(0, s[1]), (1, s[3])], "{tracks} tracks");
+            // and the other way round
+            let back = a.new_line_id();
+            assert_eq!(a.set_line(back, &[s[4], s[0]], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "B".into()), 0, "{}", a.issues());
+            let passed: Vec<u32> = a.passed_stations(back).chunks(2).map(|c| c[1] as u32).collect();
+            assert_eq!(passed, vec![s[3], s[2], s[1]]);
+            // adding them all: one edit, one undo
+            let all: Vec<u32> = s.iter().rev().copied().collect();
+            assert_eq!(a.set_stops(back, &all), 0, "{}", a.issues());
+            assert!(a.passed_stations(back).is_empty());
+            assert_eq!(a.undo(), 0);
+            assert_eq!(a.w.net.line_stops(back), &[s[4], s[0]]);
+        }
+    }
+
+    /// T-733: a line's train length. 0 runs the most the shortest platform fits; a set length runs
+    /// as set, never past that cap; a platform shortened below it caps the trains while the
+    /// setting stays, so lengthening the platform again brings it back. Fleet cost follows.
+    #[test]
+    fn line_train_length_capped_by_platforms() {
+        let mut a = TrackApi::new(-73.985, 40.758, true);
+        a.set_route_tangent(true);
+        route(&mut a, [0.0, 0.0, 0.0, 0.0, 0.0], 4000.0, 0.0, 2);
+        for (x, name) in [(500.0, "A"), (3500.0, "B")] {
+            assert_eq!(a.add_station(2, track_at(&a, x, 0.0), x, 0.0, 200, name.into()), 0, "{}", a.issues());
+        }
+        let (sa, sb) = (stations(&a, "A")[0], stations(&a, "B")[0]);
+        let id = a.new_line_id();
+        assert_eq!(a.set_line(id, &[sa, sb], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+        let cars = |a: &TrackApi| a.w.svc.lines[id as usize].cars;
+        assert_eq!(cars(&a), 10);
+        assert_eq!(a.line_cars_cap(id), vec![10, sa]);
+        let cost10 = a.line_train_cost(id);
+        assert_eq!(a.set_line_cars(id, 4), 0, "{}", a.issues());
+        assert_eq!(cars(&a), 4);
+        let cost4 = a.line_train_cost(id);
+        assert!(cost4 < cost10 * 0.5, "fleet cost {cost4} against {cost10}");
+        assert_eq!(a.undo(), 0);
+        assert_eq!(cars(&a), 10, "one undo step");
+        assert_eq!(a.redo(), 0);
+        // more than the platforms fit runs at the cap
+        assert_eq!(a.set_line_cars(id, 30), 0);
+        assert_eq!(cars(&a), 10);
+        assert_eq!(a.set_line_cars(id, 6), 0);
+        // a platform shortened below the setting caps it; the setting stays
+        assert_eq!(a.set_station_props(sb, 80, "B".into()), 0, "{}", a.issues());
+        assert_eq!(cars(&a), 4);
+        assert_eq!(a.line_cars_cap(id), vec![4, sb]);
+        assert_eq!(a.set_station_props(sb, 200, "B".into()), 0, "{}", a.issues());
+        assert_eq!(cars(&a), 6);
+        // saved with the line
+        let mut b = TrackApi::new(-73.985, 40.758, true);
+        assert!(b.load(&a.save()));
+        assert_eq!(b.w.svc.lines[id as usize].cars, 6);
+    }
+
+    /// T-733: the crossover tool and single track are gone from the game's Build tab, but saves
+    /// holding them still load and run: a line over single track and one over a hand-placed
+    /// crossover keep their routes and timetables.
+    #[test]
+    fn old_saves_with_crossovers_and_single_track_still_run() {
+        let mut a = TrackApi::new(-73.985, 40.758, true);
+        a.set_route_tangent(true);
+        // single track with two stations
+        route(&mut a, [0.0, 0.0, 0.0, 0.0, 0.0], 0.0, 3000.0, 1);
+        for (y, name) in [(500.0, "S1"), (2500.0, "S2")] {
+            assert_eq!(a.add_station(2, track_at(&a, 0.0, y), 0.0, y, 160, name.into()), 0, "{}", a.issues());
+        }
+        let single = a.new_line_id();
+        let ss = [stations(&a, "S1")[0], stations(&a, "S2")[0]];
+        assert_eq!(a.set_line(single, &ss, 4.0, 2.0, 1.0, 30.0, 180.0, 0, 0, "Single".into()), 0, "{}", a.issues());
+        // quad with stations, their automatic crossovers removed, and one placed by hand between
+        route(&mut a, [0.0, 0.0, 2000.0, 0.0, 0.0], 6000.0, 0.0, 4);
+        for (x, name) in [(2500.0, "Q1"), (5500.0, "Q2")] {
+            assert_eq!(a.add_station(2, track_at(&a, x, 0.0), x, 0.0, 120, name.into()), 0, "{}", a.issues());
+        }
+        while let Some(&x) = a.crossover_edges().first() {
+            assert_eq!(a.delete_edge(x), 0, "{}", a.issues());
+        }
+        assert_eq!(a.add_crossover(track_at(&a, 4000.0, 0.0), 4000.0, 0.0), 0, "{}", a.issues());
+        let q1 = *stations(&a, "Q1").iter().min_by(|&&p, &&q| a.w.net.node_y[p as usize].abs().total_cmp(&a.w.net.node_y[q as usize].abs())).unwrap();
+        let q2 = *stations(&a, "Q2").iter().max_by(|&&p, &&q| a.w.net.node_y[p as usize].abs().total_cmp(&a.w.net.node_y[q as usize].abs())).unwrap();
+        let cross = a.new_line_id();
+        assert_eq!(a.set_line(cross, &[q1, q2], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "Cross".into()), 0, "{}", a.issues());
+        let bytes = a.save();
+        let mut b = TrackApi::new(-73.985, 40.758, true);
+        assert!(b.load(&bytes));
+        assert_eq!(b.crossover_edges().len(), 2);
+        assert!(live(&b).iter().any(|&e| b.w.net.edge_tracks[e as usize] == 1), "single track kept");
+        assert!((b.total_cost() - a.total_cost()).abs() < 1e-6);
+        let xs = b.crossover_edges();
+        assert!(b.line_path(cross).iter().any(|p| xs.contains(&(p >> 1))), "still across the crossover");
+        for id in [single, cross] {
+            assert!(!b.w.net.line_broken[id as usize]);
+            let s = b.line_summary(id);
+            assert!(s[0] > 0.0 && s[1] > 0.0, "line {id} runs: {s:?}");
+            assert_eq!(b.stop_departures(id, 0, 0).len(), 2);
+        }
     }
 }

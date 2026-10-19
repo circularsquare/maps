@@ -32,6 +32,23 @@ regression in our drawing; lag felt on 2026-10-19 coincided with the machine at 
 work (three rustc and a pipeline python). `cityNear` (run on every map move) now scans instead of
 sorting every zone.
 
+**Trains/headway switch (T-747, 2026-10-19).** Anita's world save (143 lines, 103 still on
+legacy rates, 40 on counts), subway M express to headways: 2.9-3.1 s in the clock worker's
+`apply`, all of it `settle_counts` running its 80-round cap twice (about 12 ms a round on that save, two
+`update_scoped` passes over every counted line). M express's high-level track (resource 4828)
+is over capacity from the legacy-rate lines alone (rho 1.07), so the fill keeps its rate at 0,
+and the `held` test (`|rho - 1| <= 1 - FULL_RHO`) never counted an over-full track as full
+(T-752 changed that): every round repeated the last. The loop now stops at the first round that changes no rate or round
+trip; final state identical to the bit (digest of every line's rates, counts and round trips
+over six switches), native switch 3.1 s to 0.25 s the first time and 2.1 s to 25 ms after.
+The panel also shows the new mode at once (`pendingHeadway`, null for back to counts). In
+headless Chrome, demand final: click to the panel in the new mode 2.9-3.1 s before (the first
+switch; later ones 0.1-0.2 s since the counts no longer moved), 1.5-5 ms after; the worker's
+busy time for the first switch 2,970 ms to about 320 ms, later edits 60-65 ms in all. The real
+New York save (mnr Hudson) after: 2-4 ms to the panel, edits 40-100 ms. Not the save's size: a
+round costs more with more counted lines, but the seconds came from the cap.
+`artifacts/trainworld/t747-*.json` and the traces beside them.
+
 **Per worker, New York, native** (cellbench): commute engine opens in 50 ms (+12.5 MB); the everyday
 layer in 1.2 s (+69 MB, peak +83), mostly destination sampling; its `set_network` 0.43-0.73 s
 (+88 MB: `edge_pair` 56 MB and the pair list); the commute engine's `set_network` 0.45 s. One

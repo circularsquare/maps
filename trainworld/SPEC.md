@@ -229,13 +229,16 @@ The regional layer carries what crosses zones or goes far [T-117, T-276]. Detail
 
 ## 6. Building and running
 
-The player draws curved track (straights and circular arcs, single, double or quad, at elevations
+The player draws curved track (straights and circular arcs, double or quad, at elevations
 -3 to +3, "levels" in the code) two clicks per segment, each segment one curve through the click leaving along the track, up
 to 350 degrees round [T-418, T-422, T-442], places stations, and makes lines, all as
 **blueprints** that are free to edit and undo, then pays to **construct** them. A segment is one
-piece of track [T-244]. A crossover, placed with one click, joins a track to the track beside it (quad's
-other pair, or a route alongside) in an X, 120 m long, 50 km/h, priced as two junctions, so lines
-can change pairs mid-stretch [T-338]. Lines set a whole number of trains for high, medium and low demand, or a headway for each, run with the fewest trains that keep it, or at the track's limit the most that fit [T-625, T-679]; capacity and
+piece of track [T-244]. Each station on quad track gets a crossover just past it, placed by the
+game in the same edit where it fits: an X between the two pairs, 120 m long, 50 km/h, priced as two
+junctions, so lines can change pairs between neighbouring quad stations [T-338, T-733]. Single
+track is not offered (saves and imports keep theirs, which run as before) [T-733]. Each line has
+a train length in cars, by default the most its shortest platform fits (20 m cars) and never more
+[T-733]. Lines set a whole number of trains for high, medium and low demand, or a headway for each, run with the fewest trains that keep it, or at the track's limit the most that fit [T-625, T-679]; capacity and
 junction conflicts add delay, computed from the schedules in the clock worker before demand runs,
 and no track, platform or junction carries more trains than its capacity: a line's fleet past that
 waits at its ends [T-517].
@@ -275,7 +278,7 @@ Detail: [docs/architecture.md](docs/architecture.md) 7; file layout in `docs/cod
 
 A pastel style in Zen Maru Gothic, light or dark (Settings, Theme) with three colours each [T-039].
 Panels take CSS tokens (`ui/style.css`); the map's light and dark colours (basemap, line casing, map
-ink) are one table, `game/shades.ts`, whose basemap palette is warm paper land, soft teal water and sage parks [T-676]. The network takes the line colours, the same in both themes. One dock on the left holds the icon tabs (Build, Lines, Stations, Money), the
+ink) are one table, `game/shades.ts`, whose basemap palette is warm paper land, soft teal water and sage parks [T-676]. The network takes the line colours, the same in both themes. One dock on the left holds the icon tabs (Build, Lines, Stations, Money, Cities), the
 saved games button and the Settings gear, with the inspector under them, whose top edge never
 moves. The top bar holds the mode split (the goal number), the cash, the local day and time, the
 demand level, pause and three speeds. **Panels show what can change**: labels, numbers and states,
@@ -319,13 +322,18 @@ Rough on purpose: the bar is the right order (section 1).
 ## 11. Saves and accounts
 
 A save is the player's inputs only; everything else is recomputed from versioned packs. The clock
-worker writes it to IndexedDB in named browser slots (one writing tab per slot) and to files. Beside
-each slot the page keeps its last final demand result, shown at once on reload when the network,
-packs and build match [T-328].
+worker writes it to IndexedDB in named browser slots (one writing tab per slot) and to files. New
+game, Load a file and restoring a backup each start a new slot; no slot is ever written over with
+another game [T-743]. A game is normal or a sandbox (nothing refused for money, the cash hidden;
+a normal game can become one once, never back), starts in a city or on the world map, and a sandbox
+in one of seven cities can start from its real network [T-728, T-731; docs/ui-panels.md "Saved
+games"]. Each slot keeps two rotating backups, about 5 wall minutes apart, restorable
+as a new slot [T-744]. Beside each slot the page keeps its last final demand result, shown at once
+on reload when the network, packs and build match [T-328].
 Keeping old saves loading is a nicety: only Anita has saves. Sharing by link and accounts (on
 `shonei-server`) come later. [docs/architecture.md](docs/architecture.md) 11.
 
 ## 12. Open questions
 
 - Open items in the detailed docs: border factor fade (T-273), how commutes between zones are
-  labelled (T-298), automatic crossovers at quad stations (notes/T-334.md option B, on hold).
+  labelled (T-298).

@@ -37,7 +37,7 @@ const TEXT: Record<string, string | (() => string)> = {
   NodeLevel: "Elevation goes from −3 to +3.",
   Tracks: "Track is single or double.",
   OutsideWorld: "Track cannot be built within 5 degrees of a pole or across the 180th meridian.",
-  Crossover: "A crossover keeps its shape. Delete it and place it again.",
+  Crossover: "A crossover keeps its shape.",
   Alongside: "This track has a pair beside it already.",
   NoParallel: () => `A crossover needs other track alongside within ${length(15)}, with ${length(60)} of plain track each way.`,
 };

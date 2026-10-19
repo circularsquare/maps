@@ -59,8 +59,8 @@ bars); the network takes the line colours ([ui-map.md](ui-map.md)).
 exceptions). One dock on the left [T-252, `ui/Dock.tsx`]:
 
 - A row of icon tabs, names in their hovers: **Build** (a wrench), **Lines** (a route with stops),
-  **Stations** (a platform under its canopy), **Money** (a bill and a coin), sharing the row's width
-  equally [T-532]; at the row's right end
+  **Stations** (a platform under its canopy), **Money** (a bill and a coin), **Cities** (a skyline) [T-749], sharing the row's width
+  equally [T-532] (each at least 34 px); at the row's right end
   the saved games button (a floppy disk) [T-251] and the **Settings** gear (a toothed wheel outline with a hub circle) [T-523], which opens in the tab
   area like a tab. There is no City tab [T-220]; a browser that last had it open starts on Lines.
 - Under the tab content, the **inspector** ([ui-inspectors.md](ui-inspectors.md)). The tab area has
@@ -112,7 +112,9 @@ below 700 px the bar takes two rows (name, cash, time and speed over the split).
   (Loading, below).
 - **Cash**, to the dollar, moving as fares are paid and running costs drain [T-284]. Fixed width
   (room for "-$99,999,999,999") with the digits left-aligned after the $ in tabular figures, so a
-  changing figure never moves the rest of the bar [T-305, T-310].
+  changing figure never moves the rest of the bar [T-305, T-310]. In a sandbox the box says
+  "Sandbox" in the muted colour, with the money since day 1 (the cash less the $3B start) and
+  today's fares and running costs in its hover [T-728].
 - **The clock**: day of the week, day and time ("Sat 13", hover "Saturday, day 13 · High demand":
   the demand level is only in the hover [T-406]), the local
   time where the player is looking [T-309]; pause and three
@@ -216,9 +218,16 @@ prices per mile. All go through the distance functions in `game/format.ts`; the 
 metric. "Use more cores" (off by default) allows up to 5 demand workers instead of 3 at most; its
 hover says it counts from the next load ([architecture.md](architecture.md) 7).
 
+**Game** [T-728], last before Explore a trip: the game's mode, "Normal" or "Sandbox" (hover: what
+it means). A normal game has "Make it a sandbox", which asks first ("This game becomes a sandbox
+for good...", Make it a sandbox or Keep it normal); a sandbox has no way back, so a later campaign's
+or a hard start's achievements cannot be had for free. The mode is the game's, kept in its save,
+not the browser's.
+
 ## Money tab
 
-Cash (always the whole network's); yesterday and today (fares, running trains, new trains,
+Cash (always the whole network's; in a sandbox "Since day 1" instead, the cash less the $3B start,
+T-728); yesterday and today (fares, running trains, new trains,
 construction, net), headed by the Lines and Stations tabs' place-or-world toggle (T-332, one setting
 for all three): with the place on, these figures and History are that region's (T-531; the
 place's hover adds how a region's money is counted), with the globe the network's. A region with
@@ -246,8 +255,8 @@ on it opens a box to type it, Enter or leaving the box applying and Escape cance
 the stepper's rounding to the cent and floor of $0 [T-626, `TypedValue` in `ui/widgets.tsx`]); cars
 owned (prices in its hover), cars the lines need and spare cars [T-631]; the value of the track and stations built. Rules: [track-and-service.md](track-and-service.md)
 6.4. The economy's 100x scaling is in the hover of "A day at this schedule".
-**Cities** [T-550, `ui/Cities.tsx`], last in the tab and whatever the
-toggle: a list of every region (the toggle's regions) with a built station, one row each: its name
+**The Cities tab** [T-550, `ui/Cities.tsx`; its own tab since T-749, no longer last in Money],
+whatever the Lines toggle says: a list of every region (the toggle's regions) with a built station, one row each: its name
 (hover: its station count), its mode split bar as the top bar draws it (the same colours and the
 same hover), its train rides per day and its money a day, fares less running trains (yesterday's, today so far
 until the game has a first full day; hover: fares and running trains, then new trains and
@@ -278,16 +287,39 @@ bottom so the figures above come first; there is no list until a station is buil
   cities its stations are in, lines, stations and cash. The game being played is marked Playing;
   every other card has Open (closes the panel and loads it) and Delete (asked first); every card
   has Rename. A slot with no stored picture shows "No picture yet" until it is next saved.
+- Under the Playing card, its backups [T-744], newest first: "Backup 4 min ago · Day 26" (exact
+  time on hover) and Restore as a copy, which closes the panel and opens the backup in a new slot.
 - Under the cards: Save as a copy (with a name), Save to a file
-  (`anitabuilder-nyc-day-12.save`), Load a file, New game (after a confirmation; it replaces only
-  the active slot).
+  (`anitabuilder-nyc-day-12.save`), Load a file, New game. Load a file asks nothing: it closes the
+  panel and opens its game in a new slot, the game being played saved first [T-743; the slot rules
+  in architecture.md]. New game shows the new game sheet (below) in the panel, headed "New game";
+  its Start closes the panel and opens the new game the same way, its Back returns to the cards.
 - A page opened with `?new=1`, `?synth=1` or `?demandTest=1` does not autosave: the top bar says
   "Autosave is off in this test page. Save a copy to keep the game.", a `?new=1` page marks no
   card Playing, and Save as a copy gives the game a slot of its own, which autosaves from then on.
 
-**A new game** starts on day 1 at 07:00 in an empty New York with $3B. Opening the page shows the
-start menu (below). The URL's view says only which city or zone; the map starts at that city's registry
-centre and zoom, or over New York with none [T-310].
+**A new game** starts on day 1 at 07:00 with $3B, empty or (a sandbox) from a real network, on its
+start city's registry centre and zoom, or on the world map (centre 20° E 30° N, zoom 1.8: the
+Americas, Europe and East Asia) with no start city. Opening the page shows the start menu (below).
+For a loaded game the URL's view says only which city or zone; the map starts at that city's
+registry centre and zoom, or over New York with none [T-310].
+
+**The new game sheet** [T-728, T-731; `ui/NewGame.tsx`], the start menu's and the saves panel's:
+- **Mode**: Normal (lit to begin with) or Sandbox, two buttons, each with a hover saying what it
+  means. A sandbox is the normal game with nothing refused for money and the cash hidden; demand,
+  fares, running costs, line money, the Money tab, points and stars are worked out as in normal.
+- **Start in**: New York, London, Paris, Tokyo and Toronto (`START_CITIES`, a fixed list), one lit
+  at most, a second click unlighting it; then "Find a city or region", which lists up to eight of
+  the registry's cities and zones whose name has a word starting with the text (case and accents
+  ignored, so "hague" finds Rotterdam [The Hague]), biggest by local trips first, each with its
+  country (the market row's code, named by the browser). Up and down move, Enter or a click picks;
+  a pick of one of the five lights its button. Nothing picked starts on the world map.
+- **Real network** (ticked to begin with): only for a sandbox in New York, London, Paris, Tokyo,
+  Seoul, Toronto or Sendai, the cities with a real network (`REAL_NETWORKS`; architecture.md 11). The
+  game starts from that network, built and running.
+- **Start in Tokyo** or **Start on the map**, and Back. If a real network cannot be downloaded, a
+  line says so and the sheet stays.
+- The slot is named after the start ("Tokyo", "Tokyo sandbox", "World", then " 2" and on).
 
 ## Start menu
 
@@ -298,11 +330,12 @@ centre and zoom, or over New York with none [T-310].
   saves panel's picture (144 x 96) and facts (name, when saved, day, cities, lines, stations, cash).
   With no saved game it is New game alone. The dock, top bar and map controls are hidden under it,
   it takes every key outside itself, and nothing loads behind it but the map.
-- A click on a save opens that slot. New game with no saved game starts in the original slot (as
-  the first visit did before the menu); beside saved games it starts in a new slot named "Game N"
-  (N one more than the slots listed), so no saved game is replaced. Either way the slot is first
-  written once the network has something in it: a new game left empty leaves no card.
-- URL switches that already say which game skip it: `?new=1` (a new game owning no slot),
+- A click on a save opens that slot (a sandbox's name has the "Sandbox" mark). New game shows the
+  new game sheet (above) in the card, headed "New game", with Back to the menu; its Start starts the
+  game in a new slot, so no saved game is replaced. The slot is first written once the network has
+  something in it (a real network at once): a new game left empty leaves no card.
+- URL switches that already say which game skip it: `?new=1` (a new game owning no slot; normal
+  in New York, or `&mode=sandbox` and `&city=<zone id>`),
   `?synth=1`, `?demandTest=1`, `?paused=1` and `?continue=1` (the game opened last).
 
 ## Loading

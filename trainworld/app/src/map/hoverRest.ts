@@ -14,7 +14,9 @@ import type { Selection } from "../game/types";
 import { ask, display, selection, tool } from "../game/ui";
 import { world } from "../game/world";
 import { hoverHeld } from "../ui/blurHold";
-import { hoverAt } from "./demandHover";
+import { complexOf } from "../game/complexView";
+import { hoverAt, hoverDisc } from "./demandHover";
+import { setListHot, type Hot } from "./hovered";
 import { markAt } from "./gradeMarks";
 import { live } from "./live";
 import type { Overlay } from "./overlay";
@@ -28,6 +30,8 @@ const MAX_LINES = 3;
 interface Entry {
   row: HTMLElement;
   select: () => Selection;
+  /** what pointing at it lights on the map (T-741) */
+  hot: Partial<Hot>;
 }
 
 /** where the pointer rested, CSS px in the map, while the list is up */
@@ -67,6 +71,7 @@ export function startRestList(map: MlMap, ov: Overlay, bubbleSelect: (x: number,
     restAt = box = null;
     el.style.display = "none";
     el.replaceChildren();
+    setListHot(null);
   };
 
   /** The entries at a point, without the one the hover tag already describes. */
@@ -80,19 +85,20 @@ export function startRestList(map: MlMap, ov: Overlay, bubbleSelect: (x: number,
     const marked = hit?.kind === "line" && n.marks && markAt(ov, n.marks, px, py, map.getZoom()) >= 0;
     const out: Entry[] = [];
     const under = bubbleOnTop ? null : hoverAt(map, px, py, true);
+    const disc = hoverDisc();
     const text = under?.find((s) => s && !s.startsWith("<"));
-    if (text) out.push({ row: row(text, Object.assign(document.createElement("span"), { className: "rest-bub" })), select: () => bubbleSelect(px, py) ?? null });
+    if (text) out.push({ row: row(text, Object.assign(document.createElement("span"), { className: "rest-bub" })), select: () => bubbleSelect(px, py) ?? null, hot: { disc } });
     const si = ov.renderer.stationAt(px, py, (x, y) => ov.toScreen(x, y), SLOP_PX);
     const sid = si >= 0 ? n.stationIds[si] : null;
     const s = sid !== null ? w.save.stations.find((x) => x.id === sid) : undefined;
     if (s && !(hit?.kind === "station" && hit.station === s.id)) {
-      out.push({ row: row(s.name, Object.assign(document.createElement("span"), { className: "rest-stn" })), select: () => ({ kind: "station", station: s.id }) });
+      out.push({ row: row(s.name, Object.assign(document.createElement("span"), { className: "rest-stn" })), select: () => ({ kind: "station", station: s.id }), hot: { stations: complexOf(s.id) } });
     }
     for (const id of linesAt(ov, px, py, selection.peek(), MAX_LINES)) {
       if (hit?.kind === "line" && hit.line === id && !marked) continue;
       const l = w.save.lines.find((x) => x.id === id) ?? w.save.lines.find((x) => String(x.num) === id);
       if (!l) continue;
-      out.push({ row: row(l.name, lineBullet(l, true)), select: () => ({ kind: "line", line: id }) });
+      out.push({ row: row(l.name, lineBullet(l, true)), select: () => ({ kind: "line", line: id }), hot: { line: l.num } });
     }
     return out;
   };
@@ -108,6 +114,8 @@ export function startRestList(map: MlMap, ov: Overlay, bubbleSelect: (x: number,
         hide();
         if (sel) selection.value = sel;
       };
+      e.row.onmouseenter = () => setListHot(e.hot);
+      e.row.onmouseleave = () => setListHot(null);
       return e.row;
     }));
     // under whichever hover tag is up, flush with it

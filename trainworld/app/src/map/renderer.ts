@@ -1,4 +1,4 @@
-import { BOX_WIDTH_ZOOM, boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, bridgeShape, connectorHalfPx, dotRing, spanningPairs, insideStation, PLATFORM_POINTS, platformPoints, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, shapePoints, STATION_BOX_ZOOM, STATIONS_ZOOM, TRAINS_ZOOM, stationHaloRadius, stationRadii, stationRing, stationShape, type PlatformShape, type Project, type StationShape, type StationStyle } from "./stationGeometry";
+import { BOX_WIDTH_ZOOM, boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, bridgeShape, connectorHalfPx, dotRing, spanningPairs, insideStation, PLATFORM_POINTS, platformPoints, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, shapePoints, STATION_BOX_ZOOM, STATIONS_ZOOM, TRAINS_ZOOM, stationHaloRadius, stationRadii, stationReachPx, stationRing, stationShape, type PlatformShape, type Project, type StationShape, type StationStyle } from "./stationGeometry";
 // WebGL2 network renderer: track and line strokes (one instanced quad per polyline segment, a
 // casing under the colour, the theme's (T-039); blueprint solid, lighter and without casing, T-311), stations (platforms along the track, or
 // dots zoomed out, T-189), the drawing tool's preview,
@@ -86,6 +86,11 @@ const SEL_MAX = Math.floor(2048 / SEL_STRIDE); // texels in a row: 2048, the nar
 /** A selected train's ring (T-242): the train's own shape grown by this, CSS px, with a white band
  * between, so the train reads at zoom 11-13 where it is a few px. */
 const SEL_RING_GAP_PX = 6;
+/** Hovered (T-730): a line's or bare track's colour mixed this far toward white; a station's rim
+ * likewise, `HOT_STATIONS` of a complex at most. */
+const HOT_LINE_MIX = "0.3";
+const HOT_RIM_MIX = "0.45";
+const HOT_STATIONS = 16;
 /** Stations as the complex rule's distances group them (game/complexView.ts `dotGroups`): zoomed out
  * each group's dots are joined by connectors, the shortest set that links them all (T-313). */
 export interface StationGroups {
@@ -104,6 +109,7 @@ uniform float u_cap;         // > 0: no wider than this (px), the track drawn th
 uniform int u_kind;          // 0 track, 1 lines, 2 preview
 uniform int u_sel_line;
 uniform int u_sel_edge;
+uniform ivec2 u_hot;         // the hovered line and bare track edge, -1 none (T-730)
 uniform int u_only_sel;
 uniform int u_bp_part;       // T-695: 0 every stroke, 1 all but blueprint, 2 blueprint only
 uniform vec4 u_lanes;        // T-658: 4 m in px, how far the tracks have parted (0-1), how far the
@@ -236,6 +242,8 @@ void main() {
   if (bp && !bpMid && u_casing <= 0.0) v_color = swOff ? mix(v_color, u_bp_off_fade, 0.8) : mix(v_color, vec3(1.0), 0.45);
   // the band behind a line's two tracks, pale so they stand out on it
   if (u_lane_mode == 1 && u_casing <= 0.0) v_color = mix(v_color, u_casing_rgb, 0.6 * t);
+  bool hot = (u_kind == 1 && int(a_colour) == u_hot.x) || (u_kind == 0 && int(a_edge) == u_hot.y);
+  if (hot && u_casing <= 0.0) v_color = mix(v_color, vec3(1.0), ${HOT_LINE_MIX});
 }`;
 
 const STROKE_FS = `#version 300 es
@@ -296,9 +304,14 @@ flat out vec4 v_crowd;
 flat out vec4 v_scr;     // a dot's frame on the screen (T-553): where its x and y axes point, as
                          // (x.x, y.x, x.y, y.y) with the screen's y up, so a pie can start at 12 o'clock
 flat out float v_lane;   // 1 on double track: a platform each side of its two tracks close in (T-658)
+uniform highp int u_hot_st[${HOT_STATIONS}]; // the hovered stations (T-730), u_hot_n of them
+uniform highp int u_hot_n;
+flat out float v_hot;
 // the centre line in the frame, px (T-254), two points to a vec4
 ${qVars("out")}
 void main() {
+  v_hot = 0.0;
+  for (int k = 0; k < ${HOT_STATIONS}; k++) if (k < u_hot_n && u_hot_st[k] == gl_InstanceID) v_hot = 1.0;
   v_dot = 0.0;
   v_scr = vec4(1.0, 0.0, 0.0, 1.0);
   v_crowd = a_crowd;
@@ -404,8 +417,13 @@ flat out float v_alpha;
 flat out vec4 v_crowd;
 flat out vec4 v_scr;
 flat out float v_lane;
+uniform highp int u_hot_st[${HOT_STATIONS}]; // the bridges between hovered stations (T-730)
+uniform highp int u_hot_n;
+flat out float v_hot;
 ${qVars("out")}
 void main() {
+  v_hot = 0.0;
+  for (int k = 0; k < ${HOT_STATIONS}; k++) if (k < u_hot_n && u_hot_st[k] == gl_InstanceID) v_hot = 1.0;
   v_dot = 0.0;
   v_lane = 0.0;
   v_scr = vec4(1.0, 0.0, 0.0, 1.0);
@@ -451,6 +469,7 @@ flat in float v_alpha;
 flat in vec4 v_crowd;
 flat in vec4 v_scr;
 flat in float v_lane;
+flat in float v_hot;
 ${qVars("in")}
 out vec4 o;
 ${SHAPE_GLSL}
@@ -476,7 +495,7 @@ void main() {
     // the whole shape dark, painted white inside the rim next; a faded (blueprint) one only its
     // rim, so its see-through white stays as light as before
     float a = (v_alpha < 0.99 ? outer - inner : outer) * v_alpha;
-    o = vec4(u_ink * a, a);
+    o = vec4(mix(u_ink, vec3(1.0), ${HOT_RIM_MIX} * v_hot) * a, a);
   } else if (u_layer == 1) {
     // marking where the track is drawn over the station (T-236): the white's inside, no colour
     if (u_mask > 0.5) {
@@ -926,6 +945,10 @@ export interface DrawOptions {
   /** the stations the complex rule's distances group (T-313): zoomed out their dots are joined by
    * connectors; absent, only the player's links are */
   groups?: StationGroups | null;
+  /** hovered (T-730): a line's number, a bare track edge's id (-1 none), stations by index */
+  hotLine?: number;
+  hotEdge?: number;
+  hotStations?: number[];
 }
 
 interface StrokeVao {
@@ -1087,6 +1110,19 @@ export class NetworkRenderer {
     const sh: PlatformShape = { mx: s?.[i * 4] ?? 0, my: s?.[i * 4 + 1] ?? 0, ax: n.stationAxis?.[i * 2] ?? 0, ay: n.stationAxis?.[i * 2 + 1] ?? 0, phi: s?.[i * 4 + 2] ?? 0, pts: line };
     return stationShape(n.stations[i * 3], n.stations[i * 3 + 1], sh, s?.[i * 4 + 3] ?? 0, project, this.stationStyle, (flag & 1) !== 0);
   }
+  private hotList = new Int32Array(HOT_STATIONS);
+  /** The bridge program's hovered instances (T-730): the pairs in `pairs` (station indices, two
+   * an instance) with both stations hovered. */
+  private hotPairs(bu: Record<string, WebGLUniformLocation | null>, pairs: Int32Array, hot: number[]) {
+    let k = 0;
+    this.hotList.fill(-1);
+    if (hot.length > 1) for (let j = 0; j * 2 < pairs.length && k < HOT_STATIONS; j++) {
+      if (hot.includes(pairs[j * 2]) && hot.includes(pairs[j * 2 + 1])) this.hotList[k++] = j;
+    }
+    this.gl.uniform1iv(bu.u_hot_st, this.hotList);
+    this.gl.uniform1i(bu.u_hot_n, k);
+  }
+
   /** Whether station `i` is drawn selected: the selected station, or in complex view its complex. */
   private drawnSelected(i: number) {
     return i === this.selectedStation || this.selectedAlso.has(i);
@@ -1099,10 +1135,23 @@ export class NetworkRenderer {
     const n = this.net;
     if (!n) return -1;
     const dots = !this.stationStyle.boxes;
+    // T-724: on a flat camera, a station whose node is further from the pointer than its platform
+    // and shape reach is skipped before its shape is worked out (same answers)
+    const [ox, oy] = project(0, 0), [ex, ey] = project(1000, 0), [nx, ny] = project(0, 1000), [fx, fy] = project(1000, 1000);
+    const a = (ex - ox) / 1000, c = (ey - oy) / 1000, b = (nx - ox) / 1000, e = (ny - oy) / 1000;
+    const flat = Math.abs(fx - (ex + nx - ox)) + Math.abs(fy - (ey + ny - oy)) < 0.01;
+    const reach = flat ? this.stationReach(n) : null;
+    const perLoc = 1.01 * Math.max(Math.hypot(a, c), Math.hypot(b, e));
+    const extra = reach ? stationReachPx(this.stationStyle, reach.halfWidth, perLoc) + padding + 2 : 0;
     for (const sel of this.stationStyle.hidden ? [true] : [true, false]) {
       let best = -1, bestD = Infinity;
       for (let i = n.stationCount - 1; i >= 0; i--) {
         if (this.drawnSelected(i) !== sel) continue;
+        if (reach) {
+          const x = n.stations[i * 3], y = n.stations[i * 3 + 1], r = reach.r[i] * perLoc + extra;
+          const sx = ox + a * x + b * y, sy = oy + c * x + e * y;
+          if (Math.abs(sx - px) > r || Math.abs(sy - py) > r) continue;
+        }
         const s = this.drawnShapeOf(i, project);
         if (!insideStation(s, px, py, padding)) continue;
         if (!dots) return i;
@@ -1112,6 +1161,25 @@ export class NetworkRenderer {
       if (best >= 0) return best;
     }
     return -1;
+  }
+  private reachOf: { net: NetworkBuffers; r: Float32Array; halfWidth: number } | null = null;
+  /** Per station, local units from its node to the farthest point of its platform's centre line,
+   * and the widest true half width of any (stationAt's skip, T-724). */
+  private stationReach(n: NetworkBuffers): { r: Float32Array; halfWidth: number } {
+    if (this.reachOf?.net === n) return this.reachOf;
+    const r = new Float32Array(n.stationCount), s = n.stationShape, P2 = 2 * PLATFORM_POINTS;
+    let halfWidth = 0;
+    for (let i = 0; i < n.stationCount; i++) {
+      const line = n.stationLine && n.stationLine.length >= (i + 1) * P2 ? n.stationLine.subarray(i * P2, (i + 1) * P2) : undefined;
+      const sh: PlatformShape = { mx: s?.[i * 4] ?? 0, my: s?.[i * 4 + 1] ?? 0, ax: n.stationAxis?.[i * 2] ?? 0, ay: n.stationAxis?.[i * 2 + 1] ?? 0, phi: s?.[i * 4 + 2] ?? 0, pts: line };
+      const q = platformPoints(sh);
+      let m = Math.hypot(sh.mx, sh.my) + Math.hypot(sh.ax, sh.ay);
+      for (let j = 0; j + 1 < q.length; j += 2) m = Math.max(m, Math.hypot(q[j], q[j + 1]));
+      r[i] = m;
+      halfWidth = Math.max(halfWidth, s?.[i * 4 + 3] ?? 0);
+    }
+    this.reachOf = { net: n, r, halfWidth };
+    return this.reachOf;
   }
   /** The selected stations drawn, by index: the selected one, or its complex in complex view. */
   private selectedDrawn(): number[] {
@@ -1187,10 +1255,10 @@ export class NetworkRenderer {
     this.marks.init(gl);
     this.trainProg = compile(gl, TRAIN_VS, TRAIN_FS);
     this.hasStencil = (gl.getParameter(gl.STENCIL_BITS) ?? 0) > 0;
-    this.strokeU = uniforms(gl, this.strokeProg, ["u_matrix", "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_edge", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_dim", "u_by_level", "u_by_speed", "u_px_per_unit", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours"]);
-    this.stationU = uniforms(gl, this.stationProg, ["u_matrix", "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass", "u_layer", "u_halo", "u_halo_radius", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_hair", "u_plat", "u_mask", "u_stline", "u_lanes"]);
+    this.strokeU = uniforms(gl, this.strokeProg, ["u_matrix", "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_edge", "u_hot", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_dim", "u_by_level", "u_by_speed", "u_px_per_unit", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours"]);
+    this.stationU = uniforms(gl, this.stationProg, ["u_matrix", "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass", "u_layer", "u_halo", "u_halo_radius", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_hair", "u_plat", "u_mask", "u_stline", "u_lanes", "u_hot_st", "u_hot_n"]);
     this.bridgeProg = compile(gl, BRIDGE_VS, STATION_FS);
-    this.bridgeU = uniforms(gl, this.bridgeProg, ["u_matrix", "u_viewport", "u_ring", "u_bridge", "u_pass", "u_layer", "u_halo", "u_ink", "u_bad", "u_crowd_rgb", "u_mask"]);
+    this.bridgeU = uniforms(gl, this.bridgeProg, ["u_matrix", "u_viewport", "u_ring", "u_bridge", "u_pass", "u_layer", "u_halo", "u_ink", "u_bad", "u_crowd_rgb", "u_mask", "u_hot_st", "u_hot_n"]);
     this.selProg = compile(gl, SEL_VS, SEL_FS);
     this.selU = uniforms(gl, this.selProg, ["u_bbox", "u_css", "u_shapes", "u_count", "u_dpr", "u_height", "u_ink", "u_outline", "u_glow"]);
     this.selTex = this.texture(this.selData, "rgba32f", SEL_MAX * SEL_STRIDE, []);
@@ -1532,6 +1600,7 @@ export class NetworkRenderer {
     gl.uniform2f(u.u_viewport, vp[0], vp[1]);
     gl.uniform1i(u.u_sel_line, opt.selLine);
     gl.uniform1i(u.u_sel_edge, opt.selEdge);
+    gl.uniform2i(u.u_hot, opt.hotLine ?? -1, opt.hotEdge ?? -1);
     gl.uniform1f(u.u_dim, opt.dimOthers ?? 1);
     gl.uniform1i(u.u_by_level, opt.byLevel ? 1 : 0);
     gl.uniform1i(u.u_by_speed, opt.bySpeed ? 1 : 0);
@@ -1648,6 +1717,11 @@ export class NetworkRenderer {
       gl.uniform1f(su.u_line, wLine);
       gl.uniform3f(su.u_lanes, lanes.gap * dpr, lanes.t, lanes.narrow);
       gl.uniform1f(su.u_boxes, boxes ? 1 : 0);
+      const hotSt = (opt.hotStations ?? []).filter((i) => i >= 0 && i < n.stationCount);
+      this.hotList.fill(-1);
+      hotSt.slice(0, HOT_STATIONS).forEach((i, k) => (this.hotList[k] = i));
+      gl.uniform1iv(su.u_hot_st, this.hotList);
+      gl.uniform1i(su.u_hot_n, Math.min(hotSt.length, HOT_STATIONS));
       // each platform's track line (T-254)
       gl.activeTexture(gl.TEXTURE11);
       gl.bindTexture(gl.TEXTURE_2D, this.tex.stationLine);
@@ -1677,6 +1751,7 @@ export class NetworkRenderer {
         gl.uniform3fv(bu.u_ink, this.ink);
         gl.uniform3fv(bu.u_bad, BAD_RGB);
         gl.uniform3fv(bu.u_crowd_rgb, CROWD_RGB);
+        this.hotPairs(bu, n.stationLinkIdx!, hotSt);
       }
       // zoomed out, the connectors between a complex's dots and the player's links (T-313, Anita:
       // "it should look like its made of the same material"): the dots' rim, and their white
@@ -1696,6 +1771,7 @@ export class NetworkRenderer {
         gl.uniform3fv(bu.u_bad, BAD_RGB);
         gl.uniform3fv(bu.u_crowd_rgb, CROWD_RGB);
         gl.uniform1f(bu.u_mask, 0);
+        this.hotPairs(bu, this.connPairs, hotSt);
       }
       const connDraw = (pass: number, layer: number) => {
         gl.useProgram(this.bridgeProg);

@@ -11,6 +11,7 @@ import { rgb } from "../game/palette";
 import { shadeColours } from "../game/shades";
 import { DISC } from "../workers/commutersProtocol";
 import { anchor, EARTH_C, localToMercMatrix, mul4, type Anchor } from "./geo";
+import { hot, onHot } from "./hovered";
 import type { Overlay } from "./overlay";
 import { PLATFORM_POINTS, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, shapePoints, type StationShape } from "./stationGeometry";
 
@@ -48,6 +49,9 @@ void main() {
   o = vec4(0.0, 0.0, 0.0, 1.0 - clamp((d - u_outline) / u_glow, 0.0, 1.0));
 }`;
 
+/** A hovered bubble's colour mixed this far toward white (T-730). */
+const HOT_MIX = "0.2";
+
 // A disc per instance: radius in local units, colour and alpha, and an edge (0 none, 2 a dark
 // outline of 2 px, a selected bubble's). No minimum size: a tiny count is a tiny disc.
 const DISC_VS = `#version 300 es
@@ -57,6 +61,7 @@ uniform vec2 u_viewport;
 uniform float u_px_per_unit;
 uniform float u_rscale;   // the player's bubble size (T-099)
 uniform float u_opacity;  // the player's bubble opacity (T-470)
+uniform int u_hot;        // the hovered disc of this set, -1 none (T-730)
 in vec3 a_geo;    // x, y, radius (local units)
 in vec4 a_col;    // r, g, b, a
 in float a_edge;
@@ -65,6 +70,7 @@ out float v_r;
 out float v_edge;
 out vec4 v_col;
 void main() {
+  bool hot = gl_InstanceID == u_hot;
   float r = a_geo.z * u_rscale * u_px_per_unit;
   vec2 corner = vec2(float(gl_VertexID & 1) * 2.0 - 1.0, gl_VertexID < 2 ? -1.0 : 1.0);
   vec4 c = u_matrix * vec4(a_geo.xy, 0.0, 1.0);
@@ -74,7 +80,7 @@ void main() {
   v_p = off;
   v_r = r;
   v_edge = a_edge;
-  v_col = vec4(a_col.rgb, a_col.a * u_opacity);
+  v_col = vec4(hot ? mix(a_col.rgb, vec3(1.0), ${HOT_MIX}) : a_col.rgb, a_col.a * u_opacity);
 }`;
 
 const DISC_FS = `#version 300 es
@@ -200,6 +206,8 @@ interface DiscSet {
   count: number;
   /** the draw anchor the discs' positions are relative to (T-317): drawn with its matrix */
   anchor: Anchor;
+  /** the discs it was made from, matched against the hovered disc (T-730) */
+  data?: Float32Array;
 }
 
 export class DemandOverlay {
@@ -242,7 +250,7 @@ export class DemandOverlay {
     if (!gl) throw new Error("no WebGL2");
     this.gl = gl;
     this.prog = compile(gl, DISC_VS, DISC_FS);
-    for (const n of ["u_matrix", "u_viewport", "u_px_per_unit", "u_ink", "u_dpr", "u_rscale", "u_opacity"])this.u[n] = gl.getUniformLocation(this.prog, n);
+    for (const n of ["u_matrix", "u_viewport", "u_px_per_unit", "u_ink", "u_dpr", "u_rscale", "u_opacity", "u_hot"]) this.u[n] = gl.getUniformLocation(this.prog, n);
     this.timerExt = gl.getExtension("EXT_disjoint_timer_query_webgl2");
     this.size();
     map.on("resize", () => {
@@ -250,6 +258,13 @@ export class DemandOverlay {
       this.invalidate();
     });
     overlay.afterMapFrame.push(() => this.draw());
+    let lit = hot().disc;
+    onHot(() => {
+      const d = hot().disc;
+      if (d?.discs === lit?.discs && d?.i === lit?.i) return;
+      lit = d;
+      this.invalidate();
+    });
   }
 
   private size() {
@@ -283,7 +298,7 @@ export class DemandOverlay {
     }
     gl.bindVertexArray(null);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
-    return { vao, buf, count: data.length / DISC, anchor: a };
+    return { vao, buf, count: data.length / DISC, anchor: a, data };
   }
 
   private dropSet(s: DiscSet | null | undefined) {
@@ -462,7 +477,9 @@ export class DemandOverlay {
     gl.uniform1f(this.u.u_opacity, this.bubbleOpacity);
     this.discsDrawn = 0;
     let uploaded = -1;
+    const lit = hot().disc;
     for (const s of list) {
+      gl.uniform1i(this.u.u_hot, lit && lit.discs === s.data ? lit.i : -1);
       if (s.anchor.version !== uploaded) {
         uploaded = s.anchor.version;
         let m = matrices.get(uploaded);

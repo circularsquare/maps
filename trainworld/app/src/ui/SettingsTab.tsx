@@ -6,7 +6,9 @@
 // (T-251, ui/SavesPanel.tsx). T-253: no explanatory notes, only controls and their labels.
 
 import { FONT_KEYS, FONTS, type FontKey } from "../game/fonts";
-import { display, setDisplay, shade, SHADE_NAMES, theme, THEMES, tool, UI_SCALES, uiScale, type Shade, type Theme } from "../game/ui";
+import { ask, display, setDisplay, shade, SHADE_NAMES, theme, THEMES, tool, UI_SCALES, uiScale, type Shade, type Theme } from "../game/ui";
+import { moneyState } from "../game/money";
+import { makeSandbox } from "../workers/clockClient";
 import { pickTool, TRIP_KEY } from "./tabs";
 import { Check, Segmented, Stepper } from "./widgets";
 
@@ -56,7 +58,7 @@ export function SettingsTab() {
           Map labels
         </Check>
         <Check checked={d.realNetwork} onChange={(v) => setDisplay("realNetwork", v)}>
-          <span data-tip="Real railways drawn faintly under yours, for reference: main lines, other passenger lines and metros. Appears once you zoom in to a region.">Real network</span>
+          <span data-tip="Real railways drawn faintly under yours, for reference: main lines, other passenger lines and metros. Appears once you zoom in to a region, brighter while track snaps to it.">Real network</span>
         </Check>
       </div>
       {/* T-213: station demand circles and one circle per complex are in the Stations tab */}
@@ -111,7 +113,27 @@ export function SettingsTab() {
           <span data-tip="Up to 5 demand workers, using more of the processor and about 400 MB of memory each. Counts from the next time the page loads.">Use more cores</span>
         </Check>
       </div>
+      <GameMode />
       <TripStart />
+    </>
+  );
+}
+
+/** T-728: the game's mode; a normal game can be made a sandbox once, after a confirmation, never back. */
+function GameMode() {
+  const m = moneyState.value;
+  if (!m) return null;
+  const sandbox = m.mode === "sandbox";
+  return (
+    <>
+      <div class="h">Game</div>
+      <div class="game-mode">
+        <span data-tip={sandbox ? "Nothing is refused for money and the cash is hidden" : "Building costs money, and an edit is refused when the cash runs short"}>{sandbox ? "Sandbox" : "Normal"}</span>
+        {!sandbox && <button class="btn text" data-mode-switch onClick={() => (ask.value = {
+          text: "This game becomes a sandbox for good. Nothing will be refused for money and the cash will be hidden. It cannot become a normal game again.",
+          yes: "Make it a sandbox", no: "Keep it normal", run: makeSandbox,
+        })}>Make it a sandbox</button>}
+      </div>
     </>
   );
 }

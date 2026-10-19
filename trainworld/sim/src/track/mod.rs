@@ -36,6 +36,7 @@ pub mod params;
 pub mod profile;
 pub mod save;
 pub mod service;
+pub mod trace;
 /// The clock worker's API; left out of the demand workers' module (feature `track-api`, T-051).
 #[cfg(feature = "track-api")]
 pub mod wasm;

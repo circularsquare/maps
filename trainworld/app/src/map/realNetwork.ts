@@ -1,6 +1,6 @@
 // The real-network reference layer (T-682 stage 1): where railways run in the real world, faint, under
-// the game's own network and above the basemap's roads. View only, off by default (Settings > Real
-// network).
+// the game's own network and above the basemap's roads. View only; on by default at 0.15 opacity
+// (Settings > Real network), at 0.4 while the track tool snaps to it (T-727).
 //
 // The lines come from noritetsu's per-region vector tiles (`noritetsu/dist/data/<region>.pmtiles`, one
 // `track` layer: k kind, r rank 0 main or 1 other, p confirmed by a passenger route, n no line runs over
@@ -17,7 +17,7 @@ import * as maplibregl from "maplibre-gl";
 import { effect } from "@preact/signals";
 import { Protocol } from "pmtiles";
 import { SHADES, type ShadeColours } from "../game/shadeTable";
-import { display, shade } from "../game/ui";
+import { display, shade, snapping } from "../game/ui";
 
 const LOCAL_BASE = new URL("../noritetsu/", document.baseURI).href;
 const R2_BASE = "https://data.anita.garden/noritetsu/";
@@ -36,7 +36,9 @@ const SHOWN = ["all", ["!=", ["get", "n"], 1], ["any", METRO, ["all", kind("rail
 /** line width (px) by zoom; main and metro the same, other rail thinner */
 const width = (...stops: number[]) => ["interpolate", ["exponential", 1.4], ["zoom"], ...stops.flatMap((v, i) => [MIN_ZOOM + [0, 4, 7, 10, 13, 16][i], ["case", ["any", METRO, MAIN], v, v * 0.7]])];
 const WIDTH = width(0.6, 1, 1.5, 2.4, 4, 8);
-const OPACITY = 0.4;
+/** T-727: faint for reference, full while the track tool snaps to it */
+const OPACITY = 0.15;
+const OPACITY_SNAP = 0.4;
 
 const colour = (c: ShadeColours) => ["case", METRO, c.realMetro, MAIN, c.realMain, c.realOther];
 
@@ -58,6 +60,7 @@ export function startRealNetwork(map: maplibregl.Map) {
   let index: Promise<void> | null = null;
   let on = false;
   let painted: "light" | "dark" | null = null;
+  let opacity = OPACITY;
 
   /** regions.json (about 1.5 MB, outlines in it): which regions exist and where, and which base serves them */
   const load = () =>
@@ -115,7 +118,7 @@ export function startRealNetwork(map: maplibregl.Map) {
           id: ID + cc, type: "line", source: ID + cc, "source-layer": "track", minzoom: MIN_ZOOM,
           filter: SHOWN as never,
           layout: { "line-cap": "round", "line-join": "round" },
-          paint: { "line-color": colours as never, "line-width": WIDTH as never, "line-opacity": OPACITY },
+          paint: { "line-color": colours as never, "line-width": WIDTH as never, "line-opacity": opacity },
         },
         before,
       );
@@ -125,10 +128,16 @@ export function startRealNetwork(map: maplibregl.Map) {
   };
 
   effect(() => {
-    on = display.value.realNetwork;
+    // snapping shows the layer even when Settings has it off: nothing unseen is snapped to
+    const snap = snapping.value;
+    on = display.value.realNetwork || snap;
+    opacity = snap ? OPACITY_SNAP : OPACITY;
     shade.value;
     if (on) setShade(), void ensure();
-    for (const id of layerIds()) map.setLayoutProperty(id, "visibility", on ? "visible" : "none");
+    for (const id of layerIds()) {
+      map.setLayoutProperty(id, "visibility", on ? "visible" : "none");
+      map.setPaintProperty(id, "line-opacity", opacity);
+    }
   });
   map.on("moveend", ensure);
   map.on("style.load", () => {

@@ -8,7 +8,7 @@ import { useEffect, useLayoutEffect, useRef } from "preact/hooks";
 import { dockLayout, tab, uiScale, type Tab } from "../game/ui";
 import { live } from "../map/live";
 import { Inspector } from "./inspector/Inspector";
-import { BuildTab, LinesTab, MoneyTab, StationsTab } from "./tabs";
+import { BuildTab, CitiesTab, LinesTab, MoneyTab, StationsTab } from "./tabs";
 import { SavesPanel, savesOpen } from "./SavesPanel";
 import { SettingsTab } from "./SettingsTab";
 import { Icon } from "./widgets";
@@ -19,6 +19,7 @@ const TABS: [Tab, string, () => JSX.Element][] = [
   ["lines", "Lines", Icon.route],
   ["stations", "Stations", Icon.building],
   ["money", "Money", Icon.money],
+  ["cities", "Cities", Icon.cities],
 ];
 
 const PANES: Record<Tab, () => JSX.Element | null> = {
@@ -26,6 +27,7 @@ const PANES: Record<Tab, () => JSX.Element | null> = {
   lines: LinesTab,
   stations: StationsTab,
   money: MoneyTab,
+  cities: CitiesTab,
   settings: SettingsTab,
 };
 

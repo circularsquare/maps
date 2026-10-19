@@ -1,4 +1,4 @@
-// The Money tab's Cities section (T-550): one row for every region (a city pack or a zone, the
+// The Cities tab (T-550, its own tab since T-749): one row for every region (a city pack or a zone, the
 // regions of the Lines tab's place toggle) where the player has a station, with its mode split bar
 // as the top bar draws it, its train rides a day, its money a day (fares less running trains), its
 // points over the past 24 game hours (T-684, T-694) and its star once earned (T-685). A click moves the camera to the region.
@@ -18,6 +18,7 @@ import { world } from "../game/world";
 import { zonesLoaded } from "../game/zones";
 import { live } from "../map/live";
 import type { DayLedger, MoneyState } from "../workers/protocol";
+import type { JSX } from "preact";
 import { Icon, SortHead } from "./widgets";
 
 /** Move the camera to a region's registry centre and zoom, at once; what search does for a city. */
@@ -87,7 +88,7 @@ interface CityRow {
   money: { d: DayLedger; yesterday: boolean } | null;
 }
 
-export function CitiesList() {
+export function CitiesList({ empty = null }: { empty?: JSX.Element | null }) {
   const w = world.value, m = moneyState.value;
   void zonesLoaded.value; // boundaries arriving re-place the stations
   if (!w) return null;
@@ -98,7 +99,7 @@ export function CitiesList() {
     const z = stationZone(s);
     if (z) built.set(z, (built.get(z) ?? 0) + 1);
   }
-  if (!built.size) return null;
+  if (!built.size) return empty;
   const rows: CityRow[] = [...built].map(([id, stations]) => {
     const view = views.get(id);
     return { id, name: cityById(id).name, stations, view, trainShare: view ? view.split.train : null, rides: view ? view.railTripsPerDay : null, money: m ? figures(id, m) : null };
@@ -120,7 +121,6 @@ export function CitiesList() {
   // T-693: a container, so a narrow dock hides the star and then the money before the names go
   return (
     <div class="cities-box">
-      <div class="h">Cities</div>
       <SortHead sort={citySort} cols={[
         { key: "name", label: "Name", tip: "Sort by name", first: 1 },
         { key: "train", label: "Train", tip: "Sort by the train share of rides", first: -1, cls: "w-citybar c-cities" },
