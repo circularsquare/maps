@@ -31,6 +31,8 @@ import { createMap, setBasemapLabels, setBasemapShade } from "./map/mapView";
 import { startRealNetwork } from "./map/realNetwork";
 import { startCityBoundaries } from "./map/cityBoundaries";
 import { startZoneLoading } from "./map/zoneLoading";
+import { greyCityAt, openGreyCityAt } from "./map/greyCities";
+import { openedZones } from "./game/openedZones";
 import { startZoneFocus } from "./map/zoneFocus";
 import { StationLabels } from "./map/stationLabels";
 import { networkFromState, tripAt } from "./map/network";
@@ -296,6 +298,8 @@ map.on("click", (e) => {
 function selectAt(x: number, y: number, add: boolean) {
   // linking a station into a complex (T-197): the station clicked is the other end
   if (linking.peek() !== null) void linkPicked(pick(overlay, x, y, false, selection.peek()));
+  // T-729: a grey city takes the click before anything under it; the selection stays
+  else if (!onMark(x, y) && openGreyCityAt(x, y)) return;
   // commuter bubbles first while they are shown (T-097), then the network
   else selection.value = demandOnTop(x, y, add) ?? pick(overlay, x, y, display.peek().trains && !onMark(x, y), selection.peek(), true);
 }
@@ -516,6 +520,9 @@ if (DEBUG) {
     anchor, toLocal, toLngLat,
     frame: () => { const f = getWorldFrame(); return { kind: f.kind, lon: f.lon, lat: f.lat }; }, packToLngLat, lngLatToPack,
     select: (s: unknown) => (selection.value = s as any),
+    // T-729: the game's opened zones ("all" with ?opened=all)
+    opened: () => { const o = openedZones.peek(); return o === "all" || o === null ? o : [...o]; },
+    greyAt: greyCityAt,
     lagStart: () => {
       lag.samples = [];
       if (!lag.on) {

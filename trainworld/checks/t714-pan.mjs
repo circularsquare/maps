@@ -138,7 +138,7 @@ async function run(BASE) {
     const cdp = await ctx.newCDPSession(page);
     await cdp.send('Performance.enable');
     const sep = BASE.includes('?') ? '&' : '?';
-    await page.goto(`${BASE}${sep}debug=1&new=1&v=${Date.now()}`);
+    await page.goto(`${BASE}${sep}debug=1&new=1&opened=all&v=${Date.now()}`);
     await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });
     out.gpu = await page.evaluate(() => { const gl = document.createElement('canvas').getContext('webgl2'); const e = gl?.getExtension('WEBGL_debug_renderer_info'); return e ? gl.getParameter(e.UNMASKED_RENDERER_WEBGL) : '?'; });
     const bytes = await readFile(SAVE);

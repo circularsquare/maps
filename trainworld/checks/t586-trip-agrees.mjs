@@ -49,7 +49,7 @@ const report = (name, ok, detail = '') => { results.push(ok); console.log(`${ok 
 const waitFinal = (page, after = -1) => page.waitForFunction((v) => { const d = window.twDemand, dv = d?.view?.(); return dv && dv.final && dv.version > v && !d.client.waiting; }, after, { timeout: 900000, polling: 500 });
 
 async function open(page, city) {
-  await page.goto(`${BASE}?debug=1&new=1&paused=1&v=${Date.now()}`);
+  await page.goto(`${BASE}?debug=1&new=1&opened=all&paused=1&v=${Date.now()}`);
   await page.waitForFunction(() => window.tw?.world?.value && window.twViews && window.twDemand?.client, undefined, { timeout: 240000 });
   if (city === 'nyc') {
     const bytes = await readFile(SAVE);

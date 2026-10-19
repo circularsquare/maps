@@ -11,6 +11,7 @@ import { activeCity, viewedZone } from "../game/cities";
 import { display, selection } from "../game/ui";
 import { viewCentre } from "../game/listScope";
 import { nearbyZones, placeAt, zonesInBox, zonesLoaded } from "../game/zones";
+import { isOpened, openedZones } from "../game/openedZones";
 import { OVERVIEW_ZOOM } from "./intercityView";
 import { shiftAt, viewShift } from "../game/localTime";
 
@@ -32,7 +33,8 @@ export function startZoneFocus(map: MlMap) {
     let next: string[] = [];
     if (display.peek().commuters && map.getZoom() > OVERVIEW_ZOOM) {
       const c = map.getCenter(), b = map.getBounds();
-      next = zonesInBox(focus, c.lng, c.lat, b.getWest(), b.getSouth(), b.getEast(), b.getNorth());
+      // T-729: a zone this game has not opened is a grey bubble, never loaded for its bubbles
+      next = zonesInBox(focus, c.lng, c.lat, b.getWest(), b.getSouth(), b.getEast(), b.getNorth(), (id) => isOpened(id));
     }
     const prev = nearbyZones.peek();
     if (next.length !== prev.length || next.some((id, i) => id !== prev[i])) nearbyZones.value = next;
@@ -54,6 +56,7 @@ export function startZoneFocus(map: MlMap) {
   effect(() => {
     display.value.commuters;
     activeCity.value;
+    openedZones.value;
     nearby();
   });
   place(false); // fetches the boundaries near the view (T-404)

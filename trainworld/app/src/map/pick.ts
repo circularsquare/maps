@@ -11,6 +11,7 @@ import { clock } from "../game/clock";
 import type { Selection } from "../game/types";
 import { F_BLUEPRINT, profileS, trainCarAt, tripAt, type NetworkBuffers } from "./network";
 import type { Overlay } from "./overlay";
+import { CellLevels, whenIdle } from "./cellIndex";
 
 export const SLOP_PX = 7;
 /** projected points, reused (topSeg runs over every segment on each pointer move) */
@@ -37,64 +38,28 @@ export function pointerLocal(ov: Overlay, px: number, py: number): [number, numb
   return [(e * sx - b * sy) / det, (a * sy - d * sx) / det, 1.25 / pxPerUnit];
 }
 
-/** A stroke set's grid (T-724): per cell size, each cell's segments (those whose box touches it),
- * highest index first; segments spanning more than BIG_CELLS cells are kept apart and always tried.
- * Built on a set's second query, so a network seen once (a node drag's) never pays for one. */
-interface SegGrid {
-  count: number;
-  uses: number;
-  levels: ({ cells: Map<number, Int32Array>; big: Int32Array } | undefined)[];
-}
-/** cell sides, local units: the smallest whose side covers the query's width is used */
-const GRID_CELL = [256, 2048, 16384, 131072];
-const BIG_CELLS = 16;
-const grids = new WeakMap<Float32Array, SegGrid>();
-const cellKey = (cx: number, cy: number) => (cx + 0x100000) * 0x200000 + (cy + 0x100000);
+
+/** A stroke set's grid (T-724); until it is built in idle time, queries scan every segment. */
+const grids = new WeakMap<Float32Array, { count: number; levels: CellLevels }>();
 /** the candidate indices of the last `segsNear`, highest first */
 let NEAR = new Int32Array(1024);
-
-function buildLevel(seg: Float32Array, count: number, side: number): { cells: Map<number, Int32Array>; big: Int32Array } {
-  const lists = new Map<number, number[]>(), big: number[] = [];
-  for (let i = 0; i < count; i++) {
-    const ax = seg[i * 4], ay = seg[i * 4 + 1], bx = seg[i * 4 + 2], by = seg[i * 4 + 3];
-    const x0 = Math.floor(Math.min(ax, bx) / side), x1 = Math.floor(Math.max(ax, bx) / side);
-    const y0 = Math.floor(Math.min(ay, by) / side), y1 = Math.floor(Math.max(ay, by) / side);
-    if (!Number.isFinite(x0 + x1 + y0 + y1) || (x1 - x0 + 1) * (y1 - y0 + 1) > BIG_CELLS) {
-      big.push(i);
-      continue;
-    }
-    for (let cx = x0; cx <= x1; cx++)
-      for (let cy = y0; cy <= y1; cy++) {
-        const k = cellKey(cx, cy), l = lists.get(k);
-        if (l) l.push(i);
-        else lists.set(k, [i]);
-      }
-  }
-  const cells = new Map<number, Int32Array>();
-  for (const [k, l] of lists) cells.set(k, Int32Array.from(l).reverse());
-  return { cells, big: Int32Array.from(big).reverse() };
-}
 
 /** Every segment whose box comes within `reach` (local units) of (lx, ly), into NEAR highest index
  * first, perhaps with others; their number, or -1 when the caller is to scan them all. */
 function segsNear(seg: Float32Array, count: number, lx: number, ly: number, reach: number): number {
   let g = grids.get(seg);
-  if (!g || g.count !== count) grids.set(seg, (g = { count, uses: 0, levels: [] }));
-  if (++g.uses < 2 || !(reach >= 0)) return -1;
-  const L = GRID_CELL.findIndex((side) => 2 * reach <= side);
-  if (L < 0) return -1;
-  const side = GRID_CELL[L];
-  const lv = g.levels[L] ?? (g.levels[L] = buildLevel(seg, count, side));
-  const parts: Int32Array[] = [lv.big];
-  let total = lv.big.length;
-  for (let cx = Math.floor((lx - reach) / side); cx <= Math.floor((lx + reach) / side); cx++)
-    for (let cy = Math.floor((ly - reach) / side); cy <= Math.floor((ly + reach) / side); cy++) {
-      const c = lv.cells.get(cellKey(cx, cy));
-      if (c) parts.push(c), (total += c.length);
-    }
-  if (NEAR.length < total) NEAR = new Int32Array(Math.max(total, NEAR.length * 2));
+  if (!g || g.count !== count) grids.set(seg, (g = { count, levels: new CellLevels(() => seg, count) }));
+  const grid = g.levels.for(reach);
+  if (!grid) return -1;
   let n = 0;
-  for (const c of parts) NEAR.set(c, n), (n += c.length);
+  grid.near(lx, ly, reach, (i) => {
+    if (n === NEAR.length) {
+      const more = new Int32Array(NEAR.length * 2);
+      more.set(NEAR);
+      NEAR = more;
+    }
+    NEAR[n++] = i;
+  });
   const v = NEAR.subarray(0, n).sort().reverse();
   // a segment in two cells comes twice
   let m = 0;
@@ -192,9 +157,17 @@ interface LineBlocks {
 const BLOCK = 16;
 const blocksOf = new WeakMap<NetworkBuffers, LineBlocks>();
 
-function lineBlocks(n: NetworkBuffers): LineBlocks {
+const blocksAsked = new WeakSet<NetworkBuffers>();
+
+/** A network's line blocks, or null while they are built in idle time. */
+function lineBlocks(n: NetworkBuffers): LineBlocks | null {
   const had = blocksOf.get(n);
   if (had) return had;
+  if (!blocksAsked.has(n)) blocksAsked.add(n), whenIdle(() => buildBlocks(n));
+  return null;
+}
+
+function buildBlocks(n: NetworkBuffers) {
   const T = n.lineTable, S = n.samples, lines = T.length / 4;
   const first = new Int32Array(lines + 1), box: number[] = [];
   for (let l = 0; l < lines; l++) {
@@ -213,14 +186,15 @@ function lineBlocks(n: NetworkBuffers): LineBlocks {
     }
   }
   first[lines] = box.length / 4;
-  const out = { first, box: new Float32Array(box), mark: new Uint8Array(box.length / 4) };
-  blocksOf.set(n, out);
-  return out;
+  blocksOf.set(n, { first, box: new Float32Array(box), mark: new Uint8Array(box.length / 4) });
 }
 
-/** Marks the blocks whose box comes within `reach` (local units) of (lx, ly). */
-function markNearBlocks(n: NetworkBuffers, lx: number, ly: number, reach: number): LineBlocks {
-  const lb = lineBlocks(n), b = lb.box, m = lb.mark;
+/** Marks the blocks whose box comes within `reach` (local units) of (lx, ly); null while they are
+ * not built. */
+function markNearBlocks(n: NetworkBuffers, lx: number, ly: number, reach: number): LineBlocks | null {
+  const lb = lineBlocks(n);
+  if (!lb) return null;
+  const b = lb.box, m = lb.mark;
   for (let k = 0; k < m.length; k++)
     m[k] = b[k * 4] - reach <= lx && b[k * 4 + 2] + reach >= lx && b[k * 4 + 1] - reach <= ly && b[k * 4 + 3] + reach >= ly ? 1 : 0;
   return lb;

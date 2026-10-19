@@ -88,7 +88,7 @@ try {
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  await page.goto(`${BASE}?debug=1&new=1&paused=1&v=${Date.now()}`);
+  await page.goto(`${BASE}?debug=1&new=1&opened=all&paused=1&v=${Date.now()}`);
   await page.waitForFunction(() => window.tw?.world?.value && window.twViews && window.twDemand?.client, undefined, { timeout: 240000 });
   await page.evaluate((ll) => window.tw.map.jumpTo({ center: ll, zoom: 12 }), HANEDA);
   await page.waitForFunction(() => window.twDemand.activeCity.value === 'tyo', undefined, { timeout: 300000 });

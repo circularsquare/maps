@@ -244,7 +244,7 @@ try {
   const page = await ctx.newPage(), errors = [];
   page.on('pageerror', e => errors.push(e.message));
   page.on('console', m => { if (m.type() === 'error' && !IGNORE.test(m.text())) errors.push(m.text()); });
-  await page.goto(`${BASE}/?debug=1&new=1&paused=1&demandWorkers=${WORKERS}&v=${Date.now()}`);
+  await page.goto(`${BASE}/?debug=1&new=1&opened=all&paused=1&demandWorkers=${WORKERS}&v=${Date.now()}`);
   await page.waitForFunction(() => window.tw?.world.value && window.twDemand?.client && window.twDemand.view()?.round >= 0, undefined, { timeout: 240000 });
 
   // 1. jump to the city: its pack opens, it becomes the active city, its boundary layer exists

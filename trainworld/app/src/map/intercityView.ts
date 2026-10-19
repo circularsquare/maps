@@ -28,6 +28,7 @@
 
 import { computed, effect, signal } from "@preact/signals";
 import { zoneLoads } from "../game/loading";
+import { isOpened, openedZones } from "../game/openedZones";
 import type { Map as MlMap } from "maplibre-gl";
 import { activeCity, cityById, CITIES } from "../game/cities";
 import { clock } from "../game/clock";
@@ -77,6 +78,11 @@ const SELECTED_TRIPS_PER_PX2 = 1400;
  * zoomed out, about as before T-525 at zooms 4-7, but far less than the map itself). */
 const SCALE_ZOOM = 6.5;
 const ZOOM_GROWTH = 0.35;
+/** The overview's radius for `trips` a day at `zoom`, in local units before the size slider; the
+ * grey bubbles of cities not opened (T-729) are sized by it at every zoom. */
+export function overviewRadius(trips: number, zoom: number): number {
+  return Math.sqrt(trips / TRIPS_PER_PX2) * 2 ** (ZOOM_GROWTH * (zoom - SCALE_ZOOM)) / (512 * 2 ** zoom / EARTH_C);
+}
 /** The lines from a selected zone to the others (T-520). */
 const ZONE_LINE_ALPHA = 0.5;
 /** The zones' pointers are this many times the neighbourhoods' length (T-739). */
@@ -221,7 +227,8 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
           ? [interLine, interBar, `(${localLine})`]
           : [`${count(t.all)} trips ${day} between ${own.name} and ${c.name}`, interBar];
       return { ...t, city: c, isOwn, tag };
-    }).filter((p) => p.isOwn || (p.all > 0 && !(!own && zoneLoads.peek().has(p.city.id)))); // T-421: a zone still loading has its bar instead
+    // T-421: a zone still loading has its bar instead; T-729: one not opened, its grey bubble
+    }).filter((p) => p.isOwn || (p.all > 0 && !(!own && (zoneLoads.peek().has(p.city.id) || !isOpened(p.city.id)))));
     points.sort((a, b) => b.all - a.all);
     const zoom = map.getZoom();
     const pxPerUnit = 512 * 2 ** zoom / EARTH_C;
@@ -312,6 +319,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     purposeFilter.value;
     anchorVersion.value; // the discs are measured from the draw anchor (T-317)
     loadingZones.value;
+    openedZones.value;
     render();
   });
   map.on("zoom", render);

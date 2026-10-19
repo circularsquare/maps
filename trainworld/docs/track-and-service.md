@@ -226,6 +226,11 @@ Full design, numbers and sources: `notes/T-008.md`.
   reached (`0 +1` in the tag). Another level is left as drawn. A route through clicked corners (the
   edit API's `pis`, as the real-network snap sends them, T-727) is bridged the same way when every
   corner is at ground level, the bridge's vertices cut into pieces with the corners [T-667].
+  Through more than 16 vertices (a snapped real route) each stretch of water is bridged on its
+  own, between the corners 4 km of chainage either side (water read every 3.1 m, a quarter of the
+  usual step, since each piece is checked with its own samples); where that finds no room the
+  stretch is raised whole, ramping on the last leg before the water and the first after it that
+  are long enough for a ramp [T-727d; `bridge::bridge_long`].
   With no room on land (water within 200 m of the segment's start or end, so of a station or
   junction it leaves, or one a curve leaves no vertex room for) the edit is refused as
   `BridgeNoRoom`: "There is not enough land for the bridge ramps, which are 200 m long."

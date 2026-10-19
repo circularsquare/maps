@@ -26,11 +26,32 @@ de76ad3 (before 10-18) 5.6 ms, 9e466a4 5.3, bfe93f9 5.7, d931dcf 5.2, today's tr
 throughout, overlay draw 0.4-0.5 ms CPU and 1.3-1.4 ms GPU, camera at rest 8-12% of a core in all.
 With the main thread throttled 4x: 20.5-23.8 ms, 3-6% of frames over 50 ms, no trend by build. A
 5K framebuffer, the real network, bubbles with station circles, 960x and the track tool all left
-today within old's numbers; the station tool alone stalls on hover (T-724). Of the pan's main
+today within old's numbers; the station tool alone stalled on hover (T-724, below). Of the pan's main
 thread MapLibre's basemap is about 70%, our overlay plus per-frame placers about 20%. So no
 regression in our drawing; lag felt on 2026-10-19 coincided with the machine at 60% CPU from other
 work (three rustc and a pipeline python). `cityNear` (run on every map move) now scans instead of
 sorting every zone.
+
+**Pointer moves (T-724, T-689, 2026-10-19, `checks/t724-hover.mjs`, 1400x900, demand final).**
+A move's handlers, window capture to bubble, over a zigzag in Manhattan z12/z14/z16 and Brooklyn z14.
+Select tool: p50 17-19 ms, p95 24-27 (z12 6/9) before; 1.4-2.1 and 2.4-3.8 after; the resting list's
+timer 18-25 ms to 2-4. Station tool: p50 14-27, p95 21-37 before; 1.1-2, 3-6 after; its snap
+(every node and edge point projected) p95 8-11 ms to 0.1-0.8; the name looked up after a 150 ms
+rest 10-17 ms, 36-58 on fresh tiles, to under 2 (7 in the first view). `pick` 2.6-5.3 ms a call
+to 0.4. The costs were: every station's shape worked out per pick, every train placed, every
+segment visited, the snap projecting 1,756 nodes and every edge point, `querySourceFeatures`
+decoding every tile in view the first time (12-23 ms) and `getStyle`. Now: grids (`cellIndex.ts`,
+`snapIndex.ts`) built in idle time after each new network (5-20 ms each), a station skipped when its
+node is further than its platform reaches, a train only placed when its line's stretch near the
+pointer could hold it, the name read only from the tiles within 400 m (each tile's features kept
+until its data changes, and the view's tiles read ahead one per idle moment while the station tool
+is on). Same answers: 30,000 picks, 6,900 snaps and track directions, 2,300 name suggestions
+against the old code, identical. Left: the first one or two moves after loading or an edit scan as
+before (21-35 ms once) until the grids are built. Wheel zoom: the per-frame placers' total 196 ms
+to 90-120 over a 40 s scroll run (names and capacity tags write only what changed, collisions by a
+64 px grid); every placement under 2 ms but the first time names show (zoom 12), when all 1,756
+are measured once, 17-25 ms; frame callbacks max 9-11 ms; the move before a scroll 30 ms (T-675)
+to 2-3. `artifacts/trainworld/t724/`.
 
 **Trains/headway switch (T-747, 2026-10-19).** Anita's world save (143 lines, 103 still on
 legacy rates, 40 on counts), subway M express to headways: 2.9-3.1 s in the clock worker's

@@ -10,8 +10,8 @@ finish T-613 (the rest of Europe; Russia, Belarus and Ukraine held for later, An
 the follow-ups below, then whole countries from now on, Spain first (T-723, notes/T-719.md), and the
 rest of the world; 2. demand: T-712 with T-721 (city pairs and regional rail against real figures,
 for discussion), then T-528 (fit the regional rail constant and damping); T-634; 3. interface:
-T-602/T-651, T-724, T-646; 4. game modes wait. Performance is open work (notes/perf-survey.md;
-`checks/t714-pan.mjs` guards panning).
+T-602/T-651, T-646; 4. game modes wait. Performance is open work (notes/perf-survey.md;
+`checks/t714-pan.mjs` guards panning, `checks/t724-hover.mjs` pointer moves).
 
 **Where things stand (2026-10-17).** 80 zones play, all shipping through the pack gate (T-538). The
 unattended runner `pipeline/world_run.py` shipped its 5-city pilot (T-540), the UK batch (T-541)
@@ -106,7 +106,6 @@ orchestrator's commit recipe is in CLAUDE.md "Before a commit".
 ## Interface
 Anita's playtest of 2026-10-19 (the 9e466a4 build): notes/playtest-2026-10-19.md, a section a task.
 - T-700 [P2] Shanghai: a sharp line between bubbles walking about 25% and bubbles walking about 0%, as if some cells' walks were wrong. Cause (a bug): a 2 km zone astride the Huangpu got one walk factor blending both banks (x15-50), applied to same-bank walks too. Fixed in code (walk factors per bank, `walk_part`); Shanghai rebuilt and checked. Left: the other 109 packs' walk stage (`routes.py --stage walk --unparted`) after T-613 hands back. notes/T-700.md.
-- T-724 [P2] (taking with T-689, 2026-10-19) Station tool hover stalls on the real save: 40-50 ms when a new spot asks for a name (`stationNames.ts` crossStreet's querySourceFeatures), 15-35 ms in `tools.ts` snap (every node and edge point projected per move) and the hover pick under it. Found by T-714 (checks/t714-pan.mjs SETUP). taking, 2026-10-19.
 - T-721 [P2] Regional rail levels after T-718: rail between cities fell by a half to four fifths (New York to Philadelphia on a test line 2.8% to 0.4% of the corridor's trips, Tokyo to Osaka 56% to 42%); check a few corridors against published rail shares and say whether anything needs changing (notes/T-717.md, regional table). To be done as part of T-712's spot check, which starts first after T-613.
 - T-719 [P2] Covering whole regions (all of Spain, as Japan) rather than lone metros, timings and speedups: note written 2026-10-19, waits on Anita's decisions (its last section); notes/T-719.md.
 - T-723 [P2] Whole-country cover, Spain as the pilot (Anita 2026-10-19; notes/T-719.md): zone rows in world_plan.py, the runner and plan_config.py taking them, countryside zones on a curve borrowed from Japan's fitted zones, joint gravity once per country; after T-613 hands back (the runner's files are in use). Open.
@@ -116,11 +115,9 @@ Anita's second set of 2026-10-19 notes (the bfe93f9 build): notes/playtest-2026-
 Anita's TODO.md "short term", filed 2026-10-19 (evening).
 - T-727f [P3] A quad route through thousands of clicked corners is slow: New York-Emeryville (5,684 corners) previews in 3.4 s native against 0.11 s for double; find the quadratic step in the express pair. Open; notes/T-727.md.
 - T-727e [P3] Real-network graphs for the other ~113 noritetsu regions (`pipeline/realgraph.py`), shipped from R2 beside noritetsu's tiles rather than copied into the build. Open; notes/T-727.md.
-- T-727d [P2] Snap to the real network, the router worker and the track tool (ring, ghost, tag, refusal, one undo step). Open; notes/T-727.md.
-- T-729 [P2] Grey cities (notes/T-728.md stage 3): a city not opened is a grey bubble that lightens on hover; a click opens it without moving the camera; opened cities load on pan from then on. Old saves start with the cities their stations reach plus the one in view (Anita 2026-10-19). After T-728's stage 1. Open.
-- T-730 [P3] (taking with T-741, 2026-10-19) Hover lightening on demand bubbles, line segments and stations too, so the game feels more responsive (Anita, with T-729).
+- T-754 [P3] The snapped route's fit is 2.1-2.4 s in WASM for New York-Emeryville (0.8 s native), most of the 4.9 s from rest to preview; it cannot be cut short by a newer request. Profile `trace.rs` in WASM, or fit in chunks that yield. Open; notes/T-727.md.
+- T-755 [P3] `bridge::bridge` finds no room for ramps at Lake Hamana on the traced Tokaido Shinkansen (six corners alone fail too), so `bridge_long` raises that stretch whole; find why the ramps do not place. Open; notes/T-727.md.
 - T-750 [P3] Add a city's real network to a sandbox game already running (merging in the Rust track model; notes/T-728.md stage 6). Anita wants it, not urgent. Open.
-- T-741 [P3] The resting hover's list (T-732, `map/hoverRest.ts`): pointing at an entry lights up that line, station or bubble on the map, so the player sees which one it is before clicking. Needs a hover highlight in the renderer; do with T-730. Open.
 - T-751 [P3] "Expand all platforms on this line" in the line panel, so a line can run longer trains (Anita 2026-10-19, after T-733). Open.
 - T-734 [P2] While placing track, a press and drag on a node moves the node (a click on track still branches and places track). Open.
 - T-737 [P2] (taking, 2026-10-19) Stress test: all of Japan's real network loaded, run at 4x, measure whether it lags (notes/perf-survey.md). Open.
@@ -132,8 +129,8 @@ Anita's playtest of 2026-10-18 (her TODO.md "short term"), filed 2026-10-19. Pla
 - T-682 [P3] Real-world rail layer for reference (noritetsu's tiles), then a trace tool that follows a real line. Stage 1 (view only, Settings > Real network) done 2026-10-19; the trace tool is T-727; notes/T-682.md.
 - T-683 [P3] Accounts (optional, skippable), cloud saves and city ridership leaderboards on shonei-server. After T-684; notes/T-684.md.
 - T-685 [P3] City stamps at 10% rail share (the goal number): stars done (T-684's round, 2026-10-19), drawn stamps later. Open; notes/T-684.md.
-- T-651 [P2] Zoomed out, zones not opened look fully red while opened ones look yellowish from their green walkers (Anita's TODO 2026-10-17): the same as T-602, give unopened zones their walk split. Open.
-- T-602 [P2] Walk split for zones not opened (rest of T-576): `zone_summary` (sim) gives a walk count per zone, `pipeline/zones.py` `local_trips()` stores it as `localWalk` in registry.json beside `localTrips`, `intercityView.ts` draws it green. Open.
+- T-651 [P3] Zoomed out, zones not opened look fully red while opened ones look yellowish from their green walkers (Anita's TODO 2026-10-17): the same as T-602, give unopened zones their walk split. Moot since T-729 for zones never opened (grey); left for opened zones not loaded this session. Open.
+- T-602 [P3] Walk split for zones not opened (rest of T-576; since T-729 only for opened zones not loaded this session, never-opened ones are grey): `zone_summary` (sim) gives a walk count per zone, `pipeline/zones.py` `local_trips()` stores it as `localWalk` in registry.json beside `localTrips`, `intercityView.ts` draws it green. Open.
 - T-561 [P3] Page freezes at 1,500x or faster in a fresh game with a line in each of Toronto and Boston (T-550's agent); not reproduced on 2026-10-16's tree. Open until seen again with exact steps; notes/T-561.md.
 - T-560 [P3] Crush load per country (found in T-552): every city's trains fill at `api::CRUSH_PER_CAR`'s 160 riders a 20 m car, stranding Tokyo's riders early; take published figures per stock from the pack. Open; notes/T-552.md.
 - T-330 [P3] Line chips without a symbol show the name's first letter (every New York subway chip reads "S"); default to the line's short name ("subway 6X" to "6X"). Open. Detail in notes/T-330.md.
@@ -184,7 +181,7 @@ Tier 0 and country sources: docs/demand-worldwide.md, docs/data-register.md. The
 - T-321 [P3] Local time's rest (T-309, docs/world.md "Local time"): the money ledger's days and the bubbles' catch-up follow the game clock, and market trips across offsets need a period rule. Open; notes/T-321.md.
 
 ## Performance (open since 2026-10-15; ranked in notes/perf-survey.md)
-- T-648 [P2] Adding a stop takes about 100 ms to respond and the map sometimes flashes (Anita's TODO 2026-10-17): measure with checks/t496-edit-latency.mjs, find the flash. Related T-499. Open.
+- T-648 [P2] (taking, 2026-10-19) Adding a stop takes about 100 ms to respond and the map sometimes flashes (Anita's TODO 2026-10-17): measure with checks/t496-edit-latency.mjs, find the flash. Related T-499. Open.
 - T-630 [P2] The game lags with station ridership shown, zoomed far out (Anita's TODO 2026-10-17): measure where the frame time goes, then cut what can be cut (fewer markers far out, say). Open.
 - T-499 [P3] Edits after T-496: click to drawn is 96 ms on the real save; left ~20 ms worker-to-main transfer (send only what changed, also T-070's idea), `buildState`, shadow name layer, GPU uploads. Open; notes/T-496.md "Left".
 - T-281 [P3] Opening a big save searches every station's walk round water per worker: 1.0 s for the real New York network's 867 stations; a tighter search or a 100 m raster would halve it. Open; notes/T-275.md.
@@ -194,7 +191,6 @@ Tier 0 and country sources: docs/demand-worldwide.md, docs/data-register.md. The
 - T-436 [P3] Start an edit's crowding rounds from the solve before instead of free flow; figures would then depend on edit history, so Anita decides. Not measured; notes/T-434.md.
 - T-361 [P3] One demand engine per city, not two (T-361's item 3): the everyday layer builds its own commute engine copy; sharing saves 20-40 MB a worker, moderate risk. Open; notes/T-361.md.
 - T-356 [P3] A move far from the draw anchor (T-307) rebuilds the whole world on the main thread, about 50 ms per long pan (T-348); rebuild only what depends on the anchor. Open; notes/T-356.md.
-- T-689 [P3] (taking with T-724, 2026-10-19) Main-thread tasks as a wheel zoom starts, real save (T-675): the zoom's first frame 36 ms (`stationLabels.ts` and `capacityMarkers.ts` placing labels), the hover pick on the mousemove before it 30 ms (`pick.ts` topSeg, `trackHover.ts`). No demand publish or world rebuild landed in a 40 s zoom run. taking, 2026-10-19 (with T-724); notes/T-675.md.
 - T-354 [P3] Two smaller main-thread costs (T-348): a pack opening is copied per worker in one task (45-70 ms for New York), and a solve's final publish takes 70-110 ms; spread each. Open; notes/T-354.md.
 - T-359 [P3] After T-351: a bare start's card waits 2.0-2.2 s for New York's bare opening in the aux worker alone; splitting it over the pool could bring it to 1-1.5 s. Open; notes/T-351.md.
 - T-344 [P3] A zone's loading bar can stick near 99% (found in T-343) when the view moved to dead space before the viewed zone's first solve. Rare. Open; notes/T-344.md.

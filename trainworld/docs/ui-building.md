@@ -20,7 +20,7 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
   Everything the player reads says elevation, never level (code keeps `level`) [T-526].
   Beside keep placing, the **snap switch** (a magnet, "Snap track to the real network") [T-727]: while
   it is on and the track tool is in hand, the real network is drawn at full strength
-  ([ui-map.md](ui-map.md) "Real network"); the snapping itself is T-727d (notes/T-727.md).
+  ([ui-map.md](ui-map.md) "Real network"); what it does to drawing is [below](#snapping-to-the-real-network).
   The elevation, the double or quad choice, the keep placing switch and the snap switch are remembered per
   browser; a remembered single (from before T-733) reads as double (localStorage with the other panel settings, not in the save) [T-468]. Caps Lock only
   changes the switch when its state changes after the page loads, so a stored setting wins over a
@@ -97,6 +97,37 @@ T-422]. The geometry is in [track-and-service.md](track-and-service.md) 6.1.
 - **Placed blueprint track** is drawn as blue rails ([ui-map.md](ui-map.md) "Lines and track").
 - A segment is one piece (each pair's on quad); the delete tool, Construct and the track
   inspector act on one piece [T-244].
+- **Curve labels** show only for curves on screen and never over one another (64 by 22 px), at
+  most 300, so a long snapped route zoomed out keeps a few [T-727d].
+
+## Snapping to the real network
+
+[T-727d; `map/realSnap.ts`, `workers/realRoute.worker.ts`; design notes/T-727.md] With the snap
+switch on, the track tool follows the real network the layer draws.
+
+- **The ring**: within 12 px of a drawn real line (the layer's own rendered features), the ring
+  sits on the line where a click would snap. A first click on open ground there starts on the line;
+  a first click on the player's own track starts there as always, and the route begins from the
+  real track under the click.
+- **The route**: with the start within reach of real track, the pointer resting 120 ms near real
+  track asks the router worker for the route. It is shortest by length over the graph files
+  (`packs/realgraph/<cc>.rgr`), every chain within the snap radius (plus 20 m) a candidate at
+  either click, its distance from the click counted twice; no turn sharper than 60 degrees where
+  two chains meet; the other family (metro or rail) than the first click's nearest track at three
+  times its length, so a subway click follows the subway and an intercity route keeps off it. A
+  region's graph is fetched when the view, a click or the search first reaches it (a border
+  junction loads the neighbour's file, joined by OSM node id). The search stops after 2 s or 3
+  million states. The real line is drawn as the ghost, then the corners fitted to it at 25 m
+  (`TrackApi.trace_route`, run in the router worker's own track model) are previewed by the clock
+  worker and replace it with the usual tag. A search or fit over half a second shows the small
+  spinner in the tag. Changing the elevation or double and quad fits the route again.
+- **The second click** places the route as one segment: one edit, one undo step, Shift or keep
+  placing carrying on from its end. A click before the route is ready waits for it. It ends on the
+  player's own track when the pointer is on it, else at the real line's snap point.
+- **Nothing joins them** (two networks that never meet, or the search ran out): a red straight
+  ghost and "No real track joins these points" in the tag; the click places nothing and says so.
+- **Away from real track**, or where no graph file covers the click, the tool draws an ordinary
+  segment.
 
 ## Placing stations
 

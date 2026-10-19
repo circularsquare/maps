@@ -98,6 +98,130 @@ pub fn bridge(verts: &[Pi], scaled: bool, mask: &dyn WaterMask) -> Result<Option
     Err(NoRoom)
 }
 
+/// Corners further than this along the alignment from water (fit units) are left as they are by
+/// `bridge_long`: past the ramps' furthest shift and span, with room to spare.
+const LONG_REACH: f64 = 4000.0;
+
+/// `bridge` for a long route through many corners (the real-network snap, T-727d): each stretch of
+/// water bridged on its own, between the corners LONG_REACH either side of it, the rest of the
+/// route as it is. `bridge` on the whole tries every vertex for every ramp and fits the whole
+/// alignment for each try, minutes over hundreds of corners, and one river it cannot bridge
+/// moves every ramp on the route. Never NoRoom: such a stretch is raised whole.
+pub fn bridge_long(verts: &[Pi], scaled: bool, mask: &dyn WaterMask) -> Result<Option<Vec<Pi>>, NoRoom> {
+    if mask.is_empty() || verts.len() < 2 || verts.iter().any(|p| p.level != 0) {
+        return Ok(None);
+    }
+    let f = geom::fit_in(verts, scaled);
+    if !f.issues.is_empty() || f.pieces.is_empty() {
+        return Ok(None);
+    }
+    let wet = fine_spans(&f, mask);
+    if wet.is_empty() {
+        return Ok(None);
+    }
+    let n = verts.len();
+    // the windows, as vertex index ranges with the water's first and last chainage, merged where
+    // they meet
+    let mut wins: Vec<(usize, usize, f64, f64)> = vec![];
+    for w in &wet {
+        let a = (0..n).rev().find(|&i| f.vert_s[i] <= w[0] - LONG_REACH).unwrap_or(0);
+        let b = (0..n).find(|&i| f.vert_s[i] >= w[1] + LONG_REACH).unwrap_or(n - 1);
+        match wins.last_mut() {
+            Some(last) if a <= last.1 => (last.1, last.3) = (last.1.max(b), w[1]),
+            _ => wins.push((a, b, w[0], w[1])),
+        }
+    }
+    let mut out: Vec<Pi> = vec![];
+    let mut next = 0;
+    for (a, b, s0, s1) in wins {
+        out.extend_from_slice(&verts[next..a]);
+        // the window's corners with their chainage along the whole route
+        let mut sub: Vec<(Pi, f64)> = (a..=b).map(|i| (verts[i], f.vert_s[i])).collect();
+        if sub.len() == 2 {
+            // water on one long straight leg: corners on it either side of the water, with no turn
+            let (p, q) = (verts[a], verts[b]);
+            let at = |s: f64| {
+                let t = ((s - f.vert_s[a]) / (f.vert_s[b] - f.vert_s[a])).clamp(0.05, 0.95);
+                (Pi::new(p.x + (q.x - p.x) * t, p.y + (q.y - p.y) * t, 0.0, 0), f.vert_s[a] + t * (f.vert_s[b] - f.vert_s[a]))
+            };
+            sub.insert(1, at(s1 + LONG_REACH / 2.0));
+            sub.insert(1, at(s0 - LONG_REACH / 2.0));
+        }
+        let pis: Vec<Pi> = sub.iter().map(|v| v.0).collect();
+        let mut nv = match bridge(&pis, scaled, mask) {
+            Ok(Some(v)) if held(&v, scaled, mask) => v,
+            // no room for ramps beside the water (Lake Hamana's islands), or the window alone does
+            // not fit: the stretch goes up whole, rather than one lake refusing 500 km (T-727d)
+            _ => raised(&sub, s0, s1),
+        };
+        // the window's ends are the route's own corners, radius and all
+        let last = nv.len() - 1;
+        nv[0] = verts[a];
+        nv[last] = verts[b];
+        out.extend_from_slice(&nv[..last]);
+        next = b;
+    }
+    out.extend_from_slice(&verts[next..]);
+    Ok(Some(out))
+}
+
+/// Water spans sampled four times as finely as `water_spans`: the route is cut into pieces later,
+/// and each piece is checked with its own samples, which can catch a sliver of shore the whole
+/// route's samples stepped over (the Hudson line).
+fn fine_spans(f: &Fit, mask: &dyn WaterMask) -> Vec<[f64; 2]> {
+    let mut wet = vec![];
+    let step = WATER_STEP / 4.0;
+    let n = (f.len / step).ceil().max(1.0) as usize;
+    let mut open: Option<f64> = None;
+    for j in 0..=n {
+        let s = (j as f64 * f.len / n as f64).min(f.len);
+        let (x, y, _) = geom::pos_at(&f.pieces, s);
+        match (mask.is_water(x, y), open) {
+            (true, None) => open = Some((s - step).max(0.0)),
+            (false, Some(s0)) => {
+                wet.push([s0, s]);
+                open = None;
+            }
+            _ => {}
+        }
+    }
+    if let Some(s0) = open {
+        wet.push([s0, f.len]);
+    }
+    wet
+}
+
+/// Every fine sample over water on `v` is at least half a level up, as the edit's check wants.
+fn held(v: &[Pi], scaled: bool, mask: &dyn WaterMask) -> bool {
+    let g = geom::fit_in(v, scaled);
+    g.issues.is_empty() && fine_spans(&g, mask).iter().all(|w| {
+        let mut s = w[0];
+        while s <= w[1] {
+            if geom::height_at(&g.vert, s) < LEVEL_H / 2.0 {
+                return false;
+            }
+            s += WATER_STEP / 4.0;
+        }
+        true
+    })
+}
+
+/// A window raised whole: up on the last leg before the water long enough for a ramp, down on the
+/// first such leg after it, each ramp centred between its leg's two corners. As it was where there
+/// is no such leg.
+fn raised(sub: &[(Pi, f64)], s0: f64, s1: f64) -> Vec<Pi> {
+    let mut v: Vec<Pi> = sub.iter().map(|p| p.0).collect();
+    let fits = |j: usize| sub[j + 1].1 - sub[j].1 >= RAMP + 2.0 * SHORE;
+    let up = (0..sub.len() - 1).rev().find(|&j| fits(j) && sub[j + 1].1 <= s0 - SHORE);
+    let down = (0..sub.len() - 1).find(|&j| fits(j) && sub[j].1 >= s1 + SHORE);
+    if let (Some(u), Some(d)) = (up, down) {
+        for p in &mut v[u + 1..=d] {
+            p.level = BRIDGE_LEVEL;
+        }
+    }
+    v
+}
+
 /// The ramps one after another, each with the nearest vertices that hold it; then the whole.
 fn place(f: &Fit, verts: &[Pi], scaled: bool, centres: &[f64], wet: &[[f64; 2]]) -> Option<Vec<Pi>> {
     let mut ramps: Vec<Ramp> = vec![];

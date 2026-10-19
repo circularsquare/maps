@@ -1,4 +1,5 @@
 import { activeCity, cityById, viewedZone } from "../game/cities";
+import { isOpened, openedZones } from "../game/openedZones";
 import { cityDemandViews } from "../game/demand";
 import { levelLabel, speed } from "../game/format";
 import { loadProgress } from "../game/loading";
@@ -26,7 +27,8 @@ export function MapTopLeft() {
 /** The map's demand view stays within reach whichever dock tab is open. */
 export function DemandSelector() {
   const d = display.value;
-  const ready = !!viewedZone.value && cityDemandViews.value.has(activeCity.value);
+  // T-729: over a city not opened the buttons work too: its grey bubble and the opened ones show
+  const ready = !!viewedZone.value && (cityDemandViews.value.has(activeCity.value) || !isOpened(activeCity.value, openedZones.value));
   // T-149: the viewed city may still be loading after a pan
   const load = loadProgress.value;
   const pending = !viewedZone.value ? "Nothing modelled here" // T-318: dead space

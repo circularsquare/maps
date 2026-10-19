@@ -4,7 +4,8 @@
 // way out reopens on the way back).
 //   BASE=http://localhost:6101/ LABEL=after SAVE=1 OUT=<dir> node trainworld/checks/t301-pan.mjs
 // SAVE=1 imports T-007-real-nyc.save first (else a ?new=1 game). DWELL ms at each stop (5000),
-// REST ms at each end (75000, longer than the close delay). Writes OUT/pan-LABEL.json.
+// REST ms at each end (75000, longer than the close delay). Writes OUT/pan-LABEL.json. Since T-729 a
+// ?new=1 game has New York opened only and the rest grey; QS=&opened=all pans as before.
 import { readFile, writeFile, rm, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { readdir } from 'node:fs/promises';
@@ -95,6 +96,9 @@ const go = async (id, lon, lat) => {
       const isOpen = () => d.client.opened.has(id) || d.client.bareOpen.has(id);
       while (d.activeCity.peek() !== id && performance.now() - t0 < 60000) await new Promise((res) => setTimeout(res, 10));
       const t1 = performance.now();
+      // T-729: a zone the game has not opened is a grey bubble and never opens on a pan
+      const o = window.tw.opened?.();
+      if (Array.isArray(o) && !o.includes(id)) return { focusMs: Math.round(t1 - t0), openMs: null, grey: true };
       while (!isOpen() && performance.now() - t1 < 60000) await new Promise((res) => setTimeout(res, 10));
       return { focusMs: Math.round(t1 - t0), openMs: Math.round(performance.now() - t1) };
     }, id);

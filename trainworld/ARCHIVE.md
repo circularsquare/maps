@@ -1,5 +1,15 @@
 ﻿# Archive
 
+- T-727d [P2] Snap to the real network: router worker and track tool. Done 2026-10-19: two clicks place Tokyo-Shin-Osaka (515 km, 461 corners, rest to preview 1.3 s) and Penn Station-Emeryville (5,400 km, 4.9 s) as one edit and one undo; long routes bridged river by river. checks/t727-snap.mjs; notes/T-727.md.
+
+- T-724, T-689 [P2] Hover and zoom-start stalls on the real save. Done 2026-10-19: idle-built grids for pick and snap, station names read from nearby tiles only; a pointer move p95 24-37 ms to 3-6 with either tool, same answers. checks/t724-hover.mjs; notes/perf-survey.md.
+
+- T-729 [P2] Grey cities. Done 2026-10-19: each game's `opened` list decides what loads for viewing; other zones are one grey bubble (hover lightens, a click opens it, camera still); old saves take the view and reached zones. Northeast pan 56 loads to 4. notes/T-728.md.
+
+- T-753 [P3] The resting list dropped on every world change. Done 2026-10-19: it drops only when the network under it changes (track, which lines run where, stations, names), a 1.1 ms key on the real save built only while the list is up.
+
+- T-730, T-741 [P3] Hover lightening, and the resting list lighting its entry. Done 2026-10-19: bubble, whole line, bare track edge and station complex lighten under the pointer by a uniform (`map/hovered.ts`); a pointer move 0.8-2 ms median on the real save, one redraw per change.
+
 - T-646 [P2] Add the stations a line passes. Done 2026-10-19: while editing stops, each stretch between stops that passes stations offers them ("+ 2 stations passed", or add all), previewed in the stop list with Add or Cancel, one undo step; only the line's own path counts.
 
 - T-745 [P2] Line bullets still off centre after T-705. Done 2026-10-19: ink box measured at 240 px (canvas rounds to whole pixels), circle drawn in the bullet's SVG, baseline on a whole device pixel; worst 2.6 device px before, 0.55 after. `checks/t745-bullets.mjs`, notes/T-745.md.

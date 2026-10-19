@@ -35,7 +35,7 @@ let failed = false;
 try {
   const page = await ctx.newPage();
   page.on('pageerror', (e) => console.log('pageerror', e.message));
-  await page.goto(`${BASE}?debug=1&new=1&paused=1&v=${Date.now()}`);
+  await page.goto(`${BASE}?debug=1&new=1&opened=all&paused=1&v=${Date.now()}`);
   await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });
   const bytes = await readFile(SAVE);
   await page.evaluate((data) => { const b = Uint8Array.from(data).buffer; window.tw.client.post({ kind: 'import', bytes: b }, [b]); }, Array.from(bytes));

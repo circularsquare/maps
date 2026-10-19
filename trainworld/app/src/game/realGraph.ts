@@ -28,12 +28,13 @@ export interface RealGraph {
 
 const loaded = new Map<string, Promise<RealGraph | null>>();
 
-/** A region's graph, fetched once; null if there is none. */
-export function realGraph(cc: string): Promise<RealGraph | null> {
+/** A region's graph, fetched once; null if there is none. `base`: the folder of the files (a worker
+ * has no document to find it from). */
+export function realGraph(cc: string, base?: string): Promise<RealGraph | null> {
   let p = loaded.get(cc);
   if (!p) {
     p = (async () => {
-      const r = await fetch(new URL(`packs/realgraph/${cc}.rgr`, document.baseURI));
+      const r = await fetch(new URL(`${cc}.rgr`, base ?? new URL("packs/realgraph/", document.baseURI)));
       if (!r.ok || !r.body) return null;
       const raw = await new Response(r.body.pipeThrough(new DecompressionStream("gzip"))).arrayBuffer();
       return decodeRealGraph(cc, raw);

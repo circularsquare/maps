@@ -239,15 +239,28 @@ commuters and inter-region riders are in its inspector only ([ui-inspectors.md](
   with a mode bar (train blue, the rest red, plane included).
 - A selection survives a pan to another zone.
 
+## Cities not opened: grey bubbles
+
+[T-729; `map/greyCities.ts`, `game/openedZones.ts`; docs/zones.md 6] Every zone the game has not
+opened is one grey bubble at its registry centre, at every zoom and whatever the demand buttons say:
+sized by the pipeline's `localTrips` on the zoomed-out scale below (`overviewRadius`), in the
+theme's `greyCity` (`shadeTable.ts`) at the bubbles' opacity, drawn over every other disc. Zoomed
+in over a grey city there is only that bubble and the zone outline. The hover lightens it (T-730's
+hook) and says the name, "19.2M trips a day within Philadelphia" and "Click to open". A click with
+the select tool opens it, before the track, a station or another bubble under it; the camera stays
+and the selection is kept; the zone's loading bar shows, then its coloured bubbles. Grey bubbles are
+hidden while a bubble or city selection is shown, since its partner bubbles sit at the same centres.
+Over a grey city the top bar names it with "–" for the split, and Homes and Destinations stay usable.
+
 ## Zoomed far out: one bubble per zone
 
 [T-186, T-276; `OVERVIEW_ZOOM` 8.5 in `map/intercityView.ts`] At zoom 8.5 and below, with Homes or
-Destinations on and no bubble selection, every zone in the regional market, the focused
+Destinations on and no bubble selection, every opened zone in the regional market, the focused
 one included, is one bubble at its registry centre in place of the focused zone's own bubbles:
 all its trips a day (its local trips, from the open zone's view or the pipeline's no-rail count in
 `zones.json`, plus the regional layer's to and from it), coloured by `modeMix` of train, walking
-and the rest [T-576: an open zone's walking is green, from its split; a zone not opened has no walk
-split, so its walking counts in the red; regional trips have no walking], labelled
+and the rest [T-576: an open zone's walking is green, from its split; an opened zone not loaded in
+this session has no walk split, so its walking counts in the red; regional trips have no walking], labelled
 "Philadelphia · 187k trips/day" (at most eight labels on screen, the biggest first [T-493]). The hover
 has two lines, each with a mode bar [T-494]: "1.6m trips per day within Yamanashi" (bar from
 the zone's modelled split, none for a zone not opened) and "120k inter-region trips per day on

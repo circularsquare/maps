@@ -192,11 +192,22 @@ not held, and the focused zone stays where it was. A built station that reaches 
 that zone. One helper answers it, `placeAt` in `game/zones.ts`, kept in `viewedZone`
 (`game/cities.ts`).
 
-**Nearby zones** are drawn too: every zone whose boundary is on screen (at most
-four, nearest first) shows its own bubbles beside the focused zone's, so a zone line is not a cliff
+**Zones not opened** [T-729]: each game keeps the zones it has opened, in order (the save header's
+`opened`). A zone not on the list is loaded for viewing exactly as dead space is above (nothing
+fetched, no card, the clock not held), though the top bar still names it with "–" for the split, and
+it is drawn as one grey bubble at every zoom (docs/ui-demand-views.md "Cities not opened"). A click
+on the bubble adds it and opens it bare, wherever the view is; a built station within reach (4.5 km)
+adds it too, so the list only ever stops a zone opening for viewing, never for a solve, and no demand
+figure depends on it. Nothing removes a zone from the list. A new game opens its start city only (a
+start on the map, none); a save from before T-729 starts with the zone in view as it opens and the
+zones its stations reach. `?opened=all` treats every zone as opened and leaves the list alone, for
+checks that pan.
+
+**Nearby zones** are drawn too: every opened zone whose boundary is on screen (at most
+three, nearest first) shows its own bubbles beside the focused zone's, so a zone line is not a cliff
 in the bubbles. A click on a nearby zone's bubble focuses that zone and selects the bubble.
 
-Bubbles need a zone's results: a zone on screen is opened (its pack downloaded) like a viewed city.
+Bubbles need a zone's results: an opened zone on screen is opened (its pack downloaded) like a viewed city.
 With no station within reach (T-325) it opens **bare**, in the auxiliary demand worker only: its
 bubbles and city figures come from a no-rail pass there (all walking and driving, exactly what a
 solve would give it), and no solve covers it or is started for it. A click on its bubble draws the
@@ -208,10 +219,10 @@ A station built within reach downloads the pack again and opens it in every work
 waits for it and covers it from then on, and its bare figures serve until a shown solve does.
 Detail: [demand-runtime.md](demand-runtime.md), "Bare zones".
 
-**Zoomed far out** (8.5 and below) every zone is one bubble, as if it were one place: its trips a
+**Zoomed far out** (8.5 and below) every opened zone is one bubble, as if it were one place: its trips a
 day at homes (Homes) or at destinations (Destinations) in every layer, local trips, commutes
 between zones and longer trips, coloured by train share, sized against the busiest zone whose
-centre is on screen (New York's local trips would otherwise dwarf every other zone). A zone not opened has no rail and its
+centre is on screen (New York's local trips would otherwise dwarf every other zone). An opened zone not loaded in this session has no rail and its
 totals come from a small summary written by the pipeline (`data/packs/zones.json`: each zone's
 trips a day by purpose with no rail). A click on one selects the zone and draws one bubble per
 other zone for the commutes and longer trips between them, as T-186 does for cities.

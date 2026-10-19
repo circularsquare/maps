@@ -107,7 +107,7 @@ try {
     await page.evaluate(() => window.tw.client.post({ kind: 'flush' }));
     await page.waitForFunction((b) => window.tw.lastSaved.peek() > b, before, { timeout: 60000 });
     await page.goto(`${BASE}?debug=1&continue=1${QS}&v=${Date.now()}`);
-  } else await page.goto(`${BASE}?debug=1&new=1&paused=1${QS}&v=${Date.now()}`);
+  } else await page.goto(`${BASE}?debug=1&new=1&opened=all&paused=1${QS}&v=${Date.now()}`);
   await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 120000 });
   await waitSolved();
   const built = {};

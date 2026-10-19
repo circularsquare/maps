@@ -30,7 +30,9 @@ import { metresBetween } from "../game/walks";
 import { ask, buildLevel, buildPlatform, keepPlacing, lineDraft, selection, shownDayPhrase, trackCount, tool } from "../game/ui";
 import { describeRemovable, removeThing, type Removable } from "../game/remove";
 import { loadPlacesAt } from "../game/placeList";
-import { newStationName, trackDirection } from "./stationNames";
+import { newStationName, trackDirection, warmStreetNames } from "./stationNames";
+import { pointerLocal } from "./pick";
+import { edgesNear, nodesNear } from "./snapIndex";
 import { edit, say, world } from "../game/world";
 import type { RouteEnd } from "../workers/protocol";
 import type { ClockClient, PreviewAnswer } from "../workers/clockClient";
@@ -43,6 +45,8 @@ import type { StopMarkers } from "./stopMarkers";
 import { chip, elevationFact, factRow, speedFact } from "./trackTagRows";
 import { firstAccepted, fractionAlong, layoutIssues, layoutOf, likelyFirst, nearestOn, orderOverlapping, type Candidate, type Layout } from "./stationSnap";
 import { M_CROSSING, MARK_STRIDE } from "./markData";
+import { RealSnap, type RealRoute } from "./realSnap";
+import { snapping } from "../game/ui";
 
 const SNAP_NODE_PX = 12;
 const SNAP_EDGE_PX = 10;
@@ -91,6 +95,8 @@ export class Tools {
   private delHover: (Removable & { lx: number; ly: number }) | null = null;
   private delAt: [number, number] = [0, 0];
   private lastPreview: PreviewAnswer | null = null;
+  /** snapping to the real network (T-727d) */
+  readonly real: RealSnap;
   /** the request `lastPreview` answers, as JSON */
   private previewKey = "";
   /** where the last station of this session was placed (lng, lat), T-312 */
@@ -121,8 +127,19 @@ export class Tools {
     effect(() => { buildPlatform.value; if (tool.value === "station") this.place(); });
     // the place lists name stations where the tiles have no streets (T-065); the view's zones' are
     // fetched when the station tool is picked, not at startup (T-400)
-    effect(() => { if (tool.value === "station") { const c = this.map.getCenter(); void loadPlacesAt(c.lng, c.lat); } });
-    effect(() => { buildLevel.value; trackCount.value; if (tool.peek() === "track" && this.start) this.requestPreview(); });
+    effect(() => { if (tool.value === "station") { const c = this.map.getCenter(); void loadPlacesAt(c.lng, c.lat); warmStreetNames(this.map); } });
+    map.on("idle", () => tool.peek() === "station" && warmStreetNames(map));
+    effect(() => { buildLevel.value; trackCount.value; if (tool.peek() === "track" && this.start) this.real?.active ? this.real.again() : this.requestPreview(); });
+    // T-727d: the snap switch's routes along the real network
+    this.real = new RealSnap(map, overlay, client, (r) => this.realReq(r), (a) => {
+      if (a) return this.start && this.showPreview(a, "");
+      this.lastPreview = null;
+      this.overlay.renderer.setPreview(null);
+      this.overlay.invalidate();
+      if (!this.real.active) this.requestPreview();
+      this.place();
+    }, () => this.place());
+    effect(() => this.real.setOn(snapping.value));
     effect(() => {
       const active = tool.value === "line" ? lineDraft.value.line : null;
       const w = world.value;
@@ -166,7 +183,11 @@ export class Tools {
     if (!w || !n) return { kind: "free", lx: fx, ly: fy };
     let best = SNAP_NODE_PX * SNAP_NODE_PX, hit: Snap | null = null;
     const nodeHits: { d: number; hit: Spot }[] = [];
-    for (const node of nodes ? w.nodes.values() : []) {
+    // only what is near the pointer (T-724); everything with the map pitched
+    const at = pointerLocal(this.overlay, px, py);
+    const nearNodes = at && nodes ? nodesNear(w, at[0], at[1], SNAP_NODE_PX * at[2]) : null;
+    const nearEdges = at ? edgesNear(n, at[0], at[1], SNAP_EDGE_PX * at[2]) : null;
+    for (const node of nodes ? nearNodes ?? w.nodes.values() : []) {
       const [lx, ly] = toLocal(node.lng, node.lat);
       const [x, y] = this.screen(lx, ly);
       const d = (x - px) ** 2 + (y - py) ** 2;
@@ -179,9 +200,9 @@ export class Tools {
     if (hit && !station) return hit;
     // each edge's nearest point within reach, px squared
     const near: { d: number; hit: Snap }[] = [];
-    for (const [edge, pts] of n.edgePts) {
+    for (const { edge, pts, ks } of nearEdges ?? [...n.edgePts].map(([edge, pts]) => ({ edge, pts, ks: null }))) {
       let eb = SNAP_EDGE_PX * SNAP_EDGE_PX, eh: Snap | null = null;
-      for (let k = 0; k + 5 < pts.length; k += 3) {
+      for (let j = 0, k = ks ? ks[0] : 0; ks ? j < ks.length : k + 5 < pts.length; j++, k = ks ? ks[j] : k + 3) {
         const [x0, y0] = this.screen(pts[k], pts[k + 1]);
         const [x1, y1] = this.screen(pts[k + 3], pts[k + 4]);
         const dx = x1 - x0, dy = y1 - y0, l2 = dx * dx + dy * dy;
@@ -260,6 +281,7 @@ export class Tools {
     if (t === "delete") return this.deleteHover(e.point.x, e.point.y);
     if (t === "line") this.stops?.hover(e.point.x, e.point.y); // T-233: the toggle markers' tag
     this.hover = t === "line" ? null : this.snap(e.point.x, e.point.y, e.lngLat);
+    if (t === "track") this.real.move(e.point.x, e.point.y);
     if (t === "track" && this.start) this.requestPreview();
     if (t === "station") this.nameAhead(e.point.x, e.point.y);
     this.place();
@@ -316,6 +338,7 @@ export class Tools {
     this.delHover = null;
     this.lastPreview = null;
     this.previewKey = "";
+    this.real.reset();
     this.overlay.renderer.setPreview(null);
     this.overlay.invalidate();
     this.place();
@@ -330,9 +353,16 @@ export class Tools {
       else this.reset();
       return;
     }
-    const s = this.snap(e.point.x, e.point.y, e.lngLat);
+    let s = this.snap(e.point.x, e.point.y, e.lngLat);
     if (!this.start) {
+      // T-727d: on open ground near a real line the start goes on the line (the ring)
+      const ring = snapping.peek() ? this.real.ring(e.point.x, e.point.y) : null;
+      if (ring && s.kind === "free") {
+        const [lx, ly] = toLocal(ring[0], ring[1]);
+        s = { kind: "free", lx, ly };
+      }
       this.start = { end: this.endOf(s), lx: s.lx, ly: s.ly };
+      this.real.begin(ring);
       this.requestPreview();
       this.place();
       return;
@@ -353,10 +383,18 @@ export class Tools {
       return;
     }
     const chain = e.originalEvent.shiftKey || keepPlacing.peek();
-    const p = this.lastPreview;
     this.placing = true;
     this.endRun = false;
-    const a = await edit({ op: "route", ...this.routeReq(this.endOf(s)) });
+    // T-727d: near real track at both clicks, the real route (waited for if still being found)
+    const rc = await this.real.click(e.point.x, e.point.y);
+    if (rc?.kind === "refuse" || this.start !== from) {
+      this.placing = false;
+      if (rc?.kind === "refuse") say("No real track joins these points.", true);
+      return;
+    }
+    const p = this.lastPreview;
+    const req = rc ? this.realReq(rc.route, s) : this.routeReq(this.endOf(s));
+    const a = await edit({ op: "route", ...req });
     this.placing = false;
     if (!a.ok || this.start !== from) return;
     say(p ? `Blueprint added: ${distance(p.lengthM)}, ${money(p.cost * 1e6)} to construct.` : "Blueprint added.");
@@ -365,7 +403,9 @@ export class Tools {
       return;
     }
     this.chain.push(from);
-    this.start = { end: { kind: "node", node: a.node }, lx: s.lx, ly: s.ly };
+    const [ex, ey] = rc && s.kind === "free" ? toLocal(...rc.route.last) : [s.lx, s.ly];
+    this.start = { end: { kind: "node", node: a.node }, lx: ex, ly: ey };
+    this.real.begin(rc ? rc.route.last : snapping.peek() ? this.real.ring(e.point.x, e.point.y) : null);
     this.lastPreview = null;
     this.previewKey = "";
     this.overlay.renderer.setPreview(null);
@@ -396,8 +436,16 @@ export class Tools {
     return { from: this.start!.end, to, pis: [], single: false, quad: trackCount.peek() === 4, through: true };
   }
 
+  /** A real route's request (T-727d): from the start, or on open ground from the route's first
+   * point; to the player's own track under the pointer, else the route's last point. */
+  private realReq(r: RealRoute, at: Snap | null = this.hover) {
+    const free = ([lng, lat]: [number, number]): RouteEnd => ({ kind: "free", ...lngLatToPack(lng, lat), level: buildLevel.peek() });
+    const se = this.start!.end;
+    return { from: se.kind === "free" ? free(r.first) : se, to: at && at.kind !== "free" ? this.endOf(at) : free(r.last), pis: r.pis, single: false, quad: trackCount.peek() === 4, through: true };
+  }
+
   private requestPreview() {
-    if (!this.start) return;
+    if (!this.start || this.real.active) return;
     const se = this.start.end;
     if (se.kind === "node" && !world.peek()?.nodes.has(se.node)) return this.reset(); // undone meanwhile
     const h = this.hover;
@@ -408,7 +456,7 @@ export class Tools {
     const req = this.routeReq(this.endOf(h));
     const key = JSON.stringify(req);
     this.client.preview(req, (a) => {
-      if (this.start) this.showPreview(a, key);
+      if (this.start && !this.real.active) this.showPreview(a, key);
     });
   }
 
@@ -971,7 +1019,15 @@ export class Tools {
       put(this.el(k++, "pi-mark"), this.start.lx, this.start.ly);
       const pv = this.lastPreview;
       if (pv) {
+        // only those on screen: a snapped route can have thousands of curves (T-727d)
+        // and none over another, so zoomed out a long route keeps a few
+        const { clientWidth: W, clientHeight: H } = this.map.getContainer();
+        const shown: [number, number][] = [];
         for (const c of curveLabels(pv.verts)) {
+          const [x, y] = this.screen(c.x, c.y);
+          if (x < -40 || y < -40 || x > W + 40 || y > H + 40) continue;
+          if (shown.some(([u, v]) => Math.abs(u - x) < 64 && Math.abs(v - y) < 22)) continue;
+          if (shown.push([x, y]) > 300) break;
           const m = this.el(k++, "pi-label");
           setCurveLabel(m, c.kmh);
           put(m, c.x, c.y, 8, 6);
@@ -1010,9 +1066,21 @@ export class Tools {
         this.stationRings(h);
         this.stationGhost(h);
       } else put(this.ring, h.lx, h.ly);
+    } else if (t === "track" && this.real.ringAt) {
+      this.ring.style.display = "";
+      put(this.ring, ...toLocal(...this.real.ringAt));
     } else this.ring.style.display = "none";
-    const pv = this.lastPreview;
-    if (t === "track" && this.start && h && pv) {
+    const pv = this.lastPreview, rt = t === "track" && this.start && h ? this.real.tag() : null;
+    if (rt) {
+      // T-727d: a real route still being found (the spinner once it takes a while), or none
+      this.tag.className = "tool-tag build-tag" + (rt.bad ? " bad" : "");
+      const kids: (string | Node)[] = [];
+      if (rt.spin) kids.push(Object.assign(document.createElement("i"), { className: "spin" }));
+      if (rt.text) kids.push(rt.text);
+      this.tag.style.display = kids.length ? "" : "none";
+      this.tag.replaceChildren(...kids);
+      put(this.tag, h!.lx, h!.ly, 14, 12);
+    } else if (t === "track" && this.start && h && pv) {
       this.tag.style.display = "";
       this.tag.className = "tool-tag build-tag";
       this.tag.replaceChildren(...placementTag(pv, buildLevel.peek()));

@@ -17,6 +17,7 @@ import { platformRoom, pulsesBetween, readBoardHour, QUEUE_STRIDE, type BoardHou
 import { anchor, anchorPsi, EARTH_C, kAtY, localToMercMatrix, mul4, PSI_PER_UNIT } from "./geo";
 import { GradeMarks } from "./gradeMarks";
 import { F_BLUEPRINT, lineAt, type NetworkBuffers, type Strokes } from "./network";
+import { whenIdle } from "./cellIndex";
 
 const TEX_W = 2048;
 const LINES_W = 1024;
@@ -89,7 +90,7 @@ const SEL_RING_GAP_PX = 6;
 /** Hovered (T-730): a line's or bare track's colour mixed this far toward white; a station's rim
  * likewise, `HOT_STATIONS` of a complex at most. */
 const HOT_LINE_MIX = "0.3";
-const HOT_RIM_MIX = "0.45";
+const HOT_RIM_MIX = "0.6";
 const HOT_STATIONS = 16;
 /** Stations as the complex rule's distances group them (game/complexView.ts `dotGroups`): zoomed out
  * each group's dots are joined by connectors, the shortest set that links them all (T-313). */
@@ -1140,7 +1141,7 @@ export class NetworkRenderer {
     const [ox, oy] = project(0, 0), [ex, ey] = project(1000, 0), [nx, ny] = project(0, 1000), [fx, fy] = project(1000, 1000);
     const a = (ex - ox) / 1000, c = (ey - oy) / 1000, b = (nx - ox) / 1000, e = (ny - oy) / 1000;
     const flat = Math.abs(fx - (ex + nx - ox)) + Math.abs(fy - (ey + ny - oy)) < 0.01;
-    const reach = flat ? this.stationReach(n) : null;
+    const reach = flat ? this.stationReachNow(n) : null;
     const perLoc = 1.01 * Math.max(Math.hypot(a, c), Math.hypot(b, e));
     const extra = reach ? stationReachPx(this.stationStyle, reach.halfWidth, perLoc) + padding + 2 : 0;
     for (const sel of this.stationStyle.hidden ? [true] : [true, false]) {
@@ -1165,6 +1166,16 @@ export class NetworkRenderer {
   private reachOf: { net: NetworkBuffers; r: Float32Array; halfWidth: number } | null = null;
   /** Per station, local units from its node to the farthest point of its platform's centre line,
    * and the widest true half width of any (stationAt's skip, T-724). */
+  private reachAsked: NetworkBuffers | null = null;
+  /** `stationReach`'s table, or null while it is worked out in idle time. */
+  private stationReachNow(n: NetworkBuffers): { r: Float32Array; halfWidth: number } | null {
+    if (this.reachOf?.net === n) return this.reachOf;
+    if (this.reachAsked !== n) {
+      this.reachAsked = n;
+      whenIdle(() => this.net === n && this.stationReach(n));
+    }
+    return null;
+  }
   private stationReach(n: NetworkBuffers): { r: Float32Array; halfWidth: number } {
     if (this.reachOf?.net === n) return this.reachOf;
     const r = new Float32Array(n.stationCount), s = n.stationShape, P2 = 2 * PLATFORM_POINTS;

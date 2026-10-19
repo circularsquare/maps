@@ -73,7 +73,7 @@ async function checkZone(ctx, base, city) {
   const failed = () => page.evaluate(() => (String(window.twDemand?.client?.status ?? '').startsWith('failed') ? window.twDemand.client.status : null));
   try {
     const sep = base.includes('?') ? '&' : '?';
-    await page.goto(`${base}${sep}debug=1&new=1&paused=1&v=${Date.now()}`);
+    await page.goto(`${base}${sep}debug=1&new=1&opened=all&paused=1&v=${Date.now()}`);
     await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 120000 });
     await page.evaluate(([c, z]) => window.tw.map.jumpTo({ center: c, zoom: z }), [city.center, Math.max(city.zoom, 11)]);
     await page.waitForFunction((id) => window.twDemand.activeCity.peek() === id, city.id, { timeout: 60000, polling: 100 });
@@ -135,7 +135,7 @@ async function checkBroken(ctx, base, kind, bad, good) {
   const tag = () => page.evaluate(() => { const t = document.querySelector('.status-tag'); return t ? { text: t.textContent, tip: t.getAttribute('data-tip') } : null; });
   const state = () => page.evaluate((item) => { const c = window.twDemand.client; return { fails: c.openFails.get(item) ?? 0, out: c.broken.has(item), status: String(c.status) }; }, item);
   try {
-    await page.goto(`${base}${base.includes('?') ? '&' : '?'}debug=1&new=1&paused=1&v=${Date.now()}`);
+    await page.goto(`${base}${base.includes('?') ? '&' : '?'}debug=1&new=1&opened=all&paused=1&v=${Date.now()}`);
     await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 120000 });
     await jump(bad);
     await page.waitForFunction((item) => window.twDemand.client.openFails.get(item) >= 1, item, { timeout: 90000, polling: 250 });

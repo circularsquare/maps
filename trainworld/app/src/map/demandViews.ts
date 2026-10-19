@@ -30,6 +30,7 @@ import { buildLayers } from "./demandLayers";
 import { hoverAbove, hoverAt, startHover } from "./demandHover";
 import { DemandOverlay } from "./demandOverlay";
 import { startIntercityView } from "./intercityView";
+import { openGreyCityAt, startGreyCities } from "./greyCities";
 import type { Overlay } from "./overlay";
 
 /** Which end of a selected station's riders the inspector lists. */
@@ -124,6 +125,7 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
   startAirportMarks(map, overlay);
   // ---- longer trips of a selection (T-118) ----
   const intercity = startIntercityView(view, map);
+  startGreyCities(view, map); // T-729
 
   // ---- a selected station's riders, for the inspector ----
   let focusSeen = activeCity.peek();
@@ -177,6 +179,7 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
     },
     click(px, py, add, under = false) {
       if (!under && onSelected(px, py)) return undefined; // the network picks the selected station
+      if (openGreyCityAt(px, py)) return selection.peek() ?? undefined;
       const picked = commuters.click(px, py, add) ?? intercity.click(px, py);
       if (picked !== undefined) return picked;
       // Longer-trip discs describe the current selection. They are drawn over the network, so a

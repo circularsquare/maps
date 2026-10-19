@@ -85,7 +85,7 @@ const scroll = async (kind, held) => {
 
 let pass = false, line = '';
 try {
-  await page.goto(`${BASE}?new=1&debug=1&v=${Date.now()}`);
+  await page.goto(`${BASE}?new=1&opened=all&debug=1&v=${Date.now()}`);
   await page.waitForFunction(() => window.tw?.map?.loaded?.(), undefined, { timeout: 120000 });
   await page.waitForTimeout(5000);
   if (RAW) await page.evaluate(() => { delete window.tw.map.scrollZoom.wheel; });

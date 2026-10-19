@@ -5,7 +5,8 @@
 
 import { effect, signal } from "@preact/signals";
 import { clock, SPEEDS } from "../game/clock";
-import { HOME_CITY, setWorldFrame } from "../game/cities";
+import { activeCity, HOME_CITY, setWorldFrame, viewedZone } from "../game/cities";
+import { setGameOpened, setOpenedSink } from "../game/openedZones";
 import { holdForGameLoad } from "../game/loading";
 import { incomeByDay, lastSaved, liveMoney, moneyState, setMoneyState } from "../game/money";
 import { chargeShares, lineShares } from "../game/regionMoney";
@@ -288,6 +289,7 @@ export class ClockClient {
   constructor(cityId = HOME_CITY) {
     this.cityId = cityId;
     setEditSink((op) => this.edit(op));
+    setOpenedSink((zones) => this.post({ kind: "opened", zones }));
     current = this;
     // The worker settles money from the clock (T-028, T-284): tell it each time the
     // clock is set, paused, resumed or sped up.
@@ -427,6 +429,9 @@ export class ClockClient {
         break;
       case "cash": // T-284: fares landing, running costs draining
         liveMoney.value = { cash: msg.cash, today: msg.today, hour: msg.hour, regions: msg.regions };
+        break;
+      case "opened":
+        setGameOpened(msg.zones, viewedZone.peek() ? activeCity.peek() : null);
         break;
       case "loaded":
         // the game now in the worker may be in the other frame (T-125); first, before anything reads positions

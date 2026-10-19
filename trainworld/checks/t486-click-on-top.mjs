@@ -32,7 +32,7 @@ const report = (name, ok, detail) => { results.push(ok); console.log(`${ok ? 'PA
 try {
   const page = await ctx.newPage();
   page.on('pageerror', (e) => console.log('pageerror', e.message));
-  await page.goto(`${BASE}?debug=1&new=1&paused=1`);
+  await page.goto(`${BASE}?debug=1&new=1&opened=all&paused=1`);
   await page.waitForFunction(() => window.tw?.world?.value && window.twViews && window.twDemand?.client, undefined, { timeout: 180000 });
   await page.evaluate(() => {
     const tw = window.tw;

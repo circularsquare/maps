@@ -336,6 +336,22 @@ function nodePoints(out: Float64Array): number[] {
   return xy;
 }
 
+/** Before a load (T-737): the masks of the zones the save's nodes and curve points fall in, so the
+ * network is derived once (a load is about 3 s in WASM for Japan's 709 lines). `masksForLoaded`
+ * still catches a zone only the drawn curves reach. */
+async function masksBeforeLoad(net: Uint8Array) {
+  if (trackFrameKind(net) !== NEW_GAME_FRAME.kind) return;
+  const pts = TrackApi.save_points(net);
+  if (!pts.length) return; // undecodable: the load says so
+  const shown = frame;
+  frame = makeFrame(NEW_GAME_FRAME);
+  const missing = zonesOfPoints(pts).filter((id) => !masksIn.has(id));
+  frame = shown;
+  if (!missing.length) return;
+  api!.load(emptyTrack!);
+  await ensureMasks(missing);
+}
+
 /** After a network is loaded: the masks of every zone its track meets, then the network opened again
  * over them if any was missing (each mask installed on a loaded network would rework all of it). */
 async function masksForLoaded(net: Uint8Array) {
@@ -1132,6 +1148,7 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
     // an unreadable network converts to nothing: let the load below say so
     if (c.length) { net = c; converted = true; }
   }
+  await masksBeforeLoad(net);
   if (!api!.load(net)) throw new Error("This save is damaged.");
   await masksForLoaded(net);
   api!.set_fleet(h.fleet ?? 0);
@@ -1161,6 +1178,9 @@ function startClock(spec?: NewGameSpec): number {
 /** A new game's mode, start and opened zones (T-728). */
 function newGameHeader(spec?: NewGameSpec): Pick<SaveHeader, "mode" | "start" | "opened"> {
   return { mode: spec?.mode ?? "normal", start: spec?.start, opened: spec?.start ? [spec.start] : [] };
+}
+function sendOpened() {
+  send({ kind: "opened", zones: opened ? [...opened] : null });
 }
 function setNewGame(spec?: NewGameSpec) {
   const g = newGameHeader(spec);
@@ -1213,6 +1233,7 @@ function restart(t: number, from: "autosave" | "file" | "new") {
   api!.clear_riders(); // and its riders (T-164)
   forget(true);
   syncFrame();
+  sendOpened();
   send({ kind: "loaded", from, clock: t, frame: frameSpec(), converted: convertedOnLoad || undefined, game });
   convertedOnLoad = false;
   sendState();
@@ -1565,6 +1586,7 @@ async function processMessage(msg: ToClock) {
           send({ kind: "loaded", from: "new", clock: START_CLOCK, error: "The last game could not be loaded. " + (err as Error).message, frame: frameSpec(), game });
         }
       }
+      sendOpened();
       sendState();
       send({ kind: "snapshot", snapshot: buildSnapshot() });
     })();
@@ -1637,7 +1659,10 @@ async function handle(msg: ToClock) {
   if (settle()) sendMoney();
   // an edit's new departures start now; trains already running keep their places (T-206)
   api.set_now(gameNow());
-  if (msg.kind === "sandbox") {
+  if (msg.kind === "opened") {
+    opened = [...msg.zones];
+    dirty = true;
+  } else if (msg.kind === "sandbox") {
     if (mode === "sandbox") return;
     setMode("sandbox");
     dirty = true;

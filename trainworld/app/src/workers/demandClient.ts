@@ -66,6 +66,7 @@ import { perfOff } from "../perfFlags";
 import { marketZonesNear } from "./demandClusters";
 import { citiesReached, footprintOf, loadFootprints, REACH_M, zonesNearStations, type Footprint } from "./cityReach";
 import { nearbyZones } from "../game/zones";
+import { addOpened, isOpened, openedZones } from "../game/openedZones";
 import type { BareFigures, DemandNetwork, FromDemand, OpenRejected, ToDemand } from "./demandProtocol";
 import { readTripPeriod, setTripQuery, tripKey, type RouteNodes, type Trip } from "../game/trip";
 import { demandTestSnapshot } from "./demandTest";
@@ -434,7 +435,8 @@ function packService(svc: Service): { net: DemandNetwork; layout: Solve["layout"
     for (let run = 0; run < 2; run++) for (let k = 0; k < n - 1; k++) {
       const i = run === 0 ? k : n - 1 - k, j = run === 0 ? k + 1 : n - 2 - k;
       const from = svc.stations[index.get(l.stops[i])!], to = svc.stations[index.get(l.stops[j])!];
-      net.hopKm[2 * a + run * n + k] = l.hopKm?.[run]?.[k] ?? Math.hypot(to.x - from.x, to.y - from.y) / 1000;
+      // two stops closer than their platforms give a negative track distance, which set_fares refuses (T-737)
+      net.hopKm[2 * a + run * n + k] = Math.max(0, l.hopKm?.[run]?.[k] ?? Math.hypot(to.x - from.x, to.y - from.y) / 1000);
     }
     a += n;
   }
@@ -547,6 +549,15 @@ class DemandClient {
     }
     // the viewed city loads when it changes (a pan, the city buttons)
     effect(() => { activeCity.value; viewedZone.value; this.ensure(); });
+    // T-729: a zone just opened (a click on its grey bubble) loads even when off the view's centre
+    let openedSeen = openedZones.peek();
+    effect(() => {
+      const o = openedZones.value;
+      if (o !== "all" && o !== null && openedSeen !== "all" && openedSeen !== null)
+        for (const id of o) if (!openedSeen.has(id)) this.asked.add(id);
+      openedSeen = o;
+      this.ensure();
+    });
     // and the zones beside it with bubbles on screen (T-276), once nothing waits on them
     effect(() => { nearbyZones.value; this.ensure(); });
     // T-351: a building tool picked in a game with no station readies the viewed zone for its solve
@@ -563,7 +574,7 @@ class DemandClient {
     const t = tool.peek();
     if ((t !== "track" && t !== "station" && t !== "blueprint") || perfOff("bareStart")) return;
     const svc = this.latest(), id = activeCity.peek();
-    if (this.hold || !svc || svc.stations.length || !viewedZone.peek() || this.status.startsWith("failed")) return;
+    if (this.hold || !svc || svc.stations.length || !viewedZone.peek() || !isOpened(id) || this.status.startsWith("failed")) return;
     if (!this.fetchingBare.has(id) || this.fetching.has(id) || this.fetchingUndecided.has(id)) return;
     this.prefetched.add(id);
     this.fetchCity(id, "full");
@@ -580,10 +591,14 @@ class DemandClient {
 
   // --- Loading only what is needed (T-149) -------------------------------------------------------
 
-  /** T-318: the viewed zone alone; empty over dead space, where nothing loads for the view. */
+  /** T-318: the viewed zone alone; empty over dead space, where nothing loads for the view, and
+   * (T-729) over a zone this game has not opened. */
   private viewedSet(): Set<CityId> {
-    return this.withoutBroken(new Set(viewedZone.peek() ? [activeCity.peek()] : []));
+    return this.withoutBroken(new Set(viewedZone.peek() && isOpened(activeCity.peek()) ? [activeCity.peek()] : []));
   }
+
+  /** T-729: zones opened by a click, loaded (bare unless reached) until they are open */
+  private asked = new Set<CityId>();
 
   /** T-318: a network is in hand and neither the view nor any station needs a pack: nothing to
    * load or solve. The clock's hold goes, and no card or status says "Loading data". */
@@ -716,8 +731,14 @@ class DemandClient {
     // T-325: a city no station reaches opens bare; while the reach is not known (startup), the
     // viewed city's pack is fetched and decided once downloaded (T-351)
     const reached = this.knownReach();
+    // T-729: a zone a station reaches is opened for good
+    if (reached?.size) addOpened(reached);
     for (const id of need) this.want(id, reached === null ? null : reached.has(id));
     if (this.nearbyOpen()) for (const id of nearbyZones.peek()) this.want(id, !!reached?.has(id));
+    for (const id of this.asked) {
+      if (this.isOpen(id) || this.broken.has(id)) this.asked.delete(id);
+      else this.want(id, !!reached?.has(id));
+    }
     this.flush();
     this.progress();
     this.sweep();
@@ -731,7 +752,7 @@ class DemandClient {
   private keepSet(): Set<string> | null {
     const reached = this.knownReach();
     if (!reached) return null;
-    const keep = new Set<string>([...this.viewedSet(), ...nearbyZones.peek(), ...reached]);
+    const keep = new Set<string>([...this.viewedSet(), ...nearbyZones.peek(), ...reached, ...this.asked]);
     if (this.job) for (const id of this.job.items) keep.add(id);
     const svc = this.latest();
     for (const id of [...keep]) if (!isMarket(id)) keep.add(marketItem(id as CityId));

@@ -343,6 +343,25 @@ impl TrackApi {
         let Some(to) = FrameKind::from_u8(kind) else { return vec![] };
         save::convert_frame(bytes, to).unwrap_or_default()
     }
+    /// A save's node and curve points, x, y flat, read without deriving it (T-737: the clock worker
+    /// fetches the water masks they fall in before the one real load). Empty if it does not decode.
+    pub fn save_points(bytes: &[u8]) -> Vec<f64> {
+        let Ok(net) = save::decode(bytes) else { return vec![] };
+        let mut out = Vec::with_capacity(2 * (net.node_x.len() + net.pis.data.len()));
+        for (i, &alive) in net.node_alive.iter().enumerate() {
+            if alive {
+                out.extend([net.node_x[i], net.node_y[i]]);
+            }
+        }
+        for (e, &alive) in net.edge_alive.iter().enumerate() {
+            if alive {
+                for p in net.pis.get(net.edge_pis[e]) {
+                    out.extend([p.x, p.y]);
+                }
+            }
+        }
+        out
+    }
     pub fn save(&self) -> Vec<u8> {
         save::encode(&self.w.net)
     }
@@ -1267,7 +1286,9 @@ impl TrackApi {
     /// edit fails and says why (`bridge_refusal`).
     fn bridged(&mut self, shape: &[Pi]) -> Option<Vec<Pi>> {
         let scaled = self.w.net.frame().scaled();
-        match bridge::bridge(shape, scaled, self.w.net.water_mask.as_ref()) {
+        // a snapped real route (T-727d) bridges each river on its own
+        let b = if shape.len() > LONG_ROUTE_VERTS { bridge::bridge_long(shape, scaled, self.w.net.water_mask.as_ref()) } else { bridge::bridge(shape, scaled, self.w.net.water_mask.as_ref()) };
+        match b {
             Ok(b) => b,
             Err(bridge::NoRoom) => {
                 self.bridge_refused = true;
@@ -3068,6 +3089,8 @@ fn stroke_pieces(verts: &[Pi], first: usize, clicks: usize, scaled: bool) -> Vec
 pub const QUAD_SPACING: f64 = 8.0;
 /// How long the express pair takes to swing out to its place beside the drawn pair, m.
 const QUAD_TAPER: f64 = 150.0;
+/// A route through more vertices than this is bridged river by river (`bridge::bridge_long`).
+const LONG_ROUTE_VERTS: usize = 16;
 
 /// The express pair of a quad route (T-255): from the drawn route's `verts` (end, lead-in, the
 /// `clicks` corners from index `first`, lead-in, end), a double track starting and ending at the
@@ -5740,6 +5763,39 @@ mod bridge_tests {
             let (fx, fy) = *xy.last().unwrap();
             let e = [0.0, 0.0, sx, sy, 0.0, 0.0, 0.0, fx, fy, 0.0];
             assert_eq!(a.add_route(&e, &t[3..], tracks, false), 0, "{}", a.issue_kinds());
+        }
+    }
+
+    #[test]
+    fn a_long_route_bridges_each_river_on_its_own() {
+        // a gentle zigzag with a corner every km; then corners 10 km apart, a river mid-leg
+        for (step, rivers) in [(1000.0, [(10_000.0, 10_200.0), (40_000.0, 40_300.0)]), (10_000.0, [(55_000.0, 55_300.0), (125_000.0, 125_200.0)])] {
+            let mut a = merc();
+            water(&mut a, &rivers);
+            let (bx, by) = base(&a);
+            let e = ends(&a, (0.0, 0.0), (step * 60.0, 0.0));
+            let pis: Vec<f64> = (1..60).flat_map(|i| [bx + i as f64 * step, by + if i % 2 == 0 { 30.0 } else { -30.0 }, 0.0, 0.0]).collect();
+            let t = std::time::Instant::now();
+            let pv = a.preview_route(&e, &pis, 2, false);
+            assert_eq!(pv[0], 1.0, "{}", a.issue_kinds());
+            assert!(t.elapsed().as_secs_f64() < 2.0, "preview took {:?}", t.elapsed());
+            assert_eq!(a.add_route(&e, &pis, 2, false), 0, "{}", a.issue_kinds());
+            let edges = alive(&a);
+            // every sample over either river is up on a bridge
+            let mut wet = [0, 0];
+            for &e in &edges {
+                let (pieces, len) = (a.w.net.edge_pieces(e), a.w.net.edge_len[e as usize]);
+                let mut s = 0.0;
+                while s <= len {
+                    let (x, y, _) = pos_at(pieces, s);
+                    if a.w.net.water_mask.is_water(x, y) {
+                        wet[usize::from(x > bx + rivers[0].1 + 1000.0)] += 1;
+                        assert!(height(&a, e, s) > 7.99, "edge {e} s {s} over water");
+                    }
+                    s += 5.0;
+                }
+            }
+            assert!(wet[0] > 0 && wet[1] > 0, "both rivers crossed: {wet:?}");
         }
     }
 

@@ -50,7 +50,7 @@ void main() {
 }`;
 
 /** A hovered bubble's colour mixed this far toward white (T-730). */
-const HOT_MIX = "0.2";
+const HOT_MIX = "0.3";
 
 // A disc per instance: radius in local units, colour and alpha, and an edge (0 none, 2 a dark
 // outline of 2 px, a selected bubble's). No minimum size: a tiny count is a tiny disc.
@@ -196,9 +196,10 @@ export function bubbleLevel(z: number): number {
 }
 
 /** Disc layers, drawn in this order. */
-export type DiscLayer = "inter" | "far" | "near";
-// "inter": a selection's longer trips (T-118), under the commuters' discs
-const LAYERS: DiscLayer[] = ["inter", "far", "near"];
+export type DiscLayer = "inter" | "far" | "near" | "grey";
+// "inter": a selection's longer trips (T-118), under the commuters' discs; "grey": the cities not
+// opened (T-729), over everything, as they take the click
+const LAYERS: DiscLayer[] = ["inter", "far", "near", "grey"];
 
 interface DiscSet {
   vao: WebGLVertexArrayObject;

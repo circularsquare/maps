@@ -1,8 +1,7 @@
 // The resting hover (T-732): when the pointer rests 250 ms on the map with the select tool, a list
 // under the hover tag names what else is under it: at most one demand bubble, one station and
 // three lines, the thing the tag already describes counted in those limits. Clicking an entry
-// selects that thing. The query runs once per rest, not per move: the pick costs 15-35 ms on the
-// real save (T-689, T-724).
+// selects that thing. The query runs once per rest, not per move (2-4 ms on the real save, T-724).
 //
 // While the list is up, the pointer may cross the stretch between where it rested and the list
 // (the hull of that point and the tag with its list) without the tags moving, so the list can be
@@ -10,7 +9,7 @@
 
 import { effect } from "@preact/signals";
 import type { Map as MlMap } from "maplibre-gl";
-import type { Selection } from "../game/types";
+import type { Selection, WorldView } from "../game/types";
 import { ask, display, selection, tool } from "../game/ui";
 import { world } from "../game/world";
 import { hoverHeld } from "../ui/blurHold";
@@ -129,6 +128,7 @@ export function startRestList(map: MlMap, ov: Overlay, bubbleSelect: (x: number,
     el.style.display = "";
     el.style.transform = `translate(${Math.round(px + 14)}px, ${Math.round(top)}px)`;
     restAt = [px, py];
+    restKey = networkKey(world.peek()!);
     box = { l: px + 14, t: py + 14, r: Math.max(right, px + 14 + el.offsetWidth), b: top + el.offsetHeight };
   };
 
@@ -150,10 +150,28 @@ export function startRestList(map: MlMap, ov: Overlay, bubbleSelect: (x: number,
     selection.value;
     tool.value;
     display.value;
-    world.value;
     ask.value;
     hide();
   });
+  // Most world changes (demand settling, the clock's live figures) leave the network as it was; only
+  // an edit that changes what is under the pointer drops the list (T-753). The key is built only
+  // while the list is up.
+  effect(() => {
+    const w = world.value;
+    if (restAt && w && networkKey(w) !== restKey) hide();
+  });
+}
+
+/** the network's shape when the list came up */
+let restKey = "";
+
+/** What decides what is under a point: track, which lines run where, stations and their places,
+ * line names. */
+function networkKey(w: WorldView): string {
+  const e = w.edges.map((x) => `${x.id}:${x.a}:${x.b}:${x.lengthM}:${x.lines.join(",")}`).join("|");
+  const s = w.save.stations.map((x) => `${x.id}:${x.x}:${x.y}:${x.heading}:${x.length}:${x.name}`).join("|");
+  const l = w.save.lines.map((x) => `${x.id}:${x.num}:${x.name}`).join("|");
+  return `${e}/${s}/${l}`;
 }
 
 function row(text: string, lead?: HTMLElement): HTMLDivElement {

@@ -44,7 +44,7 @@ page.on('pageerror', (e) => errors.push(e.message));
 page.on('console', (m) => { if (m.text().startsWith('t496')) log(m.text()); if (m.type() === 'error' && !/openfreemap|AJAXError|favicon/.test(m.text())) errors.push(m.text()); });
 const out = { label: LABEL, rate: RATE, errors };
 try {
-  await page.goto(`${BASE}?debug=1&new=1&paused=1&v=${Date.now()}`);
+  await page.goto(`${BASE}?debug=1&new=1&opened=all&paused=1&v=${Date.now()}`);
   await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });
   await page.waitForTimeout(1500);
   await page.evaluate(() => { const c = window.tw.client, e = c.edit.bind(c); c.edit = (op) => { if (window.__t && !window.__t.sent) window.__t.sent = performance.now(); return e(op); }; });

@@ -60,12 +60,12 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   (new and copied lines, Edit stops, construct blueprints: the N, L and C keys, T-670), `remove.ts` (removing things, with the question asked before removing
   anything constructed, T-096).
 - `realGraph.ts`: a region's real-network routing graph (`packs/realgraph/<cc>.rgr`, fetched once
-  and decoded), for snapping track to the real network (T-727).
+  and decoded), for snapping track to the real network (T-727); read by `workers/realRoute.worker.ts`.
 - Other: `money.ts` (cash and ledger from the worker, fare income from riders, T-028),
   `moneyTiming.ts` (each game hour's fares, rides, points and running cost from the period tables, T-736),
   `regionMoney.ts` (each line's and each construction's split between regions, the region ledgers, T-531), `points.ts`
   (each line's points per hour by region, points a day, each region's past 24 hours' points, the star's mark, T-684, T-685, T-694), `issues.ts`
-  (the track model's refusals in plain words), `loading.ts` (what is loading, the startup gate and
+  (the track model's refusals in plain words), `openedZones.ts` (the zones the game has opened, T-729), `loading.ts` (what is loading, the startup gate and
   the clock hold, T-149, T-172; whether the start menu is up, T-677), `palette.ts`, `shades.ts` over `shadeTable.ts` (the light and dark themes' map
   colours: basemap, line casing, map ink, blueprint off, outside shade, thumbnails; the table has no
   page behind it so the clock worker reads it, T-039, T-543), `format.ts`.
@@ -90,7 +90,9 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   neighbourhood, city or town, T-534), `stationLabels.ts` (names
   keep their elements across edits unless their text changes, T-496), `capacityMarkers.ts`, `labelLayout.ts` (shared spacing
   for names and tags).
-- Tools: `pick.ts`, `tools.ts` (drawing track, placing stations, the line tool), `stationSnap.ts` (which overlapping track a station goes on, the end snap, T-671), `edgeEdit.ts`
+- Tools: `realSnap.ts` (the track tool's snap to the real network: ring, route ghost and tag, the
+  second click's route, T-727d), `pick.ts`, `cellIndex.ts` and `snapIndex.ts` (grids built in idle time that narrow a pick
+  and the build tools' snap to what is near the pointer, T-724), `tools.ts` (drawing track, placing stations, the line tool), `stationSnap.ts` (which overlapping track a station goes on, the end snap, T-671), `edgeEdit.ts`
   (dragging blueprint track's PIs, T-064, T-092), `nodeDrag.ts` (dragging blueprint nodes, T-093), `endMarkers.ts` (loose-end and draggable-point markers, T-416), `curveCircle.ts` (the circle of the segment being drawn, T-418),
   `blueprintBox.ts` (the Select tool's drag box, T-333, and dragging its pick, T-475; its state is `game/blueprintPick.ts`),
   `stopMarkers.ts` (the toggle markers of stop editing, T-233).
@@ -99,13 +101,14 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 - Demand views (T-084, T-097): `demandViews.ts` (wiring, a station's riders for its inspector), `demandLayers.ts`
   (line width, station use circles, train fill; the figures from `game/stationUse.ts`, T-482), `commuterView.ts` and `bubbles.ts` (commuter bubbles and
   bubble selections), `intercityView.ts` (longer trips of a selection or station, one bubble per
-  far zone, T-118, T-120; one per city zoomed far out, T-186), `catchUp.ts` (the bubbles catching
+  far zone, T-118, T-120; one per city zoomed far out, T-186), `greyCities.ts` (one grey bubble per
+  city not opened, its hover and click, T-729), `catchUp.ts` (the bubbles catching
   up over a game day, T-156), `demandOverlay.ts` (their canvas, over the network's),
   `demandHover.ts` (the count tag by the pointer), `modeBar.ts` (the tag's mode bar, T-494, and `localModes`, an open zone's local legs by mode, T-576), `airportMarks.ts` (the plane badge on an
   airport and its hover, T-448, T-674; paths shared with the icons in `glyphs.ts`).
 - Tags and outlines: `trackHover.ts` and `networkTips.ts` (the hover tags on track, trains and
   stations, T-157, T-194), `hoverRest.ts` (the list of what else is under a resting pointer,
-  T-732), `trackTagRows.ts` (the elevation and speed rows with icons, shared with
+  T-732), `hovered.ts` (what is lit as hovered, from the tags and the list, read by both renderers, T-730), `trackTagRows.ts` (the elevation and speed rows with icons, shared with
   the track tool's tag, T-526), `cityBoundaries.ts` and `boundaryGeometry.ts` (the metro outlines, one
   layer for the zones near the view, and the outside shade, T-131, T-139, T-400), `zoneLoading.ts` (zones still loading drawn grey with a loading
   bar, T-343).
@@ -127,7 +130,8 @@ the screen when demand cannot load, T-149, T-172, T-180); `StartMenu.tsx` (the s
 
 ### src/workers/
 
-`protocol.ts` (edit ops, clock messages, the network snapshot for demand), `clock.worker.ts` (owns
+`realRoute.worker.ts` (the real-network router: graphs joined at borders, A* with the turn limit
+and families, then `trace_route` on a track model of its own, T-727d); `protocol.ts` (edit ops, clock messages, the network snapshot for demand), `clock.worker.ts` (owns
 the network: `TrackApi`, notes/T-025.md; money and autosave too), `saveFile.ts` (the save format
 and IndexedDB, T-029; slots' backups, T-744), `clockClient.ts`, `demand.worker.ts`, `demandClient.ts`, `demandCache.ts`
 (the last final demand result kept beside the save, T-328),
@@ -143,7 +147,8 @@ T-285).
 with demand timings and `client.qlog` per query; `window.twViews` with the demand views'),
 `?paused=1`, `?new=1` (a new game; it owns no slot and never writes one
 until a copy is saved, T-320, so it is safe in a browser profile holding real games),
-`?continue=1` (the game opened last; checks that reopen a stored game use it), each of these and
+`?continue=1` (the game opened last; checks that reopen a stored game use it), `&opened=all` (every
+zone counts as opened, as before T-729, for checks that pan; the game's list is left alone), each of these and
 the two below skipping the start menu (T-677),
 `?synth=1&lines=500&trains=10000`, `?demandTest=1` (demand on T-005's hand-made network; both also
 never autosave), `?backupMs=N` (wall ms between a slot's backups, T-744), `?demandWorkers=N`, `?perfOff=...` / `?perfTry=...` (CPU A/B switches,
@@ -183,7 +188,10 @@ Run from the maps root (`node trainworld/checks/<file>`).
   timed to their final, every final figure hashed against `?perfOff=clusters`), `t409-split.mjs` (a
   Boston and a Philadelphia line, in a new game or on the real save, edits timed, against
   `?perfOff=split`), `t301-pan.mjs` (a long pan, Washington to Toronto and back, bubbles on: worker
-  memory, open packs, reopening times; `SAVE=1` on the real save), `t124-periods.mjs`
+  memory, open packs, reopening times; `SAVE=1` on the real save; `QS=&opened=all` to open every
+  zone), `t729-grey.mjs` (grey cities: a new New York game's Philadelphia grey, lightened on hover,
+  not loaded by a pan, opened by a click with the camera still; the real save's opened list and a
+  clicked city in it after a reload; a map start all grey; screenshots `t729-*.png`), `t124-periods.mjs`
   (the real save: a one-level train-count edit and an every-level edit timed to their final, hashed
   against `?perfOff=periods`), `t488-money-days.mjs` (the real save's clock run fast and pulled back
   across midnight: money days and hours one each, in order, none empty; uses the app's Vite, port
@@ -193,6 +201,10 @@ Run from the maps root (`node trainworld/checks/<file>`).
   `t728-newgame.mjs` (the new game sheet in a fresh profile: the search, a sandbox in Tokyo from
   its real network, a normal London start, a map start, the real New York save turned sandbox from
   Settings; slots left keep their bytes; screenshots t728-*.png; port 6150 by default),
+  `t727-snap.mjs` (the snap to the real network in a new game: Tokyo to Shin-Osaka and Penn
+  Station to Emeryville by two clicks each, one undo each, Tokyo to London refused, a click off
+  real track an ordinary segment; router, fit and preview times and the longest main-thread task;
+  t727-snap.json, t727d-*.png; about 2 minutes, port 6170 by default),
   `t743-slots.mjs` (through the saves panel: Load a file, New game and a backup's Restore as a copy
   each open a new slot and leave every other slot's bytes as they were, the real save and
   artifacts/trainworld/recovered-day26.save both; two backups rotate at `?backupMs=4000`; a deleted
@@ -232,6 +244,9 @@ Run from the maps root (`node trainworld/checks/<file>`).
   trace spent its time on), `t714-pan.mjs` (frame time while dragging and wheel-zooming the
   real save at zoom 11-16 with the clock running: fails over 12 ms of main thread a frame or 5% of
   frames over 50 ms; options for a throttled CPU, a trace per thread, settings, a tool),
+  `t724-hover.mjs` (what a pointer move costs on the real save with the select and station tools,
+  timers and the station name included, then a wheel zoom's frame placers: fails over 8 ms at the
+  95th percentile in any view),
   `t161-complexes.mjs` (the real save's complexes for the native
   comparison), `t125-fingerprint.mjs` (a save's derived geometry, before and after a frame
   change), `t277-browser.mjs` (Toronto; not rerun since T-277), `city-browser.mjs <id>` (a tier 0

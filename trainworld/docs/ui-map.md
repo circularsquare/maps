@@ -331,8 +331,17 @@ those who got on, less the load carried on.
   counted in those limits and left out; nothing else under the pointer, no list. Clicking an entry
   selects it (a bubble beneath the selected station selects that bubble). The pointer may cross
   from where it rested to the list, inside the hull of that point and the tag with its list,
-  without either moving; leaving that area, pressing, scrolling or a camera move drops the list.
-  The query runs once per rest, never per move.
+  without either moving; leaving that area, pressing, scrolling, a camera move or an edit to the
+  network (track, which lines run where, a station placed or renamed, a line renamed) drops the
+  list; demand and the clock's figures changing do not [T-753].
+  The query runs once per rest, never per move. Pointing at an entry lights that thing on the map
+  (below) in place of what the pointer rests on [T-741].
+- **Lightening** [T-730, `map/hovered.ts`]: with the select tool, what a hover tag describes is
+  drawn lighter at once, mixed toward white in both themes: a demand bubble 30% (the disc whose tag
+  shows, any disc layer), a line 30% along its whole length, bare track that edge, and a station's
+  dark rim 60% over its whole complex (with the bridges and connectors between its members). A
+  train, a mark, an airport badge and the station demand circles light nothing; build tools light
+  nothing. It is a uniform in the shaders: a change redraws once and rebuilds nothing.
 
 ## Picking
 

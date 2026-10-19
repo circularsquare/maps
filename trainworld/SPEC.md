@@ -70,7 +70,9 @@ city packs), **non-city zones** (county-sized units touching two city zones, bui
 same pipeline, `kind: "zone"`) and **dead space**, where no trip starts or ends. Only zones a
 built station reaches join the demand solves; a zone viewed or beside the view that no station
 reaches opens **bare** in one auxiliary worker, its figures, bubbles and clicks from a no-rail pass
-that equals a solve's to the bit, so panning never re-solves [T-325]. Zones that share no rider
+that equals a solve's to the bit, so panning never re-solves [T-325]. Each game keeps the list of
+zones it has **opened** [T-729]; any other zone is one grey bubble at every zoom and loads nothing on
+a pan, until a click on it or a station within reach opens it for good. Zones that share no rider
 (Toronto and the Northeast, London, Paris) fall into separate **clusters**, each solved on its own
 lines; an edit re-solves only the clusters it touched, the others keep their figures [T-326,
 [docs/demand-runtime.md](docs/demand-runtime.md) "Clusters"].

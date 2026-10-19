@@ -38,7 +38,7 @@ export class CapacityMarkers {
    * own: the station, train or track under the tag is selected as if the tag were not there (T-256). */
   selectClick: ((px: number, py: number, add: boolean) => void) | null = null;
   private box: HTMLDivElement;
-  private items: { el: HTMLDivElement; x: number; y: number; w: number; h: number }[] = [];
+  private items: { el: HTMLDivElement; x: number; y: number; w: number; h: number; shown?: boolean; transform?: string }[] = [];
   private visible = true;
   private placedMatrix: number[] | null = null;
   private placedSize = "";
@@ -186,12 +186,18 @@ export class CapacityMarkers {
     this.placedSize = size;
     this.placedLabels = labelsAt;
     const [padX, padY] = labelPadding(zoom);
-    const taken: [number, number, number, number][] = [];
     // Shown station names on or near the screen, with a little clearance (T-184).
     const names = (this.labels?.rects() ?? [])
       .filter((n) => n[2] > -64 && n[0] < W + 64 && n[3] > -64 && n[1] < H + 64)
       .map((n) => [n[0] - NAME_CLEAR, n[1] - NAME_CLEAR, n[2] + NAME_CLEAR, n[3] + NAME_CLEAR]);
-    const hits = (r: number[], boxes: number[][]) => boxes.some((t) => r[0] < t[2] && r[2] > t[0] && r[1] < t[3] && r[3] > t[1]);
+    // boxes filed by the 64 px grid cells they touch, so a spot is tested only against its neighbours (T-689)
+    const binned = (boxes: number[][]) => {
+      const m = new Map<number, number[][]>();
+      for (const t of boxes) addBox(m, t);
+      return m;
+    };
+    const hits = (r: number[], m: Map<number, number[][]>) => cellsOf(r, (k) => m.get(k)?.some((t) => r[0] < t[2] && r[2] > t[0] && r[1] < t[3] && r[3] > t[1]));
+    const nameBins = binned(names), takenBins = new Map<number, number[][]>();
     // Batch measurements before writes, and repeat only when tags or fonts change.
     for (const it of this.items) if (!it.w) {
       it.w = it.el.offsetWidth;
@@ -209,17 +215,35 @@ export class CapacityMarkers {
       let at: [number, number] | null = null;
       for (const [tx, ty] of spots) {
         if (tx + w < 0 || tx > W || ty + h < 0 || ty > H) continue;
-        if (hits([tx, ty, tx + w, ty + h], names)) continue;
+        if (hits([tx, ty, tx + w, ty + h], nameBins)) continue;
         const r = [tx - padX, ty - padY, tx + w + padX, ty + h + padY];
-        if (hits(r, taken)) continue;
-        taken.push(r as [number, number, number, number]);
+        if (hits(r, takenBins)) continue;
+        addBox(takenBins, r);
         at = [tx, ty];
         break;
       }
-      it.el.style.visibility = at ? "" : "hidden";
-      if (at) it.el.style.transform = `translate(${at[0]}px, ${at[1]}px)`;
+      // only what changed is written (T-689)
+      if (it.shown !== !!at) it.el.style.visibility = at ? "" : "hidden";
+      it.shown = !!at;
+      const transform = at ? `translate(${at[0]}px, ${at[1]}px)` : it.transform;
+      if (transform !== it.transform) it.el.style.transform = it.transform = transform!;
     }
   }
+}
+
+const BIN = 64;
+function cellsOf(r: number[], each: (k: number) => boolean | undefined): boolean {
+  for (let bx = Math.floor(r[0] / BIN); bx <= Math.floor(r[2] / BIN); bx++)
+    for (let by = Math.floor(r[1] / BIN); by <= Math.floor(r[3] / BIN); by++) if (each(bx * 4096 + by)) return true;
+  return false;
+}
+function addBox(m: Map<number, number[][]>, r: number[]) {
+  cellsOf(r, (k) => {
+    const b = m.get(k);
+    if (b) b.push(r);
+    else m.set(k, [r]);
+    return undefined;
+  });
 }
 
 /** The junction a marker at (x, y) (local units) belongs to: the nearest node where three or

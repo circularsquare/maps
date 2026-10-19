@@ -155,6 +155,8 @@ export type ToClock =
   | { kind: "newGame"; name?: string; game?: NewGameSpec }
   /** T-728: make this normal game a sandbox, for good */
   | { kind: "sandbox" }
+  /** T-729: the zones this game has opened, the whole list in order (game/openedZones.ts) */
+  | { kind: "opened"; zones: string[] }
   /** `restore`: `key` is a backup's (T-744) */
   | { kind: "saveSlot"; action: "refresh" | "create" | "open" | "rename" | "delete" | "restore"; key?: string; name?: string }
   /** inspector queries (T-031), answered with "answer": a junction's moves
@@ -392,6 +394,9 @@ export type FromClock =
   /** `frame`: the game now in the worker; `converted`: its save was in an older frame and was
    * converted to the world's on the way in (T-308); `game` counts the worker's loads, for "clock" */
   | { kind: "loaded"; from: "autosave" | "file" | "new"; clock: number; frame: FrameSpec; error?: string; converted?: boolean; game: number }
+  /** T-729: the opened zones of the game in hand, sent before its snapshot; null for a save from
+   * before T-729 */
+  | { kind: "opened"; zones: string[] | null }
   /** the save file, for the player to keep */
   | { kind: "exported"; bytes: Uint8Array; day: number }
   /** a station placement's check (T-311): `issues` as an edit's */
