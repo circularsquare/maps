@@ -1935,7 +1935,7 @@
    "order": 12,
    "id": "mos",
    "name": "Moscow",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -1998,13 +1998,31 @@
     "fua": [
      2262
     ]
+   },
+   "run": {
+    "run_batch": "20261019-090725",
+    "steps": {
+     "build": 219.2,
+     "places": 7.6,
+     "routes": 63.3,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 0.7
+    },
+    "built": "2026-10-19T09:25:33",
+    "gate": {
+     "warn": [
+      "fleet_range 1"
+     ]
+    },
+    "shipped": "2026-10-19T09:30:33"
    }
   },
   {
    "order": 13,
    "id": "mad",
    "name": "Madrid",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "ESP"
@@ -2037,13 +2055,29 @@
     "fua": [
      3147
     ]
+   },
+   "run": {
+    "run_batch": "20261017-193804",
+    "built": "2026-10-17T19:40:56",
+    "steps": {
+     "build": 20.8,
+     "places": 6.7,
+     "routes": 49.6,
+     "merge": 0.9,
+     "nocar": 1.6,
+     "everyday": 1.0
+    },
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-17T19:42:41"
    }
   },
   {
    "order": 14,
    "id": "bar",
    "name": "Barcelona",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "ESP"
@@ -2076,13 +2110,31 @@
     "fua": [
      4523
     ]
+   },
+   "run": {
+    "run_batch": "20261017-193804",
+    "built": "2026-10-17T19:47:13",
+    "steps": {
+     "build": 26.6,
+     "places": 6.7,
+     "routes": 44.5,
+     "merge": 0.8,
+     "nocar": 1.5,
+     "everyday": 0.9
+    },
+    "gate": {
+     "warn": [
+      "pop_vs_fua 1.3388424352004071"
+     ]
+    },
+    "shipped": "2026-10-17T19:49:05"
    }
   },
   {
    "order": 15,
    "id": "sai",
    "name": "Saint Petersburg",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -2117,13 +2169,29 @@
     "fua": [
      750
     ]
+   },
+   "run": {
+    "run_batch": "20261019-090725",
+    "steps": {
+     "build": 147.3,
+     "places": 4.2,
+     "routes": 16.7,
+     "merge": 0.6,
+     "nocar": 1.0,
+     "everyday": 0.7
+    },
+    "built": "2026-10-19T09:45:09",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-19T09:47:44"
    }
   },
   {
    "order": 16,
    "id": "dor",
    "name": "Dortmund",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "DEU"
@@ -2173,13 +2241,29 @@
     "fua": [
      536
     ]
+   },
+   "run": {
+    "run_batch": "20261017-193804",
+    "steps": {
+     "build": 210.0,
+     "places": 11.6,
+     "routes": 79.6,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-10-17T19:54:17",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-17T20:11:48"
    }
   },
   {
    "order": 17,
    "id": "mil",
    "name": "Milan",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "ITA"
@@ -2215,13 +2299,29 @@
     "fua": [
      1600
     ]
+   },
+   "run": {
+    "run_batch": "20261017-193804",
+    "steps": {
+     "build": 174.9,
+     "places": 8.8,
+     "routes": 64.1,
+     "merge": 0.7,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-10-17T20:23:58",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-17T20:33:54"
    }
   },
   {
    "order": 18,
    "id": "rom",
    "name": "Rome",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "ITA"
@@ -2254,13 +2354,29 @@
     "fua": [
      3881
     ]
+   },
+   "run": {
+    "run_batch": "20261017-193804",
+    "steps": {
+     "build": 96.5,
+     "places": 3.9,
+     "routes": 32.7,
+     "merge": 0.7,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-10-17T20:42:10",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-17T20:45:13"
    }
   },
   {
    "order": 19,
    "id": "nap",
    "name": "Naples",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "ITA"
@@ -2294,13 +2410,29 @@
     "fua": [
      4333
     ]
+   },
+   "run": {
+    "run_batch": "20261017-193804",
+    "steps": {
+     "build": 62.6,
+     "places": 2.8,
+     "routes": 22.5,
+     "merge": 0.7,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-10-17T20:53:03",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-17T20:55:12"
    }
   },
   {
    "order": 20,
    "id": "rot",
    "name": "Rotterdam [The Hague]",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "NLD"
@@ -2338,13 +2470,29 @@
     "fua": [
      296
     ]
+   },
+   "run": {
+    "run_batch": "20261017-193804",
+    "steps": {
+     "build": 111.6,
+     "places": 6.9,
+     "routes": 27.3,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 1.0
+    },
+    "built": "2026-10-17T20:57:43",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-17T20:59:57"
    }
   },
   {
    "order": 21,
    "id": "ath",
    "name": "Athens",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "GRC"
@@ -2383,13 +2531,29 @@
     "fua": [
      959
     ]
+   },
+   "run": {
+    "run_batch": "20261017-193804",
+    "steps": {
+     "build": 168.1,
+     "places": 3.3,
+     "routes": 31.1,
+     "merge": 0.8,
+     "nocar": 1.3,
+     "everyday": 1.0
+    },
+    "built": "2026-10-17T21:09:05",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-17T21:13:59"
    }
   },
   {
    "order": 22,
    "id": "fra",
    "name": "Frankfurt am Main",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "DEU"
@@ -2434,13 +2598,29 @@
     "fua": [
      3093
     ]
+   },
+   "run": {
+    "run_batch": "20261017-193804",
+    "steps": {
+     "build": 130.3,
+     "places": 7.9,
+     "routes": 52.9,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 1.0
+    },
+    "built": "2026-10-17T19:57:31",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-17T20:11:48"
    }
   },
   {
    "order": 23,
    "id": "war",
    "name": "Warsaw",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -2475,13 +2655,29 @@
     "fua": [
      3222
     ]
+   },
+   "run": {
+    "run_batch": "20261017-193804",
+    "steps": {
+     "build": 134.9,
+     "places": 6.7,
+     "routes": 35.5,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-10-17T21:23:06",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-17T21:25:41"
    }
   },
   {
    "order": 24,
    "id": "col",
    "name": "Cologne",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "DEU"
@@ -2523,13 +2719,29 @@
     "fua": [
      1064
     ]
+   },
+   "run": {
+    "run_batch": "20261017-193804",
+    "steps": {
+     "build": 175.8,
+     "places": 11.3,
+     "routes": 54.5,
+     "merge": 0.7,
+     "nocar": 1.1,
+     "everyday": 0.9
+    },
+    "built": "2026-10-17T20:01:36",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-17T20:11:48"
    }
   },
   {
    "order": 25,
    "id": "kyi",
    "name": "Kyiv",
-   "status": "planned",
+   "status": "parked",
    "region": "europe",
    "countries": [
     "UKR"
@@ -2653,13 +2865,17 @@
     "fua": [
      2203
     ]
+   },
+   "run": {
+    "reason": "extract europe/ukraine: [i:i + 1_000_000])\n  File \"C:\\Users\\anita\\projects\\maps\\venv\\lib\\site-packages\\shapely\\io.py\", line 320, in from_wkb\n    return lib.from_wkb(geometry, invalid_handler, **kwargs)\nshapely.errors.GEOSException: IllegalArgumentException: Invalid number of points in LinearRing found 2 - must be 0 or >= 4",
+    "parked": "2026-10-19T09:53:16"
    }
   },
   {
    "order": 26,
    "id": "bud",
    "name": "Budapest",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "HUN"
@@ -2693,6 +2909,22 @@
     "fua": [
      964
     ]
+   },
+   "run": {
+    "run_batch": "20261017-193804",
+    "steps": {
+     "build": 99.3,
+     "places": 5.0,
+     "routes": 31.1,
+     "merge": 0.8,
+     "nocar": 1.3,
+     "everyday": 1.0
+    },
+    "built": "2026-10-17T21:34:33",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-17T21:37:42"
    }
   },
   {
@@ -2755,7 +2987,7 @@
    "order": 28,
    "id": "ham",
    "name": "Hamburg",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "DEU"
@@ -2794,13 +3026,29 @@
     "fua": [
      3793
     ]
+   },
+   "run": {
+    "run_batch": "20261017-224522",
+    "built": "2026-10-17T22:58:01",
+    "steps": {
+     "build": 62.2,
+     "places": 5.2,
+     "routes": 39.5,
+     "merge": 0.6,
+     "nocar": 1.0,
+     "everyday": 0.7
+    },
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-17T23:02:00"
    }
   },
   {
    "order": 29,
    "id": "mun",
    "name": "Munich",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "DEU"
@@ -2839,13 +3087,29 @@
     "fua": [
      4736
     ]
+   },
+   "run": {
+    "run_batch": "20261017-224522",
+    "built": "2026-10-17T23:07:35",
+    "steps": {
+     "build": 16.8,
+     "places": 4.1,
+     "routes": 23.3,
+     "merge": 0.6,
+     "nocar": 1.1,
+     "everyday": 0.9
+    },
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-17T23:09:05"
    }
   },
   {
    "order": 30,
    "id": "kat",
    "name": "Katowice",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -2882,13 +3146,29 @@
     "fua": [
      2663
     ]
+   },
+   "run": {
+    "run_batch": "20261017-224522",
+    "built": "2026-10-17T23:09:50",
+    "steps": {
+     "build": 13.2,
+     "places": 4.1,
+     "routes": 24.5,
+     "merge": 0.6,
+     "nocar": 1.0,
+     "everyday": 0.7
+    },
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-17T23:11:21"
    }
   },
   {
    "order": 31,
    "id": "vie",
    "name": "Vienna",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "AUT"
@@ -2923,13 +3203,29 @@
     "fua": [
      790
     ]
+   },
+   "run": {
+    "run_batch": "20261017-224522",
+    "steps": {
+     "build": 83.5,
+     "places": 3.8,
+     "routes": 27.4,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 1.0
+    },
+    "built": "2026-10-17T23:13:21",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-17T23:15:35"
    }
   },
   {
    "order": 32,
    "id": "bru",
    "name": "Brussels",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "BEL"
@@ -2965,13 +3261,29 @@
     "fua": [
      1269
     ]
+   },
+   "run": {
+    "run_batch": "20261017-224522",
+    "steps": {
+     "build": 97.7,
+     "places": 4.2,
+     "routes": 36.5,
+     "merge": 0.5,
+     "nocar": 1.1,
+     "everyday": 0.8
+    },
+    "built": "2026-10-17T23:33:59",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-17T23:45:23"
    }
   },
   {
    "order": 33,
    "id": "sto",
    "name": "Stockholm",
-   "status": "planned",
+   "status": "parked",
    "region": "europe",
    "countries": [
     "SWE"
@@ -3004,13 +3316,21 @@
     "fua": [
      1445
     ]
+   },
+   "run": {
+    "run_batch": "20261019-114703",
+    "steps": {
+     "build": 5620.2
+    },
+    "reason": "build failed: stopped after 90 minutes (STEP_LIMIT_S); last lines:   File \"C:\\Users\\anita\\projects\\maps\\trainworld\\pipeline\\world_run.py\", line 161 in run_main |   File \"C:\\Users\\anita\\projects\\maps\\trainworld\\pipeline\\world_run.py\", line 178 in step_main |   File \"C:\\Users\\anita\\projects\\maps\\trainworld\\pipeline\\world_run.py\", line 882 in <module>",
+    "parked": "2026-10-19T13:34:59"
    }
   },
   {
    "order": 34,
    "id": "lil",
    "name": "Lille",
-   "status": "planned",
+   "status": "parked",
    "region": "europe",
    "countries": [
     "FRA"
@@ -3043,13 +3363,23 @@
     "fua": [
      3200
     ]
+   },
+   "run": {
+    "run_batch": "20261019-090725",
+    "steps": {
+     "build": 68.6,
+     "places": 3.6,
+     "routes": 58.9
+    },
+    "reason": "routes failed: tage)\n  File \"C:\\Users\\anita\\projects\\maps\\trainworld\\pipeline\\routes.py\", line 748, in build\n    walk_stage(city, t_all)\n  File \"C:\\Users\\anita\\projects\\maps\\trainworld\\pipeline\\routes.py\", line 758, in walk_stage\n    part = np.fromfile(out + \".part\", np.uint8)\nFileNotFoundError: [Errno 2] No such file or directory: 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld\\\\data\\\\work\\\\lil.walk_zone.u8.part'",
+    "parked": "2026-10-19T11:29:02"
    }
   },
   {
    "order": 35,
    "id": "val",
    "name": "Valencia",
-   "status": "planned",
+   "status": "parked",
    "region": "europe",
    "countries": [
     "ESP"
@@ -3082,13 +3412,23 @@
     "fua": [
      4156
     ]
+   },
+   "run": {
+    "run_batch": "20261019-090725",
+    "steps": {
+     "build": 70.6,
+     "places": 2.8,
+     "routes": 74.0
+    },
+    "reason": "routes failed: tage)\n  File \"C:\\Users\\anita\\projects\\maps\\trainworld\\pipeline\\routes.py\", line 748, in build\n    walk_stage(city, t_all)\n  File \"C:\\Users\\anita\\projects\\maps\\trainworld\\pipeline\\routes.py\", line 758, in walk_stage\n    part = np.fromfile(out + \".part\", np.uint8)\nFileNotFoundError: [Errno 2] No such file or directory: 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld\\\\data\\\\work\\\\val.walk_zone.u8.part'",
+    "parked": "2026-10-19T11:34:20"
    }
   },
   {
    "order": 36,
    "id": "stu",
    "name": "Stuttgart",
-   "status": "planned",
+   "status": "parked",
    "region": "europe",
    "countries": [
     "DEU"
@@ -3125,6 +3465,16 @@
     "fua": [
      3580
     ]
+   },
+   "run": {
+    "run_batch": "20261019-090725",
+    "steps": {
+     "build": 83.2,
+     "places": 3.9,
+     "routes": 45.2
+    },
+    "reason": "routes failed: tage)\n  File \"C:\\Users\\anita\\projects\\maps\\trainworld\\pipeline\\routes.py\", line 748, in build\n    walk_stage(city, t_all)\n  File \"C:\\Users\\anita\\projects\\maps\\trainworld\\pipeline\\routes.py\", line 758, in walk_stage\n    part = np.fromfile(out + \".part\", np.uint8)\nFileNotFoundError: [Errno 2] No such file or directory: 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\trainworld\\\\data\\\\work\\\\stu.walk_zone.u8.part'",
+    "parked": "2026-10-19T11:40:13"
    }
   },
   {
@@ -3171,7 +3521,7 @@
    "order": 38,
    "id": "tur",
    "name": "Turin",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "ITA"
@@ -3204,6 +3554,22 @@
     "fua": [
      85
     ]
+   },
+   "run": {
+    "run_batch": "20261017-193804",
+    "steps": {
+     "build": 65.1,
+     "places": 3.3,
+     "routes": 34.6,
+     "merge": 0.8,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-10-17T20:25:44",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-17T20:33:54"
    }
   },
   {
@@ -3373,7 +3739,7 @@
    "order": 43,
    "id": "mah",
    "name": "Mannheim",
-   "status": "planned",
+   "status": "parked",
    "region": "europe",
    "countries": [
     "DEU"
@@ -3417,6 +3783,14 @@
     "fua": [
      3041
     ]
+   },
+   "run": {
+    "run_batch": "20261017-193804",
+    "steps": {
+     "build": 58.699999999999996
+    },
+    "reason": "build failed:  in kreise}))\n  File \"C:\\Users\\anita\\projects\\maps\\trainworld\\pipeline\\germany.py\", line 143, in workplace_jobs\n    return {r.ARS: float(r.EIP) + float(r.IOP) for r in t.itertuples()}\n  File \"C:\\Users\\anita\\projects\\maps\\trainworld\\pipeline\\germany.py\", line 143, in <dictcomp>\n    return {r.ARS: float(r.EIP) + float(r.IOP) for r in t.itertuples()}\nValueError: could not convert string to float: '-'",
+    "parked": "2026-10-17T20:03:34"
    }
   },
   {
@@ -3679,7 +4053,7 @@
    "order": 50,
    "id": "ant",
    "name": "Antwerp",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "BEL"
@@ -3714,6 +4088,22 @@
     "fua": [
      1160
     ]
+   },
+   "run": {
+    "run_batch": "20261017-224522",
+    "steps": {
+     "build": 114.7,
+     "places": 2.5,
+     "routes": 19.7,
+     "merge": 0.5,
+     "nocar": 1.0,
+     "everyday": 0.8
+    },
+    "built": "2026-10-17T23:37:19",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-17T23:45:23"
    }
   },
   {
@@ -3918,7 +4308,7 @@
    "order": 56,
    "id": "kha",
    "name": "Kharkiv",
-   "status": "planned",
+   "status": "parked",
    "region": "europe",
    "countries": [
     "UKR"
@@ -3987,6 +4377,10 @@
     "fua": [
      3818
     ]
+   },
+   "run": {
+    "reason": "extract europe/ukraine: [i:i + 1_000_000])\n  File \"C:\\Users\\anita\\projects\\maps\\venv\\lib\\site-packages\\shapely\\io.py\", line 320, in from_wkb\n    return lib.from_wkb(geometry, invalid_handler, **kwargs)\nshapely.errors.GEOSException: IllegalArgumentException: Invalid number of points in LinearRing found 2 - must be 0 or >= 4",
+    "parked": "2026-10-19T09:53:16"
    }
   },
   {
@@ -4405,7 +4799,7 @@
    "order": 67,
    "id": "don",
    "name": "Donetsk",
-   "status": "planned",
+   "status": "parked",
    "region": "europe",
    "countries": [
     "UKR"
@@ -4458,6 +4852,10 @@
     "fua": [
      4344
     ]
+   },
+   "run": {
+    "reason": "extract europe/ukraine: [i:i + 1_000_000])\n  File \"C:\\Users\\anita\\projects\\maps\\venv\\lib\\site-packages\\shapely\\io.py\", line 320, in from_wkb\n    return lib.from_wkb(geometry, invalid_handler, **kwargs)\nshapely.errors.GEOSException: IllegalArgumentException: Invalid number of points in LinearRing found 2 - must be 0 or >= 4",
+    "parked": "2026-10-19T09:53:16"
    }
   },
   {
@@ -4545,7 +4943,7 @@
    "order": 70,
    "id": "lie",
    "name": "Liège",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "BEL"
@@ -4582,6 +4980,22 @@
     "fua": [
      1656
     ]
+   },
+   "run": {
+    "run_batch": "20261017-224522",
+    "steps": {
+     "build": 65.9,
+     "places": 2.7,
+     "routes": 26.7,
+     "merge": 0.6,
+     "nocar": 1.1,
+     "everyday": 0.7
+    },
+    "built": "2026-10-17T23:38:56",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-17T23:45:23"
    }
   },
   {
@@ -4628,7 +5042,7 @@
    "order": 72,
    "id": "bea",
    "name": "Bergamo",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "ITA"
@@ -4661,13 +5075,29 @@
     "fua": [
      1943
     ]
+   },
+   "run": {
+    "run_batch": "20261017-193804",
+    "steps": {
+     "build": 65.6,
+     "places": 3.4,
+     "routes": 26.2,
+     "merge": 0.7,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-10-17T20:27:22",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-17T20:33:54"
    }
   },
   {
    "order": 73,
    "id": "han",
    "name": "Hanover",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "DEU"
@@ -4700,13 +5130,29 @@
     "fua": [
      3667
     ]
+   },
+   "run": {
+    "run_batch": "20261017-224522",
+    "built": "2026-10-17T22:58:31",
+    "steps": {
+     "build": 14.4,
+     "places": 2.2,
+     "routes": 11.2,
+     "merge": 0.5,
+     "nocar": 0.8,
+     "everyday": 0.7
+    },
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-17T23:02:00"
    }
   },
   {
    "order": 74,
    "id": "dus",
    "name": "Dusseldorf",
-   "status": "planned",
+   "status": "parked",
    "region": "europe",
    "countries": [
     "DEU"
@@ -4745,13 +5191,33 @@
     "satellites": [
      1293
     ]
+   },
+   "run": {
+    "run_batch": "20261017-193804",
+    "steps": {
+     "build": 69.4,
+     "places": 4.4,
+     "routes": 12.1,
+     "merge": 0.6,
+     "nocar": 1.1,
+     "everyday": 0.9
+    },
+    "built": "2026-10-17T20:05:03",
+    "reason": "gate: pop_vs_fua 1.5945595617493533 1,003,149 in Dusseldorf",
+    "gate": {
+     "fail": [
+      "pop_vs_fua 1.5945595617493533 1,003,149 in Dusseldorf"
+     ],
+     "warn": []
+    },
+    "parked": "2026-10-17T20:10:12"
    }
   },
   {
    "order": 75,
    "id": "vor",
    "name": "Voronezh",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "RUS"
@@ -4787,6 +5253,22 @@
     "fua": [
      3560
     ]
+   },
+   "run": {
+    "run_batch": "20261019-090725",
+    "steps": {
+     "build": 242.0,
+     "places": 1.4,
+     "routes": 7.3,
+     "merge": 0.7,
+     "nocar": 1.1,
+     "everyday": 0.9
+    },
+    "built": "2026-10-19T09:25:54",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-19T09:30:33"
    }
   },
   {
@@ -4952,7 +5434,7 @@
    "order": 80,
    "id": "ode",
    "name": "Odesa",
-   "status": "planned",
+   "status": "parked",
    "region": "europe",
    "countries": [
     "UKR"
@@ -5018,13 +5500,17 @@
     "fua": [
      2737
     ]
+   },
+   "run": {
+    "reason": "extract europe/ukraine: [i:i + 1_000_000])\n  File \"C:\\Users\\anita\\projects\\maps\\venv\\lib\\site-packages\\shapely\\io.py\", line 320, in from_wkb\n    return lib.from_wkb(geometry, invalid_handler, **kwargs)\nshapely.errors.GEOSException: IllegalArgumentException: Invalid number of points in LinearRing found 2 - must be 0 or >= 4",
+    "parked": "2026-10-19T09:53:16"
    }
   },
   {
    "order": 81,
    "id": "the",
    "name": "Thessaloniki",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "GRC"
@@ -5057,6 +5543,22 @@
     "fua": [
      552
     ]
+   },
+   "run": {
+    "run_batch": "20261017-193804",
+    "steps": {
+     "build": 46.9,
+     "places": 1.7,
+     "routes": 15.8,
+     "merge": 0.7,
+     "nocar": 1.2,
+     "everyday": 1.0
+    },
+    "built": "2026-10-17T21:10:12",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-17T21:13:59"
    }
   },
   {
@@ -13571,7 +14073,7 @@
    "order": 208,
    "id": "owe",
    "name": "Owerri",
-   "status": "parked",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "NGA"
@@ -13625,26 +14127,22 @@
     ]
    },
    "run": {
-    "run_batch": "20261017-082936",
+    "run_batch": "20261017-184743",
+    "built": "2026-10-17T18:52:07",
     "steps": {
-     "build": 21.6,
-     "places": 1.2,
-     "routes": 16.5,
-     "merge": 0.5,
-     "nocar": 1.0,
-     "everyday": 0.7
+     "build": 54.0,
+     "places": 1.0,
+     "routes": 22.3,
+     "merge": 0.6,
+     "nocar": 1.1,
+     "everyday": 0.8
     },
-    "built": "2026-10-17T08:43:23",
-    "reason": "gate: browser None failed: ['the Gate test carries every purpose, purposes add up']",
     "gate": {
-     "fail": [
-      "browser None failed: ['the Gate test carries every purpose, purposes add up']"
-     ],
      "warn": [
       "top_school_cell_pupils 6225.291015625"
      ]
     },
-    "parked": "2026-10-17T08:45:52"
+    "shipped": "2026-10-17T18:58:30"
    }
   },
   {
@@ -23837,7 +24335,7 @@
    "order": 401,
    "id": "aba",
    "name": "Aba",
-   "status": "parked",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "NGA"
@@ -23879,26 +24377,23 @@
     ]
    },
    "run": {
-    "run_batch": "20261017-082936",
+    "run_batch": "20261017-184743",
+    "built": "2026-10-17T18:52:25",
     "steps": {
-     "build": 18.3,
-     "places": 0.8,
-     "routes": 6.0,
+     "build": 8.0,
+     "places": 0.9,
+     "routes": 6.6,
      "merge": 0.5,
-     "nocar": 1.0,
-     "everyday": 0.8
+     "nocar": 1.2,
+     "everyday": 0.9
     },
-    "built": "2026-10-17T08:43:51",
-    "reason": "gate: university_rate 0.0",
     "gate": {
-     "fail": [
-      "university_rate 0.0"
-     ],
      "warn": [
+      "university_rate 0.0",
       "fleet_range 2"
      ]
     },
-    "parked": "2026-10-17T08:45:52"
+    "shipped": "2026-10-17T18:58:30"
    }
   },
   {
@@ -25112,7 +25607,7 @@
    "order": 425,
    "id": "abo",
    "name": "Aboh",
-   "status": "parked",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "NGA"
@@ -25158,27 +25653,23 @@
     ]
    },
    "run": {
-    "run_batch": "20261017-082936",
+    "run_batch": "20261017-184743",
+    "built": "2026-10-17T18:52:44",
     "steps": {
-     "build": 20.5,
-     "places": 1.1,
-     "routes": 6.7,
-     "merge": 0.5,
-     "nocar": 1.0,
+     "build": 8.2,
+     "places": 1.0,
+     "routes": 7.0,
+     "merge": 0.7,
+     "nocar": 1.1,
      "everyday": 0.8
     },
-    "built": "2026-10-17T08:44:21",
-    "reason": "gate: university_rate 0.0; browser None failed: ['the Gate test carries every purpose, purposes add up']",
     "gate": {
-     "fail": [
-      "university_rate 0.0",
-      "browser None failed: ['the Gate test carries every purpose, purposes add up']"
-     ],
      "warn": [
+      "university_rate 0.0",
       "fleet_range 3"
      ]
     },
-    "parked": "2026-10-17T08:45:52"
+    "shipped": "2026-10-17T18:58:30"
    }
   },
   {

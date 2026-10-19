@@ -166,6 +166,9 @@ def step_main(argv):
     the runner's own pieces below."""
     sys.stdout.reconfigure(encoding="utf-8", line_buffering=True)
     sys.stderr.reconfigure(encoding="utf-8")
+    if os.environ.get("TW_FAULT_S"):  # a step that hangs silently: every N seconds its stack goes to its log
+        import faulthandler
+        faulthandler.dump_traceback_later(int(os.environ["TW_FAULT_S"]), repeat=True, file=sys.stderr)
     sys.path[:0] = [str(HERE), str(REAL / "checks")]
     root = os.environ.get("TW_RUN_ROOT")
     if root:

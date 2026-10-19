@@ -237,7 +237,7 @@ def _read_areas(extract, pbf):
         hit = np.zeros(len(bt), bool)
         wkb = bt[geom].to_numpy(zero_copy_only=False)
         for i in range(0, len(bt), 1_000_000):
-            g = shapely.from_wkb(wkb[i:i + 1_000_000])
+            g = shapely.from_wkb(wkb[i:i + 1_000_000], on_invalid="ignore")  # OSM has rings of 2 points (Ukraine); a missing geometry never meets a hospital
             hit[i + np.unique(tree.query(g, predicate="intersects")[0])] = True
         near = _frame([bt.filter(pa.array(hit))], geom, MP_COLS)
         rb = rb[np.isin(np.arange(len(rb)), np.unique(tree.query(rb.geometry.to_numpy(), predicate="intersects")[0]))]

@@ -171,10 +171,17 @@ def build(cid, row, sources):
     # (Lagos Island's relation is 161 km2, its land about 9)
     box = (w - SEA_PAD, s - SEA_PAD, e + SEA_PAD, n + SEA_PAD)
     sea = union_all(osm_water.sea(box))
-    wet = union_all([sea] + [g for g in osm_water.inland(row["extracts"], box) if km2(g, lat0) >= WET_MIN_KM2])
+    lakes = [g for g in osm_water.inland(row["extracts"], box) if km2(g, lat0) >= WET_MIN_KM2]
+    wet = union_all(lakes) if lakes else shapely.Polygon()  # the sea is cut from every shape below (`landed`), so only inland water is left to dry
     shapely.prepare(sea)
-    admin["geometry"] = [make_valid(g).difference(sea).buffer(0) for g in admin.geometry]
-    units = [(uid, name, g.difference(sea).buffer(0), kind) for uid, name, g, kind in units]
+
+    def landed(g):  # the sea within the shape's box only: a difference with a whole archipelago's coast never ends (Stockholm)
+        if g.is_empty:
+            return g
+        c = shapely.clip_by_rect(sea, *g.bounds)
+        return g.difference(c if c.is_valid else make_valid(c)).buffer(0)
+    admin["geometry"] = [landed(make_valid(g)) for g in admin.geometry]
+    units = [(uid, name, landed(g), kind) for uid, name, g, kind in units]
 
     def dried(g):  # the water within the shape's box only: a difference with all of it is slow
         if g.is_empty:
