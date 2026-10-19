@@ -27,7 +27,7 @@ all committed). 15 Europe rows built and then parked on one cause, `merge_cells.
 for T-700's new per-cell `walk_part`: **T-725 first** (add the rule, then rerun those rows), then
 the 12 rows not yet built, with the resume command and its sim copy (`TW_SIM_DIR`, in that
 session's scratchpad `t613\simroot`, refresh it from HEAD) in notes/T-613.md. Russia, Belarus and
-Ukraine are held (status `held`). Then, in order: the data register rows and extract dates (T-726)
+Ukraine are held (status `held`). Düsseldorf (dus) ships with its pop_vs_fua check relaxed for that row (Anita, DECISIONS 2026-10-19): rerun it with the parked rows. Then, in order: the data register rows and extract dates (T-726)
 and the retrospective's proposals (notes/T-613.md); T-700's walk rerun on every pack (notes/T-700.md, last
 step: `routes.py --stage walk --unparted`, back up first); T-638's market packs (park 7); T-602/T-651
 (zones not opened drawn with their walk split; writes registry.json, so after T-613); T-712 (with

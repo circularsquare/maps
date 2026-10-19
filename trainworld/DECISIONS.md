@@ -5,6 +5,8 @@ reasoning and what it replaced.
 
 ## 2026-10-19
 
+- **Düsseldorf ships despite pop_vs_fua 1.59** (Anita, T-613): its plan units hold 1.66M against Eurostat's 1.0M FUA, a real difference between admin units and the FUA rather than an error; relax the check for this row (a per-row override, not the threshold for all) and rerun it with the parked rows.
+
 - **Whole countries from now on, Spain first** (Anita, T-719/T-723): the space between metros is covered with zones as Japan was; zones keep provinces where they are provinces and group small units to about 0.3-1.5M people (orchestrator's default from notes/T-719.md); countryside zones borrow a commute curve from Japan's fitted countryside zones (Anita: no strong view). **Access walks are split into 15-minute walking bands** (Anita, T-720), and the trip explorer prices its own trip exactly, cell to cell.
 
 - **Walk bands of 15 minutes, not 10 or 5** (Anita, T-720): 15 leaves a short line's rail 3-7% over one subzone per cell (10 minutes: 0-4%, 5: within 2%) for about 1.5x the subzones and 1.9x New York's commute pass (10 and 5 cost more again); the explorer's own-cell answer covers the trips she inspects. Revisit if sparse networks still look too generous. notes/T-720.md.
