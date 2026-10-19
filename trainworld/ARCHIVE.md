@@ -1,5 +1,9 @@
 ﻿# Archive
 
+- T-715 [P1] Money on loading a save. Done 2026-10-19: a stale clock from the game open before charged the gap's running costs and froze the cash; clocks now carry the load count, loads refund ledger entries after the clock (bodega back to +893.6 US$M). notes/T-715.md, checks/t715-load-money.mjs.
+
+- T-716 [P3] Save file named after its slot. Done 2026-10-19: "Save to a file" downloads `anitabuilder-<slot name>-day-N.save` (lowercase, spaces to dashes, other characters dropped; the city id if nothing is left); in `workers/clockClient.ts`.
+
 - T-710 [P2] Sharper route choice. Done 2026-10-19: station pairs by the difference relative to the trip (20 / min(25 + 3 km, 60), four bands), crowding from 70% of crush; New York rail -10%, entries x2.93 to x2.52, solve about the same. notes/T-710.md.
 
 - T-713 [P2] Crowd red inside the box; tracks 20% narrower close in. Done 2026-10-19: `CROWD_BULGE` removed (the red fills within the box), tracks (not trains) narrow 20% from 10 to 16 px for 4 m (`LANE_NARROW`); screenshots in `artifacts/trainworld/t713/`; `t658-lanes.mjs` now tolerates one level of edge noise.

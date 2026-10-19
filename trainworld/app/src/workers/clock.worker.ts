@@ -589,22 +589,30 @@ function mergeLedger<T extends { fares: number; running: number; trains: number;
 /** A load settles again from the save's clock, so what the loaded ledgers hold after it leaves them
  * and its net comes back into the cash; edits' charges stay, on the clock's day and hour. Such
  * entries come from a clock pulled back (T-488, minutes) or, before T-715, a clock of the game open
- * before (up to a year of running costs with no fares). The day ledger keeps 30 days, so the running
- * cost is worked out again on the loaded network up to where the hour ledger ends. Returns US$M. */
+ * before (up to a year of running costs with no fares, charged again by each such load). The day
+ * ledger keeps 30 days, so the running cost is worked out again on the loaded network up to where the
+ * hour ledger ends, times the whole days kept over the same worked out again. Returns US$M. */
 function unsettleAfter(clockT: number): number {
   const D = Math.floor(clockT / 86400), H = Math.floor(clockT / 3600);
   const last = hourLedger[hourLedger.length - 1];
   if (!last || last.hour <= H) return 0;
   const groups = localGroups();
   const costAt = (h: number) => groups.reduce((s, g) => s + g.running[LEVEL_OF[PERIODS[periodAt(h * 3600 + g.shift)].demand]], 0);
-  const full = costAt(last.hour);
+  const replay = (from: number, to: number) => {
+    let c = 0;
+    for (let t = from; t < to;) {
+      const h = Math.floor(t / 3600), e = Math.min(to, (h + 1) * 3600);
+      c += costAt(h) * (e - t) / 3600;
+      t = e;
+    }
+    return c;
+  };
+  const whole = ledger.filter((d) => d.day > D && d.day < Math.floor(last.hour / 24));
+  const kept = whole.reduce((s, d) => s + d.running, 0), again = whole.reduce((s, d) => s + replay(d.day * 86400, (d.day + 1) * 86400), 0);
+  const times = kept > 0 && again > 0 ? kept / again : 1;
+  const full = costAt(last.hour) * times;
   const end = last.hour * 3600 + 3600 * (full > 0 ? Math.min(1, last.running / full) : 1);
-  let back = 0;
-  for (let t = Math.max(clockT, end - 86400 * 366); t < end;) { // settle's year at most
-    const h = Math.floor(t / 3600), e = Math.min(end, (h + 1) * 3600);
-    back += costAt(h) * (e - t) / 3600;
-    t = e;
-  }
+  const back = times * replay(Math.max(clockT, end - 86400 * 366), end); // settle's year at most
   const trim = (days: DayLedger[], hours: HourLedger[]) => {
     const later = days.filter((d) => d.day > D), laterH = hours.filter((e) => e.hour > H);
     const today = laterH.filter((e) => Math.floor(e.hour / 24) === D);

@@ -465,8 +465,9 @@ multiplier per level (Anita, 2026-10-08; all construction prices halved 2026-10-
   the load it follows, and the worker ignores one sent before the main thread saw the latest load,
   which still holds the previous game's time (T-715). A load settles again from the save's clock, so
   ledger entries after it are dropped and their net returned to the cash (the running cost worked
-  out again on the loaded network, since the day ledger keeps 30 days); edits' charges in them stay,
-  on the clock's day. Each game hour's fares are paid as that hour's trains pick up riders (the boarding
+  out again on the loaded network at the rate the kept whole days show, since the day ledger keeps
+  30 days); edits' charges in them stay, on the clock's day. After a load the main thread sends the
+  income, region shares and points again even when they match the last game's. Each game hour's fares are paid as that hour's trains pick up riders (the boarding
   account's trains leaving platforms, 6.6, weighted by the riders each takes; evenly in an hour
   without one), its running cost drains evenly, and both are paid in full by the hour's end, so a
   day's totals are those of whole-hour settling. The worker settles and sends the cash and today's

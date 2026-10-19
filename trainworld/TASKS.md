@@ -15,8 +15,8 @@ unattended runner `pipeline/world_run.py` shipped its 5-city pilot (T-540), the 
 and, after T-610 and T-611, Cardiff and Belfast; Owerri, Aba and Aboh park on T-614 and T-615.
 Anita's plain page on demand: docs/demand-plain.md (keep it current). History is in ARCHIVE.md.
 
-**State (2026-10-19).** Last commit on 8800: d931dcf (Anita's second 2026-10-19 round, T-703 to
-T-711, T-658 stages a and b). After T-613 hands back: commit its registry.json and world_plan.json, then T-700's walk
+**State (2026-10-19).** 8800 serves master as of the T-715 commit (the Europe batch's first 29 zones,
+T-710, T-713, T-715, T-716). After T-613 hands back: commit its registry.json and world_plan.json, then T-700's walk
 rerun on every pack (notes/T-700.md, last step), then T-638's market packs. In flight: T-613, the Europe batch, by one agent; registry.json and
 world_plan.json were left out of that commit as the batch's own: commit them when it hands back.
 Market packs still hold the old parking base (T-638).
@@ -94,7 +94,6 @@ orchestrator's commit recipe is in CLAUDE.md "Before a commit".
 ## Interface
 Anita's playtest of 2026-10-19 (the 9e466a4 build): notes/playtest-2026-10-19.md, a section a task.
 - T-700 [P2] Shanghai: a sharp line between bubbles walking about 25% and bubbles walking about 0%, as if some cells' walks were wrong. Cause (a bug): a 2 km zone astride the Huangpu got one walk factor blending both banks (x15-50), applied to same-bank walks too. Fixed in code (walk factors per bank, `walk_part`); Shanghai rebuilt and checked. Left: the other 109 packs' walk stage (`routes.py --stage walk --unparted`) after T-613 hands back. notes/T-700.md.
-- T-715 [P1] Money on loading a save (Anita 2026-10-19, her "bodega" save on 8800): -$6B after one load, -$13B after reloading; on the load before, no fares and no running costs at all (cash stuck). Undiagnosed. taking, 2026-10-19.
 - T-714 [P1] Panning a busy save (her "Original game") lags since the last rounds: measure frame time against earlier commits, find what costs (two-track passes, faces and sound sampler, real network, bullets, labels), fix. taking, 2026-10-19.
 - T-712 [P2] After the Europe batch (T-613): spot check the regional market's city pairs against real figures where published (rail, air and all-mode trips between pairs such as Madrid-Barcelona, London-Paris, Milan-Rome, Berlin-Hamburg, Tokyo-Osaka, the Northeast Corridor) and brainstorm what could improve the fit. Anita 2026-10-19: measure and discuss only, implement nothing. notes/T-712.md when started.
 Anita's second set of 2026-10-19 notes (the bfe93f9 build): notes/playtest-2026-10-19b.md, a section a task.

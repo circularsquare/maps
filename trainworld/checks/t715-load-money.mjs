@@ -3,8 +3,9 @@
 // later copy is open, twice (before T-715 the later game's clock reached the worker after the load,
 // so the gap's running costs were charged with no fares and the money then stood still until the
 // clock caught up). Each time the cash must load as saved, move while the clock runs with fares coming
-// in (the same network's income is sent again after a load), and no ledger day may lie after the clock. Part 2: a save whose ledgers run three days past its clock (as such a
-// load left them) loads with those days gone and their running costs back in the cash.
+// in (the same network's income is sent again after a load), and no ledger day may lie after the
+// clock. Part 2: a save whose ledgers run three days past its clock (as two such loads left them, each
+// day's running cost twice) loads with those days gone and both charges back in the cash.
 //   node trainworld/checks/t715-load-money.mjs [url]     (from the maps root; default localhost:6165)
 // Prints PASS or FAIL lines and exits 1 on a failure. About two minutes.
 import { readFile, mkdtemp, rm, readdir } from 'node:fs/promises';
@@ -31,14 +32,15 @@ async function playwright() {
 let failed = false;
 const report = (name, ok, detail) => { failed ||= !ok; console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}  ${detail}`); };
 
-/** The real save with day and hour ledger entries for the three days after its clock (no fares,
- * some running, a build charge on the second), the last hour's running 0 so they end on its hour. */
-function damagedSave(file) {
+/** The real save with day and hour ledger entries for the three days after its clock as two such
+ * loads leave them (no fares, each day's running cost twice, a build charge on the second), the last
+ * hour's running 0 so they end on its hour. */
+function damagedSave(file, daily) {
   const raw = gunzipSync(file);
   const n = raw.readUInt32LE(4);
   const h = JSON.parse(raw.subarray(8, 8 + n).toString('utf8'));
   const D = Math.floor(h.clock / 86400), H = Math.floor(h.clock / 3600);
-  const day = (d, extra = {}) => ({ day: d, fares: 0, running: 100, trains: 0, build: 0, rides: 0, ...extra });
+  const day = (d, extra = {}) => ({ day: d, fares: 0, running: 2 * daily, trains: 0, build: 0, rides: 0, ...extra });
   h.ledger = [...(h.ledger ?? []).filter((d) => d.day <= D), day(D + 1), day(D + 2, { build: 50 }), day(D + 3)];
   const hours = [];
   for (let k = H + 1; k <= H + 73; k++) hours.push({ hour: k, fares: 0, running: k === H + 73 ? 0 : 5, trains: 0, build: 0, rides: 0 });
@@ -106,22 +108,23 @@ try {
     if (round < 2) await open(laterKey);
   }
 
-  // Part 2: a save already damaged that way
-  await page.goto(`${BASE}?debug=1&new=1&paused=1&v=${Date.now()}`);
-  await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });
-  const bad = damagedSave(await readFile(SAVE));
-  await importSave(bad.bytes);
-  await wait(1000);
-  const r = await page.evaluate(async () => {
+  // Part 2: a save already damaged that way, twice over; the real save's day of running costs first
+  const run = await page.evaluate(async () => {
     const m = window.tw.moneyState.value, P = await import('/src/game/periods.ts');
     const LEVEL = { high: 0, medium: 1, low: 2 };
     let daily = 0;
-    for (let h = 0; h < 24; h++) daily += m.runningPerHour[LEVEL[P.PERIODS[P.periodAt(h * 3600)].demand] ?? 0];
-    return { cash: m.cash, daily, most: Math.max(...m.runningPerHour), days: m.ledger.map((d) => d.day), build: m.ledger.reduce((s, d) => s + d.build, 0) };
+    for (let h = 0; h < 24; h++) daily += m.runningPerHour[LEVEL[P.PERIODS[P.periodAt(h * 3600)].demand]];
+    return { daily, most: Math.max(...m.runningPerHour) };
   });
-  const back = r.cash - bad.cash, want = 3 * r.daily;
-  report('a save with ledger days after its clock', Math.abs(back - want) <= r.most + 0.01 && Math.max(...r.days) <= bad.day && r.build >= 50,
-    `cash back ${back.toFixed(2)}, three days' running ${want.toFixed(2)} (US$M, within an hour's ${r.most.toFixed(2)}), ledger days [${r.days.join(' ')}], clock day ${bad.day}, build kept ${r.build.toFixed(0)}`);
+  await page.goto(`${BASE}?debug=1&new=1&paused=1&v=${Date.now()}`);
+  await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });
+  const bad = damagedSave(await readFile(SAVE), run.daily);
+  await importSave(bad.bytes);
+  await wait(1000);
+  const r = await page.evaluate(() => { const m = window.tw.moneyState.value; return { cash: m.cash, days: m.ledger.map((d) => d.day), build: m.ledger.reduce((s, d) => s + d.build, 0) }; });
+  const back = r.cash - bad.cash, want = 2 * 3 * run.daily;
+  report('a save with ledger days after its clock', Math.abs(back - want) <= 2 * run.most + 0.01 && Math.max(...r.days) <= bad.day && r.build >= 50,
+    `cash back ${back.toFixed(2)}, twice three days' running ${want.toFixed(2)} (US$M, within two hours' ${(2 * run.most).toFixed(2)}), ledger days [${r.days.join(' ')}], clock day ${bad.day}, build kept ${r.build.toFixed(0)}`);
 } finally {
   await ctx.close();
   await rm(profile, { recursive: true, force: true }).catch(() => {});
