@@ -17,14 +17,12 @@ export function money(n: number): string {
   return moneyShort(n);
 }
 
-/** Four significant figures, for the cash (T-722): "$11.36B", "$893.6M"; to the dollar under a million. */
+/** Four significant figures, for the cash (T-722): "$11.36B", "$893.6M", trailing zeros dropped ("$6B");
+ * to the dollar under a million. */
 export function moneyCash(n: number): string {
   const a = Math.abs(n), s = n < 0 ? "−" : "";
   if (a < 999.95e3) return moneyExact(n);
-  const sig = (v: number) => {
-    const r = Number(v.toPrecision(4));
-    return r >= 100 ? r.toFixed(1) : r >= 10 ? r.toFixed(2) : r.toFixed(3);
-  };
+  const sig = (v: number) => String(Number(v.toPrecision(4)));
   return a >= 999.95e6 ? s + "$" + sig(a / 1e9) + "B" : s + "$" + sig(a / 1e6) + "M";
 }
 
