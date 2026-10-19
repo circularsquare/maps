@@ -55,6 +55,8 @@ export type EditOp =
   | { op: "addStation"; at: StationAt; platform: number; name: string }
   /** a crossover on track `edge` near x, y and the track running beside it (T-338) */
   | { op: "crossover"; edge: EdgeId; x: number; y: number }
+  /** an express pair beside double track `edge` and the run it is on, as blueprint (T-708) */
+  | { op: "doubleUp"; edge: EdgeId }
   | { op: "stationProps"; node: NodeId; platform: number; name: string }
   | { op: "removeStation"; node: NodeId }
   | { op: "construct"; edges: EdgeId[]; stations: NodeId[] }
@@ -126,6 +128,8 @@ export type ToClock =
   | { kind: "points"; lines: { line: number; regions: [string, number[][]][] }[] }
   /** T-685: region `zone`'s rail share has reached the star's mark; kept from the first time */
   | { kind: "star"; zone: string }
+  /** T-706: notes chosen for lines that had none; kept from the first time */
+  | { kind: "lineNotes"; notes: Record<string, [number, string]> }
   /** T-531: how edit `seq`'s charge divides between regions */
   | { kind: "chargeShares"; seq: number; build: [string, number][]; trains: [string, number][] }
   /** demand's riders for the boarding account (T-164): `TrackApi.set_riders`'s packing, built by
@@ -145,11 +149,13 @@ export type ToClock =
   | { kind: "saveSlot"; action: "refresh" | "create" | "open" | "rename" | "delete"; key?: string; name?: string }
   /** inspector queries (T-031), answered with "answer": a junction's moves
    * (`TrackApi.junction_info`), where a line waits at a demand level (`line_delays`), a blueprint
-   * stretch's PIs with their curves (`edge_pis`, T-064), or a flyover's price (`[US$M]`, T-080) */
+   * stretch's PIs with their curves (`edge_pis`, T-064), a flyover's price (`[US$M]`, T-080), or
+   * what doubling up a track adds to the blueprint (`[US$M]`, or `[-1, ...]` and the refusal's
+   * kinds as character codes, joined by newlines; T-708) */
   | {
       kind: "query";
       seq: number;
-      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "lineHeld"; line: number } | { what: "lineMarks"; line: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "lineAccount"; line: number; day: number } | { what: "linePeriods"; line: number; day: number } | { what: "today" };
+      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "lineHeld"; line: number } | { what: "lineMarks"; line: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "doubleUp"; edge: number } | { what: "lineAccount"; line: number; day: number } | { what: "linePeriods"; line: number; day: number } | { what: "today" };
     };
 
 /** T-531: each region's today and this hour, as the "cash" message carries them. */
@@ -178,6 +184,8 @@ export interface MoneyState {
   regions: Record<string, { ledger: DayLedger[]; hours: HourLedger[] }>;
   /** T-685: stars earned, per region the game second it was earned */
   stars: Record<string, number>;
+  /** T-706: each line's station note and the city it was chosen in (see `SaveHeader.notes`) */
+  notes: Record<string, [number, string]>;
 }
 
 export interface ClockEdge {

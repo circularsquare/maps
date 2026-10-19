@@ -100,8 +100,10 @@ function linesOnEdge(s: { colour: Uint32Array; edge: Uint32Array; count: number 
 export function pick(ov: Overlay, px: number, py: number, trainsShown: boolean, current: Selection = null, chooseShared = false): Selection {
   const n = ov.renderer.net;
   if (!n || !ov.camMatrix) return null;
-  const slop = SLOP_PX * SLOP_PX + 1;
-  const best = slop;
+  const best = SLOP_PX * SLOP_PX + 1;
+  // close in, either of double track's two tracks (T-658)
+  const reach = Math.max(SLOP_PX, ov.renderer.laneReachPx);
+  const slop = reach * reach + 1;
 
   // trains are not drawn zoomed far out (T-205)
   if (trainsShown && !ov.renderer.trainsHidden) {
@@ -114,7 +116,7 @@ export function pick(ov: Overlay, px: number, py: number, trainsShown: boolean, 
       const i = k === r.tripCount ? first : k;
       if (k < r.tripCount && i === first) continue;
       const prof = trips[i * 2], dep = trips[i * 2 + 1] + r.tripsEpoch;
-      const at = tripAt(n, prof, dep, t, r.tripEnds ? r.tripEnds[i] + r.tripsEpoch : -Infinity);
+      const at = tripAt(n, prof, dep, t, r.tripEnds ? r.tripEnds[i] + r.tripsEpoch : -Infinity, r.laneShiftM);
       if (!at) continue;
       if (r.detailedTrains) {
         const cars = Math.max(1, n.lineCars?.[at.line] ?? 8);

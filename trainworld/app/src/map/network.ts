@@ -8,7 +8,7 @@
 
 import { rgb } from "../game/palette";
 import type { ClockState } from "../workers/protocol";
-import { anchor, toLocal, type Anchor } from "./geo";
+import { anchor, kAtY, toLocal, type Anchor } from "./geo";
 import { M_BAD, M_CROSSING, M_JUNCTION, rampMarks } from "./markData";
 import { bridgeEnds, PLATFORM_HALF_M, PLATFORM_POINTS, platformPoints, platformShape, reversed } from "./stationGeometry";
 
@@ -43,6 +43,9 @@ export interface Strokes {
   info?: Float32Array;
   /** a preview only (T-629): its marks, `MARK_STRIDE` numbers each (map/markData.ts) */
   marks?: Float32Array;
+  /** 2 per segment (T-658): how far apart its two tracks are drawn at its start and end, 0 (single
+   * track, one track on the centre line) to 255 (double track); absent: all double */
+  lane?: Uint8Array;
   count: number;
 }
 
@@ -88,6 +91,9 @@ export interface NetworkBuffers {
   /** per sample of `samples`: a line stroke segment of the same stretch of path, -1 if none
    * (T-084: its stretch gives the train's load) */
   sampleStroke?: Int32Array;
+  /** per sample of `samples`: how far apart its track's two tracks are drawn there (T-658), 0
+   * single track to 1 double, as `Strokes.lane`; absent: 1 */
+  sampleLane?: Float32Array;
   /** per edge id: local polyline (x, y, z triples), for snapping and picking */
   edgePts: Map<number, Float32Array>;
   /** The draw anchor every position here is relative to (T-307, geo.ts): the clock worker's when
@@ -108,11 +114,12 @@ class StrokeBuilder {
   dist = new Float32Array(0);
   /** 4 per segment (`Strokes.info`), only when built with `withInfo` */
   info = new Float32Array(0);
+  lane = new Uint8Array(0);
   constructor(private withInfo = false) {}
   private grow(need: number) {
     if (need <= this.cap) return;
     const cap = Math.max(need, this.cap * 2, 1024);
-    const g = <T extends Float32Array | Uint32Array>(a: T, k: number): T => {
+    const g = <T extends Float32Array | Uint32Array | Uint8Array>(a: T, k: number): T => {
       const b = new (a.constructor as any)(cap * k) as T;
       b.set(a);
       return b;
@@ -123,11 +130,13 @@ class StrokeBuilder {
     this.level = g(this.level, 1);
     this.flags = g(this.flags, 1);
     this.dist = g(this.dist, 1);
+    this.lane = g(this.lane, 2);
     if (this.withInfo) this.info = g(this.info, 4);
     this.cap = cap;
   }
-  /** pts: x, y, z triples; `info` as `Strokes.info`, for every segment added */
-  add(pts: ArrayLike<number>, colour: number, edge: number, flags: number, reverse = false, dist0 = 0, info?: [number, number, number, number]): number {
+  /** pts: x, y, z triples; `info` as `Strokes.info`, for every segment added; `lane`: per point of
+   * `pts`, 0 single track to 255 double (`Strokes.lane`), or one value for all */
+  add(pts: ArrayLike<number>, colour: number, edge: number, flags: number, reverse = false, dist0 = 0, info?: [number, number, number, number], lane: number | ArrayLike<number> = 255): number {
     const n = pts.length / 3;
     let d = dist0;
     this.grow(this.count + Math.max(0, n - 1));
@@ -145,6 +154,8 @@ class StrokeBuilder {
       this.level[c] = Math.round(pts[i * 3 + 2] / 8);
       this.flags[c] = flags;
       this.dist[c] = d;
+      this.lane[c * 2] = typeof lane === "number" ? lane : lane[i];
+      this.lane[c * 2 + 1] = typeof lane === "number" ? lane : lane[j];
       d += Math.hypot(x1 - x0, y1 - y0);
     }
     return d;
@@ -158,6 +169,7 @@ class StrokeBuilder {
       level: this.level.slice(0, n),
       flags: this.flags.slice(0, n),
       dist: this.dist.slice(0, n),
+      lane: this.lane.slice(0, n * 2),
       ...(this.withInfo ? { info: this.info.slice(0, n * 4) } : {}),
       count: n,
     };
@@ -245,10 +257,12 @@ function concatStrokes(parts: Strokes[], withInfo: boolean): Strokes {
   for (const p of parts) n += p.count;
   const out: Strokes = {
     seg: new Float32Array(n * 4), colour: new Uint32Array(n), edge: new Uint32Array(n), level: new Float32Array(n),
-    flags: new Float32Array(n), dist: new Float32Array(n), ...(withInfo ? { info: new Float32Array(n * 4) } : {}), count: n,
+    flags: new Float32Array(n), dist: new Float32Array(n), lane: new Uint8Array(n * 2), ...(withInfo ? { info: new Float32Array(n * 4) } : {}), count: n,
   };
   let at = 0;
   for (const p of parts) {
+    if (p.lane) out.lane!.set(p.lane, at * 2);
+    else out.lane!.fill(255, at * 2, (at + p.count) * 2);
     out.seg.set(p.seg, at * 4);
     out.colour.set(p.colour, at);
     out.edge.set(p.edge, at);
@@ -275,13 +289,69 @@ const sameFloats = (a: Float32Array, b: Float32Array) => {
   return true;
 };
 
+/** Where double track narrows to single, m (T-658). */
+const TAPER_M = 40;
+
+/** An edge's points as drawn, with their `Strokes.lane` values; `src`, when points were added: per
+ * segment, the edge's own segment it lies on. */
+interface LanePoints { lpts: Float32Array; lane: number | Uint8Array; src: number[] | null }
+
+/**
+ * `lanes`: 1 double track, 2 and 4 narrowing to single track over TAPER_M at the a and b end (half
+ * the edge at most each). A point is added where a taper starts, so it never spans a long leg.
+ */
+function lanePoints(pts: Float32Array, lanes: number): LanePoints {
+  const n = pts.length / 3;
+  const tapA = (lanes & 2) !== 0, tapB = (lanes & 4) !== 0;
+  if (!(lanes & 1) || (!tapA && !tapB) || n < 2) return { lpts: pts, lane: lanes & 1 ? 255 : 0, src: null };
+  const at = new Float64Array(n);
+  for (let k = 1; k < n; k++) at[k] = at[k - 1] + Math.hypot(pts[k * 3] - pts[k * 3 - 3], pts[k * 3 + 1] - pts[k * 3 - 2]);
+  const len = at[n - 1];
+  const L = Math.max(1e-6, Math.min(TAPER_M * kAtY(pts[1]), tapA && tapB ? len / 2 : len));
+  const cuts = [...(tapA ? [L] : []), ...(tapB && (!tapA || len - L > L + 1e-6) ? [len - L] : [])];
+  const value = (d: number) => Math.round(255 * Math.max(0, Math.min(1, tapA ? d / L : 1, tapB ? (len - d) / L : 1)));
+  const out: number[] = [pts[0], pts[1], pts[2]], lane: number[] = [value(0)], src: number[] = [];
+  for (let k = 0; k < n - 1; k++) {
+    for (const c of cuts) {
+      if (c <= at[k] + 1e-6 || c >= at[k + 1] - 1e-6) continue;
+      const f = (c - at[k]) / (at[k + 1] - at[k]);
+      for (let j = 0; j < 3; j++) out.push(pts[k * 3 + j] + (pts[k * 3 + 3 + j] - pts[k * 3 + j]) * f);
+      lane.push(value(c));
+      src.push(k);
+    }
+    out.push(pts[k * 3 + 3], pts[k * 3 + 4], pts[k * 3 + 5]);
+    lane.push(value(at[k + 1]));
+    src.push(k);
+  }
+  return { lpts: new Float32Array(out), lane: new Uint8Array(lane), src };
+}
+
+/** The lane value (0-1) a fraction `f` of the way along an edge's drawn points. */
+function laneAlong(dr: LanePoints, f: number): number {
+  if (typeof dr.lane === "number") return dr.lane / 255;
+  const p = dr.lpts, n = p.length / 3;
+  let total = 0;
+  for (let k = 1; k < n; k++) total += Math.hypot(p[k * 3] - p[k * 3 - 3], p[k * 3 + 1] - p[k * 3 - 2]);
+  let at = 0;
+  const want = f * total;
+  for (let k = 1; k < n; k++) {
+    const s = Math.hypot(p[k * 3] - p[k * 3 - 3], p[k * 3 + 1] - p[k * 3 - 2]);
+    if (at + s >= want || k === n - 1) {
+      const u = s > 0 ? Math.max(0, Math.min(1, (want - at) / s)) : 0;
+      return (dr.lane[k - 1] + (dr.lane[k] - dr.lane[k - 1]) * u) / 255;
+    }
+    at += s;
+  }
+  return dr.lane[0] / 255;
+}
+
 /**
  * What the last build made, per edge, line and station, so an edit rebuilds only the pieces whose
  * inputs changed (T-496). Every entry is checked against its inputs, never trusted, so a reused
  * piece is exactly what a full build would make; entries not seen in a build are dropped.
  */
 export interface NetCache {
-  edges: Map<number, { pts: Float32Array; a: number; b: number; flags: number; strokes: Strokes; ramps: number[] }>;
+  edges: Map<number, { pts: Float32Array; a: number; b: number; flags: number; lanes: number; strokes: Strokes; ramps: number[] } & LanePoints>;
   lines: Map<number, { path: number[]; stops: number[]; running: boolean; strokes: Strokes; firstStroke: number[] }>;
   stations: Map<number, { platform: number; lat: number; first: number; ways: number[]; ax: number; ay: number; shape: [number, number, number, number]; line: ArrayLike<number> }>;
 }
@@ -299,9 +369,19 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
   const kept = new Set<number>();
   const trackParts: Strokes[] = [];
   const edgesSeen: NetCache["edges"] = new Map();
-  const speeds = new Float32Array(Math.max(0, r.edgePts.length / 3 - s.edges.length));
+  // a taper adds at most two points to an edge
+  const speeds = new Float32Array(Math.max(0, r.edgePts.length / 3 + s.edges.length));
   let speedAt = 0;
   const marks: number[] = [];
+  // double track narrows to single track where the two meet at a plain node (T-658)
+  const endCount = new Map<number, number>(), singleAt = new Set<number>();
+  for (const e of s.edges) {
+    endCount.set(e.a, (endCount.get(e.a) ?? 0) + 1).set(e.b, (endCount.get(e.b) ?? 0) + 1);
+    if (e.tracks === 1) singleAt.add(e.a).add(e.b);
+  }
+  const taperAt = (node: number) => singleAt.has(node) && endCount.get(node) === 2;
+  /** per edge id: the points and lanes its track and lines are drawn with */
+  const drawn = new Map<number, LanePoints>();
   // blueprint track after built, so drawn over it and picked first where they overlap, as the
   // station tool prefers it (T-695)
   const order = s.edges.map((_, i) => i).sort((i, j) => Number(!s.edges[i].built) - Number(!s.edges[j].built) || i - j);
@@ -311,19 +391,25 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
     edgePts.set(e.id, pts);
     builtEdge.set(e.id, e.built);
     const flags = e.built ? 0 : F_BLUEPRINT | (e.off ? F_OFF : 0);
+    const lanes = (e.tracks === 2 ? 1 : 0) | (e.tracks === 2 && taperAt(e.a) ? 2 : 0) | (e.tracks === 2 && taperAt(e.b) ? 4 : 0);
     let c = cache.edges.get(e.id);
-    if (c && c.a === e.a && c.b === e.b && c.flags === flags && sameFloats(c.pts, pts)) kept.add(e.id);
+    if (c && c.a === e.a && c.b === e.b && c.flags === flags && c.lanes === lanes && sameFloats(c.pts, pts)) kept.add(e.id);
     else {
+      const own = pts.slice();
+      const lp = lanePoints(own, lanes);
       const b = new StrokeBuilder();
-      b.add(pts, TRACK, e.id, flags);
+      b.add(lp.lpts, TRACK, e.id, flags, false, 0, undefined, lp.lane);
       const ramps: number[] = [];
       rampMarks(pts, e.built ? 0 : 1, ramps);
-      c = { pts: pts.slice(), a: e.a, b: e.b, flags, strokes: b.build(), ramps };
+      c = { pts: own, a: e.a, b: e.b, flags, lanes, ...lp, strokes: b.build(), ramps };
     }
     edgesSeen.set(e.id, c);
+    drawn.set(e.id, c);
     trackParts.push(c.strokes);
     for (const v of c.ramps) marks.push(v);
-    for (let k = r.edgeOff[i]; k < r.edgeOff[i + 1] - 1; k++) speeds[speedAt++] = r.edgeSpeed?.[k] ?? e.vminKmh;
+    const src = c.src;
+    if (src) for (const k of src) speeds[speedAt++] = r.edgeSpeed?.[r.edgeOff[i] + k] ?? e.vminKmh;
+    else for (let k = r.edgeOff[i]; k < r.edgeOff[i + 1] - 1; k++) speeds[speedAt++] = r.edgeSpeed?.[k] ?? e.vminKmh;
   }
   cache.edges = edgesSeen;
   const maxLine = s.lines.reduce((m, l) => Math.max(m, l.id), -1);
@@ -338,6 +424,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
   const edgeLen = new Map(s.edges.map((e) => [e.id, e.lengthM]));
   const edgeEnds = new Map(s.edges.map((e) => [e.id, e]));
   const sampleStroke = new Int32Array(r.samples.length / 2).fill(-1);
+  const sampleLane = new Float32Array(r.samples.length / 2).fill(1);
   for (const l of s.lines) lineColours.set([...rgb(l.colour), 255], l.id * 4);
   for (const l of lineDrawOrder(s.lines)) {
     if (!l.ok) continue;
@@ -352,14 +439,14 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
       let stretch = 0, next = 1;
       l.path.forEach((p, k) => {
         const e = p >> 1;
-        const pts = edgePts.get(e);
+        const dr = drawn.get(e);
         const ends = edgeEnds.get(e);
-        if (pts) {
+        if (dr) {
           const flags = l.running ? 0 : F_FADED | (builtEdge.get(e) ? 0 : F_BLUEPRINT | (offEdge.has(e) ? F_OFF : 0));
           // one slot per edge since T-190: no line sits beside another
           const info: [number, number, number, number] = [Math.min(stretch, Math.max(0, l.stops.length - 2)), 0, 1, 1];
-          if (pts.length >= 6) firstStroke[k] = lines.count;
-          d = lines.add(pts, l.id, e, flags, (p & 1) === 1, d, info);
+          if (dr.lpts.length >= 6) firstStroke[k] = lines.count;
+          d = lines.add(dr.lpts, l.id, e, flags, (p & 1) === 1, d, info, dr.lane);
         }
         // a path entry runs a -> b, or b -> a when its low bit is set
         const to = ends ? ((p & 1) === 1 ? ends.a : ends.b) : -1;
@@ -383,6 +470,12 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
       while (j < l.path.length - 1 && at > end) end += edgeLen.get(l.path[++j] >> 1) ?? 0;
       const f = firstStroke[j] ?? -1;
       sampleStroke[first + k] = f < 0 ? -1 : base + f;
+      // how far apart the tracks are there (T-658), along the edge's drawn points when it tapers
+      const p = l.path[j], dr = drawn.get(p >> 1), len = edgeLen.get(p >> 1) ?? 0;
+      if (dr) {
+        const along = len > 0 ? Math.max(0, Math.min(1, 1 - (end - at) / len)) : 0;
+        sampleLane[first + k] = laneAlong(dr, (p & 1) === 1 ? 1 - along : along);
+      }
     }
   }
   cache.lines = linesSeen;
@@ -484,6 +577,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
     stationShape,
     stationLine,
     sampleStroke,
+    sampleLane,
     edgePts,
     anchor: anchor(),
   };
@@ -523,9 +617,21 @@ export function lineAt(n: NetworkBuffers, line: number, d: number): [number, num
   return [n.samples[si * 2] + (n.samples[si * 2 + 2] - n.samples[si * 2]) * f, n.samples[si * 2 + 1] + (n.samples[si * 2 + 3] - n.samples[si * 2 + 1]) * f];
 }
 
+/** How far apart the two tracks are at offset `d` along run 0 of a line, 0-1 (`sampleLane`). */
+function laneAt(n: NetworkBuffers, line: number, d: number): number {
+  if (!n.sampleLane) return 1;
+  const first = n.lineTable[line * 4], count = n.lineTable[line * 4 + 1], len = n.lineTable[line * 4 + 2], step = n.lineTable[line * 4 + 3];
+  if (count < 2) return n.sampleLane[first] ?? 1;
+  const dd = Math.max(0, Math.min(len, d));
+  const i0 = Math.min(Math.floor(dd / step), count - 2);
+  const f = Math.max(0, Math.min(1, (dd - i0 * step) / Math.max(1e-3, Math.min(step, len - i0 * step))));
+  return n.sampleLane[first + i0] + (n.sampleLane[first + i0 + 1] - n.sampleLane[first + i0]) * f;
+}
+
 /** A trip's state at game time `t` (`dep` absolute): null if it is not on the track. `dx, dy`:
- * run 0's direction there. */
-export function tripAt(n: NetworkBuffers, profile: number, dep: number, t: number, end = -Infinity): { x: number; y: number; s: number; run: number; line: number; dx: number; dy: number } | null {
+ * run 0's direction there. `shiftM`: metres to the right of its direction of travel on double
+ * track, where the renderer draws it on its own track (T-658, `NetworkRenderer.laneShiftM`). */
+export function tripAt(n: NetworkBuffers, profile: number, dep: number, t: number, end = -Infinity, shiftM = 0): { x: number; y: number; s: number; run: number; line: number; dx: number; dy: number; shiftM: number } | null {
   const tau = t - dep;
   const tripS = n.meta[profile * 4 + 2];
   // `end`: drawn until then, standing at the terminal for its next departure (T-206)
@@ -534,14 +640,24 @@ export function tripAt(n: NetworkBuffers, profile: number, dep: number, t: numbe
   const s = profileS(n, profile, tau);
   const len = n.meta[profile * 4 + 3];
   const d = run === 0 ? s : len - s;
-  return { ...pointAt(n, line, d), s, run, line };
+  return { ...pointAt(n, line, d, run, shiftM), s, run, line, shiftM };
 }
 
-/** Position and direction used by both train and car picking. */
-function pointAt(n: NetworkBuffers, line: number, d: number) {
+/** Position and direction used by both train and car picking, `shiftM` to the right of travel. */
+function pointAt(n: NetworkBuffers, line: number, d: number, run = 0, shiftM = 0) {
   const [x, y] = lineAt(n, line, d);
   const [bx, by] = lineAt(n, line, d - 5), [fx, fy] = lineAt(n, line, d + 5);
-  return { x, y, dx: fx - bx, dy: fy - by };
+  const dx = fx - bx, dy = fy - by;
+  const [ox, oy] = rightOf(n, line, d, x, y, dx, dy, run, shiftM);
+  return { x: x + ox, y: y + oy, dx, dy };
+}
+
+/** The shift to the right of travel (local y points south, so right of (dx, dy) is (-dy, dx)). */
+function rightOf(n: NetworkBuffers, line: number, d: number, x: number, y: number, dx: number, dy: number, run: number, shiftM: number): [number, number] {
+  const len = Math.hypot(dx, dy);
+  if (!shiftM || len < 1e-9) return [0, 0];
+  const k = shiftM * laneAt(n, line, d) * kAtY(y, n.anchor ?? anchor()) * (run === 0 ? 1 : -1) / len;
+  return [-dy * k, dx * k];
 }
 
 /** A close-up car's centre and bogies, matching the GPU's terminal clamp and 20 m pitch. */
@@ -552,5 +668,8 @@ export function trainCarAt(n: NetworkBuffers, at: NonNullable<ReturnType<typeof 
   const centre = Math.max(total / 2, Math.min(len - total / 2, d));
   const carD = centre + (car + 0.5) * total / cars - total / 2;
   const half = Math.max(total / cars / 2 - 0.5, 1);
-  return { ...pointAt(n, at.line, carD), back: lineAt(n, at.line, carD - half), front: lineAt(n, at.line, carD + half) };
+  const p = pointAt(n, at.line, carD, at.run, at.shiftM);
+  const [cx, cy] = lineAt(n, at.line, carD), ox = p.x - cx, oy = p.y - cy;
+  const [bx, by] = lineAt(n, at.line, carD - half), [fx, fy] = lineAt(n, at.line, carD + half);
+  return { ...p, back: [bx + ox, by + oy] as [number, number], front: [fx + ox, fy + oy] as [number, number] };
 }

@@ -1,6 +1,9 @@
 import { activeCity, cityById, viewedZone } from "../game/cities";
 import { cityDemandViews } from "../game/demand";
+import { levelLabel, speed } from "../game/format";
 import { loadProgress } from "../game/loading";
+import { LEVEL_COLOURS, SPEED_STOPS } from "../game/palette";
+import { LEVELS } from "../game/types";
 import { asFilter, FILTER_PURPOSES, purposeColour } from "../game/purposes";
 import { useState } from "preact/hooks";
 import { display, purposeFilter, setDisplay } from "../game/ui";
@@ -15,6 +18,7 @@ export function MapTopLeft() {
       <DemandSelector />
       <StatusTag />
     </div>
+    <TrackDisplay />
     <StationsFull />
   </div>;
 }
@@ -38,24 +42,33 @@ export function DemandSelector() {
           display.value = value === "none" ? { ...current, commuters: false } : { ...current, commuters: true, commuterEnd: value };
         }}>{label}</button>)}
     <PurposeSelect />
-    <DaySelect />
   </div>;
 }
 
-const DAY_OPTIONS = [["average", "Average day"], ["weekday", "Weekday"], ["weekend", "Weekend"]] as const;
+const TRACK_OPTIONS = [
+  ["line", "Line", "Lines in their own colours"],
+  ["traffic", "Traffic", "Line colours, thickness by traffic"],
+  ["height", "Elevation", "Track coloured by its height"],
+  ["speed", "Max speed", "Track coloured by its speed limit"],
+] as const;
 
-/** The day the demand views are for (T-464): the average day, a weekday or a weekend day. */
-function DaySelect() {
-  const day = display.value.dayShown === "weekday" || display.value.dayShown === "weekend" ? display.value.dayShown : "average";
-  const [mouse, setMouse] = useState(false);
-  return <label class={`purpose-filter${day !== "average" ? " on" : ""}${mouse ? " mouse" : ""}`}
-    data-tip="The day the demand figures are for. The average counts 5 weekdays and 2 weekend days over 7. Trains, platforms and riders over the past 24 hours follow the clock.">
-    <select aria-label="Day the demand is for" value={day}
-      onPointerDown={() => setMouse(true)} onKeyDown={() => setMouse(false)} onBlur={() => setMouse(false)}
-      onChange={(e) => setDisplay("dayShown", (e.currentTarget as HTMLSelectElement).value as typeof day)}>
-      {DAY_OPTIONS.map(([v, name]) => <option key={v} value={v}>{name}</option>)}
-    </select>
-  </label>;
+/** The track display (T-703): the four ways the network is coloured, switched often, so on the map
+ * under the demand buttons; the key of the height and speed colours sits under it. */
+function TrackDisplay() {
+  const mode = display.value.trackColour;
+  return <div class="track-row">
+    <div class="demand-selector" role="group" aria-label="Track display">
+      {TRACK_OPTIONS.map(([value, label, tip]) =>
+        <button type="button" class={`btn${mode === value ? " on" : ""}`} aria-pressed={mode === value} data-tip={tip}
+          onClick={() => setDisplay("trackColour", value)}>{label}</button>)}
+    </div>
+    {mode === "speed" && <ul class="track-key speed-key">
+      {SPEED_STOPS.map(([v, colour]) => <li><i style={{ background: colour }} />{speed(v, 5)}</li>)}
+    </ul>}
+    {mode === "height" && <ul class="track-key levels-key">
+      {LEVELS.map((l) => <li><i style={{ background: LEVEL_COLOURS[l] }} />{levelLabel(l)}</li>)}
+    </ul>}
+  </div>;
 }
 
 /** The purpose filter (T-158): every demand drawing on the map narrowed to one trip purpose. */

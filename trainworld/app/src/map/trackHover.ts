@@ -88,7 +88,8 @@ export function trackTip(ov: Overlay, px: number, py: number, zoom = 12): TipLin
   }
   // the demand circles are drawn under the network
   if (!hit) return w && !isBuildTool(tool.peek()) ? circleTip(ov, w, px, py, zoom) : null;
-  const slop = SLOP_PX * SLOP_PX + 1;
+  const reach = Math.max(SLOP_PX, ov.renderer.laneReachPx);
+  const slop = reach * reach + 1;
   if (hit.kind === "line") {
     const L = n.lines;
     // a selected line's highlight is drawn above the others (pick.ts)

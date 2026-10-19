@@ -4,7 +4,7 @@
 
 import { computed, effect, signal } from "@preact/signals";
 import { AVERAGE_DAY, DEMAND_DAY_PHRASE, type DemandDay } from "./days";
-import { FONT_KEYS, fontStack, loadFont, type FontKey } from "./fonts";
+import { DEFAULT_FONT, FONT_KEYS, fontStack, loadFont, type FontKey } from "./fonts";
 import type { PurposeFilter } from "./purposes";
 import { LEVELS, type Level, type Selection } from "./types";
 
@@ -99,8 +99,8 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   commuterEnd: "home",
   bubbleSize: 1,
   bubbleOpacity: 0.9,
-  uiScale: 1,
-  font: "zen",
+  uiScale: 0.9,
+  font: DEFAULT_FONT,
   dayShown: "average",
   usUnits: false,
   moreCores: false,
@@ -114,10 +114,10 @@ export interface DockLayout {
   paneH: number | null;
 }
 
-/** The stored settings' version: 2 since complex view became the default (T-192). Settings stored
- * before it had saved the old default with everything else, so their complex view is dropped once
- * and the new default applies. */
-const VERSION = 2;
+/** The stored settings' version: 2 since complex view became the default (T-192), 3 since Nunito and
+ * 90% did (T-703). Settings stored before a version had saved the old default with everything else,
+ * so that setting is dropped once and the new default applies. */
+const VERSION = 3;
 
 function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partial<DisplaySettings>; dock: DockLayout; build: Partial<{ level: Level; tracks: 1 | 2 | 4; keep: boolean }>; v: number }> {
   try {
@@ -133,6 +133,9 @@ const oldDisplay = saved.display as (Partial<DisplaySettings> & { lineLoad?: boo
 // (the demand circles, T-482): dropped from storage
 const { lineLoad: legacyLineLoad, intercity: _intercity, stationRiders: _stationRiders, ...migratedDisplay } = oldDisplay ?? {};
 if ((saved.v ?? 1) < 2) delete migratedDisplay.complexView;
+// T-703: the font and size defaults changed, and settings stored before had saved the old ones with
+// everything else, so both are dropped once
+if ((saved.v ?? 1) < 3) delete migratedDisplay.font, delete migratedDisplay.uiScale;
 const trackColour = oldDisplay?.trackColour === "line" && legacyLineLoad !== undefined
   ? legacyLineLoad === false ? "line" : "traffic"
   : oldDisplay?.trackColour ?? DEFAULT_DISPLAY.trackColour;
@@ -209,8 +212,8 @@ effect(() => {
 /** T-698: the panels' font as the `--font` variable. Text measured in the old font (station names,
  * capacity tags) is measured again by the "tw-fontchange" event once the new one has loaded. */
 effect(() => {
-  const k = FONT_KEYS.includes(display.value.font) ? display.value.font : "zen";
-  if (k === "zen") document.documentElement.style.removeProperty("--font");
+  const k = FONT_KEYS.includes(display.value.font) ? display.value.font : DEFAULT_FONT;
+  if (k === DEFAULT_FONT) document.documentElement.style.removeProperty("--font");
   else document.documentElement.style.setProperty("--font", fontStack(k));
   void loadFont(k).then(() => document.dispatchEvent?.(new Event("tw-fontchange")));
 });

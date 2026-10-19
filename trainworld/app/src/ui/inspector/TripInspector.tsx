@@ -61,8 +61,8 @@ function trainEquation(t: TripPeriod, r: TripRoute): string {
     perceived: x.perceived,
   }));
   const rest = t.railPerceived - terms.reduce((s, x) => s + x.perceived, 0);
-  if (Math.abs(rest) >= 0.05) terms.push({ label: "other routes and stations", real: "", weight: 1, perceived: rest });
-  return equation(terms, t.railPerceived);
+  if (Math.abs(rest) >= 0.05) terms.push({ label: "choice of routes", real: "", weight: 1, perceived: rest });
+  return equation(terms, t.railPerceived) + (Math.abs(rest) >= 0.05 ? "\nChoice of routes is the time saved by having several ways to go." : "");
 }
 
 /** The real minutes of a route as an equation: "Walk 8 + wait 3 + ride 6 = 17 min". */
@@ -177,7 +177,9 @@ function OtherRoutes({ t }: { t: TripPeriod }) {
     else merged.set(k, { ...r });
   }
   const others = [...merged].filter(([k]) => k !== main).map(([, r]) => r).sort((a, b) => b.share - a.share).slice(0, 4);
-  if (!others.length) return null;
+  // what the main route's group and these rows leave: many small routes (T-709)
+  const rest = 1 - mainShare(t) - others.reduce((s, r) => s + r.share, 0);
+  if (!others.length && rest < 0.005) return null;
   return (
     <>
       <div class="h">Other routes<span class="right muted small">train riders</span></div>
@@ -195,22 +197,38 @@ function OtherRoutes({ t }: { t: TripPeriod }) {
             </li>
           );
         })}
+        {rest >= 0.005 && (
+          <li class="muted" data-tip={spreadTip(t)}>
+            <span class="grow">Smaller routes</span>
+            <span class="val w-num">{pct(rest)}</span>
+          </li>
+        )}
       </ul>
     </>
   );
 }
 
-/** How much of the trip's train riders the main route carries. The model spreads them over the
- * stations near each end and over the useful trains at each station. */
-function mainNote(t: TripPeriod): string {
+/** The share of the trip's train users on the main route and the same trains from other platforms
+ * or with other walks. */
+function mainShare(t: TripPeriod): number {
   const main = t.routes[0];
-  if (main.share >= 0.995) return "Every train rider on this trip takes this route.";
   const st = new Map(world.value!.save.stations.map((s) => [s.id, s.name]));
   const label = routeLabel(st), k = label(main);
-  const same = t.routes.slice(1).filter((r) => label(r) === k).reduce((s, r) => s + r.share, 0);
-  return `${pct(main.share)} of the train riders on this trip take this route` +
-    (same >= 0.005 ? `, and ${pct(same)} more the same trains from other platforms or with other walks.` : ".") +
-    (1 - main.share - same >= 0.005 ? " The rest use other stations or trains nearby." : "");
+  return main.share + t.routes.slice(1).filter((r) => label(r) === k).reduce((s, r) => s + r.share, 0);
+}
+
+/** Why no route carries most of them (T-709): the model spreads the train users over the station
+ * pairs near the two ends and the useful trains at each station; routes under 0.5% are not kept. */
+function spreadTip(t: TripPeriod): string {
+  const top = t.pairs.reduce((m, p) => Math.max(m, p.share), 0);
+  return `The model spreads this trip's train users over ${t.pairs.length} ${t.pairs.length === 1 ? "pair" : "pairs"} of stations near the two ends, the busiest pair taking ${pct(top)}, and over the useful trains at each station. Routes under 0.5% of them are not listed.`;
+}
+
+/** How much of the trip's train riders the main route carries. */
+function mainNote(t: TripPeriod): string {
+  if (t.routes[0].share >= 0.995) return "Every train user on this trip takes this route.";
+  const all = mainShare(t);
+  return `${pct(all)} of the train users on this trip take this route` + (1 - all >= 0.005 ? ", the rest use different routes." : ".");
 }
 
 function ByPeriod({ periods, words }: { periods: (TripPeriod | null)[]; words: string }) {
@@ -257,7 +275,6 @@ export function TripInspector() {
       <div class="sub muted">{sub}</div>
       {back && back.trip === sel && (
         <div class="pane-foot">
-          <span class="muted small">{back.what}</span>
           <button class="btn text" onClick={() => (selection.value = back.from)}>Back</button>
         </div>
       )}
@@ -304,7 +321,7 @@ export function TripInspector() {
               <span class="val">{min(t.railPerceived)}</span>
             </li>
           </ul>
-          <p class="muted small">{mainNote(t)}</p>
+          <p class="muted small" data-tip={spreadTip(t)}>{mainNote(t)}</p>
           <OtherRoutes t={t} />
         </>
       ) : <p class="muted">No route.</p>}
@@ -336,10 +353,6 @@ export function TripInspector() {
       <div class="h">By walking</div>
       {t.distM > WALK_REACH_M ? <p class="muted">Walks over {roughDistance(WALK_REACH_M)} are not offered.</p> : (
         <ul class="rows">
-          <li data-tip={`${distance(t.distM)} in a straight line, walked along the streets at ${WALK_KMH} km/h`}>
-            <span class="grow">Time</span>
-            <span class="val">{min(t.walkMin)}</span>
-          </li>
           <li data-tip={equation([{ label: "walk", real: num(t.walkMin), weight: t.walkWeight, perceived: t.walkMin * t.walkWeight }])}>
             <span class="grow">Effective time</span>
             <span class="val">{min(t.walkMin * t.walkWeight)}</span>

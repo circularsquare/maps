@@ -1,7 +1,7 @@
 /* trainworld UI. Three colour tokens per colour theme and light or dark (--bg, --text, --accent),
    two for warnings (--bad, --warn); everything else in the UI is mixed from them. The map's own
    light and dark colours (--map-land, --map-ink) are set from game/shades.ts. Line, mode and level
-   colours never change (game/palette.ts). Zen Maru Gothic; sizes 12, 14, 18 px; weights 400 and
+   colours never change (game/palette.ts). Nunito, Zen Maru Gothic for kana and kanji; sizes 12, 14, 18 px; weights 400 and
    700. No transitions. */
 
 :root,
@@ -21,7 +21,7 @@
 :root[data-shade="dark"] { --mk-route-ring: #a39e97; --mk-reroute-fill: #34373c; --mk-reroute-ring: #8d8983; --mk-cut-fill: #2a2c30; --mk-cut-ring: #66635f; }
 
 :root {
-  --font: "Zen Maru Gothic", system-ui, sans-serif;
+  --font: "Nunito", "Zen Maru Gothic", system-ui, sans-serif;
   --muted: color-mix(in srgb, var(--text) 58%, var(--bg));
   --rule: color-mix(in srgb, var(--text) 22%, var(--bg));
   --shade: color-mix(in srgb, var(--text) 6%, var(--bg));
@@ -227,7 +227,6 @@ body.resizing, body.resizing * { user-select: none; }
   background: var(--c); color: var(--ct, #fff);
   font-size: 12px; font-weight: 700; line-height: 1;
 }
-.chip > span { transform: translateY(-1px); }
 .chip.link { cursor: pointer; }
 .place-link { cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
 /* T-521: a station row keeps at least 3 bullets, its name gives way */
@@ -272,7 +271,7 @@ body.resizing, body.resizing * { user-select: none; }
 table.sched { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
 table.sched th { font-weight: 400; color: var(--muted); font-size: 12px; text-align: right; padding: 0 0 2px; }
 table.sched th:first-child, table.sched td:first-child { text-align: left; }
-table.sched td { text-align: right; padding: 3px 0; border-bottom: 1px dotted var(--rule); }
+table.sched td { text-align: right; padding: 3px 0; }
 table.sched tr.now td:first-child { font-weight: 700; }
 /* T-692: every cell one line; the demand column takes what the others leave and is cut with an ellipsis */
 table.sched th, table.sched td { white-space: nowrap; }
@@ -441,6 +440,10 @@ rect.now { fill-opacity: .45; }
 .stations-full { font-size: 12px; padding: 4px 8px; color: var(--bad); border-color: var(--bad); background: var(--bg); }
 .demand-selector .btn { font-size: 12px; padding: 4px 8px; }
 .demand-selector .btn + .btn { margin-left: -1px; }
+/* T-703: the track display under the demand buttons, its key (height, speed) beside it */
+.track-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; max-width: 100%; }
+.track-row .track-key { margin: 0; padding: 0 8px; height: 28px; box-sizing: border-box; align-items: center; background: var(--bg); border: 1px solid var(--rule); }
+.track-row .speed-key { display: flex; gap: 10px; }
 /* T-158: one trip purpose on the map; a swatch in its purpose colour while one is chosen */
 .demand-selector .purpose-filter { display: flex; align-items: center; gap: 5px; height: 28px; margin-left: 6px;
   padding: 0 0 0 6px; border: 1px solid var(--rule); background: var(--bg); font-size: 12px; }
@@ -523,7 +526,8 @@ rect.now { fill-opacity: .45; }
   padding: 6px 8px 6px 12px; background: var(--bg); border: 1px solid var(--rule); white-space: nowrap; }
 .blueprint-bar .count { min-width: 76px; }
 @container map-column (max-width: 1350px) { .blueprint-bar { top: 46px; } }
-@container map-column (max-width: 680px) { .blueprint-bar { top: 80px; } }
+@container map-column (max-width: 1000px) { .blueprint-bar { top: 80px; } }
+@container map-column (max-width: 680px) { .blueprint-bar { top: 114px; } }
 .bp-box { position: absolute; z-index: 3; pointer-events: none; border: 1.5px dashed var(--map-ink); background: color-mix(in srgb, var(--map-ink) 10%, transparent); }
 .track-row { display: flex; align-items: center; gap: 8px; }
 /* T-478: each level button carries its level's track colour (--lc, palette.ts), the chosen one in full */
@@ -810,7 +814,7 @@ rect.now { fill-opacity: .45; }
 .search-mark.city { border-radius: 0; background: var(--muted); border-color: var(--muted); }
 .search-mark.place { background: none; border-color: var(--muted); }
 @container map-column (max-width: 680px) {
-  .map-search { left: 10px; right: auto; top: 46px; }
+  .map-search { left: 10px; right: auto; top: 80px; }
   /* T-231: the alert sits beside the search glass, which is under the demand buttons here */
   .stations-full { margin-left: 36px; }
 }
@@ -818,11 +822,11 @@ rect.now { fill-opacity: .45; }
    whether or not it shows; the search glass, the alert and the Select bar sit under it */
 @container map-column (max-width: 520px) {
   .map-top-row { min-height: 58px; align-content: flex-start; }
-  .map-search { top: 74px; }
-  .blueprint-bar { top: 110px; }
+  .map-search { top: 108px; }
+  .blueprint-bar { top: 144px; }
 }
 @container map-column (max-width: 360px) {
-  .map-search { top: 108px; }
+  .map-search { top: 142px; }
 }
 
 /* T-195: the trip explorer's inspector and its canvas over the demand views' */

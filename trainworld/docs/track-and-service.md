@@ -139,7 +139,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   where their heights differ by a level or more; at the same level they make a flat crossing; in
   between is invalid.
 - **What the player builds**: a **route** drawn as one stroke, **double track by default** (4 m
-  apart, running side per country from the city pack), with **single track** as a setting: cheaper,
+  apart, trains keeping right everywhere, T-319), with **single track** as a setting: cheaper,
   both directions sharing it, with sections split at stations. A single-track station has one
   shared platform track; it does not automatically add a passing loop. (Anita, 2026-10-08; not NIMBY-style
   individual tracks.)
@@ -149,7 +149,9 @@ Full design, numbers and sources: `notes/T-008.md`.
   it leaves each end along the node's heading like a turnout and swings out over 150 m (less on a
   short leg), and between them runs parallel, each corner concentric with the drawn one (radius
   8 m smaller on the inside of the turn, 8 m larger outside; a drawn curve under 108 m is too
-  tight for quad). Lines change pairs at the ends of the quad stretch, where the two pairs meet as
+  tight for quad; a corner whose concentric radius would overrun its legs, as the capped curve of a
+  nearly straight segment can once the millimetre grid tilts its metre-long legs, takes the auto radius
+  instead, within millimetres of concentric, T-708). Lines change pairs at the ends of the quad stretch, where the two pairs meet as
   a junction (a fork with nothing behind it if the end is new track), and at crossovers (below). Both pairs are
   ordinary double-track edges, cut into pieces per corner (T-244), priced, deleted and drawn like
   any track: quad costs two double tracks, plus junctions at ends on existing track. Drawn through
@@ -158,6 +160,18 @@ Full design, numbers and sources: `notes/T-008.md`.
   other pair, in the same edit (on the other pair's loose end or joint when one is level with it,
   T-423): the local and express platforms, one complex and one label. If
   the twin cannot be built there, the station goes in alone.
+- **Doubling up** (T-708, `TrackApi::double_up`): double track already placed, blueprint or
+  built, becomes quad with one undoable edit that adds the express pair as blueprint (built track
+  too: Construct pays for the pair as for any blueprint). It covers the run the selected piece is
+  on: through plain joints and stations into more double track, stopping each way at a junction,
+  a track end, single track, a crossover or track that has a pair beside it already. The pair runs
+  8 m to the left of the selected piece's direction, or to the right where the left is refused
+  (crossing other track, water), every corner concentric, one piece beside each piece with a joint
+  beside each joint. Each station on the run gets its twin (same name and platform) on the joint
+  beside it. At a junction end the pair swings in to meet the junction (the T-255 taper), so lines
+  can change pairs there; at any other end it has its own loose end beside the drawn pair's, or
+  carries on from a loose end of the pair beside that is there already (quad drawn earlier). Refused
+  on single track (`Tracks`), a crossover, and track with a pair beside it (`Alongside`).
 - **Crossovers** (T-338, design notes/T-334.md): the crossover tool joins a track to the track
   running beside it, with a click. It finds the nearest other track whose centre line is 6-15 m
   from the click and parallel there (quad's other pair, or a separate route drawn alongside), splits

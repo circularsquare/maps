@@ -24,7 +24,10 @@ import { Faces } from "./faces";
 import { profileS } from "./network";
 import type { Overlay } from "./overlay";
 import { STATION_BOX_ZOOM } from "./stationGeometry";
-import { popsFor, StationSound } from "./stationSound";
+import { lineNote, popsFor, StationSound } from "./stationSound";
+import { stationZone } from "../game/listScope";
+import { moneyState } from "../game/money";
+import { zonesLoaded } from "../game/zones";
 
 /** Samples a second. */
 const SAMPLE_MS = 125;
@@ -76,7 +79,47 @@ export function boardedAt(b: BoardHour, q: number, t: number): { boarded: number
   return { boarded, waited };
 }
 
-export function startStationLife(map: MlMap, overlay: Overlay) {
+/** Each line's note (T-706): chosen once and kept in the save (the clock worker's `lineNotes`, the
+ * header's `notes`). A line's city is where its first stop is (as the Lines tab has it); its rank
+ * is how many lines were given a note in that city before it, deleted ones too, so removing a line
+ * changes nobody else's note. Lines found without a note (a new line, or an older save) are given
+ * theirs here, in line number order, and sent to the worker. A line with no stops yet, or in no
+ * city, keeps the note its number gives and none is stored. */
+let posted: Record<string, [number, string]> = {};
+let postNotes: ((notes: Record<string, [number, string]>) => void) | null = null;
+let noted: { save: unknown; stored: unknown; zones: number; by: Map<string, number> } | null = null;
+function lineNotes(save: { stations: StationInput[]; lines: LineInput[] }): Map<string, number> {
+  const stored = moneyState.peek()?.notes, zones = zonesLoaded.peek();
+  if (noted && noted.save === save && noted.stored === stored && noted.zones === zones) return noted.by;
+  // a note the worker has sent back is no longer ours to remember
+  if (stored) for (const id of Object.keys(posted)) if (stored[id]) delete posted[id];
+  const all: Record<string, [number, string]> = { ...stored, ...posted };
+  const at = new Map(save.stations.map((s) => [s.id, s]));
+  const fresh: Record<string, [number, string]> = {};
+  const missing = save.lines.filter((l) => !all[l.id]).sort((a, b) => Number(a.id) - Number(b.id));
+  if (missing.length) {
+    const rank = new Map<string, number>();
+    for (const [, [, city]] of Object.entries(all)) rank.set(city, (rank.get(city) ?? 0) + 1);
+    for (const l of missing) {
+      const s = at.get(l.stops[0]), city = s ? stationZone(s) : null;
+      if (!city) continue;
+      const r = rank.get(city) ?? 0;
+      rank.set(city, r + 1);
+      fresh[l.id] = all[l.id] = [lineNote(Number(l.id), r), city];
+    }
+    if (Object.keys(fresh).length) {
+      posted = { ...posted, ...fresh };
+      postNotes?.(fresh);
+    }
+  }
+  const by = new Map<string, number>();
+  for (const l of save.lines) by.set(l.id, all[l.id]?.[0] ?? lineNote(Number(l.id), 99));
+  noted = { save, stored, zones, by };
+  return by;
+}
+
+export function startStationLife(map: MlMap, overlay: Overlay, post: (notes: Record<string, [number, string]>) => void) {
+  postNotes = post;
   const faces = new Faces(map, overlay);
   const sound = new StationSound();
   let timer = 0;
@@ -161,7 +204,7 @@ export function startStationLife(map: MlMap, overlay: Overlay) {
     }
     if (d.sound) {
       const p = map.project([s.lng, s.lat]);
-      sound.play({ pan: (p.x / Math.max(1, overlay.cssW)) * 2 - 1, zoom: map.getZoom(), volume: d.soundVolume, speed, off: popsFor(off), on: popsFor(on), line: vl.num, crowded: red });
+      sound.play({ pan: (p.x / Math.max(1, overlay.cssW)) * 2 - 1, zoom: map.getZoom(), volume: d.soundVolume, speed, off: popsFor(off), on: popsFor(on), note: lineNotes(world.peek()!.save).get(vl.line.id) ?? 0, crowded: red });
     }
     if (d.faces && off >= 1) {
       const count = Math.min(MAX_FACES_PER_TRAIN, Math.floor(off / RIDERS_PER_FACE + Math.random()));

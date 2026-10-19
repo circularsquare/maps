@@ -55,7 +55,9 @@ T-422]. The geometry is in [track-and-service.md](track-and-service.md) 6.1.
   start. The **keep placing** button (an icon beside the Single, Double and Quad choice) does the
   same for every click until it is switched off, and so does Caps Lock, which is the same switch
   (the button shows it) [T-445]. A double click, Escape or Enter ends the run (the first click of
-  the double places the last segment); the button stays on. To carry on later, click the loose end
+  the double places the last segment); the button stays on. A click on the start (within 6 px, or
+  on its node) does the same at any later time: it ends the run, or drops a start that has no
+  segment yet [T-707]; a segment never ends where it starts, so no loop is lost. To carry on later, click the loose end
   (on quad, either pair's). Backspace while chaining undoes the last segment and draws on from its
   start. A segment may turn
   up to 350 degrees, so a loop or hairpin is one click [T-442]. A click whose segment cannot be
@@ -74,10 +76,13 @@ T-422]. The geometry is in [track-and-service.md](track-and-service.md) 6.1.
   station tool's pointer snaps to it, so the station goes at the line's end. The markers take no
   presses, and show from zoom 9.
 - **The tag by the cursor** [T-411, T-526] has two lines: the segment's length, average cost
-  multiplier and price ("1.5 km, cost 1.33x, $12.8M"), then the elevation being placed and the
-  segment's lowest speed limit with the track tag's icons and colours ("↕ +2  » 67 km/h",
+  multiplier and price ("1.5 km, cost 1.33x, $12.8M"), then the elevations the segment passes
+  and its lowest speed limit with the track tag's icons and colours ("↕ 0 +2  » 67 km/h": where
+  it starts, a bridge's top or a dip's bottom, where it ends, each once [T-707]),
   `map/trackTagRows.ts`; [ui-map.md](ui-map.md) "Hover tags on the network"). The multiplier sits
-  on yellow above 1x, deeper up to 2.5x, plain at 1x and below. Where the segment could not be
+  on yellow above 1x, deeper up to 2.5x, plain at 1x and below. It is the level's multiplier
+  (6.4: 0.3x at ground, 0.8x at +1) and water's, averaged over the track priced, both pairs on
+  quad, whose price is two double tracks' [T-711]. Where the segment could not be
   built ending at the cursor, the reason comes first, in red, and the cost line is left out. The
   build tools' tags are drawn over the bubbles' tags; the track tag shows above the pointer when
   it is on existing track.
@@ -94,7 +99,10 @@ T-422]. The geometry is in [track-and-service.md](track-and-service.md) 6.1.
 
 - **The ghost** is the platform's full box at its true length at every zoom: blue (`#2f6fe0` fill,
   `#1c4fb8` outline) where a click would place it and red (`#e03c3c`, `#b91f1f`) where it would be
-  refused, fixed colours with a thin white halo; a refused spot shows the reason in the tag.
+  refused, fixed colours with a thin white halo; a refused spot shows the reason in the tag. On
+  quad track the twin's platform shows too [T-708; `pairBeside`, `map/stationGeometry.ts`]: on
+  the nearest track 4-12 m beside the spot running the same way, level with it, as the track
+  model places the twin.
   **First frame** [T-695]: the page works out at once, from what it already has, where the click
   would go and whether it would be taken (`likelyFirst`, `layoutIssues` in `map/stationSnap.ts`),
   and shows that: a node with a station or a junction is refused; a spot is refused when the
@@ -209,7 +217,11 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
 - **The track inspector** lists the corners with each curve's speed, a radius stepper (100 to 1,500
   m, then auto), an elevation stepper and Remove; Add corner inserts one midway along the selected
   interval; it can put all corners at one elevation ("Elevation of the stretch"). It has Construct
-  and the elevation buttons for its piece [T-244], and Remove.
+  and the elevation buttons for its piece [T-244], and Remove. On double track (blueprint or
+  built) the title carries **Double up** [T-708; `DoubleUp` in `ui/inspector/others.tsx`], an
+  icon of two rails and a plus: a click adds the express pair beside its run as blueprint
+  ([track-and-service.md](track-and-service.md) 6.1 "Doubling up"). Its hover gives the price, or
+  why not, greyed (a pair beside already).
 - **On a crossover's diagonal** [T-391] the track inspector is titled "Crossover" and drops the
   corners and elevation controls; it shows the slowest curve, the price of both diagonals, Construct
   (builds both) and Remove crossover.

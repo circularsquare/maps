@@ -40,6 +40,8 @@ there is no high-speed class and no hover yet.
 - **Zoom 10 to 14** [`TRAINS_ZOOM`]: stations are dots; trains are pills, drawn and picked from 10.
 - **From zoom 14** (`STATION_BOX_ZOOM`, T-553): a station is its platform, trains show their cars, and
   platform crowds are drawn.
+- **About zoom 17** (T-658; by 4 m on screen, so the same in every city: 16.7 to 17.2 in New York):
+  double track opens into its two tracks ("Lines and track").
 - Station names and capacity tags hide below zoom 12 [T-101].
 
 ## Lines and track
@@ -50,11 +52,29 @@ there is no high-speed class and no hover yet.
   under the stroke and not part of a traffic width [T-267]; a selected line or track 0.5-3 px wider
   still. A stroke thinner than a device pixel is drawn a pixel wide and that much fainter. Line and
   track ends, and the joints between a stroke's segments, are round, casing included [T-673].
-- **Lines sharing track are drawn over each other** [T-190, T-533]: interlining is not represented.
+- **Double track as its two tracks, close in** [T-658, `laneState` in `map/renderer.ts`, design
+  notes/T-658.md]: drawing only; the track stays one piece. Where 4 m on the ground is 4 px on
+  screen, a double track's stroke starts growing to its two tracks' width (4 m plus a track's
+  2.4 m), which it reaches at 7 px; from there to 10 px a stripe opens down its middle, widening
+  to 1.6 m while the outline stays the same, each track half of what is left, until the tracks'
+  centres are 4 m apart and each is 2.4 m wide; from 10 px on everything is to scale. Stations are
+  not yet drawn with a platform each side (T-658c): the two tracks run through the box.
+  Trains keep right (T-319): each line's run 0 is drawn on the right-hand track of its direction
+  and run 1 on the left. Under a line's two tracks is a band as wide as the pair or its traffic
+  width, whichever is wider, in the line colour mixed 60% towards the casing, over one casing
+  band (Anita, 2026-10-19: the tracks over the traffic width). Bare track is two grey tracks as
+  much thinner than 2.4 m as it is thinner than a line; blueprint track is two blueprint tracks,
+  each its own rails and middle. Single track stays one track on the centre line, 2.4 m wide;
+  double track narrows into it over 40 m where the two meet at a plain node (`lanePoints` in
+  `map/network.ts`); at a junction a single-track branch leaves from the centre line. Quad
+  track is four tracks 4 m apart; a crossover between double tracks is two double tracks in an
+  X. Clicks and the hover reach half the pair's width from the centre line once it has grown.
+- **Lines sharing track are drawn over each other** [T-190, T-533], each of the two tracks too
+  close in: interlining is not represented.
   One order for all lines: a line with no trains (fleet zero) goes under every line that runs
   trains; within each group the shorter route (end to end, one direction) is on top, ties to the
   higher id. The line on top wins a click. It is rebuilt when lines or fleets change.
-- **Track display** [T-105; Settings], four choices, remembered per browser:
+- **Track display** [T-105; on the map under the demand buttons since T-703], four choices, remembered per browser:
   - **Line**: uniform width in the line colours.
   - **Line + traffic thickness** (the default): width by riders over the day shown
     ([ui-demand-views.md](ui-demand-views.md) "Line width by riders").
@@ -172,6 +192,13 @@ change; only links are saved. Riders change between any two stations of a comple
   snakes round curves and stays on the route at terminals (notes/T-047.md). One instanced draw for
   all trains, positions from keyframes on the GPU. A click on any car selects the train; one drawn
   over a station selects the train.
+- **On its own track** [T-658b]: as double track parts into two (about zoom 17, "Lines and
+  track"), a train moves from the centre line to the right-hand track of its direction of travel
+  (2 m out once apart) and narrows from its pill width to its true 3 m, so two trains passing go
+  by side by side without touching. Where double track narrows to single the train drifts back
+  to the centre over the taper (`sampleLane`, one value a 50 m sample). A train turning back
+  stands on its arrival track and steps across to the other as its next trip starts. Clicks
+  find it where it is drawn (`laneShiftM`).
 - **How full** [T-103, T-207, T-218, T-230]: the core fills from its back like a gauge across the
   whole consist, in the dark shade of the line colour (48% of the line RGB) over an 18% white tint.
   Half full is every seat taken, full is packed to crush, from the boarding account
@@ -215,9 +242,14 @@ those who got on, less the load carried on.
   a frown) when the riders waited 10 minutes or more (`RED_WAIT_S`) [T-696]: the time since the platform's last train left, doubled
   when that train left riders behind. Two sprites on a 2D canvas over the network; a frame loop
   runs only while a face is alive. Not in the demand views' way: the bubbles draw over them.
-- **Sound** (WebAudio, no files): one soft sine note as the train pulls in, the line's own (from its number, one of 8 notes of C
-  major pentatonic, C5 to E6), a minor third lower, softer and sagging at a sad-face platform
-  [T-696]; then pops (a short
+- **Sound** (WebAudio, no files): one soft sine note as the train pulls in, the line's own, one of the 12 semitones from C5
+  [T-706]: a city's first five lines (a line's city is where its first stop is) take C, E, G, D, A in
+  that order, later lines a semitone from their number. The note is chosen once, when the arrival
+  code first meets the line, and kept in the save (`notes` in the header: note and city, per line id,
+  kept after the line is deleted), so deleting a line changes nobody else's; a line's rank is how
+  many lines were given a note in its city before it. Older saves get theirs on load, in line
+  number order. A line with no stops or in no city is not stored. A sad-face
+  platform sounds a minor third lower, softer, sagging [T-696]; then pops (a short
   falling blip) as riders get off (higher) and on (lower), 1 to 4 each by the rider count. Silent
   until the first click or key. Volume is the setting times a zoom gain (a quarter at 14, full from
   17), shared down by the arrivals sounding in the last second; a second one sounding together gets

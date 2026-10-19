@@ -120,8 +120,8 @@ function textWidth(t: string): number {
   if (measureCtx === undefined) {
     measureCtx = document.createElement("canvas").getContext("2d");
   }
-  // the panels' font (T-698) is the `--font` variable, unset for Zen Maru Gothic
-  if (measureCtx) measureCtx.font = `12px ${document.documentElement.style.getPropertyValue("--font") || '"Zen Maru Gothic", sans-serif'}`;
+  // the panels' font (T-698) is the `--font` variable, unset for the default (Nunito)
+  if (measureCtx) measureCtx.font = `12px ${document.documentElement.style.getPropertyValue("--font") || '"Nunito", "Zen Maru Gothic", sans-serif'}`;
   return measureCtx ? measureCtx.measureText(t).width : t.length * 6.6;
 }
 

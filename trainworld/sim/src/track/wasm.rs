@@ -1290,6 +1290,11 @@ impl TrackApi {
             self.preview_marks.extend([j[0], j[1], 1.0]);
         }
         if !self.route_express.is_empty() && out.len() > 5 {
+            // T-711: the multiplier over both pairs' track, as the price is
+            let (fl, tl, _) = self.w.preview(if shape.is_empty() { &verts } else { &shape }, 2);
+            let (fe, te, _) = self.w.preview(&self.route_express, 2);
+            let base = BASE_COST_PER_KM * (fl.len + fe.len) / 1000.0;
+            out[4] = if base > 0.0 { (tl + te) / base } else { 0.0 };
             // a quad route's express pair, drawn on from the end back to the start (T-255)
             let mut back = self.route_express.clone();
             back.reverse();
@@ -1495,6 +1500,174 @@ impl TrackApi {
             }
         }
         Some((f, sf))
+    }
+
+    // ---- doubling up (T-708)
+
+    /// Double up: an express pair beside double track, as blueprint, making it quad. One undoable
+    /// edit. The rules are in docs/track-and-service.md 6.1 ("Doubling up").
+    pub fn double_up(&mut self, edge: u32) -> u32 {
+        let (op, nn, ne) = match self.double_up_op(edge) {
+            Ok(v) => v,
+            Err(i) => return self.refuse(i),
+        };
+        let r = self.run(op);
+        if r != 0 {
+            self.release(&nn, &ne);
+        }
+        r
+    }
+
+    /// What `double_up` would add to the blueprint, US$M, or -1 when it would be refused
+    /// (`issue_kinds()` says why).
+    pub fn preview_double_up(&mut self, edge: u32) -> f64 {
+        let (op, nn, ne) = match self.double_up_op(edge) {
+            Ok(v) => v,
+            Err(i) => {
+                self.refuse(i);
+                return -1.0;
+            }
+        };
+        let r = self.w.trial(op);
+        self.release(&nn, &ne);
+        let cost = r.as_ref().map_or(-1.0, |r| r.cost_after - r.cost_before);
+        self.done(r.map(|mut r| {
+            r.dirty = Default::default();
+            r
+        }));
+        self.last = None;
+        cost
+    }
+
+    /// The double-up edit on the left of the piece's own direction, else on its right where the
+    /// left is refused; the left's problems when both are.
+    fn double_up_op(&mut self, edge: u32) -> Result<(Op, Vec<u32>, Vec<u32>), Issue> {
+        let (run, nodes) = self.double_run(edge)?;
+        let mut first_err = None;
+        for side in [1.0, -1.0] {
+            let (op, nn, ne) = self.double_side(&run, &nodes, side)?;
+            let r = self.w.trial(op.clone());
+            match r {
+                Ok(_) => return Ok((op, nn, ne)),
+                Err(e) => {
+                    self.release(&nn, &ne);
+                    first_err.get_or_insert(e);
+                }
+            }
+        }
+        // the left's own issues, through `refuse`'s single slot: the first stands for them all
+        let mut e = first_err.unwrap_or_default();
+        Err(if e.is_empty() { Issue::NoSuchEdge { edge } } else { e.swap_remove(0) })
+    }
+
+    /// The run a double-up covers: the pieces in order (edge, and whether it runs b to a) and the
+    /// nodes from end to end, starting from `edge`'s a end. It carries on through plain joints and
+    /// stations into double track, and stops at a junction, a track end, other track counts, a
+    /// crossover or track that has a pair beside it already.
+    fn double_run(&self, edge: u32) -> Result<(Vec<(u32, bool)>, Vec<u32>), Issue> {
+        let net = &self.w.net;
+        if !net.edge_ok(edge) {
+            return Err(Issue::NoSuchEdge { edge });
+        }
+        if net.edge_crossover[edge as usize] {
+            return Err(Issue::Crossover { edge });
+        }
+        if net.edge_tracks[edge as usize] != 2 {
+            return Err(Issue::Tracks { edge });
+        }
+        let doubled = |e: u32| self.twin_at(e, net.edge_len[e as usize] / 2.0).is_some();
+        if doubled(edge) {
+            return Err(Issue::Alongside { edge });
+        }
+        let mut run = vec![(edge, false)];
+        let mut nodes = vec![net.edge_a[edge as usize], net.edge_b[edge as usize]];
+        // `back`: walking out of the a end, so pieces go in at the front
+        for back in [false, true] {
+            loop {
+                let (node, from) = if back { (nodes[0], run[0].0) } else { (*nodes.last().unwrap(), run.last().unwrap().0) };
+                let p = &net.node_ports[node as usize];
+                if p.n != 2 || p.side[0] == p.side[1] {
+                    break;
+                }
+                let Some(&c) = p.ends().iter().find(|&&c| c >> 1 != from) else { break };
+                let e = c >> 1;
+                if run.iter().any(|r| r.0 == e) || net.edge_crossover[e as usize] || net.edge_tracks[e as usize] != 2 || doubled(e) {
+                    break;
+                }
+                // c & 1 is the end of e at `node`: walking forward, e runs a to b when that is its a
+                let far = net.end_node(e, 1 - (c & 1));
+                if back {
+                    run.insert(0, (e, c & 1 == 0));
+                    nodes.insert(0, far);
+                } else {
+                    run.push((e, c & 1 == 1));
+                    nodes.push(far);
+                }
+            }
+        }
+        Ok((run, nodes))
+    }
+
+    /// `double_up_op` on one side: 1 left of the run's direction, -1 right.
+    fn double_side(&mut self, run: &[(u32, bool)], nodes: &[u32], side: f64) -> Result<(Op, Vec<u32>, Vec<u32>), Issue> {
+        let scaled = self.w.net.frame().scaled();
+        let shapes: Vec<Vec<Pi>> = run
+            .iter()
+            .map(|&(e, rev)| {
+                let mut d = self.editable(e).expect("a live edge");
+                if rev {
+                    d.pis.reverse();
+                    std::mem::swap(&mut d.a, &mut d.b);
+                }
+                vertices_of(&self.w.net, &d, &[])
+            })
+            .collect();
+        let last = nodes.len() - 1;
+        let (mut ops, mut nn, mut ne) = (vec![], vec![], vec![]);
+        // each node's partner on the express pair: None at a junction end, where it swings in
+        let mut beside: Vec<Option<(u32, f64, f64)>> = vec![];
+        for (i, &n) in nodes.iter().enumerate() {
+            let net = &self.w.net;
+            let ni = n as usize;
+            if i == last && n == nodes[0] {
+                beside.push(beside[0]); // a ring: back where it started
+                continue;
+            }
+            let end = i == 0 || i == last;
+            let ports = net.node_ports[ni].n;
+            if end && ports >= 3 && !net.node_ports[ni].ends().iter().any(|&c| net.edge_crossover[(c >> 1) as usize]) {
+                beside.push(None);
+                continue;
+            }
+            let (x, y) = if i < last { express_end(&shapes[i], 0, side, scaled) } else { express_end(&shapes[i - 1], 1, side, scaled) };
+            if end {
+                if let Some(m) = loose_near(net, n, x, y) {
+                    beside.push(Some((m, net.node_x[m as usize], net.node_y[m as usize])));
+                    continue;
+                }
+            }
+            let m = self.w.net.alloc_node();
+            nn.push(m);
+            ops.push(Op::Node { id: m, data: Some(NodeData { x, y, level: self.w.net.node_level[ni], flying: false }) });
+            if let Some(mut st) = self.w.net.station_data(n) {
+                st.built = false;
+                st.off = false;
+                ops.push(Op::Station { node: m, data: Some(st) });
+            }
+            beside.push(Some((m, x, y)));
+        }
+        for (i, verts) in shapes.iter().enumerate() {
+            let (a, b) = (beside[i], beside[i + 1]);
+            let Some((ex, _, _)) = express_verts(verts, 1, verts.len() - 2, scaled, side, a.map(|o| (o.1, o.2)), b.map(|o| (o.1, o.2))) else {
+                self.release(&nn, &ne);
+                return Err(Issue::Geom { edge: run[i].0, issue: GeomIssue::ZeroLeg(0) });
+            };
+            let id = self.w.net.alloc_edge();
+            ne.push(id);
+            let (na, nb) = (a.map_or(nodes[i], |o| o.0), b.map_or(nodes[i + 1], |o| o.0));
+            ops.push(Op::Edge { id, data: Some(EdgeData { a: na, b: nb, tracks: 2, pis: ex[1..ex.len() - 1].to_vec(), built: false, off: false, thru: vec![], crossover: false }) });
+        }
+        Ok((Op::Batch(ops), nn, ne))
     }
 
     // ---- crossovers (T-338)
@@ -2786,6 +2959,15 @@ fn express_verts(verts: &[Pi], first: usize, clicks: usize, scaled: bool, side: 
         }
         out.push(Pi::new(b.x, b.y, 0.0, b.level));
     }
+    // T-708: a corner whose curve fills its legs is ill-conditioned when the turn is slight (a
+    // capped curve of a fraction of a degree has tangents of a metre or two): the millimetre grid
+    // tilts its legs enough that the concentric radius overruns them. Auto fills them instead,
+    // within millimetres of concentric.
+    for issue in geom::fit_in(&out, scaled).issues {
+        if let GeomIssue::ArcDoesNotFit(j) = issue {
+            out[j].radius = 0.0;
+        }
+    }
     Some((out, first_out, count))
 }
 
@@ -2821,6 +3003,18 @@ fn quad_beside(net: &Network, node: u32) -> Option<(u32, f64)> {
         best = Some((m as u32, across.signum(), across.abs()));
     }
     best.map(|b| (b.0, b.1))
+}
+
+/// A track end within 2 m of (x, y), where the express pair's end beside `node` would go (T-708):
+/// at the same level and running the same way, so a double-up carries on from the pair beside
+/// that is there already.
+fn loose_near(net: &Network, node: u32, x: f64, y: f64) -> Option<u32> {
+    let h = net.node_heading[node as usize];
+    let reach = 2.0 * net.k_at(y);
+    (0..net.node_count() as u32).find(|&m| {
+        let i = m as usize;
+        m != node && net.node_ok(m) && net.node_ports[i].n == 1 && net.node_level[i] == net.node_level[node as usize] && (net.node_x[i] - x).hypot(net.node_y[i] - y) < reach && (net.node_heading[i] - h).sin().abs() < 0.03
+    })
 }
 
 /// Where the express pair's own end goes beside the drawn route's end `at` (0 start, 1 end) on
@@ -5578,5 +5772,184 @@ mod regional_water_tests {
             assert_eq!(a.preview_route(&ends, &[], 2, false)[0], 0.0, "ground-level Delaware crossing refused");
             assert!(a.issue_kinds().contains("BridgeNoRoom"), "400 m is no room for the ramps");
         }
+    }
+}
+
+#[cfg(test)]
+mod quad_edit_tests {
+    use super::*;
+    /// T-708: quad drawn through points, chains of random segments from the drawn pair's loose end
+    /// (half of them nearly straight, where a capped curve has tangents of a metre or two), in both
+    /// frames: no refusal is ever a curve that does not fit, which nothing the player drew sets.
+    #[test]
+    fn quad_chains_never_refuse_a_curve_that_does_not_fit() {
+        let mut seed: u64 = 12345;
+        let mut rnd = move || { seed = seed.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407); ((seed >> 11) as f64) / ((1u64 << 53) as f64) };
+        let mut misfits = vec![];
+        for world in [false, true] {
+            for _chain in 0..40 {
+                let mut a = TrackApi::new(-73.985, 40.758, true);
+                if world { assert!(a.set_empty_frame(1)); }
+                a.set_route_tangent(true);
+                let o = if world { let p = a.from_lonlat(-73.985, 40.758); (p[0], p[1]) } else { (0.0, 0.0) };
+                let ends = [0.0, 0.0, o.0, o.1, 0.0, 0.0, 0.0, o.0 + 600.0, o.1, 0.0];
+                assert_eq!(a.add_route(&ends, &[], 4, false), 0, "{}", a.issues());
+                let mut end = a.route_end();
+                let mut heading = 0.0f64;
+                for _seg in 0..8 {
+                    let turn = (rnd() - 0.5) * 2.0 * if rnd() < 0.5 { 3.0 } else { 170.0 };
+                    let dist = 100.0 + rnd() * 2500.0;
+                    let lvl = if rnd() < 0.2 { (rnd() * 3.0) as i32 - 1 } else { a.w.net.node_level[end as usize] as i32 };
+                    let off = turn.to_radians();
+                    let (x0, y0) = (a.w.net.node_x[end as usize], a.w.net.node_y[end as usize]);
+                    let (x, y) = (x0 + dist * (heading + off).cos(), y0 + dist * (heading + off).sin());
+                    let e = [1.0, end as f64, 0.0, 0.0, 0.0, 0.0, 0.0, x, y, lvl as f64];
+                    let pv = a.preview_route(&e, &[], 4, false);
+                    if pv[0] == 0.0 {
+                        if a.issue_kinds().contains("ArcDoesNotFit") {
+                            misfits.push(format!("world {world} turn {turn:.2} dist {dist:.0}"));
+                        }
+                        continue;
+                    }
+                    assert_eq!(a.add_route(&e, &[], 4, false), 0);
+                    end = a.route_end();
+                    let p = &a.w.net.node_ports[end as usize];
+                    heading = if p.side[0] == 1 { a.w.net.node_heading[end as usize] + PI } else { a.w.net.node_heading[end as usize] };
+                }
+            }
+        }
+        assert!(misfits.is_empty(), "{misfits:#?}");
+    }
+
+    fn live(a: &TrackApi) -> Vec<u32> {
+        (0..a.w.net.edge_count() as u32).filter(|&e| a.w.net.edge_ok(e)).collect()
+    }
+    fn named(a: &TrackApi, name: &str) -> usize {
+        (0..a.w.net.node_count() as u32).filter(|&k| a.w.net.node_ok(k) && a.w.net.node_platform[k as usize] > 0 && a.w.net.node_name[k as usize] == name).count()
+    }
+    fn route(a: &mut TrackApi, from: [f64; 5], x: f64, y: f64, tracks: u8) -> u32 {
+        let ends: Vec<f64> = from.iter().copied().chain([0.0, 0.0, x, y, 0.0]).collect();
+        assert_eq!(a.add_route(&ends, &[], tracks, false), 0, "{}", a.issues());
+        a.route_end()
+    }
+    /// Every drawn point of `ex` lies `QUAD_SPACING` from the nearest of `local`, away from `taper`
+    /// metres of each end.
+    fn beside(a: &TrackApi, ex: &[u32], local: &[u32], taper: f64) {
+        for &p in ex {
+            let len = a.w.net.edge_len[p as usize];
+            for q in a.edge_render(p).chunks(3) {
+                let s = a.w.net.project(p, q[0], q[1]).0;
+                if s < taper || s > len - taper {
+                    continue;
+                }
+                let off = local.iter().map(|&l| a.w.net.project(l, q[0], q[1]).1).fold(f64::INFINITY, f64::min);
+                assert!((off - QUAD_SPACING).abs() < 0.05, "express {p} {off} m off at {s}");
+            }
+        }
+    }
+
+    /// T-708: doubling up. A double-track run of three pieces (a joint, then a station) gets an
+    /// express pair beside it, one piece each, joints and a twin station beside, loose ends at
+    /// both ends; one undo takes it all back. Track with a pair beside already, single track and
+    /// a crossover are refused. A branch from a junction swings in to meet at it. Constructed
+    /// track gets a blueprint pair, priced as the preview said.
+    #[test]
+    fn double_up_makes_quad() {
+        let mut a = TrackApi::new(-73.985, 40.758, true);
+        a.set_route_tangent(true);
+        let j = route(&mut a, [0.0, 0.0, 0.0, 0.0, 0.0], 1000.0, 0.0, 2);
+        let end = route(&mut a, [1.0, j as f64, 0.0, 0.0, 0.0], 1800.0, 300.0, 2);
+        let second = *live(&a).last().unwrap();
+        let (sx, sy, _) = geom::pos_at(a.w.net.edge_pieces(second), 450.0);
+        assert_eq!(a.add_station(2, second, sx, sy, 160, "Mid".into()), 0, "{}", a.issues());
+        let local = live(&a);
+        assert_eq!(local.len(), 3);
+        let price = a.preview_double_up(local[0]);
+        assert!(price > 0.0, "{}", a.issues());
+        let before = a.total_cost();
+        assert_eq!(a.double_up(local[2]), 0, "{}", a.issues());
+        assert!((a.total_cost() - before - price).abs() < 1e-6);
+        let ex: Vec<u32> = live(&a).into_iter().filter(|e| !local.contains(e)).collect();
+        assert_eq!(ex.len(), 3, "one express piece per piece");
+        beside(&a, &ex, &local, 0.0);
+        assert_eq!(named(&a, "Mid"), 2, "the station's twin");
+        let ends = (0..a.w.net.node_count() as u32).filter(|&k| a.w.net.node_ok(k) && a.w.net.node_ports[k as usize].n == 1).count();
+        assert_eq!(ends, 4, "loose ends beside both ends");
+        assert!(ex.iter().all(|&e| !a.w.net.edge_built[e as usize] && a.w.net.edge_tracks[e as usize] == 2));
+        // quad now: no second time, from any piece of either pair
+        for &e in local.iter().chain(&ex) {
+            assert_ne!(a.double_up(e), 0);
+            assert!(a.issue_kinds().contains("Alongside"), "{e}: {}", a.issue_kinds());
+        }
+        assert_eq!(a.undo(), 0);
+        assert_eq!(live(&a), local);
+        assert_eq!(named(&a, "Mid"), 1);
+        // a branch off the middle of the first piece meets it at a junction: the pair swings in
+        let (bx, by, _) = geom::pos_at(a.w.net.edge_pieces(local[0]), 500.0);
+        let ends: Vec<f64> = [2.0, local[0] as f64, bx, by, 0.0, 0.0, 0.0, 900.0, -900.0, 0.0].to_vec();
+        assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+        let junction = (0..a.w.net.node_count() as u32).find(|&k| a.w.net.node_ok(k) && a.w.net.node_ports[k as usize].n == 3).unwrap();
+        let tip = a.route_end();
+        let branch = live(&a).into_iter().find(|&e| a.w.net.edge_a[e as usize] == tip || a.w.net.edge_b[e as usize] == tip).unwrap();
+        assert_eq!(a.double_up(branch), 0, "{}", a.issues());
+        assert_eq!(a.w.net.node_ports[junction as usize].n, 4, "the express pair meets the junction");
+        assert_eq!(a.undo(), 0);
+        // single track is refused
+        route(&mut a, [1.0, end as f64, 0.0, 0.0, 0.0], 2600.0, 900.0, 1);
+        let single = live(&a).into_iter().find(|&e| a.w.net.edge_tracks[e as usize] == 1).unwrap();
+        assert_ne!(a.double_up(single), 0);
+        assert!(a.issue_kinds().contains("Tracks"));
+        assert_eq!(a.undo(), 0);
+        // constructed track: the pair is blueprint, what the preview priced
+        a.cash = 1e6;
+        assert_eq!(a.construct_all(), 0, "{}", a.issues());
+        let built = live(&a);
+        let price = a.preview_double_up(local[1]);
+        let cash = a.cash;
+        assert_eq!(a.double_up(local[1]), 0, "{}", a.issues());
+        assert_eq!(a.cash, cash, "blueprint costs nothing until constructed");
+        let ex: Vec<u32> = live(&a).into_iter().filter(|e| !built.contains(e)).collect();
+        assert_eq!(ex.len(), 3);
+        assert!(ex.iter().all(|&e| !a.w.net.edge_built[e as usize]));
+        assert!(price > 0.0);
+    }
+
+    /// T-711: the drawing tag's cost multiplier (`preview_route`'s fifth number) is the level's on
+    /// plain ground for quad as for double (0.3x at ground, 0.8x at +1), and quad's price is what
+    /// the edit adds, twice double's.
+    #[test]
+    fn quad_preview_multiplier_and_price() {
+        for level in [0.0, 1.0] {
+            let ends = [0.0, 0.0, 0.0, 0.0, level, 0.0, 0.0, 1000.0, 0.0, level];
+            let mut a = TrackApi::new(-73.985, 40.758, true);
+            a.set_route_tangent(true);
+            let double = a.preview_route(&ends, &[], 2, false);
+            let quad = a.preview_route(&ends, &[], 4, false);
+            assert_eq!((double[0], quad[0]), (1.0, 1.0), "{}", a.issues());
+            let want = level_mult(level as i8);
+            assert!((double[4] - want).abs() < 1e-6, "double {} at {level}", double[4]);
+            assert!((quad[4] - want).abs() < 1e-6, "quad {} at {level}", quad[4]);
+            assert!((quad[1] / double[1] - 2.0).abs() < 0.01, "quad {} against double {}", quad[1], double[1]);
+            let before = a.total_cost();
+            assert_eq!(a.add_route(&ends, &[], 4, false), 0);
+            assert!((a.total_cost() - before - quad[1]).abs() < 1e-9, "the tag's price is what the edit adds");
+        }
+    }
+
+    /// T-708: doubling up double track drawn on from a loose quad end carries on from the express
+    /// pair's loose end there, with no new end beside it.
+    #[test]
+    fn double_up_carries_on_from_quad() {
+        let mut a = TrackApi::new(-73.985, 40.758, true);
+        a.set_route_tangent(true);
+        let q = route(&mut a, [0.0, 0.0, 0.0, 0.0, 0.0], 800.0, 0.0, 4);
+        let quad = live(&a);
+        route(&mut a, [1.0, q as f64, 0.0, 0.0, 0.0], 1600.0, 100.0, 2);
+        let piece = *live(&a).last().unwrap();
+        assert_eq!(a.double_up(piece), 0, "{}", a.issues());
+        let ends = (0..a.w.net.node_count() as u32).filter(|&k| a.w.net.node_ok(k) && a.w.net.node_ports[k as usize].n == 1).count();
+        assert_eq!(ends, 4, "the two pairs' ends at each end, none left between");
+        let ex: Vec<u32> = live(&a).into_iter().filter(|e| !quad.contains(e) && *e != piece).collect();
+        beside(&a, &ex, &[piece], 0.0);
     }
 }

@@ -7,7 +7,7 @@ const TEXT: Record<string, string | (() => string)> = {
   "Geom:ZeroLeg": "Two points are in the same place.",
   "Geom:Reversal": "The track would turn back on itself.",
   "Geom:RadiusTooSmall": () => `The curve is too tight. Curves need a radius of at least ${length(100)}.`,
-  "Geom:ArcDoesNotFit": "The curve does not fit between its neighbours.",
+  "Geom:ArcDoesNotFit": "A curve's set radius is too wide for the corners either side of it. Make it smaller or set it to auto.",
   "Geom:RampTooShort": () => `Not enough room to change elevation. Each step up or down needs ${length(200)} of ramp.`,
   "Geom:LevelRange": "Elevation goes from −3 to +3.",
   GroundOverWater: "Track at ground level cannot cross water. Pick a viaduct or tunnel elevation.",
@@ -38,6 +38,7 @@ const TEXT: Record<string, string | (() => string)> = {
   Tracks: "Track is single or double.",
   OutsideWorld: "Track cannot be built within 5 degrees of a pole or across the 180th meridian.",
   Crossover: "A crossover keeps its shape. Delete it and place it again.",
+  Alongside: "This track has a pair beside it already.",
   NoParallel: () => `A crossover needs other track alongside within ${length(15)}, with ${length(60)} of plain track each way.`,
 };
 

@@ -1,20 +1,19 @@
 // Settings (T-037): display settings (SPEC 8) and the theme, remembered per browser: the commuter
-// bubbles (T-097: off, where commuters live, where they work), track colour, trains, station names,
+// bubbles (T-097: off, where commuters live, where they work), trains, station names,
 // capacity markers (T-031), map labels, the riders drawn on the network (T-084: line width by the
 // track display, train fill; the station circles are in the Stations tab since T-213), the UI
 // scale (T-247), and last the trip explorer's button (T-220). The saves are in their own panel
 // (T-251, ui/SavesPanel.tsx). T-253: no explanatory notes, only controls and their labels.
 
 import { FONT_KEYS, FONTS, type FontKey } from "../game/fonts";
-import { levelLabel, speed } from "../game/format";
-import { LEVEL_COLOURS, SPEED_STOPS } from "../game/palette";
-import { LEVELS } from "../game/types";
 import { display, setDisplay, shade, SHADE_NAMES, theme, THEMES, tool, UI_SCALES, uiScale, type Shade, type Theme } from "../game/ui";
 import { pickTool, TRIP_KEY } from "./tabs";
 import { Check, Segmented, Stepper } from "./widgets";
 
 const THEME_NAME: Record<Theme, string> = { pink: "Pink", blue: "Blue", green: "Green" };
 const SHADE_NAME: Record<Shade, string> = { light: "Light", dark: "Dark" };
+type DayShown = "average" | "weekday" | "weekend";
+const DAY_OPTIONS: [DayShown, string][] = [["average", "Average"], ["weekday", "Weekday"], ["weekend", "Weekend"]];
 
 export function SettingsTab() {
   const d = display.value;
@@ -34,31 +33,11 @@ export function SettingsTab() {
           onInput={(e) => setDisplay("bubbleOpacity", Number((e.target as HTMLInputElement).value))} />
       </label>
       {/* T-222: longer-trip bubbles are always drawn; their setting is gone */}
-      {/* T-464: the day the demand views show is chosen in the demand bar (ui/DemandSelector.tsx) */}
-      <div class="h">Track display</div>
-      <div class="track-modes"><Segmented<"line" | "traffic" | "height" | "speed">
-        options={[
-          ["line", "Line"],
-          ["traffic", "Line + traffic thickness"],
-          ["height", "Elevation"],
-          ["speed", "Max speed"],
-        ]}
-        value={d.trackColour}
-        onChange={(v) => setDisplay("trackColour", v)}
-      /></div>
-      {d.trackColour === "speed" && <ul class="speed-key">
-        {SPEED_STOPS.map(([v, colour]) => <li><i style={{background: colour}} />{speed(v, 5)}</li>)}
-      </ul>}
-      {d.trackColour === "height" && (
-        <ul class="levels-key">
-          {LEVELS.map((l) => (
-            <li>
-              <i style={{ background: LEVEL_COLOURS[l] }} />
-              {levelLabel(l)}
-            </li>
-          ))}
-        </ul>
-      )}
+      {/* T-703: the day the demand views are for (T-464), here since it left the map; the track display is on the map (ui/DemandSelector.tsx) */}
+      <div class="slider" data-tip="The day the demand figures are for. The average counts 5 weekdays and 2 weekend days over 7. Trains, platforms and riders over the past 24 hours follow the clock.">
+        <span>Day</span>
+        <Segmented<DayShown> options={DAY_OPTIONS} value={d.dayShown === "weekday" || d.dayShown === "weekend" ? d.dayShown : "average"} onChange={(v) => setDisplay("dayShown", v)} />
+      </div>
       <div class="h">Show</div>
       <div class="checks">
         <Check checked={d.trains} onChange={(v) => setDisplay("trains", v)}>

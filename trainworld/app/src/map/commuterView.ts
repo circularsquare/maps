@@ -512,11 +512,10 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     const xy = cellsWorld;
     const at = (c: number): [number, number] => [xy[c * 2], xy[c * 2 + 1]];
     const trip: Selection = sel.end === "home" ? { kind: "trip", from: at(own), to: at(to) } : { kind: "trip", from: at(to), to: at(own) };
-    const what = sel.areas > 1 ? "From the selected bubbles" : sel.end === "home" ? "From the selected homes" : "From the selected destinations";
     // T-586: the explorer counts the trips between the selection and every cell of the far bubble,
     // as this bubble's hover does
     const places = { end: sel.end, near: Uint32Array.from(sel.cells), far: g.members.slice(g.off[q], g.off[q + 1]) };
-    tripOpenedFrom.value = { trip, from: sel, what, places };
+    tripOpenedFrom.value = { trip, from: sel, places };
     return trip;
   };
 

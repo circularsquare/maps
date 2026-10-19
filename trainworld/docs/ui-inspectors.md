@@ -169,7 +169,9 @@ purpose filter the purpose drawn is ringed in the bar.
 - **Line bullets** [T-521]: one component (`Chip` in `ui/widgets.tsx`), drawn the same everywhere.
   Hovering one gives the line's name and a click selects the line, except in the selected line's
   own panel (its title bullet opens the colour and symbol editor) and on a search row that is the
-  line itself.
+  line itself. The map's tags draw the same bullet as plain DOM (`lineBullet`). In both, the
+  symbol is moved so its ink, not the font's line box, is centred in the circle (`ui/bullet.ts`,
+  T-705; measured to within 1 px in all four fonts).
 - **A click on a station selects its whole complex** [T-249]: complex view, whatever was selected
   before (there is no Station / Complex switch). A station on its own is a complex of one. Complex
   rules: [ui-map.md](ui-map.md) "Station complexes".
@@ -291,7 +293,7 @@ destinations at the end, and how the demand model's people would make one of the
   trip for that pair (hovers end "Click to explore this trip"), homes to destinations. The
   selection's end is its busiest cell under the purpose filter, the far end the clicked bubble's
   cell with most of the selection's trips: the representative trip's two ends. The inspector then
-  has a Back button to that selection.
+  has a Back button to that selection (alone, with no line saying where it came from).
 - The trip is a selection: it stays after the tool is left, until Esc or an empty click, and while
   selected panning does not change the focused zone. It is asked again at each published round,
   and when the purpose filter or the day changes.
@@ -320,18 +322,22 @@ destinations at the end, and how the demand model's people would make one of the
   hover the sum, "Walk 6.3 + wait 2.1 + ride 10.1 = 19 min") and **Effective time** [T-699, T-549]
   (the minutes the model weighs against the other methods; its hover is only the equation, the
   first route's terms in the rows' order, each real amount times its weight, "Walk 6.3 × 1.47 +
-  wait 2.1 + ride 10.1 × 1.1 + fare $1.92 × 3 − other routes and stations 11.8 = 16 min"; the
+  wait 2.1 + ride 10.1 × 1.1 + fare $1.92 × 3 − choice of routes 11.8 = 16 min"; the
   last term is what the model's pooled figure, over every station and route people use, is below
-  this route's sum, so the equation always adds to the row; the terms are the worker's perceived
-  minutes, `routeTerms` in `game/trip.ts`), then the share of the trip's train riders taking the
-  route, with up to four "Other routes" and their shares. "By car" and "By walking" read the same
+  this route's sum, so the equation always adds to the row, and one plain line under the equation
+  says choice of routes is the time saved by having several ways to go; the terms are the worker's
+  perceived minutes, `routeTerms` in `game/trip.ts`), then one sentence with the share of the
+  trip's train users on the route and the same trains from other platforms or walks added ("65% of
+  the train users on this trip take this route, the rest use different routes."), with up to four
+  "Other routes" and their shares, then a "Smaller routes" row with what is left [T-709]; the
+  sentence's and the row's hover say how many pairs of stations the users spread over and what the
+  busiest pair takes (in New York the main route has 5 to 12% and the rest is thin, notes/T-709.md). "By car" and "By walking" read the same
   way. Car: **Drive** (real minutes; its hover the straight line, the road length and the average
   speed of this drive, `DemandApi.trip`'s road km over its minutes), **Parking** (minutes, with the
   price of parking and any congestion charge counted as minutes), **Car ownership** (dollars) and
   Effective time ("Drive 17.6 × 1.33 + parking 67.3 + ownership $1.99 × 3 = 97 min"). Walking: one
-  **Time** row (real minutes of walking the whole way, the quickest check of why a place does or
-  does not walk) and Effective time ("Walk 52.4 × 1.5 = 79 min"); over 10 km it says walks are
-  not offered. "Train by period": a row a period with the representative
+  Effective time row [T-704] (its hover "Walk 52.4 × 1.5 = 79 min" holds the real minutes of
+  walking the whole way); over 10 km it says walks are not offered. "Train by period": a row a period with the representative
   trip's chance of the train, a click showing that period. Without a train it says why (no station in reach, walks too long, no
   service in the period). Every row and bar segment has a hover with its figure and what it is made
   of.

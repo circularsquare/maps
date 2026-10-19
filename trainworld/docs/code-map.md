@@ -106,7 +106,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 ### src/ui/: Preact components
 
 `Dock.tsx` (the dock, its icon tabs and resizing, T-252); `tabs.tsx` (Build, Lines, Stations and
-Money); `MoneyHistory.tsx` (the Money tab's history charts, T-447); `Cities.tsx` (its Cities list, T-550); `SettingsTab.tsx`; `SavesPanel.tsx` (saved games, T-251); `widgets.tsx` (chips, steppers,
+Money); `MoneyHistory.tsx` (the Money tab's history charts, T-447); `Cities.tsx` (its Cities list, T-550); `SettingsTab.tsx`; `SavesPanel.tsx` (saved games, T-251); `bullet.ts` (`bulletShift`: the transform that centres a line bullet's text by its measured ink box and the font's baseline, per font, symbol and size, T-705; used by `Chip` and `lineBullet`); `widgets.tsx` (chips, steppers,
 checkboxes and the inline SVG icons); `ColourPicker.tsx` (the line colour picker: preview while dragging, one commit on release, T-672); `TopBar.tsx`; `StatusTag.tsx` (the demand status tag on the map's top row); `Toolbar.tsx` (tool hints and the confirmation
 dialog); `DemandSelector.tsx` (None/Homes/Destinations and the purpose filter); `Blueprint.tsx`
 (Build's quote and Construct, and the Select tool's selection bar on the map, T-353); `Debug.tsx` (the `?debug=1` readout); `inspector/` (one inspector
@@ -183,6 +183,10 @@ Run from the maps root (`node trainworld/checks/<file>`).
   6135 by default), `t486-click-on-top.mjs` (a click on a blueprint point's square over a bubble
   selects the track, beside it the bubble), `t533-draw-order.mjs` (the real save: the shorter line
   on top where lines share ground, a line with no trains under; port 6130 by default),
+  `t658-lanes.mjs` (the real save: the overlay at zoom 12 and 15 pixel for pixel the baseline
+  build's, 8800 by default; either of double track's two tracks picks the line at 17.5; two
+  trains passing each picked on its own track; draw time; screenshots at 15 to 19, light and
+  dark; port 6160 by default),
   `t586-trip-agrees.mjs` (New York's real save and a Mumbai test line: a far-end bubble's hover,
   the trip explorer opened from it and the worker's far-end sums agree within 1 point under every
   purpose filter and day; port 6196 by default),

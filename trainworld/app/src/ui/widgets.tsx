@@ -4,6 +4,7 @@ import type { ComponentChildren } from "preact";
 import { useRef, useState } from "preact/hooks";
 import { inkOn } from "../game/palette";
 import { PLANE_PATH } from "../map/glyphs";
+import { bulletEpoch, bulletShift } from "./bullet";
 import type { LineInput } from "../game/types";
 import { selection, type ListSort } from "../game/ui";
 import type { Signal } from "@preact/signals";
@@ -71,10 +72,11 @@ export function Chip({ line, size = "", plain, pick, gone }: { line: LineInput; 
     if (pick) pick(line);
     else selection.value = { kind: "line", line: line.id };
   };
+  void bulletEpoch.value;
   return (
     <span class={"chip " + size + (plain ? "" : " link")} style={{ "--c": line.colour, "--ct": inkOn(line.colour), visibility: gone ? "hidden" : undefined }}
       data-tip={plain ? undefined : line.name} onClick={click}>
-      <span>{line.letter}</span>
+      <span style={{ transform: bulletShift(line.letter, size) }}>{line.letter}</span>
     </span>
   );
 }

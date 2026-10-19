@@ -251,7 +251,7 @@ effect(() => capacity.setVisible(display.value.capacity && !SYNTH));
 // Resting the pointer on track says what the track display shows there (T-157).
 startTrackHover(map, overlay);
 // T-686: from the platforms' zoom, chimes, pops and faces as trains let riders off and on
-const stationLife = SYNTH ? null : startStationLife(map, overlay);
+const stationLife = SYNTH ? null : startStationLife(map, overlay, (notes) => client.post({ kind: "lineNotes", notes }));
 if (DEBUG && stationLife) (window as any).twLife = stationLife;
 map.on("load", () => {
   effect(() => setBasemapLabels(map, display.value.basemapLabels));

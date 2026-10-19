@@ -37,7 +37,7 @@ import type { ClockClient, CrossoverAnswer, PreviewAnswer } from "../workers/clo
 import { toLngLat, toLocal } from "./geo";
 import { circleOnScreen } from "./curveCircle";
 import { strokesFromParts, strokesFromPreview } from "./network";
-import { PLATFORM_HALF_M, platformShape, reversed, stationPath, stationShape, waysFrom } from "./stationGeometry";
+import { pairBeside, PLATFORM_HALF_M, platformShape, reversed, stationPath, stationShape, waysFrom } from "./stationGeometry";
 import type { Overlay } from "./overlay";
 import type { StopMarkers } from "./stopMarkers";
 import { chip, elevationFact, factRow, speedFact } from "./trackTagRows";
@@ -351,8 +351,13 @@ export class Tools {
   private async segmentClick(e: MapMouseEvent, s: Snap) {
     const from = this.start;
     if (!from || this.placing) return;
-    const [sx, sy] = this.screen(from.lx, from.ly);
-    if (Math.hypot(sx - e.point.x, sy - e.point.y) < 6) return; // the start itself
+    // T-707: a click on the start ends the run, as a double click does, or drops a start with no
+    // segment yet; a segment can never end where it starts, so a loop's end is never this point
+    const [sx, sy] = this.screen(from.lx, from.ly), se = this.endOf(s);
+    if (Math.hypot(sx - e.point.x, sy - e.point.y) < 6 || (from.end.kind === "node" && se.kind === "node" && se.node === from.end.node)) {
+      this.reset();
+      return;
+    }
     const chain = e.originalEvent.shiftKey || keepPlacing.peek();
     const p = this.lastPreview;
     this.placing = true;
@@ -782,6 +787,42 @@ export class Tools {
     this.ghost.setAttribute("class",`station-ghost ${this.verdict()?.ok===false?"bad":"ok"}`);
     this.ghost.style.transform=`translate(${shape.x}px,${shape.y}px)`;
     this.ghost.firstElementChild!.setAttribute("d",stationPath(shape));
+    // on quad track the pair beside gets its platform too, as the track model places it (T-708)
+    const dir=ways.find((p)=>p.length>=6);
+    const beside=dir?pairBeside(this.tracksNear(h.lx,h.ly,12*perM,candidates),h.lx,h.ly,dir,perM):null;
+    let twin=this.ghost.children[1] as SVGPathElement|undefined;
+    if (beside) {
+      const tp=n.edgePts.get(beside.edge)!;
+      const ts=stationShape(beside.x,beside.y,platformShape(waysFrom(tp,beside.x,beside.y),0,buildPlatform.peek()/2*perM),PLATFORM_HALF_M*perM,(x,y)=>this.screen(x,y),style,false);
+      if (!twin) twin=this.ghost.appendChild(document.createElementNS("http://www.w3.org/2000/svg","path"));
+      twin.setAttribute("d",stationPath(ts));
+      twin.setAttribute("transform",`translate(${ts.x-shape.x},${ts.y-shape.y})`);
+      twin.style.display="";
+    } else if (twin) twin.style.display="none";
+  }
+
+  /** The drawn tracks whose bounds come within `pad` of (x, y), but `skip`: the twin platform's
+   * candidates, bounds kept for one network version. */
+  private boxes: { version: number; box: Map<number, [number, number, number, number]> } | null = null;
+  private tracksNear(x: number, y: number, pad: number, skip: number[]): [number, ArrayLike<number>][] {
+    const n=this.overlay.renderer.net, v=world.peek()?.version ?? -1;
+    if (!n) return [];
+    if (this.boxes?.version!==v) {
+      const box=new Map<number,[number,number,number,number]>();
+      for (const [id,p] of n.edgePts) {
+        let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+        for (let k=0;k<p.length;k+=3) x0=Math.min(x0,p[k]),x1=Math.max(x1,p[k]),y0=Math.min(y0,p[k+1]),y1=Math.max(y1,p[k+1]);
+        box.set(id,[x0,y0,x1,y1]);
+      }
+      this.boxes={version:v,box};
+    }
+    const out:[number,ArrayLike<number>][]=[];
+    for (const [id,[x0,y0,x1,y1]] of this.boxes.box) {
+      if (skip.includes(id) || x<x0-pad || x>x1+pad || y<y0-pad || y>y1+pad) continue;
+      const p=n.edgePts.get(id);
+      if (p) out.push([id,p]);
+    }
+    return out;
   }
 
   /** Faint rings 1 and 2 km, or miles in US units (ground distance), round the station being placed (T-312), under the
@@ -1134,11 +1175,28 @@ function placementTag(pv: PreviewAnswer, level: number): HTMLDivElement[] {
     out.push(div(`${distance(pv.lengthM)}, cost `, chip(`${pv.mult.toFixed(2)}x`, pv.mult > 1.005 ? COST_YELLOW : null, 0.2 + 0.6 * dear),
       `, ${moneyShort(pv.cost * 1e6)}`));
   }
-  // Ground track over water is raised to a bridge (T-656): the elevation it reaches follows the placed one.
-  let reached = level;
-  if (level === 0) for (let i = 2; i < pv.pts.length; i += 3) reached = Math.max(reached, Math.round(pv.pts[i] / 8));
-  out.push(factRow(reached > level ? elevationFact(level, reached) : elevationFact(level), speedFact(top)));
+  const [first, ...more] = placedLevels(pv.pts, level);
+  out.push(factRow(elevationFact(first, ...more), speedFact(top)));
   return out;
+}
+
+/** The elevations a segment passes, in order and each once: where it starts, the top of a
+ * bridge (T-656) or the bottom of a dip, where it ends (T-707: a ramp names both its levels).
+ * `pts` x, y, height (m) triples; `level` when there are none. */
+function placedLevels(pts: ArrayLike<number>, level: number): number[] {
+  const n = pts.length / 3;
+  if (n < 1) return [level];
+  const a = pts[2] / 8, b = pts[(n - 1) * 3 + 2] / 8;
+  let hi = -Infinity, lo = Infinity;
+  for (let i = 2; i < pts.length; i += 3) {
+    hi = Math.max(hi, pts[i] / 8);
+    lo = Math.min(lo, pts[i] / 8);
+  }
+  const seq = [a];
+  if (hi > Math.max(a, b) + 0.25) seq.push(hi);
+  if (lo < Math.min(a, b) - 0.25) seq.push(lo);
+  seq.push(b);
+  return [...new Set(seq.map(Math.round))];
 }
 
 /** The M1 train's top speed, km/h: straight track's limit (track-and-service.md 6.1). */

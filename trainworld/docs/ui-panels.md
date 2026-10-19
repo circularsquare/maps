@@ -9,7 +9,7 @@ Cuter than Subway Builder and NIMBY Rails: a little pastel, a little Japanese, a
 still minimal with the map first. **The style applies to the UI only** (dock, panels, buttons,
 bars); the network takes the line colours ([ui-map.md](ui-map.md)).
 
-- **Zen Maru Gothic** everywhere, station names, map DOM controls and form controls included (the
+- **Nunito** (Zen Maru Gothic for kana and kanji; the font is a Settings choice, T-703) everywhere, station names, map DOM controls and form controls included (the
   map container inherits it rather than MapLibre's Helvetica) [T-101]. Few font sizes and weights:
   the mock's 3 sizes and 2 weights are the ceiling. The basemap's labels use it too, Regular only,
   faint grey, from glyph tiles hosted beside the app (`app/public/fonts/`, `pipeline/glyphs.py`,
@@ -125,11 +125,10 @@ below 700 px the bar takes two rows (name, cash, time and speed over the split).
   games.
 
 **Demand shown for** [T-260, T-266, T-464; `ui/DemandSelector.tsx`, display setting `dayShown`]: a
-dropdown at the end of the demand bar, after the purpose filter: Average day (the default),
-Weekday or Weekend. The average is 5 weekdays and 2 weekend days over 7 ([demand-timing.md](demand-timing.md)
+"Day" choice in Settings, right under the demand bubbles' Opacity (it left the map's demand bar,
+T-703): Average (the default), Weekday or Weekend. The average is 5 weekdays and 2 weekend days over 7 ([demand-timing.md](demand-timing.md)
 4.2). It sets the day every demand view shows, the split included, and does not follow the clock,
-so nothing jumps when the clock enters a weekend. The control takes the accent border when it is
-not the average. Hovers state the day beside every demand figure ("12,400 trip legs per day",
+so nothing jumps when the clock enters a weekend. Hovers state the day beside every demand figure ("12,400 trip legs per day",
 "per weekday", "per weekend day": `shownDayPhrase` in `game/ui.ts`). A switch of day shows at
 once (the bubbles' catch-up is for a new forecast, not another day). The trains, platforms, the
 past 24 hours' riders and the panels' Today counts always follow the clock.
@@ -190,22 +189,25 @@ dismissed, and the map and tools are blocked meanwhile.
 
 `ui/SettingsTab.tsx`, remembered per browser, in order: Demand bubbles, two sliders: Size
 (0.5-2x, [T-099]) and Opacity (20-100% of the built alpha, default 90%, [T-470]; for the
-commuter and longer-trip bubbles, not station discs), Track display (four modes with their key,
-[ui-map.md](ui-map.md)), Show (trains, station names, capacity markers, flat junctions and crossings, map labels), Riders on trains
+commuter and longer-trip bubbles, not station discs) and the Day choice (Average, Weekday, Weekend;
+"Demand shown for", below) [T-703], Show (trains, station names, capacity markers, flat junctions and crossings, map labels), Riders on trains
 and platforms ("How full each train is", "How full each platform is", both on by default)
-[T-164], Stations up close (Faces and Sound, both on by default, and a Volume slider while Sound is on; [ui-map.md](ui-map.md) Life at stations) [T-686], Theme (Light or Dark, light by default, over Pink, Blue or Green) [T-039], Panel and text size, Font (a trial, T-698), Units and performance, and Explore a trip at the bottom [T-220]. Station demand
+[T-164], Stations up close (Faces and Sound, both on by default, and a Volume slider while Sound is on; [ui-map.md](ui-map.md) Life at stations) [T-686], Theme (Light or Dark, light by default, over Pink, Blue or Green) [T-039], Panel and text size, Font [T-698], Units and performance, and Explore a trip at the bottom [T-220]. Station demand
 circles are at the top of the Stations tab instead [T-213].
 
-**Panel and text size** [T-247]: 80% to 120% in 5% steps, 100% by default, no reset button. It
+**Panel and text size** [T-247]: 80% to 120% in 5% steps, 90% by default (T-703), no reset button. It
 zooms the dock, top bar, map buttons, search, loading card, tool notes and dialogs, and sizes the
 text of the map's DOM tags and the hover tag; the map itself is never scaled.
 
-**Font** [T-698, a trial]: Zen Maru Gothic (default), M PLUS Rounded 1c, Kosugi Maru (one weight, so
-bold is synthesised) or Nunito (Latin only, kana and kanji fall back to Zen Maru Gothic), remembered
-per browser. The panels, station names and map controls follow the `--font` variable (`game/fonts.ts`,
-`game/ui.ts`); a chosen font's stylesheet is fetched from Google Fonts (all SIL OFL) only when it is
-first chosen, and station names and capacity tags are measured again once it has loaded. The map's
-own labels are glyph tiles and stay Zen Maru Gothic.
+**Font** [T-698, T-703]: Nunito (default), Zen Maru Gothic, M PLUS Rounded 1c or Kosugi Maru (one
+weight, so bold is synthesised), remembered per browser. Nunito is self-hosted (`public/fonts/`,
+Latin and Latin extended subsets of the variable file, about 75 kB, SIL OFL) and has no Japanese, so
+kana and kanji fall back to Zen Maru Gothic, which `index.html` loads from Google Fonts. The panels,
+station names and map controls follow the `--font` variable (`game/fonts.ts`, `game/ui.ts`); the
+other choices' stylesheets are fetched from Google Fonts (all SIL OFL) only when first chosen, and
+station names and capacity tags are measured again once a font has loaded. The map's own labels are
+glyph tiles and stay Zen Maru Gothic. Stored settings from before T-703 (stored version below 3) lose
+their saved font and size once, so they get Nunito and 90%.
 
 **Units and performance** [T-381]: "US units" (off by default) shows every distance, length and
 speed in miles, mph and feet instead of kilometres, km/h and metres: panels, inspectors, hovers, the

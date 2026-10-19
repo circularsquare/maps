@@ -14,7 +14,7 @@ import { BOX_WIDTH_ZOOM, boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, bridgeShape, connec
 import { LEVEL_COLOURS, NET_INK, PLATFORM_BLUE, rgb } from "../game/palette";
 import { shadeColours } from "../game/shades";
 import { platformRoom, pulsesBetween, readBoardHour, QUEUE_STRIDE, type BoardHour } from "../game/boarding";
-import { anchor, anchorPsi, EARTH_C, localToMercMatrix, mul4, PSI_PER_UNIT } from "./geo";
+import { anchor, anchorPsi, EARTH_C, kAtY, localToMercMatrix, mul4, PSI_PER_UNIT } from "./geo";
 import { GradeMarks } from "./gradeMarks";
 import { F_BLUEPRINT, lineAt, type NetworkBuffers, type Strokes } from "./network";
 
@@ -42,6 +42,21 @@ const TRAIN_PX: [number, number][] = [[10, 3], [11, 5.25], [12, 6], [15, 9]];
  * thinning to 40% of T-191's 2.1 px at zoom 9 (T-205, Anita: "lower min line thickness like 40%").
  * Bare track, the casing and a selected line's extra width follow the same steps. */
 const LINE_PX: [number, number][] = [[9, 0.85], [12, 3.9], [15, 6.6]];
+/** Double track's two tracks (T-658): their centres 4 m apart on the ground, each a line's width
+ * of LANE_SHARE of that (2.4 m) once apart. Where 4 m is LANE_GROW_PX on screen a double track's
+ * stroke starts growing to the pair's width, which it reaches at LANE_PART_PX, where the two tracks
+ * start parting; they are fully apart at LANE_APART_PX (zoom 16.7 to 17.2 in New York). */
+const LANE_M = 4, LANE_SHARE = 0.6, LANE_GROW_PX = 4, LANE_PART_PX = 7, LANE_APART_PX = 10;
+
+/** How far double track has opened into two tracks at `zoom`, by the size of 4 m on screen at the
+ * view's anchor: the gap in CSS px, the growth and parting (0-1), and half the pair's drawn width
+ * in CSS px once it has grown (0 before), for picking. */
+export function laneState(zoom: number) {
+  const gap = LANE_M * kAtY(0) * (512 * 2 ** zoom) / EARTH_C;
+  const grow = Math.max(0, Math.min(1, (gap - LANE_GROW_PX) / (LANE_PART_PX - LANE_GROW_PX)));
+  const t = Math.max(0, Math.min(1, (gap - LANE_PART_PX) / (LANE_APART_PX - LANE_PART_PX)));
+  return { gap, grow, t, reach: grow > 0 ? 0.5 * (1 + LANE_SHARE) * gap : 0 };
+}
 /** Platform crowds (T-164, T-219): drawn from this zoom, where platforms are (T-204), as each side's
  * half of the box filling from its middle outwards in `CROWD_RGB`, red (BAD_RGB) once that side is
  * full (T-559). */
@@ -77,7 +92,7 @@ precision highp float;
 precision highp int;
 uniform mat4 u_matrix;
 uniform vec2 u_viewport;
-uniform vec3 u_width;        // normal, extra when selected, (unused)
+uniform vec3 u_width;        // normal, extra when selected, each track's once apart (T-658)
 uniform float u_casing;      // extra px for the casing pass, 0 for the colour pass
 uniform vec3 u_casing_rgb;   // white, or dark in the dark theme (game/shades.ts)
 uniform float u_cap;         // > 0: no wider than this (px), the track drawn through stations (T-236)
@@ -86,6 +101,9 @@ uniform int u_sel_line;
 uniform int u_sel_edge;
 uniform int u_only_sel;
 uniform int u_bp_part;       // T-695: 0 every stroke, 1 all but blueprint, 2 blueprint only
+uniform vec4 u_lanes;        // T-658: 4 m in px, how far the tracks have parted (0-1), how far the
+                             // stroke has grown to their width (0-1), a blueprint track's width apart
+uniform int u_lane_mode;     // 0 one stroke, 1 the band under both tracks, 2 the right track, 3 the left
 uniform float u_dim;        // line strokes other than the selected line's: share of full strength (T-233)
 uniform int u_by_level;
 uniform int u_by_speed;
@@ -109,6 +127,7 @@ in float a_flags;
 in float a_speed;
 in float a_dist;
 in float a_wmul;            // width as a multiple of the line width (riders, T-084); 1 otherwise
+in vec2 a_lane;             // T-658: how far apart its two tracks are at its start and end, 0-1
 out vec3 v_color;
 out float v_alpha;
 out vec4 v_cap;             // px: along from the segment's start, along to its end, across, half the width
@@ -125,9 +144,37 @@ void main() {
   if ((u_only_sel == 1 && !sel) || (u_casing > 0.0 && blueprint && !placement && !bpTrack) || (u_bp_part == 1 && blueprint) || (u_bp_part == 2 && !blueprint)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   // a line planned along blueprint fills the track's middle (T-331: narrower than a line now)
   bool bpLine = blueprint && !placement && u_kind == 1;
-  float w = bpTrack ? u_bp.x + (sel ? u_width.y : 0.0) + (u_casing > 0.0 ? 2.0 * u_bp.y : 0.0)
-    : bpLine ? u_bp.x + (sel ? u_width.y : 0.0) + u_casing
-    : u_width.x * a_wmul + (sel ? u_width.y : 0.0) + u_casing;
+  // double track as its two tracks close in (T-658): first the stroke grows to the pair's width
+  // (u_lanes.z), then the two tracks part inside it (u_lanes.y), so its outline never jumps
+  float lfm = max(a_lane.x, a_lane.y), G = u_lanes.x, t = u_lanes.y;
+  float lt = blueprint && !placement ? u_lanes.w : u_width.z;
+  float core = bpTrack || bpLine ? u_bp.x + 2.0 * u_bp.y : u_width.x;
+  float grow = u_lanes.z * max(0.0, lfm * (G + lt) - core * (bpTrack || bpLine ? 1.0 : a_wmul));
+  float extra = sel ? u_width.y : 0.0;
+  float w, lane_off = 0.0;
+  if (u_lane_mode == 0) {
+    w = (bpTrack ? u_bp.x + extra + (u_casing > 0.0 ? 2.0 * u_bp.y : 0.0)
+      : bpLine ? u_bp.x + extra + u_casing
+      : u_width.x * a_wmul + extra + u_casing) + grow;
+  } else {
+    // the gap opens from the middle while the pair's width stays: each track is half of what is
+    // left; the band under both is the pair's width, or the traffic width behind them (Anita,
+    // 2026-10-19)
+    float gap = t * (G - lt);
+    float wl = lfm > 0.0 ? 0.5 * (max(core, G + lt) - gap) : mix(core, lt, t);
+    float half_ = 0.5 * (gap + wl);
+    lane_off = half_;
+    float band = max(core * (bpTrack || bpLine ? 1.0 : a_wmul), lfm * 2.0 * half_ + wl);
+    bool casing = u_casing > 0.0;
+    bool keep = u_lane_mode == 1
+      ? (casing ? !bpTrack : u_kind == 1 && !blueprint)
+      : (casing ? bpTrack : true) && (u_lane_mode == 2 || lfm > 0.0);
+    if (!keep) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+    w = u_lane_mode == 1 ? band + extra + u_casing
+      : bpTrack || bpLine ? (casing ? wl : max(0.0, wl - 2.0 * u_bp.y))
+      : wl;
+    if (u_cap > 0.0 && u_lane_mode > 1) w = min(w, 0.5 * u_cap);
+  }
   if (u_cap > 0.0) w = min(w, u_cap);
   // thinner than a pixel (zoomed far out, T-205): a pixel wide and fainter, rather than broken up
   float faint = clamp(w, 0.05, 1.0);
@@ -146,6 +193,9 @@ void main() {
   vec2 nrm = vec2(-dir.y, dir.x);
   vec4 c = along < 0.5 ? c0 : c1;
   vec2 off = nrm * side * w * 0.5 + dir * (along * 2.0 - 1.0) * w * 0.5;
+  // trains keep right (T-319): a line's strokes run in its run 0's direction, so its run 0 has the
+  // right-hand track (-nrm) and run 1 the left
+  if (u_lane_mode > 1) off -= nrm * (u_lane_mode == 2 ? 1.0 : -1.0) * (along < 0.5 ? a_lane.x : a_lane.y) * lane_off;
   c.xy += off / half_vp * c.w;
   gl_Position = c;
   // round caps (T-673): the quad runs half a width past each end; the fragment shader rounds it
@@ -174,6 +224,8 @@ void main() {
   else v_color = texelFetch(u_line_colours, ivec2(int(a_colour) % ${LINES_W}, int(a_colour) / ${LINES_W}), 0).rgb;
   // other blueprint colours (a planned line, a selected blueprint, by height or speed) lighter
   if (bp && !bpMid && u_casing <= 0.0) v_color = swOff ? mix(v_color, u_bp_off_fade, 0.8) : mix(v_color, vec3(1.0), 0.45);
+  // the band behind a line's two tracks, pale so they stand out on it
+  if (u_lane_mode == 1 && u_casing <= 0.0) v_color = mix(v_color, u_casing_rgb, 0.6 * t);
 }`;
 
 const STROKE_FS = `#version 300 es
@@ -576,6 +628,8 @@ uniform float u_dim;               // the others' share of full strength
 uniform vec2 u_sel_trip;           // the selected train (T-242): profile, departure - epoch; x < 0 none
 uniform highp int u_pass;          // 0 every train but the selected, 1 the selected's halo, 2 the selected
 uniform float u_psi0;              // the anchor's isometric latitude (T-307): k = cosh(u_psi0 - y * PSI_PER_UNIT)
+uniform highp sampler2D u_lane_tex; // R32F per sample: how far apart its track's two tracks are, 0-1 (T-658)
+uniform vec2 u_lane;               // px from the centre line to a track's once parted, how far parted (0-1)
 out float v_alpha;
 in vec2 a_load;               // this trip's first load in u_loads or -1, seconds to its last stop
 ${POS_GLSL}
@@ -589,6 +643,15 @@ out float v_front;
 out vec2 v_consist;
 out float v_detail;
 out float v_cab;
+
+/** How far apart the two tracks are at distance d along run 0 (laneAt in network.ts). */
+float laneAt(vec4 L, float d) {
+  float dd = clamp(d, 0.0, L.z);
+  float i0 = clamp(floor(dd / L.w), 0.0, max(L.y - 2.0, 0.0));
+  float f = clamp((dd - i0 * L.w) / max(min(L.w, L.z - i0 * L.w), 1e-3), 0.0, 1.0);
+  int si = int(L.x + i0);
+  return mix(texelFetch(u_lane_tex, tc(si, ${TEX_W}), 0).x, texelFetch(u_lane_tex, tc(si + (L.y > 1.5 ? 1 : 0), ${TEX_W}), 0).x, f);
+}
 
 void main() {
   vec4 L;
@@ -611,6 +674,10 @@ void main() {
   // Both representations share the same width: splitting into cars must not shrink the train.
   vec2 px = max(u_min_px, vec2(cars * 20.0, 3.0) * kM * u_px_per_unit);
   if (u_detail) px.x = max(2.0 * u_dpr, pitchM * kM * u_px_per_unit - max(1.5 * u_dpr, kM * u_px_per_unit));
+  // on its own track as double track parts (T-658): narrowing to its true 3 m, so two trains
+  // passing never touch, and keeping right of its direction of travel (T-319)
+  float lane = u_lane.y * laneAt(L, carD);
+  px.y = mix(px.y, 3.0 * kM * u_px_per_unit, lane);
   // Heading along the chord between the train's two ends (as its bogies sit on the track), not
   // the sample segment under its centre, which turns in steps on curves (T-047).
   float h = max(0.5 * px.x / u_px_per_unit / kM, 1.0);
@@ -647,7 +714,8 @@ void main() {
     k = clamp(k, -0.8 / halfq.y, 0.8 / halfq.y);
   }
   vec2 q = vec2(corner.x * halfq.x * (1.0 + halfq.y * abs(k)), corner.y < 0.0 ? min(0.0, ends) - halfq.y : max(0.0, ends) + halfq.y);
-  c.xy += (sdir * q.x + nrm * q.y) / half_vp * c.w;
+  float shift = ((int(a_trip.x + 0.5) / 3) % 2 == 0 ? -1.0 : 1.0) * lane * u_lane.x;
+  c.xy += (sdir * q.x + nrm * (q.y + shift)) / half_vp * c.w;
   gl_Position = c;
   v_uv = q;
   v_k = k;
@@ -892,7 +960,7 @@ export class NetworkRenderer {
   private loadBuf: WebGLBuffer | null = null;
   /** the hour's loads (T-164), replaced with the trips; kept apart from `res`, like the trips */
   private loadTex: WebGLTexture | null = null;
-  private tex: Record<"phases" | "meta" | "samples" | "lines" | "colours" | "fill" | "cars" | "stretch" | "stationLine", WebGLTexture | null> = { phases: null, meta: null, samples: null, lines: null, colours: null, fill: null, cars: null, stretch: null, stationLine: null };
+  private tex: Record<"phases" | "meta" | "samples" | "lines" | "colours" | "fill" | "cars" | "stretch" | "stationLine" | "lane", WebGLTexture | null> = { phases: null, meta: null, samples: null, lines: null, colours: null, fill: null, cars: null, stretch: null, stationLine: null, lane: null };
   /** The boarding account's hour the trip buffer holds (T-164), or null before demand has riders. */
   board: BoardHour | null = null;
   /** per platform of `board`: its station's index in the station buffer (-1 none) and its side;
@@ -1050,6 +1118,12 @@ export class NetworkRenderer {
   onSelectionDrawn: () => void = () => {};
   /** A line's width in CSS px at the last draw, 0 when lines are not drawn (picking) */
   slotPx = 0;
+  /** Half a double track's drawn width in CSS px at the last draw once it has grown to its two
+   * tracks' width (T-658), 0 further out (picking) */
+  laneReachPx = 0;
+  /** Metres a train on double track is drawn to the right of its line's centre line at the last
+   * draw (T-658): 2 m once the two tracks have parted, 0 further out (picking) */
+  laneShiftM = 0;
   /** per line stroke segment, its width as a multiple of `slotPx` (traffic thickness), or null
    * when all are plain: picking reaches across wide lines (T-227) */
   lineWidths: Float32Array | null = null;
@@ -1089,14 +1163,14 @@ export class NetworkRenderer {
     this.marks.init(gl);
     this.trainProg = compile(gl, TRAIN_VS, TRAIN_FS);
     this.hasStencil = (gl.getParameter(gl.STENCIL_BITS) ?? 0) > 0;
-    this.strokeU = uniforms(gl, this.strokeProg, ["u_matrix", "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_edge", "u_only_sel", "u_bp_part", "u_dim", "u_by_level", "u_by_speed", "u_px_per_unit", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours"]);
+    this.strokeU = uniforms(gl, this.strokeProg, ["u_matrix", "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_edge", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_dim", "u_by_level", "u_by_speed", "u_px_per_unit", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours"]);
     this.stationU = uniforms(gl, this.stationProg, ["u_matrix", "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass", "u_layer", "u_halo", "u_halo_radius", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_hair", "u_plat", "u_mask", "u_stline"]);
     this.bridgeProg = compile(gl, BRIDGE_VS, STATION_FS);
     this.bridgeU = uniforms(gl, this.bridgeProg, ["u_matrix", "u_viewport", "u_ring", "u_bridge", "u_pass", "u_layer", "u_halo", "u_ink", "u_bad", "u_crowd_rgb", "u_mask"]);
     this.selProg = compile(gl, SEL_VS, SEL_FS);
     this.selU = uniforms(gl, this.selProg, ["u_bbox", "u_css", "u_shapes", "u_count", "u_dpr", "u_height", "u_ink", "u_outline", "u_glow"]);
     this.selTex = this.texture(this.selData, "rgba32f", SEL_MAX * SEL_STRIDE, []);
-    this.trainU = uniforms(gl, this.trainProg, ["u_matrix", "u_viewport", "u_time", "u_px_per_unit", "u_min_px", "u_phases", "u_meta", "u_samples", "u_lines", "u_line_colours", "u_fill", "u_bad", "u_detail", "u_dpr", "u_cars", "u_loads", "u_stretch", "u_sel_line", "u_dim", "u_sel_trip", "u_pass", "u_ink", "u_band", "u_psi0"]);
+    this.trainU = uniforms(gl, this.trainProg, ["u_matrix", "u_viewport", "u_time", "u_px_per_unit", "u_min_px", "u_phases", "u_meta", "u_samples", "u_lines", "u_line_colours", "u_fill", "u_bad", "u_detail", "u_dpr", "u_cars", "u_loads", "u_stretch", "u_sel_line", "u_dim", "u_sel_trip", "u_pass", "u_ink", "u_band", "u_psi0", "u_lane_tex", "u_lane"]);
     this.timerExt = gl.getExtension("EXT_disjoint_timer_query_webgl2");
     this.tripBuf = gl.createBuffer();
     this.endBuf = gl.createBuffer();
@@ -1169,6 +1243,14 @@ export class NetworkRenderer {
     this.attrib(p, "a_dist", this.buffer(one(s.dist, 1), list), 1, gl.FLOAT, 1);
     const wmulBuf = this.buffer(new Float32Array(Math.max(1, s.count)).fill(1), list);
     this.attrib(p, "a_wmul", wmulBuf, 1, gl.FLOAT, 1);
+    const lane = s.count && s.lane ? s.lane : new Uint8Array(Math.max(1, s.count) * 2).fill(255);
+    const loc = gl.getAttribLocation(p, "a_lane");
+    if (loc >= 0) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer(lane, list));
+      gl.enableVertexAttribArray(loc);
+      gl.vertexAttribPointer(loc, 2, gl.UNSIGNED_BYTE, true, 0, 0);
+      gl.vertexAttribDivisor(loc, 1);
+    }
     gl.bindVertexArray(null);
     return { vao, count: s.count, wmulBuf };
   }
@@ -1224,6 +1306,7 @@ export class NetworkRenderer {
     this.tex.phases = this.texture(n.phases.length ? n.phases : new Float32Array(4), "rgba32f", TEX_W);
     this.tex.meta = this.texture(n.meta.length ? n.meta : new Float32Array(4), "rgba32f", TEX_W);
     this.tex.samples = this.texture(n.samples.length ? n.samples : new Float32Array(2), "rg32f", TEX_W);
+    this.tex.lane = this.texture(n.sampleLane?.length ? n.sampleLane : new Float32Array(Math.max(1, n.samples.length / 2)).fill(1), "r32f", TEX_W);
     this.tex.lines = this.texture(n.lineTable.length ? n.lineTable : new Float32Array(4), "rgba32f", LINES_W);
     this.tex.colours = this.texture(n.lineColours, "rgba8", LINES_W);
     this.tex.fill = this.texture(new Float32Array(Math.max(1, n.samples.length / 2) * 2).fill(-1), "rg32f", TEX_W);
@@ -1449,11 +1532,18 @@ export class NetworkRenderer {
     gl.activeTexture(gl.TEXTURE2);
     gl.bindTexture(gl.TEXTURE_2D, this.tex.colours);
     gl.uniform1i(u.u_line_colours, 2);
+    const lanes = laneState(zoom);
+    this.laneReachPx = lanes.reach;
+    this.laneShiftM = LANE_M / 2 * lanes.t;
+    const G = lanes.gap * dpr;
+    gl.uniform4f(u.u_lanes, G, lanes.t, lanes.grow, LANE_SHARE * G);
+    const modes = lanes.t > 0 ? [1, 2, 3] : [0];
     // `cap` > 0: the track drawn through station boxes (T-236), no wider than that and no casing
     const stroke = (s: StrokeVao | null, kind: number, width: number, sel: boolean, cap = 0) => {
       if (!s || !s.count) return;
       gl.uniform1i(u.u_kind, kind);
-      gl.uniform3f(u.u_width, width, wSel, 0);
+      // each track's width once apart: a line's share of the gap, bare track as much thinner
+      gl.uniform3f(u.u_width, width, wSel, LANE_SHARE * G * width / wLine);
       gl.uniform1f(u.u_cap, cap);
       gl.bindVertexArray(s.vao);
       const passes: [number, number][] = cap > 0 ? [[0, 0]] : [[casing, 0], [0, 0]];
@@ -1461,8 +1551,13 @@ export class NetworkRenderer {
       for (const [cas, only] of passes) {
         gl.uniform1f(u.u_casing, cas);
         gl.uniform1i(u.u_only_sel, only);
-        gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, s.count);
+        for (const mode of modes) {
+          if (cap > 0 && mode === 1) continue;
+          gl.uniform1i(u.u_lane_mode, mode);
+          gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, s.count);
+        }
       }
+      gl.uniform1i(u.u_lane_mode, 0);
     };
     // Colour by height: the track itself, at line width, and no line strokes over it. Blueprint
     // track and the lines planned on it go over built track and its lines (T-695).
@@ -1478,12 +1573,15 @@ export class NetworkRenderer {
       // an ink band 3 px beyond the blueprint's rails either side (kind 2 placement strokes in a
       // casing pass are the selection ink)
       gl.uniform1i(u.u_kind, 2);
-      gl.uniform3f(u.u_width, bpMid + 2 * bpRail + 6 * dpr, 0, 0);
+      gl.uniform3f(u.u_width, bpMid + 2 * bpRail + 6 * dpr, 0, LANE_SHARE * G + 6 * dpr);
       gl.uniform1f(u.u_cap, 0);
       gl.uniform1i(u.u_only_sel, 0);
       gl.uniform1f(u.u_casing, 0.01 * dpr);
+      // round both tracks once they part
+      gl.uniform1i(u.u_lane_mode, lanes.t > 0 ? 1 : 0);
       gl.bindVertexArray(this.highlight.vao);
       gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, this.highlight.count);
+      gl.uniform1i(u.u_lane_mode, 0);
     }
     trackStrokes();
     stroke(this.preview, 2, wLine, false);
@@ -1699,6 +1797,11 @@ export class NetworkRenderer {
       gl.activeTexture(gl.TEXTURE9);
       gl.bindTexture(gl.TEXTURE_2D, this.tex.stretch);
       gl.uniform1i(this.trainU.u_stretch, 9);
+      gl.activeTexture(gl.TEXTURE10);
+      gl.bindTexture(gl.TEXTURE_2D, this.tex.lane);
+      gl.uniform1i(this.trainU.u_lane_tex, 10);
+      // on its own track close in (T-658): the shift at full parting, how far parted
+      gl.uniform2f(this.trainU.u_lane, lanes.gap * dpr * 0.5, lanes.t);
       gl.bindVertexArray(this.trainVao);
       // every train but the selected; then the selected one's halo, round the whole consist as one
       // pill; then the selected train over it (T-242)

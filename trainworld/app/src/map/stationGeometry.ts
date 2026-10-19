@@ -170,6 +170,28 @@ export function waysFrom(p: ArrayLike<number>, x: number, y: number): [Float32Ar
   return [new Float32Array(fwd), new Float32Array(back)];
 }
 
+/** Quad track's other pair beside (x, y), the ghost's twin platform (T-708; the track model's
+ * `twin_at`): the nearest of `tracks` 4-12 m away whose direction there is within 2 degrees of
+ * the way `dir` (a polyline leaving the point), and the point on it level with (x, y). `perM`:
+ * local units per metre. */
+export function pairBeside(tracks: Iterable<[number, ArrayLike<number>]>, x: number, y: number, dir: ArrayLike<number>, perM: number): { edge: number; x: number; y: number } | null {
+  const h = heading(dir);
+  if (!h) return null;
+  let best: { edge: number; x: number; y: number } | null = null, bestD = 12 * perM;
+  for (const [edge, p] of tracks) {
+    for (let k = 0; k + 5 < p.length; k += 3) {
+      const dx = p[k + 3] - p[k], dy = p[k + 4] - p[k + 1], l2 = dx * dx + dy * dy;
+      if (l2 < 1e-12) continue;
+      const t = Math.max(0, Math.min(1, ((x - p[k]) * dx + (y - p[k + 1]) * dy) / l2));
+      const qx = p[k] + t * dx, qy = p[k + 1] + t * dy, d = Math.hypot(qx - x, qy - y);
+      if (d < 4 * perM || d >= bestD || Math.abs(h[0] * dy - h[1] * dx) / Math.sqrt(l2) > 0.035) continue;
+      bestD = d;
+      best = { edge, x: qx, y: qy };
+    }
+  }
+  return best;
+}
+
 /** Dots are this much wider in radius than T-189's: T-313's 1.65 (Anita: "make station small dots
  * bigger, maybe 65% bigger radius"), less a fifth (T-322). */
 const DOT_GROW = 1.65 * 0.8;

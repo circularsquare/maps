@@ -22,6 +22,7 @@ import { edit, linesAt, say, world } from "../../game/world";
 import { createLine } from "../../game/lineActions";
 import { live } from "../../map/live";
 import { removeThing } from "../../game/remove";
+import { describeIssues } from "../../game/issues";
 import { tripAt } from "../../map/network";
 import { nextLeavingAt, platformsAt, tripLoad } from "../../game/boarding";
 import { today, useToday, type LineToday } from "../../game/today";
@@ -615,6 +616,30 @@ function Shape({ edge, version }: { edge: number; version: number }) {
   );
 }
 
+/** Double up (T-708): an express pair beside this double track as far as its run goes, as
+ * blueprint. The hover gives the price or why not. */
+function DoubleUp({ edge, version }: { edge: number; version: number }) {
+  const [answer, setAnswer] = useState<{ price: number } | { why: string } | null>(null);
+  useEffect(() => {
+    let on = true;
+    setAnswer(null);
+    void queryClock({ what: "doubleUp", edge }).then((d) => {
+      if (!on || !d) return;
+      setAnswer(d[0] >= 0 ? { price: d[0] } : { why: describeIssues(String.fromCharCode(...d.subarray(1)).split("\n").filter(Boolean)) });
+    });
+    return () => {
+      on = false;
+    };
+  }, [edge, version]);
+  if (!answer) return null;
+  const tip = "price" in answer ? `Double up to quad track for ${money(answer.price * 1e6)} (blueprint)\nThe express pair runs beside it to the next junction or track end each way` : answer.why;
+  return (
+    <button class="btn icon" disabled={"why" in answer} data-tip={tip} aria-label="Double up" onClick={() => void edit({ op: "doubleUp", edge })}>
+      <svg viewBox="0 0 16 16"><path d="M1.5 3h13M1.5 6h13M8 9v6M5 12h6" /></svg>
+    </button>
+  );
+}
+
 export function TrackInspector({ edge }: { edge: number }) {
   const w = world.value;
   const e = w?.edges.find((e) => e.id === edge);
@@ -634,6 +659,7 @@ export function TrackInspector({ edge }: { edge: number }) {
     <>
       <div class="title">
         <span class="name">{e.crossover ? "Crossover" : e.tracks === 2 ? "Double track" : "Single track"}</span>
+        {e.tracks === 2 && !e.crossover && <DoubleUp edge={e.id} version={w.version} />}
       </div>
       <div class="sub muted">
         {distance(e.lengthM)}, {lv}

@@ -24,24 +24,29 @@ export interface Arrival {
   speed: number;
   off: number;
   on: number;
-  /** the line's number: its note */
-  line: number;
+  /** the line's note, semitones above C5 (0 to 11) */
+  note: number;
   /** the platform's riders waited long (the red face's test): a lower, softer note */
   crowded: boolean;
 }
 
-/** C major pentatonic, C5 to E6: any two lines' notes sound fine together. */
-const NOTES = [523.25, 587.33, 659.25, 783.99, 880, 1046.5, 1174.66, 1318.51];
+/** The notes are the 12 semitones from C5 (T-706). */
+const C5 = 523.25;
 /** A minor third down. */
 const CROWDED_RATIO = 0.84;
+/** The first five lines of a city take these semitones in this order: C, E, G, D, A, a major
+ * pentatonic, so a new city starts out sounding pleasant. */
+const FIRST_LINES = [0, 4, 7, 2, 9];
 
-/** A line's note, fixed by its number. */
-export function lineNote(line: number): number {
+/** A line's note, in semitones above C5: by its rank among its city's lines (0 for the first built)
+ * for the first five, else from its number, spread over the 12. */
+export function lineNote(line: number, rank: number): number {
+  if (rank < FIRST_LINES.length) return FIRST_LINES[rank];
   let h = Math.imul(line + 1, 0x9e3779b1);
   h ^= h >>> 15;
   h = Math.imul(h, 0x85ebca6b);
   h ^= h >>> 13;
-  return NOTES[(h >>> 0) % NOTES.length];
+  return (h >>> 0) % 12;
 }
 
 /** Zoom gain: a quarter at the zoom platforms appear, full three zooms closer. */
@@ -104,7 +109,7 @@ export class StationSound {
       pan.connect(out);
     }
     const dest: AudioNode = pan ?? out;
-    this.chime(dest, now, level, a.line, a.crowded);
+    this.chime(dest, now, level, a.note, a.crowded);
     const cap = together ? 0 : a.speed === 1 ? 2 : MAX_POPS;
     // pops follow the chime, getting off first, then getting on a moment later
     for (let i = 0; i < Math.min(cap, a.off); i++) this.pop(dest, now + 0.28 + i * 0.09 + Math.random() * 0.05, level, 560 + Math.random() * 200);
@@ -114,9 +119,9 @@ export class StationSound {
 
   /** One soft sine note, the line's own. At a crowded platform it is a minor third lower, softer,
    * and sags a little as it fades. */
-  private chime(dest: AudioNode, t: number, level: number, line: number, crowded: boolean) {
+  private chime(dest: AudioNode, t: number, level: number, note: number, crowded: boolean) {
     const ctx = this.ctx!;
-    const f = lineNote(line) * (crowded ? CROWDED_RATIO : 1);
+    const f = C5 * 2 ** (note / 12) * (crowded ? CROWDED_RATIO : 1);
     const o = ctx.createOscillator(), g = ctx.createGain();
     o.type = "sine";
     o.frequency.setValueAtTime(f, t);

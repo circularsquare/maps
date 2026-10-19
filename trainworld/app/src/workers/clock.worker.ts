@@ -77,6 +77,8 @@ let lineShares = new Map<number, { fare: [string, number][]; ride: [string, numb
 let linePoints = new Map<number, [string, number[][]][]>();
 /** T-685: each region's star, the game second it was earned */
 let stars = new Map<string, number>();
+/** T-706: each line's station note and the city it was chosen in */
+let lineNotes = new Map<string, [number, string]>();
 /** T-531: paid edits' charges, held under "" until the main thread says how each divides */
 const heldCharges = new Map<number, { day: number; hour: number; build: number; trains: number }>();
 /** Wall ms on the clock both threads read (`ToClock` "clock"): Date.now() drifts from it, and the
@@ -597,6 +599,7 @@ function moneyState(): MoneyState {
     hours: hourLedger.map((d) => ({ ...d })),
     regions: savedRegions(),
     stars: Object.fromEntries(stars),
+    notes: Object.fromEntries(lineNotes),
   };
 }
 
@@ -796,7 +799,7 @@ function shapeHour(epoch: number, b: Float32Array) {
 // ---------------------------------------------------------------- saves (T-029)
 
 function header(): SaveHeader {
-  return { game: "anitabuilder", format: SAVE_FORMAT, city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), fleet: api!.fleet(), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), stars: Object.fromEntries(stars) };
+  return { game: "anitabuilder", format: SAVE_FORMAT, city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), fleet: api!.fleet(), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), stars: Object.fromEntries(stars), notes: Object.fromEntries(lineNotes) };
 }
 
 /** The game as file bytes. The network and header are taken at once, before anything awaits. */
@@ -1018,6 +1021,7 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file"): Promise<b
   hourLedger = mergeLedger(h.hours, (d) => d.hour);
   loadRegions(h.regions);
   stars = new Map(Object.entries(h.stars ?? {}));
+  lineNotes = new Map(Object.entries(h.notes ?? {}));
   convertedOnLoad = converted;
   restart(h.clock, from);
   return converted;
@@ -1040,6 +1044,7 @@ function newGame() {
   hourLedger = [];
   loadRegions(undefined);
   stars = new Map();
+  lineNotes = new Map();
   restart(START_CLOCK, "new");
 }
 
@@ -1096,7 +1101,7 @@ function sendState(service = false) {
   const r = s.render;
   const bufs = new Set<ArrayBufferLike>([r.edgePts.buffer, r.edgeOff.buffer, r.phases.buffer, r.meta.buffer, r.samples.buffer, r.lineTable.buffer]);
   if (r.edgeSpeed) bufs.add(r.edgeSpeed.buffer);
-  for (const st of [n.track, n.lines]) for (const v of [st.seg, st.colour, st.edge, st.level, st.flags, st.dist, st.speed]) if (v) bufs.add(v.buffer);
+  for (const st of [n.track, n.lines]) for (const v of [st.seg, st.colour, st.edge, st.level, st.flags, st.dist, st.speed, st.lane]) if (v) bufs.add(v.buffer);
   for (const v of [n.lineColours, n.lineCars, n.stations, n.stationAxis, n.stationShape, n.junctions, n.marks]) if (v) bufs.add(v.buffer);
   send({ kind: "state", state: s }, [...bufs] as Transferable[]);
   sendTrips();
@@ -1239,6 +1244,8 @@ function apply(op: EditOp): { r: number; line?: number; node?: number } {
         : { r: a.add_station(2, op.at.edge, op.at.x, op.at.y, op.platform, op.name) };
     case "crossover":
       return { r: a.add_crossover(op.edge, op.x, op.y) };
+    case "doubleUp":
+      return { r: a.double_up(op.edge) };
     case "stationProps":
       return { r: a.set_station_props(op.node, op.platform, op.name) };
     case "removeStation":
@@ -1292,6 +1299,14 @@ function apply(op: EditOp): { r: number; line?: number; node?: number } {
 
 function issues(): string[] {
   return api!.issue_kinds().split("\n").filter(Boolean);
+}
+
+/** The "doubleUp" query's answer (protocol.ts). */
+function doubleUpAnswer(edge: number): Float64Array {
+  const price = api!.preview_double_up(edge);
+  if (price >= 0) return new Float64Array([price]);
+  const kinds = api!.issue_kinds();
+  return new Float64Array([-1, ...Array.from(kinds, (c) => c.charCodeAt(0))]);
 }
 
 // ---------------------------------------------------------------- messages
@@ -1509,6 +1524,13 @@ async function handle(msg: ToClock) {
       dirty = true;
       sendMoney();
     }
+  } else if (msg.kind === "lineNotes") {
+    let added = false;
+    for (const [id, v] of Object.entries(msg.notes)) if (!lineNotes.has(id)) { lineNotes.set(id, v); added = true; }
+    if (added) {
+      dirty = true;
+      sendMoney();
+    }
   } else if (msg.kind === "chargeShares") {
     // T-531: move a paid edit's charge from "" to the regions it was spent in
     const c = heldCharges.get(msg.seq);
@@ -1543,6 +1565,7 @@ async function handle(msg: ToClock) {
       : q.what === "junction" ? api.junction_info(q.node)
       : q.what === "edgePis" ? api.edge_pis(q.edge)
       : q.what === "flyover" ? new Float64Array([api.flyover_cost(q.node)])
+      : q.what === "doubleUp" ? doubleUpAnswer(q.edge)
       : q.what === "lineAccount" ? api.line_account(q.line, q.day ?? 0)
       : q.what === "linePeriods" ? api.line_periods(q.line, q.day)
       : q.what === "today" ? today()

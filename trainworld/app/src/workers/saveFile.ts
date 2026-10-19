@@ -69,6 +69,9 @@ export interface SaveHeader {
   regions?: Record<string, { ledger: DayLedger[]; hours: HourLedger[] }>;
   /** T-685: each region's star, the game second it was earned; absent in older saves */
   stars?: Record<string, number>;
+  /** T-706: each line's station note (semitones above C5) and the city it was chosen in, kept for the
+   * line's life and after it so the others keep theirs; absent in older saves (map/stationLife.ts) */
+  notes?: Record<string, [number, string]>;
 }
 
 /**

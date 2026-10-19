@@ -42,8 +42,11 @@ closest pair), the same in the pie, bars, filter swatch and purpose split.
 - **None / Homes / Destinations** [T-132, `ui/DemandSelector.tsx`], always at the map's upper left,
   remembered per browser. Destinations is every activity end (work, shopping, social, school and
   university, airport, medical).
-- **Day** [T-464]: a dropdown after the purpose filter, Average day (default), Weekday or Weekend;
-  see "Demand shown for" in [ui-panels.md](ui-panels.md). Remembered per browser.
+- **Track display** [T-703, `ui/DemandSelector.tsx`]: right below None / Homes / Destinations, in the
+  same style, four buttons: Line, Traffic (line colours, thickness by traffic), Elevation and Max
+  speed; the key of the last two (height colours, speed limits) sits beside them. Remembered per browser.
+- **Day** [T-464, T-703]: a Settings choice under the bubbles' Opacity, not on the map; see "Demand
+  shown for" in [ui-panels.md](ui-panels.md).
 - **Readiness** [T-143]: while the focused zone has no published result, Homes and Destinations fade
   (their text only), keeping the stored choice, with "Calculating demand" on hover; while its pack
   is still loading the hover says "Loading Boston, 37%" [T-149]. Over dead space they say "Nothing

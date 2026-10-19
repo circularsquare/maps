@@ -5,6 +5,13 @@ reasoning and what it replaced.
 
 ## 2026-10-19
 
+- **A line keeps the note it was given when built** (Anita, T-706), stored with the line; **the turn-back crossovers are drawn** (Anita, T-658 stage d); **the schedule table has no lines between rows** (Anita, T-692).
+
+- **Double track shows as two tracks from about zoom 17, a platform each side of them; in Line + traffic thickness the two tracks draw over the traffic width, which stays behind** (Anita, T-658; the turn-back crossovers still wait on her).
+- **Points keep their size** (New York about 350M a day; Anita, T-694).
+- **No road-class or time-of-day drive speeds** (Anita, T-701): "start with just distance and maybe spatial traffic but keep the model quite light".
+- **Nunito is the default font and the UI defaults to 90%** (Anita, T-703).
+
 - **Everyday trips take one worldwide set of shorter decay scales (W1) and the parking base goes from 5 to 7 minutes** (Anita, T-637): errands 1.3 km, social 1.4, school 1.4, medical 2.0, university 3.5, replacing each country's survey-fitted scale, which matched the survey's mean length but put too few trips under 2 km (New York 23% against NHTS's 50%). The parking base holds her test A at 85%. notes/T-637.md.
 - **A line's colour on the map follows a picker drag about every 0.2 s** (Anita, T-672): a middle path between every move (froze the game) and only on release.
 - **Destination bubbles catching up over a game day, still while paused, is fine as it is** (Anita, T-674).
@@ -2368,3 +2375,5 @@ reasoning and what it replaced.
 - 2026-10-19 (T-692, Anita): Express copy is removed (the button, the `express` flag on `copyLine`, `express_copy` and `twin_station` in sim/src/track/wasm.rs; quad track and twin stations stay). The crowding dot goes by the level's average wait for a train with room, in minutes (`crowdColour(avg.wait)`): green to 2, yellow at 3, orange at 10, red at 15, deep red from 20; the score still grades the hover's worst-period line and `crowdClass`. The green plateau to 2 min is my choice, so that her 2.2 min reads nearly green.
 
 - 2026-10-19 (T-700): a zone's cells split by bank for walking the whole way: a part is the cells its representative reaches by a walk of at most 1.5 x the straight line + 500 m, at most 4 parts a zone (`routes::walk_tables`); a cell centred in a river joins the first part that reaches it, and a subzone takes the part most of its people are in. The thresholds are my choice; Shanghai splits 127 of 1,879 zones.
+
+- 2026-10-19 (T-708): Double up adds the express pair as blueprint even beside built track (Construct then pays, as for any blueprint) rather than charging at once; it covers the whole run through plain joints and stations (twins added) up to a junction (where it swings in) or another end (loose end beside); left of the selected piece, else right. My choices; the alternative was one piece at a time, which T-248 found tedious.

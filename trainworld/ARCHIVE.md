@@ -1,5 +1,21 @@
 ﻿# Archive
 
+- T-711 [P3] Quad's 0.30x in the track tag. Done 2026-10-19: not a bug, ground track is 0.3x (6.4) for double too (the 1.10x was a ramp to +2); the quad multiplier now averages both pairs, and a test checks it and that quad's price is what the edit adds.
+
+- T-707 [P2] Track tool: ramps and the start click. Done 2026-10-19: the tag lists every elevation passed ("0 +2"); a click on the start ends the run or drops a lone start.
+
+- T-708 [P2] Quad track. Done 2026-10-19: Double up in the track inspector (whole run, blueprint, twins, swing-in at junctions); "the curve does not fit" was an artefact of nearly straight quad segments, lifted, text reworded; the station ghost shows the twin platform.
+
+- T-705 [P2] Line bullets' characters off centre. Done 2026-10-19: `ui/bullet.ts` moves every bullet's text (Chip and the map tags' `lineBullet`) so its measured ink box is centred; worst offset 2 px (4.5 px for g or j) before, 1 px at 1x and under 1 px at 2x after, in all four fonts.
+
+- T-709 [P2] Why the explorer's route carries few train users. Done 2026-10-19: the shown route is already the biggest; New York spreads users over 33 to 60 station pairs, so the main route has 5 to 12% and routes under 0.5% hold 47 to 80%; Toronto's single line 63 to 71%. The panel gets a "Smaller routes" row and a spread hover. notes/T-709.md.
+
+- T-703 [P2] Defaults and the demand row. Done 2026-10-19: Nunito default (self-hosted, `public/fonts/Nunito-latin*.woff2`, Zen Maru Gothic for kana and kanji) and 90% UI size, both reset once for stored settings below version 3; the day choice is in Settings under bubble opacity; Line, Traffic, Elevation and Max speed sit on the map under None / Homes / Destinations (`ui/DemandSelector.tsx`).
+
+- T-704 [P3] Trip explorer, again. Done 2026-10-19: walking is one Effective time row; the "From the selected ..." line beside Back is gone (`what` removed from `tripOpenedFrom`); one sentence gives the route's share with the same trains added ("65% of the train users on this trip take this route, the rest use different routes."); the pooled term is named "choice of routes" with one plain line under the equation.
+
+- T-706 [P2] Station notes on the chromatic scale. Done 2026-10-19 (`stationSound.ts`, `stationLife.ts`): 12 semitones from C5; a city's first five lines take C, E, G, D, A in order, later lines a semitone from the line number. Each line's note is chosen once and kept in the save (header `notes`), so deleting a line changes no other.
+- T-701 [P3] How drive speeds work and what real road speeds would cost. Done 2026-10-19: answered in notes/T-701.md; Anita chose neither (DECISIONS 2026-10-19).
 - T-695 [P2] Station placement right on the first frame. Done 2026-10-19: the ghost shows a guess from the track's layout at once, the worker confirms (first frame wrong ~20% before, 1-2 of 80 overlaps after); blueprint track and its lines drawn and picked over built. notes/T-695.md, follow-up T-702.
 
 - T-699 [P2] Trip explorer wording. Done 2026-10-19: By train, By car and By walking read in parallel (Time in real minutes, Effective time with only an equation as its hover); the car shows the drive's average speed and ownership in dollars; no door to door or leg summary rows. Replaces T-633. `DemandApi.trip` head grew to 37 numbers (road km, walk weight).
@@ -7,7 +23,7 @@
 - T-697 [P2] Look fixes. Done 2026-10-19: real network at 40% opacity (was 80%), `DARK_WATER` #1e3032 (was #173a3a, less saturated), the purpose bar and its fetching removed from bubble hovers (the plane's 8 px hover stays).
 - T-698 [P3] A font switcher. Done 2026-10-19 as a trial, Anita picks: Settings > Font, panels only, Zen Maru Gothic, M PLUS Rounded 1c, Kosugi Maru or Nunito, loaded from Google Fonts when first chosen (`game/fonts.ts`); map glyph tiles stay Zen Maru Gothic.
 
-- T-692 [P2] Line panel layout. Done 2026-10-19: one-line schedule cells ("Trains"), rules only above Past 24 hours and Stops, the crowding dot coloured by average wait (yellow 3 min, orange 10, red 15, dark red 20), Express copy removed (button, `express_copy`), a light outline on the selected Elevation chip in dark.
+- T-692 [P2] Line panel layout. Done 2026-10-19: one-line schedule cells ("Trains") with no dotted lines between rows, rules only above Past 24 hours and Stops, the crowding dot coloured by average wait (yellow 3 min, orange 10, red 15, dark red 20), Express copy removed (button, `express_copy`), a light outline on the selected Elevation chip in dark.
 - T-694 [P2] Points as a measure. Done 2026-10-19 (`pointsPast24h` in game/points.ts): a city's points are what it earned in the past 24 whole game hours, from the hour ledgers, changing once a game hour; the running total is gone from the display and the save. checks/t684-points.mjs.
 - T-693 [P2] Cities list fixes. Done 2026-10-19: the star hover reads "Monday, day 71, at 14:08" (game day count, minutes whole); a narrow list keeps about six characters of a name, dropping the star, then the money (container queries).
 

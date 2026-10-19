@@ -20,7 +20,7 @@ import { SHADES, type ShadeColours } from "../game/shadeTable";
 import { display, shade } from "../game/ui";
 
 const LOCAL_BASE = new URL("../noritetsu/", document.baseURI).href;
-const R2_BASE = "https://pub-ae551368cea941f39101e13c84d60bde.r2.dev/noritetsu/";
+const R2_BASE = "https://data.anita.garden/noritetsu/";
 const OSM_ATTRIBUTION = '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a> (ODbL)';
 /** below this the view spans too many regions and the lines are too small to follow */
 const MIN_ZOOM = 4;

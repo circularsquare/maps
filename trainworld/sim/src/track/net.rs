@@ -245,6 +245,8 @@ pub enum Issue {
     Crossover { edge: u32 },
     /// No track runs parallel within `CROSSOVER_REACH` for a crossover, or not for its length.
     NoParallel { edge: u32 },
+    /// Doubling up track that has track beside it already (T-708).
+    Alongside { edge: u32 },
 }
 
 /// What the raw setters touched since the last `take_touch`.

@@ -315,7 +315,7 @@ export interface TripShown {
 export const tripView = signal<TripShown | null>(null);
 /** A trip opened from a bubble selection by clicking a far-end bubble (T-208): the trip selection,
  * the one it came from (for the inspector's way back) and the two places it counts between. */
-export const tripOpenedFrom = signal<{ trip: Selection; from: Selection; what: string; places: TripPlaces } | null>(null);
+export const tripOpenedFrom = signal<{ trip: Selection; from: Selection; places: TripPlaces } | null>(null);
 /** The period the explorer shows: null follows the busiest period of the purpose shown. */
 export const tripPeriod = signal<number | null>(null);
 export const PERIOD_NAMES = PERIODS.map((p) => p.name);
