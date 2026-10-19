@@ -12,7 +12,7 @@ import { clock, demandAt } from "../../game/clock";
 import { clockTime, count, distance, duration, headway, money, speed } from "../../game/format";
 import { LINE_PALETTE } from "../../game/palette";
 import { levelHours, PERIODS, periodAt } from "../../game/periods";
-import { crowdColour, crowdGrade, crowding, today, useToday, waitText } from "../../game/today";
+import { crowdColour, crowdGrade, crowding, runningToday, today, useToday, waitText } from "../../game/today";
 import { accountVersion } from "../../game/boarding";
 import { complexOf } from "../../game/complexView";
 import { dayKindAt } from "../../game/days";
@@ -172,22 +172,6 @@ function AverageSpeed({ st, lev }: { st: LineStats; lev: number }) {
       </li>
     </ul>
   );
-}
-
-/** US$ of running cost over the past 24 hours (T-446): each hour's trains at its demand level, the
- * hours at either end in part, as the worker drains the cash (T-284). */
-function runningToday(l: LineInput, st: LineStats): number {
-  const m = moneyState.value;
-  if (!m) return 0;
-  // T-309: in the line's own local time
-  const t = (clock.now() + st.shift) / 3600, t0 = t - 24;
-  const tph = { high: l.tph.high, medium: l.tph.medium, low: l.tph.low };
-  let cost = 0;
-  for (let h = Math.floor(t0); h < t; h++) {
-    const lev = PERIODS[periodAt(h * 3600)].demand;
-    cost += tph[lev] * 2 * st.km * st.cars * m.runCostCarKm * m.economy * (Math.min(h + 1, t) - Math.max(h, t0));
-  }
-  return cost;
 }
 
 /** The line's past 24 hours (T-446, game/today.ts): riders, fares less running cost, and its trains

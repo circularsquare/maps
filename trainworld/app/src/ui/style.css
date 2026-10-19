@@ -159,6 +159,9 @@ body.resizing, body.resizing * { user-select: none; }
 /* T-670: the Lines list's city column, left aligned and cut to the room */
 .rows .val.w-city { width: 62px; flex: none; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sort-btn.val.w-city { justify-content: flex-start; width: 62px; }
+/* T-735: the Lines list's money column */
+.w-linemoney { width: 58px; white-space: nowrap; }
+.with-city .w-linemoney { width: 54px; }
 .with-city .w-riders { width: 48px; }
 .with-city .w-trains { width: 40px; }
 /* T-550: the Money tab's Cities section: name, split bar, train rides a day, net money a day */
@@ -654,6 +657,16 @@ rect.now { fill-opacity: .45; }
 .track-tag, .build-tag { z-index: 5; }
 .build-tag { position: absolute; left: 0; top: 0; pointer-events: none; }
 .building #map canvas.overlay.demand, .building .airport-marks, .building .intercity-labels { z-index: 0; }
+/* T-732: what else is under a resting pointer, under the hover tag; its entries take clicks */
+.rest-list { z-index: 6; pointer-events: auto; padding: 1px 0; }
+.rest-entry { display: flex; gap: 5px; align-items: center; padding: 1px 4px; cursor: pointer; }
+.rest-entry:hover { background: var(--tint); }
+/* a station's mark in the list, a small platform box */
+.rest-stn { flex: none; box-sizing: border-box; width: 16px; height: 10px;
+            background: #fff; border: 2px solid var(--net-ink); border-radius: 2px; }
+/* a demand bubble's mark: a circle, as wide as a line bullet */
+.rest-bub { flex: none; box-sizing: border-box; width: 12px; height: 12px; margin: 0 2px; border-radius: 50%;
+            border: 1.5px solid var(--map-ink); background: color-mix(in srgb, var(--map-ink) 15%, transparent); }
 .tag-facts { display: flex; gap: 8px; align-items: center; }
 .tag-fact { display: inline-flex; gap: 3px; align-items: center; }
 .tag-lines { display: flex; flex-wrap: wrap; gap: 2px; }

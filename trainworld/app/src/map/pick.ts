@@ -84,6 +84,29 @@ export function topSeg(ov: Overlay, seg: Float32Array, count: number, px: number
   return [-1, best];
 }
 
+/** Up to `max` different lines with a stroke under the pointer, in `pick`'s order: the selected
+ * line, blueprint lines, then the rest, each top first (the resting hover's list, T-732). */
+export function linesAt(ov: Overlay, px: number, py: number, current: Selection, max: number): string[] {
+  const n = ov.renderer.net;
+  if (!n || !ov.camMatrix || !ov.renderer.slotPx) return [];
+  const reach = Math.max(SLOP_PX, ov.renderer.laneReachPx);
+  const slop = reach * reach + 1;
+  const L = n.lines, wide = ov.renderer.lineWidths, widePx = ov.renderer.slotPx;
+  const tiers: ((i: number) => boolean)[] = [];
+  if (current?.kind === "line") tiers.push((i) => String(L.colour[i]) === current.line);
+  if (ov.renderer.hasBlueprint) tiers.push((i) => (L.flags[i] & F_BLUEPRINT) !== 0);
+  tiers.push(() => true);
+  const out: string[] = [];
+  for (const tier of tiers) {
+    while (out.length < max) {
+      const [i] = topSeg(ov, L.seg, L.count, px, py, slop, undefined, 0, (j) => tier(j) && !out.includes(String(L.colour[j])), wide, widePx);
+      if (i < 0) break;
+      out.push(String(L.colour[i]));
+    }
+  }
+  return out;
+}
+
 /** How many different lines have strokes on an edge. */
 function linesOnEdge(s: { colour: Uint32Array; edge: Uint32Array; count: number }, edge: number): number {
   let first = -1;

@@ -12,6 +12,9 @@ import { clock } from "./clock";
 import { world } from "./world";
 import { queryClock } from "../workers/clockClient";
 import { accountVersion } from "./boarding";
+import { moneyState } from "./money";
+import { PERIODS, periodAt } from "./periods";
+import type { LineInput, LineStats } from "./types";
 
 export interface LineToday {
   /** riders boarded in the past 24 hours, or yesterday (a change of line boards again), the line's own stops */
@@ -70,6 +73,22 @@ export function crowdClass(score: number): "" | "crowd-warn" | "crowd-bad" {
 }
 /** "2.3 min", or "under 0.1 min" */
 export const waitText = (min: number) => (min < 0.05 ? "under 0.1 min" : `${min < 10 ? min.toFixed(1) : Math.round(min)} min`);
+
+/** US$ of running cost over the past 24 hours (T-446): each hour's trains at its demand level, the
+ * hours at either end in part, as the worker drains the cash (T-284). */
+export function runningToday(l: LineInput, st: LineStats): number {
+  const m = moneyState.value;
+  if (!m) return 0;
+  // T-309: in the line's own local time
+  const t = (clock.now() + st.shift) / 3600, t0 = t - 24;
+  const tph = { high: l.tph.high, medium: l.tph.medium, low: l.tph.low };
+  let cost = 0;
+  for (let h = Math.floor(t0); h < t; h++) {
+    const lev = PERIODS[periodAt(h * 3600)].demand;
+    cost += tph[lev] * 2 * st.km * st.cars * m.runCostCarKm * m.economy * (Math.min(h + 1, t) - Math.max(h, t0));
+  }
+  return cost;
+}
 
 /** Per line id; empty until the first answer (and for a line with no riders yet). */
 export const today = signal<Map<string, LineToday>>(new Map());

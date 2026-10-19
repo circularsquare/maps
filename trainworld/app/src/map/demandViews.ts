@@ -52,8 +52,9 @@ export const viewStats = { layersMs: 0, layerBuilds: 0, stationMs: 0, commuters:
 export interface DemandViews {
   /** call after `renderer.setNetwork` */
   networkChanged(): void;
-  /** a click with the select tool: a bubble selection, or undefined to let the network pick */
-  click(px: number, py: number, add: boolean): Selection | undefined;
+  /** a click with the select tool: a bubble selection, or undefined to let the network pick;
+   * `under`: the bubble even beneath the selected station (the resting hover's list, T-732) */
+  click(px: number, py: number, add: boolean, under?: boolean): Selection | undefined;
   /** the hover tag's lines at a point (for probes) */
   hover(px: number, py: number): string[] | null;
   overlay: DemandOverlay;
@@ -174,8 +175,8 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
     networkChanged() {
       if (renderer.net !== netSeen) schedule();
     },
-    click(px, py, add) {
-      if (onSelected(px, py)) return undefined; // the network picks the selected station
+    click(px, py, add, under = false) {
+      if (!under && onSelected(px, py)) return undefined; // the network picks the selected station
       const picked = commuters.click(px, py, add) ?? intercity.click(px, py);
       if (picked !== undefined) return picked;
       // Longer-trip discs describe the current selection. They are drawn over the network, so a

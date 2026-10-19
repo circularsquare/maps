@@ -323,6 +323,15 @@ those who got on, less the load carried on.
   waiting", red when full, then "Fullest platform 45% full"). A
   demand circle away from any station gives its busiest station's name and count. Refreshed each
   game minute while shown.
+- **What else is here** [T-732, `map/hoverRest.ts`]: with the select tool, when the pointer rests
+  250 ms on the map, a list under the hover tag names what else is under it, at most one demand
+  bubble (its count line, behind a small circle), one station (its name, behind a small platform
+  box) and three lines (bullet and name, in pick order), the thing the tag already describes
+  counted in those limits and left out; nothing else under the pointer, no list. Clicking an entry
+  selects it (a bubble beneath the selected station selects that bubble). The pointer may cross
+  from where it rested to the list, inside the hull of that point and the tag with its list,
+  without either moving; leaving that area, pressing, scrolling or a camera move drops the list.
+  The query runs once per rest, never per move.
 
 ## Picking
 

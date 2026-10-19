@@ -467,10 +467,20 @@ multiplier per level (Anita, 2026-10-08; all construction prices halved 2026-10-
   ledger entries after it are dropped and their net returned to the cash (the running cost worked
   out again on the loaded network at the rate the kept whole days show, since the day ledger keeps
   30 days); edits' charges in them stay, on the clock's day. After a load the main thread sends the
-  income, region shares and points again even when they match the last game's. Each game hour's fares are paid as that hour's trains pick up riders (the boarding
-  account's trains leaving platforms, 6.6, weighted by the riders each takes; evenly in an hour
-  without one), its running cost drains evenly, and both are paid in full by the hour's end, so a
-  day's totals are those of whole-hour settling. The worker settles and sends the cash and today's
+  income, region shares and points again even when they match the last game's. **How much each
+  game hour gets** (T-736, `app/src/game/moneyTiming.ts`): demand gives fares and rides per hour of
+  each period and kind of day, the timetable a running cost per hour of each level. An hour's rides
+  are the period's spread over its hours by the boarding account's arrival shape (6.6: tent, falling
+  or valley, at the busiest-hour factor of that kind of day), counted when riders set out; its fares
+  and points follow the same shape but land as the ride ends, spread over a trailing window as long
+  as the network's typical one-way run (each running line's one-way run at medium, weighted by its
+  car-km; at most 2 hours); its running cost is the timetable's car-km spread over the same window,
+  as trains that left on one timetable keep running into the next period. So no period or day
+  change is a cliff, a ride late on Friday pays on Saturday, and any run of whole days with the same
+  tables keeps its totals. **Within the hour**, its fares are paid as that hour's trains pick up
+  riders (the boarding account's trains leaving platforms, 6.6, weighted by the riders each takes;
+  evenly in an hour without one), its running cost drains evenly, and both are paid in full by the
+  hour's end. The worker settles and sends the cash and today's
   and this hour's ledger four times a wall second while the clock runs; the top bar shows the cash to the dollar,
   and only it and the Money tab's cash, Today column and History re-render. Fare per ride
   = a base plus a rate per km of the ride, one curve for the network, set in the Money tab ($1.50
@@ -493,8 +503,8 @@ multiplier per level (Anita, 2026-10-08; all construction prices halved 2026-10-
 - **Train rides** (T-565): each day and hour entry of every ledger also counts the train rides
   taken, the same rides the fares are charged on (a line's riders a day less rides that change
   lines, as `money.ts` has them, not scaled by the economy). A period's rides are the line's by that
-  period's share of passenger-km, settled with the fares (an hour's rides count as its fares are
-  paid) and divided between regions by the region of each ride's boarding stop.
+  period's share of passenger-km, each hour's as above (when riders set out), counted within the
+  hour as its fares are paid, and divided between regions by the region of each ride's boarding stop.
 - **Points** (T-684, T-694, `app/src/game/points.ts`): a measure per region of how good its
   network is: the points it earned in the past 24 whole game hours (fewer while the hour ledger is
   younger), recomputed once a game hour; never a running total. 20 a rail trip and 1 a

@@ -185,13 +185,14 @@ second. Inspectors, selections and the top bar are the current forecast at once.
   biggest about its hexagon's area) and coloured by their own mix (`flows`) [T-098]. A click on a
   far-end bubble opens the trip explorer for the pair [T-208].
 - **Lines to the selection** [T-520, on trial: `LINES_TO_SELECTION` in `map/commuterView.ts`
-  turns them off]: from each far-end bubble's edge a 1 px line in that bubble's own colour, up to
-  50% opaque, points at the selection's centre (its bubbles' centres weighted by area) and fades
-  out over 6% of the map's longer side, stopping at the selected bubble's edge when there is one.
+  turns them off]: from each far-end bubble's edge a 1.5 px line of constant width in that bubble's
+  own colour, 50% opaque, points at the selection's centre (its bubbles' centres weighted by area),
+  6% of the map's longer side long and cut square (no taper, no fade) [T-739], stopping at the
+  selected bubble's edge when there is one.
   Opacity scales with the source bubble's drawn radius: full at 8 CSS px or more, in proportion
   below, so a bubble too small to see has no visible line [T-524]. A selected zone's lines to the
-  other zone bubbles are the same (in each zone bubble's colour, running from that
-  bubble toward the selected one). Under every bubble, no hover (`setLines` in
+  other zone bubbles are the same but twice as long, 12% of the map's longer side [T-739] (in each
+  zone bubble's colour, running from that bubble toward the selected one). Under every bubble, no hover (`setLines` in
   `map/demandOverlay.ts`).
 - **The inspector** (`ui/inspector/CommutersInspector.tsx`): the selection's local trip legs and
   split; the top eight far-end places, each named by the nearest station within 3 km, else by

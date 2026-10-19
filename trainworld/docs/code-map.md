@@ -58,6 +58,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   (new and copied lines, Edit stops, construct blueprints: the N, L and C keys, T-670), `remove.ts` (removing things, with the question asked before removing
   anything constructed, T-096).
 - Other: `money.ts` (cash and ledger from the worker, fare income from riders, T-028),
+  `moneyTiming.ts` (each game hour's fares, rides, points and running cost from the period tables, T-736),
   `regionMoney.ts` (each line's and each construction's split between regions, the region ledgers, T-531), `points.ts`
   (each line's points per hour by region, points a day, each region's past 24 hours' points, the star's mark, T-684, T-685, T-694), `issues.ts`
   (the track model's refusals in plain words), `loading.ts` (what is loading, the startup gate and
@@ -99,7 +100,8 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   `demandHover.ts` (the count tag by the pointer), `modeBar.ts` (the tag's mode bar, T-494, and `localModes`, an open zone's local legs by mode, T-576), `airportMarks.ts` (the plane badge on an
   airport and its hover, T-448, T-674; paths shared with the icons in `glyphs.ts`).
 - Tags and outlines: `trackHover.ts` and `networkTips.ts` (the hover tags on track, trains and
-  stations, T-157, T-194), `trackTagRows.ts` (the elevation and speed rows with icons, shared with
+  stations, T-157, T-194), `hoverRest.ts` (the list of what else is under a resting pointer,
+  T-732), `trackTagRows.ts` (the elevation and speed rows with icons, shared with
   the track tool's tag, T-526), `cityBoundaries.ts` and `boundaryGeometry.ts` (the metro outlines, one
   layer for the zones near the view, and the outside shade, T-131, T-139, T-400), `zoneLoading.ts` (zones still loading drawn grey with a loading
   bar, T-343).
@@ -184,6 +186,8 @@ Run from the maps root (`node trainworld/checks/<file>`).
   6135 by default), `t715-load-money.mjs` (the real save opened from the saves panel while a later
   copy is open, twice: cash loads as saved and moves, no ledger day after the clock; a save with
   ledger days after its clock gets their running cost back; port 6165 by default),
+  `t736-money-timing.mjs` (Node: a week's hours of `moneyTiming.ts` keep the period tables' fares,
+  rides and running costs, with the largest hour-to-hour change beside the flat booking's),
   `t486-click-on-top.mjs` (a click on a blueprint point's square over a bubble
   selects the track, beside it the bubble), `t533-draw-order.mjs` (the real save: the shorter line
   on top where lines share ground, a line with no trains under; port 6130 by default),

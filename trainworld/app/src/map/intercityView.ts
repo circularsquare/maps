@@ -79,6 +79,8 @@ const SCALE_ZOOM = 6.5;
 const ZOOM_GROWTH = 0.35;
 /** The lines from a selected zone to the others (T-520). */
 const ZONE_LINE_ALPHA = 0.5;
+/** The zones' pointers are this many times the neighbourhoods' length (T-739). */
+const ZONE_STUB = 2;
 /** Most place labels on screen at once, the biggest first (T-493). */
 const MAX_LABELS = 8;
 
@@ -241,7 +243,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       const o = first * DISC;
       for (let i = 0, k = 0; i < points.length; i++) {
         const s = i * DISC;
-        if (i !== first) lines.set([discs[s], discs[s + 1], discs[s + 2], discs[o], discs[o + 1], discs[o + 2], 1, ZONE_LINE_ALPHA, discs[s + 3], discs[s + 4], discs[s + 5]], k++ * LINE);
+        if (i !== first) lines.set([discs[s], discs[s + 1], discs[s + 2], discs[o], discs[o + 1], discs[o + 2], ZONE_STUB, ZONE_LINE_ALPHA, discs[s + 3], discs[s + 4], discs[s + 5]], k++ * LINE);
       }
       view.setLines("inter", lines, a);
     }

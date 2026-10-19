@@ -11,10 +11,11 @@ import init, { TrackApi } from "../wasm/track/sim"; // the track model only (T-0
 import { anchor, makeAnchor, setAnchor, toLocal } from "../map/geo";
 import { CITIES, cityWithin, HOME_CITY, NEW_GAME_FRAME, WORLD_ID, zoneBox, zonesTouching } from "../game/cities";
 import { frameKindName, frameKindNumber, makeFrame, mercK, type Frame, type FrameSpec } from "../game/frame";
-import { PERIODS, periodAt } from "../game/periods";
+import { PERIODS } from "../game/periods";
 import { SHADES } from "../game/shadeTable";
-import { DAY_KINDS, dayKindAt } from "../game/days";
+import { DAY_KINDS } from "../game/days";
 import { timeZoneTable } from "../game/localTime";
+import { between, lagged, runLag, strengths, table, type PerHour } from "../game/moneyTiming";
 import { networkFromState, newNetCache, runsTrains } from "../map/network";
 import { buildComplexes } from "../game/complexes";
 import { decodeSave, encodeSave, isNortheastSave, trackFrameKind, readStored, SAVE_FORMAT, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, deleteSlot, leaseSlot, ORIGINAL_SLOT, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader } from "./saveFile";
@@ -68,6 +69,13 @@ let lineIncome = new Map<number, number[][]>();
 /** train rides per game hour as `incomePerHour` (T-565), and per line id */
 let ridesPerHour: number[][] = DAY_KINDS.map(() => PERIODS.map(() => 0));
 let lineRides = new Map<number, number[][]>();
+/** T-736: the boarding account's in-period shape strengths per kind of day and period, and the lag
+ * (s) money lands after riders set out (game/moneyTiming.ts) */
+const peakC: number[][] = DAY_KINDS.map(() => PERIODS.map(() => 0));
+let moneyLag = 0;
+const fareHour = (per: number[][] | undefined, tl: number) => lagged(table(per), peakC, tl, moneyLag);
+const rideHour = (per: number[][] | undefined, tl: number) => between(table(per), peakC, tl, tl + 3600);
+const costHour = (run: number[], tl: number) => lagged(((_k, p) => run[LEVEL_OF[PERIODS[p].demand]]) as PerHour, null, tl, moneyLag);
 /** T-531: each region's ledgers, kept as the network's (a zone id; "" outside every zone or not yet
  * placed, so the regions add up to the network) */
 let regions = new Map<string, { days: DayLedger[]; hours: HourLedger[] }>();
@@ -542,15 +550,9 @@ function regionHour(t: number, rl: ReturnType<typeof regionLines>): Map<string, 
       e[k] += v * s;
     }
   };
-  for (const f of rl.fares) {
-    const tl = t + f.shift;
-    spread(f.shares, (f.per[dayKindAt(tl)] ?? f.per[0])?.[periodAt(tl)] ?? 0, 0);
-  }
-  for (const f of rl.rides) {
-    const tl = t + f.shift;
-    spread(f.shares, (f.per[dayKindAt(tl)] ?? f.per[0])?.[periodAt(tl)] ?? 0, 2);
-  }
-  for (const c of rl.costs) spread(c.shares, c.run[LEVEL_OF[PERIODS[periodAt(t + c.shift)].demand]], 1);
+  for (const f of rl.fares) spread(f.shares, fareHour(f.per, t + f.shift), 0);
+  for (const f of rl.rides) spread(f.shares, rideHour(f.per, t + f.shift), 2);
+  for (const c of rl.costs) spread(c.shares, costHour(c.run, t + c.shift), 1);
   return out;
 }
 
@@ -597,7 +599,7 @@ function unsettleAfter(clockT: number): number {
   const last = hourLedger[hourLedger.length - 1];
   if (!last || last.hour <= H) return 0;
   const groups = localGroups();
-  const costAt = (h: number) => groups.reduce((s, g) => s + g.running[LEVEL_OF[PERIODS[periodAt(h * 3600 + g.shift)].demand]], 0);
+  const costAt = (h: number) => groups.reduce((s, g) => s + costHour(g.running, h * 3600 + g.shift), 0);
   const replay = (from: number, to: number) => {
     let c = 0;
     for (let t = from; t < to;) {
@@ -693,9 +695,9 @@ function localGroups(): { shift: number; running: number[]; income: number[][]; 
 }
 
 /** Fares in and running costs out up to now (T-284: to the game second, not the whole hour). An
- * hour's fare (the main thread's income for its period and kind of day) is paid as its trains
- * pick up riders (`hourShape`), its running cost evenly; by the hour's end both are paid in full,
- * so a day's totals are what whole-hour settling gave. Returns whether an hour ended. */
+ * hour's fare (`fareHour`: the period's income shaped as the riders arrive, landing as rides end)
+ * is paid as its trains pick up riders (`hourShape`), its running cost (`costHour`) evenly; by the
+ * hour's end both are paid in full. Returns whether an hour ended. */
 function settle(): boolean {
   if (!api) return false;
   const now = gameNow();
@@ -713,13 +715,13 @@ function settle(): boolean {
     if (h !== partHour) { partHour = h; partFare = partCost = 0; }
     const t = h * 3600, end = Math.min(now, t + 3600), full = end >= t + 3600;
     // T-309: each local time's lines at their own period and day; T-260: the hour's own kind of
-    // day, the weekday's until a weekend's has come
+    // day, the weekday's until a weekend's has come; T-736: shaped and lagged (fareHour)
     let fare = 0, cost = 0, rides = 0;
     for (const g of groups) {
-      const tl = t + g.shift, p = periodAt(tl);
-      fare += (g.income[dayKindAt(tl)] ?? g.income[0])?.[p] ?? 0;
-      rides += (g.rides[dayKindAt(tl)] ?? g.rides[0])?.[p] ?? 0;
-      cost += g.running[LEVEL_OF[PERIODS[p].demand]];
+      const tl = t + g.shift;
+      fare += fareHour(g.income, tl);
+      rides += rideHour(g.rides, tl);
+      cost += costHour(g.running, tl);
     }
     const wf = full ? 1 : shareAt(h, end - t), wc = full ? 1 : (end - t) / 3600;
     const df = Math.max(0, wf - partFare), dc = Math.max(0, wc - partCost);
@@ -739,9 +741,8 @@ function settle(): boolean {
     }
     // T-684: points land as fares do, each line's at its own local period and kind of day
     if (df > 0) for (const { shift, regs } of pl) {
-      const tl = t + shift, k = dayKindAt(tl), p = periodAt(tl);
       for (const [z, per] of regs) {
-        const v = ((per[k] ?? per[0])?.[p] ?? 0) * df;
+        const v = fareHour(per, t + shift) * df;
         if (!(v > 0)) continue;
         d.points = (d.points ?? 0) + v;
         e.points = (e.points ?? 0) + v;
@@ -786,7 +787,7 @@ function lineDaysAt(now: number, closed: boolean, shift?: number, past = false):
       const wNow = closed ? 1 : hNow === partHour ? partFare : 0;
       if (per) for (let h = h0; h <= hNow; h++) {
         const t = h * 3600 + sh, w = h === hNow ? wNow : past && h === h0 ? 1 - wNow : 1;
-        f += ((per[dayKindAt(t)] ?? per[0])?.[periodAt(t)] ?? 0) * w;
+        f += fareHour(per, t) * w;
       }
       out.push({ id, block: v.subarray(i, i + len), fare: f });
     }
@@ -1137,6 +1138,7 @@ function sendState(service = false) {
   const t0 = performance.now();
   const s = buildState();
   const t1 = performance.now();
+  moneyLag = runLag(s.lines.filter((l) => l.ok && l.running).map((l) => ({ tph: l.tph[1], lengthM: l.lengthM, cars: l.cars, oneWayS: l.roundTrip[1] / 2 - l.turnaround })));
   // a line gaining its first train or losing its last changes the draw order (T-533)
   const running = s.lines.filter((l) => l.ok && runsTrains(l)).map((l) => l.id).join();
   if (service && running === runningLines) {
@@ -1606,6 +1608,7 @@ async function handle(msg: ToClock) {
   } else if (msg.kind === "riders") {
     // a new demand result: the boarding account follows it (T-164), a few lines at a time, one
     // kind of day's riders a message (T-260)
+    if (peakC[msg.day ?? 0]) peakC[msg.day ?? 0] = strengths(msg.packed.subarray(0, PERIODS.length));
     api.set_riders(msg.packed, msg.day ?? 0);
     stepBoarding();
   } else if (msg.kind === "transfers") {

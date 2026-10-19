@@ -5,6 +5,7 @@ import type { Map as MlMap } from "maplibre-gl";
 import { DISC } from "../workers/commutersProtocol";
 import { EARTH_C, toLocal, type Anchor } from "./geo";
 import { hoverHeld } from "../ui/blurHold";
+import { restHolds } from "./hoverRest";
 
 /** Where the pointer is on the ground. Each disc set is in the local units of its own draw anchor
  * (T-317, map/geo.ts), so a finder turns the pointer into those (`discAt`, `pointerLocal`). */
@@ -67,8 +68,9 @@ export function pointerLocal(p: Pointer, a: Anchor): [number, number] {
 /** Points where something drawn above the discs is (the selected station, T-189): no disc there. */
 export const hoverAbove: { at: ((px: number, py: number) => boolean) | null } = { at: null };
 
-export function hoverAt(map: MlMap, px: number, py: number): string[] | null {
-  if (!finders.length || hoverAbove.at?.(px, py)) return null;
+/** `under`: the bubble even beneath what is drawn above the discs (the resting hover's list, T-732). */
+export function hoverAt(map: MlMap, px: number, py: number, under = false): string[] | null {
+  if (!finders.length || (!under && hoverAbove.at?.(px, py))) return null;
   const p = pointerAt(map, px, py);
   for (const { f } of finders) {
     const t = f(p);
@@ -89,6 +91,7 @@ export function startHover(map: MlMap) {
     last = "";
   };
   const show = (e: MouseEvent, px: number, py: number) => {
+    if (restHolds(px, py)) return; // on the way to the resting hover's list (T-732)
     if (e.buttons) return hide();
     const t = hoverAt(map, px, py);
     if (!t) return hide();

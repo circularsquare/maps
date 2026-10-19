@@ -16,6 +16,7 @@ import type { LineInput, WorldView } from "../game/types";
 import { ask, display, isBuildTool, purposeFilter, selection, shownDayPhrase, tool } from "../game/ui";
 import { world } from "../game/world";
 import { hoverAt } from "./demandHover";
+import { restHolds } from "./hoverRest";
 import { markAt, markTip } from "./gradeMarks";
 import { hoverHeld } from "../ui/blurHold";
 import { live } from "./live";
@@ -188,6 +189,7 @@ export function startTrackHover(map: MlMap, ov: Overlay) {
   box.addEventListener("mousemove", (e) => {
     const r = box.getBoundingClientRect();
     const px = e.clientX - r.left, py = e.clientY - r.top;
+    if (restHolds(px, py)) return; // on the way to the resting hover's list (T-732)
     // anything but the bare map canvas (a capacity tag, a handle, a control) is above the track
     if (e.buttons || e.target !== map.getCanvas()) {
       at = null;

@@ -1,5 +1,13 @@
 ﻿# Archive
 
+- T-732 [P2] Overlapping things under the mouse. Done 2026-10-19: a 250 ms rest with the select tool lists what else is under the pointer (1 bubble, 1 station, 3 lines) under the hover tag; clicking an entry selects it. `map/hoverRest.ts`; map highlight on pointing is T-741.
+
+- T-736 [P2] Money graph steps and lockstep (Anita's playtest). Done 2026-10-19: hours follow the boarding account's in-period shape, fares land as rides end and running costs as trains run (a run-length window); whole days keep their totals. Also closes T-294. notes/T-736.md.
+
+- T-735 [P2] Money per line in the lines view. Done 2026-10-19: a Money column in the Lines tab, each line's fares less running cost over the past 24 hours (`runningToday` moved to `game/today.ts`), red when negative, hover with the parts, sortable.
+
+- T-739 [P2] Bubble pointers. Done 2026-10-19: constant width (no fade), 1.5 px, and 2x as long (12% of the screen) at the intercity level (`ZONE_STUB`); the stub factor is the line's flag in `demandOverlay.ts`.
+
 - T-714 [P1] Pan lag on busy saves. Done 2026-10-19: not reproduced; the real save pans at 4.7-5.7 ms main thread a frame on all five builds of 10-18/19 (MapLibre most of it). Check `checks/t714-pan.mjs`; notes/perf-survey.md.
 
 - T-720 [P2] A walk to a station far too short (Fulton Mall, "10 min" from 2 km). Done 2026-10-19: the subzone's averaged walk; subzones now split by 15-minute walk bands (short lines' rail 7-21% over to 3-7%), and the trip explorer prices its two cells' own trip, hovers giving the bubbles' grouped figure. notes/T-720.md.

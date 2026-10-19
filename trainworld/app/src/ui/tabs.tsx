@@ -9,7 +9,7 @@ import { createLine } from "../game/lineActions";
 import type { JSX } from "preact";
 import { count, distUnit, length, levelLabel, money, perDistance, perKmFrom, shortDistance } from "../game/format";
 import { inkOn, LEVEL_COLOURS } from "../game/palette";
-import { DEMAND_INDEX, LEVELS, type Level, type LineInput, type StationInput } from "../game/types";
+import { DEMAND_INDEX, LEVELS, type Level, type LineInput, type LineStats, type StationInput } from "../game/types";
 import { complexes } from "../game/complexView";
 import { membersOf } from "../game/complexes";
 import { buildLevel, buildPlatform, display, keepPlacing, lineSort, selection, setDisplay, stationSort, trackCount, tool, type StationUseMode, type Tool } from "../game/ui";
@@ -19,7 +19,7 @@ import { cityById, viewedZone } from "../game/cities";
 import { listScope, scopedLists, scopeZone, stationZone } from "../game/listScope";
 import { regionLedger } from "../game/regionMoney";
 import { accountVersion } from "../game/boarding";
-import { crowdClass, crowding, stationsToday, today, todayLoaded, useToday, waitText } from "../game/today";
+import { crowdClass, crowding, runningToday, stationsToday, today, todayLoaded, useToday, waitText, type LineToday } from "../game/today";
 import type { DayLedger } from "../workers/protocol";
 import { live } from "../map/live";
 import { Check, Chip, Icon, Row, Segmented, SortHead, Stepper } from "./widgets";
@@ -155,6 +155,19 @@ function RidersToday({ line }: { line: string }) {
   return <span class="val w-riders" data-tip={d ? `${count(d.riders)} riders in the past 24 hours` : undefined}>{d ? count(d.riders) : ""}</span>;
 }
 
+/** T-735: a line's fares less running cost over the past 24 hours. */
+const lineNet = (d: LineToday | undefined, l: LineInput, st: LineStats) => (d ? d.fares - runningToday(l, st) : 0);
+function MoneyToday({ l, st }: { l: LineInput; st: LineStats }) {
+  const d = today.value.get(l.id);
+  if (!d) return <span class="val w-linemoney" />;
+  const run = runningToday(l, st);
+  return (
+    <span class="val w-linemoney" data-tip={`Fares ${money(d.fares)} less running cost ${money(run)} in the past 24 hours: ${money(d.fares - run)} net`}>
+      <Money dollars={d.fares - run} />
+    </span>
+  );
+}
+
 /** T-472, T-491: a line's trains now, coloured by its riders' wait for a train with room in the period now. */
 function TrainsNow({ line, n, period }: { line: string; n: number; period: string }) {
   const d = today.value.get(line);
@@ -217,6 +230,7 @@ export function LinesTab() {
   const lines = [...sc.lines].sort((a, b) =>
     (key === "city" ? natural(cityOf.get(a.id) ?? "", cityOf.get(b.id) ?? "") * dir
       : key === "riders" ? ((t.get(a.id)?.riders ?? 0) - (t.get(b.id)?.riders ?? 0)) * dir
+      : key === "money" ? (lineNet(t.get(a.id), a, w.lineStats[a.id]) - lineNet(t.get(b.id), b, w.lineStats[b.id])) * dir
       : key === "trains" ? (trains(a.id) - trains(b.id)) * dir
       : key === "near" ? byNear(sc.lineDist.get(a.id), sc.lineDist.get(b.id), dir) : 0)
     || natural(a.name, b.name) * (key === "name" ? dir : 1) || a.num - b.num);
@@ -232,6 +246,7 @@ export function LinesTab() {
         { key: "name", label: "Name", tip: "Sort by name", first: 1 },
         ...(showCity ? [{ key: "city" as const, label: "City", tip: "Sort by the city of the first stop", first: 1 as const, cls: "w-city", left: true }] : []),
         { key: "riders", label: "Riders", tip: "Sort by riders in the past 24 hours", first: -1, cls: "w-riders" },
+        { key: "money", label: "Money", tip: "Sort by money in the past 24 hours, fares less running cost", first: -1, cls: "w-linemoney" },
         { key: "trains", label: "Trains", tip: "Sort by trains needed", first: -1, cls: "w-trains" },
         { key: "near", label: "Near", tip: "Sort by distance from the centre of the screen, by the nearest stop", first: 1, cls: key === "near" ? "w-near" : "near-off" },
       ]} />}
@@ -249,6 +264,7 @@ export function LinesTab() {
               ) : (
                 <>
                   <RidersToday line={l.id} />
+                  <MoneyToday l={l} st={st} />
                   <TrainsNow line={l.id} n={st.trainsNeeded[levOf(l.id)]} period={PERIODS[periodAt(hour * 3600 + (st.shift ?? 0))]?.name ?? ""} />
                 </>
               )}

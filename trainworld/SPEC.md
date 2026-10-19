@@ -241,7 +241,8 @@ and no track, platform or junction carries more trains than its capacity: a line
 waits at its ends [T-517].
 The clock worker owns edits (with undo for reversible changes), capacity, fleet, costs, money and
 the boarding account. Fares are paid into the cash as trains pick up riders and running costs
-drain evenly [T-284]; the economy runs at 100x real days [T-081]. Changing a line's trains moves no
+drain evenly [T-284], each hour's share following when riders travel and trains run, fares
+landing as rides end [T-736]; the economy runs at 100x real days [T-081]. Changing a line's trains moves no
 running train: added ones enter at a terminal, removed ones leave at one [T-206]. A new game starts
 with $3B in an empty New York [T-485]; double track costs a base of US$45M a km times a
 multiplier per elevation (US$13.5M at grade) [T-467], a 20 m car costs US$2.5M, bought as a line's

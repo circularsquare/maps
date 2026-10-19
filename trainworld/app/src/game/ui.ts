@@ -167,7 +167,7 @@ export const renameLinePrompt = signal<string | null>(null);
 /** How the Lines and Stations lists are sorted: the column clicked and its direction (T-310). Kept
  * while the page is open, as the list sort always was. */
 export interface ListSort<K extends string> { key: K; dir: 1 | -1 }
-export const lineSort = signal<ListSort<"name" | "city" | "riders" | "trains" | "near">>({ key: "name", dir: 1 });
+export const lineSort = signal<ListSort<"name" | "city" | "riders" | "money" | "trains" | "near">>({ key: "name", dir: 1 });
 export const stationSort = signal<ListSort<"name" | "riders" | "near">>({ key: "riders", dir: -1 });
 /** The Money tab's Cities section (T-550): by name, train share, train rides a day or money a day. */
 export const citySort = signal<ListSort<"name" | "train" | "rides" | "money" | "points">>({ key: "rides", dir: -1 });

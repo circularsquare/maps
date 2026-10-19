@@ -35,7 +35,7 @@ purpose filter the purpose drawn is ringed in the bar.
 ## Lines tab and the line inspector
 
 - **The Lines tab** has New line above its list (actions go above lists of any length). The list
-  sorts by clicking a column header [T-310]: Name, City (below), Riders (past 24 hours), Trains and Near. A click sorts by that
+  sorts by clicking a column header [T-310]: Name, City (below), Riders (past 24 hours), Money (the line's fares less its running cost over the past 24 hours, in the money format with negatives red; its hover gives the fares, the running cost and the net) [T-735], Trains and Near. A click sorts by that
   column (names A to Z, figures biggest first, Near nearest first), a second reverses it, the sorted
   column has a small arrow, and each header's hover says what it sorts by. Names sort naturally, ties
   by name. Lines default to by name. The sort is kept while the page is open and re-runs each game hour.

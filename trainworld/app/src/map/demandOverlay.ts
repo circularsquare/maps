@@ -103,15 +103,15 @@ void main() {
 }`;
 
 /** Floats per line instance: x0, y0, r0, x1, y1, r1 (local units, radii before the bubble size),
- * a stub flag, alpha, and the colour r, g, b (the first disc's own). A line runs edge to edge
- * between the two discs; a stub runs from the first disc's edge toward the second and fades out
- * over `STUB_SCREEN` of the screen (T-520). Its alpha is scaled by the first disc's drawn size
- * (T-524). */
+ * a stub length factor (0 = a line), alpha, and the colour r, g, b (the first disc's own). A line
+ * runs edge to edge between the two discs; a stub runs from the first disc's edge toward the
+ * second, `STUB_SCREEN` of the screen long times its factor, at constant width and alpha (T-520,
+ * T-739). Its alpha is scaled by the first disc's drawn size (T-524). */
 export const LINE = 11;
-/** A stub's length as a share of the map's longer side. */
+/** A stub's length (factor 1) as a share of the map's longer side. */
 const STUB_SCREEN = 0.06;
 /** Line width, CSS px. */
-const LINE_PX = 1;
+const LINE_PX = 1.5;
 /** A line's source disc drawn at this radius (CSS px) or more gives the line its full alpha;
  * smaller ones give it in proportion to the radius. */
 const LINE_FULL_PX = 8;
@@ -127,12 +127,10 @@ uniform float u_width;    // device px
 uniform float u_full;     // device px: the source radius that gives the full alpha
 in vec3 a_from;
 in vec3 a_to;
-in vec2 a_style;          // stub, alpha
+in vec2 a_style;          // stub length factor, alpha
 in vec3 a_col;
-out float v_t;
 out float v_across;
 out float v_alpha;
-out float v_stub;
 out vec3 v_col;
 void main() {
   vec4 c0 = u_matrix * vec4(a_from.xy, 0.0, 1.0);
@@ -144,32 +142,27 @@ void main() {
   vec2 u = len > 0.0 ? d / len : vec2(1.0, 0.0);
   float s0 = a_from.z * u_rscale * u_px_per_unit;
   float s1 = len - a_to.z * u_rscale * u_px_per_unit;
-  if (a_style.x > 0.5) s1 = min(s1, s0 + u_stub);
+  if (a_style.x > 0.5) s1 = min(s1, s0 + u_stub * a_style.x);
   float along = (gl_VertexID & 1) == 1 ? s1 : s0;
   float side = gl_VertexID < 2 ? -1.0 : 1.0;
   float half_w = u_width * 0.5 + 1.0;
   vec2 p = p0 + u * along + vec2(-u.y, u.x) * side * half_w;
   // nothing left between the two edges: off screen
   gl_Position = s1 > s0 ? vec4(p / u_viewport * 2.0 - 1.0, 0.0, 1.0) : vec4(2.0, 2.0, 2.0, 1.0);
-  v_t = (gl_VertexID & 1) == 1 ? 1.0 : 0.0;
   v_across = side * half_w;
   v_alpha = a_style.y * clamp(s0 / u_full, 0.0, 1.0);
-  v_stub = a_style.x;
   v_col = a_col;
 }`;
 
 const LINE_FS = `#version 300 es
 precision highp float;
 uniform float u_width;
-in float v_t;
 in float v_across;
 in float v_alpha;
-in float v_stub;
 in vec3 v_col;
 out vec4 o;
 void main() {
   float a = v_alpha * clamp(u_width * 0.5 - abs(v_across) + 0.5, 0.0, 1.0);
-  if (v_stub > 0.5) a *= 1.0 - v_t;
   o = vec4(v_col * a, a);
 }`;
 

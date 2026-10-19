@@ -48,6 +48,7 @@ import { EndMarkers } from "./map/endMarkers";
 import { hoverAbove } from "./map/demandHover";
 import { CapacityMarkers } from "./map/capacityMarkers";
 import { startTrackHover } from "./map/trackHover";
+import { startRestList } from "./map/hoverRest";
 import { startStationLife } from "./map/stationLife";
 import { perfOff, perfTry } from "./perfFlags";
 import { DEMAND_INDEX, type Selection } from "./game/types";
@@ -114,7 +115,7 @@ render(h(BlueprintBar, null), blueprintBarRoot); // T-353: the Select tool's Dis
 startSearch(map.getContainer()); // T-148: the search box at the map's upper right
 const renderer = new NetworkRenderer();
 /** A click on the commuter bubbles (T-097; set below once the demand views start). */
-let demandClick: ((x: number, y: number, add: boolean) => Selection | undefined) | null = null;
+let demandClick: ((x: number, y: number, add: boolean, under?: boolean) => Selection | undefined) | null = null;
 let demandHover: ((x: number, y: number) => string[] | null) | null = null;
 const overlay = new Overlay(map, renderer, () => {
   let sel = selection.peek();
@@ -250,6 +251,8 @@ effect(() => {
 effect(() => capacity.setVisible(display.value.capacity && !SYNTH));
 // Resting the pointer on track says what the track display shows there (T-157).
 startTrackHover(map, overlay);
+// T-732: resting the pointer lists what else is under it
+if (!SYNTH) startRestList(map, overlay, (x, y) => demandClick?.(x, y, false, true));
 // T-686: from the platforms' zoom, chimes, pops and faces as trains let riders off and on
 const stationLife = SYNTH ? null : startStationLife(map, overlay, (notes) => client.post({ kind: "lineNotes", notes }));
 if (DEBUG && stationLife) (window as any).twLife = stationLife;
