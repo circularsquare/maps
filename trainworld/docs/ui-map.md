@@ -57,8 +57,14 @@ there is no high-speed class and no hover yet.
   screen, a double track's stroke starts growing to its two tracks' width (4 m plus a track's
   2.4 m), which it reaches at 7 px; from there to 10 px a stripe opens down its middle, widening
   to 1.6 m while the outline stays the same, each track half of what is left, until the tracks'
-  centres are 4 m apart and each is 2.4 m wide; from 10 px on everything is to scale. Stations are
-  not yet drawn with a platform each side (T-658c): the two tracks run through the box.
+  centres are 4 m apart and each is 2.4 m wide; from 10 px on everything is to scale. A station
+  on double track then has a platform each side ("Stations").
+- **Turn-back crossovers** [T-658d, `turnbackStrokes` in `map/network.ts`]: close in only, where
+  a line ends at a double-track station, the crossover the game assumes there (6.2) is drawn in
+  bare-track grey over the line's two tracks, 50 m long: a scissors (both diagonals) just outside
+  a dead-end terminus's platform, and at a through station one diagonal just outside the
+  platform on the side the line arrives from, from the arrival track to the departure track. Not
+  picked, no hover of its own.
   Trains keep right (T-319): each line's run 0 is drawn on the right-hand track of its direction
   and run 1 on the left. Under a line's two tracks is a band as wide as the pair or its traffic
   width, whichever is wider, in the line colour mixed 60% towards the casing, over one casing
@@ -164,6 +170,12 @@ there is no high-speed class and no hover yet.
   platform's two long edges as thin lines in the platform blue (`PLATFORM_BLUE` #8085f0), 14% of the
   white's half width thick (at least 1 px), 15% of it in from the rim, coming in between zoom 15
   and 15.5.
+- **A platform each side, close in** [T-658c]: on a double-track station (flag 16 in the station
+  buffer), as the two tracks part ("Lines and track") the blue edges move in beside them, 0.4 m
+  wide and 1 px outside each track, and each direction's riders stand on their own platform,
+  from just outside its blue edge out to 1.5 px inside the rim, instead of filling half the box:
+  the + side's trains travel along the platform axis and keep right, so their track and their
+  platform are on the + side. A single-track station is unchanged.
 - **A player link's bridge** [T-197]: a straight white band 3 px wide at zoom 15 (fixed on the
   ground) with the 2 px rim along both sides, between the nearest points of the two platforms'
   centre lines, at least 6 px inside each platform's ends; overlapping platforms get one inside
@@ -218,7 +230,8 @@ change; only links are saved. Riders change between any two stations of a comple
 
 [T-164, T-219, T-236, T-553] From zoom 14 the white of each platform box fills with a dark warm grey
 (#77726d, kept 1.5 px clear of the rim or the blue edge) as riders wait. Each direction of travel
-has its half of the box along its length; a platform whose trains all use one side (a terminal)
+has its half of the box along its length (close in on double track, its own platform beside its
+track, "Stations", T-658c); a platform whose trains all use one side (a terminal)
 fills as one. A side fills from the middle outwards by its riders' share of the room
 (`platformRoom`, [track-and-service.md](track-and-service.md) 6.6: 1,250 a side on 150 m), full to
 both ends at that or more. A side is red instead of grey once it is full [T-559], and its bar then also stands out past the rim on its own side by half the box's half width (`CROWD_BULGE`) [T-652]. A standing train covers the box's middle; from zoom 16 the sides show beside it. The crowd

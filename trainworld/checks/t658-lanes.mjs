@@ -104,7 +104,18 @@ try {
       const d = Math.hypot(x - sx, y - sy);
       if (far && d < openD) { openD = d; open = window.tw.toLngLat(x, y); }
     }
-    return { station, junction, open, lines: bestN };
+    // T-658d: a turn-back crossover, the first a dead end's scissors if there is one
+    const T = n.turnbacks;
+    let turnback = null, deadEnd = null;
+    if (T?.count) {
+      turnback = window.tw.toLngLat(T.seg[0], T.seg[1]);
+      for (let i = 1; i < T.count && !deadEnd; i++) {
+        // a scissors: two strokes starting at the same point
+        if (Math.hypot(T.seg[i * 4] - T.seg[0], T.seg[i * 4 + 1] - T.seg[1]) < 1e-6) continue;
+        for (let j = i + 1; j < T.count; j++) if (T.seg[j * 4] === T.seg[i * 4] && T.seg[j * 4 + 1] === T.seg[i * 4 + 1] && T.edge[j] === T.edge[i]) { deadEnd = window.tw.toLngLat(T.seg[i * 4], T.seg[i * 4 + 1]); break; }
+      }
+    }
+    return { station, junction, open, turnback, deadEnd, turnbackSegs: T?.count ?? 0, lines: bestN };
   });
   console.log('spots', JSON.stringify(spots));
 
@@ -121,8 +132,16 @@ try {
   for (const z of [12, 15]) {
     await go(dev.page, spots.station, z);
     await go(ref.page, spots.station, z);
-    const [a, b] = [Buffer.from(await pixels(dev.page), 'base64'), Buffer.from(await pixels(ref.page), 'base64')];
-    let diff = 0;
+    // line widths follow demand, which can still be settling in one of the two: up to 6 tries
+    let a, b, diff = 0;
+    for (let tries = 0; tries < 6; tries++) {
+      [a, b] = [Buffer.from(await pixels(dev.page), 'base64'), Buffer.from(await pixels(ref.page), 'base64')];
+      diff = 0;
+      for (let k = 0; k < Math.min(a.length, b.length); k += 4) if (a[k] !== b[k] || a[k + 1] !== b[k + 1] || a[k + 2] !== b[k + 2] || a[k + 3] !== b[k + 3]) diff++;
+      if (!diff) break;
+      await dev.page.waitForTimeout(10000);
+    }
+    diff = 0;
     const mask = new Uint8Array(a.length);
     for (let k = 0; k < Math.min(a.length, b.length); k += 4) {
       if (a[k] !== b[k] || a[k + 1] !== b[k + 1] || a[k + 2] !== b[k + 2] || a[k + 3] !== b[k + 3]) { diff++; mask[k] = 255; mask[k + 3] = 255; }
@@ -224,7 +243,7 @@ try {
 
   const shoot = async (page, shade) => {
     await fix(page);
-    for (const [name, at] of [['station', spots.station], ['open', spots.open], ['junction', spots.junction]]) {
+    for (const [name, at] of [['station', spots.station], ['open', spots.open], ['junction', spots.junction], ['turnback', spots.turnback], ['deadend', spots.deadEnd]]) {
       if (!at) continue;
       for (const z of [15, 16.9, 17.2, 19]) {
         await go(page, at, z);

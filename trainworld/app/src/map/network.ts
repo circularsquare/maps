@@ -22,6 +22,8 @@ export const F_OFF = 64;
 export const F_BAD = 16;
 /** Live placement only: solid body/casing without changing its blueprint status. */
 export const F_PLACEMENT = 32;
+/** A crossover where lines turn back (T-658d): its lane values are signed, drawn close in only. */
+export const F_TURNBACK = 128;
 
 export interface Strokes {
   /** per segment: x0, y0, x1, y1 */
@@ -56,7 +58,8 @@ export interface NetworkBuffers {
   lineIds: string[];
   /** per line id: r, g, b, 255 */
   lineColours: Uint8Array;
-  /** per station: x, y, flags (1 transfer, 2 blueprint) */
+  /** per station: x, y, flags (1 transfer, 2 blueprint, 4 a line runs through, 8 switched off, 16
+   * on double track: a platform each side close in, T-658) */
   stations: Float32Array;
   /** Per station: half the platform along its track at the platform's middle, local units (T-144). */
   stationAxis?: Float32Array;
@@ -94,6 +97,8 @@ export interface NetworkBuffers {
   /** per sample of `samples`: how far apart its track's two tracks are drawn there (T-658), 0
    * single track to 1 double, as `Strokes.lane`; absent: 1 */
   sampleLane?: Float32Array;
+  /** the crossovers where lines turn back, drawn close in only (T-658d, `turnbackStrokes`) */
+  turnbacks?: Strokes;
   /** per edge id: local polyline (x, y, z triples), for snapping and picking */
   edgePts: Map<number, Float32Array>;
   /** The draw anchor every position here is relative to (T-307, geo.ts): the clock worker's when
@@ -203,7 +208,8 @@ function linesOnEdges(s: ClockState) {
   return onEdge;
 }
 
-export function strokesFromPreview(pts: Float32Array, bad: boolean, speed?: Float32Array, placement = false, simMarks?: ArrayLike<number>): Strokes {
+/** `lane`: as `Strokes.lane`, 0 for single track (T-658) */
+export function strokesFromPreview(pts: Float32Array, bad: boolean, speed?: Float32Array, placement = false, simMarks?: ArrayLike<number>, lane = 255): Strokes {
   const b = new StrokeBuilder();
   const flags = F_BLUEPRINT | (bad ? F_BAD : 0) | (placement ? F_PLACEMENT : 0);
   // a negative speed is a step with no track (between quad's two pairs' own ends, T-423): not drawn
@@ -211,12 +217,12 @@ export function strokesFromPreview(pts: Float32Array, bad: boolean, speed?: Floa
   if (speed) {
     for (let k = 0; k < speed.length; k++) {
       if (speed[k] >= 0) continue;
-      b.add(pts.subarray(from * 3, (k + 1) * 3), TRACK, 0xffffffff, flags);
+      b.add(pts.subarray(from * 3, (k + 1) * 3), TRACK, 0xffffffff, flags, false, 0, undefined, lane);
       from = k + 1;
     }
     if (from > 0) speed = speed.filter((v) => v >= 0);
   }
-  b.add(pts.subarray(from * 3), TRACK, 0xffffffff, flags);
+  b.add(pts.subarray(from * 3), TRACK, 0xffffffff, flags, false, 0, undefined, lane);
   const strokes = b.build();
   strokes.marks = previewMarks(pts, simMarks);
   if (speed) {
@@ -324,6 +330,65 @@ function lanePoints(pts: Float32Array, lanes: number): LanePoints {
     src.push(k);
   }
   return { lpts: new Float32Array(out), lane: new Uint8Array(lane), src };
+}
+
+/** Length of a turn-back crossover's diagonal, m (T-658d). */
+const TURNBACK_M = 50;
+
+/**
+ * The crossovers the game assumes where a line turns back on double track (T-658d; SPEC 6.2: a
+ * dead-end terminus uses both its platform tracks, a line ending at a through station crosses back
+ * behind the platform): a scissors just outside a dead-end terminus's platform, one diagonal just
+ * outside a through station's platform on the side the line arrives from, from the arrival track
+ * to the departure track. Drawn along the line's own strokes with `Strokes.lane` signed (`F_TURNBACK`:
+ * 0 the left track of run 0's direction, 255 the right).
+ */
+function turnbackStrokes(s: ClockState, lines: NetCache["lines"], endCount: Map<number, number>): Strokes {
+  const b = new StrokeBuilder();
+  const nodes = new Map(s.nodes.map((n) => [n.id, n]));
+  for (const l of s.lines) {
+    const st = lines.get(l.id)?.strokes;
+    const last = l.stops.length - 1;
+    if (!l.ok || !st || !st.count || last < 1 || l.stops[0] === l.stops[last]) continue;
+    const segLen = (i: number) => Math.hypot(st.seg[i * 4 + 2] - st.seg[i * 4], st.seg[i * 4 + 3] - st.seg[i * 4 + 1]);
+    const D = st.dist[st.count - 1] + segLen(st.count - 1);
+    /** run 0's strokes from `s0` to `s1`, the lane going from `v0` to `v1` (-1 left, 1 right) */
+    const along = (s0: number, s1: number, v0: number, v1: number, flags: number) => {
+      s0 = Math.max(0, s0);
+      s1 = Math.min(D, s1);
+      if (s1 - s0 < 1e-6) return;
+      const pts: number[] = [], lane: number[] = [];
+      const push = (x: number, y: number, at: number) => {
+        pts.push(x, y, 0);
+        lane.push(Math.round(127.5 * (1 + v0 + (v1 - v0) * (at - s0) / (s1 - s0))));
+      };
+      let edge = -1;
+      for (let i = 0; i < st.count; i++) {
+        const a = st.dist[i], len = segLen(i), e = a + len;
+        if (e < s0 || a > s1 || len < 1e-9) continue;
+        if (edge < 0) edge = st.edge[i];
+        const x0 = st.seg[i * 4], y0 = st.seg[i * 4 + 1], dx = st.seg[i * 4 + 2] - x0, dy = st.seg[i * 4 + 3] - y0;
+        const f0 = Math.max(0, (s0 - a) / len), f1 = Math.min(1, (s1 - a) / len);
+        if (!pts.length) push(x0 + dx * f0, y0 + dy * f0, a + len * f0);
+        push(x0 + dx * f1, y0 + dy * f1, a + len * f1);
+      }
+      if (pts.length >= 6) b.add(pts, TRACK, edge, flags | F_TURNBACK, false, 0, undefined, lane);
+    };
+    for (const atEnd of [false, true]) {
+      const node = nodes.get(l.stops[atEnd ? last : 0]);
+      const i = atEnd ? st.count - 1 : 0;
+      if (!node || !node.platform || (st.lane?.[i * 2 + (atEnd ? 1 : 0)] ?? 255) < 255) continue;
+      const k = kAtY(st.seg[i * 4 + (atEnd ? 3 : 1)]);
+      const dead = endCount.get(node.id) === 1;
+      // the platform's open end at a dead end, else its end on the side the line arrives from
+      const p = node.platform * k * (dead ? 1 : 0.5), T = TURNBACK_M * k;
+      const s0 = atEnd ? D - p - T : p;
+      const flags = node.stationBuilt ? 0 : F_FADED;
+      along(s0, s0 + T, -1, 1, flags);
+      if (dead) along(s0, s0 + T, 1, -1, flags);
+    }
+  }
+  return b.build();
 }
 
 /** The lane value (0-1) a fraction `f` of the way along an edge's drawn points. */
@@ -479,6 +544,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
     }
   }
   cache.lines = linesSeen;
+  const turnbacks = turnbackStrokes(s, linesSeen, endCount);
   const served = new Map<number, number>();
   for (const l of s.lines) for (const st of new Set(l.stops)) served.set(st, (served.get(st) ?? 0) + 1);
   // whether a line runs through each node, so a station's box covers it (one line width since T-190)
@@ -531,7 +597,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
     stationAxis.set([c.ax, c.ay], i * 2);
     stationShape.set(c.shape, i * 4);
     stationLine.set(c.line, i * 2 * PLATFORM_POINTS);
-    stations.set([p[0], p[1], ((served.get(n.id) ?? 0) > 1 ? 1 : 0) | (n.stationBuilt ? 0 : 2) | (lined.has(n.id) ? 4 : 0) | (n.stationOff ? 8 : 0)], i * 3);
+    stations.set([p[0], p[1], ((served.get(n.id) ?? 0) > 1 ? 1 : 0) | (n.stationBuilt ? 0 : 2) | (lined.has(n.id) ? 4 : 0) | (n.stationOff ? 8 : 0) | (edgeOf.get(platformEdge.get(n.id) ?? -1)?.tracks === 2 ? 16 : 0)], i * 3);
   });
   cache.stations = stationsSeen;
   // the player's links as bridges between the two platforms' nearest points (T-217)
@@ -578,6 +644,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
     stationLine,
     sampleStroke,
     sampleLane,
+    turnbacks,
     edgePts,
     anchor: anchor(),
   };

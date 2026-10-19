@@ -146,7 +146,10 @@ void main() {
   bool bpLine = blueprint && !placement && u_kind == 1;
   // double track as its two tracks close in (T-658): first the stroke grows to the pair's width
   // (u_lanes.z), then the two tracks part inside it (u_lanes.y), so its outline never jumps
-  float lfm = max(a_lane.x, a_lane.y), G = u_lanes.x, t = u_lanes.y;
+  // a turn-back crossover (T-658d) goes from one track to the other: drawn once, as a track
+  bool turnback = (flags & 128) != 0;
+  if (turnback && (u_lane_mode != 2 || u_casing > 0.0)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+  float lfm = turnback ? 1.0 : max(a_lane.x, a_lane.y), G = u_lanes.x, t = u_lanes.y;
   float lt = blueprint && !placement ? u_lanes.w : u_width.z;
   float core = bpTrack || bpLine ? u_bp.x + 2.0 * u_bp.y : u_width.x;
   float grow = u_lanes.z * max(0.0, lfm * (G + lt) - core * (bpTrack || bpLine ? 1.0 : a_wmul));
@@ -195,7 +198,9 @@ void main() {
   vec2 off = nrm * side * w * 0.5 + dir * (along * 2.0 - 1.0) * w * 0.5;
   // trains keep right (T-319): a line's strokes run in its run 0's direction, so its run 0 has the
   // right-hand track (-nrm) and run 1 the left
-  if (u_lane_mode > 1) off -= nrm * (u_lane_mode == 2 ? 1.0 : -1.0) * (along < 0.5 ? a_lane.x : a_lane.y) * lane_off;
+  float lv = along < 0.5 ? a_lane.x : a_lane.y;
+  if (turnback) lv = 2.0 * lv - 1.0;
+  if (u_lane_mode > 1) off -= nrm * (u_lane_mode == 2 ? 1.0 : -1.0) * lv * lane_off;
   c.xy += off / half_vp * c.w;
   gl_Position = c;
   // round caps (T-673): the quad runs half a width past each end; the fragment shader rounds it
@@ -285,6 +290,7 @@ flat out float v_alpha;
 flat out vec4 v_crowd;
 flat out vec4 v_scr;     // a dot's frame on the screen (T-553): where its x and y axes point, as
                          // (x.x, y.x, x.y, y.y) with the screen's y up, so a pie can start at 12 o'clock
+flat out float v_lane;   // 1 on double track: a platform each side of its two tracks close in (T-658)
 // the centre line in the frame, px (T-254), two points to a vec4
 ${qVars("out")}
 void main() {
@@ -292,6 +298,7 @@ void main() {
   v_scr = vec4(1.0, 0.0, 0.0, 1.0);
   v_crowd = a_crowd;
   int flags = int(a_st.z + 0.5);
+  v_lane = (flags & 16) != 0 ? 1.0 : 0.0;
   v_alpha = (flags & 8) != 0 ? 0.3 : (flags & 2) != 0 ? 0.6 : 1.0; // 8: a blueprint switched off (T-333)
   vec2 half_vp = u_viewport * 0.5;
   vec2 corner = vec2(float(gl_VertexID & 1) * 2.0 - 1.0, gl_VertexID < 2 ? -1.0 : 1.0);
@@ -393,9 +400,11 @@ flat out float v_dot;
 flat out float v_alpha;
 flat out vec4 v_crowd;
 flat out vec4 v_scr;
+flat out float v_lane;
 ${qVars("out")}
 void main() {
   v_dot = 0.0;
+  v_lane = 0.0;
   v_scr = vec4(1.0, 0.0, 0.0, 1.0);
   v_crowd = vec4(0.0);
   v_alpha = a_bflag.y > 0.5 ? 0.6 : 1.0;
@@ -431,17 +440,21 @@ uniform float u_hair;    // a CSS px in device px
 uniform float u_tint;    // 1: dots show their crowds as pies (T-228, T-553)
 uniform vec3 u_plat;     // the platforms' blue (T-236)
 uniform float u_mask;    // 1: the white only marks the stencil (the track drawn through it, T-236)
+uniform vec2 u_lanes;    // T-658: 4 m in px, how far double track's two tracks have parted (0-1)
 in vec2 v_p;
 flat in vec3 v_size;
 flat in float v_dot;
 flat in float v_alpha;
 flat in vec4 v_crowd;
 flat in vec4 v_scr;
+flat in float v_lane;
 ${qVars("in")}
 out vec4 o;
 ${SHAPE_GLSL}
 // white between a platform's rim and its blue edge (T-236), px, from the white's half width W
 float platGap(float W) { return 0.15 * W; }
+// a blue platform edge's width, px: a share of the white, then 0.4 m once double track has parted
+float edgeW(float W, float tl) { return mix(max(u_hair, 0.14 * W), max(u_hair, 0.1 * u_lanes.x), tl); }
 void main() {
   if (u_halo == 1) {
     if (v_size.x < 0.5 || v_alpha < 0.9) discard;
@@ -488,8 +501,11 @@ void main() {
     // enough to hold them beside the track
     vec2 p = f;
     float W = v_size.y - u_ring;
-    float gap = platGap(W), bw = max(u_hair, 0.14 * W);
-    float off = W - gap - 0.5 * bw;
+    // close in on double track (T-658) they move in beside its two tracks, 0.4 m wide: a platform
+    // each side
+    float tl = u_lanes.y * v_lane;
+    float gap = platGap(W), bw = edgeW(W, tl);
+    float off = mix(W - gap - 0.5 * bw, 0.8 * u_lanes.x + u_hair + 0.5 * bw, tl);
     float a = clamp(0.5 * bw + 0.5 - abs(abs(p.y) - off), 0.0, 1.0)
       * clamp(v_size.x - u_ring - gap - abs(p.x) + 0.5, 0.0, 1.0)
       * clamp((W / u_hair - 3.0) / 2.0, 0.0, 1.0) * v_alpha;
@@ -503,8 +519,14 @@ void main() {
     float keep = max(1.5, platGap(v_size.y - u_ring));
     inner = clamp(0.5 - keep - d - u_ring, 0.0, 1.0);
     float reach = v_size.x - u_ring - keep;
-    float ap = inner * clamp(p.y + 0.5, 0.0, 1.0) * clamp(v_crowd.x * reach - abs(p.x) + 0.5, 0.0, 1.0);
-    float am = inner * clamp(0.5 - p.y, 0.0, 1.0) * clamp(v_crowd.y * reach - abs(p.x) + 0.5, 0.0, 1.0);
+    // close in on double track (T-658) each side's riders stand on their own platform, from beside
+    // its blue edge out to the rim: the + side's trains travel along the axis, keeping right, so
+    // their track and platform are on the + side
+    float tl = u_lanes.y * v_lane;
+    float yin = tl * (0.8 * u_lanes.x + 2.0 * u_hair + edgeW(v_size.y - u_ring, tl) + 1.5);
+    inner = mix(inner, clamp(0.5 - 1.5 - d - u_ring, 0.0, 1.0), tl);
+    float ap = inner * clamp(p.y - yin + 0.5, 0.0, 1.0) * clamp(v_crowd.x * reach - abs(p.x) + 0.5, 0.0, 1.0);
+    float am = inner * clamp(0.5 - p.y - yin, 0.0, 1.0) * clamp(v_crowd.y * reach - abs(p.x) + 0.5, 0.0, 1.0);
     // a full side's bar also stands out beyond the rim, on its own side (T-652)
     float out_ = ${CROWD_BULGE.toFixed(2)} * v_size.y;
     float wing = clamp(abs(p.y) - v_size.y + 0.5, 0.0, 1.0) * clamp(v_size.y + out_ - abs(p.y) + 0.5, 0.0, 1.0);
@@ -946,6 +968,8 @@ export class NetworkRenderer {
   private previewRes: { del: () => void }[] = [];
   private track: StrokeVao | null = null;
   private lines: StrokeVao | null = null;
+  /** the crossovers where lines turn back (T-658d), drawn close in only */
+  private turnback: StrokeVao | null = null;
   private preview: StrokeVao | null = null;
   private highlightRes: { del: () => void }[] = [];
   /** the drag-selected blueprint (T-333): an ink band drawn under the track */
@@ -1164,7 +1188,7 @@ export class NetworkRenderer {
     this.trainProg = compile(gl, TRAIN_VS, TRAIN_FS);
     this.hasStencil = (gl.getParameter(gl.STENCIL_BITS) ?? 0) > 0;
     this.strokeU = uniforms(gl, this.strokeProg, ["u_matrix", "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_edge", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_dim", "u_by_level", "u_by_speed", "u_px_per_unit", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours"]);
-    this.stationU = uniforms(gl, this.stationProg, ["u_matrix", "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass", "u_layer", "u_halo", "u_halo_radius", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_hair", "u_plat", "u_mask", "u_stline"]);
+    this.stationU = uniforms(gl, this.stationProg, ["u_matrix", "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass", "u_layer", "u_halo", "u_halo_radius", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_hair", "u_plat", "u_mask", "u_stline", "u_lanes"]);
     this.bridgeProg = compile(gl, BRIDGE_VS, STATION_FS);
     this.bridgeU = uniforms(gl, this.bridgeProg, ["u_matrix", "u_viewport", "u_ring", "u_bridge", "u_pass", "u_layer", "u_halo", "u_ink", "u_bad", "u_crowd_rgb", "u_mask"]);
     this.selProg = compile(gl, SEL_VS, SEL_FS);
@@ -1300,6 +1324,7 @@ export class NetworkRenderer {
     this.marks.setNetwork(n.marks);
     this.track = this.strokes(n.track);
     this.lines = this.strokes(n.lines);
+    this.turnback = n.turnbacks?.count ? this.strokes(n.turnbacks) : null;
     // blueprint track sorts last (network.ts)
     this.hasBlueprint = n.track.count > 0 && (n.track.flags[n.track.count - 1] & F_BLUEPRINT) !== 0;
     this.lineWidths = null;
@@ -1584,6 +1609,8 @@ export class NetworkRenderer {
       gl.uniform1i(u.u_lane_mode, 0);
     }
     trackStrokes();
+    // where lines turn back, over their tracks (T-658d)
+    if (lanes.t > 0) stroke(this.turnback, 0, wTrack, false);
     stroke(this.preview, 2, wLine, false);
     this.marks.draw(m, vp, zoom, dpr, this.levelColours, opt.flatMarks !== false);
 
@@ -1619,6 +1646,7 @@ export class NetworkRenderer {
       gl.uniform3fv(su.u_bad, BAD_RGB);
       gl.uniform3fv(su.u_crowd_rgb, CROWD_RGB);
       gl.uniform1f(su.u_line, wLine);
+      gl.uniform2f(su.u_lanes, lanes.gap * dpr, lanes.t);
       gl.uniform1f(su.u_boxes, boxes ? 1 : 0);
       // each platform's track line (T-254)
       gl.activeTexture(gl.TEXTURE11);

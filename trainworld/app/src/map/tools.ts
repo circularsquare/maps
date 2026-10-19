@@ -421,7 +421,8 @@ export class Tools {
   private showPreview(a: PreviewAnswer, key: string) {
     this.lastPreview = a;
     this.previewKey = key;
-    this.overlay.renderer.setPreview(a.pts.length >= 6 ? strokesFromPreview(a.pts, !a.ok, a.speeds, true, a.marks) : null);
+    // single track previews as one track close in, double and quad as two each (T-658)
+    this.overlay.renderer.setPreview(a.pts.length >= 6 ? strokesFromPreview(a.pts, !a.ok, a.speeds, true, a.marks, trackCount.peek() === 1 ? 0 : 255) : null);
     this.overlay.invalidate();
     this.place();
   }
