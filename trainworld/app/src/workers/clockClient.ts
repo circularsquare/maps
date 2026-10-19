@@ -411,7 +411,7 @@ export class ClockClient {
         setMoneyState(msg.money);
         break;
       case "cash": // T-284: fares landing, running costs draining
-        liveMoney.value = { cash: msg.cash, today: msg.today, hour: msg.hour, regions: msg.regions, points: msg.points };
+        liveMoney.value = { cash: msg.cash, today: msg.today, hour: msg.hour, regions: msg.regions };
         break;
       case "loaded":
         // the game now in the worker may be in the other frame (T-125); first, before anything reads positions

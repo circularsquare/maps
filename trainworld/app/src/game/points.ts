@@ -1,5 +1,6 @@
-// Points (T-684; SPEC 6.5): a score per region, 20 a rail trip and 1 a passenger-km. A trip is a
-// rider's whole rail journey, however many lines it uses, and counts in the region it starts in.
+// Points (T-684; SPEC 6): a measure per region, what it earned in the past 24 game hours at 20 a
+// rail trip and 1 a passenger-km (T-694). A trip is a rider's whole rail journey, however many
+// lines it uses, and counts in the region it starts in.
 //
 // Trips come from the solve, not from boardings: each region's rail trips (its own demand's, plus
 // half of each regional corridor's at each end) are spread over the boardings at that region's
@@ -13,6 +14,7 @@ import { CITIES, type CityId } from "./cities";
 import { AVERAGE_DAY, DAY_KINDS, DEMAND_DAYS } from "./days";
 import { demandByDay, type DayDemand } from "./demand";
 import { stationZone } from "./listScope";
+import { moneyState } from "./money";
 import { PERIODS } from "./periods";
 import { world } from "./world";
 import { zonesLoaded } from "./zones";
@@ -119,6 +121,20 @@ export const linePoints = computed<{ line: number; regions: [string, number[][]]
       regions: [...zones].map((z): [string, number[][]] => [z, DAY_KINDS.map((k) => (days[k].view ? per[k] : per[base]).get(line)?.get(z) ?? zero)]),
     };
   });
+});
+
+/** T-694: each region's points, the measure shown: what it earned in the past 24 whole game hours,
+ * from the hour ledgers, so it moves once a game hour (fewer hours while the ledger is younger). */
+export const pointsPast24h = computed<Map<string, number>>(() => {
+  const m = moneyState.value, out = new Map<string, number>();
+  const now = m?.hours.at(-1)?.hour;
+  if (!m || now === undefined) return out;
+  for (const [z, r] of Object.entries(m.regions ?? {})) {
+    let t = 0;
+    for (const e of r.hours) if (e.hour >= now - 24 && e.hour < now) t += e.points ?? 0;
+    if (t > 0) out.set(z, t);
+  }
+  return out;
 });
 
 /** Each region's points a day at the riders now, per demand day (weekday, weekend day, average). */

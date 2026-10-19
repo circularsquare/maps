@@ -28,7 +28,7 @@ class Element {
   addEventListener(type, f) { (this.listeners[type] ??= []).push(f); }
 }
 globalThis.location = { search: '' };
-globalThis.document = { visibilityState: 'visible', documentElement: { dataset: {}, style: { setProperty() {} } }, addEventListener() {}, createElement: () => new Element(), fonts: { ready: Promise.resolve() } };
+globalThis.document = { visibilityState: 'visible', documentElement: { dataset: {}, style: { setProperty() {}, removeProperty() {} } }, addEventListener() {}, createElement: () => new Element(), fonts: { ready: Promise.resolve() } };
 const { NetworkRenderer, pick, discAt, startClock, CapacityMarkers, selection, tool, addFinder, startHover, HOME_ANCHOR, toLngLat } = await import('data:text/javascript;base64,' + Buffer.from(output.find(o => o.type === 'chunk').code).toString('base64'));
 startClock(0).setRunning(false);
 const F = a => new Float32Array(a);

@@ -855,9 +855,9 @@ impl Gravity {
                             continue;
                         }
                         let (ju, k) = (j as usize, (self.base(z, i) + self.key(z, j as usize)) as usize);
-                        let f = self.walk_factor(i, ju) * 0.001;
                         for (n, &a) in hi.iter().enumerate() {
                             for (m, &b) in wj.iter().enumerate() {
+                                let f = self.walk_factor_cells(z, a as usize, b as usize) * 0.001;
                                 c[n * ns + m] = self.wcost.at(cell_walk_m(city, a, b) * f);
                             }
                         }
@@ -908,6 +908,12 @@ impl Gravity {
     #[inline]
     pub fn walk_factor(&self, i: usize, j: usize) -> f32 {
         self.wroutes.as_ref().map_or(1.0, |r| r.walk_factor(i, j)).max(1.0)
+    }
+
+    /// The same between cells a and b, from the parts of their zones they are in (T-700).
+    #[inline]
+    pub fn walk_factor_cells(&self, z: &Zones, a: usize, b: usize) -> f32 {
+        self.wroutes.as_ref().map_or(1.0, |r| r.walk_factor_cells(z, a, b)).max(1.0)
     }
 
     /// The cost of walking the whole way between zones i and j at table index `k` (`base(i) +

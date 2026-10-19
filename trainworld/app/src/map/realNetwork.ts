@@ -36,7 +36,7 @@ const SHOWN = ["all", ["!=", ["get", "n"], 1], ["any", METRO, ["all", kind("rail
 /** line width (px) by zoom; main and metro the same, other rail thinner */
 const width = (...stops: number[]) => ["interpolate", ["exponential", 1.4], ["zoom"], ...stops.flatMap((v, i) => [MIN_ZOOM + [0, 4, 7, 10, 13, 16][i], ["case", ["any", METRO, MAIN], v, v * 0.7]])];
 const WIDTH = width(0.6, 1, 1.5, 2.4, 4, 8);
-const OPACITY = 0.8;
+const OPACITY = 0.4;
 
 const colour = (c: ShadeColours) => ["case", METRO, c.realMetro, MAIN, c.realMain, c.realOther];
 

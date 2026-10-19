@@ -58,7 +58,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   anything constructed, T-096).
 - Other: `money.ts` (cash and ledger from the worker, fare income from riders, T-028),
   `regionMoney.ts` (each line's and each construction's split between regions, the region ledgers, T-531), `points.ts`
-  (each line's points per hour by region, points a day, the star's mark, T-684, T-685), `issues.ts`
+  (each line's points per hour by region, points a day, each region's past 24 hours' points, the star's mark, T-684, T-685, T-694), `issues.ts`
   (the track model's refusals in plain words), `loading.ts` (what is loading, the startup gate and
   the clock hold, T-149, T-172; whether the start menu is up, T-677), `palette.ts`, `shades.ts` over `shadeTable.ts` (the light and dark themes' map
   colours: basemap, line casing, map ink, blueprint off, outside shade, thumbnails; the table has no
@@ -159,7 +159,7 @@ Run from the maps root (`node trainworld/checks/<file>`).
 - `every-pack-opens.mjs [url] [zone ...]`: every registered zone, in a fresh new game, opens for
   the view and solves a three-station line across its centre without a demand error (T-484; about
   16 s a zone, 18 minutes for all).
-- Node, no browser: `t133-picking-check` (picking order), `t671-station-snap-check` (the station tool's choice among overlapping tracks), `t144-check` (station geometry, line
+- Node, no browser: `t133-picking-check` (picking order), `t671-station-snap-check` (the station tool's choice among overlapping tracks and the layout's guess; given a dev server URL it also runs `t671-ghost-hover`, the ghost's first frame against the worker on the real save in headless Chrome), `t144-check` (station geometry, line
   widths), `t145-check` (the route preview contract), `t146-check` (complexes), `t125-frame-check`
   (world frames against PROJ), `t116-save-check` (save format), `t285-merge-check` (needs
   `--experimental-strip-types`), `t066-wasm-check` (demand WASM contract), `t066-worker-check` and
@@ -192,8 +192,9 @@ Run from the maps root (`node trainworld/checks/<file>`).
   `t680-new-line-crowd.mjs` (a new game's Mumbai test line: its platforms are empty when its
   trains start and fill no faster than riders arrive; also runs on a production build; port 6145
   by default, about two minutes), `t684-points.mjs` (a new game's two Mumbai lines with a walk
-  between them at Dadar: points count each journey once and the loads' passenger-km, and a whole
-  hour's ledger points match the hour's table; dev server only, port 6153 by default, about two minutes),
+  between them at Dadar: points count each journey once and the loads' passenger-km, a whole
+  hour's ledger points match the hour's table, and a city's points are its past 24 hours'; dev
+  server only, port 6153 by default, about four minutes),
   `t496-edit-latency.mjs` (the real save: click to drawn
   for placing stations; `MODE=visual` hashes the renderer's buffers after a series of edits against
   an older network.ts),
@@ -217,6 +218,8 @@ Run from the maps root (`node trainworld/checks/<file>`).
   plus a WARN outside the fleet's range (`pack_gate_fleet.json`, from `fleet`). JSON a pack in
   `../artifacts/trainworld/pack_gate/`; one summary line a pack. Thresholds and the 67-pack result:
   notes/T-538.md.
+- `t700_walk_banks.py [id ...] [--packs dir]` (Python, T-700): the walk factors split by bank; no
+  part of a zone walking to itself at over x5, and Shanghai's Middle Henan Rd to the Bund straight.
 
 ## pipeline/: city packs (Python)
 

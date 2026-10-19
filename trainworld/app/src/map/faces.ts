@@ -30,7 +30,7 @@ interface Face {
   sway: number;
 }
 
-function sprite(red: boolean): HTMLCanvasElement {
+export function sprite(red: boolean): HTMLCanvasElement {
   const c = document.createElement("canvas");
   c.width = c.height = SPRITE;
   const g = c.getContext("2d")!;
@@ -48,15 +48,21 @@ function sprite(red: boolean): HTMLCanvasElement {
   g.strokeStyle = ink;
   g.lineWidth = 3;
   if (red) {
-    // slanted brows, round eyes, a small frown
+    // sad: brows raised at the inner ends, round eyes, a small frown and a tear
+    g.lineWidth = 2.4;
     g.beginPath();
-    g.moveTo(m - 13, m - 11); g.lineTo(m - 5, m - 7);
-    g.moveTo(m + 13, m - 11); g.lineTo(m + 5, m - 7);
+    g.moveTo(m - 14, m - 6); g.lineTo(m - 5, m - 11);
+    g.moveTo(m + 14, m - 6); g.lineTo(m + 5, m - 11);
     g.stroke();
+    g.lineWidth = 3;
     for (const x of [-8, 8]) { g.beginPath(); g.arc(m + x, m - 1, 2.8, 0, Math.PI * 2); g.fill(); }
     g.beginPath();
-    g.arc(m, m + 15, 7, Math.PI * 1.15, Math.PI * 1.85);
+    g.arc(m, m + 17, 7, Math.PI * 1.2, Math.PI * 1.8);
     g.stroke();
+    g.fillStyle = "#8ec5f0";
+    g.beginPath();
+    g.ellipse(m + 11, m + 7, 2.4, 3.4, 0, 0, Math.PI * 2);
+    g.fill();
   } else {
     for (const x of [-8, 8]) { g.beginPath(); g.arc(m + x, m - 4, 2.8, 0, Math.PI * 2); g.fill(); }
     g.beginPath();

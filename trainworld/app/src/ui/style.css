@@ -134,6 +134,9 @@ body.resizing, body.resizing * { user-select: none; }
 .h { display: flex; align-items: baseline; font-weight: 700; margin: 14px 0 4px; }
 .pane > .h:first-child, #inspector > .h:first-child { margin-top: 0; }
 .h .right { margin-left: auto; font-weight: 400; }
+/* T-692: the line panel's rule between sections */
+.h.divided { border-top: 1px solid var(--rule); padding-top: 10px; margin-top: 12px; }
+.rows.flat > li { border-bottom: 0; }
 .note { margin-top: 10px; }
 
 .rows { list-style: none; margin: 0; padding: 0; }
@@ -163,14 +166,19 @@ body.resizing, body.resizing * { user-select: none; }
 .w-money { width: 76px; white-space: nowrap; }
 .w-points { width: 52px; white-space: nowrap; }
 .rows.cities .w-riders, .rows.cities .w-money, .rows.cities .w-points, .rows.cities .city-bar { flex: none; white-space: nowrap; }
-.rows.cities .city-star { display: inline-flex; flex: none; margin-right: 4px; color: var(--accent, currentColor); }
+.rows.cities .city-star { display: inline-flex; flex: none; color: var(--accent, currentColor); }
 .rows.cities .city-star svg { width: 13px; height: 13px; }
-.rows.cities .city-bar { display: block; width: 48px; }
+.rows.cities .city-bar { display: block; width: 44px; }
 /* T-684: room for the points column and the name */
-.w-citybar.c-cities { width: 48px; }
-.w-riders.c-cities { width: 44px; }
+.w-citybar.c-cities { width: 44px; }
+.w-riders.c-cities { width: 40px; }
 .w-money.c-cities { width: 62px; }
-.w-points.c-cities { width: 44px; }
+.w-points.c-cities { width: 40px; }
+/* T-693: about six characters of a name kept (60 px with the ellipsis); a narrower list drops the
+   star, then the money (each width: the columns, their 8 px gaps and that name) */
+.cities-box { container-type: inline-size; container-name: cities; }
+@container cities (max-width: 298px) { .cities-box .rows.cities .city-star { display: none; } }
+@container cities (max-width: 277px) { .cities-box .c-money { display: none; } }
 .rows.cities .bar { height: 10px; }
 .rows.cities .val.neg { color: var(--bad); }
 .group.scope .btn { display: inline-flex; align-items: center; gap: 4px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -266,6 +274,10 @@ table.sched th { font-weight: 400; color: var(--muted); font-size: 12px; text-al
 table.sched th:first-child, table.sched td:first-child { text-align: left; }
 table.sched td { text-align: right; padding: 3px 0; border-bottom: 1px dotted var(--rule); }
 table.sched tr.now td:first-child { font-weight: 700; }
+/* T-692: every cell one line; the demand column takes what the others leave and is cut with an ellipsis */
+table.sched th, table.sched td { white-space: nowrap; }
+table.sched th:not(:first-child) { padding-left: 10px; }
+table.sched td:first-child { width: 100%; max-width: 0; overflow: hidden; text-overflow: ellipsis; }
 /* T-625, T-679: a count refused for cash, a headway shorter than the track allows; the headway a
    line runs at when its track holds it just over the one set; a refused edit's control shakes once */
 table.sched .bad { color: var(--bad); }
@@ -519,6 +531,7 @@ rect.now { fill-opacity: .45; }
           background: color-mix(in srgb, var(--lc) 30%, var(--bg)); border-color: color-mix(in srgb, var(--lc) 60%, var(--bg)); }
 .btn.lv:hover { background: color-mix(in srgb, var(--lc) 48%, var(--bg)); }
 .btn.lv.on { background: var(--lc); color: var(--lk); border-color: var(--net-ink); box-shadow: inset 0 0 0 1px var(--net-ink); }
+:root[data-shade="dark"] .btn.lv.on { border-color: var(--text); box-shadow: inset 0 0 0 1px var(--text); }
 /* five tools: three on the first row, two on the second (T-338) */
 .tool-pick { display: flex; flex-wrap: wrap; }
 .tool-pick > .btn { flex: 1 0 30%; }

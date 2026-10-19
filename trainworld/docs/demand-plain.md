@@ -69,7 +69,7 @@ There is no built-in liking for the train. Rail and the car are compared on time
 
 The walk to and from the station. A train that is fast still has to be reached: a kilometre at each
 end is 39 perceived minutes before the train has moved, more than most short drives cost. Where
-parking is paid, rail wins easily (Hempstead to Midtown). The trip explorer shows any trip's numbers.
+parking is paid, rail wins easily (Hempstead to Midtown). The trip explorer shows any trip's real minutes and its effective time (the perceived minutes above) by train, car and walking, each with its sum in a hover.
 
 ## Anita's two tests
 

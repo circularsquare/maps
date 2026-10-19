@@ -19,7 +19,7 @@ through `game/shades.ts`) [T-543].
 
 ## Real network (reference layer)
 
-Settings > Show > **Real network**, off by default: faint lines where railways run in the real
+Settings > Show > **Real network**, off by default: faint lines (40% opaque, T-697) where railways run in the real
 world, for reference, view only (`map/realNetwork.ts`, T-682). They sit above the basemap's
 roads and under its labels, so under our own network (which is drawn on the overlay canvas above
 everything). Three classes by colour and width, in both themes (`realMain`, `realOther`, `realMetro`
@@ -76,7 +76,9 @@ there is no high-speed class and no hover yet.
   a line planned along it, the colour is mixed 80% towards white (towards #383e46 in the dark theme)
   instead of 45% towards white. **Picked** with the blueprint tool: an ink band
   3 px beyond the rails, drawn under the track, and the stations' selection outline. All rails are drawn before any middle, as the casing is, so curves
-  and joints join cleanly. In Elevation and Max speed the middle keeps the view's colour mixed 45%
+  and joints join cleanly. Blueprint track and the lines planned on it are drawn after built track
+  and its lines [T-695], so where they overlap the blueprint is on top and wins the click, as the
+  station tool prefers it; the order of lines sharing track (above) holds within each. In Elevation and Max speed the middle keeps the view's colour mixed 45%
   towards white; a selected blueprint's middle is the selection ink mixed the same way. A line
   planned along blueprint track fills the middle in its colour mixed 45% towards white. Lines that
   do not run stay see-through at 55%.
@@ -209,15 +211,18 @@ those who got on, less the load carried on.
 
 - **Faces**: one per 20 riders getting off (rounded at random), at most 4 per train, 5 per platform
   and 36 in all. Each rises 30 px from a random point along the platform over 2 s and fades, 14 px
-  across at zoom 14 to 20 px at 17. Happy (pale yellow, blushing); red and frowning when the riders
-  waited 10 minutes or more (`RED_WAIT_S`): the time since the platform's last train left, doubled
+  across at zoom 14 to 20 px at 17. Happy (pale yellow, blushing); sad (red, brows raised at the inner ends, a tear,
+  a frown) when the riders waited 10 minutes or more (`RED_WAIT_S`) [T-696]: the time since the platform's last train left, doubled
   when that train left riders behind. Two sprites on a 2D canvas over the network; a frame loop
   runs only while a face is alive. Not in the demand views' way: the bubbles draw over them.
-- **Sound** (WebAudio, no files): a chime (G5 then E5) as the train pulls in, then pops (a short
+- **Sound** (WebAudio, no files): one soft sine note as the train pulls in, the line's own (from its number, one of 8 notes of C
+  major pentatonic, C5 to E6), a minor third lower, softer and sagging at a sad-face platform
+  [T-696]; then pops (a short
   falling blip) as riders get off (higher) and on (lower), 1 to 4 each by the rider count. Silent
   until the first click or key. Volume is the setting times a zoom gain (a quarter at 14, full from
   17), shared down by the arrivals sounding in the last second; a second one sounding together gets
-  the chime only, and none beyond 3; panned by where the station is on screen. At the second speed only the chime and two pops; none at the third.
+  the note only, and none beyond 3; panned by where the station is on screen. At the second speed
+  only the note and two pops; none at the third.
 - Both are on by default and set in Settings (Stations up close).
 
 ## Station names and capacity tags

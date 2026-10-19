@@ -12,7 +12,7 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
 
 - **Tools**: draw track (key 1), station (2), crossover (6, below), delete (3), select blueprints
   (5, below), three buttons on the first row and two on the second; then the elevation (seven buttons
-  tinted in their Elevation colours, the chosen one solid with a dark outline, T-478) with its
+  tinted in their Elevation colours, the chosen one solid with a dark outline, a light one in the dark theme, T-478, T-692) with its
   multiplier and price per km, single, double or quad track [T-255], and the platform length for
   new stations.
   Everything the player reads says elevation, never level (code keeps `level`) [T-526].
@@ -94,10 +94,24 @@ T-422]. The geometry is in [track-and-service.md](track-and-service.md) 6.1.
 
 - **The ghost** is the platform's full box at its true length at every zoom: blue (`#2f6fe0` fill,
   `#1c4fb8` outline) where a click would place it and red (`#e03c3c`, `#b91f1f`) where it would be
-  refused, fixed colours with a thin white halo; a refused spot shows the reason in the tag. The
-  answer comes from the clock worker trying the real edit (`TrackApi.preview_station`; one request
-  in flight, asked when the spot, platform length or network changes, the last answer kept
-  meanwhile), so the ghost and the click cannot disagree.
+  refused, fixed colours with a thin white halo; a refused spot shows the reason in the tag.
+  **First frame** [T-695]: the page works out at once, from what it already has, where the click
+  would go and whether it would be taken (`likelyFirst`, `layoutIssues` in `map/stationSnap.ts`),
+  and shows that: a node with a station or a junction is refused; a spot is refused when the
+  platform (half its length each way, all of it from a dead end node) and a station's reach beyond
+  come within 1 m of the next station, junction or track end, a drawn route's plain joints within
+  reach joined through when the pieces match (built or blueprint, tracks, not a crossover), as the
+  track model joins them; or when a flat crossing (the map's marks) is under the platform. Then the
+  clock worker tries the real edit
+  (`TrackApi.preview_station`) and its answer replaces the guess; a refused spot stays where the
+  guess put it. The worker's last answer for each track is kept for the network and platform
+  length it was given in: a refusal the layout cannot explain (water, a ramp, a crossing that is
+  not flat, a curve, cash) stands for spots on that track within 16 px of where it was tried, and
+  that track is not asked again there, so while the pointer moves each answer gets further down
+  the list. Where 7 or more candidates are under the pointer and the worker has not yet confirmed
+  the guess (a bundle of overlapping tracks, where the guess was often wrong on the real save), the
+  ghost stays as it was if it was within 10 px, else shows nothing, until the answer. The click
+  tries the ghost's spot first, so the ghost and the click cannot disagree.
 - **What is under the pointer** [T-469, T-671]: the ghost and the click take the first spot the
   track model would accept (the same trial edit as above), tried in this order: the nodes within
   12 px (nearest first, at most 3), then the tracks within 4 px of the nearest, then the rest within
@@ -211,7 +225,7 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
 the line panel (Edit stops). Map clicks test every insertion position and take the shortest valid
 route, keeping the existing stop order; removing a stop leaves the others in order.
 
-**Stop editing mode** (Edit stops, New line, Copy line, Express copy):
+**Stop editing mode** (Edit stops, New line, Copy line):
 
 - The map hides the demand views (bubbles, inter-region bubbles, the trip route,
   capacity tags, traffic widths and station circles) and draws the other lines and their trains at

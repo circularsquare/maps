@@ -4,7 +4,7 @@
 // routes the train riders spread over, and the drive. Every number is the model's (game/trip.ts);
 // every drawn quantity has a hover with it.
 
-import { count, distance } from "../../game/format";
+import { count, distance, roughDistance, speed } from "../../game/format";
 import { MODE_COLOURS } from "../../game/palette";
 import { PERIODS } from "../../game/periods";
 import { purposeName, purposeWords, type PurposeFilter } from "../../game/purposes";
@@ -13,7 +13,7 @@ import { routeTerms, routeTotals, stationName, tripOpenedFrom, tripPeriod, tripV
 import { purposeFilter, selection, shownDayPhrase, tool } from "../../game/ui";
 import { world } from "../../game/world";
 import { shownPeriod } from "../../map/tripView";
-import { Chip, Row } from "../widgets";
+import { Chip } from "../widgets";
 
 const min = (m: number) => `${Math.max(1, Math.round(m))} min`;
 const pct = (v: number) => (v > 0 && v < 0.005 ? "<1%" : `${Math.round(100 * v)}%`);
@@ -30,28 +30,52 @@ const num = (v: number) => String(Math.round(v * 10) / 10);
 const exact = (n: number) => Math.round(n).toLocaleString("en");
 const weight = (v: number) => String(Math.round(v * 100) / 100);
 
-/** The "Counts as" hover: the first route's perceived total term by term (the worker's own
- * perceived minutes), then what the weights are. The shown figure averages the routes. */
-function countsAsTip(t: TripPeriod, r: TripRoute): string {
-  const terms = routeTerms(t, r).filter((x) => x.perceived !== 0 || x.unit === "usd");
-  const p = (v: number) => Math.round(v * 10) / 10;
-  const total = terms.reduce((s, x) => s + p(x.perceived), 0);
-  const lines = terms.map((x) => {
-    const w = Math.abs(x.weight - 1) < 0.005 && x.unit === "min" ? "" : ` × ${weight(x.weight)}`;
-    const real = x.unit === "usd" ? `$${x.real.toFixed(2)}` : x.real > 0 ? `${num(x.real)} min` : "";
-    return `${x.label}${real ? " " + real : ""}${w} = ${p(x.perceived).toFixed(1)}`;
-  });
-  const avg = Math.abs(total - t.railPerceived) >= 0.5;
-  return [
-    "The route listed first, in the minutes the model weighs against driving:",
-    ...lines,
-    `Total ${total.toFixed(1)}`,
-    ...(avg ? [`The ${Math.round(t.railPerceived)} shown pools the stations and routes people near here use, so it can be lower than any one route.`] : []),
-    `Walks count for more than a minute on board, crowding stretches the ride, the wait is half the time between trains, and a dollar of fare counts as ${weight(t.minPerUsd)} minutes.`,
-  ].join("\n");
+/** One term of an effective time equation: "walk 8 × 1.5", "wait 3", "fare $2.90 × 3". */
+interface Term {
+  label: string;
+  /** the real amount, already formatted ("" where the term is a count of its own minutes) */
+  real: string;
+  weight: number;
+  perceived: number;
 }
 
-/** T-628: walking gets its own row when walking the whole way takes under this, real minutes. */
+/** The effective time hover (T-699): only the equation, in the order of the rows, "Walk 8 × 1.5 +
+ * wait 3 + ride 6 = 21 min". The total is the sum of the terms' unrounded minutes. */
+function equation(terms: Term[], total = terms.reduce((s, x) => s + x.perceived, 0)): string {
+  const text = terms.map((x, i) => {
+    const minus = x.perceived < 0;
+    const body = `${x.label}${x.real ? " " + x.real : " " + num(Math.abs(x.perceived))}${x.real && Math.abs(x.weight - 1) >= 0.005 ? ` × ${weight(x.weight)}` : ""}`;
+    return i === 0 ? body : `${minus ? "−" : "+"} ${body}`;
+  }).join(" ");
+  return `${text[0].toUpperCase()}${text.slice(1)} = ${Math.round(total)} min`;
+}
+
+/** The train's effective time as an equation. The terms are the first route's (the worker's
+ * perceived minutes); the model's figure pools every station and route people use, so it is lower
+ * than that route's sum by a last term. */
+function trainEquation(t: TripPeriod, r: TripRoute): string {
+  const terms: Term[] = routeTerms(t, r).filter((x) => x.perceived !== 0 || x.unit === "usd").map((x) => ({
+    label: x.label === "station" ? "at the station" : x.label,
+    real: x.unit === "usd" ? `$${x.real.toFixed(2)}` : x.real > 0 ? num(x.real) : "",
+    weight: x.weight,
+    perceived: x.perceived,
+  }));
+  const rest = t.railPerceived - terms.reduce((s, x) => s + x.perceived, 0);
+  if (Math.abs(rest) >= 0.05) terms.push({ label: "other routes and stations", real: "", weight: 1, perceived: rest });
+  return equation(terms, t.railPerceived);
+}
+
+/** The real minutes of a route as an equation: "Walk 8 + wait 3 + ride 6 = 17 min". */
+function timeEquation(tot: ReturnType<typeof routeTotals>): string {
+  const parts: [string, number][] = [["drive", tot.driveMin], ["walk", tot.walkMin], ["wait", tot.wait], ["ride", tot.ride], ["walk between stations", tot.xfer]];
+  const text = parts.filter(([, m]) => m > 0).map(([l, m]) => `${l} ${num(m)}`).join(" + ");
+  return `${text[0].toUpperCase()}${text.slice(1)} = ${Math.round(tot.total)} min`;
+}
+
+/** Walks over this straight-line distance are not offered by the model. */
+const WALK_REACH_M = 10000;
+
+/** T-628: the headline gets a walk row when walking the whole way takes under this, real minutes. */
 const WALK_ROW_MIN = 30;
 
 /** The headline: the trips between the two places by mode as the view counts them (T-586), or,
@@ -98,8 +122,8 @@ function RouteLegs({ t, r }: { t: TripPeriod; r: TripRoute }) {
     <ul class="rows trip-legs">
       {pair && first && (
         <li data-tip={pair.accessRide
-          ? `Driving, a bus or a bike over ${distance(pair.accessM)} in a straight line, ${pair.accessMin.toFixed(1)} min on the road. The ride's fixed cost and the parking or drop-off at the station add ${pair.rideExtra.toFixed(1)} min, so it counts as ${pair.accessPerceived.toFixed(1)} min`
-          : `Walk ${distance(pair.accessM)} in a straight line, ${pair.accessMin.toFixed(1)} min at ${WALK_KMH} km/h; it counts as ${pair.accessPerceived.toFixed(1)} min`}>
+          ? `Driving, a bus or a bike over ${distance(pair.accessM)} in a straight line, ${pair.accessMin.toFixed(1)} min on the road`
+          : `Walk ${distance(pair.accessM)} in a straight line, ${pair.accessMin.toFixed(1)} min at ${WALK_KMH} km/h`}>
           <span class="grow">{pair.accessRide ? "Drive" : "Walk"} to {name(first.from)}</span>
           <span class="val">{min(pair.accessMin)}</span>
         </li>
@@ -107,17 +131,14 @@ function RouteLegs({ t, r }: { t: TripPeriod; r: TripRoute }) {
       {r.legs.map((l, i) => {
         if (l.kind === "walk") {
           return (
-            <li data-tip={`${l.min.toFixed(1)} min on foot; it counts as ${l.perceived.toFixed(1)} min`}>
+            <li data-tip={`${l.min.toFixed(1)} min on foot`}>
               <span class="grow">Change: walk to {name(l.to)}</span>
               <span class="val">{min(l.min)}</span>
             </li>
           );
         }
         const line = ln.get(l.line);
-        const crowd = l.perceived - l.min;
-        const tip = `Wait ${l.waitMin.toFixed(1)} min (half the time between the useful trains), then ${l.min.toFixed(1)} min on the train over ${l.stops} ${l.stops === 1 ? "stop" : "stops"}`
-          + (crowd >= 0.05 ? `. Crowding makes the ride count as ${l.perceived.toFixed(1)} min` : "")
-          + (l.farePerceived > 0 ? `. Distance fare ${usd(l.farePerceived / t.minPerUsd)}` : "");
+        const tip = `Wait ${l.waitMin.toFixed(1)} min (half the time between the useful trains), then ${l.min.toFixed(1)} min on the train over ${l.stops} ${l.stops === 1 ? "stop" : "stops"}`;
         return (
           <li data-tip={tip}>
             {line && <Chip line={line} size="sm" />}
@@ -127,7 +148,7 @@ function RouteLegs({ t, r }: { t: TripPeriod; r: TripRoute }) {
         );
       })}
       {pair && last && (
-        <li data-tip={`Walk ${distance(pair.egressM)} in a straight line, ${pair.egressMin.toFixed(1)} min at ${WALK_KMH} km/h; it counts as ${pair.egressPerceived.toFixed(1)} min`}>
+        <li data-tip={`Walk ${distance(pair.egressM)} in a straight line, ${pair.egressMin.toFixed(1)} min at ${WALK_KMH} km/h`}>
           <span class="grow">Walk from {name(last.to)}</span>
           <span class="val">{min(pair.egressMin)}</span>
         </li>
@@ -167,7 +188,7 @@ function OtherRoutes({ t }: { t: TripPeriod }) {
           const names = rides.map((l) => ln.get(l.line)?.name ?? "a line").join(" then ");
           const tot = routeTotals(t, r);
           return (
-            <li data-tip={`${names} from ${from} to ${to}: ${(100 * r.share).toFixed(1)}% of this trip's train riders, ${min(tot.total)} door to door`}>
+            <li data-tip={`${names} from ${from} to ${to}: ${(100 * r.share).toFixed(1)}% of this trip's train riders, ${min(tot.total)} long`}>
               {rides.map((l) => { const line = ln.get(l.line); return line && <Chip line={line} size="sm" />; })}
               <span class="grow">{names} to {to}</span>
               <span class="val w-num">{pct(r.share)}</span>
@@ -250,8 +271,7 @@ export function TripInspector() {
   if (!t) return <>{head}<p class="muted">Calculating demand.</p></>;
   const main = t.routes[0];
   const tot = main ? routeTotals(t, main) : null;
-  const pair = main ? t.pairs[main.pair] : null;
-  // T-586: the trips the view counts between the two places, and the trip the routes are read for
+  const pair = main ? t.pairs[main.pair] : null;  // T-586: the trips the view counts between the two places, and the trip the routes are read for
   const mix = v!.mix;
   const n = mix ? mix.rail + mix.walk + mix.drive : 0;
   const day = shownDayPhrase.value;
@@ -271,16 +291,16 @@ export function TripInspector() {
         <>
           <RouteLegs t={t} r={main} />
           <ul class="rows">
-            <Row label="Door to door" bold>{min(tot.total)}</Row>
-            <li data-tip={`${tot.driveMin > 0 ? `Driving to the station ${tot.driveMin.toFixed(1)} min, walking` : "Walking"} ${tot.walkMin.toFixed(1)} min, waiting ${tot.wait.toFixed(1)} min, on trains ${tot.ride.toFixed(1)} min${tot.xfer > 0 ? `, walking between stations ${tot.xfer.toFixed(1)} min` : ""}`}>
-              <span class="grow muted">{tot.driveMin > 0 ? `Drive ${min(tot.driveMin)}, walk ${min(tot.walkMin + tot.xfer)}` : `Walk ${min(tot.walkMin + tot.xfer)}`}, wait {min(tot.wait)}, ride {min(tot.ride)}</span>
-            </li>
             <li data-tip={`Base fare ${usd(t.baseFarePerceived / t.minPerUsd)} once a trip, plus the distance fare`}>
               <span class="grow">Fare</span>
               <span class="val">{usd(tot.fareUsd)}</span>
             </li>
-            <li data-tip={countsAsTip(t, main)}>
-              <span class="grow">Counts as</span>
+            <li data-tip={timeEquation(tot)}>
+              <span class="grow">Time</span>
+              <span class="val">{min(tot.total)}</span>
+            </li>
+            <li data-tip={trainEquation(t, main)}>
+              <span class="grow">Effective time</span>
               <span class="val">{min(t.railPerceived)}</span>
             </li>
           </ul>
@@ -290,25 +310,42 @@ export function TripInspector() {
       ) : <p class="muted">No route.</p>}
       <div class="h">By car</div>
       <ul class="rows">
-        <li data-tip={`${distance(t.driveDistM)} in a straight line, 1.3 times that by road, at the speeds of the places at each end`}>
+        <li data-tip={`${distance(t.driveDistM)} in a straight line, ${distance(1000 * t.driveRoadKm)} by road, at an average ${speed(t.driveRoadKm / (Math.max(t.driveMin, 0.1) / 60))}`}>
           <span class="grow">Drive</span>
           <span class="val">{min(t.driveMin)}</span>
         </li>
-        <li data-tip={`Parking at the end counts as ${t.parkPerceived.toFixed(1)} min: 3 to park, more where jobs are dense`}>
+        <li data-tip="Minutes to park, plus the price of parking and any congestion charge, counted as minutes">
           <span class="grow">Parking</span>
           <span class="val">{min(t.parkPerceived)}</span>
         </li>
         {t.carOwnPerceived > 0 && (
-          <li data-tip={`Owning a car costs ${usd(t.carOwnPerceived / t.minPerUsd)} a trip, which counts as ${t.carOwnPerceived.toFixed(1)} min`}>
+          <li data-tip="The cost of owning the car, charged per trip and per distance driven">
             <span class="grow">Car ownership</span>
-            <span class="val">{min(t.carOwnPerceived)}</span>
+            <span class="val">{usd(t.carOwnPerceived / t.minPerUsd)}</span>
           </li>
         )}
-        <li data-tip={`The drive counts 1.33 times (${t.drivePerceived.toFixed(1)} min) plus parking${t.carOwnPerceived > 0 ? " and car ownership" : ""}`}>
-          <span class="grow">Counts as</span>
+        <li data-tip={equation([
+          { label: "drive", real: num(t.driveMin), weight: t.driveMin > 0 ? t.drivePerceived / t.driveMin : 1, perceived: t.drivePerceived },
+          { label: "parking", real: "", weight: 1, perceived: t.parkPerceived },
+          ...(t.carOwnPerceived > 0 ? [{ label: "ownership", real: usd(t.carOwnPerceived / t.minPerUsd), weight: t.minPerUsd, perceived: t.carOwnPerceived }] : []),
+        ])}>
+          <span class="grow">Effective time</span>
           <span class="val">{min(t.roadPerceived)}</span>
         </li>
       </ul>
+      <div class="h">By walking</div>
+      {t.distM > WALK_REACH_M ? <p class="muted">Walks over {roughDistance(WALK_REACH_M)} are not offered.</p> : (
+        <ul class="rows">
+          <li data-tip={`${distance(t.distM)} in a straight line, walked along the streets at ${WALK_KMH} km/h`}>
+            <span class="grow">Time</span>
+            <span class="val">{min(t.walkMin)}</span>
+          </li>
+          <li data-tip={equation([{ label: "walk", real: num(t.walkMin), weight: t.walkWeight, perceived: t.walkMin * t.walkWeight }])}>
+            <span class="grow">Effective time</span>
+            <span class="val">{min(t.walkMin * t.walkWeight)}</span>
+          </li>
+        </ul>
+      )}
       <ByPeriod periods={trip.periods} words={words} />
     </>
   );

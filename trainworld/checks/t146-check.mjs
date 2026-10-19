@@ -14,7 +14,7 @@ const bundle=await build({configFile:false,logLevel:'silent',plugins:[{
 const output=(Array.isArray(bundle)?bundle[0]:bundle).output;
 // game/ui.ts (through demandLayers -> game/demand, since T-260) sets the theme on the page at import
 globalThis.location??={search:''};
-globalThis.document??={documentElement:{dataset:{},style:{setProperty(){}}},addEventListener(){}};
+globalThis.document??={documentElement:{dataset:{},style:{setProperty(){},removeProperty(){}}},addEventListener(){}};
 const {buildComplexes,membersOf,segmentGap,PLATFORM_GAP_M,DEMAND_MERGE_M,complexCircles,stationScale}=await import('data:text/javascript;base64,'+Buffer.from(output.find(o=>o.type==='chunk').code).toString('base64'));
 const near=(a,b,m='')=>assert.ok(Math.abs(a-b)<1e-6,`${m} ${a} != ${b}`);
 assert.equal(PLATFORM_GAP_M,50);assert.equal(DEMAND_MERGE_M,100);

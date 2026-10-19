@@ -1482,6 +1482,8 @@ pub struct EverydayApi {
     destinations: Vec<u32>,
     edge_pair: Vec<u32>,
     pairs: Vec<Pair>,
+    /// Each subzone's part of its zone for walks round water (T-700): its busiest one.
+    sz_part: Vec<u8>,
     per: Vec<Option<Period>>,
     totals: Vec<f64>,
     /// Trips walking the whole way and by other with no rail, by purpose (T-513, T-558); the
@@ -1560,10 +1562,9 @@ impl EverydayApi {
         } else {
             self.pairs.iter().find(|x| x.kind() as usize == kind && x.u() == u && x.v == v).map(|x| (x.distance, x.trips))
         };
-        let z = &self.engine.z;
         let walk_factor = match sz {
-            Some(s) if u != NONE && v != NONE => self.walk_factor(s.zone[u as usize] as usize, s.zone[v as usize] as usize),
-            _ => self.walk_factor(z.cell_zone[c] as usize, z.cell_zone[d] as usize),
+            Some(s) if u != NONE && v != NONE => self.walk_factor_sz(s, u as usize, v as usize),
+            _ => self.walk_factor(c, d),
         };
         Some(TripInputs { engine: &self.engine, g: &st.g, p: &st.p, round: st.round, pair, no_rail: self.no_rail(c, d, self.distance(c, d)), walk_factor })
     }
@@ -1612,7 +1613,7 @@ impl EverydayApi {
         let z = &self.engine.z;
         let (hz, az) = (z.cell_zone[c] as usize, z.cell_zone[d] as usize);
         let cu = p.nocar.as_ref().map_or(0.0, |n| n[c]);
-        let cw = p.walk_trip_cost(distance * self.walk_factor(hz, az) / 1000.0);
+        let cw = p.walk_trip_cost(distance * self.walk_factor(c, d) / 1000.0);
         if cw >= NO_WALK {
             return (0.0, cu);
         }
@@ -1627,9 +1628,30 @@ impl EverydayApi {
         }
         out
     }
-    /// T-275: the walk goes around water between two zones.
-    fn walk_factor(&self, i: usize, j: usize) -> f32 {
-        self.engine.gr.wroutes.as_ref().map_or(1.0, |r| r.walk_factor(i, j))
+    /// T-275: the walk goes around water between cells c and d.
+    fn walk_factor(&self, c: usize, d: usize) -> f32 {
+        self.engine.gr.walk_factor_cells(&self.engine.z, c, d)
+    }
+    /// The same between subzones u and v, each at its busiest part of its zone (T-700).
+    fn walk_factor_sz(&self, sz: &Subzones, u: usize, v: usize) -> f32 {
+        let part = |s: usize| self.sz_part.get(s).copied().unwrap_or(0);
+        self.engine.gr.wroutes.as_ref().map_or(1.0, |r| r.walk_factor_parts(sz.zone[u] as usize, part(u), sz.zone[v] as usize, part(v))).max(1.0)
+    }
+    /// `sz_part` for the present subzones.
+    fn set_sz_part(&mut self) {
+        let (Some(sz), Some(r)) = (self.engine.sz.as_ref(), self.engine.gr.wroutes.as_ref()) else {
+            self.sz_part.clear();
+            return;
+        };
+        let pop = self.engine.pop();
+        let np = r.parts_max();
+        let mut w = vec![0f32; sz.n * np];
+        for (c, &s) in sz.cell.iter().enumerate() {
+            if s != NONE {
+                w[s as usize * np + r.part(c) as usize] += pop[c] + 1e-3;
+            }
+        }
+        self.sz_part = w.chunks_exact(np).map(|v| (0..np).fold(0, |b, p| if v[p] > v[b] { p } else { b }) as u8).collect();
     }
     /// Join destination samples `r` to the subzone pairs they fall in (for `set_network`).
     #[inline(never)]
@@ -1804,7 +1826,7 @@ impl EverydayApi {
                 let cu = sz.nocar[h];
                 let by_ride = pair.distance >= ride_m && min_r[h].is_finite();
                 // T-558: walking the whole way, over the pair's mean distance
-                let cw = p.walk_trip_cost(pair.distance * self.walk_factor(sz.zone[h] as usize, sz.zone[x] as usize) / 1000.0);
+                let cw = p.walk_trip_cost(pair.distance * self.walk_factor_sz(sz, h, x) / 1000.0);
                 for direction in 0..2 {
                     let ((a, ma, wa), (b, mb, wb)) = if direction == 0 {
                         ((hr.clone(), hm, hw), (xr.clone(), xm, &acc))
@@ -2125,6 +2147,7 @@ impl EverydayApi {
             destinations,
             edge_pair: vec![],
             pairs: vec![],
+            sz_part: vec![],
             per: (0..PERIODS).map(|_| None).collect(),
             totals: vec![0.0; kinds],
             walks: vec![0.0; kinds],
@@ -2197,6 +2220,7 @@ impl EverydayApi {
         if self.engine.sz.is_none() {
             return Ok(now_ms() - t);
         }
+        self.set_sz_part();
         // about one pair in eight samples on New York's first network
         let mut index = PairIndex::with_capacity(if last > 0 { last } else { self.destinations.len() / 8 });
         for r in chunks(self.destinations.len()) {

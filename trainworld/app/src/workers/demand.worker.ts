@@ -707,7 +707,7 @@ function marketFigures(parts: IntercityApi[], q: number) {
 /** A `DemandApi.trip` answer's route nodes (trip.ts `PAIR_LEN`, `LEG_LEN`) from its cluster's
  * network to the whole network's, the ones the client reads. */
 function tripNodesGlobal(v: Float64Array, nodeGlobal: Uint32Array) {
-  const HEAD = 35, PAIR_LEN = 14, LEG_LEN = 12;
+  const HEAD = 37, PAIR_LEN = 14, LEG_LEN = 12;
   const g = (i: number) => { if (v[i] >= 0) v[i] = nodeGlobal[v[i]]; };
   const np = v[24], nr = v[25];
   for (let k = 0; k < np; k++) { g(HEAD + k * PAIR_LEN + 2); g(HEAD + k * PAIR_LEN + 3); }

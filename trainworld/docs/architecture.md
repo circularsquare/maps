@@ -188,10 +188,10 @@ all results are recomputed. About 100 KB compressed per 10,000 route-km (T-040).
   outside every zone) hold the history charts' data, loaded back as they were, so a reload keeps the
   charts; money is saved to the dollar and rides to a tenth, which gzips to about 60% of full
   precision. An entry without `rides` (a save from before T-565) reads as 0 rides, and a save with
-  no `hours` or `regions` starts those empty. Sizes: notes/T-567.md. `points` (each region's points
-  since the game began, whole points; each ledger entry also has its `points`) and `stars` (each
-  region's star, the game second it was earned) are absent in saves before T-684 and T-685, which
-  start with none.
+  no `hours` or `regions` starts those empty. Sizes: notes/T-567.md. Each ledger entry's
+  `points` (whole points) and `stars` (each region's star, the game second it was earned) are
+  absent in saves before T-684 and T-685, which start with none. A header `points` block (per region
+  totals, written by builds between T-684 and T-694) is ignored.
 - **Older frames** [T-308; [world.md](world.md)]: a file or slot in TWT5 (the Northeast conic) or
   TWT4 and older (equirectangular) is converted to Mercator as it loads (`convert_save_frame` in the
   clock worker) and the slot written again at once in TWT6; the old bytes stay under a hidden key

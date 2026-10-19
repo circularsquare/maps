@@ -302,7 +302,11 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
   const speeds = new Float32Array(Math.max(0, r.edgePts.length / 3 - s.edges.length));
   let speedAt = 0;
   const marks: number[] = [];
-  s.edges.forEach((e, i) => {
+  // blueprint track after built, so drawn over it and picked first where they overlap, as the
+  // station tool prefers it (T-695)
+  const order = s.edges.map((_, i) => i).sort((i, j) => Number(!s.edges[i].built) - Number(!s.edges[j].built) || i - j);
+  for (const i of order) {
+    const e = s.edges[i];
     const pts = r.edgePts.subarray(r.edgeOff[i] * 3, r.edgeOff[i + 1] * 3);
     edgePts.set(e.id, pts);
     builtEdge.set(e.id, e.built);
@@ -320,7 +324,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache())
     trackParts.push(c.strokes);
     for (const v of c.ramps) marks.push(v);
     for (let k = r.edgeOff[i]; k < r.edgeOff[i + 1] - 1; k++) speeds[speedAt++] = r.edgeSpeed?.[k] ?? e.vminKmh;
-  });
+  }
   cache.edges = edgesSeen;
   const maxLine = s.lines.reduce((m, l) => Math.max(m, l.id), -1);
   const lineColours = new Uint8Array(Math.max(1, maxLine + 1) * 4);

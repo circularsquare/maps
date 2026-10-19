@@ -15,11 +15,10 @@ unattended runner `pipeline/world_run.py` shipped its 5-city pilot (T-540), the 
 and, after T-610 and T-611, Cardiff and Belfast; Owerri, Aba and Aboh park on T-614 and T-615.
 Anita's plain page on demand: docs/demand-plain.md (keep it current). History is in ARCHIVE.md.
 
-**Handoff (2026-10-17, evening; usage nearly spent).** Last commit on 8800: eed8d58. In flight when
-the session wound down: T-614, T-615 and T-613 (the Europe batch) by one agent; its files
-(registry.json, world_plan.json, checks/pack_gate.py, checks/city-browser.mjs, docs/adding-a-city.md,
-notes/T-613.md) may be uncommitted: read notes/T-613.md and `git status`, then smoke, commit and
-rebuild 8800, or finish the batch (the runner resumes). T-637's W1 applied 2026-10-19. T-625's cash question answered 2026-10-19 (refuse; DECISIONS).
+**State (2026-10-19).** Last commit on 8800: 9e466a4 (Anita's 2026-10-18 playtest round, T-669 to
+T-687 less the open ones). In flight: T-613, the Europe batch, by one agent; registry.json and
+world_plan.json were left out of that commit as the batch's own: commit them when it hands back.
+Market packs still hold the old parking base (T-638).
 
 **For a task agent.** Check `git status` and the "taking" marks here first. Several agents work at once:
 each owns named files, so leave others' alone. Anita's playtest notes land in TODO.md (hers; read it,
@@ -32,12 +31,10 @@ orchestrator's commit recipe is in CLAUDE.md "Before a commit".
 
 ## Demand and data
 - T-632 [P3] Walking feels too strong to play against (Anita 2026-10-17): the model walks at or under the surveys; showing trips no train could win apart from the demand played against is parked (Anita: try later). notes/T-632.md.
-- T-633 [P2] Explain perceived minutes in the game (Anita 2026-10-17: the walk weight stays; communicate it better): where the trip explorer and hovers show "counts as" minutes, say plainly why a walk counts for more. Open.
 - T-551 [P2] Demand review for Anita (her playtest notes, 2026-10-16): measured, nothing changed (notes/T-551.md). Waits for Anita, who decides at the deep calibration.
 - T-514 [P3] "Other" per cell (T-513): the sim keeps trips by other only as a total, so bubbles and hovers cannot show them by cell; needs other by home and work cell. Open; notes/T-514.md.
 - T-638 [P3] Rebuild the market packs on the new parking base (they hold 3 minutes until rebuilt, `intercity.py`'s `PARK_MIN` is 7 since T-637; about 2 minutes on long regional trips). notes/T-636.md.
 - T-688 [P3] A distance decay inside the 2 km zone (an everyday destination is a zone, then any cell in it): the only way to the surveys' very short trips (NHTS 23% of errands under 0.5 km, the game 12% at best). Item 3 of notes/T-637.md "What Anita decides". Open.
-- T-690 [P3] Job-heavy, home-poor zones draw commuters from far (found in T-681): Haneda's biggest job zone takes 28% of its workers from within 10 km against a median of 78% for Tokyo's 200 biggest job zones, its balancing factor 33 times the median; 24 such zones in the Tokyo pack. A commute rule, so a proposal for Anita first. notes/T-681.md "A second thing".
 - T-634 [P2] Short trips need somewhere to go besides the car (a bike mode, or "other" fitted for short trips) before walking is refit on the census and surveys: the fit's lost walkers mostly drive (Paris commute car 46% to 57%, census 36%). notes/T-621.md "Stage 2".
 - T-635 [P3] Why Toronto wants more rail than the fitted cities (TTC platform counts, the 2021 lockdown census, worldwide everyday rates); a Canada rail constant only if it holds up. notes/T-621.md.
 - T-528 [P2] Fit the regional layer's longer trips (T-509's last part, Anita's design 2026-10-16): rail constant and damping on corridor counts at two lengths per country. Open; notes/T-509.md section 15.
@@ -84,7 +81,7 @@ orchestrator's commit recipe is in CLAUDE.md "Before a commit".
 - T-691 [P3] A station tried on edges 997 and 1130 of the real save (an overlapping pair, 688/1075) is refused with a track-drawing reason ("The curve is too tight... would run on top of existing track"): find where the worker's station trial produces it and give the station's own reason. Found in T-671. Open.
 - T-623 [P3] A station cut inside an arc, or a ramp overlapping a curve, still shifts the ramp (T-622 holds ramps on straights only). Open.
 - T-663 [P3] The select tool's drag handle covers a blueprint junction's fork badge; and check whether the quiet crossing marks get busy on a big built network (340 on the real save; `QUIET_R`, `QUIET_ZOOM` in gradeMarks.ts). Open.
-- T-658 [P3] Draw double track as its two tracks when zoomed far in, which needs lines and stations drawn with a minimum width in world units (the two tracks sit at slightly different places); helps reason about terminals and crossovers (Anita 2026-10-17: plan first, not now). Reference NIMBY Rails (research/nimby-track-drawing.md: its double track is two single tracks, which it calls its main usability cost, so keep our one piece and offset each lane in drawing), but show little of it at medium and far zoom and keep the normal single-click default easy; odd setups possible but no priority (Anita 2026-10-18). Open.
+- T-658 [P2] (raised by Anita 2026-10-19: "somewhat important"; design for her first, taking 2026-10-19) Draw double track as its two tracks when zoomed far in, which needs lines and stations drawn with a minimum width in world units (the two tracks sit at slightly different places); helps reason about terminals and crossovers (Anita 2026-10-17: plan first, not now). Reference NIMBY Rails (research/nimby-track-drawing.md: its double track is two single tracks, which it calls its main usability cost, so keep our one piece and offset each lane in drawing), but show little of it at medium and far zoom and keep the normal single-click default easy; odd setups possible but no priority (Anita 2026-10-18). Design in notes/T-658.md, waits on Anita (four questions; stages T-658a-d).
 - T-666 [P3] An automatic bridge near a short first arc or inside a tight multi-corner turn is refused although the land is there (`bridge.rs` cuts an arc only around the ramp's two vertices; 14 such cases in its sweep). Open.
 - T-667 [P3] A segment sent with clicked corners (`pis`) is not bridged (the drawing tool never sends them; the edit API only). Open.
 - T-668 [P3] Reshaping or dragging a bridged segment still refuses ground over water: decide whether the drag rebuilds its ramps. Open.
@@ -94,6 +91,10 @@ orchestrator's commit recipe is in CLAUDE.md "Before a commit".
 - T-340 [P3] Quad track's rest (from T-257): a station on a quad stroke's own end node is refused when that end is new track; the express pair is always left of the drawn direction. Open.
 
 ## Interface
+Anita's playtest of 2026-10-19 (the 9e466a4 build): notes/playtest-2026-10-19.md, a section a task.
+- T-700 [P2] Shanghai: a sharp line between bubbles walking about 25% and bubbles walking about 0%, as if some cells' walks were wrong. Cause (a bug): a 2 km zone astride the Huangpu got one walk factor blending both banks (x15-50), applied to same-bank walks too. Fixed in code (walk factors per bank, `walk_part`); Shanghai rebuilt and checked. Left: the other 109 packs' walk stage (`routes.py --stage walk --unparted`) after T-613 hands back. notes/T-700.md.
+- T-701 [P3] How drive speeds work now and what real road speeds would cost. Answered in notes/T-701.md (2026-10-19): road class speeds cost no pack size or solve time but a New York refit; a per-period multiplier is free but has no source for its numbers. Anita decides whether to do either.
+- T-702 [P3] Station ghost leftovers after T-695: rare corrections on the real save's bundles of overlapping imported lines (refusals the page cannot see, T-691), jumps while sliding along them, one blink near a track end. notes/T-695.md "Left". Open.
 Anita's playtest of 2026-10-18 (her TODO.md "short term"), filed 2026-10-19. Plans in the notes.
 - T-676 [P2] A cuter base map (warm paper land, soft teal water, sage parks, 3 road weights, most POIs gone); the ground tinted by density as a switch, off. Anita judges the palette. Open: stage 1 done, palette waits on Anita; stage 2 (density tint) not built; notes/T-676.md.
 - T-678 [P3] Day and night tint on the base map, subtle. After T-676; notes/T-676.md.

@@ -59,8 +59,8 @@ commuters walk and take other with no rail at the cell pairs' mean shares; its w
 with rail is the one cost whose share against a driver parking free is that mean. Farther pairs,
 whose cells are at least 6 km apart, use the zone-centre distance, and the drive between them
 stays at the zone centres. Everyday purposes walk the sampled cell-centre distance (a pair of
-subzones its samples' mean distance). Every walk's distance is times the two zones' walk factor
-where water lies between them (T-275, below), so a home across a river from its job is as far as
+subzones its samples' mean distance). Every walk's distance is times the walk factor of its ends' parts
+of their zones where water lies between them (T-275, below), so a home across a river from its job is as far as
 the walk round by a bridge. Walking with no rail is summed once (`Gravity::no_rail_by_zone` over
 zone pairs for commutes, over the samples for everyday trips); a pair offered rail takes from walking rail's share times walking's share with no
 rail, as the logit does (`ModeOut::rail_walk`, `Params::car_choice`). A good station near a short
@@ -121,9 +121,14 @@ them, or with them made for other zones, has every walk and drive straight x 1.3
   it off within the bound. The cells whose walk differs are kept per station position for the
   worker (`routes::station_walks`), shared by a city's commute and everyday populations, so an
   edit searches only the stations it moved or added. The walk to and from stations, the
-  access subzones and the trip explorer all use these distances. Between zones, the walk's
-  factor to every zone within 2 squares (`walk_zone`) comes from the same search run from each
-  zone's representative cell over the other zone's cells, both directions averaged.
+  access subzones and the trip explorer all use these distances. For walking the whole way, each
+  zone's cells split by bank into at most 4 parts (`walk_part`, T-700): a part is the cells its
+  representative (the cell nearest the part's weighted centre) reaches by a walk of at most 1.5
+  times the straight line plus 500 m, the next part starts from the cells left. The walk's factor
+  between parts within 2 squares (`walk_zone`) comes from the same search run from each part's
+  representative over the other part's cells, both directions averaged; a cell's walk takes the
+  factor of the two parts its ends are in (a subzone the part most of its people are in), so a
+  walk along one bank of a zone astride a river goes straight.
 - **Drives.** Per zone, the routed factor (road metres over straight metres, commuter-weighted
   over the other zone's cells) to every zone within 6 squares (`drive_near`), and between
   supercells of 4 x 4 squares per region beyond (`drive_far`, `drive_super`). The roads are

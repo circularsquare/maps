@@ -78,11 +78,13 @@ export class StationLabels {
       map.triggerRepaint();
     });
     // widths measured before the web font arrived are wrong: measure again once it has
-    document.fonts?.ready.then(() => {
+    const remeasure = () => {
       for (const l of this.labels) l.w = 0;
       this.needsPlacement = true;
       this.place();
-    });
+    };
+    document.fonts?.ready.then(remeasure);
+    document.addEventListener("tw-fontchange", remeasure);
     map.on("style.load", () => this.addShadow());
     if (map.isStyleLoaded()) this.addShadow();
   }

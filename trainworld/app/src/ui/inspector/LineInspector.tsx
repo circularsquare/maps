@@ -199,10 +199,10 @@ function LineToday({ l, st }: { l: LineInput; st: LineStats }) {
   const run = runningToday(l, st);
   return (
     <>
-      <div class="h">
+      <div class="h divided">
         <span data-tip="The past 24 hours, counted train by train. Whoever does not fit on a full train waits for the next one.">Past 24 hours</span>
       </div>
-      <ul class="rows">
+      <ul class="rows flat">
         <Row label="Riders">{count(d.riders)}</Row>
         <PurposeSplit scope={[{ line: l.id }]} unit="riders" />
         <li data-tip={`Fares ${money(d.fares)} less running cost ${money(run)} for the trains: ${money(d.fares - run)} net`}>
@@ -241,7 +241,7 @@ function CrowdDots({ v, d }: { v: Float64Array; d: Demand }) {
   const grade = crowdGrade(avg.score);
   const tip = `Riders wait ${waitText(avg.wait)} on average for a train with room\n${count(full)}/${count(trains)} trains are full`
     + (worst && crowdGrade(worst.score) > grade ? `\n${worst.name}: ${waitText(worst.wait)}` : "");
-  return <i class="crowd-dot" style={{ background: crowdColour(avg.score) }} data-tip={tip} />;
+  return <i class="crowd-dot" style={{ background: crowdColour(avg.wait) }} data-tip={tip} />;
 }
 
 /** Bullets shown at a transfer stop; the rest sit behind a "+". */
@@ -470,17 +470,15 @@ export function LineInspector({ id }: { id: string }) {
       });
     }};
   };
-  /** A copy to edit; an express copy (T-255) runs on the express pair of quad track where there
-   * is one and goes straight to stop editing, so the player clicks off the stops it skips. */
-  const copy = async (express = false) => {
+  const copy = async () => {
     if (copying) return;
     setCopying(true);
     try {
-      const a = await edit({ op: "copyLine", line: l.num, express });
+      const a = await edit({ op: "copyLine", line: l.num });
       if (!a.ok || a.line === undefined) return;
       live.tools?.exit();
       lineDraft.value = { line: a.line, stops: [] };
-      if (!express) renameLinePrompt.value = String(a.line);
+      renameLinePrompt.value = String(a.line);
       selection.value = { kind: "line", line: String(a.line) };
       tool.value = "line";
     } finally { setCopying(false); }
@@ -490,7 +488,7 @@ export function LineInspector({ id }: { id: string }) {
   // T-670: the stops editor sits at the top while stops are being edited, else after the day's figures
   const stopsBlock = (
     <>
-      <div class="h">
+      <div class="h divided">
         Stops<span class="right muted small">boardings, past 24 h</span>
       </div>
       <ul class="stops" style={{ "--c": shown }}>
@@ -558,7 +556,6 @@ export function LineInspector({ id }: { id: string }) {
       <div class="line-stop-actions">
         <button class={"btn text" + (editingStops ? " on" : "")} data-tip={editingStops ? "Finish editing stops (L)" : "Click stations on the map to add stops to the line (L)"} onClick={() => toggleEditStops(l)}><Icon.pencil />{editingStops ? "Done editing stops" : "Edit stops"}</button>
         <button class="btn text" onClick={() => void copy()} disabled={copying}>Copy line</button>
-        <button class="btn text" onClick={() => void copy(true)} disabled={copying} data-tip="Copy onto the express tracks where there are any, then click the stops it skips">Express copy</button>
         <button class="btn text danger" onClick={remove}>Delete line</button>
       </div>
       {editingStops && stopsBlock}
@@ -581,7 +578,7 @@ export function LineInspector({ id }: { id: string }) {
       <table class="sched">
         <tr>
           <th>Demand</th>
-          <th>Trains on line</th>
+          <th>Trains</th>
           <th>Headway</th>
         </tr>
         {DEMANDS.map((d) => (

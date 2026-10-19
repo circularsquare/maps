@@ -7,7 +7,8 @@
 //   - the trips points count are the solve's rail trips (journeys), and those equal boardings less
 //     the changes, so a two-line journey scores one trip;
 //   - the rest of the points a day is the lines' loads times their stretches' lengths;
-// then the clock runs and a whole game hour's points in the ledger match the hour's table.
+// then the clock runs a day and more: a whole game hour's points in the ledger match the hour's
+// table, and Mumbai's points (T-694) are the sum of the past 24 whole hours' tables.
 // Writes artifacts/trainworld/t684-points.json.
 //   node trainworld/checks/t684-points.mjs [url]   (from the maps root; default localhost:6153)
 // Prints PASS or FAIL lines and exits 1 on failure. A few minutes.
@@ -115,23 +116,30 @@ try {
   report('a journey with a change is one trip: rail trips are boardings less changes', near(day.railTrips, day.boardings - day.changes, 0.02), `(${Math.round(day.railTrips)} against ${Math.round(day.boardings - day.changes)})`);
   report('points a day are 20 a trip and 1 a passenger-km of the line loads', near(tripPoints / day.perTrip, day.railTrips, 0.005), `(${Math.round(day.points)} points: ${Math.round(tripPoints / day.perTrip)} trips, ${Math.round(day.pkm)} passenger-km)`);
 
-  // the clock runs; a whole hour's points in the ledger are the hour's table
+  // the clock runs a game day and more; each whole hour's points in the ledger are the hour's table,
+  // and Mumbai's points (T-694) are the past 24 whole hours'
   const t0 = await page.evaluate(() => { const c = window.tw.clock; c.setSpeed(2); c.setRunning(true); return c.now(); });
-  await page.waitForFunction((t) => window.tw.clock.now() > t + 3 * 3600, t0, { timeout: 240000, polling: 500 });
+  await page.waitForFunction((t) => window.tw.clock.now() > t + 26 * 3600, t0, { timeout: 300000, polling: 500 });
   const hour = await page.evaluate(async (t0) => {
     const c = window.tw.clock;
     c.setRunning(false);
+    await new Promise((r) => setTimeout(r, 500));
     const P = await import('/src/game/points.ts'), M = await import('/src/game/money.ts'), L = await import('/src/game/localTime.ts');
     const Pe = await import('/src/game/periods.ts'), Dy = await import('/src/game/days.ts');
-    const h = Math.floor(c.now() / 3600) - 1;
-    const m = M.moneyState.value, e = m.hours.find((x) => x.hour === h);
-    const tl = h * 3600 + L.shiftAt(72.8428, 19.0192), k = Dy.dayKindAt(tl), p = Pe.periodAt(tl);
-    let expect = 0;
-    for (const { regions } of P.linePoints.value) for (const [, per] of regions) expect += (per[k] ?? per[0])[p];
-    const live = Object.values(M.liveMoney.value.points ?? {}).reduce((a, b) => a + b, 0);
-    return { h, ledger: e?.points ?? null, expect, total: live, started: h * 3600 >= t0, region: m.regions.mum?.hours.find((x) => x.hour === h)?.points ?? null };
+    const m = M.moneyState.value, now = m.hours.at(-1).hour;
+    const table = (h) => {
+      const tl = h * 3600 + L.shiftAt(72.8428, 19.0192), k = Dy.dayKindAt(tl), p = Pe.periodAt(tl);
+      let v = 0;
+      for (const { regions } of P.linePoints.value) for (const [, per] of regions) v += (per[k] ?? per[0])[p];
+      return v;
+    };
+    const h = now - 1, e = m.hours.find((x) => x.hour === h);
+    let expect24 = 0;
+    for (let x = now - 24; x < now; x++) expect24 += table(x);
+    return { h, ledger: e?.points ?? null, expect: table(h), started: (now - 24) * 3600 >= t0, region: m.regions.mum?.hours.find((x) => x.hour === h)?.points ?? null, past24: P.pointsPast24h.value.get('mum') ?? 0, expect24 };
   }, t0);
-  report('a whole hour\'s points in the ledger match the hour\'s table', hour.started && hour.ledger !== null && near(hour.ledger, hour.expect, 1e-4) && hour.expect > 0, `(hour ${hour.h}: ${Math.round(hour.ledger ?? -1)} against ${Math.round(hour.expect)}; Mumbai's ${Math.round(hour.region ?? -1)}; ${Math.round(hour.total)} so far)`);
+  report('a whole hour\'s points in the ledger match the hour\'s table', hour.ledger !== null && near(hour.ledger, hour.expect, 1e-4) && hour.expect > 0, `(hour ${hour.h}: ${Math.round(hour.ledger ?? -1)} against ${Math.round(hour.expect)}; Mumbai's ${Math.round(hour.region ?? -1)})`);
+  report('Mumbai\'s points are the past 24 whole hours\' tables', hour.started && near(hour.past24, hour.expect24, 1e-4) && hour.expect24 > 0, `(${Math.round(hour.past24)} against ${Math.round(hour.expect24)}; a day at the weekday's riders ${Math.round(day.points)})`);
   await writeFile(OUT, JSON.stringify({ built, day, hour }, null, 1));
   report('no page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 } finally {

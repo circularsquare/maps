@@ -7,7 +7,7 @@ import {resolve} from 'node:path';
 const root=resolve('trainworld/app');
 // game/ui.ts touches the DOM when it loads; the check itself uses none
 globalThis.location={search:''};
-globalThis.document={visibilityState:'visible',documentElement:{dataset:{},style:{setProperty(){}}},addEventListener(){},fonts:{ready:Promise.resolve()}};
+globalThis.document={visibilityState:'visible',documentElement:{dataset:{},style:{setProperty(){},removeProperty(){}}},addEventListener(){},fonts:{ready:Promise.resolve()}};
 const bundle=await build({configFile:false,logLevel:'silent',plugins:[{
  name:'station-check',resolveId(id){if(id.endsWith('station-check'))return '\0station-check'},
  load(id){if(id==='\0station-check')return `
@@ -20,7 +20,7 @@ const bundle=await build({configFile:false,logLevel:'silent',plugins:[{
 const output=(Array.isArray(bundle)?bundle[0]:bundle).output;
 // game/ui.ts (through demandLayers -> game/demand, since T-260) sets the theme on the page at import
 globalThis.location??={search:''};
-globalThis.document??={documentElement:{dataset:{},style:{setProperty(){}}},addEventListener(){}};
+globalThis.document??={documentElement:{dataset:{},style:{setProperty(){},removeProperty(){}}},addEventListener(){}};
 const mod=await import('data:text/javascript;base64,'+Buffer.from(output.find(o=>o.type==='chunk').code).toString('base64'));
 const {stationDistance,boxHalfPxAtBoxZoom,platformShape,waysFrom,stationShape,stationCoords,insideStation,stationPath,stationRadii,stationHaloRadius,STATION_BOX_ZOOM,BOX_WIDTH_ZOOM,STATIONS_ZOOM,plainBoxHalfPx,networkFromState,NetworkRenderer,buildLayers,stationScale}=await import('data:text/javascript;base64,'+Buffer.from(output.find(o=>o.type==='chunk').code).toString('base64'));
 const F=a=>new Float32Array(a),near=(a,b,msg,eps=1e-4)=>assert.ok(Math.abs(a-b)<eps,`${msg??''} ${a} != ${b}`);

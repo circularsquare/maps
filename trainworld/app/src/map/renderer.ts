@@ -16,7 +16,7 @@ import { shadeColours } from "../game/shades";
 import { platformRoom, pulsesBetween, readBoardHour, QUEUE_STRIDE, type BoardHour } from "../game/boarding";
 import { anchor, anchorPsi, EARTH_C, localToMercMatrix, mul4, PSI_PER_UNIT } from "./geo";
 import { GradeMarks } from "./gradeMarks";
-import { lineAt, type NetworkBuffers, type Strokes } from "./network";
+import { F_BLUEPRINT, lineAt, type NetworkBuffers, type Strokes } from "./network";
 
 const TEX_W = 2048;
 const LINES_W = 1024;
@@ -85,7 +85,8 @@ uniform int u_kind;          // 0 track, 1 lines, 2 preview
 uniform int u_sel_line;
 uniform int u_sel_edge;
 uniform int u_only_sel;
-uniform float u_dim;         // line strokes other than the selected line's: share of full strength (T-233)
+uniform int u_bp_part;       // T-695: 0 every stroke, 1 all but blueprint, 2 blueprint only
+uniform float u_dim;        // line strokes other than the selected line's: share of full strength (T-233)
 uniform int u_by_level;
 uniform int u_by_speed;
 uniform float u_px_per_unit;
@@ -121,7 +122,7 @@ void main() {
   // the middle is a line wide, so a line planned along it fills it and the rails show either side
   bool bpTrack = blueprint && !placement && u_kind == 0;
   bool swOff = (flags & 64) != 0;
-  if ((u_only_sel == 1 && !sel) || (u_casing > 0.0 && blueprint && !placement && !bpTrack)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+  if ((u_only_sel == 1 && !sel) || (u_casing > 0.0 && blueprint && !placement && !bpTrack) || (u_bp_part == 1 && blueprint) || (u_bp_part == 2 && !blueprint)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   // a line planned along blueprint fills the track's middle (T-331: narrower than a line now)
   bool bpLine = blueprint && !placement && u_kind == 1;
   float w = bpTrack ? u_bp.x + (sel ? u_width.y : 0.0) + (u_casing > 0.0 ? 2.0 * u_bp.y : 0.0)
@@ -1052,6 +1053,8 @@ export class NetworkRenderer {
   /** per line stroke segment, its width as a multiple of `slotPx` (traffic thickness), or null
    * when all are plain: picking reaches across wide lines (T-227) */
   lineWidths: Float32Array | null = null;
+  /** the network has blueprint track: it and its lines are drawn after the rest (T-695) */
+  hasBlueprint = false;
   private levelColours = new Float32Array([3, 2, 1, 0, -1, -2, -3].flatMap((l) => rgb(LEVEL_COLOURS[l as 3]).map((v) => v / 255)));
   private ink = new Float32Array(rgb(NET_INK).map((v) => v / 255));
   private timerExt: any = null;
@@ -1086,7 +1089,7 @@ export class NetworkRenderer {
     this.marks.init(gl);
     this.trainProg = compile(gl, TRAIN_VS, TRAIN_FS);
     this.hasStencil = (gl.getParameter(gl.STENCIL_BITS) ?? 0) > 0;
-    this.strokeU = uniforms(gl, this.strokeProg, ["u_matrix", "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_edge", "u_only_sel", "u_dim", "u_by_level", "u_by_speed", "u_px_per_unit", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours"]);
+    this.strokeU = uniforms(gl, this.strokeProg, ["u_matrix", "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_edge", "u_only_sel", "u_bp_part", "u_dim", "u_by_level", "u_by_speed", "u_px_per_unit", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours"]);
     this.stationU = uniforms(gl, this.stationProg, ["u_matrix", "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass", "u_layer", "u_halo", "u_halo_radius", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_hair", "u_plat", "u_mask", "u_stline"]);
     this.bridgeProg = compile(gl, BRIDGE_VS, STATION_FS);
     this.bridgeU = uniforms(gl, this.bridgeProg, ["u_matrix", "u_viewport", "u_ring", "u_bridge", "u_pass", "u_layer", "u_halo", "u_ink", "u_bad", "u_crowd_rgb", "u_mask"]);
@@ -1215,6 +1218,8 @@ export class NetworkRenderer {
     this.marks.setNetwork(n.marks);
     this.track = this.strokes(n.track);
     this.lines = this.strokes(n.lines);
+    // blueprint track sorts last (network.ts)
+    this.hasBlueprint = n.track.count > 0 && (n.track.flags[n.track.count - 1] & F_BLUEPRINT) !== 0;
     this.lineWidths = null;
     this.tex.phases = this.texture(n.phases.length ? n.phases : new Float32Array(4), "rgba32f", TEX_W);
     this.tex.meta = this.texture(n.meta.length ? n.meta : new Float32Array(4), "rgba32f", TEX_W);
@@ -1459,10 +1464,15 @@ export class NetworkRenderer {
         gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, s.count);
       }
     };
-    // Colour by height: the track itself, at line width, and no line strokes over it.
+    // Colour by height: the track itself, at line width, and no line strokes over it. Blueprint
+    // track and the lines planned on it go over built track and its lines (T-695).
     const trackStrokes = (cap = 0) => {
-      stroke(this.track, 0, opt.byLevel || opt.bySpeed ? wLine : wTrack, opt.selEdge >= 0, cap);
-      if (!opt.byLevel && !opt.bySpeed) stroke(this.lines, 1, wLine, opt.selLine >= 0, cap);
+      for (const part of this.hasBlueprint ? [1, 2] : [0]) {
+        gl.uniform1i(u.u_bp_part, part);
+        stroke(this.track, 0, opt.byLevel || opt.bySpeed ? wLine : wTrack, opt.selEdge >= 0, cap);
+        if (!opt.byLevel && !opt.bySpeed) stroke(this.lines, 1, wLine, opt.selLine >= 0, cap);
+      }
+      gl.uniform1i(u.u_bp_part, 0);
     };
     if (this.highlight) {
       // an ink band 3 px beyond the blueprint's rails either side (kind 2 placement strokes in a

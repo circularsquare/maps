@@ -63,7 +63,7 @@ export type EditOp =
   | { op: "blueprintOff"; edges: EdgeId[]; stations: NodeId[]; off: boolean }
   | { op: "constructLine"; line: number }
   | { op: "addLine"; stops: NodeId[]; name: string; colour: string }
-  | { op: "copyLine"; line: number; name?: string; express?: boolean }
+  | { op: "copyLine"; line: number; name?: string }
   | { op: "setStops"; line: number; stops: NodeId[] }
   | { op: "setTrainCount"; line: number; trains: [number, number, number] }
   /** T-625: the line's trains follow a headway in seconds per level (0: no service), or null: counts by hand */
@@ -176,8 +176,6 @@ export interface MoneyState {
   hours: HourLedger[];
   /** T-531: the same per region (a zone id; "" outside every zone) */
   regions: Record<string, { ledger: DayLedger[]; hours: HourLedger[] }>;
-  /** T-684: points since the game began, per region */
-  points: Record<string, number>;
   /** T-685: stars earned, per region the game second it was earned */
   stars: Record<string, number>;
 }
@@ -366,7 +364,7 @@ export type FromClock =
   | { kind: "money"; money: MoneyState }
   /** T-284: the cash and today's ledger as fares land and running costs drain, several times a wall
    * second while the clock runs; the rest of MoneyState comes with "money" when an hour turns */
-  | { kind: "cash"; cash: number; today: MoneyState["ledger"][number]; hour: HourLedger; regions: RegionNow; points: Record<string, number> }
+  | { kind: "cash"; cash: number; today: MoneyState["ledger"][number]; hour: HourLedger; regions: RegionNow }
   /** a game was loaded or started (`from`), at game time `clock`; a failed import says why in
    * `error` and changes nothing */
   /** `frame`: the game now in the worker; `converted`: its save was in an older frame and was

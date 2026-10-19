@@ -2,6 +2,8 @@
 
     python pipeline/routes.py <city> [<city> ...] [--extracts a,b] [--keep-pbf]
     python pipeline/routes.py --download <city> ...      (only fetch and read the OSM extracts)
+    python pipeline/routes.py --stage walk --unparted [--list]   (the walk factors of every pack
+                                                  made before T-700's split by bank; --list: only name them)
 
 Adds three things to data/packs/<city>.json/.bin in place (nothing else in the pack changes):
 
@@ -9,8 +11,9 @@ Adds three things to data/packs/<city>.json/.bin in place (nothing else in the p
   `WALK_CELL_M`): water from the pack's own water mask, with every OSM way a person may walk
   over a bridge on (footways, paths, streets; not motorways or `foot=no`) burnt back in as land.
   The game finds walks to its stations on it (sim `demand::routes`).
-- `walk_zone`: per gravity zone, the walk's detour factor to each zone within `WALK_WIN` squares
-  (u8, `ln(f) * 64`; 0 = no detour), for the walk share between zones.
+- `walk_zone`: per part of a gravity zone (`walk_part`, each cell's: the zone's cells split by
+  bank, T-700), the walk's detour factor to each part of the zones within `WALK_WIN` squares
+  (u8, `ln(f) * 64`; 0 = no detour), for the walk share between cells.
 - `drive`: routed road distance over straight distance between zones (u8, `ln(f) * 64`), for
   zones within `DRIVE_WIN` squares (`drive_near`, each zone's window in canonical order) and
   between supercells of `SUPER` x `SUPER` squares per region beyond it (`drive_far`).
@@ -740,7 +743,7 @@ def build(city, ex_arg=None, keep=False, workers=2, stage="all"):
                         "walk_x": (walk.xs.astype(np.uint16), "u16", "walk"),
                         "drive_near": (near_q, "u8", "routes"),
                         "drive_super": (sup, "u16", "zone"),
-                        "drive_far": (far_q, "u8", "routes")}, "routes", block, drop=("walk_zone",))
+                        "drive_far": (far_q, "u8", "routes")}, "routes", block, drop=("walk_zone", "walk_part"))
     if stage == "all":
         walk_stage(city, t_all)
 
@@ -752,12 +755,15 @@ def walk_stage(city, t_all):
     t0 = time.time()
     cargo_run("pack_walk", [os.path.join(PACKS, f"{city}.json"), out, "--window", str(WALK_WIN)])
     wz = np.fromfile(out, np.uint8)
+    part = np.fromfile(out + ".part", np.uint8)
     header, _ = load_pack(city, PACKS)
+    assert len(part) == header["cells"], f"{city}: {len(part)} walk parts for {header['cells']} cells"
     block = header["routes"]
-    block["walk_zone"] = {"window": WALK_WIN, "q": QSCALE, "seconds": round(time.time() - t0),
-                          "factor": "walk metres around water / straight metres = exp(q / q_scale), from each zone's representative cell to the window zone's cells",
-                          "layout": "as drive_near, with the walk's window"}
-    n = write_arrays(city, {"walk_zone": (wz, "u8", "routes")}, "routes", block)
+    block["walk_zone"] = {"window": WALK_WIN, "q": QSCALE, "seconds": round(time.time() - t0), "parts": True,
+                          "factor": "walk metres around water / straight metres = exp(q / q_scale), from each part's representative cell to the window part's cells",
+                          "parts_rule": "walk_part: each zone's cells split by bank (T-700): a part is the cells its representative reaches by a walk of at most 1.5 x the straight line + 500 m, at most 4 a zone",
+                          "layout": "per zone, per part of it: as drive_near, with the walk's window, then each window zone's parts"}
+    n = write_arrays(city, {"walk_zone": (wz, "u8", "routes"), "walk_part": (part, "u8", "cell")}, "routes", block)
     print(f"{city}: routes written, pack {n / 1e6:.2f} MB, {time.time() - t_all:.0f} s in all", flush=True)
 
 
@@ -829,6 +835,23 @@ def main(argv):
         for e in sorted(exs):
             read_ways(e, keep)
         return
+    if "--unparted" in argv and not cities:
+        # T-700: every pack whose walk factors predate the split by bank, with current routes
+        import glob
+        for p in sorted(glob.glob(os.path.join(PACKS, "*.json"))):
+            c = os.path.basename(p)[:-5]
+            if "." in c or "intercity" in c:
+                continue
+            header, a = load_pack(c, PACKS)
+            rb = header.get("routes")
+            if rb is None or "walk_row" not in a or "zone_gx" not in a:
+                continue
+            current = rb.get("zones") == header.get("zones") and rb.get("zones_check") == zones_check(ZoneSet(header, a))
+            if current and not (rb.get("walk_zone") or {}).get("parts"):
+                cities.append(c)
+        print(f"walk factors without parts: {len(cities)} packs: {' '.join(cities)}", flush=True)
+        if "--list" in argv:
+            return
     for c in cities:
         build(c, ex_arg, keep, workers, stage)
 

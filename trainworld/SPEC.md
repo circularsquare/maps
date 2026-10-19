@@ -237,9 +237,10 @@ with $3B in an empty New York [T-485]; double track costs a base of US$45M a km 
 multiplier per elevation (US$13.5M at grade) [T-467], a 20 m car costs US$2.5M, bought as a line's
 fleet grows and kept in the depot for any line when it shrinks [T-028, T-631], and running costs are
 US$2.25 a car-km. The fare is typed or stepped in the Money tab [T-626].
-**Points** score each city: 20 a rail trip (a rider's whole journey, changes included, counted
-in the city it starts in) and 1 a passenger-km, landing as fares do and saved with the game; they
-unlock nothing yet [T-684]. A city whose train share reaches 10% earns a star in the Cities list,
+**Points** measure each city's network: what it earned in the past 24 game hours, recomputed
+once a game hour, at 20 a rail trip (a rider's whole journey, changes included, counted in the
+city it starts in) and 1 a passenger-km; not a running total, and they unlock nothing yet [T-684,
+T-694]. A city whose train share reaches 10% earns a star in the Cities list,
 kept once earned [T-685].
 
 Detail: [docs/track-and-service.md](docs/track-and-service.md) (6.1 track and stations, 6.2

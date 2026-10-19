@@ -6,8 +6,8 @@
 //!   player's, so this cannot be done offline). A station's search is kept for the thread
 //!   (`station_walks`), so an edit searches only the stations it moved or added, and the
 //!   commute and everyday populations of one city share it.
-//! - per zone, the walk's detour factor to the zones within 2 squares (`walk_zone`), for the
-//!   walk share between zones, and the drive's routed-over-straight factor to the zones within 6
+//! - per part of a zone (its cells split by bank, `walk_part`, T-700), the walk's detour factor
+//!   to the parts of the zones within 2 squares (`walk_zone`), for walking the whole way, and the drive's routed-over-straight factor to the zones within 6
 //!   squares (`drive_near`) and between supercells beyond (`drive_far`, `drive_super`).
 //!
 //! A pack without them, or whose zones are not the ones they were made for, has no `Routes`:
@@ -266,7 +266,13 @@ pub struct Routes {
     nsup: usize,
     drive_far: Vec<u8>,
     walk_win: i32,
+    /// Dense: ((unit * slots + slot) * nreg + region of the other zone) * pmax + its part, a unit
+    /// being one part of a zone (`walk_part`, T-700), `unit_off[zone] + part`.
     walk_zone: Vec<u8>,
+    /// Each cell's part of its zone (empty: every cell part 0, one unit a zone).
+    part: Vec<u8>,
+    unit_off: Vec<u32>,
+    pmax: usize,
     exp: [f32; 256],
 }
 
@@ -288,6 +294,29 @@ pub fn zones_check(z: &Zones) -> u64 {
 }
 
 impl Routes {
+    /// No walking barrier and no tables yet, for zones `z`.
+    pub fn bare(z: &Zones) -> Routes {
+        Routes {
+            id: 0,
+            walk: None,
+            nreg: z.region.iter().copied().max().map_or(1, |r| r as usize + 1),
+            gx: z.gx.clone(),
+            gy: z.gy.clone(),
+            reg: z.region.clone(),
+            drive_win: 0,
+            drive_near: vec![],
+            sup: vec![],
+            nsup: 0,
+            drive_far: vec![],
+            walk_win: 0,
+            walk_zone: vec![],
+            part: vec![],
+            unit_off: vec![],
+            pmax: 1,
+            exp: std::array::from_fn(|q| (q as f32 / Q_SCALE).exp()),
+        }
+    }
+
     /// The pack's routes for zones `z`, or None (with the reason) if it has none or they do not
     /// fit these zones.
     pub fn from_pack(header: &str, bin: &[u8], z: &Zones) -> Result<Option<Routes>, String> {
@@ -303,23 +332,7 @@ impl Routes {
             // straight x 1.3 until pipeline/routes.py is rerun (routes.py --check says so)
             return Ok(None);
         }
-        let nreg = z.region.iter().copied().max().map_or(1, |r| r as usize + 1);
-        let mut r = Routes {
-            id: 0,
-            walk: None,
-            nreg,
-            gx: z.gx.clone(),
-            gy: z.gy.clone(),
-            reg: z.region.clone(),
-            drive_win: 0,
-            drive_near: vec![],
-            sup: vec![],
-            nsup: 0,
-            drive_far: vec![],
-            walk_win: 0,
-            walk_zone: vec![],
-            exp: std::array::from_fn(|q| (q as f32 / Q_SCALE).exp()),
-        };
+        let mut r = Routes::bare(z);
         // the walking barrier
         let wb = &rb["walk"];
         if let (Some((rows, nr)), Some((xs, nx))) = (array(arrays, bin, "walk_row", 4), array(arrays, bin, "walk_x", 2)) {
@@ -363,10 +376,84 @@ impl Routes {
         }
         if let Some((wz, _)) = array(arrays, bin, "walk_zone", 1) {
             let win = rb["walk_zone"]["window"].as_i64().ok_or("routes.walk_zone lacks window")? as i32;
-            r.walk_zone = r.expand(z, wz, win)?;
-            r.walk_win = win;
+            let part = match array(arrays, bin, "walk_part", 1) {
+                Some((p, np)) if rb["walk_zone"]["parts"] == true => {
+                    if np != z.cell_zone.len() {
+                        return Err("walk_part does not have one entry per cell".into());
+                    }
+                    p.to_vec()
+                }
+                _ => vec![],
+            };
+            r.set_walk_zone(z, wz, win, part)?;
         }
         Ok(Some(r))
+    }
+
+    /// The walk factors (`walk_zone`, canonical bytes of window `win`) and each cell's part
+    /// (`walk_part`; empty for a pack made before T-700: one part a zone).
+    pub fn set_walk_zone(&mut self, z: &Zones, bytes: &[u8], win: i32, part: Vec<u8>) -> Result<(), String> {
+        let mut np = vec![1u32; z.n];
+        for (c, &p) in part.iter().enumerate() {
+            let zi = z.cell_zone[c] as usize;
+            np[zi] = np[zi].max(p as u32 + 1);
+        }
+        self.pmax = np.iter().copied().max().unwrap_or(1) as usize;
+        self.unit_off = std::iter::once(0).chain(np.iter().scan(0u32, |s, &v| {
+            *s += v;
+            Some(*s)
+        })).collect();
+        self.walk_zone = self.expand_walk(z, bytes, win, &np)?;
+        self.walk_win = win;
+        self.part = part;
+        Ok(())
+    }
+
+    /// `expand` for the walk table, whose window entries are each zone's parts (T-700): units
+    /// (each zone's parts in order) outer, then the window's zones as `expand`, then their parts.
+    fn expand_walk(&self, z: &Zones, bytes: &[u8], win: i32, np: &[u32]) -> Result<Vec<u8>, String> {
+        let nreg = self.nreg;
+        let pmax = self.pmax;
+        let mut grid = vec![u32::MAX; (z.w * z.h) as usize * nreg];
+        for i in 0..z.n {
+            grid[((z.gx[i] * z.h + z.gy[i]) as usize) * nreg + z.region[i] as usize] = i as u32;
+        }
+        let slots = ((2 * win + 1) * (2 * win + 1)) as usize;
+        let units = *self.unit_off.last().unwrap_or(&0) as usize;
+        let mut out = vec![0u8; units * slots * nreg * pmax];
+        let mut k = 0usize;
+        for i in 0..z.n {
+            for pi in 0..np[i] as usize {
+                let u = self.unit_off[i] as usize + pi;
+                for dx in -win..=win {
+                    let gx = z.gx[i] + dx;
+                    if gx < 0 || gx >= z.w {
+                        continue;
+                    }
+                    for dy in -win..=win {
+                        let gy = z.gy[i] + dy;
+                        if gy < 0 || gy >= z.h {
+                            continue;
+                        }
+                        for reg in 0..nreg {
+                            let j = grid[((gx * z.h + gy) as usize) * nreg + reg];
+                            if j == u32::MAX {
+                                continue;
+                            }
+                            for pj in 0..np[j as usize] as usize {
+                                let b = *bytes.get(k).ok_or("walk_zone is shorter than its units' windows")?;
+                                out[((u * slots + Self::slot(dx, dy, win)) * nreg + reg) * pmax + pj] = b;
+                                k += 1;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if k != bytes.len() {
+            return Err(format!("walk_zone has {} bytes for {k} window entries", bytes.len()));
+        }
+        Ok(out)
     }
 
     /// The window's slot of square offset (dx, dy).
@@ -450,9 +537,10 @@ impl Routes {
         self.sup.get(j).copied().unwrap_or(0)
     }
 
-    /// The walk's detour factor between zones i and j (1 beyond the window or without tables).
+    /// The walk's detour factor between part `pi` of zone i and part `pj` of zone j (1 beyond the
+    /// window or without tables).
     #[inline]
-    pub fn walk_factor(&self, i: usize, j: usize) -> f32 {
+    pub fn walk_factor_parts(&self, i: usize, pi: u8, j: usize, pj: u8) -> f32 {
         if self.walk_zone.is_empty() {
             return 1.0;
         }
@@ -462,7 +550,32 @@ impl Routes {
             return 1.0;
         }
         let slots = ((2 * w + 1) * (2 * w + 1)) as usize;
-        self.exp[self.walk_zone[(i * slots + Self::slot(dx, dy, w)) * self.nreg + self.reg[j] as usize] as usize]
+        let u = self.unit_off[i] as usize + pi as usize;
+        self.exp[self.walk_zone[((u * slots + Self::slot(dx, dy, w)) * self.nreg + self.reg[j] as usize) * self.pmax + pj as usize] as usize]
+    }
+
+    /// The walk's detour factor between cells a and b (their zones' parts they are in).
+    #[inline]
+    pub fn walk_factor_cells(&self, z: &Zones, a: usize, b: usize) -> f32 {
+        self.walk_factor_parts(z.cell_zone[a] as usize, self.part(a), z.cell_zone[b] as usize, self.part(b))
+    }
+
+    /// The most parts any zone has (1 for a pack made before T-700).
+    pub fn parts_max(&self) -> usize {
+        self.pmax
+    }
+
+    /// Cell c's part of its zone (T-700).
+    #[inline]
+    pub fn part(&self, c: usize) -> u8 {
+        self.part.get(c).copied().unwrap_or(0)
+    }
+
+    /// The walk's detour factor between zones i and j from their first parts (where no cell is
+    /// at hand: walks between zone centres).
+    #[inline]
+    pub fn walk_factor(&self, i: usize, j: usize) -> f32 {
+        self.walk_factor_parts(i, 0, j, 0)
     }
 
     /// The walk window (squares), 0 without tables.
@@ -520,6 +633,192 @@ pub fn walk_m(ex: Option<&Arc<Vec<(u32, f32)>>>, c: u32, straight: f32) -> f32 {
         },
         _ => straight,
     }
+}
+
+/// Most parts a zone's cells split into by bank (T-700).
+pub const WALK_PARTS: usize = 4;
+/// A cell is on its part's side of the water when the walk from the part's representative is at
+/// most `PART_DETOUR` times the straight line plus `PART_SLACK_M`.
+const PART_DETOUR: f32 = 1.5;
+const PART_SLACK_M: f32 = 500.0;
+
+/// What `walk_tables` makes: the canonical `walk_zone` bytes, each cell's part, and counts.
+pub struct WalkTables {
+    pub bytes: Vec<u8>,
+    pub part: Vec<u8>,
+    pub units: usize,
+    pub split_zones: usize,
+    pub searched: usize,
+    pub pairs: usize,
+    pub over: usize,
+    pub cut: usize,
+}
+
+/// The walk factors of `pipeline/routes.py` (run by `pack_walk`). Each zone's cells (positions
+/// `x`, `y`, weights `w`) split into at most `pmax` parts, one per bank: part 0 is the cells the
+/// representative (the cell nearest the weighted centre, off the barrier if any is) reaches by a
+/// short walk, the next part's representative is the same for the cells left, and so on; cells
+/// left after `pmax` parts join the part whose representative walks to them shortest. From each
+/// part's representative the walk is searched, and its factor to each part of the window's zones
+/// is the cells' walking metres over their straight metres weighted by `w` (a cell cut off counts
+/// at the cap); the two directions are averaged. A factor is never a blend of two banks, which
+/// put the cap's 53 on walks that cross no water (T-700).
+pub fn walk_tables(grid: &WalkGrid, z: &Zones, x: &[f32], y: &[f32], w: &[f64], win: i32, pmax: usize) -> WalkTables {
+    let n = z.n;
+    let nreg = z.region.iter().copied().max().map_or(1, |v| v as usize + 1);
+    let dist = |a: usize, b: usize| ((x[a] - x[b]).powi(2) + (y[a] - y[b]).powi(2)).sqrt();
+    let mut members: Vec<Vec<u32>> = vec![vec![]; n];
+    for c in 0..x.len() {
+        members[z.cell_zone[c] as usize].push(c as u32);
+    }
+    let rep_of = |cells: &[u32]| -> usize {
+        let (mut sx, mut sy, mut sw) = (0f64, 0f64, 0f64);
+        for &c in cells {
+            let c = c as usize;
+            sx += w[c] * x[c] as f64;
+            sy += w[c] * y[c] as f64;
+            sw += w[c];
+        }
+        let (mx, my) = (sx / sw, sy / sw);
+        let mut best = (true, f64::INFINITY, cells[0] as usize);
+        for &c in cells {
+            let c = c as usize;
+            let wet = grid.is_barrier(x[c], y[c]);
+            let d = ((x[c] as f64 - mx).powi(2) + (y[c] as f64 - my).powi(2)).sqrt();
+            if (wet, d) < (best.0, best.1) {
+                best = (wet, d, c);
+            }
+        }
+        best.2
+    };
+    // the parts, searched as far as a walk across the zone and back
+    let mut part = vec![0u8; x.len()];
+    let mut reps: Vec<Vec<usize>> = vec![vec![]; n];
+    let part_reach = z.zone_m * 2.5;
+    let mut split_zones = 0;
+    for zi in 0..n {
+        if members[zi].is_empty() {
+            continue;
+        }
+        let mut left = members[zi].clone();
+        let mut fields = vec![];
+        while !left.is_empty() && reps[zi].len() < pmax {
+            let r = rep_of(&left);
+            let k = reps[zi].len() as u8;
+            reps[zi].push(r);
+            let f = grid.field(x[r], y[r], part_reach);
+            left.retain(|&c| {
+                let c = c as usize;
+                let s = dist(r, c);
+                let near = c == r || f.as_ref().map_or(true, |f| f.eff(x[c], y[c], s).is_some_and(|e| e <= PART_DETOUR * s + PART_SLACK_M));
+                if near {
+                    part[c] = k;
+                }
+                !near
+            });
+            fields.push(f);
+        }
+        for &c in &left {
+            let c = c as usize;
+            let mut best = (f32::INFINITY, 0u8);
+            for (k, f) in fields.iter().enumerate() {
+                let s = dist(reps[zi][k], c);
+                if let Some(e) = f.as_ref().and_then(|f| f.eff(x[c], y[c], s)) {
+                    if e < best.0 {
+                        best = (e, k as u8);
+                    }
+                }
+            }
+            part[c] = best.1;
+        }
+        split_zones += (reps[zi].len() > 1) as usize;
+    }
+    let np: Vec<usize> = (0..n).map(|zi| reps[zi].len().max(1)).collect();
+    let mut unit_off = vec![0usize; n + 1];
+    for zi in 0..n {
+        unit_off[zi + 1] = unit_off[zi] + np[zi];
+    }
+    let mut cells: Vec<Vec<u32>> = vec![vec![]; unit_off[n]];
+    for c in 0..x.len() {
+        let zi = z.cell_zone[c] as usize;
+        cells[unit_off[zi] + part[c] as usize].push(c as u32);
+    }
+    let mut grid_zone = vec![u32::MAX; (z.w * z.h) as usize * nreg];
+    for zi in 0..n {
+        grid_zone[((z.gx[zi] * z.h + z.gy[zi]) as usize) * nreg + z.region[zi] as usize] = zi as u32;
+    }
+    // each zone's window as units, canonical order
+    let window = |zi: usize| {
+        let mut v = vec![];
+        for dx in -win..=win {
+            let gx = z.gx[zi] + dx;
+            if gx < 0 || gx >= z.w {
+                continue;
+            }
+            for dy in -win..=win {
+                let gy = z.gy[zi] + dy;
+                if gy < 0 || gy >= z.h {
+                    continue;
+                }
+                for reg in 0..nreg {
+                    let j = grid_zone[((gx * z.h + gy) as usize) * nreg + reg];
+                    if j != u32::MAX {
+                        v.extend(unit_off[j as usize]..unit_off[j as usize + 1]);
+                    }
+                }
+            }
+        }
+        v
+    };
+    // the search reaches the window's farthest cells: (W + 1) squares on each axis
+    let reach = z.zone_m * (win as f32 + 1.0) * std::f32::consts::SQRT_2;
+    let fmax = (255.0 / Q_SCALE).exp();
+    let mut f: Vec<Vec<f32>> = Vec::with_capacity(unit_off[n]);
+    let mut wins: Vec<Vec<usize>> = Vec::with_capacity(unit_off[n]);
+    let mut searched = 0;
+    for zi in 0..n {
+        let js = window(zi);
+        for pi in 0..np[zi] {
+            let mut row = vec![1.0f32; js.len()];
+            if let Some(&r) = reps[zi].get(pi) {
+                if let Some(fl) = grid.field(x[r], y[r], reach) {
+                    searched += 1;
+                    for (k, &u) in js.iter().enumerate() {
+                        let (mut num, mut den) = (0f64, 0f64);
+                        for &c in &cells[u] {
+                            let c = c as usize;
+                            let s = dist(r, c);
+                            if s < 1.0 {
+                                continue;
+                            }
+                            let e = fl.eff(x[c], y[c], s).unwrap_or(s * fmax);
+                            num += w[c] * e as f64;
+                            den += w[c] * s as f64;
+                        }
+                        if den > 0.0 {
+                            row[k] = (num / den) as f32;
+                        }
+                    }
+                }
+            }
+            f.push(row);
+            wins.push(js.clone());
+        }
+    }
+    // both directions averaged
+    let mut bytes = Vec::new();
+    let (mut over, mut cut, mut pairs) = (0, 0, 0);
+    for u in 0..unit_off[n] {
+        for (k, &v) in wins[u].iter().enumerate() {
+            let back = wins[v].iter().position(|&x| x == u).map_or(f[u][k], |b| f[v][b]);
+            let m = 0.5 * (f[u][k] + back);
+            pairs += 1;
+            over += (m > 1.2) as usize;
+            cut += (m > 5.0) as usize;
+            bytes.push((Q_SCALE * m.max(1.0).ln()).round().clamp(0.0, 255.0) as u8);
+        }
+    }
+    WalkTables { bytes, part, units: unit_off[n], split_zones, searched, pairs, over, cut }
 }
 
 #[cfg(test)]
@@ -581,5 +880,67 @@ mod tests {
         let g = grid(120, 120, |c, r| c == r);
         let f = g.field(at(40.0), at(60.0), 3000.0).unwrap();
         assert_eq!(f.eff(at(60.0), at(40.0), 1414.0), None);
+    }
+
+    /// T-700: a zone astride a river nobody can walk across. Walks on one bank, in or out of it,
+    /// go straight; walks across are cut off. Before, the zone's one factor blended both banks
+    /// (Shanghai's Bund: x48 on a 300 m walk); `pmax` 1 is that blend.
+    #[test]
+    fn a_zone_astride_a_river_keeps_each_bank_apart() {
+        // 10 km square, the river down columns 100-102 (x 5,000-5,150 m), no bridge; 2 km zones,
+        // so the zones of column 2 (x 4,000-6,000 m) hold both banks
+        let g = grid(200, 200, |c, _| (100..=102).contains(&c));
+        let (zw, zh) = (5, 5);
+        let (mut x, mut y, mut w, mut cz) = (vec![], vec![], vec![], vec![]);
+        for i in 0..40 {
+            for j in 0..40 {
+                let (px, py) = (125.0 + 250.0 * i as f32, 125.0 + 250.0 * j as f32);
+                if g.is_barrier(px, py) {
+                    continue;
+                }
+                x.push(px);
+                y.push(py);
+                // more people on the east bank: the astride zones' representatives are there
+                w.push(if px > 5000.0 { 3.0 } else { 1.0 });
+                cz.push(((px / 2000.0) as i32 * zh + (py / 2000.0) as i32) as u32);
+            }
+        }
+        let n = (zw * zh) as usize;
+        let z = Zones {
+            zone_m: 2000.0,
+            n,
+            cell_zone: cz,
+            gx: (0..n as i32).map(|i| i / zh).collect(),
+            gy: (0..n as i32).map(|i| i % zh).collect(),
+            region: vec![0; n],
+            w: zw,
+            h: zh,
+            x0: 0.0,
+            y0: 0.0,
+            pop: vec![1.0; n],
+            jobs: vec![1.0; n],
+            ncell: vec![1; n],
+        };
+        let cell = |px: f32, py: f32| x.iter().zip(&y).position(|(&a, &b)| a == px && b == py).unwrap();
+        // west bank: 4,625 in the astride zone, 4,375 too, 3,875 in the zone west of it
+        let (a, b, c) = (cell(4625.0, 5125.0), cell(4375.0, 5125.0), cell(3875.0, 5125.0));
+        // east bank, in the same astride zone
+        let e = cell(5375.0, 5125.0);
+        let routes = |pmax: usize| {
+            let t = walk_tables(&g, &z, &x, &y, &w, 2, pmax);
+            let mut r = Routes::bare(&z);
+            r.set_walk_zone(&z, &t.bytes, 2, if pmax > 1 { t.part } else { vec![] }).unwrap();
+            r
+        };
+        let r = routes(WALK_PARTS);
+        for (p, q) in [(a, b), (a, c), (c, a), (b, c)] {
+            let f = r.walk_factor_cells(&z, p, q);
+            assert!(f < 1.1, "one bank, cells {p} and {q}: x{f}");
+        }
+        assert!(r.walk_factor_cells(&z, a, e) > 5.0, "across the river: x{}", r.walk_factor_cells(&z, a, e));
+        assert!(r.walk_factor_cells(&z, e, e) < 1.1);
+        // today's blend: one bank's walks counted many times over
+        let old = routes(1);
+        assert!(old.walk_factor_cells(&z, a, c) > 5.0, "the blend: x{}", old.walk_factor_cells(&z, a, c));
     }
 }

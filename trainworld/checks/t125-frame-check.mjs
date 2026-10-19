@@ -9,7 +9,7 @@ import { build } from '../app/node_modules/vite/dist/node/index.js';
 
 // cities.ts reaches game/ui.ts, which reads the page at import
 globalThis.location ??= { search: '' };
-globalThis.document ??= { documentElement: { dataset: {}, style: { setProperty() {} } }, addEventListener() {} };
+globalThis.document ??= { documentElement: { dataset: {}, style: { setProperty() {}, removeProperty() {} } }, addEventListener() {} };
 async function load(entry) {
   const bundle = await build({ configFile: false, root: 'trainworld/app', logLevel: 'silent', build: {
     write: false, minify: false, lib: { entry: entry.replace('trainworld/app/', ''), formats: ['es'] },

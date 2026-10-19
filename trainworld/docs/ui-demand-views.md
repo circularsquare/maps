@@ -103,12 +103,7 @@ its constructed stations, grouped exactly as the complexes are, the player's lin
   Destinations, a purpose's name before "trips" under a filter), then a thin **mode bar**
   (`map/modeBar.ts`): train blue, walking green, driving red, widths by share, no numbers. A far-end
   bubble adds "Click to explore this trip". Every demand hover with a mode split uses the bar (the
-  airport badges too). Under All purposes the focused zone's bubble hover has a second thin
-  **purpose bar** below it [T-681], in the purpose colours, widths by each shown purpose's legs at
-  that end in the bubble's cells (work, school and university, shopping and errands, social and
-  leisure, medical, airport): a bubble over an airport terminal and its neighbouring job cells holds
-  both, and the mode bar cannot tell them apart. The purposes' legs are asked of the workers once
-  the result is final, so the bar is missing until then, and nearby zones' bubbles have none.
+  airport badges too). A bubble's hover has no split by trip purpose (Anita, 2026-10-19, T-697).
 - **Airports** [T-448, T-674, `map/airportMarks.ts`]: a small black plane (14 px, a thin white
   halo) on each airport's busiest terminal cell, so on its biggest destination bubble; no bubble
   of its own. Shown with Destinations under All purposes or Airport, for the focused zone and the

@@ -41,7 +41,8 @@ import { PLATFORM_HALF_M, platformShape, reversed, stationPath, stationShape, wa
 import type { Overlay } from "./overlay";
 import type { StopMarkers } from "./stopMarkers";
 import { chip, elevationFact, factRow, speedFact } from "./trackTagRows";
-import { firstAccepted, fractionAlong, orderOverlapping } from "./stationSnap";
+import { firstAccepted, fractionAlong, layoutIssues, layoutOf, likelyFirst, nearestOn, orderOverlapping, type Candidate, type Layout } from "./stationSnap";
+import { M_CROSSING, MARK_STRIDE } from "./markData";
 
 const SNAP_NODE_PX = 12;
 const SNAP_EDGE_PX = 10;
@@ -54,6 +55,22 @@ type Snap =
   | { kind: "free"; lx: number; ly: number };
 
 type Spot = Exclude<Snap, { kind: "free" }>;
+
+/** where a station would go for the candidates `key` (null: no ghost), and whether a click there
+ * is taken; `held`: the ghost as it was, until the worker answers */
+interface Verdict { key: string; spot: Spot | null; ok: boolean; why: string; held?: boolean }
+
+/** this many candidates under the pointer, not yet tried, and the ghost waits for the worker (T-695) */
+const HOLD_AT = 7;
+/** the worker's answer for a track tried this close to the pointer's spot stands for it (T-695) */
+const KNOWN_PX = 16;
+const LAYOUT_ISSUES = new Set(["PlatformTooLong", "PlatformJoint", "PlatformCrossing", "StationPorts"]);
+
+const lengthOf = (pts: ArrayLike<number>) => {
+  let l = 0;
+  for (let k = 0; k + 5 < pts.length; k += 3) l += Math.hypot(pts[k + 3] - pts[k], pts[k + 4] - pts[k + 1]);
+  return l;
+};
 
 interface Placed {
   end: RouteEnd;
@@ -430,8 +447,9 @@ export class Tools {
       say("Click on track to put a station there.");
       return;
     }
-    // T-671: the spot the ghost settled on, else the first the track model takes of what is under the pointer
-    const tries = [...(this.chosen?.key === this.altsKey() ? [this.chosen.snap] : []), ...this.alts];
+    // T-671, T-695: the spot the ghost shows, else the first the track model takes of what is under the pointer
+    const v = this.verdict();
+    const tries = [...(v?.ok && v.spot && !v.held ? [v.spot] : []), ...this.alts];
     const key = this.nameKey(e.point.x, e.point.y);
     const ahead = this.named?.key === key && this.map.areTilesLoaded() ? this.named.name : null;
     this.named = null;
@@ -759,10 +777,9 @@ export class Tools {
       this.ghost.appendChild(document.createElementNS("http://www.w3.org/2000/svg","path"));
       this.box.appendChild(this.ghost);
     }
-    this.checkGhost(h);
     this.ring.style.display="none";
     this.ghost.style.display="";
-    this.ghost.setAttribute("class",`station-ghost ${this.ghostOk===false?"bad":"ok"}`);
+    this.ghost.setAttribute("class",`station-ghost ${this.verdict()?.ok===false?"bad":"ok"}`);
     this.ghost.style.transform=`translate(${shape.x}px,${shape.y}px)`;
     this.ghost.firstElementChild!.setAttribute("d",stationPath(shape));
   }
@@ -798,30 +815,103 @@ export class Tools {
     }
   }
 
-  /** Whether a click here would place the station (T-311): the worker tries the same `addStation`
-   * the click sends and rolls it back. Asked when the spot, the platform length or the network
-   * changes, one request in flight (the newest waits), and the last answer stays up meanwhile. */
-  private ghostOk: boolean | null = null;
-  private ghostWhy = "";
-  private ghostKey = "";
-  private checkGhost(h: Spot) {
-    const platform=buildPlatform.peek();
+  /** Where a station would go and whether a click there is taken (T-311, T-671, T-695). `guess`
+   * comes at once from the track's layout (`likelyFirst`), so the first frame is right; `answer`
+   * when the worker has tried the same `addStation` the click sends, rolled back, and overrides it.
+   * A refused spot stays where the guess put it. */
+  private guess: Verdict | null = null;
+  private answer: Verdict | null = null;
+  /** what the ghost last showed (null: nothing) */
+  private shown: Verdict | null = null;
+  /** the worker's last answer for each track or node (null: taken) and where it was tried, for
+   * this network and platform length (T-695) */
+  private tried: { scope: string; at: Map<string, { issues: string[] | null; lx: number; ly: number }> } = { scope: "", at: new Map() };
+  private checkGhost() {
+    const h=this.hover, w=world.peek(), n=this.overlay.renderer.net;
+    if (!h || h.kind==="free" || !w || !n) return;
     const key=this.altsKey(h);
-    if (key===this.ghostKey) return;
-    this.ghostKey=key;
+    if (key===this.guess?.key) return;
     const spots=this.alts.length?this.alts:[h];
-    const atOf=(s:Spot)=>s.kind==="node"?{kind:"node" as const,node:s.node}:{kind:"edge" as const,edge:s.edge,...this.pack(s.lx,s.ly)};
-    // T-671: the first spot the track model takes among what is under the pointer; none: why the first is refused
-    void firstAccepted(spots,(s)=>new Promise<string[]|null>((res)=>this.client.checkStation(atOf(s),platform,(ok,issues)=>res(ok?null:issues))),(s)=>s.kind==="edge"?this.endSnap(s):null,()=>key!==this.ghostKey).then(({spot,issues})=>{
-      if (key!==this.ghostKey) return; // a newer spot is already asked
-      const ok=spot!==null, why=ok?"":describeIssues(issues)||"Cannot be built here.";
-      this.chosen=spot?{key,snap:spot}:null;
-      if (ok!==this.ghostOk || why!==this.ghostWhy || spot) {
-        this.ghostOk=ok;
-        this.ghostWhy=why;
-        if (tool.peek()==="station") this.place();
+    const platform=buildPlatform.peek(), lay=this.layout(w);
+    const id=(s:Spot)=>s.kind==="node"?`n${s.node}`:`e${s.edge}`;
+    const scope=`${platform}:${w.version}`;
+    if (this.tried.scope!==scope) this.tried={scope,at:new Map()};
+    const tried=this.tried.at;
+    // the worker's answer for this track from a spot within KNOWN_PX of this one: a refusal the
+    // layout cannot explain stands for this spot; a spot taken there still has the layout checked
+    const known=(s:Spot)=>{
+      const r=tried.get(id(s));
+      if (!r) return undefined;
+      const [ax,ay]=this.screen(r.lx,r.ly), [bx,by]=this.screen(s.lx,s.ly);
+      return Math.hypot(ax-bx,ay-by)<=KNOWN_PX ? r.issues : undefined;
+    };
+    const cand=(s:Spot):Candidate=>s.kind==="node"?{kind:"node",node:s.node}:{kind:"edge",edge:s.edge,frac:fractionAlong(n.edgePts.get(s.edge)??[],s.lx,s.ly)};
+    const endOf=(s:Spot)=>s.kind==="edge"?this.endSnap(s):null;
+    const g=likelyFirst(spots,(s)=>known(s)||layoutIssues(cand(s),platform,lay),endOf);
+    let guess:Verdict={key,spot:g.spot??spots[0],ok:!!g.spot,why:g.spot?"":describeIssues(g.issues)||"Cannot be built here."};
+    if (spots.length>=HOLD_AT && !(g.spot?known(g.spot)===null:spots.every((s)=>known(s)))) {
+      // a bundle of tracks where the worker has not yet confirmed the guess: there it is often
+      // refused for what the page cannot see, so the ghost stays as it was until the answer (if it
+      // was by the pointer; else none)
+      const was=this.shown, at=was?.spot;
+      let near=false;
+      if (at) {
+        const [ax,ay]=this.screen(at.lx,at.ly), [bx,by]=this.screen(h.lx,h.ly);
+        near=Math.hypot(ax-bx,ay-by)<=SNAP_EDGE_PX;
       }
+      guess=near&&was ? {...was,key,held:true} : {key,spot:null,ok:true,why:"",held:true};
+    }
+    this.guess=guess;
+    const atOf=(s:Spot)=>s.kind==="node"?{kind:"node" as const,node:s.node}:{kind:"edge" as const,edge:s.edge,...this.pack(s.lx,s.ly)};
+    // a track the worker refused a few px away is not asked again, so while the pointer moves each
+    // new spot's answer gets further down the list
+    const trial=(s:Spot)=>{
+      const k=known(s);
+      return k ? Promise.resolve(k) : new Promise<string[]|null>((res)=>this.client.checkStation(atOf(s),platform,(ok,issues)=>{
+        // refusals the layout explains depend on the spot; the layout finds those itself
+        if (ok || !issues.every((i)=>LAYOUT_ISSUES.has(i))) tried.set(id(s),{issues:ok?null:issues,lx:s.lx,ly:s.ly});
+        else tried.delete(id(s));
+        res(ok?null:issues);
+      }));
+    };
+    void firstAccepted(spots,trial,endOf,()=>key!==this.guess?.key).then(({spot,issues})=>{
+      if (key!==this.guess?.key) return; // a newer spot is already asked
+      const why=spot?"":describeIssues(issues)||"Cannot be built here.";
+      this.answer={key,spot:spot??(guess.held?spots[0]:guess.spot),ok:!!spot,why};
+      if (tool.peek()==="station" && (this.answer.ok!==guess.ok || this.answer.why!==guess.why || this.answer.spot!==guess.spot)) this.place();
     });
+  }
+
+  /** the track's layout as `layoutIssues` reads it, for the world it was made from, with the flat
+   * crossings on each edge from the map's marks */
+  private lay: (Layout & { version: number }) | null = null;
+  private layout(w: NonNullable<ReturnType<typeof world.peek>>) {
+    if (this.lay?.version===w.version) return this.lay;
+    const net=this.overlay.renderer.net, marks=net?.marks, crossings=new Map<number, number[]>();
+    const lay=layoutOf(w.edges,w.nodes,{
+      crossingsOn:(e)=>{
+        let out=crossings.get(e);
+        if (out) return out;
+        out=[];
+        const pts=net?.edgePts.get(e), edge=lay.byId.get(e);
+        if (pts && edge && marks) {
+          // local units per metre along this edge; a crossing within 2 m of it is on it
+          const total=lengthOf(pts), perM=total/Math.max(1,edge.lengthM);
+          let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+          for (let k=0;k<pts.length;k+=3) x0=Math.min(x0,pts[k]),x1=Math.max(x1,pts[k]),y0=Math.min(y0,pts[k+1]),y1=Math.max(y1,pts[k+1]);
+          const pad=2*perM;
+          for (let k=0;k+MARK_STRIDE<=marks.length;k+=MARK_STRIDE) {
+            const x=marks[k],y=marks[k+1];
+            if (marks[k+2]!==M_CROSSING || x<x0-pad || x>x1+pad || y<y0-pad || y>y1+pad) continue;
+            const [f,off]=nearestOn(pts,x,y);
+            if (off<=pad) out.push(f*edge.lengthM);
+          }
+        }
+        crossings.set(e,out);
+        return out;
+      },
+    });
+    return this.lay={...lay,version:w.version};
   }
 
   /** the spots the pointer's candidates (`alts`) are tried at, and the world and platform they were tried in */
@@ -830,14 +920,20 @@ export class Tools {
     return spots.map((h)=>`${h.kind==="node"?`n${h.node}`:`e${h.edge}`}:${h.lx.toFixed(1)}:${h.ly.toFixed(1)}`).join("|")+`:${buildPlatform.peek()}:${world.peek()?.version}`;
   }
 
-  /** the spot the track model took among them (T-671) */
-  private chosen: { key: string; snap: Spot } | null = null;
+  /** the worker's answer for the pointer's candidates, else the layout's guess */
+  private verdict(): Verdict | null {
+    const h=this.hover;
+    if (!h || h.kind==="free") return null;
+    const key=this.altsKey(h);
+    return this.answer?.key===key ? this.answer : this.guess?.key===key ? this.guess : null;
+  }
 
-  /** Where a station would go: the spot the track model took, once it has answered, else the first tried. */
+  /** Where a station would go (T-695): the worker's spot, else the guessed one. */
   private stationSpot(): Snap | null {
     const h=this.hover;
     if (!h || h.kind==="free") return h;
-    return this.chosen && this.chosen.key===this.altsKey(h) ? this.chosen.snap : h;
+    const v=this.verdict();
+    return v ? v.spot : h;
   }
 
   /** The node at the nearer end of the track under an edge spot (T-671). */
@@ -914,7 +1010,10 @@ export class Tools {
       return;
     }
     // the snap ring and the cursor tag
+    if (t === "station") this.checkGhost();
     const h = t === "station" ? this.stationSpot() : this.hover;
+    const v = t === "station" ? this.verdict() : null;
+    if (t === "station") this.shown = h && h.kind !== "free" ? v : null;
     if ((t === "track" || t === "station" || t === "crossover") && h && h.kind !== "free") {
       this.ring.style.display = "";
       if (t === "station") {
@@ -934,11 +1033,11 @@ export class Tools {
       this.tag.className = "tool-tag build-tag";
       this.tag.replaceChildren(...placementTag(pv, buildLevel.peek()));
       put(this.tag, h.lx, h.ly, 14, 12);
-    } else if (t === "station" && h && h.kind !== "free" && this.ghostOk === false) {
+    } else if (t === "station" && h && h.kind !== "free" && v?.ok === false) {
       // why a click here would be refused (T-311)
       this.tag.style.display = "";
       this.tag.className = "tool-tag build-tag bad";
-      this.tag.textContent = this.ghostWhy;
+      this.tag.textContent = v.why;
       put(this.tag, h.lx, h.ly, 14, 12);
     } else if (t === "station" && h && h.kind !== "free") {
       const lines: string[] = [];

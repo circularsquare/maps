@@ -1925,25 +1925,6 @@ impl TrackApi {
         if r == 0 { self.w.net.next_line_number = self.w.net.next_line_number.saturating_add(1); }
         r
     }
-    /// A copy of a line for an express service (T-255): every stop with a station on the pair
-    /// beside it (quad track, `twin_at`'s stations of one name) moves there, and the path is found
-    /// again over them, so the copy runs on the other pair wherever there is one. Where that has
-    /// no route, a plain copy. The player then takes out the stops it skips.
-    pub fn express_copy(&mut self, source: u32, id: u32, name: String) -> u32 {
-        let Some(mut d) = self.w.net.line_data(source) else { return self.refuse(Issue::NoSuchLine { line: source }) };
-        let net = &self.w.net;
-        let stops: Vec<u32> = d.stops.iter().map(|&s| twin_station(net, s).unwrap_or(s)).collect();
-        if stops != d.stops {
-            if let Some(path) = net.route(&stops) {
-                d.stops = stops;
-                d.path = path;
-            }
-        }
-        d.name = name;
-        let r = self.run(Op::Line { id, data: Some(d) });
-        if r == 0 { self.w.net.next_line_number = self.w.net.next_line_number.saturating_add(1); }
-        r
-    }
     pub fn next_line_name(&mut self) -> String {
         loop {
             let name = format!("Line {}", self.w.net.next_line_number);
@@ -2852,21 +2833,6 @@ fn express_end(verts: &[Pi], at: usize, side: f64, scaled: bool) -> (f64, f64) {
     let d = QUAD_SPACING * kk(scaled, verts[0].y) * side;
     let o = if at == 0 { p } else { q };
     (quant(o.x - dy / l * d), quant(o.y + dx / l * d))
-}
-
-/// The station beside station `s` on quad track (T-255): the nearest other station within one
-/// and a half times `QUAD_SPACING`, the other platform of the same stop.
-fn twin_station(net: &Network, s: u32) -> Option<u32> {
-    if !net.node_ok(s) {
-        return None;
-    }
-    let (x, y) = (net.node_x[s as usize], net.node_y[s as usize]);
-    (0..net.node_count() as u32)
-        .filter(|&n| n != s && net.node_ok(n) && net.node_platform[n as usize] > 0)
-        .map(|n| (n, (net.node_x[n as usize] - x).hypot(net.node_y[n as usize] - y)))
-        .filter(|&(_, d)| d <= QUAD_SPACING * 1.5 * net.k_at(y))
-        .min_by(|a, b| a.1.total_cmp(&b.1))
-        .map(|(n, _)| n)
 }
 
 /// Where a crossover's end goes (T-338): a split of an edge at a chainage, or a plain joint.
@@ -4906,10 +4872,9 @@ mod tests {
     }
 
     /// T-255: quad track is the drawn double track and an express double track beside it, end to
-    /// end; a station on one pair gets its twin on the other; an express copy of a line runs on
-    /// the express pair.
+    /// end; a station on one pair gets its twin on the other.
     #[test]
-    fn quad_track_and_express_copy() {
+    fn quad_track_and_twin_stations() {
         let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(12000.0, 0.0).iter()).copied().collect();
         let pis = vec![3000.0, 400.0, 0.0, 0.0, 6000.0, 0.0, 0.0, 0.0, 9000.0, 400.0, 0.0, 0.0];
         let mut a = api();
@@ -4965,18 +4930,7 @@ mod tests {
         assert_eq!(a.undo(), 0);
         let id = a.new_line_id();
         assert_eq!(a.set_line(id, &stops, 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "Local".into()), 0, "{}", a.issues());
-        let ex = a.new_line_id();
-        assert_eq!(a.express_copy(id, ex, "Local express".into()), 0, "{}", a.issues());
-        let es = a.line_stops(ex);
-        assert_eq!(es.len(), 2);
-        assert!(es.iter().zip(&stops).all(|(p, q)| p != q && a.w.net.node_name[*p as usize] == a.w.net.node_name[*q as usize]), "the twins");
-        let on_express = a.line_path(ex).iter().filter(|&&p| !on_local(&a, p >> 1)).count();
-        assert!(on_express == a.line_path(ex).len() && on_express >= 2, "{:?}", a.line_path(ex));
         assert!(a.line_path(id).iter().all(|&p| on_local(&a, p >> 1)));
-        assert!(!a.w.net.line_broken[ex as usize]);
-        assert!(a.stop_times(ex, 0, 0).last().unwrap() > &60.0);
-        assert_eq!(a.undo(), 0);
-        assert!(!a.w.net.line_ok(ex));
         // deleting an express piece leaves the drawn pair
         assert_eq!(a.delete_edge(express[express.len() / 2]), 0, "{}", a.issues());
         assert!(!a.w.net.line_broken[id as usize]);

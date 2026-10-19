@@ -78,7 +78,7 @@ styles only**: normal (14 px, regular, text colour: name, "Train", cash), figure
 train share and the time) and small (12 px, regular, muted: rides, walking and driving shares,
 day, status). **Every part has a fixed width** [T-341], so no city name or status moves the split
 bar: the name box is cut with an ellipsis (the whole name on hover, with the city's points and
-points a day, T-684), the percentages and counts
+points a day, T-684, T-694), the percentages and counts
 are in tabular figures in boxes of fixed width, and the split bar is centred in the bar with
 nothing under it: the status is a tag over the map (Status, below). The mode bar is the one
 flexible part [T-406]: it takes the width the fixed parts leave, so its length follows the window
@@ -193,12 +193,19 @@ dismissed, and the map and tools are blocked meanwhile.
 commuter and longer-trip bubbles, not station discs), Track display (four modes with their key,
 [ui-map.md](ui-map.md)), Show (trains, station names, capacity markers, flat junctions and crossings, map labels), Riders on trains
 and platforms ("How full each train is", "How full each platform is", both on by default)
-[T-164], Stations up close (Faces and Sound, both on by default, and a Volume slider while Sound is on; [ui-map.md](ui-map.md) Life at stations) [T-686], Theme (Light or Dark, light by default, over Pink, Blue or Green) [T-039], Panel and text size, Units and performance, and Explore a trip at the bottom [T-220]. Station demand
+[T-164], Stations up close (Faces and Sound, both on by default, and a Volume slider while Sound is on; [ui-map.md](ui-map.md) Life at stations) [T-686], Theme (Light or Dark, light by default, over Pink, Blue or Green) [T-039], Panel and text size, Font (a trial, T-698), Units and performance, and Explore a trip at the bottom [T-220]. Station demand
 circles are at the top of the Stations tab instead [T-213].
 
 **Panel and text size** [T-247]: 80% to 120% in 5% steps, 100% by default, no reset button. It
 zooms the dock, top bar, map buttons, search, loading card, tool notes and dialogs, and sizes the
 text of the map's DOM tags and the hover tag; the map itself is never scaled.
+
+**Font** [T-698, a trial]: Zen Maru Gothic (default), M PLUS Rounded 1c, Kosugi Maru (one weight, so
+bold is synthesised) or Nunito (Latin only, kana and kanji fall back to Zen Maru Gothic), remembered
+per browser. The panels, station names and map controls follow the `--font` variable (`game/fonts.ts`,
+`game/ui.ts`); a chosen font's stylesheet is fetched from Google Fonts (all SIL OFL) only when it is
+first chosen, and station names and capacity tags are measured again once it has loaded. The map's
+own labels are glyph tiles and stay Zen Maru Gothic.
 
 **Units and performance** [T-381]: "US units" (off by default) shows every distance, length and
 speed in miles, mph and feet instead of kilometres, km/h and metres: panels, inspectors, hovers, the
@@ -238,12 +245,14 @@ toggle: a list of every region (the toggle's regions) with a built station, one 
 (hover: its station count), its mode split bar as the top bar draws it (the same colours and the
 same hover), its train rides per day and its money a day, fares less running trains (yesterday's, today so far
 until the game has a first full day; hover: fares and running trains, then new trains and
-construction, left out of the figure, when there were any; losses red), and its points since the
-game began, moving as they land (hover: the exact total, points a day with the riders now on the
-day shown, and the rule) [T-684]. A star after the name marks a region whose train share has
-reached 10% (hover: when it was earned, in the region's local time) [T-685]. The top bar's city
-name has the same points in its hover. Sorted by rides, largest first; a click on a header sorts by that
-column (name, train share, rides, money, points as of the last whole hour) as in the Lines tab; a click on a row moves the camera to
+construction, left out of the figure, when there were any; losses red), and its points, those of the
+past 24 game hours, changing once a game hour (hover: the exact figure, points a day with the
+riders now on the day shown, and the rule) [T-684, T-694]. A star after the name marks a region
+whose train share has reached 10% (hover: when it was earned, "Monday, day 71, at 14:08" in the
+region's local time) [T-685]. The top bar's city name has the same points in its hover. A narrow
+list keeps about six characters of each name (60 px): below that the star goes first, then the
+money column (container queries on `.cities-box`) [T-693]. Sorted by rides, largest first; a click on a header sorts by that
+column (name, train share, rides, money, points) as in the Lines tab; a click on a row moves the camera to
 the region as search does, and the viewed region's row is tinted. It lives here and not in
 Stations because the row's money is this tab's region ledger and a click on a row changes the
 region the table above follows; a fifth dock tab button was ruled out by [T-532]. It sits at the

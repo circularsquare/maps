@@ -67,8 +67,6 @@ export interface SaveHeader {
   hours?: HourLedger[];
   /** T-531: the same two per region (a zone id; "" outside every zone); absent in older saves */
   regions?: Record<string, { ledger: DayLedger[]; hours: HourLedger[] }>;
-  /** T-684: points earned since the game began, per region; absent in older saves (none yet) */
-  points?: Record<string, number>;
   /** T-685: each region's star, the game second it was earned; absent in older saves */
   stars?: Record<string, number>;
 }

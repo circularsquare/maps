@@ -4,6 +4,7 @@
 
 import { computed, effect, signal } from "@preact/signals";
 import { AVERAGE_DAY, DEMAND_DAY_PHRASE, type DemandDay } from "./days";
+import { FONT_KEYS, fontStack, loadFont, type FontKey } from "./fonts";
 import type { PurposeFilter } from "./purposes";
 import { LEVELS, type Level, type Selection } from "./types";
 
@@ -62,6 +63,8 @@ export interface DisplaySettings {
   bubbleOpacity: number;
   /** T-247: the size of the page's panels and text, 0.8-1.2 (UI_SCALES); the map itself is not scaled */
   uiScale: number;
+  /** T-698: the panels' font, a trial (game/fonts.ts); the map's labels stay Zen Maru Gothic */
+  font: FontKey;
   /** T-464: the day the demand views show: the average day, a weekday or a weekend day. A stored
    * "today" (T-266's old default) reads as the average. The trains and platforms follow the clock
    * whatever this says. */
@@ -97,6 +100,7 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   bubbleSize: 1,
   bubbleOpacity: 0.9,
   uiScale: 1,
+  font: "zen",
   dayShown: "average",
   usUnits: false,
   moreCores: false,
@@ -201,6 +205,14 @@ export const uiScale = computed(() => {
 });
 effect(() => {
   document.documentElement.style.setProperty("--ui", String(uiScale.value));
+});
+/** T-698: the panels' font as the `--font` variable. Text measured in the old font (station names,
+ * capacity tags) is measured again by the "tw-fontchange" event once the new one has loaded. */
+effect(() => {
+  const k = FONT_KEYS.includes(display.value.font) ? display.value.font : "zen";
+  if (k === "zen") document.documentElement.style.removeProperty("--font");
+  else document.documentElement.style.setProperty("--font", fontStack(k));
+  void loadFont(k).then(() => document.dispatchEvent?.(new Event("tw-fontchange")));
 });
 effect(() => {
   const s = { tab: tab.value, theme: theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, tracks: trackCount.value, keep: keepPlacing.value }, v: VERSION };

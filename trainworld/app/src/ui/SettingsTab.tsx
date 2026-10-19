@@ -5,6 +5,7 @@
 // scale (T-247), and last the trip explorer's button (T-220). The saves are in their own panel
 // (T-251, ui/SavesPanel.tsx). T-253: no explanatory notes, only controls and their labels.
 
+import { FONT_KEYS, FONTS, type FontKey } from "../game/fonts";
 import { levelLabel, speed } from "../game/format";
 import { LEVEL_COLOURS, SPEED_STOPS } from "../game/palette";
 import { LEVELS } from "../game/types";
@@ -115,6 +116,13 @@ export function SettingsTab() {
         <Segmented options={THEMES.map((t) => [t, THEME_NAME[t]] as [Theme, string])} value={theme.value} onChange={(v) => (theme.value = v)} />
       </div>
       <UiScale />
+      {/* T-698: a trial of other rounded fonts for the panels, each loaded when first chosen */}
+      <div class="h">Font</div>
+      <div class="track-modes"><Segmented<FontKey>
+        options={FONT_KEYS.map((k) => [k, FONTS[k].label] as [FontKey, string])}
+        value={d.font}
+        onChange={(v) => setDisplay("font", v)}
+      /></div>
       <div class="h">Units and performance</div>
       <div class="checks">
         <Check checked={d.usUnits} onChange={(v) => setDisplay("usUnits", v)}>

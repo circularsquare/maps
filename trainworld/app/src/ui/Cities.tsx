@@ -1,16 +1,16 @@
 // The Money tab's Cities section (T-550): one row for every region (a city pack or a zone, the
 // regions of the Lines tab's place toggle) where the player has a station, with its mode split bar
 // as the top bar draws it, its train rides a day, its money a day (fares less running trains), its
-// points (T-684) and its star once earned (T-685). A click moves the camera to the region.
+// points over the past 24 game hours (T-684, T-694) and its star once earned (T-685). A click moves the camera to the region.
 
 import { activeCity, cityById, viewedZone, type City, type CityId } from "../game/cities";
 import { cityDemandViews, type DemandView } from "../game/demand";
 import { clockTime, count, dayOf, money } from "../game/format";
-import { weekdayName } from "../game/days";
+import { weekdayOf } from "../game/days";
 import { stationZone } from "../game/listScope";
 import { shiftAt } from "../game/localTime";
-import { liveMoney, moneyState } from "../game/money";
-import { POINTS_PER_KM, POINTS_PER_TRIP, pointsExact, pointsPerDay, pointsShort, STAR_SHARE } from "../game/points";
+import { moneyState } from "../game/money";
+import { POINTS_PER_KM, POINTS_PER_TRIP, pointsExact, pointsPast24h, pointsPerDay, pointsShort, STAR_SHARE } from "../game/points";
 import { regionLedger } from "../game/regionMoney";
 import { splitTip } from "../game/splitTip";
 import { citySort, selection, shownDay, tool } from "../game/ui";
@@ -30,6 +30,7 @@ export function goToCity(city: City) {
 
 /** Fares less running trains: the figure of a row, so a build day does not swamp it. */
 const net = (d: DayLedger) => d.fares - d.running;
+const WEEKDAY_LONG = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const collate = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" }).compare;
 
 /** A region's money for the figure: yesterday's ledger once there is one, before that today so far. */
@@ -57,22 +58,23 @@ function moneyTip(name: string, f: { d: DayLedger; yesterday: boolean }): string
   return rows.join("\n");
 }
 
-/** T-684: a region's points since the game began, its own component since they move as fares land. */
+/** T-694: a region's points, what it earned in the past 24 game hours (moves once a game hour). */
 function PointsCell({ id, name }: { id: CityId; name: string }) {
-  const total = liveMoney.value.points?.[id] ?? 0;
+  const past = pointsPast24h.value.get(id) ?? 0;
   const rate = pointsPerDay.value.get(id)?.[shownDay.value] ?? 0;
   const tip = [
-    `${pointsExact(total)} points in ${name} since the game began`,
+    `${pointsExact(past)} points in ${name} in the past 24 hours`,
     `${pointsExact(rate)} points ${["on a weekday", "on a weekend day", "a day"][shownDay.value]} with the riders now`,
     `${POINTS_PER_TRIP} for each train trip that starts here, changes included, and ${POINTS_PER_KM} for each km ridden`,
   ].join("\n");
-  return <span class="val w-points c-cities" data-tip={tip}>{pointsShort(total)}</span>;
+  return <span class="val w-points c-cities" data-tip={tip}>{pointsShort(past)}</span>;
 }
 
-/** T-685: the star beside a region that has reached the mark, with when (its local time). */
+/** T-685: the star beside a region that has reached the mark, with when (its local time, as the
+ * top bar's clock hover names a day). */
 function Star({ city, at }: { city: City; at: number }) {
-  const t = (at + shiftAt(city.center[0], city.center[1])) / 60;
-  return <span class="city-star" data-tip={`Star earned on ${weekdayName(dayOf(t))} ${dayOf(t)} at ${clockTime(t)}, once the train share in ${city.name} reached ${STAR_SHARE}%`}><Icon.star /></span>;
+  const t = Math.floor((at + shiftAt(city.center[0], city.center[1])) / 60), d = dayOf(t);
+  return <span class="city-star" data-tip={`Star earned on ${WEEKDAY_LONG[weekdayOf(d)]}, day ${d}, at ${clockTime(t)}, once the train share in ${city.name} reached ${STAR_SHARE}%`}><Icon.star /></span>;
 }
 
 interface CityRow {
@@ -102,8 +104,8 @@ export function CitiesList() {
     return { id, name: cityById(id).name, stations, view, trainShare: view ? view.split.train : null, rides: view ? view.railTripsPerDay : null, money: m ? figures(id, m) : null };
   });
   const { key, dir } = citySort.value;
-  // T-684: by points as of the last whole hour, so the order does not shuffle as points land
-  const val = (r: CityRow) => (key === "train" ? r.trainShare : key === "rides" ? r.rides : key === "money" ? (r.money ? net(r.money.d) : null) : key === "points" ? (m?.points?.[r.id] ?? 0) : null);
+  const past = pointsPast24h.value;
+  const val = (r: CityRow) => (key === "train" ? r.trainShare : key === "rides" ? r.rides : key === "money" ? (r.money ? net(r.money.d) : null) : key === "points" ? (past.get(r.id) ?? 0) : null);
   rows.sort((a, b) => {
     if (key !== "name") {
       const x = val(a), y = val(b);
@@ -115,15 +117,16 @@ export function CitiesList() {
   });
   const day = [" on a weekday", " on a weekend day", ""][shownDay.value];
   const here = viewedZone.value;
+  // T-693: a container, so a narrow dock hides the star and then the money before the names go
   return (
-    <>
+    <div class="cities-box">
       <div class="h">Cities</div>
       <SortHead sort={citySort} cols={[
         { key: "name", label: "Name", tip: "Sort by name", first: 1 },
         { key: "train", label: "Train", tip: "Sort by the train share of rides", first: -1, cls: "w-citybar c-cities" },
         { key: "rides", label: "Rides", tip: "Sort by train rides per day", first: -1, cls: "w-riders c-cities" },
-        { key: "money", label: "Money", tip: "Sort by money a day, fares less running trains", first: -1, cls: "w-money c-cities" },
-        { key: "points", label: "Points", tip: "Sort by points since the game began", first: -1, cls: "w-points c-cities" },
+        { key: "money", label: "Money", tip: "Sort by money a day, fares less running trains", first: -1, cls: "w-money c-cities c-money" },
+        { key: "points", label: "Points", tip: "Sort by points in the past 24 hours", first: -1, cls: "w-points c-cities" },
       ]} />
       <ul class="rows pick cities">
         {rows.map((r) => {
@@ -144,12 +147,12 @@ export function CitiesList() {
                 </span>
               </span>
               <span class="val w-riders c-cities" data-tip={v ? `${count(v.railTripsPerDay)} train rides per day${where}` : undefined}>{v ? count(v.railTripsPerDay) : "–"}</span>
-              <span class={"val w-money c-cities" + (f && net(f.d) * 1e6 <= -500 ? " neg" : "")} data-tip={f ? moneyTip(r.name, f) : undefined}>{f ? money(net(f.d) * 1e6) : "–"}</span>
+              <span class={"val w-money c-cities c-money" + (f && net(f.d) * 1e6 <= -500 ? " neg" : "")} data-tip={f ? moneyTip(r.name, f) : undefined}>{f ? money(net(f.d) * 1e6) : "–"}</span>
               <PointsCell id={r.id} name={r.name} />
             </li>
           );
         })}
       </ul>
-    </>
+    </div>
   );
 }

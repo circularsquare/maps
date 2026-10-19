@@ -86,12 +86,16 @@ export interface TripPeriod {
   cells: [number, number];
   /** walking the whole way between the two cells, real minutes (T-628) */
   walkMin: number;
+  /** the weight a minute of walking the whole way counts at */
+  walkWeight: number;
   /** an everyday purpose's trips a day between the two cells' areas (0: a commute, or none) */
   pairTrips: number;
   /** straight line between the two cells, and the drive's distance (between the two areas the
    * model groups the places into), metres */
   distM: number;
   driveDistM: number;
+  /** the drive's length by road, km */
+  driveRoadKm: number;
   driveMin: number;
   drivePerceived: number;
   parkPerceived: number;
@@ -138,7 +142,7 @@ export interface Trip {
  * (as `transfers`). */
 export type RouteNodes = { line: string; station: string; k: number }[];
 
-const HEAD = 35, PAIR_LEN = 14, LEG_LEN = 12;
+const HEAD = 37, PAIR_LEN = 14, LEG_LEN = 12;
 
 /** Read one period's packed answer (layout: `DemandApi.trip`). */
 export function readTripPeriod(v: Float64Array, at: RouteNodes): TripPeriod | null {
@@ -171,7 +175,7 @@ export function readTripPeriod(v: Float64Array, at: RouteNodes): TripPeriod | nu
   }
   const offered = v[13] === 1;
   return {
-    round: v[1], from: [v[27], v[28]], to: [v[29], v[30]], cells: [v[2], v[3]], walkMin: v[33], pairTrips: v[34], distM: v[6], driveDistM: v[7],
+    round: v[1], from: [v[27], v[28]], to: [v[29], v[30]], cells: [v[2], v[3]], walkMin: v[33], walkWeight: v[36], pairTrips: v[34], distM: v[6], driveDistM: v[7], driveRoadKm: v[35],
     driveMin: v[9], drivePerceived: v[10], parkPerceived: v[11], carOwnPerceived: v[32], roadPerceived: v[12],
     railOffered: offered, why: WHY[v[26]] ?? "", railPerceived: offered ? v[14] : NaN, railOfMotor: v[15], utility: v[16],
     pWalk: v[17], pTrain: v[18], pDrive: v[19], baseFarePerceived: v[22], minPerUsd: v[23], walkStartPerceived: v[20], walkEndPerceived: v[21], pairs, routes, cut: v[31],

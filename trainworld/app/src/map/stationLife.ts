@@ -161,7 +161,7 @@ export function startStationLife(map: MlMap, overlay: Overlay) {
     }
     if (d.sound) {
       const p = map.project([s.lng, s.lat]);
-      sound.play({ pan: (p.x / Math.max(1, overlay.cssW)) * 2 - 1, zoom: map.getZoom(), volume: d.soundVolume, speed, off: popsFor(off), on: popsFor(on) });
+      sound.play({ pan: (p.x / Math.max(1, overlay.cssW)) * 2 - 1, zoom: map.getZoom(), volume: d.soundVolume, speed, off: popsFor(off), on: popsFor(on), line: vl.num, crowded: red });
     }
     if (d.faces && off >= 1) {
       const count = Math.min(MAX_FACES_PER_TRAIN, Math.floor(off / RIDERS_PER_FACE + Math.random()));

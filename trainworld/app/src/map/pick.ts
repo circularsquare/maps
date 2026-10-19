@@ -2,12 +2,13 @@
 // cannot see it; this projects the network with the overlay's camera. Within each layer the
 // last drawn object containing the pointer wins, matching the visible stacking.
 // Trains beat stations (a train is drawn over the station it stands at; Anita, T-085) beat
-// lines beat junctions beat track (SPEC 8). Clicking the line already
+// lines beat junctions beat track (SPEC 8), blueprint track and its lines above built track and
+// its lines (T-695). Clicking the line already
 // selected selects the track under it instead. Linear scans: fine for a city.
 
 import { clock } from "../game/clock";
 import type { Selection } from "../game/types";
-import { trainCarAt, tripAt } from "./network";
+import { F_BLUEPRINT, trainCarAt, tripAt } from "./network";
 import type { Overlay } from "./overlay";
 
 export const SLOP_PX = 7;
@@ -148,7 +149,15 @@ export function pick(ov: Overlay, px: number, py: number, trainsShown: boolean, 
   const [selectedLi] = ov.renderer.slotPx && current?.kind === "line"
     ? topSeg(ov, n.lines.seg, n.lines.count, px, py, slop, undefined, 0, (i) => String(n.lines.colour[i]) === current.line, wide, widePx)
     : [-1];
-  const [li] = selectedLi >= 0 ? [selectedLi] : ov.renderer.slotPx ? topSeg(ov, n.lines.seg, n.lines.count, px, py, slop, undefined, 0, undefined, wide, widePx) : [-1];
+  // blueprint track and the lines planned on it are drawn over built track and its lines (T-695)
+  const bp = ov.renderer.hasBlueprint;
+  let li = selectedLi;
+  if (li < 0 && bp && ov.renderer.slotPx) [li] = topSeg(ov, n.lines.seg, n.lines.count, px, py, slop, undefined, 0, (i) => (n.lines.flags[i] & F_BLUEPRINT) !== 0, wide, widePx);
+  if (li < 0 && bp) {
+    const [ti] = topSeg(ov, n.track.seg, n.track.count, px, py, slop, undefined, 0, (i) => (n.track.flags[i] & F_BLUEPRINT) !== 0);
+    if (ti >= 0) return { kind: "track", edge: n.track.edge[ti] };
+  }
+  if (li < 0 && ov.renderer.slotPx) [li] = topSeg(ov, n.lines.seg, n.lines.count, px, py, slop, undefined, 0, undefined, wide, widePx);
   const lineHit = li >= 0 ? String(n.lines.colour[li]) : null;
   if (lineHit && !(current?.kind === "line" && current.line === lineHit)) {
     // track several lines run over opens the track's list of them rather than the line on top (T-654)

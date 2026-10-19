@@ -66,11 +66,13 @@ export class CapacityMarkers {
     });
     overlay.afterMapFrame.push(() => this.place());
     if (labels) labels.onPlace = () => this.place();
-    document.fonts.ready.then(() => {
+    const remeasure = () => {
       for (const it of this.items) it.w = 0;
       this.placedMatrix = null;
       this.place();
-    });
+    };
+    document.fonts.ready.then(remeasure);
+    document.addEventListener("tw-fontchange", remeasure);
     map.on("movestart", () => (this.tip.style.display = "none"));
   }
 

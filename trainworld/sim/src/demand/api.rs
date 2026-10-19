@@ -647,10 +647,10 @@ impl DemandApi {
                         let k = (gr.base(z, i) + gr.key(z, j)) as usize;
                         let t = gr.t(z, i, j) / (ns * ns) as f64;
                         let w = self.nr.split(gr, p, i, j, k).0;
-                        let f = gr.walk_factor(i, j);
                         let (road, paid, free, road_km) = self.nr.road(gr, p, i, j, k);
                         for (n, (&a, &b)) in home[i * ns..(i + 1) * ns].iter().flat_map(|a| work[j * ns..(j + 1) * ns].iter().map(move |b| (a, b))).enumerate() {
                             d[n] = cell_walk_m(&self.city, a, b) / 1000.0;
+                            let f = gr.walk_factor_cells(z, a as usize, b as usize);
                             e[n] = if fine { p.no_rail_split(self.nr.cz[i], road, paid, free, road_km, gr.wcost.at(d[n] * f)).0 } else { w };
                         }
                         for n in 0..ns * ns {

@@ -2,7 +2,7 @@
 // the end of the track when the platform would not fit the pointer's spot. Pure, so
 // checks/t671-station-snap-check.mjs runs it without a browser.
 
-export interface SnapEdge { id: number; a: number; b: number; built: boolean; lengthM: number }
+export interface SnapEdge { id: number; a: number; b: number; built: boolean; lengthM: number; off?: boolean; tracks?: number; crossover?: boolean }
 export interface SnapNode { platform: number; ports: number }
 /** a spot on a track: the edge, and how far along it from node `a` to node `b`, 0 to 1 */
 export interface Spot { edge: number; frac: number }
@@ -78,6 +78,83 @@ export async function firstAccepted<S>(spots: readonly S[], accepts: (s: S) => P
   return { spot: null, issues: first };
 }
 
+/** `firstAccepted` answered at once from `issuesOf` (T-695): the station tool's guess at what the
+ * track model will take, so the ghost's first frame is where the click would put the station. */
+export function likelyFirst<S>(spots: readonly S[], issuesOf: (s: S) => string[], endOf: (s: S) => S | null): { spot: S | null; issues: string[] } {
+  let first: string[] = [];
+  for (let i = 0; i < spots.length; i++) {
+    const issues = issuesOf(spots[i]);
+    if (!issues.length) return { spot: spots[i], issues: [] };
+    if (i === 0) first = issues;
+    if (onlyEndIssues(issues)) {
+      const end = endOf(spots[i]);
+      if (end && !issuesOf(end).length) return { spot: end, issues: [] };
+    }
+  }
+  return { spot: null, issues: first };
+}
+
+export type Candidate = { kind: "node"; node: number } | { kind: "edge"; edge: number; frac: number };
+
+/** What `layoutIssues` reads: the track, and what the page knows besides of each edge. */
+export interface Layout {
+  nodes: ReadonlyMap<number, SnapNode>;
+  byNode: Map<number, number[]>;
+  byId: Map<number, SnapEdge>;
+  /** where flat crossings are on the edge, metres from its node `a` */
+  crossingsOn?: (edge: number) => readonly number[];
+}
+
+export function layoutOf(edges: readonly SnapEdge[], nodes: ReadonlyMap<number, SnapNode>, more: Pick<Layout, "crossingsOn"> = {}): Layout {
+  return { nodes, byNode: edgesByNode(edges), byId: new Map(edges.map((e) => [e.id, e])), ...more };
+}
+
+/** The refusals a station at `c` would meet, as far as the page can tell (T-695): an existing
+ * station or junction at a node; the platform's room on each side up to the next station,
+ * junction or track end (a drawn route's plain joints joined through as the track model joins
+ * them, T-418); a flat crossing under the platform. Water, ramps, crossings that are not flat,
+ * curves and cash are the worker's to find. Mirrors `check_station` and `unjoin_near` in
+ * sim/src/track. */
+export function layoutIssues(c: Candidate, platform: number, lay: Layout): string[] {
+  const { nodes, byNode, byId } = lay;
+  const out = new Set<string>();
+  const ends = (n: number) => (nodes.get(n)?.platform ?? 0) > 0 ? reachOf(nodes.get(n)!) : 0;
+  const joint = (n: number) => { const o = nodes.get(n); return !!o && o.platform === 0 && o.ports === 2; };
+  const crossed = (edge: number, from: number, to: number) => (lay.crossingsOn?.(edge) ?? []).some((s) => s >= from - 1 && s <= to + 1);
+  if (c.kind === "node") {
+    const n = nodes.get(c.node);
+    if (!n || n.platform > 0 || n.ports > 2) return ["StationPorts"];
+    const reach = n.ports <= 1 ? platform : platform / 2;
+    for (const id of byNode.get(c.node) ?? []) {
+      const e = byId.get(id)!, other = e.a === c.node ? e.b : e.a;
+      if (reach + ends(other) > e.lengthM - 1) out.add(joint(other) ? "PlatformJoint" : "PlatformTooLong");
+      if (e.a === c.node ? crossed(id, 0, reach) : crossed(id, e.lengthM - reach, e.lengthM)) out.add("PlatformCrossing");
+    }
+    return [...out];
+  }
+  const e0 = byId.get(c.edge);
+  if (!e0) return [];
+  const mine = platform / 2, s0 = c.frac * e0.lengthM;
+  if (crossed(e0.id, s0 - mine, s0 + mine)) out.add("PlatformCrossing");
+  const same = (o: SnapEdge) => o.built === e0.built && !!o.off === !!e0.off && (o.tracks ?? 1) === (e0.tracks ?? 1) && !o.crossover && !e0.crossover;
+  for (const [start, gap0] of [[e0.a, c.frac * e0.lengthM], [e0.b, (1 - c.frac) * e0.lengthM]] as const) {
+    let node = start, gap = gap0, from = e0.id;
+    const seen = new Set([from]);
+    // joints within the platform's reach (and 2 m) are joined through, as unjoin_near does
+    while (gap < mine + 2 && joint(node)) {
+      const next = (byNode.get(node) ?? []).find((id) => id !== from);
+      const o = next === undefined ? undefined : byId.get(next);
+      if (!o || seen.has(o.id) || !same(o)) break;
+      seen.add(o.id);
+      gap += o.lengthM;
+      node = o.a === node ? o.b : o.a;
+      from = o.id;
+    }
+    if (mine + ends(node) > gap - 1) out.add(joint(node) ? "PlatformJoint" : "PlatformTooLong");
+  }
+  return [...out];
+}
+
 /** A refusal only because the platform would run off the end of its track. */
 export function onlyEndIssues(issues: readonly string[]): boolean {
   return issues.length > 0 && issues.every((i) => i === "PlatformTooLong" || i === "PlatformJoint");
@@ -86,6 +163,11 @@ export function onlyEndIssues(issues: readonly string[]): boolean {
 /** How far along `pts` (x, y, z triples from the edge's first node to its last) the point on it
  * nearest (x, y) is, 0 to 1. */
 export function fractionAlong(pts: ArrayLike<number>, x: number, y: number): number {
+  return nearestOn(pts, x, y)[0];
+}
+
+/** The point on `pts` nearest (x, y): how far along it is, 0 to 1, and how far off, in `pts` units. */
+export function nearestOn(pts: ArrayLike<number>, x: number, y: number): [number, number] {
   let total = 0, best = Infinity, at = 0;
   for (let k = 0; k + 5 < pts.length; k += 3) {
     const x0 = pts[k], y0 = pts[k + 1], dx = pts[k + 3] - x0, dy = pts[k + 4] - y0, l2 = dx * dx + dy * dy, l = Math.sqrt(l2);
@@ -94,5 +176,5 @@ export function fractionAlong(pts: ArrayLike<number>, x: number, y: number): num
     if (d < best) best = d, at = total + t * l;
     total += l;
   }
-  return total ? at / total : 0;
+  return [total ? at / total : 0, Math.sqrt(best)];
 }

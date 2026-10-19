@@ -75,10 +75,8 @@ let regions = new Map<string, { days: DayLedger[]; hours: HourLedger[] }>();
 let lineShares = new Map<number, { fare: [string, number][]; ride: [string, number][]; run: [string, number][] }>();
 /** T-684: each running line's points per game hour by region and kind of day and period (game/points.ts) */
 let linePoints = new Map<number, [string, number[][]][]>();
-/** T-684: points since the game began, per region; T-685: stars, the game second each was earned */
-let pointsTotal = new Map<string, number>();
+/** T-685: each region's star, the game second it was earned */
 let stars = new Map<string, number>();
-let sentPoints = NaN;
 /** T-531: paid edits' charges, held under "" until the main thread says how each divides */
 const heldCharges = new Map<number, { day: number; hour: number; build: number; trains: number }>();
 /** Wall ms on the clock both threads read (`ToClock` "clock"): Date.now() drifts from it, and the
@@ -598,35 +596,24 @@ function moneyState(): MoneyState {
     ledger: ledger.map((d) => ({ ...d })),
     hours: hourLedger.map((d) => ({ ...d })),
     regions: savedRegions(),
-    points: Object.fromEntries(pointsTotal),
     stars: Object.fromEntries(stars),
   };
-}
-
-/** T-684: the points of every region together. */
-function pointsAll(): number {
-  let t = 0;
-  for (const v of pointsTotal.values()) t += v;
-  return t;
 }
 
 function sendMoney() {
   const m = moneyState();
   sentCash = m.cash;
   sentFares = m.ledger[m.ledger.length - 1]?.fares ?? NaN;
-  sentPoints = pointsAll();
   send({ kind: "money", money: m });
 }
 
 /** T-284: the cash and today's ledger, if either moved since last sent. */
 function sendCash() {
   const cash = api!.cash(), today = dayEntry(Math.floor(moneyNow() / 86400)), hour = hourEntry(Math.floor(moneyNow() / 3600));
-  const pts = pointsAll();
-  if (cash === sentCash && today.fares === sentFares && pts === sentPoints) return;
+  if (cash === sentCash && today.fares === sentFares) return;
   sentCash = cash;
   sentFares = today.fares;
-  sentPoints = pts;
-  send({ kind: "cash", cash, today: { ...today }, hour: { ...hour }, regions: regionNow(), points: Object.fromEntries(pointsTotal) });
+  send({ kind: "cash", cash, today: { ...today }, hour: { ...hour }, regions: regionNow() });
 }
 
 /** T-309: the running lines grouped by the local time they run on, each group's running cost per
@@ -703,7 +690,6 @@ function settle(): boolean {
         d.points = (d.points ?? 0) + v;
         e.points = (e.points ?? 0) + v;
         for (const r of regionEntries(z, d.day, h)) r.points = (r.points ?? 0) + v;
-        pointsTotal.set(z, (pointsTotal.get(z) ?? 0) + v);
       }
     }
     settledT = full ? t + 3600 : end;
@@ -810,7 +796,7 @@ function shapeHour(epoch: number, b: Float32Array) {
 // ---------------------------------------------------------------- saves (T-029)
 
 function header(): SaveHeader {
-  return { game: "anitabuilder", format: SAVE_FORMAT, city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), fleet: api!.fleet(), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), points: Object.fromEntries([...pointsTotal].map(([k, v]) => [k, Math.round(v)])), stars: Object.fromEntries(stars) };
+  return { game: "anitabuilder", format: SAVE_FORMAT, city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), fleet: api!.fleet(), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), stars: Object.fromEntries(stars) };
 }
 
 /** The game as file bytes. The network and header are taken at once, before anything awaits. */
@@ -1031,7 +1017,6 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file"): Promise<b
   ledger = mergeLedger(h.ledger, (d) => d.day);
   hourLedger = mergeLedger(h.hours, (d) => d.hour);
   loadRegions(h.regions);
-  pointsTotal = new Map(Object.entries(h.points ?? {}));
   stars = new Map(Object.entries(h.stars ?? {}));
   convertedOnLoad = converted;
   restart(h.clock, from);
@@ -1054,7 +1039,6 @@ function newGame() {
   ledger = [];
   hourLedger = [];
   loadRegions(undefined);
-  pointsTotal = new Map();
   stars = new Map();
   restart(START_CLOCK, "new");
 }
@@ -1277,10 +1261,10 @@ function apply(op: EditOp): { r: number; line?: number; node?: number } {
       const existing = new Set<string>();
       const info = a.lines_info();
       for (let i = 0; i < info.length; i += 22) existing.add(a.line_name(info[i]));
-      const base = op.name?.trim() || `${a.line_name(op.line)} ${op.express ? "express" : "copy"}`;
+      const base = op.name?.trim() || `${a.line_name(op.line)} copy`;
       let name = base, n = 2;
       while (existing.has(name)) name = `${base} ${n++}`;
-      return { r: op.express ? a.express_copy(op.line, id, name) : a.copy_line(op.line, id, name), line: id };
+      return { r: a.copy_line(op.line, id, name), line: id };
     }
     case "setStops":
       return { r: a.set_stops(op.line, new Uint32Array(op.stops)) };

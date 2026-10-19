@@ -35,7 +35,7 @@ const ROUTE_MIN: f32 = 0.005;
 const MAX_ROUTES: usize = 8;
 
 /// Numbers in the answer's head, per station pair, and per leg (`DemandApi::trip`).
-pub const HEAD: usize = 35;
+pub const HEAD: usize = 37;
 pub const PAIR_LEN: usize = 14;
 pub const LEG_LEN: usize = 12;
 
@@ -459,8 +459,8 @@ impl DemandApi {
         h[3] = d as f64;
         h[6] = ((city.x[o] - city.x[d]).powi(2) + (city.y[o] - city.y[d]).powi(2)).sqrt() as f64;
         // walking the whole way, real minutes (T-628: the explorer's walk row)
-        let (zo, zd) = (self.z.cell_zone[o] as usize, self.z.cell_zone[d] as usize);
-        h[33] = h[6] / 1000.0 * (p.walk_detour * 1000.0 / p.walk_mps / 60.0 * self.gr.walk_factor(zo, zd)) as f64;
+        h[33] = h[6] / 1000.0 * (p.walk_detour * 1000.0 / p.walk_mps / 60.0 * self.gr.walk_factor_cells(&self.z, o, d)) as f64;
+        h[36] = p.walk_trip_w as f64;
         if let Model::Everyday(ev) = m {
             h[34] = ev.pair.map_or(0.0, |x| x.1 as f64);
         }
@@ -498,6 +498,7 @@ impl DemandApi {
             h[11] = (park - p.car_own_min()) as f64;
             h[12] = (car + park) as f64;
             h[32] = (p.car_own_min() + rk * p.car_own_km_min()) as f64;
+            h[35] = rk as f64;
             h[17] = pw as f64;
             h[19] = (1.0 - pw) as f64;
             h[26] = if u == NONE { NO_STATION_AT_START } else { NO_STATION_AT_END } as f64;
@@ -524,7 +525,9 @@ impl DemandApi {
         h[10] = (pc.drive_min * p.w_drive) as f64;
         h[11] = (pc.park - p.car_own_min()) as f64;
         h[12] = pc.road as f64;
-        h[32] = (p.car_own_min() + pc.d_m * 0.001 * p.drive_factor(sz.zone[u] as usize, sz.zone[v] as usize) * p.car_own_km_min()) as f64;
+        let rk = pc.d_m * 0.001 * p.drive_factor(sz.zone[u] as usize, sz.zone[v] as usize);
+        h[32] = (p.car_own_min() + rk * p.car_own_km_min()) as f64;
+        h[35] = rk as f64;
         h[13] = (pc.why == RAIL_OFFERED) as u32 as f64;
         h[14] = if pc.rail.is_finite() { pc.rail as f64 } else { -1.0 };
         // rail's share of the trips not walking
@@ -602,7 +605,7 @@ impl DemandApi {
     /// riders on routes not listed; the car's ownership cost per trip (perceived minutes, T-620),
     /// which the whole cost includes and the parking leaves out; walking the whole way, real
     /// minutes (T-628); an everyday purpose's subzone pair's trips a day (0: a commute, or no
-    /// sample joins the two subzones).
+    /// sample joins the two subzones); the drive's length by road, km, and the weight a minute of walking the whole way counts at (T-699).
     ///
     /// Then per station pair, biggest share first, `PAIR_LEN` numbers: access and egress demand
     /// stations, a route node at each (-1 none), the access walk's straight-line metres and

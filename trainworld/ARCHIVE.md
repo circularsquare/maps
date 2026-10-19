@@ -1,5 +1,19 @@
 ﻿# Archive
 
+- T-695 [P2] Station placement right on the first frame. Done 2026-10-19: the ghost shows a guess from the track's layout at once, the worker confirms (first frame wrong ~20% before, 1-2 of 80 overlaps after); blueprint track and its lines drawn and picked over built. notes/T-695.md, follow-up T-702.
+
+- T-699 [P2] Trip explorer wording. Done 2026-10-19: By train, By car and By walking read in parallel (Time in real minutes, Effective time with only an equation as its hover); the car shows the drive's average speed and ownership in dollars; no door to door or leg summary rows. Replaces T-633. `DemandApi.trip` head grew to 37 numbers (road km, walk weight).
+
+- T-697 [P2] Look fixes. Done 2026-10-19: real network at 40% opacity (was 80%), `DARK_WATER` #1e3032 (was #173a3a, less saturated), the purpose bar and its fetching removed from bubble hovers (the plane's 8 px hover stays).
+- T-698 [P3] A font switcher. Done 2026-10-19 as a trial, Anita picks: Settings > Font, panels only, Zen Maru Gothic, M PLUS Rounded 1c, Kosugi Maru or Nunito, loaded from Google Fonts when first chosen (`game/fonts.ts`); map glyph tiles stay Zen Maru Gothic.
+
+- T-692 [P2] Line panel layout. Done 2026-10-19: one-line schedule cells ("Trains"), rules only above Past 24 hours and Stops, the crowding dot coloured by average wait (yellow 3 min, orange 10, red 15, dark red 20), Express copy removed (button, `express_copy`), a light outline on the selected Elevation chip in dark.
+- T-694 [P2] Points as a measure. Done 2026-10-19 (`pointsPast24h` in game/points.ts): a city's points are what it earned in the past 24 whole game hours, from the hour ledgers, changing once a game hour; the running total is gone from the display and the save. checks/t684-points.mjs.
+- T-693 [P2] Cities list fixes. Done 2026-10-19: the star hover reads "Monday, day 71, at 14:08" (game day count, minutes whole); a narrow list keeps about six characters of a name, dropping the star, then the money (container queries).
+
+- T-696 [P2] Station sounds and faces, round two. Done 2026-10-19: one note per arrival, fixed per line (C major pentatonic, from the line number); a minor third lower and softer at a crowded platform; the crowded face is sad (raised brows, tear). notes/playtest-2026-10-19.md.
+- T-690 [P3] Job-heavy zones drawing commuters from far. Dropped 2026-10-19 by Anita: work trips stay one type, placed the same way across a city; nothing special for such zones. notes/T-681.md.
+- T-633 [P2] Explain perceived minutes in the game. Folded into T-699 (the trip explorer's "effective time" row with an equation hover), 2026-10-19.
 - T-681 [P2] Airport staff commute versus air trips. Done 2026-10-19: no demand fault (staff are work jobs one cell from the terminals); a purpose bar under the mode bar in the focused zone's bubble hover under All purposes, the plane's hover cut to 8 px and worded as the airport's (`map/commuterView.ts`, `modeBar.ts`, `airportMarks.ts`). notes/T-681.md.
 - T-686 [P2] Sound and faces at stations. Done 2026-10-19 (`map/stationLife.ts`, `stationSound.ts`, `faces.ts`; Settings, Stations up close): from zoom 14 a chime and pops per arrival and happy faces, red after a 10 minute wait; both on by default. Sampling 0.46 ms, 8 a second.
 - T-684 [P2] Points per city. Done 2026-10-19 (`game/points.ts`, clock worker): 20 a rail journey (from the solve, changes included, where it starts) plus 1 a passenger-km, landing as fares do, saved; Cities list and top bar hover. Also T-685's stars. checks/t684-points.mjs, notes/T-684.md.

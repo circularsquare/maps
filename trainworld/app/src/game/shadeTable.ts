@@ -9,7 +9,7 @@ import type { Shade } from "./ui";
 // the warm tone that buildings, boundaries and airfields are mixed towards from the land.
 const LIGHT_LAND = "#f4ecdd", LIGHT_WATER = "#b7d9d6", LIGHT_PARK = "#d3e0c4", LIGHT_ROAD = "#ffffff";
 const LIGHT_LABEL = "#aaa7a3", LIGHT_WARM = "#6e5b48";
-const DARK_LAND = "#292520", DARK_WATER = "#173a3a", DARK_PARK = "#2b3727", DARK_ROAD = "#443e36";
+const DARK_LAND = "#292520", DARK_WATER = "#1e3032", DARK_PARK = "#2b3727", DARK_ROAD = "#443e36";
 const DARK_LABEL = "#6a655e", DARK_WARM = "#efe4d3";
 
 export interface ShadeColours {

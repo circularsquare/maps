@@ -85,13 +85,12 @@ purpose filter the purpose drawn is ringed in the bar.
   machine: 6 times the last edit's round trip), and the final colour goes as one edit on release, a
   swatch click, an arrow key step or a typed hex.
 - **Actions** at the top, under the title and the planned or broken notice: Edit stops (hover and key L), Copy line (duplicates route and settings, then opens
-  naming and editing), Express copy [T-255] ("<line> express" with stops moved to their twins on
-  quad track's express pair, opening stop editing at once; [track-and-service.md](track-and-service.md)
-  6.1), and Delete line (asked first). While stops are being edited the Stops list (with a remove
+  naming and editing), and Delete line (asked first). While stops are being edited the Stops list (with a remove
   button on each stop) follows them there, above Schedule; otherwise it sits after the day's figures.
   Incomplete lines stay planned and run no trains.
 - **Sections**, in order: Schedule (trains for each demand level, with the resulting headway;
-  [track-and-service.md](track-and-service.md) 6.3; a Trains / Headway switch in the heading
+  [track-and-service.md](track-and-service.md) 6.3; columns Demand, Trains and Headway, every
+  cell one line, the Demand column cut with an ellipsis when short of room [T-692]; a Trains / Headway switch in the heading
   chooses what the player sets [T-625]: with Headway the headway column holds a stepper (30 s steps
   under 5 minutes, 1 minute under 15, 5 above; none, or 1 to 120 minutes; a click on the number types
   it in minutes) and the trains column the count it gives; each button's hover names the train
@@ -106,9 +105,10 @@ purpose filter the purpose drawn is ringed in the bar.
   level's times of day in the line's local time, from the period table in `game/periods.ts`:
   "High demand: 06:00 to 10:00, 16:00 to 20:00"; weekends use the same hours) [T-406]; on a
   running line one dot before each level's name grades the level on today's kind of day by the
-  crowding score above (the level's periods averaged by riders; High is its two peaks), its colour
-  running smoothly from green at 0 through yellow (0.15), orange (0.4) and red (0.7) to a deep red
-  from 1.2 (`crowdColour` in `game/today.ts`; `Boarding::line_periods`) [T-673] [T-477, T-491, T-515]; hover "Riders wait 4.0 min on
+  average wait for a train with room (the level's periods averaged by riders; High is its two
+  peaks), its colour running smoothly with that wait in minutes: green to 2, yellow at 3, orange
+  at 10, red at 15 and a deep red from 20 (`crowdColour` in `game/today.ts`, fed `avg.wait` in
+  `CrowdDots`; `Boarding::line_periods`) [T-692] [T-673] [T-477, T-491, T-515]; hover "Riders wait 4.0 min on
   average for a train with room", then "12/96 trains are full" (all the level's periods),
   and a last line naming the worst period and its wait when that period's grade is worse than the
   level's; the trains steppers take Shift-click for 5 and Ctrl-click for 20 (their hover says so)
@@ -122,7 +122,8 @@ purpose filter the purpose drawn is ringed in the bar.
   reached a stop in the 24 hours (the fourth number from the end of each `past_day` block) [T-481]
   and the riders left on the platform as "x/y", x those a full train left behind and y those who
   wanted a train (boarded plus left behind) [T-230, T-239, T-293, T-669]; the block's heading is
-  "Past 24 hours" (no Yesterday view since T-669); the stops (above Schedule while being edited [T-670]) with their time from
+  "Past 24 hours" (no Yesterday view since T-669), with a rule above it and none between its rows
+  (the only other rule is above Stops) [T-692]; the stops (above Schedule while being edited [T-670]) with their time from
   the start and boardings in the past 24 hours, each transfer stop (any station of its complex
   served by another line) showing the two other lines with most boardings there in the past
   24 hours as bullets and, when there are more, a "+" whose hover names the rest [T-549]; **flat junctions and
@@ -315,15 +316,22 @@ destinations at the end, and how the demand model's people would make one of the
   station, each line ridden with its chip and the station it goes to, each change and walk, the
   walk from the last station; each row's minutes its wait and ride; a ride access [T-374] reads
   "Drive to" with its drive minutes, its hover adding the ride's fixed cost and the station's
-  parking or drop-off), door to door, its drive, walk, wait
-  and ride minutes, the fare and the perceived minutes against driving ("Counts as"; its hover is
-  the first route's sum, one term a line with the trip's own numbers: walk, wait, ride and walks
-  between stations as minutes times their weight (a change has no penalty of its own), the fare in
-  dollars times 3, then the total, a line saying that the figure shown averages the stations and
-  routes people use when it differs from that total, and one line naming the weights; the terms are
-  the worker's perceived minutes per leg, `routeTerms` in `game/trip.ts`) [T-549], then the share of the trip's
-  train riders taking it, with up to four "Other routes" and their shares. Under "By car" the drive,
-  its parking and perceived minutes. "Train by period": a row a period with the representative
+  parking or drop-off; the hovers give real minutes only), the fare, **Time** (real minutes; its
+  hover the sum, "Walk 6.3 + wait 2.1 + ride 10.1 = 19 min") and **Effective time** [T-699, T-549]
+  (the minutes the model weighs against the other methods; its hover is only the equation, the
+  first route's terms in the rows' order, each real amount times its weight, "Walk 6.3 × 1.47 +
+  wait 2.1 + ride 10.1 × 1.1 + fare $1.92 × 3 − other routes and stations 11.8 = 16 min"; the
+  last term is what the model's pooled figure, over every station and route people use, is below
+  this route's sum, so the equation always adds to the row; the terms are the worker's perceived
+  minutes, `routeTerms` in `game/trip.ts`), then the share of the trip's train riders taking the
+  route, with up to four "Other routes" and their shares. "By car" and "By walking" read the same
+  way. Car: **Drive** (real minutes; its hover the straight line, the road length and the average
+  speed of this drive, `DemandApi.trip`'s road km over its minutes), **Parking** (minutes, with the
+  price of parking and any congestion charge counted as minutes), **Car ownership** (dollars) and
+  Effective time ("Drive 17.6 × 1.33 + parking 67.3 + ownership $1.99 × 3 = 97 min"). Walking: one
+  **Time** row (real minutes of walking the whole way, the quickest check of why a place does or
+  does not walk) and Effective time ("Walk 52.4 × 1.5 = 79 min"); over 10 km it says walks are
+  not offered. "Train by period": a row a period with the representative
   trip's chance of the train, a click showing that period. Without a train it says why (no station in reach, walks too long, no
   service in the period). Every row and bar segment has a hover with its figure and what it is made
   of.

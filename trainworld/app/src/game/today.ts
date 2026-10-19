@@ -48,15 +48,16 @@ export const CROWD_GRADES = [0.1, 0.3, 0.6];
 export function crowdGrade(score: number): 0 | 1 | 2 | 3 {
   return score >= CROWD_GRADES[2] ? 3 : score >= CROWD_GRADES[1] ? 2 : score >= CROWD_GRADES[0] ? 1 : 0;
 }
-/** T-673: the crowding dot's colour runs smoothly with the score: green, yellow at 0.15, orange at
- * 0.4, red at 0.7 and a deep red from 1.2 up, the same in both themes. */
-const CROWD_STOPS: [number, [number, number, number]][] = [[0, [0x4f, 0x9a, 0x4f]], [0.15, [0xd8, 0xb4, 0x25]], [0.4, [0xe0, 0x7a, 0x1f]], [0.7, [0xc4, 0x3c, 0x3c]], [1.2, [0xa0, 0x1c, 0x2c]]];
-export function crowdColour(score: number): string {
+/** T-673, T-692: the crowding dot's colour runs smoothly with the level's average wait for a train
+ * with room (min): green to 2, yellow at 3, orange at 10, red at 15 and a deep red from 20 up,
+ * the same in both themes. */
+const CROWD_STOPS: [number, [number, number, number]][] = [[0, [0x4f, 0x9a, 0x4f]], [2, [0x4f, 0x9a, 0x4f]], [3, [0xd8, 0xb4, 0x25]], [10, [0xe0, 0x7a, 0x1f]], [15, [0xc4, 0x3c, 0x3c]], [20, [0xa0, 0x1c, 0x2c]]];
+export function crowdColour(waitMin: number): string {
   const s = CROWD_STOPS;
   let c = s[s.length - 1][1];
   for (let i = 1; i < s.length; i++) {
-    if (score > s[i][0]) continue;
-    const t = Math.max(0, (score - s[i - 1][0]) / (s[i][0] - s[i - 1][0]));
+    if (waitMin > s[i][0]) continue;
+    const t = Math.max(0, (waitMin - s[i - 1][0]) / (s[i][0] - s[i - 1][0]));
     c = s[i - 1][1].map((v, k) => v + (s[i][1][k] - v) * t) as [number, number, number];
     break;
   }

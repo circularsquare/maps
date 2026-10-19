@@ -157,10 +157,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   placed on either pair (on track or on a node) gets a twin of the same name level with it on the
   other pair, in the same edit (on the other pair's loose end or joint when one is level with it,
   T-423): the local and express platforms, one complex and one label. If
-  the twin cannot be built there, the station goes in alone. **Express copy** in the line
-  inspector copies a line with every stop that has a twin (a station within 12 m) moved to it and
-  the path found again, so the copy runs on the express pair wherever the local one runs on quad
-  track, and opens stop editing on it; the player clicks off the stops it skips.
+  the twin cannot be built there, the station goes in alone.
 - **Crossovers** (T-338, design notes/T-334.md): the crossover tool joins a track to the track
   running beside it, with a click. It finds the nearest other track whose centre line is 6-15 m
   from the click and parallel there (quad's other pair, or a separate route drawn alongside), splits
@@ -478,7 +475,9 @@ multiplier per level (Anita, 2026-10-08; all construction prices halved 2026-10-
   lines, as `money.ts` has them, not scaled by the economy). A period's rides are the line's by that
   period's share of passenger-km, settled with the fares (an hour's rides count as its fares are
   paid) and divided between regions by the region of each ride's boarding stop.
-- **Points** (T-684, `app/src/game/points.ts`): a score per region, 20 a rail trip and 1 a
+- **Points** (T-684, T-694, `app/src/game/points.ts`): a measure per region of how good its
+  network is: the points it earned in the past 24 whole game hours (fewer while the hour ledger is
+  younger), recomputed once a game hour; never a running total. 20 a rail trip and 1 a
   passenger-km, not scaled by the economy, unlocking nothing yet. A trip is a rider's whole rail
   journey (changes of line and walks between stations within it included), counted in the region
   it starts in: each region's rail trips a day are the solve's (its own demand's, plus half of each
@@ -489,8 +488,8 @@ multiplier per level (Anita, 2026-10-08; all construction prices halved 2026-10-
   (each boarding the line's average km), so they count where riders get on. The main thread sends
   each line's points per game hour by region, kind of day and period; the worker settles them as
   fares land (each line at its local period), into a `points` figure in every day and hour entry
-  and a total per region since the game began, saved in the header (`points`; older saves start
-  at zero). The Cities list shows the total, the top bar's city name its hover.
+  (saved with the ledgers; older entries read as 0). A region's points are the sum of its last 24
+  closed hour entries; the Cities list shows them, the top bar's city name in its hover.
 - **Stars** (T-685): a region earns a star the first time a final solve's train share for it, on
   the average day (the top bar's goal number as it shows by default; never the weekday or weekend
   view, so switching the day shown earns nothing), reaches 10%. The header keeps the game second it was
