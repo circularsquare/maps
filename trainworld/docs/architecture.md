@@ -191,7 +191,9 @@ all results are recomputed. About 100 KB compressed per 10,000 route-km (T-040).
   no `hours` or `regions` starts those empty. Sizes: notes/T-567.md. Each ledger entry's
   `points` (whole points) and `stars` (each region's star, the game second it was earned) are
   absent in saves before T-684 and T-685, which start with none. A header `points` block (per region
-  totals, written by builds between T-684 and T-694) is ignored.
+  totals, written by builds between T-684 and T-694) is ignored. Ledger entries after the header's
+  clock are dropped on load and their net returned to the cash ([track-and-service.md](track-and-service.md)
+  6.4, T-715).
 - **Older frames** [T-308; [world.md](world.md)]: a file or slot in TWT5 (the Northeast conic) or
   TWT4 and older (equirectangular) is converted to Mercator as it loads (`convert_save_frame` in the
   clock worker) and the slot written again at once in TWT6; the old bytes stay under a hidden key

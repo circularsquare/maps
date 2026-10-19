@@ -201,3 +201,15 @@ Lampa, Colina, Pudahuel and Paine has become Colina, Lampa, Talagante, El Monte 
 **What it does not fix.** It is a population weight, not a religion one: a Catholic and an
 evangelical dot inside one comuna are spread the same way, so read clusters as "this comuna,
 drawn where its people live". The religion geography is still the comuna's.
+
+## Pentecostals from Pew 2014 (2026-10-16)
+
+Anita's call of 2026-10-16, built by session `c67d3c3c-latam` (`latam_split.py`, sources.md
+§latam-2026-10-16). Of the census's 2,466,600 `Evangélica o protestante`, 1,103,764 (44.7%) are
+drawn on `christianity.pentecostal`, the share of Protestants Pew Research Center's 2014 survey
+found in a Pentecostal church (`QPROT`, 265 Chilean Protestants; Pew names the Iglesia Metodista
+Pentecostal and the Iglesia Evangélica Pentecostal among them). 1,362,836 stay on
+`christianity.protestant`. Applied as one national fraction to every comuna's row, so the Biobío
+coast pattern is the census's own. The split rows are `derived` and roll back to `Evangélica o
+protestante`. The note_public sentence that said the cell is "drawn as one colour" was rewritten
+to say what is drawn now.

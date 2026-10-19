@@ -39,7 +39,7 @@ ROOT = os.path.dirname(HERE)
 WEBSITE = os.path.join(os.path.dirname(os.path.dirname(ROOT)), "website", "religiondots")
 
 REMOTE = "r2:anitamaps/religiondots/data"
-PUBLIC = "https://pub-ae551368cea941f39101e13c84d60bde.r2.dev/religiondots/data"
+PUBLIC = "https://data.anita.garden/religiondots/data"
 
 # What the viewer fetches out of data/.  `index.html`'s DATA_BASE builds every one of these
 # paths, so a rename here is a rename there.

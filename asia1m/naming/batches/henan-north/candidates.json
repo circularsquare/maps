@@ -1,0 +1,427 @@
+{
+ "batch": "henan-north",
+ "regions": [
+  {
+   "n": 1,
+   "key": "#e0eda6",
+   "settled": "Yindu",
+   "summary": "Rural and western Anyang: Anyang county, Yindu and Long'an districts, plus Linzhang across the Zhang River in Hebei.",
+   "candidates": [],
+   "notes": "The label 'yin du' sits on this region. Yindu is the Yin ruins district; 'anyang' is on the small city region 2."
+  },
+  {
+   "n": 2,
+   "key": "#d6eb77",
+   "settled": "Anyang",
+   "summary": "Anyang city centre: Wenfeng and Beiguan districts (old Zhangde prefecture city).",
+   "candidates": [],
+   "notes": "Small region with the 'anyang' label drawn over it."
+  },
+  {
+   "n": 3,
+   "key": "#dadfb5",
+   "settled": "Linzhou",
+   "summary": "Linzhou (old Linlu, Lin county) in the Taihang foothills, plus a slice of Hebi's hills.",
+   "candidates": [],
+   "notes": ""
+  },
+  {
+   "n": 4,
+   "key": "#e4f1b1",
+   "settled": "Qingfeng",
+   "summary": "Qingfeng county and the Neihuang part east of the Wei River.",
+   "candidates": [],
+   "notes": ""
+  },
+  {
+   "n": 5,
+   "key": "#dde8aa",
+   "settled": "Tangyin",
+   "summary": "Tangyin county with the Hebi hill districts Shancheng and Heshan.",
+   "candidates": [],
+   "notes": ""
+  },
+  {
+   "n": 6,
+   "key": "#d2ea79",
+   "settled": "Puyang",
+   "summary": "Puyang city centre (Hualong district, old Kaizhou).",
+   "candidates": [],
+   "notes": "No label sits exactly on this tiny region; 'pu yang' is drawn just to its left, on region 9's edge, so I read it as region 6's label spilling over. Region 9's own label is 'dao kou' just below. If 'pu yang' is meant for region 9, then 6 is unnamed and Kaizhou or Hualong would fit."
+  },
+  {
+   "n": 7,
+   "key": "#d9edae",
+   "settled": "Fanxian",
+   "summary": "Fan county and the eastern half of Puyang county, down to the Yellow River bank.",
+   "candidates": [],
+   "notes": ""
+  },
+  {
+   "n": 8,
+   "key": "#e6eaa3",
+   "settled": null,
+   "summary": "Hebi city core and the Qi River valley: Qi county, Qibin district and the western half of Jun county.",
+   "candidates": [
+    {
+     "name": "Zhaoge",
+     "local": "朝歌",
+     "origin": "historical",
+     "meaning": "\"Morning song\": the late Shang dynasty's secondary capital and the Zhou-era Wei capital, at today's Qi county.",
+     "fit": "Seat of Zhaoge county (221 BC-605) and Zhaoge commandery at Qi; the region holds all of Qi county (32% of people), most of Qibin and half of Jun.",
+     "recognisability": "Own zh-wiki article, 381 hits with Henan, top ones about Qi county and Hebi; also the setting of the Fengshen story.",
+     "source_url": "https://zh.wikipedia.org/wiki/朝歌",
+     "source_note": "朝歌，商朝晚期的国都。一般认为位于河南省淇县县城内",
+     "rating": 5,
+     "status": "suggested"
+    },
+    {
+     "name": "Hebi",
+     "local": "鹤壁",
+     "origin": "city",
+     "meaning": "\"Crane wall\": from a cliff where cranes were said to nest, named for the old market town Hebiji.",
+     "fit": "Hebi's urban seat Qibin lies here (68% of Qibin), though Heshan and Shancheng, the old Hebi town, are in region 5.",
+     "recognisability": "Current prefecture-level city, 1.57M people; always known.",
+     "source_url": "https://zh.wikipedia.org/wiki/鹤壁市",
+     "source_note": "prefecture seat Qibin district",
+     "rating": 4,
+     "status": "suggested"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 9,
+   "key": "#e7f1b1",
+   "settled": "Daokou",
+   "summary": "Hua county (Daokou), the south of Neihuang and Puyang county, Hualong's outskirts.",
+   "candidates": [],
+   "notes": "See region 6: two labels ('pu yang', 'dao kou') fall inside this region's outline."
+  },
+  {
+   "n": 10,
+   "key": "#e2e4a0",
+   "settled": "Huixian",
+   "summary": "Huixian city and the north edge of Weihui, below the Taihang.",
+   "candidates": [],
+   "notes": ""
+  },
+  {
+   "n": 11,
+   "key": "#e4de6c",
+   "settled": null,
+   "summary": "Xinxiang city: Weibin, Hongqi, Muye parts and Xinxiang county.",
+   "candidates": [
+    {
+     "name": "Xinxiang",
+     "local": "新乡",
+     "origin": "city",
+     "meaning": "\"New village\": from the Han township Xinzhong (\"new middle\") in Ji county, shortened to Xinxiang in the Sui.",
+     "fit": "Holds all of Weibin, the old centre, and most of Xinxiang county and Hongqi; the city's other regions need other names.",
+     "recognisability": "Current city and county; always known.",
+     "source_url": "https://zh.wikipedia.org/wiki/新乡县",
+     "source_note": "以汲县新中乡简称新乡得名",
+     "rating": 5,
+     "status": "suggested"
+    }
+   ],
+   "notes": "Xinxiang's urban area is split between this region and region 15, which also holds Hongqi, Muye and Fengquan parts."
+  },
+  {
+   "n": 12,
+   "key": "#d7d982",
+   "settled": null,
+   "summary": "Jiaozuo city: Shanyang, Jiefang, Macun and most of Xiuwu county.",
+   "candidates": [
+    {
+     "name": "Jiaozuo",
+     "local": "焦作",
+     "origin": "city",
+     "meaning": "Either a kiln-owning Jiao family, or \"jiao zao\" (scorched jujube) in memory of Shanxi settlers who ate jujubes here.",
+     "fit": "Holds the three urban districts Shanyang, Jiefang and Macun, the Jiaozuo coal city; city name goes to the central region.",
+     "recognisability": "Current city; always known.",
+     "source_url": "https://zh.wikipedia.org/wiki/焦作市",
+     "source_note": "名称渊源",
+     "rating": 5,
+     "status": "suggested"
+    },
+    {
+     "name": "Xiuwu",
+     "local": "修武",
+     "origin": "county",
+     "meaning": "\"Repair arms\": traditionally King Wu of Zhou readying his troops here before the Shang campaign (not checked); a county name since the Qin and Han.",
+     "fit": "County makes 20% of the region's people (83% of the county) and 44% of its area; Yuntai Mountain is in it.",
+     "recognisability": "Current county, many hits; known for Yuntai Mountain.",
+     "source_url": "https://zh.wikipedia.org/wiki/修武县",
+     "source_note": "修武是孔子問禮之地、漢獻帝謫居之地、“竹林七賢”隱居之地",
+     "rating": 3,
+     "status": "suggested"
+    }
+   ],
+   "notes": "Meaning for Xiuwu is the commonly given explanation; not checked against a source in the batch."
+  },
+  {
+   "n": 13,
+   "key": "#f0eda8",
+   "settled": null,
+   "summary": "Changyuan city (Zhangyuan in facts.json is a romanisation slip) beside the Yellow River.",
+   "candidates": [
+    {
+     "name": "Changyuan",
+     "local": "长垣",
+     "origin": "county",
+     "meaning": "\"Long wall\": a Qin county named for a long wall or rampart in the Wey/Wei state area.",
+     "fit": "88% of the region's people live in Changyuan, which is 98% inside the region; the rest is a sliver of Fengqiu.",
+     "recognisability": "Current county-level city (formerly Changyuan county), 2000+ years old.",
+     "source_url": "https://zh.wikipedia.org/wiki/长垣市",
+     "source_note": "秦朝始置长垣县，此为长垣得名之始",
+     "rating": 5,
+     "status": "suggested"
+    }
+   ],
+   "notes": "facts.json spells the county 'Zhangyuan'. 长垣 is read Changyuan in Mandarin."
+  },
+  {
+   "n": 14,
+   "key": "#ddd893",
+   "settled": null,
+   "summary": "Huaiqing seat: Qinyang city, Bo'ai county, Zhongzhan and part of Shanyang.",
+   "candidates": [
+    {
+     "name": "Huaiqing",
+     "local": "怀庆",
+     "origin": "prefecture",
+     "meaning": "\"Celebrating Huai\": Ming and Qing prefecture named after the Huai region, a rich herb-growing area (the 'Four Huai medicines').",
+     "fit": "Prefecture seated at Qinyang (Henei county) here; it covered Wuzhi, Wen, Xiuwu, Jiyuan and Mengzhou in regions 12, 18 and 19, but the seat and 70% of this region's people are in it.",
+     "recognisability": "Own zh-wiki article (Huaiqing fu) and Yuan-dynasty route article; 202 hits with Henan, top ones about this prefecture.",
+     "source_url": "https://zh.wikipedia.org/wiki/懷慶府",
+     "source_note": "治所在今河南省沁阳市，领六县",
+     "rating": 4,
+     "status": "suggested"
+    },
+    {
+     "name": "Qinyang",
+     "local": "沁阳",
+     "origin": "county",
+     "meaning": "\"North of the Qin River\": the name since the Republic; before that Henei.",
+     "fit": "City holds 38% of the region (98% of the city); the Qin River runs through the region.",
+     "recognisability": "Current county-level city; always known.",
+     "source_url": "https://zh.wikipedia.org/wiki/沁阳市",
+     "source_note": "因处沁河之北（阳）而得名",
+     "rating": 4,
+     "status": "suggested"
+    },
+    {
+     "name": "Bo'ai",
+     "local": "博爱",
+     "origin": "county",
+     "meaning": "\"Universal love\": a modern county name (origin not checked).",
+     "fit": "County is 32% of the region (99% of the county), but the name is a modern slogan and tells nothing about the place.",
+     "recognisability": "Current county.",
+     "source_url": "https://zh.wikipedia.org/wiki/博爱县",
+     "source_note": "county name",
+     "status": "rejected"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 16,
+   "key": "#f0eeb4",
+   "settled": null,
+   "summary": "Fengqiu, Yanjin and the east of Yuanyang, Yellow River plain.",
+   "candidates": [
+    {
+     "name": "Fengqiu",
+     "local": "封丘",
+     "origin": "county",
+     "meaning": "\"Enfeoffed mound\": Liu Bang gave a mound of land to a woman who had fed him when he was in flight, in return.",
+     "fit": "56% of the region's people, 82% of the county; the Fengqiu seat is inside and the Chen Bridge mutiny of 960 is here.",
+     "recognisability": "Current county; also a Han county for 2000 years.",
+     "source_url": "https://zh.wikipedia.org/wiki/封丘县",
+     "source_note": "因汉高祖刘邦为答谢翟母...钦封“丘地”而得名",
+     "rating": 5,
+     "status": "suggested"
+    },
+    {
+     "name": "Yanjin",
+     "local": "延津",
+     "origin": "county",
+     "meaning": "\"Extended ford\": a Yellow River crossing name (not checked).",
+     "fit": "23% of the region's people, 53% of the county; the county seat lies here.",
+     "recognisability": "Current county; name known from the Guandu campaign crossings.",
+     "source_url": "https://zh.wikipedia.org/wiki/延津县",
+     "source_note": "延津县 (CHGIS seat 1117-1911)",
+     "rating": 3,
+     "status": "suggested"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 17,
+   "key": "#e8e084",
+   "settled": null,
+   "summary": "Yuanyang and Huojia counties, west of Fengqiu.",
+   "candidates": [
+    {
+     "name": "Yuanyang",
+     "local": "原阳",
+     "origin": "county",
+     "meaning": "Name made in 1950 by merging Yuanwu and Yangwu counties.",
+     "fit": "48% of the region's people, 66% of the county; both old county seats were here.",
+     "recognisability": "Current county, 2000+ years of component counties.",
+     "source_url": "https://zh.wikipedia.org/wiki/原阳县",
+     "source_note": "原武、阳武二县合并，定名为原阳县",
+     "rating": 4,
+     "status": "suggested"
+    },
+    {
+     "name": "Huojia",
+     "local": "获嘉",
+     "origin": "county",
+     "meaning": "\"Capture and praise\": in 111 BC Han Wudi was brought the head of the Nanyue minister Lu Jia and renamed the township.",
+     "fit": "43% of the region's people, 97% of the county; the county seat and old Huojia of the Han are inside the region.",
+     "recognisability": "Current county.",
+     "source_url": "https://zh.wikipedia.org/wiki/获嘉县",
+     "source_note": "得吕嘉首，以为获嘉县",
+     "rating": 4,
+     "status": "suggested"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 18,
+   "key": "#f0e7b3",
+   "settled": null,
+   "summary": "Jiyuan city, Mengzhou and Jili: the Ji River source on the northern Yellow River bank.",
+   "candidates": [
+    {
+     "name": "Jiyuan",
+     "local": "济源",
+     "origin": "county",
+     "meaning": "\"Source of the Ji\": the town at the source of the Ji River, one of the four great ancient rivers.",
+     "fit": "67% of the region's people, 99.8% of the county-level city; holds the Ji Du temple.",
+     "recognisability": "Current county-level city under the province.",
+     "source_url": "https://zh.wikipedia.org/wiki/济源市",
+     "source_note": "济源因济水发源地而得名",
+     "rating": 5,
+     "status": "suggested"
+    },
+    {
+     "name": "Wangwu",
+     "local": "王屋",
+     "origin": "mountain",
+     "meaning": "Wangwu Mountain, the place of the Foolish Old Man who moved mountains, in the Taihang foothills of Jiyuan.",
+     "fit": "Mountain lies inside Jiyuan, the region's main unit; also seat of Wangwu county for 600 years.",
+     "recognisability": "Own zh-wiki article; 128 hits with Henan, top ones about this mountain.",
+     "source_url": "https://zh.wikipedia.org/wiki/王屋山",
+     "source_note": "愚公移山故事就发生在这里",
+     "rating": 4,
+     "status": "suggested"
+    },
+    {
+     "name": "Mengzhou",
+     "local": "孟州",
+     "origin": "county",
+     "meaning": "Tang-Song prefecture of Meng (843-1256) on the Yellow River's north bank; meaning of Meng not checked.",
+     "fit": "24% of the region's people, 74% of the city; seat of Mengzhou prefecture 843-1256 is inside.",
+     "recognisability": "Current county-level city.",
+     "source_url": "https://zh.wikipedia.org/wiki/孟州市",
+     "source_note": "孟州 (州, 843-1256)",
+     "rating": 3,
+     "status": "suggested"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 19,
+   "key": "#ebe6a5",
+   "settled": null,
+   "summary": "Wuzhi and Wen counties, between the Qin River and the Yellow River.",
+   "candidates": [
+    {
+     "name": "Wuzhi",
+     "local": "武陟",
+     "origin": "county",
+     "meaning": "\"King Wu ascended\": tradition says King Wu of Zhou climbed here on his way to attack Shang.",
+     "fit": "54% of the region's people, 84% of the county; old Huai county, seat of Henei commandery, is inside.",
+     "recognisability": "Current county.",
+     "source_url": "https://zh.wikipedia.org/wiki/武陟县",
+     "source_note": "相传周武王伐纣路过此地，登高望远，因而得名",
+     "rating": 4,
+     "status": "suggested"
+    },
+    {
+     "name": "Wen",
+     "local": "温",
+     "origin": "county",
+     "meaning": "Wen, from an ancient river or the hot-spring name, the fief of Su Fensheng after the Zhou conquest.",
+     "fit": "36% of the region's people, 98% of the county; seat of Wen county 221 BC-1911 is inside.",
+     "recognisability": "Current county.",
+     "source_url": "https://zh.wikipedia.org/wiki/温县",
+     "source_note": "武王克商，封司寇苏忿生于温",
+     "rating": 3,
+     "status": "suggested"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 20,
+   "key": "#f1eea6@114.5,35.4",
+   "settled": null,
+   "summary": "Hua county (75% of people) plus the eastern half of Yanjin, on the Henan plain south of Anyang.",
+   "candidates": [
+    {
+     "name": "Huaxian",
+     "local": "滑县",
+     "origin": "county",
+     "meaning": "County named for the ancient Hua state and the Hua city (Huatai) in the area; one-character county, so -xian.",
+     "fit": "Holds 61% of Hua county's people and Hua is 75% of the region.",
+     "recognisability": "Current county, own zh-wiki article.",
+     "source_url": "https://zh.wikipedia.org/wiki/滑县",
+     "source_note": "滑县为河南省安阳市下辖的一个县",
+     "rating": 4,
+     "status": "suggested"
+    }
+   ],
+   "notes": "Huixian (a county further north-west) is already labelled on the map; Huaxian looks similar in English but they are different places."
+  },
+  {
+   "n": 21,
+   "key": "#e4ea85@114.1,35.4",
+   "settled": null,
+   "summary": "Xinxiang urban core (Hongqi, Muye, Fengquan) plus most of Weihui city.",
+   "candidates": [
+    {
+     "name": "Xinxiang",
+     "local": "新乡",
+     "origin": "city",
+     "meaning": "\"New Xiang\": from Xinzhong township of Ji county, shortened to Xinxiang (Sui, 586).",
+     "fit": "Holds the old centre of Xinxiang city (Hongqi and Muye, over half the people); city rule gives the central region the city name.",
+     "recognisability": "Prefecture-level city, own zh-wiki article.",
+     "source_url": "https://zh.wikipedia.org/wiki/新乡市",
+     "source_note": "《太平寰宇记》：以汲县新中乡简称新乡得名",
+     "rating": 5,
+     "status": "suggested"
+    },
+    {
+     "name": "Weihui",
+     "local": "卫辉市",
+     "origin": "city",
+     "meaning": "\"Weizhou splendour\": Weihui prefecture/route (Ming-Qing seat at Ji county), city since 1988.",
+     "fit": "Weihui is 34% of the people and 56% of the area, holds 72% of the city; but the Xinxiang centre is larger.",
+     "recognisability": "County-level city, own zh-wiki article; Weihui prefecture seat for 543 years.",
+     "source_url": "https://zh.wikipedia.org/wiki/卫辉市",
+     "source_note": "元朝时属卫辉路。明代、清代属卫辉府",
+     "rating": 3,
+     "status": "suggested"
+    }
+   ],
+   "notes": "Muye (the 1046 BC battlefield) is a district name and also the earlier agents' second idea; it is a fair third option but only a third of the people."
+  }
+ ]
+}

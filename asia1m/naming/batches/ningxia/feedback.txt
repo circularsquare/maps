@@ -1,0 +1,8 @@
+batch ningxia
+1: pick Helanshan
+2: pick Xixia
+3: pick Yinchuan
+4: pick Wuzhong
+5: pick Zhongwei
+6: pick Haiyuan
+7: pick Guyuan

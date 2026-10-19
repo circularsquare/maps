@@ -1,0 +1,443 @@
+{
+ "batch": "anhui-west",
+ "regions": [
+  {
+   "n": 1,
+   "key": "#f0d6aa",
+   "settled": null,
+   "summary": "Taihe county (92% of the people), in the far north-west of Anhui beside Henan.",
+   "candidates": [
+    {
+     "name": "Taihe",
+     "local": "太和县",
+     "origin": "county",
+     "meaning": "\"Great harmony\": the 1304 name, changed from Taihe (泰和) to mean peace and concord.",
+     "fit": "Holds 92% of this region's people and two thirds of the county's own.",
+     "recognisability": "Current county.",
+     "source_url": "https://zh.wikipedia.org/wiki/太和县",
+     "source_note": "大德八年（1304年），复置县，改“泰”为“太”，寓意“太平祥和，政通人和”",
+     "rating": 5,
+     "status": "suggested"
+    }
+   ],
+   "notes": "Region 2 holds the other third of Taihe county; region 2 is named Jieshou so there is no clash."
+  },
+  {
+   "n": 2,
+   "key": "#ebcfa4",
+   "settled": null,
+   "summary": "Jieshou city on the Henan border plus the west of Taihe county.",
+   "candidates": [
+    {
+     "name": "Jieshou",
+     "local": "界首市",
+     "origin": "city",
+     "meaning": "\"Head of the boundary\": the town grew at the Anhui-Henan border on the Shaying River.",
+     "fit": "Holds 96% of Jieshou city, which is 52% of the region's people (city of about 650,000).",
+     "recognisability": "Current county-level city.",
+     "source_url": "https://zh.wikipedia.org/wiki/界首市",
+     "source_note": "界首市位于安徽省西北部边陲",
+     "rating": 5,
+     "status": "suggested"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 3,
+   "key": "#ebc99a",
+   "settled": null,
+   "summary": "Linquan county, the west edge of Anhui; 99% of the people.",
+   "candidates": [
+    {
+     "name": "Linquan",
+     "local": "临泉县",
+     "origin": "county",
+     "meaning": "\"Beside the Quan River\": the county town lies on the Quan River (1934 name).",
+     "fit": "99% of the region is Linquan, which holds 58% of the county's people (it is China's most populous county).",
+     "recognisability": "Current county.",
+     "source_url": "https://zh.wikipedia.org/wiki/临泉县",
+     "source_note": "因县城滨临泉河，故名临泉县",
+     "rating": 5,
+     "status": "suggested"
+    }
+   ],
+   "notes": "Linquan county is split across regions 3, 4 and 6 (58%, 4%, 15%)."
+  },
+  {
+   "n": 4,
+   "key": "#f6cfaf",
+   "settled": null,
+   "summary": "Suburban belt around Fuyang city: Yingdong and Yingquan districts, a slice of Yingzhou and Linquan.",
+   "candidates": [
+    {
+     "name": "Yingdong",
+     "local": "颍东区",
+     "origin": "county",
+     "meaning": "\"East of the Ying\": the district lies north of the Ying River east of Fuyang's old core.",
+     "fit": "35% of the region's people and 59% of the district; the largest single unit.",
+     "recognisability": "Current district. The 'east' is a direction word inside an established district name, not 'East X'.",
+     "source_url": "https://zh.wikipedia.org/wiki/颍东区",
+     "source_note": "颍东区地处黄淮海平原，南依颍河与颍州区和颍上县相望",
+     "rating": 3,
+     "status": "suggested"
+    },
+    {
+     "name": "Yingquan",
+     "local": "颍泉区",
+     "origin": "county",
+     "meaning": "\"Ying and Quan\": the district between the Ying River and the Quan River.",
+     "fit": "29% of the region's people, 45% of the district; the region's north and west.",
+     "recognisability": "Current district.",
+     "source_url": "https://zh.wikipedia.org/wiki/颍泉区",
+     "source_note": "颍泉区是中国安徽省阜阳市下辖的一个市辖区",
+     "rating": 3,
+     "status": "suggested"
+    }
+   ],
+   "notes": "A ring of three districts around Fuyang, none dominant. Both names are 1996 districts; I found no better historical name (Kouzi's Xuchang and Qingqiu counties of the 500s-600s are obscure and clash with Xuchang in Henan)."
+  },
+  {
+   "n": 5,
+   "key": "#f3b889",
+   "settled": null,
+   "summary": "Centre of Fuyang city: Yingzhou, parts of Yingdong and Yingquan.",
+   "candidates": [
+    {
+     "name": "Fuyang",
+     "local": "阜阳市",
+     "origin": "city",
+     "meaning": "Fu (mound, abundant) and yang (sunny side): the county name given in 1735 when Yingzhou became a prefecture.",
+     "fit": "Holds the old centre of the city (Yingzhou, seat of the prefecture for over 1,100 years); the city's prefecture is about 8 million.",
+     "recognisability": "Prefecture-level city.",
+     "source_url": "https://zh.wikipedia.org/wiki/阜阳市",
+     "source_note": "清朝雍正十三年（1735年），颍州升为颍州府，设置附郭县——阜阳县",
+     "rating": 5,
+     "status": "suggested"
+    }
+   ],
+   "notes": "Region 4 is the suburban ring around it. Yingzhou (the old prefecture, 583-1911) would be a good name here too if Anita prefers the old name."
+  },
+  {
+   "n": 6,
+   "key": "#ebcaaf",
+   "settled": null,
+   "summary": "Funan county (62%) with the south of Linquan and part of Yingzhou district.",
+   "candidates": [
+    {
+     "name": "Funan",
+     "local": "阜南县",
+     "origin": "county",
+     "meaning": "\"South of Fuyang\": founded in 1947 in the south countryside of Fuyang.",
+     "fit": "62% of the region and 51% of the county; the county seat Lucheng is the largest town (18%).",
+     "recognisability": "Current county; home of the Wangjiaba sluice on the Huai.",
+     "source_url": "https://zh.wikipedia.org/wiki/阜南县",
+     "source_note": "1947年11月中国人民解放军开辟阜阳南乡，建阜南县",
+     "rating": 4,
+     "status": "suggested"
+    }
+   ],
+   "notes": "Funan sounds like a part of Fuyang, which Anita's rule discourages, but it is a county name in its own right and nothing better covers the region."
+  },
+  {
+   "n": 7,
+   "key": "#eecbaf",
+   "settled": null,
+   "summary": "Yingshang county (64%) at the Ying-Huai confluence, with east Funan and a corner of Huoqiu.",
+   "candidates": [
+    {
+     "name": "Yingshang",
+     "local": "颍上县",
+     "origin": "county",
+     "meaning": "\"Upper Ying\" (on the Ying River): a county since 606.",
+     "fit": "64% of the region's people, 53% of the county; the county seat Shencheng is the largest town.",
+     "recognisability": "Current county, 1,260-year-old name, at the junction of the Huai and Ying rivers.",
+     "source_url": "https://zh.wikipedia.org/wiki/颍上县",
+     "source_note": "颍上县位于中国安徽省西北部，淮河、颍河交汇处",
+     "rating": 4,
+     "status": "suggested"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 8,
+   "key": "#f3ddd1",
+   "settled": "huoqiu",
+   "summary": "Already labelled Huoqiu on the map (Shou county and Huoqiu county).",
+   "candidates": [],
+   "notes": "Shou county (54%) is the larger part of the region, so the settled name is Huoqiu county's although the region is slightly more Shou. Left as Anita set it."
+  },
+  {
+   "n": 9,
+   "key": "#edd5c8",
+   "settled": null,
+   "summary": "North Lu'an: Yu'an and Jin'an districts plus south Huoqiu and a bit of Feixi, ring around Lu'an city.",
+   "candidates": [
+    {
+     "name": "Pihe",
+     "local": "淠河",
+     "origin": "river",
+     "meaning": "The Pi River, which flows north out of the Dabie Mountains through Lu'an to the Huai and feeds the Pi-Shi-Hang irrigation scheme.",
+     "fit": "Flows through the whole of the Lu'an plain: the region's Jin'an and Yu'an towns (Sanshipu, Dushan, Xin'an) lie along it.",
+     "recognisability": "Own zh-wiki article, 40 hits with Anhui, top ones about the Lu'an area.",
+     "source_url": "https://zh.wikipedia.org/wiki/淠河",
+     "source_note": "淠史杭灌区的水源为淠河、史河和杭埠河",
+     "rating": 3,
+     "status": "suggested"
+    },
+    {
+     "name": "Yu'an",
+     "local": "裕安区",
+     "origin": "county",
+     "meaning": "\"Prosperous and peaceful\": a 1999 district name chosen to echo Lu'an.",
+     "fit": "39% of the region's people, 49% of the district; shares the region with Jin'an and Huoqiu.",
+     "recognisability": "Current district, but sounds like Lu'an.",
+     "source_url": "https://zh.wikipedia.org/wiki/裕安区",
+     "source_note": "裕安区成立于1999年9月2日",
+     "rating": 2,
+     "status": "suggested"
+    }
+   ],
+   "notes": "Region 10 takes Lu'an, and Huoqiu is settled on region 8, so the district names or a river were the only unclaimed options. The Pi River also runs through region 10; Lu'an's own name of Gaocheng or the ancient state of Liu would clash with Lu'an."
+  },
+  {
+   "n": 10,
+   "key": "#e7bbaf",
+   "settled": null,
+   "summary": "Centre of Lu'an city: Yu'an and Jin'an urban core.",
+   "candidates": [
+    {
+     "name": "Lu'an",
+     "local": "六安市",
+     "origin": "city",
+     "meaning": "\"Six at peace\": the Han kingdom of Liu'an (121 BC) named for the county of Liu and Anfeng, or for 'peace in the six lands'; locals say Lu'an.",
+     "fit": "Holds the city centre; the seat of Liu county, Liu'an county and Liu'an prefecture all lay here.",
+     "recognisability": "Prefecture-level city (4.4 million in the prefecture).",
+     "source_url": "https://zh.wikipedia.org/wiki/六安市",
+     "source_note": "武帝元狩二年（前121年）改衡山国为六安国，取“六地平安”或六县、安丰等县首字为名",
+     "rating": 5,
+     "status": "suggested"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 11,
+   "key": "#eed7d1",
+   "settled": null,
+   "summary": "Dabie foothills: Shucheng (33%), west Jin'an, all of Huoshan, southern Feixi.",
+   "candidates": [
+    {
+     "name": "Shucheng",
+     "local": "舒城县",
+     "origin": "county",
+     "meaning": "\"City of Shu\": named from Longshu, the old county of the Shu state (the Qunshu), taken in 735.",
+     "fit": "33% of the region's people and 58% of the county, the largest unit; the Longshu seat also lay here.",
+     "recognisability": "Current county.",
+     "source_url": "https://zh.wikipedia.org/wiki/舒城县",
+     "source_note": "唐开元二十三年（735年）设舒城县...取古龙舒县为名",
+     "rating": 4,
+     "status": "suggested"
+    },
+    {
+     "name": "Huoshan",
+     "local": "霍山县",
+     "origin": "county",
+     "meaning": "\"Huo Mountain\": a county since 583, in the Dabie Mountains at the head of the Pi River; famous for yellow tea.",
+     "fit": "Holds the whole county (99.7%) but only 21% of the region's people.",
+     "recognisability": "Current county.",
+     "source_url": "https://zh.wikipedia.org/wiki/霍山县",
+     "source_note": "霍山县位于安徽西部、大别山腹地、淠河上游",
+     "rating": 3,
+     "status": "suggested"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 12,
+   "key": "#f3d1b9",
+   "settled": null,
+   "summary": "Zongyang county (57%), the Yangtze north bank and the Lujiang west side.",
+   "candidates": [
+    {
+     "name": "Zongyang",
+     "local": "枞阳县",
+     "origin": "county",
+     "meaning": "Zong (a conifer) and yang (sunny side): a Han county from 106 BC (etymology of the two characters is my reading, not sourced).",
+     "fit": "57% of the region's people, 96% of the county, plus its Han seat (121 BC-597).",
+     "recognisability": "Current county, 2,100-year-old name.",
+     "source_url": "https://zh.wikipedia.org/wiki/枞阳县",
+     "source_note": "汉武帝元封五年（前106年）置枞阳县，属庐江郡",
+     "rating": 5,
+     "status": "suggested"
+    }
+   ],
+   "notes": "Lujiang (30% of this region) is already used on a neighbouring region, so it is not offered here."
+  },
+  {
+   "n": 13,
+   "key": "#f7ceb8",
+   "settled": null,
+   "summary": "Tongcheng city (62%) with parts of Huaining and Qianshan.",
+   "candidates": [
+    {
+     "name": "Tongcheng",
+     "local": "桐城市",
+     "origin": "city",
+     "meaning": "Tong (paulownia) and city: since 757, after the older name Tong'an was dropped for sounding like agreeing with An Lushan; the Tong state was a Spring and Autumn neighbour of Wan.",
+     "fit": "62% of the region and 98% of Tongcheng; the seat of Tongcheng county for 1,150 years lies inside.",
+     "recognisability": "Current county-level city, home of the Tongcheng school of prose.",
+     "source_url": "https://zh.wikipedia.org/wiki/桐城县",
+     "source_note": "唐至德二载（757年）改称桐城县，属盛唐郡",
+     "rating": 5,
+     "status": "suggested"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 14,
+   "key": "#fadccc",
+   "settled": null,
+   "summary": "West Anqing hill country: Taihu (33%), Yuexi (29%), Qianshan (28%, with the seat at Meicheng).",
+   "candidates": [
+    {
+     "name": "Qianshan",
+     "local": "潜山市",
+     "origin": "county",
+     "meaning": "\"Hidden mountain\" (my reading of the characters; the Qian hills are the Tianzhu range); the ancient state of Wan, whose capital stood at today's town, gave Anhui its short name.",
+     "fit": "Holds Meicheng, the largest town (500,000 city), seat of Wan county, Huaining county, and the Tang prefecture of Shuzhou; 58% of the county, 28% of the region.",
+     "recognisability": "Current county-level city; the Wan state and Wan mountain are well known as the origin of Anhui's abbreviation.",
+     "source_url": "https://zh.wikipedia.org/wiki/潜山市",
+     "source_note": "周朝时，为皖国所辖、皖国都城就在今潜山县城",
+     "rating": 4,
+     "status": "suggested"
+    },
+    {
+     "name": "Tianzhushan",
+     "local": "天柱山",
+     "origin": "mountain",
+     "meaning": "\"Heaven-pillar mountain\": the main peak stands like a pillar leaning on the sky. Also called Wanshan or Wangongshan (the Wan mountain that gave Anhui its short name) and, anciently, Qianshan.",
+     "fit": "The range lies in Qianshan, about 9 km north-west of Meicheng (the region's largest town), so it is at the region's heart in one county but does not span Taihu or Yuexi: a fair landmark for the region, not a map of it.",
+     "recognisability": "Own zh-wiki article, 903 hits with Anhui; a national scenic area with its own airport and railway station named after it.",
+     "source_url": "https://zh.wikipedia.org/wiki/天柱山",
+     "source_note": "天柱山，又名皖山、皖公山、万岁山、万山、潜山，是位于安徽省安庆市潜山市的山脉，因主峰如柱倚天而得名。主要山体在潜山市市区西北约9公里，主峰天柱峰海拔1489.8m",
+     "rating": 3,
+     "status": "suggested"
+    },
+    {
+     "name": "Shuzhou",
+     "local": "舒州",
+     "origin": "prefecture",
+     "meaning": "\"Shu prefecture\": a Tang prefecture (621-1195) after the old Shu peoples of the area, whose seat was Meicheng.",
+     "fit": "Seat inside the region; covered the land south of Tianzhu Mountain, so Qianshan, Taihu and Yuexi's area, and also Tongcheng, Huaining, Susong and Wangjiang.",
+     "recognisability": "Own zh-wiki article for the Tang prefecture (zh-wiki disambiguation lists two others in Henan); 49 hits with Anhui.",
+     "source_url": "https://zh.wikipedia.org/wiki/舒州_(唐朝)",
+     "source_note": "治所在怀宁县（今安徽省潜山市）。辖境相当今安徽省天柱山、三官山以南，长江以北地区",
+     "rating": 3,
+     "status": "suggested"
+    },
+    {
+     "name": "Taihu",
+     "local": "太湖县",
+     "origin": "county",
+     "meaning": "\"Great lake\": named for the lakes in the county that have since silted up.",
+     "fit": "Largest unit (33%) but holds only 68% of the county.",
+     "recognisability": "Current county.",
+     "source_url": "https://zh.wikipedia.org/wiki/太湖县",
+     "source_note": "《南畿志》载：“因其地有大湖，故名。”",
+     "status": "rejected"
+    }
+   ],
+   "notes": "Taihu is a rejected entry because Lake Tai (Taihu) in Jiangsu is far better known, and the name would be read as that lake. Shuzhou's old territory spans regions 13 to 16 too, so it fits the prefecture better than the region."
+  },
+  {
+   "n": 15,
+   "key": "#f4d5aa",
+   "settled": null,
+   "summary": "Anqing city: Yixiu, Daguan, Yingjiang and part of Huaining.",
+   "candidates": [
+    {
+     "name": "Anqing",
+     "local": "安庆市",
+     "origin": "city",
+     "meaning": "\"An\" from the old Tong'an commandery and \"qing\" (celebration): a Song name (1147) that became the prefecture and later provincial capital.",
+     "fit": "Holds the city centre (Yingjiang, Daguan, Yixiu) and the seat of Anqing prefecture for 600 years (1217-1911).",
+     "recognisability": "Prefecture-level city of 4.2 million and former provincial capital.",
+     "source_url": "https://zh.wikipedia.org/wiki/安庆市",
+     "source_note": "南宋绍兴十七年（1147年），改为舒州安庆军",
+     "rating": 5,
+     "status": "suggested"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 16,
+   "key": "#f4e2c2",
+   "settled": null,
+   "summary": "South-west corner of Anhui on the Yangtze: Wangjiang (45%), Susong (39%), south Taihu.",
+   "candidates": [
+    {
+     "name": "Wangjiang",
+     "local": "望江县",
+     "origin": "county",
+     "meaning": "\"Watching the river\": a county since 598 on the north bank of the Yangtze.",
+     "fit": "45% of the region's people and 99% of the county; the seat of Wangjiang county for 1,300 years.",
+     "recognisability": "Current county.",
+     "source_url": "https://zh.wikipedia.org/wiki/望江县",
+     "source_note": "望江县 (县, 598-1911, 1313 yrs in all) 安徽望江县治",
+     "rating": 4,
+     "status": "suggested"
+    },
+    {
+     "name": "Susong",
+     "local": "宿松县",
+     "origin": "county",
+     "meaning": "\"Lodging pines\"; the area was the Han marquisate and county of Songzi (82 BC-212), from which the name derives.",
+     "fit": "39% of the region's people but only 73% of the county; Songzi seats lay in this region.",
+     "recognisability": "Current county, no zh-wiki article in the gathered sources.",
+     "source_url": "https://zh.wikipedia.org/wiki/安庆市",
+     "source_note": "松兹侯国 (82 BC-13) 今安徽宿松县北五十里趾凤",
+     "rating": 3,
+     "status": "suggested"
+    }
+   ],
+   "notes": "The meaning of Susong is my reading of the character pair and the Songzi connection, not a sourced etymology."
+  },
+  {
+   "n": 17,
+   "key": "#f0d5c4",
+   "settled": null,
+   "summary": "Rural Fengtai county (40%) north of the Huai, east Yingshang county (46%) and a bit of Lixin (13%), between Huainan, Yingshang and Huoqiu.",
+   "candidates": [
+    {
+     "name": "Fengtai",
+     "local": "凤台县",
+     "origin": "county",
+     "meaning": "\"Phoenix terrace\": named in 1732 for Phoenix Mountain (Fenghuangshan) in the county; the area was the ancient Zhoulai state and the Han-era Xiacai.",
+     "fit": "Holds 67% of Fengtai county and 40% of the region's people (Yingshang is 46% but is already the name of the neighbour); the county seat and urban corner lie in the next region over, so the name sits on the rural part.",
+     "recognisability": "Current county, a coal-mining county on the Huai.",
+     "source_url": "https://zh.wikipedia.org/wiki/凤台县",
+     "source_note": "清雍正十一年(1732年)置县，因县境内有凤凰山而得凤台县名",
+     "rating": 4,
+     "status": "suggested"
+    },
+    {
+     "name": "Yingshang",
+     "local": "颍上县",
+     "origin": "county",
+     "meaning": "\"Upper Ying\" (on the Ying River): a county since 606.",
+     "fit": "Largest unit (46% of the people) but only 46% of the county; the neighbouring region already carries this name, so it is not offered.",
+     "recognisability": "Current county.",
+     "source_url": "https://zh.wikipedia.org/wiki/颍上县",
+     "source_note": "颍上县位于中国安徽省西北部，淮河、颍河交汇处",
+     "status": "rejected"
+    }
+   ],
+   "notes": "Labels show no name in this region (28 text pixels come from a neighbour's label). Xiacai (Fengtai's old name) and Shen county (seat at Jiangkou, Yingshang) were checked: Xiacai's seat is Fengtai town outside the region, and Shen county has a thin zh-wiki presence (14 hits with Anhui), so neither is offered. The Xifei River is too obscure (17 hits)."
+  }
+ ]
+}

@@ -340,9 +340,9 @@ average of the GFS and Afrobarometer shares weighted by non-Catholic Christian r
 Anambra 22.1%, Enugu 15.6%, Imo 12.8%, Ekiti 12.2%, Delta 12.1%, Bayelsa 11.4%, Rivers 10.0%; under
 1% across the far north.
 
-### Re-tested and still folded
+### Re-tested and still folded (superseded 2026-10-16 for Pentecostal; see the next section)
 
-- **Pentecostal** (above): the level is plausible and the place is not checkable. As a share of
+- **Pentecostal** (above): the level is plausible and the place is not checkable BY STATE. As a share of
   ALL Christians the two surveys do agree (+0.40, p 0.019), but that is mostly the Catholic pattern
   inverted. Within the Afrobarometer alone it runs 0.3-21.4% of Christians by round and fails its
   rounds 4-5 split-half (+0.137). Rounds 8-9 also carry a second box, "Pentecostal (e.g., Born
@@ -360,3 +360,41 @@ Anambra 22.1%, Enugu 15.6%, Imo 12.8%, Ekiti 12.2%, Delta 12.1%, Bayelsa 11.4%, 
 - **Pew 2010 sub-Saharan Africa survey** (*Tolerance and Tension*): NOT CHECKED this session,
   neither the report's appendix tables nor the terms of its data set.
 - **Catholic diocesan statistics**: read, used as a rank witness (above).
+
+## The rest of Christianity by zone, 2026-10-16 (session `c67d3c3c-westafrica`)
+
+Anita's call, as part of the West African unspecified-Christian sweep
+(`unspecified_splits/westafrica.md` §1): the `Christian` cell left after Catholics and Anglicans
+(80,254,467, 37.02%) is split by **geopolitical zone** from the GFS 2023, three ways plus a
+remainder. `sources/wa_christian.py ng` writes `data/normalized/ng_split.csv`; countries/ng.py
+swaps it in; every row stays `modelled`. Baptists stay in the Protestant group (Anita).
+
+**Why zones when states failed.** By state the two surveys rank Pentecostals at +0.20 (above).
+Pooled to the six zones they agree, on every build, by exact permutation over all 720 orderings:
+Pentecostal **+0.829 (p 0.029)**, Protestant group **+0.943 (p 0.008)**; the build fails if either
+p passes 0.05. Every state takes its zone's split, so the shares step at zone borders.
+
+GFS 2023 shares of non-Catholic, non-Anglican Christians (REL3 codes; `ng_gfs_zone_shares.csv`):
+
+| zone | n | Pentecostal (8) | Protestant (2, 4-7, 9) | Other (10-13, 96) | none in particular (97) |
+|---|---:|---:|---:|---:|---:|
+| North Central | 342 | 50.3 | 44.1 | 2.6 | 3.0 |
+| North East | 138 | 12.1 | 86.0 | 0.7 | 1.2 |
+| North West | 144 | 31.8 | 54.3 | 1.9 | 11.9 |
+| South East | 322 | 70.8 | 23.7 | 5.3 | 0.2 |
+| South South | 771 | 66.2 | 23.8 | 9.9 | 0.1 |
+| South West | 822 | 68.9 | 24.2 | 4.7 | 2.2 |
+
+As drawn: `christianity.pentecostal` 47,606,160 (22.0% of Nigeria), `christianity.protestant`
+26,859,039 (12.4%), `christianity.other` 4,416,988 (2.0%), and 1,372,280 left on `christianity`
+(GFS's `none in particular`, §2.7a). Every state closes on its old `Christian` row.
+
+- GFS `Orthodox` (code 2) goes to Protestant: in Nigerian usage "orthodox churches" are the old
+  mission churches, and it is 87% of Plateau's Christians, i.e. COCIN. `Independent/Evangelical`
+  (9) is ECWA in the Middle Belt.
+- GFS has no respondents in Adamawa, Borno, Taraba or Yobe, so the North East is Bauchi and Gombe;
+  the Afrobarometer's North East (with Adamawa) agrees on a Protestant majority.
+- The Aladura churches mostly answered Pentecostal (GFS African Initiated is 0.7% of Christians),
+  so Benin's Celestial Church has no counterpart across the border.
+- Level: Pentecostals are 62.3% of the named bucket in GFS and 58.7% in the Afrobarometer's named
+  answers; GFS sets it.

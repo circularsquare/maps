@@ -7,6 +7,21 @@ traps that cost a rebuild and the session logs. `spec.md` is the design (§13 th
 
 ## Start here
 
+**Accounts, sharing and leaderboards (live 2026-10-19).** Optional sign-in (Google, or
+username + password with an optional recovery email); signed-in rides sync to the server.
+Backend: `shonei-server` (`noritetsu.go`, `noritetsu_google.go`, `noritetsu_password.go`; API
+in its `docs/noritetsu-api.md`, box setup in its `deploy/README.md` "noritetsu sign-in"),
+served at `https://market.anita.garden/noritetsu/`. Page side: `dist/account.js` (person icon
+in the title box, sync, short `?p=` share links, Compare and Leaderboards tabs);
+`dist/privacy.html`, `dist/terms.html`. On localhost the page talks to `127.0.0.1:8083`: run
+shonei-server locally with `NORITETSU_GOOGLE_CLIENT_ID` and `SHONEI_SECRET` unset for a dev
+sign-in. Anita's calls: profiles private until a share link is made; public views never show
+dates, notes or when rides were logged (dates are kept on the server for the owner);
+leaderboards only total km and % per country, opt-in, no join button with 0 rides; no friends,
+no feed; About panel opens on arrival (her wording). Agents cannot ssh to the box (the
+permission classifier blocks it): hand her the commands. **Open**: saves on the box are not
+backed up; `RESEND_API_KEY` appears twice in `/opt/shonei/shonei.env`.
+
 **72 regions are built** (Vietnam, Argentina, Chile, New Zealand, South Africa, Brazil,
 Iran, Morocco, Algeria, Tunisia, Egypt, Belarus, Moldova, the five Central Asian ones and the
 three Caucasian ones added overnight 2026-10-03/04; Ireland, Türkiye, Ukraine, the six

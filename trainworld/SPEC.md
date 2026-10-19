@@ -158,7 +158,10 @@ institutions** (prisons, nursing homes and the like, T-234).
   common-line strategies (a wait is half the combined headway, in plain minutes [T-585]),
   fare-sensitive choice between rail and driving, and up to three crowding
   rounds that price crowded trains and riders left behind by full ones [T-188]; a period stops
-  once a round moves its loads under 1% [T-434]. Each round uses
+  once a round moves its loads under 1% [T-434]. Riders choose among station pairs by how much
+  slower an option is relative to the trip's length: the scale is 20 over the trip's rough length
+  in perceived minutes (25 + 3 a straight km), held from 60 minutes on, in four distance bands; a
+  train counts as crowded only from 70% of its crush load [T-710]. Each round uses
   the combined loads of every zone, the everyday layer and the regional market. Walking the whole
   way is a third mode in the same logit [T-558]: 1.5 perceived minutes a minute at every length,
   a bonus of 10 minutes against the car, commutes walking

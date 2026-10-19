@@ -1,0 +1,1614 @@
+{
+ "name": "hunan-west",
+ "province": "Hunan",
+ "prefectures": [
+  "Xiangxi Tujia and Miao Autonomous Prefecture",
+  "Zhangjiajie",
+  "Huaihua"
+ ],
+ "tiles": [
+  {
+   "tag": "1",
+   "x": 6509,
+   "y": 3645,
+   "w": 613,
+   "h": 794,
+   "scale": 2,
+   "regions": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ]
+  }
+ ],
+ "regions": [
+  {
+   "key": "#def0d5",
+   "color": "#def0d5",
+   "lon": 110.7047,
+   "lat": 29.7485,
+   "bbox": [
+    6771,
+    3845,
+    6922,
+    3960
+   ],
+   "area_px": 8979,
+   "people": 1075037,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Cili",
+     "local": "慈利县",
+     "prefecture": "Zhangjiajie",
+     "prefecture_local": "张家界市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.458,
+     "area_share": 0.287,
+     "cover": 0.849
+    },
+    {
+     "name": "Shimen",
+     "local": "石门县",
+     "prefecture": "Changde",
+     "prefecture_local": "常德市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.317,
+     "area_share": 0.335,
+     "cover": 0.581
+    },
+    {
+     "name": "Hefeng",
+     "local": "鹤峰县",
+     "prefecture": "Enshi Tujia and Miao",
+     "prefecture_local": "恩施土家族苗族自治州",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.16,
+     "area_share": 0.29,
+     "cover": 0.994
+    },
+    {
+     "name": "Taoyuan",
+     "local": "桃源县",
+     "prefecture": "Changde",
+     "prefecture_local": "常德市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.033,
+     "area_share": 0.019,
+     "cover": 0.044
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.817,
+     "cover": 0.013
+    },
+    {
+     "level": "prefecture",
+     "name": "Zhangjiajie",
+     "local": "张家界市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.466,
+     "cover": 0.352
+    },
+    {
+     "level": "prefecture",
+     "name": "Changde",
+     "local": "常德市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.351,
+     "cover": 0.069
+    },
+    {
+     "level": "province",
+     "name": "Hubei",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.183,
+     "cover": 0.004
+    },
+    {
+     "level": "prefecture",
+     "name": "Enshi Tujia and Miao Autonomous Prefecture",
+     "local": "恩施土家族苗族自治州",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.168,
+     "cover": 0.056
+    }
+   ],
+   "towns": [
+    {
+     "town": "零阳镇",
+     "county": "慈利县",
+     "city": "张家界市",
+     "people_share": 0.122,
+     "cover": 1.0
+    },
+    {
+     "town": "江垭镇",
+     "county": "慈利县",
+     "city": "张家界市",
+     "people_share": 0.046,
+     "cover": 0.991
+    },
+    {
+     "town": "走马镇",
+     "county": "鹤峰县",
+     "city": "恩施土家族苗族自治州",
+     "people_share": 0.042,
+     "cover": 0.993
+    },
+    {
+     "town": "新关镇",
+     "county": "石门县",
+     "city": "常德市",
+     "people_share": 0.037,
+     "cover": 0.905
+    },
+    {
+     "town": "白云乡",
+     "county": "石门县",
+     "city": "常德市",
+     "people_share": 0.03,
+     "cover": 1.0
+    },
+    {
+     "town": "三圣乡",
+     "county": "石门县",
+     "city": "常德市",
+     "people_share": 0.03,
+     "cover": 0.979
+    }
+   ],
+   "cities": [
+    {
+     "name": "Cili",
+     "admin": "Hunan",
+     "pop": 130000
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#d6f0d5",
+     "border_px": 2236
+    },
+    {
+     "key": "#deedd0",
+     "border_px": 1581
+    },
+    {
+     "key": "#e2dbe2",
+     "border_px": 702
+    },
+    {
+     "key": "#dcead3",
+     "border_px": 656
+    },
+    {
+     "key": "#f0cbd9",
+     "border_px": 654
+    },
+    {
+     "key": "#e8c7d3",
+     "border_px": 649
+    },
+    {
+     "key": "#d5eedc",
+     "border_px": 298
+    },
+    {
+     "key": "#bee5ba",
+     "border_px": 211
+    },
+    {
+     "key": "#f0d8db",
+     "border_px": 155
+    }
+   ],
+   "text_px": 0,
+   "n": 1,
+   "thumb": {
+    "x0": 6719,
+    "y0": 3793,
+    "k": 1.0,
+    "w": 255,
+    "h": 219
+   }
+  },
+  {
+   "key": "#d6f0d5",
+   "color": "#d6f0d5",
+   "lon": 110.3313,
+   "lat": 29.3718,
+   "bbox": [
+    6772,
+    3895,
+    6883,
+    3990
+   ],
+   "area_px": 5976,
+   "people": 924743,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yongding",
+     "local": "永定区",
+     "prefecture": "Zhangjiajie",
+     "prefecture_local": "张家界市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.454,
+     "area_share": 0.328,
+     "cover": 0.997
+    },
+    {
+     "name": "Sangzhi",
+     "local": "桑植县",
+     "prefecture": "Zhangjiajie",
+     "prefecture_local": "张家界市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.399,
+     "area_share": 0.5,
+     "cover": 0.984
+    },
+    {
+     "name": "Cili",
+     "local": "慈利县",
+     "prefecture": "Zhangjiajie",
+     "prefecture_local": "张家界市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.093,
+     "area_share": 0.099,
+     "cover": 0.148
+    },
+    {
+     "name": "Wulingyuan",
+     "local": "武陵源区",
+     "prefecture": "Zhangjiajie",
+     "prefecture_local": "张家界市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.049,
+     "area_share": 0.061,
+     "cover": 1.0
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.999,
+     "cover": 0.014
+    },
+    {
+     "level": "prefecture",
+     "name": "Zhangjiajie",
+     "local": "张家界市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.994,
+     "cover": 0.646
+    }
+   ],
+   "towns": [
+    {
+     "town": "崇文街道",
+     "county": "永定区",
+     "city": "张家界市",
+     "people_share": 0.066,
+     "cover": 1.0
+    },
+    {
+     "town": "澧源镇",
+     "county": "桑植县",
+     "city": "张家界市",
+     "people_share": 0.06,
+     "cover": 1.0
+    },
+    {
+     "town": "瑞塔铺镇",
+     "county": "桑植县",
+     "city": "张家界市",
+     "people_share": 0.032,
+     "cover": 1.0
+    },
+    {
+     "town": "西溪坪街道",
+     "county": "永定区",
+     "city": "张家界市",
+     "people_share": 0.032,
+     "cover": 1.0
+    },
+    {
+     "town": "利福塔镇",
+     "county": "桑植县",
+     "city": "张家界市",
+     "people_share": 0.032,
+     "cover": 1.0
+    },
+    {
+     "town": "阳湖坪镇",
+     "county": "永定区",
+     "city": "张家界市",
+     "people_share": 0.032,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Zhangjiajie",
+     "admin": "Hunan",
+     "pop": 1517027
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#def0d5",
+     "border_px": 2236
+    },
+    {
+     "key": "#dbf0e5",
+     "border_px": 1439
+    },
+    {
+     "key": "#e2dbe2",
+     "border_px": 929
+    },
+    {
+     "key": "#d5eedc",
+     "border_px": 702
+    },
+    {
+     "key": "#ceede3",
+     "border_px": 196
+    }
+   ],
+   "text_px": 0,
+   "n": 2,
+   "thumb": {
+    "x0": 6732,
+    "y0": 3855,
+    "k": 2.0,
+    "w": 382,
+    "h": 350
+   }
+  },
+  {
+   "key": "#d5eedc",
+   "color": "#d5eedc",
+   "lon": 109.3798,
+   "lat": 29.3067,
+   "bbox": [
+    6709,
+    3881,
+    6783,
+    4012
+   ],
+   "area_px": 6354,
+   "people": 946961,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Longshan",
+     "local": "龙山县",
+     "prefecture": "Xiangxitujiazumiaozu",
+     "prefecture_local": "湘西土家族苗族自治州",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.509,
+     "area_share": 0.445,
+     "cover": 0.998
+    },
+    {
+     "name": "Laifeng",
+     "local": "来凤县",
+     "prefecture": "Enshi Tujia and Miao",
+     "prefecture_local": "恩施土家族苗族自治州",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.238,
+     "area_share": 0.188,
+     "cover": 0.998
+    },
+    {
+     "name": "Youyangtujiazumiaozu",
+     "local": "酉阳土家族苗族自治县",
+     "prefecture": "Chongqing",
+     "prefecture_local": "重庆市",
+     "province": "重庆市",
+     "country": "China",
+     "people_share": 0.127,
+     "area_share": 0.192,
+     "cover": 0.231
+    },
+    {
+     "name": "Xuan'en",
+     "local": "宣恩县",
+     "prefecture": "Enshi Tujia and Miao",
+     "prefecture_local": "恩施土家族苗族自治州",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.12,
+     "area_share": 0.16,
+     "cover": 0.424
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.51,
+     "cover": 0.007
+    },
+    {
+     "level": "prefecture",
+     "name": "Xiangxi Tujia and Miao Autonomous Prefecture",
+     "local": "湘西土家族苗族自治州",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.51,
+     "cover": 0.194
+    },
+    {
+     "level": "province",
+     "name": "Hubei",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.363,
+     "cover": 0.006
+    },
+    {
+     "level": "prefecture",
+     "name": "Enshi Tujia and Miao Autonomous Prefecture",
+     "local": "恩施土家族苗族自治州",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.363,
+     "cover": 0.107
+    },
+    {
+     "level": "province",
+     "name": "Chongqing",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.126,
+     "cover": 0.004
+    },
+    {
+     "level": "prefecture",
+     "name": "Chongqing Municipality",
+     "local": "重庆市",
+     "province": "Chongqing",
+     "country": "China",
+     "people_share": 0.126,
+     "cover": 0.004
+    }
+   ],
+   "towns": [
+    {
+     "town": "翔凤镇",
+     "county": "来凤县",
+     "city": "恩施土家族苗族自治州",
+     "people_share": 0.118,
+     "cover": 1.0
+    },
+    {
+     "town": "华塘街道",
+     "county": "龙山县",
+     "city": "湘西土家族苗族自治州",
+     "people_share": 0.062,
+     "cover": 1.0
+    },
+    {
+     "town": "沙道沟镇",
+     "county": "宣恩县",
+     "city": "恩施土家族苗族自治州",
+     "people_share": 0.047,
+     "cover": 0.987
+    },
+    {
+     "town": "民安街道",
+     "county": "龙山县",
+     "city": "湘西土家族苗族自治州",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "高罗乡",
+     "county": "宣恩县",
+     "city": "恩施土家族苗族自治州",
+     "people_share": 0.037,
+     "cover": 0.997
+    },
+    {
+     "town": "李家河乡",
+     "county": "宣恩县",
+     "city": "恩施土家族苗族自治州",
+     "people_share": 0.036,
+     "cover": 0.996
+    },
+    {
+     "town": "里耶镇",
+     "county": "龙山县",
+     "city": "湘西土家族苗族自治州",
+     "people_share": 0.034,
+     "cover": 0.99
+    },
+    {
+     "town": "麻旺镇",
+     "county": "酉阳土家族苗族自治县",
+     "city": "重庆市",
+     "people_share": 0.032,
+     "cover": 0.972
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#dbf0e5",
+     "border_px": 1289
+    },
+    {
+     "key": "#c8e8cb",
+     "border_px": 1105
+    },
+    {
+     "key": "#bee5ba",
+     "border_px": 942
+    },
+    {
+     "key": "#c4e4c7",
+     "border_px": 744
+    },
+    {
+     "key": "#d6f0d5",
+     "border_px": 702
+    },
+    {
+     "key": "#def0d5",
+     "border_px": 298
+    }
+   ],
+   "text_px": 0,
+   "n": 3,
+   "thumb": {
+    "x0": 6664,
+    "y0": 3836,
+    "k": 1.0,
+    "w": 164,
+    "h": 221
+   }
+  },
+  {
+   "key": "#dbf0e5",
+   "color": "#dbf0e5",
+   "lon": 109.8059,
+   "lat": 28.7891,
+   "bbox": [
+    6737,
+    3936,
+    6838,
+    4077
+   ],
+   "area_px": 7215,
+   "people": 1094514,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yongshun",
+     "local": "永顺县",
+     "prefecture": "Xiangxitujiazumiaozu",
+     "prefecture_local": "湘西土家族苗族自治州",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.375,
+     "area_share": 0.471,
+     "cover": 0.988
+    },
+    {
+     "name": "Huayuan",
+     "local": "花垣县",
+     "prefecture": "Xiangxitujiazumiaozu",
+     "prefecture_local": "湘西土家族苗族自治州",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.259,
+     "area_share": 0.135,
+     "cover": 0.979
+    },
+    {
+     "name": "Baojing",
+     "local": "保靖县",
+     "prefecture": "Xiangxitujiazumiaozu",
+     "prefecture_local": "湘西土家族苗族自治州",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.246,
+     "area_share": 0.217,
+     "cover": 0.985
+    },
+    {
+     "name": "Guzhang",
+     "local": "古丈县",
+     "prefecture": "Xiangxitujiazumiaozu",
+     "prefecture_local": "湘西土家族苗族自治州",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.111,
+     "area_share": 0.163,
+     "cover": 1.0
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.997,
+     "cover": 0.016
+    },
+    {
+     "level": "prefecture",
+     "name": "Xiangxi Tujia and Miao Autonomous Prefecture",
+     "local": "湘西土家族苗族自治州",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.996,
+     "cover": 0.437
+    }
+   ],
+   "towns": [
+    {
+     "town": "灵溪镇",
+     "county": "永顺县",
+     "city": "湘西土家族苗族自治州",
+     "people_share": 0.082,
+     "cover": 1.0
+    },
+    {
+     "town": "花垣镇",
+     "county": "花垣县",
+     "city": "湘西土家族苗族自治州",
+     "people_share": 0.061,
+     "cover": 1.0
+    },
+    {
+     "town": "迁陵镇",
+     "county": "保靖县",
+     "city": "湘西土家族苗族自治州",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "石堤镇",
+     "county": "永顺县",
+     "city": "湘西土家族苗族自治州",
+     "people_share": 0.034,
+     "cover": 1.0
+    },
+    {
+     "town": "碗米坡镇",
+     "county": "保靖县",
+     "city": "湘西土家族苗族自治州",
+     "people_share": 0.032,
+     "cover": 0.999
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#ceede3",
+     "border_px": 1815
+    },
+    {
+     "key": "#d6f0d5",
+     "border_px": 1439
+    },
+    {
+     "key": "#d5eedc",
+     "border_px": 1289
+    },
+    {
+     "key": "#c9e8d8",
+     "border_px": 753
+    },
+    {
+     "key": "#c4e4c7",
+     "border_px": 642
+    }
+   ],
+   "text_px": 0,
+   "n": 4,
+   "thumb": {
+    "x0": 6688,
+    "y0": 3887,
+    "k": 1.0,
+    "w": 199,
+    "h": 239
+   }
+  },
+  {
+   "key": "#ceede3",
+   "color": "#ceede3",
+   "lon": 110.1463,
+   "lat": 28.3284,
+   "bbox": [
+    6769,
+    3989,
+    6871,
+    4100
+   ],
+   "area_px": 5212,
+   "people": 985284,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yuanling",
+     "local": "沅陵县",
+     "prefecture": "Huaihua",
+     "prefecture_local": "怀化市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.362,
+     "area_share": 0.48,
+     "cover": 0.625
+    },
+    {
+     "name": "Jishou",
+     "local": "吉首市",
+     "prefecture": "Xiangxitujiazumiaozu",
+     "prefecture_local": "湘西土家族苗族自治州",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.315,
+     "area_share": 0.183,
+     "cover": 0.99
+    },
+    {
+     "name": "Luxi",
+     "local": "泸溪县",
+     "prefecture": "Xiangxitujiazumiaozu",
+     "prefecture_local": "湘西土家族苗族自治州",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.259,
+     "area_share": 0.268,
+     "cover": 0.972
+    },
+    {
+     "name": "Chenxi",
+     "local": "辰溪县",
+     "prefecture": "Huaihua",
+     "prefecture_local": "怀化市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.04,
+     "area_share": 0.041,
+     "cover": 0.088
+    },
+    {
+     "name": "Fenghuang",
+     "local": "凤凰县",
+     "prefecture": "Xiangxitujiazumiaozu",
+     "prefecture_local": "湘西土家族苗族自治州",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.02,
+     "area_share": 0.021,
+     "cover": 0.059
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.014
+    },
+    {
+     "level": "prefecture",
+     "name": "Xiangxi Tujia and Miao Autonomous Prefecture",
+     "local": "湘西土家族苗族自治州",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.595,
+     "cover": 0.235
+    },
+    {
+     "level": "prefecture",
+     "name": "Huaihua",
+     "local": "怀化市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.405,
+     "cover": 0.081
+    }
+   ],
+   "towns": [
+    {
+     "town": "沅陵镇",
+     "county": "沅陵县",
+     "city": "怀化市",
+     "people_share": 0.135,
+     "cover": 1.0
+    },
+    {
+     "town": "峒河街道",
+     "county": "吉首市",
+     "city": "湘西土家族苗族自治州",
+     "people_share": 0.083,
+     "cover": 1.0
+    },
+    {
+     "town": "凉水井镇",
+     "county": "沅陵县",
+     "city": "怀化市",
+     "people_share": 0.056,
+     "cover": 0.991
+    },
+    {
+     "town": "浦市镇",
+     "county": "泸溪县",
+     "city": "湘西土家族苗族自治州",
+     "people_share": 0.048,
+     "cover": 0.968
+    },
+    {
+     "town": "武溪镇",
+     "county": "泸溪县",
+     "city": "湘西土家族苗族自治州",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "镇溪街道",
+     "county": "吉首市",
+     "city": "湘西土家族苗族自治州",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "寨阳乡",
+     "county": "吉首市",
+     "city": "湘西土家族苗族自治州",
+     "people_share": 0.036,
+     "cover": 0.998
+    }
+   ],
+   "cities": [
+    {
+     "name": "Qianzhou",
+     "admin": "Hunan",
+     "pop": 301000
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#dbf0e5",
+     "border_px": 1815
+    },
+    {
+     "key": "#c9e8d8",
+     "border_px": 1106
+    },
+    {
+     "key": "#d3bcf2",
+     "border_px": 1103
+    },
+    {
+     "key": "#e2dbe2",
+     "border_px": 1004
+    },
+    {
+     "key": "#d6f0d5",
+     "border_px": 196
+    }
+   ],
+   "text_px": 0,
+   "n": 5,
+   "thumb": {
+    "x0": 6729,
+    "y0": 3949,
+    "k": 2.0,
+    "w": 364,
+    "h": 382
+   }
+  },
+  {
+   "key": "#c9e8d8",
+   "color": "#c9e8d8",
+   "lon": 109.4534,
+   "lat": 27.9819,
+   "bbox": [
+    6718,
+    4047,
+    6823,
+    4147
+   ],
+   "area_px": 4490,
+   "people": 961918,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Mayang Miao",
+     "local": "麻阳苗族自治县",
+     "prefecture": "Huaihua",
+     "prefecture_local": "怀化市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.34,
+     "area_share": 0.313,
+     "cover": 0.991
+    },
+    {
+     "name": "Fenghuang",
+     "local": "凤凰县",
+     "prefecture": "Xiangxitujiazumiaozu",
+     "prefecture_local": "湘西土家族苗族自治州",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.328,
+     "area_share": 0.322,
+     "cover": 0.931
+    },
+    {
+     "name": "Songtao Miao",
+     "local": "松桃苗族自治县",
+     "prefecture": "Tongren",
+     "prefecture_local": "铜仁市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.282,
+     "area_share": 0.304,
+     "cover": 0.618
+    },
+    {
+     "name": "Xiushantujiazumiaozu",
+     "local": "秀山土家族苗族自治县",
+     "prefecture": "Chongqing",
+     "prefecture_local": "重庆市",
+     "province": "重庆市",
+     "country": "China",
+     "people_share": 0.037,
+     "area_share": 0.043,
+     "cover": 0.08
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.681,
+     "cover": 0.01
+    },
+    {
+     "level": "prefecture",
+     "name": "Huaihua",
+     "local": "怀化市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.345,
+     "cover": 0.067
+    },
+    {
+     "level": "prefecture",
+     "name": "Xiangxi Tujia and Miao Autonomous Prefecture",
+     "local": "湘西土家族苗族自治州",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.336,
+     "cover": 0.13
+    },
+    {
+     "level": "province",
+     "name": "Guizhou",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.281,
+     "cover": 0.008
+    },
+    {
+     "level": "prefecture",
+     "name": "Tongren",
+     "local": "铜仁市",
+     "province": "Guizhou",
+     "country": "China",
+     "people_share": 0.281,
+     "cover": 0.092
+    }
+   ],
+   "towns": [
+    {
+     "town": "沱江镇",
+     "county": "凤凰县",
+     "city": "湘西土家族苗族自治州",
+     "people_share": 0.052,
+     "cover": 1.0
+    },
+    {
+     "town": "蓼皋镇",
+     "county": "松桃苗族自治县",
+     "city": "铜仁市",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "高村镇",
+     "county": "麻阳苗族自治县",
+     "city": "怀化市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "世昌乡",
+     "county": "松桃苗族自治县",
+     "city": "铜仁市",
+     "people_share": 0.032,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#c9e8de",
+     "border_px": 1419
+    },
+    {
+     "key": "#ceede3",
+     "border_px": 1106
+    },
+    {
+     "key": "#dbf0e5",
+     "border_px": 753
+    },
+    {
+     "key": "#c4e4c7",
+     "border_px": 702
+    },
+    {
+     "key": "#bface8",
+     "border_px": 597
+    },
+    {
+     "key": "#c7e1da",
+     "border_px": 453
+    },
+    {
+     "key": "#d3bcf2",
+     "border_px": 72
+    }
+   ],
+   "text_px": 0,
+   "n": 6,
+   "thumb": {
+    "x0": 6678,
+    "y0": 4007,
+    "k": 2.0,
+    "w": 370,
+    "h": 360
+   }
+  },
+  {
+   "key": "#d3bcf2",
+   "color": "#d3bcf2",
+   "lon": 110.5607,
+   "lat": 27.8568,
+   "bbox": [
+    6824,
+    4054,
+    6903,
+    4165
+   ],
+   "area_px": 4120,
+   "people": 1033469,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Xupu",
+     "local": "溆浦县",
+     "prefecture": "Huaihua",
+     "prefecture_local": "怀化市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.699,
+     "area_share": 0.745,
+     "cover": 0.997
+    },
+    {
+     "name": "Chenxi",
+     "local": "辰溪县",
+     "prefecture": "Huaihua",
+     "prefecture_local": "怀化市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.287,
+     "area_share": 0.232,
+     "cover": 0.663
+    },
+    {
+     "name": "Zhongfang",
+     "local": "中方县",
+     "prefecture": "Huaihua",
+     "prefecture_local": "怀化市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.008,
+     "area_share": 0.006,
+     "cover": 0.034
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.015
+    },
+    {
+     "level": "prefecture",
+     "name": "Huaihua",
+     "local": "怀化市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.996,
+     "cover": 0.208
+    }
+   ],
+   "towns": [
+    {
+     "town": "卢峰镇",
+     "county": "溆浦县",
+     "city": "怀化市",
+     "people_share": 0.112,
+     "cover": 1.0
+    },
+    {
+     "town": "城郊乡",
+     "county": "辰溪县",
+     "city": "怀化市",
+     "people_share": 0.064,
+     "cover": 0.998
+    },
+    {
+     "town": "桥江镇",
+     "county": "溆浦县",
+     "city": "怀化市",
+     "people_share": 0.051,
+     "cover": 1.0
+    },
+    {
+     "town": "低庄镇",
+     "county": "溆浦县",
+     "city": "怀化市",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "辰阳镇",
+     "county": "辰溪县",
+     "city": "怀化市",
+     "people_share": 0.04,
+     "cover": 0.991
+    },
+    {
+     "town": "黄茅园镇",
+     "county": "溆浦县",
+     "city": "怀化市",
+     "people_share": 0.03,
+     "cover": 0.99
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#ceede3",
+     "border_px": 1103
+    },
+    {
+     "key": "#bface8",
+     "border_px": 1069
+    },
+    {
+     "key": "#d8affa",
+     "border_px": 779
+    },
+    {
+     "key": "#d1c8f1",
+     "border_px": 757
+    },
+    {
+     "key": "#c1b4f5",
+     "border_px": 712
+    },
+    {
+     "key": "#c7e1da",
+     "border_px": 321
+    },
+    {
+     "key": "#c3b8ed",
+     "border_px": 230
+    },
+    {
+     "key": "#c9e8d8",
+     "border_px": 72
+    },
+    {
+     "key": "#e2dbe2",
+     "border_px": 43
+    }
+   ],
+   "text_px": 49,
+   "n": 7,
+   "thumb": {
+    "x0": 6784,
+    "y0": 4014,
+    "k": 2.0,
+    "w": 318,
+    "h": 382
+   }
+  },
+  {
+   "key": "#bface8",
+   "color": "#bface8",
+   "lon": 110.1322,
+   "lat": 27.6184,
+   "bbox": [
+    6801,
+    4104,
+    6863,
+    4165
+   ],
+   "area_px": 2413,
+   "people": 1152818,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Hecheng",
+     "local": "鹤城区",
+     "prefecture": "Huaihua",
+     "prefecture_local": "怀化市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.742,
+     "area_share": 0.266,
+     "cover": 0.997
+    },
+    {
+     "name": "Zhongfang",
+     "local": "中方县",
+     "prefecture": "Huaihua",
+     "prefecture_local": "怀化市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.159,
+     "area_share": 0.46,
+     "cover": 0.803
+    },
+    {
+     "name": "Chenxi",
+     "local": "辰溪县",
+     "prefecture": "Huaihua",
+     "prefecture_local": "怀化市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.095,
+     "area_share": 0.261,
+     "cover": 0.246
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.017
+    },
+    {
+     "level": "prefecture",
+     "name": "Huaihua",
+     "local": "怀化市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.233
+    }
+   ],
+   "towns": [
+    {
+     "town": "盈口乡",
+     "county": "鹤城区",
+     "city": "怀化市",
+     "people_share": 0.229,
+     "cover": 1.0
+    },
+    {
+     "town": "河西街道",
+     "county": "鹤城区",
+     "city": "怀化市",
+     "people_share": 0.148,
+     "cover": 0.993
+    },
+    {
+     "town": "城南街道",
+     "county": "鹤城区",
+     "city": "怀化市",
+     "people_share": 0.099,
+     "cover": 1.0
+    },
+    {
+     "town": "迎丰街道",
+     "county": "鹤城区",
+     "city": "怀化市",
+     "people_share": 0.052,
+     "cover": 1.0
+    },
+    {
+     "town": "石门乡",
+     "county": "鹤城区",
+     "city": "怀化市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "红星街道",
+     "county": "鹤城区",
+     "city": "怀化市",
+     "people_share": 0.045,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Huaihua",
+     "admin": "Hunan",
+     "pop": 4587594
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#c7e1da",
+     "border_px": 1364
+    },
+    {
+     "key": "#d3bcf2",
+     "border_px": 1069
+    },
+    {
+     "key": "#c9e8d8",
+     "border_px": 597
+    }
+   ],
+   "text_px": 87,
+   "n": 8,
+   "thumb": {
+    "x0": 6761,
+    "y0": 4064,
+    "k": 2.0,
+    "w": 284,
+    "h": 282
+   }
+  },
+  {
+   "key": "#c7e1da",
+   "color": "#c7e1da",
+   "lon": 109.8255,
+   "lat": 27.2023,
+   "bbox": [
+    6760,
+    4136,
+    6869,
+    4239
+   ],
+   "area_px": 5911,
+   "people": 1118978,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Hóngjiāng",
+     "local": "洪江市",
+     "prefecture": "Huaihua",
+     "prefecture_local": "怀化市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.421,
+     "area_share": 0.347,
+     "cover": 0.993
+    },
+    {
+     "name": "Zhijiangdongzu",
+     "local": "芷江侗族自治县",
+     "prefecture": "Huaihua",
+     "prefecture_local": "怀化市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.299,
+     "area_share": 0.316,
+     "cover": 0.992
+    },
+    {
+     "name": "Huitong",
+     "local": "会同县",
+     "prefecture": "Huaihua",
+     "prefecture_local": "怀化市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.239,
+     "area_share": 0.293,
+     "cover": 0.877
+    },
+    {
+     "name": "Zhongfang",
+     "local": "中方县",
+     "prefecture": "Huaihua",
+     "prefecture_local": "怀化市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.033,
+     "area_share": 0.033,
+     "cover": 0.162
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.998,
+     "cover": 0.016
+    },
+    {
+     "level": "prefecture",
+     "name": "Huaihua",
+     "local": "怀化市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.996,
+     "cover": 0.225
+    }
+   ],
+   "towns": [
+    {
+     "town": "黔城镇",
+     "county": "洪江市",
+     "city": "怀化市",
+     "people_share": 0.101,
+     "cover": 1.0
+    },
+    {
+     "town": "硖州乡",
+     "county": "洪江市",
+     "city": "怀化市",
+     "people_share": 0.071,
+     "cover": 1.0
+    },
+    {
+     "town": "芷江镇",
+     "county": "芷江侗族自治县",
+     "city": "怀化市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "林城镇",
+     "county": "会同县",
+     "city": "怀化市",
+     "people_share": 0.039,
+     "cover": 1.0
+    },
+    {
+     "town": "岩桥乡",
+     "county": "芷江侗族自治县",
+     "city": "怀化市",
+     "people_share": 0.03,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Hongjiang",
+     "admin": "Hunan",
+     "pop": 498100
+    },
+    {
+     "name": "Zhijiang",
+     "admin": "Hunan",
+     "pop": 113907
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#c8e1de",
+     "border_px": 1439
+    },
+    {
+     "key": "#bface8",
+     "border_px": 1364
+    },
+    {
+     "key": "#c3dee6",
+     "border_px": 1251
+    },
+    {
+     "key": "#c9e8d8",
+     "border_px": 453
+    },
+    {
+     "key": "#c3b8ed",
+     "border_px": 390
+    },
+    {
+     "key": "#d3bcf2",
+     "border_px": 321
+    },
+    {
+     "key": "#c9e8de",
+     "border_px": 298
+    }
+   ],
+   "text_px": 115,
+   "n": 9,
+   "thumb": {
+    "x0": 6720,
+    "y0": 4096,
+    "k": 2.0,
+    "w": 378,
+    "h": 366
+   }
+  }
+ ]
+}

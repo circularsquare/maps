@@ -8,7 +8,8 @@
 
 WHAT GOES WHERE. Everything the page fetches goes to R2, under r2:anitamaps/noritetsu/:
 `regions.json` and all of `dist/data/` (the .pmtiles, every country's json and geom/, logos/).
-The website repo gets the page and its two scripts: `index.html`, `poster.js`, `share.js`.
+The website repo gets the page and its scripts: `index.html`, `poster.js`, `share.js`,
+`account.js`, and the sign-in's `privacy.html` and `terms.html`.
 The page decides where its data is by asking for `regions.json` beside itself (index.html,
 "WHERE THE DATA IS"), so **regions.json must never be copied into the website repo**: if it
 were, the published page would look for data/ on GitHub Pages and find none. The preflight
@@ -57,7 +58,7 @@ LOGS = os.path.join(ROOT, "data", "logs")
 WEBSITE = os.path.join(os.path.dirname(os.path.dirname(ROOT)), "website", "noritetsu")
 
 REMOTE = "r2:anitamaps/noritetsu"
-PUBLIC = "https://pub-ae551368cea941f39101e13c84d60bde.r2.dev/noritetsu"
+PUBLIC = "https://data.anita.garden/noritetsu"
 
 # Every country in regions.json needs these beside its tiles. foot.json above all: without it
 # the app credits that country's OSM lines whole (HANDOFF, "Publishing").
@@ -67,7 +68,7 @@ REGION_FILES = ["lines.json", "stations.json", "foot.json", "ways.json", "aliase
 SHARED_FILES = ["search.json", "closed.json", "operators.json"]
 # Wanted but not fatal: the app has a fallback for each.
 SHARED_OPTIONAL = ["names_en.json", "riders_sources.json"]
-PAGE_FILES = ["index.html", "poster.js", "share.js"]
+PAGE_FILES = ["index.html", "poster.js", "share.js", "account.js", "privacy.html", "terms.html"]
 
 # `--s3-no-check-bucket`: without it rclone asks to CreateBucket first, an admin call the
 # Object Read & Write token is refused, and the copy dies with a 403 that reads like a dead

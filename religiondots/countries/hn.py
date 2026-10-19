@@ -49,6 +49,12 @@ def _hn_counts():
     return df[["unit", "node", "count", "congregations", "tier"]]
 
 
+def _hn_counts_split():
+    """`_hn_counts` with Pew 2014's Pentecostal share drawn inside the survey's Evangelical
+    answer; latam_split.py, Anita 2026-10-16. The rows stay `modelled`."""
+    return _latam_split("hn", _hn_counts())
+
+
 ENTRY = {
     "hn": dict(
         name="Honduras",
@@ -74,12 +80,14 @@ ENTRY = {
             "**Adventists are drawn at 8.3% of the Bay Islands**, the one department the "
             "survey clearly sets apart for them, and at 0.6% everywhere else. Latter-day "
             "Saints and other religions are too few in the survey to place, so they are drawn "
-            "at their national shares in every department."),
+            "at their national shares in every department. 49% of the Evangelicals are drawn "
+            "as Pentecostal, the share of Protestants that Pew Research Center's 2014 survey "
+            "found in Pentecostal churches; the rest stay unnamed."),
         how="household survey, one round in 2019",
         grain="departments, 550,000 people on average",
         gap="the 0.5% of people in households whose head's religion was not given",
         gap_share=0.0047,
-        counts=_hn_counts,
+        counts=_hn_counts_split,
         units=None,
         unit_key=None,
         place=HERE / "data" / "geo" / "hn" / "hn_hexes.gpkg",

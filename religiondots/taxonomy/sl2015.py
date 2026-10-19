@@ -15,13 +15,29 @@ EXCLUDED = {}
 
 REVIEW = {
     "Christianity":
-        "-> christianity, the bare branch. 1,547,129 people, 21.86%. The form asked six Christian "
-        "codes, but Stats SL printed them only nationally (National Analytical Report Table 3.25: "
-        "Catholic 7.0, Anglican 1.2, Methodist 3.0, SDA 0.7, Pentecostal 5.3, other Christian 4.7, "
-        "once a stray `SDA 8.0` row with a sex ratio of 210.2 is left out). No district split "
-        "exists, so nothing is spread from the national one: Pujehun is 4.8% Christian, and a "
-        "uniform 7.0% Catholic share cannot even fit there. Kono (43.5%), Kailahun (34.0%) and "
-        "Western Area Urban (31.3%) hold 47% of the country's Christians.",
+        "-> christianity, the bare branch, and NO LONGER DRAWN since 2026-10-16: "
+        "sl_split.csv replaces every row of it with the census's own six codes, and this "
+        "cell is what they roll back to (COLUMNS). 1,547,129 people, 21.86%. The form asked "
+        "six Christian codes and Stats SL printed them only nationally (National Analytical "
+        "Report Table 3.25: Catholic 7.0, Anglican 1.2, Methodist 3.0, SDA 0.7, Pentecostal "
+        "5.3, other Christian 4.7, once a stray `SDA 8.0` row with a sex ratio of 210.2 is left "
+        "out). This note used to say a uniform split could not fit Pujehun, which is 4.8% "
+        "Christian; that took the 7.0% as a share of each district's population. Applied as "
+        "32.0% of each district's Christians it always fits, which is how it is drawn. Kono "
+        "(43.5%), Kailahun (34.0%) and Western Area Urban (31.3%) hold 47% of the country's "
+        "Christians.",
+    "Catholic":
+        "-> christianity.catholic, DERIVED. 494,515, 32.0% of Christians in every district "
+        "(Table 3.25's 7.0 of 21.9). The Afrobarometer's named Christians give 34.4% and Pew "
+        "2010 33.6%. The district distribution is the national ratio, not a measurement.",
+    "Pentecostal": "-> christianity.pentecostal, DERIVED. 374,418, 24.2% (5.3 of 21.9).",
+    "Methodist": "-> christianity.methodist, DERIVED. 211,935, 13.7% (3.0 of 21.9).",
+    "Anglican": "-> christianity.anglican, DERIVED. 84,774, 5.5% (1.2 of 21.9).",
+    "SDA": "-> christianity.adventist, DERIVED. 49,454, 3.2% (0.7 of 21.9).",
+    "Other Christian":
+        "-> christianity.other, DERIVED. 332,033, 21.5% (4.7 of 21.9): the census's own code "
+        "06, every church not named on the form, Baptists and the independent churches "
+        "among them.",
     "Islam":
         "-> islam, no branch. 5,452,061 people, 77.05%. The 2004 census coded Ahmadi, Sunni and "
         "Shia Muslims apart (its Table 8A), and 2015 dropped them for one Islam code, so a branch "
@@ -59,10 +75,20 @@ MAP = {
     "Traditional": "indigenous.african",
     "Other": "other.sl",
     "No Religion": "unaffiliated",
+    # 2026-10-16, sources/wa_christian.py: sl_split.csv replaces `Christianity` with the
+    # census's own six Christian codes at their national shares. `derived`.
+    "Catholic": "christianity.catholic",
+    "Pentecostal": "christianity.pentecostal",
+    "Methodist": "christianity.methodist",
+    "Anglican": "christianity.anglican",
+    "SDA": "christianity.adventist",
+    "Other Christian": "christianity.other",
 }
 
-# spec §7a-i-1: every row is measured at the node it is drawn on.
+# spec §7a-i-1: the measured rows are measured at the node they are drawn on, and the six
+# derived Christian rows roll back to the `Christianity` cell the census counted per district.
 COLUMNS = {v: v for v in MAP.values()}
+COLUMNS["Christianity"] = "christianity"
 
 
 def _key(cat):

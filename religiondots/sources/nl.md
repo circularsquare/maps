@@ -262,3 +262,19 @@ is blank right up to the Zeeuws-Vlaanderen border**, which is the visible confir
 **Precedent checked and not disturbed.** `Islam` to the `islam` root is what 110 other
 mappings do; `other.nl` is one of 115 `other.<cc>` nodes; `Geen` to `unaffiliated` rather
 than `secular` matches gr2024, fi2024 and ge2014 as the REVIEW entry says.
+
+## Muslims by branch, borrowed from Germany's MLD 2020, 2026-10-16 (session `c67d3c3c-islam`)
+
+Anita's call (research: `unspecified_splits/islam.md`). `sources/nl_mld.py`:
+- origin: CBS StatLine 37713, 1 January 2014, Turkije (H008766) and Marokko (H008673) background by
+  gemeente, open OData (`TypedDataSet`, `Leeftijd 10000`, `MannenEnVrouwen_1`), saved to
+  `data/raw/nl/cbs_37713_2014_tr_ma.json`;
+- Muslim share: SCP, *De religieuze beleving van moslims in Nederland* (2018), 2015 data: 86% of
+  Turkish-Dutch and 94% of Moroccan-Dutch call themselves Muslim (as reported by NOS and Hart van
+  Nederland; the report itself not opened);
+- branches: MLD 2020 Table 32, Türkei and Nordafrika columns (`sources/de_mld.py`).
+Estimated Turkish- and Moroccan-origin Muslims are 83.9% of the EBB's 778,387; in 79 of 343
+gemeenten they exceed the surveyed Muslims and are scaled down to fit. Drawn: Sunni 531,247 (68.2%),
+Alevi 55,135, Shia 5,537, Ahmadi 1,955; everyone else on `islam`. All `modelled`. Iraqi, Afghan,
+Iranian and Somali backgrounds are in 37713 too but were not used: nothing Dutch gives their Muslim
+share. `fill` added; note_public says the shares are borrowed.

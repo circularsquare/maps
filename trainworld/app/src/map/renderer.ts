@@ -1,4 +1,4 @@
-import { BOX_WIDTH_ZOOM, boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, bridgeShape, connectorHalfPx, CROWD_BULGE, dotRing, spanningPairs, insideStation, PLATFORM_POINTS, platformPoints, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, shapePoints, STATION_BOX_ZOOM, STATIONS_ZOOM, TRAINS_ZOOM, stationHaloRadius, stationRadii, stationRing, stationShape, type PlatformShape, type Project, type StationShape, type StationStyle } from "./stationGeometry";
+import { BOX_WIDTH_ZOOM, boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, bridgeShape, connectorHalfPx, dotRing, spanningPairs, insideStation, PLATFORM_POINTS, platformPoints, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, shapePoints, STATION_BOX_ZOOM, STATIONS_ZOOM, TRAINS_ZOOM, stationHaloRadius, stationRadii, stationRing, stationShape, type PlatformShape, type Project, type StationShape, type StationStyle } from "./stationGeometry";
 // WebGL2 network renderer: track and line strokes (one instanced quad per polyline segment, a
 // casing under the colour, the theme's (T-039); blueprint solid, lighter and without casing, T-311), stations (platforms along the track, or
 // dots zoomed out, T-189), the drawing tool's preview,
@@ -47,6 +47,10 @@ const LINE_PX: [number, number][] = [[9, 0.85], [12, 3.9], [15, 6.6]];
  * stroke starts growing to the pair's width, which it reaches at LANE_PART_PX, where the two tracks
  * start parting; they are fully apart at LANE_APART_PX (zoom 16.7 to 17.2 in New York). */
 const LANE_M = 4, LANE_SHARE = 0.6, LANE_GROW_PX = 4, LANE_PART_PX = 7, LANE_APART_PX = 10;
+/** Past LANE_APART_PX each track narrows by up to LANE_NARROW (T-713, Anita: "reduce the width of
+ * the individual tracks by around 20%" so the riders waiting behind them show), reached at
+ * LANE_NARROW_PX; trains keep their 3 m. */
+const LANE_NARROW = 0.2, LANE_NARROW_PX = 16;
 
 /** How far double track has opened into two tracks at `zoom`, by the size of 4 m on screen at the
  * view's anchor: the gap in CSS px, the growth and parting (0-1), and half the pair's drawn width
@@ -55,7 +59,8 @@ export function laneState(zoom: number) {
   const gap = LANE_M * kAtY(0) * (512 * 2 ** zoom) / EARTH_C;
   const grow = Math.max(0, Math.min(1, (gap - LANE_GROW_PX) / (LANE_PART_PX - LANE_GROW_PX)));
   const t = Math.max(0, Math.min(1, (gap - LANE_PART_PX) / (LANE_APART_PX - LANE_PART_PX)));
-  return { gap, grow, t, reach: grow > 0 ? 0.5 * (1 + LANE_SHARE) * gap : 0 };
+  const narrow = 1 - LANE_NARROW * Math.max(0, Math.min(1, (gap - LANE_APART_PX) / (LANE_NARROW_PX - LANE_APART_PX)));
+  return { gap, grow, t, narrow, share: LANE_SHARE * narrow, reach: grow > 0 ? 0.5 * (1 + LANE_SHARE * narrow) * gap : 0 };
 }
 /** Platform crowds (T-164, T-219): drawn from this zoom, where platforms are (T-204), as each side's
  * half of the box filling from its middle outwards in `CROWD_RGB`, red (BAD_RGB) once that side is
@@ -370,10 +375,8 @@ void main() {
     // never shorter than it is wide: the end stretches carry on
     float ext = hl - 0.5 * total;
     v_size = vec3(hl, hw, 0.0);
-    // a full side's red bar reaches past the box (T-652), so the crowd's quad is wider
-    float bulge = u_layer == 2 ? ${CROWD_BULGE.toFixed(2)} * hw : 0.0;
-    lo = mn.y - hw - ext - bulge - 1.0;
-    hi = mx.y + hw + ext + bulge + 1.0;
+    lo = mn.y - hw - ext - 1.0;
+    hi = mx.y + hw + ext + 1.0;
     xl = mn.x - hw - ext - 1.0;
     xh = mx.x + hw + ext + 1.0;
   }
@@ -440,7 +443,7 @@ uniform float u_hair;    // a CSS px in device px
 uniform float u_tint;    // 1: dots show their crowds as pies (T-228, T-553)
 uniform vec3 u_plat;     // the platforms' blue (T-236)
 uniform float u_mask;    // 1: the white only marks the stencil (the track drawn through it, T-236)
-uniform vec2 u_lanes;    // T-658: 4 m in px, how far double track's two tracks have parted (0-1)
+uniform vec3 u_lanes;    // T-658: 4 m in px, how far double track's two tracks have parted (0-1), their narrowing close in (T-713)
 in vec2 v_p;
 flat in vec3 v_size;
 flat in float v_dot;
@@ -505,7 +508,8 @@ void main() {
     // each side
     float tl = u_lanes.y * v_lane;
     float gap = platGap(W), bw = edgeW(W, tl);
-    float off = mix(W - gap - 0.5 * bw, 0.8 * u_lanes.x + u_hair + 0.5 * bw, tl);
+    float trk = (0.5 + 0.5 * ${LANE_SHARE.toFixed(1)} * u_lanes.z) * u_lanes.x;  // the pair's outer edge
+    float off = mix(W - gap - 0.5 * bw, trk + u_hair + 0.5 * bw, tl);
     float a = clamp(0.5 * bw + 0.5 - abs(abs(p.y) - off), 0.0, 1.0)
       * clamp(v_size.x - u_ring - gap - abs(p.x) + 0.5, 0.0, 1.0)
       * clamp((W / u_hair - 3.0) / 2.0, 0.0, 1.0) * v_alpha;
@@ -523,16 +527,12 @@ void main() {
     // its blue edge out to the rim: the + side's trains travel along the axis, keeping right, so
     // their track and platform are on the + side
     float tl = u_lanes.y * v_lane;
-    float yin = tl * (0.8 * u_lanes.x + 2.0 * u_hair + edgeW(v_size.y - u_ring, tl) + 1.5);
+    float yin = tl * ((0.5 + 0.5 * ${LANE_SHARE.toFixed(1)} * u_lanes.z) * u_lanes.x + 2.0 * u_hair + edgeW(v_size.y - u_ring, tl) + 1.5);
     inner = mix(inner, clamp(0.5 - 1.5 - d - u_ring, 0.0, 1.0), tl);
     float ap = inner * clamp(p.y - yin + 0.5, 0.0, 1.0) * clamp(v_crowd.x * reach - abs(p.x) + 0.5, 0.0, 1.0);
     float am = inner * clamp(0.5 - p.y - yin, 0.0, 1.0) * clamp(v_crowd.y * reach - abs(p.x) + 0.5, 0.0, 1.0);
-    // a full side's bar also stands out beyond the rim, on its own side (T-652)
-    float out_ = ${CROWD_BULGE.toFixed(2)} * v_size.y;
-    float wing = clamp(abs(p.y) - v_size.y + 0.5, 0.0, 1.0) * clamp(v_size.y + out_ - abs(p.y) + 0.5, 0.0, 1.0);
-    if (v_crowd.z > 0.5) ap = max(ap, wing * clamp(p.y + 0.5, 0.0, 1.0) * clamp(v_crowd.x * reach - abs(p.x) + 0.5, 0.0, 1.0));
-    if (v_crowd.w > 0.5) am = max(am, wing * clamp(0.5 - p.y, 0.0, 1.0) * clamp(v_crowd.y * reach - abs(p.x) + 0.5, 0.0, 1.0));
-    o = vec4((v_crowd.z > 0.5 ? u_bad : u_crowd_rgb) * ap + (v_crowd.w > 0.5 ? u_bad : u_crowd_rgb) * am, ap + am);  }
+    o = vec4((v_crowd.z > 0.5 ? u_bad : u_crowd_rgb) * ap + (v_crowd.w > 0.5 ? u_bad : u_crowd_rgb) * am, ap + am);
+  }
 }`;
 
 // The selected stations' outline and glow (T-189), round their union (T-217): one quad over all of
@@ -1561,14 +1561,14 @@ export class NetworkRenderer {
     this.laneReachPx = lanes.reach;
     this.laneShiftM = LANE_M / 2 * lanes.t;
     const G = lanes.gap * dpr;
-    gl.uniform4f(u.u_lanes, G, lanes.t, lanes.grow, LANE_SHARE * G);
+    gl.uniform4f(u.u_lanes, G, lanes.t, lanes.grow, lanes.share * G);
     const modes = lanes.t > 0 ? [1, 2, 3] : [0];
     // `cap` > 0: the track drawn through station boxes (T-236), no wider than that and no casing
     const stroke = (s: StrokeVao | null, kind: number, width: number, sel: boolean, cap = 0) => {
       if (!s || !s.count) return;
       gl.uniform1i(u.u_kind, kind);
       // each track's width once apart: a line's share of the gap, bare track as much thinner
-      gl.uniform3f(u.u_width, width, wSel, LANE_SHARE * G * width / wLine);
+      gl.uniform3f(u.u_width, width, wSel, lanes.share * G * width / wLine);
       gl.uniform1f(u.u_cap, cap);
       gl.bindVertexArray(s.vao);
       const passes: [number, number][] = cap > 0 ? [[0, 0]] : [[casing, 0], [0, 0]];
@@ -1598,7 +1598,7 @@ export class NetworkRenderer {
       // an ink band 3 px beyond the blueprint's rails either side (kind 2 placement strokes in a
       // casing pass are the selection ink)
       gl.uniform1i(u.u_kind, 2);
-      gl.uniform3f(u.u_width, bpMid + 2 * bpRail + 6 * dpr, 0, LANE_SHARE * G + 6 * dpr);
+      gl.uniform3f(u.u_width, bpMid + 2 * bpRail + 6 * dpr, 0, lanes.share * G + 6 * dpr);
       gl.uniform1f(u.u_cap, 0);
       gl.uniform1i(u.u_only_sel, 0);
       gl.uniform1f(u.u_casing, 0.01 * dpr);
@@ -1646,7 +1646,7 @@ export class NetworkRenderer {
       gl.uniform3fv(su.u_bad, BAD_RGB);
       gl.uniform3fv(su.u_crowd_rgb, CROWD_RGB);
       gl.uniform1f(su.u_line, wLine);
-      gl.uniform2f(su.u_lanes, lanes.gap * dpr, lanes.t);
+      gl.uniform3f(su.u_lanes, lanes.gap * dpr, lanes.t, lanes.narrow);
       gl.uniform1f(su.u_boxes, boxes ? 1 : 0);
       // each platform's track line (T-254)
       gl.activeTexture(gl.TEXTURE11);

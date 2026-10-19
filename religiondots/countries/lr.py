@@ -51,6 +51,9 @@ def _lr_counts():
     df = pd.read_csv(HERE / "data" / "normalized" / "lr.csv",
                      dtype={"geo_id": str}, low_memory=False,
                      keep_default_na=False, na_values=[""])
+    # 2026-10-16: `Christian` split into seven church groups from the Afrobarometer's named
+    # answers (sources/wa_christian.py). Still `modelled`, like every row here.
+    df = _swap_christian_split(df, "lr", "Christian")
 
     lut = pd.read_csv(HERE / "data" / "geo" / "lr" / "lr_lookup.csv", dtype=str)
     df["unit"] = df["geo_id"].map(dict(zip(lut["geo_id"], lut["unit"])))
@@ -109,13 +112,17 @@ ENTRY = {
             "interviewed there across six rounds was one. On a sample that size the true "
             "share could be anything up to about 2%, so read it as a county where the survey "
             "found none rather than as a county with none. "
-            "**Christianity is a single colour here because no Liberian census has ever "
-            "split it.** The 2022 questionnaire defines its Christian box as all Christian "
-            "denomination churches and stops there, and so did 2008. The Afrobarometer does "
-            "name denominations, and Liberians fill twenty of them, but the share who name "
-            "one rather than answering Christian runs from **23.1%** to **72.0%** between "
-            "rounds. That is a fact about how hard each round's fieldwork probed and not "
-            "about Liberia, so the split is not drawn. "
+            "**No Liberian census has ever split Christianity, so its churches come from the "
+            "same survey.** The 2022 questionnaire defines its Christian box as all Christian "
+            "denomination churches and stops there, and so did 2008. In the Afrobarometer the "
+            "share who name a church rather than answering just Christian runs from 23% to "
+            "81% between rounds, but among those who do name one the mix hardly moves, so "
+            "everyone is assumed to divide the same way: Pentecostal **24.9%** of Christians, "
+            "Methodist 18.0%, Lutheran 15.1%, Baptist 13.7% and Catholic 11.0%. Lutherans, "
+            "Baptists and Catholics are placed by county, because the survey's earlier and "
+            "later rounds agree on where they are; Lutherans are about a third of Lofa, "
+            "Gbarpolu and Grand Gedeh, and Baptists 30% of Nimba. The other churches are "
+            "drawn at the national rate in every county. "
             "**Traditional religion is 0.48% here and is a floor rather than a count.** The "
             "census offers it as an alternative to Christianity and Islam, so it cannot see "
             "anyone who is both, and the Poro and Sande societies of the interior are not an "
@@ -154,7 +161,11 @@ ENTRY = {
              "margin comes from the same table set. Substituting a projection for one margin "
              "would make the two disagree by whatever it had drifted, and the fitted table "
              "would absorb that drift as though it were religion. "
-             "THE DENOMINATIONS ARE IN THE SURVEY AND ARE NOT DRAWN. Afrobarometer's card "
+             "THE DENOMINATIONS ARE DRAWN SINCE 2026-10-16 (Anita), reversing what follows: "
+             "among NAMED Christians the mix is steady across rounds even while the unnamed "
+             "share swings, so `Christian` is split by the named answers "
+             "(sources/wa_christian.py; Lutheran, Baptist and Catholic by county). THE ORIGINAL "
+             "REFUSAL: THE DENOMINATIONS ARE IN THE SURVEY AND ARE NOT DRAWN. Afrobarometer's card "
              "names twenty-odd Christian bodies and Liberia's pooled respondents give "
              "Pentecostal 9.6%, Methodist 7.0%, Lutheran 5.8%, Baptist 5.3% and Roman "
              "Catholic 4.3%, which no Liberian census has ever published. It is not taken "

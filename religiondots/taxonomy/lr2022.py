@@ -5,15 +5,15 @@ A13 of the *Final Results*; the county geography is fitted from the pooled Afrob
 (`sources/lr.py`), and the mapping is unaffected by that — a Liberian Christian is on the
 same node whichever county the fit puts them in.
 
-**THE INTERESTING MAPPING QUESTION IS THE ONE THIS SOURCE CANNOT ASK.** Afrobarometer's own
-card names Pentecostal, Methodist, Lutheran, Baptist, Roman Catholic, Presbyterian, Anglican,
-Adventist and a dozen more, and Liberia's pooled respondents fill every one of them — so a
-denominational tree for Liberia is *visible* in the raw data and is still not drawable, for
-the reason `sources/lr.py`'s docstring gives at length: the share who name a denomination
-rather than answering `Christian only` runs from 23.1% to 72.0% between rounds, so any
-denominational split would be a measurement of the fieldwork. `source_category` carries the
-census's wording per §2.4, and the raw answers are printed on every build, so a later source
-that settles the split can open this cell rather than re-deriving it.
+**THE CHRISTIAN CELL IS SPLIT INTO CHURCHES SINCE 2026-10-16, REVERSING THIS FILE'S REFUSAL.**
+The refusal read the swing in `Christian only` (23.1% to 81% of Christians between rounds) as
+making any denominational split a measurement of the fieldwork. What swings is whether people
+name a church, not which: among those who do, Baptists are 12.6-14.6% in every round and
+Pentecostals 19.5-30.2%, and no church's share tracks the unnamed share consistently. Anita
+accepted that people answering `Christian only` divide like those who name a church.
+`sources/wa_christian.py` writes `lr_split.csv`, which countries/lr.py swaps in for
+`Christian`; Lutheran, Baptist and Catholic carry county shares (they replicate across
+counties), the other four are drawn at the national rate inside each county's Christians.
 
 EXCLUDED holds categories that are deliberately not on the tree.
 REVIEW holds calls that are defensible but arguable, with the reason.
@@ -22,8 +22,37 @@ REVIEW holds calls that are defensible but arguable, with the reason.
 EXCLUDED = {}
 
 REVIEW = {
+    "Pentecostal":
+        "-> christianity.pentecostal. 1,108,234, 24.9% of Christians: the largest named answer "
+        "in five of six rounds. National rate in every county (split-half -0.03).",
+    "Methodist":
+        "-> christianity.methodist. 803,368, 18.0%; the settler churches of the 19th century. "
+        "National rate in every county (split-half +0.09).",
+    "Lutheran":
+        "-> christianity.lutheran. 671,142, 15.1%. County shares: Gbarpolu 36.9%, Grand Gedeh "
+        "36.8%, Lofa 36.0%, Bong 24.5%, the Muhlenberg mission's interior. Split-half +0.724 "
+        "(p 0.004).",
+    "Baptist":
+        "-> christianity.baptist. 609,084, 13.7%. Nimba 30.3%, River Cess 21.3%, Sinoe 21.0%. "
+        "Split-half +0.602 (p 0.016). Grand Kru is drawn with none: none of its 40 named "
+        "Christians was Baptist.",
+    "Roman Catholic":
+        "-> christianity.catholic. 492,299, 11.0% of Christians, against Pew 2010's 8.4% and "
+        "the Church's own 2023 claim of 8.6% (asserted within 5 points of Pew). Grand Kru "
+        "27.9%, Bomi 18.8%, Maryland 16.8% (the Cape Palmas diocese). Split-half +0.564 "
+        "(p 0.023). River Cess has none among 52 named.",
+    "Protestant (Evangelical, Presbyterian, Episcopal)":
+        "-> christianity.protestant. 376,194, 8.4%: the survey's Evangelical, Presbyterian and "
+        "Anglican boxes, the last being the Episcopal Church of Liberia at 0.9% of named "
+        "Christians, too few for a node of its own.",
+    "Other Christian":
+        "-> christianity.other. 397,967, 8.9%: Witnesses, Adventists, Church of Christ, "
+        "Orthodox, Latter-day Saints, and the independent churches.",
     "Christian":
-        "-> christianity, the bare branch. 4,458,286 people, 84.9%, and the whole of "
+        "-> christianity, the bare branch. NO LONGER DRAWN since 2026-10-16: lr_split.csv "
+        "replaces every row of it (module docstring). Kept so a re-run against the base file "
+        "resolves, and as the record of the refusal it reverses: "
+        "4,458,286 people, 84.9%, and the whole of "
         "Liberian Christianity in one cell. No Liberian census has ever split it: the 2022 "
         "questionnaire defines the box as `all Christian denomination churches` and stops "
         "there, and the 2008 census and the 2012 analytical monographs do the same. **What "
@@ -74,6 +103,14 @@ REVIEW = {
 
 MAP = {
     "Christian": "christianity",
+    # 2026-10-16, sources/wa_christian.py: data/normalized/lr_split.csv replaces `Christian`.
+    "Pentecostal": "christianity.pentecostal",
+    "Methodist": "christianity.methodist",
+    "Lutheran": "christianity.lutheran",
+    "Baptist": "christianity.baptist",
+    "Roman Catholic": "christianity.catholic",
+    "Protestant (Evangelical, Presbyterian, Episcopal)": "christianity.protestant",
+    "Other Christian": "christianity.other",
     "Muslim": "islam",
     "Traditional African Religion": "indigenous.african",
     "Other religion": "other.lr",

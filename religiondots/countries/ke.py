@@ -30,12 +30,16 @@ def _ke_counts():
     people the census never asked are in hotels, hospitals, prisons, children's homes,
     travelling or sleeping outdoors, and the table says so in its own footnote.
     """
+    import ke2019
     from ke2019 import resolve
 
     df = pd.read_csv(HERE / "data" / "normalized" / "ke.csv",
                      dtype={"geo_id": str}, low_memory=False,
                      keep_default_na=False, na_values=[""])
     df = df[df["geo_level"] == "county"].copy()
+    # 2026-10-16: `Protestant` replaced by its churches at GFS 2023 county shares
+    # (sources/ea_christian.py). Those rows are `derived` and roll back to `Protestant`.
+    df = _swap_christian_split(df, "ke", "Protestant")
 
     lut = pd.read_csv(HERE / "data" / "geo" / "ke" / "ke_lookup.csv", dtype=str)
     df["unit"] = df["geo_id"].map(dict(zip(lut["geo_id"], lut["unit"])))
@@ -47,9 +51,12 @@ def _ke_counts():
         raise SystemExit(f"{df['unit'].nunique()} counties, expected 47")
 
     df["node"] = df["source_category"].map(resolve)
-    df = df[df["node"].notna() & (df["count"] > 0)]
+    df = df[df["node"].notna() & (df["count"] > 0)].copy()
     df["congregations"] = 0
-    return df[["unit", "node", "count", "congregations"]]
+    df["tier"] = df["split"].map({True: "derived", False: "measured"})
+    df["may_ring"] = ~df["split"]
+    df = _add_roll(df, ke2019.COLUMNS)
+    return df[["unit", "node", "count", "congregations", "may_ring", "tier", "roll"]]
 
 
 ENTRY = {
@@ -69,13 +76,16 @@ ENTRY = {
             "It also gives Hindus, the Orthodox and traditional religion cells of their own "
             "instead of burying them in a residual. The price is 47 counties for 47.2 "
             "million people, about a million each. "
-            "**The Kenyan split of Christianity is not the usual one, and reading it as the "
-            "usual one will mislead you.** *Protestant* here means the mainline mission "
-            "inheritance — the Anglican Church of Kenya, the Presbyterian Church of East "
-            "Africa, the Methodists — while *Evangelical Churches* is a peer category, not "
-            "a subset, holding the Africa Inland Church, the Baptists and the Pentecostal "
-            "Assemblies of God. An Anglican here is a Protestant; a Baptist here is an "
-            "Evangelical. Together they are 53.9% of the country. "
+            "**The Kenyan split of Christianity is not the usual one.** The census's "
+            "instructions put the Anglicans, the Presbyterians, the Africa Inland Church, "
+            "the Methodists, the Baptists, the Adventists and the Friends under *Protestant*, "
+            "and the Pentecostal churches and the Jehovah's Witnesses under *Evangelical "
+            "Churches*. Together they are 53.9% of the country. "
+            "The census does not name the churches inside *Protestant*, so each county's "
+            "Protestants are divided at the shares the Global Flourishing Study (2023) found "
+            "there: **26%** Anglican, 23% Adventist, 13% Presbyterian, 6% Baptist and 3% "
+            "Methodist nationally, with the rest, mostly the Africa Inland Church, left as "
+            "Protestant. "
             "**African Instituted Churches are 3.29 million people and they have a "
             "homeland.** These are the churches founded in Africa by Africans outside the "
             "missions — in Kenya the Legio Maria, the Nomiya Luo Church, the African Israel "
@@ -92,6 +102,7 @@ ENTRY = {
             "against a national 0.68% — and **Kilifi is 10.2% no-religion**, two and a half "
             "times the next county and a genuine outlier on the Mijikenda coast."),
         how="census, 2019",
+        fill="Protestant churches from the Global Flourishing Study, 2023",
         grain="counties, 1.0m people on average",
         counts=_ke_counts,
         units=None,

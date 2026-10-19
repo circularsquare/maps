@@ -230,6 +230,13 @@ def coverage():
     for cc, school in buddhism_assign.SCHOOL.items():
         if cc in out:
             out[cc] |= {school, buddhism_assign.PARENT}
+    # Pew 2014's family shares inside Latin America's Protestant/Evangelical bucket
+    # (latam_split.py, Anita 2026-10-16), applied in each countries/<cc>.py counts wrapper,
+    # downstream of every mapping module, the same reason as the two above.
+    import latam_split
+    for cc, fams in latam_split.FAMILIES.items():
+        if cc in out:
+            out[cc] |= {latam_split.FAMILY_NODE[f] for f in fams}
     return out
 
 
@@ -284,6 +291,12 @@ def regions():
     for rg, (source_id, name) in UK_REGIONS.items():
         here = cats.loc[cats["source_id"] == source_id, "source_category"]
         got = _clean(uk.resolve(c) for c in here)
+        if rg == "uk-ew":
+            # sources/uk_islam.py's two branch categories are written into uk_islam_split.csv,
+            # not uk.csv, so England and Wales would read "not asked" for Sunni and Shia while
+            # drawing them (2026-10-16).
+            got |= _clean(uk.resolve(c) for c in ("Muslim: Sunni (Pew 2012)",
+                                                  "Muslim: Shi'a (Pew 2012)"))
         if not got:
             raise SystemExit(f"coverage: {rg} resolved to nothing — uk.csv no longer "
                              f"carries source_id {source_id!r}?")

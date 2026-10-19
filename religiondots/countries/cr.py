@@ -71,6 +71,12 @@ def _cr_counts():
     return df[["unit", "node", "count", "congregations", "tier"]]
 
 
+def _cr_counts_split():
+    """`_cr_counts` with Pew 2014's Pentecostal share drawn inside LAPOP's two Protestant boxes;
+    latam_split.py, Anita 2026-10-16. The rows stay `modelled`."""
+    return _latam_split("cr", _cr_counts())
+
+
 ENTRY = {
     "cr": dict(
         name="Costa Rica",
@@ -137,10 +143,12 @@ ENTRY = {
             "**0.31%**, eighteen respondents in thirteen years, from a card that offers one "
             "worldwide box for it, in a country whose census asks every person which of its "
             "indigenous peoples they belong to. The same card read a fifth of a census on "
-            "that cell in Suriname."),
+            "that cell in Suriname. 46% of the Evangelical and Protestant answers are drawn "
+            "as Pentecostal, the share of Protestants that Pew Research Center's 2014 survey "
+            "found in Pentecostal churches; the rest stay unnamed."),
         how="survey, four rounds 2010 to 2023 pooled",
         grain="provinces, 721,000 people on average",
-        counts=_cr_counts,
+        counts=_cr_counts_split,
         units=None,
         unit_key=None,
         place=HERE / "data" / "geo" / "cr" / "cr_hexes.gpkg",

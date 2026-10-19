@@ -1,0 +1,3377 @@
+{
+ "name": "anhui-west",
+ "province": "Anhui",
+ "prefectures": [
+  "Fuyang",
+  "Lu'an",
+  "Anqing"
+ ],
+ "tiles": [
+  {
+   "tag": "1",
+   "x": 6981,
+   "y": 3222,
+   "w": 669,
+   "h": 800,
+   "scale": 2,
+   "regions": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16
+   ]
+  }
+ ],
+ "regions": [
+  {
+   "key": "#f0d6aa",
+   "color": "#f0d6aa",
+   "lon": 115.6977,
+   "lat": 33.3271,
+   "bbox": [
+    7221,
+    3422,
+    7257,
+    3475
+   ],
+   "area_px": 1257,
+   "people": 911406,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Taihe",
+     "local": "太和县",
+     "prefecture": "Fuyang",
+     "prefecture_local": "阜阳市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.92,
+     "area_share": 0.92,
+     "cover": 0.665
+    },
+    {
+     "name": "Yingquan",
+     "local": "颍泉区",
+     "prefecture": "Fuyang",
+     "prefecture_local": "阜阳市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.063,
+     "area_share": 0.06,
+     "cover": 0.1
+    },
+    {
+     "name": "Lixin",
+     "local": "利辛县",
+     "prefecture": "Bozhou",
+     "prefecture_local": "亳州市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.009,
+     "area_share": 0.012,
+     "cover": 0.007
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Anhui",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.998,
+     "cover": 0.015
+    },
+    {
+     "level": "prefecture",
+     "name": "Fuyang",
+     "local": "阜阳市",
+     "province": "Anhui",
+     "country": "China",
+     "people_share": 0.983,
+     "cover": 0.121
+    }
+   ],
+   "towns": [
+    {
+     "town": "城关镇",
+     "county": "太和县",
+     "city": "阜阳市",
+     "people_share": 0.12,
+     "cover": 0.905
+    },
+    {
+     "town": "坟台镇",
+     "county": "太和县",
+     "city": "阜阳市",
+     "people_share": 0.074,
+     "cover": 0.993
+    },
+    {
+     "town": "三塔镇",
+     "county": "太和县",
+     "city": "阜阳市",
+     "people_share": 0.053,
+     "cover": 0.986
+    },
+    {
+     "town": "洪山镇",
+     "county": "太和县",
+     "city": "阜阳市",
+     "people_share": 0.052,
+     "cover": 1.0
+    },
+    {
+     "town": "原墙镇",
+     "county": "太和县",
+     "city": "阜阳市",
+     "people_share": 0.051,
+     "cover": 1.0
+    },
+    {
+     "town": "倪邱镇",
+     "county": "太和县",
+     "city": "阜阳市",
+     "people_share": 0.046,
+     "cover": 1.0
+    },
+    {
+     "town": "三堂镇",
+     "county": "太和县",
+     "city": "阜阳市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "阮桥镇",
+     "county": "太和县",
+     "city": "阜阳市",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "行流镇",
+     "county": "颍泉区",
+     "city": "阜阳市",
+     "people_share": 0.039,
+     "cover": 0.422
+    },
+    {
+     "town": "关集镇",
+     "county": "太和县",
+     "city": "阜阳市",
+     "people_share": 0.039,
+     "cover": 1.0
+    },
+    {
+     "town": "桑营镇",
+     "county": "太和县",
+     "city": "阜阳市",
+     "people_share": 0.038,
+     "cover": 0.954
+    },
+    {
+     "town": "赵集乡",
+     "county": "太和县",
+     "city": "阜阳市",
+     "people_share": 0.038,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#ebcfa4",
+     "border_px": 767
+    },
+    {
+     "key": "#ebe1b5",
+     "border_px": 523
+    },
+    {
+     "key": "#ead4ae",
+     "border_px": 502
+    },
+    {
+     "key": "#f6cfaf",
+     "border_px": 172
+    },
+    {
+     "key": "#edd79b",
+     "border_px": 128
+    }
+   ],
+   "text_px": 0,
+   "n": 1,
+   "thumb": {
+    "x0": 7181,
+    "y0": 3382,
+    "k": 3.0,
+    "w": 348,
+    "h": 399
+   }
+  },
+  {
+   "key": "#ebcfa4",
+   "color": "#ebcfa4",
+   "lon": 115.4396,
+   "lat": 33.2598,
+   "bbox": [
+    7204,
+    3426,
+    7235,
+    3485
+   ],
+   "area_px": 1150,
+   "people": 954094,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Jieshou",
+     "local": "界首市",
+     "prefecture": "Fuyang",
+     "prefecture_local": "阜阳市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.525,
+     "area_share": 0.496,
+     "cover": 0.96
+    },
+    {
+     "name": "Taihe",
+     "local": "太和县",
+     "prefecture": "Fuyang",
+     "prefecture_local": "阜阳市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.433,
+     "area_share": 0.449,
+     "cover": 0.328
+    },
+    {
+     "name": "Yingquan",
+     "local": "颍泉区",
+     "prefecture": "Fuyang",
+     "prefecture_local": "阜阳市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.022,
+     "area_share": 0.037,
+     "cover": 0.037
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Anhui",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.995,
+     "cover": 0.015
+    },
+    {
+     "level": "prefecture",
+     "name": "Fuyang",
+     "local": "阜阳市",
+     "province": "Anhui",
+     "country": "China",
+     "people_share": 0.995,
+     "cover": 0.129
+    }
+   ],
+   "towns": [
+    {
+     "town": "大新镇",
+     "county": "太和县",
+     "city": "阜阳市",
+     "people_share": 0.087,
+     "cover": 0.979
+    },
+    {
+     "town": "李兴镇",
+     "county": "太和县",
+     "city": "阜阳市",
+     "people_share": 0.054,
+     "cover": 1.0
+    },
+    {
+     "town": "陶庙镇",
+     "county": "界首市",
+     "city": "阜阳市",
+     "people_share": 0.047,
+     "cover": 0.965
+    },
+    {
+     "town": "颍南街道",
+     "county": "界首市",
+     "city": "阜阳市",
+     "people_share": 0.046,
+     "cover": 0.901
+    },
+    {
+     "town": "肖口镇",
+     "county": "太和县",
+     "city": "阜阳市",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "大庙集镇",
+     "county": "太和县",
+     "city": "阜阳市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "东城街道",
+     "county": "界首市",
+     "city": "阜阳市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "王集镇",
+     "county": "界首市",
+     "city": "阜阳市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "双庙镇",
+     "county": "太和县",
+     "city": "阜阳市",
+     "people_share": 0.037,
+     "cover": 0.917
+    },
+    {
+     "town": "西城街道",
+     "county": "界首市",
+     "city": "阜阳市",
+     "people_share": 0.033,
+     "cover": 0.961
+    },
+    {
+     "town": "光武镇",
+     "county": "界首市",
+     "city": "阜阳市",
+     "people_share": 0.032,
+     "cover": 0.877
+    },
+    {
+     "town": "砖集镇",
+     "county": "界首市",
+     "city": "阜阳市",
+     "people_share": 0.03,
+     "cover": 0.927
+    }
+   ],
+   "cities": [
+    {
+     "name": "Jieshou",
+     "admin": "Anhui",
+     "pop": 650870
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f0d6aa",
+     "border_px": 767
+    },
+    {
+     "key": "#f4d398",
+     "border_px": 489
+    },
+    {
+     "key": "#edd79b",
+     "border_px": 351
+    },
+    {
+     "key": "#ebc99a",
+     "border_px": 296
+    },
+    {
+     "key": "#f6cfaf",
+     "border_px": 245
+    }
+   ],
+   "text_px": 0,
+   "n": 2,
+   "thumb": {
+    "x0": 7164,
+    "y0": 3386,
+    "k": 3.0,
+    "w": 333,
+    "h": 417
+   }
+  },
+  {
+   "key": "#ebc99a",
+   "color": "#ebc99a",
+   "lon": 115.1888,
+   "lat": 32.9907,
+   "bbox": [
+    7181,
+    3476,
+    7221,
+    3505
+   ],
+   "area_px": 827,
+   "people": 831072,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Linquan",
+     "local": "临泉县",
+     "prefecture": "Fuyang",
+     "prefecture_local": "阜阳市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.988,
+     "area_share": 0.984,
+     "cover": 0.579
+    },
+    {
+     "name": "Xincai",
+     "local": "新蔡县",
+     "prefecture": "Zhumadian",
+     "prefecture_local": "驻马店市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.006,
+     "area_share": 0.01,
+     "cover": 0.006
+    },
+    {
+     "name": "Jieshou",
+     "local": "界首市",
+     "prefecture": "Fuyang",
+     "prefecture_local": "阜阳市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.003,
+     "area_share": 0.002,
+     "cover": 0.005
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Anhui",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.991,
+     "cover": 0.013
+    },
+    {
+     "level": "prefecture",
+     "name": "Fuyang",
+     "local": "阜阳市",
+     "province": "Anhui",
+     "country": "China",
+     "people_share": 0.991,
+     "cover": 0.112
+    }
+   ],
+   "towns": [
+    {
+     "town": "城关镇",
+     "county": "临泉县",
+     "city": "阜阳市",
+     "people_share": 0.147,
+     "cover": 0.987
+    },
+    {
+     "town": "临泉工业园区",
+     "county": "临泉县",
+     "city": "阜阳市",
+     "people_share": 0.074,
+     "cover": 0.985
+    },
+    {
+     "town": "牛庄乡",
+     "county": "临泉县",
+     "city": "阜阳市",
+     "people_share": 0.068,
+     "cover": 0.982
+    },
+    {
+     "town": "杨桥镇",
+     "county": "临泉县",
+     "city": "阜阳市",
+     "people_share": 0.066,
+     "cover": 0.906
+    },
+    {
+     "town": "黄岭镇",
+     "county": "临泉县",
+     "city": "阜阳市",
+     "people_share": 0.063,
+     "cover": 1.0
+    },
+    {
+     "town": "韦寨镇",
+     "county": "临泉县",
+     "city": "阜阳市",
+     "people_share": 0.062,
+     "cover": 1.0
+    },
+    {
+     "town": "长官镇",
+     "county": "临泉县",
+     "city": "阜阳市",
+     "people_share": 0.059,
+     "cover": 1.0
+    },
+    {
+     "town": "单桥镇",
+     "county": "临泉县",
+     "city": "阜阳市",
+     "people_share": 0.058,
+     "cover": 1.0
+    },
+    {
+     "town": "张营乡",
+     "county": "临泉县",
+     "city": "阜阳市",
+     "people_share": 0.05,
+     "cover": 1.0
+    },
+    {
+     "town": "姜寨镇",
+     "county": "临泉县",
+     "city": "阜阳市",
+     "people_share": 0.048,
+     "cover": 0.951
+    },
+    {
+     "town": "田桥乡",
+     "county": "临泉县",
+     "city": "阜阳市",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "庞营乡",
+     "county": "临泉县",
+     "city": "阜阳市",
+     "people_share": 0.047,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#eed2b1",
+     "border_px": 452
+    },
+    {
+     "key": "#f4d398",
+     "border_px": 310
+    },
+    {
+     "key": "#ebcfa4",
+     "border_px": 296
+    },
+    {
+     "key": "#eedab1",
+     "border_px": 245
+    },
+    {
+     "key": "#ebcaaf",
+     "border_px": 174
+    },
+    {
+     "key": "#f6cfaf",
+     "border_px": 99
+    }
+   ],
+   "text_px": 0,
+   "n": 3,
+   "thumb": {
+    "x0": 7141,
+    "y0": 3436,
+    "k": 3.0,
+    "w": 360,
+    "h": 327
+   }
+  },
+  {
+   "key": "#f6cfaf",
+   "color": "#f6cfaf",
+   "lon": 115.851,
+   "lat": 32.9474,
+   "bbox": [
+    7221,
+    3475,
+    7286,
+    3507
+   ],
+   "area_px": 1221,
+   "people": 872316,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yingdong",
+     "local": "颍东区",
+     "prefecture": "Fuyang",
+     "prefecture_local": "阜阳市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.35,
+     "area_share": 0.428,
+     "cover": 0.593
+    },
+    {
+     "name": "Yingquan",
+     "local": "颍泉区",
+     "prefecture": "Fuyang",
+     "prefecture_local": "阜阳市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.294,
+     "area_share": 0.271,
+     "cover": 0.446
+    },
+    {
+     "name": "Yingzhou",
+     "local": "颍州区",
+     "prefecture": "Fuyang",
+     "prefecture_local": "阜阳市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.231,
+     "area_share": 0.179,
+     "cover": 0.225
+    },
+    {
+     "name": "Linquan",
+     "local": "临泉县",
+     "prefecture": "Fuyang",
+     "prefecture_local": "阜阳市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.07,
+     "area_share": 0.048,
+     "cover": 0.043
+    },
+    {
+     "name": "Lixin",
+     "local": "利辛县",
+     "prefecture": "Bozhou",
+     "prefecture_local": "亳州市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.035,
+     "area_share": 0.053,
+     "cover": 0.029
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Anhui",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.014
+    },
+    {
+     "level": "prefecture",
+     "name": "Fuyang",
+     "local": "阜阳市",
+     "province": "Anhui",
+     "country": "China",
+     "people_share": 0.96,
+     "cover": 0.113
+    }
+   ],
+   "towns": [
+    {
+     "town": "周棚街道",
+     "county": "颍泉区",
+     "city": "阜阳市",
+     "people_share": 0.081,
+     "cover": 0.675
+    },
+    {
+     "town": "宁老庄镇",
+     "county": "颍泉区",
+     "city": "阜阳市",
+     "people_share": 0.072,
+     "cover": 0.985
+    },
+    {
+     "town": "插花镇",
+     "county": "颍东区",
+     "city": "阜阳市",
+     "people_share": 0.068,
+     "cover": 0.952
+    },
+    {
+     "town": "谭棚镇",
+     "county": "临泉县",
+     "city": "阜阳市",
+     "people_share": 0.064,
+     "cover": 0.926
+    },
+    {
+     "town": "闻集镇",
+     "county": "颍泉区",
+     "city": "阜阳市",
+     "people_share": 0.058,
+     "cover": 0.574
+    },
+    {
+     "town": "行流镇",
+     "county": "颍泉区",
+     "city": "阜阳市",
+     "people_share": 0.056,
+     "cover": 0.578
+    },
+    {
+     "town": "口孜镇",
+     "county": "颍东区",
+     "city": "阜阳市",
+     "people_share": 0.052,
+     "cover": 1.0
+    },
+    {
+     "town": "袁寨镇",
+     "county": "颍东区",
+     "city": "阜阳市",
+     "people_share": 0.044,
+     "cover": 0.686
+    },
+    {
+     "town": "新乌江镇",
+     "county": "颍东区",
+     "city": "阜阳市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "三十里铺镇",
+     "county": "颍州区",
+     "city": "阜阳市",
+     "people_share": 0.042,
+     "cover": 0.945
+    },
+    {
+     "town": "新华街道",
+     "county": "颍东区",
+     "city": "阜阳市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "西湖镇",
+     "county": "颍州区",
+     "city": "阜阳市",
+     "people_share": 0.041,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#ebcaaf",
+     "border_px": 497
+    },
+    {
+     "key": "#f3b889",
+     "border_px": 490
+    },
+    {
+     "key": "#ead4ae",
+     "border_px": 479
+    },
+    {
+     "key": "#f0d5c4",
+     "border_px": 408
+    },
+    {
+     "key": "#eecbaf",
+     "border_px": 370
+    },
+    {
+     "key": "#ebcfa4",
+     "border_px": 245
+    },
+    {
+     "key": "#f0d6aa",
+     "border_px": 172
+    },
+    {
+     "key": "#ebc99a",
+     "border_px": 99
+    }
+   ],
+   "text_px": 0,
+   "n": 4,
+   "thumb": {
+    "x0": 7181,
+    "y0": 3435,
+    "k": 2.0,
+    "w": 290,
+    "h": 224
+   }
+  },
+  {
+   "key": "#f3b889",
+   "color": "#f3b889",
+   "lon": 115.8011,
+   "lat": 32.9016,
+   "bbox": [
+    7246,
+    3485,
+    7261,
+    3501
+   ],
+   "area_px": 199,
+   "people": 892146,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yingzhou",
+     "local": "颍州区",
+     "prefecture": "Fuyang",
+     "prefecture_local": "阜阳市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.64,
+     "area_share": 0.623,
+     "cover": 0.639
+    },
+    {
+     "name": "Yingdong",
+     "local": "颍东区",
+     "prefecture": "Fuyang",
+     "prefecture_local": "阜阳市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.188,
+     "area_share": 0.151,
+     "cover": 0.326
+    },
+    {
+     "name": "Yingquan",
+     "local": "颍泉区",
+     "prefecture": "Fuyang",
+     "prefecture_local": "阜阳市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.172,
+     "area_share": 0.226,
+     "cover": 0.268
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Anhui",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.014
+    },
+    {
+     "level": "prefecture",
+     "name": "Fuyang",
+     "local": "阜阳市",
+     "province": "Anhui",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.121
+    }
+   ],
+   "towns": [
+    {
+     "town": "颍西街道",
+     "county": "颍州区",
+     "city": "阜阳市",
+     "people_share": 0.197,
+     "cover": 0.977
+    },
+    {
+     "town": "阜阳开发区京九街道",
+     "county": "颍州区",
+     "city": "阜阳市",
+     "people_share": 0.157,
+     "cover": 0.97
+    },
+    {
+     "town": "清河街道",
+     "county": "颍州区",
+     "city": "阜阳市",
+     "people_share": 0.151,
+     "cover": 1.0
+    },
+    {
+     "town": "中市街道",
+     "county": "颍泉区",
+     "city": "阜阳市",
+     "people_share": 0.134,
+     "cover": 0.933
+    },
+    {
+     "town": "文峰街道",
+     "county": "颍州区",
+     "city": "阜阳市",
+     "people_share": 0.099,
+     "cover": 1.0
+    },
+    {
+     "town": "河东街道",
+     "county": "颍东区",
+     "city": "阜阳市",
+     "people_share": 0.097,
+     "cover": 1.0
+    },
+    {
+     "town": "向阳街道",
+     "county": "颍东区",
+     "city": "阜阳市",
+     "people_share": 0.071,
+     "cover": 0.955
+    },
+    {
+     "town": "周棚街道",
+     "county": "颍泉区",
+     "city": "阜阳市",
+     "people_share": 0.037,
+     "cover": 0.314
+    }
+   ],
+   "cities": [
+    {
+     "name": "Fuyang",
+     "admin": "Anhui",
+     "pop": 8200264
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f6cfaf",
+     "border_px": 490
+    },
+    {
+     "key": "#ebcaaf",
+     "border_px": 212
+    }
+   ],
+   "text_px": 0,
+   "n": 5,
+   "thumb": {
+    "x0": 7206,
+    "y0": 3445,
+    "k": 4.0,
+    "w": 380,
+    "h": 384
+   }
+  },
+  {
+   "key": "#ebcaaf",
+   "color": "#ebcaaf",
+   "lon": 115.5608,
+   "lat": 32.7665,
+   "bbox": [
+    7214,
+    3493,
+    7259,
+    3529
+   ],
+   "area_px": 1212,
+   "people": 887146,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Funan",
+     "local": "阜南县",
+     "prefecture": "Fuyang",
+     "prefecture_local": "阜阳市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.62,
+     "area_share": 0.596,
+     "cover": 0.511
+    },
+    {
+     "name": "Linquan",
+     "local": "临泉县",
+     "prefecture": "Fuyang",
+     "prefecture_local": "阜阳市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.246,
+     "area_share": 0.284,
+     "cover": 0.154
+    },
+    {
+     "name": "Yingzhou",
+     "local": "颍州区",
+     "prefecture": "Fuyang",
+     "prefecture_local": "阜阳市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.133,
+     "area_share": 0.12,
+     "cover": 0.132
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Anhui",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.014
+    },
+    {
+     "level": "prefecture",
+     "name": "Fuyang",
+     "local": "阜阳市",
+     "province": "Anhui",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.12
+    }
+   ],
+   "towns": [
+    {
+     "town": "鹿城镇",
+     "county": "阜南县",
+     "city": "阜阳市",
+     "people_share": 0.176,
+     "cover": 0.996
+    },
+    {
+     "town": "王店镇",
+     "county": "颍州区",
+     "city": "阜阳市",
+     "people_share": 0.062,
+     "cover": 0.879
+    },
+    {
+     "town": "三塔镇",
+     "county": "阜南县",
+     "city": "阜阳市",
+     "people_share": 0.062,
+     "cover": 1.0
+    },
+    {
+     "town": "柴集镇",
+     "county": "阜南县",
+     "city": "阜阳市",
+     "people_share": 0.051,
+     "cover": 1.0
+    },
+    {
+     "town": "许堂乡",
+     "county": "阜南县",
+     "city": "阜阳市",
+     "people_share": 0.047,
+     "cover": 0.971
+    },
+    {
+     "town": "土陂乡",
+     "county": "临泉县",
+     "city": "阜阳市",
+     "people_share": 0.047,
+     "cover": 1.0
+    },
+    {
+     "town": "滑集镇",
+     "county": "临泉县",
+     "city": "阜阳市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "王店孜乡",
+     "county": "阜南县",
+     "city": "阜阳市",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "苗集镇",
+     "county": "阜南县",
+     "city": "阜阳市",
+     "people_share": 0.041,
+     "cover": 0.977
+    },
+    {
+     "town": "田集镇",
+     "county": "阜南县",
+     "city": "阜阳市",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "吕寨镇",
+     "county": "临泉县",
+     "city": "阜阳市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "新村镇",
+     "county": "阜南县",
+     "city": "阜阳市",
+     "people_share": 0.035,
+     "cover": 0.894
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f6cfaf",
+     "border_px": 497
+    },
+    {
+     "key": "#f1d4ba",
+     "border_px": 488
+    },
+    {
+     "key": "#eecbaf",
+     "border_px": 328
+    },
+    {
+     "key": "#eed2b1",
+     "border_px": 277
+    },
+    {
+     "key": "#f3b889",
+     "border_px": 212
+    },
+    {
+     "key": "#ebc99a",
+     "border_px": 174
+    }
+   ],
+   "text_px": 0,
+   "n": 6,
+   "thumb": {
+    "x0": 7174,
+    "y0": 3453,
+    "k": 3.0,
+    "w": 375,
+    "h": 348
+   }
+  },
+  {
+   "key": "#eecbaf",
+   "color": "#eecbaf",
+   "lon": 116.0377,
+   "lat": 32.6278,
+   "bbox": [
+    7252,
+    3500,
+    7304,
+    3539
+   ],
+   "area_px": 1558,
+   "people": 942650,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yingshang",
+     "local": "颍上县",
+     "prefecture": "Fuyang",
+     "prefecture_local": "阜阳市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.635,
+     "area_share": 0.592,
+     "cover": 0.533
+    },
+    {
+     "name": "Funan",
+     "local": "阜南县",
+     "prefecture": "Fuyang",
+     "prefecture_local": "阜阳市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.207,
+     "area_share": 0.236,
+     "cover": 0.181
+    },
+    {
+     "name": "Huoqiu",
+     "local": "霍邱县",
+     "prefecture": "Lu'an",
+     "prefecture_local": "六安市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.144,
+     "area_share": 0.156,
+     "cover": 0.107
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Anhui",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.994,
+     "cover": 0.015
+    },
+    {
+     "level": "prefecture",
+     "name": "Fuyang",
+     "local": "阜阳市",
+     "province": "Anhui",
+     "country": "China",
+     "people_share": 0.849,
+     "cover": 0.108
+    },
+    {
+     "level": "prefecture",
+     "name": "Lu'an",
+     "local": "六安市",
+     "province": "Anhui",
+     "country": "China",
+     "people_share": 0.145,
+     "cover": 0.023
+    }
+   ],
+   "towns": [
+    {
+     "town": "慎城镇",
+     "county": "颍上县",
+     "city": "阜阳市",
+     "people_share": 0.13,
+     "cover": 1.0
+    },
+    {
+     "town": "周集镇",
+     "county": "霍邱县",
+     "city": "六安市",
+     "people_share": 0.064,
+     "cover": 1.0
+    },
+    {
+     "town": "十八里铺镇",
+     "county": "颍上县",
+     "city": "阜阳市",
+     "people_share": 0.054,
+     "cover": 1.0
+    },
+    {
+     "town": "耿棚镇",
+     "county": "颍上县",
+     "city": "阜阳市",
+     "people_share": 0.051,
+     "cover": 1.0
+    },
+    {
+     "town": "润河镇",
+     "county": "颍上县",
+     "city": "阜阳市",
+     "people_share": 0.051,
+     "cover": 1.0
+    },
+    {
+     "town": "建颍乡",
+     "county": "颍上县",
+     "city": "阜阳市",
+     "people_share": 0.046,
+     "cover": 0.883
+    },
+    {
+     "town": "六十铺镇",
+     "county": "颍上县",
+     "city": "阜阳市",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "临水镇",
+     "county": "霍邱县",
+     "city": "六安市",
+     "people_share": 0.043,
+     "cover": 0.924
+    },
+    {
+     "town": "朱寨镇",
+     "county": "阜南县",
+     "city": "阜阳市",
+     "people_share": 0.042,
+     "cover": 0.839
+    },
+    {
+     "town": "八里河镇",
+     "county": "颍上县",
+     "city": "阜阳市",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "张寨镇",
+     "county": "阜南县",
+     "city": "阜阳市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "黄岗镇",
+     "county": "阜南县",
+     "city": "阜阳市",
+     "people_share": 0.037,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f0d5c4",
+     "border_px": 517
+    },
+    {
+     "key": "#f6cfaf",
+     "border_px": 370
+    },
+    {
+     "key": "#ebcaaf",
+     "border_px": 328
+    },
+    {
+     "key": "#f1d9c2",
+     "border_px": 283
+    },
+    {
+     "key": "#f3ddd1",
+     "border_px": 283
+    },
+    {
+     "key": "#f1d4ba",
+     "border_px": 273
+    }
+   ],
+   "text_px": 0,
+   "n": 7,
+   "thumb": {
+    "x0": 7212,
+    "y0": 3460,
+    "k": 3.0,
+    "w": 396,
+    "h": 357
+   }
+  },
+  {
+   "key": "#f3ddd1",
+   "color": "#f3ddd1",
+   "lon": 116.531,
+   "lat": 32.2529,
+   "bbox": [
+    7281,
+    3516,
+    7362,
+    3589
+   ],
+   "area_px": 3777,
+   "people": 1287186,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Shou",
+     "local": "寿县",
+     "prefecture": "Lu'an",
+     "prefecture_local": "六安市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.542,
+     "area_share": 0.556,
+     "cover": 0.733
+    },
+    {
+     "name": "Huoqiu",
+     "local": "霍邱县",
+     "prefecture": "Lu'an",
+     "prefecture_local": "六安市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.446,
+     "area_share": 0.43,
+     "cover": 0.452
+    },
+    {
+     "name": "Yu'an",
+     "local": "裕安区",
+     "prefecture": "Lu'an",
+     "prefecture_local": "六安市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.005,
+     "area_share": 0.005,
+     "cover": 0.006
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Anhui",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.021
+    },
+    {
+     "level": "prefecture",
+     "name": "Lu'an",
+     "local": "六安市",
+     "province": "Anhui",
+     "country": "China",
+     "people_share": 0.996,
+     "cover": 0.218
+    }
+   ],
+   "towns": [
+    {
+     "town": "孟集镇",
+     "county": "霍邱县",
+     "city": "六安市",
+     "people_share": 0.052,
+     "cover": 1.0
+    },
+    {
+     "town": "安丰镇",
+     "county": "寿县",
+     "city": "六安市",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "城关镇",
+     "county": "霍邱县",
+     "city": "六安市",
+     "people_share": 0.046,
+     "cover": 1.0
+    },
+    {
+     "town": "城西湖乡",
+     "county": "霍邱县",
+     "city": "六安市",
+     "people_share": 0.043,
+     "cover": 0.992
+    },
+    {
+     "town": "炎刘镇",
+     "county": "寿县",
+     "city": "六安市",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "新店镇",
+     "county": "霍邱县",
+     "city": "六安市",
+     "people_share": 0.038,
+     "cover": 0.979
+    },
+    {
+     "town": "保义镇",
+     "county": "寿县",
+     "city": "六安市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "临淮岗乡",
+     "county": "霍邱县",
+     "city": "六安市",
+     "people_share": 0.037,
+     "cover": 0.99
+    },
+    {
+     "town": "迎河镇",
+     "county": "寿县",
+     "city": "六安市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "双桥镇",
+     "county": "寿县",
+     "city": "六安市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "冯瓴乡",
+     "county": "霍邱县",
+     "city": "六安市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "三觉镇",
+     "county": "寿县",
+     "city": "六安市",
+     "people_share": 0.032,
+     "cover": 0.862
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#edd5c8",
+     "border_px": 1116
+    },
+    {
+     "key": "#f0cdc3",
+     "border_px": 689
+    },
+    {
+     "key": "#f0d5c4",
+     "border_px": 619
+    },
+    {
+     "key": "#f1d9c2",
+     "border_px": 458
+    },
+    {
+     "key": "#edc3b7",
+     "border_px": 384
+    },
+    {
+     "key": "#eecbaf",
+     "border_px": 283
+    },
+    {
+     "key": "#edb7a7",
+     "border_px": 121
+    }
+   ],
+   "text_px": 73,
+   "n": 8,
+   "thumb": {
+    "x0": 7241,
+    "y0": 3476,
+    "k": 2.0,
+    "w": 322,
+    "h": 306
+   }
+  },
+  {
+   "key": "#edd5c8",
+   "color": "#edd5c8",
+   "lon": 116.3156,
+   "lat": 31.8491,
+   "bbox": [
+    7278,
+    3571,
+    7368,
+    3644
+   ],
+   "area_px": 3159,
+   "people": 1316076,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yu'an",
+     "local": "裕安区",
+     "prefecture": "Lu'an",
+     "prefecture_local": "六安市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.392,
+     "area_share": 0.424,
+     "cover": 0.492
+    },
+    {
+     "name": "Jin'an",
+     "local": "金安区",
+     "prefecture": "Lu'an",
+     "prefecture_local": "六安市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.265,
+     "area_share": 0.141,
+     "cover": 0.32
+    },
+    {
+     "name": "Huoqiu",
+     "local": "霍邱县",
+     "prefecture": "Lu'an",
+     "prefecture_local": "六安市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.243,
+     "area_share": 0.297,
+     "cover": 0.252
+    },
+    {
+     "name": "Feixi",
+     "local": "肥西县",
+     "prefecture": "Hefei",
+     "prefecture_local": "合肥市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.075,
+     "area_share": 0.096,
+     "cover": 0.132
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Anhui",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.999,
+     "cover": 0.021
+    },
+    {
+     "level": "prefecture",
+     "name": "Lu'an",
+     "local": "六安市",
+     "province": "Anhui",
+     "country": "China",
+     "people_share": 0.922,
+     "cover": 0.206
+    },
+    {
+     "level": "prefecture",
+     "name": "Hefei",
+     "local": "合肥市",
+     "province": "Anhui",
+     "country": "China",
+     "people_share": 0.076,
+     "cover": 0.011
+    }
+   ],
+   "towns": [
+    {
+     "town": "新安镇",
+     "county": "裕安区",
+     "city": "六安市",
+     "people_share": 0.069,
+     "cover": 0.821
+    },
+    {
+     "town": "三十铺镇",
+     "county": "金安区",
+     "city": "六安市",
+     "people_share": 0.064,
+     "cover": 0.795
+    },
+    {
+     "town": "独山镇",
+     "county": "裕安区",
+     "city": "六安市",
+     "people_share": 0.053,
+     "cover": 0.999
+    },
+    {
+     "town": "官亭镇",
+     "county": "肥西县",
+     "city": "合肥市",
+     "people_share": 0.048,
+     "cover": 0.983
+    },
+    {
+     "town": "木厂镇",
+     "county": "金安区",
+     "city": "六安市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "马头镇",
+     "county": "金安区",
+     "city": "六安市",
+     "people_share": 0.037,
+     "cover": 0.931
+    },
+    {
+     "town": "分路口镇",
+     "county": "裕安区",
+     "city": "六安市",
+     "people_share": 0.037,
+     "cover": 0.974
+    },
+    {
+     "town": "淠东乡",
+     "county": "金安区",
+     "city": "六安市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "东桥镇",
+     "county": "金安区",
+     "city": "六安市",
+     "people_share": 0.036,
+     "cover": 0.983
+    },
+    {
+     "town": "顺河镇",
+     "county": "裕安区",
+     "city": "六安市",
+     "people_share": 0.032,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f3ddd1",
+     "border_px": 1116
+    },
+    {
+     "key": "#eed7d1",
+     "border_px": 764
+    },
+    {
+     "key": "#f3ded2",
+     "border_px": 754
+    },
+    {
+     "key": "#e7bbaf",
+     "border_px": 736
+    },
+    {
+     "key": "#f1d9c2",
+     "border_px": 501
+    },
+    {
+     "key": "#f0cdc3",
+     "border_px": 369
+    }
+   ],
+   "text_px": 0,
+   "n": 9,
+   "thumb": {
+    "x0": 7238,
+    "y0": 3531,
+    "k": 2.0,
+    "w": 340,
+    "h": 306
+   }
+  },
+  {
+   "key": "#e7bbaf",
+   "color": "#e7bbaf",
+   "lon": 116.4865,
+   "lat": 31.6971,
+   "bbox": [
+    7318,
+    3602,
+    7343,
+    3629
+   ],
+   "area_px": 504,
+   "people": 886800,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yu'an",
+     "local": "裕安区",
+     "prefecture": "Lu'an",
+     "prefecture_local": "六安市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.559,
+     "area_share": 0.528,
+     "cover": 0.473
+    },
+    {
+     "name": "Jin'an",
+     "local": "金安区",
+     "prefecture": "Lu'an",
+     "prefecture_local": "六安市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.441,
+     "area_share": 0.472,
+     "cover": 0.358
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Anhui",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.014
+    },
+    {
+     "level": "prefecture",
+     "name": "Lu'an",
+     "local": "六安市",
+     "province": "Anhui",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.151
+    }
+   ],
+   "towns": [
+    {
+     "town": "平桥乡",
+     "county": "裕安区",
+     "city": "六安市",
+     "people_share": 0.182,
+     "cover": 0.944
+    },
+    {
+     "town": "六安经济开发区",
+     "county": "金安区",
+     "city": "六安市",
+     "people_share": 0.129,
+     "cover": 0.927
+    },
+    {
+     "town": "小华山街道",
+     "county": "裕安区",
+     "city": "六安市",
+     "people_share": 0.125,
+     "cover": 1.0
+    },
+    {
+     "town": "望城街道",
+     "county": "金安区",
+     "city": "六安市",
+     "people_share": 0.095,
+     "cover": 1.0
+    },
+    {
+     "town": "城南镇",
+     "county": "裕安区",
+     "city": "六安市",
+     "people_share": 0.066,
+     "cover": 0.986
+    },
+    {
+     "town": "苏埠镇",
+     "county": "裕安区",
+     "city": "六安市",
+     "people_share": 0.058,
+     "cover": 0.974
+    },
+    {
+     "town": "清水河街道",
+     "county": "金安区",
+     "city": "六安市",
+     "people_share": 0.045,
+     "cover": 0.975
+    },
+    {
+     "town": "先生店乡",
+     "county": "金安区",
+     "city": "六安市",
+     "people_share": 0.036,
+     "cover": 0.874
+    },
+    {
+     "town": "六安市裕安区经济开发区",
+     "county": "裕安区",
+     "city": "六安市",
+     "people_share": 0.034,
+     "cover": 1.0
+    },
+    {
+     "town": "东市街道",
+     "county": "金安区",
+     "city": "六安市",
+     "people_share": 0.03,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Lu’an",
+     "admin": "Anhui",
+     "pop": 4393699
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#edd5c8",
+     "border_px": 736
+    },
+    {
+     "key": "#eed7d1",
+     "border_px": 496
+    }
+   ],
+   "text_px": 0,
+   "n": 10,
+   "thumb": {
+    "x0": 7278,
+    "y0": 3562,
+    "k": 3.0,
+    "w": 315,
+    "h": 321
+   }
+  },
+  {
+   "key": "#eed7d1",
+   "color": "#eed7d1",
+   "lon": 116.5257,
+   "lat": 31.3411,
+   "bbox": [
+    7289,
+    3604,
+    7386,
+    3699
+   ],
+   "area_px": 5347,
+   "people": 1359454,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Shucheng",
+     "local": "舒城县",
+     "prefecture": "Lu'an",
+     "prefecture_local": "六安市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.334,
+     "area_share": 0.275,
+     "cover": 0.582
+    },
+    {
+     "name": "Jin'an",
+     "local": "金安区",
+     "prefecture": "Lu'an",
+     "prefecture_local": "六安市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.256,
+     "area_share": 0.152,
+     "cover": 0.318
+    },
+    {
+     "name": "Huoshan",
+     "local": "霍山县",
+     "prefecture": "Lu'an",
+     "prefecture_local": "六安市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.21,
+     "area_share": 0.342,
+     "cover": 0.997
+    },
+    {
+     "name": "Feixi",
+     "local": "肥西县",
+     "prefecture": "Hefei",
+     "prefecture_local": "合肥市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.151,
+     "area_share": 0.114,
+     "cover": 0.275
+    },
+    {
+     "name": "Yu'an",
+     "local": "裕安区",
+     "prefecture": "Lu'an",
+     "prefecture_local": "六安市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.022,
+     "area_share": 0.017,
+     "cover": 0.028
+    },
+    {
+     "name": "Yuexi",
+     "local": "岳西县",
+     "prefecture": "Anqing",
+     "prefecture_local": "安庆市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.021,
+     "area_share": 0.093,
+     "cover": 0.089
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Anhui",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.022
+    },
+    {
+     "level": "prefecture",
+     "name": "Lu'an",
+     "local": "六安市",
+     "province": "Anhui",
+     "country": "China",
+     "people_share": 0.816,
+     "cover": 0.189
+    },
+    {
+     "level": "prefecture",
+     "name": "Hefei",
+     "local": "合肥市",
+     "province": "Anhui",
+     "country": "China",
+     "people_share": 0.154,
+     "cover": 0.023
+    }
+   ],
+   "towns": [
+    {
+     "town": "张店镇",
+     "county": "金安区",
+     "city": "六安市",
+     "people_share": 0.057,
+     "cover": 0.979
+    },
+    {
+     "town": "汤池镇",
+     "county": "舒城县",
+     "city": "六安市",
+     "people_share": 0.054,
+     "cover": 0.999
+    },
+    {
+     "town": "孙岗镇",
+     "county": "金安区",
+     "city": "六安市",
+     "people_share": 0.054,
+     "cover": 0.993
+    },
+    {
+     "town": "衡山镇",
+     "county": "霍山县",
+     "city": "六安市",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "山南镇",
+     "county": "肥西县",
+     "city": "合肥市",
+     "people_share": 0.046,
+     "cover": 1.0
+    },
+    {
+     "town": "花岗镇",
+     "county": "肥西县",
+     "city": "合肥市",
+     "people_share": 0.045,
+     "cover": 0.944
+    },
+    {
+     "town": "柏林乡",
+     "county": "舒城县",
+     "city": "六安市",
+     "people_share": 0.044,
+     "cover": 1.0
+    },
+    {
+     "town": "椿树镇",
+     "county": "金安区",
+     "city": "六安市",
+     "people_share": 0.038,
+     "cover": 0.959
+    },
+    {
+     "town": "柿树岗乡",
+     "county": "肥西县",
+     "city": "合肥市",
+     "people_share": 0.036,
+     "cover": 0.997
+    },
+    {
+     "town": "棠树乡",
+     "county": "舒城县",
+     "city": "六安市",
+     "people_share": 0.03,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f7ceb8",
+     "border_px": 876
+    },
+    {
+     "key": "#edd5c8",
+     "border_px": 764
+    },
+    {
+     "key": "#f7cdc1",
+     "border_px": 725
+    },
+    {
+     "key": "#f3ded2",
+     "border_px": 700
+    },
+    {
+     "key": "#fadccc",
+     "border_px": 574
+    },
+    {
+     "key": "#e7bbaf",
+     "border_px": 496
+    },
+    {
+     "key": "#f4d7d0",
+     "border_px": 346
+    },
+    {
+     "key": "#f0cdc3",
+     "border_px": 244
+    },
+    {
+     "key": "#dca492",
+     "border_px": 93
+    }
+   ],
+   "text_px": 0,
+   "n": 11,
+   "thumb": {
+    "x0": 7249,
+    "y0": 3564,
+    "k": 2.0,
+    "w": 354,
+    "h": 350
+   }
+  },
+  {
+   "key": "#f3d1b9",
+   "color": "#f3d1b9",
+   "lon": 117.3982,
+   "lat": 30.9871,
+   "bbox": [
+    7389,
+    3645,
+    7450,
+    3721
+   ],
+   "area_px": 3072,
+   "people": 1354290,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Zongyang",
+     "local": "枞阳县",
+     "prefecture": "Anqing",
+     "prefecture_local": "安庆市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.568,
+     "area_share": 0.509,
+     "cover": 0.959
+    },
+    {
+     "name": "Lujiang",
+     "local": "庐江县",
+     "prefecture": "Hefei",
+     "prefecture_local": "合肥市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.304,
+     "area_share": 0.332,
+     "cover": 0.447
+    },
+    {
+     "name": "Wuwei",
+     "local": "无为县",
+     "prefecture": "Wuhu",
+     "prefecture_local": "芜湖市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.101,
+     "area_share": 0.118,
+     "cover": 0.135
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Anhui",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.022
+    },
+    {
+     "level": "prefecture",
+     "name": "Anqing",
+     "local": "安庆市",
+     "province": "Anhui",
+     "country": "China",
+     "people_share": 0.587,
+     "cover": 0.155
+    },
+    {
+     "level": "prefecture",
+     "name": "Hefei",
+     "local": "合肥市",
+     "province": "Anhui",
+     "country": "China",
+     "people_share": 0.301,
+     "cover": 0.046
+    },
+    {
+     "level": "prefecture",
+     "name": "Wuhu",
+     "local": "芜湖市",
+     "province": "Anhui",
+     "country": "China",
+     "people_share": 0.105,
+     "cover": 0.036
+    }
+   ],
+   "towns": [
+    {
+     "town": "白湖镇",
+     "county": "庐江县",
+     "city": "合肥市",
+     "people_share": 0.086,
+     "cover": 0.925
+    },
+    {
+     "town": "泥河镇",
+     "county": "庐江县",
+     "city": "合肥市",
+     "people_share": 0.056,
+     "cover": 1.0
+    },
+    {
+     "town": "汤沟镇",
+     "county": "枞阳县",
+     "city": "安庆市",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "老洲镇",
+     "county": "枞阳县",
+     "city": "安庆市",
+     "people_share": 0.046,
+     "cover": 0.996
+    },
+    {
+     "town": "枞阳镇",
+     "county": "枞阳县",
+     "city": "安庆市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "横埠镇",
+     "county": "枞阳县",
+     "city": "安庆市",
+     "people_share": 0.044,
+     "cover": 1.0
+    },
+    {
+     "town": "钱桥镇",
+     "county": "枞阳县",
+     "city": "安庆市",
+     "people_share": 0.039,
+     "cover": 1.0
+    },
+    {
+     "town": "牛埠镇",
+     "county": "无为县",
+     "city": "芜湖市",
+     "people_share": 0.038,
+     "cover": 0.987
+    },
+    {
+     "town": "乐桥镇",
+     "county": "庐江县",
+     "city": "合肥市",
+     "people_share": 0.036,
+     "cover": 0.962
+    },
+    {
+     "town": "欧山镇",
+     "county": "枞阳县",
+     "city": "安庆市",
+     "people_share": 0.034,
+     "cover": 0.982
+    },
+    {
+     "town": "柯坦镇",
+     "county": "庐江县",
+     "city": "合肥市",
+     "people_share": 0.033,
+     "cover": 0.955
+    },
+    {
+     "town": "周潭镇",
+     "county": "枞阳县",
+     "city": "安庆市",
+     "people_share": 0.032,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f7cdc1",
+     "border_px": 773
+    },
+    {
+     "key": "#f7ceb8",
+     "border_px": 717
+    },
+    {
+     "key": "#dfe5ce",
+     "border_px": 633
+    },
+    {
+     "key": "#eec2bb",
+     "border_px": 437
+    },
+    {
+     "key": "#e5b3a2",
+     "border_px": 397
+    },
+    {
+     "key": "#f4d5aa",
+     "border_px": 263
+    }
+   ],
+   "text_px": 0,
+   "n": 12,
+   "thumb": {
+    "x0": 7349,
+    "y0": 3605,
+    "k": 2.0,
+    "w": 282,
+    "h": 312
+   }
+  },
+  {
+   "key": "#f7ceb8",
+   "color": "#f7ceb8",
+   "lon": 116.8069,
+   "lat": 30.9065,
+   "bbox": [
+    7341,
+    3657,
+    7397,
+    3729
+   ],
+   "area_px": 2656,
+   "people": 1167662,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Tongcheng",
+     "local": "桐城市",
+     "prefecture": "Anqing",
+     "prefecture_local": "安庆市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.618,
+     "area_share": 0.517,
+     "cover": 0.983
+    },
+    {
+     "name": "Huaining",
+     "local": "怀宁县",
+     "prefecture": "Anqing",
+     "prefecture_local": "安庆市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.202,
+     "area_share": 0.161,
+     "cover": 0.425
+    },
+    {
+     "name": "Qianshan",
+     "local": "潜山县",
+     "prefecture": "Anqing",
+     "prefecture_local": "安庆市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.172,
+     "area_share": 0.305,
+     "cover": 0.42
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Anhui",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.019
+    },
+    {
+     "level": "prefecture",
+     "name": "Anqing",
+     "local": "安庆市",
+     "province": "Anhui",
+     "country": "China",
+     "people_share": 0.999,
+     "cover": 0.227
+    }
+   ],
+   "towns": [
+    {
+     "town": "龙眠街道",
+     "county": "桐城市",
+     "city": "安庆市",
+     "people_share": 0.082,
+     "cover": 1.0
+    },
+    {
+     "town": "高河镇",
+     "county": "怀宁县",
+     "city": "安庆市",
+     "people_share": 0.082,
+     "cover": 1.0
+    },
+    {
+     "town": "大关镇",
+     "county": "桐城市",
+     "city": "安庆市",
+     "people_share": 0.081,
+     "cover": 0.996
+    },
+    {
+     "town": "孔城镇",
+     "county": "桐城市",
+     "city": "安庆市",
+     "people_share": 0.07,
+     "cover": 0.994
+    },
+    {
+     "town": "吕亭镇",
+     "county": "桐城市",
+     "city": "安庆市",
+     "people_share": 0.065,
+     "cover": 1.0
+    },
+    {
+     "town": "源潭镇",
+     "county": "潜山县",
+     "city": "安庆市",
+     "people_share": 0.053,
+     "cover": 1.0
+    },
+    {
+     "town": "新渡镇",
+     "county": "桐城市",
+     "city": "安庆市",
+     "people_share": 0.049,
+     "cover": 1.0
+    },
+    {
+     "town": "青草镇",
+     "county": "桐城市",
+     "city": "安庆市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "金神镇",
+     "county": "桐城市",
+     "city": "安庆市",
+     "people_share": 0.044,
+     "cover": 1.0
+    },
+    {
+     "town": "余井镇",
+     "county": "潜山县",
+     "city": "安庆市",
+     "people_share": 0.042,
+     "cover": 0.991
+    },
+    {
+     "town": "范岗镇",
+     "county": "桐城市",
+     "city": "安庆市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "龙腾街道",
+     "county": "桐城市",
+     "city": "安庆市",
+     "people_share": 0.035,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Wenchang",
+     "admin": "Anhui",
+     "pop": 664455
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#eed7d1",
+     "border_px": 876
+    },
+    {
+     "key": "#f3d1b9",
+     "border_px": 717
+    },
+    {
+     "key": "#fadccc",
+     "border_px": 700
+    },
+    {
+     "key": "#f4d5aa",
+     "border_px": 535
+    },
+    {
+     "key": "#f7cdc1",
+     "border_px": 94
+    }
+   ],
+   "text_px": 0,
+   "n": 13,
+   "thumb": {
+    "x0": 7301,
+    "y0": 3617,
+    "k": 2.0,
+    "w": 272,
+    "h": 304
+   }
+  },
+  {
+   "key": "#fadccc",
+   "color": "#fadccc",
+   "lon": 116.2251,
+   "lat": 30.6843,
+   "bbox": [
+    7285,
+    3690,
+    7369,
+    3765
+   ],
+   "area_px": 4009,
+   "people": 994116,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Taihu",
+     "local": "太湖县",
+     "prefecture": "Anqing",
+     "prefecture_local": "安庆市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.329,
+     "area_share": 0.347,
+     "cover": 0.68
+    },
+    {
+     "name": "Yuexi",
+     "local": "岳西县",
+     "prefecture": "Anqing",
+     "prefecture_local": "安庆市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.285,
+     "area_share": 0.408,
+     "cover": 0.908
+    },
+    {
+     "name": "Qianshan",
+     "local": "潜山县",
+     "prefecture": "Anqing",
+     "prefecture_local": "安庆市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.28,
+     "area_share": 0.177,
+     "cover": 0.579
+    },
+    {
+     "name": "Huaining",
+     "local": "怀宁县",
+     "prefecture": "Anqing",
+     "prefecture_local": "安庆市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.103,
+     "area_share": 0.061,
+     "cover": 0.185
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Anhui",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.999,
+     "cover": 0.016
+    },
+    {
+     "level": "prefecture",
+     "name": "Anqing",
+     "local": "安庆市",
+     "province": "Anhui",
+     "country": "China",
+     "people_share": 0.999,
+     "cover": 0.193
+    }
+   ],
+   "towns": [
+    {
+     "town": "晋熙镇",
+     "county": "太湖县",
+     "city": "安庆市",
+     "people_share": 0.09,
+     "cover": 0.991
+    },
+    {
+     "town": "梅城镇",
+     "county": "潜山县",
+     "city": "安庆市",
+     "people_share": 0.088,
+     "cover": 0.995
+    },
+    {
+     "town": "天堂镇",
+     "county": "岳西县",
+     "city": "安庆市",
+     "people_share": 0.052,
+     "cover": 1.0
+    },
+    {
+     "town": "黄铺镇",
+     "county": "潜山县",
+     "city": "安庆市",
+     "people_share": 0.047,
+     "cover": 1.0
+    },
+    {
+     "town": "小池镇",
+     "county": "太湖县",
+     "city": "安庆市",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "王河镇",
+     "county": "潜山县",
+     "city": "安庆市",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "腊树镇",
+     "county": "怀宁县",
+     "city": "安庆市",
+     "people_share": 0.034,
+     "cover": 0.981
+    },
+    {
+     "town": "弥陀镇",
+     "county": "太湖县",
+     "city": "安庆市",
+     "people_share": 0.033,
+     "cover": 0.933
+    },
+    {
+     "town": "温泉镇",
+     "county": "岳西县",
+     "city": "安庆市",
+     "people_share": 0.03,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Meicheng",
+     "admin": "Anhui",
+     "pop": 500292
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f4e2c2",
+     "border_px": 983
+    },
+    {
+     "key": "#f7ceb8",
+     "border_px": 700
+    },
+    {
+     "key": "#f4d7d0",
+     "border_px": 688
+    },
+    {
+     "key": "#eed7d1",
+     "border_px": 574
+    },
+    {
+     "key": "#f3d4c4",
+     "border_px": 455
+    },
+    {
+     "key": "#f4d5aa",
+     "border_px": 428
+    }
+   ],
+   "text_px": 0,
+   "n": 14,
+   "thumb": {
+    "x0": 7245,
+    "y0": 3650,
+    "k": 2.0,
+    "w": 328,
+    "h": 310
+   }
+  },
+  {
+   "key": "#f4d5aa",
+   "color": "#f4d5aa",
+   "lon": 116.9345,
+   "lat": 30.5578,
+   "bbox": [
+    7363,
+    3710,
+    7414,
+    3759
+   ],
+   "area_px": 1292,
+   "people": 945174,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yixiu",
+     "local": "宜秀区",
+     "prefecture": "Anqing",
+     "prefecture_local": "安庆市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.317,
+     "area_share": 0.289,
+     "cover": 0.996
+    },
+    {
+     "name": "Huaining",
+     "local": "怀宁县",
+     "prefecture": "Anqing",
+     "prefecture_local": "安庆市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.226,
+     "area_share": 0.359,
+     "cover": 0.385
+    },
+    {
+     "name": "Daguan",
+     "local": "大观区",
+     "prefecture": "Anqing",
+     "prefecture_local": "安庆市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.218,
+     "area_share": 0.18,
+     "cover": 0.979
+    },
+    {
+     "name": "Yingjiang",
+     "local": "迎江区",
+     "prefecture": "Anqing",
+     "prefecture_local": "安庆市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.187,
+     "area_share": 0.135,
+     "cover": 0.973
+    },
+    {
+     "name": "Dongzhi",
+     "local": "东至县",
+     "prefecture": "Chizhou",
+     "prefecture_local": "池州市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.041,
+     "area_share": 0.009,
+     "cover": 0.072
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Anhui",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.015
+    },
+    {
+     "level": "prefecture",
+     "name": "Anqing",
+     "local": "安庆市",
+     "province": "Anhui",
+     "country": "China",
+     "people_share": 0.955,
+     "cover": 0.176
+    }
+   ],
+   "towns": [
+    {
+     "town": "大桥街道",
+     "county": "宜秀区",
+     "city": "安庆市",
+     "people_share": 0.119,
+     "cover": 1.0
+    },
+    {
+     "town": "菱北街道",
+     "county": "宜秀区",
+     "city": "安庆市",
+     "people_share": 0.071,
+     "cover": 1.0
+    },
+    {
+     "town": "石牌镇",
+     "county": "怀宁县",
+     "city": "安庆市",
+     "people_share": 0.063,
+     "cover": 0.947
+    },
+    {
+     "town": "十里铺乡",
+     "county": "大观区",
+     "city": "安庆市",
+     "people_share": 0.053,
+     "cover": 1.0
+    },
+    {
+     "town": "海口镇",
+     "county": "大观区",
+     "city": "安庆市",
+     "people_share": 0.051,
+     "cover": 1.0
+    },
+    {
+     "town": "新河路街道",
+     "county": "迎江区",
+     "city": "安庆市",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "白泽湖乡",
+     "county": "宜秀区",
+     "city": "安庆市",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "大渡口镇",
+     "county": "东至县",
+     "city": "池州市",
+     "people_share": 0.041,
+     "cover": 0.367
+    },
+    {
+     "town": "龙狮桥乡",
+     "county": "迎江区",
+     "city": "安庆市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "石化路街道",
+     "county": "大观区",
+     "city": "安庆市",
+     "people_share": 0.039,
+     "cover": 1.0
+    },
+    {
+     "town": "大龙山镇",
+     "county": "宜秀区",
+     "city": "安庆市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "老峰镇",
+     "county": "迎江区",
+     "city": "安庆市",
+     "people_share": 0.036,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Anqing",
+     "admin": "Anhui",
+     "pop": 4165284
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#dfe5ce",
+     "border_px": 669
+    },
+    {
+     "key": "#f7ceb8",
+     "border_px": 535
+    },
+    {
+     "key": "#fadccc",
+     "border_px": 428
+    },
+    {
+     "key": "#f4e2c2",
+     "border_px": 335
+    },
+    {
+     "key": "#f3d1b9",
+     "border_px": 263
+    }
+   ],
+   "text_px": 0,
+   "n": 15,
+   "thumb": {
+    "x0": 7323,
+    "y0": 3670,
+    "k": 3.0,
+    "w": 393,
+    "h": 387
+   }
+  },
+  {
+   "key": "#f4e2c2",
+   "color": "#f4e2c2",
+   "lon": 116.4283,
+   "lat": 30.1987,
+   "bbox": [
+    7301,
+    3752,
+    7390,
+    3826
+   ],
+   "area_px": 3517,
+   "people": 1076935,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Wangjiang",
+     "local": "望江县",
+     "prefecture": "Anqing",
+     "prefecture_local": "安庆市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.446,
+     "area_share": 0.336,
+     "cover": 0.989
+    },
+    {
+     "name": "Susong",
+     "local": "宿松县",
+     "prefecture": "Anqing",
+     "prefecture_local": "安庆市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.388,
+     "area_share": 0.514,
+     "cover": 0.73
+    },
+    {
+     "name": "Taihu",
+     "local": "太湖县",
+     "prefecture": "Anqing",
+     "prefecture_local": "安庆市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.14,
+     "area_share": 0.125,
+     "cover": 0.313
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Anhui",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.985,
+     "cover": 0.017
+    },
+    {
+     "level": "prefecture",
+     "name": "Anqing",
+     "local": "安庆市",
+     "province": "Anhui",
+     "country": "China",
+     "people_share": 0.979,
+     "cover": 0.205
+    }
+   ],
+   "towns": [
+    {
+     "town": "华阳镇",
+     "county": "望江县",
+     "city": "安庆市",
+     "people_share": 0.108,
+     "cover": 1.0
+    },
+    {
+     "town": "高士镇",
+     "county": "望江县",
+     "city": "安庆市",
+     "people_share": 0.056,
+     "cover": 0.983
+    },
+    {
+     "town": "鸦滩镇",
+     "county": "望江县",
+     "city": "安庆市",
+     "people_share": 0.055,
+     "cover": 0.973
+    },
+    {
+     "town": "长岭镇",
+     "county": "望江县",
+     "city": "安庆市",
+     "people_share": 0.053,
+     "cover": 0.989
+    },
+    {
+     "town": "新仓镇",
+     "county": "太湖县",
+     "city": "安庆市",
+     "people_share": 0.049,
+     "cover": 0.924
+    },
+    {
+     "town": "复兴镇",
+     "county": "宿松县",
+     "city": "安庆市",
+     "people_share": 0.046,
+     "cover": 0.989
+    },
+    {
+     "town": "太慈镇",
+     "county": "望江县",
+     "city": "安庆市",
+     "people_share": 0.046,
+     "cover": 1.0
+    },
+    {
+     "town": "徐桥镇",
+     "county": "太湖县",
+     "city": "安庆市",
+     "people_share": 0.039,
+     "cover": 1.0
+    },
+    {
+     "town": "雷池乡",
+     "county": "望江县",
+     "city": "安庆市",
+     "people_share": 0.037,
+     "cover": 0.991
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#fadccc",
+     "border_px": 983
+    },
+    {
+     "key": "#edcaae",
+     "border_px": 860
+    },
+    {
+     "key": "#d4eecf",
+     "border_px": 777
+    },
+    {
+     "key": "#dfe5ce",
+     "border_px": 617
+    },
+    {
+     "key": "#f4d5aa",
+     "border_px": 335
+    },
+    {
+     "key": "#f3d4c4",
+     "border_px": 186
+    },
+    {
+     "key": "#e4de96",
+     "border_px": 148
+    }
+   ],
+   "text_px": 0,
+   "n": 16,
+   "thumb": {
+    "x0": 7261,
+    "y0": 3712,
+    "k": 2.0,
+    "w": 338,
+    "h": 308
+   }
+  },
+  {
+   "key": "#f0d5c4",
+   "color": "#f0d5c4",
+   "lon": 116.4303,
+   "lat": 32.7718,
+   "bbox": [
+    7282,
+    3473,
+    7337,
+    3535
+   ],
+   "area_px": 1979,
+   "people": 1121161,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yingshang",
+     "local": "颍上县",
+     "prefecture": "Fuyang",
+     "prefecture_local": "阜阳市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.455,
+     "area_share": 0.439,
+     "cover": 0.455
+    },
+    {
+     "name": "Fengtai",
+     "local": "凤台县",
+     "prefecture": "Huainan",
+     "prefecture_local": "淮南市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.404,
+     "area_share": 0.403,
+     "cover": 0.674
+    },
+    {
+     "name": "Lixin",
+     "local": "利辛县",
+     "prefecture": "Bozhou",
+     "prefecture_local": "亳州市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.131,
+     "area_share": 0.145,
+     "cover": 0.136
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Anhui",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.018
+    },
+    {
+     "level": "prefecture",
+     "name": "Fuyang",
+     "local": "阜阳市",
+     "province": "Anhui",
+     "country": "China",
+     "people_share": 0.448,
+     "cover": 0.068
+    },
+    {
+     "level": "prefecture",
+     "name": "Huainan",
+     "local": "淮南市",
+     "province": "Anhui",
+     "country": "China",
+     "people_share": 0.407,
+     "cover": 0.205
+    },
+    {
+     "level": "prefecture",
+     "name": "Bozhou",
+     "local": "亳州市",
+     "province": "Anhui",
+     "country": "China",
+     "people_share": 0.136,
+     "cover": 0.031
+    }
+   ],
+   "towns": [
+    {
+     "town": "谢桥镇",
+     "county": "颍上县",
+     "city": "阜阳市",
+     "people_share": 0.066,
+     "cover": 1.0
+    },
+    {
+     "town": "新集镇",
+     "county": "凤台县",
+     "city": "淮南市",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "阚疃镇",
+     "county": "利辛县",
+     "city": "亳州市",
+     "people_share": 0.048,
+     "cover": 0.787
+    },
+    {
+     "town": "胡集镇",
+     "county": "利辛县",
+     "city": "亳州市",
+     "people_share": 0.044,
+     "cover": 0.958
+    },
+    {
+     "town": "刘集乡",
+     "county": "颍上县",
+     "city": "阜阳市",
+     "people_share": 0.042,
+     "cover": 0.958
+    },
+    {
+     "town": "迪沟镇",
+     "county": "颍上县",
+     "city": "阜阳市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "江口镇",
+     "county": "颍上县",
+     "city": "阜阳市",
+     "people_share": 0.04,
+     "cover": 0.919
+    },
+    {
+     "town": "岳张集镇",
+     "county": "凤台县",
+     "city": "淮南市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "古城镇",
+     "county": "颍上县",
+     "city": "阜阳市",
+     "people_share": 0.033,
+     "cover": 0.972
+    },
+    {
+     "town": "毛集镇",
+     "county": "凤台县",
+     "city": "淮南市",
+     "people_share": 0.033,
+     "cover": 0.981
+    },
+    {
+     "town": "江店孜镇",
+     "county": "颍上县",
+     "city": "阜阳市",
+     "people_share": 0.032,
+     "cover": 1.0
+    },
+    {
+     "town": "焦岗湖镇",
+     "county": "凤台县",
+     "city": "淮南市",
+     "people_share": 0.032,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f3ddd1",
+     "border_px": 619
+    },
+    {
+     "key": "#edc3b7@116.8,32.7",
+     "border_px": 614
+    },
+    {
+     "key": "#eecbaf",
+     "border_px": 517,
+     "name": "Yingshang"
+    },
+    {
+     "key": "#eed8b5",
+     "border_px": 428
+    },
+    {
+     "key": "#f6cfaf",
+     "border_px": 408,
+     "name": "Yingquan"
+    },
+    {
+     "key": "#ead4ae",
+     "border_px": 192
+    }
+   ],
+   "text_px": 28,
+   "n": 17,
+   "thumb": {
+    "x0": 7242,
+    "y0": 3433,
+    "k": 2.0,
+    "w": 270,
+    "h": 284
+   }
+  }
+ ]
+}

@@ -1,0 +1,2758 @@
+{
+ "name": "shanxi-south",
+ "province": "Shanxi",
+ "prefectures": [
+  "Linfen",
+  "Yuncheng",
+  "Changzhi",
+  "Jincheng"
+ ],
+ "tiles": [
+  {
+   "tag": "1",
+   "x": 6561,
+   "y": 2872,
+   "w": 670,
+   "h": 671,
+   "scale": 2,
+   "regions": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13
+   ]
+  }
+ ],
+ "regions": [
+  {
+   "key": "#e2d8c5",
+   "color": "#e2d8c5",
+   "lon": 112.8444,
+   "lat": 36.6245,
+   "bbox": [
+    6921,
+    3072,
+    6992,
+    3171
+   ],
+   "area_px": 5191,
+   "people": 1101274,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Tunliu",
+     "local": "屯留县",
+     "prefecture": "Zhangzhi",
+     "prefecture_local": "长治市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.265,
+     "area_share": 0.205,
+     "cover": 0.999
+    },
+    {
+     "name": "Xiangyuan",
+     "local": "襄垣县",
+     "prefecture": "Zhangzhi",
+     "prefecture_local": "长治市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.247,
+     "area_share": 0.203,
+     "cover": 1.0
+    },
+    {
+     "name": "Wuxiang",
+     "local": "武乡县",
+     "prefecture": "Zhangzhi",
+     "prefecture_local": "长治市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.162,
+     "area_share": 0.268,
+     "cover": 0.971
+    },
+    {
+     "name": "Qin",
+     "local": "沁县",
+     "prefecture": "Zhangzhi",
+     "prefecture_local": "长治市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.158,
+     "area_share": 0.227,
+     "cover": 1.0
+    },
+    {
+     "name": "Jiao",
+     "local": "郊区",
+     "prefecture": "Zhangzhi",
+     "prefecture_local": "长治市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.07,
+     "area_share": 0.018,
+     "cover": 0.189
+    },
+    {
+     "name": "Zhangzi",
+     "local": "长子县",
+     "prefecture": "Zhangzhi",
+     "prefecture_local": "长治市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.046,
+     "area_share": 0.032,
+     "cover": 0.147
+    },
+    {
+     "name": "Lucheng",
+     "local": "潞城市",
+     "prefecture": "Zhangzhi",
+     "prefecture_local": "长治市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.043,
+     "area_share": 0.02,
+     "cover": 0.191
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.028
+    },
+    {
+     "level": "prefecture",
+     "name": "Changzhi",
+     "local": "长治市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.991,
+     "cover": 0.32
+    }
+   ],
+   "towns": [
+    {
+     "town": "定昌镇",
+     "county": "沁县",
+     "city": "长治市",
+     "people_share": 0.051,
+     "cover": 1.0
+    },
+    {
+     "town": "丰州镇",
+     "county": "武乡县",
+     "city": "长治市",
+     "people_share": 0.05,
+     "cover": 1.0
+    },
+    {
+     "town": "社区管理服务中心",
+     "county": "襄垣县",
+     "city": "长治市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "侯堡镇",
+     "county": "襄垣县",
+     "city": "长治市",
+     "people_share": 0.039,
+     "cover": 1.0
+    },
+    {
+     "town": "上村镇",
+     "county": "屯留县",
+     "city": "长治市",
+     "people_share": 0.039,
+     "cover": 1.0
+    },
+    {
+     "town": "路村乡",
+     "county": "屯留县",
+     "city": "长治市",
+     "people_share": 0.039,
+     "cover": 1.0
+    },
+    {
+     "town": "古韩镇",
+     "county": "襄垣县",
+     "city": "长治市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "渔泽镇",
+     "county": "屯留县",
+     "city": "长治市",
+     "people_share": 0.034,
+     "cover": 1.0
+    },
+    {
+     "town": "麟绛镇",
+     "county": "屯留县",
+     "city": "长治市",
+     "people_share": 0.034,
+     "cover": 1.0
+    },
+    {
+     "town": "店上镇",
+     "county": "潞城市",
+     "city": "长治市",
+     "people_share": 0.032,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#e5dcca",
+     "border_px": 1475
+    },
+    {
+     "key": "#f1e7d1",
+     "border_px": 1231
+    },
+    {
+     "key": "#eae4d3",
+     "border_px": 1003
+    },
+    {
+     "key": "#e2d5bd",
+     "border_px": 393
+    },
+    {
+     "key": "#d7c49e",
+     "border_px": 250
+    }
+   ],
+   "text_px": 0,
+   "n": 1,
+   "thumb": {
+    "x0": 6881,
+    "y0": 3032,
+    "k": 2.0,
+    "w": 302,
+    "h": 358
+   }
+  },
+  {
+   "key": "#f1e7d1",
+   "color": "#f1e7d1",
+   "lon": 112.0834,
+   "lat": 36.3671,
+   "bbox": [
+    6835,
+    3092,
+    6936,
+    3218
+   ],
+   "area_px": 7552,
+   "people": 1150680,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Hongdong",
+     "local": "洪洞县",
+     "prefecture": "Linfen",
+     "prefecture_local": "临汾市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.291,
+     "area_share": 0.093,
+     "cover": 0.436
+    },
+    {
+     "name": "Huozhou",
+     "local": "霍州市",
+     "prefecture": "Linfen",
+     "prefecture_local": "临汾市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.234,
+     "area_share": 0.079,
+     "cover": 0.93
+    },
+    {
+     "name": "Qinyuan",
+     "local": "沁源县",
+     "prefecture": "Zhangzhi",
+     "prefecture_local": "长治市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.145,
+     "area_share": 0.285,
+     "cover": 0.938
+    },
+    {
+     "name": "Fushan",
+     "local": "浮山县",
+     "prefecture": "Linfen",
+     "prefecture_local": "临汾市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.112,
+     "area_share": 0.104,
+     "cover": 0.99
+    },
+    {
+     "name": "Gu",
+     "local": "古县",
+     "prefecture": "Linfen",
+     "prefecture_local": "临汾市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.078,
+     "area_share": 0.144,
+     "cover": 1.0
+    },
+    {
+     "name": "Anze",
+     "local": "安泽县",
+     "prefecture": "Linfen",
+     "prefecture_local": "临汾市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.076,
+     "area_share": 0.235,
+     "cover": 0.997
+    },
+    {
+     "name": "Fenxi",
+     "local": "汾西县",
+     "prefecture": "Linfen",
+     "prefecture_local": "临汾市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.04,
+     "area_share": 0.037,
+     "cover": 0.321
+    },
+    {
+     "name": "Yaodou",
+     "local": "尧都区",
+     "prefecture": "Linfen",
+     "prefecture_local": "临汾市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.021,
+     "area_share": 0.014,
+     "cover": 0.019
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.03
+    },
+    {
+     "level": "prefecture",
+     "name": "Linfen",
+     "local": "临汾市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.854,
+     "cover": 0.206
+    },
+    {
+     "level": "prefecture",
+     "name": "Changzhi",
+     "local": "长治市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.145,
+     "cover": 0.049
+    }
+   ],
+   "towns": [
+    {
+     "town": "赵城镇",
+     "county": "洪洞县",
+     "city": "临汾市",
+     "people_share": 0.06,
+     "cover": 1.0
+    },
+    {
+     "town": "沁河镇",
+     "county": "沁源县",
+     "city": "长治市",
+     "people_share": 0.059,
+     "cover": 1.0
+    },
+    {
+     "town": "白龙镇",
+     "county": "霍州市",
+     "city": "临汾市",
+     "people_share": 0.05,
+     "cover": 1.0
+    },
+    {
+     "town": "堤村乡",
+     "county": "洪洞县",
+     "city": "临汾市",
+     "people_share": 0.05,
+     "cover": 0.997
+    },
+    {
+     "town": "明姜镇",
+     "county": "洪洞县",
+     "city": "临汾市",
+     "people_share": 0.045,
+     "cover": 0.991
+    },
+    {
+     "town": "辛置镇",
+     "county": "霍州市",
+     "city": "临汾市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "天坛镇",
+     "county": "浮山县",
+     "city": "临汾市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "曲亭镇",
+     "county": "洪洞县",
+     "city": "临汾市",
+     "people_share": 0.038,
+     "cover": 0.895
+    },
+    {
+     "town": "淹底乡",
+     "county": "洪洞县",
+     "city": "临汾市",
+     "people_share": 0.035,
+     "cover": 0.888
+    },
+    {
+     "town": "广胜寺镇",
+     "county": "洪洞县",
+     "city": "临汾市",
+     "people_share": 0.03,
+     "cover": 0.982
+    }
+   ],
+   "cities": [
+    {
+     "name": "Huozhou",
+     "admin": "Shanxi",
+     "pop": 282905
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#e2d8c5",
+     "border_px": 1231
+    },
+    {
+     "key": "#e7ddbc",
+     "border_px": 1108
+    },
+    {
+     "key": "#eddcb7",
+     "border_px": 842
+    },
+    {
+     "key": "#e4d8c0",
+     "border_px": 719
+    },
+    {
+     "key": "#eace93",
+     "border_px": 469
+    },
+    {
+     "key": "#e2d5bd",
+     "border_px": 451
+    },
+    {
+     "key": "#f1e0be",
+     "border_px": 389
+    },
+    {
+     "key": "#e5dcca",
+     "border_px": 296
+    },
+    {
+     "key": "#ede2cc",
+     "border_px": 65
+    }
+   ],
+   "text_px": 0,
+   "n": 2,
+   "thumb": {
+    "x0": 6791,
+    "y0": 3048,
+    "k": 1.0,
+    "w": 189,
+    "h": 214
+   }
+  },
+  {
+   "key": "#e5dcca",
+   "color": "#e5dcca",
+   "lon": 113.2789,
+   "lat": 36.2198,
+   "bbox": [
+    6932,
+    3090,
+    7031,
+    3205
+   ],
+   "area_px": 5089,
+   "people": 1413952,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Huguan",
+     "local": "壶关县",
+     "prefecture": "Zhangzhi",
+     "prefecture_local": "长治市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.213,
+     "area_share": 0.18,
+     "cover": 0.995
+    },
+    {
+     "name": "Zhangzi",
+     "local": "长子县",
+     "prefecture": "Zhangzhi",
+     "prefecture_local": "长治市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.206,
+     "area_share": 0.15,
+     "cover": 0.843
+    },
+    {
+     "name": "Zhangzhi",
+     "local": "长治县",
+     "prefecture": "Zhangzhi",
+     "prefecture_local": "长治市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.157,
+     "area_share": 0.061,
+     "cover": 0.562
+    },
+    {
+     "name": "Lucheng",
+     "local": "潞城市",
+     "prefecture": "Zhangzhi",
+     "prefecture_local": "长治市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.142,
+     "area_share": 0.089,
+     "cover": 0.804
+    },
+    {
+     "name": "Licheng",
+     "local": "黎城县",
+     "prefecture": "Zhangzhi",
+     "prefecture_local": "长治市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.114,
+     "area_share": 0.196,
+     "cover": 0.993
+    },
+    {
+     "name": "Pingshun",
+     "local": "平顺县",
+     "prefecture": "Zhangzhi",
+     "prefecture_local": "长治市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.101,
+     "area_share": 0.267,
+     "cover": 0.993
+    },
+    {
+     "name": "Gaoping",
+     "local": "高平市",
+     "prefecture": "Jincheng",
+     "prefecture_local": "晋城市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.059,
+     "area_share": 0.038,
+     "cover": 0.119
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.998,
+     "cover": 0.036
+    },
+    {
+     "level": "prefecture",
+     "name": "Changzhi",
+     "local": "长治市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.935,
+     "cover": 0.388
+    },
+    {
+     "level": "prefecture",
+     "name": "Jincheng",
+     "local": "晋城市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.062,
+     "cover": 0.031
+    }
+   ],
+   "towns": [
+    {
+     "town": "丹朱镇",
+     "county": "长子县",
+     "city": "长治市",
+     "people_share": 0.073,
+     "cover": 0.981
+    },
+    {
+     "town": "龙泉镇",
+     "county": "壶关县",
+     "city": "长治市",
+     "people_share": 0.058,
+     "cover": 1.0
+    },
+    {
+     "town": "黎侯镇",
+     "county": "黎城县",
+     "city": "长治市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "潞华街道",
+     "county": "潞城市",
+     "city": "长治市",
+     "people_share": 0.039,
+     "cover": 1.0
+    },
+    {
+     "town": "荫城镇",
+     "county": "长治县",
+     "city": "长治市",
+     "people_share": 0.034,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#e4d8c0",
+     "border_px": 1479
+    },
+    {
+     "key": "#e2d8c5",
+     "border_px": 1475
+    },
+    {
+     "key": "#dadfb5",
+     "border_px": 851
+    },
+    {
+     "key": "#d7c49e",
+     "border_px": 816
+    },
+    {
+     "key": "#dee5c1",
+     "border_px": 788
+    },
+    {
+     "key": "#f1e7d1",
+     "border_px": 296
+    },
+    {
+     "key": "#eae4d3",
+     "border_px": 266
+    },
+    {
+     "key": "#e2e4a0",
+     "border_px": 81
+    }
+   ],
+   "text_px": 0,
+   "n": 3,
+   "thumb": {
+    "x0": 6892,
+    "y0": 3050,
+    "k": 2.0,
+    "w": 358,
+    "h": 390
+   }
+  },
+  {
+   "key": "#eace93",
+   "color": "#eace93",
+   "lon": 111.5905,
+   "lat": 36.1792,
+   "bbox": [
+    6845,
+    3165,
+    6866,
+    3196
+   ],
+   "area_px": 432,
+   "people": 1141466,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yaodou",
+     "local": "尧都区",
+     "prefecture": "Linfen",
+     "prefecture_local": "临汾市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.737,
+     "area_share": 0.502,
+     "cover": 0.659
+    },
+    {
+     "name": "Hongdong",
+     "local": "洪洞县",
+     "prefecture": "Linfen",
+     "prefecture_local": "临汾市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.263,
+     "area_share": 0.498,
+     "cover": 0.392
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.029
+    },
+    {
+     "level": "prefecture",
+     "name": "Linfen",
+     "local": "临汾市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.239
+    }
+   ],
+   "towns": [
+    {
+     "town": "段店乡",
+     "county": "尧都区",
+     "city": "临汾市",
+     "people_share": 0.166,
+     "cover": 1.0
+    },
+    {
+     "town": "大槐树镇",
+     "county": "洪洞县",
+     "city": "临汾市",
+     "people_share": 0.124,
+     "cover": 0.966
+    },
+    {
+     "town": "刘村镇",
+     "county": "尧都区",
+     "city": "临汾市",
+     "people_share": 0.124,
+     "cover": 0.882
+    },
+    {
+     "town": "辛村乡",
+     "county": "洪洞县",
+     "city": "临汾市",
+     "people_share": 0.075,
+     "cover": 0.929
+    },
+    {
+     "town": "滨河街道",
+     "county": "尧都区",
+     "city": "临汾市",
+     "people_share": 0.066,
+     "cover": 1.0
+    },
+    {
+     "town": "屯里镇",
+     "county": "尧都区",
+     "city": "临汾市",
+     "people_share": 0.059,
+     "cover": 1.0
+    },
+    {
+     "town": "铁路东街道",
+     "county": "尧都区",
+     "city": "临汾市",
+     "people_share": 0.055,
+     "cover": 1.0
+    },
+    {
+     "town": "甘亭镇",
+     "county": "洪洞县",
+     "city": "临汾市",
+     "people_share": 0.043,
+     "cover": 0.957
+    },
+    {
+     "town": "尧庙镇",
+     "county": "尧都区",
+     "city": "临汾市",
+     "people_share": 0.039,
+     "cover": 0.524
+    },
+    {
+     "town": "乡贤街街道",
+     "county": "尧都区",
+     "city": "临汾市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "贾得乡",
+     "county": "尧都区",
+     "city": "临汾市",
+     "people_share": 0.032,
+     "cover": 0.228
+    }
+   ],
+   "cities": [
+    {
+     "name": "Linfen",
+     "admin": "Shanxi",
+     "pop": 3976481
+    },
+    {
+     "name": "Xiaoyi",
+     "admin": "Shanxi",
+     "pop": 468770
+    },
+    {
+     "name": "Dahuaishu",
+     "admin": "Shanxi",
+     "pop": 151037
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#eddcb7",
+     "border_px": 701
+    },
+    {
+     "key": "#f1e7d1",
+     "border_px": 469
+    }
+   ],
+   "text_px": 0,
+   "n": 4,
+   "thumb": {
+    "x0": 6805,
+    "y0": 3125,
+    "k": 3.0,
+    "w": 303,
+    "h": 333
+   }
+  },
+  {
+   "key": "#d7c49e",
+   "color": "#d7c49e",
+   "lon": 113.0836,
+   "lat": 36.1777,
+   "bbox": [
+    6972,
+    3153,
+    6987,
+    3184
+   ],
+   "area_px": 341,
+   "people": 807863,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Jiao",
+     "local": "郊区",
+     "prefecture": "Zhangzhi",
+     "prefecture_local": "长治市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.402,
+     "area_share": 0.478,
+     "cover": 0.797
+    },
+    {
+     "name": "Cheng",
+     "local": "城区",
+     "prefecture": "Zhangzhi",
+     "prefecture_local": "长治市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.377,
+     "area_share": 0.15,
+     "cover": 1.0
+    },
+    {
+     "name": "Zhangzhi",
+     "local": "长治县",
+     "prefecture": "Zhangzhi",
+     "prefecture_local": "长治市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.214,
+     "area_share": 0.346,
+     "cover": 0.438
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.021
+    },
+    {
+     "level": "prefecture",
+     "name": "Changzhi",
+     "local": "长治市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.237
+    }
+   ],
+   "towns": [
+    {
+     "town": "老顶山镇",
+     "county": "郊区",
+     "city": "长治市",
+     "people_share": 0.19,
+     "cover": 0.986
+    },
+    {
+     "town": "堠北庄镇",
+     "county": "郊区",
+     "city": "长治市",
+     "people_share": 0.08,
+     "cover": 0.973
+    },
+    {
+     "town": "常青街道",
+     "county": "城区",
+     "city": "长治市",
+     "people_share": 0.075,
+     "cover": 1.0
+    },
+    {
+     "town": "五马街道",
+     "county": "城区",
+     "city": "长治市",
+     "people_share": 0.073,
+     "cover": 1.0
+    },
+    {
+     "town": "韩店镇",
+     "county": "长治县",
+     "city": "长治市",
+     "people_share": 0.067,
+     "cover": 0.942
+    },
+    {
+     "town": "马厂镇",
+     "county": "郊区",
+     "city": "长治市",
+     "people_share": 0.063,
+     "cover": 0.785
+    },
+    {
+     "town": "工业园区",
+     "county": "长治县",
+     "city": "长治市",
+     "people_share": 0.057,
+     "cover": 1.0
+    },
+    {
+     "town": "大辛庄镇",
+     "county": "郊区",
+     "city": "长治市",
+     "people_share": 0.051,
+     "cover": 1.0
+    },
+    {
+     "town": "苏店镇",
+     "county": "长治县",
+     "city": "长治市",
+     "people_share": 0.047,
+     "cover": 1.0
+    },
+    {
+     "town": "东街街道",
+     "county": "城区",
+     "city": "长治市",
+     "people_share": 0.047,
+     "cover": 1.0
+    },
+    {
+     "town": "太行东街街道",
+     "county": "城区",
+     "city": "长治市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "郝家庄乡",
+     "county": "长治县",
+     "city": "长治市",
+     "people_share": 0.034,
+     "cover": 0.932
+    }
+   ],
+   "cities": [
+    {
+     "name": "Changzhi",
+     "admin": "Shanxi",
+     "pop": 3180884
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#e5dcca",
+     "border_px": 816
+    },
+    {
+     "key": "#e2d8c5",
+     "border_px": 250
+    }
+   ],
+   "text_px": 0,
+   "n": 5,
+   "thumb": {
+    "x0": 6932,
+    "y0": 3113,
+    "k": 3.0,
+    "w": 285,
+    "h": 333
+   }
+  },
+  {
+   "key": "#ede2cc",
+   "color": "#ede2cc",
+   "lon": 110.8464,
+   "lat": 36.1175,
+   "bbox": [
+    6761,
+    3137,
+    6834,
+    3264
+   ],
+   "area_px": 6015,
+   "people": 1130929,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Hejin",
+     "local": "河津市",
+     "prefecture": "Yuncheng",
+     "prefecture_local": "运城市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.352,
+     "area_share": 0.088,
+     "cover": 0.997
+    },
+    {
+     "name": "Jishan",
+     "local": "稷山县",
+     "prefecture": "Yuncheng",
+     "prefecture_local": "运城市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.239,
+     "area_share": 0.074,
+     "cover": 0.742
+    },
+    {
+     "name": "Xiangning",
+     "local": "乡宁县",
+     "prefecture": "Linfen",
+     "prefecture_local": "临汾市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.149,
+     "area_share": 0.196,
+     "cover": 0.687
+    },
+    {
+     "name": "Pu",
+     "local": "蒲县",
+     "prefecture": "Linfen",
+     "prefecture_local": "临汾市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.097,
+     "area_share": 0.227,
+     "cover": 0.986
+    },
+    {
+     "name": "Ji",
+     "local": "吉县",
+     "prefecture": "Linfen",
+     "prefecture_local": "临汾市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.096,
+     "area_share": 0.268,
+     "cover": 0.997
+    },
+    {
+     "name": "Daning",
+     "local": "大宁县",
+     "prefecture": "Linfen",
+     "prefecture_local": "临汾市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.058,
+     "area_share": 0.14,
+     "cover": 0.99
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.029
+    },
+    {
+     "level": "prefecture",
+     "name": "Yuncheng",
+     "local": "运城市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.599,
+     "cover": 0.123
+    },
+    {
+     "level": "prefecture",
+     "name": "Linfen",
+     "local": "临汾市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.401,
+     "cover": 0.095
+    }
+   ],
+   "towns": [
+    {
+     "town": "稷峰镇",
+     "county": "稷山县",
+     "city": "运城市",
+     "people_share": 0.123,
+     "cover": 0.989
+    },
+    {
+     "town": "城区街道",
+     "county": "河津市",
+     "city": "运城市",
+     "people_share": 0.075,
+     "cover": 1.0
+    },
+    {
+     "town": "昌宁镇",
+     "county": "乡宁县",
+     "city": "临汾市",
+     "people_share": 0.056,
+     "cover": 1.0
+    },
+    {
+     "town": "僧楼镇",
+     "county": "河津市",
+     "city": "运城市",
+     "people_share": 0.053,
+     "cover": 1.0
+    },
+    {
+     "town": "赵家庄乡",
+     "county": "河津市",
+     "city": "运城市",
+     "people_share": 0.047,
+     "cover": 1.0
+    },
+    {
+     "town": "吉昌镇",
+     "county": "吉县",
+     "city": "临汾市",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "化峪镇",
+     "county": "稷山县",
+     "city": "运城市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "樊村镇",
+     "county": "河津市",
+     "city": "运城市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "阳村乡",
+     "county": "河津市",
+     "city": "运城市",
+     "people_share": 0.033,
+     "cover": 0.984
+    },
+    {
+     "town": "蒲城镇",
+     "county": "蒲县",
+     "city": "临汾市",
+     "people_share": 0.033,
+     "cover": 1.0
+    },
+    {
+     "town": "柴家乡",
+     "county": "河津市",
+     "city": "运城市",
+     "people_share": 0.032,
+     "cover": 1.0
+    },
+    {
+     "town": "清涧街道",
+     "county": "河津市",
+     "city": "运城市",
+     "people_share": 0.031,
+     "cover": 0.996
+    }
+   ],
+   "cities": [
+    {
+     "name": "Hejin",
+     "admin": "Shanxi",
+     "pop": 395527
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#eddcb7",
+     "border_px": 1779
+    },
+    {
+     "key": "#dfd9cc",
+     "border_px": 1020
+    },
+    {
+     "key": "#ebe5d2",
+     "border_px": 1016
+    },
+    {
+     "key": "#f0e5c4",
+     "border_px": 530
+    },
+    {
+     "key": "#ebe4b9",
+     "border_px": 360
+    },
+    {
+     "key": "#f1e9b9",
+     "border_px": 214
+    },
+    {
+     "key": "#e7ddbc",
+     "border_px": 164
+    },
+    {
+     "key": "#f1e7d1",
+     "border_px": 65
+    }
+   ],
+   "text_px": 0,
+   "n": 6,
+   "thumb": {
+    "x0": 6717,
+    "y0": 3093,
+    "k": 1.0,
+    "w": 161,
+    "h": 215
+   }
+  },
+  {
+   "key": "#eddcb7",
+   "color": "#eddcb7",
+   "lon": 111.3181,
+   "lat": 35.9963,
+   "bbox": [
+    6808,
+    3147,
+    6868,
+    3257
+   ],
+   "area_px": 3312,
+   "people": 1369684,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Xiangfen",
+     "local": "襄汾县",
+     "prefecture": "Linfen",
+     "prefecture_local": "临汾市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.349,
+     "area_share": 0.284,
+     "cover": 0.999
+    },
+    {
+     "name": "Yaodou",
+     "local": "尧都区",
+     "prefecture": "Linfen",
+     "prefecture_local": "临汾市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.3,
+     "area_share": 0.257,
+     "cover": 0.322
+    },
+    {
+     "name": "Xinjiang",
+     "local": "新绛县",
+     "prefecture": "Yuncheng",
+     "prefecture_local": "运城市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.191,
+     "area_share": 0.119,
+     "cover": 0.789
+    },
+    {
+     "name": "Hongdong",
+     "local": "洪洞县",
+     "prefecture": "Linfen",
+     "prefecture_local": "临汾市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.096,
+     "area_share": 0.133,
+     "cover": 0.172
+    },
+    {
+     "name": "Xiangning",
+     "local": "乡宁县",
+     "prefecture": "Linfen",
+     "prefecture_local": "临汾市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.056,
+     "area_share": 0.197,
+     "cover": 0.312
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.035
+    },
+    {
+     "level": "prefecture",
+     "name": "Linfen",
+     "local": "临汾市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.808,
+     "cover": 0.231
+    },
+    {
+     "level": "prefecture",
+     "name": "Yuncheng",
+     "local": "运城市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.192,
+     "cover": 0.048
+    }
+   ],
+   "towns": [
+    {
+     "town": "贾得乡",
+     "county": "尧都区",
+     "city": "临汾市",
+     "people_share": 0.091,
+     "cover": 0.772
+    },
+    {
+     "town": "新城镇",
+     "county": "襄汾县",
+     "city": "临汾市",
+     "people_share": 0.062,
+     "cover": 1.0
+    },
+    {
+     "town": "龙兴镇",
+     "county": "新绛县",
+     "city": "运城市",
+     "people_share": 0.058,
+     "cover": 0.953
+    },
+    {
+     "town": "万安镇",
+     "county": "洪洞县",
+     "city": "临汾市",
+     "people_share": 0.053,
+     "cover": 1.0
+    },
+    {
+     "town": "金殿镇",
+     "county": "尧都区",
+     "city": "临汾市",
+     "people_share": 0.048,
+     "cover": 0.938
+    },
+    {
+     "town": "邓庄镇",
+     "county": "襄汾县",
+     "city": "临汾市",
+     "people_share": 0.046,
+     "cover": 1.0
+    },
+    {
+     "town": "县底镇",
+     "county": "尧都区",
+     "city": "临汾市",
+     "people_share": 0.04,
+     "cover": 0.865
+    },
+    {
+     "town": "汾城镇",
+     "county": "襄汾县",
+     "city": "临汾市",
+     "people_share": 0.031,
+     "cover": 1.0
+    },
+    {
+     "town": "古城镇",
+     "county": "襄汾县",
+     "city": "临汾市",
+     "people_share": 0.03,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Houzhuang",
+     "admin": "Shanxi",
+     "pop": 102400
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#ede2cc",
+     "border_px": 1779
+    },
+    {
+     "key": "#f1e7d1",
+     "border_px": 842
+    },
+    {
+     "key": "#f1e0be",
+     "border_px": 835
+    },
+    {
+     "key": "#eace93",
+     "border_px": 701
+    },
+    {
+     "key": "#ebe4b9",
+     "border_px": 113
+    }
+   ],
+   "text_px": 0,
+   "n": 7,
+   "thumb": {
+    "x0": 6768,
+    "y0": 3107,
+    "k": 2.0,
+    "w": 280,
+    "h": 380
+   }
+  },
+  {
+   "key": "#e4d8c0",
+   "color": "#e4d8c0",
+   "lon": 112.6804,
+   "lat": 35.6728,
+   "bbox": [
+    6892,
+    3186,
+    7030,
+    3277
+   ],
+   "area_px": 6263,
+   "people": 1519931,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Gaoping",
+     "local": "高平市",
+     "prefecture": "Jincheng",
+     "prefecture_local": "晋城市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.402,
+     "area_share": 0.114,
+     "cover": 0.881
+    },
+    {
+     "name": "Yangcheng",
+     "local": "阳城县",
+     "prefecture": "Jincheng",
+     "prefecture_local": "晋城市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.201,
+     "area_share": 0.192,
+     "cover": 0.76
+    },
+    {
+     "name": "Lingchuan",
+     "local": "陵川县",
+     "prefecture": "Jincheng",
+     "prefecture_local": "晋城市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.147,
+     "area_share": 0.239,
+     "cover": 0.984
+    },
+    {
+     "name": "Qinshui",
+     "local": "沁水县",
+     "prefecture": "Jincheng",
+     "prefecture_local": "晋城市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.14,
+     "area_share": 0.373,
+     "cover": 0.988
+    },
+    {
+     "name": "Zezhou",
+     "local": "泽州县",
+     "prefecture": "Jincheng",
+     "prefecture_local": "晋城市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.105,
+     "area_share": 0.049,
+     "cover": 0.267
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.998,
+     "cover": 0.039
+    },
+    {
+     "level": "prefecture",
+     "name": "Jincheng",
+     "local": "晋城市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.997,
+     "cover": 0.543
+    }
+   ],
+   "towns": [
+    {
+     "town": "凤城镇",
+     "county": "阳城县",
+     "city": "晋城市",
+     "people_share": 0.089,
+     "cover": 1.0
+    },
+    {
+     "town": "南城街道",
+     "county": "高平市",
+     "city": "晋城市",
+     "people_share": 0.082,
+     "cover": 1.0
+    },
+    {
+     "town": "东城街道",
+     "county": "高平市",
+     "city": "晋城市",
+     "people_share": 0.057,
+     "cover": 1.0
+    },
+    {
+     "town": "崇文镇",
+     "county": "陵川县",
+     "city": "晋城市",
+     "people_share": 0.046,
+     "cover": 1.0
+    },
+    {
+     "town": "龙港镇",
+     "county": "沁水县",
+     "city": "晋城市",
+     "people_share": 0.04,
+     "cover": 0.999
+    },
+    {
+     "town": "河西镇",
+     "county": "高平市",
+     "city": "晋城市",
+     "people_share": 0.033,
+     "cover": 1.0
+    },
+    {
+     "town": "下村镇",
+     "county": "泽州县",
+     "city": "晋城市",
+     "people_share": 0.033,
+     "cover": 1.0
+    },
+    {
+     "town": "三甲镇",
+     "county": "高平市",
+     "city": "晋城市",
+     "people_share": 0.033,
+     "cover": 0.943
+    },
+    {
+     "town": "米山镇",
+     "county": "高平市",
+     "city": "晋城市",
+     "people_share": 0.033,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Gaoping",
+     "admin": "Shanxi",
+     "pop": 484862
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#d4ccb2",
+     "border_px": 1649
+    },
+    {
+     "key": "#e5dcca",
+     "border_px": 1479
+    },
+    {
+     "key": "#e2e4a0",
+     "border_px": 792
+    },
+    {
+     "key": "#f1e7d1",
+     "border_px": 719
+    },
+    {
+     "key": "#f1e0be",
+     "border_px": 679
+    },
+    {
+     "key": "#ebe4b9",
+     "border_px": 241
+    },
+    {
+     "key": "#f0e7b3",
+     "border_px": 234
+    },
+    {
+     "key": "#d7d982",
+     "border_px": 67
+    }
+   ],
+   "text_px": 0,
+   "n": 8,
+   "thumb": {
+    "x0": 6844,
+    "y0": 3138,
+    "k": 1.0,
+    "w": 234,
+    "h": 187
+   }
+  },
+  {
+   "key": "#f1e0be",
+   "color": "#f1e0be",
+   "lon": 111.6494,
+   "lat": 35.612,
+   "bbox": [
+    6829,
+    3215,
+    6897,
+    3271
+   ],
+   "area_px": 2710,
+   "people": 1176123,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yicheng",
+     "local": "翼城县",
+     "prefecture": "Linfen",
+     "prefecture_local": "临汾市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.278,
+     "area_share": 0.382,
+     "cover": 0.997
+    },
+    {
+     "name": "Jiang",
+     "local": "绛县",
+     "prefecture": "Yuncheng",
+     "prefecture_local": "运城市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.239,
+     "area_share": 0.33,
+     "cover": 0.994
+    },
+    {
+     "name": "Houma",
+     "local": "侯马市",
+     "prefecture": "Linfen",
+     "prefecture_local": "临汾市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.223,
+     "area_share": 0.072,
+     "cover": 0.977
+    },
+    {
+     "name": "Quwo",
+     "local": "曲沃县",
+     "prefecture": "Linfen",
+     "prefecture_local": "临汾市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.19,
+     "area_share": 0.144,
+     "cover": 0.997
+    },
+    {
+     "name": "Xinjiang",
+     "local": "新绛县",
+     "prefecture": "Yuncheng",
+     "prefecture_local": "运城市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.041,
+     "area_share": 0.031,
+     "cover": 0.147
+    },
+    {
+     "name": "Wenxi",
+     "local": "闻喜县",
+     "prefecture": "Yuncheng",
+     "prefecture_local": "运城市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.027,
+     "area_share": 0.031,
+     "cover": 0.076
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.03
+    },
+    {
+     "level": "prefecture",
+     "name": "Linfen",
+     "local": "临汾市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.687,
+     "cover": 0.169
+    },
+    {
+     "level": "prefecture",
+     "name": "Yuncheng",
+     "local": "运城市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.312,
+     "cover": 0.067
+    }
+   ],
+   "towns": [
+    {
+     "town": "古绛镇",
+     "county": "绛县",
+     "city": "运城市",
+     "people_share": 0.08,
+     "cover": 1.0
+    },
+    {
+     "town": "唐兴镇",
+     "county": "翼城县",
+     "city": "临汾市",
+     "people_share": 0.077,
+     "cover": 1.0
+    },
+    {
+     "town": "史村镇",
+     "county": "曲沃县",
+     "city": "临汾市",
+     "people_share": 0.053,
+     "cover": 1.0
+    },
+    {
+     "town": "新田乡",
+     "county": "侯马市",
+     "city": "临汾市",
+     "people_share": 0.051,
+     "cover": 1.0
+    },
+    {
+     "town": "高村乡",
+     "county": "侯马市",
+     "city": "临汾市",
+     "people_share": 0.047,
+     "cover": 0.992
+    },
+    {
+     "town": "隆化镇",
+     "county": "翼城县",
+     "city": "临汾市",
+     "people_share": 0.044,
+     "cover": 0.999
+    },
+    {
+     "town": "南梁镇",
+     "county": "翼城县",
+     "city": "临汾市",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "张村街道",
+     "county": "侯马市",
+     "city": "临汾市",
+     "people_share": 0.038,
+     "cover": 0.887
+    },
+    {
+     "town": "乐昌镇",
+     "county": "曲沃县",
+     "city": "临汾市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "横桥乡",
+     "county": "新绛县",
+     "city": "运城市",
+     "people_share": 0.038,
+     "cover": 0.918
+    },
+    {
+     "town": "中卫乡",
+     "county": "翼城县",
+     "city": "临汾市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "上马街道",
+     "county": "侯马市",
+     "city": "临汾市",
+     "people_share": 0.035,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#ebe4b9",
+     "border_px": 1083
+    },
+    {
+     "key": "#eddcb7",
+     "border_px": 835
+    },
+    {
+     "key": "#e4d8c0",
+     "border_px": 679
+    },
+    {
+     "key": "#f1e7d1",
+     "border_px": 389
+    }
+   ],
+   "text_px": 0,
+   "n": 9,
+   "thumb": {
+    "x0": 6789,
+    "y0": 3175,
+    "k": 2.0,
+    "w": 296,
+    "h": 272
+   }
+  },
+  {
+   "key": "#d4ccb2",
+   "color": "#d4ccb2",
+   "lon": 112.7928,
+   "lat": 35.4087,
+   "bbox": [
+    6926,
+    3229,
+    7006,
+    3279
+   ],
+   "area_px": 2422,
+   "people": 1192209,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Cheng",
+     "local": "城区",
+     "prefecture": "Jincheng",
+     "prefecture_local": "晋城市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.546,
+     "area_share": 0.053,
+     "cover": 0.998
+    },
+    {
+     "name": "Zezhou",
+     "local": "泽州县",
+     "prefecture": "Jincheng",
+     "prefecture_local": "晋城市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.368,
+     "area_share": 0.635,
+     "cover": 0.733
+    },
+    {
+     "name": "Yangcheng",
+     "local": "阳城县",
+     "prefecture": "Jincheng",
+     "prefecture_local": "晋城市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.081,
+     "area_share": 0.227,
+     "cover": 0.24
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.996,
+     "cover": 0.031
+    },
+    {
+     "level": "prefecture",
+     "name": "Jincheng",
+     "local": "晋城市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.996,
+     "cover": 0.425
+    }
+   ],
+   "towns": [
+    {
+     "town": "钟家庄街道",
+     "county": "城区",
+     "city": "晋城市",
+     "people_share": 0.193,
+     "cover": 1.0
+    },
+    {
+     "town": "西上庄街道",
+     "county": "城区",
+     "city": "晋城市",
+     "people_share": 0.113,
+     "cover": 1.0
+    },
+    {
+     "town": "金村镇",
+     "county": "泽州县",
+     "city": "晋城市",
+     "people_share": 0.093,
+     "cover": 1.0
+    },
+    {
+     "town": "南村镇",
+     "county": "泽州县",
+     "city": "晋城市",
+     "people_share": 0.092,
+     "cover": 1.0
+    },
+    {
+     "town": "北石店镇",
+     "county": "城区",
+     "city": "晋城市",
+     "people_share": 0.08,
+     "cover": 0.989
+    },
+    {
+     "town": "开发区",
+     "county": "城区",
+     "city": "晋城市",
+     "people_share": 0.046,
+     "cover": 1.0
+    },
+    {
+     "town": "高都镇",
+     "county": "泽州县",
+     "city": "晋城市",
+     "people_share": 0.037,
+     "cover": 0.914
+    },
+    {
+     "town": "北留镇",
+     "county": "阳城县",
+     "city": "晋城市",
+     "people_share": 0.035,
+     "cover": 0.967
+    },
+    {
+     "town": "北街街道",
+     "county": "城区",
+     "city": "晋城市",
+     "people_share": 0.034,
+     "cover": 1.0
+    },
+    {
+     "town": "南街街道",
+     "county": "城区",
+     "city": "晋城市",
+     "people_share": 0.033,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Jincheng",
+     "admin": "Shanxi",
+     "pop": 2279146
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#e4d8c0",
+     "border_px": 1649
+    },
+    {
+     "key": "#f0e7b3",
+     "border_px": 608
+    },
+    {
+     "key": "#ddd893",
+     "border_px": 588
+    },
+    {
+     "key": "#d7d982",
+     "border_px": 129
+    }
+   ],
+   "text_px": 0,
+   "n": 10,
+   "thumb": {
+    "x0": 6886,
+    "y0": 3189,
+    "k": 2.0,
+    "w": 320,
+    "h": 260
+   }
+  },
+  {
+   "key": "#ebe4b9",
+   "color": "#ebe4b9",
+   "lon": 111.4414,
+   "lat": 35.255,
+   "bbox": [
+    6796,
+    3257,
+    6907,
+    3316
+   ],
+   "area_px": 4242,
+   "people": 1204558,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Wenxi",
+     "local": "闻喜县",
+     "prefecture": "Yuncheng",
+     "prefecture_local": "运城市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.323,
+     "area_share": 0.229,
+     "cover": 0.924
+    },
+    {
+     "name": "Xia",
+     "local": "夏县",
+     "prefecture": "Yuncheng",
+     "prefecture_local": "运城市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.226,
+     "area_share": 0.258,
+     "cover": 0.78
+    },
+    {
+     "name": "Yuanqu",
+     "local": "垣曲县",
+     "prefecture": "Yuncheng",
+     "prefecture_local": "运城市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.19,
+     "area_share": 0.342,
+     "cover": 0.999
+    },
+    {
+     "name": "Wanrong",
+     "local": "万荣县",
+     "prefecture": "Yuncheng",
+     "prefecture_local": "运城市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.139,
+     "area_share": 0.074,
+     "cover": 0.372
+    },
+    {
+     "name": "Jishan",
+     "local": "稷山县",
+     "prefecture": "Yuncheng",
+     "prefecture_local": "运城市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.076,
+     "area_share": 0.039,
+     "cover": 0.251
+    },
+    {
+     "name": "Yanhu",
+     "local": "盐湖区",
+     "prefecture": "Yuncheng",
+     "prefecture_local": "运城市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.025,
+     "area_share": 0.029,
+     "cover": 0.031
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.998,
+     "cover": 0.031
+    },
+    {
+     "level": "prefecture",
+     "name": "Yuncheng",
+     "local": "运城市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.998,
+     "cover": 0.218
+    }
+   ],
+   "towns": [
+    {
+     "town": "桐城镇",
+     "county": "闻喜县",
+     "city": "运城市",
+     "people_share": 0.092,
+     "cover": 1.0
+    },
+    {
+     "town": "解店镇",
+     "county": "万荣县",
+     "city": "运城市",
+     "people_share": 0.075,
+     "cover": 1.0
+    },
+    {
+     "town": "瑶峰镇",
+     "county": "夏县",
+     "city": "运城市",
+     "people_share": 0.064,
+     "cover": 0.976
+    },
+    {
+     "town": "新城镇",
+     "county": "垣曲县",
+     "city": "运城市",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "河底镇",
+     "county": "闻喜县",
+     "city": "运城市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "太阳乡",
+     "county": "稷山县",
+     "city": "运城市",
+     "people_share": 0.04,
+     "cover": 0.837
+    },
+    {
+     "town": "皋落乡",
+     "county": "垣曲县",
+     "city": "运城市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "侯村乡",
+     "county": "闻喜县",
+     "city": "运城市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "胡张乡",
+     "county": "夏县",
+     "city": "运城市",
+     "people_share": 0.033,
+     "cover": 1.0
+    },
+    {
+     "town": "水头镇",
+     "county": "夏县",
+     "city": "运城市",
+     "people_share": 0.033,
+     "cover": 0.97
+    },
+    {
+     "town": "东镇镇",
+     "county": "闻喜县",
+     "city": "运城市",
+     "people_share": 0.032,
+     "cover": 0.941
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f1e0be",
+     "border_px": 1083
+    },
+    {
+     "key": "#ebe09c",
+     "border_px": 583
+    },
+    {
+     "key": "#eddcb3",
+     "border_px": 575
+    },
+    {
+     "key": "#f1dcb1",
+     "border_px": 476
+    },
+    {
+     "key": "#f1e9b9",
+     "border_px": 419
+    },
+    {
+     "key": "#f0e7b3",
+     "border_px": 372
+    },
+    {
+     "key": "#ede2cc",
+     "border_px": 360
+    },
+    {
+     "key": "#e4d8c0",
+     "border_px": 241
+    },
+    {
+     "key": "#eddcb7",
+     "border_px": 113
+    }
+   ],
+   "text_px": 0,
+   "n": 11,
+   "thumb": {
+    "x0": 6756,
+    "y0": 3217,
+    "k": 2.0,
+    "w": 382,
+    "h": 278
+   }
+  },
+  {
+   "key": "#f1e9b9",
+   "color": "#f1e9b9",
+   "lon": 110.5844,
+   "lat": 35.1314,
+   "bbox": [
+    6761,
+    3264,
+    6808,
+    3343
+   ],
+   "area_px": 2598,
+   "people": 1215410,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Linyi",
+     "local": "临猗县",
+     "prefecture": "Yuncheng",
+     "prefecture_local": "运城市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.442,
+     "area_share": 0.428,
+     "cover": 0.899
+    },
+    {
+     "name": "Yongji",
+     "local": "永济市",
+     "prefecture": "Yuncheng",
+     "prefecture_local": "运城市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.325,
+     "area_share": 0.313,
+     "cover": 0.872
+    },
+    {
+     "name": "Wanrong",
+     "local": "万荣县",
+     "prefecture": "Yuncheng",
+     "prefecture_local": "运城市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.228,
+     "area_share": 0.248,
+     "cover": 0.614
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.996,
+     "cover": 0.031
+    },
+    {
+     "level": "prefecture",
+     "name": "Yuncheng",
+     "local": "运城市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.996,
+     "cover": 0.22
+    }
+   ],
+   "towns": [
+    {
+     "town": "猗氏镇",
+     "county": "临猗县",
+     "city": "运城市",
+     "people_share": 0.065,
+     "cover": 1.0
+    },
+    {
+     "town": "城西街道",
+     "county": "永济市",
+     "city": "运城市",
+     "people_share": 0.063,
+     "cover": 0.985
+    },
+    {
+     "town": "城东街道",
+     "county": "永济市",
+     "city": "运城市",
+     "people_share": 0.052,
+     "cover": 0.999
+    },
+    {
+     "town": "城北街道",
+     "county": "永济市",
+     "city": "运城市",
+     "people_share": 0.05,
+     "cover": 1.0
+    },
+    {
+     "town": "北景乡",
+     "county": "临猗县",
+     "city": "运城市",
+     "people_share": 0.046,
+     "cover": 1.0
+    },
+    {
+     "town": "角杯乡",
+     "county": "临猗县",
+     "city": "运城市",
+     "people_share": 0.045,
+     "cover": 0.99
+    },
+    {
+     "town": "卿头镇",
+     "county": "永济市",
+     "city": "运城市",
+     "people_share": 0.035,
+     "cover": 0.995
+    },
+    {
+     "town": "孙吉镇",
+     "county": "临猗县",
+     "city": "运城市",
+     "people_share": 0.035,
+     "cover": 0.992
+    },
+    {
+     "town": "北辛乡",
+     "county": "临猗县",
+     "city": "运城市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "虞乡镇",
+     "county": "永济市",
+     "city": "运城市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "荣河镇",
+     "county": "万荣县",
+     "city": "运城市",
+     "people_share": 0.034,
+     "cover": 0.979
+    },
+    {
+     "town": "高村乡",
+     "county": "万荣县",
+     "city": "运城市",
+     "people_share": 0.032,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Yongji",
+     "admin": "Shanxi",
+     "pop": 444724
+    },
+    {
+     "name": "Yishi",
+     "admin": "Shanxi",
+     "pop": 102090
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f0e5c4",
+     "border_px": 869
+    },
+    {
+     "key": "#f7eec4",
+     "border_px": 731
+    },
+    {
+     "key": "#ebe09c",
+     "border_px": 712
+    },
+    {
+     "key": "#ebe4b9",
+     "border_px": 419
+    },
+    {
+     "key": "#ede2cc",
+     "border_px": 214
+    },
+    {
+     "key": "#f3edbb",
+     "border_px": 43
+    }
+   ],
+   "text_px": 0,
+   "n": 12,
+   "thumb": {
+    "x0": 6721,
+    "y0": 3224,
+    "k": 2.0,
+    "w": 254,
+    "h": 318
+   }
+  },
+  {
+   "key": "#ebe09c",
+   "color": "#ebe09c",
+   "lon": 110.9526,
+   "lat": 35.0417,
+   "bbox": [
+    6799,
+    3289,
+    6841,
+    3336
+   ],
+   "area_px": 1212,
+   "people": 1065594,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yanhu",
+     "local": "盐湖区",
+     "prefecture": "Yuncheng",
+     "prefecture_local": "运城市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.869,
+     "area_share": 0.786,
+     "cover": 0.963
+    },
+    {
+     "name": "Xia",
+     "local": "夏县",
+     "prefecture": "Yuncheng",
+     "prefecture_local": "运城市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.072,
+     "area_share": 0.104,
+     "cover": 0.22
+    },
+    {
+     "name": "Linyi",
+     "local": "临猗县",
+     "prefecture": "Yuncheng",
+     "prefecture_local": "运城市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.056,
+     "area_share": 0.097,
+     "cover": 0.1
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.027
+    },
+    {
+     "level": "prefecture",
+     "name": "Yuncheng",
+     "local": "运城市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.193
+    }
+   ],
+   "towns": [
+    {
+     "town": "北城街道",
+     "county": "盐湖区",
+     "city": "运城市",
+     "people_share": 0.203,
+     "cover": 1.0
+    },
+    {
+     "town": "东城街道",
+     "county": "盐湖区",
+     "city": "运城市",
+     "people_share": 0.115,
+     "cover": 1.0
+    },
+    {
+     "town": "南城街道",
+     "county": "盐湖区",
+     "city": "运城市",
+     "people_share": 0.064,
+     "cover": 1.0
+    },
+    {
+     "town": "龙居镇",
+     "county": "盐湖区",
+     "city": "运城市",
+     "people_share": 0.061,
+     "cover": 1.0
+    },
+    {
+     "town": "解州镇",
+     "county": "盐湖区",
+     "city": "运城市",
+     "people_share": 0.06,
+     "cover": 0.995
+    },
+    {
+     "town": "北相镇",
+     "county": "盐湖区",
+     "city": "运城市",
+     "people_share": 0.059,
+     "cover": 1.0
+    },
+    {
+     "town": "西城街道",
+     "county": "盐湖区",
+     "city": "运城市",
+     "people_share": 0.058,
+     "cover": 1.0
+    },
+    {
+     "town": "姚孟街道",
+     "county": "盐湖区",
+     "city": "运城市",
+     "people_share": 0.05,
+     "cover": 1.0
+    },
+    {
+     "town": "裴介镇",
+     "county": "夏县",
+     "city": "运城市",
+     "people_share": 0.046,
+     "cover": 0.964
+    },
+    {
+     "town": "楚侯乡",
+     "county": "临猗县",
+     "city": "运城市",
+     "people_share": 0.03,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Yuncheng",
+     "admin": "Shanxi",
+     "pop": 4774508
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f1e9b9",
+     "border_px": 712
+    },
+    {
+     "key": "#ebe4b9",
+     "border_px": 583
+    },
+    {
+     "key": "#f1dcb1",
+     "border_px": 576
+    },
+    {
+     "key": "#f7eec4",
+     "border_px": 39
+    }
+   ],
+   "text_px": 0,
+   "n": 13,
+   "thumb": {
+    "x0": 6759,
+    "y0": 3249,
+    "k": 3.0,
+    "w": 366,
+    "h": 381
+   }
+  }
+ ]
+}

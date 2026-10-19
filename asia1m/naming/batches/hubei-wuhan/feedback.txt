@@ -1,0 +1,17 @@
+batch hubei-wuhan
+1: pick Xinzhou
+2: pick Panlong. Picked Panlongcheng, shortened to Panlong on the map for space.
+3: pick Jiang'an
+4: pick Qiaokou
+5: pick Qingshan
+6: pick Hankou. Wuhan's three well-known towns each get a region, so there is no "Wuhan" region.
+7: pick Wuchang
+8: pick Hanyang
+9: pick East Lake
+10: pick Ezhou
+11: pick Hongshan
+12: pick Caidian
+13: pick Tangxun
+14: pick Jiangxia
+15: pick Daye
+16: pick Yangxin

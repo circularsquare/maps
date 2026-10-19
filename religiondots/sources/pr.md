@@ -290,3 +290,13 @@ Supervisor-decided, from §10. Two changes and one measurement.
   Protestant turns blue (#5476fc), and the only close pair left is `Christianity, unspecified` /
   Latin Catholic at 25.3, 16.2. CIEDE2000 is a scratch implementation checked against the 12 published
   test pairs of Sharma, Wu and Dalal (2005), all equal to 4 dp.
+
+## Pentecostals from Pew 2014 (2026-10-16)
+
+Anita's call of 2026-10-16, built by session `c67d3c3c-latam` (`latam_split.py`, sources.md
+§latam-2026-10-16). Of the 297,770 WVS `Protestante`, 148,935 (50.0%) are drawn on
+`christianity.pentecostal`, the share of Puerto Rican Protestants Pew Research Center's 2014 survey
+found in a Pentecostal church (`QPROT`, 566 Protestants). 148,835 stay on `christianity.protestant`.
+All `modelled`. The write-in `Otros` (about 662,000 on bare `christianity`) is not split: Pew finds
+33% of Puerto Ricans Protestant against WVS's 9.4% `Protestante`, so many of those write-ins are
+probably Protestants, but the file records them only as other Christian.

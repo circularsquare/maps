@@ -231,3 +231,12 @@ Judaísmo (199 people in 57 municipios) and Musulmán (321 in 50) are both **und
   `CifrasMun/` 404s; the variable dictionary made it unnecessary.
 - INIDE announced a **IX Censo de Población** (`/docs/cepov2023/`). Nothing published yet, so
   2005 is still the current census as of 2026-09-07.
+
+## Pentecostals from Pew 2014 (2026-10-16)
+
+Anita's call of 2026-10-16, built by session `c67d3c3c-latam` (`latam_split.py`, sources.md
+§latam-2026-10-16). Of the census's 981,795 `Evangélica`, 643,496 (65.5%) are drawn on
+`christianity.pentecostal`: Pew Research Center's 2014 survey puts 61.0% of Nicaraguan Protestants
+in a Pentecostal church (`QPROT`, 596 Protestants), taken of the Protestant universe of 1,055,697,
+which includes the census's Moravians. 338,299 stay on `christianity.protestant`. The split rows
+are `derived` and roll back to `Evangélica`.

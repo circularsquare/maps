@@ -1,0 +1,89 @@
+{
+ "1": [
+  {
+   "i": 1,
+   "name": "Wushengguan",
+   "x": 171.2,
+   "y": 158.0,
+   "inside": true,
+   "src": "township"
+  }
+ ],
+ "2": [],
+ "3": [
+  {
+   "i": 1,
+   "name": "Huang'an",
+   "x": 151.9,
+   "y": 160.2,
+   "inside": true,
+   "src": "wikidata"
+  }
+ ],
+ "4": [
+  {
+   "i": 1,
+   "name": "De'an",
+   "x": 126.2,
+   "y": 123.4,
+   "inside": true,
+   "src": "CHGIS"
+  }
+ ],
+ "5": [],
+ "6": [],
+ "7": [
+  {
+   "i": 0,
+   "name": "Dabie",
+   "x": 48.3,
+   "y": 108.7,
+   "inside": true,
+   "src": "zh-wiki"
+  }
+ ],
+ "8": [],
+ "9": [
+  {
+   "i": 1,
+   "name": "Qishui",
+   "x": 166.6,
+   "y": 183.8,
+   "inside": true,
+   "src": "wikidata"
+  }
+ ],
+ "10": [
+  {
+   "i": 1,
+   "name": "Chenhu",
+   "x": 193.5,
+   "y": 209.1,
+   "inside": true,
+   "src": "wikidata"
+  }
+ ],
+ "11": [
+  {
+   "i": 1,
+   "name": "Qizhou",
+   "x": 122.8,
+   "y": 164.5,
+   "inside": true,
+   "src": "CHGIS"
+  }
+ ],
+ "12": [],
+ "13": [
+  {
+   "i": 1,
+   "name": "Longgan",
+   "x": 155.6,
+   "y": 155.3,
+   "inside": true,
+   "src": "wikidata"
+  }
+ ],
+ "14": [],
+ "15": []
+}

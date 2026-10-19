@@ -1,0 +1,24 @@
+batch henan-zhengzhou
+1: pick Lankao
+2: pick Huiji
+3: pick Jinshui
+4: pick Kaifeng
+5: pick Zhongmu
+6: pick Xingyang
+7: pick Zhengzhou
+8: pick Zhongyuan
+9: pick Guancheng
+10: pick Jialu
+11: pick Erqi
+12: pick Tongxu
+13: pick Weishi
+14: pick Qixian
+15: pick Xinzheng
+16: pick Xinmi. ill go with xinmi but i feel like if mixian or mi mountain have weight we could have done those too?
+17: pick Songshan
+18: pick Changge
+19: pick Yuzhou
+20: pick Xuchang
+21: pick Linying
+22: pick Xiangcheng
+23: pick Luohe

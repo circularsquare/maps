@@ -1,0 +1,3316 @@
+{
+ "name": "henan-east",
+ "province": "Henan",
+ "prefectures": [
+  "Zhoukou",
+  "Shangqiu"
+ ],
+ "tiles": [
+  {
+   "tag": "1",
+   "x": 6888,
+   "y": 3010,
+   "w": 621,
+   "h": 671,
+   "scale": 2,
+   "regions": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+   ]
+  }
+ ],
+ "regions": [
+  {
+   "key": "#e6ebb2",
+   "color": "#e6ebb2",
+   "lon": 115.2648,
+   "lat": 34.6553,
+   "bbox": [
+    7151,
+    3287,
+    7218,
+    3327
+   ],
+   "area_px": 1662,
+   "people": 948200,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Minquan",
+     "local": "民权县",
+     "prefecture": "Shangqiu",
+     "prefecture_local": "商丘市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.657,
+     "area_share": 0.623,
+     "cover": 0.937
+    },
+    {
+     "name": "Ningling",
+     "local": "宁陵县",
+     "prefecture": "Shangqiu",
+     "prefecture_local": "商丘市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.161,
+     "area_share": 0.168,
+     "cover": 0.304
+    },
+    {
+     "name": "Cao",
+     "local": "曹县",
+     "prefecture": "Heze",
+     "prefecture_local": "菏泽市",
+     "province": "山东省",
+     "country": "China",
+     "people_share": 0.129,
+     "area_share": 0.15,
+     "cover": 0.092
+    },
+    {
+     "name": "Liangyuan",
+     "local": "梁园区",
+     "prefecture": "Shangqiu",
+     "prefecture_local": "商丘市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.042,
+     "area_share": 0.046,
+     "cover": 0.045
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Henan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.872,
+     "cover": 0.008
+    },
+    {
+     "level": "prefecture",
+     "name": "Shangqiu",
+     "local": "商丘市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 0.87,
+     "cover": 0.111
+    },
+    {
+     "level": "province",
+     "name": "Shandong",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.128,
+     "cover": 0.001
+    },
+    {
+     "level": "prefecture",
+     "name": "Heze",
+     "local": "菏泽市",
+     "province": "Shandong",
+     "country": "China",
+     "people_share": 0.128,
+     "cover": 0.015
+    }
+   ],
+   "towns": [
+    {
+     "town": "商丘市林场",
+     "county": "民权县",
+     "city": "商丘市",
+     "people_share": 0.072,
+     "cover": 1.0
+    },
+    {
+     "town": "城关镇",
+     "county": "民权县",
+     "city": "商丘市",
+     "people_share": 0.061,
+     "cover": 1.0
+    },
+    {
+     "town": "程庄镇",
+     "county": "民权县",
+     "city": "商丘市",
+     "people_share": 0.058,
+     "cover": 0.944
+    },
+    {
+     "town": "北关镇",
+     "county": "民权县",
+     "city": "商丘市",
+     "people_share": 0.048,
+     "cover": 0.976
+    },
+    {
+     "town": "曹县邵庄镇",
+     "county": "曹县",
+     "city": "菏泽市",
+     "people_share": 0.048,
+     "cover": 0.973
+    },
+    {
+     "town": "柳河镇",
+     "county": "宁陵县",
+     "city": "商丘市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "逻岗镇",
+     "county": "宁陵县",
+     "city": "商丘市",
+     "people_share": 0.042,
+     "cover": 0.974
+    },
+    {
+     "town": "龙塘镇",
+     "county": "民权县",
+     "city": "商丘市",
+     "people_share": 0.04,
+     "cover": 0.989
+    },
+    {
+     "town": "野岗乡",
+     "county": "民权县",
+     "city": "商丘市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "白云寺镇",
+     "county": "民权县",
+     "city": "商丘市",
+     "people_share": 0.037,
+     "cover": 0.935
+    },
+    {
+     "town": "石桥镇",
+     "county": "宁陵县",
+     "city": "商丘市",
+     "people_share": 0.037,
+     "cover": 0.98
+    },
+    {
+     "town": "人和镇",
+     "county": "民权县",
+     "city": "商丘市",
+     "people_share": 0.036,
+     "cover": 0.871
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f1eea6",
+     "border_px": 698
+    },
+    {
+     "key": "#eaf0ab",
+     "border_px": 634
+    },
+    {
+     "key": "#f6eeb1",
+     "border_px": 511
+    },
+    {
+     "key": "#f0edab",
+     "border_px": 502
+    },
+    {
+     "key": "#e0e8a3",
+     "border_px": 71
+    },
+    {
+     "key": "#e4ea85",
+     "border_px": 22
+    }
+   ],
+   "text_px": 0,
+   "n": 2,
+   "thumb": {
+    "x0": 7111,
+    "y0": 3247,
+    "k": 2.0,
+    "w": 294,
+    "h": 240
+   }
+  },
+  {
+   "key": "#e0e8a3",
+   "color": "#e0e8a3",
+   "lon": 115.8997,
+   "lat": 34.4071,
+   "bbox": [
+    7218,
+    3306,
+    7261,
+    3357
+   ],
+   "area_px": 1302,
+   "people": 879308,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yucheng",
+     "local": "虞城县",
+     "prefecture": "Shangqiu",
+     "prefecture_local": "商丘市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.917,
+     "area_share": 0.927,
+     "cover": 0.872
+    },
+    {
+     "name": "Liangyuan",
+     "local": "梁园区",
+     "prefecture": "Shangqiu",
+     "prefecture_local": "商丘市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.069,
+     "area_share": 0.055,
+     "cover": 0.069
+    },
+    {
+     "name": "Xiayi",
+     "local": "夏邑县",
+     "prefecture": "Shangqiu",
+     "prefecture_local": "商丘市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.011,
+     "area_share": 0.012,
+     "cover": 0.011
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Henan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.995,
+     "cover": 0.009
+    },
+    {
+     "level": "prefecture",
+     "name": "Shangqiu",
+     "local": "商丘市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 0.995,
+     "cover": 0.118
+    }
+   ],
+   "towns": [
+    {
+     "town": "城郊乡",
+     "county": "虞城县",
+     "city": "商丘市",
+     "people_share": 0.084,
+     "cover": 0.981
+    },
+    {
+     "town": "刘店乡",
+     "county": "虞城县",
+     "city": "商丘市",
+     "people_share": 0.071,
+     "cover": 1.0
+    },
+    {
+     "town": "稍岗乡",
+     "county": "虞城县",
+     "city": "商丘市",
+     "people_share": 0.058,
+     "cover": 1.0
+    },
+    {
+     "town": "李老家乡",
+     "county": "虞城县",
+     "city": "商丘市",
+     "people_share": 0.054,
+     "cover": 1.0
+    },
+    {
+     "town": "刘集乡",
+     "county": "虞城县",
+     "city": "商丘市",
+     "people_share": 0.053,
+     "cover": 0.995
+    },
+    {
+     "town": "贾寨镇",
+     "county": "虞城县",
+     "city": "商丘市",
+     "people_share": 0.053,
+     "cover": 0.95
+    },
+    {
+     "town": "利民镇",
+     "county": "虞城县",
+     "city": "商丘市",
+     "people_share": 0.049,
+     "cover": 1.0
+    },
+    {
+     "town": "杜集镇",
+     "county": "虞城县",
+     "city": "商丘市",
+     "people_share": 0.039,
+     "cover": 0.91
+    },
+    {
+     "town": "城关镇",
+     "county": "虞城县",
+     "city": "商丘市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "闻集乡",
+     "county": "虞城县",
+     "city": "商丘市",
+     "people_share": 0.037,
+     "cover": 0.941
+    },
+    {
+     "town": "站集镇",
+     "county": "虞城县",
+     "city": "商丘市",
+     "people_share": 0.036,
+     "cover": 1.0
+    },
+    {
+     "town": "谷熟镇",
+     "county": "虞城县",
+     "city": "商丘市",
+     "people_share": 0.034,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#e5edac",
+     "border_px": 630
+    },
+    {
+     "key": "#e4ea85",
+     "border_px": 444
+    },
+    {
+     "key": "#e6f0bb",
+     "border_px": 384
+    },
+    {
+     "key": "#ebea9c",
+     "border_px": 222
+    },
+    {
+     "key": "#e7f0c2",
+     "border_px": 220
+    },
+    {
+     "key": "#eaf0ab",
+     "border_px": 191
+    },
+    {
+     "key": "#e7e6ae",
+     "border_px": 169
+    },
+    {
+     "key": "#e6ebb2",
+     "border_px": 71
+    }
+   ],
+   "text_px": 0,
+   "n": 3,
+   "thumb": {
+    "x0": 7178,
+    "y0": 3266,
+    "k": 3.0,
+    "w": 369,
+    "h": 393
+   }
+  },
+  {
+   "key": "#e5edac",
+   "color": "#e5edac",
+   "lon": 116.1391,
+   "lat": 34.1796,
+   "bbox": [
+    7241,
+    3325,
+    7288,
+    3384
+   ],
+   "area_px": 1649,
+   "people": 1009826,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Xiayi",
+     "local": "夏邑县",
+     "prefecture": "Shangqiu",
+     "prefecture_local": "商丘市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.839,
+     "area_share": 0.801,
+     "cover": 0.975
+    },
+    {
+     "name": "Yongcheng",
+     "local": "永城市",
+     "prefecture": "Shangqiu",
+     "prefecture_local": "商丘市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.153,
+     "area_share": 0.191,
+     "cover": 0.114
+    },
+    {
+     "name": "Dangshan",
+     "local": "砀山县",
+     "prefecture": "Suzhou",
+     "prefecture_local": "宿州市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.005,
+     "area_share": 0.003,
+     "cover": 0.006
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Henan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.994,
+     "cover": 0.01
+    },
+    {
+     "level": "prefecture",
+     "name": "Shangqiu",
+     "local": "商丘市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 0.994,
+     "cover": 0.136
+    }
+   ],
+   "towns": [
+    {
+     "town": "曹集乡",
+     "county": "夏邑县",
+     "city": "商丘市",
+     "people_share": 0.057,
+     "cover": 1.0
+    },
+    {
+     "town": "李集镇",
+     "county": "夏邑县",
+     "city": "商丘市",
+     "people_share": 0.056,
+     "cover": 0.972
+    },
+    {
+     "town": "车站镇",
+     "county": "夏邑县",
+     "city": "商丘市",
+     "people_share": 0.051,
+     "cover": 0.923
+    },
+    {
+     "town": "孔庄乡",
+     "county": "夏邑县",
+     "city": "商丘市",
+     "people_share": 0.049,
+     "cover": 1.0
+    },
+    {
+     "town": "业庙乡",
+     "county": "夏邑县",
+     "city": "商丘市",
+     "people_share": 0.044,
+     "cover": 1.0
+    },
+    {
+     "town": "城关镇",
+     "county": "夏邑县",
+     "city": "商丘市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "胡桥乡",
+     "county": "夏邑县",
+     "city": "商丘市",
+     "people_share": 0.039,
+     "cover": 1.0
+    },
+    {
+     "town": "太平镇",
+     "county": "夏邑县",
+     "city": "商丘市",
+     "people_share": 0.039,
+     "cover": 1.0
+    },
+    {
+     "town": "杨集镇",
+     "county": "夏邑县",
+     "city": "商丘市",
+     "people_share": 0.038,
+     "cover": 0.91
+    },
+    {
+     "town": "会亭镇",
+     "county": "夏邑县",
+     "city": "商丘市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "桑固乡",
+     "county": "夏邑县",
+     "city": "商丘市",
+     "people_share": 0.037,
+     "cover": 0.984
+    },
+    {
+     "town": "龙岗镇",
+     "county": "永城市",
+     "city": "商丘市",
+     "people_share": 0.036,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#e7edbc",
+     "border_px": 651
+    },
+    {
+     "key": "#e0e8a3",
+     "border_px": 630
+    },
+    {
+     "key": "#e7f0c2",
+     "border_px": 503
+    },
+    {
+     "key": "#ede7a1",
+     "border_px": 279
+    },
+    {
+     "key": "#e7e6ae",
+     "border_px": 217
+    },
+    {
+     "key": "#eae7ae",
+     "border_px": 92
+    }
+   ],
+   "text_px": 53,
+   "n": 4,
+   "thumb": {
+    "x0": 7201,
+    "y0": 3285,
+    "k": 3.0,
+    "w": 381,
+    "h": 417
+   }
+  },
+  {
+   "key": "#ebea9c",
+   "color": "#ebea9c",
+   "lon": 115.4382,
+   "lat": 34.1664,
+   "bbox": [
+    7182,
+    3337,
+    7226,
+    3382
+   ],
+   "area_px": 1260,
+   "people": 956349,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Zhecheng",
+     "local": "柘城县",
+     "prefecture": "Shangqiu",
+     "prefecture_local": "商丘市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.576,
+     "area_share": 0.533,
+     "cover": 0.751
+    },
+    {
+     "name": "Suiyang",
+     "local": "睢阳区",
+     "prefecture": "Shangqiu",
+     "prefecture_local": "商丘市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.403,
+     "area_share": 0.448,
+     "cover": 0.469
+    },
+    {
+     "name": "Luyi",
+     "local": "鹿邑县",
+     "prefecture": "Zhoukou",
+     "prefecture_local": "周口市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.016,
+     "area_share": 0.013,
+     "cover": 0.018
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Henan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.01
+    },
+    {
+     "level": "prefecture",
+     "name": "Shangqiu",
+     "local": "商丘市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 0.975,
+     "cover": 0.126
+    }
+   ],
+   "towns": [
+    {
+     "town": "路河镇",
+     "county": "睢阳区",
+     "city": "商丘市",
+     "people_share": 0.068,
+     "cover": 0.9
+    },
+    {
+     "town": "邵元乡",
+     "county": "柘城县",
+     "city": "商丘市",
+     "people_share": 0.059,
+     "cover": 1.0
+    },
+    {
+     "town": "闫集镇",
+     "county": "睢阳区",
+     "city": "商丘市",
+     "people_share": 0.054,
+     "cover": 0.939
+    },
+    {
+     "town": "勒马乡",
+     "county": "睢阳区",
+     "city": "商丘市",
+     "people_share": 0.047,
+     "cover": 0.93
+    },
+    {
+     "town": "岗王镇",
+     "county": "柘城县",
+     "city": "商丘市",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "毛固堆乡",
+     "county": "睢阳区",
+     "city": "商丘市",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "高辛镇",
+     "county": "睢阳区",
+     "city": "商丘市",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "李口镇",
+     "county": "睢阳区",
+     "city": "商丘市",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "柘城县城关镇",
+     "county": "柘城县",
+     "city": "商丘市",
+     "people_share": 0.039,
+     "cover": 1.0
+    },
+    {
+     "town": "牛城乡",
+     "county": "柘城县",
+     "city": "商丘市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "慈圣镇",
+     "county": "柘城县",
+     "city": "商丘市",
+     "people_share": 0.038,
+     "cover": 0.951
+    },
+    {
+     "town": "陈青集镇",
+     "county": "柘城县",
+     "city": "商丘市",
+     "people_share": 0.037,
+     "cover": 0.978
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#e7e6ae",
+     "border_px": 609
+    },
+    {
+     "key": "#f1eea6",
+     "border_px": 514
+    },
+    {
+     "key": "#f0e6a8",
+     "border_px": 335
+    },
+    {
+     "key": "#e0e8a3",
+     "border_px": 222
+    },
+    {
+     "key": "#e4ea85",
+     "border_px": 183
+    },
+    {
+     "key": "#f4e1ac",
+     "border_px": 113
+    }
+   ],
+   "text_px": 0,
+   "n": 5,
+   "thumb": {
+    "x0": 7142,
+    "y0": 3297,
+    "k": 3.0,
+    "w": 372,
+    "h": 375
+   }
+  },
+  {
+   "key": "#e7dfb2",
+   "color": "#e7dfb2",
+   "lon": 114.5674,
+   "lat": 34.1492,
+   "bbox": [
+    7105,
+    3347,
+    7157,
+    3394
+   ],
+   "area_px": 1918,
+   "people": 1146715,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Fugou",
+     "local": "扶沟县",
+     "prefecture": "Zhoukou",
+     "prefecture_local": "周口市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.433,
+     "area_share": 0.454,
+     "cover": 0.858
+    },
+    {
+     "name": "Taikang",
+     "local": "太康县",
+     "prefecture": "Zhoukou",
+     "prefecture_local": "周口市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.378,
+     "area_share": 0.386,
+     "cover": 0.417
+    },
+    {
+     "name": "Qi",
+     "local": "杞县",
+     "prefecture": "Kaifeng",
+     "prefecture_local": "开封市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.105,
+     "area_share": 0.09,
+     "cover": 0.129
+    },
+    {
+     "name": "Weishi",
+     "local": "尉氏县",
+     "prefecture": "Kaifeng",
+     "prefecture_local": "开封市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.064,
+     "area_share": 0.052,
+     "cover": 0.087
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Henan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.012
+    },
+    {
+     "level": "prefecture",
+     "name": "Zhoukou",
+     "local": "周口市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 0.828,
+     "cover": 0.109
+    },
+    {
+     "level": "prefecture",
+     "name": "Kaifeng",
+     "local": "开封市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 0.17,
+     "cover": 0.039
+    }
+   ],
+   "towns": [
+    {
+     "town": "永兴镇",
+     "county": "尉氏县",
+     "city": "开封市",
+     "people_share": 0.058,
+     "cover": 0.974
+    },
+    {
+     "town": "板桥镇",
+     "county": "太康县",
+     "city": "周口市",
+     "people_share": 0.043,
+     "cover": 0.991
+    },
+    {
+     "town": "包屯镇",
+     "county": "扶沟县",
+     "city": "周口市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "常营镇",
+     "county": "太康县",
+     "city": "周口市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "高贤乡",
+     "county": "太康县",
+     "city": "周口市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "逊母口镇",
+     "county": "太康县",
+     "city": "周口市",
+     "people_share": 0.037,
+     "cover": 0.99
+    },
+    {
+     "town": "大许寨乡",
+     "county": "太康县",
+     "city": "周口市",
+     "people_share": 0.037,
+     "cover": 0.932
+    },
+    {
+     "town": "大新镇",
+     "county": "扶沟县",
+     "city": "周口市",
+     "people_share": 0.037,
+     "cover": 0.972
+    },
+    {
+     "town": "城郊乡",
+     "county": "扶沟县",
+     "city": "周口市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "江村镇",
+     "county": "扶沟县",
+     "city": "周口市",
+     "people_share": 0.037,
+     "cover": 0.915
+    },
+    {
+     "town": "芝麻洼乡",
+     "county": "太康县",
+     "city": "周口市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "韭园镇",
+     "county": "扶沟县",
+     "city": "周口市",
+     "people_share": 0.036,
+     "cover": 0.868
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f0e6a8",
+     "border_px": 546
+    },
+    {
+     "key": "#f1e0af",
+     "border_px": 451
+    },
+    {
+     "key": "#f0e4ab",
+     "border_px": 408
+    },
+    {
+     "key": "#e5d19a",
+     "border_px": 332
+    },
+    {
+     "key": "#f6eeb1",
+     "border_px": 267
+    },
+    {
+     "key": "#ead696",
+     "border_px": 234
+    },
+    {
+     "key": "#f4e1ac",
+     "border_px": 218
+    },
+    {
+     "key": "#ead89f",
+     "border_px": 84
+    }
+   ],
+   "text_px": 0,
+   "n": 6,
+   "thumb": {
+    "x0": 7065,
+    "y0": 3307,
+    "k": 3.0,
+    "w": 396,
+    "h": 381
+   }
+  },
+  {
+   "key": "#f0e6a8",
+   "color": "#f0e6a8",
+   "lon": 115.0122,
+   "lat": 34.1443,
+   "bbox": [
+    7153,
+    3341,
+    7186,
+    3393
+   ],
+   "area_px": 1251,
+   "people": 900614,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Taikang",
+     "local": "太康县",
+     "prefecture": "Zhoukou",
+     "prefecture_local": "周口市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.572,
+     "area_share": 0.573,
+     "cover": 0.495
+    },
+    {
+     "name": "Sui",
+     "local": "睢县",
+     "prefecture": "Shangqiu",
+     "prefecture_local": "商丘市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.257,
+     "area_share": 0.248,
+     "cover": 0.348
+    },
+    {
+     "name": "Zhecheng",
+     "local": "柘城县",
+     "prefecture": "Shangqiu",
+     "prefecture_local": "商丘市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.156,
+     "area_share": 0.165,
+     "cover": 0.192
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Henan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.009
+    },
+    {
+     "level": "prefecture",
+     "name": "Zhoukou",
+     "local": "周口市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 0.591,
+     "cover": 0.061
+    },
+    {
+     "level": "prefecture",
+     "name": "Shangqiu",
+     "local": "商丘市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 0.406,
+     "cover": 0.049
+    }
+   ],
+   "towns": [
+    {
+     "town": "朱口镇",
+     "county": "太康县",
+     "city": "周口市",
+     "people_share": 0.082,
+     "cover": 1.0
+    },
+    {
+     "town": "马头镇",
+     "county": "太康县",
+     "city": "周口市",
+     "people_share": 0.071,
+     "cover": 1.0
+    },
+    {
+     "town": "马厂镇",
+     "county": "太康县",
+     "city": "周口市",
+     "people_share": 0.068,
+     "cover": 1.0
+    },
+    {
+     "town": "毛庄镇",
+     "county": "太康县",
+     "city": "周口市",
+     "people_share": 0.067,
+     "cover": 0.742
+    },
+    {
+     "town": "安平镇",
+     "county": "柘城县",
+     "city": "商丘市",
+     "people_share": 0.049,
+     "cover": 0.987
+    },
+    {
+     "town": "高朗乡",
+     "county": "太康县",
+     "city": "周口市",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "张集镇",
+     "county": "太康县",
+     "city": "周口市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "转楼乡",
+     "county": "太康县",
+     "city": "周口市",
+     "people_share": 0.044,
+     "cover": 1.0
+    },
+    {
+     "town": "城郊乡",
+     "county": "太康县",
+     "city": "周口市",
+     "people_share": 0.042,
+     "cover": 0.945
+    },
+    {
+     "town": "杨庙乡",
+     "county": "太康县",
+     "city": "周口市",
+     "people_share": 0.041,
+     "cover": 0.926
+    },
+    {
+     "town": "孙聚寨乡",
+     "county": "睢县",
+     "city": "商丘市",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "伯岗乡",
+     "county": "柘城县",
+     "city": "商丘市",
+     "people_share": 0.039,
+     "cover": 0.978
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#e7dfb2",
+     "border_px": 546
+    },
+    {
+     "key": "#f4e1ac",
+     "border_px": 481
+    },
+    {
+     "key": "#f1eea6",
+     "border_px": 372
+    },
+    {
+     "key": "#ebea9c",
+     "border_px": 335
+    },
+    {
+     "key": "#f6eeb1",
+     "border_px": 274
+    }
+   ],
+   "text_px": 0,
+   "n": 7,
+   "thumb": {
+    "x0": 7113,
+    "y0": 3301,
+    "k": 3.0,
+    "w": 339,
+    "h": 396
+   }
+  },
+  {
+   "key": "#e7edbc",
+   "color": "#e7edbc",
+   "lon": 116.4158,
+   "lat": 33.9964,
+   "bbox": [
+    7266,
+    3342,
+    7309,
+    3391
+   ],
+   "area_px": 1339,
+   "people": 1126909,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yongcheng",
+     "local": "永城市",
+     "prefecture": "Shangqiu",
+     "prefecture_local": "商丘市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.913,
+     "area_share": 0.872,
+     "cover": 0.761
+    },
+    {
+     "name": "Xiao",
+     "local": "萧县",
+     "prefecture": "Suzhou",
+     "prefecture_local": "宿州市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.079,
+     "area_share": 0.115,
+     "cover": 0.079
+    },
+    {
+     "name": "Xiangshan",
+     "local": "相山区",
+     "prefecture": "Huaibei",
+     "prefecture_local": "淮北市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.004,
+     "area_share": 0.004,
+     "cover": 0.009
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Henan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.912,
+     "cover": 0.01
+    },
+    {
+     "level": "prefecture",
+     "name": "Shangqiu",
+     "local": "商丘市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 0.912,
+     "cover": 0.139
+    },
+    {
+     "level": "province",
+     "name": "Anhui",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.088,
+     "cover": 0.002
+    },
+    {
+     "level": "prefecture",
+     "name": "Suzhou",
+     "local": "宿州市",
+     "province": "Anhui",
+     "country": "China",
+     "people_share": 0.078,
+     "cover": 0.016
+    }
+   ],
+   "towns": [
+    {
+     "town": "演集镇",
+     "county": "永城市",
+     "city": "商丘市",
+     "people_share": 0.179,
+     "cover": 1.0
+    },
+    {
+     "town": "城厢乡",
+     "county": "永城市",
+     "city": "商丘市",
+     "people_share": 0.074,
+     "cover": 1.0
+    },
+    {
+     "town": "高庄镇",
+     "county": "永城市",
+     "city": "商丘市",
+     "people_share": 0.073,
+     "cover": 0.987
+    },
+    {
+     "town": "陈集镇",
+     "county": "永城市",
+     "city": "商丘市",
+     "people_share": 0.061,
+     "cover": 1.0
+    },
+    {
+     "town": "候岭乡",
+     "county": "永城市",
+     "city": "商丘市",
+     "people_share": 0.059,
+     "cover": 0.973
+    },
+    {
+     "town": "薛湖镇",
+     "county": "永城市",
+     "city": "商丘市",
+     "people_share": 0.058,
+     "cover": 0.989
+    },
+    {
+     "town": "刘河镇",
+     "county": "永城市",
+     "city": "商丘市",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "张庄寨镇",
+     "county": "萧县",
+     "city": "宿州市",
+     "people_share": 0.047,
+     "cover": 0.864
+    },
+    {
+     "town": "蒋口镇",
+     "county": "永城市",
+     "city": "商丘市",
+     "people_share": 0.04,
+     "cover": 0.924
+    },
+    {
+     "town": "茴村镇",
+     "county": "永城市",
+     "city": "商丘市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "双桥乡",
+     "county": "永城市",
+     "city": "商丘市",
+     "people_share": 0.036,
+     "cover": 1.0
+    },
+    {
+     "town": "酇阳镇",
+     "county": "永城市",
+     "city": "商丘市",
+     "people_share": 0.033,
+     "cover": 0.881
+    }
+   ],
+   "cities": [
+    {
+     "name": "Yongcheng",
+     "admin": "Henan",
+     "pop": 1240382
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#eae7ae",
+     "border_px": 751
+    },
+    {
+     "key": "#e5edac",
+     "border_px": 651
+    },
+    {
+     "key": "#dfe497",
+     "border_px": 259
+    },
+    {
+     "key": "#e6eeb4",
+     "border_px": 242
+    },
+    {
+     "key": "#e7f0c2",
+     "border_px": 225
+    }
+   ],
+   "text_px": 115,
+   "n": 8,
+   "thumb": {
+    "x0": 7226,
+    "y0": 3302,
+    "k": 3.0,
+    "w": 369,
+    "h": 387
+   }
+  },
+  {
+   "key": "#e7e6ae",
+   "color": "#e7e6ae",
+   "lon": 115.5922,
+   "lat": 33.9545,
+   "bbox": [
+    7196,
+    3357,
+    7246,
+    3406
+   ],
+   "area_px": 1367,
+   "people": 998743,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Luyi",
+     "local": "鹿邑县",
+     "prefecture": "Zhoukou",
+     "prefecture_local": "周口市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.537,
+     "area_share": 0.514,
+     "cover": 0.627
+    },
+    {
+     "name": "Qiaocheng",
+     "local": "谯城区",
+     "prefecture": "Bozhou",
+     "prefecture_local": "亳州市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.312,
+     "area_share": 0.288,
+     "cover": 0.189
+    },
+    {
+     "name": "Yucheng",
+     "local": "虞城县",
+     "prefecture": "Shangqiu",
+     "prefecture_local": "商丘市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.096,
+     "area_share": 0.123,
+     "cover": 0.104
+    },
+    {
+     "name": "Suiyang",
+     "local": "睢阳区",
+     "prefecture": "Shangqiu",
+     "prefecture_local": "商丘市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.046,
+     "area_share": 0.065,
+     "cover": 0.056
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Henan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.683,
+     "cover": 0.007
+    },
+    {
+     "level": "prefecture",
+     "name": "Zhoukou",
+     "local": "周口市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 0.545,
+     "cover": 0.063
+    },
+    {
+     "level": "province",
+     "name": "Anhui",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.317,
+     "cover": 0.005
+    },
+    {
+     "level": "prefecture",
+     "name": "Bozhou",
+     "local": "亳州市",
+     "province": "Anhui",
+     "country": "China",
+     "people_share": 0.317,
+     "cover": 0.065
+    },
+    {
+     "level": "prefecture",
+     "name": "Shangqiu",
+     "local": "商丘市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 0.138,
+     "cover": 0.019
+    }
+   ],
+   "towns": [
+    {
+     "town": "魏岗镇",
+     "county": "谯城区",
+     "city": "亳州市",
+     "people_share": 0.089,
+     "cover": 0.916
+    },
+    {
+     "town": "牛集镇",
+     "county": "谯城区",
+     "city": "亳州市",
+     "people_share": 0.088,
+     "cover": 1.0
+    },
+    {
+     "town": "古井镇",
+     "county": "谯城区",
+     "city": "亳州市",
+     "people_share": 0.068,
+     "cover": 1.0
+    },
+    {
+     "town": "杨湖口镇",
+     "county": "鹿邑县",
+     "city": "周口市",
+     "people_share": 0.052,
+     "cover": 0.905
+    },
+    {
+     "town": "太清宫镇",
+     "county": "鹿邑县",
+     "city": "周口市",
+     "people_share": 0.05,
+     "cover": 0.969
+    },
+    {
+     "town": "贾滩镇",
+     "county": "鹿邑县",
+     "city": "周口市",
+     "people_share": 0.044,
+     "cover": 0.988
+    },
+    {
+     "town": "涡北镇",
+     "county": "鹿邑县",
+     "city": "周口市",
+     "people_share": 0.044,
+     "cover": 1.0
+    },
+    {
+     "town": "马铺镇",
+     "county": "鹿邑县",
+     "city": "周口市",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "王皮溜镇",
+     "county": "鹿邑县",
+     "city": "周口市",
+     "people_share": 0.042,
+     "cover": 0.975
+    },
+    {
+     "town": "界沟镇",
+     "county": "虞城县",
+     "city": "商丘市",
+     "people_share": 0.039,
+     "cover": 0.976
+    },
+    {
+     "town": "卫真街道",
+     "county": "鹿邑县",
+     "city": "周口市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "华佗镇",
+     "county": "谯城区",
+     "city": "亳州市",
+     "people_share": 0.034,
+     "cover": 0.536
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#ede7a1",
+     "border_px": 672
+    },
+    {
+     "key": "#ebea9c",
+     "border_px": 609
+    },
+    {
+     "key": "#f4e1ac",
+     "border_px": 348
+    },
+    {
+     "key": "#edd79b",
+     "border_px": 313
+    },
+    {
+     "key": "#e5edac",
+     "border_px": 217
+    },
+    {
+     "key": "#e0e8a3",
+     "border_px": 169
+    }
+   ],
+   "text_px": 0,
+   "n": 9,
+   "thumb": {
+    "x0": 7156,
+    "y0": 3317,
+    "k": 3.0,
+    "w": 390,
+    "h": 387
+   }
+  },
+  {
+   "key": "#f4e1ac",
+   "color": "#f4e1ac",
+   "lon": 114.9816,
+   "lat": 33.8366,
+   "bbox": [
+    7145,
+    3380,
+    7200,
+    3424
+   ],
+   "area_px": 1278,
+   "people": 999844,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Huaiyang",
+     "local": "淮阳县",
+     "prefecture": "Zhoukou",
+     "prefecture_local": "周口市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.607,
+     "area_share": 0.578,
+     "cover": 0.627
+    },
+    {
+     "name": "Luyi",
+     "local": "鹿邑县",
+     "prefecture": "Zhoukou",
+     "prefecture_local": "周口市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.291,
+     "area_share": 0.305,
+     "cover": 0.341
+    },
+    {
+     "name": "Taikang",
+     "local": "太康县",
+     "prefecture": "Zhoukou",
+     "prefecture_local": "周口市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.09,
+     "area_share": 0.102,
+     "cover": 0.087
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Henan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.01
+    },
+    {
+     "level": "prefecture",
+     "name": "Zhoukou",
+     "local": "周口市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 0.998,
+     "cover": 0.115
+    }
+   ],
+   "towns": [
+    {
+     "town": "郑集乡",
+     "county": "淮阳县",
+     "city": "周口市",
+     "people_share": 0.076,
+     "cover": 0.953
+    },
+    {
+     "town": "城关回族镇",
+     "county": "淮阳县",
+     "city": "周口市",
+     "people_share": 0.075,
+     "cover": 1.0
+    },
+    {
+     "town": "大连乡",
+     "county": "淮阳县",
+     "city": "周口市",
+     "people_share": 0.069,
+     "cover": 0.956
+    },
+    {
+     "town": "白楼镇",
+     "county": "淮阳县",
+     "city": "周口市",
+     "people_share": 0.066,
+     "cover": 1.0
+    },
+    {
+     "town": "王店乡",
+     "county": "淮阳县",
+     "city": "周口市",
+     "people_share": 0.061,
+     "cover": 0.964
+    },
+    {
+     "town": "安岭镇",
+     "county": "淮阳县",
+     "city": "周口市",
+     "people_share": 0.058,
+     "cover": 1.0
+    },
+    {
+     "town": "葛店乡",
+     "county": "淮阳县",
+     "city": "周口市",
+     "people_share": 0.052,
+     "cover": 1.0
+    },
+    {
+     "town": "老冢镇",
+     "county": "太康县",
+     "city": "周口市",
+     "people_share": 0.051,
+     "cover": 0.988
+    },
+    {
+     "town": "四通镇",
+     "county": "淮阳县",
+     "city": "周口市",
+     "people_share": 0.047,
+     "cover": 0.886
+    },
+    {
+     "town": "试量镇",
+     "county": "鹿邑县",
+     "city": "周口市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "张店镇",
+     "county": "鹿邑县",
+     "city": "周口市",
+     "people_share": 0.04,
+     "cover": 0.908
+    },
+    {
+     "town": "临蔡镇",
+     "county": "淮阳县",
+     "city": "周口市",
+     "people_share": 0.039,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#edd79b",
+     "border_px": 497
+    },
+    {
+     "key": "#f0e6a8",
+     "border_px": 481
+    },
+    {
+     "key": "#f1e0af",
+     "border_px": 413
+    },
+    {
+     "key": "#e7e6ae",
+     "border_px": 348
+    },
+    {
+     "key": "#e7dfb2",
+     "border_px": 218
+    },
+    {
+     "key": "#eed092",
+     "border_px": 196
+    },
+    {
+     "key": "#f4dc98",
+     "border_px": 196
+    },
+    {
+     "key": "#ebea9c",
+     "border_px": 113
+    }
+   ],
+   "text_px": 0,
+   "n": 10,
+   "thumb": {
+    "x0": 7105,
+    "y0": 3340,
+    "k": 3.0,
+    "w": 405,
+    "h": 372
+   }
+  },
+  {
+   "key": "#f1e0af",
+   "color": "#f1e0af",
+   "lon": 114.4377,
+   "lat": 33.7671,
+   "bbox": [
+    7098,
+    3391,
+    7152,
+    3441
+   ],
+   "area_px": 1697,
+   "people": 1172487,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Xihua",
+     "local": "西华县",
+     "prefecture": "Zhoukou",
+     "prefecture_local": "周口市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.643,
+     "area_share": 0.628,
+     "cover": 0.973
+    },
+    {
+     "name": "Shangshui",
+     "local": "商水县",
+     "prefecture": "Zhoukou",
+     "prefecture_local": "周口市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.153,
+     "area_share": 0.152,
+     "cover": 0.205
+    },
+    {
+     "name": "Zhaoling",
+     "local": "召陵区",
+     "prefecture": "Tahe",
+     "prefecture_local": "漯河市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.097,
+     "area_share": 0.071,
+     "cover": 0.196
+    },
+    {
+     "name": "Fugou",
+     "local": "扶沟县",
+     "prefecture": "Zhoukou",
+     "prefecture_local": "周口市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.053,
+     "area_share": 0.091,
+     "cover": 0.108
+    },
+    {
+     "name": "Huaiyang",
+     "local": "淮阳县",
+     "prefecture": "Zhoukou",
+     "prefecture_local": "周口市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.042,
+     "area_share": 0.049,
+     "cover": 0.051
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Henan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.012
+    },
+    {
+     "level": "prefecture",
+     "name": "Zhoukou",
+     "local": "周口市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 0.901,
+     "cover": 0.121
+    },
+    {
+     "level": "prefecture",
+     "name": "Luohe",
+     "local": "漯河市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 0.098,
+     "cover": 0.039
+    }
+   ],
+   "towns": [
+    {
+     "town": "老窝镇",
+     "county": "召陵区",
+     "city": "漯河市",
+     "people_share": 0.064,
+     "cover": 0.976
+    },
+    {
+     "town": "叶埠口乡",
+     "county": "西华县",
+     "city": "周口市",
+     "people_share": 0.054,
+     "cover": 1.0
+    },
+    {
+     "town": "红花集镇",
+     "county": "西华县",
+     "city": "周口市",
+     "people_share": 0.05,
+     "cover": 1.0
+    },
+    {
+     "town": "谭庄镇",
+     "county": "商水县",
+     "city": "周口市",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "西华营镇",
+     "county": "西华县",
+     "city": "周口市",
+     "people_share": 0.043,
+     "cover": 0.926
+    },
+    {
+     "town": "西夏亭镇",
+     "county": "西华县",
+     "city": "周口市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "迟营乡",
+     "county": "西华县",
+     "city": "周口市",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "曹河乡",
+     "county": "淮阳县",
+     "city": "周口市",
+     "people_share": 0.038,
+     "cover": 0.979
+    },
+    {
+     "town": "李大庄乡",
+     "county": "西华县",
+     "city": "周口市",
+     "people_share": 0.037,
+     "cover": 0.94
+    },
+    {
+     "town": "邓城镇",
+     "county": "商水县",
+     "city": "周口市",
+     "people_share": 0.036,
+     "cover": 0.988
+    },
+    {
+     "town": "大王庄乡",
+     "county": "西华县",
+     "city": "周口市",
+     "people_share": 0.033,
+     "cover": 1.0
+    },
+    {
+     "town": "张明乡",
+     "county": "商水县",
+     "city": "周口市",
+     "people_share": 0.032,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#e5d19a",
+     "border_px": 635
+    },
+    {
+     "key": "#e7dfb2",
+     "border_px": 451
+    },
+    {
+     "key": "#f4e1ac",
+     "border_px": 413
+    },
+    {
+     "key": "#eed9b3",
+     "border_px": 401
+    },
+    {
+     "key": "#eacf9a",
+     "border_px": 307
+    },
+    {
+     "key": "#eed092",
+     "border_px": 295
+    }
+   ],
+   "text_px": 0,
+   "n": 11,
+   "thumb": {
+    "x0": 7058,
+    "y0": 3351,
+    "k": 3.0,
+    "w": 402,
+    "h": 390
+   }
+  },
+  {
+   "key": "#edd79b",
+   "color": "#edd79b",
+   "lon": 115.2888,
+   "lat": 33.6381,
+   "bbox": [
+    7176,
+    3403,
+    7227,
+    3441
+   ],
+   "area_px": 1358,
+   "people": 942631,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Dancheng",
+     "local": "郸城县",
+     "prefecture": "Zhoukou",
+     "prefecture_local": "周口市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.981,
+     "area_share": 0.978,
+     "cover": 0.978
+    },
+    {
+     "name": "Shenqiu",
+     "local": "沈丘县",
+     "prefecture": "Zhoukou",
+     "prefecture_local": "周口市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.005,
+     "area_share": 0.004,
+     "cover": 0.005
+    },
+    {
+     "name": "Luyi",
+     "local": "鹿邑县",
+     "prefecture": "Zhoukou",
+     "prefecture_local": "周口市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.004,
+     "area_share": 0.005,
+     "cover": 0.005
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Henan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.99,
+     "cover": 0.01
+    },
+    {
+     "level": "prefecture",
+     "name": "Zhoukou",
+     "local": "周口市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 0.99,
+     "cover": 0.107
+    }
+   ],
+   "towns": [
+    {
+     "town": "城郊乡",
+     "county": "郸城县",
+     "city": "周口市",
+     "people_share": 0.069,
+     "cover": 1.0
+    },
+    {
+     "town": "白马镇",
+     "county": "郸城县",
+     "city": "周口市",
+     "people_share": 0.065,
+     "cover": 0.993
+    },
+    {
+     "town": "胡集乡",
+     "county": "郸城县",
+     "city": "周口市",
+     "people_share": 0.058,
+     "cover": 1.0
+    },
+    {
+     "town": "钱店镇",
+     "county": "郸城县",
+     "city": "周口市",
+     "people_share": 0.058,
+     "cover": 0.961
+    },
+    {
+     "town": "汲冢镇",
+     "county": "郸城县",
+     "city": "周口市",
+     "people_share": 0.056,
+     "cover": 0.977
+    },
+    {
+     "town": "宜路镇",
+     "county": "郸城县",
+     "city": "周口市",
+     "people_share": 0.054,
+     "cover": 0.986
+    },
+    {
+     "town": "虎头岗乡",
+     "county": "郸城县",
+     "city": "周口市",
+     "people_share": 0.052,
+     "cover": 1.0
+    },
+    {
+     "town": "汲水乡",
+     "county": "郸城县",
+     "city": "周口市",
+     "people_share": 0.052,
+     "cover": 0.974
+    },
+    {
+     "town": "吴台镇",
+     "county": "郸城县",
+     "city": "周口市",
+     "people_share": 0.051,
+     "cover": 0.895
+    },
+    {
+     "town": "石槽镇",
+     "county": "郸城县",
+     "city": "周口市",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "宁平镇",
+     "county": "郸城县",
+     "city": "周口市",
+     "people_share": 0.047,
+     "cover": 1.0
+    },
+    {
+     "town": "巴集乡",
+     "county": "郸城县",
+     "city": "周口市",
+     "people_share": 0.042,
+     "cover": 0.981
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f4e1ac",
+     "border_px": 497
+    },
+    {
+     "key": "#ebcfa4",
+     "border_px": 351
+    },
+    {
+     "key": "#f4d398",
+     "border_px": 322
+    },
+    {
+     "key": "#e7e6ae",
+     "border_px": 313
+    },
+    {
+     "key": "#f4dc98",
+     "border_px": 212
+    },
+    {
+     "key": "#ede7a1",
+     "border_px": 155
+    },
+    {
+     "key": "#f0d6aa",
+     "border_px": 128
+    },
+    {
+     "key": "#ebe1b5",
+     "border_px": 64
+    }
+   ],
+   "text_px": 0,
+   "n": 12,
+   "thumb": {
+    "x0": 7136,
+    "y0": 3363,
+    "k": 3.0,
+    "w": 393,
+    "h": 354
+   }
+  },
+  {
+   "key": "#eed092",
+   "color": "#eed092",
+   "lon": 114.6845,
+   "lat": 33.5947,
+   "bbox": [
+    7135,
+    3419,
+    7161,
+    3441
+   ],
+   "area_px": 468,
+   "people": 933904,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Chuanhui",
+     "local": "川汇区",
+     "prefecture": "Zhoukou",
+     "prefecture_local": "周口市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.79,
+     "area_share": 0.626,
+     "cover": 0.983
+    },
+    {
+     "name": "Shangshui",
+     "local": "商水县",
+     "prefecture": "Zhoukou",
+     "prefecture_local": "周口市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.203,
+     "area_share": 0.359,
+     "cover": 0.216
+    },
+    {
+     "name": "Huaiyang",
+     "local": "淮阳县",
+     "prefecture": "Zhoukou",
+     "prefecture_local": "周口市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.004,
+     "area_share": 0.011,
+     "cover": 0.004
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Henan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.01
+    },
+    {
+     "level": "prefecture",
+     "name": "Zhoukou",
+     "local": "周口市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.107
+    }
+   ],
+   "towns": [
+    {
+     "town": "淮河路街道",
+     "county": "川汇区",
+     "city": "周口市",
+     "people_share": 0.095,
+     "cover": 1.0
+    },
+    {
+     "town": "七一路街道",
+     "county": "川汇区",
+     "city": "周口市",
+     "people_share": 0.088,
+     "cover": 1.0
+    },
+    {
+     "town": "小桥街道",
+     "county": "川汇区",
+     "city": "周口市",
+     "people_share": 0.084,
+     "cover": 1.0
+    },
+    {
+     "town": "太昊路街道",
+     "county": "川汇区",
+     "city": "周口市",
+     "people_share": 0.067,
+     "cover": 1.0
+    },
+    {
+     "town": "城关乡",
+     "county": "商水县",
+     "city": "周口市",
+     "people_share": 0.065,
+     "cover": 1.0
+    },
+    {
+     "town": "文昌街道",
+     "county": "川汇区",
+     "city": "周口市",
+     "people_share": 0.062,
+     "cover": 1.0
+    },
+    {
+     "town": "城南街道",
+     "county": "川汇区",
+     "city": "周口市",
+     "people_share": 0.061,
+     "cover": 0.967
+    },
+    {
+     "town": "许湾乡",
+     "county": "川汇区",
+     "city": "周口市",
+     "people_share": 0.058,
+     "cover": 0.978
+    },
+    {
+     "town": "城北街道",
+     "county": "川汇区",
+     "city": "周口市",
+     "people_share": 0.055,
+     "cover": 0.924
+    },
+    {
+     "town": "荷花街道",
+     "county": "川汇区",
+     "city": "周口市",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "金海路街道",
+     "county": "川汇区",
+     "city": "周口市",
+     "people_share": 0.042,
+     "cover": 0.895
+    },
+    {
+     "town": "人和街道",
+     "county": "川汇区",
+     "city": "周口市",
+     "people_share": 0.041,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Zhoukou",
+     "admin": "Henan",
+     "pop": 9026015
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#eed9b3",
+     "border_px": 397
+    },
+    {
+     "key": "#f1e0af",
+     "border_px": 295
+    },
+    {
+     "key": "#f4dc98",
+     "border_px": 232
+    },
+    {
+     "key": "#f4e1ac",
+     "border_px": 196
+    }
+   ],
+   "text_px": 0,
+   "n": 13,
+   "thumb": {
+    "x0": 7095,
+    "y0": 3379,
+    "k": 3.0,
+    "w": 318,
+    "h": 306
+   }
+  },
+  {
+   "key": "#f4dc98",
+   "color": "#f4dc98",
+   "lon": 114.9171,
+   "lat": 33.4402,
+   "bbox": [
+    7158,
+    3421,
+    7184,
+    3469
+   ],
+   "area_px": 977,
+   "people": 960418,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Xiangcheng",
+     "local": "项城市",
+     "prefecture": "Zhoukou",
+     "prefecture_local": "周口市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.624,
+     "area_share": 0.53,
+     "cover": 0.633
+    },
+    {
+     "name": "Huaiyang",
+     "local": "淮阳县",
+     "prefecture": "Zhoukou",
+     "prefecture_local": "周口市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.314,
+     "area_share": 0.383,
+     "cover": 0.311
+    },
+    {
+     "name": "Shangshui",
+     "local": "商水县",
+     "prefecture": "Zhoukou",
+     "prefecture_local": "周口市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.044,
+     "area_share": 0.066,
+     "cover": 0.048
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Henan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.01
+    },
+    {
+     "level": "prefecture",
+     "name": "Zhoukou",
+     "local": "周口市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.11
+    }
+   ],
+   "towns": [
+    {
+     "town": "郑郭镇",
+     "county": "项城市",
+     "city": "周口市",
+     "people_share": 0.1,
+     "cover": 0.966
+    },
+    {
+     "town": "王明口镇",
+     "county": "项城市",
+     "city": "周口市",
+     "people_share": 0.064,
+     "cover": 1.0
+    },
+    {
+     "town": "千佛阁街道",
+     "county": "项城市",
+     "city": "周口市",
+     "people_share": 0.061,
+     "cover": 1.0
+    },
+    {
+     "town": "永丰镇",
+     "county": "项城市",
+     "city": "周口市",
+     "people_share": 0.06,
+     "cover": 1.0
+    },
+    {
+     "town": "冯塘乡",
+     "county": "淮阳县",
+     "city": "周口市",
+     "people_share": 0.057,
+     "cover": 1.0
+    },
+    {
+     "town": "新站镇",
+     "county": "淮阳县",
+     "city": "周口市",
+     "people_share": 0.056,
+     "cover": 0.961
+    },
+    {
+     "town": "丁集镇",
+     "county": "项城市",
+     "city": "周口市",
+     "people_share": 0.055,
+     "cover": 1.0
+    },
+    {
+     "town": "豆门乡",
+     "county": "淮阳县",
+     "city": "周口市",
+     "people_share": 0.054,
+     "cover": 1.0
+    },
+    {
+     "town": "朱集乡",
+     "county": "淮阳县",
+     "city": "周口市",
+     "people_share": 0.049,
+     "cover": 1.0
+    },
+    {
+     "town": "刘振屯乡",
+     "county": "淮阳县",
+     "city": "周口市",
+     "people_share": 0.048,
+     "cover": 0.925
+    },
+    {
+     "town": "高寺镇",
+     "county": "项城市",
+     "city": "周口市",
+     "people_share": 0.044,
+     "cover": 0.955
+    },
+    {
+     "town": "鲁台镇",
+     "county": "淮阳县",
+     "city": "周口市",
+     "people_share": 0.044,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Shuizhai",
+     "admin": "Henan",
+     "pop": 1003698
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f4d398",
+     "border_px": 515
+    },
+    {
+     "key": "#eed9b3",
+     "border_px": 308
+    },
+    {
+     "key": "#eedab1",
+     "border_px": 291
+    },
+    {
+     "key": "#eed092",
+     "border_px": 232
+    },
+    {
+     "key": "#edd79b",
+     "border_px": 212
+    },
+    {
+     "key": "#f4e1ac",
+     "border_px": 196
+    }
+   ],
+   "text_px": 0,
+   "n": 14,
+   "thumb": {
+    "x0": 7118,
+    "y0": 3381,
+    "k": 3.0,
+    "w": 318,
+    "h": 384
+   }
+  },
+  {
+   "key": "#f4d398",
+   "color": "#f4d398",
+   "lon": 115.1543,
+   "lat": 33.2884,
+   "bbox": [
+    7178,
+    3435,
+    7208,
+    3481
+   ],
+   "area_px": 1044,
+   "people": 983666,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Shenqiu",
+     "local": "沈丘县",
+     "prefecture": "Zhoukou",
+     "prefecture_local": "周口市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.915,
+     "area_share": 0.904,
+     "cover": 0.965
+    },
+    {
+     "name": "Xiangcheng",
+     "local": "项城市",
+     "prefecture": "Zhoukou",
+     "prefecture_local": "周口市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.062,
+     "area_share": 0.075,
+     "cover": 0.064
+    },
+    {
+     "name": "Jieshou",
+     "local": "界首市",
+     "prefecture": "Fuyang",
+     "prefecture_local": "阜阳市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.013,
+     "area_share": 0.011,
+     "cover": 0.024
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Henan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.985,
+     "cover": 0.01
+    },
+    {
+     "level": "prefecture",
+     "name": "Zhoukou",
+     "local": "周口市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 0.985,
+     "cover": 0.111
+    }
+   ],
+   "towns": [
+    {
+     "town": "付井镇",
+     "county": "沈丘县",
+     "city": "周口市",
+     "people_share": 0.078,
+     "cover": 0.989
+    },
+    {
+     "town": "赵德营镇",
+     "county": "沈丘县",
+     "city": "周口市",
+     "people_share": 0.058,
+     "cover": 1.0
+    },
+    {
+     "town": "槐店回族镇",
+     "county": "沈丘县",
+     "city": "周口市",
+     "people_share": 0.058,
+     "cover": 0.962
+    },
+    {
+     "town": "刘庄店镇",
+     "county": "沈丘县",
+     "city": "周口市",
+     "people_share": 0.052,
+     "cover": 1.0
+    },
+    {
+     "town": "石槽集乡",
+     "county": "沈丘县",
+     "city": "周口市",
+     "people_share": 0.046,
+     "cover": 1.0
+    },
+    {
+     "town": "冯营乡",
+     "county": "沈丘县",
+     "city": "周口市",
+     "people_share": 0.045,
+     "cover": 0.908
+    },
+    {
+     "town": "卞路口乡",
+     "county": "沈丘县",
+     "city": "周口市",
+     "people_share": 0.045,
+     "cover": 0.985
+    },
+    {
+     "town": "洪山乡",
+     "county": "沈丘县",
+     "city": "周口市",
+     "people_share": 0.043,
+     "cover": 0.983
+    },
+    {
+     "town": "范营乡",
+     "county": "沈丘县",
+     "city": "周口市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "连池乡",
+     "county": "沈丘县",
+     "city": "周口市",
+     "people_share": 0.041,
+     "cover": 0.955
+    },
+    {
+     "town": "老城镇",
+     "county": "沈丘县",
+     "city": "周口市",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "白集镇",
+     "county": "沈丘县",
+     "city": "周口市",
+     "people_share": 0.04,
+     "cover": 0.865
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f4dc98",
+     "border_px": 515
+    },
+    {
+     "key": "#ebcfa4",
+     "border_px": 489
+    },
+    {
+     "key": "#edd79b",
+     "border_px": 322
+    },
+    {
+     "key": "#ebc99a",
+     "border_px": 310
+    },
+    {
+     "key": "#eedab1",
+     "border_px": 194
+    }
+   ],
+   "text_px": 0,
+   "n": 15,
+   "thumb": {
+    "x0": 7138,
+    "y0": 3395,
+    "k": 3.0,
+    "w": 330,
+    "h": 378
+   }
+  },
+  {
+   "key": "#e4ea85@115.7,34.4",
+   "color": "#e4ea85",
+   "lon": 115.6655,
+   "lat": 34.4256,
+   "bbox": [
+    7210,
+    3317,
+    7228,
+    3340
+   ],
+   "area_px": 307,
+   "people": 804151,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Liangyuan",
+     "local": "梁园区",
+     "prefecture": "Shangqiu",
+     "prefecture_local": "商丘市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.605,
+     "area_share": 0.612,
+     "cover": 0.549
+    },
+    {
+     "name": "Suiyang",
+     "local": "睢阳区",
+     "prefecture": "Shangqiu",
+     "prefecture_local": "商丘市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.384,
+     "area_share": 0.345,
+     "cover": 0.375
+    },
+    {
+     "name": "Yucheng",
+     "local": "虞城县",
+     "prefecture": "Shangqiu",
+     "prefecture_local": "商丘市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.011,
+     "area_share": 0.042,
+     "cover": 0.01
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Henan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.008
+    },
+    {
+     "level": "prefecture",
+     "name": "Shangqiu",
+     "local": "商丘市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.109
+    }
+   ],
+   "towns": [
+    {
+     "town": "新城街道",
+     "county": "睢阳区",
+     "city": "商丘市",
+     "people_share": 0.109,
+     "cover": 0.972
+    },
+    {
+     "town": "平原街道",
+     "county": "梁园区",
+     "city": "商丘市",
+     "people_share": 0.106,
+     "cover": 0.899
+    },
+    {
+     "town": "平安街道",
+     "county": "梁园区",
+     "city": "商丘市",
+     "people_share": 0.098,
+     "cover": 1.0
+    },
+    {
+     "town": "古宋乡",
+     "county": "睢阳区",
+     "city": "商丘市",
+     "people_share": 0.09,
+     "cover": 1.0
+    },
+    {
+     "town": "双八镇",
+     "county": "梁园区",
+     "city": "商丘市",
+     "people_share": 0.074,
+     "cover": 0.894
+    },
+    {
+     "town": "宋城街道",
+     "county": "睢阳区",
+     "city": "商丘市",
+     "people_share": 0.065,
+     "cover": 1.0
+    },
+    {
+     "town": "中州街道",
+     "county": "梁园区",
+     "city": "商丘市",
+     "people_share": 0.056,
+     "cover": 1.0
+    },
+    {
+     "town": "张阁镇",
+     "county": "梁园区",
+     "city": "商丘市",
+     "people_share": 0.056,
+     "cover": 0.959
+    },
+    {
+     "town": "平台街道",
+     "county": "梁园区",
+     "city": "商丘市",
+     "people_share": 0.053,
+     "cover": 0.972
+    },
+    {
+     "town": "建设街道",
+     "county": "梁园区",
+     "city": "商丘市",
+     "people_share": 0.049,
+     "cover": 0.866
+    },
+    {
+     "town": "白云街道",
+     "county": "梁园区",
+     "city": "商丘市",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "文化街道",
+     "county": "睢阳区",
+     "city": "商丘市",
+     "people_share": 0.047,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Shangqiu",
+     "admin": "Henan",
+     "pop": 7816831
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#e0e8a3",
+     "border_px": 444
+    },
+    {
+     "key": "#f1eea6@115.3,34.4",
+     "border_px": 283
+    },
+    {
+     "key": "#ebea9c",
+     "border_px": 183
+    },
+    {
+     "key": "#e6ebb2",
+     "border_px": 22
+    }
+   ],
+   "text_px": 0,
+   "n": 16,
+   "thumb": {
+    "x0": 7170,
+    "y0": 3277,
+    "k": 4.0,
+    "w": 392,
+    "h": 412
+   }
+  },
+  {
+   "key": "#f1eea6@115.3,34.4",
+   "color": "#f1eea6",
+   "lon": 115.32,
+   "lat": 34.4084,
+   "bbox": [
+    7165,
+    3315,
+    7214,
+    3358
+   ],
+   "area_px": 1140,
+   "people": 996549,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Ningling",
+     "local": "宁陵县",
+     "prefecture": "Shangqiu",
+     "prefecture_local": "商丘市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.351,
+     "area_share": 0.387,
+     "cover": 0.695
+    },
+    {
+     "name": "Liangyuan",
+     "local": "梁园区",
+     "prefecture": "Shangqiu",
+     "prefecture_local": "商丘市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.298,
+     "area_share": 0.257,
+     "cover": 0.335
+    },
+    {
+     "name": "Sui",
+     "local": "睢县",
+     "prefecture": "Shangqiu",
+     "prefecture_local": "商丘市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.235,
+     "area_share": 0.205,
+     "cover": 0.351
+    },
+    {
+     "name": "Suiyang",
+     "local": "睢阳区",
+     "prefecture": "Shangqiu",
+     "prefecture_local": "商丘市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.081,
+     "area_share": 0.099,
+     "cover": 0.098
+    },
+    {
+     "name": "Zhecheng",
+     "local": "柘城县",
+     "prefecture": "Shangqiu",
+     "prefecture_local": "商丘市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.036,
+     "area_share": 0.052,
+     "cover": 0.049
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Henan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.01
+    },
+    {
+     "level": "prefecture",
+     "name": "Shangqiu",
+     "local": "商丘市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.135
+    }
+   ],
+   "towns": [
+    {
+     "town": "城郊乡",
+     "county": "睢县",
+     "city": "商丘市",
+     "people_share": 0.079,
+     "cover": 0.983
+    },
+    {
+     "town": "观堂乡",
+     "county": "梁园区",
+     "city": "商丘市",
+     "people_share": 0.068,
+     "cover": 1.0
+    },
+    {
+     "town": "水池铺乡",
+     "county": "梁园区",
+     "city": "商丘市",
+     "people_share": 0.063,
+     "cover": 1.0
+    },
+    {
+     "town": "李庄乡",
+     "county": "梁园区",
+     "city": "商丘市",
+     "people_share": 0.057,
+     "cover": 0.946
+    },
+    {
+     "town": "王楼乡",
+     "county": "梁园区",
+     "city": "商丘市",
+     "people_share": 0.049,
+     "cover": 1.0
+    },
+    {
+     "town": "董店乡",
+     "county": "睢县",
+     "city": "商丘市",
+     "people_share": 0.048,
+     "cover": 0.899
+    },
+    {
+     "town": "华堡镇",
+     "county": "宁陵县",
+     "city": "商丘市",
+     "people_share": 0.047,
+     "cover": 1.0
+    },
+    {
+     "town": "郭村镇",
+     "county": "睢阳区",
+     "city": "商丘市",
+     "people_share": 0.046,
+     "cover": 0.944
+    },
+    {
+     "town": "谢集镇",
+     "county": "梁园区",
+     "city": "商丘市",
+     "people_share": 0.04,
+     "cover": 0.878
+    },
+    {
+     "town": "刘楼乡",
+     "county": "宁陵县",
+     "city": "商丘市",
+     "people_share": 0.036,
+     "cover": 1.0
+    },
+    {
+     "town": "产业集聚区",
+     "county": "宁陵县",
+     "city": "商丘市",
+     "people_share": 0.035,
+     "cover": 0.8
+    },
+    {
+     "town": "乔楼乡",
+     "county": "宁陵县",
+     "city": "商丘市",
+     "people_share": 0.035,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#e6ebb2",
+     "border_px": 698
+    },
+    {
+     "key": "#ebea9c",
+     "border_px": 514
+    },
+    {
+     "key": "#f0e6a8",
+     "border_px": 372
+    },
+    {
+     "key": "#e4ea85@115.7,34.4",
+     "border_px": 283
+    },
+    {
+     "key": "#f6eeb1",
+     "border_px": 214
+    }
+   ],
+   "text_px": 0,
+   "n": 17,
+   "thumb": {
+    "x0": 7125,
+    "y0": 3275,
+    "k": 3.0,
+    "w": 387,
+    "h": 369
+   }
+  }
+ ]
+}

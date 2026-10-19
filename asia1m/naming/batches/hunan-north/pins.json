@@ -1,0 +1,82 @@
+{
+ "1": [
+  {
+   "i": 0,
+   "name": "Lizhou",
+   "x": 179.2,
+   "y": 139.6,
+   "inside": true,
+   "src": "wikidata"
+  }
+ ],
+ "2": [],
+ "3": [
+  {
+   "i": 1,
+   "name": "Junshan",
+   "x": 221.1,
+   "y": 173.3,
+   "inside": true,
+   "src": "wikidata"
+  }
+ ],
+ "4": [],
+ "5": [],
+ "6": [
+  {
+   "i": 1,
+   "name": "Dongting",
+   "x": 207.4,
+   "y": 116.1,
+   "inside": true,
+   "src": "zh-wiki"
+  },
+  {
+   "i": 3,
+   "name": "Nanzhou",
+   "x": 110.1,
+   "y": 113.8,
+   "inside": true,
+   "src": "wikidata"
+  }
+ ],
+ "7": [],
+ "8": [
+  {
+   "i": 1,
+   "name": "Wuling",
+   "x": 157.0,
+   "y": 173.0,
+   "inside": true,
+   "src": "zh-wiki"
+  }
+ ],
+ "9": [
+  {
+   "i": 0,
+   "name": "Longyang",
+   "x": 163.4,
+   "y": 168.3,
+   "inside": true,
+   "src": "CHGIS"
+  }
+ ],
+ "10": [],
+ "11": [],
+ "12": [],
+ "13": [
+  {
+   "i": 1,
+   "name": "Luoxian",
+   "x": 116.4,
+   "y": 80.5,
+   "inside": true,
+   "src": "CHGIS"
+  }
+ ],
+ "14": [],
+ "15": [],
+ "16": [],
+ "17": [],
+ "18": []
+}

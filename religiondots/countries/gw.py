@@ -20,10 +20,14 @@ def _gw_counts():
     households (sources/gw.py). `Total` and `ND` (228,718 who did not answer) are carried in
     gw.csv and are EXCLUDED in taxonomy/gw2009.py.
     """
+    import gw2009
     from gw2009 import EXCLUDED, resolve
 
     df = pd.read_csv(HERE / "data" / "normalized" / "gw.csv",
                      low_memory=False, keep_default_na=False, na_values=[""])
+    # 2026-10-16: `Cristão` split at the 1991 census's national ratio (sources/wa_christian.py);
+    # `derived`.
+    df = _swap_christian_split(df, "gw", "Cristão")
     df["count"] = df["count"].astype(int)
     if df["geo_id"].nunique() != 9:
         raise SystemExit(f"{df['geo_id'].nunique()} regiões in gw.csv, expected 9 -- re-run "
@@ -34,9 +38,10 @@ def _gw_counts():
         raise SystemExit(f"gw.csv categories with no node: {unmapped}")
     df = df[df["node"].notna() & (df["count"] > 0)].rename(columns={"geo_id": "unit"})
     df["congregations"] = 0
-    df["may_ring"] = True
-    df["tier"] = "measured"
-    return df[["unit", "node", "count", "congregations", "may_ring", "tier"]]
+    df["tier"] = df["split"].map({True: "derived", False: "measured"})
+    df["may_ring"] = ~df["split"]
+    df = _add_roll(df, gw2009.COLUMNS)
+    return df[["unit", "node", "count", "congregations", "may_ring", "tier", "roll"]]
 
 
 ENTRY = {
@@ -54,9 +59,13 @@ ENTRY = {
             "and its report notes that many people practise two, so this does not count "
             "Christians or Muslims who also follow a traditional religion. "
             "**Christians are concentrated in Bissau.** The capital is **40.2%** Christian and "
-            "holds 46% of the country's Christians. The published tables do not divide them "
-            "by church."),
+            "holds 46% of the country's Christians. The 2009 tables do not divide them by "
+            "church, so every region is drawn with the 1991 census's national mix, **89%** "
+            "Catholic. That is probably too Catholic for 2009: Christians grew from 14% to 26% "
+            "of the country between the two censuses, much of it in Protestant churches, and "
+            "the Catholic Church's own figures today suggest nearer 60%."),
         how="census, 2009",
+        fill="from the 1991 census's national church table",
         grain="regions, 160,000 people on average",
         # Both parts as shares of the 1,452,926 people enumerated (sources/gw.py prints the
         # arithmetic): ND, 228,718, is a column the census printed; the 10,699 outside the

@@ -1,0 +1,681 @@
+{
+  "batch": "sichuan-chengdu",
+  "regions": [
+    {
+      "n": 1,
+      "key": "#f4bebc",
+      "settled": null,
+      "summary": "Deyang's northwest: Mianzhu (42%) and Shifang (39%), foothills of the Longmen range, with a sliver of Guanghan and Jingyang.",
+      "candidates": [
+        {
+          "name": "Mianzhu",
+          "local": "绵竹市",
+          "origin": "county",
+          "meaning": "\"Bamboo along the Mian\": named for the bamboo on the banks of the Mian water (now Mianyuan River).",
+          "fit": "Holds 94% of Mianzhu's people and is 42% of the region; the Han county seated at today's Mianzhu or just north of Deyang.",
+          "recognisability": "Current county-level city; known for Jiannanchun liquor and Mianzhu New Year prints.",
+          "source_url": "https://zh.wikipedia.org/wiki/绵竹市",
+          "source_note": "西汉初置绵竹县，因境内绵水（今称绵远河）之滨多竹而得名",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Shifang",
+          "local": "什邡市",
+          "origin": "county",
+          "meaning": "Han county Shifang (written 汁方 at first); the lead says Li Bing worked and died here and the town is also called Yongcheng after the general Yong Chi.",
+          "fit": "Holds 99.6% of Shifang's people and is 39% of the region; nearly as large a share as Mianzhu.",
+          "recognisability": "Current county-level city; known for cigars and mineral water, and as the 2012 protest site.",
+          "source_url": "https://zh.wikipedia.org/wiki/什邡市",
+          "source_note": "汉代名将雍齿的受封之地，故什邡城又名雍城",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Two near-equal units. I put Mianzhu first because its county is older and the Mian River basin is the region's spine; Shifang is equally defensible."
+    },
+    {
+      "n": 2,
+      "key": "#f09092",
+      "settled": null,
+      "summary": "Deyang city: Jingyang district (93%) and a little of Guanghan, on the Mianyuan River.",
+      "candidates": [
+        {
+          "name": "Deyang",
+          "local": "德阳",
+          "origin": "city",
+          "meaning": "Tang county Deyang, split from Luo county in 620; the prefecture's name today.",
+          "fit": "Seat of the prefecture-level city; Jingyang district is the whole built-up city. Urban population is about 0.9M, so the over-1M rule does not force it, but nothing fits better.",
+          "recognisability": "Prefecture of 3.5M; heavy machinery centre.",
+          "source_url": "https://zh.wikipedia.org/wiki/德阳市",
+          "source_note": "唐武德三年（620年）析雒县置德阳县（治今旌阳区）",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Jingyang",
+          "local": "旌阳区",
+          "origin": "county",
+          "meaning": "District name chosen in 1996, from the Qing-era Jingyang post station in Deyang county; 旌 is a banner or flag.",
+          "fit": "Holds 87% of Jingyang district and is 93% of the region.",
+          "recognisability": "Current district name, little known outside Sichuan.",
+          "source_url": "https://zh.wikipedia.org/wiki/旌阳区",
+          "source_note": "清代德阳县亦曾有旌阳驿。1996年8月3日，撤销市中区，设立旌阳区",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 3,
+      "key": "#f4c5bc",
+      "settled": null,
+      "summary": "Dujiangyan (67%) at the Min River's mouth onto the plain, with Longmen mountain parts of Chongzhou and Pengzhou.",
+      "candidates": [
+        {
+          "name": "Dujiangyan",
+          "local": "都江堰市",
+          "origin": "city",
+          "meaning": "\"Capital river weir\": Li Bing's irrigation works of the Warring States, which gave the city its name in 1988; before that the county was Guanxian.",
+          "fit": "Holds 99.7% of the city's people and is 67% of the region; the weir sits at the region's heart.",
+          "recognisability": "UNESCO World Heritage site, very well known.",
+          "source_url": "https://zh.wikipedia.org/wiki/都江堰市",
+          "source_note": "1988年5月，经中国国务院批准撤销灌县设立都江堰市，以李冰父子建造的都江堰而得名",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Qingcheng",
+          "local": "青城山",
+          "origin": "mountain",
+          "meaning": "\"Green city\" mountain, an old name Zhangren Shan; one of the birthplaces of Daoism.",
+          "fit": "Lies within Dujiangyan, south-west of the weir; a landscape name for the western mountain half of the region.",
+          "recognisability": "Own zh-wiki article, 1031 hits with 四川, top ones about this place; World Heritage with the weir.",
+          "source_url": "https://zh.wikipedia.org/wiki/青城山",
+          "source_note": "位于四川省成都市都江堰市西南，古称「丈人山」",
+          "rating": 4,
+          "status": "suggested",
+          "lat": 30.9,
+          "lon": 103.57
+        }
+      ],
+      "notes": "Dujiangyan is the obvious pick; Qingcheng is only worth it if Anita wants the weir name kept elsewhere."
+    },
+    {
+      "n": 4,
+      "key": "#e89d9d",
+      "settled": null,
+      "summary": "North of Chengdu plain: Pengzhou (62%) and the Xinfan part of Xindu (26%).",
+      "candidates": [
+        {
+          "name": "Pengzhou",
+          "local": "彭州市",
+          "origin": "city",
+          "meaning": "Tang prefecture of 686, named for the Tianpeng gate (天彭阙); one view says it was the old state of Peng.",
+          "fit": "Holds 71% of Pengzhou's people and is 62% of the region; also the prefecture seat (Pengzhou) covered Jiulong, Daoyang, Tangchang and Mengyang counties.",
+          "recognisability": "Current county-level city, own zh-wiki article.",
+          "source_url": "https://zh.wikipedia.org/wiki/彭州市",
+          "source_note": "垂拱二年（686年）分益州九陇、导江、唐昌、濛阳四县置彭州，因天彭阙为名",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Sanxingdui museum (Nanxing town, Guanghan) falls inside this region by the town data (Nanxing 91% here), not in region 5, even though Guanghan's centre is in 5. Xinfan (new Fan county, 1350 yrs, 201 hits with 四川, no own article) was left out as too obscure."
+    },
+    {
+      "n": 5,
+      "key": "#f9a0a2",
+      "settled": null,
+      "summary": "Guanghan (52%) and Qingbaijiang (36%) on the plain east of Deyang, with a bit of Jintang.",
+      "candidates": [
+        {
+          "name": "Guanghan",
+          "local": "广汉市",
+          "origin": "city",
+          "meaning": "Han commandery, said to be named for reaching the Han river (\"广至汉水\"); the town was earlier Luo county and Hanzhou.",
+          "fit": "Holds 71% of Guanghan's people and is 52% of the region; Luo county was the seat of Guanghan commandery and Yizhou province for centuries.",
+          "recognisability": "Current county-level city.",
+          "source_url": "https://zh.wikipedia.org/wiki/广汉市",
+          "source_note": "汉朝为广汉郡，因“广至汉水”而得名；古称雒城、雒县、汉州",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Sanxingdui",
+          "local": "三星堆",
+          "origin": "other",
+          "meaning": "\"Three star mounds\": the Bronze Age Shu site on the Duck River at Guanghan, 3700 years old.",
+          "fit": "Site is in Guanghan on the boundary between this region and region 4; by town data Nanxing town sits in region 4, so only partly fits.",
+          "recognisability": "Own zh-wiki article, 810 hits with 四川, top ones about this place; very well known.",
+          "source_url": "https://zh.wikipedia.org/wiki/三星堆遗址",
+          "source_note": "三星堆文化的出现标志着四川盆地进入青铜时代，距今约3700年",
+          "rating": 3,
+          "status": "suggested",
+          "lat": 31.0,
+          "lon": 104.2
+        },
+        {
+          "name": "Qingbaijiang",
+          "local": "青白江区",
+          "origin": "river",
+          "meaning": "\"Blue-white river\", the river the district is named for; the district was founded in 1960 for a fertiliser plant and is now a rail freight hub.",
+          "fit": "Holds 75% of the district and is 36% of the region.",
+          "recognisability": "Current district; 1960 industrial creation, little history.",
+          "source_url": "https://zh.wikipedia.org/wiki/青白江区",
+          "source_note": "青白江区因境内的青白江而得名，并因工业建设的需要在1960年设立",
+          "rating": 2,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Sanxingdui fits better on the map for region 4 or for neither; check the pin before using it here."
+    },
+    {
+      "n": 6,
+      "key": "#f1b8b8",
+      "settled": null,
+      "summary": "Zhongjiang county (87%), a large hilly county east of Deyang, with a little of Lezhi.",
+      "candidates": [
+        {
+          "name": "Zhongjiang",
+          "local": "中江县",
+          "origin": "county",
+          "meaning": "Renamed in 1012 from Xuanwu county, which was Wucheng county under Shu Han.",
+          "fit": "Holds 98% of the county and is 87% of the region; the Wucheng/Xuanwu seat sat 2 li east of today's seat.",
+          "recognisability": "Current county; known for dried noodles, a million-people county.",
+          "source_url": "https://zh.wikipedia.org/wiki/中江县",
+          "source_note": "三国蜀汉时置五城县，隋改玄武县，宋真宗大中祥符五年（1012年）改为中江县",
+          "rating": 5,
+          "status": "suggested"
+        }
+      ],
+      "notes": "No better alternative; Wucheng (五城) and Xuanwu (玄武) are too obscure."
+    },
+    {
+      "n": 7,
+      "key": "#ea988c",
+      "settled": null,
+      "summary": "Pixian: the county west of Chengdu, now Pidu district (99%).",
+      "candidates": [
+        {
+          "name": "Pixian",
+          "local": "郫县",
+          "origin": "county",
+          "meaning": "County name Pi (郫) used from 314 BC until 2016; Pidu is its district name now, after the old Shu capital Pi.",
+          "fit": "Holds 64% of the old county and is 99% of the region; the seat is in the region.",
+          "recognisability": "Known for Pixian doubanjiang chili bean paste.",
+          "source_url": "https://zh.wikipedia.org/wiki/郫都区",
+          "source_note": "郫（pí）都区，原为郫县，别称鹃城",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Pidu",
+          "local": "郫都区",
+          "origin": "county",
+          "meaning": "\"Capital of Pi\": the present district name since 2016.",
+          "fit": "Same place as Pixian.",
+          "recognisability": "Current admin name, less known than Pixian.",
+          "source_url": "https://zh.wikipedia.org/wiki/郫都区",
+          "source_note": "郫都区，原为郫县",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Pixian and Pidu are one place; pick one."
+    },
+    {
+      "n": 8,
+      "key": "#f68989",
+      "settled": null,
+      "summary": "Xindu district, Chengdu's northern suburb (94%).",
+      "candidates": [
+        {
+          "name": "Xindu",
+          "local": "新都区",
+          "origin": "county",
+          "meaning": "\"New capital\": built by the Kaiming kings of Shu to tell it apart from the old Shu capital at Pi.",
+          "fit": "Holds 58% of the district and is 94% of the region; seat in the region.",
+          "recognisability": "Current district, Han county for 2090 yrs.",
+          "source_url": "https://zh.wikipedia.org/wiki/新都区",
+          "source_note": "新都为古蜀国都邑……为有别于杜宇氏的旧都郫邑，得名“新都”",
+          "rating": 5,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Xindu is also the name of Xindu commandery at Guanghan (266-284), 80 km away; not an issue unless a neighbour uses it."
+    },
+    {
+      "n": 9,
+      "key": "#ed7766",
+      "settled": null,
+      "summary": "Suburban sliver between Pixian, Xindu and Jinniu: Xipu, Anjing, Tianhui.",
+      "candidates": [
+        {
+          "name": "Xipu",
+          "local": "犀浦",
+          "origin": "historical",
+          "meaning": "\"Rhinoceros shore\": said to come from Li Bing sinking stone rhinoceroses in the water to subdue floods; Xipu county 686-1071.",
+          "fit": "Xipu town is 19% of the region; Pi county is 63% of it; the Tang county seat lay at Xipu.",
+          "recognisability": "Own article for the sub-district, 118 hits with 四川; known for the Southwest Jiaotong University campus and metro terminus.",
+          "source_url": "https://zh.wikipedia.org/wiki/犀浦街道",
+          "source_note": "相传犀浦得名于李冰治水时“石犀沉之于水以压怪”。唐垂拱二年（686年）设犀浦县",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "A split fringe region with no historic unit of its own. Tianhui (天回镇) was checked: 58 hits, stub article, dropped."
+    },
+    {
+      "n": 10,
+      "key": "#eaa28c",
+      "settled": null,
+      "summary": "Wenjiang district (96%), the western suburb on the Jinma and Jiangan canals.",
+      "candidates": [
+        {
+          "name": "Wenjiang",
+          "local": "温江区",
+          "origin": "county",
+          "meaning": "\"Warm river\": county name since 553; the lead calls it \"gold Wenjiang\" for its fertile land.",
+          "fit": "Holds 95% of the district and is 96% of the region.",
+          "recognisability": "Current district, 1313 yrs as a county.",
+          "source_url": "https://zh.wikipedia.org/wiki/温江区",
+          "source_note": "温江县（县, 553-1911）CHGIS; 素有“金温江”之称",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Yufu",
+          "local": "鱼凫",
+          "origin": "historical",
+          "meaning": "\"Fishing cormorant\": third king of ancient Shu, with the Yufu tomb and the Yufu village walled-city site in Wenjiang; \"Cancong and Yufu\" is the opening line of Li Bai's Shu Dao Nan.",
+          "fit": "Both the Yufu village city and the king's tomb lie in Wenjiang.",
+          "recognisability": "Own zh-wiki article, 445 hits with 四川.",
+          "source_url": "https://zh.wikipedia.org/wiki/魚鳧",
+          "source_note": "鱼凫王墓遗址位于現今温江区寿安镇水星村",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 11,
+      "key": "#f15740",
+      "settled": null,
+      "summary": "Jinniu district, Chengdu's north-west inner ring (92%).",
+      "candidates": [
+        {
+          "name": "Jinniu",
+          "local": "金牛区",
+          "origin": "county",
+          "meaning": "\"Golden ox\": from the legend that Qin carved stone oxen said to excrete gold to lure Shu's king into building a road; the Jinniu road leads to Shu.",
+          "fit": "Holds 76% of the district and is 92% of the region.",
+          "recognisability": "Current district; Jinniu Road is a famous ancient Shu route.",
+          "source_url": "https://zh.wikipedia.org/wiki/金牛区",
+          "source_note": "1960年，郊区更名为金牛区，因境内“金牛坝”得名",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 12,
+      "key": "#f35e5e",
+      "settled": null,
+      "summary": "Chenghua district (77%), the north-east of the inner city, with a bit of Jinniu and Longquanyi.",
+      "candidates": [
+        {
+          "name": "Chenghua",
+          "local": "成华区",
+          "origin": "county",
+          "meaning": "Made in 1991 from the first characters of Chengdu county and Huayang county, which it once belonged to.",
+          "fit": "Holds 77% of the district and is 77% of the region.",
+          "recognisability": "Current district; Zhaojue Temple and the Chengdu East station are here.",
+          "source_url": "https://zh.wikipedia.org/wiki/成华区",
+          "source_note": "成华区在历史上曾分属原成都县、华阳县，故以成都、华阳两地名的第一个字命名",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "A made-up 1991 name, but it is the district name. No older name sits here."
+    },
+    {
+      "n": 13,
+      "key": "#f36d59",
+      "settled": null,
+      "summary": "Qingyang district (87%), the west of the old city, including the Jinsha site.",
+      "candidates": [
+        {
+          "name": "Qingyang",
+          "local": "青羊区",
+          "origin": "county",
+          "meaning": "\"Green goat\": named for the Qingyang Gong Daoist temple in the district.",
+          "fit": "Holds 60% of the district and is 87% of the region; the 25% of Qingyang's people in region 14 are inside the old city.",
+          "recognisability": "Current district; Qingyang Gong is one of Chengdu's best-known temples.",
+          "source_url": "https://zh.wikipedia.org/wiki/青羊区",
+          "source_note": "因辖区内著名道观青羊宫而得名",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Jinsha",
+          "local": "金沙",
+          "origin": "other",
+          "meaning": "\"Gold sand\": the Jinsha site (c. 1250-650 BC), where the Sun Bird gold ornament was found in 2001; the street is named Jinsha.",
+          "fit": "The site lies in Jinsha street (8% of the region) in the north-west corner of the old city.",
+          "recognisability": "Own zh-wiki article, 480 hits with 四川, top ones about this place; but 金沙 is also the Jinsha River of Yunnan and Sichuan.",
+          "source_url": "https://zh.wikipedia.org/wiki/金沙遗址",
+          "source_note": "金沙遗址位于成都市青羊区苏坡乡金沙村（现为成都市青羊区金沙街道）",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Jinsha clashes with the Jinsha River (Yibin, Panzhihua, Lijiang); another agent may want it for the river."
+    },
+    {
+      "n": 14,
+      "key": "#f03420",
+      "settled": null,
+      "summary": "The old city of Chengdu inside the first ring: Jinjiang, Qingyang and Chenghua parts.",
+      "candidates": [
+        {
+          "name": "Chengdu",
+          "local": "成都",
+          "origin": "city",
+          "meaning": "City of the Shu kings since the 4th century BC; also commandery Shu, province Yizhou and prefecture Chengdu fu seated here.",
+          "fit": "The old city; holds the CHGIS seat of Chengdu county, Yizhou, Shu commandery, Chengdufu.",
+          "recognisability": "City of 14.6M by simplemaps.",
+          "source_url": "https://zh.wikipedia.org/wiki/成都市",
+          "source_note": "成都（县, 314 BC-1911）今四川成都市旧城区; 春秋末期（约公元前4世纪），古蜀国第五世开明王把都城迁至成都",
+          "rating": 5,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Per the rules, only this region takes Chengdu."
+    },
+    {
+      "n": 15,
+      "key": "#f04e2f",
+      "settled": null,
+      "summary": "Wuhou district's northern half (96% of the region), around Wuhou Temple, the south station and Yulin.",
+      "candidates": [
+        {
+          "name": "Wuhou",
+          "local": "武侯区",
+          "origin": "county",
+          "meaning": "\"Marquis of Wu\": Zhuge Liang's title; the district is named after the Wuhou Temple, one of few counties named after a person.",
+          "fit": "Holds 39% of the district and is 96% of the region; the temple sits in Jiangxijie sub-district (8.5% of region).",
+          "recognisability": "Wuhou Temple is a major Three Kingdoms site.",
+          "source_url": "https://zh.wikipedia.org/wiki/武侯区",
+          "source_note": "武侯区因其辖区内的武侯祠（诸葛亮）而得名，区人民政府驻浆洗街街道武侯祠大街264号",
+          "rating": 5,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Region 17 is also 93% Wuhou district; Wuhou here and Tianfu there avoids a repeat."
+    },
+    {
+      "n": 16,
+      "key": "#eda695",
+      "settled": null,
+      "summary": "Longquanyi district (98%), the east suburb at the foot of Longquan mountain.",
+      "candidates": [
+        {
+          "name": "Longquanyi",
+          "local": "龙泉驿区",
+          "origin": "county",
+          "meaning": "\"Dragon spring post station\": a post station set up at Longquan town in 1513; the area was earlier Lingchi and Lingquan counties.",
+          "fit": "Holds 72% of the district and is 98% of the region.",
+          "recognisability": "Current district; peach-blossom festival, car plants.",
+          "source_url": "https://zh.wikipedia.org/wiki/龙泉驿区",
+          "source_note": "正德八年（1513年）置龙泉镇巡检司，设驿站龙泉驿",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Longquanshan",
+          "local": "龙泉山",
+          "origin": "mountain",
+          "meaning": "\"Dragon spring mountain\": the narrow range of 600 to 1000 m that divides the Chengdu plain from the hills to the east.",
+          "fit": "The range runs through this district's east, but also Jintang and Jianyang, so a landscape name only.",
+          "recognisability": "Own zh-wiki article (Chengdu), only 47 hits with 四川; Longquan in Zhejiang is better known.",
+          "source_url": "https://zh.wikipedia.org/wiki/成都市",
+          "source_note": "东部为龙泉山脉和盆中丘陵，龙泉山脉海拔600至1000米，为成都平原和盆中丘陵的分界线",
+          "rating": 2,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 17,
+      "key": "#f37b59",
+      "settled": null,
+      "summary": "Wuhou's southern half (93%): Guixi, Cujin, Huaxing, the Hi-tech zone along Tianfu Avenue.",
+      "candidates": [
+        {
+          "name": "Tianfu",
+          "local": "天府",
+          "origin": "plain",
+          "meaning": "\"Heavenly storehouse\": the traditional name of the fertile Sichuan basin (Tianfu zhi guo); Tianfu Square and Avenue are the centre of the zone.",
+          "fit": "Tianfu Avenue and the Hi-tech zone run through this region.",
+          "recognisability": "Own zh-wiki article (天府之国), 6479 hits with 四川.",
+          "source_url": "https://zh.wikipedia.org/wiki/四川天府新区",
+          "source_note": "天府新区将成为云贵川渝地区的第3个国家级新区",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Tianfu is a nickname for all of Sichuan; another Sichuan agent may want it for a basin region. The region's own unit is Wuhou, which region 15 takes."
+    },
+    {
+      "n": 18,
+      "key": "#f1b6a6",
+      "settled": null,
+      "summary": "Chongzhou (54%) and Dayi (42%), the plain west of Wenjiang.",
+      "candidates": [
+        {
+          "name": "Chongzhou",
+          "local": "崇州市",
+          "origin": "city",
+          "meaning": "Named from Chongqing prefecture, Song, itself the old Shuzhou (Tang, 686); its Han county was Jiangyuan.",
+          "fit": "Holds 73% of Chongzhou and is 54% of the region; Shuzhou seated at Huaiyuan town covered Jinyuan, Tanglong, Qingcheng and Xinjin.",
+          "recognisability": "Current county-level city; \"Shu within Shu\".",
+          "source_url": "https://zh.wikipedia.org/wiki/崇州市",
+          "source_note": "唐朝垂拱二年（686年）置蜀州……南宋绍兴十四年（1146年）升为崇庆府",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Dayi",
+          "local": "大邑县",
+          "origin": "county",
+          "meaning": "\"Large town\": Tang county of 631; the Xiling snow mountain, Liu Wencai's manor and Heming mountain, where Daoism began, are in the county.",
+          "fit": "Holds 81% of Dayi's people and is 42% of the region.",
+          "recognisability": "Current county; Xiling Snow Mountain and Liu manor are well known.",
+          "source_url": "https://zh.wikipedia.org/wiki/大邑县",
+          "source_note": "大邑县（县, 631-1911）; 著名旅游胜地西岭雪山地处大邑县境内",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Two near-equal counties. I put Chongzhou first for its seat and the bigger share."
+    },
+    {
+      "n": 19,
+      "key": "#ea7958",
+      "settled": null,
+      "summary": "South-east inner ring: Jinjiang (58%) and part of Longquanyi (25%), the Sansheng flower villages.",
+      "candidates": [
+        {
+          "name": "Jinjiang",
+          "local": "锦江区",
+          "origin": "river",
+          "meaning": "\"Brocade river\": the river through Chengdu where Shu brocade was washed; the district is named for it.",
+          "fit": "Holds 53% of the district and is 58% of the region; the region lies east of the river, in the old Huayang county.",
+          "recognisability": "Current district; the river is Chengdu's nickname, Jinguan.",
+          "source_url": "https://zh.wikipedia.org/wiki/锦江区",
+          "source_note": "原名东城区，因流经其区域的锦江得名",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Only one candidate. Jinjiang is also a city in Fujian (晋江, different characters); a repeat only by spelling."
+    },
+    {
+      "n": 20,
+      "key": "#f0957a",
+      "settled": null,
+      "summary": "Shuangliu (97%), the south-west suburb with the old airport.",
+      "candidates": [
+        {
+          "name": "Shuangliu",
+          "local": "双流区",
+          "origin": "county",
+          "meaning": "\"Two streams\": renamed in 601 for lying between the Pi and Liu rivers (or from a line of the Shu Capital Rhapsody).",
+          "fit": "Holds 46% of Shuangliu and is 97% of the region; the county seat and airport are here.",
+          "recognisability": "Current district; name of the Chengdu airport.",
+          "source_url": "https://zh.wikipedia.org/wiki/双流区",
+          "source_note": "隋仁寿元年（601年）……更名为双流县，因双流地处郫江、流江二江之间而得名",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Guangdu",
+          "local": "广都",
+          "origin": "historical",
+          "meaning": "Han county, name of the area before Shuangliu; the Shan Hai Jing's \"Duguang plain\" where Hou Ji is buried.",
+          "fit": "Seat of Guangdu county for 820 yrs, at today's Shuangliu seat.",
+          "recognisability": "36 hits with 四川, no own article; only a metro station.",
+          "source_url": "https://zh.wikipedia.org/wiki/双流区",
+          "source_note": "双流原名广都，始见于《山海经·海内经》",
+          "rating": 2,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 21,
+      "key": "#f1bfb8",
+      "settled": null,
+      "summary": "Jintang (60%), part of Jianyang, Lezhi and Qingbaijiang: hills east of Chengdu where the Tuo leaves the plain.",
+      "candidates": [
+        {
+          "name": "Jintang",
+          "local": "金堂县",
+          "origin": "county",
+          "meaning": "\"Golden hall\": named for the Jintang mountain in the county, Tang 671.",
+          "fit": "Holds 88% of Jintang and is 60% of the region.",
+          "recognisability": "Current county; Jintang Gorge.",
+          "source_url": "https://zh.wikipedia.org/wiki/金堂县",
+          "source_note": "咸亨二年（671年）……建置金堂县，以界有金堂山得名",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Tuojiang",
+          "local": "沱江",
+          "origin": "river",
+          "meaning": "\"Tuo river\": the Yangtze tributary whose three sources include the Mianyuan; it runs through Deyang's plain and on through Jintang.",
+          "fit": "Runs through Jintang and Jianyang from north-west to south-east, but its course is long and goes on into other regions.",
+          "recognisability": "Own zh-wiki article, 283 hits with 四川.",
+          "source_url": "https://zh.wikipedia.org/wiki/沱江",
+          "source_note": "沱江，古称江沱，又名外江、中江，是中华人民共和国四川省中部的一条河流",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Jianyang (20%) and Lezhi are not recommended: a small slice of each. Tuojiang may be wanted by Zigong or Luzhou agents downstream."
+    },
+    {
+      "n": 22,
+      "key": "#ea8e74",
+      "settled": null,
+      "summary": "Huayang and Xinxing: the southern suburb along Tianfu Avenue, in Shuangliu (94%).",
+      "candidates": [
+        {
+          "name": "Huayang",
+          "local": "华阳",
+          "origin": "historical",
+          "meaning": "An old literary name for Shu (\"Tianfu, originally called Huayang\"), also the title of the Huayang guozhi; the county seated in Chengdu's old city 758-1911.",
+          "fit": "Huayang street holds 56% of the region; the county later covered the area south-east of the city.",
+          "recognisability": "zh-wiki article on the county, 991 hits with 四川; the name is common elsewhere in China.",
+          "source_url": "https://zh.wikipedia.org/wiki/华阳县_(成都)",
+          "source_note": "华阳，据说是因古人论蜀之繁富有“地称天府，原号华阳”之说",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Region 20 also takes a Shuangliu unit, so this avoids repeating that name; the CHGIS Huayang seat is the old city (region 14), so Huayang here rests on the town and the county's later territory."
+    },
+    {
+      "n": 23,
+      "key": "#f4cdba",
+      "settled": null,
+      "summary": "Qionglai (63%) and Pujiang (23%) in the south-west, with parts of Dayi and Mingshan.",
+      "candidates": [
+        {
+          "name": "Qionglai",
+          "local": "邛崃市",
+          "origin": "city",
+          "meaning": "Named for the Qionglai mountains; the city was Linqiong, with the prefecture Qiongzhou seated here from 539.",
+          "fit": "Holds 99% of Qionglai and is 63% of the region; Qiongzhou covered Pujiang too.",
+          "recognisability": "Current county-level city, one of the four ancient cities of Ba-Shu.",
+          "source_url": "https://zh.wikipedia.org/wiki/邛崃市",
+          "source_note": "邛崃有2300多年的筑城史，是巴蜀四大古城之一",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Linqiong",
+          "local": "临邛",
+          "origin": "historical",
+          "meaning": "Han county seated at Qionglai (314 BC-1284), 1340 yrs.",
+          "fit": "Seat is Linqiong town, the biggest part of the region.",
+          "recognisability": "58 hits with 四川, commandery article exists; a literary name (Zhuo Wenjun).",
+          "source_url": "https://zh.wikipedia.org/wiki/邛崃市",
+          "source_note": "临邛郡……治所在临邛县（今四川省邛崃市）",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Pujiang county is 23% of the region and not recommended; its name is too small for the whole region."
+    },
+    {
+      "n": 24,
+      "key": "#f1b9a6",
+      "settled": null,
+      "summary": "Xinjin (38%), southern Shuangliu (41%), a bit of Pengshan and Renshou, on the Min River south of Chengdu.",
+      "candidates": [
+        {
+          "name": "Xinjin",
+          "local": "新津区",
+          "origin": "county",
+          "meaning": "\"New ferry\": the name comes from a new ford opened in 216 across the Min at Pengshan by the Qianwei governor Li Yan.",
+          "fit": "Holds 98% of Xinjin and is 38% of the region; seat is in the region.",
+          "recognisability": "Current district; Baodun site and the Min River crossing.",
+          "source_url": "https://zh.wikipedia.org/wiki/新津区",
+          "source_note": "东汉建安二十一年（公元216年）……新渡口，新津这一地名由此诞生",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Baodun",
+          "local": "宝墩",
+          "origin": "other",
+          "meaning": "The Baodun culture, a Neolithic city site in Xinjin, the largest of Chengdu plain's prehistoric walled cities.",
+          "fit": "Site is in Xinjin (Longma township).",
+          "recognisability": "Article on the culture, 620 hits with 四川; known mainly to archaeology readers.",
+          "source_url": "https://zh.wikipedia.org/wiki/宝墩文化",
+          "source_note": "宝墩遗址为目前发现的最大的一个，约250万平方米",
+          "rating": 2,
+          "status": "suggested"
+        }
+      ],
+      "notes": "41% of the people are in suburban Shuangliu (Shiyuan, Shigao), which region 20 already uses, so a Xinjin name suits the region best."
+    }
+  ]
+}

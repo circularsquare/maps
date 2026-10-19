@@ -27,6 +27,12 @@ cid = (r<<16)|(g<<8)|b
 cid[a==0] = 0
 for (sr,sg,sb) in SPECIALS:
     cid[cid == ((sr<<16)|(sg<<8)|sb)] = 0
+# boundary lines drawn a shade off the border colour (#535c8d, #535e8d...) are lines, not regions
+for dr in range(-2,3):
+    for dg in range(-2,3):
+        for db in range(-2,3):
+            if abs(dr)+abs(dg)+abs(db) <= 3:
+                cid[cid == (((0x53+dr)<<16)|((0x5d+dg)<<8)|(0x8d+db))] = 0
 del r,g,b,im
 print(f"[{time.time()-t0:.0f}s] loaded {W}x{H}")
 
@@ -42,6 +48,31 @@ yy,xx = np.ogrid[-R:R+1, -R:R+1]
 disk = (xx*xx+yy*yy) <= R*R
 
 slices = ndi.find_objects(inv, max_label=K)  # index k-1 -> bbox of color label k
+
+# A colour reused for two separate regions less than MERGE_PX apart merges into one ~2M "region".
+# Island chains are legitimately in pieces, but their pieces are small. So split a group into its
+# separate pieces when it holds over SPLIT_TOTAL people and two or more pieces each hold
+# SPLIT_PIECE; smaller scraps join the nearest big piece. Needs ../naming/pop.npy (skipped if absent).
+SPLIT_TOTAL, SPLIT_PIECE = 1_600_000, 250_000
+_pop_path = f"{SCR}/../naming/pop.npy"
+POP = np.load(_pop_path, mmap_mode="r") if __import__("os").path.exists(_pop_path) else None
+split_log = []
+def split_reused(fy, fx):
+    """fy, fx: pixel coords (relative to the colour's bbox) of one merged group -> list of pieces."""
+    if POP is None or len(fy) < 50: return [(fy, fx)]
+    p = np.asarray(POP[fy + y0, fx + x0], dtype=np.float64)
+    if p.sum() < SPLIT_TOTAL: return [(fy, fx)]
+    oy, ox = fy.min(), fx.min()
+    m = np.zeros((fy.max() - oy + 1, fx.max() - ox + 1), bool); m[fy - oy, fx - ox] = True
+    lab, k = ndi.label(m, structure=np.ones((3, 3)))
+    cp = np.bincount(lab[fy - oy, fx - ox], weights=p, minlength=k + 1)
+    big = [c for c in range(1, k + 1) if cp[c] >= SPLIT_PIECE]
+    if len(big) < 2: return [(fy, fx)]
+    seed = np.where(np.isin(lab, big), lab, 0)
+    _, (iy, ix) = ndi.distance_transform_edt(seed == 0, return_indices=True)
+    owner = seed[iy, ix][fy - oy, fx - ox]
+    split_log.append((hexc, len(big), [int(cp[c]) for c in big]))
+    return [(fy[owner == c], fx[owner == c]) for c in big]
 
 region_id = np.zeros((H, W), np.int32)
 regions = []
@@ -77,10 +108,14 @@ for k in range(1, K+1):
     groups = np.unique(g)
     y0, x0 = ys.start, xs.start
     rids_here = []
+    pieces = []
     for gi in groups:
         sel = g == gi
-        py = fy[sel] + y0
-        px = fx[sel] + x0
+        pieces += split_reused(fy[sel], fx[sel])
+    for py, px in pieces:
+        py = py + y0
+        px = px + x0
+        sel = np.ones(len(py), bool)
         rid = next_rid; next_rid += 1
         region_id[py, px] = rid
         area = int(sel.sum())
@@ -96,6 +131,8 @@ for k in range(1, K+1):
         reuse.append((hexc, len(rids_here), [regions[r-1] for r in rids_here]))
 
 print(f"[{time.time()-t0:.0f}s] {len(regions)} regions from {K} colors")
+for hexc_, n_, pops_ in split_log:
+    print(f"  split reused colour {hexc_} into {n_} regions: {pops_} people")
 np.save(f"{SCR}/region_id.npy", region_id)
 
 import csv

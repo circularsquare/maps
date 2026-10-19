@@ -131,3 +131,18 @@ still drawn about as dense as the old centre.
 
 Counts did not move: dots per node are identical before and after, 10,500 at 1:1,000 and 1,048
 at 1:10,000.
+
+## Churches drawn, 2026-10-16 (session `c67d3c3c-westafrica`)
+
+On Anita's call (unspecified_splits/westafrica.md §4), `Chrétienne` (711,350) is replaced in every
+région by one national split: Catholique 65% (`christianity.catholic`), Protestante ou
+évangélique 30% (`christianity.protestant`), Autre chrétienne 5% (`christianity.other`). No census
+or DHS splits Guinea's Christians (DHS 2018 FR353 Table 3.1 has one Christian row). The
+Afrobarometer's named Christians, rounds 5-9, are 64.8% Catholic and 24.3% Evangelical (n=414;
+Catholic 57-75% by round); Pew 2010 gives 68/31. N'Zérékoré, with 62.5% of the Christians, sits in
+the national range in the survey. The Church's 2023 claim (331,000) is lower than these, about 36%
+of Christians, and is not used.
+
+The Protestants go to `.protestant` with Mali and Burkina Faso rather than to `.evangelical` with
+Côte d'Ivoire; that node question is parked with Anita. `sources/wa_christian.py gn` writes
+`gn_split.csv`; `tier="derived"`, never rings, rolls back through `gn2014.COLUMNS`.

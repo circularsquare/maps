@@ -1,7 +1,10 @@
 # Algeria. Arab Barometer VI-VII (2020-2022) ethnic group read as language, by wilaya, on the RGPH
-# 2008 wilaya populations (sources/dz_survey.py); every row `modelled`. On religiondots' Kontur
-# hexes for the 48 wilayas. Inside a wilaya, Berber dots lean to where the 1966 census found
-# Berber speakers, Arabic dots away from there. The record is sources/dz.md.
+# 2008 wilaya populations (sources/dz_survey.py); every row `modelled`. Amazigh answers are split
+# over ten Berber varieties by place (dz_survey.SPLIT, 2026-10-19). The Sahrawi camps near Tindouf,
+# in no census, are added as Hassaniya from the UN agencies' 2018 figure (sources/dz_camps.py
+# places them). On religiondots' Kontur hexes for the 48 wilayas plus the camps' patches. Inside a
+# wilaya, Berber dots lean to where the 1966 census found Berber speakers, Arabic dots away from
+# there. The record is sources/dz.md.
 from _shared import *  # noqa: F401,F403
 import numpy as np
 
@@ -9,6 +12,10 @@ UNITS = 48
 RGPH_2008 = 34_080_030
 BERBER = "afroasiatic.berber"
 ARABIC = "afroasiatic.algerian_arabic"
+HASSANIYA = "afroasiatic.hassaniya"
+CAMPS_PEOPLE = 173_600          # the five Sahrawi camps, UN agencies' figure for 31 Dec 2017
+CAMPS_UNIT = "DZ37"             # Tindouf wilaya
+PLACE = GEO / "dz" / "dz_hexes_camps.gpkg"
 
 
 def _counts():
@@ -29,6 +36,8 @@ def _counts():
         raise SystemExit("dz.csv wilayas missing from religiondots' dz_lookup.csv")
     df = df[df["count"] > 0]
     out = by_unit(df)
+    camps = pd.DataFrame([dict(unit=CAMPS_UNIT, node=HASSANIYA, count=CAMPS_PEOPLE)])
+    out = pd.concat([out, camps], ignore_index=True)
     out["tier"] = "modelled"
     return out
 

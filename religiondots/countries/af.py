@@ -52,11 +52,12 @@ ENTRY = {
             "That estimate is projected from a household listing made between 2002 and 2006; the "
             "US government's own figure for mid-2023 is 39.2 million. Nobody counted these dots, "
             "so they disappear when inferred dots are turned off. "
-            "**Shia and Sunni Muslims are drawn as one.** The World Religion Database's 2022 "
-            "estimate is 89% Sunni and 11% Shia, Columbia University's Gulf 2000 project puts the "
-            "Shia as high as 29%, and in Pew Research Center's 2011 survey 90% of Afghan Muslims "
-            "called themselves Sunni and 7% Shia. None of them gives a figure for any province, "
-            "and Shia Hazaras have been attacked repeatedly, so no split is drawn. "
+            "**No Shia dots are drawn.** The World Religion Database's 2022 estimate is 89% Sunni "
+            "and 11% Shia, Columbia University's Gulf 2000 project puts the Shia as high as 29%, "
+            "and in Pew Research Center's 2011 survey 90% of Afghan Muslims called themselves "
+            "Sunni and 7% Shia. None of them gives a figure for any province, so Pew's Sunni share "
+            "is drawn as Sunni everywhere except the two Hazara provinces, and the rest stays "
+            "Muslim with no branch (see the last paragraph). "
             "**Almost no Sikhs or Hindus remain.** The US State Department's 2023 report on "
             "religious freedom says six are left, where community representatives counted more "
             "than 1,000 when the Taliban took power in 2021. Six people are fewer than one dot, "
@@ -70,9 +71,8 @@ ENTRY = {
             "not-drawn part of the bar."),
         how="no source asks; everyone drawn as Muslim",
         grain="provinces, 1,028,000 people on average",
-        gap="the 1.5 million nomadic Kuchis, 4.1% of the population, whom the estimate holds at one "
-            "national figure with no province; and Afghans who are not Muslim, whom no source has "
-            "counted",
+        gap="the 1.5 million nomadic Kuchis, 4.1% of the population, held at one national figure "
+            "with no province; and Afghans who are not Muslim, whom nobody has counted",
         gap_share=0.04117,
         counts=_af_counts,
         units=None,
@@ -86,8 +86,10 @@ ENTRY = {
              "People has no religion or sect item (sources.md §11ao); no UNSD row. All 34,935,197 "
              "settled people (NSIA 1404 Table 3, checked against its 1402-1404 table) on islam; Pew "
              "2020's 53,928 non-Muslims not drawn (no source places them); IRF 2023: six Sikhs and "
-             "Hindus, no estimate for Christians or Baha'is. SECT: not drawn; WRD 2022 11% Shia, "
-             "Gulf 2000 up to 29%, Pew 2011 7% of Muslims, none by province (sources/af.md §3; §14). "
+             "Hindus, no estimate for Christians or Baha'is. SECT: since 2026-10-16 Sunni by "
+             "assignment at Pew 2012's 90% (islam_assign.py, Anita's call), Bamyan and Daykundi "
+             "whole on islam, no Shia node; WRD 2022 11% Shia, Gulf 2000 up to 29%, none by "
+             "province (sources/af.md §3, §8; §14). "
              "GEOGRAPHY: COD-AB v03 34 provinces, names pinned to pcodes, COD-PS 2026 rank witness "
              "+0.892. PLACEMENT: Kontur AF calibrated to NSIA provinces (1.211x nationally; Sar-e "
              "Pol 0.11, shape kept); 16 false cap blocks lowered, Kabul and Herat cities left and "

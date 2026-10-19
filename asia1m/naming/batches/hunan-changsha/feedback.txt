@@ -1,0 +1,14 @@
+batch hunan-changsha
+1: pick Ningxiang
+2: pick Laodao
+3: pick Xingsha
+4: pick Wangcheng
+5: pick Changsha
+7: pick Yuelu
+8: pick Yuhua
+9: pick Tianxin
+10: pick Shaoshan
+11: pick Xiangtan
+12: pick Zhuzhou
+13: pick Lukou
+15: pick Xiangxiang

@@ -1,0 +1,475 @@
+{
+  "batch": "ningxia",
+  "regions": [
+    {
+      "n": 1,
+      "key": "#dbeecb",
+      "settled": null,
+      "summary": "Northern Ningxia: all of Shizuishan prefecture (Pingluo county, Dawukou and Huinong districts) plus the northern third of Helan county.",
+      "candidates": [
+        {
+          "name": "Shizuishan",
+          "local": "石嘴山",
+          "origin": "prefecture",
+          "meaning": "\"Stone-mouth mountain\": a rock on the Yellow River bank that juts out like a mouth (山石突出如嘴), first called Shizuizi.",
+          "fit": "Very good. The region holds 98.6% of Shizuishan prefecture's people, and the prefecture is 68% of the region. Shizuishan is a prefecture of about 0.75M, not a 1M city.",
+          "recognisability": "High: the current prefecture name, and the only city of note in the region.",
+          "source_url": "https://mca.nx.gov.cn/zzb/mzdt_71747/202511/t20251105_5075341.html",
+          "source_note": "Ningxia civil affairs department place-name series, part 3: the town was named for rocks on the Yellow River bank, \"山石突出如嘴\", colloquially 石嘴子; recorded 1729; city founded 1960.",
+          "status": "suggested"
+        },
+        {
+          "name": "Helanshan",
+          "local": "贺兰山",
+          "origin": "mountain",
+          "meaning": "The Helan Mountains, named after the Helan tribe (贺兰部, Xiongnu or Xianbei); 贺兰 is said to mean \"mottled\" in Turkic.",
+          "fit": "Good. The highest, central part of the range (peak 3,556 m in Helan county) runs along the whole western edge of this region; Shizuishan is described as lying where the Helan Mountains meet the Yellow River. Region 4 touches the low southern end.",
+          "recognisability": "High: one of Ningxia's three named mountains (with Liupan and Luoshan), and known for its rock art and wine.",
+          "source_url": "https://zh.wikipedia.org/wiki/贺兰山",
+          "source_note": "\"十九之匈奴部落中有一支名'贺兰部'，后部落名变为山名\"; \"突厥语'贺兰'意为'斑駁'\". Shizuishan's own site: \"石嘴山市地处贺兰山与黄河交汇处\".",
+          "status": "suggested"
+        },
+        {
+          "name": "Pingluo",
+          "local": "平罗",
+          "origin": "county",
+          "meaning": "A softened spelling of Pinglu (平虏), \"pacify the raiders\", the early-15th-century Ming frontier fort; the county took the name Pingluo in 1724.",
+          "fit": "Moderate. The region holds all of Pingluo county (cover 99.9%), but it is only 37% of the region.",
+          "recognisability": "Medium: a county name, known within Ningxia.",
+          "source_url": "https://pingluo.gov.cn/hlpl/plgk/lsyg/",
+          "source_note": "County government history page: \"明嘉靖三十年(1551年),改设平虏守御千户所\"; \"雍正二年(1724年)改平虏守御千户为平罗县\". Shizuishan site: \"'平罗'由'平虏'转音\".",
+          "status": "suggested"
+        },
+        {
+          "name": "Shahu",
+          "local": "沙湖",
+          "origin": "lake",
+          "meaning": "\"Sand Lake\": a lake on the edge of desert dunes in Pingluo county, a national 5A scenic area.",
+          "fit": "Weak as a geographic fit (one lake of about 10 km² of water), but it lies near the middle of the region and is its best-known landmark.",
+          "recognisability": "High within China: one of Ningxia's best-known tourist sites.",
+          "source_url": "https://zh.wikipedia.org/wiki/石嘴山市",
+          "source_note": "\"沙湖位于平罗县，现为国家5A级旅游景区\"; about 50 km², roughly 10 km² of it water and 20 km² desert.",
+          "status": "suggested"
+        },
+        {
+          "name": "Dawukou",
+          "local": "大武口",
+          "origin": "county",
+          "meaning": "From 打硙口, \"millstone-cutting pass\", a Ming-era pass in a valley of the Helan Mountains.",
+          "fit": "Moderate. The district is the urban seat of Shizuishan and is 18% of the region (cover 99.7%).",
+          "recognisability": "Medium: known as the city centre of Shizuishan.",
+          "source_url": "https://mca.nx.gov.cn/zzb/mzdt_71747/202511/t20251105_5075341.html",
+          "source_note": "Same series, part 3: the name comes from \"打硙口\", a pass in the Helan Mountains where millstones were made, dating to the Ming.",
+          "status": "suggested"
+        },
+        {
+          "name": "Huinong",
+          "local": "惠农",
+          "origin": "county",
+          "meaning": "\"Benefit the farmers\", taken from the Huinong Canal (惠农渠), finished in 1729.",
+          "fit": "Weak to moderate. Huinong district (with the old Shizuishan district merged into it) is about 17% of the region. The canal itself runs from the Qingtongxia area to here, through regions 4, 2 and 1.",
+          "recognisability": "Medium: a district name.",
+          "source_url": "https://mca.nx.gov.cn/xwzx/mzdt/202512/t20251210_5105177.html",
+          "source_note": "Series part 14: \"县名取自清雍正七年（1729年）竣工的惠农渠，寓意惠济于农\"; county created 1 April 1941.",
+          "status": "suggested"
+        }
+      ],
+      "notes": "The only settled name visible in the tile is Ordos to the east. facts.json lists a unit \"Shizuishan Qū\" under Wuhai prefecture: that is the old Shizuishan district, abolished in 2003 and merged into Huinong, so its prefecture is wrong. \"Taole\" (3%) is a county abolished into Pingluo, and the \"Sizhan\" city (751,389) is really Shizuishan prefecture's population. If Helanshan goes here, Helan should not be used for region 2."
+    },
+    {
+      "n": 2,
+      "key": "#c3eb9f",
+      "settled": null,
+      "summary": "Western Yinchuan: Xixia district's urban streets, most of Jinfeng district, and the Helan county seat Xigang.",
+      "candidates": [
+        {
+          "name": "Xixia",
+          "local": "西夏",
+          "origin": "historical",
+          "meaning": "Western Xia, the Tangut empire (1038-1227) whose capital was at Yinchuan; the district is named after the Western Xia royal tombs west of the city.",
+          "fit": "Good. Xixia district's urban streets (贺兰山西路, 宁华路, 朔方路, 西花园, 文昌路, 北京西路) make up about 38% of the region and most of the district's people.",
+          "recognisability": "High: the dynasty is widely known, and the tombs became a World Heritage site in 2025.",
+          "source_url": "https://zh.wikipedia.org/wiki/西夏区",
+          "source_note": "\"西夏區因西夏王陵得名\"; it was the 新市区 part of Yinchuan's former 新城区, renamed on 1 November 2002.",
+          "status": "suggested"
+        },
+        {
+          "name": "Jinfeng",
+          "local": "金凤",
+          "origin": "county",
+          "meaning": "\"Golden phoenix\". Yinchuan's nickname is Fengcheng (凤城, Phoenix City), but no source I reached says the district was named after it.",
+          "fit": "Moderate. Jinfeng streets make up about 25% of the region; the district is split with region 3.",
+          "recognisability": "Medium: a district name, seat of the city government since 2006.",
+          "source_url": "https://zh.wikipedia.org/wiki/金凤区",
+          "source_note": "The district covers the former 新城 area (新满营, 丰乐堡); the city government moved from Xingqing to Jinfeng in 2006.",
+          "status": "suggested"
+        },
+        {
+          "name": "Helan",
+          "local": "贺兰",
+          "origin": "county",
+          "meaning": "Named after the Helan Mountains (from the Helan tribe); the county was called Ningxia county until 1941.",
+          "fit": "Moderate. The region holds 61% of Helan county's people, including the county seat Xigang (20% of the region), but Helan is only 24% of the region and the region does not reach the mountains.",
+          "recognisability": "Medium to high, but shared with the mountains.",
+          "source_url": "https://zh.wikipedia.org/wiki/贺兰县",
+          "source_note": "\"1941年，宁夏县改名贺兰县\"; the Helan Mountains form the west of the county.",
+          "status": "suggested"
+        },
+        {
+          "name": "Xincheng",
+          "local": "新城",
+          "origin": "historical",
+          "meaning": "\"New City\": the Qing Manchu garrison town west of old Yinchuan, around which the 1950s new city was built; Jinfeng and Xixia were once the Xincheng district.",
+          "fit": "Good for the area (Xincheng is roughly this region), but the name is generic.",
+          "recognisability": "Low outside Yinchuan: Xincheng is a common district name elsewhere (Xi'an, Hohhot).",
+          "source_url": "https://zh.wikipedia.org/wiki/银川市",
+          "source_note": "\"在新满城一带建设新城\", creating a 双城 (twin-city) layout; the wetlands between old and new city were later filled in to form 兴庆区, 金凤区 and 西夏区.",
+          "status": "suggested"
+        },
+        {
+          "name": "Yuehai",
+          "local": "阅海",
+          "origin": "lake",
+          "meaning": "Literally \"viewing the sea\": a large lake and national wetland park in Jinfeng, earlier called Daxihu (大西湖, Big West Lake).",
+          "fit": "Weak to moderate: a landmark lake at the northern edge of the region rather than a name for the whole area.",
+          "recognisability": "Medium within Yinchuan; searches for 阅海 银川 return the wetland park and the Yuehai Bay business district.",
+          "source_url": "https://zh.wikipedia.org/wiki/银川市",
+          "source_note": "宝湖, 阅海 and 鸣翠湖 became wetland parks; 阅海 is also called 金凤区's \"大西湖\".",
+          "status": "suggested"
+        }
+      ],
+      "notes": "Xixia starts with 西 (west) but is the established name of a dynasty, much like Hebei, so I think it passes the rule; flagging in case it reads as \"West Xia\" to you. Helan here and Helanshan in region 1 would repeat one another, so pick one."
+    },
+    {
+      "n": 3,
+      "key": "#91da51",
+      "settled": null,
+      "summary": "Old city of Yinchuan: most of Xingqing district (Yuhuangge, Yingulu, Lijingjie, Daxin) and the east of Jinfeng.",
+      "candidates": [
+        {
+          "name": "Yinchuan",
+          "local": "银川",
+          "origin": "city",
+          "meaning": "Literally \"silver river\" (川 can also mean plain). Used by early-Qing writers for the Ningxia capital and made the city's official name in 1944.",
+          "fit": "Required by your rule: Yinchuan is a city of about 2.5M and this region holds the old city (Xingqing, the 老城, including 玉皇阁北街).",
+          "recognisability": "High: the capital of Ningxia.",
+          "source_url": "https://en.wikipedia.org/wiki/Yinchuan",
+          "source_note": "Gives the name as lit. \"Silver River\"; 2020 built-up area 2,564,918.",
+          "status": "suggested"
+        },
+        {
+          "name": "Xingqing",
+          "local": "兴庆",
+          "origin": "historical",
+          "meaning": "\"Flourishing celebration\": Xingqingfu, the Western Xia capital on this site from 1038; now the district holding the old city.",
+          "fit": "Good. Xingqing streets and towns make up about two thirds of the region, but by your rule Yinchuan should take this region.",
+          "recognisability": "Medium: a district name and a well-known historical name.",
+          "source_url": "https://zh.wikipedia.org/wiki/兴庆区",
+          "source_note": "\"因西夏时期的兴庆府而得名\"; the district is \"即原城区或老城\".",
+          "status": "suggested"
+        },
+        {
+          "name": "Fengcheng",
+          "local": "凤城",
+          "origin": "other",
+          "meaning": "\"Phoenix City\", a traditional nickname of Yinchuan.",
+          "fit": "Good for the old city, but it is a nickname of the whole city.",
+          "recognisability": "Low to medium; Fengcheng is also a city in Liaoning.",
+          "source_url": "https://zh.wikipedia.org/wiki/银川市",
+          "source_note": "Lists the nicknames \"凤城\" and \"塞上明珠\".",
+          "status": "suggested"
+        }
+      ],
+      "notes": "The tile shows no label, so I take it this is unnamed. It is the old centre of a 2.5M city, so Yinchuan is the expected name; the others are listed only for completeness."
+    },
+    {
+      "n": 4,
+      "key": "#d0eec2",
+      "settled": null,
+      "summary": "The Yellow River plain south of Yinchuan: Litong (Wuzhong city), Lingwu, Qingtongxia and Yongning.",
+      "candidates": [
+        {
+          "name": "Lingzhou",
+          "local": "灵州",
+          "origin": "historical",
+          "meaning": "\"Spirit isle\": a Han county (191 BC) on an island in the Yellow River that \"rose and fell with the water and never sank\". Later a major Tang prefecture, where Emperor Suzong took the throne.",
+          "fit": "Good. Old Lingzhou stood in today's Litong (the 古城 town) until Ming floods moved it to today's Lingwu, so it covers the two largest parts of the region (31% + 25%).",
+          "recognisability": "Medium: a searched \"Lingzhou Ningxia\" goes straight to Lingwu; known from Tang history.",
+          "source_url": "https://mca.nx.gov.cn/zzb/mzdt_71747/202512/t20251201_5096180.html",
+          "source_note": "Series part 12 (Lingwu), quoting Yan Shigu: \"水中可居者曰州，此地在河之州，随水高下，末尝沦没，故号灵州\"; set up 191 BC. Part 16 (Litong): after Ming floods only the name 古城 was left, \"即今利通区古城镇\".",
+          "status": "suggested"
+        },
+        {
+          "name": "Wuzhong",
+          "local": "吴忠",
+          "origin": "city",
+          "meaning": "Named after Wu Zhong, a Ming garrison officer (百户) whose fort became Wuzhongbao (吴忠堡).",
+          "fit": "Good. Wuzhong city (Litong) is the largest unit (31%, cover 82%) and the prefecture is 80% of the region. Wuzhong's 1.38M in facts is the prefecture; the city itself is well under 1M.",
+          "recognisability": "High: a prefecture city and a Hui centre.",
+          "source_url": "https://mca.nx.gov.cn/zzb/mzdt_71747/202511/t20251112_5081353.html",
+          "source_note": "Series part 4: \"其中一堡由百户吴忠管辖，故得名'吴忠堡'\"; name kept until 1950 and then given to the county and city.",
+          "status": "suggested"
+        },
+        {
+          "name": "Qingtongxia",
+          "local": "青铜峡",
+          "origin": "city",
+          "meaning": "\"Bronze Gorge\", the Yellow River gorge where, in legend, Yu the Great split the mountain with a bronze axe; now also a county-level city and a dam.",
+          "fit": "Moderate. The region holds all of Qingtongxia city (cover 100%), 24% of the region. The gorge is the divide between the Weining plain (region 5) and the Yinchuan plain.",
+          "recognisability": "High: the dam, the gorge and the 108 stupas are well known.",
+          "source_url": "https://mca.nx.gov.cn/zzb/mzdt_71747/202511/t20251112_5081353.html",
+          "source_note": "\"大禹以青铜神斧劈山导河\"; en.wikipedia also gives lit. \"Bronze Gorge\".",
+          "status": "suggested"
+        },
+        {
+          "name": "Lingwu",
+          "local": "灵武",
+          "origin": "city",
+          "meaning": "From the Han county Lingwu, named for the Lingwu valley (灵武谷) in the Helan Mountains; read as \"majestic and martial\" (威灵尚武).",
+          "fit": "Moderate. The region holds 87% of Lingwu's people, but Lingwu is 25% of the region. Too close to Lingzhou to use both.",
+          "recognisability": "Medium to high: a county-level city, known for jujubes and the Shuidonggou site.",
+          "source_url": "https://mca.nx.gov.cn/zzb/mzdt_71747/202512/t20251201_5096180.html",
+          "source_note": "\"灵武，县名，有谷\" (后汉书); \"以'威灵尚武'之寓意\".",
+          "status": "suggested"
+        },
+        {
+          "name": "Yongning",
+          "local": "永宁",
+          "origin": "county",
+          "meaning": "\"Lasting peace\".",
+          "fit": "Weak. The region holds 90% of Yongning county, but it is only 18% of the region.",
+          "recognisability": "Low: a common name (Yongning exists in several provinces).",
+          "source_url": null,
+          "source_note": "Current county name.",
+          "status": "suggested"
+        },
+        {
+          "name": "Jinji",
+          "local": "金积",
+          "origin": "historical",
+          "meaning": "Literally \"gold gathered\". Jinjipu (金积堡), now Jinji town in Litong, was the headquarters of the Jahriyya Sufi order under Ma Hualong, besieged by Qing forces 1869-71.",
+          "fit": "Weak geographically (one town south of Wuzhong city), but a name with real weight in Hui history for a region that is about half Hui.",
+          "recognisability": "Low outside Hui history; I would only use it if you want a Hui historical name here.",
+          "source_url": "https://en.wikipedia.org/wiki/Ma_Hualong",
+          "source_note": "Jinjipu (金积堡) is \"a few kilometers south from today's Wuzhong City\", the Jahriyya headquarters; besieged from July 1869, Ma Hualong surrendered January 1871. zh.wikipedia 金积镇 places the town in 利通区.",
+          "status": "suggested"
+        }
+      ],
+      "notes": "facts.json gives Lingwu's prefecture as Wuzhong while its towns are listed under Yinchuan; Lingwu moved to Yinchuan in 2002, so the county layer's parent is stale. Lingzhou and Lingwu are near-duplicates: use at most one."
+    },
+    {
+      "n": 5,
+      "key": "#ccf6c4",
+      "settled": null,
+      "summary": "Zhongwei and the Weining plain: Shapotou district (Zhongwei city), Zhongning county and the northern edge of Tongxin.",
+      "candidates": [
+        {
+          "name": "Zhongwei",
+          "local": "中卫",
+          "origin": "city",
+          "meaning": "\"Middle Guard\": the Ming garrison Ningxia Zhongwei (宁夏中卫), named in 1403.",
+          "fit": "Very good. The city proper (Shapotou district) is 47% of the region (cover 99.9%), and the region holds 72% of Zhongwei prefecture (the rest is Haiyuan, in region 6). The 1.07M in facts is the prefecture; the city is about 0.4M.",
+          "recognisability": "High: prefecture city, gateway to Shapotou.",
+          "source_url": "https://zh.wikipedia.org/wiki/中卫市",
+          "source_note": "1403 (永乐元年) the Ningxia Right Guard was renamed Ningxia Zhongwei, \"中卫之名由此而始\".",
+          "status": "suggested"
+        },
+        {
+          "name": "Weining",
+          "local": "卫宁",
+          "origin": "plain",
+          "meaning": "The Weining Plain (卫宁平原), the Yellow River plain from Shapotou to Qingtongxia; the name joins Zhong-wei and Zhong-ning, its two counties.",
+          "fit": "Very good. The plain is about 130 km long and 2-10 km wide and almost all of it is in this region; nearly every large town here (滨河, 宁安, 宣和, 文昌, 石空, 新堡) sits on it.",
+          "recognisability": "Medium: an established term in Ningxia geography and irrigation, less known outside.",
+          "source_url": "https://mca.nx.gov.cn/xwzx/mzdt/202511/t20251113_5082867.html",
+          "source_note": "Series part 6: \"中卫市境内的黄河冲积平原，叫卫宁平原，人口密集\". zh.wikipedia 卫宁平原: east end \"东止于牛首山青铜峡\", about 130 km long. The two-county origin of the name is my reading, not stated in the sources.",
+          "status": "suggested"
+        },
+        {
+          "name": "Shapotou",
+          "local": "沙坡头",
+          "origin": "other",
+          "meaning": "Literally \"head of the sand slope\": the great dune running down to the Yellow River at the edge of the Tengger Desert, a national 5A scenic area that gave its name to the district.",
+          "fit": "Moderate to good. Shapotou district is 47% of the region; the scenic area itself is a single spot at the western end.",
+          "recognisability": "High: one of China's first 5A scenic areas.",
+          "source_url": "https://mca.nx.gov.cn/xwzx/mzdt/202511/t20251113_5082867.html",
+          "source_note": "\"因沙坡头旅游景区而定名的有沙坡头区、沙都酒店、沙坡宾馆、沙坡头机场等\". The literal meaning is my own reading.",
+          "status": "suggested"
+        },
+        {
+          "name": "Zhongning",
+          "local": "中宁",
+          "origin": "county",
+          "meaning": "Made from the first characters of Zhongwei and Ning'an (宁安, today's county seat) when the county was split off from Zhongwei.",
+          "fit": "Moderate. The region holds 99% of Zhongning county, 35% of the region.",
+          "recognisability": "Medium: known as China's goji capital.",
+          "source_url": "https://mca.nx.gov.cn/xwzx/mzdt/202606/t20260630_5277242.html",
+          "source_note": "Series part 27: \"同意分设新县，取中卫、宁安之首字，命名中宁县\".",
+          "status": "suggested"
+        },
+        {
+          "name": "Mingsha",
+          "local": "鸣沙",
+          "origin": "historical",
+          "meaning": "\"Singing sand\": a Northern Wei county (and later Yuan prefecture) at today's Mingsha town in Zhongning, where sand sounded under people's and horses' feet.",
+          "fit": "Moderate. Yuan-era Mingsha prefecture covered much of Zhongning; the Ming Zhongwei garrison covered roughly today's Shapotou and most of Zhongning.",
+          "recognisability": "Weak: searches for 鸣沙 are dominated by Dunhuang's Mingsha Shan.",
+          "source_url": "https://mca.nx.gov.cn/xwzx/mzdt/202606/t20260630_5277242.html",
+          "source_note": "\"北魏在如今的中宁县鸣沙镇设置鸣沙县\"; \"人马经过这里的沙子时，沙子会随着脚步发出声音…所以号称'鸣沙'\" (citing 隋书 and 元和郡县图志).",
+          "status": "suggested"
+        }
+      ],
+      "notes": "The Tengger Desert lies north of the region but is mostly in Inner Mongolia, so I left it out. facts.json files Tongxin under Zhongwei prefecture and Haiyuan under Guyuan, while their towns are listed under Wuzhong and Zhongwei: the town lists are current (since 2004), the county parents are older."
+    },
+    {
+      "n": 6,
+      "key": "#dff3d5",
+      "settled": null,
+      "summary": "Ningxia's central dry belt: Haiyuan, most of Tongxin, Yanchi, Hongsibao and the north of Guyuan's Yuanzhou district.",
+      "candidates": [
+        {
+          "name": "Haiyuan",
+          "local": "海原",
+          "origin": "county",
+          "meaning": "From the Yuan-era Hailadu plain and fort (海喇都), shortened to Haicheng; renamed Haiyuan in 1914 because Fengtian already had a Haicheng.",
+          "fit": "Good for a county. The region holds 91% of Haiyuan's people, and Haiyuan is the largest unit (31%).",
+          "recognisability": "Medium to high: the 1920 Haiyuan earthquake is internationally known.",
+          "source_url": "https://mca.nx.gov.cn/xwzx/mzdt/202607/t20260702_5279830.html",
+          "source_note": "Series part 28: \"元朝称海喇都原，置海喇都堡\"; \"海喇都堡又称海城\"; 1914 \"因与奉天省海城县重名，遂改为海原县\".",
+          "status": "suggested"
+        },
+        {
+          "name": "Tongxin",
+          "local": "同心",
+          "origin": "county",
+          "meaning": "\"Same heart\", from 同心同德 (one heart, one mind); the town was called Tongxin in the early Qing. Its folk name was Bangecheng (\"half a city\") because the Qingshui River washed away a corner of the walls.",
+          "fit": "Good. The region holds 73% of Tongxin's people, 25% of the region, and the county seat Yuhai is here.",
+          "recognisability": "Medium: a well-known Hui county.",
+          "source_url": "https://mca.nx.gov.cn/zzb/mzdt_71747/202601/t20260104_5125608.html",
+          "source_note": "Series part 19: \"清初名同心城，寓意'同心同德'\"; \"因被清水河冲毁一角，俗名'半个城'\"; named Tongxin county in 1938.",
+          "status": "suggested"
+        },
+        {
+          "name": "Qingshui",
+          "local": "清水河",
+          "origin": "river",
+          "meaning": "\"Clear Water River\": Ningxia's largest Yellow River tributary, 320 km from Kaicheng (Guyuan) north through Yuanzhou, Haiyuan and Tongxin to Zhongning.",
+          "fit": "Good. Its middle course, the longest stretch, runs through the region's main farming corridor (Touying, Sanhe, Wangtuan, Tongxin, Dingtang). The source is in region 7 and the mouth is in region 5. Yanchi in the east is outside its basin.",
+          "recognisability": "Medium: a search for 清水河 宁夏 returns this river, but Qingshui is a common name (Qingshui county in Gansu, Qingshuihe county in Inner Mongolia).",
+          "source_url": "https://zh.wikipedia.org/wiki/%E6%B8%85%E6%B0%B4%E6%B2%B3_(%E9%BB%83%E6%B2%B3)",
+          "source_note": "\"向北流经原州区、海原县、同心县、中宁县等县\", \"在中宁的泉眼山西侧注入黄河\", 320 km. Old names \"西洛水、高平川水、蔚茹水\". chinanews 2025: \"宁夏入黄第一大支流\".",
+          "status": "suggested"
+        },
+        {
+          "name": "Luoshan",
+          "local": "罗山",
+          "origin": "mountain",
+          "meaning": "Luo Mountain (大罗山), one of Ningxia's \"three mountains\" with Helan and Liupan; named after the Tuyuhun people who settled there in the Tang.",
+          "fit": "Moderate. The mountain stands near the middle of the region, between Hongsibao and Tongxin, and is the region's only big forested peak. Few people live on it.",
+          "recognisability": "Medium: a national nature reserve; Luoshan is also a county in Henan.",
+          "source_url": "https://paper.people.com.cn/rmrb/html/2024-06/23/nw.D110000renmrb_20240623_1-02.htm",
+          "source_note": "People's Daily 2024: \"罗山有宁夏中部干旱带上唯一的天然水源涵养林\"; \"黄河、贺兰山、六盘山、罗山，这'一河三山'是宁夏的重要生态坐标\". Origin from series part 4: \"因唐代吐谷浑部在此安居得名\".",
+          "status": "suggested"
+        },
+        {
+          "name": "Yanchi",
+          "local": "盐池",
+          "origin": "county",
+          "meaning": "\"Salt ponds\": the 20-odd natural salt lakes around the county town, worked since ancient times.",
+          "fit": "Weak to moderate. The region holds all of Yanchi (cover 99.9%), but it is 14% of the region, in its far east.",
+          "recognisability": "Medium within Ningxia.",
+          "source_url": "https://mca.nx.gov.cn/xwzx/mzdt/202512/t20251230_5122860.html",
+          "source_note": "Series part 18: \"因县城周边分布着大小20余个天然盐湖，自古以来盛产食盐，故得名盐池县\".",
+          "status": "suggested"
+        },
+        {
+          "name": "Hongsibao",
+          "local": "红寺堡",
+          "origin": "county",
+          "meaning": "\"Red Temple Fort\": an early-Ming temple of rammed red earth, then a fort built in 1507; since 1999, China's largest resettlement area for migrants from the dry south.",
+          "fit": "Weak to moderate. The district (created 2009) is not separate in the county layer, but its towns (Taiyangshan, Sunjiatan area) fall in this region, perhaps 15% of it.",
+          "recognisability": "Medium: known for resettlement and for wine at the foot of Luoshan.",
+          "source_url": "https://mca.nx.gov.cn/zzb/mzdt_71747/202512/t20251223_5116399.html",
+          "source_note": "Series part 17: \"明初有佛寺，用当地红土夯筑而成，故俗称红寺\"; \"明正德二年（1507年）在其地建堡，命名红寺堡\".",
+          "status": "suggested"
+        }
+      ],
+      "notes": "No single unit is most of this region, so every county name is a partial fit. Xihaigu (listed under region 7) would fit here too: Haiyuan is one of its three namesake counties, and its broad definition includes Tongxin, Yanchi and Hongsibao. I gave it to region 7 because that region holds two of the three namesakes. The 孙家滩 (8%) town is listed under Litong, but it lies south of Wuzhong city in this region."
+    },
+    {
+      "n": 7,
+      "key": "#cbf1cb",
+      "settled": null,
+      "summary": "Southern Ningxia: Guyuan city, Xiji, Pengyang, Longde and Jingyuan, around the Liupan Mountains.",
+      "candidates": [
+        {
+          "name": "Guyuan",
+          "local": "固原",
+          "origin": "city",
+          "meaning": "\"Secure plateau\": 原 is a loess tableland. Ming name, explained either as avoiding the character 故 or \"for its strong, defensible terrain\". Earlier Gaoping (\"high and flat\") and Yuanzhou.",
+          "fit": "Good. The region holds the city centre and 58% of the Guyuan unit (28% of the region), and 99% of the region is in Guyuan prefecture. The 1.14M in facts is the prefecture; the city is well under 1M.",
+          "recognisability": "High: prefecture city and the centre of southern Ningxia.",
+          "source_url": "https://mca.nx.gov.cn/xwzx/mzdt/202511/t20251110_5079039.html",
+          "source_note": "Series part 5: \"原即'塬'，是黄土高原的一种地貌名词\"; 固原: \"一为讳'故'改固；二为'以其地险固因名之'\"; 高平镇 436, \"地势既高且平，故名\"; 原州 524.",
+          "status": "suggested"
+        },
+        {
+          "name": "Liupan",
+          "local": "六盘山",
+          "origin": "mountain",
+          "meaning": "\"Six coils\": the old road wound through six switchbacks before reaching the top. Anciently called Longshan; Genghis Khan died here in 1227, and Mao wrote a poem about it on the Long March.",
+          "fit": "Good. The main peak (Migangshan, 2,942 m) is on the Jingyuan-Longde border and the second peak is in Yuanzhou, all in this region; the range continues south into Gansu.",
+          "recognisability": "High across China.",
+          "source_url": "https://zh.wikipedia.org/wiki/六盘山",
+          "source_note": "\"盘道六重始达山顶\"; formerly \"陇山\"; main peak 米缸山 at the 泾源/隆德 junction; \"成吉思汗在养伤期间病逝于六盘山\"; Mao's 《清平乐·六盘山》.",
+          "status": "suggested"
+        },
+        {
+          "name": "Xiji",
+          "local": "西吉",
+          "origin": "county",
+          "meaning": "A sound-alike of 蓆芨草 (xijicao), the local name for the jiji grass (芨芨草) that grows thickly there; county formed in 1942.",
+          "fit": "Good for a county. The region holds 96% of Xiji, the largest unit at 32%.",
+          "recognisability": "Medium: known as the last county in China removed from the poverty list (2020).",
+          "source_url": "https://mca.nx.gov.cn/xwzx/mzdt/202605/t20260525_5248331.html",
+          "source_note": "Series part 22: \"因境内盛产芨芨草，俗称'蓆芨草'的谐音演变而来\"; formed October 1942 from parts of five counties.",
+          "status": "suggested"
+        },
+        {
+          "name": "Xihaigu",
+          "local": "西海固",
+          "origin": "ethnic",
+          "meaning": "A short form made from Xi(ji), Hai(yuan) and Gu(yuan): the mostly Hui, drought-hit hill country of southern Ningxia.",
+          "fit": "Moderate. Two of the three namesake counties (Xiji, Guyuan city) are here, about 60% of the region. The broad definition (nine counties) covers this region and region 6 together.",
+          "recognisability": "High within China, with its own en.wikipedia article.",
+          "source_url": "https://zh.wikipedia.org/wiki/西海固",
+          "source_note": "\"是西吉县、海原县和固原县三县县名首字的简称\"; broad sense \"囊括了固原市原州区、西吉县、隆德县、彭阳县、泾源县，中卫市海原县以及吴忠市同心县、盐池县、红寺堡区9个县区\".",
+          "status": "suggested"
+        },
+        {
+          "name": "Yuanzhou",
+          "local": "原州",
+          "origin": "historical",
+          "meaning": "\"Plateau prefecture\": Northern Wei prefecture from 524, now Guyuan's urban district.",
+          "fit": "Moderate. The same area as Guyuan city (58% of it here), so it is an alternative to Guyuan rather than an addition.",
+          "recognisability": "Low to medium.",
+          "source_url": "https://mca.nx.gov.cn/xwzx/mzdt/202511/t20251110_5079039.html",
+          "source_note": "\"正光五年（524年）改高平镇置原州\".",
+          "status": "suggested"
+        },
+        {
+          "name": "Xiaoguan",
+          "local": "萧关",
+          "origin": "historical",
+          "meaning": "Xiao Pass, the Han-dynasty fort guarding the northern approach to the Guanzhong plain, often named in Tang frontier poetry.",
+          "fit": "Weak geographically (a pass at Wating in Jingyuan, 7% of the region), and some scholars place the pass elsewhere in different periods.",
+          "recognisability": "Medium: famous in poetry; searches for 萧关 宁夏 return Guyuan.",
+          "source_url": "https://mca.nx.gov.cn/xwzx/mzdt/202511/t20251110_5079039.html",
+          "source_note": "\"西汉又筑萧关（在今泾源县六盘山镇瓦亭村），是关中北面要塞\".",
+          "status": "suggested"
+        }
+      ],
+      "notes": "Gaoping (高平, Guyuan's Northern Wei name) is sourced but left out because Gaoping is a city in Shanxi. Pengyang (19%) comes from the ancient Pengrong state plus 阳, \"north of the river\" (series part 25), if you want it."
+    }
+  ]
+}

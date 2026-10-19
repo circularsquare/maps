@@ -1,0 +1,13 @@
+batch shanxi-north
+7: pick Guancen
+9: pick Qiushui. qiushui is fine, but in general single character counties should not necessarily be not recommended, we can always just do like "lin xian".
+10: pick Jiancaoping
+12: pick Taiyuan
+13: pick Wanbailin
+14: pick Xiaodian
+15: pick Yuci
+17: pick Taigu
+18: pick Fenzhou
+19: pick Pingyao
+20: pick Lüliang
+21: pick Lingshi

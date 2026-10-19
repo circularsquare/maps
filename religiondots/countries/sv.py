@@ -72,6 +72,12 @@ def _sv_counts():
     return df[["unit", "node", "count", "congregations", "tier"]]
 
 
+def _sv_counts_split():
+    """`_sv_counts` with Pew 2014's Pentecostal and Baptist shares drawn inside LAPOP's two
+    Protestant boxes; latam_split.py, Anita 2026-10-16. The rows stay `modelled`."""
+    return _latam_split("sv", _sv_counts())
+
+
 ENTRY = {
     "sv": dict(
         name="El Salvador",
@@ -114,10 +120,13 @@ ENTRY = {
             "**The level is a fourteen-year average.** Salvadoran Catholicism runs 51.5% in "
             "2010 to 42.1% in 2023 across the pooled rounds, so this map is several points "
             "more Catholic than the last round alone would draw. Pooling is what buys the "
-            "department detail; a single round is 1,500 people over 14 departments."),
+            "department detail; a single round is 1,500 people over 14 departments. 46% of "
+            "the Evangelical and Protestant answers are drawn as Pentecostal and 17% as "
+            "Baptist, the shares of Protestants that Pew Research Center's 2014 survey found "
+            "in those churches; the rest stay unnamed."),
         how="survey, six rounds 2010 to 2023 pooled",
         grain="departments, 450,000 people on average",
-        counts=_sv_counts,
+        counts=_sv_counts_split,
         units=None,
         unit_key=None,
         place=HERE / "data" / "geo" / "sv" / "sv_hexes.gpkg",

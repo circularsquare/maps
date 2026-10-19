@@ -1,0 +1,117 @@
+{
+ "1": [
+  {
+   "i": 0,
+   "name": "Micang",
+   "x": 220.8,
+   "y": 87.3,
+   "inside": true,
+   "src": "wikidata"
+  }
+ ],
+ "2": [
+  {
+   "i": 1,
+   "name": "Lizhou",
+   "x": 135.4,
+   "y": 119.1,
+   "inside": true,
+   "src": "wikidata"
+  }
+ ],
+ "3": [],
+ "4": [
+  {
+   "i": 0,
+   "name": "Jianmen",
+   "x": 229.2,
+   "y": 105.2,
+   "inside": true,
+   "src": "wikidata"
+  }
+ ],
+ "5": [],
+ "6": [
+  {
+   "i": 1,
+   "name": "Zhangming",
+   "x": 162.6,
+   "y": 139.9,
+   "inside": true,
+   "src": "zh-wiki"
+  }
+ ],
+ "7": [],
+ "8": [],
+ "9": [],
+ "10": [],
+ "11": [],
+ "12": [
+  {
+   "i": 2,
+   "name": "Baoning",
+   "x": 139.7,
+   "y": 115.1,
+   "inside": true,
+   "src": "wikidata"
+  }
+ ],
+ "13": [],
+ "14": [],
+ "15": [
+  {
+   "i": 0,
+   "name": "Zizhou",
+   "x": 144.2,
+   "y": 168.6,
+   "inside": true,
+   "src": "CHGIS"
+  }
+ ],
+ "16": [],
+ "17": [],
+ "18": [
+  {
+   "i": 1,
+   "name": "Dangqu",
+   "x": 144.5,
+   "y": 134.0,
+   "inside": true,
+   "src": "CHGIS"
+  }
+ ],
+ "19": [
+  {
+   "i": 0,
+   "name": "Jialing",
+   "x": 137.0,
+   "y": 154.7,
+   "inside": true,
+   "src": "wikidata"
+  }
+ ],
+ "20": [
+  {
+   "i": 1,
+   "name": "Shunqing",
+   "x": 177.5,
+   "y": 180.8,
+   "inside": true,
+   "src": "wikidata"
+  }
+ ],
+ "21": [],
+ "22": [],
+ "23": [
+  {
+   "i": 1,
+   "name": "Huaying",
+   "x": 174.3,
+   "y": 298.7,
+   "inside": true,
+   "src": "township"
+  }
+ ],
+ "24": [],
+ "25": []
+}

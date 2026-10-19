@@ -45,7 +45,7 @@ PROC = os.path.join(ROOT, "data", "processed")
 LOCK = os.path.join(ROOT, "build_tail.lock")
 
 REMOTE = "r2:anitamaps/languagedots"
-PUBLIC = "https://pub-ae551368cea941f39101e13c84d60bde.r2.dev/languagedots"
+PUBLIC = "https://data.anita.garden/languagedots"
 
 # Paths relative to ROOT, and the same paths under REMOTE. index.html builds each of these from
 # DATA_BASE, so a rename here is a rename there.

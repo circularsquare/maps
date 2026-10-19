@@ -1767,7 +1767,9 @@ impl EverydayApi {
             return (probability, zero.clone(), vec![Part::of(&zero); kinds], xfer, 0.0, walk_lost);
         }
         let (loads, parts) = with_skims(g, p, &want, |sk| {
-            let er = station_exp(sk, p);
+            // a table per distance band (T-710)
+            let ers = station_exp(sk, p);
+            let ss = s * s;
             // One station-pair matrix, filled by one purpose's pairs (they are
             // stored purpose by purpose) and packed into its columns; then one walk of each
             // destination's strategy assigns every purpose, each kept apart for the display filter
@@ -1777,25 +1779,31 @@ impl EverydayApi {
             let mut cols = Columns::new(kinds, s);
             let mut od_kind = usize::MAX;
             let mut od_used = false;
-            let th = p.station_theta;
-            // per subzone: the cheapest walk and each walk's weight at it; and for a home with
-            // rides (T-389), the cheapest of walks and rides and every entry's weight at that
+            // per band (T-710) and subzone: the cheapest walk and each walk's weight at it; and
+            // for a home with rides (T-389), the cheapest of walks and rides and every entry's
+            // weight at that
+            let bands: Vec<(f32, f32)> = (0..p.n_bands()).map(|b| p.band(b)).collect();
+            let na = sz.acc_st.len();
             let mut min = vec![0.0; sz.n];
             let mut min_r = vec![f32::INFINITY; sz.n];
-            let mut acc = vec![0.0; sz.acc_st.len()];
-            let mut acc_r = vec![0.0; sz.acc_st.len()];
+            let mut accs = vec![0.0; bands.len() * na];
+            let mut acc_rs = vec![0.0; bands.len() * na];
             let lowest = |r: std::ops::Range<usize>| sz.acc_w[r].iter().copied().fold(f32::INFINITY, f32::min);
             for u in 0..sz.n {
                 let r = sz.walk(u);
                 min[u] = lowest(r.clone());
-                for k in r {
-                    acc[k] = fast_exp(-th * (sz.acc_w[k] - min[u]));
-                }
+                let all = sz.acc_off[u] as usize..sz.acc_off[u + 1] as usize;
                 if !sz.ride(u).is_empty() {
-                    let all = sz.acc_off[u] as usize..sz.acc_off[u + 1] as usize;
                     min_r[u] = lowest(all.clone());
-                    for k in all {
-                        acc_r[k] = fast_exp(-th * (sz.acc_w[k] - min_r[u]));
+                }
+                for (b, &(th, _)) in bands.iter().enumerate() {
+                    for k in r.clone() {
+                        accs[b * na + k] = fast_exp(-th * (sz.acc_w[k] - min[u]));
+                    }
+                    if !sz.ride(u).is_empty() {
+                        for k in all.clone() {
+                            acc_rs[b * na + k] = fast_exp(-th * (sz.acc_w[k] - min_r[u]));
+                        }
                     }
                 }
             }
@@ -1810,6 +1818,11 @@ impl EverydayApi {
                     od_kind = pair.kind() as usize;
                     od_used = false;
                 }
+                // the pair's distance band (T-710)
+                let bd = p.band_of_d2(pair.distance * pair.distance);
+                let (th, off) = bands[bd];
+                let (acc, acc_r) = (&accs[bd * na..(bd + 1) * na], &acc_rs[bd * na..(bd + 1) * na]);
+                let er = &ers[bd * ss..(bd + 1) * ss];
                 // the home end: its walks, or on a trip of `ride_min_km` or more its walks and
                 // rides (T-389, as the commute's `ride_offered` but on the pair's own distance);
                 // the activity end walks
@@ -1854,7 +1867,7 @@ impl EverydayApi {
                         p.drive_min_f(pair.distance, f, p.place_min_per_km(density[sz.zone[u] as usize]), p.place_min_per_km(density[sz.zone[v] as usize])),
                         pair.distance * 0.001 * f,
                     ) + fixed;
-                    let rail = ma + mb + p.fare_min - fast_ln(sum) / th;
+                    let rail = ma + mb + p.fare_min - fast_ln(sum) / th + off;
                     let bt = p.mode_beta(road);
                     let r_car = p.car_choice(bt * (road - rail) + p.asc_rail, bt * (road - cw) + p.asc_walk(), bt, paid, free);
                     // those without a car: on a ride trip their rail is on the home's walks
@@ -1874,7 +1887,7 @@ impl EverydayApi {
                                     }
                                 }
                                 if sum_n >= 1e-30 {
-                                    rail_n = Some(ma2 + mb2 + p.fare_min - fast_ln(sum_n) / th);
+                                    rail_n = Some(ma2 + mb2 + p.fare_min - fast_ln(sum_n) / th + off);
                                     walks = Some(((a2, &wa2[..]), (b2, &wb2[..]), sum_n));
                                 }
                             }

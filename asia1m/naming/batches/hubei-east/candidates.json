@@ -1,0 +1,226 @@
+{
+  "batch": "hubei-east",
+  "regions": [
+    {
+      "n": 1, "key": "#e4d1cf", "settled": null,
+      "summary": "Guangshui (69%) and the Dawu county seat area (30%), on the Beijing-Guangzhou rail corridor at the Henan border.",
+      "candidates": [
+        {"name": "Guangshui", "local": "广水市", "origin": "county",
+         "meaning": "\"Wide water\": county-level city, formed in 1988 from Yingshan county and named for the new rail town of Guangshui.",
+         "fit": "Region holds 98% of the city and the city is 69% of the region's people.",
+         "recognisability": "Current county-level city.", "source_url": "", "source_note": "", "rating": 4, "status": "suggested"},
+        {"name": "Wushengguan", "local": "武胜关", "origin": "other",
+         "meaning": "\"Martial victory pass\": one of the Nine Passes of the Dabie range, on the Hubei-Henan border; also a Guangshui township.",
+         "fit": "Pass lies in the region's north-east corner (Wushengguan township, 5% of people); the gateway to Xinyang across the border.",
+         "recognisability": "Own zh-wiki article, 30 hits with 湖北, most about Guangshui and the Jing-Han railway.",
+         "source_url": "https://zh.wikipedia.org/wiki/武胜关", "source_note": "京广铁路经市境东部武胜关、广办、杨寨，设广水站", "rating": 3, "status": "suggested"},
+        {"name": "Dawu", "local": "大悟县", "origin": "county",
+         "meaning": "\"Great awakening\" (Buddhist enlightenment): county named in 1932 after the local Dawu mountain area.",
+         "fit": "Holds only 52% of the county and is 30% of the region.",
+         "recognisability": "Current county.", "source_url": "", "source_note": "", "status": "rejected"}
+      ],
+      "notes": "Guangshui is the large county here. Yingshan (应山, the old county seat name) is skipped because Yingshan (英山) is a different county in region 7 and the spelling is identical."
+    },
+    {
+      "n": 2, "key": "#ebcdcd", "settled": null,
+      "summary": "Suizhou city (Cengdou district, 66%) and Sui county (29%).",
+      "candidates": [
+        {"name": "Suizhou", "local": "随州", "origin": "city",
+         "meaning": "Zhou-era Sui state, later Suizhou prefecture (907-1911); the city is the legendary birthplace of Yan Di.",
+         "fit": "Seat of Suizhou/Suixian for over 1,500 years sits at the heart of this region; Cengdou district is 66% of people.",
+         "recognisability": "Prefecture-level city.", "source_url": "", "source_note": "", "rating": 5, "status": "suggested"},
+        {"name": "Cengdou", "local": "曾都区", "origin": "county",
+         "meaning": "Named for the Zeng (Zeng/Sui) state, whose capital Cengdou lay here; Marquis Yi of Zeng's tomb is in the city.",
+         "fit": "District is 66% of the region's people.",
+         "recognisability": "Current district, so only moderately known.", "source_url": "", "source_note": "", "rating": 3, "status": "suggested"}
+      ],
+      "notes": "Suizhou city proper is probably under 1M urban, so the city rule is not strictly needed, but the name still suits the centre."
+    },
+    {
+      "n": 3, "key": "#eacbc8", "settled": null,
+      "summary": "Hong'an county (42%), the north of Wuhan's Huangpi district (38%), south-west Dawu (20%).",
+      "candidates": [
+        {"name": "Hong'an", "local": "红安县", "origin": "county",
+         "meaning": "\"Red peace\": renamed from Huang'an in 1952 for the Red Army base and its many generals.",
+         "fit": "Region holds 83% of the county, the largest unit at 42% of people.",
+         "recognisability": "Current county, well known as a revolutionary base.", "source_url": "", "source_note": "", "rating": 4, "status": "suggested"},
+        {"name": "Huang'an", "local": "黄安", "origin": "historical",
+         "meaning": "\"Yellow peace\": the county's name from 1563 until 1952, named after Huangzhou and Anlu parts it was cut from.",
+         "fit": "Same territory as Hong'an county, so it fits as the older name for the region's largest unit.",
+         "recognisability": "Part of the Hong'an article; same place, so no gain in recognition over Hong'an.",
+         "source_url": "https://zh.wikipedia.org/wiki/红安县", "source_note": "黄安县 (县, 1563-1911) 今湖北红安县", "rating": 2, "status": "suggested"}
+      ],
+      "notes": "Huangpi's Mulan mountain (Mulan, as in Hua Mulan) lies on the Wuhan side; I left it to the Wuhan agent."
+    },
+    {
+      "n": 4, "key": "#f3c9d0", "settled": null,
+      "summary": "Anlu (52%) and Xiaochang (43%), north of Xiaogan city.",
+      "candidates": [
+        {"name": "Anlu", "local": "安陆市", "origin": "county",
+         "meaning": "\"Peaceful land\" (Anlu county since 394 CE); Anzhou and later the seat of De'an prefecture.",
+         "fit": "Region holds 93% of the city, 52% of people; Anlu was the seat of the prefecture that covered the whole area.",
+         "recognisability": "Current county-level city, famous as Li Bai's home for ten years.", "source_url": "", "source_note": "", "rating": 4, "status": "suggested"},
+        {"name": "De'an", "local": "德安", "origin": "prefecture",
+         "meaning": "\"Virtue and peace\": De'an prefecture (1119-1911) seated at Anlu.",
+         "fit": "Prefecture covered today's Anlu, Guangshui, Yingcheng, Yunmeng and Xiaogan, so it also spans neighbouring regions 1, 6 and 8.",
+         "recognisability": "Own zh-wiki article, 135 hits with 湖北, but Dean (De'an county in Jiangxi) shares the spelling.",
+         "source_url": "https://zh.wikipedia.org/wiki/德安府", "source_note": "辖区约今湖北省安陆、广水、应城、云梦、孝感等市县地", "rating": 3, "status": "suggested"},
+        {"name": "Xiaochang", "local": "孝昌县", "origin": "county",
+         "meaning": "\"Filial prosperity\": county name from 1932, echoing the Xiaogan 'filial piety' legend.",
+         "fit": "Region holds 96% of the county, 43% of people.",
+         "recognisability": "Current county, little known.", "source_url": "", "source_note": "", "rating": 3, "status": "suggested"}
+      ],
+      "notes": ""
+    },
+    {
+      "n": 5, "key": "#eacbc3", "settled": null,
+      "summary": "Macheng city (75%) with the Xinzhou (Wuhan) strip and part of Hong'an.",
+      "candidates": [
+        {"name": "Macheng", "local": "麻城市", "origin": "county",
+         "meaning": "Named for the Ma Mountain (Ma Gu) and the old county town; Macheng county since 598 CE.",
+         "fit": "Region holds 90% of the city; Macheng is 75% of people and 83% of area.",
+         "recognisability": "Current county-level city, known for the Huguang-to-Sichuan migration and Dabie Mountains.", "source_url": "", "source_note": "", "rating": 5, "status": "suggested"}
+      ],
+      "notes": "One obvious name; nothing better to add."
+    },
+    {
+      "n": 6, "key": "#ebc1c3", "settled": null,
+      "summary": "Xiaonan district, the centre of Xiaogan city (98%).",
+      "candidates": [
+        {"name": "Xiaogan", "local": "孝感", "origin": "city",
+         "meaning": "\"Filial feeling\": named for the Han-era filial son Dong Yong, whose piety is said to have moved heaven.",
+         "fit": "Holds the old centre of Xiaogan city (Xiaogan county seat 1129-1911) and 98% of Xiaonan district.",
+         "recognisability": "Prefecture-level city, well known.", "source_url": "", "source_note": "", "rating": 5, "status": "suggested"}
+      ],
+      "notes": "Faint region, 951 px; the city rule gives it the city's name."
+    },
+    {
+      "n": 7, "key": "#f4d7d0", "settled": null,
+      "summary": "Luotian (47%), Yingshan (32%) and bits of Xishui and Macheng: the southern slope of the Dabie Mountains.",
+      "candidates": [
+        {"name": "Dabie", "local": "大别山", "origin": "mountain",
+         "meaning": "The Dabie Mountains (\"great separate\"), the watershed between the Yangtze and the Huai.",
+         "fit": "Region is the southern slope in Hubei; Luotian and Yingshan counties are the Dabie core, with Tiantangzhai on the Anhui border. Neighbours across the border are already Jinzhai and Tianzhushan.",
+         "recognisability": "Own zh-wiki article, 774 hits with 湖北.", "source_url": "https://zh.wikipedia.org/wiki/大别山", "source_note": "河和长江的分水岭。主峰白马尖...天堂寨", "rating": 4, "status": "suggested"},
+        {"name": "Luotian", "local": "罗田县", "origin": "county",
+         "meaning": "\"Luo fields\": county since 502 CE, named after the Luo surname families.",
+         "fit": "Holds 100% of the county, 47% of people.",
+         "recognisability": "Current county.", "source_url": "", "source_note": "", "rating": 4, "status": "suggested"},
+        {"name": "Yingshan", "local": "英山县", "origin": "county",
+         "meaning": "\"Eagle mountain\": named after Yingshan hill, county since 1267.",
+         "fit": "Holds 100% of the county, 32% of people.",
+         "recognisability": "Current county.", "source_url": "", "source_note": "", "rating": 3, "status": "suggested"}
+      ],
+      "notes": "Dabie is a whole range but, per the landscape rule, fits this southern-slope region. Luotian is the safe county choice."
+    },
+    {
+      "n": 8, "key": "#eac7cc", "settled": null,
+      "summary": "Yingcheng (48%), Yunmeng (37%), a slice of Hanchuan (14%).",
+      "candidates": [
+        {"name": "Yunmeng", "local": "云梦县", "origin": "county",
+         "meaning": "\"Cloud dream\": named for the ancient Yunmeng Marsh of Chu; the Shuihudi Qin bamboo slips were found here.",
+         "fit": "Region holds 91% of the county, 37% of people; county has been Yunmeng since 546.",
+         "recognisability": "Current county, famous for Qin bamboo slips and the old Yunmeng marsh.", "source_url": "", "source_note": "", "rating": 5, "status": "suggested"},
+        {"name": "Yingcheng", "local": "应城市", "origin": "county",
+         "meaning": "\"City of the Ying\": Ying county since 454 CE, known for gypsum and salt.",
+         "fit": "Holds 99% of the city, the largest unit at 48% of people.",
+         "recognisability": "Current county-level city.", "source_url": "", "source_note": "", "rating": 4, "status": "suggested"}
+      ],
+      "notes": ""
+    },
+    {
+      "n": 9, "key": "#f3cdc4", "settled": null,
+      "summary": "Xishui (65%) and Tuanfeng (24%) on the Yangtze north bank east of Wuhan.",
+      "candidates": [
+        {"name": "Xishui", "local": "浠水县", "origin": "county",
+         "meaning": "Named for the Xi River, which runs through the county to the Yangtze.",
+         "fit": "Region holds 85% of the county, which is 65% of people.",
+         "recognisability": "Current county, birthplace of Wen Yiduo.", "source_url": "", "source_note": "", "rating": 4, "status": "suggested"},
+        {"name": "Qishui", "local": "蕲水", "origin": "historical",
+         "meaning": "Old county name (502-1933) for the same place, from the Qi River; renamed Xishui in 1933.",
+         "fit": "Same territory as Xishui county, seat 30 li east of today's town.",
+         "recognisability": "Redirects to Xishui; 52 hits with 湖北, mostly about Xishui people ('湖北蕲水人').",
+         "source_url": "https://zh.wikipedia.org/wiki/浠水县", "source_note": "蕲水县 (县, 502-1911) 今湖北浠水县东三十里", "rating": 2, "status": "suggested"},
+        {"name": "Tuanfeng", "local": "团风县", "origin": "county",
+         "meaning": "\"Group wind\": county created 1995 around the town on the Yangtze.",
+         "fit": "Only 24% of the region's people.",
+         "recognisability": "Small current county.", "source_url": "", "source_note": "", "status": "rejected"}
+      ],
+      "notes": "Qishui and Qichun (region 11) would read alike; Qishui is rated low for that reason."
+    },
+    {
+      "n": 10, "key": "#edb7c5", "settled": null,
+      "summary": "Hanchuan (71%) and eastern Tianmen (27%) on the Han River's lower reach.",
+      "candidates": [
+        {"name": "Hanchuan", "local": "汉川市", "origin": "county",
+         "meaning": "\"Han river plain\": county named for the Han River, which runs through it before meeting the Yangtze.",
+         "fit": "Holds only 50% of the city but it is 71% of the region's people.",
+         "recognisability": "Current county-level city.", "source_url": "", "source_note": "", "rating": 4, "status": "suggested"},
+        {"name": "Chenhu", "local": "沉湖", "origin": "lake",
+         "meaning": "\"Sunken lake\": Chenhu wetland, a Ramsar site split by Hanchuan, Tianmen and Wuhan's Caidian.",
+         "fit": "Chenhu town is 8% of the region's people; the lake lies in its heart.",
+         "recognisability": "Own zh-wiki article (沉湖湿地), 57 hits with 湖北, many just township lists.",
+         "source_url": "https://zh.wikipedia.org/wiki/沉湖湿地", "source_note": "湖北省天门市沉湖", "rating": 2, "status": "suggested"}
+      ],
+      "notes": "The Tianmen share may be claimed by the central Hubei agent."
+    },
+    {
+      "n": 11, "key": "#f3d4c4", "settled": null,
+      "summary": "Qichun (75%) and Wuxue (24%) on the Yangtze north bank.",
+      "candidates": [
+        {"name": "Qichun", "local": "蕲春县", "origin": "county",
+         "meaning": "\"Qi spring\": county since 202 BC, named for the Qi River; home of Li Shizhen, author of the Compendium of Materia Medica.",
+         "fit": "Region holds 98% of the county, 75% of people.",
+         "recognisability": "Current county.", "source_url": "", "source_note": "", "rating": 5, "status": "suggested"},
+        {"name": "Qizhou", "local": "蕲州", "origin": "prefecture",
+         "meaning": "Prefecture and later route/fu, 583-1911, seated at today's Qizhou town in Qichun.",
+         "fit": "In the Ming it governed Guangji (now Wuxue) and Huangmei, so it covers this region and region 13; Qizhou town is 5.5% of people.",
+         "recognisability": "Own zh-wiki article, 112 hits with 湖北, top ones about this place.",
+         "source_url": "https://zh.wikipedia.org/wiki/蕲州", "source_note": "蕲州仅代辖广济、黄梅两县", "rating": 4, "status": "suggested"},
+        {"name": "Wuxue", "local": "武穴市", "origin": "county",
+         "meaning": "\"Martial cave\": the city's name from 1987, formerly Guangji county.",
+         "fit": "Holds only 36% of the city, 24% of the region's people.",
+         "recognisability": "Current county-level city.", "source_url": "", "source_note": "", "status": "rejected"}
+      ],
+      "notes": ""
+    },
+    {
+      "n": 12, "key": "#eacb9d", "settled": null,
+      "summary": "Huangshi urban core (Huangshigang, Xialu, Xisaishan, Tieshan) plus Echeng district of Ezhou.",
+      "candidates": [
+        {"name": "Huangshi", "local": "黄石", "origin": "city",
+         "meaning": "\"Yellow stone\": named for Huangshi Mountain/Port on the Yangtze; an iron and copper industrial city.",
+         "fit": "Holds the old centre (Huangshigang) and most of Huangshi's urban districts, the city has 2.47M people.",
+         "recognisability": "Prefecture-level city over 1M.", "source_url": "", "source_note": "", "rating": 5, "status": "suggested"},
+        {"name": "Xisaishan", "local": "西塞山", "origin": "mountain",
+         "meaning": "Hill on the Yangtze south bank, subject of Liu Yuxi's poem 'Xisaishan huaigu' and Zhang Zhihe's 'white egrets'.",
+         "fit": "Xisaishan district is 17% of people; mountain stands on the Huangshi riverfront.",
+         "recognisability": "Own zh-wiki article, 17 hits with 湖北, but also a current district name.",
+         "source_url": "https://zh.wikipedia.org/wiki/西塞山_(黄石市)", "source_note": "西塞山位于湖北省黄石市西塞山区东部，坐长江南岸", "rating": 3, "status": "suggested"}
+      ],
+      "notes": "Huangshi's rest (Daye) is another region, which can take Daye. Echeng (Ezhou) is 35% here; Ezhou's own region may be named separately."
+    },
+    {
+      "n": 13, "key": "#edcaae", "settled": null,
+      "summary": "Huangmei county (83%) with Susong (Anhui, 15%) at the Jiangxi-Anhui-Hubei corner.",
+      "candidates": [
+        {"name": "Huangmei", "local": "黄梅县", "origin": "county",
+         "meaning": "\"Yellow plum\": county since 598 CE; home of Huangmei opera and the Fourth and Fifth Patriarch temples of Chan Buddhism.",
+         "fit": "Holds 99% of the county, 83% of people.",
+         "recognisability": "Current county, famous for Huangmei opera.", "source_url": "", "source_note": "", "rating": 5, "status": "suggested"},
+        {"name": "Longgan", "local": "龙感湖", "origin": "lake",
+         "meaning": "\"Dragon-moved lake\": freshwater lake on the Hubei-Anhui border, shared by Huangmei and Susong.",
+         "fit": "Lake lies on the Huangmei-Susong line, which is the seam of this region.",
+         "recognisability": "Own zh-wiki article, 179 hits with 湖北, though many are about its farm and offices.",
+         "source_url": "https://zh.wikipedia.org/wiki/龙感湖", "source_note": "湖北省和安徽省交界处...黄梅县和宿松县共有", "rating": 3, "status": "suggested"}
+      ],
+      "notes": "Region crosses into Anhui (Susong), so a province-neutral name like Longgan is worth considering, though Huangmei is the stronger name."
+    },
+    {
+      "n": 14, "key": "#c6eece", "settled": "xianning", "summary": "Xian'an and Chibi: already named.", "candidates": [], "notes": ""
+    },
+    {
+      "n": 15, "key": "#cbf4db", "settled": "tongshan", "summary": "Chongyang, Tongshan, Tongcheng: already named.", "candidates": [], "notes": "The Tongshan label sits in this region; Tongshan county is only 34% of it, so the name may fit Chongyang better in places. Anita chose it, so leave it."
+    }
+  ]
+}

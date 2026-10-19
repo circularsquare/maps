@@ -162,3 +162,38 @@ which is the state's own.
 - **`Don't Know` is not modelled away.** It would be easy to distribute it across the named
   categories pro rata and it would change nothing visible, and it would also be inventing
   71,000 people's answers.
+
+## 9. `Protestant` split into churches, 2026-10-16 (`sources/ea_christian.py`)
+
+Anita's ruling of 2026-10-16 (unspecified_splits/eastafrica.md has the research). **§3 above
+was wrong about what the cells hold.** KNBS's 2019 Enumerator's Instructions Manual (IPUMS
+`enum_instruct_ke2019a.pdf`, PDF pp.40-41) puts ACK, PCEA, the Africa Inland Church, Lutheran,
+Quakers, Methodists, SDA, Salvation Army and Baptists in code 2 `Protestant`; CITAM, Redeemed,
+Full Gospel, Pentecostal, Deliverance, PAG, Kenya Assemblies, Winners, Apostolic and Jehovah's
+Witnesses in code 3 `Evangelical Churches`; Legio Maria, Israel, Church of Christ, Roho and
+independents in code 4; and churchless Christians in code 6 `Other Christian`.
+`taxonomy/ke2019.py`'s notes and `note_public` are corrected; §3 is left as the record.
+
+- Source: Global Flourishing Study wave 1 (2023, CC BY, `data/raw/gfs/`), `COUNTRY` 10, 11,389
+  rows, 10,192 Christians, 1.6% naming no church. `REL3_Y1` boxes in the Protestant cell:
+  Anglican, Presbyterian, Lutheran, Methodist, Baptist, Adventist, Independent/Evangelical (the
+  Africa Inland Church: Kitui 86%, Kericho 77% of the pool).
+- `REGION1_Y1` 1001-1047 read as the counties alphabetically. OSF was unreachable on 2026-10-16,
+  so `--labels` (the .sav value labels) has not run; the build instead asserts that all 42
+  sampled counties nest in exactly one of GFS's 8 `REGION2_Y1` provinces, matching KNBS's own
+  province of each. Run `--labels` when OSF answers.
+- Checks (asserted): GFS pool 34.7% against census Protestant 34.6% over the 42 sampled counties
+  (bar 3 points); split-half over 200 halvings, Anglican +0.88, Presbyterian +0.83, SDA +0.81,
+  Methodist +0.67, Baptist +0.65 (bar +0.5). Printed: county rank of the pool against the census
+  Protestant share +0.33.
+- Shares: county pool where 40+ respondents, else the former province, else national (Garissa,
+  Wajir, Mandera national; Isiolo, Marsabit, Tharaka-Nithi Eastern; Kwale, Lamu Coast; Samburu
+  Rift Valley; Vihiga Western). In Kakamega, Bungoma and Vihiga the GFS's `Presbyterian` is the
+  Friends (no Friends box; Afrobarometer Western 1.0% Presbyterian, 4.4% Quaker) and stays on
+  `Protestant` (Anita).
+- Result, of 15,777,473: Anglican 4,160,203, SDA 3,608,228, Presbyterian 2,087,475, Baptist
+  969,272, Methodist 456,102; 4,496,193 stay on `christianity.protestant`. Every county closes
+  exactly. Rows `derived`, `parent_column=Protestant`, rolling back to `christianity.protestant`.
+- Not done: `Other Christian` (1.73M, churchless Christians) still files at `christianity.other`;
+  by zm2022's rule it belongs on bare `christianity` (a question for Anita). `Evangelical
+  Churches` could be split the same way from GFS (Pentecostal, JW).

@@ -221,3 +221,14 @@ Chiquimula.
 - **Municipio geography.** LAPOP samples about 55 Guatemalan municipalities per wave and
   `municipio` is a PSU list rather than a partition, so there is no finer tier to reach for
   in this source. COD-AB ships ADM2 (340 municipios) and it has no counts to put on it.
+
+## Pentecostals from Pew 2014 (2026-10-16)
+
+Anita's call of 2026-10-16, built by session `c67d3c3c-latam` (`latam_split.py`, sources.md
+§latam-2026-10-16). LAPOP's two boxes (`Evangélica y Pentecostal`, about 6.22 million on
+`christianity.evangelical`, and `Protestante Tradicional`, about 0.98 million on
+`christianity.protestant`) are one bucket of 7,198,690. 57.0% of it, 4,106,522, is drawn on `christianity.pentecostal`: the share of
+Protestants Pew Research Center's 2014 survey found in a Pentecostal church (`QPROT`, 635
+Guatemalan Protestants, the largest sample in the set). Applied as one national fraction to every
+bucket row, so each box keeps its own department pattern; 3,092,168 stay on the two box nodes. All
+`modelled`.

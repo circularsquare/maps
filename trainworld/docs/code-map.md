@@ -180,7 +180,10 @@ Run from the maps root (`node trainworld/checks/<file>`).
   (the real save: a one-level train-count edit and an every-level edit timed to their final, hashed
   against `?perfOff=periods`), `t488-money-days.mjs` (the real save's clock run fast and pulled back
   across midnight: money days and hours one each, in order, none empty; uses the app's Vite, port
-  6135 by default), `t486-click-on-top.mjs` (a click on a blueprint point's square over a bubble
+  6135 by default), `t715-load-money.mjs` (the real save opened from the saves panel while a later
+  copy is open, twice: cash loads as saved and moves, no ledger day after the clock; a save with
+  ledger days after its clock gets their running cost back; port 6165 by default),
+  `t486-click-on-top.mjs` (a click on a blueprint point's square over a bubble
   selects the track, beside it the bubble), `t533-draw-order.mjs` (the real save: the shorter line
   on top where lines share ground, a line with no trains under; port 6130 by default),
   `t658-lanes.mjs` (the real save: the overlay at zoom 12 and 15 pixel for pixel the baseline

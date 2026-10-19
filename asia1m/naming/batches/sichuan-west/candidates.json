@@ -1,0 +1,299 @@
+{
+  "batch": "sichuan-west",
+  "regions": [
+    {
+      "n": 1,
+      "key": "#edf4e9",
+      "settled": null,
+      "summary": "Most of Ngawa prefecture: Mao, Wenchuan, Xiaojin, Jiuzhaigou, Aba, Zoigê, Songpan, Jinchuan, Heishui, Barkam, Li, Hongyuan, plus Danba and Sêrtar from Garzê and part of Beichuan.",
+      "candidates": [
+        {
+          "name": "Minshan",
+          "local": "岷山",
+          "origin": "mountain",
+          "meaning": "The Min range, the fold-mountain chain running north to south for about 500 km along the Gansu border; the Min River rises on its south side.",
+          "fit": "The range lies in Songpan, Jiuzhaigou and Mao, which hold about a fifth of the region's people; it is the divide between the Yangtze and Yellow River basins and stands for the whole north-west of the province.",
+          "recognisability": "Own zh-wiki article, 116 hits with 四川, top ones about the range and its peak Xuebaoding.",
+          "source_url": "https://zh.wikipedia.org/wiki/岷山",
+          "source_note": "自中国甘肃省南部延伸至四川省西北部的一褶皱山脉，大致呈南北走向，全长约500公里",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Ngawa",
+          "local": "阿坝",
+          "origin": "prefecture",
+          "meaning": "Tibetan romanisation (Mandarin Aba) of the county and the prefecture named after it; the prefecture is Ngawa Tibetan and Qiang Autonomous Prefecture.",
+          "fit": "The region holds 98% of the prefecture's people (79% of the region), but the county of Aba itself is only 6%; the seat Barkam is in the region. Mandarin pinyin would be Aba, but Tibetan Ngawa is the form used for the prefecture in English.",
+          "recognisability": "Current prefecture name, always known.",
+          "source_url": "https://zh.wikipedia.org/wiki/阿坝藏族羌族自治州",
+          "source_note": "阿坝藏族羌族自治州",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Gyalrong",
+          "local": "嘉绒",
+          "origin": "ethnic",
+          "meaning": "Tibetan romanisation (rGyal-rong, Mandarin Jiarong) of the Gyalrong people and their valleys in the south of the region; a Gyalrongic language group is named after them.",
+          "fit": "Covers Barkam, Jinchuan, Xiaojin, Danba, Li and parts of Heishui, roughly a third of the region's people, but not the Qiang east (Mao, Wenchuan) or the northern grasslands.",
+          "recognisability": "Own zh-wiki article, 153 hits with 四川, top ones the Gyalrong languages and tusi chiefs.",
+          "source_url": "https://zh.wikipedia.org/wiki/嘉绒",
+          "source_note": "嘉绒语组是中国四川省西北部阿坝藏族羌族自治州、甘孜藏族自治州的嘉绒人使用的语言",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Mixed region: Han and Qiang in the east (Mao, Wenchuan), Gyalrong in the south, Amdo Tibetans in Aba, Zoigê and Hongyuan. The Ngawa spelling follows Anita's note about Tibetan romanisation; pinyin Aba is the alternative."
+    },
+    {
+      "n": 2,
+      "key": "#f3d8cb",
+      "settled": null,
+      "summary": "Ya'an prefecture: Yucheng, Mingshan, Yingjing, Tianquan, Lushan, Baoxing.",
+      "candidates": [
+        {
+          "name": "Yaan",
+          "local": "雅安",
+          "origin": "city",
+          "meaning": "Ya'an, from the old Yazhou (Ya prefecture) and the Ya River; the name later read as 'elegant peace'. Written Ya'an with the apostrophe in pinyin.",
+          "fit": "Holds 97% of the region's people in Ya'an prefecture; Yucheng district (the city centre) is 42%. The city is under 1M urban, so no central-region rule applies.",
+          "recognisability": "Current prefecture name, always known.",
+          "source_url": "https://zh.wikipedia.org/wiki/雨城区",
+          "source_note": "雨城区是雅安市的市中心区，青衣江和周公河流经市中心",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Qingyi",
+          "local": "青衣江",
+          "origin": "river",
+          "meaning": "The Qingyi River, formerly the Pingqiang or Ya River; from the Balang and Jiajin mountains it flows south to north through Baoxing, Tianquan, Lushan and Yucheng into the Dadu.",
+          "fit": "Runs through the heart of the region (Baoxing, Lushan, Tianquan, Yucheng, Mingshan), its basin is the region.",
+          "recognisability": "Own zh-wiki article, 68 hits with 四川.",
+          "source_url": "https://zh.wikipedia.org/wiki/青衣江",
+          "source_note": "青衣江古称平羌江、雅水……干流自北向南流经雅安市",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Qingyi is also an ancient county name here (青衣县, seat at Lushan), which backs it up."
+    },
+    {
+      "n": 3,
+      "key": "#f0f4e6",
+      "settled": null,
+      "summary": "Kham heartland across three provinces: Kangding, Litang, Batang, Garzê, Dawu, Luhuo, Xinlong, Yajiang and others in Garzê; Markam and Zogang in Xizang; Shangri-La and Dêqên in Yunnan.",
+      "candidates": [
+        {
+          "name": "Kham",
+          "local": "康区",
+          "origin": "historical",
+          "meaning": "Khams, the eastern Tibetan cultural region (Mandarin Kang or Kangqu), home of the Khams-speaking Tibetans; its name is also behind Kangba (Khampa) people.",
+          "fit": "The region is the core of Kham: Garzê prefecture (64%) plus Dêqên and Qamdo's eastern counties (Markam, Zogang). Tibetan romanisation used, since Khams Tibetan is the main language here.",
+          "recognisability": "Own zh-wiki article 康區, 245 hits with 四川, top ones about the Kham language and region.",
+          "source_url": "https://zh.wikipedia.org/wiki/康區",
+          "source_note": "康方言是康巴地区大多数藏族人民使用的藏语……主要分布在康区",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Garzê",
+          "local": "甘孜",
+          "origin": "prefecture",
+          "meaning": "Tibetan romanisation (Mandarin Ganzi) of the county and the prefecture named after it; Garzê Tibetan Autonomous Prefecture.",
+          "fit": "Prefecture holds 64% of the region's people (58% of the prefecture), but Garzê county itself is only 5.5%; the region also takes in Yunnan and Xizang parts.",
+          "recognisability": "Current prefecture name, always known.",
+          "source_url": "https://zh.wikipedia.org/wiki/甘孜藏族自治州",
+          "source_note": "甘孜藏族自治州",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Dartsedo",
+          "local": "打箭炉",
+          "origin": "historical",
+          "meaning": "Tibetan name of Kangding, at the meeting of two rivers; Chinese Dajianlu ('arrow-forging furnace') was the Qing name, replaced by Kangding ('Kham settled').",
+          "fit": "Kangding is the largest unit in the Sichuan part (10.9% of the region), a trade gateway between Tibet and Sichuan; Dajianlu Ting was the Qing seat for Kham.",
+          "recognisability": "Kangding is well known (Kangding Love Song), but Dartsedo is less so.",
+          "source_url": "https://zh.wikipedia.org/wiki/康定市",
+          "source_note": "打箭炉厅 (1729-1910), seat in today's Kangding (CHGIS)",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Shangri-La",
+          "local": "香格里拉",
+          "origin": "county",
+          "meaning": "Renamed from Zhongdian (Tibetan Gyalthang) in 2001 after the fictional place in Lost Horizon.",
+          "fit": "Largest single unit (11.4% of the region), but only 58% of it is here and the name is a tourism rename.",
+          "recognisability": "Famous, but as a fiction.",
+          "source_url": "https://zh.wikipedia.org/wiki/香格里拉市",
+          "source_note": "Fabricated name for tourism; Gyalthang is the Tibetan name",
+          "status": "rejected"
+        }
+      ],
+      "notes": "Region spans Sichuan, Yunnan and Xizang. Kham 康 shares a character with Kangding but no neighbour is named that."
+    },
+    {
+      "n": 4,
+      "key": "#e7ddc7",
+      "settled": null,
+      "summary": "Yuexi, Ganluo, Leibo, Mabian, with parts of Meigu and Ebian: the northern and eastern Liangshan edge toward the Dadu and Jinsha rivers.",
+      "candidates": [
+        {
+          "name": "Yuexi",
+          "local": "越西",
+          "origin": "county",
+          "meaning": "Originally written Yuexi 越嶲 (the Yue-xi commandery named for the xi cuckoo bird, or 'west of the Xi River'); the old Yuexi commandery, guard and ting were seated here or at Xichang.",
+          "fit": "Largest unit (27.7%), with the old Yuexi Wei (1392-1727) and Yuexi Ting seat; current name 越西 has been used since 1959. Yuexi is not a pacify-type name.",
+          "recognisability": "Current county name, always known.",
+          "source_url": "https://zh.wikipedia.org/wiki/越西县",
+          "source_note": "越西县汉名原为越巂，巂的名字来源于巂鸟，即杜鹃",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Leibo",
+          "local": "雷波",
+          "origin": "county",
+          "meaning": "Yi name Gatlyp Mopbbo, 'a mountain standing like the stones of a cooking tripod'; Chinese Leibo from the Yuan Leibo chieftainship (1276-1729).",
+          "fit": "Second largest unit (22.5%) but the county is only 80% inside; it sits on the Jinsha River, where the Xiluodu dam is.",
+          "recognisability": "Current county name, always known.",
+          "source_url": "https://zh.wikipedia.org/wiki/雷波县",
+          "source_note": "雷波长官司 (1276-1729), seat at today's Leibo (CHGIS); 彝文全称“嘎尔莫波”",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Not checked against names elsewhere on the map. Ganluo (20%) and Mabian (17%, in Leshan) were not suggested to keep the list short."
+    },
+    {
+      "n": 5,
+      "key": "#e8e8d1",
+      "settled": null,
+      "summary": "Yalong river country and the upper Anning valley: Mianning, Yanyuan, Xide, Muli, Jiulong, part of Xichang.",
+      "candidates": [
+        {
+          "name": "Yanyuan",
+          "local": "盐源",
+          "origin": "county",
+          "meaning": "'Salt source': the salt wells of the Yanyuan basin; old names were Jingzhou (Ming guard Yanjing Wei, 1393-1727) and Baixing Fu (1290-1391).",
+          "fit": "Second largest unit (29.9%) and 27% of the area, covering nearly all of Yanyuan county; the old Yanjing Wei and Baixing Fu sat at its seat.",
+          "recognisability": "Current county name, always known.",
+          "source_url": "https://zh.wikipedia.org/wiki/盐源县",
+          "source_note": "盐井卫 (1393-1727) and 柏兴府 (1290-1391), seat at today's Yanyuan (CHGIS)",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Lugu",
+          "local": "泸沽湖",
+          "origin": "lake",
+          "meaning": "Lugu Lake, a lake on the Sichuan-Yunnan border, shared by Mosuo and Pumi people; two thirds of it lies in Yanyuan county.",
+          "fit": "A landscape name for the western highlands; the lake is at the region's edge, so it fits Yanyuan and Muli rather than the Anning valley half.",
+          "recognisability": "Own zh-wiki article, 145 hits with 四川, top ones about the lake and Yanyuan.",
+          "source_url": "https://zh.wikipedia.org/wiki/泸沽湖",
+          "source_note": "泸沽湖是川、滇两省共管的湖泊",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Mianning",
+          "local": "冕宁",
+          "origin": "county",
+          "meaning": "One character each from Mianshan (Mian mountain) and Ningfan Wei, the Ming guard whose name means pacifying the Fan (the Tibetan-type peoples).",
+          "fit": "Largest unit by a hair (30.6%) with the old Ningfan Wei seat; also known for the Yi Sea alliance of 1935.",
+          "recognisability": "Current county name, always known.",
+          "source_url": "https://zh.wikipedia.org/wiki/冕宁县",
+          "source_note": "“冕宁”一名来源于冕山、宁番卫各取一字",
+          "rating": 2,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Mianning contains 宁番 'pacify the Fan', a frontier-pacification origin, so I rate it low. The Yalong River runs along the western edge and was not suggested as a name."
+    },
+    {
+      "n": 6,
+      "key": "#e7e5c7",
+      "settled": null,
+      "summary": "The Nuosu Yi heartland (Greater Liangshan): Zhaojue, Jinyang, Butuo, Meigu, Puge.",
+      "candidates": [
+        {
+          "name": "Liangshan",
+          "local": "凉山",
+          "origin": "mountain",
+          "meaning": "'Cool mountains', the Liangshan range; Greater and Lesser Liangshan, the inner Nuosu Yi country, gave the prefecture its name.",
+          "fit": "98% of the people are in Liangshan prefecture and the region is the Great Liangshan mountains where the Yi lords kept the 'independent Lolo' lands; the prefecture seat is in Xichang (region 7), but the landscape name suits this region best.",
+          "recognisability": "Prefecture name, always known (Nuosu Yi heartland).",
+          "source_url": "https://zh.wikipedia.org/wiki/凉山彝族自治州",
+          "source_note": "凉山腹地美姑河和昭觉河流域被当地黑彝家支夺取土司领地后实施封闭统治，外人难以进入，被西方人称为“独立倮倮”",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Zhaojue",
+          "local": "昭觉",
+          "origin": "county",
+          "meaning": "Yi name Lipmu Juojjop, 'big meadow where the Luoluosi pacification commissioner grazed'; Chinese Zhaojue is a polite reworking of Jiaojiao (交脚) at a river junction.",
+          "fit": "Largest unit (25.7% of the region), and capital of the 1952 Liangshan Yi Autonomous Region until 1978.",
+          "recognisability": "Current county name, always known.",
+          "source_url": "https://zh.wikipedia.org/wiki/昭觉县",
+          "source_note": "彝文全称“利木昭觉”；1952年凉山彝族自治区治所在昭觉县",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Liangshan 凉山 is not on the neighbouring map as the same characters (Shandong's Liangshan is 梁山). If Anita wants the Nuosu form of a name, the Yi names are in sources.md (e.g. Mo ggu for Meigu)."
+    },
+    {
+      "n": 7,
+      "key": "#e4e0a5",
+      "settled": null,
+      "summary": "Xichang and Dechang on the Anning valley plain.",
+      "candidates": [
+        {
+          "name": "Xichang",
+          "local": "西昌",
+          "origin": "city",
+          "meaning": "'West prosperous', the county created with Ningyuan Fu in 1728; the Yi name is Op Rro. Known as the Moon City.",
+          "fit": "79% of the region's people, 0.7M city; seat of the prefecture and the centre of the old Yuexi, Jianchang and Ningyuan seats.",
+          "recognisability": "Current city name, always known (satellite launch centre).",
+          "source_url": "https://zh.wikipedia.org/wiki/西昌市",
+          "source_note": "西昌市……是四川省凉山彝族自治州首府所在地",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Qionghai",
+          "local": "邛海",
+          "origin": "lake",
+          "meaning": "'Qiong Sea', the fresh lake by Xichang, second largest in Sichuan; named after the ancient Qiong people and Qiongdu county.",
+          "fit": "The lake lies 7 km from the centre of Xichang and its basin is the heart of the region.",
+          "recognisability": "Own zh-wiki article, 19 hits with 四川.",
+          "source_url": "https://zh.wikipedia.org/wiki/邛海",
+          "source_note": "邛海是中国四川省凉山彝族自治州西昌市泸山东北麓的一座天然淡水湖，距市中心7公里",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Jianchang 建昌 (Ming guard and Yuan route here) was left out: the same characters are famous as Jianchang in Jiangxi. Anning (the valley name) was left to other agents, since 安宁 is also a Yunnan city."
+    },
+    {
+      "n": 8,
+      "key": "#f2d5a9",
+      "settled": "Panzhihua",
+      "summary": "Panzhihua city, already labelled \"pan / zhihua\" on the map.",
+      "candidates": [],
+      "notes": ""
+    },
+    {
+      "n": 9,
+      "key": "#e6d7c0",
+      "settled": "Huili",
+      "summary": "Huili, Huidong and Ningnan, already labelled \"huili\" on the map.",
+      "candidates": [],
+      "notes": ""
+    }
+  ]
+}

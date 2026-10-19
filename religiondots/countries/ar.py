@@ -46,6 +46,13 @@ def _ar_counts():
     return df[["unit", "node", "count", "congregations", "tier"]]
 
 
+def _ar_counts_split():
+    """`_ar_counts` with Pew 2014's Pentecostal share drawn inside ENCREA's Evangelical answer;
+    latam_split.py, Anita 2026-10-16. Drawn on Pew although the Global Flourishing Study puts
+    Argentina's Pentecostals far lower (sources/ar.md). The rows stay `modelled`."""
+    return _latam_split("ar", _ar_counts())
+
+
 ENTRY = {
     "ar": dict(
         name="Argentina",
@@ -67,12 +74,16 @@ ENTRY = {
             "points of evangelicals are Pentecostal, and the 18.9% with no religion are 6.0% "
             "atheist, 3.2% agnostic and 9.7% none. The regional figures for Jehovah's "
             "Witnesses and Mormons (one answer), other religions and don't know are too small "
-            "to use."),
+            "to use. 62% of the Evangelicals are drawn as Pentecostal, the share of "
+            "Protestants that Pew Research Center's 2014 survey found in Pentecostal churches. "
+            "The Global Flourishing Study found far fewer, because its card offered an "
+            "independent evangelical answer, so treat this split as the least certain in "
+            "the region."),
         how="survey, 2,421 adults, 2019; the census no longer asks",
         grain="six survey regions, 7.6m people each; the source's own limit",
         gap="any breakdown of the 1.2% who named another religion, which includes "
             "Argentina's Jewish and Muslim communities",
-        counts=_ar_counts,
+        counts=_ar_counts_split,
         units=None,
         unit_key=None,
         place=HERE / "data" / "geo" / "ar" / "ar_hexes.gpkg",

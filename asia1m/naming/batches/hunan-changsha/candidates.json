@@ -1,0 +1,388 @@
+{
+  "batch": "hunan-changsha",
+  "regions": [
+    {
+      "n": 1,
+      "key": "#c1aaf3",
+      "settled": null,
+      "summary": "North Ningxiang (the county seat Yutan and its suburbs) plus the Heshan side of Yiyang and western Wangcheng.",
+      "candidates": [
+        {
+          "name": "Ningxiang",
+          "local": "宁乡",
+          "origin": "county",
+          "meaning": "\"Peaceful countryside\": Tang name of 627 for the county, renamed from Xinkang.",
+          "fit": "Holds the county seat (Yutan, seat since 977) and 57% of the region's people; the region has 40% of the county, region 10 has 59%.",
+          "recognisability": "Current county-level city (formerly county).",
+          "source_url": "https://zh.wikipedia.org/wiki/宁乡市",
+          "source_note": "唐贞观元年（627年）取乡土安宁之意，改新康县为“宁乡县”，宋兴国二年（977年）县治移至玉潭镇",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Heshan",
+          "local": "赫山",
+          "origin": "county",
+          "meaning": "Named after the Heshan temple; Heshan district of Yiyang, created in 1994.",
+          "fit": "30% of the region's people but only a modern district name from the Yiyang side; Yiyang agents may use it.",
+          "recognisability": "Current district.",
+          "source_url": "https://zh.wikipedia.org/wiki/赫山区",
+          "source_note": "赫山区因区内有闻名的“赫山庙”而得名",
+          "status": "rejected"
+        }
+      ],
+      "notes": "Ningxiang is split between regions 1 and 10; I gave it to 1 because the seat is there. If Anita prefers it for 10, region 1 has no strong alternative (Yutan has no article of its own)."
+    },
+    {
+      "n": 2,
+      "key": "#c5c1ea",
+      "settled": null,
+      "summary": "Northeast Changsha county (Huanghua, Jiangbei, Chunhua) and the Liuyang towns on the Laodao River.",
+      "candidates": [
+        {
+          "name": "Laodao",
+          "local": "捞刀河",
+          "origin": "river",
+          "meaning": "\"Fish out the knife\": legend says Guan Yu dropped his sword in the river and it floated.",
+          "fit": "The 141 km river runs through Liuyang's Shegang, Longfu, Shashi, Beisheng and Yong'an and Changsha county's Chunhua and Huanghua, which are most of this region's towns.",
+          "recognisability": "Own zh-wiki article; 80 hits with 湖南, top ones about the river's railway station and Kaifu district.",
+          "source_url": "https://zh.wikipedia.org/wiki/捞刀河",
+          "source_note": "发源于浏阳市社港镇…流经浏阳市社港镇、龙伏乡、沙市镇、北盛镇和永安镇，长沙县春华镇和黄华镇",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Huanghua",
+          "local": "黄花",
+          "origin": "other",
+          "meaning": "\"Yellow flower\": the township holding Changsha Huanghua airport.",
+          "fit": "Huanghua town is the largest part (15% of the region).",
+          "recognisability": "669 hits with 湖南, mostly about the airport; known through the airport name.",
+          "source_url": "https://zh.wikipedia.org/wiki/长沙黄花国际机场",
+          "source_note": "位于中国湖南省长沙市长沙县黄花镇的国际机场",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Changsha county",
+          "local": "长沙县",
+          "origin": "county",
+          "meaning": "County of Changsha; 52% of the region's people.",
+          "fit": "Name is going to the central region 5.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/长沙县",
+          "source_note": "县人民政府驻星沙街道",
+          "status": "rejected"
+        }
+      ],
+      "notes": "Liuyang (45% of people) is the settled name of region 6, so it cannot be reused."
+    },
+    {
+      "n": 3,
+      "key": "#6d6aee",
+      "settled": null,
+      "summary": "Xingsha, the Changsha county seat, with the Liuyang River district of Kaifu and east Furong.",
+      "candidates": [
+        {
+          "name": "Xingsha",
+          "local": "星沙",
+          "origin": "city",
+          "meaning": "\"Star sand\": the seat of Changsha county; the source of Changsha's nickname Star City (Xingcheng).",
+          "fit": "Xingsha subdistrict is the largest part of the region (21%) and Changsha county is 56% of the people.",
+          "recognisability": "Seat of Changsha county (zh-wiki county article names it as seat); simplemaps lists it as a 277k city.",
+          "source_url": "https://zh.wikipedia.org/wiki/长沙县",
+          "source_note": "县人民政府驻星沙街道",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Small dense region, 324k people, at the edge of the Changsha core."
+    },
+    {
+      "n": 4,
+      "key": "#ad8ef3",
+      "settled": null,
+      "summary": "Northern Yuelu district (Yinpenling, Wangyue, Guanshaling) and southern Wangcheng (Gaotangling, Moon Island).",
+      "candidates": [
+        {
+          "name": "Wangcheng",
+          "local": "望城",
+          "origin": "county",
+          "meaning": "\"Watch the city\": named for Wangcheng slope, where the county seat sat in 1951.",
+          "fit": "Holds 55% of the Wangcheng district's people and the seat (Gaotangling); 35% of this region's people.",
+          "recognisability": "Current district, seat Gaotangling.",
+          "source_url": "https://zh.wikipedia.org/wiki/望城区",
+          "source_note": "因驻地望城坡得名“望城县”；区人民政府驻高塘岭街道",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Yuelu",
+          "local": "岳麓",
+          "origin": "mountain",
+          "meaning": "Yuelu Mountain, 300 m, on the west bank of the Xiang.",
+          "fit": "Yuelu district is 64% of this region's people, but the mountain and the district's core lie in region 7, which should take the name.",
+          "recognisability": "Famous (Yuelu Academy).",
+          "source_url": "https://zh.wikipedia.org/wiki/岳麓区",
+          "source_note": "岳麓山伫立于湘江西岸（长沙市条目）",
+          "status": "rejected"
+        }
+      ],
+      "notes": "Wangcheng also has 13% of region 1, a lesser share."
+    },
+    {
+      "n": 5,
+      "key": "#6546ed",
+      "settled": null,
+      "summary": "The old city of Changsha: Furong, south Kaifu, parts of Tianxin and Yuhua, with the seat of Tanzhou and Changsha prefecture.",
+      "candidates": [
+        {
+          "name": "Changsha",
+          "local": "长沙",
+          "origin": "city",
+          "meaning": "\"Long sands\": name first recorded in the pre-Qin Yi Zhou Shu, for the sandbars of the Xiang River.",
+          "fit": "Holds the old centre and the seat of Changsha commandery, kingdom and prefecture; over a million people.",
+          "recognisability": "Provincial capital.",
+          "source_url": "https://zh.wikipedia.org/wiki/长沙市",
+          "source_note": "“长沙”一名最早见于先秦时代的《逸周书》",
+          "rating": 5,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Only the central region gets Changsha, per the brief."
+    },
+    {
+      "n": 6,
+      "key": "#c4ead5",
+      "settled": "liuyang",
+      "summary": "Liuyang city.",
+      "candidates": [],
+      "notes": ""
+    },
+    {
+      "n": 7,
+      "key": "#aa6af3",
+      "settled": null,
+      "summary": "Yuelu district west of the Xiang: Yuelu Mountain, Orange Isle, Xihu, Meixi Lake.",
+      "candidates": [
+        {
+          "name": "Yuelu",
+          "local": "岳麓",
+          "origin": "mountain",
+          "meaning": "Yuelu Mountain, 300 m, on the west bank of the Xiang; seat of the Song academy.",
+          "fit": "Yuelu district is 99.8% of the region; the mountain, Yuelu Academy and Orange Isle are inside.",
+          "recognisability": "Famous: Yuelu Academy is one of the four great Song academies.",
+          "source_url": "https://zh.wikipedia.org/wiki/岳麓区",
+          "source_note": "岳麓山伫立于湘江西岸；岳麓书院为宋代四大书院之一（长沙市条目）",
+          "rating": 5,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 8,
+      "key": "#826aee",
+      "settled": null,
+      "summary": "Yuhua district south-east of the old city: Gaoqiao, Yuhuating, Lituo, Dongtang.",
+      "candidates": [
+        {
+          "name": "Yuhua",
+          "local": "雨花",
+          "origin": "county",
+          "meaning": "\"Rain flower\": named for the Yuhua pavilion (Yuhuating).",
+          "fit": "Yuhua district is 87% of the region's people (65% of the district).",
+          "recognisability": "Current district; named in zh-wiki for Yuhuating.",
+          "source_url": "https://zh.wikipedia.org/wiki/雨花区",
+          "source_note": "因雨花亭而得名",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Adjacent regions 3, 7, 9 are also named after districts or towns; I found no better well-sourced alternatives for these small city regions."
+    },
+    {
+      "n": 9,
+      "key": "#9c75f4",
+      "settled": null,
+      "summary": "Tianxin district south of the old city, with Muyun and the Tongsheng part of Yuhua.",
+      "candidates": [
+        {
+          "name": "Tianxin",
+          "local": "天心",
+          "origin": "county",
+          "meaning": "\"Heart of heaven\": named for the Tianxin Pavilion on the old city wall.",
+          "fit": "Tianxin district is 71% of the region's people (78% of the district).",
+          "recognisability": "Current district of Changsha.",
+          "source_url": "https://zh.wikipedia.org/wiki/天心区",
+          "source_note": "天心区为湖南省长沙市市辖区，位于长沙城区的南部",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": "The pavilion meaning is not in the sources.md extract; check if Anita wants it stated."
+    },
+    {
+      "n": 10,
+      "key": "#d7c3f4",
+      "settled": null,
+      "summary": "South and west Ningxiang plus Shaoshan and the western edge of Xiangtan (Yuhu, Xiangtan county, Xiangxiang).",
+      "candidates": [
+        {
+          "name": "Shaoshan",
+          "local": "韶山",
+          "origin": "city",
+          "meaning": "Named after Shaoshan hill; the town where Mao Zedong was born.",
+          "fit": "The whole city (cover 100%) is here, 9% of the people; Ningxiang itself (63%) goes to region 1.",
+          "recognisability": "Very well known county-level city.",
+          "source_url": "https://zh.wikipedia.org/wiki/湘潭市",
+          "source_note": "湘潭市县级市；1968年析出韶山区建省属韶山特区（湘潭县条目）",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Ningxiang",
+          "local": "宁乡",
+          "origin": "county",
+          "meaning": "\"Peaceful countryside\".",
+          "fit": "63% of this region's people and 59% of the county, but the seat is in region 1.",
+          "recognisability": "Current county-level city.",
+          "source_url": "https://zh.wikipedia.org/wiki/宁乡市",
+          "source_note": "宁乡市地理描述",
+          "status": "rejected"
+        }
+      ],
+      "notes": "Xinkang (the Jin county seated at Hengshi here) has no zh-wiki article and weak hits; Huangcai (4%) has no article. Shaoshan is a modest fit; the region is mostly rural Ningxiang."
+    },
+    {
+      "n": 11,
+      "key": "#b59af1",
+      "settled": null,
+      "summary": "Xiangtan city centre on both banks of the Xiang: Yuhu and Yuetang districts.",
+      "candidates": [
+        {
+          "name": "Xiangtan",
+          "local": "湘潭",
+          "origin": "city",
+          "meaning": "\"Xiang pool\": the deep pool (Zhaotan) in the Xiang River below Zhao Mountain, or the deep, broad land of the Xiang.",
+          "fit": "Holds the old seat of Xiangtan county and Xiangtan prefecture (Song to Qing); both urban districts.",
+          "recognisability": "Prefecture-level city.",
+          "source_url": "https://zh.wikipedia.org/wiki/湘潭市",
+          "source_note": "“湘潭”之名来源于它的地理特征…昭潭",
+          "rating": 5,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 12,
+      "key": "#a49af1",
+      "settled": null,
+      "summary": "Zhuzhou city centre on the east bank of the Xiang: Shifeng, Lusong, Hetang districts.",
+      "candidates": [
+        {
+          "name": "Zhuzhou",
+          "local": "株洲",
+          "origin": "city",
+          "meaning": "\"Tree-stump island\": from Zhutian village or from chu trees; named in 1190.",
+          "fit": "Holds the urban core of the prefecture (railway city, Lusong market); Zhuzhou's old name Jianning also had a seat here (222-270).",
+          "recognisability": "Prefecture-level city.",
+          "source_url": "https://zh.wikipedia.org/wiki/株洲市",
+          "source_note": "自南宋绍熙元年（1190年）正式定名株洲后，株洲之名沿用至今",
+          "rating": 5,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Zhuzhou is the central region of a city well over 1M (with Tianyuan in region 13)."
+    },
+    {
+      "n": 13,
+      "key": "#c6b1f6",
+      "settled": null,
+      "summary": "South Zhuzhou (Tianyuan, Lukou) and the east of Xiangtan county around Yisuhe.",
+      "candidates": [
+        {
+          "name": "Lukou",
+          "local": "渌口",
+          "origin": "county",
+          "meaning": "\"Mouth of the Lu River\": where the Lu River enters the Xiang.",
+          "fit": "Former Zhuzhou county (seat Lukou), 27% of the region plus Tianyuan; Lukou district is the former county.",
+          "recognisability": "Current district, formerly Zhuzhou county.",
+          "source_url": "https://zh.wikipedia.org/wiki/渌口区",
+          "source_note": "渌口区人民政府驻渌口镇；2018年撤销株洲县设立渌口区",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Xiangtan county",
+          "local": "湘潭县",
+          "origin": "county",
+          "meaning": "Xiangtan county, seat Yisuhe.",
+          "fit": "40% of the region's people and its seat (Yisuhe, 12%), but the name Xiangtan goes to region 11.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/湘潭县",
+          "source_note": "县政府驻易俗河镇",
+          "status": "rejected"
+        }
+      ],
+      "notes": "Weak region: a Zhuzhou-Xiangtan boundary mix. Han Xiangnan county and Hengyang commandery had seats in Xiangtan county here, but Hengyang is a famous different place."
+    },
+    {
+      "n": 14,
+      "key": "#b0ddbe",
+      "settled": "liling",
+      "summary": "Liling city plus Xiangdong district of Pingxiang.",
+      "candidates": [],
+      "notes": ""
+    },
+    {
+      "n": 15,
+      "key": "#d2b7f8",
+      "settled": null,
+      "summary": "Xiangxiang city and the western half of Xiangtan county, with a part of Zhuzhou county.",
+      "candidates": [
+        {
+          "name": "Xiangxiang",
+          "local": "湘乡",
+          "origin": "county",
+          "meaning": "\"Marquisate of Xiang\": from the Xiangxiang marquis enfeoffed in the Western Han.",
+          "fit": "Xiangxiang is 50% of the region and the seat of the old county is inside (county since AD 9); the region holds 77% of the city.",
+          "recognisability": "Current county-level city.",
+          "source_url": "https://zh.wikipedia.org/wiki/湘乡市",
+          "source_note": "湘乡的名字来源于西汉时所封的湘乡侯",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Xiangtan county",
+          "local": "湘潭县",
+          "origin": "county",
+          "meaning": "Xiangtan county.",
+          "fit": "36% of the region's people, but the name Xiangtan goes to region 11.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/湘潭县",
+          "source_note": "县政府驻易俗河镇",
+          "status": "rejected"
+        }
+      ],
+      "notes": "Xiangxiang and Xiangtan look alike; they are different places, no repeated characters."
+    },
+    {
+      "n": 16,
+      "key": "#b5e6b8",
+      "settled": "youshui",
+      "summary": "You county (written \"youshui\" on the map).",
+      "candidates": [],
+      "notes": "The label on the map reads \"you shui\", which looks like a typo for Youxian; not my call to change."
+    },
+    {
+      "n": 17,
+      "key": "#bdddc2",
+      "settled": "chaling",
+      "summary": "Chaling county, with Anren and Yanling.",
+      "candidates": [],
+      "notes": ""
+    }
+  ]
+}

@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>asia1m names</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#141414; --panel:#1c1c1c; --line:#333; --text:#ccc; --muted:#888; --value:#aaa;
+          --accent:#6889a8; --link:#89b4fa; --bad:#a86868; }
+  * { box-sizing: border-box; }
+  html, body { margin:0; height:100%; background:var(--bg); color:var(--text);
+               font:14px/1.45 Nunito, system-ui, sans-serif; }
+  a { color:var(--link); text-decoration:none; }
+  a:hover { text-decoration:underline; }
+  header { display:flex; gap:12px; align-items:center; padding:10px 16px; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  header h1 { font-size:16px; font-weight:700; margin:0 8px 0 0; }
+  select, button, textarea { font:inherit; color:var(--text); background:none; border:1px solid #555; border-radius:4px; }
+  select { padding:3px 6px; background:var(--bg); }
+  button { padding:3px 10px; cursor:pointer; }
+  button:hover { border-color:#888; }
+  button.on { border-color:var(--accent); color:#fff; background:var(--accent); }
+  .wrap { display:flex; height:calc(100% - 49px); }
+  nav { width:230px; flex:none; overflow-y:auto; border-right:1px solid var(--line); }
+  nav div { padding:6px 12px; cursor:pointer; display:flex; gap:8px; border-left:3px solid transparent; }
+  nav div:hover { background:#1f1f1f; }
+  nav div.sel { background:var(--panel); border-left-color:var(--accent); }
+  nav .n { color:var(--muted); width:24px; text-align:right; font-variant-numeric:tabular-nums; flex:none; }
+  nav .nm { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  nav .st { color:var(--accent); flex:none; }
+  nav .settled .nm { color:var(--muted); }
+  main { flex:1; overflow-y:auto; padding:16px 20px 40px; }
+  .top { display:flex; gap:20px; align-items:flex-start; flex-wrap:wrap; }
+  .thumbwrap { flex:0 1 520px; min-width:280px; }
+  .thumb { position:relative; width:100%; }
+  .thumb img { width:100%; display:block; image-rendering:pixelated; border:1px solid var(--line); border-radius:4px; }
+  .thumb svg { position:absolute; inset:0; width:100%; height:100%; }
+  .thumb path { fill:rgba(0,0,0,0); stroke:rgba(40,40,60,.55); stroke-width:.8; vector-effect:non-scaling-stroke; }
+  .thumb path:hover { fill:rgba(104,137,168,.25); stroke:rgba(30,40,70,.9); }
+  .thumb text { font:8px Nunito, sans-serif; fill:rgba(30,30,40,.7); text-anchor:middle; pointer-events:none;
+                paint-order:stroke; stroke:rgba(255,255,255,.6); stroke-width:2px; }
+  .thumb.plain svg.units { display:none; }
+  svg.pins { pointer-events:none; overflow:visible; }
+  svg.pins .river { fill:none; stroke:rgba(30,110,200,.75); stroke-width:2; vector-effect:non-scaling-stroke; }
+  svg.pins circle { fill:#d22; stroke:#fff; stroke-width:1.5; vector-effect:non-scaling-stroke; }
+  svg.pins circle.out { fill:#fff; stroke:#d22; }
+  svg.pins text { font:bold 11px Nunito, sans-serif; fill:#a00; text-anchor:start; paint-order:stroke; stroke:#fff; stroke-width:3px; }
+  svg.pins g.dim { opacity:.25; }
+  .rating { color:var(--value); font-variant-numeric:tabular-nums; font-size:12px; }
+  .tip { position:fixed; pointer-events:none; background:rgba(10,10,10,.9); border:1px solid var(--line); border-radius:6px;
+         padding:5px 8px; font-size:12px; display:none; z-index:5; }
+  .tip b { color:#eee; }
+  .thumbbar { margin-top:6px; }
+  .facts { flex:1; min-width:260px; }
+  h2 { font-size:18px; margin:0 0 4px; }
+  h3 { font-size:13px; color:var(--muted); font-weight:700; margin:14px 0 4px; }
+  .muted { color:var(--muted); }
+  table { border-collapse:collapse; width:100%; }
+  td, th { text-align:left; vertical-align:top; padding:3px 8px 3px 0; }
+  th { color:var(--muted); font-weight:400; font-size:12px; }
+  .num { color:var(--value); font-variant-numeric:tabular-nums; text-align:right; white-space:nowrap; }
+  .cands { margin-top:18px; }
+  .cand { border:1px solid var(--line); border-radius:6px; padding:10px 12px; margin:8px 0; background:var(--panel); }
+  .cand.picked { border-color:var(--accent); }
+  .cand.rejected { opacity:.5; }
+  .cand.agent-rejected .cname { color:var(--muted); }
+  .chead { display:flex; gap:10px; align-items:baseline; flex-wrap:wrap; }
+  .cname { font-size:16px; font-weight:700; }
+  .origin { color:var(--muted); font-size:12px; border:1px solid var(--line); border-radius:3px; padding:0 5px; }
+  .chead .btns { margin-left:auto; display:flex; gap:6px; }
+  .cand dl { display:grid; grid-template-columns:110px 1fr; gap:2px 10px; margin:6px 0 0; }
+  .cand dt { color:var(--muted); }
+  .cand dd { margin:0; }
+  textarea { width:100%; min-height:54px; padding:6px; background:var(--panel); }
+  .pics img { max-width:100%; image-rendering:pixelated; border:1px solid var(--line); margin:0 8px 8px 0; }
+  .toast { position:fixed; bottom:16px; right:16px; background:var(--panel); border:1px solid var(--line); padding:6px 12px; border-radius:6px; display:none; }
+  @media (max-width:700px) { .wrap { flex-direction:column; height:auto; } nav { width:auto; max-height:200px; border-right:none; border-bottom:1px solid var(--line); } }
+</style>
+</head>
+<body>
+<header>
+  <h1>asia1m names</h1>
+  <select id="batch"></select>
+  <button id="pics" title="Batch pictures">Pictures</button>
+  <button id="copy" title="Copy picks and notes as text">Copy feedback</button>
+</header>
+<div class="wrap">
+  <nav id="list"></nav>
+  <main id="main"></main>
+</div>
+<div class="toast" id="toast"></div>
+<div class="tip" id="tip"></div>
+<script>
+const $ = s => document.querySelector(s);
+let batch = null, facts = null, cands = null, overlay = {}, pins = {}, dupes = {}, picked = {}, sel = 1, showPics = false, state = {};
+let showUnits = load('asia1mnames:units', true);
+
+function load(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (e) { return d; } }
+function save() { try { localStorage.setItem('asia1mnames:' + batch, JSON.stringify(state)); } catch (e) {} }
+function rs(n) { return state[n] ??= { pick: null, rejected: [], more: false, note: '' }; }
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const pct = x => x == null ? '' : Math.round(x * 100) + '%';
+const mil = x => (x / 1e6).toFixed(2) + 'M';
+
+async function getJSON(u) { const r = await fetch(u, { cache: 'no-store' }); if (!r.ok) throw r.status; return r.json(); }
+
+// a region is decided once it is named on the map, picked in a pasted round (picks.json) or picked here
+function decided(r, c, s) { return !!((c && c.settled) || picked[r.key] || (s && s.pick)); }
+function openRegions(f, c, st) {
+  return f.regions.filter(r => !decided(r, (c.regions || []).find(x => x.n === r.n), st[r.n])).map(r => r.n);
+}
+
+async function init() {
+  const idx = await getJSON('batches/index.json');
+  try { picked = await getJSON('batches/picks.json'); } catch (e) { picked = {}; }
+  // open counts for every batch, so the page starts on the first region still undecided
+  const info = await Promise.all(idx.map(async b => {
+    const f = await getJSON(`batches/${b.name}/facts.json`);
+    let c = { regions: [] }; try { c = await getJSON(`batches/${b.name}/candidates.json`); } catch (e) {}
+    return { name: b.name, total: f.regions.length, open: openRegions(f, c, load('asia1mnames:' + b.name, {})) };
+  }));
+  info.sort((a, b) => (!a.open.length) - (!b.open.length));   // finished batches last
+  $('#batch').innerHTML = info.map(b => `<option value="${esc(b.name)}">${esc(b.name)} (${b.open.length ? b.open.length + ' open of ' + b.total : 'done'})</option>`).join('');
+  const first = info.find(b => b.open.length) || info[info.length - 1];
+  $('#batch').value = first.name;
+  await openBatch(first.name, first.open[0]);
+}
+
+async function openBatch(name, startN) {
+  batch = name;
+  facts = await getJSON(`batches/${name}/facts.json`);
+  try { cands = await getJSON(`batches/${name}/candidates.json`); } catch (e) { cands = { regions: [] }; }
+  try { overlay = await getJSON(`batches/${name}/overlay.json`); } catch (e) { overlay = {}; }
+  try { pins = await getJSON(`batches/${name}/pins.json`); } catch (e) { pins = {}; }
+  try { dupes = await getJSON(`batches/dupes.json`); } catch (e) { dupes = {}; }
+  state = load('asia1mnames:' + name, {});
+  sel = startN ?? openRegions(facts, cands, state)[0] ?? facts.regions[0].n;
+  showPics = false;
+  render();
+}
+
+function candOf(n) { return cands.regions.find(r => r.n === n) || null; }
+
+function renderList() {
+  // undecided regions first, decided ones after, each in number order
+  const order = [...facts.regions].sort((a, b) =>
+    (decided(a, candOf(a.n), state[a.n]) - decided(b, candOf(b.n), state[b.n])) || a.n - b.n);
+  $('#list').innerHTML = order.map(r => {
+    const c = candOf(r.n), s = state[r.n];
+    let nm = '', cls = '', st = '';
+    if (c && c.settled) { nm = c.settled; st = '✓'; }
+    else if (s && s.pick) { nm = s.pick; st = '✓'; }
+    else if (picked[r.key]) { nm = picked[r.key]; st = '✓'; }
+    else if (c && c.candidates.length) nm = '<span class="muted">' + esc(c.candidates[0].name) + '?</span>';
+    else nm = '<span class="muted">no candidates yet</span>';
+    if (s && s.more) st += ' +';
+    if (s && s.note) st += ' ✎';
+    const plain = (s && s.pick) || (c && c.settled) || picked[r.key];
+    return `<div data-n="${r.n}" class="${cls} ${r.n === sel && !showPics ? 'sel' : ''}"><span class="n">${r.n}</span><span class="nm">${plain ? esc(nm) : nm}</span><span class="st">${st}</span></div>`;
+  }).join('');
+  for (const d of $('#list').children) d.onclick = () => { sel = +d.dataset.n; showPics = false; render(); };
+}
+
+function renderPics() {
+  $('#main').innerHTML = `<div class="pics">` + facts.tiles.map(t =>
+    `<a href="batches/${batch}/numbers_${t.tag}.png" target="_blank"><img src="batches/${batch}/numbers_${t.tag}.png"></a>` +
+    `<a href="batches/${batch}/labels_${t.tag}.png" target="_blank"><img src="batches/${batch}/labels_${t.tag}.png"></a>`).join('') + `</div>`;
+}
+
+function renderRegion() {
+  const r = facts.regions.find(x => x.n === sel), c = candOf(sel), s = rs(sel);
+  const units = r.units.slice(0, 6).map(u => `<tr><td>${esc(u.name)} ${u.local ? '<span class="muted">' + esc(u.local) + '</span>' : ''}</td><td class="num">${pct(u.people_share)}</td><td class="num">${pct(u.cover)}</td></tr>`).join('');
+  const towns = (r.towns || []).slice(0, 6).map(t => `<tr><td>${esc(t.county)} ${esc(t.town)}</td><td class="num">${pct(t.people_share)}</td><td class="num">${pct(t.cover)}</td></tr>`).join('');
+  const pars = r.parents.filter(p => p.level === 'prefecture').map(p => `${esc(p.name)} ${p.local ? esc(p.local) : ''} <span class="muted">${pct(p.people_share)} of people, ${pct(p.cover)} of it</span>`).join('<br>');
+  const ov = overlay[r.n];
+  const short = s => String(s || '').replace(/ (County|District|City|Autonomous County|Banner|Prefecture|Subdistrict|Upazila|Tehsil)$/, '');
+  let svg = ov ? `<svg class="units" viewBox="0 0 ${ov.w} ${ov.h}">` + ov.units.map((u, i) => `<path data-u="${i}" d="${u.d}"/>`).join('') +
+    ov.units.filter(u => u.a > 900).map(u => `<text x="${u.lx}" y="${u.ly}">${esc(short(u.name))}</text>`).join('') + `</svg>` : '';
+  const pp = pins[r.n] || [], th = r.thumb;
+  if (pp.length && th) {
+    const cl = (v, m) => Math.max(4, Math.min(m - 4, v));
+    svg += `<svg class="pins" viewBox="0 0 ${th.w} ${th.h}" preserveAspectRatio="none"><defs><clipPath id="clip"><rect width="${th.w}" height="${th.h}"/></clipPath></defs>` +
+      pp.map(p => {
+        const x = cl(p.x, th.w), y = cl(p.y, th.h), left = x > th.w - 90;
+        return `<g data-pin="${p.i}">${p.d ? `<path class="river" clip-path="url(#clip)" d="${p.d}"/>` : ''}` +
+          `<circle class="${p.inside ? '' : 'out'}" cx="${x}" cy="${y}" r="4"/>` +
+          `<text x="${left ? x - 7 : x + 7}" y="${y + 4}" style="text-anchor:${left ? 'end' : 'start'}">${esc(p.name)}</text></g>`;
+      }).join('') + `</svg>`;
+  }
+  let h = `<div class="top"><div class="thumbwrap"><div class="thumb ${showUnits ? '' : 'plain'}" id="thumb"><img src="batches/${batch}/thumbs/${r.n}.png" alt="">${svg}</div>
+      ${ov ? `<div class="thumbbar"><button id="units" class="${showUnits ? 'on' : ''}" title="County outlines from helper1m">Counties</button></div>` : ''}</div>
+    <div class="facts">
+      <h2>${r.n}. ${c && c.settled ? esc(c.settled) : s.pick ? esc(s.pick) : picked[r.key] ? esc(picked[r.key]) : '<span class="muted">unnamed</span>'}</h2>
+      <div class="muted">${mil(r.people)} people · ${r.lat.toFixed(2)}, ${r.lon.toFixed(2)} · ${esc(r.key)}</div>
+      ${c && c.summary ? `<p>${esc(c.summary)}</p>` : ''}
+      <h3>Admin units</h3>
+      <table><tr><th></th><th class="num">of people</th><th class="num">of unit</th></tr>${units}</table>
+      ${pars ? `<h3>Prefectures</h3><div>${pars}</div>` : ''}
+      ${towns ? `<h3>Townships</h3><table>${towns}</table>` : ''}
+      ${r.cities.length ? `<h3>Cities</h3><div>${r.cities.map(x => esc(x.name)).join(', ')}</div>` : ''}
+    </div></div>`;
+  h += `<div class="cands">`;
+  if (c && c.settled) h += `<p class="muted">Already named on the map.</p>`;
+  else if (!c) h += `<p class="muted">No candidates yet.</p>`;
+  else {
+    for (const [i, k] of c.candidates.entries()) {
+      const picked = s.pick === k.name, rej = s.rejected.includes(k.name);
+      h += `<div class="cand ${picked ? 'picked' : ''} ${rej ? 'rejected' : ''} ${k.status === 'rejected' ? 'agent-rejected' : ''}" data-cand="${i}">
+        <div class="chead"><span class="cname">${esc(k.name)}</span><span>${esc(k.local)}</span><span class="origin">${esc(k.origin)}</span>
+          ${k.rating ? `<span class="rating" title="Agent's rating">${esc(k.rating)}/5</span>` : ''}
+          ${k.status === 'rejected' ? '<span class="muted">not recommended</span>' : ''}
+          <span class="btns"><button data-pick="${i}" class="${picked ? 'on' : ''}" title="Pick this name">Pick</button><button data-rej="${i}" class="${rej ? 'on' : ''}" title="Rule this name out">No</button></span></div>
+        <dl><dt>Meaning</dt><dd>${esc(k.meaning)}</dd><dt>Fit</dt><dd>${esc(k.fit)}</dd>
+        ${k.recognisability ? `<dt>Known as</dt><dd>${esc(k.recognisability)}</dd>` : ''}
+        ${(() => { const d = dupes[`${batch} ${r.n}|${String(k.name).toLowerCase()}`]; if (!d) return '';
+            const t = [d.picked ? `already picked for ${d.picked}` : '', d.places.length ? `also suggested for ${d.places.join(', ')}` : ''].filter(Boolean).join('; ');
+            return t ? `<dt>Clash</dt><dd style="color:var(--bad)">${esc(t)}</dd>` : ''; })()}
+        ${k.source_url ? `<dt>Source</dt><dd><a href="${esc(k.source_url)}" target="_blank" rel="noopener">${esc(decodeURI(k.source_url).replace(/^https?:\/\//, '').slice(0, 70))}</a>${k.source_note ? ' <span class="muted">' + esc(k.source_note) + '</span>' : ''}</dd>` : ''}</dl></div>`;
+    }
+    if (c.notes) h += `<p class="muted">${esc(c.notes)}</p>`;
+  }
+  h += `</div><h3>Feedback</h3><p><button id="more" class="${s.more ? 'on' : ''}">More ideas</button></p>
+    <textarea id="note" placeholder="Note for the next round">${esc(s.note)}</textarea>`;
+  $('#main').innerHTML = h;
+  for (const b of document.querySelectorAll('[data-pick]')) b.onclick = () => { const nm = c.candidates[+b.dataset.pick].name; s.pick = s.pick === nm ? null : nm; s.rejected = s.rejected.filter(x => x !== nm); save(); render(); };
+  for (const b of document.querySelectorAll('[data-rej]')) b.onclick = () => { const nm = c.candidates[+b.dataset.rej].name; s.rejected = s.rejected.includes(nm) ? s.rejected.filter(x => x !== nm) : [...s.rejected, nm]; if (s.pick === nm) s.pick = null; save(); render(); };
+  $('#more').onclick = () => { s.more = !s.more; save(); render(); };
+  for (const card of document.querySelectorAll('.cand')) {
+    const own = document.querySelector(`svg.pins g[data-pin="${card.dataset.cand}"]`);
+    if (!own) continue;
+    card.onmouseenter = () => { for (const g of document.querySelectorAll('svg.pins g')) g.classList.toggle('dim', g !== own); };
+    card.onmouseleave = () => { for (const g of document.querySelectorAll('svg.pins g')) g.classList.remove('dim'); };
+  }
+  if (ov) {
+    $('#units').onclick = () => { showUnits = !showUnits; try { localStorage.setItem('asia1mnames:units', JSON.stringify(showUnits)); } catch (e) {} render(); };
+    const tip = $('#tip');
+    for (const p of document.querySelectorAll('#thumb path')) {
+      const u = ov.units[+p.dataset.u];
+      p.onmousemove = e => {
+        tip.innerHTML = `<b>${esc(u.name)}</b> ${esc(u.local || '')}` + (u.parent ? `<br><span class="muted">${esc(u.parent)}</span>` : '') +
+          (u.est ? `<br>${(u.est.pop / 1000).toFixed(1)}k <span class="muted">${u.est.year}</span>` : '');
+        tip.style.display = 'block'; tip.style.left = (e.clientX + 14) + 'px'; tip.style.top = (e.clientY + 14) + 'px';
+      };
+      p.onmouseleave = () => { tip.style.display = 'none'; };
+    }
+  }
+  $('#note').oninput = e => { s.note = e.target.value; save(); renderList(); };
+}
+
+function render() {
+  renderList();
+  $('#pics').classList.toggle('on', showPics);
+  showPics ? renderPics() : renderRegion();
+}
+
+function feedbackText() {
+  const lines = [`batch ${batch}`];
+  for (const r of facts.regions) {
+    const s = state[r.n]; if (!s) continue;
+    const parts = [];
+    if (s.pick) parts.push(`pick ${s.pick}`);
+    if (s.rejected.length) parts.push(`not ${s.rejected.join(', ')}`);
+    if (s.more) parts.push('more ideas');
+    if (s.note.trim()) parts.push(s.note.trim().replace(/\s+/g, ' '));
+    if (parts.length) lines.push(`${r.n}: ${parts.join('. ')}`);
+  }
+  return lines.join('\n');
+}
+
+function toast(t) { const e = $('#toast'); e.textContent = t; e.style.display = 'block'; setTimeout(() => e.style.display = 'none', 1500); }
+
+$('#batch').onchange = e => openBatch(e.target.value);
+$('#pics').onclick = () => { showPics = !showPics; render(); };
+$('#copy').onclick = async () => {
+  const t = feedbackText();
+  try { await navigator.clipboard.writeText(t); toast('Copied'); }
+  catch (e) { $('#main').innerHTML = `<textarea style="min-height:300px">${esc(t)}</textarea>`; }
+};
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'TEXTAREA') return;
+  const ns = [...document.querySelectorAll('#list div')].map(d => +d.dataset.n), i = ns.indexOf(sel);
+  if (e.key === 'j' || e.key === 'ArrowDown') { sel = ns[Math.min(i + 1, ns.length - 1)]; showPics = false; render(); e.preventDefault(); }
+  if (e.key === 'k' || e.key === 'ArrowUp') { sel = ns[Math.max(i - 1, 0)]; showPics = false; render(); e.preventDefault(); }
+});
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+batch hunan-north
+1: pick Lizhou
+3: pick Huarong
+4: pick Anxiang
+6: pick Dongting. Fine even though the lake extends past the region: it is the heart of Dongting, and a name doesn't claim the whole feature (Colorado and the Colorado River).
+8: pick Changde
+9: pick Hanshou
+10: pick Taoyuan
+12: pick Yiyang
+13: pick Xiangyin
+14: pick Taojiang
+15: pick Anhua
+16: pick Meishan
+17: pick Lianyuan
+18: pick Shuangfeng. She split this ~2M region in the .ase after the batch was made: this colour (#cdb1f5) kept the Shuangfeng part; Loudi city is the new #c299f3 (in manual_picks.csv).

@@ -781,6 +781,9 @@ tail.
 
 ## 14. Kerala's St Thomas Christians: searched, not drawn, 2026-10-03 (session `fafd1067-in`)
 
+*REVERSED 2026-10-16: the non-Catholic churches are drawn, from the same Table 6. See §16. The checks below
+still describe what the district cells can and cannot bear.*
+
 Anita, 2026-09-15 (runlog, "rulings"): Kerala's St Thomas Christians wanted "if a route exists, not forced".
 They are the Syro-Malabar and Syro-Malankara Catholics, the Jacobite and Malankara Orthodox halves of the
 Malankara church, and the Mar Thoma Church (plus smaller bodies); about two thirds of Kerala's Christians on
@@ -899,3 +902,48 @@ because the census put nobody there. Kontur's people there are model spill or se
 workers in the Little Rann, herders on summer pasture) and are counted in their home villages.
 Left hatched as instructed; the hatch overstates it, and a per-part exception in `not_drawn.py`
 would be the fix if that matters. Khadir island itself is drawn.
+
+## 16. Kerala's other churches drawn, 2026-10-16 (session `c67d3c3c-de-in`)
+
+Anita's call, reversing §14 and §9's point 3, under spec §2.7b (a flat unspecified colour is worse than a
+split that can be checked). Research: `unspecified_splits/de-in.md`. Built in `in_split_christian.py`
+(`kerala_churches()`); `python in_split_christian.py --dry-run` prints every number here.
+
+**What is drawn.** Each Kerala sub-district's Christians left after the Catholic share (computed exactly as
+before; those rows and Mizoram's are held to the file on disk) are divided by WP468 Table 6's non-Catholic
+cells:
+
+| label | node | people | % of Kerala's Christians | KMS 2011 Kerala row | KMS 2023 |
+|---|---|---:|---:|---:|---:|
+| Jacobite and Orthodox | `christianity.oriental` | 911,782 | 14.8 | 15.9 | 15.4 |
+| Mar Thoma | `christianity.oriental.marthoma` (leaf promoted) | 303,601 | 4.9 | 6.6 | 5.3 |
+| CSI | `christianity.united` | 306,783 | 5.0 | 4.5 | 3.6 |
+| Pentecost, Church of God, Brethren | `christianity.pentecostal` | 188,635 | 3.1 | 3.5 | 5.3 |
+
+Dalit Christian and Others stay on `christianity`: **503,991**, down from 2,214,792 (8.2% of Kerala's
+Christians, from 36.1%). India on a church node: 11,419,136 of 27,819,588 (41.05%, from 34.90%).
+`check_rollup.py in`: 118,399,518 derived, all rolling up, none orphaned (1,710,801 more than §13).
+
+**How.** South of Malabar each district keeps its own row, so a church's share of all its Christians is
+Table 6's as printed. The six Malabar districts (Palakkad to Kasaragod) take one non-Catholic mix pooled on
+census Christians: Jacobite and Orthodox 36.8% of the remainder, Mar Thoma 20.4, CSI 11.7, Pentecost 3.1.
+That rule was chosen after seeing §14's OSM witness, which fails worst in Malabar, so it is post hoc; the
+reason given for it in advance would be that Malabar's Christians are few and mostly settlers from
+Travancore. The state totals are the KMS 2011 drawn on census weights, against KMS 2011's own
+(sample-weighted) Kerala row and KMS 2023's draft Table 2.10: no church is more than 2.2 points off 2023,
+Pentecost the furthest (KMS 2023 lumps Pentecost and Brethren the same way).
+
+**Calls, Anita's (2026-10-16), in `taxonomy/in2011.py`'s REVIEW.** Jacobite and Orthodox on the
+`christianity.oriental` parent together, since the survey swaps them (rho +0.06 as a pair, +0.16 and +0.12
+alone, against OSM; one church in two factions); Mar Thoma on `christianity.oriental.marthoma`, promoted
+from ASARB's leaf in `branches.py` with its label unchanged; CSI on `christianity.united`; the Pentecost row
+on `christianity.pentecostal`, the Brethren inside it.
+
+**Known costs.** Malabar's pooled mix carries Kozhikode's 22.3% Mar Thoma, which OSM does not see (1 place in
+142), so Malabar draws Mar Thoma at a fifth of its non-Catholics. Thiruvananthapuram's Jacobite and
+Orthodox cells (13.7% in KMS, 1.4% of OSM places) are drawn as printed.
+
+**Not done.** `taxonomy/build_tree.py` stops on two `uk2021` labels (`Muslim: Sunni/Shi'a (Pew 2012)` are
+in none of the UK tables), another session's work, so the Mar Thoma promotion has not reached
+`religions.json`. The node already exists there as a leaf and India scatters and checks clean; rebuild the
+tree once the UK labels are fixed.

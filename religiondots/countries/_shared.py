@@ -42,6 +42,40 @@ def _column_of(note, key="parent_column"):
     return v or None
 
 
+def _swap_christian_split(df, cc, parent):
+    """Replace a country's undivided Christian rows with sources/wa_christian.py's split.
+
+    Seven West African countries, 2026-10-16 (unspecified_splits/westafrica.md). `df` is the
+    country's normalised file as read; the rows whose `source_category` is `parent` are dropped
+    and `data/normalized/<cc>_split.csv` is appended in their place. The split closes on the
+    parent cell unit by unit (asserted here as well as in the script), so every unit's total
+    is unchanged. Returns the frame with a boolean `split` column marking the new rows.
+
+    `parent` may be a list of cells when one file splits several (Malawi's two Christian
+    residuals, sources/ea_christian.py); the check is then on their sum per unit.
+    """
+    p = HERE / "data" / "normalized" / f"{cc}_split.csv"
+    if not p.exists():
+        raise SystemExit(f"{p.name} missing -- run `python sources/wa_christian.py {cc}` "
+                         f"(or sources/ea_christian.py for ke and mw)")
+    sp = pd.read_csv(p, dtype={"geo_id": str}, low_memory=False,
+                     keep_default_na=False, na_values=[""])
+    parents = [parent] if isinstance(parent, str) else list(parent)
+    if "parent_column" in "".join(sp["note"].astype(str).head(1)):
+        seen = set(sp["note"].map(_column_of))
+        if not seen <= set(parents):
+            raise SystemExit(f"{cc}_split.csv splits {sorted(seen)}, the country names {parents}")
+    par = df[df["source_category"].isin(parents)]
+    a = par.groupby(par["geo_id"].astype(str))["count"].sum().astype(int)
+    b = sp.groupby("geo_id")["count"].sum().astype(int).reindex(a.index)
+    if not (a == b).all():
+        raise SystemExit(f"{cc}_split.csv no longer closes on {cc}'s `{parent}` rows -- the base "
+                         f"file changed; re-run `python sources/wa_christian.py {cc}`")
+    out = pd.concat([df[~df["source_category"].isin(parents)].assign(split=False),
+                     sp.assign(split=True)], ignore_index=True)
+    return out
+
+
 def _add_roll(df, columns, key="parent_column"):
     """Attach the `roll` column: the node of each derived row's own source column."""
     col = df["note"].map(lambda n: _column_of(n, key))
@@ -405,6 +439,17 @@ def _foreign_share(cc, resolve, level):
     tot = both["cit"] + both["for"]
     share = (both["for"] / tot.where(tot > 0)).fillna(0.0)
     return {k: float(v) for k, v in share.items()}
+
+
+def _latam_split(cc, df):
+    """Pew 2014's Pentecostal (and in sv/pa Baptist) share inside the counted Protestant or
+    Evangelical bucket: Anita's ruling of 2026-10-16, `latam_split.py`. Loaded by path because
+    the religiondots root is not on sys.path for every caller (tools/ scripts load countries)."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("latam_split", HERE / "latam_split.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod.split(cc, df)
 
 
 # Every name above, underscored ones included, for the country files' star import.

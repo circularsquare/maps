@@ -1,0 +1,314 @@
+{
+  "batch": "shanxi-north",
+  "regions": [
+    {"n": 1, "key": "#dddcc6", "settled": "yanggao", "summary": "Yanggao, Yangyuan, Tianzhen, Zuoyun, Youyu.", "candidates": [], "notes": ""},
+    {"n": 2, "key": "#c3bf88", "settled": "datong", "summary": "Datong urban core.", "candidates": [], "notes": ""},
+    {"n": 3, "key": "#dcd9b3", "settled": "sang gan", "summary": "Nanjiao, Kuang, Huairen.", "candidates": [], "notes": ""},
+    {"n": 4, "key": "#e8e4c9", "settled": "yuxian", "summary": "Wei county (Hebei), Hunyuan, Lingqiu, Guangling.", "candidates": [], "notes": ""},
+    {"n": 5, "key": "#e7e4c4", "settled": "shuozhou", "summary": "Shuocheng, Ying, Shanyin, Pinglu.", "candidates": [], "notes": ""},
+    {"n": 6, "key": "#e5e1d2", "settled": "yanmen", "summary": "Yuanping, Fanzhi, Dai, Wutai.", "candidates": [], "notes": ""},
+    {
+      "n": 7, "key": "#e2d8c0", "settled": null,
+      "summary": "Guancen mountain country at the head of the Fen river: Gujiao, Lan, Jingle, Wuzhai, Loufan, Shenchi, Kelan, Ningwu. Eight small counties, none above 21%.",
+      "candidates": [
+        {
+          "name": "Guancen", "local": "管涔山", "origin": "mountain",
+          "meaning": "Name of the range whose main peak is Luya Shan; the Fen river rises on its south side.",
+          "fit": "The range sits on the Ningwu, Kelan and Wuzhai border, inside this region, and the Fen river runs on through Jingle, Loufan and Gujiao; a geographical name suits a region of many small counties.",
+          "recognisability": "Own zh-wiki article; 151 hits with Shanxi, top ones about this mountain.",
+          "source_url": "https://zh.wikipedia.org/wiki/管涔山",
+          "source_note": "位于山西省忻州市宁武县、岢岚县和五寨县交界处...为山西境内主要河流汾河的发源地",
+          "rating": 4, "status": "suggested"
+        },
+        {
+          "name": "Loufan", "local": "娄烦", "origin": "county",
+          "meaning": "From the Loufan, a Di/Rong people of the north Shanxi highlands defeated by Zhao Wuling; the old Loufan county was seated at Ningwu.",
+          "fit": "Today's Loufan county holds only 9.5% of the people, but the old Loufan commandery and county were seated inside this region (CHGIS).",
+          "recognisability": "Own county article; the people are named in Warring States history.",
+          "source_url": "https://zh.wikipedia.org/wiki/阳高县",
+          "source_note": "战国时期，赵武灵王北征，击溃林胡、楼烦 (history section; historical Loufan seats per CHGIS list in sources.md)",
+          "rating": 3, "status": "suggested"
+        },
+        {
+          "name": "Gujiao", "local": "古交市", "origin": "city",
+          "meaning": "Named for the 'old crossing' town of Gujiao, which gave Jiaocheng county its name in 596.",
+          "fit": "Largest unit at 21% of people and a coal-city; but the region is eight small counties, so one name feels like a part.",
+          "recognisability": "Current county-level city.",
+          "source_url": "",
+          "source_note": "",
+          "rating": 3, "status": "suggested"
+        }
+      ],
+      "notes": "Region is Gujiao, Lan, Jingle, Wuzhai, Loufan, Shenchi, Kelan, Ningwu and bits of Hequ and Baode. "
+    },
+    {"n": 8, "key": "#ddd7bf", "settled": "xinzhou", "summary": "Xinfu, Dingxiang, Wutai, Yangqu.", "candidates": [], "notes": ""},
+    {
+      "n": 9, "key": "#e2dbc4", "settled": null,
+      "summary": "Western Lüliang slope down to the Yellow River: Lin, Xing, Fangshan, with Jia and Wubu in Shaanxi.",
+      "candidates": [
+        {
+          "name": "Guandishan", "local": "关帝山", "origin": "mountain",
+          "meaning": "Guandi (Lord Guan) Mountain, the main peak of the Lüliang range at 2831 m.",
+          "fit": "Lies mostly in Fangshan and neighbouring counties; Fangshan is only 11% of the region, so fit is partial.",
+          "recognisability": "No own article, but 150 hits with Shanxi, many about the Lüliang range.",
+          "source_url": "https://zh.wikipedia.org/wiki/吕梁山",
+          "source_note": "主峰关帝山，海拔2831公尺; also 方山县: 地处吕梁山中部，最高山峰为关帝山，海拔2830米",
+          "rating": 3, "status": "suggested"
+        },
+        {
+          "name": "Qiushui", "local": "湫水河", "origin": "river",
+          "meaning": "Qiu river, a Yellow River tributary that flows through Lin county.",
+          "fit": "Runs through Lin county, the largest unit at 46%, and the Sanjiao area; a minor river.",
+          "recognisability": "Own article but only 6 hits.",
+          "source_url": "https://zh.wikipedia.org/wiki/湫水河",
+          "source_note": "地處三川河、湫水河流域",
+          "rating": 2, "status": "suggested"
+        },
+        {
+          "name": "Lin", "local": "临县", "origin": "county",
+          "meaning": "County 'by the river', created 1369; the biggest unit.",
+          "fit": "46% of the region's people and 99.6% of the county, but a one-syllable name reads as a fragment.",
+          "recognisability": "",
+          "source_url": "",
+          "source_note": "",
+          "status": "rejected"
+        }
+      ],
+      "notes": "The Lüliang name goes to region 20, which holds the prefecture seat Lishi."
+    },
+    {
+      "n": 10, "key": "#d0be8c", "settled": null,
+      "summary": "Northern Taiyuan: Jiancaoping, Xinghualing and part of Yingze.",
+      "candidates": [
+        {
+          "name": "Yangqu", "local": "阳曲", "origin": "historical",
+          "meaning": "The Han county Yangqu (215 BC to 528), seated at Yangqu town in today's Jiancaoping district; later Taiyuan's city county.",
+          "fit": "Old seat lies in this region; today's Yangqu county is mostly in region 8 (xinzhou).",
+          "recognisability": "Own zh-wiki article.",
+          "source_url": "https://zh.wikipedia.org/wiki/阳曲县",
+          "source_note": "CHGIS: 阳曲县 (县, 215-528) 今山西太原市尖草坪区阳曲镇",
+          "rating": 3, "status": "suggested"
+        },
+        {
+          "name": "Jiancaoping", "local": "尖草坪", "origin": "county",
+          "meaning": "Sharp-grass flat: the district name.",
+          "fit": "59% of the region's people and 90% of the district.",
+          "recognisability": "Current district.",
+          "source_url": "",
+          "source_note": "",
+          "rating": 3, "status": "suggested"
+        }
+      ],
+      "notes": "Yangqu would sit beside a real Yangqu county in region 8; Jiancaoping avoids that."
+    },
+    {"n": 11, "key": "#e0d3ac", "settled": "yang quan", "summary": "Yangquan.", "candidates": [], "notes": ""},
+    {
+      "n": 12, "key": "#a69460", "settled": null,
+      "summary": "Taiyuan old centre: Yingze and Xinghualing districts.",
+      "candidates": [
+        {
+          "name": "Taiyuan", "local": "太原", "origin": "city",
+          "meaning": "'Great plain': the Zuo Zhuan name for the land the god Taigai cleared by taming the Fen river.",
+          "fit": "Holds the old city centre of a 3.9M city.",
+          "recognisability": "Provincial capital.",
+          "source_url": "https://zh.wikipedia.org/wiki/太原市",
+          "source_note": "“太原”一名始见于春秋时期。《左传·昭公元年》",
+          "rating": 5, "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 13, "key": "#c8b484", "settled": null,
+      "summary": "West Taiyuan: Wanbailin and Jinyuan, with the Jinci springs and the ancient city site.",
+      "candidates": [
+        {
+          "name": "Jinyang", "local": "晋阳", "origin": "historical",
+          "meaning": "'North of the Jin water': the city founded in 497 BC, capital of several dynasties and old name of Taiyuan, burned in 979.",
+          "fit": "Ancient city lies in Jinyuan district, the second unit here, which is named for the Jin spring at Jinci.",
+          "recognisability": "Taiyuan's classical name.",
+          "source_url": "https://zh.wikipedia.org/wiki/太原市",
+          "source_note": "古称晋阳；遂命“晋阳”; 西南角的晋阳古城; 晋源区因晋水源头之所在的晋祠而得名",
+          "rating": 5, "status": "suggested"
+        },
+        {
+          "name": "Wanbailin", "local": "万柏林", "origin": "county",
+          "meaning": "'Ten thousand cypress grove': Yan Xishan planned a cypress cemetery there.",
+          "fit": "70% of the region, 98% of the district.",
+          "recognisability": "Current district.",
+          "source_url": "",
+          "source_note": "",
+          "rating": 3, "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 14, "key": "#b19d76", "settled": null,
+      "summary": "South Taiyuan: Xiaodian district.",
+      "candidates": [
+        {
+          "name": "Xiaodian", "local": "小店", "origin": "county",
+          "meaning": "'Small inn': the town and district name.",
+          "fit": "96% of the region's people.",
+          "recognisability": "Current district.",
+          "source_url": "",
+          "source_note": "",
+          "rating": 3, "status": "suggested"
+        },
+        {
+          "name": "Pingjin", "local": "平晋", "origin": "historical",
+          "meaning": "'Pacify Jin': the Song county made in 979, after the Song destroyed Jinyang.",
+          "fit": "Seat was at Chengxi village in Xiaodian; county ran to 1370.",
+          "recognisability": "Little known; only in district histories.",
+          "source_url": "https://zh.wikipedia.org/wiki/小店区",
+          "source_note": "CHGIS: 平晋县 (县, 979-1370) 今山西太原市小店区城西村一带; Wanbailin article: 宋朝、金朝、元朝时期，当地为平晋县地",
+          "rating": 2, "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 15, "key": "#cabe9e", "settled": null,
+      "summary": "Yuci, the Jinzhong seat.",
+      "candidates": [
+        {
+          "name": "Yuci", "local": "榆次", "origin": "city",
+          "meaning": "Elm-tree stop, county since 247 BC.",
+          "fit": "86% of the people; Jinzhong's seat.",
+          "recognisability": "Known city.",
+          "source_url": "",
+          "source_note": "",
+          "rating": 5, "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {"n": 16, "key": "#eae4d3", "settled": "taihang", "summary": "Yu, Xiyang, Shouyang, Zuoquan, Heshun, Yushe.", "candidates": [], "notes": ""},
+    {
+      "n": 17, "key": "#dfceae", "settled": null,
+      "summary": "Qingxu, Taigu, part of Yuci and Jinyuan.",
+      "candidates": [
+        {
+          "name": "Taigu", "local": "太谷", "origin": "county",
+          "meaning": "'Great valley': county since 598; home of Shanxi merchant banks.",
+          "fit": "26% of people and 93% of the county.",
+          "recognisability": "Known for Jin merchants.",
+          "source_url": "",
+          "source_note": "",
+          "rating": 4, "status": "suggested"
+        },
+        {
+          "name": "Qingxu", "local": "清徐", "origin": "county",
+          "meaning": "Merger of Qingyuan and Xugou counties; the vinegar town.",
+          "fit": "Largest unit at 32%, nearly all the county.",
+          "recognisability": "Known for vinegar.",
+          "source_url": "",
+          "source_note": "",
+          "rating": 4, "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 18, "key": "#e4dabc", "settled": null,
+      "summary": "Fenyang, Wenshui, Jiaocheng.",
+      "candidates": [
+        {
+          "name": "Fenyang", "local": "汾阳", "origin": "city",
+          "meaning": "'Sunny side of the Fen river'; home of Fenjiu.",
+          "fit": "38% of people; the prefecture seat.",
+          "recognisability": "Fenjiu.",
+          "source_url": "",
+          "source_note": "",
+          "rating": 5, "status": "suggested"
+        },
+        {
+          "name": "Fenzhou", "local": "汾州", "origin": "prefecture",
+          "meaning": "Fen prefecture, seated at Fenyang for 980 years.",
+          "fit": "Seat at Fenyang; covered Wenshui and Jiaocheng too.",
+          "recognisability": "Own historical name; Fenyang article.",
+          "source_url": "https://zh.wikipedia.org/wiki/汾阳市",
+          "source_note": "CHGIS: 汾州 (州, 526-1594) 今山西汾阳市; 汾州府 1595-1911",
+          "rating": 4, "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 19, "key": "#e2d5bd", "settled": null,
+      "summary": "Pingyao, Jiexiu, Qi.",
+      "candidates": [
+        {
+          "name": "Pingyao", "local": "平遥", "origin": "county",
+          "meaning": "County since 448; its walled old town is a World Heritage site.",
+          "fit": "44% of people.",
+          "recognisability": "Very high.",
+          "source_url": "",
+          "source_note": "",
+          "rating": 5, "status": "suggested"
+        },
+        {
+          "name": "Jiexiu", "local": "介休", "origin": "city",
+          "meaning": "Where Jie Zitui is said to have died; from Jie's 'rest'.",
+          "fit": "27% of people, 70% of the city.",
+          "recognisability": "Known city.",
+          "source_url": "",
+          "source_note": "",
+          "rating": 3, "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 20, "key": "#dfd9cc", "settled": null,
+      "summary": "Lishi (Lüliang's seat), Liulin, Zhongyang, Shilou, Xi, Yonghe.",
+      "candidates": [
+        {
+          "name": "Lüliang", "local": "吕梁", "origin": "prefecture",
+          "meaning": "Named for the Lüliang range; the prefecture.",
+          "fit": "Holds the prefecture seat Lishi (38% of people).",
+          "recognisability": "Known prefecture and range.",
+          "source_url": "https://zh.wikipedia.org/wiki/吕梁市",
+          "source_note": "市人民政府驻离石区永宁中路",
+          "rating": 4, "status": "suggested"
+        },
+        {
+          "name": "Shizhou", "local": "石州", "origin": "historical",
+          "meaning": "Stone prefecture, seated at Lishi from 577 to 1260.",
+          "fit": "Seat lies at Lishi in this region.",
+          "recognisability": "Own article.",
+          "source_url": "https://zh.wikipedia.org/wiki/石州_(北周)",
+          "source_note": "CHGIS: 石州 (州, 577-1260) 今山西离石县",
+          "rating": 3, "status": "suggested"
+        }
+      ],
+      "notes": "Lüliang range runs through several regions."
+    },
+    {
+      "n": 21, "key": "#e7ddbc", "settled": null,
+      "summary": "Xiaoyi, Lingshi, Jiexiu part, Jiaokou, Fenxi.",
+      "candidates": [
+        {
+          "name": "Xiaoyi", "local": "孝义", "origin": "city",
+          "meaning": "'Filial and righteous'.",
+          "fit": "42% of people.",
+          "recognisability": "Known city.",
+          "source_url": "",
+          "source_note": "",
+          "rating": 4, "status": "suggested"
+        },
+        {
+          "name": "Lingshi", "local": "灵石", "origin": "county",
+          "meaning": "'Spirit stone': county since 590, with the Lingshi gorge.",
+          "fit": "25% of people, whole county.",
+          "recognisability": "Known pass.",
+          "source_url": "",
+          "source_note": "",
+          "rating": 3, "status": "suggested"
+        }
+      ],
+      "notes": ""
+    }
+  ]
+}

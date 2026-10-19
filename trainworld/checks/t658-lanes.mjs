@@ -51,6 +51,9 @@ async function open(url, shade) {
   return { ctx, page };
 }
 
+// a pixel differs when a channel is more than one level off: a station quad's size (T-713 took the
+// crowd's bulge out of it) moves its interpolated edge coverage by one level in a channel
+const differs = (a, b, k) => Math.abs(a[k] - b[k]) > 1 || Math.abs(a[k + 1] - b[k + 1]) > 1 || Math.abs(a[k + 2] - b[k + 2]) > 1 || Math.abs(a[k + 3] - b[k + 3]) > 1;
 const go = async (page, at, zoom) => {
   await page.evaluate(([c, z]) => window.tw.map.jumpTo({ center: c, zoom: z }), [at, zoom]);
   await page.waitForTimeout(1800);
@@ -137,14 +140,14 @@ try {
     for (let tries = 0; tries < 6; tries++) {
       [a, b] = [Buffer.from(await pixels(dev.page), 'base64'), Buffer.from(await pixels(ref.page), 'base64')];
       diff = 0;
-      for (let k = 0; k < Math.min(a.length, b.length); k += 4) if (a[k] !== b[k] || a[k + 1] !== b[k + 1] || a[k + 2] !== b[k + 2] || a[k + 3] !== b[k + 3]) diff++;
+      for (let k = 0; k < Math.min(a.length, b.length); k += 4) if (differs(a, b, k)) diff++;
       if (!diff) break;
       await dev.page.waitForTimeout(10000);
     }
     diff = 0;
     const mask = new Uint8Array(a.length);
     for (let k = 0; k < Math.min(a.length, b.length); k += 4) {
-      if (a[k] !== b[k] || a[k + 1] !== b[k + 1] || a[k + 2] !== b[k + 2] || a[k + 3] !== b[k + 3]) { diff++; mask[k] = 255; mask[k + 3] = 255; }
+      if (differs(a, b, k)) { diff++; mask[k] = 255; mask[k + 3] = 255; }
       else if (a[k + 3]) { mask[k] = mask[k + 1] = mask[k + 2] = 160; mask[k + 3] = 255; }
     }
     if (diff) {

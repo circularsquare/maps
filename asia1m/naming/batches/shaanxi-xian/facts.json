@@ -1,0 +1,3213 @@
+{
+ "name": "shaanxi-xian",
+ "province": "Shaanxi",
+ "prefectures": [
+  "Xi'an",
+  "Xianyang"
+ ],
+ "tiles": [
+  {
+   "tag": "1",
+   "x": 6340,
+   "y": 3073,
+   "w": 588,
+   "h": 597,
+   "scale": 2,
+   "regions": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+   ]
+  }
+ ],
+ "regions": [
+  {
+   "key": "#ebeec8",
+   "color": "#ebeec8",
+   "lon": 108.2646,
+   "lat": 35.1414,
+   "bbox": [
+    6540,
+    3273,
+    6638,
+    3364
+   ],
+   "area_px": 5563,
+   "people": 1096084,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Bin",
+     "local": "彬县",
+     "prefecture": "Xianyang",
+     "prefecture_local": "咸阳市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.285,
+     "area_share": 0.194,
+     "cover": 1.0
+    },
+    {
+     "name": "Xunyi",
+     "local": "旬邑县",
+     "prefecture": "Xianyang",
+     "prefecture_local": "咸阳市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.239,
+     "area_share": 0.288,
+     "cover": 0.999
+    },
+    {
+     "name": "Zhangwu",
+     "local": "长武县",
+     "prefecture": "Xianyang",
+     "prefecture_local": "咸阳市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.144,
+     "area_share": 0.09,
+     "cover": 0.975
+    },
+    {
+     "name": "Zhengning",
+     "local": "正宁县",
+     "prefecture": "Qingyang",
+     "prefecture_local": "庆阳市",
+     "province": "甘肃省",
+     "country": "China",
+     "people_share": 0.14,
+     "area_share": 0.199,
+     "cover": 0.929
+    },
+    {
+     "name": "Chunhua",
+     "local": "淳化县",
+     "prefecture": "Xianyang",
+     "prefecture_local": "咸阳市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.123,
+     "area_share": 0.111,
+     "cover": 0.682
+    },
+    {
+     "name": "Yongshou",
+     "local": "永寿县",
+     "prefecture": "Xianyang",
+     "prefecture_local": "咸阳市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.05,
+     "area_share": 0.067,
+     "cover": 0.303
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shaanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.852,
+     "cover": 0.024
+    },
+    {
+     "level": "prefecture",
+     "name": "Xianyang",
+     "local": "咸阳市",
+     "province": "Shaanxi",
+     "country": "China",
+     "people_share": 0.845,
+     "cover": 0.179
+    },
+    {
+     "level": "province",
+     "name": "Gansu",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.148,
+     "cover": 0.006
+    },
+    {
+     "level": "prefecture",
+     "name": "Qingyang",
+     "local": "庆阳市",
+     "province": "Gansu",
+     "country": "China",
+     "people_share": 0.136,
+     "cover": 0.073
+    }
+   ],
+   "towns": [
+    {
+     "town": "太村镇",
+     "county": "旬邑县",
+     "city": "咸阳市",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "城关镇",
+     "county": "彬县",
+     "city": "咸阳市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "义门镇",
+     "county": "彬县",
+     "city": "咸阳市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "亭口镇",
+     "county": "长武县",
+     "city": "咸阳市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "土桥镇",
+     "county": "旬邑县",
+     "city": "咸阳市",
+     "people_share": 0.033,
+     "cover": 1.0
+    },
+    {
+     "town": "北极镇",
+     "county": "彬县",
+     "city": "咸阳市",
+     "people_share": 0.03,
+     "cover": 1.0
+    },
+    {
+     "town": "炭店镇",
+     "county": "彬县",
+     "city": "咸阳市",
+     "people_share": 0.03,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Binxian",
+     "admin": "Shaanxi",
+     "pop": 323256
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#eeeebf",
+     "border_px": 1189
+    },
+    {
+     "key": "#e8e4ad",
+     "border_px": 881
+    },
+    {
+     "key": "#eaf0b0",
+     "border_px": 708
+    },
+    {
+     "key": "#f3edda",
+     "border_px": 544
+    },
+    {
+     "key": "#e4eed5",
+     "border_px": 466
+    },
+    {
+     "key": "#e8eeb5",
+     "border_px": 303
+    },
+    {
+     "key": "#f0ea99",
+     "border_px": 259
+    },
+    {
+     "key": "#dae5ab",
+     "border_px": 166
+    }
+   ],
+   "text_px": 0,
+   "n": 1,
+   "thumb": {
+    "x0": 6500,
+    "y0": 3233,
+    "k": 2.0,
+    "w": 356,
+    "h": 342
+   }
+  },
+  {
+   "key": "#f0ea99",
+   "color": "#f0ea99",
+   "lon": 108.7608,
+   "lat": 34.6015,
+   "bbox": [
+    6615,
+    3349,
+    6664,
+    3405
+   ],
+   "area_px": 1510,
+   "people": 1113562,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Jingyang",
+     "local": "泾阳县",
+     "prefecture": "Xianyang",
+     "prefecture_local": "咸阳市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.43,
+     "area_share": 0.462,
+     "cover": 0.999
+    },
+    {
+     "name": "Weicheng",
+     "local": "渭城区",
+     "prefecture": "Xianyang",
+     "prefecture_local": "咸阳市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.227,
+     "area_share": 0.15,
+     "cover": 0.705
+    },
+    {
+     "name": "Gaoling",
+     "local": "高陵县",
+     "prefecture": "Xi'an",
+     "prefecture_local": "西安市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.152,
+     "area_share": 0.057,
+     "cover": 0.485
+    },
+    {
+     "name": "Qindou",
+     "local": "秦都区",
+     "prefecture": "Xianyang",
+     "prefecture_local": "咸阳市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.06,
+     "area_share": 0.032,
+     "cover": 0.117
+    },
+    {
+     "name": "Chunhua",
+     "local": "淳化县",
+     "prefecture": "Xianyang",
+     "prefecture_local": "咸阳市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.056,
+     "area_share": 0.178,
+     "cover": 0.315
+    },
+    {
+     "name": "Liquan",
+     "local": "礼泉县",
+     "prefecture": "Xianyang",
+     "prefecture_local": "咸阳市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.054,
+     "area_share": 0.066,
+     "cover": 0.139
+    },
+    {
+     "name": "Sanyuan",
+     "local": "三原县",
+     "prefecture": "Xianyang",
+     "prefecture_local": "咸阳市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.02,
+     "area_share": 0.053,
+     "cover": 0.053
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shaanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.029
+    },
+    {
+     "level": "prefecture",
+     "name": "Xianyang",
+     "local": "咸阳市",
+     "province": "Shaanxi",
+     "country": "China",
+     "people_share": 0.841,
+     "cover": 0.181
+    },
+    {
+     "level": "prefecture",
+     "name": "Xi'an",
+     "local": "西安市",
+     "province": "Shaanxi",
+     "country": "China",
+     "people_share": 0.159,
+     "cover": 0.019
+    }
+   ],
+   "towns": [
+    {
+     "town": "泾渭街道",
+     "county": "高陵县",
+     "city": "西安市",
+     "people_share": 0.107,
+     "cover": 0.992
+    },
+    {
+     "town": "周陵街道",
+     "county": "渭城区",
+     "city": "咸阳市",
+     "people_share": 0.103,
+     "cover": 0.968
+    },
+    {
+     "town": "泾干镇",
+     "county": "泾阳县",
+     "city": "咸阳市",
+     "people_share": 0.054,
+     "cover": 1.0
+    },
+    {
+     "town": "三渠镇",
+     "county": "泾阳县",
+     "city": "咸阳市",
+     "people_share": 0.049,
+     "cover": 1.0
+    },
+    {
+     "town": "云阳镇",
+     "county": "泾阳县",
+     "city": "咸阳市",
+     "people_share": 0.047,
+     "cover": 1.0
+    },
+    {
+     "town": "安吴镇",
+     "county": "泾阳县",
+     "city": "咸阳市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "崇皇街道",
+     "county": "高陵县",
+     "city": "西安市",
+     "people_share": 0.042,
+     "cover": 0.96
+    },
+    {
+     "town": "马庄镇",
+     "county": "秦都区",
+     "city": "咸阳市",
+     "people_share": 0.04,
+     "cover": 0.944
+    },
+    {
+     "town": "高庄镇",
+     "county": "泾阳县",
+     "city": "咸阳市",
+     "people_share": 0.039,
+     "cover": 1.0
+    },
+    {
+     "town": "正阳街道",
+     "county": "渭城区",
+     "city": "咸阳市",
+     "people_share": 0.039,
+     "cover": 0.935
+    },
+    {
+     "town": "中张镇",
+     "county": "泾阳县",
+     "city": "咸阳市",
+     "people_share": 0.036,
+     "cover": 1.0
+    },
+    {
+     "town": "兴隆镇",
+     "county": "泾阳县",
+     "city": "咸阳市",
+     "people_share": 0.036,
+     "cover": 0.999
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#eaf0b0",
+     "border_px": 524
+    },
+    {
+     "key": "#ebda88",
+     "border_px": 453
+    },
+    {
+     "key": "#e8e4ad",
+     "border_px": 411
+    },
+    {
+     "key": "#faf06b",
+     "border_px": 285
+    },
+    {
+     "key": "#ebeec8",
+     "border_px": 259
+    },
+    {
+     "key": "#ebf389",
+     "border_px": 140
+    },
+    {
+     "key": "#e5f060",
+     "border_px": 119
+    },
+    {
+     "key": "#f0dd6b",
+     "border_px": 87
+    }
+   ],
+   "text_px": 0,
+   "n": 2,
+   "thumb": {
+    "x0": 6575,
+    "y0": 3309,
+    "k": 3.0,
+    "w": 387,
+    "h": 408
+   }
+  },
+  {
+   "key": "#ebda88",
+   "color": "#ebda88",
+   "lon": 109.1796,
+   "lat": 34.5943,
+   "bbox": [
+    6648,
+    3359,
+    6694,
+    3392
+   ],
+   "area_px": 1011,
+   "people": 1068263,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Lintong",
+     "local": "临潼区",
+     "prefecture": "Xi'an",
+     "prefecture_local": "西安市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.307,
+     "area_share": 0.365,
+     "cover": 0.45
+    },
+    {
+     "name": "Sanyuan",
+     "local": "三原县",
+     "prefecture": "Xianyang",
+     "prefecture_local": "咸阳市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.292,
+     "area_share": 0.258,
+     "cover": 0.753
+    },
+    {
+     "name": "Yanliang",
+     "local": "阎良区",
+     "prefecture": "Xi'an",
+     "prefecture_local": "西安市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.242,
+     "area_share": 0.209,
+     "cover": 0.943
+    },
+    {
+     "name": "Gaoling",
+     "local": "高陵县",
+     "prefecture": "Xi'an",
+     "prefecture_local": "西安市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.156,
+     "area_share": 0.16,
+     "cover": 0.479
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shaanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.028
+    },
+    {
+     "level": "prefecture",
+     "name": "Xi'an",
+     "local": "西安市",
+     "province": "Shaanxi",
+     "country": "China",
+     "people_share": 0.724,
+     "cover": 0.084
+    },
+    {
+     "level": "prefecture",
+     "name": "Xianyang",
+     "local": "咸阳市",
+     "province": "Shaanxi",
+     "country": "China",
+     "people_share": 0.271,
+     "cover": 0.056
+    }
+   ],
+   "towns": [
+    {
+     "town": "城关镇",
+     "county": "三原县",
+     "city": "咸阳市",
+     "people_share": 0.143,
+     "cover": 0.984
+    },
+    {
+     "town": "振兴街道",
+     "county": "阎良区",
+     "city": "西安市",
+     "people_share": 0.061,
+     "cover": 0.87
+    },
+    {
+     "town": "鹿苑街道",
+     "county": "高陵县",
+     "city": "西安市",
+     "people_share": 0.057,
+     "cover": 1.0
+    },
+    {
+     "town": "北田街道",
+     "county": "临潼区",
+     "city": "西安市",
+     "people_share": 0.052,
+     "cover": 1.0
+    },
+    {
+     "town": "关山镇",
+     "county": "阎良区",
+     "city": "西安市",
+     "people_share": 0.047,
+     "cover": 0.894
+    },
+    {
+     "town": "张卜镇",
+     "county": "高陵县",
+     "city": "西安市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "大程镇",
+     "county": "三原县",
+     "city": "咸阳市",
+     "people_share": 0.035,
+     "cover": 0.921
+    },
+    {
+     "town": "相桥街道",
+     "county": "临潼区",
+     "city": "西安市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "任留街道",
+     "county": "临潼区",
+     "city": "西安市",
+     "people_share": 0.034,
+     "cover": 1.0
+    },
+    {
+     "town": "凤凰路街道",
+     "county": "阎良区",
+     "city": "西安市",
+     "people_share": 0.034,
+     "cover": 1.0
+    },
+    {
+     "town": "何寨街道",
+     "county": "临潼区",
+     "city": "西安市",
+     "people_share": 0.032,
+     "cover": 0.957
+    },
+    {
+     "town": "栎阳街道",
+     "county": "临潼区",
+     "city": "西安市",
+     "people_share": 0.031,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f0ea99",
+     "border_px": 453
+    },
+    {
+     "key": "#eee299",
+     "border_px": 425
+    },
+    {
+     "key": "#e8e4ad",
+     "border_px": 361
+    },
+    {
+     "key": "#f0dd6b",
+     "border_px": 322
+    },
+    {
+     "key": "#e8dead",
+     "border_px": 187
+    }
+   ],
+   "text_px": 0,
+   "n": 3,
+   "thumb": {
+    "x0": 6608,
+    "y0": 3319,
+    "k": 3.0,
+    "w": 378,
+    "h": 339
+   }
+  },
+  {
+   "key": "#eaf0b0",
+   "color": "#eaf0b0",
+   "lon": 108.2841,
+   "lat": 34.5875,
+   "bbox": [
+    6572,
+    3357,
+    6626,
+    3408
+   ],
+   "area_px": 2125,
+   "people": 1036302,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Qian",
+     "local": "乾县",
+     "prefecture": "Xianyang",
+     "prefecture_local": "咸阳市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.511,
+     "area_share": 0.412,
+     "cover": 0.958
+    },
+    {
+     "name": "Liquan",
+     "local": "礼泉县",
+     "prefecture": "Xianyang",
+     "prefecture_local": "咸阳市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.349,
+     "area_share": 0.376,
+     "cover": 0.839
+    },
+    {
+     "name": "Yongshou",
+     "local": "永寿县",
+     "prefecture": "Xianyang",
+     "prefecture_local": "咸阳市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.119,
+     "area_share": 0.197,
+     "cover": 0.683
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shaanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.027
+    },
+    {
+     "level": "prefecture",
+     "name": "Xianyang",
+     "local": "咸阳市",
+     "province": "Shaanxi",
+     "country": "China",
+     "people_share": 0.999,
+     "cover": 0.2
+    }
+   ],
+   "towns": [
+    {
+     "town": "城关镇",
+     "county": "礼泉县",
+     "city": "咸阳市",
+     "people_share": 0.114,
+     "cover": 1.0
+    },
+    {
+     "town": "城关镇",
+     "county": "乾县",
+     "city": "咸阳市",
+     "people_share": 0.102,
+     "cover": 1.0
+    },
+    {
+     "town": "监军镇",
+     "county": "永寿县",
+     "city": "咸阳市",
+     "people_share": 0.051,
+     "cover": 1.0
+    },
+    {
+     "town": "大杨镇",
+     "county": "乾县",
+     "city": "咸阳市",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "薛录镇",
+     "county": "乾县",
+     "city": "咸阳市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "昭陵镇",
+     "county": "礼泉县",
+     "city": "咸阳市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "灵源镇",
+     "county": "乾县",
+     "city": "咸阳市",
+     "people_share": 0.033,
+     "cover": 1.0
+    },
+    {
+     "town": "史德镇",
+     "county": "礼泉县",
+     "city": "咸阳市",
+     "people_share": 0.033,
+     "cover": 0.854
+    },
+    {
+     "town": "梁村镇",
+     "county": "乾县",
+     "city": "咸阳市",
+     "people_share": 0.033,
+     "cover": 0.95
+    },
+    {
+     "town": "临平镇",
+     "county": "乾县",
+     "city": "咸阳市",
+     "people_share": 0.031,
+     "cover": 0.933
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#e8eeb5",
+     "border_px": 788
+    },
+    {
+     "key": "#ebeec8",
+     "border_px": 708
+    },
+    {
+     "key": "#ebf389",
+     "border_px": 592
+    },
+    {
+     "key": "#f0ea99",
+     "border_px": 524
+    }
+   ],
+   "text_px": 0,
+   "n": 4,
+   "thumb": {
+    "x0": 6532,
+    "y0": 3317,
+    "k": 3.0,
+    "w": 402,
+    "h": 393
+   }
+  },
+  {
+   "key": "#f0dd6b",
+   "color": "#f0dd6b",
+   "lon": 109.1613,
+   "lat": 34.3719,
+   "bbox": [
+    6661,
+    3387,
+    6689,
+    3414
+   ],
+   "area_px": 461,
+   "people": 563543,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Lintong",
+     "local": "临潼区",
+     "prefecture": "Xi'an",
+     "prefecture_local": "西安市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.553,
+     "area_share": 0.555,
+     "cover": 0.427
+    },
+    {
+     "name": "Baqiao",
+     "local": "灞桥区",
+     "prefecture": "Xi'an",
+     "prefecture_local": "西安市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.422,
+     "area_share": 0.403,
+     "cover": 0.326
+    },
+    {
+     "name": "Gaoling",
+     "local": "高陵县",
+     "prefecture": "Xi'an",
+     "prefecture_local": "西安市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.022,
+     "area_share": 0.035,
+     "cover": 0.036
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shaanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.015
+    },
+    {
+     "level": "prefecture",
+     "name": "Xi'an",
+     "local": "西安市",
+     "province": "Shaanxi",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.061
+    }
+   ],
+   "towns": [
+    {
+     "town": "席王街道",
+     "county": "灞桥区",
+     "city": "西安市",
+     "people_share": 0.144,
+     "cover": 0.705
+    },
+    {
+     "town": "秦陵街道",
+     "county": "临潼区",
+     "city": "西安市",
+     "people_share": 0.123,
+     "cover": 1.0
+    },
+    {
+     "town": "新丰街道",
+     "county": "临潼区",
+     "city": "西安市",
+     "people_share": 0.098,
+     "cover": 0.98
+    },
+    {
+     "town": "新筑街道",
+     "county": "灞桥区",
+     "city": "西安市",
+     "people_share": 0.088,
+     "cover": 0.846
+    },
+    {
+     "town": "斜口街道",
+     "county": "临潼区",
+     "city": "西安市",
+     "people_share": 0.086,
+     "cover": 1.0
+    },
+    {
+     "town": "行者街道",
+     "county": "临潼区",
+     "city": "西安市",
+     "people_share": 0.084,
+     "cover": 0.954
+    },
+    {
+     "town": "新合街道",
+     "county": "灞桥区",
+     "city": "西安市",
+     "people_share": 0.082,
+     "cover": 0.982
+    },
+    {
+     "town": "灞桥街道",
+     "county": "灞桥区",
+     "city": "西安市",
+     "people_share": 0.066,
+     "cover": 1.0
+    },
+    {
+     "town": "骊山街道",
+     "county": "临潼区",
+     "city": "西安市",
+     "people_share": 0.058,
+     "cover": 1.0
+    },
+    {
+     "town": "代王街道",
+     "county": "临潼区",
+     "city": "西安市",
+     "people_share": 0.05,
+     "cover": 0.945
+    },
+    {
+     "town": "西泉街道",
+     "county": "临潼区",
+     "city": "西安市",
+     "people_share": 0.039,
+     "cover": 0.961
+    },
+    {
+     "town": "洪庆街道",
+     "county": "灞桥区",
+     "city": "西安市",
+     "people_share": 0.034,
+     "cover": 0.995
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#ebda88",
+     "border_px": 322
+    },
+    {
+     "key": "#ede696",
+     "border_px": 319
+    },
+    {
+     "key": "#eee299",
+     "border_px": 293
+    },
+    {
+     "key": "#faf06b",
+     "border_px": 134
+    },
+    {
+     "key": "#e8dc43",
+     "border_px": 95
+    },
+    {
+     "key": "#f0ea99",
+     "border_px": 87
+    }
+   ],
+   "text_px": 0,
+   "n": 5,
+   "thumb": {
+    "x0": 6621,
+    "y0": 3347,
+    "k": 3.0,
+    "w": 324,
+    "h": 321
+   }
+  },
+  {
+   "key": "#faf06b",
+   "color": "#faf06b",
+   "lon": 108.9102,
+   "lat": 34.3635,
+   "bbox": [
+    6642,
+    3395,
+    6661,
+    3408
+   ],
+   "area_px": 176,
+   "people": 465537,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Weiyang",
+     "local": "未央区",
+     "prefecture": "Xi'an",
+     "prefecture_local": "西安市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.962,
+     "area_share": 0.932,
+     "cover": 0.419
+    },
+    {
+     "name": "Baqiao",
+     "local": "灞桥区",
+     "prefecture": "Xi'an",
+     "prefecture_local": "西安市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.019,
+     "area_share": 0.023,
+     "cover": 0.012
+    },
+    {
+     "name": "Qindou",
+     "local": "秦都区",
+     "prefecture": "Xianyang",
+     "prefecture_local": "咸阳市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.01,
+     "area_share": 0.023,
+     "cover": 0.008
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shaanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.012
+    },
+    {
+     "level": "prefecture",
+     "name": "Xi'an",
+     "local": "西安市",
+     "province": "Shaanxi",
+     "country": "China",
+     "people_share": 0.99,
+     "cover": 0.05
+    }
+   ],
+   "towns": [
+    {
+     "town": "谭家街道",
+     "county": "未央区",
+     "city": "西安市",
+     "people_share": 0.218,
+     "cover": 1.0
+    },
+    {
+     "town": "汉城街道",
+     "county": "未央区",
+     "city": "西安市",
+     "people_share": 0.205,
+     "cover": 0.86
+    },
+    {
+     "town": "六村堡街道",
+     "county": "未央区",
+     "city": "西安市",
+     "people_share": 0.176,
+     "cover": 1.0
+    },
+    {
+     "town": "未央湖街道",
+     "county": "未央区",
+     "city": "西安市",
+     "people_share": 0.11,
+     "cover": 0.952
+    },
+    {
+     "town": "建章路街道",
+     "county": "未央区",
+     "city": "西安市",
+     "people_share": 0.079,
+     "cover": 1.0
+    },
+    {
+     "town": "草滩街道",
+     "county": "未央区",
+     "city": "西安市",
+     "people_share": 0.056,
+     "cover": 1.0
+    },
+    {
+     "town": "徐家湾街道",
+     "county": "未央区",
+     "city": "西安市",
+     "people_share": 0.053,
+     "cover": 1.0
+    },
+    {
+     "town": "张家堡街道",
+     "county": "未央区",
+     "city": "西安市",
+     "people_share": 0.043,
+     "cover": 0.389
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f0ea99",
+     "border_px": 285
+    },
+    {
+     "key": "#ebee29",
+     "border_px": 171
+    },
+    {
+     "key": "#f0dd6b",
+     "border_px": 134
+    },
+    {
+     "key": "#e3f085",
+     "border_px": 49
+    },
+    {
+     "key": "#e5f060",
+     "border_px": 38
+    },
+    {
+     "key": "#e8dc43",
+     "border_px": 33
+    },
+    {
+     "key": "#bbe422",
+     "border_px": 16
+    }
+   ],
+   "text_px": 0,
+   "n": 6,
+   "thumb": {
+    "x0": 6602,
+    "y0": 3355,
+    "k": 4.0,
+    "w": 396,
+    "h": 372
+   }
+  },
+  {
+   "key": "#e5f060",
+   "color": "#e5f060",
+   "lon": 108.6837,
+   "lat": 34.3095,
+   "bbox": [
+    6628,
+    3404,
+    6641,
+    3417
+   ],
+   "area_px": 132,
+   "people": 440502,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Qindou",
+     "local": "秦都区",
+     "prefecture": "Xianyang",
+     "prefecture_local": "咸阳市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.738,
+     "area_share": 0.795,
+     "cover": 0.572
+    },
+    {
+     "name": "Weicheng",
+     "local": "渭城区",
+     "prefecture": "Xianyang",
+     "prefecture_local": "咸阳市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.222,
+     "area_share": 0.114,
+     "cover": 0.273
+    },
+    {
+     "name": "Chang'an",
+     "local": "长安区",
+     "prefecture": "Xi'an",
+     "prefecture_local": "西安市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.029,
+     "area_share": 0.061,
+     "cover": 0.011
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shaanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.011
+    },
+    {
+     "level": "prefecture",
+     "name": "Xianyang",
+     "local": "咸阳市",
+     "province": "Shaanxi",
+     "country": "China",
+     "people_share": 0.928,
+     "cover": 0.079
+    },
+    {
+     "level": "prefecture",
+     "name": "Xi'an",
+     "local": "西安市",
+     "province": "Shaanxi",
+     "country": "China",
+     "people_share": 0.072,
+     "cover": 0.003
+    }
+   ],
+   "towns": [
+    {
+     "town": "钓台街道",
+     "county": "秦都区",
+     "city": "咸阳市",
+     "people_share": 0.174,
+     "cover": 0.95
+    },
+    {
+     "town": "陈杨寨街道",
+     "county": "秦都区",
+     "city": "咸阳市",
+     "people_share": 0.136,
+     "cover": 1.0
+    },
+    {
+     "town": "渭滨街道",
+     "county": "秦都区",
+     "city": "咸阳市",
+     "people_share": 0.116,
+     "cover": 0.968
+    },
+    {
+     "town": "渭阳街道",
+     "county": "渭城区",
+     "city": "咸阳市",
+     "people_share": 0.099,
+     "cover": 0.828
+    },
+    {
+     "town": "马泉街道",
+     "county": "秦都区",
+     "city": "咸阳市",
+     "people_share": 0.085,
+     "cover": 0.785
+    },
+    {
+     "town": "古渡街道",
+     "county": "秦都区",
+     "city": "咸阳市",
+     "people_share": 0.046,
+     "cover": 0.551
+    },
+    {
+     "town": "沣东街道",
+     "county": "秦都区",
+     "city": "咸阳市",
+     "people_share": 0.041,
+     "cover": 0.379
+    },
+    {
+     "town": "西兰路街道",
+     "county": "秦都区",
+     "city": "咸阳市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "文汇路街道",
+     "county": "渭城区",
+     "city": "咸阳市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "人民路街道",
+     "county": "秦都区",
+     "city": "咸阳市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "中山街道",
+     "county": "渭城区",
+     "city": "咸阳市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "新兴街道",
+     "county": "渭城区",
+     "city": "咸阳市",
+     "people_share": 0.041,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Xianyang",
+     "admin": "Shaanxi",
+     "pop": 3959842
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#e3f085",
+     "border_px": 211
+    },
+    {
+     "key": "#ebf389",
+     "border_px": 197
+    },
+    {
+     "key": "#f0ea99",
+     "border_px": 119
+    },
+    {
+     "key": "#faf06b",
+     "border_px": 38
+    },
+    {
+     "key": "#ebf0aa",
+     "border_px": 21
+    }
+   ],
+   "text_px": 0,
+   "n": 7,
+   "thumb": {
+    "x0": 6588,
+    "y0": 3364,
+    "k": 4.0,
+    "w": 372,
+    "h": 372
+   }
+  },
+  {
+   "key": "#ebee29",
+   "color": "#ebee29",
+   "lon": 108.9189,
+   "lat": 34.3056,
+   "bbox": [
+    6648,
+    3407,
+    6659,
+    3411
+   ],
+   "area_px": 47,
+   "people": 709156,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Weiyang",
+     "local": "未央区",
+     "prefecture": "Xi'an",
+     "prefecture_local": "西安市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.671,
+     "area_share": 0.787,
+     "cover": 0.445
+    },
+    {
+     "name": "Lianhu",
+     "local": "莲湖区",
+     "prefecture": "Xi'an",
+     "prefecture_local": "西安市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.188,
+     "area_share": 0.149,
+     "cover": 0.157
+    },
+    {
+     "name": "Xincheng",
+     "local": "新城区",
+     "prefecture": "Xi'an",
+     "prefecture_local": "西安市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.141,
+     "area_share": 0.064,
+     "cover": 0.15
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shaanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.018
+    },
+    {
+     "level": "prefecture",
+     "name": "Xi'an",
+     "local": "西安市",
+     "province": "Shaanxi",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.077
+    }
+   ],
+   "towns": [
+    {
+     "town": "未央宫街道",
+     "county": "未央区",
+     "city": "西安市",
+     "people_share": 0.314,
+     "cover": 0.957
+    },
+    {
+     "town": "大明宫街道",
+     "county": "未央区",
+     "city": "西安市",
+     "people_share": 0.26,
+     "cover": 0.893
+    },
+    {
+     "town": "北关街道",
+     "county": "莲湖区",
+     "city": "西安市",
+     "people_share": 0.158,
+     "cover": 1.0
+    },
+    {
+     "town": "自强路街道",
+     "county": "新城区",
+     "city": "西安市",
+     "people_share": 0.11,
+     "cover": 1.0
+    },
+    {
+     "town": "张家堡街道",
+     "county": "未央区",
+     "city": "西安市",
+     "people_share": 0.044,
+     "cover": 0.611
+    },
+    {
+     "town": "太华路街道",
+     "county": "新城区",
+     "city": "西安市",
+     "people_share": 0.031,
+     "cover": 0.2
+    },
+    {
+     "town": "辛家庙街道",
+     "county": "未央区",
+     "city": "西安市",
+     "people_share": 0.031,
+     "cover": 0.156
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#faf06b",
+     "border_px": 171
+    },
+    {
+     "key": "#bbe422",
+     "border_px": 86
+    },
+    {
+     "key": "#dee200",
+     "border_px": 68
+    },
+    {
+     "key": "#e8dc43",
+     "border_px": 54
+    },
+    {
+     "key": "#e3f085",
+     "border_px": 5
+    }
+   ],
+   "text_px": 0,
+   "n": 8,
+   "thumb": {
+    "x0": 6608,
+    "y0": 3367,
+    "k": 4.0,
+    "w": 364,
+    "h": 336
+   }
+  },
+  {
+   "key": "#ebf389",
+   "color": "#ebf389",
+   "lon": 108.361,
+   "lat": 34.3006,
+   "bbox": [
+    6576,
+    3398,
+    6632,
+    3424
+   ],
+   "area_px": 886,
+   "people": 1373262,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Xingping",
+     "local": "兴平市",
+     "prefecture": "Xianyang",
+     "prefecture_local": "咸阳市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.534,
+     "area_share": 0.508,
+     "cover": 0.984
+    },
+    {
+     "name": "Wugong",
+     "local": "武功县",
+     "prefecture": "Xianyang",
+     "prefecture_local": "咸阳市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.218,
+     "area_share": 0.28,
+     "cover": 0.755
+    },
+    {
+     "name": "Yangling",
+     "local": "杨陵区",
+     "prefecture": "Xianyang",
+     "prefecture_local": "咸阳市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.125,
+     "area_share": 0.097,
+     "cover": 0.841
+    },
+    {
+     "name": "Qindou",
+     "local": "秦都区",
+     "prefecture": "Xianyang",
+     "prefecture_local": "咸阳市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.101,
+     "area_share": 0.072,
+     "cover": 0.245
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shaanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.035
+    },
+    {
+     "level": "prefecture",
+     "name": "Xianyang",
+     "local": "咸阳市",
+     "province": "Shaanxi",
+     "country": "China",
+     "people_share": 0.965,
+     "cover": 0.256
+    }
+   ],
+   "towns": [
+    {
+     "town": "西城街道",
+     "county": "兴平市",
+     "city": "咸阳市",
+     "people_share": 0.137,
+     "cover": 1.0
+    },
+    {
+     "town": "东城街道",
+     "county": "兴平市",
+     "city": "咸阳市",
+     "people_share": 0.087,
+     "cover": 1.0
+    },
+    {
+     "town": "双照街道",
+     "county": "秦都区",
+     "city": "咸阳市",
+     "people_share": 0.086,
+     "cover": 0.885
+    },
+    {
+     "town": "小村镇",
+     "county": "武功县",
+     "city": "咸阳市",
+     "people_share": 0.054,
+     "cover": 1.0
+    },
+    {
+     "town": "李台街道",
+     "county": "杨陵区",
+     "city": "咸阳市",
+     "people_share": 0.053,
+     "cover": 1.0
+    },
+    {
+     "town": "长宁镇",
+     "county": "武功县",
+     "city": "咸阳市",
+     "people_share": 0.049,
+     "cover": 0.98
+    },
+    {
+     "town": "贞元镇",
+     "county": "武功县",
+     "city": "咸阳市",
+     "people_share": 0.043,
+     "cover": 0.846
+    },
+    {
+     "town": "普集镇",
+     "county": "武功县",
+     "city": "咸阳市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "马嵬街道",
+     "county": "兴平市",
+     "city": "咸阳市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "杨陵街道",
+     "county": "杨陵区",
+     "city": "咸阳市",
+     "people_share": 0.041,
+     "cover": 0.983
+    },
+    {
+     "town": "西吴街道",
+     "county": "兴平市",
+     "city": "咸阳市",
+     "people_share": 0.04,
+     "cover": 0.954
+    },
+    {
+     "town": "南位镇",
+     "county": "兴平市",
+     "city": "咸阳市",
+     "people_share": 0.033,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Xiangyang",
+     "admin": "Shaanxi",
+     "pop": 541554
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#eaf0b0",
+     "border_px": 592
+    },
+    {
+     "key": "#ebf0aa",
+     "border_px": 514
+    },
+    {
+     "key": "#e8eeb5",
+     "border_px": 506
+    },
+    {
+     "key": "#e5f060",
+     "border_px": 197
+    },
+    {
+     "key": "#f0ea99",
+     "border_px": 140
+    }
+   ],
+   "text_px": 0,
+   "n": 9,
+   "thumb": {
+    "x0": 6536,
+    "y0": 3358,
+    "k": 3.0,
+    "w": 408,
+    "h": 318
+   }
+  },
+  {
+   "key": "#bbe422",
+   "color": "#bbe422",
+   "lon": 108.8514,
+   "lat": 34.2674,
+   "bbox": [
+    6646,
+    3410,
+    6652,
+    3417
+   ],
+   "area_px": 41,
+   "people": 166628,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Lianhu",
+     "local": "莲湖区",
+     "prefecture": "Xi'an",
+     "prefecture_local": "西安市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.943,
+     "area_share": 0.976,
+     "cover": 0.185
+    },
+    {
+     "name": "Yanta",
+     "local": "雁塔区",
+     "prefecture": "Xi'an",
+     "prefecture_local": "西安市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.057,
+     "area_share": 0.024,
+     "cover": 0.009
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shaanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.004
+    },
+    {
+     "level": "prefecture",
+     "name": "Xi'an",
+     "local": "西安市",
+     "province": "Shaanxi",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.018
+    }
+   ],
+   "towns": [
+    {
+     "town": "枣园街道",
+     "county": "莲湖区",
+     "city": "西安市",
+     "people_share": 0.46,
+     "cover": 0.666
+    },
+    {
+     "town": "土门街道",
+     "county": "莲湖区",
+     "city": "西安市",
+     "people_share": 0.259,
+     "cover": 0.553
+    },
+    {
+     "town": "桃园路街道",
+     "county": "莲湖区",
+     "city": "西安市",
+     "people_share": 0.224,
+     "cover": 0.728
+    },
+    {
+     "town": "丈八沟街道",
+     "county": "雁塔区",
+     "city": "西安市",
+     "people_share": 0.057,
+     "cover": 0.054
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#e3f085",
+     "border_px": 133
+    },
+    {
+     "key": "#ebee29",
+     "border_px": 86
+    },
+    {
+     "key": "#cce030",
+     "border_px": 43
+    },
+    {
+     "key": "#dee200",
+     "border_px": 43
+    },
+    {
+     "key": "#faf06b",
+     "border_px": 16
+    },
+    {
+     "key": "#d7e859",
+     "border_px": 3
+    }
+   ],
+   "text_px": 0,
+   "n": 10,
+   "thumb": {
+    "x0": 6606,
+    "y0": 3370,
+    "k": 4.0,
+    "w": 344,
+    "h": 348
+   }
+  },
+  {
+   "key": "#dee200",
+   "color": "#dee200",
+   "lon": 108.9427,
+   "lat": 34.2579,
+   "bbox": [
+    6653,
+    3412,
+    6660,
+    3416
+   ],
+   "area_px": 40,
+   "people": 1475065,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Bei",
+     "local": "碑林区",
+     "prefecture": "Xi'an",
+     "prefecture_local": "西安市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.452,
+     "area_share": 0.475,
+     "cover": 0.962
+    },
+    {
+     "name": "Lianhu",
+     "local": "莲湖区",
+     "prefecture": "Xi'an",
+     "prefecture_local": "西安市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.327,
+     "area_share": 0.3,
+     "cover": 0.568
+    },
+    {
+     "name": "Xincheng",
+     "local": "新城区",
+     "prefecture": "Xi'an",
+     "prefecture_local": "西安市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.203,
+     "area_share": 0.175,
+     "cover": 0.447
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shaanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.038
+    },
+    {
+     "level": "prefecture",
+     "name": "Xi'an",
+     "local": "西安市",
+     "province": "Shaanxi",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.16
+    }
+   ],
+   "towns": [
+    {
+     "town": "长安路街道",
+     "county": "碑林区",
+     "city": "西安市",
+     "people_share": 0.123,
+     "cover": 1.0
+    },
+    {
+     "town": "北院门街道",
+     "county": "莲湖区",
+     "city": "西安市",
+     "people_share": 0.114,
+     "cover": 1.0
+    },
+    {
+     "town": "西一路街道",
+     "county": "新城区",
+     "city": "西安市",
+     "people_share": 0.076,
+     "cover": 1.0
+    },
+    {
+     "town": "环城西路街道",
+     "county": "莲湖区",
+     "city": "西安市",
+     "people_share": 0.076,
+     "cover": 0.96
+    },
+    {
+     "town": "青年路街道",
+     "county": "莲湖区",
+     "city": "西安市",
+     "people_share": 0.076,
+     "cover": 1.0
+    },
+    {
+     "town": "中山门街道",
+     "county": "新城区",
+     "city": "西安市",
+     "people_share": 0.076,
+     "cover": 1.0
+    },
+    {
+     "town": "柏树林街道",
+     "county": "碑林区",
+     "city": "西安市",
+     "people_share": 0.076,
+     "cover": 1.0
+    },
+    {
+     "town": "西关街道",
+     "county": "莲湖区",
+     "city": "西安市",
+     "people_share": 0.057,
+     "cover": 0.899
+    },
+    {
+     "town": "张家村街道",
+     "county": "碑林区",
+     "city": "西安市",
+     "people_share": 0.051,
+     "cover": 1.0
+    },
+    {
+     "town": "文艺路街道",
+     "county": "碑林区",
+     "city": "西安市",
+     "people_share": 0.047,
+     "cover": 1.0
+    },
+    {
+     "town": "太乙路街道",
+     "county": "碑林区",
+     "city": "西安市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "南院门街道",
+     "county": "碑林区",
+     "city": "西安市",
+     "people_share": 0.038,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Xi’an",
+     "admin": "Shaanxi",
+     "pop": 12328000
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#e8dc43",
+     "border_px": 116
+    },
+    {
+     "key": "#cce030",
+     "border_px": 73
+    },
+    {
+     "key": "#ebee29",
+     "border_px": 68
+    },
+    {
+     "key": "#bbe422",
+     "border_px": 43
+    }
+   ],
+   "text_px": 0,
+   "n": 11,
+   "thumb": {
+    "x0": 6613,
+    "y0": 3372,
+    "k": 4.0,
+    "w": 348,
+    "h": 336
+   }
+  },
+  {
+   "key": "#e8dc43",
+   "color": "#e8dc43",
+   "lon": 109.0048,
+   "lat": 34.2457,
+   "bbox": [
+    6659,
+    3406,
+    6665,
+    3422
+   ],
+   "area_px": 93,
+   "people": 1118729,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yanta",
+     "local": "雁塔区",
+     "prefecture": "Xi'an",
+     "prefecture_local": "西安市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.385,
+     "area_share": 0.516,
+     "cover": 0.426
+    },
+    {
+     "name": "Xincheng",
+     "local": "新城区",
+     "prefecture": "Xi'an",
+     "prefecture_local": "西安市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.242,
+     "area_share": 0.118,
+     "cover": 0.403
+    },
+    {
+     "name": "Baqiao",
+     "local": "灞桥区",
+     "prefecture": "Xi'an",
+     "prefecture_local": "西安市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.219,
+     "area_share": 0.237,
+     "cover": 0.336
+    },
+    {
+     "name": "Weiyang",
+     "local": "未央区",
+     "prefecture": "Xi'an",
+     "prefecture_local": "西安市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.127,
+     "area_share": 0.108,
+     "cover": 0.133
+    },
+    {
+     "name": "Bei",
+     "local": "碑林区",
+     "prefecture": "Xi'an",
+     "prefecture_local": "西安市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.024,
+     "area_share": 0.011,
+     "cover": 0.038
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shaanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.029
+    },
+    {
+     "level": "prefecture",
+     "name": "Xi'an",
+     "local": "西安市",
+     "province": "Shaanxi",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.121
+    }
+   ],
+   "towns": [
+    {
+     "town": "十里铺街道",
+     "county": "灞桥区",
+     "city": "西安市",
+     "people_share": 0.2,
+     "cover": 1.0
+    },
+    {
+     "town": "等驾坡街道",
+     "county": "雁塔区",
+     "city": "西安市",
+     "people_share": 0.155,
+     "cover": 0.906
+    },
+    {
+     "town": "曲江街道",
+     "county": "雁塔区",
+     "city": "西安市",
+     "people_share": 0.126,
+     "cover": 0.946
+    },
+    {
+     "town": "辛家庙街道",
+     "county": "未央区",
+     "city": "西安市",
+     "people_share": 0.107,
+     "cover": 0.844
+    },
+    {
+     "town": "韩森寨街道",
+     "county": "新城区",
+     "city": "西安市",
+     "people_share": 0.095,
+     "cover": 0.8
+    },
+    {
+     "town": "大雁塔街道",
+     "county": "雁塔区",
+     "city": "西安市",
+     "people_share": 0.081,
+     "cover": 0.876
+    },
+    {
+     "town": "胡家庙街道",
+     "county": "新城区",
+     "city": "西安市",
+     "people_share": 0.063,
+     "cover": 1.0
+    },
+    {
+     "town": "太华路街道",
+     "county": "新城区",
+     "city": "西安市",
+     "people_share": 0.059,
+     "cover": 0.6
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#ede696",
+     "border_px": 179
+    },
+    {
+     "key": "#dee200",
+     "border_px": 116
+    },
+    {
+     "key": "#f0dd6b",
+     "border_px": 95
+    },
+    {
+     "key": "#cce030",
+     "border_px": 61
+    },
+    {
+     "key": "#ebee29",
+     "border_px": 54
+    },
+    {
+     "key": "#d7e859",
+     "border_px": 50
+    },
+    {
+     "key": "#faf06b",
+     "border_px": 33
+    }
+   ],
+   "text_px": 0,
+   "n": 12,
+   "thumb": {
+    "x0": 6619,
+    "y0": 3366,
+    "k": 4.0,
+    "w": 344,
+    "h": 384
+   }
+  },
+  {
+   "key": "#cce030",
+   "color": "#cce030",
+   "lon": 108.9166,
+   "lat": 34.2137,
+   "bbox": [
+    6651,
+    3417,
+    6658,
+    3421
+   ],
+   "area_px": 40,
+   "people": 389945,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yanta",
+     "local": "雁塔区",
+     "prefecture": "Xi'an",
+     "prefecture_local": "西安市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.968,
+     "area_share": 0.95,
+     "cover": 0.373
+    },
+    {
+     "name": "Lianhu",
+     "local": "莲湖区",
+     "prefecture": "Xi'an",
+     "prefecture_local": "西安市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.032,
+     "area_share": 0.05,
+     "cover": 0.015
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shaanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.01
+    },
+    {
+     "level": "prefecture",
+     "name": "Xi'an",
+     "local": "西安市",
+     "province": "Shaanxi",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.042
+    }
+   ],
+   "towns": [
+    {
+     "town": "长延堡街道",
+     "county": "雁塔区",
+     "city": "西安市",
+     "people_share": 0.416,
+     "cover": 0.863
+    },
+    {
+     "town": "丈八沟街道",
+     "county": "雁塔区",
+     "city": "西安市",
+     "people_share": 0.242,
+     "cover": 0.542
+    },
+    {
+     "town": "电子城街道",
+     "county": "雁塔区",
+     "city": "西安市",
+     "people_share": 0.162,
+     "cover": 0.47
+    },
+    {
+     "town": "小寨路街道",
+     "county": "雁塔区",
+     "city": "西安市",
+     "people_share": 0.114,
+     "cover": 0.634
+    },
+    {
+     "town": "大雁塔街道",
+     "county": "雁塔区",
+     "city": "西安市",
+     "people_share": 0.033,
+     "cover": 0.124
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#d7e859",
+     "border_px": 127
+    },
+    {
+     "key": "#dee200",
+     "border_px": 73
+    },
+    {
+     "key": "#e8dc43",
+     "border_px": 61
+    },
+    {
+     "key": "#bbe422",
+     "border_px": 43
+    },
+    {
+     "key": "#e3f085",
+     "border_px": 16
+    }
+   ],
+   "text_px": 0,
+   "n": 13,
+   "thumb": {
+    "x0": 6611,
+    "y0": 3377,
+    "k": 4.0,
+    "w": 348,
+    "h": 336
+   }
+  },
+  {
+   "key": "#e3f085",
+   "color": "#e3f085",
+   "lon": 108.7523,
+   "lat": 34.1741,
+   "bbox": [
+    6631,
+    3409,
+    6656,
+    3435
+   ],
+   "area_px": 434,
+   "people": 570341,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Chang'an",
+     "local": "长安区",
+     "prefecture": "Xi'an",
+     "prefecture_local": "西安市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.63,
+     "area_share": 0.675,
+     "cover": 0.316
+    },
+    {
+     "name": "Hu",
+     "local": "户县",
+     "prefecture": "Xi'an",
+     "prefecture_local": "西安市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.181,
+     "area_share": 0.242,
+     "cover": 0.185
+    },
+    {
+     "name": "Lianhu",
+     "local": "莲湖区",
+     "prefecture": "Xi'an",
+     "prefecture_local": "西安市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.111,
+     "area_share": 0.048,
+     "cover": 0.075
+    },
+    {
+     "name": "Qindou",
+     "local": "秦都区",
+     "prefecture": "Xianyang",
+     "prefecture_local": "咸阳市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.051,
+     "area_share": 0.028,
+     "cover": 0.051
+    },
+    {
+     "name": "Yanta",
+     "local": "雁塔区",
+     "prefecture": "Xi'an",
+     "prefecture_local": "西安市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.027,
+     "area_share": 0.007,
+     "cover": 0.015
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shaanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.015
+    },
+    {
+     "level": "prefecture",
+     "name": "Xi'an",
+     "local": "西安市",
+     "province": "Shaanxi",
+     "country": "China",
+     "people_share": 0.973,
+     "cover": 0.06
+    }
+   ],
+   "towns": [
+    {
+     "town": "王寺街道",
+     "county": "长安区",
+     "city": "西安市",
+     "people_share": 0.108,
+     "cover": 1.0
+    },
+    {
+     "town": "郭杜街道",
+     "county": "长安区",
+     "city": "西安市",
+     "people_share": 0.103,
+     "cover": 0.369
+    },
+    {
+     "town": "斗门街道",
+     "county": "长安区",
+     "city": "西安市",
+     "people_share": 0.083,
+     "cover": 1.0
+    },
+    {
+     "town": "秦渡镇",
+     "county": "户县",
+     "city": "西安市",
+     "people_share": 0.081,
+     "cover": 0.945
+    },
+    {
+     "town": "兴隆街道",
+     "county": "长安区",
+     "city": "西安市",
+     "people_share": 0.064,
+     "cover": 1.0
+    },
+    {
+     "town": "高桥街道",
+     "county": "长安区",
+     "city": "西安市",
+     "people_share": 0.062,
+     "cover": 0.735
+    },
+    {
+     "town": "土门街道",
+     "county": "莲湖区",
+     "city": "西安市",
+     "people_share": 0.056,
+     "cover": 0.409
+    },
+    {
+     "town": "枣园街道",
+     "county": "莲湖区",
+     "city": "西安市",
+     "people_share": 0.055,
+     "cover": 0.275
+    },
+    {
+     "town": "五星街道",
+     "county": "长安区",
+     "city": "西安市",
+     "people_share": 0.05,
+     "cover": 0.835
+    },
+    {
+     "town": "沣东街道",
+     "county": "秦都区",
+     "city": "咸阳市",
+     "people_share": 0.044,
+     "cover": 0.52
+    },
+    {
+     "town": "马王街道",
+     "county": "长安区",
+     "city": "西安市",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "五竹镇",
+     "county": "户县",
+     "city": "西安市",
+     "people_share": 0.037,
+     "cover": 0.722
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#ebf0aa",
+     "border_px": 559
+    },
+    {
+     "key": "#e5f060",
+     "border_px": 211
+    },
+    {
+     "key": "#d7e859",
+     "border_px": 210
+    },
+    {
+     "key": "#bbe422",
+     "border_px": 133
+    },
+    {
+     "key": "#ede696",
+     "border_px": 54
+    },
+    {
+     "key": "#faf06b",
+     "border_px": 49
+    },
+    {
+     "key": "#cce030",
+     "border_px": 16
+    },
+    {
+     "key": "#ebee29",
+     "border_px": 5
+    }
+   ],
+   "text_px": 0,
+   "n": 14,
+   "thumb": {
+    "x0": 6591,
+    "y0": 3369,
+    "k": 3.0,
+    "w": 315,
+    "h": 318
+   }
+  },
+  {
+   "key": "#d7e859",
+   "color": "#d7e859",
+   "lon": 108.9137,
+   "lat": 34.1598,
+   "bbox": [
+    6649,
+    3420,
+    6663,
+    3429
+   ],
+   "area_px": 97,
+   "people": 428079,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Chang'an",
+     "local": "长安区",
+     "prefecture": "Xi'an",
+     "prefecture_local": "西安市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.695,
+     "area_share": 0.784,
+     "cover": 0.262
+    },
+    {
+     "name": "Yanta",
+     "local": "雁塔区",
+     "prefecture": "Xi'an",
+     "prefecture_local": "西安市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.305,
+     "area_share": 0.216,
+     "cover": 0.129
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shaanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.011
+    },
+    {
+     "level": "prefecture",
+     "name": "Xi'an",
+     "local": "西安市",
+     "province": "Shaanxi",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.046
+    }
+   ],
+   "towns": [
+    {
+     "town": "韦曲街道",
+     "county": "长安区",
+     "city": "西安市",
+     "people_share": 0.425,
+     "cover": 0.954
+    },
+    {
+     "town": "郭杜街道",
+     "county": "长安区",
+     "city": "西安市",
+     "people_share": 0.235,
+     "cover": 0.631
+    },
+    {
+     "town": "电子城街道",
+     "county": "雁塔区",
+     "city": "西安市",
+     "people_share": 0.167,
+     "cover": 0.53
+    },
+    {
+     "town": "丈八沟街道",
+     "county": "雁塔区",
+     "city": "西安市",
+     "people_share": 0.129,
+     "cover": 0.316
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#e3f085",
+     "border_px": 210
+    },
+    {
+     "key": "#ede696",
+     "border_px": 156
+    },
+    {
+     "key": "#cce030",
+     "border_px": 127
+    },
+    {
+     "key": "#e8dc43",
+     "border_px": 50
+    },
+    {
+     "key": "#bbe422",
+     "border_px": 3
+    }
+   ],
+   "text_px": 0,
+   "n": 15,
+   "thumb": {
+    "x0": 6609,
+    "y0": 3380,
+    "k": 4.0,
+    "w": 376,
+    "h": 356
+   }
+  },
+  {
+   "key": "#ede696",
+   "color": "#ede696",
+   "lon": 109.3072,
+   "lat": 34.0801,
+   "bbox": [
+    6656,
+    3404,
+    6728,
+    3456
+   ],
+   "area_px": 2605,
+   "people": 1080399,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Lantian",
+     "local": "蓝田县",
+     "prefecture": "Xi'an",
+     "prefecture_local": "西安市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.472,
+     "area_share": 0.688,
+     "cover": 0.993
+    },
+    {
+     "name": "Chang'an",
+     "local": "长安区",
+     "prefecture": "Xi'an",
+     "prefecture_local": "西安市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.286,
+     "area_share": 0.257,
+     "cover": 0.271
+    },
+    {
+     "name": "Baqiao",
+     "local": "灞桥区",
+     "prefecture": "Xi'an",
+     "prefecture_local": "西安市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.218,
+     "area_share": 0.032,
+     "cover": 0.324
+    },
+    {
+     "name": "Yanta",
+     "local": "雁塔区",
+     "prefecture": "Xi'an",
+     "prefecture_local": "西安市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.02,
+     "area_share": 0.002,
+     "cover": 0.022
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shaanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.028
+    },
+    {
+     "level": "prefecture",
+     "name": "Xi'an",
+     "local": "西安市",
+     "province": "Shaanxi",
+     "country": "China",
+     "people_share": 0.998,
+     "cover": 0.117
+    }
+   ],
+   "towns": [
+    {
+     "town": "红旗街道",
+     "county": "灞桥区",
+     "city": "西安市",
+     "people_share": 0.093,
+     "cover": 0.978
+    },
+    {
+     "town": "狄寨街道",
+     "county": "灞桥区",
+     "city": "西安市",
+     "people_share": 0.089,
+     "cover": 1.0
+    },
+    {
+     "town": "安村镇",
+     "county": "蓝田县",
+     "city": "西安市",
+     "people_share": 0.057,
+     "cover": 1.0
+    },
+    {
+     "town": "三里镇",
+     "county": "蓝田县",
+     "city": "西安市",
+     "people_share": 0.054,
+     "cover": 1.0
+    },
+    {
+     "town": "蓝关镇",
+     "county": "蓝田县",
+     "city": "西安市",
+     "people_share": 0.044,
+     "cover": 1.0
+    },
+    {
+     "town": "杜曲街道",
+     "county": "长安区",
+     "city": "西安市",
+     "people_share": 0.041,
+     "cover": 0.9
+    },
+    {
+     "town": "引镇街道",
+     "county": "长安区",
+     "city": "西安市",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "王莽街道",
+     "county": "长安区",
+     "city": "西安市",
+     "people_share": 0.034,
+     "cover": 1.0
+    },
+    {
+     "town": "王曲街道",
+     "county": "长安区",
+     "city": "西安市",
+     "people_share": 0.033,
+     "cover": 0.776
+    },
+    {
+     "town": "普化镇",
+     "county": "蓝田县",
+     "city": "西安市",
+     "people_share": 0.033,
+     "cover": 1.0
+    },
+    {
+     "town": "大兆街道",
+     "county": "长安区",
+     "city": "西安市",
+     "people_share": 0.032,
+     "cover": 0.88
+    },
+    {
+     "town": "洩湖镇",
+     "county": "蓝田县",
+     "city": "西安市",
+     "people_share": 0.031,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f1e4c6",
+     "border_px": 845
+    },
+    {
+     "key": "#f7e7d6",
+     "border_px": 693
+    },
+    {
+     "key": "#eee299",
+     "border_px": 595
+    },
+    {
+     "key": "#ebf0aa",
+     "border_px": 341
+    },
+    {
+     "key": "#f0dd6b",
+     "border_px": 319
+    },
+    {
+     "key": "#e8dc43",
+     "border_px": 179
+    },
+    {
+     "key": "#d7e859",
+     "border_px": 156
+    },
+    {
+     "key": "#e3f085",
+     "border_px": 54
+    }
+   ],
+   "text_px": 0,
+   "n": 16,
+   "thumb": {
+    "x0": 6616,
+    "y0": 3364,
+    "k": 2.0,
+    "w": 304,
+    "h": 264
+   }
+  },
+  {
+   "key": "#ebf0aa",
+   "color": "#ebf0aa",
+   "lon": 108.5026,
+   "lat": 34.0022,
+   "bbox": [
+    6588,
+    3418,
+    6658,
+    3470
+   ],
+   "area_px": 2405,
+   "people": 1018287,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Hu",
+     "local": "户县",
+     "prefecture": "Xi'an",
+     "prefecture_local": "西安市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.443,
+     "area_share": 0.437,
+     "cover": 0.809
+    },
+    {
+     "name": "Zhouzhi",
+     "local": "周至县",
+     "prefecture": "Xi'an",
+     "prefecture_local": "西安市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.406,
+     "area_share": 0.395,
+     "cover": 0.714
+    },
+    {
+     "name": "Chang'an",
+     "local": "长安区",
+     "prefecture": "Xi'an",
+     "prefecture_local": "西安市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.151,
+     "area_share": 0.163,
+     "cover": 0.136
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shaanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.026
+    },
+    {
+     "level": "prefecture",
+     "name": "Xi'an",
+     "local": "西安市",
+     "province": "Shaanxi",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.11
+    }
+   ],
+   "towns": [
+    {
+     "town": "甘亭镇",
+     "county": "户县",
+     "city": "西安市",
+     "people_share": 0.083,
+     "cover": 1.0
+    },
+    {
+     "town": "滦镇街道",
+     "county": "长安区",
+     "city": "西安市",
+     "people_share": 0.065,
+     "cover": 0.846
+    },
+    {
+     "town": "二曲镇",
+     "county": "周至县",
+     "city": "西安市",
+     "people_share": 0.062,
+     "cover": 1.0
+    },
+    {
+     "town": "余下镇",
+     "county": "户县",
+     "city": "西安市",
+     "people_share": 0.057,
+     "cover": 1.0
+    },
+    {
+     "town": "终南镇",
+     "county": "周至县",
+     "city": "西安市",
+     "people_share": 0.055,
+     "cover": 1.0
+    },
+    {
+     "town": "尚村镇",
+     "county": "周至县",
+     "city": "西安市",
+     "people_share": 0.052,
+     "cover": 0.99
+    },
+    {
+     "town": "楼观镇",
+     "county": "周至县",
+     "city": "西安市",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "子午街道",
+     "county": "长安区",
+     "city": "西安市",
+     "people_share": 0.04,
+     "cover": 0.91
+    },
+    {
+     "town": "东大街道",
+     "county": "长安区",
+     "city": "西安市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "草堂镇",
+     "county": "户县",
+     "city": "西安市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "马召镇",
+     "county": "周至县",
+     "city": "西安市",
+     "people_share": 0.036,
+     "cover": 1.0
+    },
+    {
+     "town": "涝店镇",
+     "county": "户县",
+     "city": "西安市",
+     "people_share": 0.036,
+     "cover": 0.989
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f7e7d6",
+     "border_px": 682
+    },
+    {
+     "key": "#e3f085",
+     "border_px": 559
+    },
+    {
+     "key": "#f9e7dc",
+     "border_px": 518
+    },
+    {
+     "key": "#ebf389",
+     "border_px": 514
+    },
+    {
+     "key": "#e8eeb5",
+     "border_px": 343
+    },
+    {
+     "key": "#ede696",
+     "border_px": 341
+    },
+    {
+     "key": "#e5f060",
+     "border_px": 21
+    }
+   ],
+   "text_px": 0,
+   "n": 17,
+   "thumb": {
+    "x0": 6548,
+    "y0": 3378,
+    "k": 2.0,
+    "w": 300,
+    "h": 264
+   }
+  }
+ ]
+}

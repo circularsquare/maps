@@ -1,0 +1,23 @@
+batch shaanxi-rest
+1: pick Shenmu
+2: pick Yulin
+3: pick Jingbian
+4: pick Wudinghe
+5: pick Yan'an
+6: pick Luochuan
+7: pick Hancheng
+8: pick Tongchuan
+9: pick Pucheng
+10: pick Huashan
+11: pick Fengxiang
+12: pick Weinan
+13: pick Zhouyuan
+14: pick Baoji
+15: pick Shangluo. It holds the prefecture seat and the namesake (Shang + upper Luo River); add it as a candidate with its meaning.
+16: pick Yangxian
+17: pick Shanyang
+18: pick Mianxian. (Round one asked for more ideas: a geographical feature spanning the region.)
+19: pick Hanzhong
+20: pick Xixiang
+21: pick Ankang
+22: pick Xunyang

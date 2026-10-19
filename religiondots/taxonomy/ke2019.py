@@ -29,23 +29,30 @@ EXCLUDED = {
 REVIEW = {
     "Protestant":
         "-> christianity.protestant, the 'named no body' node. 15,777,473 people, 33.4%, "
-        "the largest single answer in Kenya. In KNBS's usage this is the MAINLINE mission "
-        "inheritance — the Anglican Church of Kenya, the Presbyterian Church of East "
-        "Africa, the Methodists, the Lutherans and the Salvation Army — as against "
-        "`Evangelical Churches` beside it. The tree could hold every one of those apart and "
-        "the census names none of them, so the answer-node is what the source supports. "
-        "Worth knowing that this is a NARROWER category than the word usually is: an "
-        "Anglican here is a Protestant, a Baptist here is an Evangelical.",
+        "the largest single answer in Kenya. KNBS's 2019 Enumerator's Instructions Manual "
+        "(IPUMS copy, PDF p.40) defines code 2 as \"Anglican Church of Kenya (ACK), "
+        "Presbyterian Church of East Africa (PCEA), African Inland Church (AIC), Lutheran, "
+        "Quakers (Friends), Methodists, Seventh Day Adventists (SDA), Salvation Army, "
+        "Baptists, etc.\" So the Africa Inland Church, the Baptists, the Adventists and the "
+        "Friends are all in here, not in `Evangelical Churches`; this note said otherwise "
+        "until 2026-10-16. "
+        "SPLIT SINCE 2026-10-16 (sources/ea_christian.py, unspecified_splits/eastafrica.md): "
+        "each county's Protestants are divided at the Global Flourishing Study wave 1 (2023) "
+        "shares of the churches in this cell, Anglican, Seventh-day Adventist, Presbyterian, "
+        "Baptist and Methodist drawn as churches and the rest (the GFS's "
+        "Independent/Evangelical box, which is mostly the Africa Inland Church, and the "
+        "Lutherans) left here. In Kakamega, Bungoma and Vihiga the GFS's `Presbyterian` is "
+        "also left here: GFS offers no Friends box and those counties are the Friends' "
+        "heartland (Anita, 2026-10-16). Split rows are `derived` and roll back to this cell.",
     "Evangelical Churches":
         "-> christianity.evangelical, a node added for Kenya. 9,648,690 people, 20.4%. "
-        "KNBS prints it as a peer of `Protestant`, not a subset, and in Kenya it means the "
-        "faith-mission and evangelical-alliance stream: the Africa Inland Church (the "
-        "largest single body in it), the Baptists, the Pentecostal Assemblies of God, "
-        "Deliverance Church, the Redeemed Gospel Church. It cuts across families the tree "
-        "keeps apart — some of it is Baptist, much of it is Pentecostal — which is exactly "
-        "why it goes to an answer-node and not to `christianity.pentecostal` or "
-        "`christianity.baptist`. Filing 9.6M people under either would assert a division "
-        "the census did not make. See the node's own note for why it was not added earlier.",
+        "KNBS prints it as a peer of `Protestant`, not a subset. The enumerator manual (PDF "
+        "p.40) defines code 3 as \"CITAM, Redeemed, Full Gospel, Pentecostal, Deliverance, "
+        "PAG, Kenya Assemblies, Winners, Apostolic church, Jehovah Witnesses, etc.\": the "
+        "Pentecostal and charismatic churches plus the Witnesses. The Africa Inland Church "
+        "and the Baptists are in `Protestant` (this note filed them here until 2026-10-16). "
+        "It still goes to an answer-node and not to `christianity.pentecostal`, because the "
+        "Witnesses are in it and the census does not separate them.",
     "African Instituted Churches":
         "-> christianity.africaninstituted, a node added for Kenya. 3,292,573 people, 7.0%, "
         "and **the single most valuable category in this file**. These are the churches "
@@ -68,12 +75,14 @@ REVIEW = {
         "`christianity.oriental`). One cell covering two communions goes to the node that "
         "asserts the less, which is the same call mk2021.py makes.",
     "Other Christian":
-        "-> christianity.other. 1,732,911 people, 3.7%. A genuine residual, and a much "
-        "*narrower* one than Ghana's identically-named cell: Kenya has already taken the "
-        "Catholics, the mainline, the evangelicals, the AICs and the Orthodox out of it, so "
-        "what is left is the Adventists, the Jehovah's Witnesses, the Latter-day Saints and "
-        "the Quakers — Kenya has the largest Quaker population in the world — plus the tail. "
-        "The tree could hold every one of those and the census separates none of them.",
+        "-> christianity.other. 1,732,911 people, 3.7%. The enumerator manual (PDF p.41) "
+        "defines code 6 as \"individuals who confess christian faith but are not affiliated "
+        "to any of the above faiths, e.g. people who don't go to any church yet they "
+        "consider themselves Christians.\" So it is Christians with no church, not a list "
+        "of small bodies: the Adventists and the Friends are in `Protestant` and the "
+        "Witnesses in `Evangelical Churches` (this note said otherwise until 2026-10-16). "
+        "By zm2022.py's rule an unaffiliated-Christian answer belongs on bare "
+        "`christianity`; moving it is not done here, it is a question for Anita.",
     "Islam":
         "-> islam, with no branch, because the census gives none. 5,152,194 people, 10.9%, "
         "and among the most concentrated distributions on this map: Wajir, Mandera and "
@@ -116,7 +125,18 @@ MAP = {
     "Traditionists": "indigenous.african",
     "Other Religion": "other.ke",
     "No religion /Atheists": "unaffiliated",
+    # 2026-10-16, sources/ea_christian.py: ke_split.csv replaces `Protestant` with these, at
+    # GFS 2023 county shares; the remainder keeps the `Protestant` label. `derived`.
+    "Protestant: Anglican": "christianity.anglican",
+    "Protestant: Seventh-day Adventist": "christianity.adventist.sda",
+    "Protestant: Presbyterian": "christianity.reformed.presbyterian",
+    "Protestant: Baptist": "christianity.baptist",
+    "Protestant: Methodist": "christianity.methodist",
 }
+
+# spec §7a-i-1: the source column each derived row rolls back to.
+COLUMNS = {v: v for v in MAP.values()}
+COLUMNS["Protestant"] = "christianity.protestant"
 
 
 def _key(cat):

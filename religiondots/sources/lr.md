@@ -249,3 +249,40 @@ rebuilds byte-identical.
 
 Small: `sources/lr.py` and `sources/afrobarometer.py` both pointed at §11ag, which is the
 Gemini lead triage; the Afrobarometer assessment is **§11ai**, as this file already said.
+
+## Churches drawn, 2026-10-16 (session `c67d3c3c-westafrica`)
+
+Anita reversed the refusal above: a flat Christian colour that stops at the border made Liberia
+look unlike Guinea, Sierra Leone and Côte d'Ivoire for no reason in the data. `Christian`
+(4,458,288 people) is replaced by `data/normalized/lr_split.csv`, written by
+`sources/wa_christian.py lr`; countries/lr.py swaps it in and every row stays `modelled`.
+Research and alternatives: `unspecified_splits/westafrica.md` §2.
+
+**Why the swing does not stop it.** The share answering `Christian only` runs 26-81% of
+Christians by round, but among those who name a church the mix holds: Baptist 12.6-14.6% in every
+round, Pentecostal 19.5-30.2%, Methodist 15.5-21.3%; no church's share follows the unnamed share
+consistently (r from -0.68 to +0.57 over six rounds, mixed signs). Accepted assumption: people
+who answer only `Christian` divide like those who name a church.
+
+| church (node) | share of Christians | people |
+|---|---:|---:|
+| Pentecostal (`.pentecostal`) | 24.9% | 1,108,234 |
+| Methodist (`.methodist`) | 18.0% | 803,368 |
+| Lutheran (`.lutheran`) | 15.1% | 671,142 |
+| Baptist (`.baptist`) | 13.7% | 609,084 |
+| Roman Catholic (`.catholic`) | 11.0% | 492,299 |
+| Other Christian (`.other`) | 8.9% | 397,967 |
+| Evangelical, Presbyterian, Episcopal (`.protestant`) | 8.4% | 376,194 |
+
+**Checks, printed and asserted on every run.** Each county's split closes on its `Christian`
+row. Catholics at 11.0% against Pew 2010's 8.4% and the Church's 2023 claim (361,000, 8.6% of
+Christians): asserted within 5 points of Pew. County split-half, even rounds against odd, 13
+counties with 15+ named Christians in each half, 5,000 permutations: Lutheran +0.724 (p 0.004),
+Baptist +0.602 (p 0.016), Catholic +0.564 (p 0.023) carry county shares, raked to the national
+level, and the build fails if one stops replicating; Pentecostal -0.03, Methodist +0.09,
+Protestant +0.25 and other -0.16 are drawn at the national rate inside each county's remainder.
+Counties with under 30 named Christians take the national share for the three. Grand Kru is drawn
+with no Baptists (0 of 40 named) and River Cess with no Catholics (0 of 52).
+
+Tables: `data/raw/wa_christian/lr_afrobarometer_named_by_round.csv`,
+`lr_afrobarometer_county_shares.csv`.

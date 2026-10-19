@@ -1,0 +1,294 @@
+{
+ "anhui-west 17|yingshang": {
+  "places": [],
+  "picked": "anhui-west 7"
+ },
+ "chongqing 1|daba": {
+  "places": [
+   "sichuan-north 3"
+  ],
+  "picked": null
+ },
+ "chongqing 8|hechuan": {
+  "places": [
+   "sichuan-north 24"
+  ],
+  "picked": null
+ },
+ "chongqing 9|dianjiang": {
+  "places": [
+   "chongqing 6"
+  ],
+  "picked": null
+ },
+ "chongqing 11|shapingba": {
+  "places": [
+   "chongqing 19"
+  ],
+  "picked": null
+ },
+ "chongqing 26|fuling": {
+  "places": [
+   "chongqing 12"
+  ],
+  "picked": null
+ },
+ "chongqing 30|hejiang": {
+  "places": [
+   "sichuan-south 22"
+  ],
+  "picked": null
+ },
+ "chongqing 30|jiangjin": {
+  "places": [
+   "chongqing 28"
+  ],
+  "picked": null
+ },
+ "hefei-core 5|baohe": {
+  "places": [],
+  "picked": "hefei-core 4"
+ },
+ "henan-east 14|xiangcheng": {
+  "places": [
+   "henan-south 5"
+  ],
+  "picked": null
+ },
+ "henan-north 11|xinxiang": {
+  "places": [
+   "henan-north 21"
+  ],
+  "picked": null
+ },
+ "henan-north 21|xinxiang": {
+  "places": [],
+  "picked": "henan-north 11"
+ },
+ "henan-south 1|shangcai": {
+  "places": [],
+  "picked": "henan-south 2"
+ },
+ "henan-south 2|shangcai": {
+  "places": [
+   "henan-south 1"
+  ],
+  "picked": null
+ },
+ "henan-south 3|fangcheng": {
+  "places": [
+   "henan-west 16"
+  ],
+  "picked": null
+ },
+ "henan-south 5|xiangcheng": {
+  "places": [],
+  "picked": "henan-east 14"
+ },
+ "henan-south 15|luoshan": {
+  "places": [
+   "ningxia 6"
+  ],
+  "picked": null
+ },
+ "henan-west 2|mangshan": {
+  "places": [
+   "henan-zhengzhou 2"
+  ],
+  "picked": null
+ },
+ "henan-west 17|dengzhou": {
+  "places": [],
+  "picked": "henan-west 22"
+ },
+ "henan-zhengzhou 2|mangshan": {
+  "places": [
+   "henan-west 2"
+  ],
+  "picked": null
+ },
+ "henan-zhengzhou 6|gongyi": {
+  "places": [],
+  "picked": "henan-west 5"
+ },
+ "henan-zhengzhou 13|zhongmu": {
+  "places": [],
+  "picked": "henan-zhengzhou 5"
+ },
+ "hubei-central 5|jianghan": {
+  "places": [
+   "hubei-wuhan 6"
+  ],
+  "picked": null
+ },
+ "hubei-central 11|yunmeng": {
+  "places": [],
+  "picked": "hubei-east 8"
+ },
+ "hubei-east 8|yunmeng": {
+  "places": [
+   "hubei-central 11"
+  ],
+  "picked": null
+ },
+ "hubei-east 10|hanchuan": {
+  "places": [
+   "hubei-wuhan 2"
+  ],
+  "picked": null
+ },
+ "hubei-wuhan 2|hanchuan": {
+  "places": [],
+  "picked": "hubei-east 10"
+ },
+ "hubei-wuhan 6|jianghan": {
+  "places": [
+   "hubei-central 5"
+  ],
+  "picked": null
+ },
+ "hubei-wuhan 9|hongshan": {
+  "places": [],
+  "picked": "hubei-wuhan 11"
+ },
+ "hunan-changsha 2|changsha county": {
+  "places": [],
+  "picked": "hunan-changsha 5"
+ },
+ "hunan-changsha 4|yuelu": {
+  "places": [],
+  "picked": "hunan-changsha 7"
+ },
+ "hunan-changsha 10|ningxiang": {
+  "places": [],
+  "picked": "hunan-changsha 1"
+ },
+ "hunan-changsha 13|xiangtan county": {
+  "places": [],
+  "picked": "hunan-changsha 11"
+ },
+ "hunan-changsha 15|xiangtan county": {
+  "places": [],
+  "picked": "hunan-changsha 11"
+ },
+ "hunan-north 4|shimen": {
+  "places": [
+   "hunan-west 1"
+  ],
+  "picked": null
+ },
+ "hunan-north 6|yuanjiang": {
+  "places": [
+   "hunan-north 14"
+  ],
+  "picked": null
+ },
+ "hunan-north 10|yuanling": {
+  "places": [],
+  "picked": "hunan-west 5"
+ },
+ "hunan-north 14|yuanjiang": {
+  "places": [
+   "hunan-north 6"
+  ],
+  "picked": null
+ },
+ "hunan-north 14|ziyang": {
+  "places": [
+   "sichuan-south 5"
+  ],
+  "picked": null
+ },
+ "hunan-north 15|meishan": {
+  "places": [],
+  "picked": "hunan-north 16"
+ },
+ "hunan-north 16|meishan": {
+  "places": [
+   "hunan-north 15"
+  ],
+  "picked": null
+ },
+ "hunan-west 1|shimen": {
+  "places": [
+   "hunan-north 4"
+  ],
+  "picked": null
+ },
+ "ningxia 6|luoshan": {
+  "places": [],
+  "picked": "henan-south 15"
+ },
+ "shaanxi-rest 18|jialing": {
+  "places": [
+   "sichuan-north 19"
+  ],
+  "picked": null
+ },
+ "shaanxi-xian 3|lintong": {
+  "places": [],
+  "picked": "shaanxi-xian 5"
+ },
+ "shaanxi-xian 6|weiyang": {
+  "places": [],
+  "picked": "shaanxi-xian 8"
+ },
+ "shaanxi-xian 8|weiyang": {
+  "places": [
+   "shaanxi-xian 6"
+  ],
+  "picked": null
+ },
+ "shaanxi-xian 13|yanta": {
+  "places": [
+   "shaanxi-xian 12"
+  ],
+  "picked": null
+ },
+ "shaanxi-xian 14|chang'an": {
+  "places": [],
+  "picked": "shaanxi-xian 15"
+ },
+ "sichuan-chengdu 21|tuojiang": {
+  "places": [
+   "sichuan-south 18"
+  ],
+  "picked": null
+ },
+ "sichuan-north 3|daba": {
+  "places": [
+   "chongqing 1"
+  ],
+  "picked": null
+ },
+ "sichuan-north 19|jialing": {
+  "places": [
+   "shaanxi-rest 18"
+  ],
+  "picked": null
+ },
+ "sichuan-north 24|hechuan": {
+  "places": [
+   "chongqing 8"
+  ],
+  "picked": null
+ },
+ "sichuan-south 9|dongpo": {
+  "places": [
+   "sichuan-south 6"
+  ],
+  "picked": null
+ },
+ "sichuan-south 18|tuojiang": {
+  "places": [
+   "sichuan-chengdu 21"
+  ],
+  "picked": null
+ },
+ "sichuan-south 22|hejiang": {
+  "places": [
+   "chongqing 30"
+  ],
+  "picked": null
+ }
+}

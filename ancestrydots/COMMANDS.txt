@@ -56,7 +56,7 @@ Build tippecanoe (WSL Ubuntu, one-time):
       (this line said "anita-maps" until 2026-09-09; there is no bucket by that name, and it
        was the only written record of it -- religiondots/COMMANDS.txt DEPLOY has the rest)
     - Upload dots_all_1per100.pmtiles (overwrites the old one)
-    - Public URL: https://pub-ae551368cea941f39101e13c84d60bde.r2.dev/dots_all_1per100.pmtiles
+    - Public URL: https://data.anita.garden/dots_all_1per100.pmtiles
 
     (PMTiles is NOT in the git repo — GitHub Pages + Cloudflare CDN breaks
     range requests with gzip encoding. R2 handles them correctly.)

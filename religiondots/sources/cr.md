@@ -811,3 +811,11 @@ Costa Rica's `Testigos de Jehová` and `Agnóstico o ateo` each tie one province
 category in all seven countries was re-run against the conditional null — the observed late-half
 average-rank vector permuted against the observed early-half one, exhaustively at n=7 — and no
 verdict changed anywhere; `Testigos de Jehová` goes from p=0.0171 to p=0.0190.
+
+## Pentecostals from Pew 2014 (2026-10-16)
+
+Anita's call of 2026-10-16, built by session `c67d3c3c-latam` (`latam_split.py`, sources.md
+§latam-2026-10-16). LAPOP's two Protestant boxes are one bucket of 1,160,590; 45.5% of it, 528,644,
+is drawn on `christianity.pentecostal`, the share of Protestants Pew Research Center's 2014 survey
+found in a Pentecostal church (`QPROT`, 367 Costa Rican Protestants). 631,946 stay on the two box
+nodes. All `modelled`.

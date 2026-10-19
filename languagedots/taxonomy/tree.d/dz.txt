@@ -1,20 +1,44 @@
 # Algeria (taxonomy/dz2022.py). Arab Barometer VI-VII ethnic group read as language.
 # Parents and languages other fragments already define are repeated with the same label and no
-# colour: Berber (ca.txt colours it), Kabyle (ca.txt), French (ao.txt and others).
+# colour: Berber (ca.txt colours it), Kabyle, Tachelhit (build.py HAND), French (ao.txt and
+# others), Hassaniya (ml.txt) for the Sahrawi camps near Tindouf.
 #
 # Glottolog (data/raw/glottolog): Algerian Arabic alge1239, Kabyle kaby1243, Chaouia of the
-# Aures tach1249, Tumzabt tumz1238, Tahaggart Tamahaq taha1241; all Afroasiatic, the four Berber
-# ones under Berber. Algerian Arabic sits beside `arabic` as Morocco's Darija does.
+# Aures tach1249, Tumzabt tumz1238, Tahaggart Tamahaq taha1241; all Afroasiatic, under Berber.
+# Algerian Arabic sits beside `arabic` as Morocco's Darija does.
+#
+# 2026-10-19 (Anita: "berber in africa"), the Berber varieties the first build left on the group
+# node, all Glottolog languages of Algeria:
+#   chenoua    Western Algerian Berber chen1266 (cnu), Cherchell and the Dahra; Beni Snous
+#              (beni1254, Tlemcen) and the Ouarsenis Zenati are listed under it.
+#   ouargli    Ouargli taga1278 (oua), Ouargla and Ngoussa.
+#   oued_righ  Oued Righ tema1243 (tjo), Touggourt, Temacine, Tamelaht.
+#   taznatit   Sud Oranais-Gourara tazn1238 (grr), Gourara and Touat (its dialects) and the Sud
+#              Oranais ksour (Figuig side).
+#   tidikelt   Tidikelt-Tuat Tamazight tidi1241 (tia), Aoulef and In Salah.
+#   tachelhit  Tachelhit tach1250 (shi), which Glottolog also lists for Algeria (Tindouf).
 afroasiatic | Afroasiatic
 afroasiatic.algerian_arabic | Algerian Arabic (Darija) | 0.78 0.06 180
+afroasiatic.hassaniya | Hassaniya (Maure)
 afroasiatic.berber | Berber
 afroasiatic.berber.kabyle | Kabyle
 afroasiatic.berber.chaouia | Chaoui (Chaouia)
 afroasiatic.berber.tumzabt | Tumzabt (Mozabite)
 afroasiatic.berber.tamahaq | Tamahaq (Tuareg)
+afroasiatic.berber.tachelhit | Tachelhit
+afroasiatic.berber.chenoua | Chenoua (Western Algerian Berber) | 0.64 0.15 125
+afroasiatic.berber.ouargli | Ouargli | 0.60 0.13 78
+afroasiatic.berber.oued_righ | Oued Righ (Righi) | 0.78 0.17 38
+afroasiatic.berber.taznatit | Taznatit (Gourara) | 0.82 0.17 78
+afroasiatic.berber.tidikelt | Tidikelt Tamazight | 0.62 0.15 55
 indoeuropean | Indo-European
 indoeuropean.romance | Romance
 indoeuropean.romance.french | French
 #
 # Colours: Algerian Arabic one shade off Morocco's Darija mint, so the two read as one dialect
-# continuum across the border.
+# continuum across the border. The new Berber varieties are hand-set, hues 38-125 like the other
+# Berbers, so each sits 0.08 (OKLab) or more from every Berber and Algerian Arabic it meets on the
+# ground: Chenoua an olive green beside Kabyle's orange (0.196), Oued Righ a salmon between Chaoui
+# and Ouargli (0.216, 0.211), Ouargli a dark gold-brown beside Tumzabt (0.103), Taznatit an amber
+# (Tidikelt 0.211, Tumzabt 0.127), Tidikelt a dark orange beside Tamahaq (0.298). The group's
+# distances are in sources/dz.md section 4.

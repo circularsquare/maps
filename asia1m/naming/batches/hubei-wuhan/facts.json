@@ -1,0 +1,3101 @@
+{
+ "name": "hubei-wuhan",
+ "province": "Hubei",
+ "prefectures": [
+  "Wuhan",
+  "Ezhou",
+  "Huangshi"
+ ],
+ "tiles": [
+  {
+   "tag": "1",
+   "x": 6911,
+   "y": 3523,
+   "w": 562,
+   "h": 550,
+   "scale": 2,
+   "regions": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16
+   ]
+  }
+ ],
+ "regions": [
+  {
+   "key": "#edc3b7@114.6,30.8",
+   "color": "#edc3b7",
+   "lon": 114.6104,
+   "lat": 30.7815,
+   "bbox": [
+    7155,
+    3723,
+    7205,
+    3762
+   ],
+   "area_px": 1304,
+   "people": 863092,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Xinzhou",
+     "local": "新洲区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.662,
+     "area_share": 0.664,
+     "cover": 0.722
+    },
+    {
+     "name": "Huangpi",
+     "local": "黄陂区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.306,
+     "area_share": 0.304,
+     "cover": 0.299
+    },
+    {
+     "name": "Hongshan",
+     "local": "洪山区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.023,
+     "area_share": 0.021,
+     "cover": 0.011
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hubei",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.015
+    },
+    {
+     "level": "prefecture",
+     "name": "Wuhan",
+     "local": "武汉市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.983,
+     "cover": 0.079
+    }
+   ],
+   "towns": [
+    {
+     "town": "前川街道",
+     "county": "黄陂区",
+     "city": "武汉市",
+     "people_share": 0.2,
+     "cover": 0.928
+    },
+    {
+     "town": "阳逻街道",
+     "county": "新洲区",
+     "city": "武汉市",
+     "people_share": 0.153,
+     "cover": 0.994
+    },
+    {
+     "town": "邾城街道",
+     "county": "新洲区",
+     "city": "武汉市",
+     "people_share": 0.118,
+     "cover": 0.933
+    },
+    {
+     "town": "辛冲镇",
+     "county": "新洲区",
+     "city": "武汉市",
+     "people_share": 0.117,
+     "cover": 1.0
+    },
+    {
+     "town": "仓埠街道",
+     "county": "新洲区",
+     "city": "武汉市",
+     "people_share": 0.094,
+     "cover": 0.982
+    },
+    {
+     "town": "六指店街道",
+     "county": "黄陂区",
+     "city": "武汉市",
+     "people_share": 0.09,
+     "cover": 0.926
+    },
+    {
+     "town": "汪集街道",
+     "county": "新洲区",
+     "city": "武汉市",
+     "people_share": 0.068,
+     "cover": 1.0
+    },
+    {
+     "town": "双柳街道",
+     "county": "新洲区",
+     "city": "武汉市",
+     "people_share": 0.037,
+     "cover": 0.915
+    },
+    {
+     "town": "李集街道",
+     "county": "新洲区",
+     "city": "武汉市",
+     "people_share": 0.032,
+     "cover": 0.865
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f3cdc4",
+     "border_px": 464
+    },
+    {
+     "key": "#eacbc8",
+     "border_px": 448
+    },
+    {
+     "key": "#eed3cd",
+     "border_px": 389
+    },
+    {
+     "key": "#eacbc3",
+     "border_px": 356
+    },
+    {
+     "key": "#f1b9b9",
+     "border_px": 300
+    },
+    {
+     "key": "#ebb2a4",
+     "border_px": 163
+    }
+   ],
+   "text_px": 0,
+   "n": 1,
+   "thumb": {
+    "x0": 7115,
+    "y0": 3683,
+    "k": 3.0,
+    "w": 390,
+    "h": 357
+   }
+  },
+  {
+   "key": "#f1b9b9",
+   "color": "#f1b9b9",
+   "lon": 114.0975,
+   "lat": 30.7307,
+   "bbox": [
+    7116,
+    3736,
+    7168,
+    3765
+   ],
+   "area_px": 785,
+   "people": 729359,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Hanchuan",
+     "local": "汉川市",
+     "prefecture": "Xiaogan",
+     "prefecture_local": "孝感市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.447,
+     "area_share": 0.205,
+     "cover": 0.268
+    },
+    {
+     "name": "Huangpi",
+     "local": "黄陂区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.29,
+     "area_share": 0.389,
+     "cover": 0.239
+    },
+    {
+     "name": "Dongxihu",
+     "local": "东西湖区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.241,
+     "area_share": 0.381,
+     "cover": 0.272
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hubei",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.013
+    },
+    {
+     "level": "prefecture",
+     "name": "Wuhan",
+     "local": "武汉市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.539,
+     "cover": 0.037
+    },
+    {
+     "level": "prefecture",
+     "name": "Xiaogan",
+     "local": "孝感市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.461,
+     "cover": 0.066
+    }
+   ],
+   "towns": [
+    {
+     "town": "新河镇",
+     "county": "汉川市",
+     "city": "孝感市",
+     "people_share": 0.187,
+     "cover": 0.987
+    },
+    {
+     "town": "仙女山街道",
+     "county": "汉川市",
+     "city": "孝感市",
+     "people_share": 0.171,
+     "cover": 0.815
+    },
+    {
+     "town": "盘龙城经济开发区",
+     "county": "黄陂区",
+     "city": "武汉市",
+     "people_share": 0.142,
+     "cover": 0.949
+    },
+    {
+     "town": "横店街道",
+     "county": "黄陂区",
+     "city": "武汉市",
+     "people_share": 0.062,
+     "cover": 0.968
+    },
+    {
+     "town": "柏泉街道",
+     "county": "东西湖区",
+     "city": "武汉市",
+     "people_share": 0.051,
+     "cover": 0.997
+    },
+    {
+     "town": "东山街道",
+     "county": "东西湖区",
+     "city": "武汉市",
+     "people_share": 0.044,
+     "cover": 0.999
+    },
+    {
+     "town": "走马岭街道",
+     "county": "东西湖区",
+     "city": "武汉市",
+     "people_share": 0.042,
+     "cover": 0.843
+    },
+    {
+     "town": "马鞍乡",
+     "county": "汉川市",
+     "city": "孝感市",
+     "people_share": 0.04,
+     "cover": 0.577
+    },
+    {
+     "town": "天河街道",
+     "county": "黄陂区",
+     "city": "武汉市",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "新沟镇街道",
+     "county": "东西湖区",
+     "city": "武汉市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "辛安渡街道",
+     "county": "东西湖区",
+     "city": "武汉市",
+     "people_share": 0.033,
+     "cover": 0.958
+    }
+   ],
+   "cities": [
+    {
+     "name": "Hanchuan",
+     "admin": "Hubei",
+     "pop": 1092700
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#ebc1c3",
+     "border_px": 451
+    },
+    {
+     "key": "#eea3a3",
+     "border_px": 360
+    },
+    {
+     "key": "#edc3b7@114.6,30.8",
+     "border_px": 300
+    },
+    {
+     "key": "#edb7ba",
+     "border_px": 278
+    },
+    {
+     "key": "#eac7cc",
+     "border_px": 243
+    },
+    {
+     "key": "#eacbc8",
+     "border_px": 130
+    },
+    {
+     "key": "#f99090",
+     "border_px": 123
+    },
+    {
+     "key": "#edb7c5",
+     "border_px": 65
+    },
+    {
+     "key": "#eed3cd",
+     "border_px": 44
+    }
+   ],
+   "text_px": 0,
+   "n": 2,
+   "thumb": {
+    "x0": 7076,
+    "y0": 3696,
+    "k": 3.0,
+    "w": 396,
+    "h": 327
+   }
+  },
+  {
+   "key": "#f99090",
+   "color": "#f99090",
+   "lon": 114.3119,
+   "lat": 30.6464,
+   "bbox": [
+    7154,
+    3752,
+    7165,
+    3762
+   ],
+   "area_px": 76,
+   "people": 741195,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Jiang'an",
+     "local": "江岸区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.787,
+     "area_share": 0.842,
+     "cover": 0.772
+    },
+    {
+     "name": "Jianghan",
+     "local": "江汉区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.161,
+     "area_share": 0.092,
+     "cover": 0.185
+    },
+    {
+     "name": "Wuchang",
+     "local": "武昌区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.051,
+     "area_share": 0.026,
+     "cover": 0.027
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hubei",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.013
+    },
+    {
+     "level": "prefecture",
+     "name": "Wuhan",
+     "local": "武汉市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.069
+    }
+   ],
+   "towns": [
+    {
+     "town": "二七街街道",
+     "county": "江岸区",
+     "city": "武汉市",
+     "people_share": 0.154,
+     "cover": 1.0
+    },
+    {
+     "town": "劳动街街道",
+     "county": "江岸区",
+     "city": "武汉市",
+     "people_share": 0.134,
+     "cover": 1.0
+    },
+    {
+     "town": "花桥街街道",
+     "county": "江岸区",
+     "city": "武汉市",
+     "people_share": 0.089,
+     "cover": 1.0
+    },
+    {
+     "town": "四唯街街道",
+     "county": "江岸区",
+     "city": "武汉市",
+     "people_share": 0.089,
+     "cover": 1.0
+    },
+    {
+     "town": "汉兴街街道",
+     "county": "江汉区",
+     "city": "武汉市",
+     "people_share": 0.085,
+     "cover": 0.576
+    },
+    {
+     "town": "唐家墩街街道",
+     "county": "江汉区",
+     "city": "武汉市",
+     "people_share": 0.076,
+     "cover": 0.46
+    },
+    {
+     "town": "塔子湖街街道",
+     "county": "江岸区",
+     "city": "武汉市",
+     "people_share": 0.067,
+     "cover": 0.89
+    },
+    {
+     "town": "丹水池街街道",
+     "county": "江岸区",
+     "city": "武汉市",
+     "people_share": 0.061,
+     "cover": 1.0
+    },
+    {
+     "town": "后湖街街道",
+     "county": "江岸区",
+     "city": "武汉市",
+     "people_share": 0.054,
+     "cover": 0.97
+    },
+    {
+     "town": "杨园街街道",
+     "county": "武昌区",
+     "city": "武汉市",
+     "people_share": 0.051,
+     "cover": 0.199
+    },
+    {
+     "town": "永清街街道",
+     "county": "江岸区",
+     "city": "武汉市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "一元街街道",
+     "county": "江岸区",
+     "city": "武汉市",
+     "people_share": 0.045,
+     "cover": 0.333
+    }
+   ],
+   "cities": [
+    {
+     "name": "Wuhan",
+     "admin": "Hubei",
+     "pop": 10251000
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f1b9b9",
+     "border_px": 123
+    },
+    {
+     "key": "#eea3a3",
+     "border_px": 99
+    },
+    {
+     "key": "#f6a589",
+     "border_px": 93
+    },
+    {
+     "key": "#f06969",
+     "border_px": 91
+    },
+    {
+     "key": "#e7744d",
+     "border_px": 46
+    },
+    {
+     "key": "#eed3cd",
+     "border_px": 32
+    }
+   ],
+   "text_px": 0,
+   "n": 3,
+   "thumb": {
+    "x0": 7114,
+    "y0": 3712,
+    "k": 4.0,
+    "w": 364,
+    "h": 360
+   }
+  },
+  {
+   "key": "#eea3a3",
+   "color": "#eea3a3",
+   "lon": 114.1511,
+   "lat": 30.6379,
+   "bbox": [
+    7136,
+    3754,
+    7156,
+    3765
+   ],
+   "area_px": 173,
+   "people": 894956,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Dongxihu",
+     "local": "东西湖区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.522,
+     "area_share": 0.763,
+     "cover": 0.724
+    },
+    {
+     "name": "Qiaokou",
+     "local": "硚口区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.345,
+     "area_share": 0.145,
+     "cover": 0.474
+    },
+    {
+     "name": "Hanyang",
+     "local": "汉阳区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.066,
+     "area_share": 0.04,
+     "cover": 0.05
+    },
+    {
+     "name": "Jianghan",
+     "local": "江汉区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.052,
+     "area_share": 0.012,
+     "cover": 0.072
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hubei",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.016
+    },
+    {
+     "level": "prefecture",
+     "name": "Wuhan",
+     "local": "武汉市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.084
+    }
+   ],
+   "towns": [
+    {
+     "town": "金银湖街道",
+     "county": "东西湖区",
+     "city": "武汉市",
+     "people_share": 0.17,
+     "cover": 0.955
+    },
+    {
+     "town": "长丰街道",
+     "county": "硚口区",
+     "city": "武汉市",
+     "people_share": 0.144,
+     "cover": 0.848
+    },
+    {
+     "town": "径河街道",
+     "county": "东西湖区",
+     "city": "武汉市",
+     "people_share": 0.124,
+     "cover": 0.868
+    },
+    {
+     "town": "韩家墩街道",
+     "county": "硚口区",
+     "city": "武汉市",
+     "people_share": 0.098,
+     "cover": 1.0
+    },
+    {
+     "town": "将军路街道",
+     "county": "东西湖区",
+     "city": "武汉市",
+     "people_share": 0.068,
+     "cover": 1.0
+    },
+    {
+     "town": "古田街道",
+     "county": "硚口区",
+     "city": "武汉市",
+     "people_share": 0.062,
+     "cover": 1.0
+    },
+    {
+     "town": "永丰街街道",
+     "county": "汉阳区",
+     "city": "武汉市",
+     "people_share": 0.05,
+     "cover": 0.17
+    },
+    {
+     "town": "易家街道",
+     "county": "硚口区",
+     "city": "武汉市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "吴家山街道",
+     "county": "东西湖区",
+     "city": "武汉市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "慈惠街道",
+     "county": "东西湖区",
+     "city": "武汉市",
+     "people_share": 0.036,
+     "cover": 0.98
+    },
+    {
+     "town": "长青街道",
+     "county": "东西湖区",
+     "city": "武汉市",
+     "people_share": 0.033,
+     "cover": 0.977
+    },
+    {
+     "town": "常青花园新区街道",
+     "county": "东西湖区",
+     "city": "武汉市",
+     "people_share": 0.032,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f1b9b9",
+     "border_px": 360
+    },
+    {
+     "key": "#edb7ba",
+     "border_px": 139
+    },
+    {
+     "key": "#ea9696",
+     "border_px": 100
+    },
+    {
+     "key": "#f99090",
+     "border_px": 99
+    },
+    {
+     "key": "#f06969",
+     "border_px": 64
+    }
+   ],
+   "text_px": 0,
+   "n": 4,
+   "thumb": {
+    "x0": 7096,
+    "y0": 3714,
+    "k": 4.0,
+    "w": 400,
+    "h": 364
+   }
+  },
+  {
+   "key": "#f6a589",
+   "color": "#f6a589",
+   "lon": 114.4155,
+   "lat": 30.609,
+   "bbox": [
+    7163,
+    3755,
+    7175,
+    3767
+   ],
+   "area_px": 132,
+   "people": 838341,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Qingshan",
+     "local": "青山区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.458,
+     "area_share": 0.508,
+     "cover": 0.93
+    },
+    {
+     "name": "Hongshan",
+     "local": "洪山区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.415,
+     "area_share": 0.394,
+     "cover": 0.195
+    },
+    {
+     "name": "Wuchang",
+     "local": "武昌区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.127,
+     "area_share": 0.098,
+     "cover": 0.075
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hubei",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.015
+    },
+    {
+     "level": "prefecture",
+     "name": "Wuhan",
+     "local": "武汉市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.078
+    }
+   ],
+   "towns": [
+    {
+     "town": "和平街道",
+     "county": "洪山区",
+     "city": "武汉市",
+     "people_share": 0.23,
+     "cover": 0.922
+    },
+    {
+     "town": "东湖风景区街道",
+     "county": "洪山区",
+     "city": "武汉市",
+     "people_share": 0.102,
+     "cover": 0.444
+    },
+    {
+     "town": "红钢城街道",
+     "county": "青山区",
+     "city": "武汉市",
+     "people_share": 0.086,
+     "cover": 0.987
+    },
+    {
+     "town": "梨园街道",
+     "county": "洪山区",
+     "city": "武汉市",
+     "people_share": 0.078,
+     "cover": 1.0
+    },
+    {
+     "town": "东湖风景区街道",
+     "county": "武昌区",
+     "city": "武汉市",
+     "people_share": 0.063,
+     "cover": 0.469
+    },
+    {
+     "town": "冶金街道",
+     "county": "青山区",
+     "city": "武汉市",
+     "people_share": 0.062,
+     "cover": 1.0
+    },
+    {
+     "town": "武钢集团公司",
+     "county": "青山区",
+     "city": "武汉市",
+     "people_share": 0.057,
+     "cover": 0.939
+    },
+    {
+     "town": "杨园街街道",
+     "county": "武昌区",
+     "city": "武汉市",
+     "people_share": 0.045,
+     "cover": 0.197
+    },
+    {
+     "town": "白玉山街道",
+     "county": "青山区",
+     "city": "武汉市",
+     "people_share": 0.044,
+     "cover": 0.785
+    },
+    {
+     "town": "红卫路街道",
+     "county": "青山区",
+     "city": "武汉市",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "工人村街道",
+     "county": "青山区",
+     "city": "武汉市",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "武东街道",
+     "county": "青山区",
+     "city": "武汉市",
+     "people_share": 0.034,
+     "cover": 0.743
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#eed3cd",
+     "border_px": 265
+    },
+    {
+     "key": "#eea37a",
+     "border_px": 128
+    },
+    {
+     "key": "#e7744d",
+     "border_px": 98
+    },
+    {
+     "key": "#f99090",
+     "border_px": 93
+    }
+   ],
+   "text_px": 0,
+   "n": 5,
+   "thumb": {
+    "x0": 7123,
+    "y0": 3715,
+    "k": 4.0,
+    "w": 368,
+    "h": 368
+   }
+  },
+  {
+   "key": "#f06969",
+   "color": "#f06969",
+   "lon": 114.2557,
+   "lat": 30.5918,
+   "bbox": [
+    7153,
+    3762,
+    7159,
+    3766
+   ],
+   "area_px": 38,
+   "people": 1157189,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Jianghan",
+     "local": "江汉区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.415,
+     "area_share": 0.447,
+     "cover": 0.743
+    },
+    {
+     "name": "Qiaokou",
+     "local": "硚口区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.296,
+     "area_share": 0.289,
+     "cover": 0.526
+    },
+    {
+     "name": "Jiang'an",
+     "local": "江岸区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.143,
+     "area_share": 0.132,
+     "cover": 0.219
+    },
+    {
+     "name": "Hanyang",
+     "local": "汉阳区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.118,
+     "area_share": 0.105,
+     "cover": 0.116
+    },
+    {
+     "name": "Wuchang",
+     "local": "武昌区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.029,
+     "area_share": 0.026,
+     "cover": 0.023
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hubei",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.021
+    },
+    {
+     "level": "prefecture",
+     "name": "Wuhan",
+     "local": "武汉市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.108
+    }
+   ],
+   "towns": [
+    {
+     "town": "万松街街道",
+     "county": "江汉区",
+     "city": "武汉市",
+     "people_share": 0.129,
+     "cover": 1.0
+    },
+    {
+     "town": "宝丰街道",
+     "county": "硚口区",
+     "city": "武汉市",
+     "people_share": 0.088,
+     "cover": 1.0
+    },
+    {
+     "town": "宗关街道",
+     "county": "硚口区",
+     "city": "武汉市",
+     "people_share": 0.07,
+     "cover": 1.0
+    },
+    {
+     "town": "汉水桥街道",
+     "county": "硚口区",
+     "city": "武汉市",
+     "people_share": 0.059,
+     "cover": 1.0
+    },
+    {
+     "town": "晴川街街道",
+     "county": "汉阳区",
+     "city": "武汉市",
+     "people_share": 0.059,
+     "cover": 1.0
+    },
+    {
+     "town": "月湖街街道",
+     "county": "汉阳区",
+     "city": "武汉市",
+     "people_share": 0.059,
+     "cover": 0.5
+    },
+    {
+     "town": "唐家墩街街道",
+     "county": "江汉区",
+     "city": "武汉市",
+     "people_share": 0.057,
+     "cover": 0.54
+    },
+    {
+     "town": "一元街街道",
+     "county": "江岸区",
+     "city": "武汉市",
+     "people_share": 0.057,
+     "cover": 0.667
+    },
+    {
+     "town": "民族街街道",
+     "county": "江汉区",
+     "city": "武汉市",
+     "people_share": 0.054,
+     "cover": 1.0
+    },
+    {
+     "town": "常青街街道",
+     "county": "江汉区",
+     "city": "武汉市",
+     "people_share": 0.04,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f99090",
+     "border_px": 91
+    },
+    {
+     "key": "#ea9696",
+     "border_px": 79
+    },
+    {
+     "key": "#eea3a3",
+     "border_px": 64
+    },
+    {
+     "key": "#e7744d",
+     "border_px": 58
+    }
+   ],
+   "text_px": 0,
+   "n": 6,
+   "thumb": {
+    "x0": 7113,
+    "y0": 3722,
+    "k": 4.0,
+    "w": 344,
+    "h": 336
+   }
+  },
+  {
+   "key": "#e7744d",
+   "color": "#e7744d",
+   "lon": 114.3214,
+   "lat": 30.5537,
+   "bbox": [
+    7159,
+    3762,
+    7165,
+    3772
+   ],
+   "area_px": 60,
+   "people": 1230791,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Wuchang",
+     "local": "武昌区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.944,
+     "area_share": 0.933,
+     "cover": 0.814
+    },
+    {
+     "name": "Hongshan",
+     "local": "洪山区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.056,
+     "area_share": 0.067,
+     "cover": 0.039
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hubei",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.022
+    },
+    {
+     "level": "prefecture",
+     "name": "Wuhan",
+     "local": "武汉市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.115
+    }
+   ],
+   "towns": [
+    {
+     "town": "水果湖街街道",
+     "county": "武昌区",
+     "city": "武汉市",
+     "people_share": 0.203,
+     "cover": 0.938
+    },
+    {
+     "town": "积玉桥街街道",
+     "county": "武昌区",
+     "city": "武汉市",
+     "people_share": 0.14,
+     "cover": 1.0
+    },
+    {
+     "town": "中南路街街道",
+     "county": "武昌区",
+     "city": "武汉市",
+     "people_share": 0.136,
+     "cover": 1.0
+    },
+    {
+     "town": "徐家棚街街道",
+     "county": "武昌区",
+     "city": "武汉市",
+     "people_share": 0.103,
+     "cover": 1.0
+    },
+    {
+     "town": "杨园街街道",
+     "county": "武昌区",
+     "city": "武汉市",
+     "people_share": 0.067,
+     "cover": 0.43
+    },
+    {
+     "town": "白沙洲街街道",
+     "county": "武昌区",
+     "city": "武汉市",
+     "people_share": 0.052,
+     "cover": 0.627
+    },
+    {
+     "town": "粮道街街道",
+     "county": "武昌区",
+     "city": "武汉市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "黄鹤楼街街道",
+     "county": "武昌区",
+     "city": "武汉市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "首义路街街道",
+     "county": "武昌区",
+     "city": "武汉市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "洪山街道",
+     "county": "洪山区",
+     "city": "武汉市",
+     "people_share": 0.037,
+     "cover": 0.239
+    },
+    {
+     "town": "东湖风景区街道",
+     "county": "武昌区",
+     "city": "武汉市",
+     "people_share": 0.032,
+     "cover": 0.351
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#eea37a",
+     "border_px": 105
+    },
+    {
+     "key": "#f6a589",
+     "border_px": 98
+    },
+    {
+     "key": "#ea9696",
+     "border_px": 61
+    },
+    {
+     "key": "#f39381",
+     "border_px": 60
+    },
+    {
+     "key": "#f06969",
+     "border_px": 58
+    },
+    {
+     "key": "#f99090",
+     "border_px": 46
+    }
+   ],
+   "text_px": 0,
+   "n": 7,
+   "thumb": {
+    "x0": 7119,
+    "y0": 3722,
+    "k": 4.0,
+    "w": 344,
+    "h": 360
+   }
+  },
+  {
+   "key": "#ea9696",
+   "color": "#ea9696",
+   "lon": 114.1938,
+   "lat": 30.5296,
+   "bbox": [
+    7145,
+    3766,
+    7157,
+    3779
+   ],
+   "area_px": 136,
+   "people": 1097143,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Hanyang",
+     "local": "汉阳区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.889,
+     "area_share": 0.691,
+     "cover": 0.831
+    },
+    {
+     "name": "Caidian",
+     "local": "蔡甸区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.097,
+     "area_share": 0.287,
+     "cover": 0.153
+    },
+    {
+     "name": "Wuchang",
+     "local": "武昌区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.014,
+     "area_share": 0.022,
+     "cover": 0.011
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hubei",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.02
+    },
+    {
+     "level": "prefecture",
+     "name": "Wuhan",
+     "local": "武汉市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.103
+    }
+   ],
+   "towns": [
+    {
+     "town": "永丰街街道",
+     "county": "汉阳区",
+     "city": "武汉市",
+     "people_share": 0.197,
+     "cover": 0.82
+    },
+    {
+     "town": "五里墩街街道",
+     "county": "汉阳区",
+     "city": "武汉市",
+     "people_share": 0.127,
+     "cover": 1.0
+    },
+    {
+     "town": "江堤街街道",
+     "county": "汉阳区",
+     "city": "武汉市",
+     "people_share": 0.112,
+     "cover": 1.0
+    },
+    {
+     "town": "鹦鹉街街道",
+     "county": "汉阳区",
+     "city": "武汉市",
+     "people_share": 0.107,
+     "cover": 1.0
+    },
+    {
+     "town": "琴断口街街道",
+     "county": "汉阳区",
+     "city": "武汉市",
+     "people_share": 0.087,
+     "cover": 1.0
+    },
+    {
+     "town": "月湖街街道",
+     "county": "汉阳区",
+     "city": "武汉市",
+     "people_share": 0.062,
+     "cover": 0.5
+    },
+    {
+     "town": "建桥街街道",
+     "county": "汉阳区",
+     "city": "武汉市",
+     "people_share": 0.062,
+     "cover": 1.0
+    },
+    {
+     "town": "沌口街街道",
+     "county": "蔡甸区",
+     "city": "武汉市",
+     "people_share": 0.059,
+     "cover": 0.875
+    },
+    {
+     "town": "洲头街街道",
+     "county": "汉阳区",
+     "city": "武汉市",
+     "people_share": 0.046,
+     "cover": 1.0
+    },
+    {
+     "town": "江汉二桥街道",
+     "county": "汉阳区",
+     "city": "武汉市",
+     "people_share": 0.038,
+     "cover": 0.75
+    },
+    {
+     "town": "沌阳街道",
+     "county": "蔡甸区",
+     "city": "武汉市",
+     "people_share": 0.034,
+     "cover": 0.562
+    },
+    {
+     "town": "翠微街街道",
+     "county": "汉阳区",
+     "city": "武汉市",
+     "people_share": 0.031,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#edb7ba",
+     "border_px": 221
+    },
+    {
+     "key": "#f39381",
+     "border_px": 129
+    },
+    {
+     "key": "#eea3a3",
+     "border_px": 100
+    },
+    {
+     "key": "#f06969",
+     "border_px": 79
+    },
+    {
+     "key": "#e7744d",
+     "border_px": 61
+    }
+   ],
+   "text_px": 0,
+   "n": 8,
+   "thumb": {
+    "x0": 7105,
+    "y0": 3726,
+    "k": 4.0,
+    "w": 368,
+    "h": 372
+   }
+  },
+  {
+   "key": "#eea37a",
+   "color": "#eea37a",
+   "lon": 114.4194,
+   "lat": 30.5044,
+   "bbox": [
+    7164,
+    3767,
+    7179,
+    3777
+   ],
+   "area_px": 135,
+   "people": 901475,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Hongshan",
+     "local": "洪山区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.936,
+     "area_share": 0.881,
+     "cover": 0.473
+    },
+    {
+     "name": "Wuchang",
+     "local": "武昌区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.035,
+     "area_share": 0.044,
+     "cover": 0.022
+    },
+    {
+     "name": "Jiangxia",
+     "local": "江夏区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.028,
+     "area_share": 0.067,
+     "cover": 0.031
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hubei",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.016
+    },
+    {
+     "level": "prefecture",
+     "name": "Wuhan",
+     "local": "武汉市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.084
+    }
+   ],
+   "towns": [
+    {
+     "town": "关东街道",
+     "county": "洪山区",
+     "city": "武汉市",
+     "people_share": 0.307,
+     "cover": 0.722
+    },
+    {
+     "town": "珞南街道",
+     "county": "洪山区",
+     "city": "武汉市",
+     "people_share": 0.179,
+     "cover": 1.0
+    },
+    {
+     "town": "东湖风景区街道",
+     "county": "洪山区",
+     "city": "武汉市",
+     "people_share": 0.119,
+     "cover": 0.556
+    },
+    {
+     "town": "关山街道",
+     "county": "洪山区",
+     "city": "武汉市",
+     "people_share": 0.107,
+     "cover": 1.0
+    },
+    {
+     "town": "卓刀泉街道",
+     "county": "洪山区",
+     "city": "武汉市",
+     "people_share": 0.066,
+     "cover": 1.0
+    },
+    {
+     "town": "九峰街道",
+     "county": "洪山区",
+     "city": "武汉市",
+     "people_share": 0.062,
+     "cover": 0.941
+    },
+    {
+     "town": "洪山街道",
+     "county": "洪山区",
+     "city": "武汉市",
+     "people_share": 0.053,
+     "cover": 0.25
+    },
+    {
+     "town": "狮子山街道",
+     "county": "洪山区",
+     "city": "武汉市",
+     "people_share": 0.042,
+     "cover": 0.219
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#e79e91",
+     "border_px": 184
+    },
+    {
+     "key": "#eed3cd",
+     "border_px": 149
+    },
+    {
+     "key": "#f6a589",
+     "border_px": 128
+    },
+    {
+     "key": "#e7744d",
+     "border_px": 105
+    },
+    {
+     "key": "#f39381",
+     "border_px": 98
+    }
+   ],
+   "text_px": 0,
+   "n": 9,
+   "thumb": {
+    "x0": 7124,
+    "y0": 3727,
+    "k": 4.0,
+    "w": 380,
+    "h": 360
+   }
+  },
+  {
+   "key": "#ebb2a4",
+   "color": "#ebb2a4",
+   "lon": 114.8243,
+   "lat": 30.4696,
+   "bbox": [
+    7194,
+    3756,
+    7222,
+    3789
+   ],
+   "area_px": 735,
+   "people": 792831,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Huangzhou",
+     "local": "黄州区",
+     "prefecture": "Huanggang",
+     "prefecture_local": "黄冈市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.423,
+     "area_share": 0.362,
+     "cover": 0.93
+    },
+    {
+     "name": "Echeng",
+     "local": "鄂城区",
+     "prefecture": "Ezhou",
+     "prefecture_local": "鄂州市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.396,
+     "area_share": 0.256,
+     "cover": 0.518
+    },
+    {
+     "name": "Huarong",
+     "local": "华容区",
+     "prefecture": "Ezhou",
+     "prefecture_local": "鄂州市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.175,
+     "area_share": 0.367,
+     "cover": 0.596
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hubei",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.014
+    },
+    {
+     "level": "prefecture",
+     "name": "Ezhou",
+     "local": "鄂州市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.592,
+     "cover": 0.468
+    },
+    {
+     "level": "prefecture",
+     "name": "Huanggang",
+     "local": "黄冈市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.408,
+     "cover": 0.054
+    }
+   ],
+   "towns": [
+    {
+     "town": "鄂州经济开发区",
+     "county": "鄂城区",
+     "city": "鄂州市",
+     "people_share": 0.117,
+     "cover": 1.0
+    },
+    {
+     "town": "西山街道",
+     "county": "鄂城区",
+     "city": "鄂州市",
+     "people_share": 0.113,
+     "cover": 1.0
+    },
+    {
+     "town": "禹王街道",
+     "county": "黄州区",
+     "city": "黄冈市",
+     "people_share": 0.107,
+     "cover": 1.0
+    },
+    {
+     "town": "赤壁街道",
+     "county": "黄州区",
+     "city": "黄冈市",
+     "people_share": 0.098,
+     "cover": 1.0
+    },
+    {
+     "town": "凤凰街道",
+     "county": "鄂城区",
+     "city": "鄂州市",
+     "people_share": 0.08,
+     "cover": 1.0
+    },
+    {
+     "town": "路口镇",
+     "county": "黄州区",
+     "city": "黄冈市",
+     "people_share": 0.061,
+     "cover": 1.0
+    },
+    {
+     "town": "华容镇",
+     "county": "华容区",
+     "city": "鄂州市",
+     "people_share": 0.06,
+     "cover": 0.863
+    },
+    {
+     "town": "临江乡",
+     "county": "华容区",
+     "city": "鄂州市",
+     "people_share": 0.059,
+     "cover": 1.0
+    },
+    {
+     "town": "黄冈经济开发区",
+     "county": "黄州区",
+     "city": "黄冈市",
+     "people_share": 0.055,
+     "cover": 1.0
+    },
+    {
+     "town": "东湖街道",
+     "county": "黄州区",
+     "city": "黄冈市",
+     "people_share": 0.053,
+     "cover": 1.0
+    },
+    {
+     "town": "古楼街道",
+     "county": "鄂城区",
+     "city": "鄂州市",
+     "people_share": 0.031,
+     "cover": 1.0
+    },
+    {
+     "town": "段店镇",
+     "county": "华容区",
+     "city": "鄂州市",
+     "people_share": 0.031,
+     "cover": 0.992
+    }
+   ],
+   "cities": [
+    {
+     "name": "Huanggang",
+     "admin": "Hubei",
+     "pop": 5882719
+    },
+    {
+     "name": "Ezhou",
+     "admin": "Hubei",
+     "pop": 1079353
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f3cdc4",
+     "border_px": 470
+    },
+    {
+     "key": "#eacb9d",
+     "border_px": 364
+    },
+    {
+     "key": "#eed3cd",
+     "border_px": 333
+    },
+    {
+     "key": "#e8ddbe",
+     "border_px": 200
+    },
+    {
+     "key": "#edc3b7@114.6,30.8",
+     "border_px": 163
+    }
+   ],
+   "text_px": 0,
+   "n": 10,
+   "thumb": {
+    "x0": 7154,
+    "y0": 3716,
+    "k": 3.0,
+    "w": 324,
+    "h": 339
+   }
+  },
+  {
+   "key": "#f39381",
+   "color": "#f39381",
+   "lon": 114.2618,
+   "lat": 30.4607,
+   "bbox": [
+    7152,
+    3773,
+    7164,
+    3785
+   ],
+   "area_px": 108,
+   "people": 352783,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Hongshan",
+     "local": "洪山区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.881,
+     "area_share": 0.787,
+     "cover": 0.174
+    },
+    {
+     "name": "Wuchang",
+     "local": "武昌区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.114,
+     "area_share": 0.157,
+     "cover": 0.028
+    },
+    {
+     "name": "Jiangxia",
+     "local": "江夏区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.005,
+     "area_share": 0.056,
+     "cover": 0.002
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hubei",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.006
+    },
+    {
+     "level": "prefecture",
+     "name": "Wuhan",
+     "local": "武汉市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.033
+    }
+   ],
+   "towns": [
+    {
+     "town": "狮子山街道",
+     "county": "洪山区",
+     "city": "武汉市",
+     "people_share": 0.388,
+     "cover": 0.781
+    },
+    {
+     "town": "洪山街道",
+     "county": "洪山区",
+     "city": "武汉市",
+     "people_share": 0.275,
+     "cover": 0.511
+    },
+    {
+     "town": "张家湾街道",
+     "county": "洪山区",
+     "city": "武汉市",
+     "people_share": 0.16,
+     "cover": 0.885
+    },
+    {
+     "town": "白沙洲街街道",
+     "county": "武昌区",
+     "city": "武汉市",
+     "people_share": 0.065,
+     "cover": 0.222
+    },
+    {
+     "town": "青菱街道",
+     "county": "洪山区",
+     "city": "武汉市",
+     "people_share": 0.058,
+     "cover": 0.874
+    },
+    {
+     "town": "南湖街街道",
+     "county": "武昌区",
+     "city": "武汉市",
+     "people_share": 0.049,
+     "cover": 0.413
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#e79e91",
+     "border_px": 175
+    },
+    {
+     "key": "#ea9696",
+     "border_px": 129
+    },
+    {
+     "key": "#eea37a",
+     "border_px": 98
+    },
+    {
+     "key": "#eed3cd",
+     "border_px": 72
+    },
+    {
+     "key": "#e7744d",
+     "border_px": 60
+    },
+    {
+     "key": "#edb7ba",
+     "border_px": 50
+    }
+   ],
+   "text_px": 0,
+   "n": 11,
+   "thumb": {
+    "x0": 7112,
+    "y0": 3733,
+    "k": 4.0,
+    "w": 368,
+    "h": 368
+   }
+  },
+  {
+   "key": "#edb7ba",
+   "color": "#edb7ba",
+   "lon": 113.9421,
+   "lat": 30.4288,
+   "bbox": [
+    7111,
+    3760,
+    7151,
+    3812
+   ],
+   "area_px": 1296,
+   "people": 793326,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Caidian",
+     "local": "蔡甸区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.721,
+     "area_share": 0.713,
+     "cover": 0.822
+    },
+    {
+     "name": "Hanchuan",
+     "local": "汉川市",
+     "prefecture": "Xiaogan",
+     "prefecture_local": "孝感市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.152,
+     "area_share": 0.071,
+     "cover": 0.099
+    },
+    {
+     "name": "Hannan",
+     "local": "汉南区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.103,
+     "area_share": 0.194,
+     "cover": 0.995
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hubei",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.014
+    },
+    {
+     "level": "prefecture",
+     "name": "Wuhan",
+     "local": "武汉市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.849,
+     "cover": 0.063
+    },
+    {
+     "level": "prefecture",
+     "name": "Xiaogan",
+     "local": "孝感市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.145,
+     "cover": 0.023
+    }
+   ],
+   "towns": [
+    {
+     "town": "马口镇",
+     "county": "汉川市",
+     "city": "孝感市",
+     "people_share": 0.109,
+     "cover": 0.921
+    },
+    {
+     "town": "蔡甸街道",
+     "county": "蔡甸区",
+     "city": "武汉市",
+     "people_share": 0.1,
+     "cover": 1.0
+    },
+    {
+     "town": "武汉市蔡甸区后官湖生态宜居新城",
+     "county": "蔡甸区",
+     "city": "武汉市",
+     "people_share": 0.081,
+     "cover": 1.0
+    },
+    {
+     "town": "大集街道",
+     "county": "蔡甸区",
+     "city": "武汉市",
+     "people_share": 0.077,
+     "cover": 1.0
+    },
+    {
+     "town": "奓山街道",
+     "county": "蔡甸区",
+     "city": "武汉市",
+     "people_share": 0.062,
+     "cover": 1.0
+    },
+    {
+     "town": "侏儒街道",
+     "county": "蔡甸区",
+     "city": "武汉市",
+     "people_share": 0.062,
+     "cover": 0.971
+    },
+    {
+     "town": "玉贤镇",
+     "county": "蔡甸区",
+     "city": "武汉市",
+     "people_share": 0.06,
+     "cover": 1.0
+    },
+    {
+     "town": "纱帽街道",
+     "county": "汉南区",
+     "city": "武汉市",
+     "people_share": 0.054,
+     "cover": 0.994
+    },
+    {
+     "town": "军山街道",
+     "county": "蔡甸区",
+     "city": "武汉市",
+     "people_share": 0.042,
+     "cover": 0.998
+    },
+    {
+     "town": "张湾街道",
+     "county": "蔡甸区",
+     "city": "武汉市",
+     "people_share": 0.041,
+     "cover": 0.663
+    },
+    {
+     "town": "沌阳街道",
+     "county": "蔡甸区",
+     "city": "武汉市",
+     "people_share": 0.037,
+     "cover": 0.438
+    },
+    {
+     "town": "索河镇",
+     "county": "蔡甸区",
+     "city": "武汉市",
+     "people_share": 0.036,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#eed3cd",
+     "border_px": 691
+    },
+    {
+     "key": "#edb7c5",
+     "border_px": 395
+    },
+    {
+     "key": "#eed6da",
+     "border_px": 384
+    },
+    {
+     "key": "#f1b9b9",
+     "border_px": 278
+    },
+    {
+     "key": "#ea9696",
+     "border_px": 221
+    },
+    {
+     "key": "#eea3a3",
+     "border_px": 139
+    },
+    {
+     "key": "#f39381",
+     "border_px": 50
+    },
+    {
+     "key": "#f1c2ce",
+     "border_px": 42
+    }
+   ],
+   "text_px": 0,
+   "n": 12,
+   "thumb": {
+    "x0": 7071,
+    "y0": 3720,
+    "k": 3.0,
+    "w": 360,
+    "h": 396
+   }
+  },
+  {
+   "key": "#e79e91",
+   "color": "#e79e91",
+   "lon": 114.3633,
+   "lat": 30.409,
+   "bbox": [
+    7157,
+    3775,
+    7177,
+    3790
+   ],
+   "area_px": 200,
+   "people": 491760,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Jiangxia",
+     "local": "江夏区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.781,
+     "area_share": 0.885,
+     "cover": 0.473
+    },
+    {
+     "name": "Hongshan",
+     "local": "洪山区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.219,
+     "area_share": 0.115,
+     "cover": 0.06
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hubei",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.009
+    },
+    {
+     "level": "prefecture",
+     "name": "Wuhan",
+     "local": "武汉市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.046
+    }
+   ],
+   "towns": [
+    {
+     "town": "关东街道",
+     "county": "洪山区",
+     "city": "武汉市",
+     "people_share": 0.217,
+     "cover": 0.278
+    },
+    {
+     "town": "江夏区经济开发区庙山街道",
+     "county": "江夏区",
+     "city": "武汉市",
+     "people_share": 0.207,
+     "cover": 0.941
+    },
+    {
+     "town": "江夏区经济开发区大桥新区街道",
+     "county": "江夏区",
+     "city": "武汉市",
+     "people_share": 0.185,
+     "cover": 0.982
+    },
+    {
+     "town": "佛祖岭街道",
+     "county": "江夏区",
+     "city": "武汉市",
+     "people_share": 0.175,
+     "cover": 0.769
+    },
+    {
+     "town": "江夏区经济开发区藏龙岛街道",
+     "county": "江夏区",
+     "city": "武汉市",
+     "people_share": 0.107,
+     "cover": 0.907
+    },
+    {
+     "town": "纸坊街道",
+     "county": "江夏区",
+     "city": "武汉市",
+     "people_share": 0.082,
+     "cover": 0.374
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#eed3cd",
+     "border_px": 431
+    },
+    {
+     "key": "#eea37a",
+     "border_px": 184
+    },
+    {
+     "key": "#f39381",
+     "border_px": 175
+    }
+   ],
+   "text_px": 0,
+   "n": 13,
+   "thumb": {
+    "x0": 7117,
+    "y0": 3735,
+    "k": 4.0,
+    "w": 400,
+    "h": 380
+   }
+  },
+  {
+   "key": "#eed3cd",
+   "color": "#eed3cd",
+   "lon": 114.3418,
+   "lat": 30.2734,
+   "bbox": [
+    7128,
+    3751,
+    7196,
+    3827
+   ],
+   "area_px": 2236,
+   "people": 663019,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Jiangxia",
+     "local": "江夏区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.574,
+     "area_share": 0.699,
+     "cover": 0.469
+    },
+    {
+     "name": "Huarong",
+     "local": "华容区",
+     "prefecture": "Ezhou",
+     "prefecture_local": "鄂州市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.132,
+     "area_share": 0.071,
+     "cover": 0.375
+    },
+    {
+     "name": "Hongshan",
+     "local": "洪山区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.127,
+     "area_share": 0.084,
+     "cover": 0.047
+    },
+    {
+     "name": "Jiayu",
+     "local": "嘉鱼县",
+     "prefecture": "Xianning",
+     "prefecture_local": "咸宁市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.104,
+     "area_share": 0.11,
+     "cover": 0.238
+    },
+    {
+     "name": "Qingshan",
+     "local": "青山区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.042,
+     "area_share": 0.014,
+     "cover": 0.068
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hubei",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.012
+    },
+    {
+     "level": "prefecture",
+     "name": "Wuhan",
+     "local": "武汉市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.693,
+     "cover": 0.043
+    },
+    {
+     "level": "prefecture",
+     "name": "Ezhou",
+     "local": "鄂州市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.184,
+     "cover": 0.122
+    },
+    {
+     "level": "prefecture",
+     "name": "Xianning",
+     "local": "咸宁市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.114,
+     "cover": 0.034
+    }
+   ],
+   "towns": [
+    {
+     "town": "郑店街道",
+     "county": "江夏区",
+     "city": "武汉市",
+     "people_share": 0.123,
+     "cover": 0.881
+    },
+    {
+     "town": "纸坊街道",
+     "county": "江夏区",
+     "city": "武汉市",
+     "people_share": 0.101,
+     "cover": 0.626
+    },
+    {
+     "town": "葛店镇",
+     "county": "华容区",
+     "city": "鄂州市",
+     "people_share": 0.076,
+     "cover": 0.887
+    },
+    {
+     "town": "牌洲湾镇",
+     "county": "嘉鱼县",
+     "city": "咸宁市",
+     "people_share": 0.063,
+     "cover": 0.975
+    },
+    {
+     "town": "山坡街道",
+     "county": "江夏区",
+     "city": "武汉市",
+     "people_share": 0.049,
+     "cover": 0.996
+    },
+    {
+     "town": "金口街道",
+     "county": "江夏区",
+     "city": "武汉市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "金港新区街道",
+     "county": "江夏区",
+     "city": "武汉市",
+     "people_share": 0.039,
+     "cover": 0.662
+    },
+    {
+     "town": "潘家湾镇",
+     "county": "嘉鱼县",
+     "city": "咸宁市",
+     "people_share": 0.038,
+     "cover": 0.82
+    },
+    {
+     "town": "八吉府街街道",
+     "county": "洪山区",
+     "city": "武汉市",
+     "people_share": 0.037,
+     "cover": 0.528
+    },
+    {
+     "town": "左岭街道",
+     "county": "洪山区",
+     "city": "武汉市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "庙岭镇",
+     "county": "华容区",
+     "city": "鄂州市",
+     "people_share": 0.034,
+     "cover": 0.98
+    },
+    {
+     "town": "豹澥街道",
+     "county": "江夏区",
+     "city": "武汉市",
+     "people_share": 0.034,
+     "cover": 0.966
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#edb7ba",
+     "border_px": 691
+    },
+    {
+     "key": "#e8ddbe",
+     "border_px": 556
+    },
+    {
+     "key": "#e79e91",
+     "border_px": 431
+    },
+    {
+     "key": "#edc3b7@114.6,30.8",
+     "border_px": 389
+    },
+    {
+     "key": "#c6eece",
+     "border_px": 353
+    },
+    {
+     "key": "#eed6da",
+     "border_px": 352
+    },
+    {
+     "key": "#ebb2a4",
+     "border_px": 333
+    },
+    {
+     "key": "#f6a589",
+     "border_px": 265
+    },
+    {
+     "key": "#cbeed8",
+     "border_px": 239
+    },
+    {
+     "key": "#eea37a",
+     "border_px": 149
+    },
+    {
+     "key": "#f39381",
+     "border_px": 72
+    },
+    {
+     "key": "#f1b9b9",
+     "border_px": 44
+    },
+    {
+     "key": "#f99090",
+     "border_px": 32
+    }
+   ],
+   "text_px": 0,
+   "n": 14,
+   "thumb": {
+    "x0": 7088,
+    "y0": 3711,
+    "k": 2.0,
+    "w": 296,
+    "h": 312
+   }
+  },
+  {
+   "key": "#e8ddbe",
+   "color": "#e8ddbe",
+   "lon": 114.7664,
+   "lat": 30.0967,
+   "bbox": [
+    7185,
+    3786,
+    7239,
+    3835
+   ],
+   "area_px": 1678,
+   "people": 926284,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Daye",
+     "local": "大冶市",
+     "prefecture": "Huangshi",
+     "prefecture_local": "黄石市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.857,
+     "area_share": 0.716,
+     "cover": 0.877
+    },
+    {
+     "name": "Liangzihu",
+     "local": "梁子湖区",
+     "prefecture": "Ezhou",
+     "prefecture_local": "鄂州市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.128,
+     "area_share": 0.253,
+     "cover": 0.957
+    },
+    {
+     "name": "Xisaishan",
+     "local": "西塞山区",
+     "prefecture": "Huangshi",
+     "prefecture_local": "黄石市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.004,
+     "area_share": 0.002,
+     "cover": 0.022
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hubei",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.017
+    },
+    {
+     "level": "prefecture",
+     "name": "Huangshi",
+     "local": "黄石市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.863,
+     "cover": 0.457
+    },
+    {
+     "level": "prefecture",
+     "name": "Ezhou",
+     "local": "鄂州市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.128,
+     "cover": 0.118
+    }
+   ],
+   "towns": [
+    {
+     "town": "还地桥镇",
+     "county": "大冶市",
+     "city": "黄石市",
+     "people_share": 0.125,
+     "cover": 0.974
+    },
+    {
+     "town": "金湖街道",
+     "county": "大冶市",
+     "city": "黄石市",
+     "people_share": 0.113,
+     "cover": 0.974
+    },
+    {
+     "town": "罗家桥街道",
+     "county": "大冶市",
+     "city": "黄石市",
+     "people_share": 0.085,
+     "cover": 0.981
+    },
+    {
+     "town": "汪仁镇",
+     "county": "大冶市",
+     "city": "黄石市",
+     "people_share": 0.066,
+     "cover": 0.785
+    },
+    {
+     "town": "金山街道",
+     "county": "大冶市",
+     "city": "黄石市",
+     "people_share": 0.064,
+     "cover": 0.843
+    },
+    {
+     "town": "陈贵镇",
+     "county": "大冶市",
+     "city": "黄石市",
+     "people_share": 0.059,
+     "cover": 1.0
+    },
+    {
+     "town": "保安镇",
+     "county": "大冶市",
+     "city": "黄石市",
+     "people_share": 0.058,
+     "cover": 1.0
+    },
+    {
+     "town": "金牛镇",
+     "county": "大冶市",
+     "city": "黄石市",
+     "people_share": 0.051,
+     "cover": 0.973
+    },
+    {
+     "town": "刘仁八镇",
+     "county": "大冶市",
+     "city": "黄石市",
+     "people_share": 0.045,
+     "cover": 0.99
+    },
+    {
+     "town": "灵乡镇",
+     "county": "大冶市",
+     "city": "黄石市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "太和镇",
+     "county": "梁子湖区",
+     "city": "鄂州市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "茗山乡",
+     "county": "大冶市",
+     "city": "黄石市",
+     "people_share": 0.042,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Daye",
+     "admin": "Hubei",
+     "pop": 909724
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#e5f1d0",
+     "border_px": 838
+    },
+    {
+     "key": "#eed3cd",
+     "border_px": 556
+    },
+    {
+     "key": "#eacb9d",
+     "border_px": 553
+    },
+    {
+     "key": "#c6eece",
+     "border_px": 275
+    },
+    {
+     "key": "#ebb2a4",
+     "border_px": 200
+    }
+   ],
+   "text_px": 0,
+   "n": 15,
+   "thumb": {
+    "x0": 7145,
+    "y0": 3746,
+    "k": 3.0,
+    "w": 402,
+    "h": 387
+   }
+  },
+  {
+   "key": "#e5f1d0",
+   "color": "#e5f1d0",
+   "lon": 115.118,
+   "lat": 29.8217,
+   "bbox": [
+    7207,
+    3795,
+    7273,
+    3873
+   ],
+   "area_px": 2975,
+   "people": 911507,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yangxin",
+     "local": "阳新县",
+     "prefecture": "Huangshi",
+     "prefecture_local": "黄石市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.819,
+     "area_share": 0.836,
+     "cover": 0.993
+    },
+    {
+     "name": "Daye",
+     "local": "大冶市",
+     "prefecture": "Huangshi",
+     "prefecture_local": "黄石市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.084,
+     "area_share": 0.062,
+     "cover": 0.084
+    },
+    {
+     "name": "Ruichang",
+     "local": "瑞昌市",
+     "prefecture": "Jiujiang",
+     "prefecture_local": "九江市",
+     "province": "江西省",
+     "country": "China",
+     "people_share": 0.046,
+     "area_share": 0.071,
+     "cover": 0.096
+    },
+    {
+     "name": "Xisaishan",
+     "local": "西塞山区",
+     "prefecture": "Huangshi",
+     "prefecture_local": "黄石市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.04,
+     "area_share": 0.021,
+     "cover": 0.196
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hubei",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.953,
+     "cover": 0.016
+    },
+    {
+     "level": "prefecture",
+     "name": "Huangshi",
+     "local": "黄石市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.938,
+     "cover": 0.489
+    }
+   ],
+   "towns": [
+    {
+     "town": "浮屠镇",
+     "county": "阳新县",
+     "city": "黄石市",
+     "people_share": 0.097,
+     "cover": 1.0
+    },
+    {
+     "town": "白沙镇",
+     "county": "阳新县",
+     "city": "黄石市",
+     "people_share": 0.096,
+     "cover": 1.0
+    },
+    {
+     "town": "兴国镇",
+     "county": "阳新县",
+     "city": "黄石市",
+     "people_share": 0.095,
+     "cover": 1.0
+    },
+    {
+     "town": "龙港镇",
+     "county": "阳新县",
+     "city": "黄石市",
+     "people_share": 0.093,
+     "cover": 0.996
+    },
+    {
+     "town": "大箕铺镇",
+     "county": "大冶市",
+     "city": "黄石市",
+     "people_share": 0.057,
+     "cover": 0.815
+    },
+    {
+     "town": "大王镇",
+     "county": "阳新县",
+     "city": "黄石市",
+     "people_share": 0.048,
+     "cover": 0.997
+    },
+    {
+     "town": "枫林镇",
+     "county": "阳新县",
+     "city": "黄石市",
+     "people_share": 0.044,
+     "cover": 0.987
+    },
+    {
+     "town": "黄颡口镇",
+     "county": "阳新县",
+     "city": "黄石市",
+     "people_share": 0.043,
+     "cover": 0.966
+    },
+    {
+     "town": "富池镇",
+     "county": "阳新县",
+     "city": "黄石市",
+     "people_share": 0.04,
+     "cover": 0.977
+    },
+    {
+     "town": "西塞山工业园区",
+     "county": "西塞山区",
+     "city": "黄石市",
+     "people_share": 0.04,
+     "cover": 0.934
+    },
+    {
+     "town": "排市镇",
+     "county": "阳新县",
+     "city": "黄石市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "太子镇",
+     "county": "阳新县",
+     "city": "黄石市",
+     "people_share": 0.034,
+     "cover": 0.998
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#eae7be",
+     "border_px": 868
+    },
+    {
+     "key": "#e8ddbe",
+     "border_px": 838
+    },
+    {
+     "key": "#daf3e0",
+     "border_px": 444
+    },
+    {
+     "key": "#f3d4c4",
+     "border_px": 414
+    },
+    {
+     "key": "#cbf4db",
+     "border_px": 364
+    },
+    {
+     "key": "#c6eece",
+     "border_px": 265
+    },
+    {
+     "key": "#f3cdc4",
+     "border_px": 56
+    },
+    {
+     "key": "#eacb9d",
+     "border_px": 23
+    }
+   ],
+   "text_px": 87,
+   "n": 16,
+   "thumb": {
+    "x0": 7167,
+    "y0": 3755,
+    "k": 2.0,
+    "w": 292,
+    "h": 316
+   }
+  }
+ ]
+}

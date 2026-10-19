@@ -49,6 +49,7 @@ UK_NI = HERE.parent / "data" / "normalized" / "uk_ni_allocated.csv"
 # reports them as typos, which is what it did on 2026-09-07.
 UK_SPLIT = HERE.parent / "data" / "normalized" / "uk_split.csv"
 UK_SPLIT_WALES = HERE.parent / "data" / "normalized" / "uk_split_wales.csv"   # 2026-10-04
+UK_ISLAM = HERE.parent / "data" / "normalized" / "uk_islam_split.csv"   # 2026-10-16
 CSV = HERE / "usrc_groups.csv"
 OUT = HERE / "religions.json"
 
@@ -239,7 +240,7 @@ def main():
             problems.append(f"uk2021: {cat!r} -> {target!r}, which is not in branches.py")
     uk_cats, missing_file = set(), False
     for path, where in [(UK_EW, None), (UK_NI, None), (UK_SPLIT, None), (UK_SPLIT_WALES, None),
-                        (UK, "uk_sc_census_2022")]:
+                        (UK_ISLAM, None), (UK, "uk_sc_census_2022")]:
         if not path.exists():
             missing_file = True
             continue

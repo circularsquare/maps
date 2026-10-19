@@ -39,6 +39,8 @@ statistics department's membership rolls for 2010-11, one share for the whole st
 table names ten churches and only the Catholic total is drawn: the three rites disagree with the
 dioceses' own rolls by up to fifty times from place to place while their sum holds, and nothing
 independent reaches the others. The reasoning is in that file's docstring and sources/in.md §9.
+Since 2026-10-16 the others are drawn too, on Anita's call (spec §2.7b, sources/in.md §16): Jacobite and
+Orthodox together, Mar Thoma, CSI and Pentecost, from the same table, checked against KMS 2023's state totals.
 
 **And Pew's regions for the rest, the same day.** The same script applies Pew's 2021 respondent file
 (`qdenomrec`, weighted) to the East and South outside Kerala: Catholic and Baptist, of the three churches
@@ -120,6 +122,30 @@ REVIEW = {
         "the Catholic total spreads 2.3, so the survey swaps rites and keeps the total. Would be "
         "catholic.eastern and catholic.latin if a rite ever passed. A floor: Catholics who answered "
         "Dalit Christian or Others stay on `christianity`.",
+    "Christian: Jacobite and Orthodox (KMS 2008-2014)":
+        "-> christianity.oriental, the parent, holding two answers. DRAWN 2026-10-16 on Anita's call, "
+        "reversing the 2026-10-03 'searched, not drawn' (sources/in.md §14, §16; spec §2.7b). The Jacobite "
+        "Syrian Christian Church (`.syriac`'s Malankara branch) and the Malankara Orthodox Syrian Church "
+        "(`.malankara-orthodox`) are two factions of one church since 1912, and KMS's coders swap them: "
+        "against OSM's churches by district each scores rho +0.16 and +0.12 on its own. One node for the "
+        "pair is the honest depth. 911,782 people, 14.8% of Kerala's Christians, against 15.9% in KMS 2011's "
+        "own row and 15.4% in KMS 2023. Each district's Table 6 cells, except Malabar's six, which take "
+        "one pooled mix (in_split_christian.MALABAR).",
+    "Christian: Mar Thoma (KMS 2008-2014)":
+        "-> christianity.oriental.marthoma, the ASARB leaf promoted to a branch 2026-10-16 so a second "
+        "source can reach it (branches.py), where ASARB files it: Reformed Oriental, in communion with the "
+        "Anglicans. 303,601 people, 4.9% of Kerala's Christians (KMS 2011 row 6.6%, KMS 2023 5.3%). THE "
+        "KNOWN COST: Malabar's pooled mix carries Kozhikode's 22.3% Mar Thoma, which OSM does not see (1 "
+        "place of 142), so Malabar draws Mar Thoma at 20.4% of its non-Catholics; in the south, where it "
+        "agrees with OSM, Pathanamthitta is 18.5% and Thrissur 1.3%.",
+    "Christian: CSI (KMS 2008-2014)":
+        "-> christianity.united, whose note names the Church of South India: the 1947 union of Anglican, "
+        "Methodist, Congregational and Presbyterian churches. 306,783 people, 5.0% of Kerala's Christians "
+        "(KMS 2011 row 4.5%, KMS 2023 3.6%), 17.1% of Thiruvananthapuram's, the old LMS field. OSM rho +0.48.",
+    "Christian: Pentecost, Church of God, Brethren (KMS 2008-2014)":
+        "-> christianity.pentecostal. The best-replicating Kerala row (OSM rho +0.89). THE KNOWN COST: the "
+        "Brethren are inside it and are not Pentecostal (`christianity.plymouth`); KMS prints one row. "
+        "188,635 people, 3.1% of Kerala's Christians (KMS 2011 row 3.5%, KMS 2023 5.3%).",
     "Christian: Catholic (Pew 2021)":
         "-> christianity.catholic, NOT .latin: the card says Catholic, and India has three rites. Pew's "
         "respondent file, weighted: East 37.4 and South 39.4 on their own, which do not differ once Pew's "
@@ -151,10 +177,9 @@ REVIEW = {
         "now fills.",
     "Christian":
         "THE UNSPLIT PART stays on `christianity` as the census's own `Christian`, `measured`. "
-        "(1) Kerala: the non-Catholic answers of WP468 Table 6 (Jacobite, Orthodox, Mar Thoma, CSI, "
-        "Pentecost/Church of God/Brethren) have no independent figure to check them against, and "
-        "three of the four Syrian churches share the 'Malankara' name the rite check shows being "
-        "confused, so unchecked is not drawn; Dalit Christian is a caste, not a church; Others. "
+        "(1) Kerala: Dalit Christian, a caste and not a church, and Others, 503,991 people (8.2% of "
+        "Kerala's Christians). Until 2026-10-16 the Jacobite, Orthodox, Mar Thoma, CSI and Pentecost "
+        "answers were here too, 2.21M in all; they are drawn now (their own entries). "
         "(2) Mizoram: Isua Krista Kohhran, 1.2% of the rolls, whose family nothing read here names. "
         "(3) Pew's East and South: the answers the respondent file does not name, which are "
         "all other denominations (Church of North India, Church of South India, Orthodox, Pentecostal "
@@ -282,6 +307,11 @@ MAP = {
     # DERIVED, 2026-09-15. Not census categories: in_split_christian.py divides each Kerala and Mizoram
     # sub-district's `Christian` count and writes these labels, plus a smaller `Christian` for the rest.
     "Christian: Catholic, three rites (KMS 2008-2014)": "christianity.catholic",
+    # Kerala's other churches, 2026-10-16 (spec §2.7b; REVIEW)
+    "Christian: Jacobite and Orthodox (KMS 2008-2014)": "christianity.oriental",
+    "Christian: Mar Thoma (KMS 2008-2014)": "christianity.oriental.marthoma",
+    "Christian: CSI (KMS 2008-2014)": "christianity.united",
+    "Christian: Pentecost, Church of God, Brethren (KMS 2008-2014)": "christianity.pentecostal",
     "Christian: Presbyterian Church of India (Mizoram roll 2010-11)": "christianity.reformed.presbyterian",
     "Christian: Baptist Church of Mizoram (Mizoram roll 2010-11)": "christianity.baptist",
     "Christian: Lairam Isua Krista Baptist Kohhran (Mizoram roll 2010-11)": "christianity.baptist",

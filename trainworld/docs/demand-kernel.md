@@ -186,8 +186,10 @@ works on two levels:
 7. **Crowding**: a penalty per segment from the loads, repeat 4-6, average the loads (method of
    successive averages). Each round costs as much as the first pass. The riders projects worked
    this out; read memory `reference_transit_crowding_assignment.md` (in
-   `~/.claude/projects/c--Users-anita-projects-maps/memory/`) first: the penalty starts where seats
-   run out, never saturates, and averaging is what stops it ringing. **At most three rounds**
+   `~/.claude/projects/c--Users-anita-projects-maps/memory/`) first: the penalty never saturates,
+   and averaging is what stops it ringing. It is 1 + 2x(1+x)/2, x from the larger of the seats and
+   **70% of crush** to crush (Anita, T-710: riders mind crowding only near full; 3 at crush,
+   5.4 at 120%; `crowd_start`). **At most three rounds**
    (T-022): the first round leaves the segment that takes the overflow at its worst (963% of crush
    on the real New York network against 310% before it). No crush cap: an overloaded line is the
    player's signal (notes/T-022.md). **Each period stops early once settled** (T-434,

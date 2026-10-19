@@ -23,6 +23,9 @@ Writes helper1m/data/india/population.csv  (columns: code, level, year, pop):
   level 2 = district    (code = 3-digit pc11_d_id)
   level 3 = subdistrict - each subdistrict's 2011 population (SHRUG PC11
             subdistrict weights) scaled by its district's projected growth.
+  level 4 = level 3 with the sub-districts over 2M in 2026 split into parts
+            (code = level-3 code + 2 digits, 00 for a unit carried whole);
+            see level4.py.
 """
 from __future__ import annotations
 
@@ -44,6 +47,11 @@ SUBDIST_CSV = (HELPER.parent / "data" / "asia1m" / "india" /
 # on pc11_d_id+pc11_sd_id and silently drops weights rows with no polygon, e.g.
 # the census 99999 "unclassified" / big-city residuals, ~48M people nationally).
 SUBDIST_SHP = HELPER.parent / "data" / "asia1m" / "india" / "subdistrict.shp"
+# Census C-01 town rows (religiondots in_place.py) and SHRUG town polygons, read
+# only: they say which sub-district each town of a 99999 unit stands in.
+RD_GEO = HELPER.parent / "religiondots" / "data" / "geo" / "in"
+TOWNS = RD_GEO / "in_towns.csv"
+VILLAGES = RD_GEO / "shrug-village-pc11.parquet"
 
 # 0-indexed PDF page ranges (printed page number = index - 7).
 TABLE4_PAGES = range(30, 35)   # printed 23-27
@@ -155,6 +163,36 @@ def shapefile_subdist_codes():
     return {(str(d), str(sd)) for d, sd in zip(gdf["pc11_d_id"], gdf["pc11_sd_id"])}
 
 
+def place_towns(orphans, pop2011):
+    """Add the towns of each polygon-less census row to the sub-district (in
+    pop2011, by composite code) that SHRUG files the town's polygon under."""
+    if not orphans or not (TOWNS.exists() and VILLAGES.exists()):
+        print(f"  (no town files under {RD_GEO} - polygon-less rows stay pro rata)")
+        return
+    import pyarrow.parquet as pq  # local import: only this step needs it
+    towns = []
+    with TOWNS.open(encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            if r["unit"][2:] in orphans:
+                towns.append((r["unit"][2:], r["town"], r["name"], int(r["pop"])))
+    tbl = pq.read_table(VILLAGES, columns=["pc11_d_id", "pc11_sd_id", "pc11_tv_id"],
+                        filters=[("pc11_tv_id", "in", sorted({t[1] for t in towns}))])
+    filed = {(t, d): d + sd for t, d, sd in zip(tbl["pc11_tv_id"].to_pylist(),
+                                                tbl["pc11_d_id"].to_pylist(),
+                                                tbl["pc11_sd_id"].to_pylist())}
+    placed, missed = 0, []
+    for unit, town, name, pop in towns:
+        code = filed.get((town, unit[:3]))
+        if code in pop2011:
+            pop2011[code] += pop
+            placed += pop
+        else:
+            missed.append(name)
+    print(f"level 3: {len(towns)} towns of {len(orphans)} polygon-less rows, "
+          f"{placed:,} people placed in their sub-districts"
+          + (f"; not placed: {missed}" if missed else ""))
+
+
 def subdistrict_rows(district_proj):
     """Level-3 rows: each subdistrict's 2011 SHRUG population scaled by its
     district's projected growth. Shares within a district sum to 1, so the
@@ -169,6 +207,13 @@ def subdistrict_rows(district_proj):
     (e.g. West Tripura summed to 1.30M against a 1.96M district). Excluding
     them here renormalises the surviving subdistricts to absorb that share.
 
+    Those 99999 rows (17.4M people in 23 districts of West Bengal, Tripura and
+    Karnataka) are municipal towns outside any block, though, so pro rata
+    put Haldia's 200k across all of Purba Medinipur and doubled the rural
+    blocks of North 24 Parganas. Each of their towns is now added to the
+    sub-district SHRUG files its polygon under (place_towns); only what that
+    can't place still spreads pro rata.
+
     Code = pc11_district_id + pc11_subdistrict_id (pc11_district_id is global,
     so the pair is unique) - matches build_country.py's composite code_col.
     """
@@ -176,17 +221,22 @@ def subdistrict_rows(district_proj):
         print(f"  (no subdistrict CSV at {SUBDIST_CSV} - skipping level 3)")
         return []
     keep = shapefile_subdist_codes()
-    subdists, dist_sum, dropped = [], {}, 0
+    pop2011, orphans = {}, set()
     with SUBDIST_CSV.open(encoding="utf-8") as f:
         for r in csv.DictReader(f):
             d, sd = r["pc11_district_id"], r["pc11_subdistrict_id"]
             if keep is not None and (d, sd) not in keep:
-                dropped += 1
+                orphans.add(d + sd)
                 continue   # no polygon -> exclude from share denominator too
             raw = r["sd_pc11_pca_tot_p"]
-            pop2011 = float(raw) if raw not in ("", "NA") else 0.0
-            subdists.append((d, d + sd, pop2011))
-            dist_sum[d] = dist_sum.get(d, 0.0) + pop2011
+            pop2011[d + sd] = float(raw) if raw not in ("", "NA") else 0.0
+    dropped = len(orphans)
+    place_towns(orphans, pop2011)
+    subdists, dist_sum = [], {}
+    for full_code, p in pop2011.items():
+        d = full_code[:3]
+        subdists.append((d, full_code, p))
+        dist_sum[d] = dist_sum.get(d, 0.0) + p
     rows, used = [], 0
     for d, full_code, pop2011 in subdists:
         proj = district_proj.get(d)
@@ -243,7 +293,13 @@ def main():
             rows.append((f"{snum:02d}", 1, year, pop))
 
     # Level 3 - subdistrict, proportional downscale of district projections.
-    rows += subdistrict_rows(district_proj)
+    l3 = subdistrict_rows(district_proj)
+    rows += l3
+
+    # Level 4 - level 3 with the sub-districts over 2M split (level4.py); also
+    # writes data/india/level4.gpkg, which build_country.py draws.
+    import level4
+    rows += level4.build(l3)
 
     print(f"matched {len(matched)} districts")
     if unmatched:

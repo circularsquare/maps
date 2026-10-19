@@ -1,0 +1,17 @@
+batch anhui-west
+1: pick Taihe
+2: pick Jieshou
+3: pick Linquan
+4: pick Yingquan
+5: pick Fuyang
+6: pick Funan
+7: pick Yingshang
+9: pick Pihe
+10: pick Lu'an
+11: pick Shucheng
+12: pick Zongyang
+13: pick Tongcheng
+14: pick Tianzhushan
+15: pick Anqing
+16: pick Wangjiang
+17: pick Fengtai. Not a great name (the county seat is in the next region), but nothing better.

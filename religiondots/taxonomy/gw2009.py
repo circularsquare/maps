@@ -43,8 +43,20 @@ REVIEW = {
         "-> christianity, the bare branch. 318,021 people, 22.05%, and 45.8% of them in "
         "Bissau (SAB is 40.2% Christian). The 1991 census tabulated Catholic and other "
         "Christian separately (Resultados, Tabela 6.6, national); the 2009 reports print one "
-        "row, so nothing finer exists at região. Left at the parent rather than split on "
-        "1991's national ratio.",
+        "row. NO LONGER DRAWN since 2026-10-16: gw_split.csv replaces it at 1991's national "
+        "ratio (below), on Anita's call, and rolls back here (COLUMNS).",
+    "Cristã Católica":
+        "-> christianity.catholic, DERIVED. 283,476, 89.1% of Christians in every região: "
+        "1991's Tabela 6.6 (PDF p61), 125,637 Catholics of 140,947 Christians among 979,203 "
+        "residents. **Probably too Catholic for 2009 and certainly for today.** Christians "
+        "went from 14.4% of residents in 1991 to 26.2% of those who answered in 2009, and the "
+        "growth is widely put down to Brazilian and other Protestant missions; the Church's "
+        "own 2023 claim, 222,000 of 1.69M, would make Catholics roughly 55-65% of today's "
+        "Christians. Pew 2010's 89% is very likely this same table, so it is not a second "
+        "witness.",
+    "Outras Cristãs":
+        "-> christianity.other, DERIVED. 34,545, 10.9%: 1991's own `other Christian` row, "
+        "Protestants among them; on `.other` because the census's cell names no family.",
     "Sem religião":
         "-> unaffiliated. 29,542 people, 2.05%. A coded write-in, not a box: the form prints "
         "no answer list, so the Mozambique ruling (a no-religion box that names animism, "
@@ -62,10 +74,15 @@ MAP = {
     "Cristão": "christianity",
     "Sem religião": "unaffiliated",
     "Outra religião": "other.gw",
+    # 2026-10-16, sources/wa_christian.py: gw_split.csv replaces `Cristão`. `derived`.
+    "Cristã Católica": "christianity.catholic",
+    "Outras Cristãs": "christianity.other",
 }
 
-# spec §7a-i-1: every row is measured at the node it is drawn on.
+# spec §7a-i-1: measured rows at their own node; the two derived Christian rows roll back to
+# the `Cristão` cell the 2009 census counted per região.
 COLUMNS = {v: v for v in MAP.values()}
+COLUMNS["Cristão"] = "christianity"
 
 
 def _key(cat):

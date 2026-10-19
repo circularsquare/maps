@@ -155,7 +155,8 @@ ENTRY = {
             "**The blank in the far north is missing data, not empty land.** Gilgit-Baltistan's "
             "1,709,049 people were counted in the same census, but no published table gives "
             "their religion. It is also where Pakistan's Shia population is most concentrated; "
-            "the census does not ask about Sunni and Shia anywhere. A further 1,041,342 people "
+            "the census does not ask about Sunni and Shia anywhere, so the branch drawn below "
+            "is assigned from a survey. A further 1,041,342 people "
             "in restricted areas were counted by head only, with no religion recorded."),
         how="census, 2023",
         grain="districts, 1.7m people on average",

@@ -1,5 +1,9 @@
 ﻿# Archive
 
+- T-710 [P2] Sharper route choice. Done 2026-10-19: station pairs by the difference relative to the trip (20 / min(25 + 3 km, 60), four bands), crowding from 70% of crush; New York rail -10%, entries x2.93 to x2.52, solve about the same. notes/T-710.md.
+
+- T-713 [P2] Crowd red inside the box; tracks 20% narrower close in. Done 2026-10-19: `CROWD_BULGE` removed (the red fills within the box), tracks (not trains) narrow 20% from 10 to 16 px for 4 m (`LANE_NARROW`); screenshots in `artifacts/trainworld/t713/`; `t658-lanes.mjs` now tolerates one level of edge noise.
+
 - T-711 [P3] Quad's 0.30x in the track tag. Done 2026-10-19: not a bug, ground track is 0.3x (6.4) for double too (the 1.10x was a ramp to +2); the quad multiplier now averages both pairs, and a test checks it and that quad's price is what the edit adds.
 
 - T-707 [P2] Track tool: ramps and the start click. Done 2026-10-19: the tag lists every elevation passed ("0 +2"); a click on the start ends the run or drops a lone start.

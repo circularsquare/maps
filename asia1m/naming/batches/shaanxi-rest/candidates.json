@@ -1,0 +1,746 @@
+{
+  "batch": "shaanxi-rest",
+  "regions": [
+    {
+      "n": 1,
+      "key": "#e8e3d1",
+      "settled": null,
+      "summary": "Far north Shaanxi on the Yellow River: Shenmu (half), Fugu, Jia, plus Baode across the river in Shanxi.",
+      "candidates": [
+        {
+          "name": "Shenmu",
+          "local": "神木",
+          "origin": "county",
+          "meaning": "\"Sacred tree\": the county gazetteer says two (or three) huge Tang-era pines near the old Linzhou city were called the sacred tree; a Song fort and then the Yuan county took the name.",
+          "fit": "Holds 95% of Shenmu's people and Shenmu is half the region; Shenmu town alone is 30%.",
+          "recognisability": "Own zh-wiki article (Shenmu City), 685 hits with 陕西, top ones about this place; China's top coal county.",
+          "source_url": "https://zh.wikipedia.org/wiki/神木市",
+          "source_note": "道光《神木县志》:县东北杨家城，古麟州城……松树三株……人称神木。元至元六年（1269年），设神木县。",
+          "status": "suggested"
+        },
+        {
+          "name": "Linzhou",
+          "local": "麟州",
+          "origin": "historical",
+          "meaning": "\"Qilin prefecture\" (qilin = the mythical unicorn-like beast): Tang prefecture (724/742) and Song frontier prefecture, seated at Yangjiacheng in Shenmu.",
+          "fit": "Its walled seat and territory lie in Shenmu county, which is half the region.",
+          "recognisability": "Own zh-wiki article, 281 hits with 陕西, top ones about this place. Caution: Linzhou (林州) in Henan is spelled the same in pinyin.",
+          "source_url": "https://zh.wikipedia.org/wiki/麟州_(开元)",
+          "source_note": "治所在新秦县（今陕西省神木市北）。辖境约今陕西省神木市地。",
+          "status": "suggested"
+        }
+      ],
+      "notes": "Neighbours on the map are Ordos (north) and Xinzhou (Shanxi, east); Baode county is 8% of this region's people but is not suggested."
+    },
+    {
+      "n": 2,
+      "key": "#e0dbca",
+      "settled": null,
+      "summary": "Yulin city (Yuyang district, 76%) and part of Hengshan district, on the upper Wuding River at the Mu Us desert edge.",
+      "candidates": [
+        {
+          "name": "Yulin",
+          "local": "榆林",
+          "origin": "city",
+          "meaning": "\"Elm forest\": Ming frontier garrison (Yulin Wei, 1471), one of the Nine Border Garrisons, later prefecture seat and now the prefecture capital.",
+          "fit": "Holds the old centre: Yuyang district is 76% of the region and Yulin town alone is a third of it.",
+          "recognisability": "Prefecture and city name; own zh-wiki article.",
+          "source_url": "https://zh.wikipedia.org/wiki/榆林市",
+          "source_note": "榆林是明代的九边重镇之一……成化七年（1471年），置榆林卫。",
+          "status": "suggested"
+        },
+        {
+          "name": "Shangjun",
+          "local": "上郡",
+          "origin": "historical",
+          "meaning": "\"Upper commandery\": the Qin commandery created in 328 BC from the 15 counties Wei gave up, seated at Fushi; it stood here for 437 years in all. Established historical name, so it does not read as part of a whole.",
+          "fit": "CHGIS puts the commandery seat at Yuhe in Yulin, inside the region; the territory covered all of northern Shaanxi.",
+          "recognisability": "Own zh-wiki article, 108 hits with 榆林, top ones about this place (a Yuyang street is named after it).",
+          "source_url": "https://zh.wikipedia.org/wiki/上郡",
+          "source_note": "秦惠王十年（前328年），魏國獻上郡15縣與秦……郡治膚施縣。CHGIS: 上郡 今陕西榆林市鱼河镇鱼儿河寨 (221 BC-216).",
+          "status": "suggested"
+        }
+      ],
+      "notes": "Other Shangjun seats in CHGIS fall in regions 4 and 6 (Tang/Sui-era 上郡), so the name is only a loose claim to this region."
+    },
+    {
+      "n": 3,
+      "key": "#e8e6d7",
+      "settled": null,
+      "summary": "Western Yulin and the north of Yan'an: Jingbian (36%), Dingbian (32%), Hengshan west, Wuqi; touches Ningxia's Haiyuan region.",
+      "candidates": [
+        {
+          "name": "Jingbian",
+          "local": "靖边",
+          "origin": "county",
+          "meaning": "\"Pacify the frontier\": county set up in 1731 along with Dingbian and Huaiyuan.",
+          "fit": "Holds 99.8% of the county, the largest unit at 36% of the region.",
+          "recognisability": "Own zh-wiki article, 589 hits with 陕西, top ones about this place.",
+          "source_url": "https://zh.wikipedia.org/wiki/靖边县",
+          "source_note": "靖边县 (县, 1731-1911) 今陕西靖边县城 (CHGIS); 靖边县是中国陕西省榆林市所辖的一个县。",
+          "status": "suggested"
+        },
+        {
+          "name": "Xiazhou",
+          "local": "夏州",
+          "origin": "historical",
+          "meaning": "\"Xia prefecture\": Northern Wei prefecture (487) set up on the former Tongwan Garrison, the capital city of the Helian Xia state (407-431); later seat of the Dingnan military governors whose line became the Western Xia.",
+          "fit": "The walled city of Tongwan (Xiazhou's seat) lies on the Jingbian border in this region and the prefecture ran over the Mu Us sands and the Wuding valley; 458 years in all.",
+          "recognisability": "Own zh-wiki article, 553 hits with 陕西; Tongwancheng has its own article with 323 hits.",
+          "source_url": "https://zh.wikipedia.org/wiki/夏州",
+          "source_note": "北魏太和十一年（487年）改统万镇置，治所在岩绿县（……今陕西省靖边县北白城子）。",
+          "status": "suggested"
+        },
+        {
+          "name": "Dingbian",
+          "local": "定边",
+          "origin": "county",
+          "meaning": "\"Settle the frontier\": Song fort Dingbian Army (1099), Ming Dingbian camp (1470), county in 1731; the Luo River rises here.",
+          "fit": "Holds 99.8% of the county, 32% of the region, almost level with Jingbian.",
+          "recognisability": "Own zh-wiki article, 1199 hits with 陕西, top ones about this place and its Yanzhou (salt prefecture).",
+          "source_url": "https://zh.wikipedia.org/wiki/定边县",
+          "source_note": "宋置定边军，明成化六年（1470年）置定边营，清雍正九年（1731年）设定边县。",
+          "status": "suggested"
+        }
+      ],
+      "notes": "Jingbian and Dingbian are near equals; picking one leaves the other half of the region unnamed. Xiazhou avoids that choice."
+    },
+    {
+      "n": 4,
+      "key": "#e8e4d7",
+      "settled": null,
+      "summary": "Lower Wuding River and Qingjian River loess hills: Suide, Zichang, Yanchuan, Zizhou, Qingjian, Mizhi, down to the Yellow River bends.",
+      "candidates": [
+        {
+          "name": "Suide",
+          "local": "绥德",
+          "origin": "county",
+          "meaning": "From Suizhou (\"pacified prefecture\", 552-907) and Suide Prefecture (1182-1911); the town is the old regional centre of the Wuding valley.",
+          "fit": "Holds 99.6% of the county, the largest unit at 26%; its prefecture ruled Mizhi and Qingjian too.",
+          "recognisability": "Own zh-wiki article, 1489 hits with 陕西, top ones about this place and its Sui prefecture.",
+          "source_url": "https://zh.wikipedia.org/wiki/绥州",
+          "source_note": "绥州，中国西魏到北宋设置一个州，治所在今陕西省绥德县。绥德州 (1182-1911) 今陕西省绥德县 (CHGIS).",
+          "status": "suggested"
+        },
+        {
+          "name": "Wudinghe",
+          "local": "无定河",
+          "origin": "river",
+          "meaning": "\"River with no fixed course\": a Yellow River tributary so full of silt that it keeps changing course.",
+          "fit": "Flows through Mizhi, Suide and Qingjian to join the Yellow River at Qingjian, about half this region's people; the upper course lies in regions 2 and 3.",
+          "recognisability": "Own zh-wiki article (無定河), 26 hits with 榆林 but a well-known name in Tang poetry.",
+          "source_url": "https://zh.wikipedia.org/wiki/無定河",
+          "source_note": "无定河是中华人民共和国陕西省北部的一条河流，是黄河的一级支流之一。因其含泥沙很多，常常改道而得名。",
+          "status": "suggested"
+        }
+      ],
+      "notes": "Zichang and Zizhou are named after Communist martyrs (Xie Zichang, Li Zizhou) and are not suggested. Mizhi (10%, Li Zicheng's home county) is a third option if wanted."
+    },
+    {
+      "n": 5,
+      "key": "#ebe5d2",
+      "settled": null,
+      "summary": "Yan'an city (Baota district, 62%) with Ansai, Yanchang and Yichuan, on the Yan River.",
+      "candidates": [
+        {
+          "name": "Yan'an",
+          "local": "延安",
+          "origin": "city",
+          "meaning": "\"Prolonged peace\": Tang Yan'an commandery and the Song-to-Qing Yan'an prefecture; ancient name Fushi. Capital of the Communist base area from 1935.",
+          "fit": "Holds the whole city: Baota district is 62% of the region and Qiaogou, Liulin and Zaoyuan towns alone are nearly a third.",
+          "recognisability": "Prefecture and city name; own zh-wiki article.",
+          "source_url": "https://zh.wikipedia.org/wiki/延安市",
+          "source_note": "延安市，简称延，古称肤施……1935年红军长征到达陕北后，延安成为中华苏维埃共和国（陕甘宁革命根据地）的首都。",
+          "status": "suggested"
+        },
+        {
+          "name": "Yanhe",
+          "local": "延河",
+          "origin": "river",
+          "meaning": "\"Yan River\": 287 km Yellow River tributary rising in Jingbian.",
+          "fit": "Runs through Ansai, Baota and Yanchang, three of the region's four counties (about 90% of its people) and meets the Yellow River at Yanchang.",
+          "recognisability": "Own zh-wiki article, 69 hits with 延安, top ones about this place. Close to 'Yan'an' in sound, so only worth it if Yan'an is used elsewhere.",
+          "source_url": "https://zh.wikipedia.org/wiki/延河",
+          "source_note": "延河发源于陕西省靖边县天赐湾……流经延安市安塞、宝塔、延长三县区，全长287公里。",
+          "status": "suggested"
+        }
+      ],
+      "notes": "Yan'an prefecture total (2.3M) is not the urban figure; the city rule is not clearly triggered but Yan'an is still the obvious name."
+    },
+    {
+      "n": 6,
+      "key": "#f3edda",
+      "settled": null,
+      "summary": "Luochuan loess plateau and the Luo River middle course: Baishui, Luochuan, Fu, Huangling, Zhidan, Ganquan, Yijun, Huanglong.",
+      "candidates": [
+        {
+          "name": "Luochuan",
+          "local": "洛川",
+          "origin": "county",
+          "meaning": "\"Luo River plain\": county on the middle Luo River (445 AD); site of China's best-known loess plateau and of the 1937 Luochuan Conference.",
+          "fit": "Holds 100% of the county, 18% of the region and the centre of the plateau.",
+          "recognisability": "Own zh-wiki article, 850 hits with 陕西, top ones about this place; a national loess geopark.",
+          "source_url": "https://zh.wikipedia.org/wiki/洛川县",
+          "source_note": "洛川县位于中国陕西省北部、洛河中游……是著名的黄土塬区，黄土地貌发育典型。",
+          "status": "suggested"
+        },
+        {
+          "name": "Huangling",
+          "local": "黄陵",
+          "origin": "county",
+          "meaning": "\"Yellow Emperor's tomb\": the county was renamed in 1944 after the tomb of Huangdi on Qiao Mountain just north of the town; before that it was Zhongbu, for 1485 years.",
+          "fit": "Holds 100% of the county, 12% of the region.",
+          "recognisability": "Own zh-wiki article, 729 hits with 陕西, top ones about this place; the tomb is a national sacred site.",
+          "source_url": "https://zh.wikipedia.org/wiki/黄陵县",
+          "source_note": "因县北桥山有黄帝陵而得名……民国卅三年（1944年）因县城北桥山上有中华民族始祖轩辕黄帝陵，改名黄陵县。",
+          "status": "suggested"
+        },
+        {
+          "name": "Baishui",
+          "local": "白水",
+          "origin": "county",
+          "meaning": "\"White water\" (Baishui county since 478; grave of the legendary scribe Cang Jie is here).",
+          "fit": "Largest single unit at 22% (95% of the county), but it sits on the southeast rim away from the plateau.",
+          "recognisability": "Own zh-wiki article, but 1291 hits with 渭南 are mixed with other 白水 places.",
+          "source_url": "https://zh.wikipedia.org/wiki/白水县",
+          "source_note": "白水县 (县, 478-1911) 今陕西白水县西北方城一带 (CHGIS); 仓颉墓与庙位于……白水县史官镇.",
+          "status": "rejected"
+        }
+      ],
+      "notes": "Fu county (Fuzhou, 13%) has no article in sources.md so it is left out; Zhidan is named after Liu Zhidan."
+    },
+    {
+      "n": 7,
+      "key": "#f0e5c4",
+      "settled": null,
+      "summary": "Yellow River strip in east Weinan: Hancheng (37%), Heyang (35%), Chengcheng (31%, shown under a wrong name in the unit list).",
+      "candidates": [
+        {
+          "name": "Hancheng",
+          "local": "韩城",
+          "origin": "city",
+          "meaning": "\"Han city\": fief of the Han marquis in the Western Zhou, renamed so in the Sui; birthplace of the historian Sima Qian, beside the Dragon Gate gorge of the Yellow River.",
+          "fit": "Holds 99% of the city, the largest unit at 37%; the city's 391k is the only urban place in the region.",
+          "recognisability": "Own zh-wiki article, 696 hits with 陕西, top ones about this place; a national historic city.",
+          "source_url": "https://zh.wikipedia.org/wiki/韩城市",
+          "source_note": "西周时为韩侯封邑……至隋代改称韩城，并延续至今。1986年被定为国家历史文化名城。",
+          "status": "suggested"
+        },
+        {
+          "name": "Heyang",
+          "local": "合阳",
+          "origin": "county",
+          "meaning": "\"North of the He River\": written 郃阳 from 155 BC until 1964, one of the longest-lived county names at 2069 years.",
+          "fit": "Holds 99.7% of the county, 35% of the region, level with Hancheng.",
+          "recognisability": "Own zh-wiki article, 1191 hits with 陕西, top ones about this place.",
+          "source_url": "https://zh.wikipedia.org/wiki/合阳县",
+          "source_note": "西汉景帝二年（前155年）改“合”为“郃”，始设“郃阳县”，以在郃水之阳得名。",
+          "status": "suggested"
+        }
+      ],
+      "notes": "The unit list names 'Chencang' here but the towns show Chengcheng county (澄城, 31%) is the third part; the county layer is stale. Chengcheng is not suggested (no distinct meaning in the sources)."
+    },
+    {
+      "n": 8,
+      "key": "#e8e4ad",
+      "settled": null,
+      "summary": "Tongchuan city (Wangyi, Yintai, Yaozhou) plus west Fuping and a corner of Sanyuan.",
+      "candidates": [
+        {
+          "name": "Tongchuan",
+          "local": "铜川",
+          "origin": "city",
+          "meaning": "\"Copper river plain\": named 1946 after the Tong river valley, replacing Tongguan (similar in sound to Tongguan pass). Earlier Tongguan then Tongguan county (446, 575).",
+          "fit": "The three city districts are about 60% of the region's people; the city's centre is here.",
+          "recognisability": "Prefecture and city name; own zh-wiki article, 1783 hits with 陕西.",
+          "source_url": "https://zh.wikipedia.org/wiki/铜川市",
+          "source_note": "铜川市，古称铜官、同官……因同官县与“潼关”同音，治所又设在铜水之川，改称铜川县。",
+          "status": "suggested"
+        },
+        {
+          "name": "Yaozhou",
+          "local": "耀州",
+          "origin": "prefecture",
+          "meaning": "\"Shining prefecture\": created 904/906 by Li Maozhen from Huayuan county, a prefecture for 405 years and a direct-governed one under the Qing; home of the Yaozhou celadon kilns (Tang to Ming) and of the Sun Simiao temple fair.",
+          "fit": "Prefecture seat (Yaozhou district) lies in the region; it governed Tongchuan's districts and Fuping.",
+          "recognisability": "Own zh-wiki article, 1348 hits with 陕西, top ones about this place; Yaozhou ware is one of the six great kiln systems.",
+          "source_url": "https://zh.wikipedia.org/wiki/耀州_(唐朝)",
+          "source_note": "耀州窯是唐朝至明朝時的青瓷窯之一，位於陕西省铜川市黃堡鎮……為六大窯系中最大的。",
+          "status": "suggested"
+        },
+        {
+          "name": "Fuping",
+          "local": "富平",
+          "origin": "county",
+          "meaning": "County since 266 AD (1617 years); Fuping county is the most populous in Shaanxi.",
+          "fit": "Split almost evenly between this region (31%) and region 9 (32%), so it cannot name either cleanly.",
+          "recognisability": "Own zh-wiki article.",
+          "source_url": "https://zh.wikipedia.org/wiki/富平县",
+          "source_note": "富平县 (县, 266-1911) 今富平县西南境内怀德城 (CHGIS).",
+          "status": "rejected"
+        }
+      ],
+      "notes": "The unit list shows 'Yangling' (29.7%) but that is a stale label: the towns list is Tongchuan city (Yintai, Wangyi, Yaozhou). Yangling district is in Xianyang."
+    },
+    {
+      "n": 9,
+      "key": "#e8dead",
+      "settled": null,
+      "summary": "Pucheng county (58%) and east Fuping on the Weibei plain.",
+      "candidates": [
+        {
+          "name": "Pucheng",
+          "local": "蒲城",
+          "origin": "county",
+          "meaning": "\"Bulrush town\": name given in 554 to the former Nan-Baishui county; from 716 to 970 it was Fengxian, then Pucheng again. Home of the Tang Emperor Ruizong's Qiaoling tomb.",
+          "fit": "Holds 98% of the county, 58% of the region and its geographic centre.",
+          "recognisability": "Own zh-wiki article, 1538 hits with 陕西, top ones about this place.",
+          "source_url": "https://zh.wikipedia.org/wiki/蒲城县",
+          "source_note": "西魏恭帝元年（554），改南白水县为蒲城县……北宋开宝四年（971），奉先县复名“蒲城”。",
+          "status": "suggested"
+        },
+        {
+          "name": "Fuping",
+          "local": "富平",
+          "origin": "county",
+          "meaning": "County since 266 AD; the 1131 Song-Jin battle of Fuping was fought here.",
+          "fit": "32% of this region but the county is split with region 8, so it does not fit cleanly.",
+          "recognisability": "Own zh-wiki article.",
+          "source_url": "https://zh.wikipedia.org/wiki/富平县",
+          "source_note": "金太宗天会九年（1131年），即宋金两军“富平之役”后……",
+          "status": "rejected"
+        }
+      ],
+      "notes": "Only one clean candidate; Fengxian (Pucheng's Tang name) sounds like Fengxian in Shanghai (奉贤) and has too few hits (42 with 蒲城)."
+    },
+    {
+      "n": 10,
+      "key": "#f3edbb",
+      "settled": null,
+      "summary": "Dali county (55%), Huayin city and Hua county around the Wei-Luo-Yellow River confluence and the foot of Mount Hua.",
+      "candidates": [
+        {
+          "name": "Dali",
+          "local": "大荔",
+          "origin": "county",
+          "meaning": "Old place name used for the county since 290 AD (the county has also been Linjin, Wuxiang, Fengyi and Tongzhou); the sources do not explain the characters.",
+          "fit": "Holds 94% of the county, 55% of the region; the old prefecture seat Tongzhou was here.",
+          "recognisability": "Own zh-wiki article, 588 hits with 陕西, top ones about this place. Caution: Dali in Yunnan is far better known and spelled the same.",
+          "source_url": "https://zh.wikipedia.org/wiki/大荔县",
+          "source_note": "大荔早在秦朝便有县制，历称临晋、大荔、武乡、冯翊、同州等。",
+          "status": "suggested"
+        },
+        {
+          "name": "Huashan",
+          "local": "华山",
+          "origin": "mountain",
+          "meaning": "\"Splendid mountain\": Mount Hua, one of the Five Great Mountains, rising directly south of Huayin.",
+          "fit": "The mountain is at the region's southern edge in Huayin (99% in the region, 21% of its people); Hua county's Shaohua Shan is its neighbour.",
+          "recognisability": "Own zh-wiki article, 773 hits with 华阴, top ones about this place.",
+          "source_url": "https://zh.wikipedia.org/wiki/华山",
+          "source_note": "华山站位于……渭南市华阴市华山镇；华阴市……因在太华山之阴得名.",
+          "status": "suggested"
+        }
+      ],
+      "notes": "Dali's collision with Dali in Yunnan is the one worry. Tongzhou (同州, 704 years) shares its pinyin with Tongzhou in Beijing, so it was not put forward."
+    },
+    {
+      "n": 11,
+      "key": "#dae5ab",
+      "settled": null,
+      "summary": "Fengxiang (42%) and Chencang district west of Baoji's old centre, plus slices of Qishan, Qianyang and Linyou.",
+      "candidates": [
+        {
+          "name": "Fengxiang",
+          "local": "凤翔",
+          "origin": "county",
+          "meaning": "\"Soaring phoenix\": Tang prefecture seat from 757, after local legend of a phoenix settling; the site of Yong, the Qin capital for nearly 300 years.",
+          "fit": "Holds 100% of the county, the largest unit at 42%.",
+          "recognisability": "Own zh-wiki article (Fengxiang district), 532 hits with 宝鸡, top ones about this place.",
+          "source_url": "https://zh.wikipedia.org/wiki/凤翔区",
+          "source_note": "古称雍县，民间长期流传有凤凰栖生，到唐朝时设凤翔府治雍县，名称被后代沿用称凤翔县。",
+          "status": "suggested"
+        },
+        {
+          "name": "Chencang",
+          "local": "陈仓",
+          "origin": "historical",
+          "meaning": "\"Old granary\": Qin city (762 BC), ancient name of Baoji, famous from the idiom 'secretly crossing Chencang' (Han Xin's flank march in 206 BC); Chencang district since 2003.",
+          "fit": "The district (formerly Baoji county, shown in the unit list as 'Baoji Xian') has 39% of the region's people.",
+          "recognisability": "Own zh-wiki article, 373 hits with 宝鸡, top ones about this place; one of China's best-known chengyu.",
+          "source_url": "https://zh.wikipedia.org/wiki/陈仓区",
+          "source_note": "宝鸡古称陈仓，为陈仓一名之起源。2003年3月……设立宝鸡市陈仓区。",
+          "status": "suggested"
+        }
+      ],
+      "notes": "Chencang district is split: 59% of its people are here, about 24% in region 14 (Baoji city); the old Chencang town sat east of Baoji, nearer region 14. Region 14 is better named Baoji."
+    },
+    {
+      "n": 12,
+      "key": "#eee299",
+      "settled": null,
+      "summary": "Weinan city (Linwei district, 84%) with Hua county's western part and the edge of Lintong.",
+      "candidates": [
+        {
+          "name": "Weinan",
+          "local": "渭南",
+          "origin": "city",
+          "meaning": "\"South of the Wei River\": county since 360 AD (over 1500 years under one name), now the prefecture capital.",
+          "fit": "Holds the old centre: Linwei district is 84% of the region and 97% of the district is here.",
+          "recognisability": "Prefecture and city name; own zh-wiki article.",
+          "source_url": "https://zh.wikipedia.org/wiki/渭南市",
+          "source_note": "前身渭南县，因地处渭河南岸而得名……渭南县建于前秦甘露二年（公元360年）。",
+          "status": "suggested"
+        }
+      ],
+      "notes": "Only one candidate: the city is the obvious name and nothing else covers more than a small part."
+    },
+    {
+      "n": 13,
+      "key": "#e8eeb5",
+      "settled": null,
+      "summary": "Zhou homeland on the Wei plain: Fufeng (30%), Qishan (24%), Mei county (22%), plus parts of Zhouzhi, Wugong and Linyou.",
+      "candidates": [
+        {
+          "name": "Zhouyuan",
+          "local": "周原",
+          "origin": "plain",
+          "meaning": "\"Plain of Zhou\": the cradle of the Zhou people, stretching from Qishan and Fufeng east to Wugong and west to Fengxiang, backed by Mount Qi and bounded on the south by the Wei River.",
+          "fit": "Covers exactly Fufeng and Qishan plus the plain parts of Mei and Wugong, about 85% of the region.",
+          "recognisability": "Own zh-wiki article, 1086 hits with 陕西, top ones about this place (Zhouyuan bronzes, Zhou palace sites).",
+          "source_url": "https://zh.wikipedia.org/wiki/周原",
+          "source_note": "周原是周族（周人）的发祥地，位于今陕西省宝鸡市扶风县、岐山县一带，北倚岐山，南临渭河，东西延伸至武功、凤翔等地。",
+          "status": "suggested"
+        },
+        {
+          "name": "Fufeng",
+          "local": "扶风",
+          "origin": "county",
+          "meaning": "County and ancient commandery name (Han 'Right Fufeng'); site of Famen Temple, which housed a Buddha finger relic.",
+          "fit": "Holds 94% of the county, the largest unit at 30%.",
+          "recognisability": "Own zh-wiki article, 809 hits with 陕西, top ones about this place and Famen Temple.",
+          "source_url": "https://zh.wikipedia.org/wiki/扶风县",
+          "source_note": "扶风县著名古迹有法门寺。扶风郡 (郡, 607-755) (CHGIS).",
+          "status": "suggested"
+        }
+      ],
+      "notes": "Qishan (24%, named for the two-peaked mountain, 1692 hits) is a third option, but Qishan is also 10% of region 11 and Zhouyuan already covers it."
+    },
+    {
+      "n": 14,
+      "key": "#e2ee84",
+      "settled": null,
+      "summary": "Baoji city (Weibin and Jintai districts) in the Wei valley below the Qinling, plus part of Chencang district.",
+      "candidates": [
+        {
+          "name": "Baoji",
+          "local": "宝鸡",
+          "origin": "city",
+          "meaning": "\"Treasure chicken\": in 757 Chencang county was renamed after a stone chicken said to crow on Chencang Mountain (now Jifeng).",
+          "fit": "Holds the old centre: Weibin and Jintai districts are 77% of the region.",
+          "recognisability": "Prefecture and city name; own zh-wiki article.",
+          "source_url": "https://zh.wikipedia.org/wiki/宝鸡市",
+          "source_note": "唐朝至德二年（757年），以陈仓山（今鸡峰山）的石鸡啼鸣，陈仓县易名宝鸡县。",
+          "status": "suggested"
+        }
+      ],
+      "notes": "Chencang, the older name for this spot, is put on region 11 instead so the two do not collide."
+    },
+    {
+      "n": 15,
+      "key": "#f1e4c6",
+      "settled": null,
+      "summary": "Shangluo's upper Luo River and Dan River basins: Shangzhou (46%), Luonan (38%), part of Danfeng.",
+      "candidates": [
+        {
+          "name": "Shangluo",
+          "local": "商洛",
+          "origin": "prefecture",
+          "meaning": "Shang + Luo: named for Mount Shang and the Luo River (the upper Luo rises here); Shang was also the Shang fief of Wei Yang. Earlier Shangluo county (584-1153), prefecture of that name since 2001.",
+          "fit": "Holds the prefecture seat (Shangzhou district, 46%) and the upper Luo River (Luonan, 38%); the other Shangluo counties lie in region 17.",
+          "recognisability": "Current prefecture name; own zh-wiki article.",
+          "source_url": "https://zh.wikipedia.org/wiki/商洛市",
+          "source_note": "商洛市……因境内商山、洛水而得名。",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Shangzhou",
+          "local": "商州",
+          "origin": "prefecture",
+          "meaning": "\"Shang prefecture\" (from Mount Shang and the Shang fief): prefecture seat 578-1911, a directly governed prefecture in the Qing and the Shangluo seat now; also the seat of the Shang fief of Wei Yang.",
+          "fit": "Holds 100% of Shangzhou district, the largest unit at 46%.",
+          "recognisability": "Own zh-wiki article, 1179 hits with 陕西, top ones about this place.",
+          "source_url": "https://zh.wikipedia.org/wiki/商州区",
+          "source_note": "北周宣政元年（578年）改洛州为商州，治所设上洛……CHGIS 商州 (州/直隶州, 578-1911) 今陕西省商县治.",
+          "status": "suggested"
+        },
+        {
+          "name": "Luonan",
+          "local": "洛南",
+          "origin": "county",
+          "meaning": "\"South of the Luo\": county since 583 (written 雒南 until 1964), on the upper Luo River that flows to the Yellow River; the Luonan palaeolithic site group is a national monument.",
+          "fit": "Holds 100% of the county, 38% of the region.",
+          "recognisability": "Own zh-wiki article, 348 hits with 陕西, top ones about this place.",
+          "source_url": "https://zh.wikipedia.org/wiki/洛南县",
+          "source_note": "洛南县（旧作“雒南”，1964年改为“洛南”）……位于陕西东南部，华山以南，洛河上游。",
+          "status": "suggested"
+        }
+      ],
+      "notes": "Shangluo (the whole prefecture name) is not suggested because the prefecture covers this region and region 17."
+    },
+    {
+      "n": 16,
+      "key": "#f9e7dc",
+      "settled": null,
+      "summary": "Eastern Hanzhong basin and the Qinling south slope: Yang (40%), Chenggu (38%), Taibai, Ningshan, Liuba, Foping.",
+      "candidates": [
+        {
+          "name": "Chenggu",
+          "local": "城固",
+          "origin": "county",
+          "meaning": "\"Walled and firm\": county from 312 BC (written 成固 until the Liu Song), named for the hope that the city would hold; birthplace of Zhang Qian, the Han envoy to Central Asia.",
+          "fit": "Holds 84% of the county, 38% of the region.",
+          "recognisability": "Own zh-wiki article, 558 hits with 陕西, top ones about this place.",
+          "source_url": "https://zh.wikipedia.org/wiki/城固县",
+          "source_note": "前312年……置汉中郡，同时置成固县，“盖始为城，而冀其巩固之意也”，故名“成固”。",
+          "status": "suggested"
+        },
+        {
+          "name": "Yangxian",
+          "local": "洋县",
+          "origin": "county",
+          "meaning": "\"Yang county\": from Yangzhou prefecture (618-1369) on the Yang River; the article names it as China's only habitat of the crested ibis (toki), with a giant panda reserve as well.",
+          "fit": "Holds 100% of the county, the largest unit at 40%.",
+          "recognisability": "Own zh-wiki article, 1152 hits with 陕西, top ones about this place. Written as one word to avoid reading as just 'Yang'; Yangzhou in Jiangsu is a different place.",
+          "source_url": "https://zh.wikipedia.org/wiki/洋县",
+          "source_note": "唐乾元元年（758）起为洋州州治所在地……明洪武三年（1370）改洋州为洋县……境内有长青国家级自然保护区和朱鹮国家级自然保护区。",
+          "status": "suggested"
+        }
+      ],
+      "notes": "Yangxian is the larger unit; Chenggu has the better single-word name."
+    },
+    {
+      "n": 17,
+      "key": "#f7e7d6",
+      "settled": null,
+      "summary": "Qinling south slope in Shangluo: Shanyang (34%), Zhen'an (22%), Yunxi in Hubei (18%), Zhashui, Danfeng east.",
+      "candidates": [
+        {
+          "name": "Shanyang",
+          "local": "山阳",
+          "origin": "county",
+          "meaning": "\"South of the mountain\": the county seat lies south of Mount Shang (named so in 998); earlier Fengyang.",
+          "fit": "Holds 100% of the county, the largest unit at 34%.",
+          "recognisability": "Own zh-wiki article, 1364 hits with 陕西, top ones about this place; Shanyang in Henan (Jiaozuo district) is spelled the same.",
+          "source_url": "https://zh.wikipedia.org/wiki/山阳县",
+          "source_note": "北宋咸平元年（998年）改名山阳县，因县城地处商山之南而得名。",
+          "status": "suggested"
+        },
+        {
+          "name": "Zhen'an",
+          "local": "镇安",
+          "origin": "county",
+          "meaning": "\"Keep the peace\": Ming county (earlier Anye, Qianyuan, Qianyou), in the forested Qianyou River valley.",
+          "fit": "Holds 100% of the county, 22% of the region.",
+          "recognisability": "Own zh-wiki article, 641 hits with 陕西; Zhen'an Prefecture in Guangxi also appears in the top hits.",
+          "source_url": "https://zh.wikipedia.org/wiki/镇安县",
+          "source_note": "唐置安业县，后改乾元县，五代汉改乾佑县。明改镇安县。",
+          "status": "suggested"
+        }
+      ],
+      "notes": "Yunxi (Hubei) holds 18% of the region's people; its Shangjin (上津) old town is a CHGIS seat here but has no article in sources.md."
+    },
+    {
+      "n": 18,
+      "key": "#f7e5dc",
+      "settled": null,
+      "summary": "Western Hanzhong along the Han and Jialing rivers: Mian (30%), Ningqiang (24%), Lueyang (16%), Kang in Gansu, Chaotian in Sichuan, part of Nanzheng.",
+      "candidates": [
+        {
+          "name": "Mianxian",
+          "local": "勉县",
+          "origin": "county",
+          "meaning": "\"Mian county\": spelled 沔县 (Mian, the ancient name of the Han River) until 1964, now with a simpler character; home of Mount Dingjun and Zhuge Liang's tomb and temple.",
+          "fit": "Holds 99% of the county, the largest unit at 30%.",
+          "recognisability": "Own zh-wiki article, 1178 hits with 陕西, top ones about this place (Mianzhou, Zhuge Liang). Written as one word to keep it from reading as 'Mian' (cf. Mianyang in Sichuan).",
+          "source_url": "https://zh.wikipedia.org/wiki/勉县",
+          "source_note": "勉县（旧称“沔县”，1964年因用字生僻难认被改名为“勉县”）……勉县内有定军山暨纪念诸葛亮出师的武侯墓、武侯祠。",
+          "status": "suggested"
+        },
+        {
+          "name": "Ningqiang",
+          "local": "宁强",
+          "origin": "county",
+          "meaning": "Originally Ningqiang ('pacify the Qiang', 宁羌, 1485), changed to 'calm and strong' in 1942; the Yangping Pass on the Han and Jialing divide is here.",
+          "fit": "Holds 100% of the county, 24% of the region.",
+          "recognisability": "Own zh-wiki article, 1193 hits with 陕西; Yangpingguan has its own article with 79 hits.",
+          "source_url": "https://zh.wikipedia.org/wiki/宁强县",
+          "source_note": "明成化二十一年（1485年）建立宁羌州；1913年改宁羌县，1942年改宁强县。",
+          "status": "suggested"
+        },
+        {
+          "name": "Jialing",
+          "local": "嘉陵",
+          "origin": "river",
+          "meaning": "The Jialing River, a major Yangtze tributary (old names Langshui, Yushui); it rises in Feng county and the name comes from Jialing Pass on its west source.",
+          "fit": "Its upper course runs south through Lueyang, Ningqiang and Chaotian, about half the region's people; the Han's headwaters (Ningqiang, Mian) are the other main river here.",
+          "recognisability": "Own zh-wiki article; 47 hits with 略阳 but the river itself is well known (it gives its name to Chongqing's Jialing district).",
+          "source_url": "https://zh.wikipedia.org/wiki/嘉陵江",
+          "source_note": "嘉陵江……发源于陕西省宝鸡市凤县西北凉水泉沟；略阳县位于陕西西南部，嘉陵江上游；嘉陵江水系……纵贯略阳、宁强两县。",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Wuxing",
+          "local": "武兴",
+          "origin": "historical",
+          "meaning": "\"Rise of arms\": the Wuxing kingdom of the Di Yang clan (473-506) around today's Lueyang, then Wuxing commandery under Northern Wei (506-556).",
+          "fit": "Walled seat (Wuxing city, east of Lueyang town) is in the region; the kingdom covered the Lueyang and upper Jialing corner where Shaanxi, Gansu and Sichuan meet.",
+          "recognisability": "Own zh-wiki articles (武興城, 武興郡), only 6 hits with 略阳, so a lesser-known name.",
+          "source_url": "https://zh.wikipedia.org/wiki/武興城",
+          "source_note": "北魏延兴三年（473年），氐人杨文度占据沮县武兴城（今略阳县城），建立武兴国。正始三年（506年），北魏攻占武兴城。",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Xingzhou",
+          "local": "兴州",
+          "origin": "prefecture",
+          "meaning": "\"Flourishing prefecture\": Western Wei prefecture of 553 seated at Lueyang, which lasted 624 years in all until 1206 when it became Mianzhou.",
+          "fit": "Seat is Lueyang (16% of the region) and the prefecture ran up the Jialing and Han headwaters.",
+          "recognisability": "Own zh-wiki article, 64 hits with 略阳; Xingzhou also exists elsewhere (Hebei, Shanxi).",
+          "source_url": "https://zh.wikipedia.org/wiki/兴州_(陕西省)",
+          "source_note": "西魏废帝二年（553年），西魏改东益州设置兴州。治所在汉曲县（……今陕西省略阳县）。",
+          "rating": 2,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Kang county (Gansu) and Chaotian district (Sichuan) lie in this region; Lueyang (16%) is a third option with Xingzhou, a Tang prefecture seat."
+    },
+    {
+      "n": 19,
+      "key": "#fad4c0",
+      "settled": null,
+      "summary": "Hanzhong city (Hantai district, 56%) and Nanzheng district (43%).",
+      "candidates": [
+        {
+          "name": "Hanzhong",
+          "local": "汉中",
+          "origin": "city",
+          "meaning": "\"Middle of the Han\": Qin commandery of 312 BC (Hanzhong commandery); a prefecture seat for most of 2300 years (Liangzhou, Xingyuan, Hanzhong).",
+          "fit": "Holds the old centre: Hantai district is 56% of the region and its seat is here.",
+          "recognisability": "Prefecture and city name; own zh-wiki article.",
+          "source_url": "https://zh.wikipedia.org/wiki/汉中市",
+          "source_note": "公元前312年，秦惠文王置汉中郡，“汉中”一名即来源于此。",
+          "status": "suggested"
+        },
+        {
+          "name": "Nanzheng",
+          "local": "南郑",
+          "origin": "county",
+          "meaning": "Qin city of 451 BC and county from 202 BC (2084 years), the capital of Liu Bang as King of Han and later the Zhang Lu regime.",
+          "fit": "Holds 80% of Nanzheng district, 43% of the region.",
+          "recognisability": "Own zh-wiki article, 552 hits with 陕西, top ones about this place.",
+          "source_url": "https://zh.wikipedia.org/wiki/南郑区",
+          "source_note": "战国时期置县。前451年秦国筑南郑城。秦亡后，项羽分封十八路诸侯，刘邦为汉王，以南郑为都城。",
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 20,
+      "key": "#fceae1",
+      "settled": null,
+      "summary": "Hanzhong's southeast and the Han River middle valley: Xixiang (40%), Hanyin, Shiquan, Zhenba, in the Daba Mountains.",
+      "candidates": [
+        {
+          "name": "Xixiang",
+          "local": "西乡",
+          "origin": "county",
+          "meaning": "Named in 281 AD for Zhang Fei, who was made Marquis of Xixiang ('west village'); county since 607 with a seat at Siji River.",
+          "fit": "Holds 98% of the county, the largest unit at 40%.",
+          "recognisability": "Own zh-wiki article, 1420 hits with 陕西, top ones about this place (Yangzhou, Fengning prefectures).",
+          "source_url": "https://zh.wikipedia.org/wiki/西乡县",
+          "source_note": "西晋武帝太康二年（281年），因张飞封侯西乡，改南乡县为西乡县。",
+          "status": "suggested"
+        },
+        {
+          "name": "Shiquan",
+          "local": "石泉",
+          "origin": "county",
+          "meaning": "\"Stone spring\": county since 562 on the Han River, the old route between Qin and Shu; Guiguzi is said to have taught on Yunwu Mountain in the north.",
+          "fit": "Holds 94% of the county, 18% of the region.",
+          "recognisability": "Own zh-wiki article, 1543 hits with 陕西, top ones about this place and its prefectures.",
+          "source_url": "https://zh.wikipedia.org/wiki/石泉县",
+          "source_note": "石泉县(县, 562-1911) (CHGIS); 著名的“鬼谷子”曾经修道的地方，便在该县北部的云雾山顶的天台观。",
+          "status": "suggested"
+        }
+      ],
+      "notes": "Hanyin (19%) and Zhenba (15%) were left out: Hanyin is split with region 21 and Zhenba is better known for the Daba Mountains, which run across several provinces."
+    },
+    {
+      "n": 21,
+      "key": "#fadece",
+      "settled": null,
+      "summary": "Ankang city (Hanbin district, 90%) on the Han River.",
+      "candidates": [
+        {
+          "name": "Ankang",
+          "local": "安康",
+          "origin": "city",
+          "meaning": "\"Peaceful and well\": named in 280 AD for 'ten thousand years of plenty and peace' to settle refugees; formerly Xicheng, Jinzhou and Xing'an.",
+          "fit": "Holds the old centre: Hanbin district is 90% of the region.",
+          "recognisability": "Prefecture and city name; own zh-wiki article.",
+          "source_url": "https://zh.wikipedia.org/wiki/安康市",
+          "source_note": "晋武帝太康元年（280年）为安置巴山一带流民，取“万年丰乐、安宁康泰”之意，将安阳县更名为安康县。",
+          "status": "suggested"
+        }
+      ],
+      "notes": "Only one candidate: Jinzhou (748 years) clashes with Jinzhou in Liaoning and Xing'an with Hinggan in Inner Mongolia."
+    },
+    {
+      "n": 22,
+      "key": "#f7e4d6",
+      "settled": null,
+      "summary": "Han River middle valley and the Daba foothills east of Ankang: Xunyang (39%), Ziyang (22%), Pingli, Langao, Zhenping.",
+      "candidates": [
+        {
+          "name": "Xunyang",
+          "local": "旬阳",
+          "origin": "county",
+          "meaning": "\"North of the Xun River\": the Qin Xun pass guarding the Xun river mouth; written 洵阳 until 1964; the town's river bend resembles a taiji symbol.",
+          "fit": "Holds 99% of the county, the largest unit at 39%; Xunyang city is 427k.",
+          "recognisability": "Own zh-wiki article (Xunyang City), 1067 hits with 陕西, top ones about this place.",
+          "source_url": "https://zh.wikipedia.org/wiki/旬阳市",
+          "source_note": "秦朝时于旬水入汉水处设旬关……置旬阳县。……因为流经城区的旬河的特殊形状……故亦被官方或民间称为“太极城”。",
+          "status": "suggested"
+        },
+        {
+          "name": "Pingli",
+          "local": "平利",
+          "origin": "county",
+          "meaning": "Named in 618 after the Pingli river plain (Pingli Chuan); county on the site of the earlier Shanglian and Ji'an counties.",
+          "fit": "Holds 99% of the county, 18% of the region.",
+          "recognisability": "Own zh-wiki article, 448 hits with 陕西, top ones about this place.",
+          "source_url": "https://zh.wikipedia.org/wiki/平利县",
+          "source_note": "唐武德元年（618年）……在上廉故城，以平利川名置平利县，属金州。",
+          "status": "suggested"
+        },
+        {
+          "name": "Ziyang",
+          "local": "紫阳",
+          "origin": "county",
+          "meaning": "Named after Zhang Boduan, the founder of the southern school of Daoism, who is said to have practised here under the name Ziyang; it is the only Chinese county named for a Daoist title.",
+          "fit": "Holds 81% of the county, 22% of the region.",
+          "recognisability": "Own zh-wiki article. Rejected because its pinyin is identical to Ziyang city in Sichuan (资阳), which is far larger.",
+          "source_url": "https://zh.wikipedia.org/wiki/紫阳县",
+          "source_note": "紫阳县因曾在该地修行悟道的道教南派创始人张伯端而得名，是中国唯一以道教名号命名的县。",
+          "status": "rejected"
+        }
+      ],
+      "notes": ""
+    }
+  ]
+}

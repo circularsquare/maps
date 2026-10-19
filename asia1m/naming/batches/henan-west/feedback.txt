@@ -1,0 +1,25 @@
+batch henan-west
+1: pick Mianchi
+2: pick Mengjin
+3: pick Sanmenxia
+4: pick Luoyang
+5: pick Gongyi
+6: pick Longmen
+7: pick Xiong'er
+8: pick Yichuan
+9: pick Ruzhou
+10: pick Funiu
+11: pick Baofeng
+12: pick Pingdingshan
+13: pick Lushan
+14: pick Yexian
+15: pick Danjiang
+16: pick Nanzhao
+17: pick Neixiang
+18: pick Zhenping
+19: pick Sheqi
+20: pick Nanyang
+21: pick Xinye
+22: pick Dengzhou
+23: pick Tanghe
+24: pick Fenglingdu

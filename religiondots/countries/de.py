@@ -27,6 +27,11 @@ class _DeGridWeighter:
     COLUMN = {
         "christianity.catholic": "kath",
         "christianity.protestant": "ev",
+        # the Landeskirche split of that same column (sources/de_ekd.py): one church per Gemeinde,
+        # so the Protestant grid inside a Gemeinde is that church's grid
+        "christianity.lutheran": "ev",
+        "christianity.united": "ev",
+        "christianity.reformed.continental": "ev",
         "unrecorded": "son",
         # EVERYTHING BELOW IS THE `Sonstige` COLUMN AND NOT THE RELIGION'S OWN, and the
         # paragraphs above do not describe any of it. destatis publishes a grid for its
@@ -43,6 +48,11 @@ class _DeGridWeighter:
         # true of the three Zensus categories and of nothing else here.
         "judaism": "son",
         "islam": "son",
+        # the MLD split of the ESS Muslims (sources/de_mld.py), on the same column
+        "islam.sunni": "son",
+        "islam.shia": "son",
+        "islam.ahmadiyya": "son",
+        "alevism": "son",
         "christianity.orthodox": "son",
         "christianity.evangelical": "son",
         "christianity": "son",
@@ -52,7 +62,8 @@ class _DeGridWeighter:
     # slice to it: the node's own `ev` column is the right weight for the measured 19.1M
     # that dominates it, and `weights()` is asked per (unit, node) and cannot see tier.
     PROXY = {"judaism", "islam", "christianity.orthodox",
-             "christianity.evangelical", "christianity", "other.de"}
+             "christianity.evangelical", "christianity", "other.de",
+             "islam.sunni", "islam.shia", "islam.ahmadiyya", "alevism"}
 
     # --- Route B: citizenship sharpens two of those six ---------------------------------
     # `son` is half of Germany and contains every secular German, so on its own it spreads
@@ -73,7 +84,12 @@ class _DeGridWeighter:
     # of the weight and `son` keeps the rest. Where the signal is absent it is pure `son`
     # and nothing changes; where it accounts for the whole node it is pure citizenship.
     # No constant is picked anywhere, so there is nothing here to tune.
-    CITIZENSHIP = {"islam": "isl_ctz", "christianity.orthodox": "orth_ctz"}
+    CITIZENSHIP = {"islam": "isl_ctz", "christianity.orthodox": "orth_ctz",
+                   # MLD's Sunni and Alevi are mostly Turkish and Balkan by origin (Table 32,
+                   # Abbildung 32: 95% of Alevis are Türkei-origin), which is what `isl_ctz`
+                   # counts. Shia and Ahmadi are mostly Middle-Eastern by origin, a column the
+                   # grid does not publish, so they stay on `son` alone.
+                   "islam.sunni": "isl_ctz", "alevism": "isl_ctz"}
 
     def __init__(self, place):
         self.pop = place["pop"].to_numpy(dtype=float)
@@ -183,11 +199,107 @@ def _de_counts():
 
     df = _de_add_zwst(df)
     df = _de_split_ess(df)
+    df = _de_split_islam(df)
+    df = _de_split_ekd(df)
 
     df["congregations"] = 0
     if "tier" not in df.columns:
-        return df[["unit", "node", "count", "congregations"]]
-    return df[["unit", "node", "count", "congregations", "tier"]]
+        df["tier"] = "measured"
+    if "roll" not in df.columns:
+        df["roll"] = None
+    return df[["unit", "node", "count", "congregations", "tier", "roll"]]
+
+
+def _de_split_islam(df):
+    """Divide the ESS-modelled `islam` rows by each Land's MLD 2020 branch shares.
+
+    sources/de_mld.py (2026-10-16, approved by Anita). Per Land, MLD's Sunni, Shi'a, Alevi and
+    Ahmadi shares of Muslims move to `islam.sunni`, `islam.shia`, `alevism` and
+    `islam.ahmadiyya`; MLD's other, just-Muslim and don't-know share stays on `islam`. Every row
+    stays `modelled`: nobody counted Germany's Muslims, so they are removed, not rolled, when
+    inferred dots are hidden, exactly as the ESS rows they come from.
+    """
+    import de2022
+
+    path = HERE / "data" / "normalized" / "de_mld.csv"
+    if not path.exists():
+        print("  !! de_mld.csv missing; run sources/de_mld.py. Germany's Muslims stay on "
+              "`islam` (unspecified_splits/islam.md §3)")
+        return df
+    m = pd.read_csv(path, dtype={"geo_id": str})
+    m["node"] = m["source_category"].map(de2022.resolve)
+    if m["node"].isna().any():
+        bad = sorted(m.loc[m["node"].isna(), "source_category"].unique())
+        raise SystemExit(f"de_mld: unmapped categories {bad}; add them to taxonomy/de2022.py")
+    shares = {gid: dict(zip(g["node"], g["share"])) for gid, g in m.groupby("geo_id")}
+
+    sel = (df["node"] == "islam") & (df["tier"] == "modelled")
+    before = df.loc[sel, "count"].sum()
+    land = df.loc[sel, "unit"].str[:2]
+    missing = sorted(set(land) - set(shares))
+    if missing:
+        raise SystemExit(f"de_mld: no shares for Länder {missing}")
+    frames, taken = [], pd.Series(0.0, index=df.index[sel])
+    for node in sorted({n for s in shares.values() for n in s}):
+        f = land.map(lambda g: shares[g].get(node, 0.0)).to_numpy(dtype=float)
+        n = df.loc[sel, "count"].to_numpy(dtype=float) * f
+        taken += n
+        keep = n > 0
+        frames.append(pd.DataFrame({"unit": df.loc[sel, "unit"].to_numpy()[keep],
+                                    "node": node, "count": n[keep], "tier": "modelled"}))
+    if (taken > df.loc[sel, "count"] + 1e-9).any():
+        raise SystemExit("de_mld: a Land's named shares take more than its Muslims")
+    df.loc[sel, "count"] = df.loc[sel, "count"] - taken
+    add = pd.concat(frames, ignore_index=True)
+    out = pd.concat([df, add], ignore_index=True)
+    after = out.loc[out["node"].isin(["islam", "islam.sunni", "islam.shia", "islam.ahmadiyya",
+                                      "alevism"]) & (out["tier"] == "modelled"), "count"].sum()
+    if abs(after - before) > 1.0:
+        raise SystemExit(f"de_mld: {before:,.0f} Muslims in, {after:,.0f} out")
+    by = add.groupby("node")["count"].sum()
+    print("  " + ", ".join(f"{n} {v:,.0f}" for n, v in by.sort_values(ascending=False).items())
+          + f" of the {before:,.0f} ESS Muslims, by Land from MLD 2020, MODELLED "
+            "(sources/de_mld.py)")
+    return out
+
+
+def _de_split_ekd(df):
+    """Replace the Zensus `Evangelische Kirche` rows with the same people named by Landeskirche.
+
+    sources/de_ekd.py, sources/de.md §12, spec §2.7b. By church law a member belongs to the Landeskirche
+    of their main residence, so each Gemeinde's Protestants are that church's members; the rows say
+    which body that is (Lutheran, United or Reformed) and sum to the column exactly. `derived`, with
+    `roll` naming `christianity.protestant`, so `inferred dots: not shown` redraws the undivided
+    column the register counted. The one modelled step, the Reformed church inside Hannover's
+    territory, is described in that file.
+    """
+    import de2022
+    from de2022 import EV_COLUMN
+
+    path = HERE / "data" / "normalized" / "de_ekd.csv"
+    if not path.exists():
+        print("  !! de_ekd.csv missing; run sources/de_ekd.py. Germany's Protestants stay on "
+              "christianity.protestant (sources/de.md §12)")
+        return df
+    e = pd.read_csv(path, dtype={"geo_id": str})
+    e["node"] = e["source_category"].map(de2022.resolve)
+    if e["node"].isna().any():
+        bad = sorted(e.loc[e["node"].isna(), "source_category"].unique())
+        raise SystemExit(f"de_ekd: unmapped categories {bad}; add them to taxonomy/de2022.py")
+
+    old = df["source_category"] == EV_COLUMN
+    replaced = df.loc[old, "count"].sum()
+    if abs(e["count"].sum() - replaced) > 0.5:
+        raise SystemExit(f"de_ekd.csv draws {e['count'].sum():,.0f} Protestants against the "
+                         f"{replaced:,.0f} it replaces; re-run sources/de_ekd.py")
+    add = pd.DataFrame({"unit": e["geo_id"], "node": e["node"], "count": e["count"],
+                        "tier": "derived", "roll": de2022.COLUMNS[EV_COLUMN]})
+    add = add.groupby(["unit", "node", "tier", "roll"], as_index=False)["count"].sum()
+    out = pd.concat([df[~old], add], ignore_index=True)
+    by = add.groupby("node")["count"].sum()
+    print("  " + ", ".join(f"{n} {v:,.0f}" for n, v in by.sort_values(ascending=False).items())
+          + " of the Zensus Protestants, by Landeskirche, DERIVED (sources/de_ekd.py)")
+    return out
 
 
 def _de_add_zwst(df):
@@ -346,7 +458,14 @@ ENTRY = {
             "implies about 3.5 million where the federal migration office estimates 5.5, "
             "because a German-language household survey of adults misses recent arrivals "
             "and a young population. The figure is left as the survey reports it rather "
-            "than scaled to fit. The 41% who told the survey they belong to no religion "
+            "than scaled to fit. Those Muslims are divided by branch from the federal "
+            "migration office's 2020 survey of Muslim life, which asked about 3,400 Muslims "
+            "of migrant origin which branch they follow and gives each origin region's "
+            "answers and where each region's Muslims live. Combined, they make each federal "
+            "state's Muslims about 69-83% Sunni, 3-12% Shia, 1-11% Alevi and 1-4% Ahmadi; "
+            "nationally **72%** Sunni, 5% Shia, 8% Alevi and 1% Ahmadi. Alevis are drawn "
+            "under Alevism, as everywhere else on this map. The rest, about one in seven, "
+            "named no branch or did not know, and stays on plain Islam. The 41% who told the survey they belong to no religion "
             "are deliberately NOT drawn as non-religious and stay in the grey: the "
             "register genuinely counted them into it, and where somebody stands on belief "
             "is the last thing a model like this can see. What survives untouched is the "
@@ -356,8 +475,21 @@ ENTRY = {
             "sharpest line is not that one. In the former East, 81% belong to no church, "
             "against 45% in the West, and the Eichsfeld — a Catholic enclave that stayed "
             "Catholic through forty years of the GDR — still reads at 80% against a "
-            "Thuringia of 74% none."),
+            "Thuringia of 74% none. The Protestants are drawn by church. The Protestant "
+            "church in Germany is twenty regional churches, and by church law a member "
+            "belongs to the one whose territory they live in, so each municipality's "
+            "Protestants are named by the church that covers it. Lutheran churches hold the "
+            "north, Bavaria, Württemberg, Saxony and Thuringia. United churches, where "
+            "Lutheran and Reformed congregations were joined from 1817 on, hold the "
+            "Rhineland, Westphalia, Hesse, Baden, the Palatinate and Berlin. A United "
+            "church's parishes kept their own confession, so the colour is the church's and "
+            "not each parish's. Summed over each territory, the register's count lands within "
+            "**2.5%** of every large church's own membership figure for the end of 2022. The "
+            "Reformed church of Ostfriesland and the Grafschaft Bentheim has no territory; "
+            "its members there are spread over those districts from the church's own "
+            "regional figures."),
         how="church-tax registers; nobody was asked",
+        fill="from each Protestant church's territory, since members belong to the church where they live",
         grain="municipalities, 7,700 people on average",
         counts=_de_counts,
         # Gemeinden are the COUNT layer; the 1km INSPIRE grid is the PLACEMENT layer, and
@@ -406,6 +538,12 @@ ENTRY = {
              "dots are PLACED on destatis' citizenship grid, which shares cell ids with "
              "the religion one: Turkish and Bosnian passports for Islam, Greek, Romanian, "
              "Russian and Ukrainian for Orthodoxy, blended with `son` in each Gemeinde's "
-             "own ratio (sources/de.md §10). Placement only, never a magnitude (§8.2).",
+             "own ratio (sources/de.md §10). Placement only, never a magnitude (§8.2). "
+             "The Zensus Protestant column is split by Landeskirche territory "
+             "(sources/de_ekd.py, de.md §12, spec §2.7b), `derived` and rolling back to "
+             "christianity.protestant; checked against EKD's 20 membership totals. "
+             "The ESS `islam` rows are divided by Land from BAMF's MLD 2020 Tables 23, 26 "
+             "and 32 (sources/de_mld.py, 2026-10-16): Sunni, Shia, Ahmadi and Alevi "
+             "(`alevism`), all still `modelled`; MLD's unnamed share stays on `islam`.",
     ),
 }

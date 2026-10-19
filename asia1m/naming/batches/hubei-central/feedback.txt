@@ -1,0 +1,12 @@
+batch hubei-central
+1: pick Jingshan
+2: pick Zhongxiang
+3: pick Jingmen
+4: pick Tianmen
+5: pick Qianjiang
+6: pick Jingzhou
+7: pick Xiantao
+8: pick Songzi
+9: pick Gong'an
+10: pick Honghu
+11: pick Jianli

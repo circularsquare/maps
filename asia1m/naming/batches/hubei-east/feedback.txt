@@ -1,0 +1,14 @@
+batch hubei-east
+1: pick Guangshui
+2: pick Suizhou
+3: pick Hong'an
+4: pick Anlu
+5: pick Macheng
+6: pick Xiaogan
+7: pick Dabie
+8: pick Yunmeng
+9: pick Xishui
+10: pick Hanchuan
+11: pick Qichun
+12: pick Huangshi
+13: pick Huangmei

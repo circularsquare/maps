@@ -1,0 +1,3444 @@
+{
+ "name": "hunan-changsha",
+ "province": "Hunan",
+ "prefectures": [
+  "Changsha",
+  "Xiangtan",
+  "Zhuzhou"
+ ],
+ "tiles": [
+  {
+   "tag": "1",
+   "x": 6783,
+   "y": 3788,
+   "w": 616,
+   "h": 681,
+   "scale": 2,
+   "regions": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+   ]
+  }
+ ],
+ "regions": [
+  {
+   "key": "#c1aaf3",
+   "color": "#c1aaf3",
+   "lon": 112.5489,
+   "lat": 28.3562,
+   "bbox": [
+    7017,
+    4004,
+    7059,
+    4053
+   ],
+   "area_px": 1390,
+   "people": 847938,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Ningxiang",
+     "local": "宁乡县",
+     "prefecture": "Changsha",
+     "prefecture_local": "长沙市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.57,
+     "area_share": 0.498,
+     "cover": 0.404
+    },
+    {
+     "name": "Heshan",
+     "local": "赫山区",
+     "prefecture": "Yiyang",
+     "prefecture_local": "益阳市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.298,
+     "area_share": 0.374,
+     "cover": 0.288
+    },
+    {
+     "name": "Wangcheng",
+     "local": "望城区",
+     "prefecture": "Changsha",
+     "prefecture_local": "长沙市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.131,
+     "area_share": 0.125,
+     "cover": 0.204
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.012
+    },
+    {
+     "level": "prefecture",
+     "name": "Changsha",
+     "local": "长沙市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.7,
+     "cover": 0.073
+    },
+    {
+     "level": "prefecture",
+     "name": "Yiyang",
+     "local": "益阳市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.299,
+     "cover": 0.059
+    }
+   ],
+   "towns": [
+    {
+     "town": "城郊乡",
+     "county": "宁乡县",
+     "city": "长沙市",
+     "people_share": 0.08,
+     "cover": 1.0
+    },
+    {
+     "town": "衡龙桥镇",
+     "county": "赫山区",
+     "city": "益阳市",
+     "people_share": 0.074,
+     "cover": 1.0
+    },
+    {
+     "town": "历经铺乡",
+     "county": "宁乡县",
+     "city": "长沙市",
+     "people_share": 0.061,
+     "cover": 1.0
+    },
+    {
+     "town": "泉交河镇",
+     "county": "赫山区",
+     "city": "益阳市",
+     "people_share": 0.061,
+     "cover": 1.0
+    },
+    {
+     "town": "夏铎铺镇",
+     "county": "宁乡县",
+     "city": "长沙市",
+     "people_share": 0.06,
+     "cover": 1.0
+    },
+    {
+     "town": "岳家桥镇",
+     "county": "赫山区",
+     "city": "益阳市",
+     "people_share": 0.053,
+     "cover": 0.965
+    },
+    {
+     "town": "沧水铺镇",
+     "county": "赫山区",
+     "city": "益阳市",
+     "people_share": 0.049,
+     "cover": 0.991
+    },
+    {
+     "town": "回龙铺镇",
+     "county": "宁乡县",
+     "city": "长沙市",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "坝塘镇",
+     "county": "宁乡县",
+     "city": "长沙市",
+     "people_share": 0.048,
+     "cover": 0.819
+    },
+    {
+     "town": "菁华铺乡",
+     "county": "宁乡县",
+     "city": "长沙市",
+     "people_share": 0.046,
+     "cover": 1.0
+    },
+    {
+     "town": "白马桥乡",
+     "county": "宁乡县",
+     "city": "长沙市",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "煤炭坝镇",
+     "county": "宁乡县",
+     "city": "长沙市",
+     "people_share": 0.041,
+     "cover": 0.985
+    }
+   ],
+   "cities": [
+    {
+     "name": "Yutan",
+     "admin": "Hunan",
+     "pop": 1368117
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#cab3fd",
+     "border_px": 579
+    },
+    {
+     "key": "#ad8ef3",
+     "border_px": 488
+    },
+    {
+     "key": "#d7c3f4",
+     "border_px": 471
+    },
+    {
+     "key": "#c1b4f1",
+     "border_px": 388
+    },
+    {
+     "key": "#c1b4fc",
+     "border_px": 80
+    }
+   ],
+   "text_px": 0,
+   "n": 1,
+   "thumb": {
+    "x0": 6977,
+    "y0": 3964,
+    "k": 3.0,
+    "w": 366,
+    "h": 387
+   }
+  },
+  {
+   "key": "#c5c1ea",
+   "color": "#c5c1ea",
+   "lon": 113.3431,
+   "lat": 28.2996,
+   "bbox": [
+    7084,
+    3988,
+    7136,
+    4071
+   ],
+   "area_px": 2653,
+   "people": 1164499,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Changsha",
+     "local": "长沙县",
+     "prefecture": "Changsha",
+     "prefecture_local": "长沙市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.515,
+     "area_share": 0.497,
+     "cover": 0.6
+    },
+    {
+     "name": "Liuyang",
+     "local": "浏阳市",
+     "prefecture": "Changsha",
+     "prefecture_local": "长沙市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.446,
+     "area_share": 0.46,
+     "cover": 0.277
+    },
+    {
+     "name": "Shifeng",
+     "local": "石峰区",
+     "prefecture": "Zhuzhou",
+     "prefecture_local": "株洲市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.022,
+     "area_share": 0.021,
+     "cover": 0.069
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.017
+    },
+    {
+     "level": "prefecture",
+     "name": "Changsha",
+     "local": "长沙市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.959,
+     "cover": 0.137
+    }
+   ],
+   "towns": [
+    {
+     "town": "黄花镇",
+     "county": "长沙县",
+     "city": "长沙市",
+     "people_share": 0.15,
+     "cover": 0.961
+    },
+    {
+     "town": "镇头镇",
+     "county": "浏阳市",
+     "city": "长沙市",
+     "people_share": 0.083,
+     "cover": 0.962
+    },
+    {
+     "town": "江背镇",
+     "county": "长沙县",
+     "city": "长沙市",
+     "people_share": 0.063,
+     "cover": 1.0
+    },
+    {
+     "town": "永安镇",
+     "county": "浏阳市",
+     "city": "长沙市",
+     "people_share": 0.06,
+     "cover": 1.0
+    },
+    {
+     "town": "跳马镇",
+     "county": "长沙县",
+     "city": "长沙市",
+     "people_share": 0.055,
+     "cover": 0.899
+    },
+    {
+     "town": "春华镇",
+     "county": "长沙县",
+     "city": "长沙市",
+     "people_share": 0.047,
+     "cover": 1.0
+    },
+    {
+     "town": "沙市镇",
+     "county": "浏阳市",
+     "city": "长沙市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "淳口镇",
+     "county": "浏阳市",
+     "city": "长沙市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "洞阳镇",
+     "county": "浏阳市",
+     "city": "长沙市",
+     "people_share": 0.04,
+     "cover": 0.981
+    },
+    {
+     "town": "社港镇",
+     "county": "浏阳市",
+     "city": "长沙市",
+     "people_share": 0.04,
+     "cover": 0.986
+    },
+    {
+     "town": "龙伏镇",
+     "county": "浏阳市",
+     "city": "长沙市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "北盛镇",
+     "county": "浏阳市",
+     "city": "长沙市",
+     "people_share": 0.036,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Xingsha",
+     "admin": "Hunan",
+     "pop": 277034
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#c4ead5",
+     "border_px": 991
+    },
+    {
+     "key": "#bce7cf",
+     "border_px": 720
+    },
+    {
+     "key": "#c1b4fc",
+     "border_px": 625
+    },
+    {
+     "key": "#a49af1",
+     "border_px": 318
+    },
+    {
+     "key": "#6d6aee",
+     "border_px": 212
+    },
+    {
+     "key": "#9c75f4",
+     "border_px": 158
+    },
+    {
+     "key": "#826aee",
+     "border_px": 138
+    },
+    {
+     "key": "#b59af1",
+     "border_px": 130
+    }
+   ],
+   "text_px": 0,
+   "n": 2,
+   "thumb": {
+    "x0": 7044,
+    "y0": 3948,
+    "k": 2.0,
+    "w": 264,
+    "h": 326
+   }
+  },
+  {
+   "key": "#6d6aee",
+   "color": "#6d6aee",
+   "lon": 113.0877,
+   "lat": 28.2292,
+   "bbox": [
+    7078,
+    4031,
+    7092,
+    4043
+   ],
+   "area_px": 124,
+   "people": 324239,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Changsha",
+     "local": "长沙县",
+     "prefecture": "Changsha",
+     "prefecture_local": "长沙市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.557,
+     "area_share": 0.718,
+     "cover": 0.181
+    },
+    {
+     "name": "Kaifu",
+     "local": "开福区",
+     "prefecture": "Changsha",
+     "prefecture_local": "长沙市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.296,
+     "area_share": 0.129,
+     "cover": 0.165
+    },
+    {
+     "name": "Furong",
+     "local": "芙蓉区",
+     "prefecture": "Changsha",
+     "prefecture_local": "长沙市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.133,
+     "area_share": 0.137,
+     "cover": 0.088
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.005
+    },
+    {
+     "level": "prefecture",
+     "name": "Changsha",
+     "local": "长沙市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.04
+    }
+   ],
+   "towns": [
+    {
+     "town": "星沙街道",
+     "county": "长沙县",
+     "city": "长沙市",
+     "people_share": 0.21,
+     "cover": 0.961
+    },
+    {
+     "town": "浏阳河街道",
+     "county": "开福区",
+     "city": "长沙市",
+     "people_share": 0.147,
+     "cover": 0.833
+    },
+    {
+     "town": "泉塘街道",
+     "county": "长沙县",
+     "city": "长沙市",
+     "people_share": 0.129,
+     "cover": 1.0
+    },
+    {
+     "town": "洪山街道",
+     "county": "开福区",
+     "city": "长沙市",
+     "people_share": 0.123,
+     "cover": 1.0
+    },
+    {
+     "town": "湘龙街道",
+     "county": "长沙县",
+     "city": "长沙市",
+     "people_share": 0.108,
+     "cover": 0.921
+    },
+    {
+     "town": "榔梨街道",
+     "county": "长沙县",
+     "city": "长沙市",
+     "people_share": 0.083,
+     "cover": 0.892
+    },
+    {
+     "town": "东湖街道",
+     "county": "芙蓉区",
+     "city": "长沙市",
+     "people_share": 0.066,
+     "cover": 1.0
+    },
+    {
+     "town": "马坡岭街道",
+     "county": "芙蓉区",
+     "city": "长沙市",
+     "people_share": 0.043,
+     "cover": 0.327
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#c5c1ea",
+     "border_px": 212
+    },
+    {
+     "key": "#6546ed",
+     "border_px": 143
+    },
+    {
+     "key": "#c1b4fc",
+     "border_px": 143
+    },
+    {
+     "key": "#826aee",
+     "border_px": 115
+    },
+    {
+     "key": "#ad8ef3",
+     "border_px": 3
+    }
+   ],
+   "text_px": 0,
+   "n": 3,
+   "thumb": {
+    "x0": 7038,
+    "y0": 3991,
+    "k": 4.0,
+    "w": 376,
+    "h": 368
+   }
+  },
+  {
+   "key": "#ad8ef3",
+   "color": "#ad8ef3",
+   "lon": 112.7879,
+   "lat": 28.2254,
+   "bbox": [
+    7046,
+    4022,
+    7074,
+    4058
+   ],
+   "area_px": 682,
+   "people": 850978,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yuelu",
+     "local": "岳麓区",
+     "prefecture": "Changsha",
+     "prefecture_local": "长沙市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.642,
+     "area_share": 0.421,
+     "cover": 0.558
+    },
+    {
+     "name": "Wangcheng",
+     "local": "望城区",
+     "prefecture": "Changsha",
+     "prefecture_local": "长沙市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.352,
+     "area_share": 0.559,
+     "cover": 0.551
+    },
+    {
+     "name": "Ningxiang",
+     "local": "宁乡县",
+     "prefecture": "Changsha",
+     "prefecture_local": "长沙市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.004,
+     "area_share": 0.016,
+     "cover": 0.003
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.012
+    },
+    {
+     "level": "prefecture",
+     "name": "Changsha",
+     "local": "长沙市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.997,
+     "cover": 0.104
+    }
+   ],
+   "towns": [
+    {
+     "town": "银盆岭街道",
+     "county": "岳麓区",
+     "city": "长沙市",
+     "people_share": 0.153,
+     "cover": 0.842
+    },
+    {
+     "town": "望岳街道",
+     "county": "岳麓区",
+     "city": "长沙市",
+     "people_share": 0.13,
+     "cover": 1.0
+    },
+    {
+     "town": "观沙岭街道",
+     "county": "岳麓区",
+     "city": "长沙市",
+     "people_share": 0.113,
+     "cover": 1.0
+    },
+    {
+     "town": "月亮岛街道",
+     "county": "望城区",
+     "city": "长沙市",
+     "people_share": 0.067,
+     "cover": 1.0
+    },
+    {
+     "town": "西湖街道",
+     "county": "岳麓区",
+     "city": "长沙市",
+     "people_share": 0.058,
+     "cover": 0.461
+    },
+    {
+     "town": "莲花镇",
+     "county": "岳麓区",
+     "city": "长沙市",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "白箬铺镇",
+     "county": "望城区",
+     "city": "长沙市",
+     "people_share": 0.048,
+     "cover": 0.969
+    },
+    {
+     "town": "乌山镇",
+     "county": "望城区",
+     "city": "长沙市",
+     "people_share": 0.043,
+     "cover": 0.945
+    },
+    {
+     "town": "高塘岭街道",
+     "county": "望城区",
+     "city": "长沙市",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "白沙洲街道",
+     "county": "望城区",
+     "city": "长沙市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "含浦街道",
+     "county": "岳麓区",
+     "city": "长沙市",
+     "people_share": 0.035,
+     "cover": 0.902
+    },
+    {
+     "town": "麓谷街道",
+     "county": "岳麓区",
+     "city": "长沙市",
+     "people_share": 0.031,
+     "cover": 0.767
+    }
+   ],
+   "cities": [
+    {
+     "name": "Changsha",
+     "admin": "Hunan",
+     "pop": 4766296
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#c1aaf3",
+     "border_px": 488
+    },
+    {
+     "key": "#d7c3f4",
+     "border_px": 417
+    },
+    {
+     "key": "#aa6af3",
+     "border_px": 308
+    },
+    {
+     "key": "#c1b4fc",
+     "border_px": 276
+    },
+    {
+     "key": "#6546ed",
+     "border_px": 68
+    },
+    {
+     "key": "#6d6aee",
+     "border_px": 3
+    }
+   ],
+   "text_px": 0,
+   "n": 4,
+   "thumb": {
+    "x0": 7006,
+    "y0": 3982,
+    "k": 3.0,
+    "w": 324,
+    "h": 348
+   }
+  },
+  {
+   "key": "#6546ed",
+   "color": "#6546ed",
+   "lon": 113.0,
+   "lat": 28.2135,
+   "bbox": [
+    7076,
+    4035,
+    7083,
+    4043
+   ],
+   "area_px": 62,
+   "people": 1050548,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Furong",
+     "local": "芙蓉区",
+     "prefecture": "Changsha",
+     "prefecture_local": "长沙市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.428,
+     "area_share": 0.387,
+     "cover": 0.912
+    },
+    {
+     "name": "Kaifu",
+     "local": "开福区",
+     "prefecture": "Changsha",
+     "prefecture_local": "长沙市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.304,
+     "area_share": 0.419,
+     "cover": 0.549
+    },
+    {
+     "name": "Yuhua",
+     "local": "雨花区",
+     "prefecture": "Changsha",
+     "prefecture_local": "长沙市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.149,
+     "area_share": 0.113,
+     "cover": 0.189
+    },
+    {
+     "name": "Tianxin",
+     "local": "天心区",
+     "prefecture": "Changsha",
+     "prefecture_local": "长沙市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.096,
+     "area_share": 0.065,
+     "cover": 0.173
+    },
+    {
+     "name": "Yuelu",
+     "local": "岳麓区",
+     "prefecture": "Changsha",
+     "prefecture_local": "长沙市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.023,
+     "area_share": 0.016,
+     "cover": 0.025
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.015
+    },
+    {
+     "level": "prefecture",
+     "name": "Changsha",
+     "local": "长沙市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.129
+    }
+   ],
+   "towns": [
+    {
+     "town": "韭菜园街道",
+     "county": "芙蓉区",
+     "city": "长沙市",
+     "people_share": 0.062,
+     "cover": 1.0
+    },
+    {
+     "town": "马王堆街道",
+     "county": "芙蓉区",
+     "city": "长沙市",
+     "people_share": 0.062,
+     "cover": 1.0
+    },
+    {
+     "town": "高桥街道",
+     "county": "雨花区",
+     "city": "长沙市",
+     "people_share": 0.062,
+     "cover": 0.429
+    },
+    {
+     "town": "定王台街道",
+     "county": "芙蓉区",
+     "city": "长沙市",
+     "people_share": 0.047,
+     "cover": 1.0
+    },
+    {
+     "town": "通泰街街道",
+     "county": "开福区",
+     "city": "长沙市",
+     "people_share": 0.047,
+     "cover": 1.0
+    },
+    {
+     "town": "坡子街街道",
+     "county": "天心区",
+     "city": "长沙市",
+     "people_share": 0.047,
+     "cover": 1.0
+    },
+    {
+     "town": "东岸街道",
+     "county": "芙蓉区",
+     "city": "长沙市",
+     "people_share": 0.045,
+     "cover": 0.917
+    },
+    {
+     "town": "新河街道",
+     "county": "开福区",
+     "city": "长沙市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "东屯渡街道",
+     "county": "芙蓉区",
+     "city": "长沙市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "荷花园街道",
+     "county": "芙蓉区",
+     "city": "长沙市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "湘湖街道",
+     "county": "芙蓉区",
+     "city": "长沙市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "左家塘街道",
+     "county": "雨花区",
+     "city": "长沙市",
+     "people_share": 0.041,
+     "cover": 0.446
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#6d6aee",
+     "border_px": 143
+    },
+    {
+     "key": "#826aee",
+     "border_px": 98
+    },
+    {
+     "key": "#ad8ef3",
+     "border_px": 68
+    },
+    {
+     "key": "#aa6af3",
+     "border_px": 49
+    },
+    {
+     "key": "#c1b4fc",
+     "border_px": 18
+    },
+    {
+     "key": "#9c75f4",
+     "border_px": 14
+    }
+   ],
+   "text_px": 0,
+   "n": 5,
+   "thumb": {
+    "x0": 7036,
+    "y0": 3995,
+    "k": 4.0,
+    "w": 348,
+    "h": 352
+   }
+  },
+  {
+   "key": "#c4ead5",
+   "color": "#c4ead5",
+   "lon": 113.8045,
+   "lat": 28.2125,
+   "bbox": [
+    7110,
+    3990,
+    7186,
+    4074
+   ],
+   "area_px": 3331,
+   "people": 1377246,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Liuyang",
+     "local": "浏阳市",
+     "prefecture": "Changsha",
+     "prefecture_local": "长沙市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.985,
+     "area_share": 0.986,
+     "cover": 0.722
+    },
+    {
+     "name": "Shangli",
+     "local": "上栗县",
+     "prefecture": "Pingxiang",
+     "prefecture_local": "萍乡市",
+     "province": "江西省",
+     "country": "China",
+     "people_share": 0.007,
+     "area_share": 0.003,
+     "cover": 0.018
+    },
+    {
+     "name": "Liling",
+     "local": "醴陵市",
+     "prefecture": "Zhuzhou",
+     "prefecture_local": "株洲市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.006,
+     "area_share": 0.005,
+     "cover": 0.006
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.991,
+     "cover": 0.02
+    },
+    {
+     "level": "prefecture",
+     "name": "Changsha",
+     "local": "长沙市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.985,
+     "cover": 0.166
+    }
+   ],
+   "towns": [
+    {
+     "town": "集里街道",
+     "county": "浏阳市",
+     "city": "长沙市",
+     "people_share": 0.132,
+     "cover": 1.0
+    },
+    {
+     "town": "荷花街道",
+     "county": "浏阳市",
+     "city": "长沙市",
+     "people_share": 0.113,
+     "cover": 1.0
+    },
+    {
+     "town": "普迹镇",
+     "county": "浏阳市",
+     "city": "长沙市",
+     "people_share": 0.056,
+     "cover": 0.981
+    },
+    {
+     "town": "枨冲镇",
+     "county": "浏阳市",
+     "city": "长沙市",
+     "people_share": 0.052,
+     "cover": 1.0
+    },
+    {
+     "town": "高坪镇",
+     "county": "浏阳市",
+     "city": "长沙市",
+     "people_share": 0.05,
+     "cover": 1.0
+    },
+    {
+     "town": "澄潭江镇",
+     "county": "浏阳市",
+     "city": "长沙市",
+     "people_share": 0.046,
+     "cover": 0.986
+    },
+    {
+     "town": "古港镇",
+     "county": "浏阳市",
+     "city": "长沙市",
+     "people_share": 0.046,
+     "cover": 1.0
+    },
+    {
+     "town": "关口街道",
+     "county": "浏阳市",
+     "city": "长沙市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "金刚镇",
+     "county": "浏阳市",
+     "city": "长沙市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "沿溪镇",
+     "county": "浏阳市",
+     "city": "长沙市",
+     "people_share": 0.039,
+     "cover": 0.999
+    },
+    {
+     "town": "文家市镇",
+     "county": "浏阳市",
+     "city": "长沙市",
+     "people_share": 0.036,
+     "cover": 0.996
+    },
+    {
+     "town": "大瑶镇",
+     "county": "浏阳市",
+     "city": "长沙市",
+     "people_share": 0.036,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Guankou",
+     "admin": "Hunan",
+     "pop": 1168056
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#c5c1ea",
+     "border_px": 991
+    },
+    {
+     "key": "#c8edc6",
+     "border_px": 831
+    },
+    {
+     "key": "#b0ddbe",
+     "border_px": 648
+    },
+    {
+     "key": "#bce7cf",
+     "border_px": 557
+    },
+    {
+     "key": "#d0f0d1",
+     "border_px": 391
+    },
+    {
+     "key": "#9fdfb2",
+     "border_px": 319
+    },
+    {
+     "key": "#a49af1",
+     "border_px": 33
+    }
+   ],
+   "text_px": 85,
+   "n": 6,
+   "thumb": {
+    "x0": 7070,
+    "y0": 3950,
+    "k": 2.0,
+    "w": 312,
+    "h": 328
+   }
+  },
+  {
+   "key": "#aa6af3",
+   "color": "#aa6af3",
+   "lon": 112.9003,
+   "lat": 28.1618,
+   "bbox": [
+    7066,
+    4040,
+    7074,
+    4052
+   ],
+   "area_px": 117,
+   "people": 370026,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yuelu",
+     "local": "岳麓区",
+     "prefecture": "Changsha",
+     "prefecture_local": "长沙市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.998,
+     "area_share": 0.991,
+     "cover": 0.378
+    },
+    {
+     "name": "Wangcheng",
+     "local": "望城区",
+     "prefecture": "Changsha",
+     "prefecture_local": "长沙市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.002,
+     "area_share": 0.009,
+     "cover": 0.001
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.005
+    },
+    {
+     "level": "prefecture",
+     "name": "Changsha",
+     "local": "长沙市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.045
+    }
+   ],
+   "towns": [
+    {
+     "town": "桔子洲街道",
+     "county": "岳麓区",
+     "city": "长沙市",
+     "people_share": 0.417,
+     "cover": 1.0
+    },
+    {
+     "town": "西湖街道",
+     "county": "岳麓区",
+     "city": "长沙市",
+     "people_share": 0.155,
+     "cover": 0.539
+    },
+    {
+     "town": "学士街道",
+     "county": "岳麓区",
+     "city": "长沙市",
+     "people_share": 0.087,
+     "cover": 0.894
+    },
+    {
+     "town": "岳麓街道",
+     "county": "岳麓区",
+     "city": "长沙市",
+     "people_share": 0.072,
+     "cover": 1.0
+    },
+    {
+     "town": "望月湖街道",
+     "county": "岳麓区",
+     "city": "长沙市",
+     "people_share": 0.066,
+     "cover": 1.0
+    },
+    {
+     "town": "梅溪湖街道",
+     "county": "岳麓区",
+     "city": "长沙市",
+     "people_share": 0.063,
+     "cover": 1.0
+    },
+    {
+     "town": "洋湖街道",
+     "county": "岳麓区",
+     "city": "长沙市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "望城坡街道",
+     "county": "岳麓区",
+     "city": "长沙市",
+     "people_share": 0.037,
+     "cover": 0.667
+    },
+    {
+     "town": "天顶街道",
+     "county": "岳麓区",
+     "city": "长沙市",
+     "people_share": 0.037,
+     "cover": 0.43
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#ad8ef3",
+     "border_px": 308
+    },
+    {
+     "key": "#9c75f4",
+     "border_px": 114
+    },
+    {
+     "key": "#6546ed",
+     "border_px": 49
+    },
+    {
+     "key": "#d7c3f4",
+     "border_px": 35
+    },
+    {
+     "key": "#826aee",
+     "border_px": 6
+    }
+   ],
+   "text_px": 0,
+   "n": 7,
+   "thumb": {
+    "x0": 7026,
+    "y0": 4000,
+    "k": 4.0,
+    "w": 352,
+    "h": 368
+   }
+  },
+  {
+   "key": "#826aee",
+   "color": "#826aee",
+   "lon": 113.063,
+   "lat": 28.1427,
+   "bbox": [
+    7078,
+    4043,
+    7092,
+    4050
+   ],
+   "area_px": 105,
+   "people": 619921,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yuhua",
+     "local": "雨花区",
+     "prefecture": "Changsha",
+     "prefecture_local": "长沙市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.871,
+     "area_share": 0.581,
+     "cover": 0.653
+    },
+    {
+     "name": "Changsha",
+     "local": "长沙县",
+     "prefecture": "Changsha",
+     "prefecture_local": "长沙市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.086,
+     "area_share": 0.41,
+     "cover": 0.053
+    },
+    {
+     "name": "Tianxin",
+     "local": "天心区",
+     "prefecture": "Changsha",
+     "prefecture_local": "长沙市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.043,
+     "area_share": 0.01,
+     "cover": 0.046
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.009
+    },
+    {
+     "level": "prefecture",
+     "name": "Changsha",
+     "local": "长沙市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.076
+    }
+   ],
+   "towns": [
+    {
+     "town": "高桥街道",
+     "county": "雨花区",
+     "city": "长沙市",
+     "people_share": 0.139,
+     "cover": 0.571
+    },
+    {
+     "town": "雨花亭街道",
+     "county": "雨花区",
+     "city": "长沙市",
+     "people_share": 0.115,
+     "cover": 0.726
+    },
+    {
+     "town": "黎托街道",
+     "county": "雨花区",
+     "city": "长沙市",
+     "people_share": 0.108,
+     "cover": 0.721
+    },
+    {
+     "town": "砂子塘街道",
+     "county": "雨花区",
+     "city": "长沙市",
+     "people_share": 0.087,
+     "cover": 1.0
+    },
+    {
+     "town": "东塘街道",
+     "county": "雨花区",
+     "city": "长沙市",
+     "people_share": 0.087,
+     "cover": 0.667
+    },
+    {
+     "town": "左家塘街道",
+     "county": "雨花区",
+     "city": "长沙市",
+     "people_share": 0.087,
+     "cover": 0.554
+    },
+    {
+     "town": "东山街道",
+     "county": "雨花区",
+     "city": "长沙市",
+     "people_share": 0.081,
+     "cover": 1.0
+    },
+    {
+     "town": "黄兴镇",
+     "county": "长沙县",
+     "city": "长沙市",
+     "people_share": 0.08,
+     "cover": 0.727
+    },
+    {
+     "town": "井湾子街道",
+     "county": "雨花区",
+     "city": "长沙市",
+     "people_share": 0.076,
+     "cover": 0.928
+    },
+    {
+     "town": "圭塘街道",
+     "county": "雨花区",
+     "city": "长沙市",
+     "people_share": 0.056,
+     "cover": 1.0
+    },
+    {
+     "town": "金盆岭街道",
+     "county": "天心区",
+     "city": "长沙市",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "洞井街道",
+     "county": "雨花区",
+     "city": "长沙市",
+     "people_share": 0.035,
+     "cover": 0.389
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#9c75f4",
+     "border_px": 185
+    },
+    {
+     "key": "#c5c1ea",
+     "border_px": 138
+    },
+    {
+     "key": "#6d6aee",
+     "border_px": 115
+    },
+    {
+     "key": "#6546ed",
+     "border_px": 98
+    },
+    {
+     "key": "#aa6af3",
+     "border_px": 6
+    }
+   ],
+   "text_px": 0,
+   "n": 8,
+   "thumb": {
+    "x0": 7038,
+    "y0": 4003,
+    "k": 4.0,
+    "w": 376,
+    "h": 348
+   }
+  },
+  {
+   "key": "#9c75f4",
+   "color": "#9c75f4",
+   "lon": 112.9863,
+   "lat": 28.07,
+   "bbox": [
+    7075,
+    4045,
+    7086,
+    4064
+   ],
+   "area_px": 153,
+   "people": 632899,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Tianxin",
+     "local": "天心区",
+     "prefecture": "Changsha",
+     "prefecture_local": "长沙市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.712,
+     "area_share": 0.366,
+     "cover": 0.778
+    },
+    {
+     "name": "Yuhua",
+     "local": "雨花区",
+     "prefecture": "Changsha",
+     "prefecture_local": "长沙市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.194,
+     "area_share": 0.216,
+     "cover": 0.149
+    },
+    {
+     "name": "Changsha",
+     "local": "长沙县",
+     "prefecture": "Changsha",
+     "prefecture_local": "长沙市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.093,
+     "area_share": 0.405,
+     "cover": 0.059
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.009
+    },
+    {
+     "level": "prefecture",
+     "name": "Changsha",
+     "local": "长沙市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.078
+    }
+   ],
+   "towns": [
+    {
+     "town": "新开铺街道",
+     "county": "天心区",
+     "city": "长沙市",
+     "people_share": 0.129,
+     "cover": 1.0
+    },
+    {
+     "town": "赤岭路街道",
+     "county": "天心区",
+     "city": "长沙市",
+     "people_share": 0.127,
+     "cover": 1.0
+    },
+    {
+     "town": "文源街道",
+     "county": "天心区",
+     "city": "长沙市",
+     "people_share": 0.127,
+     "cover": 1.0
+    },
+    {
+     "town": "裕南街街道",
+     "county": "天心区",
+     "city": "长沙市",
+     "people_share": 0.127,
+     "cover": 0.75
+    },
+    {
+     "town": "青园街道",
+     "county": "天心区",
+     "city": "长沙市",
+     "people_share": 0.098,
+     "cover": 1.0
+    },
+    {
+     "town": "暮云镇",
+     "county": "长沙县",
+     "city": "长沙市",
+     "people_share": 0.088,
+     "cover": 0.96
+    },
+    {
+     "town": "洞井街道",
+     "county": "雨花区",
+     "city": "长沙市",
+     "people_share": 0.054,
+     "cover": 0.611
+    },
+    {
+     "town": "东塘街道",
+     "county": "雨花区",
+     "city": "长沙市",
+     "people_share": 0.042,
+     "cover": 0.333
+    },
+    {
+     "town": "雨花亭街道",
+     "county": "雨花区",
+     "city": "长沙市",
+     "people_share": 0.042,
+     "cover": 0.274
+    },
+    {
+     "town": "同升街道",
+     "county": "雨花区",
+     "city": "长沙市",
+     "people_share": 0.038,
+     "cover": 0.903
+    },
+    {
+     "town": "先锋街道",
+     "county": "天心区",
+     "city": "长沙市",
+     "people_share": 0.037,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#826aee",
+     "border_px": 185
+    },
+    {
+     "key": "#c5c1ea",
+     "border_px": 158
+    },
+    {
+     "key": "#b59af1",
+     "border_px": 145
+    },
+    {
+     "key": "#d7c3f4",
+     "border_px": 118
+    },
+    {
+     "key": "#aa6af3",
+     "border_px": 114
+    },
+    {
+     "key": "#6546ed",
+     "border_px": 14
+    }
+   ],
+   "text_px": 0,
+   "n": 9,
+   "thumb": {
+    "x0": 7035,
+    "y0": 4005,
+    "k": 4.0,
+    "w": 364,
+    "h": 396
+   }
+  },
+  {
+   "key": "#d7c3f4",
+   "color": "#d7c3f4",
+   "lon": 112.3763,
+   "lat": 28.0338,
+   "bbox": [
+    6983,
+    4042,
+    7075,
+    4087
+   ],
+   "area_px": 2879,
+   "people": 1117744,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Ningxiang",
+     "local": "宁乡县",
+     "prefecture": "Changsha",
+     "prefecture_local": "长沙市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.631,
+     "area_share": 0.669,
+     "cover": 0.589
+    },
+    {
+     "name": "Yuhu",
+     "local": "雨湖区",
+     "prefecture": "Xiangtan",
+     "prefecture_local": "湘潭市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.106,
+     "area_share": 0.082,
+     "cover": 0.18
+    },
+    {
+     "name": "Shaoshan",
+     "local": "韶山市",
+     "prefecture": "Xiangtan",
+     "prefecture_local": "湘潭市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.091,
+     "area_share": 0.077,
+     "cover": 1.0
+    },
+    {
+     "name": "Xiangxiang",
+     "local": "湘乡市",
+     "prefecture": "Xiangtan",
+     "prefecture_local": "湘潭市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.077,
+     "area_share": 0.092,
+     "cover": 0.116
+    },
+    {
+     "name": "Xiangtan",
+     "local": "湘潭县",
+     "prefecture": "Xiangtan",
+     "prefecture_local": "湘潭市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.058,
+     "area_share": 0.044,
+     "cover": 0.083
+    },
+    {
+     "name": "Yuelu",
+     "local": "岳麓区",
+     "prefecture": "Changsha",
+     "prefecture_local": "长沙市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.034,
+     "area_share": 0.03,
+     "cover": 0.039
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.016
+    },
+    {
+     "level": "prefecture",
+     "name": "Changsha",
+     "local": "长沙市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.739,
+     "cover": 0.101
+    },
+    {
+     "level": "prefecture",
+     "name": "Xiangtan",
+     "local": "湘潭市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.26,
+     "cover": 0.112
+    }
+   ],
+   "towns": [
+    {
+     "town": "云湖桥镇",
+     "county": "湘潭县",
+     "city": "湘潭市",
+     "people_share": 0.051,
+     "cover": 0.975
+    },
+    {
+     "town": "响塘乡",
+     "county": "雨湖区",
+     "city": "湘潭市",
+     "people_share": 0.05,
+     "cover": 0.965
+    },
+    {
+     "town": "道林镇",
+     "county": "宁乡县",
+     "city": "长沙市",
+     "people_share": 0.046,
+     "cover": 0.962
+    },
+    {
+     "town": "黄材镇",
+     "county": "宁乡县",
+     "city": "长沙市",
+     "people_share": 0.045,
+     "cover": 0.993
+    },
+    {
+     "town": "姜畲镇",
+     "county": "雨湖区",
+     "city": "湘潭市",
+     "people_share": 0.043,
+     "cover": 0.844
+    },
+    {
+     "town": "流沙河镇",
+     "county": "宁乡县",
+     "city": "长沙市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "老粮仓镇",
+     "county": "宁乡县",
+     "city": "长沙市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "双凫铺镇",
+     "county": "宁乡县",
+     "city": "长沙市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "横市镇",
+     "county": "宁乡县",
+     "city": "长沙市",
+     "people_share": 0.04,
+     "cover": 0.988
+    },
+    {
+     "town": "花明楼镇",
+     "county": "宁乡县",
+     "city": "长沙市",
+     "people_share": 0.037,
+     "cover": 0.974
+    },
+    {
+     "town": "青山桥镇",
+     "county": "宁乡县",
+     "city": "长沙市",
+     "people_share": 0.036,
+     "cover": 0.96
+    },
+    {
+     "town": "巷子口镇",
+     "county": "宁乡县",
+     "city": "长沙市",
+     "people_share": 0.033,
+     "cover": 0.988
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#d2b7f8",
+     "border_px": 905
+    },
+    {
+     "key": "#c1aaf3",
+     "border_px": 471
+    },
+    {
+     "key": "#c1b4f1",
+     "border_px": 441
+    },
+    {
+     "key": "#ad8ef3",
+     "border_px": 417
+    },
+    {
+     "key": "#d1c8f1",
+     "border_px": 337
+    },
+    {
+     "key": "#b59af1",
+     "border_px": 329
+    },
+    {
+     "key": "#c6b1f6",
+     "border_px": 237
+    },
+    {
+     "key": "#cdb1f5",
+     "border_px": 214
+    },
+    {
+     "key": "#9c75f4",
+     "border_px": 118
+    },
+    {
+     "key": "#aa6af3",
+     "border_px": 35
+    },
+    {
+     "key": "#cda6fc",
+     "border_px": 34
+    }
+   ],
+   "text_px": 0,
+   "n": 10,
+   "thumb": {
+    "x0": 6943,
+    "y0": 4002,
+    "k": 2.0,
+    "w": 344,
+    "h": 250
+   }
+  },
+  {
+   "key": "#b59af1",
+   "color": "#b59af1",
+   "lon": 112.953,
+   "lat": 27.904,
+   "bbox": [
+    7069,
+    4062,
+    7089,
+    4085
+   ],
+   "area_px": 377,
+   "people": 940792,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yuhu",
+     "local": "雨湖区",
+     "prefecture": "Xiangtan",
+     "prefecture_local": "湘潭市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.572,
+     "area_share": 0.451,
+     "cover": 0.817
+    },
+    {
+     "name": "Yuetang",
+     "local": "岳塘区",
+     "prefecture": "Xiangtan",
+     "prefecture_local": "湘潭市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.408,
+     "area_share": 0.485,
+     "cover": 0.998
+    },
+    {
+     "name": "Shifeng",
+     "local": "石峰区",
+     "prefecture": "Zhuzhou",
+     "prefecture_local": "株洲市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.008,
+     "area_share": 0.027,
+     "cover": 0.02
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.014
+    },
+    {
+     "level": "prefecture",
+     "name": "Xiangtan",
+     "local": "湘潭市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.986,
+     "cover": 0.357
+    }
+   ],
+   "towns": [
+    {
+     "town": "和平街道",
+     "county": "雨湖区",
+     "city": "湘潭市",
+     "people_share": 0.189,
+     "cover": 1.0
+    },
+    {
+     "town": "响水乡",
+     "county": "雨湖区",
+     "city": "湘潭市",
+     "people_share": 0.1,
+     "cover": 0.969
+    },
+    {
+     "town": "双马街道",
+     "county": "岳塘区",
+     "city": "湘潭市",
+     "people_share": 0.081,
+     "cover": 1.0
+    },
+    {
+     "town": "先锋乡",
+     "county": "雨湖区",
+     "city": "湘潭市",
+     "people_share": 0.067,
+     "cover": 1.0
+    },
+    {
+     "town": "荷塘乡",
+     "county": "岳塘区",
+     "city": "湘潭市",
+     "people_share": 0.066,
+     "cover": 1.0
+    },
+    {
+     "town": "护潭乡",
+     "county": "雨湖区",
+     "city": "湘潭市",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "宝塔街道",
+     "county": "岳塘区",
+     "city": "湘潭市",
+     "people_share": 0.039,
+     "cover": 1.0
+    },
+    {
+     "town": "长城乡",
+     "county": "雨湖区",
+     "city": "湘潭市",
+     "people_share": 0.035,
+     "cover": 0.943
+    },
+    {
+     "town": "岳塘街道",
+     "county": "岳塘区",
+     "city": "湘潭市",
+     "people_share": 0.032,
+     "cover": 1.0
+    },
+    {
+     "town": "霞城乡",
+     "county": "岳塘区",
+     "city": "湘潭市",
+     "people_share": 0.03,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Xiangtan",
+     "admin": "Hunan",
+     "pop": 2726181
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#d7c3f4",
+     "border_px": 329
+    },
+    {
+     "key": "#c6b1f6",
+     "border_px": 288
+    },
+    {
+     "key": "#a49af1",
+     "border_px": 146
+    },
+    {
+     "key": "#9c75f4",
+     "border_px": 145
+    },
+    {
+     "key": "#c5c1ea",
+     "border_px": 130
+    }
+   ],
+   "text_px": 0,
+   "n": 11,
+   "thumb": {
+    "x0": 7029,
+    "y0": 4022,
+    "k": 4.0,
+    "w": 400,
+    "h": 412
+   }
+  },
+  {
+   "key": "#a49af1",
+   "color": "#a49af1",
+   "lon": 113.182,
+   "lat": 27.8602,
+   "bbox": [
+    7088,
+    4066,
+    7109,
+    4086
+   ],
+   "area_px": 322,
+   "people": 901442,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Shifeng",
+     "local": "石峰区",
+     "prefecture": "Zhuzhou",
+     "prefecture_local": "株洲市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.375,
+     "area_share": 0.307,
+     "cover": 0.911
+    },
+    {
+     "name": "Lusong",
+     "local": "芦淞区",
+     "prefecture": "Zhuzhou",
+     "prefecture_local": "株洲市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.374,
+     "area_share": 0.41,
+     "cover": 0.897
+    },
+    {
+     "name": "Hetang",
+     "local": "荷塘区",
+     "prefecture": "Zhuzhou",
+     "prefecture_local": "株洲市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.229,
+     "area_share": 0.245,
+     "cover": 0.933
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.013
+    },
+    {
+     "level": "prefecture",
+     "name": "Zhuzhou",
+     "local": "株州市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.999,
+     "cover": 0.208
+    }
+   ],
+   "towns": [
+    {
+     "town": "五里墩乡",
+     "county": "芦淞区",
+     "city": "株洲市",
+     "people_share": 0.086,
+     "cover": 0.993
+    },
+    {
+     "town": "龙泉街道",
+     "county": "芦淞区",
+     "city": "株洲市",
+     "people_share": 0.083,
+     "cover": 1.0
+    },
+    {
+     "town": "铜塘湾街道",
+     "county": "石峰区",
+     "city": "株洲市",
+     "people_share": 0.078,
+     "cover": 0.912
+    },
+    {
+     "town": "枫溪街道",
+     "county": "芦淞区",
+     "city": "株洲市",
+     "people_share": 0.075,
+     "cover": 0.872
+    },
+    {
+     "town": "清水塘街道",
+     "county": "石峰区",
+     "city": "株洲市",
+     "people_share": 0.068,
+     "cover": 0.989
+    },
+    {
+     "town": "学林街道",
+     "county": "石峰区",
+     "city": "株洲市",
+     "people_share": 0.067,
+     "cover": 1.0
+    },
+    {
+     "town": "响石岭街道",
+     "county": "石峰区",
+     "city": "株洲市",
+     "people_share": 0.057,
+     "cover": 1.0
+    },
+    {
+     "town": "明照乡",
+     "county": "荷塘区",
+     "city": "株洲市",
+     "people_share": 0.052,
+     "cover": 0.953
+    },
+    {
+     "town": "董家段街道",
+     "county": "芦淞区",
+     "city": "株洲市",
+     "people_share": 0.051,
+     "cover": 1.0
+    },
+    {
+     "town": "田心街道",
+     "county": "石峰区",
+     "city": "株洲市",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "桂花街道",
+     "county": "荷塘区",
+     "city": "株洲市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "茨菇塘街道",
+     "county": "荷塘区",
+     "city": "株洲市",
+     "people_share": 0.041,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#c6b1f6",
+     "border_px": 424
+    },
+    {
+     "key": "#c5c1ea",
+     "border_px": 318
+    },
+    {
+     "key": "#b59af1",
+     "border_px": 146
+    },
+    {
+     "key": "#b0ddbe",
+     "border_px": 141
+    },
+    {
+     "key": "#c4ead5",
+     "border_px": 33
+    }
+   ],
+   "text_px": 0,
+   "n": 12,
+   "thumb": {
+    "x0": 7048,
+    "y0": 4026,
+    "k": 4.0,
+    "w": 404,
+    "h": 400
+   }
+  },
+  {
+   "key": "#c6b1f6",
+   "color": "#c6b1f6",
+   "lon": 112.9905,
+   "lat": 27.6956,
+   "bbox": [
+    7052,
+    4079,
+    7110,
+    4117
+   ],
+   "area_px": 1242,
+   "people": 739290,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Xiangtan",
+     "local": "湘潭县",
+     "prefecture": "Xiangtan",
+     "prefecture_local": "湘潭市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.4,
+     "area_share": 0.457,
+     "cover": 0.377
+    },
+    {
+     "name": "Tianyuan",
+     "local": "天元区",
+     "prefecture": "Zhuzhou",
+     "prefecture_local": "株洲市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.291,
+     "area_share": 0.235,
+     "cover": 0.915
+    },
+    {
+     "name": "Zhuzhou",
+     "local": "株洲县",
+     "prefecture": "Zhuzhou",
+     "prefecture_local": "株洲市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.275,
+     "area_share": 0.295,
+     "cover": 0.651
+    },
+    {
+     "name": "Lusong",
+     "local": "芦淞区",
+     "prefecture": "Zhuzhou",
+     "prefecture_local": "株洲市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.03,
+     "area_share": 0.006,
+     "cover": 0.059
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.011
+    },
+    {
+     "level": "prefecture",
+     "name": "Zhuzhou",
+     "local": "株州市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.598,
+     "cover": 0.102
+    },
+    {
+     "level": "prefecture",
+     "name": "Xiangtan",
+     "local": "湘潭市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.402,
+     "cover": 0.115
+    }
+   ],
+   "towns": [
+    {
+     "town": "易俗河镇",
+     "county": "湘潭县",
+     "city": "湘潭市",
+     "people_share": 0.125,
+     "cover": 1.0
+    },
+    {
+     "town": "泰山路街道",
+     "county": "天元区",
+     "city": "株洲市",
+     "people_share": 0.092,
+     "cover": 1.0
+    },
+    {
+     "town": "渌口镇",
+     "county": "株洲县",
+     "city": "株洲市",
+     "people_share": 0.08,
+     "cover": 0.991
+    },
+    {
+     "town": "石潭镇",
+     "county": "湘潭县",
+     "city": "湘潭市",
+     "people_share": 0.073,
+     "cover": 0.856
+    },
+    {
+     "town": "南阳桥乡",
+     "county": "株洲县",
+     "city": "株洲市",
+     "people_share": 0.061,
+     "cover": 1.0
+    },
+    {
+     "town": "杨嘉桥镇",
+     "county": "湘潭县",
+     "city": "湘潭市",
+     "people_share": 0.06,
+     "cover": 0.929
+    },
+    {
+     "town": "嵩山路街道",
+     "county": "天元区",
+     "city": "株洲市",
+     "people_share": 0.058,
+     "cover": 0.764
+    },
+    {
+     "town": "梅林桥镇",
+     "county": "湘潭县",
+     "city": "湘潭市",
+     "people_share": 0.054,
+     "cover": 0.994
+    },
+    {
+     "town": "洲坪乡",
+     "county": "株洲县",
+     "city": "株洲市",
+     "people_share": 0.045,
+     "cover": 0.957
+    },
+    {
+     "town": "谭家山镇",
+     "county": "湘潭县",
+     "city": "湘潭市",
+     "people_share": 0.044,
+     "cover": 0.962
+    },
+    {
+     "town": "河口镇",
+     "county": "湘潭县",
+     "city": "湘潭市",
+     "people_share": 0.041,
+     "cover": 0.888
+    },
+    {
+     "town": "雷打石镇",
+     "county": "天元区",
+     "city": "株洲市",
+     "people_share": 0.039,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Zhuzhou",
+     "admin": "Hunan",
+     "pop": 3902738
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#d2b7f8",
+     "border_px": 1040
+    },
+    {
+     "key": "#b0ddbe",
+     "border_px": 439
+    },
+    {
+     "key": "#a49af1",
+     "border_px": 424
+    },
+    {
+     "key": "#b59af1",
+     "border_px": 288
+    },
+    {
+     "key": "#d7c3f4",
+     "border_px": 237
+    }
+   ],
+   "text_px": 0,
+   "n": 13,
+   "thumb": {
+    "x0": 7012,
+    "y0": 4039,
+    "k": 3.0,
+    "w": 414,
+    "h": 354
+   }
+  },
+  {
+   "key": "#b0ddbe",
+   "color": "#b0ddbe",
+   "lon": 113.5043,
+   "lat": 27.6756,
+   "bbox": [
+    7103,
+    4061,
+    7164,
+    4119
+   ],
+   "area_px": 2190,
+   "people": 1583607,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Liling",
+     "local": "醴陵市",
+     "prefecture": "Zhuzhou",
+     "prefecture_local": "株洲市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.789,
+     "area_share": 0.767,
+     "cover": 0.923
+    },
+    {
+     "name": "Xiangdong",
+     "local": "湘东区",
+     "prefecture": "Pingxiang",
+     "prefecture_local": "萍乡市",
+     "province": "江西省",
+     "country": "China",
+     "people_share": 0.193,
+     "area_share": 0.194,
+     "cover": 0.833
+    },
+    {
+     "name": "Lusong",
+     "local": "芦淞区",
+     "prefecture": "Zhuzhou",
+     "prefecture_local": "株洲市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.01,
+     "area_share": 0.027,
+     "cover": 0.043
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.801,
+     "cover": 0.019
+    },
+    {
+     "level": "prefecture",
+     "name": "Zhuzhou",
+     "local": "株州市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.8,
+     "cover": 0.292
+    },
+    {
+     "level": "province",
+     "name": "Jiangxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.199,
+     "cover": 0.006
+    },
+    {
+     "level": "prefecture",
+     "name": "Pingxiang",
+     "local": "萍乡市",
+     "province": "Jiangxi",
+     "country": "China",
+     "people_share": 0.199,
+     "cover": 0.164
+    }
+   ],
+   "towns": [
+    {
+     "town": "西山街道",
+     "county": "醴陵市",
+     "city": "株洲市",
+     "people_share": 0.094,
+     "cover": 1.0
+    },
+    {
+     "town": "来龙门街道",
+     "county": "醴陵市",
+     "city": "株洲市",
+     "people_share": 0.069,
+     "cover": 1.0
+    },
+    {
+     "town": "湘东镇",
+     "county": "湘东区",
+     "city": "萍乡市",
+     "people_share": 0.06,
+     "cover": 0.98
+    },
+    {
+     "town": "黄泥坳街道",
+     "county": "醴陵市",
+     "city": "株洲市",
+     "people_share": 0.058,
+     "cover": 1.0
+    },
+    {
+     "town": "湖南醴陵经济开发区",
+     "county": "醴陵市",
+     "city": "株洲市",
+     "people_share": 0.055,
+     "cover": 1.0
+    },
+    {
+     "town": "白兔潭镇",
+     "county": "醴陵市",
+     "city": "株洲市",
+     "people_share": 0.046,
+     "cover": 1.0
+    },
+    {
+     "town": "浦口镇",
+     "county": "醴陵市",
+     "city": "株洲市",
+     "people_share": 0.044,
+     "cover": 1.0
+    },
+    {
+     "town": "阳三石街道",
+     "county": "醴陵市",
+     "city": "株洲市",
+     "people_share": 0.033,
+     "cover": 1.0
+    },
+    {
+     "town": "东富镇",
+     "county": "醴陵市",
+     "city": "株洲市",
+     "people_share": 0.032,
+     "cover": 1.0
+    },
+    {
+     "town": "南桥镇",
+     "county": "醴陵市",
+     "city": "株洲市",
+     "people_share": 0.031,
+     "cover": 0.918
+    }
+   ],
+   "cities": [
+    {
+     "name": "Xishan",
+     "admin": "Hunan",
+     "pop": 1060000
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#b5e6b8",
+     "border_px": 745
+    },
+    {
+     "key": "#c4ead5",
+     "border_px": 648
+    },
+    {
+     "key": "#9fdfb2",
+     "border_px": 607
+    },
+    {
+     "key": "#c6b1f6",
+     "border_px": 439
+    },
+    {
+     "key": "#d2b7f8",
+     "border_px": 163
+    },
+    {
+     "key": "#a49af1",
+     "border_px": 141
+    },
+    {
+     "key": "#b1e7b6",
+     "border_px": 101
+    }
+   ],
+   "text_px": 90,
+   "n": 14,
+   "thumb": {
+    "x0": 7063,
+    "y0": 4021,
+    "k": 2.0,
+    "w": 282,
+    "h": 276
+   }
+  },
+  {
+   "key": "#d2b7f8",
+   "color": "#d2b7f8",
+   "lon": 112.6699,
+   "lat": 27.5879,
+   "bbox": [
+    6995,
+    4080,
+    7116,
+    4146
+   ],
+   "area_px": 3261,
+   "people": 1144132,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Xiangxiang",
+     "local": "湘乡市",
+     "prefecture": "Xiangtan",
+     "prefecture_local": "湘潭市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.503,
+     "area_share": 0.392,
+     "cover": 0.774
+    },
+    {
+     "name": "Xiangtan",
+     "local": "湘潭县",
+     "prefecture": "Xiangtan",
+     "prefecture_local": "湘潭市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.365,
+     "area_share": 0.381,
+     "cover": 0.533
+    },
+    {
+     "name": "Zhuzhou",
+     "local": "株洲县",
+     "prefecture": "Zhuzhou",
+     "prefecture_local": "株洲市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.092,
+     "area_share": 0.177,
+     "cover": 0.337
+    },
+    {
+     "name": "Hengdong",
+     "local": "衡东县",
+     "prefecture": "Hengyang",
+     "prefecture_local": "衡阳市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.031,
+     "area_share": 0.035,
+     "cover": 0.057
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.017
+    },
+    {
+     "level": "prefecture",
+     "name": "Xiangtan",
+     "local": "湘潭市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.867,
+     "cover": 0.382
+    },
+    {
+     "level": "prefecture",
+     "name": "Zhuzhou",
+     "local": "株州市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.094,
+     "cover": 0.025
+    }
+   ],
+   "towns": [
+    {
+     "town": "排头乡",
+     "county": "湘潭县",
+     "city": "湘潭市",
+     "people_share": 0.072,
+     "cover": 1.0
+    },
+    {
+     "town": "泉塘镇",
+     "county": "湘乡市",
+     "city": "湘潭市",
+     "people_share": 0.055,
+     "cover": 1.0
+    },
+    {
+     "town": "东郊乡",
+     "county": "湘乡市",
+     "city": "湘潭市",
+     "people_share": 0.045,
+     "cover": 0.99
+    },
+    {
+     "town": "东山街道",
+     "county": "湘乡市",
+     "city": "湘潭市",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "中路铺镇",
+     "county": "湘潭县",
+     "city": "湘潭市",
+     "people_share": 0.04,
+     "cover": 0.989
+    },
+    {
+     "town": "壶天镇",
+     "county": "湘乡市",
+     "city": "湘潭市",
+     "people_share": 0.038,
+     "cover": 0.963
+    },
+    {
+     "town": "梅桥镇",
+     "county": "湘乡市",
+     "city": "湘潭市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "山枣镇",
+     "county": "湘乡市",
+     "city": "湘潭市",
+     "people_share": 0.036,
+     "cover": 1.0
+    },
+    {
+     "town": "射埠镇",
+     "county": "湘潭县",
+     "city": "湘潭市",
+     "people_share": 0.035,
+     "cover": 0.968
+    },
+    {
+     "town": "月山镇",
+     "county": "湘乡市",
+     "city": "湘潭市",
+     "people_share": 0.034,
+     "cover": 0.978
+    },
+    {
+     "town": "茶恩寺镇",
+     "county": "湘潭县",
+     "city": "湘潭市",
+     "people_share": 0.032,
+     "cover": 0.997
+    },
+    {
+     "town": "青山桥镇",
+     "county": "湘潭县",
+     "city": "湘潭市",
+     "people_share": 0.032,
+     "cover": 0.992
+    }
+   ],
+   "cities": [
+    {
+     "name": "Xiangxiang",
+     "admin": "Hunan",
+     "pop": 787216
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#cdb1f5",
+     "border_px": 1268
+    },
+    {
+     "key": "#c6b1f6",
+     "border_px": 1040
+    },
+    {
+     "key": "#d7c3f4",
+     "border_px": 905
+    },
+    {
+     "key": "#c2a9ff",
+     "border_px": 900
+    },
+    {
+     "key": "#b5e6b8",
+     "border_px": 510
+    },
+    {
+     "key": "#b0ddbe",
+     "border_px": 163
+    }
+   ],
+   "text_px": 0,
+   "n": 15,
+   "thumb": {
+    "x0": 6953,
+    "y0": 4038,
+    "k": 2.0,
+    "w": 410,
+    "h": 300
+   }
+  },
+  {
+   "key": "#b5e6b8",
+   "color": "#b5e6b8",
+   "lon": 113.4494,
+   "lat": 27.1983,
+   "bbox": [
+    7101,
+    4109,
+    7167,
+    4194
+   ],
+   "area_px": 3497,
+   "people": 967526,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "You",
+     "local": "攸县",
+     "prefecture": "Zhuzhou",
+     "prefecture_local": "株洲市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.669,
+     "area_share": 0.662,
+     "cover": 0.948
+    },
+    {
+     "name": "Hengdong",
+     "local": "衡东县",
+     "prefecture": "Hengyang",
+     "prefecture_local": "衡阳市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.176,
+     "area_share": 0.163,
+     "cover": 0.272
+    },
+    {
+     "name": "Liling",
+     "local": "醴陵市",
+     "prefecture": "Zhuzhou",
+     "prefecture_local": "株洲市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.095,
+     "area_share": 0.069,
+     "cover": 0.068
+    },
+    {
+     "name": "Xiangdong",
+     "local": "湘东区",
+     "prefecture": "Pingxiang",
+     "prefecture_local": "萍乡市",
+     "province": "江西省",
+     "country": "China",
+     "people_share": 0.054,
+     "area_share": 0.097,
+     "cover": 0.142
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.945,
+     "cover": 0.013
+    },
+    {
+     "level": "prefecture",
+     "name": "Zhuzhou",
+     "local": "株州市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.766,
+     "cover": 0.171
+    },
+    {
+     "level": "prefecture",
+     "name": "Hengyang",
+     "local": "衡阳市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.175,
+     "cover": 0.023
+    },
+    {
+     "level": "province",
+     "name": "Jiangxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.055,
+     "cover": 0.001
+    },
+    {
+     "level": "prefecture",
+     "name": "Pingxiang",
+     "local": "萍乡市",
+     "province": "Jiangxi",
+     "country": "China",
+     "people_share": 0.055,
+     "cover": 0.028
+    }
+   ],
+   "towns": [
+    {
+     "town": "江桥街道",
+     "county": "攸县",
+     "city": "株洲市",
+     "people_share": 0.077,
+     "cover": 1.0
+    },
+    {
+     "town": "联星街道",
+     "county": "攸县",
+     "city": "株洲市",
+     "people_share": 0.055,
+     "cover": 1.0
+    },
+    {
+     "town": "皇图岭镇",
+     "county": "攸县",
+     "city": "株洲市",
+     "people_share": 0.054,
+     "cover": 1.0
+    },
+    {
+     "town": "菜花坪镇",
+     "county": "攸县",
+     "city": "株洲市",
+     "people_share": 0.046,
+     "cover": 0.994
+    },
+    {
+     "town": "网岭镇",
+     "county": "攸县",
+     "city": "株洲市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "新市镇",
+     "county": "攸县",
+     "city": "株洲市",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "大障镇",
+     "county": "醴陵市",
+     "city": "株洲市",
+     "people_share": 0.037,
+     "cover": 0.923
+    },
+    {
+     "town": "桃水镇",
+     "county": "攸县",
+     "city": "株洲市",
+     "people_share": 0.034,
+     "cover": 1.0
+    },
+    {
+     "town": "莲塘坳镇",
+     "county": "攸县",
+     "city": "株洲市",
+     "people_share": 0.034,
+     "cover": 0.995
+    },
+    {
+     "town": "丫江桥镇",
+     "county": "攸县",
+     "city": "株洲市",
+     "people_share": 0.033,
+     "cover": 0.975
+    },
+    {
+     "town": "酒埠江镇",
+     "county": "攸县",
+     "city": "株洲市",
+     "people_share": 0.032,
+     "cover": 1.0
+    },
+    {
+     "town": "杨林镇",
+     "county": "衡东县",
+     "city": "衡阳市",
+     "people_share": 0.032,
+     "cover": 0.953
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#bdddc2",
+     "border_px": 1065
+    },
+    {
+     "key": "#b0ddbe",
+     "border_px": 745
+    },
+    {
+     "key": "#d2b7f8",
+     "border_px": 510
+    },
+    {
+     "key": "#c9e8ce",
+     "border_px": 443
+    },
+    {
+     "key": "#c2a9ff",
+     "border_px": 400
+    },
+    {
+     "key": "#bcacf3",
+     "border_px": 286
+    },
+    {
+     "key": "#b1e7b6",
+     "border_px": 131
+    }
+   ],
+   "text_px": 86,
+   "n": 16,
+   "thumb": {
+    "x0": 7061,
+    "y0": 4069,
+    "k": 2.0,
+    "w": 292,
+    "h": 330
+   }
+  },
+  {
+   "key": "#bdddc2",
+   "color": "#bdddc2",
+   "lon": 113.6316,
+   "lat": 26.6088,
+   "bbox": [
+    7108,
+    4152,
+    7199,
+    4269
+   ],
+   "area_px": 5581,
+   "people": 1201899,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Chaling",
+     "local": "茶陵县",
+     "prefecture": "Zhuzhou",
+     "prefecture_local": "株洲市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.475,
+     "area_share": 0.406,
+     "cover": 0.995
+    },
+    {
+     "name": "Anren",
+     "local": "安仁县",
+     "prefecture": "Chenzhou",
+     "prefecture_local": "郴州市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.322,
+     "area_share": 0.234,
+     "cover": 0.986
+    },
+    {
+     "name": "Yanling",
+     "local": "炎陵县",
+     "prefecture": "Zhuzhou",
+     "prefecture_local": "株洲市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.168,
+     "area_share": 0.33,
+     "cover": 0.994
+    },
+    {
+     "name": "You",
+     "local": "攸县",
+     "prefecture": "Zhuzhou",
+     "prefecture_local": "株洲市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.028,
+     "area_share": 0.016,
+     "cover": 0.05
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.999,
+     "cover": 0.018
+    },
+    {
+     "level": "prefecture",
+     "name": "Zhuzhou",
+     "local": "株州市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.672,
+     "cover": 0.186
+    },
+    {
+     "level": "prefecture",
+     "name": "Chenzhou",
+     "local": "郴州市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.324,
+     "cover": 0.077
+    }
+   ],
+   "towns": [
+    {
+     "town": "永乐江镇",
+     "county": "安仁县",
+     "city": "郴州市",
+     "people_share": 0.107,
+     "cover": 0.995
+    },
+    {
+     "town": "腰陂镇",
+     "county": "茶陵县",
+     "city": "株洲市",
+     "people_share": 0.058,
+     "cover": 1.0
+    },
+    {
+     "town": "下东乡",
+     "county": "茶陵县",
+     "city": "株洲市",
+     "people_share": 0.056,
+     "cover": 1.0
+    },
+    {
+     "town": "霞阳镇",
+     "county": "炎陵县",
+     "city": "株洲市",
+     "people_share": 0.054,
+     "cover": 1.0
+    },
+    {
+     "town": "安平镇",
+     "county": "安仁县",
+     "city": "郴州市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "洣江乡",
+     "county": "茶陵县",
+     "city": "株洲市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "严塘镇",
+     "county": "茶陵县",
+     "city": "株洲市",
+     "people_share": 0.031,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#c9e8ce",
+     "border_px": 1263
+    },
+    {
+     "key": "#b5e6b8",
+     "border_px": 1065
+    },
+    {
+     "key": "#b5dfd0",
+     "border_px": 1035
+    },
+    {
+     "key": "#e1eebd",
+     "border_px": 497
+    },
+    {
+     "key": "#bcacf3",
+     "border_px": 431
+    },
+    {
+     "key": "#e1e8c3",
+     "border_px": 359
+    },
+    {
+     "key": "#accdd5",
+     "border_px": 82
+    }
+   ],
+   "text_px": 80,
+   "n": 17,
+   "thumb": {
+    "x0": 7068,
+    "y0": 4112,
+    "k": 2.0,
+    "w": 342,
+    "h": 394
+   }
+  }
+ ]
+}

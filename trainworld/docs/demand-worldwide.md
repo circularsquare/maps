@@ -556,13 +556,23 @@ notes/T-420.md has the tables.
 - **Waiting and crowding penalties.** A wait counts as plain minutes, half the headway, with no
   weight (Anita, T-585), where the literature (mostly US and European) weighs a platform wait
   1.5-2.5 times a minute aboard and a long wait at home before a known departure less. The
-  crowding penalty is from that literature too; riders in Tokyo or Mumbai tolerate crowding very
-  differently. A change has no penalty beyond its wait and walk (Anita, T-557), where the
+  crowding penalty's shape is from that literature too, but it starts only at 70% of crush (Anita,
+  T-710; the literature starts it where the seats run out, 27.5% of crush at 44 seats and 160
+  places a car); riders in Tokyo or Mumbai tolerate crowding very differently. A change has no penalty beyond its wait and walk (Anita, T-557), where the
   literature puts 5-15 perceived minutes on one. Why it may not carry over: where trains are
   sparse and timetabled (rural lines, intercity) riders plan for the departure and the half
   headway overstates the wait, while on unreliable or exposed platforms a minute feels longer.
   Check: the deep calibration's fit on station entries, where a wait weight shows up as too much
   or too little pull to frequent lines.
+- **Route choice by relative difference** (Anita, T-710, docs/demand-mode.md "Access and
+  egress"). Riders share station pairs by a logit whose scale is 20 over the trip's rough length
+  (25 + 3 perceived minutes a straight km, held at 60), in four distance bands. One rule
+  everywhere, set by judgement, not fitted. Why it may not carry over: the trip's length comes
+  from the straight line at an assumed rail speed, so a country with slow rail (or long access, as
+  where riders ride to stations) has longer real trips than the rule assumes and gets a choice
+  slightly too sharp; where many near-equal parallel routes exist (New York, Tokyo) riders stay
+  spread, as they should. Check: the trip explorer's share on the clearly faster route of a few
+  trips with unequal options, and station entries against the counts.
 - **Crowding rounds** (T-434). At most three, and a period stops once a round moves its loads
   under 1%. Measured on New York and Tokyo-sized grids, where the peaks still move a few percent at
   round three; a far more crowded network (Mumbai) may need a fourth peak round.

@@ -56,6 +56,13 @@ def _cl_place_weight(place):
     return _kontur_place_weight(place, "cl_hexes.gpkg", "sources/cl_grid.py")
 
 
+def _cl_counts_split():
+    """`_cl_counts` with Pew 2014's Pentecostal share drawn inside the census's `Evangélica o
+    protestante` column; latam_split.py, Anita 2026-10-16. The split rows are `derived` and roll
+    back to that column under `inferred dots: not shown`."""
+    return _latam_split("cl", _cl_counts())
+
+
 ENTRY = {
     "cl": dict(
         name="Chile",
@@ -93,10 +100,15 @@ ENTRY = {
             "protestante' is a single cell covering 2.5 million people: Chilean "
             "Protestantism is overwhelmingly Pentecostal, and the two largest Pentecostal "
             "churches are the biggest religious bodies in the country after the Catholic "
-            "Church, but no table separates them, so they are drawn as one colour."),
+            "Church, but no census table separates them. So 45% of the cell is drawn as "
+            "Pentecostal, the share of Protestants that Pew Research Center's 2014 survey "
+            "found in Pentecostal churches; the rest stay unnamed, and turning inferred dots "
+            "off draws them all as one colour again."),
         how="census, 2024, ages 15 and over",
+        fill="from Pew Research Center's 2014 survey, which gives the Pentecostal share of "
+             "the census's Evangelicals and Protestants",
         grain="comunas, 44,000 people on average",
-        counts=_cl_counts,
+        counts=_cl_counts_split,
         units=None,
         unit_key=None,
         place=HERE / "data" / "geo" / "cl" / "cl_hexes.gpkg",

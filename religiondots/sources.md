@@ -29104,3 +29104,140 @@ Welsh census Christians the BES names no church for take the survey's mix, as En
 no "Christian, no denomination" box, so that share is the census/survey gap, not an answer. Wales
 now: Anglican 57.0%, Catholic 17.2%, Methodist 7.2%, Baptist 6.9%, Reformed 3.4%, 8.2% plain
 `Christian` (the four churches too thin to draw). Detail: `sources/uk.md` §12.
+
+## de-2026-10-16. Protestants by Landeskirche
+
+Session `c67d3c3c-de-in`, applying Anita's call of 2026-10-16 (spec §2.7b), reversing her 2026-09-07
+refusal. Each Gemeinde's Zensus Protestants are named by the Landeskirche whose territory holds it, since
+church law makes membership follow the main residence (`sources/de_ekd.py`). Every church over 500,000
+lands within 2.4% of EKD's own 2022 count. Lutheran 9.75M, United 9.12M, Reformed 0.26M, all `derived`,
+rolling back to `christianity.protestant`. Detail: `sources/de.md` §12.
+
+## in-2026-10-16. Kerala's other churches
+
+Session `c67d3c3c-de-in`, applying Anita's call of 2026-10-16 (spec §2.7b), reversing §in-14's "searched,
+not drawn". Kerala's Christians after the Catholic share are divided by KMS Table 6: Jacobite and Orthodox
+together 911,782 (`christianity.oriental`), Mar Thoma 303,601 (`.oriental.marthoma`), CSI 306,783
+(`christianity.united`), Pentecost/Brethren 188,635 (`christianity.pentecostal`); Malabar pooled. All within
+2.2 points of KMS 2023's state shares. Kerala's unspecified Christians 36% -> 8%. Detail: `sources/in.md` §16.
+
+## wa-2026-10-16. West Africa's undivided Christians split into churches, seven countries
+
+Session `c67d3c3c-westafrica`, on Anita's calls of 2026-10-16. One script, `sources/wa_christian.py`,
+writes `data/normalized/<cc>_split.csv`, which countries/<cc>.py swaps in for the Christian cell
+(`_swap_christian_split` in countries/_shared.py checks that it closes unit by unit). Research,
+sources and the alternatives not taken: `unspecified_splits/westafrica.md`. Share tables used:
+`data/raw/wa_christian/`.
+
+| cc | cell replaced | split from | tier |
+|---|---|---|---|
+| ng | `Christian`, 80.25M | GFS 2023 by geopolitical zone; Afrobarometer zone ranks agree (+0.83, +0.94) | modelled |
+| lr | `Christian`, 4.46M | Afrobarometer named answers; Lutheran, Baptist, Catholic by county | modelled |
+| sl | `Christianity`, 1.55M | the 2015 census's own national Table 3.25 | derived |
+| gn | `Chrétienne`, 0.71M | Afrobarometer and Pew 2010, 65 / 30 / 5 | derived |
+| sn | régions' `Chrétiens`, 0.30M | Diourbel's own 1988 codes 6 and 7, Pew 2010: 92 / 8 | derived |
+| gm | `Christianity`, 70k | Afrobarometer, Pew 2010, the Church's claim: 75 / 25 | derived |
+| gw | `Cristão`, 0.32M | the 1991 census's Tabela 6.6, 89.1 / 10.9 (probably too Catholic now) | derived |
+
+Côte d'Ivoire's `christianity.evangelical` is unchanged: nothing splits it, and whether it should sit
+on `.protestant` with Burkina Faso and Mali is parked with Anita. Per-country detail is in each
+sources/<cc>.md under "Churches drawn, 2026-10-16" (Nigeria's under "The rest of Christianity by zone").
+
+## uk-2026-10-16. England and Wales's Muslims: Pakistani and Bangladeshi by Pew 2012
+
+Session `c67d3c3c-islam`, Anita's call of 2026-10-16 (first step only; research in
+`unspecified_splits/islam.md` §4). `sources/uk_islam.py` reads ONS religion x ethnic group by LTLA
+(Cantabular API, 330 of 331 LTLAs, `data/raw/uk/ons_religion_x_ethnic_ltla.json`) and gives each
+authority's Pakistani and Bangladeshi Muslims Pew 2012 Q31's shares (Pakistan 81 Sunni / 6 Shi'a,
+Bangladesh 92 / 2), spread uniformly over its Output Areas; everyone else stays on `Muslim`. Output
+`data/normalized/uk_islam_split.csv`, swapped in by countries/uk.py. 1,737,049 Sunni (44.9%), 100,111
+Shi'a (2.6%), 2,030,939 left on `islam`, all `derived` rolling back to `Muslim` (uk2021.COLUMNS).
+The allocated OA Muslims and the ONS cross agree per district to within 1.15%. Scotland and Northern
+Ireland unchanged. Detail: `sources/uk.md` §13.
+
+## de-2026-10-16b. Germany's modelled Muslims by branch, from BAMF's MLD 2020
+
+Session `c67d3c3c-islam`, Anita's call of 2026-10-16 (research in `unspecified_splits/islam.md` §3).
+`sources/de_mld.py` combines MLD 2020 Tables 23 (Muslims by origin region), 26 (each region over the
+Länder) and 32 (branch by origin region), re-read off the PDF, into per-Land shares
+(`data/normalized/de_mld.csv`); countries/de.py::_de_split_islam applies them to the ESS `islam`
+rows. Of 3,471,376: Sunni 2,509,861, Alevi 287,351 (to `alevism`, the UK and origin_religion
+precedent), Shi'a 160,755, Ahmadi 44,007; the rest on `islam`. All `modelled`. Detail:
+`sources/de.md` §13.
+
+## at-nl-2026-10-16. Austria and the Netherlands: Muslims split on borrowed German MLD 2020 shares
+
+Session `c67d3c3c-islam`, Anita's call of 2026-10-16 (borrowing approved; Switzerland not).
+- **at**: `sources/at_mld.py` reads VZ 2001 Tabelle 15 (Muslims by citizenship) from all nine Land
+  volumes and the national one (they sum to 338,988). Turkish citizens get MLD Table 32's Türkei
+  column, Bosnian, Yugoslav, Macedonian, Croatian and Slovenian citizens its Südosteuropa column;
+  Austrian (96,052) and other citizens stay on `islam`. Per-Land shares to `data/normalized/at_mld.csv`;
+  `countries/at.py::_at_split_islam` makes `derived` rows rolling back to `Islamisch`
+  (`at2001.COLUMNS`). Drawn: Sunni 142,630, Alevi 22,664, Shi'a 4,240, Ahmadi 788.
+- **nl**: `sources/nl_mld.py` takes CBS StatLine 37713 (1 Jan 2014, Turkish and Moroccan background
+  by gemeente, open OData, `data/raw/nl/cbs_37713_2014_tr_ma.json`) x SCP 2018's 86% / 94% calling
+  themselves Muslim, given MLD's Türkei and Nordafrika columns; scaled down to the gemeente's EBB
+  Muslims in 79 of 343. `countries/nl.py::_nl_split_islam`, all `modelled`. Drawn: Sunni 531,247,
+  Alevi 55,135, Shi'a 5,537, Ahmadi 1,955 of 778,387. Other origins stay on `islam`.
+- Both notes say the shares are borrowed from a German survey. `rollup.py` needs a run for `at`
+  (new COLUMNS).
+
+## pk-af-2026-10-16. Pakistan and Afghanistan: Sunni by assignment at Pew 2012's surveyed share
+
+Session `c67d3c3c-islam`, Anita's call of 2026-10-16. Added to `islam_assign.py`: pk remainder 0.19
+(Pew 2012 Q31 Sunni 81%, a floor), af 0.10 (Sunni 90%). No Shia node. WHOLE on `islam`: Pakistan's
+Kurram, Orakzai and Hangu districts (`PK23-khyber-pakhtunkhwa/...`); Afghanistan's Bamyan (AF10) and
+Daykundi (AF24). Gilgit-Baltistan is not drawn, so nothing to exempt there. pk rows `assigned`
+(rolling to `islam`), af rows stay `modelled`.
+
+## latam-2026-10-16. Pentecostals inside Latin America's unnamed Protestants, from Pew 2014
+
+Session `c67d3c3c-latam`, Anita's call of 2026-10-16 (research in `unspecified_splits/latam.md`).
+Sixteen countries drew a flat `Protestant, unspecified` / `Evangelical, unspecified` that stopped at
+borders the US and Haiti do not have. The split now comes from Pew Research Center's *Religion in
+Latin America* (2014): `QPROT`, put to every Protestant, "a historical Protestant church, a
+Pentecostal church, or another Protestant church". `sources/pew_latam.py --fetch` takes the open
+mirror on opendata.com.pk (Pew's own download needs an account), asserts that it reproduces Pew's
+published Pentecostal chart for all 19 countries (all within 0.6 points), and writes
+`data/normalized/pew_latam.csv`. The public file has no geography, so the shares are national.
+
+`latam_split.py` (loaded through `countries/_shared.py::_latam_split`) applies them inside each
+country's counted bucket: add = Pew share x the drawn Protestant universe (excluding Witnesses
+and Latter-day Saints) less what the source already names in that family, as one national fraction
+of every bucket row, so the bucket's own geography carries the pattern. Pentecostal everywhere,
+Baptist only in El Salvador and Panama, nothing else; what Pew could not place stays on the bucket.
+Census rows become `derived` rolling back to the bucket node (Mexico keeps its allocation's roll);
+modelled countries stay `modelled`. Each run asserts that every unit's bucket is unchanged once the
+split rows are added back, and prints the split.
+
+| cc | bucket | to Pentecostal | to Baptist | stays |
+|---|---|---|---|---|
+| mx | 9,494,087 | 4,269,958 (45.0%) | | 5,224,129 |
+| gt | 7,198,690 | 4,106,522 (57.0%) | | 3,092,168 |
+| ar | 7,133,023 | 4,419,892 (62.0%) | | 2,713,131 |
+| co | 7,794,381 | 3,636,913 (46.7%) | | 4,157,468 |
+| hn | 4,122,654 | 2,015,013 (48.9%) | | 2,107,641 |
+| ve | 3,486,330 | 1,365,282 (39.2%) | | 2,121,048 |
+| pe | 3,264,819 | 1,495,147 (45.8%) | | 1,769,672 |
+| do | 2,412,091 | 1,879,945 (77.9%) | | 532,146 |
+| sv | 2,382,393 | 1,103,613 (46.3%) | 408,969 (17.2%) | 869,812 |
+| ec | 2,307,396 | 1,281,881 (55.6%) | | 1,025,515 |
+| bo | 2,190,374 | 933,095 (42.6%) | | 1,257,279 |
+| cr | 1,160,590 | 528,644 (45.5%) | | 631,946 |
+| pa | 1,026,916 | 599,680 (58.4%) | 124,514 (12.1%) | 302,723 |
+| ni | 981,795 | 643,496 (65.5%) | | 338,299 |
+| uy | 325,072 | 136,038 (41.8%) | | 189,034 |
+| py | 186,107 | 87,538 (47.0%) | | 98,569 |
+
+Checks against families a source names itself (printed every run): Mexico Presbyterian, Pew
+409,022 against INEGI 428,651; Mexico Adventist 414,609 against 791,109 (Pew low, 211 Protestants);
+Peru Adventist 303,643 against 353,430; Dominican Republic Adventist 144,435 against 212,002.
+Brazil, deliberately left alone: its 2010 census already counts 28.7M Pentecostals against Pew's
+implied 28.3M, so its 9.2M `Evangélica não determinada` are not hidden Pentecostals.
+
+Argentina is drawn on Pew although the Global Flourishing Study puts Pentecostals at 16% of
+non-Catholic Christians against Pew's 62%; GFS's card offers "Independent/Evangelical", which
+Argentina's independent charismatic churches take (`sources/ar.md`). Chile and Puerto Rico were
+wired later the same day: Chile 1,103,764 of 2,466,600 `Evangélica o protestante` (44.7%, `derived`),
+Puerto Rico 148,935 of 297,770 `Protestante` (50.0%, `modelled`; its larger write-in other-Christian
+answer on bare `christianity` is not touched). Eighteen countries in all.

@@ -1,0 +1,495 @@
+{
+  "batch": "henan-south",
+  "regions": [
+    {
+      "n": 1,
+      "key": "#eed9b3",
+      "settled": null,
+      "summary": "Plain between the Ru and Ying rivers: rural Shangcai (east part) and Shangshui, with a bit of Zhaoling.",
+      "candidates": [
+        {
+          "name": "Shangshui",
+          "local": "商水县",
+          "origin": "county",
+          "meaning": "\"Shang water\": from the Shang (Yin) river, renamed in 960 to avoid a taboo on the emperor's father's name Hongyin.",
+          "fit": "41% of the people, holding over half of the county; its seat lies outside the region.",
+          "recognisability": "Current county, no check needed.",
+          "source_url": "https://zh.wikipedia.org/wiki/商水县",
+          "source_note": "隋朝时因境内有一条大河大殷水……设殷水县；宋建隆元年改殷水为商水",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Shangcai",
+          "local": "上蔡县",
+          "origin": "county",
+          "meaning": "\"Upper Cai\": first capital of the Zhou-era state of Cai.",
+          "fit": "51% of the people, but the county seat sits in region 2, which suits the name better.",
+          "recognisability": "Current county, no check needed.",
+          "source_url": "https://zh.wikipedia.org/wiki/上蔡县",
+          "source_note": "周成王把蔡地封给蔡叔度之子蔡仲胡为国，定都于今上蔡县",
+          "rating": 2,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Shangcai is the stronger fit for region 2 (it holds the county seat); Shangshui is the cleaner choice here. Shangshui is only 53% inside this region, so check the Zhoukou regions do not also take it."
+    },
+    {
+      "n": 2,
+      "key": "#edd9ba",
+      "settled": null,
+      "summary": "Xiping and the Shangcai county seat, on the plain north of Zhumadian.",
+      "candidates": [
+        {
+          "name": "Shangcai",
+          "local": "上蔡县",
+          "origin": "county",
+          "meaning": "\"Upper Cai\": first capital of the Zhou-era state of Cai; birthplace of Li Si.",
+          "fit": "Holds the county seat (Caidu) and 46% of the people; the region is about half Shangcai.",
+          "recognisability": "Current county, no check needed.",
+          "source_url": "https://zh.wikipedia.org/wiki/上蔡县",
+          "source_note": "周成王把蔡地封给蔡叔度之子蔡仲胡为国，定都于今上蔡县",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Xiping",
+          "local": "西平县",
+          "origin": "county",
+          "meaning": "\"West level\": Han county, earlier the state of Bai.",
+          "fit": "52% of the people, but only 72% of the county; the county seat lies in this region.",
+          "recognisability": "Current county, no check needed.",
+          "source_url": "https://zh.wikipedia.org/wiki/西平县",
+          "source_note": "西平县古为柏皇氏遗族封地，春秋称柏国，汉高帝四年始置县",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 3,
+      "key": "#f0d8b9",
+      "settled": null,
+      "summary": "Foothills east of Funiu and the Sha river headwaters: Wugang, Fangcheng, Suiping, Xiping, Biyang and Yicheng parts.",
+      "candidates": [
+        {
+          "name": "Chayashan",
+          "local": "嵖岈山",
+          "origin": "mountain",
+          "meaning": "Rugged, jagged peaks: a granite range on the eastern edge of the Funiu foothills, nicknamed the Monkey King's mountain; the Chayashan commune of 1958 was China's first people's commune.",
+          "fit": "Lies in Suiping county's west, within this region; marks the foothill edge where Wugang, Suiping, Xiping and Biyang meet.",
+          "recognisability": "Own zh-wiki article, 1203 hits with 河南, mostly about this mountain and its commune.",
+          "source_url": "https://zh.wikipedia.org/wiki/嵖岈山",
+          "source_note": "嵖岈山位于河南省驻马店市遂平县境内，於伏牛山东缘余脉",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Lihe",
+          "local": "澧河",
+          "origin": "river",
+          "meaning": "The Li River, a Sha River tributary rising in Fangcheng county and running east.",
+          "fit": "Rises inside the region's Fangcheng part but runs on north of it, so it fits only partly.",
+          "recognisability": "Own zh-wiki article; thin outside Henan.",
+          "source_url": "https://zh.wikipedia.org/wiki/澧河",
+          "source_note": "发源于方城县四里店乡北部",
+          "rating": 2,
+          "status": "suggested"
+        },
+        {
+          "name": "Wugang",
+          "local": "舞钢市",
+          "origin": "county",
+          "meaning": "\"Wu steel\": a steel city founded in the 1970s around the Wu Steel plant.",
+          "fit": "25% of the people and 98% of the city; the largest single unit. Anita: modern, not rooted.",
+          "recognisability": "Current county, no check needed.",
+          "source_url": "https://zh.wikipedia.org/wiki/舞钢市",
+          "source_note": "舞钢市 article in sources.md",
+          "status": "rejected"
+        },
+        {
+          "name": "Fangcheng",
+          "local": "方城县",
+          "origin": "county",
+          "meaning": "\"Square wall\": named for the Chu state's square-walled frontier, one of China's oldest great walls.",
+          "fit": "22% of the people but only 28% of the county; the county seat is outside. Anita: county seat is outside the region.",
+          "recognisability": "Current county, no check needed.",
+          "source_url": "https://zh.wikipedia.org/wiki/方城县",
+          "source_note": "方城县 article in sources.md",
+          "status": "rejected"
+        }
+      ],
+      "notes": "Wugang and Fangcheng rejected by Anita. Funiu and Tongbai avoided."
+    },
+    {
+      "n": 4,
+      "key": "#e5bd93",
+      "settled": null,
+      "summary": "Zhumadian city: Yicheng district and the Suiping county seat.",
+      "candidates": [
+        {
+          "name": "Zhumadian",
+          "local": "驻马店市",
+          "origin": "county",
+          "meaning": "\"Horses halt at the inn\": a post station where couriers rested their horses.",
+          "fit": "Holds the old centre (Yicheng, 74%) of a 7.0M city; central region takes the city name.",
+          "recognisability": "Current county, no check needed.",
+          "source_url": "https://zh.wikipedia.org/wiki/驻马店市",
+          "source_note": "驻马店是因为“旧为遂平至明港间驿马驻所”",
+          "rating": 5,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Suiping (25%) is the only other unit."
+    },
+    {
+      "n": 5,
+      "key": "#eedab1",
+      "settled": null,
+      "summary": "Pingyu county plus Xiangcheng and Linquan edges on the Anhui border.",
+      "candidates": [
+        {
+          "name": "Pingyu",
+          "local": "平舆县",
+          "origin": "county",
+          "meaning": "Old county of Pingyu, seat of Runan commandery in the Eastern Han.",
+          "fit": "61% of the people, 90% of the county, including the county seat.",
+          "recognisability": "Current county, no check needed.",
+          "source_url": "https://zh.wikipedia.org/wiki/平舆县",
+          "source_note": "平舆县 (206 BC-1293) in CHGIS list; own article",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Xiangcheng",
+          "local": "项城市",
+          "origin": "county",
+          "meaning": "County-level city named for the ancient state of Xiang.",
+          "fit": "26% of the people but only 29% of the city.",
+          "recognisability": "Current county, no check needed.",
+          "source_url": "https://zh.wikipedia.org/wiki/项城市",
+          "source_note": "项城县 seat listed in sources.md",
+          "rating": 2,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 6,
+      "key": "#ebd1b5",
+      "settled": null,
+      "summary": "Runan county and part of Zhengyang: the old prefecture seat of Runing.",
+      "candidates": [
+        {
+          "name": "Runan",
+          "local": "汝南县",
+          "origin": "county",
+          "meaning": "\"South of the Ru\": Han commandery, long the capital of the Ru-Huai region (also the Butterfly Lovers' Liang-Zhu setting).",
+          "fit": "62% of the people, 98% of the county, with its seat.",
+          "recognisability": "Current county, no check needed.",
+          "source_url": "https://zh.wikipedia.org/wiki/汝南县",
+          "source_note": "汝南县 article in sources.md",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Caizhou",
+          "local": "蔡州",
+          "origin": "prefecture",
+          "meaning": "\"Cai prefecture\": Sui-to-Song prefecture, named for the old state of Cai; the Mongol-Song siege of 1234 ended the Jin dynasty here.",
+          "fit": "Seated at today's Runan for 530 years; also covered Shangcai, Xiping, Suiping and Zhengyang, so it spans most of this part of the map.",
+          "recognisability": "Own zh-wiki article, 182 hits with 河南, mainly about this place (Runan).",
+          "source_url": "https://zh.wikipedia.org/wiki/蔡州",
+          "source_note": "蔡州 (606-1292) 今河南省汝南县",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Caizhou covers neighbours too; Runan is the clean fit."
+    },
+    {
+      "n": 7,
+      "key": "#eed2b1",
+      "settled": null,
+      "summary": "Xincai county and a slice of Linquan across the Anhui line.",
+      "candidates": [
+        {
+          "name": "Xincai",
+          "local": "新蔡县",
+          "origin": "county",
+          "meaning": "\"New Cai\": the later capital of Cai after it moved from Shangcai in 491 BC.",
+          "fit": "75% of the people, 88% of the county, with its seat.",
+          "recognisability": "Current county, no check needed.",
+          "source_url": "https://zh.wikipedia.org/wiki/新蔡县",
+          "source_note": "蔡平侯复蔡国，并迁都吕亭（今新蔡县）",
+          "rating": 5,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Linquan (19%) is in Anhui, probably claimed by the Fuyang agent."
+    },
+    {
+      "n": 8,
+      "key": "#edd4bd",
+      "settled": null,
+      "summary": "Tongbai mountains and the Biyang basin: Biyang, Tongbai, Sheqi and Tanghe edges. Source of the Huai.",
+      "candidates": [
+        {
+          "name": "Tongbai",
+          "local": "桐柏",
+          "origin": "mountain",
+          "meaning": "Tongbai range and county: the mountains where the Huai River rises.",
+          "fit": "Region holds 94% of Tongbai county (34% of the people) and the range's eastern end; a landscape name covering the whole region.",
+          "recognisability": "Current county and mountain name; no check needed.",
+          "source_url": "https://zh.wikipedia.org/wiki/桐柏县",
+          "source_note": "桐柏县 article in sources.md; 桐柏县 (598-1911) at Gu Xian",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Biyang",
+          "local": "泌阳县",
+          "origin": "county",
+          "meaning": "\"North of the Bi river\": the county seat lies on the north bank of the Bi (Miyang) river.",
+          "fit": "53% of the people, 83% of the county, with its seat.",
+          "recognisability": "Current county, no check needed.",
+          "source_url": "https://zh.wikipedia.org/wiki/泌阳县",
+          "source_note": "县治在泌阳河之北，得名泌阳",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 9,
+      "key": "#eedfc7",
+      "settled": null,
+      "summary": "Queshan, the Pingqiao rural area (Mingang) and Zhumadian's southern edge, on the Tongbai-Dabie divide.",
+      "candidates": [
+        {
+          "name": "Queshan",
+          "local": "确山县",
+          "origin": "county",
+          "meaning": "\"Sure mountain\": renamed in 1012 from Langshan to avoid the taboo on Zhao Xuanlang.",
+          "fit": "33% of the people, 98% of the county, with its seat.",
+          "recognisability": "Current county, no check needed.",
+          "source_url": "https://zh.wikipedia.org/wiki/确山县",
+          "source_note": "北宋大中祥符五年（1012年）……改朗山县为确山县",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Pingqiao (32%) and Yicheng (19%) are a third of the people each; Mingang is a known town but not a good region name."
+    },
+    {
+      "n": 10,
+      "key": "#f1d4ba",
+      "settled": null,
+      "summary": "Huai river lowland: Huaibin, Funan across the river, and Gushi's western edge.",
+      "candidates": [
+        {
+          "name": "Huaibin",
+          "local": "淮滨县",
+          "origin": "county",
+          "meaning": "\"Huai bank\": the county seat lies on the bank of the Huai River.",
+          "fit": "50% of the people, 91% of the county, with its seat; the Huai runs through the region.",
+          "recognisability": "Current county, no check needed.",
+          "source_url": "https://zh.wikipedia.org/wiki/淮滨县",
+          "source_note": "淮滨县名因县城位于淮河之滨而得名",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Qisi",
+          "local": "期思",
+          "origin": "historical",
+          "meaning": "Chu county; home of Sunshu Ao, the Chu prime minister who built the Qisi dam.",
+          "fit": "Seat in Huaibin (725 years, Qin to Liang); the town survives as Qisi.",
+          "recognisability": "Own zh-wiki article for the town; 45 hits with 河南, mostly Sunshu Ao and Gushi.",
+          "source_url": "https://zh.wikipedia.org/wiki/期思镇",
+          "source_note": "期思县 (221 BC-504) 今河南淮滨东南期思",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Funan (34%) is Anhui; the Fuyang agent may name it."
+    },
+    {
+      "n": 11,
+      "key": "#eedcc7",
+      "settled": null,
+      "summary": "Xi county on the Huai plus northern Zhengyang.",
+      "candidates": [
+        {
+          "name": "Xi",
+          "local": "息县",
+          "origin": "county",
+          "meaning": "Named for the ancient state of Xi (Xi Guo), the \"first county under heaven\"; Han Xinxi and Xizhou were its later names.",
+          "fit": "63% of the people, 99% of the county; the Huai runs through it. English form Xixian.",
+          "recognisability": "Current county, no check needed.",
+          "source_url": "https://zh.wikipedia.org/wiki/息县",
+          "source_note": "远自西周周武王时期已经有息国的建制，堪称“天下第一县”",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Zhengyang",
+          "local": "正阳县",
+          "origin": "county",
+          "meaning": "\"Straight sun\": renamed in 1723 from Zhenyang to avoid a taboo.",
+          "fit": "29% of the people, 57% of the county.",
+          "recognisability": "Current county, no check needed.",
+          "source_url": "https://zh.wikipedia.org/wiki/正阳县",
+          "source_note": "正阳县 (1723-1911) 今河南正阳县城",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Xixian clashes with Xi county in Shanxi (Xi, 隰县) in English spelling."
+    },
+    {
+      "n": 12,
+      "key": "#f1d9c2",
+      "settled": null,
+      "summary": "Gushi county's north and east, plus Huoqiu across the line.",
+      "candidates": [
+        {
+          "name": "Gushi",
+          "local": "固始县",
+          "origin": "county",
+          "meaning": "\"Firm beginning\": county named in 556; Henan's most populous county.",
+          "fit": "74% of the people, 73% of the county, with its seat.",
+          "recognisability": "Current county, no check needed.",
+          "source_url": "https://zh.wikipedia.org/wiki/固始县",
+          "source_note": "固始县 (556-1911) 今河南固始",
+          "rating": 5,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Huoqiu (24%) is Anhui; the Lu'an agent may name it. Gushi also has 12% in region 16."
+    },
+    {
+      "n": 13,
+      "key": "#eecfbc",
+      "settled": null,
+      "summary": "Huangchuan with half of Guangshan: the old Guangzhou prefecture core.",
+      "candidates": [
+        {
+          "name": "Huangchuan",
+          "local": "潢川县",
+          "origin": "county",
+          "meaning": "\"Huang river\": named for the Huang river, site of the Han Yiyang county.",
+          "fit": "63% of the people, 98.5% of the county.",
+          "recognisability": "Current county, no check needed.",
+          "source_url": "https://zh.wikipedia.org/wiki/潢川县",
+          "source_note": "潢川县 article in sources.md",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Guangshan",
+          "local": "光山县",
+          "origin": "county",
+          "meaning": "\"Light mountain\": Sui-era county (598) that was also seat of Guangzhou prefecture for about 1,200 years.",
+          "fit": "32% of the people, 55% of the county; seat of Guangzhou prefecture.",
+          "recognisability": "Current county, no check needed.",
+          "source_url": "https://zh.wikipedia.org/wiki/光山县",
+          "source_note": "光山县 (598-1911), 光州 (553-1911) 今河南光山",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Guangzhou, the prefecture name, collides with Guangzhou in Guangdong."
+    },
+    {
+      "n": 14,
+      "key": "#e8cab5",
+      "settled": null,
+      "summary": "Xinyang city: Shihe district and the Pingqiao urban area.",
+      "candidates": [
+        {
+          "name": "Xinyang",
+          "local": "信阳市",
+          "origin": "county",
+          "meaning": "Xinyang, \"trust sun\": name of the seat since the Song (976); known for Xinyang Maojian tea.",
+          "fit": "Holds the old centre (Shihe, 70%) of a 6.2M city; central region takes the city name.",
+          "recognisability": "Current county, no check needed.",
+          "source_url": "https://zh.wikipedia.org/wiki/信阳市",
+          "source_note": "信阳州 (1279-1911), 信阳军 (976-1276) 今河南省信阳市",
+          "rating": 5,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 15,
+      "key": "#f0d7c6",
+      "settled": null,
+      "summary": "Luoshan, Xin county and southern Guangshan: Dabie mountain foothills.",
+      "candidates": [
+        {
+          "name": "Luoshan",
+          "local": "罗山县",
+          "origin": "county",
+          "meaning": "\"Luo mountain\": named for Little Luo Mountain southwest of the county.",
+          "fit": "45% of the people, 98.5% of the county, with its seat.",
+          "recognisability": "Current county, no check needed.",
+          "source_url": "https://zh.wikipedia.org/wiki/罗山县",
+          "source_note": "因县境西南有小罗山，由此得名",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Xinxian",
+          "local": "新县",
+          "origin": "county",
+          "meaning": "\"New county\": a 20th-century county in the Dabie Mountains.",
+          "fit": "24% of the people, 99% of the county.",
+          "recognisability": "Current county, no check needed.",
+          "source_url": "https://zh.wikipedia.org/wiki/新县",
+          "source_note": "新县 article in sources.md",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Dabie Mountains (Dabieshan) could name this or 16, but it spans several other regions."
+    },
+    {
+      "n": 16,
+      "key": "#f3ded2",
+      "settled": null,
+      "summary": "Dabie mountain core: Jinzhai (Anhui), Shangcheng, southern Gushi.",
+      "candidates": [
+        {
+          "name": "Shangcheng",
+          "local": "商城县",
+          "origin": "county",
+          "meaning": "\"Shang city\": county name from the Song dynasty (960); the ancient Yincheng seat lay here.",
+          "fit": "42% of the people, 88% of the county, with its seat.",
+          "recognisability": "Current county, no check needed.",
+          "source_url": "https://zh.wikipedia.org/wiki/商城县",
+          "source_note": "商城县 (960-1911) 今河南商城",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Jinzhai",
+          "local": "金寨县",
+          "origin": "county",
+          "meaning": "\"Gold stockade\": named for Jinjiazhai, now under Meishan reservoir; revolutionary base.",
+          "fit": "45% of the people, 94% of the county.",
+          "recognisability": "Current county, no check needed.",
+          "source_url": "https://zh.wikipedia.org/wiki/金寨县",
+          "source_note": "金寨县得名于现已淹没于梅山水库之下的金家寨",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Jinzhai is in Anhui; the Lu'an agent might also pick it. Dabie Mountains is another option."
+    }
+  ]
+}

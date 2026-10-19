@@ -1,0 +1,102 @@
+{
+  "batch": "hubei-central",
+  "regions": [
+    {
+      "n": 1, "key": "#ead7d4", "settled": null,
+      "summary": "South foot of Dahong Mountain: Jingshan and the northern half of Zhongxiang (Hu Ji, Jiu Kou).",
+      "candidates": [
+        {"name": "Jingshan", "local": "京山", "origin": "county", "meaning": "\"Capital mountain\": Sui county of 606, named after the Jing mountain.", "fit": "48% of the region's people, 96% of the county; county seat (Xinshi) is inside; Tang Yingzhou was seated here too.", "recognisability": "Current county-level city.", "source_url": "https://zh.wikipedia.org/wiki/京山市", "source_note": "湖北省辖、荆门市代管的县级市，大洪山南麓，江汉平原北端", "rating": 4, "status": "suggested"},
+        {"name": "Dahongshan", "local": "大洪山", "origin": "mountain", "meaning": "\"Great flood mountain\"; also called Lülin Mountain, base of the Lülin rebels at the end of Western Han.", "fit": "Mountain sits on the Sui, Jingshan and Zhongxiang border, so this region is its south foot, but most of it lies north of the region.", "recognisability": "Own zh-wiki article, 74 hits with 湖北, top ones about Jingshan and Suizhou.", "source_url": "https://zh.wikipedia.org/wiki/大洪山", "source_note": "位于随州、京山、钟祥交界处，又名绿林山", "rating": 3, "status": "suggested"}
+      ],
+      "notes": "Zhongxiang is split almost evenly with region 2; the old Zhongxiang centre (Yingzhong) is in region 2. A Dahongshan name may be wanted by the east/Suizhou batch."
+    },
+    {
+      "n": 2, "key": "#edd0cb", "settled": null,
+      "summary": "Han River middle reach: Zhongxiang city (Yingzhong), Shayang and the old Jingmen city (Zi Ling) in Dongbao.",
+      "candidates": [
+        {"name": "Zhongxiang", "local": "钟祥", "origin": "county", "meaning": "\"Bell of auspice\" (gathering of good omens): name granted by the Jiajing emperor in 1531 for his birthplace; old Chu secondary capital Jiaoying.", "fit": "Holds the Zhongxiang urban core (Yingzhong) and 40% of the people; 51% of the county.", "recognisability": "Current county-level city, national historic city, Ming Xianling tomb.", "source_url": "https://zh.wikipedia.org/wiki/钟祥市", "source_note": "嘉靖十年升安陆州为承天府，御赐县名为鍾祥，取祥瑞锺聚之意", "rating": 4, "status": "suggested"},
+        {"name": "Shayang", "local": "沙洋", "origin": "county", "meaning": "\"Sandy expanse\": Han River port town, called little Hankou.", "fit": "36% of the people, 84% of the county.", "recognisability": "Current county; known river port.", "source_url": "https://zh.wikipedia.org/wiki/沙洋县", "source_note": "沙洋港口商埠兴旺，远近闻名的小汉口", "rating": 3, "status": "suggested"}
+      ],
+      "notes": ""
+    },
+    {
+      "n": 3, "key": "#e7c1ba", "settled": null,
+      "summary": "Jingmen's new town (Duodao) with the Zhanghe reservoir, Dangyang's east and the Jingzhou district's north.",
+      "candidates": [
+        {"name": "Jingmen", "local": "荆门", "origin": "prefecture", "meaning": "\"Gate of Jing\": the northern gate to Jingchu, 100 km north of Jingzhou.", "fit": "Region holds Duodao (90%), Dongbao's south and the Jingmen urban area; the prefecture city seat is split with region 2.", "recognisability": "Prefecture-level city; Jingmenzhou seat 1278-1911.", "source_url": "https://zh.wikipedia.org/wiki/荆门市", "source_note": "地处荆州以北100公里，为荆楚之门户，所以称之为荆门", "rating": 4, "status": "suggested"},
+        {"name": "Zhanghe", "local": "漳河", "origin": "river", "meaning": "\"Zhang river\": tributary of the Ju, dammed as Zhanghe reservoir.", "fit": "The river and reservoir (Zhanghe town) lie inside the region; runs south-west to Dangyang.", "recognisability": "Own zh-wiki article is a disambiguation (several Zhang rivers); 141 hits with 湖北 but mostly about Jingmen.", "source_url": "https://zh.wikipedia.org/wiki/漳河", "source_note": "漳河 (沮水)，沮水支流，湖北境内流河", "rating": 2, "status": "suggested"}
+      ],
+      "notes": "Jingmen's older centre (Zi Ling) is in region 2 but Duodao is the urban core now; Zhongxiang is already proposed there."
+    },
+    {
+      "n": 4, "key": "#f0c4c9", "settled": null,
+      "summary": "Tianmen city (Jingling) and surrounding Han River plain.",
+      "candidates": [
+        {"name": "Tianmen", "local": "天门", "origin": "city", "meaning": "\"Heaven's gate\": county of 1726, after the Tianmen hill.", "fit": "97% of the region, 83% of the city.", "recognisability": "Current county-level city.", "source_url": "https://zh.wikipedia.org/wiki/天门市", "source_note": "天门县 (县, 1726-1911) 今湖北天门市", "rating": 5, "status": "suggested"},
+        {"name": "Jingling", "local": "竟陵", "origin": "historical", "meaning": "Ancient county and commandery (Qin to Qi) seated at today's Tianmen; home of Lu Yu and the Jingling literary school.", "fit": "Seat inside the region (Jingling subdistrict) but the old Jingling county also reached Qianjiang.", "recognisability": "101 hits with 湖北, own articles on 竟陵郡 and 竟陵派, top ones about Tianmen.", "source_url": "https://zh.wikipedia.org/wiki/竟陵派", "source_note": "籍贯均为竟陵（今湖北省天门市）", "rating": 4, "status": "suggested"}
+      ],
+      "notes": ""
+    },
+    {
+      "n": 5, "key": "#f7bfbf", "settled": null,
+      "summary": "Qianjiang city and the Jianghan oilfield between the Han River and Chang Lake.",
+      "candidates": [
+        {"name": "Qianjiang", "local": "潜江", "origin": "city", "meaning": "\"Submerged river\": Song county of 965 named for a local watercourse.", "fit": "87% of the region, 99% of the city.", "recognisability": "Current county-level city.", "source_url": "https://zh.wikipedia.org/wiki/潜江市", "source_note": "潜江县 (县, 965-1911) 今湖北潜江市西北三十里处", "rating": 5, "status": "suggested"},
+        {"name": "Jianghan", "local": "江汉", "origin": "plain", "meaning": "\"Yangtze and Han\": the plain between the two rivers; also the oilfield name.", "fit": "Qianjiang sits mid plain, but the plain covers all 11 regions.", "recognisability": "Own zh-wiki article on 江汉平原; oilfield HQ in Qianjiang.", "source_url": "https://zh.wikipedia.org/wiki/江汉平原", "source_note": "江汉平原上还拥有湖北省唯一的规模油田：江汉油田", "rating": 3, "status": "suggested"}
+      ],
+      "notes": "Jianghan would be a big claim for one region of a plain this size; the Wuhan or east agents may reach for it too."
+    },
+    {
+      "n": 6, "key": "#f0aa9d", "settled": null,
+      "summary": "Jingzhou city: Shashi and the old walled city (Jiangling).",
+      "candidates": [
+        {"name": "Jingzhou", "local": "荆州", "origin": "city", "meaning": "\"Thorn province\": one of the Nine Provinces; seat of Nanjun, Jiangling and Jingzhou fu.", "fit": "Holds the Jingzhou ancient city and Shashi; city centre of the prefecture.", "recognisability": "Prefecture-level city, Three Kingdoms fame.", "source_url": "https://zh.wikipedia.org/wiki/荆州区", "source_note": "现在市区内有明代江陵城的遗址，是中国南方迄今保存最为完好的古城", "rating": 5, "status": "suggested"},
+        {"name": "Shashi", "local": "沙市", "origin": "city", "meaning": "\"Sand market\": Yangtze river port.", "fit": "65% of the region's people.", "recognisability": "Former city, now a district.", "source_url": "https://zh.wikipedia.org/wiki/沙市区", "source_note": "荆州市沙市区", "rating": 3, "status": "suggested"}
+      ],
+      "notes": "Jiangling (the historic name of the walled city) now only labels a county east of here in region 9."
+    },
+    {
+      "n": 7, "key": "#f1c2ce", "settled": null,
+      "summary": "Xiantao city on the lower Han River; old Mianyang seat at Miancheng.",
+      "candidates": [
+        {"name": "Xiantao", "local": "仙桃", "origin": "city", "meaning": "\"Immortal peach\": modern town name that became the city.", "fit": "99% of the region, 78% of the city.", "recognisability": "Current county-level city.", "source_url": "https://zh.wikipedia.org/wiki/仙桃市", "source_note": "仙桃市 (Xiantao)", "rating": 4, "status": "suggested"},
+        {"name": "Mianyang", "local": "沔阳", "origin": "prefecture", "meaning": "\"North of the Mian (Han) river\": prefecture 1376-1911, Ming/Qing seat at Miancheng in this region.", "fit": "Seat inside the region; prefecture also covered Honghu and Jianli areas (region 10 and 11).", "recognisability": "223 hits with 湖北, own article on 沔阳府; Sichuan Mianyang (绵阳) shares the pinyin, different characters.", "source_url": "https://zh.wikipedia.org/wiki/沔阳府", "source_note": "治所在玉沙县（今湖北省仙桃市西南）", "rating": 3, "status": "suggested"}
+      ],
+      "notes": ""
+    },
+    {
+      "n": 8, "key": "#f0d8db", "settled": null,
+      "summary": "Songzi and Zhijiang on the Yangtze where it leaves the gorges; Dongting neighbours across the river.",
+      "candidates": [
+        {"name": "Songzi", "local": "松滋", "origin": "county", "meaning": "\"Pine flourishing\": county moved here by refugees from Anhui in 337.", "fit": "61% of the region, 99.7% of the county; county seat inside; 1,574 years as a county.", "recognisability": "Current county-level city.", "source_url": "https://zh.wikipedia.org/wiki/松滋市", "source_note": "松滋县 (县, 337-1911) 今湖北松滋县西北老城镇", "rating": 4, "status": "suggested"}
+      ],
+      "notes": "Gong'an (22% of the region) is proposed for region 9."
+    },
+    {
+      "n": 9, "key": "#f0c7ca", "settled": null,
+      "summary": "South Jingzhou on the Yangtze: Gong'an, Jiangling county, part of Shishou.",
+      "candidates": [
+        {"name": "Gong'an", "local": "公安", "origin": "county", "meaning": "County from 557, named for Liu Bei, honoured as Lord Zuo (\"Gong\"); the \"an\" is peace.", "fit": "57% of the region, 71% of the county, county seat Douhudi inside.", "recognisability": "Current county; Gong'an school of Ming literature.", "source_url": "https://zh.wikipedia.org/wiki/公安县", "source_note": "公安县 (县, 557-1650) 今湖北公安县斗湖堤", "rating": 4, "status": "suggested"},
+        {"name": "Jingjiang", "local": "荆江", "origin": "river", "meaning": "\"Jing river\": the Yangtze between Zhicheng and Chenglingji, through old Jingzhou.", "fit": "Runs through Gong'an, Jiangling and Shishou and borders this region on two sides.", "recognisability": "Own zh-wiki article, 144 hits with 湖北, flood diversion and dyke are known.", "source_url": "https://zh.wikipedia.org/wiki/长江", "source_note": "因长江流经古荆州地区，又称荆江", "rating": 3, "status": "suggested"}
+      ],
+      "notes": "Jingjiang is also spelled the same as Jiangsu Jingjiang (靖江), different characters."
+    },
+    {
+      "n": 10, "key": "#eed6da", "settled": null,
+      "summary": "Honghu city and the lake, lower Han mouth region.",
+      "candidates": [
+        {"name": "Honghu", "local": "洪湖", "origin": "lake", "meaning": "\"Flood lake\": remnant of the ancient Yunmeng marsh, also the city name.", "fit": "67% of the region, 97% of the city; lake mostly in this region.", "recognisability": "Current city and own zh-wiki article on the lake.", "source_url": "https://zh.wikipedia.org/wiki/洪湖", "source_note": "洪湖形成于约2500年前，是古云梦泽的残迹", "rating": 5, "status": "suggested"}
+      ],
+      "notes": ""
+    },
+    {
+      "n": 11, "key": "#eebec6", "settled": null,
+      "summary": "Jianli county in the Yangtze loop north of Dongting.",
+      "candidates": [
+        {"name": "Jianli", "local": "监利", "origin": "county", "meaning": "\"Supervising profit\" (a salt or tax office); county for 1,689 years.", "fit": "94% of the region, 78% of the county.", "recognisability": "Current county-level city.", "source_url": "https://zh.wikipedia.org/wiki/监利市", "source_note": "监利县 (县, 222-1911) 今湖北监利县北", "rating": 4, "status": "suggested"},
+        {"name": "Yunmeng", "local": "云梦", "origin": "lake", "meaning": "\"Cloud dream\": the vast marsh of the old Chu heartland, silted into the Jianghan plain.", "fit": "The marsh covered the whole plain; Honghu is its remnant.", "recognisability": "Own zh-wiki article, 28 hits with 湖北, famous in classics but a Yunmeng county exists in Xiaogan.", "source_url": "https://zh.wikipedia.org/wiki/云梦泽", "source_note": "位于今湖北省江汉平原的一个已消失的淡水湖", "rating": 2, "status": "suggested"}
+      ],
+      "notes": "Yunmeng collides with Yunmeng county (east batch) so it is low."
+    }
+  ]
+}

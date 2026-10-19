@@ -21,10 +21,13 @@ def _gn_counts():
     rescaled to UNSD table 28's national count (sources/gn.py). The universe is ordinary
     households, 10,503,132; the 20,129 in collective households are in no religion table.
     """
+    import gn2014
     from gn2014 import resolve
 
     df = pd.read_csv(HERE / "data" / "normalized" / "gn.csv",
                      low_memory=False, keep_default_na=False, na_values=[""])
+    # 2026-10-16: `Chrétienne` split at one national ratio (sources/wa_christian.py); `derived`.
+    df = _swap_christian_split(df, "gn", "Chrétienne")
     df["count"] = df["count"].astype(int)
     if df["geo_id"].nunique() != 8:
         raise SystemExit(f"{df['geo_id'].nunique()} régions in gn.csv, expected 8 -- re-run "
@@ -35,9 +38,10 @@ def _gn_counts():
         raise SystemExit(f"gn.csv categories with no node: {unmapped}")
     df = df[df["count"] > 0].rename(columns={"geo_id": "unit"})
     df["congregations"] = 0
-    df["may_ring"] = True
-    df["tier"] = "measured"
-    return df[["unit", "node", "count", "congregations", "may_ring", "tier"]]
+    df["tier"] = df["split"].map({True: "derived", False: "measured"})
+    df["may_ring"] = ~df["split"]
+    df = _add_roll(df, gn2014.COLUMNS)
+    return df[["unit", "node", "count", "congregations", "may_ring", "tier", "roll"]]
 
 
 ENTRY = {
@@ -53,11 +57,15 @@ ENTRY = {
             "Christian, 10.4% animist and 14.2% no religion. It holds 15% of Guinea's people "
             "and **62.5%** of its Christians, **98.8%** of its animists and 88.1% of those who "
             "gave no religion. "
-            "**Christianity is one colour because the census never asked a denomination.** "
-            "The form had five boxes: no religion, Muslim, Christian, animist and other. The "
+            "**The census never asked a denomination, so the churches are one national mix.** "
+            "The form had five boxes: no religion, Muslim, Christian, animist and other. Each "
+            "region's Christians are drawn as 65% Catholic, 30% Protestant (mostly the "
+            "Evangelical Protestant Church) and 5% other, the mix Christians named in the "
+            "Afrobarometer surveys of 2013 to 2022. The "
             "animist box was an alternative to the others, so it does not count Muslims or "
             "Christians who also follow a traditional religion."),
         how="census, 2014",
+        fill="from the Afrobarometer's national church shares",
         grain="régions, 1.3 million people on average",
         gap="0.19% living in collective households such as barracks and boarding schools, "
             "who are in no religion table",

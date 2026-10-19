@@ -19,10 +19,13 @@ def _gm_counts():
     Annex H of the Spatial Distribution Report in counts, Kerewan as its male plus female tables
     (sources/gm.py). The 970 whose religion was left blank are read and not drawn.
     """
+    import gm2013
     from gm2013 import EXCLUDED, resolve
 
     df = pd.read_csv(HERE / "data" / "normalized" / "gm.csv",
                      low_memory=False, keep_default_na=False, na_values=[""])
+    # 2026-10-16: `Christianity` split at one national ratio (sources/wa_christian.py); `derived`.
+    df = _swap_christian_split(df, "gm", "Christianity")
     df["count"] = df["count"].astype(int)
     if df["geo_id"].nunique() != 8:
         raise SystemExit(f"{df['geo_id'].nunique()} LGAs in gm.csv, expected 8 -- re-run "
@@ -34,9 +37,10 @@ def _gm_counts():
         raise SystemExit(f"gm.csv categories with no node: {unmapped}")
     df = df[df["count"] > 0].rename(columns={"geo_id": "unit"})
     df["congregations"] = 0
-    df["may_ring"] = True
-    df["tier"] = "measured"
-    return df[["unit", "node", "count", "congregations", "may_ring", "tier"]]
+    df["tier"] = df["split"].map({True: "derived", False: "measured"})
+    df["may_ring"] = ~df["split"]
+    df = _add_roll(df, gm2013.COLUMNS)
+    return df[["unit", "node", "count", "congregations", "may_ring", "tier", "roll"]]
 
 
 ENTRY = {
@@ -55,9 +59,12 @@ ENTRY = {
             "under 1.3% Christian, and Basse is 0.5%. "
             "**The form had four answers: Islam, Christianity, Traditional and Other.** It had "
             "no answer for no religion, so anyone who gave none was recorded as Other or left "
-            "blank, and no table names a church or a Muslim order. Traditional religion is "
-            "0.06%, which counts only people who gave it as their one religion."),
+            "blank, and no table names a church or a Muslim order. Christians are drawn as 75% "
+            "Catholic and 25% Protestant in every LGA, between the Afrobarometer's 88% Catholic "
+            "and the Catholic diocese's own figures, which come to about 64%. Traditional "
+            "religion is 0.06%, which counts only people who gave it as their one religion."),
         how="census, 2013",
+        fill="from a national survey and the Catholic diocese's figures",
         grain="Local Government Areas, 232,000 people on average",
         gap="0.05% whose religion was left blank on the form",
         gap_share=0.0005,

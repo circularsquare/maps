@@ -387,6 +387,11 @@ MUSLIM = {
     "PK": {"islam.sunni": 0.85, "islam.shia": 0.145, "islam.ahmadiyya": 0.005},
     "IN": {"islam.sunni": 0.87, "islam.shia": 0.13},
     "AF": {"islam.sunni": 0.85, "islam.shia": 0.15},
+    # Unsourced. A sourced cross-check, NOT applied (2026-10-16): BAMF's MLD 2020 Table 32
+    # (sources/de_mld.py) has Türkei-origin Muslims IN GERMANY at 71.9% Sunni, 16.9% Alevi,
+    # 1.2% Shia, 0.4% Ahmadi and 9.6% unnamed. Swapping it in would move the foreign halves of
+    # fr, be, se, no, dk, fi, it, gr, es and others on a German measurement, which Anita has not
+    # approved for other countries; MLD's other columns are regions, not countries.
     "TR": {"islam.sunni": 0.80, "alevism": 0.20},
     # Albania's Bektashi are a Sufi order with their own world headquarters in Tirana and
     # about a fifth of the country's Muslims; the tree has no node, so they sit on `islam`.

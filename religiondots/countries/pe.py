@@ -67,6 +67,13 @@ def _pe_counts():
     return df[["unit", "node", "count", "congregations"]]
 
 
+def _pe_counts_split():
+    """`_pe_counts` with Pew 2014's Pentecostal share drawn inside the census's `Evangélica`
+    column; latam_split.py, Anita 2026-10-16. The split rows are `derived` and roll back to
+    `Evangélica` under `inferred dots: not shown`."""
+    return _latam_split("pe", _pe_counts())
+
+
 ENTRY = {
     "pe": dict(
         name="Peru",
@@ -122,12 +129,17 @@ ENTRY = {
             "colonies are in exactly these frontier districts and whose members are Andean "
             "migrants rather than Amazonian peoples, are the strongest candidate. The "
             "highest shares of all are among the **Tusán (5.5%) and Nikkei (3.5%)**, Peru's "
-            "Chinese and Japanese populations. The map does not split the cell."),
+            "Chinese and Japanese populations. The map does not split the cell. "
+            "46% of the census's Evangelicals are drawn as Pentecostal, the share Pew "
+            "Research Center's 2014 survey implies once Adventists are set apart; the rest "
+            "stay unnamed, and turning inferred dots off draws them all as Evangelical again."),
         how="census, 2017, ages 12 and over",
+        fill="from Pew Research Center's 2014 survey, which gives the Pentecostal share of "
+             "the census's Evangelicals",
         grain="districts, 12,378 people on average",
         gap_share=0.211,
         gap="under-twelves, 21.1% of the country, who were not asked the religion question",
-        counts=_pe_counts,
+        counts=_pe_counts_split,
         units=None,
         unit_key=None,
         place=HERE / "data" / "geo" / "pe" / "pe_hexes.gpkg",

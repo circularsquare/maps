@@ -136,6 +136,18 @@ SHAPEFILES = {
             "parent_name_col": None,
             "group_col": "pc11_s_id",
         },
+        # Level 3 with the sub-districts over 2M split (scripts/india/level4.py).
+        4: {
+            "candidates": [HELPER / "data/india/level4.gpkg"],
+            "code_col": "code",
+            "name_col": "name",
+            "parent_col": "parent",
+            "parent_name_col": None,
+            "group_col": "group",
+            # city parts (Mumbai's B ward is 2.5 km2) need a finer tolerance
+            "simplify": 0.001,
+            "split_by": "group",
+        },
     },
 }
 

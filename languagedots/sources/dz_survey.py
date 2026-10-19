@@ -21,9 +21,9 @@ TWO KINDS OF SURVEY QUESTION, AND THEY DISAGREE (sources/dz.md section 2):
     (2021-22), 3,366 adults, all 48 wilayas. Amazigh 23% nationally; Bejaia 89%, Tizi Ouzou 87%,
     Khenchela 68%, Algiers 41%: the 1966 census's geography. These are drawn, read as language
     under AGENT_BRIEF section 2's ethnicity ruling.
-A wilaya's Amazigh answers go on the Berber language of that wilaya where one is spoken there
-alone (KABYLE, CHAOUI, MZAB, TUAREG below; the place-dependent label rule of spec section 3),
-and on the Berber group node elsewhere (Algiers, Oran, Setif's neighbours...).
+A wilaya's Amazigh answers are split over Algeria's Berber varieties by place (SPLIT below; the
+place-dependent label rule of spec section 3, widened 2026-10-19 so that no Amazigh answer is left
+on the Berber group node). The record is sources/dz.md section 4.
 """
 import os
 import re
@@ -41,6 +41,8 @@ import pandas as pd
 HERE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(HERE))
 from rdlink import RD, RD_GEO  # noqa: E402
+sys.path.insert(0, str(HERE / "taxonomy"))
+from dz2022 import VARIETIES, label as variety_label  # noqa: E402
 
 RAW = HERE / "data" / "raw" / "dz"
 OUT = HERE / "data" / "normalized" / "dz.csv"
@@ -75,11 +77,53 @@ LANG_WAVES = [
 # wilaya is not used; it counts in the national checks only.
 NO_WILAYA = {"AfB R5 2013"}
 
-# Amazigh answers: wilaya -> the one Berber language spoken there (sources/dz.md section 4)
-KABYLE = {"DZ06", "DZ10", "DZ15", "DZ19", "DZ34", "DZ35"}   # Bejaia Bouira Tizi Ouzou Setif BBA Boumerdes
-CHAOUI = {"DZ04", "DZ05", "DZ07", "DZ12", "DZ40"}           # Oum El Bouaghi Batna Biskra Tebessa Khenchela
-MZAB = {"DZ47"}                                             # Ghardaia
-TUAREG = {"DZ11", "DZ33"}                                   # Tamanrasset Illizi
+# Amazigh answers: wilaya -> the Berber variety or varieties drawn there (sources/dz.md section 4).
+# The survey asks no variety, so this is a call by place. Three kinds of entry:
+#   * a list of (variety, share): the wilaya's Amazigh count cut in those shares. One variety
+#     where one is spoken there; two where a local variety and the Kabyle (or Chaoui) diaspora
+#     both plausibly are, with the split a round judgement, said so in the record.
+#   * ("hex", [a, b]): two varieties each spoken in part of the wilaya; the wilaya's Berber mass
+#     (population x the 1966 surface) is cut by which variety's Glottolog core is nearer.
+# Varieties are keyed as in taxonomy/dz2022.py VARIETIES (k kabyle, c chaouia, z chenoua,
+# m tumzabt, g taznatit, a tamahaq ...).
+KAB, CHA, CHE, MZB, TAZ, TID, TAM = ("kabyle", "chaouia", "chenoua", "tumzabt", "taznatit",
+                                      "tidikelt", "tamahaq")
+SPLIT = {
+    # named in the first build and kept: one Berber language in the wilaya
+    "DZ06": [(KAB, 1.0)], "DZ10": [(KAB, 1.0)], "DZ15": [(KAB, 1.0)], "DZ19": [(KAB, 1.0)],
+    "DZ34": [(KAB, 1.0)], "DZ35": [(KAB, 1.0)],           # Bejaia Bouira Tizi Ouzou Setif BBA Boumerdes
+    "DZ04": [(CHA, 1.0)], "DZ05": [(CHA, 1.0)], "DZ07": [(CHA, 1.0)], "DZ12": [(CHA, 1.0)],
+    "DZ40": [(CHA, 1.0)],                                # Oum El Bouaghi Batna Biskra Tebessa Khenchela
+    "DZ47": [(MZB, 1.0)],                                # Ghardaia
+    "DZ33": [(TAM, 1.0)],                                # Illizi
+    "DZ11": ("hex", [TAM, TID]),                           # Tamanrasset (Tamahaq; In Salah is Tidikelt)
+    # a local variety only
+    "DZ42": [(CHE, 0.85), (KAB, 0.15)],                    # Tipaza: Chenoua, with Kabyle migrants
+    "DZ02": [(CHE, 1.0)],                                # Chlef: the Dahra and Ouarsenis Zenati
+    "DZ38": [(CHE, 0.8), (KAB, 0.2)],                      # Tissemsilt: Ouarsenis
+    "DZ01": ("hex", [TAZ, TID]),                           # Adrar: Gourara and Touat, Tidikelt at Aoulef
+    "DZ08": [(TAZ, 1.0)], "DZ32": [(TAZ, 1.0)], "DZ45": [(TAZ, 1.0)],   # Bechar El Bayadh Naama: Sud Oranais
+    "DZ30": ("hex", ["ouargli", "righ"]),              # Ouargla (Touggourt in 2008): Ouargli | Oued Righ
+    "DZ39": [("righ", 1.0)],                           # El Oued: the Oued Righ's lower end
+    "DZ37": [("tachelhit", 1.0)],                      # Tindouf: Soussi traders, the Moroccan side
+    # the capital and the centre: the Kabyle diaspora
+    "DZ16": [(KAB, 1.0)], "DZ26": [(KAB, 1.0)], "DZ17": [(KAB, 1.0)], "DZ18": [(KAB, 1.0)],
+    "DZ09": [(KAB, 0.8), (CHE, 0.2)],                      # Blida: Kabyle, and the Blida Atlas
+    "DZ28": [(KAB, 0.7), (CHA, 0.3)],                      # M'Sila: Kabyle and Chaoui settlers
+    "DZ03": [(KAB, 0.5), (MZB, 0.5)],                      # Laghouat: Kabyle, and the Mozabite diaspora
+    # the west: Western Algerian Berber (Beni Snous, Ouarsenis, Dahra) with Kabyle migrants
+    "DZ13": [(CHE, 0.5), (KAB, 0.5)],                      # Tlemcen: Beni Snous, a few thousand
+    "DZ44": [(CHE, 0.5), (KAB, 0.5)], "DZ48": [(CHE, 0.5), (KAB, 0.5)],   # Ain Defla Relizane
+    # no Berber of their own, or very little: mostly Kabyle settlers, a quarter Western Algerian
+    "DZ14": [(CHE, 0.25), (KAB, 0.75)], "DZ20": [(CHE, 0.25), (KAB, 0.75)],
+    "DZ22": [(CHE, 0.25), (KAB, 0.75)], "DZ27": [(CHE, 0.25), (KAB, 0.75)],
+    "DZ29": [(CHE, 0.25), (KAB, 0.75)], "DZ31": [(CHE, 0.25), (KAB, 0.75)],
+    "DZ46": [(CHE, 0.25), (KAB, 0.75)],   # Tiaret Saida Sidi Bel Abbes Mostaganem Mascara Oran Ain Temouchent
+    # the east: Chaoui, with Kabyle migrants
+    "DZ41": [(CHA, 1.0)],                                # Souk Ahras
+    "DZ23": [(CHA, 0.8), (KAB, 0.2)], "DZ24": [(CHA, 0.8), (KAB, 0.2)], "DZ36": [(CHA, 0.8), (KAB, 0.2)],
+    "DZ21": [(CHA, 0.5), (KAB, 0.5)], "DZ25": [(CHA, 0.5), (KAB, 0.5)], "DZ43": [(CHA, 0.5), (KAB, 0.5)],
+}
 
 ALIAS = {   # survey spellings -> religiondots `name` (folded)
     "algeris": "algiers", "alger": "algiers", "bouria": "bouira", "bejia": "bejaia",
@@ -290,25 +334,18 @@ def shares():
 
 def build():
     lut, sh, n, fsh, lb, nat = shares()
+    split = variety_split(lut)
     rows = []
     for _, u in lut.iterrows():
         g, pop = u["geo_id"], u["pop"]
         s = sh.loc[g] * (1 - fsh[g])
-        if g in KABYLE:
-            am = "Amazigh (in a Kabyle-speaking wilaya)"
-        elif g in CHAOUI:
-            am = "Amazigh (in a Chaoui-speaking wilaya)"
-        elif g in MZAB:
-            am = "Amazigh (in Ghardaia)"
-        elif g in TUAREG:
-            am = "Amazigh (in a Tuareg wilaya)"
-        else:
-            am = "Amazigh"
         # wave VII's 22 "Tourag" answers are in Djelfa (8), Laghouat (3) and ten northern
         # wilayas, none in the Tuareg south: drawn with "Other" (sources/dz.md section 3)
-        parts = {"Arab": s["Arab"], am: s["Amazigh"],
+        parts = {"Arab": s["Arab"],
                  "Other ethnic group (incl. Tourag)": s["Other"] + s["Tourag"],
                  "French (first language)": fsh[g]}
+        for v, f in split[g].items():
+            parts[variety_label(v)] = s["Amazigh"] * f
         exact = {k: v * pop for k, v in parts.items()}
         fl = {k: int(np.floor(v)) for k, v in exact.items()}
         short = pop - sum(fl.values())
@@ -379,6 +416,46 @@ def wilaya_1966(lut):
     out = (w["b"] / w["p"]).rename(index=u2g)
     if set(out.index) != set(lut["geo_id"]):
         raise SystemExit("dz_hexes.gpkg units do not match dz_lookup.csv")
+    return out
+
+
+def hex_variety(lat, lon, cands):
+    """For each point, which of the candidate varieties has the nearer Glottolog core (km, flat
+    earth). Returns an array of variety keys."""
+    lat = np.asarray(lat, dtype=float)[:, None]
+    lon = np.asarray(lon, dtype=float)[:, None]
+    cl = np.array([VARIETIES[c][2] for c in cands])[None, :]
+    co = np.array([VARIETIES[c][3] for c in cands])[None, :]
+    d = ((lat - cl) * 111.0) ** 2 + ((lon - co) * 111.0 * np.cos(np.radians(lat))) ** 2
+    return np.array(cands, dtype=object)[d.argmin(axis=1)]
+
+
+def variety_split(lut):
+    """geo_id -> {variety: share of the wilaya's Amazigh count}, from SPLIT. A ("hex", [a, b])
+    wilaya is cut by the wilaya's Berber mass (Kontur population x the 1966 surface, the same
+    weights countries/dz.py places the dots with) on each side of the line half way between the
+    two varieties' Glottolog cores."""
+    say(set(SPLIT) == set(lut["geo_id"]), "SPLIT names every one of the 48 wilayas, none twice")
+    out, need = {}, [g for g, v in SPLIT.items() if isinstance(v, tuple)]
+    for g, v in SPLIT.items():
+        if isinstance(v, list):
+            say(abs(sum(f for _, f in v) - 1) < 1e-9, f"{g} shares sum to 1")
+            out[g] = {k: f for k, f in v}
+    if need:
+        import geopandas as gpd
+        hx = gpd.read_file(RD_GEO / "dz" / "dz_hexes.gpkg")
+        c = hx.geometry.to_crs(3857).centroid.to_crs(4326)
+        lat, lon = c.y.to_numpy(), c.x.to_numpy()
+        mass = hx["pop"].to_numpy(dtype=float) * surface(lat, lon)
+        u2g = dict(zip(lut["unit"], lut["geo_id"]))
+        gid = hx["unit"].astype(str).map(u2g).to_numpy()
+        for g in need:
+            cands = SPLIT[g][1]
+            m = gid == g
+            which = hex_variety(lat[m], lon[m], cands)
+            w = mass[m] if mass[m].sum() > 0 else hx["pop"].to_numpy(dtype=float)[m]
+            out[g] = {k: float(w[which == k].sum() / w.sum()) for k in cands}
+            out[g] = {k: f for k, f in out[g].items() if f > 0}
     return out
 
 

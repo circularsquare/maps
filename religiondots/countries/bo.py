@@ -52,6 +52,12 @@ def _bo_counts():
                    tier=("tier", "first")))
 
 
+def _bo_counts_split():
+    """`_bo_counts` with Pew 2014's Pentecostal share drawn inside LAPOP's two Protestant boxes;
+    latam_split.py, Anita 2026-10-16. The rows stay `modelled`."""
+    return _latam_split("bo", _bo_counts())
+
+
 ENTRY = {
     "bo": dict(
         name="Bolivia",
@@ -76,10 +82,12 @@ ENTRY = {
             "80.3% in 2010 to **64.8% in 2023**, and evangelicals from 8.5% to 17.9%, so this "
             "map is more Catholic than any round since 2016 found. From 2018 "
             "the survey stopped offering Jehovah's Witnesses and Mormons as answers of their "
-            "own, so both are undercounts."),
+            "own, so both are undercounts. 43% of the Evangelical and Protestant answers are "
+            "drawn as Pentecostal, the share of Protestants that Pew Research Center's 2014 "
+            "survey found in Pentecostal churches; the rest stay unnamed."),
         how="survey, six rounds 2010 to 2023 pooled",
         grain="departments, 1.3 million people on average",
-        counts=_bo_counts,
+        counts=_bo_counts_split,
         units=None,
         unit_key=None,
         place=HERE / "data" / "geo" / "bo" / "bo_hexes.gpkg",

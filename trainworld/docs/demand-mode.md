@@ -168,19 +168,28 @@ the same roads (unscaled).
 
 Route choice is not all-or-nothing shortest path. NIMBY Rails' best-known complaint is riders
 waiting 50 minutes for a fast train that arrives one minute earlier. A wait counts its plain
-minutes (T-585) and the crowding loop (4.4) spreads riders.
+minutes (T-585) and the crowding loop (4.4) spreads riders, from 70% of a train's crush load.
 
 **Access and egress.** Riders spread over the ways they could reach a station (walking or riding
-to each one) by a logit on total cost (scale 0.2 per perceived minute: an option 5 minutes worse
-gets 37% of the better one's weight), and rail as a whole is priced at the logsum, so a second
-usable station helps a little and a slightly better one does not take everyone.
+to each one) and the station to leave at, every pair of the two, by a logit on total cost, and
+rail as a whole is priced at the logsum, so a second usable station helps a little and a slightly
+better one does not take everyone. **The logit's scale follows the trip's length** (Anita, T-710):
+what counts is a difference against the trip, up to a 60 minute trip; past that a minute counts as
+on a 60 minute trip. The scale is `rel_gamma` 20 over the trip's rough rail length T = 25 + 3 x
+its straight-line km (perceived minutes, `rel_t0`, `rel_tkm`), T held at 60 (`rel_tmax`), in four
+bands of straight-line distance (`REL_EDGES`: zone centres for commutes, the pair's mean distance
+for everyday trips): under 3 km 0.68 a perceived minute, 3-7 km 0.50, 7-12 km 0.37, 12 km and over
+0.33. Of two options 1 minute apart the faster gets 66% under 3 km and 58% from 12 km; 5 minutes
+apart 97% and 84%; 10 minutes apart 99.9% and 97%. Each band's exp table is offset by 60 / scale
+perceived minutes, added back after the logsum, so every band keeps station-to-station costs from
+0 to 129 / scale minutes in f32 (387 from 12 km). The regional layer keeps `station_theta` 0.2.
 
 **Walking to a station** (Anita, 2026-10-14, T-371). A true walk at both ends: **6 km/h along a
 path 1.3x the straight line, or round water by a bridge where one is in the way (above; 13 minutes
 a straight km), each minute weighing 1.5** (`w_walk`, fitted on New York in T-372;
 notes/T-372.md). So a station 500 m away costs 9.8
 perceived minutes, 1 km 19.5, 2 km 39. Between walks the logit above applies (a station 500 m
-further gets 14% of the nearer one's riders).
+further gets 0.1% of the nearer one's riders on a trip under 3 km, 4% from 12 km).
 
 **Riding to a station** (Anita, 2026-10-14, T-295, T-371, T-389). Car, bus, bike or a lift are one
 mode, the ride, called driving in the game. It is offered only at the home end of a trip of at

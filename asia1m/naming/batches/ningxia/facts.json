@@ -1,0 +1,1476 @@
+{
+ "name": "ningxia",
+ "province": "Ningxia Hui",
+ "prefectures": [],
+ "tiles": [
+  {
+   "tag": "1",
+   "x": 6044,
+   "y": 2677,
+   "w": 670,
+   "h": 800,
+   "scale": 2,
+   "regions": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ]
+  }
+ ],
+ "regions": [
+  {
+   "key": "#dbeecb",
+   "color": "#dbeecb",
+   "lon": 106.4372,
+   "lat": 38.8813,
+   "bbox": [
+    6362,
+    2877,
+    6447,
+    2990
+   ],
+   "area_px": 5529,
+   "people": 952892,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Dawukou",
+     "local": "大武口区",
+     "prefecture": "Shizuishan",
+     "prefecture_local": "石嘴山市",
+     "province": "宁夏回族自治区",
+     "country": "China",
+     "people_share": 0.304,
+     "area_share": 0.153,
+     "cover": 0.997
+    },
+    {
+     "name": "Pingluo",
+     "local": "平罗县",
+     "prefecture": "Shizuishan",
+     "prefecture_local": "石嘴山市",
+     "province": "宁夏回族自治区",
+     "country": "China",
+     "people_share": 0.271,
+     "area_share": 0.335,
+     "cover": 1.0
+    },
+    {
+     "name": "Huinong",
+     "local": "惠农区",
+     "prefecture": "Shizuishan",
+     "prefecture_local": "石嘴山市",
+     "province": "宁夏回族自治区",
+     "country": "China",
+     "people_share": 0.176,
+     "area_share": 0.174,
+     "cover": 0.937
+    },
+    {
+     "name": "Helan",
+     "local": "贺兰县",
+     "prefecture": "Yinchuan",
+     "prefecture_local": "银川市",
+     "province": "宁夏回族自治区",
+     "country": "China",
+     "people_share": 0.151,
+     "area_share": 0.181,
+     "cover": 0.379
+    },
+    {
+     "name": "Xingqing",
+     "local": "兴庆区",
+     "prefecture": "Yinchuan",
+     "prefecture_local": "银川市",
+     "province": "宁夏回族自治区",
+     "country": "China",
+     "people_share": 0.067,
+     "area_share": 0.088,
+     "cover": 0.079
+    },
+    {
+     "name": "Xixia",
+     "local": "西夏区",
+     "prefecture": "Yinchuan",
+     "prefecture_local": "银川市",
+     "province": "宁夏回族自治区",
+     "country": "China",
+     "people_share": 0.027,
+     "area_share": 0.056,
+     "cover": 0.055
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Ningxia Hui",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.997,
+     "cover": 0.133
+    },
+    {
+     "level": "prefecture",
+     "name": "Shizuishan",
+     "local": "石嘴山市",
+     "province": "Ningxia Hui",
+     "country": "China",
+     "people_share": 0.678,
+     "cover": 0.986
+    },
+    {
+     "level": "prefecture",
+     "name": "Yinchuan",
+     "local": "银川市",
+     "province": "Ningxia Hui",
+     "country": "China",
+     "people_share": 0.236,
+     "cover": 0.098
+    },
+    {
+     "level": "prefecture",
+     "name": "Wuhai",
+     "local": "乌海市",
+     "province": "Ningxia Hui",
+     "country": "China",
+     "people_share": 0.079,
+     "cover": 0.927
+    }
+   ],
+   "towns": [
+    {
+     "town": "城关镇",
+     "county": "平罗县",
+     "city": "石嘴山市",
+     "people_share": 0.096,
+     "cover": 1.0
+    },
+    {
+     "town": "石炭井街道",
+     "county": "大武口区",
+     "city": "石嘴山市",
+     "people_share": 0.061,
+     "cover": 0.987
+    },
+    {
+     "town": "金贵镇",
+     "county": "贺兰县",
+     "city": "银川市",
+     "people_share": 0.056,
+     "cover": 0.864
+    },
+    {
+     "town": "长胜街道",
+     "county": "大武口区",
+     "city": "石嘴山市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "长兴街道",
+     "county": "大武口区",
+     "city": "石嘴山市",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "掌政镇",
+     "county": "兴庆区",
+     "city": "银川市",
+     "people_share": 0.039,
+     "cover": 0.668
+    },
+    {
+     "town": "火车站街道",
+     "county": "惠农区",
+     "city": "石嘴山市",
+     "people_share": 0.033,
+     "cover": 1.0
+    },
+    {
+     "town": "朝阳街道",
+     "county": "大武口区",
+     "city": "石嘴山市",
+     "people_share": 0.033,
+     "cover": 1.0
+    },
+    {
+     "town": "洪广镇",
+     "county": "贺兰县",
+     "city": "银川市",
+     "people_share": 0.033,
+     "cover": 1.0
+    },
+    {
+     "town": "常信乡",
+     "county": "贺兰县",
+     "city": "银川市",
+     "people_share": 0.033,
+     "cover": 0.984
+    },
+    {
+     "town": "沟口街道",
+     "county": "大武口区",
+     "city": "石嘴山市",
+     "people_share": 0.032,
+     "cover": 1.0
+    },
+    {
+     "town": "红果子镇",
+     "county": "惠农区",
+     "city": "石嘴山市",
+     "people_share": 0.031,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Sizhan",
+     "admin": "Ningxia",
+     "pop": 751389
+    },
+    {
+     "name": "Shizuishan",
+     "admin": "Ningxia",
+     "pop": 136570
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f1efde",
+     "border_px": 1927
+    },
+    {
+     "key": "#f6f5ea",
+     "border_px": 1672
+    },
+    {
+     "key": "#c3eb9f",
+     "border_px": 541,
+     "name": "Xixia"
+    },
+    {
+     "key": "#d0eec2",
+     "border_px": 420,
+     "name": "Wuzhong"
+    },
+    {
+     "key": "#91da51",
+     "border_px": 122,
+     "name": "Yinchuan"
+    }
+   ],
+   "text_px": 0,
+   "n": 1,
+   "thumb": {
+    "x0": 6322,
+    "y0": 2837,
+    "k": 2.0,
+    "w": 330,
+    "h": 386
+   }
+  },
+  {
+   "key": "#c3eb9f",
+   "color": "#c3eb9f",
+   "lon": 106.1736,
+   "lat": 38.5008,
+   "bbox": [
+    6377,
+    2960,
+    6404,
+    2989
+   ],
+   "area_px": 495,
+   "people": 1021391,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Xixia",
+     "local": "西夏区",
+     "prefecture": "Yinchuan",
+     "prefecture_local": "银川市",
+     "province": "宁夏回族自治区",
+     "country": "China",
+     "people_share": 0.405,
+     "area_share": 0.422,
+     "cover": 0.903
+    },
+    {
+     "name": "Jinfeng",
+     "local": "金凤区",
+     "prefecture": "Yinchuan",
+     "prefecture_local": "银川市",
+     "province": "宁夏回族自治区",
+     "country": "China",
+     "people_share": 0.318,
+     "area_share": 0.386,
+     "cover": 0.751
+    },
+    {
+     "name": "Helan",
+     "local": "贺兰县",
+     "prefecture": "Yinchuan",
+     "prefecture_local": "银川市",
+     "province": "宁夏回族自治区",
+     "country": "China",
+     "people_share": 0.203,
+     "area_share": 0.168,
+     "cover": 0.548
+    },
+    {
+     "name": "Xingqing",
+     "local": "兴庆区",
+     "prefecture": "Yinchuan",
+     "prefecture_local": "银川市",
+     "province": "宁夏回族自治区",
+     "country": "China",
+     "people_share": 0.073,
+     "area_share": 0.018,
+     "cover": 0.092
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Ningxia Hui",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.143
+    },
+    {
+     "level": "prefecture",
+     "name": "Yinchuan",
+     "local": "银川市",
+     "province": "Ningxia Hui",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.445
+    }
+   ],
+   "towns": [
+    {
+     "town": "习岗镇",
+     "county": "贺兰县",
+     "city": "银川市",
+     "people_share": 0.197,
+     "cover": 0.895
+    },
+    {
+     "town": "贺兰山西路街道",
+     "county": "西夏区",
+     "city": "银川市",
+     "people_share": 0.115,
+     "cover": 0.92
+    },
+    {
+     "town": "黄河东路街道",
+     "county": "金凤区",
+     "city": "银川市",
+     "people_share": 0.1,
+     "cover": 0.996
+    },
+    {
+     "town": "宁华路街道",
+     "county": "西夏区",
+     "city": "银川市",
+     "people_share": 0.084,
+     "cover": 0.854
+    },
+    {
+     "town": "丰登镇",
+     "county": "金凤区",
+     "city": "银川市",
+     "people_share": 0.06,
+     "cover": 1.0
+    },
+    {
+     "town": "上海西路街道",
+     "county": "金凤区",
+     "city": "银川市",
+     "people_share": 0.054,
+     "cover": 1.0
+    },
+    {
+     "town": "朔方路街道",
+     "county": "西夏区",
+     "city": "银川市",
+     "people_share": 0.051,
+     "cover": 0.996
+    },
+    {
+     "town": "西花园街道",
+     "county": "西夏区",
+     "city": "银川市",
+     "people_share": 0.05,
+     "cover": 1.0
+    },
+    {
+     "town": "丽景街街道",
+     "county": "兴庆区",
+     "city": "银川市",
+     "people_share": 0.044,
+     "cover": 0.248
+    },
+    {
+     "town": "文昌路街道",
+     "county": "西夏区",
+     "city": "银川市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "北京西路街道",
+     "county": "西夏区",
+     "city": "银川市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "满城北街街道",
+     "county": "金凤区",
+     "city": "银川市",
+     "people_share": 0.033,
+     "cover": 0.981
+    }
+   ],
+   "cities": [
+    {
+     "name": "Yinchuan",
+     "admin": "Ningxia",
+     "pop": 1901793
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#dbeecb",
+     "border_px": 541,
+     "name": "Helanshan"
+    },
+    {
+     "key": "#d0eec2",
+     "border_px": 494,
+     "name": "Wuzhong"
+    },
+    {
+     "key": "#91da51",
+     "border_px": 245,
+     "name": "Yinchuan"
+    }
+   ],
+   "text_px": 0,
+   "n": 2,
+   "thumb": {
+    "x0": 6337,
+    "y0": 2920,
+    "k": 3.0,
+    "w": 321,
+    "h": 327
+   }
+  },
+  {
+   "key": "#91da51",
+   "color": "#91da51",
+   "lon": 106.2841,
+   "lat": 38.4594,
+   "bbox": [
+    6393,
+    2972,
+    6402,
+    2982
+   ],
+   "area_px": 98,
+   "people": 799472,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Xingqing",
+     "local": "兴庆区",
+     "prefecture": "Yinchuan",
+     "prefecture_local": "银川市",
+     "province": "宁夏回族自治区",
+     "country": "China",
+     "people_share": 0.84,
+     "area_share": 0.735,
+     "cover": 0.826
+    },
+    {
+     "name": "Jinfeng",
+     "local": "金凤区",
+     "prefecture": "Yinchuan",
+     "prefecture_local": "银川市",
+     "province": "宁夏回族自治区",
+     "country": "China",
+     "people_share": 0.125,
+     "area_share": 0.224,
+     "cover": 0.232
+    },
+    {
+     "name": "Helan",
+     "local": "贺兰县",
+     "prefecture": "Yinchuan",
+     "prefecture_local": "银川市",
+     "province": "宁夏回族自治区",
+     "country": "China",
+     "people_share": 0.035,
+     "area_share": 0.041,
+     "cover": 0.073
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Ningxia Hui",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.112
+    },
+    {
+     "level": "prefecture",
+     "name": "Yinchuan",
+     "local": "银川市",
+     "province": "Ningxia Hui",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.348
+    }
+   ],
+   "towns": [
+    {
+     "town": "大新镇",
+     "county": "兴庆区",
+     "city": "银川市",
+     "people_share": 0.246,
+     "cover": 0.86
+    },
+    {
+     "town": "丽景街街道",
+     "county": "兴庆区",
+     "city": "银川市",
+     "people_share": 0.169,
+     "cover": 0.752
+    },
+    {
+     "town": "银古路街道",
+     "county": "兴庆区",
+     "city": "银川市",
+     "people_share": 0.168,
+     "cover": 1.0
+    },
+    {
+     "town": "长城中路街道",
+     "county": "金凤区",
+     "city": "银川市",
+     "people_share": 0.115,
+     "cover": 0.856
+    },
+    {
+     "town": "燕鸽湖管委会",
+     "county": "兴庆区",
+     "city": "银川市",
+     "people_share": 0.055,
+     "cover": 1.0
+    },
+    {
+     "town": "玉皇阁北街街道",
+     "county": "兴庆区",
+     "city": "银川市",
+     "people_share": 0.036,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#c3eb9f",
+     "border_px": 245,
+     "name": "Xixia"
+    },
+    {
+     "key": "#dbeecb",
+     "border_px": 122,
+     "name": "Helanshan"
+    },
+    {
+     "key": "#d0eec2",
+     "border_px": 105,
+     "name": "Wuzhong"
+    }
+   ],
+   "text_px": 0,
+   "n": 3,
+   "thumb": {
+    "x0": 6353,
+    "y0": 2932,
+    "k": 4.0,
+    "w": 356,
+    "h": 360
+   }
+  },
+  {
+   "key": "#d0eec2",
+   "color": "#d0eec2",
+   "lon": 106.2045,
+   "lat": 38.0725,
+   "bbox": [
+    6357,
+    2967,
+    6446,
+    3069
+   ],
+   "area_px": 5226,
+   "people": 1259100,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Litong",
+     "local": "利通区",
+     "prefecture": "Wuzhong",
+     "prefecture_local": "吴忠市",
+     "province": "宁夏回族自治区",
+     "country": "China",
+     "people_share": 0.318,
+     "area_share": 0.088,
+     "cover": 0.777
+    },
+    {
+     "name": "Qingtongxia",
+     "local": "青铜峡市",
+     "prefecture": "Wuzhong",
+     "prefecture_local": "吴忠市",
+     "province": "宁夏回族自治区",
+     "country": "China",
+     "people_share": 0.255,
+     "area_share": 0.315,
+     "cover": 0.999
+    },
+    {
+     "name": "Lingwu",
+     "local": "灵武市",
+     "prefecture": "Yinchuan",
+     "prefecture_local": "银川市",
+     "province": "宁夏回族自治区",
+     "country": "China",
+     "people_share": 0.222,
+     "area_share": 0.373,
+     "cover": 0.958
+    },
+    {
+     "name": "Yongning",
+     "local": "永宁县",
+     "prefecture": "Yinchuan",
+     "prefecture_local": "银川市",
+     "province": "宁夏回族自治区",
+     "country": "China",
+     "people_share": 0.182,
+     "area_share": 0.158,
+     "cover": 0.996
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Ningxia Hui",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.176
+    },
+    {
+     "level": "prefecture",
+     "name": "Wuzhong",
+     "local": "吴忠市",
+     "province": "Ningxia Hui",
+     "country": "China",
+     "people_share": 0.798,
+     "cover": 0.772
+    },
+    {
+     "level": "prefecture",
+     "name": "Yinchuan",
+     "local": "银川市",
+     "province": "Ningxia Hui",
+     "country": "China",
+     "people_share": 0.199,
+     "cover": 0.109
+    }
+   ],
+   "towns": [
+    {
+     "town": "杨和镇",
+     "county": "永宁县",
+     "city": "银川市",
+     "people_share": 0.06,
+     "cover": 1.0
+    },
+    {
+     "town": "上桥镇",
+     "county": "利通区",
+     "city": "吴忠市",
+     "people_share": 0.059,
+     "cover": 1.0
+    },
+    {
+     "town": "大坝镇",
+     "county": "青铜峡市",
+     "city": "吴忠市",
+     "people_share": 0.049,
+     "cover": 1.0
+    },
+    {
+     "town": "东塔镇",
+     "county": "灵武市",
+     "city": "银川市",
+     "people_share": 0.049,
+     "cover": 1.0
+    },
+    {
+     "town": "板桥乡",
+     "county": "利通区",
+     "city": "吴忠市",
+     "people_share": 0.046,
+     "cover": 1.0
+    },
+    {
+     "town": "望远镇",
+     "county": "永宁县",
+     "city": "银川市",
+     "people_share": 0.042,
+     "cover": 0.995
+    },
+    {
+     "town": "青铜峡镇",
+     "county": "青铜峡市",
+     "city": "吴忠市",
+     "people_share": 0.042,
+     "cover": 0.993
+    },
+    {
+     "town": "峡口镇",
+     "county": "青铜峡市",
+     "city": "吴忠市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "陈袁滩镇",
+     "county": "青铜峡市",
+     "city": "吴忠市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "崇兴镇",
+     "county": "灵武市",
+     "city": "银川市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "宁东镇",
+     "county": "灵武市",
+     "city": "银川市",
+     "people_share": 0.031,
+     "cover": 0.995
+    },
+    {
+     "town": "李俊镇",
+     "county": "永宁县",
+     "city": "银川市",
+     "people_share": 0.03,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Wuzhong",
+     "admin": "Ningxia",
+     "pop": 1382713
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#dff3d5",
+     "border_px": 1414,
+     "name": "Haiyuan"
+    },
+    {
+     "key": "#f6f5ea",
+     "border_px": 1262
+    },
+    {
+     "key": "#ccf6c4",
+     "border_px": 585,
+     "name": "Zhongwei"
+    },
+    {
+     "key": "#c3eb9f",
+     "border_px": 494,
+     "name": "Xixia"
+    },
+    {
+     "key": "#f1efde",
+     "border_px": 460
+    },
+    {
+     "key": "#dbeecb",
+     "border_px": 420,
+     "name": "Helanshan"
+    },
+    {
+     "key": "#91da51",
+     "border_px": 105,
+     "name": "Yinchuan"
+    }
+   ],
+   "text_px": 0,
+   "n": 4,
+   "thumb": {
+    "x0": 6317,
+    "y0": 2927,
+    "k": 2.0,
+    "w": 338,
+    "h": 364
+   }
+  },
+  {
+   "key": "#ccf6c4",
+   "color": "#ccf6c4",
+   "lon": 105.3849,
+   "lat": 37.3023,
+   "bbox": [
+    6244,
+    3055,
+    6396,
+    3174
+   ],
+   "area_px": 9412,
+   "people": 840418,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Shapotou",
+     "local": "沙坡头区",
+     "prefecture": "Zhongwei",
+     "prefecture_local": "中卫市",
+     "province": "宁夏回族自治区",
+     "country": "China",
+     "people_share": 0.509,
+     "area_share": 0.508,
+     "cover": 0.993
+    },
+    {
+     "name": "Zhongning",
+     "local": "中宁县",
+     "prefecture": "Zhongwei",
+     "prefecture_local": "中卫市",
+     "province": "宁夏回族自治区",
+     "country": "China",
+     "people_share": 0.39,
+     "area_share": 0.313,
+     "cover": 0.997
+    },
+    {
+     "name": "Tongxin",
+     "local": "同心县",
+     "prefecture": "Wuzhong",
+     "prefecture_local": "吴忠市",
+     "province": "宁夏回族自治区",
+     "country": "China",
+     "people_share": 0.049,
+     "area_share": 0.049,
+     "cover": 0.129
+    },
+    {
+     "name": "Hongsibao",
+     "local": "红寺堡区",
+     "prefecture": "Wuzhong",
+     "prefecture_local": "吴忠市",
+     "province": "宁夏回族自治区",
+     "country": "China",
+     "people_share": 0.046,
+     "area_share": 0.08,
+     "cover": 0.478
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Ningxia Hui",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.995,
+     "cover": 0.117
+    },
+    {
+     "level": "prefecture",
+     "name": "Zhongwei",
+     "local": "中卫市",
+     "province": "Ningxia Hui",
+     "country": "China",
+     "people_share": 0.949,
+     "cover": 0.723
+    }
+   ],
+   "towns": [
+    {
+     "town": "滨河镇",
+     "county": "沙坡头区",
+     "city": "中卫市",
+     "people_share": 0.086,
+     "cover": 1.0
+    },
+    {
+     "town": "宁安镇",
+     "county": "中宁县",
+     "city": "中卫市",
+     "people_share": 0.085,
+     "cover": 1.0
+    },
+    {
+     "town": "宣和镇",
+     "county": "沙坡头区",
+     "city": "中卫市",
+     "people_share": 0.068,
+     "cover": 1.0
+    },
+    {
+     "town": "文昌镇",
+     "county": "沙坡头区",
+     "city": "中卫市",
+     "people_share": 0.058,
+     "cover": 1.0
+    },
+    {
+     "town": "迎水桥镇",
+     "county": "沙坡头区",
+     "city": "中卫市",
+     "people_share": 0.054,
+     "cover": 0.995
+    },
+    {
+     "town": "大战场镇",
+     "county": "中宁县",
+     "city": "中卫市",
+     "people_share": 0.052,
+     "cover": 1.0
+    },
+    {
+     "town": "东园镇",
+     "county": "沙坡头区",
+     "city": "中卫市",
+     "people_share": 0.051,
+     "cover": 1.0
+    },
+    {
+     "town": "永康镇",
+     "county": "沙坡头区",
+     "city": "中卫市",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "河西镇",
+     "county": "同心县",
+     "city": "吴忠市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "舟塔乡",
+     "county": "中宁县",
+     "city": "中卫市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "新堡镇",
+     "county": "中宁县",
+     "city": "中卫市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "石空镇",
+     "county": "中宁县",
+     "city": "中卫市",
+     "people_share": 0.041,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Zhongwei",
+     "admin": "Ningxia",
+     "pop": 1067336
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#dff3d5",
+     "border_px": 2358,
+     "name": "Haiyuan"
+    },
+    {
+     "key": "#c9f3f1",
+     "border_px": 1822
+    },
+    {
+     "key": "#f6f5ea",
+     "border_px": 1703
+    },
+    {
+     "key": "#d0eec2",
+     "border_px": 585,
+     "name": "Wuzhong"
+    }
+   ],
+   "text_px": 0,
+   "n": 5,
+   "thumb": {
+    "x0": 6191,
+    "y0": 3002,
+    "k": 1.0,
+    "w": 258,
+    "h": 225
+   }
+  },
+  {
+   "key": "#dff3d5",
+   "color": "#dff3d5",
+   "lon": 106.426,
+   "lat": 37.1057,
+   "bbox": [
+    6324,
+    3005,
+    6514,
+    3238
+   ],
+   "area_px": 18627,
+   "people": 1188026,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Haiyuan",
+     "local": "海原县",
+     "prefecture": "Zhongwei",
+     "prefecture_local": "中卫市",
+     "province": "宁夏回族自治区",
+     "country": "China",
+     "people_share": 0.364,
+     "area_share": 0.241,
+     "cover": 0.998
+    },
+    {
+     "name": "Tongxin",
+     "local": "同心县",
+     "prefecture": "Wuzhong",
+     "prefecture_local": "吴忠市",
+     "province": "宁夏回族自治区",
+     "country": "China",
+     "people_share": 0.237,
+     "area_share": 0.19,
+     "cover": 0.871
+    },
+    {
+     "name": "Yanchi",
+     "local": "盐池县",
+     "prefecture": "Wuzhong",
+     "prefecture_local": "吴忠市",
+     "province": "宁夏回族自治区",
+     "country": "China",
+     "people_share": 0.133,
+     "area_share": 0.316,
+     "cover": 0.999
+    },
+    {
+     "name": "Yuanzhou",
+     "local": "原州区",
+     "prefecture": "Guyuan",
+     "prefecture_local": "固原市",
+     "province": "宁夏回族自治区",
+     "country": "China",
+     "people_share": 0.113,
+     "area_share": 0.07,
+     "cover": 0.325
+    },
+    {
+     "name": "Litong",
+     "local": "利通区",
+     "prefecture": "Wuzhong",
+     "prefecture_local": "吴忠市",
+     "province": "宁夏回族自治区",
+     "country": "China",
+     "people_share": 0.096,
+     "area_share": 0.07,
+     "cover": 0.22
+    },
+    {
+     "name": "Hongsibao",
+     "local": "红寺堡区",
+     "prefecture": "Wuzhong",
+     "prefecture_local": "吴忠市",
+     "province": "宁夏回族自治区",
+     "country": "China",
+     "people_share": 0.034,
+     "area_share": 0.061,
+     "cover": 0.509
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Ningxia Hui",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.998,
+     "cover": 0.166
+    },
+    {
+     "level": "prefecture",
+     "name": "Guyuan",
+     "local": "固原市",
+     "province": "Ningxia Hui",
+     "country": "China",
+     "people_share": 0.501,
+     "cover": 0.349
+    },
+    {
+     "level": "prefecture",
+     "name": "Zhongwei",
+     "local": "中卫市",
+     "province": "Ningxia Hui",
+     "country": "China",
+     "people_share": 0.253,
+     "cover": 0.273
+    },
+    {
+     "level": "prefecture",
+     "name": "Wuzhong",
+     "local": "吴忠市",
+     "province": "Ningxia Hui",
+     "country": "China",
+     "people_share": 0.244,
+     "cover": 0.222
+    }
+   ],
+   "towns": [
+    {
+     "town": "孙家滩管委会",
+     "county": "利通区",
+     "city": "吴忠市",
+     "people_share": 0.081,
+     "cover": 0.917
+    },
+    {
+     "town": "花马池镇",
+     "county": "盐池县",
+     "city": "吴忠市",
+     "people_share": 0.072,
+     "cover": 1.0
+    },
+    {
+     "town": "豫海镇",
+     "county": "同心县",
+     "city": "吴忠市",
+     "people_share": 0.063,
+     "cover": 1.0
+    },
+    {
+     "town": "王团镇",
+     "county": "同心县",
+     "city": "吴忠市",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "丁塘镇",
+     "county": "同心县",
+     "city": "吴忠市",
+     "people_share": 0.037,
+     "cover": 0.939
+    },
+    {
+     "town": "海城镇",
+     "county": "海原县",
+     "city": "中卫市",
+     "people_share": 0.034,
+     "cover": 1.0
+    },
+    {
+     "town": "红寺堡开发区太阳山镇",
+     "county": "红寺堡区",
+     "city": "吴忠市",
+     "people_share": 0.032,
+     "cover": 0.99
+    },
+    {
+     "town": "头营镇",
+     "county": "原州区",
+     "city": "固原市",
+     "people_share": 0.03,
+     "cover": 0.999
+    },
+    {
+     "town": "三河镇",
+     "county": "海原县",
+     "city": "中卫市",
+     "people_share": 0.03,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#e9eed0",
+     "border_px": 2437
+    },
+    {
+     "key": "#ccf6c4",
+     "border_px": 2358,
+     "name": "Zhongwei"
+    },
+    {
+     "key": "#cbf1cb",
+     "border_px": 1525,
+     "name": "Guyuan"
+    },
+    {
+     "key": "#e8e6d7",
+     "border_px": 1435
+    },
+    {
+     "key": "#d0eec2",
+     "border_px": 1414,
+     "name": "Wuzhong"
+    },
+    {
+     "key": "#f1efde",
+     "border_px": 1116
+    },
+    {
+     "key": "#c9f3f1",
+     "border_px": 558
+    },
+    {
+     "key": "#d1f1eb",
+     "border_px": 399
+    }
+   ],
+   "text_px": 0,
+   "n": 6,
+   "thumb": {
+    "x0": 6243,
+    "y0": 2924,
+    "k": 1.0,
+    "w": 352,
+    "h": 395
+   }
+  },
+  {
+   "key": "#cbf1cb",
+   "color": "#cbf1cb",
+   "lon": 106.174,
+   "lat": 35.8555,
+   "bbox": [
+    6340,
+    3211,
+    6472,
+    3324
+   ],
+   "area_px": 8082,
+   "people": 1059617,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Xiji",
+     "local": "西吉县",
+     "prefecture": "Guyuan",
+     "prefecture_local": "固原市",
+     "province": "宁夏回族自治区",
+     "country": "China",
+     "people_share": 0.319,
+     "area_share": 0.326,
+     "cover": 0.949
+    },
+    {
+     "name": "Yuanzhou",
+     "local": "原州区",
+     "prefecture": "Guyuan",
+     "prefecture_local": "固原市",
+     "province": "宁夏回族自治区",
+     "country": "China",
+     "people_share": 0.263,
+     "area_share": 0.148,
+     "cover": 0.675
+    },
+    {
+     "name": "Pengyang",
+     "local": "彭阳县",
+     "prefecture": "Guyuan",
+     "prefecture_local": "固原市",
+     "province": "宁夏回族自治区",
+     "country": "China",
+     "people_share": 0.187,
+     "area_share": 0.28,
+     "cover": 0.995
+    },
+    {
+     "name": "Longde",
+     "local": "隆德县",
+     "prefecture": "Guyuan",
+     "prefecture_local": "固原市",
+     "province": "宁夏回族自治区",
+     "country": "China",
+     "people_share": 0.131,
+     "area_share": 0.104,
+     "cover": 0.887
+    },
+    {
+     "name": "Jingyuan",
+     "local": "泾源县",
+     "prefecture": "Guyuan",
+     "prefecture_local": "固原市",
+     "province": "宁夏回族自治区",
+     "country": "China",
+     "people_share": 0.092,
+     "area_share": 0.125,
+     "cover": 0.999
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Ningxia Hui",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.991,
+     "cover": 0.147
+    },
+    {
+     "level": "prefecture",
+     "name": "Guyuan",
+     "local": "固原市",
+     "province": "Ningxia Hui",
+     "country": "China",
+     "people_share": 0.991,
+     "cover": 0.615
+    }
+   ],
+   "towns": [
+    {
+     "town": "吉强镇",
+     "county": "西吉县",
+     "city": "固原市",
+     "people_share": 0.077,
+     "cover": 1.0
+    },
+    {
+     "town": "官厅镇",
+     "county": "原州区",
+     "city": "固原市",
+     "people_share": 0.053,
+     "cover": 0.962
+    },
+    {
+     "town": "白阳镇",
+     "county": "彭阳县",
+     "city": "固原市",
+     "people_share": 0.051,
+     "cover": 1.0
+    },
+    {
+     "town": "北塬街道",
+     "county": "原州区",
+     "city": "固原市",
+     "people_share": 0.049,
+     "cover": 1.0
+    },
+    {
+     "town": "新区街道",
+     "county": "原州区",
+     "city": "固原市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "张易镇",
+     "county": "原州区",
+     "city": "固原市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "兴隆镇",
+     "county": "西吉县",
+     "city": "固原市",
+     "people_share": 0.032,
+     "cover": 0.99
+    }
+   ],
+   "cities": [
+    {
+     "name": "Guyuan",
+     "admin": "Ningxia",
+     "pop": 1142142
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#dff3d5",
+     "border_px": 1525,
+     "name": "Haiyuan"
+    },
+    {
+     "key": "#cce8d9",
+     "border_px": 1417
+    },
+    {
+     "key": "#e4eed5",
+     "border_px": 1283
+    },
+    {
+     "key": "#e9eed0",
+     "border_px": 1254
+    },
+    {
+     "key": "#d1f1eb",
+     "border_px": 873
+    },
+    {
+     "key": "#d4e5ce",
+     "border_px": 164
+    }
+   ],
+   "text_px": 0,
+   "n": 7,
+   "thumb": {
+    "x0": 6294,
+    "y0": 3165,
+    "k": 1.0,
+    "w": 224,
+    "h": 205
+   }
+  }
+ ]
+}

@@ -20,10 +20,14 @@ def _sn_counts():
     Tableau 1.15's one-decimal shares on Tableau 1.2's région populations, and the Diourbel
     report's Tableau 1.12 counts raked to its two printed margins (sources/sn.py).
     """
+    import sn1988
     from sn1988 import resolve
 
     df = pd.read_csv(HERE / "data" / "normalized" / "sn.csv",
                      low_memory=False, keep_default_na=False, na_values=[""])
+    # 2026-10-16: the nine régions' `Chrétiens` split 92/8 (sources/wa_christian.py); `derived`.
+    # Diourbel's three départements already print codes 6 and 7 and stay `measured`.
+    df = _swap_christian_split(df, "sn", "Chrétiens")
     df["count"] = df["count"].astype(int)
     if df["geo_id"].nunique() != 12:
         raise SystemExit(f"{df['geo_id'].nunique()} units in sn.csv, expected 12 -- re-run "
@@ -34,9 +38,10 @@ def _sn_counts():
         raise SystemExit(f"sn.csv categories with no node: {unmapped}")
     df = df[df["count"] > 0].rename(columns={"geo_id": "unit"})
     df["congregations"] = 0
-    df["may_ring"] = True
-    df["tier"] = "measured"
-    return df[["unit", "node", "count", "congregations", "may_ring", "tier"]]
+    df["tier"] = df["split"].map({True: "derived", False: "measured"})
+    df["may_ring"] = ~df["split"]
+    df = _add_roll(df, sn1988.COLUMNS)
+    return df[["unit", "node", "count", "congregations", "may_ring", "tier", "roll"]]
 
 
 ENTRY = {
@@ -62,13 +67,15 @@ ENTRY = {
             "**Christians and other religions were most common in Ziguinchor.** It was **17.1%** "
             "Christian and 7.7% other religions, which the census report describes as mainly "
             "animism. The census printed Catholics and other Christians together, except in "
-            "Diourbel. "
+            "Diourbel, where **94%** of Christians were Catholic; every other region is drawn "
+            "92% Catholic. "
             "**The dots are placed using today's population.** The counts are from 1988, when "
             "Senegal had 6.9 million people, but inside each unit they are spread by a 2023 "
             "population grid, so a fast-growing town such as Touba holds more of its "
             "department's dots than its 1988 population would. Some borders between regions "
             "have also moved since 1988."),
         how="census, 1988",
+        fill="from the same census's Catholic share in Diourbel",
         grain="regions of 1988, and departments in Diourbel; 575,000 people on average",
         # Tableau 1.1's 6,896,808 are residents of ordinary households; p8 adds "35000
         # personnes vivant dans la population comptée à part" (barracks, prisons), in no table.

@@ -1,0 +1,15 @@
+batch henan-east
+2: pick Minquan
+3: pick Yucheng
+5: pick Zhecheng
+6: pick Fugou
+7: pick Taikang
+9: pick Luyi
+10: pick Huaiyang
+11: pick Xihua
+12: pick Dancheng
+13: pick Zhoukou
+14: pick Xiangcheng
+15: pick Shenqiu
+16: pick Shangqiu
+17: pick Ningling

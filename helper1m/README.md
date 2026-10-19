@@ -123,11 +123,23 @@ and share one palette, `scripts/language_colors.csv`.
   ASPECT grid rather than joined by county name, because the two boundary
   vintages disagree about where the urban districts end
   (`scripts/china/ethnicity.py`).
-- **india** — three levels (state/UT, district, subdistrict) on 2011-census
+- **india** — four levels (state/UT, district, subdistrict, level 4 below) on 2011-census
   boundaries (SHRUG 2.1 open polygons). No post-2011 census exists, so
   populations come from the IIPS district projections (Dhar 2022, Table 8) at
   five-year steps 2011–2031: states summed from districts, subdistricts scaled
-  by their 2011 census share. Fetcher: `scripts/india/fetch.py`. Composition:
+  by their 2011 census share. The census's 99999 rows (17.4M people in towns
+  outside any block, West Bengal, Tripura and Karnataka) go to the
+  sub-districts their towns stand in, not pro rata over the district.
+  Level 4 is level 3 with 26 of the 30 sub-districts over 2 million (2026) split
+  into 142 parts from the Census 2011 town, village and ward abstract (PCA TV):
+  Mumbai by BMC admin ward, Bangalore by assembly constituency, Chennai by zone,
+  Kolkata, Lucknow, Jaipur and Delhi's Saraswati Vihar by groups of census wards
+  placed on DataMeet ward maps checked against the 2011 wards, and the other
+  tehsils into their big towns and groups of villages. Part outlines are Voronoi
+  cells around those places, a rough gist. Ahmadabad, Surat, Pune and Nagpur stay
+  whole, and many towns over 1 million are one part, for want of a 2011 ward map
+  (`scripts/india/level4.py` has the record).
+  Fetcher: `scripts/india/fetch.py`. Composition:
   mother tongue at all three levels, from Census 2011 table C-16, which goes
   down to the sub-district (`scripts/india/fetch_c16.py` downloads it,
   `scripts/india/language.py` builds it). Hindi's varieties (Bhojpuri,

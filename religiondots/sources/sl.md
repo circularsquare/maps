@@ -183,3 +183,24 @@ in the sea. No ask, nothing rebuilt.
 - **Reopen under §14.4 rule 2 if a later build splits Ahmadis out.** The 2021 mid-term census
   asked denominations, and the 2004 Table 8A split survives for Bo District, Bo Town, Western Area
   Urban and Bombali (§1). Such a build should start from the incident above.
+
+## Churches drawn, 2026-10-16 (session `c67d3c3c-westafrica`)
+
+On Anita's call (unspecified_splits/westafrica.md §3), `Christianity` (1,547,129) is replaced in
+every district by the census's own six codes at their national shares, National Analytical Report
+Table 3.25: Catholic 7.0, Pentecostal 5.3, other Christian 4.7, Methodist 3.0, Anglican 1.2, SDA
+0.7 (% of the household population; sum 21.9). As shares of Christians: 32.0 / 24.2 / 21.5 / 13.7
+/ 5.5 / 3.2. This is Bulgaria's case: the magnitudes are the publisher's and only their
+distribution over districts is borrowed. `sources/wa_christian.py sl` writes
+`data/normalized/sl_split.csv`; countries/sl.py swaps it in, `tier="derived"`, never rings, and
+rolls back to `Christianity` through `sl2015.COLUMNS`.
+
+Witnesses: the Afrobarometer's named Christians (n=693) give Catholic 34.4, Pentecostal 21.2,
+Methodist 20.3, Anglican 6.8; Pew 2010 gives Catholic 33.6% of Christians. The Church's 2023 claim,
+349,000 (4.0% of 8.69M), sits under the census's 7.0%. A provincial shape exists in the survey
+(Methodists east and south, Catholics north, Pentecostals Western Area) but on five provinces it
+cannot be tested, so the split is flat.
+
+Correction to sl2015.py's earlier note: it said a uniform 7.0% Catholic share could not fit
+Pujehun (4.8% Christian). That read 7.0 as a share of each district's population; applied as
+32.0% of each district's Christians, it always fits.

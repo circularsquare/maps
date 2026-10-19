@@ -1,0 +1,1981 @@
+{
+ "name": "sichuan-west",
+ "province": "Sichuan",
+ "prefectures": [
+  "Liangshan Yi Autonomous Prefecture",
+  "Ngawa Tibetan and Qiang Autonomous Prefecture",
+  "Garzê Tibetan Autonomous Prefecture",
+  "Ya'an",
+  "Panzhihua"
+ ],
+ "tiles": [
+  {
+   "tag": "1",
+   "x": 5462,
+   "y": 3260,
+   "w": 800,
+   "h": 800,
+   "scale": 2,
+   "regions": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ]
+  },
+  {
+   "tag": "2",
+   "x": 6262,
+   "y": 3260,
+   "w": 254,
+   "h": 800,
+   "scale": 2,
+   "regions": [
+    1,
+    4
+   ]
+  },
+  {
+   "tag": "3",
+   "x": 5462,
+   "y": 4060,
+   "w": 800,
+   "h": 501,
+   "scale": 2,
+   "regions": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ]
+  },
+  {
+   "tag": "4",
+   "x": 6262,
+   "y": 4060,
+   "w": 254,
+   "h": 501,
+   "scale": 2,
+   "regions": [
+    4
+   ]
+  }
+ ],
+ "regions": [
+  {
+   "key": "#edf4e9",
+   "color": "#edf4e9",
+   "lon": 102.4391,
+   "lat": 32.2404,
+   "bbox": [
+    5891,
+    3460,
+    6316,
+    3904
+   ],
+   "area_px": 90167,
+   "people": 1048842,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Mao",
+     "local": "茂县",
+     "prefecture": "Abazangzuqiangzu",
+     "prefecture_local": "阿坝藏族羌族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.095,
+     "area_share": 0.039,
+     "cover": 1.0
+    },
+    {
+     "name": "Wenchuan",
+     "local": "汶川县",
+     "prefecture": "Abazangzuqiangzu",
+     "prefecture_local": "阿坝藏族羌族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.085,
+     "area_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "name": "Beichuan Qiang",
+     "local": "北川羌族自治县",
+     "prefecture": "Mianyang",
+     "prefecture_local": "绵阳市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.072,
+     "area_share": 0.026,
+     "cover": 0.388
+    },
+    {
+     "name": "Xiaojin",
+     "local": "小金县",
+     "prefecture": "Abazangzuqiangzu",
+     "prefecture_local": "阿坝藏族羌族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.072,
+     "area_share": 0.056,
+     "cover": 1.0
+    },
+    {
+     "name": "Jiuzhaigou",
+     "local": "九寨沟县",
+     "prefecture": "Abazangzuqiangzu",
+     "prefecture_local": "阿坝藏族羌族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.066,
+     "area_share": 0.052,
+     "cover": 0.989
+    },
+    {
+     "name": "Aba",
+     "local": "阿坝县",
+     "prefecture": "Abazangzuqiangzu",
+     "prefecture_local": "阿坝藏族羌族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.063,
+     "area_share": 0.096,
+     "cover": 0.948
+    },
+    {
+     "name": "Zoigê",
+     "local": "若尔盖县",
+     "prefecture": "Abazangzuqiangzu",
+     "prefecture_local": "阿坝藏族羌族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.063,
+     "area_share": 0.093,
+     "cover": 0.857
+    },
+    {
+     "name": "Songpan",
+     "local": "松潘县",
+     "prefecture": "Abazangzuqiangzu",
+     "prefecture_local": "阿坝藏族羌族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.06,
+     "area_share": 0.082,
+     "cover": 0.955
+    },
+    {
+     "name": "Jinchuan",
+     "local": "金川县",
+     "prefecture": "Abazangzuqiangzu",
+     "prefecture_local": "阿坝藏族羌族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.058,
+     "area_share": 0.054,
+     "cover": 0.999
+    },
+    {
+     "name": "Danba",
+     "local": "丹巴县",
+     "prefecture": "Ganzizangzu",
+     "prefecture_local": "甘孜藏族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.058,
+     "area_share": 0.044,
+     "cover": 0.997
+    },
+    {
+     "name": "Heishui",
+     "local": "黑水县",
+     "prefecture": "Abazangzuqiangzu",
+     "prefecture_local": "阿坝藏族羌族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.057,
+     "area_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "name": "Barkam",
+     "local": "马尔康县",
+     "prefecture": "Abazangzuqiangzu",
+     "prefecture_local": "阿坝藏族羌族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.053,
+     "area_share": 0.067,
+     "cover": 1.0
+    },
+    {
+     "name": "Sêrtar",
+     "local": "色达县",
+     "prefecture": "Ganzizangzu",
+     "prefecture_local": "甘孜藏族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.048,
+     "area_share": 0.06,
+     "cover": 0.832
+    },
+    {
+     "name": "Li",
+     "local": "理县",
+     "prefecture": "Abazangzuqiangzu",
+     "prefecture_local": "阿坝藏族羌族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.042,
+     "area_share": 0.044,
+     "cover": 1.0
+    },
+    {
+     "name": "Hongyuan",
+     "local": "红原县",
+     "prefecture": "Abazangzuqiangzu",
+     "prefecture_local": "阿坝藏族羌族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.04,
+     "area_share": 0.084,
+     "cover": 1.0
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Sichuan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.99,
+     "cover": 0.013
+    },
+    {
+     "level": "prefecture",
+     "name": "Ngawa Tibetan and Qiang Autonomous Prefecture",
+     "local": "阿坝藏族羌族自治州",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.79,
+     "cover": 0.977
+    },
+    {
+     "level": "prefecture",
+     "name": "Garzê Tibetan Autonomous Prefecture",
+     "local": "甘孜藏族自治州",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.126,
+     "cover": 0.121
+    },
+    {
+     "level": "prefecture",
+     "name": "Mianyang",
+     "local": "绵阳市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.073,
+     "cover": 0.019
+    }
+   ],
+   "towns": [
+    {
+     "town": "凤仪镇",
+     "county": "茂县",
+     "city": "阿坝藏族羌族自治州",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "马尔康镇",
+     "county": "马尔康县",
+     "city": "阿坝藏族羌族自治州",
+     "people_share": 0.028,
+     "cover": 1.0
+    },
+    {
+     "town": "威州镇",
+     "county": "汶川县",
+     "city": "阿坝藏族羌族自治州",
+     "people_share": 0.025,
+     "cover": 1.0
+    },
+    {
+     "town": "芦花镇",
+     "county": "黑水县",
+     "city": "阿坝藏族羌族自治州",
+     "people_share": 0.015,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f4f5ef",
+     "border_px": 6052
+    },
+    {
+     "key": "#f0f4e6",
+     "border_px": 6005
+    },
+    {
+     "key": "#f1ebe7",
+     "border_px": 4038
+    },
+    {
+     "key": "#ebf3e6",
+     "border_px": 2818
+    },
+    {
+     "key": "#f3d8cb",
+     "border_px": 1927
+    },
+    {
+     "key": "#f4c5bc",
+     "border_px": 1403
+    },
+    {
+     "key": "#f4bcbe",
+     "border_px": 757
+    },
+    {
+     "key": "#f4bebc",
+     "border_px": 585
+    },
+    {
+     "key": "#f7f9ee",
+     "border_px": 478
+    },
+    {
+     "key": "#eec7cc",
+     "border_px": 214
+    },
+    {
+     "key": "#f4cdba",
+     "border_px": 125
+    }
+   ],
+   "text_px": 0,
+   "n": 1,
+   "thumb": {
+    "x0": 5736,
+    "y0": 3305,
+    "k": 0.6896551724137931,
+    "w": 506,
+    "h": 520
+   }
+  },
+  {
+   "key": "#f3d8cb",
+   "color": "#f3d8cb",
+   "lon": 102.7861,
+   "lat": 30.1457,
+   "bbox": [
+    6115,
+    3818,
+    6207,
+    3985
+   ],
+   "area_px": 9974,
+   "people": 1091262,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yucheng",
+     "local": "雨城区",
+     "prefecture": "Ya An",
+     "prefecture_local": "雅安市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.421,
+     "area_share": 0.096,
+     "cover": 1.0
+    },
+    {
+     "name": "Mingshan",
+     "local": "名山区",
+     "prefecture": "Ya An",
+     "prefecture_local": "雅安市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.172,
+     "area_share": 0.042,
+     "cover": 0.814
+    },
+    {
+     "name": "Yingjing",
+     "local": "荥经县",
+     "prefecture": "Ya An",
+     "prefecture_local": "雅安市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.123,
+     "area_share": 0.161,
+     "cover": 1.0
+    },
+    {
+     "name": "Tianquan",
+     "local": "天全县",
+     "prefecture": "Ya An",
+     "prefecture_local": "雅安市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.116,
+     "area_share": 0.215,
+     "cover": 1.0
+    },
+    {
+     "name": "Lushan",
+     "local": "芦山县",
+     "prefecture": "Ya An",
+     "prefecture_local": "雅安市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.091,
+     "area_share": 0.107,
+     "cover": 0.997
+    },
+    {
+     "name": "Baoxing",
+     "local": "宝兴县",
+     "prefecture": "Ya An",
+     "prefecture_local": "雅安市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.048,
+     "area_share": 0.281,
+     "cover": 1.0
+    },
+    {
+     "name": "Hongya",
+     "local": "洪雅县",
+     "prefecture": "Meishan",
+     "prefecture_local": "眉山市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.023,
+     "area_share": 0.083,
+     "cover": 0.088
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Sichuan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.014
+    },
+    {
+     "level": "prefecture",
+     "name": "Ya'an",
+     "local": "雅安市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.973,
+     "cover": 0.701
+    }
+   ],
+   "towns": [
+    {
+     "town": "北郊镇",
+     "county": "雨城区",
+     "city": "雅安市",
+     "people_share": 0.118,
+     "cover": 1.0
+    },
+    {
+     "town": "对岩镇",
+     "county": "雨城区",
+     "city": "雅安市",
+     "people_share": 0.052,
+     "cover": 1.0
+    },
+    {
+     "town": "青江街道",
+     "county": "雨城区",
+     "city": "雅安市",
+     "people_share": 0.046,
+     "cover": 1.0
+    },
+    {
+     "town": "大兴镇",
+     "county": "雨城区",
+     "city": "雅安市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "南郊乡",
+     "county": "雨城区",
+     "city": "雅安市",
+     "people_share": 0.032,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Yucheng",
+     "admin": "Sichuan",
+     "pop": 1507258
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#edd6cb",
+     "border_px": 2143
+    },
+    {
+     "key": "#edf4e9",
+     "border_px": 1927
+    },
+    {
+     "key": "#f4cdba",
+     "border_px": 1378
+    },
+    {
+     "key": "#f3cab7",
+     "border_px": 1033
+    },
+    {
+     "key": "#f0f4e6",
+     "border_px": 145
+    }
+   ],
+   "text_px": 0,
+   "n": 2,
+   "thumb": {
+    "x0": 6057,
+    "y0": 3760,
+    "k": 1.0,
+    "w": 208,
+    "h": 283
+   }
+  },
+  {
+   "key": "#f0f4e6",
+   "color": "#f0f4e6",
+   "lon": 99.7216,
+   "lat": 29.7494,
+   "bbox": [
+    5662,
+    3688,
+    6117,
+    4226
+   ],
+   "area_px": 128995,
+   "people": 989258,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Xianggelila",
+     "local": "香格里拉县",
+     "prefecture": "Diqingzangzu",
+     "prefecture_local": "迪庆藏族自治州",
+     "province": "云南省",
+     "country": "China",
+     "people_share": 0.114,
+     "area_share": 0.061,
+     "cover": 0.584
+    },
+    {
+     "name": "Kangding",
+     "local": "康定县",
+     "prefecture": "Ganzizangzu",
+     "prefecture_local": "甘孜藏族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.109,
+     "area_share": 0.062,
+     "cover": 0.823
+    },
+    {
+     "name": "Markam",
+     "local": "芒康县",
+     "prefecture": "Changdou",
+     "prefecture_local": "昌都地区",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.085,
+     "area_share": 0.081,
+     "cover": 0.998
+    },
+    {
+     "name": "Litang",
+     "local": "理塘县",
+     "prefecture": "Ganzizangzu",
+     "prefecture_local": "甘孜藏族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.071,
+     "area_share": 0.099,
+     "cover": 1.0
+    },
+    {
+     "name": "Dêqên",
+     "local": "德钦县",
+     "prefecture": "Diqingzangzu",
+     "prefecture_local": "迪庆藏族自治州",
+     "province": "云南省",
+     "country": "China",
+     "people_share": 0.069,
+     "area_share": 0.051,
+     "cover": 1.0
+    },
+    {
+     "name": "Baiyü",
+     "local": "白玉县",
+     "prefecture": "Ganzizangzu",
+     "prefecture_local": "甘孜藏族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.057,
+     "area_share": 0.072,
+     "cover": 0.999
+    },
+    {
+     "name": "Dawu",
+     "local": "道孚县",
+     "prefecture": "Ganzizangzu",
+     "prefecture_local": "甘孜藏族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.055,
+     "area_share": 0.049,
+     "cover": 0.999
+    },
+    {
+     "name": "Garzê",
+     "local": "甘孜县",
+     "prefecture": "Ganzizangzu",
+     "prefecture_local": "甘孜藏族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.055,
+     "area_share": 0.027,
+     "cover": 0.812
+    },
+    {
+     "name": "Zogang",
+     "local": "左贡县",
+     "prefecture": "Changdou",
+     "prefecture_local": "昌都地区",
+     "province": "西藏自治区",
+     "country": "China",
+     "people_share": 0.051,
+     "area_share": 0.083,
+     "cover": 0.994
+    },
+    {
+     "name": "Yajiang",
+     "local": "雅江县",
+     "prefecture": "Ganzizangzu",
+     "prefecture_local": "甘孜藏族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.05,
+     "area_share": 0.052,
+     "cover": 1.0
+    },
+    {
+     "name": "Luhuo",
+     "local": "炉霍县",
+     "prefecture": "Ganzizangzu",
+     "prefecture_local": "甘孜藏族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.049,
+     "area_share": 0.031,
+     "cover": 1.0
+    },
+    {
+     "name": "Batang",
+     "local": "巴塘县",
+     "prefecture": "Ganzizangzu",
+     "prefecture_local": "甘孜藏族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.048,
+     "area_share": 0.054,
+     "cover": 1.0
+    },
+    {
+     "name": "Xinlong",
+     "local": "新龙县",
+     "prefecture": "Ganzizangzu",
+     "prefecture_local": "甘孜藏族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.047,
+     "area_share": 0.066,
+     "cover": 1.0
+    },
+    {
+     "name": "Daocheng",
+     "local": "稻城县",
+     "prefecture": "Ganzizangzu",
+     "prefecture_local": "甘孜藏族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.036,
+     "area_share": 0.05,
+     "cover": 1.0
+    },
+    {
+     "name": "Xiangcheng",
+     "local": "乡城县",
+     "prefecture": "Ganzizangzu",
+     "prefecture_local": "甘孜藏族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.033,
+     "area_share": 0.035,
+     "cover": 1.0
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Sichuan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.66,
+     "cover": 0.008
+    },
+    {
+     "level": "prefecture",
+     "name": "Garzê Tibetan Autonomous Prefecture",
+     "local": "甘孜藏族自治州",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.639,
+     "cover": 0.58
+    },
+    {
+     "level": "province",
+     "name": "Yunnan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.184,
+     "cover": 0.004
+    },
+    {
+     "level": "prefecture",
+     "name": "Dêqên Tibetan Autonomous Prefecture",
+     "local": "迪庆藏族自治州",
+     "province": "Yunnan",
+     "country": "China",
+     "people_share": 0.184,
+     "cover": 0.428
+    },
+    {
+     "level": "province",
+     "name": "Xizang",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.156,
+     "cover": 0.047
+    },
+    {
+     "level": "prefecture",
+     "name": "Qamdo",
+     "local": "昌都市",
+     "province": "Xizang",
+     "country": "China",
+     "people_share": 0.144,
+     "cover": 0.202
+    }
+   ],
+   "towns": [
+    {
+     "town": "建塘镇",
+     "county": "香格里拉县",
+     "city": "迪庆藏族自治州",
+     "people_share": 0.071,
+     "cover": 1.0
+    },
+    {
+     "town": "炉城镇",
+     "county": "康定县",
+     "city": "甘孜藏族自治州",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "旺达镇",
+     "county": "左贡县",
+     "city": "昌都地区",
+     "people_share": 0.022,
+     "cover": 1.0
+    },
+    {
+     "town": "高城镇",
+     "county": "理塘县",
+     "city": "甘孜藏族自治州",
+     "people_share": 0.02,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Lucheng",
+     "admin": "Sichuan",
+     "pop": 130142
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f7f9ee",
+     "border_px": 8292
+    },
+    {
+     "key": "#edf4e9",
+     "border_px": 6005
+    },
+    {
+     "key": "#e8e8d1",
+     "border_px": 3790
+    },
+    {
+     "key": "#ebdac9",
+     "border_px": 3221
+    },
+    {
+     "key": "#f9f8ee",
+     "border_px": 2208
+    },
+    {
+     "key": "#f4e9d6",
+     "border_px": 1856
+    },
+    {
+     "key": "#edd6cb",
+     "border_px": 1409
+    },
+    {
+     "key": "#e9e0c0",
+     "border_px": 802
+    },
+    {
+     "key": "#e2d5c0",
+     "border_px": 556
+    },
+    {
+     "key": "#f3d8cb",
+     "border_px": 145
+    }
+   ],
+   "text_px": 0,
+   "n": 3,
+   "thumb": {
+    "x0": 5474,
+    "y0": 3500,
+    "k": 0.5689277899343544,
+    "w": 472,
+    "h": 520
+   }
+  },
+  {
+   "key": "#e7ddc7",
+   "color": "#e7ddc7",
+   "lon": 103.1103,
+   "lat": 28.7152,
+   "bbox": [
+    6131,
+    4000,
+    6267,
+    4135
+   ],
+   "area_px": 11289,
+   "people": 942289,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yuexi",
+     "local": "越西县",
+     "prefecture": "Liangshanyizu",
+     "prefecture_local": "凉山彝族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.277,
+     "area_share": 0.181,
+     "cover": 1.0
+    },
+    {
+     "name": "Leibo",
+     "local": "雷波县",
+     "prefecture": "Liangshanyizu",
+     "prefecture_local": "凉山彝族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.225,
+     "area_share": 0.191,
+     "cover": 0.805
+    },
+    {
+     "name": "Ganluo",
+     "local": "甘洛县",
+     "prefecture": "Liangshanyizu",
+     "prefecture_local": "凉山彝族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.201,
+     "area_share": 0.166,
+     "cover": 0.981
+    },
+    {
+     "name": "Mabian Yi",
+     "local": "马边彝族自治县",
+     "prefecture": "Leshan",
+     "prefecture_local": "乐山市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.17,
+     "area_share": 0.179,
+     "cover": 0.983
+    },
+    {
+     "name": "Meigu",
+     "local": "美姑县",
+     "prefecture": "Liangshanyizu",
+     "prefecture_local": "凉山彝族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.056,
+     "area_share": 0.106,
+     "cover": 0.256
+    },
+    {
+     "name": "Ebian Yi",
+     "local": "峨边彝族自治县",
+     "prefecture": "Leshan",
+     "prefecture_local": "乐山市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.056,
+     "area_share": 0.156,
+     "cover": 0.41
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Sichuan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.992,
+     "cover": 0.012
+    },
+    {
+     "level": "prefecture",
+     "name": "Liangshan Yi Autonomous Prefecture",
+     "local": "凉山彝族自治州",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.756,
+     "cover": 0.159
+    },
+    {
+     "level": "prefecture",
+     "name": "Leshan",
+     "local": "乐山市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.233,
+     "cover": 0.062
+    }
+   ],
+   "towns": [
+    {
+     "town": "新市坝镇",
+     "county": "甘洛县",
+     "city": "凉山彝族自治州",
+     "people_share": 0.059,
+     "cover": 1.0
+    },
+    {
+     "town": "民建镇",
+     "county": "马边彝族自治县",
+     "city": "乐山市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "西山乡",
+     "county": "越西县",
+     "city": "凉山彝族自治州",
+     "people_share": 0.02,
+     "cover": 1.0
+    },
+    {
+     "town": "越城镇",
+     "county": "越西县",
+     "city": "凉山彝族自治州",
+     "people_share": 0.018,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#edd6cb",
+     "border_px": 2121
+    },
+    {
+     "key": "#e7e5c7",
+     "border_px": 1698
+    },
+    {
+     "key": "#f0cfac",
+     "border_px": 1348
+    },
+    {
+     "key": "#e8e8d1",
+     "border_px": 1064
+    },
+    {
+     "key": "#f0e3b9",
+     "border_px": 621
+    },
+    {
+     "key": "#ebe1bf",
+     "border_px": 500
+    }
+   ],
+   "text_px": 0,
+   "n": 4,
+   "thumb": {
+    "x0": 6084,
+    "y0": 3953,
+    "k": 1.0,
+    "w": 230,
+    "h": 229
+   }
+  },
+  {
+   "key": "#e8e8d1",
+   "color": "#e8e8d1",
+   "lon": 101.6024,
+   "lat": 28.2377,
+   "bbox": [
+    5986,
+    4001,
+    6164,
+    4243
+   ],
+   "area_px": 28240,
+   "people": 1111734,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Mianning",
+     "local": "冕宁县",
+     "prefecture": "Liangshanyizu",
+     "prefecture_local": "凉山彝族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.306,
+     "area_share": 0.141,
+     "cover": 1.0
+    },
+    {
+     "name": "Yanyuan",
+     "local": "盐源县",
+     "prefecture": "Liangshanyizu",
+     "prefecture_local": "凉山彝族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.299,
+     "area_share": 0.268,
+     "cover": 0.994
+    },
+    {
+     "name": "Xide",
+     "local": "喜德县",
+     "prefecture": "Liangshanyizu",
+     "prefecture_local": "凉山彝族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.16,
+     "area_share": 0.069,
+     "cover": 0.964
+    },
+    {
+     "name": "Muli Tibetan",
+     "local": "木里藏族自治县",
+     "prefecture": "Liangshanyizu",
+     "prefecture_local": "凉山彝族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.087,
+     "area_share": 0.246,
+     "cover": 0.816
+    },
+    {
+     "name": "Xichang",
+     "local": "西昌市",
+     "prefecture": "Liangshanyizu",
+     "prefecture_local": "凉山彝族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.075,
+     "area_share": 0.042,
+     "cover": 0.121
+    },
+    {
+     "name": "Jiulong",
+     "local": "九龙县",
+     "prefecture": "Ganzizangzu",
+     "prefecture_local": "甘孜藏族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.057,
+     "area_share": 0.216,
+     "cover": 0.999
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Sichuan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.999,
+     "cover": 0.014
+    },
+    {
+     "level": "prefecture",
+     "name": "Liangshan Yi Autonomous Prefecture",
+     "local": "凉山彝族自治州",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.94,
+     "cover": 0.233
+    },
+    {
+     "level": "prefecture",
+     "name": "Garzê Tibetan Autonomous Prefecture",
+     "local": "甘孜藏族自治州",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.058,
+     "cover": 0.059
+    }
+   ],
+   "towns": [
+    {
+     "town": "盐井镇",
+     "county": "盐源县",
+     "city": "凉山彝族自治州",
+     "people_share": 0.031,
+     "cover": 1.0
+    },
+    {
+     "town": "双河乡",
+     "county": "盐源县",
+     "city": "凉山彝族自治州",
+     "people_share": 0.028,
+     "cover": 1.0
+    },
+    {
+     "town": "回坪乡",
+     "county": "冕宁县",
+     "city": "凉山彝族自治州",
+     "people_share": 0.026,
+     "cover": 1.0
+    },
+    {
+     "town": "沙坝镇",
+     "county": "冕宁县",
+     "city": "凉山彝族自治州",
+     "people_share": 0.023,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f0f4e6",
+     "border_px": 3790
+    },
+    {
+     "key": "#e2d5c0",
+     "border_px": 2549
+    },
+    {
+     "key": "#e4e0a5",
+     "border_px": 1873
+    },
+    {
+     "key": "#e7ddc7",
+     "border_px": 1064
+    },
+    {
+     "key": "#edd6cb",
+     "border_px": 1044
+    },
+    {
+     "key": "#e7e5c7",
+     "border_px": 837
+    },
+    {
+     "key": "#f2d5a9",
+     "border_px": 215
+    }
+   ],
+   "text_px": 0,
+   "n": 5,
+   "thumb": {
+    "x0": 5902,
+    "y0": 3917,
+    "k": 1.0,
+    "w": 346,
+    "h": 410
+   }
+  },
+  {
+   "key": "#e7e5c7",
+   "color": "#e7e5c7",
+   "lon": 102.9035,
+   "lat": 27.831,
+   "bbox": [
+    6137,
+    4088,
+    6239,
+    4222
+   ],
+   "area_px": 8476,
+   "people": 921281,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Zhaojue",
+     "local": "昭觉县",
+     "prefecture": "Liangshanyizu",
+     "prefecture_local": "凉山彝族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.257,
+     "area_share": 0.285,
+     "cover": 0.994
+    },
+    {
+     "name": "Jinyang",
+     "local": "金阳县",
+     "prefecture": "Liangshanyizu",
+     "prefecture_local": "凉山彝族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.203,
+     "area_share": 0.17,
+     "cover": 0.994
+    },
+    {
+     "name": "Butuo",
+     "local": "布拖县",
+     "prefecture": "Liangshanyizu",
+     "prefecture_local": "凉山彝族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.171,
+     "area_share": 0.181,
+     "cover": 1.0
+    },
+    {
+     "name": "Meigu",
+     "local": "美姑县",
+     "prefecture": "Liangshanyizu",
+     "prefecture_local": "凉山彝族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.168,
+     "area_share": 0.127,
+     "cover": 0.744
+    },
+    {
+     "name": "Puge",
+     "local": "普格县",
+     "prefecture": "Liangshanyizu",
+     "prefecture_local": "凉山彝族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.15,
+     "area_share": 0.185,
+     "cover": 0.937
+    },
+    {
+     "name": "Leibo",
+     "local": "雷波县",
+     "prefecture": "Liangshanyizu",
+     "prefecture_local": "凉山彝族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.042,
+     "area_share": 0.045,
+     "cover": 0.147
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Sichuan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.984,
+     "cover": 0.012
+    },
+    {
+     "level": "prefecture",
+     "name": "Liangshan Yi Autonomous Prefecture",
+     "local": "凉山彝族自治州",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.984,
+     "cover": 0.202
+    }
+   ],
+   "towns": [
+    {
+     "town": "特木里镇",
+     "county": "布拖县",
+     "city": "凉山彝族自治州",
+     "people_share": 0.029,
+     "cover": 1.0
+    },
+    {
+     "town": "新城镇",
+     "county": "昭觉县",
+     "city": "凉山彝族自治州",
+     "people_share": 0.028,
+     "cover": 1.0
+    },
+    {
+     "town": "德溪乡",
+     "county": "金阳县",
+     "city": "凉山彝族自治州",
+     "people_share": 0.019,
+     "cover": 0.991
+    },
+    {
+     "town": "巴普镇",
+     "county": "美姑县",
+     "city": "凉山彝族自治州",
+     "people_share": 0.017,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#e7ddc7",
+     "border_px": 1698
+    },
+    {
+     "key": "#f0e3b9",
+     "border_px": 1694
+    },
+    {
+     "key": "#e8e8d1",
+     "border_px": 837
+    },
+    {
+     "key": "#e4e0a5",
+     "border_px": 758
+    },
+    {
+     "key": "#e6d7c0",
+     "border_px": 663
+    }
+   ],
+   "text_px": 0,
+   "n": 6,
+   "thumb": {
+    "x0": 6091,
+    "y0": 4042,
+    "k": 1.0,
+    "w": 194,
+    "h": 226
+   }
+  },
+  {
+   "key": "#e4e0a5",
+   "color": "#e4e0a5",
+   "lon": 102.1934,
+   "lat": 27.5747,
+   "bbox": [
+    6101,
+    4141,
+    6141,
+    4245
+   ],
+   "area_px": 2419,
+   "people": 767704,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Xichang",
+     "local": "西昌市",
+     "prefecture": "Liangshanyizu",
+     "prefecture_local": "凉山彝族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.79,
+     "area_share": 0.51,
+     "cover": 0.878
+    },
+    {
+     "name": "Dechang",
+     "local": "德昌县",
+     "prefecture": "Liangshanyizu",
+     "prefecture_local": "凉山彝族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.201,
+     "area_share": 0.47,
+     "cover": 0.754
+    },
+    {
+     "name": "Xide",
+     "local": "喜德县",
+     "prefecture": "Liangshanyizu",
+     "prefecture_local": "凉山彝族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.008,
+     "area_share": 0.005,
+     "cover": 0.034
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Sichuan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.01
+    },
+    {
+     "level": "prefecture",
+     "name": "Liangshan Yi Autonomous Prefecture",
+     "local": "凉山彝族自治州",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.171
+    }
+   ],
+   "towns": [
+    {
+     "town": "西郊乡",
+     "county": "西昌市",
+     "city": "凉山彝族自治州",
+     "people_share": 0.091,
+     "cover": 1.0
+    },
+    {
+     "town": "小庙乡",
+     "county": "西昌市",
+     "city": "凉山彝族自治州",
+     "people_share": 0.063,
+     "cover": 1.0
+    },
+    {
+     "town": "德州镇",
+     "county": "德昌县",
+     "city": "凉山彝族自治州",
+     "people_share": 0.057,
+     "cover": 0.999
+    },
+    {
+     "town": "高枧乡",
+     "county": "西昌市",
+     "city": "凉山彝族自治州",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "西城街道",
+     "county": "西昌市",
+     "city": "凉山彝族自治州",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "马道镇",
+     "county": "西昌市",
+     "city": "凉山彝族自治州",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "安宁镇",
+     "county": "西昌市",
+     "city": "凉山彝族自治州",
+     "people_share": 0.039,
+     "cover": 1.0
+    },
+    {
+     "town": "新村街道",
+     "county": "西昌市",
+     "city": "凉山彝族自治州",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "长安街道",
+     "county": "西昌市",
+     "city": "凉山彝族自治州",
+     "people_share": 0.034,
+     "cover": 1.0
+    },
+    {
+     "town": "经久乡",
+     "county": "西昌市",
+     "city": "凉山彝族自治州",
+     "people_share": 0.033,
+     "cover": 1.0
+    },
+    {
+     "town": "川兴镇",
+     "county": "西昌市",
+     "city": "凉山彝族自治州",
+     "people_share": 0.033,
+     "cover": 0.996
+    },
+    {
+     "town": "王所乡",
+     "county": "德昌县",
+     "city": "凉山彝族自治州",
+     "people_share": 0.03,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Xichang",
+     "admin": "Sichuan",
+     "pop": 712434
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#e8e8d1",
+     "border_px": 1873
+    },
+    {
+     "key": "#e7e5c7",
+     "border_px": 758
+    },
+    {
+     "key": "#e6d7c0",
+     "border_px": 464
+    },
+    {
+     "key": "#f2d5a9",
+     "border_px": 459
+    }
+   ],
+   "text_px": 0,
+   "n": 7,
+   "thumb": {
+    "x0": 6061,
+    "y0": 4101,
+    "k": 2.0,
+    "w": 240,
+    "h": 368
+   }
+  },
+  {
+   "key": "#f2d5a9",
+   "color": "#f2d5a9",
+   "lon": 101.887,
+   "lat": 26.7754,
+   "bbox": [
+    6062,
+    4234,
+    6129,
+    4320
+   ],
+   "area_px": 3574,
+   "people": 1108470,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Renhe",
+     "local": "仁和区",
+     "prefecture": "Panzhihua",
+     "prefecture_local": "攀枝花市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.376,
+     "area_share": 0.202,
+     "cover": 0.87
+    },
+    {
+     "name": "East",
+     "local": "东区",
+     "prefecture": "Panzhihua",
+     "prefecture_local": "攀枝花市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.281,
+     "area_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "name": "Miyi",
+     "local": "米易县",
+     "prefecture": "Panzhihua",
+     "prefecture_local": "攀枝花市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.199,
+     "area_share": 0.524,
+     "cover": 0.993
+    },
+    {
+     "name": "Xi",
+     "local": "西区",
+     "prefecture": "Panzhihua",
+     "prefecture_local": "攀枝花市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.075,
+     "area_share": 0.031,
+     "cover": 0.987
+    },
+    {
+     "name": "Yanbian",
+     "local": "盐边县",
+     "prefecture": "Panzhihua",
+     "prefecture_local": "攀枝花市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.061,
+     "area_share": 0.161,
+     "cover": 0.354
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Sichuan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.014
+    },
+    {
+     "level": "prefecture",
+     "name": "Panzhihua",
+     "local": "攀枝花市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.994,
+     "cover": 0.854
+    }
+   ],
+   "towns": [
+    {
+     "town": "银江镇",
+     "county": "东区",
+     "city": "攀枝花市",
+     "people_share": 0.157,
+     "cover": 1.0
+    },
+    {
+     "town": "前进镇",
+     "county": "仁和区",
+     "city": "攀枝花市",
+     "people_share": 0.124,
+     "cover": 1.0
+    },
+    {
+     "town": "炳草岗街道",
+     "county": "东区",
+     "city": "攀枝花市",
+     "people_share": 0.08,
+     "cover": 1.0
+    },
+    {
+     "town": "格里坪镇",
+     "county": "西区",
+     "city": "攀枝花市",
+     "people_share": 0.065,
+     "cover": 0.985
+    },
+    {
+     "town": "金江镇",
+     "county": "仁和区",
+     "city": "攀枝花市",
+     "people_share": 0.062,
+     "cover": 1.0
+    },
+    {
+     "town": "白马镇",
+     "county": "米易县",
+     "city": "攀枝花市",
+     "people_share": 0.048,
+     "cover": 0.999
+    },
+    {
+     "town": "太平乡",
+     "county": "仁和区",
+     "city": "攀枝花市",
+     "people_share": 0.045,
+     "cover": 0.995
+    },
+    {
+     "town": "仁和镇",
+     "county": "仁和区",
+     "city": "攀枝花市",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "务本乡",
+     "county": "仁和区",
+     "city": "攀枝花市",
+     "people_share": 0.033,
+     "cover": 0.999
+    },
+    {
+     "town": "布德镇",
+     "county": "仁和区",
+     "city": "攀枝花市",
+     "people_share": 0.031,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Dadukou",
+     "admin": "Sichuan",
+     "pop": 1214121
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#e2d5c0",
+     "border_px": 1978
+    },
+    {
+     "key": "#e6d7c0",
+     "border_px": 1396
+    },
+    {
+     "key": "#e4e0a5",
+     "border_px": 459
+    },
+    {
+     "key": "#e8e8d1",
+     "border_px": 215
+    }
+   ],
+   "text_px": 116,
+   "n": 8,
+   "thumb": {
+    "x0": 6022,
+    "y0": 4194,
+    "k": 2.0,
+    "w": 294,
+    "h": 332
+   }
+  },
+  {
+   "key": "#e6d7c0",
+   "color": "#e6d7c0",
+   "lon": 102.4934,
+   "lat": 26.7153,
+   "bbox": [
+    6096,
+    4210,
+    6206,
+    4361
+   ],
+   "area_px": 9235,
+   "people": 1031072,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Huili",
+     "local": "会理县",
+     "prefecture": "Liangshanyizu",
+     "prefecture_local": "凉山彝族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.391,
+     "area_share": 0.431,
+     "cover": 0.98
+    },
+    {
+     "name": "Huidong",
+     "local": "会东县",
+     "prefecture": "Liangshanyizu",
+     "prefecture_local": "凉山彝族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.354,
+     "area_share": 0.316,
+     "cover": 0.998
+    },
+    {
+     "name": "Ningnan",
+     "local": "宁南县",
+     "prefecture": "Liangshanyizu",
+     "prefecture_local": "凉山彝族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.193,
+     "area_share": 0.164,
+     "cover": 0.993
+    },
+    {
+     "name": "Dechang",
+     "local": "德昌县",
+     "prefecture": "Liangshanyizu",
+     "prefecture_local": "凉山彝族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.033,
+     "area_share": 0.06,
+     "cover": 0.169
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Sichuan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.975,
+     "cover": 0.013
+    },
+    {
+     "level": "prefecture",
+     "name": "Liangshan Yi Autonomous Prefecture",
+     "local": "凉山彝族自治州",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.974,
+     "cover": 0.224
+    }
+   ],
+   "towns": [
+    {
+     "town": "果元乡",
+     "county": "会理县",
+     "city": "凉山彝族自治州",
+     "people_share": 0.047,
+     "cover": 1.0
+    },
+    {
+     "town": "华弹镇",
+     "county": "宁南县",
+     "city": "凉山彝族自治州",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "小岔河乡",
+     "county": "会东县",
+     "city": "凉山彝族自治州",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "披砂镇",
+     "county": "宁南县",
+     "city": "凉山彝族自治州",
+     "people_share": 0.032,
+     "cover": 1.0
+    },
+    {
+     "town": "老街乡",
+     "county": "会理县",
+     "city": "凉山彝族自治州",
+     "people_share": 0.031,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Huili Chengguanzhen",
+     "admin": "Sichuan",
+     "pop": 430066
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#eee3b2",
+     "border_px": 1557
+    },
+    {
+     "key": "#f2d5a9",
+     "border_px": 1396
+    },
+    {
+     "key": "#f5edb4",
+     "border_px": 889
+    },
+    {
+     "key": "#dfd6bb",
+     "border_px": 747
+    },
+    {
+     "key": "#e7e5c7",
+     "border_px": 663
+    },
+    {
+     "key": "#e2d5c0",
+     "border_px": 492
+    },
+    {
+     "key": "#e4e0a5",
+     "border_px": 464
+    },
+    {
+     "key": "#f0e3b9",
+     "border_px": 262
+    }
+   ],
+   "text_px": 47,
+   "n": 9,
+   "thumb": {
+    "x0": 6044,
+    "y0": 4158,
+    "k": 1.0,
+    "w": 214,
+    "h": 255
+   }
+  }
+ ]
+}

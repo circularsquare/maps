@@ -58,7 +58,13 @@ REVIEW = {
         "and Apostolic Faith Mission churches. The cell keeps its name in `source_category`, "
         "so if a Malawian source ever separates them the rows can be moved (spec §2.4). The "
         "geography that made it worth reading as one category, the Shire highlands and "
-        "valley around the Malamulo mission, is in sources/mw.md.",
+        "valley around the Malamulo mission, is in sources/mw.md. "
+        "SPLIT SINCE 2026-10-16 (sources/ea_christian.py, unspecified_splits/eastafrica.md): "
+        "each district's cell is divided at its region's Afrobarometer R4-R9 shares (the North "
+        "at the national ones, 84 respondents), Adventists 64% and Baptists 33% nationally, "
+        "the Apostolic remainder staying here. The Adventists' own count, about 540,000 "
+        "baptised members in 2018, fits 1.06M adherents of all ages. Split rows are `derived` "
+        "and roll back to this cell.",
     "Anglican":
         "-> christianity.anglican. 410,633 people, 2.3%. The Anglican Church of the "
         "Province of Central Africa, out of the Universities' Mission to Central Africa — "
@@ -75,7 +81,18 @@ REVIEW = {
         "Living Waters Church, the Pentecostal Holiness Church and the newer independent "
         "charismatic bodies. NSO gives no branch and none is inferred.",
     "Other Christian Denominations":
-        "-> christianity.other. 4,666,337 people, **26.6% — the largest cell in the "
+        "-> christianity, the family root, since 2026-10-16 (it was christianity.other): a "
+        "residual, and zm2022.py's rule puts a residual on the root because "
+        "christianity.other is for bodies with no branch. SPLIT THE SAME DAY "
+        "(sources/ea_christian.py): each district's cell is divided at its region's "
+        "Afrobarometer R4-R9 shares into independent churches "
+        "(christianity.africaninstituted), Church of Christ (christianity.restorationist), "
+        "Evangelical (christianity.evangelical) and Jehovah's Witnesses "
+        "(christianity.witnesses), with `Christian only` and the small bodies left here. "
+        "Independents and `Christian only` trade places between rounds (r -0.85), so they "
+        "are placed as one box and split at R7-R9's national ratio, 40.5% independents. "
+        "Split rows are `derived` and roll back to this cell. The older note follows. "
+        "4,666,337 people, **26.6% — the largest cell in the "
         "country**, larger than the Catholics, and by some distance the biggest residual "
         "any source on this map hands over. That size is the honest cost of the question: "
         "NSO names five Christian bodies and pools everything else, so this cell holds the "
@@ -137,12 +154,26 @@ MAP = {
     "Seventh Day Adventist/Baptist/Apostolic": "christianity.other",
     "Anglican": "christianity.anglican",
     "Pentecostal": "christianity.pentecostal",
-    "Other Christian Denominations": "christianity.other",
+    "Other Christian Denominations": "christianity",
     "Islam": "islam",
     "Traditional": "indigenous.african",
     "Other Denomination": "other.mw",
     "No Religion": "unaffiliated",
+    # 2026-10-16, sources/ea_christian.py: mw_split.csv replaces the two Christian residual
+    # cells with these, at Afrobarometer R4-R9 regional shares; each cell's remainder keeps the
+    # cell's own label. `derived`.
+    "Seventh Day Adventist/Baptist/Apostolic: Seventh-day Adventist": "christianity.adventist.sda",
+    "Seventh Day Adventist/Baptist/Apostolic: Baptist": "christianity.baptist",
+    "Other Christian Denominations: independent churches": "christianity.africaninstituted",
+    "Other Christian Denominations: Church of Christ": "christianity.restorationist",
+    "Other Christian Denominations: Evangelical": "christianity.evangelical",
+    "Other Christian Denominations: Jehovah's Witnesses": "christianity.witnesses",
 }
+
+# spec §7a-i-1: the source column each derived row rolls back to.
+COLUMNS = {v: v for v in MAP.values()}
+COLUMNS["Seventh Day Adventist/Baptist/Apostolic"] = "christianity.other"
+COLUMNS["Other Christian Denominations"] = "christianity"
 
 
 def _key(cat):

@@ -1,0 +1,4247 @@
+{
+ "name": "henan-north",
+ "province": "Henan",
+ "prefectures": [
+  "Xinxiang",
+  "Anyang",
+  "Puyang",
+  "Jiaozuo",
+  "Hebi",
+  "Jiyuan"
+ ],
+ "tiles": [
+  {
+   "tag": "1",
+   "x": 6706,
+   "y": 2936,
+   "w": 722,
+   "h": 604,
+   "scale": 2,
+   "regions": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+   ]
+  }
+ ],
+ "regions": [
+  {
+   "key": "#e0eda6",
+   "color": "#e0eda6",
+   "lon": 114.3815,
+   "lat": 36.157,
+   "bbox": [
+    7054,
+    3136,
+    7117,
+    3172
+   ],
+   "area_px": 1467,
+   "people": 1689680,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Anyang",
+     "local": "安阳县",
+     "prefecture": "Anyang",
+     "prefecture_local": "安阳市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.479,
+     "area_share": 0.592,
+     "cover": 0.911
+    },
+    {
+     "name": "Linzhang",
+     "local": "临漳县",
+     "prefecture": "Handan",
+     "prefecture_local": "邯郸市",
+     "province": "河北省",
+     "country": "China",
+     "people_share": 0.171,
+     "area_share": 0.241,
+     "cover": 0.481
+    },
+    {
+     "name": "Long'an",
+     "local": "龙安区",
+     "prefecture": "Anyang",
+     "prefecture_local": "安阳市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.155,
+     "area_share": 0.073,
+     "cover": 0.632
+    },
+    {
+     "name": "Yindou",
+     "local": "殷都区",
+     "prefecture": "Anyang",
+     "prefecture_local": "安阳市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.153,
+     "area_share": 0.038,
+     "cover": 0.692
+    },
+    {
+     "name": "Wenfeng",
+     "local": "文峰区",
+     "prefecture": "Anyang",
+     "prefecture_local": "安阳市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.03,
+     "area_share": 0.038,
+     "cover": 0.084
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Henan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.821,
+     "cover": 0.014
+    },
+    {
+     "level": "prefecture",
+     "name": "Anyang",
+     "local": "安阳市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 0.821,
+     "cover": 0.246
+    },
+    {
+     "level": "province",
+     "name": "Hebei",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.179,
+     "cover": 0.004
+    },
+    {
+     "level": "prefecture",
+     "name": "Handan",
+     "local": "邯郸市",
+     "province": "Hebei",
+     "country": "China",
+     "people_share": 0.179,
+     "cover": 0.029
+    }
+   ],
+   "towns": [
+    {
+     "town": "东风乡",
+     "county": "龙安区",
+     "city": "安阳市",
+     "people_share": 0.085,
+     "cover": 0.895
+    },
+    {
+     "town": "北蒙街道",
+     "county": "殷都区",
+     "city": "安阳市",
+     "people_share": 0.054,
+     "cover": 0.844
+    },
+    {
+     "town": "水冶镇",
+     "county": "安阳县",
+     "city": "安阳市",
+     "people_share": 0.052,
+     "cover": 1.0
+    },
+    {
+     "town": "西郊乡",
+     "county": "殷都区",
+     "city": "安阳市",
+     "people_share": 0.045,
+     "cover": 0.819
+    },
+    {
+     "town": "梅园庄街道",
+     "county": "殷都区",
+     "city": "安阳市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "安丰乡",
+     "county": "安阳县",
+     "city": "安阳市",
+     "people_share": 0.039,
+     "cover": 0.92
+    },
+    {
+     "town": "吕村镇",
+     "county": "安阳县",
+     "city": "安阳市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "白璧镇",
+     "county": "安阳县",
+     "city": "安阳市",
+     "people_share": 0.036,
+     "cover": 0.975
+    },
+    {
+     "town": "柳园镇",
+     "county": "临漳县",
+     "city": "邯郸市",
+     "people_share": 0.034,
+     "cover": 0.965
+    },
+    {
+     "town": "孙陶集镇",
+     "county": "临漳县",
+     "city": "邯郸市",
+     "people_share": 0.034,
+     "cover": 1.0
+    },
+    {
+     "town": "辛村镇",
+     "county": "安阳县",
+     "city": "安阳市",
+     "people_share": 0.033,
+     "cover": 0.988
+    },
+    {
+     "town": "许家沟乡",
+     "county": "安阳县",
+     "city": "安阳市",
+     "people_share": 0.031,
+     "cover": 0.951
+    }
+   ],
+   "cities": [
+    {
+     "name": "Dengtalu",
+     "admin": "Henan",
+     "pop": 887000
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#dde8aa",
+     "border_px": 559
+    },
+    {
+     "key": "#e4ebb0",
+     "border_px": 496
+    },
+    {
+     "key": "#dadfb5",
+     "border_px": 494
+    },
+    {
+     "key": "#d6eb77",
+     "border_px": 447
+    },
+    {
+     "key": "#dbeb9e",
+     "border_px": 318
+    },
+    {
+     "key": "#ddee9e",
+     "border_px": 314
+    },
+    {
+     "key": "#e4f1b1",
+     "border_px": 196
+    }
+   ],
+   "text_px": 133,
+   "n": 1,
+   "thumb": {
+    "x0": 7014,
+    "y0": 3096,
+    "k": 2.0,
+    "w": 286,
+    "h": 232
+   }
+  },
+  {
+   "key": "#d6eb77",
+   "color": "#d6eb77",
+   "lon": 114.3679,
+   "lat": 36.101,
+   "bbox": [
+    7082,
+    3156,
+    7090,
+    3169
+   ],
+   "area_px": 117,
+   "people": 1014607,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Wenfeng",
+     "local": "文峰区",
+     "prefecture": "Anyang",
+     "prefecture_local": "安阳市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.498,
+     "area_share": 0.496,
+     "cover": 0.84
+    },
+    {
+     "name": "Beiguan",
+     "local": "北关区",
+     "prefecture": "Anyang",
+     "prefecture_local": "安阳市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.318,
+     "area_share": 0.359,
+     "cover": 0.975
+    },
+    {
+     "name": "Yindou",
+     "local": "殷都区",
+     "prefecture": "Anyang",
+     "prefecture_local": "安阳市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.113,
+     "area_share": 0.06,
+     "cover": 0.308
+    },
+    {
+     "name": "Long'an",
+     "local": "龙安区",
+     "prefecture": "Anyang",
+     "prefecture_local": "安阳市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.065,
+     "area_share": 0.043,
+     "cover": 0.16
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Henan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.01
+    },
+    {
+     "level": "prefecture",
+     "name": "Anyang",
+     "local": "安阳市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.18
+    }
+   ],
+   "towns": [
+    {
+     "town": "彰东街道",
+     "county": "北关区",
+     "city": "安阳市",
+     "people_share": 0.102,
+     "cover": 0.967
+    },
+    {
+     "town": "开发区银杏大街街道",
+     "county": "文峰区",
+     "city": "安阳市",
+     "people_share": 0.089,
+     "cover": 1.0
+    },
+    {
+     "town": "彰北街道",
+     "county": "北关区",
+     "city": "安阳市",
+     "people_share": 0.083,
+     "cover": 0.946
+    },
+    {
+     "town": "中华路街道",
+     "county": "文峰区",
+     "city": "安阳市",
+     "people_share": 0.082,
+     "cover": 0.961
+    },
+    {
+     "town": "开发区峨嵋大街街道",
+     "county": "文峰区",
+     "city": "安阳市",
+     "people_share": 0.075,
+     "cover": 1.0
+    },
+    {
+     "town": "开发区商颂大街街道",
+     "county": "文峰区",
+     "city": "安阳市",
+     "people_share": 0.056,
+     "cover": 0.989
+    },
+    {
+     "town": "铁西路街道",
+     "county": "殷都区",
+     "city": "安阳市",
+     "people_share": 0.05,
+     "cover": 1.0
+    },
+    {
+     "town": "文昌大道街道",
+     "county": "龙安区",
+     "city": "安阳市",
+     "people_share": 0.042,
+     "cover": 0.592
+    },
+    {
+     "town": "豆腐营街道",
+     "county": "北关区",
+     "city": "安阳市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "光华路街道",
+     "county": "文峰区",
+     "city": "安阳市",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "民航路街道",
+     "county": "北关区",
+     "city": "安阳市",
+     "people_share": 0.033,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#e0eda6",
+     "border_px": 447
+    },
+    {
+     "key": "#dde8aa",
+     "border_px": 89
+    }
+   ],
+   "text_px": 31,
+   "n": 2,
+   "thumb": {
+    "x0": 7042,
+    "y0": 3116,
+    "k": 4.0,
+    "w": 352,
+    "h": 372
+   }
+  },
+  {
+   "key": "#dadfb5",
+   "color": "#dadfb5",
+   "lon": 113.8939,
+   "lat": 35.9977,
+   "bbox": [
+    7028,
+    3140,
+    7075,
+    3215
+   ],
+   "area_px": 2389,
+   "people": 941475,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Linzhou",
+     "local": "林州市",
+     "prefecture": "Anyang",
+     "prefecture_local": "安阳市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.778,
+     "area_share": 0.766,
+     "cover": 0.995
+    },
+    {
+     "name": "Qibin",
+     "local": "淇滨区",
+     "prefecture": "Hebi",
+     "prefecture_local": "鹤壁市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.087,
+     "area_share": 0.056,
+     "cover": 0.228
+    },
+    {
+     "name": "Anyang",
+     "local": "安阳县",
+     "prefecture": "Anyang",
+     "prefecture_local": "安阳市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.066,
+     "area_share": 0.081,
+     "cover": 0.07
+    },
+    {
+     "name": "Heshan",
+     "local": "鹤山区",
+     "prefecture": "Hebi",
+     "prefecture_local": "鹤壁市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.039,
+     "area_share": 0.025,
+     "cover": 0.257
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Henan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.996,
+     "cover": 0.01
+    },
+    {
+     "level": "prefecture",
+     "name": "Anyang",
+     "local": "安阳市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 0.84,
+     "cover": 0.14
+    },
+    {
+     "level": "prefecture",
+     "name": "Hebi",
+     "local": "鹤壁市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 0.156,
+     "cover": 0.09
+    }
+   ],
+   "towns": [
+    {
+     "town": "城郊乡",
+     "county": "林州市",
+     "city": "安阳市",
+     "people_share": 0.102,
+     "cover": 1.0
+    },
+    {
+     "town": "姚村镇",
+     "county": "林州市",
+     "city": "安阳市",
+     "people_share": 0.078,
+     "cover": 1.0
+    },
+    {
+     "town": "临淇镇",
+     "county": "林州市",
+     "city": "安阳市",
+     "people_share": 0.067,
+     "cover": 0.976
+    },
+    {
+     "town": "横水镇",
+     "county": "林州市",
+     "city": "安阳市",
+     "people_share": 0.058,
+     "cover": 1.0
+    },
+    {
+     "town": "五龙镇",
+     "county": "林州市",
+     "city": "安阳市",
+     "people_share": 0.051,
+     "cover": 1.0
+    },
+    {
+     "town": "合涧镇",
+     "county": "林州市",
+     "city": "安阳市",
+     "people_share": 0.05,
+     "cover": 0.991
+    },
+    {
+     "town": "河顺镇",
+     "county": "林州市",
+     "city": "安阳市",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "上峪乡",
+     "county": "淇滨区",
+     "city": "鹤壁市",
+     "people_share": 0.044,
+     "cover": 1.0
+    },
+    {
+     "town": "大河涧乡",
+     "county": "淇滨区",
+     "city": "鹤壁市",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "任村镇",
+     "county": "林州市",
+     "city": "安阳市",
+     "people_share": 0.037,
+     "cover": 0.954
+    },
+    {
+     "town": "东姚镇",
+     "county": "林州市",
+     "city": "安阳市",
+     "people_share": 0.036,
+     "cover": 1.0
+    },
+    {
+     "town": "东岗镇",
+     "county": "林州市",
+     "city": "安阳市",
+     "people_share": 0.035,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Kaiyuan",
+     "admin": "Henan",
+     "pop": 1160000
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#e5dcca",
+     "border_px": 851,
+     "name": "Huguan"
+    },
+    {
+     "key": "#e2e4a0",
+     "border_px": 638
+    },
+    {
+     "key": "#e0eda6",
+     "border_px": 494
+    },
+    {
+     "key": "#dde8aa",
+     "border_px": 393
+    },
+    {
+     "key": "#e6eaa3",
+     "border_px": 280
+    },
+    {
+     "key": "#e4ebb0",
+     "border_px": 243
+    },
+    {
+     "key": "#dee5c1",
+     "border_px": 203
+    }
+   ],
+   "text_px": 77,
+   "n": 3,
+   "thumb": {
+    "x0": 6988,
+    "y0": 3100,
+    "k": 2.0,
+    "w": 254,
+    "h": 310
+   }
+  },
+  {
+   "key": "#e4f1b1",
+   "color": "#e4f1b1",
+   "lon": 115.0272,
+   "lat": 35.9471,
+   "bbox": [
+    7115,
+    3153,
+    7171,
+    3187
+   ],
+   "area_px": 1319,
+   "people": 1080181,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Qingfeng",
+     "local": "清丰县",
+     "prefecture": "Puyang",
+     "prefecture_local": "濮阳市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.535,
+     "area_share": 0.547,
+     "cover": 0.971
+    },
+    {
+     "name": "Neihuang",
+     "local": "内黄县",
+     "prefecture": "Anyang",
+     "prefecture_local": "安阳市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.387,
+     "area_share": 0.392,
+     "cover": 0.584
+    },
+    {
+     "name": "Hualong",
+     "local": "华龙区",
+     "prefecture": "Puyang",
+     "prefecture_local": "濮阳市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.058,
+     "area_share": 0.039,
+     "cover": 0.074
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Henan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.976,
+     "cover": 0.011
+    },
+    {
+     "level": "prefecture",
+     "name": "Puyang",
+     "local": "濮阳市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 0.605,
+     "cover": 0.194
+    },
+    {
+     "level": "prefecture",
+     "name": "Anyang",
+     "local": "安阳市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 0.371,
+     "cover": 0.071
+    }
+   ],
+   "towns": [
+    {
+     "town": "城关镇",
+     "county": "内黄县",
+     "city": "安阳市",
+     "people_share": 0.096,
+     "cover": 1.0
+    },
+    {
+     "town": "马上乡",
+     "county": "内黄县",
+     "city": "安阳市",
+     "people_share": 0.057,
+     "cover": 1.0
+    },
+    {
+     "town": "东庄镇",
+     "county": "内黄县",
+     "city": "安阳市",
+     "people_share": 0.049,
+     "cover": 0.99
+    },
+    {
+     "town": "瓦屋头镇",
+     "county": "清丰县",
+     "city": "濮阳市",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "双庙乡",
+     "county": "清丰县",
+     "city": "濮阳市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "仙庄镇",
+     "county": "清丰县",
+     "city": "濮阳市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "田氏镇",
+     "county": "内黄县",
+     "city": "安阳市",
+     "people_share": 0.038,
+     "cover": 0.896
+    },
+    {
+     "town": "马村乡",
+     "county": "清丰县",
+     "city": "濮阳市",
+     "people_share": 0.036,
+     "cover": 0.987
+    },
+    {
+     "town": "胡村乡",
+     "county": "华龙区",
+     "city": "濮阳市",
+     "people_share": 0.035,
+     "cover": 0.83
+    },
+    {
+     "town": "柳格镇",
+     "county": "清丰县",
+     "city": "濮阳市",
+     "people_share": 0.034,
+     "cover": 1.0
+    },
+    {
+     "town": "高堡乡",
+     "county": "清丰县",
+     "city": "濮阳市",
+     "people_share": 0.033,
+     "cover": 0.968
+    },
+    {
+     "town": "纸房乡",
+     "county": "清丰县",
+     "city": "濮阳市",
+     "people_share": 0.033,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#dbeb9e",
+     "border_px": 521
+    },
+    {
+     "key": "#e7f1b1",
+     "border_px": 427
+    },
+    {
+     "key": "#d2ea79",
+     "border_px": 304
+    },
+    {
+     "key": "#d7edac",
+     "border_px": 280
+    },
+    {
+     "key": "#d9edae",
+     "border_px": 218
+    },
+    {
+     "key": "#d4ebb9",
+     "border_px": 203
+    },
+    {
+     "key": "#e0eda6",
+     "border_px": 196
+    },
+    {
+     "key": "#dde8aa",
+     "border_px": 73
+    }
+   ],
+   "text_px": 106,
+   "n": 4,
+   "thumb": {
+    "x0": 7075,
+    "y0": 3113,
+    "k": 3.0,
+    "w": 408,
+    "h": 342
+   }
+  },
+  {
+   "key": "#dde8aa",
+   "color": "#dde8aa",
+   "lon": 114.4021,
+   "lat": 35.8851,
+   "bbox": [
+    7067,
+    3169,
+    7114,
+    3205
+   ],
+   "area_px": 1251,
+   "people": 1029161,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Tangyin",
+     "local": "汤阴县",
+     "prefecture": "Anyang",
+     "prefecture_local": "安阳市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.4,
+     "area_share": 0.459,
+     "cover": 0.991
+    },
+    {
+     "name": "Jun",
+     "local": "浚县",
+     "prefecture": "Hebi",
+     "prefecture_local": "鹤壁市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.193,
+     "area_share": 0.225,
+     "cover": 0.299
+    },
+    {
+     "name": "Shancheng",
+     "local": "山城区",
+     "prefecture": "Hebi",
+     "prefecture_local": "鹤壁市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.134,
+     "area_share": 0.091,
+     "cover": 0.891
+    },
+    {
+     "name": "Heshan",
+     "local": "鹤山区",
+     "prefecture": "Hebi",
+     "prefecture_local": "鹤壁市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.102,
+     "area_share": 0.05,
+     "cover": 0.732
+    },
+    {
+     "name": "Long'an",
+     "local": "龙安区",
+     "prefecture": "Anyang",
+     "prefecture_local": "安阳市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.083,
+     "area_share": 0.084,
+     "cover": 0.207
+    },
+    {
+     "name": "Wenfeng",
+     "local": "文峰区",
+     "prefecture": "Anyang",
+     "prefecture_local": "安阳市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.044,
+     "area_share": 0.036,
+     "cover": 0.076
+    },
+    {
+     "name": "Qibin",
+     "local": "淇滨区",
+     "prefecture": "Hebi",
+     "prefecture_local": "鹤壁市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.033,
+     "area_share": 0.046,
+     "cover": 0.094
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Henan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.011
+    },
+    {
+     "level": "prefecture",
+     "name": "Anyang",
+     "local": "安阳市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 0.516,
+     "cover": 0.094
+    },
+    {
+     "level": "prefecture",
+     "name": "Hebi",
+     "local": "鹤壁市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 0.484,
+     "cover": 0.306
+    }
+   ],
+   "towns": [
+    {
+     "town": "鹤壁集镇",
+     "county": "鹤山区",
+     "city": "鹤壁市",
+     "people_share": 0.089,
+     "cover": 0.936
+    },
+    {
+     "town": "宜沟镇",
+     "county": "汤阴县",
+     "city": "安阳市",
+     "people_share": 0.075,
+     "cover": 1.0
+    },
+    {
+     "town": "马投涧镇",
+     "county": "龙安区",
+     "city": "安阳市",
+     "people_share": 0.069,
+     "cover": 0.869
+    },
+    {
+     "town": "韩庄镇",
+     "county": "汤阴县",
+     "city": "安阳市",
+     "people_share": 0.066,
+     "cover": 1.0
+    },
+    {
+     "town": "王庄镇",
+     "county": "浚县",
+     "city": "鹤壁市",
+     "people_share": 0.061,
+     "cover": 1.0
+    },
+    {
+     "town": "屯子镇",
+     "county": "浚县",
+     "city": "鹤壁市",
+     "people_share": 0.055,
+     "cover": 1.0
+    },
+    {
+     "town": "五陵镇",
+     "county": "汤阴县",
+     "city": "安阳市",
+     "people_share": 0.044,
+     "cover": 0.947
+    },
+    {
+     "town": "黎阳街道",
+     "county": "浚县",
+     "city": "鹤壁市",
+     "people_share": 0.044,
+     "cover": 0.936
+    },
+    {
+     "town": "宝莲寺镇",
+     "county": "文峰区",
+     "city": "安阳市",
+     "people_share": 0.044,
+     "cover": 0.969
+    },
+    {
+     "town": "白营镇",
+     "county": "汤阴县",
+     "city": "安阳市",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "宝山街道",
+     "county": "山城区",
+     "city": "鹤壁市",
+     "people_share": 0.039,
+     "cover": 0.806
+    },
+    {
+     "town": "石林镇",
+     "county": "山城区",
+     "city": "鹤壁市",
+     "people_share": 0.039,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#e0eda6",
+     "border_px": 559
+    },
+    {
+     "key": "#e6eaa3",
+     "border_px": 557
+    },
+    {
+     "key": "#e7f1b1",
+     "border_px": 443
+    },
+    {
+     "key": "#dadfb5",
+     "border_px": 393
+    },
+    {
+     "key": "#d6eb77",
+     "border_px": 89
+    },
+    {
+     "key": "#e4f1b1",
+     "border_px": 73
+    }
+   ],
+   "text_px": 89,
+   "n": 5,
+   "thumb": {
+    "x0": 7027,
+    "y0": 3129,
+    "k": 3.0,
+    "w": 381,
+    "h": 348
+   }
+  },
+  {
+   "key": "#d2ea79",
+   "color": "#d2ea79",
+   "lon": 115.0704,
+   "lat": 35.7619,
+   "bbox": [
+    7142,
+    3186,
+    7160,
+    3200
+   ],
+   "area_px": 186,
+   "people": 674788,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Hualong",
+     "local": "华龙区",
+     "prefecture": "Puyang",
+     "prefecture_local": "濮阳市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.819,
+     "area_share": 0.747,
+     "cover": 0.656
+    },
+    {
+     "name": "Puyang",
+     "local": "濮阳县",
+     "prefecture": "Puyang",
+     "prefecture_local": "濮阳市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.181,
+     "area_share": 0.253,
+     "cover": 0.119
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Henan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.007
+    },
+    {
+     "level": "prefecture",
+     "name": "Puyang",
+     "local": "濮阳市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.201
+    }
+   ],
+   "towns": [
+    {
+     "town": "开州街道",
+     "county": "华龙区",
+     "city": "濮阳市",
+     "people_share": 0.198,
+     "cover": 0.782
+    },
+    {
+     "town": "城关镇",
+     "county": "濮阳县",
+     "city": "濮阳市",
+     "people_share": 0.161,
+     "cover": 0.986
+    },
+    {
+     "town": "昆吾路街道",
+     "county": "华龙区",
+     "city": "濮阳市",
+     "people_share": 0.135,
+     "cover": 0.78
+    },
+    {
+     "town": "胜利路街道",
+     "county": "华龙区",
+     "city": "濮阳市",
+     "people_share": 0.116,
+     "cover": 1.0
+    },
+    {
+     "town": "人民路街道",
+     "county": "华龙区",
+     "city": "濮阳市",
+     "people_share": 0.057,
+     "cover": 1.0
+    },
+    {
+     "town": "建设路街道",
+     "county": "华龙区",
+     "city": "濮阳市",
+     "people_share": 0.057,
+     "cover": 1.0
+    },
+    {
+     "town": "中原油田街道",
+     "county": "华龙区",
+     "city": "濮阳市",
+     "people_share": 0.047,
+     "cover": 1.0
+    },
+    {
+     "town": "岳村乡",
+     "county": "华龙区",
+     "city": "濮阳市",
+     "people_share": 0.045,
+     "cover": 0.838
+    },
+    {
+     "town": "孟轲乡",
+     "county": "华龙区",
+     "city": "濮阳市",
+     "people_share": 0.04,
+     "cover": 0.884
+    }
+   ],
+   "cities": [
+    {
+     "name": "Puyang",
+     "admin": "Henan",
+     "pop": 3598740
+    },
+    {
+     "name": "Puyang Chengguanzhen",
+     "admin": "Henan",
+     "pop": 666322
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#e4f1b1",
+     "border_px": 304
+    },
+    {
+     "key": "#e7f1b1",
+     "border_px": 275
+    },
+    {
+     "key": "#d9edae",
+     "border_px": 263
+    }
+   ],
+   "text_px": 0,
+   "n": 6,
+   "thumb": {
+    "x0": 7102,
+    "y0": 3146,
+    "k": 4.0,
+    "w": 392,
+    "h": 376
+   }
+  },
+  {
+   "key": "#d9edae",
+   "color": "#d9edae",
+   "lon": 115.3467,
+   "lat": 35.6904,
+   "bbox": [
+    7151,
+    3168,
+    7201,
+    3227
+   ],
+   "area_px": 1371,
+   "people": 1050268,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Puyang",
+     "local": "濮阳县",
+     "prefecture": "Puyang",
+     "prefecture_local": "濮阳市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.562,
+     "area_share": 0.566,
+     "cover": 0.574
+    },
+    {
+     "name": "Fan",
+     "local": "范县",
+     "prefecture": "Puyang",
+     "prefecture_local": "濮阳市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.395,
+     "area_share": 0.392,
+     "cover": 0.948
+    },
+    {
+     "name": "Shen",
+     "local": "莘县",
+     "prefecture": "Liaocheng",
+     "prefecture_local": "聊城市",
+     "province": "山东省",
+     "country": "China",
+     "people_share": 0.033,
+     "area_share": 0.026,
+     "cover": 0.035
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Henan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.942,
+     "cover": 0.01
+    },
+    {
+     "level": "prefecture",
+     "name": "Puyang",
+     "local": "濮阳市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 0.941,
+     "cover": 0.294
+    },
+    {
+     "level": "province",
+     "name": "Shandong",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.058,
+     "cover": 0.001
+    }
+   ],
+   "towns": [
+    {
+     "town": "濮阳县文留镇",
+     "county": "濮阳县",
+     "city": "濮阳市",
+     "people_share": 0.067,
+     "cover": 1.0
+    },
+    {
+     "town": "濮阳县柳屯镇",
+     "county": "濮阳县",
+     "city": "濮阳市",
+     "people_share": 0.065,
+     "cover": 0.938
+    },
+    {
+     "town": "濮阳县梁庄乡",
+     "county": "濮阳县",
+     "city": "濮阳市",
+     "people_share": 0.057,
+     "cover": 1.0
+    },
+    {
+     "town": "濮阳县胡状镇",
+     "county": "濮阳县",
+     "city": "濮阳市",
+     "people_share": 0.055,
+     "cover": 0.971
+    },
+    {
+     "town": "濮阳县鲁河镇",
+     "county": "濮阳县",
+     "city": "濮阳市",
+     "people_share": 0.055,
+     "cover": 1.0
+    },
+    {
+     "town": "濮城镇",
+     "county": "范县",
+     "city": "濮阳市",
+     "people_share": 0.046,
+     "cover": 1.0
+    },
+    {
+     "town": "濮阳县八公桥镇",
+     "county": "濮阳县",
+     "city": "濮阳市",
+     "people_share": 0.046,
+     "cover": 0.914
+    },
+    {
+     "town": "辛庄镇",
+     "county": "范县",
+     "city": "濮阳市",
+     "people_share": 0.044,
+     "cover": 0.984
+    },
+    {
+     "town": "杨集乡",
+     "county": "范县",
+     "city": "濮阳市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "龙王庄镇",
+     "county": "范县",
+     "city": "濮阳市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "濮阳县王称固乡",
+     "county": "濮阳县",
+     "city": "濮阳市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "陈庄乡",
+     "county": "范县",
+     "city": "濮阳市",
+     "people_share": 0.035,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#e0eeab",
+     "border_px": 566
+    },
+    {
+     "key": "#e7f1b1",
+     "border_px": 448
+    },
+    {
+     "key": "#cbedae",
+     "border_px": 351
+    },
+    {
+     "key": "#d4ebb9",
+     "border_px": 341
+    },
+    {
+     "key": "#d2ea79",
+     "border_px": 263
+    },
+    {
+     "key": "#e4f1b1",
+     "border_px": 218
+    },
+    {
+     "key": "#c3e8ad",
+     "border_px": 173
+    },
+    {
+     "key": "#eef1b4",
+     "border_px": 52
+    }
+   ],
+   "text_px": 79,
+   "n": 7,
+   "thumb": {
+    "x0": 7111,
+    "y0": 3128,
+    "k": 3.0,
+    "w": 390,
+    "h": 417
+   }
+  },
+  {
+   "key": "#e6eaa3",
+   "color": "#e6eaa3",
+   "lon": 114.2954,
+   "lat": 35.6337,
+   "bbox": [
+    7067,
+    3198,
+    7112,
+    3233
+   ],
+   "area_px": 980,
+   "people": 898409,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Jun",
+     "local": "浚县",
+     "prefecture": "Hebi",
+     "prefecture_local": "鹤壁市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.394,
+     "area_share": 0.454,
+     "cover": 0.531
+    },
+    {
+     "name": "Qi",
+     "local": "淇县",
+     "prefecture": "Hebi",
+     "prefecture_local": "鹤壁市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.318,
+     "area_share": 0.405,
+     "cover": 0.962
+    },
+    {
+     "name": "Qibin",
+     "local": "淇滨区",
+     "prefecture": "Hebi",
+     "prefecture_local": "鹤壁市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.27,
+     "area_share": 0.124,
+     "cover": 0.678
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Henan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.009
+    },
+    {
+     "level": "prefecture",
+     "name": "Hebi",
+     "local": "鹤壁市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 0.976,
+     "cover": 0.539
+    }
+   ],
+   "towns": [
+    {
+     "town": "九州路街道",
+     "county": "淇滨区",
+     "city": "鹤壁市",
+     "people_share": 0.101,
+     "cover": 1.0
+    },
+    {
+     "town": "小河镇",
+     "county": "浚县",
+     "city": "鹤壁市",
+     "people_share": 0.088,
+     "cover": 0.943
+    },
+    {
+     "town": "新镇镇",
+     "county": "浚县",
+     "city": "鹤壁市",
+     "people_share": 0.087,
+     "cover": 0.957
+    },
+    {
+     "town": "卫贤镇",
+     "county": "浚县",
+     "city": "鹤壁市",
+     "people_share": 0.074,
+     "cover": 1.0
+    },
+    {
+     "town": "北阳镇",
+     "county": "淇县",
+     "city": "鹤壁市",
+     "people_share": 0.064,
+     "cover": 0.984
+    },
+    {
+     "town": "高村镇",
+     "county": "淇县",
+     "city": "鹤壁市",
+     "people_share": 0.063,
+     "cover": 0.986
+    },
+    {
+     "town": "长江路街道",
+     "county": "淇滨区",
+     "city": "鹤壁市",
+     "people_share": 0.06,
+     "cover": 1.0
+    },
+    {
+     "town": "西岗镇",
+     "county": "淇县",
+     "city": "鹤壁市",
+     "people_share": 0.057,
+     "cover": 0.983
+    },
+    {
+     "town": "白寺乡",
+     "county": "浚县",
+     "city": "鹤壁市",
+     "people_share": 0.051,
+     "cover": 0.965
+    },
+    {
+     "town": "卫溪街道",
+     "county": "浚县",
+     "city": "鹤壁市",
+     "people_share": 0.049,
+     "cover": 0.836
+    },
+    {
+     "town": "黎阳路街道",
+     "county": "淇滨区",
+     "city": "鹤壁市",
+     "people_share": 0.046,
+     "cover": 1.0
+    },
+    {
+     "town": "朝歌街道",
+     "county": "淇县",
+     "city": "鹤壁市",
+     "people_share": 0.045,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Hebi",
+     "admin": "Henan",
+     "pop": 1569208
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#dde8aa",
+     "border_px": 557
+    },
+    {
+     "key": "#f1eea6",
+     "border_px": 463
+    },
+    {
+     "key": "#dadfb5",
+     "border_px": 280
+    },
+    {
+     "key": "#e4ea85",
+     "border_px": 271
+    },
+    {
+     "key": "#e2e4a0",
+     "border_px": 241
+    },
+    {
+     "key": "#e7f1b1",
+     "border_px": 54
+    }
+   ],
+   "text_px": 0,
+   "n": 8,
+   "thumb": {
+    "x0": 7027,
+    "y0": 3158,
+    "k": 3.0,
+    "w": 375,
+    "h": 345
+   }
+  },
+  {
+   "key": "#e7f1b1",
+   "color": "#e7f1b1",
+   "lon": 114.8499,
+   "lat": 35.6231,
+   "bbox": [
+    7109,
+    3177,
+    7159,
+    3240
+   ],
+   "area_px": 1876,
+   "people": 1403135,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Hua",
+     "local": "滑县",
+     "prefecture": "Anyang",
+     "prefecture_local": "安阳市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.334,
+     "area_share": 0.353,
+     "cover": 0.382
+    },
+    {
+     "name": "Puyang",
+     "local": "濮阳县",
+     "prefecture": "Puyang",
+     "prefecture_local": "濮阳市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.219,
+     "area_share": 0.213,
+     "cover": 0.299
+    },
+    {
+     "name": "Neihuang",
+     "local": "内黄县",
+     "prefecture": "Anyang",
+     "prefecture_local": "安阳市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.201,
+     "area_share": 0.27,
+     "cover": 0.394
+    },
+    {
+     "name": "Hualong",
+     "local": "华龙区",
+     "prefecture": "Puyang",
+     "prefecture_local": "濮阳市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.161,
+     "area_share": 0.085,
+     "cover": 0.268
+    },
+    {
+     "name": "Jun",
+     "local": "浚县",
+     "prefecture": "Hebi",
+     "prefecture_local": "鹤壁市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.073,
+     "area_share": 0.066,
+     "cover": 0.154
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Henan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.998,
+     "cover": 0.014
+    },
+    {
+     "level": "prefecture",
+     "name": "Anyang",
+     "local": "安阳市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 0.535,
+     "cover": 0.133
+    },
+    {
+     "level": "prefecture",
+     "name": "Puyang",
+     "local": "濮阳市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 0.376,
+     "cover": 0.157
+    },
+    {
+     "level": "prefecture",
+     "name": "Hebi",
+     "local": "鹤壁市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 0.071,
+     "cover": 0.062
+    }
+   ],
+   "towns": [
+    {
+     "town": "善堂镇",
+     "county": "浚县",
+     "city": "鹤壁市",
+     "people_share": 0.073,
+     "cover": 0.96
+    },
+    {
+     "town": "王助镇",
+     "county": "华龙区",
+     "city": "濮阳市",
+     "people_share": 0.048,
+     "cover": 0.969
+    },
+    {
+     "town": "白道口镇",
+     "county": "滑县",
+     "city": "安阳市",
+     "people_share": 0.046,
+     "cover": 0.983
+    },
+    {
+     "town": "濮阳县郎中乡",
+     "county": "濮阳县",
+     "city": "濮阳市",
+     "people_share": 0.046,
+     "cover": 0.959
+    },
+    {
+     "town": "八里营乡",
+     "county": "滑县",
+     "city": "安阳市",
+     "people_share": 0.045,
+     "cover": 0.957
+    },
+    {
+     "town": "万古镇",
+     "county": "滑县",
+     "city": "安阳市",
+     "people_share": 0.044,
+     "cover": 0.987
+    },
+    {
+     "town": "高平镇",
+     "county": "滑县",
+     "city": "安阳市",
+     "people_share": 0.044,
+     "cover": 0.961
+    },
+    {
+     "town": "老爷庙乡",
+     "county": "滑县",
+     "city": "安阳市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "皇甫路街道",
+     "county": "华龙区",
+     "city": "濮阳市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "新习乡",
+     "county": "华龙区",
+     "city": "濮阳市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "濮阳县庆祖镇",
+     "county": "濮阳县",
+     "city": "濮阳市",
+     "people_share": 0.036,
+     "cover": 1.0
+    },
+    {
+     "town": "濮阳县子岸镇",
+     "county": "濮阳县",
+     "city": "濮阳市",
+     "people_share": 0.036,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f1eea6",
+     "border_px": 518
+    },
+    {
+     "key": "#d9edae",
+     "border_px": 448
+    },
+    {
+     "key": "#dde8aa",
+     "border_px": 443
+    },
+    {
+     "key": "#e4f1b1",
+     "border_px": 427
+    },
+    {
+     "key": "#f0eda8",
+     "border_px": 368
+    },
+    {
+     "key": "#d2ea79",
+     "border_px": 275
+    },
+    {
+     "key": "#eef1b4",
+     "border_px": 199
+    },
+    {
+     "key": "#e6eaa3",
+     "border_px": 54
+    }
+   ],
+   "text_px": 165,
+   "n": 9,
+   "thumb": {
+    "x0": 7069,
+    "y0": 3137,
+    "k": 2.0,
+    "w": 260,
+    "h": 286
+   }
+  },
+  {
+   "key": "#e2e4a0",
+   "color": "#e2e4a0",
+   "lon": 113.737,
+   "lat": 35.5343,
+   "bbox": [
+    7014,
+    3200,
+    7074,
+    3258
+   ],
+   "area_px": 1996,
+   "people": 933966,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Huixian",
+     "local": "辉县市",
+     "prefecture": "Xinxiang",
+     "prefecture_local": "新乡市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.763,
+     "area_share": 0.741,
+     "cover": 0.995
+    },
+    {
+     "name": "Weihui",
+     "local": "卫辉市",
+     "prefecture": "Xinxiang",
+     "prefecture_local": "新乡市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.138,
+     "area_share": 0.201,
+     "cover": 0.273
+    },
+    {
+     "name": "Fengquan",
+     "local": "凤泉区",
+     "prefecture": "Xinxiang",
+     "prefecture_local": "新乡市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.051,
+     "area_share": 0.019,
+     "cover": 0.293
+    },
+    {
+     "name": "Xiuwu",
+     "local": "修武县",
+     "prefecture": "Jiaozuo",
+     "prefecture_local": "焦作市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.044,
+     "area_share": 0.031,
+     "cover": 0.158
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Henan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.01
+    },
+    {
+     "level": "prefecture",
+     "name": "Xinxiang",
+     "local": "新乡市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 0.954,
+     "cover": 0.158
+    }
+   ],
+   "towns": [
+    {
+     "town": "百泉镇",
+     "county": "辉县市",
+     "city": "新乡市",
+     "people_share": 0.098,
+     "cover": 1.0
+    },
+    {
+     "town": "孟庄镇",
+     "county": "辉县市",
+     "city": "新乡市",
+     "people_share": 0.075,
+     "cover": 1.0
+    },
+    {
+     "town": "吴村镇",
+     "county": "辉县市",
+     "city": "新乡市",
+     "people_share": 0.064,
+     "cover": 0.972
+    },
+    {
+     "town": "常村镇",
+     "county": "辉县市",
+     "city": "新乡市",
+     "people_share": 0.057,
+     "cover": 1.0
+    },
+    {
+     "town": "北云门镇",
+     "county": "辉县市",
+     "city": "新乡市",
+     "people_share": 0.055,
+     "cover": 1.0
+    },
+    {
+     "town": "唐庄镇",
+     "county": "卫辉市",
+     "city": "新乡市",
+     "people_share": 0.052,
+     "cover": 0.994
+    },
+    {
+     "town": "高庄乡",
+     "county": "辉县市",
+     "city": "新乡市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "冀屯镇",
+     "county": "辉县市",
+     "city": "新乡市",
+     "people_share": 0.044,
+     "cover": 1.0
+    },
+    {
+     "town": "峪河镇",
+     "county": "辉县市",
+     "city": "新乡市",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "七贤镇",
+     "county": "修武县",
+     "city": "焦作市",
+     "people_share": 0.038,
+     "cover": 0.882
+    },
+    {
+     "town": "安都乡",
+     "county": "卫辉市",
+     "city": "新乡市",
+     "people_share": 0.037,
+     "cover": 0.947
+    },
+    {
+     "town": "城关街道",
+     "county": "辉县市",
+     "city": "新乡市",
+     "people_share": 0.036,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Chengguan",
+     "admin": "Henan",
+     "pop": 740435
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#e4d8c0",
+     "border_px": 792,
+     "name": "Gaoping"
+    },
+    {
+     "key": "#dadfb5",
+     "border_px": 638
+    },
+    {
+     "key": "#e4ea85",
+     "border_px": 444
+    },
+    {
+     "key": "#d7d982",
+     "border_px": 248
+    },
+    {
+     "key": "#e6eaa3",
+     "border_px": 241
+    },
+    {
+     "key": "#e4de6c",
+     "border_px": 207
+    },
+    {
+     "key": "#e8e084",
+     "border_px": 195
+    },
+    {
+     "key": "#e5dcca",
+     "border_px": 81,
+     "name": "Huguan"
+    }
+   ],
+   "text_px": 75,
+   "n": 10,
+   "thumb": {
+    "x0": 6974,
+    "y0": 3160,
+    "k": 3.0,
+    "w": 420,
+    "h": 414
+   }
+  },
+  {
+   "key": "#e4de6c",
+   "color": "#e4de6c",
+   "lon": 113.8246,
+   "lat": 35.2581,
+   "bbox": [
+    7042,
+    3246,
+    7067,
+    3272
+   ],
+   "area_px": 411,
+   "people": 706326,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Xinxiang",
+     "local": "新乡县",
+     "prefecture": "Xinxiang",
+     "prefecture_local": "新乡市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.31,
+     "area_share": 0.589,
+     "cover": 0.707
+    },
+    {
+     "name": "Muye",
+     "local": "牧野区",
+     "prefecture": "Xinxiang",
+     "prefecture_local": "新乡市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.24,
+     "area_share": 0.088,
+     "cover": 0.331
+    },
+    {
+     "name": "Weibin",
+     "local": "卫滨区",
+     "prefecture": "Xinxiang",
+     "prefecture_local": "新乡市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.213,
+     "area_share": 0.141,
+     "cover": 1.0
+    },
+    {
+     "name": "Hongqi",
+     "local": "红旗区",
+     "prefecture": "Xinxiang",
+     "prefecture_local": "新乡市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.177,
+     "area_share": 0.071,
+     "cover": 0.388
+    },
+    {
+     "name": "Fengquan",
+     "local": "凤泉区",
+     "prefecture": "Xinxiang",
+     "prefecture_local": "新乡市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.052,
+     "area_share": 0.09,
+     "cover": 0.224
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Henan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.007
+    },
+    {
+     "level": "prefecture",
+     "name": "Xinxiang",
+     "local": "新乡市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.125
+    }
+   ],
+   "towns": [
+    {
+     "town": "平原乡",
+     "county": "卫滨区",
+     "city": "新乡市",
+     "people_share": 0.146,
+     "cover": 1.0
+    },
+    {
+     "town": "王村镇",
+     "county": "牧野区",
+     "city": "新乡市",
+     "people_share": 0.096,
+     "cover": 1.0
+    },
+    {
+     "town": "朗公庙镇",
+     "county": "新乡县",
+     "city": "新乡市",
+     "people_share": 0.083,
+     "cover": 0.986
+    },
+    {
+     "town": "大块镇",
+     "county": "凤泉区",
+     "city": "新乡市",
+     "people_share": 0.052,
+     "cover": 0.767
+    },
+    {
+     "town": "七里营镇",
+     "county": "新乡县",
+     "city": "新乡市",
+     "people_share": 0.05,
+     "cover": 0.397
+    },
+    {
+     "town": "开发区街道",
+     "county": "红旗区",
+     "city": "新乡市",
+     "people_share": 0.046,
+     "cover": 0.794
+    },
+    {
+     "town": "合河乡",
+     "county": "新乡县",
+     "city": "新乡市",
+     "people_share": 0.046,
+     "cover": 1.0
+    },
+    {
+     "town": "小冀镇",
+     "county": "新乡县",
+     "city": "新乡市",
+     "people_share": 0.04,
+     "cover": 0.678
+    },
+    {
+     "town": "翟坡镇",
+     "county": "新乡县",
+     "city": "新乡市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "渠东街道",
+     "county": "红旗区",
+     "city": "新乡市",
+     "people_share": 0.036,
+     "cover": 1.0
+    },
+    {
+     "town": "牧野乡",
+     "county": "牧野区",
+     "city": "新乡市",
+     "people_share": 0.034,
+     "cover": 0.124
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#e8e084",
+     "border_px": 568
+    },
+    {
+     "key": "#e4ea85",
+     "border_px": 364
+    },
+    {
+     "key": "#e2e4a0",
+     "border_px": 207
+    },
+    {
+     "key": "#f0eeb4",
+     "border_px": 23
+    }
+   ],
+   "text_px": 0,
+   "n": 11,
+   "thumb": {
+    "x0": 7002,
+    "y0": 3206,
+    "k": 3.0,
+    "w": 315,
+    "h": 318
+   }
+  },
+  {
+   "key": "#d7d982",
+   "color": "#d7d982",
+   "lon": 113.3418,
+   "lat": 35.2513,
+   "bbox": [
+    6999,
+    3250,
+    7028,
+    3279
+   ],
+   "area_px": 658,
+   "people": 1066805,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Shanyang",
+     "local": "山阳区",
+     "prefecture": "Jiaozuo",
+     "prefecture_local": "焦作市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.382,
+     "area_share": 0.267,
+     "cover": 0.788
+    },
+    {
+     "name": "Jiefang",
+     "local": "解放区",
+     "prefecture": "Jiaozuo",
+     "prefecture_local": "焦作市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.263,
+     "area_share": 0.087,
+     "cover": 0.969
+    },
+    {
+     "name": "Xiuwu",
+     "local": "修武县",
+     "prefecture": "Jiaozuo",
+     "prefecture_local": "焦作市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.201,
+     "area_share": 0.442,
+     "cover": 0.832
+    },
+    {
+     "name": "Macun",
+     "local": "马村区",
+     "prefecture": "Jiaozuo",
+     "prefecture_local": "焦作市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.132,
+     "area_share": 0.166,
+     "cover": 1.0
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Henan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.011
+    },
+    {
+     "level": "prefecture",
+     "name": "Jiaozuo",
+     "local": "焦作市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 0.998,
+     "cover": 0.29
+    }
+   ],
+   "towns": [
+    {
+     "town": "上白作街道",
+     "county": "解放区",
+     "city": "焦作市",
+     "people_share": 0.114,
+     "cover": 0.992
+    },
+    {
+     "town": "新城街道",
+     "county": "山阳区",
+     "city": "焦作市",
+     "people_share": 0.111,
+     "cover": 1.0
+    },
+    {
+     "town": "王褚街道",
+     "county": "解放区",
+     "city": "焦作市",
+     "people_share": 0.075,
+     "cover": 0.91
+    },
+    {
+     "town": "文昌街道",
+     "county": "山阳区",
+     "city": "焦作市",
+     "people_share": 0.061,
+     "cover": 0.96
+    },
+    {
+     "town": "五里源乡",
+     "county": "修武县",
+     "city": "焦作市",
+     "people_share": 0.054,
+     "cover": 0.93
+    },
+    {
+     "town": "中星街道",
+     "county": "山阳区",
+     "city": "焦作市",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "演马街道",
+     "county": "马村区",
+     "city": "焦作市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "郇封镇",
+     "county": "修武县",
+     "city": "焦作市",
+     "people_share": 0.044,
+     "cover": 0.974
+    },
+    {
+     "town": "待王街道",
+     "county": "马村区",
+     "city": "焦作市",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "安阳城街道",
+     "county": "马村区",
+     "city": "焦作市",
+     "people_share": 0.033,
+     "cover": 1.0
+    },
+    {
+     "town": "西村乡",
+     "county": "修武县",
+     "city": "焦作市",
+     "people_share": 0.031,
+     "cover": 0.989
+    }
+   ],
+   "cities": [
+    {
+     "name": "Jiaozuo",
+     "admin": "Henan",
+     "pop": 3590700
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#ddd893",
+     "border_px": 394
+    },
+    {
+     "key": "#ebe6a5",
+     "border_px": 273
+    },
+    {
+     "key": "#e2e4a0",
+     "border_px": 248
+    },
+    {
+     "key": "#e8e084",
+     "border_px": 165
+    },
+    {
+     "key": "#d4ccb2",
+     "border_px": 129,
+     "name": "Jincheng"
+    },
+    {
+     "key": "#e4d8c0",
+     "border_px": 67,
+     "name": "Gaoping"
+    }
+   ],
+   "text_px": 0,
+   "n": 12,
+   "thumb": {
+    "x0": 6959,
+    "y0": 3210,
+    "k": 3.0,
+    "w": 327,
+    "h": 327
+   }
+  },
+  {
+   "key": "#f0eda8",
+   "color": "#f0eda8",
+   "lon": 114.7446,
+   "lat": 35.1742,
+   "bbox": [
+    7110,
+    3235,
+    7150,
+    3289
+   ],
+   "area_px": 1142,
+   "people": 861784,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Zhangyuan",
+     "local": "长垣县",
+     "prefecture": "Xinxiang",
+     "prefecture_local": "新乡市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.885,
+     "area_share": 0.804,
+     "cover": 0.975
+    },
+    {
+     "name": "Fengqiu",
+     "local": "封丘县",
+     "prefecture": "Xinxiang",
+     "prefecture_local": "新乡市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.106,
+     "area_share": 0.167,
+     "cover": 0.126
+    },
+    {
+     "name": "Dongming",
+     "local": "东明县",
+     "prefecture": "Heze",
+     "prefecture_local": "菏泽市",
+     "province": "山东省",
+     "country": "China",
+     "people_share": 0.007,
+     "area_share": 0.021,
+     "cover": 0.008
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Henan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.99,
+     "cover": 0.009
+    },
+    {
+     "level": "prefecture",
+     "name": "Xinxiang",
+     "local": "新乡市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 0.987,
+     "cover": 0.151
+    }
+   ],
+   "towns": [
+    {
+     "town": "南蒲街道",
+     "county": "长垣县",
+     "city": "新乡市",
+     "people_share": 0.099,
+     "cover": 1.0
+    },
+    {
+     "town": "魏庄街道",
+     "county": "长垣县",
+     "city": "新乡市",
+     "people_share": 0.089,
+     "cover": 1.0
+    },
+    {
+     "town": "蒲东街道",
+     "county": "长垣县",
+     "city": "新乡市",
+     "people_share": 0.076,
+     "cover": 1.0
+    },
+    {
+     "town": "恼里镇",
+     "county": "长垣县",
+     "city": "新乡市",
+     "people_share": 0.058,
+     "cover": 0.986
+    },
+    {
+     "town": "方里镇",
+     "county": "长垣县",
+     "city": "新乡市",
+     "people_share": 0.052,
+     "cover": 1.0
+    },
+    {
+     "town": "蒲西街道",
+     "county": "长垣县",
+     "city": "新乡市",
+     "people_share": 0.052,
+     "cover": 1.0
+    },
+    {
+     "town": "蒲北街道",
+     "county": "长垣县",
+     "city": "新乡市",
+     "people_share": 0.046,
+     "cover": 1.0
+    },
+    {
+     "town": "丁栾镇",
+     "county": "长垣县",
+     "city": "新乡市",
+     "people_share": 0.046,
+     "cover": 0.951
+    },
+    {
+     "town": "佘家乡",
+     "county": "长垣县",
+     "city": "新乡市",
+     "people_share": 0.046,
+     "cover": 0.869
+    },
+    {
+     "town": "芦岗乡",
+     "county": "长垣县",
+     "city": "新乡市",
+     "people_share": 0.043,
+     "cover": 0.993
+    },
+    {
+     "town": "常村镇",
+     "county": "长垣县",
+     "city": "新乡市",
+     "people_share": 0.041,
+     "cover": 0.948
+    },
+    {
+     "town": "武邱乡",
+     "county": "长垣县",
+     "city": "新乡市",
+     "people_share": 0.04,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Puxi",
+     "admin": "Henan",
+     "pop": 809535
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#eef1b4",
+     "border_px": 605
+    },
+    {
+     "key": "#f0eeb4",
+     "border_px": 508
+    },
+    {
+     "key": "#f1eea6",
+     "border_px": 392
+    },
+    {
+     "key": "#e7f1b1",
+     "border_px": 368
+    },
+    {
+     "key": "#f0edab",
+     "border_px": 321
+    },
+    {
+     "key": "#f0e4ab",
+     "border_px": 66
+    }
+   ],
+   "text_px": 0,
+   "n": 13,
+   "thumb": {
+    "x0": 7070,
+    "y0": 3195,
+    "k": 3.0,
+    "w": 360,
+    "h": 402
+   }
+  },
+  {
+   "key": "#ddd893",
+   "color": "#ddd893",
+   "lon": 112.9922,
+   "lat": 35.1496,
+   "bbox": [
+    6966,
+    3257,
+    7009,
+    3297
+   ],
+   "area_px": 1093,
+   "people": 1135922,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Qinyang",
+     "local": "沁阳市",
+     "prefecture": "Jiaozuo",
+     "prefecture_local": "焦作市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.382,
+     "area_share": 0.468,
+     "cover": 0.975
+    },
+    {
+     "name": "Bo'ai",
+     "local": "博爱县",
+     "prefecture": "Jiaozuo",
+     "prefecture_local": "焦作市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.319,
+     "area_share": 0.296,
+     "cover": 0.991
+    },
+    {
+     "name": "Zhongzhan",
+     "local": "中站区",
+     "prefecture": "Jiaozuo",
+     "prefecture_local": "焦作市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.104,
+     "area_share": 0.092,
+     "cover": 0.958
+    },
+    {
+     "name": "Shanyang",
+     "local": "山阳区",
+     "prefecture": "Jiaozuo",
+     "prefecture_local": "焦作市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.094,
+     "area_share": 0.059,
+     "cover": 0.207
+    },
+    {
+     "name": "Wuzhi",
+     "local": "武陟县",
+     "prefecture": "Jiaozuo",
+     "prefecture_local": "焦作市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.085,
+     "area_share": 0.065,
+     "cover": 0.141
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Henan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.012
+    },
+    {
+     "level": "prefecture",
+     "name": "Jiaozuo",
+     "local": "焦作市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.309
+    }
+   ],
+   "towns": [
+    {
+     "town": "博爱县清化镇",
+     "county": "博爱县",
+     "city": "焦作市",
+     "people_share": 0.069,
+     "cover": 1.0
+    },
+    {
+     "town": "西向镇",
+     "county": "沁阳市",
+     "city": "焦作市",
+     "people_share": 0.063,
+     "cover": 1.0
+    },
+    {
+     "town": "柏香镇",
+     "county": "沁阳市",
+     "city": "焦作市",
+     "people_share": 0.06,
+     "cover": 0.923
+    },
+    {
+     "town": "博爱县金城乡",
+     "county": "博爱县",
+     "city": "焦作市",
+     "people_share": 0.053,
+     "cover": 1.0
+    },
+    {
+     "town": "小董乡",
+     "county": "武陟县",
+     "city": "焦作市",
+     "people_share": 0.051,
+     "cover": 0.925
+    },
+    {
+     "town": "博爱县柏山镇",
+     "county": "博爱县",
+     "city": "焦作市",
+     "people_share": 0.05,
+     "cover": 1.0
+    },
+    {
+     "town": "王召乡",
+     "county": "沁阳市",
+     "city": "焦作市",
+     "people_share": 0.041,
+     "cover": 0.957
+    },
+    {
+     "town": "苏家作乡",
+     "county": "山阳区",
+     "city": "焦作市",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "阳庙镇",
+     "county": "山阳区",
+     "city": "焦作市",
+     "people_share": 0.039,
+     "cover": 1.0
+    },
+    {
+     "town": "府城街道",
+     "county": "中站区",
+     "city": "焦作市",
+     "people_share": 0.038,
+     "cover": 0.893
+    },
+    {
+     "town": "博爱县孝敬镇",
+     "county": "博爱县",
+     "city": "焦作市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "王曲乡",
+     "county": "沁阳市",
+     "city": "焦作市",
+     "people_share": 0.038,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Tanbei",
+     "admin": "Henan",
+     "pop": 447701
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#ebe6a5",
+     "border_px": 662
+    },
+    {
+     "key": "#d4ccb2",
+     "border_px": 588,
+     "name": "Jincheng"
+    },
+    {
+     "key": "#d7d982",
+     "border_px": 394
+    },
+    {
+     "key": "#f0e7b3",
+     "border_px": 294
+    }
+   ],
+   "text_px": 0,
+   "n": 14,
+   "thumb": {
+    "x0": 6926,
+    "y0": 3217,
+    "k": 3.0,
+    "w": 369,
+    "h": 360
+   }
+  },
+  {
+   "key": "#f0eeb4",
+   "color": "#f0eeb4",
+   "lon": 114.2891,
+   "lat": 35.0793,
+   "bbox": [
+    7069,
+    3244,
+    7124,
+    3293
+   ],
+   "area_px": 1710,
+   "people": 1052906,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Fengqiu",
+     "local": "封丘县",
+     "prefecture": "Xinxiang",
+     "prefecture_local": "新乡市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.561,
+     "area_share": 0.498,
+     "cover": 0.819
+    },
+    {
+     "name": "Yanjin",
+     "local": "延津县",
+     "prefecture": "Xinxiang",
+     "prefecture_local": "新乡市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.23,
+     "area_share": 0.237,
+     "cover": 0.526
+    },
+    {
+     "name": "Yuanyang",
+     "local": "原阳县",
+     "prefecture": "Xinxiang",
+     "prefecture_local": "新乡市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.204,
+     "area_share": 0.251,
+     "cover": 0.337
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Henan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.011
+    },
+    {
+     "level": "prefecture",
+     "name": "Xinxiang",
+     "local": "新乡市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 0.983,
+     "cover": 0.183
+    }
+   ],
+   "towns": [
+    {
+     "town": "城关镇",
+     "county": "延津县",
+     "city": "新乡市",
+     "people_share": 0.063,
+     "cover": 1.0
+    },
+    {
+     "town": "陡门乡",
+     "county": "原阳县",
+     "city": "新乡市",
+     "people_share": 0.061,
+     "cover": 1.0
+    },
+    {
+     "town": "王村乡",
+     "county": "封丘县",
+     "city": "新乡市",
+     "people_share": 0.06,
+     "cover": 1.0
+    },
+    {
+     "town": "潘店镇",
+     "county": "封丘县",
+     "city": "新乡市",
+     "people_share": 0.052,
+     "cover": 0.937
+    },
+    {
+     "town": "荆宫乡",
+     "county": "封丘县",
+     "city": "新乡市",
+     "people_share": 0.052,
+     "cover": 0.972
+    },
+    {
+     "town": "鲁岗乡",
+     "county": "封丘县",
+     "city": "新乡市",
+     "people_share": 0.049,
+     "cover": 1.0
+    },
+    {
+     "town": "陈桥镇",
+     "county": "封丘县",
+     "city": "新乡市",
+     "people_share": 0.045,
+     "cover": 0.993
+    },
+    {
+     "town": "城关乡",
+     "county": "封丘县",
+     "city": "新乡市",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "赵岗镇",
+     "county": "封丘县",
+     "city": "新乡市",
+     "people_share": 0.042,
+     "cover": 0.841
+    },
+    {
+     "town": "石婆固乡",
+     "county": "延津县",
+     "city": "新乡市",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "留光镇",
+     "county": "封丘县",
+     "city": "新乡市",
+     "people_share": 0.037,
+     "cover": 0.755
+    },
+    {
+     "town": "应举镇",
+     "county": "封丘县",
+     "city": "新乡市",
+     "people_share": 0.036,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f1eea6",
+     "border_px": 555
+    },
+    {
+     "key": "#f0eda8",
+     "border_px": 508
+    },
+    {
+     "key": "#e4ea85",
+     "border_px": 388
+    },
+    {
+     "key": "#e8e084",
+     "border_px": 371
+    },
+    {
+     "key": "#e4d55b",
+     "border_px": 256
+    },
+    {
+     "key": "#e7da75",
+     "border_px": 232
+    },
+    {
+     "key": "#f0e4ab",
+     "border_px": 215
+    },
+    {
+     "key": "#e4de6c",
+     "border_px": 23
+    }
+   ],
+   "text_px": 0,
+   "n": 16,
+   "thumb": {
+    "x0": 7029,
+    "y0": 3204,
+    "k": 3.0,
+    "w": 405,
+    "h": 387
+   }
+  },
+  {
+   "key": "#e8e084",
+   "color": "#e8e084",
+   "lon": 113.766,
+   "lat": 35.0753,
+   "bbox": [
+    7028,
+    3254,
+    7072,
+    3300
+   ],
+   "area_px": 1274,
+   "people": 873761,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yuanyang",
+     "local": "原阳县",
+     "prefecture": "Xinxiang",
+     "prefecture_local": "新乡市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.479,
+     "area_share": 0.587,
+     "cover": 0.656
+    },
+    {
+     "name": "Huojia",
+     "local": "获嘉县",
+     "prefecture": "Xinxiang",
+     "prefecture_local": "新乡市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.427,
+     "area_share": 0.323,
+     "cover": 0.969
+    },
+    {
+     "name": "Xinxiang",
+     "local": "新乡县",
+     "prefecture": "Xinxiang",
+     "prefecture_local": "新乡市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.078,
+     "area_share": 0.062,
+     "cover": 0.219
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Henan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.009
+    },
+    {
+     "level": "prefecture",
+     "name": "Xinxiang",
+     "local": "新乡市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 0.976,
+     "cover": 0.151
+    }
+   ],
+   "towns": [
+    {
+     "town": "葛埠口乡",
+     "county": "原阳县",
+     "city": "新乡市",
+     "people_share": 0.085,
+     "cover": 1.0
+    },
+    {
+     "town": "城关镇",
+     "county": "原阳县",
+     "city": "新乡市",
+     "people_share": 0.068,
+     "cover": 1.0
+    },
+    {
+     "town": "七里营镇",
+     "county": "新乡县",
+     "city": "新乡市",
+     "people_share": 0.061,
+     "cover": 0.603
+    },
+    {
+     "town": "城关镇",
+     "county": "获嘉县",
+     "city": "新乡市",
+     "people_share": 0.057,
+     "cover": 1.0
+    },
+    {
+     "town": "福宁集镇",
+     "county": "原阳县",
+     "city": "新乡市",
+     "people_share": 0.056,
+     "cover": 0.928
+    },
+    {
+     "town": "太山乡",
+     "county": "获嘉县",
+     "city": "新乡市",
+     "people_share": 0.053,
+     "cover": 1.0
+    },
+    {
+     "town": "冯庄镇",
+     "county": "获嘉县",
+     "city": "新乡市",
+     "people_share": 0.05,
+     "cover": 0.985
+    },
+    {
+     "town": "大新庄乡",
+     "county": "获嘉县",
+     "city": "新乡市",
+     "people_share": 0.049,
+     "cover": 1.0
+    },
+    {
+     "town": "亢村镇",
+     "county": "获嘉县",
+     "city": "新乡市",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "桥北乡",
+     "county": "原阳县",
+     "city": "新乡市",
+     "people_share": 0.039,
+     "cover": 0.983
+    },
+    {
+     "town": "祝楼乡",
+     "county": "原阳县",
+     "city": "新乡市",
+     "people_share": 0.038,
+     "cover": 0.983
+    },
+    {
+     "town": "徐营镇",
+     "county": "获嘉县",
+     "city": "新乡市",
+     "people_share": 0.036,
+     "cover": 0.88
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#e4de6c",
+     "border_px": 568
+    },
+    {
+     "key": "#ebe6a5",
+     "border_px": 407
+    },
+    {
+     "key": "#f0eeb4",
+     "border_px": 371
+    },
+    {
+     "key": "#ebe059",
+     "border_px": 226
+    },
+    {
+     "key": "#e7da75",
+     "border_px": 207
+    },
+    {
+     "key": "#e2e4a0",
+     "border_px": 195
+    },
+    {
+     "key": "#d7d982",
+     "border_px": 165
+    },
+    {
+     "key": "#dcc66d",
+     "border_px": 110
+    }
+   ],
+   "text_px": 0,
+   "n": 17,
+   "thumb": {
+    "x0": 6988,
+    "y0": 3214,
+    "k": 3.0,
+    "w": 372,
+    "h": 378
+   }
+  },
+  {
+   "key": "#f0e7b3",
+   "color": "#f0e7b3",
+   "lon": 112.4543,
+   "lat": 35.0624,
+   "bbox": [
+    6906,
+    3274,
+    6979,
+    3317
+   ],
+   "area_px": 2140,
+   "people": 1121371,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Jiyuan",
+     "local": "济源市",
+     "prefecture": "Jiyuan",
+     "prefecture_local": "济源市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.675,
+     "area_share": 0.78,
+     "cover": 0.998
+    },
+    {
+     "name": "Mengzhou",
+     "local": "孟州市",
+     "prefecture": "Jiaozuo",
+     "prefecture_local": "焦作市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.237,
+     "area_share": 0.162,
+     "cover": 0.741
+    },
+    {
+     "name": "Jili",
+     "local": "吉利区",
+     "prefecture": "Luoyang",
+     "prefecture_local": "洛阳市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.072,
+     "area_share": 0.033,
+     "cover": 1.0
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Henan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.011
+    },
+    {
+     "level": "prefecture",
+     "name": "Jiyuan",
+     "local": "济源市〔1〕",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 0.674,
+     "cover": 0.998
+    },
+    {
+     "level": "prefecture",
+     "name": "Jiaozuo",
+     "local": "焦作市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 0.317,
+     "cover": 0.097
+    }
+   ],
+   "towns": [
+    {
+     "town": "济源市轵城镇",
+     "county": "济源市",
+     "city": "济源市",
+     "people_share": 0.133,
+     "cover": 1.0
+    },
+    {
+     "town": "济源市天坛街道",
+     "county": "济源市",
+     "city": "济源市",
+     "people_share": 0.07,
+     "cover": 1.0
+    },
+    {
+     "town": "济源市沁园街道",
+     "county": "济源市",
+     "city": "济源市",
+     "people_share": 0.065,
+     "cover": 1.0
+    },
+    {
+     "town": "济源市克井镇",
+     "county": "济源市",
+     "city": "济源市",
+     "people_share": 0.062,
+     "cover": 0.999
+    },
+    {
+     "town": "济源市承留镇",
+     "county": "济源市",
+     "city": "济源市",
+     "people_share": 0.056,
+     "cover": 1.0
+    },
+    {
+     "town": "吉利乡",
+     "county": "吉利区",
+     "city": "洛阳市",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "济源市玉泉街道",
+     "county": "济源市",
+     "city": "济源市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "济源市五龙口镇",
+     "county": "济源市",
+     "city": "济源市",
+     "people_share": 0.039,
+     "cover": 0.999
+    },
+    {
+     "town": "赵和镇",
+     "county": "孟州市",
+     "city": "焦作市",
+     "people_share": 0.039,
+     "cover": 1.0
+    },
+    {
+     "town": "化工镇",
+     "county": "孟州市",
+     "city": "焦作市",
+     "people_share": 0.035,
+     "cover": 0.962
+    },
+    {
+     "town": "会昌街道",
+     "county": "孟州市",
+     "city": "焦作市",
+     "people_share": 0.034,
+     "cover": 0.996
+    },
+    {
+     "town": "济源市邵原镇",
+     "county": "济源市",
+     "city": "济源市",
+     "people_share": 0.034,
+     "cover": 0.968
+    }
+   ],
+   "cities": [
+    {
+     "name": "Shuangqiao",
+     "admin": "Henan",
+     "pop": 733000
+    },
+    {
+     "name": "Huichang",
+     "admin": "Henan",
+     "pop": 367113
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#d4ccb2",
+     "border_px": 608,
+     "name": "Jincheng"
+    },
+    {
+     "key": "#edd08c",
+     "border_px": 514
+    },
+    {
+     "key": "#eddcb3",
+     "border_px": 476
+    },
+    {
+     "key": "#ebe4b9",
+     "border_px": 372,
+     "name": "Zhongtiao"
+    },
+    {
+     "key": "#ebe6a5",
+     "border_px": 303
+    },
+    {
+     "key": "#ddd893",
+     "border_px": 294
+    },
+    {
+     "key": "#e4d8c0",
+     "border_px": 234,
+     "name": "Gaoping"
+    },
+    {
+     "key": "#eddf9a",
+     "border_px": 79
+    }
+   ],
+   "text_px": 0,
+   "n": 18,
+   "thumb": {
+    "x0": 6866,
+    "y0": 3234,
+    "k": 2.0,
+    "w": 306,
+    "h": 246
+   }
+  },
+  {
+   "key": "#ebe6a5",
+   "color": "#ebe6a5",
+   "lon": 113.2216,
+   "lat": 34.9971,
+   "bbox": [
+    6968,
+    3274,
+    7040,
+    3314
+   ],
+   "area_px": 1226,
+   "people": 1063044,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Wuzhi",
+     "local": "武陟县",
+     "prefecture": "Jiaozuo",
+     "prefecture_local": "焦作市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.538,
+     "area_share": 0.515,
+     "cover": 0.837
+    },
+    {
+     "name": "Wen",
+     "local": "温县",
+     "prefecture": "Jiaozuo",
+     "prefecture_local": "焦作市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.36,
+     "area_share": 0.352,
+     "cover": 0.98
+    },
+    {
+     "name": "Mengzhou",
+     "local": "孟州市",
+     "prefecture": "Jiaozuo",
+     "prefecture_local": "焦作市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.086,
+     "area_share": 0.085,
+     "cover": 0.256
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Henan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.011
+    },
+    {
+     "level": "prefecture",
+     "name": "Jiaozuo",
+     "local": "焦作市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 0.992,
+     "cover": 0.287
+    }
+   ],
+   "towns": [
+    {
+     "town": "大封镇",
+     "county": "武陟县",
+     "city": "焦作市",
+     "people_share": 0.075,
+     "cover": 1.0
+    },
+    {
+     "town": "温泉镇",
+     "county": "温县",
+     "city": "焦作市",
+     "people_share": 0.071,
+     "cover": 1.0
+    },
+    {
+     "town": "谢旗营镇",
+     "county": "武陟县",
+     "city": "焦作市",
+     "people_share": 0.06,
+     "cover": 0.933
+    },
+    {
+     "town": "祥云镇",
+     "county": "温县",
+     "city": "焦作市",
+     "people_share": 0.057,
+     "cover": 1.0
+    },
+    {
+     "town": "大虹桥乡",
+     "county": "武陟县",
+     "city": "焦作市",
+     "people_share": 0.05,
+     "cover": 1.0
+    },
+    {
+     "town": "黄庄镇",
+     "county": "温县",
+     "city": "焦作市",
+     "people_share": 0.046,
+     "cover": 0.934
+    },
+    {
+     "town": "詹店镇",
+     "county": "武陟县",
+     "city": "焦作市",
+     "people_share": 0.044,
+     "cover": 0.952
+    },
+    {
+     "town": "西陶镇",
+     "county": "武陟县",
+     "city": "焦作市",
+     "people_share": 0.043,
+     "cover": 0.963
+    },
+    {
+     "town": "番田镇",
+     "county": "温县",
+     "city": "焦作市",
+     "people_share": 0.042,
+     "cover": 0.975
+    },
+    {
+     "town": "南庄镇",
+     "county": "孟州市",
+     "city": "焦作市",
+     "people_share": 0.039,
+     "cover": 0.914
+    },
+    {
+     "town": "乔庙乡",
+     "county": "武陟县",
+     "city": "焦作市",
+     "people_share": 0.038,
+     "cover": 0.983
+    },
+    {
+     "town": "圪当店乡",
+     "county": "武陟县",
+     "city": "焦作市",
+     "people_share": 0.038,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#eddf9a",
+     "border_px": 784
+    },
+    {
+     "key": "#ddd893",
+     "border_px": 662
+    },
+    {
+     "key": "#e8e084",
+     "border_px": 407
+    },
+    {
+     "key": "#f0e7b3",
+     "border_px": 303
+    },
+    {
+     "key": "#d7d982",
+     "border_px": 273
+    },
+    {
+     "key": "#dcc66d",
+     "border_px": 83
+    }
+   ],
+   "text_px": 0,
+   "n": 19,
+   "thumb": {
+    "x0": 6928,
+    "y0": 3234,
+    "k": 2.0,
+    "w": 304,
+    "h": 240
+   }
+  },
+  {
+   "key": "#f1eea6@114.5,35.4",
+   "color": "#f1eea6",
+   "lon": 114.493,
+   "lat": 35.3916,
+   "bbox": [
+    7088,
+    3210,
+    7125,
+    3263
+   ],
+   "area_px": 1358,
+   "people": 988254,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Hua",
+     "local": "滑县",
+     "prefecture": "Anyang",
+     "prefecture_local": "安阳市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.754,
+     "area_share": 0.698,
+     "cover": 0.608
+    },
+    {
+     "name": "Yanjin",
+     "local": "延津县",
+     "prefecture": "Xinxiang",
+     "prefecture_local": "新乡市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.192,
+     "area_share": 0.247,
+     "cover": 0.412
+    },
+    {
+     "name": "Fengqiu",
+     "local": "封丘县",
+     "prefecture": "Xinxiang",
+     "prefecture_local": "新乡市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.038,
+     "area_share": 0.043,
+     "cover": 0.052
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Henan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.01
+    },
+    {
+     "level": "prefecture",
+     "name": "Anyang",
+     "local": "安阳市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 0.741,
+     "cover": 0.13
+    },
+    {
+     "level": "prefecture",
+     "name": "Xinxiang",
+     "local": "新乡市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 0.259,
+     "cover": 0.045
+    }
+   ],
+   "towns": [
+    {
+     "town": "牛屯镇",
+     "county": "滑县",
+     "city": "安阳市",
+     "people_share": 0.078,
+     "cover": 1.0
+    },
+    {
+     "town": "新区管委会",
+     "county": "滑县",
+     "city": "安阳市",
+     "people_share": 0.077,
+     "cover": 1.0
+    },
+    {
+     "town": "留固镇",
+     "county": "滑县",
+     "city": "安阳市",
+     "people_share": 0.071,
+     "cover": 0.917
+    },
+    {
+     "town": "上官镇",
+     "county": "滑县",
+     "city": "安阳市",
+     "people_share": 0.07,
+     "cover": 0.991
+    },
+    {
+     "town": "城关镇",
+     "county": "滑县",
+     "city": "安阳市",
+     "people_share": 0.069,
+     "cover": 0.964
+    },
+    {
+     "town": "老店镇",
+     "county": "滑县",
+     "city": "安阳市",
+     "people_share": 0.057,
+     "cover": 1.0
+    },
+    {
+     "town": "小铺乡",
+     "county": "滑县",
+     "city": "安阳市",
+     "people_share": 0.052,
+     "cover": 1.0
+    },
+    {
+     "town": "王庄镇",
+     "county": "滑县",
+     "city": "安阳市",
+     "people_share": 0.05,
+     "cover": 0.949
+    },
+    {
+     "town": "位邱乡",
+     "county": "延津县",
+     "city": "新乡市",
+     "people_share": 0.048,
+     "cover": 0.986
+    },
+    {
+     "town": "半坡店乡",
+     "county": "滑县",
+     "city": "安阳市",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "马庄乡",
+     "county": "延津县",
+     "city": "新乡市",
+     "people_share": 0.042,
+     "cover": 0.976
+    },
+    {
+     "town": "慈周寨乡",
+     "county": "滑县",
+     "city": "安阳市",
+     "people_share": 0.041,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f0eeb4",
+     "border_px": 555
+    },
+    {
+     "key": "#e7f1b1",
+     "border_px": 518
+    },
+    {
+     "key": "#e6eaa3",
+     "border_px": 463
+    },
+    {
+     "key": "#f0eda8",
+     "border_px": 392
+    },
+    {
+     "key": "#e4ea85@114.1,35.4",
+     "border_px": 146
+    }
+   ],
+   "text_px": 0,
+   "n": 20,
+   "thumb": {
+    "x0": 7048,
+    "y0": 3170,
+    "k": 3.0,
+    "w": 351,
+    "h": 399
+   }
+  },
+  {
+   "key": "#e4ea85@114.1,35.4",
+   "color": "#e4ea85",
+   "lon": 114.0808,
+   "lat": 35.3779,
+   "bbox": [
+    7054,
+    3227,
+    7091,
+    3263
+   ],
+   "area_px": 666,
+   "people": 1009571,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Muye",
+     "local": "牧野区",
+     "prefecture": "Xinxiang",
+     "prefecture_local": "新乡市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.339,
+     "area_share": 0.077,
+     "cover": 0.669
+    },
+    {
+     "name": "Weihui",
+     "local": "卫辉市",
+     "prefecture": "Xinxiang",
+     "prefecture_local": "新乡市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.337,
+     "area_share": 0.559,
+     "cover": 0.72
+    },
+    {
+     "name": "Hongqi",
+     "local": "红旗区",
+     "prefecture": "Xinxiang",
+     "prefecture_local": "新乡市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.195,
+     "area_share": 0.173,
+     "cover": 0.612
+    },
+    {
+     "name": "Fengquan",
+     "local": "凤泉区",
+     "prefecture": "Xinxiang",
+     "prefecture_local": "新乡市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.078,
+     "area_share": 0.05,
+     "cover": 0.482
+    },
+    {
+     "name": "Yanjin",
+     "local": "延津县",
+     "prefecture": "Xinxiang",
+     "prefecture_local": "新乡市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.026,
+     "area_share": 0.083,
+     "cover": 0.056
+    },
+    {
+     "name": "Xinxiang",
+     "local": "新乡县",
+     "prefecture": "Xinxiang",
+     "prefecture_local": "新乡市",
+     "province": "河南省",
+     "country": "China",
+     "people_share": 0.022,
+     "area_share": 0.051,
+     "cover": 0.072
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Henan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.01
+    },
+    {
+     "level": "prefecture",
+     "name": "Xinxiang",
+     "local": "新乡市",
+     "province": "Henan",
+     "country": "China",
+     "people_share": 0.999,
+     "cover": 0.179
+    }
+   ],
+   "towns": [
+    {
+     "town": "牧野乡",
+     "county": "牧野区",
+     "city": "新乡市",
+     "people_share": 0.171,
+     "cover": 0.876
+    },
+    {
+     "town": "洪门镇",
+     "county": "红旗区",
+     "city": "新乡市",
+     "people_share": 0.101,
+     "cover": 0.916
+    },
+    {
+     "town": "和平路街道",
+     "county": "牧野区",
+     "city": "新乡市",
+     "people_share": 0.079,
+     "cover": 1.0
+    },
+    {
+     "town": "新乡化学与物理电源产业园区",
+     "county": "牧野区",
+     "city": "新乡市",
+     "people_share": 0.077,
+     "cover": 1.0
+    },
+    {
+     "town": "城郊乡",
+     "county": "卫辉市",
+     "city": "新乡市",
+     "people_share": 0.065,
+     "cover": 1.0
+    },
+    {
+     "town": "耿黄乡",
+     "county": "凤泉区",
+     "city": "新乡市",
+     "people_share": 0.06,
+     "cover": 0.934
+    },
+    {
+     "town": "李源屯镇",
+     "county": "卫辉市",
+     "city": "新乡市",
+     "people_share": 0.05,
+     "cover": 1.0
+    },
+    {
+     "town": "柳庄乡",
+     "county": "卫辉市",
+     "city": "新乡市",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "小店镇",
+     "county": "红旗区",
+     "city": "新乡市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "上乐村镇",
+     "county": "卫辉市",
+     "city": "新乡市",
+     "people_share": 0.033,
+     "cover": 0.984
+    },
+    {
+     "town": "庞寨乡",
+     "county": "卫辉市",
+     "city": "新乡市",
+     "people_share": 0.032,
+     "cover": 0.954
+    },
+    {
+     "town": "顿坊店乡",
+     "county": "卫辉市",
+     "city": "新乡市",
+     "people_share": 0.031,
+     "cover": 0.922
+    }
+   ],
+   "cities": [
+    {
+     "name": "Nangandao",
+     "admin": "Henan",
+     "pop": 5708191
+    },
+    {
+     "name": "Chengjiao",
+     "admin": "Henan",
+     "pop": 495744
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#e2e4a0",
+     "border_px": 444
+    },
+    {
+     "key": "#f0eeb4",
+     "border_px": 388
+    },
+    {
+     "key": "#e4de6c",
+     "border_px": 364
+    },
+    {
+     "key": "#e6eaa3",
+     "border_px": 271
+    },
+    {
+     "key": "#f1eea6@114.5,35.4",
+     "border_px": 146
+    }
+   ],
+   "text_px": 0,
+   "n": 21,
+   "thumb": {
+    "x0": 7014,
+    "y0": 3187,
+    "k": 3.0,
+    "w": 351,
+    "h": 348
+   }
+  }
+ ]
+}

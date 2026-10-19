@@ -48,5 +48,15 @@
     "name": "drymonths",
     "folder": "C:/Users/anita/projects/maps/drymonths",
     "about": "dry-summer (Mediterranean) map from IMERG monthly rain"
+  },
+  {
+    "name": "asia1mnames",
+    "folder": "asia1m/naming",
+    "about": "asia1m region naming: candidates per batch"
+  },
+  {
+    "name": "statemetros",
+    "folder": "statemetros",
+    "about": "biggest metro area in each state, 1900-2020"
   }
 ]

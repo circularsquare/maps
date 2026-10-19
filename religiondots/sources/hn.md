@@ -234,3 +234,12 @@ national share in Gracias a Dios (1.40% against 0.47%), where the survey found n
 is 2x, so flat stays. §4.2's version of the residual, with the Adventists still in the tail, gives
 1.97x there and would pass. The rule tests the residual after the standouts, which is the one this
 build would have shipped.
+
+## Pentecostals from Pew 2014 (2026-10-16)
+
+Anita's call of 2026-10-16, built by session `c67d3c3c-latam` (`latam_split.py`, sources.md
+§latam-2026-10-16). Of the 4,122,654 on `christianity.evangelical`, 2,015,013 (48.9%) are drawn on
+`christianity.pentecostal`: Pew Research Center's 2014 survey puts 48.1% of Honduran Protestants
+(`QPROT`, 638 of them) in a Pentecostal church, taken of the whole Protestant universe of
+4,188,963 including the 66,309 Adventists the survey names separately. 2,107,641 stay on
+`christianity.evangelical`. All `modelled`.

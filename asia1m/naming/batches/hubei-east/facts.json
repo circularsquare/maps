@@ -1,0 +1,3060 @@
+{
+ "name": "hubei-east",
+ "province": "Hubei",
+ "prefectures": [
+  "Huanggang",
+  "Xiaogan",
+  "Suizhou",
+  "Xianning"
+ ],
+ "tiles": [
+  {
+   "tag": "1",
+   "x": 6837,
+   "y": 3407,
+   "w": 694,
+   "h": 729,
+   "scale": 2,
+   "regions": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+   ]
+  }
+ ],
+ "regions": [
+  {
+   "key": "#e4d1cf",
+   "color": "#e4d1cf",
+   "lon": 113.8959,
+   "lat": 31.6586,
+   "bbox": [
+    7077,
+    3607,
+    7145,
+    3682
+   ],
+   "area_px": 3207,
+   "people": 943839,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Guangshui",
+     "local": "广水市",
+     "prefecture": "Suizhou",
+     "prefecture_local": "随州市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.692,
+     "area_share": 0.735,
+     "cover": 0.981
+    },
+    {
+     "name": "Dawu",
+     "local": "大悟县",
+     "prefecture": "Xiaogan",
+     "prefecture_local": "孝感市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.301,
+     "area_share": 0.253,
+     "cover": 0.516
+    },
+    {
+     "name": "Xiaochang",
+     "local": "孝昌县",
+     "prefecture": "Xiaogan",
+     "prefecture_local": "孝感市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.004,
+     "area_share": 0.002,
+     "cover": 0.007
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hubei",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.999,
+     "cover": 0.017
+    },
+    {
+     "level": "prefecture",
+     "name": "Suizhou",
+     "local": "随州市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.692,
+     "cover": 0.345
+    },
+    {
+     "level": "prefecture",
+     "name": "Xiaogan",
+     "local": "孝感市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.308,
+     "cover": 0.057
+    }
+   ],
+   "towns": [
+    {
+     "town": "城关镇",
+     "county": "大悟县",
+     "city": "孝感市",
+     "people_share": 0.133,
+     "cover": 1.0
+    },
+    {
+     "town": "城郊乡",
+     "county": "广水市",
+     "city": "随州市",
+     "people_share": 0.1,
+     "cover": 1.0
+    },
+    {
+     "town": "长岭镇",
+     "county": "广水市",
+     "city": "随州市",
+     "people_share": 0.064,
+     "cover": 0.939
+    },
+    {
+     "town": "武胜关镇",
+     "county": "广水市",
+     "city": "随州市",
+     "people_share": 0.052,
+     "cover": 1.0
+    },
+    {
+     "town": "杨寨镇",
+     "county": "广水市",
+     "city": "随州市",
+     "people_share": 0.051,
+     "cover": 0.984
+    },
+    {
+     "town": "应山街道",
+     "county": "广水市",
+     "city": "随州市",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "十里街道",
+     "county": "广水市",
+     "city": "随州市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "李店乡",
+     "county": "广水市",
+     "city": "随州市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "广水街道",
+     "county": "广水市",
+     "city": "随州市",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "太平乡",
+     "county": "广水市",
+     "city": "随州市",
+     "people_share": 0.039,
+     "cover": 0.915
+    },
+    {
+     "town": "骆店乡",
+     "county": "广水市",
+     "city": "随州市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "芳畈镇",
+     "county": "大悟县",
+     "city": "孝感市",
+     "people_share": 0.036,
+     "cover": 0.937
+    }
+   ],
+   "cities": [
+    {
+     "name": "Guangshui",
+     "admin": "Hubei",
+     "pop": 755910
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#e8cab5",
+     "border_px": 1037,
+     "name": "Xinyang"
+    },
+    {
+     "key": "#ebcdcd",
+     "border_px": 910
+    },
+    {
+     "key": "#f3c9d0",
+     "border_px": 835
+    },
+    {
+     "key": "#eacbc8",
+     "border_px": 517
+    },
+    {
+     "key": "#f0d7c6",
+     "border_px": 286,
+     "name": "Luoshan"
+    },
+    {
+     "key": "#f0d1cd",
+     "border_px": 227
+    }
+   ],
+   "text_px": 0,
+   "n": 1,
+   "thumb": {
+    "x0": 7037,
+    "y0": 3567,
+    "k": 2.0,
+    "w": 296,
+    "h": 310
+   }
+  },
+  {
+   "key": "#ebcdcd",
+   "color": "#ebcdcd",
+   "lon": 113.3444,
+   "lat": 31.6469,
+   "bbox": [
+    7037,
+    3617,
+    7088,
+    3696
+   ],
+   "area_px": 2745,
+   "people": 842991,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Cengdou",
+     "local": "曾都区",
+     "prefecture": "Suizhou",
+     "prefecture_local": "随州市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.655,
+     "area_share": 0.474,
+     "cover": 0.999
+    },
+    {
+     "name": "Sui",
+     "local": "随县",
+     "prefecture": "Suizhou",
+     "prefecture_local": "随州市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.289,
+     "area_share": 0.43,
+     "cover": 0.359
+    },
+    {
+     "name": "Anlu",
+     "local": "安陆市",
+     "prefecture": "Xiaogan",
+     "prefecture_local": "孝感市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.044,
+     "area_share": 0.082,
+     "cover": 0.057
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hubei",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.015
+    },
+    {
+     "level": "prefecture",
+     "name": "Suizhou",
+     "local": "随州市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.953,
+     "cover": 0.424
+    }
+   ],
+   "towns": [
+    {
+     "town": "淅河镇",
+     "county": "曾都区",
+     "city": "随州市",
+     "people_share": 0.116,
+     "cover": 1.0
+    },
+    {
+     "town": "南郊街道",
+     "county": "曾都区",
+     "city": "随州市",
+     "people_share": 0.116,
+     "cover": 1.0
+    },
+    {
+     "town": "府河镇",
+     "county": "曾都区",
+     "city": "随州市",
+     "people_share": 0.06,
+     "cover": 0.986
+    },
+    {
+     "town": "何店镇",
+     "county": "曾都区",
+     "city": "随州市",
+     "people_share": 0.059,
+     "cover": 1.0
+    },
+    {
+     "town": "安居镇",
+     "county": "随县",
+     "city": "随州市",
+     "people_share": 0.058,
+     "cover": 0.903
+    },
+    {
+     "town": "厉山镇",
+     "county": "随县",
+     "city": "随州市",
+     "people_share": 0.057,
+     "cover": 0.947
+    },
+    {
+     "town": "北郊街道",
+     "county": "曾都区",
+     "city": "随州市",
+     "people_share": 0.057,
+     "cover": 1.0
+    },
+    {
+     "town": "随州市经济开发区",
+     "county": "曾都区",
+     "city": "随州市",
+     "people_share": 0.056,
+     "cover": 1.0
+    },
+    {
+     "town": "均川镇",
+     "county": "随县",
+     "city": "随州市",
+     "people_share": 0.056,
+     "cover": 0.998
+    },
+    {
+     "town": "东城街道",
+     "county": "曾都区",
+     "city": "随州市",
+     "people_share": 0.049,
+     "cover": 1.0
+    },
+    {
+     "town": "三里岗镇",
+     "county": "随县",
+     "city": "随州市",
+     "people_share": 0.038,
+     "cover": 0.993
+    },
+    {
+     "town": "新街镇",
+     "county": "随县",
+     "city": "随州市",
+     "people_share": 0.038,
+     "cover": 0.863
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f0d1cd",
+     "border_px": 1365
+    },
+    {
+     "key": "#e4d1cf",
+     "border_px": 910
+    },
+    {
+     "key": "#ead7d4",
+     "border_px": 525
+    },
+    {
+     "key": "#f3c9d0",
+     "border_px": 300
+    }
+   ],
+   "text_px": 0,
+   "n": 2,
+   "thumb": {
+    "x0": 6997,
+    "y0": 3577,
+    "k": 2.0,
+    "w": 262,
+    "h": 318
+   }
+  },
+  {
+   "key": "#eacbc8",
+   "color": "#eacbc8",
+   "lon": 114.4456,
+   "lat": 31.2712,
+   "bbox": [
+    7140,
+    3644,
+    7191,
+    3738
+   ],
+   "area_px": 3329,
+   "people": 1041743,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Hong'an",
+     "local": "红安县",
+     "prefecture": "Huanggang",
+     "prefecture_local": "黄冈市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.421,
+     "area_share": 0.383,
+     "cover": 0.828
+    },
+    {
+     "name": "Huangpi",
+     "local": "黄陂区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.38,
+     "area_share": 0.392,
+     "cover": 0.447
+    },
+    {
+     "name": "Dawu",
+     "local": "大悟县",
+     "prefecture": "Xiaogan",
+     "prefecture_local": "孝感市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.197,
+     "area_share": 0.22,
+     "cover": 0.374
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hubei",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.999,
+     "cover": 0.019
+    },
+    {
+     "level": "prefecture",
+     "name": "Huanggang",
+     "local": "黄冈市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.425,
+     "cover": 0.074
+    },
+    {
+     "level": "prefecture",
+     "name": "Wuhan",
+     "local": "武汉市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.375,
+     "cover": 0.037
+    },
+    {
+     "level": "prefecture",
+     "name": "Xiaogan",
+     "local": "孝感市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.199,
+     "cover": 0.041
+    }
+   ],
+   "towns": [
+    {
+     "town": "城关镇",
+     "county": "红安县",
+     "city": "黄冈市",
+     "people_share": 0.136,
+     "cover": 1.0
+    },
+    {
+     "town": "祁家湾街道",
+     "county": "黄陂区",
+     "city": "武汉市",
+     "people_share": 0.08,
+     "cover": 0.924
+    },
+    {
+     "town": "七里坪镇",
+     "county": "红安县",
+     "city": "黄冈市",
+     "people_share": 0.07,
+     "cover": 0.992
+    },
+    {
+     "town": "李集街道",
+     "county": "黄陂区",
+     "city": "武汉市",
+     "people_share": 0.063,
+     "cover": 0.971
+    },
+    {
+     "town": "杏花乡",
+     "county": "红安县",
+     "city": "黄冈市",
+     "people_share": 0.059,
+     "cover": 0.992
+    },
+    {
+     "town": "王家河街道",
+     "county": "黄陂区",
+     "city": "武汉市",
+     "people_share": 0.044,
+     "cover": 0.99
+    },
+    {
+     "town": "罗汉寺街道",
+     "county": "黄陂区",
+     "city": "武汉市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "新城镇",
+     "county": "大悟县",
+     "city": "孝感市",
+     "people_share": 0.041,
+     "cover": 0.956
+    },
+    {
+     "town": "华河镇",
+     "county": "红安县",
+     "city": "黄冈市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "姚集街道",
+     "county": "黄陂区",
+     "city": "武汉市",
+     "people_share": 0.036,
+     "cover": 1.0
+    },
+    {
+     "town": "高桥镇",
+     "county": "红安县",
+     "city": "黄冈市",
+     "people_share": 0.035,
+     "cover": 0.95
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#eacbc3",
+     "border_px": 894
+    },
+    {
+     "key": "#f0d7c6",
+     "border_px": 736,
+     "name": "Luoshan"
+    },
+    {
+     "key": "#e4d1cf",
+     "border_px": 517
+    },
+    {
+     "key": "#f3c9d0",
+     "border_px": 496
+    },
+    {
+     "key": "#edc3b7@114.6,30.8",
+     "border_px": 448
+    },
+    {
+     "key": "#ebc1c3",
+     "border_px": 373
+    },
+    {
+     "key": "#f1b9b9",
+     "border_px": 130
+    }
+   ],
+   "text_px": 0,
+   "n": 3,
+   "thumb": {
+    "x0": 7100,
+    "y0": 3604,
+    "k": 2.0,
+    "w": 262,
+    "h": 348
+   }
+  },
+  {
+   "key": "#f3c9d0",
+   "color": "#f3c9d0",
+   "lon": 113.8456,
+   "lat": 31.2603,
+   "bbox": [
+    7074,
+    3675,
+    7145,
+    3718
+   ],
+   "area_px": 2122,
+   "people": 1182606,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Anlu",
+     "local": "安陆市",
+     "prefecture": "Xiaogan",
+     "prefecture_local": "孝感市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.521,
+     "area_share": 0.46,
+     "cover": 0.933
+    },
+    {
+     "name": "Xiaochang",
+     "local": "孝昌县",
+     "prefecture": "Xiaogan",
+     "prefecture_local": "孝感市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.428,
+     "area_share": 0.485,
+     "cover": 0.962
+    },
+    {
+     "name": "Yunmeng",
+     "local": "云梦县",
+     "prefecture": "Xiaogan",
+     "prefecture_local": "孝感市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.036,
+     "area_share": 0.037,
+     "cover": 0.092
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hubei",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.021
+    },
+    {
+     "level": "prefecture",
+     "name": "Xiaogan",
+     "local": "孝感市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.996,
+     "cover": 0.232
+    }
+   ],
+   "towns": [
+    {
+     "town": "花园镇",
+     "county": "孝昌县",
+     "city": "孝感市",
+     "people_share": 0.091,
+     "cover": 1.0
+    },
+    {
+     "town": "开发区",
+     "county": "安陆市",
+     "city": "孝感市",
+     "people_share": 0.076,
+     "cover": 1.0
+    },
+    {
+     "town": "府城街道",
+     "county": "安陆市",
+     "city": "孝感市",
+     "people_share": 0.065,
+     "cover": 1.0
+    },
+    {
+     "town": "烟店镇",
+     "county": "安陆市",
+     "city": "孝感市",
+     "people_share": 0.059,
+     "cover": 0.995
+    },
+    {
+     "town": "南城街道",
+     "county": "安陆市",
+     "city": "孝感市",
+     "people_share": 0.057,
+     "cover": 1.0
+    },
+    {
+     "town": "棠棣镇",
+     "county": "安陆市",
+     "city": "孝感市",
+     "people_share": 0.053,
+     "cover": 1.0
+    },
+    {
+     "town": "邹岗镇",
+     "county": "孝昌县",
+     "city": "孝感市",
+     "people_share": 0.048,
+     "cover": 0.933
+    },
+    {
+     "town": "巡店镇",
+     "county": "安陆市",
+     "city": "孝感市",
+     "people_share": 0.041,
+     "cover": 0.99
+    },
+    {
+     "town": "李店镇",
+     "county": "安陆市",
+     "city": "孝感市",
+     "people_share": 0.039,
+     "cover": 1.0
+    },
+    {
+     "town": "陡山乡",
+     "county": "孝昌县",
+     "city": "孝感市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "周巷镇",
+     "county": "孝昌县",
+     "city": "孝感市",
+     "people_share": 0.036,
+     "cover": 1.0
+    },
+    {
+     "town": "季店乡",
+     "county": "孝昌县",
+     "city": "孝感市",
+     "people_share": 0.034,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Anlu",
+     "admin": "Hubei",
+     "pop": 720000
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#e4d1cf",
+     "border_px": 835
+    },
+    {
+     "key": "#eac7cc",
+     "border_px": 573
+    },
+    {
+     "key": "#ebc1c3",
+     "border_px": 513
+    },
+    {
+     "key": "#eacbc8",
+     "border_px": 496
+    },
+    {
+     "key": "#ebcdcd",
+     "border_px": 300
+    },
+    {
+     "key": "#ead7d4",
+     "border_px": 285
+    }
+   ],
+   "text_px": 0,
+   "n": 4,
+   "thumb": {
+    "x0": 7034,
+    "y0": 3635,
+    "k": 2.0,
+    "w": 302,
+    "h": 246
+   }
+  },
+  {
+   "key": "#eacbc3",
+   "color": "#eacbc3",
+   "lon": 114.9851,
+   "lat": 31.1939,
+   "bbox": [
+    7177,
+    3644,
+    7242,
+    3726
+   ],
+   "area_px": 3428,
+   "people": 880185,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Macheng",
+     "local": "麻城市",
+     "prefecture": "Huanggang",
+     "prefecture_local": "黄冈市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.746,
+     "area_share": 0.826,
+     "cover": 0.904
+    },
+    {
+     "name": "Xinzhou",
+     "local": "新洲区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.149,
+     "area_share": 0.069,
+     "cover": 0.165
+    },
+    {
+     "name": "Hong'an",
+     "local": "红安县",
+     "prefecture": "Huanggang",
+     "prefecture_local": "黄冈市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.103,
+     "area_share": 0.098,
+     "cover": 0.171
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hubei",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.999,
+     "cover": 0.016
+    },
+    {
+     "level": "prefecture",
+     "name": "Huanggang",
+     "local": "黄冈市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.862,
+     "cover": 0.126
+    },
+    {
+     "level": "prefecture",
+     "name": "Wuhan",
+     "local": "武汉市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.137,
+     "cover": 0.011
+    }
+   ],
+   "towns": [
+    {
+     "town": "三店街道",
+     "county": "新洲区",
+     "city": "武汉市",
+     "people_share": 0.079,
+     "cover": 0.969
+    },
+    {
+     "town": "龙池街道",
+     "county": "麻城市",
+     "city": "黄冈市",
+     "people_share": 0.079,
+     "cover": 1.0
+    },
+    {
+     "town": "永河镇",
+     "county": "红安县",
+     "city": "黄冈市",
+     "people_share": 0.069,
+     "cover": 0.963
+    },
+    {
+     "town": "乘马岗镇",
+     "county": "麻城市",
+     "city": "黄冈市",
+     "people_share": 0.058,
+     "cover": 0.994
+    },
+    {
+     "town": "南湖街道",
+     "county": "麻城市",
+     "city": "黄冈市",
+     "people_share": 0.057,
+     "cover": 1.0
+    },
+    {
+     "town": "鼓楼街道",
+     "county": "麻城市",
+     "city": "黄冈市",
+     "people_share": 0.053,
+     "cover": 1.0
+    },
+    {
+     "town": "宋埠镇",
+     "county": "麻城市",
+     "city": "黄冈市",
+     "people_share": 0.05,
+     "cover": 1.0
+    },
+    {
+     "town": "铁门岗乡",
+     "county": "麻城市",
+     "city": "黄冈市",
+     "people_share": 0.049,
+     "cover": 1.0
+    },
+    {
+     "town": "顺河镇",
+     "county": "麻城市",
+     "city": "黄冈市",
+     "people_share": 0.049,
+     "cover": 0.985
+    },
+    {
+     "town": "白果镇",
+     "county": "麻城市",
+     "city": "黄冈市",
+     "people_share": 0.047,
+     "cover": 1.0
+    },
+    {
+     "town": "三河口镇",
+     "county": "麻城市",
+     "city": "黄冈市",
+     "people_share": 0.041,
+     "cover": 0.993
+    },
+    {
+     "town": "中馆驿镇",
+     "county": "麻城市",
+     "city": "黄冈市",
+     "people_share": 0.038,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Macheng",
+     "admin": "Hubei",
+     "pop": 849090
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#eacbc8",
+     "border_px": 894
+    },
+    {
+     "key": "#f4d7d0",
+     "border_px": 877
+    },
+    {
+     "key": "#f3ded2",
+     "border_px": 584,
+     "name": "Jinzhai"
+    },
+    {
+     "key": "#f0d7c6",
+     "border_px": 507,
+     "name": "Luoshan"
+    },
+    {
+     "key": "#f3cdc4",
+     "border_px": 400
+    },
+    {
+     "key": "#edc3b7@114.6,30.8",
+     "border_px": 356
+    }
+   ],
+   "text_px": 0,
+   "n": 5,
+   "thumb": {
+    "x0": 7137,
+    "y0": 3604,
+    "k": 2.0,
+    "w": 290,
+    "h": 324
+   }
+  },
+  {
+   "key": "#ebc1c3",
+   "color": "#ebc1c3",
+   "lon": 114.0007,
+   "lat": 30.9447,
+   "bbox": [
+    7112,
+    3709,
+    7145,
+    3747
+   ],
+   "area_px": 951,
+   "people": 1115673,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Xiaonan",
+     "local": "孝南区",
+     "prefecture": "Xiaogan",
+     "prefecture_local": "孝感市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.982,
+     "area_share": 0.947,
+     "cover": 0.982
+    },
+    {
+     "name": "Xiaochang",
+     "local": "孝昌县",
+     "prefecture": "Xiaogan",
+     "prefecture_local": "孝感市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.011,
+     "area_share": 0.026,
+     "cover": 0.024
+    },
+    {
+     "name": "Huangpi",
+     "local": "黄陂区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.005,
+     "area_share": 0.018,
+     "cover": 0.007
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hubei",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.02
+    },
+    {
+     "level": "prefecture",
+     "name": "Xiaogan",
+     "local": "孝感市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.995,
+     "cover": 0.218
+    }
+   ],
+   "towns": [
+    {
+     "town": "孝南区卧龙乡",
+     "county": "孝南区",
+     "city": "孝感市",
+     "people_share": 0.154,
+     "cover": 0.966
+    },
+    {
+     "town": "孝南区广场街街道",
+     "county": "孝南区",
+     "city": "孝感市",
+     "people_share": 0.108,
+     "cover": 1.0
+    },
+    {
+     "town": "孝南区朋兴乡",
+     "county": "孝南区",
+     "city": "孝感市",
+     "people_share": 0.106,
+     "cover": 1.0
+    },
+    {
+     "town": "孝南区新华街街道",
+     "county": "孝南区",
+     "city": "孝感市",
+     "people_share": 0.068,
+     "cover": 1.0
+    },
+    {
+     "town": "孝感开发区丹阳街道",
+     "county": "孝南区",
+     "city": "孝感市",
+     "people_share": 0.067,
+     "cover": 1.0
+    },
+    {
+     "town": "孝南区肖港镇",
+     "county": "孝南区",
+     "city": "孝感市",
+     "people_share": 0.062,
+     "cover": 0.901
+    },
+    {
+     "town": "孝南区新铺镇",
+     "county": "孝南区",
+     "city": "孝感市",
+     "people_share": 0.059,
+     "cover": 1.0
+    },
+    {
+     "town": "孝南区陡岗镇",
+     "county": "孝南区",
+     "city": "孝感市",
+     "people_share": 0.053,
+     "cover": 0.961
+    },
+    {
+     "town": "孝南区书院街街道",
+     "county": "孝南区",
+     "city": "孝感市",
+     "people_share": 0.05,
+     "cover": 1.0
+    },
+    {
+     "town": "孝感开发区孝天街道",
+     "county": "孝南区",
+     "city": "孝感市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "孝南区杨店镇",
+     "county": "孝南区",
+     "city": "孝感市",
+     "people_share": 0.042,
+     "cover": 0.971
+    }
+   ],
+   "cities": [
+    {
+     "name": "Xiaoganzhan",
+     "admin": "Hubei",
+     "pop": 4270371
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f3c9d0",
+     "border_px": 513
+    },
+    {
+     "key": "#f1b9b9",
+     "border_px": 451
+    },
+    {
+     "key": "#eac7cc",
+     "border_px": 431
+    },
+    {
+     "key": "#eacbc8",
+     "border_px": 373
+    }
+   ],
+   "text_px": 0,
+   "n": 6,
+   "thumb": {
+    "x0": 7072,
+    "y0": 3669,
+    "k": 3.0,
+    "w": 339,
+    "h": 354
+   }
+  },
+  {
+   "key": "#f4d7d0",
+   "color": "#f4d7d0",
+   "lon": 115.5337,
+   "lat": 30.9022,
+   "bbox": [
+    7226,
+    3669,
+    7307,
+    3761
+   ],
+   "area_px": 4153,
+   "people": 995689,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Luotian",
+     "local": "罗田县",
+     "prefecture": "Huanggang",
+     "prefecture_local": "黄冈市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.465,
+     "area_share": 0.463,
+     "cover": 0.997
+    },
+    {
+     "name": "Yingshan",
+     "local": "英山县",
+     "prefecture": "Huanggang",
+     "prefecture_local": "黄冈市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.321,
+     "area_share": 0.318,
+     "cover": 0.998
+    },
+    {
+     "name": "Xishui",
+     "local": "浠水县",
+     "prefecture": "Huanggang",
+     "prefecture_local": "黄冈市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.11,
+     "area_share": 0.086,
+     "cover": 0.132
+    },
+    {
+     "name": "Macheng",
+     "local": "麻城市",
+     "prefecture": "Huanggang",
+     "prefecture_local": "黄冈市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.066,
+     "area_share": 0.098,
+     "cover": 0.09
+    },
+    {
+     "name": "Tuanfeng",
+     "local": "团风县",
+     "prefecture": "Huanggang",
+     "prefecture_local": "黄冈市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.035,
+     "area_share": 0.024,
+     "cover": 0.116
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hubei",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.995,
+     "cover": 0.018
+    },
+    {
+     "level": "prefecture",
+     "name": "Huanggang",
+     "local": "黄冈市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.995,
+     "cover": 0.165
+    }
+   ],
+   "towns": [
+    {
+     "town": "凤山镇",
+     "county": "罗田县",
+     "city": "黄冈市",
+     "people_share": 0.112,
+     "cover": 1.0
+    },
+    {
+     "town": "温泉镇",
+     "county": "英山县",
+     "city": "黄冈市",
+     "people_share": 0.091,
+     "cover": 1.0
+    },
+    {
+     "town": "团陂镇",
+     "county": "浠水县",
+     "city": "黄冈市",
+     "people_share": 0.073,
+     "cover": 0.95
+    },
+    {
+     "town": "三里畈镇",
+     "county": "罗田县",
+     "city": "黄冈市",
+     "people_share": 0.061,
+     "cover": 0.996
+    },
+    {
+     "town": "河铺镇",
+     "county": "罗田县",
+     "city": "黄冈市",
+     "people_share": 0.055,
+     "cover": 1.0
+    },
+    {
+     "town": "杨柳湾镇",
+     "county": "英山县",
+     "city": "黄冈市",
+     "people_share": 0.049,
+     "cover": 1.0
+    },
+    {
+     "town": "匡河镇",
+     "county": "罗田县",
+     "city": "黄冈市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "胜利镇",
+     "county": "罗田县",
+     "city": "黄冈市",
+     "people_share": 0.039,
+     "cover": 1.0
+    },
+    {
+     "town": "木子店镇",
+     "county": "麻城市",
+     "city": "黄冈市",
+     "people_share": 0.034,
+     "cover": 0.984
+    },
+    {
+     "town": "但店镇",
+     "county": "团风县",
+     "city": "黄冈市",
+     "people_share": 0.034,
+     "cover": 0.906
+    },
+    {
+     "town": "张家畈镇",
+     "county": "麻城市",
+     "city": "黄冈市",
+     "people_share": 0.031,
+     "cover": 0.986
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f3cdc4",
+     "border_px": 928
+    },
+    {
+     "key": "#eacbc3",
+     "border_px": 877
+    },
+    {
+     "key": "#f3ded2",
+     "border_px": 861,
+     "name": "Jinzhai"
+    },
+    {
+     "key": "#fadccc",
+     "border_px": 688,
+     "name": "Tianzhushan"
+    },
+    {
+     "key": "#f3d4c4",
+     "border_px": 444
+    },
+    {
+     "key": "#eed7d1",
+     "border_px": 346,
+     "name": "Shucheng"
+    }
+   ],
+   "text_px": 0,
+   "n": 7,
+   "thumb": {
+    "x0": 7186,
+    "y0": 3629,
+    "k": 2.0,
+    "w": 322,
+    "h": 344
+   }
+  },
+  {
+   "key": "#eac7cc",
+   "color": "#eac7cc",
+   "lon": 113.6245,
+   "lat": 30.8907,
+   "bbox": [
+    7071,
+    3708,
+    7118,
+    3765
+   ],
+   "area_px": 1927,
+   "people": 1146424,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yingcheng",
+     "local": "应城市",
+     "prefecture": "Xiaogan",
+     "prefecture_local": "孝感市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.476,
+     "area_share": 0.508,
+     "cover": 0.991
+    },
+    {
+     "name": "Yunmeng",
+     "local": "云梦县",
+     "prefecture": "Xiaogan",
+     "prefecture_local": "孝感市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.37,
+     "area_share": 0.244,
+     "cover": 0.906
+    },
+    {
+     "name": "Hanchuan",
+     "local": "汉川市",
+     "prefecture": "Xiaogan",
+     "prefecture_local": "孝感市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.139,
+     "area_share": 0.234,
+     "cover": 0.131
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hubei",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.02
+    },
+    {
+     "level": "prefecture",
+     "name": "Xiaogan",
+     "local": "孝感市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.999,
+     "cover": 0.225
+    }
+   ],
+   "towns": [
+    {
+     "town": "城中街道",
+     "county": "应城市",
+     "city": "孝感市",
+     "people_share": 0.077,
+     "cover": 1.0
+    },
+    {
+     "town": "城关镇",
+     "county": "云梦县",
+     "city": "孝感市",
+     "people_share": 0.074,
+     "cover": 1.0
+    },
+    {
+     "town": "吴铺镇",
+     "county": "云梦县",
+     "city": "孝感市",
+     "people_share": 0.066,
+     "cover": 1.0
+    },
+    {
+     "town": "城北街道",
+     "county": "应城市",
+     "city": "孝感市",
+     "people_share": 0.05,
+     "cover": 1.0
+    },
+    {
+     "town": "郎君镇",
+     "county": "应城市",
+     "city": "孝感市",
+     "people_share": 0.046,
+     "cover": 1.0
+    },
+    {
+     "town": "隔蒲潭镇",
+     "county": "云梦县",
+     "city": "孝感市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "陈河镇",
+     "county": "应城市",
+     "city": "孝感市",
+     "people_share": 0.036,
+     "cover": 1.0
+    },
+    {
+     "town": "经济技术开发区",
+     "county": "应城市",
+     "city": "孝感市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "下辛店镇",
+     "county": "云梦县",
+     "city": "孝感市",
+     "people_share": 0.032,
+     "cover": 0.977
+    },
+    {
+     "town": "杨河镇",
+     "county": "应城市",
+     "city": "孝感市",
+     "people_share": 0.03,
+     "cover": 0.967
+    },
+    {
+     "town": "黄滩镇",
+     "county": "应城市",
+     "city": "孝感市",
+     "people_share": 0.03,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f3c9d0",
+     "border_px": 573
+    },
+    {
+     "key": "#edb7c5",
+     "border_px": 521
+    },
+    {
+     "key": "#ebc1c3",
+     "border_px": 431
+    },
+    {
+     "key": "#ead7d4",
+     "border_px": 376
+    },
+    {
+     "key": "#f0c4c9",
+     "border_px": 274
+    },
+    {
+     "key": "#f1b9b9",
+     "border_px": 243
+    }
+   ],
+   "text_px": 0,
+   "n": 8,
+   "thumb": {
+    "x0": 7031,
+    "y0": 3668,
+    "k": 3.0,
+    "w": 381,
+    "h": 411
+   }
+  },
+  {
+   "key": "#f3cdc4",
+   "color": "#f3cdc4",
+   "lon": 115.1332,
+   "lat": 30.5737,
+   "bbox": [
+    7201,
+    3715,
+    7264,
+    3795
+   ],
+   "area_px": 2319,
+   "people": 1092812,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Xishui",
+     "local": "浠水县",
+     "prefecture": "Huanggang",
+     "prefecture_local": "黄冈市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.645,
+     "area_share": 0.606,
+     "cover": 0.847
+    },
+    {
+     "name": "Tuanfeng",
+     "local": "团风县",
+     "prefecture": "Huanggang",
+     "prefecture_local": "黄冈市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.24,
+     "area_share": 0.266,
+     "cover": 0.875
+    },
+    {
+     "name": "Xinzhou",
+     "local": "新洲区",
+     "prefecture": "Wuhan",
+     "prefecture_local": "武汉市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.081,
+     "area_share": 0.086,
+     "cover": 0.112
+    },
+    {
+     "name": "Huangzhou",
+     "local": "黄州区",
+     "prefecture": "Huanggang",
+     "prefecture_local": "黄冈市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.023,
+     "area_share": 0.028,
+     "cover": 0.07
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hubei",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.02
+    },
+    {
+     "level": "prefecture",
+     "name": "Huanggang",
+     "local": "黄冈市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.92,
+     "cover": 0.167
+    },
+    {
+     "level": "prefecture",
+     "name": "Wuhan",
+     "local": "武汉市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.078,
+     "cover": 0.008
+    }
+   ],
+   "towns": [
+    {
+     "town": "清泉镇",
+     "county": "浠水县",
+     "city": "黄冈市",
+     "people_share": 0.125,
+     "cover": 1.0
+    },
+    {
+     "town": "巴河镇",
+     "county": "浠水县",
+     "city": "黄冈市",
+     "people_share": 0.093,
+     "cover": 0.983
+    },
+    {
+     "town": "散花镇",
+     "county": "浠水县",
+     "city": "黄冈市",
+     "people_share": 0.08,
+     "cover": 0.87
+    },
+    {
+     "town": "旧街街道",
+     "county": "新洲区",
+     "city": "武汉市",
+     "people_share": 0.063,
+     "cover": 0.937
+    },
+    {
+     "town": "竹瓦镇",
+     "county": "浠水县",
+     "city": "黄冈市",
+     "people_share": 0.058,
+     "cover": 1.0
+    },
+    {
+     "town": "团风镇",
+     "county": "团风县",
+     "city": "黄冈市",
+     "people_share": 0.058,
+     "cover": 0.993
+    },
+    {
+     "town": "经济开发区镇",
+     "county": "浠水县",
+     "city": "黄冈市",
+     "people_share": 0.057,
+     "cover": 1.0
+    },
+    {
+     "town": "关口镇",
+     "county": "浠水县",
+     "city": "黄冈市",
+     "people_share": 0.054,
+     "cover": 0.967
+    },
+    {
+     "town": "淋山河镇",
+     "county": "团风县",
+     "city": "黄冈市",
+     "people_share": 0.046,
+     "cover": 1.0
+    },
+    {
+     "town": "汪岗镇",
+     "county": "浠水县",
+     "city": "黄冈市",
+     "people_share": 0.045,
+     "cover": 0.968
+    },
+    {
+     "town": "兰溪镇",
+     "county": "浠水县",
+     "city": "黄冈市",
+     "people_share": 0.037,
+     "cover": 0.988
+    },
+    {
+     "town": "洗马镇",
+     "county": "浠水县",
+     "city": "黄冈市",
+     "people_share": 0.036,
+     "cover": 0.941
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f4d7d0",
+     "border_px": 928
+    },
+    {
+     "key": "#f3d4c4",
+     "border_px": 566
+    },
+    {
+     "key": "#ebb2a4",
+     "border_px": 470
+    },
+    {
+     "key": "#edc3b7@114.6,30.8",
+     "border_px": 464
+    },
+    {
+     "key": "#eacbc3",
+     "border_px": 400
+    },
+    {
+     "key": "#eacb9d",
+     "border_px": 384
+    },
+    {
+     "key": "#e5f1d0",
+     "border_px": 56
+    }
+   ],
+   "text_px": 0,
+   "n": 9,
+   "thumb": {
+    "x0": 7161,
+    "y0": 3675,
+    "k": 2.0,
+    "w": 286,
+    "h": 320
+   }
+  },
+  {
+   "key": "#edb7c5",
+   "color": "#edb7c5",
+   "lon": 113.5308,
+   "lat": 30.5542,
+   "bbox": [
+    7070,
+    3758,
+    7118,
+    3794
+   ],
+   "area_px": 1287,
+   "people": 855184,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Hanchuan",
+     "local": "汉川市",
+     "prefecture": "Xiaogan",
+     "prefecture_local": "孝感市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.706,
+     "area_share": 0.618,
+     "cover": 0.497
+    },
+    {
+     "name": "Tianmen",
+     "local": "天门市",
+     "prefecture": "Tianmen",
+     "prefecture_local": "天门市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.266,
+     "area_share": 0.343,
+     "cover": 0.141
+    },
+    {
+     "name": "Xiantao",
+     "local": "仙桃市",
+     "prefecture": "Xiantao",
+     "prefecture_local": "仙桃市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.024,
+     "area_share": 0.034,
+     "cover": 0.02
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hubei",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.015
+    },
+    {
+     "level": "prefecture",
+     "name": "Xiaogan",
+     "local": "孝感市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.692,
+     "cover": 0.117
+    },
+    {
+     "level": "prefecture",
+     "name": "Tianmen",
+     "local": "天门市[1]",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.272,
+     "cover": 0.143
+    }
+   ],
+   "towns": [
+    {
+     "town": "城隍镇",
+     "county": "汉川市",
+     "city": "孝感市",
+     "people_share": 0.108,
+     "cover": 0.918
+    },
+    {
+     "town": "沉湖镇",
+     "county": "汉川市",
+     "city": "孝感市",
+     "people_share": 0.079,
+     "cover": 0.961
+    },
+    {
+     "town": "庙头镇",
+     "county": "汉川市",
+     "city": "孝感市",
+     "people_share": 0.079,
+     "cover": 0.95
+    },
+    {
+     "town": "多祥镇",
+     "county": "天门市",
+     "city": "天门市",
+     "people_share": 0.073,
+     "cover": 0.905
+    },
+    {
+     "town": "分水镇",
+     "county": "汉川市",
+     "city": "孝感市",
+     "people_share": 0.067,
+     "cover": 0.994
+    },
+    {
+     "town": "卢市镇",
+     "county": "天门市",
+     "city": "天门市",
+     "people_share": 0.064,
+     "cover": 0.915
+    },
+    {
+     "town": "南河乡",
+     "county": "汉川市",
+     "city": "孝感市",
+     "people_share": 0.058,
+     "cover": 1.0
+    },
+    {
+     "town": "湾潭乡",
+     "county": "汉川市",
+     "city": "孝感市",
+     "people_share": 0.05,
+     "cover": 1.0
+    },
+    {
+     "town": "干驿镇",
+     "county": "天门市",
+     "city": "天门市",
+     "people_share": 0.049,
+     "cover": 1.0
+    },
+    {
+     "town": "田二河镇",
+     "county": "汉川市",
+     "city": "孝感市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "西江乡",
+     "county": "汉川市",
+     "city": "孝感市",
+     "people_share": 0.038,
+     "cover": 0.955
+    },
+    {
+     "town": "马湾镇",
+     "county": "天门市",
+     "city": "天门市",
+     "people_share": 0.037,
+     "cover": 0.962
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f0c4c9",
+     "border_px": 577
+    },
+    {
+     "key": "#eac7cc",
+     "border_px": 521
+    },
+    {
+     "key": "#f1c2ce",
+     "border_px": 478
+    },
+    {
+     "key": "#edb7ba",
+     "border_px": 395
+    },
+    {
+     "key": "#f1b9b9",
+     "border_px": 65
+    }
+   ],
+   "text_px": 0,
+   "n": 10,
+   "thumb": {
+    "x0": 7030,
+    "y0": 3718,
+    "k": 3.0,
+    "w": 384,
+    "h": 348
+   }
+  },
+  {
+   "key": "#f3d4c4",
+   "color": "#f3d4c4",
+   "lon": 115.592,
+   "lat": 30.2842,
+   "bbox": [
+    7244,
+    3739,
+    7302,
+    3816
+   ],
+   "area_px": 2659,
+   "people": 830959,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Qichun",
+     "local": "蕲春县",
+     "prefecture": "Huanggang",
+     "prefecture_local": "黄冈市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.749,
+     "area_share": 0.806,
+     "cover": 0.983
+    },
+    {
+     "name": "Wuxue",
+     "local": "武穴市",
+     "prefecture": "Huanggang",
+     "prefecture_local": "黄冈市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.24,
+     "area_share": 0.18,
+     "cover": 0.363
+    },
+    {
+     "name": "Taihu",
+     "local": "太湖县",
+     "prefecture": "Anqing",
+     "prefecture_local": "安庆市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.003,
+     "area_share": 0.003,
+     "cover": 0.005
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hubei",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.996,
+     "cover": 0.015
+    },
+    {
+     "level": "prefecture",
+     "name": "Huanggang",
+     "local": "黄冈市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.994,
+     "cover": 0.137
+    }
+   ],
+   "towns": [
+    {
+     "town": "梅川镇",
+     "county": "武穴市",
+     "city": "黄冈市",
+     "people_share": 0.141,
+     "cover": 0.991
+    },
+    {
+     "town": "横车镇",
+     "county": "蕲春县",
+     "city": "黄冈市",
+     "people_share": 0.115,
+     "cover": 0.993
+    },
+    {
+     "town": "漕河镇",
+     "county": "蕲春县",
+     "city": "黄冈市",
+     "people_share": 0.107,
+     "cover": 1.0
+    },
+    {
+     "town": "赤东镇",
+     "county": "蕲春县",
+     "city": "黄冈市",
+     "people_share": 0.08,
+     "cover": 1.0
+    },
+    {
+     "town": "刘河镇",
+     "county": "蕲春县",
+     "city": "黄冈市",
+     "people_share": 0.079,
+     "cover": 1.0
+    },
+    {
+     "town": "余川镇",
+     "county": "武穴市",
+     "city": "黄冈市",
+     "people_share": 0.073,
+     "cover": 0.983
+    },
+    {
+     "town": "蕲州镇",
+     "county": "蕲春县",
+     "city": "黄冈市",
+     "people_share": 0.055,
+     "cover": 0.879
+    },
+    {
+     "town": "张榜镇",
+     "county": "蕲春县",
+     "city": "黄冈市",
+     "people_share": 0.049,
+     "cover": 0.998
+    },
+    {
+     "town": "青石镇",
+     "county": "蕲春县",
+     "city": "黄冈市",
+     "people_share": 0.047,
+     "cover": 0.999
+    },
+    {
+     "town": "狮子镇",
+     "county": "蕲春县",
+     "city": "黄冈市",
+     "people_share": 0.043,
+     "cover": 0.988
+    },
+    {
+     "town": "向桥乡",
+     "county": "蕲春县",
+     "city": "黄冈市",
+     "people_share": 0.04,
+     "cover": 0.994
+    },
+    {
+     "town": "彭思镇",
+     "county": "蕲春县",
+     "city": "黄冈市",
+     "people_share": 0.034,
+     "cover": 0.972
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f3cdc4",
+     "border_px": 566
+    },
+    {
+     "key": "#eae7be",
+     "border_px": 529
+    },
+    {
+     "key": "#edcaae",
+     "border_px": 526
+    },
+    {
+     "key": "#fadccc",
+     "border_px": 455,
+     "name": "Tianzhushan"
+    },
+    {
+     "key": "#f4d7d0",
+     "border_px": 444
+    },
+    {
+     "key": "#e5f1d0",
+     "border_px": 414
+    },
+    {
+     "key": "#f4e2c2",
+     "border_px": 186,
+     "name": "Wangjiang"
+    }
+   ],
+   "text_px": 0,
+   "n": 11,
+   "thumb": {
+    "x0": 7204,
+    "y0": 3699,
+    "k": 2.0,
+    "w": 276,
+    "h": 314
+   }
+  },
+  {
+   "key": "#eacb9d",
+   "color": "#eacb9d",
+   "lon": 114.9696,
+   "lat": 30.2827,
+   "bbox": [
+    7205,
+    3777,
+    7238,
+    3802
+   ],
+   "area_px": 507,
+   "people": 811984,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Echeng",
+     "local": "鄂城区",
+     "prefecture": "Ezhou",
+     "prefecture_local": "鄂州市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.352,
+     "area_share": 0.688,
+     "cover": 0.472
+    },
+    {
+     "name": "Xialu",
+     "local": "下陆区",
+     "prefecture": "Huangshi",
+     "prefecture_local": "黄石市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.197,
+     "area_share": 0.103,
+     "cover": 0.987
+    },
+    {
+     "name": "Huangshigang",
+     "local": "黄石港区",
+     "prefecture": "Huangshi",
+     "prefecture_local": "黄石市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.194,
+     "area_share": 0.057,
+     "cover": 1.0
+    },
+    {
+     "name": "Xisaishan",
+     "local": "西塞山区",
+     "prefecture": "Huangshi",
+     "prefecture_local": "黄石市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.173,
+     "area_share": 0.067,
+     "cover": 0.762
+    },
+    {
+     "name": "Daye",
+     "local": "大冶市",
+     "prefecture": "Huangshi",
+     "prefecture_local": "黄石市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.04,
+     "area_share": 0.028,
+     "cover": 0.036
+    },
+    {
+     "name": "Tieshan",
+     "local": "铁山区",
+     "prefecture": "Huangshi",
+     "prefecture_local": "黄石市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.028,
+     "area_share": 0.043,
+     "cover": 0.952
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hubei",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.014
+    },
+    {
+     "level": "prefecture",
+     "name": "Huanggang",
+     "local": "黄冈市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.549,
+     "cover": 0.074
+    },
+    {
+     "level": "prefecture",
+     "name": "Ezhou",
+     "local": "鄂州市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.345,
+     "cover": 0.28
+    },
+    {
+     "level": "prefecture",
+     "name": "Huangshi",
+     "local": "黄石市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.106,
+     "cover": 0.049
+    }
+   ],
+   "towns": [
+    {
+     "town": "社区工作管理委员会",
+     "county": "西塞山区",
+     "city": "黄石市",
+     "people_share": 0.173,
+     "cover": 0.965
+    },
+    {
+     "town": "黄石港区",
+     "county": "黄石港区",
+     "city": "黄石市",
+     "people_share": 0.143,
+     "cover": 1.0
+    },
+    {
+     "town": "团城山街道",
+     "county": "下陆区",
+     "city": "黄石市",
+     "people_share": 0.135,
+     "cover": 1.0
+    },
+    {
+     "town": "汀祖镇",
+     "county": "鄂城区",
+     "city": "鄂州市",
+     "people_share": 0.073,
+     "cover": 1.0
+    },
+    {
+     "town": "泽林镇",
+     "county": "鄂城区",
+     "city": "鄂州市",
+     "people_share": 0.059,
+     "cover": 0.903
+    },
+    {
+     "town": "花湖镇",
+     "county": "鄂城区",
+     "city": "鄂州市",
+     "people_share": 0.054,
+     "cover": 1.0
+    },
+    {
+     "town": "花湖街道",
+     "county": "黄石港区",
+     "city": "黄石市",
+     "people_share": 0.052,
+     "cover": 1.0
+    },
+    {
+     "town": "新庙镇",
+     "county": "鄂城区",
+     "city": "鄂州市",
+     "people_share": 0.051,
+     "cover": 0.661
+    },
+    {
+     "town": "燕矶镇",
+     "county": "鄂城区",
+     "city": "鄂州市",
+     "people_share": 0.041,
+     "cover": 0.91
+    },
+    {
+     "town": "社区事务管理委员会",
+     "county": "下陆区",
+     "city": "黄石市",
+     "people_share": 0.036,
+     "cover": 0.932
+    },
+    {
+     "town": "杨叶镇",
+     "county": "鄂城区",
+     "city": "鄂州市",
+     "people_share": 0.033,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Huangshi",
+     "admin": "Hubei",
+     "pop": 2469079
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#e8ddbe",
+     "border_px": 553
+    },
+    {
+     "key": "#f3cdc4",
+     "border_px": 384
+    },
+    {
+     "key": "#ebb2a4",
+     "border_px": 364
+    },
+    {
+     "key": "#e5f1d0",
+     "border_px": 23
+    }
+   ],
+   "text_px": 0,
+   "n": 12,
+   "thumb": {
+    "x0": 7165,
+    "y0": 3737,
+    "k": 3.0,
+    "w": 339,
+    "h": 315
+   }
+  },
+  {
+   "key": "#edcaae",
+   "color": "#edcaae",
+   "lon": 115.9533,
+   "lat": 30.0134,
+   "bbox": [
+    7292,
+    3776,
+    7331,
+    3838
+   ],
+   "area_px": 1807,
+   "people": 1013419,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Huangmei",
+     "local": "黄梅县",
+     "prefecture": "Huanggang",
+     "prefecture_local": "黄冈市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.828,
+     "area_share": 0.835,
+     "cover": 0.989
+    },
+    {
+     "name": "Susong",
+     "local": "宿松县",
+     "prefecture": "Anqing",
+     "prefecture_local": "安庆市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.149,
+     "area_share": 0.153,
+     "cover": 0.263
+    },
+    {
+     "name": "Xunyang",
+     "local": "浔阳区",
+     "prefecture": "Jiujiang",
+     "prefecture_local": "九江市",
+     "province": "江西省",
+     "country": "China",
+     "people_share": 0.014,
+     "area_share": 0.001,
+     "cover": 0.048
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hubei",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.818,
+     "cover": 0.015
+    },
+    {
+     "level": "prefecture",
+     "name": "Huanggang",
+     "local": "黄冈市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.818,
+     "cover": 0.138
+    },
+    {
+     "level": "province",
+     "name": "Anhui",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.149,
+     "cover": 0.002
+    },
+    {
+     "level": "prefecture",
+     "name": "Anqing",
+     "local": "安庆市",
+     "province": "Anhui",
+     "country": "China",
+     "people_share": 0.149,
+     "cover": 0.029
+    }
+   ],
+   "towns": [
+    {
+     "town": "小池镇",
+     "county": "黄梅县",
+     "city": "黄冈市",
+     "people_share": 0.19,
+     "cover": 1.0
+    },
+    {
+     "town": "黄梅镇",
+     "county": "黄梅县",
+     "city": "黄冈市",
+     "people_share": 0.12,
+     "cover": 1.0
+    },
+    {
+     "town": "孚玉镇",
+     "county": "宿松县",
+     "city": "安庆市",
+     "people_share": 0.102,
+     "cover": 0.99
+    },
+    {
+     "town": "孔垄镇",
+     "county": "黄梅县",
+     "city": "黄冈市",
+     "people_share": 0.087,
+     "cover": 1.0
+    },
+    {
+     "town": "濯港镇",
+     "county": "黄梅县",
+     "city": "黄冈市",
+     "people_share": 0.059,
+     "cover": 0.994
+    },
+    {
+     "town": "新开镇",
+     "county": "黄梅县",
+     "city": "黄冈市",
+     "people_share": 0.052,
+     "cover": 0.964
+    },
+    {
+     "town": "分路镇",
+     "county": "黄梅县",
+     "city": "黄冈市",
+     "people_share": 0.05,
+     "cover": 0.971
+    },
+    {
+     "town": "蔡山镇",
+     "county": "黄梅县",
+     "city": "黄冈市",
+     "people_share": 0.05,
+     "cover": 0.962
+    },
+    {
+     "town": "大河镇",
+     "county": "黄梅县",
+     "city": "黄冈市",
+     "people_share": 0.05,
+     "cover": 0.965
+    },
+    {
+     "town": "杉木乡",
+     "county": "黄梅县",
+     "city": "黄冈市",
+     "people_share": 0.032,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f4e2c2",
+     "border_px": 860,
+     "name": "Wangjiang"
+    },
+    {
+     "key": "#eae7be",
+     "border_px": 651
+    },
+    {
+     "key": "#f3d4c4",
+     "border_px": 526
+    },
+    {
+     "key": "#e4de96",
+     "border_px": 305
+    }
+   ],
+   "text_px": 0,
+   "n": 13,
+   "thumb": {
+    "x0": 7252,
+    "y0": 3736,
+    "k": 2.0,
+    "w": 238,
+    "h": 284
+   }
+  },
+  {
+   "key": "#c6eece",
+   "color": "#c6eece",
+   "lon": 114.2993,
+   "lat": 29.8065,
+   "bbox": [
+    7129,
+    3825,
+    7212,
+    3875
+   ],
+   "area_px": 2321,
+   "people": 790838,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Xian'an",
+     "local": "咸安区",
+     "prefecture": "Xianning",
+     "prefecture_local": "咸宁市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.59,
+     "area_share": 0.579,
+     "cover": 0.993
+    },
+    {
+     "name": "Chibi",
+     "local": "赤壁市",
+     "prefecture": "Xianning",
+     "prefecture_local": "咸宁市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.376,
+     "area_share": 0.297,
+     "cover": 0.699
+    },
+    {
+     "name": "Tongshan",
+     "local": "通山县",
+     "prefecture": "Xianning",
+     "prefecture_local": "咸宁市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.031,
+     "area_share": 0.109,
+     "cover": 0.076
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hubei",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.014
+    },
+    {
+     "level": "prefecture",
+     "name": "Xianning",
+     "local": "咸宁市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.998,
+     "cover": 0.354
+    }
+   ],
+   "towns": [
+    {
+     "town": "赤马港街道",
+     "county": "赤壁市",
+     "city": "咸宁市",
+     "people_share": 0.198,
+     "cover": 0.995
+    },
+    {
+     "town": "马桥镇",
+     "county": "咸安区",
+     "city": "咸宁市",
+     "people_share": 0.097,
+     "cover": 1.0
+    },
+    {
+     "town": "官埠桥镇",
+     "county": "咸安区",
+     "city": "咸宁市",
+     "people_share": 0.088,
+     "cover": 1.0
+    },
+    {
+     "town": "浮山街道",
+     "county": "咸安区",
+     "city": "咸宁市",
+     "people_share": 0.082,
+     "cover": 1.0
+    },
+    {
+     "town": "官塘驿镇",
+     "county": "赤壁市",
+     "city": "咸宁市",
+     "people_share": 0.063,
+     "cover": 0.997
+    },
+    {
+     "town": "温泉街道",
+     "county": "咸安区",
+     "city": "咸宁市",
+     "people_share": 0.062,
+     "cover": 1.0
+    },
+    {
+     "town": "中伙铺镇",
+     "county": "赤壁市",
+     "city": "咸宁市",
+     "people_share": 0.048,
+     "cover": 0.942
+    },
+    {
+     "town": "横沟桥镇",
+     "county": "咸安区",
+     "city": "咸宁市",
+     "people_share": 0.047,
+     "cover": 1.0
+    },
+    {
+     "town": "蒲圻街道",
+     "county": "赤壁市",
+     "city": "咸宁市",
+     "people_share": 0.04,
+     "cover": 0.99
+    },
+    {
+     "town": "向阳湖镇",
+     "county": "咸安区",
+     "city": "咸宁市",
+     "people_share": 0.035,
+     "cover": 0.996
+    },
+    {
+     "town": "双溪桥镇",
+     "county": "咸安区",
+     "city": "咸宁市",
+     "people_share": 0.033,
+     "cover": 0.963
+    },
+    {
+     "town": "大幕乡",
+     "county": "咸安区",
+     "city": "咸宁市",
+     "people_share": 0.03,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Puqi",
+     "admin": "Hubei",
+     "pop": 205164
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#cbf4db",
+     "border_px": 1144
+    },
+    {
+     "key": "#cbeed8",
+     "border_px": 937
+    },
+    {
+     "key": "#eed3cd",
+     "border_px": 353
+    },
+    {
+     "key": "#e8ddbe",
+     "border_px": 275
+    },
+    {
+     "key": "#e5f1d0",
+     "border_px": 265
+    }
+   ],
+   "text_px": 90,
+   "n": 14,
+   "thumb": {
+    "x0": 7089,
+    "y0": 3785,
+    "k": 2.0,
+    "w": 326,
+    "h": 260
+   }
+  },
+  {
+   "key": "#cbf4db",
+   "color": "#cbf4db",
+   "lon": 114.2893,
+   "lat": 29.4628,
+   "bbox": [
+    7127,
+    3852,
+    7231,
+    3936
+   ],
+   "area_px": 4313,
+   "people": 884156,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Chongyang",
+     "local": "崇阳县",
+     "prefecture": "Xianning",
+     "prefecture_local": "咸宁市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.41,
+     "area_share": 0.409,
+     "cover": 0.993
+    },
+    {
+     "name": "Tongshan",
+     "local": "通山县",
+     "prefecture": "Xianning",
+     "prefecture_local": "咸宁市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.336,
+     "area_share": 0.445,
+     "cover": 0.92
+    },
+    {
+     "name": "Tongcheng",
+     "local": "通城县",
+     "prefecture": "Xianning",
+     "prefecture_local": "咸宁市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.242,
+     "area_share": 0.126,
+     "cover": 0.616
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hubei",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.989,
+     "cover": 0.016
+    },
+    {
+     "level": "prefecture",
+     "name": "Xianning",
+     "local": "咸宁市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.987,
+     "cover": 0.391
+    }
+   ],
+   "towns": [
+    {
+     "town": "天城镇",
+     "county": "崇阳县",
+     "city": "咸宁市",
+     "people_share": 0.112,
+     "cover": 0.999
+    },
+    {
+     "town": "通羊镇",
+     "county": "通山县",
+     "city": "咸宁市",
+     "people_share": 0.102,
+     "cover": 0.997
+    },
+    {
+     "town": "隽水镇",
+     "county": "通城县",
+     "city": "咸宁市",
+     "people_share": 0.073,
+     "cover": 0.922
+    },
+    {
+     "town": "青山镇",
+     "county": "崇阳县",
+     "city": "咸宁市",
+     "people_share": 0.053,
+     "cover": 1.0
+    },
+    {
+     "town": "白霓镇",
+     "county": "崇阳县",
+     "city": "咸宁市",
+     "people_share": 0.046,
+     "cover": 0.998
+    },
+    {
+     "town": "大路乡",
+     "county": "通山县",
+     "city": "咸宁市",
+     "people_share": 0.045,
+     "cover": 0.996
+    },
+    {
+     "town": "塘湖镇",
+     "county": "通城县",
+     "city": "咸宁市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "关刀镇",
+     "county": "通城县",
+     "city": "咸宁市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "肖岭乡",
+     "county": "崇阳县",
+     "city": "咸宁市",
+     "people_share": 0.032,
+     "cover": 0.938
+    },
+    {
+     "town": "麦市镇",
+     "county": "通城县",
+     "city": "咸宁市",
+     "people_share": 0.031,
+     "cover": 0.991
+    },
+    {
+     "town": "南林桥镇",
+     "county": "通山县",
+     "city": "咸宁市",
+     "people_share": 0.031,
+     "cover": 0.981
+    },
+    {
+     "town": "石城镇",
+     "county": "崇阳县",
+     "city": "咸宁市",
+     "people_share": 0.031,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#daf3e0",
+     "border_px": 1536
+    },
+    {
+     "key": "#c6eece",
+     "border_px": 1144
+    },
+    {
+     "key": "#bad7e8",
+     "border_px": 540
+    },
+    {
+     "key": "#cbeed8",
+     "border_px": 380
+    },
+    {
+     "key": "#e5f1d0",
+     "border_px": 364
+    },
+    {
+     "key": "#bce7cf",
+     "border_px": 344
+    }
+   ],
+   "text_px": 105,
+   "n": 15,
+   "thumb": {
+    "x0": 7087,
+    "y0": 3812,
+    "k": 2.0,
+    "w": 368,
+    "h": 328
+   }
+  }
+ ]
+}

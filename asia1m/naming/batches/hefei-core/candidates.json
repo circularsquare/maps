@@ -1,0 +1,216 @@
+{
+  "batch": "hefei-core",
+  "regions": [
+    {
+      "n": 1,
+      "key": "#e09a83",
+      "settled": null,
+      "summary": "Hefei's old centre inside the moat ring: Luyang district (Yaozhou, Bozhou Lu, Xiaoyaojin, Shuanggang) plus the Changhuai, Fangmiao and station subdistricts of Yaohai.",
+      "candidates": [
+        {
+          "name": "Hefei",
+          "local": "合肥",
+          "origin": "city",
+          "meaning": "\"Joined Fei\": the Fei River (a branch of the Huai) and the Nanfei River meet near here, an etymology given since the Shiji.",
+          "fit": "City rule: holds the old walled town, Luzhou prefecture seat and the Xiaoyaojin and Sanxiaokou centre; 71% Luyang, 28% Yaohai.",
+          "recognisability": "Provincial capital, current prefecture name.",
+          "source_url": "https://zh.wikipedia.org/wiki/合肥市",
+          "source_note": "“合肥”之名，最早出现在...《史记·货殖列传》中；市区人口652万",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Luzhou",
+          "local": "庐州",
+          "origin": "prefecture",
+          "meaning": "Name of the prefecture (Sui to Yuan) and, as Luzhou fu, the Ming-Qing prefecture, from the ancient Lu state north-west of the city.",
+          "fit": "CHGIS puts the seat of Luzhou, Luzhou fu and Luzhou lu in this region (583-1911); Luzhou is also a common short name for Hefei.",
+          "recognisability": "Zh-wiki lists 庐州 as an alias of the city; only useful if Anita wants a name other than Hefei.",
+          "source_url": "https://zh.wikipedia.org/wiki/合肥市",
+          "source_note": "合肥市…又称庐州; 隋朝初年…改合州为庐州",
+          "rating": 2,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Luzhou in Sichuan is the same romanisation (different characters, 泸州); fine under the repeat rule. Hefei is the clear pick."
+    },
+    {
+      "n": 2,
+      "key": "#edae95",
+      "settled": null,
+      "summary": "East Hefei: Yaohai district's industrial park, Longgang, Qilitang, Daxing and Modian, with the Feidong new town edge.",
+      "candidates": [
+        {
+          "name": "Yaohai",
+          "local": "瑶海区",
+          "origin": "county",
+          "meaning": "\"Jade sea\": from Yaohai Park, whose name echoes the saying \"Yaochi (jade pool) in heaven, Yaohai on earth\".",
+          "fit": "Yaohai district is 85% of the region's people (though only 39% of the district; the rest lies in region 1 and 4).",
+          "recognisability": "Current district name.",
+          "source_url": "https://zh.wikipedia.org/wiki/瑶海区",
+          "source_note": "瑶海区得名于境内的瑶海公园（原意为“天上瑶池，地下瑶海”）",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Longgang",
+          "local": "龙岗",
+          "origin": "other",
+          "meaning": "\"Dragon ridge\": the Longgang economic development zone and former Longgang town of Feidong, annexed to Yaohai in 2002.",
+          "fit": "Holds the Longgang zone (14.5% of the region), but the name is a small township and a very common Chinese place name (Shenzhen).",
+          "recognisability": "Mostly about Longgang district in Shenzhen.",
+          "source_url": "https://zh.wikipedia.org/wiki/瑶海区",
+          "source_note": "肥东县的…龙岗镇…划归瑶海区管辖",
+          "rating": 1,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Yaohai is also the 28% eastern share of region 1 and 4, but is the clear owner of this one."
+    },
+    {
+      "n": 3,
+      "key": "#d69677",
+      "settled": null,
+      "summary": "Western Hefei: Shushan district (Jinggang, hi-tech zone, Hupo, Wuliduan, Bijiashan, Nanqi, Xiyuan, Sanliyan).",
+      "candidates": [
+        {
+          "name": "Shushan",
+          "local": "蜀山区",
+          "origin": "county",
+          "meaning": "\"Shu hill\": named for Dashushan, the highest hill in Hefei city; the Shu character is the same as for Sichuan but the hill is said to resemble a Shu mountain.",
+          "fit": "Shushan district is 90% of the region's people and the region holds 57% of the district.",
+          "recognisability": "Current district name.",
+          "source_url": "https://zh.wikipedia.org/wiki/蜀山区",
+          "source_note": "因合肥城区最高峰大蜀山位于该区西部而得名",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Dashushan",
+          "local": "大蜀山",
+          "origin": "mountain",
+          "meaning": "\"Great Shu hill\": 284 m, Hefei's tallest hill, now a forest park; its snow scene was first of the Luyang eight views.",
+          "fit": "The hill lies just west of this region in Shushan district; the name stands for the district.",
+          "recognisability": "Own zh-wiki article, 51 hits with Anhui, top ones about this hill.",
+          "source_url": "https://zh.wikipedia.org/wiki/大蜀山",
+          "source_note": "位于安徽省合肥市蜀山区西部，是合肥城区最高的山，海拔284米",
+          "lat": 31.86,
+          "lon": 117.17,
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Tian'e Hu (Swan Lake) is in this district's south-east, split between regions 3 and 4, so not a good name for either."
+    },
+    {
+      "n": 4,
+      "key": "#d67558",
+      "settled": null,
+      "summary": "South-east of the old city: Baohe district's Wanghu, Changqing, Wuhu Lu and Bao Gong subdistricts plus the Mingguang Lu, Datong Lu and Heping Lu subdistricts of Yaohai.",
+      "candidates": [
+        {
+          "name": "Baohe",
+          "local": "包河区",
+          "origin": "county",
+          "meaning": "\"Bao river\": the moat-side pond south-east of the old city, linked to Bao Zheng (Bao Gong), the Song official born in Hefei.",
+          "fit": "Baohe is 65% of the region's people; the region holds 74% of the district, including Bao Gong subdistrict and the Bao River itself.",
+          "recognisability": "Current district name.",
+          "source_url": "https://zh.wikipedia.org/wiki/包河区",
+          "source_note": "因合肥旧城东南的包河得名",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Wanghu",
+          "local": "望湖",
+          "origin": "other",
+          "meaning": "\"Lake view\": the largest subdistrict here, facing Chao Lake.",
+          "fit": "Largest single subdistrict (25% of the region) but a modern neighbourhood name.",
+          "recognisability": "Not checked; just a subdistrict of Baohe.",
+          "source_url": "https://zh.wikipedia.org/wiki/包河区",
+          "source_note": "包河区5街道：包公街道 芜湖路街道 常青街道 望湖街道 同安街道",
+          "rating": 1,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Region 5 is also mostly Baohe district; only one of the two can take the name."
+    },
+    {
+      "n": 5,
+      "key": "#eba792",
+      "settled": null,
+      "summary": "South-east edge towards Chao Lake: Luogang (old airport), Yandun, Feihe, Yicheng, Dawei, Cuozhen, Binhu new area.",
+      "candidates": [
+        {
+          "name": "Binhu",
+          "local": "滨湖",
+          "origin": "other",
+          "meaning": "\"Lakeshore\": the Binhu New Area, Hefei's planned new city on the north shore of Chao Lake (491 km2), with the Anhui Celebrities Hall and the Crossing the Yangtze memorial.",
+          "fit": "The region holds the Binhu Shiji community and neighbours Dawei and Feihe on the shore; the new area lies mostly in Baohe and Feixi, so it spans regions 5 and 6.",
+          "recognisability": "Own zh-wiki article, 210 hits with Anhui, top ones about this new area; not an official admin unit.",
+          "source_url": "https://zh.wikipedia.org/wiki/滨湖新区",
+          "source_note": "合肥市正在建设中的一个新城区…行政上仍然属于肥西县和包河区",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Luogang",
+          "local": "骆岗",
+          "origin": "other",
+          "meaning": "Luogang town, site of Hefei's old airport (1977-2013), now Luogang Central Park; the name means roughly \"Luo ridge\" (Luo is a surname).",
+          "fit": "Largest subdistrict (20%); known for the old airport which sits in the middle of the region.",
+          "recognisability": "172 zh-wiki hits with Anhui; top hits are the old airport (Hefei Luogang International Airport).",
+          "source_url": "https://zh.wikipedia.org/wiki/合肥骆岗国际机场",
+          "source_note": "位于合肥市包河区骆岗镇，于1977年投入使用，是合肥的前民用机场",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Baohe",
+          "local": "包河区",
+          "origin": "county",
+          "meaning": "\"Bao river\": named after the Bao River pond by the old city (see region 4).",
+          "fit": "Baohe district is 78% of the region's people, but the district name is better kept for region 4, which holds the pond and most of the district's people.",
+          "recognisability": "Current district name.",
+          "source_url": "https://zh.wikipedia.org/wiki/包河区",
+          "source_note": "因合肥旧城东南的包河得名",
+          "status": "rejected"
+        }
+      ],
+      "notes": "Luogang is a town name, not an area name, but it is the one familiar place here."
+    },
+    {
+      "n": 6,
+      "key": "#dca492",
+      "settled": null,
+      "summary": "South-west of the city: Shangpai (Feixi's seat), Taohua, and the Lotus, Haiheng and Linhu community areas of Shushan.",
+      "candidates": [
+        {
+          "name": "Shangpai",
+          "local": "上派",
+          "origin": "other",
+          "meaning": "Upper Pai: town on the Pai River, seat of Feixi county since 1949.",
+          "fit": "23% of the region's people and the seat of Feixi (which holds 39% of the region).",
+          "recognisability": "Own zh-wiki article; Feixi county seat.",
+          "source_url": "https://zh.wikipedia.org/wiki/上派镇",
+          "source_note": "1949年6月正式将县治设在上派河镇",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Paihe",
+          "local": "派河",
+          "origin": "river",
+          "meaning": "\"Pai River\": a short river from Feixi into the west of Chao Lake.",
+          "fit": "Runs through Shangpai and the region before reaching Chao Lake.",
+          "recognisability": "Own zh-wiki article, 152 hits with Anhui but mostly road and bridge names.",
+          "source_url": "https://zh.wikipedia.org/wiki/派河",
+          "source_note": "合肥长江水系：南淝河、派河、丰乐河…",
+          "rating": 2,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Feixi (county) is 39% of the people but the county's main body lies outside the batch, so its name probably belongs to a larger region."
+    }
+  ]
+}

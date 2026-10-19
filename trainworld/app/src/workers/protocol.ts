@@ -113,8 +113,10 @@ export type ToClock =
   /** the game clock (main thread, game/clock.ts) whenever it is set, paused, resumed or changes
    * speed: game seconds `t` at wall time `at` (performance.timeOrigin + performance.now(), the
    * clock game/clock.ts runs on, never Date.now(): T-488), moving `rate` game s per wall s (0
-   * when stopped). The worker settles money by the game hour from it (T-028). */
-  | { kind: "clock"; t: number; rate: number; at: number }
+   * when stopped). The worker settles money by the game hour from it (T-028). `game`: the last
+   * "loaded" message's `game` the main thread had seen; the worker ignores a clock from before
+   * its latest load (T-715). */
+  | { kind: "clock"; t: number; rate: number; at: number; game: number }
   /** fare income in force, US$M per game hour for each of the five periods (from demand riders,
    * game/money.ts), one table per kind of day (T-260, game/days.ts `DayKind` order) */
   /** fare income per game hour in each period, per kind of day (US$M); `lines` the same per line
@@ -376,8 +378,8 @@ export type FromClock =
   /** a game was loaded or started (`from`), at game time `clock`; a failed import says why in
    * `error` and changes nothing */
   /** `frame`: the game now in the worker; `converted`: its save was in an older frame and was
-   * converted to the world's on the way in (T-308) */
-  | { kind: "loaded"; from: "autosave" | "file" | "new"; clock: number; frame: FrameSpec; error?: string; converted?: boolean }
+   * converted to the world's on the way in (T-308); `game` counts the worker's loads, for "clock" */
+  | { kind: "loaded"; from: "autosave" | "file" | "new"; clock: number; frame: FrameSpec; error?: string; converted?: boolean; game: number }
   /** the save file, for the player to keep */
   | { kind: "exported"; bytes: Uint8Array; day: number }
   /** a station placement's check (T-311): `issues` as an edit's */

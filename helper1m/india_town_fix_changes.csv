@@ -1,0 +1,393 @@
+state,district,subdistrict,old_2026,new_2026,change,ratio
+West Bengal,North Twenty Four Parganas,Barrackpur-II,474451,2632718,2158267,5.55
+West Bengal,Haora,Bally Jagachha,344427,1737468,1393041,5.04
+West Bengal,North Twenty Four Parganas,Barrackpur-I,399459,1376248,976789,3.45
+West Bengal,Hugli,Serampur Uttarpara,226702,879723,653021,3.88
+West Bengal,Barddhaman,Faridpur Durgapur,179539,745133,565594,4.15
+West Bengal,Barddhaman,Barabani,191424,750673,559249,3.92
+West Bengal,South Twenty Four Parganas,Thakurpukur Mahestola,229313,702199,472886,3.06
+West Bengal,North Twenty Four Parganas,Rajarhat,414857,884423,469566,2.13
+West Bengal,South Twenty Four Parganas,Sonarpur,286133,724362,438229,2.53
+Tripura,West Tripura,Mohanpur,258610,640406,381796,2.48
+West Bengal,North Twenty Four Parganas,Gaighata,721574,360925,-360649,0.5
+West Bengal,North Twenty Four Parganas,Deganga,697381,348824,-348557,0.5
+West Bengal,North Twenty Four Parganas,Bongaon,832155,535199,-296956,0.64
+West Bengal,Hugli,Singur,411540,708006,296466,1.72
+West Bengal,North Twenty Four Parganas,Swarupnagar,559444,279829,-279615,0.5
+West Bengal,Barddhaman,Salanpur,252536,520673,268137,2.06
+West Bengal,North Twenty Four Parganas,Bagda,530823,265513,-265310,0.5
+West Bengal,North Twenty Four Parganas,Baduria,623333,369148,-254185,0.59
+West Bengal,North Twenty Four Parganas,Basirhat-II,494024,247106,-246918,0.5
+West Bengal,Barddhaman,Burdwan-I,334444,578915,244471,1.73
+West Bengal,Darjiling,Matigara,302907,543880,240973,1.8
+West Bengal,North Twenty Four Parganas,Haroa,467515,233847,-233668,0.5
+West Bengal,North Twenty Four Parganas,Barasat-II,438943,219556,-219387,0.5
+West Bengal,North Twenty Four Parganas,Minakhan,430314,215239,-215075,0.5
+West Bengal,Purba Medinipur,Haldia,119070,331089,212019,2.78
+West Bengal,Maldah,English Bazar,340606,551731,211125,1.62
+West Bengal,North Twenty Four Parganas,Amdanga,418746,209453,-209293,0.5
+West Bengal,Hugli,Chinsurah-Magra,363852,570104,206252,1.57
+West Bengal,Haora,Domjur,620759,415232,-205527,0.67
+West Bengal,Paschim Medinipur,Kharagpur-I,314268,512926,198658,1.63
+West Bengal,North Twenty Four Parganas,Barasat-I,643671,840542,196871,1.31
+West Bengal,North Twenty Four Parganas,Habra-II,385576,192862,-192714,0.5
+West Bengal,Nadia,Chakdah,531182,722091,190909,1.36
+West Bengal,North Twenty Four Parganas,Hingalganj,381327,190736,-190591,0.5
+West Bengal,Jalpaiguri,Rajganj,467328,652566,185238,1.4
+West Bengal,North Twenty Four Parganas,Hasnabad,444064,263929,-180135,0.59
+West Bengal,Haora,Sankrail,543885,363810,-180075,0.67
+West Bengal,North Twenty Four Parganas,Sandeshkhali-I,359305,179721,-179584,0.5
+West Bengal,Murshidabad,Berhampore,550219,728290,178071,1.32
+West Bengal,North Twenty Four Parganas,Sandeshkhali-II,351682,175909,-175773,0.5
+West Bengal,Paschim Medinipur,Midnapore,233479,397622,164143,1.7
+West Bengal,Haora,Uluberia-II,314991,469509,154518,1.49
+West Bengal,Uttar Dinajpur,Raiganj,551944,701502,149558,1.27
+West Bengal,Bankura,Bankura-I,126180,268458,142278,2.13
+West Bengal,Haora,Jagatballavpur,424058,283657,-140401,0.67
+West Bengal,Haora,Panchla,414176,277047,-137129,0.67
+West Bengal,Hugli,Dhaniakhali,477230,345941,-131289,0.72
+West Bengal,Hugli,Pandua,470772,341260,-129512,0.72
+West Bengal,Dakshin Dinajpur,Balurghat,309979,438274,128295,1.41
+West Bengal,Puruliya,Purulia-II,199303,322290,122987,1.62
+West Bengal,Barddhaman,Jamalpur,412494,290805,-121689,0.7
+West Bengal,Haora,Amta-I,366973,245472,-121501,0.67
+West Bengal,Haora,Bagnan-I,364148,243583,-120565,0.67
+West Bengal,Barddhaman,Mangolkote,407696,287422,-120274,0.7
+West Bengal,Barddhaman,Bhatar,407423,287230,-120193,0.7
+West Bengal,Haora,Uluberia-I,354107,236866,-117241,0.67
+West Bengal,Nadia,Santipur,315631,429494,113863,1.36
+West Bengal,Haora,Amta-II,342171,228882,-113289,0.67
+West Bengal,Haora,Shyampur-I,338418,226371,-112047,0.67
+West Bengal,Nadia,Ranaghat-I,281665,392851,111186,1.39
+West Bengal,Barddhaman,Manteswar,367673,259206,-108467,0.7
+West Bengal,South Twenty Four Parganas,Budge Budge-I,146940,255001,108061,1.74
+West Bengal,Nadia,Nabadwip,177158,285184,108026,1.61
+West Bengal,Hugli,Polba-Dadpur,392396,284445,-107951,0.72
+West Bengal,Hugli,Haripal,388701,281767,-106934,0.72
+West Bengal,Haora,Shyampur-II,322496,215721,-106775,0.67
+West Bengal,Barddhaman,Jamuria,190770,297419,106649,1.56
+West Bengal,Hugli,Khanakul-I,378816,274601,-104215,0.72
+West Bengal,Haora,Udaynarayanpur,312668,209147,-103521,0.67
+West Bengal,Nadia,Krishnagar-I,412191,511529,99338,1.24
+West Bengal,North Twenty Four Parganas,Habra-I,491992,589425,97433,1.2
+West Bengal,Barddhaman,Purbasthali-II,328887,231863,-97024,0.7
+West Bengal,Barddhaman,Purbasthali-I,320558,225991,-94567,0.7
+West Bengal,Hugli,Balagarh,340946,247149,-93797,0.72
+West Bengal,Barddhaman,Raniganj,164852,257551,92699,1.56
+West Bengal,Hugli,Jangipara,329898,239141,-90757,0.72
+West Bengal,Haora,Bagnan-II,270284,180796,-89488,0.67
+West Bengal,Darjiling,Phansidewa,314030,226169,-87861,0.72
+West Bengal,Barddhaman,Khandaghosh,293236,206729,-86507,0.7
+West Bengal,Murshidabad,Murshidabad Jiaganj,288803,374715,85912,1.3
+West Bengal,Barddhaman,Galsi-I,290529,204821,-85708,0.7
+West Bengal,Barddhaman,Ondal,289487,204086,-85401,0.7
+West Bengal,Purba Medinipur,Contai-I,207653,291535,83882,1.4
+West Bengal,Nadia,Nakashipara,506110,422619,-83491,0.84
+West Bengal,Barddhaman,Raina-I,280251,197575,-82676,0.7
+West Bengal,Maldah,Maldah (Old),193932,276214,82282,1.42
+West Bengal,Barddhaman,Kanksa,275873,194488,-81385,0.7
+West Bengal,Murshidabad,Raghunathganj-I,240861,321881,81020,1.34
+West Bengal,Murshidabad,Samserganj,349757,430749,80992,1.23
+West Bengal,Darjiling,Darjeeling Pulbazar,194900,271750,76850,1.39
+West Bengal,Barddhaman,Kalna-II,259162,182707,-76455,0.7
+West Bengal,Hugli,Khanakul-II,275043,199377,-75666,0.72
+West Bengal,Barddhaman,Ketugram-I,256177,180603,-75574,0.7
+West Bengal,Barddhaman,Pandabeswar,250730,176763,-73967,0.7
+West Bengal,Hugli,Chanditala-I,267734,194079,-73655,0.72
+West Bengal,Nadia,Kaliganj,438439,366111,-72328,0.84
+West Bengal,Darjiling,Naxalbari,254149,183042,-71107,0.72
+West Bengal,Hugli,Pursura,258223,187184,-71039,0.72
+West Bengal,Jalpaiguri,Jalpaiguri,404399,474462,70063,1.17
+West Bengal,Barddhaman,Burdwan-II,236866,166989,-69877,0.7
+West Bengal,Barddhaman,Raina-II,234484,165309,-69175,0.7
+West Bengal,Barddhaman,Ausgram-II,233702,164758,-68944,0.7
+West Bengal,Barddhaman,Memari-II,232704,164055,-68649,0.7
+West Bengal,Barddhaman,Galsi-II,227942,160697,-67245,0.7
+West Bengal,Nadia,Chapra,406717,339622,-67095,0.84
+West Bengal,Birbhum,Bolpur Sriniketan,248990,314798,65808,1.26
+West Bengal,Hugli,Goghat-II,239088,173314,-65774,0.72
+West Bengal,Nadia,Hanskhali,383659,320368,-63291,0.84
+West Bengal,Birbhum,Suri-I,136911,199548,62637,1.46
+West Bengal,Bankura,Vishnupur,183756,246039,62283,1.34
+West Bengal,Koch Bihar,Cooch Behar-I,384260,445157,60897,1.16
+West Bengal,South Twenty Four Parganas,Basanti,438208,378599,-59609,0.86
+West Bengal,South Twenty Four Parganas,Patharpratima,431839,373096,-58743,0.86
+West Bengal,Hugli,Goghat-I,208485,151129,-57356,0.72
+West Bengal,Barddhaman,Memari-I,338288,283749,-54539,0.84
+West Bengal,Barddhaman,Ketugram-II,183632,129459,-54173,0.7
+West Bengal,South Twenty Four Parganas,Magrahat-II,396598,342649,-53949,0.86
+West Bengal,South Twenty Four Parganas,Canning-I,396572,342626,-53946,0.86
+West Bengal,Nadia,Ranaghat-II,477093,423663,-53430,0.89
+Tripura,West Tripura,Dukli,187884,135077,-52807,0.72
+West Bengal,Nadia,Tehatta-I,319875,267107,-52768,0.84
+West Bengal,North Twenty Four Parganas,Basirhat-I,374921,324405,-50516,0.87
+West Bengal,South Twenty Four Parganas,Kulpi,368557,318422,-50135,0.86
+West Bengal,South Twenty Four Parganas,Kakdwip,366951,317034,-49917,0.86
+West Bengal,Nadia,Haringhata,302523,252617,-49906,0.84
+Tripura,West Tripura,Bishalgarh,262741,212852,-49889,0.81
+West Bengal,Purba Medinipur,Tamluk,264619,313653,49034,1.19
+West Bengal,Jalpaiguri,Maynaguri,411385,362392,-48993,0.88
+Karnataka,Uttara Kannada,Haliyal,127372,176310,48938,1.38
+West Bengal,Darjiling,Jorebunglow Sukiapokhri,174296,125531,-48765,0.72
+Tripura,West Tripura,Jirania,224837,176533,-48304,0.79
+West Bengal,Paschim Medinipur,Jhargram,207162,255347,48185,1.23
+West Bengal,Paschim Medinipur,Ghatal,267397,315331,47934,1.18
+West Bengal,South Twenty Four Parganas,Magrahat-I,348834,301382,-47452,0.86
+West Bengal,Darjiling,Kharibari,167748,120814,-46934,0.72
+West Bengal,Nadia,Karimpur-II,284282,237385,-46897,0.84
+West Bengal,South Twenty Four Parganas,Jaynagar-I,342469,295882,-46587,0.86
+West Bengal,Uttar Dinajpur,Goalpokhar-I,418390,372697,-45693,0.89
+West Bengal,Hugli,Arambag,424633,379234,-45399,0.89
+West Bengal,South Twenty Four Parganas,Canning-II,328637,283932,-44705,0.86
+West Bengal,Jalpaiguri,Kalchini,373158,328718,-44440,0.88
+West Bengal,South Twenty Four Parganas,Falta,324782,280602,-44180,0.86
+West Bengal,South Twenty Four Parganas,Bhangar-I,324273,280162,-44111,0.86
+West Bengal,South Twenty Four Parganas,Bhangar-II,321069,277394,-43675,0.86
+West Bengal,South Twenty Four Parganas,Gosaba,320926,277270,-43656,0.86
+West Bengal,Jalpaiguri,Falakata,363486,320198,-43288,0.88
+West Bengal,Birbhum,Rampurhat-I,231410,273965,42555,1.18
+West Bengal,Uttar Dinajpur,Itahar,389598,347050,-42548,0.89
+West Bengal,Murshidabad,Kandi,271049,312790,41741,1.15
+West Bengal,South Twenty Four Parganas,Bishnupur-I,302403,261267,-41136,0.86
+Tripura,West Tripura,Melaghar,191974,150839,-41135,0.79
+West Bengal,Uttar Dinajpur,Goalpokhar-II,373657,332849,-40808,0.89
+West Bengal,South Twenty Four Parganas,Kultali,298093,257543,-40550,0.86
+West Bengal,Hugli,Tarakeswar,266726,226748,-39978,0.85
+West Bengal,Uttar Dinajpur,Chopra,364870,325022,-39848,0.89
+West Bengal,Nadia,Karimpur-I,240318,200674,-39644,0.84
+West Bengal,Paschim Medinipur,Keshpur,413172,373695,-39477,0.9
+West Bengal,Jalpaiguri,Alipurduar-II,272903,312248,39345,1.14
+West Bengal,South Twenty Four Parganas,Mathurapur-II,287403,248308,-39095,0.86
+West Bengal,Dakshin Dinajpur,Tapan,311975,272986,-38989,0.88
+West Bengal,South Twenty Four Parganas,Bishnupur-II,279194,241215,-37979,0.86
+West Bengal,Hugli,Chanditala-II,235829,273412,37583,1.16
+West Bengal,South Twenty Four Parganas,Sagar,275948,238411,-37537,0.86
+West Bengal,South Twenty Four Parganas,Mandirbazar,264337,228379,-35958,0.86
+West Bengal,Barddhaman,Katwa-II,211728,175905,-35823,0.83
+West Bengal,Murshidabad,Domkal,448137,412826,-35311,0.92
+West Bengal,Paschim Medinipur,Narayangarh,368563,333348,-35215,0.9
+West Bengal,South Twenty Four Parganas,Mathurapur-I,253911,219372,-34539,0.86
+West Bengal,South Twenty Four Parganas,Budge Budge-II,250046,216032,-34014,0.86
+West Bengal,Maldah,Kaliachak-I,460589,426734,-33855,0.93
+West Bengal,Purba Medinipur,Panskura,344240,378086,33846,1.1
+West Bengal,Paschim Medinipur,Debra,351511,317925,-33586,0.9
+West Bengal,Nadia,Tehatta-II,197997,165334,-32663,0.84
+West Bengal,Barddhaman,Kalna-I,320508,287889,-32619,0.9
+West Bengal,Murshidabad,Lalgola,413484,380904,-32580,0.92
+West Bengal,South Twenty Four Parganas,Namkhana,237938,205571,-32367,0.86
+West Bengal,South Twenty Four Parganas,Diamond Harbour-II,237496,205190,-32306,0.86
+West Bengal,Jalpaiguri,Alipurduar-I,271226,238925,-32301,0.88
+Tripura,North Tripura,Panisagar,148502,180340,31838,1.21
+West Bengal,Nadia,Krishnaganj,192072,160386,-31686,0.84
+West Bengal,Paschim Medinipur,Sabang,329434,297958,-31476,0.9
+West Bengal,Maldah,Gazole,426435,395090,-31345,0.93
+West Bengal,Purba Medinipur,Kolaghat,352529,321455,-31074,0.91
+West Bengal,Dakshin Dinajpur,Kushmundi,247524,216589,-30935,0.88
+West Bengal,Darjiling,Rangli Rangliot,107672,77547,-30125,0.72
+West Bengal,Nadia,Krishnagar-II,182602,152479,-30123,0.84
+West Bengal,Murshidabad,Sagardighi,382248,352129,-30119,0.92
+West Bengal,Maldah,Kaliachak-III,409714,379598,-30116,0.93
+West Bengal,Jalpaiguri,Madarihat,252591,222509,-30082,0.88
+West Bengal,Uttar Dinajpur,Kaliaganj,287559,317330,29771,1.1
+West Bengal,Jalpaiguri,Kumargram,249569,219847,-29722,0.88
+West Bengal,Darjiling,Kalimpong-II,102613,73903,-28710,0.72
+Tripura,West Tripura,Kathalia,98756,70999,-27757,0.72
+West Bengal,Paschim Medinipur,Daspur-II,289995,262288,-27707,0.9
+West Bengal,Murshidabad,Suti-II,343416,316357,-27059,0.92
+West Bengal,Birbhum,Sainthia,240135,267135,27000,1.11
+West Bengal,Murshidabad,Farakka,337493,310900,-26593,0.92
+West Bengal,Paschim Medinipur,Garbeta-I,278307,251716,-26591,0.9
+West Bengal,Murshidabad,Khargram,336534,310017,-26517,0.92
+West Bengal,Dakshin Dinajpur,Kumarganj,210598,184278,-26320,0.88
+West Bengal,Koch Bihar,Cooch Behar-II,404667,378473,-26194,0.94
+West Bengal,Purba Medinipur,Nanda Kumar,295782,269711,-26071,0.91
+West Bengal,Darjiling,Gorubathan,93144,67084,-26060,0.72
+West Bengal,Birbhum,Murarai-II,272936,247188,-25748,0.91
+West Bengal,Murshidabad,Raghunathganj-II,326689,300948,-25741,0.92
+West Bengal,Birbhum,Nanoor,268782,243426,-25356,0.91
+West Bengal,Purba Medinipur,Bhagawanpur-I,284858,259749,-25109,0.91
+West Bengal,Maldah,Ratua-I,341550,316444,-25106,0.93
+West Bengal,Murshidabad,Hariharpara,317128,292140,-24988,0.92
+West Bengal,Murshidabad,Burwan,316999,292021,-24978,0.92
+West Bengal,Maldah,Manikchak,334636,310038,-24598,0.93
+West Bengal,Murshidabad,Jalangi,310857,286363,-24494,0.92
+West Bengal,Murshidabad,Beldanga-II,308371,284073,-24298,0.92
+West Bengal,Dakshin Dinajpur,Gangarampur,295940,320216,24276,1.08
+West Bengal,Paschim Medinipur,Chandrakona-I,165642,189466,23824,1.14
+West Bengal,Paschim Medinipur,Daspur-I,247793,224117,-23676,0.9
+West Bengal,Purba Medinipur,Moyna,267366,243799,-23567,0.91
+West Bengal,Birbhum,Labpur,248189,224775,-23414,0.91
+Tripura,West Tripura,Boxanagar,81716,58749,-22967,0.72
+West Bengal,Maldah,Harischandrapur-II,311731,288817,-22914,0.93
+West Bengal,Paschim Medinipur,Pingla,237259,214590,-22669,0.9
+West Bengal,Darjiling,Kalimpong-I,114767,137289,22522,1.2
+West Bengal,Birbhum,Nalhati-I,251774,274262,22488,1.09
+Tripura,South Tripura,Matarbari,164005,186284,22279,1.14
+West Bengal,Purba Medinipur,Nandigram-I,252540,230280,-22260,0.91
+West Bengal,Birbhum,Murarai-I,234545,212418,-22127,0.91
+West Bengal,Murshidabad,Nabagram,280210,258131,-22079,0.92
+West Bengal,Murshidabad,Nawda,279315,257307,-22008,0.92
+West Bengal,Dakshin Dinajpur,Bansihari,175956,153966,-21990,0.88
+West Bengal,Paschim Medinipur,Salbani,229762,207809,-21953,0.9
+West Bengal,Purba Medinipur,Mahisadal,247465,225653,-21812,0.91
+West Bengal,Birbhum,Rampurhat-II,226832,205433,-21399,0.91
+West Bengal,Paschim Medinipur,Kharagpur-II,223413,202067,-21346,0.9
+West Bengal,Purba Medinipur,Sahid Matangini,242059,220723,-21336,0.91
+West Bengal,Birbhum,Dubrajpur,223033,244343,21310,1.1
+West Bengal,Dakshin Dinajpur,Harirampur,170436,149135,-21301,0.88
+Tripura,West Tripura,Kalyanpur,73612,52923,-20689,0.72
+West Bengal,Purba Medinipur,Bhagawanpur-II,233495,212914,-20581,0.91
+West Bengal,Puruliya,Raghunathpur-I,138475,158975,20500,1.15
+Tripura,West Tripura,Jampuijala,72194,51903,-20291,0.72
+West Bengal,Purba Medinipur,Chandipur,228583,208434,-20149,0.91
+West Bengal,Paschim Medinipur,Dantan-I,209610,189583,-20027,0.9
+West Bengal,Uttar Dinajpur,Hemtabad,182248,162345,-19903,0.89
+Tripura,West Tripura,Mandai,70595,50754,-19841,0.72
+West Bengal,Bankura,Sonamukhi,185953,205702,19749,1.11
+West Bengal,Paschim Medinipur,Garbeta-III,206469,186742,-19727,0.9
+West Bengal,Murshidabad,Bhagawangola-I,248795,229192,-19603,0.92
+West Bengal,Birbhum,Illambazar,207387,187823,-19564,0.91
+West Bengal,South Twenty Four Parganas,Diamond Harbour-I,202861,222267,19406,1.1
+West Bengal,Bankura,Onda,296434,277127,-19307,0.93
+Tripura,West Tripura,Tulashikhar,68681,49378,-19303,0.72
+West Bengal,Maldah,Habibpur,261319,242111,-19208,0.93
+West Bengal,Maldah,Kaliachak-II,260583,241429,-19154,0.93
+West Bengal,Purba Medinipur,Egra-II,217214,198068,-19146,0.91
+West Bengal,Paschim Medinipur,Binpur-II,200372,181228,-19144,0.9
+West Bengal,Birbhum,Mohammad Bazar,202299,183215,-19084,0.91
+West Bengal,Jalpaiguri,Nagrakata,159283,140313,-18970,0.88
+West Bengal,Uttar Dinajpur,Islampur,395808,414682,18874,1.05
+West Bengal,Purba Medinipur,Deshopran,213113,194329,-18784,0.91
+West Bengal,Purba Medinipur,Potashpur-II,212710,193961,-18749,0.91
+West Bengal,Maldah,Chanchal-II,254664,235945,-18719,0.93
+West Bengal,Maldah,Chanchal-I,253929,235264,-18665,0.93
+West Bengal,Koch Bihar,Dinhata-II,287192,268602,-18590,0.94
+West Bengal,Purba Medinipur,Potashpur-I,210670,192100,-18570,0.91
+West Bengal,Birbhum,Mayureswar-I,196413,177884,-18529,0.91
+West Bengal,Murshidabad,Raninagar-II,235023,216504,-18519,0.92
+West Bengal,Maldah,Ratua-II,250630,232207,-18423,0.93
+West Bengal,Murshidabad,Raninagar-I,232831,214485,-18346,0.92
+West Bengal,Maldah,Harischandrapur-I,247421,229235,-18186,0.93
+West Bengal,Paschim Medinipur,Binpur-I,190180,172009,-18171,0.9
+West Bengal,Paschim Medinipur,Dantan-II,188796,170757,-18039,0.9
+Tripura,North Tripura,Kadamtala,164119,146133,-17986,0.89
+West Bengal,Koch Bihar,Dinhata-I,336852,354803,17951,1.05
+West Bengal,Purba Medinipur,Ramnagar-I,203322,185400,-17922,0.91
+West Bengal,Birbhum,Khoyrasol,188382,170610,-17772,0.91
+West Bengal,Jalpaiguri,Matiali,146959,129457,-17502,0.88
+West Bengal,Murshidabad,Suti-I,221508,204054,-17454,0.92
+West Bengal,Paschim Medinipur,Keshiary,181785,164416,-17369,0.9
+West Bengal,Koch Bihar,Mathabhanga-II,267577,250257,-17320,0.94
+West Bengal,Paschim Medinipur,Garbeta-II,180749,163480,-17269,0.9
+West Bengal,Murshidabad,Bharatpur-II,217149,200039,-17110,0.92
+West Bengal,South Twenty Four Parganas,Baruipur,563667,546728,-16939,0.97
+West Bengal,Jalpaiguri,Mal,374531,357702,-16829,0.96
+West Bengal,Purba Medinipur,Contai-III,190577,173779,-16798,0.91
+West Bengal,Murshidabad,Bharatpur-I,212635,195881,-16754,0.92
+West Bengal,Purba Medinipur,Ramnagar-II,189621,172907,-16714,0.91
+West Bengal,Paschim Medinipur,Nayagram,173185,156638,-16547,0.9
+West Bengal,Barddhaman,Ausgram-I,184865,168967,-15898,0.91
+Tripura,West Tripura,Hezamara,56305,40480,-15825,0.72
+Tripura,West Tripura,Padmabil,56157,40373,-15784,0.72
+West Bengal,Purba Medinipur,Egra-I,203119,218619,15500,1.08
+West Bengal,South Twenty Four Parganas,Jaynagar-II,328170,312675,-15495,0.95
+West Bengal,Bankura,Barjora,236751,221331,-15420,0.93
+West Bengal,Murshidabad,Bhagawangola-II,194563,179233,-15330,0.92
+West Bengal,Purba Medinipur,Khejuri-II,169461,154524,-14937,0.91
+Tripura,Dhalai,Ambassa,72681,87577,14896,1.2
+Tripura,North Tripura,Dasda,135819,120934,-14885,0.89
+West Bengal,Bankura,Chhatna,228535,213651,-14884,0.93
+West Bengal,Birbhum,Nalhati-II,157081,142262,-14819,0.91
+West Bengal,Birbhum,Mayureswar-II,156928,142124,-14804,0.91
+West Bengal,Bankura,Kotulpur,221197,206790,-14407,0.93
+West Bengal,Purba Medinipur,Khejuri-I,161598,147354,-14244,0.91
+West Bengal,Koch Bihar,Tufanganj-II,219720,205498,-14222,0.94
+West Bengal,Koch Bihar,Sitalkuchi,218104,203986,-14118,0.94
+West Bengal,Bankura,Patrasayer,215684,201636,-14048,0.93
+West Bengal,Bankura,Gangajalghati,212056,198245,-13811,0.93
+West Bengal,Paschim Medinipur,Sankrail,140568,127138,-13430,0.9
+West Bengal,Puruliya,Para,235912,222533,-13379,0.94
+West Bengal,Puruliya,Kashipur,235280,221937,-13343,0.94
+West Bengal,Purba Medinipur,Sutahata,150410,137152,-13258,0.91
+West Bengal,Purba Medinipur,Nandigram-II,149723,136526,-13197,0.91
+West Bengal,Paschim Medinipur,Jamboni,137863,124691,-13172,0.9
+West Bengal,Maldah,Bamangola,178479,165360,-13119,0.93
+West Bengal,Bankura,Raipur,200811,187732,-13079,0.93
+West Bengal,Dakshin Dinajpur,Hilli,104307,91271,-13036,0.88
+West Bengal,Paschim Medinipur,Mohanpur,136285,123263,-13022,0.9
+West Bengal,Bankura,Indus,198943,185986,-12957,0.93
+Tripura,West Tripura,Mungiakumi,46095,33139,-12956,0.72
+West Bengal,Paschim Medinipur,Gopiballavpur-I,131843,119246,-12597,0.9
+West Bengal,Puruliya,Jhalda-I,161268,173801,12533,1.08
+West Bengal,Jalpaiguri,Dhupguri,518687,506168,-12519,0.98
+West Bengal,Paschim Medinipur,Gopiballavpur-II,127875,115657,-12218,0.9
+West Bengal,Bankura,Jaypur,183871,171895,-11976,0.93
+West Bengal,Bankura,Indpur,183404,171459,-11945,0.93
+Tripura,South Tripura,Rajnagar,119890,131623,11733,1.1
+West Bengal,Paschim Medinipur,Chandrakona-II,150130,161814,11684,1.08
+West Bengal,Puruliya,Barabazar,200568,189193,-11375,0.94
+West Bengal,Bankura,Taldangra,173293,162007,-11286,0.93
+West Bengal,Bankura,Simlapal,167604,156688,-10916,0.93
+West Bengal,Bankura,Bankura-II,165057,154307,-10750,0.93
+Tripura,North Tripura,Gournagar,144703,155398,10695,1.07
+West Bengal,Bankura,Saltora,159334,148957,-10377,0.93
+West Bengal,Puruliya,Arsha,181956,171637,-10319,0.94
+West Bengal,Puruliya,Manbazar-I,181174,170899,-10275,0.94
+West Bengal,Birbhum,Suri-II,107443,97307,-10136,0.91
+West Bengal,Puruliya,Purulia-I,177784,167701,-10083,0.94
+West Bengal,Barddhaman,Katwa-I,268070,278100,10030,1.04
+West Bengal,Puruliya,Jhalda-II,174218,164338,-9880,0.94
+West Bengal,Koch Bihar,Mathabhanga-I,256745,266417,9672,1.04
+West Bengal,Puruliya,Hura,168831,159257,-9574,0.94
+West Bengal,Uttar Dinajpur,Karandighi,472545,463142,-9403,0.98
+West Bengal,Puruliya,Balarampur,162217,153017,-9200,0.94
+West Bengal,Bankura,Ranibundh,139542,130454,-9088,0.93
+West Bengal,Birbhum,Rajnagar,95856,86813,-9043,0.91
+West Bengal,Puruliya,Bagmundi,159429,150387,-9042,0.94
+Tripura,South Tripura,Kakraban,95818,86777,-9041,0.91
+West Bengal,Bankura,Khatra,137130,128198,-8932,0.93
+West Bengal,Puruliya,Jaipur,156806,147914,-8892,0.94
+West Bengal,Koch Bihar,Sitai,129828,121425,-8403,0.94
+West Bengal,Puruliya,Puncha,145642,137383,-8259,0.94
+West Bengal,Bankura,Sarenga,125152,117001,-8151,0.93
+Tripura,Dhalai,Manu,112038,103994,-8044,0.93
+West Bengal,Koch Bihar,Haldibari,122340,130273,7933,1.06
+Tripura,West Tripura,Khowai,102721,94899,-7822,0.92
+West Bengal,Puruliya,Raghunathpur-II,133807,126218,-7589,0.94
+Karnataka,Uttara Kannada,Sirsi,199459,192233,-7226,0.96
+West Bengal,Darjiling,Mirik,71204,64014,-7190,0.9
+West Bengal,Puruliya,Neturia,119269,112505,-6764,0.94
+West Bengal,Bankura,Mejhia,100991,94413,-6578,0.93
+West Bengal,Puruliya,Manbazar-II,114256,107776,-6480,0.94
+Karnataka,Uttara Kannada,Honavar,177429,171001,-6428,0.96
+Tripura,West Tripura,Teliamura,107890,101463,-6427,0.94
+West Bengal,Darjiling,Kurseong,144863,151271,6408,1.04
+West Bengal,Bankura,Hirbandh,98232,91834,-6398,0.93
+Tripura,South Tripura,Hrishyamukh,67110,60778,-6332,0.91
+West Bengal,Puruliya,Bundwan,111628,105297,-6331,0.94
+Tripura,North Tripura,Pencharthal,57431,51137,-6294,0.89
+Karnataka,Uttara Kannada,Bhatkal,172426,166179,-6247,0.96
+Karnataka,Uttara Kannada,Karwar,165636,159635,-6001,0.96
+Karnataka,Uttara Kannada,Kumta,164640,158675,-5965,0.96
+Tripura,South Tripura,Rupaichhari,61015,55258,-5757,0.91
+Tripura,South Tripura,Amarpur,71992,77690,5698,1.08
+Tripura,Dhalai,Dumburnagar,79045,73369,-5676,0.93
+Tripura,South Tripura,Karbuk,57711,52266,-5445,0.91
+West Bengal,Puruliya,Santuri,92327,87091,-5236,0.94
+Tripura,South Tripura,Killa,52063,47151,-4912,0.91
+Tripura,South Tripura,Ompi,49166,44527,-4639,0.91
+West Bengal,Koch Bihar,Tufanganj-I,292521,296695,4174,1.01
+Karnataka,Uttara Kannada,Ankola,114540,110390,-4150,0.96
+Karnataka,Uttara Kannada,Mundgod,113304,109199,-4105,0.96
+Tripura,North Tripura,Damchhara,36784,32753,-4031,0.89
+Karnataka,Uttara Kannada,Siddapur,103857,100095,-3762,0.96
+Tripura,Dhalai,Chhamanu,44684,41476,-3208,0.93
+Karnataka,Uttara Kannada,Yellapur,83944,80903,-3041,0.96
+Tripura,North Tripura,Kumarghat,118719,121179,2460,1.02
+Tripura,South Tripura,Satchand,111165,108907,-2258,0.98
+West Bengal,Murshidabad,Beldanga-I,393158,395304,2146,1.01
+Tripura,Dhalai,Salema,158731,160763,2032,1.01
+Karnataka,Uttara Kannada,Supa,55505,53494,-2011,0.96
+Tripura,North Tripura,Jampuii Hills,16387,14591,-1796,0.89
+West Bengal,Koch Bihar,Mekliganj,182682,180902,-1780,0.99
+Tripura,South Tripura,Bokafa,159653,158327,-1326,0.99

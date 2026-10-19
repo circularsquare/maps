@@ -329,3 +329,12 @@ to the national rate anyway (relative reading +2.6 Catholic), which is the fill 
   (39), Quindío (12), Casanare (30), Putumayo (10), Sucre (28), Caquetá (38), and 2000-2009 cover
   La Guajira, Quindío and Sucre; a second reading for LAPOP's one-round departments. Not used:
   it would change already-drawn numbers.
+
+## Pentecostals from Pew 2014 (2026-10-16)
+
+Anita's call of 2026-10-16, built by session `c67d3c3c-latam` (`latam_split.py`, sources.md
+§latam-2026-10-16). LAPOP's two Protestant boxes are one bucket of 7,794,381; 46.7% of it,
+3,636,913, is drawn on `christianity.pentecostal`, the share of Protestants Pew Research Center's
+2014 survey found in a Pentecostal church (`QPROT`, 211 Colombian Protestants). Pew names the
+Iglesia Pentecostal Unida de Colombia (Oneness) at 11.2% of Protestants; no Oneness split was
+drawn, on Anita's ruling. 4,157,468 stay on the two box nodes. All `modelled`.

@@ -1,0 +1,792 @@
+{
+ "batch": "henan-west",
+ "regions": [
+  {
+   "n": 1,
+   "key": "#eddcb3",
+   "settled": null,
+   "summary": "Xin'an and Mianchi counties plus Yima, west of Luoyang along the Jian River and the Yellow River.",
+   "candidates": [
+    {
+     "name": "Mianchi",
+     "local": "渑池",
+     "origin": "county",
+     "meaning": "\"Mian pond\": the Shui jing zhu says a pool lay among the Xiong'er hills here. Site of the Qin-Zhao Mianchi meeting.",
+     "fit": "Holds 95% of Mianchi's people (32% of the region); Mianchi commandery and Mianchi county had seats here. Second to Xin'an by people.",
+     "recognisability": "Current admin unit, no check needed. Also the home county of Yangshao village.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E6%B8%91%E6%B1%A0%E5%8E%BF",
+     "source_note": "渑池因山水而得名...熊耳山，山际有池，世谓之渑池",
+     "rating": 4,
+     "status": "suggested"
+    },
+    {
+     "name": "Xin'an",
+     "local": "新安",
+     "origin": "county",
+     "meaning": "\"New peace\": Qin county name, kept for over 1,600 years.",
+     "fit": "Largest unit: 43% of the region's people and the whole county. The name is common elsewhere (Xin'an River, Anhui) but not a conflict on this map.",
+     "recognisability": "Current admin unit, no check needed.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E6%96%B0%E5%AE%89%E5%8E%BF",
+     "source_note": "新安县秦代建县",
+     "rating": 3,
+     "status": "suggested"
+    },
+    {
+     "name": "Yangshao",
+     "local": "仰韶",
+     "origin": "other",
+     "meaning": "Village in Mianchi where the Yangshao culture (5000-3000 BC painted pottery) was found in 1921 and named for it.",
+     "fit": "The village lies inside the region; the culture is wider than the region, so it names the place only by way of the village.",
+     "recognisability": "Culture has its own zh-wiki article; village and town articles too; 53 hits with 渑池, top ones about this place.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E4%BB%B0%E9%9F%B6%E6%9D%91%E9%81%97%E5%9D%80",
+     "source_note": "位于河南省三门峡市渑池县仰韶乡仰韶村，仰韶文化因此而得名",
+     "rating": 3,
+     "status": "suggested"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 2,
+   "key": "#edd08c",
+   "settled": null,
+   "summary": "North of Luoyang across the Mang hills: Mengjin, Laocheng, Yanshi's north, Chanhe.",
+   "candidates": [
+    {
+     "name": "Mengjin",
+     "local": "孟津",
+     "origin": "county",
+     "meaning": "\"Meng ferry\": the crossing at Meng, named for the Mengtu fief; where King Wu of Zhou is said to have gathered the lords before attacking Shang.",
+     "fit": "41% of the region's people and 71% of the district; the seat of Mengjin county (1215-1911) and of Han-Wei Luoyang's surroundings lie here.",
+     "recognisability": "Current admin unit, no check needed.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E5%AD%9F%E6%B4%A5%E5%8C%BA",
+     "source_note": "孟津之名可追溯至夏朝，“孟”指其位于孟涂氏封国，“津”指渡口",
+     "rating": 4,
+     "status": "suggested"
+    },
+    {
+     "name": "Mangshan",
+     "local": "邙山",
+     "origin": "mountain",
+     "meaning": "Loess ridge north of Luoyang along the Yellow River, also called Beimang. Burial ground of many emperors.",
+     "fit": "The ridge runs through Mengjin, Laocheng and Yanshi, which are the three biggest parts of the region.",
+     "recognisability": "Own zh-wiki article, 725 hits with 河南, top ones about this ridge and the tombs.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E9%82%99%E5%B1%B1",
+     "source_note": "位于河南省洛阳市北，黄河南岸；邙山陵墓群",
+     "rating": 4,
+     "status": "suggested"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 3,
+   "key": "#f1dcb1",
+   "settled": null,
+   "summary": "Sanmenxia city (Hubin, Shan), Pinglu across the river in Shanxi, and Lingbao's east.",
+   "candidates": [
+    {
+     "name": "Sanmenxia",
+     "local": "三门峡",
+     "origin": "city",
+     "meaning": "\"Three-gate gorge\": Yu's axe split the Yellow River into three channels (human, god, ghost gates). The dam and city grew up here in the 1950s.",
+     "fit": "Holds the city centre (Hubin 27%, Shan 29%); Sanmenxia's own urban population is under 1M so the city rule does not apply.",
+     "recognisability": "Current admin unit, no check needed.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E4%B8%89%E9%97%A8%E5%B3%A1%E5%B8%82",
+     "source_note": "相传大禹治水，使神斧将高山劈成“人门”、“神门”、“鬼门”三道峡谷",
+     "rating": 5,
+     "status": "suggested"
+    },
+    {
+     "name": "Shanzhou",
+     "local": "陕州",
+     "origin": "prefecture",
+     "meaning": "From Shan, the plateau where the Duke of Zhou and Duke of Shao split the realm. The Shaan of Shaanxi comes from here.",
+     "fit": "Prefecture seat (487-1911, 1,194 years) at old Shan, inside the region, and the old name of Sanmenxia. Also the name of a Sanmenxia district, so some confusion with Shaanxi.",
+     "recognisability": "Own zh-wiki article for the district; widely known as the source of Shaanxi.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E9%99%95%E5%B7%9E%E5%8C%BA",
+     "source_note": "陕西省省名中的“陕”字源于此地; CHGIS 陕州 487-1911",
+     "rating": 4,
+     "status": "suggested"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 4,
+   "key": "#f0b885",
+   "settled": null,
+   "summary": "Luoyang's western city: Jianxi and Xigong, the old industrial and prefecture centre.",
+   "candidates": [
+    {
+     "name": "Luoyang",
+     "local": "洛阳",
+     "origin": "city",
+     "meaning": "\"North of the Luo\": the north bank of a river is the yang side.",
+     "fit": "Over 1M urban population, so the most central region takes the city name. CHGIS puts the Ming-Qing Henan prefecture seat and the Sui Luoyang county in this region; the Luoyang dot of the city list falls in region 6, so Anita may prefer to give the name there.",
+     "recognisability": "Current admin unit, no check needed.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E6%B4%9B%E9%98%B3%E5%B8%82",
+     "source_note": "洛阳位于洛水之北，水之北谓之“阳”，故名洛阳",
+     "rating": 5,
+     "status": "suggested"
+    },
+    {
+     "name": "Jianxi",
+     "local": "涧西",
+     "origin": "other",
+     "meaning": "\"West of the Jian River\": district built in the 1950s for the tractor and bearing plants.",
+     "fit": "70% of the region's people.",
+     "recognisability": "Current district name; too new and too plain to suggest.",
+     "source_url": "",
+     "source_note": "涧西区 (no zh-wiki article in sources)",
+     "status": "rejected"
+    }
+   ],
+   "notes": "Luoyang's city regions are 4, 6 and 2. CHGIS puts the Ming-Qing prefecture seat in 4; the city list dot is in 6. Pick one for the name."
+  },
+  {
+   "n": 5,
+   "key": "#f1dba8",
+   "settled": null,
+   "summary": "East Luoyang and west Zhengzhou's edge: Yanshi and Gongyi, between the Mang hills and Mount Song.",
+   "candidates": [
+    {
+     "name": "Yanshi",
+     "local": "偃师",
+     "origin": "county",
+     "meaning": "\"Halt the army\": King Wu is said to have stopped here after defeating Shang and put down his arms. Site of the Shang city and of Erlitou.",
+     "fit": "48% of the region's people and 82% of Yanshi; seat of Yanshi county (249 BC-1911) is here.",
+     "recognisability": "Current admin unit, no check needed.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E5%81%83%E5%B8%88%E5%8C%BA",
+     "source_note": "周武王东征伐纣凯旋，在此筑城“息偃戎师”而得名",
+     "rating": 4,
+     "status": "suggested"
+    },
+    {
+     "name": "Gongyi",
+     "local": "巩义",
+     "origin": "county",
+     "meaning": "Gong was an Eastern Zhou state and a Qin county. Du Fu's birthplace and the Song imperial tombs; the Yi in the modern name means righteousness.",
+     "fit": "45% of the region's people and 70% of Gongyi, which runs on east into another batch, so check it is not used there.",
+     "recognisability": "Current admin unit, no check needed.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E5%B7%A9%E4%B9%89%E5%B8%82",
+     "source_note": "巩义因地扼古都洛阳，故历史上有“东都锁钥”之称",
+     "rating": 4,
+     "status": "suggested"
+    }
+   ],
+   "notes": "Gongyi's other 30% is in a neighbouring batch."
+  },
+  {
+   "n": 6,
+   "key": "#eab876",
+   "settled": null,
+   "summary": "Luolong district south of the Luo, with the Longmen gorge and the Yichuan edge.",
+   "candidates": [
+    {
+     "name": "Longmen",
+     "local": "龙门",
+     "origin": "mountain",
+     "meaning": "\"Dragon gate\": the gorge where the Yi River cuts between two hills, site of the Longmen Grottoes (UNESCO).",
+     "fit": "The gorge and grottoes lie in this region; Luolong district's own name is Luo plus Long (from Longmen).",
+     "recognisability": "Own zh-wiki article for the hill; widely known worldwide. The same pinyin names places in Shaanxi and Guangdong, not on this map nearby.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E9%BE%99%E9%97%A8%E5%B1%B1_(%E6%B4%9B%E9%98%B3)",
+     "source_note": "龙门山位于中国河南洛阳城南12公里处...古称“伊阙”",
+     "rating": 4,
+     "status": "suggested"
+    },
+    {
+     "name": "Yique",
+     "local": "伊阙",
+     "origin": "historical",
+     "meaning": "\"Gate of the Yi\": the old name of the Longmen gorge; two hills face each other like a gatehouse. One of Luoyang's eight passes; Bai Qi beat Han and Wei here in 293 BC.",
+     "fit": "Names the gorge in this region, but the Yique county seat (596-1071) was in Yichuan, region 8.",
+     "recognisability": "Own zh-wiki mentions only; 44 hits with 河南, top ones about Longmen. Weak.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E9%BE%99%E9%97%A8%E5%B1%B1_(%E6%B4%9B%E9%98%B3)",
+     "source_note": "因此古称“伊阙”; 洛阳八关 includes 伊阙关",
+     "rating": 3,
+     "status": "suggested"
+    },
+    {
+     "name": "Luolong",
+     "local": "洛龙",
+     "origin": "other",
+     "meaning": "Luo plus Long (Longmen): district created 1980s south of the river.",
+     "fit": "92% of the region's people.",
+     "recognisability": "Recent district name, not a place name people know.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E6%B4%9B%E9%BE%99%E5%8C%BA",
+     "source_note": "洛龙区 article",
+     "status": "rejected"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 7,
+   "key": "#f0dccf",
+   "settled": null,
+   "summary": "Middle Luo River valley and the Xiong'er hills: Yiyang, Luoning, Lushi.",
+   "candidates": [
+    {
+     "name": "Xiong'er",
+     "local": "熊耳",
+     "origin": "mountain",
+     "meaning": "\"Bear's ears\": two peaks said to look like bear ears. The range divides the Luo and Yi basins. Luoning was called Xiong'er county 553-618.",
+     "fit": "Runs through Luoning and Lushi, over half of the region, and gives its old county name to Luoning.",
+     "recognisability": "Own zh-wiki article, 123 hits with 河南, top ones about the range.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E7%86%8A%E8%80%B3%E5%B1%B1",
+     "source_note": "位于中国河南省境内，洛阳西南，为秦岭东段的支脉",
+     "rating": 4,
+     "status": "suggested"
+    },
+    {
+     "name": "Yiyang",
+     "local": "宜阳",
+     "origin": "county",
+     "meaning": "Han-era Yiyang county, 1,591 years in CHGIS, on the Luoyang road.",
+     "fit": "Largest unit: 43% of the region's people and 92% of the county; Xiongzhou and Yiyang commandery seated here. Same pinyin as Yiyang in Hunan.",
+     "recognisability": "Current admin unit, no check needed.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E5%AE%9C%E9%98%B3%E5%8E%BF",
+     "source_note": "宜阳县 (seats 宜阳郡, 熊州 in CHGIS)",
+     "rating": 3,
+     "status": "suggested"
+    },
+    {
+     "name": "Luoning",
+     "local": "洛宁",
+     "origin": "county",
+     "meaning": "\"Luo calm\": Yongning county (643-1911) renamed in 1913.",
+     "fit": "34% of the region's people and the whole county, on the middle Luo.",
+     "recognisability": "Current admin unit, no check needed.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E6%B4%9B%E5%AE%81%E5%8E%BF",
+     "source_note": "1913年改为洛宁县",
+     "rating": 3,
+     "status": "suggested"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 8,
+   "key": "#eed6b5",
+   "settled": null,
+   "summary": "Yichuan and Ruyang: the plain where the Yi River leaves the hills, and the Ru's upper valley.",
+   "candidates": [
+    {
+     "name": "Yichuan",
+     "local": "伊川",
+     "origin": "county",
+     "meaning": "\"Yi plain\": the Yi River basin. County made 1932 from the old Equality and Freedom counties.",
+     "fit": "57% of the region's people; Yichuan and Yique county seats (CHGIS) lay here. Also the name of the Yi plain around the river.",
+     "recognisability": "Current admin unit, no check needed.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E4%BC%8A%E5%B7%9D%E5%8E%BF",
+     "source_note": "1932年，平等、自由两县合并，成立伊川县",
+     "rating": 4,
+     "status": "suggested"
+    },
+    {
+     "name": "Ruyang",
+     "local": "汝阳",
+     "origin": "county",
+     "meaning": "\"North of the Ru\": formerly Yiyang county, renamed 1959 for the Beiru River.",
+     "fit": "36% of the region's people and the whole county. Easily confused with Ru'nan (once also Ruyang).",
+     "recognisability": "Current admin unit, no check needed.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E6%B1%9D%E9%98%B3%E5%8E%BF",
+     "source_note": "本县更名为汝阳县",
+     "rating": 3,
+     "status": "suggested"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 9,
+   "key": "#ebdbbf",
+   "settled": null,
+   "summary": "Ruzhou and its coal and Ru River country.",
+   "candidates": [
+    {
+     "name": "Ruzhou",
+     "local": "汝州",
+     "origin": "prefecture",
+     "meaning": "\"Ru prefecture\": from the Ru River, named by Sui in 606. Famous for Ru ware, the Song imperial porcelain.",
+     "fit": "92% of the region's people and 93% of Ruzhou; prefecture seat since 606.",
+     "recognisability": "Current admin unit, no check needed.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E6%B1%9D%E5%B7%9E%E5%B8%82",
+     "source_note": "隋炀帝大业二年（606年）改伊州为汝州",
+     "rating": 5,
+     "status": "suggested"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 10,
+   "key": "#f1d6c4",
+   "settled": null,
+   "summary": "High Funiu hills at the head of the Yi River: Song, Luanchuan, a bit of Yichuan.",
+   "candidates": [
+    {
+     "name": "Funiu",
+     "local": "伏牛",
+     "origin": "mountain",
+     "meaning": "\"Crouching ox\": the range east of Qinling, about 400 km long.",
+     "fit": "Luanchuan and Song hold its highest and widest part (Laojun, Jigejian); the range also runs into neighbouring regions.",
+     "recognisability": "Own zh-wiki article, 673 hits with 河南, top ones about the range.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E4%BC%8F%E7%89%9B%E5%B1%B1",
+     "source_note": "伏牛山位於中國河南省西部，为秦岭的东延余脉",
+     "rating": 4,
+     "status": "suggested"
+    },
+    {
+     "name": "Songxian",
+     "local": "嵩县",
+     "origin": "county",
+     "meaning": "Named after Songzhou (1151-1234), whose seat was in the county.",
+     "fit": "54% of the region's people and the whole county; Songzhou and Yiyang commanderies sat here.",
+     "recognisability": "Current admin unit, no check needed.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E6%A0%BE%E5%B7%9D%E5%8E%BF",
+     "source_note": "CHGIS 嵩州 1151-1234, 嵩县 1369-1911",
+     "rating": 4,
+     "status": "suggested"
+    },
+    {
+     "name": "Luanchuan",
+     "local": "栾川",
+     "origin": "county",
+     "meaning": "Old name Luanzhou, \"phoenix\": a luan bird is said to have perched here; the town on the stream.",
+     "fit": "36% of the region's people and the whole county; where the Yi River rises.",
+     "recognisability": "Current admin unit, no check needed.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E6%A0%BE%E5%B7%9D%E5%8E%BF",
+     "source_note": "栾川古称“鸾州”，因远古时期有形似凤凰的鸾鸟在此栖息而得名",
+     "rating": 3,
+     "status": "suggested"
+    }
+   ],
+   "notes": "Funiu is a range shared with 13, 15, 16; it is only suggested here."
+  },
+  {
+   "n": 11,
+   "key": "#ebd0a3",
+   "settled": null,
+   "summary": "Baofeng and Jia counties on the Beiru River.",
+   "candidates": [
+    {
+     "name": "Baofeng",
+     "local": "宝丰",
+     "origin": "county",
+     "meaning": "\"Treasure abundance\": Emperor Huizong's name (1120) for the area's liquor, Ru kilns and ironworks.",
+     "fit": "47% of the region's people and 97% of the county; Ru official kiln site Qingliangsi is here.",
+     "recognisability": "Current admin unit, no check needed.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E5%AE%9D%E4%B8%B0%E5%8E%BF",
+     "source_note": "“宝货兴发”，天子赐名“宝丰县”",
+     "rating": 4,
+     "status": "suggested"
+    },
+    {
+     "name": "Jia",
+     "local": "郏县",
+     "origin": "county",
+     "meaning": "Jia was a Zheng town; Qin county from 207 BC. Home of the Three Su tombs.",
+     "fit": "47% of the region's people and 87% of the county. Write as Jiaxian: the county has one character.",
+     "recognisability": "Current admin unit, no check needed.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E9%83%8F%E5%8E%BF",
+     "source_note": "秦朝时初置郏县",
+     "rating": 4,
+     "status": "suggested"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 12,
+   "key": "#e7c07d",
+   "settled": null,
+   "summary": "Pingdingshan city: Xinhua, Weidong, Zhanhe.",
+   "candidates": [
+    {
+     "name": "Pingdingshan",
+     "local": "平顶山",
+     "origin": "city",
+     "meaning": "\"Flat-top mountain\": the low peaks north of the city have flat summits.",
+     "fit": "Holds the city's three core districts; urban population about 1M. Founded 1957 as a coal city.",
+     "recognisability": "Current admin unit, no check needed.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E5%B9%B3%E9%A1%B6%E5%B1%B1%E5%B8%82",
+     "source_note": "因环绕市区北面的山峰皆平坦如削故得名",
+     "rating": 5,
+     "status": "suggested"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 13,
+   "key": "#ead9ba",
+   "settled": null,
+   "summary": "Lushan county and the Shahe's mountain headwaters.",
+   "candidates": [
+    {
+     "name": "Lushan",
+     "local": "鲁山",
+     "origin": "county",
+     "meaning": "\"Lu mountain\": old name Luyang; Zhou renamed it Lushan after the hill.",
+     "fit": "73% of the region's people and 98.5% of the county.",
+     "recognisability": "Current admin unit, no check needed.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E9%B2%81%E5%B1%B1%E5%8E%BF",
+     "source_note": "鲁山县，古称鲁阳",
+     "rating": 5,
+     "status": "suggested"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 14,
+   "key": "#f1d3ac",
+   "settled": null,
+   "summary": "Ye county and Wuyang on the Sha plain east of Lushan.",
+   "candidates": [
+    {
+     "name": "Yexian",
+     "local": "叶县",
+     "origin": "county",
+     "meaning": "Ye was Chu's Ye city; Duke Ye (Shen Zhuliang) of the \"dragon lover\" story; origin of the Ye surname.",
+     "fit": "55% of the region's people and 82% of the county. The county has one character, so Yexian.",
+     "recognisability": "Current admin unit, no check needed.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E5%8F%B6%E5%8E%BF",
+     "source_note": "叶县是叶姓的发源地 (Pingdingshan article)",
+     "rating": 4,
+     "status": "suggested"
+    },
+    {
+     "name": "Wuyang",
+     "local": "舞阳",
+     "origin": "county",
+     "meaning": "\"Sunny side of the Wu\": Wu River's north bank. Han marquis of Wuyang was Fan Kuai.",
+     "fit": "35% of the region's people; only 77% of the county sits here, and the rest lies in a neighbouring batch.",
+     "recognisability": "Current admin unit, no check needed.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E8%88%9E%E9%98%B3%E5%8E%BF",
+     "source_note": "因位于舞水之阳而得名",
+     "rating": 3,
+     "status": "suggested"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 15,
+   "key": "#f3d3c8",
+   "settled": null,
+   "summary": "Dan River and Laoguan River hills: Xixia, Xichuan, Shangnan (Shaanxi).",
+   "candidates": [
+    {
+     "name": "Danjiang",
+     "local": "丹江",
+     "origin": "river",
+     "meaning": "\"Dan River\": the Han's main tributary, which flows from Shangluo through Shangnan and Xichuan into Danjiangkou Reservoir.",
+     "fit": "The river and the reservoir run through Xichuan and Shangnan, over half of the region. Chu's first capital Danyang is on it.",
+     "recognisability": "Own zh-wiki article, 344 hits with 河南, top ones about this place. Danjiangkou city is across in Hubei.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E4%B8%B9%E6%B1%9F",
+     "source_note": "丹江为汉江一级支流; 淅川县全部位于丹江口水库流域",
+     "rating": 4,
+     "status": "suggested"
+    },
+    {
+     "name": "Xixia",
+     "local": "西峡",
+     "origin": "county",
+     "meaning": "\"West gorge\": Xixiakou, the gorge route to Shaanxi and Hubei. Dinosaur eggs found 1993.",
+     "fit": "39% of the region's people and 85% of the county. Same pinyin as the Western Xia dynasty, which may sit on another map.",
+     "recognisability": "Current admin unit, no check needed.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E8%A5%BF%E5%B3%A1%E5%8E%BF",
+     "source_note": "西峡县，原名西峡口，因位于河南连接陕西及湖北的峡口而得名",
+     "rating": 3,
+     "status": "suggested"
+    },
+    {
+     "name": "Xichuan",
+     "local": "淅川",
+     "origin": "county",
+     "meaning": "\"Xi stream plain\": named for the Xi River plain. Core of the Chu state: Danyang and 19 Chu kings.",
+     "fit": "36% of the region's people but only 53% of the county; the rest is in region 17.",
+     "recognisability": "Current admin unit, no check needed.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E6%B7%85%E5%B7%9D%E5%8E%BF",
+     "source_note": "因淅水纵贯境内形成百里冲积平川而得名",
+     "rating": 3,
+     "status": "suggested"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 16,
+   "key": "#ebd7c4",
+   "settled": null,
+   "summary": "Nanzhao and Fangcheng in the hills above Nanyang basin.",
+   "candidates": [
+    {
+     "name": "Nanzhao",
+     "local": "南召",
+     "origin": "county",
+     "meaning": "\"South of Zhao\": named for the Nanzhao inn on the Wan-Luo road.",
+     "fit": "50% of the region's people and the whole county. Pinyin matches Nanzhao, the Yunnan kingdom.",
+     "recognisability": "Current admin unit, no check needed.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E5%8D%97%E5%8F%AC%E5%8E%BF",
+     "source_note": "因县城东北隅的南召店是宛洛大道上商旅息居的名驿得而名",
+     "rating": 3,
+     "status": "suggested"
+    },
+    {
+     "name": "Fangcheng",
+     "local": "方城",
+     "origin": "county",
+     "meaning": "\"Square wall\": the Chu Great Wall of the Spring and Autumn period.",
+     "fit": "33% of the region's people but only 41% of the county, the rest lies in region 19. Pinyin matches Fangchenggang in Guangxi.",
+     "recognisability": "Current admin unit, no check needed.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E6%96%B9%E5%9F%8E%E5%8E%BF",
+     "source_note": "方城县在...唐河上游; 楚长城遗址",
+     "rating": 3,
+     "status": "suggested"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 17,
+   "key": "#f3d7c8",
+   "settled": null,
+   "summary": "Neixiang, Dengzhou's north and Xichuan's south in the basin's western rim.",
+   "candidates": [
+    {
+     "name": "Neixiang",
+     "local": "内乡",
+     "origin": "county",
+     "meaning": "\"Inner village\": Sui name for the Xi county seat inside the pass. The Qing county yamen survives intact.",
+     "fit": "41% of the region's people and the whole county.",
+     "recognisability": "Current admin unit, no check needed.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E5%8D%97%E9%98%B3%E5%B8%82",
+     "source_note": "下辖内乡县...今存完整清代县衙",
+     "rating": 4,
+     "status": "suggested"
+    },
+    {
+     "name": "Guanjun",
+     "local": "冠军",
+     "origin": "historical",
+     "meaning": "\"First of armies\": Han Wudi named Huo Qubing's marquisate Guanjun for his exploits against the Xiongnu.",
+     "fit": "Guanjun county (110 BC-629, 739 years) seat lay in the region.",
+     "recognisability": "Own zh-wiki article, 28 hits with 邓州, top ones about this place. Obscure.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E5%86%A0%E5%86%9B%E5%8E%BF",
+     "source_note": "冠军县，治所在今河南省邓州市西北张村镇冠军村一带",
+     "rating": 2,
+     "status": "suggested"
+    },
+    {
+     "name": "Dengzhou",
+     "local": "邓州",
+     "origin": "city",
+     "meaning": "Deng state; Deng surname origin. County-level city.",
+     "fit": "37% of the region's people but only 22% of Dengzhou; the city centre is in region 22.",
+     "recognisability": "Current admin unit, no check needed.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E9%82%93%E5%B7%9E%E5%B8%82",
+     "source_note": "邓州市",
+     "status": "rejected"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 18,
+   "key": "#f1d1b4",
+   "settled": null,
+   "summary": "Zhenping county and part of Wolong, north-west of Nanyang.",
+   "candidates": [
+    {
+     "name": "Zhenping",
+     "local": "镇平",
+     "origin": "county",
+     "meaning": "\"Suppress and pacify\": Jin name (1227) after a peasant uprising on Wuduo Mountain. Known for jade carving.",
+     "fit": "77% of the region's people and 98.5% of the county.",
+     "recognisability": "Current admin unit, no check needed.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E9%95%87%E5%B9%B3%E5%8E%BF",
+     "source_note": "金代正大三年（1226年），境内五垛山农民起义被镇压平息，故次年取“镇慑和平定”之意设县称镇平",
+     "rating": 4,
+     "status": "suggested"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 19,
+   "key": "#f0d1b1",
+   "settled": null,
+   "summary": "Sheqi, Wancheng's north-east and part of Fangcheng on the Tang's headwaters.",
+   "candidates": [
+    {
+     "name": "Sheqi",
+     "local": "社旗",
+     "origin": "county",
+     "meaning": "Sheqi 1965: the old shop was Sheqi (\"credit flag\"), where Liu Xiu bought a wine flag on credit; Zhou Enlai changed the character to \"commune flag\".",
+     "fit": "57% of the region's people and 89% of the county; its seat Shedian was one of China's four great merchant towns.",
+     "recognisability": "Current admin unit, no check needed.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E7%A4%BE%E6%97%97%E5%8E%BF",
+     "source_note": "赊店镇...因东汉时期刘秀举义兵赊旗而得名",
+     "rating": 4,
+     "status": "suggested"
+    },
+    {
+     "name": "Shedian",
+     "local": "赊店",
+     "origin": "other",
+     "meaning": "\"Credit shop\": the original name of Sheqi's town and its liquor.",
+     "fit": "The town is the county seat inside the region; the name is the older, better known one.",
+     "recognisability": "Named in the Sheqi article; known for tea-road trade and for a liquor.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E7%A4%BE%E6%97%97%E5%8E%BF",
+     "source_note": "赊店镇，又称赊旗镇",
+     "rating": 3,
+     "status": "suggested"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 20,
+   "key": "#f4a065",
+   "settled": null,
+   "summary": "Nanyang city centre: most of Wolong and part of Wancheng.",
+   "candidates": [
+    {
+     "name": "Nanyang",
+     "local": "南阳",
+     "origin": "city",
+     "meaning": "\"South of the mountain, north of the river\": south of Funiu, north of the Han.",
+     "fit": "Urban population over 1M; the region holds the old Wan city seat of Nanyang commandery since 272 BC.",
+     "recognisability": "Current admin unit, no check needed.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E5%8D%97%E9%98%B3%E5%B8%82",
+     "source_note": "“以在南山之南，汉水之北也”",
+     "rating": 5,
+     "status": "suggested"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 21,
+   "key": "#f0ccb5",
+   "settled": null,
+   "summary": "Xinye and Wancheng's south on the Bai River plain.",
+   "candidates": [
+    {
+     "name": "Xinye",
+     "local": "新野",
+     "origin": "county",
+     "meaning": "\"New field\": a new plain on the old lake bed, or the field of Xindu; Han county from 207 BC. Home of Deng Yu, Yin Lihua and Liu Bei's base before the Three Kingdoms.",
+     "fit": "44% of the region's people and 93% of the county; Xinye commandery seat and 1,587 years as county.",
+     "recognisability": "Current admin unit, no check needed.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E6%96%B0%E9%87%8E%E5%8E%BF",
+     "source_note": "新野之名由来, 历史名人: 邓禹、阴丽华",
+     "rating": 4,
+     "status": "suggested"
+    },
+    {
+     "name": "Wancheng",
+     "local": "宛城",
+     "origin": "county",
+     "meaning": "Wan, the old name of Nanyang, plus city: the district is the ancient capital site.",
+     "fit": "46% of the region's people but 64% of the district; its name belongs to the central Nanyang city.",
+     "recognisability": "Current admin unit, no check needed.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E5%AE%9B%E5%9F%8E%E5%8C%BA",
+     "source_note": "历史上为古宛城所在",
+     "status": "rejected"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 22,
+   "key": "#f1d1ba",
+   "settled": null,
+   "summary": "Dengzhou, the large county-level city on the basin's west side.",
+   "candidates": [
+    {
+     "name": "Dengzhou",
+     "local": "邓州",
+     "origin": "prefecture",
+     "meaning": "Deng state and surname origin; Dengzhou prefecture (583-1270).",
+     "fit": "98% of the region's people and 78% of the city; seat of Dengzhou for 642 years.",
+     "recognisability": "Current admin unit, no check needed.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E9%82%93%E5%B7%9E%E5%B8%82",
+     "source_note": "邓州，古称邓或穰",
+     "rating": 5,
+     "status": "suggested"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 23,
+   "key": "#f1cbb0",
+   "settled": null,
+   "summary": "Tanghe county on the Tang River.",
+   "candidates": [
+    {
+     "name": "Tanghe",
+     "local": "唐河",
+     "origin": "county",
+     "meaning": "\"Tang River\": county named in 1923 for the river; Tang was a Zhou state.",
+     "fit": "97% of the region's people and 94% of the county.",
+     "recognisability": "Current admin unit, no check needed.",
+     "source_url": "https://zh.wikipedia.org/wiki/%E5%94%90%E6%B2%B3%E5%8E%BF",
+     "source_note": "得名于流经境内的唐河",
+     "rating": 5,
+     "status": "suggested"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 24,
+   "key": "#f7eec4",
+   "settled": null,
+   "summary": "Yellow River bend at the three-province corner: Lingbao (Henan), Ruicheng (Shanxi), Tongguan (Shaanxi).",
+   "candidates": [
+    {
+     "name": "Hongnong",
+     "local": "弘农",
+     "origin": "historical",
+     "meaning": "Han commandery (113 BC) and county named for the Hongnong stream; seat beside the Hangu pass.",
+     "fit": "Seat at the old Hangu pass site inside Lingbao (the region's largest part, 49%); commandery covered Sanmenxia and Shangluo, so Lingbao and the pass, not Ruicheng or Tongguan.",
+     "recognisability": "Own zh-wiki article for commandery and county, 433 hits with Henan, top ones about this place.",
+     "source_url": "https://zh.wikipedia.org/wiki/弘农郡",
+     "source_note": "于函谷关边置弘农郡；弘农县因弘农涧而得名；治所在今河南省三门峡市灵宝市北",
+     "rating": 4,
+     "status": "suggested"
+    },
+    {
+     "name": "Fenglingdu",
+     "local": "风陵渡",
+     "origin": "historical",
+     "meaning": "\"Fengling ford\": the largest ancient Yellow River crossing, named for the tomb of Feng Hou (Huangdi's minister).",
+     "fit": "Sits exactly at the Shanxi-Shaanxi-Henan corner on the river bend and ties the three counties together; the town itself is only 6% of people.",
+     "recognisability": "Own zh-wiki article, 64 hits with Shanxi, top ones about the ferry and town.",
+     "source_url": "https://zh.wikipedia.org/wiki/風陵渡",
+     "source_note": "山西、陕西、河南三省的交界点（今山西省芮城县风陵渡镇）",
+     "rating": 3,
+     "status": "suggested"
+    },
+    {
+     "name": "Lingbao",
+     "local": "灵宝市",
+     "origin": "county",
+     "meaning": "\"Spirit treasure\": renamed in Tang after a sacred talisman of Laozi was found there.",
+     "fit": "49% of the people and 56% of the area, but the region is a three-province bend, so a Henan county name fits the other 51% poorly.",
+     "recognisability": "Current county-level city.",
+     "source_url": "https://zh.wikipedia.org/wiki/灵宝市",
+     "source_note": "唐明皇时在此地发现太上老君“灵符”，故改名为“灵宝”",
+     "status": "rejected"
+    }
+   ],
+   "notes": "Hangu pass itself was not proposed: the current Hangu town is in Lingbao but the name is a pass, and Hangu is also a district in Tianjin. Guozhou was not checked."
+  }
+ ]
+}

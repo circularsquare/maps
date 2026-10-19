@@ -1,0 +1,251 @@
+{
+  "batch": "hunan-west",
+  "regions": [
+    {
+      "n": 1,
+      "key": "#def0d5",
+      "settled": null,
+      "summary": "Lower Li River hills: Cili, Shimen (Hunan) and Hefeng (Hubei).",
+      "candidates": [
+        {
+          "name": "Cili",
+          "local": "慈利县",
+          "origin": "county",
+          "meaning": "Cili county (慈利, \"kind benefit\"), a county since 598; seat Lingyang town on the Li River.",
+          "fit": "46% of the region's people, and the region holds 85% of the county.",
+          "recognisability": "Current county; Cili is also the seat of the Tianmen commandery (263-282) and Lingyang county.",
+          "source_url": "https://zh.wikipedia.org/wiki/慈利县",
+          "source_note": "慈利县，598-1911，湖南慈利县驻地零阳镇 (sources.md)",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Shimen",
+          "local": "石门县",
+          "origin": "county",
+          "meaning": "\"Stone gate\": county on the Li River, named for a rock gorge gate.",
+          "fit": "32% of the region's people but the region holds only 58% of the county; Cili is more central.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/石门县",
+          "source_note": "article listed in sources.md for region 1",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Zhangjiajie (region 2) and Cili neighbour each other; no clash. Hefeng (Hubei, 16%) is skipped; its old name Rongmei is thinly known (43 hits with 湖南)."
+    },
+    {
+      "n": 2,
+      "key": "#d6f0d5",
+      "settled": null,
+      "summary": "Zhangjiajie city: Yongding district, Sangzhi, Wulingyuan, part of Cili.",
+      "candidates": [
+        {
+          "name": "Zhangjiajie",
+          "local": "张家界市",
+          "origin": "city",
+          "meaning": "Prefecture-level city named after the Zhangjiajie scenic area (literally the Zhang family's boundary), the sandstone pillar landscape of Wulingyuan.",
+          "fit": "Holds Yongding (45%), the city seat, plus Wulingyuan and Sangzhi; the region holds 65% of the city's prefecture.",
+          "recognisability": "Famous worldwide for its pillars (Avatar mountains).",
+          "source_url": "https://zh.wikipedia.org/wiki/张家界市",
+          "source_note": "article listed in sources.md for region 2",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Sangzhi",
+          "local": "桑植县",
+          "origin": "county",
+          "meaning": "\"Mulberry planting\": county in the upper Li River basin with Tujia and Bai people.",
+          "fit": "40% of the region's people, 98% of the county held; Sangzhi county (1729) and Chong prefecture seated here.",
+          "recognisability": "Current county; known as a Red Army base.",
+          "source_url": "https://zh.wikipedia.org/wiki/桑植县_(张家界市)",
+          "source_note": "桑植县，1729-1911 (sources.md)",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 3,
+      "key": "#d5eedc",
+      "settled": null,
+      "summary": "Longshan, Laifeng and Xuan'en on the You River at the Hunan, Hubei and Chongqing corner.",
+      "candidates": [
+        {
+          "name": "Longshan",
+          "local": "龙山县",
+          "origin": "county",
+          "meaning": "\"Dragon mountain\": county named in 1729 for the Longshan hill; earlier Youyang and Qianyang counties.",
+          "fit": "51% of the region's people, 99.8% of the county held; Laifeng (24%) and Xuan'en (12%) are the rest.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/龙山县",
+          "source_note": "龙山县，1729-1911; 黚阳县 222-501 (sources.md)",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Youshui",
+          "local": "酉水",
+          "origin": "river",
+          "meaning": "\"You water\": the largest tributary of the Yuan River, a boundary river here between Hunan and Hubei.",
+          "fit": "Runs through Longshan and Laifeng, the heart of the region, then on into region 4.",
+          "recognisability": "Own zh-wiki article, 80 hits with 湖南, top ones about this river.",
+          "source_url": "https://zh.wikipedia.org/wiki/酉水",
+          "source_note": "酉水，沅水水系最大支流...流经保靖、龙山",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Liye",
+          "local": "里耶",
+          "origin": "other",
+          "meaning": "Town in Longshan whose well in the Qin Qianling fort gave 36,000 Qin bamboo slips.",
+          "fit": "Only 3% of the region's people, but a distinct name known for the Qin slips.",
+          "recognisability": "Own zh-wiki article; Liye Qin slips article; 676 hits with 湖南.",
+          "source_url": "https://zh.wikipedia.org/wiki/里耶秦简",
+          "source_note": "里耶秦简是在湖南西部里耶镇出土的36000余枚...简",
+          "rating": 2,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Laifeng and Xuan'en are Hubei counties; the region mixes three provinces so Longshan fits as the Hunan majority."
+    },
+    {
+      "n": 4,
+      "key": "#dbf0e5",
+      "settled": null,
+      "summary": "Yongshun, Huayuan, Baojing and Guzhang: the core of the Tujia chieftaincy of Yongshun.",
+      "candidates": [
+        {
+          "name": "Yongshun",
+          "local": "永顺县",
+          "origin": "county",
+          "meaning": "\"Eternal obedience\": the Yongshun garrison, prefecture (1729) and chieftaincy over the Tujia in the area.",
+          "fit": "38% of the region's people; the Yongshun prefecture (1729-1911) and Yongshun chieftaincy covered Baojing, Guzhang, Longshan and Sangzhi too.",
+          "recognisability": "Current county; Laosicheng (the chieftains' seat) is a World Heritage site.",
+          "source_url": "https://zh.wikipedia.org/wiki/永顺县",
+          "source_note": "永顺府 1729-1911, 治灵溪镇 (sources.md)",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Xizhou",
+          "local": "溪州",
+          "origin": "historical",
+          "meaning": "\"Stream prefecture\": Tang and Five Dynasties prefecture (691-939) seated at Laosicheng, home to the Xizhou bronze pillar treaty.",
+          "fit": "Seat at Yongshun with territory over Baojing, Guzhang, Longshan and Sangzhi; fits the region better than one county.",
+          "recognisability": "Zh-wiki 溪州 article exists but is mostly about a Taiwan town; 322 hits with 湖南, many about this prefecture.",
+          "source_url": "https://zh.wikipedia.org/wiki/溪州",
+          "source_note": "溪州，691-939，湖南永顺县驻地灵溪镇东老司城 (sources.md); \"唐朝置溪州，宋朝为永顺州\"",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Xizhou may be confused with Xizhou in Taiwan (same spelling, different place only by context)."
+    },
+    {
+      "n": 5,
+      "key": "#ceede3",
+      "settled": null,
+      "summary": "Yuanling, Jishou and Luxi where the You and Wu rivers meet the Yuan.",
+      "candidates": [
+        {
+          "name": "Yuanling",
+          "local": "沅陵县",
+          "origin": "county",
+          "meaning": "\"Yuan mound\": a Han county (202 BC) on the Yuan River, seat of Chen prefecture for centuries.",
+          "fit": "36% of the region's people; the region holds 62% of the county; the most central and historic part.",
+          "recognisability": "Current county with a 2000-year record.",
+          "source_url": "https://zh.wikipedia.org/wiki/沅陵县",
+          "source_note": "沅陵县，202 BC-1911, 2059 yrs (sources.md)",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Jishou",
+          "local": "吉首市",
+          "origin": "city",
+          "meaning": "City and seat of Xiangxi prefecture; meaning of the name not confirmed in the sources read.",
+          "fit": "32% of the region's people, 99% of the city held; prefecture capital of the Tujia and Miao area.",
+          "recognisability": "Current city and prefecture seat.",
+          "source_url": "https://zh.wikipedia.org/wiki/吉首市",
+          "source_note": "article listed in sources.md for region 5",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Chenzhou",
+          "local": "辰州",
+          "origin": "prefecture",
+          "meaning": "Sui prefecture (589) named for the Chen stream; covered Yuanling, Chenxi, Luxi and Xupu.",
+          "fit": "Seated at Yuanling, covers Yuanling and Luxi, and also reaches Chenxi and Xupu (region 7).",
+          "recognisability": "Own zh-wiki article, 675 hits with 湖南; spelled like Chenzhou (郴州) in Hunan, a different city.",
+          "source_url": "https://zh.wikipedia.org/wiki/辰州_(隋朝)",
+          "source_note": "辰州，589-1276，湖南沅陵县驻地; 辰州府 1364-1911",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Chenzhou may be read as Chenzhou (郴州, a different city in south Hunan)."
+    },
+    {
+      "n": 6,
+      "key": "#c9e8d8",
+      "settled": null,
+      "summary": "Mayang, Fenghuang (Hunan) and Songtao (Guizhou) in the Miao hills.",
+      "candidates": [
+        {
+          "name": "Fenghuang",
+          "local": "凤凰县",
+          "origin": "county",
+          "meaning": "\"Phoenix\": a county named for the Phoenix Mountain; home to an ancient town on the Tuo River.",
+          "fit": "33% of the region's people, 93% of the county held; Fenghuang prefecture (1705-1911) seated here.",
+          "recognisability": "Famous ancient town and Shen Congwen's home.",
+          "source_url": "https://zh.wikipedia.org/wiki/凤凰县",
+          "source_note": "凤凰厅 1705-1911, 湖南凤凰县凤凰城 (sources.md)",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Mayang",
+          "local": "麻阳苗族自治县",
+          "origin": "county",
+          "meaning": "Miao autonomous county; Mayang county since 620, on the Jin River.",
+          "fit": "34% of the region's people, 99% of the county held.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/麻阳苗族自治县",
+          "source_note": "麻阳县，620-1911, 1290 yrs (sources.md)",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 7,
+      "key": "#d3bcf2",
+      "settled": "xupu",
+      "summary": "Xupu and most of Chenxi.",
+      "candidates": [],
+      "notes": ""
+    },
+    {
+      "n": 8,
+      "key": "#bface8",
+      "settled": "huaihua",
+      "summary": "Hecheng (Huaihua city centre) and Zhongfang.",
+      "candidates": [],
+      "notes": ""
+    },
+    {
+      "n": 9,
+      "key": "#c7e1da",
+      "settled": "hongjiang",
+      "summary": "Hongjiang, Zhijiang and Huitong.",
+      "candidates": [],
+      "notes": ""
+    }
+  ]
+}

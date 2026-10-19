@@ -15534,6 +15534,36 @@
 "color": "#c39810"
 },
 {
+"id": "afroasiatic.berber.chenoua",
+"label": "Chenoua (Western Algerian Berber)",
+"parent": "afroasiatic.berber",
+"color": "#779b1e"
+},
+{
+"id": "afroasiatic.berber.ouargli",
+"label": "Ouargli",
+"parent": "afroasiatic.berber",
+"color": "#aa7400"
+},
+{
+"id": "afroasiatic.berber.oued_righ",
+"label": "Oued Righ (Righi)",
+"parent": "afroasiatic.berber",
+"color": "#ff8c62"
+},
+{
+"id": "afroasiatic.berber.taznatit",
+"label": "Taznatit (Gourara)",
+"parent": "afroasiatic.berber",
+"color": "#ffb407"
+},
+{
+"id": "afroasiatic.berber.tidikelt",
+"label": "Tidikelt Tamazight",
+"parent": "afroasiatic.berber",
+"color": "#c9690c"
+},
+{
 "id": "chicham",
 "label": "Chicham (Jivaroan)",
 "parent": null,

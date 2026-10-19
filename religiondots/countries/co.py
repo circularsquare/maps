@@ -61,6 +61,12 @@ def _co_counts():
                    tier=("tier", "first")))
 
 
+def _co_counts_split():
+    """`_co_counts` with Pew 2014's Pentecostal share drawn inside LAPOP's two Protestant boxes;
+    latam_split.py, Anita 2026-10-16. The rows stay `modelled`."""
+    return _latam_split("co", _co_counts())
+
+
 ENTRY = {
     "co": dict(
         name="Colombia",
@@ -96,13 +102,15 @@ ENTRY = {
             "2010 to **67.0% in 2023** across the pooled rounds, and evangelicals from 6.2% to "
             "9.7%, so this map is more Catholic than the last round alone would draw. After "
             "2016 the survey stopped offering Jehovah's Witnesses and Mormons as answers of "
-            "their own, so both are undercounts."),
+            "their own, so both are undercounts. 47% of the Evangelical and Protestant "
+            "answers are drawn as Pentecostal, the share of Protestants that Pew Research "
+            "Center's 2014 survey found in Pentecostal churches; the rest stay unnamed."),
         how="survey, five rounds 2010 to 2023 pooled",
         grain="departments, 2.0 million people on average",
         gap=("Chocó, Arauca, Vichada, Guaviare, Guainía and San Andrés, 1,216,477 people, "
              "2.29% of the country, which neither survey sampled from 2010 to 2023"),
         gap_share=0.0229,
-        counts=_co_counts,
+        counts=_co_counts_split,
         units=None,
         unit_key=None,
         place=HERE / "data" / "geo" / "co" / "co_hexes.gpkg",

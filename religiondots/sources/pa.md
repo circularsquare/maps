@@ -407,3 +407,12 @@ or drop it.
 - The map labels the comarca **Ngöbe Buglé**, COD-AB's spelling out of `pa_lookup.csv`, while
   `note_public` and this file write Ngäbe-Buglé. §2 is right that the alias is load-bearing;
   it does not say that the COD spelling is the one the reader sees.
+
+## Pentecostals and Baptists from Pew 2014 (2026-10-16)
+
+Anita's call of 2026-10-16, built by session `c67d3c3c-latam` (`latam_split.py`, sources.md
+§latam-2026-10-16). LAPOP's two Protestant boxes are one bucket of 1,026,916. Pew Research
+Center's 2014 survey (`QPROT` and `QDENOMPAN`, 290 Panamanian Protestants) puts 58.4% in a
+Pentecostal church and 12.1% in a Baptist one, so Panama is the second country where Anita had
+Baptist drawn. 599,680 go to `christianity.pentecostal` and 124,514 to `christianity.baptist`, as
+one national fraction of every bucket row; 302,723 stay on the two box nodes. All `modelled`.

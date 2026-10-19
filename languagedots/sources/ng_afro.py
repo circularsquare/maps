@@ -76,13 +76,27 @@ ROUNDS = [
      "Q2", "Q2OTHER", "withinwt_hh", None, "Q81", "Q81OTHER"),
     (9, "R9.Merge_39ctry.20Nov23.final_.release_Updated.4Jun25-3.sav",
      "Q2", "Q2OTHER", "withinwt_hh", "LOCATION.LEVEL.1", "Q84A", "Q84AOTHER"),
+    # added 2026-10-19 (session eca0185b-ng): Nigeria's own single-round files, downloaded from
+    # afrobarometer.org's survey-resource pages to data/raw/ng/afro_extra/ (EXTRA_DIR). R3
+    # (2005) has state REGION codes and LGA names (DISTRICT) but no free text for "Others"; R10
+    # (2024) is like R9. R2 (2003) codes only six zones and Lagos, so it is not used; R1 has no
+    # file for Nigeria.
+    (3, "nig_r3.sav", "Q3", None, "WITHINWT", "DISTRICT", "Q79", None),
+    (10, "nig_r10.sav", "Q2", "Q2OTHER", "withinwt_hh", "LOCATION.LEVEL.1", "Q83A", "Q83AOther"),
 ]
+EXTRA_DIR = RAW / "afro_extra"
+EXTRA_URL = {3: "https://www.afrobarometer.org/wp-content/uploads/2022/02/nig_r3_data.sav",
+             10: "https://www.afrobarometer.org/wp-content/uploads/2025/11/"
+                 "NIG_R10.Data_18Nov24.wtd_.final_.release_updated.13Feb25.sav"}
+# R3's WITHINWT averages 0.932 over its 2,363 rows (the weight also corrects for "lost cases in
+# NW"); it is rescaled to average 1 so each round counts by its respondents, as the others do.
+RESCALE = {3}
 ETH_LABEL = ("tribe or ethnic group", "ethnic community")
-N_RESP = {4: 2324, 5: 2400, 6: 2400, 7: 1600, 8: 1599, 9: 1600}
+N_RESP = {3: 2363, 4: 2324, 5: 2400, 6: 2400, 7: 1600, 8: 1599, 9: 1600, 10: 1600}
 LANG_LABEL = ("language of respondent", "language spoken in home")
 
 ENGLISH_PIDGIN = ["English", "Nigerian Pidgin"]
-EP_ROUNDS = [7, 8, 9]
+EP_ROUNDS = [7, 8, 9, 10]
 NON_ANSWERS = {"Don't know", "Refused", "Missing"}
 OTHER_NG = "Other Nigerian language"
 COMBINED = "Ijaw/Kalabari/Okirika/Andoni/Ogoni/Nembe"
@@ -106,6 +120,12 @@ CODED = {
     "Sayawa": "Zaar",
     "Bajju": "Jju",
     "Kagoma": "Gyong",
+    # R3 (2005) and R10 (2024) card spellings, added 2026-10-19
+    "Ukwani": "Ukwuani", "Taroh": "Tarok", "Kadara": "Adara", "Korro": "Koro",
+    "Andoni": "Obolo", "Gwari": "Gbagyi", "Ikewere": "Ikwere",
+    "Ezza": "Izi-Ezaa-Ikwo-Mgbo",                          # Ezaa, a dialect of izie1238
+    "Bahumono": "Ukpet-Ehom",                              # Ehom, a dialect of ukpe1249
+    "Boki": "Bokyi", "Itsekiri": "Itsekiri",
 }
 
 # Every verbatim (title-cased) -> the answer it is counted as. OTHER_NG where it names a place
@@ -317,6 +337,15 @@ def fetch():
     out = []
     for rnd, name, q, qo, wt, lga, eth, etho in ROUNDS:
         p = AB_DIR / name
+        if rnd in EXTRA_URL:
+            p = EXTRA_DIR / name
+            if not p.exists():
+                import urllib.request
+                EXTRA_DIR.mkdir(parents=True, exist_ok=True)
+                req = urllib.request.Request(EXTRA_URL[rnd], headers={
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
+                with urllib.request.urlopen(req, timeout=120) as r:
+                    p.write_bytes(r.read())
         if not p.exists():
             raise SystemExit(f"{p} missing: run `python sources/ng.py --fetch` in religiondots "
                              "(the six merged rounds, ~280 MB, are kept there)")
@@ -325,7 +354,9 @@ def fetch():
         except Exception:  # noqa: BLE001
             _, meta = pyreadstat.read_sav(str(p), metadataonly=True, encoding="LATIN1")
         up = {c.upper(): c for c in meta.column_names}
-        want = ["COUNTRY", "REGION", "RESPNO", q, qo, wt, eth, etho] + ([lga] if lga else [])
+        single = "COUNTRY" not in up       # a one-country file
+        want = (([] if single else ["COUNTRY"]) + ["REGION", "RESPNO", q, wt, eth]
+                + [x for x in (qo, etho, lga) if x])
         cols = [up[c.upper()] for c in want]
         lab = str(meta.column_names_to_labels.get(up[q.upper()], "")).casefold()
         say(any(t in lab for t in LANG_LABEL), f"R{rnd} {q} is the home-language question "
@@ -334,24 +365,31 @@ def fetch():
         say(any(t in elab for t in ETH_LABEL), f"R{rnd} {eth} is the ethnic group ({elab!r})")
         df, meta = _read(p, cols)
         c = {k: up[k.upper()] for k in want}
-        clab = meta.variable_value_labels.get(c["COUNTRY"], {})
-        sub = df[df[c["COUNTRY"]].map(clab).astype(str).str.strip().str.casefold() == "nigeria"]
+        if single:
+            sub = df
+        else:
+            clab = meta.variable_value_labels.get(c["COUNTRY"], {})
+            sub = df[df[c["COUNTRY"]].map(clab).astype(str).str.strip().str.casefold()
+                     == "nigeria"]
         say(len(sub) == N_RESP[rnd], f"R{rnd}: {len(sub):,} Nigerian respondents")
         ql = meta.variable_value_labels.get(c[q], {})
         gl = meta.variable_value_labels.get(c["REGION"], {})
         ll = meta.variable_value_labels.get(c[lga], {}) if lga else {}
         w = pd.to_numeric(sub[c[wt]], errors="coerce")
+        if rnd in RESCALE:
+            print(f"  R{rnd} {wt} averages {w.mean():.3f}; rescaled to 1")
+            w = w / w.mean()
         say(0.98 <= w.sum() / len(sub) <= 1.02, f"R{rnd} {wt} is a within-country weight "
             f"(mean {w.sum() / len(sub):.3f})")
         o = pd.DataFrame({
             "round": rnd,
             "respno": sub[c["RESPNO"]].astype(str),
-            "region": sub[c["REGION"]].map(gl),
+            "region": sub[c["REGION"]].map(gl) if gl else sub[c["REGION"]],
             "lga": (sub[c[lga]].map(ll) if ll else sub[c[lga]]) if lga else "",
             "lang": sub[c[q]].map(ql),
-            "verbatim": sub[c[qo]].astype(str).str.strip(),
+            "verbatim": sub[c[qo]].astype(str).str.strip() if qo else "",
             "eth": sub[c[eth]].map(meta.variable_value_labels.get(c[eth], {})),
-            "eth_verbatim": sub[c[etho]].astype(str).str.strip(),
+            "eth_verbatim": sub[c[etho]].astype(str).str.strip() if etho else "",
             "w": w,
         })
         say(o["lang"].notna().all(), f"R{rnd}: every answer code has a label")
@@ -382,6 +420,10 @@ def answer(row):
 ETHNIC = {
     "Fulani": "Fula", "Gwari": "Gbagyi", "Jaba": "Hyam (Jaba)", "Buju": "Jju", "Bajju": "Jju",
     "Birom": "Berom", "Kataf": "Tyap", "Bura": "Bura-Pabir", "Itsekiri": "Itsekiri",
+    # R3 and R10 group labels (2026-10-19)
+    "Ekoi": "Ejagham", "Tapa": "Nupe", "Okpella": "Okpela", "Shuwa-Arab": "Shuwa Arabic",
+    "Awori": "Yoruba", "Anang": "Anaang", "Andoni": "Obolo", "Babur": "Bura-Pabir",
+    "Ezza": "Izi-Ezaa-Ikwo-Mgbo",
 }
 # Ethnic-group verbatims of English-at-home respondents not already in VERBATIM.
 ETH_VERBATIM = {
@@ -746,7 +788,7 @@ LGA_ALIAS = {
 # Kano's in Kaduna's Soba, Katsina's in Kano's Rano and Wudil), and their answers follow REGION,
 # not the LGA (all eight "Warri South" answered Igbo). So R7's LGA column is not used at all:
 # a label that happens to fall inside its own state is no more trustworthy than the rest.
-LGA_ROUNDS = [4, 6, 9]
+LGA_ROUNDS = [3, 4, 6, 9, 10]
 
 
 def lfold(s):

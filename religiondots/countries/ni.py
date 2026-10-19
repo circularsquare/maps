@@ -65,6 +65,13 @@ def _ni_counts():
     return df[["unit", "node", "count", "congregations"]]
 
 
+def _ni_counts_split():
+    """`_ni_counts` with Pew 2014's Pentecostal share drawn inside the census's `Evangélica`
+    column; latam_split.py, Anita 2026-10-16. The split rows are `derived` and roll back to
+    `Evangélica` under `inferred dots: not shown`."""
+    return _latam_split("ni", _ni_counts())
+
+
 ENTRY = {
     "ni": dict(
         name="Nicaragua",
@@ -104,12 +111,17 @@ ENTRY = {
             "village of the 1980 Marian apparitions and a national pilgrimage site — with "
             "Camoapa at 91.7% and a block of Nueva Segovia and Madriz municipalities behind "
             "them. The evangelical map is almost its negative: Waslala 37.3%, Murra 36.5%, "
-            "Paiwas 33.8%, all of it the interior frontier rather than the cities."),
+            "Paiwas 33.8%, all of it the interior frontier rather than the cities. 66% of "
+            "the census's Evangelicals are drawn as Pentecostal, the share Pew Research "
+            "Center's 2014 survey implies once the Moravians are set apart; the rest stay "
+            "unnamed, and turning inferred dots off draws them all as Evangelical again."),
         how="census, 2005, ages 5 and over",
+        fill="from Pew Research Center's 2014 survey, which gives the Pentecostal share of "
+             "the census's Evangelicals",
         grain="municipios, 30,000 people on average",
         gap_share=0.118,
         gap="under-fives, 11.8% of the country, who were not asked the religion question",
-        counts=_ni_counts,
+        counts=_ni_counts_split,
         units=None,
         unit_key=None,
         place=HERE / "data" / "geo" / "ni" / "ni_hexes.gpkg",

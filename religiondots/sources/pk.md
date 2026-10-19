@@ -575,3 +575,12 @@ ask before drawing it.
 
 - The AJK 2017 table (Year Book 2023, p.209) is not ingested; it is a vintage behind the rest of Pakistan.
 - AJK has no religion below district in the yearbook, so nothing finer exists to decline.
+
+## 11. Sunni by assignment, 2026-10-16 (session `c67d3c3c-islam`)
+
+Anita's call, reversing spec §2.6b's exclusion of Pakistan (research: `unspecified_splits/islam.md` §1).
+`islam_assign.py` REMAINDER `pk: 0.19`: Pew 2012 Q31's surveyed 81% Sunni goes to `islam.sunni` as
+`assigned` (rolling to `islam`), 19% stays on `islam`; 81% is a floor because Pew's frame left out
+FATA, GB and AJK. No Shia node. Left WHOLE on `islam`: Kurram, Orakzai and Hangu districts
+(`PK23-khyber-pakhtunkhwa/kurram-district`, `/orakzai-district`, `/hangu-district`). Gilgit-Baltistan
+is not drawn, so there is nothing there to exempt. Census Ahmadis stay on `islam.ahmadiyya`.

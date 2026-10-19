@@ -1,0 +1,988 @@
+{
+  "batch": "chongqing",
+  "regions": [
+    {
+      "n": 1,
+      "key": "#f1e0c9",
+      "settled": null,
+      "summary": "Far northeast Daba mountain region: Wuxi (36%), Chengkou (16%) and the uplands of Fengjie, Yunyang and Wushan. No city; 1.05M.",
+      "candidates": [
+        {
+          "name": "Daba",
+          "local": "大巴山",
+          "origin": "mountain",
+          "meaning": "\"Great Ba mountain\": the range between the Han and Jialing rivers on the Sichuan, Chongqing, Shaanxi and Hubei border.",
+          "fit": "Chengkou lies wholly on the range's south slope and Wuxi is 'on the south foot of the Daba'; the range stands for the whole region (a landscape name does not claim the whole range).",
+          "recognisability": "Own zh-wiki article, 386 hits with 重庆, top ones about the range and Chengkou.",
+          "source_url": "https://zh.wikipedia.org/wiki/大巴山",
+          "source_note": "城口县地处大巴山南麓; 巫溪县地处大巴山南麓",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Wuxi",
+          "local": "巫溪县",
+          "origin": "county",
+          "meaning": "\"Wu stream\": named for the Wu stream, the old name of the Daning river that runs through it.",
+          "fit": "Whole county (cover 1.0) and 36% of the region's people; the county's seat Baiyang is in the region.",
+          "recognisability": "Current admin unit name. Same pinyin as Wuxi in Jiangsu, different characters (无锡), so not a repeat.",
+          "source_url": "https://zh.wikipedia.org/wiki/巫溪县",
+          "source_note": "1914年改称巫溪县; 地处大巴山南麓",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Chengkou",
+          "local": "城口县",
+          "origin": "county",
+          "meaning": "\"City mouth\": named because the county is a gateway ('mouth') to three provinces.",
+          "fit": "Holds essentially all of the county (cover 0.99) but only 16% of the region's people.",
+          "recognisability": "Current admin unit name.",
+          "source_url": "https://zh.wikipedia.org/wiki/城口县",
+          "source_note": "因居三省之门户名“城”，扼四方咽喉称“口”而得其名",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 2,
+      "key": "#f6d4b4",
+      "settled": null,
+      "summary": "Kaizhou basin on the Xiao river: almost all of the former Kai county (99.7% of people).",
+      "candidates": [
+        {
+          "name": "Kaizhou",
+          "local": "开州区",
+          "origin": "county",
+          "meaning": "\"Kai prefecture\": Kai county (named for the Kai river, an old name of the south river) became Kaizhou district in 2016, reviving the Yuan-Ming prefecture name.",
+          "fit": "99.7% of the region's people live in it; the region holds 72% of the district.",
+          "recognisability": "Current admin unit name. The map's data still says Kai 开县; the unit is now Kaizhou district.",
+          "source_url": "https://zh.wikipedia.org/wiki/开州区",
+          "source_note": "2016年国务院批复撤开县设开州区; 开州(1285-1372)",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Hanfeng",
+          "local": "汉丰",
+          "origin": "historical",
+          "meaning": "\"Han abundance\": the Han-period county (216) founded here by Liu Bei; the name lives on in Hanfeng Lake and the Hanfeng street.",
+          "fit": "County seat 216-552 at the same place as today's Kaizhou town; but a county name for a small time and the area is Kai county as a whole.",
+          "recognisability": "Appears in the Kaizhou article and as a street in the region's town list; not checked with lookup (low recognisability).",
+          "source_url": "https://zh.wikipedia.org/wiki/开州区",
+          "source_note": "216年（东汉建安二十一年）刘备主四川时，于朐忍县的西北部置汉丰县",
+          "rating": 2,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 3,
+      "key": "#ede4b9",
+      "settled": null,
+      "summary": "Three Gorges heart: most of Fengjie (66%) and Wushan (34%), with Baidi city and the Qutang gorge.",
+      "candidates": [
+        {
+          "name": "Kuizhou",
+          "local": "夔州",
+          "origin": "prefecture",
+          "meaning": "\"Kui prefecture\": named for the ancient state of Kui (夔子国) whose capital was near Fengjie; the Tang-Qing prefecture seated at Baidicheng, Fengjie.",
+          "fit": "Seat is Baidicheng inside the region; the prefecture covered Fengjie, Yunyang, Wushan and Wuxi, i.e. nearly all of the region's people. Kuizhou is not famous for any other place in China.",
+          "recognisability": "Own zh-wiki article, 661 hits with 重庆, top ones about this place (Kuizhou road, Kuizhou prefecture).",
+          "source_url": "https://zh.wikipedia.org/wiki/夔州",
+          "source_note": "辖境相当今重庆市奉节、云阳、巫山、巫溪等县地",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Fengjie",
+          "local": "奉节县",
+          "origin": "county",
+          "meaning": "\"Serve with integrity\": renamed in 649 to honour Zhuge Liang's loyalty to Liu Bei ('holding to the great principle').",
+          "fit": "Holds 66% of the region's people and 74% of the county.",
+          "recognisability": "Current admin unit name.",
+          "source_url": "https://zh.wikipedia.org/wiki/奉节县",
+          "source_note": "649年（唐贞观二十三年），为尊崇诸葛亮奉刘备“托孤寄命，临大节而不可夺”，改为奉节县",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Wushan",
+          "local": "巫山县",
+          "origin": "county",
+          "meaning": "\"Wu mountains\": the mountains (and county) beside the Wu Gorge, named for the Wu (shaman) legend.",
+          "fit": "Holds 34% of the region's people and 63% of the county; the Wu Gorge of the Yangtze runs through it.",
+          "recognisability": "Current admin unit name. Also the range name, known from the Three Gorges.",
+          "source_url": "https://zh.wikipedia.org/wiki/巫山县",
+          "source_note": "隋开皇三年（583年）置建平郡，巫县更名为巫山县",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Hubei neighbours Jianshi and Enshi and Chongqing Shizhu are already named; Three Gorges (Sanxia) is taken in Yichang, so a Three Gorges name is not offered."
+    },
+    {
+      "n": 4,
+      "key": "#f3e0b5",
+      "settled": null,
+      "summary": "Yunyang county (68%) with the Yangtze valley part of Wanzhou district (22%) and a slice of Kai.",
+      "candidates": [
+        {
+          "name": "Yunyang",
+          "local": "云阳县",
+          "origin": "county",
+          "meaning": "\"Yun sunny-side\": county name since 1373, taking over the Song Yun'an military district seated at the same place.",
+          "fit": "68% of the region's people and 82% of the county.",
+          "recognisability": "Current admin unit name.",
+          "source_url": "https://zh.wikipedia.org/wiki/云阳县",
+          "source_note": "明朝洪武六年（1373年）州降为县，为云阳县，属夔州",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Yun'an",
+          "local": "云安",
+          "origin": "historical",
+          "meaning": "\"Cloud peace\": Yun'an county (561-1282) and the Song Yun'an jun (973-1277), whose seat was at today's Yunyang town, famed for its salt wells.",
+          "fit": "County and prefecture-level unit seated in the region, covering what is now Yunyang.",
+          "recognisability": "Own zh-wiki article on 云安军; not checked with lookup; shares the name with a Guangdong district (云安区).",
+          "source_url": "https://zh.wikipedia.org/wiki/雲安軍",
+          "source_note": "云安军, 治所在云安县（今重庆市云阳县）",
+          "rating": 2,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 5,
+      "key": "#f3ce8b",
+      "settled": null,
+      "summary": "Wanzhou city centre: 99% Wanzhou district, 754k in a small area. The city figure 'Sanzhou 1.68M' in the data is Wanzhou.",
+      "candidates": [
+        {
+          "name": "Wanzhou",
+          "local": "万州区",
+          "origin": "city",
+          "meaning": "\"Ten-thousand rivers\": named for the 'ten thousand streams meeting' at the Yangtze here; Wanzhou since 634.",
+          "fit": "99% of the region's people and the urban core of the district (holds 53% of the district).",
+          "recognisability": "Current admin unit name. Known as a Three Gorges port city.",
+          "source_url": "https://zh.wikipedia.org/wiki/万州区",
+          "source_note": "因“万川毕汇”而得名",
+          "rating": 5,
+          "status": "suggested"
+        }
+      ],
+      "notes": "No second candidate needed."
+    },
+    {
+      "n": 6,
+      "key": "#f6dfb4",
+      "settled": null,
+      "summary": "Liangping plain (47%) with Dianjiang (22%) and strips of Kai, Kaijiang (Sichuan) and Wanzhou.",
+      "candidates": [
+        {
+          "name": "Liangping",
+          "local": "梁平区",
+          "origin": "county",
+          "meaning": "\"Liang plain\": renamed in 1952 from Liangshan (named for Gaoliang mountain) because of the Shandong duplicate, 'ping' for the plain at the foot.",
+          "fit": "47% of the region's people and 73% of the district.",
+          "recognisability": "Current admin unit name. The data says Liangping county; it is now a district.",
+          "source_url": "https://zh.wikipedia.org/wiki/梁平区",
+          "source_note": "1952年因与山东省梁山县重名，以县境高梁山麓有平坝，更名为梁平县",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Dianjiang",
+          "local": "垫江县",
+          "origin": "county",
+          "meaning": "\"Dian river\": county name since the Han (and the Han-Wei commandery seated at Hechuan); known as the peony's home.",
+          "fit": "22% of the region's people but also 30% of region 9, where it is listed as rejected; fits better here where it is the second county.",
+          "recognisability": "Current admin unit name.",
+          "source_url": "https://zh.wikipedia.org/wiki/垫江县",
+          "source_note": "垫江建县于汉代，属巴郡; 垫江是国花牡丹的发源地",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Liangshan (梁山) is the old name but is famous for the Water Margin outlaws in Shandong, so not offered."
+    },
+    {
+      "n": 7,
+      "key": "#f0dab3",
+      "settled": null,
+      "summary": "Zhong county (49%) with the south of Wanzhou district (37%).",
+      "candidates": [
+        {
+          "name": "Zhongzhou",
+          "local": "忠州",
+          "origin": "prefecture",
+          "meaning": "\"Loyal prefecture\": Tang to Qing prefecture seated at Zhong county, 634-1911.",
+          "fit": "Seat is Zhong county in the region; the Tang prefecture covered Zhong, Dianjiang, Shizhu and Fengdu, and later Zhong, Fengdu and Shizhu. 1,156 years of existence.",
+          "recognisability": "Own zh-wiki article, 264 hits with 重庆, top ones about this place; Bai Juyi was prefect here.",
+          "source_url": "https://zh.wikipedia.org/wiki/忠州_(唐朝)",
+          "source_note": "贞观八年（634年）改临州设置忠州，治所在临江县（今重庆市忠县）",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Zhongxian",
+          "local": "忠县",
+          "origin": "county",
+          "meaning": "\"Loyal county\": the county descended from the Zhongzhou prefecture.",
+          "fit": "49% of the region's people and 75% of the county.",
+          "recognisability": "Current admin unit name. (one-character county, takes -xian).",
+          "source_url": "https://zh.wikipedia.org/wiki/忠县",
+          "source_note": "忠县是重庆市下辖的一个县",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 8,
+      "key": "#f0c8a3",
+      "settled": null,
+      "summary": "Hechuan at the three-river confluence: 91% Hechuan district, 8% Huaying (Sichuan).",
+      "candidates": [
+        {
+          "name": "Hechuan",
+          "local": "合川区",
+          "origin": "county",
+          "meaning": "\"River confluence\": named because the Jialing, Fu and Qu rivers meet here.",
+          "fit": "91% of the region's people and 71% of the district.",
+          "recognisability": "Current admin unit name.",
+          "source_url": "https://zh.wikipedia.org/wiki/合川区",
+          "source_note": "地处嘉陵江、涪江、渠江三江汇合之处，因三江汇流而得名",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Hezhou",
+          "local": "合州",
+          "origin": "prefecture",
+          "meaning": "\"Confluence prefecture\": prefecture 556-1282, seated at Hechuan, named for the Fu and Jialing joining south of the seat.",
+          "fit": "Seat is Hechuan; the prefecture covered Hechuan and Tongliang. Hezhou is not famous elsewhere (Guangxi's Hezhou is a different pinyin, 贺州).",
+          "recognisability": "Own zh-wiki article, 281 hits with 重庆, top ones about this place; the Diaoyu Fortress battle is also called the battle of Hezhou.",
+          "source_url": "https://zh.wikipedia.org/wiki/合州_(西魏)",
+          "source_note": "因涪江、嘉陵江在合州南合流得名",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 9,
+      "key": "#f4d69f",
+      "settled": null,
+      "summary": "Changshou (69%) with Dianjiang's south part (30%), around Changshou Lake.",
+      "candidates": [
+        {
+          "name": "Changshou",
+          "local": "长寿区",
+          "origin": "county",
+          "meaning": "\"Long life\": county named in the Yuan-Ming period for Longevity mountain, where people live to old age.",
+          "fit": "69% of the region's people and 94% of the district.",
+          "recognisability": "Current admin unit name.",
+          "source_url": "https://zh.wikipedia.org/wiki/长寿区",
+          "source_note": "有长寿山居其下者，人多寿考，元末明玉珍因以名县",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Dianjiang",
+          "local": "垫江县",
+          "origin": "county",
+          "meaning": "\"Dian river\": the county holding 30% of the people here.",
+          "fit": "Rejected for this region: it is better used in region 6; Changshou takes 69% here.",
+          "recognisability": "",
+          "source_url": "https://zh.wikipedia.org/wiki/垫江县",
+          "source_note": "垫江县位于重庆市中部",
+          "status": "rejected"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 10,
+      "key": "#edc8a6",
+      "settled": null,
+      "summary": "Tongliang (56%), with parts of Bishan, Beibei (Chengjiang) and Dazu.",
+      "candidates": [
+        {
+          "name": "Tongliang",
+          "local": "铜梁区",
+          "origin": "county",
+          "meaning": "\"Copper beam\": from the Tongliang mountain; county since 703 (the Han-era county seat was a few miles away).",
+          "fit": "56% of the region's people and 97% of the district.",
+          "recognisability": "Current admin unit name.",
+          "source_url": "https://zh.wikipedia.org/wiki/铜梁区",
+          "source_note": "铜梁县 (县, 703-1911, 1133 yrs in all)",
+          "rating": 5,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 11,
+      "key": "#ebb285",
+      "settled": null,
+      "summary": "Beibei (63%) and the Gele mountain countryside of northern Shapingba (35%), Jinyun mountain.",
+      "candidates": [
+        {
+          "name": "Beibei",
+          "local": "北碚区",
+          "origin": "county",
+          "meaning": "\"Bei\" is a rocky shoal in the river; Beibei is the shoal of the Jialing gorges.",
+          "fit": "63% of the region's people and 68% of the district.",
+          "recognisability": "Current admin unit name.",
+          "source_url": "https://zh.wikipedia.org/wiki/北碚区",
+          "source_note": "“碚”这个字梁实秋解释作“是指江水中矗立的石头”",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Jinyun",
+          "local": "缙云山",
+          "origin": "mountain",
+          "meaning": "\"Crimson cloud mountain\": nine peaks on the Jialing at Beibei, with the Jinyun Temple; a national scenic spot with Hechuan's Diaoyu city.",
+          "fit": "The range lies across Beibei and the top of Shapingba, at the heart of this region.",
+          "recognisability": "Own zh-wiki article, 202 hits with 重庆, top ones about the mountain and temple.",
+          "source_url": "https://zh.wikipedia.org/wiki/缙云山",
+          "source_note": "缙云山位于重庆市北碚区城北嘉陵江畔; 由九峰组成",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Shapingba",
+          "local": "沙坪坝区",
+          "origin": "county",
+          "meaning": "\"Sand flat dam\": the old Shapingba town on the Jialing.",
+          "fit": "Rejected for this region: only 35% of the people and the district's core is region 19.",
+          "recognisability": "",
+          "source_url": "https://zh.wikipedia.org/wiki/沙坪坝区",
+          "source_note": "沙坪坝区 article",
+          "status": "rejected"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 12,
+      "key": "#e7cb97",
+      "settled": null,
+      "summary": "Fuling at the Wu and Yangtze rivers: 87% Fuling district, 13% Fengdu.",
+      "candidates": [
+        {
+          "name": "Fuling",
+          "local": "涪陵区",
+          "origin": "city",
+          "meaning": "From the Fu (涪) river people and Ba tomb (陵); named Fuling in 593 and once the whole Wu-Yangtze confluence called Zhi.",
+          "fit": "87% of the region's people; the old Fuzhou prefecture seat is here. Region 26 holds 43% of the district but not the seat.",
+          "recognisability": "Current admin unit name. Known for its pickled mustard tuber.",
+          "source_url": "https://zh.wikipedia.org/wiki/涪陵区",
+          "source_note": "乌江汇入长江处，古称枳; 隋开皇十三年（593年）汉平县改名涪陵县",
+          "rating": 5,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 13,
+      "key": "#f6b47f",
+      "settled": null,
+      "summary": "Northern Yubei suburbs (72%) with Beibei Caijia and Jiangbei's Tieshanping.",
+      "candidates": [
+        {
+          "name": "Yubei",
+          "local": "渝北区",
+          "origin": "county",
+          "meaning": "\"Yu north\": district since 1994 (formerly Jiangbei county), 'Yu' being the short name of Chongqing, so a directional name. Abolished in November 2025 into Liangjiang New Area.",
+          "fit": "72% of the region's people but only 23% of the old district.",
+          "recognisability": "Former admin unit name; the abolition means it will become a historical name.",
+          "source_url": "https://zh.wikipedia.org/wiki/渝北区",
+          "source_note": "渝北区于1994年由原江北县更名而来; 2025年撤销，与江北区、北碚区的水土街道、复兴街道...合并设立两江新区",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Yubei and Jiangbei districts were abolished in November 2025 and merged with parts of Beibei into Liangjiang New Area, so facts.json's districts for regions 13, 15 and 16 are the old ones. I found no better name here: Tongluo mountain had only 12 hits with 重庆."
+    },
+    {
+      "n": 14,
+      "key": "#ebddb5",
+      "settled": null,
+      "summary": "Fengdu (53%), Wulong (28%) and Zhong's south, along the Yangtze and Wu rivers.",
+      "candidates": [
+        {
+          "name": "Fengdu",
+          "local": "丰都县",
+          "origin": "county",
+          "meaning": "\"Abundant capital\": written 酆都 (Fengdu, the Ghost City) from 1380 to 1958, from the Han-era Pingdu mountain and Yin and Wang Daoist legend.",
+          "fit": "53% of the region's people and 83% of the county.",
+          "recognisability": "Current admin unit name. Famous worldwide as the 'Ghost City'.",
+          "source_url": "https://zh.wikipedia.org/wiki/丰都县",
+          "source_note": "东汉和帝永元二年（90年），分枳县地置平都县，治所倚平都山（名山）; 明洪武十三年（1380年）改名酆都县",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Wulong",
+          "local": "武隆",
+          "origin": "county",
+          "meaning": "Written 武龙 (\"martial dragon\") when the county was set up in 618, later 武隆; known for the Wulong karst, a World Heritage site, on the Wu river.",
+          "fit": "28% of the region's people and 84% of the county.",
+          "recognisability": "Own county article; known for Wulong Karst World Heritage and film locations.",
+          "source_url": "https://zh.wikipedia.org/wiki/武隆区",
+          "source_note": "武隆县 (县, 1380-1667) 今四川武隆县 on CHGIS; Wulong in 丰都县 article",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 15,
+      "key": "#ee9750",
+      "settled": null,
+      "summary": "Dazhulin, Shimahe and Dashiba: Yubei (62%) and Jiangbei (35%) on the Jialing.",
+      "candidates": [
+        {
+          "name": "Jialing",
+          "local": "嘉陵江",
+          "origin": "river",
+          "meaning": "\"Jialing river\": the long river from Gansu that joins the Yangtze at Chaotianmen; its old name was the Yu river (渝水), the origin of Chongqing's short name Yu.",
+          "fit": "The river runs along the region's west and south, between Shapingba and Jiangbei, through the Liangjiang core; a landscape name that does not claim the whole river.",
+          "recognisability": "Own zh-wiki article, 664 hits with 重庆, top ones about the river and Chongqing.",
+          "source_url": "https://zh.wikipedia.org/wiki/嘉陵江",
+          "source_note": "因古时流经重庆的嘉陵江称为渝水，故重庆古名为渝州",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Liangjiang",
+          "local": "两江新区",
+          "origin": "other",
+          "meaning": "\"Two rivers\": the new area (2010, made a district in November 2025) joining Jialing and Yangtze.",
+          "fit": "Created from Jiangbei, Yubei and bits of Beibei, so spans regions 13, 15 and 16; the region has its middle.",
+          "recognisability": "New admin unit name; the name is widely used since 2010.",
+          "source_url": "https://zh.wikipedia.org/wiki/两江新区",
+          "source_note": "2025年11月，撤销江北区，与渝北区...合并设立两江新区",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Yubei and Jiangbei abolished 2025."
+    },
+    {
+      "n": 16,
+      "key": "#f38825",
+      "settled": null,
+      "summary": "Jiangbei's Guanyinqiao centre across the Jialing: Jiangbei (64%), Yubei (26%), a bit of Yuzhong. Holds the point for 'Chongqing 12M' but the old centre (Yuzhong peninsula) is region 20.",
+      "candidates": [
+        {
+          "name": "Jiangbei",
+          "local": "江北",
+          "origin": "county",
+          "meaning": "\"River north\": the district north of the Yangtze and Jialing; the old Jiangbei council (1754) and county, and the district 1955-2025.",
+          "fit": "64% of the region's people. The district was abolished in November 2025.",
+          "recognisability": "Former admin unit name, widely known.",
+          "source_url": "https://zh.wikipedia.org/wiki/江北区_(重庆市)",
+          "source_note": "江北区是重庆市一个已撤销的市辖区; 江北厅 (1754-1911)",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Jiangzhou",
+          "local": "江州",
+          "origin": "historical",
+          "meaning": "\"River prefecture\": Qin-Han county and Ba commandery seat 314 BC to 200 AD, located at today's Jiangbei per CHGIS (Wikipedia also says the Ba capital was in the Yuzhong peninsula).",
+          "fit": "Fits Jiangbei per CHGIS but the seat is disputed between this and Yuzhong; also the old name of Jiujiang in Jiangxi.",
+          "recognisability": "Own disambiguation page, 723 hits with 重庆, mostly about the Chongqing county, but famous elsewhere too.",
+          "source_url": "https://zh.wikipedia.org/wiki/江州",
+          "source_note": "江州县，中国自秦朝起设置的县，秦汉魏晋时期一直为巴郡的郡治，位置各代有迁移，但都在今重庆市范围内",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 17,
+      "key": "#f9c697",
+      "settled": null,
+      "summary": "Dazu (73%) with a strip of Yongchuan and Rongchang.",
+      "candidates": [
+        {
+          "name": "Dazu",
+          "local": "大足区",
+          "origin": "county",
+          "meaning": "\"Great sufficiency\": from the Dazu river, or the meaning 'plenty'; home of the Dazu Rock Carvings.",
+          "fit": "73% of the region's people and 85% of the district.",
+          "recognisability": "Current admin unit name. UNESCO Dazu Rock Carvings.",
+          "source_url": "https://zh.wikipedia.org/wiki/大足区",
+          "source_note": "大足县以“以界内大足川为名”; 取“丰足之义也",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Changzhou",
+          "local": "昌州",
+          "origin": "prefecture",
+          "meaning": "\"Prosperous prefecture\": Tang to Yuan prefecture, 477 years seated near Dazu, covering Dazu, Rongchang and Yongchuan.",
+          "fit": "Seat in Dazu for 477 years; but the same pinyin as Jiangsu's Changzhou (常州).",
+          "recognisability": "Not checked with lookup.",
+          "source_url": "https://zh.wikipedia.org/wiki/荣昌区",
+          "source_note": "昌州 (州, 804-1282) 今四川省大足县南四十里; 唐乾元二年设昌州，下辖昌元、静南、大足三县",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 18,
+      "key": "#c8e8cb",
+      "settled": null,
+      "summary": "Qianjiang (45%), Xianfeng (20%, Hubei), Lichuan (15%) and Pengshui: Wuling mountain country with Tujia and Miao people.",
+      "candidates": [
+        {
+          "name": "Wuling",
+          "local": "武陵山",
+          "origin": "mountain",
+          "meaning": "\"Wuling mountains\": the range of the Chongqing, Hubei, Hunan and Guizhou border, where Tujia and Miao live.",
+          "fit": "Qianjiang lies in the 'heartland of the Wuling', and the airport is named after it; the range stands for the whole region.",
+          "recognisability": "Own zh-wiki article, 562 hits with 重庆, top ones about the range and Qianjiang airport.",
+          "source_url": "https://zh.wikipedia.org/wiki/武陵山脉",
+          "source_note": "黔江区位于重庆市的东南边缘，地处武陵山腹地",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Qianjiang",
+          "local": "黔江区",
+          "origin": "county",
+          "meaning": "\"Black river\": the Qian river; county 741 to 1911, now a district.",
+          "fit": "45% of the region's people and the whole district.",
+          "recognisability": "Current admin unit name.",
+          "source_url": "https://zh.wikipedia.org/wiki/黔江区",
+          "source_note": "天宝元年（742年）改名黔江，属黔安郡（黔州）",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Qianzhou",
+          "local": "黔州",
+          "origin": "prefecture",
+          "meaning": "\"Qian prefecture\": 563-1227 seated at Pengshui, the source of Guizhou's short name Qian; covered Qianjiang and Pengshui and ruled 50 loose-reined (jimi) frontier prefectures.",
+          "fit": "Seat at Yushan (Pengshui) is in the region; the jimi system was about holding native peoples, so say that.",
+          "recognisability": "Own zh-wiki article, 61 hits with 重庆.",
+          "source_url": "https://zh.wikipedia.org/wiki/黔州",
+          "source_note": "黔州，中国古代的州。贵州省简称黔的来源",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Mind that Qianzhou was a prefecture of control over native chiefs."
+    },
+    {
+      "n": 19,
+      "key": "#ea8b51",
+      "settled": null,
+      "summary": "Shapingba (84%) and Jiulongpo's Shiqiaopu, with Gele mountain.",
+      "candidates": [
+        {
+          "name": "Shapingba",
+          "local": "沙坪坝区",
+          "origin": "county",
+          "meaning": "\"Sand flat dam\" (a flat riverside sandy ground); the district is named for the old Shapingba town on the Jialing.",
+          "fit": "84% of the region's people and 57% of the district.",
+          "recognisability": "Current admin unit name. University district.",
+          "source_url": "https://zh.wikipedia.org/wiki/沙坪坝区",
+          "source_note": "沙坪坝区",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Gele",
+          "local": "歌乐山",
+          "origin": "mountain",
+          "meaning": "\"Mountain of song and joy\": from Yu the Great gathering the lords at Tushan and holding a song feast here.",
+          "fit": "Gele town is 16% of the region and the mountain lies at its west; part of the Zhongliang range.",
+          "recognisability": "Own zh-wiki article, 315 hits with 重庆, top ones about the martyrs' cemetery and Linyuan on the mountain.",
+          "source_url": "https://zh.wikipedia.org/wiki/歌乐山",
+          "source_note": "歌乐名字来源于“大禹会诸侯于涂山，召众宾歌乐于此”",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 20,
+      "key": "#ee7709",
+      "settled": null,
+      "summary": "The Yuzhong peninsula, the old city: Yuzhong (60%), Jiulongpo's Yangjiaping (31%).",
+      "candidates": [
+        {
+          "name": "Chongqing",
+          "local": "重庆",
+          "origin": "city",
+          "meaning": "\"Double celebration\": the name given in 1189 when Prince Gong of Gongzhou became Emperor Guangzong, so Gongzhou was raised to Chongqing prefecture.",
+          "fit": "Holds most of the Yuzhong peninsula (83% of the district) where the city sat since the Ba kingdom, so it takes the city's name.",
+          "recognisability": "The city name, known worldwide.",
+          "source_url": "https://zh.wikipedia.org/wiki/重庆市",
+          "source_note": "对于命名为重庆的解释现有三种：宋光宗藩封在恭州，是为一庆，后又由恭州承嗣天子大位，这是二庆",
+          "rating": 5,
+          "status": "suggested"
+        }
+      ],
+      "notes": "The simplemaps point for Chongqing falls in region 16; the old centre (Yuzhong, Jiefangbei) is here."
+    },
+    {
+      "n": 21,
+      "key": "#eda56b",
+      "settled": null,
+      "summary": "Bishan (33%), Baishiyi in Jiulongpo (39%) and western Shapingba (27%).",
+      "candidates": [
+        {
+          "name": "Bishan",
+          "local": "璧山区",
+          "origin": "county",
+          "meaning": "\"Jade mountain\": named for Bi mountain; county since 757.",
+          "fit": "Holds 33% of the region's people and the county seat Bicheng is in it.",
+          "recognisability": "Current admin unit name.",
+          "source_url": "https://zh.wikipedia.org/wiki/璧山区",
+          "source_note": "璧山得名自重壁山",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 22,
+      "key": "#eea139",
+      "settled": null,
+      "summary": "Nan'an on the Yangtze's south bank: Nan'an (92%).",
+      "candidates": [
+        {
+          "name": "Nan'an",
+          "local": "南岸区",
+          "origin": "county",
+          "meaning": "\"South bank\": the district south of the Yangtze, a directional name.",
+          "fit": "92% of the region's people and 80% of the district.",
+          "recognisability": "Current admin unit name. Directional name (like Jiangbei).",
+          "source_url": "https://zh.wikipedia.org/wiki/南岸区",
+          "source_note": "南岸区是重庆市下辖的市辖区，重庆主城区之一，位于长江南岸",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Tushan",
+          "local": "涂山",
+          "origin": "mountain",
+          "meaning": "The mountain of Tu, in legend the home of Yu the Great's wife; the Nan'an Tushan town.",
+          "fit": "Tushan town is 7.6% of the region; Chongqing is one of four sites claimed.",
+          "recognisability": "Own zh-wiki article, 106 hits with 重庆 but mostly metro stations; the legend is claimed for Anhui, Henan and Zhejiang too.",
+          "source_url": "https://zh.wikipedia.org/wiki/涂山",
+          "source_note": "涂山是中国远古传说中的一个地名...四说重庆境内涂山",
+          "rating": 2,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 23,
+      "key": "#f0a263",
+      "settled": null,
+      "summary": "Jiulongpo (66%) and Dadukou (24%), around Zhongliang mountain and the Yangtze.",
+      "candidates": [
+        {
+          "name": "Jiulongpo",
+          "local": "九龙坡区",
+          "origin": "county",
+          "meaning": "\"Nine dragons slope\": named for the Jiulongpo hamlet; district since 1955.",
+          "fit": "66% of the region's people.",
+          "recognisability": "Current admin unit name.",
+          "source_url": "https://zh.wikipedia.org/wiki/九龙坡区",
+          "source_note": "1955年10月24日，第四区定名九龙坡区",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Dadukou",
+          "local": "大渡口区",
+          "origin": "county",
+          "meaning": "\"Great ferry crossing\": named for a charity ferry (yi du) on the Yangtze in the late Qing.",
+          "fit": "24% of the region's people and 71% of the district.",
+          "recognisability": "Current admin unit name.",
+          "source_url": "https://zh.wikipedia.org/wiki/大渡口区",
+          "source_note": "大渡口的名字为清末时期一长江边义渡（即免费为人摆渡）而来",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 24,
+      "key": "#f4be9c",
+      "settled": null,
+      "summary": "Rongchang (51%) and Longchang (48%, Sichuan) in the far west.",
+      "candidates": [
+        {
+          "name": "Rongchang",
+          "local": "荣昌区",
+          "origin": "county",
+          "meaning": "\"Prosperous flourishing\": county from 1373, from the old Changyuan.",
+          "fit": "51% of the region's people and 92% of the district.",
+          "recognisability": "Current admin unit name.",
+          "source_url": "https://zh.wikipedia.org/wiki/荣昌区",
+          "source_note": "洪武六年十二月甲寅，析巴县地置荣昌县",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Longchang",
+          "local": "隆昌市",
+          "origin": "county",
+          "meaning": "\"Flourishing\": county since 1567 (Longqing era); now a Sichuan city.",
+          "fit": "48% of the region's people and 73% of the city; the city is in Neijiang.",
+          "recognisability": "Current admin unit name.",
+          "source_url": "https://zh.wikipedia.org/wiki/隆昌市",
+          "source_note": "隆昌建县于明朝隆庆元年",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Rongchang and Longchang share a character and mean much the same; pick one."
+    },
+    {
+      "n": 25,
+      "key": "#eebc65",
+      "settled": null,
+      "summary": "Banan (75%), with Nan'an's south and Dadukou's Jumping.",
+      "candidates": [
+        {
+          "name": "Banan",
+          "local": "巴南区",
+          "origin": "county",
+          "meaning": "\"South of Ba\": district created in 1994 from the old Ba county.",
+          "fit": "75% of the region's people and 58% of the district.",
+          "recognisability": "Current admin unit name.",
+          "source_url": "https://zh.wikipedia.org/wiki/巴南区",
+          "source_note": "1994年12月，撤县建立巴南区",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Baxian",
+          "local": "巴县",
+          "origin": "historical",
+          "meaning": "\"Ba county\": the mother county of Chongqing, 561-1911, now succeeded by Banan.",
+          "fit": "Seat was in the old city (region 20), but its territory is the Banan district.",
+          "recognisability": "Own zh-wiki article; not checked with lookup.",
+          "source_url": "https://zh.wikipedia.org/wiki/巴縣",
+          "source_note": "巴县，中国旧县名，初设于北周，一直是重庆附郭大县，是重庆母县",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 26,
+      "key": "#f7dfb2",
+      "settled": null,
+      "summary": "Nanchuan (36%), Fuling's east (43%) and Banan's south (18%), the biggest region at 2.0M.",
+      "candidates": [
+        {
+          "name": "Jinfo",
+          "local": "金佛山",
+          "origin": "mountain",
+          "meaning": "\"Golden Buddha mountain\": a World Heritage peak in Nanchuan, the highest of the Dalou range at 2,251 m.",
+          "fit": "Lies in Nanchuan, which is 93% in the region.",
+          "recognisability": "Own zh-wiki article, 625 hits with 重庆, top ones about the mountain and Nanchuan.",
+          "source_url": "https://zh.wikipedia.org/wiki/金佛山",
+          "source_note": "金佛山是世界自然遗产，位于重庆南部南川区境内",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Nanchuan",
+          "local": "南川区",
+          "origin": "county",
+          "meaning": "\"South river\": named for being the source of the Nan river.",
+          "fit": "36% of the region's people and 93% of the district.",
+          "recognisability": "Current admin unit name.",
+          "source_url": "https://zh.wikipedia.org/wiki/南川区",
+          "source_note": "因南江之源而名南川",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Fuling",
+          "local": "涪陵区",
+          "origin": "city",
+          "meaning": "See region 12.",
+          "fit": "Rejected for this region: 43% of the people here but the seat and its name are in region 12.",
+          "recognisability": "",
+          "source_url": "https://zh.wikipedia.org/wiki/涪陵区",
+          "source_note": "涪陵区",
+          "status": "rejected"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 27,
+      "key": "#eec996",
+      "settled": null,
+      "summary": "Yongchuan (87%) with Bishan's west.",
+      "candidates": [
+        {
+          "name": "Yongchuan",
+          "local": "永川区",
+          "origin": "county",
+          "meaning": "\"Eternal river\": named in 776 because three rivers meet at the town in the shape of the seal character yong (永).",
+          "fit": "87% of the region's people and 78% of the district.",
+          "recognisability": "Current admin unit name.",
+          "source_url": "https://zh.wikipedia.org/wiki/永川区",
+          "source_note": "因城内三河汇流，形如篆文的“永”字，故取名永川",
+          "rating": 5,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 28,
+      "key": "#eebc78",
+      "settled": null,
+      "summary": "Jiangjin city (72%) with Jiulongpo's Xipeng.",
+      "candidates": [
+        {
+          "name": "Jiangjin",
+          "local": "江津区",
+          "origin": "county",
+          "meaning": "\"River ford\": a key crossing on the Yangtze, the old town is the Ji river bend.",
+          "fit": "72% of the region's people; the old town Jijiang is here; the district has 37% here and 55% in region 30.",
+          "recognisability": "Current admin unit name.",
+          "source_url": "https://zh.wikipedia.org/wiki/江津区",
+          "source_note": "因地处长江要津而得名; 因长江在其境内环鼎山绕了一个“几”字形的大弯，故江津老城区又名几江",
+          "rating": 5,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 29,
+      "key": "#f7d79b",
+      "settled": null,
+      "summary": "Qijiang (81%) with strips of Jiangjin and Banan.",
+      "candidates": [
+        {
+          "name": "Qijiang",
+          "local": "綦江区",
+          "origin": "county",
+          "meaning": "\"Qi river\": named for the Qi river.",
+          "fit": "81% of the region's people and 89% of the district.",
+          "recognisability": "Current admin unit name.",
+          "source_url": "https://zh.wikipedia.org/wiki/綦江区",
+          "source_note": "綦江区是重庆市的一个市辖区，于2011年由万盛区、綦江县合并而成",
+          "rating": 5,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 30,
+      "key": "#eed5a7",
+      "settled": null,
+      "summary": "Western Jiangjin (65%), Hejiang (19%, Sichuan), Yongchuan and Lu county.",
+      "candidates": [
+        {
+          "name": "Hejiang",
+          "local": "合江县",
+          "origin": "county",
+          "meaning": "\"River confluence\": where the Chishui meets the Yangtze; a Luzhou county.",
+          "fit": "19% of the region's people and 42% of the county.",
+          "recognisability": "Current admin unit name. One of Luzhou's counties.",
+          "source_url": "https://zh.wikipedia.org/wiki/合江县_(泸市)",
+          "source_note": "合江县 (县, 618-795) 今四川省合江县西北白沙镇",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Simian",
+          "local": "四面山",
+          "origin": "mountain",
+          "meaning": "\"Four sides mountain\": Jiangjin's mountain at the Guizhou border, a scenic area.",
+          "fit": "Probably in the south of this region; I did not confirm.",
+          "recognisability": "Own zh-wiki article, 401 hits with 重庆.",
+          "source_url": "https://zh.wikipedia.org/wiki/四面山",
+          "source_note": "四面山位于重庆江津区四面山镇",
+          "rating": 2,
+          "status": "suggested"
+        },
+        {
+          "name": "Jiangjin",
+          "local": "江津区",
+          "origin": "county",
+          "meaning": "See region 28.",
+          "fit": "Rejected for this region: 65% of the people here but its name and seat are in region 28.",
+          "recognisability": "",
+          "source_url": "https://zh.wikipedia.org/wiki/江津区",
+          "source_note": "江津区",
+          "status": "rejected"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 31,
+      "key": "#c4e4c7",
+      "settled": null,
+      "summary": "Xiushan (49%), Youyang (38%) and Yanhe and Songtao: Tujia and Miao Wuling country.",
+      "candidates": [
+        {
+          "name": "Youyang",
+          "local": "酉阳",
+          "origin": "county",
+          "meaning": "Youyang county: the old county name (Han to Southern dynasties) and the Ming-Qing prefecture, named for the You river.",
+          "fit": "38% of the region's people but 61% of the county; the prefecture seat (1372-1911) is here.",
+          "recognisability": "Current admin unit name. Not a repeat of Youshui in Hunan (different characters).",
+          "source_url": "https://zh.wikipedia.org/wiki/酉阳土家族苗族自治县",
+          "source_note": "酉阳州 (州/直隶州, 1372-1911) 今四川省酉阳县",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Xiushan",
+          "local": "秀山",
+          "origin": "county",
+          "meaning": "\"Elegant mountain\": county created in 1736 by replacing native chiefs.",
+          "fit": "49% of the region's people and 91% of the county.",
+          "recognisability": "Current admin unit name.",
+          "source_url": "https://zh.wikipedia.org/wiki/秀山土家族苗族自治县",
+          "source_note": "清朝乾隆元年（1736年），为进行改土归流",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Tujia and Miao area; no names that mean pacifying are offered."
+    }
+  ]
+}

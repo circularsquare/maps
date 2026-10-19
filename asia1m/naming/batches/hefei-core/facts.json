@@ -1,0 +1,1104 @@
+{
+ "name": "hefei-core",
+ "province": "",
+ "prefectures": [],
+ "tiles": [
+  {
+   "tag": "1",
+   "x": 7182,
+   "y": 3374,
+   "w": 428,
+   "h": 438,
+   "scale": 2,
+   "regions": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ]
+  }
+ ],
+ "regions": [
+  {
+   "key": "#e09a83",
+   "color": "#e09a83",
+   "lon": 117.2385,
+   "lat": 31.9088,
+   "bbox": [
+    7385,
+    3580,
+    7398,
+    3587
+   ],
+   "area_px": 92,
+   "people": 1240443,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Luyang",
+     "local": "庐阳区",
+     "prefecture": "Hefei",
+     "prefecture_local": "合肥市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.711,
+     "area_share": 0.815,
+     "cover": 0.867
+    },
+    {
+     "name": "Yaohai",
+     "local": "瑶海区",
+     "prefecture": "Hefei",
+     "prefecture_local": "合肥市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.279,
+     "area_share": 0.13,
+     "cover": 0.283
+    },
+    {
+     "name": "Changfeng",
+     "local": "长丰县",
+     "prefecture": "Hefei",
+     "prefecture_local": "合肥市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.005,
+     "area_share": 0.022,
+     "cover": 0.01
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Anhui",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.02
+    },
+    {
+     "level": "prefecture",
+     "name": "Hefei",
+     "local": "合肥市",
+     "province": "Anhui",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.139
+    }
+   ],
+   "towns": [
+    {
+     "town": "大杨镇",
+     "county": "庐阳区",
+     "city": "合肥市",
+     "people_share": 0.199,
+     "cover": 0.953
+    },
+    {
+     "town": "亳州路街道",
+     "county": "庐阳区",
+     "city": "合肥市",
+     "people_share": 0.105,
+     "cover": 1.0
+    },
+    {
+     "town": "逍遥津街道",
+     "county": "庐阳区",
+     "city": "合肥市",
+     "people_share": 0.079,
+     "cover": 0.667
+    },
+    {
+     "town": "方庙街道",
+     "county": "瑶海区",
+     "city": "合肥市",
+     "people_share": 0.079,
+     "cover": 0.819
+    },
+    {
+     "town": "庐阳工业区",
+     "county": "庐阳区",
+     "city": "合肥市",
+     "people_share": 0.075,
+     "cover": 0.848
+    },
+    {
+     "town": "双岗街道",
+     "county": "庐阳区",
+     "city": "合肥市",
+     "people_share": 0.066,
+     "cover": 1.0
+    },
+    {
+     "town": "四里河街道",
+     "county": "庐阳区",
+     "city": "合肥市",
+     "people_share": 0.062,
+     "cover": 1.0
+    },
+    {
+     "town": "长淮街道",
+     "county": "瑶海区",
+     "city": "合肥市",
+     "people_share": 0.054,
+     "cover": 1.0
+    },
+    {
+     "town": "三孝口街道",
+     "county": "庐阳区",
+     "city": "合肥市",
+     "people_share": 0.053,
+     "cover": 0.667
+    },
+    {
+     "town": "车站街道",
+     "county": "瑶海区",
+     "city": "合肥市",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "胜利路街道",
+     "county": "瑶海区",
+     "city": "合肥市",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "三里街街道",
+     "county": "瑶海区",
+     "city": "合肥市",
+     "people_share": 0.04,
+     "cover": 0.5
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f0cdc3",
+     "border_px": 221
+    },
+    {
+     "key": "#d69677",
+     "border_px": 115
+    },
+    {
+     "key": "#edae95",
+     "border_px": 102
+    },
+    {
+     "key": "#d67558",
+     "border_px": 52
+    }
+   ],
+   "text_px": 0,
+   "n": 1,
+   "thumb": {
+    "x0": 7345,
+    "y0": 3540,
+    "k": 4.0,
+    "w": 372,
+    "h": 348
+   }
+  },
+  {
+   "key": "#edae95",
+   "color": "#edae95",
+   "lon": 117.3765,
+   "lat": 31.9084,
+   "bbox": [
+    7397,
+    3574,
+    7409,
+    3590
+   ],
+   "area_px": 154,
+   "people": 557658,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yaohai",
+     "local": "瑶海区",
+     "prefecture": "Hefei",
+     "prefecture_local": "合肥市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.847,
+     "area_share": 0.825,
+     "cover": 0.386
+    },
+    {
+     "name": "Feidong",
+     "local": "肥东县",
+     "prefecture": "Hefei",
+     "prefecture_local": "合肥市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.138,
+     "area_share": 0.162,
+     "cover": 0.094
+    },
+    {
+     "name": "Baohe",
+     "local": "包河区",
+     "prefecture": "Hefei",
+     "prefecture_local": "合肥市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.015,
+     "area_share": 0.013,
+     "cover": 0.007
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Anhui",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.009
+    },
+    {
+     "level": "prefecture",
+     "name": "Hefei",
+     "local": "合肥市",
+     "province": "Anhui",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.063
+    }
+   ],
+   "towns": [
+    {
+     "town": "瑶海区工业园",
+     "county": "瑶海区",
+     "city": "合肥市",
+     "people_share": 0.184,
+     "cover": 1.0
+    },
+    {
+     "town": "合肥龙岗综合经济开发区",
+     "county": "瑶海区",
+     "city": "合肥市",
+     "people_share": 0.145,
+     "cover": 1.0
+    },
+    {
+     "town": "七里塘街道",
+     "county": "瑶海区",
+     "city": "合肥市",
+     "people_share": 0.143,
+     "cover": 0.704
+    },
+    {
+     "town": "大兴镇",
+     "county": "瑶海区",
+     "city": "合肥市",
+     "people_share": 0.118,
+     "cover": 0.714
+    },
+    {
+     "town": "肥东新城开发区",
+     "county": "肥东县",
+     "city": "合肥市",
+     "people_share": 0.093,
+     "cover": 0.871
+    },
+    {
+     "town": "铜陵路街道",
+     "county": "瑶海区",
+     "city": "合肥市",
+     "people_share": 0.088,
+     "cover": 1.0
+    },
+    {
+     "town": "磨店乡",
+     "county": "瑶海区",
+     "city": "合肥市",
+     "people_share": 0.051,
+     "cover": 1.0
+    },
+    {
+     "town": "方庙街道",
+     "county": "瑶海区",
+     "city": "合肥市",
+     "people_share": 0.039,
+     "cover": 0.181
+    },
+    {
+     "town": "红光街道",
+     "county": "瑶海区",
+     "city": "合肥市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "撮镇镇",
+     "county": "肥东县",
+     "city": "合肥市",
+     "people_share": 0.033,
+     "cover": 0.199
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f6c9bc",
+     "border_px": 237
+    },
+    {
+     "key": "#eba792",
+     "border_px": 147
+    },
+    {
+     "key": "#f0cdc3",
+     "border_px": 130
+    },
+    {
+     "key": "#e09a83",
+     "border_px": 102
+    },
+    {
+     "key": "#d67558",
+     "border_px": 56
+    }
+   ],
+   "text_px": 0,
+   "n": 2,
+   "thumb": {
+    "x0": 7357,
+    "y0": 3534,
+    "k": 4.0,
+    "w": 368,
+    "h": 384
+   }
+  },
+  {
+   "key": "#d69677",
+   "color": "#d69677",
+   "lon": 117.2055,
+   "lat": 31.8463,
+   "bbox": [
+    7386,
+    3588,
+    7394,
+    3596
+   ],
+   "area_px": 70,
+   "people": 862026,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Shushan",
+     "local": "蜀山区",
+     "prefecture": "Hefei",
+     "prefecture_local": "合肥市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.902,
+     "area_share": 0.843,
+     "cover": 0.574
+    },
+    {
+     "name": "Luyang",
+     "local": "庐阳区",
+     "prefecture": "Hefei",
+     "prefecture_local": "合肥市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.045,
+     "area_share": 0.057,
+     "cover": 0.038
+    },
+    {
+     "name": "Baohe",
+     "local": "包河区",
+     "prefecture": "Hefei",
+     "prefecture_local": "合肥市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.029,
+     "area_share": 0.014,
+     "cover": 0.021
+    },
+    {
+     "name": "Feixi",
+     "local": "肥西县",
+     "prefecture": "Hefei",
+     "prefecture_local": "合肥市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.024,
+     "area_share": 0.086,
+     "cover": 0.028
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Anhui",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.014
+    },
+    {
+     "level": "prefecture",
+     "name": "Hefei",
+     "local": "合肥市",
+     "province": "Anhui",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.097
+    }
+   ],
+   "towns": [
+    {
+     "town": "井岗镇",
+     "county": "蜀山区",
+     "city": "合肥市",
+     "people_share": 0.16,
+     "cover": 0.916
+    },
+    {
+     "town": "高新技术产业开发区",
+     "county": "蜀山区",
+     "city": "合肥市",
+     "people_share": 0.136,
+     "cover": 0.644
+    },
+    {
+     "town": "琥珀街道",
+     "county": "蜀山区",
+     "city": "合肥市",
+     "people_share": 0.114,
+     "cover": 1.0
+    },
+    {
+     "town": "五里墩街道",
+     "county": "蜀山区",
+     "city": "合肥市",
+     "people_share": 0.114,
+     "cover": 1.0
+    },
+    {
+     "town": "笔架山街道",
+     "county": "蜀山区",
+     "city": "合肥市",
+     "people_share": 0.074,
+     "cover": 1.0
+    },
+    {
+     "town": "南七街道",
+     "county": "蜀山区",
+     "city": "合肥市",
+     "people_share": 0.068,
+     "cover": 1.0
+    },
+    {
+     "town": "西园街道",
+     "county": "蜀山区",
+     "city": "合肥市",
+     "people_share": 0.068,
+     "cover": 1.0
+    },
+    {
+     "town": "三里庵街道",
+     "county": "蜀山区",
+     "city": "合肥市",
+     "people_share": 0.058,
+     "cover": 1.0
+    },
+    {
+     "town": "稻香村街道",
+     "county": "蜀山区",
+     "city": "合肥市",
+     "people_share": 0.058,
+     "cover": 0.667
+    },
+    {
+     "town": "荷叶地街道",
+     "county": "蜀山区",
+     "city": "合肥市",
+     "people_share": 0.044,
+     "cover": 0.421
+    },
+    {
+     "town": "三孝口街道",
+     "county": "庐阳区",
+     "city": "合肥市",
+     "people_share": 0.038,
+     "cover": 0.333
+    }
+   ],
+   "cities": [
+    {
+     "name": "Hefei",
+     "admin": "Anhui",
+     "pop": 4216940
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f0cdc3",
+     "border_px": 124
+    },
+    {
+     "key": "#e09a83",
+     "border_px": 115
+    },
+    {
+     "key": "#d67558",
+     "border_px": 102
+    },
+    {
+     "key": "#dca492",
+     "border_px": 67
+    }
+   ],
+   "text_px": 0,
+   "n": 3,
+   "thumb": {
+    "x0": 7346,
+    "y0": 3548,
+    "k": 4.0,
+    "w": 352,
+    "h": 352
+   }
+  },
+  {
+   "key": "#d67558",
+   "color": "#d67558",
+   "lon": 117.2809,
+   "lat": 31.8312,
+   "bbox": [
+    7393,
+    3588,
+    7399,
+    3595
+   ],
+   "area_px": 45,
+   "people": 1329443,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Baohe",
+     "local": "包河区",
+     "prefecture": "Hefei",
+     "prefecture_local": "合肥市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.654,
+     "area_share": 0.711,
+     "cover": 0.743
+    },
+    {
+     "name": "Yaohai",
+     "local": "瑶海区",
+     "prefecture": "Hefei",
+     "prefecture_local": "合肥市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.259,
+     "area_share": 0.156,
+     "cover": 0.282
+    },
+    {
+     "name": "Shushan",
+     "local": "蜀山区",
+     "prefecture": "Hefei",
+     "prefecture_local": "合肥市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.049,
+     "area_share": 0.111,
+     "cover": 0.049
+    },
+    {
+     "name": "Luyang",
+     "local": "庐阳区",
+     "prefecture": "Hefei",
+     "prefecture_local": "合肥市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.037,
+     "area_share": 0.022,
+     "cover": 0.048
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Anhui",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.021
+    },
+    {
+     "level": "prefecture",
+     "name": "Hefei",
+     "local": "合肥市",
+     "province": "Anhui",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.149
+    }
+   ],
+   "towns": [
+    {
+     "town": "望湖街道",
+     "county": "包河区",
+     "city": "合肥市",
+     "people_share": 0.245,
+     "cover": 0.995
+    },
+    {
+     "town": "常青街道",
+     "county": "包河区",
+     "city": "合肥市",
+     "people_share": 0.198,
+     "cover": 1.0
+    },
+    {
+     "town": "芜湖路街道",
+     "county": "包河区",
+     "city": "合肥市",
+     "people_share": 0.112,
+     "cover": 0.857
+    },
+    {
+     "town": "包公街道",
+     "county": "包河区",
+     "city": "合肥市",
+     "people_share": 0.093,
+     "cover": 1.0
+    },
+    {
+     "town": "明光路街道",
+     "county": "瑶海区",
+     "city": "合肥市",
+     "people_share": 0.074,
+     "cover": 1.0
+    },
+    {
+     "town": "大通路街道",
+     "county": "瑶海区",
+     "city": "合肥市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "逍遥津街道",
+     "county": "庐阳区",
+     "city": "合肥市",
+     "people_share": 0.037,
+     "cover": 0.333
+    },
+    {
+     "town": "和平路街道",
+     "county": "瑶海区",
+     "city": "合肥市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "三里街街道",
+     "county": "瑶海区",
+     "city": "合肥市",
+     "people_share": 0.037,
+     "cover": 0.5
+    },
+    {
+     "town": "城东街道",
+     "county": "瑶海区",
+     "city": "合肥市",
+     "people_share": 0.037,
+     "cover": 0.882
+    },
+    {
+     "town": "七里站街道",
+     "county": "瑶海区",
+     "city": "合肥市",
+     "people_share": 0.037,
+     "cover": 0.789
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#d69677",
+     "border_px": 102
+    },
+    {
+     "key": "#eba792",
+     "border_px": 87
+    },
+    {
+     "key": "#edae95",
+     "border_px": 56
+    },
+    {
+     "key": "#dca492",
+     "border_px": 55
+    },
+    {
+     "key": "#e09a83",
+     "border_px": 52
+    }
+   ],
+   "text_px": 0,
+   "n": 4,
+   "thumb": {
+    "x0": 7353,
+    "y0": 3548,
+    "k": 4.0,
+    "w": 344,
+    "h": 348
+   }
+  },
+  {
+   "key": "#eba792",
+   "color": "#eba792",
+   "lon": 117.3425,
+   "lat": 31.7643,
+   "bbox": [
+    7396,
+    3588,
+    7410,
+    3610
+   ],
+   "area_px": 236,
+   "people": 340369,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Baohe",
+     "local": "包河区",
+     "prefecture": "Hefei",
+     "prefecture_local": "合肥市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.775,
+     "area_share": 0.797,
+     "cover": 0.225
+    },
+    {
+     "name": "Feidong",
+     "local": "肥东县",
+     "prefecture": "Hefei",
+     "prefecture_local": "合肥市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.145,
+     "area_share": 0.178,
+     "cover": 0.06
+    },
+    {
+     "name": "Yaohai",
+     "local": "瑶海区",
+     "prefecture": "Hefei",
+     "prefecture_local": "合肥市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.077,
+     "area_share": 0.017,
+     "cover": 0.022
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Anhui",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.005
+    },
+    {
+     "level": "prefecture",
+     "name": "Hefei",
+     "local": "合肥市",
+     "province": "Anhui",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.038
+    }
+   ],
+   "towns": [
+    {
+     "town": "骆岗街道",
+     "county": "包河区",
+     "city": "合肥市",
+     "people_share": 0.2,
+     "cover": 0.977
+    },
+    {
+     "town": "烟墩街道",
+     "county": "包河区",
+     "city": "合肥市",
+     "people_share": 0.161,
+     "cover": 0.971
+    },
+    {
+     "town": "淝河镇",
+     "county": "包河区",
+     "city": "合肥市",
+     "people_share": 0.16,
+     "cover": 0.768
+    },
+    {
+     "town": "义城街道",
+     "county": "包河区",
+     "city": "合肥市",
+     "people_share": 0.151,
+     "cover": 0.997
+    },
+    {
+     "town": "撮镇镇",
+     "county": "肥东县",
+     "city": "合肥市",
+     "people_share": 0.123,
+     "cover": 0.452
+    },
+    {
+     "town": "大兴镇",
+     "county": "瑶海区",
+     "city": "合肥市",
+     "people_share": 0.077,
+     "cover": 0.286
+    },
+    {
+     "town": "大圩镇",
+     "county": "包河区",
+     "city": "合肥市",
+     "people_share": 0.058,
+     "cover": 1.0
+    },
+    {
+     "town": "滨湖世纪社区",
+     "county": "包河区",
+     "city": "合肥市",
+     "people_share": 0.039,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#dca492",
+     "border_px": 176
+    },
+    {
+     "key": "#f6c9bc",
+     "border_px": 173
+    },
+    {
+     "key": "#edae95",
+     "border_px": 147
+    },
+    {
+     "key": "#f7cdc1",
+     "border_px": 102
+    },
+    {
+     "key": "#f3bdad",
+     "border_px": 92
+    },
+    {
+     "key": "#d67558",
+     "border_px": 87
+    }
+   ],
+   "text_px": 0,
+   "n": 5,
+   "thumb": {
+    "x0": 7356,
+    "y0": 3548,
+    "k": 4.0,
+    "w": 376,
+    "h": 408
+   }
+  },
+  {
+   "key": "#dca492",
+   "color": "#dca492",
+   "lon": 117.178,
+   "lat": 31.7342,
+   "bbox": [
+    7382,
+    3597,
+    7396,
+    3612
+   ],
+   "area_px": 204,
+   "people": 546801,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Shushan",
+     "local": "蜀山区",
+     "prefecture": "Hefei",
+     "prefecture_local": "合肥市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.601,
+     "area_share": 0.324,
+     "cover": 0.243
+    },
+    {
+     "name": "Feixi",
+     "local": "肥西县",
+     "prefecture": "Hefei",
+     "prefecture_local": "合肥市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.393,
+     "area_share": 0.662,
+     "cover": 0.287
+    },
+    {
+     "name": "Baohe",
+     "local": "包河区",
+     "prefecture": "Hefei",
+     "prefecture_local": "合肥市",
+     "province": "安徽省",
+     "country": "China",
+     "people_share": 0.006,
+     "area_share": 0.015,
+     "cover": 0.003
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Anhui",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.009
+    },
+    {
+     "level": "prefecture",
+     "name": "Hefei",
+     "local": "合肥市",
+     "province": "Anhui",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.061
+    }
+   ],
+   "towns": [
+    {
+     "town": "上派镇",
+     "county": "肥西县",
+     "city": "合肥市",
+     "people_share": 0.232,
+     "cover": 0.986
+    },
+    {
+     "town": "莲花社区",
+     "county": "蜀山区",
+     "city": "合肥市",
+     "people_share": 0.196,
+     "cover": 1.0
+    },
+    {
+     "town": "海恒社区",
+     "county": "蜀山区",
+     "city": "合肥市",
+     "people_share": 0.177,
+     "cover": 0.983
+    },
+    {
+     "town": "桃花工业园",
+     "county": "肥西县",
+     "city": "合肥市",
+     "people_share": 0.103,
+     "cover": 1.0
+    },
+    {
+     "town": "临湖社区管理管委会",
+     "county": "蜀山区",
+     "city": "合肥市",
+     "people_share": 0.082,
+     "cover": 1.0
+    },
+    {
+     "town": "锦绣社区",
+     "county": "蜀山区",
+     "city": "合肥市",
+     "people_share": 0.081,
+     "cover": 1.0
+    },
+    {
+     "town": "桃花镇",
+     "county": "肥西县",
+     "city": "合肥市",
+     "people_share": 0.056,
+     "cover": 0.41
+    },
+    {
+     "town": "芙蓉社区",
+     "county": "蜀山区",
+     "city": "合肥市",
+     "people_share": 0.041,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f0cdc3",
+     "border_px": 197
+    },
+    {
+     "key": "#eba792",
+     "border_px": 176
+    },
+    {
+     "key": "#f7cdc1",
+     "border_px": 112
+    },
+    {
+     "key": "#eed7d1",
+     "border_px": 93,
+     "name": "Shucheng"
+    },
+    {
+     "key": "#d69677",
+     "border_px": 67
+    },
+    {
+     "key": "#d67558",
+     "border_px": 55
+    }
+   ],
+   "text_px": 0,
+   "n": 6,
+   "thumb": {
+    "x0": 7342,
+    "y0": 3557,
+    "k": 4.0,
+    "w": 376,
+    "h": 380
+   }
+  }
+ ]
+}

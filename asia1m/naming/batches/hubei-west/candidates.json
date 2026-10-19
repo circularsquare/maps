@@ -1,0 +1,508 @@
+{
+ "batch": "hubei-west",
+ "regions": [
+  {
+   "n": 1,
+   "key": "#f7dcd3",
+   "settled": null,
+   "summary": "Han River uplands around Yunyang, Yunxi and Baihe, between Shiyan and the Shaanxi border.",
+   "candidates": [
+    {
+     "name": "Yunyang",
+     "local": "郧阳",
+     "origin": "county",
+     "meaning": "Yun (the old Yun county, 郧乡) plus yang, the sunny side; the Ming prefecture (1476) of the whole Han-river highland was named Yunyang.",
+     "fit": "Yun district (now Yunyang district) holds 44% of the region's people with 97% of its own; Yunxi (17%) was cut from Yun in 1476 and, like Fang, Zhushan and Zhuxi, belonged to the Ming Yunyang prefecture.",
+     "recognisability": "Current district name (Yunyang since 2014); Shiyan is also called 古称郧阳 on zh-wiki; 929 hits with 湖北.",
+     "rating": 5,
+     "status": "suggested"
+    }
+   ],
+   "notes": "Yunxi (17%) and Danjiangkou (13%) are smaller; Danjiang is already a neighbour's name."
+  },
+  {
+   "n": 2,
+   "key": "#f3cabb",
+   "settled": null,
+   "summary": "Shiyan's two urban districts, Zhangwan and Maojian (3.4M city, built around the Dongfeng car works).",
+   "candidates": [
+    {
+     "name": "Shiyan",
+     "local": "十堰",
+     "origin": "city",
+     "meaning": "\"Ten weirs\": Ming-era dams built on local streams to irrigate fields, which gave the town its name.",
+     "fit": "Zhangwan (54%) and Maojian (46%) are the whole of Shiyan's urban core; it is the city's central region.",
+     "recognisability": "Prefecture-level city.",
+     "source_url": "https://zh.wikipedia.org/wiki/十堰市",
+     "source_note": "十堰作为地理名称来由…筑起十个堰",
+     "rating": 5,
+     "status": "suggested"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 3,
+   "key": "#f6d1c4",
+   "settled": null,
+   "summary": "Han River plain and Wudang foothills: Gucheng, Laohekou and the Wudang mountain area of Danjiangkou.",
+   "candidates": [
+    {
+     "name": "Wudang",
+     "local": "武当",
+     "origin": "mountain",
+     "meaning": "Wudang Mountain, the Daoist holy mountain; the name is traditionally explained as only the god Xuanwu being able to match (当) it.",
+     "fit": "The mountain lies in Danjiangkou, and the Wudangshan special zone (4% of the region's people, 91% of the zone) is inside; Danjiangkou holds 26% of the people, Gucheng 46% and Laohekou 28%. A landscape name for the heart of the area, not the whole.",
+     "recognisability": "Own zh-wiki article, 761 hits with 湖北, top ones about this mountain; World Heritage site.",
+     "source_url": "https://zh.wikipedia.org/wiki/武当山",
+     "source_note": "位於湖北省西北部丹江口市境內，武当山旅游经济特区即依此山而定名",
+     "rating": 5,
+     "status": "suggested"
+    },
+    {
+     "name": "Gucheng",
+     "local": "谷城",
+     "origin": "county",
+     "meaning": "Gu city: after the ancient state of Gu (谷国), whose ruler's mound and city lay on Gu Mountain northwest of the town.",
+     "fit": "Gucheng county holds 46% of the region's people (82% of the county).",
+     "recognisability": "Current county name.",
+     "rating": 4,
+     "status": "suggested"
+    },
+    {
+     "name": "Laohekou",
+     "local": "老河口",
+     "origin": "city",
+     "meaning": "\"Old river mouth\": the mouth of the old Han channel, a 1937 market-town name replacing the older Guanghua.",
+     "fit": "28% of the region's people; a city of 470k.",
+     "recognisability": "Smaller share than Gucheng, and a trade-town name; Wudang covers the area's identity better.",
+     "status": "rejected"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 4,
+   "key": "#edcbbe",
+   "settled": null,
+   "summary": "Plains north and west of the Xiangyang city core: Xiangzhou district, parts of Zaoyang and Fancheng.",
+   "candidates": [
+    {
+     "name": "Xiangzhou",
+     "local": "襄州",
+     "origin": "county",
+     "meaning": "Xiang prefecture: the Sui-Song prefecture (583-1118) seated at Xiangyang, and the name of today's district around it.",
+     "fit": "Xiangzhou district holds 51% of the region's people (70% of the district); the other 20% each are Zaoyang and Fancheng.",
+     "recognisability": "Current district name (襄阳区 until 2010).",
+     "rating": 4,
+     "status": "suggested"
+    }
+   ],
+   "notes": "Not the central Xiangyang region (see 8). Xiangzhou (襄州) and Xiangyang (襄阳) are different characters."
+  },
+  {
+   "n": 5,
+   "key": "#f4e3d6",
+   "settled": null,
+   "summary": "The Du River highland: Zhushan, Fang and Zhuxi counties, the south of Shiyan prefecture.",
+   "candidates": [
+    {
+     "name": "Zhushan",
+     "local": "竹山",
+     "origin": "county",
+     "meaning": "Bamboo mountain; in the Three Kingdoms the area was called Shangyong.",
+     "fit": "Largest of the three counties (37% of the region's people, 99.9% of the county).",
+     "recognisability": "Current county name.",
+     "rating": 4,
+     "status": "suggested"
+    },
+    {
+     "name": "Fang",
+     "local": "房",
+     "origin": "county",
+     "meaning": "\"Room\": one explanation is that the ring of mountains forms the walls and the sky the roof. The county was Fangling in Qin-Tang times.",
+     "fit": "Fang county holds 31% of the people (88% of the county); the Tang prefecture Fangzhou was seated here.",
+     "recognisability": "Current county name; one character, so Fangxian in English.",
+     "rating": 3,
+     "status": "suggested"
+    },
+    {
+     "name": "Duhe",
+     "local": "堵河",
+     "origin": "river",
+     "meaning": "Du River, the biggest tributary of the Han; the character means to block or dam, origin of the name not given.",
+     "fit": "The river rises in Zhuxi and flows through Zhushan and Fang before joining the Han, so it runs through all three counties.",
+     "recognisability": "Own zh-wiki article, 177 hits with 湖北, mostly reservoirs and counties of this area; known mainly locally.",
+     "source_url": "https://zh.wikipedia.org/wiki/堵河",
+     "source_note": "汉江最大支流堵河位于该县境内 (竹山县)",
+     "rating": 3,
+     "status": "suggested"
+    },
+    {
+     "name": "Zhuxi",
+     "local": "竹溪",
+     "origin": "county",
+     "meaning": "Bamboo stream.",
+     "fit": "28% of the region's people.",
+     "recognisability": "Smallest of the three counties and Zhushan carries the same bamboo name.",
+     "status": "rejected"
+    }
+   ],
+   "notes": "Shangyong (上庸, ancient Yong state and Three Kingdoms commandery at Zhushan) was checked: 41 hits with 湖北, no article of its own, so left out."
+  },
+  {
+   "n": 6,
+   "key": "#eaa790",
+   "settled": null,
+   "summary": "The dense old centre of Fancheng, the north bank of the Han opposite old Xiangyang.",
+   "candidates": [
+    {
+     "name": "Fancheng",
+     "local": "樊城",
+     "origin": "city",
+     "meaning": "Fan city: the walled town on the Han's north bank, historically paired with Xiang city across the river as the twin cities Xiang-Fan.",
+     "fit": "Fancheng district holds 80% of the region's people (62% of the district); it is the commercial half of Xiangyang.",
+     "recognisability": "Current district name and half of the old name Xiangfan.",
+     "rating": 5,
+     "status": "suggested"
+    }
+   ],
+   "notes": "Xiangyang goes to region 8 because it holds the walled old city (Xiangcheng, Pangong, Longzhong) and the simplemaps city point. Region 6 is the densest core, though, so Anita may prefer Xiangyang here and Fancheng for 8; both fit."
+  },
+  {
+   "n": 7,
+   "key": "#f0d1cd",
+   "settled": null,
+   "summary": "Zaoyang city and the Sui county uplands between the Tongbai and Dahong mountains.",
+   "candidates": [
+    {
+     "name": "Zaoyang",
+     "local": "枣阳",
+     "origin": "city",
+     "meaning": "Jujube sun: from Zaoyang village; the county took its name from it in the Sui dynasty (601).",
+     "fit": "Zaoyang holds 65% of the region's people (73% of the city); it is a 1M-person county-level city, home of the Han emperor Liu Xiu's ancestral area.",
+     "recognisability": "Current county-level city.",
+     "rating": 5,
+     "status": "suggested"
+    },
+    {
+     "name": "Sui",
+     "local": "随",
+     "origin": "county",
+     "meaning": "The old state of Sui (Zeng), whose Marquis Yi tomb is at Suizhou.",
+     "fit": "35% of the region's people (54% of Sui county).",
+     "recognisability": "Name belongs to Suizhou city, which sits outside this region; the Sui county seat and Leigudun tomb are elsewhere.",
+     "status": "rejected"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 8,
+   "key": "#ebc5b9",
+   "settled": null,
+   "summary": "Old Xiangyang: Xiangcheng, Yuliangzhou island, Dongjin and Yicheng on the Han's south bank.",
+   "candidates": [
+    {
+     "name": "Xiangyang",
+     "local": "襄阳",
+     "origin": "city",
+     "meaning": "Xiang plus yang (sunny side); the county has carried the name since 202 BC and the city was Xiangfan until 2010.",
+     "fit": "Holds the walled old city (Xiangcheng district: Pangong, Tanxi and Longzhong streets) and the simplemaps point for the 5.3M prefecture; Xiangcheng is 31% of the region's people.",
+     "recognisability": "Prefecture-level city, centre of the central region.",
+     "rating": 5,
+     "status": "suggested"
+    },
+    {
+     "name": "Yicheng",
+     "local": "宜城",
+     "origin": "county",
+     "meaning": "\"Suitable city\": renamed from Yan (鄢), the Chu capital region, in 192 BC.",
+     "fit": "40% of the region's people (73% of Yicheng).",
+     "recognisability": "The central region takes the city name; Yicheng is the largest single unit though and would be the fallback.",
+     "status": "rejected"
+    }
+   ],
+   "notes": "Yicheng's old name Yan (鄢, Chu capital Yingdu region) was not checked for hits."
+  },
+  {
+   "n": 9,
+   "key": "#f0dcd0",
+   "settled": null,
+   "summary": "Jing Mountain country: Nanzhang and Baokang, the Han's southwest highlands.",
+   "candidates": [
+    {
+     "name": "Nanzhang",
+     "local": "南漳",
+     "origin": "county",
+     "meaning": "South of the Zhang River, named in the Sui dynasty (598).",
+     "fit": "Nanzhang holds 49% of the region's people (99.7% of the county).",
+     "recognisability": "Current county name.",
+     "rating": 4,
+     "status": "suggested"
+    },
+    {
+     "name": "Jingshan",
+     "local": "荆山",
+     "origin": "mountain",
+     "meaning": "Jing Mountain (Mount Jing), the 150 km range where the Chu people began; the Ju, Zhang and Man rivers rise here.",
+     "fit": "The range covers Nanzhang and Baokang, which are 73% of the region's people.",
+     "recognisability": "Own zh-wiki article, 148 hits with 湖北, top ones about this range and early Chu. Shares pinyin with Jingshan county (京山, different characters).",
+     "source_url": "https://zh.wikipedia.org/wiki/荊山_(山脈)",
+     "source_note": "荆山位于中国湖北省西部,长约150公里；沮河、漳河以及蛮河发源于此山",
+     "rating": 4,
+     "status": "suggested"
+    },
+    {
+     "name": "Baokang",
+     "local": "保康",
+     "origin": "county",
+     "meaning": "\"Protect and keep well\": linked to a Song garrison name and read as wishing the people peace and comfort.",
+     "fit": "24% of the region's people.",
+     "recognisability": "Smaller than Nanzhang, and a keep-the-people-safe style name.",
+     "status": "rejected"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 10,
+   "key": "#ead9d2",
+   "settled": null,
+   "summary": "The Three Gorges highlands: Zigui, rural Yiling, Yuan'an, Xingshan and most of Shennongjia.",
+   "candidates": [
+    {
+     "name": "Zigui",
+     "local": "秭归",
+     "origin": "county",
+     "meaning": "By tradition from Qu Yuan's elder sister coming home (归) to urge him; the poet's birthplace and an old Kui state.",
+     "fit": "Zigui holds 29% of the region's people (97% of the county); the Tang-Qing prefecture Guizhou (归州) was seated here.",
+     "recognisability": "Current county name.",
+     "rating": 4,
+     "status": "suggested"
+    },
+    {
+     "name": "Sanxia",
+     "local": "三峡",
+     "origin": "river",
+     "meaning": "The Three Gorges of the Yangtze: Qutang, Wu and Xiling; the Xiling Gorge, longest of the three, and the Three Gorges Dam lie in this region.",
+     "fit": "Xiling Gorge runs between Zigui and Yiling, and the dam site Sandouping is in rural Yiling.",
+     "recognisability": "Own zh-wiki article, 245 hits with 湖北, all about this place or its dam.",
+     "source_url": "https://zh.wikipedia.org/wiki/长江三峡",
+     "source_note": "西陵峡 ... 西起湖北省秭归县香溪口，东至宜昌市夷陵區南津关",
+     "rating": 4,
+     "status": "suggested"
+    },
+    {
+     "name": "Yiling",
+     "local": "夷陵",
+     "origin": "county",
+     "meaning": "\"Yi mound\": the Chu kings' burial mounds; the old name of Yichang.",
+     "fit": "34% of the region's people (63% of the rural district).",
+     "recognisability": "Old Yiling's seats lay in the Yichang city region (11), so the name fits there better.",
+     "status": "rejected"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 11,
+   "key": "#dc9c90",
+   "settled": null,
+   "summary": "Yichang city: Xiling, Wujiagang and the Xiaoxita part of Yiling (4M prefecture).",
+   "candidates": [
+    {
+     "name": "Yichang",
+     "local": "宜昌",
+     "origin": "city",
+     "meaning": "\"Suited to prosper\": the name from a Jin-era county, applied to the Qing prefecture seat in 1735.",
+     "fit": "Xiling (62%) and Wujiagang (24%) hold the urban core; it is the city's central region.",
+     "recognisability": "Prefecture-level city; simplemaps shows a 4M point called Xiaoxita here.",
+     "rating": 5,
+     "status": "suggested"
+    },
+    {
+     "name": "Xiling",
+     "local": "西陵",
+     "origin": "county",
+     "meaning": "\"West mound\": after the Xiling Gorge and mountain.",
+     "fit": "62% of the region's people.",
+     "recognisability": "The central region takes the city name.",
+     "status": "rejected"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 12,
+   "key": "#dcead3",
+   "settled": null,
+   "summary": "Badong and Jianshi, the Wu Gorge side of Enshi prefecture.",
+   "candidates": [
+    {
+     "name": "Badong",
+     "local": "巴东",
+     "origin": "county",
+     "meaning": "\"East of Ba\": the Ba lands lay to the west in Chongqing and eastern Sichuan.",
+     "fit": "Badong holds 39% of the region's people (99% of the county); the Wu Gorge's eastern end is here.",
+     "recognisability": "Current county name.",
+     "rating": 4,
+     "status": "suggested"
+    },
+    {
+     "name": "Jianshi",
+     "local": "建始",
+     "origin": "county",
+     "meaning": "\"Beginning of founding\": a county since 265; the sources do not explain the name.",
+     "fit": "Jianshi holds 37% of the region's people (99.9% of the county); Tang Yezhou was seated here.",
+     "recognisability": "Current county name.",
+     "rating": 4,
+     "status": "suggested"
+    },
+    {
+     "name": "Wuxia",
+     "local": "巫峡",
+     "origin": "river",
+     "meaning": "The Wu Gorge, middle of the Three Gorges, from Wushan in Chongqing to Guandukou in Badong.",
+     "fit": "Its eastern 45 km lies in Badong.",
+     "recognisability": "Own zh-wiki article; named in all Three Gorges coverage.",
+     "source_url": "https://zh.wikipedia.org/wiki/巫峡",
+     "source_note": "巫峡西起重庆市巫山县大宁河口，东至湖北省巴东县官渡口",
+     "rating": 3,
+     "status": "suggested"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 13,
+   "key": "#e7beb7",
+   "settled": null,
+   "summary": "Dangyang and Zhijiang on the Yangtze's northern bank at the edge of the Jianghan plain.",
+   "candidates": [
+    {
+     "name": "Dangyang",
+     "local": "当阳",
+     "origin": "county",
+     "meaning": "Qin-era county name (278 BC); the name is literally \"facing the sun\". Site of Changban slope and Mai city.",
+     "fit": "Dangyang holds 40% of the region's people (75% of the county).",
+     "recognisability": "Current county-level city.",
+     "rating": 4,
+     "status": "suggested"
+    },
+    {
+     "name": "Zhijiang",
+     "local": "枝江",
+     "origin": "county",
+     "meaning": "\"Branch river\": the Yangtze divides like the limbs of a tree here.",
+     "fit": "Zhijiang holds 44% of the region's people (74% of the county).",
+     "recognisability": "Current county-level city.",
+     "rating": 4,
+     "status": "suggested"
+    }
+   ],
+   "notes": "Dangyang and Zhijiang are of similar size; no landscape name stands for both."
+  },
+  {
+   "n": 14,
+   "key": "#deedd0",
+   "settled": null,
+   "summary": "Qing River lower valley: Changyang, Yidu, Dianjun and Wufeng, south of the Yangtze.",
+   "candidates": [
+    {
+     "name": "Qingjiang",
+     "local": "清江",
+     "origin": "river",
+     "meaning": "\"Pure river\": the Qing River, a right bank tributary of the Yangtze; its valley is the homeland of Lord Lin of the Ba.",
+     "fit": "Runs through Changyang and meets the Yangtze at Yidu, the two largest units here (57%).",
+     "recognisability": "Own zh-wiki article, 822 hits with 湖北, top ones about this valley; English article Qing River.",
+     "source_url": "https://en.wikipedia.org/wiki/Qing_River",
+     "source_note": "The Qing River (Chinese: 清江) lit. 'Pure River'",
+     "rating": 4,
+     "status": "suggested"
+    },
+    {
+     "name": "Changyang",
+     "local": "长阳",
+     "origin": "county",
+     "meaning": "The county of Changyang Tujia Autonomous County; the name's origin is not given in the sources. Site of the Palaeolithic \"Changyang Man\" (185,000 years).",
+     "fit": "Holds 31% of the region's people (99.5% of the county).",
+     "recognisability": "Current county name.",
+     "rating": 4,
+     "status": "suggested"
+    },
+    {
+     "name": "Yidu",
+     "local": "宜都",
+     "origin": "city",
+     "meaning": "\"Fit to be a capital\": named by Liu Bei in 210 for a commandery.",
+     "fit": "Yidu holds 26% of the region's people (88% of the city); the Qing River joins the Yangtze here.",
+     "recognisability": "Current county-level city.",
+     "rating": 3,
+     "status": "suggested"
+    }
+   ],
+   "notes": "Qingjiang is used here and not in 16 (Enshi), though the river also rises near there."
+  },
+  {
+   "n": 15,
+   "key": "#c8e5c5",
+   "settled": null,
+   "summary": "Lichuan and the Chongqing county of Shizhu, southwest of the Qiyao mountains.",
+   "candidates": [
+    {
+     "name": "Lichuan",
+     "local": "利川",
+     "origin": "city",
+     "meaning": "Literally \"beneficial river\"; county since 1735, the sources do not explain the name. Home of the folk song Longchuan diao.",
+     "fit": "Lichuan holds 59% of the region's people (77% of the city).",
+     "recognisability": "Current county-level city.",
+     "rating": 4,
+     "status": "suggested"
+    },
+    {
+     "name": "Shizhu",
+     "local": "石柱",
+     "origin": "county",
+     "meaning": "Literally \"stone pillar\"; Shizhu Tujia Autonomous County in Chongqing, once a Tujia chieftaincy (Shizhu xuanfusi, 1375-1620).",
+     "fit": "Shizhu holds 40% of the region's people (82% of the county).",
+     "recognisability": "Current county name; old Qing spelling 石砫.",
+     "rating": 4,
+     "status": "suggested"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 16,
+   "key": "#bee5ba",
+   "settled": null,
+   "summary": "Enshi city and the counties of Xuan'en and Xianfeng, the seat of Enshi Tujia and Miao Autonomous Prefecture.",
+   "candidates": [
+    {
+     "name": "Shizhou",
+     "local": "施州",
+     "origin": "prefecture",
+     "meaning": "Shi prefecture: from the ancient Shi state; the Tang-Song prefecture (618-1389) seated at Enshi, later the Shizhou garrison.",
+     "fit": "Seat at Enshi city (77% of the region's people, 82% of the city); the Tang prefecture covered the area from Jianshi west.",
+     "recognisability": "Own zh-wiki article, 581 hits with 湖北, top ones about this place.",
+     "source_url": "https://zh.wikipedia.org/wiki/施州",
+     "source_note": "施州...治沙渠县（隋改清江县，今湖北恩施市）",
+     "rating": 4,
+     "status": "suggested"
+    },
+    {
+     "name": "Enshi",
+     "local": "恩施",
+     "origin": "city",
+     "meaning": "\"Bestow grace\": coined in 1728 when the Qing abolished the native chieftaincies, from Shi plus the emperor's favour (恩).",
+     "fit": "Enshi city holds 77% of the region's people; it is the prefecture seat.",
+     "recognisability": "Current county-level city and prefecture name.",
+     "rating": 4,
+     "status": "suggested"
+    }
+   ],
+   "notes": "Enshi's name comes from the Qing taking over from the Tujia and Miao chieftains; Shizhou is older and neutral, so ranked first. Xuan'en (14%) and Xianfeng (9%) have similar grace-style names (宣恩 'proclaim grace', 咸丰 an emperor's reign name)."
+  }
+ ]
+}

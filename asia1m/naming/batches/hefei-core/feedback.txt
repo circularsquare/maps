@@ -1,0 +1,7 @@
+batch hefei-core
+1: pick Hefei
+2: pick Yaohai
+3: pick Shushan
+4: pick Baohe
+5: pick Binhu. Fits close enough. (Round one: Luogang felt small and shadowed by Guangzhou's Luogang; asked for a lake name.)
+6: pick Shangpai

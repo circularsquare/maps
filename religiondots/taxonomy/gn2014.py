@@ -19,8 +19,23 @@ REVIEW = {
         "and lost the split. **62.5% of these people are in N'Zérékoré**, where the "
         "Catholic, Protestant (the CMA-founded Église Protestante Évangélique) and "
         "Pentecostal churches of the Kpelle, Kissi, Toma and Mano peoples are; the rest is "
-        "mostly Conakry (4.8% of the capital) and Faranah (9.7%). Left at the parent rather "
-        "than guessed at.",
+        "mostly Conakry (4.8% of the capital) and Faranah (9.7%). NO LONGER DRAWN since "
+        "2026-10-16: gn_split.csv replaces it with three national shares (below) and this "
+        "cell is what they roll back to (COLUMNS).",
+    "Catholique":
+        "-> christianity.catholic, DERIVED. 462,376, 65% of Christians in every région. The "
+        "Afrobarometer's named Christians, rounds 5-9, are 64.8% Catholic (n=414, 57-75% by "
+        "round) and Pew 2010 gives 68%. N'Zérékoré's own named answers sit in the same range, "
+        "so the flat ratio costs little where most of the dots are.",
+    "Protestante ou évangélique":
+        "-> christianity.protestant, DERIVED. 213,406, 30%: mostly the Église Protestante "
+        "Évangélique, which the CMA founded; the survey's `Evangelical` box is 24.3% of named "
+        "Christians and Pew 2010's Protestant 31%. On `.protestant` with Mali and Burkina Faso "
+        "rather than `.evangelical` with Côte d'Ivoire; that node question is Anita's and is "
+        "parked (unspecified_splits/westafrica.md §5).",
+    "Autre chrétienne":
+        "-> christianity.other, DERIVED. 35,568, 5%: Orthodox, Witnesses, New Apostolic and "
+        "the rest of the survey's small boxes.",
     "Musulmane":
         "-> islam, no branch. 9,358,718 people, 89.10%. Overwhelmingly Sunni, but the "
         "census asks neither school nor order, so `islam.sunni` would be an inference.",
@@ -48,10 +63,16 @@ MAP = {
     "Chrétienne": "christianity",
     "Animiste": "indigenous.african",
     "Autres religions": "other.gn",
+    # 2026-10-16, sources/wa_christian.py: gn_split.csv replaces `Chrétienne`. `derived`.
+    "Catholique": "christianity.catholic",
+    "Protestante ou évangélique": "christianity.protestant",
+    "Autre chrétienne": "christianity.other",
 }
 
-# spec §7a-i-1: every row is measured at the node it is drawn on.
+# spec §7a-i-1: measured rows at their own node; the three derived Christian rows roll back
+# to the `Chrétienne` cell the census counted per région.
 COLUMNS = {v: v for v in MAP.values()}
+COLUMNS["Chrétienne"] = "christianity"
 
 
 def _key(cat):

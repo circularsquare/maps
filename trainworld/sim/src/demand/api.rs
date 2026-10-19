@@ -1925,19 +1925,21 @@ mod tests {
         let (b_full, _, rail_full, _, lb_full) = run(true, 12.0, 64.0);
         assert_eq!(lb_full, 0.0);
         assert_eq!((b_full, rail_full), (b_full_off, rail_full_off));
-        // cut to 4 trains of 8 cars (a twelfth of the room): crowding alone takes some riders
-        // off; the wait for full trains takes visibly more
-        let (b_off, a_off, rail_off, _, lb_off) = run(false, 4.0, 8.0);
-        let (b_on, a_on, rail_on, la_on, lb_on) = run(true, 4.0, 8.0);
+        // cut to 6 trains of 24 cars (under a fifth of the room): crowding alone takes some
+        // riders off; the wait for full trains takes visibly more. (Cut harder, T-710's steep
+        // penalty past 70% of crush empties line b in every crowded round by itself, and what is
+        // left is the free-flow pass's quarter of the average, which no wait can move.)
+        let (b_off, a_off, rail_off, _, lb_off) = run(false, 6.0, 24.0);
+        let (b_on, a_on, rail_on, la_on, lb_on) = run(true, 6.0, 24.0);
+        println!("line b full {b_full:.0}; cut, crowding only {b_off:.0}, with the wait {b_on:.0} riders (worst extra wait {lb_on:.1} min); line a {a_off:.0} -> {a_on:.0}; rail {rail_off:.0} -> {rail_on:.0}");
         assert_eq!(lb_off, 0.0, "no waits priced with the switch off");
         assert!(lb_on > 5.0, "line b's riders wait {lb_on} minutes more at worst");
         assert_eq!(la_on, 0.0, "line a has room: {la_on}");
         assert!(b_off < b_full, "crowding alone: {b_off:.0} of {b_full:.0}");
-        // 0.8% fewer here (crowding alone has taken most of line b's riders already)
-        assert!(b_on < 0.995 * b_off, "line b keeps {b_on:.0} of {b_off:.0} riders");
+        // 7.7% fewer here
+        assert!(b_on < 0.97 * b_off, "line b keeps {b_on:.0} of {b_off:.0} riders");
         // line a loses the riders who changed from b; the rest drive
         assert!(rail_on < rail_off, "and some drive: rail {rail_on:.0} against {rail_off:.0}");
-        println!("line b full {b_full:.0}; cut, crowding only {b_off:.0}, with the wait {b_on:.0} riders (worst extra wait {lb_on:.1} min); line a {a_off:.0} -> {a_on:.0}; rail {rail_off:.0} -> {rail_on:.0}");
     }
 
     /// T-188: `kernel::left_behind` on one line: riders within the trains' room wait nothing

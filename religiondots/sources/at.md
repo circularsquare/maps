@@ -323,3 +323,18 @@ Orthodox → the parent rather than `.canonical` matches `de2022` and `hu2022` a
 composition-driven, not an inconsistency with `ch2000`; Catholic → `.latin` is safe because
 the census prints Griechisch-katholisch separately; and excluding the non-response cell is
 what 39 of the 50 modules that face the question do.
+
+## 11. Muslims by branch, borrowed from Germany's MLD 2020, 2026-10-16 (session `c67d3c3c-islam`)
+
+Anita's call: borrow MLD 2020 Table 32's origin-region shares (research: `unspecified_splits/islam.md`).
+`sources/at_mld.py` reads Tabelle 15 (*Bevölkerung nach Religion, Alter und Staatsangehörigkeit*) from
+the national and all nine Land volumes on disk; `Islamisch` is the eighth printed column (0-based 7,
+after Israelitisch). The Länder sum to the national 338,988. Nationally: Austrian citizens 96,052,
+Türkei 123,028, Bosnia 64,628, Jugoslawien 21,594, Mazedonien 10,969, Kroatien 1,027, Slowenien 484,
+anderer Staat/unbekannt 20,224, the rest a few hundred. Türkei → MLD Türkei column; the five former
+Yugoslav citizenships → Südosteuropa; everyone else unsplit. Per Land shares in
+`data/normalized/at_mld.csv`, e.g. Vorarlberg 51.7% Sunni, 10.9% Alevi; Wien 31.5% Sunni (63,219 of
+its 121,149 Muslims unsplit). Nationally 42.1% Sunni, 6.7% Alevi, 1.3% Shia, 0.2% Ahmadi.
+`countries/at.py::_at_split_islam` writes `derived` rows with `roll=islam` (`at2001.COLUMNS`), so
+hiding inferred dots puts the census's Muslims back. `fill` added; note_public paragraph says the
+shares are borrowed from a German survey.

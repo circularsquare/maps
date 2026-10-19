@@ -114,6 +114,13 @@ MAP = {
     "Gereformeerd": "christianity.reformed.continental.gereformeerd",
     "PKN": "christianity.reformed.continental.pkn",
     "Islam": "islam",
+    # --- `Islam` divided for its Turkish- and Moroccan-origin Muslims, BORROWING Germany's MLD
+    # 2020 shares (sources/nl_mld.py, Anita 2026-10-16). `modelled`, like the survey rows they
+    # are carved from. Alevis on `alevism`, as in Germany, Austria and England.
+    "MLD 2020 (borrowed): Sunnitisch": "islam.sunni",
+    "MLD 2020 (borrowed): Schiitisch": "islam.shia",
+    "MLD 2020 (borrowed): Alevitisch": "alevism",
+    "MLD 2020 (borrowed): Ahmadi": "islam.ahmadiyya",
     "Joods": "judaism",
     "Hindoe": "hinduism",
     "Boeddhist": "buddhism",

@@ -78,6 +78,12 @@ def _do_counts():
     return df[["unit", "node", "count", "congregations", "tier"]]
 
 
+def _do_counts_split():
+    """`_do_counts` with Pew 2014's Pentecostal share drawn inside the survey's Evangelical
+    answer; latam_split.py, Anita 2026-10-16. The rows stay `modelled`."""
+    return _latam_split("do", _do_counts())
+
+
 ENTRY = {
     "do": dict(
         name="Dominican Republic",
@@ -141,10 +147,12 @@ ENTRY = {
             "**The level is 2019 and the population is 2022.** Dominican religious "
             "affiliation has been moving fast, so a round fielded today would very likely "
             "find fewer Catholics; this map says where they were seven years ago, on the "
-            "population the census counted three years later."),
+            "population the census counted three years later. 78% of the Evangelicals are "
+            "drawn as Pentecostal, the share of Protestants that Pew Research Center's 2014 "
+            "survey found in Pentecostal churches; the rest stay unnamed."),
         how="household survey, one round in 2019",
         grain="provinces, 337,000 people on average",
-        counts=_do_counts,
+        counts=_do_counts_split,
         units=None,
         unit_key=None,
         place=HERE / "data" / "geo" / "do" / "do_hexes.gpkg",

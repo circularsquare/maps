@@ -1,0 +1,3628 @@
+{
+ "name": "hunan-north",
+ "province": "Hunan",
+ "prefectures": [
+  "Changde",
+  "Yiyang",
+  "Yueyang",
+  "Loudi"
+ ],
+ "tiles": [
+  {
+   "tag": "1",
+   "x": 6648,
+   "y": 3621,
+   "w": 731,
+   "h": 737,
+   "scale": 2,
+   "regions": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18
+   ]
+  }
+ ],
+ "regions": [
+  {
+   "key": "#e8c7d3",
+   "color": "#e8c7d3",
+   "lon": 111.6475,
+   "lat": 29.7648,
+   "bbox": [
+    6901,
+    3865,
+    6976,
+    3909
+   ],
+   "area_px": 1852,
+   "people": 868677,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Li",
+     "local": "澧县",
+     "prefecture": "Changde",
+     "prefecture_local": "常德市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.851,
+     "area_share": 0.846,
+     "cover": 0.869
+    },
+    {
+     "name": "Linli",
+     "local": "临澧县",
+     "prefecture": "Changde",
+     "prefecture_local": "常德市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.107,
+     "area_share": 0.112,
+     "cover": 0.251
+    },
+    {
+     "name": "Jinshi",
+     "local": "津市市",
+     "prefecture": "Changde",
+     "prefecture_local": "常德市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.032,
+     "area_share": 0.021,
+     "cover": 0.135
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.998,
+     "cover": 0.013
+    },
+    {
+     "level": "prefecture",
+     "name": "Changde",
+     "local": "常德市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.998,
+     "cover": 0.158
+    }
+   ],
+   "towns": [
+    {
+     "town": "澧阳镇",
+     "county": "澧县",
+     "city": "常德市",
+     "people_share": 0.126,
+     "cover": 1.0
+    },
+    {
+     "town": "澧澹乡",
+     "county": "澧县",
+     "city": "常德市",
+     "people_share": 0.106,
+     "cover": 1.0
+    },
+    {
+     "town": "澧南镇",
+     "county": "澧县",
+     "city": "常德市",
+     "people_share": 0.057,
+     "cover": 1.0
+    },
+    {
+     "town": "澧东乡",
+     "county": "澧县",
+     "city": "常德市",
+     "people_share": 0.051,
+     "cover": 1.0
+    },
+    {
+     "town": "张公庙镇",
+     "county": "澧县",
+     "city": "常德市",
+     "people_share": 0.044,
+     "cover": 0.95
+    },
+    {
+     "town": "新安镇",
+     "county": "临澧县",
+     "city": "常德市",
+     "people_share": 0.034,
+     "cover": 0.885
+    },
+    {
+     "town": "中武乡",
+     "county": "澧县",
+     "city": "常德市",
+     "people_share": 0.032,
+     "cover": 1.0
+    },
+    {
+     "town": "涔南乡",
+     "county": "澧县",
+     "city": "常德市",
+     "people_share": 0.031,
+     "cover": 1.0
+    },
+    {
+     "town": "合口镇",
+     "county": "临澧县",
+     "city": "常德市",
+     "people_share": 0.031,
+     "cover": 0.981
+    },
+    {
+     "town": "大堰垱镇",
+     "county": "澧县",
+     "city": "常德市",
+     "people_share": 0.03,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f0cbd9",
+     "border_px": 935
+    },
+    {
+     "key": "#f0d8db",
+     "border_px": 908
+    },
+    {
+     "key": "#def0d5",
+     "border_px": 649
+    },
+    {
+     "key": "#f0c7ca",
+     "border_px": 166
+    }
+   ],
+   "text_px": 0,
+   "n": 1,
+   "thumb": {
+    "x0": 6861,
+    "y0": 3825,
+    "k": 2.0,
+    "w": 310,
+    "h": 248
+   }
+  },
+  {
+   "key": "#cbeed8",
+   "color": "#cbeed8",
+   "lon": 113.6118,
+   "lat": 29.6245,
+   "bbox": [
+    7077,
+    3821,
+    7156,
+    3926
+   ],
+   "area_px": 3599,
+   "people": 1055448,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Linxiang",
+     "local": "临湘市",
+     "prefecture": "Yueyang",
+     "prefecture_local": "岳阳市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.449,
+     "area_share": 0.43,
+     "cover": 0.994
+    },
+    {
+     "name": "Jiayu",
+     "local": "嘉鱼县",
+     "prefecture": "Xianning",
+     "prefecture_local": "咸宁市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.205,
+     "area_share": 0.187,
+     "cover": 0.749
+    },
+    {
+     "name": "Yunxi",
+     "local": "云溪区",
+     "prefecture": "Yueyang",
+     "prefecture_local": "岳阳市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.17,
+     "area_share": 0.094,
+     "cover": 0.955
+    },
+    {
+     "name": "Chibi",
+     "local": "赤壁市",
+     "prefecture": "Xianning",
+     "prefecture_local": "咸宁市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.121,
+     "area_share": 0.238,
+     "cover": 0.301
+    },
+    {
+     "name": "Yueyanglou",
+     "local": "岳阳楼区",
+     "prefecture": "Yueyang",
+     "prefecture_local": "岳阳市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.04,
+     "area_share": 0.034,
+     "cover": 0.062
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.661,
+     "cover": 0.01
+    },
+    {
+     "level": "prefecture",
+     "name": "Yueyang",
+     "local": "岳阳市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.661,
+     "cover": 0.119
+    },
+    {
+     "level": "province",
+     "name": "Hubei",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.339,
+     "cover": 0.006
+    },
+    {
+     "level": "prefecture",
+     "name": "Xianning",
+     "local": "咸宁市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.333,
+     "cover": 0.158
+    }
+   ],
+   "towns": [
+    {
+     "town": "鱼岳镇",
+     "county": "嘉鱼县",
+     "city": "咸宁市",
+     "people_share": 0.105,
+     "cover": 0.986
+    },
+    {
+     "town": "白云镇",
+     "county": "临湘市",
+     "city": "岳阳市",
+     "people_share": 0.099,
+     "cover": 1.0
+    },
+    {
+     "town": "云溪乡",
+     "county": "云溪区",
+     "city": "岳阳市",
+     "people_share": 0.058,
+     "cover": 0.974
+    },
+    {
+     "town": "羊楼司镇",
+     "county": "临湘市",
+     "city": "岳阳市",
+     "people_share": 0.035,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Chang’an",
+     "admin": "Hunan",
+     "pop": 537500
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#eed6da",
+     "border_px": 1457
+    },
+    {
+     "key": "#c6eece",
+     "border_px": 937
+    },
+    {
+     "key": "#bad7e8",
+     "border_px": 695
+    },
+    {
+     "key": "#a7dad9",
+     "border_px": 404
+    },
+    {
+     "key": "#cbf4db",
+     "border_px": 380
+    },
+    {
+     "key": "#eed3cd",
+     "border_px": 239
+    }
+   ],
+   "text_px": 186,
+   "n": 2,
+   "thumb": {
+    "x0": 7037,
+    "y0": 3781,
+    "k": 2.0,
+    "w": 318,
+    "h": 370
+   }
+  },
+  {
+   "key": "#f0cbdf",
+   "color": "#f0cbdf",
+   "lon": 112.6178,
+   "lat": 29.5696,
+   "bbox": [
+    6993,
+    3867,
+    7073,
+    3923
+   ],
+   "area_px": 2557,
+   "people": 1317926,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Huarong",
+     "local": "华容县",
+     "prefecture": "Yueyang",
+     "prefecture_local": "岳阳市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.435,
+     "area_share": 0.443,
+     "cover": 0.817
+    },
+    {
+     "name": "Shishou",
+     "local": "石首市",
+     "prefecture": "Jingzhou",
+     "prefecture_local": "荆州市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.267,
+     "area_share": 0.303,
+     "cover": 0.67
+    },
+    {
+     "name": "Junshan",
+     "local": "君山区",
+     "prefecture": "Yueyang",
+     "prefecture_local": "岳阳市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.197,
+     "area_share": 0.193,
+     "cover": 0.872
+    },
+    {
+     "name": "Yueyang",
+     "local": "岳阳县",
+     "prefecture": "Yueyang",
+     "prefecture_local": "岳阳市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.069,
+     "area_share": 0.032,
+     "cover": 0.102
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.711,
+     "cover": 0.014
+    },
+    {
+     "level": "prefecture",
+     "name": "Yueyang",
+     "local": "岳阳市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.693,
+     "cover": 0.155
+    },
+    {
+     "level": "province",
+     "name": "Hubei",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.289,
+     "cover": 0.007
+    },
+    {
+     "level": "prefecture",
+     "name": "Jingzhou",
+     "local": "荆州市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.289,
+     "cover": 0.076
+    }
+   ],
+   "towns": [
+    {
+     "town": "东山镇",
+     "county": "华容县",
+     "city": "岳阳市",
+     "people_share": 0.071,
+     "cover": 0.9
+    },
+    {
+     "town": "柳林洲镇",
+     "county": "君山区",
+     "city": "岳阳市",
+     "people_share": 0.07,
+     "cover": 0.995
+    },
+    {
+     "town": "东洞庭湖管委会",
+     "county": "岳阳县",
+     "city": "岳阳市",
+     "people_share": 0.069,
+     "cover": 0.381
+    },
+    {
+     "town": "西城街道",
+     "county": "君山区",
+     "city": "岳阳市",
+     "people_share": 0.051,
+     "cover": 0.998
+    },
+    {
+     "town": "操军镇",
+     "county": "华容县",
+     "city": "岳阳市",
+     "people_share": 0.05,
+     "cover": 1.0
+    },
+    {
+     "town": "东升镇",
+     "county": "石首市",
+     "city": "荆州市",
+     "people_share": 0.043,
+     "cover": 0.991
+    },
+    {
+     "town": "高基庙镇",
+     "county": "石首市",
+     "city": "荆州市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "治河渡镇",
+     "county": "华容县",
+     "city": "岳阳市",
+     "people_share": 0.033,
+     "cover": 1.0
+    },
+    {
+     "town": "胜峰乡",
+     "county": "华容县",
+     "city": "岳阳市",
+     "people_share": 0.033,
+     "cover": 1.0
+    },
+    {
+     "town": "笔架山街道",
+     "county": "石首市",
+     "city": "荆州市",
+     "people_share": 0.033,
+     "cover": 0.938
+    },
+    {
+     "town": "万庾镇",
+     "county": "华容县",
+     "city": "岳阳市",
+     "people_share": 0.032,
+     "cover": 1.0
+    },
+    {
+     "town": "调关镇",
+     "county": "石首市",
+     "city": "荆州市",
+     "people_share": 0.03,
+     "cover": 0.974
+    }
+   ],
+   "cities": [
+    {
+     "name": "Xiulin",
+     "admin": "Hubei",
+     "pop": 577022
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#edd0f4",
+     "border_px": 1251
+    },
+    {
+     "key": "#f0c7ca",
+     "border_px": 752
+    },
+    {
+     "key": "#eebec6",
+     "border_px": 732
+    },
+    {
+     "key": "#eed6da",
+     "border_px": 560
+    },
+    {
+     "key": "#f0cbd9",
+     "border_px": 325
+    },
+    {
+     "key": "#a7dad9",
+     "border_px": 184
+    }
+   ],
+   "text_px": 0,
+   "n": 3,
+   "thumb": {
+    "x0": 6953,
+    "y0": 3827,
+    "k": 2.0,
+    "w": 320,
+    "h": 272
+   }
+  },
+  {
+   "key": "#f0cbd9",
+   "color": "#f0cbd9",
+   "lon": 111.8275,
+   "lat": 29.4539,
+   "bbox": [
+    6913,
+    3888,
+    6999,
+    3945
+   ],
+   "area_px": 3280,
+   "people": 1351045,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Anxiang",
+     "local": "安乡县",
+     "prefecture": "Changde",
+     "prefecture_local": "常德市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.364,
+     "area_share": 0.295,
+     "cover": 0.979
+    },
+    {
+     "name": "Linli",
+     "local": "临澧县",
+     "prefecture": "Changde",
+     "prefecture_local": "常德市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.205,
+     "area_share": 0.267,
+     "cover": 0.747
+    },
+    {
+     "name": "Shimen",
+     "local": "石门县",
+     "prefecture": "Changde",
+     "prefecture_local": "常德市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.178,
+     "area_share": 0.166,
+     "cover": 0.411
+    },
+    {
+     "name": "Jinshi",
+     "local": "津市市",
+     "prefecture": "Changde",
+     "prefecture_local": "常德市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.131,
+     "area_share": 0.143,
+     "cover": 0.864
+    },
+    {
+     "name": "Li",
+     "local": "澧县",
+     "prefecture": "Changde",
+     "prefecture_local": "常德市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.077,
+     "area_share": 0.084,
+     "cover": 0.122
+    },
+    {
+     "name": "Dingcheng",
+     "local": "鼎城区",
+     "prefecture": "Changde",
+     "prefecture_local": "常德市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.035,
+     "area_share": 0.036,
+     "cover": 0.067
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.999,
+     "cover": 0.02
+    },
+    {
+     "level": "prefecture",
+     "name": "Changde",
+     "local": "常德市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.995,
+     "cover": 0.245
+    }
+   ],
+   "towns": [
+    {
+     "town": "深柳镇",
+     "county": "安乡县",
+     "city": "常德市",
+     "people_share": 0.074,
+     "cover": 1.0
+    },
+    {
+     "town": "楚江镇",
+     "county": "石门县",
+     "city": "常德市",
+     "people_share": 0.053,
+     "cover": 0.886
+    },
+    {
+     "town": "蒙泉镇",
+     "county": "石门县",
+     "city": "常德市",
+     "people_share": 0.044,
+     "cover": 0.966
+    },
+    {
+     "town": "大鲸港镇",
+     "county": "安乡县",
+     "city": "常德市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "小渡口镇",
+     "county": "澧县",
+     "city": "常德市",
+     "people_share": 0.035,
+     "cover": 0.937
+    },
+    {
+     "town": "夹山镇",
+     "county": "石门县",
+     "city": "常德市",
+     "people_share": 0.034,
+     "cover": 0.986
+    }
+   ],
+   "cities": [
+    {
+     "name": "Jinshi",
+     "admin": "Hunan",
+     "pop": 251064
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#e8c7d3",
+     "border_px": 935
+    },
+    {
+     "key": "#eec6d9",
+     "border_px": 706
+    },
+    {
+     "key": "#def0d5",
+     "border_px": 654
+    },
+    {
+     "key": "#edd0f4",
+     "border_px": 497
+    },
+    {
+     "key": "#e2dbe2",
+     "border_px": 443
+    },
+    {
+     "key": "#f0cbdf",
+     "border_px": 325
+    },
+    {
+     "key": "#f0c7ca",
+     "border_px": 212
+    }
+   ],
+   "text_px": 0,
+   "n": 4,
+   "thumb": {
+    "x0": 6873,
+    "y0": 3848,
+    "k": 2.0,
+    "w": 332,
+    "h": 274
+   }
+  },
+  {
+   "key": "#a7dad9",
+   "color": "#a7dad9",
+   "lon": 113.1678,
+   "lat": 29.291,
+   "bbox": [
+    7070,
+    3901,
+    7090,
+    3933
+   ],
+   "area_px": 476,
+   "people": 808353,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yueyanglou",
+     "local": "岳阳楼区",
+     "prefecture": "Yueyang",
+     "prefecture_local": "岳阳市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.802,
+     "area_share": 0.519,
+     "cover": 0.938
+    },
+    {
+     "name": "Yueyang",
+     "local": "岳阳县",
+     "prefecture": "Yueyang",
+     "prefecture_local": "岳阳市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.191,
+     "area_share": 0.471,
+     "cover": 0.172
+    },
+    {
+     "name": "Yunxi",
+     "local": "云溪区",
+     "prefecture": "Yueyang",
+     "prefecture_local": "岳阳市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.007,
+     "area_share": 0.011,
+     "cover": 0.028
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.998,
+     "cover": 0.012
+    },
+    {
+     "level": "prefecture",
+     "name": "Yueyang",
+     "local": "岳阳市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.998,
+     "cover": 0.137
+    }
+   ],
+   "towns": [
+    {
+     "town": "东洞庭湖管委会",
+     "county": "岳阳县",
+     "city": "岳阳市",
+     "people_share": 0.107,
+     "cover": 0.362
+    },
+    {
+     "town": "经济技术开发区通海路管理处",
+     "county": "岳阳楼区",
+     "city": "岳阳市",
+     "people_share": 0.086,
+     "cover": 1.0
+    },
+    {
+     "town": "金凤桥管理处",
+     "county": "岳阳楼区",
+     "city": "岳阳市",
+     "people_share": 0.081,
+     "cover": 0.988
+    },
+    {
+     "town": "康王乡",
+     "county": "岳阳楼区",
+     "city": "岳阳市",
+     "people_share": 0.072,
+     "cover": 0.956
+    },
+    {
+     "town": "梅溪乡",
+     "county": "岳阳楼区",
+     "city": "岳阳市",
+     "people_share": 0.062,
+     "cover": 1.0
+    },
+    {
+     "town": "奇家岭街道",
+     "county": "岳阳楼区",
+     "city": "岳阳市",
+     "people_share": 0.054,
+     "cover": 1.0
+    },
+    {
+     "town": "新开镇",
+     "county": "岳阳县",
+     "city": "岳阳市",
+     "people_share": 0.049,
+     "cover": 0.993
+    },
+    {
+     "town": "南湖街道",
+     "county": "岳阳楼区",
+     "city": "岳阳市",
+     "people_share": 0.047,
+     "cover": 1.0
+    },
+    {
+     "town": "望岳路街道",
+     "county": "岳阳楼区",
+     "city": "岳阳市",
+     "people_share": 0.046,
+     "cover": 1.0
+    },
+    {
+     "town": "郭镇乡",
+     "county": "岳阳楼区",
+     "city": "岳阳市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "洛王街道",
+     "county": "岳阳楼区",
+     "city": "岳阳市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "求索街道",
+     "county": "岳阳楼区",
+     "city": "岳阳市",
+     "people_share": 0.038,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#cbeed8",
+     "border_px": 404
+    },
+    {
+     "key": "#bad7e8",
+     "border_px": 371
+    },
+    {
+     "key": "#edd0f4",
+     "border_px": 208
+    },
+    {
+     "key": "#f0cbdf",
+     "border_px": 184
+    },
+    {
+     "key": "#eed6da",
+     "border_px": 35
+    }
+   ],
+   "text_px": 0,
+   "n": 5,
+   "thumb": {
+    "x0": 7030,
+    "y0": 3861,
+    "k": 3.0,
+    "w": 300,
+    "h": 336
+   }
+  },
+  {
+   "key": "#edd0f4",
+   "color": "#edd0f4",
+   "lon": 112.5988,
+   "lat": 29.1313,
+   "bbox": [
+    6996,
+    3901,
+    7070,
+    3980
+   ],
+   "area_px": 4001,
+   "people": 1317817,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Nan",
+     "local": "南县",
+     "prefecture": "Yiyang",
+     "prefecture_local": "益阳市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.487,
+     "area_share": 0.314,
+     "cover": 0.957
+    },
+    {
+     "name": "Yuanjiang",
+     "local": "沅江市",
+     "prefecture": "Yiyang",
+     "prefecture_local": "益阳市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.346,
+     "area_share": 0.397,
+     "cover": 0.684
+    },
+    {
+     "name": "Huarong",
+     "local": "华容县",
+     "prefecture": "Yueyang",
+     "prefecture_local": "岳阳市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.09,
+     "area_share": 0.066,
+     "cover": 0.168
+    },
+    {
+     "name": "Yueyang",
+     "local": "岳阳县",
+     "prefecture": "Yueyang",
+     "prefecture_local": "岳阳市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.044,
+     "area_share": 0.162,
+     "cover": 0.064
+    },
+    {
+     "name": "Junshan",
+     "local": "君山区",
+     "prefecture": "Yueyang",
+     "prefecture_local": "岳阳市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.029,
+     "area_share": 0.017,
+     "cover": 0.127
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.019
+    },
+    {
+     "level": "prefecture",
+     "name": "Yiyang",
+     "local": "益阳市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.815,
+     "cover": 0.251
+    },
+    {
+     "level": "prefecture",
+     "name": "Yueyang",
+     "local": "岳阳市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.18,
+     "cover": 0.04
+    }
+   ],
+   "towns": [
+    {
+     "town": "南洲镇",
+     "county": "南县",
+     "city": "益阳市",
+     "people_share": 0.101,
+     "cover": 1.0
+    },
+    {
+     "town": "南大膳镇",
+     "county": "沅江市",
+     "city": "益阳市",
+     "people_share": 0.065,
+     "cover": 1.0
+    },
+    {
+     "town": "草尾镇",
+     "county": "沅江市",
+     "city": "益阳市",
+     "people_share": 0.058,
+     "cover": 1.0
+    },
+    {
+     "town": "黄茅洲镇",
+     "county": "沅江市",
+     "city": "益阳市",
+     "people_share": 0.053,
+     "cover": 1.0
+    },
+    {
+     "town": "华阁镇",
+     "county": "南县",
+     "city": "益阳市",
+     "people_share": 0.047,
+     "cover": 0.985
+    },
+    {
+     "town": "东洞庭湖管委会",
+     "county": "岳阳县",
+     "city": "岳阳市",
+     "people_share": 0.044,
+     "cover": 0.241
+    },
+    {
+     "town": "泗湖山镇",
+     "county": "沅江市",
+     "city": "益阳市",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "共华镇",
+     "county": "沅江市",
+     "city": "益阳市",
+     "people_share": 0.036,
+     "cover": 1.0
+    },
+    {
+     "town": "茅草街镇",
+     "county": "南县",
+     "city": "益阳市",
+     "people_share": 0.036,
+     "cover": 1.0
+    },
+    {
+     "town": "中鱼口乡",
+     "county": "南县",
+     "city": "益阳市",
+     "people_share": 0.03,
+     "cover": 1.0
+    },
+    {
+     "town": "浪拔湖镇",
+     "county": "南县",
+     "city": "益阳市",
+     "people_share": 0.03,
+     "cover": 0.739
+    }
+   ],
+   "cities": [
+    {
+     "name": "Qionghu",
+     "admin": "Hunan",
+     "pop": 667104
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f0cbdf",
+     "border_px": 1251
+    },
+    {
+     "key": "#bad7e8",
+     "border_px": 608
+    },
+    {
+     "key": "#cab3fd",
+     "border_px": 548
+    },
+    {
+     "key": "#f0cbd9",
+     "border_px": 497
+    },
+    {
+     "key": "#eec6d9",
+     "border_px": 437
+    },
+    {
+     "key": "#c1b4f1",
+     "border_px": 355
+    },
+    {
+     "key": "#a7dad9",
+     "border_px": 208
+    }
+   ],
+   "text_px": 0,
+   "n": 6,
+   "thumb": {
+    "x0": 6956,
+    "y0": 3861,
+    "k": 2.0,
+    "w": 308,
+    "h": 318
+   }
+  },
+  {
+   "key": "#bad7e8",
+   "color": "#bad7e8",
+   "lon": 113.3482,
+   "lat": 29.0582,
+   "bbox": [
+    7059,
+    3903,
+    7141,
+    3973
+   ],
+   "area_px": 3032,
+   "people": 1250144,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yueyang",
+     "local": "岳阳县",
+     "prefecture": "Yueyang",
+     "prefecture_local": "岳阳市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.472,
+     "area_share": 0.524,
+     "cover": 0.658
+    },
+    {
+     "name": "Miluo",
+     "local": "汨罗市",
+     "prefecture": "Yueyang",
+     "prefecture_local": "岳阳市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.391,
+     "area_share": 0.291,
+     "cover": 0.508
+    },
+    {
+     "name": "Tongcheng",
+     "local": "通城县",
+     "prefecture": "Xianning",
+     "prefecture_local": "咸宁市",
+     "province": "湖北省",
+     "country": "China",
+     "people_share": 0.105,
+     "area_share": 0.142,
+     "cover": 0.376
+    },
+    {
+     "name": "Pingjiang",
+     "local": "平江县",
+     "prefecture": "Yueyang",
+     "prefecture_local": "岳阳市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.025,
+     "area_share": 0.037,
+     "cover": 0.032
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.895,
+     "cover": 0.016
+    },
+    {
+     "level": "prefecture",
+     "name": "Yueyang",
+     "local": "岳阳市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.895,
+     "cover": 0.19
+    },
+    {
+     "level": "province",
+     "name": "Hubei",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.105,
+     "cover": 0.002
+    },
+    {
+     "level": "prefecture",
+     "name": "Xianning",
+     "local": "咸宁市",
+     "province": "Hubei",
+     "country": "China",
+     "people_share": 0.105,
+     "cover": 0.059
+    }
+   ],
+   "towns": [
+    {
+     "town": "鹿角镇",
+     "county": "岳阳县",
+     "city": "岳阳市",
+     "people_share": 0.08,
+     "cover": 0.999
+    },
+    {
+     "town": "红花乡",
+     "county": "汨罗市",
+     "city": "岳阳市",
+     "people_share": 0.078,
+     "cover": 0.921
+    },
+    {
+     "town": "荣家湾镇",
+     "county": "岳阳县",
+     "city": "岳阳市",
+     "people_share": 0.057,
+     "cover": 1.0
+    },
+    {
+     "town": "筻口镇",
+     "county": "岳阳县",
+     "city": "岳阳市",
+     "people_share": 0.041,
+     "cover": 0.92
+    },
+    {
+     "town": "长湖乡",
+     "county": "岳阳县",
+     "city": "岳阳市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "屈子祠镇",
+     "county": "汨罗市",
+     "city": "岳阳市",
+     "people_share": 0.036,
+     "cover": 1.0
+    },
+    {
+     "town": "月田镇",
+     "county": "岳阳县",
+     "city": "岳阳市",
+     "people_share": 0.033,
+     "cover": 0.995
+    },
+    {
+     "town": "大坪乡",
+     "county": "通城县",
+     "city": "咸宁市",
+     "people_share": 0.031,
+     "cover": 0.97
+    },
+    {
+     "town": "黄沙街镇",
+     "county": "岳阳县",
+     "city": "岳阳市",
+     "people_share": 0.03,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Rongjiawan",
+     "admin": "Hunan",
+     "pop": 826000
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#bce7cf",
+     "border_px": 865
+    },
+    {
+     "key": "#cbeed8",
+     "border_px": 695
+    },
+    {
+     "key": "#edd0f4",
+     "border_px": 608
+    },
+    {
+     "key": "#cbf4db",
+     "border_px": 540
+    },
+    {
+     "key": "#c1b4fc",
+     "border_px": 468
+    },
+    {
+     "key": "#a7dad9",
+     "border_px": 371
+    },
+    {
+     "key": "#cab3fd",
+     "border_px": 39
+    }
+   ],
+   "text_px": 56,
+   "n": 7,
+   "thumb": {
+    "x0": 7019,
+    "y0": 3863,
+    "k": 2.0,
+    "w": 324,
+    "h": 300
+   }
+  },
+  {
+   "key": "#f0b6c0",
+   "color": "#f0b6c0",
+   "lon": 111.6956,
+   "lat": 29.0386,
+   "bbox": [
+    6941,
+    3945,
+    6964,
+    3980
+   ],
+   "area_px": 616,
+   "people": 892056,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Wuling",
+     "local": "武陵区",
+     "prefecture": "Changde",
+     "prefecture_local": "常德市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.775,
+     "area_share": 0.578,
+     "cover": 0.994
+    },
+    {
+     "name": "Dingcheng",
+     "local": "鼎城区",
+     "prefecture": "Changde",
+     "prefecture_local": "常德市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.223,
+     "area_share": 0.409,
+     "cover": 0.282
+    },
+    {
+     "name": "Hanshou",
+     "local": "汉寿县",
+     "prefecture": "Changde",
+     "prefecture_local": "常德市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.003,
+     "area_share": 0.013,
+     "cover": 0.003
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.013
+    },
+    {
+     "level": "prefecture",
+     "name": "Changde",
+     "local": "常德市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.163
+    }
+   ],
+   "towns": [
+    {
+     "town": "南坪岗乡",
+     "county": "武陵区",
+     "city": "常德市",
+     "people_share": 0.128,
+     "cover": 1.0
+    },
+    {
+     "town": "武陵镇",
+     "county": "鼎城区",
+     "city": "常德市",
+     "people_share": 0.098,
+     "cover": 1.0
+    },
+    {
+     "town": "东郊乡",
+     "county": "武陵区",
+     "city": "常德市",
+     "people_share": 0.097,
+     "cover": 1.0
+    },
+    {
+     "town": "柳叶湖旅游渡假区",
+     "county": "武陵区",
+     "city": "常德市",
+     "people_share": 0.086,
+     "cover": 1.0
+    },
+    {
+     "town": "城西街道",
+     "county": "武陵区",
+     "city": "常德市",
+     "people_share": 0.059,
+     "cover": 1.0
+    },
+    {
+     "town": "芦荻山乡",
+     "county": "武陵区",
+     "city": "常德市",
+     "people_share": 0.052,
+     "cover": 1.0
+    },
+    {
+     "town": "灌溪镇",
+     "county": "鼎城区",
+     "city": "常德市",
+     "people_share": 0.049,
+     "cover": 0.992
+    },
+    {
+     "town": "丹洲乡",
+     "county": "武陵区",
+     "city": "常德市",
+     "people_share": 0.047,
+     "cover": 0.986
+    },
+    {
+     "town": "德山镇",
+     "county": "武陵区",
+     "city": "常德市",
+     "people_share": 0.047,
+     "cover": 1.0
+    },
+    {
+     "town": "东江乡",
+     "county": "武陵区",
+     "city": "常德市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "河洑镇",
+     "county": "武陵区",
+     "city": "常德市",
+     "people_share": 0.042,
+     "cover": 0.973
+    },
+    {
+     "town": "三岔路街道",
+     "county": "武陵区",
+     "city": "常德市",
+     "people_share": 0.042,
+     "cover": 0.973
+    }
+   ],
+   "cities": [
+    {
+     "name": "Changde",
+     "admin": "Hunan",
+     "pop": 5279102
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#eec6d9",
+     "border_px": 876
+    },
+    {
+     "key": "#e2dbe2",
+     "border_px": 468
+    }
+   ],
+   "text_px": 0,
+   "n": 8,
+   "thumb": {
+    "x0": 6901,
+    "y0": 3905,
+    "k": 3.0,
+    "w": 309,
+    "h": 345
+   }
+  },
+  {
+   "key": "#eec6d9",
+   "color": "#eec6d9",
+   "lon": 111.8989,
+   "lat": 28.9232,
+   "bbox": [
+    6937,
+    3929,
+    7004,
+    4011
+   ],
+   "area_px": 3333,
+   "people": 1101190,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Hanshou",
+     "local": "汉寿县",
+     "prefecture": "Changde",
+     "prefecture_local": "常德市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.623,
+     "area_share": 0.515,
+     "cover": 0.907
+    },
+    {
+     "name": "Dingcheng",
+     "local": "鼎城区",
+     "prefecture": "Changde",
+     "prefecture_local": "常德市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.369,
+     "area_share": 0.468,
+     "cover": 0.577
+    },
+    {
+     "name": "Taojiang",
+     "local": "桃江县",
+     "prefecture": "Yiyang",
+     "prefecture_local": "益阳市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.004,
+     "area_share": 0.005,
+     "cover": 0.005
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.016
+    },
+    {
+     "level": "prefecture",
+     "name": "Changde",
+     "local": "常德市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.997,
+     "cover": 0.2
+    }
+   ],
+   "towns": [
+    {
+     "town": "龙阳镇",
+     "county": "汉寿县",
+     "city": "常德市",
+     "people_share": 0.086,
+     "cover": 1.0
+    },
+    {
+     "town": "西湖管理区",
+     "county": "汉寿县",
+     "city": "常德市",
+     "people_share": 0.051,
+     "cover": 0.995
+    },
+    {
+     "town": "西洞庭管理区",
+     "county": "鼎城区",
+     "city": "常德市",
+     "people_share": 0.034,
+     "cover": 0.953
+    },
+    {
+     "town": "岩汪湖镇",
+     "county": "汉寿县",
+     "city": "常德市",
+     "people_share": 0.033,
+     "cover": 1.0
+    },
+    {
+     "town": "韩公渡镇",
+     "county": "鼎城区",
+     "city": "常德市",
+     "people_share": 0.032,
+     "cover": 1.0
+    },
+    {
+     "town": "酉港镇",
+     "county": "汉寿县",
+     "city": "常德市",
+     "people_share": 0.03,
+     "cover": 0.992
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f0b6c0",
+     "border_px": 876
+    },
+    {
+     "key": "#e2dbe2",
+     "border_px": 741
+    },
+    {
+     "key": "#d1c8f1",
+     "border_px": 713
+    },
+    {
+     "key": "#f0cbd9",
+     "border_px": 706
+    },
+    {
+     "key": "#c1b4f1",
+     "border_px": 515
+    },
+    {
+     "key": "#edd0f4",
+     "border_px": 437
+    }
+   ],
+   "text_px": 0,
+   "n": 9,
+   "thumb": {
+    "x0": 6897,
+    "y0": 3889,
+    "k": 2.0,
+    "w": 294,
+    "h": 324
+   }
+  },
+  {
+   "key": "#e2dbe2",
+   "color": "#e2dbe2",
+   "lon": 111.0673,
+   "lat": 28.8189,
+   "bbox": [
+    6848,
+    3934,
+    6953,
+    4052
+   ],
+   "area_px": 6784,
+   "people": 1037592,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Taoyuan",
+     "local": "桃源县",
+     "prefecture": "Changde",
+     "prefecture_local": "常德市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.738,
+     "area_share": 0.565,
+     "cover": 0.952
+    },
+    {
+     "name": "Yuanling",
+     "local": "沅陵县",
+     "prefecture": "Huaihua",
+     "prefecture_local": "怀化市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.205,
+     "area_share": 0.4,
+     "cover": 0.373
+    },
+    {
+     "name": "Dingcheng",
+     "local": "鼎城区",
+     "prefecture": "Changde",
+     "prefecture_local": "常德市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.05,
+     "area_share": 0.028,
+     "cover": 0.074
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.015
+    },
+    {
+     "level": "prefecture",
+     "name": "Changde",
+     "local": "常德市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.793,
+     "cover": 0.15
+    },
+    {
+     "level": "prefecture",
+     "name": "Huaihua",
+     "local": "怀化市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.206,
+     "cover": 0.043
+    }
+   ],
+   "towns": [
+    {
+     "town": "漳江镇",
+     "county": "桃源县",
+     "city": "常德市",
+     "people_share": 0.108,
+     "cover": 0.998
+    },
+    {
+     "town": "漆河镇",
+     "county": "桃源县",
+     "city": "常德市",
+     "people_share": 0.057,
+     "cover": 1.0
+    },
+    {
+     "town": "陬市镇",
+     "county": "桃源县",
+     "city": "常德市",
+     "people_share": 0.051,
+     "cover": 1.0
+    },
+    {
+     "town": "官庄镇",
+     "county": "沅陵县",
+     "city": "怀化市",
+     "people_share": 0.046,
+     "cover": 1.0
+    },
+    {
+     "town": "七甲坪镇",
+     "county": "沅陵县",
+     "city": "怀化市",
+     "people_share": 0.035,
+     "cover": 0.995
+    },
+    {
+     "town": "桃花源镇",
+     "county": "桃源县",
+     "city": "常德市",
+     "people_share": 0.034,
+     "cover": 0.99
+    },
+    {
+     "town": "五强溪镇",
+     "county": "沅陵县",
+     "city": "怀化市",
+     "people_share": 0.03,
+     "cover": 1.0
+    },
+    {
+     "town": "青林乡",
+     "county": "桃源县",
+     "city": "常德市",
+     "people_share": 0.03,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#d1c8f1",
+     "border_px": 1100
+    },
+    {
+     "key": "#ceede3",
+     "border_px": 1004
+    },
+    {
+     "key": "#d6f0d5",
+     "border_px": 929
+    },
+    {
+     "key": "#eec6d9",
+     "border_px": 741
+    },
+    {
+     "key": "#def0d5",
+     "border_px": 702
+    },
+    {
+     "key": "#f0b6c0",
+     "border_px": 468
+    },
+    {
+     "key": "#f0cbd9",
+     "border_px": 443
+    },
+    {
+     "key": "#d3bcf2",
+     "border_px": 43
+    }
+   ],
+   "text_px": 0,
+   "n": 10,
+   "thumb": {
+    "x0": 6807,
+    "y0": 3893,
+    "k": 2.0,
+    "w": 374,
+    "h": 400
+   }
+  },
+  {
+   "key": "#bce7cf",
+   "color": "#bce7cf",
+   "lon": 113.7712,
+   "lat": 28.7814,
+   "bbox": [
+    7092,
+    3926,
+    7179,
+    4007
+   ],
+   "area_px": 4090,
+   "people": 995099,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Pingjiang",
+     "local": "平江县",
+     "prefecture": "Yueyang",
+     "prefecture_local": "岳阳市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.87,
+     "area_share": 0.865,
+     "cover": 0.889
+    },
+    {
+     "name": "Xiushui",
+     "local": "修水县",
+     "prefecture": "Jiujiang",
+     "prefecture_local": "九江市",
+     "province": "江西省",
+     "country": "China",
+     "people_share": 0.127,
+     "area_share": 0.122,
+     "cover": 0.165
+    },
+    {
+     "name": "Miluo",
+     "local": "汨罗市",
+     "prefecture": "Yueyang",
+     "prefecture_local": "岳阳市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.001,
+     "area_share": 0.0,
+     "cover": 0.001
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.873,
+     "cover": 0.013
+    },
+    {
+     "level": "prefecture",
+     "name": "Yueyang",
+     "local": "岳阳市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.871,
+     "cover": 0.147
+    },
+    {
+     "level": "province",
+     "name": "Jiangxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.126,
+     "cover": 0.003
+    },
+    {
+     "level": "prefecture",
+     "name": "Jiujiang",
+     "local": "九江市",
+     "province": "Jiangxi",
+     "country": "China",
+     "people_share": 0.126,
+     "cover": 0.026
+    }
+   ],
+   "towns": [
+    {
+     "town": "三阳乡",
+     "county": "平江县",
+     "city": "岳阳市",
+     "people_share": 0.078,
+     "cover": 0.999
+    },
+    {
+     "town": "城关镇",
+     "county": "平江县",
+     "city": "岳阳市",
+     "people_share": 0.076,
+     "cover": 1.0
+    },
+    {
+     "town": "南江镇",
+     "county": "平江县",
+     "city": "岳阳市",
+     "people_share": 0.071,
+     "cover": 1.0
+    },
+    {
+     "town": "梅仙镇",
+     "county": "平江县",
+     "city": "岳阳市",
+     "people_share": 0.068,
+     "cover": 1.0
+    },
+    {
+     "town": "长寿镇",
+     "county": "平江县",
+     "city": "岳阳市",
+     "people_share": 0.067,
+     "cover": 1.0
+    },
+    {
+     "town": "加义镇",
+     "county": "平江县",
+     "city": "岳阳市",
+     "people_share": 0.052,
+     "cover": 1.0
+    },
+    {
+     "town": "伍市镇",
+     "county": "平江县",
+     "city": "岳阳市",
+     "people_share": 0.047,
+     "cover": 0.367
+    },
+    {
+     "town": "安定镇",
+     "county": "平江县",
+     "city": "岳阳市",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "三市镇",
+     "county": "平江县",
+     "city": "岳阳市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "瓮江镇",
+     "county": "平江县",
+     "city": "岳阳市",
+     "people_share": 0.042,
+     "cover": 0.989
+    },
+    {
+     "town": "龙门镇",
+     "county": "平江县",
+     "city": "岳阳市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "余坪乡",
+     "county": "平江县",
+     "city": "岳阳市",
+     "people_share": 0.035,
+     "cover": 0.994
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#bad7e8",
+     "border_px": 865
+    },
+    {
+     "key": "#c5c1ea",
+     "border_px": 720
+    },
+    {
+     "key": "#daf3e0",
+     "border_px": 623
+    },
+    {
+     "key": "#c4ead5",
+     "border_px": 557
+    },
+    {
+     "key": "#d0f0d1",
+     "border_px": 439
+    },
+    {
+     "key": "#cbf4db",
+     "border_px": 344
+    },
+    {
+     "key": "#c1b4fc",
+     "border_px": 226
+    }
+   ],
+   "text_px": 112,
+   "n": 11,
+   "thumb": {
+    "x0": 7052,
+    "y0": 3886,
+    "k": 2.0,
+    "w": 334,
+    "h": 322
+   }
+  },
+  {
+   "key": "#cab3fd",
+   "color": "#cab3fd",
+   "lon": 112.6349,
+   "lat": 28.6556,
+   "bbox": [
+    7014,
+    3973,
+    7064,
+    4013
+   ],
+   "area_px": 1446,
+   "people": 935460,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Heshan",
+     "local": "赫山区",
+     "prefecture": "Yiyang",
+     "prefecture_local": "益阳市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.41,
+     "area_share": 0.193,
+     "cover": 0.437
+    },
+    {
+     "name": "Xiangyin",
+     "local": "湘阴县",
+     "prefecture": "Yueyang",
+     "prefecture_local": "岳阳市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.383,
+     "area_share": 0.582,
+     "cover": 0.52
+    },
+    {
+     "name": "Ziyang",
+     "local": "资阳区",
+     "prefecture": "Yiyang",
+     "prefecture_local": "益阳市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.165,
+     "area_share": 0.149,
+     "cover": 0.326
+    },
+    {
+     "name": "Wangcheng",
+     "local": "望城区",
+     "prefecture": "Changsha",
+     "prefecture_local": "长沙市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.035,
+     "area_share": 0.043,
+     "cover": 0.061
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.014
+    },
+    {
+     "level": "prefecture",
+     "name": "Yiyang",
+     "local": "益阳市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.58,
+     "cover": 0.127
+    },
+    {
+     "level": "prefecture",
+     "name": "Yueyang",
+     "local": "岳阳市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.382,
+     "cover": 0.061
+    }
+   ],
+   "towns": [
+    {
+     "town": "兰溪镇",
+     "county": "赫山区",
+     "city": "益阳市",
+     "people_share": 0.092,
+     "cover": 0.996
+    },
+    {
+     "town": "朝阳街道",
+     "county": "赫山区",
+     "city": "益阳市",
+     "people_share": 0.09,
+     "cover": 0.877
+    },
+    {
+     "town": "鹤龙湖镇",
+     "county": "湘阴县",
+     "city": "岳阳市",
+     "people_share": 0.077,
+     "cover": 1.0
+    },
+    {
+     "town": "新泉镇",
+     "county": "湘阴县",
+     "city": "岳阳市",
+     "people_share": 0.073,
+     "cover": 0.981
+    },
+    {
+     "town": "岭北镇",
+     "county": "湘阴县",
+     "city": "岳阳市",
+     "people_share": 0.069,
+     "cover": 1.0
+    },
+    {
+     "town": "龙光桥镇",
+     "county": "赫山区",
+     "city": "益阳市",
+     "people_share": 0.064,
+     "cover": 0.84
+    },
+    {
+     "town": "南湖洲镇",
+     "county": "湘阴县",
+     "city": "岳阳市",
+     "people_share": 0.062,
+     "cover": 1.0
+    },
+    {
+     "town": "长春工业园",
+     "county": "资阳区",
+     "city": "益阳市",
+     "people_share": 0.056,
+     "cover": 0.781
+    },
+    {
+     "town": "赫山街道",
+     "county": "赫山区",
+     "city": "益阳市",
+     "people_share": 0.053,
+     "cover": 1.0
+    },
+    {
+     "town": "湘滨镇",
+     "county": "湘阴县",
+     "city": "岳阳市",
+     "people_share": 0.033,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Yiyang",
+     "admin": "Hunan",
+     "pop": 4413800
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#c1b4fc",
+     "border_px": 618
+    },
+    {
+     "key": "#c1b4f1",
+     "border_px": 598
+    },
+    {
+     "key": "#c1aaf3",
+     "border_px": 579
+    },
+    {
+     "key": "#edd0f4",
+     "border_px": 548
+    },
+    {
+     "key": "#bad7e8",
+     "border_px": 39
+    }
+   ],
+   "text_px": 0,
+   "n": 12,
+   "thumb": {
+    "x0": 6974,
+    "y0": 3933,
+    "k": 3.0,
+    "w": 390,
+    "h": 360
+   }
+  },
+  {
+   "key": "#c1b4fc",
+   "color": "#c1b4fc",
+   "lon": 113.0276,
+   "lat": 28.5679,
+   "bbox": [
+    7058,
+    3971,
+    7094,
+    4033
+   ],
+   "area_px": 1725,
+   "people": 1237281,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Miluo",
+     "local": "汨罗市",
+     "prefecture": "Yueyang",
+     "prefecture_local": "岳阳市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.382,
+     "area_share": 0.356,
+     "cover": 0.491
+    },
+    {
+     "name": "Xiangyin",
+     "local": "湘阴县",
+     "prefecture": "Yueyang",
+     "prefecture_local": "岳阳市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.259,
+     "area_share": 0.217,
+     "cover": 0.465
+    },
+    {
+     "name": "Kaifu",
+     "local": "开福区",
+     "prefecture": "Changsha",
+     "prefecture_local": "长沙市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.135,
+     "area_share": 0.076,
+     "cover": 0.286
+    },
+    {
+     "name": "Changsha",
+     "local": "长沙县",
+     "prefecture": "Changsha",
+     "prefecture_local": "长沙市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.083,
+     "area_share": 0.167,
+     "cover": 0.102
+    },
+    {
+     "name": "Wangcheng",
+     "local": "望城区",
+     "prefecture": "Changsha",
+     "prefecture_local": "长沙市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.081,
+     "area_share": 0.141,
+     "cover": 0.184
+    },
+    {
+     "name": "Pingjiang",
+     "local": "平江县",
+     "prefecture": "Yueyang",
+     "prefecture_local": "岳阳市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.06,
+     "area_share": 0.042,
+     "cover": 0.076
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.018
+    },
+    {
+     "level": "prefecture",
+     "name": "Yueyang",
+     "local": "岳阳市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.704,
+     "cover": 0.148
+    },
+    {
+     "level": "prefecture",
+     "name": "Changsha",
+     "local": "长沙市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.296,
+     "cover": 0.045
+    }
+   ],
+   "towns": [
+    {
+     "town": "文星镇",
+     "county": "湘阴县",
+     "city": "岳阳市",
+     "people_share": 0.067,
+     "cover": 0.934
+    },
+    {
+     "town": "城郊乡",
+     "county": "汨罗市",
+     "city": "岳阳市",
+     "people_share": 0.062,
+     "cover": 0.933
+    },
+    {
+     "town": "新市镇",
+     "county": "汨罗市",
+     "city": "岳阳市",
+     "people_share": 0.059,
+     "cover": 0.946
+    },
+    {
+     "town": "伍市镇",
+     "county": "平江县",
+     "city": "岳阳市",
+     "people_share": 0.059,
+     "cover": 0.568
+    },
+    {
+     "town": "古培镇",
+     "county": "汨罗市",
+     "city": "岳阳市",
+     "people_share": 0.054,
+     "cover": 1.0
+    },
+    {
+     "town": "石塘乡",
+     "county": "湘阴县",
+     "city": "岳阳市",
+     "people_share": 0.053,
+     "cover": 1.0
+    },
+    {
+     "town": "安沙镇",
+     "county": "长沙县",
+     "city": "长沙市",
+     "people_share": 0.05,
+     "cover": 0.993
+    },
+    {
+     "town": "捞刀河街道",
+     "county": "开福区",
+     "city": "长沙市",
+     "people_share": 0.047,
+     "cover": 0.975
+    },
+    {
+     "town": "汨罗镇",
+     "county": "汨罗市",
+     "city": "岳阳市",
+     "people_share": 0.036,
+     "cover": 0.972
+    },
+    {
+     "town": "黄柏镇",
+     "county": "汨罗市",
+     "city": "岳阳市",
+     "people_share": 0.031,
+     "cover": 1.0
+    },
+    {
+     "town": "桥驿镇",
+     "county": "望城区",
+     "city": "长沙市",
+     "people_share": 0.03,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Miluo Chengguanzhen",
+     "admin": "Hunan",
+     "pop": 692080
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#c5c1ea",
+     "border_px": 625
+    },
+    {
+     "key": "#cab3fd",
+     "border_px": 618
+    },
+    {
+     "key": "#bad7e8",
+     "border_px": 468
+    },
+    {
+     "key": "#ad8ef3",
+     "border_px": 276
+    },
+    {
+     "key": "#bce7cf",
+     "border_px": 226
+    },
+    {
+     "key": "#6d6aee",
+     "border_px": 143
+    },
+    {
+     "key": "#c1aaf3",
+     "border_px": 80
+    },
+    {
+     "key": "#6546ed",
+     "border_px": 18
+    }
+   ],
+   "text_px": 0,
+   "n": 13,
+   "thumb": {
+    "x0": 7018,
+    "y0": 3931,
+    "k": 2.0,
+    "w": 232,
+    "h": 284
+   }
+  },
+  {
+   "key": "#c1b4f1",
+   "color": "#c1b4f1",
+   "lon": 112.197,
+   "lat": 28.5202,
+   "bbox": [
+    6984,
+    3973,
+    7021,
+    4047
+   ],
+   "area_px": 1975,
+   "people": 1290842,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Taojiang",
+     "local": "桃江县",
+     "prefecture": "Yiyang",
+     "prefecture_local": "益阳市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.352,
+     "area_share": 0.473,
+     "cover": 0.591
+    },
+    {
+     "name": "Ziyang",
+     "local": "资阳区",
+     "prefecture": "Yiyang",
+     "prefecture_local": "益阳市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.247,
+     "area_share": 0.156,
+     "cover": 0.674
+    },
+    {
+     "name": "Heshan",
+     "local": "赫山区",
+     "prefecture": "Yiyang",
+     "prefecture_local": "益阳市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.187,
+     "area_share": 0.183,
+     "cover": 0.275
+    },
+    {
+     "name": "Yuanjiang",
+     "local": "沅江市",
+     "prefecture": "Yiyang",
+     "prefecture_local": "益阳市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.159,
+     "area_share": 0.093,
+     "cover": 0.307
+    },
+    {
+     "name": "Hanshou",
+     "local": "汉寿县",
+     "prefecture": "Changde",
+     "prefecture_local": "常德市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.052,
+     "area_share": 0.088,
+     "cover": 0.089
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.019
+    },
+    {
+     "level": "prefecture",
+     "name": "Yiyang",
+     "local": "益阳市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.946,
+     "cover": 0.285
+    },
+    {
+     "level": "prefecture",
+     "name": "Changde",
+     "local": "常德市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.053,
+     "cover": 0.012
+    }
+   ],
+   "towns": [
+    {
+     "town": "长春镇",
+     "county": "资阳区",
+     "city": "益阳市",
+     "people_share": 0.132,
+     "cover": 0.954
+    },
+    {
+     "town": "桃花江镇",
+     "county": "桃江县",
+     "city": "益阳市",
+     "people_share": 0.119,
+     "cover": 1.0
+    },
+    {
+     "town": "会龙山街道",
+     "county": "赫山区",
+     "city": "益阳市",
+     "people_share": 0.1,
+     "cover": 1.0
+    },
+    {
+     "town": "灰山港镇",
+     "county": "桃江县",
+     "city": "益阳市",
+     "people_share": 0.088,
+     "cover": 0.99
+    },
+    {
+     "town": "琼湖街道",
+     "county": "沅江市",
+     "city": "益阳市",
+     "people_share": 0.083,
+     "cover": 0.985
+    },
+    {
+     "town": "新桥河镇",
+     "county": "资阳区",
+     "city": "益阳市",
+     "people_share": 0.068,
+     "cover": 1.0
+    },
+    {
+     "town": "浮丘山乡",
+     "county": "桃江县",
+     "city": "益阳市",
+     "people_share": 0.051,
+     "cover": 0.979
+    },
+    {
+     "town": "三眼塘镇",
+     "county": "沅江市",
+     "city": "益阳市",
+     "people_share": 0.033,
+     "cover": 0.987
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#d1c8f1",
+     "border_px": 639
+    },
+    {
+     "key": "#cab3fd",
+     "border_px": 598
+    },
+    {
+     "key": "#eec6d9",
+     "border_px": 515
+    },
+    {
+     "key": "#d7c3f4",
+     "border_px": 441
+    },
+    {
+     "key": "#c1aaf3",
+     "border_px": 388
+    },
+    {
+     "key": "#edd0f4",
+     "border_px": 355
+    }
+   ],
+   "text_px": 0,
+   "n": 14,
+   "thumb": {
+    "x0": 6944,
+    "y0": 3933,
+    "k": 2.0,
+    "w": 234,
+    "h": 308
+   }
+  },
+  {
+   "key": "#d1c8f1",
+   "color": "#d1c8f1",
+   "lon": 111.4552,
+   "lat": 28.3225,
+   "bbox": [
+    6876,
+    4000,
+    6988,
+    4083
+   ],
+   "area_px": 5414,
+   "people": 1178006,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Anhua",
+     "local": "安化县",
+     "prefecture": "Yiyang",
+     "prefecture_local": "益阳市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.729,
+     "area_share": 0.816,
+     "cover": 0.992
+    },
+    {
+     "name": "Taojiang",
+     "local": "桃江县",
+     "prefecture": "Yiyang",
+     "prefecture_local": "益阳市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.263,
+     "area_share": 0.169,
+     "cover": 0.403
+    },
+    {
+     "name": "Xinhua",
+     "local": "新化县",
+     "prefecture": "Loudi",
+     "prefecture_local": "娄底市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.005,
+     "area_share": 0.008,
+     "cover": 0.005
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.017
+    },
+    {
+     "level": "prefecture",
+     "name": "Yiyang",
+     "local": "益阳市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.982,
+     "cover": 0.27
+    }
+   ],
+   "towns": [
+    {
+     "town": "东坪镇",
+     "county": "安化县",
+     "city": "益阳市",
+     "people_share": 0.102,
+     "cover": 1.0
+    },
+    {
+     "town": "梅城镇",
+     "county": "安化县",
+     "city": "益阳市",
+     "people_share": 0.07,
+     "cover": 1.0
+    },
+    {
+     "town": "大福镇",
+     "county": "安化县",
+     "city": "益阳市",
+     "people_share": 0.062,
+     "cover": 0.986
+    },
+    {
+     "town": "武潭镇",
+     "county": "桃江县",
+     "city": "益阳市",
+     "people_share": 0.06,
+     "cover": 0.982
+    },
+    {
+     "town": "大栗港镇",
+     "county": "桃江县",
+     "city": "益阳市",
+     "people_share": 0.054,
+     "cover": 1.0
+    },
+    {
+     "town": "羊角塘镇",
+     "county": "安化县",
+     "city": "益阳市",
+     "people_share": 0.051,
+     "cover": 0.984
+    },
+    {
+     "town": "三堂街镇",
+     "county": "桃江县",
+     "city": "益阳市",
+     "people_share": 0.05,
+     "cover": 0.968
+    },
+    {
+     "town": "清塘铺镇",
+     "county": "安化县",
+     "city": "益阳市",
+     "people_share": 0.044,
+     "cover": 0.984
+    },
+    {
+     "town": "马迹塘镇",
+     "county": "桃江县",
+     "city": "益阳市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "长塘镇",
+     "county": "安化县",
+     "city": "益阳市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "仙溪镇",
+     "county": "安化县",
+     "city": "益阳市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "马路镇",
+     "county": "安化县",
+     "city": "益阳市",
+     "people_share": 0.036,
+     "cover": 0.992
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#d8affa",
+     "border_px": 1199
+    },
+    {
+     "key": "#e2dbe2",
+     "border_px": 1100
+    },
+    {
+     "key": "#d3bcf2",
+     "border_px": 757
+    },
+    {
+     "key": "#eec6d9",
+     "border_px": 713
+    },
+    {
+     "key": "#c1b4f1",
+     "border_px": 639
+    },
+    {
+     "key": "#cda6fc",
+     "border_px": 391
+    },
+    {
+     "key": "#d7c3f4",
+     "border_px": 337
+    }
+   ],
+   "text_px": 0,
+   "n": 15,
+   "thumb": {
+    "x0": 6836,
+    "y0": 3960,
+    "k": 2.0,
+    "w": 384,
+    "h": 326
+   }
+  },
+  {
+   "key": "#d8affa",
+   "color": "#d8affa",
+   "lon": 111.2171,
+   "lat": 27.8818,
+   "bbox": [
+    6887,
+    4056,
+    6963,
+    4131
+   ],
+   "area_px": 3047,
+   "people": 960896,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Xinhua",
+     "local": "新化县",
+     "prefecture": "Loudi",
+     "prefecture_local": "娄底市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.988,
+     "area_share": 0.982,
+     "cover": 0.831
+    },
+    {
+     "name": "Longhui",
+     "local": "隆回县",
+     "prefecture": "Shaoyang",
+     "prefecture_local": "邵阳市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.004,
+     "area_share": 0.005,
+     "cover": 0.004
+    },
+    {
+     "name": "Lianyuan",
+     "local": "涟源市",
+     "prefecture": "Loudi",
+     "prefecture_local": "娄底市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.003,
+     "area_share": 0.003,
+     "cover": 0.003
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.014
+    },
+    {
+     "level": "prefecture",
+     "name": "Loudi",
+     "local": "娄底市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.992,
+     "cover": 0.233
+    }
+   ],
+   "towns": [
+    {
+     "town": "游家镇",
+     "county": "新化县",
+     "city": "娄底市",
+     "people_share": 0.087,
+     "cover": 1.0
+    },
+    {
+     "town": "上梅镇",
+     "county": "新化县",
+     "city": "娄底市",
+     "people_share": 0.086,
+     "cover": 0.664
+    },
+    {
+     "town": "洋溪镇",
+     "county": "新化县",
+     "city": "娄底市",
+     "people_share": 0.063,
+     "cover": 1.0
+    },
+    {
+     "town": "西河镇",
+     "county": "新化县",
+     "city": "娄底市",
+     "people_share": 0.062,
+     "cover": 1.0
+    },
+    {
+     "town": "炉观镇",
+     "county": "新化县",
+     "city": "娄底市",
+     "people_share": 0.059,
+     "cover": 1.0
+    },
+    {
+     "town": "科头乡",
+     "county": "新化县",
+     "city": "娄底市",
+     "people_share": 0.054,
+     "cover": 1.0
+    },
+    {
+     "town": "琅塘镇",
+     "county": "新化县",
+     "city": "娄底市",
+     "people_share": 0.052,
+     "cover": 0.975
+    },
+    {
+     "town": "温塘镇",
+     "county": "新化县",
+     "city": "娄底市",
+     "people_share": 0.051,
+     "cover": 0.957
+    },
+    {
+     "town": "吉庆镇",
+     "county": "新化县",
+     "city": "娄底市",
+     "people_share": 0.049,
+     "cover": 0.983
+    },
+    {
+     "town": "圳上镇",
+     "county": "新化县",
+     "city": "娄底市",
+     "people_share": 0.049,
+     "cover": 0.993
+    },
+    {
+     "town": "白溪镇",
+     "county": "新化县",
+     "city": "娄底市",
+     "people_share": 0.043,
+     "cover": 0.999
+    },
+    {
+     "town": "上渡街道",
+     "county": "新化县",
+     "city": "娄底市",
+     "people_share": 0.041,
+     "cover": 0.938
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#d1c8f1",
+     "border_px": 1199
+    },
+    {
+     "key": "#cda6fc",
+     "border_px": 1104
+    },
+    {
+     "key": "#d3bcf2",
+     "border_px": 779
+    },
+    {
+     "key": "#c1b4f5",
+     "border_px": 454
+    },
+    {
+     "key": "#c6affc",
+     "border_px": 126
+    }
+   ],
+   "text_px": 0,
+   "n": 16,
+   "thumb": {
+    "x0": 6847,
+    "y0": 4016,
+    "k": 2.0,
+    "w": 312,
+    "h": 310
+   }
+  },
+  {
+   "key": "#cda6fc",
+   "color": "#cda6fc",
+   "lon": 111.6061,
+   "lat": 27.7174,
+   "bbox": [
+    6935,
+    4072,
+    6985,
+    4134
+   ],
+   "area_px": 1888,
+   "people": 1299733,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Lianyuan",
+     "local": "涟源市",
+     "prefecture": "Loudi",
+     "prefecture_local": "娄底市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.479,
+     "area_share": 0.566,
+     "cover": 0.622
+    },
+    {
+     "name": "Lengshuijiang",
+     "local": "冷水江市",
+     "prefecture": "Loudi",
+     "prefecture_local": "娄底市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.302,
+     "area_share": 0.206,
+     "cover": 0.997
+    },
+    {
+     "name": "Xinhua",
+     "local": "新化县",
+     "prefecture": "Loudi",
+     "prefecture_local": "娄底市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.142,
+     "area_share": 0.137,
+     "cover": 0.161
+    },
+    {
+     "name": "Xinshao",
+     "local": "新邵县",
+     "prefecture": "Shaoyang",
+     "prefecture_local": "邵阳市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.076,
+     "area_share": 0.089,
+     "cover": 0.139
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.019
+    },
+    {
+     "level": "prefecture",
+     "name": "Loudi",
+     "local": "娄底市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.918,
+     "cover": 0.291
+    },
+    {
+     "level": "prefecture",
+     "name": "Shaoyang",
+     "local": "邵阳市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.082,
+     "cover": 0.015
+    }
+   ],
+   "towns": [
+    {
+     "town": "六亩塘镇",
+     "county": "涟源市",
+     "city": "娄底市",
+     "people_share": 0.074,
+     "cover": 1.0
+    },
+    {
+     "town": "坪上镇",
+     "county": "新邵县",
+     "city": "邵阳市",
+     "people_share": 0.072,
+     "cover": 0.917
+    },
+    {
+     "town": "石马山镇",
+     "county": "涟源市",
+     "city": "娄底市",
+     "people_share": 0.057,
+     "cover": 0.955
+    },
+    {
+     "town": "桑梓镇",
+     "county": "新化县",
+     "city": "娄底市",
+     "people_share": 0.054,
+     "cover": 0.89
+    },
+    {
+     "town": "中连乡",
+     "county": "冷水江市",
+     "city": "娄底市",
+     "people_share": 0.053,
+     "cover": 1.0
+    },
+    {
+     "town": "三甲乡",
+     "county": "涟源市",
+     "city": "娄底市",
+     "people_share": 0.049,
+     "cover": 1.0
+    },
+    {
+     "town": "石冲口镇",
+     "county": "新化县",
+     "city": "娄底市",
+     "people_share": 0.049,
+     "cover": 0.974
+    },
+    {
+     "town": "杨市镇",
+     "county": "涟源市",
+     "city": "娄底市",
+     "people_share": 0.048,
+     "cover": 0.92
+    },
+    {
+     "town": "龙塘镇",
+     "county": "涟源市",
+     "city": "娄底市",
+     "people_share": 0.046,
+     "cover": 0.987
+    },
+    {
+     "town": "蓝田街道",
+     "county": "涟源市",
+     "city": "娄底市",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "伏口镇",
+     "county": "涟源市",
+     "city": "娄底市",
+     "people_share": 0.032,
+     "cover": 0.982
+    },
+    {
+     "town": "上梅镇",
+     "county": "新化县",
+     "city": "娄底市",
+     "people_share": 0.032,
+     "cover": 0.336
+    }
+   ],
+   "cities": [
+    {
+     "name": "Lianyuan",
+     "admin": "Hunan",
+     "pop": 1162928
+    },
+    {
+     "name": "Lengshuijiang",
+     "admin": "Hunan",
+     "pop": 370300
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#d8affa",
+     "border_px": 1104
+    },
+    {
+     "key": "#cdb1f5",
+     "border_px": 908
+    },
+    {
+     "key": "#c6affc",
+     "border_px": 791
+    },
+    {
+     "key": "#d1c8f1",
+     "border_px": 391
+    },
+    {
+     "key": "#d7c3f4",
+     "border_px": 34
+    }
+   ],
+   "text_px": 0,
+   "n": 17,
+   "thumb": {
+    "x0": 6895,
+    "y0": 4032,
+    "k": 2.0,
+    "w": 260,
+    "h": 284
+   }
+  },
+  {
+   "key": "#cdb1f5",
+   "color": "#cdb1f5",
+   "lon": 112.0814,
+   "lat": 27.5861,
+   "bbox": [
+    6977,
+    4075,
+    7045,
+    4158
+   ],
+   "area_px": 2805,
+   "people": 2006452,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Shuangfeng",
+     "local": "双峰县",
+     "prefecture": "Loudi",
+     "prefecture_local": "娄底市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.403,
+     "area_share": 0.545,
+     "cover": 0.992
+    },
+    {
+     "name": "Louxing",
+     "local": "娄星区",
+     "prefecture": "Loudi",
+     "prefecture_local": "娄底市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.367,
+     "area_share": 0.139,
+     "cover": 0.999
+    },
+    {
+     "name": "Lianyuan",
+     "local": "涟源市",
+     "prefecture": "Loudi",
+     "prefecture_local": "娄底市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.186,
+     "area_share": 0.222,
+     "cover": 0.373
+    },
+    {
+     "name": "Xiangxiang",
+     "local": "湘乡市",
+     "prefecture": "Xiangtan",
+     "prefecture_local": "湘潭市",
+     "province": "湖南省",
+     "country": "China",
+     "people_share": 0.04,
+     "area_share": 0.084,
+     "cover": 0.109
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Hunan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.029
+    },
+    {
+     "level": "prefecture",
+     "name": "Loudi",
+     "local": "娄底市",
+     "province": "Hunan",
+     "country": "China",
+     "people_share": 0.955,
+     "cover": 0.468
+    }
+   ],
+   "towns": [
+    {
+     "town": "黄泥塘街道",
+     "county": "娄星区",
+     "city": "娄底市",
+     "people_share": 0.08,
+     "cover": 1.0
+    },
+    {
+     "town": "石井镇",
+     "county": "娄星区",
+     "city": "娄底市",
+     "people_share": 0.059,
+     "cover": 1.0
+    },
+    {
+     "town": "永丰镇",
+     "county": "双峰县",
+     "city": "娄底市",
+     "people_share": 0.054,
+     "cover": 1.0
+    },
+    {
+     "town": "桥头河镇",
+     "county": "涟源市",
+     "city": "娄底市",
+     "people_share": 0.049,
+     "cover": 0.97
+    },
+    {
+     "town": "大科街道",
+     "county": "娄星区",
+     "city": "娄底市",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "甘棠镇",
+     "county": "双峰县",
+     "city": "娄底市",
+     "people_share": 0.04,
+     "cover": 0.996
+    },
+    {
+     "town": "七星街镇",
+     "county": "涟源市",
+     "city": "娄底市",
+     "people_share": 0.037,
+     "cover": 0.91
+    },
+    {
+     "town": "涟滨街道",
+     "county": "娄星区",
+     "city": "娄底市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "杏子铺镇",
+     "county": "双峰县",
+     "city": "娄底市",
+     "people_share": 0.033,
+     "cover": 0.997
+    },
+    {
+     "town": "梓门桥镇",
+     "county": "双峰县",
+     "city": "娄底市",
+     "people_share": 0.031,
+     "cover": 0.988
+    },
+    {
+     "town": "青树坪镇",
+     "county": "双峰县",
+     "city": "娄底市",
+     "people_share": 0.03,
+     "cover": 0.985
+    }
+   ],
+   "cities": [
+    {
+     "name": "Loudi",
+     "admin": "Hunan",
+     "pop": 3931800
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#d2b7f8",
+     "border_px": 1268
+    },
+    {
+     "key": "#cda6fc",
+     "border_px": 908
+    },
+    {
+     "key": "#c0a2f7",
+     "border_px": 612
+    },
+    {
+     "key": "#ceb1fc",
+     "border_px": 537
+    },
+    {
+     "key": "#d7c3f4",
+     "border_px": 214
+    },
+    {
+     "key": "#c2a9ff",
+     "border_px": 150
+    },
+    {
+     "key": "#c6affc",
+     "border_px": 47
+    }
+   ],
+   "text_px": 0,
+   "n": 18,
+   "thumb": {
+    "x0": 6937,
+    "y0": 4035,
+    "k": 2.0,
+    "w": 296,
+    "h": 326
+   }
+  }
+ ]
+}

@@ -270,3 +270,11 @@ state from a design region it was never in. The Protestant group alone does tran
 instruments, so if Anita accepted an oriental-region Catholic share for Nueva Esparta and Delta
 Amacuro, evangelicals could come from Latinobarómetro; that is a neighbouring rate for the
 largest answer and was not done.
+
+## Pentecostals from Pew 2014 (2026-10-16)
+
+Anita's call of 2026-10-16, built by session `c67d3c3c-latam` (`latam_split.py`, sources.md
+§latam-2026-10-16). LAPOP's two Protestant boxes are one bucket of 3,486,330; 39.2% of it,
+1,365,282, is drawn on `christianity.pentecostal`, the share of Protestants Pew Research Center's
+2014 survey found in a Pentecostal church (`QPROT`, 254 Venezuelan Protestants, the lowest share
+in the region). 2,121,048 stay on the two box nodes. All `modelled`.

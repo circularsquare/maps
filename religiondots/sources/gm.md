@@ -196,3 +196,16 @@ geoBoundaries gbOpen GMB is CC BY 4.0 (World Bank data catalog 0038034); Kontur 
   reopen line (a district tier, or a split of Christians or Ahmadis) is the right trigger.
 - **Screenshot.** Dots on land, densest in the Kombos, thin along the river; none in the sea or over
   Senegal.
+
+## Churches drawn, 2026-10-16 (session `c67d3c3c-westafrica`)
+
+On Anita's call (unspecified_splits/westafrica.md §8), `Christianity` (69,638) is split 75%
+Catholic (`christianity.catholic`) and 25% Protestant (`christianity.protestant`) in every LGA. The
+witnesses disagree and 75 sits between them: the Afrobarometer's named Christians, rounds 7-9,
+87.7% Catholic (n=54); Pew 2010 66%; the Diocese of Banjul's 2023 claim, 54,000, about 64% of the
+census's Christians. No census or DHS table splits them (DHS 2019-20 FR369 has one Christian row).
+`sources/wa_christian.py gm` writes `gm_split.csv`; `tier="derived"`, never rings, rolls back
+through `gm2013.COLUMNS`.
+
+§14 note: §9's reopen line names "a split of Christians" as a trigger. This one is national and
+flat, at the same LGA grain, so it locates nobody more finely than before; the ask decision holds.

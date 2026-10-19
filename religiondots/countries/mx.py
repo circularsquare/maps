@@ -9,6 +9,13 @@ def _mx_counts():
     return _allocated_counts("mx", "municipio", mx2020)
 
 
+def _mx_counts_split():
+    """`_mx_counts` with Pew 2014's Pentecostal share drawn inside INEGI's Protestant bucket
+    (the 9.2M who answered only `Cristiana` or `Evangélica`), net of the 1.37M INEGI already
+    names Pentecostal; latam_split.py, Anita 2026-10-16."""
+    return _latam_split("mx", _mx_counts())
+
+
 ENTRY = {
     "mx": dict(
         name="Mexico",
@@ -21,11 +28,15 @@ ENTRY = {
             "denominations are thin by comparison — 23 categories, and everything except "
             "Catholic is derived from state-level shares. 'Other religions' is a single "
             "248,000-person bucket holding Buddhists, Hindus and Orthodox Christians "
-            "together."),
+            "together. Of the 9.5 million who answered only Christian or Evangelical, 4.3 "
+            "million are drawn as Pentecostal: the share of Protestants that Pew Research "
+            "Center's 2014 survey found in Pentecostal churches, less the Pentecostals INEGI "
+            "already names. The rest stay unnamed, as Pew could not place them either."),
         how="census, 2020",
-        fill="from the same census at state level",
+        fill="from the same census at state level; Pentecostals among the unnamed "
+             "Protestants from Pew Research Center's 2014 survey",
         grain="municipios, 51,000 people on average",
-        counts=_mx_counts,
+        counts=_mx_counts_split,
         # Counts are on municipio; AGEBs carry their municipio's code in the first five
         # characters of CVEGEO, so no spatial join. 81,451 AGEBs against 2,469 municipios,
         # and INEGI builds them to a population target — urban ones to about 2,500 people

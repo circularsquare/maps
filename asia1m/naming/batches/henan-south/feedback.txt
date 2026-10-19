@@ -1,0 +1,17 @@
+batch henan-south
+1: pick Shangshui
+2: pick Shangcai
+3: pick Chayashan. (Round one: no Wugang or Fangcheng; asked for a physical name.)
+4: pick Zhumadian
+5: pick Pingyu
+6: pick Runan
+7: pick Xincai
+8: pick Tongbai
+9: pick Queshan
+10: pick Huaibin
+11: pick Xi
+12: pick Gushi
+13: pick Huangchuan
+14: pick Xinyang
+15: pick Luoshan
+16: pick Jinzhai

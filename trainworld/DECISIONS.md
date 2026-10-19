@@ -5,6 +5,7 @@ reasoning and what it replaced.
 
 ## 2026-10-19
 
+- **A full platform side's red stays inside the station box, and each track is drawn 20% narrower once well apart** (Anita, T-713). This reverses T-652's stretch of the red bar past the box (it read badly and clashes with double and quad stations' platforms); the tracks narrow from 2.4 m to 1.92 m between 10 and 16 px for 4 m so the riders waiting behind show; trains stay 3 m (Anita: most of the time no train is in the station).
 - **A line keeps the note it was given when built** (Anita, T-706), stored with the line; **the turn-back crossovers are drawn** (Anita, T-658 stage d); **the schedule table has no lines between rows** (Anita, T-692).
 
 - **Double track shows as two tracks from about zoom 17, a platform each side of them; in Line + traffic thickness the two tracks draw over the traffic width, which stays behind** (Anita, T-658; the turn-back crossovers still wait on her).
@@ -2375,5 +2376,7 @@ reasoning and what it replaced.
 - 2026-10-19 (T-692, Anita): Express copy is removed (the button, the `express` flag on `copyLine`, `express_copy` and `twin_station` in sim/src/track/wasm.rs; quad track and twin stations stay). The crowding dot goes by the level's average wait for a train with room, in minutes (`crowdColour(avg.wait)`): green to 2, yellow at 3, orange at 10, red at 15, deep red from 20; the score still grades the hover's worst-period line and `crowdClass`. The green plateau to 2 min is my choice, so that her 2.2 min reads nearly green.
 
 - 2026-10-19 (T-700): a zone's cells split by bank for walking the whole way: a part is the cells its representative reaches by a walk of at most 1.5 x the straight line + 500 m, at most 4 parts a zone (`routes::walk_tables`); a cell centred in a river joins the first part that reaches it, and a subzone takes the part most of its people are in. The thresholds are my choice; Shanghai splits 127 of 1,879 zones.
+
+- 2026-10-19 (T-710, Anita): riders choose station pairs by the time difference relative to the trip: scale 20 / min(25 + 3 x straight km, 60) perceived minutes, in four bands (0-3, 3-7, 7-12, 12+ km), set by judgement against her examples rather than fitted; crowding counts from 70% of crush, not from the seats (she found 80%'s 1.27 x crush at the worst peak segment too much). The regional layer keeps 0.2.
 
 - 2026-10-19 (T-708): Double up adds the express pair as blueprint even beside built track (Construct then pays, as for any blueprint) rather than charging at once; it covers the whole run through plain joints and stations (twins added) up to a junction (where it swings in) or another end (loose end beside); left of the selected piece, else right. My choices; the alternative was one piece at a time, which T-248 found tedious.

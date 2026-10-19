@@ -187,3 +187,13 @@ four Japanese agricultural colonies, planted from 1936. `Reyukai` (72 people nat
 * The engine also serves `CrossTab`, so **religion × ethnicity or × department of birth** is
   one POST away if a question ever wants it. `PERSONA.ETNIA` and `PERSONA.PUEBLO` are in the
   same dictionary.
+
+## 9. Pentecostals from Pew 2014 (2026-10-16)
+
+Anita's call of 2026-10-16, built by session `c67d3c3c-latam` (`latam_split.py`, sources.md
+§latam-2026-10-16). Pew Research Center's 2014 survey puts 44.3% of Paraguayan Protestants in a
+Pentecostal church (`QPROT`, 116 Protestants, the thinnest sample in the set). Against the drawn
+Protestant universe of 249,338 that is 110,457, less the Pentecostal churches the census already
+names (Asamblea de Dios, Iglesia de Dios and the rest, about 22,900) = 87,538 drawn on
+`christianity.pentecostal` out of the 186,107 `Otras - Evangélica` (47.0%); 98,569 stay on
+`christianity.evangelical`. The split rows are `derived` and roll back to `Otras - Evangélica`.

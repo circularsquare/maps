@@ -561,3 +561,27 @@ the unnamed share on the parent. So Wales draws about 36% plain Christian beside
   Cardiff, Menevia and Wrexham dioceses, the chapels' yearbooks. They would test placement, and
   the Catholic one could justify placing Catholics by diocese through an override; left for a
   later session.
+
+## 13. England and Wales's Muslims split for Pakistani and Bangladeshi Muslims, 2026-10-16 (session `c67d3c3c-islam`)
+
+Anita's call: the first step of `unspecified_splits/islam.md` §4 only. Built as `sources/uk_islam.py`
+(docstring has the method), writing `data/normalized/uk_islam_split.csv`, which `countries/uk.py`
+swaps in for the allocated file's E&W `Muslim` rows (and fails if the totals differ).
+
+- **Source 1**: ONS Census 2021, religion (10) x ethnic group (20) by LTLA, Cantabular API
+  `api.beta.ons.gov.uk/v1/population-types/UR/census-observations?area-type=ltla&dimensions=religion_tb,ethnic_group_tb_20b`,
+  open, no key; saved as `data/raw/uk/ons_religion_x_ethnic_ltla.json`; one of 331 LTLAs blocked.
+  Muslims: Pakistani 1,470,766 (38.0%), Bangladeshi 593,142 (15.3%).
+- **Source 2**: Pew, *The World's Muslims* (2012), Q31 p. 30: Pakistan 81 Sunni / 6 Shi'a, Bangladesh
+  92 / 2.
+- **Join**: `oa_lad.csv` is LAD 2023; Cumberland, Westmorland and Furness, North Yorkshire and Somerset
+  sum their named 2021 predecessors. Allocated OA Muslims and the ONS cross agree per district within
+  1.15% (Hartlepool, E06000009), asserted at 2%.
+- **Result**: 3,868,098 E&W Muslims: `islam.sunni` 1,737,049 (44.9%), `islam.shia` 100,111 (2.6%),
+  `islam` 2,030,939. Tier `derived`, `parent_column=Muslim`, `uk2021.COLUMNS["Muslim"] = "islam"`;
+  `check_rollup.py uk` 0 orphaned. `coverage.py` `regions()` adds the two categories to `uk-ew`.
+- **Known cost**: uniform inside a district, and the Shia drawn are the Pakistani and Bangladeshi
+  share only; the Iraqi, Iranian, Lebanese and Khoja communities (Brent, Ealing, Westminster) stay on
+  `islam`. Ethnic groups Arab, Other, Other Asian, Indian, Black African and Other White were not
+  split (not approved; no published origin mix for them among Muslims). Religion x country of birth
+  exists but is blocked for 270 of 331 LTLAs.

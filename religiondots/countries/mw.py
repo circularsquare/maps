@@ -61,12 +61,17 @@ def _mw_counts():
     exactly on all 36 printed rows — so Malawi is one of the very few countries here with
     no §3.5 gap of any kind.
     """
+    import mw2018
     from mw2018 import resolve
 
     df = pd.read_csv(HERE / "data" / "normalized" / "mw.csv",
                      dtype={"geo_id": str}, low_memory=False,
                      keep_default_na=False, na_values=[""])
     df = df[df["geo_level"] == "district"].copy()
+    # 2026-10-16: the two Christian residual cells replaced by named churches at Afrobarometer
+    # R4-R9 regional shares (sources/ea_christian.py). Those rows are `derived` and roll back.
+    df = _swap_christian_split(df, "mw", ["Seventh Day Adventist/Baptist/Apostolic",
+                                          "Other Christian Denominations"])
 
     lut = pd.read_csv(HERE / "data" / "geo" / "mw" / "mw_lookup.csv", dtype=str)
     df["unit"] = df["geo_id"].map(dict(zip(lut["geo_id"], lut["unit"])))
@@ -78,9 +83,12 @@ def _mw_counts():
         raise SystemExit(f"{df['unit'].nunique()} districts, expected 32")
 
     df["node"] = df["source_category"].map(resolve)
-    df = df[df["node"].notna() & (df["count"] > 0)]
+    df = df[df["node"].notna() & (df["count"] > 0)].copy()
     df["congregations"] = 0
-    return df[["unit", "node", "count", "congregations"]]
+    df["tier"] = df["split"].map({True: "derived", False: "measured"})
+    df["may_ring"] = ~df["split"]
+    df = _add_roll(df, mw2018.COLUMNS)
+    return df[["unit", "node", "count", "congregations", "may_ring", "tier", "roll"]]
 
 
 ENTRY = {
@@ -120,9 +128,15 @@ ENTRY = {
             "membership rather than replacing it. "
             "**And the largest cell in the country is a residual.** *Other Christian "
             "Denominations* is 26.6%, more than the Catholics, and it runs from 48.3% in "
-            "Nkhata Bay to 5.5% on Likoma. Most of it is Malawi's very large independent "
-            "and Zion church sector, which the census does not name."),
+            "Nkhata Bay to 5.5% on Likoma. "
+            "The census does not name the churches in it or in its combined Adventist, "
+            "Baptist and Apostolic answer, so both are divided at the shares Afrobarometer "
+            "surveys (2008 to 2022) found in each of Malawi's three regions: independent "
+            "churches, the Church of Christ, Evangelicals and Jehovah's Witnesses from the "
+            "first, and Adventists (**64%**) and Baptists (33%) from the second. "
+            "Christians who named no church stay unspecified."),
         how="census, 2018",
+        fill="churches from Afrobarometer surveys, 2008 to 2022",
         grain="districts, 549,000 people on average",
         counts=_mw_counts,
         units=None,
@@ -154,9 +168,10 @@ ENTRY = {
              "there, so §8.2c's problem does not arise instead of being patched. "
              "ONE CATEGORY IS A MERGE OF THREE TRADITIONS. SDA/Baptist/Apostolic is "
              "1,644,829 people, 9.4%, and the tree keeps Adventists, Baptists and the "
-             "African Apostolic churches in three different places. It is drawn as Other "
-             "Christian, because the census does not say which of the three anyone belongs "
-             "to and no split is inferred; taxonomy/mw2018.py has the argument. "
+             "African Apostolic churches in three different places. Since 2026-10-16 it and "
+             "Other Christian Denominations are split at Afrobarometer R4-R9 regional shares "
+             "(sources/ea_christian.py), every split row `derived` and rolling back to its "
+             "cell; taxonomy/mw2018.py has the argument. "
              "AND `Other Denomination` IS PARTLY KNOWN AND NOT SEPARABLE: Table 3.4 splits "
              "the same national figure into Buddhism 5,506, Hinduism 3,211 and other "
              "non-Christian 983,587, and no table in the report gives any of the three a "

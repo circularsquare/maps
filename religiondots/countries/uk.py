@@ -54,7 +54,20 @@ def _uk_counts():
                 raise SystemExit(
                     f"uk_split_wales.csv draws {w_split['count'].sum():,.0f} Welsh Christians "
                     f"against the {w_replaced:,.0f} it replaces; re-run uk_split_wales.py")
-            d = pd.concat([d, split, w_split], ignore_index=True)
+            # England's and Wales's `Muslim` rows, the same way, from sources/uk_islam.py
+            # (2026-10-16): Pakistani and Bangladeshi Muslims per local authority get Pew 2012's
+            # Sunni and Shi'a shares; the rest stays on the census's `Muslim`.
+            ew = d["geo_id"].str[:1].isin(["E", "W"])
+            m_replaced = d.loc[ew & (d["source_category"] == "Muslim"), "count"].sum()
+            d = d[~(ew & (d["source_category"] == "Muslim"))]
+            m_split = pd.read_csv(HERE / "data" / "normalized" / "uk_islam_split.csv",
+                                  dtype={"geo_id": str}, low_memory=False)
+            if abs(m_split["count"].sum() - m_replaced) > 1.0:
+                raise SystemExit(
+                    f"uk_islam_split.csv draws {m_split['count'].sum():,.0f} Muslims in England "
+                    f"and Wales against the {m_replaced:,.0f} it replaces; re-run "
+                    f"sources/uk_islam.py")
+            d = pd.concat([d, split, w_split, m_split], ignore_index=True)
         d["may_ring"] = d["tier"] == "measured"
         frames.append(d[["geo_id", "source_category", "count", "may_ring", "tier", "note"]])
 
@@ -122,13 +135,25 @@ ENTRY = {
             "of Wales has no box of its own either, and many of its members seem to have "
             "answered Methodist, which is why Methodism peaks in Anglesey and Gwynedd. The "
             "Union of Welsh Independents has no box at all.\n\n"
+            "Muslims in England and Wales are split into Sunni and Shia for the people whose "
+            "ethnic group names one country. In each local authority, the census counts "
+            "Muslims who are Pakistani or Bangladeshi by ethnic group, and Pew's 2012 survey "
+            "of Muslims gives the branch shares for those countries: Pakistan 81% Sunni and 6% "
+            "Shia, Bangladesh 92% Sunni and 2% Shia. That puts **1.74 million** on Sunni and "
+            "about 100,000 on Shia, the same share in every part of a local authority. The "
+            "other half, Arab, African, Indian, Turkish, Iranian and the rest, stays on the "
+            "plain Muslim figure, because nothing published says which countries they come "
+            "from. So the Shia shown here come only from those two shares; the Iraqi, Iranian and "
+            "Lebanese communities of west London are not separated. These are inferred and "
+            "fold back into the census's Muslim count if you switch inferred dots off.\n\n"
             "Scotland names the Church of Scotland and the Roman Catholics and stops. "
             "Northern Ireland, where the denomination is the political fact, names "
             "twenty-two Christian bodies including four kinds of Presbyterian, and is the "
             "only agency here that counts people as Mixed Catholic / Protestant."),
         how="censuses, 2021 and 2022, voluntary in England and Wales",
         fill=("from the same censuses at a coarser geography; Christian denominations from "
-              "church registers, a 2005 English church census and the British Election Study"),
+              "church registers, a 2005 English church census and the British Election Study; "
+              "Sunni and Shia from ethnic group by local authority and Pew's 2012 survey"),
         grain="output areas, 260 people on average",
         counts=_uk_counts,
         # The counts are already on the finest units published — Output Areas in England,

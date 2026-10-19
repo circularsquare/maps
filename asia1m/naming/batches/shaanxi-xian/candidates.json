@@ -1,0 +1,543 @@
+{
+  "batch": "shaanxi-xian",
+  "regions": [
+    {
+      "n": 1,
+      "key": "#ebeec8",
+      "settled": null,
+      "summary": "Weibei highland on the Jing River north of Xianyang: Bin, Xunyi, Changwu, Zhengning (Gansu), Chunhua.",
+      "candidates": [
+        {
+          "name": "Binzhou",
+          "local": "邠州",
+          "origin": "prefecture",
+          "meaning": "Prefecture of Bin (the old Zhou homeland); in 725 the Tang changed the character 豳 to 邠 because it looked too like Youzhou (幽). Today's Binzhou is the county-level city at the same seat.",
+          "fit": "Bin county is 29% of the region's people and all of it lies inside; the prefecture also held Xunyi, Changwu and Yongshou.",
+          "recognisability": "Own zh-wiki articles (邠州, 彬州市), 498 hits with 陕西, top ones about this place.",
+          "source_url": "https://zh.wikipedia.org/wiki/邠州",
+          "source_note": "治新平县（今陕西彬县）；725年改豳州为邠州，沿袭至清末",
+          "status": "suggested"
+        },
+        {
+          "name": "Xunyi",
+          "local": "旬邑",
+          "origin": "county",
+          "meaning": "Qin county name 栒邑, simplified to 旬邑 in 1964; known as the apple county.",
+          "fit": "23.7% of the region's people, whole county inside; second largest unit.",
+          "recognisability": "Own zh-wiki article, county of Xianyang.",
+          "source_url": "https://zh.wikipedia.org/wiki/旬邑县",
+          "source_note": "战国时期的秦国初设栒邑县；1964年改称旬邑县",
+          "status": "suggested"
+        }
+      ],
+      "notes": "Pinyin Binzhou is identical to Binzhou (滨州) in Shandong; far away, but Anita should know."
+    },
+    {
+      "n": 2,
+      "key": "#f0ea99",
+      "settled": null,
+      "summary": "Jing River plain north of the Wei: Jingyang county, northern Xianyang (Weicheng) and Gaoling.",
+      "candidates": [
+        {
+          "name": "Jingyang",
+          "local": "泾阳",
+          "origin": "county",
+          "meaning": "\"Sunny side of the Jing\" (north bank); named in the Shijing (Xiaoya, Liuyue).",
+          "fit": "42% of the region's people, 99% of the county inside; seat Jinggan town is in the region.",
+          "recognisability": "Own zh-wiki article, 733 hits with 陕西, top ones about this place.",
+          "source_url": "https://zh.wikipedia.org/wiki/泾阳县",
+          "source_note": "泾阳之名最早见于《诗·小雅·六月》",
+          "status": "suggested"
+        },
+        {
+          "name": "Weicheng",
+          "local": "渭城",
+          "origin": "historical",
+          "meaning": "\"Wei city\": Han county that replaced Qin Xianyang at Yaodian, known from Wang Wei's Weicheng poem. Today a Xianyang district.",
+          "fit": "Han Weicheng seat lay at Yaodian in today's Weicheng district; the region holds that district's eastern part (29% of people, with Zhouling and Zhengyang streets).",
+          "recognisability": "Own zh-wiki articles (渭城县, 渭城区), 159 hits with 陕西; modest.",
+          "source_url": "https://zh.wikipedia.org/wiki/渭城县",
+          "source_note": "汉武帝时改为渭城县（今咸阳渭城区窑店）",
+          "status": "suggested"
+        }
+      ],
+      "notes": "Qin Xianyang itself lay here (Yaodian), not at the modern Xianyang centre in region 7."
+    },
+    {
+      "n": 3,
+      "key": "#ebda88",
+      "settled": null,
+      "summary": "Wei plain northeast of Xi'an: Sanyuan, Gaoling, Yanliang and northern Lintong.",
+      "candidates": [
+        {
+          "name": "Sanyuan",
+          "local": "三原",
+          "origin": "county",
+          "meaning": "\"Three plains\": named after the Mengou, Feng and Bailu plains around it; home of the Sanyuan merchants.",
+          "fit": "Second largest unit (27% of people, 73% of the county inside) and the only whole county in a region of Yanliang, Gaoling and northern Lintong parts.",
+          "recognisability": "Own zh-wiki article, 1004 hits with 陕西, top ones about this place.",
+          "source_url": "https://zh.wikipedia.org/wiki/三原县",
+          "source_note": "《元和郡县志》：以其地西有孟侯原，南曰丰原，北曰白鹿原，故名",
+          "status": "suggested"
+        },
+        {
+          "name": "Gaoling",
+          "local": "高陵",
+          "origin": "county",
+          "meaning": "\"High mound\", from the Fengzheng plain south of the town (Erya: a big mound is a ling).",
+          "fit": "17% of people; county was split with region 2, which holds 14% of its own people.",
+          "recognisability": "Own zh-wiki article, now a Xi'an district.",
+          "source_url": "https://zh.wikipedia.org/wiki/高陵区",
+          "source_note": "因县内有奉正原…取《尔雅》曰“大阜曰陵”，故名“高陵”",
+          "status": "suggested"
+        },
+        {
+          "name": "Lintong",
+          "local": "临潼",
+          "origin": "county",
+          "meaning": "\"Overlooking the Tong (a stream)\"; the Qin Terracotta Army district.",
+          "fit": "Listed as 55% of people, but the units layer lumps Yanliang in; the Lintong centre, Mount Li and the Terracotta Army are in region 5.",
+          "recognisability": "Very high, but it belongs to region 5.",
+          "source_url": "https://zh.wikipedia.org/wiki/临潼区",
+          "source_note": "区人民政府驻骊山街道（在5号区）",
+          "status": "rejected"
+        }
+      ],
+      "notes": "Yueyang (Qin capital at Yanliang) fits historically but would clash with Yueyang in Hunan, so I left it out."
+    },
+    {
+      "n": 4,
+      "key": "#eaf0b0",
+      "settled": null,
+      "summary": "Qian and Liquan counties west of Xianyang, with part of Yongshou.",
+      "candidates": [
+        {
+          "name": "Qianzhou",
+          "local": "乾州",
+          "origin": "prefecture",
+          "meaning": "Prefecture of Qian (\"heaven\", after Qianling, the tomb of Emperor Gaozong and Wu Zetian).",
+          "fit": "Prefecture seated at Qian county, 53% of the region's people; Liquan was also under it in Tang and Song.",
+          "recognisability": "Own zh-wiki article, 187 hits with 陕西; Qian county is known for Qianling.",
+          "source_url": "https://zh.wikipedia.org/wiki/乾州_(乾宁)",
+          "source_note": "治所在奉天县（今陕西省乾县）；辖区约当今乾县、武功、周至、礼泉等县地",
+          "status": "suggested"
+        },
+        {
+          "name": "Liquan",
+          "local": "礼泉",
+          "origin": "county",
+          "meaning": "\"Sweet spring\" (醴泉): a spring tasting like sweet wine welled up beside a Han palace; Taizong's Zhaoling tomb is here.",
+          "fit": "34% of people, 84% of the county inside.",
+          "recognisability": "Own zh-wiki article, county of Xianyang.",
+          "source_url": "https://zh.wikipedia.org/wiki/礼泉县",
+          "source_note": "汉宣帝时涌出，其味如醴。隋置县取此",
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 5,
+      "key": "#f0dd6b",
+      "settled": null,
+      "summary": "East of Xi'an: Lintong centre with the Terracotta Army, Mount Li, and the Baqiao district.",
+      "candidates": [
+        {
+          "name": "Lishan",
+          "local": "骊山",
+          "origin": "mountain",
+          "meaning": "\"Black horse mountain\", an outlier of the Qinling at Lintong with the Huaqing hot springs and Qin Shi Huang's tomb at its foot.",
+          "fit": "Lintong streets (Qinling, Xinfeng, Lishan, Daiwang, Xiquan) are 54% of people and sit around the mountain.",
+          "recognisability": "Own zh-wiki article, 283 hits with 陕西, top ones about this place.",
+          "source_url": "https://zh.wikipedia.org/wiki/骊山",
+          "source_note": "骊山位于西安市临潼区城区南侧…是秦岭北麓的山地",
+          "status": "suggested"
+        },
+        {
+          "name": "Lintong",
+          "local": "临潼",
+          "origin": "county",
+          "meaning": "\"Overlooking the Tong\"; the Tang Zhaoying county renamed Lintong in 1015.",
+          "fit": "The district centre is here, though the region also holds the Baqiao part (about 40%) and the district's north is in region 3.",
+          "recognisability": "Own zh-wiki article, the Terracotta Army district.",
+          "source_url": "https://zh.wikipedia.org/wiki/临潼区",
+          "source_note": "区人民政府驻骊山街道",
+          "status": "suggested"
+        }
+      ],
+      "notes": "Lintong as a name is better known than Lishan. Either works; Lishan keeps the district name from covering the Baqiao half."
+    },
+    {
+      "n": 6,
+      "key": "#faf06b",
+      "settled": null,
+      "summary": "Northwest of Xi'an: Weiyang district's western streets, Han Chang'an city ruins, Jianzhang road, Caotan.",
+      "candidates": [
+        {
+          "name": "Jianzhang",
+          "local": "建章",
+          "origin": "historical",
+          "meaning": "Jianzhang Palace, the large Han detached palace of Emperor Wu just west of Han Chang'an.",
+          "fit": "Jianzhang road street is 8% of people; the Han city ruins (Hancheng street, 20%) lie in the same region, and the palace sat just outside the city's southwest wall.",
+          "recognisability": "Own zh-wiki article; modest outside Han history.",
+          "source_url": "https://zh.wikipedia.org/wiki/建章宫",
+          "source_note": "建章宫是汉长安城在城外西南侧的一座离宫",
+          "status": "suggested"
+        },
+        {
+          "name": "Weiyang",
+          "local": "未央",
+          "origin": "county",
+          "meaning": "\"Not yet ended\": the Han Weiyang Palace; today's Weiyang district, named after it.",
+          "fit": "All eight streets of this region are Weiyang district streets, but the palace street itself and the district seat area sit in region 8.",
+          "recognisability": "Own zh-wiki article for district and palace.",
+          "source_url": "https://zh.wikipedia.org/wiki/未央区",
+          "source_note": "名称由区内的汉未央宫而来",
+          "status": "suggested"
+        }
+      ],
+      "notes": "Weiyang is also offered for region 8. Use it in only one."
+    },
+    {
+      "n": 7,
+      "key": "#e5f060",
+      "settled": null,
+      "summary": "Xianyang urban core: Qindu district and southern Weicheng.",
+      "candidates": [
+        {
+          "name": "Xianyang",
+          "local": "咸阳",
+          "origin": "city",
+          "meaning": "\"Yang on all sides\": north of the Wei river and south of Mount Jiuzong, both on the sunny side. The Qin capital.",
+          "fit": "City rule: Xianyang's urban population is over 1M and this region holds the modern centre (Qindu and Weicheng streets, 92% of the region's people).",
+          "recognisability": "Very high.",
+          "source_url": "https://zh.wikipedia.org/wiki/咸阳市",
+          "source_note": "山南曰阳，水北也称阳。咸阳地处九嵕山之南，渭水之北，山水俱阳",
+          "status": "suggested"
+        }
+      ],
+      "notes": "The Qin capital's ruins are around Yaodian, in region 2."
+    },
+    {
+      "n": 8,
+      "key": "#ebee29",
+      "settled": null,
+      "summary": "North side of Xi'an inside the ring road: Weiyang Palace, Daming Palace, Beiguan, Zhangjiabao.",
+      "candidates": [
+        {
+          "name": "Weiyang",
+          "local": "未央",
+          "origin": "historical",
+          "meaning": "\"Not yet ended\": the Han emperors' main palace in Chang'an, built from 200 BC.",
+          "fit": "Weiyang Palace street is 31% of people and holds the palace ruins; the region also has Weiyang district's seat area.",
+          "recognisability": "Own zh-wiki article, 182 hits with 陕西, top ones about this place.",
+          "source_url": "https://zh.wikipedia.org/wiki/未央宫",
+          "source_note": "未央宫是汉长安城的主要宫殿，遗址位于今西安市未央区",
+          "status": "suggested"
+        },
+        {
+          "name": "Daming",
+          "local": "大明",
+          "origin": "historical",
+          "meaning": "\"Great brightness\": Tang Daming Palace (Eastern Inner Court), the main imperial residence from Gaozong on.",
+          "fit": "Daming Palace street is 26% of people and holds the palace site.",
+          "recognisability": "Own zh-wiki article, 744 hits with 陕西; but plain \"Daming\" is also a county in Hebei (大名).",
+          "source_url": "https://zh.wikipedia.org/wiki/大明宫",
+          "source_note": "大明宫又称东内，为唐长安城东北部的宫城",
+          "status": "suggested"
+        }
+      ],
+      "notes": "Both palaces are in this region; Weiyang is also on the list for region 6."
+    },
+    {
+      "n": 9,
+      "key": "#ebf389",
+      "settled": null,
+      "summary": "Wei plain west of Xianyang: Xingping, Wugong, Yangling and a slice of Qindu.",
+      "candidates": [
+        {
+          "name": "Xingping",
+          "local": "兴平",
+          "origin": "city",
+          "meaning": "\"Rising peace\": renamed after the Xingping army camped there in the An Lushan rebellion.",
+          "fit": "53% of people, 98% of the county-level city inside.",
+          "recognisability": "Own zh-wiki article, county-level city of Xianyang.",
+          "source_url": "https://zh.wikipedia.org/wiki/兴平市",
+          "source_note": "因平乱有功的兴平军驻扎此地，遂改名“兴平县”，并沿用至今",
+          "status": "suggested"
+        },
+        {
+          "name": "Maoling",
+          "local": "茂陵",
+          "origin": "historical",
+          "meaning": "Tomb of Emperor Wu of Han, and the Han county built around it.",
+          "fit": "The tomb is in Xingping; the Han Maoling county (139 BC to 219) lay in the region's largest unit.",
+          "recognisability": "Own zh-wiki article, 350 hits with 陕西, top ones about this place.",
+          "source_url": "https://zh.wikipedia.org/wiki/汉茂陵",
+          "source_note": "位于咸阳市区与兴平市之间的五陵塬",
+          "status": "suggested"
+        },
+        {
+          "name": "Wugong",
+          "local": "武功",
+          "origin": "county",
+          "meaning": "\"Martial merit\", an old Han county name.",
+          "fit": "32% of people, 77% of the county inside.",
+          "recognisability": "Own zh-wiki article, but pinyin Wugong reads as the martial-arts word.",
+          "source_url": "https://zh.wikipedia.org/wiki/武功县",
+          "source_note": "武功县是咸阳市所辖的一个县",
+          "status": "rejected"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 10,
+      "key": "#bbe422",
+      "settled": null,
+      "summary": "Small sliver west of Xi'an's old city: Zaoyuan, Tumen and Taoyuanlu streets in Lianhu district.",
+      "candidates": [
+        {
+          "name": "Zaoyuan",
+          "local": "枣园",
+          "origin": "other",
+          "meaning": "\"Jujube garden\": a Lianhu subdistrict (and a village name on the Han city's south side).",
+          "fit": "Zaoyuan is 46% of the region's people.",
+          "recognisability": "Own zh-wiki article for the Xi'an street, but the Zaoyuan in Yan'an is far better known.",
+          "source_url": "https://zh.wikipedia.org/wiki/枣园街道_(西安市)",
+          "source_note": "枣园街道隶属西安市莲湖区；下辖汉城北路社区等",
+          "status": "suggested"
+        },
+        {
+          "name": "Lianhu",
+          "local": "莲湖",
+          "origin": "county",
+          "meaning": "\"Lotus lake\", after the Lianhu park; the district's name.",
+          "fit": "All three streets belong to Lianhu district, but most of that district's 1M people are in region 11.",
+          "recognisability": "Own zh-wiki article.",
+          "source_url": "https://zh.wikipedia.org/wiki/莲湖区",
+          "source_note": "由莲湖公园而得名；常住人口约102万人",
+          "status": "suggested"
+        }
+      ],
+      "notes": "A 166k sliver with no obvious historical or natural name. Weak options; Anita may prefer to pick by hand."
+    },
+    {
+      "n": 11,
+      "key": "#dee200",
+      "settled": null,
+      "summary": "Xi'an's walled old city and inner ring: Beilin, Lianhu and Xincheng cores.",
+      "candidates": [
+        {
+          "name": "Xi'an",
+          "local": "西安",
+          "origin": "city",
+          "meaning": "\"Western peace\": the Ming name for the city (formerly Chang'an).",
+          "fit": "City rule: the most central region, holding the Ming city wall streets (Beilin, Beiyuanmen, Zhongshanmen).",
+          "recognisability": "Very high.",
+          "source_url": "https://zh.wikipedia.org/wiki/西安市",
+          "source_note": "西安主城区至今仍保留有完整的明代城墙及城门",
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 12,
+      "key": "#e8dc43",
+      "settled": null,
+      "summary": "East and southeast of the old city: Qujiang, Dayanta, Dengjiapo, Hansenzhai, Shilipu.",
+      "candidates": [
+        {
+          "name": "Qujiang",
+          "local": "曲江",
+          "origin": "other",
+          "meaning": "\"Winding river\": the Tang imperial pleasure pool and park, now the Qujiang new area.",
+          "fit": "Qujiang street is 13% of people, Dayanta and Dengjiapo (also Yanta) another 24%.",
+          "recognisability": "Own zh-wiki article, 809 hits with 陕西, top ones about this place.",
+          "source_url": "https://zh.wikipedia.org/wiki/曲江新区",
+          "source_note": "曲江新区属于雁塔区，位于西安城东南",
+          "status": "suggested"
+        },
+        {
+          "name": "Yanta",
+          "local": "雁塔",
+          "origin": "county",
+          "meaning": "\"Wild goose pagoda\": the Big Wild Goose Pagoda, the district's name.",
+          "fit": "The pagoda street and Dengjiapo are in the region; the district's other streets are in region 13.",
+          "recognisability": "Own zh-wiki article, 468 hits with 陕西.",
+          "source_url": "https://zh.wikipedia.org/wiki/雁塔区",
+          "source_note": "名称由著名的大雁塔而来",
+          "status": "suggested"
+        }
+      ],
+      "notes": "Yanta is also the district of region 13, but only region 12 holds the pagoda."
+    },
+    {
+      "n": 13,
+      "key": "#cce030",
+      "settled": null,
+      "summary": "South of the old city: Changyanbao, Zhangbagou, Dianzicheng, Xiaozhai (Gaoxin area).",
+      "candidates": [
+        {
+          "name": "Xiaozhai",
+          "local": "小寨",
+          "origin": "other",
+          "meaning": "\"Small stockade\": the south-city commercial and university hub of Xi'an, and the old seat of Yanta district.",
+          "fit": "Xiaozhai road street is 11% of people; the region is the southern Yanta streets and the Gaoxin zone around it.",
+          "recognisability": "Own zh-wiki article, 237 hits with 陕西, but several are about the Lantian Xiaozhai.",
+          "source_url": "https://zh.wikipedia.org/wiki/小寨",
+          "source_note": "区人民政府驻小寨东路168号",
+          "status": "suggested"
+        },
+        {
+          "name": "Yanta",
+          "local": "雁塔",
+          "origin": "county",
+          "meaning": "\"Wild goose pagoda\": the Big Wild Goose Pagoda, the district's name.",
+          "fit": "All five streets are in Yanta district, but the pagoda itself is in region 12.",
+          "recognisability": "Own zh-wiki article.",
+          "source_url": "https://zh.wikipedia.org/wiki/雁塔区",
+          "source_note": "名称由著名的大雁塔而来",
+          "status": "rejected"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 14,
+      "key": "#e3f085",
+      "summary": "West and southwest of Xi'an: western Chang'an district, Doumen, Qindu on the Feng, Hu's east.",
+      "settled": null,
+      "candidates": [
+        {
+          "name": "Haojing",
+          "local": "镐京",
+          "origin": "historical",
+          "meaning": "Capital of the Western Zhou founded by King Wu, on the east bank of the Feng River.",
+          "fit": "The ruins are at Doumen (Doumen street, 8% of people) and in the Chang'an streets that are 64% of the region.",
+          "recognisability": "Own zh-wiki article (鎬京), 54 hits with 陕西, less than the Fenghao pair.",
+          "source_url": "https://zh.wikipedia.org/wiki/丰镐",
+          "source_note": "镐京位于沣河东岸，为周武王所建",
+          "status": "suggested"
+        },
+        {
+          "name": "Fenghao",
+          "local": "丰镐",
+          "origin": "historical",
+          "meaning": "Feng and Hao, the twin Western Zhou capitals either side of the Feng River.",
+          "fit": "Both sites lie within or beside the region (Feng on the west bank in the Fengxi side, Hao at Doumen).",
+          "recognisability": "Own zh-wiki article, national heritage site.",
+          "source_url": "https://zh.wikipedia.org/wiki/丰镐",
+          "source_note": "丰京位于今西安市西南沣河西岸…镐京位于沣河东岸",
+          "status": "suggested"
+        },
+        {
+          "name": "Chang'an",
+          "local": "长安",
+          "origin": "county",
+          "meaning": "\"Perpetual peace\": the capital's name since Han, and today's district.",
+          "fit": "64% of people, but only 31% of the district; the seat Weiqu is in region 15, which takes the name.",
+          "recognisability": "Very high.",
+          "source_url": "https://zh.wikipedia.org/wiki/长安区_(西安市)",
+          "source_note": "区人民政府驻地韦曲街道",
+          "status": "rejected"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 15,
+      "key": "#d7e859",
+      "settled": null,
+      "summary": "Weiqu and Guodu, the Chang'an district seat south of the old city.",
+      "candidates": [
+        {
+          "name": "Chang'an",
+          "local": "长安",
+          "origin": "county",
+          "meaning": "\"Perpetual peace\": Han capital name and today's Xi'an district; the old Chang'an county seat was Weiqu.",
+          "fit": "73% of people, Weiqu (the district seat and old county seat) is 43% of the region.",
+          "recognisability": "Very high; own zh-wiki article for the district.",
+          "source_url": "https://zh.wikipedia.org/wiki/长安区_(西安市)",
+          "source_note": "区人民政府驻地韦曲街道；公元前202年，西汉设立长安县",
+          "status": "suggested"
+        }
+      ],
+      "notes": "Only one good candidate; Chang'an is also the name of the whole old city, so Anita may prefer it elsewhere. Region 14 and 16 hold other parts of the district."
+    },
+    {
+      "n": 16,
+      "key": "#ede696",
+      "settled": null,
+      "summary": "Southeast: Lantian county, Bailuyuan plain, eastern Chang'an district and Baqiao south.",
+      "candidates": [
+        {
+          "name": "Lantian",
+          "local": "蓝田",
+          "origin": "county",
+          "meaning": "\"Blue field\": the source of Lantian jade, and of Lantian Man (about 1.5M years old).",
+          "fit": "47% of people, 99% of the county inside, 69% of the area.",
+          "recognisability": "Own zh-wiki article, one of the four famous jades.",
+          "source_url": "https://zh.wikipedia.org/wiki/蓝田县",
+          "source_note": "古时以盛产蓝田玉闻名；境内有蓝田猿人遗址",
+          "status": "suggested"
+        },
+        {
+          "name": "Bailuyuan",
+          "local": "白鹿原",
+          "origin": "plain",
+          "meaning": "\"White deer plain\": the plateau between the Ba and Chan rivers; also the title of Chen Zhongshi's novel.",
+          "fit": "Hongqi and Dizhai streets (Baqiao) and the Chang'an east streets lie on the plain; the Lantian county is mostly mountain beyond it.",
+          "recognisability": "Own zh-wiki article, 159 hits with 陕西; novel and film are famous.",
+          "source_url": "https://zh.wikipedia.org/wiki/白鹿原_(地名)",
+          "source_note": "位于西安市东南方向10公里，灞河和浐河之间",
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 17,
+      "key": "#ebf0aa",
+      "settled": null,
+      "summary": "Southwest foothills of the Qinling: Hu (Huyi) district, Zhouzhi county, southwest Chang'an.",
+      "candidates": [
+        {
+          "name": "Zhongnan",
+          "local": "终南",
+          "origin": "mountain",
+          "meaning": "\"South end\": the Zhongnan mountains, the Qinling stretch behind Xi'an, a hermit and Daoist centre.",
+          "fit": "Zhongnan town, Louguan and Caotang lie in the region, 15% of its people; the mountains form its whole southern edge.",
+          "recognisability": "Own zh-wiki article, 240 hits with 陕西, top ones about this place.",
+          "source_url": "https://zh.wikipedia.org/wiki/终南山",
+          "source_note": "一般指秦岭山脉中段陕西省境内，西起武功县，东到蓝田县的部分",
+          "status": "suggested"
+        },
+        {
+          "name": "Zhouzhi",
+          "local": "周至",
+          "origin": "county",
+          "meaning": "\"Winding of mountains and rivers\" (盩厔), simplified in 1964 to a homophone.",
+          "fit": "40% of people, 70% of the county inside, 40% of the area.",
+          "recognisability": "Own zh-wiki article.",
+          "source_url": "https://zh.wikipedia.org/wiki/周至县",
+          "source_note": "盩厔的意思是“山川曲折”，因“山曲为盩，水曲为厔”而得名",
+          "status": "suggested"
+        },
+        {
+          "name": "Huyi",
+          "local": "鄠邑",
+          "origin": "county",
+          "meaning": "Named after the Hu tribe (有扈氏) of the Xia; Hu county, renamed Hu in 1964 and Huyi in 2016.",
+          "fit": "45% of people, 80% of the district inside; the largest unit.",
+          "recognisability": "Own zh-wiki article; barely known outside Shaanxi.",
+          "source_url": "https://zh.wikipedia.org/wiki/鄠邑区",
+          "source_note": "夏朝为“有扈氏”部落…2016年撤县改区，恢复鄠字",
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    }
+  ]
+}

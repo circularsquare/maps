@@ -146,6 +146,13 @@ BRANCHES = [
      "sources file here: ASARB 202 and er2010's `Orthodox` (EPHS 2010, about 1.9 million), "
      "read as this church on the same reasoning as et2007's for Ethiopia; origin_religion's "
      "ER row also points here. The label is unchanged, so no legend row is added."),
+    ("christianity.oriental.marthoma",
+     "Malankara Mar Thoma Church",
+     "The Mar Thoma Syrian Church of Kerala: a St Thomas church reformed in the nineteenth century, "
+     "Oriental in liturgy and in communion with the Anglicans, so it sits between `oriental` and "
+     "`anglican` by any reading; ASARB files it here and so does this tree. PROMOTED FROM AN ASARB LEAF "
+     "TO A BRANCH on 2026-10-16 with Kerala (in2011's `Mar Thoma (KMS 2008-2014)`, about 304,000), the "
+     "reason Eritrea's was. Two sources: ASARB F28 and in2011. The label is unchanged."),
 
     ("christianity.churchofeast",
      "Church of the East",
@@ -236,7 +243,10 @@ BRANCHES = [
      "would lose the Presbyterians and Congregationalists who are equally in it. Added "
      "2026-09-03 with Australia. Its LINEAGE group is Reformation since 2026-09-14, because "
      "every union on the map is built on Reformed churches; that is descent only, and the "
-     "node stays a direct child of `christianity`."),
+     "node stays a direct child of `christianity`. Germany's Union Landeskirchen joined it "
+     "2026-10-16 (Rheinland, Westfalen, Hessen und Nassau, Baden and five more, about 8.9M; "
+     "taxonomy/de2022.py): Lutheran and Reformed congregations joined from 1817 on, each "
+     "keeping its own confession, as the PKN's do."),
 
     ("christianity.methodist", "Methodist", ""),
     ("christianity.methodist.african",

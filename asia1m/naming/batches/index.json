@@ -1,0 +1,256 @@
+[
+ {
+  "name": "shaanxi-rest",
+  "province": "Shaanxi",
+  "prefectures": [
+   "Yulin",
+   "Weinan",
+   "Hanzhong",
+   "Baoji",
+   "Yan'an",
+   "Shangluo",
+   "Ankang",
+   "Tongchuan"
+  ],
+  "count": 22
+ },
+ {
+  "name": "shaanxi-xian",
+  "province": "Shaanxi",
+  "prefectures": [
+   "Xi'an",
+   "Xianyang"
+  ],
+  "count": 17
+ },
+ {
+  "name": "ningxia",
+  "province": "Ningxia Hui",
+  "prefectures": [],
+  "count": 7
+ },
+ {
+  "name": "shanxi-north",
+  "province": "Shanxi",
+  "prefectures": [
+   "Datong",
+   "Shuozhou",
+   "Xinzhou",
+   "Taiyuan",
+   "Lüliang",
+   "Jinzhong",
+   "Yangquan"
+  ],
+  "count": 21
+ },
+ {
+  "name": "shanxi-south",
+  "province": "Shanxi",
+  "prefectures": [
+   "Linfen",
+   "Yuncheng",
+   "Changzhi",
+   "Jincheng"
+  ],
+  "count": 13
+ },
+ {
+  "name": "anhui-west",
+  "province": "Anhui",
+  "prefectures": [
+   "Fuyang",
+   "Lu'an",
+   "Anqing"
+  ],
+  "count": 17
+ },
+ {
+  "name": "henan-zhengzhou",
+  "province": "Henan",
+  "prefectures": [
+   "Zhengzhou",
+   "Kaifeng",
+   "Xuchang",
+   "Luohe"
+  ],
+  "count": 23
+ },
+ {
+  "name": "henan-north",
+  "province": "Henan",
+  "prefectures": [
+   "Xinxiang",
+   "Anyang",
+   "Puyang",
+   "Jiaozuo",
+   "Hebi",
+   "Jiyuan"
+  ],
+  "count": 20
+ },
+ {
+  "name": "henan-west",
+  "province": "Henan",
+  "prefectures": [
+   "Luoyang",
+   "Sanmenxia",
+   "Pingdingshan",
+   "Nanyang"
+  ],
+  "count": 24
+ },
+ {
+  "name": "henan-east",
+  "province": "Henan",
+  "prefectures": [
+   "Zhoukou",
+   "Shangqiu"
+  ],
+  "count": 16
+ },
+ {
+  "name": "henan-south",
+  "province": "Henan",
+  "prefectures": [
+   "Zhumadian",
+   "Xinyang"
+  ],
+  "count": 16
+ },
+ {
+  "name": "hunan-changsha",
+  "province": "Hunan",
+  "prefectures": [
+   "Changsha",
+   "Xiangtan",
+   "Zhuzhou"
+  ],
+  "count": 17
+ },
+ {
+  "name": "hunan-north",
+  "province": "Hunan",
+  "prefectures": [
+   "Changde",
+   "Yiyang",
+   "Yueyang",
+   "Loudi"
+  ],
+  "count": 18
+ },
+ {
+  "name": "hunan-west",
+  "province": "Hunan",
+  "prefectures": [
+   "Xiangxi Tujia and Miao Autonomous Prefecture",
+   "Zhangjiajie",
+   "Huaihua"
+  ],
+  "count": 9
+ },
+ {
+  "name": "hubei-wuhan",
+  "province": "Hubei",
+  "prefectures": [
+   "Wuhan",
+   "Ezhou",
+   "Huangshi"
+  ],
+  "count": 16
+ },
+ {
+  "name": "hubei-east",
+  "province": "Hubei",
+  "prefectures": [
+   "Huanggang",
+   "Xiaogan",
+   "Suizhou",
+   "Xianning"
+  ],
+  "count": 15
+ },
+ {
+  "name": "hubei-central",
+  "province": "Hubei",
+  "prefectures": [
+   "Jingzhou",
+   "Jingmen",
+   "Tianmen",
+   "Qianjiang",
+   "Xiantao"
+  ],
+  "count": 11
+ },
+ {
+  "name": "hubei-west",
+  "province": "Hubei",
+  "prefectures": [
+   "Xiangyang",
+   "Shiyan",
+   "Yichang",
+   "Enshi Tujia and Miao Autonomous Prefecture"
+  ],
+  "count": 16
+ },
+ {
+  "name": "hefei-core",
+  "province": "",
+  "prefectures": [],
+  "count": 6
+ },
+ {
+  "name": "chongqing",
+  "province": "Chongqing",
+  "prefectures": [],
+  "count": 31
+ },
+ {
+  "name": "sichuan-chengdu",
+  "province": "Sichuan",
+  "prefectures": [
+   "Chengdu",
+   "Deyang"
+  ],
+  "count": 24
+ },
+ {
+  "name": "sichuan-north",
+  "province": "Sichuan",
+  "prefectures": [
+   "Mianyang",
+   "Guangyuan",
+   "Bazhong",
+   "Dazhou",
+   "Nanchong",
+   "Guang'an"
+  ],
+  "count": 25
+ },
+ {
+  "name": "sichuan-south",
+  "province": "Sichuan",
+  "prefectures": [
+   "Suining",
+   "Ziyang",
+   "Meishan",
+   "Neijiang",
+   "Zigong",
+   "Luzhou",
+   "Yibin",
+   "Leshan"
+  ],
+  "count": 26
+ },
+ {
+  "name": "sichuan-west",
+  "province": "Sichuan",
+  "prefectures": [
+   "Liangshan Yi Autonomous Prefecture",
+   "Ngawa Tibetan and Qiang Autonomous Prefecture",
+   "Garzê Tibetan Autonomous Prefecture",
+   "Ya'an",
+   "Panzhihua"
+  ],
+  "count": 9
+ }
+]

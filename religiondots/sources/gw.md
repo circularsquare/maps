@@ -185,3 +185,21 @@ already has.
 
 INE Guiné-Bissau's reports are public PDFs on its own site with no licence text. UNSD
 Demographic Yearbook data is public. COD-AB is CC BY-IGO; Kontur Population is CC BY 4.0.
+
+## 11. Churches drawn, 2026-10-16 (session `c67d3c3c-westafrica`)
+
+On Anita's call (unspecified_splits/westafrica.md §6), `Cristão` (318,021) is split in every região
+at the 1991 census's national ratio: *Resultados* (`Resultados_rgph_1991.pdf`, 42 MB, Wayback
+`web.archive.org/web/2024id_/https://www.stat-guinebissau.com/Menu_principal/IV_RGPH/rgph1/Resultados_rgph_1991.pdf`),
+Tabela 6.6, PDF p61: Cristã Católica 125,637, Outras Cristãs 15,310 of 979,203 residents, so
+89.1% Catholic (`christianity.catholic`) and 10.9% other (`christianity.other`).
+
+**The ratio is probably too Catholic for 2009 and certainly for today.** Christians went from
+14.4% of residents in 1991 to 26.2% of those who answered in 2009, and US State Department reports
+put much of the growth in Brazilian and other Protestant missions. The Church's own 2023 claim,
+222,000 of 1.69M, would make Catholics roughly 55-65% of today's Christians. Pew 2010's 89% is very
+likely this same table and is not a second witness. Anita chose the census's number over an
+interpolated one; note_public says it is probably high.
+
+`sources/wa_christian.py gw` writes `gw_split.csv`; `tier="derived"`, never rings, rolls back
+through `gw2009.COLUMNS`.

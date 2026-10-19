@@ -252,3 +252,12 @@ above.
   follows `co2023.py`. The build tail has since run (runlog, the Kontur fix), and a screenshot shows
   Bolivia drawn on La Paz-El Alto, Cochabamba, Santa Cruz, Sucre, Potosí and Tarija, nothing in the
   sea.
+
+## Pentecostals from Pew 2014 (2026-10-16)
+
+Anita's call of 2026-10-16, built by session `c67d3c3c-latam` (`latam_split.py`, sources.md
+§latam-2026-10-16). LAPOP's two Protestant boxes are one bucket of 2,190,374; 42.6% of it, 933,095,
+is drawn on `christianity.pentecostal`, the share of Protestants Pew Research Center's 2014 survey
+found in a Pentecostal church (`QPROT`, 241 Bolivian Protestants). Bolivia is the one country where
+far fewer call themselves Pentecostal (20.9%, Q28a) than belong to a Pentecostal church; the
+church measure is used everywhere. 1,257,279 stay on the two box nodes. All `modelled`.

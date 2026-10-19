@@ -119,6 +119,12 @@ def _uy_counts():
     return df[["unit", "node", "count", "congregations", "tier"]]
 
 
+def _uy_counts_split():
+    """`_uy_counts` with Pew 2014's Pentecostal share drawn inside the survey's `Cristiano no
+    católico` answer; latam_split.py, Anita 2026-10-16. The rows stay `modelled`."""
+    return _latam_split("uy", _uy_counts())
+
+
 ENTRY = {
     "uy": dict(
         name="Uruguay",
@@ -185,12 +191,14 @@ ENTRY = {
             "is drawn here is several points more Catholic than Uruguay is now. What the two "
             "surveys agree on is the shape: their department orderings for non-Catholic "
             "Christians and for atheists match closely, and the ordering is what a map is "
-            "for."),
+            "for. 42% of the non-Catholic Christians are drawn as Pentecostal, the share of "
+            "Protestants that Pew Research Center's 2014 survey found in Pentecostal "
+            "churches; the rest stay unnamed."),
         how="national household survey, 2006, ages 7 and over",
         grain="departamentos, 112,000 people on average; Montevideo's 62 barrios, 19,000",
         gap="children under 7, 7.7% of Uruguay, who were not asked the question",
         gap_share=0.0767,
-        counts=_uy_counts,
+        counts=_uy_counts_split,
         units=None,
         unit_key=None,
         place=HERE / "data" / "geo" / "uy" / "uy_hexes.gpkg",

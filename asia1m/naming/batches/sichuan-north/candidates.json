@@ -1,0 +1,516 @@
+{
+  "batch": "sichuan-north",
+  "regions": [
+    {
+      "n": 1, "key": "#f0d8d1", "settled": null,
+      "summary": "Micang mountains: Nanjiang, Wangcang and the Cangxi hills (Daba foothills north of Bazhong).",
+      "candidates": [
+        {"name": "Micang", "local": "米仓山", "origin": "mountain",
+         "meaning": "\"Rice granary mountain\": the range between the Han and Jialing basins, crossed by the old Micang road from Hanzhong into Sichuan.",
+         "fit": "Its core karst peaks lie around the Wangcang and Nanjiang border, i.e. the middle of this region.",
+         "recognisability": "Own zh-wiki article, 214 hits with 四川, top ones about this range.",
+         "source_url": "https://zh.wikipedia.org/wiki/米仓山",
+         "source_note": "最典型的峰丛分布在米仓山中部的四川旺苍县和南江县接界一带；国家级自然保护区",
+         "rating": 4, "status": "suggested"},
+        {"name": "Nanjiang", "local": "南江县", "origin": "county",
+         "meaning": "\"South river\": named for the Nan river (a Bazhong headwater); county since 1516.",
+         "fit": "Nanjiang county is 49% of the region's people and almost wholly inside.",
+         "recognisability": "Current county.",
+         "source_url": "https://zh.wikipedia.org/wiki/南江县",
+         "source_note": "集州，州治所在今南江镇；Nanjiang county 1516-1911",
+         "rating": 4, "status": "suggested"}
+      ],
+      "notes": "Daba is the wider range; Micang is its western part and fits the Wangcang/Nanjiang heartland better."
+    },
+    {
+      "n": 2, "key": "#edc4bf", "settled": null,
+      "summary": "Guangyuan city on the upper Jialing: Lizhou, Zhaohua, Cangxi's river towns.",
+      "candidates": [
+        {"name": "Guangyuan", "local": "广元市", "origin": "city",
+         "meaning": "Name of the city; Guangyuan county from 1389, the Ming-Qing county seat that became the prefecture.",
+         "fit": "Holds the old centre (Lizhou district is 60% of the people).",
+         "recognisability": "Prefecture-level city.",
+         "source_url": "https://zh.wikipedia.org/wiki/广元市",
+         "source_note": "利州区；广元县 1389-1911, seat today's Guangyuan",
+         "rating": 5, "status": "suggested"},
+        {"name": "Lizhou", "local": "利州", "origin": "prefecture",
+         "meaning": "Tang and Song prefecture, from 554 to 1236, seated at Guangyuan; later Lizhou circuit (Lizhou lu) covered northern Sichuan.",
+         "fit": "Seat is this region; the prefecture covered Zhaohua and Cangxi too.",
+         "recognisability": "Is also the present district name (Lizhou district), so it is known locally; Guangyuan is better for the city centre.",
+         "source_url": "https://zh.wikipedia.org/wiki/利州区",
+         "source_note": "利州 (州, 554-1236) 今四川省广元市",
+         "rating": 3, "status": "suggested"}
+      ],
+      "notes": "Zhaohua (old Jiameng pass of Liu Bei's march into Shu) is only 15% of the people; 43 zh-wiki hits with 四川 for 葭萌, so I left it out."
+    },
+    {
+      "n": 3, "key": "#f0ddd1", "settled": null,
+      "summary": "Daba mountain interior: Tongjiang, Wanyuan, and the Zhenba corner of Shaanxi.",
+      "candidates": [
+        {"name": "Tongjiang", "local": "通江县", "origin": "county",
+         "meaning": "\"Through river\": the Tong river, which runs down from the Daba mountains (the old Bizhou seat).",
+         "fit": "Tongjiang county is 51% of the people and 90% of it is inside; the Tong river runs through the region.",
+         "recognisability": "Current county, a Red Army base area.",
+         "source_url": "https://zh.wikipedia.org/wiki/通江县",
+         "source_note": "壁州 (625-1071) 今四川省通江县; 通江县 742-1911",
+         "rating": 4, "status": "suggested"},
+        {"name": "Wanyuan", "local": "万源市", "origin": "city",
+         "meaning": "\"Ten-thousand sources\": county-level city, formerly Taiping county, renamed in 1950s.",
+         "fit": "Wanyuan city is 34% of the people and almost wholly inside; the Dazhou prefecture's northern end.",
+         "recognisability": "County-level city.",
+         "source_url": "https://zh.wikipedia.org/wiki/万源市",
+         "source_note": "太平县 (1515-1911) 今万源县治",
+         "rating": 4, "status": "suggested"},
+        {"name": "Daba", "local": "大巴山", "origin": "mountain",
+         "meaning": "The range between the Han and Jialing basins on the Sichuan, Shaanxi, Chongqing and Hubei border.",
+         "fit": "This region is the Daba's heart, but the range is much larger and also reaches the Chongqing and Shaanxi neighbours.",
+         "recognisability": "Own zh-wiki article, 396 hits with 四川.",
+         "source_url": "https://zh.wikipedia.org/wiki/大巴山",
+         "source_note": "狭义的大巴山位于四川、重庆、陕西、湖北省边境，是汉水与嘉陵江的分水岭",
+         "rating": 3, "status": "suggested"}
+      ],
+      "notes": "Daba may be wanted by the Chongqing or Shaanxi side; use it here only if nobody else takes it."
+    },
+    {
+      "n": 4, "key": "#eec7cc", "settled": null,
+      "summary": "Jianmen pass and the old Shu road: Jiange, Zitong, upper Jiangyou.",
+      "candidates": [
+        {"name": "Jianmen", "local": "剑门", "origin": "historical",
+         "meaning": "\"Sword gate\": the Jianmen pass (Jianmenguan), one of China's four great passes, on the Shu road through the Jiange ridge.",
+         "fit": "Pass sits in Jianmenguan town, inside the region; the region is the road from Zitong to Jiange.",
+         "recognisability": "Own zh-wiki article, 402 hits with 四川, top ones about this place.",
+         "source_url": "https://zh.wikipedia.org/wiki/剑门关",
+         "source_note": "剑门关镇 in Jiange; 与雁门关、函谷关、仙霞关并称中国四大古关口",
+         "rating": 5, "status": "suggested"},
+        {"name": "Jiange", "local": "剑阁县", "origin": "county",
+         "meaning": "\"Sword pavilion\": the plank-road pavilion at the pass.",
+         "fit": "Jiange county is 36% of the people and wholly inside.",
+         "recognisability": "Current county.",
+         "source_url": "https://zh.wikipedia.org/wiki/剑阁县",
+         "source_note": "剑阁县内雄险的剑门关",
+         "rating": 4, "status": "suggested"},
+        {"name": "Zitong", "local": "梓潼县", "origin": "county",
+         "meaning": "Catalpa river; seat of the Han Guanghan commandery, and the Wenchang god's temple.",
+         "fit": "Zitong is 24% of the people and wholly inside; the Han-era commandery and Zitong river are in this region.",
+         "recognisability": "Current county, Wenchang temple.",
+         "source_url": "https://zh.wikipedia.org/wiki/梓潼县",
+         "source_note": "广汉郡 (116 BC-119) 今梓潼县治",
+         "rating": 3, "status": "suggested"}
+      ],
+      "notes": "Jiangyou city (25% here, most of it in region 6) is the other big unit; I'd give Jiangyou to region 6."
+    },
+    {
+      "n": 5, "key": "#e8beb5", "settled": null,
+      "summary": "Bazhong city: Bazhou and Enyang.",
+      "candidates": [
+        {"name": "Bazhong", "local": "巴中市", "origin": "city",
+         "meaning": "\"Within Ba\": the city and prefecture, built round the old Bazhou.",
+         "fit": "The central region (Bazhou district 71%, Enyang 28%).",
+         "recognisability": "Prefecture-level city.",
+         "source_url": "https://zh.wikipedia.org/wiki/巴中市",
+         "source_note": "巴州 (514-1276) 今四川省巴中县",
+         "rating": 5, "status": "suggested"},
+        {"name": "Enyang", "local": "恩阳区", "origin": "county",
+         "meaning": "Enyang river and ancient town (Enyang county 598-1282).",
+         "fit": "Enyang is 28% of the people and entirely inside.",
+         "recognisability": "Current district, a known old river town.",
+         "source_url": "https://zh.wikipedia.org/wiki/恩阳区",
+         "source_note": "恩阳县 (598-1282) 今巴中县西南恩阳",
+         "rating": 3, "status": "suggested"}
+      ],
+      "notes": ""
+    },
+    {
+      "n": 6, "key": "#f0a3a6", "settled": null,
+      "summary": "Fu river plain north of Mianyang: Jiangyou (Li Bai's home county), Youxian.",
+      "candidates": [
+        {"name": "Jiangyou", "local": "江油市", "origin": "city",
+         "meaning": "Named for the Jiangyou pass on the road to Yinping (Jiangyou county since 1380); Li Bai's home.",
+         "fit": "Jiangyou city is 53% of the people, with 56% of the city inside; the other part is in region 4.",
+         "recognisability": "County-level city.",
+         "source_url": "https://zh.wikipedia.org/wiki/江油市",
+         "source_note": "江油县 (1380-1911) 今江油县治",
+         "rating": 5, "status": "suggested"},
+        {"name": "Zhangming", "local": "彰明", "origin": "historical",
+         "meaning": "\"Bright and plain\": Zhangming county (Li Bai's birth county), 923 to 1911.",
+         "fit": "Seat at Zhangming town, today's Jiangyou south; covers the Jiangyou plain half.",
+         "recognisability": "Not checked; known mainly as Li Bai's home county.",
+         "source_url": "https://zh.wikipedia.org/wiki/江油市",
+         "source_note": "彰明县 (923-1911) 今四川省江油县南彰明镇",
+         "rating": 2, "status": "suggested"}
+      ],
+      "notes": ""
+    },
+    {
+      "n": 7, "key": "#eed1c6", "settled": null,
+      "summary": "Bazhong's eastern hills: Pingchang with parts of Bazhou, Yilong, Dachuan.",
+      "candidates": [
+        {"name": "Pingchang", "local": "平昌县", "origin": "county",
+         "meaning": "Coined in 1946 from the two older names Pingzhou and Tongchang.",
+         "fit": "Pingchang county is 57% of the people, 95% of it inside.",
+         "recognisability": "Current county.",
+         "source_url": "https://zh.wikipedia.org/wiki/平昌县",
+         "source_note": "取“平州”、“同昌”首尾各一字命名",
+         "rating": 4, "status": "suggested"}
+      ],
+      "notes": "A Ba river name (the Ba river rises in Pingchang/Bazhou) scored weakly: 328 hits with 四川 but mostly Hubei and Xinjiang places. Shining county (始宁, 440 years) has no article of its own."
+    },
+    {
+      "n": 8, "key": "#f4bcbe", "settled": null,
+      "summary": "Mountain edge north of Mianyang and Deyang: Anzhou, Luojiang, Beichuan's lower end.",
+      "candidates": [
+        {"name": "Anzhou", "local": "安州区", "origin": "county",
+         "meaning": "Former An county (Anxian, since 1374), now Anzhou district; the Song-Yuan Anzhou.",
+         "fit": "An county is 39% of the people and almost all inside.",
+         "recognisability": "Current district (An county until 2016).",
+         "source_url": "https://zh.wikipedia.org/wiki/安州区",
+         "source_note": "安州 (1264-1373), 安县 (1374-1911) 今安县治",
+         "rating": 4, "status": "suggested"},
+        {"name": "Luojiang", "local": "罗江县", "origin": "county",
+         "meaning": "\"Luo river\": county from 742 to 1769 and again; the river runs through the region.",
+         "fit": "Luojiang is 22% of the people, 97% of it inside.",
+         "recognisability": "Current district of Deyang.",
+         "source_url": "https://zh.wikipedia.org/wiki/罗江区",
+         "source_note": "罗江县 (742-1769) 今德阳县东北罗江镇",
+         "rating": 3, "status": "suggested"},
+        {"name": "Beichuan", "local": "北川", "origin": "county",
+         "meaning": "\"North river\": the Beichuan Qiang autonomous county, named for the Beichuan city site.",
+         "fit": "Only 15% of the people here, though 61% of Beichuan county's people are inside; the new town (Yongchang) is here.",
+         "recognisability": "Widely known from the 2008 earthquake.",
+         "source_url": "https://zh.wikipedia.org/wiki/北川羌族自治县",
+         "source_note": "北周天和元年（566年）置北川县，因县西北有北川城而得名",
+         "rating": 3, "status": "suggested"}
+      ],
+      "notes": "Longan (龙安) was checked: Longan prefecture was Pingwu, not this area."
+    },
+    {
+      "n": 9, "key": "#eeceb6", "settled": null,
+      "summary": "Xuanhan county in the Daba foothills northeast of Dazhou.",
+      "candidates": [
+        {"name": "Xuanhan", "local": "宣汉县", "origin": "county",
+         "meaning": "Han-era county of the Dongxiang area (renamed Xuanhan in 1914 after the old Xuanhan county of 557).",
+         "fit": "Xuanhan county is 88% of the people and 97% of it is inside.",
+         "recognisability": "Current county.",
+         "source_url": "https://zh.wikipedia.org/wiki/宣汉县",
+         "source_note": "建制始於東漢永元八年（96年），1914年改東鄉縣为宣汉县",
+         "rating": 5, "status": "suggested"}
+      ],
+      "notes": "Puguang (the gas field town) had only 40 hits with 四川; Dongxiang is better known as the Gansu Dongxiang people."
+    },
+    {
+      "n": 10, "key": "#f9c0c2", "settled": null,
+      "summary": "Zhu De's county Yilong with parts of Langzhong and Nanbu.",
+      "candidates": [
+        {"name": "Yilong", "local": "仪陇县", "origin": "county",
+         "meaning": "Yilong county since 502 (as Yilong 仪隆), once the seat of Pengzhou.",
+         "fit": "Yilong county is 57% of the people, 85% of it inside.",
+         "recognisability": "Current county, Zhu De's birthplace.",
+         "source_url": "https://zh.wikipedia.org/wiki/仪陇县",
+         "source_note": "蓬州 (741-1257) 今四川省仪陇县大营镇; 仪隆县 (502-1911)",
+         "rating": 4, "status": "suggested"}
+      ],
+      "notes": "Pengzhou 蓬州 has the same pinyin as Pengzhou 彭州 near Chengdu, so left out."
+    },
+    {
+      "n": 11, "key": "#f37276", "settled": null,
+      "summary": "Mianyang city centre: Fucheng and Youxian urban parts.",
+      "candidates": [
+        {"name": "Mianyang", "local": "绵阳市", "origin": "city",
+         "meaning": "\"Sunny side of the Mian\": the Mian river; Mianzhou was seated here from 585.",
+         "fit": "The central region (Fucheng 79%).",
+         "recognisability": "Prefecture-level city over 1M.",
+         "source_url": "https://zh.wikipedia.org/wiki/绵阳市",
+         "source_note": "绵州 (585-1911) 今四川省绵阳市东开元场",
+         "rating": 5, "status": "suggested"},
+        {"name": "Fucheng", "local": "涪城区", "origin": "county",
+         "meaning": "\"Fu river city\": the central district, named for the Fu river and the old Fu county.",
+         "fit": "Fucheng is 79% of the people.",
+         "recognisability": "Current district.",
+         "source_url": "https://zh.wikipedia.org/wiki/涪城区",
+         "source_note": "涪县 (201 BC-552) 今绵阳市东一里涪江东岸",
+         "rating": 3, "status": "suggested"}
+      ],
+      "notes": ""
+    },
+    {
+      "n": 12, "key": "#f9b4bd", "settled": null,
+      "summary": "Langzhong ancient city and Nanbu on the Jialing.",
+      "candidates": [
+        {"name": "Langzhong", "local": "阆中市", "origin": "city",
+         "meaning": "\"Within the Lang\": the city lies inside the Lang hills and the Lang water bend of the Jialing; county since 314 BC.",
+         "fit": "Langzhong is 35% of the people but holds the old centre; the seat of Langzhou and Baoning prefecture.",
+         "recognisability": "County-level city, ancient city on the tourism list.",
+         "source_url": "https://zh.wikipedia.org/wiki/阆中市",
+         "source_note": "阆中县 (314 BC-1911); 阆州 (713-1275); 保宁府 (1276-1911)",
+         "rating": 5, "status": "suggested"},
+        {"name": "Nanbu", "local": "南部县", "origin": "county",
+         "meaning": "\"The southern part\": county from 502, south of Langzhong.",
+         "fit": "Nanbu county is 61% of the people, 64% of it inside.",
+         "recognisability": "Current county.",
+         "source_url": "https://zh.wikipedia.org/wiki/南部县",
+         "source_note": "南部县 (502-1911)",
+         "rating": 4, "status": "suggested"},
+        {"name": "Baoning", "local": "保宁", "origin": "historical",
+         "meaning": "\"Preserving peace\": Baoning prefecture (1276-1911) seated at Langzhong; also known for its vinegar.",
+         "fit": "Prefecture covered the whole Langzhong, Nanbu, Cangxi area.",
+         "recognisability": "Not checked; known for the vinegar.",
+         "source_url": "https://zh.wikipedia.org/wiki/阆中市",
+         "source_note": "保宁府 (府, 1276-1911) 今四川省阆中县",
+         "rating": 2, "status": "suggested"}
+      ],
+      "notes": ""
+    },
+    {
+      "n": 13, "key": "#f0a987", "settled": null,
+      "summary": "Dazhou city centre: Tongchuan and urban Dachuan.",
+      "candidates": [
+        {"name": "Dazhou", "local": "达州市", "origin": "city",
+         "meaning": "Dazhou prefecture 965 to 1801; the name Da (\"reaching\") from Tongzhou.",
+         "fit": "The central region of the city (Tongchuan 59%, Dachuan 41%).",
+         "recognisability": "Prefecture-level city.",
+         "source_url": "https://zh.wikipedia.org/wiki/达州市",
+         "source_note": "达州 (965-1801) 今四川省达州市",
+         "rating": 5, "status": "suggested"},
+        {"name": "Tongchuan", "local": "通川区", "origin": "county",
+         "meaning": "\"Through the rivers\": the Tongchuan district, from the old Tongzhou and Tongchuan commandery.",
+         "fit": "Tongchuan is 59% of the people.",
+         "recognisability": "Current district; same pinyin as Tongchuan (铜川) in Shaanxi.",
+         "source_url": "https://zh.wikipedia.org/wiki/通川区",
+         "source_note": "通川县 (598-1375) 今达州市治",
+         "rating": 3, "status": "suggested"}
+      ],
+      "notes": ""
+    },
+    {
+      "n": 14, "key": "#edcab9", "settled": null,
+      "summary": "Dachuan plains and Kaijiang around Dazhou.",
+      "candidates": [
+        {"name": "Dachuan", "local": "达川区", "origin": "county",
+         "meaning": "Short for Dazhou's Chuan: the district was Da county until 2013.",
+         "fit": "Dachuan is 47% of the people (51% of the district inside).",
+         "recognisability": "Current district.",
+         "source_url": "https://zh.wikipedia.org/wiki/达川区",
+         "source_note": "达县 (1376-1911)",
+         "rating": 4, "status": "suggested"},
+        {"name": "Kaijiang", "local": "开江县", "origin": "county",
+         "meaning": "\"Open river\": the Kaijiang county, formerly Xinning.",
+         "fit": "Kaijiang is 30% of the people and 81% of it is inside.",
+         "recognisability": "Current county.",
+         "source_url": "https://zh.wikipedia.org/wiki/开江县",
+         "source_note": "开州 (529-1277) 今四川省开江县",
+         "rating": 4, "status": "suggested"}
+      ],
+      "notes": "Kaizhou (the old prefecture) is now the Kaizhou district in Chongqing, so not suggested."
+    },
+    {
+      "n": 15, "key": "#f3b0ba", "settled": null,
+      "summary": "Santai on the Fu river: the old Zizhou and Tongchuan prefecture seat.",
+      "candidates": [
+        {"name": "Zizhou", "local": "梓州", "origin": "prefecture",
+         "meaning": "\"Catalpa prefecture\": Tang and Song prefecture seated at Santai (618-1117); gave its name to the Zizhou circuit, one of the four circuits that gave Sichuan its name.",
+         "fit": "Seat at Santai (82% of the region); the prefecture also covered Yanting and Shehong.",
+         "recognisability": "Own zh-wiki article, 114 hits with 四川, top ones about this place (Zizhou circuit).",
+         "source_url": "https://zh.wikipedia.org/wiki/梓州",
+         "source_note": "梓州 (州, 618-1117) 今四川省三台县",
+         "rating": 4, "status": "suggested"},
+        {"name": "Santai", "local": "三台县", "origin": "county",
+         "meaning": "\"Three platforms\": county since 1734 (as seat of Tongchuan prefecture).",
+         "fit": "Santai is 82% of the people.",
+         "recognisability": "Current county.",
+         "source_url": "https://zh.wikipedia.org/wiki/三台县",
+         "source_note": "三台县 (1734-1911)",
+         "rating": 4, "status": "suggested"}
+      ],
+      "notes": "Tongchuan prefecture (潼川) has the same pinyin as Dazhou's Tongchuan, so I did not list it."
+    },
+    {
+      "n": 16, "key": "#f7c3cc", "settled": null,
+      "summary": "Hills between the Fu and Jialing: Yanting, Xichong, Pengxi, Shehong.",
+      "candidates": [
+        {"name": "Yanting", "local": "盐亭县", "origin": "county",
+         "meaning": "\"Salt pavilion\": county since 535, after the salt springs and the Yanting salt works.",
+         "fit": "Yanting is 30% of the people, wholly inside.",
+         "recognisability": "Current county.",
+         "source_url": "https://zh.wikipedia.org/wiki/盐亭县",
+         "source_note": "盐亭县 (535-1911) 今盐亭县治",
+         "rating": 4, "status": "suggested"},
+        {"name": "Xichong", "local": "西充县", "origin": "county",
+         "meaning": "\"West Chong\": named Xichongguo in 221 after the old Chongguo county; county in its present name since 621.",
+         "fit": "Xichong is 29% of the people (79% of the county inside).",
+         "recognisability": "Current county.",
+         "source_url": "https://zh.wikipedia.org/wiki/西充县",
+         "source_note": "蜀汉章武元年改充国县为西充国；武德四年改晋城县为西充县",
+         "rating": 4, "status": "suggested"}
+      ],
+      "notes": "A hill region of four counties with no river or range name that fits."
+    },
+    {
+      "n": 17, "key": "#f9c2c0", "settled": null,
+      "summary": "Jialing east bank: Peng'an (Sima Xiangru's home) and Yingshan.",
+      "candidates": [
+        {"name": "Peng'an", "local": "蓬安县", "origin": "county",
+         "meaning": "\"Peaceful Peng\": from Pengzhou, the Peng hills; Sima Xiangru's home county.",
+         "fit": "Peng'an is 49% of the people and 97% of it is inside.",
+         "recognisability": "Current county.",
+         "source_url": "https://zh.wikipedia.org/wiki/蓬安县",
+         "source_note": "相如县 (507-1376) 今蓬安县锦屏镇",
+         "rating": 4, "status": "suggested"},
+        {"name": "Yingshan", "local": "营山县", "origin": "county",
+         "meaning": "\"Camp mountain\": county from 1012.",
+         "fit": "Yingshan is 49% of the people (73% of the county inside).",
+         "recognisability": "Current county.",
+         "source_url": "https://zh.wikipedia.org/wiki/营山县",
+         "source_note": "营山县 (1012-1911)",
+         "rating": 4, "status": "suggested"}
+      ],
+      "notes": ""
+    },
+    {
+      "n": 18, "key": "#eec7b4", "settled": null,
+      "summary": "The Qu river county and its old Cong people lands.",
+      "candidates": [
+        {"name": "Quxian", "local": "渠县", "origin": "county",
+         "meaning": "\"Canal county\": county since 1376; Qu prefecture earlier; the Qu river.",
+         "fit": "Qu county is 89% of the people, 97% of it inside.",
+         "recognisability": "Current county.",
+         "source_url": "https://zh.wikipedia.org/wiki/渠县",
+         "source_note": "渠州 (522-1375); 渠县 (1376-1911)",
+         "rating": 5, "status": "suggested"},
+        {"name": "Dangqu", "local": "宕渠", "origin": "historical",
+         "meaning": "Han-era Dangqu county (314 BC to 964) and commandery, land of the Cong people.",
+         "fit": "Seat at Chengba village in Qu county; covered the region.",
+         "recognisability": "Own zh-wiki article (宕渠縣), 83 hits with 四川.",
+         "source_url": "https://zh.wikipedia.org/wiki/宕渠縣",
+         "source_note": "宕渠县 (314 BC-964) 今渠县土溪乡城坝村",
+         "rating": 3, "status": "suggested"}
+      ],
+      "notes": ""
+    },
+    {
+      "n": 19, "key": "#edc0b8", "settled": null,
+      "summary": "The ring round Nanchong city: Gaoping, Jialing and Shunqing's outer parts.",
+      "candidates": [
+        {"name": "Jialing", "local": "嘉陵区", "origin": "river",
+         "meaning": "The Jialing river, which runs through the three Nanchong districts; also a district name.",
+         "fit": "Jialing district is 30% of the people; the river runs through the region's middle.",
+         "recognisability": "Current district; the river is well known.",
+         "source_url": "https://zh.wikipedia.org/wiki/嘉陵区",
+         "source_note": "嘉陵区因地处嘉陵江而得名",
+         "rating": 4, "status": "suggested"},
+        {"name": "Gaoping", "local": "高坪区", "origin": "county",
+         "meaning": "\"High flat\": the Gaoping town, which gave the district its name.",
+         "fit": "Gaoping is 37% of the people, 78% of it inside.",
+         "recognisability": "Current district.",
+         "source_url": "https://zh.wikipedia.org/wiki/高坪区",
+         "source_note": "高坪区区政府所在地为高坪镇，区以此得名",
+         "rating": 3, "status": "suggested"}
+      ],
+      "notes": "Other agents may use Jialing for the river further south."
+    },
+    {
+      "n": 20, "key": "#eb8471", "settled": null,
+      "summary": "Nanchong city centre (Shunqing and urban Gaoping and Jialing).",
+      "candidates": [
+        {"name": "Nanchong", "local": "南充市", "origin": "city",
+         "meaning": "Nanchong county from 598, Nanchongguo before it; \"south of Chong\".",
+         "fit": "The central region of the city (Shunqing 64%).",
+         "recognisability": "Prefecture-level city over 1M.",
+         "source_url": "https://zh.wikipedia.org/wiki/南充市",
+         "source_note": "南充县 (598-1911) 今南充市舞凤乡清泉坝",
+         "rating": 5, "status": "suggested"},
+        {"name": "Shunqing", "local": "顺庆", "origin": "prefecture",
+         "meaning": "Shunqing prefecture (1227-1911), renamed from Guozhou after the Song emperor Lizong's early post.",
+         "fit": "Seat is this region, covering Nanchong, Xichong and others.",
+         "recognisability": "Current district name (Shunqing district).",
+         "source_url": "https://zh.wikipedia.org/wiki/顺庆区",
+         "source_note": "顺庆府 (1227-1911) 今南充市舞凤乡清泉坝",
+         "rating": 3, "status": "suggested"}
+      ],
+      "notes": ""
+    },
+    {
+      "n": 21, "key": "#f0cbad", "settled": null,
+      "summary": "Dazhu county on the Huaying ridges.",
+      "candidates": [
+        {"name": "Dazhu", "local": "大竹县", "origin": "county",
+         "meaning": "\"Big bamboo\": county since 1283.",
+         "fit": "Dazhu is 77% of the people and 98% of it is inside.",
+         "recognisability": "Current county.",
+         "source_url": "https://zh.wikipedia.org/wiki/大竹县",
+         "source_note": "大竹县 (1283-1911)",
+         "rating": 4, "status": "suggested"}
+      ],
+      "notes": ""
+    },
+    {
+      "n": 22, "key": "#f1b7a9", "settled": null,
+      "summary": "Yuechi county and the western Guang'an district.",
+      "candidates": [
+        {"name": "Yuechi", "local": "岳池县", "origin": "county",
+         "meaning": "Named for the Si Yue pool on the Anyue mountain 30 li east of the county.",
+         "fit": "Yuechi is 65% of the people, 89% of it inside.",
+         "recognisability": "Current county.",
+         "source_url": "https://zh.wikipedia.org/wiki/岳池县",
+         "source_note": "因县东三十里有安岳山，山上有思岳池而得名",
+         "rating": 4, "status": "suggested"}
+      ],
+      "notes": ""
+    },
+    {
+      "n": 23, "key": "#edb69c", "settled": null,
+      "summary": "Guang'an city: Guang'an district, Qianfeng, Huaying.",
+      "candidates": [
+        {"name": "Guang'an", "local": "广安市", "origin": "city",
+         "meaning": "\"Broad lands settled\": from the Guang'an army set up in 969; Deng Xiaoping's home.",
+         "fit": "The central region (Guang'an district 47%, Qianfeng 29%).",
+         "recognisability": "Prefecture-level city.",
+         "source_url": "https://zh.wikipedia.org/wiki/广安市",
+         "source_note": "广安军 (969-1265) 今四川省广安县治",
+         "rating": 5, "status": "suggested"},
+        {"name": "Huaying", "local": "华蓥", "origin": "mountain",
+         "meaning": "The Huaying mountains, a parallel ridge running from Wanyuan to Yongchuan; also the Huaying city.",
+         "fit": "Huaying city is 17% of the people; the range runs along the east edge into the Dazhu and Linshui regions.",
+         "recognisability": "Own zh-wiki article (華鎣山), also a county-level city.",
+         "source_url": "https://zh.wikipedia.org/wiki/華鎣山",
+         "source_note": "華鎣山，亦稱西山，古稱華銀山，位於四川盆地東北部",
+         "rating": 3, "status": "suggested"}
+      ],
+      "notes": "Huaying also fits regions 21 and 25 along the ridge; use it once."
+    },
+    {
+      "n": 24, "key": "#f4c6b3", "settled": null,
+      "summary": "Wusheng and the Jialing, Fu and Qu river confluence at Hechuan.",
+      "candidates": [
+        {"name": "Wusheng", "local": "武胜县", "origin": "county",
+         "meaning": "\"Martial victory\": from the Song-Yuan Wusheng army; a military name but the plain current county name.",
+         "fit": "Wusheng is 44% of the people and 89% of the county is inside.",
+         "recognisability": "Current county.",
+         "source_url": "https://zh.wikipedia.org/wiki/合川区",
+         "source_note": "武胜军 (1267-1277) 今武胜县南旧县场",
+         "rating": 3, "status": "suggested"},
+        {"name": "Hechuan", "local": "合川", "origin": "county",
+         "meaning": "\"Rivers joined\": Hechuan, where the Jialing, Fu and Qu meet; the Diaoyu fortress held off Mongke Khan here.",
+         "fit": "Hechuan is 29% of the people, only 26% of the district inside.",
+         "recognisability": "Current district of Chongqing.",
+         "source_url": "https://zh.wikipedia.org/wiki/合川区",
+         "source_note": "地处嘉陵江、涪江、渠江三江汇合之处，因三江汇流而得名",
+         "rating": 3, "status": "suggested"}
+      ],
+      "notes": "Hechuan is mostly in Chongqing and the Chongqing agent may use it. Dingyuan (定远, seat 1287-1911) means \"settle the distant\", also a famous Anhui name, so left out."
+    },
+    {
+      "n": 25, "key": "#f3cda1", "settled": null,
+      "summary": "Linshui county and the Chongqing strip along the Huaying ridge.",
+      "candidates": [
+        {"name": "Linshui", "local": "邻水县", "origin": "county",
+         "meaning": "\"Neighbouring water\": Linshui county since 964 (Linshui 邻水 from the Linshui river).",
+         "fit": "Linshui is 52% of the people, 99% of the county inside.",
+         "recognisability": "Current county.",
+         "source_url": "https://zh.wikipedia.org/wiki/邻水县",
+         "source_note": "邻水县 (619-1911) 今邻水县北二十里",
+         "rating": 4, "status": "suggested"}
+      ],
+      "notes": "The Chongqing parts (Yubei 30%, Beibei 11%) may be named by the Chongqing agent; check it against Yubei."
+    }
+  ]
+}

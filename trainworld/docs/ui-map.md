@@ -57,8 +57,10 @@ there is no high-speed class and no hover yet.
   screen, a double track's stroke starts growing to its two tracks' width (4 m plus a track's
   2.4 m), which it reaches at 7 px; from there to 10 px a stripe opens down its middle, widening
   to 1.6 m while the outline stays the same, each track half of what is left, until the tracks'
-  centres are 4 m apart and each is 2.4 m wide; from 10 px on everything is to scale. A station
-  on double track then has a platform each side ("Stations").
+  centres are 4 m apart and each is 2.4 m wide; from 10 px on everything is to scale, except that
+  from 10 to 16 px each track narrows to 1.92 m (80%; `LANE_NARROW`, T-713) so the riders waiting
+  behind show, the pair and its band narrowing with it. A station on double track then has a
+  platform each side ("Stations").
 - **Turn-back crossovers** [T-658d, `turnbackStrokes` in `map/network.ts`]: close in only, where
   a line ends at a double-track station, the crossover the game assumes there (6.2) is drawn in
   bare-track grey over the line's two tracks, 50 m long: a scissors (both diagonals) just outside
@@ -234,7 +236,7 @@ has its half of the box along its length (close in on double track, its own plat
 track, "Stations", T-658c); a platform whose trains all use one side (a terminal)
 fills as one. A side fills from the middle outwards by its riders' share of the room
 (`platformRoom`, [track-and-service.md](track-and-service.md) 6.6: 1,250 a side on 150 m), full to
-both ends at that or more. A side is red instead of grey once it is full [T-559], and its bar then also stands out past the rim on its own side by half the box's half width (`CROWD_BULGE`) [T-652]. A standing train covers the box's middle; from zoom 16 the sides show beside it. The crowd
+both ends at that or more. A side is red instead of grey once it is full [T-559]; the red stays inside the box like the grey (T-713). A standing train covers the box's middle; from zoom 16 the sides show beside it. The crowd
 grows between trains at the steady arrival rate, jumps a transfer walk after another line's train
 leaves with riders changing to it [T-554], and drops when one of its own leaves, worked out on the
 main thread at most once a game second, only while drawn.

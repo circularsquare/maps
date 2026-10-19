@@ -85,6 +85,10 @@ const heldCharges = new Map<number, { day: number; hour: number; build: number; 
  * worker running ahead of the main thread's clock pulled money time back across midnight (T-488). */
 const wallNow = () => performance.timeOrigin + performance.now();
 let clk = { t: START_CLOCK, rate: 0, at: wallNow() };
+/** Loads so far (T-715): a "clock" message the main thread sent before it saw the latest still
+ * carries the previous game's time, and settling to it charged the gap's running costs and then
+ * held the money until the clock caught up. */
+let game = 0;
 /** T-284: money is settled up to this game second, not by whole hours, so the cash moves as fares
  * land. `partHour` is the hour being settled and `partFare`, `partCost` the shares of its fares and
  * running cost already in the cash (each reaches 1 as the hour ends, so an hour still pays its whole
@@ -582,6 +586,47 @@ function mergeLedger<T extends { fares: number; running: number; trains: number;
   return [...by.values()].sort((a, b) => at(a) - at(b));
 }
 
+/** A load settles again from the save's clock, so what the loaded ledgers hold after it leaves them
+ * and its net comes back into the cash; edits' charges stay, on the clock's day and hour. Such
+ * entries come from a clock pulled back (T-488, minutes) or, before T-715, a clock of the game open
+ * before (up to a year of running costs with no fares). The day ledger keeps 30 days, so the running
+ * cost is worked out again on the loaded network up to where the hour ledger ends. Returns US$M. */
+function unsettleAfter(clockT: number): number {
+  const D = Math.floor(clockT / 86400), H = Math.floor(clockT / 3600);
+  const last = hourLedger[hourLedger.length - 1];
+  if (!last || last.hour <= H) return 0;
+  const groups = localGroups();
+  const costAt = (h: number) => groups.reduce((s, g) => s + g.running[LEVEL_OF[PERIODS[periodAt(h * 3600 + g.shift)].demand]], 0);
+  const full = costAt(last.hour);
+  const end = last.hour * 3600 + 3600 * (full > 0 ? Math.min(1, last.running / full) : 1);
+  let back = 0;
+  for (let t = Math.max(clockT, end - 86400 * 366); t < end;) { // settle's year at most
+    const h = Math.floor(t / 3600), e = Math.min(end, (h + 1) * 3600);
+    back += costAt(h) * (e - t) / 3600;
+    t = e;
+  }
+  const trim = (days: DayLedger[], hours: HourLedger[]) => {
+    const later = days.filter((d) => d.day > D), laterH = hours.filter((e) => e.hour > H);
+    const today = laterH.filter((e) => Math.floor(e.hour / 24) === D);
+    const fares = [...later, ...today].reduce((s, e) => s + e.fares, 0);
+    const keep = { days: days.filter((d) => d.day <= D), hours: hours.filter((e) => e.hour <= H) };
+    const d = keep.days.find((x) => x.day === D);
+    if (d) for (const e of today) { d.fares -= e.fares; d.running -= e.running; d.rides = (d.rides ?? 0) - (e.rides ?? 0); d.points = (d.points ?? 0) - (e.points ?? 0); }
+    const carry = <T extends DayLedger | HourLedger>(list: T[], from: T[], at: (e: T) => number, key: number, make: () => T, cap: number) => {
+      const trains = from.reduce((s, e) => s + e.trains, 0), build = from.reduce((s, e) => s + e.build, 0);
+      if (trains || build) { const e = entryIn(list, at, key, make, cap); e.trains += trains; e.build += build; }
+    };
+    carry(keep.days, later, (x) => x.day, D, () => ({ day: D, fares: 0, running: 0, trains: 0, build: 0, rides: 0 }), LEDGER_DAYS);
+    carry(keep.hours, laterH, (x) => x.hour, H, () => ({ hour: H, fares: 0, running: 0, trains: 0, build: 0, rides: 0 }), LEDGER_HOURS);
+    return { ...keep, fares };
+  };
+  const net = trim(ledger, hourLedger);
+  ledger = net.days;
+  hourLedger = net.hours;
+  for (const [k, r] of regions) { const t = trim(r.days, r.hours); regions.set(k, { days: t.days, hours: t.hours }); }
+  return back - net.fares;
+}
+
 function moneyState(): MoneyState {
   const a = api!;
   dayEntry(Math.floor(moneyNow() / 86400));
@@ -1002,7 +1047,8 @@ let convertedOnLoad = false;
 /** Replace the game with a save's. Throws a player-readable reason, changing nothing. A save whose
  * track is not in the world frame is converted once, through longitude and latitude, and loaded in
  * it (T-308); the return value says so, and the caller then writes the slot again in the new
- * format. Money, fares and the ledger are not touched. */
+ * format. Money, fares and the ledger load as saved, but for anything settled after the clock
+ * (`unsettleAfter`). */
 async function loadGame(bytes: Uint8Array, from: "autosave" | "file"): Promise<boolean> {
   const { header: h, track } = await decodeSave(bytes);
   if (!isNortheastSave(h)) throw new Error("This save is for another region.");
@@ -1014,7 +1060,6 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file"): Promise<b
   }
   if (!api!.load(net)) throw new Error("This save is damaged.");
   await masksForLoaded(net);
-  api!.set_cash(h.cash);
   api!.set_fleet(h.fleet ?? 0);
   fares = { ...START_FARES, ...h.fares };
   ledger = mergeLedger(h.ledger, (d) => d.day);
@@ -1022,6 +1067,7 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file"): Promise<b
   loadRegions(h.regions);
   stars = new Map(Object.entries(h.stars ?? {}));
   lineNotes = new Map(Object.entries(h.notes ?? {}));
+  api!.set_cash(h.cash + unsettleAfter(h.clock));
   convertedOnLoad = converted;
   restart(h.clock, from);
   return converted;
@@ -1051,6 +1097,7 @@ function newGame() {
 /** After a load or a new game: the clock, fresh state, a new snapshot for demand. */
 function restart(t: number, from: "autosave" | "file" | "new") {
   clk = { t, rate: clk.rate, at: wallNow() };
+  game++;
   // T-284: the loaded hour counts as paid up to the clock, evenly (its trains' timing is not known yet)
   settledT = t;
   partHour = Math.floor(t / 3600);
@@ -1058,11 +1105,13 @@ function restart(t: number, from: "autosave" | "file" | "new") {
   hourShape.clear();
   incomePerHour =DAY_KINDS.map(() => PERIODS.map(() => 0)); // the main thread sends the new network's once demand lands
   ridesPerHour = DAY_KINDS.map(() => PERIODS.map(() => 0));
+  lineIncome = new Map(); // T-715: the old game's per line, which regions' fares were paid from
+  lineRides = new Map();
   linePoints = new Map();
   api!.clear_riders(); // and its riders (T-164)
   forget(true);
   syncFrame();
-  send({ kind: "loaded", from, clock: t, frame: frameSpec(), converted: convertedOnLoad || undefined });
+  send({ kind: "loaded", from, clock: t, frame: frameSpec(), converted: convertedOnLoad || undefined, game });
   convertedOnLoad = false;
   sendState();
   clearTimeout(snapTimer);
@@ -1382,7 +1431,7 @@ async function processMessage(msg: ToClock) {
         } catch (err) {
           // Keep the unreadable save aside rather than overwrite it with the new game.
           await writeStored("unreadable-" + stored.at, stored);
-          send({ kind: "loaded", from: "new", clock: START_CLOCK, error: "The last game could not be loaded. " + (err as Error).message, frame: frameSpec() });
+          send({ kind: "loaded", from: "new", clock: START_CLOCK, error: "The last game could not be loaded. " + (err as Error).message, frame: frameSpec(), game });
         }
       }
       sendState();
@@ -1432,7 +1481,7 @@ async function whole(msg: Extract<ToClock, { kind: "import" | "export" | "newGam
     try {
       await loadGame(new Uint8Array(msg.bytes), "file");
     } catch (err) {
-      send({ kind: "loaded", from: "file", clock: gameNow(), frame: frameSpec(), error: (err as Error).message });
+      send({ kind: "loaded", from: "file", clock: gameNow(), frame: frameSpec(), error: (err as Error).message, game });
       return;
     }
     dirty = true;
@@ -1508,7 +1557,7 @@ async function handle(msg: ToClock) {
     // Paid for something: keep it (T-029, autosave on construct).
     if (charge > 0) void autosave();
   } else if (msg.kind === "clock") {
-    clk = { t: msg.t, rate: msg.rate, at: msg.at };
+    if (msg.game === game) clk = { t: msg.t, rate: msg.rate, at: msg.at };
   } else if (msg.kind === "income") {
     incomePerHour = msg.perHour.map((p) => p.slice(0, PERIODS.length));
     lineIncome = new Map((msg.lines ?? []).map((l) => [l.line, l.perHour]));

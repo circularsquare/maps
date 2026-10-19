@@ -100,9 +100,11 @@ fn walk_cost(api: &DemandApi, i: usize, j: usize) -> f32 {
 pub(crate) fn pair_choice(api: &DemandApi, p: &Params, sk: &Skims, u: usize, v: usize) -> PairChoice {
     let sz = api.sz.as_ref().expect("a network with subzones");
     let z = &api.z;
-    let th = p.station_theta;
     let s = sk.s;
     let (i, j) = (sz.zone[u] as usize, sz.zone[v] as usize);
+    // T-710: the zone pair's distance band, as `mode_choice` takes it
+    let (fx, fy) = ((z.gx[j] - z.gx[i]) as f32, (z.gy[j] - z.gy[i]) as f32);
+    let (th, off) = p.band(p.band_of_d2((fx * fx + fy * fy) * z.zone_m * z.zone_m));
     let ends = |r: std::ops::Range<usize>| {
         let m = sz.acc_w[r.clone()].iter().cloned().fold(f32::INFINITY, f32::min);
         (r, m)
@@ -112,10 +114,10 @@ pub(crate) fn pair_choice(api: &DemandApi, p: &Params, sk: &Skims, u: usize, v: 
     let (ru, m_u) = ends(if by_ride { sz.acc_off[u] as usize..sz.acc_off[u + 1] as usize } else { sz.walk(u) });
     let (rv, m_v) = ends(sz.walk(v));
     let acc_e = |k: usize, m: f32| fast_exp(-th * (sz.acc_w[k] - m));
-    // `station_exp`: exp(-theta r), 0 where there is no route and on the diagonal
+    // `station_exp`: exp(-theta (r - offset)), 0 where there is no route and on the diagonal
     let er = |a: usize, t: usize| {
         let r = sk.r[a * s + t];
-        if a == t || !r.is_finite() { 0.0 } else { fast_exp(-th * r) }
+        if a == t || !r.is_finite() { 0.0 } else { fast_exp(-th * (r - off)) }
     };
     // the origin's row of the logsum, at the destination's egress stations only
     let mut ssum = 0.0f32;
@@ -151,7 +153,7 @@ pub(crate) fn pair_choice(api: &DemandApi, p: &Params, sk: &Skims, u: usize, v: 
     let bt = p.mode_beta(road_free);
     let uw = bt * (road_free - cw) + p.asc_walk();
     let (rail, util, r_car) = if why == RAIL_OFFERED {
-        let rail = m_u + m_v + p.fare_min - fast_ln(ssum) / th;
+        let rail = m_u + m_v + p.fare_min - fast_ln(ssum) / th + off;
         let util = bt * (road_free - rail) + p.asc_rail;
         (rail, util, p.car_choice(util, uw, bt, paid, free))
     } else {
@@ -185,7 +187,7 @@ pub(crate) fn pair_choice(api: &DemandApi, p: &Params, sk: &Skims, u: usize, v: 
             }
         }
         let ok_n = !by_ride || !(p.pair_walk_max - m_w < m_v || sn < 1e-30);
-        let rail_n = if by_ride { m_w + m_v + p.fare_min - fast_ln(sn) / th } else { rail };
+        let rail_n = if by_ride { m_w + m_v + p.fare_min - fast_ln(sn) / th + off } else { rail };
         let (r_n, q) = p.nocar_choice(cw, oth, ok_n.then_some(rail_n));
         r = r_car + cu * (r_n - r_car);
         other_lost = cu * r_n * q;
@@ -218,10 +220,11 @@ pub(crate) fn everyday_choice(ev: &TripInputs, sk: &Skims, u: usize, v: usize, c
     let p = ev.p;
     let sz = api.sz.as_ref().expect("a network with subzones");
     let z = &api.z;
-    let th = p.station_theta;
     let s = sk.s;
     let (i, j) = (sz.zone[u] as usize, sz.zone[v] as usize);
     let distance = ev.pair.map_or(cells_m, |x| x.0);
+    // T-710: the pair's distance band, as the everyday pass takes it
+    let (th, off) = p.band(p.band_of_d2(distance * distance));
     let ends = |r: std::ops::Range<usize>| {
         let m = sz.acc_w[r.clone()].iter().cloned().fold(f32::INFINITY, f32::min);
         (r, m)
@@ -232,7 +235,7 @@ pub(crate) fn everyday_choice(ev: &TripInputs, sk: &Skims, u: usize, v: usize, c
     let acc_e = |k: usize, m: f32| fast_exp(-th * (sz.acc_w[k] - m));
     let er = |a: usize, t: usize| {
         let r = sk.r[a * s + t];
-        if a == t || !r.is_finite() { 0.0 } else { fast_exp(-th * r) }
+        if a == t || !r.is_finite() { 0.0 } else { fast_exp(-th * (r - off)) }
     };
     let logsum = |a: &std::ops::Range<usize>, ma: f32, out: &mut Vec<(usize, usize, f32)>| {
         let mut sum = 0.0f32;
@@ -266,7 +269,7 @@ pub(crate) fn everyday_choice(ev: &TripInputs, sk: &Skims, u: usize, v: usize, c
     let (mut rail, mut util, mut r, mut other_lost) = (f32::INFINITY, f32::NEG_INFINITY, 0.0f32, 0.0f32);
     let w_none = ev.no_rail.0;
     if why == RAIL_OFFERED {
-        rail = m_u + m_v + p.fare_min - fast_ln(sum) / th;
+        rail = m_u + m_v + p.fare_min - fast_ln(sum) / th + off;
         let bt = p.mode_beta(road_free);
         util = bt * (road_free - rail) + p.asc_rail;
         let r_car = p.car_choice(util, bt * (road_free - cw) + p.asc_walk(), bt, paid, free);
@@ -284,7 +287,7 @@ pub(crate) fn everyday_choice(ev: &TripInputs, sk: &Skims, u: usize, v: usize, c
                     let mut wn = vec![];
                     let sn = logsum(&rw, m_w, &mut wn);
                     if sn >= 1e-30 {
-                        rail_n = Some(m_w + m_v + p.fare_min - fast_ln(sn) / th);
+                        rail_n = Some(m_w + m_v + p.fare_min - fast_ln(sn) / th + off);
                         walks = Some((wn, sn));
                     }
                 }
@@ -803,7 +806,7 @@ mod tests {
             for round in 0..2 {
                 if round == 1 {
                     // a crowded round's own pass only: the solve's sums are averaged with the first
-                    let seg: Vec<f32> = api.seg(q).iter().map(|v| v * 30.0).collect();
+                    let seg: Vec<f32> = api.seg(q).iter().map(|v| v * 8.0).collect();
                     assert!(api.crowd_with_external(q, &seg));
                 }
                 let st = api.period(q).unwrap();
@@ -865,7 +868,7 @@ mod tests {
                         assert_eq!(st.sub.rail_home[u], mo.rail_by_sub[u]);
                     }
                 }
-                assert!(checked > 100 && tot > 0.0 && lost_tot > 0.01 * tot && walk_tot > 0.01 * tot, "other and walking must be in play");
+                assert!(checked > 100 && tot > 0.0 && lost_tot > 0.01 * tot && walk_tot > 0.01 * tot, "other and walking must be in play: {checked} origins, rail {tot:.0}, other {lost_tot:.0}, walking {walk_tot:.0}");
                 assert!(worst < 1e-4, "period {q} round {round}: worst origin off by {worst:.2e}");
                 let (mut d, mut m) = (0f64, 0f64);
                 for k in 0..s * s {

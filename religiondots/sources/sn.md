@@ -195,3 +195,15 @@ Full pass. `check_md.py` clean, `built_countries.py --check` ok, `check_rollup.p
   Layène, 41k, as its own row beside it; so the map reads as one green until Sunni Islam is
   opened. That follows from the orders sitting at depth 3 under `islam.sunni`; worth a human eye,
   not a defect.
+
+## Churches drawn, 2026-10-16 (session `c67d3c3c-westafrica`)
+
+On Anita's call (unspecified_splits/westafrica.md §7), the nine régions' `Chrétiens` (303,725)
+are split 92% Catholic (`christianity.catholic`) and 8% other Christian (`christianity.other`,
+code 7's *autres chrétiens*). Diourbel's three départements already print codes 6 and 7, and those
+two rows, previously folded into `christianity`, are now drawn as printed: 3,775 Catholics and 222
+other Christians, measured. Witnesses for 92: Diourbel's own 94.4%; Pew 2010 95%; the
+Afrobarometer's named Christians 83% (n=165, noisy); the Church's 2023 claim (924,000, 5.1%) is
+larger than any census count of Christians. Ziguinchor is probably above 92% and Dakar below.
+`sources/wa_christian.py sn` writes `sn_split.csv`; the régions' rows are `tier="derived"`, never
+ring, and roll back through `sn1988.COLUMNS`.

@@ -396,3 +396,12 @@ Ninguna, 1 agnostic) point the same way as the region and are still not drawn on
 included; Galápagos has no rows; the country total is 16,910,403 as before. National as drawn:
 Católico 75.31% → 75.35%, Evangélica 11.09% → 11.05%, Ninguna 6.10% → 6.08%. Rescattered at
 both scales: 16,904 dots at 1:1,000, 1,686 at 1:10,000.
+
+## Pentecostals from Pew 2014 (2026-10-16)
+
+Anita's call of 2026-10-16, built by session `c67d3c3c-latam` (`latam_split.py`, sources.md
+§latam-2026-10-16). LAPOP's two Protestant boxes are one bucket of 2,307,396; 55.6% of it,
+1,281,881, is drawn on `christianity.pentecostal`, the share of Protestants Pew Research Center's
+2014 survey found in a Pentecostal church (`QPROT`, 243 Ecuadorian Protestants; Pew names the
+Oneness Iglesia Pentecostal Unida at 13.6% of them, not split out). 1,025,515 stay on the two box
+nodes. All `modelled`.

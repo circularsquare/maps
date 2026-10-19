@@ -1,0 +1,7 @@
+batch hunan-west
+1: pick Cili
+2: pick Zhangjiajie
+3: pick Youshui
+4: pick Yongshun
+5: pick Yuanling
+6: pick Fenghuang

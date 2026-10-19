@@ -400,3 +400,15 @@ at the national average.** So the altiplano cluster is *Aymara*, not merely sout
   household entities. No religion cross-tabulation was needed from them.
 - Only one base is served, `CPV2017DI`. The **2007 census** also asked religion (the oracle
   lists Peru for 2007 and 2017) and is not on this server.
+
+## Pentecostals from Pew 2014 (2026-10-16)
+
+Anita's call of 2026-10-16, built by session `c67d3c3c-latam` (`latam_split.py`, sources.md
+§latam-2026-10-16). Of the census's 3,264,819 `Evangélica`, 1,495,147 (45.8%) are drawn on
+`christianity.pentecostal`: Pew Research Center's 2014 survey puts 41.3% of Peruvian Protestants
+in a Pentecostal church (`QPROT`, 244 Protestants), taken of the Protestant universe of 3,618,249
+including the census's Adventists. 1,769,672 stay on `christianity.protestant`. The split rows are
+`derived` and roll back to `Evangélica`, so `inferred dots: not shown` draws the census as it was.
+`Cristiano` (381,000 on bare `christianity`) is left out of the bucket: it is not clearly
+Protestant. Printed check: Adventist, Pew 303,643 against the census's 353,430, which agrees within
+Pew's sampling error.

@@ -57,6 +57,13 @@ def _py_counts():
     return df[["unit", "node", "count", "congregations"]]
 
 
+def _py_counts_split():
+    """`_py_counts` with Pew 2014's Pentecostal share drawn inside the census's `Otras -
+    Evangélica` answer, net of the Pentecostal churches the census already names;
+    latam_split.py, Anita 2026-10-16."""
+    return _latam_split("py", _py_counts())
+
+
 ENTRY = {
     "py": dict(
         name="Paraguay",
@@ -94,12 +101,17 @@ ENTRY = {
             "has 30. The four districts with the highest Buddhist shares in Paraguay are La "
             "Paz (4.6%), Pirapo (2.9%), Yguazu (2.0%) and La Colmena (1.5%), which are the "
             "four agricultural colonies planted from Japan between 1936 and the 1950s. "
-            "**One person in a hundred is not drawn**, the 37,206 who gave no answer."),
+            "**One person in a hundred is not drawn**, the 37,206 who gave no answer. "
+            "47% of those who answered only Evangelical are drawn as Pentecostal, the share "
+            "Pew Research Center's 2014 survey implies less the Pentecostal churches the "
+            "census already names; the rest stay unnamed, and turning inferred dots off draws "
+            "them all as Evangelical again."),
         how="census, 2002, people aged 10 and over",
         grain="districts, 17,400 people on average",
         fill="from the district the census counted them in; Asuncion is six census "
-             "districts drawn as one",
-        counts=_py_counts,
+             "districts drawn as one; Pentecostals among the unnamed Evangelicals from Pew "
+             "Research Center's 2014 survey",
+        counts=_py_counts_split,
         units=None,
         unit_key=None,
         place=HERE / "data" / "geo" / "py" / "py_hexes.gpkg",

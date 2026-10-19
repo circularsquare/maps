@@ -683,3 +683,11 @@ dots on land, Jewish dots on the Pocitos/Punta Carretas shore, none in the river
   in a similar order in both, far closer than chance would give". refresh-meta run.
 - **Not changed:** `note` (internal) still says Montevideo is 0.92% Jewish, the pre-barrio
   figure; the drawn city share is 0.87%.
+
+## Pentecostals from Pew 2014 (2026-10-16)
+
+Anita's call of 2026-10-16, built by session `c67d3c3c-latam` (`latam_split.py`, sources.md
+§latam-2026-10-16). Of the 325,072 `Cristiano no católico` on `christianity.protestant`, 136,038
+(41.8%) are drawn on `christianity.pentecostal`, the share of Protestants Pew Research Center's
+2014 survey found in a Pentecostal church (`QPROT`, 222 Uruguayan Protestants). 189,034 stay. All
+`modelled`.

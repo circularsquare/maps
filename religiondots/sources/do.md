@@ -348,3 +348,14 @@ eight provinces with the fewest LAPOP respondents (Dajabón has **7**) lifts the
 +0.929, +0.852 and +0.892 on the remaining 21. Its ENHOGAR-side levels of 52.8 and 25.3 are
 the survey's own weighted figures; the drawn CSV gives 52.71 and 25.36 because it lays the
 province shares on census populations.
+
+## Pentecostals from Pew 2014 (2026-10-16)
+
+Anita's call of 2026-10-16, built by session `c67d3c3c-latam` (`latam_split.py`, sources.md
+§latam-2026-10-16). Of the 2,412,091 on `christianity.evangelical`, 1,879,945 (77.9%) are drawn on
+`christianity.pentecostal`: Pew Research Center's 2014 survey puts 71.6% of Dominican Protestants
+in a Pentecostal church (`QPROT`, 385 Protestants, the highest share in the region), taken of the
+Protestant universe of 2,624,093 including the 212,002 Adventists ENHOGAR names. 532,146 stay on
+`christianity.evangelical`. All `modelled`. Printed check: Adventist, Pew 144,435 against
+ENHOGAR's 212,002. Haiti next door already draws Baptist and Pentecostal from its census, which is
+what made this border the starkest one.

@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Biggest metro by state</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --land: #171717;
+    --edge: #343434;
+    --text: #eeeeee;
+    --dim: #8c8c8c;
+    --dot: #f0b24a;
+    --new: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--bg); color: var(--text); font-family: 'Nunito', sans-serif; overflow: hidden; }
+  #wrap { position: absolute; inset: 0 0 64px 0; }
+  svg { width: 100%; height: 100%; display: block; }
+  .state { fill: var(--land); stroke: var(--edge); stroke-width: 0.6; }
+  .dot { fill: var(--dot); fill-opacity: 0.5; stroke: var(--dot); stroke-width: 1; }
+  .dot.fresh { stroke: var(--new); stroke-width: 2; fill-opacity: 0.7; }
+  .lab { fill: #d6d6d6; font-size: 9.5px; pointer-events: none; paint-order: stroke; stroke: #0a0a0a; stroke-width: 2.5px; stroke-linejoin: round; }
+  #year { position: absolute; left: 24px; bottom: 84px; font-size: 64px; font-weight: 700; letter-spacing: 1px; line-height: 1; pointer-events: none; }
+  #log { position: absolute; right: 24px; top: 20px; text-align: right; font-size: 13px; line-height: 1.55; color: var(--dim); pointer-events: none; }
+  #log b { color: var(--text); font-weight: 400; }
+  #key { position: absolute; right: 24px; bottom: 84px; width: 150px; height: 90px; pointer-events: none; }
+  .lead { stroke: #5a5a5a; stroke-width: 0.6; }
+  #key text { fill: var(--dim); font-size: 11px; }
+  #bar { position: absolute; left: 0; right: 0; bottom: 0; height: 64px; display: flex; align-items: center; gap: 16px; padding: 0 24px; }
+  button { font: inherit; background: none; color: var(--text); border: 1px solid #444; border-radius: 4px; padding: 5px 14px; cursor: pointer; min-width: 74px; }
+  button:hover { border-color: #888; }
+  input[type=range] { flex: 1; accent-color: var(--dot); }
+  #tip { position: fixed; display: none; pointer-events: none; background: #1c1c1c; border: 1px solid #444; border-radius: 4px; padding: 6px 9px; font-size: 12.5px; line-height: 1.45; max-width: 260px; }
+  #tip .s { color: var(--dim); }
+</style>
+</head>
+<body>
+<div id="wrap"><svg id="map" viewBox="0 0 1060 610" preserveAspectRatio="xMidYMid meet"></svg></div>
+<div id="year">1900</div>
+<div id="log"></div>
+<svg id="key" width="150" height="90"></svg>
+<div id="bar">
+  <button id="play">Pause</button>
+  <input id="scrub" type="range" min="1900" max="2020" step="0.05" value="1900">
+</div>
+<div id="tip"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+<script>
+const K = 0.011;          // radius = K * sqrt(population), in map units
+const MIN_POP = 5000;     // below this a bubble is not drawn
+const FRESH_YEARS = 3;    // outline stays white this long after a state changes leader
+const SPEED = 4;          // years per second
+
+const svg = d3.select('#map');
+const proj = d3.geoAlbersUsa().scale(1300).translate([487.5, 305]);
+const $ = id => document.getElementById(id);
+const fmt = n => n >= 1e6 ? (n / 1e6).toFixed(1).replace(/\.0$/, '') + ' million'
+                : Math.round(n / 1000) + ',000';
+
+// Northeast labels go in a column over the Atlantic, with a line back to the dot
+const COLUMN = new Set(['ME', 'NH', 'VT', 'NY', 'MA', 'RI', 'CT', 'NJ', 'PA', 'DE', 'MD', 'VA']);
+const COL_X = 962, COL_GAP = 12.5;
+
+Promise.all([d3.json('data/states-10m.json'), d3.json('data/statemetros.json')]).then(([topo, data]) => {
+  const years = data.years, y0 = years[0], y1 = years[years.length - 1];
+
+  svg.append('g').selectAll('path').data(topojson.feature(topo, topo.objects.states).features)
+    .join('path').attr('class', 'state').attr('d', d3.geoPath(proj));
+
+  // log-linear between censuses
+  const at = (s, t) => {
+    const i = Math.min(Math.floor((t - y0) / 10), years.length - 2), f = (t - years[i]) / 10;
+    const a = Math.max(s[i], 1), b = Math.max(s[i + 1], 1);
+    return a * Math.pow(b / a, f);
+  };
+
+  const byState = d3.group(data.areas, a => a.state);
+  data.areas.forEach(a => { a.xy = proj([a.lon, a.lat]); });
+
+  // leader of each state in each whole year, and the changes between them
+  const leaderAt = (areas, t) => areas.reduce((m, a) => at(a.pop, t) > at(m.pop, t) ? a : m);
+  const changes = [];
+  const since = new Map();   // state -> year of its latest change, filled in while playing
+  for (const [st, areas] of byState) {
+    let last = leaderAt(areas, y0);
+    for (let t = y0 + 1; t <= y1; t++) {
+      const l = leaderAt(areas, t);
+      if (l !== last) { changes.push({ t, st, from: last, to: l }); last = l; }
+    }
+  }
+  changes.sort((a, b) => a.t - b.t);
+
+  // one dot and one label per state
+  const states = [...byState.keys()];
+  const g = svg.append('g');
+  const colStates = states.filter(s => COLUMN.has(s));
+  const leads = g.selectAll('line').data(colStates).join('line').attr('class', 'lead');
+  const dots = g.selectAll('circle').data(states).join('circle').attr('class', 'dot');
+  const labs = g.selectAll('text').data(states).join('text').attr('class', 'lab');
+  const nameOf = (a, st) => a.name === 'Portland' ? 'Portland, ' + st : a.name;
+  const tip = $('tip');
+  dots.on('mousemove', (e, st) => {
+    const a = cur.get(st); if (!a) return;
+    tip.style.display = 'block';
+    tip.style.left = Math.min(e.clientX + 14, innerWidth - 270) + 'px';
+    tip.style.top = (e.clientY + 14) + 'px';
+    const multi = a.title.split(', ').pop().includes('-');
+    tip.innerHTML = `<b>${a.name}, ${st}</b><br>${fmt(at(a.pop, t))}<br><span class="s">${a.title}${multi ? ', ' + st + ' counties only' : ''}</span>`;
+  }).on('mouseleave', () => { tip.style.display = 'none'; });
+
+  // size key: nested circles sharing a base, labelled on the right
+  const key = d3.select('#key');
+  [[1e5, '100,000'], [1e6, '1 million'], [1e7, '10 million']].forEach(([p, s]) => {
+    const r = K * Math.sqrt(p), top = 86 - 2 * r;
+    key.append('circle').attr('cx', 40).attr('cy', 86 - r).attr('r', r).attr('fill', 'none').attr('stroke', '#777');
+    key.append('line').attr('x1', 40).attr('x2', 84).attr('y1', top).attr('y2', top).attr('stroke', '#555');
+    key.append('text').attr('x', 88).attr('y', top + 4).text(s);
+  });
+
+  const cur = new Map();
+  let t = y0, playing = true, last = null;
+
+  function draw() {
+    const yr = Math.floor(t + 1e-6);
+    $('year').textContent = yr;
+    $('scrub').value = t;
+    cur.clear();
+    const ds = [];
+    for (const st of states) {
+      const a = leaderAt(byState.get(st), t), p = at(a.pop, t);
+      if (p < MIN_POP || !a.xy) continue;
+      cur.set(st, a);
+      ds.push({ st, a, p, r: K * Math.sqrt(p) });
+    }
+    ds.sort((u, v) => v.r - u.r);
+    const show = new Set(ds.map(d => d.st));
+    dots.attr('display', st => show.has(st) ? null : 'none');
+    labs.attr('display', st => show.has(st) ? null : 'none');
+    // draw order: big first, small on top
+    const order = new Map(ds.map((d, i) => [d.st, i]));
+    dots.sort((u, v) => (order.get(u) ?? 0) - (order.get(v) ?? 0));
+    const recent = new Set(changes.filter(c => c.t <= t && t - c.t < FRESH_YEARS).map(c => c.st));
+    // column labels: top to bottom in dot order, pushed down so they never overlap
+    const colY = new Map();
+    let prev = -1e9;
+    ds.filter(d => COLUMN.has(d.st)).sort((u, v) => u.a.xy[1] - v.a.xy[1]).forEach(d => {
+      prev = Math.max(d.a.xy[1], prev + COL_GAP);
+      colY.set(d.st, prev);
+    });
+    leads.attr('display', st => colY.has(st) ? null : 'none').each(function (st) {
+      if (!colY.has(st)) return;
+      const a = cur.get(st);
+      d3.select(this).attr('x1', a.xy[0]).attr('y1', a.xy[1]).attr('x2', COL_X - 3).attr('y2', colY.get(st) - 3);
+    });
+    ds.forEach(d => {
+      dots.filter(s => s === d.st).attr('cx', d.a.xy[0]).attr('cy', d.a.xy[1]).attr('r', d.r)
+        .classed('fresh', recent.has(d.st));
+      const inCol = colY.has(d.st);
+      labs.filter(s => s === d.st).attr('x', inCol ? COL_X : d.a.xy[0] + d.r + 2)
+        .attr('y', inCol ? colY.get(d.st) : d.a.xy[1] + 3).text(nameOf(d.a, d.st));
+    });
+    // latest changes so far
+    const seen = changes.filter(c => c.t <= t).slice(-6).reverse();
+    $('log').innerHTML = seen.map(c => `${c.t} <b>${c.to.name}</b> passes ${c.from.name} (${c.st})`).join('<br>');
+  }
+
+  function frame(now) {
+    if (last != null && playing) {
+      t = Math.min(y1, t + (now - last) / 1000 * SPEED);
+      if (t >= y1) { playing = false; $('play').textContent = 'Replay'; }
+    }
+    last = now;
+    draw();
+    requestAnimationFrame(frame);
+  }
+
+  $('play').onclick = () => {
+    if (t >= y1) t = y0;
+    playing = !playing; $('play').textContent = playing ? 'Pause' : 'Play';
+  };
+  $('scrub').oninput = e => { t = +e.target.value; playing = false; $('play').textContent = 'Play'; };
+  addEventListener('keydown', e => { if (e.code === 'Space') { e.preventDefault(); $('play').click(); } });
+
+  const q = new URLSearchParams(location.search);
+  if (q.has('t')) { t = +q.get('t'); playing = false; $('play').textContent = 'Play'; }
+  requestAnimationFrame(frame);
+});
+</script>
+</body>
+</html>

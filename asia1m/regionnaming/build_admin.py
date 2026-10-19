@@ -38,6 +38,15 @@ def gadm(n):
     def f(r):
         return rec(r.get(f'NAME_{n}'), r.get(f'NL_NAME_{n}') or r.get(f'VARNAME_{n}'), r.get('NAME_1'))
     return f
+def unhcr(n, local):
+    def f(r):
+        return rec(r.get(f'ADM{n}_EN'), r.get(f'ADM{n}_{local}') if local else None,
+                   r.get('ADM1_EN') if n > 1 else None)
+    return f
+def kaz(r):     # this file has ADM0_EN/ADM0_PCODE swapped but the rest is fine
+    return rec(r.get('ADM2_EN'), None, r.get('ADM1_EN'))
+def gb(r):      return rec(r.get('shapeName'))
+def india(r):   return rec(r.get('sd_name'), None, r.get('s_name'), r.get('d_name'))
 def china_adapter(r):
     return rec(r.get('NAME_3'), r.get('NL_NAME_3'), r.get('NAME_1'), r.get('PREF'), r.get('PREF_ZH'))
 def wof(r):     return rec(r.get('name_eng') or r.get('name'), r.get('name_zho'))
@@ -52,7 +61,15 @@ CONFIGS = [
     ('South Korea', KOREA_URL, None, korea),
     ('Japan',       f"{D}/japan/jpn_admbnda_adm2_2019.shp", None, hdx(2)),
     ('Taiwan',      f"{D}/taiwan/whosonfirst-data-admin-tw-region-polygon.shp", None, wof),
-    ('Russia',      f"{D}/russia/rus_admbnda_adm2_gadm_2022_v02.shp", (100,38,135,66), hdx(2)),
+    ('Russia',      f"{D}/russia/rus_admbnda_adm2_gadm_2022_v02.shp", (40,38,180,80), hdx(2)),
+    ('Kazakhstan',  f"{D}/kazakhstan/kaz_admbnda_adm2_unhcr_2023.shp", None, kaz),
+    ('Uzbekistan',  f"{D}/uzbekistan/uzb_admbnda_adm2_2018b.shp", None, unhcr(2, 'UZ')),
+    ('Kyrgyzstan',  f"{D}/kyrgyzstan/kgz_admin2.shp", None, ocha(2)),
+    ('Tajikistan',  f"{D}/tajikistan/geoBoundaries-TJK-ADM1.shp", None, gb),
+    ('India',       f"{D}/india/subdistrict.shp", None, india),
+    ('Bangladesh',  f"{D}/bangladesh/bgd_admin3.shp", None, ocha(3)),
+    ('Nepal',       f"{D}/nepal/npl_admin2.shp", None, ocha(2)),
+    ('Bhutan',      NE, None, ne_row, "admin = 'Bhutan'"),
     ('Vietnam',     f"{D}/vietnam/VNM_adm2.shp", None, gadm(2)),
     ('Laos',        f"{D}/laos/lao_admin2.shp", None, ocha(2)),
     ('Cambodia',    f"{D}/cambodia/khm_admin2.shp", None, ocha(2)),
@@ -67,6 +84,11 @@ CONFIGS = [
     ('Hong Kong',   NE, None, ne_dist, "admin = 'Hong Kong S.A.R.'"),
     ('Macau',       NE, None, ne_dist, "admin = 'Macau S.A.R'"),
 ]
+
+# Added for the western regions (2026-10). They fill only unclaimed pixels, so disputed areas
+# (Arunachal, Aksai Chin) keep whichever earlier country already holds them.
+FILL_ONLY = {'Russia', 'Kazakhstan', 'Uzbekistan', 'Kyrgyzstan', 'Tajikistan', 'India',
+             'Bangladesh', 'Nepal', 'Bhutan'}
 
 def attach_china_prefecture(g):
     O = gpd.read_file(f"{D}/china/chn_admbnda_adm2_ocha_2020.shp")[['ADM2_EN','ADM2_ZH','geometry']]
@@ -95,6 +117,11 @@ def main():
         g = g.to_crs(PROJ4).reset_index(drop=True)
         if country == 'China':
             g = attach_china_prefecture(g)
+        if country == 'India':
+            dist = gpd.read_file(f"{D}/india/district.shp", ignore_geometry=True)
+            state = gpd.read_file(f"{D}/india/state.shp", ignore_geometry=True)
+            g = g.merge(dist[['pc11_s_id','pc11_d_id','d_name']], on=['pc11_s_id','pc11_d_id'], how='left')
+            g = g.merge(state[['pc11_s_id','s_name']], on='pc11_s_id', how='left')
         shapes = []
         for _, row in g.iterrows():
             geom = row.geometry
@@ -104,6 +131,8 @@ def main():
             shapes.append((geom, gid))
         tmp = rasterize(shapes, out_shape=(H, W), transform=TRANSFORM, fill=0, dtype=np.int32)
         m = tmp > 0
+        if country in FILL_ONLY:     # never overwrite a unit an earlier country already painted
+            m &= arr == 0
         arr[m] = tmp[m]
         print(f"[{time.time()-t0:.0f}s] {country}: {len(shapes)} units (gid={gid})")
     np.save(f"{SCR}/adm_all.npy", arr)

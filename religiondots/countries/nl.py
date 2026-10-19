@@ -50,8 +50,46 @@ def _nl_counts():
     df = df[df["count"] > 0]
     df["congregations"] = 0
     df["tier"] = "modelled"
-    return df.rename(columns={"geo_id": "unit"})[
-        ["unit", "node", "count", "congregations", "tier"]]
+    df = df.rename(columns={"geo_id": "unit"})[["unit", "node", "count", "congregations", "tier"]]
+    return _nl_split_islam(df)
+
+
+def _nl_split_islam(df):
+    """Divide each gemeente's `islam` by its borrowed MLD 2020 branch shares (sources/nl_mld.py,
+    Anita 2026-10-16). Every row stays `modelled`, as the survey rows it divides."""
+    import nl2014
+
+    path = HERE / "data" / "normalized" / "nl_mld.csv"
+    if not path.exists():
+        print("  !! nl_mld.csv missing; run sources/nl_mld.py. Dutch Muslims stay on `islam`")
+        return df
+    m = pd.read_csv(path, dtype={"geo_id": str})
+    m["node"] = m["source_category"].map(nl2014.resolve)
+    share = m.pivot_table(index="geo_id", columns="node", values="share", aggfunc="sum")
+    sel = df["node"] == "islam"
+    base = df.loc[sel, "count"].astype(float)
+    units = df.loc[sel, "unit"]
+    missing = sorted(set(units) - set(share.index))
+    if missing:
+        raise SystemExit(f"nl_mld: no shares for {missing[:5]}; re-run sources/nl_mld.py")
+    df["count"] = df["count"].astype(float)
+    taken = pd.Series(0.0, index=base.index)
+    frames = []
+    for node in share.columns:
+        n = base * units.map(share[node]).fillna(0.0).to_numpy()
+        taken += n
+        keep = n > 0
+        frames.append(pd.DataFrame({"unit": units[keep].to_numpy(), "node": node,
+                                    "count": n[keep].to_numpy(), "congregations": 0,
+                                    "tier": "modelled"}))
+    df.loc[sel, "count"] = base - taken
+    add = pd.concat(frames, ignore_index=True)
+    out = pd.concat([df, add], ignore_index=True)
+    by = add.groupby("node")["count"].sum()
+    print("  " + ", ".join(f"{k} {v:,.0f}" for k, v in by.sort_values(ascending=False).items())
+          + f" of {base.sum():,.0f} surveyed Muslims, borrowed MLD 2020 shares, MODELLED "
+            "(sources/nl_mld.py)")
+    return out[out["count"] > 0]
 
 
 ENTRY = {
@@ -99,6 +137,16 @@ ENTRY = {
             "**0.62%**, which is high for Europe, and nearly all of it is the Hindustani "
             "Surinamese who came around independence in 1975: The Hague is **4.6%** Hindu "
             "and Rotterdam **3.1%**, and outside the Randstad the answer barely appears. "
+            "**The Sunni, Shia, Alevi and Ahmadi shares are borrowed from a German survey.** "
+            "The survey asked only Islam. Statistics Netherlands counts people of Turkish and "
+            "Moroccan background in every gemeente, and the Netherlands Institute for Social "
+            "Research found 86% and 94% of them calling themselves Muslim in 2015. Those "
+            "Muslims are given the branch mix that Germany's federal migration office found "
+            "in 2020 among Muslims of Turkish and of North African origin in Germany; nothing "
+            "like it has been asked in the Netherlands. That draws about **68%** of Dutch "
+            "Muslims as Sunni, 7% Alevi, 0.7% Shia and 0.3% Ahmadi. Muslims of every other "
+            "background, Surinamese, Iraqi, Afghan, Somali, Iranian and the rest, stay on plain "
+            "Islam, so Shia are drawn far below their real number. "
             "**Nine years is a long time in Dutch religion.** The same office's current "
             "survey, asking a differently worded question of people aged 15 and over, puts "
             "**42.9%** of the country in some denomination for 2021 to 2025, where this "
@@ -119,6 +167,7 @@ ENTRY = {
             "or agnostic box, so everyone who says they belong to no denomination lands in "
             "one category and the Netherlands puts nothing on the secular node."),
         how="survey, 460,000 adults, pooled 2010 to 2014",
+        fill="Muslim branches borrowed from a 2020 German survey, by origin",
         grain="gemeenten, 42,600 people on average",
         gap_share=0.002090,
         gap="nine gemeenten with too few respondents for CBS to publish, 0.21% of the "

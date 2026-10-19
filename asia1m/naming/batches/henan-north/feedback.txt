@@ -1,0 +1,12 @@
+batch henan-north
+8: pick Hebi
+11: pick Xinxiang
+12: pick Jiaozuo
+13: pick Changyuan
+14: pick Huaiqing
+16: pick Fengqiu
+17: pick Yuanyang
+18: pick Jiyuan
+19: pick Wuzhi
+20: pick Huaxian
+21: pick Weihui

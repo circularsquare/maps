@@ -364,3 +364,23 @@ Island (-59.94 43.94); Australia 1 near Robbins Island in Bass Strait (144.76 -4
 hits are inhabited islands Kontur r6 misses (Silba and Olib in hr, the Danube delta in ro,
 Saibai, K'gari and Curtis in au, Belcher Islands in ca, Bonaire itself in bq). Not fixed here;
 each is one to three dots.
+
+## Pentecostals from Pew 2014 (2026-10-16)
+
+Anita's call of 2026-10-16, built by session `c67d3c3c-latam` (`latam_split.py`, sources.md
+§latam-2026-10-16). The `christianity.protestant` bucket is 9,494,087: `Cristiana` 6,778,435,
+`Evangélica` 2,387,133 and `Otro Protestante/cristiano evangélico` 328,519, people who named no
+church. INEGI's 2020 classification (`clasificaciones_cpv2020_702825198701.pdf` p.9-10) codes 46
+denominations, but Asambleas de Dios and the other named Pentecostal bodies are already inside its
+`Pentecostal` row (1,179,415), so no finer INEGI table can split the generic answers.
+
+Pew Research Center's 2014 survey finds 46.1% of Mexican Protestants in a Pentecostal church
+(`QPROT`, 211 Protestants). Against the drawn Protestant universe of 12,226,400 (Witnesses and
+Latter-day Saints out) that is 5,639,990, less the 1,369,420 INEGI names (`Pentecostal` plus La
+Luz del Mundo) = **4,269,958 drawn on `christianity.pentecostal`** (45.0% of the bucket), as one
+national fraction of every municipio's bucket row; 5,224,129 stay on `christianity.protestant`.
+The split rows are `derived` and keep the allocation's roll to the Protestant column.
+
+Printed every run as a check: Presbyterian, Pew 409,022 against INEGI 428,651 (agrees); Adventist,
+Pew 414,609 against 791,109 (Pew low); Baptist, Pew 736,213 against INEGI's 143,133. Baptist is not
+drawn, on Anita's ruling (Pentecostal only outside El Salvador and Panama).

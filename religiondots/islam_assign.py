@@ -26,8 +26,9 @@ NOT HERE, AND WHY. Saudi Arabia (Anita left it to the builder): the one regional
 State Department's 25-30% Shia in the Eastern Province, has no traceable origin, Najran's
 circulating Ismaili figures exceed its census Saudis, and the 2015 mosque bombings make a Shia
 placement a §14 question, so the om/sa ruling of 2026-09-15 stands. Oman, the UAE, Qatar,
-Afghanistan, Azerbaijan, Pakistan and Syria have real minorities nothing places, and stay as
-they are.
+Azerbaijan and Syria have real minorities nothing places, and stay as they are. Pakistan and
+Afghanistan were in that list until 2026-10-16, when Anita approved assigning them at Pew
+2012's surveyed Sunni share with their Shia-majority units whole (unspecified_splits/islam.md).
 
 TIERS. A `measured` Muslim row becomes an `assigned` Sunni row with `roll=islam` plus a
 `measured` remainder. `assigned` (spec §7e, built 2026-10-04 on Anita's "ok lets add it") is the
@@ -80,6 +81,11 @@ REMAINDER = {
     "ba": 0.01,     # Pew 2009 Shia <1%; Pew 2012 0%
     "xk": 0.03,     # Pew 2012: Shia 1%, something else 2%
     "al": 0.015,    # KAS 2024: other Shia orders ~1.4% of non-Bektashi Muslims
+    # Added 2026-10-16 on Anita's call (unspecified_splits/islam.md §1-2), reversing this file's
+    # "not here" for both: Pew 2012 Q31's surveyed Sunni share, the rest left on `islam`, no Shia
+    # dots, the Shia-majority units WHOLE. Pakistan's census Ahmadis are already their own node.
+    "pk": 0.19,     # Pew 2012 Q31: Sunni 81, Shia 6, other 1, just Muslim 12; 81 is a floor (frame left out FATA, GB, AJK)
+    "af": 0.10,     # Pew 2012 Q31: Sunni 90, Shia 7, just Muslim 3; WRD 2022 89 / 11
 }
 
 # (cc, unit) left whole on `islam`: the minority's home, too large a share there to assign.
@@ -89,6 +95,17 @@ WHOLE = {
     ("ly", "LY0209"): "Nalut",             # Ibadi Amazigh, 300-400k nationally (Tmazight Congress)
     ("ly", "LY0216"): "Jabal al Gharbi",
     ("ly", "LY0215"): "Zuwara",
+    # Pakistan: the Shia-majority or near-majority districts of the drawn map. Kurram: 42% Shia
+    # (Jamestown 2008 citing "official figures") and "exceed 60 per cent" (NWFP census 1931);
+    # Orakzai and Hangu: Shia tribes of the same Kurram-Kohat belt, no figure (branches.md).
+    # Gilgit-Baltistan, the one Shia-majority region, is not drawn at all (sources/pk.md §10.3).
+    ("pk", "PK23-khyber-pakhtunkhwa/kurram-district"): "Kurram",
+    ("pk", "PK23-khyber-pakhtunkhwa/orakzai-district"): "Orakzai",
+    ("pk", "PK23-khyber-pakhtunkhwa/hangu-district"): "Hangu",
+    # Afghanistan: the Hazarajat provinces every account calls Shia heartland; no figure exists
+    # (State Department IRF 2023, "central provinces"; sources/af.md §3).
+    ("af", "AF10"): "Bamyan",
+    ("af", "AF24"): "Daykundi",
 }
 
 # (cc, unit) -> its own remainder, where the minority's home is one unit but a small share of it.
@@ -105,6 +122,8 @@ ASSIGNED_EXCEPT = {
     "dz": "Sunni outside Ghardaïa",
     "ly": "Sunni outside Ibadi districts",
     "tj": "Sunni outside Gorno-Badakhshan",
+    "pk": "Sunni outside Kurram, Orakzai and Hangu",
+    "af": "Sunni outside Bamyan and Daykundi",
 }
 
 
@@ -182,6 +201,14 @@ WHY = {
           "mostly Bektashi.",
     "al": "Bektashis are drawn apart, from the census's own answer. A 2024 Konrad Adenauer "
           "Stiftung survey found about 1.4% of Albania's other Muslims naming another Shia order.",
+    "pk": "Pew's 2012 survey of Pakistan found 81% of Muslims answering Sunni, 6% Shia and 12% "
+          "just a Muslim. Its sample left out the tribal areas, Gilgit-Baltistan and Azad "
+          "Kashmir, which include the most Shia places, so 81% is a floor for Sunni and the "
+          "Shia figure is low; compilers put Shia at 10 to 15%. Shia are not drawn as their own "
+          "dots because nothing places them.",
+    "af": "Pew's 2012 survey of Afghanistan found 90% of Muslims answering Sunni, 7% Shia and 3% "
+          "just a Muslim; the World Religion Database puts Shia at 11%. Shia are not drawn as "
+          "their own dots because nothing counts them by province.",
 }
 
 # Extra sentence for countries with a whole or separately-sized unit.
@@ -192,6 +219,11 @@ UNIT_NOTE = {
     "ly": "Nalut, Jabal al Gharbi and Zuwara districts are left whole as Muslim with no branch.",
     "tj": "Gorno-Badakhshan is left whole as Muslim with no branch; elsewhere the share left "
           "allows for Ismailis living outside it.",
+    "pk": "Kurram, Orakzai and Hangu districts, where Shia tribes are a large share or a "
+          "majority, are left whole as Muslim with no branch. Gilgit-Baltistan, the one "
+          "Shia-majority region, has no published religion table and is not drawn.",
+    "af": "Bamyan and Daykundi, the Hazara provinces of the centre where most people are Shia, "
+          "are left whole as Muslim with no branch.",
 }
 
 

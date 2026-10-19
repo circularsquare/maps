@@ -428,6 +428,9 @@ was tried (`spec.md` §12).
   would check such a table twenty times over — `Kirchenmitgliederzahlen Stand 31.12.2024`,
   e.g. Bayern 2,025,552 and Anhalt 24,180.
 
+  **REVERSED 2026-10-16 and BUILT: see §12.** The evidence that turned it was church law
+  (membership follows the main residence), which makes the territory a count.
+
   **NOT DOING IT — Anita's call, 2026-09-07. And the pitch above was overstated, which is
   the part worth keeping.** It was argued here as *reading a documented territorial fact
   rather than fitting a model*. That is true of eighteen Landeskirchen and **false of
@@ -726,3 +729,104 @@ Three readings:
    categories that carry, so applying the test would not remove any of them.
 
 Nothing here is alarming in the sense of the ruling, so no ask.
+
+## 12. The Protestants by Landeskirche — BUILT 2026-10-16. `sources/de_ekd.py`
+
+Anita's call, reversing §8 and `de2022.py`'s 2026-09-07 refusal, under spec §2.7b (a flat unspecified
+colour that ends at a border is worse than a checkable split). Research: `unspecified_splits/de-in.md`.
+Session `c67d3c3c-de-in`. Rebuild with `python sources/de_ekd.py --fetch`; writes `data/normalized/de_ekd.csv`,
+which `countries/de.py::_de_split_ekd` swaps in for the Zensus `Evangelische Kirche` rows.
+
+**Why it is a lookup and not a model.** Kirchenmitgliedschaftsgesetz §1 Abs. 2 makes a member a member of
+the Gliedkirche of their Wohnsitz, the Melderecht Hauptwohnung; EKD's Table 1 footnote 3 puts membership
+across Landeskirche borders under 0.14 per mille. So a Gemeinde's register count of Protestants is the
+membership of the church whose territory holds it.
+
+**Source.** EKD, *Kirchenmitgliederzahlen Stand 31.12.2022*, korrigierte Ausgabe Juli 2024,
+`ekd.de/ekd_de/ds_doc/Ber_Kirchenmitglieder_2022_r.pdf`, saved at `data/raw/de/ekd/`. Table 1 (members and
+territory population per Gliedkirche) is transcribed into the script and sums to 19,152,827. Other years,
+2023 to 2025 also as .xlsx, are listed at `ekd.de/kirchenmitgliederzahlen-downloads-44413.htm`.
+
+**The table is hand-built**: Land defaults, Kreis defaults and 211 Gemeinde overrides by name, from
+the pre-1866 state borders the Landeskirchen follow. No open boundary file exists (§8: OSM has two
+Protestant relations). Each name prefix must match exactly one Gemeinde in its Kreis or the build stops.
+
+**The check, printed every run** (Zensus count by territory over EKD's member count; population ratio
+beside it, where 0.98 is a match because Zensus runs 1.9% under EKD's 2011-based population):
+
+| Landeskirche | Zensus | EKD | ratio | pop |
+|---|---:|---:|---:|---:|
+| Bayern | 2,134,386 | 2,143,233 | 0.996 | 0.975 |
+| Hannover + Reformierte Kirche | 2,402,308 | 2,461,856 | 0.976 | 0.968 |
+| Rheinland | 2,279,304 | 2,266,794 | 1.006 | 0.988 |
+| Westfalen | 2,000,847 | 2,001,009 | 1.000 | 0.988 |
+| Württemberg | 1,839,450 | 1,821,266 | 1.010 | 0.987 |
+| Nordkirche | 1,775,708 | 1,772,953 | 1.002 | 0.972 |
+| Hessen und Nassau | 1,349,842 | 1,361,322 | 0.992 | 0.972 |
+| Baden | 1,040,630 | 1,035,524 | 1.005 | 0.981 |
+| Berlin-Brandenburg-schl. Oberlausitz | 840,797 | 833,846 | 1.008 | 0.976 |
+| Kurhessen-Waldeck | 733,004 | 730,478 | 1.003 | 0.975 |
+| Mitteldeutschland | 617,408 | 615,855 | 1.003 | 0.993 |
+| Sachsen | 612,984 | 610,503 | 1.004 | 0.986 |
+| Pfalz | 452,698 | 456,498 | 0.992 | 0.977 |
+| Oldenburg | 374,102 | 371,688 | 1.006 | 0.992 |
+| Braunschweig | 308,470 | 293,979 | 1.049 | 1.025 |
+| Bremen | 160,372 | 163,710 | 0.980 | 0.967 |
+| Lippe | 140,908 | 140,313 | 1.004 | 1.001 |
+| Schaumburg-Lippe | 39,643 | 45,764 | 0.866 | 0.885 |
+| Anhalt | 24,269 | 26,236 | 0.925 | 0.880 |
+
+The three misses are church borders inside one Gemeinde, which the table cannot split: Schaumburg-Lippe's
+Steinhude and Großenheidorn are in Wunstorf, Steinbergen in Rinteln and Frille in Petershagen; Wolfsburg is
+drawn whole as Braunschweig's (Propstei Vorsfelde holds its core) while Fallersleben, Heiligendorf and
+Hattorf are Hannover's; Anhalt's Gernrode is inside Quedlinburg. Villingen-Schwenningen straddles the
+Baden-Württemberg line and goes to Württemberg, which moved Baden from 1.023 to 1.005. The bar (0.97 to 1.03
+for churches over 500,000, 0.85 to 1.15 for the rest) was set after the first run, so it guards against a
+regression and proves nothing by itself.
+
+**The Reformed church (ERK) is the one modelled step.** It has no territory, and EKD says population cannot
+be assigned to it. Its 2010 report (`esklum.reformiert.de/files/reformiert.de/Bilder/artikelbilder/pdf/
+april_2010_-_bericht_des_mdg_-1_.pdf`) gives about 70,000 members in Ostfriesland, 60,000 in the Grafschaft
+Bentheim and Emsland and 50,000 scattered; scaled to 159,309 that is 61,954 (23.1% of the Protestants in
+Emden, Aurich, Leer and Wittmund) and 53,103 (48.3% in Bentheim and Emsland), spread in proportion to each
+Gemeinde's Protestants. The scattered third stays with its host church. Inside Ostfriesland the Reformed
+are really concentrated in Emden, the Krummhörn and the Rheiderland; the spread is even.
+
+**Calls, Anita's (2026-10-16), in `de2022.py`'s REVIEW.** Union churches on `christianity.united`; the EKM
+divided by Land, Thüringen Lutheran and the rest United (the Prussian parts of Thuringia were Kirchenprovinz
+Sachsen and are drawn Lutheran, a known cost); ERK and Lippe on `christianity.reformed.continental`. All rows
+`derived` with `roll = christianity.protestant`, including the ERK's.
+
+**Result**, `scatter.py --country de`: `christianity.lutheran` 9,753,206, `christianity.united` 9,117,959,
+`christianity.reformed.continental` 255,964. `christianity.protestant` falls from 19,237,130 to the 110,000
+that ESS's `Andere protestantische Konfession` models. `check_rollup.py de`: 19,127,130 derived, all rolling
+up, 0 orphaned. Placement uses the `ev` 1km grid for all three nodes, as it did for the column.
+
+## 13. The modelled Muslims by branch, from BAMF's MLD 2020 — BUILT 2026-10-16. `sources/de_mld.py`
+
+Session `c67d3c3c-islam`, Anita's call of 2026-10-16; research in `unspecified_splits/islam.md` §3.
+Source: Stichs, Pfündel et al., *Muslimisches Leben in Deutschland 2020*, BAMF Forschungsbericht 38,
+`data/raw/de/mld2020/fb38-muslimisches-leben.pdf`. Table 23 (p. 38, Muslims by origin region, middle
+estimate), Table 26 (p. 53, each region's Muslims over the Länder, Bremen with Hamburg and Brandenburg
+with Mecklenburg-Vorpommern) and Table 32 (p. 59, Glaubensrichtung by origin region) are transcribed
+in the script and re-read off the PDF with `pdftotext`. Each Land's shares are Table 32 weighted by
+Table 23 x Table 26; nationally 72.1 Sunni, 4.6 Shia, 8.2 Alevi, 1.3 Ahmadi against MLD's own 71.7,
+4.4, 9.5, 1.3 (MLD's column weights respondents).
+
+`countries/de.py::_de_split_islam` applies them to the ESS `islam` rows after `_de_split_ess`. Of
+3,471,376: `islam.sunni` 2,509,861, `alevism` 287,351, `islam.shia` 160,755, `islam.ahmadiyya` 44,007,
+the rest (MLD's other, just Muslim, don't know; 40% of Südosteuropa) on `islam`. All `modelled`.
+
+**Alevis on `alevism`**, the rule already used where a source names them (England and Wales's write-in,
+`origin_religion.py`'s Turkish nationals). Half of MLD's Alevis say they are Muslim, so some German
+Alevis are probably in ESS's other or none answers and are not drawn.
+
+**Placement**: all four new nodes use `son`; `islam.sunni` and `alevism` are sharpened by `isl_ctz`
+(Turkish and Bosnian passports). At 1:1,000: `islam.sunni` 1,147 rows at 51% citizenship; `alevism`
+199 rows at 99%, capped in 96%, so Alevi dots follow the Turkish-Bosnian passport grid almost entirely;
+the `islam` remainder now 325 rows at 95%, capped in 86%, because the remainder is small against the
+passport count. Shia and Ahmadi have no grid column (Iran, Iraq, Afghanistan, Pakistan are not
+published) and sit on `son`.
+
+**Not done**: `origin_religion.py`'s TR row was not replaced with MLD's Türkei column (it would move ten
+other countries' foreign halves on a German measurement); a comment beside it records the figures.

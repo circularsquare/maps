@@ -1,0 +1,545 @@
+{
+  "batch": "hunan-north",
+  "regions": [
+    {
+      "n": 1,
+      "key": "#e8c7d3",
+      "settled": null,
+      "summary": "Li River plain, west of Dongting Lake: Li county (85% of people), a bit of Linli and Jinshi.",
+      "candidates": [
+        {
+          "name": "Lizhou",
+          "local": "澧州",
+          "origin": "prefecture",
+          "meaning": "Prefecture named for the Li River (Li Shui), mentioned in the Yu Gong; the prefecture lay north of the river.",
+          "fit": "Seat was Liyang, today's Li county town, which is most of this region; the prefecture also held Anxiang, Shimen and Linli, so it suits the whole Li basin.",
+          "recognisability": "Own zh-wiki article, 315 hits with 湖南, top ones about this place (Lizhou Road, Lizhou city wall, Lizhou diocese).",
+          "source_url": "https://zh.wikipedia.org/wiki/澧县",
+          "source_note": "古为澧州，因澧水贯穿全境而得名; CHGIS 澧州 590-1911 seat at 澧阳镇",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Lixian",
+          "local": "澧县",
+          "origin": "county",
+          "meaning": "County named for the Li River.",
+          "fit": "Holds 87% of the county and the county is 85% of the region.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/澧县",
+          "source_note": "澧县位于洞庭湖西岸，澧水中下游",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Lizhou and Lixian are the same place; pick one. Region 4 next door is the other half of the Li basin, so avoid giving it a Li name."
+    },
+    {
+      "n": 2,
+      "key": "#cbeed8",
+      "settled": "linxiang",
+      "summary": "Linxiang, Yunxi and the Hubei counties Jiayu and Chibi across the Yangtze.",
+      "candidates": [],
+      "notes": ""
+    },
+    {
+      "n": 3,
+      "key": "#f0cbdf",
+      "summary": "Eastern Dongting Lake and Yangtze south bank: Huarong, Shishou (Hubei) and Junshan.",
+      "settled": null,
+      "candidates": [
+        {
+          "name": "Huarong",
+          "local": "华容县",
+          "origin": "county",
+          "meaning": "\"Splendid Rong\": from Rong city, an old Chu town; the Huarong road is where Guan Yu let Cao Cao go in Romance of the Three Kingdoms.",
+          "fit": "Holds 82% of the county, which is 44% of the region's people.",
+          "recognisability": "Current county, famous through the Huarong Dao episode.",
+          "source_url": "https://zh.wikipedia.org/wiki/华容县",
+          "source_note": "以“华丽的容城”得名; 古华容道",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Junshan",
+          "local": "君山",
+          "origin": "lake",
+          "meaning": "Island in Dongting Lake (old names Xiangshan, Dongting Shan), burial place of the two Xiang consorts; home of Junshan Yinzhen tea.",
+          "fit": "Junshan district is 20% of the region and the island itself lies in this part of the lake.",
+          "recognisability": "Own zh-wiki article, 478 hits with 湖南, top ones about the island and the tea.",
+          "source_url": "https://zh.wikipedia.org/wiki/君山",
+          "source_note": "君山位于湖南岳阳西部的洞庭湖中，是一个小岛",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Shishou",
+          "local": "石首市",
+          "origin": "city",
+          "meaning": "\"Stone head\": a lone rock on the Yangtze bank at the city.",
+          "fit": "Holds 67% of the city, which is 27% of the region; Hubei, so a second province in the name.",
+          "recognisability": "Current county-level city.",
+          "source_url": "https://zh.wikipedia.org/wiki/石首市",
+          "source_note": "因“有石孤立”于城区江边、以石为首而得名",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Region sits across the Hunan/Hubei border."
+    },
+    {
+      "n": 4,
+      "key": "#f0cbd9",
+      "summary": "Anxiang, Shimen, Jinshi and most of Linli, between Li River and the lake.",
+      "settled": null,
+      "candidates": [
+        {
+          "name": "Anxiang",
+          "local": "安乡县",
+          "origin": "county",
+          "meaning": "\"Peaceful countryside\": the county name dates from 589, the Sui.",
+          "fit": "Holds 98% of the county, which is 36% of the region.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/安乡县",
+          "source_note": "安乡县 589-1911, seat at Anxiang",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Jinshi",
+          "local": "津市市",
+          "origin": "city",
+          "meaning": "\"Ferry market\": a river port at the meeting of the Li and its branches.",
+          "fit": "Holds 86% of the city, which is only 13% of the region and the smallest of the four units.",
+          "recognisability": "Current county-level city.",
+          "source_url": "https://zh.wikipedia.org/wiki/澧县",
+          "source_note": "Jinshi appears in the facts as a unit; no separate article in sources.md",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Shimen",
+          "local": "石门县",
+          "origin": "county",
+          "meaning": "\"Stone gate\": named for rock walls standing like a gate by the county town.",
+          "fit": "Holds only 41% of the county but the county is 18% of the region; its seat was an early commandery seat (Tianmen, Shimen).",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/石门县",
+          "source_note": "县名...俱说明系地形特征而得名",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Linli (20% of people, 75% of the county) is not listed: the name only reads as a county that borders Li."
+    },
+    {
+      "n": 5,
+      "key": "#a7dad9",
+      "settled": "yueyang",
+      "summary": "Yueyanglou district (80%) and part of Yueyang county.",
+      "candidates": [],
+      "notes": "The label 'yue yang' is drawn on the teal patch here, partly over region 2's boundary."
+    },
+    {
+      "n": 6,
+      "key": "#edd0f4",
+      "summary": "Dongting Lake polders: Nan county (49%) and Yuanjiang (35%), plus bits of Huarong.",
+      "settled": null,
+      "candidates": [
+        {
+          "name": "Nanxian",
+          "local": "南县",
+          "origin": "county",
+          "meaning": "Short for Nanzhou, the \"south island\" of silt that rose from the lake after the Ouchi breach of 1852.",
+          "fit": "Holds 96% of the county, which is 49% of the region.",
+          "recognisability": "Current county, though a young one (1890s).",
+          "source_url": "https://zh.wikipedia.org/wiki/南县",
+          "source_note": "土人名之曰‘南洲’; 南洲直隶厅 1895",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Dongting",
+          "local": "洞庭",
+          "origin": "lake",
+          "meaning": "Name of China's second-largest freshwater lake (Dongting Lake, the \"cave court\" of the Xiang consorts' legends), taking in the Xiang, Zi, Yuan and Li rivers.",
+          "fit": "Region 6 is the silted lake plain between the Jingjiang outflows and the Zi and Yuan mouths (South Dongting and the polders), the heart of the lake country; East Dongting lies in regions 3 and 5 (Yueyang), West Dongting in region 9. Used alone it would read as claiming the whole lake, which regions 3, 5, 9 and 12 also touch, so 洞庭湖区 (Dongting lake district) or South Dongting would be more exact.",
+          "recognisability": "Own zh-wiki article (洞庭湖), 658 hits with 湖南, top ones about the lake.",
+          "source_url": "https://zh.wikipedia.org/wiki/洞庭湖",
+          "source_note": "岳阳市: 东洞庭湖...汇湘资沅澧四水; 湘阴县: 南洞庭湖滨、湘资两水尾闾",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Yuanjiang",
+          "local": "沅江市",
+          "origin": "city",
+          "meaning": "Named for the Yuan River, which reaches Dongting Lake here.",
+          "fit": "Holds 68% of the city, 35% of the region; the old county seat and urban core lie in region 14, not here.",
+          "recognisability": "Current county-level city.",
+          "source_url": "https://zh.wikipedia.org/wiki/沅江市",
+          "source_note": "地处沅水得名",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Nanzhou",
+          "local": "南洲",
+          "origin": "historical",
+          "meaning": "\"South island\": the name locals gave the new silt land; Nanzhou Hall (1894-1911) was seated at Wuzui.",
+          "fit": "Covers the Nan county area, the core of the region.",
+          "recognisability": "Own zh-wiki article but only 80 hits with 湖南, mostly a town name and a Zhuzhou township.",
+          "source_url": "https://zh.wikipedia.org/wiki/南县",
+          "source_note": "南洲直隶厅 (1894-1911) seat 乌嘴, CHGIS",
+          "rating": 2,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Yuanjiang is also offered in region 14; choose it in only one."
+    },
+    {
+      "n": 7,
+      "key": "#bad7e8",
+      "settled": "miluo",
+      "summary": "Yueyang county (47%), Miluo (39%) and Tongcheng (Hubei).",
+      "candidates": [],
+      "notes": "Miluo city proper (Miluo Chengguanzhen) falls in region 13, not here, so region 13 cannot reuse the name."
+    },
+    {
+      "n": 8,
+      "key": "#f0b6c0",
+      "summary": "Changde city: Wuling district (78%) and the Dingcheng side.",
+      "settled": null,
+      "candidates": [
+        {
+          "name": "Changde",
+          "local": "常德",
+          "origin": "city",
+          "meaning": "\"Constant virtue\" (Changde fu, from 1165).",
+          "fit": "Holds the old centre of the prefecture city (5.3M prefecture); regions 8 and 9 are its urban area.",
+          "recognisability": "Current prefecture city.",
+          "source_url": "https://zh.wikipedia.org/wiki/常德市",
+          "source_note": "常德府 1165-1911 seat in Changde urban area",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Wuling",
+          "local": "武陵",
+          "origin": "historical",
+          "meaning": "Han commandery (47 onward) seated here, and the old name of Changde; also the Wuling of the Peach Blossom Spring tale.",
+          "fit": "Seat in the urban core; Wuling district is 78% of the region.",
+          "recognisability": "Own zh-wiki article; shares its name with the Wuling mountains, which a west Hunan batch may use.",
+          "source_url": "https://zh.wikipedia.org/wiki/常德市",
+          "source_note": "常德市，古称武陵; CHGIS 武陵郡 47-757",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Wuling is also a mountain range name; check with the west Hunan batch before using it."
+    },
+    {
+      "n": 9,
+      "key": "#eec6d9",
+      "summary": "Hanshou county (62%) and the Dingcheng district lakeside, on west Dongting Lake.",
+      "settled": null,
+      "candidates": [
+        {
+          "name": "Longyang",
+          "local": "龙阳",
+          "origin": "historical",
+          "meaning": "County name from 222 to 1911 (Longyang county, renamed Hanshou in 1912); the later \"Dragon Yang\" prefecture and army were seated here too.",
+          "fit": "Seat is today's Hanshou town, the largest part of the region.",
+          "recognisability": "Own zh-wiki article, 102 hits with 湖南, top ones about Hanshou's own street and the Langzhou prefecture.",
+          "source_url": "https://zh.wikipedia.org/wiki/朗州",
+          "source_note": "下辖武陵县、龙阳县（今湖南省汉寿县）; CHGIS 龙阳县 222-1911",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Hanshou",
+          "local": "汉寿县",
+          "origin": "county",
+          "meaning": "Han Shou, a Han county (134 onward) whose original seat was in Dingcheng district.",
+          "fit": "Holds 91% of the county, which is 62% of the region.",
+          "recognisability": "Current county, home of Guan Yu's title Marquis of Hanshou.",
+          "source_url": "https://zh.wikipedia.org/wiki/鼎城区",
+          "source_note": "CHGIS 汉寿县 134-588 at 鼎城区断港头乡城址村",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 10,
+      "key": "#e2dbe2",
+      "summary": "Taoyuan county (74%) on the lower Yuan River, plus a piece of Yuanling.",
+      "settled": null,
+      "candidates": [
+        {
+          "name": "Taoyuan",
+          "local": "桃源县",
+          "origin": "county",
+          "meaning": "\"Peach spring\": named for Taohuayuan, the Peach Blossom Spring of Tao Yuanming's tale.",
+          "fit": "Holds 95% of the county, which is 74% of the region.",
+          "recognisability": "Current county, very well known through the fable.",
+          "source_url": "https://zh.wikipedia.org/wiki/桃源县",
+          "source_note": "因境内有桃花源而得名",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Yuanling",
+          "local": "沅陵县",
+          "origin": "county",
+          "meaning": "County on the middle Yuan River.",
+          "fit": "Only 37% of the county and 20% of the region; the rest of Yuanling belongs to the west Hunan batch.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/沅陵县",
+          "source_note": "",
+          "status": "rejected"
+        }
+      ],
+      "notes": "Taoyuan is spelled like the Taiwan city and airport but the characters differ (桃源 vs 桃園)."
+    },
+    {
+      "n": 11,
+      "key": "#bce7cf",
+      "settled": "pingjiang",
+      "summary": "Pingjiang county (87%) and a bit of Xiushui.",
+      "candidates": [],
+      "notes": ""
+    },
+    {
+      "n": 12,
+      "key": "#cab3fd",
+      "summary": "Yiyang city: Heshan (41%) and Ziyang districts, plus Xiangyin county north of the Xiang.",
+      "settled": null,
+      "candidates": [
+        {
+          "name": "Yiyang",
+          "local": "益阳",
+          "origin": "city",
+          "meaning": "\"Yang (north bank) of the Yi water\": Yi water being an old name for the Zi River.",
+          "fit": "Holds the old Yiyang county seat and the prefecture city centre; region 14 holds the rest of the urban area.",
+          "recognisability": "Current prefecture city (4.4M prefecture).",
+          "source_url": "https://zh.wikipedia.org/wiki/益阳市",
+          "source_note": "益阳县 202 BC-1911, 益阳州 seat at 益阳市区 (CHGIS)",
+          "rating": 5,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Yiyang (益阳) and Yueyang (岳阳) differ in characters but read alike on the map; same Hunan province, adjacent areas."
+    },
+    {
+      "n": 13,
+      "key": "#c1b4fc",
+      "summary": "Lower Miluo and Xiangyin, with Changsha's northern edge (Kaifu, Wangcheng, Changsha county).",
+      "settled": null,
+      "candidates": [
+        {
+          "name": "Xiangyin",
+          "local": "湘阴县",
+          "origin": "county",
+          "meaning": "\"North (shaded side) of the Xiang\": the county lies at the Xiang's mouth on Dongting Lake.",
+          "fit": "Holds 47% of the county, which is 26% of the region; the biggest single unit after Miluo, whose name is taken.",
+          "recognisability": "Current county; also seat of Xiangyin (474-1911) in CHGIS.",
+          "source_url": "https://zh.wikipedia.org/wiki/湘阴县",
+          "source_note": "湘阴县 474-1911 seat north of Xiangyin town",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Luoxian",
+          "local": "罗县",
+          "origin": "historical",
+          "meaning": "Qin county (222 BC to 624) that covered today's Miluo and parts of Pingjiang and Xiangyin; Luo is the old kingdom Luozi.",
+          "fit": "Seat lay inside Miluo's Qu Yuan farm area, in this region; territory covered Miluo, the region's largest unit.",
+          "recognisability": "Own zh-wiki article, 225 hits with 湖南, top ones about this place.",
+          "source_url": "https://zh.wikipedia.org/wiki/罗县",
+          "source_note": "秦置。辖境大约位于今湖南省汨罗市和平江县、湘阴县部分",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "This region holds Miluo's urban centre (692k) but region 7 has the Miluo label; the Changsha batch may name Kaifu/Wangcheng parts nearby."
+    },
+    {
+      "n": 14,
+      "key": "#c1b4f1",
+      "summary": "Taojiang (35%), Ziyang and Heshan districts, and the old Yuanjiang town: Zi River lowlands.",
+      "settled": null,
+      "candidates": [
+        {
+          "name": "Taojiang",
+          "local": "桃江县",
+          "origin": "county",
+          "meaning": "\"Peach blossom river\": named for the Taohua River; the county was split off Yiyang in 1952.",
+          "fit": "Holds 59% of the county, which is 35% of the region.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/桃江县",
+          "source_note": "以境内桃花江得名",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Yuanjiang",
+          "local": "沅江市",
+          "origin": "city",
+          "meaning": "Named for the Yuan River.",
+          "fit": "Holds the old Yuanjiang county seat (598-1911) and city centre, but only 31% of the city and 16% of the region.",
+          "recognisability": "Current county-level city.",
+          "source_url": "https://zh.wikipedia.org/wiki/沅江市",
+          "source_note": "沅江县 598-1911 seat at 沅江市城区",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Ziyang",
+          "local": "资阳区",
+          "origin": "county",
+          "meaning": "\"North bank of the Zi\": a Yiyang city district.",
+          "fit": "Holds 67% of the district, 25% of the region.",
+          "recognisability": "Same characters as the much larger Ziyang in Sichuan.",
+          "source_url": "https://zh.wikipedia.org/wiki/资阳区",
+          "source_note": "因辖境大部分位于资水以北得名“资阳”",
+          "status": "rejected"
+        }
+      ],
+      "notes": "Yuanjiang is also offered in region 6."
+    },
+    {
+      "n": 15,
+      "key": "#d1c8f1",
+      "summary": "Anhua county (73%) and western Taojiang: the Zi River gorges in the Xuefeng foothills.",
+      "settled": null,
+      "candidates": [
+        {
+          "name": "Anhua",
+          "local": "安化县",
+          "origin": "county",
+          "meaning": "\"Peace and civilisation\": the county was cut from Meishan land in 1073 after the Song conquest of the Meishan peoples.",
+          "fit": "Holds 99% of the county, which is 73% of the region.",
+          "recognisability": "Current county, known for Anhua dark tea.",
+          "source_url": "https://zh.wikipedia.org/wiki/梅山_(湖南)",
+          "source_note": "梅山，在今湖南新化县和安化县境内山地",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Meishan",
+          "local": "梅山",
+          "origin": "mountain",
+          "meaning": "Mountain district of the Meishan 'cave peoples', conquered by the Song in 977; Anhua is the core of Meishan culture.",
+          "fit": "Spans this region and region 16 (Xinhua); no single seat.",
+          "recognisability": "Own zh-wiki article, 222 hits with 湖南 but several are Ningbo's Meishan island.",
+          "source_url": "https://zh.wikipedia.org/wiki/梅山_(湖南)",
+          "source_note": "梅山，在今湖南新化县和安化县境内山地",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Meishan is also offered in region 16; use it in at most one."
+    },
+    {
+      "n": 16,
+      "key": "#d8affa",
+      "summary": "Xinhua county (99%): upper Zi River valley in the Xuefeng mountains.",
+      "settled": null,
+      "candidates": [
+        {
+          "name": "Xinhua",
+          "local": "新化县",
+          "origin": "county",
+          "meaning": "\"New civilisation\": county formed in 1072 from the conquered Meishan lands.",
+          "fit": "Holds 83% of the county, which is 99% of the region.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/新化县",
+          "source_note": "新化县 1072-1911, seat at Baixi",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Meishan",
+          "local": "梅山",
+          "origin": "mountain",
+          "meaning": "Mountain district of the Meishan 'cave peoples', in Xinhua and Anhua counties.",
+          "fit": "Xinhua is half of Meishan; spans this region and region 15.",
+          "recognisability": "Own zh-wiki article, 222 hits with 湖南, some about Ningbo.",
+          "source_url": "https://zh.wikipedia.org/wiki/梅山_(湖南)",
+          "source_note": "梅山，在今湖南新化县和安化县境内山地",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Meishan is also offered in region 15."
+    },
+    {
+      "n": 17,
+      "key": "#cda6fc",
+      "summary": "Lianyuan (48%), Lengshuijiang (30%) and edges of Xinhua and Xinshao.",
+      "settled": null,
+      "candidates": [
+        {
+          "name": "Lianyuan",
+          "local": "涟源",
+          "origin": "city",
+          "meaning": "\"Source of the Lian\": the Lian River rises here; it was Lantian county until 1952.",
+          "fit": "Holds 62% of the city, 48% of the region; 1.16M city figure is the whole county-level city.",
+          "recognisability": "Current county-level city.",
+          "source_url": "https://zh.wikipedia.org/wiki/涟源市",
+          "source_note": "以地处涟水源头而得名",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Lengshuijiang",
+          "local": "冷水江",
+          "origin": "city",
+          "meaning": "\"Cold water river\": from the cold well water along the stream.",
+          "fit": "Holds 99.7% of the city, 30% of the region; its Xikuangshan is the world's antimony capital.",
+          "recognisability": "Current county-level city.",
+          "source_url": "https://zh.wikipedia.org/wiki/冷水江市",
+          "source_note": "因境内涟溪两岸多井，井水极冷而得名",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 18,
+      "key": "#cdb1f5",
+      "summary": "Loudi urban area (Louxing, 37%), Shuangfeng county (40%) and part of Lianyuan.",
+      "settled": null,
+      "candidates": [
+        {
+          "name": "Loudi",
+          "local": "娄底",
+          "origin": "city",
+          "meaning": "Probably 'under the little hill' (naodi), alternatively said to be where the Lou and Di stars shine together.",
+          "fit": "Holds the whole of the prefecture seat Louxing.",
+          "recognisability": "Current prefecture city (3.9M).",
+          "source_url": "https://zh.wikipedia.org/wiki/娄底市",
+          "source_note": "娄底一名起源于“垴底”...因地处“娄星和氐星交相辉映之处”",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Shuangfeng",
+          "local": "双峰县",
+          "origin": "county",
+          "meaning": "\"Twin peaks\": named for the Shuangfeng mountain.",
+          "fit": "Holds 99% of the county, 40% of the region.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/双峰县",
+          "source_note": "得名于县境内的双峰山",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    }
+  ]
+}

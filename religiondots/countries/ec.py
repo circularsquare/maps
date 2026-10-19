@@ -132,6 +132,12 @@ def _ec_counts():
     return df[["unit", "node", "count", "congregations", "tier"]]
 
 
+def _ec_counts_split():
+    """`_ec_counts` with Pew 2014's Pentecostal share drawn inside LAPOP's two Protestant boxes;
+    latam_split.py, Anita 2026-10-16. The rows stay `modelled`."""
+    return _latam_split("ec", _ec_counts())
+
+
 ENTRY = {
     "ec": dict(
         name="Ecuador",
@@ -204,13 +210,15 @@ ENTRY = {
             "the pooled rounds, while the believers without a religion go from 2.6% to "
             "10.0%. So this map is several points more Catholic than the last round alone "
             "would draw. Pooling is what buys the province detail: a single round is 1,500 "
-            "people over twenty-three provinces."),
+            "people over twenty-three provinces. 56% of the Evangelical and Protestant answers "
+            "are drawn as Pentecostal, the share of Protestants that Pew Research Center's "
+            "2014 survey found in Pentecostal churches; the rest stay unnamed."),
         how="survey, four rounds 2010 to 2023 pooled",
         grain="provinces, 735,000 people on average",
         gap=("Galapagos, 28,583 people, 0.2% of the country, which the survey never offered as "
              "an answer"),
         gap_share=0.0017,
-        counts=_ec_counts,
+        counts=_ec_counts_split,
         units=None,
         unit_key=None,
         place=HERE / "data" / "geo" / "ec" / "ec_hexes.gpkg",

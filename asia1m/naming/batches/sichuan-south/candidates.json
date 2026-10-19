@@ -1,0 +1,477 @@
+{
+  "batch": "sichuan-south",
+  "regions": [
+    {
+      "n": 1, "key": "#eeafa9", "settled": null,
+      "summary": "Fu River reach north of Suining city: Shehong (53%) and Daying (39%), a sliver of Santai.",
+      "candidates": [
+        {"name": "Shehong", "local": "射洪", "origin": "county",
+         "meaning": "The county was first Shejiang (射江, \"shoot river\") and was renamed Shehong under the Northern Zhou; Chen Zi'ang and the Tuopai liquor are from here.",
+         "fit": "Shehong holds 53% of the region's people and 67% of the county; with Daying it is 92%.",
+         "recognisability": "Current county-level city.",
+         "source_url": "https://zh.wikipedia.org/wiki/射洪市", "source_note": "射洪县原名射江县...北周时期，射江县改名为射洪县", "rating": 4, "status": "suggested"},
+        {"name": "Daying", "local": "大英", "origin": "county",
+         "meaning": "Named in 1997 after the Daying zhuotong well (卓筒井), the early deep-drilling brine well; the county seat is Penglai town.",
+         "fit": "Daying is 39% of the region's people and 97% of the county.",
+         "recognisability": "Current county, small and new (1997).",
+         "source_url": "https://zh.wikipedia.org/wiki/大英县", "source_note": "取大英卓筒井命名", "rating": 3, "status": "suggested"}
+      ],
+      "notes": "Santai (7%) is the only outside bit."
+    },
+    {
+      "n": 2, "key": "#eeb4a9", "settled": null,
+      "summary": "Suining city centre on the Fu River: Chuanshan district (79%), part of Pengxi.",
+      "candidates": [
+        {"name": "Suining", "local": "遂宁", "origin": "city",
+         "meaning": "Given in 347 by Huan Wen after his conquest of Cheng-Han; the sources gloss it as \"end the fighting, reach peace\". It is a post-war name, not a frontier-pacification one.",
+         "fit": "Region holds the old city (Chuanshan 98% of that district); city rule applies (Suining prefecture 3.25M, centre about 1M).",
+         "recognisability": "Current prefecture-level city.",
+         "source_url": "https://zh.wikipedia.org/wiki/遂宁市", "source_note": "名称由来：...表示“平息战乱，达到安宁”的意思", "rating": 4, "status": "suggested"},
+        {"name": "Suizhou", "local": "遂州", "origin": "prefecture",
+         "meaning": "\"Sui prefecture\", the Sui-Tang-Song name for the city (557-979, then Suining Fu); Tang prefecture covered Xiaoxi, Pengxi, Changjiang (Daying) and Fangyi.",
+         "fit": "Seat was inside this region (Xiaoxi); the prefecture also covered most of regions 1 and 4.",
+         "recognisability": "Own zh-wiki article, 43 hits with 四川, mostly lists of Tang prefectures.",
+         "source_url": "https://zh.wikipedia.org/wiki/遂州", "source_note": "遂州 (州, 557-979) 今四川省遂宁县", "rating": 3, "status": "suggested"},
+        {"name": "Chuanshan", "local": "船山", "origin": "county",
+         "meaning": "\"Boat mountain\"; district created in 2003 from the old Shizhong district.",
+         "fit": "Chuanshan is 79% of the region.",
+         "recognisability": "A 2003 district name, unknown outside the city.",
+         "source_url": "https://zh.wikipedia.org/wiki/船山区", "source_note": "船山区...遂宁市所辖的一个市辖区", "status": "rejected"}
+      ],
+      "notes": "The meaning of Suining is peace after war, so it is fine despite the -ning ending."
+    },
+    {
+      "n": 3, "key": "#eab3a3", "settled": null,
+      "summary": "Jianyang city on the Tuo River east of Chengdu (84%) plus the north of Yanjiang.",
+      "candidates": [
+        {"name": "Jianyang", "local": "简阳", "origin": "city",
+         "meaning": "Formed in 1913 from the first characters of Jianzhou and Yang'an county.",
+         "fit": "Jianyang is 84% of the region's people and 81% of the city.",
+         "recognisability": "Current county-level city, administered by Chengdu since 2016.",
+         "source_url": "https://zh.wikipedia.org/wiki/简阳市", "source_note": "名字取自简州和阳安各自的第一个字", "rating": 5, "status": "suggested"},
+        {"name": "Jianzhou", "local": "简州", "origin": "prefecture",
+         "meaning": "Sui prefecture of 603, named after the Laijian pool at the seat; it ran to 1911 and covered Yang'an, Pingquan and Jinshui counties.",
+         "fit": "Seat at Dongxi, inside this region; prefecture covered the region's main towns.",
+         "recognisability": "Own zh-wiki article, 71 hits with 四川.",
+         "source_url": "https://zh.wikipedia.org/wiki/简阳市", "source_note": "隋朝仁寿三年（603年）设简州，得名于境内赖简池", "rating": 3, "status": "suggested"}
+      ],
+      "notes": "Jianyang now belongs to Chengdu, so the Chengdu agent could also reach for it; it fits this region best."
+    },
+    {
+      "n": 4, "key": "#f1c7bf", "settled": null,
+      "summary": "Fu River south of Suining: Anju district (50%) and Tongnan across the Chongqing border (39%).",
+      "candidates": [
+        {"name": "Anju", "local": "安居", "origin": "county",
+         "meaning": "\"Dwell in peace\"; Sui county of 593, on the Fu and Qu rivers.",
+         "fit": "Anju is 50% of the region and 98% of the district; county dates back 650 years as a seat.",
+         "recognisability": "Current district, small.",
+         "source_url": "https://zh.wikipedia.org/wiki/安居区", "source_note": "安居县 (县, 593-1242) 今四川省遂宁县西南安居", "rating": 4, "status": "suggested"},
+        {"name": "Tongnan", "local": "潼南", "origin": "county",
+         "meaning": "Usually explained as \"south of the Tong\" (Tong being the old name of the Fu river and Tongchuan); not checked in sources.md. Known for the Dafo temple.",
+         "fit": "Tongnan is 39% of the region and 73% of the county.",
+         "recognisability": "Current Chongqing district (formerly county), with a recognisable name.",
+         "source_url": "https://zh.wikipedia.org/wiki/潼南区", "source_note": "梓潼街道 / 桂林街道 top towns in region", "rating": 3, "status": "suggested"}
+      ],
+      "notes": "Tongnan is in Chongqing, so check with whoever names the rest of Tongnan (27% of it lies in another region)."
+    },
+    {
+      "n": 5, "key": "#f3b09a", "settled": null,
+      "summary": "Ziyang city on the Tuo River (Yanjiang district 70%) and Lezhi county (30%).",
+      "candidates": [
+        {"name": "Ziyang", "local": "资阳", "origin": "city",
+         "meaning": "\"Sunny bank of the Zi\": the Tang geography gives it as north of the Zi river, today's Tuo.",
+         "fit": "Region holds the city's centre (Yanjiang 67% of that district); Ziyang prefecture's seat.",
+         "recognisability": "Current prefecture-level city.",
+         "source_url": "https://zh.wikipedia.org/wiki/资阳市", "source_note": "资阳县“在资水（今沱江）之阳也”", "rating": 4, "status": "suggested"},
+        {"name": "Yanjiang", "local": "雁江", "origin": "county",
+         "meaning": "\"Wild goose river\"; district name since 2000, from the Tuo reach at the city.",
+         "fit": "Yanjiang is 70% of the region, 67% of the district.",
+         "recognisability": "Current district; less recognisable than Ziyang.",
+         "source_url": "https://zh.wikipedia.org/wiki/雁江区", "source_note": "雁江区是中国四川省资阳市所辖的一个市辖区", "rating": 3, "status": "suggested"}
+      ],
+      "notes": "Ziyang 资阳 is also a district of Yiyang in Hunan (same characters); far away."
+    },
+    {
+      "n": 6, "key": "#f1c3a6", "settled": null,
+      "summary": "Meishan city on the Min River: Dongpo district (78%) and Pengshan.",
+      "candidates": [
+        {"name": "Meishan", "local": "眉山", "origin": "city",
+         "meaning": "\"Eyebrow mountain\", after Mount Emei, or after a hill with two peaks like eyebrows; Su Shi, Su Xun and Su Zhe are from here.",
+         "fit": "Region holds the city centre (Dongpo district) and Pengshan; city rule.",
+         "recognisability": "Current prefecture-level city.",
+         "source_url": "https://zh.wikipedia.org/wiki/眉山市", "source_note": "名称来由：眉山之名有以下三说", "rating": 5, "status": "suggested"},
+        {"name": "Meizhou", "local": "眉州", "origin": "prefecture",
+         "meaning": "Old prefecture name (553-1911), seated at Taihe in today's Dongpo; it also covered Pengshan, Qingshen, Danleng and Hongya.",
+         "fit": "Seat is inside this region; prefecture covered regions 6 and 9.",
+         "recognisability": "Own zh-wiki article, 577 hits with 四川.",
+         "source_url": "https://zh.wikipedia.org/wiki/眉州", "source_note": "眉州 (州, 553-1911) 今四川省眉山县太和镇", "rating": 4, "status": "suggested"},
+        {"name": "Dongpo", "local": "东坡", "origin": "county",
+         "meaning": "\"East slope\", Su Shi's pen name; the district was named for him in 2000.",
+         "fit": "Dongpo is 78% of this region's people.",
+         "recognisability": "Current district; the name is famous but is a person.",
+         "source_url": "https://zh.wikipedia.org/wiki/东坡区", "source_note": "得名于宋代著名文学家苏东坡", "rating": 3, "status": "suggested"}
+      ],
+      "notes": ""
+    },
+    {
+      "n": 7, "key": "#f4bba0", "settled": null,
+      "summary": "Anyue county (79%) and the Dongxing district of Neijiang to its south.",
+      "candidates": [
+        {"name": "Anyue", "local": "安岳", "origin": "county",
+         "meaning": "\"Settle on the mountain\": the first county seat was on Tiefeng Mountain, steep on all sides and easy to defend. Known for its stone carvings and lemons.",
+         "fit": "Anyue is 79% of the region and 90% of the county.",
+         "recognisability": "Current county.",
+         "source_url": "https://zh.wikipedia.org/wiki/安岳县", "source_note": "取安居于山岳上之意，故名“安岳”", "rating": 5, "status": "suggested"},
+        {"name": "Puzhou", "local": "普州", "origin": "prefecture",
+         "meaning": "Prefecture of 575-1257 seated at Anyue; it also held Puci (Lezhi), Anju, Pukang and Longkang.",
+         "fit": "Seat is Anyue, and the prefecture covered the neighbouring regions 4 and 5 too.",
+         "recognisability": "Own zh-wiki article, 40 hits with 四川, mostly Tang prefecture lists.",
+         "source_url": "https://zh.wikipedia.org/wiki/普州", "source_note": "普州 (州, 575-1257) 今四川省安岳县", "rating": 3, "status": "suggested"}
+      ],
+      "notes": ""
+    },
+    {
+      "n": 8, "key": "#eabea3", "settled": null,
+      "summary": "Renshou county (96%), a large rural county between the Min and Tuo.",
+      "candidates": [
+        {"name": "Renshou", "local": "仁寿", "origin": "county",
+         "meaning": "\"Benevolence and long life\", from the Sui Renshou palace or the Renshou water; auspicious, not martial.",
+         "fit": "Renshou is 96% of the region and 86% of the county.",
+         "recognisability": "Current county, the most populous in Sichuan.",
+         "source_url": "https://zh.wikipedia.org/wiki/仁寿县", "source_note": "仁寿县名的来历，一说来自隋朝开皇十五年建成的仁寿宫", "rating": 5, "status": "suggested"},
+        {"name": "Lingzhou", "local": "陵州", "origin": "prefecture",
+         "meaning": "Old name of Renshou (557-1071 as a prefecture), after the Ling well; it also held Shiliang and Pushe counties.",
+         "fit": "Seat inside the region; the Sui commandery covered Renshou, Pengshan and Jingyan.",
+         "recognisability": "484 hits with 四川 but mostly other Lingzhou; weak.",
+         "source_url": "https://zh.wikipedia.org/wiki/仁寿县", "source_note": "仁寿县古称陵州、隆州", "rating": 2, "status": "suggested"}
+      ],
+      "notes": "Lingzhou 陵州 shares its pinyin with Lingzhou 灵州 in Ningxia, but the characters differ."
+    },
+    {
+      "n": 9, "key": "#f3cab7", "settled": null,
+      "summary": "Qingyi and Min valley country: Dongpo (25%), Hongya, Jiajiang, Qingshen, Jingyan, Danleng.",
+      "candidates": [
+        {"name": "Qingyi", "local": "青衣", "origin": "river",
+         "meaning": "\"Dark-green robe\": ancient name of the Qingyi River (also Pingqiang river) and of the old Qingyi county near Qingshen.",
+         "fit": "The Qingyi runs through Hongya and Jiajiang, about a third of the region, and Qingshen and Danleng lie in its basin.",
+         "recognisability": "Own zh-wiki article, 68 hits with 四川; the river is the main Ya'an and Leshan stream.",
+         "source_url": "https://zh.wikipedia.org/wiki/青衣江", "source_note": "青衣江古称平羌江、雅水...洪雅县在青衣江中游", "rating": 4, "status": "suggested"},
+        {"name": "Hongya", "local": "洪雅", "origin": "county",
+         "meaning": "County on the middle Qingyi, formed in 573; the name goes back to a Hongya town on the river.",
+         "fit": "Hongya is 24% of the region and 91% of the county, the largest whole county.",
+         "recognisability": "Current county.",
+         "source_url": "https://zh.wikipedia.org/wiki/洪雅县", "source_note": "洪雅县，在中国四川省中部、青衣江中游", "rating": 3, "status": "suggested"},
+        {"name": "Dongpo", "local": "东坡", "origin": "county",
+         "meaning": "\"East slope\", Su Shi's pen name; used for region 6.",
+         "fit": "The district is the largest single unit here (25%) but is mostly in region 6.",
+         "recognisability": "Current district.",
+         "source_url": "https://zh.wikipedia.org/wiki/东坡区", "source_note": "得名于宋代著名文学家苏东坡", "status": "rejected"}
+      ],
+      "notes": "The Ya'an or Leshan agents might also use Qingyi for a neighbour; this region holds the lower river."
+    },
+    {
+      "n": 10, "key": "#f3bda4", "settled": null,
+      "summary": "Zizhong county on the Tuo River (81%) with western Yanjiang.",
+      "candidates": [
+        {"name": "Zizhong", "local": "资中", "origin": "county",
+         "meaning": "Han county (135 BC) \"in the middle of the Zi\" river (today's Tuo); the seat of Zizhou from 587.",
+         "fit": "Zizhong is 81% of the region and 99% of the county.",
+         "recognisability": "Current county.",
+         "source_url": "https://zh.wikipedia.org/wiki/资中县", "source_note": "资中建县于西汉武帝建元六年；...唐朝至清朝年间，资中均为州郡治所", "rating": 5, "status": "suggested"},
+        {"name": "Zizhou", "local": "资州", "origin": "prefecture",
+         "meaning": "Prefecture seated at Zizhong from 587 to 1911; at times it held Panshi, Longshui, Yueshan and Yinshan counties.",
+         "fit": "Seat inside the region; prefecture covered the region's main towns.",
+         "recognisability": "Own zh-wiki article, 64 hits with 四川.",
+         "source_url": "https://zh.wikipedia.org/wiki/资州", "source_note": "资州 (州/直隶州, 587-1911) 今四川省资中市治", "rating": 3, "status": "suggested"}
+      ],
+      "notes": ""
+    },
+    {
+      "n": 11, "key": "#f0ac8c", "settled": null,
+      "summary": "Leshan city at the Min, Dadu and Qingyi confluence: Shizhong (70%), Jiajiang, part of Emeishan.",
+      "candidates": [
+        {"name": "Leshan", "local": "乐山", "origin": "city",
+         "meaning": "From a Zhile (至乐) mountain named in the Jiading gazetteer, though where it was is disputed; the county dates from 1734. The Giant Buddha is here.",
+         "fit": "Region holds the city centre (Shizhong 84% of the district); city rule.",
+         "recognisability": "Current prefecture-level city.",
+         "source_url": "https://zh.wikipedia.org/wiki/乐山市", "source_note": "《嘉定府志》称“以县境内有至乐山为名”", "rating": 5, "status": "suggested"},
+        {"name": "Jiazhou", "local": "嘉州", "origin": "prefecture",
+         "meaning": "Tang-Song prefecture (618-1195) seated here; the Giant Buddha's full name is the Jiazhou Lingyun temple Maitreya.",
+         "fit": "Seat is inside the region; it also covered Emei, Jiajiang and other nearby counties.",
+         "recognisability": "Own zh-wiki article, 100 hits with 四川, including the Buddha.",
+         "source_url": "https://zh.wikipedia.org/wiki/乐山大佛", "source_note": "全名嘉州凌云寺大弥勒石像", "rating": 4, "status": "suggested"}
+      ],
+      "notes": "Jiading (Jiadingfu) was avoided because Shanghai has a Jiading."
+    },
+    {
+      "n": 12, "key": "#f0af91", "settled": null,
+      "summary": "Neijiang city on the Tuo River: Dongxing (58%) and Shizhong (40%).",
+      "candidates": [
+        {"name": "Neijiang", "local": "内江", "origin": "city",
+         "meaning": "\"Inner river\": Sui named it after the Tuo (then Zhong river) looping round the town, as against the outer river; known as the sweet city for sugar.",
+         "fit": "Region holds the old city (Shizhong 99% of that district); city rule.",
+         "recognisability": "Current prefecture-level city.",
+         "source_url": "https://zh.wikipedia.org/wiki/内江市", "source_note": "《郡县释名》：“览图见江水自三堆而环绕至黄市，遂改中江为内江”", "rating": 5, "status": "suggested"},
+        {"name": "Dongxing", "local": "东兴", "origin": "county",
+         "meaning": "\"East flourishing\"; a district made in 1989 from Neijiang county.",
+         "fit": "Dongxing is 58% of the region's people.",
+         "recognisability": "Current district; Dongxing in Guangxi is a better-known town.",
+         "source_url": "https://zh.wikipedia.org/wiki/东兴区", "source_note": "1989年7月，撤销内江县，设立内江市东兴区", "status": "rejected"}
+      ],
+      "notes": ""
+    },
+    {
+      "n": 13, "key": "#eebc9d", "settled": null,
+      "summary": "Weiyuan county (52%), the Rong county part of Zigong (27%) and Gongjing (17%).",
+      "candidates": [
+        {"name": "Weiyuan", "local": "威远", "origin": "county",
+         "meaning": "Sui county of 591, \"awesome fame carried far\" (威名远震); sits on the Rong-Wei dome.",
+         "fit": "Weiyuan is 52% of the region and 98% of the county.",
+         "recognisability": "Current county.",
+         "source_url": "https://zh.wikipedia.org/wiki/威远县", "source_note": "威远县隋开皇十一年置县，取“威名远震”之义", "rating": 4, "status": "suggested"},
+        {"name": "Rongxian", "local": "荣县", "origin": "county",
+         "meaning": "\"Rong\" is the tung or parasol tree (梧桐), many of which grew here; the prefecture of Rongzhou was named for Mount Rongde.",
+         "fit": "Rong county gives 27% of the region and 58% of the county; Gongjing, its old Rongzhou seat, adds 17%.",
+         "recognisability": "Current county, with Rongzhou's article.",
+         "source_url": "https://zh.wikipedia.org/wiki/荣县", "source_note": "荣也就是梧桐，古代时县境内的梧桐树多，是“荣”名的来源", "rating": 3, "status": "suggested"},
+        {"name": "Rongzhou", "local": "荣州", "origin": "prefecture",
+         "meaning": "Tang prefecture (618-1375), first at Gongjing, later at Rong; named for Mount Rongde.",
+         "fit": "Covers Rong, Gongjing and Weiyuan; first seat is in this region.",
+         "recognisability": "82 hits with 四川; the name is also a Shanxi and a Liaoning Rongzhou.",
+         "source_url": "https://zh.wikipedia.org/wiki/荣州_(四川)", "source_note": "荣州取荣德山为名", "rating": 3, "status": "suggested"}
+      ],
+      "notes": "Weiyuan's -yuan means far, not subduing a frontier."
+    },
+    {
+      "n": 14, "key": "#edd6cb", "settled": null,
+      "summary": "Western mountains: Emeishan city (38%), Hanyuan, Shawan, Shimian, Luding, Ebian, Jinkouhe, along the Dadu River.",
+      "candidates": [
+        {"name": "Emeishan", "local": "峨眉山", "origin": "mountain",
+         "meaning": "Mount Emei, \"moth eyebrow\" (the two peaks like brows); one of the four sacred Buddhist mountains.",
+         "fit": "The city holds 75% of Emeishan city and 38% of the region's people; the mountain is in it.",
+         "recognisability": "Famous; the city is also called Emeishan.",
+         "source_url": "https://zh.wikipedia.org/wiki/峨眉山市", "source_note": "市境西北有中国四大佛教名山之一的峨眉山", "rating": 5, "status": "suggested"},
+        {"name": "Dadu", "local": "大渡", "origin": "river",
+         "meaning": "Dadu River (\"great ferry\"), 1062 km, the Tibetan-edge river that joins the Min at Leshan.",
+         "fit": "It runs through Hanyuan, Shimian, Luding and Shawan, covering most of the region's people.",
+         "recognisability": "Own zh-wiki article, hit well with 四川; known for the Luding Bridge.",
+         "source_url": "https://zh.wikipedia.org/wiki/大渡河", "source_note": "大渡河...在乐山县草鞋渡纳青衣江与岷江汇合", "rating": 4, "status": "suggested"}
+      ],
+      "notes": "A west Sichuan agent may also use Dadu or Luding for a neighbour."
+    },
+    {
+      "n": 15, "key": "#f1caab", "settled": null,
+      "summary": "Lower Min River salt country: Qianwei (34%), Wutongqiao (24%), Rong county, Jingyan.",
+      "candidates": [
+        {"name": "Qianwei", "local": "犍为", "origin": "county",
+         "meaning": "Han commandery of 135 BC (Qianwei, seated at Yibin first), whose name was later kept by the county on the Min.",
+         "fit": "Qianwei is 34% of the region and 94% of the county.",
+         "recognisability": "Current county; the commandery is well known in Sichuan history.",
+         "source_url": "https://zh.wikipedia.org/wiki/犍为县", "source_note": "犍为县 (县, 583-1911) 今四川省犍为县东南十六岷江东岸", "rating": 4, "status": "suggested"},
+        {"name": "Wutongqiao", "local": "五通桥", "origin": "county",
+         "meaning": "\"Five-way bridge\", a salt town on the Min made a district in 1951.",
+         "fit": "Wutongqiao is 24% of the region and 99% of the district.",
+         "recognisability": "Current district.",
+         "source_url": "https://zh.wikipedia.org/wiki/五通桥区", "source_note": "五通桥区是中国四川省乐山市所属的一个市辖区", "rating": 3, "status": "suggested"}
+      ],
+      "notes": ""
+    },
+    {
+      "n": 16, "key": "#eeb281", "settled": null,
+      "summary": "Zigong city, the salt capital: Da'an (44%), Ziliujing (27%), Yantan.",
+      "candidates": [
+        {"name": "Zigong", "local": "自贡", "origin": "city",
+         "meaning": "Joint name of the two salt-making districts Ziliujing and Gongjing.",
+         "fit": "Region holds the urban core (Ziliujing 96%, Da'an 85%); city rule (about 1.5M urban).",
+         "recognisability": "Current prefecture-level city.",
+         "source_url": "https://zh.wikipedia.org/wiki/自贡市", "source_note": "自贡其实就是自流井和贡井两个著名产盐区的合称", "rating": 5, "status": "suggested"},
+        {"name": "Ziliujing", "local": "自流井", "origin": "county",
+         "meaning": "\"Self-flowing well\", the salt brine well that gave the town its name.",
+         "fit": "Ziliujing is 27% of the region and 96% of the district.",
+         "recognisability": "Current district, known for salt.",
+         "source_url": "https://zh.wikipedia.org/wiki/自贡市", "source_note": "自流井...两个著名产盐区", "rating": 2, "status": "suggested"}
+      ],
+      "notes": ""
+    },
+    {
+      "n": 17, "key": "#e7c297", "settled": null,
+      "summary": "Fushun county on the lower Tuo (60%) with Yantan and Nanxi.",
+      "candidates": [
+        {"name": "Fushun", "local": "富顺", "origin": "county",
+         "meaning": "Named after the Fushi (富世) salt well, the richest of old; Fuyi and Fushun were later names of the salt prefecture.",
+         "fit": "Fushun is 60% of the region and 81% of the county.",
+         "recognisability": "Current county.",
+         "source_url": "https://zh.wikipedia.org/wiki/富顺县", "source_note": "古代“富世县”一名来源自古代出盐最多一口“富世盐井”", "rating": 5, "status": "suggested"}
+      ],
+      "notes": "Only one candidate: nothing else here is as well known."
+    },
+    {
+      "n": 18, "key": "#f3ca9a", "settled": null,
+      "summary": "Lu county (61%) at the Tuo and Yangtze junction, with part of Jiangyang and Fushun.",
+      "candidates": [
+        {"name": "Luxian", "local": "泸县", "origin": "county",
+         "meaning": "County of Luzhou (the Lu river), whose county seat moved around until Luchuan; known as Longcheng, the dragon city.",
+         "fit": "Lu county is 61% of the region and 87% of the county.",
+         "recognisability": "Current county.",
+         "source_url": "https://zh.wikipedia.org/wiki/泸县", "source_note": "泸县是四川省泸州市下辖县...因龙文化而有“龙城”之称", "rating": 4, "status": "suggested"},
+        {"name": "Tuojiang", "local": "沱江", "origin": "river",
+         "meaning": "The Tuo River, a Yangtze tributary (old names Jiangtuo, Waijiang, Zhongjiang).",
+         "fit": "Reaches the Yangtze at the region's edge and passes the region's east.",
+         "recognisability": "Own zh-wiki article.",
+         "source_url": "https://zh.wikipedia.org/wiki/沱江", "source_note": "沱江，古称江沱，又名外江、中江", "rating": 2, "status": "suggested"}
+      ],
+      "notes": "Luxian and neighbouring Luzhou share a root. Tuojiang could also fit regions 3, 10, 12 and 17 better than here."
+    },
+    {
+      "n": 19, "key": "#eeb877", "settled": null,
+      "summary": "Luzhou city, the liquor city at the Tuo-Yangtze meeting: Longmatan (64%), Jiangyang (35%).",
+      "candidates": [
+        {"name": "Luzhou", "local": "泸州", "origin": "city",
+         "meaning": "Prefecture named in the Liang era (535-546), after the Lu river; the old name is Jiangyang.",
+         "fit": "Region holds the old centre (Jiangyang 51% of the district); city rule (urban 1M+).",
+         "recognisability": "Current prefecture-level city.",
+         "source_url": "https://zh.wikipedia.org/wiki/泸州市", "source_note": "梁武帝大同年间建置州，称泸州", "rating": 5, "status": "suggested"},
+        {"name": "Jiangyang", "local": "江阳", "origin": "historical",
+         "meaning": "\"Sunny side of the river\" (north bank): the Han county of 151 BC and commandery, the old name of the city.",
+         "fit": "Jiangyang district is 35% of the region; the old seat was at its heart.",
+         "recognisability": "Current district and old name.",
+         "source_url": "https://zh.wikipedia.org/wiki/江阳区", "source_note": "“江阳区”得名于“江阳县”...（“水北曰阳”）", "rating": 3, "status": "suggested"},
+        {"name": "Longmatan", "local": "龙马潭", "origin": "county",
+         "meaning": "\"Dragon horse pool\", from a legend of a horse that turned into a dragon in a pool.",
+         "fit": "Longmatan district is 64% of the region.",
+         "recognisability": "District only from 1995, unknown outside Luzhou.",
+         "source_url": "https://zh.wikipedia.org/wiki/龙马潭区", "source_note": "龙马潭区得名于龙马潭", "status": "rejected"}
+      ],
+      "notes": ""
+    },
+    {
+      "n": 20, "key": "#f0cfac", "settled": null,
+      "summary": "Rural Min and Jinsha country: old Yibin county (now Xuzhou district, 44%), Pingshan (25%), Muchuan (20%).",
+      "candidates": [
+        {"name": "Xuzhou", "local": "叙州", "origin": "prefecture",
+         "meaning": "\"Xu prefecture\": the 1114 Song name for Rongzhou, seated at Yibin; today the name of the Xuzhou district (2018).",
+         "fit": "The district is 44% of the region; the prefecture seat is in region 21, but the current district name is here.",
+         "recognisability": "Own zh-wiki article, 1144 hits with 四川.",
+         "source_url": "https://zh.wikipedia.org/wiki/叙州区", "source_note": "2018年，撤销宜宾县，设立叙州区", "rating": 4, "status": "suggested"},
+        {"name": "Pingshan", "local": "屏山", "origin": "county",
+         "meaning": "\"Screen mountain\": named for the Baoping mountain east of the town, whose four sides stand like a screen.",
+         "fit": "Pingshan is 25% of the region and 98% of the county; it was also the seat of Mahu prefecture.",
+         "recognisability": "Current county, on the Jinsha.",
+         "source_url": "https://zh.wikipedia.org/wiki/屏山县", "source_note": "取城东十里宝屏山为名。以山四周如屏障也", "rating": 3, "status": "suggested"}
+      ],
+      "notes": "The -zhou (Xu) name could instead go to region 21 (which holds the city), but that region takes Yibin."
+    },
+    {
+      "n": 21, "key": "#f0bb74", "settled": null,
+      "summary": "Yibin city, where the Jinsha and Min form the Yangtze: Cuiping district (76%).",
+      "candidates": [
+        {"name": "Yibin", "local": "宜宾", "origin": "city",
+         "meaning": "From Yibin county, renamed from Yibin (义宾) in 977 to avoid a taboo name; the old name was Bodao, then Rongzhou and Xuzhou.",
+         "fit": "Region holds the city core (Cuiping 62% of the district) at the first point of the Yangtze; city rule.",
+         "recognisability": "Current prefecture-level city.",
+         "source_url": "https://zh.wikipedia.org/wiki/宜宾市", "source_note": "古称义宾、戎州、叙州", "rating": 5, "status": "suggested"},
+        {"name": "Cuiping", "local": "翠屏", "origin": "county",
+         "meaning": "\"Emerald screen\", the central district of 1997.",
+         "fit": "Cuiping is 76% of the region.",
+         "recognisability": "District only from 1997.",
+         "source_url": "https://zh.wikipedia.org/wiki/翠屏区", "source_note": "翠屏区为四川省宜宾市的市辖区", "status": "rejected"}
+      ],
+      "notes": ""
+    },
+    {
+      "n": 22, "key": "#e5d097", "settled": null,
+      "summary": "Yangtze below Luzhou: Hejiang (44%) and Naxi (38%).",
+      "candidates": [
+        {"name": "Hejiang", "local": "合江", "origin": "county",
+         "meaning": "\"Meeting of rivers\": the Yangtze and the Chishui meet here, the Yangtze's first port leaving Sichuan.",
+         "fit": "Hejiang is 44% of the region and 57% of the county.",
+         "recognisability": "Current county.",
+         "source_url": "https://zh.wikipedia.org/wiki/合江县", "source_note": "因长江与赤水在此汇合得名", "rating": 4, "status": "suggested"},
+        {"name": "Naxi", "local": "纳溪", "origin": "county",
+         "meaning": "\"Receiving stream\": the sources say it comes from \"tribute from the Man peoples came out of this stream\", so the name is mildly condescending.",
+         "fit": "Naxi is 38% of the region and 97% of the district.",
+         "recognisability": "Current district.",
+         "source_url": "https://zh.wikipedia.org/wiki/纳溪区", "source_note": "三国时期“蛮夷纳贡出此溪”而得名，又名云溪", "rating": 3, "status": "suggested"}
+      ],
+      "notes": "The Chishui goes to region 25."
+    },
+    {
+      "n": 23, "key": "#edce8d", "settled": null,
+      "summary": "Yangtze south bank bamboo hills: Changning (27%), Nanxi (24%), Jiang'an (23%), Cuiping, Gao.",
+      "candidates": [
+        {"name": "Nanxi", "local": "南溪", "origin": "county",
+         "meaning": "\"South stream\"; county since 602 and on the Yangtze's north bank.",
+         "fit": "Nanxi is 24% of the region and 72% of the district.",
+         "recognisability": "Current district.",
+         "source_url": "https://zh.wikipedia.org/wiki/南溪区", "source_note": "南溪县 (县, 602-965 and 966-1911)", "rating": 3, "status": "suggested"},
+        {"name": "Shunan Zhuhai", "local": "蜀南竹海", "origin": "other",
+         "meaning": "\"South Shu bamboo sea\", a scenic bamboo area of about 120 km2 in Changning and Jiang'an.",
+         "fit": "Lies in Changning and Jiang'an, 50% of the region.",
+         "recognisability": "Own zh-wiki article, 13 hits with 四川.",
+         "source_url": "https://zh.wikipedia.org/wiki/蜀南竹海", "source_note": "位于宜宾市长宁、江安两县", "rating": 3, "status": "suggested"},
+        {"name": "Changning", "local": "长宁", "origin": "county",
+         "meaning": "\"Long peace\": named for the Song Changning army (1114) set up to hold the Luo peoples, so it is a frontier pacification name.",
+         "fit": "Changning is 27% of the region and 84% of the county.",
+         "recognisability": "Current county.",
+         "source_url": "https://zh.wikipedia.org/wiki/长宁县", "source_note": "长宁军 (军, 1114-1271) 今四川省长宁县南双河镇", "rating": 2, "status": "suggested"}
+      ],
+      "notes": ""
+    },
+    {
+      "n": 24, "key": "#eedab0", "settled": null,
+      "summary": "Southern hills on the Nanguang River: Gong (34%), Junlian (32%), Gao (32%).",
+      "candidates": [
+        {"name": "Nanguang", "local": "南广", "origin": "river",
+         "meaning": "The Nanguang River (old names Fuhei and Fu river), 222 km, flowing into the Yangtze at Nanguang town; a Nanguang county existed in 544-601.",
+         "fit": "It runs through Gong, Junlian and Gao, the whole region.",
+         "recognisability": "Own zh-wiki article, 399 hits with 四川.",
+         "source_url": "https://zh.wikipedia.org/wiki/南广河", "source_note": "古称符黑水、符江...流经珙县、筠连县和高县", "rating": 4, "status": "suggested"},
+        {"name": "Junlian", "local": "筠连", "origin": "county",
+         "meaning": "Yuan prefecture of 1278 and county since 1371; jun (筠) is the bamboo skin.",
+         "fit": "Junlian is 32% of the region and 99% of the county.",
+         "recognisability": "Current county.",
+         "source_url": "https://zh.wikipedia.org/wiki/筠连县", "source_note": "筠连州 (州, 1278-1370) 今四川省筠连县治", "rating": 3, "status": "suggested"},
+        {"name": "Gongxian", "local": "珙县", "origin": "county",
+         "meaning": "County since 1371, after Gong prefecture; gong (珙) is a large jade ring. Known for the hanging coffins of the Bo people.",
+         "fit": "Gong is 34% of the region and 99% of the county.",
+         "recognisability": "Current county; no zh-wiki article in the sources.",
+         "source_url": "https://zh.wikipedia.org/wiki/南广河", "source_note": "流经珙县、筠连县和高县", "rating": 3, "status": "suggested"}
+      ],
+      "notes": "The meaning of Gong is not in the sources, so it is a general gloss."
+    },
+    {
+      "n": 25, "key": "#f0e7b4", "settled": null,
+      "summary": "Southeast corner over the border: Gulin (63%), Chishui city in Guizhou (18%), Xishui.",
+      "candidates": [
+        {"name": "Gulin", "local": "古蔺", "origin": "county",
+         "meaning": "\"Ancient lin grass\": named for the lin (蔺) grass growing thick here; county since 1909, home of Langjiu liquor.",
+         "fit": "Gulin is 63% of the region and 99% of the county.",
+         "recognisability": "Current county.",
+         "source_url": "https://zh.wikipedia.org/wiki/古蔺县", "source_note": "以境内蔺草丛生得名", "rating": 4, "status": "suggested"},
+        {"name": "Chishui", "local": "赤水", "origin": "river",
+         "meaning": "\"Red water\": the river runs red with silt; the Red Army crossed it four times in 1935, and the city has a UNESCO Danxia area.",
+         "fit": "Chishui city is 18% of the region; the river flows through Gulin and Chishui city and runs along the region.",
+         "recognisability": "Own zh-wiki article.",
+         "source_url": "https://zh.wikipedia.org/wiki/赤水河", "source_note": "赤水河...流经赤水市", "rating": 4, "status": "suggested"}
+      ],
+      "notes": "Chishui city is in Guizhou, so the Guizhou agent might also use it."
+    },
+    {
+      "n": 26, "key": "#eee5c2", "settled": null,
+      "summary": "Yongning River country on the Guizhou border: Xuyong (59%) and Xingwen (34%).",
+      "candidates": [
+        {"name": "Xingwen", "local": "兴文", "origin": "county",
+         "meaning": "\"Promote culture\"; Ming county of 1573 (its reason for the name is not in sources.md). Known for the Xingwen stone sea geopark.",
+         "fit": "Xingwen is 34% of the region and 98% of the county.",
+         "recognisability": "Current county.",
+         "source_url": "https://zh.wikipedia.org/wiki/兴文县", "source_note": "兴文县 (县, 1573-1908) 今四川省兴文县西晏阳镇", "rating": 4, "status": "suggested"},
+        {"name": "Xuyong", "local": "叙永", "origin": "county",
+         "meaning": "From Xu (Xuzhou) and Yong (Yongning, \"forever peaceful\"); a hall (ting) from 1623 and the seat of the Yongning route; a pacification-type name.",
+         "fit": "Xuyong is 59% of the region and 99% of the county.",
+         "recognisability": "Current county.",
+         "source_url": "https://zh.wikipedia.org/wiki/叙永县", "source_note": "叙永厅 (厅/直隶厅, 1623-1907)", "rating": 3, "status": "suggested"}
+      ],
+      "notes": "Xuyong is the larger unit but the name means order and permanent peace, so it is second."
+    }
+  ]
+}

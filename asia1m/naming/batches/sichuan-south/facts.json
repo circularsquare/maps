@@ -1,0 +1,5020 @@
+{
+ "name": "sichuan-south",
+ "province": "Sichuan",
+ "prefectures": [
+  "Suining",
+  "Ziyang",
+  "Meishan",
+  "Neijiang",
+  "Zigong",
+  "Luzhou",
+  "Yibin",
+  "Leshan"
+ ],
+ "tiles": [
+  {
+   "tag": "1",
+   "x": 5881,
+   "y": 3601,
+   "w": 800,
+   "h": 769,
+   "scale": 2,
+   "regions": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26
+   ]
+  }
+ ],
+ "regions": [
+  {
+   "key": "#eeafa9",
+   "color": "#eeafa9",
+   "lon": 105.2798,
+   "lat": 30.711,
+   "bbox": [
+    6354,
+    3801,
+    6394,
+    3860
+   ],
+   "area_px": 1498,
+   "people": 1068274,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Shehong",
+     "local": "射洪县",
+     "prefecture": "Suining",
+     "prefecture_local": "遂宁市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.525,
+     "area_share": 0.422,
+     "cover": 0.668
+    },
+    {
+     "name": "Daying",
+     "local": "大英县",
+     "prefecture": "Suining",
+     "prefecture_local": "遂宁市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.392,
+     "area_share": 0.413,
+     "cover": 0.966
+    },
+    {
+     "name": "Santai",
+     "local": "三台县",
+     "prefecture": "Mianyang",
+     "prefecture_local": "绵阳市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.067,
+     "area_share": 0.142,
+     "cover": 0.076
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Sichuan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.014
+    },
+    {
+     "level": "prefecture",
+     "name": "Suining",
+     "local": "遂宁市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.93,
+     "cover": 0.312
+    },
+    {
+     "level": "prefecture",
+     "name": "Mianyang",
+     "local": "绵阳市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.07,
+     "cover": 0.018
+    }
+   ],
+   "towns": [
+    {
+     "town": "蓬莱镇",
+     "county": "大英县",
+     "city": "遂宁市",
+     "people_share": 0.108,
+     "cover": 1.0
+    },
+    {
+     "town": "大榆镇",
+     "county": "射洪县",
+     "city": "遂宁市",
+     "people_share": 0.094,
+     "cover": 1.0
+    },
+    {
+     "town": "平安街道",
+     "county": "射洪县",
+     "city": "遂宁市",
+     "people_share": 0.088,
+     "cover": 1.0
+    },
+    {
+     "town": "子昂街道",
+     "county": "射洪县",
+     "city": "遂宁市",
+     "people_share": 0.068,
+     "cover": 1.0
+    },
+    {
+     "town": "沱牌镇",
+     "county": "射洪县",
+     "city": "遂宁市",
+     "people_share": 0.062,
+     "cover": 1.0
+    },
+    {
+     "town": "隆盛镇",
+     "county": "大英县",
+     "city": "遂宁市",
+     "people_share": 0.059,
+     "cover": 1.0
+    },
+    {
+     "town": "河边镇",
+     "county": "大英县",
+     "city": "遂宁市",
+     "people_share": 0.045,
+     "cover": 0.923
+    },
+    {
+     "town": "象山镇",
+     "county": "大英县",
+     "city": "遂宁市",
+     "people_share": 0.045,
+     "cover": 0.957
+    },
+    {
+     "town": "玉峰镇",
+     "county": "大英县",
+     "city": "遂宁市",
+     "people_share": 0.039,
+     "cover": 1.0
+    },
+    {
+     "town": "回马镇",
+     "county": "大英县",
+     "city": "遂宁市",
+     "people_share": 0.036,
+     "cover": 0.916
+    },
+    {
+     "town": "洋溪镇",
+     "county": "射洪县",
+     "city": "遂宁市",
+     "people_share": 0.035,
+     "cover": 0.982
+    }
+   ],
+   "cities": [
+    {
+     "name": "Taihe",
+     "admin": "Sichuan",
+     "pop": 924531
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f7c3cc",
+     "border_px": 643
+    },
+    {
+     "key": "#f1b8b8",
+     "border_px": 627
+    },
+    {
+     "key": "#f3b0ba",
+     "border_px": 482
+    },
+    {
+     "key": "#f1c7bf",
+     "border_px": 479
+    },
+    {
+     "key": "#eeb4a9",
+     "border_px": 184
+    },
+    {
+     "key": "#f1bfb8",
+     "border_px": 21
+    }
+   ],
+   "text_px": 0,
+   "n": 1,
+   "thumb": {
+    "x0": 6314,
+    "y0": 3761,
+    "k": 3.0,
+    "w": 360,
+    "h": 417
+   }
+  },
+  {
+   "key": "#eeb4a9",
+   "color": "#eeb4a9",
+   "lon": 105.6661,
+   "lat": 30.556,
+   "bbox": [
+    6387,
+    3820,
+    6427,
+    3864
+   ],
+   "area_px": 1078,
+   "people": 1023672,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Chuanshan",
+     "local": "船山区",
+     "prefecture": "Suining",
+     "prefecture_local": "遂宁市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.792,
+     "area_share": 0.48,
+     "cover": 0.975
+    },
+    {
+     "name": "Pengxi",
+     "local": "蓬溪县",
+     "prefecture": "Suining",
+     "prefecture_local": "遂宁市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.199,
+     "area_share": 0.494,
+     "cover": 0.397
+    },
+    {
+     "name": "Anju",
+     "local": "安居区",
+     "prefecture": "Suining",
+     "prefecture_local": "遂宁市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.005,
+     "area_share": 0.013,
+     "cover": 0.008
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Sichuan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.013
+    },
+    {
+     "level": "prefecture",
+     "name": "Suining",
+     "local": "遂宁市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.996,
+     "cover": 0.32
+    }
+   ],
+   "towns": [
+    {
+     "town": "慈音街道",
+     "county": "船山区",
+     "city": "遂宁市",
+     "people_share": 0.114,
+     "cover": 1.0
+    },
+    {
+     "town": "仁里镇",
+     "county": "船山区",
+     "city": "遂宁市",
+     "people_share": 0.076,
+     "cover": 1.0
+    },
+    {
+     "town": "广德街道",
+     "county": "船山区",
+     "city": "遂宁市",
+     "people_share": 0.071,
+     "cover": 1.0
+    },
+    {
+     "town": "嘉禾街道",
+     "county": "船山区",
+     "city": "遂宁市",
+     "people_share": 0.046,
+     "cover": 1.0
+    },
+    {
+     "town": "九莲街道",
+     "county": "船山区",
+     "city": "遂宁市",
+     "people_share": 0.036,
+     "cover": 1.0
+    },
+    {
+     "town": "河东二期街道",
+     "county": "船山区",
+     "city": "遂宁市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "龙凤镇",
+     "county": "船山区",
+     "city": "遂宁市",
+     "people_share": 0.03,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Suining",
+     "admin": "Sichuan",
+     "pop": 3252619
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f1c7bf",
+     "border_px": 693
+    },
+    {
+     "key": "#f7c3cc",
+     "border_px": 397
+    },
+    {
+     "key": "#edc0b8",
+     "border_px": 361
+    },
+    {
+     "key": "#f4c6b3",
+     "border_px": 185
+    },
+    {
+     "key": "#eeafa9",
+     "border_px": 184
+    }
+   ],
+   "text_px": 0,
+   "n": 2,
+   "thumb": {
+    "x0": 6347,
+    "y0": 3780,
+    "k": 3.0,
+    "w": 360,
+    "h": 372
+   }
+  },
+  {
+   "key": "#eab3a3",
+   "color": "#eab3a3",
+   "lon": 104.451,
+   "lat": 30.3293,
+   "bbox": [
+    6279,
+    3847,
+    6334,
+    3906
+   ],
+   "area_px": 1904,
+   "people": 1076798,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Jianyang",
+     "local": "简阳市",
+     "prefecture": "Ziyang",
+     "prefecture_local": "资阳市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.844,
+     "area_share": 0.733,
+     "cover": 0.809
+    },
+    {
+     "name": "Yanjiang",
+     "local": "雁江区",
+     "prefecture": "Ziyang",
+     "prefecture_local": "资阳市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.112,
+     "area_share": 0.16,
+     "cover": 0.122
+    },
+    {
+     "name": "Renshou",
+     "local": "仁寿县",
+     "prefecture": "Meishan",
+     "prefecture_local": "眉山市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.03,
+     "area_share": 0.072,
+     "cover": 0.029
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Sichuan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.014
+    },
+    {
+     "level": "prefecture",
+     "name": "Ziyang",
+     "local": "资阳市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.957,
+     "cover": 0.29
+    }
+   ],
+   "towns": [
+    {
+     "town": "简城镇",
+     "county": "简阳市",
+     "city": "资阳市",
+     "people_share": 0.163,
+     "cover": 1.0
+    },
+    {
+     "town": "石桥镇",
+     "county": "简阳市",
+     "city": "资阳市",
+     "people_share": 0.109,
+     "cover": 1.0
+    },
+    {
+     "town": "东溪镇",
+     "county": "简阳市",
+     "city": "资阳市",
+     "people_share": 0.067,
+     "cover": 1.0
+    },
+    {
+     "town": "临江镇",
+     "county": "雁江区",
+     "city": "资阳市",
+     "people_share": 0.05,
+     "cover": 0.938
+    },
+    {
+     "town": "贾家镇",
+     "county": "简阳市",
+     "city": "资阳市",
+     "people_share": 0.049,
+     "cover": 1.0
+    },
+    {
+     "town": "新市镇",
+     "county": "简阳市",
+     "city": "资阳市",
+     "people_share": 0.044,
+     "cover": 1.0
+    },
+    {
+     "town": "养马镇",
+     "county": "简阳市",
+     "city": "资阳市",
+     "people_share": 0.03,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Jiancheng",
+     "admin": "Sichuan",
+     "pop": 1045900
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f1bfb8",
+     "border_px": 733
+    },
+    {
+     "key": "#eabea3",
+     "border_px": 531
+    },
+    {
+     "key": "#f1b9a6",
+     "border_px": 437
+    },
+    {
+     "key": "#f3b09a",
+     "border_px": 435
+    },
+    {
+     "key": "#eda695",
+     "border_px": 311
+    },
+    {
+     "key": "#f3bda4",
+     "border_px": 157
+    }
+   ],
+   "text_px": 0,
+   "n": 3,
+   "thumb": {
+    "x0": 6239,
+    "y0": 3807,
+    "k": 3.0,
+    "w": 405,
+    "h": 417
+   }
+  },
+  {
+   "key": "#f1c7bf",
+   "color": "#f1c7bf",
+   "lon": 105.5579,
+   "lat": 30.2756,
+   "bbox": [
+    6361,
+    3847,
+    6437,
+    3908
+   ],
+   "area_px": 2299,
+   "people": 1101217,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Anju",
+     "local": "安居区",
+     "prefecture": "Suining",
+     "prefecture_local": "遂宁市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.499,
+     "area_share": 0.483,
+     "cover": 0.978
+    },
+    {
+     "name": "Tongnan",
+     "local": "潼南县",
+     "prefecture": "Chongqing",
+     "prefecture_local": "重庆市",
+     "province": "重庆市",
+     "country": "China",
+     "people_share": 0.387,
+     "area_share": 0.377,
+     "cover": 0.731
+    },
+    {
+     "name": "Anyue",
+     "local": "安岳县",
+     "prefecture": "Ziyang",
+     "prefecture_local": "资阳市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.081,
+     "area_share": 0.099,
+     "cover": 0.093
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Sichuan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.604,
+     "cover": 0.009
+    },
+    {
+     "level": "prefecture",
+     "name": "Suining",
+     "local": "遂宁市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.521,
+     "cover": 0.18
+    },
+    {
+     "level": "province",
+     "name": "Chongqing",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.396,
+     "cover": 0.014
+    },
+    {
+     "level": "prefecture",
+     "name": "Chongqing Municipality",
+     "local": "重庆市",
+     "province": "Chongqing",
+     "country": "China",
+     "people_share": 0.396,
+     "cover": 0.014
+    },
+    {
+     "level": "prefecture",
+     "name": "Ziyang",
+     "local": "资阳市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.083,
+     "cover": 0.026
+    }
+   ],
+   "towns": [
+    {
+     "town": "梓潼街道",
+     "county": "潼南县",
+     "city": "重庆市",
+     "people_share": 0.107,
+     "cover": 1.0
+    },
+    {
+     "town": "桂林街道",
+     "county": "潼南县",
+     "city": "重庆市",
+     "people_share": 0.081,
+     "cover": 1.0
+    },
+    {
+     "town": "三家镇",
+     "county": "安居区",
+     "city": "遂宁市",
+     "people_share": 0.047,
+     "cover": 1.0
+    },
+    {
+     "town": "塘坝镇",
+     "county": "潼南县",
+     "city": "重庆市",
+     "people_share": 0.045,
+     "cover": 0.957
+    },
+    {
+     "town": "西眉镇",
+     "county": "安居区",
+     "city": "遂宁市",
+     "people_share": 0.041,
+     "cover": 0.959
+    },
+    {
+     "town": "横山镇",
+     "county": "安居区",
+     "city": "遂宁市",
+     "people_share": 0.038,
+     "cover": 0.989
+    },
+    {
+     "town": "柏梓镇",
+     "county": "潼南县",
+     "city": "重庆市",
+     "people_share": 0.037,
+     "cover": 0.969
+    },
+    {
+     "town": "东禅镇",
+     "county": "安居区",
+     "city": "遂宁市",
+     "people_share": 0.033,
+     "cover": 1.0
+    },
+    {
+     "town": "分水镇",
+     "county": "安居区",
+     "city": "遂宁市",
+     "people_share": 0.032,
+     "cover": 0.993
+    },
+    {
+     "town": "白马镇",
+     "county": "安居区",
+     "city": "遂宁市",
+     "people_share": 0.031,
+     "cover": 0.934
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f4bba0",
+     "border_px": 749
+    },
+    {
+     "key": "#eeb4a9",
+     "border_px": 693
+    },
+    {
+     "key": "#f4c6b3",
+     "border_px": 661
+    },
+    {
+     "key": "#eeafa9",
+     "border_px": 479
+    },
+    {
+     "key": "#edc8a6",
+     "border_px": 305
+    },
+    {
+     "key": "#f3b09a",
+     "border_px": 279
+    },
+    {
+     "key": "#f1bfb8",
+     "border_px": 87
+    }
+   ],
+   "text_px": 0,
+   "n": 4,
+   "thumb": {
+    "x0": 6321,
+    "y0": 3807,
+    "k": 2.0,
+    "w": 312,
+    "h": 282
+   }
+  },
+  {
+   "key": "#f3b09a",
+   "color": "#f3b09a",
+   "lon": 104.9371,
+   "lat": 30.1675,
+   "bbox": [
+    6318,
+    3869,
+    6374,
+    3911
+   ],
+   "area_px": 1476,
+   "people": 948662,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yanjiang",
+     "local": "雁江区",
+     "prefecture": "Ziyang",
+     "prefecture_local": "资阳市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.696,
+     "area_share": 0.52,
+     "cover": 0.668
+    },
+    {
+     "name": "Lezhi",
+     "local": "乐至县",
+     "prefecture": "Ziyang",
+     "prefecture_local": "资阳市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.3,
+     "area_share": 0.461,
+     "cover": 0.576
+    },
+    {
+     "name": "Anyue",
+     "local": "安岳县",
+     "prefecture": "Ziyang",
+     "prefecture_local": "资阳市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.003,
+     "area_share": 0.016,
+     "cover": 0.003
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Sichuan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.012
+    },
+    {
+     "level": "prefecture",
+     "name": "Ziyang",
+     "local": "资阳市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.267
+    }
+   ],
+   "towns": [
+    {
+     "town": "宝台镇",
+     "county": "雁江区",
+     "city": "资阳市",
+     "people_share": 0.149,
+     "cover": 1.0
+    },
+    {
+     "town": "松涛镇",
+     "county": "雁江区",
+     "city": "资阳市",
+     "people_share": 0.136,
+     "cover": 0.957
+    },
+    {
+     "town": "雁江镇",
+     "county": "雁江区",
+     "city": "资阳市",
+     "people_share": 0.097,
+     "cover": 0.937
+    },
+    {
+     "town": "天池镇",
+     "county": "乐至县",
+     "city": "资阳市",
+     "people_share": 0.082,
+     "cover": 0.993
+    },
+    {
+     "town": "清水乡",
+     "county": "雁江区",
+     "city": "资阳市",
+     "people_share": 0.052,
+     "cover": 1.0
+    },
+    {
+     "town": "中和镇",
+     "county": "雁江区",
+     "city": "资阳市",
+     "people_share": 0.039,
+     "cover": 1.0
+    },
+    {
+     "town": "保和镇",
+     "county": "雁江区",
+     "city": "资阳市",
+     "people_share": 0.035,
+     "cover": 0.903
+    },
+    {
+     "town": "丹山镇",
+     "county": "雁江区",
+     "city": "资阳市",
+     "people_share": 0.033,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Yanjiang",
+     "admin": "Sichuan",
+     "pop": 2308631
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f4bba0",
+     "border_px": 542
+    },
+    {
+     "key": "#f3bda4",
+     "border_px": 481
+    },
+    {
+     "key": "#f1bfb8",
+     "border_px": 455
+    },
+    {
+     "key": "#eab3a3",
+     "border_px": 435
+    },
+    {
+     "key": "#f1c7bf",
+     "border_px": 279
+    }
+   ],
+   "text_px": 0,
+   "n": 5,
+   "thumb": {
+    "x0": 6278,
+    "y0": 3829,
+    "k": 3.0,
+    "w": 408,
+    "h": 366
+   }
+  },
+  {
+   "key": "#f1c3a6",
+   "color": "#f1c3a6",
+   "lon": 103.814,
+   "lat": 30.1296,
+   "bbox": [
+    6223,
+    3882,
+    6275,
+    3918
+   ],
+   "area_px": 1264,
+   "people": 1004562,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Dongpo",
+     "local": "东坡区",
+     "prefecture": "Meishan",
+     "prefecture_local": "眉山市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.777,
+     "area_share": 0.597,
+     "cover": 0.737
+    },
+    {
+     "name": "Pengshan",
+     "local": "彭山县",
+     "prefecture": "Meishan",
+     "prefecture_local": "眉山市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.174,
+     "area_share": 0.205,
+     "cover": 0.655
+    },
+    {
+     "name": "Renshou",
+     "local": "仁寿县",
+     "prefecture": "Meishan",
+     "prefecture_local": "眉山市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.045,
+     "area_share": 0.186,
+     "cover": 0.041
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Sichuan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.013
+    },
+    {
+     "level": "prefecture",
+     "name": "Meishan",
+     "local": "眉山市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.999,
+     "cover": 0.335
+    }
+   ],
+   "towns": [
+    {
+     "town": "尚义镇",
+     "county": "东坡区",
+     "city": "眉山市",
+     "people_share": 0.111,
+     "cover": 1.0
+    },
+    {
+     "town": "崇礼镇",
+     "county": "东坡区",
+     "city": "眉山市",
+     "people_share": 0.102,
+     "cover": 0.924
+    },
+    {
+     "town": "大石桥街道",
+     "county": "东坡区",
+     "city": "眉山市",
+     "people_share": 0.089,
+     "cover": 1.0
+    },
+    {
+     "town": "通惠街道",
+     "county": "东坡区",
+     "city": "眉山市",
+     "people_share": 0.082,
+     "cover": 1.0
+    },
+    {
+     "town": "象耳镇",
+     "county": "东坡区",
+     "city": "眉山市",
+     "people_share": 0.057,
+     "cover": 1.0
+    },
+    {
+     "town": "凤鸣镇",
+     "county": "彭山县",
+     "city": "眉山市",
+     "people_share": 0.055,
+     "cover": 1.0
+    },
+    {
+     "town": "苏祠街道",
+     "county": "东坡区",
+     "city": "眉山市",
+     "people_share": 0.051,
+     "cover": 1.0
+    },
+    {
+     "town": "富牛镇",
+     "county": "东坡区",
+     "city": "眉山市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "彭溪镇",
+     "county": "彭山县",
+     "city": "眉山市",
+     "people_share": 0.036,
+     "cover": 1.0
+    },
+    {
+     "town": "太和镇",
+     "county": "东坡区",
+     "city": "眉山市",
+     "people_share": 0.033,
+     "cover": 1.0
+    },
+    {
+     "town": "悦兴镇",
+     "county": "东坡区",
+     "city": "眉山市",
+     "people_share": 0.031,
+     "cover": 1.0
+    },
+    {
+     "town": "多悦镇",
+     "county": "东坡区",
+     "city": "眉山市",
+     "people_share": 0.031,
+     "cover": 0.989
+    }
+   ],
+   "cities": [
+    {
+     "name": "Meishan",
+     "admin": "Sichuan",
+     "pop": 2950545
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f3cab7",
+     "border_px": 743
+    },
+    {
+     "key": "#f4cdba",
+     "border_px": 466
+    },
+    {
+     "key": "#f1b9a6",
+     "border_px": 439
+    },
+    {
+     "key": "#eabea3",
+     "border_px": 340
+    }
+   ],
+   "text_px": 0,
+   "n": 6,
+   "thumb": {
+    "x0": 6183,
+    "y0": 3842,
+    "k": 3.0,
+    "w": 396,
+    "h": 348
+   }
+  },
+  {
+   "key": "#f4bba0",
+   "color": "#f4bba0",
+   "lon": 105.3654,
+   "lat": 29.9297,
+   "bbox": [
+    6354,
+    3882,
+    6420,
+    3954
+   ],
+   "area_px": 2786,
+   "people": 1097721,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Anyue",
+     "local": "安岳县",
+     "prefecture": "Ziyang",
+     "prefecture_local": "资阳市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.788,
+     "area_share": 0.782,
+     "cover": 0.9
+    },
+    {
+     "name": "Dongxing",
+     "local": "东兴区",
+     "prefecture": "Neijiang",
+     "prefecture_local": "内江市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.194,
+     "area_share": 0.184,
+     "cover": 0.278
+    },
+    {
+     "name": "Lezhi",
+     "local": "乐至县",
+     "prefecture": "Ziyang",
+     "prefecture_local": "资阳市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.007,
+     "area_share": 0.016,
+     "cover": 0.015
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Sichuan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.992,
+     "cover": 0.014
+    },
+    {
+     "level": "prefecture",
+     "name": "Ziyang",
+     "local": "资阳市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.799,
+     "cover": 0.247
+    },
+    {
+     "level": "prefecture",
+     "name": "Neijiang",
+     "local": "内江市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.194,
+     "cover": 0.06
+    }
+   ],
+   "towns": [
+    {
+     "town": "石桥铺镇",
+     "county": "安岳县",
+     "city": "资阳市",
+     "people_share": 0.061,
+     "cover": 1.0
+    },
+    {
+     "town": "岳阳镇",
+     "county": "安岳县",
+     "city": "资阳市",
+     "people_share": 0.059,
+     "cover": 1.0
+    },
+    {
+     "town": "石羊镇",
+     "county": "安岳县",
+     "city": "资阳市",
+     "people_share": 0.028,
+     "cover": 1.0
+    },
+    {
+     "town": "白合镇",
+     "county": "东兴区",
+     "city": "内江市",
+     "people_share": 0.028,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f1c7bf",
+     "border_px": 749
+    },
+    {
+     "key": "#f3bda4",
+     "border_px": 544
+    },
+    {
+     "key": "#f3b09a",
+     "border_px": 542
+    },
+    {
+     "key": "#f9c697",
+     "border_px": 446
+    },
+    {
+     "key": "#f0af91",
+     "border_px": 353
+    },
+    {
+     "key": "#f4be9c",
+     "border_px": 310
+    },
+    {
+     "key": "#edc8a6",
+     "border_px": 238
+    }
+   ],
+   "text_px": 0,
+   "n": 7,
+   "thumb": {
+    "x0": 6314,
+    "y0": 3842,
+    "k": 2.0,
+    "w": 292,
+    "h": 304
+   }
+  },
+  {
+   "key": "#eabea3",
+   "color": "#eabea3",
+   "lon": 104.2537,
+   "lat": 29.9266,
+   "bbox": [
+    6270,
+    3891,
+    6311,
+    3956
+   ],
+   "area_px": 1934,
+   "people": 1004202,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Renshou",
+     "local": "仁寿县",
+     "prefecture": "Meishan",
+     "prefecture_local": "眉山市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.955,
+     "area_share": 0.933,
+     "cover": 0.86
+    },
+    {
+     "name": "Jingyan",
+     "local": "井研县",
+     "prefecture": "Leshan",
+     "prefecture_local": "乐山市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.03,
+     "area_share": 0.049,
+     "cover": 0.113
+    },
+    {
+     "name": "Zizhong",
+     "local": "资中县",
+     "prefecture": "Neijiang",
+     "prefecture_local": "内江市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.005,
+     "area_share": 0.004,
+     "cover": 0.004
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Sichuan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.013
+    },
+    {
+     "level": "prefecture",
+     "name": "Meishan",
+     "local": "眉山市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.951,
+     "cover": 0.319
+    }
+   ],
+   "towns": [
+    {
+     "town": "文林镇",
+     "county": "仁寿县",
+     "city": "眉山市",
+     "people_share": 0.139,
+     "cover": 1.0
+    },
+    {
+     "town": "富加镇",
+     "county": "仁寿县",
+     "city": "眉山市",
+     "people_share": 0.046,
+     "cover": 1.0
+    },
+    {
+     "town": "满井镇",
+     "county": "仁寿县",
+     "city": "眉山市",
+     "people_share": 0.044,
+     "cover": 1.0
+    },
+    {
+     "town": "汪洋镇",
+     "county": "仁寿县",
+     "city": "眉山市",
+     "people_share": 0.034,
+     "cover": 0.9
+    },
+    {
+     "town": "钟祥镇",
+     "county": "仁寿县",
+     "city": "眉山市",
+     "people_share": 0.032,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f3cab7",
+     "border_px": 560
+    },
+    {
+     "key": "#eab3a3",
+     "border_px": 531
+    },
+    {
+     "key": "#eebc9d",
+     "border_px": 380
+    },
+    {
+     "key": "#f3bda4",
+     "border_px": 380
+    },
+    {
+     "key": "#f1c3a6",
+     "border_px": 340
+    },
+    {
+     "key": "#f1caab",
+     "border_px": 183
+    },
+    {
+     "key": "#f1b9a6",
+     "border_px": 32
+    }
+   ],
+   "text_px": 0,
+   "n": 8,
+   "thumb": {
+    "x0": 6230,
+    "y0": 3851,
+    "k": 2.0,
+    "w": 242,
+    "h": 290
+   }
+  },
+  {
+   "key": "#f3cab7",
+   "color": "#f3cab7",
+   "lon": 103.5753,
+   "lat": 29.8558,
+   "bbox": [
+    6190,
+    3905,
+    6281,
+    3963
+   ],
+   "area_px": 3080,
+   "people": 1118923,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Dongpo",
+     "local": "东坡区",
+     "prefecture": "Meishan",
+     "prefecture_local": "眉山市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.249,
+     "area_share": 0.147,
+     "cover": 0.263
+    },
+    {
+     "name": "Hongya",
+     "local": "洪雅县",
+     "prefecture": "Meishan",
+     "prefecture_local": "眉山市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.236,
+     "area_share": 0.303,
+     "cover": 0.911
+    },
+    {
+     "name": "Jiajiang",
+     "local": "夹江县",
+     "prefecture": "Leshan",
+     "prefecture_local": "乐山市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.134,
+     "area_share": 0.141,
+     "cover": 0.445
+    },
+    {
+     "name": "Qingshen",
+     "local": "青神县",
+     "prefecture": "Meishan",
+     "prefecture_local": "眉山市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.116,
+     "area_share": 0.112,
+     "cover": 0.997
+    },
+    {
+     "name": "Jingyan",
+     "local": "井研县",
+     "prefecture": "Leshan",
+     "prefecture_local": "乐山市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.113,
+     "area_share": 0.107,
+     "cover": 0.477
+    },
+    {
+     "name": "Danleng",
+     "local": "丹棱县",
+     "prefecture": "Meishan",
+     "prefecture_local": "眉山市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.104,
+     "area_share": 0.13,
+     "cover": 0.972
+    },
+    {
+     "name": "Shizhong",
+     "local": "市中区",
+     "prefecture": "Leshan",
+     "prefecture_local": "乐山市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.037,
+     "area_share": 0.032,
+     "cover": 0.042
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Sichuan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.014
+    },
+    {
+     "level": "prefecture",
+     "name": "Meishan",
+     "local": "眉山市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.724,
+     "cover": 0.271
+    },
+    {
+     "level": "prefecture",
+     "name": "Leshan",
+     "local": "乐山市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.276,
+     "cover": 0.086
+    }
+   ],
+   "towns": [
+    {
+     "town": "洪川镇",
+     "county": "洪雅县",
+     "city": "眉山市",
+     "people_share": 0.061,
+     "cover": 1.0
+    },
+    {
+     "town": "松江镇",
+     "county": "东坡区",
+     "city": "眉山市",
+     "people_share": 0.05,
+     "cover": 0.895
+    },
+    {
+     "town": "永寿镇",
+     "county": "东坡区",
+     "city": "眉山市",
+     "people_share": 0.049,
+     "cover": 0.931
+    },
+    {
+     "town": "研城镇",
+     "county": "井研县",
+     "city": "乐山市",
+     "people_share": 0.041,
+     "cover": 0.959
+    },
+    {
+     "town": "丹棱镇",
+     "county": "丹棱县",
+     "city": "眉山市",
+     "people_share": 0.033,
+     "cover": 0.962
+    },
+    {
+     "town": "余坪镇",
+     "county": "洪雅县",
+     "city": "眉山市",
+     "people_share": 0.031,
+     "cover": 1.0
+    },
+    {
+     "town": "修文镇",
+     "county": "东坡区",
+     "city": "眉山市",
+     "people_share": 0.031,
+     "cover": 0.857
+    },
+    {
+     "town": "崇仁镇",
+     "county": "东坡区",
+     "city": "眉山市",
+     "people_share": 0.03,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f3d8cb",
+     "border_px": 1033
+    },
+    {
+     "key": "#f1c3a6",
+     "border_px": 743
+    },
+    {
+     "key": "#f0ac8c",
+     "border_px": 674
+    },
+    {
+     "key": "#eabea3",
+     "border_px": 560
+    },
+    {
+     "key": "#f1caab",
+     "border_px": 409
+    },
+    {
+     "key": "#f4cdba",
+     "border_px": 209
+    },
+    {
+     "key": "#edd6cb",
+     "border_px": 174
+    }
+   ],
+   "text_px": 0,
+   "n": 9,
+   "thumb": {
+    "x0": 6150,
+    "y0": 3865,
+    "k": 2.0,
+    "w": 342,
+    "h": 276
+   }
+  },
+  {
+   "key": "#f3bda4",
+   "color": "#f3bda4",
+   "lon": 104.7881,
+   "lat": 29.8442,
+   "bbox": [
+    6309,
+    3905,
+    6368,
+    3956
+   ],
+   "area_px": 2034,
+   "people": 1263585,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Zizhong",
+     "local": "资中县",
+     "prefecture": "Neijiang",
+     "prefecture_local": "内江市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.813,
+     "area_share": 0.762,
+     "cover": 0.988
+    },
+    {
+     "name": "Yanjiang",
+     "local": "雁江区",
+     "prefecture": "Ziyang",
+     "prefecture_local": "资阳市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.161,
+     "area_share": 0.195,
+     "cover": 0.206
+    },
+    {
+     "name": "Dongxing",
+     "local": "东兴区",
+     "prefecture": "Neijiang",
+     "prefecture_local": "内江市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.018,
+     "area_share": 0.031,
+     "cover": 0.029
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Sichuan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.016
+    },
+    {
+     "level": "prefecture",
+     "name": "Neijiang",
+     "local": "内江市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.841,
+     "cover": 0.299
+    },
+    {
+     "level": "prefecture",
+     "name": "Ziyang",
+     "local": "资阳市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.157,
+     "cover": 0.056
+    }
+   ],
+   "towns": [
+    {
+     "town": "水南镇",
+     "county": "资中县",
+     "city": "内江市",
+     "people_share": 0.074,
+     "cover": 1.0
+    },
+    {
+     "town": "重龙镇",
+     "county": "资中县",
+     "city": "内江市",
+     "people_share": 0.059,
+     "cover": 1.0
+    },
+    {
+     "town": "银山镇",
+     "county": "资中县",
+     "city": "内江市",
+     "people_share": 0.041,
+     "cover": 0.994
+    },
+    {
+     "town": "龙江镇",
+     "county": "资中县",
+     "city": "内江市",
+     "people_share": 0.035,
+     "cover": 0.982
+    },
+    {
+     "town": "双龙镇",
+     "county": "资中县",
+     "city": "内江市",
+     "people_share": 0.031,
+     "cover": 1.0
+    },
+    {
+     "town": "孟塘镇",
+     "county": "资中县",
+     "city": "内江市",
+     "people_share": 0.031,
+     "cover": 0.987
+    },
+    {
+     "town": "高楼镇",
+     "county": "资中县",
+     "city": "内江市",
+     "people_share": 0.03,
+     "cover": 1.0
+    },
+    {
+     "town": "伍隍镇",
+     "county": "雁江区",
+     "city": "资阳市",
+     "people_share": 0.03,
+     "cover": 0.968
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#eebc9d",
+     "border_px": 580
+    },
+    {
+     "key": "#f4bba0",
+     "border_px": 544
+    },
+    {
+     "key": "#f3b09a",
+     "border_px": 481
+    },
+    {
+     "key": "#f0af91",
+     "border_px": 408
+    },
+    {
+     "key": "#eabea3",
+     "border_px": 380
+    },
+    {
+     "key": "#eab3a3",
+     "border_px": 157
+    }
+   ],
+   "text_px": 0,
+   "n": 10,
+   "thumb": {
+    "x0": 6269,
+    "y0": 3865,
+    "k": 3.0,
+    "w": 417,
+    "h": 393
+   }
+  },
+  {
+   "key": "#f0ac8c",
+   "color": "#f0ac8c",
+   "lon": 103.6361,
+   "lat": 29.6405,
+   "bbox": [
+    6218,
+    3940,
+    6254,
+    3976
+   ],
+   "area_px": 810,
+   "people": 1187103,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Shizhong",
+     "local": "市中区",
+     "prefecture": "Leshan",
+     "prefecture_local": "乐山市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.699,
+     "area_share": 0.469,
+     "cover": 0.844
+    },
+    {
+     "name": "Jiajiang",
+     "local": "夹江县",
+     "prefecture": "Leshan",
+     "prefecture_local": "乐山市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.157,
+     "area_share": 0.298,
+     "cover": 0.555
+    },
+    {
+     "name": "Emeishan",
+     "local": "峨眉山市",
+     "prefecture": "Leshan",
+     "prefecture_local": "乐山市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.126,
+     "area_share": 0.185,
+     "cover": 0.243
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Sichuan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.015
+    },
+    {
+     "level": "prefecture",
+     "name": "Leshan",
+     "local": "乐山市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.999,
+     "cover": 0.332
+    }
+   ],
+   "towns": [
+    {
+     "town": "肖坝街道",
+     "county": "市中区",
+     "city": "乐山市",
+     "people_share": 0.106,
+     "cover": 1.0
+    },
+    {
+     "town": "通江街道",
+     "county": "市中区",
+     "city": "乐山市",
+     "people_share": 0.063,
+     "cover": 1.0
+    },
+    {
+     "town": "苏稽镇",
+     "county": "市中区",
+     "city": "乐山市",
+     "people_share": 0.063,
+     "cover": 1.0
+    },
+    {
+     "town": "安谷镇",
+     "county": "市中区",
+     "city": "乐山市",
+     "people_share": 0.061,
+     "cover": 1.0
+    },
+    {
+     "town": "柏杨街道",
+     "county": "市中区",
+     "city": "乐山市",
+     "people_share": 0.056,
+     "cover": 1.0
+    },
+    {
+     "town": "棉竹镇",
+     "county": "市中区",
+     "city": "乐山市",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "符溪镇",
+     "county": "峨眉山市",
+     "city": "乐山市",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "大佛街道",
+     "county": "市中区",
+     "city": "乐山市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "全福镇",
+     "county": "市中区",
+     "city": "乐山市",
+     "people_share": 0.04,
+     "cover": 0.761
+    },
+    {
+     "town": "双福镇",
+     "county": "峨眉山市",
+     "city": "乐山市",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "黄土镇",
+     "county": "夹江县",
+     "city": "乐山市",
+     "people_share": 0.039,
+     "cover": 0.933
+    },
+    {
+     "town": "新平乡",
+     "county": "峨眉山市",
+     "city": "乐山市",
+     "people_share": 0.035,
+     "cover": 0.841
+    }
+   ],
+   "cities": [
+    {
+     "name": "Leshan",
+     "admin": "Sichuan",
+     "pop": 3160168
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f3cab7",
+     "border_px": 674
+    },
+    {
+     "key": "#edd6cb",
+     "border_px": 516
+    },
+    {
+     "key": "#f1caab",
+     "border_px": 452
+    }
+   ],
+   "text_px": 0,
+   "n": 11,
+   "thumb": {
+    "x0": 6178,
+    "y0": 3900,
+    "k": 3.0,
+    "w": 348,
+    "h": 348
+   }
+  },
+  {
+   "key": "#f0af91",
+   "color": "#f0af91",
+   "lon": 105.0604,
+   "lat": 29.5633,
+   "bbox": [
+    6346,
+    3941,
+    6384,
+    3971
+   ],
+   "area_px": 857,
+   "people": 903369,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Dongxing",
+     "local": "东兴区",
+     "prefecture": "Neijiang",
+     "prefecture_local": "内江市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.579,
+     "area_share": 0.567,
+     "cover": 0.683
+    },
+    {
+     "name": "Shizhong",
+     "local": "市中区",
+     "prefecture": "Neijiang",
+     "prefecture_local": "内江市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.405,
+     "area_share": 0.399,
+     "cover": 0.989
+    },
+    {
+     "name": "Longchang",
+     "local": "隆昌县",
+     "prefecture": "Neijiang",
+     "prefecture_local": "内江市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.008,
+     "area_share": 0.015,
+     "cover": 0.01
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Sichuan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.012
+    },
+    {
+     "level": "prefecture",
+     "name": "Neijiang",
+     "local": "内江市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.994,
+     "cover": 0.253
+    }
+   ],
+   "towns": [
+    {
+     "town": "胜利镇",
+     "county": "东兴区",
+     "city": "内江市",
+     "people_share": 0.136,
+     "cover": 1.0
+    },
+    {
+     "town": "新江街道",
+     "county": "东兴区",
+     "city": "内江市",
+     "people_share": 0.06,
+     "cover": 1.0
+    },
+    {
+     "town": "西林街道",
+     "county": "东兴区",
+     "city": "内江市",
+     "people_share": 0.053,
+     "cover": 1.0
+    },
+    {
+     "town": "交通乡",
+     "county": "市中区",
+     "city": "内江市",
+     "people_share": 0.052,
+     "cover": 1.0
+    },
+    {
+     "town": "郭北镇",
+     "county": "东兴区",
+     "city": "内江市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "永安镇",
+     "county": "市中区",
+     "city": "内江市",
+     "people_share": 0.044,
+     "cover": 1.0
+    },
+    {
+     "town": "凌家镇",
+     "county": "市中区",
+     "city": "内江市",
+     "people_share": 0.044,
+     "cover": 0.926
+    },
+    {
+     "town": "东兴街道",
+     "county": "东兴区",
+     "city": "内江市",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "白马镇",
+     "county": "市中区",
+     "city": "内江市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "椑南乡",
+     "county": "东兴区",
+     "city": "内江市",
+     "people_share": 0.036,
+     "cover": 0.985
+    },
+    {
+     "town": "靖民镇",
+     "county": "市中区",
+     "city": "内江市",
+     "people_share": 0.036,
+     "cover": 1.0
+    },
+    {
+     "town": "小河口镇",
+     "county": "东兴区",
+     "city": "内江市",
+     "people_share": 0.032,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Neijiang",
+     "admin": "Sichuan",
+     "pop": 3702847
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#eeb281",
+     "border_px": 424
+    },
+    {
+     "key": "#f3bda4",
+     "border_px": 408
+    },
+    {
+     "key": "#f4bba0",
+     "border_px": 353
+    },
+    {
+     "key": "#f4be9c",
+     "border_px": 270
+    },
+    {
+     "key": "#eebc9d",
+     "border_px": 179
+    }
+   ],
+   "text_px": 0,
+   "n": 12,
+   "thumb": {
+    "x0": 6306,
+    "y0": 3901,
+    "k": 3.0,
+    "w": 354,
+    "h": 330
+   }
+  },
+  {
+   "key": "#eebc9d",
+   "color": "#eebc9d",
+   "lon": 104.5381,
+   "lat": 29.503,
+   "bbox": [
+    6295,
+    3936,
+    6347,
+    4000
+   ],
+   "area_px": 2160,
+   "people": 1147127,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Weiyuan",
+     "local": "威远县",
+     "prefecture": "Neijiang",
+     "prefecture_local": "内江市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.52,
+     "area_share": 0.531,
+     "cover": 0.979
+    },
+    {
+     "name": "Rong",
+     "local": "荣县",
+     "prefecture": "Zigong",
+     "prefecture_local": "自贡市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.271,
+     "area_share": 0.289,
+     "cover": 0.581
+    },
+    {
+     "name": "Gongjing",
+     "local": "贡井区",
+     "prefecture": "Zigong",
+     "prefecture_local": "自贡市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.167,
+     "area_share": 0.155,
+     "cover": 0.907
+    },
+    {
+     "name": "Da'an",
+     "local": "大安区",
+     "prefecture": "Zigong",
+     "prefecture_local": "自贡市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.024,
+     "area_share": 0.006,
+     "cover": 0.079
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Sichuan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.015
+    },
+    {
+     "level": "prefecture",
+     "name": "Neijiang",
+     "local": "内江市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.552,
+     "cover": 0.178
+    },
+    {
+     "level": "prefecture",
+     "name": "Zigong",
+     "local": "自贡市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.442,
+     "cover": 0.223
+    }
+   ],
+   "towns": [
+    {
+     "town": "旭阳镇",
+     "county": "荣县",
+     "city": "自贡市",
+     "people_share": 0.122,
+     "cover": 0.995
+    },
+    {
+     "town": "严陵镇",
+     "county": "威远县",
+     "city": "内江市",
+     "people_share": 0.115,
+     "cover": 1.0
+    },
+    {
+     "town": "连界镇",
+     "county": "威远县",
+     "city": "内江市",
+     "people_share": 0.06,
+     "cover": 0.971
+    },
+    {
+     "town": "向义镇",
+     "county": "威远县",
+     "city": "内江市",
+     "people_share": 0.054,
+     "cover": 0.991
+    },
+    {
+     "town": "镇西镇",
+     "county": "威远县",
+     "city": "内江市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "长土镇",
+     "county": "贡井区",
+     "city": "自贡市",
+     "people_share": 0.037,
+     "cover": 0.727
+    },
+    {
+     "town": "成佳镇",
+     "county": "贡井区",
+     "city": "自贡市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "新店镇",
+     "county": "威远县",
+     "city": "内江市",
+     "people_share": 0.032,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f1caab",
+     "border_px": 728
+    },
+    {
+     "key": "#f3bda4",
+     "border_px": 580
+    },
+    {
+     "key": "#eeb281",
+     "border_px": 557
+    },
+    {
+     "key": "#eabea3",
+     "border_px": 380
+    },
+    {
+     "key": "#f0cfac",
+     "border_px": 256
+    },
+    {
+     "key": "#f0af91",
+     "border_px": 179
+    }
+   ],
+   "text_px": 0,
+   "n": 13,
+   "thumb": {
+    "x0": 6255,
+    "y0": 3896,
+    "k": 2.0,
+    "w": 264,
+    "h": 288
+   }
+  },
+  {
+   "key": "#edd6cb",
+   "color": "#edd6cb",
+   "lon": 102.6037,
+   "lat": 29.4322,
+   "bbox": [
+    6081,
+    3915,
+    6247,
+    4048
+   ],
+   "area_px": 8675,
+   "people": 1235923,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Emeishan",
+     "local": "峨眉山市",
+     "prefecture": "Leshan",
+     "prefecture_local": "乐山市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.376,
+     "area_share": 0.106,
+     "cover": 0.755
+    },
+    {
+     "name": "Hanyuan",
+     "local": "汉源县",
+     "prefecture": "Ya An",
+     "prefecture_local": "雅安市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.238,
+     "area_share": 0.225,
+     "cover": 0.996
+    },
+    {
+     "name": "Shawan",
+     "local": "沙湾区",
+     "prefecture": "Leshan",
+     "prefecture_local": "乐山市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.112,
+     "area_share": 0.059,
+     "cover": 0.875
+    },
+    {
+     "name": "Shimian",
+     "local": "石棉县",
+     "prefecture": "Ya An",
+     "prefecture_local": "雅安市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.093,
+     "area_share": 0.277,
+     "cover": 0.999
+    },
+    {
+     "name": "Luding",
+     "local": "泸定县",
+     "prefecture": "Ganzizangzu",
+     "prefecture_local": "甘孜藏族自治州",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.067,
+     "area_share": 0.223,
+     "cover": 0.999
+    },
+    {
+     "name": "Ebian Yi",
+     "local": "峨边彝族自治县",
+     "prefecture": "Leshan",
+     "prefecture_local": "乐山市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.061,
+     "area_share": 0.046,
+     "cover": 0.589
+    },
+    {
+     "name": "Jinkouhe",
+     "local": "金口河区",
+     "prefecture": "Leshan",
+     "prefecture_local": "乐山市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.032,
+     "area_share": 0.044,
+     "cover": 0.843
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Sichuan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.016
+    },
+    {
+     "level": "prefecture",
+     "name": "Leshan",
+     "local": "乐山市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.598,
+     "cover": 0.207
+    },
+    {
+     "level": "prefecture",
+     "name": "Ya'an",
+     "local": "雅安市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.332,
+     "cover": 0.271
+    },
+    {
+     "level": "prefecture",
+     "name": "Garzê Tibetan Autonomous Prefecture",
+     "local": "甘孜藏族自治州",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.067,
+     "cover": 0.076
+    }
+   ],
+   "towns": [
+    {
+     "town": "绥山镇",
+     "county": "峨眉山市",
+     "city": "乐山市",
+     "people_share": 0.148,
+     "cover": 0.998
+    },
+    {
+     "town": "桂花桥镇",
+     "county": "峨眉山市",
+     "city": "乐山市",
+     "people_share": 0.053,
+     "cover": 0.926
+    },
+    {
+     "town": "胜利镇",
+     "county": "峨眉山市",
+     "city": "乐山市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "沙湾镇",
+     "county": "沙湾区",
+     "city": "乐山市",
+     "people_share": 0.034,
+     "cover": 1.0
+    },
+    {
+     "town": "新棉镇",
+     "county": "石棉县",
+     "city": "雅安市",
+     "people_share": 0.034,
+     "cover": 1.0
+    },
+    {
+     "town": "九襄镇",
+     "county": "汉源县",
+     "city": "雅安市",
+     "people_share": 0.033,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f3d8cb",
+     "border_px": 2143
+    },
+    {
+     "key": "#e7ddc7",
+     "border_px": 2121
+    },
+    {
+     "key": "#f0f4e6",
+     "border_px": 1409
+    },
+    {
+     "key": "#e8e8d1",
+     "border_px": 1044
+    },
+    {
+     "key": "#f0ac8c",
+     "border_px": 516
+    },
+    {
+     "key": "#f1caab",
+     "border_px": 328
+    },
+    {
+     "key": "#f0cfac",
+     "border_px": 265
+    },
+    {
+     "key": "#f3cab7",
+     "border_px": 174
+    }
+   ],
+   "text_px": 0,
+   "n": 14,
+   "thumb": {
+    "x0": 6023,
+    "y0": 3857,
+    "k": 1.0,
+    "w": 282,
+    "h": 249
+   }
+  },
+  {
+   "key": "#f1caab",
+   "color": "#f1caab",
+   "lon": 104.0366,
+   "lat": 29.3645,
+   "bbox": [
+    6243,
+    3949,
+    6309,
+    4018
+   ],
+   "area_px": 3211,
+   "people": 1139772,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Qianwei",
+     "local": "犍为县",
+     "prefecture": "Leshan",
+     "prefecture_local": "乐山市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.339,
+     "area_share": 0.346,
+     "cover": 0.937
+    },
+    {
+     "name": "Wutongqiao",
+     "local": "五通桥区",
+     "prefecture": "Leshan",
+     "prefecture_local": "乐山市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.24,
+     "area_share": 0.129,
+     "cover": 0.985
+    },
+    {
+     "name": "Rong",
+     "local": "荣县",
+     "prefecture": "Zigong",
+     "prefecture_local": "自贡市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.196,
+     "area_share": 0.255,
+     "cover": 0.417
+    },
+    {
+     "name": "Jingyan",
+     "local": "井研县",
+     "prefecture": "Leshan",
+     "prefecture_local": "乐山市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.095,
+     "area_share": 0.107,
+     "cover": 0.409
+    },
+    {
+     "name": "Shizhong",
+     "local": "市中区",
+     "prefecture": "Leshan",
+     "prefecture_local": "乐山市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.082,
+     "area_share": 0.083,
+     "cover": 0.095
+    },
+    {
+     "name": "Yibin",
+     "local": "宜宾县",
+     "prefecture": "Yibin",
+     "prefecture_local": "宜宾市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.047,
+     "area_share": 0.078,
+     "cover": 0.074
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Sichuan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.015
+    },
+    {
+     "level": "prefecture",
+     "name": "Leshan",
+     "local": "乐山市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.754,
+     "cover": 0.241
+    },
+    {
+     "level": "prefecture",
+     "name": "Zigong",
+     "local": "自贡市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.198,
+     "cover": 0.099
+    }
+   ],
+   "towns": [
+    {
+     "town": "下渡乡",
+     "county": "犍为县",
+     "city": "乐山市",
+     "people_share": 0.052,
+     "cover": 1.0
+    },
+    {
+     "town": "西坝镇",
+     "county": "五通桥区",
+     "city": "乐山市",
+     "people_share": 0.05,
+     "cover": 1.0
+    },
+    {
+     "town": "罗城镇",
+     "county": "犍为县",
+     "city": "乐山市",
+     "people_share": 0.033,
+     "cover": 1.0
+    },
+    {
+     "town": "清溪镇",
+     "county": "犍为县",
+     "city": "乐山市",
+     "people_share": 0.03,
+     "cover": 0.992
+    },
+    {
+     "town": "玉津镇",
+     "county": "犍为县",
+     "city": "乐山市",
+     "people_share": 0.03,
+     "cover": 1.0
+    },
+    {
+     "town": "冠英镇",
+     "county": "五通桥区",
+     "city": "乐山市",
+     "people_share": 0.03,
+     "cover": 0.95
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f0cfac",
+     "border_px": 1196
+    },
+    {
+     "key": "#eebc9d",
+     "border_px": 728
+    },
+    {
+     "key": "#f0ac8c",
+     "border_px": 452
+    },
+    {
+     "key": "#f3cab7",
+     "border_px": 409
+    },
+    {
+     "key": "#edd6cb",
+     "border_px": 328
+    },
+    {
+     "key": "#eabea3",
+     "border_px": 183
+    }
+   ],
+   "text_px": 0,
+   "n": 15,
+   "thumb": {
+    "x0": 6203,
+    "y0": 3909,
+    "k": 2.0,
+    "w": 292,
+    "h": 298
+   }
+  },
+  {
+   "key": "#eeb281",
+   "color": "#eeb281",
+   "lon": 104.8928,
+   "lat": 29.3624,
+   "bbox": [
+    6328,
+    3968,
+    6376,
+    3999
+   ],
+   "area_px": 690,
+   "people": 688366,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Da'an",
+     "local": "大安区",
+     "prefecture": "Zigong",
+     "prefecture_local": "自贡市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.437,
+     "area_share": 0.435,
+     "cover": 0.845
+    },
+    {
+     "name": "Ziliujing",
+     "local": "自流井区",
+     "prefecture": "Zigong",
+     "prefecture_local": "自贡市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.271,
+     "area_share": 0.196,
+     "cover": 0.964
+    },
+    {
+     "name": "Yantan",
+     "local": "沿滩区",
+     "prefecture": "Zigong",
+     "prefecture_local": "自贡市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.147,
+     "area_share": 0.167,
+     "cover": 0.36
+    },
+    {
+     "name": "Longchang",
+     "local": "隆昌县",
+     "prefecture": "Neijiang",
+     "prefecture_local": "内江市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.113,
+     "area_share": 0.174,
+     "cover": 0.108
+    },
+    {
+     "name": "Gongjing",
+     "local": "贡井区",
+     "prefecture": "Zigong",
+     "prefecture_local": "自贡市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.023,
+     "area_share": 0.009,
+     "cover": 0.076
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Sichuan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.009
+    },
+    {
+     "level": "prefecture",
+     "name": "Zigong",
+     "local": "自贡市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.873,
+     "cover": 0.265
+    },
+    {
+     "level": "prefecture",
+     "name": "Neijiang",
+     "local": "内江市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.127,
+     "cover": 0.025
+    }
+   ],
+   "towns": [
+    {
+     "town": "卫坪镇",
+     "county": "沿滩区",
+     "city": "自贡市",
+     "people_share": 0.086,
+     "cover": 0.985
+    },
+    {
+     "town": "牛佛镇",
+     "county": "大安区",
+     "city": "自贡市",
+     "people_share": 0.058,
+     "cover": 0.944
+    },
+    {
+     "town": "黄家镇",
+     "county": "隆昌县",
+     "city": "内江市",
+     "people_share": 0.055,
+     "cover": 0.961
+    },
+    {
+     "town": "新民镇",
+     "county": "大安区",
+     "city": "自贡市",
+     "people_share": 0.053,
+     "cover": 0.736
+    },
+    {
+     "town": "舒坪镇",
+     "county": "自流井区",
+     "city": "自贡市",
+     "people_share": 0.051,
+     "cover": 1.0
+    },
+    {
+     "town": "团结镇",
+     "county": "大安区",
+     "city": "自贡市",
+     "people_share": 0.051,
+     "cover": 0.983
+    },
+    {
+     "town": "凤凰乡",
+     "county": "大安区",
+     "city": "自贡市",
+     "people_share": 0.047,
+     "cover": 0.699
+    },
+    {
+     "town": "高峰乡",
+     "county": "自流井区",
+     "city": "自贡市",
+     "people_share": 0.046,
+     "cover": 1.0
+    },
+    {
+     "town": "何市镇",
+     "county": "大安区",
+     "city": "自贡市",
+     "people_share": 0.036,
+     "cover": 0.982
+    },
+    {
+     "town": "双凤镇",
+     "county": "隆昌县",
+     "city": "内江市",
+     "people_share": 0.036,
+     "cover": 0.806
+    },
+    {
+     "town": "仙市镇",
+     "county": "沿滩区",
+     "city": "自贡市",
+     "people_share": 0.035,
+     "cover": 0.985
+    },
+    {
+     "town": "大山铺镇",
+     "county": "大安区",
+     "city": "自贡市",
+     "people_share": 0.034,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Zigong",
+     "admin": "Sichuan",
+     "pop": 2489256
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#e7c297",
+     "border_px": 658
+    },
+    {
+     "key": "#eebc9d",
+     "border_px": 557
+    },
+    {
+     "key": "#f0af91",
+     "border_px": 424
+    },
+    {
+     "key": "#f4be9c",
+     "border_px": 174
+    },
+    {
+     "key": "#f0cfac",
+     "border_px": 65
+    }
+   ],
+   "text_px": 0,
+   "n": 16,
+   "thumb": {
+    "x0": 6288,
+    "y0": 3928,
+    "k": 3.0,
+    "w": 384,
+    "h": 333
+   }
+  },
+  {
+   "key": "#e7c297",
+   "color": "#e7c297",
+   "lon": 104.9457,
+   "lat": 29.1334,
+   "bbox": [
+    6334,
+    3982,
+    6387,
+    4039
+   ],
+   "area_px": 1751,
+   "people": 984448,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Fushun",
+     "local": "富顺县",
+     "prefecture": "Zigong",
+     "prefecture_local": "自贡市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.596,
+     "area_share": 0.527,
+     "cover": 0.805
+    },
+    {
+     "name": "Yantan",
+     "local": "沿滩区",
+     "prefecture": "Zigong",
+     "prefecture_local": "自贡市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.182,
+     "area_share": 0.178,
+     "cover": 0.639
+    },
+    {
+     "name": "Longchang",
+     "local": "隆昌县",
+     "prefecture": "Neijiang",
+     "prefecture_local": "内江市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.095,
+     "area_share": 0.073,
+     "cover": 0.13
+    },
+    {
+     "name": "Nanxi",
+     "local": "南溪区",
+     "prefecture": "Yibin",
+     "prefecture_local": "宜宾市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.053,
+     "area_share": 0.105,
+     "cover": 0.168
+    },
+    {
+     "name": "Cuiping",
+     "local": "翠屏区",
+     "prefecture": "Yibin",
+     "prefecture_local": "宜宾市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.046,
+     "area_share": 0.089,
+     "cover": 0.063
+    },
+    {
+     "name": "Da'an",
+     "local": "大安区",
+     "prefecture": "Zigong",
+     "prefecture_local": "自贡市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.023,
+     "area_share": 0.024,
+     "cover": 0.064
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Sichuan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.013
+    },
+    {
+     "level": "prefecture",
+     "name": "Zigong",
+     "local": "自贡市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.798,
+     "cover": 0.346
+    },
+    {
+     "level": "prefecture",
+     "name": "Yibin",
+     "local": "宜宾市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.1,
+     "cover": 0.024
+    },
+    {
+     "level": "prefecture",
+     "name": "Neijiang",
+     "local": "内江市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.098,
+     "cover": 0.027
+    }
+   ],
+   "towns": [
+    {
+     "town": "富世镇",
+     "county": "富顺县",
+     "city": "自贡市",
+     "people_share": 0.131,
+     "cover": 1.0
+    },
+    {
+     "town": "东湖镇",
+     "county": "富顺县",
+     "city": "自贡市",
+     "people_share": 0.057,
+     "cover": 1.0
+    },
+    {
+     "town": "代寺镇",
+     "county": "富顺县",
+     "city": "自贡市",
+     "people_share": 0.053,
+     "cover": 1.0
+    },
+    {
+     "town": "骑龙镇",
+     "county": "富顺县",
+     "city": "自贡市",
+     "people_share": 0.041,
+     "cover": 0.988
+    },
+    {
+     "town": "九洪乡",
+     "county": "沿滩区",
+     "city": "自贡市",
+     "people_share": 0.036,
+     "cover": 1.0
+    },
+    {
+     "town": "胡家镇",
+     "county": "隆昌县",
+     "city": "内江市",
+     "people_share": 0.034,
+     "cover": 0.974
+    },
+    {
+     "town": "板桥镇",
+     "county": "富顺县",
+     "city": "自贡市",
+     "people_share": 0.032,
+     "cover": 0.973
+    },
+    {
+     "town": "响石镇",
+     "county": "隆昌县",
+     "city": "内江市",
+     "people_share": 0.03,
+     "cover": 0.826
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f3ca9a",
+     "border_px": 775
+    },
+    {
+     "key": "#eeb281",
+     "border_px": 658
+    },
+    {
+     "key": "#f0cfac",
+     "border_px": 542
+    },
+    {
+     "key": "#f4be9c",
+     "border_px": 233
+    },
+    {
+     "key": "#edce8d",
+     "border_px": 215
+    },
+    {
+     "key": "#f0bb74",
+     "border_px": 195
+    }
+   ],
+   "text_px": 0,
+   "n": 17,
+   "thumb": {
+    "x0": 6294,
+    "y0": 3942,
+    "k": 3.0,
+    "w": 399,
+    "h": 411
+   }
+  },
+  {
+   "key": "#f3ca9a",
+   "color": "#f3ca9a",
+   "lon": 105.3402,
+   "lat": 29.0511,
+   "bbox": [
+    6359,
+    3982,
+    6426,
+    4046
+   ],
+   "area_px": 2019,
+   "people": 1159373,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Lu",
+     "local": "泸县",
+     "prefecture": "Luzhou",
+     "prefecture_local": "泸州市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.612,
+     "area_share": 0.572,
+     "cover": 0.869
+    },
+    {
+     "name": "Jiangyang",
+     "local": "江阳区",
+     "prefecture": "Luzhou",
+     "prefecture_local": "泸州市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.143,
+     "area_share": 0.139,
+     "cover": 0.327
+    },
+    {
+     "name": "Fushun",
+     "local": "富顺县",
+     "prefecture": "Zigong",
+     "prefecture_local": "自贡市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.121,
+     "area_share": 0.138,
+     "cover": 0.192
+    },
+    {
+     "name": "Jiang'an",
+     "local": "江安县",
+     "prefecture": "Yibin",
+     "prefecture_local": "宜宾市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.065,
+     "area_share": 0.089,
+     "cover": 0.204
+    },
+    {
+     "name": "Nanxi",
+     "local": "南溪区",
+     "prefecture": "Yibin",
+     "prefecture_local": "宜宾市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.031,
+     "area_share": 0.043,
+     "cover": 0.115
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Sichuan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.992,
+     "cover": 0.015
+    },
+    {
+     "level": "prefecture",
+     "name": "Luzhou",
+     "local": "泸州市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.766,
+     "cover": 0.219
+    },
+    {
+     "level": "prefecture",
+     "name": "Zigong",
+     "local": "自贡市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.119,
+     "cover": 0.061
+    },
+    {
+     "level": "prefecture",
+     "name": "Yibin",
+     "local": "宜宾市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.094,
+     "cover": 0.027
+    }
+   ],
+   "towns": [
+    {
+     "town": "福集镇",
+     "county": "泸县",
+     "city": "泸州市",
+     "people_share": 0.118,
+     "cover": 0.986
+    },
+    {
+     "town": "玄滩镇",
+     "county": "泸县",
+     "city": "泸州市",
+     "people_share": 0.049,
+     "cover": 1.0
+    },
+    {
+     "town": "方山镇",
+     "county": "江阳区",
+     "city": "泸州市",
+     "people_share": 0.047,
+     "cover": 1.0
+    },
+    {
+     "town": "云锦镇",
+     "county": "泸县",
+     "city": "泸州市",
+     "people_share": 0.044,
+     "cover": 0.965
+    },
+    {
+     "town": "潮河镇",
+     "county": "泸县",
+     "city": "泸州市",
+     "people_share": 0.043,
+     "cover": 0.985
+    },
+    {
+     "town": "嘉明镇",
+     "county": "泸县",
+     "city": "泸州市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "牛滩镇",
+     "county": "泸县",
+     "city": "泸州市",
+     "people_share": 0.036,
+     "cover": 1.0
+    },
+    {
+     "town": "得胜镇",
+     "county": "泸县",
+     "city": "泸州市",
+     "people_share": 0.033,
+     "cover": 1.0
+    },
+    {
+     "town": "海潮镇",
+     "county": "泸县",
+     "city": "泸州市",
+     "people_share": 0.032,
+     "cover": 1.0
+    },
+    {
+     "town": "云龙镇",
+     "county": "泸县",
+     "city": "泸州市",
+     "people_share": 0.031,
+     "cover": 0.978
+    },
+    {
+     "town": "石桥镇",
+     "county": "泸县",
+     "city": "泸州市",
+     "people_share": 0.031,
+     "cover": 0.854
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#e7c297",
+     "border_px": 775
+    },
+    {
+     "key": "#eeb877",
+     "border_px": 618
+    },
+    {
+     "key": "#edce8d",
+     "border_px": 452
+    },
+    {
+     "key": "#f4be9c",
+     "border_px": 438
+    },
+    {
+     "key": "#e5d097",
+     "border_px": 363
+    },
+    {
+     "key": "#eed5a7",
+     "border_px": 318
+    },
+    {
+     "key": "#eec996",
+     "border_px": 225
+    },
+    {
+     "key": "#f9c697",
+     "border_px": 75
+    }
+   ],
+   "text_px": 0,
+   "n": 18,
+   "thumb": {
+    "x0": 6319,
+    "y0": 3942,
+    "k": 2.0,
+    "w": 294,
+    "h": 288
+   }
+  },
+  {
+   "key": "#eeb877",
+   "color": "#eeb877",
+   "lon": 105.4399,
+   "lat": 28.9402,
+   "bbox": [
+    6393,
+    4011,
+    6412,
+    4035
+   ],
+   "area_px": 431,
+   "people": 740350,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Longmatan",
+     "local": "龙马潭区",
+     "prefecture": "Luzhou",
+     "prefecture_local": "泸州市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.643,
+     "area_share": 0.671,
+     "cover": 0.986
+    },
+    {
+     "name": "Jiangyang",
+     "local": "江阳区",
+     "prefecture": "Luzhou",
+     "prefecture_local": "泸州市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.348,
+     "area_share": 0.318,
+     "cover": 0.508
+    },
+    {
+     "name": "Nàxī",
+     "local": "纳溪区",
+     "prefecture": "Luzhou",
+     "prefecture_local": "泸州市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.007,
+     "area_share": 0.005,
+     "cover": 0.015
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Sichuan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.01
+    },
+    {
+     "level": "prefecture",
+     "name": "Luzhou",
+     "local": "泸州市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.182
+    }
+   ],
+   "towns": [
+    {
+     "town": "安宁镇",
+     "county": "龙马潭区",
+     "city": "泸州市",
+     "people_share": 0.171,
+     "cover": 1.0
+    },
+    {
+     "town": "石洞镇",
+     "county": "龙马潭区",
+     "city": "泸州市",
+     "people_share": 0.164,
+     "cover": 0.994
+    },
+    {
+     "town": "茜草街道",
+     "county": "江阳区",
+     "city": "泸州市",
+     "people_share": 0.089,
+     "cover": 1.0
+    },
+    {
+     "town": "蓝田街道",
+     "county": "江阳区",
+     "city": "泸州市",
+     "people_share": 0.051,
+     "cover": 0.645
+    },
+    {
+     "town": "红星街道",
+     "county": "龙马潭区",
+     "city": "泸州市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "鱼塘镇",
+     "county": "龙马潭区",
+     "city": "泸州市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "大山坪街道",
+     "county": "江阳区",
+     "city": "泸州市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "华阳街道",
+     "county": "江阳区",
+     "city": "泸州市",
+     "people_share": 0.038,
+     "cover": 0.931
+    },
+    {
+     "town": "胡市镇",
+     "county": "龙马潭区",
+     "city": "泸州市",
+     "people_share": 0.036,
+     "cover": 0.969
+    },
+    {
+     "town": "双加镇",
+     "county": "龙马潭区",
+     "city": "泸州市",
+     "people_share": 0.033,
+     "cover": 0.871
+    },
+    {
+     "town": "莲花池街道",
+     "county": "龙马潭区",
+     "city": "泸州市",
+     "people_share": 0.031,
+     "cover": 1.0
+    },
+    {
+     "town": "泰安镇",
+     "county": "江阳区",
+     "city": "泸州市",
+     "people_share": 0.031,
+     "cover": 0.977
+    }
+   ],
+   "cities": [
+    {
+     "name": "Luzhou",
+     "admin": "Sichuan",
+     "pop": 4218427
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f3ca9a",
+     "border_px": 618
+    },
+    {
+     "key": "#e5d097",
+     "border_px": 357
+    },
+    {
+     "key": "#eed5a7",
+     "border_px": 67
+    }
+   ],
+   "text_px": 0,
+   "n": 19,
+   "thumb": {
+    "x0": 6353,
+    "y0": 3971,
+    "k": 4.0,
+    "w": 396,
+    "h": 416
+   }
+  },
+  {
+   "key": "#f0cfac",
+   "color": "#f0cfac",
+   "lon": 104.1346,
+   "lat": 28.911,
+   "bbox": [
+    6235,
+    3998,
+    6339,
+    4082
+   ],
+   "area_px": 4994,
+   "people": 969649,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yibin",
+     "local": "宜宾县",
+     "prefecture": "Yibin",
+     "prefecture_local": "宜宾市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.439,
+     "area_share": 0.369,
+     "cover": 0.582
+    },
+    {
+     "name": "Pingshan",
+     "local": "屏山县",
+     "prefecture": "Yibin",
+     "prefecture_local": "宜宾市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.246,
+     "area_share": 0.268,
+     "cover": 0.978
+    },
+    {
+     "name": "Muchuan",
+     "local": "沐川县",
+     "prefecture": "Leshan",
+     "prefecture_local": "乐山市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.202,
+     "area_share": 0.251,
+     "cover": 0.994
+    },
+    {
+     "name": "Cuiping",
+     "local": "翠屏区",
+     "prefecture": "Yibin",
+     "prefecture_local": "宜宾市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.07,
+     "area_share": 0.058,
+     "cover": 0.094
+    },
+    {
+     "name": "Qianwei",
+     "local": "犍为县",
+     "prefecture": "Leshan",
+     "prefecture_local": "乐山市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.026,
+     "area_share": 0.025,
+     "cover": 0.061
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Sichuan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.994,
+     "cover": 0.012
+    },
+    {
+     "level": "prefecture",
+     "name": "Yibin",
+     "local": "宜宾市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.75,
+     "cover": 0.18
+    },
+    {
+     "level": "prefecture",
+     "name": "Leshan",
+     "local": "乐山市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.233,
+     "cover": 0.063
+    }
+   ],
+   "towns": [
+    {
+     "town": "观音镇",
+     "county": "宜宾县",
+     "city": "宜宾市",
+     "people_share": 0.063,
+     "cover": 0.994
+    },
+    {
+     "town": "沐溪镇",
+     "county": "沐川县",
+     "city": "乐山市",
+     "people_share": 0.047,
+     "cover": 1.0
+    },
+    {
+     "town": "锦屏镇",
+     "county": "屏山县",
+     "city": "宜宾市",
+     "people_share": 0.036,
+     "cover": 1.0
+    },
+    {
+     "town": "大乘镇",
+     "county": "屏山县",
+     "city": "宜宾市",
+     "people_share": 0.034,
+     "cover": 1.0
+    },
+    {
+     "town": "白花镇",
+     "county": "宜宾县",
+     "city": "宜宾市",
+     "people_share": 0.034,
+     "cover": 1.0
+    },
+    {
+     "town": "孔滩镇",
+     "county": "宜宾县",
+     "city": "宜宾市",
+     "people_share": 0.033,
+     "cover": 0.957
+    },
+    {
+     "town": "蕨溪镇",
+     "county": "宜宾县",
+     "city": "宜宾市",
+     "people_share": 0.033,
+     "cover": 1.0
+    },
+    {
+     "town": "高场镇",
+     "county": "宜宾县",
+     "city": "宜宾市",
+     "people_share": 0.03,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#e7ddc7",
+     "border_px": 1348
+    },
+    {
+     "key": "#f1caab",
+     "border_px": 1196
+    },
+    {
+     "key": "#ebe1bf",
+     "border_px": 965
+    },
+    {
+     "key": "#e7c297",
+     "border_px": 542
+    },
+    {
+     "key": "#f0bb74",
+     "border_px": 467
+    },
+    {
+     "key": "#edd6cb",
+     "border_px": 265
+    },
+    {
+     "key": "#eebc9d",
+     "border_px": 256
+    },
+    {
+     "key": "#eeb281",
+     "border_px": 65
+    }
+   ],
+   "text_px": 0,
+   "n": 20,
+   "thumb": {
+    "x0": 6195,
+    "y0": 3958,
+    "k": 2.0,
+    "w": 368,
+    "h": 328
+   }
+  },
+  {
+   "key": "#f0bb74",
+   "color": "#f0bb74",
+   "lon": 104.5883,
+   "lat": 28.7438,
+   "bbox": [
+    6313,
+    4037,
+    6346,
+    4066
+   ],
+   "area_px": 424,
+   "people": 587576,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Cuiping",
+     "local": "翠屏区",
+     "prefecture": "Yibin",
+     "prefecture_local": "宜宾市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.761,
+     "area_share": 0.656,
+     "cover": 0.616
+    },
+    {
+     "name": "Yibin",
+     "local": "宜宾县",
+     "prefecture": "Yibin",
+     "prefecture_local": "宜宾市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.238,
+     "area_share": 0.342,
+     "cover": 0.192
+    },
+    {
+     "name": "Gao",
+     "local": "高县",
+     "prefecture": "Yibin",
+     "prefecture_local": "宜宾市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.0,
+     "area_share": 0.002,
+     "cover": 0.0
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Sichuan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.008
+    },
+    {
+     "level": "prefecture",
+     "name": "Yibin",
+     "local": "宜宾市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.146
+    }
+   ],
+   "towns": [
+    {
+     "town": "象鼻街道",
+     "county": "翠屏区",
+     "city": "宜宾市",
+     "people_share": 0.133,
+     "cover": 0.955
+    },
+    {
+     "town": "柏溪镇",
+     "county": "宜宾县",
+     "city": "宜宾市",
+     "people_share": 0.127,
+     "cover": 0.988
+    },
+    {
+     "town": "菜坝镇",
+     "county": "翠屏区",
+     "city": "宜宾市",
+     "people_share": 0.124,
+     "cover": 0.957
+    },
+    {
+     "town": "南岸街道",
+     "county": "翠屏区",
+     "city": "宜宾市",
+     "people_share": 0.095,
+     "cover": 1.0
+    },
+    {
+     "town": "赵场街道",
+     "county": "翠屏区",
+     "city": "宜宾市",
+     "people_share": 0.088,
+     "cover": 0.987
+    },
+    {
+     "town": "普安镇",
+     "county": "宜宾县",
+     "city": "宜宾市",
+     "people_share": 0.081,
+     "cover": 0.95
+    },
+    {
+     "town": "沙坪街道",
+     "county": "翠屏区",
+     "city": "宜宾市",
+     "people_share": 0.075,
+     "cover": 0.945
+    },
+    {
+     "town": "安阜街道",
+     "county": "翠屏区",
+     "city": "宜宾市",
+     "people_share": 0.062,
+     "cover": 0.937
+    },
+    {
+     "town": "西郊街道",
+     "county": "翠屏区",
+     "city": "宜宾市",
+     "people_share": 0.059,
+     "cover": 1.0
+    },
+    {
+     "town": "白沙湾街道",
+     "county": "翠屏区",
+     "city": "宜宾市",
+     "people_share": 0.044,
+     "cover": 1.0
+    },
+    {
+     "town": "南广镇",
+     "county": "翠屏区",
+     "city": "宜宾市",
+     "people_share": 0.037,
+     "cover": 0.204
+    }
+   ],
+   "cities": [
+    {
+     "name": "Yibin",
+     "admin": "Sichuan",
+     "pop": 4588804
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#f0cfac",
+     "border_px": 467
+    },
+    {
+     "key": "#edce8d",
+     "border_px": 394
+    },
+    {
+     "key": "#e7c297",
+     "border_px": 195
+    },
+    {
+     "key": "#ebe1bf",
+     "border_px": 178
+    },
+    {
+     "key": "#eedab0",
+     "border_px": 170
+    }
+   ],
+   "text_px": 0,
+   "n": 21,
+   "thumb": {
+    "x0": 6273,
+    "y0": 3997,
+    "k": 3.0,
+    "w": 339,
+    "h": 327
+   }
+  },
+  {
+   "key": "#e5d097",
+   "color": "#e5d097",
+   "lon": 105.5392,
+   "lat": 28.6856,
+   "bbox": [
+    6376,
+    4021,
+    6454,
+    4079
+   ],
+   "area_px": 2532,
+   "people": 895563,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Hejiang",
+     "local": "合江县",
+     "prefecture": "Luzhou",
+     "prefecture_local": "泸州市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.441,
+     "area_share": 0.425,
+     "cover": 0.573
+    },
+    {
+     "name": "Nàxī",
+     "local": "纳溪区",
+     "prefecture": "Luzhou",
+     "prefecture_local": "泸州市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.377,
+     "area_share": 0.407,
+     "cover": 0.968
+    },
+    {
+     "name": "Jiangyang",
+     "local": "江阳区",
+     "prefecture": "Luzhou",
+     "prefecture_local": "泸州市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.091,
+     "area_share": 0.068,
+     "cover": 0.161
+    },
+    {
+     "name": "Jiang'an",
+     "local": "江安县",
+     "prefecture": "Yibin",
+     "prefecture_local": "宜宾市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.074,
+     "area_share": 0.082,
+     "cover": 0.18
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Sichuan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.989,
+     "cover": 0.011
+    },
+    {
+     "level": "prefecture",
+     "name": "Luzhou",
+     "local": "泸州市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.914,
+     "cover": 0.202
+    },
+    {
+     "level": "prefecture",
+     "name": "Yibin",
+     "local": "宜宾市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.075,
+     "cover": 0.017
+    }
+   ],
+   "towns": [
+    {
+     "town": "护国镇",
+     "county": "纳溪区",
+     "city": "泸州市",
+     "people_share": 0.073,
+     "cover": 1.0
+    },
+    {
+     "town": "合江镇",
+     "county": "合江县",
+     "city": "泸州市",
+     "people_share": 0.07,
+     "cover": 1.0
+    },
+    {
+     "town": "新乐镇",
+     "county": "纳溪区",
+     "city": "泸州市",
+     "people_share": 0.05,
+     "cover": 1.0
+    },
+    {
+     "town": "棉花坡镇",
+     "county": "纳溪区",
+     "city": "泸州市",
+     "people_share": 0.043,
+     "cover": 0.879
+    },
+    {
+     "town": "九支镇",
+     "county": "合江县",
+     "city": "泸州市",
+     "people_share": 0.042,
+     "cover": 0.868
+    },
+    {
+     "town": "二里乡",
+     "county": "合江县",
+     "city": "泸州市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "榕山镇",
+     "county": "合江县",
+     "city": "泸州市",
+     "people_share": 0.036,
+     "cover": 0.796
+    },
+    {
+     "town": "白节镇",
+     "county": "纳溪区",
+     "city": "泸州市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "大渡口镇",
+     "county": "纳溪区",
+     "city": "泸州市",
+     "people_share": 0.034,
+     "cover": 0.981
+    },
+    {
+     "town": "大桥镇",
+     "county": "合江县",
+     "city": "泸州市",
+     "people_share": 0.033,
+     "cover": 0.971
+    },
+    {
+     "town": "佛荫镇",
+     "county": "合江县",
+     "city": "泸州市",
+     "people_share": 0.032,
+     "cover": 1.0
+    },
+    {
+     "town": "先市镇",
+     "county": "合江县",
+     "city": "泸州市",
+     "people_share": 0.03,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#eed5a7",
+     "border_px": 1009
+    },
+    {
+     "key": "#f0e7b4",
+     "border_px": 727
+    },
+    {
+     "key": "#eee5c2",
+     "border_px": 673
+    },
+    {
+     "key": "#edce8d",
+     "border_px": 513
+    },
+    {
+     "key": "#f3ca9a",
+     "border_px": 363
+    },
+    {
+     "key": "#eeb877",
+     "border_px": 357
+    }
+   ],
+   "text_px": 0,
+   "n": 22,
+   "thumb": {
+    "x0": 6336,
+    "y0": 3981,
+    "k": 2.0,
+    "w": 316,
+    "h": 276
+   }
+  },
+  {
+   "key": "#edce8d",
+   "color": "#edce8d",
+   "lon": 104.9109,
+   "lat": 28.6548,
+   "bbox": [
+    6333,
+    4028,
+    6379,
+    4085
+   ],
+   "area_px": 2010,
+   "people": 928170,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Changning",
+     "local": "长宁县",
+     "prefecture": "Yibin",
+     "prefecture_local": "宜宾市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.274,
+     "area_share": 0.345,
+     "cover": 0.835
+    },
+    {
+     "name": "Nanxi",
+     "local": "南溪区",
+     "prefecture": "Yibin",
+     "prefecture_local": "宜宾市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.239,
+     "area_share": 0.182,
+     "cover": 0.718
+    },
+    {
+     "name": "Jiang'an",
+     "local": "江安县",
+     "prefecture": "Yibin",
+     "prefecture_local": "宜宾市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.232,
+     "area_share": 0.2,
+     "cover": 0.588
+    },
+    {
+     "name": "Cuiping",
+     "local": "翠屏区",
+     "prefecture": "Yibin",
+     "prefecture_local": "宜宾市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.177,
+     "area_share": 0.15,
+     "cover": 0.227
+    },
+    {
+     "name": "Gao",
+     "local": "高县",
+     "prefecture": "Yibin",
+     "prefecture_local": "宜宾市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.073,
+     "area_share": 0.12,
+     "cover": 0.182
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Sichuan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.012
+    },
+    {
+     "level": "prefecture",
+     "name": "Yibin",
+     "local": "宜宾市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.23
+    }
+   ],
+   "towns": [
+    {
+     "town": "南广镇",
+     "county": "翠屏区",
+     "city": "宜宾市",
+     "people_share": 0.09,
+     "cover": 0.796
+    },
+    {
+     "town": "南溪街道",
+     "county": "南溪区",
+     "city": "宜宾市",
+     "people_share": 0.085,
+     "cover": 0.992
+    },
+    {
+     "town": "长宁镇",
+     "county": "长宁县",
+     "city": "宜宾市",
+     "people_share": 0.067,
+     "cover": 1.0
+    },
+    {
+     "town": "罗龙街道",
+     "county": "南溪区",
+     "city": "宜宾市",
+     "people_share": 0.064,
+     "cover": 1.0
+    },
+    {
+     "town": "桐梓镇",
+     "county": "江安县",
+     "city": "宜宾市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "阳春镇",
+     "county": "江安县",
+     "city": "宜宾市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "沙河镇",
+     "county": "高县",
+     "city": "宜宾市",
+     "people_share": 0.042,
+     "cover": 0.925
+    },
+    {
+     "town": "江安镇",
+     "county": "江安县",
+     "city": "宜宾市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "竹海镇",
+     "county": "长宁县",
+     "city": "宜宾市",
+     "people_share": 0.033,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#eedab0",
+     "border_px": 525
+    },
+    {
+     "key": "#e5d097",
+     "border_px": 513
+    },
+    {
+     "key": "#f3ca9a",
+     "border_px": 452
+    },
+    {
+     "key": "#eee5c2",
+     "border_px": 401
+    },
+    {
+     "key": "#f0bb74",
+     "border_px": 394
+    },
+    {
+     "key": "#e7c297",
+     "border_px": 215
+    }
+   ],
+   "text_px": 0,
+   "n": 23,
+   "thumb": {
+    "x0": 6293,
+    "y0": 3988,
+    "k": 3.0,
+    "w": 378,
+    "h": 411
+   }
+  },
+  {
+   "key": "#eedab0",
+   "color": "#eedab0",
+   "lon": 104.6446,
+   "lat": 28.203,
+   "bbox": [
+    6310,
+    4060,
+    6372,
+    4148
+   ],
+   "area_px": 3150,
+   "people": 940772,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Gong",
+     "local": "珙县",
+     "prefecture": "Yibin",
+     "prefecture_local": "宜宾市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.338,
+     "area_share": 0.325,
+     "cover": 0.985
+    },
+    {
+     "name": "Junlian",
+     "local": "筠连县",
+     "prefecture": "Yibin",
+     "prefecture_local": "宜宾市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.323,
+     "area_share": 0.356,
+     "cover": 0.988
+    },
+    {
+     "name": "Gao",
+     "local": "高县",
+     "prefecture": "Yibin",
+     "prefecture_local": "宜宾市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.319,
+     "area_share": 0.296,
+     "cover": 0.802
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Sichuan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.997,
+     "cover": 0.012
+    },
+    {
+     "level": "prefecture",
+     "name": "Yibin",
+     "local": "宜宾市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.997,
+     "cover": 0.233
+    }
+   ],
+   "towns": [
+    {
+     "town": "巡场镇",
+     "county": "珙县",
+     "city": "宜宾市",
+     "people_share": 0.095,
+     "cover": 0.971
+    },
+    {
+     "town": "筠连镇",
+     "county": "筠连县",
+     "city": "宜宾市",
+     "people_share": 0.093,
+     "cover": 0.983
+    },
+    {
+     "town": "文江镇",
+     "county": "高县",
+     "city": "宜宾市",
+     "people_share": 0.075,
+     "cover": 1.0
+    },
+    {
+     "town": "庆符镇",
+     "county": "高县",
+     "city": "宜宾市",
+     "people_share": 0.07,
+     "cover": 1.0
+    },
+    {
+     "town": "珙泉镇",
+     "county": "珙县",
+     "city": "宜宾市",
+     "people_share": 0.038,
+     "cover": 0.991
+    },
+    {
+     "town": "巡司镇",
+     "county": "筠连县",
+     "city": "宜宾市",
+     "people_share": 0.036,
+     "cover": 1.0
+    },
+    {
+     "town": "腾达镇",
+     "county": "筠连县",
+     "city": "宜宾市",
+     "people_share": 0.03,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#ebe1bf",
+     "border_px": 1296
+    },
+    {
+     "key": "#f1eabe",
+     "border_px": 882
+    },
+    {
+     "key": "#eee5c2",
+     "border_px": 627
+    },
+    {
+     "key": "#edce8d",
+     "border_px": 525
+    },
+    {
+     "key": "#f0bb74",
+     "border_px": 170
+    }
+   ],
+   "text_px": 0,
+   "n": 24,
+   "thumb": {
+    "x0": 6270,
+    "y0": 4020,
+    "k": 2.0,
+    "w": 284,
+    "h": 336
+   }
+  },
+  {
+   "key": "#f0e7b4",
+   "color": "#f0e7b4",
+   "lon": 105.93,
+   "lat": 28.1597,
+   "bbox": [
+    6422,
+    4044,
+    6490,
+    4170
+   ],
+   "area_px": 5359,
+   "people": 1007284,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Gulin",
+     "local": "古蔺县",
+     "prefecture": "Luzhou",
+     "prefecture_local": "泸州市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.634,
+     "area_share": 0.533,
+     "cover": 0.987
+    },
+    {
+     "name": "Chishui",
+     "local": "赤水市",
+     "prefecture": "Zunyi",
+     "prefecture_local": "遵义市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.177,
+     "area_share": 0.308,
+     "cover": 0.928
+    },
+    {
+     "name": "Xishui",
+     "local": "习水县",
+     "prefecture": "Zunyi",
+     "prefecture_local": "遵义市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.137,
+     "area_share": 0.118,
+     "cover": 0.283
+    },
+    {
+     "name": "Qixingguan",
+     "local": "七星关区",
+     "prefecture": "Bijie",
+     "prefecture_local": "毕节市",
+     "province": "贵州省",
+     "country": "China",
+     "people_share": 0.034,
+     "area_share": 0.03,
+     "cover": 0.026
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Sichuan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.639,
+     "cover": 0.008
+    },
+    {
+     "level": "prefecture",
+     "name": "Luzhou",
+     "local": "泸州市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.639,
+     "cover": 0.159
+    },
+    {
+     "level": "province",
+     "name": "Guizhou",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.361,
+     "cover": 0.011
+    },
+    {
+     "level": "prefecture",
+     "name": "Zunyi",
+     "local": "遵义市",
+     "province": "Guizhou",
+     "country": "China",
+     "people_share": 0.326,
+     "cover": 0.054
+    }
+   ],
+   "towns": [
+    {
+     "town": "古蔺镇",
+     "county": "古蔺县",
+     "city": "泸州市",
+     "people_share": 0.114,
+     "cover": 1.0
+    },
+    {
+     "town": "石宝镇",
+     "county": "古蔺县",
+     "city": "泸州市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "水口镇",
+     "county": "古蔺县",
+     "city": "泸州市",
+     "people_share": 0.041,
+     "cover": 0.965
+    },
+    {
+     "town": "二郎镇",
+     "county": "古蔺县",
+     "city": "泸州市",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "双沙镇",
+     "county": "古蔺县",
+     "city": "泸州市",
+     "people_share": 0.038,
+     "cover": 0.92
+    },
+    {
+     "town": "土城镇",
+     "county": "习水县",
+     "city": "遵义市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "太平镇",
+     "county": "古蔺县",
+     "city": "泸州市",
+     "people_share": 0.034,
+     "cover": 1.0
+    },
+    {
+     "town": "金星乡",
+     "county": "古蔺县",
+     "city": "泸州市",
+     "people_share": 0.03,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Chishui",
+     "admin": "Guizhou",
+     "pop": 237052
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#eee5c2",
+     "border_px": 1294
+    },
+    {
+     "key": "#ddebb9",
+     "border_px": 956
+    },
+    {
+     "key": "#f1e8ac",
+     "border_px": 834
+    },
+    {
+     "key": "#e5d097",
+     "border_px": 727
+    },
+    {
+     "key": "#ddeec3",
+     "border_px": 443
+    },
+    {
+     "key": "#eed5a7",
+     "border_px": 436
+    },
+    {
+     "key": "#dbf0ac",
+     "border_px": 182
+    }
+   ],
+   "text_px": 0,
+   "n": 25,
+   "thumb": {
+    "x0": 6378,
+    "y0": 4000,
+    "k": 1.0,
+    "w": 156,
+    "h": 214
+   }
+  },
+  {
+   "key": "#eee5c2",
+   "color": "#eee5c2",
+   "lon": 105.3345,
+   "lat": 28.1588,
+   "bbox": [
+    6353,
+    4071,
+    6434,
+    4161
+   ],
+   "area_px": 4175,
+   "people": 955387,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Xuyong",
+     "local": "叙永县",
+     "prefecture": "Luzhou",
+     "prefecture_local": "泸州市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.59,
+     "area_share": 0.639,
+     "cover": 0.991
+    },
+    {
+     "name": "Xingwen",
+     "local": "兴文县",
+     "prefecture": "Yibin",
+     "prefecture_local": "宜宾市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.342,
+     "area_share": 0.293,
+     "cover": 0.977
+    },
+    {
+     "name": "Changning",
+     "local": "长宁县",
+     "prefecture": "Yibin",
+     "prefecture_local": "宜宾市",
+     "province": "四川省",
+     "country": "China",
+     "people_share": 0.046,
+     "area_share": 0.047,
+     "cover": 0.144
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Sichuan",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.994,
+     "cover": 0.012
+    },
+    {
+     "level": "prefecture",
+     "name": "Luzhou",
+     "local": "泸州市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.594,
+     "cover": 0.14
+    },
+    {
+     "level": "prefecture",
+     "name": "Yibin",
+     "local": "宜宾市",
+     "province": "Sichuan",
+     "country": "China",
+     "people_share": 0.4,
+     "cover": 0.095
+    }
+   ],
+   "towns": [
+    {
+     "town": "叙永镇",
+     "county": "叙永县",
+     "city": "泸州市",
+     "people_share": 0.097,
+     "cover": 1.0
+    },
+    {
+     "town": "古宋镇",
+     "county": "兴文县",
+     "city": "宜宾市",
+     "people_share": 0.084,
+     "cover": 1.0
+    },
+    {
+     "town": "震东乡",
+     "county": "叙永县",
+     "city": "泸州市",
+     "people_share": 0.044,
+     "cover": 1.0
+    },
+    {
+     "town": "僰王山镇",
+     "county": "兴文县",
+     "city": "宜宾市",
+     "people_share": 0.044,
+     "cover": 1.0
+    },
+    {
+     "town": "马岭镇",
+     "county": "叙永县",
+     "city": "泸州市",
+     "people_share": 0.036,
+     "cover": 1.0
+    },
+    {
+     "town": "江门镇",
+     "county": "叙永县",
+     "city": "泸州市",
+     "people_share": 0.031,
+     "cover": 0.976
+    },
+    {
+     "town": "落卜镇",
+     "county": "叙永县",
+     "city": "泸州市",
+     "people_share": 0.031,
+     "cover": 1.0
+    },
+    {
+     "town": "赤水镇",
+     "county": "叙永县",
+     "city": "泸州市",
+     "people_share": 0.03,
+     "cover": 0.975
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#f0e7b4",
+     "border_px": 1294
+    },
+    {
+     "key": "#f1eabe",
+     "border_px": 850
+    },
+    {
+     "key": "#e5d097",
+     "border_px": 673
+    },
+    {
+     "key": "#eedab0",
+     "border_px": 627
+    },
+    {
+     "key": "#dbf0ac",
+     "border_px": 537
+    },
+    {
+     "key": "#edce8d",
+     "border_px": 401
+    },
+    {
+     "key": "#edf3c0",
+     "border_px": 70
+    }
+   ],
+   "text_px": 0,
+   "n": 26,
+   "thumb": {
+    "x0": 6313,
+    "y0": 4031,
+    "k": 2.0,
+    "w": 322,
+    "h": 340
+   }
+  }
+ ]
+}

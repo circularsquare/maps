@@ -1,0 +1,494 @@
+{
+  "batch": "shanxi-south",
+  "regions": [
+    {
+      "n": 1,
+      "key": "#e2d8c5",
+      "settled": null,
+      "summary": "Upper Zhuozhang River uplands north of Changzhi: Tunliu, Xiangyuan, Wuxiang, Qin county.",
+      "candidates": [
+        {
+          "name": "Xiangyuan",
+          "local": "襄垣",
+          "origin": "county",
+          "meaning": "County name from the Warring States, used since 247 BC; the Wikipedia article gives no etymology.",
+          "fit": "Holds all of Xiangyuan (25% of the region); the county is among the oldest in the area, with its seat in the region.",
+          "recognisability": "Own zh-wiki article, 1267 hits with 山西, top ones about this county.",
+          "source_url": "https://zh.wikipedia.org/wiki/襄垣县",
+          "source_note": "襄垣县 (县, 247 BC-1911, 2146 yrs) 今山西襄垣县城北关",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Zhuozhang",
+          "local": "浊漳",
+          "origin": "river",
+          "meaning": "\"Turbid Zhang\": the Zhuozhang River (also called the Lu River), the muddier of the two branches of the Zhang River.",
+          "fit": "Both headwater branches run through Wuxiang, Qin county and Xiangyuan, so most of the region is its upper basin; it also runs on through region 3.",
+          "recognisability": "Own section in the zh-wiki Zhang River article; only 33 hits with 山西, a river name known mainly locally.",
+          "source_url": "https://zh.wikipedia.org/wiki/漳河_(卫河)",
+          "source_note": "浊漳河（又稱潞水或潞川）流经...",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Tunliu",
+          "local": "屯留",
+          "origin": "county",
+          "meaning": "From Chunliu, the Jin name for the land of the Liuxu Chidi people; \"chun\" meant great or fine and is interchangeable with \"tun\".",
+          "fit": "Largest unit (27%), fully inside, but its only a quarter of the region.",
+          "recognisability": "Own zh-wiki article (Tunliu district), well known as a Shangdang county.",
+          "source_url": "https://zh.wikipedia.org/wiki/屯留区",
+          "source_note": "屯留县名起源于春秋时期赤狄的支属留吁...晋人改称这里为纯留",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Taihang is already on the map to the north-east, so no mountain name here."
+    },
+    {
+      "n": 2,
+      "key": "#f1e7d1",
+      "settled": null,
+      "summary": "Taiyue mountains and the upper Fen valley south of Lingshi: Hongdong, Huozhou, Qinyuan, Fushan, Gu, Anze.",
+      "candidates": [
+        {
+          "name": "Huozhou",
+          "local": "霍州",
+          "origin": "city",
+          "meaning": "Prefecture named for Mount Huo (Huotai Mountain), which rises behind it.",
+          "fit": "Holds 93% of Huozhou city (23% of the region); a prefecture seat from 1215, with older Huo prefectures on the same site.",
+          "recognisability": "Own zh-wiki article; city of 283k in Kontur cities list.",
+          "source_url": "https://zh.wikipedia.org/wiki/霍州市",
+          "source_note": "霍州 (州, 1215-1911) 今山西霍州市",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Hongdong",
+          "local": "洪洞",
+          "origin": "county",
+          "meaning": "County name in use since the Tang (618), seat of the famous Great Locust Tree migration story.",
+          "fit": "Largest unit (29%) but the region holds only 44% of the county; the locust tree town and the county seat lie in region 4.",
+          "recognisability": "Own zh-wiki article, very widely known nationally.",
+          "source_url": "https://zh.wikipedia.org/wiki/洪洞县",
+          "source_note": "洪洞县 (县, 618-1911) 今山西洪洞县",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Hongdong is better known than Huozhou, but its centre sits in the Linfen region next door."
+    },
+    {
+      "n": 3,
+      "key": "#e5dcca",
+      "settled": null,
+      "summary": "Shangdang basin around Changzhi's west and east: Huguan, Zhangzi, Lucheng, Licheng, Pingshun, part of Changzhi county.",
+      "candidates": [
+        {
+          "name": "Zhangzi",
+          "local": "长子",
+          "origin": "county",
+          "meaning": "Warring States county, said to be the home of Danzhu, Yao's eldest son (\"changzi\").",
+          "fit": "Holds 84% of Zhangzi county (21%); seat of the Shangdang commandery for 480 years.",
+          "recognisability": "Own zh-wiki article, county of long standing.",
+          "source_url": "https://zh.wikipedia.org/wiki/长子县",
+          "source_note": "上党郡 (郡, 204 BC-353) 今山西长子县城; 长子县 (县, 247 BC-1911)",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Shangdang",
+          "local": "上党",
+          "origin": "historical",
+          "meaning": "\"Upper party\": a place so high it stands as a companion to Heaven; the old commandery and region of the Changzhi basin.",
+          "fit": "Covers the whole basin; the commandery seat lay at Zhangzi (here) for 480 years, but also at the Changzhi city site for 288 years.",
+          "recognisability": "Own zh-wiki article, 1194 hits with 山西; also the Shangdang Campaign.",
+          "source_url": "https://zh.wikipedia.org/wiki/上党",
+          "source_note": "狄子奇《国策地名考》曰：“地极高，与天为党，故曰上党”",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Huguan",
+          "local": "壶关",
+          "origin": "county",
+          "meaning": "\"Pot pass\": a pass in the Taihang named for a pot-shaped mountain.",
+          "fit": "Holds all of Huguan (21%), joint largest unit with Zhangzi.",
+          "recognisability": "Own zh-wiki article; the Huguan Gorge is a national geopark.",
+          "source_url": "https://zh.wikipedia.org/wiki/壶关县",
+          "source_note": "壶关县 (县, 489-1911) 今山西壶关县东南",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Shangdang also suits region 5 (Changzhi city). I put it here because region 5 gets the prefecture name."
+    },
+    {
+      "n": 4,
+      "key": "#eace93",
+      "settled": null,
+      "summary": "Linfen city centre: Yaodou district and the Dahuaishu part of Hongdong.",
+      "candidates": [
+        {
+          "name": "Linfen",
+          "local": "临汾",
+          "origin": "city",
+          "meaning": "\"Beside the Fen\": the city on the Fen River; Linfen county existed from 583.",
+          "fit": "Holds the old centre of the prefecture seat (74% Yaodou).",
+          "recognisability": "Own zh-wiki article; city of 3.9M in the cities list.",
+          "source_url": "https://zh.wikipedia.org/wiki/临汾市",
+          "source_note": "临汾县 (县, 583-1911) 今山西临汾市",
+          "rating": 5,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Region 4 is small (432 px) but it is the city's centre, so it takes the city name."
+    },
+    {
+      "n": 5,
+      "key": "#d7c49e",
+      "settled": null,
+      "summary": "Changzhi city centre: Cheng district, Jiao district and part of Changzhi county (Shangdang district).",
+      "candidates": [
+        {
+          "name": "Changzhi",
+          "local": "长治",
+          "origin": "city",
+          "meaning": "\"Lasting order\": name given to the county in 1529 when Luan Prefecture was set up (Changzhi county from 1529).",
+          "fit": "Holds the old city centre; the prefecture seat from 583, and Shangdang commandery seat.",
+          "recognisability": "Own zh-wiki article; city of 3.2M in the cities list.",
+          "source_url": "https://zh.wikipedia.org/wiki/长治市",
+          "source_note": "长治县 (县, 1529-1911) 今山西长治市区; 潞州 (州, 583-1528)",
+          "rating": 5,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 6,
+      "key": "#ede2cc",
+      "settled": null,
+      "summary": "Yellow River bend on the west: Hejin, Jishan, Xiangning, Pu, Ji, Daning.",
+      "candidates": [
+        {
+          "name": "Hejin",
+          "local": "河津",
+          "origin": "city",
+          "meaning": "\"River ford\": the Yellow River crossing at the Longmen (Dragon Gate) gorge.",
+          "fit": "Holds all of Hejin city (35%), the largest unit, at the foot of the Longmen gorge.",
+          "recognisability": "Own zh-wiki article; city of 396k.",
+          "source_url": "https://zh.wikipedia.org/wiki/河津市",
+          "source_note": "龙门郡 (郡, 556-582) 今山西省河津县西阳村乡太阳堡村东",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Hukou",
+          "local": "壶口",
+          "origin": "other",
+          "meaning": "\"Pot mouth\": the Hukou Waterfall, where the Yellow River squeezes into a gorge.",
+          "fit": "The falls (36.15N 110.44E) lie on the western edge, in Ji county, which holds a tenth of the region.",
+          "recognisability": "Own zh-wiki article, 413 hits with 山西; one of China's best-known waterfalls.",
+          "source_url": "https://zh.wikipedia.org/wiki/壶口瀑布",
+          "source_note": "36°08′56″N 110°26′38″E",
+          "lat": 36.1488,
+          "lon": 110.4439,
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Jishan",
+          "local": "稷山",
+          "origin": "mountain",
+          "meaning": "Mount Ji, named for Hou Ji, ancestor of agriculture, who legend says taught farming here.",
+          "fit": "Holds 74% of Jishan county (24%), second largest unit.",
+          "recognisability": "Own zh-wiki article for the county.",
+          "source_url": "https://zh.wikipedia.org/wiki/稷山县",
+          "source_note": "绛州 (州, 577-582) 今山西稷山县西南十二里",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Hejin and Jishan are neighbouring county names; Hukou gives a different kind."
+    },
+    {
+      "n": 7,
+      "key": "#eddcb7",
+      "settled": null,
+      "summary": "Lower Fen valley south of Linfen: Xiangfen, west part of Yaodou, Xinjiang, part of Hongdong.",
+      "candidates": [
+        {
+          "name": "Taosi",
+          "local": "陶寺",
+          "origin": "historical",
+          "meaning": "Taosi site, a walled Longshan-period city believed to be Yao's capital Pingyang.",
+          "fit": "The site is in Xiangfen, 7 km north-east of its seat, the largest unit (35%).",
+          "recognisability": "Own zh-wiki article, 989 hits with 山西; major early-state archaeological site.",
+          "source_url": "https://zh.wikipedia.org/wiki/陶寺遺址",
+          "source_note": "陶寺遺址位於中國山西省襄汾縣城東北七公里的陶寺乡中",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Jiangzhou",
+          "local": "绛州",
+          "origin": "historical",
+          "meaning": "Jiang prefecture, seated at Xinjiang (Baibi village) from 561 for over 1,100 years.",
+          "fit": "Seat is in the region (Xinjiang 19%); Jiangzhou's lands also reach Jishan and Yicheng.",
+          "recognisability": "Own zh-wiki article, 770 hits; Jiangzhou drums and Jiangzhou hall.",
+          "source_url": "https://zh.wikipedia.org/wiki/绛州",
+          "source_note": "绛州 (州/直隶州, 561-1911) 今山西新绛县柏壁村",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Xiangfen",
+          "local": "襄汾",
+          "origin": "county",
+          "meaning": "Formed in 1954 from Xiangling and Taiping counties; \"xiang\" for the first, \"fen\" for the Fen River.",
+          "fit": "Holds all of Xiangfen (35%).",
+          "recognisability": "Own zh-wiki article.",
+          "source_url": "https://zh.wikipedia.org/wiki/襄汾县",
+          "source_note": "襄陵县; 太平县 (县, 557-1911)",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Jiang prefecture and the old Jin capital Jiang overlap region 9's Jiang county only by name."
+    },
+    {
+      "n": 8,
+      "key": "#e4d8c0",
+      "settled": null,
+      "summary": "Northern Jincheng highlands: Gaoping, Yangcheng, Lingchuan, Qinshui, a bit of Zezhou.",
+      "candidates": [
+        {
+          "name": "Gaoping",
+          "local": "高平",
+          "origin": "city",
+          "meaning": "\"High plain\"; county from 569, battle site of Changping.",
+          "fit": "Holds 88% of Gaoping city (40%), the largest unit; the 40% is by far the biggest.",
+          "recognisability": "Own zh-wiki article; city of 485k.",
+          "source_url": "https://zh.wikipedia.org/wiki/高平市",
+          "source_note": "高平县 (县, 569-1911) 今山西高平市区",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Changping",
+          "local": "长平",
+          "origin": "historical",
+          "meaning": "\"Long plain\": the Changping commandery seated at Gaoping, scene of the 260 BC Qin-Zhao battle.",
+          "fit": "Commandery seat is Gaoping; the battle is tied to the region.",
+          "recognisability": "99 hits with 山西, but the name also points to Changping in Beijing; top hits are about Gaoping.",
+          "source_url": "https://zh.wikipedia.org/wiki/長平郡",
+          "source_note": "长平郡 (郡, 529-617) 今山西高平市区",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 9,
+      "key": "#f1e0be",
+      "settled": null,
+      "summary": "Old Jin heartland between Linfen and Yuncheng: Yicheng, Jiang, Houma, Quwo.",
+      "candidates": [
+        {
+          "name": "Yicheng",
+          "local": "翼城",
+          "origin": "county",
+          "meaning": "\"City of Yi\": Yi was an early capital of the Jin state.",
+          "fit": "Holds all of Yicheng (28%), largest unit.",
+          "recognisability": "Own zh-wiki article.",
+          "source_url": "https://zh.wikipedia.org/wiki/翼城县",
+          "source_note": "翼城县 (县, 598-1911) 今山西翼城东南北绛村",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Quwo",
+          "local": "曲沃",
+          "origin": "county",
+          "meaning": "\"Curved fertile land\": the base of the Quwo branch that took over Jin.",
+          "fit": "Holds all of Quwo county (19%).",
+          "recognisability": "Quwo's own county; no standalone article in sources, so the name is checked only through Jin history.",
+          "source_url": "https://zh.wikipedia.org/wiki/翼城县",
+          "source_note": "曲沃县 (县, 590-1911) 今山西曲沃县城",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Houma",
+          "local": "侯马",
+          "origin": "city",
+          "meaning": "\"Marquis's horse\": a Jin capital Xintian lay here; site of the Houma Covenant tablets.",
+          "fit": "Holds 98% of the city (22%).",
+          "recognisability": "Own zh-wiki article.",
+          "source_url": "https://zh.wikipedia.org/wiki/侯马市",
+          "source_note": "侯马市, 新田乡",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Yicheng and Quwo are the two rival Jin seats, a pair that works well on adjacent regions if the neighbour is also named."
+    },
+    {
+      "n": 10,
+      "key": "#d4ccb2",
+      "settled": null,
+      "summary": "Jincheng city centre: Cheng district and Zezhou county.",
+      "candidates": [
+        {
+          "name": "Jincheng",
+          "local": "晋城",
+          "origin": "city",
+          "meaning": "\"Jin city\": Jincheng county from 620, prefecture seat for centuries.",
+          "fit": "Holds the old centre (Cheng district 55%).",
+          "recognisability": "Own zh-wiki article; city of 2.3M in the cities list.",
+          "source_url": "https://zh.wikipedia.org/wiki/晋城市",
+          "source_note": "晋城县 (县, 620-1367) 今山西晋城市",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Zezhou",
+          "local": "泽州",
+          "origin": "prefecture",
+          "meaning": "\"Marsh prefecture\": prefecture of 583-1727 and Zezhou fu to 1911.",
+          "fit": "Seat was at Gaodu in today's Zezhou county (37% of the region).",
+          "recognisability": "Own zh-wiki article.",
+          "source_url": "https://zh.wikipedia.org/wiki/泽州府",
+          "source_note": "泽州 (州, 583-1727) 今山西泽州县高都村",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 11,
+      "key": "#ebe4b9",
+      "settled": null,
+      "summary": "Zhongtiao mountains and the Yellow River bend: Wenxi, Xia, Yuanqu, Wanrong.",
+      "candidates": [
+        {
+          "name": "Zhongtiao",
+          "local": "中条",
+          "origin": "mountain",
+          "meaning": "The Zhongtiao range: a long narrow ridge between the Qinling and Taihang, bordering the Yellow River.",
+          "fit": "Wenxi, Xia and Yuanqu (the three main units, 74%) lie on its northern and eastern slopes.",
+          "recognisability": "Own zh-wiki article, 233 hits with 山西; the Zhongtiao Mountain Campaign.",
+          "source_url": "https://zh.wikipedia.org/wiki/中条山",
+          "source_note": "中条山，中国山西省南部主要山脉之一",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Wenxi",
+          "local": "闻喜",
+          "origin": "county",
+          "meaning": "\"Heard joy\": Emperor Wu of Han is said to have heard news of victory here in 111 BC.",
+          "fit": "Holds 92% of Wenxi (32%), the largest unit.",
+          "recognisability": "County with 1,966 years of history, home of the Pei family.",
+          "source_url": "https://zh.wikipedia.org/wiki/闻喜县",
+          "source_note": "闻喜县 (县, 111 BC-1911) 今山西闻喜县西南",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Xia",
+          "local": "夏",
+          "origin": "county",
+          "meaning": "Xia county, linked to the first dynasty, Xia, whose capital Anyi tradition places at Xia county.",
+          "fit": "Holds 78% of Xia county (23%).",
+          "recognisability": "The single character is the name of the dynasty; a lone \"Xia\" may be confused with the dynasty or Xiamen.",
+          "source_url": "https://zh.wikipedia.org/wiki/夏县",
+          "source_note": "夏县 (县, 494-1911) 今山西夏县禹王乡",
+          "rating": 2,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 12,
+      "key": "#f1e9b9",
+      "settled": null,
+      "summary": "Yellow River plain at the south-west corner: Linyi, Yongji, Wanrong.",
+      "candidates": [
+        {
+          "name": "Puzhou",
+          "local": "蒲州",
+          "origin": "historical",
+          "meaning": "\"Cattail prefecture\": the old Hedong seat at the Yellow River ferry, now a town in Yongji.",
+          "fit": "Puzhou is in Yongji, 33% of the region, on its south-west edge.",
+          "recognisability": "Own zh-wiki article, 1216 hits with 山西, top ones about people from Pu prefecture.",
+          "source_url": "https://zh.wikipedia.org/wiki/蒲州",
+          "source_note": "蒲州 (州, 618-619) 今山西临猗县临晋镇附近; 蒲坂县 今山西永济县西南蒲州镇东",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Yongji",
+          "local": "永济",
+          "origin": "city",
+          "meaning": "\"Lasting relief\"; the county-level city that grew out of the old Puzhou area.",
+          "fit": "Holds 87% of Yongji city (33%); city of 445k.",
+          "recognisability": "Own zh-wiki article.",
+          "source_url": "https://zh.wikipedia.org/wiki/永济市",
+          "source_note": "永济市",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Linyi",
+          "local": "临猗",
+          "origin": "county",
+          "meaning": "\"Beside Yi\": Linyi county, from Linjin plus Yishi.",
+          "fit": "Largest unit (44%).",
+          "recognisability": "Same pinyin as the 11M city Linyi in Shandong, so confusing.",
+          "source_url": "https://zh.wikipedia.org/wiki/临猗县",
+          "source_note": "临猗县",
+          "status": "rejected"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 13,
+      "key": "#ebe09c",
+      "settled": null,
+      "summary": "Yuncheng city centre: Yanhu district around the Salt Lake.",
+      "candidates": [
+        {
+          "name": "Yuncheng",
+          "local": "运城",
+          "origin": "city",
+          "meaning": "\"Transport city\": from the salt transport depot of the Salt Lake.",
+          "fit": "Holds the city centre (Yanhu 87%); prefecture name, city of 4.8M for the prefecture.",
+          "recognisability": "Own zh-wiki article.",
+          "source_url": "https://zh.wikipedia.org/wiki/运城市",
+          "source_note": "运城市",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Yanhu",
+          "local": "盐湖",
+          "origin": "county",
+          "meaning": "\"Salt lake\": the district named for the Yuncheng Salt Lake.",
+          "fit": "87% of the region, but the prefecture name goes to the central region.",
+          "recognisability": "Own zh-wiki article.",
+          "source_url": "https://zh.wikipedia.org/wiki/盐湖区",
+          "source_note": "盐湖区",
+          "status": "rejected"
+        }
+      ],
+      "notes": ""
+    }
+  ]
+}

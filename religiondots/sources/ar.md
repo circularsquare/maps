@@ -199,3 +199,20 @@ viewer at the next `tiles.py`.
 Checked and fine: a lone `Evangélica` is `christianity.protestant` in mx2020, ni2005, pe2017 and
 br2010; `other.ar` follows the existing `other.<cc>` nodes; 76.5% (2008) and NOA's 3.7% against the
 PDFs. A screenshot shows dots on land following population and none on the Malvinas. No ask.
+
+## Pentecostals from Pew 2014 (2026-10-16)
+
+Anita's call of 2026-10-16, built by session `c67d3c3c-latam` (`latam_split.py`, sources.md
+§latam-2026-10-16). 4,419,892 of the 7,133,023 `Evangélica` people (62.0%) are drawn on
+`christianity.pentecostal`, the share of Protestants Pew Research Center's 2014 survey found in a
+Pentecostal church (`QPROT`, 205 Argentine Protestants); 2,713,131 stay on `christianity.protestant`.
+Applied as one national fraction inside each region's `Evangélica` row, so the regions keep
+ENCREA's own pattern. All `modelled`, as the country already was.
+
+**Drawn on Pew although a second survey disagrees, on Anita's call.** The Global Flourishing
+Study (wave 1, `REL3_Y1`, 1,178 non-Catholic Christians) puts Pentecostal/Charismatic at 15.7% of
+them, with 35.2% "Independent/Holiness/Evangelical" and 35.3% "no denomination in particular".
+The likely reason is the card: GFS offers an independent-evangelical answer that Argentina's
+independent charismatic churches take, while Pew's three-way question puts them under "a
+Pentecostal church". Where a census can referee, Brazil, Pew's 59.7% matches IBGE's 60.0% and GFS
+reads lower, which is why Pew was preferred. Neither CONICET round splits its evangelicals.

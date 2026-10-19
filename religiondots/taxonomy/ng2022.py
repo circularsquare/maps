@@ -4,7 +4,10 @@ Seven categories, at state. Three of them are the Afrobarometer's own answer box
 `Christian` and `Muslim` are that card's umbrella answers with their denominational children
 folded back in; `Catholic` and `Anglican` (since 2026-10-03) are carved back out of `Christian`,
 Catholics from the three rounds whose Catholic share matches the NDHS, Anglicans levelled by the
-Global Flourishing Study. `sources/ng.py`'s
+Global Flourishing Study. Since 2026-10-16 the rest of `Christian` is split three ways by
+geopolitical zone from the Global Flourishing Study (`sources/wa_christian.py`, which writes
+`ng_split.csv`; countries/ng.py swaps it in), leaving only GFS's `none in particular` on the bare
+node. `sources/ng.py`'s
 docstring has the argument and `sources/ng.md` §5 the record.
 
 **THE INTERESTING MAPPING QUESTIONS ARE BOTH ONES THIS SOURCE CANNOT ANSWER**, and Nigeria is
@@ -24,10 +27,33 @@ REVIEW holds calls that are defensible but arguable, with the reason.
 EXCLUDED = {}
 
 REVIEW = {
+    "Pentecostal":
+        "-> christianity.pentecostal, since 2026-10-16 (Anita's call; sources/wa_christian.py). "
+        "47.6M, 22.0% of Nigeria, 59.3% of the old `Christian` cell. Each state's non-Catholic, "
+        "non-Anglican Christians times its geopolitical zone's Pentecostal share in the Global "
+        "Flourishing Study 2023 (REL3 code 8): South East 70.8%, South South 66.2%, South West "
+        "68.9%, North Central 50.3%, North West 31.8%, North East 12.1%. The state-level test "
+        "failed (+0.20) and the zone-level one passes: the Afrobarometer's named answers rank "
+        "the six zones alike (+0.829, exact p 0.029), asserted on every build.",
+    "Protestant (Baptist, Methodist, Presbyterian, ECWA, COCIN and others)":
+        "-> christianity.protestant, the answer-node Ghana, Mali, Burkina Faso and Chad draw "
+        "their Protestants on. 26.9M, 33.5% of the old cell. GFS codes 2 (`Orthodox`, which in "
+        "Nigeria means the old mission churches; 87% of Plateau's Christians, i.e. COCIN), 4-7 "
+        "and 9 (`Independent/Evangelical`, ECWA in the Middle Belt). 86.0% of the North East's "
+        "bucket. Zone ranks agree with the Afrobarometer at +0.943 (p 0.008). Baptists stay "
+        "here rather than on their own node (Anita, 2026-10-16): on their own they rank the "
+        "zones alike only at p 0.051.",
+    "Other Christian (Witnesses, Adventists, Latter-day Saints, African Initiated)":
+        "-> christianity.other. 4.4M, 5.5% of the old cell: GFS codes 10-13 and 96. The "
+        "Aladura churches are mostly NOT here; GFS gives African Initiated only 0.7% of "
+        "Christians, so most of them evidently answered Pentecostal. Benin draws the Celestial "
+        "Church by name; that difference at the border is the surveys' and is not fixable.",
     "Christian":
-        "-> christianity, the bare branch: every Christian but Catholics and Anglicans (37.0% "
-        "of Nigeria as drawn), and still the largest single cell on this map drawn at a parent "
-        "node. **No Nigerian census since 1963 has asked about religion at all.** Inside it: "
+        "-> christianity, the bare branch. Since 2026-10-16 only the 1.7% of the old cell that "
+        "GFS respondents left as `none in particular` (code 97), 1.37M people; §2.7a. "
+        "WHAT FOLLOWS IS THE PRE-SPLIT RECORD: every Christian but Catholics and Anglicans "
+        "(37.0% of Nigeria as drawn), then the largest single cell on this map drawn at a "
+        "parent node. **No Nigerian census since 1963 has asked about religion at all.** Inside it: "
         "the Redeemed Christian Church of God and the rest of the Pentecostal sector, the "
         "Methodists and Baptists out of the 19th-century missions, the Aladura churches (Christ "
         "Apostolic, Cherubim and Seraphim, the Celestial Church of Christ), ECWA in the Middle "
@@ -100,6 +126,12 @@ REVIEW = {
 
 MAP = {
     "Christian": "christianity",
+    # 2026-10-16, sources/wa_christian.py: data/normalized/ng_split.csv replaces `Christian`.
+    "Pentecostal": "christianity.pentecostal",
+    "Protestant (Baptist, Methodist, Presbyterian, ECWA, COCIN and others)":
+        "christianity.protestant",
+    "Other Christian (Witnesses, Adventists, Latter-day Saints, African Initiated)":
+        "christianity.other",
     "Catholic": "christianity.catholic",
     "Anglican": "christianity.anglican",
     "Muslim": "islam",

@@ -1,0 +1,362 @@
+{
+ "batch": "henan-east",
+ "regions": [
+  {
+   "n": 2,
+   "key": "#e6ebb2",
+   "settled": null,
+   "summary": "Minquan county with part of Ningling and a bit of Cao county (Shandong).",
+   "candidates": [
+    {
+     "name": "Minquan",
+     "local": "民权县",
+     "origin": "county",
+     "meaning": "\"People's rights\", a 1914 county name taken from Sun Yat-sen's Principle of Democracy.",
+     "fit": "66% of the people, region holds 94% of the county.",
+     "recognisability": "Current county.",
+     "source_url": "https://zh.wikipedia.org/wiki/民权县_(商丘市)",
+     "source_note": "民权县 article in sources.md",
+     "rating": 4,
+     "status": "suggested"
+    },
+    {
+     "name": "Kaocheng",
+     "local": "考城",
+     "origin": "historical",
+     "meaning": "Old county town, seat for 1,592 years (Zi county, Han era to Qing 1777), northeast of Minquan.",
+     "fit": "Its seat lies in this region; territory is roughly today's Minquan north part.",
+     "recognisability": "Own zh-wiki article (考城縣), 133 hits with 河南, mostly about this place.",
+     "source_url": "https://zh.wikipedia.org/wiki/考城縣",
+     "source_note": "治所在今河南省民權縣東北",
+     "rating": 3,
+     "status": "suggested"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 3,
+   "key": "#e0e8a3",
+   "settled": null,
+   "summary": "Yucheng county, almost entire.",
+   "candidates": [
+    {
+     "name": "Yucheng",
+     "local": "虞城县",
+     "origin": "county",
+     "meaning": "\"Yu town\": Yu was the fief of Shun's son Shangjun, said to lie here; county since 596.",
+     "fit": "92% of the people, region holds 87% of the county.",
+     "recognisability": "Current county.",
+     "source_url": "https://zh.wikipedia.org/wiki/虞城县",
+     "source_note": "舜之子商均……封于虞地(今河南虞城)",
+     "rating": 5,
+     "status": "suggested"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 4,
+   "key": "#e5edac",
+   "settled": "xiayi",
+   "summary": "Already named on the map.",
+   "candidates": [],
+   "notes": ""
+  },
+  {
+   "n": 5,
+   "key": "#ebea9c",
+   "settled": null,
+   "summary": "Zhecheng county and the rural south of Suiyang district (Shangqiu).",
+   "candidates": [
+    {
+     "name": "Zhecheng",
+     "local": "柘城县",
+     "origin": "county",
+     "meaning": "\"Mulberry-wood town\" (zhe is the cudrania/silkworm thorn tree); county since 621, Zhe county before.",
+     "fit": "58% of the people, region holds 75% of the county.",
+     "recognisability": "Current county.",
+     "source_url": "https://zh.wikipedia.org/wiki/柘城县",
+     "source_note": "柘城县 (县, 621-1911) in sources.md",
+     "rating": 4,
+     "status": "suggested"
+    },
+    {
+     "name": "Suiyang",
+     "local": "睢阳区",
+     "origin": "county",
+     "meaning": "\"Sui River's north bank\"; the old name of Shangqiu's centre and its current district.",
+     "fit": "40% of the people but only rural parts of the district; the city core lies outside this region.",
+     "recognisability": "Current district.",
+     "source_url": "https://zh.wikipedia.org/wiki/睢阳区",
+     "source_note": "睢阳区 article in sources.md",
+     "status": "rejected"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 6,
+   "key": "#e7dfb2",
+   "settled": null,
+   "summary": "Fugou county plus the western half of Taikang and bits of Qi and Weishi.",
+   "candidates": [
+    {
+     "name": "Fugou",
+     "local": "扶沟县",
+     "origin": "county",
+     "meaning": "County named for the Fu watercourse (gou, ditch); a county for about 2,000 years since 202 BC.",
+     "fit": "43% of the people, region holds 86% of the county.",
+     "recognisability": "Current county.",
+     "source_url": "https://zh.wikipedia.org/wiki/扶沟县",
+     "source_note": "扶沟县 (县, 202 BC-1911)",
+     "rating": 4,
+     "status": "suggested"
+    }
+   ],
+   "notes": "Taikang is split between 6 and 7; I gave Taikang to 7, which holds the county seat."
+  },
+  {
+   "n": 7,
+   "key": "#f0e6a8",
+   "settled": null,
+   "summary": "Central Taikang, with Sui and Zhecheng edges.",
+   "candidates": [
+    {
+     "name": "Taikang",
+     "local": "太康县",
+     "origin": "county",
+     "meaning": "Named for Tai Kang, a Xia king said to have moved his capital here; county since 587 (Yangxia before).",
+     "fit": "57% of the people, region holds the county seat (half the county).",
+     "recognisability": "Current county.",
+     "source_url": "https://zh.wikipedia.org/wiki/太康县",
+     "source_note": "夏王太康迁都于此，故称阳夏",
+     "rating": 4,
+     "status": "suggested"
+    }
+   ],
+   "notes": "Yangxia, the old name, was checked and rejected: it is better known as the Wuhan (Hankou) battle name."
+  },
+  {
+   "n": 8,
+   "key": "#e7edbc",
+   "settled": "yong cheng",
+   "summary": "Already named on the map (Yongcheng).",
+   "candidates": [],
+   "notes": ""
+  },
+  {
+   "n": 9,
+   "key": "#e7e6ae",
+   "settled": null,
+   "summary": "Luyi county with the Anhui side (Qiaocheng district edge, Bozhou).",
+   "candidates": [
+    {
+     "name": "Luyi",
+     "local": "鹿邑县",
+     "origin": "county",
+     "meaning": "\"Deer town\"; county since 1271, earlier Ku, Guyang and Zhenyuan; traditional birthplace of Laozi.",
+     "fit": "54% of the people, region holds 63% of the county; Anhui part is the Bozhou side, which the map names Bozhou separately.",
+     "recognisability": "Current county.",
+     "source_url": "https://zh.wikipedia.org/wiki/鹿邑县",
+     "source_note": "鹿邑县 (县, 1271-1911), seats list in sources.md",
+     "rating": 4,
+     "status": "suggested"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 10,
+   "key": "#f4e1ac",
+   "settled": null,
+   "summary": "Huaiyang district and part of Luyi and Taikang; the old Chenzhou seat.",
+   "candidates": [
+    {
+     "name": "Huaiyang",
+     "local": "淮阳",
+     "origin": "county",
+     "meaning": "\"North of the Huai\": Han kingdom of Huaiyang (196 BC); the county was also called Chen, Wanqiu and Huaining.",
+     "fit": "61% of the people, region holds 63% of the county and the old Chen seat.",
+     "recognisability": "Current district; seat of Chen state, Chen prefecture and Chen commandery for over 2,000 years.",
+     "source_url": "https://zh.wikipedia.org/wiki/淮阳区",
+     "source_note": "旧称陈、宛丘、淮宁",
+     "rating": 5,
+     "status": "suggested"
+    },
+    {
+     "name": "Chen",
+     "local": "陈国",
+     "origin": "historical",
+     "meaning": "Zhou-era state of the Gui clan (descendants of Shun), capital Wanqiu at Huaiyang.",
+     "fit": "Capital is in this region; the state covered most of Zhoukou.",
+     "recognisability": "Own zh-wiki article; one-word pinyin collides with the surname Chen.",
+     "source_url": "https://zh.wikipedia.org/wiki/陈国",
+     "source_note": "陳建都宛丘（今河南淮陽城關一帶）",
+     "rating": 2,
+     "status": "suggested"
+    }
+   ],
+   "notes": "Chenzhou not offered: Chenzhou in Hunan is far better known. Wanqiu has only 26 hits and no article."
+  },
+  {
+   "n": 11,
+   "key": "#f1e0af",
+   "settled": null,
+   "summary": "Xihua county with parts of Shangshui and Zhaoling (Luohe).",
+   "candidates": [
+    {
+     "name": "Xihua",
+     "local": "西华县",
+     "origin": "county",
+     "meaning": "\"West Hua\"; the county dates from 202 BC, from the Han Xihua town on the Ying River.",
+     "fit": "64% of the people, region holds 97% of the county.",
+     "recognisability": "Current county.",
+     "source_url": "https://zh.wikipedia.org/wiki/西华县",
+     "source_note": "西华县 (县, 202 BC-1911)",
+     "rating": 4,
+     "status": "suggested"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 12,
+   "key": "#edd79b",
+   "settled": null,
+   "summary": "Dancheng county, almost entire.",
+   "candidates": [
+    {
+     "name": "Dancheng",
+     "local": "郸城县",
+     "origin": "county",
+     "meaning": "\"Dan town\"; county formed in 1965 from parts of Luyi, Huaiyang and others.",
+     "fit": "98% of the people, region holds 98% of the county.",
+     "recognisability": "Current county.",
+     "source_url": "https://zh.wikipedia.org/wiki/郸城县",
+     "source_note": "郸城县 article in sources.md",
+     "rating": 5,
+     "status": "suggested"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 13,
+   "key": "#eed092",
+   "settled": null,
+   "summary": "Zhoukou city centre: Chuanhui district and the Shangshui county seat.",
+   "candidates": [
+    {
+     "name": "Zhoukou",
+     "local": "周口",
+     "origin": "city",
+     "meaning": "\"Zhou family's landing\": a Zhou family opened the first ferry on the Sha River here (Zhoujiakou).",
+     "fit": "Holds the old centre (Chuanhui, 79% of the people); the prefecture is named after this city.",
+     "recognisability": "Prefecture-level city.",
+     "source_url": "https://zh.wikipedia.org/wiki/周口市",
+     "source_note": "“周家口”也因此得名",
+     "rating": 5,
+     "status": "suggested"
+    }
+   ],
+   "notes": "Zhoukou has about 0.5M urban people in Chuanhui alone, so the region fits the city-centre rule by being the old centre."
+  },
+  {
+   "n": 14,
+   "key": "#f4dc98",
+   "settled": null,
+   "summary": "Xiangcheng city (county level) and the eastern half of Huaiyang.",
+   "candidates": [
+    {
+     "name": "Xiangcheng",
+     "local": "项城市",
+     "origin": "county",
+     "meaning": "\"Xiang town\": from the ancient Xiang state, an old county town.",
+     "fit": "62% of the people, region holds 63% of the city.",
+     "recognisability": "Current county-level city.",
+     "source_url": "https://zh.wikipedia.org/wiki/项城市",
+     "source_note": "项城市 article in sources.md",
+     "rating": 4,
+     "status": "suggested"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 15,
+   "key": "#f4d398",
+   "settled": null,
+   "summary": "Shenqiu county, almost entire.",
+   "candidates": [
+    {
+     "name": "Shenqiu",
+     "local": "沈丘县",
+     "origin": "county",
+     "meaning": "\"Shen mound\": named for the ancient Shen state's hill, a county since the Sui dynasty.",
+     "fit": "92% of the people, region holds 97% of the county.",
+     "recognisability": "Current county.",
+     "source_url": "https://zh.wikipedia.org/wiki/沈丘县",
+     "source_note": "沈丘县 article in sources.md",
+     "rating": 5,
+     "status": "suggested"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 16,
+   "key": "#e4ea85@115.7,34.4",
+   "settled": null,
+   "summary": "Shangqiu city core: Liangyuan and Suiyang urban districts, holding the old Song and Guide centre.",
+   "candidates": [
+    {
+     "name": "Shangqiu",
+     "local": "商丘",
+     "origin": "city",
+     "meaning": "\"Hill of Shang\": Ahbo, fire officer of Tao Tang, lived at Shangqiu; site of the Shang people's roots.",
+     "fit": "Holds Shangqiu's old centre (Suiyang old city, Liangyuan); city rule names the central region after the city.",
+     "recognisability": "Prefecture-level city, national historic city, own zh-wiki article.",
+     "source_url": "https://zh.wikipedia.org/wiki/商丘市",
+     "source_note": "因陶唐氏（帝尧）封帝喾子契（阏伯）为火正于此，又地应商星，故曰“商丘”",
+     "rating": 5,
+     "status": "suggested"
+    }
+   ],
+   "notes": ""
+  },
+  {
+   "n": 17,
+   "key": "#f1eea6@115.3,34.4",
+   "settled": null,
+   "summary": "West of Shangqiu: Ningling county, western Liangyuan and Sui county, on the Yellow River old course plain.",
+   "candidates": [
+    {
+     "name": "Ningling",
+     "local": "宁陵县",
+     "origin": "county",
+     "meaning": "County since 122 BC; earlier Ning city of Song, then Xinling under Wei.",
+     "fit": "Largest unit (35% of people), holds 70% of the county; Liangyuan (30%) and Sui (24%) are the rest.",
+     "recognisability": "Current county, own zh-wiki article.",
+     "source_url": "https://zh.wikipedia.org/wiki/宁陵县",
+     "source_note": "公元前122年，西汉武帝置宁陵县",
+     "rating": 4,
+     "status": "suggested"
+    },
+    {
+     "name": "Xiangyi",
+     "local": "襄邑",
+     "origin": "historical",
+     "meaning": "Qin county at today's Sui county, later Gongzhou and Suizhou seat.",
+     "fit": "Seat of Sui county (24% of people) only; Ningling is bigger.",
+     "recognisability": "Only 28 zh-wiki hits with Shangqiu, mostly about Sui county.",
+     "source_url": "https://zh.wikipedia.org/wiki/睢县",
+     "source_note": "襄邑升为拱州；睢州治所在襄邑县（今河南省睢县）",
+     "rating": 2,
+     "status": "suggested"
+    }
+   ],
+   "notes": ""
+  }
+ ]
+}

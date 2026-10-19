@@ -44,6 +44,13 @@ def _pr_counts():
     return df[["unit", "node", "count", "congregations", "tier"]]
 
 
+def _pr_counts_split():
+    """`_pr_counts` with Pew 2014's Pentecostal share drawn inside the survey's `Protestante`
+    answer; latam_split.py, Anita 2026-10-16. The rows stay `modelled`. The larger write-in
+    other-Christian answer (bare `christianity`) is not touched: it is not clearly Protestant."""
+    return _latam_split("pr", _pr_counts())
+
+
 ENTRY = {
     "pr": dict(
         name="Puerto Rico",
@@ -63,12 +70,14 @@ ENTRY = {
             "Christian. "
             "Protestants and people with no religion did not differ reliably between regions in "
             "this sample, so each region's remainder is shared between them at the island-wide "
-            "ratio."),
+            "ratio. Half of the Protestants are drawn as Pentecostal, the share that Pew "
+            "Research Center's 2014 survey found in Pentecostal churches; the rest stay "
+            "unnamed."),
         how="survey, one round of 1,127 interviews in 2018",
         grain="regions, 530,000 people on average",
         gap="the 0.9% who did not answer",
         gap_share=0.0093,
-        counts=_pr_counts,
+        counts=_pr_counts_split,
         units=None,
         unit_key=None,
         place=HERE / "data" / "geo" / "pr" / "pr_hexes.gpkg",

@@ -54,6 +54,12 @@ def _ve_counts():
                    tier=("tier", "first")))
 
 
+def _ve_counts_split():
+    """`_ve_counts` with Pew 2014's Pentecostal share drawn inside LAPOP's two Protestant boxes;
+    latam_split.py, Anita 2026-10-16. The rows stay `modelled`."""
+    return _latam_split("ve", _ve_counts())
+
+
 ENTRY = {
     "ve": dict(
         name="Venezuela",
@@ -87,13 +93,15 @@ ENTRY = {
             "Catholic identification runs from 78.1% in 2010 to **67.5% in 2016/17**, and "
             "evangelicals from 6.1% to 13.0%, so this map is more Catholic than the last round "
             "found. The population is the 2011 count, taken before the emigration of the late "
-            "2010s."),
+            "2010s. 39% of the Evangelical and Protestant answers are drawn as Pentecostal, "
+            "the share of Protestants that Pew Research Center's 2014 survey found in "
+            "Pentecostal churches; the rest stay unnamed."),
         how="survey, four rounds 2010 to 2016/17 pooled",
         grain="states, 1.3 million people on average",
         gap=("Amazonas, Delta Amacuro, Nueva Esparta and the Dependencias Federales, 805,770 "
              "people, 2.96% of the country in the 2011 census, which the survey never sampled"),
         gap_share=0.0296,
-        counts=_ve_counts,
+        counts=_ve_counts_split,
         units=None,
         unit_key=None,
         place=HERE / "data" / "geo" / "ve" / "ve_hexes.gpkg",

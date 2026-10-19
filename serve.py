@@ -196,6 +196,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
 class Server(http.server.ThreadingHTTPServer):
     daemon_threads = True
+    # Windows refuses (not delays) connections past a full backlog; the default 5 lost 60% of
+    # a 200-connection burst, as when a game opens many packs and tiles at once (trainworld T-490).
+    request_queue_size = 128
 
     def handle_error(self, request, client_address):
         # The browser drops tile requests it no longer needs whenever the map moves;

@@ -1,0 +1,14 @@
+batch shanxi-south
+1: pick Xiangyuan
+2: pick Huozhou
+3: pick Huguan
+4: pick Linfen
+5: pick Changzhi
+6: pick Hejin
+7: pick Taosi
+8: pick Gaoping
+9: pick Yicheng
+10: pick Jincheng
+11: pick Zhongtiao
+12: pick Puzhou
+13: pick Yuncheng

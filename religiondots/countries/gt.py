@@ -83,6 +83,12 @@ def _gt_counts():
     return df[["unit", "node", "count", "congregations", "tier"]]
 
 
+def _gt_counts_split():
+    """`_gt_counts` with Pew 2014's Pentecostal share drawn inside LAPOP's two Protestant boxes;
+    latam_split.py, Anita 2026-10-16. The rows stay `modelled`."""
+    return _latam_split("gt", _gt_counts())
+
+
 ENTRY = {
     "gt": dict(
         name="Guatemala",
@@ -131,10 +137,13 @@ ENTRY = {
             "points on its Catholic share; every other department has at least 129 and the "
             "median has 279. And because the rounds are pooled, the level is an average over "
             "fourteen years in which Guatemalan Catholicism fell from 55% to 50%, so this "
-            "map is a couple of points more Catholic than the 2023 round alone would draw."),
+            "map is a couple of points more Catholic than the 2023 round alone would draw. "
+            "57% of the Evangelical and Protestant answers are drawn as Pentecostal, the "
+            "share of Protestants that Pew Research Center's 2014 survey found in Pentecostal "
+            "churches; the rest stay unnamed."),
         how="survey, six rounds 2010 to 2023 pooled",
         grain="departments, 810,000 people on average",
-        counts=_gt_counts,
+        counts=_gt_counts_split,
         units=None,
         unit_key=None,
         place=HERE / "data" / "geo" / "gt" / "gt_hexes.gpkg",

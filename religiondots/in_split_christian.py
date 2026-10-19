@@ -79,6 +79,19 @@ So Kerala draws ONE named share per district: Syro-Malabar + Syro-Malankara + La
 parent. Known cost, spec §3.10's: the share is uniform inside a district, and the district cells in
 Malabar rest on few sampled localities (point 1), which the six-group check cannot see inside.
 
+KERALA'S OTHER CHURCHES, DRAWN SINCE 2026-10-16 (point 3 reversed)
+------------------------------------------------------------------
+Anita's call under spec §2.7b: a Kerala two-fifths grey beside churches drawn everywhere else is worse
+than a split that can be checked. The Christians the Catholic share leaves are divided by Table 6's
+non-Catholic cells: Jacobite and Orthodox together (`christianity.oriental`; one church in two factions,
+and KMS's coders swap them, sources/in.md §14), Mar Thoma (`christianity.oriental.marthoma`), CSI
+(`christianity.united`) and Pentecost/Church of God/Brethren (`christianity.pentecostal`; the Brethren are
+not Pentecostal and are inside it). Dalit Christian and Others stay on `Christian`. South of Malabar each
+district keeps its own row, so the shares of all Christians are Table 6's as printed; Malabar's six
+districts take one mix pooled on census weights (MALABAR). The Catholic rows are computed exactly as
+before and held to the file on disk. What can contradict it: KMS 2023's state shares, printed beside the
+drawn totals by kerala_churches(), and the OSM witness by district, sources/in_osm_churches.py.
+
 MIZORAM: THE STATE'S CHURCH ROLLS, ONE SHARE FOR THE WHOLE STATE
 -----------------------------------------------------------------
 Source: Directorate of Economics and Statistics, Government of Mizoram, Mizoram Statistical Database,
@@ -264,6 +277,25 @@ KERALA = {
 KERALA_STATE = "32"
 KERALA_LABEL = "Christian: Catholic, three rites (KMS 2008-2014)"
 
+# The non-Catholic churches, drawn since 2026-10-16 (Anita's call, spec §2.7b; docstring, KERALA'S OTHER
+# CHURCHES). Table 6 columns -> the label they are written under. Jacobite and Orthodox are one label: two
+# factions of one church, which KMS's coders swap (sources/in.md §14). Dalit Christian (a caste) and Others
+# stay on `Christian`.
+KERALA_CHURCHES = {
+    "Christian: Jacobite and Orthodox (KMS 2008-2014)": ["Jacobite", "Orthodox"],
+    "Christian: Mar Thoma (KMS 2008-2014)": ["Mar Thoma"],
+    "Christian: CSI (KMS 2008-2014)": ["CSI"],
+    "Christian: Pentecost, Church of God, Brethren (KMS 2008-2014)": ["Pentecost"],
+}
+# Malabar takes ONE non-Catholic mix, pooled over its six districts on census weights, instead of each
+# district's own row: its Christians are few, mostly twentieth-century settlers from Travancore, and the
+# OSM witness fails worst there (sources/in.md §14). Chosen after seeing that witness, which is post hoc.
+MALABAR = ["Palakkad", "Malappuram", "Kozhikode", "Wayanad", "Kannur", "Kasaragod"]
+# KMS 2023 (S. Irudaya Rajan and others, IIMAD, draft report, Table 2.10, p. 26), % of Kerala's whole
+# population; Christians 16.9. The second year the state totals are checked against, printed every run.
+KMS_2023_POP = {"Jacobite": 1.3, "Orthodox": 1.3, "Mar Thoma": 0.9, "CSI": 0.6, "Pentecost": 0.9}
+KMS_2023_CHRISTIANS = 16.9
+
 # The witness. catholic-hierarchy's name for each Kerala-seated jurisdiction -> the district of its see
 # city. Territories cross district lines; that is why the comparison is by group, below.
 SEAT = {
@@ -430,8 +462,9 @@ NOTE_KERALA = ("level=leaf; derivation=survey_share; structure=zachariah_2016_wp
                "+ Syro-Malankara + Latin); structure_geo=district:{district}; share={share:.1f}%; "
                "parent_column=Christian")
 NOTE_KERALA_REST = ("level=leaf; cat=Christian; derivation=exact_single_child; church not drawn "
-                    "(Jacobite, Orthodox, Mar Thoma, CSI, Dalit Christian, Pentecost, Others: unchecked; "
-                    "WP468 Table 6, {district}); parent_column=Christian")
+                    "(Dalit Christian, a caste, and Others; WP468 Table 6, {district}); parent_column=Christian")
+NOTE_KERALA_CHURCH = ("level=leaf; derivation=survey_share; structure=zachariah_2016_wp468_table6 ({cols}); "
+                      "structure_geo={geo}; share_of_non_catholic={share:.1f}%; parent_column=Christian")
 NOTE_MIZO = ("level=leaf; derivation=roll_share; structure=mizoram_des_church_members_2010_11; "
              "structure_geo=state; share={share:.2f}%; parent_column=Christian")
 NOTE_MIZO_REST = ("level=leaf; cat=Christian; derivation=exact_single_child; Isua Krista Kohhran, family "
@@ -744,8 +777,47 @@ def check_kerala(t5, census_d):
         print("  !! all three rites now pass the bar; reconsider drawing them (docstring, point 2)")
     print(f"  OK Catholics as a whole pass (spread {spread['Catholic']:.1f} <= {CATHOLIC_SPREAD_BAR}); "
           f"the rites do not, and are not drawn")
-    print("  3. Jacobite, Orthodox, Mar Thoma, CSI, Pentecost: no independent figure; not drawn")
+    print("  3. Jacobite, Orthodox, Mar Thoma, CSI, Pentecost: no independent figure by district; drawn since "
+          "2026-10-16 on Anita's call (spec §2.7b), checked against KMS 2023's state totals below")
     return {n: sum(TABLE6[n][:3]) for n in names}
+
+
+def kerala_churches(census_d, catholic):
+    """Each district's non-Catholic mix: label -> fraction of the Christians left after the Catholic share.
+
+    South of Malabar a district's own Table 6 row, which leaves Table 6's shares of all Christians exactly as
+    printed. Malabar's six districts take one mix pooled on census weights. Prints the state totals this
+    draws against KMS 2011's own Kerala row (sample-weighted) and against KMS 2023, the second year.
+    """
+    names = [n for n in TABLE6 if n != "KERALA"]
+    col = {d: j for j, d in enumerate(DENOMS)}
+
+    def cells(n, cols):
+        return sum(TABLE6[n][col[c]] for c in cols)
+
+    pooled_rest = sum(census_d[n] * (100 - catholic[n]) for n in MALABAR)
+    pooled = {lab: sum(census_d[n] * cells(n, cols) for n in MALABAR) / pooled_rest
+              for lab, cols in KERALA_CHURCHES.items()}
+    mix = {}
+    for n in names:
+        if n in MALABAR:
+            mix[n] = dict(pooled)
+        else:
+            mix[n] = {lab: cells(n, cols) / (100 - catholic[n]) for lab, cols in KERALA_CHURCHES.items()}
+        if sum(mix[n].values()) > 1 + 1e-9:
+            raise SystemExit(f"Kerala {n}: the non-Catholic churches take more than the non-Catholic remainder")
+
+    total_c = sum(census_d.values())
+    print("\n  Kerala's other churches: Malabar's pooled mix, % of the non-Catholic remainder: "
+          + ", ".join(f"{lab.split(': ')[1].split(' (')[0]} {100 * v:.1f}" for lab, v in pooled.items()))
+    print("  State totals, % of Kerala's Christians: drawn (census weights) | KMS 2011 Kerala row | KMS 2023")
+    for lab, cols in KERALA_CHURCHES.items():
+        drawn = sum(census_d[n] * (100 - catholic[n]) / 100 * mix[n][lab] for n in names)
+        k11 = sum(TABLE6["KERALA"][col[c]] for c in cols)
+        k23 = 100 * sum(KMS_2023_POP[c] for c in cols) / KMS_2023_CHRISTIANS
+        short = lab.split(": ")[1].split(" (")[0]
+        print(f"    {short:<38}{drawn:>11,.0f}  {100 * drawn / total_c:5.1f}%  |  {k11:5.1f}%  |  {k23:5.1f}%")
+    return mix
 
 
 def check_mizoram(series, census_christians):
@@ -919,7 +991,10 @@ def _largest_remainder(shares, total):
 
 
 def _kept(frame):
-    k = frame[frame["geo_id"].str[:2].isin([KERALA_STATE, MIZORAM_STATE])]
+    # Mizoram's rows and Kerala's Catholic rows are held to the file on disk. Kerala's remainder is not,
+    # since 2026-10-16: it is now divided among its other churches.
+    st = frame["geo_id"].str[:2]
+    k = frame[(st == MIZORAM_STATE) | ((st == KERALA_STATE) & (frame["source_category"] == KERALA_LABEL))]
     return (k[["geo_id", "source_category", "count", "tier", "note"]]
             .sort_values(["geo_id", "source_category"]).reset_index(drop=True))
 
@@ -944,6 +1019,7 @@ def build():
         raise SystemExit("Kerala's districts do not sum to its state Christians")
 
     catholic = check_kerala(t5, census_d)
+    mix = kerala_churches(census_d, catholic)
     print()
     mizo_christians = int(state.loc[MIZORAM_STATE, "count"])
     shares = check_mizoram(read_mizoram(), mizo_christians)
@@ -981,10 +1057,21 @@ def build():
             if cath:
                 rows.append(dict(base, source_category=KERALA_LABEL, count=cath, tier="derived",
                                  note=NOTE_KERALA.format(district=district, share=share)))
+            add(KERALA_LABEL, cath)
+            # the Catholic split above is exactly as before; only what it leaves is divided further
+            m = mix[district]
+            parts = _largest_remainder(list(m.values()) + [1 - sum(m.values())], rest)
+            geo = "pooled:Malabar" if district in MALABAR else f"district:{district}"
+            for (label, f), p in zip(m.items(), parts):
+                add(label, p)
+                if p:
+                    rows.append(dict(base, source_category=label, count=p, tier="derived",
+                                     note=NOTE_KERALA_CHURCH.format(cols=" + ".join(KERALA_CHURCHES[label]),
+                                                                    geo=geo, share=100 * f)))
+            rest = parts[-1]
             if rest:
                 rows.append(dict(base, source_category=REMAINDER, count=rest, tier="measured",
                                  note=NOTE_KERALA_REST.format(district=district)))
-            add(KERALA_LABEL, cath)
             add("Kerala remainder", rest)
         elif st == MIZORAM_STATE:
             parts = _largest_remainder([shares[k] for k in keys], n)
@@ -1046,8 +1133,8 @@ def build():
           f"{total:,} in all")
     if os.path.exists(OUT):
         if not _kept(pd.read_csv(OUT, dtype={"geo_id": str}, low_memory=False)).equals(_kept(out)):
-            raise SystemExit("Kerala's or Mizoram's rows differ from the file on disk; they stay as built")
-        print("  OK Kerala's and Mizoram's rows are identical to the file on disk")
+            raise SystemExit("Kerala's Catholic or Mizoram's rows differ from the file on disk; they stay as built")
+        print("  OK Kerala's Catholic rows and Mizoram's rows are identical to the file on disk")
 
     print("\n  Kerala, by district: census Christians, Catholic share, Catholics drawn")
     kc = out[out["source_category"] == KERALA_LABEL].assign(d=lambda x: x["geo_id"].str[:5])

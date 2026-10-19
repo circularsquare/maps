@@ -87,6 +87,12 @@ def _pa_counts():
     return df[["unit", "node", "count", "congregations", "tier"]]
 
 
+def _pa_counts_split():
+    """`_pa_counts` with Pew 2014's Pentecostal and Baptist shares drawn inside LAPOP's two
+    Protestant boxes; latam_split.py, Anita 2026-10-16. The rows stay `modelled`."""
+    return _latam_split("pa", _pa_counts())
+
+
 ENTRY = {
     "pa": dict(
         name="Panama",
@@ -144,13 +150,15 @@ ENTRY = {
             "map sits closer to INEC's 2022 reading than the last round alone would. Two "
             "answers exist in only part of the pool: `Otro` was not on the card before 2023, "
             "and Jehovah's Witnesses and Latter-day Saints were taken off it for 2023, so "
-            "both of those are floors."),
+            "both of those are floors. 58% of the Evangelical and Protestant answers are "
+            "drawn as Pentecostal and 12% as Baptist, the shares of Protestants that Pew "
+            "Research Center's 2014 survey found in those churches; the rest stay unnamed."),
         how="survey, four rounds 2010 to 2023 pooled",
         grain="provinces and one comarca, 402,000 people on average",
         gap=("Comarca Guna Yala and Comarca Emberá-Wounaan, 44,374 people, 1.09% of Panama, "
              "which the survey has no code for in any round"),
         gap_share=0.0109,
-        counts=_pa_counts,
+        counts=_pa_counts_split,
         units=None,
         unit_key=None,
         place=HERE / "data" / "geo" / "pa" / "pa_hexes.gpkg",

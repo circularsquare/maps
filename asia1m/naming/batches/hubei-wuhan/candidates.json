@@ -1,0 +1,423 @@
+{
+  "batch": "hubei-wuhan",
+  "regions": [
+    {
+      "n": 1,
+      "key": "#edc3b7@114.6,30.8",
+      "settled": null,
+      "summary": "Northeast Wuhan across the Yangtze: Xinzhou district (66%) and the Qianchuan part of Huangpi (31%).",
+      "candidates": [
+        {
+          "name": "Xinzhou",
+          "local": "新洲区",
+          "origin": "county",
+          "meaning": "\"New islet\": a county formed in 1951 (Xinzhou county), made a Wuhan district in 1998.",
+          "fit": "66% of the region's people, and the district's seat Zhucheng and Yangluo are inside.",
+          "recognisability": "Current district, always known.",
+          "source_url": "https://zh.wikipedia.org/wiki/新洲区",
+          "source_note": "1951年6月建立新洲县，1998年撤县设区",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Huangpi",
+          "local": "黄陂区",
+          "origin": "county",
+          "meaning": "Old county name (Huangpi, 579 onward); the district seat Qianchuan is in this region.",
+          "fit": "Holds 30% of the district's people and its seat; the rest of Huangpi is split over region 2 and others.",
+          "recognisability": "Current district; CHGIS puts the Huangpi county seat (579-1911) here.",
+          "source_url": "https://zh.wikipedia.org/wiki/黄陂区",
+          "source_note": "区人民政府驻前川街道",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Huangpi is also the main county of region 2's Panlongcheng area, so Huangpi here is workable only if region 2 does not use it."
+    },
+    {
+      "n": 2,
+      "key": "#f1b9b9",
+      "settled": null,
+      "summary": "Northwest edge of Wuhan on the Han River side: Hanchuan city (45%), Panlongcheng and Tianhe airport area of Huangpi, and Dongxihu's north.",
+      "candidates": [
+        {
+          "name": "Hanchuan",
+          "local": "汉川市",
+          "origin": "county",
+          "meaning": "\"Han river plain\": named in 977 because the Han River runs across the county.",
+          "fit": "45% of the region's people and the county seat (Xiannvshan) is inside, though it holds only 27% of the county.",
+          "recognisability": "County-level city of about 0.9M.",
+          "source_url": "https://zh.wikipedia.org/wiki/汉川市",
+          "source_note": "977年，因汉水横贯县境，改名汉川县",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Panlongcheng",
+          "local": "盘龙城",
+          "origin": "historical",
+          "meaning": "\"Coiled dragon city\": the Shang dynasty walled city (about 1500 BC) beside the Fu River, the earliest known city in the Wuhan area.",
+          "fit": "The site and its development zone (14% of the region) are inside; the name suits a region mixing Huangpi, Dongxihu and Hanchuan.",
+          "recognisability": "Own zh-wiki article, 251 hits with 湖北, top ones about this place.",
+          "source_url": "https://zh.wikipedia.org/wiki/盘龙城遗址",
+          "source_note": "武汉市东北郊黄陂区境内的盘龙湖畔，南隔府河与汉口相望",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Both are good; Panlongcheng avoids the region reading as only a Hanchuan region when Hanchuan covers just 27% of its county."
+    },
+    {
+      "n": 3,
+      "key": "#f99090",
+      "settled": null,
+      "summary": "East Hankou: Jiang'an district (79%) with the old concessions, and the east side of Jianghan.",
+      "candidates": [
+        {
+          "name": "Hankou",
+          "local": "汉口",
+          "origin": "historical",
+          "meaning": "\"Mouth of the Han\": the town at the Han River's junction with the Yangtze, one of the three towns of Wuhan.",
+          "fit": "Jiang'an held the foreign concessions and the river front of Hankou; the other Hankou districts fall mostly in region 6 and region 4.",
+          "recognisability": "One of the three towns, a treaty port and a former separate city.",
+          "source_url": "https://zh.wikipedia.org/wiki/武汉市",
+          "source_note": "武昌、汉口、汉阳三块区域隔江鼎立",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Jiang'an",
+          "local": "江岸区",
+          "origin": "county",
+          "meaning": "\"River bank\": named for the Yangtze north bank at the Jiang'an railway station and quay.",
+          "fit": "79% of the region's people; the region holds 77% of the district.",
+          "recognisability": "Current district.",
+          "source_url": "https://zh.wikipedia.org/wiki/江岸区",
+          "source_note": "名称中的“江岸”便是指长江北岸",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "If Anita prefers Hankou for region 6 (Jianghan core), then this region takes Jiang'an."
+    },
+    {
+      "n": 4,
+      "key": "#eea3a3",
+      "settled": null,
+      "summary": "West Hankou: Dongxihu district (52%) and Qiaokou (35%).",
+      "candidates": [
+        {
+          "name": "Dongxihu",
+          "local": "东西湖区",
+          "origin": "county",
+          "meaning": "\"East-west lake\": the district formed in 1958 from reclaimed lake land west of Hankou.",
+          "fit": "52% of the people, 72% of the district.",
+          "recognisability": "Current district.",
+          "source_url": "https://zh.wikipedia.org/wiki/东西湖区",
+          "source_note": "1957年围垦，1958年10月设立武汉市东西湖区",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Qiaokou",
+          "local": "硚口区",
+          "origin": "county",
+          "meaning": "\"Bridge mouth\": from the stone bridge built in the 1600s where the Yudai canal met the Han River.",
+          "fit": "35% of the people; the region holds 47% of the district.",
+          "recognisability": "Current district; Hanzheng Street market is here.",
+          "source_url": "https://zh.wikipedia.org/wiki/硚口区",
+          "source_note": "在河与汉江相连处的河口，修建了一座石桥，因而此地被称之为“硚口”",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 5,
+      "key": "#f6a589",
+      "settled": null,
+      "summary": "Qingshan steel district (46%) and Hongshan's east lakeshore around Heping (41%), north of East Lake.",
+      "candidates": [
+        {
+          "name": "Qingshan",
+          "local": "青山区",
+          "origin": "county",
+          "meaning": "\"Green hill\": from the old Yangtze river town Qingshanji, named in the Song history and in Lu You's travel diary (1170).",
+          "fit": "46% of the people; the region holds 93% of Qingshan.",
+          "recognisability": "Current district, home of the Wuhan steel works.",
+          "source_url": "https://zh.wikipedia.org/wiki/青山区_(武汉市)",
+          "source_note": "“青山”之名，始见于《宋史·地理志》",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": "East Lake (Donghu) touches this region and region 9; it is given to region 9."
+    },
+    {
+      "n": 6,
+      "key": "#f06969",
+      "settled": null,
+      "summary": "The centre of Wuhan at the Han-Yangtze junction: Jianghan (42%), Qiaokou (30%), parts of Jiang'an and Hanyang.",
+      "candidates": [
+        {
+          "name": "Wuhan",
+          "local": "武汉",
+          "origin": "city",
+          "meaning": "Wu(chang) plus Han(kou, Hanyang): the three towns joined as one city in 1927.",
+          "fit": "The central region of the city, touching the Han mouth and holding pieces of Hankou and Hanyang; the old centre.",
+          "recognisability": "The city itself, over 10M.",
+          "source_url": "https://zh.wikipedia.org/wiki/武汉市",
+          "source_note": "1927年，国民政府将武昌、汉阳、汉口合并为武汉市",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Jianghan",
+          "local": "江汉区",
+          "origin": "county",
+          "meaning": "\"Yangtze and Han\": the district between the two rivers at their junction; also the name of the wider plain.",
+          "fit": "42% of the people; the region holds 74% of the district.",
+          "recognisability": "Current district; Jianghan Road is the main shopping street.",
+          "source_url": "https://zh.wikipedia.org/wiki/江汉区",
+          "source_note": "区境南临长江、汉江交汇处",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Region 7 (Wuchang) is the other candidate for the plain city name; region 6 sits nearest the three towns' meeting point, so I gave it Wuhan."
+    },
+    {
+      "n": 7,
+      "key": "#e7744d",
+      "settled": null,
+      "summary": "Wuchang district (94%), the old walled city south of the Yangtze with Yellow Crane Tower.",
+      "candidates": [
+        {
+          "name": "Wuchang",
+          "local": "武昌",
+          "origin": "historical",
+          "meaning": "\"Martial prosperity\": a Wu kingdom name (3rd century), later the seat of Wuchang prefecture and Hubei government; site of the 1911 uprising.",
+          "fit": "94% of the people and 81% of the district; the prefecture seat and Jiangxia commandery seat lay here.",
+          "recognisability": "One of the three towns; the uprising of 1911.",
+          "source_url": "https://zh.wikipedia.org/wiki/武昌区",
+          "source_note": "武昌府 (1364-1911) seated at 今湖北武汉市武昌",
+          "rating": 5,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 8,
+      "key": "#ea9696",
+      "settled": null,
+      "summary": "Hanyang district (89%), south of the Han River, plus the Zhuankou edge of Caidian.",
+      "candidates": [
+        {
+          "name": "Hanyang",
+          "local": "汉阳",
+          "origin": "historical",
+          "meaning": "\"North of the Han\" by yin-yang naming, though the Han shifted in the 1400s and the town now lies south of it.",
+          "fit": "89% of the people; Hanyang prefecture and county seat (621-1911) lay here.",
+          "recognisability": "One of the three towns; famed for the Hanyang arsenal rifle and the Guqintai story.",
+          "source_url": "https://zh.wikipedia.org/wiki/汉阳区",
+          "source_note": "汉阳府 (1277-1911) seated at 今湖北省武汉市汉阳",
+          "rating": 5,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 9,
+      "key": "#eea37a",
+      "settled": null,
+      "summary": "East of Wuchang: Hongshan district's Guanshan, Luonan and Guanggu side (94%), including half of the East Lake scenic area.",
+      "candidates": [
+        {
+          "name": "East Lake",
+          "local": "东湖",
+          "origin": "lake",
+          "meaning": "Donghu, the large lake inside Wuchang, once China's largest city lake.",
+          "fit": "The scenic area street is 12% of the region and the East Lake high-tech zone lies here; the lake itself sits on the border with regions 5 and 7, so the fit is moderate.",
+          "recognisability": "1285 zh-wiki hits with 湖北 (many are East Lake institutions); the plain 东湖 title is a disambiguation page, the Wuhan lake article title was not confirmed.",
+          "source_url": "https://zh.wikipedia.org/wiki/武汉市",
+          "source_note": "武昌的东湖曾为中国第一大城中湖，随着武汉市区面积不断扩大，汤逊湖现已取代东湖",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Hongshan",
+          "local": "洪山区",
+          "origin": "county",
+          "meaning": "Named for Hong Hill (Hongshan), renamed from East Hill in the 1230s when the Dahong mountain temple moved there.",
+          "fit": "94% of the people, but the hill and Hongshan street are mostly in region 11.",
+          "recognisability": "Current district.",
+          "source_url": "https://zh.wikipedia.org/wiki/洪山区",
+          "source_note": "洪山古名东山，南宋端平年间改东山为洪山",
+          "status": "rejected"
+        }
+      ],
+      "notes": "Hongshan is used for region 11 where the hill itself is."
+    },
+    {
+      "n": 10,
+      "key": "#ebb2a4",
+      "settled": null,
+      "summary": "Ezhou (Echeng and Huarong, 57%) and Huangzhou across the Yangtze (42%).",
+      "candidates": [
+        {
+          "name": "Ezhou",
+          "local": "鄂州",
+          "origin": "city",
+          "meaning": "From E, the old state and the short name of Hubei; Wu built the city here in the 3rd century and called it Wuchang.",
+          "fit": "Holds the city seat Echeng and Huarong, 59% of the people by prefecture.",
+          "recognisability": "Prefecture-level city of 1.08M; origin of the Hubei abbreviation E.",
+          "source_url": "https://zh.wikipedia.org/wiki/鄂州市",
+          "source_note": "湖北简称鄂由此得名",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Huangzhou",
+          "local": "黄州",
+          "origin": "prefecture",
+          "meaning": "Yellow prefecture: seat of Huanggang prefecture since 583; the place of Su Dongpo's exile and Red Cliff poems.",
+          "fit": "Holds 93% of Huangzhou district, 42% of the region's people; the prefecture seat was here.",
+          "recognisability": "Current district of Huanggang city; Su Shi's Huangzhou.",
+          "source_url": "https://zh.wikipedia.org/wiki/黄州区",
+          "source_note": "黄州府 (1364-1911) seated at 今湖北黄州市",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": "The region straddles the Yangtze; Ezhou covers both Ezhou districts, Huangzhou the north bank. Check against the east Hubei agent for a Huanggang name."
+    },
+    {
+      "n": 11,
+      "key": "#f39381",
+      "settled": null,
+      "summary": "Southwest Hongshan: Shizishan, Hongshan street, Zhangjiawan, with Baishazhou and Nanhu edges (88% Hongshan).",
+      "candidates": [
+        {
+          "name": "Hongshan",
+          "local": "洪山",
+          "origin": "county",
+          "meaning": "Hong Hill: named in the 1230s when the Dahong mountain temple was moved to East Hill.",
+          "fit": "Hongshan street and Baotong Temple lie here; the region holds 17% of the district.",
+          "recognisability": "Current district.",
+          "source_url": "https://zh.wikipedia.org/wiki/洪山区",
+          "source_note": "改东山为洪山，改弥陀寺为崇宁万寿禅寺",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Only 0.35M people; Hongshan name used here and not for region 9."
+    },
+    {
+      "n": 12,
+      "key": "#edb7ba",
+      "settled": null,
+      "summary": "West of Wuhan on the Han and Yangtze: Caidian (72%), Hannan (10%), and Hanchuan's southeast (15%).",
+      "candidates": [
+        {
+          "name": "Caidian",
+          "local": "蔡甸区",
+          "origin": "county",
+          "meaning": "Cai-dian, a Hanyang county market town and later the seat of the district; the source gives no origin of the name.",
+          "fit": "72% of the people, 82% of the district.",
+          "recognisability": "Current district.",
+          "source_url": "https://zh.wikipedia.org/wiki/蔡甸区",
+          "source_note": "区人民政府驻知音湖大道",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": "The Caidian article gives no origin for the name."
+    },
+    {
+      "n": 13,
+      "key": "#e79e91",
+      "settled": null,
+      "summary": "Southeast of Wuhan's centre: Guanggu south and Miaoshan, Jiangxia (78%) and Hongshan's Guandong.",
+      "candidates": [
+        {
+          "name": "Tangxun",
+          "local": "汤逊湖",
+          "origin": "lake",
+          "meaning": "Tangxun Lake, now the largest lake inside a Chinese city (47.6 km2), replacing East Lake.",
+          "fit": "The lake lies south of Wuchang in Hongshan and Jiangxia, which is this region; part of it may reach region 14.",
+          "recognisability": "Own zh-wiki article, 39 hits with 湖北.",
+          "source_url": "https://zh.wikipedia.org/wiki/汤逊湖",
+          "source_note": "汤逊湖是中国最大的城中湖，面积约47.6平方千米",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Jiangxia is held for region 14 where the old county seat Zhifang lies."
+    },
+    {
+      "n": 14,
+      "key": "#eed3cd",
+      "summary": "South of Wuhan: Jiangxia (57%), Gedian in Ezhou (13%), Jiayu county (10%), Zhifang and Jinkou.",
+      "settled": null,
+      "candidates": [
+        {
+          "name": "Jiangxia",
+          "local": "江夏",
+          "origin": "county",
+          "meaning": "\"Yangtze summer\": Jiangxia commandery set up in 201 BC; the county seat moved to Wuchang in 589 and the name came back to this district in 1995.",
+          "fit": "57% of the people; the district seat Zhifang is here and the old Shayi county seat at Jinkou.",
+          "recognisability": "Current district, and Han commandery.",
+          "source_url": "https://zh.wikipedia.org/wiki/江夏区",
+          "source_note": "西汉高祖六年（前201年）设置江夏郡",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Shayi (沙羡) has no own article and only 16 hits, so I left it out."
+    },
+    {
+      "n": 15,
+      "key": "#e8ddbe",
+      "settled": null,
+      "summary": "Daye city (86%) and Liangzihu district around Taihe (13%).",
+      "candidates": [
+        {
+          "name": "Daye",
+          "local": "大冶",
+          "origin": "county",
+          "meaning": "\"Great smelting\": county created 967 from a mining and smelting station, meaning 'great furnaces'.",
+          "fit": "86% of the people; the region holds 88% of the city.",
+          "recognisability": "County-level city of about 0.9M; copper and iron mining centre.",
+          "source_url": "https://zh.wikipedia.org/wiki/大冶市",
+          "source_note": "取“大兴炉冶”之意",
+          "rating": 5,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 16,
+      "key": "#e5f1d0",
+      "summary": "Yangxin county (82%) in the southeast, with Xisaishan and Ruichang edges.",
+      "candidates": [
+        {
+          "name": "Yangxin",
+          "local": "阳新县",
+          "origin": "county",
+          "meaning": "\"Sunny new\": county name used for Xingguo prefecture's seat; the source gives no origin of the name.",
+          "fit": "82% of the people, 99% of the county.",
+          "recognisability": "County of 0.9M.",
+          "source_url": "https://zh.wikipedia.org/wiki/阳新县",
+          "source_note": "兴国州 (1376-1911) seated at 今湖北阳新县",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Xingguo (the old prefecture) is famous in Jiangxi, so it is not offered."
+    }
+  ]
+}

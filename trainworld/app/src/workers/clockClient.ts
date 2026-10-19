@@ -282,7 +282,7 @@ export class ClockClient {
     current = this;
     // The worker settles money from the clock (T-028, T-284): tell it each time the
     // clock is set, paused, resumed or sped up.
-    const sendClock = () => this.post({ kind: "clock", t: clock.now(), rate: clock.ticking ? SPEEDS[clock.speed.peek()] : 0, at: performance.timeOrigin + performance.now() });
+    const sendClock = () => this.post({ kind: "clock", t: clock.now(), rate: clock.ticking ? SPEEDS[clock.speed.peek()] : 0, at: performance.timeOrigin + performance.now(), game: this.game });
     clock.onChange(sendClock);
     sendClock();
     // Fare income from the riders (game/money.ts), whenever riders, fares or lines change.
@@ -325,6 +325,9 @@ export class ClockClient {
         this.post({ kind: "points", lines });
       }
     });
+    // T-715: a load clears the worker's income, shares and points; the next round sends them again
+    // even when they match the last game's
+    this.forgetSent = () => { lastIncome = lastShares = lastPoints = ""; };
     // T-685: a region's star, the first time its rail share on the average day (never the day
     // shown, so switching it earns nothing) reaches the mark in a final result
     effect(() => {
@@ -373,6 +376,9 @@ export class ClockClient {
   private worldBefore: WorldView | null = null;
   /** `?new=1`, `?synth=1` or `?demandTest=1`: no autosave until a copy is saved (T-320) */
   private testPage = false;
+  /** the worker's game the clock messages are for (`loaded`'s `game`, T-715) */
+  private game = 0;
+  private forgetSent = () => {};
 
   post(msg: ToClock, transfer: Transferable[] = []) {
     if (this.worker) this.worker.postMessage(msg, transfer);
@@ -427,6 +433,9 @@ export class ClockClient {
         selection.value = null;
         tool.value = "select";
         lineDraft.value = { line: null, stops: [] };
+        // T-715: the clock the hold above sent is the old game's, which the worker ignores
+        this.game = msg.game;
+        this.forgetSent();
         clock.set(msg.clock);
         if (msg.from === "file") say(`Game loaded, day ${Math.floor(msg.clock / 86400)}.`);
         if (msg.from === "new" && !msg.error) say("New game started.");
@@ -434,7 +443,10 @@ export class ClockClient {
       case "exported": {
         const a = document.createElement("a");
         a.href = URL.createObjectURL(new Blob([msg.bytes as BlobPart], { type: "application/octet-stream" }));
-        a.download = `anitabuilder-${this.cityId}-day-${msg.day}.save`;
+        const { slots, active } = saveSlotsState.value;
+        const named = (slots.find((s) => s.key === active)?.name ?? "").toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "")
+          .replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "").replace(/-+/g, "-").replace(/^-|-$/g, "");
+        a.download = `anitabuilder-${named || this.cityId}-day-${msg.day}.save`;
         a.click();
         setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
         break;

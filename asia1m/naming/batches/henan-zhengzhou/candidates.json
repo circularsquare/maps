@@ -1,0 +1,722 @@
+{
+  "batch": "henan-zhengzhou",
+  "regions": [
+    {
+      "n": 1,
+      "key": "#f0edab",
+      "settled": null,
+      "summary": "Lankao county on the old Yellow River plain (73%), plus the Shandong edge of Cao county (25%).",
+      "candidates": [
+        {
+          "name": "Lankao",
+          "local": "兰考县",
+          "origin": "county",
+          "meaning": "Merger name (1954) of Lanfeng (from Lanyang and Yifeng) and Kaocheng counties; known for its paulownia trees and as Jiao Yulu's county.",
+          "fit": "Region holds 98% of Lankao's people and Lankao is 73% of the region.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/兰考县",
+          "source_note": "今日兰考县就是由历史上的兰封县（由兰阳县、仪封县合并）、考城县合并而成",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Cao",
+          "local": "曹县",
+          "origin": "county",
+          "meaning": "Cao county in Shandong, named after the Cao state and Caozhou prefecture (reduced to a county in 1371).",
+          "fit": "Holds 25% of the region's people but only 17% of Cao county; most of Cao lies in a Shandong region.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/曹县",
+          "source_note": "明洪武四年（1371年），降曹州为曹县",
+          "status": "rejected"
+        }
+      ],
+      "notes": "The Shandong part of the region is Cao county, so check the Heze neighbour in the Shandong batch does not also take 'Cao'."
+    },
+    {
+      "n": 2,
+      "key": "#dcc66d",
+      "settled": null,
+      "summary": "North-west Zhengzhou on the Yellow River bank: Huiji district, Guxing, the Mang hills.",
+      "candidates": [
+        {
+          "name": "Huiji",
+          "local": "惠济区",
+          "origin": "county",
+          "meaning": "\"Benefit and relief\": named in 2004 after Huiji Bridge, a three-arch stone bridge on the Guangji canal (the district was Mangshan district before).",
+          "fit": "Huiji is 59% of the region's people, and the region holds 64% of the district.",
+          "recognisability": "Current district.",
+          "source_url": "https://zh.wikipedia.org/wiki/惠济区",
+          "source_note": "区名来源于位于区内的惠济桥",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Mangshan",
+          "local": "邙山",
+          "origin": "mountain",
+          "meaning": "The Mang loess ridge along the south bank of the Yellow River; the district was called Mangshan district until 2004.",
+          "fit": "The ridge lies in the north-west of the region (Guxing, the Yellow River scenic area), but the name is far more associated with Luoyang.",
+          "recognisability": "Own zh-wiki article; 465 hits with Zhengzhou, top ones about the Luoyang tombs.",
+          "source_url": "https://zh.wikipedia.org/wiki/邙山",
+          "source_note": "惠济区，原名邙山区；邙山丘陵位于区西北部",
+          "rating": 2,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Mangshan is likely to be wanted by the Luoyang (west) batch."
+    },
+    {
+      "n": 3,
+      "key": "#ebe059",
+      "settled": null,
+      "summary": "North-east Zhengzhou: Jinshui district's Zhengdong new area, Longzi lake, Huayuankou on the Yellow River.",
+      "candidates": [
+        {
+          "name": "Jinshui",
+          "local": "金水区",
+          "origin": "county",
+          "meaning": "\"Gold water\": the Jinshui River, a canal dug in the early Song to bring water to Kaifeng (west is the metal direction).",
+          "fit": "Jinshui is 92% of the region's people and the region holds 53% of the district.",
+          "recognisability": "Current district; the Henan provincial government sits in it.",
+          "source_url": "https://zh.wikipedia.org/wiki/金水区",
+          "source_note": "金水区的名称来源于金水河",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Huayuankou",
+          "local": "花园口",
+          "origin": "other",
+          "meaning": "A Yellow River village where the dike was deliberately breached in 1938, flooding three provinces.",
+          "fit": "The town holds only 3% of the region, on its northern edge.",
+          "recognisability": "Own zh-wiki article; 179 hits with Zhengzhou, mostly the 1938 breach and a Zhengzhou road.",
+          "source_url": "https://zh.wikipedia.org/wiki/花园口决堤",
+          "source_note": "花园口镇位于郑州市区东北角的黄河南岸",
+          "rating": 2,
+          "status": "suggested"
+        },
+        {
+          "name": "Zhengdong",
+          "local": "郑东",
+          "origin": "other",
+          "meaning": "\"East of Zhengzhou\": the Zhengdong New Area planned in 2002 over the east of Jinshui.",
+          "fit": "Most of the region is the new area, but the name reads as part of a whole.",
+          "recognisability": "New-area name, not an admin unit.",
+          "source_url": "https://zh.wikipedia.org/wiki/金水区",
+          "source_note": "2002年，郑东新区的规划启动，辖区东部……目前由郑东新区代管",
+          "status": "rejected"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 4,
+      "key": "#e4d55b",
+      "settled": null,
+      "summary": "Kaifeng city proper: Gulou, Longting, Shunhe, Yuwangtai, Jinming.",
+      "candidates": [
+        {
+          "name": "Kaifeng",
+          "local": "开封市",
+          "origin": "city",
+          "meaning": "\"Open the frontier\": from Qifeng, a town Duke Zhuang of Zheng built to push his borders; renamed under the Han to avoid Emperor Jing's name Qi.",
+          "fit": "Holds the old walled city and 25% of the prefecture's people; the prefecture's urban centre.",
+          "recognisability": "Prefecture city; capital of the Northern Song.",
+          "source_url": "https://zh.wikipedia.org/wiki/开封市",
+          "source_note": "取“启拓封疆”之义……以开代启而改名为开封",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Bianliang",
+          "local": "汴梁",
+          "origin": "historical",
+          "meaning": "Liang on the Bian River: the Song capital (Dongjing) as later called under the Yuan, when it was Bianliang circuit.",
+          "fit": "Seat of Bianliang circuit (1288-1367) was exactly this city.",
+          "recognisability": "Own zh-wiki article, 208 hits with Kaifeng, all about this place.",
+          "source_url": "https://zh.wikipedia.org/wiki/汴梁",
+          "source_note": "汴梁指北宋首都东京開封府治所，即「汴京」，现河南省开封市",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 5,
+      "key": "#e7da75",
+      "settled": null,
+      "summary": "Zhongmu county (74%) between Zhengzhou and Kaifeng, plus a slice of Guancheng.",
+      "candidates": [
+        {
+          "name": "Zhongmu",
+          "local": "中牟县",
+          "origin": "county",
+          "meaning": "Old place name (Mou in the middle); a county since the early Western Han, formerly called Putian and Mouzhou.",
+          "fit": "Zhongmu is 74% of the region; the region holds 59% of the county and its county seat.",
+          "recognisability": "Current county; site of the Battle of Guandu.",
+          "source_url": "https://zh.wikipedia.org/wiki/中牟县",
+          "source_note": "中牟县，古称“圃田”、“牟州”",
+          "rating": 5,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 6,
+      "key": "#eddf9a",
+      "settled": null,
+      "summary": "West of Zhengzhou on the Yellow River: Xingyang (58%), Gongyi (26%), Shangjie, Hulao pass.",
+      "candidates": [
+        {
+          "name": "Xingyang",
+          "local": "荥阳市",
+          "origin": "county",
+          "meaning": "Yang (north bank) of the Xing marsh, from the Yu Gong line \"the Xing banks are pooled\"; Han Xingyang commandery.",
+          "fit": "Xingyang is 58% of the region and the region holds 88% of its people; Xingyang commanderies (493-582) were seated in the old town here.",
+          "recognisability": "Current county-level city; origin of the Xingyang Zheng clan.",
+          "source_url": "https://zh.wikipedia.org/wiki/荥阳市",
+          "source_note": "荥阳之名取自《尚书·禹贡》中的“荥陂既潴”",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Hulao",
+          "local": "虎牢关",
+          "origin": "historical",
+          "meaning": "\"Tiger pen\": the pass on the Yellow River south bank guarding the road to Luoyang (also Si River pass, Chenggao pass).",
+          "fit": "Pass lies at Sishui in the far west of Xingyang, inside the region, but is a small part of its people.",
+          "recognisability": "Own zh-wiki article; 29 hits with Xingyang, top ones about this place.",
+          "source_url": "https://zh.wikipedia.org/wiki/虎牢关",
+          "source_note": "今河南省荥阳市市区西北部16公里的汜水镇境内",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Gongyi",
+          "local": "巩义市",
+          "origin": "county",
+          "meaning": "Gong county on the Luo River mouth, \"lock and key of the eastern capital\".",
+          "fit": "26% of the region but only 30% of Gongyi's people; the rest lies in the region to the west.",
+          "recognisability": "Current county-level city.",
+          "source_url": "https://zh.wikipedia.org/wiki/巩义市",
+          "source_note": "巩义因地扼古都洛阳，故历史上有“东都锁钥”之称",
+          "status": "rejected"
+        }
+      ],
+      "notes": "The west batch will probably name a Gongyi region; this one keeps Xingyang."
+    },
+    {
+      "n": 7,
+      "key": "#dac900",
+      "settled": null,
+      "summary": "The old centre of Zhengzhou: Jinshui south, Erqi Square, Zhengzhou railway station area.",
+      "candidates": [
+        {
+          "name": "Zhengzhou",
+          "local": "郑州",
+          "origin": "city",
+          "meaning": "From the Zheng state; the name moved from Xinzheng to this city in the Sui and Tang, replacing the older name Guancheng.",
+          "fit": "Most central region, holding the prefecture seat since 607 and the main station; 5.6M city.",
+          "recognisability": "Provincial capital.",
+          "source_url": "https://zh.wikipedia.org/wiki/郑州市",
+          "source_note": "郑州古称管城，隋开皇三年……将荥州更名为郑州",
+          "rating": 5,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 8,
+      "key": "#d9bb00",
+      "settled": null,
+      "summary": "West-central Zhengzhou: Zhongyuan district's government centre, cotton mills, universities, part of Erqi.",
+      "candidates": [
+        {
+          "name": "Zhongyuan",
+          "local": "中原区",
+          "origin": "county",
+          "meaning": "\"Central plain\": the district was named in 1961 after the commune; the term is the traditional name for the Yellow River heartland.",
+          "fit": "Zhongyuan is 60% of the region and the district government sits here; the region holds 40% of the district.",
+          "recognisability": "Current district; the word is the common name for the whole plain.",
+          "source_url": "https://zh.wikipedia.org/wiki/中原区_(郑州市)",
+          "source_note": "中原区始建于1948年……区人民政府驻桐柏路200号",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Zhongyuan also covers 66% of region 10; I gave 10 a river name instead. The other Henan batches may reach for 'Zhongyuan' as a plain name; it is better kept here."
+    },
+    {
+      "n": 9,
+      "key": "#d9cd3c",
+      "settled": null,
+      "summary": "Guancheng old town and the Shang city area, Zhengzhou's south-east.",
+      "candidates": [
+        {
+          "name": "Guancheng",
+          "local": "管城回族区",
+          "origin": "county",
+          "meaning": "\"Guan city\": after the Guan state of Guan Shu, King Wu's brother; Guancheng county and Guanzhou from 596.",
+          "fit": "Guancheng Hui district is 74% of the region, the region holds 62% of the district, and the old walled town (Guancheng street) is here.",
+          "recognisability": "Current district; Zhengzhou's old name.",
+          "source_url": "https://zh.wikipedia.org/wiki/管城回族区",
+          "source_note": "周武王封其弟姬鲜于此为王，称为管国……隋开皇十六年设立管城县",
+          "rating": 5,
+          "status": "suggested"
+        }
+      ],
+      "notes": "CHGIS puts the Guancheng seat in region 8 only because of coordinate rounding; the old town is Guancheng district."
+    },
+    {
+      "n": 10,
+      "key": "#e5c854",
+      "settled": null,
+      "summary": "West Zhengzhou: Shifo, Xiliu Lake, Mazhai, Zhengzhou's high-tech zone, a bit of Xingyang.",
+      "candidates": [
+        {
+          "name": "Jialu",
+          "local": "贾鲁河",
+          "origin": "river",
+          "meaning": "Named after Jia Lu, the Yuan works minister who dredged it; rises in Xinmi, flows north-east through west Zhengzhou, then east.",
+          "fit": "The river runs down the west side of Zhengzhou through this region (also touching 2, 5 and 13).",
+          "recognisability": "Own zh-wiki article; 72 hits with Zhengzhou, top ones about this river's stations and metro lines.",
+          "source_url": "https://zh.wikipedia.org/wiki/贾鲁河",
+          "source_note": "发源于新密市境内，向东北流经郑州市区西部后折向东流",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Xushui",
+          "local": "须水",
+          "origin": "river",
+          "meaning": "The Xu River, joining the Suo to form the Suoxu River; Xushui county (621-626) was seated west of Zhengzhou.",
+          "fit": "Xushui street and the Xu River are in the middle of the region, but the name is minor.",
+          "recognisability": "No own article; 71 hits with Zhengzhou, mostly metro stations and a street.",
+          "source_url": "https://zh.wikipedia.org/wiki/须水街道",
+          "source_note": "须水县 (621-626) 今郑州市西须水镇 (CHGIS); 索须河因索河和须水两河汇流而得名",
+          "rating": 2,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Weakest region of the batch for names; Zhongyuan (66% of it) is used for region 8. Jialu might also be wanted by the Zhoukou region it ends in."
+    },
+    {
+      "n": 11,
+      "key": "#e7c65c",
+      "settled": null,
+      "summary": "South Zhengzhou: Erqi district south of the station, Guancheng south, Xinzheng's Longhu.",
+      "candidates": [
+        {
+          "name": "Erqi",
+          "local": "二七区",
+          "origin": "county",
+          "meaning": "\"February 7\": the 1923 Beijing-Hankou railway strike; the district was named for it in 1955.",
+          "fit": "Erqi is 56% of the region and the region holds 47% of the district; the memorial tower itself is in region 7.",
+          "recognisability": "Current district; the strike is a standard history topic.",
+          "source_url": "https://zh.wikipedia.org/wiki/二七区",
+          "source_note": "1955年10月为纪念二七大罢工而改称二七区",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": "No second name I could source for this one."
+    },
+    {
+      "n": 12,
+      "key": "#f0e4ab",
+      "settled": null,
+      "summary": "Rural Kaifeng: Xiangfu district (old Kaifeng county, 49%) and Tongxu county (46%).",
+      "candidates": [
+        {
+          "name": "Tongxu",
+          "local": "通许县",
+          "origin": "county",
+          "meaning": "\"Leading to the Xu land\": a Song canal town, named when the Cai River was dredged from the capital towards the old Xu country (1189 name).",
+          "fit": "Tongxu is 46% of the region and the region holds 96% of the county.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/通许县",
+          "source_note": "取自汴京直通许国故地之义，故名通许",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Chenliu",
+          "local": "陈留",
+          "origin": "historical",
+          "meaning": "Chenliu commandery and county (Han to Qing): the county town and its Prince of Chenliu title; the Chenliu town lies in the region.",
+          "fit": "Chenliu county (221 BC-1911) was seated at Chenliu town in Xiangfu, and the commandery covered Xiangfu, Tongxu and Lankao.",
+          "recognisability": "En-wiki 'Chenliu' town plus 'Prince of Chenliu'; 210 zh hits with Kaifeng, about this area.",
+          "source_url": "https://zh.wikipedia.org/wiki/陈留镇",
+          "source_note": "陈留县 (221 BC-1911) 今河南开封县东南陈留镇; 陈留郡 (122 BC-187)",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Xiangfu",
+          "local": "祥符",
+          "origin": "county",
+          "meaning": "\"Auspicious omen\": the Song Dazhongxiangfu reign name, given to Kaifeng's county in 1009; today's Xiangfu district.",
+          "fit": "Xiangfu holds 49% of the region, but the name belongs to Kaifeng city's own history.",
+          "recognisability": "Current district; also an old name for Kaifeng itself.",
+          "source_url": "https://zh.wikipedia.org/wiki/祥符区",
+          "source_note": "以年号改浚仪县为祥符县",
+          "status": "rejected"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 13,
+      "key": "#ead89f",
+      "settled": null,
+      "summary": "Weishi county (58%) and the Zhongmu side south-east of Zhengzhou, with Guandu.",
+      "candidates": [
+        {
+          "name": "Weishi",
+          "local": "尉氏县",
+          "origin": "county",
+          "meaning": "From the town of the Zheng official Weishi (the military commandant); a county since the Qin.",
+          "fit": "Weishi is 58% of the region and the region holds 66% of the county.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/尉氏县",
+          "source_note": "县境在春秋时期为郑国大夫尉氏之邑，因而得名",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Guandu",
+          "local": "官渡",
+          "origin": "historical",
+          "meaning": "\"Official ford\": a town in Zhongmu where Cao Cao beat Yuan Shao in 200.",
+          "fit": "Guandu town is in this region but is under 7% of its people.",
+          "recognisability": "Own zh-wiki article; 376 hits with Zhongmu, top ones about the battle and the town.",
+          "source_url": "https://zh.wikipedia.org/wiki/官渡之战",
+          "source_note": "官渡是从河北进军河南地界的军事要冲之地，因为发生了官渡大战而闻名",
+          "rating": 3,
+          "status": "suggested"
+        },
+        {
+          "name": "Zhongmu",
+          "local": "中牟县",
+          "origin": "county",
+          "meaning": "See region 5.",
+          "fit": "28% of the region but only 35% of Zhongmu; the county seat and the rest are region 5.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/中牟县",
+          "source_note": "中牟县，古称“圃田”、“牟州”",
+          "status": "rejected"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 14,
+      "key": "#f6eeb1",
+      "settled": null,
+      "summary": "Qi county (77%) in the east, with a part of Sui county (19%).",
+      "candidates": [
+        {
+          "name": "Qixian",
+          "local": "杞县",
+          "origin": "county",
+          "meaning": "County named for the Qi state (the Xia descendants' fief), formerly Yongqiu; the Chinese phrase 'worrying that the sky falls' comes from it.",
+          "fit": "Qi is 77% of the region and the region holds 85% of the county.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/杞县",
+          "source_note": "杞县，古称雍丘……商周时为杞国",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Yongqiu",
+          "local": "雍丘",
+          "origin": "historical",
+          "meaning": "The old county name for Qi county (Qin to Song), seat of Yangxia commandery and Qi prefecture, site of the 756 siege.",
+          "fit": "Seat was Qi county town; the commandery and prefecture covered the county.",
+          "recognisability": "No own article; 40 zh hits with Qi county, all about this place.",
+          "source_url": "https://zh.wikipedia.org/wiki/杞县",
+          "source_note": "秦统一六国后置雍丘县……北魏孝昌四年（528年）置阳夏郡，以雍丘县为郡治",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 15,
+      "key": "#e7d075",
+      "settled": null,
+      "summary": "Xinzheng city (88%) south-east of Zhengzhou, airport zone.",
+      "candidates": [
+        {
+          "name": "Xinzheng",
+          "local": "新郑市",
+          "origin": "county",
+          "meaning": "\"New Zheng\": the capital the Zheng state moved to when it migrated east; later capital of Han; birthplace of the Yellow Emperor tradition.",
+          "fit": "Xinzheng is 88% of the region and the region holds 51% of the city; the Zheng-Han city is just west.",
+          "recognisability": "Current county-level city; the airport carries the name.",
+          "source_url": "https://zh.wikipedia.org/wiki/新郑市",
+          "source_note": "“新郑”之名源于周代诸侯国郑国东迁之事",
+          "rating": 5,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 16,
+      "key": "#e8d792",
+      "settled": null,
+      "summary": "Xinmi city (73%) in the Song foothills, with Xinzheng's western townships.",
+      "candidates": [
+        {
+          "name": "Xinmi",
+          "local": "新密市",
+          "origin": "county",
+          "meaning": "\"New Mi\": from the Mi state, named after Mi mountain; the county was Mixian until 1994.",
+          "fit": "Xinmi is 73% of the region and the region holds 97% of the city.",
+          "recognisability": "Current county-level city.",
+          "source_url": "https://zh.wikipedia.org/wiki/新密市",
+          "source_note": "新密西周时属密国，因“密山”得名",
+          "rating": 5,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 17,
+      "key": "#eaddb2",
+      "settled": null,
+      "summary": "Dengfeng (73%) around Mount Song and Shaolin, plus north-west Yuzhou (27%).",
+      "candidates": [
+        {
+          "name": "Dengfeng",
+          "local": "登封市",
+          "origin": "county",
+          "meaning": "\"Ascend and enfeoff\": named by Empress Wu Zetian for her 696 sacrifice at Mount Song.",
+          "fit": "Dengfeng is 73% of the region and the region holds 99% of the city.",
+          "recognisability": "Current county-level city; Shaolin Temple.",
+          "source_url": "https://zh.wikipedia.org/wiki/登封市",
+          "source_note": "登封之名由武周女皇帝武则天所封",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Songshan",
+          "local": "嵩山",
+          "origin": "mountain",
+          "meaning": "\"Lofty mountain\": the central peak of the Five Sacred Mountains, split into Taishi and Shaoshi.",
+          "fit": "The range lies wholly in Dengfeng, in the north of the region.",
+          "recognisability": "Own zh-wiki article; 590 hits with Dengfeng, top ones about this place.",
+          "source_url": "https://zh.wikipedia.org/wiki/嵩山",
+          "source_note": "中岳嵩山是境内北部的主要山脉，分为太室、少室二山",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": "The west batch (Luoyang, Song county) might also want Songshan."
+    },
+    {
+      "n": 18,
+      "key": "#ead696",
+      "settled": null,
+      "summary": "Changge city (64%) with Weishi's western townships and Xuchang county's north (Jian'an district).",
+      "candidates": [
+        {
+          "name": "Changge",
+          "local": "长葛市",
+          "origin": "county",
+          "meaning": "\"Long Ge\": the old land of the legendary Getian clan; Zhuang of Zheng 'dug the ground to meet his mother' here; ancient Changshe.",
+          "fit": "Changge (written Zhangge in facts.json) is 64% of the region and the region holds 94% of the city.",
+          "recognisability": "Current county-level city.",
+          "source_url": "https://zh.wikipedia.org/wiki/长葛市",
+          "source_note": "相传这里是上古时葛天氏的故地，后人便命名为长葛",
+          "rating": 5,
+          "status": "suggested"
+        }
+      ],
+      "notes": "facts.json spells it 'Zhangge'; the correct pinyin is Changge."
+    },
+    {
+      "n": 19,
+      "key": "#ead89d",
+      "settled": null,
+      "summary": "Yuzhou city (79%) on the Ying River, with Xiangcheng's north.",
+      "candidates": [
+        {
+          "name": "Yuzhou",
+          "local": "禹州市",
+          "origin": "county",
+          "meaning": "\"Yu's prefecture\": after Yu the Great, whose Xia capital tradition is here; the Ming renamed Junzhou to avoid Emperor Wanli's name.",
+          "fit": "Yuzhou is 79% of the region and the region holds 68% of the city.",
+          "recognisability": "Current county-level city; homophone of Yuzhou (Henan's old name) written differently.",
+          "source_url": "https://zh.wikipedia.org/wiki/禹州市",
+          "source_note": "夏启在此建立了中国历史上第一个世袭王朝夏朝……称颍州、钧州（避明神宗讳，改称禹州）",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Yingchuan",
+          "local": "颍川",
+          "origin": "historical",
+          "meaning": "\"Ying river\": the Qin-Han commandery named for the Ying River, seated at Yangzhai (Yuzhou); the heartland of this part of Henan.",
+          "fit": "Seat at Yuzhou for 230 BC-220 AD; the commandery also covered Xuchang, Changge and Xiangcheng nearby.",
+          "recognisability": "Own zh-wiki article; 174 hits with Xuchang, top ones about this commandery.",
+          "source_url": "https://zh.wikipedia.org/wiki/颍川郡",
+          "source_note": "因颍水流过境内而得名，治所在阳翟（今河南省禹州市）",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Junzhou",
+          "local": "钧州",
+          "origin": "historical",
+          "meaning": "Jin and Yuan prefecture (1184-1233 and after), source of Jun porcelain, one of the five famous Chinese wares.",
+          "fit": "Prefecture seat was Yuzhou; Jun kilns are at Shenhou in the city.",
+          "recognisability": "Named in zh-wiki as Yuzhou's old name (钧都); not distinct from Junzhou in Hubei.",
+          "source_url": "https://zh.wikipedia.org/wiki/禹州市",
+          "source_note": "钧州 (州, 1184-1233) 今河南省禹州市; 钧瓷的唯一产地",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Yingchuan could also fit Xuchang (20), so it should not be used twice."
+    },
+    {
+      "n": 20,
+      "key": "#e5c585",
+      "settled": null,
+      "summary": "Xuchang city: Weidou district (52%) and Jian'an district (47%).",
+      "candidates": [
+        {
+          "name": "Xuchang",
+          "local": "许昌",
+          "origin": "city",
+          "meaning": "Name from the ancient Xu state; renamed in the Wei (\"Han fell by Xu, Wei flourished by Xu\") from Xu county; the Han capital under Cao Cao.",
+          "fit": "Holds the prefecture seat (Xuzhou since 581) and Weidou district entirely.",
+          "recognisability": "Prefecture city.",
+          "source_url": "https://zh.wikipedia.org/wiki/许昌市",
+          "source_note": "曹丕……将许县改称许昌县",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Jian'an",
+          "local": "建安区",
+          "origin": "county",
+          "meaning": "Reign name of Emperor Xian of Han (196-220) when Xuchang was his capital; the district outside the city.",
+          "fit": "Jian'an district is the rural 47% of the region; the name also marks the Jian'an poets.",
+          "recognisability": "Current district.",
+          "source_url": "https://zh.wikipedia.org/wiki/建安区",
+          "source_note": "区名得名于东汉末代皇帝汉献帝刘协的年号——建安",
+          "rating": 3,
+          "status": "suggested"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "n": 21,
+      "key": "#e5d19a",
+      "settled": null,
+      "summary": "Linying (44%) and Yanling (44%) in the plain east of Xuchang.",
+      "candidates": [
+        {
+          "name": "Linying",
+          "local": "临颍县",
+          "origin": "county",
+          "meaning": "\"Beside the Ying\": the county lies on the Ying River; set up in 201 BC.",
+          "fit": "Linying is 44% of the region and the region holds 67% of the county.",
+          "recognisability": "Current county; Wei's Shoushan abdication altar is near.",
+          "source_url": "https://zh.wikipedia.org/wiki/临颍县",
+          "source_note": "因濒临颍河得名",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Yanling",
+          "local": "鄢陵县",
+          "origin": "county",
+          "meaning": "From the Yan state (Zhou fief), renamed Yanling in the Eastern Zhou; known for Yanling plum and flower nurseries and the Jin-Chu Battle of Yanling.",
+          "fit": "Yanling is 44% of the region and the region holds 89% of the county.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/鄢陵县",
+          "source_note": "周初封为鄢国，东周平王初改为鄢陵……晋楚鄢陵之战",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": "The two counties are of equal size here; Anita picks."
+    },
+    {
+      "n": 22,
+      "key": "#e8d7b4",
+      "settled": null,
+      "summary": "Xiangcheng (41%), with Yancheng, Linying and Wuyang parts south-west of Luohe.",
+      "candidates": [
+        {
+          "name": "Xiangcheng",
+          "local": "襄城县",
+          "origin": "county",
+          "meaning": "King Xiang of Zhou took refuge here and built a city; a county since the Qin.",
+          "fit": "Xiangcheng is 41% of the region and the region holds 80% of the county; Xiangcheng commandery (266-582) was here.",
+          "recognisability": "Current county.",
+          "source_url": "https://zh.wikipedia.org/wiki/襄城县",
+          "source_note": "周襄王避王子带之乱，居于此，后筑城，秦代置襄城县",
+          "rating": 4,
+          "status": "suggested"
+        },
+        {
+          "name": "Yancheng",
+          "local": "郾城区",
+          "origin": "county",
+          "meaning": "Yan city: site of Yue Fei's 1140 Yancheng victory; Luohe's seat district.",
+          "fit": "22% of the region but the seat and most of the district sit in region 23; spelling clashes with Yancheng (Jiangsu).",
+          "recognisability": "Current district.",
+          "source_url": "https://zh.wikipedia.org/wiki/郾城区",
+          "source_note": "岳飞“郾城大捷”的古战场",
+          "status": "rejected"
+        }
+      ],
+      "notes": "Xiangcheng also reads the same as Xiangcheng (项城) in Zhoukou in pinyin; check the east batch."
+    },
+    {
+      "n": 23,
+      "key": "#eacf9a",
+      "settled": null,
+      "summary": "Luohe city: Yuanhui, Yancheng and Shaoling districts.",
+      "candidates": [
+        {
+          "name": "Luohe",
+          "local": "漯河市",
+          "origin": "city",
+          "meaning": "The Luo River (Sha and Li rivers meet at the city); the prefecture-level city of 2.4M.",
+          "fit": "Holds the urban core (Yuanhui 87% of the district) and the prefecture seat.",
+          "recognisability": "Prefecture city.",
+          "source_url": "https://zh.wikipedia.org/wiki/漯河市",
+          "source_note": "沙河、澧河、颍河、清潩河自西向东流经境内……沙河、澧河……在市区交汇",
+          "rating": 5,
+          "status": "suggested"
+        },
+        {
+          "name": "Shaoling",
+          "local": "召陵",
+          "origin": "historical",
+          "meaning": "Site of the 656 BC Shaoling covenant between Duke Huan of Qi and Chu; home town of Xu Shen; the character 召 is read shao here.",
+          "fit": "Han county seat at Shaoling; Shaoling district is 31% of the region (district written Zhaoling in facts.json).",
+          "recognisability": "Own zh-wiki article; 394 hits with Luohe, top ones about this place.",
+          "source_url": "https://zh.wikipedia.org/wiki/召陵区",
+          "source_note": "召陵区……是东汉许慎的故乡; 召陵之盟",
+          "rating": 4,
+          "status": "suggested"
+        }
+      ],
+      "notes": "Sha river itself is also an option if needed."
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+batch shaanxi-xian
+1: pick Binzhou
+2: pick Jingyang
+3: pick Sanyuan
+4: pick Liquan
+5: pick Lintong
+6: pick Jianzhang
+7: pick Xianyang
+8: pick Weiyang
+9: pick Xingping
+10: pick Zaoyuan
+11: pick Xi'an
+12: pick Qujiang
+13: pick Xiaozhai
+14: pick Fenghao
+15: pick Chang'an
+16: pick Lantian
+17: pick Zhouzhi

@@ -54,7 +54,56 @@ def _at_counts():
     df["node"] = df["source_category"].map(resolve)
     df = df[df["node"].notna() & (df["count"] > 0)]
     df["congregations"] = 0
-    return df[["unit", "node", "count", "congregations"]]
+    df["tier"] = "measured"
+    df["roll"] = None
+    df = _at_split_islam(df)
+    return df[["unit", "node", "count", "congregations", "tier", "roll"]]
+
+
+def _at_split_islam(df):
+    """Divide each unit's census `Islamisch` by its Bundesland's borrowed MLD 2020 shares.
+
+    sources/at_mld.py (Anita, 2026-10-16): VZ 2001 Tabelle 15's Muslims by citizenship per Land,
+    Turkish and former-Yugoslav citizens given Germany's MLD 2020 branch shares for Türkei- and
+    Südosteuropa-origin Muslims; Austrian and other citizens stay on `islam`. The census counted
+    these Muslims at the unit, so the branch rows are `derived` and roll back to `islam`.
+    """
+    import at2001
+
+    path = HERE / "data" / "normalized" / "at_mld.csv"
+    if not path.exists():
+        print("  !! at_mld.csv missing; run sources/at_mld.py. Austria's Muslims stay on `islam`")
+        return df
+    m = pd.read_csv(path, dtype={"geo_id": str})
+    m["node"] = m["source_category"].map(at2001.resolve)
+    shares = {g: dict(zip(x["node"], x["share"])) for g, x in m.groupby("geo_id")}
+    sel = df["node"] == "islam"
+    land = df.loc[sel, "unit"].str[2]
+    missing = sorted(set(land) - set(shares))
+    if missing:
+        raise SystemExit(f"at_mld: no shares for Land digits {missing}")
+    base = df.loc[sel, "count"].astype(float).to_numpy()
+    df["count"] = df["count"].astype(float)
+    taken = 0.0
+    frames = []
+    for node in sorted({n for s in shares.values() for n in s}):
+        n = base * land.map(lambda g: shares[g].get(node, 0.0)).to_numpy(dtype=float)
+        taken = taken + n
+        keep = n > 0
+        frames.append(pd.DataFrame({"unit": df.loc[sel, "unit"].to_numpy()[keep], "node": node,
+                                    "count": n[keep], "congregations": 0, "tier": "derived",
+                                    "roll": at2001.COLUMNS["Islamisch"]}))
+    df.loc[sel, "count"] = base - taken
+    add = pd.concat(frames, ignore_index=True)
+    out = pd.concat([df, add], ignore_index=True)
+    if abs(out.loc[out["node"].isin(["islam", "islam.sunni", "islam.shia", "alevism",
+                                     "islam.ahmadiyya"]), "count"].sum() - base.sum()) > 1.0:
+        raise SystemExit("at_mld: the split did not conserve Austria's census Muslims")
+    by = add.groupby("node")["count"].sum()
+    print("  " + ", ".join(f"{k} {v:,.0f}" for k, v in by.sort_values(ascending=False).items())
+          + f" of {base.sum():,.0f} census Muslims, borrowed MLD 2020 shares, DERIVED "
+            "(sources/at_mld.py)")
+    return out[out["count"] > 0]
 
 
 ENTRY = {
@@ -90,6 +139,17 @@ ENTRY = {
             "Vorarlberg was **15.7%**, ahead of every Viennese district, and Vorarlberg as "
             "a whole was 8.4% against a national 4.2%; the Rhine valley textile mills "
             "recruited in Anatolia from the 1960s and the pattern has not moved since. "
+            "**The Sunni, Shia, Alevi and Ahmadi shares are borrowed from a German survey.** "
+            "The census asked only Islam, but it counted Muslims by citizenship in each "
+            "Bundesland. Turkish citizens are given the branch mix that Germany's federal "
+            "migration office found among Turkish-origin Muslims in Germany in 2020, and "
+            "Bosnian, Yugoslav, Macedonian, Croatian and Slovenian citizens the mix it found "
+            "among Muslims from south-eastern Europe. Nothing like that has been asked in "
+            "Austria. Austrian citizens, 28% of the Muslims counted, and everyone else stay on "
+            "plain Islam, because the census does not say where their families came from. "
+            "Nationally that draws **42%** of Muslims as Sunni, 6.7% Alevi, 1.3% Shia and 0.2% "
+            "Ahmadi, and the rest with no branch. These are inferred and fold back into the "
+            "census's Muslim count if you switch inferred dots off. "
             "Protestants are similarly concentrated rather than thin: 13.3% in Burgenland "
             "and 10.3% in Kärnten against 2.2% in Vorarlberg, which is the "
             "Counter-Reformation's map. "
@@ -112,6 +172,7 @@ ENTRY = {
             "in the country and the only units above 1%. Before 1938 Leopoldstadt was "
             "somewhere around two fifths Jewish."),
         how="census, 2001",
+        fill="Muslim branches borrowed from a 2020 German survey, by citizenship",
         grain="Gemeinden and Vienna districts, 3,400 people on average",
         gap_share=0.02,
         gap="the 2.0% who did not state a religion; Stallehr (272 people), which has no "

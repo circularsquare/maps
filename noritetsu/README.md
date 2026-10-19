@@ -43,14 +43,16 @@ python tools/deploy.py --check       # preflight and sizes only
 python tools/deploy.py --dry-run     # preflight, then what rclone would send and delete
 python tools/deploy.py               # upload data to R2, copy the page into the website repo, verify
 python tools/deploy.py --verify      # check the published copy on its own
-python tools/deploy.py --skip-data   # page files only (index.html, poster.js, share.js)
+python tools/deploy.py --skip-data   # page files only (index.html, poster.js, share.js, account.js, privacy.html, terms.html)
 ```
 
 Then commit and push the website repo by hand (`git add noritetsu/` there); the script never
 does. What goes where: `regions.json` and all of `dist/data/` go to Cloudflare R2 under
 `r2:anitamaps/noritetsu/` (public at
-`https://pub-ae551368cea941f39101e13c84d60bde.r2.dev/noritetsu/`); `index.html`, `poster.js`
-and `share.js` go to `website/noritetsu/`. The page finds its data by asking for
+`https://data.anita.garden/noritetsu/`); `index.html`, `poster.js`,
+`share.js`, `account.js`, `privacy.html` and `terms.html` go to `website/noritetsu/`. `account.js` talks to the sign-in
+server (shonei-server, `docs/noritetsu-api.md` there) at `https://market.anita.garden/noritetsu/`,
+or `http://localhost:8083/noritetsu/` when the page is opened from localhost. The page finds its data by asking for
 `regions.json` beside itself (index.html, "WHERE THE DATA IS"), so **never copy regions.json
 or data/ into the website repo**: the published page would then look for its data on GitHub
 Pages, which also breaks the range requests a .pmtiles needs. The json goes up gzipped

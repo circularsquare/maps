@@ -1,0 +1,4358 @@
+{
+ "name": "shanxi-north",
+ "province": "Shanxi",
+ "prefectures": [
+  "Datong",
+  "Shuozhou",
+  "Xinzhou",
+  "Taiyuan",
+  "Lüliang",
+  "Jinzhong",
+  "Yangquan"
+ ],
+ "tiles": [
+  {
+   "tag": "1",
+   "x": 6540,
+   "y": 2484,
+   "w": 746,
+   "h": 800,
+   "scale": 2,
+   "regions": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21
+   ]
+  }
+ ],
+ "regions": [
+  {
+   "key": "#dddcc6",
+   "color": "#dddcc6",
+   "lon": 113.4807,
+   "lat": 40.1391,
+   "bbox": [
+    6853,
+    2684,
+    7075,
+    2795
+   ],
+   "area_px": 10050,
+   "people": 1418570,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yanggao",
+     "local": "阳高县",
+     "prefecture": "Datong",
+     "prefecture_local": "大同市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.197,
+     "area_share": 0.15,
+     "cover": 0.998
+    },
+    {
+     "name": "Yangyuan",
+     "local": "阳原县",
+     "prefecture": "Zhangjiakou",
+     "prefecture_local": "张家口市",
+     "province": "河北省",
+     "country": "China",
+     "people_share": 0.184,
+     "area_share": 0.166,
+     "cover": 0.998
+    },
+    {
+     "name": "Tianzhen",
+     "local": "天镇县",
+     "prefecture": "Datong",
+     "prefecture_local": "大同市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.143,
+     "area_share": 0.126,
+     "cover": 0.948
+    },
+    {
+     "name": "Zuoyun",
+     "local": "左云县",
+     "prefecture": "Datong",
+     "prefecture_local": "大同市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.112,
+     "area_share": 0.119,
+     "cover": 0.998
+    },
+    {
+     "name": "Xinrong",
+     "local": "新荣区",
+     "prefecture": "Datong",
+     "prefecture_local": "大同市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.095,
+     "area_share": 0.09,
+     "cover": 0.943
+    },
+    {
+     "name": "Nanjiao",
+     "local": "南郊区",
+     "prefecture": "Datong",
+     "prefecture_local": "大同市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.094,
+     "area_share": 0.049,
+     "cover": 0.117
+    },
+    {
+     "name": "Youyu",
+     "local": "右玉县",
+     "prefecture": "Shuozhou",
+     "prefecture_local": "朔州市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.083,
+     "area_share": 0.177,
+     "cover": 0.997
+    },
+    {
+     "name": "Datong",
+     "local": "大同县",
+     "prefecture": "Datong",
+     "prefecture_local": "大同市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.082,
+     "area_share": 0.084,
+     "cover": 0.564
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.809,
+     "cover": 0.029
+    },
+    {
+     "level": "prefecture",
+     "name": "Datong",
+     "local": "大同市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.725,
+     "cover": 0.291
+    },
+    {
+     "level": "province",
+     "name": "Hebei",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.189,
+     "cover": 0.004
+    },
+    {
+     "level": "prefecture",
+     "name": "Zhangjiakou",
+     "local": "张家口市",
+     "province": "Hebei",
+     "country": "China",
+     "people_share": 0.189,
+     "cover": 0.061
+    },
+    {
+     "level": "prefecture",
+     "name": "Shuozhou",
+     "local": "朔州市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.084,
+     "cover": 0.064
+    }
+   ],
+   "towns": [
+    {
+     "town": "龙泉镇",
+     "county": "阳高县",
+     "city": "大同市",
+     "people_share": 0.068,
+     "cover": 1.0
+    },
+    {
+     "town": "玉泉镇",
+     "county": "天镇县",
+     "city": "大同市",
+     "people_share": 0.049,
+     "cover": 1.0
+    },
+    {
+     "town": "西城镇",
+     "county": "阳原县",
+     "city": "张家口市",
+     "people_share": 0.046,
+     "cover": 1.0
+    },
+    {
+     "town": "云兴镇",
+     "county": "左云县",
+     "city": "大同市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "新城镇",
+     "county": "右玉县",
+     "city": "朔州市",
+     "people_share": 0.039,
+     "cover": 1.0
+    },
+    {
+     "town": "西坪镇",
+     "county": "大同县",
+     "city": "大同市",
+     "people_share": 0.033,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#e8e4c9",
+     "border_px": 1895
+    },
+    {
+     "key": "#e4e5d6",
+     "border_px": 1504
+    },
+    {
+     "key": "#e4e5ce",
+     "border_px": 1434
+    },
+    {
+     "key": "#dcd9b3",
+     "border_px": 1068
+    },
+    {
+     "key": "#dcd9c2",
+     "border_px": 995
+    },
+    {
+     "key": "#e7e4c4",
+     "border_px": 696
+    },
+    {
+     "key": "#eae8d6",
+     "border_px": 363
+    },
+    {
+     "key": "#c3bf88",
+     "border_px": 263
+    },
+    {
+     "key": "#dfdbbe",
+     "border_px": 234
+    }
+   ],
+   "text_px": 184,
+   "n": 1,
+   "thumb": {
+    "x0": 6776,
+    "y0": 2607,
+    "k": 1.0,
+    "w": 376,
+    "h": 265
+   }
+  },
+  {
+   "key": "#c3bf88",
+   "color": "#c3bf88",
+   "lon": 113.3137,
+   "lat": 40.08,
+   "bbox": [
+    6939,
+    2739,
+    6952,
+    2755
+   ],
+   "area_px": 195,
+   "people": 750612,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Nanjiao",
+     "local": "南郊区",
+     "prefecture": "Datong",
+     "prefecture_local": "大同市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.614,
+     "area_share": 0.759,
+     "cover": 0.403
+    },
+    {
+     "name": "Cheng",
+     "local": "城区",
+     "prefecture": "Datong",
+     "prefecture_local": "大同市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.379,
+     "area_share": 0.21,
+     "cover": 1.0
+    },
+    {
+     "name": "Datong",
+     "local": "大同县",
+     "prefecture": "Datong",
+     "prefecture_local": "大同市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.004,
+     "area_share": 0.026,
+     "cover": 0.015
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.019
+    },
+    {
+     "level": "prefecture",
+     "name": "Datong",
+     "local": "大同市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.212
+    }
+   ],
+   "towns": [
+    {
+     "town": "马军营乡",
+     "county": "南郊区",
+     "city": "大同市",
+     "people_share": 0.357,
+     "cover": 0.848
+    },
+    {
+     "town": "水泊寺乡",
+     "county": "南郊区",
+     "city": "大同市",
+     "people_share": 0.199,
+     "cover": 0.965
+    },
+    {
+     "town": "向阳里街道",
+     "county": "城区",
+     "city": "大同市",
+     "people_share": 0.067,
+     "cover": 1.0
+    },
+    {
+     "town": "新华街街道",
+     "county": "城区",
+     "city": "大同市",
+     "people_share": 0.05,
+     "cover": 1.0
+    },
+    {
+     "town": "大庆路街道",
+     "county": "城区",
+     "city": "大同市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "南关街道",
+     "county": "城区",
+     "city": "大同市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "新旺乡",
+     "county": "南郊区",
+     "city": "大同市",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "振华南街街道",
+     "county": "城区",
+     "city": "大同市",
+     "people_share": 0.037,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Xiping",
+     "admin": "Shanxi",
+     "pop": 1873000
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#dcd9b3",
+     "border_px": 419
+    },
+    {
+     "key": "#dddcc6",
+     "border_px": 263
+    }
+   ],
+   "text_px": 0,
+   "n": 2,
+   "thumb": {
+    "x0": 6899,
+    "y0": 2699,
+    "k": 4.0,
+    "w": 372,
+    "h": 384
+   }
+  },
+  {
+   "key": "#dcd9b3",
+   "color": "#dcd9b3",
+   "lon": 113.2484,
+   "lat": 39.8697,
+   "bbox": [
+    6915,
+    2741,
+    6972,
+    2791
+   ],
+   "area_px": 1697,
+   "people": 1280946,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Nanjiao",
+     "local": "南郊区",
+     "prefecture": "Datong",
+     "prefecture_local": "大同市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.428,
+     "area_share": 0.143,
+     "cover": 0.48
+    },
+    {
+     "name": "Huairen",
+     "local": "怀仁县",
+     "prefecture": "Shuozhou",
+     "prefecture_local": "朔州市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.257,
+     "area_share": 0.527,
+     "cover": 0.924
+    },
+    {
+     "name": "Kuang",
+     "local": "矿区",
+     "prefecture": "Datong",
+     "prefecture_local": "大同市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.247,
+     "area_share": 0.022,
+     "cover": 0.986
+    },
+    {
+     "name": "Datong",
+     "local": "大同县",
+     "prefecture": "Datong",
+     "prefecture_local": "大同市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.068,
+     "area_share": 0.298,
+     "cover": 0.421
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.033
+    },
+    {
+     "level": "prefecture",
+     "name": "Datong",
+     "local": "大同市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.74,
+     "cover": 0.268
+    },
+    {
+     "level": "prefecture",
+     "name": "Shuozhou",
+     "local": "朔州市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.26,
+     "cover": 0.178
+    }
+   ],
+   "towns": [
+    {
+     "town": "西韩岭乡",
+     "county": "南郊区",
+     "city": "大同市",
+     "people_share": 0.283,
+     "cover": 0.976
+    },
+    {
+     "town": "口泉乡",
+     "county": "南郊区",
+     "city": "大同市",
+     "people_share": 0.121,
+     "cover": 0.944
+    },
+    {
+     "town": "云中镇",
+     "county": "怀仁县",
+     "city": "朔州市",
+     "people_share": 0.09,
+     "cover": 0.999
+    },
+    {
+     "town": "新平旺街道",
+     "county": "矿区",
+     "city": "大同市",
+     "people_share": 0.085,
+     "cover": 0.99
+    },
+    {
+     "town": "和瑞街道",
+     "county": "矿区",
+     "city": "大同市",
+     "people_share": 0.065,
+     "cover": 1.0
+    },
+    {
+     "town": "何家堡乡",
+     "county": "怀仁县",
+     "city": "朔州市",
+     "people_share": 0.048,
+     "cover": 0.999
+    },
+    {
+     "town": "亲和乡",
+     "county": "怀仁县",
+     "city": "朔州市",
+     "people_share": 0.04,
+     "cover": 0.986
+    },
+    {
+     "town": "清泉街街道",
+     "county": "矿区",
+     "city": "大同市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "民胜街道",
+     "county": "矿区",
+     "city": "大同市",
+     "people_share": 0.03,
+     "cover": 0.946
+    },
+    {
+     "town": "新家园乡",
+     "county": "怀仁县",
+     "city": "朔州市",
+     "people_share": 0.03,
+     "cover": 0.954
+    }
+   ],
+   "cities": [
+    {
+     "name": "Yunzhong",
+     "admin": "Shanxi",
+     "pop": 326849
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#dddcc6",
+     "border_px": 1068
+    },
+    {
+     "key": "#e7e4c4",
+     "border_px": 737
+    },
+    {
+     "key": "#c3bf88",
+     "border_px": 419
+    },
+    {
+     "key": "#e8e4c9",
+     "border_px": 378
+    }
+   ],
+   "text_px": 99,
+   "n": 3,
+   "thumb": {
+    "x0": 6875,
+    "y0": 2701,
+    "k": 3.0,
+    "w": 411,
+    "h": 390
+   }
+  },
+  {
+   "key": "#e8e4c9",
+   "color": "#e8e4c9",
+   "lon": 114.2595,
+   "lat": 39.6539,
+   "bbox": [
+    6958,
+    2721,
+    7086,
+    2847
+   ],
+   "area_px": 8229,
+   "people": 1239048,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Wei",
+     "local": "蔚县",
+     "prefecture": "Zhangjiakou",
+     "prefecture_local": "张家口市",
+     "province": "河北省",
+     "country": "China",
+     "people_share": 0.363,
+     "area_share": 0.346,
+     "cover": 0.998
+    },
+    {
+     "name": "Hunyuan",
+     "local": "浑源县",
+     "prefecture": "Datong",
+     "prefecture_local": "大同市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.281,
+     "area_share": 0.211,
+     "cover": 0.998
+    },
+    {
+     "name": "Lingqiu",
+     "local": "灵丘县",
+     "prefecture": "Datong",
+     "prefecture_local": "大同市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.2,
+     "area_share": 0.3,
+     "cover": 0.999
+    },
+    {
+     "name": "Guangling",
+     "local": "广灵县",
+     "prefecture": "Datong",
+     "prefecture_local": "大同市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.154,
+     "area_share": 0.131,
+     "cover": 0.999
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.639,
+     "cover": 0.02
+    },
+    {
+     "level": "prefecture",
+     "name": "Datong",
+     "local": "大同市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.638,
+     "cover": 0.223
+    },
+    {
+     "level": "province",
+     "name": "Hebei",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.361,
+     "cover": 0.006
+    },
+    {
+     "level": "prefecture",
+     "name": "Zhangjiakou",
+     "local": "张家口市",
+     "province": "Hebei",
+     "country": "China",
+     "people_share": 0.359,
+     "cover": 0.102
+    }
+   ],
+   "towns": [
+    {
+     "town": "武灵镇",
+     "county": "灵丘县",
+     "city": "大同市",
+     "people_share": 0.098,
+     "cover": 1.0
+    },
+    {
+     "town": "永安镇",
+     "county": "浑源县",
+     "city": "大同市",
+     "people_share": 0.092,
+     "cover": 1.0
+    },
+    {
+     "town": "蔚州镇",
+     "county": "蔚县",
+     "city": "张家口市",
+     "people_share": 0.064,
+     "cover": 1.0
+    },
+    {
+     "town": "壶泉镇",
+     "county": "广灵县",
+     "city": "大同市",
+     "people_share": 0.05,
+     "cover": 1.0
+    },
+    {
+     "town": "西合营镇",
+     "county": "蔚县",
+     "city": "张家口市",
+     "people_share": 0.039,
+     "cover": 1.0
+    },
+    {
+     "town": "东坊城乡",
+     "county": "浑源县",
+     "city": "大同市",
+     "people_share": 0.03,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Wuling",
+     "admin": "Shanxi",
+     "pop": 121110
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#dddcc6",
+     "border_px": 1895
+    },
+    {
+     "key": "#ede9ce",
+     "border_px": 1868
+    },
+    {
+     "key": "#e5e1d2",
+     "border_px": 780
+    },
+    {
+     "key": "#f1f0c4",
+     "border_px": 711
+    },
+    {
+     "key": "#e7e4c4",
+     "border_px": 450
+    },
+    {
+     "key": "#dcd9b3",
+     "border_px": 378
+    },
+    {
+     "key": "#dfdbbe",
+     "border_px": 62
+    }
+   ],
+   "text_px": 70,
+   "n": 4,
+   "thumb": {
+    "x0": 6914,
+    "y0": 2677,
+    "k": 1.0,
+    "w": 216,
+    "h": 214
+   }
+  },
+  {
+   "key": "#e7e4c4",
+   "color": "#e7e4c4",
+   "lon": 112.7737,
+   "lat": 39.4603,
+   "bbox": [
+    6861,
+    2782,
+    6974,
+    2859
+   ],
+   "area_px": 5652,
+   "people": 1373278,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Shuocheng",
+     "local": "朔城区",
+     "prefecture": "Shuozhou",
+     "prefecture_local": "朔州市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.39,
+     "area_share": 0.24,
+     "cover": 0.984
+    },
+    {
+     "name": "Ying",
+     "local": "应县",
+     "prefecture": "Shuozhou",
+     "prefecture_local": "朔州市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.252,
+     "area_share": 0.27,
+     "cover": 0.994
+    },
+    {
+     "name": "Shanyin",
+     "local": "山阴县",
+     "prefecture": "Shuozhou",
+     "prefecture_local": "朔州市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.184,
+     "area_share": 0.259,
+     "cover": 0.996
+    },
+    {
+     "name": "Pinglu",
+     "local": "平鲁区",
+     "prefecture": "Shuozhou",
+     "prefecture_local": "朔州市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.15,
+     "area_share": 0.167,
+     "cover": 0.859
+    },
+    {
+     "name": "Huairen",
+     "local": "怀仁县",
+     "prefecture": "Shuozhou",
+     "prefecture_local": "朔州市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.02,
+     "area_share": 0.038,
+     "cover": 0.075
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.035
+    },
+    {
+     "level": "prefecture",
+     "name": "Shuozhou",
+     "local": "朔州市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.998,
+     "cover": 0.733
+    }
+   ],
+   "towns": [
+    {
+     "town": "北旺庄街道",
+     "county": "朔城区",
+     "city": "朔州市",
+     "people_share": 0.151,
+     "cover": 1.0
+    },
+    {
+     "town": "金城镇",
+     "county": "应县",
+     "city": "朔州市",
+     "people_share": 0.073,
+     "cover": 1.0
+    },
+    {
+     "town": "井坪镇",
+     "county": "平鲁区",
+     "city": "朔州市",
+     "people_share": 0.071,
+     "cover": 0.999
+    },
+    {
+     "town": "岱岳镇",
+     "county": "山阴县",
+     "city": "朔州市",
+     "people_share": 0.059,
+     "cover": 1.0
+    },
+    {
+     "town": "南城街道",
+     "county": "朔城区",
+     "city": "朔州市",
+     "people_share": 0.051,
+     "cover": 1.0
+    },
+    {
+     "town": "南河种镇",
+     "county": "应县",
+     "city": "朔州市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "神头镇",
+     "county": "朔城区",
+     "city": "朔州市",
+     "people_share": 0.033,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Shuozhou",
+     "admin": "Shanxi",
+     "pop": 1714857
+    },
+    {
+     "name": "Jincheng",
+     "admin": "Shanxi",
+     "pop": 105038
+    },
+    {
+     "name": "Jingping",
+     "admin": "Shanxi",
+     "pop": 101297
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#e5e1d2",
+     "border_px": 1644
+    },
+    {
+     "key": "#dcd9b3",
+     "border_px": 737
+    },
+    {
+     "key": "#dddcc6",
+     "border_px": 696
+    },
+    {
+     "key": "#eae8d6",
+     "border_px": 594
+    },
+    {
+     "key": "#e2d8c0",
+     "border_px": 565
+    },
+    {
+     "key": "#e8e4c9",
+     "border_px": 450
+    }
+   ],
+   "text_px": 102,
+   "n": 5,
+   "thumb": {
+    "x0": 6821,
+    "y0": 2742,
+    "k": 2.0,
+    "w": 386,
+    "h": 314
+   }
+  },
+  {
+   "key": "#e5e1d2",
+   "color": "#e5e1d2",
+   "lon": 113.1232,
+   "lat": 38.9755,
+   "bbox": [
+    6873,
+    2814,
+    7009,
+    2920
+   ],
+   "area_px": 8262,
+   "people": 1231092,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yuanping",
+     "local": "原平市",
+     "prefecture": "Xinzhou",
+     "prefecture_local": "忻州市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.403,
+     "area_share": 0.276,
+     "cover": 0.999
+    },
+    {
+     "name": "Fanzhi",
+     "local": "繁峙县",
+     "prefecture": "Xinzhou",
+     "prefecture_local": "忻州市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.22,
+     "area_share": 0.258,
+     "cover": 0.997
+    },
+    {
+     "name": "Dai",
+     "local": "代县",
+     "prefecture": "Xinzhou",
+     "prefecture_local": "忻州市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.179,
+     "area_share": 0.181,
+     "cover": 0.993
+    },
+    {
+     "name": "Wutai",
+     "local": "五台县",
+     "prefecture": "Xinzhou",
+     "prefecture_local": "忻州市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.092,
+     "area_share": 0.199,
+     "cover": 0.367
+    },
+    {
+     "name": "Ningwu",
+     "local": "宁武县",
+     "prefecture": "Xinzhou",
+     "prefecture_local": "忻州市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.063,
+     "area_share": 0.044,
+     "cover": 0.494
+    },
+    {
+     "name": "Xinfu",
+     "local": "忻府区",
+     "prefecture": "Xinzhou",
+     "prefecture_local": "忻州市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.03,
+     "area_share": 0.029,
+     "cover": 0.068
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.032
+    },
+    {
+     "level": "prefecture",
+     "name": "Xinzhou",
+     "local": "忻州市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.998,
+     "cover": 0.403
+    }
+   ],
+   "towns": [
+    {
+     "town": "新原乡",
+     "county": "原平市",
+     "city": "忻州市",
+     "people_share": 0.094,
+     "cover": 1.0
+    },
+    {
+     "town": "繁城镇",
+     "county": "繁峙县",
+     "city": "忻州市",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "上馆镇",
+     "county": "代县",
+     "city": "忻州市",
+     "people_share": 0.047,
+     "cover": 1.0
+    },
+    {
+     "town": "凤凰镇",
+     "county": "宁武县",
+     "city": "忻州市",
+     "people_share": 0.045,
+     "cover": 0.98
+    },
+    {
+     "town": "砂河镇",
+     "county": "繁峙县",
+     "city": "忻州市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "轩岗镇",
+     "county": "原平市",
+     "city": "忻州市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "西镇乡",
+     "county": "原平市",
+     "city": "忻州市",
+     "people_share": 0.032,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Yuanping",
+     "admin": "Shanxi",
+     "pop": 491213
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#e7e4c4",
+     "border_px": 1644
+    },
+    {
+     "key": "#ddd7bf",
+     "border_px": 1481
+    },
+    {
+     "key": "#e2d8c0",
+     "border_px": 1172
+    },
+    {
+     "key": "#e8e4c9",
+     "border_px": 780
+    },
+    {
+     "key": "#f1f0c4",
+     "border_px": 617
+    },
+    {
+     "key": "#f0efc4",
+     "border_px": 308
+    }
+   ],
+   "text_px": 86,
+   "n": 6,
+   "thumb": {
+    "x0": 6826,
+    "y0": 2767,
+    "k": 1.0,
+    "w": 230,
+    "h": 200
+   }
+  },
+  {
+   "key": "#e2d8c0",
+   "color": "#e2d8c0",
+   "lon": 111.8769,
+   "lat": 38.57,
+   "bbox": [
+    6784,
+    2826,
+    6914,
+    3014
+   ],
+   "area_px": 14393,
+   "people": 1182774,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Gujiao",
+     "local": "古交市",
+     "prefecture": "Taiyuan",
+     "prefecture_local": "太原市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.208,
+     "area_share": 0.095,
+     "cover": 0.999
+    },
+    {
+     "name": "Lan",
+     "local": "岚县",
+     "prefecture": "Lvliang",
+     "prefecture_local": "吕梁市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.152,
+     "area_share": 0.094,
+     "cover": 0.997
+    },
+    {
+     "name": "Jingle",
+     "local": "静乐县",
+     "prefecture": "Xinzhou",
+     "prefecture_local": "忻州市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.135,
+     "area_share": 0.129,
+     "cover": 1.0
+    },
+    {
+     "name": "Wuzhai",
+     "local": "五寨县",
+     "prefecture": "Xinzhou",
+     "prefecture_local": "忻州市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.095,
+     "area_share": 0.087,
+     "cover": 1.0
+    },
+    {
+     "name": "Loufan",
+     "local": "娄烦县",
+     "prefecture": "Taiyuan",
+     "prefecture_local": "太原市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.095,
+     "area_share": 0.08,
+     "cover": 0.999
+    },
+    {
+     "name": "Shenchi",
+     "local": "神池县",
+     "prefecture": "Xinzhou",
+     "prefecture_local": "忻州市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.092,
+     "area_share": 0.092,
+     "cover": 0.997
+    },
+    {
+     "name": "Kelan",
+     "local": "岢岚县",
+     "prefecture": "Xinzhou",
+     "prefecture_local": "忻州市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.072,
+     "area_share": 0.125,
+     "cover": 0.999
+    },
+    {
+     "name": "Ningwu",
+     "local": "宁武县",
+     "prefecture": "Xinzhou",
+     "prefecture_local": "忻州市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.064,
+     "area_share": 0.097,
+     "cover": 0.482
+    },
+    {
+     "name": "Hequ",
+     "local": "河曲县",
+     "prefecture": "Xinzhou",
+     "prefecture_local": "忻州市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.026,
+     "area_share": 0.061,
+     "cover": 0.291
+    },
+    {
+     "name": "Baode",
+     "local": "保德县",
+     "prefecture": "Xinzhou",
+     "prefecture_local": "忻州市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.024,
+     "area_share": 0.019,
+     "cover": 0.178
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.03
+    },
+    {
+     "level": "prefecture",
+     "name": "Xinzhou",
+     "local": "忻州市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.518,
+     "cover": 0.201
+    },
+    {
+     "level": "prefecture",
+     "name": "Taiyuan",
+     "local": "太原市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.324,
+     "cover": 0.074
+    },
+    {
+     "level": "prefecture",
+     "name": "Lüliang",
+     "local": "吕梁市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.152,
+     "cover": 0.044
+    }
+   ],
+   "towns": [
+    {
+     "town": "桃园街道",
+     "county": "古交市",
+     "city": "太原市",
+     "people_share": 0.077,
+     "cover": 1.0
+    },
+    {
+     "town": "鹅城镇",
+     "county": "静乐县",
+     "city": "忻州市",
+     "people_share": 0.058,
+     "cover": 1.0
+    },
+    {
+     "town": "东村镇",
+     "county": "岚县",
+     "city": "吕梁市",
+     "people_share": 0.053,
+     "cover": 1.0
+    },
+    {
+     "town": "娄烦镇",
+     "county": "娄烦县",
+     "city": "太原市",
+     "people_share": 0.034,
+     "cover": 1.0
+    },
+    {
+     "town": "岚漪镇",
+     "county": "岢岚县",
+     "city": "忻州市",
+     "people_share": 0.031,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Gujiao",
+     "admin": "Shanxi",
+     "pop": 216723
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#e2dbc4",
+     "border_px": 2008
+    },
+    {
+     "key": "#eae8d6",
+     "border_px": 1626
+    },
+    {
+     "key": "#e5e1d2",
+     "border_px": 1172
+    },
+    {
+     "key": "#e4dabc",
+     "border_px": 820
+    },
+    {
+     "key": "#ddd7bf",
+     "border_px": 757
+    },
+    {
+     "key": "#e7e4c4",
+     "border_px": 565
+    },
+    {
+     "key": "#d0be8c",
+     "border_px": 380
+    },
+    {
+     "key": "#c8b484",
+     "border_px": 253
+    },
+    {
+     "key": "#dfceae",
+     "border_px": 241
+    },
+    {
+     "key": "#e8e3d1",
+     "border_px": 172
+    }
+   ],
+   "text_px": 0,
+   "n": 7,
+   "thumb": {
+    "x0": 6719,
+    "y0": 2761,
+    "k": 1.0,
+    "w": 260,
+    "h": 318
+   }
+  },
+  {
+   "key": "#ddd7bf",
+   "color": "#ddd7bf",
+   "lon": 112.9663,
+   "lat": 38.4032,
+   "bbox": [
+    6902,
+    2884,
+    6989,
+    2980
+   ],
+   "area_px": 3804,
+   "people": 1004346,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Xinfu",
+     "local": "忻府区",
+     "prefecture": "Xinzhou",
+     "prefecture_local": "忻州市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.497,
+     "area_share": 0.252,
+     "cover": 0.913
+    },
+    {
+     "name": "Dingxiang",
+     "local": "定襄县",
+     "prefecture": "Xinzhou",
+     "prefecture_local": "忻州市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.197,
+     "area_share": 0.182,
+     "cover": 0.934
+    },
+    {
+     "name": "Wutai",
+     "local": "五台县",
+     "prefecture": "Xinzhou",
+     "prefecture_local": "忻州市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.195,
+     "area_share": 0.251,
+     "cover": 0.633
+    },
+    {
+     "name": "Yangqu",
+     "local": "阳曲县",
+     "prefecture": "Taiyuan",
+     "prefecture_local": "太原市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.11,
+     "area_share": 0.299,
+     "cover": 0.831
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.026
+    },
+    {
+     "level": "prefecture",
+     "name": "Xinzhou",
+     "local": "忻州市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.889,
+     "cover": 0.293
+    },
+    {
+     "level": "prefecture",
+     "name": "Taiyuan",
+     "local": "太原市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.11,
+     "cover": 0.021
+    }
+   ],
+   "towns": [
+    {
+     "town": "长征街街道",
+     "county": "忻府区",
+     "city": "忻州市",
+     "people_share": 0.07,
+     "cover": 1.0
+    },
+    {
+     "town": "播明镇",
+     "county": "忻府区",
+     "city": "忻州市",
+     "people_share": 0.051,
+     "cover": 1.0
+    },
+    {
+     "town": "东楼乡",
+     "county": "忻府区",
+     "city": "忻州市",
+     "people_share": 0.05,
+     "cover": 1.0
+    },
+    {
+     "town": "晋昌镇",
+     "county": "定襄县",
+     "city": "忻州市",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "解原乡",
+     "county": "忻府区",
+     "city": "忻州市",
+     "people_share": 0.045,
+     "cover": 1.0
+    },
+    {
+     "town": "兰村乡",
+     "county": "忻府区",
+     "city": "忻州市",
+     "people_share": 0.044,
+     "cover": 1.0
+    },
+    {
+     "town": "东冶镇",
+     "county": "五台县",
+     "city": "忻州市",
+     "people_share": 0.039,
+     "cover": 0.977
+    },
+    {
+     "town": "新建路街道",
+     "county": "忻府区",
+     "city": "忻州市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "秀容街道",
+     "county": "忻府区",
+     "city": "忻州市",
+     "people_share": 0.036,
+     "cover": 1.0
+    },
+    {
+     "town": "黄寨镇",
+     "county": "阳曲县",
+     "city": "太原市",
+     "people_share": 0.034,
+     "cover": 1.0
+    },
+    {
+     "town": "台城镇",
+     "county": "五台县",
+     "city": "忻州市",
+     "people_share": 0.032,
+     "cover": 0.957
+    },
+    {
+     "town": "沟南乡",
+     "county": "五台县",
+     "city": "忻州市",
+     "people_share": 0.031,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Xinzhou",
+     "admin": "Shanxi",
+     "pop": 3067501
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#eae4d3",
+     "border_px": 1546
+    },
+    {
+     "key": "#e5e1d2",
+     "border_px": 1481
+    },
+    {
+     "key": "#e2d8c0",
+     "border_px": 757
+    },
+    {
+     "key": "#d0be8c",
+     "border_px": 285
+    },
+    {
+     "key": "#f0efc4",
+     "border_px": 207
+    }
+   ],
+   "text_px": 79,
+   "n": 8,
+   "thumb": {
+    "x0": 6862,
+    "y0": 2844,
+    "k": 2.0,
+    "w": 334,
+    "h": 352
+   }
+  },
+  {
+   "key": "#e2dbc4",
+   "color": "#e2dbc4",
+   "lon": 111.0165,
+   "lat": 38.0723,
+   "bbox": [
+    6740,
+    2886,
+    6835,
+    3053
+   ],
+   "area_px": 9049,
+   "people": 1296902,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Lin",
+     "local": "临县",
+     "prefecture": "Lvliang",
+     "prefecture_local": "吕梁市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.456,
+     "area_share": 0.297,
+     "cover": 0.996
+    },
+    {
+     "name": "Xing",
+     "local": "兴县",
+     "prefecture": "Lvliang",
+     "prefecture_local": "吕梁市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.219,
+     "area_share": 0.314,
+     "cover": 0.994
+    },
+    {
+     "name": "Fangshan",
+     "local": "方山县",
+     "prefecture": "Lvliang",
+     "prefecture_local": "吕梁市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.114,
+     "area_share": 0.143,
+     "cover": 0.999
+    },
+    {
+     "name": "Jia",
+     "local": "佳县",
+     "prefecture": "Yulin",
+     "prefecture_local": "榆林市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.048,
+     "area_share": 0.044,
+     "cover": 0.297
+    },
+    {
+     "name": "Wubu",
+     "local": "吴堡县",
+     "prefecture": "Yulin",
+     "prefecture_local": "榆林市",
+     "province": "陕西省",
+     "country": "China",
+     "people_share": 0.048,
+     "area_share": 0.041,
+     "cover": 0.972
+    },
+    {
+     "name": "Liulin",
+     "local": "柳林县",
+     "prefecture": "Lvliang",
+     "prefecture_local": "吕梁市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.04,
+     "area_share": 0.027,
+     "cover": 0.148
+    },
+    {
+     "name": "Lishi",
+     "local": "离石区",
+     "prefecture": "Lvliang",
+     "prefecture_local": "吕梁市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.038,
+     "area_share": 0.069,
+     "cover": 0.096
+    },
+    {
+     "name": "Baode",
+     "local": "保德县",
+     "prefecture": "Xinzhou",
+     "prefecture_local": "忻州市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.035,
+     "area_share": 0.057,
+     "cover": 0.284
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.901,
+     "cover": 0.03
+    },
+    {
+     "level": "prefecture",
+     "name": "Lüliang",
+     "local": "吕梁市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.866,
+     "cover": 0.277
+    },
+    {
+     "level": "province",
+     "name": "Shaanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.099,
+     "cover": 0.003
+    },
+    {
+     "level": "prefecture",
+     "name": "Yulin",
+     "local": "榆林市",
+     "province": "Shaanxi",
+     "country": "China",
+     "people_share": 0.099,
+     "cover": 0.036
+    }
+   ],
+   "towns": [
+    {
+     "town": "蔚汾镇",
+     "county": "兴县",
+     "city": "吕梁市",
+     "people_share": 0.078,
+     "cover": 1.0
+    },
+    {
+     "town": "临泉镇",
+     "county": "临县",
+     "city": "吕梁市",
+     "people_share": 0.074,
+     "cover": 1.0
+    },
+    {
+     "town": "三交镇",
+     "county": "临县",
+     "city": "吕梁市",
+     "people_share": 0.053,
+     "cover": 1.0
+    },
+    {
+     "town": "圪洞镇",
+     "county": "方山县",
+     "city": "吕梁市",
+     "people_share": 0.035,
+     "cover": 1.0
+    },
+    {
+     "town": "大禹乡",
+     "county": "临县",
+     "city": "吕梁市",
+     "people_share": 0.033,
+     "cover": 1.0
+    },
+    {
+     "town": "大武镇",
+     "county": "方山县",
+     "city": "吕梁市",
+     "people_share": 0.03,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Weifen",
+     "admin": "Shanxi",
+     "pop": 100615
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#e2d8c0",
+     "border_px": 2008
+    },
+    {
+     "key": "#e8e3d1",
+     "border_px": 2007
+    },
+    {
+     "key": "#dfd9cc",
+     "border_px": 1074
+    },
+    {
+     "key": "#e8e4d7",
+     "border_px": 729
+    },
+    {
+     "key": "#e4dabc",
+     "border_px": 704
+    }
+   ],
+   "text_px": 0,
+   "n": 9,
+   "thumb": {
+    "x0": 6682,
+    "y0": 2828,
+    "k": 1.0,
+    "w": 211,
+    "h": 283
+   }
+  },
+  {
+   "key": "#d0be8c",
+   "color": "#d0be8c",
+   "lon": 112.5739,
+   "lat": 37.9589,
+   "bbox": [
+    6900,
+    2969,
+    6930,
+    2994
+   ],
+   "area_px": 427,
+   "people": 963786,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Jiancaoping",
+     "local": "尖草坪区",
+     "prefecture": "Taiyuan",
+     "prefecture_local": "太原市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.589,
+     "area_share": 0.518,
+     "cover": 0.903
+    },
+    {
+     "name": "Xinghualing",
+     "local": "杏花岭区",
+     "prefecture": "Taiyuan",
+     "prefecture_local": "太原市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.28,
+     "area_share": 0.239,
+     "cover": 0.366
+    },
+    {
+     "name": "Yingze",
+     "local": "迎泽区",
+     "prefecture": "Taiyuan",
+     "prefecture_local": "太原市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.123,
+     "area_share": 0.155,
+     "cover": 0.192
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.025
+    },
+    {
+     "level": "prefecture",
+     "name": "Taiyuan",
+     "local": "太原市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.187
+    }
+   ],
+   "towns": [
+    {
+     "town": "柴村街道",
+     "county": "尖草坪区",
+     "city": "太原市",
+     "people_share": 0.136,
+     "cover": 0.912
+    },
+    {
+     "town": "郝庄镇",
+     "county": "迎泽区",
+     "city": "太原市",
+     "people_share": 0.123,
+     "cover": 0.601
+    },
+    {
+     "town": "尖草坪街道",
+     "county": "尖草坪区",
+     "city": "太原市",
+     "people_share": 0.119,
+     "cover": 1.0
+    },
+    {
+     "town": "古城街道",
+     "county": "尖草坪区",
+     "city": "太原市",
+     "people_share": 0.112,
+     "cover": 1.0
+    },
+    {
+     "town": "中涧河乡",
+     "county": "杏花岭区",
+     "city": "太原市",
+     "people_share": 0.096,
+     "cover": 1.0
+    },
+    {
+     "town": "涧河街道",
+     "county": "杏花岭区",
+     "city": "太原市",
+     "people_share": 0.083,
+     "cover": 1.0
+    },
+    {
+     "town": "汇丰街道",
+     "county": "尖草坪区",
+     "city": "太原市",
+     "people_share": 0.055,
+     "cover": 0.524
+    },
+    {
+     "town": "小返乡",
+     "county": "杏花岭区",
+     "city": "太原市",
+     "people_share": 0.046,
+     "cover": 1.0
+    },
+    {
+     "town": "新城街道",
+     "county": "尖草坪区",
+     "city": "太原市",
+     "people_share": 0.036,
+     "cover": 1.0
+    },
+    {
+     "town": "杨家峪街道",
+     "county": "杏花岭区",
+     "city": "太原市",
+     "people_share": 0.031,
+     "cover": 0.231
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#e2d8c0",
+     "border_px": 380
+    },
+    {
+     "key": "#ddd7bf",
+     "border_px": 285
+    },
+    {
+     "key": "#a69460",
+     "border_px": 197
+    },
+    {
+     "key": "#cabe9e",
+     "border_px": 196
+    },
+    {
+     "key": "#c8b484",
+     "border_px": 125
+    },
+    {
+     "key": "#eae4d3",
+     "border_px": 77
+    },
+    {
+     "key": "#b19d76",
+     "border_px": 20
+    }
+   ],
+   "text_px": 0,
+   "n": 10,
+   "thumb": {
+    "x0": 6860,
+    "y0": 2929,
+    "k": 3.0,
+    "w": 330,
+    "h": 315
+   }
+  },
+  {
+   "key": "#e0d3ac",
+   "color": "#e0d3ac",
+   "lon": 113.6989,
+   "lat": 37.8798,
+   "bbox": [
+    6983,
+    2953,
+    7035,
+    2999
+   ],
+   "area_px": 1669,
+   "people": 1021499,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Jiao",
+     "local": "郊区",
+     "prefecture": "Yangquan",
+     "prefecture_local": "阳泉市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.557,
+     "area_share": 0.283,
+     "cover": 0.931
+    },
+    {
+     "name": "Pingding",
+     "local": "平定县",
+     "prefecture": "Yangquan",
+     "prefecture_local": "阳泉市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.34,
+     "area_share": 0.683,
+     "cover": 0.907
+    },
+    {
+     "name": "Cheng",
+     "local": "城区",
+     "prefecture": "Yangquan",
+     "prefecture_local": "阳泉市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.051,
+     "area_share": 0.008,
+     "cover": 1.0
+    },
+    {
+     "name": "Kuang",
+     "local": "矿区",
+     "prefecture": "Yangquan",
+     "prefecture_local": "阳泉市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.05,
+     "area_share": 0.006,
+     "cover": 1.0
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.999,
+     "cover": 0.026
+    },
+    {
+     "level": "prefecture",
+     "name": "Yangquan",
+     "local": "阳泉市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.999,
+     "cover": 0.719
+    }
+   ],
+   "towns": [
+    {
+     "town": "平坦镇",
+     "county": "郊区",
+     "city": "阳泉市",
+     "people_share": 0.277,
+     "cover": 0.961
+    },
+    {
+     "town": "冠山镇",
+     "county": "平定县",
+     "city": "阳泉市",
+     "people_share": 0.146,
+     "cover": 1.0
+    },
+    {
+     "town": "义井镇",
+     "county": "郊区",
+     "city": "阳泉市",
+     "people_share": 0.088,
+     "cover": 1.0
+    },
+    {
+     "town": "荫营镇",
+     "county": "郊区",
+     "city": "阳泉市",
+     "people_share": 0.058,
+     "cover": 1.0
+    },
+    {
+     "town": "冶西镇",
+     "county": "平定县",
+     "city": "阳泉市",
+     "people_share": 0.051,
+     "cover": 1.0
+    },
+    {
+     "town": "河底镇",
+     "county": "郊区",
+     "city": "阳泉市",
+     "people_share": 0.044,
+     "cover": 0.954
+    },
+    {
+     "town": "李家庄乡",
+     "county": "郊区",
+     "city": "阳泉市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "开发区",
+     "county": "郊区",
+     "city": "阳泉市",
+     "people_share": 0.032,
+     "cover": 1.0
+    },
+    {
+     "town": "锁簧镇",
+     "county": "平定县",
+     "city": "阳泉市",
+     "people_share": 0.03,
+     "cover": 0.9
+    }
+   ],
+   "cities": [
+    {
+     "name": "Yangquan",
+     "admin": "Shanxi",
+     "pop": 1368502
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#eae4d3",
+     "border_px": 1581
+    },
+    {
+     "key": "#edf0c4",
+     "border_px": 661
+    }
+   ],
+   "text_px": 113,
+   "n": 11,
+   "thumb": {
+    "x0": 6943,
+    "y0": 2913,
+    "k": 3.0,
+    "w": 396,
+    "h": 378
+   }
+  },
+  {
+   "key": "#a69460",
+   "color": "#a69460",
+   "lon": 112.5752,
+   "lat": 37.8708,
+   "bbox": [
+    6913,
+    2987,
+    6918,
+    2993
+   ],
+   "area_px": 50,
+   "people": 902033,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Xinghualing",
+     "local": "杏花岭区",
+     "prefecture": "Taiyuan",
+     "prefecture_local": "太原市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.466,
+     "area_share": 0.52,
+     "cover": 0.571
+    },
+    {
+     "name": "Yingze",
+     "local": "迎泽区",
+     "prefecture": "Taiyuan",
+     "prefecture_local": "太原市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.447,
+     "area_share": 0.42,
+     "cover": 0.653
+    },
+    {
+     "name": "Xiaodian",
+     "local": "小店区",
+     "prefecture": "Taiyuan",
+     "prefecture_local": "太原市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.087,
+     "area_share": 0.06,
+     "cover": 0.069
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.023
+    },
+    {
+     "level": "prefecture",
+     "name": "Taiyuan",
+     "local": "太原市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.175
+    }
+   ],
+   "towns": [
+    {
+     "town": "桥东街道",
+     "county": "迎泽区",
+     "city": "太原市",
+     "people_share": 0.115,
+     "cover": 0.856
+    },
+    {
+     "town": "杨家峪街道",
+     "county": "杏花岭区",
+     "city": "太原市",
+     "people_share": 0.112,
+     "cover": 0.769
+    },
+    {
+     "town": "巨轮街道",
+     "county": "杏花岭区",
+     "city": "太原市",
+     "people_share": 0.103,
+     "cover": 1.0
+    },
+    {
+     "town": "营盘街道",
+     "county": "小店区",
+     "city": "太原市",
+     "people_share": 0.087,
+     "cover": 0.562
+    },
+    {
+     "town": "老军营街道",
+     "county": "迎泽区",
+     "city": "太原市",
+     "people_share": 0.087,
+     "cover": 1.0
+    },
+    {
+     "town": "郝庄镇",
+     "county": "迎泽区",
+     "city": "太原市",
+     "people_share": 0.058,
+     "cover": 0.266
+    },
+    {
+     "town": "迎泽街道",
+     "county": "迎泽区",
+     "city": "太原市",
+     "people_share": 0.058,
+     "cover": 1.0
+    },
+    {
+     "town": "文庙街道",
+     "county": "迎泽区",
+     "city": "太原市",
+     "people_share": 0.058,
+     "cover": 1.0
+    },
+    {
+     "town": "敦化坊街道",
+     "county": "杏花岭区",
+     "city": "太原市",
+     "people_share": 0.057,
+     "cover": 0.691
+    },
+    {
+     "town": "三桥街道",
+     "county": "杏花岭区",
+     "city": "太原市",
+     "people_share": 0.051,
+     "cover": 0.5
+    }
+   ],
+   "cities": [
+    {
+     "name": "Taiyuan",
+     "admin": "Shanxi",
+     "pop": 3875053
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#d0be8c",
+     "border_px": 197
+    },
+    {
+     "key": "#c8b484",
+     "border_px": 84
+    },
+    {
+     "key": "#b19d76",
+     "border_px": 48
+    }
+   ],
+   "text_px": 0,
+   "n": 12,
+   "thumb": {
+    "x0": 6873,
+    "y0": 2947,
+    "k": 4.0,
+    "w": 340,
+    "h": 344
+   }
+  },
+  {
+   "key": "#c8b484",
+   "color": "#c8b484",
+   "lon": 112.4356,
+   "lat": 37.8528,
+   "bbox": [
+    6896,
+    2986,
+    6912,
+    3000
+   ],
+   "area_px": 198,
+   "people": 1254446,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Wanbai",
+     "local": "万柏林区",
+     "prefecture": "Taiyuan",
+     "prefecture_local": "太原市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.703,
+     "area_share": 0.843,
+     "cover": 0.984
+    },
+    {
+     "name": "Jinyuan",
+     "local": "晋源区",
+     "prefecture": "Taiyuan",
+     "prefecture_local": "太原市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.097,
+     "area_share": 0.086,
+     "cover": 0.446
+    },
+    {
+     "name": "Xiaodian",
+     "local": "小店区",
+     "prefecture": "Taiyuan",
+     "prefecture_local": "太原市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.073,
+     "area_share": 0.02,
+     "cover": 0.08
+    },
+    {
+     "name": "Jiancaoping",
+     "local": "尖草坪区",
+     "prefecture": "Taiyuan",
+     "prefecture_local": "太原市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.048,
+     "area_share": 0.03,
+     "cover": 0.096
+    },
+    {
+     "name": "Yingze",
+     "local": "迎泽区",
+     "prefecture": "Taiyuan",
+     "prefecture_local": "太原市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.041,
+     "area_share": 0.01,
+     "cover": 0.084
+    },
+    {
+     "name": "Xinghualing",
+     "local": "杏花岭区",
+     "prefecture": "Taiyuan",
+     "prefecture_local": "太原市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.037,
+     "area_share": 0.01,
+     "cover": 0.063
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.032
+    },
+    {
+     "level": "prefecture",
+     "name": "Taiyuan",
+     "local": "太原市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.244
+    }
+   ],
+   "towns": [
+    {
+     "town": "和平街道",
+     "county": "万柏林区",
+     "city": "太原市",
+     "people_share": 0.137,
+     "cover": 1.0
+    },
+    {
+     "town": "小井峪街道",
+     "county": "万柏林区",
+     "city": "太原市",
+     "people_share": 0.114,
+     "cover": 1.0
+    },
+    {
+     "town": "下元街道",
+     "county": "万柏林区",
+     "city": "太原市",
+     "people_share": 0.101,
+     "cover": 1.0
+    },
+    {
+     "town": "义井街道",
+     "county": "晋源区",
+     "city": "太原市",
+     "people_share": 0.082,
+     "cover": 1.0
+    },
+    {
+     "town": "兴华街道",
+     "county": "万柏林区",
+     "city": "太原市",
+     "people_share": 0.079,
+     "cover": 1.0
+    },
+    {
+     "town": "平阳路街道",
+     "county": "小店区",
+     "city": "太原市",
+     "people_share": 0.073,
+     "cover": 0.366
+    },
+    {
+     "town": "东社街道",
+     "county": "万柏林区",
+     "city": "太原市",
+     "people_share": 0.064,
+     "cover": 1.0
+    },
+    {
+     "town": "长风西街街道",
+     "county": "万柏林区",
+     "city": "太原市",
+     "people_share": 0.057,
+     "cover": 1.0
+    },
+    {
+     "town": "庙前街道",
+     "county": "迎泽区",
+     "city": "太原市",
+     "people_share": 0.041,
+     "cover": 0.667
+    },
+    {
+     "town": "神堂沟街道",
+     "county": "万柏林区",
+     "city": "太原市",
+     "people_share": 0.04,
+     "cover": 0.835
+    },
+    {
+     "town": "千峰街道",
+     "county": "万柏林区",
+     "city": "太原市",
+     "people_share": 0.039,
+     "cover": 1.0
+    },
+    {
+     "town": "汇丰街道",
+     "county": "尖草坪区",
+     "city": "太原市",
+     "people_share": 0.038,
+     "cover": 0.476
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#e2d8c0",
+     "border_px": 253
+    },
+    {
+     "key": "#dfceae",
+     "border_px": 233
+    },
+    {
+     "key": "#d0be8c",
+     "border_px": 125
+    },
+    {
+     "key": "#a69460",
+     "border_px": 84
+    },
+    {
+     "key": "#b19d76",
+     "border_px": 69
+    }
+   ],
+   "text_px": 0,
+   "n": 13,
+   "thumb": {
+    "x0": 6856,
+    "y0": 2946,
+    "k": 4.0,
+    "w": 384,
+    "h": 376
+   }
+  },
+  {
+   "key": "#b19d76",
+   "color": "#b19d76",
+   "lon": 112.5764,
+   "lat": 37.768,
+   "bbox": [
+    6914,
+    2995,
+    6921,
+    3008
+   ],
+   "area_px": 91,
+   "people": 802503,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Xiaodian",
+     "local": "小店区",
+     "prefecture": "Taiyuan",
+     "prefecture_local": "太原市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.957,
+     "area_share": 0.956,
+     "cover": 0.675
+    },
+    {
+     "name": "Yingze",
+     "local": "迎泽区",
+     "prefecture": "Taiyuan",
+     "prefecture_local": "太原市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.043,
+     "area_share": 0.044,
+     "cover": 0.056
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.021
+    },
+    {
+     "level": "prefecture",
+     "name": "Taiyuan",
+     "local": "太原市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.156
+    }
+   ],
+   "towns": [
+    {
+     "town": "平阳路街道",
+     "county": "小店区",
+     "city": "太原市",
+     "people_share": 0.197,
+     "cover": 0.631
+    },
+    {
+     "town": "坞城街道",
+     "county": "小店区",
+     "city": "太原市",
+     "people_share": 0.172,
+     "cover": 1.0
+    },
+    {
+     "town": "小店街道",
+     "county": "小店区",
+     "city": "太原市",
+     "people_share": 0.163,
+     "cover": 0.873
+    },
+    {
+     "town": "黄陵街道",
+     "county": "小店区",
+     "city": "太原市",
+     "people_share": 0.136,
+     "cover": 0.863
+    },
+    {
+     "town": "太原高新技术产业开发区",
+     "county": "小店区",
+     "city": "太原市",
+     "people_share": 0.098,
+     "cover": 1.0
+    },
+    {
+     "town": "太原经济技术开发区",
+     "county": "小店区",
+     "city": "太原市",
+     "people_share": 0.084,
+     "cover": 0.869
+    },
+    {
+     "town": "营盘街道",
+     "county": "小店区",
+     "city": "太原市",
+     "people_share": 0.076,
+     "cover": 0.438
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#cabe9e",
+     "border_px": 195
+    },
+    {
+     "key": "#dfceae",
+     "border_px": 182
+    },
+    {
+     "key": "#c8b484",
+     "border_px": 69
+    },
+    {
+     "key": "#a69460",
+     "border_px": 48
+    },
+    {
+     "key": "#d0be8c",
+     "border_px": 20
+    }
+   ],
+   "text_px": 0,
+   "n": 14,
+   "thumb": {
+    "x0": 6874,
+    "y0": 2955,
+    "k": 4.0,
+    "w": 348,
+    "h": 372
+   }
+  },
+  {
+   "key": "#cabe9e",
+   "color": "#cabe9e",
+   "lon": 112.7749,
+   "lat": 37.7586,
+   "bbox": [
+    6919,
+    2988,
+    6945,
+    3013
+   ],
+   "area_px": 529,
+   "people": 601440,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yuci",
+     "local": "榆次区",
+     "prefecture": "Jinzhong",
+     "prefecture_local": "晋中市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.862,
+     "area_share": 0.905,
+     "cover": 0.761
+    },
+    {
+     "name": "Xiaodian",
+     "local": "小店区",
+     "prefecture": "Taiyuan",
+     "prefecture_local": "太原市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.122,
+     "area_share": 0.078,
+     "cover": 0.065
+    },
+    {
+     "name": "Yingze",
+     "local": "迎泽区",
+     "prefecture": "Taiyuan",
+     "prefecture_local": "太原市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.015,
+     "area_share": 0.009,
+     "cover": 0.014
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.015
+    },
+    {
+     "level": "prefecture",
+     "name": "Jinzhong",
+     "local": "晋中市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.859,
+     "cover": 0.153
+    },
+    {
+     "level": "prefecture",
+     "name": "Taiyuan",
+     "local": "太原市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.141,
+     "cover": 0.017
+    }
+   ],
+   "towns": [
+    {
+     "town": "郭家堡乡",
+     "county": "榆次区",
+     "city": "晋中市",
+     "people_share": 0.191,
+     "cover": 0.979
+    },
+    {
+     "town": "晋中经济开发区",
+     "county": "榆次区",
+     "city": "晋中市",
+     "people_share": 0.133,
+     "cover": 1.0
+    },
+    {
+     "town": "锦纶街道",
+     "county": "榆次区",
+     "city": "晋中市",
+     "people_share": 0.088,
+     "cover": 1.0
+    },
+    {
+     "town": "安宁街道",
+     "county": "榆次区",
+     "city": "晋中市",
+     "people_share": 0.065,
+     "cover": 1.0
+    },
+    {
+     "town": "北营街道",
+     "county": "小店区",
+     "city": "太原市",
+     "people_share": 0.062,
+     "cover": 0.609
+    },
+    {
+     "town": "修文镇",
+     "county": "榆次区",
+     "city": "晋中市",
+     "people_share": 0.056,
+     "cover": 0.499
+    },
+    {
+     "town": "路西街道",
+     "county": "榆次区",
+     "city": "晋中市",
+     "people_share": 0.054,
+     "cover": 1.0
+    },
+    {
+     "town": "乌金山镇",
+     "county": "榆次区",
+     "city": "晋中市",
+     "people_share": 0.053,
+     "cover": 0.988
+    },
+    {
+     "town": "新建街道",
+     "county": "榆次区",
+     "city": "晋中市",
+     "people_share": 0.041,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Yuci",
+     "admin": "Shanxi",
+     "pop": 840000
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#eae4d3",
+     "border_px": 563
+    },
+    {
+     "key": "#dfceae",
+     "border_px": 325
+    },
+    {
+     "key": "#d0be8c",
+     "border_px": 196
+    },
+    {
+     "key": "#b19d76",
+     "border_px": 195
+    }
+   ],
+   "text_px": 0,
+   "n": 15,
+   "thumb": {
+    "x0": 6879,
+    "y0": 2948,
+    "k": 3.0,
+    "w": 318,
+    "h": 315
+   }
+  },
+  {
+   "key": "#eae4d3",
+   "color": "#eae4d3",
+   "lon": 113.3451,
+   "lat": 37.557,
+   "bbox": [
+    6931,
+    2912,
+    7044,
+    3100
+   ],
+   "area_px": 11943,
+   "people": 1305112,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Yu",
+     "local": "盂县",
+     "prefecture": "Yangquan",
+     "prefecture_local": "阳泉市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.243,
+     "area_share": 0.186,
+     "cover": 0.994
+    },
+    {
+     "name": "Xiyang",
+     "local": "昔阳县",
+     "prefecture": "Jinzhong",
+     "prefecture_local": "晋中市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.181,
+     "area_share": 0.147,
+     "cover": 0.997
+    },
+    {
+     "name": "Shouyang",
+     "local": "寿阳县",
+     "prefecture": "Jinzhong",
+     "prefecture_local": "晋中市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.167,
+     "area_share": 0.159,
+     "cover": 0.995
+    },
+    {
+     "name": "Zuoquan",
+     "local": "左权县",
+     "prefecture": "Jinzhong",
+     "prefecture_local": "晋中市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.125,
+     "area_share": 0.152,
+     "cover": 0.989
+    },
+    {
+     "name": "Heshun",
+     "local": "和顺县",
+     "prefecture": "Jinzhong",
+     "prefecture_local": "晋中市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.113,
+     "area_share": 0.167,
+     "cover": 1.0
+    },
+    {
+     "name": "Yushe",
+     "local": "榆社县",
+     "prefecture": "Jinzhong",
+     "prefecture_local": "晋中市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.1,
+     "area_share": 0.119,
+     "cover": 0.933
+    },
+    {
+     "name": "Jiao",
+     "local": "郊区",
+     "prefecture": "Yangquan",
+     "prefecture_local": "阳泉市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.032,
+     "area_share": 0.009,
+     "cover": 0.069
+    },
+    {
+     "name": "Pingding",
+     "local": "平定县",
+     "prefecture": "Yangquan",
+     "prefecture_local": "阳泉市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.027,
+     "area_share": 0.01,
+     "cover": 0.092
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.998,
+     "cover": 0.033
+    },
+    {
+     "level": "prefecture",
+     "name": "Jinzhong",
+     "local": "晋中市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.693,
+     "cover": 0.269
+    },
+    {
+     "level": "prefecture",
+     "name": "Yangquan",
+     "local": "阳泉市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.304,
+     "cover": 0.28
+    }
+   ],
+   "towns": [
+    {
+     "town": "朝阳镇",
+     "county": "寿阳县",
+     "city": "晋中市",
+     "people_share": 0.07,
+     "cover": 1.0
+    },
+    {
+     "town": "义兴镇",
+     "county": "和顺县",
+     "city": "晋中市",
+     "people_share": 0.059,
+     "cover": 1.0
+    },
+    {
+     "town": "箕城镇",
+     "county": "榆社县",
+     "city": "晋中市",
+     "people_share": 0.056,
+     "cover": 1.0
+    },
+    {
+     "town": "乐平镇",
+     "county": "昔阳县",
+     "city": "晋中市",
+     "people_share": 0.052,
+     "cover": 1.0
+    },
+    {
+     "town": "大寨镇",
+     "county": "昔阳县",
+     "city": "晋中市",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "秀水镇",
+     "county": "盂县",
+     "city": "阳泉市",
+     "people_share": 0.047,
+     "cover": 1.0
+    },
+    {
+     "town": "辽阳镇",
+     "county": "左权县",
+     "city": "晋中市",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "南娄镇",
+     "county": "盂县",
+     "city": "阳泉市",
+     "people_share": 0.04,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#e0d3ac",
+     "border_px": 1581
+    },
+    {
+     "key": "#ddd7bf",
+     "border_px": 1546
+    },
+    {
+     "key": "#e2d8c5",
+     "border_px": 1003
+    },
+    {
+     "key": "#dfceae",
+     "border_px": 817
+    },
+    {
+     "key": "#f0efc4",
+     "border_px": 727
+    },
+    {
+     "key": "#deedc4",
+     "border_px": 631
+    },
+    {
+     "key": "#dee5c1",
+     "border_px": 597
+    },
+    {
+     "key": "#cabe9e",
+     "border_px": 563
+    },
+    {
+     "key": "#dee5c5",
+     "border_px": 524
+    },
+    {
+     "key": "#e5dcca",
+     "border_px": 266
+    },
+    {
+     "key": "#e2d5bd",
+     "border_px": 214
+    },
+    {
+     "key": "#edf0c4",
+     "border_px": 192
+    },
+    {
+     "key": "#d0be8c",
+     "border_px": 77
+    }
+   ],
+   "text_px": 545,
+   "n": 16,
+   "thumb": {
+    "x0": 6866,
+    "y0": 2847,
+    "k": 1.0,
+    "w": 243,
+    "h": 318
+   }
+  },
+  {
+   "key": "#dfceae",
+   "color": "#dfceae",
+   "lon": 112.5688,
+   "lat": 37.5407,
+   "bbox": [
+    6886,
+    2998,
+    6948,
+    3054
+   ],
+   "area_px": 2017,
+   "people": 1068237,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Qingxu",
+     "local": "清徐县",
+     "prefecture": "Taiyuan",
+     "prefecture_local": "太原市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.323,
+     "area_share": 0.266,
+     "cover": 0.983
+    },
+    {
+     "name": "Taigu",
+     "local": "太谷县",
+     "prefecture": "Jinzhong",
+     "prefecture_local": "晋中市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.257,
+     "area_share": 0.374,
+     "cover": 0.928
+    },
+    {
+     "name": "Yuci",
+     "local": "榆次区",
+     "prefecture": "Jinzhong",
+     "prefecture_local": "晋中市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.144,
+     "area_share": 0.161,
+     "cover": 0.225
+    },
+    {
+     "name": "Jinyuan",
+     "local": "晋源区",
+     "prefecture": "Taiyuan",
+     "prefecture_local": "太原市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.142,
+     "area_share": 0.121,
+     "cover": 0.554
+    },
+    {
+     "name": "Xiaodian",
+     "local": "小店区",
+     "prefecture": "Taiyuan",
+     "prefecture_local": "太原市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.116,
+     "area_share": 0.063,
+     "cover": 0.109
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.027
+    },
+    {
+     "level": "prefecture",
+     "name": "Taiyuan",
+     "local": "太原市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.596,
+     "cover": 0.124
+    },
+    {
+     "level": "prefecture",
+     "name": "Jinzhong",
+     "local": "晋中市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.404,
+     "cover": 0.128
+    }
+   ],
+   "towns": [
+    {
+     "town": "清源镇",
+     "county": "清徐县",
+     "city": "太原市",
+     "people_share": 0.099,
+     "cover": 0.997
+    },
+    {
+     "town": "张庆乡",
+     "county": "榆次区",
+     "city": "晋中市",
+     "people_share": 0.066,
+     "cover": 0.846
+    },
+    {
+     "town": "北格镇",
+     "county": "小店区",
+     "city": "太原市",
+     "people_share": 0.052,
+     "cover": 1.0
+    },
+    {
+     "town": "胡村镇",
+     "county": "太谷县",
+     "city": "晋中市",
+     "people_share": 0.049,
+     "cover": 1.0
+    },
+    {
+     "town": "徐沟镇",
+     "county": "清徐县",
+     "city": "太原市",
+     "people_share": 0.048,
+     "cover": 0.993
+    },
+    {
+     "town": "晋源街道",
+     "county": "晋源区",
+     "city": "太原市",
+     "people_share": 0.042,
+     "cover": 1.0
+    },
+    {
+     "town": "侯城乡",
+     "county": "太谷县",
+     "city": "晋中市",
+     "people_share": 0.04,
+     "cover": 0.997
+    },
+    {
+     "town": "晋祠镇",
+     "county": "晋源区",
+     "city": "太原市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "王答乡",
+     "county": "清徐县",
+     "city": "太原市",
+     "people_share": 0.038,
+     "cover": 1.0
+    },
+    {
+     "town": "刘家堡乡",
+     "county": "小店区",
+     "city": "太原市",
+     "people_share": 0.036,
+     "cover": 1.0
+    },
+    {
+     "town": "孟封镇",
+     "county": "清徐县",
+     "city": "太原市",
+     "people_share": 0.032,
+     "cover": 0.991
+    },
+    {
+     "town": "修文镇",
+     "county": "榆次区",
+     "city": "晋中市",
+     "people_share": 0.032,
+     "cover": 0.501
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#eae4d3",
+     "border_px": 817
+    },
+    {
+     "key": "#e2d5bd",
+     "border_px": 561
+    },
+    {
+     "key": "#e4dabc",
+     "border_px": 389
+    },
+    {
+     "key": "#cabe9e",
+     "border_px": 325
+    },
+    {
+     "key": "#e2d8c0",
+     "border_px": 241
+    },
+    {
+     "key": "#c8b484",
+     "border_px": 233
+    },
+    {
+     "key": "#b19d76",
+     "border_px": 182
+    }
+   ],
+   "text_px": 0,
+   "n": 17,
+   "thumb": {
+    "x0": 6846,
+    "y0": 2958,
+    "k": 2.0,
+    "w": 284,
+    "h": 272
+   }
+  },
+  {
+   "key": "#e4dabc",
+   "color": "#e4dabc",
+   "lon": 111.83,
+   "lat": 37.5061,
+   "bbox": [
+    6822,
+    2998,
+    6899,
+    3074
+   ],
+   "area_px": 3785,
+   "people": 1192377,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Fenyang",
+     "local": "汾阳市",
+     "prefecture": "Lvliang",
+     "prefecture_local": "吕梁市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.382,
+     "area_share": 0.276,
+     "cover": 0.995
+    },
+    {
+     "name": "Wenshui",
+     "local": "文水县",
+     "prefecture": "Lvliang",
+     "prefecture_local": "吕梁市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.381,
+     "area_share": 0.254,
+     "cover": 0.992
+    },
+    {
+     "name": "Jiaocheng",
+     "local": "交城县",
+     "prefecture": "Lvliang",
+     "prefecture_local": "吕梁市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.19,
+     "area_share": 0.43,
+     "cover": 0.987
+    },
+    {
+     "name": "Pingyao",
+     "local": "平遥县",
+     "prefecture": "Jinzhong",
+     "prefecture_local": "晋中市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.037,
+     "area_share": 0.027,
+     "cover": 0.086
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.031
+    },
+    {
+     "level": "prefecture",
+     "name": "Lüliang",
+     "local": "吕梁市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.938,
+     "cover": 0.276
+    },
+    {
+     "level": "prefecture",
+     "name": "Jinzhong",
+     "local": "晋中市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.053,
+     "cover": 0.019
+    }
+   ],
+   "towns": [
+    {
+     "town": "凤城镇",
+     "county": "文水县",
+     "city": "吕梁市",
+     "people_share": 0.114,
+     "cover": 1.0
+    },
+    {
+     "town": "天宁镇",
+     "county": "交城县",
+     "city": "吕梁市",
+     "people_share": 0.061,
+     "cover": 1.0
+    },
+    {
+     "town": "阳城乡",
+     "county": "汾阳市",
+     "city": "吕梁市",
+     "people_share": 0.045,
+     "cover": 0.985
+    },
+    {
+     "town": "三泉镇",
+     "county": "汾阳市",
+     "city": "吕梁市",
+     "people_share": 0.042,
+     "cover": 0.987
+    },
+    {
+     "town": "栗家庄乡",
+     "county": "汾阳市",
+     "city": "吕梁市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "刘胡兰镇",
+     "county": "文水县",
+     "city": "吕梁市",
+     "people_share": 0.038,
+     "cover": 0.966
+    },
+    {
+     "town": "下曲镇",
+     "county": "文水县",
+     "city": "吕梁市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "肖家庄镇",
+     "county": "汾阳市",
+     "city": "吕梁市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "贾家庄镇",
+     "county": "汾阳市",
+     "city": "吕梁市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "冀村镇",
+     "county": "汾阳市",
+     "city": "吕梁市",
+     "people_share": 0.033,
+     "cover": 1.0
+    },
+    {
+     "town": "洪相乡",
+     "county": "交城县",
+     "city": "吕梁市",
+     "people_share": 0.032,
+     "cover": 1.0
+    },
+    {
+     "town": "南安镇",
+     "county": "文水县",
+     "city": "吕梁市",
+     "people_share": 0.032,
+     "cover": 0.946
+    }
+   ],
+   "cities": [
+    {
+     "name": "Fenyang",
+     "admin": "Shanxi",
+     "pop": 416212
+    },
+    {
+     "name": "Fengcheng",
+     "admin": "Shanxi",
+     "pop": 128571
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#e2d8c0",
+     "border_px": 820
+    },
+    {
+     "key": "#e2dbc4",
+     "border_px": 704
+    },
+    {
+     "key": "#e2d5bd",
+     "border_px": 661
+    },
+    {
+     "key": "#e7ddbc",
+     "border_px": 629
+    },
+    {
+     "key": "#dfd9cc",
+     "border_px": 455
+    },
+    {
+     "key": "#dfceae",
+     "border_px": 389
+    }
+   ],
+   "text_px": 0,
+   "n": 18,
+   "thumb": {
+    "x0": 6782,
+    "y0": 2958,
+    "k": 2.0,
+    "w": 314,
+    "h": 312
+   }
+  },
+  {
+   "key": "#e2d5bd",
+   "color": "#e2d5bd",
+   "lon": 112.3047,
+   "lat": 37.1644,
+   "bbox": [
+    6870,
+    3035,
+    6932,
+    3096
+   ],
+   "area_px": 2440,
+   "people": 1059023,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Pingyao",
+     "local": "平遥县",
+     "prefecture": "Jinzhong",
+     "prefecture_local": "晋中市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.443,
+     "area_share": 0.425,
+     "cover": 0.914
+    },
+    {
+     "name": "Jiexiu",
+     "local": "介休市",
+     "prefecture": "Jinzhong",
+     "prefecture_local": "晋中市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.271,
+     "area_share": 0.142,
+     "cover": 0.695
+    },
+    {
+     "name": "Qi",
+     "local": "祁县",
+     "prefecture": "Jinzhong",
+     "prefecture_local": "晋中市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.248,
+     "area_share": 0.31,
+     "cover": 0.979
+    },
+    {
+     "name": "Taigu",
+     "local": "太谷县",
+     "prefecture": "Jinzhong",
+     "prefecture_local": "晋中市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.02,
+     "area_share": 0.03,
+     "cover": 0.072
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.027
+    },
+    {
+     "level": "prefecture",
+     "name": "Jinzhong",
+     "local": "晋中市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.982,
+     "cover": 0.309
+    }
+   ],
+   "towns": [
+    {
+     "town": "岳壁乡",
+     "county": "平遥县",
+     "city": "晋中市",
+     "people_share": 0.091,
+     "cover": 1.0
+    },
+    {
+     "town": "南政乡",
+     "county": "平遥县",
+     "city": "晋中市",
+     "people_share": 0.053,
+     "cover": 0.972
+    },
+    {
+     "town": "城赵镇",
+     "county": "祁县",
+     "city": "晋中市",
+     "people_share": 0.05,
+     "cover": 0.98
+    },
+    {
+     "town": "义安镇",
+     "county": "介休市",
+     "city": "晋中市",
+     "people_share": 0.049,
+     "cover": 0.948
+    },
+    {
+     "town": "中都乡",
+     "county": "平遥县",
+     "city": "晋中市",
+     "people_share": 0.049,
+     "cover": 1.0
+    },
+    {
+     "town": "东观镇",
+     "county": "祁县",
+     "city": "晋中市",
+     "people_share": 0.049,
+     "cover": 0.956
+    },
+    {
+     "town": "宋古乡",
+     "county": "介休市",
+     "city": "晋中市",
+     "people_share": 0.047,
+     "cover": 0.909
+    },
+    {
+     "town": "古陶镇",
+     "county": "平遥县",
+     "city": "晋中市",
+     "people_share": 0.037,
+     "cover": 1.0
+    },
+    {
+     "town": "宁固镇",
+     "county": "平遥县",
+     "city": "晋中市",
+     "people_share": 0.035,
+     "cover": 0.967
+    },
+    {
+     "town": "城关乡",
+     "county": "介休市",
+     "city": "晋中市",
+     "people_share": 0.033,
+     "cover": 0.876
+    },
+    {
+     "town": "卜宜乡",
+     "county": "平遥县",
+     "city": "晋中市",
+     "people_share": 0.031,
+     "cover": 1.0
+    },
+    {
+     "town": "古县镇",
+     "county": "祁县",
+     "city": "晋中市",
+     "people_share": 0.031,
+     "cover": 1.0
+    }
+   ],
+   "cities": [
+    {
+     "name": "Jiexiu",
+     "admin": "Shanxi",
+     "pop": 406517
+    }
+   ],
+   "neighbours": [
+    {
+     "key": "#e4dabc",
+     "border_px": 661
+    },
+    {
+     "key": "#dfceae",
+     "border_px": 561
+    },
+    {
+     "key": "#f1e7d1",
+     "border_px": 451
+    },
+    {
+     "key": "#e7ddbc",
+     "border_px": 448
+    },
+    {
+     "key": "#e2d8c5",
+     "border_px": 393
+    },
+    {
+     "key": "#eae4d3",
+     "border_px": 214
+    }
+   ],
+   "text_px": 0,
+   "n": 19,
+   "thumb": {
+    "x0": 6830,
+    "y0": 2995,
+    "k": 2.0,
+    "w": 284,
+    "h": 282
+   }
+  },
+  {
+   "key": "#dfd9cc",
+   "color": "#dfd9cc",
+   "lon": 110.9188,
+   "lat": 37.0458,
+   "bbox": [
+    6747,
+    3036,
+    6840,
+    3154
+   ],
+   "area_px": 6832,
+   "people": 1207595,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Lishi",
+     "local": "离石区",
+     "prefecture": "Lvliang",
+     "prefecture_local": "吕梁市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.383,
+     "area_share": 0.083,
+     "cover": 0.904
+    },
+    {
+     "name": "Liulin",
+     "local": "柳林县",
+     "prefecture": "Lvliang",
+     "prefecture_local": "吕梁市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.248,
+     "area_share": 0.134,
+     "cover": 0.849
+    },
+    {
+     "name": "Zhongyang",
+     "local": "中阳县",
+     "prefecture": "Lvliang",
+     "prefecture_local": "吕梁市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.128,
+     "area_share": 0.19,
+     "cover": 1.0
+    },
+    {
+     "name": "Shilou",
+     "local": "石楼县",
+     "prefecture": "Lvliang",
+     "prefecture_local": "吕梁市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.096,
+     "area_share": 0.228,
+     "cover": 0.992
+    },
+    {
+     "name": "Xi",
+     "local": "隰县",
+     "prefecture": "Linfen",
+     "prefecture_local": "临汾市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.087,
+     "area_share": 0.185,
+     "cover": 0.989
+    },
+    {
+     "name": "Yonghe",
+     "local": "永和县",
+     "prefecture": "Linfen",
+     "prefecture_local": "临汾市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.053,
+     "area_share": 0.158,
+     "cover": 0.98
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 0.997,
+     "cover": 0.031
+    },
+    {
+     "level": "prefecture",
+     "name": "Lüliang",
+     "local": "吕梁市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.856,
+     "cover": 0.255
+    },
+    {
+     "level": "prefecture",
+     "name": "Linfen",
+     "local": "临汾市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.141,
+     "cover": 0.036
+    }
+   ],
+   "towns": [
+    {
+     "town": "滨河街道",
+     "county": "离石区",
+     "city": "吕梁市",
+     "people_share": 0.106,
+     "cover": 1.0
+    },
+    {
+     "town": "柳林镇",
+     "county": "柳林县",
+     "city": "吕梁市",
+     "people_share": 0.088,
+     "cover": 0.997
+    },
+    {
+     "town": "凤山街道",
+     "county": "离石区",
+     "city": "吕梁市",
+     "people_share": 0.086,
+     "cover": 1.0
+    },
+    {
+     "town": "宁乡镇",
+     "county": "中阳县",
+     "city": "吕梁市",
+     "people_share": 0.063,
+     "cover": 1.0
+    },
+    {
+     "town": "莲花池街道",
+     "county": "离石区",
+     "city": "吕梁市",
+     "people_share": 0.044,
+     "cover": 1.0
+    },
+    {
+     "town": "红眼川乡",
+     "county": "离石区",
+     "city": "吕梁市",
+     "people_share": 0.043,
+     "cover": 1.0
+    },
+    {
+     "town": "灵泉镇",
+     "county": "石楼县",
+     "city": "吕梁市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "田家会街道",
+     "county": "离石区",
+     "city": "吕梁市",
+     "people_share": 0.038,
+     "cover": 0.899
+    },
+    {
+     "town": "交口街道",
+     "county": "离石区",
+     "city": "吕梁市",
+     "people_share": 0.038,
+     "cover": 0.994
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#e8e4d7",
+     "border_px": 1344
+    },
+    {
+     "key": "#e7ddbc",
+     "border_px": 1343
+    },
+    {
+     "key": "#e2dbc4",
+     "border_px": 1074
+    },
+    {
+     "key": "#ede2cc",
+     "border_px": 1020
+    },
+    {
+     "key": "#e4dabc",
+     "border_px": 455
+    },
+    {
+     "key": "#ebe5d2",
+     "border_px": 188
+    }
+   ],
+   "text_px": 0,
+   "n": 20,
+   "thumb": {
+    "x0": 6706,
+    "y0": 2995,
+    "k": 2.0,
+    "w": 350,
+    "h": 400
+   }
+  },
+  {
+   "key": "#e7ddbc",
+   "color": "#e7ddbc",
+   "lon": 111.5682,
+   "lat": 36.9125,
+   "bbox": [
+    6806,
+    3062,
+    6886,
+    3139
+   ],
+   "area_px": 3932,
+   "people": 1103819,
+   "land_share": 1.0,
+   "country": "China",
+   "units": [
+    {
+     "name": "Xiaoyi",
+     "local": "孝义市",
+     "prefecture": "Lvliang",
+     "prefecture_local": "吕梁市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.416,
+     "area_share": 0.212,
+     "cover": 0.987
+    },
+    {
+     "name": "Lingshi",
+     "local": "灵石县",
+     "prefecture": "Jinzhong",
+     "prefecture_local": "晋中市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.253,
+     "area_share": 0.277,
+     "cover": 1.0
+    },
+    {
+     "name": "Jiexiu",
+     "local": "介休市",
+     "prefecture": "Jinzhong",
+     "prefecture_local": "晋中市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.113,
+     "area_share": 0.08,
+     "cover": 0.302
+    },
+    {
+     "name": "Jiaokou",
+     "local": "交口县",
+     "prefecture": "Lvliang",
+     "prefecture_local": "吕梁市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.107,
+     "area_share": 0.27,
+     "cover": 0.97
+    },
+    {
+     "name": "Fenxi",
+     "local": "汾西县",
+     "prefecture": "Linfen",
+     "prefecture_local": "临汾市",
+     "province": "山西省",
+     "country": "China",
+     "people_share": 0.089,
+     "area_share": 0.128,
+     "cover": 0.678
+    }
+   ],
+   "parents": [
+    {
+     "level": "province",
+     "name": "Shanxi",
+     "local": null,
+     "province": null,
+     "country": "China",
+     "people_share": 1.0,
+     "cover": 0.028
+    },
+    {
+     "level": "prefecture",
+     "name": "Lüliang",
+     "local": "吕梁市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.534,
+     "cover": 0.145
+    },
+    {
+     "level": "prefecture",
+     "name": "Jinzhong",
+     "local": "晋中市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.359,
+     "cover": 0.118
+    },
+    {
+     "level": "prefecture",
+     "name": "Linfen",
+     "local": "临汾市",
+     "province": "Shanxi",
+     "country": "China",
+     "people_share": 0.108,
+     "cover": 0.025
+    }
+   ],
+   "towns": [
+    {
+     "town": "翠峰镇",
+     "county": "灵石县",
+     "city": "晋中市",
+     "people_share": 0.069,
+     "cover": 1.0
+    },
+    {
+     "town": "绵山镇",
+     "county": "介休市",
+     "city": "晋中市",
+     "people_share": 0.052,
+     "cover": 0.922
+    },
+    {
+     "town": "崇文街道",
+     "county": "孝义市",
+     "city": "吕梁市",
+     "people_share": 0.048,
+     "cover": 1.0
+    },
+    {
+     "town": "永安镇",
+     "county": "汾西县",
+     "city": "临汾市",
+     "people_share": 0.043,
+     "cover": 0.992
+    },
+    {
+     "town": "中阳楼街道",
+     "county": "孝义市",
+     "city": "吕梁市",
+     "people_share": 0.041,
+     "cover": 1.0
+    },
+    {
+     "town": "兑镇镇",
+     "county": "孝义市",
+     "city": "吕梁市",
+     "people_share": 0.04,
+     "cover": 1.0
+    },
+    {
+     "town": "大孝堡乡",
+     "county": "孝义市",
+     "city": "吕梁市",
+     "people_share": 0.039,
+     "cover": 0.981
+    },
+    {
+     "town": "高阳镇",
+     "county": "孝义市",
+     "city": "吕梁市",
+     "people_share": 0.038,
+     "cover": 0.969
+    },
+    {
+     "town": "新义街道",
+     "county": "孝义市",
+     "city": "吕梁市",
+     "people_share": 0.034,
+     "cover": 1.0
+    },
+    {
+     "town": "下堡镇",
+     "county": "孝义市",
+     "city": "吕梁市",
+     "people_share": 0.033,
+     "cover": 0.97
+    },
+    {
+     "town": "南关镇",
+     "county": "灵石县",
+     "city": "晋中市",
+     "people_share": 0.032,
+     "cover": 1.0
+    }
+   ],
+   "cities": [],
+   "neighbours": [
+    {
+     "key": "#dfd9cc",
+     "border_px": 1343
+    },
+    {
+     "key": "#f1e7d1",
+     "border_px": 1108
+    },
+    {
+     "key": "#e4dabc",
+     "border_px": 629
+    },
+    {
+     "key": "#e2d5bd",
+     "border_px": 448
+    },
+    {
+     "key": "#ede2cc",
+     "border_px": 164
+    }
+   ],
+   "text_px": 0,
+   "n": 21,
+   "thumb": {
+    "x0": 6766,
+    "y0": 3022,
+    "k": 2.0,
+    "w": 320,
+    "h": 314
+   }
+  }
+ ]
+}

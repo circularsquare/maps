@@ -37,6 +37,9 @@ def _ng_counts():
     df = pd.read_csv(HERE / "data" / "normalized" / "ng.csv",
                      dtype={"geo_id": str}, low_memory=False,
                      keep_default_na=False, na_values=[""])
+    # 2026-10-16: `Christian` split three ways by zone from GFS 2023 (sources/wa_christian.py).
+    # Still `modelled`, like every row here.
+    df = _swap_christian_split(df, "ng", "Christian")
 
     lut = pd.read_csv(HERE / "data" / "geo" / "ng" / "ng_lookup.csv", dtype=str)
     df["unit"] = df["geo_id"].map(dict(zip(lut["geo_id"], lut["unit"])))
@@ -102,8 +105,7 @@ ENTRY = {
             "of the 198 to 256 people interviewed in each of them across six rounds was one. "
             "Every large Nigerian town has a northern trading quarter, so read those three "
             "as states where the survey found none rather than as states with none. "
-            "**Catholics and Anglicans are drawn apart from other Christians; the rest of "
-            "Christianity and all of Islam are one colour each.** The survey's card names about "
+            "**Christianity is drawn by church; Islam is one colour.** The survey's card names about "
             "twenty churches, but the share who name one rather than answering just Christian "
             "swings **27.9** points between rounds. The Catholic share holds in the three rounds "
             "from 2008 to 2015, at 19 to 21% of Christians, which is what all four Demographic "
@@ -113,9 +115,13 @@ ENTRY = {
             "at 5.8% Catholic, while its archdiocese counts a quarter of the state. Anglicans, "
             "**4.2%**, take their level from the 2023 Global Flourishing Study, where almost "
             "every Christian named a church, and are strongest in Anambra (22.1%), Enugu and "
-            "Imo. That study puts Pentecostals at about 40% of Christians, but it and the "
-            "Afrobarometer disagree about which states they are in, so they stay inside "
-            "Christianity. On the Muslim side the box for Izala is on the card in three rounds "
+            "Imo. The other Christians are split into Pentecostal, Protestant and other "
+            "churches by the share each geopolitical zone gave in the same 2023 study: "
+            "Pentecostals are **22.0%** of Nigerians, about 70% of these Christians in the south "
+            "and 12% in the north east, where the older Protestant churches such as ECWA and "
+            "COCIN hold most of them. The two surveys disagree state by state but rank the six "
+            "zones alike, so every state in a zone is drawn with that zone's split. "
+            "On the Muslim side the box for Izala is on the card in three rounds "
             "and off it in the other three. "
             "**Traditional religion is 0.32% here and is a floor rather than a count.** The "
             "survey offers it as an alternative to Christianity and Islam, so it cannot see "
@@ -166,8 +172,11 @@ ENTRY = {
              "its Christians in rounds 4-6, the rounds whose Catholic share matches the four "
              "NDHS reports' Table 3.1; and the Anglican Church, levelled by GFS 2023 REL3 and "
              "placed by GFS and Afrobarometer together; sources/ng.md, the 2026-10-03 section. "
-             "Pentecostals fail the two-survey rank test. THE OTHER DENOMINATIONS AND THE "
-             "SUNNI/SHIA SPLIT ARE IN THE SURVEY AND ARE NOT "
+             "Pentecostals fail the two-survey rank test BY STATE. 2026-10-16 (Anita): the "
+             "rest of `Christian` is split by GEOPOLITICAL ZONE from GFS 2023 into Pentecostal, "
+             "Protestant and other, where the Afrobarometer does rank the zones alike "
+             "(sources/wa_christian.py, unspecified_splits/westafrica.md). THE "
+             "SUNNI/SHIA SPLIT AND THE BROTHERHOODS ARE IN THE SURVEY AND ARE NOT "
              "DRAWN. Â§11ai's probing swing is 27.9 points here, and report_card() in "
              "sources/ng.py reads each round's value labels to show which answers were on "
              "that round's card at all: Izala is on three of six and the Shia box is renamed "

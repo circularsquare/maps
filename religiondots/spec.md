@@ -58,7 +58,10 @@ and the surviving part is stated first.
 - 2.6b Muslims drawn as Sunni by assignment in 33 countries, less the best minority figure —
   DECIDED AND BUILT 2026-10-04
 - 2.7 Record whatever the source actually says — DECIDED, and a coarse cell left at the parent
-  is the finished answer
+  is the finished answer; that last part REVERSED 2026-10-16 where a split passes §2.7b's tests
+- 2.7a A large unspecified share is expected, and does not stop a split being drawn — DECIDED 2026-09-14
+- 2.7b A flat unspecified colour that stops at a border is worse than a checkable split — DECIDED
+  2026-10-16; Germany's Protestants by Landeskirche and Kerala's non-Catholic churches BUILT
 
 **§3 Counting rules** — the R4 answers
 - 3.1 Every figure carries a `basis`, and bases are never mixed
@@ -614,6 +617,8 @@ do libya too, same treatment"*, with Saudi Arabia left to the builder.
   unassigned: ma, dz, tn, ly, mr, sd, so, dj, km, ml, ne, bf, gn, gm, gw, td, eg, sl, jo, ps, uz, kz,
   kg, tm, tj, id, bd, my, bn, mv, ba, xk, al. Not: Saudi Arabia (no traceable regional figure, §14),
   Oman, the UAE, Qatar, Afghanistan, Azerbaijan, Pakistan and Syria (real minorities nothing places).
+  **Pakistan and Afghanistan added 2026-10-16** on Anita's call, at Pew 2012's surveyed Sunni share
+  (81%, a floor, and 90%), with Kurram, Orakzai, Hangu, Bamyan and Daykundi whole on `islam`.
 - **The remainder** on bare `islam` is the best minority figure for each country, as a share of its
   Muslims: a government or community figure where one exists, else the World Religion Database's
   non-Sunni share. Spread at one share across the country, as in §2.6a, because nothing places the
@@ -633,6 +638,9 @@ do libya too, same treatment"*, with Saudi Arabia left to the builder.
   were undivided (dz, tn, ly, km, eg, jo, tj) were corrected the same day.
 
 ### 2.7 Record whatever the source actually says — DECIDED 2026-09-08
+
+*Partly reversed 2026-10-16 by §2.7b: the source is still recorded as it answers, but a coarse cell left
+on its parent is no longer the finished answer where a second source can split it and be checked.*
 
 Those are Anita's words, ruling on `ask/004-am`. Armenia's census puts 2,793,041 people, 95.2%
 of the country, on a cell that names the Armenian Apostolic Church, and the mapping filed them
@@ -712,6 +720,53 @@ branch shares applied inside a column the census counted are `derived`, not `mod
 viewer rolls only `derived` dots back to their column and removes `modelled` ones, so Türkiye's
 tier would have made `inferred dots: not shown` delete 100M Muslims the census counted.
 `modelled` is for places where nobody counted the religion at any level.
+
+### 2.7b A flat unspecified colour that stops at a border is worse than a checkable split — DECIDED 2026-10-16
+
+Anita reversed the habit of leaving a census's undivided category on its parent node unless a source
+placed the split below the country. Her case: Mexico draws a large "Protestant, unspecified" while the
+United States is drawn Baptist, Pentecostal and the rest, so two neighbours with the same churches look
+like different religions. A flat colour that ends at a border makes a claim too, and a wrong one.
+
+**The tests are Bulgaria's (2026-09-08, `feedback_dont_draw_unsourced_breakdowns`), and they still
+decide.** The magnitude must be the publisher's, with only the distribution inside the undivided
+category borrowed; something must be able to contradict the borrowed distribution (a second year, a
+second source); and the rows must roll back, which inside a counted column means `derived` (§2.7a).
+What changes is the default: when those three hold, draw the split, nationally if nothing finer exists,
+instead of waiting for a subnational source. Research for the first cases is in `unspecified_splits/`.
+
+**Germany's Protestants, reversing the 2026-09-07 refusal** (`taxonomy/de2022.py`, `sources/de.md` §8).
+That refusal said a split by Landeskirche territory would draw "which church body governs a place, not
+what confession its people hold". The evidence that turned it is church law, which makes the territory a
+count rather than a model. Kirchenmitgliedschaftsgesetz §1 Abs. 2: *"Die Kirchenmitgliedschaft besteht
+zur Kirchengemeinde und zur Gliedkirche des Wohnsitzes des Kirchenmitgliedes"*, the Wohnsitz being the
+register's Hauptwohnung; and EKD's *Kirchenmitgliederzahlen Stand 31.12.2022*, Table 1 footnote 3:
+membership across Landeskirche borders *"würde saldiert weniger als 0,14 ‰ der Mitglieder ausmachen"*.
+On a `roll` basis, the body that governs a place is the body its registered Protestants belong to.
+`sources/de_ekd.py` assigns every Gemeinde its Landeskirche and checks the Zensus count summed by
+territory against EKD's own twenty totals: every church over 500,000 members lands within 2.4%, and
+the three small misses (Schaumburg-Lippe 0.87, Anhalt 0.93, Braunschweig 1.05) are church borders
+running through a single Gemeinde. Built: Lutheran 9.75M, United 9.12M (`christianity.united`, the
+Union churches being churches formed by union), Reformed 0.26M (`christianity.reformed.continental`);
+`christianity.protestant` keeps only ESS's modelled 110,000. The Reformed church inside Hannover's
+territory is the one modelled step, placed from its own 2010 regional figures; its rows are `derived`
+anyway, because the people in them were counted as Protestants where they are drawn. The calls (United
+node, the EKM split by Land) were Anita's, recorded in `de2022.py`'s REVIEW.
+
+**Kerala's non-Catholic churches, reversing the 2026-10-03 "searched, not drawn"** (`sources/in.md` §14).
+The Kerala Migration Survey's district table (Zachariah, CDS WP468 Table 6) had been left unused for
+everything but the Catholic total, because its Syrian churches did not replicate one by one against
+OpenStreetMap's churches. Two things turned it. The Catholic shares already drawn by district leave a
+remainder only a district table can divide (Thrissur is 88.5% Catholic, the state's named non-Catholic
+churches 30.5%), so no state-wide share could sit beside them; and a second survey year checks the
+magnitudes: KMS 2023's state shares land within 2.2 points of the drawn totals for every church. The two
+churches the survey confuses, Jacobite and Orthodox, are drawn together on `christianity.oriental`; Mar Thoma
+on `christianity.oriental.marthoma`, CSI on `christianity.united`, the Pentecostal row on
+`christianity.pentecostal`. Malabar's six districts share one pooled mix, a rule chosen after seeing where
+the witness failed. Kerala's unspecified Christians fall from 36% to 8%. Detail `sources/in.md` §16.
+
+**One consequence not acted on:** §6.13 gave `christianity.protestant` a colour beside Lutheran because
+the node was "mostly a thing in germany". It no longer is; that colour may want revisiting.
 
 ## 3. Counting rules — DECIDED
 

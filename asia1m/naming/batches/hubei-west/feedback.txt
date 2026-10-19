@@ -1,0 +1,17 @@
+batch hubei-west
+1: pick Yunyang
+2: pick Shiyan
+3: pick Wudang
+4: pick Xiangzhou
+5: pick Zhushan
+6: pick Fancheng
+7: pick Zaoyang
+8: pick Xiangyang
+9: pick Jingshan
+10: pick Sanxia
+11: pick Yichang
+12: pick Jianshi
+13: pick Dangyang
+14: pick Qingjiang
+15: pick Shizhu
+16: pick Enshi

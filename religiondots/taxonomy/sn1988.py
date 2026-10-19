@@ -43,8 +43,18 @@ REVIEW = {
     "Chrétiens":
         "-> christianity, the bare branch. 307,722 with Diourbel's two rows, 4.46%. The form "
         "separates Catholics (code 6) from other Christians (code 7, *protestants, luthériens, "
-        "témoins de Jéhovah*), but the national table prints one column, so nothing finer exists "
-        "outside Diourbel.",
+        "témoins de Jéhovah*), but the national table prints one column. NO LONGER DRAWN since "
+        "2026-10-16: sn_split.csv replaces the nine régions' rows at 92/8 (below) and they "
+        "roll back here (COLUMNS).",
+    "Catholiques":
+        "-> christianity.catholic, DERIVED. 279,428, 92% of each région's Christians. "
+        "Diourbel, the one place the census printed codes 6 and 7, is 94.4% Catholic (3,775 of "
+        "3,997); Pew 2010 95%; the Afrobarometer's named Christians 83% (n=165); the Church "
+        "claims 924,000 for 2023, more than any census has counted Christians. Ziguinchor, "
+        "the Diola Catholic heartland, is probably above 92% and Dakar below it.",
+    "Autres chrétiens":
+        "-> christianity.other, DERIVED. 24,297, 8%: code 7, whose manual names Protestants, "
+        "Lutherans and Witnesses. Mali's `Autre religion chrétienne` node.",
     "Autres":
         "-> other.sn. 79,584 with Diourbel's row, 1.15%, and 7.7% of Ziguinchor, which holds 38.5% "
         "of the count. Code 8 `AR`: the manual lists Jews, Buddhists and animists, and the report "
@@ -59,10 +69,10 @@ REVIEW = {
         "Diourbel's `AUTRES` is the row under TOTAL MUSULMAN, Muslims of no listed brotherhood: "
         "-> islam, as `Autres mus.`. It is NOT the national table's `Autres`.",
     "CATHOLIQUE":
-        "-> christianity, not christianity.catholic. 3,775 people in the Diourbel région, about "
-        "four dots; the other nine régions print Christians as one column, so drawing Diourbel's "
-        "Catholics apart would add a legend row for one région.",
-    "AUTRES CHRETIENS": "-> christianity, with CATHOLIQUE.",
+        "-> christianity.catholic, MEASURED, since 2026-10-16. 3,775 people in the Diourbel "
+        "région. It was folded into `christianity` while the other nine régions printed one "
+        "Christian column; now that they are split, Diourbel's own count is drawn as printed.",
+    "AUTRES CHRETIENS": "-> christianity.other, MEASURED, as `Autres chrétiens`.",
     "AUTRE RELIGION": "-> other.sn, as `Autres`.",
 }
 
@@ -79,13 +89,18 @@ MAP = {
     "MOURIDE": "islam.sunni.mouride",
     "TIDIANE": "islam.sunni.tijaniyya",
     "AUTRES": "islam",
-    "CATHOLIQUE": "christianity",
-    "AUTRES CHRETIENS": "christianity",
+    "CATHOLIQUE": "christianity.catholic",
+    "AUTRES CHRETIENS": "christianity.other",
     "AUTRE RELIGION": "other.sn",
+    # 2026-10-16, sources/wa_christian.py: sn_split.csv replaces the régions' `Chrétiens`.
+    "Catholiques": "christianity.catholic",
+    "Autres chrétiens": "christianity.other",
 }
 
-# spec §7a-i-1: every row is measured at the node it is drawn on.
+# spec §7a-i-1: measured rows at their own node; the régions' two derived Christian rows roll
+# back to the `Chrétiens` cell the census printed per région.
 COLUMNS = {v: v for v in MAP.values()}
+COLUMNS["Chrétiens"] = "christianity"
 
 
 def _key(cat):

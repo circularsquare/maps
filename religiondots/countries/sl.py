@@ -20,10 +20,14 @@ def _sl_counts():
     population of 7,076,119 (sources/sl.py). The 15,994 enumerated in institutions are in no
     religion table.
     """
+    import sl2015
     from sl2015 import resolve
 
     df = pd.read_csv(HERE / "data" / "normalized" / "sl.csv",
                      low_memory=False, keep_default_na=False, na_values=[""])
+    # 2026-10-16: `Christianity` replaced by the census's own six codes at their national
+    # shares (Table 3.25; sources/wa_christian.py). Those rows are `derived` and roll back.
+    df = _swap_christian_split(df, "sl", "Christianity")
     df["count"] = df["count"].astype(int)
     if df["geo_id"].nunique() != 14:
         raise SystemExit(f"{df['geo_id'].nunique()} districts in sl.csv, expected 14 -- re-run "
@@ -34,9 +38,10 @@ def _sl_counts():
         raise SystemExit(f"sl.csv categories with no node: {unmapped}")
     df = df[df["count"] > 0].rename(columns={"geo_id": "unit"})
     df["congregations"] = 0
-    df["may_ring"] = True
-    df["tier"] = "measured"
-    return df[["unit", "node", "count", "congregations", "may_ring", "tier"]]
+    df["tier"] = df["split"].map({True: "derived", False: "measured"})
+    df["may_ring"] = ~df["split"]
+    df = _add_roll(df, sl2015.COLUMNS)
+    return df[["unit", "node", "count", "congregations", "may_ring", "tier", "roll"]]
 
 
 ENTRY = {
@@ -53,14 +58,17 @@ ENTRY = {
             "Kambia and Port Loko are each under 6%. "
             "**The districts are the ones the census was taken on.** Karene, created in 2017, is "
             "drawn inside Bombali and Port Loko, and Falaba inside Koinadugu. "
-            "**Christianity is one colour because its churches were published only for the "
-            "whole country.** The form had six Christian answers, but no table splits them by "
-            "district. "
+            "**The churches were published only for the whole country, so every district is "
+            "drawn with the national mix.** The census's six Christian answers give Catholics "
+            "**32.0%** of Christians, Pentecostals 24.2%, other churches 21.5%, Methodists "
+            "13.7%, Anglicans 5.5% and Adventists 3.2% (National Analytical Report, Table "
+            "3.25); no table splits them by district. "
             "**Each person was recorded with one religion.** The 0.1% who answered traditional "
             "religion does not include Muslims or Christians who also follow traditional "
             "practice, and most of the 0.3% recorded with no religion are children: **87%** of "
             "them are under 15."),
         how="census, 2015",
+        fill="from the same census's national church table",
         grain="districts, 505,000 people on average",
         gap="0.23% enumerated in institutions rather than households, who are in no religion "
             "table",

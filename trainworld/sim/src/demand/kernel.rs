@@ -113,6 +113,9 @@ pub struct Params {
     pub period_hours: f32,
     pub peak_hour_factor: f32,
     pub crowd_alpha: f32,
+    /// The crowding penalty starts at this share of crush, or at the seats if they are more
+    /// (T-710, `crowd_factors`).
+    pub crowd_start: f32,
     /// Zone pairs carrying fewer trips than this are skipped in mode choice.
     pub prune_trips: f32,
     /// Subzone pairs whose cheapest walks at the two ends together cost more than this many
@@ -120,10 +123,15 @@ pub struct Params {
     /// `walk_cutoff_m`, set where little rail is left).
     pub pair_walk_max: f32,
     /// Logit scale of the choice among access and egress stations (and access modes), per
-    /// perceived minute. notes/T-020.md. The pair loop keeps exp(-theta x station-to-station
-    /// minutes) in f32, so theta x the longest such trip must stay under ~85 (0.2 allows 7 h);
-    /// it cannot be pushed towards all-or-nothing.
+    /// perceived minute, where `rel_gamma` is 0, and in the regional layer. notes/T-020.md.
     pub station_theta: f32,
+    /// T-710: the local layers' scale is `rel_gamma` / min(T, `rel_tmax`), T = `rel_t0` +
+    /// `rel_tkm` x the straight-line km of the trip (a rough rail trip in perceived minutes), by
+    /// the distance bands `REL_EDGES` (`Params::band`). 0: `station_theta` for every trip.
+    pub rel_gamma: f32,
+    pub rel_t0: f32,
+    pub rel_tkm: f32,
+    pub rel_tmax: f32,
     /// Walking the whole way, a mode in the choice beside rail and the car (or other) (T-558,
     /// `walk_trip_cost`): the walk's real minutes (its distance x `walk_detour` at `walk_mps`)
     /// weigh `walk_trip_w` each, at one rate. `walk_bonus_min`, in perceived minutes, is what the
@@ -193,6 +201,9 @@ pub struct Params {
 /// Walks longer than this straight line (km, round water where the routes say) are not offered
 /// (T-558): a computational bound, past which walking takes under one trip in a million.
 pub const WALK_REACH_KM: f32 = 10.0;
+/// T-710: edges (straight-line km) of the station choice's distance bands (`Params::band`); from
+/// 12 km on the trip counts as 60 minutes or more, where the scale stops changing.
+pub const REL_EDGES: [f32; 5] = [0.0, 3.0, 7.0, 12.0, f32::INFINITY];
 /// A walk's cost past `WALK_REACH_KM`: its share is 0 in every logit.
 pub const NO_WALK: f32 = 1e6;
 /// Zone pairs up to this many squares apart each way walk between cells (T-587); past it (cells
@@ -264,6 +275,8 @@ impl Default for Params {
             period_hours: 3.0,
             peak_hour_factor: 1.25,
             crowd_alpha: 2.0,
+            // T-710: Anita's 70% (notes/T-710.md)
+            crowd_start: 0.7,
             prune_trips: 0.0,
             // T-090: holds the pairs at what the 2.5 km edge had; on the real New York network
             // 0.3% of rail trips have walks of 70-80 perceived minutes together and 0.2% were
@@ -271,6 +284,11 @@ impl Default for Params {
             // 4% of its riders)
             pair_walk_max: 80.0,
             station_theta: 0.2,
+            // T-710: Anita's relative rule, capped at a 60 minute trip (notes/T-710.md)
+            rel_gamma: 20.0,
+            rel_t0: 25.0,
+            rel_tkm: 3.0,
+            rel_tmax: 60.0,
             // T-558: the cost as Anita approved it; the constants hold New York's and London's
             // walking as it was (notes/T-558.md; commutes refitted for the cells' walks, T-587)
             walk_trip_w: 1.5,
@@ -306,6 +324,11 @@ impl Params {
     pub fn set_extra(&mut self, k: &str, v: f32) -> Result<(), String> {
         match k {
             "station_theta" => self.station_theta = v,
+            "rel_gamma" => self.rel_gamma = v,
+            "rel_t0" => self.rel_t0 = v,
+            "rel_tkm" => self.rel_tkm = v,
+            "rel_tmax" => self.rel_tmax = v,
+            "crowd_start" => self.crowd_start = v,
             "asc_rail" => self.asc_rail = v + self.country_asc_rail,
             "country_asc_rail" => {
                 self.asc_rail += v - self.country_asc_rail;
@@ -382,6 +405,33 @@ impl Params {
             _ => return Err(format!("unknown parameter {k}")),
         }
         Ok(())
+    }
+    /// The local layers' station-choice bands (T-710): `REL_EDGES`' four, or one where
+    /// `rel_gamma` is 0.
+    pub fn n_bands(&self) -> usize {
+        if self.rel_gamma > 0.0 { REL_EDGES.len() - 1 } else { 1 }
+    }
+    /// The band of a trip whose straight line squared is `d2` square metres (zone centres for
+    /// the commutes, the pair's mean distance for everyday trips).
+    pub fn band_of_d2(&self, d2: f32) -> usize {
+        if self.rel_gamma <= 0.0 {
+            return 0;
+        }
+        REL_EDGES[1..REL_EDGES.len() - 1].iter().filter(|&&e| d2 >= e * e * 1e6).count()
+    }
+    /// Band `b`'s scale and offset (perceived minutes). Exp tables hold exp(-theta (r - offset))
+    /// and each logsum adds the offset back. With the offset at 60 / theta a band keeps costs
+    /// from 0 to 129 / theta inside f32 (`fast_exp` and the pair loop's 1e-30 floor): 190
+    /// perceived minutes in the sharpest band, 387 from 12 km on; without it the sharpest would
+    /// lose every pair over 100 (New York's station-to-station costs reach 700).
+    pub fn band(&self, b: usize) -> (f32, f32) {
+        if self.rel_gamma <= 0.0 {
+            return (self.station_theta, 0.0);
+        }
+        let (lo, hi) = (REL_EDGES[b], REL_EDGES[b + 1]);
+        let km = if hi.is_finite() { 0.5 * (lo + hi) } else { 1.5 * lo };
+        let th = self.rel_gamma / (self.rel_t0 + self.rel_tkm * km).min(self.rel_tmax);
+        (th, 60.0 / th)
     }
     /// Real minutes of the fast walk to a station `d_m` metres away in a straight line.
     pub fn walk_min(&self, d_m: f32) -> f32 {
@@ -2725,13 +2775,19 @@ pub fn fast_ln(x: f32) -> f32 {
     e as f32 * std::f32::consts::LN_2 + t * q
 }
 
-/// exp(-theta x station-to-station cost), S x S, with a zero diagonal: boarding and alighting at
-/// the same station is not a rail trip. The access logsum per origin subzone is built from it.
+/// exp(-theta (station-to-station cost - offset)), S x S per band of `Params::band` one after
+/// the other, with a zero diagonal: boarding and alighting at the same station is not a rail
+/// trip. The access logsum per origin subzone is built from it.
 pub fn station_exp(sk: &Skims, p: &Params) -> Vec<f32> {
     let s = sk.s;
-    let mut er: Vec<f32> = sk.r.iter().map(|&r| if r.is_finite() { fast_exp(-p.station_theta * r) } else { 0.0 }).collect();
-    for a in 0..s {
-        er[a * s + a] = 0.0;
+    let mut er: Vec<f32> = Vec::with_capacity(p.n_bands() * s * s);
+    for b in 0..p.n_bands() {
+        let (th, off) = p.band(b);
+        let at = er.len();
+        er.extend(sk.r.iter().map(|&r| if r.is_finite() { fast_exp(-th * (r - off)) } else { 0.0 }));
+        for a in 0..s {
+            er[at + a * s + a] = 0.0;
+        }
     }
     er
 }
@@ -2796,6 +2852,8 @@ pub struct ModeOut {
 /// v); each costs access_a + R[a, t] + egress_t. Their logsum separates:
 ///     S_uv = sum_t A_u[t] E_v[t],  A_u[t] = sum_a exp(-theta (access_a - m_u)) exp(-theta R[a, t]),
 ///     E_v[t] = exp(-theta (egress_t - m_v)),  rail cost = m_u + m_v + fare - ln(S_uv) / theta.
+/// Theta is the pair's distance band's (T-710, `Params::band`), its exp table offset by the
+/// band's offset, which the cost adds back; an origin builds its rows for the bands it uses.
 /// A_u is one row of S per origin subzone, built once per subzone (access options x S
 /// multiply-adds), so the pair loop costs one product per egress station plus one ln and one
 /// exp. Rail trips are kept by (u, egress station) as Y_u[t] = sum_v x_uv E_v[t] / S_uv and split
@@ -2808,7 +2866,10 @@ pub struct ModeOut {
 /// its order, so the results are those of one pair at a time to the bit (`trip::pair_choice`).
 pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize, p: &Params, nr: &NoRail) -> ModeOut {
     let share = p.period_share as f64;
-    let th = p.station_theta;
+    // T-710: the station choice's scale and offset by distance band (`er` holds a table per band)
+    let nb = p.n_bands();
+    let bands: Vec<(f32, f32)> = (0..nb).map(|b| p.band(b)).collect();
+    let (ss, na) = (s * s, sz.acc_st.len());
     // per subzone: its part of the zone's row / column factor
     let ou: Vec<f32> = (0..sz.n).map(|u| sz.origin_weight(u, z, gr, share)).collect();
     let dv: Vec<f32> = (0..sz.n)
@@ -2818,23 +2879,25 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
         })
         .collect();
     let park: Vec<(f32, f32, f32)> = (0..z.n).map(|j| p.park_parts(z, j)).collect();
-    // per subzone and access entry: weights exp(-theta (cost - m)), a walk entry's with m the
-    // cheapest walk (`acc_m`, the same at both ends; infinite with none), a ride entry's with m
-    // the cheapest of walks and rides (`ride_m`)
+    // per band, subzone and access entry: weights exp(-theta (cost - m)), a walk entry's with m
+    // the cheapest walk (`acc_m`, the same at both ends; infinite with none), a ride entry's with
+    // m the cheapest of walks and rides (`ride_m`)
     let mut acc_m = vec![f32::INFINITY; sz.n];
     let mut ride_m = vec![f32::INFINITY; sz.n];
-    let mut acc_e = vec![0f32; sz.acc_st.len()];
+    let mut acc_e = vec![0f32; nb * na];
     let min_of = |r: std::ops::Range<usize>| sz.acc_w[r].iter().cloned().fold(f32::INFINITY, f32::min);
     for v in 0..sz.n {
         let m = min_of(sz.walk(v));
         let mr = m.min(min_of(sz.ride(v)));
         acc_m[v] = m;
         ride_m[v] = mr;
-        for k in sz.walk(v) {
-            acc_e[k] = fast_exp(-th * (sz.acc_w[k] - m));
-        }
-        for k in sz.ride(v) {
-            acc_e[k] = fast_exp(-th * (sz.acc_w[k] - mr));
+        for (b, &(th, _)) in bands.iter().enumerate() {
+            for k in sz.walk(v) {
+                acc_e[b * na + k] = fast_exp(-th * (sz.acc_w[k] - m));
+            }
+            for k in sz.ride(v) {
+                acc_e[b * na + k] = fast_exp(-th * (sz.acc_w[k] - mr));
+            }
         }
     }
     // per subzone: minutes a km on its local streets and main roads (by its zone's density)
@@ -2906,12 +2969,19 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
         let mut dvz = 0.0f32;
         for &v in &sz.zd[sz.zd_off[j] as usize..sz.zd_off[j + 1] as usize] {
             let v = v as usize;
-            let (mut st, mut e, mut kk) = ([s as u32; K], [0f32; K], [0u32; K]);
+            let (mut st, mut kk) = ([s as u32; K], [0u32; K]);
             for (n, k) in sz.walk(v).enumerate() {
-                (st[n], e[n], kk[n]) = (sz.acc_st[k], acc_e[k], k as u32);
+                (st[n], kk[n]) = (sz.acc_st[k], k as u32);
+            }
+            // its weights per band: destination q's band b at `eg_e[q * nb + b]`
+            for b in 0..nb {
+                let mut e = [0f32; K];
+                for (n, k) in sz.walk(v).enumerate() {
+                    e[n] = acc_e[b * na + k];
+                }
+                eg_e.push(e);
             }
             eg_st.push(st);
-            eg_e.push(e);
             eg_k.push(kk);
             eg_n.push(sz.walk(v).len() as u8);
             dvz += dv[v];
@@ -2928,17 +2998,19 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
     // with a third: the road's length over the straight line between the zones (T-275); and a
     // fourth, 1 where the commute is long enough for the ride (T-371)
     let mut fz = vec![[0f32, 0.0, p.road_detour, 0.0]; dz.len()];
-    // and the zone pair's walking with no rail (`NoRail::split`, T-558)
+    // and the zone pair's walking with no rail (`NoRail::split`, T-558), and its distance band
     let mut fzw = vec![0f32; dz.len()];
+    let mut fzb = vec![0u8; dz.len()];
     let pair_walk = gr.wroutes.is_some() || !gr.wf_off.is_empty();
     let drive = p.routes.as_deref().filter(|r| r.has_drive());
     let ride_min2 = (p.ride_min_km * 1000.0).powi(2);
     let (ko, kow) = (p.other_min_km(), p.other_wait());
     // the origin's two rows (walks; walks and rides) one after the other, each followed by
-    // `PADS` dummies (0), and their rail trips by egress station the same way
+    // `PADS` dummies (0), and their rail trips by egress station the same way; a pair per band,
+    // band b's at 2 b h
     let h = s + PADS;
-    let mut ab_row = vec![0f32; 2 * h];
-    let mut ab_y = vec![0f32; 2 * h];
+    let mut ab_row = vec![0f32; 2 * nb * h];
+    let mut ab_y = vec![0f32; 2 * nb * h];
     // rail trips reaching each destination's egress entries, by its egress step
     let mut acc_q = vec![[[0f32; 4]; 2]; dd.len()];
     // the origin's pairs within the walk bound, in visiting order: destination, and the zone
@@ -2947,6 +3019,7 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
     let mut cand: Vec<[u32; 2]> = Vec::with_capacity(dd.len() + 7);
     let mut visit: Vec<[f32; 4]> = Vec::with_capacity(dz.len());
     let mut visit_w: Vec<f32> = Vec::with_capacity(dz.len());
+    let mut visit_b: Vec<u8> = Vec::with_capacity(dz.len());
     let mut walksum = [0f64; N_WALKSUM];
     for &i in &ozones {
         let base = gr.base(z, i);
@@ -2957,13 +3030,15 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
         let ri = z.region[i];
         let nzi = us.iter().map(|&u| reach(u as usize)).max().unwrap_or(0);
         let (gxi, gyi) = (z.gx[i], z.gy[i]);
-        for (o, zj) in fz[..nzi].iter_mut().zip(&dz) {
+        for ((o, zb), zj) in fz[..nzi].iter_mut().zip(fzb.iter_mut()).zip(&dz) {
             let k = (base + zj.key) as usize;
             let [f, w] = fw[k];
             // `ride_offered`
             let (dx, dy) = (zj.gx - gxi, zj.gy - gyi);
             let (fx, fy) = (dx as f32, dy as f32);
-            let long = ((fx * fx + fy * fy) * z.zone_m * z.zone_m >= ride_min2) as u32 as f32;
+            let d2 = (fx * fx + fy * fy) * z.zone_m * z.zone_m;
+            let long = (d2 >= ride_min2) as u32 as f32;
+            *zb = p.band_of_d2(d2) as u8;
             *o = [f, w, o[2], long];
             if zj.reg != ri {
                 o[0] *= gr.border;
@@ -2984,32 +3059,8 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
             let (walk, ride) = (sz.walk(u), sz.ride(u));
             let (m_u, m_r) = (acc_m[u], ride_m[u]);
             let rides = !ride.is_empty();
-            // the walk entries' weight at the rides' offset
-            let c_u = if walk.is_empty() { 0.0 } else { fast_exp(-th * (m_u - m_r)) };
-            {
-                let (a_row, b_row) = ab_row.split_at_mut(h);
-                let (a_row, b_row) = (&mut a_row[..s], &mut b_row[..s]);
-                a_row.fill(0.0);
-                for k in walk.clone() {
-                    let (a, w) = (sz.acc_st[k] as usize, acc_e[k]);
-                    for (av, &e) in a_row.iter_mut().zip(&er[a * s..(a + 1) * s]) {
-                        *av += w * e;
-                    }
-                }
-                // the row with the rides too, for the long commutes
-                if rides {
-                    for (bv, &av) in b_row.iter_mut().zip(a_row.iter()) {
-                        *bv = c_u * av;
-                    }
-                    for k in ride.clone() {
-                        let (a, w) = (sz.acc_st[k] as usize, acc_e[k]);
-                        for (bv, &e) in b_row.iter_mut().zip(&er[a * s..(a + 1) * s]) {
-                            *bv += w * e;
-                        }
-                    }
-                }
-            }
-            ab_y.fill(0.0);
+            // the walk entries' weight at the rides' offset, per band
+            let c_u: Vec<f32> = bands.iter().map(|&(th, _)| if walk.is_empty() { 0.0 } else { fast_exp(-th * (m_u - m_r)) }).collect();
             let (ux8, uy8, lu08, lu18) = (F8::splat(sz.cx[u]), F8::splat(sz.cy[u]), F8::splat(local[u].0), F8::splat(local[u].1));
             let mut rail_sum = 0.0f32;
             let mut other_sum = 0.0f32;
@@ -3024,7 +3075,9 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
             let cu = sz.nocar[u];
             let wmax_n = F8::splat(wmax);
             let nz = reach(u);
-            for ((zj, &[f, cw, df, long]), &w0) in dz[..nz].iter().zip(&fz).zip(&fzw) {
+            // the bands this origin's pairs fall in
+            let mut used = 0u32;
+            for (((zj, &[f, cw, df, long]), &w0), &zb) in dz[..nz].iter().zip(&fz).zip(&fzw).zip(&fzb) {
                 let by_ride = rides && long > 0.0;
                 let (m_o, wmax) = if by_ride { (m_r, wmax_r) } else { (m_u, wmax) };
                 if zj.min > wmax {
@@ -3045,9 +3098,41 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
                 let zv = visit.len() as u32 | (by_ride as u32) << 31;
                 visit.push([tu, cw, df, m_o]);
                 visit_w.push(w0);
+                visit_b.push(zb);
+                used |= 1 << zb;
                 cand.extend((zj.q0..zj.q0 + nv).map(|q| [q, zv]));
             }
             out.pairs += n_pairs as u64;
+            // the origin's rows in each band its pairs use
+            for (b, &c_ub) in c_u.iter().enumerate() {
+                if used >> b & 1 == 0 {
+                    continue;
+                }
+                let at = 2 * b * h;
+                ab_y[at..at + 2 * h].fill(0.0);
+                let er_b = &er[b * ss..(b + 1) * ss];
+                let (a_row, b_row) = ab_row[at..at + 2 * h].split_at_mut(h);
+                let (a_row, b_row) = (&mut a_row[..s], &mut b_row[..s]);
+                a_row.fill(0.0);
+                for k in walk.clone() {
+                    let (a, w) = (sz.acc_st[k] as usize, acc_e[b * na + k]);
+                    for (av, &e) in a_row.iter_mut().zip(&er_b[a * s..(a + 1) * s]) {
+                        *av += w * e;
+                    }
+                }
+                // the row with the rides too, for the long commutes
+                if rides {
+                    for (bv, &av) in b_row.iter_mut().zip(a_row.iter()) {
+                        *bv = c_ub * av;
+                    }
+                    for k in ride.clone() {
+                        let (a, w) = (sz.acc_st[k] as usize, acc_e[b * na + k]);
+                        for (bv, &e) in b_row.iter_mut().zip(&er_b[a * s..(a + 1) * s]) {
+                            *bv += w * e;
+                        }
+                    }
+                }
+            }
             // The pairs eight at a time, each lane the scalar expressions in their order
             // (`trip::pair_choice` gives the same bits one pair at a time), then each pair's rail
             // trips onto its egress stations, lane by lane in the pairs' order.
@@ -3058,7 +3143,12 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
             let (mut wb, mut wacc) = (0, walksum[0]);
             for (ci, c) in cand.chunks_exact(8).enumerate() {
                 let q: [usize; 8] = std::array::from_fn(|l| c[l][0] as usize);
-                let ro: [u32; 8] = std::array::from_fn(|l| if c[l][1] >> 31 != 0 { h as u32 } else { 0 });
+                // each lane's band, and its row: the band's pair, walks or walks and rides
+                let bl: [usize; 8] = std::array::from_fn(|l| visit_b[(c[l][1] & 0x7fff_ffff) as usize] as usize);
+                let rr: [u32; 8] = std::array::from_fn(|l| if c[l][1] >> 31 != 0 { h as u32 } else { 0 });
+                let ro: [u32; 8] = std::array::from_fn(|l| (2 * bl[l] * h) as u32 + rr[l]);
+                let th8 = F8::new(std::array::from_fn(|l| bands[bl[l]].0));
+                let off8 = F8::new(std::array::from_fn(|l| bands[bl[l]].1));
                 let kn = q.iter().map(|&q| eg_n[q]).max().unwrap() as usize;
                 let mut ix = [[0u32; 8]; K];
                 let mut ev = [F8::splat(0.0); K];
@@ -3070,7 +3160,7 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
                         let t = eg_st[q[l]][k] as usize;
                         (if t == s { s + l * K + k } else { t }) as u32 + ro[l]
                     });
-                    ev[k] = F8::new(std::array::from_fn(|l| eg_e[q[l]][k]));
+                    ev[k] = F8::new(std::array::from_fn(|l| eg_e[q[l] * nb + bl[l]][k]));
                     rv[k] = F8::gather(&ab_row, &ix[k]);
                     ssum = ssum + rv[k] * ev[k];
                 }
@@ -3092,7 +3182,7 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
                 let drive = e * (lu08 + l08) + k * (lu18 + l18) + (main - F8::splat(2.0) * k) * F8::splat(60.0) / F8::splat(p.road_open_kmh);
                 // `Params::car_drive`
                 let road = drive * F8::splat(p.w_drive) + rd * F8::splat(p.car_own_km_min()) + park8;
-                let rail = mo8 + m8 + F8::splat(p.fare_min) - ssum.ln() / F8::splat(th);
+                let rail = mo8 + m8 + F8::splat(p.fare_min) - ssum.ln() / th8 + off8;
                 // `Params::mode_beta`
                 let bt = F8::splat(p.beta) * (F8::splat(p.damp_min) / road).min(F8::splat(1.0)).sqrt();
                 let util = bt * (road - rail) + F8::splat(p.asc_rail);
@@ -3112,7 +3202,7 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
                 // T-511, T-513: those without a car choose among rail, walking to stations,
                 // walking the whole way and other; a lane on the rides' row prices their rail on
                 // the walks' row
-                let ride_l: u32 = (0..8).fold(0, |m, l| m | ((ro[l] != 0) as u32) << l);
+                let ride_l: u32 = (0..8).fold(0, |m, l| m | ((rr[l] != 0) as u32) << l);
                 let split = cu > 0.0 && ride_l != 0;
                 let mut ix0 = [[0u32; 8]; K];
                 let mut rv0 = [F8::splat(0.0); K];
@@ -3127,11 +3217,11 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
                     if split {
                         sn = F8::splat(0.0);
                         for k in 0..kn {
-                            ix0[k] = std::array::from_fn(|l| ix[k][l] - ro[l]);
+                            ix0[k] = std::array::from_fn(|l| ix[k][l] - rr[l]);
                             rv0[k] = F8::gather(&ab_row, &ix0[k]);
                             sn = sn + rv0[k] * ev[k];
                         }
-                        let rw = (F8::splat(m_u) + m8 + F8::splat(p.fare_min) - sn.ln() / F8::splat(th)).to_array();
+                        let rw = (F8::splat(m_u) + m8 + F8::splat(p.fare_min) - sn.ln() / th8 + off8).to_array();
                         let ra = rail.to_array();
                         rail_n = F8::new(std::array::from_fn(|l| if ride_l >> l & 1 != 0 { rw[l] } else { ra[l] }));
                         // walks over the bound, or no station on foot: no rail for them
@@ -3223,6 +3313,7 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
             cand.clear();
             visit.clear();
             visit_w.clear();
+            visit_b.clear();
             out.trips_access += all_sum as f64;
             if rail_sum == 0.0 {
                 continue;
@@ -3233,37 +3324,43 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], s: usize,
             out.walk_lost_by_sub[u] = walk_sum;
             out.rail += rail_sum as f64;
             out.rail_by_sub[u] = rail_sum;
-            // split this subzone's rail trips back onto its access stations: a walk entry carries
-            // its share of both rows' trips, a ride entry of the long commutes' only
-            let (y_row, yb_row) = (&ab_y[..s], &ab_y[h..h + s]);
-            for k in walk.start..ride.end {
-                let (a, w) = (sz.acc_st[k] as usize, acc_e[k]);
-                let row = &mut out.od[a * s..(a + 1) * s];
-                let mut tot = 0.0f32;
-                let er_a = &er[a * s..(a + 1) * s];
-                if k < walk.end {
-                    if rides {
-                        for (((o, &y), &yb), &e) in row.iter_mut().zip(y_row).zip(yb_row).zip(er_a) {
-                            let f = (y + c_u * yb) * w * e;
-                            *o += f;
-                            tot += f;
+            // split this subzone's rail trips back onto its access stations, band by band: a walk
+            // entry carries its share of both rows' trips, a ride entry of the long commutes' only
+            for (b, &c_ub) in c_u.iter().enumerate() {
+                if used >> b & 1 == 0 {
+                    continue;
+                }
+                let at = 2 * b * h;
+                let (y_row, yb_row) = (&ab_y[at..at + s], &ab_y[at + h..at + h + s]);
+                for k in walk.start..ride.end {
+                    let (a, w) = (sz.acc_st[k] as usize, acc_e[b * na + k]);
+                    let row = &mut out.od[a * s..(a + 1) * s];
+                    let mut tot = 0.0f32;
+                    let er_a = &er[b * ss + a * s..b * ss + (a + 1) * s];
+                    if k < walk.end {
+                        if rides {
+                            for (((o, &y), &yb), &e) in row.iter_mut().zip(y_row).zip(yb_row).zip(er_a) {
+                                let f = (y + c_ub * yb) * w * e;
+                                *o += f;
+                                tot += f;
+                            }
+                        } else {
+                            for ((o, &y), &e) in row.iter_mut().zip(y_row).zip(er_a) {
+                                let f = y * w * e;
+                                *o += f;
+                                tot += f;
+                            }
                         }
                     } else {
-                        for ((o, &y), &e) in row.iter_mut().zip(y_row).zip(er_a) {
-                            let f = y * w * e;
+                        for ((o, &yb), &e) in row.iter_mut().zip(yb_row).zip(er_a) {
+                            let f = yb * w * e;
                             *o += f;
                             tot += f;
                         }
                     }
-                } else {
-                    for ((o, &yb), &e) in row.iter_mut().zip(yb_row).zip(er_a) {
-                        let f = yb * w * e;
-                        *o += f;
-                        tot += f;
-                    }
+                    out.acc_home[k] += tot;
+                    out.rail_band[dist_band(sz.acc_d[k])] += tot as f64;
                 }
-                out.acc_home[k] += tot;
-                out.rail_band[dist_band(sz.acc_d[k])] += tot as f64;
             }
         }
     }
@@ -3554,8 +3651,9 @@ pub struct CrowdStats {
     pub p90: f32,
 }
 
-/// Penalty per segment: 1 + alpha x(1+x)/2, x = max(load - seats, 0) / (crush - seats), per hour
-/// at the peak hour. Starts where seats run out, never saturates (memory note on crowding).
+/// Penalty per segment: 1 + alpha x(1+x)/2, x = max(load - start, 0) / (crush - start), per hour
+/// at the peak hour, start the larger of the seats and `crowd_start` x crush (T-710: riders mind
+/// crowding only near full). Never saturates (memory note on crowding).
 pub fn crowd_factors(g: &Graph, net: &Network, loads: &Loads, p: &Params) -> (Vec<f32>, CrowdStats) {
     let nr = g.rn_line.len();
     let mut fac = vec![1.0f32; nr];
@@ -3570,8 +3668,9 @@ pub fn crowd_factors(g: &Graph, net: &Network, loads: &Loads, p: &Params) -> (Ve
         let tph = 60.0 / net.line_headway_min[l][p.period];
         let seats = tph * net.line_seats[l];
         let crush = tph * net.line_crush[l];
+        let start = seats.max(p.crowd_start * crush);
         let hour = loads.seg[r] / p.period_hours * p.peak_hour_factor;
-        let x = ((hour - seats) / (crush - seats)).max(0.0);
+        let x = ((hour - start) / (crush - start)).max(0.0);
         fac[r] = 1.0 + p.crowd_alpha * x * (1.0 + x) / 2.0;
         if hour > seats {
             st.segs_over_seats += 1;
@@ -3819,6 +3918,60 @@ mod tests {
         assert_eq!((p.everyday_rate[1], p.everyday_decay_m[5]), (0.42, 3500.0));
         assert_eq!(p.everyday_rate[0], super::super::everyday::RATE[0]);
         assert!(p.set_extra("rate_shopping", 0.1).is_err());
+    }
+
+    /// T-710: the station choice's scale is 20 over the trip's rough length (25 + 3 x km
+    /// perceived minutes), held from 60 minutes on, by four distance bands; off, one band at
+    /// `station_theta` with no offset.
+    #[test]
+    fn station_choice_scale_follows_the_trip_length() {
+        let p = Params::default();
+        let km = |d: f32| p.band_of_d2(d * d * 1e6);
+        assert_eq!((km(0.0), km(2.9), km(3.0), km(6.0), km(11.9), km(12.0), km(80.0)), (0, 0, 1, 1, 2, 3, 3));
+        let (th0, off0) = p.band(0);
+        assert!((th0 - 20.0 / 29.5).abs() < 1e-6 && (off0 - 60.0 / th0).abs() < 1e-4);
+        assert!((p.band(1).0 - 0.5).abs() < 1e-6);
+        assert!((p.band(2).0 - 20.0 / 53.5).abs() < 1e-6);
+        // past 60 minutes a minute counts the same however long the trip
+        assert!((p.band(3).0 - 20.0 / 60.0).abs() < 1e-6);
+        let off = Params { rel_gamma: 0.0, ..Params::default() };
+        assert_eq!((off.n_bands(), off.band_of_d2(1e12), off.band(0)), (1, 0, (0.2, 0.0)));
+    }
+
+    /// T-710: a train costs nothing extra until 70% of crush (or its seats, if more), then
+    /// 1 + 2 x(1+x)/2 with x from there to crush: 3 at crush.
+    #[test]
+    fn crowding_starts_near_full() {
+        let p = common_test_params();
+        let net = common_test_net(&[&[0, 1]], &[6.0], &[2.0]);
+        let g = build_graph(&net, &p);
+        // an hour's load at the busiest hour from the period's riders
+        let at = |hour: f32, p: &Params| {
+            let mut l = Loads::zero(g.n_st, g.rn_line.len());
+            l.seg[0] = hour * p.period_hours / p.peak_hour_factor;
+            crowd_factors(&g, &net, &l, p).0[0]
+        };
+        // 6 trains an hour: 600 seats, 1,200 at crush
+        assert_eq!(at(720.0, &p), 1.0);
+        assert_eq!(at(840.0, &p), 1.0);
+        assert!((at(1200.0, &p) - 3.0).abs() < 1e-4);
+        let seats = Params { crowd_start: 0.0, ..common_test_params() };
+        assert!((at(720.0, &seats) - 1.24).abs() < 1e-4);
+    }
+
+    /// T-710: a band's offset keeps a long trip's rail inside f32 with a sharp scale: a pair whose
+    /// station-to-station cost is 300 perceived minutes is still priced, at its own cost.
+    #[test]
+    fn a_long_trip_keeps_its_rail_cost_in_a_sharp_band() {
+        let p = Params::default();
+        let (th, off) = p.band(3);
+        // 300 minutes at this scale is e^-100 without the offset: clamped, as if 240
+        assert_eq!(fast_exp(-th * 300.0), fast_exp(-80.0));
+        let e = fast_exp(-th * (300.0 - off));
+        assert!(e > 1e-30);
+        assert!((-fast_ln(e) / th + off - 300.0).abs() < 0.05);
+        // and a short one in the same band does not overflow
+        assert!(fast_exp(-th * (0.0 - off)).is_finite());
     }
 
     /// Setting the worldwide rail constant by name keeps the country's part on top.

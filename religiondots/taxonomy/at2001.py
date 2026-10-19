@@ -128,8 +128,20 @@ MAP = {
     "Andere christliche Gemeinschaften": "christianity",
     "Israelitisch": "judaism",
     "Islamisch": "islam",
+    # --- the census's `Islamisch` divided by branch, BORROWING Germany's MLD 2020 shares by
+    # citizenship (sources/at_mld.py, Anita 2026-10-16). `derived`, rolling back to
+    # `Islamisch` through COLUMNS. Alevis on `alevism`, as in Germany and England.
+    "MLD 2020 (borrowed): Sunnitisch": "islam.sunni",
+    "MLD 2020 (borrowed): Schiitisch": "islam.shia",
+    "MLD 2020 (borrowed): Alevitisch": "alevism",
+    "MLD 2020 (borrowed): Ahmadi": "islam.ahmadiyya",
     "Andere nichtchristliche Gemeinschaften": "other.at",
     "Ohne Bekenntnis": "unaffiliated",
+}
+
+# spec §7a-i-1: the census column the borrowed branch rows were split out of -> its node.
+COLUMNS = {
+    "Islamisch": "islam",
 }
 
 

@@ -1,7 +1,7 @@
 # How demand works, in plain words
 
 For Anita. One page, kept current: an agent who changes a rule here updates this page too.
-Last updated 2026-10-17 (the T-636 model). The full rules are in demand.md; this is the gist.
+Last updated 2026-10-19 (the T-636 model, with T-710's route choice and crowding). The full rules are in demand.md; this is the gist.
 
 ## Who travels, and where to
 
@@ -30,11 +30,17 @@ There is no built-in liking for the train. Rail and the car are compared on time
 **By train**
 - Walk to the station: each minute counts 1.5.
 - Wait on the platform: half the time between trains, in plain minutes.
-- Ride: 1 a minute, stretched when the train is crowded.
+- Ride: 1 a minute, stretched once the train is 70% full: at crush load a minute counts 3, at 120%
+  it counts 5.4. Below 70% nobody minds the crowd.
 - Changing trains: the wait for the next train plus the walk between platforms. No extra penalty.
   Nobody changes back onto the line they just left: on a full line people wait at their station.
 - If the train is full when it arrives, the wait for one with room counts too.
 - Fare: in the US $1 counts as 3 minutes.
+- Which stations: riders share the pairs of stations near each end by how much slower each option
+  is compared with the trip's length. Of two options 1 minute apart the faster gets 66% on a short
+  trip and 58% on one of an hour or more; 5 minutes apart, 97% and 84%; 10 minutes apart, nearly
+  everyone takes the faster. From an hour on, a minute matters as much however long the trip. At a
+  station, riders take the first train that helps.
 - Or drive to the station: 15 minutes to start, the drive (counted 1.33 a minute), and the cheaper of
   parking there or a 10 minute drop-off. Only for trips of 5 km or more.
 
@@ -79,14 +85,14 @@ and "other" are left out of the comparison; the figure is rail out of rail plus 
   New York 86%, London 85.5%. As a share of all trips, walks and the rest included: 79% and 75%.
 - **B**: 100 km/h, a 3 minute walk at each end, a fare of $1.50 plus $0.05 a km. Target at least 50%.
   New York 79%, London 79%. Of all trips: 71% and 67%.
-- The real networks, for comparison: New York's rail takes 22% of rail plus car (17% of all trips),
-  London's 31% (22%). The old constants gave 19% and 29% (14% and 19%). Short trips are where
+- The real networks, for comparison: New York's rail takes 21% of rail plus car (15% of all trips),
+  London's 30% (20%); before the route choice was sharpened (T-710), 23% and 32%. Short trips are where
   the real systems fall short: coverage, not the choice, holds them down.
 
-Details and the settings that were tried: notes/T-636.md.
+Details and the settings that were tried: notes/T-636.md; the route choice, notes/T-710.md.
 
 ## Coming next
 
 - T-584: commuting between neighbouring cities damped at 0.4.
 - Deep calibration, later: whether the walk's 1.5 should be 1, and what the real cities say about
-  the new numbers (the model carries about three times New York's station counts, twice London's).
+  the new numbers (the model carries about 2.5 times New York's station counts, 1.7 times London's).

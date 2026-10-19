@@ -29,7 +29,16 @@ REVIEW = {
         "-> christianity, the bare branch. 69,638 people, 3.75%. The form has one Christian code, "
         "so no church can be read from this census. Kanifing is 7.70% Christian, Banjul 4.84% and "
         "Brikama 4.82%, and those three hold 91.5% of the country's Christians; every LGA up "
-        "river is under 1.3% (Basse 0.48%).",
+        "river is under 1.3% (Basse 0.48%). NO LONGER DRAWN since 2026-10-16: gm_split.csv "
+        "replaces it with a national 75/25 split (below), which rolls back here (COLUMNS).",
+    "Catholic":
+        "-> christianity.catholic, DERIVED. 52,229, 75% of Christians in every LGA. Three "
+        "witnesses that disagree: the Afrobarometer's named Christians, rounds 7-9, 87.7% "
+        "(n=54); Pew 2010 66%; the Diocese of Banjul's own 2023 claim, 54,000, about 64% of "
+        "the census's Christians. 75 sits between them. About 70 dots at 1:1,000.",
+    "Protestant":
+        "-> christianity.protestant, DERIVED. 17,409, 25%: the Methodist Church (in the "
+        "Gambia since 1821), the Anglican diocese and the newer churches.",
     "Traditional":
         "-> indigenous.african. 1,028 people, 0.055%. The manual defines it as \"the traditional "
         "African religion\" (para 8.38). **Read it as a floor**, per §11b's continental rule: "
@@ -53,10 +62,15 @@ MAP = {
     "Christianity": "christianity",
     "Traditional": "indigenous.african",
     "Other": "other.gm",
+    # 2026-10-16, sources/wa_christian.py: gm_split.csv replaces `Christianity`. `derived`.
+    "Catholic": "christianity.catholic",
+    "Protestant": "christianity.protestant",
 }
 
-# spec §7a-i-1: every row is measured at the node it is drawn on.
+# spec §7a-i-1: measured rows at their own node; the two derived Christian rows roll back to
+# the `Christianity` cell the census counted per LGA.
 COLUMNS = {v: v for v in MAP.values()}
+COLUMNS["Christianity"] = "christianity"
 
 
 def _key(cat):

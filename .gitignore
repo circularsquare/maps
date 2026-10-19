@@ -34,3 +34,6 @@ served.json.tmp
 
 # Local game screenshots and diagnostic plots, outside the trainworld source tree.
 /artifacts/trainworld/
+
+# Personal Claude Code permissions
+.claude/settings.local.json

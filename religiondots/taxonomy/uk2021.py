@@ -146,6 +146,12 @@ MAP = {
     "Christian: Reformed": "christianity.reformed",
     "Christian: Orthodox": "christianity.orthodox",
     "Muslim": "islam",
+    # --- England and Wales's Muslims by branch, from sources/uk_islam.py rather than from ONS.
+    # Pakistani and Bangladeshi Muslims per local authority (ONS religion x ethnic group) times
+    # Pew 2012 Q31's Sunni and Shi'a shares for Pakistan and Bangladesh; every other Muslim
+    # stays on `Muslim` above. `derived`, rolling back to `Muslim` (COLUMNS below).
+    "Muslim: Sunni (Pew 2012)": "islam.sunni",
+    "Muslim: Shi'a (Pew 2012)": "islam.shia",
     "Hindu": "hinduism",
     "Sikh": "sikhism",
     "Buddhist": "buddhism",
@@ -271,6 +277,9 @@ COLUMNS = {
     # turns inferred dots off sees them roll back to the census's own Christian count --
     # which is exactly what ONS published and the only thing about them that was measured.
     "Christian": "christianity",
+    # sources/uk_islam.py's two branch rows carry `parent_column=Muslim` and roll back to the
+    # census's own Muslim count, the only thing about them ONS measured (2026-10-16).
+    "Muslim": "islam",
     # NISRA, Northern Ireland. `christianity` and not `christianity.other`, for hu2022's
     # reason: NISRA's column is a residual and that node is explicitly not one.
     "Other Christian (including Christian related)": "christianity",

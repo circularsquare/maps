@@ -246,9 +246,6 @@ export interface StationStyle {
  * zoomed out). Lines are not covered any more: in traffic thickness mode (T-227) a line can be
  * wider than the stations on it. */
 export const BOX_NARROW = 0.75 * 1.5;
-/** A full platform side's red bar reaches this share of the box's half width beyond its rim (T-652);
- * and the station shader's crowd quad grows by it. */
-export const CROWD_BULGE = 0.5;
 /** The line widths a dot covers, as a share of the line width: the same plain line a box is sized
  * from, whatever the traffic mode draws (T-239). */
 const PLAIN_COVER = 0.6;

@@ -252,4 +252,26 @@ test is passed rather than dodged: the vintage note is a note, not a repair.
 * **`Other Christian Denominations` (26.6%) has no African-Instituted split.** This is
   gh2021.py's position before Kenya supplied `christianity.africaninstituted`, at twice the
   size. Any Malawian source that separates the Zion and Apostolic churches would open the
-  largest cell on this map's Malawi.
+  largest cell on this map's Malawi. (Superseded by §10.)
+
+## 10. The two Christian residuals split, 2026-10-16 (`sources/ea_christian.py`)
+
+Anita's ruling of 2026-10-16 (unspecified_splits/eastafrica.md). Source: Afrobarometer R4-R9
+merged files (on disk), 9,607 Malawian answers; `REGION` is North, Central, South in every round
+(`DISTRICT` only in R4), so shares are regional and applied to each district's census cell.
+
+- Each answer is mapped to its census cell. Levels, census against survey: SDA/Baptist/Apostolic
+  9.4% / 7.8%, Other Christian Denominations 26.6% / 24.2% (asserted within 5 points).
+- `Seventh Day Adventist/Baptist/Apostolic` (801 respondents): SDA 1,058,847, Baptist 548,393,
+  37,589 Apostolic left on the cell's node, `christianity.other` (Anita's 2026-09-14 node). North
+  (84 respondents) takes the national shares. Witness: the Adventists' Malawi Union counted
+  494,977 baptised members in mid-2016 and 627,797 in Q2 2021.
+- `Other Christian Denominations` (2,327): independent churches 1,094,509 ->
+  `christianity.africaninstituted`; Church of Christ 823,529 -> `christianity.restorationist`;
+  Evangelical 396,740 -> `christianity.evangelical`; Jehovah's Witnesses 386,894 ->
+  `christianity.witnesses`; 1,964,665 (`Christian only`, Lutheran, New Apostolic and other small
+  bodies) left on the cell, which now files at bare `christianity` per zm2022.py's residual rule.
+- Independents and `Christian only` trade places by round (r -0.85; R5 43%/6.5%, R6 29%/39%), so
+  they are placed as one box per region and split at R7-R9's national ratio (40.5% independents).
+  The North's own 52% independents is therefore not drawn as such.
+- Every district closes exactly on both cells. Rows `derived`, `parent_column=<cell>`.

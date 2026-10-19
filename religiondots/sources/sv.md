@@ -157,3 +157,13 @@ does not hold here. Drawn as given.
   country gains a fourth measured layer.~~ Closed 2026-09-09, not by a new wave but by the bar
   being corrected to the exact null: +0.5165 against +0.4637 is p=0.031 and the fourth measured
   layer is drawn. `Religiones Orientales` at +0.4472, p=0.054, is now the row to watch.
+
+## Pentecostals and Baptists from Pew 2014 (2026-10-16)
+
+Anita's call of 2026-10-16, built by session `c67d3c3c-latam` (`latam_split.py`, sources.md
+§latam-2026-10-16). LAPOP's two Protestant boxes are one bucket of 2,382,393. Pew Research Center's
+2014 survey (`QPROT` and `QDENOMESA`, 546 Salvadoran Protestants) puts 46.3% in a Pentecostal
+church and 17.2% in a Baptist one, the largest Baptist share in the region, which is why El
+Salvador is one of the two countries where Anita had Baptist drawn too. 1,103,613 go to
+`christianity.pentecostal` and 408,969 to `christianity.baptist`, as one national fraction of every
+bucket row; 869,812 stay on the two box nodes. All `modelled`.
