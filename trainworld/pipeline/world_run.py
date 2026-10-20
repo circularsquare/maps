@@ -24,8 +24,12 @@ then market_zones and local trips. Status and a record of
 times live in each row of pipeline/world_plan.json; a report a batch goes to
 ../artifacts/trainworld/world_run/<batch>/.
 
-Stop: ctrl-c, or create data/work/world_run/STOP. The city under way finishes its steps first;
-gating and joining wait for the next run, which takes up rows where they were.
+Stop: ctrl-c, or create trainworld/data/work/world_run/STOP (`status` and the run's first line print
+the path; with --root, that tree's). The city under way finishes its steps first; gating and joining
+wait for the next run, which takes up rows where they were. A run fault (the TW_SIM_DIR copy without
+its `data`/`app` junctions, a gate or re-gate that leaves no result) stops the run without parking
+anything for it. A step whose log has not grown for QUIET_S dumps its stack into its log. The run
+ends by printing `status`.
 
 Each step runs in its own process (`world_run.py step ...`, `python -I`), with OMP_NUM_THREADS and
 CARGO_BUILD_JOBS from --jobs; TW_SIM_DIR and TW_CARGO_TARGET_DIR pass through, for a copy of sim/
@@ -56,14 +60,19 @@ MAPS = REAL.parent
 OSM = REAL / "data/raw/osm"
 GEOFABRIK = "https://download.geofabrik.de/{}-latest.osm.pbf"
 UA = {"User-Agent": "trainworld-pipeline/0.1 (rail game data build; python-requests)"}
-BUILD_STEPS = ["build", "places", "routes", "merge", "nocar", "everyday"]
+BUILD_STEPS = ["build", "stations", "places", "routes", "merge", "nocar", "everyday"]
 VITE_FILES = (".json", ".bin", ".boundary.geojson", ".places.json", ".market.json")  # vite.config.ts copies these
-CACHES = (".points.fgb", ".areas.fgb", ".water.fgb", ".ways2.npz")  # an extract's big OSM caches
+CACHES = (".points.fgb", ".stations.fgb", ".areas.fgb", ".water.fgb", ".ways2.npz")  # an extract's OSM caches
+QUIET_S = 1200  # a step whose log has not grown this long dumps its stack into the log (T-764)
 MODULE_OUTLINES = {"england", "france", "germany"}  # plan_hooks giving a boundary_file (T-555)
 # A step still running after this long is stopped and its row parks (four times as long for a row
 # over BIG_PEOPLE): the longest seen, a 20M pack's build, takes under an hour on 3 cores.
 STEP_LIMIT_S = {"build_city": 5400, "routes": 3600, "pack_gate": 5400, "intercity": 7200, None: 1800}
 BIG_PEOPLE = 15e6
+
+
+class RunFault(Exception):
+    """A fault of the run, not of a row (T-764, T-773): the run stops and parks nothing for it."""
 
 
 # ================================================================ a step, in its own process
@@ -170,6 +179,8 @@ def step_main(argv):
     if os.environ.get("TW_FAULT_S"):  # a step that hangs silently: every N seconds its stack goes to its log
         import faulthandler
         faulthandler.dump_traceback_later(int(os.environ["TW_FAULT_S"]), repeat=True, file=sys.stderr)
+    elif os.environ.get("TW_STEP_LOG"):
+        quiet_watch(os.environ["TW_STEP_LOG"], int(os.environ.get("TW_QUIET_S", QUIET_S)))
     sys.path[:0] = [str(HERE), str(REAL / "checks")]
     root = os.environ.get("TW_RUN_ROOT")
     if root:
@@ -181,6 +192,27 @@ def step_main(argv):
            "@preview": preview}[name](args)
     if out is not None:
         print("RESULT " + json.dumps(out))
+
+
+def quiet_watch(log, secs):
+    """Every thread's stack into the step's log once the log has not grown for `secs`, and again
+    after each further `secs` of silence. faulthandler's timer is C, so it fires even while C code
+    holds the GIL; a thread re-arms it whenever the log grows."""
+    import faulthandler
+    faulthandler.dump_traceback_later(secs, repeat=True, file=sys.stderr)
+
+    def watch():
+        size = -1
+        while True:
+            time.sleep(min(30, secs / 4))
+            try:
+                s = os.path.getsize(log)
+            except OSError:
+                continue
+            if s != size:
+                size = s
+                faulthandler.dump_traceback_later(secs, repeat=True, file=sys.stderr)
+    threading.Thread(target=watch, daemon=True).start()
 
 
 def read_extract(args):
@@ -336,20 +368,36 @@ class Run:
         if self.scratch:
             e["TW_RUN_ROOT"] = str(self.root)
         log = Path(log)
+        e["TW_STEP_LOG"] = str(log)
         log.parent.mkdir(parents=True, exist_ok=True)
         t0 = time.time()
         flags = subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0  # ctrl-c stops the runner, not a step
+        hush = int(e.get("TW_QUIET_S", QUIET_S))
         with open(log, "a", encoding="utf-8") as f:
             f.write(f"### {datetime.datetime.now().isoformat(timespec='seconds')} {name} {' '.join(args)}\n")
             f.flush()
             p = subprocess.Popen([sys.executable, "-I", "-u", os.path.abspath(__file__), "step", name, *args],
                                  stdout=f, stderr=subprocess.STDOUT, env=e, cwd=str(MAPS), creationflags=flags)
             limit = STEP_LIMIT_S.get(name, STEP_LIMIT_S[None]) * (4 if big else 1)
-            try:
-                code = p.wait(timeout=limit)
-            except subprocess.TimeoutExpired:
-                self.kill(p)
-                code = None
+            size, still, said = -1, time.time(), False
+            while True:
+                try:
+                    code = p.wait(timeout=min(30, hush / 4))
+                    break
+                except subprocess.TimeoutExpired:
+                    pass
+                now = time.time()
+                if now - t0 >= limit:
+                    self.kill(p)
+                    code = None
+                    break
+                s = log.stat().st_size
+                if s != size:
+                    size, still, said = s, now, False
+                elif not said and now - still >= hush:
+                    print(f"    {name} {' '.join(args)[:60]}: no log growth for {hush / 60:.0f} min; its stack goes to {log}",
+                          flush=True)
+                    said = True
         secs = round(time.time() - t0, 1)
         text = log.read_text(encoding="utf-8", errors="replace")
         res = None
@@ -444,32 +492,65 @@ class Run:
         if not rows:
             print("nothing to build")
             return
-        self.logs.mkdir(parents=True, exist_ok=True)
         if self.stop_file.exists():
             raise SystemExit(f"{self.stop_file} exists: delete it to run")
+        try:
+            self.check_sim()
+        except RunFault as x:
+            raise SystemExit(f"RUN FAULT, nothing run: {x}")
+        self.logs.mkdir(parents=True, exist_ok=True)
         signal.signal(signal.SIGINT, self.on_ctrl_c)
         t0 = time.time()
         regs = self.regions(rows)
         print(f"batch {self.batch}: {len(rows)} rows in {len(regs)} regions; jobs {self.jobs} ({self.workers} x {self.threads}); "
-              f"logs {self.logs}", flush=True)
+              f"logs {self.logs}; to stop, create {self.stop_file}", flush=True)
         gated = []
-        for k, reg in enumerate(regs, 1):
-            if self.stop_asked():
-                break
-            gated += self.region(k, reg)
-        # one joint solve a group for the whole batch, after every region (T-723: a covered country's
-        # group re-solved after each of its regions was most of the join's time)
-        if not self.stop_asked() and (gated or any(self.report["rows"].get(i, {}).get("result") == "parked"
-                                                   for i in self.report["rows"])):
-            t = time.time()
-            self.join(gated, self.logs / "join")
-            self.report["join_seconds"] = round(time.time() - t)
-        elif gated:
-            print(f"  stopped before the joint solve: {' '.join(gated)} stay registered and built; the next run gates them again",
-                  flush=True)
+        try:
+            for k, reg in enumerate(regs, 1):
+                if self.stop_asked():
+                    break
+                gated += self.region(k, reg)
+            # one joint solve a group for the whole batch, after every region (T-723: a covered country's
+            # group re-solved after each of its regions was most of the join's time)
+            if not self.stop_asked() and (gated or any(self.report["rows"].get(i, {}).get("result") == "parked"
+                                                       for i in self.report["rows"])):
+                t = time.time()
+                self.join(gated, self.logs / "join")
+                self.report["join_seconds"] = round(time.time() - t)
+            elif gated:
+                print(f"  stopped before the joint solve: {' '.join(gated)} stay registered and built; the next run gates them again",
+                      flush=True)
+        except RunFault as x:
+            self.stop_vite()
+            self.report["fault"] = str(x)
+            self.stopping = True
+            print(f"\nRUN FAULT, the run stops (no row parked for it): {x}", flush=True)
         self.report["seconds"] = round(time.time() - t0)
         self.report["stopped"] = self.stop_asked()
         self.write_report()
+        print()
+        status(self.root)
+        if "fault" in self.report:
+            sys.exit(2)
+
+    def check_sim(self):
+        """The TW_SIM_DIR copy's `data` and `app` junctions beside it, which the gate's rates test and
+        the joint solve read (T-616): missing, they fail every row, so the run stops instead (T-764)."""
+        sim = os.environ.get("TW_SIM_DIR")
+        if not sim:
+            return
+        sim, bad = Path(sim), []
+        if not (sim / "Cargo.toml").exists():
+            bad.append(f"{sim / 'Cargo.toml'} missing")
+        for rel, want in (("data/packs", self.packs), ("app/src/game/registry.json", self.reg_path)):
+            p = sim.parent / rel
+            if not p.exists():
+                bad.append(f"{p} missing")
+            elif not os.path.samefile(p, want):
+                bad.append(f"{p} is not {want}")
+        if bad:
+            raise RunFault("the TW_SIM_DIR copy cannot see this tree's packs: " + "; ".join(bad) +
+                           " (junctions: docs/adding-a-city.md, Running the pipeline)")
 
     def on_ctrl_c(self, *_):
         if not self.stopping:
@@ -594,7 +675,8 @@ class Run:
         L = self.logs / cid
         steps, t0 = {}, time.time()
         ex = ",".join(r["extracts"])
-        cmds = {"build": ("build_city", [cid]), "places": ("places", [cid]),
+        cmds = {"build": ("build_city", [cid]), "stations": ("pack_gate", ["stations", cid, "--extracts", ex]),
+                "places": ("places", [cid]),
                 "routes": ("routes", [cid, "--extracts", ex, "--workers", str(self.threads), "--keep-pbf"]),
                 "merge": ("merge_cells", [cid]), "nocar": ("nocar", [cid]), "everyday": ("everyday_rates", [cid])}
         for s in BUILD_STEPS:
@@ -633,6 +715,7 @@ class Run:
         ids = [i for i in ids if i not in near]
         if not ids:
             return []
+        self.check_sim()
         snap = L.parent / f"{L.name}.snapshot.json"
         ok, _, tail = self.step("pack_gate", ["snapshot", str(snap)], f"{L}.snapshot.log", threads=1)
         if not ok:
@@ -656,16 +739,25 @@ class Run:
             if not log.exists() and made:  # a row built by an earlier batch, gated by this one (T-725)
                 log = self.logs.parent / made / f"{i}.build.log"
             args += ["--log", f"{i}={log}"]
+            (gd / f"{i}.json").unlink(missing_ok=True)
         try:
-            self.step("pack_gate", args, f"{L}.gate.log", env=env)
+            ok, _, tail = self.step("pack_gate", args, f"{L}.gate.log", env=env)
         finally:
             self.stop_vite()
+        try:
+            self.check_sim()  # the junctions went during the gate (T-613): its rates test read nothing
+        except RunFault:
+            self.unregister(ids)
+            raise
+        # a pack's own error is a FAIL in its result: no result means the gate itself died (T-773)
+        none = [i for i in ids if not (gd / f"{i}.json").exists()]
+        if none:
+            self.unregister(ids)
+            raise RunFault(f"the gate {'crashed' if not ok else 'ended'} with no result for {' '.join(none)} "
+                           f"({str(tail)[-300:]}); the region's rows stay built for the next run (see {L}.gate.log)")
         shipped = []
         for i in ids:
             p = gd / f"{i}.json"
-            if not p.exists():
-                self.park(i, "gate: no result (see the gate log)")
-                continue
             res = json.loads(p.read_text(encoding="utf-8"))
             fails = [f"{c['name']} {c.get('value')} {c.get('detail') or ''}".strip() for c in res["checks"] if c["status"] == "FAIL"]
             warns = [f"{c['name']} {c.get('value')}" for c in res["checks"] if c["status"] == "WARN"]
@@ -721,11 +813,20 @@ class Run:
                 shipped, changed = [], set()
             for g in groups:
                 new = [i for i in g if i in shipped]
-                if self.solve(g, new, L):
+                parked, rest = self.solve(g, new, L)
+                if rest:  # only some new members failed: the group again without them, once (T-773)
+                    ok, _, again = self.step("@groups", rest, f"{L}.groups-again.log", threads=1)
+                    if not ok or not isinstance(again, list):
+                        raise RunFault(f"joint gravity groups failed for {' '.join(rest)}: {str(again)[-300:]}")
+                    for g2 in again:
+                        p2, _ = self.solve(g2, [i for i in g2 if i in rest], L, again=True)
+                        parked += p2
+                        if not p2:
+                            changed |= set(g2)
+                elif not parked:
                     changed |= set(g)
-                else:
-                    shipped = [i for i in shipped if i not in new]
-                    changed -= set(new)
+                shipped = [i for i in shipped if i not in parked]
+                changed -= set(parked)
         ids = sorted(changed, key=lambda i: [c["id"] for c in self.registry()["cities"]].index(i)) if changed else []
         if ids:
             ok, _, tail = self.step("register", ids + ["--market", "--trips"], f"{L}.market.log")
@@ -744,42 +845,58 @@ class Run:
             self.rec(i, result="shipped")
             print(f"  {i}: SHIPPED", flush=True)
 
-    def solve(self, g, new, L):
+    def solve(self, g, new, L, again=False):
         """One group's joint solve: members back to res-9, solved, merged again, re-gated (gravity
-        may change in the group only). A FAIL restores every member and parks the group's new packs."""
-        tag = f"{L}.group-{g[0]}"
-        print(f"  joint group {g[0]}: {' '.join(g)} (new: {' '.join(new)})", flush=True)
-        bak =Path(f"{tag}-backup")
+        may change in the group only). Returns (parked, rest). A FAIL restores every member; when
+        only new members FAIL, those park and `rest` (the other new ones) go to a second solve
+        without them; when an older member FAILs, or on the second solve, every new member parks.
+        A re-gate that leaves a member without a result is a run fault (T-773)."""
+        tag = f"{L}.group-{g[0]}" + ("-again" if again else "")
+        print(f"  joint group {g[0]}{' again' if again else ''}: {' '.join(g)} (new: {' '.join(new)})", flush=True)
+        self.check_sim()
+        bak = Path(f"{tag}-backup")
         self.backup(g, bak)
         # the re-gate compares against the packs just before this solve (an earlier group's solve changed its own)
         snap = Path(f"{tag}.snapshot.json")
         self.step("pack_gate", ["snapshot", str(snap)], f"{tag}.log", threads=1)
         steps = [("merge_cells", g + ["--undo"]), ("intercity", ["--group", "auto"] + new + ["--no-market"]),
                  ("merge_cells", g)]
-        fail = None
+        fail, bad = None, {}
         for mod, args in steps:
             ok, _, tail = self.step(mod, args, f"{tag}.log")
             if not ok:
+                try:
+                    self.check_sim()  # intercity builds from the sim copy
+                except RunFault:
+                    self.restore(g, bak)
+                    raise
                 fail = f"{mod} failed: {str(tail)[-300:]}"
                 break
         if fail is None:
             gd = Path(f"{tag}-gate")
-            self.step("pack_gate", g + ["--no-rust", "--since", str(snap), "--out", str(gd)], f"{tag}.gate.log")
-            bad = []
+            ok, _, tail = self.step("pack_gate", g + ["--no-rust", "--since", str(snap), "--out", str(gd)], f"{tag}.gate.log")
+            none = [i for i in g if not (gd / f"{i}.json").exists()]
+            if none:
+                self.restore(g, bak)
+                raise RunFault(f"joint group {g[0]}: the re-gate {'crashed' if not ok else 'ended'} with no result for "
+                               f"{' '.join(none)} ({str(tail)[-300:]}); the group is restored and its new packs "
+                               f"({' '.join(new)}) stay built and registered for the next run (see {tag}.gate.log)")
             for i in g:
-                p = gd / f"{i}.json"
-                res = json.loads(p.read_text(encoding="utf-8")) if p.exists() else {"verdict": "park", "checks": []}
+                res = json.loads((gd / f"{i}.json").read_text(encoding="utf-8"))
                 if res["verdict"] != "ship":
-                    bad.append(f"{i}: " + ", ".join(c["name"] for c in res["checks"] if c["status"] == "FAIL"))
+                    bad[i] = ", ".join(f"{c['name']} {c.get('value')}" for c in res["checks"] if c["status"] == "FAIL")
             if bad:
-                fail = "after the joint solve " + "; ".join(bad)
+                fail = "after the joint solve " + "; ".join(f"{i}: {v}" for i, v in bad.items())
         if fail is None:
-            return True
+            return [], []
         self.restore(g, bak)
-        self.unregister(new)
-        for i in new:
-            self.park(i, f"joint group {g[0]} ({' '.join(g)}): {fail}"[:600])
-        return False
+        only_new = bool(bad) and set(bad) <= set(new) and not again
+        parked = [i for i in new if i in bad] if only_new else list(new)
+        self.unregister(parked)
+        for i in parked:
+            why = f"after the joint solve: {bad[i]}" if only_new else fail
+            self.park(i, f"joint group {g[0]} ({' '.join(g)}): {why}"[:600])
+        return parked, ([i for i in new if i not in parked] if only_new else [])
 
     def group_files(self, g):
         out = []
@@ -871,6 +988,8 @@ def status(root):
     import collections
     plan = Path(root or REAL) / "pipeline/world_plan.json"
     rows = [r for r in json.loads(plan.read_text(encoding="utf-8"))["metros"] if r.get("units")]
+    stop = Path(root or REAL) / "data/work/world_run/STOP"
+    print(f"STOP file: {stop}{' (present: the next run will not start)' if stop.exists() else ''}")
     print(dict(collections.Counter(r["status"] for r in rows)))
     for r in sorted(rows, key=lambda r: r["order"]):
         if r["status"] in ("built", "shipped", "parked"):

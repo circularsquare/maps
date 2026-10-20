@@ -269,8 +269,10 @@ Run from the maps root (`node trainworld/checks/<file>`).
 - `pack_gate.py <id ...> [--all] [--browser] [--since snap] [--log id=build.log]` (Python, T-538):
   the ship-or-park gate for a finished pack, pipeline stage 6 (notes/T-535.md). Every check a
   number against `THRESHOLDS` at the top of the file: `read_pack.py`, OSM water points (polylabel on
-  the extract's water cache) in the mask and OSM stations (`railway=station|halt`, one cached
-  Overpass request a pack, `data/raw/stations/`) on land, `every_pack_everyday`'s rates (`TW_PACKS`),
+  the extract's water cache) in the mask and OSM stations (`railway=station|halt`, from
+  `data/work/<id>.stations.json`, which `stations <id> --extracts` writes from the extracts'
+  `.stations.fgb`; older packs' cached Overpass answers in `data/raw/stations/`; no network, T-770)
+  on land, `every_pack_everyday`'s rates (`TW_PACKS`),
   the browser check on a row it makes (a test line along OSM stations near the centre, a water pair
   from the mask), other packs unchanged against a `snapshot`, and the plausibility figures (people
   against GHSL and the FUA, outline, jobs, commute, schools, hospitals, roads, T-460's OSM signal),
@@ -319,7 +321,7 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   inland water, T-041; `source(extracts)` for a config's `water_source`, `mask <id>` for a
   water-only pack in `data/work/osm_water/`; docs/adding-a-city.md).
 - `osm_features.py [extracts]` reads a Geofabrik extract's point and area features once into
-  `data/raw/osm/<extract>.points.fgb` and `.areas.fgb`; `read()` gives tier0.py, canada.py and
+  `data/raw/osm/<extract>.points.fgb`, `.stations.fgb` (the gate's, T-770) and `.areas.fgb`; `read()` gives tier0.py, canada.py and
   places.py the rows a GDAL read of the .osm.pbf would (T-363).
 - `places.py [ids]` writes each city's OSM place list, `data/packs/<id>.places.json` (towns and
   neighbourhoods inside the boundary; from the extract's cached features for a tier 0 city, else
@@ -355,7 +357,8 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   runner (T-540): world plan rows a region at a time through download, build, gate, registry,
   joint gravity, market and clean up, each step its own `python -I` process; status and times in
   each plan row, a report a batch in `../artifacts/trainworld/world_run/` (docs/adding-a-city.md
-  "Running the pipeline"). `--root` points every step at a scratch tree (`Redirect`).
+  "Running the pipeline"). `--root` points every step at a scratch tree (`Redirect`). `RunFault`
+  stops a run without parking (`check_sim`, a gate with no result); `quiet_watch` dumps a silent step's stack.
 - Real networks and calibration (T-007, T-509): `realnet.py net <city>` turns a city's sources
   (GTFS, OSM route relations from `realnet.py fetch-osm <city>`, or a CSV of timetabled trips;
   `CITIES` lists each city's) into a demand test network in `data/work/realnet/`; `realnet.py`

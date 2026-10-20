@@ -36,9 +36,13 @@ for the browser check (default 6360). Set `TW_SIM_DIR` and `TW_CARGO_TARGET_DIR`
 - **Rows** go in plan order, a region at a time: rows sharing a Geofabrik extract, chained. The
   region's extracts are downloaded (four tries) unless their caches or `.osm.pbf` are on disk, and
   read once into the caches (`osm_features`, inland water, roads, admin relations).
-- **Per row**: `build_city`, `places`, `routes --keep-pbf`, `merge_cells`, `nocar`,
-  `everyday_rates`, each its own process and log; a failed step runs once more after a minute,
-  then the row parks. Status `built`.
+- **Per row**: `build_city`, `pack_gate stations` (the gate's station file, section 8), `places`,
+  `routes --keep-pbf`, `merge_cells` (which runs `read_pack`'s checks on its output before it
+  replaces the pack, and fails the step otherwise), `nocar`, `everyday_rates`, each its own process
+  and log; a failed step runs once more after a minute (a timed-out one does not), then the row
+  parks. A step whose log has not grown for 20 minutes (`QUIET_S`; `TW_QUIET_S` to change it) dumps
+  every thread's stack into its log, again after each further 20 silent minutes, and the runner
+  prints a line saying so. Status `built`.
 - **Gate**: a row within 50 km of a pack with a Northeast `market` id parks (T-580: the Northeast
   is solved on its own sites). The rest are registered with their market packs (`register.py
   --market`; the browser check needs them), a snapshot of every registered pack taken first, and
@@ -52,8 +56,10 @@ for the browser check (default 6360). Set `TW_SIM_DIR` and `TW_CARGO_TARGET_DIR`
   country in its header (tor, lon, par, sao) takes the registry's
   `marketRow.country`. Each group a gated pack joined is solved once (members back to res-9,
   `intercity.py --group auto <new> --no-market`, merged again) and gated again without the browser
-  or rates; a FAIL restores every member from the backup taken before and parks the group's new
-  packs. Then `register.py <shipped and changed> --market --trips` (or `market_zones.py --rows`
+  or rates; a FAIL restores every member from the backup taken before. When only new packs FAIL,
+  they park and the group is solved once more without them (a FAIL then parks every new pack of
+  that solve); when an older member FAILs, every new pack parks (T-773). Then `register.py
+  <shipped and changed> --market --trips` (or `market_zones.py --rows`
   when only parks happened), and a check that every file `vite.config.ts` copies into a
   production build exists for each shipped pack (it copies the registry's packs, so nothing more
   needs listing). Status `shipped`.
@@ -64,10 +70,18 @@ for the browser check (default 6360). Set `TW_SIM_DIR` and `TW_CARGO_TARGET_DIR`
   `parked`) with a `run` record: batch, seconds a step, gate warnings, a parked row's reason. A
   batch's report (shipped, parked with reasons, warnings, times) and every log go to
   `../artifacts/trainworld/world_run/<batch>/`.
-- **Stopping**: ctrl-c, or the file `data/work/world_run/STOP`; the city under way finishes its
+- **Stopping**: ctrl-c, or the file `trainworld\data\work\world_run\STOP` (the run's first line and
+  `status` print its path; with `--root`, that tree's); the city under way finishes its
   steps (they run in their own process group, so ctrl-c does not reach them). Gating and joining
   wait for the next run, which takes up `built` rows without rebuilding them and first takes any
-  unshipped row out of the registry.
+  unshipped row out of the registry. The run ends by printing `status`.
+- **Run faults** stop the run and park nothing for them (T-764, T-773): a `TW_SIM_DIR` copy whose
+  `data/packs` or `app/src/game/registry.json` beside it is missing or not this tree's (checked
+  at the start, before and after each gate, and before each joint solve), and a gate or re-gate
+  that leaves a row with no result file (the gate itself died; a pack's own error is a FAIL in its
+  result). The rows stay `built`, the region's downloads stay on disk and a joint group is
+  restored; fix the fault and run again. The
+  runner exits with code 2 and the report's `fault` says what happened.
 - **A scratch tree** (`--root data/work/<task>/trainworld`, with `data/raw` a junction to this
   tree's, `sim/` a copy, a registry, the world plan, `borders.json`, `intercity.json`, the plan
   extents and data/work's shared inputs: `world_field.*`, `outside.json`, `tiger_counties_simple.json`)
@@ -226,7 +240,8 @@ From the maps root, one city at a time, in the background, with `CARGO_BUILD_JOB
 `build_city.py` puts `~/.cargo/bin` on PATH itself; `pack_gravity` runs from `data/work/target`.
 **The sim crate must compile**: another agent mid-edit in `sim/` stops the build at the gravity step;
 then point `TW_SIM_DIR` at a copy of the committed crate (`git archive HEAD trainworld/sim`, with
-junctions to `data` and `app` beside it for `pack_gate.py`'s rates test), which `build_city.py`,
+junctions to `data` and `app` beside it for `pack_gate.py`'s rates test and the joint solve:
+`mklink /J <copy>\data trainworld\data` and the same for `app`), which `build_city.py`,
 `routes.py`, `market_zones.py`, `zones.py` and `pack_gate.py` honour. Canada's adapter has
 `canada.py <id> --finish` to resume from the cached cells.
 
@@ -364,6 +379,14 @@ pack is not shipped until its fault is fixed. `pack_gate.py snapshot <file>` bef
 `--since` check that no other pack changed beyond its own gravity group's factors. The thresholds
 and what each check catches: notes/T-538.md. Where Anita accepts a failure for one row, its plan row
 carries `"gate_relax": {"<check>": "<why>"}` and that check's FAIL counts as a WARN (dus, T-725).
+
+The gate uses no network. Its OSM stations (railway=station|halt nodes, for `stations_on_land` and
+the test line) come from `data/work/<id>.stations.json`, which `pack_gate.py stations <id> --extracts
+<a,b>` writes from the extracts' `.stations.fgb` caches (`osm_features`, made in the points pass);
+the runner does this as a build step, since the caches go after the region and a joint re-gate
+comes later (T-770). Without that file the gate makes it from the caches if they are on disk, else
+reads the Overpass answer cached for packs gated before T-770 (`data/raw/stations/`), else the
+check SKIPs.
 
 ## 9. Checks
 

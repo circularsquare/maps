@@ -1,5 +1,10 @@
 ﻿# Archive
 
+- T-770 [P2] The gate's stations from the extract, not Overpass. Done 2026-10-20: a `.stations.fgb` beside each extract and a per-pack station file at build time; same stations as Overpass on three packs; a row's gate 2-6.6 min to about 30 s. notes/T-770.md.
+- T-764 [P2] Runner safety checks. Done 2026-10-20: sim junctions checked (a run fault, not a park), STOP path printed, stack dump after 20 silent minutes, status table at the end, merge_cells checks its own output. notes/T-770.md.
+- T-773 [P3] A crashed re-gate parked a whole group. Done 2026-10-20: no result is a run fault (group restored, run stops); when only new packs FAIL, they park and the group solves again without them. notes/T-770.md.
+- T-616 [P3] A sim copy without junctions reported as a pack fault. Done 2026-10-20 with T-764 (a run fault now; the junction commands in adding-a-city.md 4). notes/T-770.md.
+
 - T-723 [P2] Whole-country cover, Spain as the pilot. Done 2026-10-20: zone rows in the world plan, zone curve d^-1.4 exp(-d/16 km), joint solve once a batch; 40 Spanish zones shipped (9 provinces dead space), every-pack-opens and smoke pass. notes/T-723.md.
 
 - T-700 [P2] Shanghai's sharp walking divide. Done 2026-10-20: walk factors per bank (`walk_part`); all 109 older packs redone through res 9 (undo, walk stage, merge), 125 s; bank check PASS everywhere, gate figures unchanged, merged cells +0-1%. notes/T-700.md.

@@ -3,10 +3,12 @@ read from the .osm.pbf once and cached beside it (T-363).
 
     python pipeline/osm_features.py <extract> [<extract> ...]     read ahead (Geofabrik names)
 
-Two FlatGeobuf files per extract in data/raw/osm/, with a spatial index:
+Three FlatGeobuf files per extract in data/raw/osm/, with a spatial index:
 
 - `<extract>.points.fgb`: GDAL OSM points with any shop, amenity, office, craft, tourism,
   leisure or healthcare tag, or a place tag (columns osm_id, name, place, other_tags).
+- `<extract>.stations.fgb`: the points with railway=station or halt, same columns, made in the
+  same pass (the gate's station check, T-770).
 - `<extract>.areas.fgb`: GDAL OSM multipolygons with any shop, amenity, office, craft, tourism or
   leisure, an airport terminal, a healthcare tag, a beach or a place tag; closed ways with
   commercial, industrial or retail land, relations with any land use; plus every building
@@ -40,6 +42,7 @@ MP_COLS = ["osm_id", "osm_way_id", "name", "aeroway", "amenity", "building", "cr
 PLACES = ["city", "town", "borough", "suburb", "quarter", "village", "neighbourhood", "hamlet"]  # places.KINDS
 PLACE_KINDS = "(" + ",".join(f"'{k}'" for k in PLACES) + ")"
 PT_KEYS = ["shop", "amenity", "office", "craft", "tourism", "leisure", "healthcare"]
+STATION_VALUES = ["station", "halt"]  # the gate's railway=station|halt nodes (pack_gate.stations, T-770)
 MP_KEYS = ["shop", "amenity", "office", "craft", "tourism", "leisure"]
 HOSPITAL_PAD = 0.001  # degrees; enrich's mask is the sites + 0.0005
 WAY = 1 << 40  # GDAL emits multipolygon relations first, then closed ways
@@ -53,6 +56,10 @@ def points_path(extract):
     return _stem(extract) + ".points.fgb"
 
 
+def stations_path(extract):
+    return _stem(extract) + ".stations.fgb"
+
+
 def areas_path(extract):
     return _stem(extract) + ".areas.fgb"
 
@@ -64,10 +71,10 @@ def _gdal():
     return pyogrio
 
 
-def _write(df, out, what, t0):
+def _write(df, out, what, t0, **kw):
     import pyogrio
     _in_order(df["seq"].to_numpy(), what)
-    pyogrio.write_dataframe(df, out + ".part.fgb", driver="FlatGeobuf", SPATIAL_INDEX="YES")
+    pyogrio.write_dataframe(df, out + ".part.fgb", driver="FlatGeobuf", SPATIAL_INDEX="YES", **kw)
     os.replace(out + ".part.fgb", out)
     print(f"  {os.path.basename(out)}: {len(df):,} {what}, {os.path.getsize(out) / 1e6:.0f} MB; "
           f"{time.time() - t0:.0f} s", flush=True)
@@ -115,7 +122,7 @@ def _frame(tables, geom, cols):
 def _read_points(extract, pbf):
     import pyarrow as pa
     t0 = time.time()
-    keep, n = [], 0
+    keep, rail, n = [], [], 0
     for geom, b in _batches(pbf, "points", PT_COLS):
         n += len(b)
         other = _lower(b, "other_tags")
@@ -123,10 +130,17 @@ def _read_points(extract, pbf):
         for k in PT_KEYS:
             m |= _has(other, f'"{k}"=>')
         keep.append(pa.Table.from_batches([b.filter(pa.array(m))]))
+        st = np.zeros(len(b), bool)
+        for v in STATION_VALUES:
+            st |= _has(other, f'"railway"=>"{v}"')
+        rail.append(pa.Table.from_batches([b.filter(pa.array(st))]))
     df = _frame(keep, geom, PT_COLS)
     df["seq"] = df["osm_id"].astype(np.int64)
     print(f"  {extract}: {n:,} points read; {time.time() - t0:.0f} s", flush=True)
     _write(df, points_path(extract), "points", t0)
+    st = _frame(rail, geom, PT_COLS)
+    st["seq"] = st["osm_id"].astype(np.int64)
+    _write(st, stations_path(extract), "stations", t0, geometry_type="Point")  # an extract with none (Ceuta)
 
 
 def _area_pass(pbf, where, landuse):
@@ -272,10 +286,13 @@ def _in_order(seq, what):
         raise RuntimeError(f"GDAL's {what} are not in id order; `read` would reorder them")
 
 
-def build(extract):
-    """Make both cache files for the extract if missing (downloading it if need be)."""
+def build(extract, stations=True):
+    """Make the cache files for the extract if missing (downloading it if need be). `stations`
+    False: the points file alone answers for the points pass (a reader that needs no stations
+    does not download an extract read before T-770 for them)."""
     import routes
-    need_pts, need_areas = not os.path.exists(points_path(extract)), not os.path.exists(areas_path(extract))
+    need_pts = not os.path.exists(points_path(extract)) or (stations and not os.path.exists(stations_path(extract)))
+    need_areas = not os.path.exists(areas_path(extract))
     if not (need_pts or need_areas):
         return
     pbf = routes.download(extract)
@@ -310,7 +327,7 @@ def read(extract, layer, columns=None, bbox=None, mask=None, where=None):
     cols = None if columns is None else list(dict.fromkeys(list(columns) + helpers))
     parts = []
     for e in exs:
-        build(e)
+        build(e, stations=False)
         path = areas_path(e) if areas else points_path(e)
         parts.append(pyogrio.read_dataframe(path, columns=cols, bbox=bbox, mask=mask, where=where))
     df = parts[0] if len(parts) == 1 else pd.concat(parts, ignore_index=True).drop_duplicates("seq")

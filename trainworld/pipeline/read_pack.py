@@ -313,8 +313,8 @@ def check_water(city, header, a):
           f"water {m['water_share']:.1%}; {sum(len(p) for p in WATER_TESTS.get(city, {}).values())} test places right; OK")
 
 
-def check(city):
-    header, a = load_pack(city)
+def check(city, packs=PACKS):
+    header, a = load_pack(city, packs)
     n = header["cells"]
     assert header["format"] == 1, header["format"]
     for name in ("h3", "x_m", "y_m", "pop", "jobs"):

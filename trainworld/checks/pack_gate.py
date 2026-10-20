@@ -5,6 +5,7 @@ by numeric thresholds, so a city is built with no agent judgement.
                                [--since <snapshot.json>] [--out <dir>] [--work <dir of joint reports>]
     python checks/pack_gate.py snapshot <snapshot.json>   every pack's arrays hashed, before a build
     python checks/pack_gate.py fleet                      checks/pack_gate_fleet.json from the results in --out
+    python checks/pack_gate.py stations <id> --extracts a,b   the pack's station file, from the extracts' caches
 
 From the maps root, with ..\\venv's Python. Each check prints PASS, WARN, FAIL or SKIP and its figure; a
 pack ships when nothing FAILs and parks otherwise. One summary line a pack, and the result as JSON
@@ -224,15 +225,63 @@ def water_points(header, mask, outline):
             "dry": [[round(float(a), 5), round(float(b), 5), round(float(r))] for a, b, r in zip(lo, la, xy[~wet, 2])]}
 
 
-def stations(city, outline):
-    """OSM railway=station|halt nodes in the outline: (name, lon, lat), from one cached Overpass
-    request (data/raw/stations/)."""
-    import overpass
+def stations_path(city):
+    return os.path.join(WORK, f"{city}.stations.json")
+
+
+def write_stations(city, extracts, outline=None):
+    """The pack's OSM railway=station|halt nodes in its outline, (name, lon, lat), from its extracts'
+    station caches (osm_features), to data/work/<city>.stations.json: written by the runner's build
+    step while the caches are on disk, since they are deleted after the region and a joint re-gate
+    comes later (T-770). Raises when an extract's cache is missing."""
+    import pyogrio
     import shapely
-    w, s, e, n = outline.bounds
-    q = (f'[out:json][timeout:300];node["railway"~"^(station|halt)$"]'
-         f'({s:.4f},{w:.4f},{n:.4f},{e:.4f});out;')
-    data = overpass.fetch(f"stations/osm_stations_{city}", q)
+    import osm_features
+    import routes
+    outline = outline if outline is not None else boundary(city)
+    missing = [e for e in extracts if not os.path.exists(osm_features.stations_path(e))]
+    if missing:
+        raise SystemExit(f"{city}: no station cache for {', '.join(missing)} (osm_features.build)")
+    seen, rows = set(), []
+    for e in extracts:
+        df = pyogrio.read_dataframe(osm_features.stations_path(e), bbox=tuple(outline.bounds), columns=["osm_id", "name", "other_tags"])
+        for oid, name, other, g in zip(df.osm_id, df.name, df.other_tags, df.geometry.to_numpy()):
+            if oid in seen:  # Geofabrik regions overlap along their borders
+                continue
+            seen.add(oid)
+            rows.append([routes.tag(other, "name:en") or name or "", round(g.x, 7), round(g.y, 7)])
+    if rows:
+        shapely.prepare(outline)
+        inside = shapely.contains_xy(outline, [r[1] for r in rows], [r[2] for r in rows])
+        rows = [r for r, i in zip(rows, inside) if i]
+    doc = {"city": city, "extracts": list(extracts), "source": "OpenStreetMap contributors, ODbL (Geofabrik " +
+           osm_features.label(list(extracts)) + ")", "stations": rows}
+    tmp = stations_path(city) + ".part"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(doc, f, ensure_ascii=False)
+    os.replace(tmp, stations_path(city))
+    print(f"{city}: {len(rows)} stations in the outline -> {stations_path(city)}", flush=True)
+    return [tuple(r) for r in rows]
+
+
+def stations(city, outline, header):
+    """OSM railway=station|halt nodes in the outline: (name, lon, lat). From the pack's station file;
+    else made from its extracts' caches if on disk; else the Overpass answer cached for packs gated
+    before T-770 (data/raw/stations/). Never the network: SystemExit when none is on disk."""
+    import shapely
+    import osm_features
+    p = stations_path(city)
+    if os.path.exists(p):
+        with open(p, encoding="utf-8") as f:
+            return [tuple(r) for r in json.load(f)["stations"]]
+    exs = (header.get("routes") or {}).get("extracts") or (header.get("water") or {}).get("extracts") or []
+    if exs and all(os.path.exists(osm_features.stations_path(e)) for e in exs):
+        return write_stations(city, exs, outline)
+    old = os.path.join(ROOT, "data", "raw", "stations", f"osm_stations_{city}.json")
+    if not os.path.exists(old):
+        raise SystemExit(f"no station file ({os.path.basename(p)}) and no station cache for {', '.join(exs) or 'its extracts'}")
+    with open(old, encoding="utf-8") as f:
+        data = json.load(f)
     rows = []
     for el in data.get("elements", []):
         t = el.get("tags", {})
@@ -390,8 +439,8 @@ def figures(city, reg, logs):
     if mask is not None:
         out["water"] = water_points(header, mask, outline)
         try:
-            st = stations(city, outline)
-        except SystemExit as e:  # every Overpass server down: the check skips, the runner may retry
+            st = stations(city, outline, header)
+        except SystemExit as e:  # no station file or cache on disk: the check skips
             st, out["stations_error"] = [], str(e)
         out["stations"] = st
         if st:
@@ -914,6 +963,8 @@ def main(argv):
         return snapshot(argv[1])
     if argv and argv[0] == "fleet":
         return fleet(out)
+    if argv and argv[0] == "stations":
+        return write_stations(argv[1], opt("--extracts").split(","))
     reg = registry()
     valued = {i for i, x in enumerate(argv) if i and argv[i - 1] in ("--log", "--since", "--out", "--work")}
     ids = list(reg) if "--all" in argv else [x for i, x in enumerate(argv) if not x.startswith("--") and i not in valued]

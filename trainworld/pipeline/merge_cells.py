@@ -27,13 +27,16 @@ resolution field cleared (a merged cell right after where its children were), th
 import os
 os.environ.setdefault("OMP_NUM_THREADS", "2")
 
+import contextlib
 import hashlib
+import io
 import json
 import shutil
 import sys
 
 import numpy as np
 
+import read_pack
 from read_pack import PACKS, ROOT, load_pack
 
 WORK = os.path.join(ROOT, "data", "work", "res9")
@@ -454,7 +457,19 @@ def run(city, stats=False, child=None):
     header = json.loads(json.dumps(header))
     header["arrays"].append({"name": "zone_cells9", "dtype": "u32", "per": "zone"})
     a = dict(a, zone_cells9=np.bincount(a["zone"].astype(np.int64), minlength=header["zones"]).astype(np.uint32))
-    size = write_pack(os.path.join(PACKS, city), header, a, cells, block)
+    # read_pack's invariants on the merged pack before it replaces the live one, so a bad merge rule
+    # fails this step rather than the gate later (T-764)
+    staged = os.path.join(WORK, "staged")
+    os.makedirs(staged, exist_ok=True)
+    size = write_pack(os.path.join(staged, city), header, a, cells, block)
+    try:
+        with contextlib.redirect_stdout(io.StringIO()):
+            read_pack.check(city, staged)
+    except Exception as e:  # as the gate's read_pack check counts it
+        sys.exit(f"{city}: the merged pack fails read_pack ({type(e).__name__}: {e}); data/packs left as it was, "
+                 f"the merged one in {staged}")
+    for ext in (".bin", ".json"):
+        os.replace(os.path.join(staged, city + ext), os.path.join(PACKS, city + ext))
     with open(os.path.join(WORK, f"{city}.merged.json"), "w") as f:
         json.dump(stamp(PACKS, city), f)
     print(f"{line}; .bin {size9 / 1e6:.2f} -> {size / 1e6:.2f} MB", flush=True)
