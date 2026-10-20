@@ -22,7 +22,7 @@ R_EARTH = 6371008.8
 
 
 def load_pack(city, packs=PACKS):
-    with open(os.path.join(packs, f"{city}.json")) as f:
+    with open(os.path.join(packs, f"{city}.json"), encoding="utf-8") as f:  # the sim writes raw UTF-8 (T-768)
         header = json.load(f)
     with open(os.path.join(packs, f"{city}.bin"), "rb") as f:
         buf = f.read()

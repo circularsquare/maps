@@ -3283,7 +3283,7 @@
    "order": 33,
    "id": "sto",
    "name": "Stockholm",
-   "status": "parked",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "SWE"
@@ -3318,22 +3318,29 @@
     ]
    },
    "run": {
-    "run_batch": "20261019-135759",
+    "run_batch": "20261019-160608",
     "steps": {
-     "build": 73.6,
-     "places": 4.5,
-     "routes": 41.2,
-     "merge": 0.6000000000000001
+     "build": 145.6,
+     "places": 5.2,
+     "routes": 37.0,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 0.9
     },
-    "reason": "merge failed: ### 2026-10-19T14:00:03 merge_cells sto\nsto: per-cell array walk_part (u8) has no merge rule\n### 2026-10-19T14:01:03 merge_cells sto\nsto: per-cell array walk_part (u8) has no merge rule",
-    "parked": "2026-10-19T14:01:03"
+    "built": "2026-10-19T16:20:11",
+    "reason": "gate: figures None FileNotFoundError: [Errno 2] No such file or directory: 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\artifacts\\\\trainworld\\\\world_run\\\\20261019-215203\\\\sto.build.log'",
+    "gate": {
+     "warn": []
+    },
+    "parked": "2026-10-19T21:52:18",
+    "shipped": "2026-10-19T22:15:56"
    }
   },
   {
    "order": 34,
    "id": "lil",
    "name": "Lille",
-   "status": "parked",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "FRA"
@@ -3368,22 +3375,35 @@
     ]
    },
    "run": {
-    "run_batch": "20261019-135759",
+    "run_batch": "20261019-160608",
     "steps": {
-     "build": 28.0,
+     "build": 23.6,
      "places": 4.4,
-     "routes": 40.1,
-     "merge": 0.8
+     "routes": 36.5,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 0.9
     },
-    "reason": "merge failed: ### 2026-10-19T14:05:21 merge_cells lil\nlil: per-cell array walk_part (u8) has no merge rule\n### 2026-10-19T14:06:22 merge_cells lil\nlil: per-cell array walk_part (u8) has no merge rule",
-    "parked": "2026-10-19T14:06:22"
+    "built": "2026-10-19T16:30:01",
+    "reason": "gate: pop_vs_fua 2.1706378025314614 1,205,008 in Lille",
+    "gate": {
+     "warn": [
+      "pop_vs_fua 2.1706378025314614",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-10-19T22:16:38",
+    "shipped": "2026-10-19T23:13:13"
+   },
+   "gate_relax": {
+    "pop_vs_fua": "the plan's whole units hold more people than the FUA, which only widens the playable area; no neighbouring pack overlaps (orchestrator, DECISIONS 2026-10-19)"
    }
   },
   {
    "order": 35,
    "id": "val",
    "name": "Valencia",
-   "status": "parked",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "ESP"
@@ -3418,22 +3438,31 @@
     ]
    },
    "run": {
-    "run_batch": "20261019-135759",
+    "run_batch": "20261019-160608",
     "steps": {
-     "build": 24.0,
-     "places": 3.2,
-     "routes": 42.6,
-     "merge": 0.6
+     "build": 17.6,
+     "places": 2.5,
+     "routes": 36.5,
+     "merge": 0.6,
+     "nocar": 1.2,
+     "everyday": 0.7
     },
-    "reason": "merge failed: ### 2026-10-19T14:09:24 merge_cells val\nval: per-cell array walk_part (u8) has no merge rule\n### 2026-10-19T14:10:24 merge_cells val\nval: per-cell array walk_part (u8) has no merge rule",
-    "parked": "2026-10-19T14:10:25"
+    "built": "2026-10-19T16:38:59",
+    "reason": "gate: figures None FileNotFoundError: [Errno 2] No such file or directory: 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\artifacts\\\\trainworld\\\\world_run\\\\20261019-215203\\\\val.build.log'",
+    "gate": {
+     "warn": [
+      "pop_vs_fua 1.3360948606862524"
+     ]
+    },
+    "parked": "2026-10-19T21:53:07",
+    "shipped": "2026-10-19T22:18:29"
    }
   },
   {
    "order": 36,
    "id": "stu",
    "name": "Stuttgart",
-   "status": "parked",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "DEU"
@@ -3472,22 +3501,27 @@
     ]
    },
    "run": {
-    "run_batch": "20261019-135759",
+    "run_batch": "20261019-160608",
     "steps": {
-     "build": 16.1,
-     "places": 4.2,
-     "routes": 25.7,
-     "merge": 0.6
+     "build": 18.0,
+     "places": 4.6,
+     "routes": 29.7,
+     "merge": 0.7,
+     "nocar": 1.1,
+     "everyday": 0.9
     },
-    "reason": "merge failed: ### 2026-10-19T14:13:51 merge_cells stu\nstu: per-cell array walk_part (u8) has no merge rule\n### 2026-10-19T14:14:52 merge_cells stu\nstu: per-cell array walk_part (u8) has no merge rule",
-    "parked": "2026-10-19T14:14:52"
+    "built": "2026-10-19T16:56:31",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-19T17:06:39"
    }
   },
   {
    "order": 37,
    "id": "buc",
    "name": "Bucharest",
-   "status": "parked",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "ROU"
@@ -3523,15 +3557,22 @@
     ]
    },
    "run": {
-    "run_batch": "20261019-135759",
+    "run_batch": "20261019-160608",
     "steps": {
-     "build": 49.9,
-     "places": 1.9,
-     "routes": 10.7,
-     "merge": 0.6
+     "build": 12.2,
+     "places": 1.5,
+     "routes": 9.3,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 1.0
     },
-    "reason": "merge failed: ### 2026-10-19T14:15:56 merge_cells buc\nbuc: per-cell array walk_part (u8) has no merge rule\n### 2026-10-19T14:16:57 merge_cells buc\nbuc: per-cell array walk_part (u8) has no merge rule",
-    "parked": "2026-10-19T14:16:57"
+    "built": "2026-10-19T17:10:58",
+    "reason": "gate: figures None FileNotFoundError: [Errno 2] No such file or directory: 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\artifacts\\\\trainworld\\\\world_run\\\\20261019-215203\\\\buc.build.log'",
+    "gate": {
+     "warn": []
+    },
+    "parked": "2026-10-19T21:53:31",
+    "shipped": "2026-10-19T22:20:04"
    }
   },
   {
@@ -3636,7 +3677,7 @@
    "order": 40,
    "id": "cop",
    "name": "Copenhagen",
-   "status": "parked",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "DNK"
@@ -3674,22 +3715,29 @@
     ]
    },
    "run": {
-    "run_batch": "20261019-135759",
+    "run_batch": "20261019-160608",
     "steps": {
-     "build": 106.0,
-     "places": 3.6,
-     "routes": 25.6,
-     "merge": 0.7
+     "build": 25.5,
+     "places": 3.0,
+     "routes": 19.0,
+     "merge": 0.6,
+     "nocar": 1.1,
+     "everyday": 0.7
     },
-    "reason": "merge failed: ### 2026-10-19T14:25:46 merge_cells cop\ncop: per-cell array walk_part (u8) has no merge rule\n### 2026-10-19T14:26:46 merge_cells cop\ncop: per-cell array walk_part (u8) has no merge rule",
-    "parked": "2026-10-19T14:26:47"
+    "built": "2026-10-19T17:30:18",
+    "reason": "gate: figures None FileNotFoundError: [Errno 2] No such file or directory: 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\artifacts\\\\trainworld\\\\world_run\\\\20261019-215203\\\\cop.build.log'",
+    "gate": {
+     "warn": []
+    },
+    "parked": "2026-10-19T21:53:55",
+    "shipped": "2026-10-19T22:21:39"
    }
   },
   {
    "order": 41,
    "id": "ams",
    "name": "Amsterdam",
-   "status": "parked",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "NLD"
@@ -3727,22 +3775,29 @@
     ]
    },
    "run": {
-    "run_batch": "20261019-135759",
+    "run_batch": "20261019-160608",
     "steps": {
-     "build": 101.4,
-     "places": 4.5,
-     "routes": 12.3,
-     "merge": 0.6
+     "build": 22.1,
+     "places": 3.5,
+     "routes": 11.0,
+     "merge": 0.5,
+     "nocar": 1.1,
+     "everyday": 0.9
     },
-    "reason": "merge failed: ### 2026-10-19T14:31:08 merge_cells ams\nams: per-cell array walk_part (u8) has no merge rule\n### 2026-10-19T14:32:09 merge_cells ams\nams: per-cell array walk_part (u8) has no merge rule",
-    "parked": "2026-10-19T14:32:09"
+    "built": "2026-10-19T17:40:13",
+    "reason": "joint group dor (dor fra col rot bru ant lie ams): after the joint solve dor: other_packs_unchanged; fra: other_packs_unchanged; col: other_packs_unchanged; rot: other_packs_unchanged; bru: other_packs_unchanged; ant: other_packs_unchanged; lie: other_packs_unchanged; ams: other_packs_unchanged",
+    "parked": "2026-10-19T22:23:14",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-19T22:55:37"
    }
   },
   {
    "order": 42,
    "id": "mar",
    "name": "Marseille",
-   "status": "parked",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "FRA"
@@ -3777,22 +3832,34 @@
     ]
    },
    "run": {
-    "run_batch": "20261019-135759",
+    "run_batch": "20261019-160608",
     "steps": {
-     "build": 72.6,
-     "places": 4.4,
-     "routes": 29.1,
-     "merge": 0.8
+     "build": 19.2,
+     "places": 3.7,
+     "routes": 29.2,
+     "merge": 0.6,
+     "nocar": 1.2,
+     "everyday": 0.9
     },
-    "reason": "merge failed: ### 2026-10-19T14:38:33 merge_cells mar\nmar: per-cell array walk_part (u8) has no merge rule\n### 2026-10-19T14:39:33 merge_cells mar\nmar: per-cell array walk_part (u8) has no merge rule",
-    "parked": "2026-10-19T14:39:34"
+    "built": "2026-10-19T17:48:56",
+    "reason": "gate: pop_vs_fua 1.5380841583069644 1,357,311 in Marseille",
+    "gate": {
+     "warn": [
+      "pop_vs_fua 1.5380841583069644"
+     ]
+    },
+    "parked": "2026-10-19T22:24:35",
+    "shipped": "2026-10-19T23:14:54"
+   },
+   "gate_relax": {
+    "pop_vs_fua": "the plan's whole units hold more people than the FUA, which only widens the playable area; no neighbouring pack overlaps (orchestrator, DECISIONS 2026-10-19)"
    }
   },
   {
    "order": 43,
    "id": "mah",
    "name": "Mannheim",
-   "status": "parked",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "DEU"
@@ -3838,22 +3905,29 @@
     ]
    },
    "run": {
-    "run_batch": "20261019-135759",
+    "run_batch": "20261019-160608",
     "steps": {
-     "build": 67.1,
-     "places": 5.9,
-     "routes": 41.2,
-     "merge": 0.7
+     "build": 17.9,
+     "places": 4.2,
+     "routes": 27.3,
+     "merge": 0.7,
+     "nocar": 1.1,
+     "everyday": 0.8
     },
-    "reason": "merge failed: ### 2026-10-19T14:51:28 merge_cells mah\nmah: per-cell array walk_part (u8) has no merge rule\n### 2026-10-19T14:52:29 merge_cells mah\nmah: per-cell array walk_part (u8) has no merge rule",
-    "parked": "2026-10-19T14:52:29"
+    "built": "2026-10-19T18:15:40",
+    "reason": "joint group dor (dor fra col rot bru ant lie stu ams dus mah): after the joint solve dor: other_packs_unchanged; fra: other_packs_unchanged; col: other_packs_unchanged; rot: other_packs_unchanged; bru: other_packs_unchanged; ant: other_packs_unchanged; lie: other_packs_unchanged; ams: other_packs_unchanged; dus: other_packs_unchanged; mah: other_packs_unchanged",
+    "parked": "2026-10-19T23:05:29",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-19T23:23:34"
    }
   },
   {
    "order": 44,
    "id": "beg",
    "name": "Belgrade",
-   "status": "parked",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "SRB"
@@ -3888,22 +3962,31 @@
     ]
    },
    "run": {
-    "run_batch": "20261019-135759",
+    "run_batch": "20261019-160608",
     "steps": {
-     "build": 54.8,
-     "places": 2.1,
-     "routes": 16.8,
-     "merge": 0.7
+     "build": 11.9,
+     "places": 1.8,
+     "routes": 13.7,
+     "merge": 0.5,
+     "nocar": 1.0,
+     "everyday": 0.8
     },
-    "reason": "merge failed: ### 2026-10-19T14:58:23 merge_cells beg\nbeg: per-cell array walk_part (u8) has no merge rule\n### 2026-10-19T14:59:23 merge_cells beg\nbeg: per-cell array walk_part (u8) has no merge rule",
-    "parked": "2026-10-19T14:59:23"
+    "built": "2026-10-19T18:23:50",
+    "reason": "gate: figures None FileNotFoundError: [Errno 2] No such file or directory: 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\artifacts\\\\trainworld\\\\world_run\\\\20261019-215203\\\\beg.build.log'",
+    "gate": {
+     "warn": [
+      "pop_vs_fua 1.3440111022554606"
+     ]
+    },
+    "parked": "2026-10-19T21:55:22",
+    "shipped": "2026-10-19T22:28:17"
    }
   },
   {
    "order": 45,
    "id": "zur",
    "name": "Zurich",
-   "status": "parked",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "CHE"
@@ -3940,22 +4023,29 @@
     ]
    },
    "run": {
-    "run_batch": "20261019-135759",
+    "run_batch": "20261019-160608",
     "steps": {
-     "build": 177.5,
-     "places": 5.0,
-     "routes": 27.5,
-     "merge": 0.7
+     "build": 13.5,
+     "places": 4.6,
+     "routes": 22.0,
+     "merge": 0.7,
+     "nocar": 1.2,
+     "everyday": 0.8
     },
-    "reason": "merge failed: ### 2026-10-19T15:12:04 merge_cells zur\nzur: per-cell array walk_part (u8) has no merge rule\n### 2026-10-19T15:13:04 merge_cells zur\nzur: per-cell array walk_part (u8) has no merge rule",
-    "parked": "2026-10-19T15:13:04"
+    "built": "2026-10-19T18:31:55",
+    "reason": "gate: figures None FileNotFoundError: [Errno 2] No such file or directory: 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\artifacts\\\\trainworld\\\\world_run\\\\20261019-215203\\\\zur.build.log'",
+    "gate": {
+     "warn": []
+    },
+    "parked": "2026-10-19T21:55:49",
+    "shipped": "2026-10-19T22:29:59"
    }
   },
   {
    "order": 46,
    "id": "sev",
    "name": "Seville",
-   "status": "parked",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "ESP"
@@ -3990,15 +4080,29 @@
     ]
    },
    "run": {
-    "run_batch": "20261019-135759",
+    "run_batch": "20261019-160608",
     "steps": {
-     "build": 68.9,
-     "places": 2.3,
-     "routes": 47.8,
-     "merge": 0.5
+     "build": 19.1,
+     "places": 1.8,
+     "routes": 43.6,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 0.9
     },
-    "reason": "merge failed: ### 2026-10-19T15:18:43 merge_cells sev\nsev: per-cell array walk_part (u8) has no merge rule\n### 2026-10-19T15:19:44 merge_cells sev\nsev: per-cell array walk_part (u8) has no merge rule",
-    "parked": "2026-10-19T15:19:44"
+    "built": "2026-10-19T18:43:04",
+    "reason": "gate: pop_vs_fua 1.5002026732836908 1,256,011 in Seville",
+    "gate": {
+     "warn": [
+      "pop_vs_fua 1.5002026732836908",
+      "road_snap_median_m 357.7",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-10-19T22:31:09",
+    "shipped": "2026-10-19T23:17:37"
+   },
+   "gate_relax": {
+    "pop_vs_fua": "the plan's whole units hold more people than the FUA, which only widens the playable area; no neighbouring pack overlaps (orchestrator, DECISIONS 2026-10-19)"
    }
   },
   {
@@ -4051,7 +4155,7 @@
    "order": 48,
    "id": "lyo",
    "name": "Lyon",
-   "status": "parked",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "FRA"
@@ -4086,15 +4190,22 @@
     ]
    },
    "run": {
-    "run_batch": "20261019-135759",
+    "run_batch": "20261019-160608",
     "steps": {
-     "build": 74.6,
-     "places": 5.0,
-     "routes": 28.9,
-     "merge": 0.5
+     "build": 15.7,
+     "places": 4.6,
+     "routes": 30.8,
+     "merge": 0.7,
+     "nocar": 1.2,
+     "everyday": 1.0
     },
-    "reason": "merge failed: ### 2026-10-19T15:27:26 merge_cells lyo\nlyo: per-cell array walk_part (u8) has no merge rule\n### 2026-10-19T15:28:26 merge_cells lyo\nlyo: per-cell array walk_part (u8) has no merge rule",
-    "parked": "2026-10-19T15:28:27"
+    "built": "2026-10-19T18:59:29",
+    "reason": "gate: figures None FileNotFoundError: [Errno 2] No such file or directory: 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\artifacts\\\\trainworld\\\\world_run\\\\20261019-215203\\\\lyo.build.log'",
+    "gate": {
+     "warn": []
+    },
+    "parked": "2026-10-19T21:56:40",
+    "shipped": "2026-10-19T22:33:00"
    }
   },
   {
@@ -4213,7 +4324,7 @@
    "order": 51,
    "id": "osl",
    "name": "Oslo",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "NOR"
@@ -4248,13 +4359,31 @@
     "fua": [
      596
     ]
+   },
+   "run": {
+    "run_batch": "20261019-160608",
+    "steps": {
+     "build": 552.6,
+     "places": 3.8,
+     "routes": 40.9,
+     "merge": 0.8,
+     "nocar": 1.2,
+     "everyday": 0.7
+    },
+    "built": "2026-10-19T19:24:04",
+    "reason": "gate: figures None FileNotFoundError: [Errno 2] No such file or directory: 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\artifacts\\\\trainworld\\\\world_run\\\\20261019-215203\\\\osl.build.log'",
+    "gate": {
+     "warn": []
+    },
+    "parked": "2026-10-19T21:57:05",
+    "shipped": "2026-10-19T22:34:43"
    }
   },
   {
    "order": 52,
    "id": "bor",
    "name": "Bordeaux",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "FRA"
@@ -4287,13 +4416,36 @@
     "fua": [
      1397
     ]
+   },
+   "run": {
+    "run_batch": "20261019-160608",
+    "steps": {
+     "build": 76.3,
+     "places": 4.7,
+     "routes": 47.8,
+     "merge": 1.1,
+     "nocar": 2.0,
+     "everyday": 1.0
+    },
+    "built": "2026-10-19T19:38:42",
+    "reason": "gate: pop_vs_fua 1.6167056974790983 1,045,641 in Bordeaux",
+    "gate": {
+     "warn": [
+      "pop_vs_fua 1.6167056974790983"
+     ]
+    },
+    "parked": "2026-10-19T22:35:26",
+    "shipped": "2026-10-19T23:19:31"
+   },
+   "gate_relax": {
+    "pop_vs_fua": "the plan's whole units hold more people than the FUA, which only widens the playable area; no neighbouring pack overlaps (orchestrator, DECISIONS 2026-10-19)"
    }
   },
   {
    "order": 53,
    "id": "mal",
    "name": "Málaga",
-   "status": "parked",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "ESP"
@@ -4328,22 +4480,34 @@
     ]
    },
    "run": {
-    "run_batch": "20261019-135759",
+    "run_batch": "20261019-160608",
     "steps": {
-     "build": 76.6,
-     "places": 3.6,
-     "routes": 26.8,
-     "merge": 0.6
+     "build": 16.7,
+     "places": 3.2,
+     "routes": 22.5,
+     "merge": 0.6,
+     "nocar": 1.3,
+     "everyday": 0.9
     },
-    "reason": "merge failed: ### 2026-10-19T15:18:31 merge_cells mal\nmal: per-cell array walk_part (u8) has no merge rule\n### 2026-10-19T15:19:32 merge_cells mal\nmal: per-cell array walk_part (u8) has no merge rule",
-    "parked": "2026-10-19T15:19:32"
+    "built": "2026-10-19T18:43:50",
+    "reason": "gate: pop_vs_fua 1.5322693207941025 1,053,432 in Málaga",
+    "gate": {
+     "warn": [
+      "pop_vs_fua 1.5322693207941025"
+     ]
+    },
+    "parked": "2026-10-19T22:31:09",
+    "shipped": "2026-10-19T23:17:37"
+   },
+   "gate_relax": {
+    "pop_vs_fua": "the plan's whole units hold more people than the FUA, which only widens the playable area; no neighbouring pack overlaps (orchestrator, DECISIONS 2026-10-19)"
    }
   },
   {
    "order": 54,
    "id": "hel",
    "name": "Helsinki",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "FIN"
@@ -4376,13 +4540,31 @@
     "fua": [
      687
     ]
+   },
+   "run": {
+    "run_batch": "20261019-160608",
+    "steps": {
+     "build": 825.8,
+     "places": 4.3,
+     "routes": 30.7,
+     "merge": 0.6,
+     "nocar": 1.2,
+     "everyday": 0.8
+    },
+    "built": "2026-10-19T20:16:18",
+    "reason": "gate: figures None FileNotFoundError: [Errno 2] No such file or directory: 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\artifacts\\\\trainworld\\\\world_run\\\\20261019-215203\\\\hel.build.log'",
+    "gate": {
+     "warn": []
+    },
+    "parked": "2026-10-19T21:57:55",
+    "shipped": "2026-10-19T22:37:25"
    }
   },
   {
    "order": 55,
    "id": "kra",
    "name": "Krakow",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -4416,6 +4598,24 @@
     "fua": [
      3171
     ]
+   },
+   "run": {
+    "run_batch": "20261019-160608",
+    "steps": {
+     "build": 72.3,
+     "places": 3.3,
+     "routes": 17.3,
+     "merge": 0.6,
+     "nocar": 1.1,
+     "everyday": 0.7
+    },
+    "built": "2026-10-19T20:26:26",
+    "reason": "joint group kat (kat kra): after the joint solve kra: other_packs_unchanged",
+    "parked": "2026-10-19T22:38:37",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-19T22:59:15"
    }
   },
   {
@@ -4547,7 +4747,7 @@
    "order": 58,
    "id": "sof",
    "name": "Sofia",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "BGR"
@@ -4581,13 +4781,31 @@
     "fua": [
      15
     ]
+   },
+   "run": {
+    "run_batch": "20261019-160608",
+    "steps": {
+     "build": 48.5,
+     "places": 1.9,
+     "routes": 8.7,
+     "merge": 0.5,
+     "nocar": 0.9,
+     "everyday": 0.7
+    },
+    "built": "2026-10-19T20:34:27",
+    "reason": "gate: figures None FileNotFoundError: [Errno 2] No such file or directory: 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\artifacts\\\\trainworld\\\\world_run\\\\20261019-215203\\\\sof.build.log'",
+    "gate": {
+     "warn": []
+    },
+    "parked": "2026-10-19T21:58:42",
+    "shipped": "2026-10-19T22:40:29"
    }
   },
   {
    "order": 59,
    "id": "tou",
    "name": "Toulouse",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "FRA"
@@ -4620,13 +4838,29 @@
     "fua": [
      2304
     ]
+   },
+   "run": {
+    "run_batch": "20261019-215203",
+    "steps": {
+     "build": 34.2,
+     "places": 3.6,
+     "routes": 32.7,
+     "merge": 0.6,
+     "nocar": 1.1,
+     "everyday": 0.7
+    },
+    "built": "2026-10-19T22:05:31",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-19T22:10:44"
    }
   },
   {
    "order": 60,
    "id": "dub",
    "name": "Dublin",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "IRL"
@@ -4659,6 +4893,26 @@
     "fua": [
      415
     ]
+   },
+   "run": {
+    "run_batch": "20261019-160608",
+    "steps": {
+     "build": 132.0,
+     "places": 4.0,
+     "routes": 7.9,
+     "merge": 1.1,
+     "nocar": 1.5,
+     "everyday": 1.0
+    },
+    "built": "2026-10-19T20:54:29",
+    "reason": "gate: figures None FileNotFoundError: [Errno 2] No such file or directory: 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\artifacts\\\\trainworld\\\\world_run\\\\20261019-215203\\\\dub.build.log'",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10200149712544003"
+     ]
+    },
+    "parked": "2026-10-19T22:10:58",
+    "shipped": "2026-10-19T22:42:13"
    }
   },
   {
@@ -4711,7 +4965,7 @@
    "order": 62,
    "id": "nur",
    "name": "Nuremberg",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "DEU"
@@ -4751,13 +5005,31 @@
     "fua": [
      4454
     ]
+   },
+   "run": {
+    "run_batch": "20261019-160608",
+    "steps": {
+     "build": 54.5,
+     "places": 2.3,
+     "routes": 11.1,
+     "merge": 0.5,
+     "nocar": 0.9,
+     "everyday": 0.7
+    },
+    "built": "2026-10-19T21:03:46",
+    "reason": "gate: figures None FileNotFoundError: [Errno 2] No such file or directory: 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\artifacts\\\\trainworld\\\\world_run\\\\20261019-215203\\\\nur.build.log'",
+    "gate": {
+     "warn": []
+    },
+    "parked": "2026-10-19T22:11:22",
+    "shipped": "2026-10-19T22:43:53"
    }
   },
   {
    "order": 63,
    "id": "pra",
    "name": "Prague",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "CZE"
@@ -4790,6 +5062,27 @@
     "fua": [
      535
     ]
+   },
+   "run": {
+    "run_batch": "20261019-160608",
+    "steps": {
+     "build": 52.5,
+     "places": 2.3,
+     "routes": 4.4,
+     "merge": 0.4,
+     "nocar": 0.8,
+     "everyday": 0.6
+    },
+    "built": "2026-10-19T21:14:00",
+    "reason": "gate: figures None FileNotFoundError: [Errno 2] No such file or directory: 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\artifacts\\\\trainworld\\\\world_run\\\\20261019-215203\\\\pra.build.log'",
+    "gate": {
+     "warn": [
+      "pop_vs_fua 0.711318079386339",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-10-19T22:11:47",
+    "shipped": "2026-10-19T22:45:32"
    }
   },
   {
@@ -5137,7 +5430,7 @@
    "order": 71,
    "id": "poz",
    "name": "Poznan",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -5171,6 +5464,24 @@
     "fua": [
      1529
     ]
+   },
+   "run": {
+    "run_batch": "20261019-160608",
+    "steps": {
+     "build": 66.1,
+     "places": 2.6,
+     "routes": 17.9,
+     "merge": 0.5,
+     "nocar": 1.1,
+     "everyday": 0.7
+    },
+    "built": "2026-10-19T21:24:53",
+    "reason": "gate: figures None FileNotFoundError: [Errno 2] No such file or directory: 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\artifacts\\\\trainworld\\\\world_run\\\\20261019-215203\\\\poz.build.log'",
+    "gate": {
+     "warn": []
+    },
+    "parked": "2026-10-19T22:12:12",
+    "shipped": "2026-10-19T22:47:13"
    }
   },
   {
@@ -5287,7 +5598,7 @@
    "order": 74,
    "id": "dus",
    "name": "Dusseldorf",
-   "status": "parked",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "DEU"
@@ -5327,25 +5638,28 @@
      1293
     ]
    },
+   "gate_relax": {
+    "pop_vs_fua": "the plan's four units hold 1.66M against a 1.0M FUA, a real difference (Anita, DECISIONS 2026-10-19)"
+   },
    "run": {
-    "run_batch": "20261017-193804",
+    "run_batch": "20261019-160608",
+    "built": "2026-10-19T21:31:45",
     "steps": {
-     "build": 69.4,
-     "places": 4.4,
-     "routes": 12.1,
-     "merge": 0.6,
-     "nocar": 1.1,
-     "everyday": 0.9
+     "build": 15.5,
+     "places": 3.0,
+     "routes": 10.9,
+     "merge": 0.5,
+     "nocar": 0.9,
+     "everyday": 0.8
     },
-    "built": "2026-10-17T20:05:03",
-    "reason": "gate: pop_vs_fua 1.5945595617493533 1,003,149 in Dusseldorf",
+    "reason": "joint group dor (dor fra col rot bru ant lie dus): after the joint solve dor: other_packs_unchanged; fra: other_packs_unchanged; col: other_packs_unchanged; rot: other_packs_unchanged; bru: other_packs_unchanged; ant: other_packs_unchanged; lie: other_packs_unchanged; dus: other_packs_unchanged",
+    "parked": "2026-10-19T22:48:41",
     "gate": {
-     "fail": [
-      "pop_vs_fua 1.5945595617493533 1,003,149 in Dusseldorf"
-     ],
-     "warn": []
+     "warn": [
+      "pop_vs_fua 1.5945595617384205"
+     ]
     },
-    "parked": "2026-10-17T20:10:12"
+    "shipped": "2026-10-19T23:01:29"
    }
   },
   {
@@ -5410,7 +5724,7 @@
    "order": 76,
    "id": "tir",
    "name": "Tirana",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "ALB"
@@ -5443,6 +5757,26 @@
     "fua": [
      650
     ]
+   },
+   "run": {
+    "run_batch": "20261019-160608",
+    "steps": {
+     "build": 41.3,
+     "places": 1.5,
+     "routes": 6.6,
+     "merge": 0.6,
+     "nocar": 1.1,
+     "everyday": 0.8
+    },
+    "built": "2026-10-19T21:35:16",
+    "reason": "gate: figures None FileNotFoundError: [Errno 2] No such file or directory: 'C:\\\\Users\\\\anita\\\\projects\\\\maps\\\\artifacts\\\\trainworld\\\\world_run\\\\20261019-215203\\\\tir.build.log'",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.12837701673027024"
+     ]
+    },
+    "parked": "2026-10-19T22:13:01",
+    "shipped": "2026-10-19T22:50:30"
    }
   },
   {
@@ -5709,7 +6043,7 @@
    "order": 82,
    "id": "lod",
    "name": "Lodz",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "POL"
@@ -5743,6 +6077,24 @@
     "fua": [
      2787
     ]
+   },
+   "run": {
+    "run_batch": "20261019-160608",
+    "steps": {
+     "build": 49.1,
+     "places": 2.4,
+     "routes": 10.4,
+     "merge": 0.6,
+     "nocar": 1.2,
+     "everyday": 0.8
+    },
+    "built": "2026-10-19T21:45:15",
+    "reason": "joint group war (war lod): after the joint solve lod: other_packs_unchanged",
+    "parked": "2026-10-19T22:51:40",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-19T23:03:21"
    }
   },
   {
@@ -5784,15 +6136,26 @@
     ]
    },
    "run": {
-    "run_batch": "20261019-135759",
+    "run_batch": "20261019-160608",
     "steps": {
-     "build": 46.4,
-     "places": 2.9,
-     "routes": 10.8,
-     "merge": 0.6
+     "build": 17.2,
+     "places": 2.2,
+     "routes": 9.9,
+     "merge": 0.6,
+     "nocar": 1.0,
+     "everyday": 0.8
     },
-    "reason": "merge failed: ### 2026-10-19T14:37:47 merge_cells nic\nnic: per-cell array walk_part (u8) has no merge rule\n### 2026-10-19T14:38:47 merge_cells nic\nnic: per-cell array walk_part (u8) has no merge rule",
-    "parked": "2026-10-19T14:38:48"
+    "built": "2026-10-19T17:49:27",
+    "reason": "gate: drive_factor_median 2.5139997230375233",
+    "gate": {
+     "fail": [
+      "drive_factor_median 2.5139997230375233"
+     ],
+     "warn": [
+      "top_zone_jobs_share 0.10089991878035304"
+     ]
+    },
+    "parked": "2026-10-19T22:24:35"
    }
   },
   {

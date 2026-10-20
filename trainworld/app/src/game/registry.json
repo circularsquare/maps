@@ -522,6 +522,370 @@
       {
         "name": "Saint Petersburg",
         "regionName": "Saint Petersburg region"
+      },
+      {
+        "name": "Stockholm",
+        "regionName": "Stockholm region"
+      },
+      {
+        "name": "Lille",
+        "regionName": "Lille region"
+      },
+      {
+        "name": "Valencia",
+        "regionName": "Valencia region"
+      },
+      {
+        "name": "Stuttgart",
+        "regionName": "Stuttgart region"
+      },
+      {
+        "name": "Bucharest",
+        "regionName": "Bucharest region"
+      },
+      {
+        "name": "Copenhagen",
+        "regionName": "Copenhagen region"
+      },
+      {
+        "name": "Amsterdam",
+        "regionName": "Amsterdam region"
+      },
+      {
+        "name": "Marseille",
+        "regionName": "Marseille region"
+      },
+      {
+        "name": "Nice",
+        "regionName": "Nice region"
+      },
+      {
+        "name": "Mannheim",
+        "regionName": "Mannheim region"
+      },
+      {
+        "name": "Belgrade",
+        "regionName": "Belgrade region"
+      },
+      {
+        "name": "Zurich",
+        "regionName": "Zurich region"
+      },
+      {
+        "name": "Seville",
+        "regionName": "Seville region"
+      },
+      {
+        "name": "Málaga",
+        "regionName": "Málaga region"
+      },
+      {
+        "name": "Lyon",
+        "regionName": "Lyon region"
+      },
+      {
+        "name": "Oslo",
+        "regionName": "Oslo region"
+      },
+      {
+        "name": "Bordeaux",
+        "regionName": "Bordeaux region"
+      },
+      {
+        "name": "Helsinki",
+        "regionName": "Helsinki region"
+      },
+      {
+        "name": "Krakow",
+        "regionName": "Krakow region"
+      },
+      {
+        "name": "Sofia",
+        "regionName": "Sofia region"
+      },
+      {
+        "name": "Dublin",
+        "regionName": "Dublin region"
+      },
+      {
+        "name": "Nuremberg",
+        "regionName": "Nuremberg region"
+      },
+      {
+        "name": "Prague",
+        "regionName": "Prague region"
+      },
+      {
+        "name": "Poznan",
+        "regionName": "Poznan region"
+      },
+      {
+        "name": "Dusseldorf",
+        "regionName": "Dusseldorf region"
+      },
+      {
+        "name": "Tirana",
+        "regionName": "Tirana region"
+      },
+      {
+        "name": "Lodz",
+        "regionName": "Lodz region"
+      },
+      {
+        "name": "Stockholm",
+        "regionName": "Stockholm region"
+      },
+      {
+        "name": "Lille",
+        "regionName": "Lille region"
+      },
+      {
+        "name": "Valencia",
+        "regionName": "Valencia region"
+      },
+      {
+        "name": "Bucharest",
+        "regionName": "Bucharest region"
+      },
+      {
+        "name": "Copenhagen",
+        "regionName": "Copenhagen region"
+      },
+      {
+        "name": "Marseille",
+        "regionName": "Marseille region"
+      },
+      {
+        "name": "Nice",
+        "regionName": "Nice region"
+      },
+      {
+        "name": "Mannheim",
+        "regionName": "Mannheim region"
+      },
+      {
+        "name": "Belgrade",
+        "regionName": "Belgrade region"
+      },
+      {
+        "name": "Zurich",
+        "regionName": "Zurich region"
+      },
+      {
+        "name": "Seville",
+        "regionName": "Seville region"
+      },
+      {
+        "name": "Málaga",
+        "regionName": "Málaga region"
+      },
+      {
+        "name": "Lyon",
+        "regionName": "Lyon region"
+      },
+      {
+        "name": "Oslo",
+        "regionName": "Oslo region"
+      },
+      {
+        "name": "Bordeaux",
+        "regionName": "Bordeaux region"
+      },
+      {
+        "name": "Helsinki",
+        "regionName": "Helsinki region"
+      },
+      {
+        "name": "Krakow",
+        "regionName": "Krakow region"
+      },
+      {
+        "name": "Sofia",
+        "regionName": "Sofia region"
+      },
+      {
+        "name": "Toulouse",
+        "regionName": "Toulouse region"
+      },
+      {
+        "name": "Dublin",
+        "regionName": "Dublin region"
+      },
+      {
+        "name": "Nuremberg",
+        "regionName": "Nuremberg region"
+      },
+      {
+        "name": "Prague",
+        "regionName": "Prague region"
+      },
+      {
+        "name": "Poznan",
+        "regionName": "Poznan region"
+      },
+      {
+        "name": "Dusseldorf",
+        "regionName": "Dusseldorf region"
+      },
+      {
+        "name": "Tirana",
+        "regionName": "Tirana region"
+      },
+      {
+        "name": "Lodz",
+        "regionName": "Lodz region"
+      },
+      {
+        "name": "Stockholm",
+        "regionName": "Stockholm region"
+      },
+      {
+        "name": "Lille",
+        "regionName": "Lille region"
+      },
+      {
+        "name": "Valencia",
+        "regionName": "Valencia region"
+      },
+      {
+        "name": "Bucharest",
+        "regionName": "Bucharest region"
+      },
+      {
+        "name": "Copenhagen",
+        "regionName": "Copenhagen region"
+      },
+      {
+        "name": "Amsterdam",
+        "regionName": "Amsterdam region"
+      },
+      {
+        "name": "Marseille",
+        "regionName": "Marseille region"
+      },
+      {
+        "name": "Nice",
+        "regionName": "Nice region"
+      },
+      {
+        "name": "Mannheim",
+        "regionName": "Mannheim region"
+      },
+      {
+        "name": "Belgrade",
+        "regionName": "Belgrade region"
+      },
+      {
+        "name": "Zurich",
+        "regionName": "Zurich region"
+      },
+      {
+        "name": "Seville",
+        "regionName": "Seville region"
+      },
+      {
+        "name": "Málaga",
+        "regionName": "Málaga region"
+      },
+      {
+        "name": "Lyon",
+        "regionName": "Lyon region"
+      },
+      {
+        "name": "Oslo",
+        "regionName": "Oslo region"
+      },
+      {
+        "name": "Bordeaux",
+        "regionName": "Bordeaux region"
+      },
+      {
+        "name": "Helsinki",
+        "regionName": "Helsinki region"
+      },
+      {
+        "name": "Krakow",
+        "regionName": "Krakow region"
+      },
+      {
+        "name": "Sofia",
+        "regionName": "Sofia region"
+      },
+      {
+        "name": "Dublin",
+        "regionName": "Dublin region"
+      },
+      {
+        "name": "Nuremberg",
+        "regionName": "Nuremberg region"
+      },
+      {
+        "name": "Prague",
+        "regionName": "Prague region"
+      },
+      {
+        "name": "Poznan",
+        "regionName": "Poznan region"
+      },
+      {
+        "name": "Dusseldorf",
+        "regionName": "Dusseldorf region"
+      },
+      {
+        "name": "Tirana",
+        "regionName": "Tirana region"
+      },
+      {
+        "name": "Lodz",
+        "regionName": "Lodz region"
+      },
+      {
+        "name": "Amsterdam",
+        "regionName": "Amsterdam region"
+      },
+      {
+        "name": "Mannheim",
+        "regionName": "Mannheim region"
+      },
+      {
+        "name": "Krakow",
+        "regionName": "Krakow region"
+      },
+      {
+        "name": "Dusseldorf",
+        "regionName": "Dusseldorf region"
+      },
+      {
+        "name": "Lodz",
+        "regionName": "Lodz region"
+      },
+      {
+        "name": "Mannheim",
+        "regionName": "Mannheim region"
+      },
+      {
+        "name": "Lille",
+        "regionName": "Lille region"
+      },
+      {
+        "name": "Marseille",
+        "regionName": "Marseille region"
+      },
+      {
+        "name": "Seville",
+        "regionName": "Seville region"
+      },
+      {
+        "name": "Málaga",
+        "regionName": "Málaga region"
+      },
+      {
+        "name": "Bordeaux",
+        "regionName": "Bordeaux region"
+      },
+      {
+        "name": "Mannheim",
+        "regionName": "Mannheim region"
       }
     ],
     "rule": {
@@ -567,7 +931,7 @@
       "zoom": 11.2,
       "utcOffset": -5,
       "market": 0,
-      "localTrips": 69488168.0,
+      "localTrips": 69194941.0,
       "box": [
         -75.219,
         39.475,
@@ -795,7 +1159,7 @@
       "zoom": 11.2,
       "utcOffset": -5,
       "market": 1,
-      "localTrips": 19343662.0,
+      "localTrips": 19236397.0,
       "box": [
         -76.257,
         39.272,
@@ -977,7 +1341,7 @@
       "zoom": 11.2,
       "utcOffset": -5,
       "market": 3,
-      "localTrips": 15912727.0,
+      "localTrips": 15822140.0,
       "box": [
         -71.924,
         41.565,
@@ -1136,7 +1500,7 @@
       "zoom": 11.2,
       "utcOffset": -5,
       "market": 4,
-      "localTrips": 19805894.0,
+      "localTrips": 19704171.0,
       "box": [
         -78.418,
         37.972,
@@ -1282,7 +1646,7 @@
       "zoom": 11.2,
       "utcOffset": -5,
       "market": 5,
-      "localTrips": 8582842.0,
+      "localTrips": 8533138.0,
       "box": [
         -77.335,
         38.694,
@@ -1446,7 +1810,7 @@
       "zoom": 11.2,
       "utcOffset": -5,
       "market": 6,
-      "localTrips": 4964987.0,
+      "localTrips": 4933114.0,
       "box": [
         -71.908,
         41.095,
@@ -1617,7 +1981,7 @@
       "zoom": 11.2,
       "utcOffset": -5,
       "market": 7,
-      "localTrips": 2466332.0,
+      "localTrips": 2449173.0,
       "box": [
         -73.352,
         41.087,
@@ -1842,7 +2206,7 @@
       "zoom": 11.2,
       "utcOffset": -5,
       "market": 8,
-      "localTrips": 3644147.0,
+      "localTrips": 3616739.0,
       "box": [
         -73.054,
         41.177,
@@ -2026,7 +2390,7 @@
       "zoom": 11.2,
       "utcOffset": -5,
       "market": 9,
-      "localTrips": 2114639.0,
+      "localTrips": 2100228.0,
       "box": [
         -73.1,
         41.979,
@@ -2220,7 +2584,7 @@
       "zoom": 11.2,
       "utcOffset": -5,
       "market": -1,
-      "localTrips": 19660793.0,
+      "localTrips": 19598684.0,
       "box": [
         -80.274,
         43.032,
@@ -2338,7 +2702,7 @@
       "zoom": 11.2,
       "utcOffset": 0,
       "market": -1,
-      "localTrips": 43339880.0,
+      "localTrips": 43245221.0,
       "box": [
         -1.17,
         50.844,
@@ -2520,7 +2884,7 @@
       "zoom": 11.2,
       "utcOffset": 1,
       "market": -1,
-      "localTrips": 37318034.0,
+      "localTrips": 37133146.0,
       "box": [
         1.418,
         48.102,
@@ -2547,6 +2911,10 @@
           [
             16,
             287409.0251938952
+          ],
+          [
+            211,
+            23454.42764963405
           ]
         ],
         "commute": [],
@@ -2630,7 +2998,7 @@
       "zoom": 11.2,
       "utcOffset": 8,
       "market": -1,
-      "localTrips": 74908328.0,
+      "localTrips": 74760594.0,
       "box": [
         120.829,
         30.663,
@@ -2753,7 +3121,7 @@
       "zoom": 11.2,
       "utcOffset": 5,
       "market": -1,
-      "localTrips": 77048360.0,
+      "localTrips": 76759449.0,
       "box": [
         72.633,
         18.467,
@@ -2825,7 +3193,7 @@
         14.789,
         53.27
       ],
-      "localTrips": 16924791.0,
+      "localTrips": 16872417.0,
       "place": 19,
       "marketRow": {
         "place": 19,
@@ -2850,6 +3218,10 @@
           [
             116,
             3576.787949400891
+          ],
+          [
+            201,
+            714.5677021574047
           ]
         ],
         "commute": [],
@@ -2900,7 +3272,7 @@
         140.904,
         36.964
       ],
-      "localTrips": 70402131.0,
+      "localTrips": 70263567.0,
       "place": 20,
       "marketRow": {
         "place": 20,
@@ -3216,7 +3588,7 @@
         ],
         "park": 8.508338995487374
       },
-      "localTrips": 4592043.0
+      "localTrips": 4583174.0
     },
     {
       "id": "fuk",
@@ -3437,7 +3809,7 @@
         ],
         "park": 6.710241794632939
       },
-      "localTrips": 9478362.0
+      "localTrips": 9452933.0
     },
     {
       "id": "ngo",
@@ -3663,7 +4035,7 @@
         ],
         "park": 5.168531610335049
       },
-      "localTrips": 21454285.0
+      "localTrips": 21395093.0
     },
     {
       "id": "osa",
@@ -3947,7 +4319,7 @@
         ],
         "park": 7.369412228299632
       },
-      "localTrips": 32550473.0
+      "localTrips": 32482474.0
     },
     {
       "id": "hij",
@@ -4215,7 +4587,7 @@
         ],
         "park": 5.35483142038364
       },
-      "localTrips": 5295692.0
+      "localTrips": 5276187.0
     },
     {
       "id": "sdj",
@@ -4338,7 +4710,7 @@
         ],
         "park": 7.1660483429404955
       },
-      "localTrips": 4290690.0
+      "localTrips": 4272664.0
     },
     {
       "id": "wor",
@@ -4355,7 +4727,7 @@
       "zoom": 10.5,
       "utcOffset": -5,
       "market": 10,
-      "localTrips": 2377842.0,
+      "localTrips": 2356214.0,
       "box": [
         -72.341,
         41.989,
@@ -4527,7 +4899,7 @@
       "zoom": 10.5,
       "utcOffset": -5,
       "market": 11,
-      "localTrips": 295410.0,
+      "localTrips": 292032.0,
       "box": [
         -72.278,
         41.616,
@@ -4717,7 +5089,7 @@
       "zoom": 10.5,
       "utcOffset": -5,
       "market": 12,
-      "localTrips": 745792.0,
+      "localTrips": 737022.0,
       "box": [
         -72.491,
         41.215,
@@ -4898,7 +5270,7 @@
       "zoom": 10.5,
       "utcOffset": -5,
       "market": 13,
-      "localTrips": 448551.0,
+      "localTrips": 442554.0,
       "box": [
         -73.543,
         41.449,
@@ -5251,7 +5623,7 @@
         ],
         "park": 13.060652026202439
       },
-      "localTrips": 53400859.0
+      "localTrips": 53321756.0
     },
     {
       "id": "sao",
@@ -5334,7 +5706,7 @@
         ],
         "park": 9.208801799555395
       },
-      "localTrips": 32775738.0
+      "localTrips": 32719236.0
     },
     {
       "id": "lag",
@@ -5356,7 +5728,7 @@
         4.37,
         7.175
       ],
-      "localTrips": 45046512.0,
+      "localTrips": 44948298.0,
       "place": 29,
       "marketRow": {
         "place": 29,
@@ -5518,7 +5890,7 @@
         ],
         "park": 3.309332241265935
       },
-      "localTrips": 2249281.0
+      "localTrips": 2236469.0
     },
     {
       "id": "iwt",
@@ -5620,7 +5992,7 @@
         ],
         "park": 3.365084522228674
       },
-      "localTrips": 2240006.0
+      "localTrips": 2223786.0
     },
     {
       "id": "akt",
@@ -5726,7 +6098,7 @@
         ],
         "park": 3.43095715956548
       },
-      "localTrips": 1708843.0
+      "localTrips": 1695344.0
     },
     {
       "id": "ygt",
@@ -5884,7 +6256,7 @@
         ],
         "park": 3.223138962906329
       },
-      "localTrips": 1984754.0
+      "localTrips": 1973382.0
     },
     {
       "id": "fks",
@@ -6046,7 +6418,7 @@
         ],
         "park": 3.2740666339301807
       },
-      "localTrips": 3377484.0
+      "localTrips": 3360063.0
     },
     {
       "id": "tcg",
@@ -6253,7 +6625,7 @@
         ],
         "park": 3.349848232815529
       },
-      "localTrips": 3505423.0
+      "localTrips": 3490072.0
     },
     {
       "id": "gnm",
@@ -6484,7 +6856,7 @@
         ],
         "park": 3.3403870850067148
       },
-      "localTrips": 3563400.0
+      "localTrips": 3549866.0
     },
     {
       "id": "nig",
@@ -6621,7 +6993,7 @@
         ],
         "park": 3.4097575355397476
       },
-      "localTrips": 4145909.0
+      "localTrips": 4122252.0
     },
     {
       "id": "tym",
@@ -6756,7 +7128,7 @@
         ],
         "park": 3.389403062513829
       },
-      "localTrips": 1987008.0
+      "localTrips": 1979386.0
     },
     {
       "id": "isk",
@@ -6887,7 +7259,7 @@
         ],
         "park": 3.727127444556565
       },
-      "localTrips": 2149566.0
+      "localTrips": 2141743.0
     },
     {
       "id": "fki",
@@ -7058,7 +7430,7 @@
         ],
         "park": 3.29397759308829
       },
-      "localTrips": 1479158.0
+      "localTrips": 1471021.0
     },
     {
       "id": "yns",
@@ -7223,7 +7595,7 @@
         ],
         "park": 3.253177671127904
       },
-      "localTrips": 1463931.0
+      "localTrips": 1457624.0
     },
     {
       "id": "ngn",
@@ -7348,7 +7720,7 @@
         ],
         "park": 3.3583473332819325
       },
-      "localTrips": 3845397.0
+      "localTrips": 3826135.0
     },
     {
       "id": "szo",
@@ -7551,7 +7923,7 @@
         ],
         "park": 3.930606060104807
       },
-      "localTrips": 6926867.0
+      "localTrips": 6904805.0
     },
     {
       "id": "shg",
@@ -7812,7 +8184,7 @@
         ],
         "park": 3.0207663106379266
       },
-      "localTrips": 2561622.0
+      "localTrips": 2551186.0
     },
     {
       "id": "wky",
@@ -8070,7 +8442,7 @@
         ],
         "park": 3.4292069239541956
       },
-      "localTrips": 1613356.0
+      "localTrips": 1604305.0
     },
     {
       "id": "ttr",
@@ -8293,7 +8665,7 @@
         ],
         "park": 3.193894746306761
       },
-      "localTrips": 1023217.0
+      "localTrips": 1016661.0
     },
     {
       "id": "smn",
@@ -8448,7 +8820,7 @@
         ],
         "park": 3.237528315792278
       },
-      "localTrips": 1259643.0
+      "localTrips": 1250387.0
     },
     {
       "id": "oky",
@@ -8769,7 +9141,7 @@
         ],
         "park": 4.04514508649286
       },
-      "localTrips": 3462762.0
+      "localTrips": 3448088.0
     },
     {
       "id": "ymg",
@@ -9017,7 +9389,7 @@
         ],
         "park": 3.131040909988085
       },
-      "localTrips": 2452006.0
+      "localTrips": 2438347.0
     },
     {
       "id": "tks",
@@ -9295,7 +9667,7 @@
         ],
         "park": 3.2369593413936895
       },
-      "localTrips": 1260929.0
+      "localTrips": 1253774.0
     },
     {
       "id": "kgw",
@@ -9608,7 +9980,7 @@
         ],
         "park": 3.825643500605681
       },
-      "localTrips": 1742672.0
+      "localTrips": 1734191.0
     },
     {
       "id": "ehm",
@@ -9854,7 +10226,7 @@
         ],
         "park": 3.8460315655710287
       },
-      "localTrips": 2401056.0
+      "localTrips": 2388692.0
     },
     {
       "id": "kch",
@@ -10084,7 +10456,7 @@
         ],
         "park": 3.96993182049919
       },
-      "localTrips": 1215619.0
+      "localTrips": 1208156.0
     },
     {
       "id": "sag",
@@ -10298,7 +10670,7 @@
         ],
         "park": 3.3028654332867697
       },
-      "localTrips": 1496082.0
+      "localTrips": 1488440.0
     },
     {
       "id": "ngs",
@@ -10488,7 +10860,7 @@
         ],
         "park": 4.131860682912327
       },
-      "localTrips": 2425082.0
+      "localTrips": 2411760.0
     },
     {
       "id": "kmm",
@@ -10760,7 +11132,7 @@
         ],
         "park": 3.6452228506956192
       },
-      "localTrips": 3208516.0
+      "localTrips": 3193274.0
     },
     {
       "id": "oit",
@@ -11000,7 +11372,7 @@
         ],
         "park": 3.7648275512347396
       },
-      "localTrips": 2068434.0
+      "localTrips": 2058146.0
     },
     {
       "id": "mzk",
@@ -11164,7 +11536,7 @@
         ],
         "park": 3.3218191425299186
       },
-      "localTrips": 1974206.0
+      "localTrips": 1963721.0
     },
     {
       "id": "kgs",
@@ -11320,7 +11692,7 @@
         ],
         "park": 3.923017024685203
       },
-      "localTrips": 2942248.0
+      "localTrips": 2923693.0
     },
     {
       "id": "oka",
@@ -11413,7 +11785,7 @@
         ],
         "park": 4.131779597498632
       },
-      "localTrips": 2701587.0
+      "localTrips": 2690383.0
     },
     {
       "id": "kmk",
@@ -11546,7 +11918,7 @@
         ],
         "park": 3.4428987565602505
       },
-      "localTrips": 1060691.0
+      "localTrips": 1055437.0
     },
     {
       "id": "sor",
@@ -11675,7 +12047,7 @@
         ],
         "park": 2.9999999999999987
       },
-      "localTrips": 474764.0
+      "localTrips": 470277.0
     },
     {
       "id": "ibr",
@@ -11828,7 +12200,7 @@
         ],
         "park": 3.033050953737515
       },
-      "localTrips": 844890.0
+      "localTrips": 838877.0
     },
     {
       "id": "okh",
@@ -11909,7 +12281,7 @@
         ],
         "park": 3.039332173063441
       },
-      "localTrips": 611631.0
+      "localTrips": 607362.0
     },
     {
       "id": "tkc",
@@ -12042,7 +12414,7 @@
         ],
         "park": 3.272220519879888
       },
-      "localTrips": 706367.0
+      "localTrips": 700960.0
     },
     {
       "id": "ksr",
@@ -12115,7 +12487,7 @@
         ],
         "park": 3.158277792928504
       },
-      "localTrips": 394774.0
+      "localTrips": 392694.0
     },
     {
       "id": "osh",
@@ -12275,7 +12647,7 @@
         ],
         "park": 3.175492591508928
       },
-      "localTrips": 729652.0
+      "localTrips": 724769.0
     },
     {
       "id": "man",
@@ -12430,7 +12802,7 @@
         ],
         "park": 7.115205948463339
       },
-      "localTrips": 8853297.0
+      "localTrips": 8837634.0
     },
     {
       "id": "liv",
@@ -12504,6 +12876,10 @@
           [
             86,
             763.7846335265696
+          ],
+          [
+            198,
+            691.9274564128519
           ]
         ],
         "commute": [
@@ -12589,7 +12965,7 @@
         ],
         "park": 5.304156002594475
       },
-      "localTrips": 4178013.0
+      "localTrips": 4169534.0
     },
     {
       "id": "por",
@@ -12774,7 +13150,7 @@
         ],
         "park": 3.901513217542424
       },
-      "localTrips": 3980196.0
+      "localTrips": 3966001.0
     },
     {
       "id": "lis",
@@ -12851,7 +13227,7 @@
         ],
         "park": 5.992035735761174
       },
-      "localTrips": 8351763.0
+      "localTrips": 8307239.0
     },
     {
       "id": "pot",
@@ -12921,7 +13297,7 @@
         ],
         "park": 4.3762982878857555
       },
-      "localTrips": 4968926.0
+      "localTrips": 4942154.0
     },
     {
       "id": "lee",
@@ -13067,7 +13443,7 @@
         ],
         "park": 5.644963031917109
       },
-      "localTrips": 7992490.0
+      "localTrips": 7968743.0
     },
     {
       "id": "not",
@@ -13244,7 +13620,7 @@
         ],
         "park": 4.53545752598452
       },
-      "localTrips": 5179382.0
+      "localTrips": 5160575.0
     },
     {
       "id": "she",
@@ -13403,7 +13779,7 @@
         ],
         "park": 5.487636491228336
       },
-      "localTrips": 2946207.0
+      "localTrips": 2938069.0
     },
     {
       "id": "bir",
@@ -13619,7 +13995,7 @@
         ],
         "park": 6.568303365560466
       },
-      "localTrips": 7207573.0
+      "localTrips": 7197093.0
     },
     {
       "id": "new",
@@ -13707,7 +14083,7 @@
         ],
         "park": 4.504589609854868
       },
-      "localTrips": 5310369.0
+      "localTrips": 5288750.0
     },
     {
       "id": "gla",
@@ -13810,7 +14186,7 @@
         ],
         "park": 4.239869457925654
       },
-      "localTrips": 5344704.0
+      "localTrips": 5330301.0
     },
     {
       "id": "bel",
@@ -13860,6 +14236,10 @@
           [
             82,
             8561.141004153165
+          ],
+          [
+            198,
+            1942.1345491727614
           ]
         ],
         "commute": [],
@@ -13931,7 +14311,7 @@
         ],
         "park": 4.269609914809487
       },
-      "localTrips": 3059755.0
+      "localTrips": 3047604.0
     },
     {
       "id": "car",
@@ -14056,7 +14436,7 @@
         ],
         "park": 4.075630572035531
       },
-      "localTrips": 3324699.0
+      "localTrips": 3315114.0
     },
     {
       "id": "owe",
@@ -14128,7 +14508,7 @@
         ],
         "park": 7.935793514329357
       },
-      "localTrips": 12470765.0
+      "localTrips": 12422299.0
     },
     {
       "id": "aba",
@@ -14200,7 +14580,7 @@
         ],
         "park": 9.132997207450446
       },
-      "localTrips": 4861187.0
+      "localTrips": 4846404.0
     },
     {
       "id": "abo",
@@ -14272,7 +14652,7 @@
         ],
         "park": 7.0144366233877795
       },
-      "localTrips": 4538375.0
+      "localTrips": 4520112.0
     },
     {
       "id": "mad",
@@ -14359,7 +14739,7 @@
         ],
         "park": 9.80493152199039
       },
-      "localTrips": 20576398.0
+      "localTrips": 20483130.0
     },
     {
       "id": "bar",
@@ -14401,6 +14781,10 @@
           [
             93,
             158055.5331109428
+          ],
+          [
+            171,
+            1269.2505557050197
           ]
         ],
         "commute": [],
@@ -14480,7 +14864,7 @@
         ],
         "park": 10.00151670049014
       },
-      "localTrips": 17438845.0
+      "localTrips": 17359563.0
     },
     {
       "id": "dor",
@@ -14550,16 +14934,32 @@
           [
             122,
             1929.2338781366084
+          ],
+          [
+            205,
+            1239.791670138146
+          ],
+          [
+            208,
+            55109.78207789195
+          ],
+          [
+            216,
+            2627.774604590108
           ]
         ],
         "commute": [
           [
             95,
-            29.14400017261505
+            24.424000024795532
           ],
           [
             96,
-            25851.619006752968
+            19999.974999189377
+          ],
+          [
+            208,
+            57522.47299349308
           ]
         ],
         "air": [
@@ -14597,7 +14997,24 @@
               117,
               119,
               121,
-              122
+              122,
+              129,
+              179,
+              181,
+              183,
+              188,
+              189,
+              193,
+              195,
+              198,
+              199,
+              200,
+              205,
+              208,
+              209,
+              213,
+              214,
+              216
             ]
           ],
           [
@@ -14627,7 +15044,18 @@
               116,
               117,
               119,
-              122
+              122,
+              181,
+              182,
+              189,
+              192,
+              197,
+              199,
+              203,
+              207,
+              208,
+              212,
+              214
             ]
           ],
           [
@@ -14645,7 +15073,20 @@
               106,
               107,
               118,
-              119
+              119,
+              181,
+              182,
+              183,
+              188,
+              193,
+              197,
+              200,
+              201,
+              203,
+              207,
+              209,
+              213,
+              214
             ]
           ],
           [
@@ -14658,7 +15099,13 @@
               106,
               107,
               118,
-              119
+              119,
+              182,
+              188,
+              197,
+              203,
+              207,
+              209
             ]
           ],
           [
@@ -14668,7 +15115,11 @@
               105,
               120,
               121,
-              122
+              122,
+              181,
+              203,
+              211,
+              214
             ]
           ],
           [
@@ -14676,13 +15127,15 @@
             [
               15,
               70,
-              117
+              117,
+              199,
+              214
             ]
           ]
         ],
-        "park": 5.695980215665905
+        "park": 7.6959802497734175
       },
-      "localTrips": 16532781.0
+      "localTrips": 16398410.0
     },
     {
       "id": "fra",
@@ -14736,16 +15189,44 @@
           [
             122,
             442.8599084976567
+          ],
+          [
+            129,
+            8453.907355349193
+          ],
+          [
+            199,
+            3524.4374802695797
+          ],
+          [
+            208,
+            3230.8134890775905
+          ],
+          [
+            216,
+            38132.83062445832
           ]
         ],
         "commute": [
           [
             94,
-            52.74799978733063
+            42.90299987792969
           ],
           [
             96,
-            2884.1320016384125
+            1837.1319961547852
+          ],
+          [
+            129,
+            178.24899995326996
+          ],
+          [
+            208,
+            37.09899950027466
+          ],
+          [
+            216,
+            19595.7460064888
           ]
         ],
         "air": [
@@ -14811,7 +15292,33 @@
               119,
               120,
               121,
-              122
+              122,
+              129,
+              179,
+              181,
+              182,
+              183,
+              188,
+              189,
+              192,
+              193,
+              195,
+              197,
+              198,
+              199,
+              200,
+              201,
+              203,
+              205,
+              207,
+              208,
+              209,
+              211,
+              212,
+              213,
+              214,
+              215,
+              216
             ]
           ],
           [
@@ -14842,7 +15349,18 @@
               116,
               117,
               119,
-              122
+              122,
+              181,
+              182,
+              189,
+              192,
+              197,
+              199,
+              203,
+              207,
+              208,
+              212,
+              214
             ]
           ],
           [
@@ -14852,13 +15370,16 @@
               70,
               72,
               93,
-              101
+              101,
+              181,
+              203,
+              214
             ]
           ]
         ],
-        "park": 7.6905893979795525
+        "park": 9.690589372341233
       },
-      "localTrips": 11553554.0
+      "localTrips": 11482234.0
     },
     {
       "id": "col",
@@ -14924,16 +15445,36 @@
           [
             122,
             2403.1039710227788
+          ],
+          [
+            205,
+            435.7860193766798
+          ],
+          [
+            208,
+            30816.405148016536
+          ],
+          [
+            216,
+            2776.5957653032615
           ]
         ],
         "commute": [
           [
             94,
-            25878.408986091614
+            24208.75096511841
           ],
           [
             95,
-            3067.8100048303604
+            2412.918000102043
+          ],
+          [
+            208,
+            48596.440036177635
+          ],
+          [
+            216,
+            74.00799989700317
           ]
         ],
         "air": [
@@ -14971,7 +15512,24 @@
               117,
               119,
               121,
-              122
+              122,
+              129,
+              179,
+              181,
+              183,
+              188,
+              189,
+              193,
+              195,
+              198,
+              199,
+              200,
+              205,
+              208,
+              209,
+              213,
+              214,
+              216
             ]
           ],
           [
@@ -15001,7 +15559,18 @@
               116,
               117,
               119,
-              122
+              122,
+              181,
+              182,
+              189,
+              192,
+              197,
+              199,
+              203,
+              207,
+              208,
+              212,
+              214
             ]
           ],
           [
@@ -15019,7 +15588,20 @@
               106,
               107,
               118,
-              119
+              119,
+              181,
+              182,
+              183,
+              188,
+              193,
+              197,
+              200,
+              201,
+              203,
+              207,
+              209,
+              213,
+              214
             ]
           ],
           [
@@ -15032,7 +15614,13 @@
               106,
               107,
               118,
-              119
+              119,
+              182,
+              188,
+              197,
+              203,
+              207,
+              209
             ]
           ],
           [
@@ -15042,7 +15630,11 @@
               105,
               120,
               121,
-              122
+              122,
+              181,
+              203,
+              211,
+              214
             ]
           ],
           [
@@ -15052,7 +15644,10 @@
               70,
               72,
               93,
-              101
+              101,
+              181,
+              203,
+              214
             ]
           ],
           [
@@ -15060,7 +15655,9 @@
             [
               15,
               70,
-              117
+              117,
+              199,
+              214
             ]
           ],
           [
@@ -15073,9 +15670,9 @@
             ]
           ]
         ],
-        "park": 7.018088630716972
+        "park": 9.018088630716974
       },
-      "localTrips": 9619391.0
+      "localTrips": 9505141.0
     },
     {
       "id": "mil",
@@ -15125,6 +15722,10 @@
           [
             100,
             54044.233480087525
+          ],
+          [
+            189,
+            1474.2640664549874
           ]
         ],
         "commute": [
@@ -15264,7 +15865,7 @@
         ],
         "park": 6.153078852633917
       },
-      "localTrips": 14052186.0
+      "localTrips": 13984349.0
     },
     {
       "id": "tur",
@@ -15314,6 +15915,10 @@
           [
             100,
             2653.171868834591
+          ],
+          [
+            192,
+            453.2339070302259
           ]
         ],
         "commute": [],
@@ -15404,7 +16009,7 @@
         ],
         "park": 6.191780248122005
       },
-      "localTrips": 6108493.0
+      "localTrips": 6060371.0
     },
     {
       "id": "bea",
@@ -15454,6 +16059,10 @@
           [
             100,
             1306.5775711009198
+          ],
+          [
+            189,
+            302.47738831982286
           ]
         ],
         "commute": [
@@ -15573,7 +16182,7 @@
         ],
         "park": 5.146092218102668
       },
-      "localTrips": 3132065.0
+      "localTrips": 3105094.0
     },
     {
       "id": "rom",
@@ -15704,7 +16313,7 @@
         ],
         "park": 7.011984605223965
       },
-      "localTrips": 11629585.0
+      "localTrips": 11561290.0
     },
     {
       "id": "nap",
@@ -15790,7 +16399,7 @@
         ],
         "park": 7.564032641589825
       },
-      "localTrips": 10683051.0
+      "localTrips": 10627126.0
     },
     {
       "id": "rot",
@@ -15852,12 +16461,32 @@
           [
             122,
             1009.4690487566659
+          ],
+          [
+            205,
+            75474.43007897133
+          ],
+          [
+            208,
+            626.9235249066876
+          ],
+          [
+            211,
+            1513.6152307135735
           ]
         ],
         "commute": [
           [
+            120,
+            1.1549999713897705
+          ],
+          [
             121,
-            836.9940013885498
+            398.93800008296967
+          ],
+          [
+            205,
+            30611.5850635767
           ]
         ],
         "air": [
@@ -15928,7 +16557,33 @@
               119,
               120,
               121,
-              122
+              122,
+              129,
+              171,
+              179,
+              181,
+              182,
+              183,
+              188,
+              189,
+              192,
+              193,
+              195,
+              197,
+              198,
+              199,
+              200,
+              201,
+              203,
+              207,
+              208,
+              209,
+              211,
+              212,
+              213,
+              214,
+              215,
+              216
             ]
           ],
           [
@@ -15975,7 +16630,28 @@
               116,
               117,
               119,
-              121
+              121,
+              129,
+              171,
+              179,
+              181,
+              182,
+              183,
+              189,
+              192,
+              193,
+              195,
+              198,
+              199,
+              200,
+              203,
+              205,
+              209,
+              212,
+              213,
+              214,
+              215,
+              216
             ]
           ],
           [
@@ -15993,7 +16669,20 @@
               106,
               107,
               118,
-              119
+              119,
+              181,
+              182,
+              183,
+              188,
+              193,
+              197,
+              200,
+              201,
+              203,
+              207,
+              209,
+              213,
+              214
             ]
           ],
           [
@@ -16003,7 +16692,10 @@
               70,
               71,
               93,
-              101
+              101,
+              181,
+              213,
+              214
             ]
           ],
           [
@@ -16013,13 +16705,17 @@
               105,
               120,
               121,
-              122
+              122,
+              181,
+              203,
+              211,
+              214
             ]
           ]
         ],
-        "park": 6.102957632776573
+        "park": 8.102957625268726
       },
-      "localTrips": 11135078.0
+      "localTrips": 11037713.0
     },
     {
       "id": "ath",
@@ -16113,7 +16809,7 @@
         ],
         "park": 10.049583238831138
       },
-      "localTrips": 10347252.0
+      "localTrips": 10307109.0
     },
     {
       "id": "the",
@@ -16155,6 +16851,10 @@
           [
             105,
             2931.2137696804234
+          ],
+          [
+            197,
+            275.4077080370115
           ]
         ],
         "commute": [],
@@ -16184,7 +16884,7 @@
         ],
         "park": 7.982614294399408
       },
-      "localTrips": 3022302.0
+      "localTrips": 2999762.0
     },
     {
       "id": "war",
@@ -16226,9 +16926,18 @@
           [
             106,
             23199.17396714135
+          ],
+          [
+            209,
+            10350.116913711707
           ]
         ],
-        "commute": [],
+        "commute": [
+          [
+            209,
+            1150.2639976739883
+          ]
+        ],
         "air": [
           [
             29.12971282560135,
@@ -16267,7 +16976,35 @@
               102,
               103,
               104,
-              105
+              105,
+              107,
+              115,
+              116,
+              117,
+              118,
+              119,
+              120,
+              121,
+              122,
+              129,
+              179,
+              181,
+              182,
+              183,
+              188,
+              189,
+              192,
+              193,
+              195,
+              197,
+              199,
+              200,
+              201,
+              203,
+              205,
+              207,
+              208,
+              209
             ]
           ],
           [
@@ -16293,13 +17030,24 @@
               101,
               102,
               104,
-              105
+              105,
+              107,
+              119,
+              120,
+              121,
+              122,
+              129,
+              179,
+              181,
+              195,
+              197,
+              198
             ]
           ]
         ],
-        "park": 7.188308888613607
+        "park": 9.188308877272878
       },
-      "localTrips": 8999347.0
+      "localTrips": 8952026.0
     },
     {
       "id": "bud",
@@ -16388,7 +17136,7 @@
         ],
         "park": 7.1297124703786405
       },
-      "localTrips": 8690296.0
+      "localTrips": 8636659.0
     },
     {
       "id": "ham",
@@ -16495,7 +17243,7 @@
         ],
         "park": 7.979845882167448
       },
-      "localTrips": 8849738.0
+      "localTrips": 8827118.0
     },
     {
       "id": "han",
@@ -16549,6 +17297,10 @@
           [
             116,
             929.0782783650517
+          ],
+          [
+            208,
+            608.5449468399498
           ]
         ],
         "commute": [],
@@ -16617,7 +17369,7 @@
         ],
         "park": 7.03877612759898
       },
-      "localTrips": 3632329.0
+      "localTrips": 3619436.0
     },
     {
       "id": "mun",
@@ -16659,6 +17411,18 @@
           [
             117,
             12841.258627985377
+          ],
+          [
+            129,
+            5451.466959057732
+          ],
+          [
+            189,
+            685.7616009041102
+          ],
+          [
+            199,
+            6128.312542927946
           ]
         ],
         "commute": [],
@@ -16746,7 +17510,7 @@
         ],
         "park": 9.285810007020372
       },
-      "localTrips": 9026906.0
+      "localTrips": 9008239.0
     },
     {
       "id": "kat",
@@ -16788,9 +17552,22 @@
           [
             118,
             17481.79559335508
+          ],
+          [
+            207,
+            25129.68984419206
+          ],
+          [
+            209,
+            3046.7622888350734
           ]
         ],
-        "commute": [],
+        "commute": [
+          [
+            207,
+            9539.847988843918
+          ]
+        ],
         "air": [
           [
             71.66949193508299,
@@ -16825,7 +17602,26 @@
               104,
               106,
               107,
-              117
+              117,
+              119,
+              120,
+              121,
+              122,
+              129,
+              171,
+              179,
+              181,
+              183,
+              189,
+              192,
+              193,
+              195,
+              197,
+              198,
+              199,
+              200,
+              203,
+              205
             ]
           ],
           [
@@ -16850,13 +17646,22 @@
               104,
               105,
               106,
-              107
+              107,
+              120,
+              121,
+              122,
+              129,
+              181,
+              193,
+              198,
+              203,
+              205
             ]
           ]
         ],
-        "park": 5.530523811502229
+        "park": 7.530523792798465
       },
-      "localTrips": 7756584.0
+      "localTrips": 7687904.0
     },
     {
       "id": "vie",
@@ -16993,7 +17798,7 @@
         ],
         "park": 8.141392110400881
       },
-      "localTrips": 7812174.0
+      "localTrips": 7765973.0
     },
     {
       "id": "bru",
@@ -17055,20 +17860,36 @@
           [
             122,
             16080.159171404664
+          ],
+          [
+            205,
+            797.9214093176001
+          ],
+          [
+            208,
+            437.59310725401474
+          ],
+          [
+            211,
+            5480.183900776116
           ]
         ],
         "commute": [
           [
             103,
-            1.2350000143051147
+            1.190999984741211
           ],
           [
             121,
-            26290.073979139328
+            26636.84200143814
           ],
           [
             122,
-            4296.274017930031
+            4372.026991248131
+          ],
+          [
+            211,
+            397.0160015821457
           ]
         ],
         "air": [
@@ -17117,7 +17938,28 @@
               116,
               117,
               119,
-              121
+              121,
+              129,
+              171,
+              179,
+              181,
+              182,
+              183,
+              189,
+              192,
+              193,
+              195,
+              198,
+              199,
+              200,
+              203,
+              205,
+              209,
+              212,
+              213,
+              214,
+              215,
+              216
             ]
           ],
           [
@@ -17150,7 +17992,24 @@
               118,
               119,
               121,
-              122
+              122,
+              171,
+              179,
+              181,
+              182,
+              195,
+              197,
+              198,
+              200,
+              201,
+              203,
+              205,
+              207,
+              208,
+              209,
+              212,
+              213,
+              214
             ]
           ],
           [
@@ -17168,7 +18027,20 @@
               106,
               107,
               118,
-              119
+              119,
+              181,
+              182,
+              183,
+              188,
+              193,
+              197,
+              200,
+              201,
+              203,
+              207,
+              209,
+              213,
+              214
             ]
           ],
           [
@@ -17178,7 +18050,10 @@
               70,
               71,
               93,
-              101
+              101,
+              181,
+              213,
+              214
             ]
           ],
           [
@@ -17187,12 +18062,21 @@
               93,
               105,
               121,
-              122
+              122,
+              181,
+              203,
+              211,
+              214
             ]
           ],
           [
             96.04080638012805,
-            []
+            [
+              171,
+              212,
+              214,
+              215
+            ]
           ],
           [
             87.01049964207353,
@@ -17204,9 +18088,9 @@
             ]
           ]
         ],
-        "park": 8.978845440747042
+        "park": 10.978845440747032
       },
-      "localTrips": 7154339.0
+      "localTrips": 7117726.0
     },
     {
       "id": "ant",
@@ -17268,20 +18152,36 @@
           [
             122,
             7370.2552859650505
+          ],
+          [
+            205,
+            987.8633633562185
+          ],
+          [
+            208,
+            327.9414124639926
+          ],
+          [
+            211,
+            1916.3299768786746
           ]
         ],
         "commute": [
           [
             103,
-            83.22100067138672
+            75.09399998188019
           ],
           [
             120,
-            27209.21398985386
+            27487.90893125534
           ],
           [
             122,
-            863.1380021572113
+            875.4770015478134
+          ],
+          [
+            211,
+            30.33299970626831
           ]
         ],
         "air": [
@@ -17352,7 +18252,33 @@
               118,
               119,
               120,
-              122
+              122,
+              129,
+              171,
+              179,
+              181,
+              182,
+              183,
+              188,
+              189,
+              192,
+              193,
+              195,
+              197,
+              198,
+              199,
+              200,
+              201,
+              203,
+              207,
+              208,
+              209,
+              211,
+              212,
+              213,
+              214,
+              215,
+              216
             ]
           ],
           [
@@ -17399,7 +18325,28 @@
               115,
               116,
               117,
-              119
+              119,
+              129,
+              171,
+              179,
+              181,
+              182,
+              183,
+              189,
+              192,
+              193,
+              195,
+              198,
+              199,
+              200,
+              203,
+              205,
+              209,
+              212,
+              213,
+              214,
+              215,
+              216
             ]
           ],
           [
@@ -17432,7 +18379,24 @@
               118,
               119,
               120,
-              122
+              122,
+              171,
+              179,
+              181,
+              182,
+              195,
+              197,
+              198,
+              200,
+              201,
+              203,
+              205,
+              207,
+              208,
+              209,
+              212,
+              213,
+              214
             ]
           ],
           [
@@ -17450,7 +18414,20 @@
               106,
               107,
               118,
-              119
+              119,
+              181,
+              182,
+              183,
+              188,
+              193,
+              197,
+              200,
+              201,
+              203,
+              207,
+              209,
+              213,
+              214
             ]
           ],
           [
@@ -17460,7 +18437,10 @@
               70,
               71,
               93,
-              101
+              101,
+              181,
+              213,
+              214
             ]
           ],
           [
@@ -17469,12 +18449,21 @@
               93,
               105,
               120,
-              122
+              122,
+              181,
+              203,
+              211,
+              214
             ]
           ],
           [
             117.0487279782158,
-            []
+            [
+              171,
+              212,
+              214,
+              215
+            ]
           ],
           [
             99.50630422439384,
@@ -17486,9 +18475,9 @@
             ]
           ]
         ],
-        "park": 5.23515188272031
+        "park": 7.23515186754898
       },
-      "localTrips": 4630234.0
+      "localTrips": 4601719.0
     },
     {
       "id": "lie",
@@ -17554,20 +18543,40 @@
           [
             122,
             6720.676084258325
+          ],
+          [
+            205,
+            357.3038624966216
+          ],
+          [
+            208,
+            1060.944444064742
+          ],
+          [
+            211,
+            663.1186166381101
+          ],
+          [
+            216,
+            164.44040452057516
           ]
         ],
         "commute": [
           [
             96,
-            47.544000029563904
+            40.674999952316284
           ],
           [
             120,
-            5567.67299592495
+            5678.693004846573
           ],
           [
             121,
-            1613.1949973106384
+            1644.9189989566803
+          ],
+          [
+            208,
+            66.86000037193298
           ]
         ],
         "air": [
@@ -17616,7 +18625,28 @@
               116,
               117,
               119,
-              121
+              121,
+              129,
+              171,
+              179,
+              181,
+              182,
+              183,
+              189,
+              192,
+              193,
+              195,
+              198,
+              199,
+              200,
+              203,
+              205,
+              209,
+              212,
+              213,
+              214,
+              215,
+              216
             ]
           ],
           [
@@ -17653,7 +18683,24 @@
               106,
               117,
               119,
-              121
+              121,
+              129,
+              179,
+              181,
+              183,
+              188,
+              189,
+              193,
+              195,
+              198,
+              199,
+              200,
+              205,
+              208,
+              209,
+              213,
+              214,
+              216
             ]
           ],
           [
@@ -17686,7 +18733,24 @@
               118,
               119,
               120,
-              121
+              121,
+              171,
+              179,
+              181,
+              182,
+              195,
+              197,
+              198,
+              200,
+              201,
+              203,
+              205,
+              207,
+              208,
+              209,
+              212,
+              213,
+              214
             ]
           ],
           [
@@ -17716,7 +18780,18 @@
               115,
               116,
               117,
-              119
+              119,
+              181,
+              182,
+              189,
+              192,
+              197,
+              199,
+              203,
+              207,
+              208,
+              212,
+              214
             ]
           ],
           [
@@ -17734,7 +18809,20 @@
               106,
               107,
               118,
-              119
+              119,
+              181,
+              182,
+              183,
+              188,
+              193,
+              197,
+              200,
+              201,
+              203,
+              207,
+              209,
+              213,
+              214
             ]
           ],
           [
@@ -17758,7 +18846,18 @@
               103,
               117,
               119,
-              121
+              121,
+              129,
+              181,
+              183,
+              189,
+              198,
+              199,
+              205,
+              212,
+              213,
+              214,
+              216
             ]
           ],
           [
@@ -17767,7 +18866,11 @@
               93,
               105,
               120,
-              121
+              121,
+              181,
+              203,
+              211,
+              214
             ]
           ],
           [
@@ -17777,13 +18880,16 @@
               70,
               72,
               93,
-              101
+              101,
+              181,
+              203,
+              214
             ]
           ]
         ],
-        "park": 5.172687899510293
+        "park": 7.172687899510294
       },
-      "localTrips": 3697780.0
+      "localTrips": 3662792.0
     },
     {
       "id": "mos",
@@ -17846,7 +18952,7 @@
         ],
         "park": 11.574874611446603
       },
-      "localTrips": 52247251.0
+      "localTrips": 52001070.0
     },
     {
       "id": "vor",
@@ -17893,7 +18999,7 @@
         "commute": [],
         "park": 8.761345718545819
       },
-      "localTrips": 3494254.0
+      "localTrips": 3466231.0
     },
     {
       "id": "sai",
@@ -17949,7 +19055,4073 @@
         ],
         "park": 10.489502389956332
       },
-      "localTrips": 17750680.0
+      "localTrips": 17660908.0
+    },
+    {
+      "id": "stu",
+      "name": "Stuttgart",
+      "origin": {
+        "lon": 9.1562,
+        "lat": 48.7741
+      },
+      "center": [
+        9.1562,
+        48.7741
+      ],
+      "zoom": 11.2,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.718,
+        48.48,
+        9.798,
+        49.098
+      ],
+      "place": 129,
+      "marketRow": {
+        "place": 129,
+        "zone": "stu",
+        "lon": 9.208209029376887,
+        "lat": 48.78642793026699,
+        "country": "DE",
+        "inc": 0.816622,
+        "road": 0,
+        "g": 428.9591962496644,
+        "t": 0.006080986973922541,
+        "a": 2187266.1215351224,
+        "ta": 4941876.340870015,
+        "pop": 2520500.995000001,
+        "dep": 247673.8237518653,
+        "zones": 110,
+        "near": [
+          [
+            95,
+            8453.907355349193
+          ],
+          [
+            117,
+            5451.466959057732
+          ],
+          [
+            129,
+            9847.169269632292
+          ],
+          [
+            189,
+            1350.1772137405649
+          ],
+          [
+            199,
+            4233.0986120816115
+          ],
+          [
+            216,
+            17548.581951502798
+          ]
+        ],
+        "commute": [
+          [
+            95,
+            442.43600046634674
+          ],
+          [
+            216,
+            6067.758005857468
+          ]
+        ],
+        "air": [
+          [
+            143.97409520449295,
+            [
+              0,
+              1,
+              3,
+              4,
+              5,
+              6,
+              7,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              27,
+              28,
+              29,
+              35,
+              36,
+              41,
+              43,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              78,
+              82,
+              86,
+              92,
+              93,
+              94,
+              96,
+              98,
+              99,
+              100,
+              101,
+              102,
+              103,
+              104,
+              105,
+              106,
+              107,
+              115,
+              116,
+              117,
+              118,
+              119,
+              120,
+              121,
+              122,
+              179,
+              181,
+              182,
+              183,
+              188,
+              189,
+              192,
+              193,
+              195,
+              197,
+              198,
+              199,
+              200,
+              201,
+              203,
+              205,
+              207,
+              208,
+              209,
+              211,
+              212,
+              213,
+              214,
+              215,
+              216
+            ]
+          ],
+          [
+            31.201529893972474,
+            [
+              15,
+              19,
+              70,
+              76,
+              93,
+              95,
+              101,
+              102,
+              103,
+              104,
+              105,
+              106,
+              107,
+              115,
+              116,
+              118,
+              119,
+              121,
+              181,
+              182,
+              183,
+              189,
+              197,
+              203,
+              205,
+              207,
+              209,
+              214,
+              216
+            ]
+          ],
+          [
+            118.74039867233114,
+            [
+              93,
+              188,
+              197,
+              203,
+              214
+            ]
+          ],
+          [
+            89.00482859005999,
+            [
+              15,
+              70,
+              93,
+              119,
+              179,
+              181,
+              188,
+              197,
+              201,
+              203,
+              213,
+              214
+            ]
+          ],
+          [
+            121.08511349270347,
+            [
+              171
+            ]
+          ]
+        ],
+        "park": 9.572980730513262
+      },
+      "localTrips": 8010158.0
+    },
+    {
+      "id": "tou",
+      "name": "Toulouse",
+      "origin": {
+        "lon": 1.4454,
+        "lat": 43.6075
+      },
+      "center": [
+        1.4454,
+        43.6075
+      ],
+      "zoom": 11.2,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        0.416,
+        42.671,
+        2.074,
+        43.94
+      ],
+      "place": 171,
+      "marketRow": {
+        "place": 171,
+        "zone": "tou",
+        "lon": 1.3828433410278362,
+        "lat": 43.558285760236224,
+        "country": "FR",
+        "inc": 0.716542,
+        "road": 0,
+        "g": 935.7249540010786,
+        "t": 0.002691357953793163,
+        "a": 1165252.3073277918,
+        "ta": 2693054.621762867,
+        "pop": 1471467.9780000001,
+        "dep": 131407.2246488351,
+        "zones": 230,
+        "near": [
+          [
+            93,
+            1269.2505557050197
+          ],
+          [
+            171,
+            8439.611776091302
+          ],
+          [
+            215,
+            3942.2603060839583
+          ]
+        ],
+        "commute": [],
+        "air": [
+          [
+            29.93103378402721,
+            [
+              15,
+              16,
+              70,
+              71,
+              72,
+              76,
+              78,
+              82,
+              86,
+              92,
+              98,
+              100,
+              102,
+              103,
+              117,
+              118,
+              120,
+              121,
+              122,
+              129
+            ]
+          ]
+        ],
+        "park": 8.626127391918006
+      },
+      "localTrips": 4307609.0
+    },
+    {
+      "id": "sto",
+      "name": "Stockholm",
+      "origin": {
+        "lon": 18.0356,
+        "lat": 59.3402
+      },
+      "center": [
+        18.0356,
+        59.3402
+      ],
+      "zoom": 11.2,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        17.208,
+        58.718,
+        19.551,
+        60.241
+      ],
+      "place": 179,
+      "marketRow": {
+        "place": 179,
+        "zone": "sto",
+        "lon": 18.01650785551612,
+        "lat": 59.33944643435126,
+        "country": "SE",
+        "inc": 0.823624,
+        "road": 0,
+        "g": 2965.214054892514,
+        "t": 0.0066485117437605264,
+        "a": 2146114.191854919,
+        "ta": 5514157.762736716,
+        "pop": 2458343.3030000003,
+        "dep": 243710.3422139477,
+        "zones": 300,
+        "near": [
+          [
+            179,
+            48328.02827502507
+          ]
+        ],
+        "commute": [],
+        "air": [
+          [
+            48.13806103207057,
+            [
+              0,
+              1,
+              7,
+              13,
+              15,
+              16,
+              19,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              78,
+              82,
+              86,
+              92,
+              93,
+              94,
+              95,
+              96,
+              98,
+              99,
+              100,
+              101,
+              103,
+              104,
+              105,
+              106,
+              107,
+              115,
+              116,
+              117,
+              118,
+              119,
+              120,
+              121,
+              122,
+              129
+            ]
+          ]
+        ],
+        "park": 9.652550451307118
+      },
+      "localTrips": 7225206.0
+    },
+    {
+      "id": "val",
+      "name": "Valencia",
+      "origin": {
+        "lon": -0.416,
+        "lat": 39.4738
+      },
+      "center": [
+        -0.416,
+        39.4738
+      ],
+      "zoom": 11.2,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -1.553,
+        38.668,
+        -0.001,
+        40.23
+      ],
+      "place": 181,
+      "marketRow": {
+        "place": 181,
+        "zone": "val",
+        "lon": -0.4284988638676282,
+        "lat": 39.38310066076347,
+        "country": "ES",
+        "inc": 0.641067,
+        "road": 0,
+        "g": 1417.4531564925587,
+        "t": 0.007731417791669186,
+        "a": 1848561.54533723,
+        "ta": 4664988.674151081,
+        "pop": 2523489.601000001,
+        "dep": 210516.34869586542,
+        "zones": 349,
+        "near": [
+          [
+            181,
+            35758.10334227466
+          ]
+        ],
+        "commute": [],
+        "air": [
+          [
+            124.29780975243946,
+            [
+              15,
+              16,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              82,
+              86,
+              92,
+              93,
+              94,
+              95,
+              96,
+              98,
+              99,
+              100,
+              101,
+              103,
+              106,
+              107,
+              115,
+              116,
+              117,
+              118,
+              119,
+              120,
+              121,
+              122,
+              129,
+              171,
+              179
+            ]
+          ],
+          [
+            34.25870185276098,
+            [
+              15,
+              16,
+              19,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              82,
+              86,
+              92,
+              94,
+              95,
+              96,
+              98,
+              99,
+              100,
+              101,
+              102,
+              103,
+              106,
+              107,
+              115,
+              116,
+              117,
+              118,
+              119,
+              120,
+              121,
+              122,
+              129,
+              171
+            ]
+          ]
+        ],
+        "park": 8.533907965973004
+      },
+      "localTrips": 7021320.0
+    },
+    {
+      "id": "buc",
+      "name": "Bucharest",
+      "origin": {
+        "lon": 26.0183,
+        "lat": 44.4319
+      },
+      "center": [
+        26.0183,
+        44.4319
+      ],
+      "zoom": 11.2,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        25.799,
+        44.216,
+        26.484,
+        44.788
+      ],
+      "place": 182,
+      "marketRow": {
+        "place": 182,
+        "zone": "buc",
+        "lon": 26.099164632697537,
+        "lat": 44.43811677773361,
+        "country": "RO",
+        "inc": 0.530941,
+        "road": 0,
+        "g": 1395.872051716551,
+        "t": 0.011950117394138943,
+        "a": 1480141.7398627007,
+        "ta": 7959588.20341924,
+        "pop": 2305530.7630000003,
+        "dep": 175733.09591322817,
+        "zones": 66,
+        "near": [
+          [
+            182,
+            1877.0838089415308
+          ]
+        ],
+        "commute": [],
+        "air": [
+          [
+            29.486493944268904,
+            [
+              15,
+              16,
+              19,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              82,
+              86,
+              92,
+              93,
+              94,
+              95,
+              96,
+              98,
+              99,
+              100,
+              101,
+              102,
+              103,
+              104,
+              105,
+              106,
+              117,
+              119,
+              120,
+              121,
+              122,
+              129,
+              181
+            ]
+          ]
+        ],
+        "park": 9.389544335108814
+      },
+      "localTrips": 6354603.0
+    },
+    {
+      "id": "cop",
+      "name": "Copenhagen",
+      "origin": {
+        "lon": 12.5524,
+        "lat": 55.6985
+      },
+      "center": [
+        12.5524,
+        55.6985
+      ],
+      "zoom": 11.2,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        11.662,
+        54.969,
+        15.19,
+        56.218
+      ],
+      "place": 183,
+      "marketRow": {
+        "place": 183,
+        "zone": "cop",
+        "lon": 12.47503116218824,
+        "lat": 55.70687989019038,
+        "country": "DK",
+        "inc": 0.945302,
+        "road": 0,
+        "g": 1878.709406785202,
+        "t": 0.006177211649941805,
+        "a": 1998919.7029067327,
+        "ta": 6277557.771071932,
+        "pop": 2079198.4609999994,
+        "dep": 228632.7347017096,
+        "zones": 137,
+        "near": [
+          [
+            183,
+            35677.957030392
+          ]
+        ],
+        "commute": [],
+        "air": [
+          [
+            35.98829393653883,
+            [
+              0,
+              1,
+              3,
+              4,
+              5,
+              6,
+              7,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              19,
+              20,
+              27,
+              35,
+              36,
+              41,
+              43,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              78,
+              82,
+              86,
+              92,
+              93,
+              94,
+              95,
+              96,
+              98,
+              99,
+              100,
+              101,
+              102,
+              103,
+              104,
+              106,
+              107,
+              115,
+              116,
+              117,
+              118,
+              119,
+              120,
+              121,
+              122,
+              129,
+              179,
+              181,
+              182
+            ]
+          ]
+        ],
+        "park": 8.862874203217167
+      },
+      "localTrips": 6251735.0
+    },
+    {
+      "id": "beg",
+      "name": "Belgrade",
+      "origin": {
+        "lon": 20.4763,
+        "lat": 44.7997
+      },
+      "center": [
+        20.4763,
+        44.7997
+      ],
+      "zoom": 11.2,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        19.949,
+        44.244,
+        20.88,
+        45.115
+      ],
+      "place": 188,
+      "marketRow": {
+        "place": 188,
+        "zone": "beg",
+        "lon": 20.429637351976623,
+        "lat": 44.75932895166562,
+        "country": "RS",
+        "inc": 0.358806,
+        "road": 0,
+        "g": 1212.8474083313874,
+        "t": 0.0068167264578719,
+        "a": 928881.735310953,
+        "ta": 2543033.084902209,
+        "pop": 1903525.2220000003,
+        "dep": 106050.3868430087,
+        "zones": 115,
+        "near": [
+          [
+            188,
+            7635.24538598704
+          ]
+        ],
+        "commute": [],
+        "air": [
+          [
+            29.391795626052094,
+            [
+              0,
+              1,
+              7,
+              13,
+              15,
+              16,
+              19,
+              70,
+              71,
+              74,
+              76,
+              92,
+              93,
+              94,
+              95,
+              96,
+              98,
+              99,
+              100,
+              101,
+              103,
+              104,
+              105,
+              106,
+              107,
+              115,
+              116,
+              117,
+              119,
+              120,
+              121,
+              122,
+              123,
+              125,
+              129,
+              179,
+              181,
+              182,
+              183
+            ]
+          ],
+          [
+            136.31958490601403,
+            [
+              15,
+              70,
+              74,
+              76,
+              117,
+              182
+            ]
+          ]
+        ],
+        "park": 10.7729711950218
+      },
+      "localTrips": 5433282.0
+    },
+    {
+      "id": "zur",
+      "name": "Zurich",
+      "origin": {
+        "lon": 8.5424,
+        "lat": 47.3715
+      },
+      "center": [
+        8.5424,
+        47.3715
+      ],
+      "zoom": 11.2,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.33,
+        46.867,
+        9.032,
+        47.713
+      ],
+      "place": 189,
+      "marketRow": {
+        "place": 189,
+        "zone": "zur",
+        "lon": 8.602876869923266,
+        "lat": 47.356385206133815,
+        "country": "CH",
+        "inc": 1.0,
+        "road": 0,
+        "g": 574.0142029854903,
+        "t": 0.0047766710715529456,
+        "a": 1803147.6229999978,
+        "ta": 4287166.817079098,
+        "pop": 1803147.6229999992,
+        "dep": 204232.62528347914,
+        "zones": 105,
+        "near": [
+          [
+            98,
+            1474.2640664549874
+          ],
+          [
+            100,
+            302.47738831982286
+          ],
+          [
+            117,
+            685.7616009041102
+          ],
+          [
+            129,
+            1350.1772137405649
+          ],
+          [
+            189,
+            9960.3237586042
+          ],
+          [
+            216,
+            413.21079982157227
+          ]
+        ],
+        "commute": [],
+        "air": [
+          [
+            30.577644427338807,
+            [
+              0,
+              1,
+              3,
+              4,
+              5,
+              6,
+              7,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              27,
+              28,
+              35,
+              36,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              78,
+              82,
+              92,
+              93,
+              94,
+              95,
+              96,
+              98,
+              99,
+              100,
+              101,
+              102,
+              103,
+              104,
+              105,
+              106,
+              107,
+              115,
+              116,
+              117,
+              118,
+              119,
+              120,
+              121,
+              122,
+              129,
+              179,
+              181,
+              182,
+              183,
+              188
+            ]
+          ],
+          [
+            140.0522974931941,
+            [
+              93,
+              188
+            ]
+          ],
+          [
+            92.01813117501598,
+            [
+              93
+            ]
+          ],
+          [
+            148.42024878262427,
+            [
+              171
+            ]
+          ]
+        ],
+        "park": 9.275117510357097
+      },
+      "localTrips": 5449595.0
+    },
+    {
+      "id": "lyo",
+      "name": "Lyon",
+      "origin": {
+        "lon": 4.8513,
+        "lat": 45.7694
+      },
+      "center": [
+        4.8513,
+        45.7694
+      ],
+      "zoom": 11.2,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        4.217,
+        45.435,
+        5.187,
+        46.325
+      ],
+      "place": 192,
+      "marketRow": {
+        "place": 192,
+        "zone": "lyo",
+        "lon": 4.8198030603659285,
+        "lat": 45.7703731978673,
+        "country": "FR",
+        "inc": 0.716542,
+        "road": 0,
+        "g": 681.0201981003955,
+        "t": 0.0050011955379213515,
+        "a": 1516220.6489571847,
+        "ta": 4291603.317893321,
+        "pop": 1914666.9939999995,
+        "dep": 173129.80111578506,
+        "zones": 117,
+        "near": [
+          [
+            99,
+            453.2339070302259
+          ],
+          [
+            192,
+            6922.164386486565
+          ]
+        ],
+        "commute": [],
+        "air": [
+          [
+            114.925069487984,
+            [
+              0,
+              1,
+              4,
+              5,
+              7,
+              13,
+              15,
+              16,
+              17,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              78,
+              82,
+              86,
+              92,
+              93,
+              95,
+              101,
+              102,
+              103,
+              104,
+              106,
+              117,
+              119,
+              120,
+              121,
+              122,
+              129,
+              171,
+              181,
+              183,
+              188,
+              189
+            ]
+          ],
+          [
+            35.88357708537593,
+            [
+              15,
+              16,
+              70,
+              71,
+              72,
+              76,
+              82,
+              92,
+              93,
+              94,
+              95,
+              96,
+              98,
+              99,
+              100,
+              101,
+              103,
+              104,
+              117,
+              118,
+              119,
+              120,
+              121,
+              122,
+              129,
+              171,
+              181,
+              182,
+              183
+            ]
+          ]
+        ],
+        "park": 10.709165353139595
+      },
+      "localTrips": 5724374.0
+    },
+    {
+      "id": "osl",
+      "name": "Oslo",
+      "origin": {
+        "lon": 10.7234,
+        "lat": 59.924
+      },
+      "center": [
+        10.7234,
+        59.924
+      ],
+      "zoom": 11.2,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        7.402,
+        58.956,
+        11.983,
+        61.11
+      ],
+      "place": 193,
+      "marketRow": {
+        "place": 193,
+        "zone": "osl",
+        "lon": 10.653467893291431,
+        "lat": 59.91424343025648,
+        "country": "NO",
+        "inc": 1.0,
+        "road": 0,
+        "g": 1853.2086632809187,
+        "t": 0.003203992506032787,
+        "a": 1590139.9909999885,
+        "ta": 2545738.3861339446,
+        "pop": 1590139.9909999995,
+        "dep": 177808.4857531319,
+        "zones": 584,
+        "near": [
+          [
+            193,
+            46568.20748282544
+          ]
+        ],
+        "commute": [],
+        "air": [
+          [
+            53.75251756168067,
+            [
+              0,
+              1,
+              7,
+              13,
+              15,
+              16,
+              19,
+              68,
+              69,
+              70,
+              71,
+              73,
+              74,
+              75,
+              76,
+              78,
+              82,
+              92,
+              93,
+              94,
+              95,
+              96,
+              98,
+              99,
+              100,
+              101,
+              103,
+              104,
+              106,
+              107,
+              115,
+              116,
+              117,
+              118,
+              119,
+              120,
+              121,
+              122,
+              129,
+              179,
+              181,
+              183,
+              188,
+              189
+            ]
+          ],
+          [
+            91.84689035682787,
+            [
+              15,
+              68,
+              69,
+              70,
+              73,
+              74,
+              75,
+              76,
+              98,
+              100,
+              106,
+              118,
+              182
+            ]
+          ]
+        ],
+        "park": 8.098154674600277
+      },
+      "localTrips": 4808937.0
+    },
+    {
+      "id": "hel",
+      "name": "Helsinki",
+      "origin": {
+        "lon": 24.9522,
+        "lat": 60.1859
+      },
+      "center": [
+        24.9522,
+        60.1859
+      ],
+      "zoom": 11.2,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        22.773,
+        59.746,
+        26.593,
+        60.86
+      ],
+      "place": 195,
+      "marketRow": {
+        "place": 195,
+        "zone": "hel",
+        "lon": 24.87971958441685,
+        "lat": 60.270704233555,
+        "country": "FI",
+        "inc": 0.72448,
+        "road": 0,
+        "g": 2499.024913989084,
+        "t": 0.003563200053615913,
+        "a": 1312903.080718087,
+        "ta": 2176698.8685990646,
+        "pop": 1645182.9000000018,
+        "dep": 147071.2921781662,
+        "zones": 350,
+        "near": [
+          [
+            195,
+            40278.22881834688
+          ]
+        ],
+        "commute": [],
+        "air": [
+          [
+            32.99812339551815,
+            [
+              0,
+              1,
+              7,
+              13,
+              15,
+              16,
+              17,
+              19,
+              20,
+              23,
+              24,
+              27,
+              35,
+              36,
+              40,
+              41,
+              43,
+              44,
+              45,
+              48,
+              50,
+              51,
+              68,
+              69,
+              70,
+              71,
+              73,
+              74,
+              75,
+              76,
+              78,
+              82,
+              92,
+              93,
+              94,
+              95,
+              96,
+              98,
+              99,
+              100,
+              101,
+              103,
+              104,
+              106,
+              107,
+              115,
+              116,
+              117,
+              118,
+              119,
+              120,
+              121,
+              122,
+              129,
+              179,
+              181,
+              183,
+              189,
+              192,
+              193
+            ]
+          ],
+          [
+            101.37896532172334,
+            [
+              15,
+              19,
+              70,
+              74,
+              76,
+              95,
+              98,
+              99,
+              100,
+              101,
+              103,
+              106,
+              107,
+              118,
+              121,
+              129,
+              179,
+              183,
+              189,
+              193
+            ]
+          ]
+        ],
+        "park": 8.099550942078974
+      },
+      "localTrips": 4720335.0
+    },
+    {
+      "id": "sof",
+      "name": "Sofia",
+      "origin": {
+        "lon": 23.3286,
+        "lat": 42.6963
+      },
+      "center": [
+        23.3286,
+        42.6963
+      ],
+      "zoom": 11.2,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        22.414,
+        42.342,
+        23.704,
+        42.915
+      ],
+      "place": 197,
+      "marketRow": {
+        "place": 197,
+        "zone": "sof",
+        "lon": 23.317339963991632,
+        "lat": 42.68176255336723,
+        "country": "BG",
+        "inc": 0.459183,
+        "road": 0,
+        "g": 2074.801675683446,
+        "t": 0.0051468298364600925,
+        "a": 878662.9620485915,
+        "ta": 2349953.7926623872,
+        "pop": 1515068.4669999997,
+        "dep": 100410.42589092514,
+        "zones": 129,
+        "near": [
+          [
+            105,
+            275.4077080370115
+          ],
+          [
+            197,
+            4476.207351927855
+          ]
+        ],
+        "commute": [],
+        "air": [
+          [
+            25.102289085252604,
+            [
+              15,
+              16,
+              19,
+              70,
+              74,
+              76,
+              82,
+              92,
+              93,
+              94,
+              95,
+              96,
+              98,
+              99,
+              100,
+              101,
+              102,
+              103,
+              104,
+              106,
+              107,
+              115,
+              116,
+              117,
+              118,
+              119,
+              120,
+              121,
+              122,
+              129,
+              181,
+              182,
+              183,
+              188,
+              189
+            ]
+          ]
+        ],
+        "park": 10.51916826340403
+      },
+      "localTrips": 4314288.0
+    },
+    {
+      "id": "dub",
+      "name": "Dublin",
+      "origin": {
+        "lon": -6.2623,
+        "lat": 53.3584
+      },
+      "center": [
+        -6.2623,
+        53.3584
+      ],
+      "zoom": 11.2,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -6.578,
+        53.16,
+        -5.964,
+        53.653
+      ],
+      "place": 198,
+      "marketRow": {
+        "place": 198,
+        "zone": "dub",
+        "lon": -6.27590191452014,
+        "lat": 53.35413149250743,
+        "country": "IE",
+        "inc": 1.0,
+        "road": 17,
+        "g": 1461.7753946255052,
+        "t": 0.004574879085197255,
+        "a": 1395350.161000005,
+        "ta": 3874308.836026093,
+        "pop": 1395350.1609999998,
+        "dep": 159608.52450693995,
+        "zones": 43,
+        "near": [
+          [
+            69,
+            691.9274564128519
+          ],
+          [
+            82,
+            1942.1345491727614
+          ],
+          [
+            198,
+            2726.32566965131
+          ]
+        ],
+        "commute": [],
+        "air": [
+          [
+            25.438058582910333,
+            [
+              0,
+              1,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              19,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              86,
+              92,
+              93,
+              94,
+              95,
+              96,
+              98,
+              99,
+              100,
+              101,
+              102,
+              103,
+              104,
+              106,
+              107,
+              115,
+              116,
+              117,
+              118,
+              119,
+              120,
+              121,
+              122,
+              129,
+              171,
+              179,
+              181,
+              182,
+              183,
+              189,
+              192,
+              193,
+              195,
+              197
+            ]
+          ],
+          [
+            142.90556420380778,
+            [
+              15,
+              16,
+              68,
+              69,
+              70,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              86,
+              93,
+              181
+            ]
+          ],
+          [
+            141.13628754163958,
+            [
+              15,
+              68,
+              69,
+              70,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              86,
+              103,
+              121
+            ]
+          ]
+        ],
+        "park": 9.302743750119722
+      },
+      "localTrips": 4276287.0
+    },
+    {
+      "id": "nur",
+      "name": "Nuremberg",
+      "origin": {
+        "lon": 11.0871,
+        "lat": 49.4381
+      },
+      "center": [
+        11.0871,
+        49.4381
+      ],
+      "zoom": 11.2,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        10.563,
+        48.979,
+        11.63,
+        49.807
+      ],
+      "place": 199,
+      "marketRow": {
+        "place": 199,
+        "zone": "nur",
+        "lon": 11.065329909510774,
+        "lat": 49.459869989813555,
+        "country": "DE",
+        "inc": 0.816622,
+        "road": 0,
+        "g": 350.4870414490157,
+        "t": 0.003036496579452589,
+        "a": 1190431.185070769,
+        "ta": 2422533.8062366094,
+        "pop": 1371796.0320000001,
+        "dep": 134126.92037952546,
+        "zones": 110,
+        "near": [
+          [
+            95,
+            3524.4374802695797
+          ],
+          [
+            117,
+            6128.312542927946
+          ],
+          [
+            129,
+            4233.0986120816115
+          ],
+          [
+            199,
+            3104.6287528893695
+          ],
+          [
+            216,
+            2034.495153623359
+          ]
+        ],
+        "commute": [],
+        "air": [
+          [
+            132.98231590287452,
+            [
+              0,
+              1,
+              3,
+              4,
+              5,
+              6,
+              7,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              24,
+              27,
+              28,
+              35,
+              36,
+              41,
+              43,
+              44,
+              45,
+              48,
+              50,
+              51,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              78,
+              82,
+              92,
+              93,
+              94,
+              95,
+              96,
+              98,
+              99,
+              100,
+              101,
+              102,
+              103,
+              104,
+              105,
+              106,
+              107,
+              115,
+              116,
+              118,
+              119,
+              120,
+              121,
+              122,
+              129,
+              171,
+              179,
+              181,
+              182,
+              183,
+              188,
+              189,
+              192,
+              193,
+              195,
+              197,
+              198
+            ]
+          ],
+          [
+            26.86807668695963,
+            [
+              15,
+              16,
+              70,
+              93,
+              95,
+              102,
+              103,
+              105,
+              121,
+              129,
+              181,
+              182,
+              197
+            ]
+          ]
+        ],
+        "park": 9.08840831320886
+      },
+      "localTrips": 4357895.0
+    },
+    {
+      "id": "pra",
+      "name": "Prague",
+      "origin": {
+        "lon": 14.4433,
+        "lat": 50.0767
+      },
+      "center": [
+        14.4433,
+        50.0767
+      ],
+      "zoom": 11.2,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        14.196,
+        49.923,
+        14.736,
+        50.196
+      ],
+      "place": 200,
+      "marketRow": {
+        "place": 200,
+        "zone": "pra",
+        "lon": 14.454144241619822,
+        "lat": 50.073391680639524,
+        "country": "CZ",
+        "inc": 0.640734,
+        "road": 0,
+        "g": 677.1942348636757,
+        "t": 0.004558473655663123,
+        "a": 979243.583023727,
+        "ta": 3102524.223258747,
+        "pop": 1337261.3580000005,
+        "dep": 112750.85858928245,
+        "zones": 24,
+        "near": [
+          [
+            200,
+            2.301222024518077
+          ]
+        ],
+        "commute": [],
+        "air": [
+          [
+            28.108221076006032,
+            [
+              0,
+              1,
+              7,
+              13,
+              15,
+              16,
+              27,
+              68,
+              69,
+              70,
+              71,
+              73,
+              74,
+              75,
+              76,
+              78,
+              82,
+              86,
+              92,
+              93,
+              94,
+              95,
+              96,
+              98,
+              99,
+              100,
+              101,
+              102,
+              103,
+              104,
+              106,
+              107,
+              118,
+              119,
+              120,
+              121,
+              122,
+              129,
+              171,
+              179,
+              181,
+              182,
+              183,
+              188,
+              189,
+              193,
+              195,
+              197,
+              198
+            ]
+          ]
+        ],
+        "park": 9.677157427574436
+      },
+      "localTrips": 3939844.0
+    },
+    {
+      "id": "poz",
+      "name": "Poznan",
+      "origin": {
+        "lon": 16.9251,
+        "lat": 52.4103
+      },
+      "center": [
+        16.9251,
+        52.4103
+      ],
+      "zoom": 11.2,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        15.984,
+        51.906,
+        17.553,
+        52.907
+      ],
+      "place": 201,
+      "marketRow": {
+        "place": 201,
+        "zone": "poz",
+        "lon": 16.899012890079756,
+        "lat": 52.40571327043319,
+        "country": "PL",
+        "inc": 0.609954,
+        "road": 0,
+        "g": 465.6285530556541,
+        "t": 0.002311664175720239,
+        "a": 845503.5198987261,
+        "ta": 1262354.7471973838,
+        "pop": 1195108.8470000003,
+        "dep": 94390.84498664916,
+        "zones": 180,
+        "near": [
+          [
+            19,
+            714.5677021574047
+          ],
+          [
+            201,
+            5352.417927273649
+          ],
+          [
+            209,
+            1294.856260355235
+          ]
+        ],
+        "commute": [],
+        "air": [
+          [
+            142.94019240313906,
+            [
+              15,
+              16,
+              68,
+              69,
+              70,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              92,
+              93,
+              94,
+              95,
+              96,
+              98,
+              100,
+              101,
+              103,
+              104,
+              106,
+              107,
+              120,
+              121,
+              122,
+              129,
+              181,
+              189,
+              193,
+              197,
+              200
+            ]
+          ],
+          [
+            29.76346820467846,
+            [
+              15,
+              16,
+              68,
+              69,
+              70,
+              71,
+              73,
+              74,
+              75,
+              76,
+              77,
+              82,
+              86,
+              93,
+              95,
+              98,
+              100,
+              101,
+              103,
+              105,
+              106,
+              120,
+              121,
+              122,
+              129,
+              183,
+              193,
+              198,
+              200
+            ]
+          ]
+        ],
+        "park": 7.705446172768839
+      },
+      "localTrips": 3429705.0
+    },
+    {
+      "id": "tir",
+      "name": "Tirana",
+      "origin": {
+        "lon": 19.8606,
+        "lat": 41.3479
+      },
+      "center": [
+        19.8606,
+        41.3479
+      ],
+      "zoom": 11.2,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        19.411,
+        40.983,
+        20.265,
+        41.534
+      ],
+      "place": 203,
+      "marketRow": {
+        "place": 203,
+        "zone": "tir",
+        "lon": 19.789545763228944,
+        "lat": 41.32981788861454,
+        "country": "AL",
+        "inc": 0.295384,
+        "road": 0,
+        "g": 1075.8987308228204,
+        "t": 0.004080634064115167,
+        "a": 426206.45107258315,
+        "ta": 1161933.390377304,
+        "pop": 1000804.2520000001,
+        "dep": 48728.690930733654,
+        "zones": 62,
+        "near": [
+          [
+            203,
+            941.4674608537373
+          ]
+        ],
+        "commute": [],
+        "air": [
+          [
+            25.987940394133417,
+            [
+              15,
+              16,
+              19,
+              68,
+              69,
+              70,
+              73,
+              74,
+              75,
+              76,
+              78,
+              92,
+              93,
+              94,
+              95,
+              96,
+              98,
+              99,
+              100,
+              101,
+              102,
+              103,
+              104,
+              106,
+              107,
+              115,
+              116,
+              117,
+              118,
+              119,
+              120,
+              121,
+              122,
+              129,
+              179,
+              181,
+              182,
+              188,
+              189,
+              192,
+              193,
+              199,
+              200
+            ]
+          ],
+          [
+            123.68159709440972,
+            [
+              15,
+              16,
+              19,
+              70,
+              94,
+              96,
+              98,
+              99,
+              100,
+              106,
+              107,
+              115,
+              116,
+              117,
+              118,
+              119,
+              120,
+              121,
+              122,
+              129,
+              188,
+              189
+            ]
+          ]
+        ],
+        "park": 12.694595505100201
+      },
+      "localTrips": 2924753.0
+    },
+    {
+      "id": "ams",
+      "name": "Amsterdam",
+      "origin": {
+        "lon": 4.8689,
+        "lat": 52.3714
+      },
+      "center": [
+        4.8689,
+        52.3714
+      ],
+      "zoom": 11.2,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        4.464,
+        52.188,
+        5.216,
+        52.633
+      ],
+      "place": 205,
+      "marketRow": {
+        "place": 205,
+        "zone": "ams",
+        "lon": 4.810229994348563,
+        "lat": 52.384191898474604,
+        "country": "NL",
+        "inc": 0.927821,
+        "road": 0,
+        "g": 322.87867214327423,
+        "t": 0.00678827520822251,
+        "a": 1889369.529434846,
+        "ta": 5378938.177818525,
+        "pop": 1991094.9389999998,
+        "dep": 216334.4009060635,
+        "zones": 52,
+        "near": [
+          [
+            94,
+            1239.791670138146
+          ],
+          [
+            96,
+            435.7860193766798
+          ],
+          [
+            103,
+            75474.43007897133
+          ],
+          [
+            120,
+            797.9214093176001
+          ],
+          [
+            121,
+            987.8633633562185
+          ],
+          [
+            122,
+            357.3038624966216
+          ],
+          [
+            205,
+            1263.068070466377
+          ],
+          [
+            208,
+            319.05241229878897
+          ],
+          [
+            211,
+            451.31514057149184
+          ]
+        ],
+        "commute": [
+          [
+            103,
+            30093.24199426174
+          ],
+          [
+            121,
+            11.489999771118164
+          ]
+        ],
+        "air": [
+          [
+            26.754471803964154,
+            [
+              0,
+              1,
+              3,
+              4,
+              5,
+              6,
+              7,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              24,
+              27,
+              28,
+              29,
+              35,
+              36,
+              44,
+              45,
+              48,
+              50,
+              51,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              82,
+              86,
+              92,
+              93,
+              94,
+              95,
+              96,
+              98,
+              99,
+              100,
+              101,
+              102,
+              103,
+              104,
+              105,
+              106,
+              107,
+              115,
+              116,
+              117,
+              118,
+              119,
+              120,
+              121,
+              122,
+              129,
+              171,
+              179,
+              181,
+              182,
+              183,
+              188,
+              189,
+              192,
+              193,
+              195,
+              197,
+              198,
+              199,
+              200,
+              201,
+              203,
+              207,
+              208,
+              209,
+              211,
+              212,
+              213,
+              214,
+              215,
+              216
+            ]
+          ],
+          [
+            113.15665602838641,
+            [
+              15,
+              70,
+              71,
+              72,
+              93,
+              98,
+              100,
+              101,
+              104,
+              106,
+              107,
+              118,
+              119,
+              181,
+              182,
+              183,
+              188,
+              193,
+              197,
+              200,
+              201,
+              203,
+              207,
+              209,
+              213,
+              214
+            ]
+          ],
+          [
+            63.32075735033992,
+            [
+              15,
+              70,
+              71,
+              93,
+              101,
+              181,
+              213,
+              214
+            ]
+          ],
+          [
+            126.42109673749894,
+            [
+              93,
+              105,
+              120,
+              121,
+              122,
+              181,
+              203,
+              211,
+              214
+            ]
+          ]
+        ],
+        "park": 8.927615393151518
+      },
+      "localTrips": 6103470.0
+    },
+    {
+      "id": "kra",
+      "name": "Krakow",
+      "origin": {
+        "lon": 19.9393,
+        "lat": 50.0576
+      },
+      "center": [
+        19.9393,
+        50.0576
+      ],
+      "zoom": 11.2,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        19.492,
+        49.599,
+        20.71,
+        50.539
+      ],
+      "place": 207,
+      "marketRow": {
+        "place": 207,
+        "zone": "kra",
+        "lon": 20.004029993752592,
+        "lat": 50.045883250730384,
+        "country": "PL",
+        "inc": 0.609954,
+        "road": 0,
+        "g": 369.4941398108384,
+        "t": 0.003789983526365455,
+        "a": 1048739.3152127662,
+        "ta": 2690766.6378755257,
+        "pop": 1482380.1490000002,
+        "dep": 118760.45728430599,
+        "zones": 156,
+        "near": [
+          [
+            118,
+            25129.68984419206
+          ],
+          [
+            207,
+            4577.140126873204
+          ],
+          [
+            209,
+            1174.8387846260127
+          ]
+        ],
+        "commute": [
+          [
+            118,
+            9625.967007517815
+          ]
+        ],
+        "air": [
+          [
+            33.40647227291537,
+            [
+              0,
+              1,
+              7,
+              15,
+              16,
+              68,
+              69,
+              70,
+              71,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              82,
+              86,
+              92,
+              93,
+              94,
+              95,
+              96,
+              98,
+              99,
+              100,
+              101,
+              103,
+              104,
+              106,
+              107,
+              117,
+              119,
+              120,
+              121,
+              122,
+              129,
+              171,
+              179,
+              181,
+              183,
+              189,
+              192,
+              193,
+              195,
+              197,
+              198,
+              199,
+              200,
+              203,
+              205
+            ]
+          ],
+          [
+            87.69766494226855,
+            [
+              15,
+              19,
+              70,
+              72,
+              74,
+              76,
+              82,
+              93,
+              94,
+              95,
+              96,
+              98,
+              100,
+              101,
+              102,
+              103,
+              104,
+              105,
+              106,
+              107,
+              120,
+              121,
+              122,
+              129,
+              181,
+              193,
+              198,
+              203,
+              205
+            ]
+          ],
+          [
+            142.71080728373005,
+            [
+              15,
+              70,
+              78,
+              94,
+              95,
+              96,
+              98,
+              99,
+              100,
+              101,
+              106,
+              122
+            ]
+          ]
+        ],
+        "park": 9.244986864485872
+      },
+      "localTrips": 4252541.0
+    },
+    {
+      "id": "dus",
+      "name": "Dusseldorf",
+      "origin": {
+        "lon": 6.7839,
+        "lat": 51.2381
+      },
+      "center": [
+        6.7839,
+        51.2381
+      ],
+      "zoom": 11.2,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        6.407,
+        50.997,
+        7.343,
+        51.37
+      ],
+      "place": 208,
+      "marketRow": {
+        "place": 208,
+        "zone": "dus",
+        "lon": 6.865444990044923,
+        "lat": 51.210593954995346,
+        "country": "DE",
+        "inc": 0.816622,
+        "road": 0,
+        "g": 168.3383181171636,
+        "t": 0.0047717875207470275,
+        "a": 1388100.740322166,
+        "ta": 3885326.0910084248,
+        "pop": 1599580.985,
+        "dep": 158714.8605882045,
+        "zones": 52,
+        "near": [
+          [
+            94,
+            55109.78207789195
+          ],
+          [
+            95,
+            3230.8134890775905
+          ],
+          [
+            96,
+            30816.405148016536
+          ],
+          [
+            103,
+            626.9235249066876
+          ],
+          [
+            116,
+            608.5449468399498
+          ],
+          [
+            120,
+            437.59310725401474
+          ],
+          [
+            121,
+            327.9414124639926
+          ],
+          [
+            122,
+            1060.944444064742
+          ],
+          [
+            205,
+            319.05241229878897
+          ],
+          [
+            208,
+            1860.7934006720582
+          ],
+          [
+            216,
+            874.1781756548824
+          ]
+        ],
+        "commute": [
+          [
+            94,
+            50378.643973469734
+          ],
+          [
+            95,
+            1.156999945640564
+          ],
+          [
+            96,
+            51018.25500190258
+          ]
+        ],
+        "air": [
+          [
+            29.903231626723336,
+            [
+              15,
+              16,
+              19,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              78,
+              82,
+              86,
+              92,
+              93,
+              94,
+              95,
+              96,
+              98,
+              99,
+              100,
+              101,
+              102,
+              103,
+              104,
+              105,
+              106,
+              117,
+              119,
+              121,
+              122,
+              129,
+              179,
+              181,
+              183,
+              188,
+              189,
+              193,
+              195,
+              198,
+              199,
+              200,
+              205,
+              209,
+              213,
+              214,
+              216
+            ]
+          ],
+          [
+            54.53763632664798,
+            [
+              15,
+              16,
+              19,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              78,
+              93,
+              94,
+              96,
+              98,
+              100,
+              101,
+              104,
+              105,
+              115,
+              116,
+              117,
+              119,
+              122,
+              181,
+              182,
+              189,
+              192,
+              197,
+              199,
+              203,
+              207,
+              212,
+              214
+            ]
+          ],
+          [
+            110.10864291801145,
+            [
+              15,
+              70,
+              71,
+              72,
+              93,
+              98,
+              100,
+              101,
+              104,
+              106,
+              107,
+              118,
+              119,
+              181,
+              182,
+              183,
+              188,
+              193,
+              197,
+              200,
+              201,
+              203,
+              207,
+              209,
+              213,
+              214
+            ]
+          ],
+          [
+            69.96135508758842,
+            [
+              15,
+              70,
+              74,
+              76,
+              106,
+              107,
+              118,
+              119,
+              182,
+              188,
+              197,
+              203,
+              207,
+              209
+            ]
+          ],
+          [
+            74.92297382341823,
+            [
+              93,
+              105,
+              120,
+              121,
+              122,
+              181,
+              203,
+              211,
+              214
+            ]
+          ],
+          [
+            141.84412861384135,
+            [
+              15,
+              70,
+              72,
+              93,
+              101,
+              181,
+              203,
+              214
+            ]
+          ],
+          [
+            118.94719753675507,
+            [
+              15,
+              70,
+              117,
+              199,
+              214
+            ]
+          ],
+          [
+            119.77373475635164,
+            [
+              17,
+              98,
+              99,
+              100
+            ]
+          ]
+        ],
+        "park": 9.496931133964546
+      },
+      "localTrips": 4993927.0
+    },
+    {
+      "id": "lod",
+      "name": "Lodz",
+      "origin": {
+        "lon": 19.4519,
+        "lat": 51.7695
+      },
+      "center": [
+        19.4519,
+        51.7695
+      ],
+      "zoom": 11.2,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        18.969,
+        51.489,
+        20.046,
+        52.056
+      ],
+      "place": 209,
+      "marketRow": {
+        "place": 209,
+        "zone": "lod",
+        "lon": 19.4673687813688,
+        "lat": 51.77215449597962,
+        "country": "PL",
+        "inc": 0.609954,
+        "road": 0,
+        "g": 343.6048327742331,
+        "t": 0.002701822754073376,
+        "a": 748753.0744857468,
+        "ta": 1657815.413932789,
+        "pop": 1058353.28,
+        "dep": 84701.96013348135,
+        "zones": 90,
+        "near": [
+          [
+            106,
+            10350.116913711707
+          ],
+          [
+            118,
+            3046.7622888350734
+          ],
+          [
+            201,
+            1294.856260355235
+          ],
+          [
+            207,
+            1174.8387846260127
+          ],
+          [
+            209,
+            843.6611984333024
+          ]
+        ],
+        "commute": [
+          [
+            106,
+            1109.382001399994
+          ]
+        ],
+        "air": [
+          [
+            113.89431976050705,
+            [
+              0,
+              1,
+              7,
+              13,
+              14,
+              15,
+              16,
+              19,
+              20,
+              27,
+              35,
+              36,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              92,
+              93,
+              94,
+              95,
+              96,
+              98,
+              99,
+              100,
+              101,
+              102,
+              103,
+              104,
+              105,
+              107,
+              115,
+              116,
+              117,
+              118,
+              119,
+              120,
+              121,
+              122,
+              129,
+              179,
+              181,
+              182,
+              183,
+              188,
+              189,
+              192,
+              193,
+              195,
+              197,
+              199,
+              200,
+              201,
+              203,
+              205,
+              207,
+              208
+            ]
+          ],
+          [
+            144.61288129826804,
+            [
+              15,
+              19,
+              70,
+              72,
+              74,
+              76,
+              82,
+              93,
+              94,
+              95,
+              96,
+              98,
+              100,
+              101,
+              102,
+              103,
+              104,
+              105,
+              106,
+              107,
+              120,
+              121,
+              122,
+              129,
+              181,
+              193,
+              198,
+              203,
+              205,
+              208
+            ]
+          ],
+          [
+            112.9459449873576,
+            [
+              15,
+              16,
+              68,
+              69,
+              70,
+              71,
+              73,
+              74,
+              75,
+              76,
+              82,
+              86,
+              92,
+              93,
+              98,
+              99,
+              100,
+              101,
+              102,
+              104,
+              105,
+              107,
+              119,
+              120,
+              121,
+              122,
+              129,
+              179,
+              181,
+              195,
+              197,
+              198
+            ]
+          ]
+        ],
+        "park": 8.631659623160884
+      },
+      "localTrips": 3050005.0
+    },
+    {
+      "id": "lil",
+      "name": "Lille",
+      "origin": {
+        "lon": 3.0559,
+        "lat": 50.6321
+      },
+      "center": [
+        3.0559,
+        50.6321
+      ],
+      "zoom": 11.2,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        2.06,
+        49.95,
+        4.26,
+        51.108
+      ],
+      "place": 211,
+      "marketRow": {
+        "place": 211,
+        "zone": "lil",
+        "lon": 3.133341412788882,
+        "lat": 50.56221602247127,
+        "country": "FR",
+        "inc": 0.716542,
+        "road": 0,
+        "g": 772.4520511735732,
+        "t": 0.0062488397934804905,
+        "a": 2071315.679291683,
+        "ta": 4302867.230745663,
+        "pop": 2615634.978999999,
+        "dep": 233189.74371921422,
+        "zones": 216,
+        "near": [
+          [
+            16,
+            23454.42764963405
+          ],
+          [
+            103,
+            1513.6152307135735
+          ],
+          [
+            120,
+            5480.183900776116
+          ],
+          [
+            121,
+            1916.3299768786746
+          ],
+          [
+            122,
+            663.1186166381101
+          ],
+          [
+            205,
+            451.31514057149184
+          ],
+          [
+            211,
+            31325.367712616797
+          ]
+        ],
+        "commute": [
+          [
+            120,
+            526.7479953765869
+          ],
+          [
+            121,
+            7.890000104904175
+          ],
+          [
+            122,
+            16.146000385284424
+          ]
+        ],
+        "air": [
+          [
+            109.65233109955012,
+            [
+              0,
+              1,
+              4,
+              5,
+              7,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              35,
+              36,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              78,
+              82,
+              92,
+              93,
+              95,
+              98,
+              99,
+              100,
+              101,
+              102,
+              103,
+              104,
+              106,
+              107,
+              115,
+              116,
+              117,
+              119,
+              121,
+              129,
+              171,
+              179,
+              181,
+              182,
+              183,
+              189,
+              192,
+              193,
+              195,
+              198,
+              199,
+              200,
+              203,
+              205,
+              209,
+              212,
+              213,
+              214,
+              215,
+              216
+            ]
+          ],
+          [
+            100.74626819130663,
+            [
+              68,
+              69,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              82,
+              92,
+              93,
+              94,
+              96,
+              98,
+              99,
+              100,
+              101,
+              102,
+              103,
+              104,
+              106,
+              107,
+              118,
+              119,
+              120,
+              121,
+              122,
+              171,
+              179,
+              181,
+              182,
+              195,
+              197,
+              198,
+              200,
+              201,
+              203,
+              205,
+              207,
+              208,
+              209,
+              212,
+              213,
+              214
+            ]
+          ],
+          [
+            144.77267818516583,
+            [
+              68,
+              69,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              78,
+              82,
+              86,
+              92,
+              93,
+              98,
+              99,
+              100,
+              101,
+              102,
+              106,
+              118,
+              119,
+              179,
+              182,
+              183,
+              188,
+              197,
+              198,
+              200,
+              201,
+              203,
+              207,
+              209,
+              214
+            ]
+          ],
+          [
+            41.6434070001518,
+            [
+              171,
+              212,
+              214,
+              215
+            ]
+          ]
+        ],
+        "park": 7.909333818776002
+      },
+      "localTrips": 7296314.0
+    },
+    {
+      "id": "mar",
+      "name": "Marseille",
+      "origin": {
+        "lon": 5.3802,
+        "lat": 43.2971
+      },
+      "center": [
+        5.3802,
+        43.2971
+      ],
+      "zoom": 11.2,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        4.205,
+        43.139,
+        5.839,
+        43.943
+      ],
+      "place": 212,
+      "marketRow": {
+        "place": 212,
+        "zone": "mar",
+        "lon": 5.30894708239801,
+        "lat": 43.4178622647336,
+        "country": "FR",
+        "inc": 0.716542,
+        "road": 0,
+        "g": 968.4734165661407,
+        "t": 0.0036690355018392283,
+        "a": 1653211.8601522506,
+        "ta": 3354252.136321051,
+        "pop": 2087658.0099999995,
+        "dep": 186406.45332841104,
+        "zones": 188,
+        "near": [
+          [
+            212,
+            23719.438429591195
+          ]
+        ],
+        "commute": [],
+        "air": [
+          [
+            36.29959301690328,
+            [
+              15,
+              16,
+              17,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              78,
+              82,
+              92,
+              94,
+              95,
+              96,
+              98,
+              100,
+              101,
+              102,
+              103,
+              104,
+              107,
+              118,
+              119,
+              120,
+              121,
+              122,
+              129,
+              179,
+              181,
+              189,
+              198,
+              201,
+              205,
+              207,
+              208,
+              211
+            ]
+          ],
+          [
+            113.02842919610377,
+            [
+              15,
+              16,
+              70,
+              103,
+              104,
+              121,
+              183,
+              205
+            ]
+          ]
+        ],
+        "park": 8.816494805907606
+      },
+      "localTrips": 5925556.0
+    },
+    {
+      "id": "sev",
+      "name": "Seville",
+      "origin": {
+        "lon": -5.9781,
+        "lat": 37.3712
+      },
+      "center": [
+        -5.9781,
+        37.3712
+      ],
+      "zoom": 11.2,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -6.562,
+        36.824,
+        -4.63,
+        38.216
+      ],
+      "place": 213,
+      "marketRow": {
+        "place": 213,
+        "zone": "sev",
+        "lon": -5.875601672760771,
+        "lat": 37.36526708863085,
+        "country": "ES",
+        "inc": 0.641067,
+        "road": 0,
+        "g": 1401.0481295533302,
+        "t": 0.004381758742078172,
+        "a": 1380306.839587311,
+        "ta": 2959559.2014380973,
+        "pop": 1884270.4830000002,
+        "dep": 155775.7522462151,
+        "zones": 446,
+        "near": [
+          [
+            213,
+            20949.98045053673
+          ],
+          [
+            214,
+            14117.16654256717
+          ]
+        ],
+        "commute": [
+          [
+            214,
+            3930.354000210762
+          ]
+        ],
+        "air": [
+          [
+            34.1472565671028,
+            [
+              15,
+              16,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              82,
+              93,
+              94,
+              95,
+              96,
+              98,
+              99,
+              100,
+              101,
+              103,
+              106,
+              117,
+              120,
+              121,
+              122,
+              129,
+              171,
+              181,
+              182,
+              192,
+              198,
+              199,
+              200,
+              205,
+              208,
+              209,
+              211,
+              212,
+              214
+            ]
+          ],
+          [
+            80.59905923909545,
+            [
+              15,
+              68,
+              69,
+              70,
+              73,
+              74,
+              75,
+              76,
+              86,
+              93,
+              94,
+              95,
+              96,
+              122,
+              129,
+              208
+            ]
+          ]
+        ],
+        "park": 8.749210972654446
+      },
+      "localTrips": 5211555.0
+    },
+    {
+      "id": "mal",
+      "name": "Málaga",
+      "origin": {
+        "lon": -4.4241,
+        "lat": 36.7281
+      },
+      "center": [
+        -4.4241,
+        36.7281
+      ],
+      "zoom": 11.2,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -5.635,
+        36.292,
+        -3.743,
+        37.301
+      ],
+      "place": 214,
+      "marketRow": {
+        "place": 214,
+        "zone": "mal",
+        "lon": -4.558285319778539,
+        "lat": 36.689897833328075,
+        "country": "ES",
+        "inc": 0.641067,
+        "road": 0,
+        "g": 1042.3258436593992,
+        "t": 0.0031159471241997963,
+        "a": 1182425.7700924661,
+        "ta": 1960003.1637745737,
+        "pop": 1614141.0829999987,
+        "dep": 132350.3649905878,
+        "zones": 245,
+        "near": [
+          [
+            213,
+            14117.16654256717
+          ],
+          [
+            214,
+            22996.495911609865
+          ]
+        ],
+        "commute": [
+          [
+            213,
+            3416.6069917678833
+          ]
+        ],
+        "air": [
+          [
+            36.00151836822821,
+            [
+              0,
+              1,
+              7,
+              15,
+              16,
+              19,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              82,
+              86,
+              92,
+              93,
+              94,
+              95,
+              96,
+              98,
+              99,
+              100,
+              101,
+              102,
+              103,
+              106,
+              107,
+              115,
+              116,
+              117,
+              118,
+              119,
+              120,
+              121,
+              122,
+              129,
+              179,
+              181,
+              182,
+              183,
+              189,
+              192,
+              193,
+              195,
+              197,
+              198,
+              199,
+              200,
+              201,
+              205,
+              207,
+              208,
+              209,
+              211,
+              212,
+              213
+            ]
+          ],
+          [
+            95.76118077865881,
+            [
+              93,
+              103,
+              121,
+              205
+            ]
+          ],
+          [
+            133.331706813453,
+            [
+              15,
+              68,
+              69,
+              70,
+              73,
+              74,
+              75,
+              76,
+              86,
+              93,
+              94,
+              95,
+              96,
+              122,
+              129,
+              208
+            ]
+          ]
+        ],
+        "park": 9.334698701647886
+      },
+      "localTrips": 4513570.0
+    },
+    {
+      "id": "bor",
+      "name": "Bordeaux",
+      "origin": {
+        "lon": -0.5747,
+        "lat": 44.8365
+      },
+      "center": [
+        -0.5747,
+        44.8365
+      ],
+      "zoom": 11.2,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -1.287,
+        44.175,
+        0.341,
+        45.605
+      ],
+      "place": 215,
+      "marketRow": {
+        "place": 215,
+        "zone": "bor",
+        "lon": -0.5769326009965333,
+        "lat": 44.83949126057492,
+        "country": "FR",
+        "inc": 0.716542,
+        "road": 0,
+        "g": 1130.742831780715,
+        "t": 0.002588833961583188,
+        "a": 1338697.745083023,
+        "ta": 2264696.6583876745,
+        "pop": 1690492.9959999998,
+        "dep": 149511.80150971594,
+        "zones": 338,
+        "near": [
+          [
+            171,
+            3942.2603060839583
+          ],
+          [
+            215,
+            26183.972153248043
+          ]
+        ],
+        "commute": [],
+        "air": [
+          [
+            35.65311526474139,
+            [
+              15,
+              16,
+              70,
+              71,
+              72,
+              74,
+              76,
+              82,
+              93,
+              95,
+              98,
+              99,
+              100,
+              101,
+              103,
+              120,
+              121,
+              122,
+              129,
+              183,
+              189,
+              192,
+              198,
+              205,
+              211,
+              212,
+              213,
+              214
+            ]
+          ]
+        ],
+        "park": 8.407248320578791
+      },
+      "localTrips": 4836153.0
+    },
+    {
+      "id": "mah",
+      "name": "Mannheim",
+      "origin": {
+        "lon": 8.469,
+        "lat": 49.4856
+      },
+      "center": [
+        8.469,
+        49.4856
+      ],
+      "zoom": 11.2,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        7.796,
+        49.156,
+        9.129,
+        49.773
+      ],
+      "place": 216,
+      "marketRow": {
+        "place": 216,
+        "zone": "mah",
+        "lon": 8.539092697937772,
+        "lat": 49.46716116155817,
+        "country": "DE",
+        "inc": 0.816622,
+        "road": 0,
+        "g": 275.9125855449511,
+        "t": 0.00418286628231553,
+        "a": 1699489.913127707,
+        "ta": 3002807.1620832896,
+        "pop": 1958410.9930000005,
+        "dep": 190825.9423386231,
+        "zones": 109,
+        "near": [
+          [
+            94,
+            2627.774604590108
+          ],
+          [
+            95,
+            38132.83062445832
+          ],
+          [
+            96,
+            2776.5957653032615
+          ],
+          [
+            122,
+            164.44040452057516
+          ],
+          [
+            129,
+            17548.581951502798
+          ],
+          [
+            189,
+            413.21079982157227
+          ],
+          [
+            199,
+            2034.495153623359
+          ],
+          [
+            208,
+            874.1781756548824
+          ],
+          [
+            216,
+            5428.554107657694
+          ]
+        ],
+        "commute": [
+          [
+            95,
+            18168.85100901127
+          ],
+          [
+            96,
+            4.293000102043152
+          ],
+          [
+            129,
+            5200.01599252224
+          ]
+        ],
+        "air": [
+          [
+            71.05636715425092,
+            [
+              0,
+              1,
+              3,
+              4,
+              5,
+              6,
+              7,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              27,
+              28,
+              29,
+              35,
+              36,
+              41,
+              43,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              78,
+              82,
+              86,
+              92,
+              93,
+              94,
+              96,
+              98,
+              99,
+              100,
+              101,
+              102,
+              103,
+              104,
+              105,
+              106,
+              107,
+              115,
+              116,
+              117,
+              118,
+              119,
+              120,
+              121,
+              122,
+              129,
+              179,
+              181,
+              182,
+              183,
+              188,
+              189,
+              192,
+              193,
+              195,
+              197,
+              198,
+              199,
+              200,
+              201,
+              203,
+              205,
+              207,
+              208,
+              209,
+              211,
+              212,
+              213,
+              214,
+              215
+            ]
+          ],
+          [
+            103.85217260501271,
+            [
+              15,
+              19,
+              70,
+              76,
+              93,
+              95,
+              101,
+              102,
+              103,
+              104,
+              105,
+              106,
+              107,
+              115,
+              116,
+              118,
+              119,
+              121,
+              129,
+              181,
+              182,
+              183,
+              189,
+              197,
+              203,
+              205,
+              207,
+              209,
+              214
+            ]
+          ],
+          [
+            89.48406815874108,
+            [
+              15,
+              70,
+              93,
+              119,
+              179,
+              181,
+              188,
+              197,
+              201,
+              203,
+              213,
+              214
+            ]
+          ],
+          [
+            108.7062769885989,
+            [
+              15,
+              70,
+              72,
+              93,
+              101,
+              181,
+              203,
+              214
+            ]
+          ],
+          [
+            123.8062744584425,
+            [
+              171
+            ]
+          ]
+        ],
+        "park": 8.12476309205676
+      },
+      "localTrips": 5728644.0
     }
   ]
 }

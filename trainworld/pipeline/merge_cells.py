@@ -15,7 +15,8 @@ CHILD left alone by both joins the touching merged cell of its zone with the few
 its parent's edge, and lone cells touching only each other merge among themselves (T-510), so long as
 no member ends up over REACH from the group's centre. A merged cell sums every per-cell weight and
 sits at its children's trip-end-weighted centre. A group stays unmerged if that centre would leave
-its zone square or stand on water. The merged pack also carries
+its zone square or stand on water. Where the pack has `walk_part` (T-700), each part of a zone counts
+as a zone here: a merged cell never spans two banks (T-725). The merged pack also carries
 `zone_cells9`, each zone's res-9 cells, since a merged cell's index no longer gives its land.
 
 The res-9 pack is kept in data/work/res9/<id>.json/.bin: the first merge of a pack copies it there,
@@ -41,7 +42,15 @@ THRESHOLD = 2500.0  # trip ends a weekday per res-8 parent (DECISIONS 2026-10-16
 CHILD = THRESHOLD / 2  # per res-9 child of a busier parent (T-466)
 REACH = 700.0  # m, a lone cell's group at most this far from its centre: about a merged parent's own (T-510)
 RES_MASK = np.uint64(0xF) << np.uint64(52)
-INT_SAME = ("zone", "region")  # integer per-cell arrays, equal within a zone
+INT_SAME = ("zone", "region", "walk_part")  # integer per-cell arrays, equal within a merged cell
+
+
+def _bank(a):
+    """Each cell's zone and walk part as one key: cells merge only within one part of a zone, so a
+    merged cell never spans a river and every zone keeps its parts (the sim counts a zone's parts
+    by its cells' highest `walk_part`; T-725)."""
+    zone = a["zone"].astype(np.uint64)
+    return zone * np.uint64(256) + a["walk_part"].astype(np.uint64) if "walk_part" in a else zone
 
 
 def sha(path):
@@ -182,7 +191,7 @@ def _join_lone(header, a, e, h3, head, nx, ny, merged, lone):
     info = {"lone": int(len(li)), "lone_joined": 0, "lone_groups": 0, "lone_grouped": 0, "lone_group_max": 0}
     if not len(li):
         return dict(info, lone_kept_square=0, lone_kept_water=0, lone_kept_reach=0), joined
-    zone = a["zone"]
+    zone = _bank(a)
     i, j = _touching(h3, li)
     same = zone[i] == zone[j]
     i, j = i[same], j[same]
@@ -274,7 +283,7 @@ def merge(header, a, threshold=THRESHOLD, child=None):
             sys.exit(f"{header['city']}: per-cell array {e['name']} ({e['dtype']}) has no merge rule")
     h3 = a["h3"]
     par = (h3 & ~RES_MASK) | (np.uint64(8) << np.uint64(52)) | (np.uint64(7) << np.uint64(18))
-    zone = a["zone"].astype(np.uint64)
+    zone = _bank(a)
     e = trip_ends(a, n)
     _, pinv = np.unique(par, return_inverse=True)
     pends = np.bincount(pinv.ravel(), weights=e)[pinv.ravel()]
@@ -294,6 +303,21 @@ def merge(header, a, threshold=THRESHOLD, child=None):
     nh3, nx, ny = h3.copy(), a["x_m"].copy(), a["y_m"].copy()
     head[m1] = first[ginv[m1]]
     nh3[m1], nx[m1], ny[m1] = par[m1], mx[ginv[m1]], my[ginv[m1]]
+    # T-725: a parent merged in two walk parts of one zone would give that zone its index twice;
+    # such groups keep their busiest child's index instead, as the sparse groups below do
+    gz = np.zeros(ng, np.uint64)
+    gz[ginv] = a["zone"].astype(np.uint64)
+    gp = par[first]
+    gk = np.stack([gp[want], gz[want]], 1)
+    twin = np.zeros(ng, bool)
+    if len(gk):
+        _, gi, gc = np.unique(gk, axis=0, return_inverse=True, return_counts=True)
+        twin[np.nonzero(want)[0][gc[gi.ravel()] > 1]] = True
+        if twin.any():
+            o = np.lexsort((h3, -e, ginv))
+            top = o[np.r_[0, np.nonzero(np.diff(ginv[o]))[0] + 1]]
+            t = m1 & twin[ginv]
+            nh3[t] = h3[top[ginv[t]]]
     # T-466: sparse children of a parent left unmerged
     digit = ((h3 >> np.uint64(18)) & np.uint64(7)).astype(np.int64)
     sparse = ~m1 & (e < child)
@@ -335,7 +359,10 @@ def merge(header, a, threshold=THRESHOLD, child=None):
         out[k] = np.ascontiguousarray(nv)
     order = np.lexsort((out["zone"], out["h3"] & ~RES_MASK))
     out = {k: v[order] for k, v in out.items()}
-    info = {"cells_before": n, "cells": m, "parents": int(want.sum()), "cells_merged": int(m1.sum()),
+    # a pack without walk parts keeps the block it always had, so its re-merge (a joint solve) is unchanged
+    parts = {"parents_split_by_part": int(twin.sum())} if "walk_part" in a else {}
+    info = {"cells_before": n, "cells": m, "parents": int((want & ~twin).sum()), **parts,
+            "cells_merged": int(m1.sum()),
             "sparse_groups": int(ok.sum()), "sparse_cells_merged": int(m2.sum()),
             "sparse_child_trip_ends": float(child),
             "ends_merged": float(e[m1 | m2 | m3].sum() / max(e.sum(), 1e-30)),
@@ -360,7 +387,7 @@ def write_pack(stem, header, a, cells, block):
         buf += np.ascontiguousarray(v).tobytes()
     with open(stem + ".bin.part", "wb") as f:
         f.write(buf)
-    with open(stem + ".json.part", "w") as f:
+    with open(stem + ".json.part", "w", encoding="utf-8") as f:
         json.dump(h, f, indent=2)
     os.replace(stem + ".bin.part", stem + ".bin")
     os.replace(stem + ".json.part", stem + ".json")
@@ -369,7 +396,7 @@ def write_pack(stem, header, a, cells, block):
 
 def res9_copy(city, copy=True):
     """Where the pack's res-9 version is: data/work/res9, copied there first if data/packs holds it."""
-    with open(os.path.join(PACKS, f"{city}.json")) as f:
+    with open(os.path.join(PACKS, f"{city}.json"), encoding="utf-8") as f:
         live = json.load(f)
     if not copy and "merged" not in live:
         return PACKS
@@ -418,7 +445,8 @@ def run(city, stats=False, child=None):
              "everyday outings, both ends) merge, children within one zone together, at their trip-end-weighted centre; "
              "in a busier parent, touching children within one zone each under the sparse-child threshold merge "
              "together, with their busiest child's index; a cell under that threshold left alone joins the touching "
-             "merged cell of its zone with the fewest trip ends, or merges with touching lone cells of its zone",
+             "merged cell of its zone with the fewest trip ends, or merges with touching lone cells of its zone"
+             + ("; with walk parts, 'zone' is one walk part of a zone (T-725)" if "walk_part" in a else ""),
              "threshold_trip_ends": THRESHOLD, **info,
              "source": stamp(src, city)}
     size9 = os.path.getsize(os.path.join(src, f"{city}.bin"))

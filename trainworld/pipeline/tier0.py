@@ -767,7 +767,7 @@ def everyday_pack(city, stem=None):
     import canada
     cfg = b.CITIES[city]
     stem = stem or os.path.join(b.PACKS, city)
-    with open(stem + ".json") as f:
+    with open(stem + ".json", encoding="utf-8") as f:
         header = json.load(f)
     with open(stem + ".bin", "rb") as f:
         buf = bytearray(f.read())
@@ -991,6 +991,8 @@ def wikidata_students(qids):
         for row in r.json()["results"]["bindings"]:
             qid = row["item"]["value"].rsplit("/", 1)[1]
             t = row.get("t", {}).get("value", "")
+            if row["v"].get("type") != "literal":  # "unknown value": a blank node, no number (T-613, Toulouse)
+                continue
             v = float(row["v"]["value"])
             if qid not in best or t > best[qid][1]:
                 best[qid] = (v, t)

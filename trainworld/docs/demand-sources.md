@@ -33,7 +33,10 @@ edge, the touching merged cell of its zone with the fewest trip ends; such cells
 each other merge among themselves under the busiest one's index (T-510). Joining is one pass (no
 cell joins a joiner), and no group a lone cell joins may reach more than 700 m from its centre; a
 group past that gives up its farthest joiners. A group stays unmerged if its centre falls on water
-or outside its zone square. The pack carries each zone's res-9 cell count (`zone_cells9`), which the sim takes as the
+or outside its zone square. In a pack with walk parts (`walk_part`, a zone's cells split by bank,
+T-700), each part of a zone counts as the zone in all of this: no merged cell spans two banks, and
+every zone keeps all its parts, which the walk table's layout needs; a parent merged in two parts of
+one zone gives each its busiest child's index (T-725). The pack carries each zone's res-9 cell count (`zone_cells9`), which the sim takes as the
 zone's land. Together the rules remove 47-68% of the cells of a metro outside the US, 70-78% of
 a US one, 56-70% of a Japanese prefecture and 78-79% of a rural US county. Enrichments and routes run on the res-9 pack,
 kept in `data/work/res9/`.

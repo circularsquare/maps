@@ -1,5 +1,7 @@
 ﻿# Archive
 
+- T-768 [P2] Pack JSON in the locale code page. Done 2026-10-19: read as UTF-8 in load_pack, merge_cells and tier0; the gate's header hash undoes the old re-encoding, so a joint solve's one-time text change passes. Mannheim shipped. notes/T-613.md.
+- T-725 [P1] merge_cells rule for `walk_part`. Done 2026-10-19: cells merge only within one walk part of a zone (a twin parent takes its busiest child's index); packs without parts merge as before. DECISIONS 2026-10-19; notes/T-613.md.
 - T-761 [P2] The regional market on Japan's whole-country cluster. Done 2026-10-19: destinations searched one at a time (exact), commutes' OD and far-zone table sparse; the whole country's final in 19 min, 3.2-3.4 GB a worker; New York and seven cities identical to the bit. notes/T-761.md.
 - T-726 [P3] Data register rows and OSM extract dates. Done 2026-10-19: rows for 24 countries plus new pack lists; download day found for every built pack, exact snapshot only for Toulouse. T-765 and T-766 filed; notes/T-726.md.
 - T-754 [P3] The snapped route's fit faster and cancellable. Done 2026-10-19: New York-Emeryville natively 779 to 136 ms, same corners; fitted in steps of at most 10 ms, the router worker dropping it for a newer request. notes/T-727.md.

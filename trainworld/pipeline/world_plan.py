@@ -1054,6 +1054,8 @@ def main(argv):
     was = {r["id"]: r for r in prev}
     for r in out:
         o = was.get(r["id"])
+        if o and "gate_relax" in o and o["units"] == r["units"]:  # T-725: a per-row gate override (pack_gate.py)
+            r["gate_relax"] = o["gate_relax"]
         if o and o["status"] != "planned" and o["units"] == r["units"]:
             r["status"] = o["status"]
             if "run" in o:

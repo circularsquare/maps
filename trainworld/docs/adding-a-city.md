@@ -356,7 +356,8 @@ running:
 It prints PASS, WARN, FAIL or SKIP a check and `wor SHIP` or `wor PARK` with the failures; a parked
 pack is not shipped until its fault is fixed. `pack_gate.py snapshot <file>` before the build makes
 `--since` check that no other pack changed beyond its own gravity group's factors. The thresholds
-and what each check catches: notes/T-538.md.
+and what each check catches: notes/T-538.md. Where Anita accepts a failure for one row, its plan row
+carries `"gate_relax": {"<check>": "<why>"}` and that check's FAIL counts as a WARN (dus, T-725).
 
 ## 9. Checks
 

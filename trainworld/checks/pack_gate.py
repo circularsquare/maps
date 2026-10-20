@@ -381,6 +381,7 @@ def figures(city, reg, logs):
     out["pop"] = pop.sum()
     row = plan_row(city, header)
     out["plan_people"] = row.get("people") if row else None
+    out["gate_relax"] = (row or {}).get("gate_relax") or {}
     if reg.get("kind") != "zone":
         out["fua"] = fua_people(of["moll"], row)
     mask = Mask(header, a) if header.get("water") else None
@@ -556,6 +557,11 @@ def checks_of(city, f, rates, browser, changed, joint=None):
             c.append(judge("osm_top_place_jobs_share", o["top_place_jobs_share"], f"{o['top_place']} {o['top_place_name']}"))
         else:  # a table's jobs are spread within its units, so one place takes at most its unit's share
             c.append(skip("osm_top_place_jobs_share", "jobs from a table, spread within its units"))
+    # a plan row's `gate_relax` {check: why}: that check's FAIL counts as a WARN for this row only
+    for k in c:
+        why = f.get("gate_relax", {}).get(k["name"])
+        if why and k["status"] == "FAIL":
+            k["status"], k["detail"] = "WARN", f"{k.get('detail') or ''}; relaxed for this row: {why}"
     fleet_check(c)
     return c
 
@@ -757,7 +763,23 @@ def browser_check(city, header, a, f, reg, out_dir):
 
 # ---------------------------------------------------------------- other packs unchanged
 
+def _unmangle(s):
+    """Text as first written: packs read in the locale code page re-encoded UTF-8 once per pass
+    ("LÃ¤nder", "LÃƒÂ¤nder"), which is no change to the pack (T-768)."""
+    for _ in range(4):
+        try:
+            t = s.encode("cp1252").decode("utf-8")
+        except (UnicodeEncodeError, UnicodeDecodeError):
+            return s
+        if t == s:
+            return s
+        s = t
+    return s
+
+
 def _round(v):
+    if isinstance(v, str):
+        return _unmangle(v)
     if isinstance(v, float):
         return float(f"{v:.9g}")
     if isinstance(v, dict):
@@ -782,7 +804,8 @@ def pack_hashes(city):
     # the merge's stamp of the res-9 pack it came from changes with the res-9 pack's gravity (T-540)
     stamp = (rest.get("merged") or {}).get("source") if isinstance(rest.get("merged"), dict) else None
     if stamp is not None:
-        rest["merged"] = {k: v for k, v in rest["merged"].items() if k != "source"}
+        # also the merge's own wording and its walk-part count (T-725): the arrays show any change to cells
+        rest["merged"] = {k: v for k, v in rest["merged"].items() if k not in ("source", "rule", "parents_split_by_part")}
     # figures to 9 significant digits: a re-merge recomputes shares in another order (T-540:
     # Rotterdam's school location_match_share moved by one bit in its last place)
     out["header"] = hashlib.sha1(json.dumps(_round(rest), sort_keys=True).encode()).hexdigest()

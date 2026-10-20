@@ -638,8 +638,13 @@ class Run:
         if self.browser:
             env = {"BASE": self.start_vite(L), "WORKERS": "1"}
         args = ids + ["--since", str(snap), "--out", str(gd)] + (["--browser"] if self.browser else [])
+        rows = {r["id"]: r for r in self.rows()}
         for i in ids:
-            args += ["--log", f"{i}={self.logs / i}.build.log"]
+            log = self.logs / f"{i}.build.log"
+            made = (rows.get(i, {}).get("run") or {}).get("run_batch")
+            if not log.exists() and made:  # a row built by an earlier batch, gated by this one (T-725)
+                log = self.logs.parent / made / f"{i}.build.log"
+            args += ["--log", f"{i}={log}"]
         try:
             self.step("pack_gate", args, f"{L}.gate.log", env=env)
         finally:
