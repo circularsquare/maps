@@ -350,6 +350,8 @@ class Run:
             reg["cities"] = [c for c in reg["cities"] if c["id"] not in ids]
             if len(reg["cities"]) != before:
                 self.reg_path.write_text(json.dumps(reg, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+                if str(HERE) not in sys.path:  # the runner itself runs with -I, so the pipeline is not on the path (T-779)
+                    sys.path.insert(0, str(HERE))
                 import market_rows
                 market_rows.save(reg, market_rows.load(self.root), self.root)
             for i in ids:
@@ -546,6 +548,13 @@ class Run:
             bad.append(f"{sim / 'Cargo.toml'} missing")
         for rel, want in (("data/packs", self.packs), ("app/src/game/registry.json", self.reg_path)):
             p = sim.parent / rel
+            top, target = sim.parent / rel.split("/")[0], want.parents[len(rel.split("/")) - 2]
+            if not p.exists() and not os.path.lexists(top) and os.name == "nt" and (sim / "Cargo.toml").exists():
+                # junctions in a scratch folder have vanished mid-run twice, cause unknown (T-613, T-779):
+                # put the same junction back and say so rather than stop a long run
+                subprocess.run(["cmd", "/c", "mklink", "/J", str(top), str(target)], capture_output=True)
+                print(f"  sim copy: junction {top} was missing, made again to {target}", flush=True)
+                self.report.setdefault("problems", []).append(f"junction {top} made again at {datetime.datetime.now().isoformat(timespec='seconds')}")
             if not p.exists():
                 bad.append(f"{p} missing")
             elif not os.path.samefile(p, want):
@@ -865,7 +874,10 @@ class Run:
                  ("merge_cells", g)]
         fail, bad = None, {}
         for mod, args in steps:
-            ok, _, tail = self.step(mod, args, f"{tag}.log")
+            # nothing else runs during the join: the solve takes every core, and a covered continent's
+            # group (Spain, France and Italy chained, T-779) gets the long limit
+            solo = mod == "intercity"
+            ok, _, tail = self.step(mod, args, f"{tag}.log", threads=self.jobs if solo else None, big=solo and len(g) > 100)
             if not ok:
                 try:
                     self.check_sim()  # intercity builds from the sim copy

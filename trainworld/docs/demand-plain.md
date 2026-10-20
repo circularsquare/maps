@@ -63,6 +63,14 @@ There is no built-in liking for the train. Rail and the car are compared on time
   to $4.00, and a driver's day comes to about $10. Homes without a car pay none, and so do the
   long trips between cities.
 
+**Between cities** (the car and the plane against the train)
+- Car: the drive at 85 km/h on a road 1.25 times the straight line, plus $0.15 a km and parking,
+  shared by two people. Across the Channel it also pays $150 a car and an hour for the shuttle or
+  ferry; to Hokkaido $170 and 4 hours for the ferry (the Seikan Tunnel takes no cars).
+- Plane, between cities 250 km apart or more that both have airports: the drive to each airport,
+  90 minutes at the airports, the flight at 750 km/h plus 30 minutes (an hour more with no direct
+  flight), and a fare of $100 plus 5 cents a km, so $125 at 500 km and $150 at 1,000 km.
+
 **Walking the whole way**
 - 13 real minutes a km, every minute counted 1.5. So 1 km costs 19.5 minutes, 2 km 39, 3 km 58.5.
   Walks over 10 km are not offered.

@@ -52,7 +52,7 @@ const marketParts = new Map<string, IntercityApi>();
  * clusters are joined by */
 let marketZones: Float64Array | null = null;
 let mine: number[] = [];
-let pending: { version: number; net: DemandNetwork; rounds: number; barrier?: boolean; whole?: boolean; oneMarket?: boolean; wide?: boolean; fresh?: boolean; first?: CityId } | null = null;
+let pending: { version: number; net: DemandNetwork; rounds: number; barrier?: boolean; whole?: boolean; oneMarket?: boolean; wide?: boolean; exactMarket?: boolean; fresh?: boolean; first?: CityId } | null = null;
 let busy = false;
 /** the version whose network `api` holds (queries about any other get nulls) */
 let current = -1;
@@ -898,6 +898,7 @@ async function run() {
           held.delete(p);
           p.set_complexes(m.complex);
           if (p instanceof IntercityApi) {
+            p.set_sampled(!job.exactMarket);
             // T-377: the market takes stations as longitude and latitude, each zone in its own frame
             const ll = new Float64Array(m.stXY.length);
             for (let k = 0; k < ll.length; k += 2) [ll[k], ll[k + 1]] = worldToLonLat(m.stXY[k], m.stXY[k + 1]);

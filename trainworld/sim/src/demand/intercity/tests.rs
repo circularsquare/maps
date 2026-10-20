@@ -634,6 +634,14 @@ fn far_line(a: &mut IntercityApi, hours: f32) {
     a.set_fares(2., 0.1, &[900., 0., 0., 900.]).unwrap();
 }
 #[test]
+fn the_car_pays_the_channel_and_the_tsugaru_ferry() {
+    let (lon, par, man) = (("GB", 51.5), ("FR", 48.9), ("GB", 53.5));
+    let (tyo, spk, hak) = (("JP", 35.7), ("JP", 43.1), ("JP", 41.8));
+    assert_eq!((crossing_min(lon, man), crossing_min(tyo, ("JP", 40.8)), crossing_min(spk, hak)), (0., 0., 0.));
+    assert_eq!(crossing_min(lon, par), crossing_min(par, man));
+    assert!(crossing_min(lon, par) > 200. && crossing_min(tyo, spk) > crossing_min(lon, par));
+}
+#[test]
 fn air_flies_far_pairs_by_place_and_rail_takes_its_share_by_the_curve() {
     let packs = air_packs(false);
     let rows = rows_json(&packs);
@@ -657,7 +665,8 @@ fn air_flies_far_pairs_by_place_and_rail_takes_its_share_by_the_curve() {
     let nod = air_packs(false).into_iter().enumerate().map(|(i, p)| if i == 0 { with_air(&p, &[(0.1, 50.)], &[], None) } else { p }).collect::<Vec<_>>();
     let b = IntercityApi::new(&composition(&nod, Some(&rows_json(&nod)))).unwrap();
     assert!(b.m.pr(0, 2).air < r02.air);
-    // rail against air on a far pair: about 3 hours on the train wins most, 6 hours little
+    // rail against air on a far pair (T-712's dearer plane): 3 hours on the train wins nearly
+    // all, 6 hours about half
     let ratio = |a: &mut IntercityApi, hours: f32| {
         far_line(a, hours);
         assert!(a.solve(0));
@@ -669,7 +678,7 @@ fn air_flies_far_pairs_by_place_and_rail_takes_its_share_by_the_curve() {
         rail / (rail + air)
     };
     let (fast, slow) = (ratio(&mut a, 3.), ratio(&mut a, 6.));
-    assert!(fast > 0.6 && fast < 0.97 && slow < 0.3 && slow > 0.001, "rail of rail and air: 3 h {fast}, 6 h {slow}");
+    assert!(fast > 0.95 && fast < 1. && slow < 0.8 && slow > 0.3, "rail of rail and air: 3 h {fast}, 6 h {slow}");
     // across the sea the far pair is all air, and still served by rail where track joins it
     let packs = air_packs(true);
     let rows = rows_json(&packs);
@@ -985,8 +994,11 @@ fn t761_market_bench() {
 /// The world composition as the app opens it: the market rows of the registry's zones (T-776:
 /// market-rows.json, in registry order) and the packs of `ids` (all that exist with None).
 pub(crate) fn real_world(root: &str, ids: Option<&[&str]>) -> String {
-    let reg: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(format!("{root}/app/src/game/registry.json")).unwrap()).unwrap();
-    let by_id: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(format!("{root}/app/src/game/market-rows.json")).unwrap()).unwrap();
+    // T-780: a copy of the registry and rows (`TW_REGISTRY`, `TW_ROWS`) while a batch is adding zones
+    let reg = std::env::var("TW_REGISTRY").unwrap_or(format!("{root}/app/src/game/registry.json"));
+    let rows = std::env::var("TW_ROWS").unwrap_or(format!("{root}/app/src/game/market-rows.json"));
+    let reg: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(reg).unwrap()).unwrap();
+    let by_id: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(rows).unwrap()).unwrap();
     let m = &reg["market"];
     let rows: Vec<serde_json::Value> = reg["cities"].as_array().unwrap().iter().filter_map(|c| by_id.get(c["id"].as_str()?).cloned()).collect();
     let packs: Vec<String> = reg["cities"]
@@ -1021,4 +1033,244 @@ fn regional_station_pairs_take_the_local_scale() {
     assert!((c - want).abs() < 1e-3, "{c} against {want}");
     let (c, sum) = rail_logsum(&sk.r, sk.s, 0., &[(1, w)], &[(1, 1.)], p.beta, th, &mut terms);
     assert!(c.is_infinite() && sum == 0. && terms.is_empty(), "no route");
+}
+/// T-780: a captured network's market (`checks/t761-plain-net.mjs`'s output), set up natively.
+#[cfg(test)]
+pub(crate) fn t780_net(path: &str, chunk: f64) -> IntercityApi {
+    let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
+    let j: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+    let f = |k: &str| j[k].as_array().unwrap().iter().map(|v| v.as_f64().unwrap()).collect::<Vec<f64>>();
+    let ids: Vec<String> = j["markets"].as_array().unwrap().iter().map(|v| v.as_str().unwrap().to_string()).collect();
+    let idr: Vec<&str> = ids.iter().map(|s| s.as_str()).collect();
+    let mut a = IntercityApi::new(&real_world(root, Some(&idr))).unwrap();
+    let fr = &j["frame"];
+    let frame = Frame::equirect(fr["lon"].as_f64().unwrap(), fr["lat"].as_f64().unwrap()).with_kind(crate::track::frame::FrameKind::Merc);
+    let ll: Vec<f64> = f("stXY").chunks_exact(2).flat_map(|p| { let (x, y) = frame.to_lonlat(p[0], p[1]); [x, y] }).collect();
+    let u = |k: &str| f(k).into_iter().map(|v| v as u32).collect::<Vec<u32>>();
+    let g32 = |k: &str| f(k).into_iter().map(|v| v as f32).collect::<Vec<f32>>();
+    a.set_complexes(&u("complex"));
+    a.set_chunk(chunk);
+    a.set_network_ll(&ll, &u("lineN"), &u("stops"), &g32("times"), &g32("tph"), &g32("cars")).unwrap();
+    a.set_fares(j["fare"]["base"].as_f64().unwrap() as f32, j["fare"]["perKm"].as_f64().unwrap() as f32, &g32("hopKm")).unwrap();
+    a
+}
+/// T-780: the market's pairs by distance and size, with their station pairs and rail trips.
+/// `TW_T780_NET=<plain net> cargo test --release --features demand t780_census -- --ignored --nocapture`
+#[test]
+#[ignore]
+fn t780_census() {
+    let mut a = t780_net(&std::env::var("TW_T780_NET").unwrap(), 0.);
+    eprintln!("served zones {}, pairs {}, commute pairs {}, stations {}, wanted {}", a.served.len(), a.pairs.len(), a.cpairs.len(), a.want.len(), a.want.iter().filter(|&&w| w).count());
+    let t = now_ms();
+    assert!(a.solve(1));
+    eprintln!("solve(1) {:.0} ms", now_ms() - t);
+    let per = a.per(1).unwrap();
+    let bands = [25., 50., 100., 250., 500., 1e9];
+    let mut by = vec![[0f64; 5]; bands.len() * 3];
+    let mut sz = vec![[0f64; 5]; 8];
+    let mut hist_terms = 0f64;
+    for (pi, pair) in a.pairs.iter().enumerate() {
+        let (za, zb) = (&a.m.zones[pair.a as usize], &a.m.zones[pair.b as usize]);
+        let pr = a.m.pr(za.place, zb.place);
+        let class = if za.place == zb.place { 0 } else if pr.near { 1 } else { 2 };
+        let d = a.m.zone_km(za, zb);
+        let k = bands.iter().position(|&b| d < b).unwrap();
+        let terms = (a.access[pair.a as usize].len() * a.access_work[pair.b as usize].len()) as f64;
+        hist_terms += terms;
+        let rail = per.pair_rail[pi] as f64;
+        let e = &mut by[class * bands.len() + k];
+        e[0] += 1.; e[1] += pair.trips * SHARES[1] as f64; e[2] += terms; e[3] += rail;
+        let t = pair.trips * SHARES[1] as f64;
+        let k = [0.01, 0.03, 0.1, 0.3, 1., 3., 10., 1e18].iter().position(|&b| t < b).unwrap();
+        let e = &mut sz[k];
+        e[0] += 1.; e[1] += t; e[2] += terms; e[3] += rail;
+    }
+    eprintln!("terms {hist_terms:.0}; period 1 rail {:.0}, commutes' rail {:.0}", per.rail, per.c_rail);
+    for c in 0..3 {
+        for (k, b) in bands.iter().enumerate() {
+            let e = by[c * bands.len() + k];
+            eprintln!("class {c} under {b:>6} km: pairs {:>9} trips {:>10.0} terms {:>11.0} rail {:>9.1}", e[0], e[1], e[2], e[3]);
+        }
+    }
+    for (k, b) in [0.01, 0.03, 0.1, 0.3, 1., 3., 10., 1e18].iter().enumerate() {
+        let e = sz[k];
+        eprintln!("trips a period under {b:>6}: pairs {:>9} trips {:>10.0} terms {:>11.0} rail {:>9.1}", e[0], e[1], e[2], e[3]);
+    }
+    // the logsums alone against the whole of `demand`
+    let (g, p) = (&per.g, &per.p);
+    let s = g.n_st;
+    let mut r = vec![f32::INFINITY; s * s];
+    let mut q = DestSearch::new(g, p);
+    let t = now_ms();
+    for d in (0..s).filter(|&d| a.want[d]) {
+        q.run(d, Some(&mut r));
+    }
+    eprintln!("a sweep {:.0} ms", now_ms() - t);
+    let t = now_ms();
+    let mut terms = vec![];
+    let mut x = 0f64;
+    for pair in &a.pairs {
+        let (c, _) = rail_logsum(&r, s, p.fare_min, &a.access[pair.a as usize], &a.access_work[pair.b as usize], p.beta, p.soften(p.band_unsoftened(pair.band as usize), pair.car), &mut terms);
+        x += c as f64;
+    }
+    eprintln!("logsums alone {:.0} ms ({x:.0})", now_ms() - t);
+    let t = now_ms();
+    let d = a.demand(&r, s, p, 1);
+    eprintln!("demand {:.0} ms, rail {:.0}", now_ms() - t, d.rail);
+}
+/// T-780: the market's period 1 at free flow with its pairs sampled in chunks, against every pair.
+/// `TW_T780_NET=<plain net> TW_T780_CHUNKS=0,0.3,1 cargo test --release --features demand t780_compare -- --ignored --nocapture`
+#[test]
+#[ignore]
+fn t780_compare() {
+    let net = std::env::var("TW_T780_NET").unwrap();
+    let chunks: Vec<f64> = std::env::var("TW_T780_CHUNKS").unwrap_or("0,1".into()).split(',').map(|v| v.parse().unwrap()).collect();
+    let mut base: Option<(Vec<f32>, Vec<f32>, Vec<f32>, Vec<f64>, f64)> = None;
+    // how far b is from a: the total's change, the share of the whole moved, and the worst element
+    // against the larger of itself and 1% of the biggest
+    let moved = |a: &[f32], b: &[f32]| {
+        let (ta, tb) = (a.iter().map(|&v| v as f64).sum::<f64>(), b.iter().map(|&v| v as f64).sum::<f64>());
+        let l1: f64 = a.iter().zip(b).map(|(&x, &y)| (x as f64 - y as f64).abs()).sum();
+        let top = a.iter().fold(0f32, |m, &v| m.max(v)) as f64;
+        let worst = a.iter().zip(b).map(|(&x, &y)| (x as f64 - y as f64).abs() / (x as f64).max(y as f64).max(0.01 * top).max(1e-9)).fold(0., f64::max);
+        format!("total {:+.3}%, moved {:.2}%, worst {:.1}%", 100. * (tb - ta) / ta.max(1e-9), 100. * l1 / ta.max(1e-9), 100. * worst)
+    };
+    for &c in &chunks {
+        let t = now_ms();
+        let mut a = t780_net(&net, c);
+        let t_net = now_ms() - t;
+        let t = now_ms();
+        assert!(a.solve(1));
+        let t_solve = now_ms() - t;
+        let per = a.per(1).unwrap();
+        let (board, seg, entries) = (a.board(1), a.seg(1), a.entries(1));
+        let cor: Vec<f64> = a.corridor_summary(1).chunks_exact(4).map(|v| v[3]).collect();
+        let rail = per.rail;
+        eprintln!("chunk {c}: pairs {}, far-zone entries {}, set up {t_net:.0} ms, solve {t_solve:.0} ms, longer trips' rail {rail:.1}, commutes' {:.1}", a.pairs.len(), a.st_pat.col.len(), per.c_rail);
+        if let Some((b0, s0, e0, c0, r0)) = &base {
+            let cf = |v: &[f64]| v.iter().map(|&x| x as f32).collect::<Vec<f32>>();
+            eprintln!("  rail {:+.3}%; boardings {}; hop loads {}; station entries {}; corridors {}", 100. * (rail - r0) / r0, moved(b0, &board), moved(s0, &seg), moved(e0, &entries), moved(&cf(c0), &cf(&cor)));
+            let top = e0.iter().fold(0f32, |m, &v| m.max(v));
+            let w = (0..e0.len()).max_by(|&i, &j| ((e0[i] - entries[i]).abs() / e0[i].max(entries[i]).max(0.01 * top)).total_cmp(&((e0[j] - entries[j]).abs() / e0[j].max(entries[j]).max(0.01 * top)))).unwrap();
+            eprintln!("  worst station {w}: {:.1} against {:.1} entries (busiest {top:.1}, {} stations over 1% of it)", e0[w], entries[w], e0.iter().filter(|&&v| v > 0.01 * top).count());
+        } else {
+            base = Some((board, seg, entries, cor, rail));
+        }
+    }
+}
+/// T-780 (T-767): the streamed pass keeping more of its strategies between sweeps, with sampled pairs.
+/// `TW_T780_NET=<plain net> TW_T780_KEEP=256,768 cargo test --release --features demand t780_keep -- --ignored --nocapture`
+#[test]
+#[ignore]
+fn t780_keep() {
+    let mut a = t780_net(&std::env::var("TW_T780_NET").unwrap(), MARKET_CHUNK);
+    assert!(a.solve(1));
+    let per = a.per(1).unwrap();
+    let (g, p, ix) = (&per.g, &per.p, &per.xi);
+    eprintln!("a strategy {:.0} KB, {} destinations", strategy_bytes(g) as f64 / 1024., a.want.iter().filter(|&&w| w).count());
+    for mb in std::env::var("TW_T780_KEEP").unwrap_or("256,768".into()).split(',').map(|v| v.parse::<usize>().unwrap()) {
+        let t = now_ms();
+        let s = a.pass_streamed(g, p, 1, ix, mb << 20);
+        eprintln!("keeping {mb} MB: pass {:.0} ms, rail {:.1}", now_ms() - t, s.rail);
+    }
+}
+/// T-780: each curve worked out once gives every zone pair's trips to the bit.
+#[test]
+fn eachway_with_its_curves_is_eachway() {
+    let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
+    let api = IntercityApi::new(&real_world(root, Some(&["tyo", "gnm"]))).unwrap();
+    let m = &api.m;
+    for a in m.zones.iter().step_by(7) {
+        for b in &m.zones {
+            assert_eq!(m.eachway_with(a, b, m.curves(a, b)).to_bits(), m.eachway(a, b).to_bits());
+        }
+    }
+}
+/// T-780: sampled pairs keep each zone's trips with each place after it, always solve a pair of at
+/// least a chunk, carry whole chunks or a big pair's own trips, and are the same every time.
+#[test]
+fn sampled_pairs_keep_each_zones_trips_with_each_place() {
+    let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
+    let api = IntercityApi::new(&real_world(root, Some(&["tyo", "gnm"]))).unwrap();
+    let m = &api.m;
+    let served: Vec<usize> = (0..m.zones.len()).collect();
+    let joined = |_: usize, _: usize| true;
+    let (any0, each0) = solved_pairs(m, &served, &joined, 0.);
+    let chunk = 1.;
+    let (any, each) = solved_pairs(m, &served, &joined, chunk);
+    assert_eq!((&any, &each), (&solved_pairs(m, &served, &joined, chunk).0, &solved_pairs(m, &served, &joined, chunk).1));
+    assert!(each.len() * 10 < each0.len() * 8, "{} sampled pairs of {}", each.len(), each0.len());
+    // per zone and later place: (exact trips, sampled trips)
+    let n = served.len();
+    let mut by: HashMap<(usize, usize), (f64, f64)> = HashMap::new();
+    let (mut bit, mut k0, mut k1) = (0, 0, 0);
+    for i in 0..n {
+        for k in i + 1..n {
+            let (on0, on1) = (any0[bit / 64] >> (bit % 64) & 1 == 1, any[bit / 64] >> (bit % 64) & 1 == 1);
+            bit += 1;
+            let e = by.entry((i, m.zones[k].place)).or_default();
+            let t0 = if on0 { k0 += 1; each0[k0 - 1] } else { 0. };
+            if on0 {
+                e.0 += t0;
+            }
+            if on1 {
+                k1 += 1;
+                e.1 += each[k1 - 1];
+                assert!(on0, "a sampled pair that is not a pair");
+            } else if t0 >= chunk {
+                panic!("a pair of {t0} trips left out");
+            }
+        }
+    }
+    for ((i, p), (t0, t1)) in by {
+        assert!((t0 - t1).abs() <= 1e-9 * t0.max(1.), "zone {i} with place {p}: {t0} trips, {t1} sampled");
+    }
+}/// T-780: with sampled pairs no far zone of a selection shows more rail than trips, and its rail by
+/// place is the zones' added up.
+#[test]
+fn sampled_selection_rail_stays_within_trips() {
+    let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
+    let mut api = IntercityApi::new(&real_world(root, Some(&["tyo", "gnm"]))).unwrap();
+    api.set_chunk(1.);
+    // the streamed pass's two lines across Tokyo, changing at Tokyo station
+    let ll = [139.7671, 35.6812, 139.7387, 35.6285, 139.6970, 35.5313, 139.6222, 35.4660, 139.7006, 35.6896, 139.7774, 35.7138, 139.6239, 35.9064, 139.0124, 36.3221];
+    let mut times = vec![];
+    for len in [4, 5] {
+        let mut t = vec![0f32; 6 * len];
+        for lev in 0..3 {
+            for k in 0..len - 1 {
+                t[lev * len + k] = 600.;
+                t[(3 + lev) * len + k + 1] = 600.;
+            }
+        }
+        times.extend(t);
+    }
+    api.set_network_ll(&ll, &[4, 5], &[0, 1, 2, 3, 4, 0, 5, 6, 7], &times, &[12., 12., 12., 8., 8., 8.], &[10., 10.]).unwrap();
+    api.set_fares(1.5, 0.1, &[8.; 18]).unwrap();
+    solve_all(&mut api);
+    let m = &api.m;
+    let pop = |c: usize| { let (g, ci) = m.site(c); g.city.pop[ci] };
+    let mut keys: Vec<((i32, i32, usize), usize)> = m.site_key.iter().map(|(&k, &c)| (k, c)).collect();
+    keys.sort_by(|a, b| pop(b.1).total_cmp(&pop(a.1)).then(a.0.cmp(&b.0)));
+    let (np, ng) = (m.places.len(), m.n_gid);
+    let head = 1 + 8 * np;
+    let mut any = 0.;
+    for &(key, _) in keys.iter().take(12) {
+        let xy = [(key.0 as f32 + 0.5) * SITE_M, (key.1 as f32 + 0.5) * SITE_M];
+        let out = api.selection_flows(key.2 as u32, &xy, &[1.]);
+        for d in 0..2 {
+            let mut by = vec![0f64; np];
+            for z in 0..ng {
+                let (t, r) = (out[head + 4 * z + 2 * d], out[head + 4 * z + 2 * d + 1]);
+                assert!(r <= t * (1. + 1e-6) + 1e-9, "zone {z}: rail {r} above all {t}");
+                by[m.gid_place[z] as usize] += r;
+                any += r;
+            }
+            for (p, &r) in by.iter().enumerate() {
+                let place = out[2 + 8 * p + 4 * d];
+                assert!((place - r).abs() <= 1e-6 * place.max(1.), "place {p}: {place} against its zones' {r}");
+            }
+        }
+    }
+    assert!(any > 0., "the lines carry some of the selections");
 }

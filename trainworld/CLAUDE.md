@@ -149,6 +149,10 @@ packs, `..\venv\Scripts\python.exe`). Details and build orders: `docs/code-map.m
   ceiling tests are the targets (rail of rail + car: A at least 85%, B at least 50%; notes/T-636.md);
   real cities are loose checks. Think hard before adding any complicating factor to demand (a
   constant per country or purpose, a fitted curve): propose it to Anita first.
+- **Built cities are not fixed** (Anita, 2026-10-20): when covering a whole country, a metro built
+  earlier may be cut down or grown if that makes the country's zones fit together better.
+- **Simple, predictable prices** (Anita, 2026-10-20): fares and costs the player reasons about
+  (flights, crossings) follow a simple rule (a base plus per-km), not per-route real data.
 - **General sources and methods only** (2026-10-12, stressed 2026-10-13). Prefer global sources
   (OSM, GHSL, Kontur, WorldPop) or a method any national census can feed. A one-city source is
   worth it only if very easy; one for a minor city never is. Research briefs say this.

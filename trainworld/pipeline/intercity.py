@@ -47,9 +47,10 @@ MARKETS = [p["name"] for p in REGISTRY["market"]["places"]]
 # T-276: the market's trips a weekday per resident (fitted with its curve, research/intercity/market_fit.py)
 TRIP_RATE = 0.107
 GROUP_GAP_KM = 50.0
-# about 3x Japan's 68k zones (0.5 billion zone pairs, 25 minutes on one thread): over 1.5 billion
-# pairs, an hour or more a solve (notes/T-539.md); no group in the world plan comes near it
-MAX_GROUP_ZONES = 200_000
+# a time guard: about 6x Japan's 68k zones (notes/T-539.md). Whole-country cover chains Spain, France,
+# Italy and the Benelux-Rhine metros into one group of about 300k zones (T-779), which the runner
+# solves on every core; a covered Europe will need the group split (T-781)
+MAX_GROUP_ZONES = 400_000
 # the local layer's parking (sim kernel `Params` defaults: park_min, park_paid_min, park_paid_d0,
 # park_paid_cap_min, park_free_d; `CELL_KM2`)
 PARK_MIN, PARK_PAID_MIN, PARK_PAID_D0, PARK_PAID_CAP_MIN, PARK_FREE_D = 7.0, 15.0, 3000.0, 50.0, 8000.0

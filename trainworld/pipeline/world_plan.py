@@ -68,6 +68,7 @@ TESTS = ["tor", "lon", "par", "ber", "seo", "mum", "lag", "sao"]
 ZONE_MIN_POP = 100_000   # a zone under this joins a neighbouring zone of its region
 ZONE_MIN_DENSITY = 20.0  # people a km2: an emptier unit stays dead space
 ISLAND_KM = 150.0        # an island under ZONE_MIN_POP joins the most populous zone of its region this near
+EUROPE_BOX = (-32.0, 27.0, 45.0, 72.0)  # lon/lat: a European country's units outside it (France's overseas départements) are not zoned (T-779)
 
 # What a city in each country can have (docs/data-register.md "Countries and their procedure");
 # every other country is archetype D. England's module covers England's ITL3 units only.
@@ -1123,8 +1124,13 @@ def plan_zones(isos3):
         held = {uid for r in rows if r.get("units") and r["id"] not in old for uid in r["units"].get(iso, [])}
         ptree = STRtree([q["geom"] for q in pk.values()])
         pl = list(pk.values())
-        free, dead = [], []
+        free, dead, away = [], [], []
         for u in units:
+            if iso in st["europe"]:
+                lon, lat = INV.transform(*u.geom.representative_point().coords[0])
+                if not (EUROPE_BOX[0] <= lon <= EUROPE_BOX[2] and EUROPE_BOX[1] <= lat <= EUROPE_BOX[3]):
+                    away.append(u.name)
+                    continue
             x, y, p = pop.inside(u.geom)
             inpk = np.zeros(len(x), bool)
             for i in ptree.query(u.geom, predicate="intersects"):
@@ -1144,7 +1150,8 @@ def plan_zones(isos3):
         groups, lines = zone_groups(units, free, region)
         by = {u.id: u for u in units}
         log(f"{iso}: {len(units)} units, {len(held)} in plan rows, {len(free)} free, {len(dead)} dead space "
-            f"(under {ZONE_MIN_DENSITY:g} a km2: {', '.join(d['name'] for d in dead)}); {len(groups)} zones")
+            f"(under {ZONE_MIN_DENSITY:g} a km2: {', '.join(d['name'] for d in dead)}); {len(groups)} zones"
+            + (f"; outside Europe, left out: {', '.join(away)}" if away else ""))
         for ln in lines:
             log(ln)
         was = {tuple(sorted(r["units"][iso])): r for r in old.values()}
@@ -1166,7 +1173,7 @@ def plan_zones(isos3):
             tz = tf.timezone_at(lng=lon, lat=lat) or tf.closest_timezone_at(lng=lon, lat=lat)
             name = us[0].name.split("/")[0].strip()
             prev = was.get(tuple(sorted(ids)))
-            arch, module = ARCHETYPE.get(iso, ("D", None))
+            arch, module = "D", None  # zones: global sources and the zone curve, no country module (T-779)
             if prev:
                 cid, n = prev["id"], prev["order"]
             else:
@@ -1199,6 +1206,8 @@ def plan_zones(isos3):
                        "rule": f"free units at or over {ZONE_MIN_DENSITY:g} people a km2; under {ZONE_MIN_POP:,} joins "
                                f"a zone of its region (longest border, or an island the most populous within {ISLAND_KM:g} km)",
                        "dead": dead, "merges": [ln.strip() for ln in lines]}
+        if away:
+            record[iso]["outside_europe"] = away
         ext_path = WORK / "extents.geojson"
         ext = json.loads(ext_path.read_text(encoding="utf-8"))
         drop = set(old) | {f["properties"]["id"] for f in feats}
@@ -1214,7 +1223,9 @@ def plan_zones(isos3):
 def main(argv):
     import pickle
     if argv and argv[0] == "zones":
-        a3 = {v: k for k, v in iso2s().items()}
+        have = json.loads(OUT.read_text(encoding="utf-8"))["unit_sources"]
+        # several territories share an alpha-2 in Natural Earth (FR: France and Clipperton, T-779)
+        a3 = {v: k for k, v in sorted(iso2s().items(), key=lambda kv: kv[0] in have)}
         cs = argv[argv.index("--countries") + 1].split(",")
         return plan_zones([a3[c] for c in cs])
     cache = WORK / "state.pkl"  # the units and their shares; --fresh rebuilds it

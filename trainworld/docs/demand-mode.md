@@ -33,9 +33,9 @@ between modes is damped (the walks and station pairs behind rail's cost are weig
 they are shared by every destination); the regional layer damps the whole rail trip, access
 included. **Catchment is soft** (T-090): there
 is no circle the player sees. A farther station makes the walk, and so the whole trip, worse, and
-the station loses riders where that trip gets worse than driving. Value of time is per country so
-fares compare across countries. The US uses $20/hour (3 perceived minutes per dollar, a gameplay
-judgement). The base fare is charged once per trip, including transfers; the per-km rate uses
+the station loses riders where that trip gets worse than driving. Value of time is one constant everywhere,
+$20/hour (`FARE_MIN_PER_USD`: 3 perceived minutes per dollar, a gameplay judgement), so fares
+compare across countries. The base fare is charged once per trip, including transfers; the per-km rate uses
 actual track length. Distance fare affects route choice as well as mode choice, and crowding
 multiplies ride time without multiplying fare (T-067).
 

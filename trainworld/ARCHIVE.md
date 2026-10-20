@@ -1,5 +1,10 @@
 ﻿# Archive
 
+- T-779 [P2] Whole-country cover for Italy and France. Done 2026-10-20: 97 and 80 zones shipped, none parked (15 mountain zones and Trieste relaxed); one joint group of 239 packs, 29 min; registry 353 zones; every-pack-opens and smoke passed. notes/T-779.md.
+- T-780 [P2] Coarser pairs for the market. Done 2026-10-20: zone pairs under a trip a day dealt in chunks, seeded by zone ids; all of Japan 12.4M pairs to 3.1M, solve 1,256-1,288 s to 965 s, workers 3.1-3.6 to 2.2-2.4 GB, worst line 0.25%. notes/T-780.md.
+- T-767 [P3] The market's pass on Japan. Done with T-780 (85 s to 62-70 s a daytime pass); keeping more strategies did not pay in WASM, the rest is T-782. notes/T-780.md.
+- T-712 [P2] City pairs against published figures. Done 2026-10-20: airports 90 min, plane fare $100 + 5 c/km, the car pays the Channel and Tsugaru crossings; rail of rail + air now 70-99% (Madrid 78%, published 78%); access caps checked, not a bug. notes/T-712.md.
+- T-721 [P2] Regional rail levels after T-718. Done 2026-10-20 with T-712: the shortfall was the plane's cost and the station's reach, not T-718; T-718 kept. notes/T-712.md.
 - T-776 [P2] Registry split. Done 2026-10-20: registry.json is a bundled index (55 KB compact, was 208); the market rows moved to market-rows.json, fetched beside the first market pack; each bundle 145 KB smaller, startup and demand unchanged at 176 zones. notes/T-776.md.
 - T-770 [P2] The gate's stations from the extract, not Overpass. Done 2026-10-20: a `.stations.fgb` beside each extract and a per-pack station file at build time; same stations as Overpass on three packs; a row's gate 2-6.6 min to about 30 s. notes/T-770.md.
 - T-764 [P2] Runner safety checks. Done 2026-10-20: sim junctions checked (a run fault, not a park), STOP path printed, stack dump after 20 silent minutes, status table at the end, merge_cells checks its own output. notes/T-770.md.

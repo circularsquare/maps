@@ -81,6 +81,8 @@ export type ToDemand =
       oneMarket?: boolean;
       /** T-756 `?perfOff=reach`: every population on its whole cluster, not its reach */
       wide?: boolean;
+      /** T-780 `?perfOff=chunks`: the market solves every zone pair, none sampled */
+      exactMarket?: boolean;
       /** T-124 `?perfOff=periods`: a cluster solved solves every period, none kept */
       fresh?: boolean;
       /** T-393: the city in view: its cluster is solved first */

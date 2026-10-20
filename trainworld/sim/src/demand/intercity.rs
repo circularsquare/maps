@@ -315,6 +315,8 @@ struct PairRule {
     air: f32,
     rest: f32,
     refm: f32,
+    /// the car's perceived minutes for water it is carried over (`crossing_min`)
+    cross: f32,
 }
 impl PairRule {
     /// A pair the solve may build: a car or a plane to compete with.
@@ -504,7 +506,11 @@ const SITE_M: f32 = 600.;
 const MARKETS: usize = 3;
 /// The bytes of strategies a market's pass holds at once (T-761): past this its destinations are
 /// searched one at a time (`IntercityApi::pass_streamed`), this much of them kept between sweeps.
+/// Not more (T-780): in WASM the heap grows a piece at a time for the strategies kept, which cost
+/// minutes on all of Japan's first pass, and growing it at once raised the peak by 600 MB.
 const MARKET_STRATEGY_BYTES: usize = 256 << 20;
+/// T-780: the trips a day each way a sampled zone pair carries (`solved_pairs`).
+const MARKET_CHUNK: f64 = 1.;
 /// A destination's strategy for `IntercityApi::assigned`: a table's, or searched for it alone.
 enum Held<'a> {
     Ref(Strategy<'a>),
@@ -601,15 +607,37 @@ const LONG_OCCUPANCY: f32 = 2.;
 fn car_min(d: f32, park: f32) -> f32 {
     drive_min(d) + (d * ROAD_DETOUR * CAR_USD_PER_KM * FARE_MIN_PER_USD + park) / LONG_OCCUPANCY
 }
-/// T-378 (notes/T-362.md "Modes"; the terminal time and the fare's base set on the rail-air share
-/// curve, notes/T-378.md): air door to door, minutes at the airports, cruise speed and the
-/// flight's fixed minutes on the great circle, the extra minutes with no direct flight, the fare.
-const AIR_TERMINAL_MIN: f64 = 60.;
+/// A car carried over water by a shuttle or ferry where the landmass's fixed link takes no cars
+/// at its own price (T-712): the fare per car in dollars and the minutes beyond the straight drive.
+struct Crossing {
+    usd: f32,
+    min: f32,
+}
+/// The Channel (Le Shuttle and the Dover ferries) between Great Britain and the continent.
+const CHANNEL: Crossing = Crossing { usd: 150., min: 60. };
+/// The Tsugaru Strait: the Seikan Tunnel carries no cars, the Aomori-Hakodate ferry (3 h 40) does.
+const TSUGARU: Crossing = Crossing { usd: 170., min: 240. };
+/// The car's perceived minutes for the crossings between two places (country, latitude) on one
+/// landmass; the fare is shared like the car's running cost.
+fn crossing_min(a: (&str, f64), b: (&str, f64)) -> f32 {
+    let hokkaido = |p: (&str, f64)| p.0 == "JP" && p.1 > 41.4;
+    let mut m = 0.;
+    for (on, c) in [((a.0 == "GB") != (b.0 == "GB"), &CHANNEL), (hokkaido(a) != hokkaido(b), &TSUGARU)] {
+        if on {
+            m += c.min + c.usd * FARE_MIN_PER_USD / LONG_OCCUPANCY;
+        }
+    }
+    m
+}
+/// T-378 (notes/T-362.md "Modes"), T-712: air door to door, minutes at the airports, cruise speed
+/// and the flight's fixed minutes on the great circle, the extra minutes with no direct flight, the
+/// fare (a flat base: published average fares barely rise with distance, notes/T-712.md).
+const AIR_TERMINAL_MIN: f64 = 90.;
 const AIR_KMH: f64 = 750.;
 const AIR_FIXED_MIN: f64 = 30.;
 const AIR_NO_DIRECT_MIN: f64 = 60.;
-const AIR_FARE_USD: f64 = 50.;
-const AIR_USD_PER_KM: f64 = 0.09;
+const AIR_FARE_USD: f64 = 100.;
+const AIR_USD_PER_KM: f64 = 0.05;
 /// A flight's perceived minutes over `km` with `access` minutes of driving at the two ends.
 fn air_min(km: f64, access: f64, direct: bool) -> f64 {
     access + AIR_TERMINAL_MIN + km / AIR_KMH * 60. + AIR_FIXED_MIN + if direct { 0. } else { AIR_NO_DIRECT_MIN } + (AIR_FARE_USD + AIR_USD_PER_KM * km) * FARE_MIN_PER_USD as f64
@@ -643,6 +671,20 @@ impl Market {
         let r = self.pr(a.place, b.place);
         let d = if r.near { self.zone_km(a, b) } else { r.km };
         (self.directed(a.place, b.place, a.g, a.t, b.a, b.ta, d) + self.directed(b.place, a.place, b.g, b.t, a.a, a.ta, d)) * 0.5
+    }
+    /// `eachway` with the curves at the pair's distance given (`curves`), so a run of far zones works
+    /// them out once (T-780): the same figure to the bit.
+    #[inline(always)]
+    fn eachway_with(&self, a: &Zone, b: &Zone, (gc, tc): (f64, f64)) -> f64 {
+        let one = |r: &PairRule, g: f64, t: f64, at: f64, ta: f64| r.b * ((if g > 0. { g * gc * at } else { 0. }) + if t > 0. { t * tc * ta * r.rel } else { 0. });
+        (one(self.pr(a.place, b.place), a.g, a.t, b.a, b.ta) + one(self.pr(b.place, a.place), b.g, b.t, a.a, a.ta)) * 0.5
+    }
+    /// The ground and tail curves of zones a and b (`eachway_with`).
+    #[inline(always)]
+    fn curves(&self, a: &Zone, b: &Zone) -> (f64, f64) {
+        let r = self.pr(a.place, b.place);
+        let d = if r.near { self.zone_km(a, b) } else { r.km };
+        (self.rule.ground(d), self.rule.tail(d))
     }
     /// Two places' trips a day each way: near ones from the rows (every zone pair added up),
     /// far ones from their centres.
@@ -1168,7 +1210,8 @@ fn build(b: Built) -> Result<Market, String> {
                 }
                 best.map(|v| v as f32)
             };
-            let car_m = car_min(km as f32, (0.5 * (p.park + q.park)) as f32);
+            let cross = if car && i != j { crossing_min((&countries[p.country as usize], p.lat), (&countries[q.country as usize], q.lat)) } else { 0. };
+            let car_m = car_min(km as f32, (0.5 * (p.park + q.park)) as f32) + cross;
             let (air, rest, refm) = match (car, flight) {
                 (true, Some(f)) => {
                     let w = (-mp.mode_beta(car_m) * (f - car_m)).clamp(-80., 80.).exp();
@@ -1177,7 +1220,7 @@ fn build(b: Built) -> Result<Market, String> {
                 (false, Some(f)) => (1., 1., f),
                 _ => (0., 1., car_m),
             };
-            pp[i * np + j] = PairRule { b, rel, near, km, car, air, rest, refm };
+            pp[i * np + j] = PairRule { b, rel, near, km, car, air, rest, refm, cross };
         }
     }
     let corridors: Vec<(usize, usize)> = (0..np).flat_map(|a| (a..np).map(move |b| (a, b))).collect();
@@ -1585,6 +1628,8 @@ pub struct IntercityApi {
     /// T-409: per served zone, the track components its stations lie in.
     served_comp: Vec<Vec<u32>>,
     st_pat: StPattern,
+    /// T-780: trips a day each way a sampled zone pair carries (`solved_pairs`); 0 solves every pair.
+    chunk: f64,
 }
 
 /// T-761: the entries of the per-station far-zone table (`Period::st`) a pass can make non-zero,
@@ -1676,6 +1721,117 @@ fn find_from<T: Copy + Ord>(row: &[T], c: T, cur: &mut u32) -> usize {
     }
 }
 
+/// Which pairs of the `served` zones (ascending) are solved, a bit each for (i, k > i) in that
+/// order, and their trips a day each way, counted before `set_served` makes their table so it is
+/// made once at its size (T-761: grown by doubling it peaked at twice that, 500 MB on Japan).
+/// A pair needs a car or a plane to compete with (T-377, T-378: else its trips stay fixed), track
+/// joining its zones, and `MIN_TRIPS`.
+///
+/// With `chunk` (T-780) each zone's pairs with the zones of one place after it are dealt that
+/// place's trips in chunks of about `chunk`: systematic sampling over the place's zones in their
+/// order, by trips, from a start fixed by the two zones' ids, so the same zones give the same pairs
+/// on any network and each zone's trips with each later place are kept exactly. A pair of at least
+/// a chunk is always solved; smaller ones are solved for a chunk or not at all. The chunks are dealt
+/// over every zone, served or not, so a station serving another zone adds pairs without dealing
+/// the rest again.
+fn solved_pairs(m: &Market, served: &[usize], joined: &impl Fn(usize, usize) -> bool, chunk: f64) -> (Vec<u64>, Vec<f64>) {
+    let min = m.rule.min_trips;
+    let n = served.len();
+    let mut any = vec![0u64; (n as u64 * n.saturating_sub(1) as u64 / 2).div_ceil(64) as usize];
+    let mut each = vec![];
+    let row = |i: usize| i * n.saturating_sub(1) - i * i.saturating_sub(1) / 2;
+    let mut keep = |any: &mut [u64], i: usize, k: usize, trips: f64| {
+        let bit = row(i) + k - i - 1;
+        any[bit / 64] |= 1 << (bit % 64);
+        each.push(trips);
+    };
+    if chunk <= 0. {
+        for (i, &a) in served.iter().enumerate() {
+            let za = &m.zones[a];
+            for (k, &b) in served.iter().enumerate().skip(i + 1) {
+                let zb = &m.zones[b];
+                if !m.pr(za.place, zb.place).has_alt() || !joined(i, k) {
+                    continue;
+                }
+                let trips = m.eachway_with(za, zb, m.curves(za, zb));
+                if trips >= min {
+                    keep(&mut any, i, k, trips);
+                }
+            }
+        }
+        return (any, each);
+    }
+    let mut at = vec![u32::MAX; m.zones.len()];
+    let mut some = vec![false; m.places.len()];
+    for (k, &z) in served.iter().enumerate() {
+        at[z] = k as u32;
+        some[m.zones[z].place] = true;
+    }
+    let mut run: Vec<(usize, f64)> = vec![];
+    for (i, &a) in served.iter().enumerate() {
+        let za = &m.zones[a];
+        let mut b = a + 1;
+        while b < m.zones.len() {
+            // one place's zones after a: a run of the zones' order
+            let place = m.zones[b].place;
+            run.clear();
+            if !some[place] || !m.pr(za.place, place).has_alt() {
+                while b < m.zones.len() && m.zones[b].place == place {
+                    b += 1;
+                }
+                continue;
+            }
+            // far places' zones are all at the places' distance
+            let fixed = (!m.pr(za.place, place).near).then(|| m.curves(za, &m.zones[b]));
+            while b < m.zones.len() && m.zones[b].place == place {
+                let zb = &m.zones[b];
+                let t = m.eachway_with(za, zb, fixed.unwrap_or_else(|| m.curves(za, zb)));
+                if t >= min {
+                    run.push((b, t));
+                }
+                b += 1;
+            }
+            let Some(&(first, _)) = run.first() else { continue };
+            let total: f64 = run.iter().map(|e| e.1).sum();
+            let draws = (total / chunk).ceil();
+            let mut solve = |zb: usize, trips: f64| {
+                let k = at[zb];
+                if k != u32::MAX && joined(i, k as usize) {
+                    keep(&mut any, i, k as usize, trips);
+                }
+            };
+            if draws >= run.len() as f64 {
+                for &(zb, t) in &run {
+                    solve(zb, t);
+                }
+                continue;
+            }
+            let step = total / draws;
+            let u = unit_hash(za.gid, m.zones[first].gid);
+            // draws before trips x: those at (j + u) x step below x
+            let before = |x: f64| (x / step - u).ceil().clamp(0., draws);
+            let mut lo = 0.;
+            for &(zb, t) in &run {
+                let hi = lo + t;
+                let got = before(hi) - before(lo);
+                lo = hi;
+                if got > 0. {
+                    solve(zb, got * step);
+                }
+            }
+        }
+    }
+    (any, each)
+}
+/// A number in [0, 1) fixed by two ids (splitmix64).
+fn unit_hash(a: u32, b: u32) -> f64 {
+    let mut z = ((a as u64) << 32 | b as u64).wrapping_add(0x9e37_79b9_7f4a_7c15);
+    z = (z ^ (z >> 30)).wrapping_mul(0xbf58_476d_1ce4_e5b9);
+    z = (z ^ (z >> 27)).wrapping_mul(0x94d0_49bb_1331_11eb);
+    z ^= z >> 31;
+    (z >> 11) as f64 / (1u64 << 53) as f64
+}
+
 impl IntercityApi {
     fn on(m: Rc<Market>) -> Self {
         IntercityApi {
@@ -1697,6 +1853,7 @@ impl IntercityApi {
             fare_km: vec![],
             fare_per_km: 0.,
             complex_in: vec![],
+            chunk: 0.,
             served_comp: vec![],
             st_pat: StPattern::default(),
         }
@@ -1869,37 +2026,21 @@ impl IntercityApi {
         }
         if a != b && k < n && at(k) == key { (2 * k + (a > b) as usize) as u32 } else { u32::MAX }
     }
+    /// Whether zones a and b could make a pair (`solved_pairs` with every pair solved).
+    fn solvable(&self, a: usize, b: usize) -> bool {
+        let m = &self.m;
+        let at = |z: usize| self.served_at.get(z).copied().unwrap_or(u32::MAX);
+        let (i, k) = (at(a), at(b));
+        let (za, zb) = (&m.zones[a], &m.zones[b]);
+        a != b && i != u32::MAX && k != u32::MAX && m.pr(za.place, zb.place).has_alt() && m.eachway(za, zb) >= m.rule.min_trips && self.served_comp[i as usize].iter().any(|c| self.served_comp[k as usize].binary_search(c).is_ok())
+    }
     /// The pairs between the `served` zones (ascending) joined by track, with a car or a plane to
     /// compete with, in the whole market's order (T-174, T-409, T-377). `comp` is `served_comp`.
     fn set_served(&mut self, served: Vec<usize>, comp: Vec<Vec<u32>>) {
         let m = self.m.clone();
         let joined = |i: usize, k: usize| comp[i].iter().any(|c| comp[k].binary_search(c).is_ok());
-        // T-761: the pairs are counted first (which zone pairs have any, a bit each, and their
-        // trips), so their table is made once at its size: grown by doubling it peaked at twice
-        // that (Japan's whole network: 12 million pairs, 500 MB)
         self.pairs = vec![];
-        let min = m.rule.min_trips;
-        let n = served.len();
-        let mut any = vec![0u64; (n as u64 * n.saturating_sub(1) as u64 / 2).div_ceil(64) as usize];
-        let mut each = vec![];
-        let mut bit = 0;
-        for (i, &a) in served.iter().enumerate() {
-            let za = &m.zones[a];
-            for (k, &b) in served.iter().enumerate().skip(i + 1) {
-                let zb = &m.zones[b];
-                bit += 1;
-                // T-377, T-378: with neither a car nor a plane (near places on two landmasses)
-                // the trips stay fixed
-                if !m.pr(za.place, zb.place).has_alt() || !joined(i, k) {
-                    continue;
-                }
-                let trips = m.eachway(za, zb);
-                if trips >= min {
-                    any[(bit - 1) / 64] |= 1 << ((bit - 1) % 64);
-                    each.push(trips);
-                }
-            }
-        }
+        let (any, each) = solved_pairs(&m, &served, &joined, self.chunk);
         let mut pairs = Vec::with_capacity(2 * each.len());
         let (mut bit, mut next) = (0, each.into_iter());
         for (i, &a) in served.iter().enumerate() {
@@ -1914,11 +2055,12 @@ impl IntercityApi {
                 let trips = next.next().unwrap();
                 let d = m.zone_km(za, zb) as f32;
                 let corridor = m.corridor(za.place, zb.place) as u32;
-                let drive = |park: f32| if r.car { car_min(d, park) } else { r.refm };
+                let car = |park: f32| car_min(d, park) + r.cross;
+                let drive = |park: f32| if r.car { car(park) } else { r.refm };
                 let (a, b) = (a as u32, b as u32);
                 let band = self.base.band_of_d2(d * d * 1e6) as u8;
-                pairs.push(Pair { a, b, trips, drive: drive(zb.park), rest: r.rest, corridor, car: car_min(d, zb.park), band });
-                pairs.push(Pair { a: b, b: a, trips, drive: drive(za.park), rest: r.rest, corridor, car: car_min(d, za.park), band });
+                pairs.push(Pair { a, b, trips, drive: drive(zb.park), rest: r.rest, corridor, car: car(zb.park), band });
+                pairs.push(Pair { a: b, b: a, trips, drive: drive(za.park), rest: r.rest, corridor, car: car(za.park), band });
             }
         }
         self.pairs = pairs;
@@ -1940,7 +2082,7 @@ impl IntercityApi {
             }
             let (zh, zw) = (&m.zones[h], &m.zones[w]);
             let km = m.zone_km(zh, zw) as f32;
-            let car = drive_min(km) * pc.w_drive + zw.park + pc.car_own_min() + km * ROAD_DETOUR * pc.car_own_km_min();
+            let car = drive_min(km) * pc.w_drive + zw.park + pc.car_own_min() + km * ROAD_DETOUR * pc.car_own_km_min() + m.pr(zh.place, zw.place).cross;
             let corridor = m.corridor(zh.place, zw.place);
             self.cpair_of[c] = self.cpairs.len() as u32;
             let asc = pc.asc_rail + super::api::country_asc_rail(&m.countries[m.places[zh.place].country as usize]);
@@ -2175,6 +2317,23 @@ impl IntercityApi {
     pub fn set_complexes(&mut self, complex: &[u32]) {
         self.complex_in = complex.to_vec();
     }
+    /// T-780: zone pairs sampled in chunks of `MARKET_CHUNK` trips (`solved_pairs`), or every pair
+    /// solved; the next network sets its pairs up again.
+    pub fn set_sampled(&mut self, on: bool) {
+        self.set_chunk(if on { MARKET_CHUNK } else { 0. });
+    }
+}
+impl IntercityApi {
+    fn set_chunk(&mut self, chunk: f64) {
+        if chunk != self.chunk {
+            self.chunk = chunk;
+            self.svc = None;
+            self.served.clear();
+        }
+    }
+}
+#[wasm_bindgen]
+impl IntercityApi {
     /// Number of places in selection and station flow headers.
     pub fn market_count(&self) -> usize {
         self.m.places.len()
@@ -2525,6 +2684,9 @@ impl IntercityApi {
             Some(p) if i != NONE => p.pair_rail[i as usize],
             _ => 0.,
         };
+        // T-780: with sampled pairs a zone's rail with a place is its sampled pairs', spread over the
+        // place's zones it could ride to by their trips, so no far zone shows more rail than trips
+        let mut spread = vec![(0f64, 0f64); if self.chunk > 0. { np } else { 0 }];
         for q in 0..PERIODS {
             let Some(per) = per_of(q) else { continue };
             let sh = share_out(day, LONGER, q) as f64;
@@ -2533,10 +2695,23 @@ impl IntercityApi {
                 for (z, &w) in weights.iter().enumerate().filter(|(_, w)| **w > 0.) {
                     let (row, far) = &rows[&z];
                     out[away + dir] += w * away_z[&z] * sh;
+                    if !spread.is_empty() {
+                        spread.fill((0., 0.));
+                        for &(b, out_i, in_i, trips) in row {
+                            let e = &mut spread[m.zones[b as usize].place];
+                            e.0 += rail(per, if dir == 0 { out_i } else { in_i }) as f64;
+                            e.1 += if self.solvable(z, b as usize) { trips } else { 0. };
+                        }
+                    }
                     for &(b, out_i, in_i, trips) in row {
                         let zb = &m.zones[b as usize];
                         let all = w * trips * sh;
-                        let r = w * rail(per, if dir == 0 { out_i } else { in_i }) as f64 * f;
+                        let pair_r = match spread.get(zb.place) {
+                            Some(&(r, t)) if t > 0. && self.solvable(z, b as usize) => (r * trips / t) as f32,
+                            Some(_) => 0.,
+                            None => rail(per, if dir == 0 { out_i } else { in_i }),
+                        };
+                        let r = w * pair_r as f64 * f;
                         let o = 1 + 8 * zb.place + 4 * dir;
                         out[o] += all;
                         out[o + 1] += r;

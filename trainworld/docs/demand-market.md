@@ -40,7 +40,8 @@ place's own frame for access and rides (each place on its own, so its figures ne
 other packs are open), the graph in the first place's. It builds pairs only between zones some
 station serves whose stations share a track component (T-409: the rail graph's, every line and
 walking transfer at any frequency; the commutes between zones follow the same rule) on one
-landmass, in the composition's zone order, so every rail figure is the same sum. All-mode trips
+landmass, in the composition's zone order, so every rail figure is the same sum; the longer trips'
+pairs dealt in chunks (T-780, [regional.md](regional.md) 5.1), the commutes' all kept. All-mode trips
 for a selection are computed row by row for its zones when asked, against every open zone and, by
 place, every place not open (`selection_all_day`, over any periods: the worker asks it of the
 composition of every pack it holds and adds each part's rail, `selection_rail_day`). Answers lay

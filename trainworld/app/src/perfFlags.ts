@@ -27,6 +27,7 @@
 //            (before T-409)
 //   reach    every city's demand solves on its whole cluster, not the stations it reaches
 //            (before T-756)
+//   chunks   the regional market solves every zone pair, none dealt in chunks (before T-780)
 //   close   packs no longer needed never close (before T-301)
 //   marks    the crossing, junction, ramp and portal marks are not drawn (before T-629)
 //
@@ -41,5 +42,5 @@ const q = new URLSearchParams(location.search);
 const off = new Set((q.get("perfOff") ?? "").split(",").filter(Boolean));
 const tries = new Set((q.get("perfTry") ?? "").split(",").filter(Boolean));
 
-export const perfOff = (part: "labels" | "shadow" | "hover" | "clock" | "overlay" | "markers" | "idle" | "labelPan" | "noDouble" | "stagger" | "early" | "bareStart" | "ahead" | "clusters" | "periods" | "spread" | "split" | "reach" | "close" | "marks") => off.has(part);
+export const perfOff = (part: "labels" | "shadow" | "hover" | "clock" | "overlay" | "markers" | "idle" | "labelPan" | "noDouble" | "stagger" | "early" | "bareStart" | "ahead" | "clusters" | "periods" | "spread" | "split" | "reach" | "chunks" | "close" | "marks") => off.has(part);
 export const perfTry = (fix: "labelLayers" | "hoverCursor" | "idle" | "noDouble") => tries.has(fix);

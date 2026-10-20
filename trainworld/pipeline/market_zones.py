@@ -265,6 +265,10 @@ def build(cid, reg, F, ne, air):
     place = city["place"]
     lon0, lat0 = city["center"]
     country, road = F.wf.locate(lon0, lat0)
+    # the pack's own country over the box centre's: Gorizia's box centre is in Slovenia (T-779)
+    with open(PACKS / f"{cid}.json", encoding="utf-8") as f:
+        own = (json.load(f).get("country") or "").upper()
+    country = next((k for k, c in enumerate(F.wf.countries) if own and c["iso2"] == own), country)
     cinfo = F.wf.countries[country]
     inc = min(cinfo["gdp"] / RULE["y_us"], 1.0)
     if city.get("market", -1) >= 0:

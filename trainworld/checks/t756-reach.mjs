@@ -1,6 +1,6 @@
 // T-756: each population solves on the stations within its reach. Two modes, from the maps root:
 //   node trainworld/checks/t756-reach.mjs capture <save> <label>   (headless Chrome on its own Vite)
-//   node trainworld/checks/t756-reach.mjs compare <label> [wide|reach|both]
+//   node trainworld/checks/t756-reach.mjs compare <label> [wide|reach|both|chunks]
 // `capture` loads the save, records the network the page sends its demand workers and the packs they
 // open, and writes ../artifacts/trainworld/t756/<label>.net.json. `compare` runs the real demand
 // worker in Node on it (WORKERS threads, default 3, the periods dealt as the page deals them), once
@@ -10,6 +10,9 @@
 // more than the tolerance (TOL, default 0.005): the network's and the market's rail and walked trips
 // and each city's rail trips per period within TOL (a city's within 10 trips either way), each
 // line's day of boardings within 2 x TOL of the line's (or of 1% of the busiest line's).
+// T-780: `chunks` instead compares the market with every zone pair solved (`exact`,
+// `?perfOff=chunks`) and sampled (`reach`, the default), into <label>.chunks.json; ROWS=<file> reads
+// the market rows from a copy.
 import { spawn } from 'node:child_process';
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'node:fs';
 import { mkdtemp } from 'node:fs/promises';
@@ -125,14 +128,14 @@ parentPort.postMessage({kind:'boot'});
 }
 
 function start(wrapper) {
-  const w = new Worker(wrapper, { resourceLimits: { maxOldGenerationSizeMb: 4096 } }), messages = [], waiters = [];
-  w.on('message', (msg) => { messages.push(msg); for (const f of [...waiters]) f(msg); });
+  const w = new Worker(wrapper, { resourceLimits: { maxOldGenerationSizeMb: 4096 } }), messages = [], waiters = [], at = [];
+  w.on('message', (msg) => { messages.push(msg); at.push(Math.round(performance.now())); for (const f of [...waiters]) f(msg); });
   w.on('error', (e) => { messages.push({ kind: 'failed', error: String(e) }); for (const f of [...waiters]) f({ kind: 'failed', error: String(e) }); });
   const next = (predicate, from = 0) => new Promise((resolve) => {
     const existing = messages.slice(from).find(predicate); if (existing) return resolve(existing);
     const f = (m) => { if (predicate(m) || m.kind === 'failed') { waiters.splice(waiters.indexOf(f), 1); resolve(m); } }; waiters.push(f);
   });
-  return { w, messages, next };
+  return { w, messages, next, at };
 }
 
 const ROUNDS = 3;
@@ -148,7 +151,7 @@ async function solveIn(wrapper, cap, extra) {
   const ks = await Promise.all(periods.map(async (ps) => {
     const k = start(wrapper);
     await k.next((m) => m.kind === 'boot');
-    k.w.postMessage({ kind: 'init', packs: cap.packs.map(packOf), intercity: cap.markets.map(marketOf), rows: readFileSync(new URL('../app/src/game/market-rows.json', import.meta.url), 'utf8'), periods: ps });
+    k.w.postMessage({ kind: 'init', packs: cap.packs.map(packOf), intercity: cap.markets.map(marketOf), rows: readFileSync(process.env.ROWS ?? new URL('../app/src/game/market-rows.json', import.meta.url), 'utf8'), periods: ps });
     const r = await k.next((m) => m.kind === 'ready');
     if (r.kind !== 'ready') throw new Error('init failed: ' + r.error);
     return k;
@@ -160,7 +163,9 @@ async function solveIn(wrapper, cap, extra) {
     k.w.postMessage({ kind: 'solve', version: 1, net, rounds: ROUNDS, first: cap.packs[0], ...extra });
     const d = await k.next((m) => (m.kind === 'done' && m.version === 1), from);
     if (d.kind !== 'done') throw new Error('solve failed: ' + d.error);
-    return { d, ms: performance.now() - t1, results: k.messages.slice(from).filter((m) => m.kind === 'result' && !m.cluster && m.summary[0] === ROUNDS) };
+    return { d, ms: performance.now() - t1, results: k.messages.slice(from).filter((m) => m.kind === 'result' && !m.cluster && m.summary[0] === ROUNDS),
+      // T-780: when each period's round came in, seconds from the solve's start
+      timeline: k.messages.slice(from).flatMap((m, j) => (m.kind === 'result' ? [[Math.round((k.at[from + j] - t1) / 100) / 10, m.period, m.summary?.[0], m.cluster ? 1 : 0]] : [])) };
   }));
   const results = new Map();
   for (const { results: rs } of dones) for (const r of rs) results.set(r.period, r);
@@ -174,7 +179,7 @@ async function solveIn(wrapper, cap, extra) {
   const lineBoard = new Float64Array(L), lineSeg = new Float64Array(L);
   for (const r of per) for (let i = 0; i < r.board.length; i++) { lineBoard[lineOf[i]] += r.board[i]; lineSeg[lineOf[i]] += r.seg[i]; }
   return {
-    openMs: Math.round(tOpen), solveMs: Math.round(Math.max(...dones.map((x) => x.ms))), workerMB: dones.map((x) => Math.round(x.d.memBytes / 1048576)), clusters: dones[0].d.clusters,
+    openMs: Math.round(tOpen), solveMs: Math.round(Math.max(...dones.map((x) => x.ms))), workerMB: dones.map((x) => Math.round(x.d.memBytes / 1048576)), clusters: dones[0].d.clusters, timeline: dones.map((x) => x.timeline),
     periods: per.map((r) => ({ period: r.period, summary: r.summary.slice(0, 4).concat(r.summary.slice(5)), citySummary: r.citySummary, intercitySummary: r.intercitySummary })),
     lineBoard: Array.from(lineBoard), lineSeg: Array.from(lineSeg),
   };
@@ -218,21 +223,23 @@ async function compare(label, which = 'both') {
   const cap = JSON.parse(readFileSync(join(OUT, `${label}.net.json`), 'utf8'));
   const wrapper = await bundleWorker();
   const runs = {};
-  for (const m of which === 'both' ? ['wide', 'reach'] : [which]) {
+  // T-780: `chunks` compares every market pair solved (`exact`, `?perfOff=chunks`) with the default
+  const [ma, mb] = which === 'chunks' ? ['exact', 'reach'] : ['wide', 'reach'];
+  for (const m of which === 'both' || which === 'chunks' ? [ma, mb] : [which]) {
     const file = join(OUT, `${label}.${m}.json`);
     if (existsSync(file) && process.env.FRESH !== '1') { runs[m] = JSON.parse(readFileSync(file, 'utf8')); continue; }
     console.log(`${label} ${m}: solving`);
-    runs[m] = await solveIn(wrapper, cap, m === 'wide' ? { wide: true } : {});
+    runs[m] = await solveIn(wrapper, cap, m === 'wide' ? { wide: true } : m === 'exact' ? { exactMarket: true } : {});
     writeFileSync(file, JSON.stringify(runs[m]));
     console.log(`${label} ${m}: open ${runs[m].openMs} ms, solve ${runs[m].solveMs} ms, worker MB ${runs[m].workerMB}`);
   }
-  if (!runs.wide || !runs.reach) return;
-  const c = compareRuns(runs.wide, runs.reach);
-  c.time = { wide: runs.wide.solveMs, reach: runs.reach.solveMs };
-  c.workerMB = { wide: runs.wide.workerMB, reach: runs.reach.workerMB };
-  writeFileSync(join(OUT, `${label}.compare.json`), JSON.stringify(c, null, 1));
+  if (!runs[ma] || !runs[mb]) return;
+  const c = compareRuns(runs[ma], runs[mb]);
+  c.time = { [ma]: runs[ma].solveMs, [mb]: runs[mb].solveMs };
+  c.workerMB = { [ma]: runs[ma].workerMB, [mb]: runs[mb].workerMB };
+  writeFileSync(join(OUT, `${label}.${which === 'chunks' ? 'chunks' : 'compare'}.json`), JSON.stringify(c, null, 1));
   const pct = (x) => (100 * x).toFixed(3) + '%';
-  console.log(`${c.pass ? 'PASS' : 'FAIL'}  t756 ${label}: solve ${c.time.wide} -> ${c.time.reach} ms, worker MB ${c.workerMB.wide} -> ${c.workerMB.reach}; boardings ${Math.round(c.lines.boardings[0])} vs ${Math.round(c.lines.boardings[1])} (${pct(c.lines.boardings[2])}), worst total ${pct(c.worst)}, worst line ${pct(c.lines.worstShare)} (line ${c.lines.worstLine}, ${Math.round(c.lines.worstAbs)} riders at most)`);
+  console.log(`${c.pass ? 'PASS' : 'FAIL'}  t756 ${label}: solve ${c.time[ma]} -> ${c.time[mb]} ms, worker MB ${c.workerMB[ma]} -> ${c.workerMB[mb]}; boardings ${Math.round(c.lines.boardings[0])} vs ${Math.round(c.lines.boardings[1])} (${pct(c.lines.boardings[2])}), worst total ${pct(c.worst)}, worst line ${pct(c.lines.worstShare)} (line ${c.lines.worstLine}, ${Math.round(c.lines.worstAbs)} riders at most)`);
   if (!c.pass) process.exitCode = 1;
 }
 
@@ -241,5 +248,5 @@ else if (mode === 'compare') await compare(a1, a2);
 else if (mode === 'solve') {
   // one run, no comparison: `solve <label> reach|wide`
   await compare(a1, a2 ?? 'reach');
-} else { console.error('usage: capture <save> <label> | compare <label> [wide|reach|both]'); process.exit(2); }
+} else { console.error('usage: capture <save> <label> | compare <label> [wide|reach|both|chunks]'); process.exit(2); }
 void a3;

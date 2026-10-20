@@ -755,17 +755,30 @@ notes/T-420.md has the tables.
 - **No car between landmasses** (T-377, T-375's fixed links). Far pairs on two landmasses fly
   (T-378); near ones (under 250 km) keep their trips fixed; a ferry is no link.
 - **Air door to door** (T-378, docs/regional.md 5.1). Between far places (250 km and more) that both
-  have airports: drives to the airports, 60 minutes there, 750 km/h plus 30 minutes, 60 more with
-  no direct flight, $50 + 9 cents a km; with the damped logit rail holds about 73% of rail and air
-  at 3 hours on the train, half near 4 and 28% at 5 (European studies: 70%, half, a fifth;
-  notes/T-378.md, T-495.md).
+  have airports: drives to the airports, 90 minutes there (T-712, Anita 2026-10-20), 750 km/h plus
+  30 minutes, 60 more with no direct flight, and a fare of $100 + 5 cents a km at 3 perceived
+  minutes a dollar. The fare is one simple rule on purpose (Anita: predictable for the player),
+  checked against published averages (notes/T-712.md): $150 at 1,000 km sits between the US
+  ($200-220 each way at 400-2,000 km, DOT's Consumer Airfare Report Table 6, 2025, taxes in, bags
+  out) and Japan and Germany (JAL's domestic revenue a passenger, about ¥15,700 or $108 at 770 km,
+  FY2023; DLR's Low Cost Monitor, €81-141 one way, 2026); all three barely rise with distance, so
+  the base is large and the per-km small. On ideal access rail holds about 99% of rail and air at
+  3 hours on the train, 92% at 4 and 56% at 5 (European studies: 70%, half, a fifth): a lean to
+  rail Anita accepted ("if someone puts in the effort to build a long distance rail it should feel
+  rewarding"); over whole corridors the station's reach brings it down (notes/T-712.md).
   Airports from OurAirports (global, public domain), their size and direct routes from FR24 (two
-  days in May 2026, offline). Why it may not carry over: fares (low-cost carriers in Europe and
-  India, dear domestic flights in Japan, subsidised routes), airport times (US security is slower
-  than a Japanese domestic flight), the long car's cost (Paris - Berlin's car is 0.2% beside the
-  plane even with cost damping, real about a tenth), and a single 1M-passenger floor. Check: each country's
-  air and rail share on its big corridors (MLIT for Japan, Eurostat's air O-D counts, DB1B), a fare
-  per country or region where they disagree.
+  days in May 2026, offline). Why it may not carry over: fares (the US pays about twice Japan and
+  Europe; low-cost India, subsidised routes), airport times (US security is slower than a Japanese
+  domestic flight), and a single 1M-passenger floor. Check: each country's air and rail share on
+  its big corridors (MLIT for Japan, Eurostat's air O-D counts, DB1B).
+- **Cars carried over water** (T-712). Where a fixed link joins two landmasses but takes no cars at
+  road prices, the car pays the crossing: the Channel (Le Shuttle or the Dover ferries) $150 a car
+  and 60 minutes beyond the straight drive, between Great Britain and anywhere else; the Tsugaru
+  Strait (the Seikan Tunnel is rail only; the Aomori-Hakodate ferry, 3 h 40) $170 and 240 minutes,
+  between Hokkaido (Japan north of 41.4°) and anywhere else; the fare shared by two like the car's
+  running cost. Toll bridges (Øresund, the Great Belt, Honshu-Shikoku) stay free like every toll
+  road (T-270). Why it may not carry over: each crossing is named by hand; a new fixed link that
+  carries no cars (a rail tunnel) needs its own entry.
 - **The longer trip's car** (T-276). Drive 15 min + 1.25 x the great circle at 85 km/h, plus 15
   US cents a road km (AAA 2024 fuel and upkeep) and the local parking rule at the destination,
   both split over two occupants, at 3 perceived minutes a dollar. Fuel prices, tolls (T-270),
@@ -792,3 +805,10 @@ notes/T-420.md has the tables.
   the unit (US county, Canadian census division, NUTS-3) differs in size by country, and where
   admin-2 units are tiny (French communes, Japanese municipalities) a coarser statistical unit is
   needed.
+- **Zone pairs in chunks** (T-780, docs/regional.md 5.1). The longer trips' 6 km zone pairs under
+  about 1 trip a day are dealt in chunks of that size, each zone's trips with each place kept. It
+  saves most where many small zones trade a little over long distances (all of Japan: 12.4 million
+  pairs to 3.1 million); a sparse country with few zones gains little and moves little. Why it may
+  not carry over: a station fed by few small pairs (a rural stop on a long-distance line) shows the
+  sampling most, by a quarter or so of its market riders on Japan. Check: `t756-reach.mjs compare
+  <label> chunks` on the country's network.

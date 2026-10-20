@@ -1206,6 +1206,1690 @@
       {
         "name": "Lanzarote",
         "regionName": "Lanzarote region"
+      },
+      {
+        "name": "Brescia",
+        "regionName": "Brescia region"
+      },
+      {
+        "name": "Genova",
+        "regionName": "Genova region"
+      },
+      {
+        "name": "Como",
+        "regionName": "Como region"
+      },
+      {
+        "name": "Pavia",
+        "regionName": "Pavia region"
+      },
+      {
+        "name": "Cuneo",
+        "regionName": "Cuneo region"
+      },
+      {
+        "name": "Mantova",
+        "regionName": "Mantova region"
+      },
+      {
+        "name": "Alessandria",
+        "regionName": "Alessandria region"
+      },
+      {
+        "name": "Novara",
+        "regionName": "Novara region"
+      },
+      {
+        "name": "Lecco",
+        "regionName": "Lecco region"
+      },
+      {
+        "name": "Cremona",
+        "regionName": "Cremona region"
+      },
+      {
+        "name": "Savona",
+        "regionName": "Savona region"
+      },
+      {
+        "name": "La Spezia",
+        "regionName": "La Spezia region"
+      },
+      {
+        "name": "Asti",
+        "regionName": "Asti region"
+      },
+      {
+        "name": "Imperia",
+        "regionName": "Imperia region"
+      },
+      {
+        "name": "Biella",
+        "regionName": "Biella region"
+      },
+      {
+        "name": "Sondrio",
+        "regionName": "Sondrio region"
+      },
+      {
+        "name": "Vercelli",
+        "regionName": "Vercelli region"
+      },
+      {
+        "name": "Verbano-Cusio-Ossola",
+        "regionName": "Verbano-Cusio-Ossola region"
+      },
+      {
+        "name": "Valle d’Aosta",
+        "regionName": "Valle d’Aosta region"
+      },
+      {
+        "name": "Brescia",
+        "regionName": "Brescia region"
+      },
+      {
+        "name": "Genova",
+        "regionName": "Genova region"
+      },
+      {
+        "name": "Como",
+        "regionName": "Como region"
+      },
+      {
+        "name": "Pavia",
+        "regionName": "Pavia region"
+      },
+      {
+        "name": "Cuneo",
+        "regionName": "Cuneo region"
+      },
+      {
+        "name": "Mantova",
+        "regionName": "Mantova region"
+      },
+      {
+        "name": "Alessandria",
+        "regionName": "Alessandria region"
+      },
+      {
+        "name": "Novara",
+        "regionName": "Novara region"
+      },
+      {
+        "name": "Lecco",
+        "regionName": "Lecco region"
+      },
+      {
+        "name": "Cremona",
+        "regionName": "Cremona region"
+      },
+      {
+        "name": "Savona",
+        "regionName": "Savona region"
+      },
+      {
+        "name": "La Spezia",
+        "regionName": "La Spezia region"
+      },
+      {
+        "name": "Asti",
+        "regionName": "Asti region"
+      },
+      {
+        "name": "Imperia",
+        "regionName": "Imperia region"
+      },
+      {
+        "name": "Biella",
+        "regionName": "Biella region"
+      },
+      {
+        "name": "Sondrio",
+        "regionName": "Sondrio region"
+      },
+      {
+        "name": "Vercelli",
+        "regionName": "Vercelli region"
+      },
+      {
+        "name": "Verbano-Cusio-Ossola",
+        "regionName": "Verbano-Cusio-Ossola region"
+      },
+      {
+        "name": "Valle d’Aosta",
+        "regionName": "Valle d’Aosta region"
+      },
+      {
+        "name": "Bari",
+        "regionName": "Bari region"
+      },
+      {
+        "name": "Salerno",
+        "regionName": "Salerno region"
+      },
+      {
+        "name": "Lecce",
+        "regionName": "Lecce region"
+      },
+      {
+        "name": "Cosenza",
+        "regionName": "Cosenza region"
+      },
+      {
+        "name": "Taranto",
+        "regionName": "Taranto region"
+      },
+      {
+        "name": "Foggia",
+        "regionName": "Foggia region"
+      },
+      {
+        "name": "Reggio Calabria",
+        "regionName": "Reggio Calabria region"
+      },
+      {
+        "name": "Avellino",
+        "regionName": "Avellino region"
+      },
+      {
+        "name": "Barletta-Andria-Trani",
+        "regionName": "Barletta-Andria-Trani region"
+      },
+      {
+        "name": "Brindisi",
+        "regionName": "Brindisi region"
+      },
+      {
+        "name": "Chieti",
+        "regionName": "Chieti region"
+      },
+      {
+        "name": "Pescara",
+        "regionName": "Pescara region"
+      },
+      {
+        "name": "Potenza",
+        "regionName": "Potenza region"
+      },
+      {
+        "name": "Catanzaro",
+        "regionName": "Catanzaro region"
+      },
+      {
+        "name": "Teramo",
+        "regionName": "Teramo region"
+      },
+      {
+        "name": "Campobasso",
+        "regionName": "Campobasso region"
+      },
+      {
+        "name": "L’Aquila",
+        "regionName": "L’Aquila region"
+      },
+      {
+        "name": "Benevento",
+        "regionName": "Benevento region"
+      },
+      {
+        "name": "Matera",
+        "regionName": "Matera region"
+      },
+      {
+        "name": "Crotone",
+        "regionName": "Crotone region"
+      },
+      {
+        "name": "Vibo Valentia",
+        "regionName": "Vibo Valentia region"
+      },
+      {
+        "name": "Palermo",
+        "regionName": "Palermo region"
+      },
+      {
+        "name": "Catania",
+        "regionName": "Catania region"
+      },
+      {
+        "name": "Messina",
+        "regionName": "Messina region"
+      },
+      {
+        "name": "Sassari",
+        "regionName": "Sassari region"
+      },
+      {
+        "name": "Cagliari",
+        "regionName": "Cagliari region"
+      },
+      {
+        "name": "Agrigento",
+        "regionName": "Agrigento region"
+      },
+      {
+        "name": "Trapani",
+        "regionName": "Trapani region"
+      },
+      {
+        "name": "Siracusa",
+        "regionName": "Siracusa region"
+      },
+      {
+        "name": "Sud Sardegna",
+        "regionName": "Sud Sardegna region"
+      },
+      {
+        "name": "Ragusa",
+        "regionName": "Ragusa region"
+      },
+      {
+        "name": "Caltanissetta",
+        "regionName": "Caltanissetta region"
+      },
+      {
+        "name": "Nuoro",
+        "regionName": "Nuoro region"
+      },
+      {
+        "name": "Enna",
+        "regionName": "Enna region"
+      },
+      {
+        "name": "Oristano",
+        "regionName": "Oristano region"
+      },
+      {
+        "name": "Bologna",
+        "regionName": "Bologna region"
+      },
+      {
+        "name": "Firenze",
+        "regionName": "Firenze region"
+      },
+      {
+        "name": "Padova",
+        "regionName": "Padova region"
+      },
+      {
+        "name": "Treviso",
+        "regionName": "Treviso region"
+      },
+      {
+        "name": "Verona",
+        "regionName": "Verona region"
+      },
+      {
+        "name": "Vicenza",
+        "regionName": "Vicenza region"
+      },
+      {
+        "name": "Venezia",
+        "regionName": "Venezia region"
+      },
+      {
+        "name": "Modena",
+        "regionName": "Modena region"
+      },
+      {
+        "name": "Perugia",
+        "regionName": "Perugia region"
+      },
+      {
+        "name": "Latina",
+        "regionName": "Latina region"
+      },
+      {
+        "name": "Reggio nell’Emilia",
+        "regionName": "Reggio nell’Emilia region"
+      },
+      {
+        "name": "Trento",
+        "regionName": "Trento region"
+      },
+      {
+        "name": "Udine",
+        "regionName": "Udine region"
+      },
+      {
+        "name": "Bolzano-Bozen",
+        "regionName": "Bolzano-Bozen region"
+      },
+      {
+        "name": "Frosinone",
+        "regionName": "Frosinone region"
+      },
+      {
+        "name": "Parma",
+        "regionName": "Parma region"
+      },
+      {
+        "name": "Ancona",
+        "regionName": "Ancona region"
+      },
+      {
+        "name": "Pisa",
+        "regionName": "Pisa region"
+      },
+      {
+        "name": "Ravenna",
+        "regionName": "Ravenna region"
+      },
+      {
+        "name": "Forlì-Cesena",
+        "regionName": "Forlì-Cesena region"
+      },
+      {
+        "name": "Lucca",
+        "regionName": "Lucca region"
+      },
+      {
+        "name": "Pesaro e Urbino",
+        "regionName": "Pesaro e Urbino region"
+      },
+      {
+        "name": "Ferrara",
+        "regionName": "Ferrara region"
+      },
+      {
+        "name": "Rimini",
+        "regionName": "Rimini region"
+      },
+      {
+        "name": "Pordenone",
+        "regionName": "Pordenone region"
+      },
+      {
+        "name": "Arezzo",
+        "regionName": "Arezzo region"
+      },
+      {
+        "name": "Livorno",
+        "regionName": "Livorno region"
+      },
+      {
+        "name": "Piacenza",
+        "regionName": "Piacenza region"
+      },
+      {
+        "name": "Viterbo",
+        "regionName": "Viterbo region"
+      },
+      {
+        "name": "Macerata",
+        "regionName": "Macerata region"
+      },
+      {
+        "name": "Pistoia",
+        "regionName": "Pistoia region"
+      },
+      {
+        "name": "Prato",
+        "regionName": "Prato region"
+      },
+      {
+        "name": "Siena",
+        "regionName": "Siena region"
+      },
+      {
+        "name": "Terni",
+        "regionName": "Terni region"
+      },
+      {
+        "name": "Trieste",
+        "regionName": "Trieste region"
+      },
+      {
+        "name": "Rovigo",
+        "regionName": "Rovigo region"
+      },
+      {
+        "name": "Grosseto",
+        "regionName": "Grosseto region"
+      },
+      {
+        "name": "Ascoli Piceno",
+        "regionName": "Ascoli Piceno region"
+      },
+      {
+        "name": "Belluno",
+        "regionName": "Belluno region"
+      },
+      {
+        "name": "Massa-Carrara",
+        "regionName": "Massa-Carrara region"
+      },
+      {
+        "name": "Fermo",
+        "regionName": "Fermo region"
+      },
+      {
+        "name": "Gorizia",
+        "regionName": "Gorizia region"
+      },
+      {
+        "name": "Rieti",
+        "regionName": "Rieti region"
+      },
+      {
+        "name": "Brescia",
+        "regionName": "Brescia region"
+      },
+      {
+        "name": "Genova",
+        "regionName": "Genova region"
+      },
+      {
+        "name": "Como",
+        "regionName": "Como region"
+      },
+      {
+        "name": "Pavia",
+        "regionName": "Pavia region"
+      },
+      {
+        "name": "Cuneo",
+        "regionName": "Cuneo region"
+      },
+      {
+        "name": "Mantova",
+        "regionName": "Mantova region"
+      },
+      {
+        "name": "Alessandria",
+        "regionName": "Alessandria region"
+      },
+      {
+        "name": "Novara",
+        "regionName": "Novara region"
+      },
+      {
+        "name": "Lecco",
+        "regionName": "Lecco region"
+      },
+      {
+        "name": "Cremona",
+        "regionName": "Cremona region"
+      },
+      {
+        "name": "Savona",
+        "regionName": "Savona region"
+      },
+      {
+        "name": "La Spezia",
+        "regionName": "La Spezia region"
+      },
+      {
+        "name": "Asti",
+        "regionName": "Asti region"
+      },
+      {
+        "name": "Imperia",
+        "regionName": "Imperia region"
+      },
+      {
+        "name": "Biella",
+        "regionName": "Biella region"
+      },
+      {
+        "name": "Sondrio",
+        "regionName": "Sondrio region"
+      },
+      {
+        "name": "Vercelli",
+        "regionName": "Vercelli region"
+      },
+      {
+        "name": "Verbano-Cusio-Ossola",
+        "regionName": "Verbano-Cusio-Ossola region"
+      },
+      {
+        "name": "Valle d’Aosta",
+        "regionName": "Valle d’Aosta region"
+      },
+      {
+        "name": "Bari",
+        "regionName": "Bari region"
+      },
+      {
+        "name": "Salerno",
+        "regionName": "Salerno region"
+      },
+      {
+        "name": "Lecce",
+        "regionName": "Lecce region"
+      },
+      {
+        "name": "Cosenza",
+        "regionName": "Cosenza region"
+      },
+      {
+        "name": "Taranto",
+        "regionName": "Taranto region"
+      },
+      {
+        "name": "Foggia",
+        "regionName": "Foggia region"
+      },
+      {
+        "name": "Reggio Calabria",
+        "regionName": "Reggio Calabria region"
+      },
+      {
+        "name": "Avellino",
+        "regionName": "Avellino region"
+      },
+      {
+        "name": "Barletta-Andria-Trani",
+        "regionName": "Barletta-Andria-Trani region"
+      },
+      {
+        "name": "Brindisi",
+        "regionName": "Brindisi region"
+      },
+      {
+        "name": "Chieti",
+        "regionName": "Chieti region"
+      },
+      {
+        "name": "Pescara",
+        "regionName": "Pescara region"
+      },
+      {
+        "name": "Potenza",
+        "regionName": "Potenza region"
+      },
+      {
+        "name": "Catanzaro",
+        "regionName": "Catanzaro region"
+      },
+      {
+        "name": "Teramo",
+        "regionName": "Teramo region"
+      },
+      {
+        "name": "Campobasso",
+        "regionName": "Campobasso region"
+      },
+      {
+        "name": "L’Aquila",
+        "regionName": "L’Aquila region"
+      },
+      {
+        "name": "Benevento",
+        "regionName": "Benevento region"
+      },
+      {
+        "name": "Matera",
+        "regionName": "Matera region"
+      },
+      {
+        "name": "Crotone",
+        "regionName": "Crotone region"
+      },
+      {
+        "name": "Vibo Valentia",
+        "regionName": "Vibo Valentia region"
+      },
+      {
+        "name": "Palermo",
+        "regionName": "Palermo region"
+      },
+      {
+        "name": "Catania",
+        "regionName": "Catania region"
+      },
+      {
+        "name": "Messina",
+        "regionName": "Messina region"
+      },
+      {
+        "name": "Agrigento",
+        "regionName": "Agrigento region"
+      },
+      {
+        "name": "Trapani",
+        "regionName": "Trapani region"
+      },
+      {
+        "name": "Siracusa",
+        "regionName": "Siracusa region"
+      },
+      {
+        "name": "Ragusa",
+        "regionName": "Ragusa region"
+      },
+      {
+        "name": "Caltanissetta",
+        "regionName": "Caltanissetta region"
+      },
+      {
+        "name": "Enna",
+        "regionName": "Enna region"
+      },
+      {
+        "name": "Bologna",
+        "regionName": "Bologna region"
+      },
+      {
+        "name": "Firenze",
+        "regionName": "Firenze region"
+      },
+      {
+        "name": "Padova",
+        "regionName": "Padova region"
+      },
+      {
+        "name": "Treviso",
+        "regionName": "Treviso region"
+      },
+      {
+        "name": "Verona",
+        "regionName": "Verona region"
+      },
+      {
+        "name": "Vicenza",
+        "regionName": "Vicenza region"
+      },
+      {
+        "name": "Venezia",
+        "regionName": "Venezia region"
+      },
+      {
+        "name": "Modena",
+        "regionName": "Modena region"
+      },
+      {
+        "name": "Perugia",
+        "regionName": "Perugia region"
+      },
+      {
+        "name": "Latina",
+        "regionName": "Latina region"
+      },
+      {
+        "name": "Reggio nell’Emilia",
+        "regionName": "Reggio nell’Emilia region"
+      },
+      {
+        "name": "Trento",
+        "regionName": "Trento region"
+      },
+      {
+        "name": "Udine",
+        "regionName": "Udine region"
+      },
+      {
+        "name": "Bolzano-Bozen",
+        "regionName": "Bolzano-Bozen region"
+      },
+      {
+        "name": "Frosinone",
+        "regionName": "Frosinone region"
+      },
+      {
+        "name": "Parma",
+        "regionName": "Parma region"
+      },
+      {
+        "name": "Ancona",
+        "regionName": "Ancona region"
+      },
+      {
+        "name": "Pisa",
+        "regionName": "Pisa region"
+      },
+      {
+        "name": "Ravenna",
+        "regionName": "Ravenna region"
+      },
+      {
+        "name": "Forlì-Cesena",
+        "regionName": "Forlì-Cesena region"
+      },
+      {
+        "name": "Lucca",
+        "regionName": "Lucca region"
+      },
+      {
+        "name": "Pesaro e Urbino",
+        "regionName": "Pesaro e Urbino region"
+      },
+      {
+        "name": "Ferrara",
+        "regionName": "Ferrara region"
+      },
+      {
+        "name": "Rimini",
+        "regionName": "Rimini region"
+      },
+      {
+        "name": "Pordenone",
+        "regionName": "Pordenone region"
+      },
+      {
+        "name": "Arezzo",
+        "regionName": "Arezzo region"
+      },
+      {
+        "name": "Livorno",
+        "regionName": "Livorno region"
+      },
+      {
+        "name": "Piacenza",
+        "regionName": "Piacenza region"
+      },
+      {
+        "name": "Viterbo",
+        "regionName": "Viterbo region"
+      },
+      {
+        "name": "Macerata",
+        "regionName": "Macerata region"
+      },
+      {
+        "name": "Pistoia",
+        "regionName": "Pistoia region"
+      },
+      {
+        "name": "Prato",
+        "regionName": "Prato region"
+      },
+      {
+        "name": "Siena",
+        "regionName": "Siena region"
+      },
+      {
+        "name": "Terni",
+        "regionName": "Terni region"
+      },
+      {
+        "name": "Trieste",
+        "regionName": "Trieste region"
+      },
+      {
+        "name": "Rovigo",
+        "regionName": "Rovigo region"
+      },
+      {
+        "name": "Grosseto",
+        "regionName": "Grosseto region"
+      },
+      {
+        "name": "Ascoli Piceno",
+        "regionName": "Ascoli Piceno region"
+      },
+      {
+        "name": "Belluno",
+        "regionName": "Belluno region"
+      },
+      {
+        "name": "Massa-Carrara",
+        "regionName": "Massa-Carrara region"
+      },
+      {
+        "name": "Fermo",
+        "regionName": "Fermo region"
+      },
+      {
+        "name": "Gorizia",
+        "regionName": "Gorizia region"
+      },
+      {
+        "name": "Rieti",
+        "regionName": "Rieti region"
+      },
+      {
+        "name": "Loire-Atlantique",
+        "regionName": "Loire-Atlantique region"
+      },
+      {
+        "name": "Maine-et-Loire",
+        "regionName": "Maine-et-Loire region"
+      },
+      {
+        "name": "Vendée",
+        "regionName": "Vendée region"
+      },
+      {
+        "name": "Sarthe",
+        "regionName": "Sarthe region"
+      },
+      {
+        "name": "Mayenne",
+        "regionName": "Mayenne region"
+      },
+      {
+        "name": "Pas-de-Calais",
+        "regionName": "Pas-de-Calais region"
+      },
+      {
+        "name": "Isère",
+        "regionName": "Isère region"
+      },
+      {
+        "name": "Haute-Savoie",
+        "regionName": "Haute-Savoie region"
+      },
+      {
+        "name": "Loire",
+        "regionName": "Loire region"
+      },
+      {
+        "name": "Ain",
+        "regionName": "Ain region"
+      },
+      {
+        "name": "Drôme",
+        "regionName": "Drôme region"
+      },
+      {
+        "name": "Savoie",
+        "regionName": "Savoie region"
+      },
+      {
+        "name": "Ardèche",
+        "regionName": "Ardèche region"
+      },
+      {
+        "name": "Seine-Maritime",
+        "regionName": "Seine-Maritime region"
+      },
+      {
+        "name": "Eure",
+        "regionName": "Eure region"
+      },
+      {
+        "name": "Hérault",
+        "regionName": "Hérault region"
+      },
+      {
+        "name": "Gard",
+        "regionName": "Gard region"
+      },
+      {
+        "name": "Pyrénées-Orientales",
+        "regionName": "Pyrénées-Orientales region"
+      },
+      {
+        "name": "Aude",
+        "regionName": "Aude region"
+      },
+      {
+        "name": "Ille-et-Vilaine",
+        "regionName": "Ille-et-Vilaine region"
+      },
+      {
+        "name": "Finistère",
+        "regionName": "Finistère region"
+      },
+      {
+        "name": "Morbihan",
+        "regionName": "Morbihan region"
+      },
+      {
+        "name": "Côtes-d’Armor",
+        "regionName": "Côtes-d’Armor region"
+      },
+      {
+        "name": "Bas-Rhin",
+        "regionName": "Bas-Rhin region"
+      },
+      {
+        "name": "Haut-Rhin",
+        "regionName": "Haut-Rhin region"
+      },
+      {
+        "name": "Var",
+        "regionName": "Var region"
+      },
+      {
+        "name": "Vaucluse",
+        "regionName": "Vaucluse region"
+      },
+      {
+        "name": "Alpes-de-Haute-Provence",
+        "regionName": "Alpes-de-Haute-Provence region"
+      },
+      {
+        "name": "Hautes-Alpes",
+        "regionName": "Hautes-Alpes region"
+      },
+      {
+        "name": "Moselle",
+        "regionName": "Moselle region"
+      },
+      {
+        "name": "Meurthe-et-Moselle",
+        "regionName": "Meurthe-et-Moselle region"
+      },
+      {
+        "name": "Vosges",
+        "regionName": "Vosges region"
+      },
+      {
+        "name": "Meuse",
+        "regionName": "Meuse region"
+      },
+      {
+        "name": "Oise",
+        "regionName": "Oise region"
+      },
+      {
+        "name": "Somme",
+        "regionName": "Somme region"
+      },
+      {
+        "name": "Aisne",
+        "regionName": "Aisne region"
+      },
+      {
+        "name": "Loiret",
+        "regionName": "Loiret region"
+      },
+      {
+        "name": "Indre-et-Loire",
+        "regionName": "Indre-et-Loire region"
+      },
+      {
+        "name": "Eure-et-Loir",
+        "regionName": "Eure-et-Loir region"
+      },
+      {
+        "name": "Loir-et-Cher",
+        "regionName": "Loir-et-Cher region"
+      },
+      {
+        "name": "Cher",
+        "regionName": "Cher region"
+      },
+      {
+        "name": "Indre",
+        "regionName": "Indre region"
+      },
+      {
+        "name": "Calvados",
+        "regionName": "Calvados region"
+      },
+      {
+        "name": "Manche",
+        "regionName": "Manche region"
+      },
+      {
+        "name": "Orne",
+        "regionName": "Orne region"
+      },
+      {
+        "name": "Pyrénées-Atlantiques",
+        "regionName": "Pyrénées-Atlantiques region"
+      },
+      {
+        "name": "Landes",
+        "regionName": "Landes region"
+      },
+      {
+        "name": "Dordogne",
+        "regionName": "Dordogne region"
+      },
+      {
+        "name": "Lot-et-Garonne",
+        "regionName": "Lot-et-Garonne region"
+      },
+      {
+        "name": "Charente-Maritime",
+        "regionName": "Charente-Maritime region"
+      },
+      {
+        "name": "Vienne",
+        "regionName": "Vienne region"
+      },
+      {
+        "name": "Deux-Sèvres",
+        "regionName": "Deux-Sèvres region"
+      },
+      {
+        "name": "Charente",
+        "regionName": "Charente region"
+      },
+      {
+        "name": "Loire-Atlantique",
+        "regionName": "Loire-Atlantique region"
+      },
+      {
+        "name": "Maine-et-Loire",
+        "regionName": "Maine-et-Loire region"
+      },
+      {
+        "name": "Vendée",
+        "regionName": "Vendée region"
+      },
+      {
+        "name": "Sarthe",
+        "regionName": "Sarthe region"
+      },
+      {
+        "name": "Mayenne",
+        "regionName": "Mayenne region"
+      },
+      {
+        "name": "Pas-de-Calais",
+        "regionName": "Pas-de-Calais region"
+      },
+      {
+        "name": "Isère",
+        "regionName": "Isère region"
+      },
+      {
+        "name": "Haute-Savoie",
+        "regionName": "Haute-Savoie region"
+      },
+      {
+        "name": "Loire",
+        "regionName": "Loire region"
+      },
+      {
+        "name": "Ain",
+        "regionName": "Ain region"
+      },
+      {
+        "name": "Drôme",
+        "regionName": "Drôme region"
+      },
+      {
+        "name": "Savoie",
+        "regionName": "Savoie region"
+      },
+      {
+        "name": "Ardèche",
+        "regionName": "Ardèche region"
+      },
+      {
+        "name": "Seine-Maritime",
+        "regionName": "Seine-Maritime region"
+      },
+      {
+        "name": "Eure",
+        "regionName": "Eure region"
+      },
+      {
+        "name": "Hérault",
+        "regionName": "Hérault region"
+      },
+      {
+        "name": "Gard",
+        "regionName": "Gard region"
+      },
+      {
+        "name": "Pyrénées-Orientales",
+        "regionName": "Pyrénées-Orientales region"
+      },
+      {
+        "name": "Aude",
+        "regionName": "Aude region"
+      },
+      {
+        "name": "Ille-et-Vilaine",
+        "regionName": "Ille-et-Vilaine region"
+      },
+      {
+        "name": "Finistère",
+        "regionName": "Finistère region"
+      },
+      {
+        "name": "Morbihan",
+        "regionName": "Morbihan region"
+      },
+      {
+        "name": "Côtes-d’Armor",
+        "regionName": "Côtes-d’Armor region"
+      },
+      {
+        "name": "Bas-Rhin",
+        "regionName": "Bas-Rhin region"
+      },
+      {
+        "name": "Haut-Rhin",
+        "regionName": "Haut-Rhin region"
+      },
+      {
+        "name": "Var",
+        "regionName": "Var region"
+      },
+      {
+        "name": "Vaucluse",
+        "regionName": "Vaucluse region"
+      },
+      {
+        "name": "Alpes-de-Haute-Provence",
+        "regionName": "Alpes-de-Haute-Provence region"
+      },
+      {
+        "name": "Hautes-Alpes",
+        "regionName": "Hautes-Alpes region"
+      },
+      {
+        "name": "Moselle",
+        "regionName": "Moselle region"
+      },
+      {
+        "name": "Meurthe-et-Moselle",
+        "regionName": "Meurthe-et-Moselle region"
+      },
+      {
+        "name": "Vosges",
+        "regionName": "Vosges region"
+      },
+      {
+        "name": "Meuse",
+        "regionName": "Meuse region"
+      },
+      {
+        "name": "Oise",
+        "regionName": "Oise region"
+      },
+      {
+        "name": "Somme",
+        "regionName": "Somme region"
+      },
+      {
+        "name": "Aisne",
+        "regionName": "Aisne region"
+      },
+      {
+        "name": "Loiret",
+        "regionName": "Loiret region"
+      },
+      {
+        "name": "Indre-et-Loire",
+        "regionName": "Indre-et-Loire region"
+      },
+      {
+        "name": "Eure-et-Loir",
+        "regionName": "Eure-et-Loir region"
+      },
+      {
+        "name": "Loir-et-Cher",
+        "regionName": "Loir-et-Cher region"
+      },
+      {
+        "name": "Cher",
+        "regionName": "Cher region"
+      },
+      {
+        "name": "Indre",
+        "regionName": "Indre region"
+      },
+      {
+        "name": "Calvados",
+        "regionName": "Calvados region"
+      },
+      {
+        "name": "Manche",
+        "regionName": "Manche region"
+      },
+      {
+        "name": "Orne",
+        "regionName": "Orne region"
+      },
+      {
+        "name": "Pyrénées-Atlantiques",
+        "regionName": "Pyrénées-Atlantiques region"
+      },
+      {
+        "name": "Landes",
+        "regionName": "Landes region"
+      },
+      {
+        "name": "Dordogne",
+        "regionName": "Dordogne region"
+      },
+      {
+        "name": "Lot-et-Garonne",
+        "regionName": "Lot-et-Garonne region"
+      },
+      {
+        "name": "Charente-Maritime",
+        "regionName": "Charente-Maritime region"
+      },
+      {
+        "name": "Vienne",
+        "regionName": "Vienne region"
+      },
+      {
+        "name": "Deux-Sèvres",
+        "regionName": "Deux-Sèvres region"
+      },
+      {
+        "name": "Charente",
+        "regionName": "Charente region"
+      },
+      {
+        "name": "Puy-de-Dôme",
+        "regionName": "Puy-de-Dôme region"
+      },
+      {
+        "name": "Allier",
+        "regionName": "Allier region"
+      },
+      {
+        "name": "Haute-Loire",
+        "regionName": "Haute-Loire region"
+      },
+      {
+        "name": "Cantal",
+        "regionName": "Cantal region"
+      },
+      {
+        "name": "Marne",
+        "regionName": "Marne region"
+      },
+      {
+        "name": "Aube",
+        "regionName": "Aube region"
+      },
+      {
+        "name": "Ardennes",
+        "regionName": "Ardennes region"
+      },
+      {
+        "name": "Haute-Marne",
+        "regionName": "Haute-Marne region"
+      },
+      {
+        "name": "Côte-d’Or",
+        "regionName": "Côte-d’Or region"
+      },
+      {
+        "name": "Saône-et-Loire",
+        "regionName": "Saône-et-Loire region"
+      },
+      {
+        "name": "Yonne",
+        "regionName": "Yonne region"
+      },
+      {
+        "name": "Nièvre",
+        "regionName": "Nièvre region"
+      },
+      {
+        "name": "Doubs",
+        "regionName": "Doubs region"
+      },
+      {
+        "name": "Jura",
+        "regionName": "Jura region"
+      },
+      {
+        "name": "Haute-Saône",
+        "regionName": "Haute-Saône region"
+      },
+      {
+        "name": "Territoire de Belfort",
+        "regionName": "Territoire de Belfort region"
+      },
+      {
+        "name": "Tarn",
+        "regionName": "Tarn region"
+      },
+      {
+        "name": "Tarn-et-Garonne",
+        "regionName": "Tarn-et-Garonne region"
+      },
+      {
+        "name": "Aveyron",
+        "regionName": "Aveyron region"
+      },
+      {
+        "name": "Hautes-Pyrénées",
+        "regionName": "Hautes-Pyrénées region"
+      },
+      {
+        "name": "Gers",
+        "regionName": "Gers region"
+      },
+      {
+        "name": "Lot",
+        "regionName": "Lot region"
+      },
+      {
+        "name": "Ariège",
+        "regionName": "Ariège region"
+      },
+      {
+        "name": "Haute-Vienne",
+        "regionName": "Haute-Vienne region"
+      },
+      {
+        "name": "Corrèze",
+        "regionName": "Corrèze region"
+      },
+      {
+        "name": "Haute-Corse",
+        "regionName": "Haute-Corse region"
+      },
+      {
+        "name": "Corse-du-Sud",
+        "regionName": "Corse-du-Sud region"
+      },
+      {
+        "name": "Loire-Atlantique",
+        "regionName": "Loire-Atlantique region"
+      },
+      {
+        "name": "Maine-et-Loire",
+        "regionName": "Maine-et-Loire region"
+      },
+      {
+        "name": "Vendée",
+        "regionName": "Vendée region"
+      },
+      {
+        "name": "Sarthe",
+        "regionName": "Sarthe region"
+      },
+      {
+        "name": "Mayenne",
+        "regionName": "Mayenne region"
+      },
+      {
+        "name": "Pas-de-Calais",
+        "regionName": "Pas-de-Calais region"
+      },
+      {
+        "name": "Isère",
+        "regionName": "Isère region"
+      },
+      {
+        "name": "Haute-Savoie",
+        "regionName": "Haute-Savoie region"
+      },
+      {
+        "name": "Loire",
+        "regionName": "Loire region"
+      },
+      {
+        "name": "Ain",
+        "regionName": "Ain region"
+      },
+      {
+        "name": "Drôme",
+        "regionName": "Drôme region"
+      },
+      {
+        "name": "Savoie",
+        "regionName": "Savoie region"
+      },
+      {
+        "name": "Ardèche",
+        "regionName": "Ardèche region"
+      },
+      {
+        "name": "Seine-Maritime",
+        "regionName": "Seine-Maritime region"
+      },
+      {
+        "name": "Eure",
+        "regionName": "Eure region"
+      },
+      {
+        "name": "Hérault",
+        "regionName": "Hérault region"
+      },
+      {
+        "name": "Gard",
+        "regionName": "Gard region"
+      },
+      {
+        "name": "Pyrénées-Orientales",
+        "regionName": "Pyrénées-Orientales region"
+      },
+      {
+        "name": "Aude",
+        "regionName": "Aude region"
+      },
+      {
+        "name": "Ille-et-Vilaine",
+        "regionName": "Ille-et-Vilaine region"
+      },
+      {
+        "name": "Finistère",
+        "regionName": "Finistère region"
+      },
+      {
+        "name": "Morbihan",
+        "regionName": "Morbihan region"
+      },
+      {
+        "name": "Côtes-d’Armor",
+        "regionName": "Côtes-d’Armor region"
+      },
+      {
+        "name": "Bas-Rhin",
+        "regionName": "Bas-Rhin region"
+      },
+      {
+        "name": "Haut-Rhin",
+        "regionName": "Haut-Rhin region"
+      },
+      {
+        "name": "Var",
+        "regionName": "Var region"
+      },
+      {
+        "name": "Vaucluse",
+        "regionName": "Vaucluse region"
+      },
+      {
+        "name": "Alpes-de-Haute-Provence",
+        "regionName": "Alpes-de-Haute-Provence region"
+      },
+      {
+        "name": "Hautes-Alpes",
+        "regionName": "Hautes-Alpes region"
+      },
+      {
+        "name": "Moselle",
+        "regionName": "Moselle region"
+      },
+      {
+        "name": "Meurthe-et-Moselle",
+        "regionName": "Meurthe-et-Moselle region"
+      },
+      {
+        "name": "Vosges",
+        "regionName": "Vosges region"
+      },
+      {
+        "name": "Meuse",
+        "regionName": "Meuse region"
+      },
+      {
+        "name": "Oise",
+        "regionName": "Oise region"
+      },
+      {
+        "name": "Somme",
+        "regionName": "Somme region"
+      },
+      {
+        "name": "Aisne",
+        "regionName": "Aisne region"
+      },
+      {
+        "name": "Loiret",
+        "regionName": "Loiret region"
+      },
+      {
+        "name": "Indre-et-Loire",
+        "regionName": "Indre-et-Loire region"
+      },
+      {
+        "name": "Eure-et-Loir",
+        "regionName": "Eure-et-Loir region"
+      },
+      {
+        "name": "Loir-et-Cher",
+        "regionName": "Loir-et-Cher region"
+      },
+      {
+        "name": "Cher",
+        "regionName": "Cher region"
+      },
+      {
+        "name": "Indre",
+        "regionName": "Indre region"
+      },
+      {
+        "name": "Calvados",
+        "regionName": "Calvados region"
+      },
+      {
+        "name": "Manche",
+        "regionName": "Manche region"
+      },
+      {
+        "name": "Orne",
+        "regionName": "Orne region"
+      },
+      {
+        "name": "Pyrénées-Atlantiques",
+        "regionName": "Pyrénées-Atlantiques region"
+      },
+      {
+        "name": "Landes",
+        "regionName": "Landes region"
+      },
+      {
+        "name": "Dordogne",
+        "regionName": "Dordogne region"
+      },
+      {
+        "name": "Lot-et-Garonne",
+        "regionName": "Lot-et-Garonne region"
+      },
+      {
+        "name": "Charente-Maritime",
+        "regionName": "Charente-Maritime region"
+      },
+      {
+        "name": "Vienne",
+        "regionName": "Vienne region"
+      },
+      {
+        "name": "Deux-Sèvres",
+        "regionName": "Deux-Sèvres region"
+      },
+      {
+        "name": "Charente",
+        "regionName": "Charente region"
+      },
+      {
+        "name": "Puy-de-Dôme",
+        "regionName": "Puy-de-Dôme region"
+      },
+      {
+        "name": "Allier",
+        "regionName": "Allier region"
+      },
+      {
+        "name": "Haute-Loire",
+        "regionName": "Haute-Loire region"
+      },
+      {
+        "name": "Cantal",
+        "regionName": "Cantal region"
+      },
+      {
+        "name": "Marne",
+        "regionName": "Marne region"
+      },
+      {
+        "name": "Aube",
+        "regionName": "Aube region"
+      },
+      {
+        "name": "Ardennes",
+        "regionName": "Ardennes region"
+      },
+      {
+        "name": "Haute-Marne",
+        "regionName": "Haute-Marne region"
+      },
+      {
+        "name": "Côte-d’Or",
+        "regionName": "Côte-d’Or region"
+      },
+      {
+        "name": "Saône-et-Loire",
+        "regionName": "Saône-et-Loire region"
+      },
+      {
+        "name": "Yonne",
+        "regionName": "Yonne region"
+      },
+      {
+        "name": "Nièvre",
+        "regionName": "Nièvre region"
+      },
+      {
+        "name": "Doubs",
+        "regionName": "Doubs region"
+      },
+      {
+        "name": "Jura",
+        "regionName": "Jura region"
+      },
+      {
+        "name": "Haute-Saône",
+        "regionName": "Haute-Saône region"
+      },
+      {
+        "name": "Territoire de Belfort",
+        "regionName": "Territoire de Belfort region"
+      },
+      {
+        "name": "Tarn",
+        "regionName": "Tarn region"
+      },
+      {
+        "name": "Tarn-et-Garonne",
+        "regionName": "Tarn-et-Garonne region"
+      },
+      {
+        "name": "Aveyron",
+        "regionName": "Aveyron region"
+      },
+      {
+        "name": "Hautes-Pyrénées",
+        "regionName": "Hautes-Pyrénées region"
+      },
+      {
+        "name": "Gers",
+        "regionName": "Gers region"
+      },
+      {
+        "name": "Lot",
+        "regionName": "Lot region"
+      },
+      {
+        "name": "Ariège",
+        "regionName": "Ariège region"
+      },
+      {
+        "name": "Haute-Vienne",
+        "regionName": "Haute-Vienne region"
+      },
+      {
+        "name": "Corrèze",
+        "regionName": "Corrèze region"
+      },
+      {
+        "name": "Haute-Corse",
+        "regionName": "Haute-Corse region"
+      },
+      {
+        "name": "Corse-du-Sud",
+        "regionName": "Corse-du-Sud region"
       }
     ],
     "rule": {
@@ -1515,7 +3199,7 @@
       "zoom": 11.2,
       "utcOffset": 1,
       "market": -1,
-      "localTrips": 37133007.0,
+      "localTrips": 37037717.0,
       "box": [
         1.418,
         48.102,
@@ -3004,7 +4688,7 @@
         41.49
       ],
       "place": 72,
-      "localTrips": 4942076.0,
+      "localTrips": 4942048.0,
       "country": "PT"
     },
     {
@@ -3292,7 +4976,7 @@
         41.184
       ],
       "place": 92,
-      "localTrips": 20409587.0,
+      "localTrips": 20409688.0,
       "country": "ES"
     },
     {
@@ -3316,7 +5000,7 @@
         42.342
       ],
       "place": 93,
-      "localTrips": 17307851.0,
+      "localTrips": 17308361.0,
       "country": "ES"
     },
     {
@@ -3340,7 +5024,7 @@
         51.84
       ],
       "place": 94,
-      "localTrips": 16398381.0,
+      "localTrips": 16400766.0,
       "country": "DE"
     },
     {
@@ -3364,7 +5048,7 @@
         50.519
       ],
       "place": 95,
-      "localTrips": 11482090.0,
+      "localTrips": 11482844.0,
       "country": "DE"
     },
     {
@@ -3388,7 +5072,7 @@
         51.244
       ],
       "place": 96,
-      "localTrips": 9504723.0,
+      "localTrips": 9506979.0,
       "country": "DE"
     },
     {
@@ -3412,7 +5096,7 @@
         46.141
       ],
       "place": 98,
-      "localTrips": 13984349.0,
+      "localTrips": 13755330.0,
       "country": "IT"
     },
     {
@@ -3436,7 +5120,7 @@
         45.621
       ],
       "place": 99,
-      "localTrips": 6060371.0,
+      "localTrips": 6014186.0,
       "country": "IT"
     },
     {
@@ -3460,7 +5144,7 @@
         46.11
       ],
       "place": 100,
-      "localTrips": 3105094.0,
+      "localTrips": 3038534.0,
       "country": "IT"
     },
     {
@@ -3484,7 +5168,7 @@
         42.315
       ],
       "place": 101,
-      "localTrips": 11561268.0,
+      "localTrips": 11477654.0,
       "country": "IT"
     },
     {
@@ -3508,7 +5192,7 @@
         41.527
       ],
       "place": 102,
-      "localTrips": 10627126.0,
+      "localTrips": 10522631.0,
       "country": "IT"
     },
     {
@@ -3532,7 +5216,7 @@
         52.347
       ],
       "place": 103,
-      "localTrips": 11037761.0,
+      "localTrips": 11039162.0,
       "country": "NL"
     },
     {
@@ -3772,7 +5456,7 @@
         51.062
       ],
       "place": 120,
-      "localTrips": 7117727.0,
+      "localTrips": 7118658.0,
       "country": "BE"
     },
     {
@@ -3796,7 +5480,7 @@
         51.501
       ],
       "place": 121,
-      "localTrips": 4601597.0,
+      "localTrips": 4602523.0,
       "country": "BE"
     },
     {
@@ -3820,7 +5504,7 @@
         51.031
       ],
       "place": 122,
-      "localTrips": 3662813.0,
+      "localTrips": 3662953.0,
       "country": "BE"
     },
     {
@@ -3916,7 +5600,7 @@
         49.098
       ],
       "place": 129,
-      "localTrips": 8010158.0,
+      "localTrips": 8010242.0,
       "country": "DE"
     },
     {
@@ -3940,7 +5624,7 @@
         43.94
       ],
       "place": 171,
-      "localTrips": 4307073.0,
+      "localTrips": 4264705.0,
       "country": "FR"
     },
     {
@@ -3988,7 +5672,7 @@
         40.23
       ],
       "place": 181,
-      "localTrips": 6990335.0,
+      "localTrips": 6990633.0,
       "country": "ES"
     },
     {
@@ -4108,7 +5792,7 @@
         46.325
       ],
       "place": 192,
-      "localTrips": 5724374.0,
+      "localTrips": 5623919.0,
       "country": "FR"
     },
     {
@@ -4324,7 +6008,7 @@
         52.633
       ],
       "place": 205,
-      "localTrips": 6103470.0,
+      "localTrips": 6104772.0,
       "country": "NL"
     },
     {
@@ -4372,7 +6056,7 @@
         51.37
       ],
       "place": 208,
-      "localTrips": 4993927.0,
+      "localTrips": 4996741.0,
       "country": "DE"
     },
     {
@@ -4420,7 +6104,7 @@
         51.108
       ],
       "place": 211,
-      "localTrips": 7296314.0,
+      "localTrips": 7205252.0,
       "country": "FR"
     },
     {
@@ -4444,7 +6128,7 @@
         43.943
       ],
       "place": 212,
-      "localTrips": 5925556.0,
+      "localTrips": 5867578.0,
       "country": "FR"
     },
     {
@@ -4468,7 +6152,7 @@
         38.216
       ],
       "place": 213,
-      "localTrips": 5170276.0,
+      "localTrips": 5170936.0,
       "country": "ES"
     },
     {
@@ -4492,7 +6176,7 @@
         37.301
       ],
       "place": 214,
-      "localTrips": 4473217.0,
+      "localTrips": 4473904.0,
       "country": "ES"
     },
     {
@@ -4516,7 +6200,7 @@
         45.605
       ],
       "place": 215,
-      "localTrips": 4836153.0,
+      "localTrips": 4811839.0,
       "country": "FR"
     },
     {
@@ -4540,7 +6224,7 @@
         49.773
       ],
       "place": 216,
-      "localTrips": 5728644.0,
+      "localTrips": 5728856.0,
       "country": "DE"
     },
     {
@@ -4640,7 +6324,7 @@
         38.906
       ],
       "place": 258,
-      "localTrips": 5240882.0,
+      "localTrips": 5241409.0,
       "country": "ES"
     },
     {
@@ -4665,7 +6349,7 @@
         40.807
       ],
       "place": 259,
-      "localTrips": 1650935.0,
+      "localTrips": 1651094.0,
       "country": "ES"
     },
     {
@@ -4690,7 +6374,7 @@
         38.774
       ],
       "place": 260,
-      "localTrips": 4220022.0,
+      "localTrips": 4220497.0,
       "country": "ES"
     },
     {
@@ -4715,7 +6399,7 @@
         37.071
       ],
       "place": 261,
-      "localTrips": 3243960.0,
+      "localTrips": 3244525.0,
       "country": "ES"
     },
     {
@@ -4740,7 +6424,7 @@
         38.103
       ],
       "place": 262,
-      "localTrips": 2324475.0,
+      "localTrips": 2324901.0,
       "country": "ES"
     },
     {
@@ -4765,7 +6449,7 @@
         38.748
       ],
       "place": 263,
-      "localTrips": 2087394.0,
+      "localTrips": 2087630.0,
       "country": "ES"
     },
     {
@@ -4790,7 +6474,7 @@
         37.935
       ],
       "place": 264,
-      "localTrips": 1871048.0,
+      "localTrips": 1871178.0,
       "country": "ES"
     },
     {
@@ -4815,7 +6499,7 @@
         38.551
       ],
       "place": 265,
-      "localTrips": 1621579.0,
+      "localTrips": 1621727.0,
       "country": "ES"
     },
     {
@@ -4840,7 +6524,7 @@
         38.227
       ],
       "place": 266,
-      "localTrips": 1314712.0,
+      "localTrips": 1314878.0,
       "country": "ES"
     },
     {
@@ -4865,7 +6549,7 @@
         42.763
       ],
       "place": 267,
-      "localTrips": 2792393.0,
+      "localTrips": 2792004.0,
       "country": "ES"
     },
     {
@@ -4890,7 +6574,7 @@
         43.475
       ],
       "place": 268,
-      "localTrips": 2874908.0,
+      "localTrips": 2874915.0,
       "country": "ES"
     },
     {
@@ -4915,7 +6599,7 @@
         43.413
       ],
       "place": 269,
-      "localTrips": 1714860.0,
+      "localTrips": 1713523.0,
       "country": "ES"
     },
     {
@@ -4940,7 +6624,7 @@
         43.236
       ],
       "place": 270,
-      "localTrips": 918900.0,
+      "localTrips": 918925.0,
       "country": "ES"
     },
     {
@@ -4965,7 +6649,7 @@
         43.678
       ],
       "place": 271,
-      "localTrips": 2783538.0,
+      "localTrips": 2783568.0,
       "country": "ES"
     },
     {
@@ -5015,7 +6699,7 @@
         43.809
       ],
       "place": 275,
-      "localTrips": 2703425.0,
+      "localTrips": 2703341.0,
       "country": "ES"
     },
     {
@@ -5040,7 +6724,7 @@
         42.879
       ],
       "place": 276,
-      "localTrips": 2342290.0,
+      "localTrips": 2342225.0,
       "country": "ES"
     },
     {
@@ -5065,7 +6749,7 @@
         42.597
       ],
       "place": 277,
-      "localTrips": 780238.0,
+      "localTrips": 780231.0,
       "country": "ES"
     },
     {
@@ -5090,7 +6774,7 @@
         43.772
       ],
       "place": 278,
-      "localTrips": 755621.0,
+      "localTrips": 755566.0,
       "country": "ES"
     },
     {
@@ -5115,7 +6799,7 @@
         41.601
       ],
       "place": 279,
-      "localTrips": 2187804.0,
+      "localTrips": 2187576.0,
       "country": "ES"
     },
     {
@@ -5140,7 +6824,7 @@
         42.514
       ],
       "place": 280,
-      "localTrips": 1970812.0,
+      "localTrips": 1970169.0,
       "country": "ES"
     },
     {
@@ -5165,7 +6849,7 @@
         42.88
       ],
       "place": 281,
-      "localTrips": 1202842.0,
+      "localTrips": 1201736.0,
       "country": "ES"
     },
     {
@@ -5190,7 +6874,7 @@
         40.337
       ],
       "place": 282,
-      "localTrips": 1796690.0,
+      "localTrips": 1796987.0,
       "country": "ES"
     },
     {
@@ -5215,7 +6899,7 @@
         39.595
       ],
       "place": 283,
-      "localTrips": 1300629.0,
+      "localTrips": 1300774.0,
       "country": "ES"
     },
     {
@@ -5240,7 +6924,7 @@
         39.442
       ],
       "place": 284,
-      "localTrips": 1081695.0,
+      "localTrips": 1081912.0,
       "country": "ES"
     },
     {
@@ -5265,7 +6949,7 @@
         41.346
       ],
       "place": 285,
-      "localTrips": 665376.0,
+      "localTrips": 665497.0,
       "country": "ES"
     },
     {
@@ -5290,7 +6974,7 @@
         43.333
       ],
       "place": 286,
-      "localTrips": 1658892.0,
+      "localTrips": 1658517.0,
       "country": "ES"
     },
     {
@@ -5315,7 +6999,7 @@
         39.47
       ],
       "place": 287,
-      "localTrips": 1665798.0,
+      "localTrips": 1665862.0,
       "country": "ES"
     },
     {
@@ -5340,7 +7024,7 @@
         43.532
       ],
       "place": 288,
-      "localTrips": 1482015.0,
+      "localTrips": 1481958.0,
       "country": "ES"
     },
     {
@@ -5365,7 +7049,7 @@
         42.33
       ],
       "place": 289,
-      "localTrips": 1362488.0,
+      "localTrips": 1362576.0,
       "country": "ES"
     },
     {
@@ -5390,7 +7074,7 @@
         43.257
       ],
       "place": 290,
-      "localTrips": 1165622.0,
+      "localTrips": 1165535.0,
       "country": "ES"
     },
     {
@@ -5440,7 +7124,7 @@
         41.313
       ],
       "place": 292,
-      "localTrips": 839404.0,
+      "localTrips": 839391.0,
       "country": "ES"
     },
     {
@@ -5465,7 +7149,7 @@
         42.663
       ],
       "place": 293,
-      "localTrips": 876765.0,
+      "localTrips": 876769.0,
       "country": "ES"
     },
     {
@@ -5490,7 +7174,7 @@
         35.936
       ],
       "place": 294,
-      "localTrips": 154501.0,
+      "localTrips": 154521.0,
       "country": "ES"
     },
     {
@@ -5542,6 +7226,4431 @@
       "place": 296,
       "localTrips": 380483.0,
       "country": "ES"
+    },
+    {
+      "id": "sss",
+      "name": "Sassari",
+      "kind": "zone",
+      "origin": {
+        "lon": 8.5656,
+        "lat": 40.736
+      },
+      "center": [
+        8.5656,
+        40.736
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.106,
+        40.278,
+        9.778,
+        41.288
+      ],
+      "place": 359,
+      "country": "IT",
+      "localTrips": 1202052.0
+    },
+    {
+      "id": "cgl",
+      "name": "Cagliari",
+      "kind": "zone",
+      "origin": {
+        "lon": 9.126,
+        "lat": 39.2242
+      },
+      "center": [
+        9.126,
+        39.2242
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.796,
+        38.897,
+        9.51,
+        39.442
+      ],
+      "place": 360,
+      "country": "IT",
+      "localTrips": 1134326.0
+    },
+    {
+      "id": "sud",
+      "name": "Sud Sardegna",
+      "kind": "zone",
+      "origin": {
+        "lon": 9.0081,
+        "lat": 39.3579
+      },
+      "center": [
+        9.0081,
+        39.3579
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.195,
+        38.845,
+        9.675,
+        39.938
+      ],
+      "place": 364,
+      "country": "IT",
+      "localTrips": 796005.0
+    },
+    {
+      "id": "nuo",
+      "name": "Nuoro",
+      "kind": "zone",
+      "origin": {
+        "lon": 9.3231,
+        "lat": 40.3143
+      },
+      "center": [
+        9.3231,
+        40.3143
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.587,
+        39.531,
+        9.853,
+        40.725
+      ],
+      "place": 367,
+      "country": "IT",
+      "localTrips": 449169.0
+    },
+    {
+      "id": "ori",
+      "name": "Oristano",
+      "kind": "zone",
+      "origin": {
+        "lon": 8.5945,
+        "lat": 39.9115
+      },
+      "center": [
+        8.5945,
+        39.9115
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.352,
+        39.608,
+        9.197,
+        40.445
+      ],
+      "place": 369,
+      "country": "IT",
+      "localTrips": 352065.0
+    },
+    {
+      "id": "bre",
+      "name": "Brescia",
+      "kind": "zone",
+      "origin": {
+        "lon": 10.2191,
+        "lat": 45.5379
+      },
+      "center": [
+        10.2191,
+        45.5379
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        9.81,
+        45.186,
+        10.869,
+        46.373
+      ],
+      "place": 413,
+      "country": "IT",
+      "localTrips": 3302762.0
+    },
+    {
+      "id": "gen",
+      "name": "Genova",
+      "kind": "zone",
+      "origin": {
+        "lon": 8.9262,
+        "lat": 44.4227
+      },
+      "center": [
+        8.9262,
+        44.4227
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.546,
+        44.198,
+        9.601,
+        44.695
+      ],
+      "place": 414,
+      "country": "IT",
+      "localTrips": 2151584.0
+    },
+    {
+      "id": "cox",
+      "name": "Como",
+      "kind": "zone",
+      "origin": {
+        "lon": 9.0882,
+        "lat": 45.8064
+      },
+      "center": [
+        9.0882,
+        45.8064
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.868,
+        45.621,
+        9.467,
+        46.258
+      ],
+      "place": 415,
+      "country": "IT",
+      "localTrips": 1541362.0
+    },
+    {
+      "id": "pav",
+      "name": "Pavia",
+      "kind": "zone",
+      "origin": {
+        "lon": 8.8521,
+        "lat": 45.3161
+      },
+      "center": [
+        8.8521,
+        45.3161
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.472,
+        44.661,
+        9.577,
+        45.412
+      ],
+      "place": 416,
+      "country": "IT",
+      "localTrips": 1441577.0
+    },
+    {
+      "id": "cun",
+      "name": "Cuneo",
+      "kind": "zone",
+      "origin": {
+        "lon": 7.5452,
+        "lat": 44.386
+      },
+      "center": [
+        7.5452,
+        44.386
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        6.829,
+        44.041,
+        8.295,
+        44.875
+      ],
+      "place": 417,
+      "country": "IT",
+      "localTrips": 1460077.0
+    },
+    {
+      "id": "mav",
+      "name": "Mantova",
+      "kind": "zone",
+      "origin": {
+        "lon": 10.7829,
+        "lat": 45.1499
+      },
+      "center": [
+        10.7829,
+        45.1499
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        10.283,
+        44.892,
+        11.454,
+        45.447
+      ],
+      "place": 418,
+      "country": "IT",
+      "localTrips": 1020189.0
+    },
+    {
+      "id": "als",
+      "name": "Alessandria",
+      "kind": "zone",
+      "origin": {
+        "lon": 8.6271,
+        "lat": 44.9102
+      },
+      "center": [
+        8.6271,
+        44.9102
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.083,
+        44.446,
+        9.24,
+        45.224
+      ],
+      "place": 419,
+      "country": "IT",
+      "localTrips": 1027282.0
+    },
+    {
+      "id": "noa",
+      "name": "Novara",
+      "kind": "zone",
+      "origin": {
+        "lon": 8.6027,
+        "lat": 45.4362
+      },
+      "center": [
+        8.6027,
+        45.4362
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.284,
+        45.273,
+        8.869,
+        45.895
+      ],
+      "place": 420,
+      "country": "IT",
+      "localTrips": 927589.0
+    },
+    {
+      "id": "lex",
+      "name": "Lecco",
+      "kind": "zone",
+      "origin": {
+        "lon": 9.3939,
+        "lat": 45.862
+      },
+      "center": [
+        9.3939,
+        45.862
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        9.217,
+        45.631,
+        9.567,
+        46.17
+      ],
+      "place": 421,
+      "country": "IT",
+      "localTrips": 868525.0
+    },
+    {
+      "id": "cre",
+      "name": "Cremona",
+      "kind": "zone",
+      "origin": {
+        "lon": 10.0243,
+        "lat": 45.1315
+      },
+      "center": [
+        10.0243,
+        45.1315
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        9.427,
+        44.919,
+        10.623,
+        45.523
+      ],
+      "place": 422,
+      "country": "IT",
+      "localTrips": 838466.0
+    },
+    {
+      "id": "svo",
+      "name": "Savona",
+      "kind": "zone",
+      "origin": {
+        "lon": 8.4732,
+        "lat": 44.3125
+      },
+      "center": [
+        8.4732,
+        44.3125
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        7.951,
+        43.92,
+        8.697,
+        44.547
+      ],
+      "place": 423,
+      "country": "IT",
+      "localTrips": 662850.0
+    },
+    {
+      "id": "las",
+      "name": "La Spezia",
+      "kind": "zone",
+      "origin": {
+        "lon": 9.8162,
+        "lat": 44.1108
+      },
+      "center": [
+        9.8162,
+        44.1108
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        9.44,
+        44.015,
+        10.097,
+        44.46
+      ],
+      "place": 424,
+      "country": "IT",
+      "localTrips": 565429.0
+    },
+    {
+      "id": "asi",
+      "name": "Asti",
+      "kind": "zone",
+      "origin": {
+        "lon": 8.2058,
+        "lat": 44.901
+      },
+      "center": [
+        8.2058,
+        44.901
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        7.857,
+        44.5,
+        8.54,
+        45.152
+      ],
+      "place": 425,
+      "country": "IT",
+      "localTrips": 506292.0
+    },
+    {
+      "id": "imp",
+      "name": "Imperia",
+      "kind": "zone",
+      "origin": {
+        "lon": 7.7688,
+        "lat": 43.8178
+      },
+      "center": [
+        7.7688,
+        43.8178
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        7.469,
+        43.757,
+        8.161,
+        44.16
+      ],
+      "place": 426,
+      "country": "IT",
+      "localTrips": 515295.0
+    },
+    {
+      "id": "bie",
+      "name": "Biella",
+      "kind": "zone",
+      "origin": {
+        "lon": 8.0545,
+        "lat": 45.5657
+      },
+      "center": [
+        8.0545,
+        45.5657
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        7.855,
+        45.357,
+        8.354,
+        45.776
+      ],
+      "place": 427,
+      "country": "IT",
+      "localTrips": 453317.0
+    },
+    {
+      "id": "son",
+      "name": "Sondrio",
+      "kind": "zone",
+      "origin": {
+        "lon": 9.8657,
+        "lat": 46.1683
+      },
+      "center": [
+        9.8657,
+        46.1683
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        9.22,
+        45.993,
+        10.659,
+        46.654
+      ],
+      "place": 428,
+      "country": "IT",
+      "localTrips": 411565.0
+    },
+    {
+      "id": "vec",
+      "name": "Vercelli",
+      "kind": "zone",
+      "origin": {
+        "lon": 8.4181,
+        "lat": 45.3253
+      },
+      "center": [
+        8.4181,
+        45.3253
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        7.835,
+        45.141,
+        8.608,
+        45.969
+      ],
+      "place": 429,
+      "country": "IT",
+      "localTrips": 380129.0
+    },
+    {
+      "id": "veb",
+      "name": "Verbano-Cusio-Ossola",
+      "kind": "zone",
+      "origin": {
+        "lon": 8.2933,
+        "lat": 46.1218
+      },
+      "center": [
+        8.2933,
+        46.1218
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        7.842,
+        45.748,
+        8.756,
+        46.483
+      ],
+      "place": 430,
+      "country": "IT",
+      "localTrips": 359122.0
+    },
+    {
+      "id": "vao",
+      "name": "Valle d’Aosta",
+      "kind": "zone",
+      "origin": {
+        "lon": 7.3082,
+        "lat": 45.7323
+      },
+      "center": [
+        7.3082,
+        45.7323
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        6.775,
+        45.449,
+        7.966,
+        46.006
+      ],
+      "place": 431,
+      "country": "IT",
+      "localTrips": 306321.0
+    },
+    {
+      "id": "bai",
+      "name": "Bari",
+      "kind": "zone",
+      "origin": {
+        "lon": 16.8549,
+        "lat": 41.1227
+      },
+      "center": [
+        16.8549,
+        41.1227
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        16.178,
+        40.674,
+        17.424,
+        41.248
+      ],
+      "place": 432,
+      "country": "IT",
+      "localTrips": 3177046.0
+    },
+    {
+      "id": "sle",
+      "name": "Salerno",
+      "kind": "zone",
+      "origin": {
+        "lon": 14.7704,
+        "lat": 40.6821
+      },
+      "center": [
+        14.7704,
+        40.6821
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        14.438,
+        39.972,
+        15.831,
+        40.867
+      ],
+      "place": 433,
+      "country": "IT",
+      "localTrips": 2717229.0
+    },
+    {
+      "id": "lec",
+      "name": "Lecce",
+      "kind": "zone",
+      "origin": {
+        "lon": 18.1755,
+        "lat": 40.3591
+      },
+      "center": [
+        18.1755,
+        40.3591
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        17.738,
+        39.771,
+        18.545,
+        40.533
+      ],
+      "place": 434,
+      "country": "IT",
+      "localTrips": 1999868.0
+    },
+    {
+      "id": "cos",
+      "name": "Cosenza",
+      "kind": "zone",
+      "origin": {
+        "lon": 16.2466,
+        "lat": 39.3044
+      },
+      "center": [
+        16.2466,
+        39.3044
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        15.733,
+        39.03,
+        17.048,
+        40.164
+      ],
+      "place": 435,
+      "country": "IT",
+      "localTrips": 1667292.0
+    },
+    {
+      "id": "tat",
+      "name": "Taranto",
+      "kind": "zone",
+      "origin": {
+        "lon": 17.2581,
+        "lat": 40.4578
+      },
+      "center": [
+        17.2581,
+        40.4578
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        16.673,
+        40.276,
+        17.825,
+        40.822
+      ],
+      "place": 436,
+      "country": "IT",
+      "localTrips": 1489006.0
+    },
+    {
+      "id": "fog",
+      "name": "Foggia",
+      "kind": "zone",
+      "origin": {
+        "lon": 15.5481,
+        "lat": 41.4561
+      },
+      "center": [
+        15.5481,
+        41.4561
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        14.91,
+        41.037,
+        16.224,
+        41.969
+      ],
+      "place": 437,
+      "country": "IT",
+      "localTrips": 1440680.0
+    },
+    {
+      "id": "rei",
+      "name": "Reggio Calabria",
+      "kind": "zone",
+      "origin": {
+        "lon": 15.6476,
+        "lat": 38.0961
+      },
+      "center": [
+        15.6476,
+        38.0961
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        15.606,
+        37.897,
+        16.607,
+        38.592
+      ],
+      "place": 438,
+      "country": "IT",
+      "localTrips": 1302064.0
+    },
+    {
+      "id": "ave",
+      "name": "Avellino",
+      "kind": "zone",
+      "origin": {
+        "lon": 14.7911,
+        "lat": 40.9158
+      },
+      "center": [
+        14.7911,
+        40.9158
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        14.535,
+        40.688,
+        15.597,
+        41.305
+      ],
+      "place": 439,
+      "country": "IT",
+      "localTrips": 1021236.0
+    },
+    {
+      "id": "bax",
+      "name": "Barletta-Andria-Trani",
+      "kind": "zone",
+      "origin": {
+        "lon": 16.267,
+        "lat": 41.3209
+      },
+      "center": [
+        16.267,
+        41.3209
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        15.846,
+        40.879,
+        16.567,
+        41.46
+      ],
+      "place": 440,
+      "country": "IT",
+      "localTrips": 1025933.0
+    },
+    {
+      "id": "brn",
+      "name": "Brindisi",
+      "kind": "zone",
+      "origin": {
+        "lon": 17.9251,
+        "lat": 40.6282
+      },
+      "center": [
+        17.9251,
+        40.6282
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        17.271,
+        40.361,
+        18.123,
+        40.911
+      ],
+      "place": 441,
+      "country": "IT",
+      "localTrips": 968048.0
+    },
+    {
+      "id": "chi",
+      "name": "Chieti",
+      "kind": "zone",
+      "origin": {
+        "lon": 14.168,
+        "lat": 42.3514
+      },
+      "center": [
+        14.168,
+        42.3514
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        14.056,
+        41.741,
+        14.809,
+        42.464
+      ],
+      "place": 442,
+      "country": "IT",
+      "localTrips": 912350.0
+    },
+    {
+      "id": "pec",
+      "name": "Pescara",
+      "kind": "zone",
+      "origin": {
+        "lon": 14.2088,
+        "lat": 42.4694
+      },
+      "center": [
+        14.2088,
+        42.4694
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        13.741,
+        42.055,
+        14.279,
+        42.564
+      ],
+      "place": 443,
+      "country": "IT",
+      "localTrips": 857190.0
+    },
+    {
+      "id": "pox",
+      "name": "Potenza",
+      "kind": "zone",
+      "origin": {
+        "lon": 15.8065,
+        "lat": 40.6372
+      },
+      "center": [
+        15.8065,
+        40.6372
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        15.311,
+        39.877,
+        16.424,
+        41.158
+      ],
+      "place": 444,
+      "country": "IT",
+      "localTrips": 836847.0
+    },
+    {
+      "id": "caz",
+      "name": "Catanzaro",
+      "kind": "zone",
+      "origin": {
+        "lon": 16.3158,
+        "lat": 38.9749
+      },
+      "center": [
+        16.3158,
+        38.9749
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        16.072,
+        38.445,
+        16.944,
+        39.213
+      ],
+      "place": 445,
+      "country": "IT",
+      "localTrips": 847609.0
+    },
+    {
+      "id": "ter",
+      "name": "Teramo",
+      "kind": "zone",
+      "origin": {
+        "lon": 13.7046,
+        "lat": 42.66
+      },
+      "center": [
+        13.7046,
+        42.66
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        13.322,
+        42.403,
+        14.171,
+        42.914
+      ],
+      "place": 446,
+      "country": "IT",
+      "localTrips": 738506.0
+    },
+    {
+      "id": "cao",
+      "name": "Campobasso",
+      "kind": "zone",
+      "origin": {
+        "lon": 14.6563,
+        "lat": 41.5644
+      },
+      "center": [
+        14.6563,
+        41.5644
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        13.916,
+        41.345,
+        15.186,
+        42.089
+      ],
+      "place": 447,
+      "country": "IT",
+      "localTrips": 686284.0
+    },
+    {
+      "id": "laq",
+      "name": "L’Aquila",
+      "kind": "zone",
+      "origin": {
+        "lon": 13.4272,
+        "lat": 42.0344
+      },
+      "center": [
+        13.4272,
+        42.0344
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        12.994,
+        41.663,
+        14.255,
+        42.61
+      ],
+      "place": 448,
+      "country": "IT",
+      "localTrips": 674524.0
+    },
+    {
+      "id": "bev",
+      "name": "Benevento",
+      "kind": "zone",
+      "origin": {
+        "lon": 14.7726,
+        "lat": 41.1227
+      },
+      "center": [
+        14.7726,
+        41.1227
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        14.327,
+        40.99,
+        15.174,
+        41.505
+      ],
+      "place": 449,
+      "country": "IT",
+      "localTrips": 626514.0
+    },
+    {
+      "id": "mte",
+      "name": "Matera",
+      "kind": "zone",
+      "origin": {
+        "lon": 16.5938,
+        "lat": 40.6731
+      },
+      "center": [
+        16.5938,
+        40.6731
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        16.024,
+        40.038,
+        16.891,
+        40.857
+      ],
+      "place": 450,
+      "country": "IT",
+      "localTrips": 425259.0
+    },
+    {
+      "id": "cro",
+      "name": "Crotone",
+      "kind": "zone",
+      "origin": {
+        "lon": 17.1253,
+        "lat": 39.0817
+      },
+      "center": [
+        17.1253,
+        39.0817
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        16.589,
+        38.874,
+        17.23,
+        39.501
+      ],
+      "place": 451,
+      "country": "IT",
+      "localTrips": 376551.0
+    },
+    {
+      "id": "vib",
+      "name": "Vibo Valentia",
+      "kind": "zone",
+      "origin": {
+        "lon": 16.0864,
+        "lat": 38.6726
+      },
+      "center": [
+        16.0864,
+        38.6726
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        15.803,
+        38.41,
+        16.458,
+        38.843
+      ],
+      "place": 452,
+      "country": "IT",
+      "localTrips": 345519.0
+    },
+    {
+      "id": "pae",
+      "name": "Palermo",
+      "kind": "zone",
+      "origin": {
+        "lon": 13.335,
+        "lat": 38.1227
+      },
+      "center": [
+        13.335,
+        38.1227
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        12.905,
+        37.521,
+        14.318,
+        38.739
+      ],
+      "place": 453,
+      "country": "IT",
+      "localTrips": 3183071.0
+    },
+    {
+      "id": "cta",
+      "name": "Catania",
+      "kind": "zone",
+      "origin": {
+        "lon": 15.0992,
+        "lat": 37.5213
+      },
+      "center": [
+        15.0992,
+        37.5213
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        14.329,
+        37.032,
+        15.281,
+        37.98
+      ],
+      "place": 454,
+      "country": "IT",
+      "localTrips": 2787380.0
+    },
+    {
+      "id": "mes",
+      "name": "Messina",
+      "kind": "zone",
+      "origin": {
+        "lon": 15.5587,
+        "lat": 38.2113
+      },
+      "center": [
+        15.5587,
+        38.2113
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        14.16,
+        37.776,
+        15.677,
+        38.831
+      ],
+      "place": 455,
+      "country": "IT",
+      "localTrips": 1508104.0
+    },
+    {
+      "id": "agi",
+      "name": "Agrigento",
+      "kind": "zone",
+      "origin": {
+        "lon": 13.6589,
+        "lat": 37.3183
+      },
+      "center": [
+        13.6589,
+        37.3183
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        12.494,
+        35.474,
+        14.062,
+        37.761
+      ],
+      "place": 456,
+      "country": "IT",
+      "localTrips": 1081602.0
+    },
+    {
+      "id": "tra",
+      "name": "Trapani",
+      "kind": "zone",
+      "origin": {
+        "lon": 12.9603,
+        "lat": 37.981
+      },
+      "center": [
+        12.9603,
+        37.981
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        11.902,
+        36.716,
+        13.124,
+        38.208
+      ],
+      "place": 457,
+      "country": "IT",
+      "localTrips": 1012084.0
+    },
+    {
+      "id": "sir",
+      "name": "Siracusa",
+      "kind": "zone",
+      "origin": {
+        "lon": 15.2862,
+        "lat": 37.089
+      },
+      "center": [
+        15.2862,
+        37.089
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        14.75,
+        36.628,
+        15.36,
+        37.431
+      ],
+      "place": 458,
+      "country": "IT",
+      "localTrips": 966523.0
+    },
+    {
+      "id": "rag",
+      "name": "Ragusa",
+      "kind": "zone",
+      "origin": {
+        "lon": 14.5232,
+        "lat": 36.9481
+      },
+      "center": [
+        14.5232,
+        36.9481
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        14.314,
+        36.673,
+        15.031,
+        37.158
+      ],
+      "place": 459,
+      "country": "IT",
+      "localTrips": 737027.0
+    },
+    {
+      "id": "cae",
+      "name": "Caltanissetta",
+      "kind": "zone",
+      "origin": {
+        "lon": 14.2394,
+        "lat": 37.0714
+      },
+      "center": [
+        14.2394,
+        37.0714
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        13.628,
+        36.984,
+        14.5,
+        37.764
+      ],
+      "place": 460,
+      "country": "IT",
+      "localTrips": 604315.0
+    },
+    {
+      "id": "enn",
+      "name": "Enna",
+      "kind": "zone",
+      "origin": {
+        "lon": 14.275,
+        "lat": 37.5654
+      },
+      "center": [
+        14.275,
+        37.5654
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        14.033,
+        37.272,
+        14.853,
+        37.899
+      ],
+      "place": 461,
+      "country": "IT",
+      "localTrips": 373304.0
+    },
+    {
+      "id": "bol",
+      "name": "Bologna",
+      "kind": "zone",
+      "origin": {
+        "lon": 11.3343,
+        "lat": 44.4962
+      },
+      "center": [
+        11.3343,
+        44.4962
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        10.778,
+        44.044,
+        11.865,
+        44.824
+      ],
+      "place": 462,
+      "country": "IT",
+      "localTrips": 2646009.0
+    },
+    {
+      "id": "fir",
+      "name": "Firenze",
+      "kind": "zone",
+      "origin": {
+        "lon": 11.2496,
+        "lat": 43.7903
+      },
+      "center": [
+        11.2496,
+        43.7903
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        10.686,
+        43.433,
+        11.779,
+        44.258
+      ],
+      "place": 463,
+      "country": "IT",
+      "localTrips": 2531052.0
+    },
+    {
+      "id": "pao",
+      "name": "Padova",
+      "kind": "zone",
+      "origin": {
+        "lon": 11.8858,
+        "lat": 45.427
+      },
+      "center": [
+        11.8858,
+        45.427
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        11.365,
+        45.077,
+        12.233,
+        45.706
+      ],
+      "place": 464,
+      "country": "IT",
+      "localTrips": 2480129.0
+    },
+    {
+      "id": "tre",
+      "name": "Treviso",
+      "kind": "zone",
+      "origin": {
+        "lon": 12.2421,
+        "lat": 45.6675
+      },
+      "center": [
+        12.2421,
+        45.6675
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        11.717,
+        45.512,
+        12.712,
+        46.101
+      ],
+      "place": 465,
+      "country": "IT",
+      "localTrips": 2436156.0
+    },
+    {
+      "id": "ver",
+      "name": "Verona",
+      "kind": "zone",
+      "origin": {
+        "lon": 10.9675,
+        "lat": 45.4454
+      },
+      "center": [
+        10.9675,
+        45.4454
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        10.597,
+        45.034,
+        11.518,
+        45.85
+      ],
+      "place": 466,
+      "country": "IT",
+      "localTrips": 2435670.0
+    },
+    {
+      "id": "vic",
+      "name": "Vicenza",
+      "kind": "zone",
+      "origin": {
+        "lon": 11.5281,
+        "lat": 45.5472
+      },
+      "center": [
+        11.5281,
+        45.5472
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        11.11,
+        45.237,
+        11.862,
+        46.033
+      ],
+      "place": 467,
+      "country": "IT",
+      "localTrips": 2288015.0
+    },
+    {
+      "id": "ven",
+      "name": "Venezia",
+      "kind": "zone",
+      "origin": {
+        "lon": 12.2566,
+        "lat": 45.5009
+      },
+      "center": [
+        12.2566,
+        45.5009
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        11.936,
+        45.037,
+        13.128,
+        45.873
+      ],
+      "place": 468,
+      "country": "IT",
+      "localTrips": 2182254.0
+    },
+    {
+      "id": "mod",
+      "name": "Modena",
+      "kind": "zone",
+      "origin": {
+        "lon": 10.9207,
+        "lat": 44.6433
+      },
+      "center": [
+        10.9207,
+        44.6433
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        10.484,
+        44.096,
+        11.395,
+        44.981
+      ],
+      "place": 469,
+      "country": "IT",
+      "localTrips": 1837250.0
+    },
+    {
+      "id": "peu",
+      "name": "Perugia",
+      "kind": "zone",
+      "origin": {
+        "lon": 12.3713,
+        "lat": 43.1057
+      },
+      "center": [
+        12.3713,
+        43.1057
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        11.887,
+        42.578,
+        13.289,
+        43.636
+      ],
+      "place": 470,
+      "country": "IT",
+      "localTrips": 1711219.0
+    },
+    {
+      "id": "lat",
+      "name": "Latina",
+      "kind": "zone",
+      "origin": {
+        "lon": 12.9111,
+        "lat": 41.4651
+      },
+      "center": [
+        12.9111,
+        41.4651
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        12.506,
+        40.858,
+        13.919,
+        41.733
+      ],
+      "place": 471,
+      "country": "IT",
+      "localTrips": 1521496.0
+    },
+    {
+      "id": "reg",
+      "name": "Reggio nell’Emilia",
+      "kind": "zone",
+      "origin": {
+        "lon": 10.6423,
+        "lat": 44.6893
+      },
+      "center": [
+        10.6423,
+        44.6893
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        10.117,
+        44.207,
+        10.923,
+        45.011
+      ],
+      "place": 472,
+      "country": "IT",
+      "localTrips": 1423200.0
+    },
+    {
+      "id": "trn",
+      "name": "Trento",
+      "kind": "zone",
+      "origin": {
+        "lon": 11.1185,
+        "lat": 46.0568
+      },
+      "center": [
+        11.1185,
+        46.0568
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        10.426,
+        45.654,
+        11.989,
+        46.552
+      ],
+      "place": 473,
+      "country": "IT",
+      "localTrips": 1375495.0
+    },
+    {
+      "id": "udi",
+      "name": "Udine",
+      "kind": "zone",
+      "origin": {
+        "lon": 13.2385,
+        "lat": 46.0754
+      },
+      "center": [
+        13.2385,
+        46.0754
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        12.466,
+        45.624,
+        13.744,
+        46.667
+      ],
+      "place": 474,
+      "country": "IT",
+      "localTrips": 1362294.0
+    },
+    {
+      "id": "boz",
+      "name": "Bolzano-Bozen",
+      "kind": "zone",
+      "origin": {
+        "lon": 11.338,
+        "lat": 46.4937
+      },
+      "center": [
+        11.338,
+        46.4937
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        10.355,
+        46.201,
+        12.505,
+        47.111
+      ],
+      "place": 475,
+      "country": "IT",
+      "localTrips": 1306755.0
+    },
+    {
+      "id": "fro",
+      "name": "Frosinone",
+      "kind": "zone",
+      "origin": {
+        "lon": 13.834,
+        "lat": 41.4922
+      },
+      "center": [
+        13.834,
+        41.4922
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        12.967,
+        41.283,
+        14.052,
+        41.974
+      ],
+      "place": 476,
+      "country": "IT",
+      "localTrips": 1223215.0
+    },
+    {
+      "id": "pam",
+      "name": "Parma",
+      "kind": "zone",
+      "origin": {
+        "lon": 10.3215,
+        "lat": 44.7997
+      },
+      "center": [
+        10.3215,
+        44.7997
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        9.412,
+        44.328,
+        10.535,
+        45.063
+      ],
+      "place": 477,
+      "country": "IT",
+      "localTrips": 1152950.0
+    },
+    {
+      "id": "anc",
+      "name": "Ancona",
+      "kind": "zone",
+      "origin": {
+        "lon": 13.509,
+        "lat": 43.6075
+      },
+      "center": [
+        13.509,
+        43.6075
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        12.721,
+        43.191,
+        13.684,
+        43.769
+      ],
+      "place": 478,
+      "country": "IT",
+      "localTrips": 1207978.0
+    },
+    {
+      "id": "pis",
+      "name": "Pisa",
+      "kind": "zone",
+      "origin": {
+        "lon": 10.3983,
+        "lat": 43.7171
+      },
+      "center": [
+        10.3983,
+        43.7171
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        10.232,
+        43.09,
+        11.04,
+        43.853
+      ],
+      "place": 479,
+      "country": "IT",
+      "localTrips": 1040327.0
+    },
+    {
+      "id": "rav",
+      "name": "Ravenna",
+      "kind": "zone",
+      "origin": {
+        "lon": 12.1866,
+        "lat": 44.4227
+      },
+      "center": [
+        12.1866,
+        44.4227
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        11.499,
+        44.08,
+        12.41,
+        44.647
+      ],
+      "place": 480,
+      "country": "IT",
+      "localTrips": 1019330.0
+    },
+    {
+      "id": "fol",
+      "name": "Forlì-Cesena",
+      "kind": "zone",
+      "origin": {
+        "lon": 12.0486,
+        "lat": 44.2116
+      },
+      "center": [
+        12.0486,
+        44.2116
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        11.619,
+        43.721,
+        12.484,
+        44.349
+      ],
+      "place": 481,
+      "country": "IT",
+      "localTrips": 1015299.0
+    },
+    {
+      "id": "lcc",
+      "name": "Lucca",
+      "kind": "zone",
+      "origin": {
+        "lon": 10.4857,
+        "lat": 43.8452
+      },
+      "center": [
+        10.4857,
+        43.8452
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        10.118,
+        43.731,
+        10.763,
+        44.305
+      ],
+      "place": 482,
+      "country": "IT",
+      "localTrips": 974554.0
+    },
+    {
+      "id": "peo",
+      "name": "Pesaro e Urbino",
+      "kind": "zone",
+      "origin": {
+        "lon": 12.9156,
+        "lat": 43.9093
+      },
+      "center": [
+        12.9156,
+        43.9093
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        12.16,
+        43.398,
+        13.198,
+        43.99
+      ],
+      "place": 483,
+      "country": "IT",
+      "localTrips": 887011.0
+    },
+    {
+      "id": "fer",
+      "name": "Ferrara",
+      "kind": "zone",
+      "origin": {
+        "lon": 11.6122,
+        "lat": 44.8457
+      },
+      "center": [
+        11.6122,
+        44.8457
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        11.209,
+        44.528,
+        12.425,
+        45.006
+      ],
+      "place": 484,
+      "country": "IT",
+      "localTrips": 862944.0
+    },
+    {
+      "id": "rim",
+      "name": "Rimini",
+      "kind": "zone",
+      "origin": {
+        "lon": 12.5557,
+        "lat": 44.0558
+      },
+      "center": [
+        12.5557,
+        44.0558
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        12.071,
+        43.712,
+        12.781,
+        44.181
+      ],
+      "place": 485,
+      "country": "IT",
+      "localTrips": 891393.0
+    },
+    {
+      "id": "pod",
+      "name": "Pordenone",
+      "kind": "zone",
+      "origin": {
+        "lon": 12.6586,
+        "lat": 45.964
+      },
+      "center": [
+        12.6586,
+        45.964
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        12.295,
+        45.772,
+        13.017,
+        46.431
+      ],
+      "place": 486,
+      "country": "IT",
+      "localTrips": 832251.0
+    },
+    {
+      "id": "arz",
+      "name": "Arezzo",
+      "kind": "zone",
+      "origin": {
+        "lon": 11.8809,
+        "lat": 43.4613
+      },
+      "center": [
+        11.8809,
+        43.4613
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        11.372,
+        43.138,
+        12.398,
+        43.896
+      ],
+      "place": 487,
+      "country": "IT",
+      "localTrips": 828144.0
+    },
+    {
+      "id": "lir",
+      "name": "Livorno",
+      "kind": "zone",
+      "origin": {
+        "lon": 10.3195,
+        "lat": 43.5527
+      },
+      "center": [
+        10.3195,
+        43.5527
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        9.766,
+        42.295,
+        10.822,
+        43.653
+      ],
+      "place": 488,
+      "country": "IT",
+      "localTrips": 834310.0
+    },
+    {
+      "id": "pia",
+      "name": "Piacenza",
+      "kind": "zone",
+      "origin": {
+        "lon": 9.6921,
+        "lat": 45.0392
+      },
+      "center": [
+        9.6921,
+        45.0392
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        9.172,
+        44.537,
+        10.109,
+        45.158
+      ],
+      "place": 489,
+      "country": "IT",
+      "localTrips": 754557.0
+    },
+    {
+      "id": "vir",
+      "name": "Viterbo",
+      "kind": "zone",
+      "origin": {
+        "lon": 12.1164,
+        "lat": 42.4149
+      },
+      "center": [
+        12.1164,
+        42.4149
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        11.424,
+        42.129,
+        12.545,
+        42.857
+      ],
+      "place": 490,
+      "country": "IT",
+      "localTrips": 742438.0
+    },
+    {
+      "id": "mce",
+      "name": "Macerata",
+      "kind": "zone",
+      "origin": {
+        "lon": 13.4535,
+        "lat": 43.2971
+      },
+      "center": [
+        13.4535,
+        43.2971
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        12.804,
+        42.813,
+        13.769,
+        43.493
+      ],
+      "place": 491,
+      "country": "IT",
+      "localTrips": 759786.0
+    },
+    {
+      "id": "pit",
+      "name": "Pistoia",
+      "kind": "zone",
+      "origin": {
+        "lon": 10.9119,
+        "lat": 43.9367
+      },
+      "center": [
+        10.9119,
+        43.9367
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        10.595,
+        43.77,
+        11.097,
+        44.179
+      ],
+      "place": 492,
+      "country": "IT",
+      "localTrips": 703615.0
+    },
+    {
+      "id": "prt",
+      "name": "Prato",
+      "kind": "zone",
+      "origin": {
+        "lon": 11.078,
+        "lat": 43.891
+      },
+      "center": [
+        11.078,
+        43.891
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        10.938,
+        43.74,
+        11.235,
+        44.131
+      ],
+      "place": 493,
+      "country": "IT",
+      "localTrips": 666547.0
+    },
+    {
+      "id": "sie",
+      "name": "Siena",
+      "kind": "zone",
+      "origin": {
+        "lon": 11.1512,
+        "lat": 43.4705
+      },
+      "center": [
+        11.1512,
+        43.4705
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        10.883,
+        42.767,
+        12.008,
+        43.567
+      ],
+      "place": 494,
+      "country": "IT",
+      "localTrips": 621385.0
+    },
+    {
+      "id": "tei",
+      "name": "Terni",
+      "kind": "zone",
+      "origin": {
+        "lon": 12.6397,
+        "lat": 42.551
+      },
+      "center": [
+        12.6397,
+        42.551
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        11.867,
+        42.346,
+        12.921,
+        42.962
+      ],
+      "place": 495,
+      "country": "IT",
+      "localTrips": 592048.0
+    },
+    {
+      "id": "trs",
+      "name": "Trieste",
+      "kind": "zone",
+      "origin": {
+        "lon": 13.7844,
+        "lat": 45.6397
+      },
+      "center": [
+        13.7844,
+        45.6397
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        13.549,
+        45.562,
+        13.945,
+        45.827
+      ],
+      "place": 496,
+      "country": "IT",
+      "localTrips": 592767.0
+    },
+    {
+      "id": "rov",
+      "name": "Rovigo",
+      "kind": "zone",
+      "origin": {
+        "lon": 11.7902,
+        "lat": 45.0761
+      },
+      "center": [
+        11.7902,
+        45.0761
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        11.148,
+        44.774,
+        12.579,
+        45.182
+      ],
+      "place": 497,
+      "country": "IT",
+      "localTrips": 534198.0
+    },
+    {
+      "id": "gro",
+      "name": "Grosseto",
+      "kind": "zone",
+      "origin": {
+        "lon": 11.1186,
+        "lat": 42.76
+      },
+      "center": [
+        11.1186,
+        42.76
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        10.681,
+        42.219,
+        11.845,
+        43.208
+      ],
+      "place": 498,
+      "country": "IT",
+      "localTrips": 497911.0
+    },
+    {
+      "id": "asc",
+      "name": "Ascoli Piceno",
+      "kind": "zone",
+      "origin": {
+        "lon": 13.8783,
+        "lat": 42.951
+      },
+      "center": [
+        13.8783,
+        42.951
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        13.162,
+        42.669,
+        13.941,
+        43.098
+      ],
+      "place": 499,
+      "country": "IT",
+      "localTrips": 492918.0
+    },
+    {
+      "id": "bll",
+      "name": "Belluno",
+      "kind": "zone",
+      "origin": {
+        "lon": 12.2213,
+        "lat": 46.1497
+      },
+      "center": [
+        12.2213,
+        46.1497
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        11.639,
+        45.862,
+        12.759,
+        46.699
+      ],
+      "place": 500,
+      "country": "IT",
+      "localTrips": 465534.0
+    },
+    {
+      "id": "mss",
+      "name": "Massa-Carrara",
+      "kind": "zone",
+      "origin": {
+        "lon": 10.1394,
+        "lat": 44.0375
+      },
+      "center": [
+        10.1394,
+        44.0375
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        9.661,
+        43.957,
+        10.281,
+        44.491
+      ],
+      "place": 501,
+      "country": "IT",
+      "localTrips": 460711.0
+    },
+    {
+      "id": "fem",
+      "name": "Fermo",
+      "kind": "zone",
+      "origin": {
+        "lon": 13.7618,
+        "lat": 43.2424
+      },
+      "center": [
+        13.7618,
+        43.2424
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        13.191,
+        42.872,
+        13.875,
+        43.313
+      ],
+      "place": 502,
+      "country": "IT",
+      "localTrips": 406517.0
+    },
+    {
+      "id": "goz",
+      "name": "Gorizia",
+      "kind": "zone",
+      "origin": {
+        "lon": 13.523,
+        "lat": 45.8064
+      },
+      "center": [
+        13.523,
+        45.8064
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        13.211,
+        45.655,
+        13.67,
+        46.07
+      ],
+      "place": 503,
+      "country": "IT",
+      "localTrips": 364671.0
+    },
+    {
+      "id": "rie",
+      "name": "Rieti",
+      "kind": "zone",
+      "origin": {
+        "lon": 12.8503,
+        "lat": 42.4058
+      },
+      "center": [
+        12.8503,
+        42.4058
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        12.412,
+        42.07,
+        13.435,
+        42.76
+      ],
+      "place": 504,
+      "country": "IT",
+      "localTrips": 350667.0
+    },
+    {
+      "id": "loi",
+      "name": "Loire-Atlantique",
+      "kind": "zone",
+      "origin": {
+        "lon": -1.5556,
+        "lat": 47.2217
+      },
+      "center": [
+        -1.5556,
+        47.2217
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -2.555,
+        46.842,
+        -0.92,
+        47.855
+      ],
+      "place": 638,
+      "country": "FR",
+      "localTrips": 4073070.0
+    },
+    {
+      "id": "mie",
+      "name": "Maine-et-Loire",
+      "kind": "zone",
+      "origin": {
+        "lon": -0.5413,
+        "lat": 47.4652
+      },
+      "center": [
+        -0.5413,
+        47.4652
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -1.382,
+        46.95,
+        0.262,
+        47.828
+      ],
+      "place": 639,
+      "country": "FR",
+      "localTrips": 2282809.0
+    },
+    {
+      "id": "ved",
+      "name": "Vendée",
+      "kind": "zone",
+      "origin": {
+        "lon": -1.432,
+        "lat": 46.6707
+      },
+      "center": [
+        -1.432,
+        46.6707
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -2.428,
+        46.248,
+        -0.511,
+        47.104
+      ],
+      "place": 640,
+      "country": "FR",
+      "localTrips": 1980531.0
+    },
+    {
+      "id": "srt",
+      "name": "Sarthe",
+      "kind": "zone",
+      "origin": {
+        "lon": 0.1987,
+        "lat": 48.0005
+      },
+      "center": [
+        0.1987,
+        48.0005
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -0.475,
+        47.55,
+        0.944,
+        48.503
+      ],
+      "place": 641,
+      "country": "FR",
+      "localTrips": 1663132.0
+    },
+    {
+      "id": "mye",
+      "name": "Mayenne",
+      "kind": "zone",
+      "origin": {
+        "lon": -0.7761,
+        "lat": 48.0663
+      },
+      "center": [
+        -0.7761,
+        48.0663
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -1.266,
+        47.715,
+        -0.021,
+        48.587
+      ],
+      "place": 642,
+      "country": "FR",
+      "localTrips": 876215.0
+    },
+    {
+      "id": "pas",
+      "name": "Pas-de-Calais",
+      "kind": "zone",
+      "origin": {
+        "lon": 1.6129,
+        "lat": 50.7281
+      },
+      "center": [
+        1.6129,
+        50.7281
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        1.526,
+        50.001,
+        3.217,
+        51.027
+      ],
+      "place": 643,
+      "country": "FR",
+      "localTrips": 4048404.0
+    },
+    {
+      "id": "ise",
+      "name": "Isère",
+      "kind": "zone",
+      "origin": {
+        "lon": 5.7125,
+        "lat": 45.1776
+      },
+      "center": [
+        5.7125,
+        45.1776
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        4.715,
+        44.677,
+        6.385,
+        45.902
+      ],
+      "place": 644,
+      "country": "FR",
+      "localTrips": 3642516.0
+    },
+    {
+      "id": "hau",
+      "name": "Haute-Savoie",
+      "kind": "zone",
+      "origin": {
+        "lon": 6.2425,
+        "lat": 46.1961
+      },
+      "center": [
+        6.2425,
+        46.1961
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        5.778,
+        45.663,
+        7.071,
+        46.475
+      ],
+      "place": 645,
+      "country": "FR",
+      "localTrips": 2453260.0
+    },
+    {
+      "id": "lor",
+      "name": "Loire",
+      "kind": "zone",
+      "origin": {
+        "lon": 4.3853,
+        "lat": 45.4362
+      },
+      "center": [
+        4.3853,
+        45.4362
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        3.662,
+        45.212,
+        4.787,
+        46.295
+      ],
+      "place": 646,
+      "country": "FR",
+      "localTrips": 2148522.0
+    },
+    {
+      "id": "ain",
+      "name": "Ain",
+      "kind": "zone",
+      "origin": {
+        "lon": 5.2267,
+        "lat": 46.2054
+      },
+      "center": [
+        5.2267,
+        46.2054
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        4.702,
+        45.592,
+        6.197,
+        46.538
+      ],
+      "place": 647,
+      "country": "FR",
+      "localTrips": 1786973.0
+    },
+    {
+      "id": "dro",
+      "name": "Drôme",
+      "kind": "zone",
+      "origin": {
+        "lon": 4.8928,
+        "lat": 44.9286
+      },
+      "center": [
+        4.8928,
+        44.9286
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        4.621,
+        44.097,
+        5.856,
+        45.363
+      ],
+      "place": 648,
+      "country": "FR",
+      "localTrips": 1441954.0
+    },
+    {
+      "id": "svi",
+      "name": "Savoie",
+      "kind": "zone",
+      "origin": {
+        "lon": 5.9241,
+        "lat": 45.5657
+      },
+      "center": [
+        5.9241,
+        45.5657
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        5.595,
+        45.033,
+        7.212,
+        45.957
+      ],
+      "place": 649,
+      "country": "FR",
+      "localTrips": 1224871.0
+    },
+    {
+      "id": "ard",
+      "name": "Ardèche",
+      "kind": "zone",
+      "origin": {
+        "lon": 4.868,
+        "lat": 44.9286
+      },
+      "center": [
+        4.868,
+        44.9286
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        3.835,
+        44.246,
+        4.912,
+        45.385
+      ],
+      "place": 650,
+      "country": "FR",
+      "localTrips": 886860.0
+    },
+    {
+      "id": "sei",
+      "name": "Seine-Maritime",
+      "kind": "zone",
+      "origin": {
+        "lon": 1.0899,
+        "lat": 49.4476
+      },
+      "center": [
+        1.0899,
+        49.4476
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        0.037,
+        49.232,
+        1.819,
+        50.091
+      ],
+      "place": 651,
+      "country": "FR",
+      "localTrips": 3511212.0
+    },
+    {
+      "id": "eur",
+      "name": "Eure",
+      "kind": "zone",
+      "origin": {
+        "lon": 1.149,
+        "lat": 49.0298
+      },
+      "center": [
+        1.149,
+        49.0298
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        0.268,
+        48.648,
+        1.831,
+        49.503
+      ],
+      "place": 652,
+      "country": "FR",
+      "localTrips": 1669830.0
+    },
+    {
+      "id": "hea",
+      "name": "Hérault",
+      "kind": "zone",
+      "origin": {
+        "lon": 3.8728,
+        "lat": 43.6075
+      },
+      "center": [
+        3.8728,
+        43.6075
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        2.514,
+        43.192,
+        4.22,
+        43.991
+      ],
+      "place": 653,
+      "country": "FR",
+      "localTrips": 3350605.0
+    },
+    {
+      "id": "gar",
+      "name": "Gard",
+      "kind": "zone",
+      "origin": {
+        "lon": 4.3589,
+        "lat": 43.836
+      },
+      "center": [
+        4.3589,
+        43.836
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        3.236,
+        43.442,
+        4.871,
+        44.478
+      ],
+      "place": 654,
+      "country": "FR",
+      "localTrips": 2187287.0
+    },
+    {
+      "id": "pye",
+      "name": "Pyrénées-Orientales",
+      "kind": "zone",
+      "origin": {
+        "lon": 2.8942,
+        "lat": 42.6963
+      },
+      "center": [
+        2.8942,
+        42.6963
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        1.696,
+        42.314,
+        3.203,
+        42.937
+      ],
+      "place": 655,
+      "country": "FR",
+      "localTrips": 1412445.0
+    },
+    {
+      "id": "aud",
+      "name": "Aude",
+      "kind": "zone",
+      "origin": {
+        "lon": 3.0059,
+        "lat": 43.1877
+      },
+      "center": [
+        3.0059,
+        43.1877
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        1.663,
+        42.63,
+        3.266,
+        43.479
+      ],
+      "place": 656,
+      "country": "FR",
+      "localTrips": 1066851.0
+    },
+    {
+      "id": "ill",
+      "name": "Ille-et-Vilaine",
+      "kind": "zone",
+      "origin": {
+        "lon": -1.6751,
+        "lat": 48.1134
+      },
+      "center": [
+        -1.6751,
+        48.1134
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -2.316,
+        47.613,
+        -0.988,
+        48.733
+      ],
+      "place": 657,
+      "country": "FR",
+      "localTrips": 3168721.0
+    },
+    {
+      "id": "fin",
+      "name": "Finistère",
+      "kind": "zone",
+      "origin": {
+        "lon": -4.4884,
+        "lat": 48.3868
+      },
+      "center": [
+        -4.4884,
+        48.3868
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -5.169,
+        47.683,
+        -3.359,
+        48.772
+      ],
+      "place": 658,
+      "country": "FR",
+      "localTrips": 2591213.0
+    },
+    {
+      "id": "mob",
+      "name": "Morbihan",
+      "kind": "zone",
+      "origin": {
+        "lon": -3.3672,
+        "lat": 47.7467
+      },
+      "center": [
+        -3.3672,
+        47.7467
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -3.763,
+        47.259,
+        -2.008,
+        48.229
+      ],
+      "place": 659,
+      "country": "FR",
+      "localTrips": 2172516.0
+    },
+    {
+      "id": "coe",
+      "name": "Côtes-d’Armor",
+      "kind": "zone",
+      "origin": {
+        "lon": -2.7668,
+        "lat": 48.5095
+      },
+      "center": [
+        -2.7668,
+        48.5095
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -3.694,
+        48.014,
+        -1.881,
+        48.91
+      ],
+      "place": 660,
+      "country": "FR",
+      "localTrips": 1726295.0
+    },
+    {
+      "id": "bsr",
+      "name": "Bas-Rhin",
+      "kind": "zone",
+      "origin": {
+        "lon": 7.7531,
+        "lat": 48.585
+      },
+      "center": [
+        7.7531,
+        48.585
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        6.913,
+        48.102,
+        8.26,
+        49.096
+      ],
+      "place": 661,
+      "country": "FR",
+      "localTrips": 3266429.0
+    },
+    {
+      "id": "hat",
+      "name": "Haut-Rhin",
+      "kind": "zone",
+      "origin": {
+        "lon": 7.3414,
+        "lat": 47.7467
+      },
+      "center": [
+        7.3414,
+        47.7467
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        6.814,
+        47.402,
+        7.65,
+        48.33
+      ],
+      "place": 662,
+      "country": "FR",
+      "localTrips": 2220593.0
+    },
+    {
+      "id": "vax",
+      "name": "Var",
+      "kind": "zone",
+      "origin": {
+        "lon": 5.9173,
+        "lat": 43.1331
+      },
+      "center": [
+        5.9173,
+        43.1331
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        5.631,
+        42.964,
+        6.959,
+        43.827
+      ],
+      "place": 663,
+      "country": "FR",
+      "localTrips": 3084617.0
+    },
+    {
+      "id": "vau",
+      "name": "Vaucluse",
+      "kind": "zone",
+      "origin": {
+        "lon": 4.8047,
+        "lat": 43.9459
+      },
+      "center": [
+        4.8047,
+        43.9459
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        4.623,
+        43.64,
+        5.784,
+        44.348
+      ],
+      "place": 664,
+      "country": "FR",
+      "localTrips": 1502562.0
+    },
+    {
+      "id": "ald",
+      "name": "Alpes-de-Haute-Provence",
+      "kind": "zone",
+      "origin": {
+        "lon": 6.2343,
+        "lat": 44.0924
+      },
+      "center": [
+        6.2343,
+        44.0924
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        5.471,
+        43.65,
+        6.995,
+        44.679
+      ],
+      "place": 665,
+      "country": "FR",
+      "localTrips": 479290.0
+    },
+    {
+      "id": "hut",
+      "name": "Hautes-Alpes",
+      "kind": "zone",
+      "origin": {
+        "lon": 6.0808,
+        "lat": 44.5605
+      },
+      "center": [
+        6.0808,
+        44.5605
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        5.392,
+        44.168,
+        7.103,
+        45.145
+      ],
+      "place": 666,
+      "country": "FR",
+      "localTrips": 405295.0
+    },
+    {
+      "id": "mol",
+      "name": "Moselle",
+      "kind": "zone",
+      "origin": {
+        "lon": 6.1666,
+        "lat": 49.1057
+      },
+      "center": [
+        6.1666,
+        49.1057
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        5.864,
+        48.508,
+        7.667,
+        49.534
+      ],
+      "place": 667,
+      "country": "FR",
+      "localTrips": 2877321.0
+    },
+    {
+      "id": "meu",
+      "name": "Meurthe-et-Moselle",
+      "kind": "zone",
+      "origin": {
+        "lon": 6.186,
+        "lat": 48.689
+      },
+      "center": [
+        6.186,
+        48.689
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        5.398,
+        48.33,
+        7.151,
+        49.582
+      ],
+      "place": 668,
+      "country": "FR",
+      "localTrips": 2047364.0
+    },
+    {
+      "id": "vos",
+      "name": "Vosges",
+      "kind": "zone",
+      "origin": {
+        "lon": 6.9524,
+        "lat": 48.283
+      },
+      "center": [
+        6.9524,
+        48.283
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        5.366,
+        47.795,
+        7.226,
+        48.532
+      ],
+      "place": 669,
+      "country": "FR",
+      "localTrips": 1015048.0
+    },
+    {
+      "id": "mus",
+      "name": "Meuse",
+      "kind": "zone",
+      "origin": {
+        "lon": 5.1573,
+        "lat": 48.7741
+      },
+      "center": [
+        5.1573,
+        48.7741
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        4.86,
+        48.391,
+        5.882,
+        49.635
+      ],
+      "place": 670,
+      "country": "FR",
+      "localTrips": 502122.0
+    },
+    {
+      "id": "ois",
+      "name": "Oise",
+      "kind": "zone",
+      "origin": {
+        "lon": 2.4805,
+        "lat": 49.2575
+      },
+      "center": [
+        2.4805,
+        49.2575
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        1.66,
+        49.042,
+        3.194,
+        49.782
+      ],
+      "place": 671,
+      "country": "FR",
+      "localTrips": 2270037.0
+    },
+    {
+      "id": "som",
+      "name": "Somme",
+      "kind": "zone",
+      "origin": {
+        "lon": 2.291,
+        "lat": 49.8953
+      },
+      "center": [
+        2.291,
+        49.8953
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        1.351,
+        49.553,
+        3.231,
+        50.385
+      ],
+      "place": 672,
+      "country": "FR",
+      "localTrips": 1557624.0
+    },
+    {
+      "id": "ais",
+      "name": "Aisne",
+      "kind": "zone",
+      "origin": {
+        "lon": 3.2867,
+        "lat": 49.8476
+      },
+      "center": [
+        3.2867,
+        49.8476
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        2.93,
+        48.819,
+        4.284,
+        50.088
+      ],
+      "place": 673,
+      "country": "FR",
+      "localTrips": 1453437.0
+    },
+    {
+      "id": "loe",
+      "name": "Loiret",
+      "kind": "zone",
+      "origin": {
+        "lon": 1.9013,
+        "lat": 47.9064
+      },
+      "center": [
+        1.9013,
+        47.9064
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        1.485,
+        47.465,
+        3.156,
+        48.364
+      ],
+      "place": 674,
+      "country": "FR",
+      "localTrips": 1941817.0
+    },
+    {
+      "id": "inr",
+      "name": "Indre-et-Loire",
+      "kind": "zone",
+      "origin": {
+        "lon": 0.6807,
+        "lat": 47.3902
+      },
+      "center": [
+        0.6807,
+        47.3902
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        0.026,
+        46.718,
+        1.393,
+        47.728
+      ],
+      "place": 675,
+      "country": "FR",
+      "localTrips": 1737157.0
+    },
+    {
+      "id": "eue",
+      "name": "Eure-et-Loir",
+      "kind": "zone",
+      "origin": {
+        "lon": 1.4886,
+        "lat": 48.4434
+      },
+      "center": [
+        1.4886,
+        48.4434
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        0.728,
+        47.935,
+        2.022,
+        48.96
+      ],
+      "place": 676,
+      "country": "FR",
+      "localTrips": 1200599.0
+    },
+    {
+      "id": "loc",
+      "name": "Loir-et-Cher",
+      "kind": "zone",
+      "origin": {
+        "lon": 1.3328,
+        "lat": 47.5871
+      },
+      "center": [
+        1.3328,
+        47.5871
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        0.553,
+        47.168,
+        2.275,
+        48.152
+      ],
+      "place": 677,
+      "country": "FR",
+      "localTrips": 911143.0
+    },
+    {
+      "id": "chx",
+      "name": "Cher",
+      "kind": "zone",
+      "origin": {
+        "lon": 2.4024,
+        "lat": 47.0814
+      },
+      "center": [
+        2.4024,
+        47.0814
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        1.747,
+        46.402,
+        3.106,
+        47.648
+      ],
+      "place": 678,
+      "country": "FR",
+      "localTrips": 816049.0
+    },
+    {
+      "id": "ine",
+      "name": "Indre",
+      "kind": "zone",
+      "origin": {
+        "lon": 1.6997,
+        "lat": 46.8106
+      },
+      "center": [
+        1.6997,
+        46.8106
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        0.84,
+        46.329,
+        2.231,
+        47.296
+      ],
+      "place": 679,
+      "country": "FR",
+      "localTrips": 615854.0
+    },
+    {
+      "id": "cav",
+      "name": "Calvados",
+      "kind": "zone",
+      "origin": {
+        "lon": -0.3577,
+        "lat": 49.1816
+      },
+      "center": [
+        -0.3577,
+        49.1816
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -1.188,
+        48.733,
+        0.475,
+        49.449
+      ],
+      "place": 680,
+      "country": "FR",
+      "localTrips": 1995406.0
+    },
+    {
+      "id": "mnc",
+      "name": "Manche",
+      "kind": "zone",
+      "origin": {
+        "lon": -1.6291,
+        "lat": 49.6379
+      },
+      "center": [
+        -1.6291,
+        49.6379
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -1.977,
+        48.437,
+        -0.707,
+        49.747
+      ],
+      "place": 681,
+      "country": "FR",
+      "localTrips": 1404824.0
+    },
+    {
+      "id": "orn",
+      "name": "Orne",
+      "kind": "zone",
+      "origin": {
+        "lon": 0.0838,
+        "lat": 48.4339
+      },
+      "center": [
+        0.0838,
+        48.4339
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -0.888,
+        48.161,
+        1.004,
+        48.991
+      ],
+      "place": 682,
+      "country": "FR",
+      "localTrips": 775546.0
+    },
+    {
+      "id": "pyr",
+      "name": "Pyrénées-Atlantiques",
+      "kind": "zone",
+      "origin": {
+        "lon": -0.3708,
+        "lat": 43.2971
+      },
+      "center": [
+        -0.3708,
+        43.2971
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -1.815,
+        42.759,
+        0.056,
+        43.615
+      ],
+      "place": 683,
+      "country": "FR",
+      "localTrips": 1945866.0
+    },
+    {
+      "id": "lad",
+      "name": "Landes",
+      "kind": "zone",
+      "origin": {
+        "lon": -1.0562,
+        "lat": 43.708
+      },
+      "center": [
+        -1.0562,
+        43.708
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -1.549,
+        43.469,
+        0.162,
+        44.551
+      ],
+      "place": 684,
+      "country": "FR",
+      "localTrips": 1188275.0
+    },
+    {
+      "id": "dod",
+      "name": "Dordogne",
+      "kind": "zone",
+      "origin": {
+        "lon": 0.7134,
+        "lat": 45.1868
+      },
+      "center": [
+        0.7134,
+        45.1868
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -0.068,
+        44.553,
+        1.474,
+        45.733
+      ],
+      "place": 685,
+      "country": "FR",
+      "localTrips": 1185503.0
+    },
+    {
+      "id": "lot",
+      "name": "Lot-et-Garonne",
+      "kind": "zone",
+      "origin": {
+        "lon": 0.6199,
+        "lat": 44.2025
+      },
+      "center": [
+        0.6199,
+        44.2025
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -0.166,
+        43.954,
+        1.104,
+        44.784
+      ],
+      "place": 686,
+      "country": "FR",
+      "localTrips": 957605.0
+    },
+    {
+      "id": "chr",
+      "name": "Charente-Maritime",
+      "kind": "zone",
+      "origin": {
+        "lon": -1.1476,
+        "lat": 46.159
+      },
+      "center": [
+        -1.1476,
+        46.159
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -1.589,
+        45.07,
+        0.033,
+        46.39
+      ],
+      "place": 687,
+      "country": "FR",
+      "localTrips": 1852115.0
+    },
+    {
+      "id": "vin",
+      "name": "Vienne",
+      "kind": "zone",
+      "origin": {
+        "lon": 0.3466,
+        "lat": 46.5776
+      },
+      "center": [
+        0.3466,
+        46.5776
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -0.132,
+        46.03,
+        1.24,
+        47.195
+      ],
+      "place": 688,
+      "country": "FR",
+      "localTrips": 1230986.0
+    },
+    {
+      "id": "deu",
+      "name": "Deux-Sèvres",
+      "kind": "zone",
+      "origin": {
+        "lon": -0.2075,
+        "lat": 46.41
+      },
+      "center": [
+        -0.2075,
+        46.41
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -0.93,
+        45.951,
+        0.247,
+        47.127
+      ],
+      "place": 689,
+      "country": "FR",
+      "localTrips": 1052758.0
+    },
+    {
+      "id": "cht",
+      "name": "Charente",
+      "kind": "zone",
+      "origin": {
+        "lon": 0.1559,
+        "lat": 45.649
+      },
+      "center": [
+        0.1559,
+        45.649
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -0.489,
+        45.174,
+        0.973,
+        46.159
+      ],
+      "place": 690,
+      "country": "FR",
+      "localTrips": 988557.0
+    },
+    {
+      "id": "puy",
+      "name": "Puy-de-Dôme",
+      "kind": "zone",
+      "origin": {
+        "lon": 3.0784,
+        "lat": 45.7786
+      },
+      "center": [
+        3.0784,
+        45.7786
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        2.362,
+        45.268,
+        4.012,
+        46.275
+      ],
+      "place": 691,
+      "country": "FR",
+      "localTrips": 1862928.0
+    },
+    {
+      "id": "all",
+      "name": "Allier",
+      "kind": "zone",
+      "origin": {
+        "lon": 3.4293,
+        "lat": 46.1311
+      },
+      "center": [
+        3.4293,
+        46.1311
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        2.25,
+        45.912,
+        4.032,
+        46.823
+      ],
+      "place": 692,
+      "country": "FR",
+      "localTrips": 932420.0
+    },
+    {
+      "id": "hal",
+      "name": "Haute-Loire",
+      "kind": "zone",
+      "origin": {
+        "lon": 3.8831,
+        "lat": 45.0392
+      },
+      "center": [
+        3.8831,
+        45.0392
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        3.056,
+        44.725,
+        4.516,
+        45.446
+      ],
+      "place": 693,
+      "country": "FR",
+      "localTrips": 638984.0
+    },
+    {
+      "id": "cnt",
+      "name": "Cantal",
+      "kind": "zone",
+      "origin": {
+        "lon": 2.4433,
+        "lat": 44.9286
+      },
+      "center": [
+        2.4433,
+        44.9286
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        2.037,
+        44.597,
+        3.397,
+        45.502
+      ],
+      "place": 694,
+      "country": "FR",
+      "localTrips": 391438.0
+    },
+    {
+      "id": "mrn",
+      "name": "Marne",
+      "kind": "zone",
+      "origin": {
+        "lon": 4.0431,
+        "lat": 49.2575
+      },
+      "center": [
+        4.0431,
+        49.2575
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        3.368,
+        48.497,
+        5.068,
+        49.425
+      ],
+      "place": 695,
+      "country": "FR",
+      "localTrips": 1577914.0
+    },
+    {
+      "id": "aub",
+      "name": "Aube",
+      "kind": "zone",
+      "origin": {
+        "lon": 4.0716,
+        "lat": 48.2924
+      },
+      "center": [
+        4.0716,
+        48.2924
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        3.356,
+        47.905,
+        4.893,
+        48.735
+      ],
+      "place": 696,
+      "country": "FR",
+      "localTrips": 865984.0
+    },
+    {
+      "id": "arn",
+      "name": "Ardennes",
+      "kind": "zone",
+      "origin": {
+        "lon": 4.7122,
+        "lat": 49.7713
+      },
+      "center": [
+        4.7122,
+        49.7713
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        3.996,
+        49.208,
+        5.423,
+        50.188
+      ],
+      "place": 697,
+      "country": "FR",
+      "localTrips": 744475.0
+    },
+    {
+      "id": "hax",
+      "name": "Haute-Marne",
+      "kind": "zone",
+      "origin": {
+        "lon": 5.1408,
+        "lat": 48.1134
+      },
+      "center": [
+        5.1408,
+        48.1134
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        4.6,
+        47.558,
+        5.919,
+        48.708
+      ],
+      "place": 698,
+      "country": "FR",
+      "localTrips": 458712.0
+    },
+    {
+      "id": "cte",
+      "name": "Côte-d’Or",
+      "kind": "zone",
+      "origin": {
+        "lon": 5.0412,
+        "lat": 47.3247
+      },
+      "center": [
+        5.0412,
+        47.3247
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        4.038,
+        46.881,
+        5.546,
+        48.05
+      ],
+      "place": 699,
+      "country": "FR",
+      "localTrips": 1526548.0
+    },
+    {
+      "id": "soe",
+      "name": "Saône-et-Loire",
+      "kind": "zone",
+      "origin": {
+        "lon": 4.8448,
+        "lat": 46.7826
+      },
+      "center": [
+        4.8448,
+        46.7826
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        3.596,
+        46.138,
+        5.492,
+        47.174
+      ],
+      "place": 700,
+      "country": "FR",
+      "localTrips": 1545394.0
+    },
+    {
+      "id": "yon",
+      "name": "Yonne",
+      "kind": "zone",
+      "origin": {
+        "lon": 3.5737,
+        "lat": 47.7936
+      },
+      "center": [
+        3.5737,
+        47.7936
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        2.821,
+        47.292,
+        4.367,
+        48.419
+      ],
+      "place": 701,
+      "country": "FR",
+      "localTrips": 937624.0
+    },
+    {
+      "id": "nie",
+      "name": "Nièvre",
+      "kind": "zone",
+      "origin": {
+        "lon": 3.1596,
+        "lat": 46.988
+      },
+      "center": [
+        3.1596,
+        46.988
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        2.817,
+        46.632,
+        4.259,
+        47.607
+      ],
+      "place": 702,
+      "country": "FR",
+      "localTrips": 562340.0
+    },
+    {
+      "id": "dob",
+      "name": "Doubs",
+      "kind": "zone",
+      "origin": {
+        "lon": 6.0269,
+        "lat": 47.2404
+      },
+      "center": [
+        6.0269,
+        47.2404
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        5.672,
+        46.535,
+        7.089,
+        47.599
+      ],
+      "place": 703,
+      "country": "FR",
+      "localTrips": 1525587.0
+    },
+    {
+      "id": "jur",
+      "name": "Jura",
+      "kind": "zone",
+      "origin": {
+        "lon": 5.4837,
+        "lat": 47.0908
+      },
+      "center": [
+        5.4837,
+        47.0908
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        5.225,
+        46.242,
+        6.234,
+        47.324
+      ],
+      "place": 704,
+      "country": "FR",
+      "localTrips": 717751.0
+    },
+    {
+      "id": "has",
+      "name": "Haute-Saône",
+      "kind": "zone",
+      "origin": {
+        "lon": 6.156,
+        "lat": 47.6153
+      },
+      "center": [
+        6.156,
+        47.6153
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        5.34,
+        47.234,
+        6.853,
+        48.043
+      ],
+      "place": 705,
+      "country": "FR",
+      "localTrips": 654068.0
+    },
+    {
+      "id": "tet",
+      "name": "Territoire de Belfort",
+      "kind": "zone",
+      "origin": {
+        "lon": 6.8481,
+        "lat": 47.6528
+      },
+      "center": [
+        6.8481,
+        47.6528
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        6.729,
+        47.415,
+        7.171,
+        47.844
+      ],
+      "place": 706,
+      "country": "FR",
+      "localTrips": 404183.0
+    },
+    {
+      "id": "trx",
+      "name": "Tarn",
+      "kind": "zone",
+      "origin": {
+        "lon": 2.1479,
+        "lat": 43.9276
+      },
+      "center": [
+        2.1479,
+        43.9276
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        1.51,
+        43.364,
+        2.963,
+        44.22
+      ],
+      "place": 707,
+      "country": "FR",
+      "localTrips": 1117614.0
+    },
+    {
+      "id": "trt",
+      "name": "Tarn-et-Garonne",
+      "kind": "zone",
+      "origin": {
+        "lon": 1.3537,
+        "lat": 44.0191
+      },
+      "center": [
+        1.3537,
+        44.0191
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        0.712,
+        43.749,
+        2.026,
+        44.412
+      ],
+      "place": 708,
+      "country": "FR",
+      "localTrips": 765090.0
+    },
+    {
+      "id": "avy",
+      "name": "Aveyron",
+      "kind": "zone",
+      "origin": {
+        "lon": 2.5755,
+        "lat": 44.3493
+      },
+      "center": [
+        2.5755,
+        44.3493
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        1.814,
+        43.672,
+        3.478,
+        44.96
+      ],
+      "place": 709,
+      "country": "FR",
+      "localTrips": 785748.0
+    },
+    {
+      "id": "hap",
+      "name": "Hautes-Pyrénées",
+      "kind": "zone",
+      "origin": {
+        "lon": 0.079,
+        "lat": 43.2333
+      },
+      "center": [
+        0.079,
+        43.2333
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -0.353,
+        42.656,
+        0.671,
+        43.632
+      ],
+      "place": 710,
+      "country": "FR",
+      "localTrips": 636965.0
+    },
+    {
+      "id": "ger",
+      "name": "Gers",
+      "kind": "zone",
+      "origin": {
+        "lon": 0.5918,
+        "lat": 43.644
+      },
+      "center": [
+        0.5918,
+        43.644
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -0.308,
+        43.292,
+        1.229,
+        44.099
+      ],
+      "place": 711,
+      "country": "FR",
+      "localTrips": 541788.0
+    },
+    {
+      "id": "lox",
+      "name": "Lot",
+      "kind": "zone",
+      "origin": {
+        "lon": 1.4338,
+        "lat": 44.4503
+      },
+      "center": [
+        1.4338,
+        44.4503
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        0.956,
+        44.185,
+        2.237,
+        45.065
+      ],
+      "place": 712,
+      "country": "FR",
+      "localTrips": 505003.0
+    },
+    {
+      "id": "ari",
+      "name": "Ariège",
+      "kind": "zone",
+      "origin": {
+        "lon": 1.6055,
+        "lat": 42.9601
+      },
+      "center": [
+        1.6055,
+        42.9601
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        0.802,
+        42.555,
+        2.201,
+        43.334
+      ],
+      "place": 713,
+      "country": "FR",
+      "localTrips": 444110.0
+    },
+    {
+      "id": "hai",
+      "name": "Haute-Vienne",
+      "kind": "zone",
+      "origin": {
+        "lon": 1.2559,
+        "lat": 45.8342
+      },
+      "center": [
+        1.2559,
+        45.8342
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        0.603,
+        45.418,
+        1.937,
+        46.42
+      ],
+      "place": 714,
+      "country": "FR",
+      "localTrips": 1058427.0
+    },
+    {
+      "id": "coz",
+      "name": "Corrèze",
+      "kind": "zone",
+      "origin": {
+        "lon": 1.5317,
+        "lat": 45.1591
+      },
+      "center": [
+        1.5317,
+        45.1591
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        1.201,
+        44.902,
+        2.555,
+        45.784
+      ],
+      "place": 715,
+      "country": "FR",
+      "localTrips": 678286.0
+    },
+    {
+      "id": "hac",
+      "name": "Haute-Corse",
+      "kind": "zone",
+      "origin": {
+        "lon": 9.4447,
+        "lat": 42.7054
+      },
+      "center": [
+        9.4447,
+        42.7054
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.549,
+        41.814,
+        9.585,
+        43.046
+      ],
+      "place": 716,
+      "country": "FR",
+      "localTrips": 503455.0
+    },
+    {
+      "id": "cou",
+      "name": "Corse-du-Sud",
+      "kind": "zone",
+      "origin": {
+        "lon": 8.7361,
+        "lat": 41.9258
+      },
+      "center": [
+        8.7361,
+        41.9258
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.515,
+        41.315,
+        9.433,
+        42.401
+      ],
+      "place": 717,
+      "country": "FR",
+      "localTrips": 434652.0
     }
   ]
 }

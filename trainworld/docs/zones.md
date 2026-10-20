@@ -64,9 +64,12 @@ zone of their own region (NUTS-2; elsewhere the first-level unit), smallest firs
 share the longest border with, or for an island the most populous zone of the region within
 150 km (so small islands join their province's largest: La Gomera, La Palma and El Hierro
 Tenerife, Fuerteventura Gran Canaria, Menorca Mallorca). A small unit with neither stays its own
-zone (Ceuta, Melilla). A zone row has `kind` "zone", is named after its most populous unit (before
+zone (Ceuta, Melilla). A European country's units outside Europe (France's overseas départements)
+are not zoned. A zone row has `kind` "zone", is named after its most populous unit (before
 any "/"), and has its origin at its densest square km. A replan of the metros keeps zone rows as
-they are. Countryside zones use the zone curve (section 4).
+they are. Countryside zones use the zone curve (section 4) and global sources only: a zone row
+never takes its country's module. Covered so far: Spain (40 zones, T-723), Italy (97) and France
+(80, Creuse and Lozère dead space; T-779).
 
 **Mercer County (Trenton) is part of New York's city zone**, not a non-city zone (Anita leaned
 this way). Reasons: it is in the New York combined statistical area; LODES holds 175,000 jobs
@@ -148,8 +151,10 @@ over every job in reach, in its own zone or another, so moving a zone line moves
   country. A group's solve grows with its zone pairs (within packs plus across within the cut):
   each Furness step sums every pair twice, about 100M pairs a second a thread, so Japan's 0.5
   billion pairs take about 25 minutes on one thread and the Northeast's 0.2 billion 4 minutes.
-  `intercity.py` refuses a group over 200,000 zones (about three Japans); with outlines under the
-  gate's 40,000 km² no group in the world plan comes near it (notes/T-539.md).
+  `intercity.py` refuses a group over 400,000 zones (about six Japans). Covered countries that
+  touch chain into one group: Spain, France, Italy and the Benelux-Rhine metros are 239 packs and
+  298,507 zones (3.7 billion pairs, 29 minutes on 9 threads; notes/T-779.md); a covered Europe
+  needs the group split (T-781).
 
 **Fitting and checking.** The curve and the factors are each pack's fitted values, so nothing new
 is fitted for commutes between zones in the US. LODES OD 2023 is the check, not an input: commuters

@@ -261,7 +261,8 @@ Run from the maps root (`node trainworld/checks/<file>`).
   about 4 minutes, `QUICK=1` 1.5; notes/T-737.md),
   `t756-reach.mjs` (`capture <save> <label>` records a save's demand network and packs from the
   page; `compare <label>` solves it with the real worker in Node, every population on its whole
-  cluster and on its reach, and fails when a figure moves past the tolerance; New York about 1.5
+  cluster and on its reach, and fails when a figure moves past the tolerance; `compare <label>
+  chunks` the market with every zone pair against pairs dealt in chunks (T-780); New York about 1.5
   minutes, Japan's seven cities about 15; notes/T-756.md),
   `t161-complexes.mjs` (the real save's complexes for the native
   comparison), `t125-fingerprint.mjs` (a save's derived geometry, before and after a frame

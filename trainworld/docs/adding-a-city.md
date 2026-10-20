@@ -55,7 +55,8 @@ for the browser check (default 6360). Set `TW_SIM_DIR` and `TW_CARGO_TARGET_DIR`
   leaves the gated rows registered and `built`, for the next run to gate again): a pack with no
   country in its header (tor, lon, par, sao) takes the registry's
   `country`. Each group a gated pack joined is solved once (members back to res-9,
-  `intercity.py --group auto <new> --no-market`, merged again) and gated again without the browser
+  `intercity.py --group auto <new> --no-market` on every core of `--jobs`, with four times the step
+  limit for a group of over 100 packs, merged again) and gated again without the browser
   or rates; a FAIL restores every member from the backup taken before. When only new packs FAIL,
   they park and the group is solved once more without them (a FAIL then parks every new pack of
   that solve); when an older member FAILs, every new pack parks (T-773). Then `register.py
@@ -76,7 +77,8 @@ for the browser check (default 6360). Set `TW_SIM_DIR` and `TW_CARGO_TARGET_DIR`
   wait for the next run, which takes up `built` rows without rebuilding them and first takes any
   unshipped row out of the registry. The run ends by printing `status`.
 - **Run faults** stop the run and park nothing for them (T-764, T-773): a `TW_SIM_DIR` copy whose
-  `data/packs` or `app/src/game/registry.json` beside it is missing or not this tree's (checked
+  `data/packs` or `app/src/game/registry.json` beside it is not this tree's (a missing `data` or
+  `app` junction is made again to this tree's and noted in the report's problems, T-779; checked
   at the start, before and after each gate, and before each joint solve), and a gate or re-gate
   that leaves a row with no result file (the gate itself died; a pack's own error is a FAIL in its
   result). The rows stay `built`, the region's downloads stay on disk and a joint group is

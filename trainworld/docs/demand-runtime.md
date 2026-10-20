@@ -194,7 +194,9 @@ every station pair's route cost (its logsums) and, for its assignment, each dest
 256 MB (`MARKET_STRATEGY_BYTES`) and no population on the worker has searched the period's graph,
 its destinations are searched one at a time, twice: the first sweep keeps every destination's route
 costs and the first 256 MB of strategies, the second assigns each destination's column of trips,
-searching it again unless kept. The cities' cached tables go first (the market solves last in its
+searching it again unless kept (no more: in WASM the heap grows a piece at a time for them, T-780).
+The longer trips' zone pairs are dealt in chunks ([regional.md](regional.md) 5.1, T-780), so their
+table, the far-zone table and the logsums shrink with the pairs. The cities' cached tables go first (the market solves last in its
 cluster). The figures are the one-table pass's to the bit. On any network the commutes' station to
 station trips are held by destination, only the pairs that carry any; the far-zone table a station
 click reads (`station_flows`) holds only the entries a station's zones can fill (`StPattern`, a

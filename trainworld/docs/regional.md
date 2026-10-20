@@ -53,6 +53,16 @@ Generate **total** all-mode trips, then let the player's network earn rail's sha
   links joined), or far places that both have airports. Every other pair's trips are fixed: counted
   in the totals, shown, never in the solve. The market's day and its corridors (place pairs) come
   from the rows, the same in every part of it.
+- **Zone pairs in chunks** [T-780]: a zone's trips with the zones of each place that come after it
+  in the market's zone order are dealt in chunks of about 1 trip a day each way (`MARKET_CHUNK`),
+  by systematic sampling over that place's zones by their trips from a start fixed by the two
+  zones' ids (`solved_pairs`). A pair of at least a chunk is always solved; a smaller one carries a
+  chunk or is not solved. Each zone's trips with each later place are exact, the rest exact on
+  average, and the dealing runs over every zone, served or not, so a newly served zone adds pairs
+  without dealing the others again. Mode and station choice within a pair are unchanged. A
+  selection's rail with a place is its sampled pairs' rail spread over the place's zones it could
+  ride to, by their trips; a station's far-zone rows stay the sampled pairs'. `?perfOff=chunks`
+  solves every pair.
 - **Elsewhere**: a place's or a 6 km zone's departures less its trips with every place are its
   trips with places that have no zone; shown, never solved, their modes not modelled.
 
@@ -67,19 +77,24 @@ distance (0.33 a perceived minute from 12 km, so nearly every pair), softened pa
 sqrt(60 / T) with T the car's perceived minutes (`rel_soft`: 0.19 at 3 hours by car, 0.12 at 8),
 so a long trip spreads over more of its stations, and rail is priced at that logsum before the
 damped mode choice. Each zone's access weights (built at 0.10, 5.3) are taken to
-that scale by raising them to the power of the scale over 0.10. On the market's own costs rail
-then holds about 93%, 73%, 48% and 28% of rail and air at 2, 3, 4 and 5 hours on the train.
+that scale by raising them to the power of the scale over 0.10. On the market's own costs (T-378's
+ideal access) rail then holds about 100%, 99%, 92% and 56% of rail and air at 2, 3, 4 and 5 hours
+on the train.
 
 - *Car*: 15 minutes plus 1.25 times the great-circle distance at 85 km/h, plus 15 cents a road km
   and the destination's parking (the local rule, docs/demand-mode.md 4.3, baked into the market pack's
   `site_park`), both split over two occupants; no tolls (T-270). Only within a
-  landmass.
+  landmass. Where the car is carried over water (T-712, `crossing_min`) it also pays the crossing's
+  fare per car (shared by the two) and its minutes beyond the straight drive: the Channel, $150 and
+  60 minutes, between a place in Great Britain and one elsewhere; the Tsugaru Strait's ferry, $170
+  and 240 minutes, between Hokkaido (Japan north of 41.4°) and elsewhere. Commutes between zones
+  pay it too.
 - *Plane*: between places whose centres are at least 250 km apart (the far pairs) and that both
   have airports. Door to door: the drive to an airport at each end (the car's drive time,
-  people-weighted over the place's zones), 60 minutes at the airports, the flight at 750 km/h on
+  people-weighted over the place's zones), 90 minutes at the airports, the flight at 750 km/h on
   the great circle between the places' centres plus 30 minutes, 60 more with no direct flight, and
-  a fare of $50 plus 9 cents a km; the best pair of the two places' airports. Not built by the
-  player, no capacity, not drawn.
+  a fare of $100 plus 5 cents a km (T-712); the best pair of the two places' airports. Not built by
+  the player, no capacity, not drawn.
 - *Rail*: the player's network. Fares, service, transfers and shared crowding affect it.
 
 The car's and the plane's costs are by place (the car's at the places' centres and their mean
@@ -93,7 +108,7 @@ choose rail or car as local commutes do: 0.10 per perceived minute damped the sa
 weighted 1.33 plus the work end's parking; their loads are the work purpose's [T-158]. Inter-region trips' period
 shares are 20/35/25/15/5%; their weekend factor 1.58.
 
-Not modelled yet: coach, ferries, the Channel crossing's price, induced travel, routed drives
+Not modelled yet: coach, ferries other than the two car crossings, induced travel, routed drives
 between zones (T-279; routes inside packs are T-275's).
 
 ## 5.2 Where a long-distance trip starts and ends

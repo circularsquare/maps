@@ -1662,7 +1662,7 @@ class DemandClient {
     // T-327: rounds in step only where clicks are answered by round (`target`): it costs the final
     // about 0.7 s on the real save
     demandSolving.value = null;
-    const msg: ToDemand = { kind: "solve", version, net, rounds: ROUNDS, barrier: (showEstimates || !!this.hold) && !perfOff("ahead"), first: activeCity.peek(), ...(perfOff("clusters") ? { whole: true } : {}), ...(perfOff("split") ? { oneMarket: true } : {}), ...(perfOff("reach") ? { wide: true } : {}), ...(perfOff("periods") ? { fresh: true } : {}) };
+    const msg: ToDemand = { kind: "solve", version, net, rounds: ROUNDS, barrier: (showEstimates || !!this.hold) && !perfOff("ahead"), first: activeCity.peek(), ...(perfOff("clusters") ? { whole: true } : {}), ...(perfOff("split") ? { oneMarket: true } : {}), ...(perfOff("reach") ? { wide: true } : {}), ...(perfOff("chunks") ? { exactMarket: true } : {}), ...(perfOff("periods") ? { fresh: true } : {}) };
     for (const w of this.workers) w.postMessage(msg);
     this.progress(); // T-243: a held game's solve shows its progress even with nothing to load
   }
