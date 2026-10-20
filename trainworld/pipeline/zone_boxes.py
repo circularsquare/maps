@@ -49,11 +49,13 @@ def box(cid):
 
 
 def main():
-    reg = json.loads(REG.read_text(encoding="utf-8"))
-    for c in reg["cities"]:
-        c["box"] = box(c["id"])
-        print(c["id"], c["box"])
-    REG.write_text(json.dumps(reg, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    import shared_lock
+    with shared_lock.held("registry", "zone_boxes.py"):  # T-786
+        reg = shared_lock.read_json(REG)
+        for c in reg["cities"]:
+            c["box"] = box(c["id"])
+            print(c["id"], c["box"])
+        shared_lock.write_atomic(REG, json.dumps(reg, indent=2, ensure_ascii=False) + "\n")
 
 
 if __name__ == "__main__":

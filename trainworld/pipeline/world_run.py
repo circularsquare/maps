@@ -3,15 +3,26 @@ agent judgement (docs/adding-a-city.md "Running the pipeline"; design notes/T-53
 
     python -I pipeline/world_run.py plan   [select]            what a run would do; nothing built
     python -I pipeline/world_run.py run    [select] [options]  build, gate, register, join, clean up
-    python -I pipeline/world_run.py status                     rows by status, parked reasons
+    python -I pipeline/world_run.py join   [--countries ..] [--jobs N]
+                                                               the joint solve for every gated row
+    python -I pipeline/world_run.py status                     rows by status, parked reasons, locks
 
-    select   --rows a,b,c  (in plan order, any status but shipped) | --countries GB,PT | --limit N
-             (the next N planned or half-done rows in plan order; default 10)
+    select   --rows a,b,c  (in plan order, any status but shipped or gated) | --countries GB,PT |
+             --limit N (the next N planned or half-done rows in plan order; default 10)
     options  --jobs N         cores in all (default 2; 12 only on an overnight run Anita approves)
-             --port P         the runner's own Vite for the gate's browser check (default 6360)
+             --port P         the runner's own Vite for the gate's browser check (default 6360);
+                              runners at once need a port each
              --no-browser     gate without the browser check
+             --no-join        stop after the regions: gated rows stay registered, status "gated",
+                              for one `join` once every parallel run is done (T-786)
              --keep-downloads keep the region's .osm.pbf and OSM caches
              --root DIR       a scratch tree instead of this one (below)
+
+Several runs at once (T-786): each claims its rows (a row claimed by a live run is not selected),
+holds its region's extracts, and takes the shared_lock locks for every read-modify-write of the
+plan, the registry and market rows, and made.json. Gates overlap; a joint solve holds the "packs"
+lock and waits for gates under way, and no gate starts while it is held: a gate's snapshot would
+see the solve's changes.
 
 A run goes a region at a time: rows sharing a Geofabrik extract, chained, in plan order. For each:
 download (or reuse) and read its extracts, then per row build_city, places, routes, merge_cells,
@@ -39,12 +50,14 @@ tree's, so caches are shared; sim/ a copy, for the gate's rates test), and the b
 off, since Vite serves only this tree.
 """
 import ast
+import contextlib
 import datetime
 import importlib
 import importlib.abc
 import importlib.machinery
 import json
 import os
+import re
 import shutil
 import signal
 import subprocess
@@ -73,6 +86,14 @@ BIG_PEOPLE = 15e6
 
 class RunFault(Exception):
     """A fault of the run, not of a row (T-764, T-773): the run stops and parks nothing for it."""
+
+
+def shared():
+    """pipeline/shared_lock (the runner runs with -I, so the pipeline is not on the path)."""
+    if str(HERE) not in sys.path:
+        sys.path.insert(0, str(HERE))
+    import shared_lock
+    return shared_lock
 
 
 # ================================================================ a step, in its own process
@@ -250,10 +271,10 @@ def ne_gap(ids):
 
 
 def groups_of(ids):
-    """The registered packs' joint gravity groups holding any of these ids."""
+    """The solve units (intercity.solve_units, T-786) holding any of these ids."""
     import intercity
     reg = json.loads((intercity.ROOT / "app/src/game/registry.json").read_text(encoding="utf-8"))
-    return [g for g in intercity.auto_groups(reg, intercity.ROOT) if set(g) & set(ids)]
+    return intercity.solve_units(reg, intercity.ROOT, only=ids)
 
 
 def preview(ids):
@@ -307,6 +328,7 @@ class Run:
         self.browser = not opts.get("no_browser") and not self.scratch
         self.port = int(opts.get("port", 6360))
         self.lock = threading.Lock()
+        self.streak = (None, 0)  # T-775: the last park's reason, as compared, and how many in a row
         self.stopping = False
         self.vite = None
         self.report = {"batch": self.batch, "root": str(self.root), "jobs": self.jobs, "rows": {}, "regions": []}
@@ -314,15 +336,19 @@ class Run:
     # ---------------------------------------------------------------- files
 
     def plan_doc(self):
-        return json.loads(self.plan_path.read_text(encoding="utf-8"))
+        return shared().read_json(self.plan_path)
 
     def rows(self):
         return [r for r in self.plan_doc()["metros"] if r.get("units")]
 
+    def held(self, name, what, root=None):
+        """A shared_lock lock of this tree (or `root`'s), held by this run."""
+        return shared().held(name, f"world_run {self.batch}: {what}", root=root or self.root)
+
     def set_row(self, cid, status=None, **run):
-        """One row's status and run record, the plan re-read first (other tools write it too)."""
-        with self.lock:
-            doc = self.plan_doc()
+        """One row's status and run record, the plan re-read first (other runs and tools write it too)."""
+        with self.held("plan", f"row {cid}"):
+            doc = shared().read_json(self.plan_path)
             row = next(r for r in doc["metros"] if r.get("id") == cid and r.get("units"))
             if status:
                 row["status"] = status
@@ -334,25 +360,21 @@ class Run:
                     rec.setdefault("steps", {}).update(v)
                 else:
                     rec[k] = v
-            tmp = self.plan_path.with_suffix(".json.part")
-            tmp.write_text(json.dumps(doc, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
-            os.replace(tmp, self.plan_path)
+            shared().write_atomic(self.plan_path, json.dumps(doc, indent=1, ensure_ascii=False) + "\n")
 
     def registry(self):
-        return json.loads(self.reg_path.read_text(encoding="utf-8"))
+        return shared().read_json(self.reg_path)
 
     def unregister(self, ids):
         """Take packs out of the registry again (a parked pack): its entry and market pack go; its
         market place stays in `market.places`, unused (place ids are positions, append only)."""
-        with self.lock:
+        with self.held("registry", f"unregister {' '.join(ids)}"[:200]):
             reg = self.registry()
             before = len(reg["cities"])
             reg["cities"] = [c for c in reg["cities"] if c["id"] not in ids]
             if len(reg["cities"]) != before:
-                self.reg_path.write_text(json.dumps(reg, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-                if str(HERE) not in sys.path:  # the runner itself runs with -I, so the pipeline is not on the path (T-779)
-                    sys.path.insert(0, str(HERE))
-                import market_rows
+                shared().write_atomic(self.reg_path, json.dumps(reg, indent=2, ensure_ascii=False) + "\n")
+                import market_rows  # shared() put the pipeline on the path (the runner runs with -I, T-779)
                 market_rows.save(reg, market_rows.load(self.root), self.root)
             for i in ids:
                 p = self.packs / f"{i}.market.json"
@@ -428,19 +450,59 @@ class Run:
 
     # ---------------------------------------------------------------- selection
 
+    def claimed(self, r):
+        """The batch of another run that is live and has claimed this row, else None (T-786)."""
+        b = (r.get("run") or {}).get("claim")
+        return b if b and b != self.batch and shared().is_held(f"batch-{b}", self.root) else None
+
     def select(self):
         rows = sorted(self.rows(), key=lambda r: r["order"])
+        busy = {r["id"]: self.claimed(r) for r in rows if self.claimed(r)}
         if self.o.get("rows"):
             want = self.o["rows"].split(",")
             missing = [w for w in want if w not in {r["id"] for r in rows}]
             if missing:
                 raise SystemExit(f"not plan rows: {missing}")
-            return [r for r in rows if r["id"] in want and r["status"] != "shipped"]
-        pick = [r for r in rows if r["status"] in ("planned", "built")]
-        if self.o.get("countries"):
-            cs = set(self.o["countries"].split(","))
-            pick = [r for r in pick if r.get("iso2") in cs]
-        return pick[:int(self.o.get("limit") or 10)]
+            gated = [r["id"] for r in rows if r["id"] in want and r["status"] == "gated"]
+            if gated:
+                print(f"gated, for `join`: {' '.join(gated)}")
+            pick = [r for r in rows if r["id"] in want and r["status"] not in ("shipped", "gated")]
+        else:
+            pick = [r for r in rows if r["status"] in ("planned", "built")]
+            if self.o.get("countries"):
+                cs = set(self.o["countries"].split(","))
+                pick = [r for r in pick if r.get("iso2") in cs]
+        if busy:
+            taken = [f"{r['id']} ({busy[r['id']]})" for r in pick if r["id"] in busy]
+            if taken:
+                print(f"claimed by a live run, left out: {' '.join(taken)}")
+            pick = [r for r in pick if r["id"] not in busy]
+        return pick if self.o.get("rows") else pick[:int(self.o.get("limit") or 10)]
+
+    def claim(self, rows):
+        """Mark the rows as this run's, under the plan lock; rows another live run claimed in the
+        meantime are dropped. Returns the rows kept."""
+        with self.held("plan", "claim rows"):
+            doc = shared().read_json(self.plan_path)
+            by = {r["id"]: r for r in doc["metros"] if r.get("units")}
+            keep = []
+            for r in rows:
+                cur = by[r["id"]]
+                if self.claimed(cur):
+                    print(f"  {r['id']}: claimed by {self.claimed(cur)} meanwhile, left out", flush=True)
+                    continue
+                cur.setdefault("run", {})["claim"] = self.batch
+                keep.append(r)
+            shared().write_atomic(self.plan_path, json.dumps(doc, indent=1, ensure_ascii=False) + "\n")
+        return keep
+
+    def unclaim(self):
+        with self.held("plan", "release claims"):
+            doc = shared().read_json(self.plan_path)
+            for r in doc["metros"]:
+                if (r.get("run") or {}).get("claim") == self.batch:
+                    del r["run"]["claim"]
+            shared().write_atomic(self.plan_path, json.dumps(doc, indent=1, ensure_ascii=False) + "\n")
 
     @staticmethod
     def regions(rows):
@@ -491,9 +553,20 @@ class Run:
 
     # ---------------------------------------------------------------- the run
 
+    def start(self):
+        """The batch's log folder (a second run started in the same second gets its pid added) and
+        its lock, held for the run's life: its row claims are live while it is held."""
+        try:
+            self.logs.mkdir(parents=True, exist_ok=False)
+        except FileExistsError:
+            self.batch += f"-{os.getpid()}"
+            self.report["batch"] = self.batch
+            self.logs = self.logs.parent / self.batch
+            self.logs.mkdir(parents=True, exist_ok=True)
+        return self.held(f"batch-{self.batch}", "the run")
+
     def go(self):
-        rows = self.select()
-        if not rows:
+        if not self.select():
             print("nothing to build")
             return
         if self.stop_file.exists():
@@ -502,24 +575,49 @@ class Run:
             self.check_sim()
         except RunFault as x:
             raise SystemExit(f"RUN FAULT, nothing run: {x}")
-        self.logs.mkdir(parents=True, exist_ok=True)
+        with self.start():
+            rows = self.claim(self.select())
+            if not rows:
+                print("nothing to build: every row is claimed by another live run")
+                return
+            try:
+                self.run_rows(rows)
+            finally:
+                self.unclaim()
+        print()
+        status(self.root)
+        if "fault" in self.report:
+            sys.exit(2)
+
+    def run_rows(self, rows):
         signal.signal(signal.SIGINT, self.on_ctrl_c)
         t0 = time.time()
         regs = self.regions(rows)
         print(f"batch {self.batch}: {len(rows)} rows in {len(regs)} regions; jobs {self.jobs} ({self.workers} x {self.threads}); "
+              f"{'no joint solve (--no-join); ' if self.o.get('no_join') else ''}"
               f"logs {self.logs}; to stop, create {self.stop_file}", flush=True)
+        self.sim_vs_head()
         gated = []
         try:
             for k, reg in enumerate(regs, 1):
                 if self.stop_asked():
                     break
                 gated += self.region(k, reg)
+            if self.o.get("no_join"):
+                # T-786: the regions of several runs at once, then one `join` for them all
+                for i in gated:
+                    self.set_row(i, "gated", gated=datetime.datetime.now().isoformat(timespec="seconds"))
+                    self.rec(i, result="gated")
+                if gated:
+                    print(f"  gated, for `world_run.py join`: {' '.join(gated)}", flush=True)
             # one joint solve a group for the whole batch, after every region (T-723: a covered country's
             # group re-solved after each of its regions was most of the join's time)
-            if not self.stop_asked() and (gated or any(self.report["rows"].get(i, {}).get("result") == "parked"
-                                                       for i in self.report["rows"])):
+            elif not self.stop_asked() and (gated or any(self.report["rows"].get(i, {}).get("result") == "parked"
+                                                         for i in self.report["rows"])):
                 t = time.time()
-                self.join(gated, self.logs / "join")
+                with self.held("packs", "joint solve"):
+                    self.wait_gates()
+                    self.join(gated, self.logs / "join")
                 self.report["join_seconds"] = round(time.time() - t)
             elif gated:
                 print(f"  stopped before the joint solve: {' '.join(gated)} stay registered and built; the next run gates them again",
@@ -532,10 +630,102 @@ class Run:
         self.report["seconds"] = round(time.time() - t0)
         self.report["stopped"] = self.stop_asked()
         self.write_report()
-        print()
-        status(self.root)
+
+    def join_only(self):
+        """T-786: the joint solve for every gated row (of --countries), once, after the parallel
+        runs' regions; one at a time (the packs lock), on every core of --jobs."""
+        rows = [r for r in self.rows() if r["status"] == "gated"]
+        if self.o.get("countries"):
+            cs = set(self.o["countries"].split(","))
+            rows = [r for r in rows if r.get("iso2") in cs]
+        if not rows:
+            print("nothing gated to join")
+            return
+        if self.stop_file.exists():
+            raise SystemExit(f"{self.stop_file} exists: delete it to run")
+        try:
+            self.check_sim()
+        except RunFault as x:
+            raise SystemExit(f"RUN FAULT, nothing run: {x}")
+        with self.start():
+            rows = self.claim(rows)
+            ids = [r["id"] for r in rows]
+            t0 = time.time()
+            print(f"batch {self.batch}: the joint solve for {len(ids)} gated rows ({' '.join(ids)}); jobs {self.jobs}; logs {self.logs}",
+                  flush=True)
+            self.sim_vs_head()
+            self.report["regions"].append({"n": 0, "extracts": [], "rows": ids, "seconds": {}})
+            try:
+                with self.held("packs", "joint solve"):
+                    self.wait_gates()
+                    have = {c["id"] for c in self.registry()["cities"]}
+                    gone = [i for i in ids if i not in have]
+                    for i in gone:  # gated but no longer registered: gate it again
+                        self.set_row(i, "built")
+                        print(f"  {i}: gated but not registered; back to built for the next run", flush=True)
+                    ids = [i for i in ids if i in have]
+                    if ids:
+                        self.join(ids, self.logs / "join")
+            except RunFault as x:
+                self.report["fault"] = str(x)
+                print(f"\nRUN FAULT, the join stops (no row parked for it): {x}", flush=True)
+            finally:
+                self.unclaim()
+            self.report["join_seconds"] = self.report["seconds"] = round(time.time() - t0)
+            self.report["stopped"] = False
+            self.write_report()
+            print()
+            status(self.root)
         if "fault" in self.report:
             sys.exit(2)
+
+    def sim_vs_head(self):
+        """T-775: the TW_SIM_DIR copy against HEAD's sim/ (pipeline scripts run from this tree, the
+        sim from the copy; a stale copy broke T-613's merges). Differences are printed and go in
+        the report's problems; each says whether the tree's own sim/ has the copy's version (a
+        change not yet committed, carried on purpose)."""
+        sim = os.environ.get("TW_SIM_DIR")
+        if not sim:
+            return
+        import hashlib
+        sim = Path(sim)
+        out = subprocess.run(["git", "-C", str(REAL), "ls-tree", "-r", "HEAD", "sim"], capture_output=True, text=True)
+        if out.returncode != 0:
+            self.report.setdefault("problems", []).append(f"sim copy not checked: git ls-tree failed: {out.stderr.strip()[:200]}")
+            return
+
+        def blob(data):
+            return hashlib.sha1(b"blob %d\0" % len(data) + data).hexdigest()
+        head, diff = {}, []
+        for ln in out.stdout.splitlines():
+            meta, rel = ln.split("\t", 1)
+            head[rel] = meta.split()[2]
+        for rel, sha in head.items():
+            p = sim / rel[len("sim/"):]
+            if not p.exists():
+                diff.append((rel, "missing in the copy"))
+                continue
+            data = p.read_bytes()
+            if blob(data) != sha and blob(data.replace(b"\r\n", b"\n")) != sha:
+                diff.append((rel, "differs"))
+        for top, dirs, files in os.walk(sim):
+            if Path(top) == sim:
+                dirs[:] = [d for d in dirs if d not in ("target", "pkg")]  # build output
+            for f in files:
+                rel = "sim/" + (Path(top) / f).relative_to(sim).as_posix()
+                if rel not in head:
+                    diff.append((rel, "not in HEAD"))
+        if not diff:
+            print(f"sim copy {sim}: same as HEAD's sim/", flush=True)
+            return
+        notes = []
+        for rel, what in diff:
+            tree = REAL / rel
+            same = tree.exists() and (sim / rel[len("sim/"):]).exists() and tree.read_bytes() == (sim / rel[len("sim/"):]).read_bytes()
+            notes.append(f"{rel} {what}{' (as in the tree: not committed yet)' if same else ''}")
+        msg = f"sim copy {sim} is not HEAD's sim/ in {len(diff)} files: " + "; ".join(notes[:10])
+        print("  " + msg, flush=True)
+        self.report.setdefault("problems", []).append(msg)
 
     def check_sim(self):
         """The TW_SIM_DIR copy's `data` and `app` junctions beside it, which the gate's rates test and
@@ -572,6 +762,14 @@ class Run:
         self.report["rows"].setdefault(cid, {}).update(kv)
 
     def region(self, k, reg):
+        """One region, holding its extracts (T-786: another run sharing one waits, since a region
+        deletes its downloads and caches at the end; data/raw is this tree's in a scratch run too)."""
+        with contextlib.ExitStack() as st:
+            for e in sorted({e for r in reg for e in r["extracts"]}):
+                st.enter_context(self.held("extract-" + e.replace("/", "_"), f"region {k}", root=REAL))
+            return self.region_held(k, reg)
+
+    def region_held(self, k, reg):
         ids = [r["id"] for r in reg]
         exs = sorted({e for r in reg for e in r["extracts"]})
         rr = {"n": k, "extracts": exs, "rows": ids, "seconds": {}}
@@ -631,15 +829,15 @@ class Run:
         """The OSM caches runs have made and not yet deleted, by extract (those already on disk
         before a run stay when it cleans up)."""
         p = REAL / "data/work/world_run/made.json"  # this tree's, as the caches are (data/raw is shared)
-        with self.lock:
-            made = json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
+        with self.held("made", "made.json", root=REAL):
+            made = shared().read_json(p) if p.exists() else {}
             for e, cs in (add or {}).items():
                 made[e] = sorted(set(made.get(e, [])) | set(cs))
             for e in drop:
                 made.pop(e, None)
             made = {e: cs for e, cs in made.items() if cs}
             p.parent.mkdir(parents=True, exist_ok=True)
-            p.write_text(json.dumps(made, indent=1), encoding="utf-8")
+            shared().write_atomic(p, json.dumps(made, indent=1))
         return made
 
     def status(self, cid):
@@ -704,19 +902,64 @@ class Run:
                 self.park(cid, f"{s} failed: {str(tail)[-400:]}")
                 return
         self.set_row(cid, "built", steps=steps, built=datetime.datetime.now().isoformat(timespec="seconds"))
+        with self.lock:
+            self.streak = (None, 0)
         self.rec(cid, name=r["name"], build_s=round(time.time() - t0), steps=steps)
         print(f"  {cid}: built in {time.time() - t0:.0f} s", flush=True)
 
-    def park(self, cid, reason, gate=None):
+    STREAK = 3
+
+    def park(self, cid, reason, gate=None, streak=True):
         self.set_row(cid, "parked", reason=reason, gate=gate, parked=datetime.datetime.now().isoformat(timespec="seconds"))
         self.rec(cid, result="parked", reason=reason)
         print(f"  {cid}: PARKED: {reason[:300]}", flush=True)
+        if not streak:
+            return
+        # T-775: three rows in a row parking on one reason is a fault of the run (T-613: 15 rows on one
+        # merge error), so the run stops. The row's id is taken out; a failed step's log tail also
+        # loses its numbers (times), while a gate's figures stay, so rows failing one check on their
+        # own values (Liguria's drive factors) do not stop it
+        key = reason.replace(cid, "<id>")
+        if not key.startswith("gate:"):
+            key = re.sub(r"\d+(\.\d+)?", "#", key)
+        with self.lock:
+            n = self.streak[1] + 1 if self.streak[0] == key else 1
+            self.streak = (key, n)
+        if n >= self.STREAK and not self.stopping:
+            self.stopping = True
+            msg = f"{n} rows in a row parked on one reason, so the run stops (T-775): {reason[:300]}"
+            self.report.setdefault("problems", []).append(msg)
+            print(f"  {msg}", flush=True)
 
     # ---------------------------------------------------------------- gate
 
     def gate(self, ids, L):
         """Gate the region's built rows, each registered with its market pack; returns those that
-        ship (registered), the rest parked and unregistered again."""
+        ship (registered), the rest parked and unregistered again. Gates of several runs overlap, but
+        never a joint solve (T-786), which would change packs between the snapshot and the verdicts:
+        the gate holds its own gate lock and backs off while a solve holds (or waits for) packs."""
+        sl = shared()
+        while True:
+            with self.held(f"gate-{self.batch}", f"gate {L.name} {' '.join(ids)}"[:200]):
+                if not sl.is_held("packs", self.root):
+                    return self.gate_held(ids, L)
+            with self.held("packs", "a gate waiting for a joint solve to end"):
+                pass
+
+    def wait_gates(self):
+        """A joint solve, holding packs (so no gate starts), waits for gates under way (T-786)."""
+        sl, said = shared(), False
+        while True:
+            busy = [p.stem for p in (self.work / "world_run/locks").glob("gate-*.lock")
+                    if p.stem != f"gate-{self.batch}" and sl.is_held(p.stem, self.root)]
+            if not busy:
+                return
+            if not said:
+                print(f"    the joint solve waits for gates under way: {' '.join(busy)}", flush=True)
+                said = True
+            time.sleep(5)
+
+    def gate_held(self, ids, L):
         gd = L.parent / "gate"
         ok, _, near = self.step("@ne_gap", ids, f"{L}.ne_gap.log", threads=1)
         near = near if ok and isinstance(near, dict) else {}
@@ -776,6 +1019,7 @@ class Run:
             if res["verdict"] == "ship":
                 shipped.append(i)
                 self.set_row(i, gate={"warn": warns})
+                self.streak = (None, 0)
             else:
                 self.park(i, "gate: " + "; ".join(fails)[:600], gate={"fail": fails, "warn": warns})
         parked = [i for i in ids if i not in shipped]
@@ -817,25 +1061,31 @@ class Run:
         if shipped:
             ok, _, groups = self.step("@groups", shipped, f"{L}.groups.log", threads=1)
             if not ok or not isinstance(groups, list):
-                groups = []
                 for i in shipped:
-                    self.park(i, f"joint gravity groups failed: {str(groups)[-300:]}")
+                    self.park(i, f"joint gravity groups failed: {str(groups)[-300:]}", streak=False)
+                groups = []
                 self.unregister(shipped)
                 shipped, changed = [], set()
-            for g in groups:
+            # T-786: a solve unit is one country's packs of a group, its neighbours within the cut fixed
+            # (intercity.solve_units); units solve in turn, so a later one sees an earlier one's factors
+            for u in groups:
+                g = u["members"]
                 new = [i for i in g if i in shipped]
-                parked, rest = self.solve(g, new, L)
+                if not new:
+                    continue
+                parked, rest = self.solve(u, new, L)
                 if rest:  # only some new members failed: the group again without them, once (T-773)
                     ok, _, again = self.step("@groups", rest, f"{L}.groups-again.log", threads=1)
                     if not ok or not isinstance(again, list):
                         raise RunFault(f"joint gravity groups failed for {' '.join(rest)}: {str(again)[-300:]}")
-                    for g2 in again:
-                        p2, _ = self.solve(g2, [i for i in g2 if i in rest], L, again=True)
+                    for u2 in again:
+                        p2, _ = self.solve(u2, [i for i in u2["members"] if i in rest], L, again=True)
                         parked += p2
                         if not p2:
-                            changed |= set(g2)
+                            changed |= set(u2["members"])
                 elif not parked:
-                    changed |= set(g)
+                    # the fixed neighbours too: their commutes into the members come from this solve now
+                    changed |= set(g) | set(u.get("fixed", []))
                 shipped = [i for i in shipped if i not in parked]
                 changed -= set(parked)
         ids = sorted(changed, key=lambda i: [c["id"] for c in self.registry()["cities"]].index(i)) if changed else []
@@ -850,32 +1100,35 @@ class Run:
             missing = [x for x in VITE_FILES if not (self.packs / f"{i}{x}").exists()]
             if missing:
                 self.unregister([i])
-                self.park(i, f"files a production build copies are missing: {', '.join(missing)}")
+                self.park(i, f"files a production build copies are missing: {', '.join(missing)}", streak=False)
                 continue
             self.set_row(i, "shipped", shipped=datetime.datetime.now().isoformat(timespec="seconds"))
             self.rec(i, result="shipped")
             print(f"  {i}: SHIPPED", flush=True)
 
-    def solve(self, g, new, L, again=False):
-        """One group's joint solve: members back to res-9, solved, merged again, re-gated (gravity
-        may change in the group only). Returns (parked, rest). A FAIL restores every member; when
-        only new members FAIL, those park and `rest` (the other new ones) go to a second solve
-        without them; when an older member FAILs, or on the second solve, every new member parks.
-        A re-gate that leaves a member without a result is a run fault (T-773)."""
-        tag = f"{L}.group-{g[0]}" + ("-again" if again else "")
-        print(f"  joint group {g[0]}{' again' if again else ''}: {' '.join(g)} (new: {' '.join(new)})", flush=True)
+    def solve(self, u, new, L, again=False):
+        """One solve unit's joint solve (`u`: name, members, fixed): members back to res-9, solved
+        with the fixed packs held at their factors, merged again, re-gated (gravity may change in
+        the members only). Returns (parked, rest). A FAIL restores every member; when only new
+        members FAIL, those park and `rest` (the other new ones) go to a second solve without them;
+        when an older member FAILs, or on the second solve, every new member parks. A re-gate that
+        leaves a member without a result is a run fault (T-773)."""
+        g, fixed, name = u["members"], u.get("fixed", []), u["name"]
+        tag = f"{L}.group-{name}" + ("-again" if again else "")
+        print(f"  joint group {name}{' again' if again else ''}: {' '.join(g)} (new: {' '.join(new)})"
+              f"{'; fixed: ' + ' '.join(fixed) if fixed else ''}", flush=True)
         self.check_sim()
         bak = Path(f"{tag}-backup")
         self.backup(g, bak)
         # the re-gate compares against the packs just before this solve (an earlier group's solve changed its own)
         snap = Path(f"{tag}.snapshot.json")
         self.step("pack_gate", ["snapshot", str(snap)], f"{tag}.log", threads=1)
-        steps = [("merge_cells", g + ["--undo"]), ("intercity", ["--group", "auto"] + new + ["--no-market"]),
+        steps = [("merge_cells", g + ["--undo"]),
+                 ("intercity", ["--solve", ",".join(g), "--name", name] + (["--fixed", ",".join(fixed)] if fixed else [])),
                  ("merge_cells", g)]
         fail, bad = None, {}
         for mod, args in steps:
-            # nothing else runs during the join: the solve takes every core, and a covered continent's
-            # group (Spain, France and Italy chained, T-779) gets the long limit
+            # nothing else runs during the join: the solve takes every core, and a big unit gets the long limit
             solo = mod == "intercity"
             ok, _, tail = self.step(mod, args, f"{tag}.log", threads=self.jobs if solo else None, big=solo and len(g) > 100)
             if not ok:
@@ -967,7 +1220,7 @@ class Run:
         rows = {r["id"]: r for r in self.rows()}
         lines = [f"world_run batch {self.batch}: {self.report['seconds'] / 60:.0f} minutes, jobs {self.jobs}"
                  f"{', STOPPED early' if self.report['stopped'] else ''}"]
-        for res in ("shipped", "parked", "built", "planned"):
+        for res in ("shipped", "gated", "parked", "built", "planned"):
             ids = [i for i in self.report["rows"] if rows.get(i, {}).get("status") == res]
             ids += [i for rr in self.report["regions"] for i in rr["rows"] if rows.get(i, {}).get("status") == res and i not in ids]
             if not ids:
@@ -1005,15 +1258,27 @@ def status(root):
     stop = Path(root or REAL) / "data/work/world_run/STOP"
     print(f"STOP file: {stop}{' (present: the next run will not start)' if stop.exists() else ''}")
     print(dict(collections.Counter(r["status"] for r in rows)))
+    sl = shared()
     for r in sorted(rows, key=lambda r: r["order"]):
-        if r["status"] in ("built", "shipped", "parked"):
+        if r["status"] in ("built", "gated", "shipped", "parked"):
+            claim = (r.get("run") or {}).get("claim")
+            live = claim and sl.is_held(f"batch-{claim}", root or REAL)
             print(f"  {r['order']:>4} {r['id']} {r['name']}: {r['status']}"
-                  f"{'; ' + r.get('run', {}).get('reason', '') if r['status'] == 'parked' else ''}")
+                  f"{'; ' + r.get('run', {}).get('reason', '') if r['status'] == 'parked' else ''}"
+                  f"{'; claimed by run ' + claim if live else ''}")
+    # T-786: locks held now (runs at once): which run holds what
+    locks = sorted((Path(root or REAL) / "data/work/world_run/locks").glob("*.lock"))
+    if root:
+        locks += sorted((REAL / "data/work/world_run/locks").glob("extract-*.lock"))
+    for p in locks:
+        if sl.is_held(p.stem, p.parents[4]):
+            w = sl.who(p.stem, p.parents[4]) or {}
+            print(f"lock {p.stem}: held by pid {w.get('pid')} ({w.get('what')}) since {w.get('since')}")
 
 
 def parse(argv):
     o = {}
-    flags = {"--no-browser": "no_browser", "--keep-downloads": "keep_downloads"}
+    flags = {"--no-browser": "no_browser", "--keep-downloads": "keep_downloads", "--no-join": "no_join"}
     valued = {"--rows": "rows", "--countries": "countries", "--limit": "limit", "--jobs": "jobs",
               "--port": "port", "--root": "root", "--workers": "workers"}
     i = 0
@@ -1041,6 +1306,8 @@ if __name__ == "__main__":
         Run(opts).dry()
     elif cmd == "run":
         Run(opts).go()
+    elif cmd == "join":
+        Run(opts).join_only()
     elif cmd == "status":
         status(opts.get("root"))
     else:

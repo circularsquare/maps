@@ -17,6 +17,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 from build_city import CITIES  # noqa: E402
 import zone_boxes  # noqa: E402
+import shared_lock  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 REG = ROOT / "app/src/game/registry.json"
@@ -35,8 +36,14 @@ def entry(cid):
 
 
 def main(argv):
+    # the whole read-modify-write, market and trips included: two runners register at once (T-786)
+    with shared_lock.held("registry", "register.py " + " ".join(argv)[:200]):
+        _main(argv)
+
+
+def _main(argv):
     ids = [a for a in argv if not a.startswith("--")]
-    reg = json.loads(REG.read_text(encoding="utf-8"))
+    reg = shared_lock.read_json(REG)
     have = {c["id"] for c in reg["cities"]}
     for cid in ids:
         if cid not in CITIES:
@@ -49,15 +56,15 @@ def main(argv):
         c = next(c for c in reg["cities"] if c["id"] == cid)
         c["box"] = zone_boxes.box(cid)
         print(f"{cid}: {c['name']}, {'new' if cid not in have else 'already registered'}, box {c['box']}", flush=True)
-    REG.write_text(json.dumps(reg, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    shared_lock.write_atomic(REG, json.dumps(reg, indent=2, ensure_ascii=False) + "\n")
     if "--market" in argv:
         import market_zones
         market_zones.main(ids)
     if "--trips" in argv:
         import zones
-        reg = json.loads(REG.read_text(encoding="utf-8"))
+        reg = shared_lock.read_json(REG)
         trips = zones.local_trips(reg)
-        REG.write_text(json.dumps(reg, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        shared_lock.write_atomic(REG, json.dumps(reg, indent=2, ensure_ascii=False) + "\n")
         for cid in ids:
             print(f"{cid}: localTrips {trips.get(cid, 0):,.0f}", flush=True)
 

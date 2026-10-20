@@ -20,7 +20,7 @@ INFORMAL_BLEND = {"nres": 0.2, "osm": 0.3, "pop": 0.5}
 # A plan row's status: planned (not built yet), built (pack written, not yet gated), shipped
 # (registered) or parked (left unregistered, its reason in `run`); world_run.py moves rows along.
 # The plan's entries for existing hand-made packs are "built" too, but have no units.
-ROW_STATES = ("planned", "built", "shipped", "parked")
+ROW_STATES = ("planned", "built", "gated", "shipped", "parked")
 
 
 def is_plan_row(r):

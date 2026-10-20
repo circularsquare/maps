@@ -1,5 +1,9 @@
 ﻿# Archive
 
+- T-786 [P2] Parallel country batches. Done 2026-10-20: cross-process locks, `run --no-join` and `join`; Portugal and Greece at once (48 min regions, 6 min join), 44 zones shipped, every-pack-opens and smoke passed. notes/T-786.md.
+- T-781 [P3] Joint groups for a covered continent. Done 2026-10-20 in T-786: a group spanning countries is solved a country at a time, neighbours held fixed; pack-line commutes within 2% of the one group, Portugal's join 48 s of solve. notes/T-786.md.
+- T-775 [P3] The rest of T-613's runner proposals. Done 2026-10-20 in T-786: three parks in a row on one reason stop the run; the TW_SIM_DIR copy is checked against HEAD's sim/ (a warning). notes/T-786.md.
+
 - T-779 [P2] Whole-country cover for Italy and France. Done 2026-10-20: 97 and 80 zones shipped, none parked (15 mountain zones and Trieste relaxed); one joint group of 239 packs, 29 min; registry 353 zones; every-pack-opens and smoke passed. notes/T-779.md.
 - T-780 [P2] Coarser pairs for the market. Done 2026-10-20: zone pairs under a trip a day dealt in chunks, seeded by zone ids; all of Japan 12.4M pairs to 3.1M, solve 1,256-1,288 s to 965 s, workers 3.1-3.6 to 2.2-2.4 GB, worst line 0.25%. notes/T-780.md.
 - T-767 [P3] The market's pass on Japan. Done with T-780 (85 s to 62-70 s a daytime pass); keeping more strategies did not pay in WASM, the rest is T-782. notes/T-780.md.

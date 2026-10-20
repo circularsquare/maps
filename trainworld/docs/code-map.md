@@ -356,12 +356,15 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   country module's `plan_hooks(row)` keys (T-555; `build_city.py` takes every planned row through
   it); `osm_units.py <id>`: its outline from the
   OSM admin relations matching the row's units (T-537, docs/adding-a-city.md 3).
-- `world_run.py plan|run|status [--rows ..|--countries ..|--limit N] [--jobs N] [--root dir]`: the
+- `world_run.py plan|run|join|status [--rows ..|--countries ..|--limit N] [--jobs N] [--no-join] [--root dir]`: the
   runner (T-540): world plan rows a region at a time through download, build, gate, registry,
   joint gravity, market and clean up, each step its own `python -I` process; status and times in
   each plan row, a report a batch in `../artifacts/trainworld/world_run/` (docs/adding-a-city.md
   "Running the pipeline"). `--root` points every step at a scratch tree (`Redirect`). `RunFault`
   stops a run without parking (`check_sim`, a gate with no result); `quiet_watch` dumps a silent step's stack.
+  Several runs at once (T-786): `--no-join` then `join`; row claims, extract, packs, registry and
+  plan locks through `shared_lock.py` (re-entrant cross-process file locks, `write_atomic`), which
+  register.py, market_zones.py, zones.py, zone_boxes.py and world_plan.py take too.
 - Real networks and calibration (T-007, T-509): `realnet.py net <city>` turns a city's sources
   (GTFS, OSM route relations from `realnet.py fetch-osm <city>`, or a CSV of timetabled trips;
   `CITIES` lists each city's) into a demand test network in `data/work/realnet/`; `realnet.py`
@@ -389,7 +392,8 @@ writes every entry's `box` through `zone_boxes.py`, which also runs alone, T-302
 `intercity.py` (the Northeast's sites, then the joint commute gravity `joint_gravity`, which
 rewrites every Northeast pack's gravity factors and the commute list, then `market_zones.py`;
 `--group auto [ids]` every group of packs within 50 km of each other, the Northeast as above and
-the rest by `joint_gravity --packs`, T-463, T-539; `--groups` lists them),
+the rest by `joint_gravity --packs`, T-463, T-539, a group spanning countries a country at a time
+with `--fixed` neighbours, T-786; `--groups` lists them and their solve units),
 `market_zones.py [ids]` (each zone's market pack against the world field, then `market_pack`'s
 rows into app/src/game/market-rows.json and each zone's `country` into the registry through
 `market_rows.py`, which also drops the rows of unregistered zones, T-776; seconds a zone, T-377),

@@ -9,6 +9,12 @@
 //! writes their cross-pack commutes to `--out` by 6 km squares of each pack's own frame, for
 //! pipeline/market_zones.py; intercity.json is not read or written.
 //!
+//! `--fixed c,d` (T-786, with `--packs`): packs held at their factors (the pack's gravity block, or
+//! `--init F`, a `--dump` of an earlier solve), a neighbouring country's: their zones take part in
+//! the solved packs' sums across the cut but are not balanced or written. `--out` then holds every
+//! commute with an end in a solved pack (listed under `solved`), from the fixed packs' homes too;
+//! pipeline/market_zones.py takes each pair of packs from the newest file covering it.
+//!
 //! Reads every zone pack of the registry (`app/src/game/registry.json`, cities with a market place)
 //! and the regional market's pack (`data/packs/intercity.json`, its sites written by
 //! pipeline/intercity.py), and solves the doubly constrained work gravity over all their 2 km zones
@@ -55,6 +61,7 @@ struct Pk {
     /// first global zone index
     off: usize,
     market: usize,
+    fixed: bool,
 }
 
 fn main() {
@@ -69,7 +76,9 @@ fn main() {
 
     let registry: Value = serde_json::from_str(&std::fs::read_to_string(format!("{root}/app/src/game/registry.json")).unwrap()).unwrap();
     // `--packs a,b,..`: a group outside the Northeast (Japan, T-463), its commutes to `--out`
-    let only: Option<Vec<String>> = get("--packs").map(|s| s.split(',').map(String::from).collect());
+    let only: Option<Vec<String>> = get("--packs").map(|s| s.split(',').filter(|x| !x.is_empty()).map(String::from).collect());
+    let fixed_ids: Vec<String> = get("--fixed").map(|s| s.split(',').filter(|x| !x.is_empty()).map(String::from).collect()).unwrap_or_default();
+    assert!(fixed_ids.is_empty() || only.is_some(), "--fixed needs --packs");
     let cities = registry["cities"].as_array().unwrap();
     // Zone distances in a conic: the Northeast's at the market's origin (T-125), a group's at the
     // mean of its packs' origins (1.2% at 9 degrees of latitude off it). The game's own frame is
@@ -80,8 +89,10 @@ fn main() {
             Frame::lcc(wf["lon"].as_f64().unwrap(), wf["lat"].as_f64().unwrap())
         }
         Some(ids) => {
-            let os: Vec<&Value> = cities.iter().filter(|c| ids.iter().any(|i| c["id"].as_str() == Some(i))).map(|c| &c["origin"]).collect();
-            assert_eq!(os.len(), ids.len(), "--packs names a city the registry lacks");
+            assert_eq!(cities.iter().filter(|c| fixed_ids.iter().any(|i| c["id"].as_str() == Some(i))).count(), fixed_ids.len(), "--fixed names a city the registry lacks");
+            // the frame at the mean of the solved and fixed packs' origins: a fixed pack's distances are the same as in its own solve to 1%
+            let os: Vec<&Value> = cities.iter().filter(|c| ids.iter().chain(&fixed_ids).any(|i| c["id"].as_str() == Some(i))).map(|c| &c["origin"]).collect();
+            assert_eq!(os.len(), ids.len() + fixed_ids.len(), "--packs names a city the registry lacks");
             let n = os.len() as f64;
             Frame::lcc(os.iter().map(|o| o["lon"].as_f64().unwrap()).sum::<f64>() / n, os.iter().map(|o| o["lat"].as_f64().unwrap()).sum::<f64>() / n)
         }
@@ -95,7 +106,8 @@ fn main() {
     for c in cities {
         let market = c["market"].as_i64().unwrap_or(-1);
         let id = c["id"].as_str().unwrap().to_string();
-        if match &only { Some(ids) => !ids.contains(&id), None => market < 0 } {
+        let fixed = fixed_ids.contains(&id);
+        if match &only { Some(ids) => !ids.contains(&id) && !fixed, None => market < 0 } {
             continue;
         }
         let (header, bin) = pack::load_raw(&format!("{root}/data/packs/{id}.json")).unwrap_or_else(|e| panic!("{e}"));
@@ -120,13 +132,45 @@ fn main() {
             })
             .collect();
         let n = z.n;
-        packs.push(Pk { id, header, bin, th: 2 * z.h - 1, border: pg.border_factor, decay_km: pg.decay_km, decay_pow: pg.decay_pow, zone_m: pg.zone_m, city, z, ftab, regions, off, market: market.max(0) as usize });
+        packs.push(Pk { id, header, bin, th: 2 * z.h - 1, border: pg.border_factor, decay_km: pg.decay_km, decay_pow: pg.decay_pow, zone_m: pg.zone_m, city, z, ftab, regions, off, market: market.max(0) as usize, fixed });
         off += n;
     }
     let nz = off;
     let np = packs.len();
     let nr = region_key.len();
-    eprintln!("{} packs, {} zones, {} regions, loaded in {:.0} ms", np, nz, nr, now_ms() - t0);
+    eprintln!("{} packs ({} fixed), {} zones, {} regions, loaded in {:.0} ms", np, packs.iter().filter(|p| p.fixed).count(), nz, nr, now_ms() - t0);
+    // a fixed pack's factors: its gravity block's, or `--init`'s (a `--dump` of an earlier solve)
+    let init: HashMap<String, (Vec<f64>, Vec<f64>)> = match get("--init") {
+        None => HashMap::new(),
+        Some(f) => {
+            let d: Value = serde_json::from_str(&std::fs::read_to_string(&f).unwrap()).unwrap();
+            let (rw, cl) = (d["row"].as_array().unwrap(), d["col"].as_array().unwrap());
+            d["packs"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|p| {
+                    let (o, n) = (p[1].as_u64().unwrap() as usize, p[2].as_u64().unwrap() as usize);
+                    let v = |a: &Vec<Value>| a[o..o + n].iter().map(|x| x.as_f64().unwrap_or(0.0)).collect::<Vec<f64>>();
+                    (p[0].as_str().unwrap().to_string(), (v(rw), v(cl)))
+                })
+                .collect()
+        }
+    };
+    let mut base_row = vec![0f64; nz];
+    let mut base_col = vec![0f64; nz];
+    for p in packs.iter().filter(|p| p.fixed) {
+        let (r, c) = match init.get(&p.id) {
+            Some(rc) => rc.clone(),
+            None => {
+                let g = p.city.gravity.as_ref().unwrap();
+                (g.row.clone(), g.col.clone())
+            }
+        };
+        assert!(r.len() == p.z.n && c.len() == p.z.n, "{}: {} factors for {} zones", p.id, r.len(), p.z.n);
+        base_row[p.off..p.off + p.z.n].copy_from_slice(&r);
+        base_col[p.off..p.off + p.z.n].copy_from_slice(&c);
+    }
 
     // ---- border factor per pair of global regions
     let mut kf = vec![f32::NAN; nr * nr];
@@ -319,9 +363,17 @@ fn main() {
         a
     }
     let mut npairs = 0usize;
+    // fixed packs join no group: their factors are given, so nothing is balanced through them
+    let fixed_zone = |g: usize| packs[zp[g] as usize].fixed;
     for g in 0..nz {
+        if fixed_zone(g) {
+            continue;
+        }
         cross(g, true, &mut |h, _| {
             npairs += 1;
+            if fixed_zone(h) {
+                return;
+            }
             let (a, b) = (root_of(&mut parent, zp[g] as usize), root_of(&mut parent, zp[h] as usize));
             if a != b {
                 parent[a] = b;
@@ -331,6 +383,9 @@ fn main() {
     let mut groups: Vec<Vec<usize>> = vec![];
     let mut group_of: HashMap<usize, usize> = HashMap::new();
     for pi in 0..np {
+        if packs[pi].fixed {
+            continue;
+        }
         let r = root_of(&mut parent, pi);
         let k = *group_of.entry(r).or_insert_with(|| {
             groups.push(vec![]);
@@ -345,13 +400,13 @@ fn main() {
     // ---- balancing: Furness steps with Anderson mixing (T-297)
     let max_iters: usize = get("--max-iters").map_or(500, |v| v.parse().unwrap());
     let mix: usize = get("--anderson").map_or(12, |v| v.parse().unwrap());
-    let mut row = vec![0f64; nz];
-    let mut col = jobs.clone();
+    let mut row = base_row.clone();
+    let mut col: Vec<f64> = (0..nz).map(|g| if fixed_zone(g) { base_col[g] } else { jobs[g] }).collect();
     let (mut iters, mut err) = (0, 0f64);
     for grp in &groups {
         let zs: Vec<usize> = grp.iter().flat_map(|&pi| packs[pi].off..packs[pi].off + packs[pi].z.n).collect();
         let name = grp.iter().map(|&p| packs[p].id.as_str()).collect::<Vec<_>>().join("+");
-        let b = balance(&o, &jobs, &col, &zs, &|v, rows| sums(v, rows, &zs), tol, max_iters, mix, &mut |k, e| {
+        let b = balance(&o, &jobs, &col, &base_row, &base_col, &zs, &|v, rows| sums(v, rows, &zs), tol, max_iters, mix, &mut |k, e| {
             if k % 10 == 0 {
                 eprintln!("  {name}: step {k}, max column error {e:.2e} ({:.0} s)", (now_ms() - t0) / 1000.0);
             }
@@ -368,17 +423,37 @@ fn main() {
         let all: Vec<usize> = (0..nz).collect();
         let sr = sums(&col, true, &all);
         let sc = sums(&row, false, &all);
-        let (mut er, mut ec) = (0f64, 0f64);
+        // fixed packs apart: their margins move when the solved packs' factors change (T-786)
+        let (mut er, mut ec, mut fr, mut fc) = (0f64, 0f64, 0f64, 0f64);
+        let (mut fo, mut fo_off, mut fd, mut fd_off) = (0f64, 0f64, 0f64, 0f64);
         for g in 0..nz {
-            if o[g] > 0.0 && sr[g] > 0.0 {
-                er = er.max((row[g] * sr[g] / o[g] - 1.0).abs());
+            let (re, ce) = ((row[g] * sr[g] / o[g].max(1e-300) - 1.0).abs(), (col[g] * sc[g] / jobs[g].max(1e-300) - 1.0).abs());
+            let (rok, cok) = (o[g] > 0.0 && sr[g] > 0.0, jobs[g] > 0.0 && sc[g] > 0.0);
+            if fixed_zone(g) {
+                if rok {
+                    fr = fr.max(re);
+                    fo += o[g];
+                    fo_off += (row[g] * sr[g] - o[g]).abs();
+                }
+                if cok {
+                    fc = fc.max(ce);
+                    fd += jobs[g];
+                    fd_off += (col[g] * sc[g] - jobs[g]).abs();
+                }
+                continue;
             }
-            if jobs[g] > 0.0 && sc[g] > 0.0 {
-                ec = ec.max((col[g] * sc[g] / jobs[g] - 1.0).abs());
+            if rok {
+                er = er.max(re);
+            }
+            if cok {
+                ec = ec.max(ce);
             }
         }
         eprintln!("check: max row error {er:.2e}, max column error {ec:.2e}, {:.0} s", (now_ms() - t0) / 1000.0);
-        let mut worst: Vec<(f64, usize)> = (0..nz).filter(|&g| jobs[g] > 0.0 && sc[g] > 0.0).map(|g| ((col[g] * sc[g] / jobs[g] - 1.0).abs(), g)).collect();
+        if fo > 0.0 {
+            eprintln!("check, fixed packs: max row error {fr:.2e} (homes off by {:.3e} of theirs in all), max column error {fc:.2e} (jobs off by {:.3e})", fo_off / fo, fd_off / fd.max(1e-300));
+        }
+        let mut worst: Vec<(f64, usize)> = (0..nz).filter(|&g| !fixed_zone(g) && jobs[g] > 0.0 && sc[g] > 0.0).map(|g| ((col[g] * sc[g] / jobs[g] - 1.0).abs(), g)).collect();
         worst.sort_by(|a, b| b.0.total_cmp(&a.0));
         for &(e, g) in worst.iter().take(8) {
             let p = &packs[zp[g] as usize];
@@ -390,7 +465,7 @@ fn main() {
     // ---- what each zone keeps in its pack, and the cross-pack flows
     let mut home = vec![0f64; nz];
     let mut work = vec![0f64; nz];
-    for p in &packs {
+    for p in packs.iter().filter(|p| !p.fixed) {
         for i in 0..p.z.n {
             let g = p.off + i;
             home[g] = row[g] * within(p, i, &col);
@@ -470,14 +545,22 @@ fn main() {
         if row[g] == 0.0 {
             continue;
         }
+        let gf = fixed_zone(g);
         cross(g, true, &mut |h, w| {
+            // a fixed pack's commutes into the solved packs are listed too (the newest solve covering a pair
+            // gives it, T-786); between two fixed packs, nowhere
+            if gf && fixed_zone(h) {
+                return;
+            }
             let t = row[g] * col[h] * w;
             if t <= 0.0 {
                 return;
             }
             by_pack[zp[g] as usize * np + zp[h] as usize] += t;
-            cross_km.0 += t;
-            cross_km.1 += t * ((px[h] - px[g]).powi(2) + (py[h] - py[g]).powi(2)).sqrt() / 1000.0;
+            if !gf {
+                cross_km.0 += t;
+                cross_km.1 += t * ((px[h] - px[g]).powi(2) + (py[h] - py[g]).powi(2)).sqrt() / 1000.0;
+            }
             for &(mh, sh) in &hsplit[g] {
                 for &(mw, sw) in &wsplit[h] {
                     *flows.entry((mh, mw)).or_default() += t * sh * sw;
@@ -521,8 +604,10 @@ fn main() {
     let kept: f64 = list.iter().map(|x| x.1).sum();
     println!("market zone pairs: {} kept (at least {min} a day), {:.0} commuters after giving the dropped ones to each home zone's kept pairs ({:.2}% of the cross-pack ones; home zones with no kept pair lose theirs)", list.len(), kept, 100.0 * kept / total_cross.max(1e-9));
 
+    let solved: Vec<String> = packs.iter().filter(|p| !p.fixed).map(|p| p.id.clone()).collect();
     let report = json!({
         "packs": packs.iter().map(|p| p.id.clone()).collect::<Vec<_>>(),
+        "solved": solved,
         "by_pack": by_pack,
         "commuters": tj, "within": total_within, "cross": total_cross,
         "border_pairs": table, "iterations": iters, "max_error": err, "cut_km": cut_km,
@@ -535,7 +620,7 @@ fn main() {
         return;
     }
     // ---- write the packs
-    for p in &packs {
+    for p in packs.iter().filter(|p| !p.fixed) {
         let mut pg = p.city.gravity.clone().unwrap();
         let r = p.off..p.off + p.z.n;
         pg.row = row[r.clone()].to_vec();
@@ -550,6 +635,7 @@ fn main() {
         let into: f64 = (0..np).map(|a| by_pack[a * np + pi]).sum();
         pg.joint = Some(json!({
             "packs": packs.iter().map(|q| q.id.clone()).collect::<Vec<_>>(),
+            "solved": solved,
             "cut_km": cut_km,
             "commuters_out": out,
             "commuters_in": into,
@@ -571,6 +657,9 @@ fn main() {
         let zk = |m: u32| group_zones[m as usize];
         let g = json!({
             "task": "T-463", "packs": packs.iter().map(|p| p.id.clone()).collect::<Vec<_>>(), "zone_m": 6000,
+            // the packs solved; a pair of packs with an end among them is this file's until a newer one covers it (T-786)
+            "solved": solved,
+            "solved_at": std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0.0, |d| d.as_secs_f64()),
             "frame": "each pack's own equirectangular frame at its origin; a zone is [floor(x / 6000), floor(y / 6000)]",
             "source": format!("bin/joint_gravity.rs (T-276, T-463): the cross-pack part of one commute gravity over {np} packs, cut at {cut_km} km"),
             "home_pack": list.iter().map(|x| zk(x.0 .0).0).collect::<Vec<_>>(),
@@ -651,10 +740,10 @@ struct Balanced {
 /// `sums(v, true)` is W v and `sums(v, false)` is W^T v. A Furness step maps log col to log col and the
 /// solution is its fixed point. Plain Furness crawls along the few slow modes between weakly joined
 /// packs and regions (500 steps to 2e-4 on the Northeast); Anderson mixing of the last `mix` steps
-/// removes them (T-297). `mix` 0 is plain Furness.
+/// removes them (T-297). `mix` 0 is plain Furness. Zones outside `zs` keep `base_row` and
+/// `base_col` (a fixed pack's factors, T-786; zero otherwise).
 #[allow(clippy::too_many_arguments)]
-fn balance(o: &[f64], d: &[f64], c0: &[f64], zs: &[usize], sums: &dyn Fn(&[f64], bool) -> Vec<f64>, tol: f64, max_steps: usize, mix: usize, log: &mut dyn FnMut(usize, f64)) -> Balanced {
-    let n = o.len();
+fn balance(o: &[f64], d: &[f64], c0: &[f64], base_row: &[f64], base_col: &[f64], zs: &[usize], sums: &dyn Fn(&[f64], bool) -> Vec<f64>, tol: f64, max_steps: usize, mix: usize, log: &mut dyn FnMut(usize, f64)) -> Balanced {
     let act: Vec<usize> = zs.iter().copied().filter(|&g| d[g] > 0.0).collect();
     let mut x: Vec<f64> = act.iter().map(|&g| if c0[g] > 0.0 { c0[g] } else { d[g] }.ln()).collect();
     // a column no home reaches gets 0, as in plain Furness
@@ -662,13 +751,13 @@ fn balance(o: &[f64], d: &[f64], c0: &[f64], zs: &[usize], sums: &dyn Fn(&[f64],
     let mut hist: VecDeque<(Vec<f64>, Vec<f64>)> = VecDeque::new();
     let mut prev: Option<(Vec<f64>, Vec<f64>, f64)> = None;
     let mut best: Option<Balanced> = None;
-    let mut c = vec![0f64; n];
+    let mut c = base_col.to_vec();
     for k in 0..max_steps {
         for (i, &g) in act.iter().enumerate() {
             c[g] = if dead[i] { 0.0 } else { x[i].exp() };
         }
         let s = sums(&c, true);
-        let mut row = vec![0f64; n];
+        let mut row = base_row.to_vec();
         for &g in zs {
             if o[g] > 0.0 && s[g] > 0.0 {
                 row[g] = o[g] / s[g];
@@ -797,8 +886,9 @@ mod tests {
             (0..n).map(|g| (0..n).map(|h| v[h] * if rows { w[g * n + h] } else { w[h * n + g] }).sum()).collect()
         };
         let zs: Vec<usize> = (0..n).collect();
-        let slow = balance(&o, &d, &d, &zs, &sums, 1e-10, 50000, 0, &mut |_, _| {});
-        let fast = balance(&o, &d, &d, &zs, &sums, 1e-10, 50000, 8, &mut |_, _| {});
+        let z = vec![0f64; n];
+        let slow = balance(&o, &d, &d, &z, &z, &zs, &sums, 1e-10, 50000, 0, &mut |_, _| {});
+        let fast = balance(&o, &d, &d, &z, &z, &zs, &sums, 1e-10, 50000, 8, &mut |_, _| {});
         eprintln!("furness {} steps, anderson {}", slow.steps, fast.steps);
         assert!(slow.err < 1e-10 && fast.err < 1e-10, "{} {}", slow.err, fast.err);
         assert!(fast.steps * 10 < slow.steps, "anderson {} steps, furness {}", fast.steps, slow.steps);
@@ -812,6 +902,20 @@ mod tests {
         }
         for j in 0..n {
             assert_eq!(fast.col[j] == 0.0, d[j] == 0.0);
+        }
+        // T-786: block A solved with block B held at the joint solution gives the joint flows back
+        let a: Vec<usize> = (0..40).collect();
+        let (mut br, mut bc) = (vec![0f64; n], vec![0f64; n]);
+        for g in 40..n {
+            br[g] = fast.row[g];
+            bc[g] = fast.col[g];
+        }
+        let part = balance(&o, &d, &d, &br, &bc, &a, &sums, 1e-10, 50000, 8, &mut |_, _| {});
+        for i in 0..40 {
+            for j in 0..n {
+                let (x, y) = (fast.row[i] * fast.col[j], part.row[i] * part.col[j]);
+                assert!((x - y).abs() <= 1e-6 * x.max(y).max(1e-300), "fixed: {i} {j} {x} {y}");
+            }
         }
     }
 }

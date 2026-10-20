@@ -1262,4 +1262,7 @@ def main(argv):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    import shared_lock
+    # a replan or zone rows rewrite the plan whole while runners set row statuses (T-786)
+    with shared_lock.held("plan", "world_plan.py " + " ".join(sys.argv[1:])[:200]):
+        main(sys.argv[1:])

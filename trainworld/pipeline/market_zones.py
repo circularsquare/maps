@@ -38,6 +38,7 @@ from read_pack import load_pack
 from build_city import R_EARTH
 from intercity import park_by_cell
 import market_rows
+import shared_lock
 
 ROOT = Path(__file__).resolve().parents[1]
 REG = ROOT / "app/src/game/registry.json"
@@ -211,14 +212,21 @@ class Groups:
     def __init__(self, reg):
         self.reg = {c["id"]: c for c in reg["cities"]}
         self.rows, self.source, self.keys = {}, {}, {}
-        for path in sorted((ROOT / "data/work").glob("*.joint_commutes.json")):
+        # each pair of packs from the newest file covering it (T-786: a country's file covers its own
+        # packs' pairs and its fixed neighbours' pairs with them, not the neighbours' among themselves)
+        import intercity
+        pairs = {}
+        for path, f in intercity.joint_files(ROOT / "data/work").items():  # oldest first
             g = json.loads(path.read_text(encoding="utf-8"))
+            for k in [k for k in pairs if k[0] in f["packs"] and k[1] in f["packs"] and (k[0] in f["solved"] or k[1] in f["solved"])]:
+                del pairs[k]
             ids = g["packs"]
-            hp = np.array(g["home_pack"], np.int64)
-            for i, cid in enumerate(ids):
-                mine = np.nonzero(hp == i)[0]
-                self.rows[cid] = [(tuple(g["home_zone"][k]), ids[g["work_pack"][k]], tuple(g["work_zone"][k]), g["trips"][k]) for k in mine]
-                self.source[cid] = g["source"]
+            for k in range(len(g["trips"])):
+                h, w = ids[g["home_pack"][k]], ids[g["work_pack"][k]]
+                pairs.setdefault((h, w), []).append((tuple(g["home_zone"][k]), w, tuple(g["work_zone"][k]), g["trips"][k]))
+                self.source[h] = g["source"]
+        for (h, _w), lst in pairs.items():
+            self.rows.setdefault(h, []).extend(lst)
 
     def zone_keys(self, cid):
         """A pack's 6 km zones' squares, in its zone file's order."""
@@ -359,10 +367,16 @@ def write(path, out):
 
 def main(ids=None):
     args = sys.argv[1:] if ids is None else ids
+    # registry, market rows and data/work/market_rows.json: one writer at a time (T-786)
+    with shared_lock.held("registry", "market_zones " + " ".join(args)[:200]):
+        _main(args)
+
+
+def _main(args):
     air_only = "--air" in args
-    reg = json.loads(REG.read_text(encoding="utf-8"))
+    reg = shared_lock.read_json(REG)
     assign_places(reg)
-    REG.write_text(json.dumps(reg, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    shared_lock.write_atomic(REG, json.dumps(reg, indent=2, ensure_ascii=False) + "\n")
     air = airports_by_zone(reg)
     for cid, a in air.items():
         print(f"{cid}: airports {' '.join(a['air_codes']) or 'none'}", flush=True)
@@ -399,11 +413,11 @@ def main(ids=None):
     rows = ROOT / "data/work/market_rows.json"
     cargo_bin("market_pack", "--root", str(ROOT), "--out", str(rows))
     got = json.loads(rows.read_text(encoding="utf-8"))
-    reg = json.loads(REG.read_text(encoding="utf-8"))
+    reg = shared_lock.read_json(REG)
     have = market_rows.load(ROOT)
     have.update(got["rows"])
     market_rows.with_countries(reg, have)
-    REG.write_text(json.dumps(reg, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    shared_lock.write_atomic(REG, json.dumps(reg, indent=2, ensure_ascii=False) + "\n")
     market_rows.save(reg, have, ROOT)
     print("registry rows:", ", ".join(sorted(got["rows"])))
 

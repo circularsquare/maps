@@ -877,8 +877,10 @@ def changed_since(city, header, path):
         snap = json.load(f)
     group = set((header.get("gravity", {}).get("joint") or {}).get("packs", []))
     bad = []
+    now = registry()
     for other, before in snap.items():
-        if other == city:
+        # a pack taken out of the registry since (another run's park or rebuild, T-786) is no concern of this gate
+        if other == city or other not in now:
             continue
         if not os.path.exists(os.path.join(PACKS, f"{other}.json")):
             bad.append(f"{other} gone")

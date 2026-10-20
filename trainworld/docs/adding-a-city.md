@@ -22,12 +22,33 @@ and 11 for it, with the gate (section 8) deciding ship or park. From the maps ro
 
     venv\Scripts\python.exe -I trainworld\pipeline\world_run.py plan --limit 20    what a run would do
     venv\Scripts\python.exe -I trainworld\pipeline\world_run.py run --limit 20     the next 20 rows
-    venv\Scripts\python.exe -I trainworld\pipeline\world_run.py status             rows by status
+    venv\Scripts\python.exe -I trainworld\pipeline\world_run.py status             rows by status, locks held
+    venv\Scripts\python.exe -I trainworld\pipeline\world_run.py join               the joint solve for gated rows
 
 `--rows a,b` or `--countries GB,PT` instead of `--limit`; `--jobs N` the cores in all (default 2,
 up to 12 on an overnight run Anita approves; one city at a time per 3 cores); `--port` its own Vite
 for the browser check (default 6360). Set `TW_SIM_DIR` and `TW_CARGO_TARGET_DIR` when the tree's
-`sim/` may be mid-edit (section 4). Run it in the background and wait once for the process.
+`sim/` may be mid-edit (section 4); the run prints, and reports as a problem, every file where that
+copy is not HEAD's `sim/`, saying which match the tree (a change not yet committed). Run it in the
+background and wait once for the process.
+
+- **Several countries at once** (T-786): a batch's regions use about 4 cores and its joint solve
+  all of them, so start one run per country with `--no-join` and its own `--port`, `--jobs` summed
+  within the cores allowed; each ends with its gated rows registered, status `gated`. When all
+  have ended, one `join` (every gated row, or `--countries`) solves their groups on every core of
+  its `--jobs`. A run claims its rows (a row another live run claimed is left out) and holds its
+  region's extracts (a run needing the same extract waits). Every read-modify-write of the plan,
+  the registry, the market rows and `made.json` takes a lock (`pipeline/shared_lock.py`, files in
+  `data/work/world_run/locks/`, released when the process dies), and so do register.py,
+  market_zones.py, zones.py, zone_boxes.py and world_plan.py. Gates of several runs overlap, but a
+  joint solve overlaps no gate (a gate's snapshot would see its changes): the solve holds the
+  `packs` lock and waits for gates under way (each holds `gate-<batch>`), and a gate does not
+  start while `packs` is held. A run waiting for a lock prints so after 5 seconds, and `status`
+  lists who holds what. A gate check comparing other packs against its snapshot skips packs no
+  longer registered (another run's park or rebuild).
+- **Three parks in a row on one reason stop the run** (T-775): the reason with the row's id taken
+  out (and, for a failed step, its numbers), so a code fault does not park a whole country; rows
+  failing a gate check on their own values do not count as one reason.
 
 - **Zone rows** (whole-country cover, T-723, docs/zones.md 2): `world_plan.py zones --countries ES`
   (run through `world_run.py step world_plan zones ...`, which puts the pipeline on the path) writes
@@ -52,11 +73,13 @@ for the browser check (default 6360). Set `TW_SIM_DIR` and `TW_CARGO_TARGET_DIR`
   checks are its reason. The browser check serves the main tree's app/, so whoever runs a batch
   says who may rebuild app/ (its WASM) while it runs.
 - **Joint gravity**, once for the batch after its last region (T-723; a run stopped before it
-  leaves the gated rows registered and `built`, for the next run to gate again): a pack with no
-  country in its header (tor, lon, par, sao) takes the registry's
-  `country`. Each group a gated pack joined is solved once (members back to res-9,
-  `intercity.py --group auto <new> --no-market` on every core of `--jobs`, with four times the step
-  limit for a group of over 100 packs, merged again) and gated again without the browser
+  leaves the gated rows registered and `built`, for the next run to gate again; with `--no-join`,
+  `join` does it): a pack with no country in its header (tor, lon, par, sao) takes the registry's
+  `country`. Each solve unit a gated pack joined (a group, or one country's part of a group
+  spanning countries with its neighbours held fixed, docs/zones.md 4) is solved once (members back
+  to res-9, `intercity.py --solve <members> --fixed <neighbours> --name <unit>` on every core of
+  `--jobs`, with four times the step limit for a unit of over 100 packs, merged again) and gated
+  again without the browser
   or rates; a FAIL restores every member from the backup taken before. When only new packs FAIL,
   they park and the group is solved once more without them (a FAIL then parks every new pack of
   that solve); when an older member FAILs, every new pack parks (T-773). Then `register.py
@@ -67,8 +90,9 @@ for the browser check (default 6360). Set `TW_SIM_DIR` and `TW_CARGO_TARGET_DIR`
 - **Clean up**: the region's `.osm.pbf` files and the OSM caches the runner made go once the
   region is done (`--keep-downloads` keeps them); caches already on disk before, and the small
   `.admin.fgb`, stay.
-- **Status** is each row's `status` in `pipeline/world_plan.json` (`planned`, `built`, `shipped`,
-  `parked`) with a `run` record: batch, seconds a step, gate warnings, a parked row's reason. A
+- **Status** is each row's `status` in `pipeline/world_plan.json` (`planned`, `built`, `gated`,
+  `shipped`, `parked`) with a `run` record: batch, seconds a step, gate warnings, a parked row's
+  reason, the claiming run while one runs it (`claim`). A
   batch's report (shipped, parked with reasons, warnings, times) and every log go to
   `../artifacts/trainworld/world_run/<batch>/`.
 - **Stopping**: ctrl-c, or the file `trainworld\data\work\world_run\STOP` (the run's first line and

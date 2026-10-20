@@ -2890,6 +2890,234 @@
       {
         "name": "Corse-du-Sud",
         "regionName": "Corse-du-Sud region"
+      },
+      {
+        "name": "Algarve",
+        "regionName": "Algarve region"
+      },
+      {
+        "name": "Ave",
+        "regionName": "Ave region"
+      },
+      {
+        "name": "Região de Coimbra",
+        "regionName": "Região de Coimbra region"
+      },
+      {
+        "name": "Tâmega e Sousa",
+        "regionName": "Tâmega e Sousa region"
+      },
+      {
+        "name": "Cávado",
+        "regionName": "Cávado region"
+      },
+      {
+        "name": "Oeste",
+        "regionName": "Oeste region"
+      },
+      {
+        "name": "Região de Aveiro",
+        "regionName": "Região de Aveiro region"
+      },
+      {
+        "name": "Região de Leiria",
+        "regionName": "Região de Leiria region"
+      },
+      {
+        "name": "Região Autónoma da Madeira",
+        "regionName": "Região Autónoma da Madeira region"
+      },
+      {
+        "name": "Viseu Dão Lafões",
+        "regionName": "Viseu Dão Lafões region"
+      },
+      {
+        "name": "Lezíria do Tejo",
+        "regionName": "Lezíria do Tejo region"
+      },
+      {
+        "name": "Alto Minho",
+        "regionName": "Alto Minho region"
+      },
+      {
+        "name": "Beiras e Serra da Estrela",
+        "regionName": "Beiras e Serra da Estrela region"
+      },
+      {
+        "name": "Douro",
+        "regionName": "Douro region"
+      },
+      {
+        "name": "Irakleio",
+        "regionName": "Irakleio region"
+      },
+      {
+        "name": "Larisa",
+        "regionName": "Larisa region"
+      },
+      {
+        "name": "Achaia",
+        "regionName": "Achaia region"
+      },
+      {
+        "name": "Grevena, Kozani",
+        "regionName": "Grevena, Kozani region"
+      },
+      {
+        "name": "Serres",
+        "regionName": "Serres region"
+      },
+      {
+        "name": "Karditsa, Trikala",
+        "regionName": "Karditsa, Trikala region"
+      },
+      {
+        "name": "Lakonia, Messinia",
+        "regionName": "Lakonia, Messinia region"
+      },
+      {
+        "name": "Ioannina",
+        "regionName": "Ioannina region"
+      },
+      {
+        "name": "Thasos, Kavala",
+        "regionName": "Thasos, Kavala region"
+      },
+      {
+        "name": "Magnisia, Sporades",
+        "regionName": "Magnisia, Sporades region"
+      },
+      {
+        "name": "Evvoia",
+        "regionName": "Evvoia region"
+      },
+      {
+        "name": "Aitoloakarnania",
+        "regionName": "Aitoloakarnania region"
+      },
+      {
+        "name": "Kalymnos, Karpathos, Kasos, Kos, Rodos",
+        "regionName": "Kalymnos, Karpathos, Kasos, Kos, Rodos region"
+      },
+      {
+        "name": "Lesvos, Limnos",
+        "regionName": "Lesvos, Limnos region"
+      },
+      {
+        "name": "Argolida, Arkadia",
+        "regionName": "Argolida, Arkadia region"
+      },
+      {
+        "name": "Kerkyra",
+        "regionName": "Kerkyra region"
+      },
+      {
+        "name": "Chania",
+        "regionName": "Chania region"
+      },
+      {
+        "name": "Fthiotida",
+        "regionName": "Fthiotida region"
+      },
+      {
+        "name": "Ileia",
+        "regionName": "Ileia region"
+      },
+      {
+        "name": "Imathia",
+        "regionName": "Imathia region"
+      },
+      {
+        "name": "Pella",
+        "regionName": "Pella region"
+      },
+      {
+        "name": "Evros",
+        "regionName": "Evros region"
+      },
+      {
+        "name": "Korinthia",
+        "regionName": "Korinthia region"
+      },
+      {
+        "name": "Pieria",
+        "regionName": "Pieria region"
+      },
+      {
+        "name": "Arta, Preveza",
+        "regionName": "Arta, Preveza region"
+      },
+      {
+        "name": "Voiotia",
+        "regionName": "Voiotia region"
+      },
+      {
+        "name": "Andros, Thira, Kea - Kythnos, Milos, Mykonos, Naxos, Paros,  Syros, Tinos",
+        "regionName": "Andros, Thira, Kea - Kythnos, Milos, Mykonos, Naxos, Paros,  Syros, Tinos region"
+      },
+      {
+        "name": "Rodopi",
+        "regionName": "Rodopi region"
+      },
+      {
+        "name": "Xanthi",
+        "regionName": "Xanthi region"
+      },
+      {
+        "name": "Chalkidiki",
+        "regionName": "Chalkidiki region"
+      },
+      {
+        "name": "Lefkada",
+        "regionName": "Lefkada region"
+      },
+      {
+        "name": "Região Autónoma dos Açores",
+        "regionName": "Região Autónoma dos Açores region"
+      },
+      {
+        "name": "Região Autónoma da Madeira",
+        "regionName": "Região Autónoma da Madeira region"
+      },
+      {
+        "name": "Região Autónoma dos Açores",
+        "regionName": "Região Autónoma dos Açores region"
+      },
+      {
+        "name": "Larisa",
+        "regionName": "Larisa region"
+      },
+      {
+        "name": "Achaia",
+        "regionName": "Achaia region"
+      },
+      {
+        "name": "Ioannina",
+        "regionName": "Ioannina region"
+      },
+      {
+        "name": "Chania",
+        "regionName": "Chania region"
+      },
+      {
+        "name": "Ileia",
+        "regionName": "Ileia region"
+      },
+      {
+        "name": "Pieria",
+        "regionName": "Pieria region"
+      },
+      {
+        "name": "Rodopi",
+        "regionName": "Rodopi region"
+      },
+      {
+        "name": "Xanthi",
+        "regionName": "Xanthi region"
+      },
+      {
+        "name": "Lefkada",
+        "regionName": "Lefkada region"
       }
     ],
     "rule": {
@@ -4664,7 +4892,7 @@
         39.08
       ],
       "place": 71,
-      "localTrips": 8307239.0,
+      "localTrips": 8286007.0,
       "country": "PT"
     },
     {
@@ -4688,7 +4916,7 @@
         41.49
       ],
       "place": 72,
-      "localTrips": 4942048.0,
+      "localTrips": 4830390.0,
       "country": "PT"
     },
     {
@@ -5240,7 +5468,7 @@
         38.36
       ],
       "place": 104,
-      "localTrips": 10307109.0,
+      "localTrips": 10284067.0,
       "country": "GR"
     },
     {
@@ -5264,7 +5492,7 @@
         41.025
       ],
       "place": 105,
-      "localTrips": 2999761.0,
+      "localTrips": 2974920.0,
       "country": "GR"
     },
     {
@@ -11651,6 +11879,1106 @@
       "place": 717,
       "country": "FR",
       "localTrips": 434652.0
+    },
+    {
+      "id": "ala",
+      "name": "Algarve",
+      "kind": "zone",
+      "origin": {
+        "lon": -7.9227,
+        "lat": 37.0186
+      },
+      "center": [
+        -7.9227,
+        37.0186
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -9.02,
+        36.945,
+        -7.372,
+        37.548
+      ],
+      "place": 718,
+      "country": "PT",
+      "localTrips": 1280036.0
+    },
+    {
+      "id": "avx",
+      "name": "Ave",
+      "kind": "zone",
+      "origin": {
+        "lon": -8.3016,
+        "lat": 41.4471
+      },
+      "center": [
+        -8.3016,
+        41.4471
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -8.647,
+        41.1,
+        -7.146,
+        41.946
+      ],
+      "place": 719,
+      "country": "PT",
+      "localTrips": 1468762.0
+    },
+    {
+      "id": "rea",
+      "name": "Região de Coimbra",
+      "kind": "zone",
+      "origin": {
+        "lon": -8.4048,
+        "lat": 40.1978
+      },
+      "center": [
+        -8.4048,
+        40.1978
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -8.933,
+        39.905,
+        -7.708,
+        40.539
+      ],
+      "place": 720,
+      "country": "PT",
+      "localTrips": 1128412.0
+    },
+    {
+      "id": "tau",
+      "name": "Tâmega e Sousa",
+      "kind": "zone",
+      "origin": {
+        "lon": -8.1997,
+        "lat": 41.366
+      },
+      "center": [
+        -8.1997,
+        41.366
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -8.814,
+        40.945,
+        -7.826,
+        41.507
+      ],
+      "place": 721,
+      "country": "PT",
+      "localTrips": 1080034.0
+    },
+    {
+      "id": "cva",
+      "name": "Cávado",
+      "kind": "zone",
+      "origin": {
+        "lon": -8.4051,
+        "lat": 41.5464
+      },
+      "center": [
+        -8.4051,
+        41.5464
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -8.834,
+        41.396,
+        -8.02,
+        41.839
+      ],
+      "place": 722,
+      "country": "PT",
+      "localTrips": 1026379.0
+    },
+    {
+      "id": "oes",
+      "name": "Oeste",
+      "kind": "zone",
+      "origin": {
+        "lon": -9.2553,
+        "lat": 39.0906
+      },
+      "center": [
+        -9.2553,
+        39.0906
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -9.446,
+        38.904,
+        -8.842,
+        39.76
+      ],
+      "place": 723,
+      "country": "PT",
+      "localTrips": 982438.0
+    },
+    {
+      "id": "reo",
+      "name": "Região de Aveiro",
+      "kind": "zone",
+      "origin": {
+        "lon": -8.6413,
+        "lat": 40.6462
+      },
+      "center": [
+        -8.6413,
+        40.6462
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -8.808,
+        40.377,
+        -8.221,
+        41.002
+      ],
+      "place": 724,
+      "country": "PT",
+      "localTrips": 913003.0
+    },
+    {
+      "id": "red",
+      "name": "Região de Leiria",
+      "kind": "zone",
+      "origin": {
+        "lon": -8.8044,
+        "lat": 39.7416
+      },
+      "center": [
+        -8.8044,
+        39.7416
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -9.064,
+        39.447,
+        -8.084,
+        40.108
+      ],
+      "place": 725,
+      "country": "PT",
+      "localTrips": 754877.0
+    },
+    {
+      "id": "viu",
+      "name": "Viseu Dão Lafões",
+      "kind": "zone",
+      "origin": {
+        "lon": -7.9194,
+        "lat": 40.6552
+      },
+      "center": [
+        -7.9194,
+        40.6552
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -8.358,
+        40.315,
+        -7.28,
+        41.233
+      ],
+      "place": 727,
+      "country": "PT",
+      "localTrips": 820224.0
+    },
+    {
+      "id": "alt",
+      "name": "Alto Minho",
+      "kind": "zone",
+      "origin": {
+        "lon": -8.8245,
+        "lat": 41.6998
+      },
+      "center": [
+        -8.8245,
+        41.6998
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -8.906,
+        41.588,
+        -8.058,
+        42.173
+      ],
+      "place": 729,
+      "country": "PT",
+      "localTrips": 602390.0
+    },
+    {
+      "id": "bed",
+      "name": "Beiras e Serra da Estrela",
+      "kind": "zone",
+      "origin": {
+        "lon": -7.2599,
+        "lat": 40.5385
+      },
+      "center": [
+        -7.2599,
+        40.5385
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -7.874,
+        39.959,
+        -6.757,
+        41.198
+      ],
+      "place": 730,
+      "country": "PT",
+      "localTrips": 550880.0
+    },
+    {
+      "id": "ira",
+      "name": "Irakleio",
+      "kind": "zone",
+      "origin": {
+        "lon": 25.1381,
+        "lat": 35.3342
+      },
+      "center": [
+        25.1381,
+        35.3342
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        24.247,
+        34.847,
+        26.342,
+        35.486
+      ],
+      "place": 732,
+      "country": "GR",
+      "localTrips": 1269049.0
+    },
+    {
+      "id": "gre",
+      "name": "Grevena, Kozani",
+      "kind": "zone",
+      "origin": {
+        "lon": 21.7897,
+        "lat": 40.2964
+      },
+      "center": [
+        21.7897,
+        40.2964
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        20.751,
+        39.812,
+        22.22,
+        40.962
+      ],
+      "place": 735,
+      "country": "GR",
+      "localTrips": 689116.0
+    },
+    {
+      "id": "see",
+      "name": "Serres",
+      "kind": "zone",
+      "origin": {
+        "lon": 23.546,
+        "lat": 41.0867
+      },
+      "center": [
+        23.546,
+        41.0867
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        22.226,
+        40.739,
+        24.142,
+        41.425
+      ],
+      "place": 736,
+      "country": "GR",
+      "localTrips": 636456.0
+    },
+    {
+      "id": "kak",
+      "name": "Karditsa, Trikala",
+      "kind": "zone",
+      "origin": {
+        "lon": 21.7714,
+        "lat": 39.5541
+      },
+      "center": [
+        21.7714,
+        39.5541
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        21.096,
+        39.006,
+        22.288,
+        39.919
+      ],
+      "place": 737,
+      "country": "GR",
+      "localTrips": 619450.0
+    },
+    {
+      "id": "lak",
+      "name": "Lakonia, Messinia",
+      "kind": "zone",
+      "origin": {
+        "lon": 22.1075,
+        "lat": 37.0362
+      },
+      "center": [
+        22.1075,
+        37.0362
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        21.515,
+        36.367,
+        23.225,
+        37.504
+      ],
+      "place": 738,
+      "country": "GR",
+      "localTrips": 604364.0
+    },
+    {
+      "id": "tha",
+      "name": "Thasos, Kavala",
+      "kind": "zone",
+      "origin": {
+        "lon": 24.4047,
+        "lat": 40.9427
+      },
+      "center": [
+        24.4047,
+        40.9427
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        23.599,
+        40.549,
+        24.829,
+        41.592
+      ],
+      "place": 740,
+      "country": "GR",
+      "localTrips": 588898.0
+    },
+    {
+      "id": "mgn",
+      "name": "Magnisia, Sporades",
+      "kind": "zone",
+      "origin": {
+        "lon": 22.9523,
+        "lat": 39.3668
+      },
+      "center": [
+        22.9523,
+        39.3668
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        22.467,
+        38.951,
+        24.123,
+        39.621
+      ],
+      "place": 741,
+      "country": "GR",
+      "localTrips": 516445.0
+    },
+    {
+      "id": "evv",
+      "name": "Evvoia",
+      "kind": "zone",
+      "origin": {
+        "lon": 23.6077,
+        "lat": 38.4684
+      },
+      "center": [
+        23.6077,
+        38.4684
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        22.805,
+        37.93,
+        24.709,
+        39.058
+      ],
+      "place": 742,
+      "country": "GR",
+      "localTrips": 501798.0
+    },
+    {
+      "id": "ait",
+      "name": "Aitoloakarnania",
+      "kind": "zone",
+      "origin": {
+        "lon": 21.4073,
+        "lat": 38.6282
+      },
+      "center": [
+        21.4073,
+        38.6282
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        20.704,
+        38.272,
+        22.05,
+        39.193
+      ],
+      "place": 743,
+      "country": "GR",
+      "localTrips": 494459.0
+    },
+    {
+      "id": "kay",
+      "name": "Kalymnos, Karpathos, Kasos, Kos, Rodos",
+      "kind": "zone",
+      "origin": {
+        "lon": 28.224,
+        "lat": 36.438
+      },
+      "center": [
+        28.224,
+        36.438
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        26.236,
+        35.321,
+        29.668,
+        37.496
+      ],
+      "place": 744,
+      "country": "GR",
+      "localTrips": 504055.0
+    },
+    {
+      "id": "les",
+      "name": "Lesvos, Limnos",
+      "kind": "zone",
+      "origin": {
+        "lon": 26.5534,
+        "lat": 39.0995
+      },
+      "center": [
+        26.5534,
+        39.0995
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        24.947,
+        37.485,
+        27.094,
+        40.042
+      ],
+      "place": 745,
+      "country": "GR",
+      "localTrips": 472952.0
+    },
+    {
+      "id": "arg",
+      "name": "Argolida, Arkadia",
+      "kind": "zone",
+      "origin": {
+        "lon": 22.3793,
+        "lat": 37.5124
+      },
+      "center": [
+        22.3793,
+        37.5124
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        21.768,
+        36.975,
+        23.478,
+        37.884
+      ],
+      "place": 746,
+      "country": "GR",
+      "localTrips": 439920.0
+    },
+    {
+      "id": "ker",
+      "name": "Kerkyra",
+      "kind": "zone",
+      "origin": {
+        "lon": 20.8936,
+        "lat": 37.7775
+      },
+      "center": [
+        20.8936,
+        37.7775
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        19.35,
+        37.221,
+        21.045,
+        39.917
+      ],
+      "place": 747,
+      "country": "GR",
+      "localTrips": 462994.0
+    },
+    {
+      "id": "fth",
+      "name": "Fthiotida",
+      "kind": "zone",
+      "origin": {
+        "lon": 22.4366,
+        "lat": 38.8948
+      },
+      "center": [
+        22.4366,
+        38.8948
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        21.802,
+        38.482,
+        23.402,
+        39.292
+      ],
+      "place": 749,
+      "country": "GR",
+      "localTrips": 383692.0
+    },
+    {
+      "id": "ima",
+      "name": "Imathia",
+      "kind": "zone",
+      "origin": {
+        "lon": 22.2019,
+        "lat": 40.5205
+      },
+      "center": [
+        22.2019,
+        40.5205
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        21.858,
+        40.282,
+        22.706,
+        40.753
+      ],
+      "place": 751,
+      "country": "GR",
+      "localTrips": 353196.0
+    },
+    {
+      "id": "pel",
+      "name": "Pella",
+      "kind": "zone",
+      "origin": {
+        "lon": 22.0465,
+        "lat": 40.7989
+      },
+      "center": [
+        22.0465,
+        40.7989
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        21.68,
+        40.621,
+        22.669,
+        41.189
+      ],
+      "place": 752,
+      "country": "GR",
+      "localTrips": 337501.0
+    },
+    {
+      "id": "evr",
+      "name": "Evros",
+      "kind": "zone",
+      "origin": {
+        "lon": 25.8794,
+        "lat": 40.8528
+      },
+      "center": [
+        25.8794,
+        40.8528
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        25.419,
+        40.374,
+        26.66,
+        41.767
+      ],
+      "place": 753,
+      "country": "GR",
+      "localTrips": 371099.0
+    },
+    {
+      "id": "kor",
+      "name": "Korinthia",
+      "kind": "zone",
+      "origin": {
+        "lon": 22.9336,
+        "lat": 37.9368
+      },
+      "center": [
+        22.9336,
+        37.9368
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        22.195,
+        37.683,
+        23.203,
+        38.162
+      ],
+      "place": 754,
+      "country": "GR",
+      "localTrips": 348437.0
+    },
+    {
+      "id": "art",
+      "name": "Arta, Preveza",
+      "kind": "zone",
+      "origin": {
+        "lon": 20.9822,
+        "lat": 39.1618
+      },
+      "center": [
+        20.9822,
+        39.1618
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        20.277,
+        38.926,
+        21.454,
+        39.558
+      ],
+      "place": 756,
+      "country": "GR",
+      "localTrips": 310381.0
+    },
+    {
+      "id": "voi",
+      "name": "Voiotia",
+      "kind": "zone",
+      "origin": {
+        "lon": 23.3217,
+        "lat": 38.3176
+      },
+      "center": [
+        23.3217,
+        38.3176
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        22.464,
+        38.117,
+        23.714,
+        38.614
+      ],
+      "place": 757,
+      "country": "GR",
+      "localTrips": 270059.0
+    },
+    {
+      "id": "and",
+      "name": "Andros, Thira, Kea - Kythnos, Milos, Mykonos, Naxos, Paros,  Syros, Tinos",
+      "kind": "zone",
+      "origin": {
+        "lon": 24.9338,
+        "lat": 37.4418
+      },
+      "center": [
+        24.9338,
+        37.4418
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        24.078,
+        36.314,
+        26.109,
+        38.018
+      ],
+      "place": 758,
+      "country": "GR",
+      "localTrips": 303212.0
+    },
+    {
+      "id": "chl",
+      "name": "Chalkidiki",
+      "kind": "zone",
+      "origin": {
+        "lon": 23.2894,
+        "lat": 40.2426
+      },
+      "center": [
+        23.2894,
+        40.2426
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        22.981,
+        39.889,
+        24.047,
+        40.661
+      ],
+      "place": 761,
+      "country": "GR",
+      "localTrips": 238481.0
+    },
+    {
+      "id": "reu",
+      "name": "Região Autónoma da Madeira",
+      "kind": "zone",
+      "origin": {
+        "lon": -16.9334,
+        "lat": 32.6506
+      },
+      "center": [
+        -16.9334,
+        32.6506
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -17.288,
+        32.614,
+        -16.267,
+        33.126
+      ],
+      "place": 764,
+      "country": "PT",
+      "localTrips": 728555.0
+    },
+    {
+      "id": "ret",
+      "name": "Região Autónoma dos Açores",
+      "kind": "zone",
+      "origin": {
+        "lon": -25.5776,
+        "lat": 37.8129
+      },
+      "center": [
+        -25.5776,
+        37.8129
+      ],
+      "zoom": 10.5,
+      "utcOffset": -1,
+      "market": -1,
+      "box": [
+        -31.293,
+        36.909,
+        -24.99,
+        39.745
+      ],
+      "place": 765,
+      "country": "PT",
+      "localTrips": 599378.0
+    },
+    {
+      "id": "lai",
+      "name": "Larisa",
+      "kind": "zone",
+      "origin": {
+        "lon": 22.4209,
+        "lat": 39.6345
+      },
+      "center": [
+        22.4209,
+        39.6345
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        21.84,
+        39.112,
+        22.94,
+        40.215
+      ],
+      "place": 766,
+      "country": "GR",
+      "localTrips": 725948.0
+    },
+    {
+      "id": "ach",
+      "name": "Achaia",
+      "kind": "zone",
+      "origin": {
+        "lon": 21.7441,
+        "lat": 38.2556
+      },
+      "center": [
+        21.7441,
+        38.2556
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        21.327,
+        37.762,
+        22.402,
+        38.36
+      ],
+      "place": 767,
+      "country": "GR",
+      "localTrips": 759418.0
+    },
+    {
+      "id": "ioa",
+      "name": "Ioannina",
+      "kind": "zone",
+      "origin": {
+        "lon": 20.8534,
+        "lat": 39.6612
+      },
+      "center": [
+        20.8534,
+        39.6612
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        19.985,
+        39.255,
+        21.321,
+        40.395
+      ],
+      "place": 768,
+      "country": "GR",
+      "localTrips": 572578.0
+    },
+    {
+      "id": "cni",
+      "name": "Chania",
+      "kind": "zone",
+      "origin": {
+        "lon": 24.0158,
+        "lat": 35.509
+      },
+      "center": [
+        24.0158,
+        35.509
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        23.492,
+        34.782,
+        24.355,
+        35.714
+      ],
+      "place": 769,
+      "country": "GR",
+      "localTrips": 429834.0
+    },
+    {
+      "id": "ile",
+      "name": "Ileia",
+      "kind": "zone",
+      "origin": {
+        "lon": 21.4402,
+        "lat": 37.6715
+      },
+      "center": [
+        21.4402,
+        37.6715
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        21.082,
+        37.356,
+        22.023,
+        38.123
+      ],
+      "place": 770,
+      "country": "GR",
+      "localTrips": 383568.0
+    },
+    {
+      "id": "pie",
+      "name": "Pieria",
+      "kind": "zone",
+      "origin": {
+        "lon": 22.5043,
+        "lat": 40.2695
+      },
+      "center": [
+        22.5043,
+        40.2695
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        22.079,
+        39.927,
+        22.703,
+        40.568
+      ],
+      "place": 771,
+      "country": "GR",
+      "localTrips": 321382.0
+    },
+    {
+      "id": "rod",
+      "name": "Rodopi",
+      "kind": "zone",
+      "origin": {
+        "lon": 25.4103,
+        "lat": 41.1227
+      },
+      "center": [
+        25.4103,
+        41.1227
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        25.022,
+        40.839,
+        25.989,
+        41.367
+      ],
+      "place": 772,
+      "country": "GR",
+      "localTrips": 284564.0
+    },
+    {
+      "id": "xan",
+      "name": "Xanthi",
+      "kind": "zone",
+      "origin": {
+        "lon": 24.8889,
+        "lat": 41.1317
+      },
+      "center": [
+        24.8889,
+        41.1317
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        24.436,
+        40.827,
+        25.25,
+        41.427
+      ],
+      "place": 773,
+      "country": "GR",
+      "localTrips": 286350.0
+    },
+    {
+      "id": "lef",
+      "name": "Lefkada",
+      "kind": "zone",
+      "origin": {
+        "lon": 20.6982,
+        "lat": 38.8237
+      },
+      "center": [
+        20.6982,
+        38.8237
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        20.517,
+        38.522,
+        20.985,
+        38.871
+      ],
+      "place": 774,
+      "country": "GR",
+      "localTrips": 49139.0
     }
   ]
 }

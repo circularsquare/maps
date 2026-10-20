@@ -63,10 +63,12 @@ def local_trips(reg):
 
 
 if __name__ == "__main__":
-    reg = json.loads(REG.read_text(encoding="utf-8"))
-    if "--trips" not in sys.argv[1:]:
-        print("registered:", register(reg) or "none")
-    print("local trips:", local_trips(reg))
-    for c in reg["cities"]:
-        c["box"] = zone_boxes.box(c["id"])  # T-302
-    REG.write_text(json.dumps(reg, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    import shared_lock
+    with shared_lock.held("registry", "zones.py"):  # T-786
+        reg = shared_lock.read_json(REG)
+        if "--trips" not in sys.argv[1:]:
+            print("registered:", register(reg) or "none")
+        print("local trips:", local_trips(reg))
+        for c in reg["cities"]:
+            c["box"] = zone_boxes.box(c["id"])  # T-302
+        shared_lock.write_atomic(REG, json.dumps(reg, indent=2, ensure_ascii=False) + "\n")

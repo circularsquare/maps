@@ -19,7 +19,10 @@ its market place (id 2) keeps its name and has no sites.
                                             takes the outputs (no market step then)
     python pipeline/intercity.py --groups [--plan]
                                             list the groups (with the world plan's planned metros
-                                            marked +)
+                                            marked +) and their solve units (T-786: a group
+                                            spanning countries is solved a country at a time)
+    python pipeline/intercity.py --solve a,b [--fixed c,d] --name n
+                                            one solve unit, no market step (world_run.py's join)
 
 The game no longer reads this file (T-377): pipeline/market_zones.py takes the Northeast's sites
 and commutes from it into each zone's own market pack, `data/packs/<id>.market.json`.
@@ -47,9 +50,10 @@ MARKETS = [p["name"] for p in REGISTRY["market"]["places"]]
 # T-276: the market's trips a weekday per resident (fitted with its curve, research/intercity/market_fit.py)
 TRIP_RATE = 0.107
 GROUP_GAP_KM = 50.0
-# a time guard: about 6x Japan's 68k zones (notes/T-539.md). Whole-country cover chains Spain, France,
-# Italy and the Benelux-Rhine metros into one group of about 300k zones (T-779), which the runner
-# solves on every core; a covered Europe will need the group split (T-781)
+# joint_gravity's cut for pairs across packs: a neighbouring country's pack this near takes part in a
+# country's solve, held at its factors (T-786)
+CUT_KM = 150.0
+# a time guard on one solve (a country's packs since T-786): about 6x Japan's 68k zones (notes/T-539.md)
 MAX_GROUP_ZONES = 400_000
 # the local layer's parking (sim kernel `Params` defaults: park_min, park_paid_min, park_paid_d0,
 # park_paid_cap_min, park_free_d; `CELL_KM2`)
@@ -139,23 +143,91 @@ def joint(root=ROOT, work=None, dry=False):
               "--report", str(work / "joint_report.json"), *extra)
 
 
-def solve_group(ids, name, root=ROOT, work=None, dry=False):
+def solve_group(ids, name, root=ROOT, work=None, dry=False, fixed=()):
     """T-463, T-539: one joint commute gravity over packs outside the Northeast: each pack's
-    factors, and the cross-pack commutes in <work>/<name>.joint_commutes.json for market_zones.py.
-    An older file holding any of these packs (another name for a group this one has grown from) is
-    removed, since market_zones.py reads every such file."""
+    factors, and the cross-pack commutes from their homes in <work>/<name>.joint_commutes.json for
+    market_zones.py; `fixed` packs (T-786) take part at their own factors and are not written. A
+    file no pack takes its commutes from any more (joint_files) is removed."""
     work = work or root / "data/work"
     out = work / f"{name}.joint_commutes.json"
     extra = ["--dry", "--dump", str(work / f"{name}.joint_dump.json")] if dry else []
+    if fixed:
+        extra += ["--fixed", ",".join(fixed)]
     # Japan's columns stall at about 8e-4 from step ~90, all in Okinawa's outlying islands (weakly
     # joined to anything; notes/T-463.md): the best step is kept, so 150 steps are as good as 500
     cargo_bin("joint_gravity", "--root", str(root), "--threads", os.environ.get("OMP_NUM_THREADS", "3"), "--max-iters", "150",
               "--packs", ",".join(ids), "--out", str(out), "--report", str(work / f"{name}.joint_report.json"), *extra)
     if not dry:
-        for p in work.glob("*.joint_commutes.json"):
-            if p != out and set(json.loads(p.read_text(encoding="utf-8"))["packs"]) & set(ids):
-                print(f"removed {p.name}: its packs are now in {out.name}")
+        files = joint_files(work)
+        for p, f in files.items():
+            if any(q != p and g["t"] > f["t"] and covers(g, f) for q, g in files.items()):
+                print(f"removed {p.name}: a newer solve covers every pair of packs it covered")
                 p.unlink()
+
+
+def joint_files(work):
+    """T-786: every joint commutes file as {path: {solved, packs, t}}, oldest first. A file covers
+    the pairs of its packs with an end among its solved ones; market_zones.py takes each pair from
+    the newest file covering it. A file from before T-786 solved every pack it lists."""
+    files = {}
+    for p in sorted(Path(work).glob("*.joint_commutes.json")):
+        g = json.loads(p.read_text(encoding="utf-8"))
+        files[p] = {"solved": set(g.get("solved") or g["packs"]), "packs": set(g["packs"]),
+                    "t": float(g.get("solved_at") or p.stat().st_mtime)}
+    return dict(sorted(files.items(), key=lambda kv: kv[1]["t"]))
+
+
+def covers(a, b):
+    """Whether joint file `a` covers every pack pair `b` covers."""
+    return b["solved"] <= a["solved"] and b["packs"] <= a["packs"]
+
+
+def country_of(reg, root=ROOT):
+    """Each registered pack's country: its header's, else the registry's (T-590, T-779)."""
+    out = {}
+    for c in reg["cities"]:
+        p = root / f"data/packs/{c['id']}.json"
+        h = json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
+        out[c["id"]] = (h.get("country") or c.get("country") or "US").upper()
+    return out
+
+
+def solve_units(reg, root=ROOT, only=(), gap=None):
+    """T-786 (T-781): what each joint solve covers. A group of one country is solved whole; a group
+    spanning countries is solved a country at a time, the group's packs of other countries within
+    CUT_KM of that country's held at their factors (`fixed`), so a country's join never re-solves
+    its neighbours and no solve grows past one country. [{name, members, fixed, country}] for every
+    unit, or those holding a pack of `only`."""
+    cc = country_of(reg, root)
+    units = []
+    for g in auto_groups(reg, root, gap=gap):
+        by = {}
+        for i in g:
+            by.setdefault(cc[i], []).append(i)
+        if len(by) == 1:
+            units.append({"name": g[0], "members": g, "fixed": [], "country": cc[g[0]]})
+            continue
+        shapes = None
+        for c, ms in by.items():
+            if only and not set(ms) & set(only):
+                continue
+            if shapes is None:
+                shapes = {i: outline(root / f"data/packs/{i}.boundary.geojson") for i in g}
+            units.append({"name": f"{ms[0]}-{c.lower()}", "members": ms, "country": c,
+                          "fixed": [j for j in g if cc[j] != c and near_any(shapes[j], [shapes[m] for m in ms], CUT_KM)]})
+    return [u for u in units if not only or set(u["members"]) & set(only)]
+
+
+def near_any(a, others, km):
+    """Whether shape `a` lies within `km` of any of `others` (boxes first)."""
+    dy = km / 111.0
+    for b in others:
+        lat = max(abs(a.bounds[1]), abs(a.bounds[3]), abs(b.bounds[1]), abs(b.bounds[3]))
+        dx = dy / max(math.cos(math.radians(min(lat + dy, 89.0))), 0.01)
+        if (b.bounds[0] - dx < a.bounds[2] and a.bounds[0] - dx < b.bounds[2] and b.bounds[1] - dy < a.bounds[3]
+                and a.bounds[1] - dy < b.bounds[3] and gap_km(a, b) <= km):
+            return True
+    return False
 
 
 def solve_auto(only=(), root=ROOT, work=None, dry=False, gap=None):
@@ -167,30 +239,38 @@ def solve_auto(only=(), root=ROOT, work=None, dry=False, gap=None):
     work = work or root / "data/work"
     ne = {c["id"] for c in reg["cities"] if c.get("market", -1) >= 0}
     solved = []
-    for g in auto_groups(reg, root, gap=gap):
-        if only and not set(g) & set(only):
-            continue
-        t0 = time.time()
-        nz = sum(json.loads((root / f"data/packs/{i}.json").read_text(encoding="utf-8"))["zones"] for i in g)
-        if nz > MAX_GROUP_ZONES:
-            sys.exit(f"group {g[0]} has {nz:,} gravity zones, over {MAX_GROUP_ZONES:,}: split it (notes/T-539.md)")
-        if set(g) & ne:
-            if set(g) != ne:
-                sys.exit(f"the Northeast's group is {'+'.join(g)}: {', '.join(sorted(set(g) ^ ne))} "
-                         "would need a Northeast market place (docs/adding-a-city.md 6), or the Northeast "
-                         "solved as a --packs group")
-            if not dry:
-                # the sites come from this tree's packs (sites() reads the module's registry)
-                assert root == ROOT, "the Northeast is solved for real only in this tree"
-                write_sites()
-            joint(root, work, dry)
-        else:
-            solve_group(g, g[0], root, work, dry)
-        print(f"group {g[0]} ({len(g)} packs: {' '.join(g)}) solved in {time.time() - t0:.0f} s", flush=True)
+    for u in solve_units(reg, root, only, gap=gap):
+        g = u["members"]
+        solve_unit(g, u["fixed"], u["name"], root, work, dry, ne)
         solved += g
     for i in set(only) - set(solved):
         print(f"{i}: no registered pack within {GROUP_GAP_KM:g} km, so no joint gravity")
     return solved
+
+
+def solve_unit(g, fixed, name, root=ROOT, work=None, dry=False, ne=None):
+    """One solve unit (solve_units): its members balanced, `fixed` held at their factors."""
+    t0 = time.time()
+    if ne is None:
+        reg = json.loads((root / "app/src/game/registry.json").read_text(encoding="utf-8"))
+        ne = {c["id"] for c in reg["cities"] if c.get("market", -1) >= 0}
+    nz = sum(json.loads((root / f"data/packs/{i}.json").read_text(encoding="utf-8"))["zones"] for i in g)
+    if nz > MAX_GROUP_ZONES:
+        sys.exit(f"group {name} has {nz:,} gravity zones, over {MAX_GROUP_ZONES:,}: split it (notes/T-539.md)")
+    if set(g) & ne:
+        if set(g) != ne or fixed:
+            sys.exit(f"the Northeast's group is {'+'.join(g)}: {', '.join(sorted(set(g) ^ ne))} "
+                     "would need a Northeast market place (docs/adding-a-city.md 6), or the Northeast "
+                     "solved as a --packs group")
+        if not dry:
+            # the sites come from this tree's packs (sites() reads the module's registry)
+            assert root == ROOT, "the Northeast is solved for real only in this tree"
+            write_sites()
+        joint(root, work, dry)
+    else:
+        solve_group(g, name, root, work, dry, fixed)
+    print(f"group {name} ({len(g)} packs{f', {len(fixed)} fixed' if fixed else ''}: {' '.join(g)}) solved in "
+          f"{time.time() - t0:.0f} s", flush=True)
 
 
 def outline(path):
@@ -296,6 +376,14 @@ if __name__ == "__main__":
     if "--groups" in sys.argv:
         for g in auto_groups(REGISTRY, plan="--plan" in sys.argv):
             print(f"{len(g)} packs: {' '.join(g)}")
+        if "--plan" not in sys.argv:
+            for u in solve_units(REGISTRY):
+                print(f"solve {u['name']} ({u['country']}): {len(u['members'])} packs, {len(u['fixed'])} fixed")
+        sys.exit()
+    if "--solve" in sys.argv:  # one unit as world_run.py hands it: --solve a,b [--fixed c,d] --name n
+        arg = lambda k: sys.argv[sys.argv.index(k) + 1] if k in sys.argv else ""  # noqa: E731
+        solve_unit([i for i in arg("--solve").split(",") if i], [i for i in arg("--fixed").split(",") if i],
+                   arg("--name"), dry="--dry" in sys.argv)
         sys.exit()
     if "--group" in sys.argv:
         i = sys.argv.index("--group")

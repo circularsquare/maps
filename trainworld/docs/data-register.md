@@ -43,11 +43,11 @@ causes and the rerun are in notes/T-613.md and T-725).
 | Italy | mil rom nap tur bea (shipped); the whole country as 97 zones (T-779: every other province, Isernia merged into Campobasso; no dead space) | D | global sources only; zones on the zone curve (T-723); OSM extracts 2026-10-17 (metros), 2026-10-20 (the zones). National sources not looked for |
 | Austria | vie (shipped) | D | global sources only; OSM extract 2026-10-17 |
 | Belgium | bru ant lie (shipped) | D | global sources only; OSM extract 2026-10-17 |
-| Greece | ath the (shipped) | D | global sources only; OSM extract 2026-10-17 |
+| Greece | ath the (shipped); the whole country as 31 zones (T-786: NUTS-3 units, small islands onto their region's largest zone, Evrytania and Fokida dead space) | D | global sources only; zones on the zone curve (T-723); OSM extracts 2026-10-17 (metros), 2026-10-20 (the zones). National sources not looked for |
 | Poland | war kat (shipped); kra poz lod (built, not registered) | D | global sources only; OSM extracts 2026-10-17 (war kat), 2026-10-19 (kra poz lod) |
 | Hungary | bud (shipped) | D | global sources only; OSM extract 2026-10-17 |
 | Netherlands | rot (shipped); ams (built, not registered) | D | global sources only; OSM extract 2026-10-16 for rot (a hand run, no download log: date from the cache file's time), 2026-10-19 for ams |
-| Portugal | lis pot (shipped) | D | global sources only; OSM extract 2026-10-17 |
+| Portugal | lis pot (shipped); 13 of 16 zones (T-786: NUTS-3 units with Madeira and the Azores; the Alentejo's four, Beira Baixa and Terras de Trás-os-Montes dead space); meo lez doo parked on their outlines (T-787) | D | global sources only; zones on the zone curve (T-723); OSM extracts 2026-10-17 (metros), 2026-10-20 (the zones). National sources not looked for |
 | Russia | mos sai vor (shipped); 13 more rows held (Anita 2026-10-19) | D | global sources only (geoBoundaries ADM2 units); OSM extracts 2026-10-19 (central and north-western federal districts) |
 | Sweden | sto (built, not registered) | D | global sources only; OSM extract 2026-10-19 |
 | Romania | buc (built, not registered) | D | global sources only; OSM extract 2026-10-19 |

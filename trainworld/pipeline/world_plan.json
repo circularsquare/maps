@@ -44044,6 +44044,2928 @@
     },
     "shipped": "2026-10-20T14:13:28"
    }
+  },
+  {
+   "order": 739,
+   "id": "ala",
+   "name": "Algarve",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "PRT"
+   ],
+   "iso2": "PT",
+   "people": 467552,
+   "origin": [
+    -7.9227,
+    37.0186
+   ],
+   "tz": "Europe/Lisbon",
+   "utc_offset": 0,
+   "extracts": [
+    "europe/portugal"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "PRT": [
+     "PT150"
+    ]
+   },
+   "bbox": [
+    -8.982,
+    36.971,
+    -7.402,
+    37.526
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Algarve"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938",
+    "steps": {
+     "build": 65.6,
+     "stations": 0.8,
+     "places": 1.6,
+     "routes": 13.4,
+     "merge": 0.7,
+     "nocar": 1.1,
+     "everyday": 0.8
+    },
+    "built": "2026-10-20T16:33:18",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-20T17:17:25",
+    "shipped": "2026-10-20T17:33:58"
+   }
+  },
+  {
+   "order": 740,
+   "id": "avx",
+   "name": "Ave",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "PRT"
+   ],
+   "iso2": "PT",
+   "people": 442772,
+   "origin": [
+    -8.3016,
+    41.4471
+   ],
+   "tz": "Europe/Lisbon",
+   "utc_offset": 0,
+   "extracts": [
+    "europe/portugal"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "PRT": [
+     "PT119",
+     "PT11B"
+    ]
+   },
+   "bbox": [
+    -8.623,
+    41.303,
+    -7.175,
+    41.927
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Ave",
+     "Alto Tâmega e Barroso"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938",
+    "steps": {
+     "build": 74.5,
+     "stations": 0.8,
+     "places": 3.1,
+     "routes": 40.2,
+     "merge": 0.7,
+     "nocar": 1.1,
+     "everyday": 0.7
+    },
+    "built": "2026-10-20T16:33:55",
+    "gate": {
+     "warn": [
+      "pop_vs_plan 1.2567172678863119"
+     ]
+    },
+    "gated": "2026-10-20T17:17:26",
+    "shipped": "2026-10-20T17:33:58"
+   }
+  },
+  {
+   "order": 741,
+   "id": "rea",
+   "name": "Região de Coimbra",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "PRT"
+   ],
+   "iso2": "PT",
+   "people": 395473,
+   "origin": [
+    -8.4048,
+    40.1978
+   ],
+   "tz": "Europe/Lisbon",
+   "utc_offset": 0,
+   "extracts": [
+    "europe/portugal"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "PRT": [
+     "PT192"
+    ]
+   },
+   "bbox": [
+    -8.908,
+    39.927,
+    -7.735,
+    40.52
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Região de Coimbra"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938",
+    "steps": {
+     "build": 52.4,
+     "stations": 0.7,
+     "places": 1.6,
+     "routes": 25.6,
+     "merge": 0.8,
+     "nocar": 1.1,
+     "everyday": 0.9
+    },
+    "built": "2026-10-20T16:34:41",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10307548245494078"
+     ]
+    },
+    "gated": "2026-10-20T17:17:26",
+    "shipped": "2026-10-20T17:33:58"
+   }
+  },
+  {
+   "order": 742,
+   "id": "tau",
+   "name": "Tâmega e Sousa",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "PRT"
+   ],
+   "iso2": "PT",
+   "people": 393534,
+   "origin": [
+    -8.1997,
+    41.366
+   ],
+   "tz": "Europe/Lisbon",
+   "utc_offset": 0,
+   "extracts": [
+    "europe/portugal"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "PRT": [
+     "PT11C"
+    ]
+   },
+   "bbox": [
+    -8.45,
+    40.964,
+    -7.854,
+    41.486
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Tâmega e Sousa"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938",
+    "steps": {
+     "build": 71.4,
+     "stations": 0.8,
+     "places": 2.8,
+     "routes": 25.8,
+     "merge": 0.6,
+     "nocar": 1.1,
+     "everyday": 0.9
+    },
+    "built": "2026-10-20T16:35:38",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-20T17:17:26",
+    "shipped": "2026-10-20T17:33:58"
+   }
+  },
+  {
+   "order": 743,
+   "id": "cva",
+   "name": "Cávado",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "PRT"
+   ],
+   "iso2": "PT",
+   "people": 367208,
+   "origin": [
+    -8.4051,
+    41.5464
+   ],
+   "tz": "Europe/Lisbon",
+   "utc_offset": 0,
+   "extracts": [
+    "europe/portugal"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "PRT": [
+     "PT112"
+    ]
+   },
+   "bbox": [
+    -8.812,
+    41.415,
+    -8.048,
+    41.82
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Cávado"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938",
+    "steps": {
+     "build": 53.1,
+     "stations": 0.8,
+     "places": 1.7,
+     "routes": 14.3,
+     "merge": 0.5,
+     "nocar": 1.0,
+     "everyday": 0.7
+    },
+    "built": "2026-10-20T16:35:53",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.17299287435926614"
+     ]
+    },
+    "gated": "2026-10-20T17:17:26",
+    "shipped": "2026-10-20T17:33:58"
+   }
+  },
+  {
+   "order": 744,
+   "id": "oes",
+   "name": "Oeste",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "PRT"
+   ],
+   "iso2": "PT",
+   "people": 354150,
+   "origin": [
+    -9.2553,
+    39.0906
+   ],
+   "tz": "Europe/Lisbon",
+   "utc_offset": 0,
+   "extracts": [
+    "europe/portugal"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "PRT": [
+     "PT1D1"
+    ]
+   },
+   "bbox": [
+    -9.522,
+    38.923,
+    -8.868,
+    39.741
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Oeste"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938",
+    "steps": {
+     "build": 44.6,
+     "stations": 0.8,
+     "places": 1.4,
+     "routes": 18.7,
+     "merge": 0.7,
+     "nocar": 1.1,
+     "everyday": 0.7
+    },
+    "built": "2026-10-20T16:36:46",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-20T17:17:26",
+    "shipped": "2026-10-20T17:33:58"
+   }
+  },
+  {
+   "order": 745,
+   "id": "reo",
+   "name": "Região de Aveiro",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "PRT"
+   ],
+   "iso2": "PT",
+   "people": 320348,
+   "origin": [
+    -8.6413,
+    40.6462
+   ],
+   "tz": "Europe/Lisbon",
+   "utc_offset": 0,
+   "extracts": [
+    "europe/portugal"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "PRT": [
+     "PT191"
+    ]
+   },
+   "bbox": [
+    -8.784,
+    40.396,
+    -8.251,
+    40.971
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Região de Aveiro"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938",
+    "steps": {
+     "build": 53.4,
+     "stations": 0.7,
+     "places": 1.6,
+     "routes": 14.5,
+     "merge": 0.5,
+     "nocar": 1.0,
+     "everyday": 0.8
+    },
+    "built": "2026-10-20T16:37:06",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-20T17:17:26",
+    "shipped": "2026-10-20T17:33:58"
+   }
+  },
+  {
+   "order": 746,
+   "id": "red",
+   "name": "Região de Leiria",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "PRT"
+   ],
+   "iso2": "PT",
+   "people": 270261,
+   "origin": [
+    -8.8044,
+    39.7416
+   ],
+   "tz": "Europe/Lisbon",
+   "utc_offset": 0,
+   "extracts": [
+    "europe/portugal"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "PRT": [
+     "PT193"
+    ]
+   },
+   "bbox": [
+    -9.04,
+    39.466,
+    -8.114,
+    40.084
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Região de Leiria"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938",
+    "steps": {
+     "build": 47.3,
+     "stations": 0.7,
+     "places": 1.4,
+     "routes": 19.0,
+     "merge": 0.6,
+     "nocar": 0.9,
+     "everyday": 0.7
+    },
+    "built": "2026-10-20T16:37:57",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-20T17:17:26",
+    "shipped": "2026-10-20T17:33:58"
+   }
+  },
+  {
+   "order": 747,
+   "id": "reu",
+   "name": "Região Autónoma da Madeira",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "PRT"
+   ],
+   "iso2": "PT",
+   "people": 248084,
+   "origin": [
+    -16.9334,
+    32.6506
+   ],
+   "tz": "Atlantic/Madeira",
+   "utc_offset": 0,
+   "extracts": [
+    "europe/portugal"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "PRT": [
+     "PT300"
+    ]
+   },
+   "bbox": [
+    -17.266,
+    30.026,
+    -15.855,
+    33.104
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Região Autónoma da Madeira"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938",
+    "steps": {
+     "build": 57.3,
+     "stations": 0.7,
+     "places": 1.2,
+     "routes": 3.0,
+     "merge": 0.5,
+     "nocar": 1.0,
+     "everyday": 0.8
+    },
+    "built": "2026-10-20T16:38:10",
+    "reason": "gate: drive_factor_median 2.0841789734955687",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.14203690738208766",
+      "drive_factor_median 2.0841789734955687",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-10-20T16:54:51",
+    "gated": "2026-10-20T17:27:23",
+    "shipped": "2026-10-20T17:33:58"
+   },
+   "gate_relax": {
+    "drive_factor_median": "Madeira's mountain roads round steep valleys (as Corsica, T-779)"
+   }
+  },
+  {
+   "order": 748,
+   "id": "viu",
+   "name": "Viseu Dão Lafões",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "PRT"
+   ],
+   "iso2": "PT",
+   "people": 230120,
+   "origin": [
+    -7.9194,
+    40.6552
+   ],
+   "tz": "Europe/Lisbon",
+   "utc_offset": 0,
+   "extracts": [
+    "europe/portugal"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "PRT": [
+     "PT194"
+    ]
+   },
+   "bbox": [
+    -8.329,
+    40.337,
+    -7.427,
+    41.02
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Viseu Dão Lafões"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938",
+    "steps": {
+     "build": 41.1,
+     "stations": 0.8,
+     "places": 1.5,
+     "routes": 30.6,
+     "merge": 0.7,
+     "nocar": 1.1,
+     "everyday": 0.8
+    },
+    "built": "2026-10-20T16:39:14",
+    "gate": {
+     "warn": [
+      "pop_vs_plan 1.3417008486847",
+      "top_zone_jobs_share 0.13139745464838645"
+     ]
+    },
+    "gated": "2026-10-20T17:17:26",
+    "shipped": "2026-10-20T17:33:58"
+   }
+  },
+  {
+   "order": 749,
+   "id": "lez",
+   "name": "Lezíria do Tejo",
+   "kind": "zone",
+   "status": "parked",
+   "region": "europe",
+   "countries": [
+    "PRT"
+   ],
+   "iso2": "PT",
+   "people": 225613,
+   "origin": [
+    -8.6824,
+    39.2331
+   ],
+   "tz": "Europe/Lisbon",
+   "utc_offset": 0,
+   "extracts": [
+    "europe/portugal"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "PRT": [
+     "PT1D3"
+    ]
+   },
+   "bbox": [
+    -9.002,
+    38.736,
+    -8.128,
+    39.482
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Lezíria do Tejo"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938",
+    "steps": {
+     "build": 53.2,
+     "stations": 0.9,
+     "places": 1.7,
+     "routes": 41.2,
+     "merge": 0.8,
+     "nocar": 1.1,
+     "everyday": 0.7
+    },
+    "built": "2026-10-20T16:39:50",
+    "reason": "gate: pop_vs_plan 1.958265190523535",
+    "gate": {
+     "fail": [
+      "pop_vs_plan 1.958265190523535"
+     ],
+     "warn": []
+    },
+    "parked": "2026-10-20T16:54:51"
+   }
+  },
+  {
+   "order": 750,
+   "id": "alt",
+   "name": "Alto Minho",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "PRT"
+   ],
+   "iso2": "PT",
+   "people": 212567,
+   "origin": [
+    -8.8245,
+    41.6998
+   ],
+   "tz": "Europe/Lisbon",
+   "utc_offset": 0,
+   "extracts": [
+    "europe/portugal"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "PRT": [
+     "PT111"
+    ]
+   },
+   "bbox": [
+    -8.878,
+    41.612,
+    -8.084,
+    42.154
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Alto Minho"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938",
+    "steps": {
+     "build": 45.1,
+     "stations": 0.7,
+     "places": 1.3,
+     "routes": 11.6,
+     "merge": 0.6,
+     "nocar": 1.0,
+     "everyday": 0.8
+    },
+    "built": "2026-10-20T16:40:15",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.12884316975342486"
+     ]
+    },
+    "gated": "2026-10-20T17:17:26",
+    "shipped": "2026-10-20T17:33:58"
+   }
+  },
+  {
+   "order": 751,
+   "id": "ret",
+   "name": "Região Autónoma dos Açores",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "PRT"
+   ],
+   "iso2": "PT",
+   "people": 207817,
+   "origin": [
+    -25.5776,
+    37.8129
+   ],
+   "tz": "Atlantic/Azores",
+   "utc_offset": -1,
+   "extracts": [
+    "europe/azores"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "PRT": [
+     "PT200"
+    ]
+   },
+   "bbox": [
+    -31.268,
+    36.931,
+    -25.014,
+    39.726
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Região Autónoma dos Açores"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938",
+    "steps": {
+     "build": 277.6,
+     "stations": 0.7,
+     "places": 1.1,
+     "routes": 4.6,
+     "merge": 0.5,
+     "nocar": 0.9,
+     "everyday": 0.8
+    },
+    "built": "2026-10-20T17:00:00",
+    "reason": "gate: water_points_in_water 0.8484848484848485 33 points; dry: [[-28.18596, 38.43253, 41], [-25.74721, 37.82106, 40], [-27.15811, 38.6954, 42], [-28.26845, 38.45927, 42], [-27.28049, 38.76311, 41]]",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.15245825757257808",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-10-20T17:17:25",
+    "gated": "2026-10-20T17:27:23",
+    "shipped": "2026-10-20T17:33:59"
+   },
+   "gate_relax": {
+    "water_points_in_water": "scattered volcanic islands: the dry points are crater lakes and shore points the coarse mask misses"
+   }
+  },
+  {
+   "order": 752,
+   "id": "meo",
+   "name": "Médio Tejo",
+   "kind": "zone",
+   "status": "parked",
+   "region": "europe",
+   "countries": [
+    "PRT"
+   ],
+   "iso2": "PT",
+   "people": 199679,
+   "origin": [
+    -8.4065,
+    39.6077
+   ],
+   "tz": "Europe/Lisbon",
+   "utc_offset": 0,
+   "extracts": [
+    "europe/portugal"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "PRT": [
+     "PT1D2"
+    ]
+   },
+   "bbox": [
+    -8.761,
+    39.233,
+    -7.813,
+    39.836
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Médio Tejo"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938",
+    "steps": {
+     "build": 42.0
+    },
+    "reason": "build failed: ls(city, cfg, boundary, mask)\n  File \"C:\\Users\\anita\\projects\\maps\\trainworld\\pipeline\\tier0.py\", line 401, in signals\n    place_w, out[\"osm_w0\"], out[\"osm_wcap\"] = cap_places(places, in_pack, blend_osm)\n  File \"C:\\Users\\anita\\projects\\maps\\trainworld\\pipeline\\tier0.py\", line 487, in cap_places\n    w0 = float(w[in_pack].sum())\nIndexError: arrays used as indices must be of integer (or boolean) type",
+    "parked": "2026-10-20T16:41:32"
+   }
+  },
+  {
+   "order": 753,
+   "id": "bed",
+   "name": "Beiras e Serra da Estrela",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "PRT"
+   ],
+   "iso2": "PT",
+   "people": 187014,
+   "origin": [
+    -7.2599,
+    40.5385
+   ],
+   "tz": "Europe/Lisbon",
+   "utc_offset": 0,
+   "extracts": [
+    "europe/portugal"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "PRT": [
+     "PT196"
+    ]
+   },
+   "bbox": [
+    -7.846,
+    39.979,
+    -6.785,
+    41.034
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Beiras e Serra da Estrela"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938",
+    "steps": {
+     "build": 39.4,
+     "stations": 0.7,
+     "places": 1.2,
+     "routes": 20.5,
+     "merge": 0.7,
+     "nocar": 1.0,
+     "everyday": 0.7
+    },
+    "built": "2026-10-20T16:41:19",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.12940086111122487"
+     ]
+    },
+    "gated": "2026-10-20T17:17:26",
+    "shipped": "2026-10-20T17:33:59"
+   }
+  },
+  {
+   "order": 754,
+   "id": "doo",
+   "name": "Douro",
+   "kind": "zone",
+   "status": "parked",
+   "region": "europe",
+   "countries": [
+    "PRT"
+   ],
+   "iso2": "PT",
+   "people": 170145,
+   "origin": [
+    -7.7417,
+    41.3029
+   ],
+   "tz": "Europe/Lisbon",
+   "utc_offset": 0,
+   "extracts": [
+    "europe/portugal"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "PRT": [
+     "PT11D"
+    ]
+   },
+   "bbox": [
+    -7.918,
+    40.813,
+    -6.69,
+    41.524
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Douro"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938",
+    "steps": {
+     "build": 31.5,
+     "stations": 0.8,
+     "places": 1.1,
+     "routes": 4.0,
+     "merge": 0.6,
+     "nocar": 1.2,
+     "everyday": 1.0
+    },
+    "built": "2026-10-20T16:42:00",
+    "reason": "gate: browser None failed: no result; not required of the test line: shopping (no sites within 1.5 km of the line (676 elsewhere)), school (no sites within 1.5 km of the line (8 elsewhere)), medical (no sites within 1.5 km of the line (9 elsewhere)); pop_vs_plan 0.09308887625487318",
+    "gate": {
+     "fail": [
+      "browser None failed: no result; not required of the test line: shopping (no sites within 1.5 km of the line (676 elsewhere)), school (no sites within 1.5 km of the line (8 elsewhere)), medical (no sites within 1.5 km of the line (9 elsewhere))",
+      "pop_vs_plan 0.09308887625487318"
+     ],
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.18563392082635444",
+      "fleet_range 2"
+     ]
+    },
+    "parked": "2026-10-20T16:54:51"
+   }
+  },
+  {
+   "order": 755,
+   "id": "ira",
+   "name": "Irakleio",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "GRC"
+   ],
+   "iso2": "GR",
+   "people": 452168,
+   "origin": [
+    25.1381,
+    35.3342
+   ],
+   "tz": "Europe/Athens",
+   "utc_offset": 2,
+   "extracts": [
+    "europe/greece"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GRC": [
+     "EL431",
+     "EL433",
+     "EL432"
+    ]
+   },
+   "bbox": [
+    24.271,
+    34.865,
+    26.351,
+    35.462
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Irakleio",
+     "Rethymni",
+     "Lasithi"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938-26912",
+    "steps": {
+     "build": 61.9,
+     "stations": 0.9,
+     "places": 1.5,
+     "routes": 12.3,
+     "merge": 0.8,
+     "nocar": 1.1,
+     "everyday": 0.7
+    },
+    "built": "2026-10-20T16:33:58",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-20T17:16:12",
+    "shipped": "2026-10-20T17:33:59"
+   }
+  },
+  {
+   "order": 756,
+   "id": "lai",
+   "name": "Larisa",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "GRC"
+   ],
+   "iso2": "GR",
+   "people": 264375,
+   "origin": [
+    22.4209,
+    39.6345
+   ],
+   "tz": "Europe/Athens",
+   "utc_offset": 2,
+   "extracts": [
+    "europe/greece"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GRC": [
+     "EL612"
+    ]
+   },
+   "bbox": [
+    21.871,
+    39.131,
+    22.916,
+    40.196
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Larisa"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938-26912",
+    "steps": {
+     "build": 37.4,
+     "stations": 0.7,
+     "places": 1.2,
+     "routes": 15.1,
+     "merge": 0.7,
+     "nocar": 1.1,
+     "everyday": 0.8
+    },
+    "built": "2026-10-20T16:33:36",
+    "reason": "gate: top_zone_jobs_share 0.2869000084640925 at [22.415, 39.6358]",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.2869000084640925",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-10-20T17:16:10",
+    "gated": "2026-10-20T17:27:23",
+    "shipped": "2026-10-20T17:33:59"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "one compact town holds the unit's jobs among sparse farmland (as trs Trieste, T-779)"
+   }
+  },
+  {
+   "order": 757,
+   "id": "ach",
+   "name": "Achaia",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "GRC"
+   ],
+   "iso2": "GR",
+   "people": 263667,
+   "origin": [
+    21.7441,
+    38.2556
+   ],
+   "tz": "Europe/Athens",
+   "utc_offset": 2,
+   "extracts": [
+    "europe/greece"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GRC": [
+     "EL632"
+    ]
+   },
+   "bbox": [
+    21.351,
+    37.784,
+    22.376,
+    38.337
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Achaia"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938-26912",
+    "steps": {
+     "build": 44.8,
+     "stations": 0.8,
+     "places": 1.2,
+     "routes": 8.5,
+     "merge": 0.6,
+     "nocar": 1.0,
+     "everyday": 0.9
+    },
+    "built": "2026-10-20T16:34:34",
+    "reason": "gate: top_zone_jobs_share 0.23586240817707843 at [21.7292, 38.2422]",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.23586240817707843",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-10-20T17:16:10",
+    "gated": "2026-10-20T17:27:23",
+    "shipped": "2026-10-20T17:33:59"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "one compact town holds the unit's jobs among sparse farmland (as trs Trieste, T-779)"
+   }
+  },
+  {
+   "order": 758,
+   "id": "gre",
+   "name": "Grevena, Kozani",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "GRC"
+   ],
+   "iso2": "GR",
+   "people": 255002,
+   "origin": [
+    21.7897,
+    40.2964
+   ],
+   "tz": "Europe/Athens",
+   "utc_offset": 2,
+   "extracts": [
+    "europe/greece"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GRC": [
+     "EL531",
+     "EL533",
+     "EL532"
+    ]
+   },
+   "bbox": [
+    20.777,
+    39.833,
+    22.194,
+    40.94
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Grevena, Kozani",
+     "Florina",
+     "Kastoria"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938-26912",
+    "steps": {
+     "build": 36.7,
+     "stations": 0.7,
+     "places": 1.1,
+     "routes": 16.2,
+     "merge": 0.8,
+     "nocar": 1.1,
+     "everyday": 0.8
+    },
+    "built": "2026-10-20T16:34:55",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-20T17:16:12",
+    "shipped": "2026-10-20T17:33:59"
+   }
+  },
+  {
+   "order": 759,
+   "id": "see",
+   "name": "Serres",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "GRC"
+   ],
+   "iso2": "GR",
+   "people": 243464,
+   "origin": [
+    23.546,
+    41.0867
+   ],
+   "tz": "Europe/Athens",
+   "utc_offset": 2,
+   "extracts": [
+    "europe/greece"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GRC": [
+     "EL526",
+     "EL523"
+    ]
+   },
+   "bbox": [
+    22.255,
+    40.758,
+    24.118,
+    41.403
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Serres",
+     "Kilkis"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938-26912",
+    "steps": {
+     "build": 40.0,
+     "stations": 0.8,
+     "places": 1.1,
+     "routes": 15.8,
+     "merge": 0.8,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-10-20T16:35:34",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-20T17:16:12",
+    "shipped": "2026-10-20T17:33:59"
+   }
+  },
+  {
+   "order": 760,
+   "id": "kak",
+   "name": "Karditsa, Trikala",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "GRC"
+   ],
+   "iso2": "GR",
+   "people": 227853,
+   "origin": [
+    21.7714,
+    39.5541
+   ],
+   "tz": "Europe/Athens",
+   "utc_offset": 2,
+   "extracts": [
+    "europe/greece"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GRC": [
+     "EL611"
+    ]
+   },
+   "bbox": [
+    21.124,
+    39.028,
+    22.258,
+    39.9
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Karditsa, Trikala"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938-26912",
+    "steps": {
+     "build": 35.3,
+     "stations": 0.8,
+     "places": 1.3,
+     "routes": 13.8,
+     "merge": 0.7,
+     "nocar": 1.1,
+     "everyday": 0.8
+    },
+    "built": "2026-10-20T16:35:49",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.12612653161779927"
+     ]
+    },
+    "gated": "2026-10-20T17:16:12",
+    "shipped": "2026-10-20T17:33:59"
+   }
+  },
+  {
+   "order": 761,
+   "id": "lak",
+   "name": "Lakonia, Messinia",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "GRC"
+   ],
+   "iso2": "GR",
+   "people": 217972,
+   "origin": [
+    22.1075,
+    37.0362
+   ],
+   "tz": "Europe/Athens",
+   "utc_offset": 2,
+   "extracts": [
+    "europe/greece"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GRC": [
+     "EL653"
+    ]
+   },
+   "bbox": [
+    21.535,
+    36.411,
+    23.188,
+    37.483
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Lakonia, Messinia"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938-26912",
+    "steps": {
+     "build": 58.9,
+     "stations": 0.9,
+     "places": 1.3,
+     "routes": 13.1,
+     "merge": 0.9,
+     "nocar": 1.1,
+     "everyday": 0.8
+    },
+    "built": "2026-10-20T16:36:51",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-20T17:16:12",
+    "shipped": "2026-10-20T17:33:59"
+   }
+  },
+  {
+   "order": 762,
+   "id": "ioa",
+   "name": "Ioannina",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "GRC"
+   ],
+   "iso2": "GR",
+   "people": 217445,
+   "origin": [
+    20.8534,
+    39.6612
+   ],
+   "tz": "Europe/Athens",
+   "utc_offset": 2,
+   "extracts": [
+    "europe/greece"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GRC": [
+     "EL543",
+     "EL542"
+    ]
+   },
+   "bbox": [
+    20.009,
+    39.273,
+    21.296,
+    40.373
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Ioannina",
+     "Thesprotia"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938-26912",
+    "steps": {
+     "build": 44.2,
+     "stations": 0.9,
+     "places": 1.2,
+     "routes": 12.4,
+     "merge": 0.7,
+     "nocar": 1.1,
+     "everyday": 0.9
+    },
+    "built": "2026-10-20T16:36:51",
+    "reason": "gate: drive_factor_median 2.117000016612675",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.16633023847522213",
+      "drive_factor_median 2.117000016612675"
+     ]
+    },
+    "parked": "2026-10-20T17:16:11",
+    "gated": "2026-10-20T17:27:23",
+    "shipped": "2026-10-20T17:33:59"
+   },
+   "gate_relax": {
+    "drive_factor_median": "the Pindus: roads wind round the Epirus mountains (as the Alpine valleys, T-779)"
+   }
+  },
+  {
+   "order": 763,
+   "id": "tha",
+   "name": "Thasos, Kavala",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "GRC"
+   ],
+   "iso2": "GR",
+   "people": 215582,
+   "origin": [
+    24.4047,
+    40.9427
+   ],
+   "tz": "Europe/Athens",
+   "utc_offset": 2,
+   "extracts": [
+    "europe/greece"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GRC": [
+     "EL515",
+     "EL514"
+    ]
+   },
+   "bbox": [
+    23.624,
+    40.572,
+    24.813,
+    41.572
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Thasos, Kavala",
+     "Drama"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938-26912",
+    "steps": {
+     "build": 44.2,
+     "stations": 0.7,
+     "places": 1.2,
+     "routes": 10.3,
+     "merge": 0.8,
+     "nocar": 1.1,
+     "everyday": 0.9
+    },
+    "built": "2026-10-20T16:37:50",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-20T17:16:12",
+    "shipped": "2026-10-20T17:33:59"
+   }
+  },
+  {
+   "order": 764,
+   "id": "mgn",
+   "name": "Magnisia, Sporades",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "GRC"
+   ],
+   "iso2": "GR",
+   "people": 185153,
+   "origin": [
+    22.9523,
+    39.3668
+   ],
+   "tz": "Europe/Athens",
+   "utc_offset": 2,
+   "extracts": [
+    "europe/greece"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GRC": [
+     "EL613"
+    ]
+   },
+   "bbox": [
+    22.494,
+    38.972,
+    24.332,
+    39.603
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Magnisia, Sporades"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938-26912",
+    "steps": {
+     "build": 51.4,
+     "stations": 0.8,
+     "places": 1.1,
+     "routes": 6.8,
+     "merge": 0.6,
+     "nocar": 1.0,
+     "everyday": 0.8
+    },
+    "built": "2026-10-20T16:37:54",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-20T17:16:13",
+    "shipped": "2026-10-20T17:33:59"
+   }
+  },
+  {
+   "order": 765,
+   "id": "evv",
+   "name": "Evvoia",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "GRC"
+   ],
+   "iso2": "GR",
+   "people": 184107,
+   "origin": [
+    23.6077,
+    38.4684
+   ],
+   "tz": "Europe/Athens",
+   "utc_offset": 2,
+   "extracts": [
+    "europe/greece"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GRC": [
+     "EL642"
+    ]
+   },
+   "bbox": [
+    22.809,
+    37.929,
+    24.682,
+    39.037
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Evvoia"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938-26912",
+    "steps": {
+     "build": 95.6,
+     "stations": 0.8,
+     "places": 2.3,
+     "routes": 16.0,
+     "merge": 0.6,
+     "nocar": 1.0,
+     "everyday": 0.7
+    },
+    "built": "2026-10-20T16:39:47",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-20T17:16:13",
+    "shipped": "2026-10-20T17:33:59"
+   }
+  },
+  {
+   "order": 766,
+   "id": "ait",
+   "name": "Aitoloakarnania",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "GRC"
+   ],
+   "iso2": "GR",
+   "people": 178823,
+   "origin": [
+    21.4073,
+    38.6282
+   ],
+   "tz": "Europe/Athens",
+   "utc_offset": 2,
+   "extracts": [
+    "europe/greece"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GRC": [
+     "EL631"
+    ]
+   },
+   "bbox": [
+    20.732,
+    38.301,
+    22.024,
+    39.175
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Aitoloakarnania"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938-26912",
+    "steps": {
+     "build": 65.2,
+     "stations": 0.9,
+     "places": 1.3,
+     "routes": 13.6,
+     "merge": 0.7,
+     "nocar": 1.1,
+     "everyday": 0.8
+    },
+    "built": "2026-10-20T16:39:18",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10513652314100672"
+     ]
+    },
+    "gated": "2026-10-20T17:16:13",
+    "shipped": "2026-10-20T17:33:59"
+   }
+  },
+  {
+   "order": 767,
+   "id": "kay",
+   "name": "Kalymnos, Karpathos, Kasos, Kos, Rodos",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "GRC"
+   ],
+   "iso2": "GR",
+   "people": 170301,
+   "origin": [
+    28.224,
+    36.438
+   ],
+   "tz": "Europe/Athens",
+   "utc_offset": 2,
+   "extracts": [
+    "europe/greece"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GRC": [
+     "EL421"
+    ]
+   },
+   "bbox": [
+    26.129,
+    35.344,
+    29.648,
+    37.479
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Kalymnos, Karpathos, Kasos, Kos, Rodos"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938-26912",
+    "steps": {
+     "build": 131.8,
+     "stations": 0.8,
+     "places": 1.3,
+     "routes": 7.2,
+     "merge": 0.6,
+     "nocar": 0.9,
+     "everyday": 0.8
+    },
+    "built": "2026-10-20T16:41:41",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-20T17:16:13",
+    "shipped": "2026-10-20T17:33:59"
+   }
+  },
+  {
+   "order": 768,
+   "id": "les",
+   "name": "Lesvos, Limnos",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "GRC"
+   ],
+   "iso2": "GR",
+   "people": 167514,
+   "origin": [
+    26.5534,
+    39.0995
+   ],
+   "tz": "Europe/Athens",
+   "utc_offset": 2,
+   "extracts": [
+    "europe/greece"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GRC": [
+     "EL411",
+     "EL413",
+     "EL412"
+    ]
+   },
+   "bbox": [
+    24.969,
+    37.505,
+    27.064,
+    40.029
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Lesvos, Limnos",
+     "Chios",
+     "Ikaria, Samos"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938-26912",
+    "steps": {
+     "build": 125.7,
+     "stations": 1.1,
+     "places": 1.6,
+     "routes": 9.0,
+     "merge": 0.7,
+     "nocar": 1.0,
+     "everyday": 0.8
+    },
+    "built": "2026-10-20T16:42:07",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1425960792614993"
+     ]
+    },
+    "gated": "2026-10-20T17:16:13",
+    "shipped": "2026-10-20T17:33:59"
+   }
+  },
+  {
+   "order": 769,
+   "id": "arg",
+   "name": "Argolida, Arkadia",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "GRC"
+   ],
+   "iso2": "GR",
+   "people": 162611,
+   "origin": [
+    22.3793,
+    37.5124
+   ],
+   "tz": "Europe/Athens",
+   "utc_offset": 2,
+   "extracts": [
+    "europe/greece"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GRC": [
+     "EL651"
+    ]
+   },
+   "bbox": [
+    21.793,
+    37.001,
+    23.454,
+    37.866
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Argolida, Arkadia"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938-26912",
+    "steps": {
+     "build": 56.1,
+     "stations": 0.8,
+     "places": 1.3,
+     "routes": 109.1,
+     "merge": 0.7,
+     "nocar": 1.0,
+     "everyday": 0.8
+    },
+    "built": "2026-10-20T16:44:31",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-20T17:16:13",
+    "shipped": "2026-10-20T17:33:59"
+   }
+  },
+  {
+   "order": 770,
+   "id": "ker",
+   "name": "Kerkyra",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "GRC"
+   ],
+   "iso2": "GR",
+   "people": 154886,
+   "origin": [
+    20.8936,
+    37.7775
+   ],
+   "tz": "Europe/Athens",
+   "utc_offset": 2,
+   "extracts": [
+    "europe/greece"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GRC": [
+     "EL622",
+     "EL621",
+     "EL623"
+    ]
+   },
+   "bbox": [
+    19.373,
+    37.239,
+    21.118,
+    39.899
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Kerkyra",
+     "Zakynthos",
+     "Ithaki, Kefallinia"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938-26912",
+    "steps": {
+     "build": 148.3,
+     "stations": 0.9,
+     "places": 1.5,
+     "routes": 7.0,
+     "merge": 0.7,
+     "nocar": 1.0,
+     "everyday": 0.8
+    },
+    "built": "2026-10-20T16:44:48",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.11098479375075206"
+     ]
+    },
+    "gated": "2026-10-20T17:16:13",
+    "shipped": "2026-10-20T17:34:00"
+   }
+  },
+  {
+   "order": 771,
+   "id": "cni",
+   "name": "Chania",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "GRC"
+   ],
+   "iso2": "GR",
+   "people": 154505,
+   "origin": [
+    24.0158,
+    35.509
+   ],
+   "tz": "Europe/Athens",
+   "utc_offset": 2,
+   "extracts": [
+    "europe/greece"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GRC": [
+     "EL434"
+    ]
+   },
+   "bbox": [
+    23.466,
+    34.81,
+    24.329,
+    35.691
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Chania"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938-26912",
+    "steps": {
+     "build": 42.3,
+     "stations": 0.8,
+     "places": 1.2,
+     "routes": 5.4,
+     "merge": 0.7,
+     "nocar": 1.1,
+     "everyday": 0.8
+    },
+    "built": "2026-10-20T16:45:24",
+    "reason": "gate: drive_factor_median 2.117000016612675",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.12027341226804629",
+      "drive_factor_median 2.117000016612675"
+     ]
+    },
+    "parked": "2026-10-20T17:16:11",
+    "gated": "2026-10-20T17:27:23",
+    "shipped": "2026-10-20T17:34:00"
+   },
+   "gate_relax": {
+    "drive_factor_median": "Crete's White Mountains: roads wind along the coast and the gorges"
+   }
+  },
+  {
+   "order": 772,
+   "id": "fth",
+   "name": "Fthiotida",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "GRC"
+   ],
+   "iso2": "GR",
+   "people": 143247,
+   "origin": [
+    22.4366,
+    38.8948
+   ],
+   "tz": "Europe/Athens",
+   "utc_offset": 2,
+   "extracts": [
+    "europe/greece"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GRC": [
+     "EL644"
+    ]
+   },
+   "bbox": [
+    21.83,
+    38.507,
+    23.362,
+    39.272
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Fthiotida"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938-26912",
+    "steps": {
+     "build": 40.6,
+     "stations": 0.7,
+     "places": 1.1,
+     "routes": 9.9,
+     "merge": 0.7,
+     "nocar": 1.0,
+     "everyday": 0.9
+    },
+    "built": "2026-10-20T16:45:43",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.15837489952197198"
+     ]
+    },
+    "gated": "2026-10-20T17:16:13",
+    "shipped": "2026-10-20T17:34:00"
+   }
+  },
+  {
+   "order": 773,
+   "id": "ile",
+   "name": "Ileia",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "GRC"
+   ],
+   "iso2": "GR",
+   "people": 137520,
+   "origin": [
+    21.4402,
+    37.6715
+   ],
+   "tz": "Europe/Athens",
+   "utc_offset": 2,
+   "extracts": [
+    "europe/greece"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GRC": [
+     "EL633"
+    ]
+   },
+   "bbox": [
+    21.11,
+    37.377,
+    21.992,
+    38.102
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Ileia"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938-26912",
+    "steps": {
+     "build": 35.3,
+     "stations": 0.7,
+     "places": 1.1,
+     "routes": 7.5,
+     "merge": 0.7,
+     "nocar": 1.1,
+     "everyday": 0.9
+    },
+    "built": "2026-10-20T16:46:11",
+    "reason": "gate: top_zone_jobs_share 0.21172753259741423 at [21.4368, 37.675]",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.21172753259741423"
+     ]
+    },
+    "parked": "2026-10-20T17:16:11",
+    "gated": "2026-10-20T17:27:24",
+    "shipped": "2026-10-20T17:34:00"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "one compact town holds the unit's jobs among sparse farmland (as trs Trieste, T-779)"
+   }
+  },
+  {
+   "order": 774,
+   "id": "ima",
+   "name": "Imathia",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "GRC"
+   ],
+   "iso2": "GR",
+   "people": 133260,
+   "origin": [
+    22.2019,
+    40.5205
+   ],
+   "tz": "Europe/Athens",
+   "utc_offset": 2,
+   "extracts": [
+    "europe/greece"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GRC": [
+     "EL521"
+    ]
+   },
+   "bbox": [
+    21.885,
+    40.302,
+    22.682,
+    40.733
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Imathia"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938-26912",
+    "steps": {
+     "build": 29.7,
+     "stations": 0.7,
+     "places": 0.9,
+     "routes": 6.3,
+     "merge": 0.5,
+     "nocar": 1.0,
+     "everyday": 0.8
+    },
+    "built": "2026-10-20T16:46:23",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-20T17:16:13",
+    "shipped": "2026-10-20T17:34:00"
+   }
+  },
+  {
+   "order": 775,
+   "id": "pel",
+   "name": "Pella",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "GRC"
+   ],
+   "iso2": "GR",
+   "people": 132230,
+   "origin": [
+    22.0465,
+    40.7989
+   ],
+   "tz": "Europe/Athens",
+   "utc_offset": 2,
+   "extracts": [
+    "europe/greece"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GRC": [
+     "EL524"
+    ]
+   },
+   "bbox": [
+    21.708,
+    40.643,
+    22.639,
+    41.17
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Pella"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938-26912",
+    "steps": {
+     "build": 27.3,
+     "stations": 0.7,
+     "places": 1.0,
+     "routes": 6.1,
+     "merge": 0.5,
+     "nocar": 1.0,
+     "everyday": 0.7
+    },
+    "built": "2026-10-20T16:46:49",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-20T17:16:13",
+    "shipped": "2026-10-20T17:34:00"
+   }
+  },
+  {
+   "order": 776,
+   "id": "evr",
+   "name": "Evros",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "GRC"
+   ],
+   "iso2": "GR",
+   "people": 128583,
+   "origin": [
+    25.8794,
+    40.8528
+   ],
+   "tz": "Europe/Athens",
+   "utc_offset": 2,
+   "extracts": [
+    "europe/greece"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GRC": [
+     "EL511"
+    ]
+   },
+   "bbox": [
+    25.448,
+    40.393,
+    26.633,
+    41.747
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Evros"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938-26912",
+    "steps": {
+     "build": 35.7,
+     "stations": 0.7,
+     "places": 1.0,
+     "routes": 7.6,
+     "merge": 0.6,
+     "nocar": 1.0,
+     "everyday": 0.8
+    },
+    "built": "2026-10-20T16:47:10",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.11480316085695212"
+     ]
+    },
+    "gated": "2026-10-20T17:16:13",
+    "shipped": "2026-10-20T17:34:00"
+   }
+  },
+  {
+   "order": 777,
+   "id": "kor",
+   "name": "Korinthia",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "GRC"
+   ],
+   "iso2": "GR",
+   "people": 122987,
+   "origin": [
+    22.9336,
+    37.9368
+   ],
+   "tz": "Europe/Athens",
+   "utc_offset": 2,
+   "extracts": [
+    "europe/greece"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GRC": [
+     "EL652"
+    ]
+   },
+   "bbox": [
+    22.223,
+    37.705,
+    23.18,
+    38.142
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Korinthia"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938-26912",
+    "steps": {
+     "build": 40.4,
+     "stations": 0.7,
+     "places": 1.0,
+     "routes": 6.9,
+     "merge": 0.5,
+     "nocar": 1.0,
+     "everyday": 0.8
+    },
+    "built": "2026-10-20T16:47:40",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1451138314636376"
+     ]
+    },
+    "gated": "2026-10-20T17:16:13",
+    "shipped": "2026-10-20T17:34:00"
+   }
+  },
+  {
+   "order": 778,
+   "id": "pie",
+   "name": "Pieria",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "GRC"
+   ],
+   "iso2": "GR",
+   "people": 119333,
+   "origin": [
+    22.5043,
+    40.2695
+   ],
+   "tz": "Europe/Athens",
+   "utc_offset": 2,
+   "extracts": [
+    "europe/greece"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GRC": [
+     "EL525"
+    ]
+   },
+   "bbox": [
+    22.109,
+    39.949,
+    22.675,
+    40.546
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Pieria"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938-26912",
+    "steps": {
+     "build": 31.4,
+     "stations": 0.7,
+     "places": 1.0,
+     "routes": 5.0,
+     "merge": 0.5,
+     "nocar": 1.0,
+     "everyday": 0.9
+    },
+    "built": "2026-10-20T16:47:51",
+    "reason": "gate: top_zone_jobs_share 0.2344914222486037 at [22.5005, 40.2658]",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.2344914222486037",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-10-20T17:16:12",
+    "gated": "2026-10-20T17:27:24",
+    "shipped": "2026-10-20T17:34:00"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "one compact town holds the unit's jobs among sparse farmland (as trs Trieste, T-779)"
+   }
+  },
+  {
+   "order": 779,
+   "id": "art",
+   "name": "Arta, Preveza",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "GRC"
+   ],
+   "iso2": "GR",
+   "people": 113243,
+   "origin": [
+    20.9822,
+    39.1618
+   ],
+   "tz": "Europe/Athens",
+   "utc_offset": 2,
+   "extracts": [
+    "europe/greece"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GRC": [
+     "EL541"
+    ]
+   },
+   "bbox": [
+    20.301,
+    38.954,
+    21.426,
+    39.536
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Arta, Preveza"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938-26912",
+    "steps": {
+     "build": 39.8,
+     "stations": 0.7,
+     "places": 1.1,
+     "routes": 7.6,
+     "merge": 0.6,
+     "nocar": 1.1,
+     "everyday": 0.8
+    },
+    "built": "2026-10-20T16:48:32",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-20T17:16:13",
+    "shipped": "2026-10-20T17:34:00"
+   }
+  },
+  {
+   "order": 780,
+   "id": "voi",
+   "name": "Voiotia",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "GRC"
+   ],
+   "iso2": "GR",
+   "people": 109593,
+   "origin": [
+    23.3217,
+    38.3176
+   ],
+   "tz": "Europe/Athens",
+   "utc_offset": 2,
+   "extracts": [
+    "europe/greece"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GRC": [
+     "EL641"
+    ]
+   },
+   "bbox": [
+    22.491,
+    38.135,
+    23.69,
+    38.592
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Voiotia"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938-26912",
+    "steps": {
+     "build": 40.8,
+     "stations": 0.7,
+     "places": 1.1,
+     "routes": 10.5,
+     "merge": 0.5,
+     "nocar": 0.9,
+     "everyday": 0.7
+    },
+    "built": "2026-10-20T16:48:46",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-10-20T17:16:13",
+    "shipped": "2026-10-20T17:34:00"
+   }
+  },
+  {
+   "order": 781,
+   "id": "and",
+   "name": "Andros, Thira, Kea - Kythnos, Milos, Mykonos, Naxos, Paros,  Syros, Tinos",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "GRC"
+   ],
+   "iso2": "GR",
+   "people": 106447,
+   "origin": [
+    24.9338,
+    37.4418
+   ],
+   "tz": "Europe/Athens",
+   "utc_offset": 2,
+   "extracts": [
+    "europe/greece"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GRC": [
+     "EL422"
+    ]
+   },
+   "bbox": [
+    24.1,
+    36.243,
+    26.059,
+    37.998
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Andros, Thira, Kea - Kythnos, Milos, Mykonos, Naxos, Paros,  Syros, Tinos"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938-26912",
+    "steps": {
+     "build": 158.0,
+     "stations": 0.9,
+     "places": 1.7,
+     "routes": 6.5,
+     "merge": 0.6,
+     "nocar": 1.0,
+     "everyday": 0.7
+    },
+    "built": "2026-10-20T16:51:21",
+    "gate": {
+     "warn": [
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-20T17:16:13",
+    "shipped": "2026-10-20T17:34:00"
+   }
+  },
+  {
+   "order": 782,
+   "id": "rod",
+   "name": "Rodopi",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "GRC"
+   ],
+   "iso2": "GR",
+   "people": 105913,
+   "origin": [
+    25.4103,
+    41.1227
+   ],
+   "tz": "Europe/Athens",
+   "utc_offset": 2,
+   "extracts": [
+    "europe/greece"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GRC": [
+     "EL513"
+    ]
+   },
+   "bbox": [
+    25.049,
+    40.862,
+    25.944,
+    41.345
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Rodopi"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938-26912",
+    "steps": {
+     "build": 30.8,
+     "stations": 0.7,
+     "places": 0.9,
+     "routes": 5.2,
+     "merge": 0.5,
+     "nocar": 0.9,
+     "everyday": 0.7
+    },
+    "built": "2026-10-20T16:49:26",
+    "reason": "gate: top_zone_jobs_share 0.23635810933851362 at [25.3928, 41.1201]",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.23635810933851362",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-10-20T17:16:12",
+    "gated": "2026-10-20T17:27:24",
+    "shipped": "2026-10-20T17:34:00"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "one compact town holds the unit's jobs among sparse farmland (as trs Trieste, T-779)"
+   }
+  },
+  {
+   "order": 783,
+   "id": "xan",
+   "name": "Xanthi",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "GRC"
+   ],
+   "iso2": "GR",
+   "people": 105263,
+   "origin": [
+    24.8889,
+    41.1317
+   ],
+   "tz": "Europe/Athens",
+   "utc_offset": 2,
+   "extracts": [
+    "europe/greece"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GRC": [
+     "EL512"
+    ]
+   },
+   "bbox": [
+    24.481,
+    40.858,
+    25.225,
+    41.407
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Xanthi"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938-26912",
+    "steps": {
+     "build": 31.9,
+     "stations": 0.7,
+     "places": 0.9,
+     "routes": 4.1,
+     "merge": 0.5,
+     "nocar": 0.9,
+     "everyday": 0.7
+    },
+    "built": "2026-10-20T16:50:06",
+    "reason": "gate: top_zone_jobs_share 0.2046277325139936 at [24.8943, 41.1302]",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.2046277325139936"
+     ]
+    },
+    "parked": "2026-10-20T17:16:12",
+    "gated": "2026-10-20T17:27:24",
+    "shipped": "2026-10-20T17:34:00"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "one compact town holds the unit's jobs among sparse farmland (as trs Trieste, T-779)"
+   }
+  },
+  {
+   "order": 784,
+   "id": "chl",
+   "name": "Chalkidiki",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "GRC"
+   ],
+   "iso2": "GR",
+   "people": 94993,
+   "origin": [
+    23.2894,
+    40.2426
+   ],
+   "tz": "Europe/Athens",
+   "utc_offset": 2,
+   "extracts": [
+    "europe/greece"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GRC": [
+     "EL527"
+    ]
+   },
+   "bbox": [
+    23.004,
+    39.912,
+    24.015,
+    40.637
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Chalkidiki"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938-26912",
+    "steps": {
+     "build": 42.3,
+     "stations": 0.8,
+     "places": 1.1,
+     "routes": 7.9,
+     "merge": 0.6,
+     "nocar": 1.0,
+     "everyday": 0.8
+    },
+    "built": "2026-10-20T16:51:01",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-10-20T17:16:13",
+    "shipped": "2026-10-20T17:34:00"
+   }
+  },
+  {
+   "order": 785,
+   "id": "lef",
+   "name": "Lefkada",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "GRC"
+   ],
+   "iso2": "GR",
+   "people": 15662,
+   "origin": [
+    20.6982,
+    38.8237
+   ],
+   "tz": "Europe/Athens",
+   "utc_offset": 2,
+   "extracts": [
+    "europe/greece"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GRC": [
+     "EL624"
+    ]
+   },
+   "bbox": [
+    20.546,
+    38.545,
+    20.962,
+    38.855
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Lefkada"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-162938-26912",
+    "steps": {
+     "build": 33.5,
+     "stations": 0.8,
+     "places": 0.9,
+     "routes": 2.4,
+     "merge": 0.5,
+     "nocar": 0.8,
+     "everyday": 0.7
+    },
+    "built": "2026-10-20T16:51:40",
+    "reason": "gate: top_zone_jobs_share 0.38919354014266844 at [20.7179, 38.8241]",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "pop_vs_plan 1.3073851613486271",
+      "top_zone_jobs_share 0.38919354014266844",
+      "fleet_range 6"
+     ]
+    },
+    "parked": "2026-10-20T17:16:12",
+    "gated": "2026-10-20T17:27:24",
+    "shipped": "2026-10-20T17:34:00"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "one compact town holds the unit's jobs among sparse farmland (as trs Trieste, T-779)"
+   }
   }
  ],
  "dropped": [
@@ -44496,6 +47418,86 @@
     "Guyane",
     "La Réunion",
     "Mayotte "
+   ]
+  },
+  "PRT": {
+   "task": "T-723",
+   "built": "2026-10-20",
+   "rule": "free units at or over 20 people a km2; under 100,000 joins a zone of its region (longest border, or an island the most populous within 150 km)",
+   "dead": [
+    {
+     "unit": "PT11E",
+     "name": "Terras de Trás-os-Montes",
+     "people": 94794,
+     "per_km2": 17.1
+    },
+    {
+     "unit": "PT195",
+     "name": "Beira Baixa",
+     "people": 89985,
+     "per_km2": 17.1
+    },
+    {
+     "unit": "PT1C1",
+     "name": "Alentejo Litoral",
+     "people": 85127,
+     "per_km2": 16.2
+    },
+    {
+     "unit": "PT1C2",
+     "name": "Baixo Alentejo",
+     "people": 104825,
+     "per_km2": 12.3
+    },
+    {
+     "unit": "PT1C3",
+     "name": "Alto Alentejo",
+     "people": 96483,
+     "per_km2": 15.8
+    },
+    {
+     "unit": "PT1C4",
+     "name": "Alentejo Central",
+     "people": 141854,
+     "per_km2": 19.1
+    }
+   ],
+   "merges": [
+    "Alto Tâmega e Barroso (76,231) joins Ave (shared border 69 km)"
+   ]
+  },
+  "GRC": {
+   "task": "T-723",
+   "built": "2026-10-20",
+   "rule": "free units at or over 20 people a km2; under 100,000 joins a zone of its region (longest border, or an island the most populous within 150 km)",
+   "dead": [
+    {
+     "unit": "EL643",
+     "name": "Evrytania",
+     "people": 18431,
+     "per_km2": 9.9
+    },
+    {
+     "unit": "EL645",
+     "name": "Fokida",
+     "people": 33271,
+     "per_km2": 15.6
+    }
+   ],
+   "merges": [
+    "Lefkada (15,662) stays its own zone: no zone of its region beside it",
+    "Ithaki, Kefallinia (31,055) joins Kerkyra (island, 80 km)",
+    "Ikaria, Samos (34,354) joins Lesvos, Limnos (island, 138 km)",
+    "Zakynthos (36,058) joins Kerkyra (island, 16 km)",
+    "Thesprotia (41,104) joins Ioannina (shared border 78 km)",
+    "Chios (43,246) joins Lesvos, Limnos (island, 46 km)",
+    "Kastoria (45,190) joins Grevena, Kozani (shared border 86 km)",
+    "Florina (46,224) joins Grevena, Kozani (shared border 107 km)",
+    "Lasithi (69,833) joins Irakleio (shared border 51 km)",
+    "Kilkis (76,183) joins Serres (shared border 67 km)",
+    "Rethymni (78,995) joins Irakleio (shared border 65 km)",
+    "Drama (92,789) joins Thasos, Kavala (shared border 52 km)",
+    "Chalkidiki (94,993) stays its own zone: no zone of its region beside it"
    ]
   }
  }

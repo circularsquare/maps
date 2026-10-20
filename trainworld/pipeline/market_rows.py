@@ -29,10 +29,8 @@ def save(reg, rows, root=ROOT):
     keep = {c["id"]: rows[c["id"]] for c in reg["cities"] if c["id"] in rows}
     lines = [f"{json.dumps(k)}:{json.dumps(v, ensure_ascii=False, separators=(',', ':'))}" for k, v in keep.items()]
     text = "{\n" + ",\n".join(lines) + "\n}\n"
-    p = path(root)
-    part = p.with_suffix(".json.part")
-    part.write_text(text, encoding="utf-8")
-    os.replace(part, p)
+    import shared_lock
+    shared_lock.write_atomic(path(root), text)
     return keep
 
 
