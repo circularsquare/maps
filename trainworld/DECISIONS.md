@@ -3,6 +3,13 @@
 Newest first. One entry per decision: what, and why. The spec states the result; this keeps the
 reasoning and what it replaced.
 
+## 2026-10-20
+
+- **Whole-country cover, Spain first** (Anita, T-719 decisions 1 and 5; the rest the orchestrator's calls, T-723): zones are the plan's units as they are (NUTS-3 provinces in Spain), under 100k merged into a zone of their NUTS-2 region; small islands join their province's largest island, which the rule "an island joins the most populous zone of its region within 150 km" gives for every Spanish island; Ceuta and Melilla are zones of their own; a unit under 20 people a km² stays dead space for now (9 Spanish provinces, 1.46M people, three of them at 16.8-18.9); no Spain module yet (later tailoring); no registry split for Spain alone. Countryside zones borrow T-314's rule over the 38 fitted Japanese zones only (d^-1.4 exp(-d/16 km)) instead of the metros' d^-1.8 exp(-d/80 km). notes/T-723.md.
+- **The runner solves each joint group once a batch**, after its last region, not after each region (T-723, T-719 speedup 6): a covered country is one group, and re-solving it after each of 18 regions would repeat a growing solve and re-gate every member each time. A batch stopped before the end leaves its gated rows registered and `built`, and the next run gates them again.
+- **Ceuta and Melilla relax top_zone_jobs_share and mean_commute_km** (my call, T-723): towns of 12-19 km² hold a handful of 2 km zones, so one zone has a third of the jobs and commutes are under the gate's 3 km floor by size alone; `gate_relax` on both rows. **Asturias and Tenerife relax drive_factor_median** at 2.05 and 2.08 (the gate fails over 2.0): mountain valleys, and a zone of four volcanic islands; both passed the browser check. Nice (2.51) stays parked (T-769).
+- **The 35 rows a runner fault parked were gated again without the browser check** (my call, T-723): each had passed the full gate, browser included, in the same batch; only the joint solve's re-gate had crashed on a missing snapshot.
+
 ## 2026-10-19
 
 - **Lille, Bordeaux, Marseille, Malaga and Seville ship despite pop_vs_fua 1.50-2.17** (orchestrator under Anita's leave for sensible defaults, T-613): their plan units are whole départements or provinces holding more than the FUA, which only widens the playable area, and no neighbouring pack overlaps them; `gate_relax` on each row, as for dus.

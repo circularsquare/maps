@@ -28,7 +28,7 @@ T-700 is done: every pack's walk factors are split by bank through res 9 (packs 
 `data/work/pre-T700/` wait for Anita's acceptance). Then, in order: the retrospective's proposals (notes/T-613.md,
 T-764); T-638's market packs (park 7); T-602/T-651
 (zones not opened drawn with their walk split; writes registry.json, so after T-613); T-712 (with
-T-721); T-723 (Spain). Batch agents wait once on the runner's process, never on a timer (T-719: wake-ups
+T-721). Spain is covered whole (T-723, 2026-10-20; registry 176 zones, not committed). Batch agents wait once on the runner's process, never on a timer (T-719: wake-ups
 were 75% of a batch's tokens).
 
 **For a task agent.** Check `git status` and the "taking" marks here first. Several agents work at once:
@@ -104,7 +104,11 @@ orchestrator's commit recipe is in CLAUDE.md "Before a commit".
 Anita's playtest of 2026-10-19 (the 9e466a4 build): notes/playtest-2026-10-19.md, a section a task.
 - T-721 [P2] Regional rail levels after T-718: rail between cities fell by a half to four fifths (New York to Philadelphia on a test line 2.8% to 0.4% of the corridor's trips, Tokyo to Osaka 56% to 42%); check a few corridors against published rail shares and say whether anything needs changing (notes/T-717.md, regional table). Measured in notes/T-712.md, waits on Anita.
 - T-719 [P2] Covering whole regions (all of Spain, as Japan) rather than lone metros, timings and speedups: note written 2026-10-19, waits on Anita's decisions (its last section); notes/T-719.md.
-- T-723 [P2] Whole-country cover, Spain as the pilot (Anita 2026-10-19; notes/T-719.md): zone rows in world_plan.py, the runner and plan_config.py taking them, countryside zones on a curve borrowed from Japan's fitted zones, joint gravity once per country; after T-613 hands back (the runner's files are in use). Open.
+- T-770 [P2] The gate's station check queries Overpass live per pack: in T-723's first batch the mirrors answered 502/504 and one fetch hung over 15 minutes, and the gate took 177 of the batch's 247 minutes. Take the stations from the extract's own caches (points.fgb, already read for the build) instead. Open; notes/T-723.md.
+- T-771 [P3] A Spain module (T-719 item 6, later tailoring): the transport ministry's mobile-phone trip tables (a curve per zone, jobs at work) and INE's 1 km census grid; would rebuild mad bar val sev mal and the 40 zones. Open; notes/T-719.md.
+- T-772 [P3] Spain's 9 dead-space provinces (under 20 people a km², 1.46M people; three at 16.8-18.9) leave Valladolid, León, Burgos and Salamanca as zones in a hole: revisit the cut, or grow very empty units onto a neighbour, before covering the next country. Open; notes/T-723.md.
+- T-773 [P3] Runner: a joint solve whose re-gate fails parks every new pack of the group (35 at once in T-723, from one runner error that left no gate results). A re-gate with no result files is a run fault: stop the run and say so, and otherwise park only the members that fail. Open; notes/T-723.md.
+- T-774 [P3] `world_plan.py`'s metro replan does not know the `held` status (plan_config.ROW_STATES), so a replan would give held rows new ids and orders; check and add it. Open.
 - T-712 [P2] After the Europe batch (T-613): spot check the regional market's city pairs against real figures where published (rail, air and all-mode trips between pairs such as Madrid-Barcelona, London-Paris, Milan-Rome, Berlin-Hamburg, Tokyo-Osaka, the Northeast Corridor) and brainstorm what could improve the fit. Anita 2026-10-19: measure and discuss only, implement nothing. Measured in notes/T-712.md, waits on Anita.
 Anita's second set of 2026-10-19 notes (the bfe93f9 build): notes/playtest-2026-10-19b.md, a section a task.
 - T-702 [P3] Station ghost leftovers after T-695: rare corrections on the real save's bundles of overlapping imported lines (refusals the page cannot see, T-691), jumps while sliding along them, one blink near a track end. notes/T-695.md "Left". Open.

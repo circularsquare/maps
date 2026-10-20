@@ -30812,6 +30812,2443 @@
    "id": "yns",
    "name": "Yamanashi",
    "status": "built"
+  },
+  {
+   "order": 518,
+   "id": "alc",
+   "name": "Alicante",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "ESP"
+   ],
+   "iso2": "ES",
+   "people": 1899894,
+   "origin": [
+    -0.4931,
+    38.3443
+   ],
+   "tz": "Europe/Madrid",
+   "utc_offset": 1,
+   "extracts": [
+    "europe/spain/valencia"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ESP": [
+     "ES521"
+    ]
+   },
+   "bbox": [
+    -1.088,
+    37.847,
+    0.227,
+    38.886
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Alicante/Alacant"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-003650",
+    "steps": {
+     "build": 72.4,
+     "places": 2.8,
+     "routes": 19.1,
+     "merge": 0.6,
+     "nocar": 1.0,
+     "everyday": 0.6
+    },
+    "built": "2026-10-20T00:40:39",
+    "reason": "joint group pot (pot mad bar tou val sev mal alc cat mur cad grn cod alr jae hue zar biz gip ara aco poe our lug trr gir lle tod cid alb gul nav baj cax vaa len bug sla lar ceu): after the joint solve pot: ; mad: ; bar: ; tou: ; val: ; sev: ; mal: ; alc: ; cat: ; mur: ; cad: ; grn: ; cod: ; alr: ; jae: ; hue: ; zar: ; biz: ; gip: ; ara: ; aco: ; poe: ; our: ; lug: ; trr: ; gir: ; lle: ; tod: ; cid: ; alb: ; gul: ; nav: ; baj: ; cax: ; vaa: ; len: ; bug: ; sla: ; lar: ; ceu: ",
+    "parked": "2026-10-20T04:42:44",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-20T05:07:37"
+   }
+  },
+  {
+   "order": 519,
+   "id": "mur",
+   "name": "Murcia",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "ESP"
+   ],
+   "iso2": "ES",
+   "people": 1570772,
+   "origin": [
+    -1.1278,
+    37.9899
+   ],
+   "tz": "Europe/Madrid",
+   "utc_offset": 1,
+   "extracts": [
+    "europe/spain/murcia"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ESP": [
+     "ES620"
+    ]
+   },
+   "bbox": [
+    -2.341,
+    37.375,
+    -0.699,
+    38.754
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Murcia"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-003650",
+    "steps": {
+     "build": 53.2,
+     "places": 1.4,
+     "routes": 26.0,
+     "merge": 0.6,
+     "nocar": 1.1,
+     "everyday": 0.7
+    },
+    "built": "2026-10-20T00:49:44",
+    "reason": "joint group pot (pot mad bar tou val sev mal alc cat mur cad grn cod alr jae hue zar biz gip ara aco poe our lug trr gir lle tod cid alb gul nav baj cax vaa len bug sla lar ceu): after the joint solve pot: ; mad: ; bar: ; tou: ; val: ; sev: ; mal: ; alc: ; cat: ; mur: ; cad: ; grn: ; cod: ; alr: ; jae: ; hue: ; zar: ; biz: ; gip: ; ara: ; aco: ; poe: ; our: ; lug: ; trr: ; gir: ; lle: ; tod: ; cid: ; alb: ; gul: ; nav: ; baj: ; cax: ; vaa: ; len: ; bug: ; sla: ; lar: ; ceu: ",
+    "parked": "2026-10-20T04:42:44",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-20T05:07:37"
+   }
+  },
+  {
+   "order": 520,
+   "id": "cad",
+   "name": "Cádiz",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "ESP"
+   ],
+   "iso2": "ES",
+   "people": 1164308,
+   "origin": [
+    -6.2792,
+    36.5171
+   ],
+   "tz": "Europe/Madrid",
+   "utc_offset": 1,
+   "extracts": [
+    "europe/spain/andalucia"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ESP": [
+     "ES612"
+    ]
+   },
+   "bbox": [
+    -6.437,
+    36.01,
+    -5.09,
+    37.051
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Cádiz"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-003650",
+    "steps": {
+     "build": 53.2,
+     "places": 1.9,
+     "routes": 14.9,
+     "merge": 0.6,
+     "nocar": 1.0,
+     "everyday": 0.7
+    },
+    "built": "2026-10-20T00:59:57",
+    "reason": "joint group pot (pot mad bar tou val sev mal alc cat mur cad grn cod alr jae hue zar biz gip ara aco poe our lug trr gir lle tod cid alb gul nav baj cax vaa len bug sla lar ceu): after the joint solve pot: ; mad: ; bar: ; tou: ; val: ; sev: ; mal: ; alc: ; cat: ; mur: ; cad: ; grn: ; cod: ; alr: ; jae: ; hue: ; zar: ; biz: ; gip: ; ara: ; aco: ; poe: ; our: ; lug: ; trr: ; gir: ; lle: ; tod: ; cid: ; alb: ; gul: ; nav: ; baj: ; cax: ; vaa: ; len: ; bug: ; sla: ; lar: ; ceu: ",
+    "parked": "2026-10-20T04:42:45",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-20T05:07:37"
+   }
+  },
+  {
+   "order": 521,
+   "id": "mll",
+   "name": "Mallorca",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "ESP"
+   ],
+   "iso2": "ES",
+   "people": 1051516,
+   "origin": [
+    2.6568,
+    39.5809
+   ],
+   "tz": "Europe/Madrid",
+   "utc_offset": 1,
+   "extracts": [
+    "europe/spain/islas-baleares"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ESP": [
+     "ES532",
+     "ES533"
+    ]
+   },
+   "bbox": [
+    2.309,
+    39.127,
+    4.313,
+    40.102
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mallorca",
+     "Menorca"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-003650",
+    "steps": {
+     "build": 85.7,
+     "places": 1.8,
+     "routes": 8.8,
+     "merge": 0.5,
+     "nocar": 0.9,
+     "everyday": 0.6
+    },
+    "built": "2026-10-20T01:29:23",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-20T04:43:51"
+   }
+  },
+  {
+   "order": 522,
+   "id": "zar",
+   "name": "Zaragoza",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "ESP"
+   ],
+   "iso2": "ES",
+   "people": 1024626,
+   "origin": [
+    -0.891,
+    41.6457
+   ],
+   "tz": "Europe/Madrid",
+   "utc_offset": 1,
+   "extracts": [
+    "europe/spain/aragon"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ESP": [
+     "ES243"
+    ]
+   },
+   "bbox": [
+    -2.172,
+    40.941,
+    0.386,
+    42.743
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Zaragoza"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-003650",
+    "steps": {
+     "build": 54.1,
+     "places": 1.8,
+     "routes": 25.1,
+     "merge": 0.6,
+     "nocar": 1.1,
+     "everyday": 0.7
+    },
+    "built": "2026-10-20T01:41:48",
+    "reason": "joint group pot (pot mad bar tou val sev mal alc cat mur cad grn cod alr jae hue zar biz gip ara aco poe our lug trr gir lle tod cid alb gul nav baj cax vaa len bug sla lar ceu): after the joint solve pot: ; mad: ; bar: ; tou: ; val: ; sev: ; mal: ; alc: ; cat: ; mur: ; cad: ; grn: ; cod: ; alr: ; jae: ; hue: ; zar: ; biz: ; gip: ; ara: ; aco: ; poe: ; our: ; lug: ; trr: ; gir: ; lle: ; tod: ; cid: ; alb: ; gul: ; nav: ; baj: ; cax: ; vaa: ; len: ; bug: ; sla: ; lar: ; ceu: ",
+    "parked": "2026-10-20T04:42:45",
+    "gate": {
+     "warn": [
+      "road_snap_median_m 465.7",
+      "fleet_range 1"
+     ]
+    },
+    "shipped": "2026-10-20T05:07:37"
+   }
+  },
+  {
+   "order": 523,
+   "id": "biz",
+   "name": "Bizkaia",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "ESP"
+   ],
+   "iso2": "ES",
+   "people": 1000816,
+   "origin": [
+    -2.9352,
+    43.2606
+   ],
+   "tz": "Europe/Madrid",
+   "utc_offset": 1,
+   "extracts": [
+    "europe/spain/pais-vasco"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ESP": [
+     "ES213"
+    ]
+   },
+   "bbox": [
+    -3.446,
+    42.982,
+    -2.413,
+    43.453
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Bizkaia"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-003650",
+    "steps": {
+     "build": 45.3,
+     "places": 1.9,
+     "routes": 6.7,
+     "merge": 0.5,
+     "nocar": 0.9,
+     "everyday": 0.6
+    },
+    "built": "2026-10-20T01:49:13",
+    "reason": "joint group pot (pot mad bar tou val sev mal alc cat mur cad grn cod alr jae hue zar biz gip ara aco poe our lug trr gir lle tod cid alb gul nav baj cax vaa len bug sla lar ceu): after the joint solve pot: ; mad: ; bar: ; tou: ; val: ; sev: ; mal: ; alc: ; cat: ; mur: ; cad: ; grn: ; cod: ; alr: ; jae: ; hue: ; zar: ; biz: ; gip: ; ara: ; aco: ; poe: ; our: ; lug: ; trr: ; gir: ; lle: ; tod: ; cid: ; alb: ; gul: ; nav: ; baj: ; cax: ; vaa: ; len: ; bug: ; sla: ; lar: ; ceu: ",
+    "parked": "2026-10-20T04:42:45",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-20T05:07:38"
+   }
+  },
+  {
+   "order": 524,
+   "id": "asr",
+   "name": "Asturias",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "ESP"
+   ],
+   "iso2": "ES",
+   "people": 981664,
+   "origin": [
+    -5.8582,
+    43.361
+   ],
+   "tz": "Europe/Madrid",
+   "utc_offset": 1,
+   "extracts": [
+    "europe/spain/asturias"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ESP": [
+     "ES120"
+    ]
+   },
+   "bbox": [
+    -7.177,
+    42.884,
+    -4.512,
+    43.657
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Asturias"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-003650",
+    "steps": {
+     "build": 51.3,
+     "places": 1.9,
+     "routes": 15.8,
+     "merge": 0.6,
+     "nocar": 1.0,
+     "everyday": 0.7
+    },
+    "built": "2026-10-20T02:05:10",
+    "reason": "gate: drive_factor_median 2.0518667734879767",
+    "gate": {
+     "warn": [
+      "drive_factor_median 2.0518667734879767"
+     ]
+    },
+    "parked": "2026-10-20T02:09:11",
+    "shipped": "2026-10-20T05:07:38"
+   },
+   "gate_relax": {
+    "drive_factor_median": "2.05-2.08: Asturias' roads run along mountain valleys and Tenerife's zone is four volcanic islands, so routed drives are long against the straight line; the browser check passed (T-723)"
+   }
+  },
+  {
+   "order": 525,
+   "id": "tee",
+   "name": "Tenerife",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "ESP"
+   ],
+   "iso2": "ES",
+   "people": 976094,
+   "origin": [
+    -16.2579,
+    28.4637
+   ],
+   "tz": "Atlantic/Canary",
+   "utc_offset": 0,
+   "extracts": [
+    "africa/canary-islands"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ESP": [
+     "ES709",
+     "ES707",
+     "ES706",
+     "ES703"
+    ]
+   },
+   "bbox": [
+    -18.16,
+    27.638,
+    -16.124,
+    28.854
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Tenerife",
+     "La Palma",
+     "La Gomera",
+     "El Hierro"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-003650",
+    "steps": {
+     "build": 90.9,
+     "places": 1.6,
+     "routes": 5.9,
+     "merge": 0.5,
+     "nocar": 0.8,
+     "everyday": 0.6
+    },
+    "built": "2026-10-20T02:11:59",
+    "reason": "gate: drive_factor_median 2.0841789734955687",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10640718556408127",
+      "drive_factor_median 2.0841789734955687"
+     ]
+    },
+    "parked": "2026-10-20T02:20:31",
+    "shipped": "2026-10-20T05:07:38"
+   },
+   "gate_relax": {
+    "drive_factor_median": "2.05-2.08: Asturias' roads run along mountain valleys and Tenerife's zone is four volcanic islands, so routed drives are long against the straight line; the browser check passed (T-723)"
+   }
+  },
+  {
+   "order": 526,
+   "id": "gra",
+   "name": "Gran Canaria",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "ESP"
+   ],
+   "iso2": "ES",
+   "people": 909018,
+   "origin": [
+    -15.4268,
+    28.1156
+   ],
+   "tz": "Atlantic/Canary",
+   "utc_offset": 0,
+   "extracts": [
+    "africa/canary-islands"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ESP": [
+     "ES705",
+     "ES704"
+    ]
+   },
+   "bbox": [
+    -15.834,
+    27.736,
+    -13.811,
+    28.764
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Gran Canaria",
+     "Fuerteventura"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-003650",
+    "steps": {
+     "build": 59.4,
+     "places": 1.4,
+     "routes": 5.7,
+     "merge": 0.5,
+     "nocar": 0.8,
+     "everyday": 0.7
+    },
+    "built": "2026-10-20T02:11:28",
+    "reason": "joint group gra (gra laz): after the joint solve gra: other_packs_unchanged; laz: other_packs_unchanged",
+    "parked": "2026-10-20T05:06:01",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10595837865120188"
+     ]
+    },
+    "shipped": "2026-10-20T05:10:00"
+   }
+  },
+  {
+   "order": 527,
+   "id": "aco",
+   "name": "A Coruña",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "ESP"
+   ],
+   "iso2": "ES",
+   "people": 907224,
+   "origin": [
+    -8.4132,
+    43.361
+   ],
+   "tz": "Europe/Madrid",
+   "utc_offset": 1,
+   "extracts": [
+    "europe/spain/galicia"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ESP": [
+     "ES111"
+    ]
+   },
+   "bbox": [
+    -9.288,
+    42.464,
+    -7.674,
+    43.779
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "A Coruña"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-003650",
+    "steps": {
+     "build": 128.5,
+     "places": 3.3,
+     "routes": 37.8,
+     "merge": 0.6,
+     "nocar": 1.0,
+     "everyday": 0.7
+    },
+    "built": "2026-10-20T02:25:56",
+    "reason": "joint group pot (pot mad bar tou val sev mal alc cat mur cad grn cod alr jae hue zar biz gip ara aco poe our lug trr gir lle tod cid alb gul nav baj cax vaa len bug sla lar ceu): after the joint solve pot: ; mad: ; bar: ; tou: ; val: ; sev: ; mal: ; alc: ; cat: ; mur: ; cad: ; grn: ; cod: ; alr: ; jae: ; hue: ; zar: ; biz: ; gip: ; ara: ; aco: ; poe: ; our: ; lug: ; trr: ; gir: ; lle: ; tod: ; cid: ; alb: ; gul: ; nav: ; baj: ; cax: ; vaa: ; len: ; bug: ; sla: ; lar: ; ceu: ",
+    "parked": "2026-10-20T04:42:45",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-20T05:07:38"
+   }
+  },
+  {
+   "order": 528,
+   "id": "grn",
+   "name": "Granada",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "ESP"
+   ],
+   "iso2": "ES",
+   "people": 840158,
+   "origin": [
+    -3.6015,
+    37.1684
+   ],
+   "tz": "Europe/Madrid",
+   "utc_offset": 1,
+   "extracts": [
+    "europe/spain/andalucia"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ESP": [
+     "ES614"
+    ]
+   },
+   "bbox": [
+    -4.328,
+    36.695,
+    -2.208,
+    38.084
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Granada"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-003650",
+    "steps": {
+     "build": 78.7,
+     "places": 3.0,
+     "routes": 31.5,
+     "merge": 0.6,
+     "nocar": 1.2,
+     "everyday": 0.8
+    },
+    "built": "2026-10-20T01:00:41",
+    "reason": "joint group pot (pot mad bar tou val sev mal alc cat mur cad grn cod alr jae hue zar biz gip ara aco poe our lug trr gir lle tod cid alb gul nav baj cax vaa len bug sla lar ceu): after the joint solve pot: ; mad: ; bar: ; tou: ; val: ; sev: ; mal: ; alc: ; cat: ; mur: ; cad: ; grn: ; cod: ; alr: ; jae: ; hue: ; zar: ; biz: ; gip: ; ara: ; aco: ; poe: ; our: ; lug: ; trr: ; gir: ; lle: ; tod: ; cid: ; alb: ; gul: ; nav: ; baj: ; cax: ; vaa: ; len: ; bug: ; sla: ; lar: ; ceu: ",
+    "parked": "2026-10-20T04:42:45",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-20T05:07:37"
+   }
+  },
+  {
+   "order": 529,
+   "id": "poe",
+   "name": "Pontevedra",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "ESP"
+   ],
+   "iso2": "ES",
+   "people": 805296,
+   "origin": [
+    -8.7146,
+    42.2336
+   ],
+   "tz": "Europe/Madrid",
+   "utc_offset": 1,
+   "extracts": [
+    "europe/spain/galicia"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ESP": [
+     "ES114"
+    ]
+   },
+   "bbox": [
+    -8.953,
+    41.872,
+    -7.865,
+    42.856
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Pontevedra"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-003650",
+    "steps": {
+     "build": 72.2,
+     "places": 2.2,
+     "routes": 23.7,
+     "merge": 0.5,
+     "nocar": 1.0,
+     "everyday": 0.7
+    },
+    "built": "2026-10-20T02:24:44",
+    "reason": "joint group pot (pot mad bar tou val sev mal alc cat mur cad grn cod alr jae hue zar biz gip ara aco poe our lug trr gir lle tod cid alb gul nav baj cax vaa len bug sla lar ceu): after the joint solve pot: ; mad: ; bar: ; tou: ; val: ; sev: ; mal: ; alc: ; cat: ; mur: ; cad: ; grn: ; cod: ; alr: ; jae: ; hue: ; zar: ; biz: ; gip: ; ara: ; aco: ; poe: ; our: ; lug: ; trr: ; gir: ; lle: ; tod: ; cid: ; alb: ; gul: ; nav: ; baj: ; cax: ; vaa: ; len: ; bug: ; sla: ; lar: ; ceu: ",
+    "parked": "2026-10-20T04:42:45",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-20T05:07:38"
+   }
+  },
+  {
+   "order": 530,
+   "id": "trr",
+   "name": "Tarragona",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "ESP"
+   ],
+   "iso2": "ES",
+   "people": 776503,
+   "origin": [
+    1.2433,
+    41.1137
+   ],
+   "tz": "Europe/Madrid",
+   "utc_offset": 1,
+   "extracts": [
+    "europe/spain/cataluna"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ESP": [
+     "ES514"
+    ]
+   },
+   "bbox": [
+    0.17,
+    40.523,
+    1.645,
+    41.581
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Tarragona"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-003650",
+    "steps": {
+     "build": 75.7,
+     "places": 2.0,
+     "routes": 17.3,
+     "merge": 0.6,
+     "nocar": 1.0,
+     "everyday": 0.8
+    },
+    "built": "2026-10-20T02:47:49",
+    "reason": "joint group pot (pot mad bar tou val sev mal alc cat mur cad grn cod alr jae hue zar biz gip ara aco poe our lug trr gir lle tod cid alb gul nav baj cax vaa len bug sla lar ceu): after the joint solve pot: ; mad: ; bar: ; tou: ; val: ; sev: ; mal: ; alc: ; cat: ; mur: ; cad: ; grn: ; cod: ; alr: ; jae: ; hue: ; zar: ; biz: ; gip: ; ara: ; aco: ; poe: ; our: ; lug: ; trr: ; gir: ; lle: ; tod: ; cid: ; alb: ; gul: ; nav: ; baj: ; cax: ; vaa: ; len: ; bug: ; sla: ; lar: ; ceu: ",
+    "parked": "2026-10-20T04:42:45",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-20T05:07:38"
+   }
+  },
+  {
+   "order": 531,
+   "id": "cod",
+   "name": "Córdoba",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "ESP"
+   ],
+   "iso2": "ES",
+   "people": 766258,
+   "origin": [
+    -4.7788,
+    37.8837
+   ],
+   "tz": "Europe/Madrid",
+   "utc_offset": 1,
+   "extracts": [
+    "europe/spain/andalucia"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ESP": [
+     "ES613"
+    ]
+   },
+   "bbox": [
+    -5.585,
+    37.184,
+    -4.001,
+    38.729
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Córdoba"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-003650",
+    "steps": {
+     "build": 40.7,
+     "places": 1.3,
+     "routes": 24.4,
+     "merge": 0.7,
+     "nocar": 1.1,
+     "everyday": 0.8
+    },
+    "built": "2026-10-20T00:59:54",
+    "reason": "joint group pot (pot mad bar tou val sev mal alc cat mur cad grn cod alr jae hue zar biz gip ara aco poe our lug trr gir lle tod cid alb gul nav baj cax vaa len bug sla lar ceu): after the joint solve pot: ; mad: ; bar: ; tou: ; val: ; sev: ; mal: ; alc: ; cat: ; mur: ; cad: ; grn: ; cod: ; alr: ; jae: ; hue: ; zar: ; biz: ; gip: ; ara: ; aco: ; poe: ; our: ; lug: ; trr: ; gir: ; lle: ; tod: ; cid: ; alb: ; gul: ; nav: ; baj: ; cax: ; vaa: ; len: ; bug: ; sla: ; lar: ; ceu: ",
+    "parked": "2026-10-20T04:42:45",
+    "gate": {
+     "warn": [
+      "road_snap_median_m 330.3",
+      "fleet_range 1"
+     ]
+    },
+    "shipped": "2026-10-20T05:07:37"
+   }
+  },
+  {
+   "order": 532,
+   "id": "gir",
+   "name": "Girona",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "ESP"
+   ],
+   "iso2": "ES",
+   "people": 716415,
+   "origin": [
+    2.8136,
+    41.9801
+   ],
+   "tz": "Europe/Madrid",
+   "utc_offset": 1,
+   "extracts": [
+    "europe/spain/cataluna"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ESP": [
+     "ES512"
+    ]
+   },
+   "bbox": [
+    1.731,
+    41.649,
+    3.313,
+    42.494
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Girona"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-003650",
+    "steps": {
+     "build": 142.2,
+     "places": 2.5,
+     "routes": 16.7,
+     "merge": 0.5,
+     "nocar": 0.9,
+     "everyday": 0.6
+    },
+    "built": "2026-10-20T02:48:55",
+    "reason": "joint group pot (pot mad bar tou val sev mal alc cat mur cad grn cod alr jae hue zar biz gip ara aco poe our lug trr gir lle tod cid alb gul nav baj cax vaa len bug sla lar ceu): after the joint solve pot: ; mad: ; bar: ; tou: ; val: ; sev: ; mal: ; alc: ; cat: ; mur: ; cad: ; grn: ; cod: ; alr: ; jae: ; hue: ; zar: ; biz: ; gip: ; ara: ; aco: ; poe: ; our: ; lug: ; trr: ; gir: ; lle: ; tod: ; cid: ; alb: ; gul: ; nav: ; baj: ; cax: ; vaa: ; len: ; bug: ; sla: ; lar: ; ceu: ",
+    "parked": "2026-10-20T04:42:45",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-20T05:07:38"
+   }
+  },
+  {
+   "order": 533,
+   "id": "tod",
+   "name": "Toledo",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "ESP"
+   ],
+   "iso2": "ES",
+   "people": 688466,
+   "origin": [
+    -4.8202,
+    39.9651
+   ],
+   "tz": "Europe/Madrid",
+   "utc_offset": 1,
+   "extracts": [
+    "europe/spain/castilla-la-mancha"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ESP": [
+     "ES425"
+    ]
+   },
+   "bbox": [
+    -5.401,
+    39.259,
+    -2.911,
+    40.315
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Toledo"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-003650",
+    "steps": {
+     "build": 42.8,
+     "places": 1.5,
+     "routes": 28.3,
+     "merge": 0.6,
+     "nocar": 1.1,
+     "everyday": 0.7
+    },
+    "built": "2026-10-20T03:03:36",
+    "reason": "joint group pot (pot mad bar tou val sev mal alc cat mur cad grn cod alr jae hue zar biz gip ara aco poe our lug trr gir lle tod cid alb gul nav baj cax vaa len bug sla lar ceu): after the joint solve pot: ; mad: ; bar: ; tou: ; val: ; sev: ; mal: ; alc: ; cat: ; mur: ; cad: ; grn: ; cod: ; alr: ; jae: ; hue: ; zar: ; biz: ; gip: ; ara: ; aco: ; poe: ; our: ; lug: ; trr: ; gir: ; lle: ; tod: ; cid: ; alb: ; gul: ; nav: ; baj: ; cax: ; vaa: ; len: ; bug: ; sla: ; lar: ; ceu: ",
+    "parked": "2026-10-20T04:42:45",
+    "gate": {
+     "warn": [
+      "road_snap_median_m 316.4"
+     ]
+    },
+    "shipped": "2026-10-20T05:07:38"
+   }
+  },
+  {
+   "order": 534,
+   "id": "alr",
+   "name": "Almería",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "ESP"
+   ],
+   "iso2": "ES",
+   "people": 672065,
+   "origin": [
+    -2.4576,
+    36.8425
+   ],
+   "tz": "Europe/Madrid",
+   "utc_offset": 1,
+   "extracts": [
+    "europe/spain/andalucia"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ESP": [
+     "ES611"
+    ]
+   },
+   "bbox": [
+    -3.136,
+    36.682,
+    -1.63,
+    37.916
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Almería"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-003650",
+    "steps": {
+     "build": 50.5,
+     "places": 1.7,
+     "routes": 15.9,
+     "merge": 0.6,
+     "nocar": 1.0,
+     "everyday": 0.7
+    },
+    "built": "2026-10-20T01:01:05",
+    "reason": "joint group pot (pot mad bar tou val sev mal alc cat mur cad grn cod alr jae hue zar biz gip ara aco poe our lug trr gir lle tod cid alb gul nav baj cax vaa len bug sla lar ceu): after the joint solve pot: ; mad: ; bar: ; tou: ; val: ; sev: ; mal: ; alc: ; cat: ; mur: ; cad: ; grn: ; cod: ; alr: ; jae: ; hue: ; zar: ; biz: ; gip: ; ara: ; aco: ; poe: ; our: ; lug: ; trr: ; gir: ; lle: ; tod: ; cid: ; alb: ; gul: ; nav: ; baj: ; cax: ; vaa: ; len: ; bug: ; sla: ; lar: ; ceu: ",
+    "parked": "2026-10-20T04:42:45",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-20T05:07:37"
+   }
+  },
+  {
+   "order": 535,
+   "id": "nav",
+   "name": "Navarra",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "ESP"
+   ],
+   "iso2": "ES",
+   "people": 612894,
+   "origin": [
+    -1.6394,
+    42.8145
+   ],
+   "tz": "Europe/Madrid",
+   "utc_offset": 1,
+   "extracts": [
+    "europe/spain/navarra"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ESP": [
+     "ES220"
+    ]
+   },
+   "bbox": [
+    -2.496,
+    41.911,
+    -0.725,
+    43.313
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Navarra"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-003650",
+    "steps": {
+     "build": 45.5,
+     "places": 1.3,
+     "routes": 14.5,
+     "merge": 0.5,
+     "nocar": 1.0,
+     "everyday": 0.7
+    },
+    "built": "2026-10-20T03:25:53",
+    "reason": "joint group pot (pot mad bar tou val sev mal alc cat mur cad grn cod alr jae hue zar biz gip ara aco poe our lug trr gir lle tod cid alb gul nav baj cax vaa len bug sla lar ceu): after the joint solve pot: ; mad: ; bar: ; tou: ; val: ; sev: ; mal: ; alc: ; cat: ; mur: ; cad: ; grn: ; cod: ; alr: ; jae: ; hue: ; zar: ; biz: ; gip: ; ara: ; aco: ; poe: ; our: ; lug: ; trr: ; gir: ; lle: ; tod: ; cid: ; alb: ; gul: ; nav: ; baj: ; cax: ; vaa: ; len: ; bug: ; sla: ; lar: ; ceu: ",
+    "parked": "2026-10-20T04:42:45",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-20T05:07:38"
+   }
+  },
+  {
+   "order": 536,
+   "id": "gip",
+   "name": "Gipuzkoa",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "ESP"
+   ],
+   "iso2": "ES",
+   "people": 609147,
+   "origin": [
+    -1.976,
+    43.3062
+   ],
+   "tz": "Europe/Madrid",
+   "utc_offset": 1,
+   "extracts": [
+    "europe/spain/pais-vasco"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ESP": [
+     "ES212"
+    ]
+   },
+   "bbox": [
+    -2.599,
+    42.896,
+    -1.729,
+    43.392
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Gipuzkoa"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-003650",
+    "steps": {
+     "build": 42.3,
+     "places": 1.8,
+     "routes": 6.3,
+     "merge": 0.6,
+     "nocar": 1.0,
+     "everyday": 0.7
+    },
+    "built": "2026-10-20T01:49:10",
+    "reason": "joint group pot (pot mad bar tou val sev mal alc cat mur cad grn cod alr jae hue zar biz gip ara aco poe our lug trr gir lle tod cid alb gul nav baj cax vaa len bug sla lar ceu): after the joint solve pot: ; mad: ; bar: ; tou: ; val: ; sev: ; mal: ; alc: ; cat: ; mur: ; cad: ; grn: ; cod: ; alr: ; jae: ; hue: ; zar: ; biz: ; gip: ; ara: ; aco: ; poe: ; our: ; lug: ; trr: ; gir: ; lle: ; tod: ; cid: ; alb: ; gul: ; nav: ; baj: ; cax: ; vaa: ; len: ; bug: ; sla: ; lar: ; ceu: ",
+    "parked": "2026-10-20T04:42:45",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-20T05:07:38"
+   }
+  },
+  {
+   "order": 537,
+   "id": "baj",
+   "name": "Badajoz",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "ESP"
+   ],
+   "iso2": "ES",
+   "people": 606547,
+   "origin": [
+    -6.9765,
+    38.8771
+   ],
+   "tz": "Europe/Madrid",
+   "utc_offset": 1,
+   "extracts": [
+    "europe/spain/extremadura"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ESP": [
+     "ES431"
+    ]
+   },
+   "bbox": [
+    -7.328,
+    37.941,
+    -4.677,
+    39.45
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Badajoz"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-003650",
+    "steps": {
+     "build": 53.5,
+     "places": 1.1,
+     "routes": 29.0,
+     "merge": 0.6,
+     "nocar": 1.1,
+     "everyday": 0.6
+    },
+    "built": "2026-10-20T03:30:08",
+    "reason": "joint group pot (pot mad bar tou val sev mal alc cat mur cad grn cod alr jae hue zar biz gip ara aco poe our lug trr gir lle tod cid alb gul nav baj cax vaa len bug sla lar ceu): after the joint solve pot: ; mad: ; bar: ; tou: ; val: ; sev: ; mal: ; alc: ; cat: ; mur: ; cad: ; grn: ; cod: ; alr: ; jae: ; hue: ; zar: ; biz: ; gip: ; ara: ; aco: ; poe: ; our: ; lug: ; trr: ; gir: ; lle: ; tod: ; cid: ; alb: ; gul: ; nav: ; baj: ; cax: ; vaa: ; len: ; bug: ; sla: ; lar: ; ceu: ",
+    "parked": "2026-10-20T04:42:45",
+    "gate": {
+     "warn": [
+      "road_snap_median_m 452.5",
+      "fleet_range 1"
+     ]
+    },
+    "shipped": "2026-10-20T05:07:38"
+   }
+  },
+  {
+   "order": 538,
+   "id": "jae",
+   "name": "Jaén",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "ESP"
+   ],
+   "iso2": "ES",
+   "people": 597107,
+   "origin": [
+    -3.7931,
+    37.7775
+   ],
+   "tz": "Europe/Madrid",
+   "utc_offset": 1,
+   "extracts": [
+    "europe/spain/andalucia"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ESP": [
+     "ES616"
+    ]
+   },
+   "bbox": [
+    -4.286,
+    37.379,
+    -2.438,
+    38.533
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Jaén"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-003650",
+    "steps": {
+     "build": 39.6,
+     "places": 1.4,
+     "routes": 21.7,
+     "merge": 0.6,
+     "nocar": 1.1,
+     "everyday": 0.8
+    },
+    "built": "2026-10-20T01:01:03",
+    "reason": "joint group pot (pot mad bar tou val sev mal alc cat mur cad grn cod alr jae hue zar biz gip ara aco poe our lug trr gir lle tod cid alb gul nav baj cax vaa len bug sla lar ceu): after the joint solve pot: ; mad: ; bar: ; tou: ; val: ; sev: ; mal: ; alc: ; cat: ; mur: ; cad: ; grn: ; cod: ; alr: ; jae: ; hue: ; zar: ; biz: ; gip: ; ara: ; aco: ; poe: ; our: ; lug: ; trr: ; gir: ; lle: ; tod: ; cid: ; alb: ; gul: ; nav: ; baj: ; cax: ; vaa: ; len: ; bug: ; sla: ; lar: ; ceu: ",
+    "parked": "2026-10-20T04:42:45",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-20T05:07:37"
+   }
+  },
+  {
+   "order": 539,
+   "id": "cat",
+   "name": "Castellón",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "ESP"
+   ],
+   "iso2": "ES",
+   "people": 593589,
+   "origin": [
+    -0.0412,
+    39.983
+   ],
+   "tz": "Europe/Madrid",
+   "utc_offset": 1,
+   "extracts": [
+    "europe/spain/valencia"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ESP": [
+     "ES522"
+    ]
+   },
+   "bbox": [
+    -0.843,
+    39.717,
+    0.515,
+    40.786
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Castellón/Castelló"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-003650",
+    "steps": {
+     "build": 36.6,
+     "places": 1.2,
+     "routes": 12.0,
+     "merge": 0.5,
+     "nocar": 1.0,
+     "everyday": 0.7
+    },
+    "built": "2026-10-20T00:39:55",
+    "reason": "joint group pot (pot mad bar tou val sev mal alc cat mur cad grn cod alr jae hue zar biz gip ara aco poe our lug trr gir lle tod cid alb gul nav baj cax vaa len bug sla lar ceu): after the joint solve pot: ; mad: ; bar: ; tou: ; val: ; sev: ; mal: ; alc: ; cat: ; mur: ; cad: ; grn: ; cod: ; alr: ; jae: ; hue: ; zar: ; biz: ; gip: ; ara: ; aco: ; poe: ; our: ; lug: ; trr: ; gir: ; lle: ; tod: ; cid: ; alb: ; gul: ; nav: ; baj: ; cax: ; vaa: ; len: ; bug: ; sla: ; lar: ; ceu: ",
+    "parked": "2026-10-20T04:42:44",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-20T05:07:37"
+   }
+  },
+  {
+   "order": 540,
+   "id": "cax",
+   "name": "Cantabria",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "ESP"
+   ],
+   "iso2": "ES",
+   "people": 520252,
+   "origin": [
+    -3.8182,
+    43.4613
+   ],
+   "tz": "Europe/Madrid",
+   "utc_offset": 1,
+   "extracts": [
+    "europe/spain/cantabria"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ESP": [
+     "ES130"
+    ]
+   },
+   "bbox": [
+    -4.847,
+    42.761,
+    -3.15,
+    43.512
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Cantabria"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-003650",
+    "steps": {
+     "build": 48.7,
+     "places": 1.5,
+     "routes": 9.2,
+     "merge": 0.5,
+     "nocar": 0.9,
+     "everyday": 0.7
+    },
+    "built": "2026-10-20T03:38:21",
+    "reason": "joint group pot (pot mad bar tou val sev mal alc cat mur cad grn cod alr jae hue zar biz gip ara aco poe our lug trr gir lle tod cid alb gul nav baj cax vaa len bug sla lar ceu): after the joint solve pot: ; mad: ; bar: ; tou: ; val: ; sev: ; mal: ; alc: ; cat: ; mur: ; cad: ; grn: ; cod: ; alr: ; jae: ; hue: ; zar: ; biz: ; gip: ; ara: ; aco: ; poe: ; our: ; lug: ; trr: ; gir: ; lle: ; tod: ; cid: ; alb: ; gul: ; nav: ; baj: ; cax: ; vaa: ; len: ; bug: ; sla: ; lar: ; ceu: ",
+    "parked": "2026-10-20T04:42:45",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1138406943054576"
+     ]
+    },
+    "shipped": "2026-10-20T05:07:38"
+   }
+  },
+  {
+   "order": 541,
+   "id": "cid",
+   "name": "Ciudad Real",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "ESP"
+   ],
+   "iso2": "ES",
+   "people": 486971,
+   "origin": [
+    -3.9261,
+    38.9838
+   ],
+   "tz": "Europe/Madrid",
+   "utc_offset": 1,
+   "extracts": [
+    "europe/spain/castilla-la-mancha"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ESP": [
+     "ES422"
+    ]
+   },
+   "bbox": [
+    -5.047,
+    38.346,
+    -2.64,
+    39.574
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Ciudad Real"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-003650",
+    "steps": {
+     "build": 34.3,
+     "places": 1.1,
+     "routes": 26.9,
+     "merge": 0.6,
+     "nocar": 1.1,
+     "everyday": 0.7
+    },
+    "built": "2026-10-20T03:03:26",
+    "reason": "joint group pot (pot mad bar tou val sev mal alc cat mur cad grn cod alr jae hue zar biz gip ara aco poe our lug trr gir lle tod cid alb gul nav baj cax vaa len bug sla lar ceu): after the joint solve pot: ; mad: ; bar: ; tou: ; val: ; sev: ; mal: ; alc: ; cat: ; mur: ; cad: ; grn: ; cod: ; alr: ; jae: ; hue: ; zar: ; biz: ; gip: ; ara: ; aco: ; poe: ; our: ; lug: ; trr: ; gir: ; lle: ; tod: ; cid: ; alb: ; gul: ; nav: ; baj: ; cax: ; vaa: ; len: ; bug: ; sla: ; lar: ; ceu: ",
+    "parked": "2026-10-20T04:42:45",
+    "gate": {
+     "warn": [
+      "road_snap_median_m 422.9",
+      "fleet_range 1"
+     ]
+    },
+    "shipped": "2026-10-20T05:07:38"
+   }
+  },
+  {
+   "order": 542,
+   "id": "vaa",
+   "name": "Valladolid",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "ESP"
+   ],
+   "iso2": "ES",
+   "people": 484195,
+   "origin": [
+    -4.7179,
+    41.6457
+   ],
+   "tz": "Europe/Madrid",
+   "utc_offset": 1,
+   "extracts": [
+    "europe/spain/castilla-y-leon"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ESP": [
+     "ES418"
+    ]
+   },
+   "bbox": [
+    -5.521,
+    41.097,
+    -3.981,
+    42.31
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Valladolid"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-003650",
+    "steps": {
+     "build": 36.5,
+     "places": 1.4,
+     "routes": 20.8,
+     "merge": 0.6,
+     "nocar": 1.1,
+     "everyday": 0.8
+    },
+    "built": "2026-10-20T03:46:25",
+    "reason": "joint group pot (pot mad bar tou val sev mal alc cat mur cad grn cod alr jae hue zar biz gip ara aco poe our lug trr gir lle tod cid alb gul nav baj cax vaa len bug sla lar ceu): after the joint solve pot: ; mad: ; bar: ; tou: ; val: ; sev: ; mal: ; alc: ; cat: ; mur: ; cad: ; grn: ; cod: ; alr: ; jae: ; hue: ; zar: ; biz: ; gip: ; ara: ; aco: ; poe: ; our: ; lug: ; trr: ; gir: ; lle: ; tod: ; cid: ; alb: ; gul: ; nav: ; baj: ; cax: ; vaa: ; len: ; bug: ; sla: ; lar: ; ceu: ",
+    "parked": "2026-10-20T04:42:45",
+    "gate": {
+     "warn": [
+      "road_snap_median_m 391.8",
+      "fleet_range 1"
+     ]
+    },
+    "shipped": "2026-10-20T05:07:38"
+   }
+  },
+  {
+   "order": 543,
+   "id": "hue",
+   "name": "Huelva",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "ESP"
+   ],
+   "iso2": "ES",
+   "people": 482193,
+   "origin": [
+    -6.9381,
+    37.2565
+   ],
+   "tz": "Europe/Madrid",
+   "utc_offset": 1,
+   "extracts": [
+    "europe/spain/andalucia"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ESP": [
+     "ES615"
+    ]
+   },
+   "bbox": [
+    -7.52,
+    36.797,
+    -6.125,
+    38.208
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Huelva"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-003650",
+    "steps": {
+     "build": 64.5,
+     "places": 1.0,
+     "routes": 15.2,
+     "merge": 0.5,
+     "nocar": 0.9,
+     "everyday": 0.7
+    },
+    "built": "2026-10-20T01:02:04",
+    "reason": "joint group pot (pot mad bar tou val sev mal alc cat mur cad grn cod alr jae hue zar biz gip ara aco poe our lug trr gir lle tod cid alb gul nav baj cax vaa len bug sla lar ceu): after the joint solve pot: ; mad: ; bar: ; tou: ; val: ; sev: ; mal: ; alc: ; cat: ; mur: ; cad: ; grn: ; cod: ; alr: ; jae: ; hue: ; zar: ; biz: ; gip: ; ara: ; aco: ; poe: ; our: ; lug: ; trr: ; gir: ; lle: ; tod: ; cid: ; alb: ; gul: ; nav: ; baj: ; cax: ; vaa: ; len: ; bug: ; sla: ; lar: ; ceu: ",
+    "parked": "2026-10-20T04:42:45",
+    "gate": {
+     "warn": [
+      "road_snap_median_m 437.7",
+      "fleet_range 1"
+     ]
+    },
+    "shipped": "2026-10-20T05:07:37"
+   }
+  },
+  {
+   "order": 544,
+   "id": "lle",
+   "name": "Lleida",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "ESP"
+   ],
+   "iso2": "ES",
+   "people": 457521,
+   "origin": [
+    0.6157,
+    41.6186
+   ],
+   "tz": "Europe/Madrid",
+   "utc_offset": 1,
+   "extracts": [
+    "europe/spain/cataluna"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ESP": [
+     "ES513"
+    ]
+   },
+   "bbox": [
+    0.325,
+    41.277,
+    1.852,
+    42.86
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Lleida"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-003650",
+    "steps": {
+     "build": 95.0,
+     "places": 2.1,
+     "routes": 28.6,
+     "merge": 0.6,
+     "nocar": 1.1,
+     "everyday": 0.7
+    },
+    "built": "2026-10-20T02:48:20",
+    "reason": "joint group pot (pot mad bar tou val sev mal alc cat mur cad grn cod alr jae hue zar biz gip ara aco poe our lug trr gir lle tod cid alb gul nav baj cax vaa len bug sla lar ceu): after the joint solve pot: ; mad: ; bar: ; tou: ; val: ; sev: ; mal: ; alc: ; cat: ; mur: ; cad: ; grn: ; cod: ; alr: ; jae: ; hue: ; zar: ; biz: ; gip: ; ara: ; aco: ; poe: ; our: ; lug: ; trr: ; gir: ; lle: ; tod: ; cid: ; alb: ; gul: ; nav: ; baj: ; cax: ; vaa: ; len: ; bug: ; sla: ; lar: ; ceu: ",
+    "parked": "2026-10-20T04:42:45",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-20T05:07:38"
+   }
+  },
+  {
+   "order": 545,
+   "id": "alb",
+   "name": "Albacete",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "ESP"
+   ],
+   "iso2": "ES",
+   "people": 416796,
+   "origin": [
+    -1.8611,
+    38.9927
+   ],
+   "tz": "Europe/Madrid",
+   "utc_offset": 1,
+   "extracts": [
+    "europe/spain/castilla-la-mancha"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ESP": [
+     "ES421"
+    ]
+   },
+   "bbox": [
+    -2.879,
+    38.026,
+    -0.921,
+    39.419
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Albacete"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-003650",
+    "steps": {
+     "build": 41.8,
+     "places": 1.5,
+     "routes": 22.8,
+     "merge": 0.6,
+     "nocar": 1.0,
+     "everyday": 0.7
+    },
+    "built": "2026-10-20T03:03:30",
+    "reason": "joint group pot (pot mad bar tou val sev mal alc cat mur cad grn cod alr jae hue zar biz gip ara aco poe our lug trr gir lle tod cid alb gul nav baj cax vaa len bug sla lar ceu): after the joint solve pot: ; mad: ; bar: ; tou: ; val: ; sev: ; mal: ; alc: ; cat: ; mur: ; cad: ; grn: ; cod: ; alr: ; jae: ; hue: ; zar: ; biz: ; gip: ; ara: ; aco: ; poe: ; our: ; lug: ; trr: ; gir: ; lle: ; tod: ; cid: ; alb: ; gul: ; nav: ; baj: ; cax: ; vaa: ; len: ; bug: ; sla: ; lar: ; ceu: ",
+    "parked": "2026-10-20T04:42:45",
+    "gate": {
+     "warn": [
+      "road_snap_median_m 330.4",
+      "fleet_range 1"
+     ]
+    },
+    "shipped": "2026-10-20T05:07:38"
+   }
+  },
+  {
+   "order": 546,
+   "id": "len",
+   "name": "León",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "ESP"
+   ],
+   "iso2": "ES",
+   "people": 414731,
+   "origin": [
+    -5.5713,
+    42.5964
+   ],
+   "tz": "Europe/Madrid",
+   "utc_offset": 1,
+   "extracts": [
+    "europe/spain/castilla-y-leon"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ESP": [
+     "ES413"
+    ]
+   },
+   "bbox": [
+    -7.077,
+    42.031,
+    -4.738,
+    43.237
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "León"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-003650",
+    "steps": {
+     "build": 37.5,
+     "places": 1.4,
+     "routes": 24.3,
+     "merge": 0.6,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-10-20T03:46:30",
+    "reason": "joint group pot (pot mad bar tou val sev mal alc cat mur cad grn cod alr jae hue zar biz gip ara aco poe our lug trr gir lle tod cid alb gul nav baj cax vaa len bug sla lar ceu): after the joint solve pot: ; mad: ; bar: ; tou: ; val: ; sev: ; mal: ; alc: ; cat: ; mur: ; cad: ; grn: ; cod: ; alr: ; jae: ; hue: ; zar: ; biz: ; gip: ; ara: ; aco: ; poe: ; our: ; lug: ; trr: ; gir: ; lle: ; tod: ; cid: ; alb: ; gul: ; nav: ; baj: ; cax: ; vaa: ; len: ; bug: ; sla: ; lar: ; ceu: ",
+    "parked": "2026-10-20T04:42:46",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-20T05:07:38"
+   }
+  },
+  {
+   "order": 547,
+   "id": "bug",
+   "name": "Burgos",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "ESP"
+   ],
+   "iso2": "ES",
+   "people": 348740,
+   "origin": [
+    -3.7027,
+    42.3424
+   ],
+   "tz": "Europe/Madrid",
+   "utc_offset": 1,
+   "extracts": [
+    "europe/spain/castilla-y-leon"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ESP": [
+     "ES412"
+    ]
+   },
+   "bbox": [
+    -4.334,
+    41.454,
+    -2.52,
+    43.196
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Burgos"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-003650",
+    "steps": {
+     "build": 55.3,
+     "places": 2.0,
+     "routes": 23.6,
+     "merge": 0.6,
+     "nocar": 1.0,
+     "everyday": 0.7
+    },
+    "built": "2026-10-20T03:46:47",
+    "reason": "joint group pot (pot mad bar tou val sev mal alc cat mur cad grn cod alr jae hue zar biz gip ara aco poe our lug trr gir lle tod cid alb gul nav baj cax vaa len bug sla lar ceu): after the joint solve pot: ; mad: ; bar: ; tou: ; val: ; sev: ; mal: ; alc: ; cat: ; mur: ; cad: ; grn: ; cod: ; alr: ; jae: ; hue: ; zar: ; biz: ; gip: ; ara: ; aco: ; poe: ; our: ; lug: ; trr: ; gir: ; lle: ; tod: ; cid: ; alb: ; gul: ; nav: ; baj: ; cax: ; vaa: ; len: ; bug: ; sla: ; lar: ; ceu: ",
+    "parked": "2026-10-20T04:42:46",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-20T05:07:38"
+   }
+  },
+  {
+   "order": 548,
+   "id": "ara",
+   "name": "Araba",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "ESP"
+   ],
+   "iso2": "ES",
+   "people": 341033,
+   "origin": [
+    -2.6687,
+    42.8509
+   ],
+   "tz": "Europe/Madrid",
+   "utc_offset": 1,
+   "extracts": [
+    "europe/spain/pais-vasco"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ESP": [
+     "ES211"
+    ]
+   },
+   "bbox": [
+    -3.284,
+    42.481,
+    -2.236,
+    43.203
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Araba/Álava"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-003650",
+    "steps": {
+     "build": 39.2,
+     "places": 1.5,
+     "routes": 8.8,
+     "merge": 0.6,
+     "nocar": 1.1,
+     "everyday": 0.8
+    },
+    "built": "2026-10-20T01:49:09",
+    "reason": "joint group pot (pot mad bar tou val sev mal alc cat mur cad grn cod alr jae hue zar biz gip ara aco poe our lug trr gir lle tod cid alb gul nav baj cax vaa len bug sla lar ceu): after the joint solve pot: ; mad: ; bar: ; tou: ; val: ; sev: ; mal: ; alc: ; cat: ; mur: ; cad: ; grn: ; cod: ; alr: ; jae: ; hue: ; zar: ; biz: ; gip: ; ara: ; aco: ; poe: ; our: ; lug: ; trr: ; gir: ; lle: ; tod: ; cid: ; alb: ; gul: ; nav: ; baj: ; cax: ; vaa: ; len: ; bug: ; sla: ; lar: ; ceu: ",
+    "parked": "2026-10-20T04:42:45",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.11726512561643619"
+     ]
+    },
+    "shipped": "2026-10-20T05:07:38"
+   }
+  },
+  {
+   "order": 549,
+   "id": "lar",
+   "name": "La Rioja",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "ESP"
+   ],
+   "iso2": "ES",
+   "people": 334233,
+   "origin": [
+    -2.4533,
+    42.4603
+   ],
+   "tz": "Europe/Madrid",
+   "utc_offset": 1,
+   "extracts": [
+    "europe/spain/la-rioja"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ESP": [
+     "ES230"
+    ]
+   },
+   "bbox": [
+    -3.127,
+    41.92,
+    -1.687,
+    42.639
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "La Rioja"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-003650",
+    "steps": {
+     "build": 28.4,
+     "places": 1.0,
+     "routes": 6.2,
+     "merge": 0.5,
+     "nocar": 0.8,
+     "everyday": 0.6
+    },
+    "built": "2026-10-20T04:18:03",
+    "reason": "joint group pot (pot mad bar tou val sev mal alc cat mur cad grn cod alr jae hue zar biz gip ara aco poe our lug trr gir lle tod cid alb gul nav baj cax vaa len bug sla lar ceu): after the joint solve pot: ; mad: ; bar: ; tou: ; val: ; sev: ; mal: ; alc: ; cat: ; mur: ; cad: ; grn: ; cod: ; alr: ; jae: ; hue: ; zar: ; biz: ; gip: ; ara: ; aco: ; poe: ; our: ; lug: ; trr: ; gir: ; lle: ; tod: ; cid: ; alb: ; gul: ; nav: ; baj: ; cax: ; vaa: ; len: ; bug: ; sla: ; lar: ; ceu: ",
+    "parked": "2026-10-20T04:42:46",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10003323842651354"
+     ]
+    },
+    "shipped": "2026-10-20T05:07:38"
+   }
+  },
+  {
+   "order": 550,
+   "id": "sla",
+   "name": "Salamanca",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "ESP"
+   ],
+   "iso2": "ES",
+   "people": 301834,
+   "origin": [
+    -5.6616,
+    40.9697
+   ],
+   "tz": "Europe/Madrid",
+   "utc_offset": 1,
+   "extracts": [
+    "europe/spain/castilla-y-leon"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ESP": [
+     "ES415"
+    ]
+   },
+   "bbox": [
+    -6.93,
+    40.241,
+    -5.092,
+    41.294
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Salamanca"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-003650",
+    "steps": {
+     "build": 41.2,
+     "places": 1.3,
+     "routes": 19.5,
+     "merge": 0.6,
+     "nocar": 0.9,
+     "everyday": 0.6
+    },
+    "built": "2026-10-20T03:47:29",
+    "reason": "joint group pot (pot mad bar tou val sev mal alc cat mur cad grn cod alr jae hue zar biz gip ara aco poe our lug trr gir lle tod cid alb gul nav baj cax vaa len bug sla lar ceu): after the joint solve pot: ; mad: ; bar: ; tou: ; val: ; sev: ; mal: ; alc: ; cat: ; mur: ; cad: ; grn: ; cod: ; alr: ; jae: ; hue: ; zar: ; biz: ; gip: ; ara: ; aco: ; poe: ; our: ; lug: ; trr: ; gir: ; lle: ; tod: ; cid: ; alb: ; gul: ; nav: ; baj: ; cax: ; vaa: ; len: ; bug: ; sla: ; lar: ; ceu: ",
+    "parked": "2026-10-20T04:42:46",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.15311835962539858",
+      "road_snap_median_m 357.8",
+      "fleet_range 1"
+     ]
+    },
+    "shipped": "2026-10-20T05:07:38"
+   }
+  },
+  {
+   "order": 551,
+   "id": "our",
+   "name": "Ourense",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "ESP"
+   ],
+   "iso2": "ES",
+   "people": 277471,
+   "origin": [
+    -7.8691,
+    42.3424
+   ],
+   "tz": "Europe/Madrid",
+   "utc_offset": 1,
+   "extracts": [
+    "europe/spain/galicia"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ESP": [
+     "ES113"
+    ]
+   },
+   "bbox": [
+    -8.352,
+    41.809,
+    -6.737,
+    42.579
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Ourense"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-003650",
+    "steps": {
+     "build": 44.0,
+     "places": 1.6,
+     "routes": 18.4,
+     "merge": 0.6,
+     "nocar": 1.1,
+     "everyday": 0.7
+    },
+    "built": "2026-10-20T02:24:10",
+    "reason": "joint group pot (pot mad bar tou val sev mal alc cat mur cad grn cod alr jae hue zar biz gip ara aco poe our lug trr gir lle tod cid alb gul nav baj cax vaa len bug sla lar ceu): after the joint solve pot: ; mad: ; bar: ; tou: ; val: ; sev: ; mal: ; alc: ; cat: ; mur: ; cad: ; grn: ; cod: ; alr: ; jae: ; hue: ; zar: ; biz: ; gip: ; ara: ; aco: ; poe: ; our: ; lug: ; trr: ; gir: ; lle: ; tod: ; cid: ; alb: ; gul: ; nav: ; baj: ; cax: ; vaa: ; len: ; bug: ; sla: ; lar: ; ceu: ",
+    "parked": "2026-10-20T04:42:45",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-10-20T05:07:38"
+   }
+  },
+  {
+   "order": 552,
+   "id": "lug",
+   "name": "Lugo",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "ESP"
+   ],
+   "iso2": "ES",
+   "people": 262983,
+   "origin": [
+    -7.5589,
+    43.0147
+   ],
+   "tz": "Europe/Madrid",
+   "utc_offset": 1,
+   "extracts": [
+    "europe/spain/galicia"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ESP": [
+     "ES112"
+    ]
+   },
+   "bbox": [
+    -8.0,
+    42.329,
+    -6.824,
+    43.746
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Lugo"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-003650",
+    "steps": {
+     "build": 62.0,
+     "places": 2.2,
+     "routes": 31.6,
+     "merge": 0.7,
+     "nocar": 1.1,
+     "everyday": 0.7
+    },
+    "built": "2026-10-20T02:25:49",
+    "reason": "joint group pot (pot mad bar tou val sev mal alc cat mur cad grn cod alr jae hue zar biz gip ara aco poe our lug trr gir lle tod cid alb gul nav baj cax vaa len bug sla lar ceu): after the joint solve pot: ; mad: ; bar: ; tou: ; val: ; sev: ; mal: ; alc: ; cat: ; mur: ; cad: ; grn: ; cod: ; alr: ; jae: ; hue: ; zar: ; biz: ; gip: ; ara: ; aco: ; poe: ; our: ; lug: ; trr: ; gir: ; lle: ; tod: ; cid: ; alb: ; gul: ; nav: ; baj: ; cax: ; vaa: ; len: ; bug: ; sla: ; lar: ; ceu: ",
+    "parked": "2026-10-20T04:42:45",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.11711259977349706"
+     ]
+    },
+    "shipped": "2026-10-20T05:07:38"
+   }
+  },
+  {
+   "order": 553,
+   "id": "gul",
+   "name": "Guadalajara",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "ESP"
+   ],
+   "iso2": "ES",
+   "people": 257502,
+   "origin": [
+    -3.1681,
+    40.6282
+   ],
+   "tz": "Europe/Madrid",
+   "utc_offset": 1,
+   "extracts": [
+    "europe/spain/castilla-la-mancha"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ESP": [
+     "ES424"
+    ]
+   },
+   "bbox": [
+    -3.54,
+    40.158,
+    -1.539,
+    41.325
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Guadalajara"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-003650",
+    "steps": {
+     "build": 28.5,
+     "places": 1.0,
+     "routes": 12.1,
+     "merge": 0.5,
+     "nocar": 0.9,
+     "everyday": 0.6
+    },
+    "built": "2026-10-20T03:04:10",
+    "reason": "joint group pot (pot mad bar tou val sev mal alc cat mur cad grn cod alr jae hue zar biz gip ara aco poe our lug trr gir lle tod cid alb gul nav baj cax vaa len bug sla lar ceu): after the joint solve pot: ; mad: ; bar: ; tou: ; val: ; sev: ; mal: ; alc: ; cat: ; mur: ; cad: ; grn: ; cod: ; alr: ; jae: ; hue: ; zar: ; biz: ; gip: ; ara: ; aco: ; poe: ; our: ; lug: ; trr: ; gir: ; lle: ; tod: ; cid: ; alb: ; gul: ; nav: ; baj: ; cax: ; vaa: ; len: ; bug: ; sla: ; lar: ; ceu: ",
+    "parked": "2026-10-20T04:42:45",
+    "gate": {
+     "warn": [
+      "road_snap_median_m 313.8"
+     ]
+    },
+    "shipped": "2026-10-20T05:07:38"
+   }
+  },
+  {
+   "order": 554,
+   "id": "eiv",
+   "name": "Eivissa y Formentera",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "ESP"
+   ],
+   "iso2": "ES",
+   "people": 142168,
+   "origin": [
+    1.4284,
+    38.9126
+   ],
+   "tz": "Europe/Madrid",
+   "utc_offset": 1,
+   "extracts": [
+    "europe/spain/islas-baleares"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ESP": [
+     "ES531"
+    ]
+   },
+   "bbox": [
+    1.186,
+    38.644,
+    1.655,
+    39.114
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Eivissa y Formentera"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-003650",
+    "steps": {
+     "build": 36.3,
+     "places": 1.1,
+     "routes": 1.9,
+     "merge": 0.5,
+     "nocar": 0.8,
+     "everyday": 0.7
+    },
+    "built": "2026-10-20T01:28:26",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.16249448153243906",
+      "fleet_range 1"
+     ]
+    },
+    "shipped": "2026-10-20T04:43:51"
+   }
+  },
+  {
+   "order": 555,
+   "id": "laz",
+   "name": "Lanzarote",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "ESP"
+   ],
+   "iso2": "ES",
+   "people": 126465,
+   "origin": [
+    -13.5534,
+    28.9653
+   ],
+   "tz": "Atlantic/Canary",
+   "utc_offset": 0,
+   "extracts": [
+    "africa/canary-islands"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ESP": [
+     "ES708"
+    ]
+   },
+   "bbox": [
+    -13.881,
+    28.843,
+    -13.424,
+    29.417
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Lanzarote"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-003650",
+    "steps": {
+     "build": 40.0,
+     "places": 1.0,
+     "routes": 2.3,
+     "merge": 0.5,
+     "nocar": 0.9,
+     "everyday": 0.7
+    },
+    "built": "2026-10-20T02:11:05",
+    "reason": "joint group gra (gra laz): after the joint solve gra: other_packs_unchanged; laz: other_packs_unchanged",
+    "parked": "2026-10-20T05:06:01",
+    "gate": {
+     "warn": [
+      "fleet_range 1"
+     ]
+    },
+    "shipped": "2026-10-20T05:10:00"
+   }
+  },
+  {
+   "order": 556,
+   "id": "mea",
+   "name": "Melilla",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "ESP"
+   ],
+   "iso2": "ES",
+   "people": 77061,
+   "origin": [
+    -2.9481,
+    35.2905
+   ],
+   "tz": "Africa/Ceuta",
+   "utc_offset": 1,
+   "extracts": [
+    "europe/spain/melilla"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ESP": [
+     "ES640"
+    ]
+   },
+   "bbox": [
+    -2.969,
+    35.267,
+    -2.93,
+    35.32
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Melilla"
+    ]
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "a town of under 20 km2 has only a handful of 2 km zones, so one holds a third of its jobs (T-723)",
+    "mean_commute_km": "a town of under 20 km2: its commutes are short because the town is (T-723)"
+   },
+   "run": {
+    "run_batch": "20261020-003650",
+    "steps": {
+     "build": 25.5,
+     "places": 0.8,
+     "routes": 1.0,
+     "merge": 0.5,
+     "nocar": 0.8,
+     "everyday": 0.6
+    },
+    "built": "2026-10-20T04:20:57",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.3828280246050904",
+      "mean_commute_km 1.6347560921532536",
+      "fleet_range 3"
+     ]
+    },
+    "shipped": "2026-10-20T04:43:51"
+   }
+  },
+  {
+   "order": 557,
+   "id": "ceu",
+   "name": "Ceuta",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "europe",
+   "countries": [
+    "ESP"
+   ],
+   "iso2": "ES",
+   "people": 43312,
+   "origin": [
+    -5.3491,
+    35.8766
+   ],
+   "tz": "Africa/Ceuta",
+   "utc_offset": 1,
+   "extracts": [
+    "europe/spain/ceuta"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ESP": [
+     "ES630"
+    ]
+   },
+   "bbox": [
+    -5.382,
+    35.871,
+    -5.28,
+    35.917
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Ceuta"
+    ]
+   },
+   "run": {
+    "run_batch": "20261020-002803",
+    "steps": {
+     "build": 23.2,
+     "places": 0.8,
+     "routes": 1.1,
+     "merge": 0.4,
+     "nocar": 0.8,
+     "everyday": 0.7
+    },
+    "built": "2026-10-20T00:28:39",
+    "reason": "joint group pot (pot mad bar tou val sev mal alc cat mur cad grn cod alr jae hue zar biz gip ara aco poe our lug trr gir lle tod cid alb gul nav baj cax vaa len bug sla lar ceu): after the joint solve pot: ; mad: ; bar: ; tou: ; val: ; sev: ; mal: ; alc: ; cat: ; mur: ; cad: ; grn: ; cod: ; alr: ; jae: ; hue: ; zar: ; biz: ; gip: ; ara: ; aco: ; poe: ; our: ; lug: ; trr: ; gir: ; lle: ; tod: ; cid: ; alb: ; gul: ; nav: ; baj: ; cax: ; vaa: ; len: ; bug: ; sla: ; lar: ; ceu: ",
+    "parked": "2026-10-20T04:42:46",
+    "gate": {
+     "warn": [
+      "pop_vs_plan 1.318701026487117",
+      "pop_vs_ghsl 1.3187158931348058",
+      "top_zone_jobs_share 0.33846523381903193",
+      "mean_commute_km 1.8689227695933994",
+      "fleet_range 3"
+     ]
+    },
+    "shipped": "2026-10-20T05:07:38"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "a town of under 20 km2 has only a handful of 2 km zones, so one holds a third of its jobs (T-723)",
+    "mean_commute_km": "a town of under 20 km2: its commutes are short because the town is (T-723)"
+   }
   }
  ],
  "dropped": [
@@ -31158,5 +33595,77 @@
    },
    "reason": "0.76M people outside existing packs"
   }
- ]
+ ],
+ "zones": {
+  "ESP": {
+   "task": "T-723",
+   "built": "2026-10-20",
+   "rule": "free units at or over 20 people a km2; under 100,000 joins a zone of its region (longest border, or an island the most populous within 150 km)",
+   "dead": [
+    {
+     "unit": "ES417",
+     "name": "Soria",
+     "people": 73184,
+     "per_km2": 7.1
+    },
+    {
+     "unit": "ES419",
+     "name": "Zamora",
+     "people": 146786,
+     "per_km2": 13.9
+    },
+    {
+     "unit": "ES241",
+     "name": "Huesca",
+     "people": 194944,
+     "per_km2": 12.4
+    },
+    {
+     "unit": "ES242",
+     "name": "Teruel",
+     "people": 122065,
+     "per_km2": 8.2
+    },
+    {
+     "unit": "ES411",
+     "name": "Ávila",
+     "people": 135162,
+     "per_km2": 16.8
+    },
+    {
+     "unit": "ES414",
+     "name": "Palencia",
+     "people": 131395,
+     "per_km2": 16.3
+    },
+    {
+     "unit": "ES416",
+     "name": "Segovia",
+     "people": 130877,
+     "per_km2": 18.9
+    },
+    {
+     "unit": "ES423",
+     "name": "Cuenca",
+     "people": 197431,
+     "per_km2": 11.5
+    },
+    {
+     "unit": "ES432",
+     "name": "Cáceres",
+     "people": 325974,
+     "per_km2": 16.4
+    }
+   ],
+   "merges": [
+    "El Hierro (10,002) joins Tenerife (island, 111 km)",
+    "La Gomera (18,314) joins Tenerife (island, 27 km)",
+    "Ceuta (43,312) stays its own zone: no zone of its region within 150.0 km",
+    "La Palma (73,928) joins Tenerife (island, 55 km)",
+    "Melilla (77,061) stays its own zone: no zone of its region within 150.0 km",
+    "Fuerteventura (92,529) joins Gran Canaria (island, 82 km)",
+    "Menorca (92,555) joins Mallorca (island, 38 km)"
+   ]
+  }
+ }
 }

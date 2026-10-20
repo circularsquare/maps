@@ -29,6 +29,10 @@ up to 12 on an overnight run Anita approves; one city at a time per 3 cores); `-
 for the browser check (default 6360). Set `TW_SIM_DIR` and `TW_CARGO_TARGET_DIR` when the tree's
 `sim/` may be mid-edit (section 4). Run it in the background and wait once for the process.
 
+- **Zone rows** (whole-country cover, T-723, docs/zones.md 2): `world_plan.py zones --countries ES`
+  (run through `world_run.py step world_plan zones ...`, which puts the pipeline on the path) writes
+  a country's zone rows into the plan; then `run --countries ES --limit 100`. A zone row builds as
+  a metro row does, with `kind` "zone" and the zone curve.
 - **Rows** go in plan order, a region at a time: rows sharing a Geofabrik extract, chained. The
   region's extracts are downloaded (four tries) unless their caches or `.osm.pbf` are on disk, and
   read once into the caches (`osm_features`, inland water, roads, admin relations).
@@ -43,8 +47,10 @@ for the browser check (default 6360). Set `TW_SIM_DIR` and `TW_CARGO_TARGET_DIR`
   with its market pack, its market place left unused (place ids are positions), and its failing
   checks are its reason. The browser check serves the main tree's app/, so whoever runs a batch
   says who may rebuild app/ (its WASM) while it runs.
-- **Joint gravity**: a pack with no country in its header (tor, lon, par, sao) takes the registry's
-  `marketRow.country`. Each group a shipped pack joined is solved once (members back to res-9,
+- **Joint gravity**, once for the batch after its last region (T-723; a run stopped before it
+  leaves the gated rows registered and `built`, for the next run to gate again): a pack with no
+  country in its header (tor, lon, par, sao) takes the registry's
+  `marketRow.country`. Each group a gated pack joined is solved once (members back to res-9,
   `intercity.py --group auto <new> --no-market`, merged again) and gated again without the browser
   or rates; a FAIL restores every member from the backup taken before and parks the group's new
   packs. Then `register.py <shipped and changed> --market --trips` (or `market_zones.py --rows`

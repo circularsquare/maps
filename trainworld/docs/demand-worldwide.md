@@ -89,7 +89,13 @@ building Toronto from tier 0 against the real pack (notes/T-287.md has every tab
   nearest by population and vehicles, by income group, a world median or a length scaled to the
   city's size (T-314). Why it may not carry over: no fitted country has the US's flat d^-0.8
   curve, and the US packs lose 4-14 points under any borrowed curve, so a sprawling car city
-  would be served worst. Where a distance distribution exists (India's census bands, a travel
+  would be served worst. A **non-city zone** with no flow table (a countryside zone of a covered
+  country, T-723; Anita, T-719 decision 5) borrows by the same rule over the 38 fitted Japanese
+  prefecture zones only (`"curve": "borrowed_zone"`): today d^-1.4 exp(-d/16 km), 0.3 points over
+  each zone's own on average, where the metros' curve would send rural commuters far too far
+  (Japan's zones keep 52-91% of commuters in their own municipality). Why it may not carry over:
+  every fitted zone is Japanese, so a country with longer rural commutes (Spain's interior,
+  dispersed farm work) may sit on too short a curve. Where a distance distribution exists (India's census bands, a travel
   survey), fit both parameters; reported (road) distances are divided by 1.3, which matches the
   routed drive factor of Mumbai's commutes at the band edges (1.30-1.45; the near zone pairs'
   unweighted median of 1.62 is not the commuters' factor). A published median or mean alone fits

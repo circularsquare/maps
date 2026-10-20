@@ -41,7 +41,8 @@ census or registers then upgrade single inputs by replacing one function. What e
   `osm_water.source([<Geofabrik extracts>])` (T-041: OSM coastline sea plus the extracts' inland
   water).
 - Gravity curve: the config's "decay_pow"/"decay_km" if given; "curve": "borrowed" for a city with
-  no flows or distance table, borrowed_curve below (T-314); else the length fitted so the model's median commute (straight line between 2 km zones) matches the
+  no flows or distance table, borrowed_curve below (T-314), "borrowed_zone" for a non-city zone
+  the same rule over the fitted zones (T-723); else the length fitted so the model's median commute (straight line between 2 km zones) matches the
   config's published figure ("curve": {"median_km" or "mean_km", "pow"}), fit_curve below; or
   both parameters fitted to a census table of commuters by distance band ("curve": {"bands",
   "road_factor"}), fit_curve_bands.
@@ -599,23 +600,31 @@ def fit_curve(x_m, y_m, home, work, target, pw=DEFAULT_CURVE_POW):
 FITTED_CURVES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fitted_curves.json")
 
 
-def borrowed_curve(path=FITTED_CURVES):
+def borrowed_curve(path=FITTED_CURVES, zones=False):
     """The curve for a city with no flows or distance table (config "curve": "borrowed"): of the
     fitted cities' curves, the one that misplaces the fewest commuters beyond each city's own,
     averaged by country (T-314: it won a leave-one-country-out test against nearest by population
     and vehicles, by income group, a world median and a length scaled to the city's size).
+    `zones` ("curve": "borrowed_zone", T-723): the same rule over the fitted non-city zones only
+    (Japan's prefecture zones, pipeline/japan_zones.json), for countryside zones.
     Returns (power, length km)."""
     with open(path) as f:
         t = json.load(f)
+    cities = t["cities"]
+    if zones:
+        with open(os.path.join(os.path.dirname(path), "japan_zones.json"), encoding="utf-8") as f:
+            zids = set(json.load(f)["zones"])
+        cities = {k: c for k, c in cities.items() if k in zids}
     cands = [tuple(c) for c in t["candidates"]]
     excess = {}
-    for c in t["cities"].values():
+    for c in cities.values():
         own = c["misplaced"][cands.index((c["pow"], c["km"]))]
         excess.setdefault(c["country"], []).append(np.asarray(c["misplaced"]) - own)
     score = np.mean([np.mean(v, axis=0) for v in excess.values()], axis=0)
     pw, km = cands[int(np.argmin(score))]
-    print(f"curve borrowed (T-314): d^-{pw:g} exp(-d/{km:g} km), {100 * score.min():.1f} points over each fitted city's own "
-          f"on average by country ({len(t['cities'])} cities, {len(excess)} countries)", flush=True)
+    print(f"curve borrowed{' from fitted zones (T-723)' if zones else ''} (T-314): d^-{pw:g} exp(-d/{km:g} km), "
+          f"{100 * score.min():.1f} points over each fitted {'zone' if zones else 'city'}'s own "
+          f"on average by country ({len(cities)} {'zones' if zones else 'cities'}, {len(excess)} countries)", flush=True)
     return pw, km
 
 
@@ -882,8 +891,8 @@ def main(city):
     y = b.R_EARTH * np.radians(sig["lat"][keep] - lat0)
     print(f"tier 0: {len(cells):,} cells, pop {P:,.0f}, jobs {J:,.0f} ({jpr:.3f} a resident, World Bank {wb_year}), "
           f"commuters {work_c.sum():,.0f} (work from home {wfh:.1%})", flush=True)
-    if "decay_km" not in cfg and cfg["curve"] == "borrowed":
-        cfg["decay_pow"], cfg["decay_km"] = borrowed_curve()
+    if "decay_km" not in cfg and cfg["curve"] in ("borrowed", "borrowed_zone"):
+        cfg["decay_pow"], cfg["decay_km"] = borrowed_curve(zones=cfg["curve"] == "borrowed_zone")
     elif "decay_km" not in cfg and "bands" in cfg["curve"]:
         cfg["decay_pow"], cfg["decay_km"] = fit_curve_bands(x, y, home_c[keep], work_c[keep], cfg["curve"])
     elif "decay_km" not in cfg:

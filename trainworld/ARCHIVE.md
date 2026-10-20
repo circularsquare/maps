@@ -1,5 +1,7 @@
 ﻿# Archive
 
+- T-723 [P2] Whole-country cover, Spain as the pilot. Done 2026-10-20: zone rows in the world plan, zone curve d^-1.4 exp(-d/16 km), joint solve once a batch; 40 Spanish zones shipped (9 provinces dead space), every-pack-opens and smoke pass. notes/T-723.md.
+
 - T-700 [P2] Shanghai's sharp walking divide. Done 2026-10-20: walk factors per bank (`walk_part`); all 109 older packs redone through res 9 (undo, walk stage, merge), 125 s; bank check PASS everywhere, gate figures unchanged, merged cells +0-1%. notes/T-700.md.
 
 - T-768 [P2] Pack JSON in the locale code page. Done 2026-10-19: read as UTF-8 in load_pack, merge_cells and tier0; the gate's header hash undoes the old re-encoding, so a joint solve's one-time text change passes. Mannheim shipped. notes/T-613.md.

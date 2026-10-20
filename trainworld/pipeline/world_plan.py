@@ -6,6 +6,9 @@ and which whole admin units each one holds.
     python pipeline/world_plan.py row <pack> <out.json>
                                             one existing pack's metro planned as if the pack did not
                                             exist, as a one-row plan file (T-537's test build)
+    python pipeline/world_plan.py zones --countries ES[,PT]
+                                            whole-country cover (T-723): the country's zone rows,
+                                            every unit no row or pack holds (docs/zones.md 2)
 
 The rules are docs/adding-a-city.md "Which cities, and where their edges go". Downloads land in
 data/raw/worldplan/ when missing; extents as GeoJSON in data/work/worldplan/. Everything is computed
@@ -61,6 +64,10 @@ SAT_GAP = 3000           # m: a smaller urban centre this close to a metro's cen
 MEDIAN_UNIT = 20_000     # the finest level where the median person's unit has this many people
 COUNTRY_SHARE = 0.02     # a country lends units to a metro holding this share of its area's people
 TESTS = ["tor", "lon", "par", "ber", "seo", "mum", "lag", "sao"]
+# whole-country zones (T-723, docs/zones.md 2)
+ZONE_MIN_POP = 100_000   # a zone under this joins a neighbouring zone of its region
+ZONE_MIN_DENSITY = 20.0  # people a km2: an emptier unit stays dead space
+ISLAND_KM = 150.0        # an island under ZONE_MIN_POP joins the most populous zone of its region this near
 
 # What a city in each country can have (docs/data-register.md "Countries and their procedure");
 # every other country is archetype D. England's module covers England's ITL3 units only.
@@ -353,7 +360,7 @@ def metro_countries(m, ne, netree):
 # ---------------------------------------------------------------- admin units
 
 class Unit:
-    __slots__ = ("id", "name", "iso", "geom", "parents", "pop", "px", "share", "pshare")
+    __slots__ = ("id", "name", "iso", "geom", "parents", "pop", "px", "share", "pshare", "free")
 
     def __init__(self, uid, name, iso, geom, parents):
         self.id, self.name, self.iso, self.geom, self.parents = uid, name, iso, geom, parents
@@ -934,14 +941,23 @@ def finish(st, rows, taken=None, prev=()):
 
 def write(st, out, feats, dropped):
     built = [{"id": q["id"], "name": q["name"], "status": "built"} for q in st["packs"].values()]
+    old = json.loads(OUT.read_text(encoding="utf-8")) if OUT.exists() else {}
+    zone_rows = [r for r in old.get("metros", []) if r.get("kind") == "zone"]  # plan_zones' rows stay as they are
+    built = [b for b in built if b["id"] not in {r["id"] for r in zone_rows}]
     doc = {"note": "T-536, pipeline stage 4: written by pipeline/world_plan.py; the rules are in docs/adding-a-city.md",
            "built": str(datetime.now().date()),
            "unit_sources": st["sources"],
-           "metros": out + built,
+           "metros": out + zone_rows + built,
            "dropped": [{"name": m["name"], "source": m["source"], "reason": why} for m, why in dropped]}
+    if "zones" in old:
+        doc["zones"] = old["zones"]
     OUT.write_text(json.dumps(doc, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
     WORK.mkdir(parents=True, exist_ok=True)
-    (WORK / "extents.geojson").write_text(json.dumps({"type": "FeatureCollection", "features": feats}), encoding="utf-8")
+    ext = WORK / "extents.geojson"
+    if zone_rows and ext.exists():
+        zids = {r["id"] for r in zone_rows}
+        feats = feats + [f for f in json.loads(ext.read_text(encoding="utf-8"))["features"] if f["properties"]["id"] in zids]
+    ext.write_text(json.dumps({"type": "FeatureCollection", "features": feats}), encoding="utf-8")
     regions = collections.Counter(r["region"] for r in out)
     log(f"{len(out)} planned metros ({dict(regions)}), {len(dropped)} dropped; {OUT}")
 
@@ -1034,8 +1050,173 @@ def test_row(st, pid, out):
         f"{sum(len(v) for v in row['units'].values())} units; {out}")
 
 
+def zone_groups(units, free, region):
+    """Free units (ids) grouped into zones: smallest first, one under ZONE_MIN_POP joins the zone of
+    its region it shares the longest border with; an island (no land border with any unit) the most
+    populous zone of its region within ISLAND_KM; one with neither stays alone (Ceuta). Returns
+    ({lead id: [units]}, [log lines])."""
+    by = {u.id: u for u in units}
+    simple = {u.id: u.geom.simplify(500) for u in units}
+    zones, done, lines = {i: [i] for i in free}, set(), []
+    ppl = lambda z: sum(by[i].free for i in zones[z])  # noqa: E731
+    geo = lambda z: union_all([simple[i] for i in zones[z]])  # noqa: E731
+    while True:
+        small = sorted((ppl(z), z) for z in zones if z not in done and ppl(z) < ZONE_MIN_POP)
+        if not small:
+            break
+        n, z = small[0]
+        g = geo(z)
+        same = [o for o in zones if o != z and region[o] == region[z]]
+        border = [(g.boundary.intersection(geo(o).buffer(1000)).length, o) for o in same]
+        border = [b for b in border if b[0] > 0]
+        island = not any(g.buffer(1000).intersects(simple[u.id]) for u in units if u.id not in zones[z])
+        into, how = None, ""
+        if border:
+            length, into = max(border)
+            how = f"shared border {length / 1000:.0f} km"
+        elif island:
+            near = [(ppl(o), o) for o in same if g.distance(geo(o)) <= ISLAND_KM * 1000]
+            if near:
+                into = max(near)[1]
+                how = f"island, {g.distance(geo(into)) / 1000:.0f} km"
+        if into is None:
+            done.add(z)
+            lines.append(f"  {by[z].name} ({n:,.0f}) stays its own zone: no zone of its region "
+                         f"{'within ' + str(ISLAND_KM) + ' km' if island else 'beside it'}")
+            continue
+        lines.append(f"  {by[z].name} ({n:,.0f}) joins {by[into].name} ({how})")
+        zones[into] += zones.pop(z)
+    return zones, lines
+
+
+def plan_zones(isos3):
+    """Whole-country cover (T-723): for each country, its units held by no plan row and by no pack
+    (half their people), those under ZONE_MIN_DENSITY left as dead space, the rest grouped by
+    zone_groups into zone rows (`kind` "zone"), written into the plan beside its metro rows. A
+    country's earlier zone rows are replaced; one with the same units keeps its id, order, status
+    and run record."""
+    import pickle
+    import plan_config
+    from timezonefinder import TimezoneFinder
+    class Here(pickle.Unpickler):  # the cache was written by this file run as __main__
+        def find_class(self, mod, name):
+            return Unit if name == "Unit" else super().find_class(mod, name)
+    with open(WORK / "state.pkl", "rb") as f:
+        st = Here(f).load()
+    pop = Pop()
+    doc = json.loads(OUT.read_text(encoding="utf-8"))
+    rows = doc["metros"]
+    pk = packs()
+    tf = TimezoneFinder()
+    ex, kids = geofabrik()
+    a2 = iso2s()
+    used = set(pk) | {c["id"] for c in json.loads(REGISTRY.read_text(encoding="utf-8"))["cities"]}
+    used |= {r["id"] for r in rows}
+    order = max(r.get("order", 0) for r in rows)
+    record = doc.setdefault("zones", {})
+    for iso in isos3:
+        src = doc["unit_sources"][iso]
+        units = [u for u in st["units"] if u.iso == iso]
+        if not units:
+            raise SystemExit(f"{iso}: no units in the plan's state (data/work/worldplan/state.pkl)")
+        old = {r["id"]: r for r in rows if r.get("kind") == "zone" and iso in r.get("units", {})}
+        held = {uid for r in rows if r.get("units") and r["id"] not in old for uid in r["units"].get(iso, [])}
+        ptree = STRtree([q["geom"] for q in pk.values()])
+        pl = list(pk.values())
+        free, dead = [], []
+        for u in units:
+            x, y, p = pop.inside(u.geom)
+            inpk = np.zeros(len(x), bool)
+            for i in ptree.query(u.geom, predicate="intersects"):
+                inpk |= contains_xy(pl[i]["geom"], x, y)
+            u.px = (x[~inpk], y[~inpk], p[~inpk])
+            u.free = float(p[~inpk].sum())
+            tot = float(p.sum())
+            if u.id in held or (tot > 0 and u.free < UNIT_SHARE * tot) or u.free <= 0:
+                continue
+            dens = u.free / (u.geom.area / 1e6)
+            if dens < ZONE_MIN_DENSITY:
+                dead.append({"unit": u.id, "name": u.name, "people": round(u.free), "per_km2": round(dens, 1)})
+            else:
+                free.append(u.id)
+        nuts = src["kind"] in ("NUTS3", "ITL3")
+        region = {u.id: (u.parents[-1] if nuts else u.parents[0]) if u.parents else iso for u in units}
+        groups, lines = zone_groups(units, free, region)
+        by = {u.id: u for u in units}
+        log(f"{iso}: {len(units)} units, {len(held)} in plan rows, {len(free)} free, {len(dead)} dead space "
+            f"(under {ZONE_MIN_DENSITY:g} a km2: {', '.join(d['name'] for d in dead)}); {len(groups)} zones")
+        for ln in lines:
+            log(ln)
+        was = {tuple(sorted(r["units"][iso])): r for r in old.values()}
+        out, feats = [], []
+        for lead, ids in sorted(groups.items(), key=lambda kv: -sum(by[i].free for i in kv[1])):
+            us = sorted((by[i] for i in ids), key=lambda u: -u.free)
+            g = polygonal(union_all([u.geom for u in us]))
+            cut = [q["geom"] for q in pk.values() if q["geom"].intersects(g)]
+            if cut:
+                g = polygonal(g.difference(union_all(cut)))
+            ll = to_ll(g)
+            best = None
+            for u in us:
+                x, y, p = u.px
+                if len(p) and (best is None or p.max() > best[0]):
+                    i = int(np.argmax(p))
+                    best = (float(p[i]), x[i], y[i])
+            lon, lat = INV.transform(best[1], best[2])
+            tz = tf.timezone_at(lng=lon, lat=lat) or tf.closest_timezone_at(lng=lon, lat=lat)
+            name = us[0].name.split("/")[0].strip()
+            prev = was.get(tuple(sorted(ids)))
+            arch, module = ARCHETYPE.get(iso, ("D", None))
+            if prev:
+                cid, n = prev["id"], prev["order"]
+            else:
+                cid, n = make_id(name, used), None
+            row = {"order": n, "id": cid, "name": name, "kind": "zone", "status": "planned",
+                   "region": "uk" if iso == "GBR" else ("europe" if iso in st["europe"] else "world"),
+                   "countries": [iso], "iso2": a2.get(iso), "people": round(sum(u.free for u in us)),
+                   "origin": [round(lon, 4), round(lat, 4)], "tz": tz, "utc_offset": std_offset(tz),
+                   "extracts": extracts(ll, ex, kids), "archetype": arch, "module": module,
+                   "units": {iso: [u.id for u in us]}, "bbox": [round(v, 3) for v in ll.bounds],
+                   "source": {"zone": "T-723", "unit_names": [u.name for u in us]}}
+            if prev:
+                for k in ("status", "run", "gate_relax"):
+                    if k in prev:
+                        row[k] = prev[k]
+            out.append(row)
+            feats.append({"type": "Feature", "properties": {"id": cid, "name": name, "people": row["people"], "kind": "zone"},
+                          "geometry": mapping(shapely.set_precision(ll, 1e-5))})
+        for r in out:
+            if r["order"] is None:
+                order += 1
+                r["order"] = order
+            log(f"  {r['order']:>4} {r['id']} {r['name']}: {r['people'] / 1e6:.2f}M, {len(r['units'][iso])} units "
+                f"{r['units'][iso]}, extracts {r['extracts']}, origin {r['origin']}{', status ' + r['status'] if r['status'] != 'planned' else ''}")
+        gone = [r["id"] for r in old.values() if r["id"] not in {o["id"] for o in out}]
+        if gone:
+            log(f"  earlier zone rows with no successor, removed: {gone}")
+        rows[:] = [r for r in rows if r["id"] not in old] + out
+        record[iso] = {"task": "T-723", "built": str(datetime.now().date()),
+                       "rule": f"free units at or over {ZONE_MIN_DENSITY:g} people a km2; under {ZONE_MIN_POP:,} joins "
+                               f"a zone of its region (longest border, or an island the most populous within {ISLAND_KM:g} km)",
+                       "dead": dead, "merges": [ln.strip() for ln in lines]}
+        ext_path = WORK / "extents.geojson"
+        ext = json.loads(ext_path.read_text(encoding="utf-8"))
+        drop = set(old) | {f["properties"]["id"] for f in feats}
+        ext["features"] = [f for f in ext["features"] if f["properties"]["id"] not in drop] + feats
+        ext_path.write_text(json.dumps(ext), encoding="utf-8")
+    assert all(plan_config.is_plan_row(r) for r in rows if r.get("kind") == "zone")
+    tmp = OUT.with_suffix(".json.part")
+    tmp.write_text(json.dumps(doc, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+    os.replace(tmp, OUT)
+    log(f"written {OUT}")
+
+
 def main(argv):
     import pickle
+    if argv and argv[0] == "zones":
+        a3 = {v: k for k, v in iso2s().items()}
+        cs = argv[argv.index("--countries") + 1].split(",")
+        return plan_zones([a3[c] for c in cs])
     cache = WORK / "state.pkl"  # the units and their shares; --fresh rebuilds it
     if cache.exists() and "--fresh" not in argv:
         st = pickle.loads(cache.read_bytes())

@@ -39,7 +39,7 @@ causes and the rerun are in notes/T-613.md and T-725).
 | South Korea | seo | C, curve from a mean | notes/T-457.md; calibration (T-509): U seoulriders' timetable, card gate and KRIC station counts; G census commuting mode by si-gun-gu (KOSIS) |
 | India | mum | C, curve from bands | notes/T-292.md |
 | Nigeria | lag owe aba abo | D | notes/T-459.md; owe aba abo (plan rows, shipped) share Lagos's country module and its informal jobs blend; OSM extract of 2026-10-17 (notes/T-726.md) |
-| Spain | mad bar; val sev mal (built, not registered) | D | global sources only; OSM extracts 2026-10-17 (mad bar), 2026-10-19 (val sev mal) |
+| Spain | mad bar val sev mal; the whole country as 40 zones (T-723: alc cat mur cad grn cod alr jae hue mll eiv zar biz gip ara asr tee gra laz aco poe our lug trr gir lle tod cid alb gul nav baj cax vaa len bug sla lar mea ceu); 9 provinces under 20 a km² are dead space | D | global sources only; zones on the zone curve (T-723); OSM extracts 2026-10-17 (mad bar), 2026-10-19 (val sev mal), 2026-10-20 (the zones). Not used yet: the transport ministry's mobile-phone trip tables and INE's 1 km census grid (notes/T-719.md; T-771) |
 | Italy | mil rom nap tur bea (shipped) | D | global sources only; OSM extracts 2026-10-17 |
 | Austria | vie (shipped) | D | global sources only; OSM extract 2026-10-17 |
 | Belgium | bru ant lie (shipped) | D | global sources only; OSM extract 2026-10-17 |
@@ -82,7 +82,7 @@ capped at 1 (errands / leisure). It decides how far the everyday fallback trusts
 | South Korea | U resident registration by si-gun-gu (MOIS, open CSV); skip eup-myeon-dong (same file, little gain at 2 km); G 2020 census table (KOSIS: no account without a Korean ID; browser download only) | U OSM relations by Korean name | 0.51 / 0.93 |
 | India | U Census 2011 by sub-district, grown by district to 2020; 2027 census not out | U OSM admin_level 5 and 6 by name; G SHRUG polygons (non-commercial, checks only) | 0.04 / 0.05 |
 | Nigeria | U GHSL alone; - no credible count (census 2006); ? GRID3 100 m estimates, T-507 | U OSM LGAs | 0.02 / 0.01 (owe aba abo the same) |
-| Spain | U GHSL alone (GHS-POP E2020 R2023A 100 m); ? national grid or census not looked for | U OSM admin relations matched to NUTS-3 units (`osm_units.py`) | 0.81-0.95 / 0.94-1 |
+| Spain | U GHSL alone (GHS-POP E2020 R2023A 100 m); N INE Census 2021 population on the 1 km Eurostat grid, found, not opened (T-719, T-771) | U OSM admin relations matched to NUTS-3 units (`osm_units.py`) | 0.81-0.95 / 0.94-1 |
 | Italy | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 0.66-1 / 0.62-1 (Naples lowest) |
 | Austria | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 1 / 1 |
 | Belgium | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 1 / 1 |
@@ -142,7 +142,8 @@ days of people with a workplace. Several countries have one figure for both.
 | South Korea | G 2020 census commuting by si-gun-gu (KOSIS: no account without a Korean ID; browser download only), T-504; U mobile-data mean commute (Statistics Korea, 20.4 km) | ? KTDB household survey, not checked | U 0 (no figure checked) | U 0 |
 | India | U Census 2011 B-28 distance bands by district, both parameters fitted | - | U B-28 "no travel" (20.1%) | - |
 | Nigeria | - none; U the borrowed curve (T-314) | - (one 2010 paper's mean trip, too weak to fit) | U 0 | U 0 |
-| Spain, Italy, Austria, Belgium, Greece, Poland, Hungary, Netherlands, Portugal, Russia, Sweden, Romania, Denmark, Switzerland, Serbia, Norway, Finland, Bulgaria, Czechia, Ireland, Albania, Wales, Scotland, Northern Ireland | ? national flows not looked for; U the borrowed curve (T-314) | ? not looked for | U 0; N Eurostat LFS lfsa_ehomp where it has the country (as Germany's and France's), ONS OPN 0.27 for the three UK nations, T-765 | U 0, as work at home |
+| Spain | N the transport ministry's "Estudio de movilidad con Big Data" (daily trips between 3,792 districts with home and work ends, open CSV, licence not read; T-719, T-771); U the borrowed curve (T-314) for the metros, the zone curve (T-723) for the zones | ? not looked for | U 0; N Eurostat LFS lfsa_ehomp, T-765 | U 0, as work at home |
+| Italy, Austria, Belgium, Greece, Poland, Hungary, Netherlands, Portugal, Russia, Sweden, Romania, Denmark, Switzerland, Serbia, Norway, Finland, Bulgaria, Czechia, Ireland, Albania, Wales, Scotland, Northern Ireland | ? national flows not looked for; U the borrowed curve (T-314) | ? not looked for | U 0; N Eurostat LFS lfsa_ehomp where it has the country (as Germany's and France's), ONS OPN 0.27 for the three UK nations, T-765 | U 0, as work at home |
 
 ## Car ownership
 

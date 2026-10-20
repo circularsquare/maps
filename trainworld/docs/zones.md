@@ -55,6 +55,19 @@ join Kamikawa; Hidaka joins Tokachi; Nemuro joins Okhotsk; Shiribeshi less Otaru
 zones from `pipeline/japan_zones.json` (T-420 stage 3). Their outlines leave out the
 Russian-administered southern Kurils and uninhabited islets more than 50 km from other land.
 
+**Whole countries** (Anita, 2026-10-19, T-719; built for Spain, T-723) are covered by zone rows in
+the world plan (`world_plan.py zones --countries ES`), built by the runner like metro rows. Every
+unit of the plan's unit level (NUTS-3 in Europe) that no plan row holds and no pack holds half of is
+a candidate. A unit under **20 people a km²** stays dead space for now (Spain: Soria, Teruel, Cuenca,
+Huesca, Zamora, Palencia, Ávila, Cáceres and Segovia, 1.46M people). Units **under 100,000** join a
+zone of their own region (NUTS-2; elsewhere the first-level unit), smallest first: the one they
+share the longest border with, or for an island the most populous zone of the region within
+150 km (so small islands join their province's largest: La Gomera, La Palma and El Hierro
+Tenerife, Fuerteventura Gran Canaria, Menorca Mallorca). A small unit with neither stays its own
+zone (Ceuta, Melilla). A zone row has `kind` "zone", is named after its most populous unit (before
+any "/"), and has its origin at its densest square km. A replan of the metros keeps zone rows as
+they are. Countryside zones use the zone curve (section 4).
+
 **Mercer County (Trenton) is part of New York's city zone**, not a non-city zone (Anita leaned
 this way). Reasons: it is in the New York combined statistical area; LODES holds 175,000 jobs
 between Mercer and New York's counties against 88,000 with Philadelphia's; and as a zone of

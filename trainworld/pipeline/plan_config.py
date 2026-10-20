@@ -1,7 +1,8 @@
 """T-537, pipeline stage 5: the build_city config of a planned city, generated from its world plan
 row (pipeline/world_plan.json). Every field comes from the row or a rule (docs/adding-a-city.md 3
 "A planned city"), and the row's country module (its `module`) puts its `plan_hooks(row)` keys over
-them (T-555); build_city.CITIES takes every planned row whose id it does not already have.
+them (T-555); build_city.CITIES takes every planned row whose id it does not already have. A zone
+row (`kind` "zone", T-723) gives a zone's config: its kind and name, and the zone curve.
 
     python pipeline/plan_config.py <id> [plan.json]     print the generated config
 """
@@ -107,7 +108,9 @@ def config(row, sources):
 def global_config(row, sources):
     """The CITIES entry for a planned row from global sources only, carrying its row."""
     cid, ex = row["id"], list(row["extracts"])
+    zone = {"kind": "zone", "name": row["name"]} if row.get("kind") == "zone" else {}
     return {
+        **zone,
         "plan_row": row,
         "tier0": True,
         "origin": tuple(row["origin"]),
@@ -118,7 +121,7 @@ def global_config(row, sources):
         "water_source": lambda bbox: __import__("osm_water").source(ex)(bbox),
         "extract": ex[0] if len(ex) == 1 else ex,
         "iso2": row["iso2"],
-        "curve": "borrowed",
+        "curve": "borrowed_zone" if zone else "borrowed",  # T-723: countryside commutes are shorter than a metro's
         "region_name": row["name"],
         "utc_offset": row["utc_offset"],
         "latin_names": lambda: __import__("osm_units").latin_names(cid),

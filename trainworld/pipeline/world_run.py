@@ -17,9 +17,10 @@ A run goes a region at a time: rows sharing a Geofabrik extract, chained, in pla
 download (or reuse) and read its extracts, then per row build_city, places, routes, merge_cells,
 nocar, everyday_rates (status "built"); then the gate on every built row, registered with its
 market pack against a snapshot taken before the region (status "shipped", or "parked" with the
-failing checks, unregistered again). Then the joint gravity groups the shipped packs joined, one
-solve a group, the group re-gated after it (a FAIL restores the group and parks its new packs);
-then market_zones and local trips; then the region's downloads are deleted. Status and a record of
+failing checks, unregistered again); then the region's downloads are deleted. After the last
+region, the joint gravity groups the batch's gated packs joined, one solve a group for the whole
+batch (T-723), the group re-gated after it (a FAIL restores the group and parks its new packs);
+then market_zones and local trips. Status and a record of
 times live in each row of pipeline/world_plan.json; a report a batch goes to
 ../artifacts/trainworld/world_run/<batch>/.
 
@@ -451,10 +452,21 @@ class Run:
         regs = self.regions(rows)
         print(f"batch {self.batch}: {len(rows)} rows in {len(regs)} regions; jobs {self.jobs} ({self.workers} x {self.threads}); "
               f"logs {self.logs}", flush=True)
+        gated = []
         for k, reg in enumerate(regs, 1):
             if self.stop_asked():
                 break
-            self.region(k, reg)
+            gated += self.region(k, reg)
+        # one joint solve a group for the whole batch, after every region (T-723: a covered country's
+        # group re-solved after each of its regions was most of the join's time)
+        if not self.stop_asked() and (gated or any(self.report["rows"].get(i, {}).get("result") == "parked"
+                                                   for i in self.report["rows"])):
+            t = time.time()
+            self.join(gated, self.logs / "join")
+            self.report["join_seconds"] = round(time.time() - t)
+        elif gated:
+            print(f"  stopped before the joint solve: {' '.join(gated)} stay registered and built; the next run gates them again",
+                  flush=True)
         self.report["seconds"] = round(time.time() - t0)
         self.report["stopped"] = self.stop_asked()
         self.write_report()
@@ -507,17 +519,16 @@ class Run:
                 list(pool.map(self.build_row, todo))
         if self.stop_asked():
             print("  stopped: the built rows are gated by the next run", flush=True)
-            return
+            return []
         built = [r["id"] for r in reg if self.status(r["id"]) == "built"]
+        shipped = []
         if built:
             t = time.time()
             shipped = self.gate(built, L)
             rr["seconds"]["gate"] = round(time.time() - t)
-            t = time.time()
-            self.join(shipped, L)
-            rr["seconds"]["join"] = round(time.time() - t)
         if not self.o.get("keep_downloads"):
             rr["deleted"] = self.clean(exs)
+        return shipped
 
     @staticmethod
     def caches(e):
@@ -740,6 +751,9 @@ class Run:
         print(f"  joint group {g[0]}: {' '.join(g)} (new: {' '.join(new)})", flush=True)
         bak =Path(f"{tag}-backup")
         self.backup(g, bak)
+        # the re-gate compares against the packs just before this solve (an earlier group's solve changed its own)
+        snap = Path(f"{tag}.snapshot.json")
+        self.step("pack_gate", ["snapshot", str(snap)], f"{tag}.log", threads=1)
         steps = [("merge_cells", g + ["--undo"]), ("intercity", ["--group", "auto"] + new + ["--no-market"]),
                  ("merge_cells", g)]
         fail = None
@@ -750,7 +764,6 @@ class Run:
                 break
         if fail is None:
             gd = Path(f"{tag}-gate")
-            snap = L.parent / f"{L.name}.snapshot.json"
             self.step("pack_gate", g + ["--no-rust", "--since", str(snap), "--out", str(gd)], f"{tag}.gate.log")
             bad = []
             for i in g:
@@ -843,6 +856,8 @@ class Run:
             lines.append(f"region {rr['n']} ({', '.join(rr['extracts'])}): " +
                          ", ".join(f"{k} {v / 60:.1f} min" for k, v in rr["seconds"].items()) +
                          (f"; deleted {len(rr.get('deleted', []))} files" if rr.get("deleted") else ""))
+        if "join_seconds" in self.report:
+            lines.append(f"joint solve and market, once for the batch: {self.report['join_seconds'] / 60:.1f} min")
         for p in self.report.get("problems", []):
             lines.append("problem: " + p)
         text = "\n".join(lines)

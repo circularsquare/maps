@@ -1065,8 +1065,9 @@ def add_gravity(cells_json, city, extra=None):
     arguments (a later --border-factor wins)."""
     factor = CITIES[city].get("border_factor", BORDER_FACTOR_US)
     # a pack's own fitted curve (T-277: Toronto's, from the census commuting flows), else the US one
-    if CITIES[city].get("curve") == "borrowed" and "decay_km" not in CITIES[city]:
-        CITIES[city]["decay_pow"], CITIES[city]["decay_km"] = __import__("tier0").borrowed_curve()
+    if CITIES[city].get("curve") in ("borrowed", "borrowed_zone") and "decay_km" not in CITIES[city]:
+        CITIES[city]["decay_pow"], CITIES[city]["decay_km"] = __import__("tier0").borrowed_curve(
+            zones=CITIES[city]["curve"] == "borrowed_zone")
     decay_pow = CITIES[city].get("decay_pow", DECAY_POW_US)
     decay_km = CITIES[city].get("decay_km", DECAY_KM_US)
     env = dict(os.environ)
