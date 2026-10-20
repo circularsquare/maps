@@ -1,5 +1,8 @@
 ﻿# Archive
 
+- T-756 [P2] Each demand population on the stations within its reach. Done 2026-10-19: a city's layers on its box + 30 km, the market on the cluster; Japan's seven cities 555 to 346 s, 2.5 to 1.5 GB a worker (Node), figures within 0.06%; whole-country cities solve, the market is T-761. notes/T-756.md.
+- T-757 [P2] A failed demand worker says so. Done 2026-10-19: a red alert under the demand buttons ("Demand ran out of memory" or "Demand stopped"), the figures shown kept; no restart (reload). notes/T-756.md.
+- T-760 [P3] Negative stop-to-stop distance for stops closer than their platforms. Done 2026-10-19: fixed in `build_run`, demandClient's clamp gone. notes/T-756.md.
 - T-630 [P2] Lag with station ridership shown, zoomed far out. Done 2026-10-19: drawing was 60 fps throughout; the circle's hover tag cost 100-115 ms a pointer move off track (and each game minute) on the world save, now 0.1; far-out picks 2-6x faster, same answers. notes/perf-survey.md.
 
 - T-648 [P2] Adding a stop: slow and the map flashes. Done 2026-10-19: the flash was the stop list's stations passed arriving a query late (also old trips on new profiles, counts a row off), all gone; click to drawn 132-142 to 112-130 ms. checks/t648-stop-edit.mjs; notes/perf-survey.md.

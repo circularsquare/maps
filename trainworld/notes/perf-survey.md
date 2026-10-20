@@ -304,7 +304,8 @@ country never solves (each worker out of WASM memory: station x station tables o
 10,320 stations, 426 MB each; Tokyo's pack alone natively 243 s and 3.28 GB peak); the seven cities
 take 680-735 s to their final with 2.5 GB a worker and 6 GB in the renderer.
 
-Ranked:
+Ranked (T-756, T-757 and T-760 done 2026-10-19, notes/T-756.md; the whole country's market is
+T-761):
 
 1. **T-756 each population on the stations within its reach**: Tokyo's pack on the whole network
    natively 243 s / 3.28 GB to 107 s / 0.50 GB cut to its box + 20 km, same figures (operator

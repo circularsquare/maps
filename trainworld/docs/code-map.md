@@ -16,7 +16,8 @@ tests natively.
   `cargo run --release --bin track_bench` times edits on a synthetic 2,000 km network; feature
   `track-bench` exports it to WASM. notes/T-040.md.
 - `src/track/trace.rs`: a real railway's line as corners within a tolerance (T-727c), for
-  `TrackApi::trace_route` and the real-network snap; notes/T-727.md.
+  `TrackApi::trace_route` and the real-network snap; `Tracer` runs it in steps (`RouteTrace` in
+  WASM, T-754); notes/T-727.md.
 - `src/demand/`: the demand kernel, behind feature `demand` (on in the app's build): `api.rs`
   (`DemandApi`, the demand workers' API), `intercity.rs` (the regional market), `warm.rs` (the
   everyday warm-up demand worker 0 runs at startup, T-173), `days.rs` (the weekend's factors per
@@ -122,7 +123,7 @@ dialog); `DemandSelector.tsx` (None/Homes/Destinations and the purpose filter); 
 (Build's quote and Construct, and the Select tool's selection bar on the map, T-353); `Debug.tsx` (the `?debug=1` readout); `inspector/` (one inspector
 per selection kind: `others.tsx` holds station, train, track, junction and cell or zone;
 `ComplexMap.tsx` the complex map; `NameEdit.tsx` a station's or line's name edited in place, T-534); `LoadingScreen.tsx` (the clock hold at startup, the loading card,
-the screen when demand cannot load, T-149, T-172, T-180); `StartMenu.tsx` (the start menu and the URL switches that skip it, T-677); `NewGame.tsx` (the new game sheet: mode, start city, search, real network; `START_CITIES`, `REAL_NETWORKS`, T-728, T-731); `Spinner.tsx` (the small spinner, T-647, and the bunny's train, T-677); `Search.tsx` (T-148); `StationsFull.tsx`
+the screen when demand cannot load, T-149, T-172, T-180); `StartMenu.tsx` (the start menu and the URL switches that skip it, T-677); `NewGame.tsx` (the new game sheet: mode, start city, search, real network; `START_CITIES`, `REAL_NETWORKS`, T-728, T-731); `Spinner.tsx` (the small spinner, T-647, and the bunny's train, T-677); `Search.tsx` (T-148); `DemandStopped.tsx` (the alert when demand stops after startup, T-757), `StationsFull.tsx`
 (the "N stations full" button, T-231); `keys.ts` (which keys a focused control keeps, T-183); `locate.ts` (the camera to a station or a line: search picks, the tabs' double click, the inspectors' locate button, T-569);
 `tip.ts` (the hover tag for every panel and control, from `data-tip`, never `title`, T-210);
 `blurHold.ts` (every hover kept up through a window blur until the pointer moves, T-483);
@@ -136,7 +137,7 @@ the network: `TrackApi`, notes/T-025.md; money and autosave too), `saveFile.ts` 
 and IndexedDB, T-029; slots' backups, T-744), `clockClient.ts`, `demand.worker.ts`, `demandClient.ts`, `demandCache.ts`
 (the last final demand result kept beside the save, T-328),
 `demandProtocol.ts`, `demandClusters.ts` (the network split into clusters that share no rider,
-each a sub-network, T-326; `marketReaches`, which stations the market's riders use, T-396), `demandTest.ts`, `cityReach.ts` (which city packs a network's stations can
+each a sub-network, T-326; `reachView`, a city's own network inside its cluster, T-756; `marketReaches`, which stations the market's riders use, T-396), `demandTest.ts`, `cityReach.ts` (which city packs a network's stations can
 reach, T-149; the footprints fetched on demand by registry box, T-404), `commuters.worker.ts` and `commutersProtocol.ts` (the commuter bubbles' sums,
 T-097), `selectionMerge.ts` (a bubble selection's everyday far end added up over the workers,
 T-285).
@@ -255,6 +256,10 @@ Run from the maps root (`node trainworld/checks/<file>`).
   load time, demand's first solve, then frames, long tasks and threads' busy time panning and zooming
   across Japan at 240x and 960x; fails over 14 ms of main thread a frame or 5% of frames over 50 ms;
   about 4 minutes, `QUICK=1` 1.5; notes/T-737.md),
+  `t756-reach.mjs` (`capture <save> <label>` records a save's demand network and packs from the
+  page; `compare <label>` solves it with the real worker in Node, every population on its whole
+  cluster and on its reach, and fails when a figure moves past the tolerance; New York about 1.5
+  minutes, Japan's seven cities about 15; notes/T-756.md),
   `t161-complexes.mjs` (the real save's complexes for the native
   comparison), `t125-fingerprint.mjs` (a save's derived geometry, before and after a frame
   change), `t277-browser.mjs` (Toronto; not rerun since T-277), `city-browser.mjs <id>` (a tier 0

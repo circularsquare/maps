@@ -9,9 +9,9 @@
 // ../artifacts/trainworld/t737), VIEW=WxH, SPEEDS (default "1,2": indices into the clock's SPEEDS),
 // THROTTLE, CPUPROFILE=1 (the main thread's profile per scene in OUT), DEMAND_WORKERS (default 2), NOSOLVE=1 (play at once; the clock is held while demand solves,
 // so this measures panning during a solve). Before the scenes it waits up to 25 min for demand's final
-// (the clock runs only then) or a demand worker's failure: whole Japan fails in about a minute until
-// T-756 (reported as `demandErrors`, not failing the check; DEMAND_STRICT=1 fails on it), the seven cities
-// solve in about 12 minutes. Fails on page errors, a load that never ends, and the budget below.
+// (the clock runs only then) or a demand worker's failure: whole Japan fails in about 16 minutes until
+// T-761, the market on the whole country (reported as `demandErrors`, not failing the check; DEMAND_STRICT=1 fails on it), the seven cities
+// solve in about 6.5 minutes (T-756). Fails on page errors, a load that never ends, and the budget below.
 import { spawn } from 'node:child_process';
 import { readFile, readdir, mkdtemp, rm, writeFile, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -296,7 +296,7 @@ out.total = { frames, mainMsPerFrame: r1(mainMsPerFrame), slowShare: Math.round(
 if (process.env.DEMAND_STRICT !== '1') {
   out.demandErrors = out.errors.filter((e) => /demand: worker|demand never reached/.test(e));
   out.errors = out.errors.filter((e) => !/demand: worker|demand never reached/.test(e));
-  if (out.demandErrors.length) log(`demand workers failed (known on whole Japan, T-756): ${out.demandErrors.slice(0, 2).join(' | ')}`);
+  if (out.demandErrors.length) log(`demand workers failed (known on whole Japan, T-761): ${out.demandErrors.slice(0, 2).join(' | ')}`);
 }
 await mkdir(OUT, { recursive: true });
 await writeFile(join(OUT, `japan-${LABEL}.json`), JSON.stringify(out, null, 1));
