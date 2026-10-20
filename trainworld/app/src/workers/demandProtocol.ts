@@ -45,13 +45,17 @@ export interface DemandNetwork {
 /** T-377: a zone's part of the world market (`data/packs/<id>.market.json`). */
 export interface MarketPack { id: CityId; pack: string | Uint8Array }
 
+/** T-776: the world market's rows (app/src/game/market-rows.json), as text or UTF-8 bytes; given
+ * with or before a worker's first market pack, which cannot open without them. */
+export type MarketRows = string | Uint8Array;
+
 /** T-492: a pack a worker could not open: the zone, whether it was its market pack, and why */
 export interface OpenRejected { id: CityId; market: boolean; error: string }
 
 export type ToDemand =
   /** start the WASM with the periods this worker solves; city packs (header text and .bin) and
    * zones' market packs may come here or in `open`s after it (T-149) */
-  | { kind: "init"; packs: { id: CityId; header: string; bin: ArrayBuffer }[]; intercity?: MarketPack[]; periods: number[]; aux?: boolean;
+  | { kind: "init"; packs: { id: CityId; header: string; bin: ArrayBuffer }[]; intercity?: MarketPack[]; rows?: MarketRows; periods: number[]; aux?: boolean;
       /** T-173: open a small synthetic everyday layer first (`everyday_warm_up`), before `ready` */
       warmEveryday?: boolean;
       /** T-325, the aux worker: each solving worker's periods, in worker order, so a zone it holds
@@ -62,7 +66,7 @@ export type ToDemand =
    * aux worker, which never opens one, gets empty bytes). `bare` (T-325, aux worker only): a zone
    * no station reaches, opened for its bubbles and city figures alone (no rail, so no solve needs
    * it); a later `open` of the same pack without `bare` adds it to the solves as well */
-  | { kind: "open"; packs: { id: CityId; header: string; bin: ArrayBuffer }[]; intercity?: MarketPack[]; bare?: boolean }
+  | { kind: "open"; packs: { id: CityId; header: string; bin: ArrayBuffer }[]; intercity?: MarketPack[]; rows?: MarketRows; bare?: boolean }
   /** T-301: close city packs and zones' market packs (`markets`) no longer needed, freeing their
    * WASM memory for the next pack; `bare`: the aux worker's bare copies. A pack the solve in hand
    * covers closes when that solve ends, unless an `open` of it comes first. Answered by `closed`. */

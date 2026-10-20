@@ -312,7 +312,7 @@ registry centre and zoom, or over New York with none [T-310].
   at most, a second click unlighting it; then "Find a city or region", which lists up to eight of
   the registry's cities and zones whose name has a word starting with the text (case and accents
   ignored, so "hague" finds Rotterdam [The Hague]), biggest by local trips first, each with its
-  country (the market row's code, named by the browser). Up and down move, Enter or a click picks;
+  country (the registry's code, named by the browser). Up and down move, Enter or a click picks;
   a pick of one of the five lights its button. Nothing picked starts on the world map.
 - **Real network** (ticked to begin with): only for a sandbox in New York, London, Paris, Tokyo,
   Seoul, Toronto or Sendai, the cities with a real network (`REAL_NETWORKS`; architecture.md 11). The

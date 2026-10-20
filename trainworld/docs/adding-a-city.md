@@ -54,7 +54,7 @@ for the browser check (default 6360). Set `TW_SIM_DIR` and `TW_CARGO_TARGET_DIR`
 - **Joint gravity**, once for the batch after its last region (T-723; a run stopped before it
   leaves the gated rows registered and `built`, for the next run to gate again): a pack with no
   country in its header (tor, lon, par, sao) takes the registry's
-  `marketRow.country`. Each group a gated pack joined is solved once (members back to res-9,
+  `country`. Each group a gated pack joined is solved once (members back to res-9,
   `intercity.py --group auto <new> --no-market`, merged again) and gated again without the browser
   or rates; a FAIL restores every member from the backup taken before. When only new packs FAIL,
   they park and the group is solved once more without them (a FAIL then parks every new pack of
@@ -325,8 +325,9 @@ registry (T-441).
   saving; round a half hour down (India's +5:30 is +5). Its periods, weekends and fares run on it.
 - `market` is the Northeast's joint commute gravity's place for the zone (`intercity.py` and
   `joint_gravity` take the cities with one), **-1 for every other zone**. Every zone's place in the
-  world market, `place`, and its row, `marketRow`, are written by `pipeline/market_zones.py`
-  (step 7), which appends the zone to `market.places`. **Place ids are positions in that list:
+  world market, `place`, and its `country` are written by `pipeline/market_zones.py` (step 7),
+  which appends the zone to `market.places` and writes its market row into
+  `app/src/game/market-rows.json` (T-776: not in the registry, which the app bundles). **Place ids are positions in that list:
   append only, never reorder or renumber.**
 
 ## 7. Regional market and zones

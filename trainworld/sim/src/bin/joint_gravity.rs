@@ -105,7 +105,7 @@ fn main() {
         let (ftab, _) = kernel::decay_table(z.w, z.h, z.zone_m, pg.decay_km, pg.decay_pow);
         let hv: Value = serde_json::from_str(&header).unwrap();
         // packs built before headers carried a country (tor, lon, par, sao) take the registry's (T-590)
-        let country = hv["country"].as_str().or(c["marketRow"]["country"].as_str()).unwrap_or("US").to_uppercase();
+        let country = hv["country"].as_str().or(c["country"].as_str()).unwrap_or("US").to_uppercase();
         let ids: Vec<String> = hv["regions"]["ids"].as_array().map(|a| a.iter().map(|v| v.as_str().unwrap_or("").to_string()).collect()).unwrap_or_else(|| vec!["".into()]);
         // a tier 0 pack's one region ("00") is its own, not every other tier 0 pack's
         let single = ids.len() == 1 && ids[0] == "00";

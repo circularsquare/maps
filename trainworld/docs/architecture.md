@@ -144,7 +144,12 @@ Web first, so it can be shared as a link.
   chooses the game (`?new=1`, `?synth=1`, `?demandTest=1`, `?paused=1`, `?continue=1`;
   `choiceFromUrl` in ui/StartMenu.tsx) skips the menu, and the pool then starts before the map is
   set up, as it did before the menu. A new game, from the menu or `?new=1`, opens its viewed zone
-  bare (`startDemand`'s `newGame`). The regional market goes to the workers as bytes and is decoded there; each zone's
+  bare (`startDemand`'s `newGame`). **The registry is split** [T-776]: `game/registry.json`, bundled,
+  is the index of what is needed before a zone opens (each zone's id, name, kind, country, origin,
+  centre, zoom, box, place, UTC offset and `localTrips`; the market's frame, rule and place names);
+  the world market's rows, the only per-zone detail, are `game/market-rows.json` (a hashed file in
+  a build), downloaded once by the page beside the first market pack and sent with it to the
+  solving workers, which cannot open a market pack before them. The regional market goes to the workers as bytes and is decoded there; each zone's
   boundary file is fetched once, shared by the reach test, the focus and the outlines
   (`game/boundaries.ts`). The clock worker is ready without any water mask: masks, outlines, place
   lists and boundaries are fetched per zone as the view, track or a search needs them (T-302,
@@ -155,7 +160,7 @@ Web first, so it can be shared as a link.
   its failure shows on the status tag while it is in view, and it is tried again after 10, 30 and
   then every 60 s; demand everywhere else carries on (T-484). A pack that downloads whole and
   does not open in a worker (a parse or WASM error, or a market pack whose zone count disagrees
-  with the registry's row) is treated the same way: the worker answers its `open` naming the pack
+  with its market row) is treated the same way: the worker answers its `open` naming the pack
   in `rejected`, every worker drops it, the zone is left out and flagged, and it is tried again
   once after 10 s; a second failure is final until the page is reloaded (T-492). A market pack
   mismatched with its row, as in a snapshot built mid pack rebuild, is isolated per zone like any

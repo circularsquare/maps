@@ -62,7 +62,7 @@ const solving = GROUPS.map(() => start());
 const aux = start();
 for (const s of [...solving, aux]) await s.next((m) => m.kind === 'boot');
 const t0 = performance.now();
-solving.forEach((s, i) => { s.w.postMessage({ kind: 'init', packs: [], periods: GROUPS[i] }); s.w.postMessage({ kind: 'open', packs: [], intercity: market }); s.w.postMessage({ kind: 'open', packs: [pack(ZONE)] }); });
+solving.forEach((s, i) => { s.w.postMessage({ kind: 'init', packs: [], periods: GROUPS[i] }); s.w.postMessage({ kind: 'open', packs: [], intercity: market, rows: readFileSync(new URL('../app/src/game/market-rows.json', import.meta.url), 'utf8') }); s.w.postMessage({ kind: 'open', packs: [pack(ZONE)] }); });
 aux.w.postMessage({ kind: 'init', packs: [], periods: [], aux: true, groups: GROUPS });
 aux.w.postMessage({ kind: 'open', packs: [], intercity: new Uint8Array(0) });
 aux.w.postMessage({ kind: 'open', packs: [pack(ZONE)] });

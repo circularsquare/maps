@@ -74,7 +74,8 @@ const ROUNDS = 3;
 const finals = (msgs, version) => [...new Map(msgs.filter((m) => m.kind === 'result' && !m.cluster && m.version === version && m.summary[0] === ROUNDS).map((m) => [m.period, m])).values()].sort((a, b) => a.period - b.period);
 async function worker(init = { packs: [pack('bos'), pack('phl')], intercity: market(['bos', 'phl']), periods: [0, 1, 2, 3, 4] }) {
   const k = start(); await k.next((m) => m.kind === 'boot');
-  k.w.postMessage({ kind: 'init', ...init });
+  // T-776: the world market's rows, which the page sends with its first market pack
+  k.w.postMessage({ kind: 'init', rows: readFileSync(new URL('../app/src/game/market-rows.json', import.meta.url), 'utf8'), ...init });
   const r = await k.next((m) => m.kind === 'ready' || m.kind === 'failed'); assert.equal(r.kind, 'ready', r.error);
   return k;
 }

@@ -148,7 +148,7 @@ async function solveIn(wrapper, cap, extra) {
   const ks = await Promise.all(periods.map(async (ps) => {
     const k = start(wrapper);
     await k.next((m) => m.kind === 'boot');
-    k.w.postMessage({ kind: 'init', packs: cap.packs.map(packOf), intercity: cap.markets.map(marketOf), periods: ps });
+    k.w.postMessage({ kind: 'init', packs: cap.packs.map(packOf), intercity: cap.markets.map(marketOf), rows: readFileSync(new URL('../app/src/game/market-rows.json', import.meta.url), 'utf8'), periods: ps });
     const r = await k.next((m) => m.kind === 'ready');
     if (r.kind !== 'ready') throw new Error('init failed: ' + r.error);
     return k;

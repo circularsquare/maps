@@ -18,8 +18,9 @@ export type CityId = string;
 /** `box`: [west, south, east, north] in degrees round its boundary and water mask
  * (pipeline/zone_boxes.py, T-302), so where a zone is is known without fetching its files. */
 /** T-377: `place`, the zone's place in the world market (every zone has one; `market` is the
- * Northeast joint commute gravity's, -1 outside it); `marketRow`, its row (pipeline/market_zones.py). */
-export interface City { id: CityId; name: string; kind?: "city" | "zone"; origin: { lon: number; lat: number }; center: [number, number]; zoom: number; utcOffset?: number; market: number; place: number; marketRow?: unknown; localTrips?: number; box?: [number, number, number, number] }
+ * Northeast joint commute gravity's, -1 outside it). Its market row is not here but in
+ * market-rows.json, fetched once a market pack opens (T-776, `marketWorld`). `country`: ISO 3166 alpha-2. */
+export interface City { id: CityId; name: string; kind?: "city" | "zone"; country?: string; origin: { lon: number; lat: number }; center: [number, number]; zoom: number; utcOffset?: number; market: number; place: number; localTrips?: number; box?: [number, number, number, number] }
 interface Registry {
   world: string;
   /** T-309: the UTC offset the game clock counts world time in (game/localTime.ts) */
@@ -40,8 +41,12 @@ export const NEW_GAME_FRAME: FrameSpec = REGISTRY.frame;
 export const LEGACY_FRAME: FrameSpec = REGISTRY.legacyFrame;
 /** The frame the market reports positions in. */
 export const MARKET_FRAME = makeFrame({ ...REGISTRY.market.frame, kind: "equirect" });
-/** T-377: the world market's frame, rule, places and every zone's row, as `MarketPacks` reads it. */
-export const MARKET_WORLD = JSON.stringify({ frame: REGISTRY.market.frame, rule: REGISTRY.market.rule, places: REGISTRY.market.places.length, rows: CITIES.flatMap((c) => (c.marketRow ? [c.marketRow] : [])) });
+/** T-377: the world market's frame, rule, places and every registered zone's row in registry order,
+ * as `MarketPacks` reads it; `rowsText` is market-rows.json ({zone id: row}, T-776). */
+export function marketWorld(rowsText: string): string {
+  const rows = JSON.parse(rowsText) as Record<CityId, unknown>;
+  return JSON.stringify({ frame: REGISTRY.market.frame, rule: REGISTRY.market.rule, places: REGISTRY.market.places.length, rows: CITIES.flatMap((c) => (rows[c.id] ? [rows[c.id]] : [])) });
+}
 
 export const activeCity = signal<CityId>(HOME_CITY);
 export const cityById = (id: CityId) => CITIES.find(c => c.id === id)!;

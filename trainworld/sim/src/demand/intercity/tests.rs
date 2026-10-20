@@ -982,12 +982,13 @@ fn t761_market_bench() {
     let d = a.demand(&r, s, p, 0);
     eprintln!("demand {:.0} ms; od non-zero {}, od_c non-zero {}", now_ms() - t, d.od.iter().filter(|&&v| v != 0.).count(), d.od_c.v.len());
 }
-/// The world composition as the app opens it: the registry's rows and the packs of `ids` (all
-/// that exist with None).
+/// The world composition as the app opens it: the market rows of the registry's zones (T-776:
+/// market-rows.json, in registry order) and the packs of `ids` (all that exist with None).
 pub(crate) fn real_world(root: &str, ids: Option<&[&str]>) -> String {
     let reg: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(format!("{root}/app/src/game/registry.json")).unwrap()).unwrap();
+    let by_id: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(format!("{root}/app/src/game/market-rows.json")).unwrap()).unwrap();
     let m = &reg["market"];
-    let rows: Vec<serde_json::Value> = reg["cities"].as_array().unwrap().iter().filter_map(|c| c.get("marketRow").cloned()).collect();
+    let rows: Vec<serde_json::Value> = reg["cities"].as_array().unwrap().iter().filter_map(|c| by_id.get(c["id"].as_str()?).cloned()).collect();
     let packs: Vec<String> = reg["cities"]
         .as_array()
         .unwrap()

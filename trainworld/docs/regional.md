@@ -37,7 +37,7 @@ Generate **total** all-mode trips, then let the player's network earn rail's sha
   normalisers and its attraction (DECISIONS 2026-10-15, T-377). Opposite totals are averaged;
   pairs under 0.01 trips a day each way are pruned. Distances are great circles [T-128]. Local
   outings taper over 40-80 km, so the two layers meet without a gap or double count.
-- **Registry rows**: each place's row (`marketRow`: its zones' sums, centre, country, income,
+- **Market rows**: each place's row (`app/src/game/market-rows.json` by zone id, T-776: its zones' sums, centre, country, income,
   landmass, parking, its airports' drive times and direct flights, and its trips with every place
   under 250 km, every zone pair added up) gives any pair of places its trips and modes with no pack
   open; `bin/market_pack.rs` writes them from every place's pack.

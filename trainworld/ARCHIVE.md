@@ -1,5 +1,6 @@
 ﻿# Archive
 
+- T-776 [P2] Registry split. Done 2026-10-20: registry.json is a bundled index (55 KB compact, was 208); the market rows moved to market-rows.json, fetched beside the first market pack; each bundle 145 KB smaller, startup and demand unchanged at 176 zones. notes/T-776.md.
 - T-770 [P2] The gate's stations from the extract, not Overpass. Done 2026-10-20: a `.stations.fgb` beside each extract and a per-pack station file at build time; same stations as Overpass on three packs; a row's gate 2-6.6 min to about 30 s. notes/T-770.md.
 - T-764 [P2] Runner safety checks. Done 2026-10-20: sim junctions checked (a run fault, not a park), STOP path printed, stack dump after 20 silent minutes, status table at the end, merge_cells checks its own output. notes/T-770.md.
 - T-773 [P3] A crashed re-gate parked a whole group. Done 2026-10-20: no result is a run fault (group restored, run stops); when only new packs FAIL, they park and the group solves again without them. notes/T-770.md.

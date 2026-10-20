@@ -51,7 +51,9 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   `complexLive.ts` (a complex's platform crowds and trains now, T-246), `purposes.ts` (the trip
   purposes as shown, T-192), `trip.ts` (the trip explorer's state).
 - Places and frames: `coords.ts` (world metres to lng/lat), `frame.ts` and `registry.json` (the
-  world frames and the one city registry, read by `cities.ts`, T-125), `places.ts` (station and
+  world frames and the one city registry, read by `cities.ts`, T-125; since T-776 the bundled index
+  only), `market-rows.json` (each zone's world market row, fetched by `workers/demandClient.ts` beside
+  the first market pack and sent with it to the solving workers, `cities.ts` `marketWorld`), `places.ts` (station and
   compass names for the inspectors), `placeList.ts` (each city's OSM place list, fetched per zone by
   search or station naming, the view's zones first, T-177, T-065, T-400), `boundaries.ts` (each city's boundary file, fetched
   once, T-172), `search.ts` (the search box's matching, T-148), `walks.ts` (walking minutes to the
@@ -388,7 +390,8 @@ rewrites every Northeast pack's gravity factors and the commute list, then `mark
 `--group auto [ids]` every group of packs within 50 km of each other, the Northeast as above and
 the rest by `joint_gravity --packs`, T-463, T-539; `--groups` lists them),
 `market_zones.py [ids]` (each zone's market pack against the world field, then `market_pack`'s
-registry rows; seconds a zone, T-377),
+rows into app/src/game/market-rows.json and each zone's `country` into the registry through
+`market_rows.py`, which also drops the rows of unregistered zones, T-776; seconds a zone, T-377),
 `zones.py --trips`, `routes.py <ids>` for any pack whose zones changed (T-275), and last
 `merge_cells.py --all` (T-044; the chain runs on res-9 packs, so `merge_cells.py <ids> --undo`
 first), then `market_zones.py` for the zones outside the Northeast.

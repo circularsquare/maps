@@ -20,7 +20,7 @@ const MAX_HITS = 8;
 const fold = (s: string) => s.toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "");
 let regionNames: Intl.DisplayNames | null = null;
 function countryOf(c: City): string {
-  const code = (c.marketRow as { country?: string } | undefined)?.country;
+  const code = c.country;
   if (!code) return "";
   try {
     regionNames ??= new Intl.DisplayNames(["en"], { type: "region" });

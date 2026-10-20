@@ -480,7 +480,7 @@ def skip(name, why):
 
 def joint_borders(city, header, work=None):
     """T-591: after a joint solve, every border pair in the group's joint report is between the
-    countries the registry gives its packs (`marketRow.country`). A pack whose header lacked a
+    countries the registry gives its packs (`country`). A pack whose header lacked a
     country once read as US, a false national border to its neighbours (T-590)."""
     work = work or WORK
     group = (header.get("gravity", {}).get("joint") or {}).get("packs") or []
@@ -495,7 +495,7 @@ def joint_borders(city, header, work=None):
     if not reports:
         return skip("joint_borders", "no joint report for " + "+".join(group))
     reg = registry()
-    want = {i: (reg.get(i, {}).get("marketRow") or {}).get("country") for i in group}
+    want = {i: reg.get(i, {}).get("country") for i in group}
     known = {v for v in want.values() if v}
     bad = []
     for name, r in reports:

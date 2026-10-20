@@ -1,7 +1,7 @@
 //! T-377: the world market's registry rows from every place's pack (`data/packs/<id>.market.json`),
 //! with the game's own code (`intercity::world_rows`): each place's sums of its zones, its centre,
 //! and the trips to every place whose centre is under `near_km` (every 6 km zone pair added up).
-//! pipeline/market_zones.py runs it and merges the rows into app/src/game/registry.json.
+//! pipeline/market_zones.py runs it and merges the rows into app/src/game/market-rows.json.
 //!
 //!   cargo run --release --features demand --bin market_pack -- --root . --out data/work/market_rows.json
 //!

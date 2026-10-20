@@ -20,10 +20,10 @@
 // covers goes when that solve ends.
 
 import init, { DemandApi, EverydayApi, IntercityApi, MarketPacks, day_factors, demand_periods, everyday_warm_up, release_skims, wasm_memory_bytes } from "../wasm/demand/sim"; // demand only (T-051)
-import { CITIES, cityToMarket, cityToWorld, HOME_CITY, MARKET_WORLD, setWorldFrame, worldToCity, worldToLonLat, type CityId } from "../game/cities";
+import { CITIES, cityToMarket, cityToWorld, HOME_CITY, marketWorld, setWorldFrame, worldToCity, worldToLonLat, type CityId } from "../game/cities";
 import { EVERYDAY_KEYS, EVERYDAY_NAMES } from "../game/purposes";
 import { PERIODS } from "../game/periods";
-import type { BareFigures, DemandNetwork, FromDemand, MarketPack, OpenRejected, ToDemand } from "./demandProtocol";
+import type { BareFigures, DemandNetwork, FromDemand, MarketPack, MarketRows, OpenRejected, ToDemand } from "./demandProtocol";
 import { cellBox, cityReach, clusterView, reachView, splitClusters, type Box, type Cluster, type PopView } from "./demandClusters";
 
 /** WASM started (and the market opened if `init` carried it): `open` and solves wait for this. */
@@ -40,6 +40,8 @@ const EVERYDAY_PURPOSES = EVERYDAY_NAMES;
 /** T-377: the zones' market packs open here, and `intercity` the market composed of all of them
  * (composed again whenever one opens or closes); it answers every question's all-mode part */
 let marketPacks: MarketPacks | null = null;
+/** T-776: the world market's rows until `marketPacks` is made from them */
+let marketRows: MarketRows | null = null;
 let intercity: IntercityApi | null = null;
 /** T-409: the market's parts by `Cluster.marketKey`, one per cluster the market reaches, each on its
  * cluster's network alone (`IntercityApi.beside`). A part keeps the composition it was made from
@@ -177,7 +179,14 @@ function openPacks(packs: { id: CityId; header: string; bin: ArrayBuffer }[], ma
     }
   }
   if (market?.length && !aux) {
-    marketPacks ??= new MarketPacks(MARKET_WORLD);
+    if (!marketPacks) {
+      if (!marketRows) {
+        for (const m of market) reject(m.id, true, "the market's rows have not arrived");
+        return opened(packs, isBare, rejected);
+      }
+      marketPacks = new MarketPacks(marketWorld(typeof marketRows === "string" ? marketRows : new TextDecoder().decode(marketRows)));
+      marketRows = null;
+    }
     const have = new Set(marketPacks.places());
     const added: CityId[] = [];
     for (const m of market) {
@@ -202,6 +211,11 @@ function openPacks(packs: { id: CityId; header: string; bin: ArrayBuffer }[], ma
       }
     }
   }
+  return opened(packs, isBare, rejected);
+}
+
+/** Each city pack that opened, with its figures (`info`). */
+function opened(packs: { id: CityId }[], isBare: boolean, rejected: OpenRejected[]) {
   const failed = new Set(rejected.filter((r) => !r.market).map((r) => r.id));
   return Object.fromEntries(packs.filter(({ id }) => !failed.has(id)).map(({ id }) => {
     const b = isBare ? bare.get(id) : undefined;
@@ -357,6 +371,7 @@ onmessage = (e: MessageEvent<ToDemand>) => {
         // optimised that code before the real cities open in every worker at once
         // (150: 22,500 cells, 900 zones; about 150 ms, mostly while the packs download)
         const everydayWarmMs = msg.warmEveryday ? everyday_warm_up(150) : 0;
+        if (msg.rows && !marketPacks) marketRows = msg.rows;
         const cityInfo = openPacks(msg.packs, msg.intercity);
         const t2 = performance.now();
         const warmMs = warmUp() + everydayWarmMs;
@@ -374,6 +389,7 @@ onmessage = (e: MessageEvent<ToDemand>) => {
       try {
         const t0 = performance.now();
         const isBare = !!msg.bare && aux;
+        if (msg.rows && !marketPacks) marketRows = msg.rows;
         const rejected: OpenRejected[] = [];
         const cityInfo = openPacks(msg.packs, msg.intercity, isBare, rejected);
         const openMs = performance.now() - t0;

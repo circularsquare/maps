@@ -226,7 +226,7 @@ struct ZoneIn {
 fn one() -> f64 {
     1.
 }
-/// A place's registry row (`marketRow`), written by `bin/market_pack.rs`.
+/// A place's market row (app/src/game/market-rows.json, T-776), written by `bin/market_pack.rs`.
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq)]
 pub struct Row {
     place: usize,

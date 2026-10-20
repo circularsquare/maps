@@ -303,6 +303,8 @@ const LAST_SOLVE = "anitabuilder-load-solve";
 /** T-377: a zone's market pack as a load item, "market:<zone>" */
 const MARKET = "market:";
 const marketItem = (id: CityId) => MARKET + id;
+/** T-776: the world market's rows, beside the registry index the app bundles (a hashed file in a build) */
+const MARKET_ROWS = new URL("../game/market-rows.json", import.meta.url).href;
 const isMarket = (item: string) => item.startsWith(MARKET);
 const marketZone = (item: string) => item.slice(MARKET.length) as CityId;
 /**
@@ -875,7 +877,7 @@ class DemandClient {
 
   /** Download one pack file once, counting its bytes as they arrive. */
   private async downloadOnce(file: string): Promise<Uint8Array> {
-    const r = await fetch(new URL(`packs/${file}`, document.baseURI));
+    const r = await fetch(file === MARKET_ROWS ? file : new URL(`packs/${file}`, document.baseURI));
     if (!r.ok) throw new Error(`${r.status} ${r.url}`);
     const d: Download = { got: 0, total: Number(r.headers.get("Content-Length")) || 0, at: performance.now() };
     this.downloads.set(file, d);
@@ -903,7 +905,10 @@ class DemandClient {
 
   /** Post an `open` to every worker (the last takes the original buffer, the others copies).
    * T-173: until the first worker is ready, the other solving workers' city packs wait (`held`). */
-  private post(open: { pack?: { id: CityId; header: string; bin: ArrayBuffer }; intercity?: { id: CityId; bytes: Uint8Array } }) {
+  private post(open: { pack?: { id: CityId; header: string; bin: ArrayBuffer }; intercity?: { id: CityId; bytes: Uint8Array }; rows?: Uint8Array }) {
+    // T-776: the market's rows go with the first market pack, the same way as its bytes
+    const rows = open.intercity && !this.rowsSent ? open.rows : undefined;
+    if (rows) this.rowsSent = true;
     this.workers.forEach((w, i) => {
       const last = i === this.workers.length - 1;
       const pack = open.pack && { ...open.pack, bin: last ? open.pack.bin : open.pack.bin.slice(0) };
@@ -911,10 +916,12 @@ class DemandClient {
       // original), decoded there: decoding megabytes and cloning the text six times held the main
       // thread up while the player could already pan. The aux worker never opens one: empty bytes.
       const m = open.intercity;
-      const bytes = !m ? undefined : i === this.computeN ? new Uint8Array(0) : i === this.computeN - 1 ? m.bytes : m.bytes.slice();
-      const msg: ToDemand = { kind: "open", packs: pack ? [pack] : [], ...(m ? { intercity: [{ id: m.id, pack: bytes! }] } : {}) };
+      const own = <T extends Uint8Array>(b: T) => (i === this.computeN ? new Uint8Array(0) : i === this.computeN - 1 ? b : b.slice());
+      const bytes = m && own(m.bytes), r = rows && own(rows);
+      const msg: ToDemand = { kind: "open", packs: pack ? [pack] : [], ...(m ? { intercity: [{ id: m.id, pack: bytes! }] } : {}), ...(r?.byteLength ? { rows: r } : {}) };
       const transfer: Transferable[] = pack ? [pack.bin] : [];
       if (bytes?.byteLength) transfer.push(bytes.buffer as ArrayBuffer);
+      if (r?.byteLength) transfer.push(r.buffer as ArrayBuffer);
       const send = () => w.postMessage(msg, transfer);
       if (pack && i > 0 && i < this.computeN && this.held) this.held.push(send);
       else send();
@@ -967,13 +974,21 @@ class DemandClient {
     this.fetching.add(item);
     const log: LoadLog = { item, requestedAt: performance.now() };
     this.start.loads.push(log);
-    this.download(`${id}.market.json`).then((bytes) => {
+    Promise.all([this.download(`${id}.market.json`), this.marketRows()]).then(([bytes, rows]) => {
       log.downloadedAt = performance.now();
       this.recovered(item);
       this.bytes.set(item, bytes.byteLength);
       this.hashPack(item, [bytes]);
-      this.post({ intercity: { id, bytes } });
+      this.post({ intercity: { id, bytes }, rows });
     }).catch((err) => this.unreachable(item, id, `market pack ${id}: ${String(err)}`));
+  }
+
+  /** T-776: the world market's rows, downloaded once, beside the first market pack (a fraction of
+   * its size, so in before it; preloading them with a zone's city pack cost a new game 0.2 s). */
+  private rows: Promise<Uint8Array> | null = null;
+  private rowsSent = false;
+  private marketRows(): Promise<Uint8Array> {
+    return (this.rows ??= this.download(MARKET_ROWS).catch((err) => { this.rows = null; throw err; }));
   }
 
   // --- T-484: a pack that could not be downloaded --------------------------------------------------

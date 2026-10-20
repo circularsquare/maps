@@ -350,6 +350,8 @@ class Run:
             reg["cities"] = [c for c in reg["cities"] if c["id"] not in ids]
             if len(reg["cities"]) != before:
                 self.reg_path.write_text(json.dumps(reg, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+                import market_rows
+                market_rows.save(reg, market_rows.load(self.root), self.root)
             for i in ids:
                 p = self.packs / f"{i}.market.json"
                 if p.exists():

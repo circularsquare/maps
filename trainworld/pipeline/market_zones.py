@@ -6,8 +6,9 @@
 
 Writes `data/packs/<id>.market.json` per zone (seconds each), then runs the sim crate's `market_pack`
 over every zone's file, which adds up each zone's registry row and the trips between zones whose
-centres are under 250 km apart, and merges them into app/src/game/registry.json (`place`,
-`marketRow`, and `market.rule` / `market.places`). A new zone needs only its own file and this merge.
+centres are under 250 km apart, and merges them into app/src/game/registry.json (`place`, `country`,
+`market.rule` / `market.places`) and the rows into app/src/game/market-rows.json (T-776,
+market_rows.py). A new zone needs only its own file and this merge.
 
 A zone's file holds its endpoint sites (its pack's cells in 600 m squares: the Northeast's straight
 from data/packs/intercity.json, the sites the joint commute gravity names, in the market frame; every
@@ -36,6 +37,7 @@ import world_field as W
 from read_pack import load_pack
 from build_city import R_EARTH
 from intercity import park_by_cell
+import market_rows
 
 ROOT = Path(__file__).resolve().parents[1]
 REG = ROOT / "app/src/game/registry.json"
@@ -394,10 +396,11 @@ def main(ids=None):
     cargo_bin("market_pack", "--root", str(ROOT), "--out", str(rows))
     got = json.loads(rows.read_text(encoding="utf-8"))
     reg = json.loads(REG.read_text(encoding="utf-8"))
-    for c in reg["cities"]:
-        if c["id"] in got["rows"]:
-            c["marketRow"] = got["rows"][c["id"]]
+    have = market_rows.load(ROOT)
+    have.update(got["rows"])
+    market_rows.with_countries(reg, have)
     REG.write_text(json.dumps(reg, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    market_rows.save(reg, have, ROOT)
     print("registry rows:", ", ".join(sorted(got["rows"])))
 
 

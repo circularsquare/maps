@@ -40,7 +40,8 @@ function start() {
 }
 const registry = JSON.parse(readFileSync(new URL('../app/src/game/registry.json', import.meta.url)));
 const pack = (id) => ({ id, header: readFileSync(new URL(`../data/packs/${id}.json`, import.meta.url), 'utf8'), bin: Uint8Array.from(readFileSync(new URL(`../data/packs/${id}.bin`, import.meta.url))).buffer });
-// T-377: the zones' market packs (the world market's rows are in the registry the worker bundles)
+// T-377: the zones' market packs; T-776: the world market's rows, which the page sends with the first
+const ROWS = readFileSync(new URL('../app/src/game/market-rows.json', import.meta.url), 'utf8');
 const market = ['bos', 'phl'].map((id) => ({ id, pack: readFileSync(new URL(`../data/packs/${id}.market.json`, import.meta.url), 'utf8') }));
 const FRAME = { kind: 'equirect', lon: -73.985, lat: 40.758 }, R = 6371008.8, RAD = Math.PI / 180;
 const xyOf = ([lon, lat]) => [R * (lon - FRAME.lon) * RAD * Math.cos(FRAME.lat * RAD), R * (lat - FRAME.lat) * RAD];
@@ -70,7 +71,7 @@ const ROUNDS = 3;
 const finals = (msgs, version) => [...new Map(msgs.filter((m) => m.kind === 'result' && !m.cluster && m.version === version && m.summary[0] === ROUNDS).map((m) => [m.period, m])).values()].sort((a, b) => a.period - b.period);
 async function worker() {
   const k = start(); await k.next((m) => m.kind === 'boot');
-  k.w.postMessage({ kind: 'init', packs: [pack('bos'), pack('phl')], intercity: market, periods: [0, 1, 2, 3, 4] });
+  k.w.postMessage({ kind: 'init', packs: [pack('bos'), pack('phl')], intercity: market, rows: ROWS, periods: [0, 1, 2, 3, 4] });
   const r = await k.next((m) => m.kind === 'ready' || m.kind === 'failed'); assert.equal(r.kind, 'ready', r.error);
   return k;
 }

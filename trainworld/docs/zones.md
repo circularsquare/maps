@@ -179,7 +179,7 @@ Every zone is a place of one world market (T-377; the rule in [regional.md](regi
 - **Normalisers over the world field** (T-375), never over the zone list: a share of every zone's
   trips goes to places with no zone, and adding a zone moves only the trips that went to where it
   now is. Each zone's own pack carries its 6 km zones' two normalisers (ground and tail), so a new
-  zone needs only its own pack and the registry rows rebuilt (`pipeline/market_zones.py`, seconds).
+  zone needs only its own pack and the market rows rebuilt (`pipeline/market_zones.py`, seconds).
 - **The trip rate, the onset and the curve** from NHTS 2017 for the ground; the long-haul tail,
   income and border factors fitted in T-376.
 - **Near and far**: places under 250 km apart (centre to centre) pair 6 km zone to 6 km zone; farther
@@ -290,14 +290,17 @@ between them are place to place, and clusters merge only through track (T-362 de
   within 30 km of its box, and closes with the zone (T-396, T-377; demand.md "Which cities are
   open"), so the market a worker holds grows with what is viewed and reached, not with the
   registry. Its pairs are built only between zones a station serves, so a solve's pair loop grows
-  with the network's reach; pairs to every other place come from the registry rows (one row per
-  zone, a few hundred bytes).
+  with the network's reach; pairs to every other place come from the market rows (one row per
+  zone, about 0.9 KB, `game/market-rows.json`), which every solving worker holds once a market pack opens.
   Cross-zone commute pairs add a second pass over served pairs to the market's per-period work
   (the market pass was 0.06 s natively a period on the real New York network).
 - **The joint gravity** is offline only (`joint_gravity`, about a minute natively on three
   threads over the 13 packs' 25.6k zones, about three over 65k); a runtime edit never reruns it.
-- **Startup** must not grow with the number of zones: zones add registry entries, and their files
-  are fetched on demand (section 6). A mask installed while a big network is loaded reworks the
+- **Startup** must not grow with the number of zones beyond the registry index (T-776): a zone adds
+  about 310 bytes to the bundled `registry.json` (what the map, the grey bubbles, the new game
+  sheet's search and the save header need before it opens) and about 0.9 KB to the market rows,
+  which the page downloads only with the first market pack; its files are fetched
+  on demand (section 6). A mask installed while a big network is loaded reworks the
   whole network once (about 0.2 s on the real New York network). A zone opened only for its bubbles opens bare in the auxiliary worker (T-325):
   0.3-1.5 s, and its everyday layer once rather than in every solving worker.
 - **Closing** (T-301; demand-runtime.md "Which cities are open"). A zone nobody views, sees beside the view

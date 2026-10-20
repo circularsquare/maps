@@ -40,7 +40,8 @@ function start() {
 }
 const registry = JSON.parse(readFileSync(new URL('../app/src/game/registry.json', import.meta.url)));
 const pack = (id) => ({ id, header: readFileSync(new URL(`../data/packs/${id}.json`, import.meta.url), 'utf8'), bin: Uint8Array.from(readFileSync(new URL(`../data/packs/${id}.bin`, import.meta.url))).buffer });
-// T-377: zones' market packs (the world market's rows are in the registry the worker bundles)
+// T-377: zones' market packs; T-776: the world market's rows, which the page sends with the first
+const ROWS = readFileSync(new URL('../app/src/game/market-rows.json', import.meta.url), 'utf8');
 const market = (ids) => ids.map((id) => ({ id, pack: readFileSync(new URL(`../data/packs/${id}.market.json`, import.meta.url), 'utf8') }));
 // a three-station line across Midtown (world frame = the New York pack's origin, equirectangular)
 const times = new Float32Array(18); for (let lev = 0; lev < 3; lev++) { times[lev * 3] = 60; times[lev * 3 + 1] = 60; times[(lev + 3) * 3 + 1] = 60; times[(lev + 3) * 3 + 2] = 60; }
@@ -54,7 +55,7 @@ const t = () => performance.now();
 // before T-149: every pack at init
 const all = start(); await all.next((m) => m.kind === 'boot');
 let a0 = t();
-all.w.postMessage({ kind: 'init', packs: registry.cities.map(({ id }) => pack(id)), intercity: market(registry.cities.map(({ id }) => id)), periods: [0, 1, 2, 3, 4] });
+all.w.postMessage({ kind: 'init', packs: registry.cities.map(({ id }) => pack(id)), intercity: market(registry.cities.map(({ id }) => id)), rows: ROWS, periods: [0, 1, 2, 3, 4] });
 const readyAll = await all.next((m) => m.kind === 'ready' || m.kind === 'failed'); assert.equal(readyAll.kind, 'ready', readyAll.error);
 const openAllMs = t() - a0;
 all.w.postMessage({ kind: 'solve', version: 1, net, rounds: ROUNDS });
@@ -65,7 +66,7 @@ await all.w.terminate();
 // T-149: start empty, then the market and New York, solve; then Philadelphia, solve again
 const lazy = start(); await lazy.next((m) => m.kind === 'boot');
 a0 = t();
-lazy.w.postMessage({ kind: 'init', packs: [], periods: [0, 1, 2, 3, 4] });
+lazy.w.postMessage({ kind: 'init', packs: [], rows: ROWS, periods: [0, 1, 2, 3, 4] });
 lazy.w.postMessage({ kind: 'open', packs: [], intercity: market(['nyc']) });
 lazy.w.postMessage({ kind: 'open', packs: [pack('nyc')] });
 const ready = await lazy.next((m) => m.kind === 'ready' || m.kind === 'failed'); assert.equal(ready.kind, 'ready', ready.error);
