@@ -1368,15 +1368,17 @@ impl TrackApi {
     /// (m), corner count, then each corner's x, y, radius (0 auto), level], or empty if it cannot
     /// be fitted.
     pub fn trace_route(&self, lonlat: &[f64], tol: f64, tracks: u8, level: i8) -> Vec<f64> {
+        let mut t = self.trace_start(lonlat, tol, tracks, level);
+        while !t.step() {}
+        t.result()
+    }
+
+    /// `trace_route` in steps (T-754): `step` until it says done, then `result`.
+    pub fn trace_start(&self, lonlat: &[f64], tol: f64, tracks: u8, level: i8) -> RouteTrace {
         let f = self.w.net.frame();
         let line: Vec<(f64, f64)> = lonlat.chunks_exact(2).map(|p| f.from_lonlat(p[0], p[1])).collect();
         let r_min = if tracks == 4 { MIN_RADIUS + QUAD_SPACING } else { MIN_RADIUS };
-        let Some(t) = super::trace::trace(&line, f.scaled(), tol, r_min, level) else { return vec![] };
-        let mut out = vec![t.worst, t.mean, t.pis.len() as f64];
-        for p in &t.pis {
-            out.extend_from_slice(&[p.x, p.y, p.radius, p.level as f64]);
-        }
-        out
+        RouteTrace { t: super::trace::Tracer::new(&line, f.scaled(), tol, r_min, level) }
     }
 
     /// The node the last `add_route` ended at, so the next segment can start from it (T-418).
@@ -3173,10 +3175,19 @@ fn express_verts(verts: &[Pi], first: usize, clicks: usize, scaled: bool, side: 
     // T-708: a corner whose curve fills its legs is ill-conditioned when the turn is slight (a
     // capped curve of a fraction of a degree has tangents of a metre or two): the millimetre grid
     // tilts its legs enough that the concentric radius overruns them. Auto fills them instead,
-    // within millimetres of concentric.
-    for issue in geom::fit_in(&out, scaled).issues {
-        if let GeomIssue::ArcDoesNotFit(j) = issue {
-            out[j].radius = 0.0;
+    // within millimetres of concentric. An auto curve takes half of each leg, so a set one beside
+    // it may then not fit either (T-727f: one left in 5,692 kept the whole pair from being cut into
+    // pieces, and the 5,400 km single edge took 3 s to add).
+    for _ in 0..8 {
+        let mut eased = false;
+        for issue in geom::fit_in(&out, scaled).issues {
+            if let GeomIssue::ArcDoesNotFit(j) = issue {
+                out[j].radius = 0.0;
+                eased = true;
+            }
+        }
+        if !eased {
+            break;
         }
     }
     Some((out, first_out, count))
@@ -3479,6 +3490,32 @@ fn issue_kind(i: &Issue) -> String {
             let d = format!("{other:?}");
             d.split(|c: char| c == ' ' || c == '{' || c == '(').next().unwrap_or("").to_string()
         }
+    }
+}
+
+/// A real line being traced (`TrackApi::trace_start`): the router worker steps it between its
+/// messages, so a newer request can drop it (T-754).
+#[wasm_bindgen]
+pub struct RouteTrace {
+    t: super::trace::Tracer,
+}
+
+#[wasm_bindgen]
+impl RouteTrace {
+    /// One step, tens of ms at most; true once the result is ready.
+    pub fn step(&mut self) -> bool {
+        self.t.step()
+    }
+
+    /// `trace_route`'s result: [worst, mean distance (m), corner count, then each corner's x, y,
+    /// radius (0 auto), level], or empty if it cannot be fitted.
+    pub fn result(&mut self) -> Vec<f64> {
+        let Some(t) = self.t.take() else { return vec![] };
+        let mut out = vec![t.worst, t.mean, t.pis.len() as f64];
+        for p in &t.pis {
+            out.extend_from_slice(&[p.x, p.y, p.radius, p.level as f64]);
+        }
+        out
     }
 }
 

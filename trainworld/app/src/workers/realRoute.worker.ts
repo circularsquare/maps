@@ -440,6 +440,27 @@ const apiReady = (async () => {
   api = a;
 })();
 
+/** Work this long between looks at the messages, ms (T-754). */
+const TRACE_SLICE_MS = 25;
+
+/** The fit in steps of a few ms, yielding every slice so a newer route request is seen; null
+ *  once one has come. */
+async function traceLatest(seq: number, line: Float64Array, tol: number, tracks: number, level: number): Promise<Float64Array | null> {
+  const t = api!.trace_start(line, tol, tracks, level);
+  try {
+    let slice = performance.now();
+    while (!t.step()) {
+      if (performance.now() - slice < TRACE_SLICE_MS) continue;
+      await new Promise((r) => setTimeout(r, 0));
+      if (seq !== latest) return null;
+      slice = performance.now();
+    }
+    return t.result();
+  } finally {
+    t.free();
+  }
+}
+
 let queue: Promise<void> = Promise.resolve();
 
 self.onmessage = (ev: MessageEvent<ToRouter>) => {
@@ -474,7 +495,8 @@ async function handle(m: ToRouter) {
     await apiReady;
     if (m.seq !== latest) return;
     const t1 = performance.now();
-    const out = api!.trace_route(line, m.tol, m.tracks, m.level);
+    const out = await traceLatest(m.seq, line, m.tol, m.tracks, m.level);
+    if (!out) return;
     const ms = performance.now() - t1;
     if (out.length < 3) return post({ kind: "fit", seq: m.seq, pis: null, worst: 0, mean: 0, ms });
     const pis = out.slice(3);

@@ -1,5 +1,7 @@
 ﻿# Archive
 
+- T-754 [P3] The snapped route's fit faster and cancellable. Done 2026-10-19: New York-Emeryville natively 779 to 136 ms, same corners; fitted in steps of at most 10 ms, the router worker dropping it for a newer request. notes/T-727.md.
+- T-727f [P3] Quad over thousands of clicked corners slow. Done 2026-10-19: one express curve left not fitting made the express pair one 5,400 km edge; now cleared until none is, New York-Emeryville quad edit 3.3 s to 0.15 s natively. notes/T-727.md.
 - T-756 [P2] Each demand population on the stations within its reach. Done 2026-10-19: a city's layers on its box + 30 km, the market on the cluster; Japan's seven cities 555 to 346 s, 2.5 to 1.5 GB a worker (Node), figures within 0.06%; whole-country cities solve, the market is T-761. notes/T-756.md.
 - T-757 [P2] A failed demand worker says so. Done 2026-10-19: a red alert under the demand buttons ("Demand ran out of memory" or "Demand stopped"), the figures shown kept; no restart (reload). notes/T-756.md.
 - T-760 [P3] Negative stop-to-stop distance for stops closer than their platforms. Done 2026-10-19: fixed in `build_run`, demandClient's clamp gone. notes/T-756.md.

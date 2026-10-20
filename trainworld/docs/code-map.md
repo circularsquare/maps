@@ -132,7 +132,7 @@ the screen when demand cannot load, T-149, T-172, T-180); `StartMenu.tsx` (the s
 ### src/workers/
 
 `realRoute.worker.ts` (the real-network router: graphs joined at borders, A* with the turn limit
-and families, then `trace_route` on a track model of its own, T-727d); `protocol.ts` (edit ops, clock messages, the network snapshot for demand), `clock.worker.ts` (owns
+and families, then the fit in steps on a track model of its own, dropped for a newer request, T-727d, T-754); `protocol.ts` (edit ops, clock messages, the network snapshot for demand), `clock.worker.ts` (owns
 the network: `TrackApi`, notes/T-025.md; money and autosave too), `saveFile.ts` (the save format
 and IndexedDB, T-029; slots' backups, T-744), `clockClient.ts`, `demand.worker.ts`, `demandClient.ts`, `demandCache.ts`
 (the last final demand result kept beside the save, T-328),

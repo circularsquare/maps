@@ -40,49 +40,136 @@ pub struct Traced {
 /// or 108 for quad track's inner pair). None if the line is too short to fit or the result does
 /// not fit (it never should).
 pub fn trace(line: &[(f64, f64)], scaled: bool, tol: f64, r_min: f64, level: i8) -> Option<Traced> {
-    let line = dedup(line);
-    if line.len() < 2 {
-        return None;
-    }
-    let k = |y: f64| if scaled { merc_k(y) } else { 1.0 };
-    let samples = densify(&line, scaled);
-    let mut keep = thin(&line, &|y| tol * THIN_SHARE * k(y));
-    for _ in 0..MAX_ROUNDS {
-        let off = offsets(&line, &keep, &samples, scaled, level);
-        let add = worst_per_span(&keep, &samples, &off, tol);
-        if add.is_empty() {
-            break;
+    let mut t = Tracer::new(line, scaled, tol, r_min, level);
+    while !t.step() {}
+    t.take()
+}
+
+/// `trace` in steps, each a round of adding corners or one tight curve eased (tens of ms at
+/// most on a 5,000 km route), so a caller can give up on it between steps (T-754).
+pub struct Tracer {
+    line: Vec<(f64, f64)>,
+    samples: Vec<((f64, f64), usize)>,
+    scaled: bool,
+    tol: f64,
+    r_min: f64,
+    level: i8,
+    keep: Vec<usize>,
+    rounds: usize,
+    corners: Option<Corners>,
+    tried: usize,
+    widened: usize,
+    dropped: usize,
+    sweep: Option<Sweep>,
+    pis: Vec<Pi>,
+    done: Option<Option<Traced>>,
+}
+
+enum Eased {
+    Widened(Corners),
+    Dropped(Corners),
+    Done,
+    Failed,
+}
+
+impl Tracer {
+    pub fn new(line: &[(f64, f64)], scaled: bool, tol: f64, r_min: f64, level: i8) -> Tracer {
+        let line = dedup(line);
+        let mut t = Tracer { line, samples: vec![], scaled, tol, r_min, level, keep: vec![], rounds: 0, corners: None, tried: 0, widened: 0, dropped: 0, sweep: None, pis: vec![], done: None };
+        if t.line.len() < 2 {
+            t.done = Some(None);
+            return t;
         }
-        keep.extend(add);
-        keep.sort_unstable();
-        keep.dedup();
+        t.samples = densify(&t.line, scaled);
+        t.keep = thin(&t.line, &|y| tol * THIN_SHARE * if scaled { merc_k(y) } else { 1.0 });
+        t
     }
-    let mut c = Corners { radius: vec![0.0; keep.len()], at: vec![None; keep.len()], keep };
-    let (mut widened, mut dropped) = (0, 0);
-    let mut tried = 0;
-    while tried < c.keep.len() {
-        tried += 1;
-        let f = c.fit(&line, scaled, level);
+
+    /// One step; true once the result is ready.
+    pub fn step(&mut self) -> bool {
+        if self.done.is_some() {
+            return true;
+        }
+        if let Some(s) = &mut self.sweep {
+            if !s.run(&self.samples, self.scaled) {
+                return false;
+            }
+            let off = self.sweep.take().map(|s| s.off).unwrap_or_default();
+            if self.corners.is_none() {
+                // a round of adding corners where the fit is out of tolerance
+                self.rounds += 1;
+                let add = worst_per_span(&self.keep, &self.samples, &off, self.tol);
+                let more = !add.is_empty();
+                if more {
+                    self.keep.extend(add);
+                    self.keep.sort_unstable();
+                    self.keep.dedup();
+                }
+                if !more || self.rounds >= MAX_ROUNDS {
+                    let keep = std::mem::take(&mut self.keep);
+                    self.corners = Some(Corners { radius: vec![0.0; keep.len()], at: vec![None; keep.len()], keep });
+                }
+                return false;
+            }
+            let worst = off.iter().cloned().fold(0.0, f64::max);
+            let mean = off.iter().sum::<f64>() / off.len().max(1) as f64;
+            self.done = Some(Some(Traced { pis: std::mem::take(&mut self.pis), worst, mean, widened: self.widened, dropped: self.dropped }));
+            return true;
+        }
+        let Some(c) = &self.corners else {
+            let v: Vec<Pi> = self.keep.iter().map(|&i| Pi::new(self.line[i].0, self.line[i].1, 0.0, self.level).quantised()).collect();
+            self.sweep = Some(Sweep::new(&geom::fit_in(&v, self.scaled), SWEEP_CHUNK));
+            return false;
+        };
+        if self.tried >= c.keep.len() {
+            return self.finish();
+        }
+        self.tried += 1;
+        match self.ease(c) {
+            Eased::Widened(c2) => {
+                self.corners = Some(c2);
+                self.widened += 1;
+                false
+            }
+            Eased::Dropped(c2) => {
+                self.corners = Some(c2);
+                self.dropped += 1;
+                false
+            }
+            Eased::Done => self.finish(),
+            Eased::Failed => {
+                self.done = Some(None);
+                true
+            }
+        }
+    }
+
+    /// The result, once `step` has said it is ready.
+    pub fn take(&mut self) -> Option<Traced> {
+        self.done.take().flatten()
+    }
+
+    /// The tightest curve under the minimum radius widened to it, or its corners dropped or merged.
+    fn ease(&self, c: &Corners) -> Eased {
+        let (line, samples, scaled, level, r_min, tol) = (&self.line[..], &self.samples[..], self.scaled, self.level, self.r_min, self.tol);
+        let f = c.fit(line, scaled, level);
         let tight_at = |f: &Fit, j: usize| f.radius[j] > 0.0 && f.radius[j] < r_min - 1e-6;
-        let Some(i) = (1..c.keep.len() - 1).filter(|&j| tight_at(&f, j)).min_by(|&a, &b| f.radius[a].total_cmp(&f.radius[b])) else { break };
+        let Some(i) = (1..c.keep.len() - 1).filter(|&j| tight_at(&f, j)).min_by(|&a, &b| f.radius[a].total_cmp(&f.radius[b])) else { return Eased::Done };
         // widen in place when the legs have room beside the neighbours' tangents
-        let v = c.verts(&line, level);
+        let v = c.verts(line, level);
         let leg = |a: usize, b: usize| (v[b].x - v[a].x).hypot(v[b].y - v[a].y);
         let turn = turn_at(&v, i);
-        let need = r_min * k(v[i].y) * (turn / 2.0).tan();
+        let need = r_min * if scaled { merc_k(v[i].y) } else { 1.0 } * (turn / 2.0).tan();
         if turn < PI - 1e-3 && need + f.tangent[i - 1] <= leg(i - 1, i) - FIT_TOL && need + f.tangent[i + 1] <= leg(i, i + 1) - FIT_TOL {
             let mut c2 = c.clone();
             c2.radius[i] = r_min + 1e-3;
-            if c2.fit(&line, scaled, level).issues.is_empty() && c2.worst_near(&line, &samples, scaled, level, i) <= 2.0 * tol {
-                c = c2;
-                widened += 1;
-                continue;
+            if c2.near(line, scaled, level, i).issues(|_| true) == 0 && c2.worst_near(line, samples, scaled, level, i) <= 2.0 * tol {
+                return Eased::Widened(c2);
             }
         }
         // else drop it with up to three neighbours each side, or put one corner where the legs
         // either side of those meet, at the minimum radius; keep what leaves the line nearest
-        let tight_near = |f: &Fit, a: usize, b: usize| (a.max(1)..b.min(f.radius.len() - 1)).filter(|&j| tight_at(f, j)).count();
-        let before = tight_near(&f, i.saturating_sub(6), i + 7);
+        let before = (i.saturating_sub(6).max(1)..(i + 7).min(f.radius.len() - 1)).filter(|&j| tight_at(&f, j)).count();
         let mut best: Option<(f64, Corners)> = None;
         for (a, b) in [(0, 0), (1, 0), (0, 1), (1, 1), (2, 1), (1, 2), (2, 2), (3, 3)] {
             let (lo, hi) = (i.saturating_sub(a), i + b);
@@ -91,33 +178,36 @@ pub fn trace(line: &[(f64, f64)], scaled: bool, tol: f64, r_min: f64, level: i8)
             }
             for merge in [false, true] {
                 let Some(c2) = (if merge { c.merged(&v, lo, hi, r_min + 1e-3) } else { Some(c.without(lo, hi)) }) else { continue };
-                let f2 = c2.fit(&line, scaled, level);
                 let at = lo.min(c2.keep.len() - 2).max(1);
-                if tight_near(&f2, at.saturating_sub(6), at + 7) >= before || f2.issues.iter().any(|g| !matches!(g, geom::GeomIssue::RadiusTooSmall(_))) {
+                let w2 = c2.near(line, scaled, level, at);
+                if w2.tight(at.saturating_sub(6), at + 7, r_min) >= before || w2.issues(|g| !matches!(g, geom::GeomIssue::RadiusTooSmall(_))) > 0 {
                     continue;
                 }
-                let w = c2.worst_near(&line, &samples, scaled, level, at);
+                let w = c2.worst_near(line, samples, scaled, level, at);
                 if best.as_ref().map_or(true, |bst| w < bst.0) {
                     best = Some((w, c2));
                 }
             }
         }
         match best {
-            Some((_, c2)) => {
-                c = c2;
-                dropped += 1;
-            }
-            None => return None,
+            Some((_, c2)) => Eased::Dropped(c2),
+            None => Eased::Failed,
         }
     }
-    let v = c.verts(&line, level);
-    if !geom::fit_in(&v, scaled).issues.is_empty() {
-        return None;
+
+    /// Checks the eased alignment and starts measuring it; true if it does not fit.
+    fn finish(&mut self) -> bool {
+        let Some(c) = &self.corners else { return true };
+        let v = c.verts(&self.line, self.level);
+        let f = geom::fit_in(&v, self.scaled);
+        if !f.issues.is_empty() {
+            self.done = Some(None);
+            return true;
+        }
+        self.sweep = Some(Sweep::new(&f, SWEEP_CHUNK));
+        self.pis = v[1..v.len() - 1].to_vec();
+        false
     }
-    let off = sweep(&c.fit(&line, scaled, level), &samples, scaled);
-    let worst = off.iter().cloned().fold(0.0, f64::max);
-    let mean = off.iter().sum::<f64>() / off.len().max(1) as f64;
-    Some(Traced { pis: v[1..v.len() - 1].to_vec(), worst, mean, widened, dropped })
 }
 
 /// The alignment's vertices: real vertices by index (ends included), each with its radius (0
@@ -140,6 +230,18 @@ impl Corners {
     }
     fn fit(&self, line: &[(f64, f64)], scaled: bool, level: i8) -> Fit {
         geom::fit_in(&self.verts(line, level), scaled)
+    }
+    /// The fit of the corners around corner `at` alone: a corner's arc depends only on its two
+    /// legs, so away from the slice's ends it is the whole alignment's.
+    fn near(&self, line: &[(f64, f64)], scaled: bool, level: i8, at: usize) -> Near {
+        let last = self.keep.len() - 1;
+        let (a, b) = (at.saturating_sub(NEAR), (at + NEAR).min(last));
+        let fit = geom::fit_in(&self.slice(a, b).verts(line, level), scaled);
+        // the slice's first and last corners are its ends, so the corners beside them lose the
+        // half-leg rule, and an arc set beside those may then be blamed
+        let lo = if a == 0 { 1 } else { a + 3 };
+        let hi = if b == last { last - 1 } else { b - 3 };
+        Near { fit, a, lo, hi }
     }
     fn slice(&self, lo: usize, hi: usize) -> Corners {
         Corners { keep: self.keep[lo..=hi].to_vec(), radius: self.radius[lo..=hi].to_vec(), at: self.at[lo..=hi].to_vec() }
@@ -182,8 +284,42 @@ impl Corners {
         let n = v.len();
         v[0].radius = 0.0;
         v[n - 1].radius = 0.0;
-        let s: Vec<((f64, f64), usize)> = samples.iter().filter(|s| s.1 >= a && s.1 < b).cloned().collect();
-        sweep(&geom::fit_in(&v, scaled), &s, scaled).into_iter().fold(0.0, f64::max)
+        // samples are in order along the line
+        let (from, to) = (samples.partition_point(|s| s.1 < a), samples.partition_point(|s| s.1 < b));
+        sweep(&geom::fit_in(&v, scaled), &samples[from..to], scaled).into_iter().fold(0.0, f64::max)
+    }
+}
+
+/// Corners either side of the one `Corners::near` fits around.
+const NEAR: usize = 12;
+
+/// A fit of some corners, indexed as the whole alignment is, trusted from corner `lo` to `hi`.
+struct Near {
+    fit: Fit,
+    a: usize,
+    lo: usize,
+    hi: usize,
+}
+
+impl Near {
+    /// Issues at the trusted corners (or legs) that `pick` picks.
+    fn issues(&self, pick: impl Fn(&geom::GeomIssue) -> bool) -> usize {
+        use geom::GeomIssue::*;
+        self.fit
+            .issues
+            .iter()
+            .filter(|g| {
+                let (ZeroLeg(j) | Reversal(j) | RadiusTooSmall(j) | ArcDoesNotFit(j) | RampTooShort(j) | LevelRange(j)) = **g;
+                (self.lo..=self.hi).contains(&(self.a + j)) && pick(g)
+            })
+            .count()
+    }
+    /// Corners from..to (whole-alignment indices, within the trusted ones) under `r_min`.
+    fn tight(&self, from: usize, to: usize, r_min: f64) -> usize {
+        (from.max(self.lo)..to.min(self.hi + 1)).filter(|&j| {
+            let r = self.fit.radius[j - self.a];
+            r > 0.0 && r < r_min - 1e-6
+        }).count()
     }
 }
 
@@ -251,42 +387,68 @@ fn densify(line: &[(f64, f64)], scaled: bool) -> Vec<((f64, f64), usize)> {
     out
 }
 
-/// Ground distance from each sample to the alignment through the real vertices `keep`, auto radii.
-fn offsets(line: &[(f64, f64)], keep: &[usize], samples: &[((f64, f64), usize)], scaled: bool, level: i8) -> Vec<f64> {
-    let v: Vec<Pi> = keep.iter().map(|&i| Pi::new(line[i].0, line[i].1, 0.0, level).quantised()).collect();
-    sweep(&geom::fit_in(&v, scaled), samples, scaled)
-}
-
 /// Distances from points in order along the line to pieces in order along the fit: each point
 /// looks at the pieces near the last one it matched.
 fn sweep(f: &Fit, samples: &[((f64, f64), usize)], scaled: bool) -> Vec<f64> {
-    let shapes: Vec<Shape> = f.pieces.iter().map(Shape::of).collect();
-    let mut cur = 0usize;
-    let n = shapes.len();
-    samples
-        .iter()
-        .map(|&((x, y), _)| {
-            // pieces are hundreds of metres and samples 10 m apart, so the match moves slowly
+    let mut s = Sweep::new(f, usize::MAX);
+    s.run(samples, scaled);
+    s.off
+}
+
+/// Samples measured in one `Sweep::run`: a few ms of a step.
+const SWEEP_CHUNK: usize = 150_000;
+
+/// `sweep` a chunk of samples at a time (`Tracer::step`).
+struct Sweep {
+    shapes: Vec<Shape>,
+    cur: usize,
+    chunk: usize,
+    off: Vec<f64>,
+}
+
+impl Sweep {
+    fn new(f: &Fit, chunk: usize) -> Sweep {
+        Sweep { shapes: f.pieces.iter().map(Shape::of).collect(), cur: 0, chunk, off: vec![] }
+    }
+    /// The next chunk of `samples` (the same every call); true once all are measured.
+    fn run(&mut self, samples: &[((f64, f64), usize)], scaled: bool) -> bool {
+        let (from, n) = (self.off.len(), self.shapes.len());
+        let to = from.saturating_add(self.chunk).min(samples.len());
+        for &((x, y), _) in &samples[from..to] {
+            if n == 0 {
+                self.off.push(f64::INFINITY);
+                continue;
+            }
+            // pieces are hundreds of metres and samples 10 m apart, so the match moves slowly; the
+            // nearest of the window, the first of equals, with the last match measured first so the
+            // bounding circles rule most of the others out
+            let cur = self.cur;
             let (lo, hi) = (cur.saturating_sub(1), (cur + 8).min(n));
-            let mut best = (f64::INFINITY, cur);
-            for (j, s) in shapes.iter().enumerate().take(hi).skip(lo) {
+            let mut best = (self.shapes[cur].dist(x, y), cur);
+            for (j, s) in self.shapes.iter().enumerate().take(hi).skip(lo) {
+                if j == cur || s.beyond(x, y, best.0) {
+                    continue;
+                }
                 let d = s.dist(x, y);
-                if d < best.0 {
+                if d < best.0 || (d == best.0 && j < best.1) {
                     best = (d, j);
                 }
             }
-            cur = best.1;
-            best.0 / if scaled { merc_k(y) } else { 1.0 }
-        })
-        .collect()
+            self.cur = best.1;
+            self.off.push(best.0 / if scaled { merc_k(y) } else { 1.0 });
+        }
+        to == samples.len()
+    }
 }
 
-/// A piece as the distance test wants it: its ends, and an arc's centre, radius, start angle and
-/// signed turn.
+/// A piece as the distance test wants it: its ends, an arc's centre, radius, start angle and
+/// signed turn, and a circle holding the whole piece.
 struct Shape {
     a: (f64, f64),
     b: (f64, f64),
     arc: Option<(f64, f64, f64, f64, f64)>,
+    mid: (f64, f64),
+    reach: f64,
 }
 
 impl Shape {
@@ -296,7 +458,16 @@ impl Shape {
             let (cx, cy) = p.center();
             (cx, cy, 1.0 / p.k.abs(), (p.y0 - cy).atan2(p.x0 - cx), p.k * p.plen)
         });
-        Shape { a: (p.x0, p.y0), b: (ex, ey), arc }
+        // an arc turning under half a circle lies inside the circle on its chord (Thales)
+        let wide = arc.is_some_and(|a| a.4.abs() > PI - 1e-6);
+        let mid = ((p.x0 + ex) / 2.0, (p.y0 + ey) / 2.0);
+        let reach = if wide { f64::INFINITY } else { (ex - p.x0).hypot(ey - p.y0) / 2.0 + 1e-6 };
+        Shape { a: (p.x0, p.y0), b: (ex, ey), arc, mid, reach }
+    }
+    /// Whether every point of the piece is further than `d` from (x, y).
+    fn beyond(&self, x: f64, y: f64, d: f64) -> bool {
+        let (dx, dy, r) = (x - self.mid.0, y - self.mid.1, self.reach + d + 1e-9);
+        r.is_finite() && dx * dx + dy * dy > r * r
     }
     fn dist(&self, x: f64, y: f64) -> f64 {
         let Some((cx, cy, r, a0, turn)) = self.arc else { return seg_dist((x, y), self.a, self.b) };

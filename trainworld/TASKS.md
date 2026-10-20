@@ -113,10 +113,9 @@ Anita's playtest of 2026-10-19 (the 9e466a4 build): notes/playtest-2026-10-19.md
 Anita's second set of 2026-10-19 notes (the bfe93f9 build): notes/playtest-2026-10-19b.md, a section a task.
 - T-702 [P3] Station ghost leftovers after T-695: rare corrections on the real save's bundles of overlapping imported lines (refusals the page cannot see, T-691), jumps while sliding along them, one blink near a track end. notes/T-695.md "Left". Open.
 Anita's TODO.md "short term", filed 2026-10-19 (evening).
-- T-727f [P3] A quad route through thousands of clicked corners is slow: New York-Emeryville (5,684 corners) previews in 3.4 s native against 0.11 s for double; find the quadratic step in the express pair. Open; notes/T-727.md.
 - T-727e [P3] Real-network graphs for the other ~113 noritetsu regions (`pipeline/realgraph.py`), shipped from R2 beside noritetsu's tiles rather than copied into the build. Open; notes/T-727.md.
-- T-754 [P3] (taking, 2026-10-19) The snapped route's fit is 2.1-2.4 s in WASM for New York-Emeryville (0.8 s native), most of the 4.9 s from rest to preview; it cannot be cut short by a newer request. Profile `trace.rs` in WASM, or fit in chunks that yield. Open; notes/T-727.md.
-- T-755 [P3] `bridge::bridge` finds no room for ramps at Lake Hamana on the traced Tokaido Shinkansen (six corners alone fail too), so `bridge_long` raises that stretch whole; find why the ramps do not place. Open; notes/T-727.md.
+- T-755 [P3] `bridge::bridge` finds no room for ramps at Lake Hamana on the traced Tokaido Shinkansen (six corners alone fail too), so `bridge_long` raises that stretch whole; find why the ramps do not place (needs the zone's water raster in a native harness; not tried in T-754). Open; notes/T-727.md.
+- T-763 [P3] Penn Station-Emeryville is still 3.0-3.6 s from rest to preview in WASM though search (0.06 s) and fit (0.27-0.36 s) are fast now: the clock worker's preview is 1.2-1.35 s and about 1.5 s more is unaccounted for. Profile the preview round trip. Open; notes/T-727.md.
 - T-750 [P3] Add a city's real network to a sandbox game already running (merging in the Rust track model; notes/T-728.md stage 6). Anita wants it, not urgent. Open.
 - T-751 [P3] "Expand all platforms on this line" in the line panel, so a line can run longer trains (Anita 2026-10-19, after T-733). Open.
 - T-734 [P2] While placing track, a press and drag on a node moves the node (a click on track still branches and places track). Open.
@@ -180,7 +179,7 @@ Tier 0 and country sources: docs/demand-worldwide.md, docs/data-register.md. The
 - T-321 [P3] Local time's rest (T-309, docs/world.md "Local time"): the money ledger's days and the bubbles' catch-up follow the game clock, and market trips across offsets need a period rule. Open; notes/T-321.md.
 
 ## Performance (open since 2026-10-15; ranked in notes/perf-survey.md)
-- T-761 [P2] The regional market's part on a whole-country cluster (all of Japan) is past a worker's 4 GB on its own (skims, both ODs, the far-zone table, all S^2 over 10k stations): stream its destinations (exact) or a coarser station set (a demand rule, Anita). Open; notes/T-756.md "The market on the whole country".
+- T-761 [P2] (taking, exact option, 2026-10-19) The regional market's part on a whole-country cluster (all of Japan) is past a worker's 4 GB on its own (skims, both ODs, the far-zone table, all S^2 over 10k stations): stream its destinations (exact) or a coarser station set (a demand rule, Anita). Open; notes/T-756.md "The market on the whole country".
 - T-758 [P3] The track derive with water masks is about 4.9 s in WASM for Japan's 709 lines (0.42 s natively without masks): find the water cost. Open; notes/T-737.md.
 - T-759 [P3] The clock state on a big network: 360-500 ms of main thread when Japan loads, 130-200 ms when resent mid-play; send only what changed (with T-499, T-070). Open; notes/T-737.md.
 - T-499 [P3] Edits after T-648: a stop click to drawn 112-130 ms on the real save (checks/t648-stop-edit.mjs); edges and nodes already left out when unchanged. Left: lines sent whole (send only the changed ones, with T-759), the buffer build 15-20 ms, 25 ms of main thread taking the state (world effects: labels, money charts) and ~40 ms more to the frame. Open; notes/perf-survey.md (T-648).

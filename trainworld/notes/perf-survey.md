@@ -321,3 +321,13 @@ T-761):
    without masks). Load only.
 5. **T-760 negative stop-to-stop distance** for stops closer than their platforms (guarded since
    T-737). Correctness, not speed.
+
+## 7. The snapped route's fit (T-754, T-727f, 2026-10-19)
+
+notes/T-727.md "T-754". New York-Emeryville's fit (`trace.rs`, 5,690 corners) natively 779 to 136 ms, in WASM 2.1-2.4 s to
+0.27-0.36 s:
+the sample sweep was 146 ms a pass, three passes (bounding circles now skip most pieces), and easing
+tight curves refitted the whole route 16 times a curve (now 25 corners around it). It runs in steps
+of at most 10 ms natively and the router worker drops it for a newer request. The quad edit over the
+same route 3.3 s to 0.15 s: one express curve left not fitting kept the express pair from being cut,
+so it went in as one 5,400 km edge.

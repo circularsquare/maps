@@ -118,8 +118,9 @@ switch on, the track tool follows the real network the layer draws.
   region's graph is fetched when the view, a click or the search first reaches it (a border
   junction loads the neighbour's file, joined by OSM node id). The search stops after 2 s or 3
   million states. The real line is drawn as the ghost, then the corners fitted to it at 25 m
-  (`TrackApi.trace_route`, run in the router worker's own track model) are previewed by the clock
-  worker and replace it with the usual tag. A search or fit over half a second shows the small
+  (`TrackApi.trace_start`, run in the router worker's own track model in steps of a few ms, with a
+  look at its messages every 25 ms so a newer rest drops a fit still running) are previewed by the
+  clock worker and replace it with the usual tag. A search or fit over half a second shows the small
   spinner in the tag. Changing the elevation or double and quad fits the route again.
 - **The second click** places the route as one segment: one edit, one undo step, Shift or keep
   placing carrying on from its end. A click before the route is ready waits for it. It ends on the
