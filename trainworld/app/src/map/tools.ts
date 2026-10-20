@@ -696,38 +696,22 @@ export class Tools {
   }
 
   private async addStop(station: number, session: number) {
-    // Read the authoritative stops for every queued click: removals and undo may have changed
-    // them while the previous click was waiting for the worker.
-    for (let attempt = 0; attempt < 3; attempt++) {
-      if (session !== this.lineSession || tool.peek() !== "line") return;
-      const id = lineDraft.peek().line;
-      if (id === null) return; // The Lines pane creates the line before entering this tool.
-      const w = world.peek();
-      const line = w?.save.lines.find((l) => Number(l.id) === id);
-      if (!line) return;
-      const before = line.stops.map(Number);
-      if (before.includes(station)) {
-        say("That station is already a stop on this line.");
-        return;
-      }
-      const result = await this.client.query({ what: "insertStop", line: id, station });
-      if (session !== this.lineSession || tool.peek() !== "line" || lineDraft.peek().line !== id) return;
-      const current = world.peek()?.save.lines.find((l) => Number(l.id) === id);
-      if (!current) return;
-      if (world.peek()?.version !== w!.version || !sameStops(current.stops.map(Number), before)) continue;
-      if (!result.length) {
-        say("No track joins these stations with that stop inserted. Check the track connections.", true);
-        return;
-      }
-      const stops = Array.from(result);
-      const a = await edit({ op: "setStops", line: id, stops });
-      if (a.ok && session === this.lineSession && tool.peek() === "line") {
-        const latest = world.peek()?.save.lines.find((l) => Number(l.id) === id);
-        if (latest) lineDraft.value = { line: id, stops: latest.stops.map(Number) };
-      }
+    if (session !== this.lineSession || tool.peek() !== "line") return;
+    const id = lineDraft.peek().line;
+    if (id === null) return; // The Lines pane creates the line before entering this tool.
+    const line = world.peek()?.save.lines.find((l) => Number(l.id) === id);
+    if (!line) return;
+    if (line.stops.map(Number).includes(station)) {
+      say("That station is already a stop on this line.");
       return;
     }
-    say("The network changed while adding that stop. Please try again.", true);
+    // the worker fits it in among the stops it holds then (T-648), so a queued click never works
+    // from stops an earlier one changed
+    const a = await edit({ op: "insertStop", line: id, station });
+    if (a.ok && session === this.lineSession && tool.peek() === "line") {
+      const latest = world.peek()?.save.lines.find((l) => Number(l.id) === id);
+      if (latest) lineDraft.value = { line: id, stops: latest.stops.map(Number) };
+    }
   }
 
   // ---------------------------------------------------------------- markers

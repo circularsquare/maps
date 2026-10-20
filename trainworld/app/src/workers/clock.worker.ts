@@ -472,6 +472,8 @@ function buildState(): ClockState {
       buildCost: ok && !running ? a.line_build_cost(id) : 0,
       trainCost: ok && !running ? a.line_train_cost(id) : 0,
       shift: a.line_shift(id),
+      // in the state, not asked for after it, so the line panel never draws new stops with old gaps (T-648)
+      passed: [...a.passed_stations(id)],
     });
   }
   // Keyframes: phase tables, profile meta, and run 0 of every line resampled.
@@ -1260,7 +1262,7 @@ function sendState(service = false) {
     s.ms = [t1 - t0, 0];
     timing.state = t1 - t0;
     const r = s.render;
-    send({ kind: "state", state: s }, [r.edgePts.buffer, r.edgeOff.buffer, r.phases.buffer, r.meta.buffer, r.samples.buffer, r.lineTable.buffer, ...(r.edgeSpeed ? [r.edgeSpeed.buffer] : [])] as Transferable[]);
+    postState(s, [r.edgePts.buffer, r.edgeOff.buffer, r.phases.buffer, r.meta.buffer, r.samples.buffer, r.lineTable.buffer, ...(r.edgeSpeed ? [r.edgeSpeed.buffer] : [])] as Transferable[]);
     sendTrips();
     return;
   }
@@ -1276,8 +1278,31 @@ function sendState(service = false) {
   if (r.edgeSpeed) bufs.add(r.edgeSpeed.buffer);
   for (const st of [n.track, n.lines]) for (const v of [st.seg, st.colour, st.edge, st.level, st.flags, st.dist, st.speed, st.lane]) if (v) bufs.add(v.buffer);
   for (const v of [n.lineColours, n.lineCars, n.stations, n.stationAxis, n.stationShape, n.junctions, n.marks]) if (v) bufs.add(v.buffer);
-  send({ kind: "state", state: s }, [...bufs] as Transferable[]);
+  postState(s, [...bufs] as Transferable[]);
   sendTrips();
+}
+
+/** the edges and nodes of the last state posted */
+let postedEdges: ClockEdge[] = [], postedNodes: ClockNode[] = [];
+
+/** Rows of plain fields, field for field. */
+function sameRows<T extends object>(a: T[], b: T[]): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    const x = a[i] as Record<string, unknown>, y = b[i] as Record<string, unknown>;
+    for (const k in x) if (x[k] !== y[k]) return false;
+  }
+  return true;
+}
+
+/** Post a state, leaving out the edges and nodes when they are as last posted (T-648): copying
+ * them to the main thread and back into objects was about half of the state's ~12 ms trip there on
+ * New York's real network, and a line edit changes neither. */
+function postState(s: ClockState, transfer: Transferable[]) {
+  const sameEdges = sameRows(s.edges, postedEdges), sameNodes = sameRows(s.nodes, postedNodes);
+  postedEdges = s.edges;
+  postedNodes = s.nodes;
+  send({ kind: "state", state: { ...s, edges: sameEdges ? [] : s.edges, nodes: sameNodes ? [] : s.nodes, sameEdges, sameNodes } }, transfer);
 }
 
 /** Lines of the boarding account worked out per step: a few ms on New York's real network, so an
@@ -1448,6 +1473,11 @@ function apply(op: EditOp): { r: number; line?: number; node?: number } {
     }
     case "setStops":
       return { r: a.set_stops(op.line, new Uint32Array(op.stops)) };
+    case "insertStop": {
+      // one message instead of a query and then setStops: a round trip less, and no stale stops
+      const stops = a.insert_stop(op.line, op.station);
+      return stops.length ? { r: a.set_stops(op.line, Uint32Array.from(stops)) } : { r: INSERT_REFUSED };
+    }
     case "setTrainCount":
       return { r: a.set_train_counts(op.line, ...op.trains) };
     case "setHeadway":
@@ -1471,6 +1501,9 @@ function apply(op: EditOp): { r: number; line?: number; node?: number } {
       return { r: a.redo() };
   }
 }
+
+/** `apply`'s answer for an insertStop with nowhere to go (the track model's own codes are >= 0) */
+const INSERT_REFUSED = -1;
 
 function issues(): string[] {
   return api!.issue_kinds().split("\n").filter(Boolean);
@@ -1714,7 +1747,7 @@ async function handle(msg: ToClock) {
       sendState(msg.op.op === "setTrainCount" || msg.op.op === "setHeadway");
       if (demand.length || msg.op.op === "undo" || msg.op.op === "redo") scheduleSnapshot();
     }
-    send({ kind: "edited", seq: msg.seq, ok: r === 0, issues: r === 0 ? [] : issues(), charge, line, node, ms: { apply: tB - tA, ...timing, total: performance.now() - tA } });
+    send({ kind: "edited", seq: msg.seq, ok: r === 0, issues: r === 0 ? [] : r === INSERT_REFUSED ? ["InsertStop"] : issues(), charge, line, node, ms: { apply: tB - tA, ...timing, total: performance.now() - tA } });
     // Paid for something: keep it (T-029, autosave on construct).
     if (charge > 0) void autosave();
   } else if (msg.kind === "clock") {

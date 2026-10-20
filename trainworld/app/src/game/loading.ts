@@ -66,6 +66,10 @@ export function loadComplete() {
   if (startup.peek() === "loading") startup.value = "ready";
 }
 
+/** T-757: demand stopped after startup (a worker failed mid-game: out of memory, an error), as the
+ * player is told it under the demand buttons (ui/DemandStopped.tsx); the figures shown stay. */
+export const demandStopped = signal<"memory" | "error" | null>(null);
+
 /** Demand could not load. At startup the loading screen says so and offers a way on; later the
  * clock is released at once, since there is no result to wait for. */
 export function loadFailed(why: string) {
@@ -74,7 +78,11 @@ export function loadFailed(why: string) {
   holdArmed = false;
   if (startup.peek() === "loading") startup.value = "failed";
   // after startup; at a failed startup the player's choice releases it (every worker may report)
-  else if (startup.peek() === "ready") clock?.setHeld(false);
+  else if (startup.peek() === "ready") {
+    clock?.setHeld(false);
+    // WASM out of memory aborts as `unreachable` (T-737)
+    if (!demandStopped.peek()) demandStopped.value = /unreachable|memory|allocat/i.test(why) ? "memory" : "error";
+  }
 }
 
 /** Carry on without demand after a failed startup (the loading screen's second button). */

@@ -363,9 +363,18 @@ function turnbackStrokes(s: ClockState, lines: NetCache["lines"], endCount: Map<
         lane.push(Math.round(127.5 * (1 + v0 + (v1 - v0) * (at - s0) / (s1 - s0))));
       };
       let edge = -1;
-      for (let i = 0; i < st.count; i++) {
+      // `dist` never falls along a line's strokes: start a little before s0, stop past s1 (T-648:
+      // a scan of every stroke per call was a third of an edit's buffer build on New York)
+      let lo = 0, hi = st.count;
+      while (lo < hi) {
+        const mid = (lo + hi) >> 1;
+        if (st.dist[mid] <= s0) lo = mid + 1;
+        else hi = mid;
+      }
+      for (let i = Math.max(0, lo - 2); i < st.count; i++) {
         const a = st.dist[i], len = segLen(i), e = a + len;
-        if (e < s0 || a > s1 || len < 1e-9) continue;
+        if (a > s1) break;
+        if (e < s0 || len < 1e-9) continue;
         if (edge < 0) edge = st.edge[i];
         const x0 = st.seg[i * 4], y0 = st.seg[i * 4 + 1], dx = st.seg[i * 4 + 2] - x0, dy = st.seg[i * 4 + 3] - y0;
         const f0 = Math.max(0, (s0 - a) / len), f1 = Math.min(1, (s1 - a) / len);

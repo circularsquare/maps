@@ -8,6 +8,7 @@ import { LEVELS } from "../game/types";
 import { asFilter, FILTER_PURPOSES, purposeColour } from "../game/purposes";
 import { useState } from "preact/hooks";
 import { display, purposeFilter, setDisplay } from "../game/ui";
+import { DemandStopped } from "./DemandStopped";
 import { StationsFull } from "./StationsFull";
 import { StatusTag } from "./StatusTag";
 
@@ -20,6 +21,7 @@ export function MapTopLeft() {
       <StatusTag />
     </div>
     <TrackDisplay />
+    <DemandStopped />
     <StationsFull />
   </div>;
 }

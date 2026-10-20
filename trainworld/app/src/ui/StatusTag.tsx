@@ -4,7 +4,7 @@
 
 import { demandStep, demandView, viewFinal, viewUpdating } from "../game/demand";
 import { activeCity, cityById, viewedZone } from "../game/cities";
-import { cityNames, demandIdle, loadFailure, loadProgress, zoneFailures } from "../game/loading";
+import { cityNames, demandIdle, demandStopped, loadFailure, loadProgress, zoneFailures } from "../game/loading";
 import { CACHE_VERSION } from "../workers/demandCache";
 import { LoadBar, loadingCardShown } from "./LoadingScreen";
 import { BunnyTrain } from "./Spinner";
@@ -16,6 +16,8 @@ export function StatusTag() {
   const load = loadProgress.value;
   // T-484, T-492: the zone in view could not load (the others carry on); its text says whether it is tried again
   const zoneFailure = viewedZone.value ? zoneFailures.value.get(activeCity.value) : undefined;
+  // T-757: after startup the alert under the demand buttons says it instead
+  if (demandStopped.value) return null;
   const busy = loadFailure.value ? "Demand could not load"
     : zoneFailure ? `${cityById(activeCity.value).name} could not load`
     // T-180: while the clock waits, the card in the middle of the map says it instead

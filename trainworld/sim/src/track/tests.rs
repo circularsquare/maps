@@ -405,6 +405,27 @@ fn station_links_save_and_load() {
     assert!(!w.net.unlink(a, b));
 }
 
+/// T-760: two dead-end stops closer than their platforms stop halfway at most, never past each other.
+#[test]
+fn stops_closer_than_their_platforms_keep_their_order() {
+    let mut w = world();
+    let a = node(&mut w, 0.0, 0.0, 0);
+    let b = node(&mut w, 400.0, 0.0, 0);
+    edge(&mut w, a, b, &[], 0).unwrap();
+    for n in [a, b] { station(&mut w, n, 100); }
+    let l = line(&mut w, &[a, b], [8.0, 4.0, 2.0]);
+    // the editor refuses such platforms; a save made elsewhere (Japan's N02 network) has them
+    for n in [a, b] { w.net.node_platform[n as usize] = 600; }
+    let w = TrackWorld::new(super::save::decode(&super::save::encode(&w.net)).unwrap());
+    let svc = &w.svc.lines[l as usize];
+    assert!(svc.ok);
+    for run in 0..2 {
+        let s = &svc.runs[run].stop_s;
+        assert!(s[1] >= s[0], "run {run}: {s:?}");
+        assert!((s[0] - svc.runs[run].len / 2.0).abs() < 1e-9 && (s[1] - s[0]).abs() < 1e-9, "both at the middle: {s:?}");
+    }
+}
+
 #[test]
 fn synthetic_network_builds() {
     let w = TrackWorld::new(super::bench::synth(200.0, 50, 9, 3));

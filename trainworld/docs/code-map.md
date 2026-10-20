@@ -237,6 +237,10 @@ Run from the maps root (`node trainworld/checks/<file>`).
   `t496-edit-latency.mjs` (the real save: click to drawn
   for placing stations; `MODE=visual` hashes the renderer's buffers after a series of edits against
   an older network.ts),
+  `t648-stop-edit.mjs` (the real save: a station built on a line's track, then added as a stop
+  with a click on its marker; click to world and to the frame drawn with the new network, and a
+  screencast of the click's frames with a flash test, pixels the same before and after that a frame
+  between draws otherwise, as a mask and a frame strip),
   `t328-cache-check.mjs` (the demand cache on reload: timing, cached
   against fresh final to the bit, a changed build, pack or network shows none), `t348-lag.mjs`
   (main-thread long tasks and frame gaps while demand loads: startup, pans, a re-solve, a zone
@@ -247,6 +251,10 @@ Run from the maps root (`node trainworld/checks/<file>`).
   `t724-hover.mjs` (what a pointer move costs on the real save with the select and station tools,
   timers and the station name included, then a wheel zoom's frame placers: fails over 8 ms at the
   95th percentile in any view),
+  `t737-japan.mjs` (Japan's whole N02 network, 709 lines, from `../artifacts/trainworld/t737-japan.save`:
+  load time, demand's first solve, then frames, long tasks and threads' busy time panning and zooming
+  across Japan at 240x and 960x; fails over 14 ms of main thread a frame or 5% of frames over 50 ms;
+  about 4 minutes, `QUICK=1` 1.5; notes/T-737.md),
   `t161-complexes.mjs` (the real save's complexes for the native
   comparison), `t125-fingerprint.mjs` (a save's derived geometry, before and after a frame
   change), `t277-browser.mjs` (Toronto; not rerun since T-277), `city-browser.mjs <id>` (a tier 0
@@ -346,7 +354,8 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   (GTFS, OSM route relations from `realnet.py fetch-osm <city>`, or a CSV of timetabled trips;
   `CITIES` lists each city's) into a demand test network in `data/work/realnet/`; `realnet.py`
   also has New York's older targets, `compare`, and the save (`geom`, `gamesave`; `ship` copies the
-  seven game files a sandbox starts from to `data/packs/real/<id>.save`, T-731). `calib.py
+  seven game files a sandbox starts from to `data/packs/real/<id>.save`, T-731); `realnet_n02.py` is
+  its N02 adapter, all of Japan's lines (cities `jpn`, `jpn7`: T-737's stress saves). `calib.py
   targets <city>` writes the city's targets (`data/work/calib/<city>/`), `calib.py run <city>
   [--set k=v,..] [--params p.json] [--tag t]` runs the sim's `calib` bin (a weekday, commutes and
   everyday, 3 crowding rounds, about 22 s for New York) and scores it (station entries, operator

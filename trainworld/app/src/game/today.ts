@@ -140,9 +140,46 @@ function ask(force = false) {
   void queryClock({ what: "today" }).then((d) => {
     busy = false;
     if (!d) return;
-    today.value = readToday(d);
+    const w = world.peek();
+    readFor = new Map((w?.save.lines ?? []).map((l) => [l.id, l.stops]));
+    const next = readToday(d), prev = today.peek();
+    // A line's account is worked out again a while after its stops change (new riders, T-164);
+    // until then its counts may be per the old stops. The ones moved to the new stops stand meanwhile.
+    for (const l of w?.save.lines ?? []) {
+      const t = next.get(l.id), p = prev.get(l.id);
+      if (t && t.stops.length !== l.stops.length && p?.stops.length === l.stops.length) next.set(l.id, { ...t, stops: p.stops });
+    }
+    today.value = next;
   });
 }
+
+/** the stops each line's counts are in the order of: the world's when they were read */
+let readFor = new Map<string, string[]>();
+
+/** T-648: a stop edit renumbers the line's stops, and the counts (until the next answer) would sit
+ * one row off: they follow their stations to the new order now, a new stop at 0. */
+world.subscribe((w) => {
+  const t = today.peek();
+  if (!w || !t.size) return;
+  let out: Map<string, LineToday> | null = null;
+  for (const l of w.save.lines) {
+    const d = t.get(l.id), was = readFor.get(l.id);
+    if (!d || !was || (was.length === l.stops.length && was.every((s, k) => s === l.stops[k]))) continue;
+    const used = was.map(() => false);
+    const stops = l.stops.map((s) => {
+      const k = was.findIndex((x, j) => !used[j] && x === s);
+      if (k < 0) return 0;
+      used[k] = true;
+      return d.stops[k] ?? 0;
+    });
+    (out ??= new Map(t)).set(l.id, { ...d, stops });
+    readFor.set(l.id, l.stops);
+  }
+  if (out) {
+    today.value = out;
+    if (users > 0) ask(); // the new stop's count, and a line that just lost its service, at once
+  }
+});
 
 /** Keep `today` fresh while the calling panel is shown. */
 export function useToday() {

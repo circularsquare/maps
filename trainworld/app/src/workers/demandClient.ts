@@ -435,8 +435,7 @@ function packService(svc: Service): { net: DemandNetwork; layout: Solve["layout"
     for (let run = 0; run < 2; run++) for (let k = 0; k < n - 1; k++) {
       const i = run === 0 ? k : n - 1 - k, j = run === 0 ? k + 1 : n - 2 - k;
       const from = svc.stations[index.get(l.stops[i])!], to = svc.stations[index.get(l.stops[j])!];
-      // two stops closer than their platforms give a negative track distance, which set_fares refuses (T-737)
-      net.hopKm[2 * a + run * n + k] = Math.max(0, l.hopKm?.[run]?.[k] ?? Math.hypot(to.x - from.x, to.y - from.y) / 1000);
+      net.hopKm[2 * a + run * n + k] = l.hopKm?.[run]?.[k] ?? Math.hypot(to.x - from.x, to.y - from.y) / 1000;
     }
     a += n;
   }
@@ -1648,7 +1647,7 @@ class DemandClient {
     // T-327: rounds in step only where clicks are answered by round (`target`): it costs the final
     // about 0.7 s on the real save
     demandSolving.value = null;
-    const msg: ToDemand = { kind: "solve", version, net, rounds: ROUNDS, barrier: (showEstimates || !!this.hold) && !perfOff("ahead"), first: activeCity.peek(), ...(perfOff("clusters") ? { whole: true } : {}), ...(perfOff("split") ? { oneMarket: true } : {}), ...(perfOff("periods") ? { fresh: true } : {}) };
+    const msg: ToDemand = { kind: "solve", version, net, rounds: ROUNDS, barrier: (showEstimates || !!this.hold) && !perfOff("ahead"), first: activeCity.peek(), ...(perfOff("clusters") ? { whole: true } : {}), ...(perfOff("split") ? { oneMarket: true } : {}), ...(perfOff("reach") ? { wide: true } : {}), ...(perfOff("periods") ? { fresh: true } : {}) };
     for (const w of this.workers) w.postMessage(msg);
     this.progress(); // T-243: a held game's solve shows its progress even with nothing to load
   }

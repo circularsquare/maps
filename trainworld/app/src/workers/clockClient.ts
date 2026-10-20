@@ -78,6 +78,9 @@ function letterOf(name: string): string {
   return c.toUpperCase();
 }
 
+/** The longest a state waits for its trips (T-648, `ClockClient.receive`), ms. */
+const HOLD_MS = 250;
+
 /** Flat node pairs (the clock worker's `links`) as station id pairs (T-197). */
 function pairsOf(flat: number[]): [string, string][] {
   const out: [string, string][] = [];
@@ -122,6 +125,7 @@ function toWorld(s: ClockState, city: { population: number; jobs: number }): Wor
       dwellS: l.dwell,
       turnaroundS: l.turnaround,
       shift: l.shift,
+      passed: Array.from({ length: l.passed.length >> 1 }, (_, k) => ({ gap: l.passed[k * 2], node: l.passed[k * 2 + 1] })),
     };
   }
   const edges: TrackEdge[] = s.edges.map((e) => ({
@@ -396,7 +400,46 @@ export class ClockClient {
     else this.waiting.push([msg, transfer]);
   }
 
+  /** A state waiting for its trips (T-648), and how long it may wait. */
+  private held: Extract<FromClock, { kind: "state" }> | null = null;
+  private holdTimer = 0;
+  /** the last state's edges and nodes, which the worker leaves out when unchanged (T-648) */
+  private lastEdges: ClockState["edges"] = [];
+  private lastNodes: ClockState["nodes"] = [];
+
+  private release() {
+    window.clearTimeout(this.holdTimer);
+    const m = this.held;
+    this.held = null;
+    if (m) this.takeState(m);
+  }
+
+  private takeState(msg: Extract<FromClock, { kind: "state" }>) {
+    const t0 = performance.now();
+    // built at another draw anchor (T-307): switch to it first, so everything rebuilt from
+    // this state converts with the anchor its positions are relative to
+    const a = msg.state.anchor ? this.anchorOf(msg.state.anchor) : anchor();
+    const moved = a !== anchor();
+    if (moved) setAnchor(a);
+    if (msg.state.net) msg.state.net.anchor = a;
+    setMoneyState(msg.state.money);
+    this.worldBefore = world.value;
+    world.value = toWorld(msg.state, this.city);
+    this.onState(msg.state);
+    if (moved) {
+      anchorVersion.value = a.version; // the demand views rebuild at it (T-317)
+      this.onAnchor(a);
+    }
+    this.lastStateMs = performance.now() - t0;
+  }
+
   private receive(msg: FromClock) {
+    // T-648: the worker posts a state's trips right after it, before anything else. The state waits
+    // for them, so its world, network and trips are taken in one task: no frame draws the old trips
+    // on the new run profiles (trains jumped, or stayed a frame on a line that had lost its service),
+    // and the demand views build once. Not when the draw anchor moves (its listeners need the network
+    // at once), and never past HOLD_MS.
+    if (this.held && !(msg.kind === "trips" && msg.version < this.held.state.version) && msg.kind !== "cash") this.release();
     switch (msg.kind) {
       case "ready":
         clockWorkerStatus.value = `ready in ${msg.initMs.toFixed(0)} ms`;
@@ -406,22 +449,16 @@ export class ClockClient {
         console.warn("clock worker:", msg.message);
         break;
       case "state": {
-        const t0 = performance.now();
-        // built at another draw anchor (T-307): switch to it first, so everything rebuilt from
-        // this state converts with the anchor its positions are relative to
-        const a = msg.state.anchor ? this.anchorOf(msg.state.anchor) : anchor();
-        const moved = a !== anchor();
-        if (moved) setAnchor(a);
-        if (msg.state.net) msg.state.net.anchor = a;
-        setMoneyState(msg.state.money);
-        this.worldBefore = world.value;
-        world.value = toWorld(msg.state, this.city);
-        this.onState(msg.state);
-        if (moved) {
-          anchorVersion.value = a.version; // the demand views rebuild at it (T-317)
-          this.onAnchor(a);
-        }
-        this.lastStateMs = performance.now() - t0;
+        const st = msg.state;
+        if (st.sameEdges) st.edges = this.lastEdges;
+        else this.lastEdges = st.edges;
+        if (st.sameNodes) st.nodes = this.lastNodes;
+        else this.lastNodes = st.nodes;
+        const a = st.anchor ? this.anchorOf(st.anchor) : anchor();
+        if (a === anchor() && world.peek()) {
+          this.held = msg;
+          this.holdTimer = window.setTimeout(() => this.release(), HOLD_MS);
+        } else this.takeState(msg);
         break;
       }
       case "money":

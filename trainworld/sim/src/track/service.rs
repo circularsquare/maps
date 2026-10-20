@@ -334,25 +334,34 @@ fn build_run(net: &Network, l: u32, rev: bool, train_len: f64, dwell: f64) -> Op
         stops.reverse();
     }
     let mut k = 0;
-    for (j, &st) in stops.iter().enumerate() {
+    for &st in &stops {
         while k < run.nodes.len() && run.nodes[k] != st {
             k += 1;
         }
         if k == run.nodes.len() {
             return None;
         }
-        let mut at = run.node_s[k];
+        run.stop_idx.push(k as u32);
+        k += 1;
+    }
+    let node_s: Vec<f64> = run.stop_idx.iter().map(|&i| run.node_s[i as usize]).collect();
+    for (j, &st) in stops.iter().enumerate() {
+        let node_at = |i: usize| node_s[i];
+        let mut at = node_at(j);
         // At a dead end the platform lies along the track: stop at its middle.
         // Unused blueprints do not move the stops of a constructed service. Planned
         // services still preview the complete planned station geometry.
         let ports = if running { net.built_ports(st) } else { net.node_ports[st as usize].n as usize };
         if ports == 1 {
             let half = net.node_platform[st as usize] as f64 / 2.0;
-            at += if j == 0 { half } else { -half };
+            // never past halfway to the next stop (T-760: two stops closer than their platforms)
+            at = if j == 0 {
+                (at + half).min(if stops.len() > 1 { (at + node_at(1)) / 2.0 } else { at + half })
+            } else {
+                (at - half).max((at + node_at(j - 1)) / 2.0)
+            };
         }
-        run.stop_idx.push(k as u32);
         run.stop_s.push(at);
-        k += 1;
     }
     run.limits = profile::widen(&raw, run.len, train_len / 2.0);
     let n = run.stop_s.len();

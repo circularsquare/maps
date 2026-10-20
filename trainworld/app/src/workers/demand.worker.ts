@@ -24,7 +24,7 @@ import { CITIES, cityToMarket, cityToWorld, HOME_CITY, MARKET_WORLD, setWorldFra
 import { EVERYDAY_KEYS, EVERYDAY_NAMES } from "../game/purposes";
 import { PERIODS } from "../game/periods";
 import type { BareFigures, DemandNetwork, FromDemand, MarketPack, OpenRejected, ToDemand } from "./demandProtocol";
-import { cellBox, splitClusters, type Box, type Cluster } from "./demandClusters";
+import { cellBox, cityReach, clusterView, reachView, splitClusters, type Box, type Cluster, type PopView } from "./demandClusters";
 
 /** WASM started (and the market opened if `init` carried it): `open` and solves wait for this. */
 let started = false;
@@ -50,7 +50,7 @@ const marketParts = new Map<string, IntercityApi>();
  * clusters are joined by */
 let marketZones: Float64Array | null = null;
 let mine: number[] = [];
-let pending: { version: number; net: DemandNetwork; rounds: number; barrier?: boolean; whole?: boolean; oneMarket?: boolean; fresh?: boolean; first?: CityId } | null = null;
+let pending: { version: number; net: DemandNetwork; rounds: number; barrier?: boolean; whole?: boolean; oneMarket?: boolean; wide?: boolean; fresh?: boolean; first?: CityId } | null = null;
 let busy = false;
 /** the version whose network `api` holds (queries about any other get nulls) */
 let current = -1;
@@ -93,7 +93,21 @@ type Population = DemandApi | EverydayApi | IntercityApi;
  * they are set up and solved (it changes no figure) */
 /** `reuse`: this worker's periods (bit q) kept from the last solve, set when it is set up (T-124) */
 /** `part`: the market's part for the cluster's network (T-409), among `pops` */
-type JobCluster = Cluster & { pops: Population[]; solveOrder: Population[]; reuse: number; part: IntercityApi | null };
+/** `views`: the network each population is set on (T-756: a city's stations within its reach, the
+ * market's the cluster's) and its maps to the whole network's stations and route nodes */
+type JobCluster = Cluster & { pops: Population[]; solveOrder: Population[]; reuse: number; part: IntercityApi | null; views: Map<Population, PopView> };
+const viewOf = (c: JobCluster, p: Population) => c.views.get(p)!;
+/** T-756: whole network route node -> a view's, or -1 (made when first asked) */
+const nodeLocals = new WeakMap<PopView, Int32Array>();
+function nodeLocal(v: PopView, nodes: number): Int32Array {
+  let m = nodeLocals.get(v);
+  if (!m) {
+    m = new Int32Array(nodes).fill(-1);
+    v.nodeGlobal.forEach((g, k) => (m![g] = k));
+    nodeLocals.set(v, m);
+  }
+  return m;
+}
 let jobClusters: JobCluster[] = [];
 let jobNodes = 0;
 /** T-326: the cluster `sig` each population holds every one of this worker's periods solved for,
@@ -567,7 +581,7 @@ function query(msg: Query) {
           if (v[0] === 1) {
             const p0 = cityToWorld(v[27], v[28], msg.city), p1 = cityToWorld(v[29], v[30], msg.city);
             v[27] = p0.x; v[28] = p0.y; v[29] = p1.x; v[30] = p1.y;
-            if (c) tripNodesGlobal(v, c.nodeGlobal);
+            if (c) tripNodesGlobal(v, viewOf(c, a!).nodeGlobal);
           }
           answers.push(v);
           periods.push(q);
@@ -634,17 +648,18 @@ function transfersAt(at: Version, allLive: boolean, nodes: Uint32Array, day: num
   for (const c of at.clusters) {
     // T-392: a cluster mid-solve has no figures for this network yet (T-402: nor one of a later group)
     if (!isHeld(c) && !(allLive && (groupOf.get(c) ?? stageGroup) === stageGroup)) continue;
-    const sel = new Uint8Array(c.nodeGlobal.length);
-    let any = false;
-    for (const r of nodes) {
-      const l = r < jobNodes ? c.nodeLocal[r] : -1;
-      if (l >= 0) (sel[l] = 1), (any = true);
-    }
-    if (!any) continue;
     for (const p of c.pops) {
+      const view = viewOf(c, p), local = nodeLocal(view, jobNodes);
+      const sel = new Uint8Array(view.nodeGlobal.length);
+      let any = false;
+      for (const r of nodes) {
+        const l = r < jobNodes ? local[r] : -1;
+        if (l >= 0) (sel[l] = 1), (any = true);
+      }
+      if (!any) continue;
       const v = p.transfers_day(sel, day);
       for (let k = 0; k + 2 < v.length; k += 3) {
-        const key = c.nodeGlobal[v[k]] * jobNodes + c.nodeGlobal[v[k + 1]];
+        const key = view.nodeGlobal[v[k]] * jobNodes + view.nodeGlobal[v[k + 1]];
         sum.set(key, (sum.get(key) ?? 0) + v[k + 2]);
       }
     }
@@ -658,12 +673,13 @@ function transfersAt(at: Version, allLive: boolean, nodes: Uint32Array, day: num
 }
 
 /**
- * T-326: a station's riders from one city, on its cluster's network. A station outside the cluster
+ * T-326: a station's riders from one city, on its own network (T-756). A station outside it
  * gets the answer a population set on the whole network gives for a station it cannot reach: no
  * riders, every zone listed (`DemandApi.station_riders_day`).
  */
 function stationRiders(at: Version, c: JobCluster | undefined, a: DemandApi, station: number, day: number): Float32Array {
-  const ls = c && c.net.lineN.length ? c.stLocal[station] ?? -1 : -1;
+  const view = c?.views.get(a);
+  const ls = view && view.net.lineN.length ? view.stLocal[station] ?? -1 : -1;
   if (ls >= 0) return a.station_riders_day(ls, day);
   return at.railed && station < at.stations ? new Float32Array(4 + 2 * a.info()[1]) : new Float32Array(0);
 }
@@ -732,20 +748,24 @@ function purposeParts(q: number, nr: number, clusters: typeof jobClusters, regio
   if (regional) keys.push("longer");
   const seg = new Float32Array(keys.length * nr), board = new Float32Array(keys.length * nr), alight = new Float32Array(keys.length * nr);
   for (const c of clusters) {
-    const map = c.nodeGlobal, m = map.length;
+    // T-756: each population's route nodes go through its own view
+    let map = c.nodeGlobal, m = map.length;
+    const to = (p: Population) => { map = viewOf(c, p).nodeGlobal; m = map.length; };
     const add = (out: Float32Array, at: number, v: ArrayLike<number>, from = 0) => {
       if (v.length < from + m) return; // nothing solved for this population (no network)
       for (let r = 0; r < m; r++) out[at * nr + map[r]] += v[from + r];
     };
-    for (const a of c.pops) if (a instanceof DemandApi) { add(seg, 0, a.seg(q)); add(board, 0, a.board(q)); add(alight, 0, a.alight(q)); }
+    for (const a of c.pops) if (a instanceof DemandApi) { to(a); add(seg, 0, a.seg(q)); add(board, 0, a.board(q)); add(alight, 0, a.alight(q)); }
     for (const e of c.pops) {
       if (!(e instanceof EverydayApi)) continue;
+      to(e);
       const v = e.part_loads(q), k1 = Math.min(kinds, e.purpose_count());
       if (v.length !== 3 * e.purpose_count() * m) continue;
       for (let k = 0; k < k1; k++) { add(seg, 1 + k, v, 3 * k * m); add(board, 1 + k, v, (3 * k + 1) * m); add(alight, 1 + k, v, (3 * k + 2) * m); }
     }
     if (regional && c.part) {
       const at = keys.length - 1, part = c.part;
+      to(part);
       add(seg, at, part.seg(q)); add(board, at, part.board(q)); add(alight, at, part.alight(q));
       // T-276: the regional layer's commutes between zones are work: moved from longer trips to it
       const v = part.commute_loads(q);
@@ -823,7 +843,19 @@ async function run() {
         ...[...cities.keys()].filter((id) => c.cities.includes(id)).map((id) => cities.get(id)!),
         ...[...everyday.keys()].filter((id) => c.cities.includes(id) && jobCities.has(id)).map((id) => everyday.get(id)!),
         ...partOf(c),
-      ], reuse: 0 }));
+      ], reuse: 0, views: new Map<Population, PopView>() }));
+      // T-756: a city's layers solve on the stations within its reach (`?perfOff=reach`: on its
+      // whole cluster); the market's longer trips on the whole cluster
+      for (const c of jobClusters) {
+        const whole = clusterView(c);
+        for (const id of c.cities) {
+          const v = job.wide || job.whole ? whole : reachView(n, c, cityReach(n, id, boxes.get(id) ?? null));
+          c.views.set(cities.get(id)!, v);
+          const e = everyday.get(id);
+          if (e && c.pops.includes(e)) c.views.set(e, v);
+        }
+        if (c.part) c.views.set(c.part, whole);
+      }
       const dirty = jobClusters.filter((c) => c.pops.some((p) => held.get(p) !== c.sig));
       // T-393: the cluster of the city in view first
       if (job.first) {
@@ -845,8 +877,8 @@ async function run() {
       stageGroup = 0;
       let periodsKept = 0, periodsSolved = 0;
       const setUp =(c: JobCluster) => {
-        const m = c.net;
         for (const p of c.solveOrder) {
+          const m = viewOf(c, p).net;
           held.delete(p);
           p.set_complexes(m.complex);
           if (p instanceof IntercityApi) {
@@ -900,18 +932,10 @@ async function run() {
       stageRound = -1;
       answerWaiting(); // an older version's get nulls; this one's wait on
       let stale = false;
-      // a cluster's loads, all its populations', per route node of its network
-      const sum = (c: JobCluster, read: (a: Population) => Float32Array): Float32Array => {
-        const out = new Float32Array(c.nodeGlobal.length);
-        for (const a of c.pops) { const v = read(a); for (let k = 0; k < out.length; k++) out[k] += v[k] ?? 0; }
-        return out;
-      };
-      // the clusters', per route node of the whole network
-      const sumAll = (cs: JobCluster[], read: (a: Population) => Float32Array): Float32Array => {
-        const out = new Float32Array(jobNodes);
+      // the clusters' loads, all their populations', per route node of the whole network
+      const sumAll = (cs: JobCluster[], read: (a: Population) => Float32Array, out = new Float32Array(jobNodes), at = 0): Float32Array => {
         for (const c of cs) {
-          const map = c.nodeGlobal;
-          for (const a of c.pops) { const v = read(a); for (let k = 0; k < map.length; k++) out[map[k]] += v[k] ?? 0; }
+          for (const a of c.pops) { const map = viewOf(c, a).nodeGlobal, v = read(a); for (let k = 0; k < map.length; k++) out[at + map[k]] += v[k] ?? 0; }
         }
         return out;
       };
@@ -921,15 +945,22 @@ async function run() {
       const step = async (c: JobCluster, round: number, q: number): Promise<boolean> => {
         // the cluster's segment loads, boardings and alightings per route node: the crowding and
         // the waits for full trains (T-188) the round is solved with
-        let total: Float32Array | null = null;
+        let total: Float32Array<ArrayBuffer> | null = null;
+        const N = jobNodes;
         if (round > 0) {
-          const nr = c.nodeGlobal.length;
-          total = new Float32Array(3 * nr);
-          total.set(sum(c, a => a.seg(q)), 0); total.set(sum(c, a => a.board(q)), nr); total.set(sum(c, a => a.alight(q)), 2 * nr);
+          total = new Float32Array(3 * N);
+          sumAll([c], a => a.seg(q), total, 0); sumAll([c], a => a.board(q), total, N); sumAll([c], a => a.alight(q), total, 2 * N);
         }
         for (const a of c.solveOrder) {
           if (total === null) a.solve(q);
-          else if (!a.crowd_with_external(q, total)) throw new Error("shared crowding layout disagrees");
+          else {
+            // the cluster's loads on this population's own route nodes; at a pad, the riders aboard
+            // as its boardings (`PopView.pads`)
+            const { nodeGlobal: map, pads } = viewOf(c, a), nr = map.length, own = new Float32Array(3 * nr);
+            for (let k = 0; k < nr; k++) { const g = map[k]; own[k] = total[g]; own[nr + k] = total[N + g]; own[2 * nr + k] = total[2 * N + g]; }
+            for (const k of pads) { own[nr + k] = own[k]; own[2 * nr + k] = 0; }
+            if (!a.crowd_with_external(q, own)) throw new Error("shared crowding layout disagrees");
+          }
           // a population's pass is up to a second of one call: let a waiting query or a newer
           // network in between
           await yieldNow();

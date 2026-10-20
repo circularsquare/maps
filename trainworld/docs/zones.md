@@ -235,7 +235,9 @@ is known without its files (T-302, T-400):
 
 - **Water masks** (clock worker): a zone's mask is fetched when the view comes within 20 km of its box
   (only the zone under the centre when the view is over 400 km wide), and for every zone whose box,
-  widened by 2 km, a loaded network's track meets; the network then opens over those masks. A
+  widened by 2 km, a loaded network's track meets; the network then opens over those masks (read from
+  the save's nodes and curve points before the load, so it is derived once; a zone only the drawn
+  curves reach still costs a second opening; T-737). A
   preview or an edit that makes track (a route, new PIs, a node moved) is first worked out, and if
   its geometry comes within 2 km of a zone whose mask is not in, it waits for the mask and is worked
   out again, so ground over water is never accepted because a mask was late. A mask that cannot be

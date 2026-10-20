@@ -75,6 +75,8 @@ export type ToDemand =
       whole?: boolean;
       /** T-409 `?perfOff=split`: the market's zones as one, so its clusters merge through it */
       oneMarket?: boolean;
+      /** T-756 `?perfOff=reach`: every population on its whole cluster, not its reach */
+      wide?: boolean;
       /** T-124 `?perfOff=periods`: a cluster solved solves every period, none kept */
       fresh?: boolean;
       /** T-393: the city in view: its cluster is solved first */

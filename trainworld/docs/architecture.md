@@ -72,6 +72,12 @@ Web first, so it can be shared as a link.
   worker and replaced on each edit, made from per-edge, per-line and per-station pieces the worker
   keeps and rebuilds only when their inputs change (`NetCache` in map/network.ts, T-496); trains are instanced and positioned on the GPU from keyframes
   and the clock. World coordinates and the moving draw anchor: [world.md](world.md).
+- **A state and its trips land together** [T-648]: the clock worker posts each state, then its
+  trips, before anything else. The client holds the state until those trips (at most 250 ms), so
+  the world, the network and the trips are taken in one task and no frame draws old trips on new run
+  profiles; a state built at another draw anchor is taken at once. A state leaves out its edges and
+  nodes when they are as in the last one posted (`sameEdges`, `sameNodes`); the client puts back its
+  last ones.
 - **Staying in step with the basemap** [T-075; notes/T-015.md, notes/T-075.md]: an empty MapLibre
   custom layer hands over the camera matrix on every frame MapLibre draws, and the overlay is drawn
   right there with the same matrix; our own frame loop drives the overlay only for the clock and
@@ -107,7 +113,9 @@ Web first, so it can be shared as a link.
   within its reach [T-396]. A solve waits until every pack it needs is open in
   every worker, so a published result never leaves out a constructed city. Each worker solves the
   network's clusters (populations and the lines they reach, sharing no rider) apart, and after an
-  edit only those it touched [T-326, [demand-runtime.md](demand-runtime.md) "Clusters"]. Worker 0 first opens a
+  edit only those it touched [T-326, [demand-runtime.md](demand-runtime.md) "Clusters"]; within a
+  cluster each city's layers solve on the stations within its reach, the market on the whole
+  cluster [T-756, "Each population on its reach"]. Worker 0 first opens a
   small synthetic everyday layer (`warm.rs`) and the others get packs only once it is ready, so
   every worker opens on optimised code [T-173]. The clock worker's network snapshot after each
   service change goes to every worker; a worker takes a newer one between populations. Messages:
@@ -151,7 +159,8 @@ Web first, so it can be shared as a link.
   in `rejected`, every worker drops it, the zone is left out and flagged, and it is tried again
   once after 10 s; a second failure is final until the page is reloaded (T-492). A market pack
   mismatched with its row, as in a snapshot built mid pack rebuild, is isolated per zone like any
-  other. Only an error outside opening a pack stops the pool ("Demand could not load").
+  other. Only an error outside opening a pack stops the pool ("Demand could not load" at startup, the
+  "Demand stopped" alert later, the figures shown kept [T-757]).
   `checks/every-pack-opens.mjs --broken` serves a broken city pack and market pack.
   `game/loading.ts`; timings in notes/T-172.md, frame times in notes/T-180.md.
 - **Threads talk by snapshots**: a worker transfers a finished buffer with a version number; the

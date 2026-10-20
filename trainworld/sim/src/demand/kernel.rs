@@ -3960,8 +3960,8 @@ pub const SETTLED: f64 = 0.01;
 
 /// Whether a period's next crowding round is skipped (T-434): `seg`, the segment loads it would be
 /// priced on, is within `SETTLED` of those the round before was priced on, kept in `seen`. The first
-/// crowding round always runs, as `seen` starts empty. Every population of a cluster gets the same
-/// loads, so they all stop together.
+/// crowding round always runs, as `seen` starts empty. Each population of a cluster gets the
+/// cluster's loads on its own route nodes (T-756), so it stops when those settle.
 pub fn settled(seen: &mut Vec<f32>, seg: &[f32]) -> bool {
     if seen.len() == seg.len() {
         let (mut moved, mut base) = (0f64, 0f64);

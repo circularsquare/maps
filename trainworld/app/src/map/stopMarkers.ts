@@ -135,6 +135,10 @@ export class StopMarkers {
   private hoverId: string | null = null;
   /** the last tiers asked of the clock worker; an older answer is dropped */
   private asked = 0;
+  /** the clock worker's last tiers for the line being edited */
+  private fromWorker: Map<string, StopTier> | null = null;
+  private seenWorld: WorldView | null = null;
+  private seenLine: number | null = null;
 
   constructor(private map: MlMap, private overlay: Overlay, private toggle: (station: number) => void) {
     this.box = document.createElement("div");
@@ -155,22 +159,40 @@ export class StopMarkers {
       this.box.style.display = on ? "" : "none";
       if (!on || id === null || !w) {
         this.line = null;
+        this.seenLine = null;
+        this.fromWorker = null;
         this.tiers = new Map();
         this.hideTag();
         this.overlay.invalidate();
         return;
       }
+      // lineDraft is set again after every stop edit with the same line: nothing to do then
+      if (w === this.seenWorld && id === this.seenLine && this.line) return;
+      const sameLine = id === this.seenLine && this.line !== null;
+      this.seenWorld = w;
+      this.seenLine = id;
       this.line = w.save.lines.find((l) => l.num === id) ?? null;
       if (!this.line) return;
       this.colour = this.line.colour;
       this.box.style.setProperty("--c", this.colour);
       this.names = new Map(w.save.stations.map((s) => [s.id, s.name]));
-      this.tiers = stopTiers(w, this.line);
+      // After an edit to the same line the worker's last tiers stand until its new answer, with only
+      // the stops changed; the estimate disagrees with them past the line's ends, and showing it in
+      // between made markers change and change back (T-648).
+      const estimate = stopTiers(w, this.line);
+      if (sameLine && this.fromWorker) {
+        const stops = new Set(this.line.stops);
+        for (const s of estimate.keys()) {
+          const was = this.fromWorker.get(s);
+          if (!stops.has(s) && was !== undefined && was !== "on") estimate.set(s, was);
+        }
+      } else this.fromWorker = null;
+      this.tiers = estimate;
       // the clock worker's tiers, from the line tool's own search (T-237), replace this estimate
       const asked = ++this.asked;
       void queryClock({ what: "stopTiers", line: id }).then((d) => {
         if (!d || asked !== this.asked || world.peek() !== w || !this.line) return;
-        this.tiers = tiersFrom(d, w);
+        this.tiers = this.fromWorker = tiersFrom(d, w);
         this.place();
         this.overlay.invalidate();
       });

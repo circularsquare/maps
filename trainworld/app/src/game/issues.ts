@@ -27,6 +27,7 @@ const TEXT: Record<string, string | (() => string)> = {
   StationInUse: "A line stops here. Take the station out of that line first.",
   LineStops: "A line needs at least two different stations.",
   LinePath: "No track joins these stations in this order.",
+  InsertStop: "No track joins these stations with that stop inserted. Check the track connections.",
   LineSchedule: "Trains an hour cannot be negative.",
   SplitPoint: "Too close to the end of the track, or on a ramp.",
   NodeInUse: "Constructed track cannot be moved. Remove it and draw it again.",

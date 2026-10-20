@@ -1,5 +1,11 @@
 ﻿# Archive
 
+- T-630 [P2] Lag with station ridership shown, zoomed far out. Done 2026-10-19: drawing was 60 fps throughout; the circle's hover tag cost 100-115 ms a pointer move off track (and each game minute) on the world save, now 0.1; far-out picks 2-6x faster, same answers. notes/perf-survey.md.
+
+- T-648 [P2] Adding a stop: slow and the map flashes. Done 2026-10-19: the flash was the stop list's stations passed arriving a query late (also old trips on new profiles, counts a row off), all gone; click to drawn 132-142 to 112-130 ms. checks/t648-stop-edit.mjs; notes/perf-survey.md.
+
+- T-737 [P2] Stress test: all of Japan at 4x. Done 2026-10-19: playing and panning 55-60 fps at 240x and 960x; load 10.3 to 7.7 s (masks before the load); whole-country demand dies of worker memory (T-756), seven cities 12 min. checks/t737-japan.mjs; notes/T-737.md.
+
 - T-727d [P2] Snap to the real network: router worker and track tool. Done 2026-10-19: two clicks place Tokyo-Shin-Osaka (515 km, 461 corners, rest to preview 1.3 s) and Penn Station-Emeryville (5,400 km, 4.9 s) as one edit and one undo; long routes bridged river by river. checks/t727-snap.mjs; notes/T-727.md.
 
 - T-724, T-689 [P2] Hover and zoom-start stalls on the real save. Done 2026-10-19: idle-built grids for pick and snap, station names read from nearby tiles only; a pointer move p95 24-37 ms to 3-6 with either tool, same answers. checks/t724-hover.mjs; notes/perf-survey.md.

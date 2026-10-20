@@ -67,6 +67,9 @@ export type EditOp =
   | { op: "addLine"; stops: NodeId[]; name: string; colour: string }
   | { op: "copyLine"; line: number; name?: string }
   | { op: "setStops"; line: number; stops: NodeId[] }
+  /** T-648: the station put in where the line tool's search fits it best (`TrackApi::insert_stop`),
+   * then set as `setStops`; refused with "InsertStop" when no track joins it in */
+  | { op: "insertStop"; line: number; station: NodeId }
   | { op: "setTrainCount"; line: number; trains: [number, number, number] }
   /** T-625: the line's trains follow a headway in seconds per level (0: no service), or null: counts by hand */
   | { op: "setHeadway"; line: number; seconds: [number, number, number] | null }
@@ -273,6 +276,8 @@ export interface ClockLine {
   trainCost: number;
   /** seconds its local time runs ahead of the game clock: its first stop's region's (T-309) */
   shift: number;
+  /** the stations it passes between stops, `[gap, node]` pairs (`TrackApi::passed_stations`, T-646) */
+  passed: number[];
 }
 
 /** Everything drawn, in local units (map/geo.ts). */
@@ -322,6 +327,10 @@ export interface ClockState {
   canRedo: boolean;
   edges: ClockEdge[];
   nodes: ClockNode[];
+  /** T-648: posted empty when as in the last state posted (most line edits); the client puts its
+   * last ones back before anything reads the state */
+  sameEdges?: boolean;
+  sameNodes?: boolean;
   lines: ClockLine[];
   /** stations the player linked into one complex (T-197): node id pairs, flat */
   links: number[];

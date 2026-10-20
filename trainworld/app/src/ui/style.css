@@ -463,6 +463,7 @@ rect.now { fill-opacity: .45; }
 .map-top-left > * { pointer-events: auto; }
 .demand-selector { display: flex; flex-wrap: wrap; max-width: 100%; }
 .stations-full { font-size: 12px; padding: 4px 8px; color: var(--bad); border-color: var(--bad); background: var(--bg); }
+.demand-stopped, .demand-stopped:hover { cursor: default; background: var(--bg); }
 .demand-selector .btn { font-size: 12px; padding: 4px 8px; }
 .demand-selector .btn + .btn { margin-left: -1px; }
 /* T-703: the track display under the demand buttons, its key (height, speed) beside it */

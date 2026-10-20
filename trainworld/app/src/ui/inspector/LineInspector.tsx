@@ -434,21 +434,11 @@ export function LineInspector({ id }: { id: string }) {
   }, [l?.num, w?.version, acct, kind]);
   // T-646: while stops are edited, the stations the line passes between stops, and the gaps whose
   // passed stations are shown as stops to add, waiting for Add or Cancel
+  // (the passed stations come with the world, so new stops never show with the old gaps, T-648;
+  // the gaps picked hold for the world version they were picked in)
   const editingThis = tool.value === "line" && !!l && lineDraft.value.line === l.num;
-  const [passed, setPassed] = useState<{ gap: number; node: number }[]>([]);
-  const [pending, setPending] = useState<number[] | null>(null);
-  useEffect(() => {
-    setPending(null);
-    if (!l || !editingThis) return setPassed([]);
-    let on = true;
-    void queryClock({ what: "passedStations", line: l.num }).then((d) => {
-      if (!on || !d) return;
-      const out = [];
-      for (let i = 0; i + 1 < d.length; i += 2) out.push({ gap: d[i], node: d[i + 1] });
-      setPassed(out);
-    });
-    return () => { on = false; };
-  }, [l?.num, w?.version, editingThis]);
+  const [pendingAt, setPendingAt] = useState<{ v: number; gaps: number[] } | null>(null);
+  useEffect(() => setPendingAt(null), [l?.num, editingThis]);
   // its day so far (T-293), kept fresh while the panel is open
   useToday();
   if (!w || !l) return null;
@@ -490,6 +480,9 @@ export function LineInspector({ id }: { id: string }) {
     setPreview(hex);
     void edit({ op: "lineLook", line: l.num, name: l.name, colour: hex }).then((a) => { if (!a.ok) setPreview(null); });
   };
+  const passed = editingStops ? st.passed : [];
+  const pending = pendingAt && pendingAt.v === w.version ? pendingAt.gaps : null;
+  const setPending = (gaps: number[] | null) => setPendingAt(gaps && { v: w.version, gaps });
   const gaps = [...new Set(passed.map((p) => p.gap))];
   const adding = pending ? passed.filter((p) => pending.includes(p.gap)) : [];
   const addPassed = async () => {

@@ -386,5 +386,8 @@ registry centre and zoom, or over New York with none [T-310].
   text ends in an ellipsis.
 - If demand cannot load, a screen says "Demand could not load" with the reason and two buttons, Try
   again (reload) and Play without demand, and takes every key until one is pressed.
+- If demand stops later (a worker out of memory on a very big network, or an error) [T-757], a red
+  alert under the demand buttons says "Demand ran out of memory" or "Demand stopped", its hover
+  the cause and that a reload starts it again; the status tag goes, the figures shown stay.
 - A game whose view is over dead space and whose stations reach no zone loads nothing: no card, no
   status, the clock not held, the split "–" [T-318].

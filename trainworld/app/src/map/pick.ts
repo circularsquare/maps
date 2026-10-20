@@ -43,10 +43,23 @@ export function pointerLocal(ov: Overlay, px: number, py: number): [number, numb
 const grids = new WeakMap<Float32Array, { count: number; levels: CellLevels }>();
 /** the candidate indices of the last `segsNear`, highest first */
 let NEAR = new Int32Array(1024);
+/** per stroke set, its last query and answer: a pointer move asks the same set at the same point
+ * several times (the cursor's pick, the tag's pick, the tag's own segment; T-630) */
+const lastNear = new WeakMap<Float32Array, { count: number; lx: number; ly: number; reach: number; m: number; idx: Int32Array }>();
+/** scratch marks for ordering many candidates without a sort */
+let MARK = new Uint8Array(0);
+/** the widest drawn line of a width array (topSeg's reach), worked out once per array */
+const widest = new WeakMap<Float32Array, number>();
 
 /** Every segment whose box comes within `reach` (local units) of (lx, ly), into NEAR highest index
  * first, perhaps with others; their number, or -1 when the caller is to scan them all. */
 function segsNear(seg: Float32Array, count: number, lx: number, ly: number, reach: number): number {
+  const was = lastNear.get(seg);
+  if (was && was.count === count && was.lx === lx && was.ly === ly && was.reach === reach) {
+    if (NEAR.length < was.m) NEAR = new Int32Array(was.idx.length);
+    NEAR.set(was.idx.subarray(0, was.m));
+    return was.m;
+  }
   let g = grids.get(seg);
   if (!g || g.count !== count) grids.set(seg, (g = { count, levels: new CellLevels(() => seg, count) }));
   const grid = g.levels.for(reach);
@@ -60,10 +73,19 @@ function segsNear(seg: Float32Array, count: number, lx: number, ly: number, reac
     }
     NEAR[n++] = i;
   });
-  const v = NEAR.subarray(0, n).sort().reverse();
-  // a segment in two cells comes twice
   let m = 0;
-  for (let k = 0; k < n; k++) if (!m || v[k] !== v[m - 1]) v[m++] = v[k];
+  if (n * 32 > count) {
+    // zoomed far out a query holds a whole city (T-630): marking them and reading the marks back
+    // from the top is one pass over the set, where a sort of that many costs milliseconds
+    if (MARK.length < count) MARK = new Uint8Array(count);
+    for (let k = 0; k < n; k++) MARK[NEAR[k]] = 1;
+    for (let i = count - 1; i >= 0; i--) if (MARK[i]) (MARK[i] = 0), (NEAR[m++] = i);
+  } else {
+    const v = NEAR.subarray(0, n).sort().reverse();
+    // a segment in two cells comes twice
+    for (let k = 0; k < n; k++) if (!m || v[k] !== v[m - 1]) v[m++] = v[k];
+  }
+  lastNear.set(seg, { count, lx, ly, reach, m, idx: NEAR.slice(0, m) });
   return m;
 }
 
@@ -72,7 +94,7 @@ function segsNear(seg: Float32Array, count: number, lx: number, ly: number, reac
  * Also used by the track tooltip (trackHover.ts, T-157) to find the segment `pick` hit.
  * `wide` and `widePx`: per segment, the drawn width as a multiple of `widePx` (line widths by
  * riders, T-227); a segment drawn wider than the slop is hit anywhere across it. */
-export function topSeg(ov: Overlay, seg: Float32Array, count: number, px: number, py: number, best: number, offset?: Float32Array, slot = 0, accept?: (index: number) => boolean, wide?: Float32Array | null, widePx = 0): [number, number] {
+export function topSeg(ov: Overlay, seg: Float32Array, count: number, px: number, py: number, best: number, offset?: Float32Array, slot = 0, accept?: (index: number) => boolean, wide?: Float32Array | null, widePx = 0, only?: Int32Array): [number, number] {
   // T-180: a segment whose box, grown by the slop and its sideways shift (and a pixel to spare),
   // misses the pointer cannot be within the slop, so it is skipped before the exact sum: first in
   // local units without projecting it (the pointer taken into local units once), then on screen.
@@ -82,9 +104,18 @@ export function topSeg(ov: Overlay, seg: Float32Array, count: number, px: number
   const at = pointerLocal(ov, px, py);
   const lx = at ? at[0] : 0, ly = at ? at[1] : 0, perPx = at ? at[2] : 0;
   let near: Int32Array | null = null, nearCount = 0;
-  if (at && !offset) {
+  // `only`: the caller's own candidates, highest first (the blueprint's few segments, T-630)
+  if (only) (near = only), (nearCount = only.length);
+  else if (at && !offset) {
     let maxWide = 0;
-    if (wide && widePx) for (let i = 0; i < count; i++) if (wide[i] > maxWide) maxWide = wide[i];
+    if (wide && widePx) {
+      const had = widest.get(wide);
+      if (had !== undefined) maxWide = had;
+      else {
+        for (let i = 0; i < wide.length; i++) if (wide[i] > maxWide) maxWide = wide[i];
+        widest.set(wide, maxWide);
+      }
+    }
     const reachMax = (Math.max(slop, 0.5 * maxWide * widePx) + 1) * perPx;
     nearCount = segsNear(seg, count, lx, ly, reachMax);
     if (nearCount >= 0) near = NEAR;
@@ -219,6 +250,18 @@ function tripMayBeNear(n: NetworkBuffers, lb: LineBlocks, profile: number, dep: 
   return false;
 }
 
+const blueprints = new WeakMap<Float32Array, Int32Array>();
+/** A stroke set's blueprint segments, highest first: a handful beside the built network's tens of
+ * thousands, which a pick far out would otherwise all look at (T-630). */
+function blueprintOf(s: { flags: Float32Array; count: number }): Int32Array {
+  let had = blueprints.get(s.flags);
+  if (had) return had;
+  const out: number[] = [];
+  for (let i = s.count - 1; i >= 0; i--) if ((s.flags[i] & F_BLUEPRINT) !== 0) out.push(i);
+  blueprints.set(s.flags, (had = Int32Array.from(out)));
+  return had;
+}
+
 /** How many different lines have strokes on an edge. */
 function linesOnEdge(s: { colour: Uint32Array; edge: Uint32Array; count: number }, edge: number): number {
   let first = -1;
@@ -293,9 +336,9 @@ export function pick(ov: Overlay, px: number, py: number, trainsShown: boolean, 
   // blueprint track and the lines planned on it are drawn over built track and its lines (T-695)
   const bp = ov.renderer.hasBlueprint;
   let li = selectedLi;
-  if (li < 0 && bp && ov.renderer.slotPx) [li] = topSeg(ov, n.lines.seg, n.lines.count, px, py, slop, undefined, 0, (i) => (n.lines.flags[i] & F_BLUEPRINT) !== 0, wide, widePx);
+  if (li < 0 && bp && ov.renderer.slotPx) [li] = topSeg(ov, n.lines.seg, n.lines.count, px, py, slop, undefined, 0, undefined, wide, widePx, blueprintOf(n.lines));
   if (li < 0 && bp) {
-    const [ti] = topSeg(ov, n.track.seg, n.track.count, px, py, slop, undefined, 0, (i) => (n.track.flags[i] & F_BLUEPRINT) !== 0);
+    const [ti] = topSeg(ov, n.track.seg, n.track.count, px, py, slop, undefined, 0, undefined, null, 0, blueprintOf(n.track));
     if (ti >= 0) return { kind: "track", edge: n.track.edge[ti] };
   }
   if (li < 0 && ov.renderer.slotPx) [li] = topSeg(ov, n.lines.seg, n.lines.count, px, py, slop, undefined, 0, undefined, wide, widePx);

@@ -156,6 +156,8 @@ export interface LineStats {
   turnaroundS: number;
   /** seconds the line's local time runs ahead of the game clock (T-309, game/localTime.ts) */
   shift: number;
+  /** the stations it passes without stopping, in path order; gap i lies between stop i and i + 1 (T-646) */
+  passed: { gap: number; node: number }[];
 }
 
 export interface ModeSplit {

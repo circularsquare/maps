@@ -16,7 +16,8 @@ stations and trips (route, direction, stops, departure times), and the rest is c
 `gtfs` (a feed's weekday, a Wednesday with the most trips), `osm` (route relations from
 `fetch-osm`: stop order from the relation, trains per hour from its `interval` tag or a default
 by kind of line, run times from distance at a speed by kind), `trips` (a CSV of timetabled
-trips any other source can be written to: route, direction, trip, stop, name, lon, lat, time).
+trips any other source can be written to: route, direction, trip, stop, name, lon, lat, time),
+`n02` (Japan's whole network from MLIT's N02, T-737: pipeline/realnet_n02.py; cities `jpn`, `jpn7`).
 A source's `group` table puts its stops into the stations the city's counts use (New York: the
 MTA's station complexes, so in-complex transfers are free of walking, as the MTA's own counts
 treat them); each station keeps that group id as `target`. Stations of different sources within
@@ -244,6 +245,11 @@ CITIES["jpn"] = {
                  "density": os.path.join(MAPS, "riders", "japanriders", "data", "segments.geojson"),
                  "min_share": 0.0, "min_trips": 1, "kind": "commuter"}],
 }
+# the same, cut to Japan's seven city packs (+10 km): seven networks no line joins, so demand solves
+# each on its own (T-737's second save)
+CITIES["jpn7"] = {**CITIES["jpn"], "out": os.path.join(WORK, "jpn7_real.json"), "boundary": ["tyo", "osa", "ngo", "fuk", "spk", "sdj", "hij"],
+                  "boundary_km": 10.0, "what": "Japan's rail in its seven city packs from N02 (T-737, rough)",
+                  "sources": [dict(CITIES["jpn"]["sources"][0])]}
 CAR_M = 20.0
 LEVEL_WINDOWS = {0: [(7, 9), (17, 19)], 1: [(10, 16)], 2: [(0, 6)]}
 DAY = (6, 20)
@@ -711,7 +717,13 @@ def cmd_net(city=None):
     merge_m = cfg.get("merge_m", MERGE_M)
     from shapely import prepared
     from shapely.geometry import Point
-    bnd = prepared.prep(boundary(cfg["pack"])) if cfg.get("boundary", True) else None
+    # `boundary`: False keeps every station; a list of packs keeps those within `boundary_km` of any
+    bb = cfg.get("boundary", True)
+    if isinstance(bb, list):
+        from shapely import union_all
+        bnd = prepared.prep(union_all([boundary(p).buffer(cfg.get("boundary_km", 0) / 111.0) for p in bb]))
+    else:
+        bnd = prepared.prep(boundary(cfg["pack"])) if bb else None
 
     def inside(lon, lat):
         return bnd is None or bnd.contains(Point(lon, lat))

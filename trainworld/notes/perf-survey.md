@@ -70,6 +70,59 @@ New York save (mnr Hudson) after: 2-4 ms to the panel, edits 40-100 ms. Not the 
 round costs more with more counted lines, but the seconds came from the cap.
 `artifacts/trainworld/t747-*.json` and the traces beside them.
 
+**Adding a stop (T-648, 2026-10-19, `checks/t648-stop-edit.mjs`, 1400x900, demand final, paused).**
+The real save's lines stop at every station they pass, so each click first builds (and constructs)
+a station on a long straight stretch of one line, then adds it with a click on its marker; 12
+lines. The flash was the line panel's stop list: the stations passed (T-646) came from a query
+asked after each new world, so for one to three frames the new stops showed with the old gaps, a
+"+ 1 station passed" row beside the new stop that pushed every row below down a line and back.
+Also found with the frame test (screencast, pixels the same before and after that some frame
+between draws otherwise): for a frame or two the old trips drawn on the new run profiles (trains
+jumping, or staying on a line that had just lost its service), and the past-24-hour counts a row
+off for up to 250 ms. The toggle markers never changed twice (the brief's guess: the estimate and
+the worker agree on this save; after an edit the worker's last tiers now stand anyway). Fixes: the
+passed stations ride in the clock state; the client holds a state until its trips (posted right
+after it, so world, network and trips are taken in one task); the counts follow their stations to
+the new stop order. Latency, medians of 12 clicks in interleaved runs against HEAD (2a46781) on
+its own Vite: click to world 97, 95, 94.5 ms before, 76, 70, 76 after; click to the frame drawn
+with the new network 142, 139, 132 before, 116, 112, 130 after. With the station left a blueprint:
+world 114 to 101, drawn 167 to 145.
+Where it went: one worker message instead of an `insertStop` query and `setStops` (10-15 ms);
+turn-back strokes searched every stroke of a line per call, now a binary search (incremental buffer
+build 30 to 15 ms on the main thread, same buffers to the byte); edges and nodes left out of the
+state when unchanged (transfer 12 to 6 ms); the shadow name layer re-tiled only when the names
+move. Left, after: worker apply 5, state 6-9, buffers 15-20, transfer 6, the first boarding hour
+about 10 (now before the state is taken), main thread 25 to take the state (world effects 15:
+labels, money charts, places) and about 40 more to the drawn frame (panel renders, layers, the
+frame). A station built as a blueprint (the line turns planned) costs 5-20 ms more in
+`blueprint_cost_items`, a trial construction of the whole blueprint on every state. The counts go
+blank for the edited line once the worker drops its riders, until demand returns (the model's
+state, not drawing). `artifacts/trainworld/t648-*.json`, strips `t648-before-strip.png` and
+`t648-after-strip.png` (same click, panel and map).
+
+**Station circles zoomed far out (T-630, 2026-10-19).** Anita's world save (world-map-day73: 143
+lines, 2,367 stations, Toronto to Tokyo) and the real New York save, circles on, clock at 240x,
+zooms 5-10 over New York, Washington and Japan, 1400x900 and 2400x1300 at 1.5x. Drawing was never
+the cost: 59-60 fps on the world save before and after, main thread 3-5 ms a frame panning and 1-2
+still; overlay GPU 4-6 ms at z5-6 over New York (1.5-2 over Japan) and the same with the circles
+off, so the track strokes, not 2,400 circle quads; circles rebuilt only when the world, solve,
+period or a display setting changes (4-7 ms, at most once in 5 s), never per tick. The lag was the
+circle's hover tag. `circleTip` runs on every pointer move that hits no train, station or track
+(most of the map far out) and again each game minute while its tag is up (4 a second at 240x); it
+worked out every station's complex and, for each, a set of every built station: 98-116 ms a call on
+the world save, 38 on New York's. Now the circle list (centre, size, riders, busiest name) is kept
+until the network, world, solve, mode, complexes or split change: 0.03-0.14 ms. Pick far out
+(blueprints in the world save): a whole city's segments sorted per query, every width scanned per
+call, the blueprint passes walking every candidate. Now the candidates are ordered by marks when
+there are many, each set's last query is reused within a move, the widest width kept per array, and
+the blueprint passes look at the blueprint segments only: 5.7 to 2.4 ms a pick at z5, 2.3 to 0.4
+at z6, 5.5 to 1.8 at z8, 3.8 to 1.5 at z10 over New York; a pointer move's handlers p50/p95 8.7/24
+ms to 5.9/9.9 at z5 and 8.1/21.8 to 5.5/9.2 at z6 (z10 2.8/4 to 2.7/3.5). New York's save has no
+blueprints, so its picks are unchanged (1-1.4 ms) and moves 3/5 ms. Same answers: 50,000 picks
+(trains on and off, each asked twice) and 5,800 circle tags at zooms 5-14 on both saves against
+HEAD's copies, identical. Circles were not merged or culled far out, since they cost nothing
+measurable. Scripts were scratch; outputs in `artifacts/trainworld/t630/`.
+
 **Per worker, New York, native** (cellbench): commute engine opens in 50 ms (+12.5 MB); the everyday
 layer in 1.2 s (+69 MB, peak +83), mostly destination sampling; its `set_network` 0.43-0.73 s
 (+88 MB: `edge_pair` 56 MB and the pair list); the commute engine's `set_network` 0.45 s. One
@@ -194,6 +247,9 @@ Impact on the target machine (2 workers) where it differs. "Scales" = what it le
     half as long. 1 day; changes figures slightly.
 11. Pack compression on publish (T-060): 43 MB of startup download to about 18-20 MB.
 
+Big networks (the whole of Japan, T-737) have their own ranking in section 6; its first item, T-756,
+belongs beside items 1-5 once a player's network spans several zones.
+
 **Later**
 
 12. T-036 faster pair loop (the round time itself; large, high effort), T-354, T-356, T-359,
@@ -237,3 +293,30 @@ changes no other zone), car and air have no capacity, far pairs between served z
 - Risk: the market's rounds and a city's rounds stop being averaged together (MSA per round), so
   results differ slightly from a joint solve and depend on order. A bit check against the joint
   solve on the Northeast (market loads are a few percent of New York's) bounds it.
+
+## 6. Big networks: all of Japan (T-737, 2026-10-19)
+
+`checks/t737-japan.mjs`, notes/T-737.md. Japan's whole N02 network (709 lines, 10,320 nodes) and its
+seven cities alone (491 lines, 5,992 nodes), 2 solving workers. Playing at 240x and 960x does not
+lag: 55-60 fps, 4.6-5.5 ms of main thread a frame over the pans, 0.3% of frames over 50 ms. Load 7.7 s
+(10.3 s before T-737 fetched the water masks before the one load). Demand is the wall: the whole
+country never solves (each worker out of WASM memory: station x station tables over one cluster of
+10,320 stations, 426 MB each; Tokyo's pack alone natively 243 s and 3.28 GB peak); the seven cities
+take 680-735 s to their final with 2.5 GB a worker and 6 GB in the renderer.
+
+Ranked:
+
+1. **T-756 each population on the stations within its reach**: Tokyo's pack on the whole network
+   natively 243 s / 3.28 GB to 107 s / 0.50 GB cut to its box + 20 km, same figures (operator
+   boardings to 2 in 11 million). Makes whole-country demand possible at all, and cuts every
+   multi-zone cluster's rounds (the seven cities' Tokyo cluster holds several Kanto zones, each
+   searching the whole cluster). Scales: network size. 1-2 days, moderate risk (per-population node
+   maps through the load sums, crowding, results).
+2. **T-757 a failed demand worker says so**: today the error is only in the console and demand never
+   finishes. Small.
+3. **T-759 the clock state on a big network**: 360-500 ms of main thread on load, 130-200 ms when
+   resent mid-play. Scales: network size. With T-499, T-070.
+4. **T-758 the track derive with water masks**: about 4.9 s in WASM for 709 lines (0.42 s natively
+   without masks). Load only.
+5. **T-760 negative stop-to-stop distance** for stops closer than their platforms (guarded since
+   T-737). Correctness, not speed.

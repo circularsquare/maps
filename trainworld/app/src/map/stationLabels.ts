@@ -55,6 +55,7 @@ export class StationLabels {
   private shown = false;
   private shadow: FeatureCollection = { type: "FeatureCollection", features: [] };
   private key = "";
+  private shadowKey = "";
   private placedMatrix: number[] | null = null;
   private placedSize: [number, number] = [0, 0];
   private anchor: [number, number] = [0, 0];
@@ -163,15 +164,21 @@ export class StationLabels {
       return { el, x, y, below, w: 0, h: 0 };
     });
     for (const v of spare.values()) for (const l of v) l.el.remove();
-    this.shadow = {
-      type: "FeatureCollection",
-      features: names.map((g, i) => ({
-        type: "Feature",
-        geometry: { type: "Point", coordinates: [g.lng, g.lat] },
-        properties: { name: g.name, anchor: this.labels[i].below ? "top" : "left", offset: this.labels[i].below ? [0, 0.6] : [0.7, 0] },
-      })),
-    };
-    (this.map.getSource(SHADOW) as GeoJSONSource | undefined)?.setData(this.shadow);
+    // A stop edit changes a station's lines and so the key, mostly not the shadow: MapLibre then
+    // keeps its layout instead of tiling and placing every name again (T-648).
+    const shadowKey = names.map((g, i) => `${g.name}|${g.lng}|${g.lat}|${this.labels[i].below}`).join("\n");
+    if (shadowKey !== this.shadowKey) {
+      this.shadowKey = shadowKey;
+      this.shadow = {
+        type: "FeatureCollection",
+        features: names.map((g, i) => ({
+          type: "Feature",
+          geometry: { type: "Point", coordinates: [g.lng, g.lat] },
+          properties: { name: g.name, anchor: this.labels[i].below ? "top" : "left", offset: this.labels[i].below ? [0, 0.6] : [0.7, 0] },
+        })),
+      };
+      (this.map.getSource(SHADOW) as GeoJSONSource | undefined)?.setData(this.shadow);
+    }
     this.place();
   }
 

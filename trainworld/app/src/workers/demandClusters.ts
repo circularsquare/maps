@@ -208,6 +208,102 @@ export function splitClusters(n: DemandNetwork, cities: { id: CityId; box: Box }
   return out;
 }
 
+/**
+ * T-756: a population's own network inside its cluster (notes/T-756.md). Each of the cluster's
+ * lines with a stop it reaches runs from the stop before its first such stop to the stop after its
+ * last (all stops between kept, so no rider changes trains where a line leaves the reach and comes
+ * back); the stops outside are only those pads, which no rider of the population boards at.
+ */
+export interface PopView {
+  net: DemandNetwork;
+  /** snapshot station -> station of `net`, or -1 */
+  stLocal: Int32Array;
+  /** route node of `net` -> route node of the whole network */
+  nodeGlobal: Uint32Array;
+  /** route nodes of `net` that start a run at a pad: their boardings in the crowding input are the
+   * riders already aboard there (the whole line's load on the hop leaving it), as the left-behind
+   * model, which runs each train from its first stop, needs */
+  pads: Uint32Array;
+}
+
+/** The view of a population that solves on its whole cluster (the market, `?perfOff=reach`). */
+export function clusterView(c: Cluster): PopView {
+  return { net: c.net, stLocal: c.stLocal, nodeGlobal: c.nodeGlobal, pads: new Uint32Array(0) };
+}
+
+/** T-756: the snapshot stations a city reaches (`CITY_REACH_M` of its cells' box), 1 each. */
+export function cityReach(n: DemandNetwork, id: CityId, box: Box): Uint8Array {
+  const S = n.stXY.length / 2, out = new Uint8Array(S);
+  if (!box) return out;
+  for (let s = 0; s < S; s++) {
+    const p = worldToCity(n.stXY[2 * s], n.stXY[2 * s + 1], id);
+    if (p.x >= box[0] - CITY_REACH_M && p.x <= box[2] + CITY_REACH_M && p.y >= box[1] - CITY_REACH_M && p.y <= box[3] + CITY_REACH_M) out[s] = 1;
+  }
+  return out;
+}
+
+/** T-756: the network of a population reaching the stations marked in `reach`, over the cluster's lines. */
+export function reachView(n: DemandNetwork, c: Cluster, reach: Uint8Array): PopView {
+  const lineOff = new Uint32Array(n.lineN.length + 1);
+  for (let l = 0; l < n.lineN.length; l++) lineOff[l + 1] = lineOff[l] + n.lineN[l];
+  const spans: [number, number, number][] = [];
+  for (const l of c.lines) {
+    const m = n.lineN[l], g = lineOff[l];
+    let a = -1, b = -1;
+    for (let k = 0; k < m; k++) if (reach[n.stops[g + k]]) { if (a < 0) a = k; b = k; }
+    if (a < 0) continue;
+    a = Math.max(0, a - 1); b = Math.min(m - 1, b + 1);
+    if (b > a) spans.push([l, a, b]);
+  }
+  const S = n.stXY.length / 2, used = new Uint8Array(S);
+  for (const [l, a, b] of spans) for (let k = a; k <= b; k++) used[n.stops[lineOff[l] + k]] = 1;
+  const stations: number[] = [];
+  for (let s = 0; s < S; s++) if (used[s]) stations.push(s);
+  const stLocal = new Int32Array(S).fill(-1);
+  stations.forEach((s, i) => (stLocal[s] = i));
+  const stXY = new Float32Array(2 * stations.length);
+  stations.forEach((s, i) => { stXY[2 * i] = n.stXY[2 * s]; stXY[2 * i + 1] = n.stXY[2 * s + 1]; });
+  let complex = new Uint32Array(0);
+  if (n.complex && n.complex.length === S) {
+    const first = new Map<number, number>();
+    complex = Uint32Array.from(stations, (s, i) => {
+      const f = first.get(n.complex[s]);
+      if (f !== undefined) return f;
+      first.set(n.complex[s], i);
+      return i;
+    });
+  }
+  const nStops = spans.reduce((t, [, a, b]) => t + b - a + 1, 0);
+  const lineN = Uint32Array.from(spans, ([, a, b]) => b - a + 1);
+  const stops = new Uint32Array(nStops), times = new Float32Array(6 * nStops), hopKm = new Float32Array(2 * nStops);
+  const tph = new Float32Array(3 * spans.length), cars = new Float32Array(spans.length);
+  const nodeGlobal = new Uint32Array(2 * nStops), pads: number[] = [];
+  let o = 0;
+  spans.forEach(([l, a, b], i) => {
+    const m = n.lineN[l], g = lineOff[l], p = b - a + 1;
+    for (let k = 0; k < p; k++) stops[o + k] = stLocal[n.stops[g + a + k]];
+    for (let r = 0; r < 6; r++) {
+      times.set(n.times.subarray(6 * g + r * m + a, 6 * g + r * m + b + 1), 6 * o + r * p);
+      // run 0 ends at the span's last stop, run 1 at its first
+      times[6 * o + r * p + (r < 3 ? p - 1 : 0)] = 0;
+    }
+    // route nodes: the span's p stops in order, then reversed (the whole line's alike)
+    for (let j = 0; j < p; j++) {
+      nodeGlobal[2 * o + j] = 2 * g + a + j;
+      nodeGlobal[2 * o + p + j] = 2 * g + m + (m - 1 - (b - j));
+      hopKm[2 * o + j] = j + 1 < p ? n.hopKm[2 * g + a + j] : 0;
+      hopKm[2 * o + p + j] = j + 1 < p ? n.hopKm[2 * g + m + (m - 1 - (b - j))] : 0;
+    }
+    if (a > 0) pads.push(2 * o);
+    if (b < m - 1) pads.push(2 * o + p);
+    tph.set(n.tph.subarray(3 * l, 3 * l + 3), 3 * i);
+    cars[i] = n.cars[l];
+    o += p;
+  });
+  const net: DemandNetwork = { frame: n.frame, stXY, complex, lineN, stops, times, tph, cars, fare: n.fare, hopKm };
+  return { net, stLocal, nodeGlobal, pads: Uint32Array.from(pads) };
+}
+
 function subNetwork(n: DemandNetwork, lineOff: Uint32Array, cities: CityId[], market: boolean, marketKey: string, stations: number[], lines: number[], rounds: number, frameKey: string): Cluster {
   const S = n.stXY.length / 2;
   const stLocal = new Int32Array(S).fill(-1);

@@ -17,9 +17,9 @@ import { clock } from "../game/clock";
 import { complexes } from "../game/complexView";
 import { demandView } from "../game/demand";
 import { PERIODS, periodAt } from "../game/periods";
-import { useFigure } from "../game/stationUse";
+import { stationUse, useFigure } from "../game/stationUse";
 import type { WorldView } from "../game/types";
-import { display, purposeFilter, shownDayPhrase } from "../game/ui";
+import { display, purposeFilter, shownDayPhrase, type StationUseMode } from "../game/ui";
 import { stationScale } from "./demandLayers";
 import { tripAt } from "./network";
 import type { Overlay } from "./overlay";
@@ -165,18 +165,54 @@ export function circleTip(ov: Overlay, w: WorldView, px: number, py: number, zoo
   const net = ov.renderer.net, dv = demandView.peek(), mode = display.peek().stationUse;
   if (!net || !dv || mode === "none") return null;
   const R = stationHaloRadius(zoom);
+  const list = circleList(net, w, dv, mode);
+  let best: Circle | null = null, bestF = 1;
+  for (const c of list) {
+    const r = R * c.scale;
+    const [sx, sy] = ov.toScreen(c.x, c.y);
+    const dx = sx - px, dy = sy - py;
+    if (dx > r || dx < -r || dy > r || dy < -r) continue;
+    const f = Math.hypot(dx, dy) / r;
+    // the circle whose centre the pointer is relatively nearest, of those it is inside
+    if (f <= bestF) [best, bestF] = [c, f];
+  }
+  if (!best) return null;
+  return [best.name, ...circleLines(best.riders)];
+}
+
+interface Circle { x: number; y: number; scale: number; riders: number; name: string }
+let circleKey: unknown[] = [];
+let circles: Circle[] = [];
+
+/** Every use circle with riders (T-630): its centre (its stations' mean position, local units), size,
+ * riders and its busiest station's name; kept until the network, world, solve or display changes,
+ * since working it out is a pass over every station's complex (tens of ms on a world save). */
+function circleList(net: NonNullable<Overlay["renderer"]["net"]>, w: WorldView, dv: NonNullable<ReturnType<typeof demandView.peek>>, mode: StationUseMode): Circle[] {
+  const key = [net, w, dv, mode, display.peek().complexView, complexes.peek(), stationUse.peek()];
+  if (key.every((v, i) => v === circleKey[i])) return circles;
+  circleKey = key;
   const index = new Map(net.stationIds.map((id, i) => [id, i]));
   const names = new Map(w.save.stations.map((s) => [s.id, s.name]));
+  const built = new Set(w.save.stations.filter((s) => s.built).map((s) => s.id));
+  const cx = display.peek().complexView ? complexes.peek() : null;
   const seen = new Set<string>();
-  let best: { members: string[]; riders: number } | null = null, bestF = 1;
+  const out: Circle[] = [];
   for (const s of w.save.stations) {
     if (!s.built || seen.has(s.id)) continue;
-    const c = circleOf(w, s.id);
-    if (!c || c.riders <= 0) continue;
-    for (const m of c.members) seen.add(m);
-    // the circle's centre: its stations' mean position (one station's own position otherwise)
+    const k0 = cx?.of.get(s.id);
+    const members = k0 !== undefined && cx ? cx.members[k0].filter((m) => built.has(m)) : [s.id];
+    let riders = 0, known = false, top = s.id, topV = -1;
+    for (const m of members) {
+      seen.add(m);
+      const v = useFigure(dv, mode, m);
+      if (v === undefined) continue;
+      riders += v;
+      known = true;
+      if (v > topV) (topV = v), (top = m);
+    }
+    if (!known || riders <= 0) continue;
     let x = 0, y = 0, k = 0;
-    for (const m of c.members) {
+    for (const m of members) {
       const j = index.get(m);
       if (j === undefined) continue;
       x += net.stations[j * 3];
@@ -184,13 +220,8 @@ export function circleTip(ov: Overlay, w: WorldView, px: number, py: number, zoo
       k++;
     }
     if (!k) continue;
-    const [sx, sy] = ov.toScreen(x / k, y / k);
-    const r = R * stationScale(c.riders);
-    const f = r > 0 ? Math.hypot(sx - px, sy - py) / r : Infinity;
-    // the circle whose centre the pointer is relatively nearest, of those it is inside
-    if (f <= bestF) [best, bestF] = [c, f];
+    out.push({ x: x / k, y: y / k, scale: stationScale(riders), riders, name: names.get(top) ?? "Station" });
   }
-  if (!best) return null;
-  const busiest = best.members.map((m) => ({ m, v: useFigure(dv, mode, m) ?? 0 })).sort((a, b) => b.v - a.v)[0];
-  return [names.get(busiest.m) ?? "Station", ...circleLines(best.riders)];
+  circles = out;
+  return out;
 }

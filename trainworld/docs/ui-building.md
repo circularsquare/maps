@@ -285,7 +285,10 @@ route, keeping the existing stop order; removing a stop leaves the others in ord
   the same size and greyer. In the dark theme the greys are dark discs with lighter rings that fade
   into the land, the unreachable ones dimmest (CSS tokens `--mk-*`, T-543). The tiers come from the clock worker trying each station with the same
   insertion search a click makes (`TrackApi::stop_tiers`), so a marker always says what its click
-  does; until the answer lands an estimate from the track graph shows.
+  does; until the answer lands an estimate from the track graph shows on entering, and after an edit
+  the last answer stands with only the stops changed (T-648). A click on a marker is one edit
+  (`insertStop`): the worker fits the station in where `TrackApi::insert_stop` puts it, among the
+  stops it holds then.
 - Hover says "Click to add a stop", "Click to add a stop and change the route", "Click to remove the
   stop" or "No track joins it to this line", under the station's name; a click on the last says
   why in its own tag for four seconds. The markers take no pointer events (the map's pick handles clicks), so the wheel
@@ -298,4 +301,5 @@ route, keeping the existing stop order; removing a stop leaves the others in ord
   all 5 stations the line passes" heads the list. A click shows those stations in the list as
   faint "+ Name" rows, in path order, with Add and Cancel under the list; Add makes them stops in
   one undoable edit. Only stations on the line's path count: a quad twin on the pair beside, or a
-  station on a branch, is not offered.
+  station on a branch, is not offered. The passed stations come in the clock state with each line
+  (`ClockLine.passed`), so the list never shows new stops with the old gaps (T-648).

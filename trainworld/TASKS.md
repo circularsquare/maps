@@ -120,7 +120,6 @@ Anita's TODO.md "short term", filed 2026-10-19 (evening).
 - T-750 [P3] Add a city's real network to a sandbox game already running (merging in the Rust track model; notes/T-728.md stage 6). Anita wants it, not urgent. Open.
 - T-751 [P3] "Expand all platforms on this line" in the line panel, so a line can run longer trains (Anita 2026-10-19, after T-733). Open.
 - T-734 [P2] While placing track, a press and drag on a node moves the node (a click on track still branches and places track). Open.
-- T-737 [P2] (taking, 2026-10-19) Stress test: all of Japan's real network loaded, run at 4x, measure whether it lags (notes/perf-survey.md). Open.
 - T-738 [P3] Flight data for long-distance intercity demand (Anita's idea); see T-712's spot check first. Idea.
 - T-742 [P3] `checks/t488-money-days.mjs` times out waiting for 00:00-00:10 (line 47) on the current app, with or without T-736; also after importing a save, fares stay $0 for about 40 wall seconds of play (notes/T-736.md). Open.
 Anita's playtest of 2026-10-18 (her TODO.md "short term"), filed 2026-10-19. Plans in the notes.
@@ -181,9 +180,14 @@ Tier 0 and country sources: docs/demand-worldwide.md, docs/data-register.md. The
 - T-321 [P3] Local time's rest (T-309, docs/world.md "Local time"): the money ledger's days and the bubbles' catch-up follow the game clock, and market trips across offsets need a period rule. Open; notes/T-321.md.
 
 ## Performance (open since 2026-10-15; ranked in notes/perf-survey.md)
-- T-648 [P2] (taking, 2026-10-19) Adding a stop takes about 100 ms to respond and the map sometimes flashes (Anita's TODO 2026-10-17): measure with checks/t496-edit-latency.mjs, find the flash. Related T-499. Open.
-- T-630 [P2] The game lags with station ridership shown, zoomed far out (Anita's TODO 2026-10-17): measure where the frame time goes, then cut what can be cut (fewer markers far out, say). Open.
-- T-499 [P3] Edits after T-496: click to drawn is 96 ms on the real save; left ~20 ms worker-to-main transfer (send only what changed, also T-070's idea), `buildState`, shadow name layer, GPU uploads. Open; notes/T-496.md "Left".
+- T-756 [P2] (taking with T-757 and T-760, 2026-10-19) Each demand population solves on the stations within its reach only (pack box + 30 km), not its whole cluster: whole-country Japan dies of WASM memory (station x station skims, 426 MB a table); natively Tokyo 243 s / 3.28 GB to 107 s / 0.50 GB, same figures. Per-population node maps through load sums, crowding, results. Open; notes/T-737.md.
+- T-761 [P2] The regional market's part on a whole-country cluster (all of Japan) is past a worker's 4 GB on its own (skims, both ODs, the far-zone table, all S^2 over 10k stations): stream its destinations (exact) or a coarser station set (a demand rule, Anita). Open; notes/T-756.md "The market on the whole country".
+- T-757 [P2] A demand worker that fails (an error, out of memory) leaves demand unfinished with the error only in the console: tell the player and recover. Found in T-737. Open; notes/T-737.md.
+- T-758 [P3] The track derive with water masks is about 4.9 s in WASM for Japan's 709 lines (0.42 s natively without masks): find the water cost. Open; notes/T-737.md.
+- T-759 [P3] The clock state on a big network: 360-500 ms of main thread when Japan loads, 130-200 ms when resent mid-play; send only what changed (with T-499, T-070). Open; notes/T-737.md.
+- T-760 [P3] `line_stop_s` gives a negative stop-to-stop distance for two stops closer than their platforms (7 of Japan's N02 lines); demandClient clamps it since T-737. Open; notes/T-737.md.
+- T-499 [P3] Edits after T-648: a stop click to drawn 112-130 ms on the real save (checks/t648-stop-edit.mjs); edges and nodes already left out when unchanged. Left: lines sent whole (send only the changed ones, with T-759), the buffer build 15-20 ms, 25 ms of main thread taking the state (world effects: labels, money charts) and ~40 ms more to the frame. Open; notes/perf-survey.md (T-648).
+- T-762 [P3] Every clock state with a planned line runs `blueprint_cost_items`'s trial construction of the whole blueprint (5-20 ms on the real save); work it out only when the blueprint or service changed. Open; notes/perf-survey.md (T-648).
 - T-281 [P3] Opening a big save searches every station's walk round water per worker: 1.0 s for the real New York network's 867 stations; a tighter search or a 100 m raster would halve it. Open; notes/T-275.md.
 - T-076 [P3] Playing costs 13-15% of a core, nearly all Chrome presenting 60 frames a second; a lower frame rate when the fastest train moves under half a pixel a frame would halve it. Smoothness judgement for Anita. Open; notes/T-076.md.
 - T-168 [P3] Add a newly viewed city without re-solving the whole network (a pan to one re-solves everything, seconds on a big save). Open; notes/T-149.md.

@@ -173,6 +173,21 @@ only the clusters it touched are solved, and the others' figures are read from t
 as they stand. Every worker splits the same way from the same inputs. `?perfOff=clusters` solves
 everything as one cluster, as before T-326.
 
+**Each population on its reach** (T-756, `reachView` in `workers/demandClusters.ts`). Within a
+cluster a city's commutes and everyday layer are set on their own network: the stations within
+30 km of the city's cells' box (`CITY_REACH_M`, the test that joins it to the cluster: past the
+15 km ride from a home group's centre up to 9 km off its cell, and the work and activity ends walk),
+and each of the cluster's lines with a stop among them from the stop before its first such stop to
+the stop after its last, every stop between kept (a line that leaves the reach and comes back needs
+no change of trains). The stops outside are those pads alone, where none of the city's riders
+board. The regional market's part solves on the whole cluster, since its longer trips ride across
+it. Every round each population is given the cluster's loads, all populations' summed on the whole
+network's route nodes, on its own route nodes; at a pad its boardings are the riders already
+aboard (the line's load leaving the pad), since the left-behind model runs each train from its
+run's first stop. So a city's search, tables and passes grow with its own reach, not the cluster's.
+Each population's crowding rounds stop when its own loads settle (T-434). `?perfOff=reach` sets
+every population on the whole cluster, as before T-756.
+
 Within a cluster that is solved, a period whose own inputs are unchanged keeps its result too
 (T-124). Periods share no rider and each reads only its own demand level's run times and trains an
 hour (the trips home in a period go back by that period's own station pairs; the day's money, the
