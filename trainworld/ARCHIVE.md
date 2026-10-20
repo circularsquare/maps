@@ -1,5 +1,7 @@
 ﻿# Archive
 
+- T-761 [P2] The regional market on Japan's whole-country cluster. Done 2026-10-19: destinations searched one at a time (exact), commutes' OD and far-zone table sparse; the whole country's final in 19 min, 3.2-3.4 GB a worker; New York and seven cities identical to the bit. notes/T-761.md.
+- T-726 [P3] Data register rows and OSM extract dates. Done 2026-10-19: rows for 24 countries plus new pack lists; download day found for every built pack, exact snapshot only for Toulouse. T-765 and T-766 filed; notes/T-726.md.
 - T-754 [P3] The snapped route's fit faster and cancellable. Done 2026-10-19: New York-Emeryville natively 779 to 136 ms, same corners; fitted in steps of at most 10 ms, the router worker dropping it for a newer request. notes/T-727.md.
 - T-727f [P3] Quad over thousands of clicked corners slow. Done 2026-10-19: one express curve left not fitting made the express pair one 5,400 km edge; now cleared until none is, New York-Emeryville quad edit 3.3 s to 0.15 s natively. notes/T-727.md.
 - T-756 [P2] Each demand population on the stations within its reach. Done 2026-10-19: a city's layers on its box + 30 km, the market on the cluster; Japan's seven cities 555 to 346 s, 2.5 to 1.5 GB a worker (Node), figures within 0.06%; whole-country cities solve, the market is T-761. notes/T-756.md.

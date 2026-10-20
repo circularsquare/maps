@@ -8,10 +8,11 @@
 // `geom jpn`, the realsave bin with --city jpn, `gamesave jpn`, notes/T-737.md). Env: LABEL, OUT (default
 // ../artifacts/trainworld/t737), VIEW=WxH, SPEEDS (default "1,2": indices into the clock's SPEEDS),
 // THROTTLE, CPUPROFILE=1 (the main thread's profile per scene in OUT), DEMAND_WORKERS (default 2), NOSOLVE=1 (play at once; the clock is held while demand solves,
-// so this measures panning during a solve). Before the scenes it waits up to 25 min for demand's final
-// (the clock runs only then) or a demand worker's failure: whole Japan fails in about 16 minutes until
-// T-761, the market on the whole country (reported as `demandErrors`, not failing the check; DEMAND_STRICT=1 fails on it), the seven cities
-// solve in about 6.5 minutes (T-756). Fails on page errors, a load that never ends, and the budget below.
+// so this measures panning during a solve). Before the scenes it waits up to 35 min for demand's final
+// (the clock runs only then) or a demand worker's failure: whole Japan's final comes in about 19 minutes
+// with 3.2-3.4 GB a worker (T-761), the seven cities' in about 6.5 (T-756). A demand failure is reported
+// as `demandErrors`, not failing the check; DEMAND_STRICT=1 fails on it. Fails on page errors, a load
+// that never ends, and the budget below.
 import { spawn } from 'node:child_process';
 import { readFile, readdir, mkdtemp, rm, writeFile, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -179,7 +180,7 @@ async function run(BASE) {
     const tD = await page.evaluate(() => performance.now());
     const samples = [];
     let final = false;
-    const deadline = Date.now() + 25 * 60000;
+    const deadline = Date.now() + 35 * 60000;
     if (process.env.NOSOLVE !== '1') {
       while (Date.now() < deadline) {
         const s = await page.evaluate(() => {
@@ -296,7 +297,7 @@ out.total = { frames, mainMsPerFrame: r1(mainMsPerFrame), slowShare: Math.round(
 if (process.env.DEMAND_STRICT !== '1') {
   out.demandErrors = out.errors.filter((e) => /demand: worker|demand never reached/.test(e));
   out.errors = out.errors.filter((e) => !/demand: worker|demand never reached/.test(e));
-  if (out.demandErrors.length) log(`demand workers failed (known on whole Japan, T-761): ${out.demandErrors.slice(0, 2).join(' | ')}`);
+  if (out.demandErrors.length) log(`demand workers failed: ${out.demandErrors.slice(0, 2).join(' | ')}`);
 }
 await mkdir(OUT, { recursive: true });
 await writeFile(join(OUT, `japan-${LABEL}.json`), JSON.stringify(out, null, 1));

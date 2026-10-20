@@ -90,6 +90,12 @@ Briefs carry only the task; these hold for every agent.
   for more than about 4 minutes (T-289, T-291: each such wait cost about 270k); do other work meanwhile. Start
   independent long jobs together and wait once (T-360: six separate waits were still 36%). Write
   long logs to a file and read summaries; read doc sections, not whole files; grep TASKS.md.
+- **Long runs are checked, not trusted** (T-613's batch, 2026-10-19: the runner ended early, its STOP file
+  was in the wrong folder and the sim copy's junctions vanished mid-run, and the agent sat "waiting" for hours
+  with 26 rows parked). Before a long run, check the sim copy's `data`/`app` junctions and the paths it will
+  write; after it ends, read `world_run.py status` and report the shipped/parked counts with causes, never just
+  "waiting". The orchestrator checks the process exists and the status table at least every couple of hours.
+  A batch agent may start subagents (one region or one fault each) when that is quicker than one queue.
 - **Reports to the orchestrator are short**: what changed and where, check results, anything for
   Anita. Detail goes in notes/, not the report.
 - **open** in the spec means Anita decides. Otherwise decide, record why, and carry on; never ask

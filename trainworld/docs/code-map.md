@@ -19,7 +19,8 @@ tests natively.
   `TrackApi::trace_route` and the real-network snap; `Tracer` runs it in steps (`RouteTrace` in
   WASM, T-754); notes/T-727.md.
 - `src/demand/`: the demand kernel, behind feature `demand` (on in the app's build): `api.rs`
-  (`DemandApi`, the demand workers' API), `intercity.rs` (the regional market), `warm.rs` (the
+  (`DemandApi`, the demand workers' API), `intercity.rs` (the regional market; on a big cluster its pass searches destinations one at a time,
+  `pass_streamed` with `kernel::DestSearch` and `DestAssign`, T-761), `warm.rs` (the
   everyday warm-up demand worker 0 runs at startup, T-173), `days.rs` (the weekend's factors per
   purpose and period, T-260), `routes.rs` (routed walks round water and drives over OSM roads from
   the pack, T-275), `trip.rs` (the trip explorer's query, T-195; its two cells' own trip, T-720, checked with the

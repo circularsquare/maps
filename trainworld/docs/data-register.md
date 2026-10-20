@@ -17,6 +17,12 @@ Sources' URLs and the measurements behind each choice live in the country's note
 the first table); the rules themselves are in demand-worldwide.md (per country) and demand.md (the
 US). **Updating it**: a city task that uses, finds or rules out a source changes that cell, filing a
 P3 task for anything marked N. A new country gets a row in every table before its first build.
+Countries on global sources only (archetype D, no country module) share one row each in the Jobs,
+Commuting, Travel surveys and Destinations tables, since every cell would read the same; split a
+country out when it gets a source of its own. Rows for the world plan's packs (T-613's batches,
+T-726) give a pack's status as the plan file shows it on 2026-10-19; `world_run.py status` is current.
+"Built, not registered" is a pack on disk that has not passed the runner's gate and merge yet (the
+causes and the rerun are in notes/T-613.md and T-725).
 
 ## Countries and their procedure
 
@@ -24,15 +30,39 @@ P3 task for anything marked N. A new country gets a row in every table before it
 |---|---|---|---|
 | United States | nyc phl bos wdc bal pvd nhv hfd spf wor wnd nlc lit | A | docs/demand.md, notes/T-142.md |
 | Canada | tor | A | notes/T-277.md |
-| England (UK) | lon | A | notes/T-288.md (T-360 part); calibration (T-509): U TfL NUMBAT 2024 station entries and line boarders, U ORR Table 1410 station usage 2024-25, U Census 2011 QS701EW travel to work by MSOA (2021 TS061 skip: lockdown), U GB-wide GTFS (aubin.app, Transitous) for National Rail; G Network Rail and RDG timetable feeds (login) |
-| France | par | A, by commune | notes/T-289.md; calibration (T-509): U IDFM GTFS, U IDFM validations per ZdC per day, U INSEE RP 2022 transit share to work by commune (no rail split); G EGT 2018-20 result tables (omnil.fr 403 to scripts) |
-| Germany | ber | A, by Gemeinde | notes/T-290.md |
+| England (UK) | lon man lee bir not new she liv por | A | notes/T-288.md (T-360 part); calibration (T-509): U TfL NUMBAT 2024 station entries and line boarders, U ORR Table 1410 station usage 2024-25, U Census 2011 QS701EW travel to work by MSOA (2021 TS061 skip: lockdown), U GB-wide GTFS (aubin.app, Transitous) for National Rail; G Network Rail and RDG timetable feeds (login); the eight plan packs (man lee bir not new she liv por, all shipped) use the sources of the other tables here, with a borrowed commute curve (T-314) and no Heathrow share; OSM extracts of 2026-10-17 (notes/T-726.md) |
+| France | par; lil mar nic lyo bor tou (plan rows, built, not registered) | A, by commune | notes/T-289.md; calibration (T-509): U IDFM GTFS, U IDFM validations per ZdC per day, U INSEE RP 2022 transit share to work by commune (no rail split); G EGT 2018-20 result tables (omnil.fr 403 to scripts); the six plan packs use the other tables' sources with a borrowed commute curve and no Charles de Gaulle share; OSM extracts of 2026-10-19 (notes/T-726.md) |
+| Germany | ber dor fra col ham han mun stu; mah nur dus (plan rows, built, not registered) | A, by Gemeinde | notes/T-290.md; the ten plan packs use the sources of the other tables here (Zensus grid, Pendlerrechnung jobs) with a borrowed commute curve; OSM extracts of 2026-10-17 (dor fra col ham han mun) and 2026-10-19 (stu mah nur dus) (notes/T-726.md) |
 | Japan | tyo osa ngo fuk spk sdj hij, 38 zones | A | notes/T-420.md, T-432, T-463; calibration (T-509): U KSJ S12 station counts, U 2020 census table 18 rail share by municipality of residence (e-Stat e18.xlsx); from them a country rail constant of +0.5 on every Japanese pack (Sendai's fit; docs/demand-worldwide.md Japan); U KSJ N02-24 lines and stations with MLIT passing counts (japanriders' segments) for the whole-country real network, a stress test only (T-737) |
 | Brazil | sao | B | notes/T-458.md |
 | China | sha | C, curve from a mean | notes/T-291.md |
 | South Korea | seo | C, curve from a mean | notes/T-457.md; calibration (T-509): U seoulriders' timetable, card gate and KRIC station counts; G census commuting mode by si-gun-gu (KOSIS) |
 | India | mum | C, curve from bands | notes/T-292.md |
-| Nigeria | lag | D | notes/T-459.md |
+| Nigeria | lag owe aba abo | D | notes/T-459.md; owe aba abo (plan rows, shipped) share Lagos's country module and its informal jobs blend; OSM extract of 2026-10-17 (notes/T-726.md) |
+| Spain | mad bar; val sev mal (built, not registered) | D | global sources only; OSM extracts 2026-10-17 (mad bar), 2026-10-19 (val sev mal) |
+| Italy | mil rom nap tur bea (shipped) | D | global sources only; OSM extracts 2026-10-17 |
+| Austria | vie (shipped) | D | global sources only; OSM extract 2026-10-17 |
+| Belgium | bru ant lie (shipped) | D | global sources only; OSM extract 2026-10-17 |
+| Greece | ath the (shipped) | D | global sources only; OSM extract 2026-10-17 |
+| Poland | war kat (shipped); kra poz lod (built, not registered) | D | global sources only; OSM extracts 2026-10-17 (war kat), 2026-10-19 (kra poz lod) |
+| Hungary | bud (shipped) | D | global sources only; OSM extract 2026-10-17 |
+| Netherlands | rot (shipped); ams (built, not registered) | D | global sources only; OSM extract 2026-10-16 for rot (a hand run, no download log: date from the cache file's time), 2026-10-19 for ams |
+| Portugal | lis pot (shipped) | D | global sources only; OSM extract 2026-10-17 |
+| Russia | mos sai vor (shipped); 13 more rows held (Anita 2026-10-19) | D | global sources only (geoBoundaries ADM2 units); OSM extracts 2026-10-19 (central and north-western federal districts) |
+| Sweden | sto (built, not registered) | D | global sources only; OSM extract 2026-10-19 |
+| Romania | buc (built, not registered) | D | global sources only; OSM extract 2026-10-19 |
+| Denmark | cop (built, not registered) | D | global sources only; OSM extract 2026-10-19 |
+| Switzerland | zur (built, not registered) | D | global sources only; OSM extract 2026-10-19 |
+| Serbia | beg (built, not registered) | D | global sources only; OSM extract 2026-10-19 |
+| Norway | osl (built, not registered) | D | global sources only; OSM extract 2026-10-19 |
+| Finland | hel (built, not registered) | D | global sources only; OSM extract 2026-10-19 |
+| Bulgaria | sof (built, not registered) | D | global sources only; OSM extract 2026-10-19 |
+| Czechia | pra (built, not registered) | D | global sources only; OSM extract 2026-10-19 |
+| Ireland | dub (built, not registered) | D | global sources only; OSM extract 2026-10-19 |
+| Albania | tir (built, not registered) | D | global sources only; OSM extract 2026-10-19 |
+| Wales | car (shipped) | D | global sources only; England's travel rates, national no-car census (T-562); OSM extract 2026-10-17 |
+| Scotland | gla (shipped) | D | as Wales; OSM extract 2026-10-17 |
+| Northern Ireland | bel (shipped) | D | as Wales; OSM extract 2026-10-17 (about 08:20, the Ireland and Northern Ireland extract that the runner found already on disk) |
 
 ## Population and geography
 
@@ -51,7 +81,31 @@ capped at 1 (errands / leisure). It decides how far the everyday fallback trusts
 | China | U 2020 census by district (city bulletin), GHSL inside | U OSM admin_level 6; skip geoBoundaries ADM2 (1:4M) | 0.07 / 0.13 |
 | South Korea | U resident registration by si-gun-gu (MOIS, open CSV); skip eup-myeon-dong (same file, little gain at 2 km); G 2020 census table (KOSIS: no account without a Korean ID; browser download only) | U OSM relations by Korean name | 0.51 / 0.93 |
 | India | U Census 2011 by sub-district, grown by district to 2020; 2027 census not out | U OSM admin_level 5 and 6 by name; G SHRUG polygons (non-commercial, checks only) | 0.04 / 0.05 |
-| Nigeria | U GHSL alone; - no credible count (census 2006); ? GRID3 100 m estimates, T-507 | U OSM LGAs | 0.02 / 0.01 |
+| Nigeria | U GHSL alone; - no credible count (census 2006); ? GRID3 100 m estimates, T-507 | U OSM LGAs | 0.02 / 0.01 (owe aba abo the same) |
+| Spain | U GHSL alone (GHS-POP E2020 R2023A 100 m); ? national grid or census not looked for | U OSM admin relations matched to NUTS-3 units (`osm_units.py`) | 0.81-0.95 / 0.94-1 |
+| Italy | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 0.66-1 / 0.62-1 (Naples lowest) |
+| Austria | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 1 / 1 |
+| Belgium | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 1 / 1 |
+| Greece | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 1 / 0.98-1 |
+| Poland | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 1 / 0.65-1 (Katowice, Lodz lowest) |
+| Hungary | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 1 / 1 |
+| Netherlands | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 1 / 1 |
+| Portugal | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 1 / 1 |
+| Russia | U GHSL alone; ? not looked for | U OSM relations matched to geoBoundaries ADM2 units | 1 / 0.50-0.82 |
+| Sweden | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 0.81 / 1 |
+| Romania | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 0.99 / 0.64 |
+| Denmark | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 1 / 1 |
+| Switzerland | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 1 / 1 |
+| Serbia | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 1 / 0.77 |
+| Norway | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 0.93 / 0.99 |
+| Finland | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 1 / 1 |
+| Bulgaria | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 1 / 1 |
+| Czechia | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 1 / 1 |
+| Ireland | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 1 / 1 |
+| Albania | U GHSL alone; ? not looked for | U OSM relations matched to NUTS-3 units | 1 / 0.98 |
+| Wales | U GHSL alone; ? Census 2021 by LSOA, as England's packs use, not opened for Wales | U OSM relations matched to ONS ITL3 units | 1 / 1 |
+| Scotland | U GHSL alone; ? Census 2022 not looked for | U OSM relations matched to ONS ITL3 units | 0.79 / 0.87 |
+| Northern Ireland | U GHSL alone; ? NISRA Census 2021 not looked for | U OSM relations matched to ONS ITL3 units | 0.81 / 0.85 |
 
 ## Jobs
 
@@ -61,13 +115,14 @@ capped at 1 (errands / leisure). It decides how far the everyday fallback trusts
 | Canada | U 2021 census workers by tract of work (98-10-0498-01), lockdown at-home workers put back | U 98-10-0492-01, tract x sector (leisure; errands fail the concentration test) | ? census industry by tract of residence, T-500 |
 | England | U BRES 2024, LSOA | U BRES by LSOA x SIC division | N Census 2021 industry by LSOA of residence (TS060), T-500 |
 | France | U census flows (MOBPRO 2022) summed by commune of work | N Flores 2021, commune x A38 (trade mixed with wholesale), T-503 | ? MOBPRO detail file, T-500 |
-| Germany | U Pendlerrechnung 2024 by Gemeinde of work (Berlin one unit; - no Bezirk table found) | - Regionaldatenbank 13111 has 4 groups by Gemeinde, too coarse | ? not looked for |
+| Germany | U Pendlerrechnung 2024 by Gemeinde of work (Berlin one unit; - no Bezirk table found; a suppressed count, "-", counts as 0, T-613) | - Regionaldatenbank 13111 has 4 groups by Gemeinde, too coarse | ? not looked for |
 | Japan | U 2021 economic census 500 m mesh, scaled to census workers by municipality of work (public service left out, T-461) | U the same mesh by major industry, 9-1B splits by municipality | N 2020 census industry by municipality of residence, T-500 |
 | Brazil | U OD 2017 survey, workers by zone of first job | ? survey's job sector, not checked | ? survey's job sector, not checked |
 | China | U 5th economic census by district (legal-person units) | ? economic census by district x sector, T-503 | - |
 | South Korea | tier 0 proxy; G Census on Establishments by si-gun-gu (KOSIS: no account without a Korean ID; browser download only), T-504 | G the same census by sector, T-504 | - |
 | India | tier 0 proxy (population 0.5); N 6th Economic Census 2013 by ward, T-388 | - | - |
 | Nigeria | tier 0 proxy (population 0.5, land cap) | - | - |
+| Spain, Italy, Austria, Belgium, Greece, Poland, Hungary, Netherlands, Portugal, Russia, Sweden, Romania, Denmark, Switzerland, Serbia, Norway, Finland, Bulgaria, Czechia, Ireland, Albania, Wales, Scotland, Northern Ireland | tier 0 proxy: population x jobs per resident (World Bank employment ratio, 2025), spread by GHSL built volume, OSM job places and population in the weights `plan_config.job_blend` sets from the ILO vulnerable-employment share (30/50/20 in most, Albania 21/33/46); ? national jobs by small area not looked for | U tier 0: OSM shops and services, restaurants, bars, venues and hotels, blended with the jobs at completeness c | ? not looked for |
 
 ## Commuting
 
@@ -87,6 +142,7 @@ days of people with a workplace. Several countries have one figure for both.
 | South Korea | G 2020 census commuting by si-gun-gu (KOSIS: no account without a Korean ID; browser download only), T-504; U mobile-data mean commute (Statistics Korea, 20.4 km) | ? KTDB household survey, not checked | U 0 (no figure checked) | U 0 |
 | India | U Census 2011 B-28 distance bands by district, both parameters fitted | - | U B-28 "no travel" (20.1%) | - |
 | Nigeria | - none; U the borrowed curve (T-314) | - (one 2010 paper's mean trip, too weak to fit) | U 0 | U 0 |
+| Spain, Italy, Austria, Belgium, Greece, Poland, Hungary, Netherlands, Portugal, Russia, Sweden, Romania, Denmark, Switzerland, Serbia, Norway, Finland, Bulgaria, Czechia, Ireland, Albania, Wales, Scotland, Northern Ireland | ? national flows not looked for; U the borrowed curve (T-314) | ? not looked for | U 0; N Eurostat LFS lfsa_ehomp where it has the country (as Germany's and France's), ONS OPN 0.27 for the three UK nations, T-765 | U 0, as work at home |
 
 ## Car ownership
 
@@ -114,6 +170,27 @@ about 2011, OICA's vehicles-in-use pages are gone (404) with no licence stated.
 | Wales | U Census 2021 TS045 by LSOA (Nomis, households, made people) |
 | Scotland | U Census 2022 UV405 by data zone 2022 (NRS topic tables zip; maps.gov.scot boundaries; OGL) |
 | Northern Ireland | U Census 2021 car or van availability by data zone 2021 (NISRA ArcGIS layer, counts people in households) |
+| Spain | U Eurostat rule 2: 550 cars per 1,000 x 2.5 people per household (2025) |
+| Italy | U Eurostat rule 2: 709 x 2.2 |
+| Austria | U Eurostat rule 2: 574 x 2.2 |
+| Belgium | U Eurostat rule 2: 513 x 2.2 |
+| Greece | U Eurostat rule 2: 597 x 2.4 |
+| Poland | U Eurostat rule 2: 639 x 2.8 |
+| Hungary | U Eurostat rule 2: 461 x 2.3 |
+| Netherlands | U Eurostat rule 2: 519 x 2.1 |
+| Portugal | U Eurostat rule 2: 561 x 2.4 |
+| Russia | U rule 4: World Bank GDP per head PPP (42,358 in 2025) by the logit fit; no register or survey found |
+| Sweden | U Eurostat rule 2: 475 x 2.0 |
+| Romania | U Eurostat rule 2: 461 x 2.5 |
+| Denmark | U Eurostat rule 2: 501 x 1.9 |
+| Switzerland | U Eurostat rule 2: 543 x 2.2 (household size 2024) |
+| Serbia | U Eurostat rule 2: 394 x 2.6 |
+| Norway | U Eurostat rule 2: 524 x 2.0 |
+| Finland | U Eurostat rule 2: 671 x 1.9 |
+| Bulgaria | U Eurostat rule 2: 507 x 2.2 |
+| Czechia | U Eurostat rule 2: 621 x 2.3 |
+| Ireland | U Eurostat rule 2: 475 x 2.7 |
+| Albania | U rule 1: DHS AL2017DHS, 37.0% of households possess a private car |
 | Hong Kong, Singapore, Taiwan | U Transport Department, LTA, Highway Bureau private cars per 1,000 x household size, national (the GDP rule cannot hold for city states; Taiwan has no World Bank figures) |
 | Rule 1: DHS countries | U DHS API (open, no registration) HC_TRNS_H_CAR, households possessing a private car, national, latest survey from 2015 (rule 3: from 2010), 51 planned countries; N the same by region, T-570 |
 | Rule 2: Eurostat countries | U road_eqs_carhab cars per 1,000 x ilc_lvph01 household size, latest year (CC BY 4.0); 20 planned countries |
@@ -138,6 +215,8 @@ lengths are not used; its share of trips under 2 km is the check (docs/demand-wo
 | South Korea | U KTDB 2016 national O/D report, capital-area sample counts; G KTDB 2021 survey (account) | skip Gyeonggi transport DB 2016 bands (T-637) |
 | India | -; worldwide | worldwide |
 | Nigeria | -; worldwide | worldwide |
+| Spain, Italy, Austria, Belgium, Greece, Poland, Hungary, Netherlands, Portugal, Russia, Sweden, Romania, Denmark, Switzerland, Serbia, Norway, Finland, Bulgaria, Czechia, Ireland, Albania | ? not looked for; worldwide (the surveys' median) | worldwide |
+| Wales, Scotland, Northern Ireland | U England's rates, NTS0504b (country GB) | worldwide |
 
 ## Destinations
 
@@ -154,6 +233,7 @@ lengths are not used; its share of trips under 2 km is the check (docs/demand-wo
 | South Korea | U tier 0 OSM | U tier 0 (3 of 217 sites with Wikidata counts) | U OSM, no beds tagged (sized by rule, T-387) | U Wikidata; Incheon 0.85 by judgement |
 | India | U tier 0 OSM; G UDISE+ enrolment (behind the portal) | U tier 0 | U OSM, one hospital with beds (sized by rule, T-387) | U the operator's total via the press |
 | Nigeria | U tier 0 OSM; ? GRID3 schools, T-507 | U tier 0 (World Bank rate from 2011) | U OSM, no beds; ? GRID3 health facilities, T-507 | U FAAN via the press |
+| Spain, Italy, Austria, Belgium, Greece, Poland, Hungary, Netherlands, Portugal, Russia, Sweden, Romania, Denmark, Switzerland, Serbia, Norway, Finland, Bulgaria, Czechia, Ireland, Albania, Wales, Scotland, Northern Ireland | U tier 0 OSM (pupils = population x World Bank 0-14 share x 0.9); ? national school registers not looked for | U tier 0 (Wikidata students where tagged, scaled to the World Bank tertiary rate) | U OSM, beds by the World Bank rule below | U OurAirports sites in the pack with Wikidata patronage, O&D share 1 (Tirana: none inside the pack) |
 
 Everywhere: places and parks from OSM, water from OSM (TIGER and StatCan in the US and Canada),
 world market from the packs. U hospital beds per 1,000 people from the World Bank (SH.MED.BEDS.ZS,
@@ -175,7 +255,7 @@ adding-a-city.md 1). Downloads in `data/raw/worldplan/`, fetched when missing.
 | Units, Europe | U NUTS-3 2024 (Eurostat GISCO, 1:3M; EU, EFTA, candidates); U ONS ITL3 January 2025 for the UK | NUTS: "© EuroGeographics for the administrative boundaries"; GISCO's own download clauses not read yet (they restrict some admin datasets to non-commercial use), check before publishing |
 | Units, elsewhere | U geoBoundaries gbOpen, simplified, ADM1-4 (the level per country is in `world_plan.json` `unit_sources`, with each file's licence: CC BY, ODbL or public domain) | per country; GADM ruled out (non-commercial) |
 | Country of a centre | U Natural Earth admin 0, 1:10M | public domain |
-| Extracts | U Geofabrik `index-v1.json` | ODbL (OSM) |
+| Extracts | U Geofabrik `index-v1.json`; fetched as `-latest` when a region is read and deleted after, so a row's extract date is its download day (batch logs under `artifacts/trainworld/world_run/`; list in notes/T-726.md) | ODbL (OSM) |
 | Time zones | U timezonefinder 6.6 (offline, timezone-boundary-builder) | MIT; data ODbL |
 | Outline of a planned city | U OSM `boundary=administrative` relations from the row's Geofabrik extracts, matched to the plan's units (`osm_units.py`, T-537) | ODbL |
 | Informal work (jobs blend) | U ILO modelled vulnerable employment, World Bank SL.EMP.VULN.ZS (T-537); - informal employment SL.ISV.IFRM.ZS, archived by the World Bank | CC BY 4.0 |

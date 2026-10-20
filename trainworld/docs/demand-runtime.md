@@ -188,6 +188,19 @@ run's first stop. So a city's search, tables and passes grow with its own reach,
 Each population's crowding rounds stop when its own loads settle (T-434). `?perfOff=reach` sets
 every population on the whole cluster, as before T-756.
 
+**The market on a big cluster** (T-761, `IntercityApi::pass_streamed`). The market's pass needs
+every station pair's route cost (its logsums) and, for its assignment, each destination's strategy
+(about 130 KB a destination on Japan's whole network, 1.1 GB in all). When the strategies would pass
+256 MB (`MARKET_STRATEGY_BYTES`) and no population on the worker has searched the period's graph,
+its destinations are searched one at a time, twice: the first sweep keeps every destination's route
+costs and the first 256 MB of strategies, the second assigns each destination's column of trips,
+searching it again unless kept. The cities' cached tables go first (the market solves last in its
+cluster). The figures are the one-table pass's to the bit. On any network the commutes' station to
+station trips are held by destination, only the pairs that carry any; the far-zone table a station
+click reads (`station_flows`) holds only the entries a station's zones can fill (`StPattern`, a
+tenth of all on Japan), and the zone pairs are counted before their table is made, so it is never
+grown by doubling.
+
 Within a cluster that is solved, a period whose own inputs are unchanged keeps its result too
 (T-124). Periods share no rider and each reads only its own demand level's run times and trains an
 hour (the trips home in a period go back by that period's own station pairs; the day's money, the

@@ -432,23 +432,28 @@ fn market_params() -> Params {
 /// scale `th`, each pair's weight into `terms`. Returns rail's perceived cost, their logsum (the
 /// first boarding's, access and egress included, as the mode choice then damps it, T-495), and the
 /// sum of the weights (0: no route).
-fn rail_logsum(sk: &Skims, fare: f32, a: &[(usize, f32)], b: &[(usize, f32)], beta: f32, th: f32, terms: &mut Vec<(u32, u32, f64)>) -> (f32, f64) {
+fn rail_logsum(r: &[f32], s: usize, fare: f32, a: &[(usize, f32)], b: &[(usize, f32)], beta: f32, th: f32, terms: &mut Vec<(u32, u32, f64)>) -> (f32, f64) {
     terms.clear();
-    let (s, k) = (sk.s, (th / beta) as f64);
+    let k = (th / beta) as f64;
     let mut top = f64::NEG_INFINITY;
+    // the egress weights' logs, once a pair rather than once a station pair (T-761)
+    let mut lb = [0f64; 8];
+    for (l, &(_, wb)) in lb.iter_mut().zip(b) {
+        *l = k * (wb as f64).ln();
+    }
     for &(sa, wa) in a {
         if wa <= 0. {
             continue;
         }
         let la = k * (wa as f64).ln();
-        let row = &sk.r[sa * s..(sa + 1) * s];
-        for &(sb, wb) in b {
+        let row = &r[sa * s..(sa + 1) * s];
+        for (j, &(sb, wb)) in b.iter().enumerate() {
             // a rail journey must actually board a train
             let cost = row[sb] + fare;
             if sa == sb || wb <= 0. || !cost.is_finite() {
                 continue;
             }
-            let lw = la + k * (wb as f64).ln() - (th * cost) as f64;
+            let lw = la + (if j < 8 { lb[j] } else { k * (wb as f64).ln() }) - (th * cost) as f64;
             top = top.max(lw);
             terms.push((sa as u32, sb as u32, lw));
         }
@@ -479,8 +484,8 @@ struct Period {
     c_corridors: Vec<f64>,
     /// Rail trips of each directed pair in this period (T-118), averaged over rounds like the loads.
     pair_rail: Vec<f32>,
-    /// Per station, `2 * served zones` numbers (T-118, T-120): rail trips starting here by
-    /// destination zone, then ending here by origin zone, in `served` order (T-398).
+    /// Per station, rail trips starting here by destination zone and ending here by origin zone
+    /// (T-118, T-120), the entries of `IntercityApi::st_pat` (T-761).
     st: Vec<f32>,
     round: usize,
     ms: f64,
@@ -497,6 +502,66 @@ const ST_W: usize = 18;
 const SITE_M: f32 = 600.;
 #[cfg(test)]
 const MARKETS: usize = 3;
+/// The bytes of strategies a market's pass holds at once (T-761): past this its destinations are
+/// searched one at a time (`IntercityApi::pass_streamed`), this much of them kept between sweeps.
+const MARKET_STRATEGY_BYTES: usize = 256 << 20;
+/// A destination's strategy for `IntercityApi::assigned`: a table's, or searched for it alone.
+enum Held<'a> {
+    Ref(Strategy<'a>),
+    Own(DestStrategy),
+}
+impl Held<'_> {
+    fn view(&self) -> Strategy<'_> {
+        match self {
+            Held::Ref(s) => *s,
+            Held::Own(d) => d.view(),
+        }
+    }
+}
+/// The commutes' station to station trips by destination (T-761: about 1.6 million of Japan's
+/// 106 million station pairs carry any): destination d's origins `src[off[d]..off[d + 1]]`
+/// ascending, their riders in `v`.
+struct SparseOd {
+    off: Vec<u32>,
+    src: Vec<u32>,
+    v: Vec<f32>,
+}
+impl SparseOd {
+    /// From (destination, origin, riders) in the order a dense table would have added them up:
+    /// each pair's sum is the dense table's, added in the same order.
+    fn of(s: usize, mut adds: Vec<(u32, u32, f32)>) -> SparseOd {
+        // stable: a pair's riders stay in the order they were added
+        adds.sort_by_key(|e| (e.0, e.1));
+        let mut od = SparseOd { off: vec![0; s + 1], src: vec![], v: vec![] };
+        let mut i = 0;
+        while i < adds.len() {
+            let (d, o) = (adds[i].0, adds[i].1);
+            let mut sum = 0f32;
+            while i < adds.len() && adds[i].0 == d && adds[i].1 == o {
+                sum += adds[i].2;
+                i += 1;
+            }
+            od.src.push(o);
+            od.v.push(sum);
+            od.off[d as usize + 1] += 1;
+        }
+        for d in 0..s {
+            od.off[d + 1] += od.off[d];
+        }
+        od
+    }
+}
+struct Demand {
+    od: Vec<f32>,
+    od_c: SparseOd,
+    st: Vec<f32>,
+    rail: f64,
+    cor: Vec<f64>,
+    pair_rail: Vec<f32>,
+    c_rail: f64,
+    c_frac: Vec<f32>,
+    c_cor: Vec<f64>,
+}
 struct Pass {
     loads: Loads,
     c_loads: Loads,
@@ -1519,6 +1584,96 @@ pub struct IntercityApi {
     complex_in: Vec<u32>,
     /// T-409: per served zone, the track components its stations lie in.
     served_comp: Vec<Vec<u32>>,
+    st_pat: StPattern,
+}
+
+/// T-761: the entries of the per-station far-zone table (`Period::st`) a pass can make non-zero,
+/// row by station (CSR): row s's columns ascending in `col[off[s]..off[s + 1]]`, a column being a
+/// served zone's place in `served` for trips starting at s, or that plus the served zones' count
+/// for trips ending there. A station's riders go to and come from the zones its own zones trade
+/// with (about a tenth of all on Japan's whole network), so the table holds those alone.
+#[derive(Default)]
+struct StPattern {
+    off: Vec<u32>,
+    col: Cols,
+}
+
+/// Columns, as u16 while every one fits (Japan's whole network: 18,228 columns).
+enum Cols {
+    Short(Vec<u16>),
+    Long(Vec<u32>),
+}
+impl Default for Cols {
+    fn default() -> Self {
+        Cols::Short(vec![])
+    }
+}
+impl Cols {
+    fn len(&self) -> usize {
+        match self {
+            Cols::Short(v) => v.len(),
+            Cols::Long(v) => v.len(),
+        }
+    }
+    fn get(&self, i: usize) -> usize {
+        match self {
+            Cols::Short(v) => v[i] as usize,
+            Cols::Long(v) => v[i] as usize,
+        }
+    }
+}
+
+impl StPattern {
+    /// Where entry (station `s`, column `c`) sits, which must be one of the pattern's, searched
+    /// from `cur` (a place in the row) outwards and left there: `demand` looks a row up in runs of
+    /// one column, or of columns rising, so most lookups take a step or two.
+    #[inline(always)]
+    fn at(&self, s: usize, c: usize, cur: &mut u32) -> usize {
+        let (lo, hi) = (self.off[s] as usize, self.off[s + 1] as usize);
+        lo + match &self.col {
+            Cols::Short(v) => find_from(&v[lo..hi], c as u16, cur),
+            Cols::Long(v) => find_from(&v[lo..hi], c as u32, cur),
+        }
+    }
+    fn row(&self, s: usize) -> std::ops::Range<usize> {
+        self.off[s] as usize..self.off[s + 1] as usize
+    }
+}
+
+/// `StPattern::at` in one row.
+#[inline(always)]
+fn find_from<T: Copy + Ord>(row: &[T], c: T, cur: &mut u32) -> usize {
+    {
+        let i = (*cur as usize).min(row.len() - 1);
+        let k = if row[i] == c {
+            i
+        } else if row[i] < c {
+            let (mut a, mut step, mut b) = (i, 1, i + 1);
+            while b < row.len() && row[b] < c {
+                a = b;
+                step *= 2;
+                b = a + step;
+            }
+            a + 1 + row[a + 1..(b + 1).min(row.len())].partition_point(|&x| x < c)
+        } else {
+            let (mut b, mut step) = (i, 1);
+            let a = loop {
+                if b < step {
+                    break 0;
+                }
+                let p = b - step;
+                if row[p] <= c {
+                    break p;
+                }
+                b = p;
+                step *= 2;
+            };
+            a + row[a..b].partition_point(|&x| x < c)
+        };
+        assert!(row.get(k) == Some(&c), "a far-zone entry outside the pattern");
+        *cur = k as u32;
+        k
+    }
 }
 
 impl IntercityApi {
@@ -1543,27 +1698,107 @@ impl IntercityApi {
             fare_per_km: 0.,
             complex_in: vec![],
             served_comp: vec![],
+            st_pat: StPattern::default(),
         }
     }
     fn pass(&self, g: &Graph, p: &Params, q: usize, ix: &XferIndex) -> Pass {
-        // the strategies are shared with the local populations on the same service (T-119)
-        with_skims(g, p, &self.want, |sk| self.pass_on(g, p, q, sk, ix))
+        let todo = self.want.iter().filter(|&&w| w).count();
+        if todo * strategy_bytes(g) <= MARKET_STRATEGY_BYTES || legacy() || skims_cached(g, p) {
+            // the strategies are shared with the local populations on the same service (T-119)
+            return with_skims(g, p, &self.want, |sk| self.pass_on(g, p, q, sk, ix));
+        }
+        self.pass_streamed(g, p, q, ix, MARKET_STRATEGY_BYTES)
     }
     fn pass_on(&self, g: &Graph, p: &Params, q: usize, sk: &Skims, ix: &XferIndex) -> Pass {
+        let d = self.demand(&sk.r, g.n_st, p, q);
         let s = g.n_st;
+        self.assigned(g, ix, d, |dst| {
+            let slot = sk.slot[dst];
+            debug_assert!(slot != u32::MAX, "flow towards station {dst}, which was not searched");
+            (slot != u32::MAX).then(|| Held::Ref(sk.strategy(slot as usize)))
+        }, s)
+    }
+    /// The pass's loads from its trips: each destination's column of the longer trips and the
+    /// commutes together (`assign_with_transfers`'s), and of the commutes alone, assigned in station
+    /// order along the destination's strategy (`strategy`; `None`: nobody can ride there).
+    fn assigned<'a>(&self, g: &Graph, ix: &XferIndex, d: Demand, mut strategy: impl FnMut(usize) -> Option<Held<'a>>, s: usize) -> Pass {
+        let Demand { od, od_c, st, rail, cor, pair_rail, c_rail, c_frac, c_cor } = d;
+        let counting = !(cfg!(test) && XFER_OFF.load(std::sync::atomic::Ordering::Relaxed));
+        let (mut all, mut com) = (DestAssign::new(g, 0, counting), DestAssign::new(g, 0, false));
+        let mut xfer = vec![0.0; ix.len];
+        // a destination's commutes as a column (the riders from each station)
+        let mut col = vec![0f32; s];
+        for dst in 0..s {
+            let ks = od_c.off[dst] as usize..od_c.off[dst + 1] as usize;
+            for k in ks.clone() {
+                col[od_c.src[k] as usize] = od_c.v[k];
+            }
+            let c = com.take(dst, |src| col[src]);
+            let a = all.take(dst, |src| od[src * s + dst] + col[src]);
+            for k in ks {
+                col[od_c.src[k] as usize] = 0.;
+            }
+            if !(a || c) {
+                continue;
+            }
+            let Some(h) = strategy(dst) else { continue };
+            let st = h.view();
+            if c {
+                com.walk(g, dst, st, None);
+            }
+            if a {
+                all.walk(g, dst, st, counting.then_some((ix, &mut xfer[..])));
+            }
+        }
+        Pass { loads: all.l, c_loads: com.l, rail, c_rail, c_frac, cor, c_cor, pair_rail, st, xfer }
+    }
+    /// `pass_on` with the destinations searched one at a time (T-761), so no table of every
+    /// destination's strategy is held: a first sweep keeps each one's route costs (the logsums need
+    /// every station pair's) and the first `keep_bytes` of strategies; the second assigns each
+    /// destination's column of both ODs, searching it again unless kept. The same figures to the bit.
+    fn pass_streamed(&self, g: &Graph, p: &Params, q: usize, ix: &XferIndex, keep_bytes: usize) -> Pass {
+        // the market's part solves last in its cluster, so the tables the cities searched for this
+        // period and round have no further use, and a search for the market shares none of them
+        clear_skim_cache();
+        let s = g.n_st;
+        let mut r = vec![f32::INFINITY; s * s];
+        let mut search = DestSearch::new(g, p);
+        let mut kept: Vec<Option<DestStrategy>> = (0..s).map(|_| None).collect();
+        let mut held = 0;
+        for dst in (0..s).filter(|&d| self.want[d]) {
+            let d = search.run(dst, Some(&mut r));
+            if held + d.bytes() <= keep_bytes {
+                held += d.bytes();
+                kept[dst] = Some(d);
+            }
+        }
+        let d = self.demand(&r, s, p, q);
+        drop(r);
+        self.assigned(g, ix, d, |dst| {
+            debug_assert!(self.want[dst], "flow towards station {dst}, which was not searched");
+            self.want[dst].then(|| Held::Own(kept[dst].take().unwrap_or_else(|| search.run(dst, None))))
+        }, s)
+    }
+    /// The market's rail trips in period `q` from the route costs `r` (S x S, `Skims::r`): the
+    /// station to station trips of the longer trips and of the commutes, and the pair, corridor and
+    /// station figures.
+    fn demand(&self, r: &[f32], s: usize, p: &Params, q: usize) -> Demand {
         let mut od = vec![0.; s * s];
         let mut rail = 0.;
         let mut cor = vec![0.; self.m.corridors.len()];
         let mut pair_rail = vec![0f32; self.pairs.len()];
         let nz = self.served.len();
-        let w = 2 * nz;
         let col = &self.served_at;
-        let mut st = vec![0f32; s * w];
+        let pat = &self.st_pat;
+        let mut st = vec![0f32; pat.col.len()];
+        // per station, where its row was last looked up, for starts and for ends
+        let mut cur = vec![0u32; 2 * s];
+        let mut put = |st: &mut [f32], x: usize, c: usize, v: f32| st[pat.at(x, c, &mut cur[2 * x + (c >= nz) as usize])] += v;
         let mut terms: Vec<(u32, u32, f64)> = vec![];
         for (pi, pair) in self.pairs.iter().enumerate() {
             let trips = pair.trips * SHARES[q] as f64;
             let (a, b) = (&self.access[pair.a as usize], &self.access_work[pair.b as usize]);
-            let (rail_c, sum) = rail_logsum(sk, p.fare_min, a, b, p.beta, p.soften(p.band_unsoftened(pair.band as usize), pair.car), &mut terms);
+            let (rail_c, sum) = rail_logsum(r, s, p.fare_min, a, b, p.beta, p.soften(p.band_unsoftened(pair.band as usize), pair.car), &mut terms);
             let bt = p.mode_beta(pair.car);
             let v_rail = if sum > 0. { ((-bt * (rail_c - pair.drive)).clamp(-80., 80.) as f64).exp() } else { 0. };
             let fraction = v_rail / (pair.rest as f64 + v_rail);
@@ -1577,15 +1812,16 @@ impl IntercityApi {
                     let (sa, sb) = (sa as usize, sb as usize);
                     let rr = (r * v / sum) as f32;
                     od[sa * s + sb] += rr;
-                    st[sa * w + cb] += rr;
-                    st[sb * w + ca] += rr;
+                    put(&mut st, sa, cb, rr);
+                    put(&mut st, sb, ca, rr);
                 }
             }
         }
         // T-276: commutes between zones, chosen as the local layer chooses: once per commuter on
         // this period's service from home to work, the trip home on the same station pair reversed
         let pc = commute_params();
-        let mut od_c = vec![0f32; if self.cpairs.is_empty() { 0 } else { s * s }];
+        // (destination, origin, riders) as they come
+        let mut od_c: Vec<(u32, u32, f32)> = vec![];
         let (mut c_rail, mut c_frac) = (0f64, vec![0f32; self.cpairs.len()]);
         let mut c_cor = vec![0f64; self.m.corridors.len()];
         for (ci, cp) in self.cpairs.iter().enumerate() {
@@ -1593,7 +1829,7 @@ impl IntercityApi {
             let (h, wz) = (h as usize, self.m.comp_of_gid[wg as usize] as usize);
             let (out, ret) = (n as f64 * TO_WORK[q] as f64, n as f64 * TO_HOME[q] as f64);
             let home = if cp.ride { &self.access_c[h] } else { &self.access_c_walk[h] };
-            let (rail_c, sum) = rail_logsum(sk, p.fare_min, home, &self.access_cw[wz], pc.beta, p.soften(pc.band_unsoftened(cp.band as usize), cp.car), &mut terms);
+            let (rail_c, sum) = rail_logsum(r, s, p.fare_min, home, &self.access_cw[wz], pc.beta, p.soften(pc.band_unsoftened(cp.band as usize), cp.car), &mut terms);
             if sum <= 0. {
                 continue;
             }
@@ -1604,29 +1840,19 @@ impl IntercityApi {
             let (ro, rr_) = (out * frac, ret * frac);
             c_rail += ro + rr_;
             c_cor[cp.corridor] += ro + rr_;
+            let (hc, wc) = (col[h] as usize, col[wz] as usize);
             for &(sa, sb, v) in &terms {
-                let (sa, sb) = (sa as usize, sb as usize);
                 let (a, b) = ((ro * v / sum) as f32, (rr_ * v / sum) as f32);
-                od_c[sa * s + sb] += a;
-                od_c[sb * s + sa] += b;
-                let (hc, wc) = (col[h] as usize, col[wz] as usize);
-                st[sa * w + wc] += a;
-                st[sb * w + nz + hc] += a;
-                st[sb * w + hc] += b;
-                st[sa * w + nz + wc] += b;
+                od_c.push((sb, sa, a));
+                od_c.push((sa, sb, b));
+                let (sa, sb) = (sa as usize, sb as usize);
+                put(&mut st, sa, wc, a);
+                put(&mut st, sb, nz + hc, a);
+                put(&mut st, sb, hc, b);
+                put(&mut st, sa, nz + wc, b);
             }
         }
-        let c_loads = if od_c.is_empty() {
-            Loads::zero(g.n_st, g.n - g.n_st)
-        } else {
-            let l = assign(g, sk, &od_c);
-            for (a, b) in od.iter_mut().zip(&od_c) {
-                *a += b;
-            }
-            l
-        };
-        let mut xfer = vec![0.0; ix.len];
-        Pass { loads: assign_with_transfers(g, sk, &od, ix, &mut xfer), c_loads, rail, c_rail, c_frac, cor, c_cor, pair_rail, st, xfer }
+        Demand { od, od_c: SparseOd::of(s, od_c), st, rail, cor, pair_rail, c_rail, c_frac, c_cor }
     }
     fn per(&self, q: usize) -> Option<&Period> {
         self.per.get(q).and_then(|v| v.as_ref())
@@ -1648,22 +1874,44 @@ impl IntercityApi {
     fn set_served(&mut self, served: Vec<usize>, comp: Vec<Vec<u32>>) {
         let m = self.m.clone();
         let joined = |i: usize, k: usize| comp[i].iter().any(|c| comp[k].binary_search(c).is_ok());
-        let mut pairs = vec![];
+        // T-761: the pairs are counted first (which zone pairs have any, a bit each, and their
+        // trips), so their table is made once at its size: grown by doubling it peaked at twice
+        // that (Japan's whole network: 12 million pairs, 500 MB)
+        self.pairs = vec![];
         let min = m.rule.min_trips;
+        let n = served.len();
+        let mut any = vec![0u64; (n as u64 * n.saturating_sub(1) as u64 / 2).div_ceil(64) as usize];
+        let mut each = vec![];
+        let mut bit = 0;
         for (i, &a) in served.iter().enumerate() {
             let za = &m.zones[a];
             for (k, &b) in served.iter().enumerate().skip(i + 1) {
                 let zb = &m.zones[b];
+                bit += 1;
                 // T-377, T-378: with neither a car nor a plane (near places on two landmasses)
                 // the trips stay fixed
-                let r = *m.pr(za.place, zb.place);
-                if !r.has_alt() || !joined(i, k) {
+                if !m.pr(za.place, zb.place).has_alt() || !joined(i, k) {
                     continue;
                 }
                 let trips = m.eachway(za, zb);
-                if trips < min {
+                if trips >= min {
+                    any[(bit - 1) / 64] |= 1 << ((bit - 1) % 64);
+                    each.push(trips);
+                }
+            }
+        }
+        let mut pairs = Vec::with_capacity(2 * each.len());
+        let (mut bit, mut next) = (0, each.into_iter());
+        for (i, &a) in served.iter().enumerate() {
+            let za = &m.zones[a];
+            for &b in &served[i + 1..] {
+                let zb = &m.zones[b];
+                bit += 1;
+                if any[(bit - 1) / 64] >> ((bit - 1) % 64) & 1 == 0 {
                     continue;
                 }
+                let r = *m.pr(za.place, zb.place);
+                let trips = next.next().unwrap();
                 let d = m.zone_km(za, zb) as f32;
                 let corridor = m.corridor(za.place, zb.place) as u32;
                 let drive = |park: f32| if r.car { car_min(d, park) } else { r.refm };
@@ -1673,7 +1921,6 @@ impl IntercityApi {
                 pairs.push(Pair { a: b, b: a, trips, drive: drive(za.park), rest: r.rest, corridor, car: car_min(d, za.park), band });
             }
         }
-        pairs.shrink_to_fit();
         self.pairs = pairs;
         let mut at = vec![u32::MAX; m.zones.len()];
         for (k, &z) in served.iter().enumerate() {
@@ -1807,6 +2054,69 @@ impl IntercityApi {
         if served != self.served || comp != self.served_comp {
             self.set_served(served, comp);
         }
+        self.set_st_pattern(svc.st_x.len());
+    }
+    /// The far-zone table's pattern (`StPattern`) for the access lists and pairs as they stand:
+    /// every entry `demand` can add to.
+    fn set_st_pattern(&mut self, s: usize) {
+        let nz = self.served.len();
+        let words = (2 * nz).div_ceil(64);
+        let mut bits = vec![0u64; s * words];
+        let mut set = |st: usize, c: usize| bits[st * words + c / 64] |= 1 << (c % 64);
+        let col = &self.served_at;
+        for pair in &self.pairs {
+            let (ca, cb) = (nz + col[pair.a as usize] as usize, col[pair.b as usize] as usize);
+            for &(sa, _) in &self.access[pair.a as usize] {
+                set(sa, cb);
+            }
+            for &(sb, _) in &self.access_work[pair.b as usize] {
+                set(sb, ca);
+            }
+        }
+        for cp in &self.cpairs {
+            let (h, wg, _) = self.m.commutes[cp.c as usize];
+            let (h, wz) = (h as usize, self.m.comp_of_gid[wg as usize] as usize);
+            let home = if cp.ride { &self.access_c[h] } else { &self.access_c_walk[h] };
+            let (hc, wc) = (col[h] as usize, col[wz] as usize);
+            for &(sa, _) in home {
+                set(sa, wc);
+                set(sa, nz + wc);
+            }
+            for &(sb, _) in &self.access_cw[wz] {
+                set(sb, nz + hc);
+                set(sb, hc);
+            }
+        }
+        let rows = || bits.chunks_exact(words.max(1)).take(s);
+        let mut off = Vec::with_capacity(s + 1);
+        off.push(0u32);
+        for row in rows() {
+            off.push(off.last().unwrap() + row.iter().map(|b| b.count_ones()).sum::<u32>());
+        }
+        off.resize(s + 1, *off.last().unwrap());
+        let cols = rows().flat_map(|row| {
+            row.iter().enumerate().flat_map(|(k, &b)| {
+                let mut b = b;
+                std::iter::from_fn(move || {
+                    (b != 0).then(|| {
+                        let c = 64 * k as u32 + b.trailing_zeros();
+                        b &= b - 1;
+                        c
+                    })
+                })
+            })
+        });
+        let n = *off.last().unwrap() as usize;
+        let col = if 2 * nz <= u16::MAX as usize {
+            let mut v = Vec::with_capacity(n);
+            v.extend(cols.map(|c| c as u16));
+            Cols::Short(v)
+        } else {
+            let mut v = Vec::with_capacity(n);
+            v.extend(cols);
+            Cols::Long(v)
+        };
+        self.st_pat = StPattern { off, col };
     }
     fn set_network_in(&mut self, st_xy: &[f32], line_n: &[u32], stops: &[u32], times: &[f32], tph: &[f32], cars: &[f32]) -> Result<f64, String> {
         let t = now_ms();
@@ -2330,11 +2640,12 @@ impl IntercityApi {
         for q in 0..PERIODS {
             let Some(per) = self.per(q) else { continue };
             let f = load_factor(day as usize, LONGER, q) as f64;
-            if let Some(row) = per.st.get(s as usize * 2 * ns..(s as usize + 1) * 2 * ns) {
-                for (k, &z) in self.served.iter().enumerate() {
-                    let gid = m.zones[z].gid as usize;
-                    out[head + gid] += row[k] as f64 * f;
-                    out[head + ng + gid] += row[ns + k] as f64 * f;
+            let pat = &self.st_pat;
+            if (s as usize) + 1 < pat.off.len() && per.st.len() == pat.col.len() {
+                for i in pat.row(s as usize) {
+                    let k = pat.col.get(i);
+                    let (end, k) = if k < ns { (0, k) } else { (ng, k - ns) };
+                    out[head + end + m.zones[self.served[k]].gid as usize] += per.st[i] as f64 * f;
                 }
             }
         }

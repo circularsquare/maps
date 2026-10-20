@@ -2294,24 +2294,94 @@ pub fn skims_for(g: &Graph, p: &Params, want: &[bool]) -> Skims {
 
 /// Search the destinations marked in `want` that `sk` does not have yet.
 pub fn skims_extend(sk: &mut Skims, g: &Graph, p: &Params, want: &[bool]) {
-    let (s, n) = (g.n_st, g.n);
-    let todo: Vec<usize> = (0..s).filter(|&d| want.get(d).copied().unwrap_or(false) && sk.slot[d] == NONE).collect();
+    let todo: Vec<usize> = (0..g.n_st).filter(|&d| want.get(d).copied().unwrap_or(false) && sk.slot[d] == NONE).collect();
     if todo.is_empty() {
         return;
     }
-    let mut q = Search::new(g, p);
+    let mut q = DestSearch::new(g, p);
     for &dst in &todo {
         sk.slot[dst] = sk.next.len() as u32;
+        let d = q.run(dst, Some(&mut sk.r));
+        sk.next.push(d.next);
+        sk.board.push(d.board);
+        sk.order.push(d.order);
+        sk.change.push(d.change);
+    }
+}
+
+/// One destination's strategy, as a `Skims` slot holds it.
+pub struct DestStrategy {
+    pub next: NodeIds,
+    pub board: Box<[u64]>,
+    pub order: NodeIds,
+    pub change: ChangeNodes,
+}
+
+/// A destination's strategy, borrowed from a `Skims` slot or a `DestStrategy`.
+#[derive(Clone, Copy)]
+pub struct Strategy<'a> {
+    pub next: &'a NodeIds,
+    pub board: &'a [u64],
+    pub order: &'a NodeIds,
+    pub change: &'a ChangeNodes,
+}
+
+impl NodeIds {
+    fn bytes(&self) -> usize {
+        match self {
+            NodeIds::Short(v) => 2 * v.len(),
+            NodeIds::Long(v) => 4 * v.len(),
+        }
+    }
+}
+
+impl DestStrategy {
+    pub fn bytes(&self) -> usize {
+        self.next.bytes() + self.order.bytes() + 8 * self.board.len() + 4 * (self.change.st.len() + self.change.off.len()) + 8 * self.change.bits.len()
+    }
+    pub fn view(&self) -> Strategy<'_> {
+        Strategy { next: &self.next, board: &self.board, order: &self.order, change: &self.change }
+    }
+}
+
+impl Skims {
+    pub fn strategy(&self, slot: usize) -> Strategy<'_> {
+        Strategy { next: &self.next[slot], board: &self.board[slot], order: &self.order[slot], change: &self.change[slot] }
+    }
+}
+
+/// About the bytes one destination's strategy holds on `g` (`DestStrategy::bytes`, change nodes
+/// left out): its next nodes and settle order, a bit per route node.
+pub fn strategy_bytes(g: &Graph) -> usize {
+    let id = if g.n < u16::MAX as usize { 2 } else { 4 };
+    2 * id * g.n + (g.n - g.n_st).div_ceil(64) * 8
+}
+
+/// The strategy search one destination at a time, for a caller that does not hold every
+/// destination's strategy at once (T-761).
+pub struct DestSearch<'a> {
+    q: Search<'a>,
+}
+
+impl<'a> DestSearch<'a> {
+    pub fn new(g: &'a Graph, p: &'a Params) -> DestSearch<'a> {
+        DestSearch { q: Search::new(g, p) }
+    }
+    /// Search towards `dst`: its strategy, and its column of route costs written into `r` (S x S,
+    /// `Skims::r`'s layout) when given.
+    pub fn run(&mut self, dst: usize, r: Option<&mut [f32]>) -> DestStrategy {
+        let q = &mut self.q;
+        let (s, n) = (q.s, q.n);
         q.run(dst);
         let ids = n + q.cn.len();
-        sk.next.push(NodeIds::of(&q.next, ids));
-        sk.board.push(std::mem::take(&mut q.board));
-        sk.order.push(NodeIds::of(&q.order, ids));
-        sk.change.push(q.change_nodes());
-        for src in 0..s {
-            // The first boarding is not a transfer; the trip's base fare is added later.
-            sk.r[src * s + dst] = if src == dst { 0.0 } else { q.dist[src] - p.transfer_min };
+        let d = DestStrategy { next: NodeIds::of(&q.next, ids), board: std::mem::take(&mut q.board), order: NodeIds::of(&q.order, ids), change: q.change_nodes() };
+        if let Some(r) = r {
+            for src in 0..s {
+                // The first boarding is not a transfer; the trip's base fare is added later.
+                r[src * s + dst] = if src == dst { 0.0 } else { q.dist[src] - q.p.transfer_min };
+            }
         }
+        d
     }
 }
 
@@ -2843,6 +2913,11 @@ pub fn with_skims<R>(g: &Graph, p: &Params, want: &[bool], f: impl FnOnce(&Skims
         skims_extend(sk, g, p, want);
         f(sk)
     })
+}
+
+/// Whether this thread holds skims of `g` (`with_skims`).
+pub fn skims_cached(g: &Graph, p: &Params) -> bool {
+    !legacy() && SKIM_CACHE.with(|c| c.borrow().iter().any(|(k, _)| k.same(g, p)))
 }
 
 /// Forget the cached skims (a worker calls this when it has finished a period's stage, so the
@@ -3587,46 +3662,85 @@ pub fn transfer_pairs(g: &Graph, ix: &XferIndex, xfer: &[f32], sel: &[u8], out: 
 }
 
 fn assign_inner(g: &Graph, sk: &Skims, od: &[f32], mut xf: Option<(&XferIndex, &mut [f32])>) -> Loads {
-    let (s, n) = (sk.s, sk.n);
-    let nr = n - s;
-    let mut l = Loads::zero(s, nr);
-    let np = sk.most_change_nodes();
-    let mut flow = vec![0f32; n + np];
-    // T-176: riders arriving at each station towards this destination, as a list per station
-    // and change node (first record, then each record's next): the arriving edge's first slot and
-    // the riders. A station is walked after every node that feeds it, so its list is whole by then.
-    let counting = xf.is_some();
-    let mut head = if counting { vec![NONE; s + np] } else { vec![] };
-    let mut rec: Vec<(u32, f32, u32)> = vec![];
-    let mut use_k: Vec<(u32, f32)> = vec![];
-    let mut dep: Vec<(u32, f32)> = vec![];
+    let s = sk.s;
+    let mut a = DestAssign::new(g, sk.most_change_nodes(), xf.is_some());
     for dst in 0..s {
-        flow.fill(0.0);
-        let mut total = 0.0;
-        for src in 0..s {
-            let v = od[src * s + dst];
-            flow[src] = v;
-            l.entry[src] += v;
-            total += v;
-        }
-        l.exit[dst] += total;
-        if total == 0.0 { continue; }
+        if !a.take(dst, |src| od[src * s + dst]) { continue; }
         let slot = sk.slot[dst] as usize;
         debug_assert!(slot != NONE as usize, "flow towards station {dst}, which was not searched");
         if slot == NONE as usize { continue; }
-        let bits = &sk.board[slot][..];
-        if counting {
-            head.fill(NONE);
-            rec.clear();
+        a.walk(g, dst, sk.strategy(slot), xf.as_mut().map(|(ix, x)| (*ix, &mut **x)));
+    }
+    a.l
+}
+
+/// `assign`'s work one destination at a time, each destination's strategy handed in (T-761):
+/// destinations taken in station order give `assign`'s loads to the bit.
+pub struct DestAssign {
+    pub l: Loads,
+    flow: Vec<f32>,
+    // T-176: riders arriving at each station towards this destination, as a list per station
+    // and change node (first record, then each record's next): the arriving edge's first slot and
+    // the riders. A station is walked after every node that feeds it, so its list is whole by then.
+    head: Vec<u32>,
+    rec: Vec<(u32, f32, u32)>,
+    use_k: Vec<(u32, f32)>,
+    dep: Vec<(u32, f32)>,
+    counting: bool,
+}
+
+impl DestAssign {
+    /// `change_nodes`: the most change nodes of a destination to come (more grows the tables);
+    /// `counting`: transfers will be counted.
+    pub fn new(g: &Graph, change_nodes: usize, counting: bool) -> DestAssign {
+        let (s, n) = (g.n_st, g.n);
+        DestAssign {
+            l: Loads::zero(s, n - s),
+            flow: vec![0f32; n + change_nodes],
+            head: if counting { vec![NONE; s + change_nodes] } else { vec![] },
+            rec: vec![],
+            use_k: vec![],
+            dep: vec![],
+            counting,
         }
-        let mut w = DestWalk { g, s, n, dst, bits, cn: &sk.change[slot], flow: &mut flow, l: &mut l, head: &mut head, rec: &mut rec, use_k: &mut use_k, dep: &mut dep, xf: xf.as_mut().map(|(ix, x)| (*ix, &mut **x)) };
-        match (&sk.next[slot], &sk.order[slot]) {
+    }
+    /// Take destination `dst`'s column of the OD, `col(src)` riders from each station; false
+    /// when nobody rides there (there is nothing to walk).
+    #[inline(always)]
+    pub fn take(&mut self, dst: usize, col: impl Fn(usize) -> f32) -> bool {
+        let s = self.l.entry.len();
+        self.flow.fill(0.0);
+        let mut total = 0.0;
+        for src in 0..s {
+            let v = col(src);
+            self.flow[src] = v;
+            self.l.entry[src] += v;
+            total += v;
+        }
+        self.l.exit[dst] += total;
+        total != 0.0
+    }
+    /// Walk the column taken towards `dst` along its strategy.
+    pub fn walk(&mut self, g: &Graph, dst: usize, st: Strategy, xf: Option<(&XferIndex, &mut [f32])>) {
+        let (s, n) = (g.n_st, g.n);
+        let np = st.change.len();
+        if self.flow.len() < n + np {
+            self.flow.resize(n + np, 0.0);
+        }
+        if self.counting {
+            if self.head.len() < s + np {
+                self.head.resize(s + np, NONE);
+            }
+            self.head.fill(NONE);
+            self.rec.clear();
+        }
+        let mut w = DestWalk { g, s, n, dst, bits: st.board, cn: st.change, flow: &mut self.flow, l: &mut self.l, head: &mut self.head, rec: &mut self.rec, use_k: &mut self.use_k, dep: &mut self.dep, xf };
+        match (st.next, st.order) {
             (NodeIds::Short(next), NodeIds::Short(order)) => w.run(next, order),
             (NodeIds::Long(next), NodeIds::Long(order)) => w.run(next, order),
             _ => unreachable!("a destination's ids in two widths"),
         }
     }
-    l
 }
 
 /// One destination's part of `assign_inner`: its flows walked back along the settle order.

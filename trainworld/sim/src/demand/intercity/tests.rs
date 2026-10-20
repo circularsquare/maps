@@ -901,6 +901,87 @@ fn real_far_lines_share_rail_with_air() {
         }
     }
 }
+/// T-761: the pass with its destinations searched one at a time gives the pass's figures to the
+/// bit, whatever share of the strategies it keeps between its sweeps. Two lines across Tokyo
+/// changing at Tokyo station, so the commutes between zones and the transfers are in it.
+#[test]
+fn a_streamed_pass_is_the_pass_to_the_bit() {
+    let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
+    // the commutes between zones here are Tokyo's to Gunma's
+    let mut api = IntercityApi::new(&real_world(root, Some(&["tyo", "gnm"]))).unwrap();
+    let ll = [139.7671, 35.6812, 139.7387, 35.6285, 139.6970, 35.5313, 139.6222, 35.4660, 139.7006, 35.6896, 139.7774, 35.7138, 139.6239, 35.9064, 139.0124, 36.3221];
+    let mut times = vec![];
+    for len in [4, 5] {
+        let mut t = vec![0f32; 6 * len];
+        for lev in 0..3 {
+            for k in 0..len - 1 {
+                t[lev * len + k] = 600.;
+                t[(3 + lev) * len + k + 1] = 600.;
+            }
+        }
+        times.extend(t);
+    }
+    api.set_network_ll(&ll, &[4, 5], &[0, 1, 2, 3, 4, 0, 5, 6, 7], &times, &[12., 12., 12., 8., 8., 8.], &[10., 10.]).unwrap();
+    api.set_fares(1.5, 0.1, &[8.; 18]).unwrap();
+    assert!(api.solve(0));
+    let per = api.per(0).unwrap();
+    let (g, p, ix) = (&per.g, &per.p, &per.xi);
+    let whole = api.pass_on(g, p, 0, &skims_for(g, p, &api.want), ix);
+    assert!(whole.c_rail > 0. && whole.rail > 0. && whole.xfer.iter().any(|&x| x > 0.), "commutes {} ({} pairs of {}), longer trips {} and transfers {}", whole.c_rail, api.cpairs.len(), api.m.commutes.len(), whole.rail, whole.xfer.iter().sum::<f32>());
+    let bits = |v: &[f32]| v.iter().map(|x| x.to_bits()).collect::<Vec<_>>();
+    let loads = |l: &Loads| [&l.seg, &l.board, &l.alight, &l.rn_board, &l.rn_alight, &l.entry, &l.exit].map(|v| bits(v));
+    let one = strategy_bytes(g);
+    for keep in [0, 3 * one, usize::MAX] {
+        let s = api.pass_streamed(g, p, 0, ix, keep);
+        assert_eq!(loads(&s.loads), loads(&whole.loads), "keeping {keep} bytes");
+        assert_eq!(loads(&s.c_loads), loads(&whole.c_loads));
+        assert_eq!((s.loads.pax_min.to_bits(), s.c_loads.pax_min.to_bits()), (whole.loads.pax_min.to_bits(), whole.c_loads.pax_min.to_bits()));
+        assert_eq!((s.rail.to_bits(), s.c_rail.to_bits()), (whole.rail.to_bits(), whole.c_rail.to_bits()));
+        assert_eq!((bits(&s.c_frac), bits(&s.pair_rail), bits(&s.st), bits(&s.xfer)), (bits(&whole.c_frac), bits(&whole.pair_rail), bits(&whole.st), bits(&whole.xfer)));
+        assert_eq!((s.cor, s.c_cor), (whole.cor.clone(), whole.c_cor.clone()));
+    }
+}
+/// T-761: the market's pass on a captured network natively, by phase, with its tables' sizes.
+/// `TW_T761_NET=<checks/t761-plain-net.mjs's output> cargo test --release --features demand t761_market_bench -- --ignored --nocapture`
+#[test]
+#[ignore]
+fn t761_market_bench() {
+    let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
+    let j: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(std::env::var("TW_T761_NET").unwrap()).unwrap()).unwrap();
+    let f = |k: &str| j[k].as_array().unwrap().iter().map(|v| v.as_f64().unwrap()).collect::<Vec<f64>>();
+    let ids: Vec<String> = j["markets"].as_array().unwrap().iter().map(|v| v.as_str().unwrap().to_string()).collect();
+    let idr: Vec<&str> = ids.iter().map(|s| s.as_str()).collect();
+    let t = now_ms();
+    let mut a = IntercityApi::new(&real_world(root, Some(&idr))).unwrap();
+    eprintln!("open {:.0} ms", now_ms() - t);
+    let fr = &j["frame"];
+    let frame = Frame::equirect(fr["lon"].as_f64().unwrap(), fr["lat"].as_f64().unwrap()).with_kind(crate::track::frame::FrameKind::Merc);
+    let ll: Vec<f64> = f("stXY").chunks_exact(2).flat_map(|p| { let (x, y) = frame.to_lonlat(p[0], p[1]); [x, y] }).collect();
+    let u = |k: &str| f(k).into_iter().map(|v| v as u32).collect::<Vec<u32>>();
+    let g32 = |k: &str| f(k).into_iter().map(|v| v as f32).collect::<Vec<f32>>();
+    let t = now_ms();
+    a.set_network_ll(&ll, &u("lineN"), &u("stops"), &g32("times"), &g32("tph"), &g32("cars")).unwrap();
+    a.set_fares(j["fare"]["base"].as_f64().unwrap() as f32, j["fare"]["perKm"].as_f64().unwrap() as f32, &g32("hopKm")).unwrap();
+    eprintln!("set_network {:.0} ms: served zones {}, pairs {}, commute pairs {}, far-zone entries {}", now_ms() - t, a.served.len(), a.pairs.len(), a.cpairs.len(), a.st_pat.col.len());
+    let t = now_ms();
+    assert!(a.solve(0));
+    eprintln!("solve(0) {:.0} ms, rail {:.1}", now_ms() - t, a.summary(0)[2]);
+    let per = a.per(0).unwrap();
+    let (g, p) = (&per.g, &per.p);
+    let s = g.n_st;
+    let mut r = vec![f32::INFINITY; s * s];
+    let mut q = DestSearch::new(g, p);
+    let t = now_ms();
+    let (mut n, mut bytes) = (0, 0);
+    for d in (0..s).filter(|&d| a.want[d]) {
+        bytes += q.run(d, Some(&mut r)).bytes();
+        n += 1;
+    }
+    eprintln!("a sweep: {n} searches {:.0} ms, {:.0} MB of strategies (estimate {:.0} MB)", now_ms() - t, bytes as f64 / 1048576., (n * strategy_bytes(g)) as f64 / 1048576.);
+    let t = now_ms();
+    let d = a.demand(&r, s, p, 0);
+    eprintln!("demand {:.0} ms; od non-zero {}, od_c non-zero {}", now_ms() - t, d.od.iter().filter(|&&v| v != 0.).count(), d.od_c.v.len());
+}
 /// The world composition as the app opens it: the registry's rows and the packs of `ids` (all
 /// that exist with None).
 pub(crate) fn real_world(root: &str, ids: Option<&[&str]>) -> String {
@@ -932,11 +1013,11 @@ fn regional_station_pairs_take_the_local_scale() {
     // 5 perceived minutes to either station
     let w = (-p.beta * 5.0f32).exp();
     let mut terms = vec![];
-    let (c, sum) = rail_logsum(&sk, 0., &[(0, w), (1, w)], &[(2, 1.)], p.beta, th, &mut terms);
+    let (c, sum) = rail_logsum(&sk.r, sk.s, 0., &[(0, w), (1, w)], &[(2, 1.)], p.beta, th, &mut terms);
     let share = terms[0].2 / sum;
     assert!((share - 1. / (1. + (-1f64).exp())).abs() < 1e-4, "3 minutes at a third: {share}");
     let want = 5. + 30. - (1. + (-1f32).exp()).ln() / th;
     assert!((c - want).abs() < 1e-3, "{c} against {want}");
-    let (c, sum) = rail_logsum(&sk, 0., &[(1, w)], &[(1, 1.)], p.beta, th, &mut terms);
+    let (c, sum) = rail_logsum(&sk.r, sk.s, 0., &[(1, w)], &[(1, 1.)], p.beta, th, &mut terms);
     assert!(c.is_infinite() && sum == 0. && terms.is_empty(), "no route");
 }
