@@ -24,8 +24,9 @@ the round's end (walking bands T-720, change cost 2 minutes T-717, regional rout
 with the long-trip softening on, circles and money T-722, bullets T-705, the pan check T-714).
 T-725 and T-768 are done and T-613 has built every non-held Europe row (nothing running; registry
 136 zones, not committed): only nic parks (T-769); state and resume in notes/T-613.md. Russia, Belarus and Ukraine are held (status `held`).
-Then, in order: the retrospective's proposals (notes/T-613.md, T-764); T-700's walk rerun on every pack (notes/T-700.md, last
-step: `routes.py --stage walk --unparted`, back up first); T-638's market packs (park 7); T-602/T-651
+T-700 is done: every pack's walk factors are split by bank through res 9 (packs changed, not committed; backups in
+`data/work/pre-T700/` wait for Anita's acceptance). Then, in order: the retrospective's proposals (notes/T-613.md,
+T-764); T-638's market packs (park 7); T-602/T-651
 (zones not opened drawn with their walk split; writes registry.json, so after T-613); T-712 (with
 T-721); T-723 (Spain). Batch agents wait once on the runner's process, never on a timer (T-719: wake-ups
 were 75% of a batch's tokens).
@@ -101,7 +102,6 @@ orchestrator's commit recipe is in CLAUDE.md "Before a commit".
 
 ## Interface
 Anita's playtest of 2026-10-19 (the 9e466a4 build): notes/playtest-2026-10-19.md, a section a task.
-- T-700 [P2] Shanghai: a sharp line between bubbles walking about 25% and bubbles walking about 0%, as if some cells' walks were wrong. Cause (a bug): a 2 km zone astride the Huangpu got one walk factor blending both banks (x15-50), applied to same-bank walks too. Fixed in code (walk factors per bank, `walk_part`); Shanghai rebuilt and checked. Left: the other 109 packs' walk stage (`routes.py --stage walk --unparted`) after T-613 hands back. notes/T-700.md.
 - T-721 [P2] Regional rail levels after T-718: rail between cities fell by a half to four fifths (New York to Philadelphia on a test line 2.8% to 0.4% of the corridor's trips, Tokyo to Osaka 56% to 42%); check a few corridors against published rail shares and say whether anything needs changing (notes/T-717.md, regional table). Measured in notes/T-712.md, waits on Anita.
 - T-719 [P2] Covering whole regions (all of Spain, as Japan) rather than lone metros, timings and speedups: note written 2026-10-19, waits on Anita's decisions (its last section); notes/T-719.md.
 - T-723 [P2] Whole-country cover, Spain as the pilot (Anita 2026-10-19; notes/T-719.md): zone rows in world_plan.py, the runner and plan_config.py taking them, countryside zones on a curve borrowed from Japan's fitted zones, joint gravity once per country; after T-613 hands back (the runner's files are in use). Open.

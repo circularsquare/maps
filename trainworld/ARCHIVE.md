@@ -1,5 +1,7 @@
 ﻿# Archive
 
+- T-700 [P2] Shanghai's sharp walking divide. Done 2026-10-20: walk factors per bank (`walk_part`); all 109 older packs redone through res 9 (undo, walk stage, merge), 125 s; bank check PASS everywhere, gate figures unchanged, merged cells +0-1%. notes/T-700.md.
+
 - T-768 [P2] Pack JSON in the locale code page. Done 2026-10-19: read as UTF-8 in load_pack, merge_cells and tier0; the gate's header hash undoes the old re-encoding, so a joint solve's one-time text change passes. Mannheim shipped. notes/T-613.md.
 - T-725 [P1] merge_cells rule for `walk_part`. Done 2026-10-19: cells merge only within one walk part of a zone (a twin parent takes its busiest child's index); packs without parts merge as before. DECISIONS 2026-10-19; notes/T-613.md.
 - T-761 [P2] The regional market on Japan's whole-country cluster. Done 2026-10-19: destinations searched one at a time (exact), commutes' OD and far-zone table sparse; the whole country's final in 19 min, 3.2-3.4 GB a worker; New York and seven cities identical to the bit. notes/T-761.md.
