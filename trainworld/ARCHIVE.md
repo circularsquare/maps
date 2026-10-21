@@ -1,5 +1,7 @@
 ﻿# Archive
 
+- T-848 [P2] Opening-day crowding. Done 2026-10-21: each stop's platform starts filling one headway before the first train reaching it; T-828's line, opening morning left behind 27,820 to 608.
+- T-849 [P2] A line over built track set to headways ran 0 trains. Done 2026-10-21: a level with no trains gets its headway's count; an empty Construct gives `NothingToConstruct`.
 - T-850 [P2] Sparse cells measured. Done 2026-10-21: cells under 5 people are 24% of 5.14M but hold 3.2% of jobs, so not dropped; merging cells under 50 trip ends saves about 18% of pack bytes and 10% of countryside memory (T-850b); zones matter more (T-852). notes/T-850.md.
 - T-828 [P2] Eurostar and crowding near the cities. Done 2026-10-21: no demand change; London - Paris riders are not put off (left-behind 0 at the terminals, crowding +2-6 perceived min at peaks); through riders grow with reach into the cities, not with trains; the red Anita saw is T-848. notes/T-828.md.
 - T-837 [P3] Sparse lines' end of service. Done 2026-10-21 by T-842: riders now expect each stop's service span; sparse lines' first-train wait went from far over demand's to 10.9% under.
