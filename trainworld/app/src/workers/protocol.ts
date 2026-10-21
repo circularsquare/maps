@@ -33,8 +33,12 @@ export type RouteEnd =
   | { kind: "node"; node: NodeId }
   | { kind: "edge"; edge: EdgeId; x: number; y: number };
 
-/** Where a station goes: on a node, or splitting an edge near a point. */
-export type StationAt = { kind: "node"; node: NodeId } | { kind: "edge"; edge: EdgeId; x: number; y: number };
+/** Where a station goes: on a node, splitting an edge near a point, or on open ground with a
+ * straight piece of new track from (x0, y0) to (x1, y1) under it (T-794). */
+export type StationAt =
+  | { kind: "node"; node: NodeId }
+  | { kind: "edge"; edge: EdgeId; x: number; y: number }
+  | { kind: "free"; x0: number; y0: number; x1: number; y1: number; level: Level; quad: boolean };
 
 /** One edit. Blueprint edits are undoable; construct and removing constructed things are final
  * (SPEC 6.4). Line ids are the track model's numbers. */
@@ -409,8 +413,9 @@ export type FromClock =
   | { kind: "opened"; zones: string[] | null }
   /** the save file, for the player to keep */
   | { kind: "exported"; bytes: Uint8Array; day: number }
-  /** a station placement's check (T-311): `issues` as an edit's */
-  | { kind: "stationCheck"; seq: number; ok: boolean; issues: string[] }
+  /** a station placement's check (T-311): `issues` as an edit's; `cost` what it adds to the
+   * blueprint, US$M */
+  | { kind: "stationCheck"; seq: number; ok: boolean; issues: string[]; cost: number }
   /** a crossover preview (T-338): cost US$M, each diagonal's centre line (local x, y, height) */
   | { kind: "crossoverCheck"; seq: number; ok: boolean; issues: string[]; cost: number; parts: Float32Array[] }
   /** a query's answer, in the track model's flat layout (pack metres) */

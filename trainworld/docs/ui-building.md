@@ -180,6 +180,18 @@ switch on, the track tool follows the real network the layer draws.
   A refused spot shows only the reason. Two thin rings at 1 km and
   2 km of ground distance, each labelled at its top, follow the spot under the ghost
   (`stationRings` in `map/tools.ts`, an SVG layer, fixed grey ink at 35%).
+- **On open ground** [T-794; `freePiece`, `freeGhost` in `map/tools.ts`]: where the pointer is
+  not within reach of track or a node (above), a click lays a straight blueprint piece of track one
+  platform long (plus 10 m each end) at the selected elevation, double or quad as set, and puts the
+  station at its middle, one undoable edit (rules: [track-and-service.md](track-and-service.md)
+  6.1). The piece lies along the line from the spot to the nearest station or loose end, so a
+  straight route later joins them; east and west when there is none. R turns it 45 degrees,
+  Shift+R back; the turn is kept until the tool is left. The ghost is the piece's track drawn as
+  the track tool's (red when refused) with the platform box on it (and the twin's on quad), and
+  the tag's first line is the price of both, "Station and 240 m of track, $31M", over the
+  placement help lines. The clock worker tries the same edit and rolls it back
+  (`TrackApi.preview_free_station`), so the ghost and the click agree; a refused spot shows the
+  reason instead.
 - How a new station is named: [track-and-service.md](track-and-service.md) 6.1. A double click on
   the name in its inspector renames it.
 

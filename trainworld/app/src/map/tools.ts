@@ -34,7 +34,7 @@ import { newStationName, trackDirection, warmStreetNames } from "./stationNames"
 import { pointerLocal } from "./pick";
 import { edgesNear, nodesNear } from "./snapIndex";
 import { edit, say, world } from "../game/world";
-import type { RouteEnd } from "../workers/protocol";
+import type { RouteEnd, StationAt } from "../workers/protocol";
 import type { ClockClient, PreviewAnswer } from "../workers/clockClient";
 import { toLngLat, toLocal } from "./geo";
 import { circleOnScreen } from "./curveCircle";
@@ -69,6 +69,12 @@ const HOLD_AT = 7;
 /** the worker's answer for a track tried this close to the pointer's spot stands for it (T-695) */
 const KNOWN_PX = 16;
 const LAYOUT_ISSUES = new Set(["PlatformTooLong", "PlatformJoint", "PlatformCrossing", "StationPorts"]);
+/** a station on open ground's own track runs this far past each platform end (T-794): the track
+ * model wants a metre clear, and room for a later route to join without a short piece at the end */
+const FREE_MARGIN_M = 10;
+/** the express pair's spacing (sim `QUAD_SPACING`) */
+const QUAD_SPACING_M = 8;
+const EARTH_R = 6371008.8;
 
 const lengthOf = (pts: ArrayLike<number>) => {
   let l = 0;
@@ -124,7 +130,7 @@ export class Tools {
     // outside the marks' layer, so no demand tag covers it (T-526)
     map.getContainer().appendChild(this.tag);
     overlay.afterMapFrame.push(() => this.place());
-    effect(() => { buildPlatform.value; if (tool.value === "station") this.place(); });
+    effect(() => { buildPlatform.value; buildLevel.value; trackCount.value; if (tool.value === "station") this.place(); else this.clearFree(); });
     // the place lists name stations where the tiles have no streets (T-065); the view's zones' are
     // fetched when the station tool is picked, not at startup (T-400)
     effect(() => { if (tool.value === "station") { const c = this.map.getCenter(); void loadPlacesAt(c.lng, c.lat); warmStreetNames(this.map); } });
@@ -318,6 +324,12 @@ export class Tools {
       this.exit();
       return true;
     }
+    // T-794: R turns a station on open ground 45 degrees, Shift+R back
+    if (t === "station" && e.key.toLowerCase() === "r" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      this.freeTurn += (e.shiftKey ? -1 : 1) * (Math.PI / 4);
+      this.place();
+      return true;
+    }
     return false;
   }
 
@@ -328,6 +340,7 @@ export class Tools {
     this.reset();
     lineDraft.value = { line: null, stops: [] };
     ask.value = null;
+    this.freeTurn = 0;
     tool.value = "select";
   }
 
@@ -339,6 +352,7 @@ export class Tools {
     this.lastPreview = null;
     this.previewKey = "";
     this.real.reset();
+    this.freeDrawn = "";
     this.overlay.renderer.setPreview(null);
     this.overlay.invalidate();
     this.place();
@@ -491,10 +505,7 @@ export class Tools {
 
   private async stationClick(e: MapMouseEvent) {
     const first = this.snap(e.point.x, e.point.y, e.lngLat);
-    if (first.kind === "free") {
-      say("Click on track to put a station there.");
-      return;
-    }
+    if (first.kind === "free") return this.freeStationClick(e, first);
     // T-671, T-695: the spot the ghost shows, else the first the track model takes of what is under the pointer
     const v = this.verdict();
     const tries = [...(v?.ok && v.spot && !v.held ? [v.spot] : []), ...this.alts];
@@ -509,6 +520,17 @@ export class Tools {
       this.lastPlaced = toLngLat(r.spot.lx, r.spot.ly); // T-312: the hover tag's "km from" (found again by position)
       say(`${name} added as a blueprint station.`);
     } else if (r.issues.length) say(describeIssues(r.issues), true);
+  }
+
+  /** T-794: open ground, the station and its own piece of track, one edit. */
+  private async freeStationClick(e: MapMouseEvent, h: Extract<Snap, { kind: "free" }>) {
+    const p = this.freePiece(h);
+    const name = await this.nameFor(e.point.x, e.point.y);
+    const a = await edit({ op: "addStation", at: p.stationAt, platform: buildPlatform.peek(), name }, true);
+    if (a.ok) {
+      this.lastPlaced = toLngLat(h.lx, h.ly);
+      say(`${name} added as a blueprint station.`);
+    } else say(describeIssues(a.issues), true);
   }
 
   /** Local trip legs a day per cell, homes and destinations together (T-412), for the demand shown. */
@@ -751,11 +773,21 @@ export class Tools {
     const ways:ArrayLike<number>[]=h.kind==="edge"
       ? pts ? waysFrom(pts,h.lx,h.ly) : []
       : candidates.map((id)=>{ const e=w.edges.find((x)=>x.id===id), p=n.edgePts.get(id); return !e||!p?new Float32Array(0):e.a===h.node?p:reversed(p); });
+    // on quad track the pair beside gets its platform too, as the track model places it (T-708)
+    const dir=ways.find((p)=>p.length>=6);
+    const beside=dir?pairBeside(this.tracksNear(h.lx,h.ly,12*perM,candidates),h.lx,h.ly,dir,perM):null;
+    const twin=beside?{x:beside.x,y:beside.y,ways:waysFrom(n.edgePts.get(beside.edge)!,beside.x,beside.y)}:null;
+    this.boxGhost(h.lx,h.ly,ways,perM,this.verdict()?.ok===false,twin);
+  }
+
+  /** The platform box at (lx, ly) along `ways` (the track from the spot each way), and the twin's
+   * on quad. */
+  private boxGhost(lx: number, ly: number, ways: ArrayLike<number>[], perM: number, bad: boolean, twinAt: { x: number; y: number; ways: ArrayLike<number>[] } | null) {
     const sh=platformShape(ways,0,buildPlatform.peek()/2*perM);
     // always the full box at its true length, whatever the zoom (T-311): the map's own style
     // draws dots below STATION_BOX_ZOOM
     const style={...this.overlay.renderer.stationStyle,boxes:true};
-    const shape=stationShape(h.lx,h.ly,sh,PLATFORM_HALF_M*perM,(x,y)=>this.screen(x,y),style,false);
+    const shape=stationShape(lx,ly,sh,PLATFORM_HALF_M*perM,(x,y)=>this.screen(x,y),style,false);
     if (!this.ghost) {
       this.ghost=document.createElementNS("http://www.w3.org/2000/svg","svg");
       this.ghost.setAttribute("width","1");
@@ -765,21 +797,91 @@ export class Tools {
     }
     this.ring.style.display="none";
     this.ghost.style.display="";
-    this.ghost.setAttribute("class",`station-ghost ${this.verdict()?.ok===false?"bad":"ok"}`);
+    this.ghost.setAttribute("class",`station-ghost ${bad?"bad":"ok"}`);
     this.ghost.style.transform=`translate(${shape.x}px,${shape.y}px)`;
     this.ghost.firstElementChild!.setAttribute("d",stationPath(shape));
-    // on quad track the pair beside gets its platform too, as the track model places it (T-708)
-    const dir=ways.find((p)=>p.length>=6);
-    const beside=dir?pairBeside(this.tracksNear(h.lx,h.ly,12*perM,candidates),h.lx,h.ly,dir,perM):null;
     let twin=this.ghost.children[1] as SVGPathElement|undefined;
-    if (beside) {
-      const tp=n.edgePts.get(beside.edge)!;
-      const ts=stationShape(beside.x,beside.y,platformShape(waysFrom(tp,beside.x,beside.y),0,buildPlatform.peek()/2*perM),PLATFORM_HALF_M*perM,(x,y)=>this.screen(x,y),style,false);
+    if (twinAt) {
+      const ts=stationShape(twinAt.x,twinAt.y,platformShape(twinAt.ways,0,buildPlatform.peek()/2*perM),PLATFORM_HALF_M*perM,(x,y)=>this.screen(x,y),style,false);
       if (!twin) twin=this.ghost.appendChild(document.createElementNS("http://www.w3.org/2000/svg","path"));
       twin.setAttribute("d",stationPath(ts));
       twin.setAttribute("transform",`translate(${ts.x-shape.x},${ts.y-shape.y})`);
       twin.style.display="";
     } else if (twin) twin.style.display="none";
+  }
+
+  /** T-794: a station on open ground lays a straight piece of double track (quad with the tool's
+   * quad) at the selected elevation under it, FREE_MARGIN_M longer than the platform at each end,
+   * along the line to the nearest station or loose end (east and west when there is none), turned
+   * by R in 45 degree steps. */
+  private freeTurn = 0;
+  private freePiece(h: Extract<Snap, { kind: "free" }>) {
+    const w = world.peek();
+    const [lng0, lat0] = toLngLat(h.lx, h.ly);
+    const cos = Math.cos((lat0 * Math.PI) / 180), deg = 180 / Math.PI;
+    let phi = 0, best = Infinity;
+    for (const n of w?.nodes.values() ?? []) {
+      if (n.platform <= 0 && n.ports !== 1) continue;
+      const d = metresBetween(lng0, lat0, n.lng, n.lat);
+      if (d < best && d > 1) (best = d), (phi = Math.atan2(n.lat - lat0, (n.lng - lng0) * cos));
+    }
+    phi += this.freeTurn;
+    const level = buildLevel.peek(), quad = trackCount.peek() === 4, z = level * 8;
+    const half = buildPlatform.peek() / 2 + FREE_MARGIN_M;
+    // ground metres east and north of the spot to lng, lat
+    const at = (e: number, n: number): [number, number] => [lng0 + (e / (EARTH_R * cos)) * deg, lat0 + (n / EARTH_R) * deg];
+    const [ce, sn] = [Math.cos(phi), Math.sin(phi)];
+    const a = at(-half * ce, -half * sn), b = at(half * ce, half * sn);
+    const loc = (p: [number, number]) => toLocal(p[0], p[1]);
+    const [ax, ay] = loc(a), [bx, by] = loc(b);
+    const track = [new Float32Array([ax, ay, z, bx, by, z])];
+    const ways = [new Float32Array([h.lx, h.ly, z, bx, by, z]), new Float32Array([h.lx, h.ly, z, ax, ay, z])];
+    let twin: { x: number; y: number; ways: ArrayLike<number>[] } | null = null;
+    if (quad) {
+      // the express pair QUAD_SPACING_M to the left, as the track model lays it (T-255)
+      const [ox, on] = [-sn * QUAD_SPACING_M, ce * QUAD_SPACING_M];
+      const [qax, qay] = loc(at(-half * ce + ox, -half * sn + on)), [qbx, qby] = loc(at(half * ce + ox, half * sn + on)), [tx, ty] = loc(at(ox, on));
+      track.push(new Float32Array([qax, qay, z, qbx, qby, z]));
+      twin = { x: tx, y: ty, ways: [new Float32Array([tx, ty, z, qbx, qby, z]), new Float32Array([tx, ty, z, qax, qay, z])] };
+    }
+    const pa = lngLatToPack(...a), pb = lngLatToPack(...b);
+    const stationAt: StationAt = { kind: "free", x0: pa.x, y0: pa.y, x1: pb.x, y1: pb.y, level, quad };
+    return { stationAt, track, ways, twin, perM: 1 / cos, lengthM: 2 * half, key: `${JSON.stringify(stationAt)}:${buildPlatform.peek()}:${w?.version}` };
+  }
+
+  /** the worker's answer for the last free piece asked about (T-794) */
+  private freeAns: { key: string; ok: boolean; why: string; cost: number } | null = null;
+  private freeAsked = "";
+  /** the free piece's track drawn as the preview (its key), so it is set once, not every frame */
+  private freeDrawn = "";
+
+  private freeGhost(h: Extract<Snap, { kind: "free" }>): { ok: boolean | null; why: string; cost: number; lengthM: number } {
+    const p = this.freePiece(h);
+    if (this.freeAsked !== p.key) {
+      this.freeAsked = p.key;
+      this.client.checkStation(p.stationAt, buildPlatform.peek(), (ok, issues, cost) => {
+        this.freeAns = { key: p.key, ok, why: ok ? "" : describeIssues(issues) || "Cannot be built here.", cost };
+        if (tool.peek() === "station") this.place();
+      });
+    }
+    const ans = this.freeAns?.key === p.key ? this.freeAns : null;
+    const bad = ans?.ok === false;
+    const drawn = `${p.key}:${bad}`;
+    if (this.freeDrawn !== drawn) {
+      this.freeDrawn = drawn;
+      this.overlay.renderer.setPreview(strokesFromParts(p.track, bad, true));
+      this.overlay.invalidate();
+    }
+    this.boxGhost(h.lx, h.ly, p.ways, p.perM, bad, p.twin);
+    return { ok: ans ? ans.ok : null, why: ans?.why ?? "", cost: ans?.cost ?? 0, lengthM: p.lengthM };
+  }
+
+  /** Take the free piece's track off the preview, if it is there. */
+  private clearFree() {
+    if (!this.freeDrawn) return;
+    this.freeDrawn = "";
+    this.overlay.renderer.setPreview(null);
+    this.overlay.invalidate();
   }
 
   /** The drawn tracks whose bounds come within `pad` of (x, y), but `skip`: the twin platform's
@@ -809,7 +911,7 @@ export class Tools {
   /** Faint rings 1 and 2 km, or miles in US units (ground distance), round the station being placed (T-312), under the
    * ghost, labelled at their tops. */
   private rings: SVGSVGElement | null = null;
-  private stationRings(h: Exclude<Snap,{kind:"free"}>) {
+  private stationRings(h: Snap) {
     const NS="http://www.w3.org/2000/svg";
     if (!this.rings) {
       const r=this.rings=document.createElementNS(NS,"svg");
@@ -1044,6 +1146,25 @@ export class Tools {
     const h = t === "station" ? this.stationSpot() : this.hover;
     const v = t === "station" ? this.verdict() : null;
     if (t === "station") this.shown = h && h.kind !== "free" ? v : null;
+    if (t === "station" && h?.kind === "free") {
+      // T-794: open ground, the station with its own piece of track
+      this.ring.style.display = "none";
+      this.stationRings(h);
+      const g = this.freeGhost(h);
+      this.tag.style.display = "";
+      if (g.ok === false) {
+        this.tag.className = "tool-tag build-tag bad";
+        this.tag.textContent = g.why;
+      } else {
+        this.tag.className = "tool-tag build-tag";
+        this.tag.replaceChildren(...this.helpLines(h, g.ok ? `Station and ${distance(g.lengthM)} of track, ${moneyShort(g.cost * 1e6)}` : null)
+          .map((s) => Object.assign(document.createElement("div"), { textContent: s })));
+        if (!this.tag.firstChild) this.tag.style.display = "none";
+      }
+      put(this.tag, h.lx, h.ly, 14, 12);
+      return;
+    }
+    if (t === "station") this.clearFree();
     if ((t === "track" || t === "station") && h && h.kind !== "free") {
       this.ring.style.display = "";
       if (t === "station") {
@@ -1076,12 +1197,7 @@ export class Tools {
       this.tag.textContent = v.why;
       put(this.tag, h.lx, h.ly, 14, 12);
     } else if (t === "station" && h && h.kind !== "free") {
-      const lines: string[] = [];
-      const last = this.lastPlacedName(), [lng, lat] = toLngLat(h.lx, h.ly);
-      // T-312: how far from the station placed last
-      if (last) lines.push(`${distance(metresBetween(lng, lat, last.lng, last.lat))} from ${last.name}`);
-      const trips = this.tripsNear(lng, lat);
-      if (trips) lines.push(trips);
+      const lines = this.helpLines(h, null);
       if (lines.length) {
         this.tag.style.display = "";
         this.tag.className = "tool-tag build-tag";
@@ -1089,6 +1205,17 @@ export class Tools {
         put(this.tag, h.lx, h.ly, 14, 12);
       } else this.tag.style.display = "none";
     } else this.tag.style.display = "none";
+  }
+
+  /** The station tool's tag lines: `first` if any, how far from the station placed last (T-312),
+   * the trips near (T-412). */
+  private helpLines(h: Snap, first: string | null): string[] {
+    const lines: string[] = first ? [first] : [];
+    const last = this.lastPlacedName(), [lng, lat] = toLngLat(h.lx, h.ly);
+    if (last) lines.push(`${distance(metresBetween(lng, lat, last.lng, last.lat))} from ${last.name}`);
+    const trips = this.tripsNear(lng, lat);
+    if (trips) lines.push(trips);
+    return lines;
   }
 }
 

@@ -102,7 +102,14 @@ Full design, numbers and sources: `notes/T-008.md`.
   **Several nodes together** (T-475, `move_nodes`, the Select tool's pick): each moves by the same
   offset; an edge between two of them shifts whole, PIs included; an edge to a node that stays
   follows the one-node rule above. All must be movable, or nothing moves.
-- **Placing stations**: click on track (it is split there) or on a node. A station's name
+- **Placing stations**: click on track (it is split there) or on a node. On open ground the station
+  brings its own track [T-794, `TrackApi::add_free_station`]: a straight blueprint piece at the
+  selected level, double or quad as the Build tab is set, the platform plus 10 m past each end
+  long, with the station at its middle (on quad its twin on the express pair), one undoable edit
+  priced as the track and station together. Its ends are ordinary loose ends, so later track joins
+  them by the drawing rules. The edit's own checks refuse it as any track or station (water, a
+  crossing between levels, track on top of track), and so does any flat crossing on the piece
+  (`PlatformCrossing`): a crossing that close would sit at the platform's end. A station's name
   suggestions (T-534, `map/stationNames.ts`, worked out when asked and never stored) are:
   - **the cross street**: the nearest named street on the basemap within 400 m ("W 42nd St"), when
     the map is at zoom 13 or closer (further out the tiles hold only the bigger roads), skipping

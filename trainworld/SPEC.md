@@ -232,7 +232,8 @@ The regional layer carries what crosses zones or goes far [T-117, T-276]. Detail
 
 The player draws curved track (straights and circular arcs, double or quad, at elevations
 -3 to +3, "levels" in the code) two clicks per segment, each segment one curve through the click leaving along the track, up
-to 350 degrees round [T-418, T-422, T-442], places stations, and makes lines, all as
+to 350 degrees round [T-418, T-422, T-442], places stations (on track, or on open ground with a
+straight piece of their own track [T-794]), and makes lines, all as
 **blueprints** that are free to edit and undo, then pays to **construct** them. A segment is one
 piece of track [T-244]. Each station on quad track gets a crossover just past it, placed by the
 game in the same edit where it fits: an X between the two pairs, 120 m long, 50 km/h, priced as two

@@ -62,6 +62,8 @@ pub struct TrackApi {
     preview_marks: Vec<f64>,
     /// The flat junctions the last route asked about makes: x, y per junction.
     route_junctions: Vec<[f64; 2]>,
+    /// What the last station trial added to the blueprint, US$M (`station_cost`).
+    station_cost: f64,
     /// The pack rasters installed with `add_pack_water`, kept so the water mask can be rebuilt
     /// when a loaded save is in another frame (T-125).
     rasters: Vec<PackWater>,
@@ -156,6 +158,7 @@ impl TrackApi {
             preview_speeds: vec![],
             preview_marks: vec![],
             route_junctions: vec![],
+            station_cost: 0.0,
             rasters: vec![],
             boarding: Boarding::default(),
             now: f64::NAN,
@@ -1448,6 +1451,7 @@ impl TrackApi {
         let fleet = self.fleet;
         match self.w.trial_with(op, |w| trains_to_buy(w, fleet)) {
             Ok((r, trains)) => {
+                self.station_cost = r.cost_after - r.cost_before;
                 let need = r.charge + trains;
                 self.issues.clear();
                 self.money_short = None;
@@ -1477,7 +1481,7 @@ impl TrackApi {
                 let (e, which) = (c >> 1, c & 1);
                 let s = if which == 0 { 0.0 } else { self.w.net.edge_len[e as usize] };
                 if let Some((twin, ts)) = self.twin_at(e, s) {
-                    let r = self.station_ops(&[(u32::MAX, id as f64), (twin, ts)], &st, dry);
+                    let r = self.station_ops(None, &[(u32::MAX, id as f64), (twin, ts)], &st, dry);
                     if r == 0 {
                         return 0;
                     }
@@ -1493,20 +1497,99 @@ impl TrackApi {
         // the local and express platforms of one station, a complex. If that cannot be built,
         // the one station alone.
         if let Some((twin, ts)) = self.twin_at(id, s) {
-            let r = self.station_ops(&[(id, s), (twin, ts)], &st, dry);
+            let r = self.station_ops(None, &[(id, s), (twin, ts)], &st, dry);
             if r == 0 {
                 return 0;
             }
         }
-        self.station_ops(&[(id, s)], &st, dry)
+        self.station_ops(None, &[(id, s)], &st, dry)
+    }
+
+    /// A station on open ground (T-794): a straight piece of new track between two free `ends` (as
+    /// `add_route`'s, both kind 0) and a station at its middle, one undoable edit. The piece's ends
+    /// are ordinary loose ends. On quad (`tracks` 4) the express pair gets the twin, as on drawn
+    /// quad track. 0 when placed; otherwise `issue_kinds()` says why.
+    pub fn add_free_station(&mut self, ends: &[f64], tracks: u8, platform: u16, name: String) -> u32 {
+        self.free_station(ends, tracks, platform, name, false)
+    }
+
+    /// Whether `add_free_station` would succeed, tried and rolled back (the ghost); `station_cost`
+    /// then holds what it would add to the blueprint, US$M.
+    pub fn preview_free_station(&mut self, ends: &[f64], tracks: u8, platform: u16) -> u32 {
+        self.free_station(ends, tracks, platform, String::new(), true)
+    }
+
+    /// What the last station tried (`preview_*station`) or placed adds to the blueprint, US$M.
+    pub fn station_cost(&self) -> f64 {
+        self.station_cost
+    }
+
+    fn free_station(&mut self, ends: &[f64], tracks: u8, platform: u16, name: String, dry: bool) -> u32 {
+        if ends.len() < 10 || ends[0] != 0.0 || ends[5] != 0.0 {
+            return self.refuse(Issue::Geom { edge: u32::MAX, issue: GeomIssue::ZeroLeg(0) });
+        }
+        // through: a quad piece's express pair gets its own ends beside the drawn pair's
+        let keep = self.route_tangent;
+        self.route_tangent = true;
+        let r = self.route_op(ends, &[], tracks, false);
+        self.route_tangent = keep;
+        let (route, _, nn, ne) = match r {
+            Ok(v) => v,
+            Err(i) => return self.refuse(i),
+        };
+        let inv = match self.w.sketch(route.clone(), false) {
+            Ok(inv) => inv,
+            Err(e) => {
+                self.release(&nn, &ne);
+                return self.done(Err(e));
+            }
+        };
+        let (mx, my) = ((ends[2] + ends[7]) / 2.0, (ends[3] + ends[8]) / 2.0);
+        let mid = ne.iter().filter(|&&e| self.w.net.edge_ok(e)).map(|&e| (e, self.w.net.project(e, mx, my))).min_by(|a, b| a.1 .1.total_cmp(&b.1 .1)).map(|(e, (s, _))| (e, s));
+        let twin = mid.and_then(|(e, s)| self.twin_at(e, s));
+        // a piece this short crossing other track flat would put the crossing at the platform's end
+        let flat = self.w.net.crossings.iter().any(|c| matches!(c.kind, CrossKind::Flat(_)) && (ne.contains(&c.e1) || ne.contains(&c.e2)));
+        self.w.unsketch(inv);
+        if flat {
+            self.release(&nn, &ne);
+            return self.refuse(Issue::PlatformCrossing { node: u32::MAX });
+        }
+        let Some((e, s)) = mid else {
+            self.release(&nn, &ne);
+            return self.refuse(Issue::Geom { edge: u32::MAX, issue: GeomIssue::ZeroLeg(0) });
+        };
+        let st = StationData { platform, name, built: false, off: false };
+        let mut r = 1;
+        if let Some((tw, ts)) = twin {
+            r = self.station_ops(Some(&route), &[(e, s), (tw, ts)], &st, dry);
+        }
+        if r != 0 {
+            r = self.station_ops(Some(&route), &[(e, s)], &st, dry);
+        }
+        if r != 0 || dry {
+            self.release(&nn, &ne);
+        }
+        r
     }
 
     /// Stations splitting edges at chainages, one undoable edit (`add_station`). The joints of a
     /// drawn route (T-244, T-418) within a platform's reach go first: the pieces become one edge
     /// again, so the platform has room. `(u32::MAX, node)` puts one on an existing node instead.
     /// Two stations are a quad complex: a crossover goes in past the first where it fits (T-733).
-    fn station_ops(&mut self, at: &[(u32, f64)], st: &StationData, dry: bool) -> u32 {
+    /// `route`: new track laid first in the same edit (`add_free_station`, T-794), sketched while
+    /// the stations are planned on it.
+    fn station_ops(&mut self, route: Option<&Op>, at: &[(u32, f64)], st: &StationData, dry: bool) -> u32 {
         let mut ops = vec![];
+        let sketched = match route {
+            Some(r) => match self.w.sketch(r.clone(), false) {
+                Ok(inv) => {
+                    ops.push(r.clone());
+                    Some(inv)
+                }
+                Err(e) => return self.done(Err(e)),
+            },
+            None => None,
+        };
         let (mut nodes, mut edges) = (vec![], vec![]);
         let mut first = None;
         for &(e, s) in at {
@@ -1523,6 +1606,9 @@ impl TrackApi {
             edges.push(new_edge);
             first.get_or_insert(node);
             ops.extend([Op::Split { edge: e, s, node, new_edge }, Op::Station { node, data: Some(st.clone()) }]);
+        }
+        if let Some(inv) = sketched {
+            self.w.unsketch(inv);
         }
         let base = Op::Batch(ops);
         let mut r = 1;
@@ -5356,6 +5442,55 @@ mod tests {
             }
         }
         assert!(seen[0] > 0 && seen[1] > 0, "both answers should occur: {seen:?}");
+    }
+
+    /// T-794: a station on open ground lays a straight piece of track a little longer than the
+    /// platform and puts the station at its middle, one undoable edit; the trial changes nothing
+    /// and prices both; the piece's ends are loose ends that later track carries on from; on quad
+    /// the express pair gets the twin.
+    #[test]
+    fn a_free_station_lays_its_own_track() {
+        let mut a = api();
+        let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(240.0, 0.0).iter()).copied().collect();
+        let (cash, nodes) = (a.cash, a.nodes_info());
+        assert_eq!(a.preview_free_station(&ends, 2, 200), 0, "{}", a.issues());
+        assert_eq!((a.cash, a.nodes_info(), live_edges(&a).len()), (cash, nodes, 0), "the trial leaves nothing");
+        let quoted = a.station_cost();
+        assert!(quoted > 0.0);
+        assert_eq!(a.add_free_station(&ends, 2, 200, "Open".into()), 0, "{}", a.issues());
+        assert!((a.total_cost() - quoted).abs() < 1e-6, "{} against {quoted}", a.total_cost());
+        let info = a.nodes_info();
+        let rows: Vec<&[f64]> = info.chunks(10).collect();
+        assert_eq!(rows.len(), 3);
+        let st: Vec<&&[f64]> = rows.iter().filter(|c| c[7] > 0.0).collect();
+        assert_eq!(st.len(), 1);
+        assert!((st[0][1] - 120.0).abs() < 1.0, "the station at the middle: {:?}", st[0]);
+        let loose: Vec<f64> = rows.iter().filter(|c| c[4] == 1.0).map(|c| c[0]).collect();
+        assert_eq!(loose.len(), 2, "both ends loose");
+        // carrying on from an end: an ordinary route, the station keeps its platform
+        let end = rows.iter().find(|c| c[4] == 1.0 && c[1] > 200.0).unwrap()[0];
+        let on = [1.0, end, 0.0, 0.0, 0.0, 0.0, 0.0, 2000.0, 0.0, 0.0];
+        assert_eq!(a.add_route(&on, &[], 2, false), 0, "{}", a.issues());
+        assert_eq!(a.undo(), 0);
+        // one undo takes the station and its track
+        assert_eq!(a.undo(), 0);
+        assert!(live_edges(&a).is_empty() && a.nodes_info().is_empty());
+        // too short for the platform: refused, nothing left
+        let short: Vec<f64> = free(0.0, 0.0).iter().chain(free(150.0, 0.0).iter()).copied().collect();
+        assert_ne!(a.add_free_station(&short, 2, 200, "Short".into()), 0);
+        assert!(a.issue_kinds().contains("PlatformTooLong"), "{}", a.issues());
+        assert!(live_edges(&a).is_empty());
+        // quad: the twin on the express pair
+        assert_eq!(a.add_free_station(&ends, 4, 200, "Quad".into()), 0, "{}", a.issues());
+        let named = (0..a.w.net.node_count() as u32).filter(|&k| a.w.net.node_ok(k) && a.w.net.node_platform[k as usize] > 0 && a.w.net.node_name[k as usize] == "Quad").count();
+        assert_eq!(named, 2, "the station and its twin");
+        // across other track on the same level: refused, though a flat crossing is allowed elsewhere
+        let mut b = api();
+        let across: Vec<f64> = free(230.0, -300.0).iter().chain(free(230.0, 300.0).iter()).copied().collect();
+        assert_eq!(b.add_route(&across, &[], 2, false), 0, "{}", b.issues());
+        assert_ne!(b.preview_free_station(&ends, 2, 200), 0);
+        assert!(b.issue_kinds().contains("PlatformCrossing"), "{}", b.issue_kinds());
+        assert_eq!(live_edges(&b).len(), 1);
     }
 
     /// T-255: quad track is the drawn double track and an express double track beside it, end to

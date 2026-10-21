@@ -199,8 +199,8 @@ export class ClockClient {
   private seq = 0;
   private pending = new Map<number, (a: EditAnswer) => void>();
   private stationBusy = false;
-  private stationNext: { at: StationAt; platform: number; cb: (ok: boolean, issues: string[]) => void } | null = null;
-  private stationCb: ((ok: boolean, issues: string[]) => void) | null = null;
+  private stationNext: { at: StationAt; platform: number; cb: (ok: boolean, issues: string[], cost: number) => void } | null = null;
+  private stationCb: ((ok: boolean, issues: string[], cost: number) => void) | null = null;
   private crossBusy = false;
   private crossNext: { edge: number; x: number; y: number; cb: (a: CrossoverAnswer) => void } | null = null;
   private crossCb: ((a: CrossoverAnswer) => void) | null = null;
@@ -554,7 +554,7 @@ export class ClockClient {
       }
       case "stationCheck": {
         this.stationBusy = false;
-        this.stationCb?.(msg.ok, msg.issues);
+        this.stationCb?.(msg.ok, msg.issues, msg.cost);
         const n = this.stationNext;
         this.stationNext = null;
         if (n) this.checkStation(n.at, n.platform, n.cb);
@@ -609,8 +609,9 @@ export class ClockClient {
   }
 
   /** Whether a station could be placed here (T-311): the worker tries `addStation` and rolls it
-   * back. One request in flight; a newer one replaces a waiting one. */
-  checkStation(at: StationAt, platform: number, cb: (ok: boolean, issues: string[]) => void) {
+   * back, `cost` (US$M) what it would add to the blueprint. One request in flight; a newer one
+   * replaces a waiting one. */
+  checkStation(at: StationAt, platform: number, cb: (ok: boolean, issues: string[], cost: number) => void) {
     if (this.stationBusy) {
       this.stationNext = { at, platform, cb };
       return;

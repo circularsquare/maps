@@ -19,7 +19,7 @@ import { between, lagged, runLag, strengths, table, type PerHour } from "../game
 import { networkFromState, newNetCache, runsTrains } from "../map/network";
 import { buildComplexes } from "../game/complexes";
 import { decodeSave, encodeSave, isNortheastSave, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, deleteSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, isBackupOf, nextGameName, newGameName, slotName, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader } from "./saveFile";
-import type { ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FromClock, MoneyState, NetworkSnapshot, PiInput, RegionNow, RouteEnd, ToClock } from "./protocol";
+import type { ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FromClock, MoneyState, NetworkSnapshot, PiInput, RegionNow, RouteEnd, StationAt, ToClock } from "./protocol";
 
 /** Run 0 of each line is resampled this often (m) for the renderer's line texture. */
 const SAMPLE_STEP = 50;
@@ -1410,6 +1410,9 @@ function endArr(e: RouteEnd): number[] {
   if (e.kind === "node") return [1, e.node, 0, 0, 0];
   return [2, e.edge, e.x, e.y, 0];
 }
+function freeEnds(at: Extract<StationAt, { kind: "free" }>): Float64Array {
+  return new Float64Array([0, 0, at.x0, at.y0, at.level, 0, 0, at.x1, at.y1, at.level]);
+}
 function pisArr(p: PiInput[]): Float64Array {
   return new Float64Array(p.flatMap((v) => [v.x, v.y, v.radius ?? 0, v.level]));
 }
@@ -1440,7 +1443,9 @@ function apply(op: EditOp): { r: number; line?: number; node?: number } {
     case "addStation":
       return op.at.kind === "node"
         ? { r: a.add_station(1, op.at.node, 0, 0, op.platform, op.name) }
-        : { r: a.add_station(2, op.at.edge, op.at.x, op.at.y, op.platform, op.name) };
+        : op.at.kind === "edge"
+          ? { r: a.add_station(2, op.at.edge, op.at.x, op.at.y, op.platform, op.name) }
+          : { r: a.add_free_station(freeEnds(op.at), op.at.quad ? 4 : 2, op.platform, op.name) };
     case "crossover":
       return { r: a.add_crossover(op.edge, op.x, op.y) };
     case "doubleUp":
@@ -1638,7 +1643,7 @@ async function processMessage(msg: ToClock) {
     // A Rust panic: report it rather than leave the main thread waiting on an answer.
     send({ kind: "error", message: String(err) });
     if (msg.kind === "edit") send({ kind: "edited", seq: msg.seq, ok: false, issues: ["Internal"], charge: 0 });
-    if (msg.kind === "previewStation") send({ kind: "stationCheck", seq: msg.seq, ok: false, issues: ["Internal"] });
+    if (msg.kind === "previewStation") send({ kind: "stationCheck", seq: msg.seq, ok: false, issues: ["Internal"], cost: 0 });
     if (msg.kind === "previewCrossover") send({ kind: "crossoverCheck", seq: msg.seq, ok: false, issues: ["Internal"], cost: 0, parts: [] });
     if (msg.kind === "preview" || msg.kind === "previewEdge" || msg.kind === "previewNode" || msg.kind === "previewNodes") send({ kind: "preview", seq: msg.seq, ok: false, cost: 0, lengthM: 0, mult: 0, issues: ["Internal"], verts: new Float64Array(0), pts: new Float32Array(0) });
   }
@@ -1821,8 +1826,10 @@ async function handle(msg: ToClock) {
     send({ kind: "answer", seq: msg.seq, data }, [data.buffer]);
   } else if (msg.kind === "previewStation") {
     const at = msg.at;
-    const r = at.kind === "node" ? api.preview_station(1, at.node, 0, 0, msg.platform) : api.preview_station(2, at.edge, at.x, at.y, msg.platform);
-    send({ kind: "stationCheck", seq: msg.seq, ok: r === 0, issues: r === 0 ? [] : issues() });
+    const r = at.kind === "node" ? api.preview_station(1, at.node, 0, 0, msg.platform)
+      : at.kind === "edge" ? api.preview_station(2, at.edge, at.x, at.y, msg.platform)
+      : api.preview_free_station(freeEnds(at), at.quad ? 4 : 2, msg.platform);
+    send({ kind: "stationCheck", seq: msg.seq, ok: r === 0, issues: r === 0 ? [] : issues(), cost: r === 0 ? api.station_cost() : 0 });
   } else if (msg.kind === "previewCrossover") {
     const out = api.preview_crossover(msg.edge, msg.x, msg.y);
     const ok = out[0] === 1;
