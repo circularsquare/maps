@@ -84,13 +84,15 @@ nothing under it: the status is a tag over the map (Status, below). The mode bar
 flexible part [T-406]: it takes the width the fixed parts leave, so its length follows the window
 (at least 80 px) and never the numbers beside it, and grows on wide windows. Walking and driving
 are the walk and car icons (the walk and drive mode colours) with the share beside them, each
-with its own hover. They drop below 860 px of map column, the day below 1000, rides below 760;
-below 700 px the bar takes two rows (name, cash, time and speed over the split).
+with its own hover. They drop below 860 px of map column. The day ("Mon 1", the weekday and the
+game's day number) is always shown, centred in the room between the cash and the time [T-832].
+Below 700 px the bar takes two rows (name, cash, time and speed over the split).
 
 - **The goal number**: the focused zone's mode split as one bar (driving, train, walking, in the
   mode colours whatever the theme), the split of all its modelled local trip legs (commutes,
   everyday outings, school and university), so the shares are of rides per day, not people [T-342].
-  The labels after it give the train share, after a blue mark, with its rides per day ("18.5% 8.81M rides"; no word "Train" [T-650]) and the
+  The labels after it give the train share, after a blue mark ("18.5%"; no word "Train" [T-650], no
+  rides count since T-832: the hover has it) and the
   walking and driving shares as icons; the hover gives all three counts and the total, and an
   icon's own hover its share and rides. The player's job is
   to make the train share grow. It shows "–" and an empty bar until the zone has figures of its own
@@ -119,6 +121,9 @@ below 700 px the bar takes two rows (name, cash, time and speed over the split).
   the demand level is only in the hover [T-406]), the local
   time where the player is looking [T-309]; pause and three
   speeds. **Space** pauses and resumes at the speed that was running, even with a button focused.
+  While the tab is hidden the clock stops, unless "Run in background" is on (Settings), when it runs
+  on at the chosen speed with fares, running costs and autosaves, and the map catches up when the
+  tab is shown again [T-826].
 - **Narrow maps**: secondary labels drop first; two rows below 700 px, a different two below 520
   px (speed beside the split), three below 300 px, with cash, time, train share and all speed
   controls kept. Hovering the split or the time gives what
@@ -193,8 +198,8 @@ dismissed, and the map and tools are blocked meanwhile.
 (0.5-2x, [T-099]), Opacity (20-100% of the built alpha, default 90%, [T-470]; for the
 commuter and longer-trip bubbles, not station discs) and Detail (4 steps from coarser to finer,
 the third by default; its hover names the zoom the finest bubbles start at; [T-795]), the Colours
-choice (Mode mix by default, or Train share, which shows two colour pickers labelled 0% train and
-100% train; [T-804]; both in [ui-demand-views.md](ui-demand-views.md) "Local trip bubbles") and the Day choice (Average, Weekday, Weekend;
+choice (Train share by default [T-833], which shows two colour pickers labelled 0% train and
+100% train, or Mode mix; [T-804]; both in [ui-demand-views.md](ui-demand-views.md) "Local trip bubbles") and the Day choice (Average, Weekday, Weekend;
 "Demand shown for", below) [T-703], Show (trains, station names, capacity markers, flat junctions and crossings, map labels), Riders on trains
 and platforms ("How full each train is", "How full each platform is", both on by default)
 [T-164], Stations up close (Faces and Sound, both on by default, and a Volume slider while Sound is on; [ui-map.md](ui-map.md) Life at stations) [T-686], Theme (Light or Dark, light by default, over Pink, Blue or Green) [T-039], Panel and text size, Font [T-698], Units and performance, and Explore a trip at the bottom [T-220]. Station demand
@@ -219,11 +224,14 @@ speed in miles, mph and feet instead of kilometres, km/h and metres: panels, ins
 track, station and line tools' readouts, the placing rings, the scale bar of a station complex, and
 prices per mile. All go through the distance functions in `game/format.ts`; the game itself stays
 metric. "Use more cores" (off by default) allows up to 5 demand workers instead of 3 at most; its
-hover says it counts from the next load ([architecture.md](architecture.md) 7).
+hover says it counts from the next load ([architecture.md](architecture.md) 7). "Run in background"
+(off by default) keeps the clock running while the tab is hidden (the top bar's clock, above;
+[architecture.md](architecture.md) "A hidden page") [T-826].
 
 **Game** [T-728], last before Explore a trip: the game's mode, "Normal" or "Sandbox" (hover: what
-it means). A normal game has "Make it a sandbox", which asks first ("This game becomes a sandbox
-for good...", Make it a sandbox or Keep it normal); a sandbox has no way back, so a later campaign's
+it means). A normal game has "Switch to sandbox mode", which asks first ("Are you sure?", then
+"Entering sandbox mode will disable money permanently and irreversibly.", with Stay in normal mode
+and Switch to sandbox mode) [T-822]; a sandbox has no way back, so a later campaign's
 or a hard start's achievements cannot be had for free. The mode is the game's, kept in its save,
 not the browser's.
 
@@ -264,7 +272,7 @@ whatever the Lines toggle says: a list of every region (the toggle's regions) wi
 same hover), its train rides per day and its money a day, fares less running trains (yesterday's, today so far
 until the game has a first full day; hover: fares and running trains, then new trains and
 construction, left out of the figure, when there were any; losses red), and its points, those of the
-past 24 game hours, changing once a game hour (hover: the exact figure, points a day with the
+past 24 game hours, changing once a game hour, to three significant digits ("512k", "4.56M", "103M"; `pointsShort`) [T-831] (hover: the exact figure, points a day with the
 riders now on the day shown, and the rule) [T-684, T-694]. A star after the name marks a region
 whose train share has reached 10% (hover: when it was earned, "Monday, day 71, at 14:08" in the
 region's local time) [T-685]. The top bar's city name has the same points in its hover. A narrow
@@ -373,10 +381,12 @@ registry centre and zoom, or over New York with none [T-310].
 - **The bar moves in proportion to time** [T-243, T-793, notes/T-793.md]: each step weighs as long as
   it is expected to take (a download by its rate; opening 220 ms per MB of city pack, 450 ms and 20 ms
   per MB for a market pack; the first estimate about 0.6 s plus 2.2 ms per line stop, scaled by this
-  browser's last load, and each crowding round about as long again: weights 1, 1.1, 1.05, 0.55). Inside
+  browser's last load of the zone in view (a game of 1,000 stops is assumed with none), and each
+  crowding round about as long again: weights 1, 1.1, 1.05, 0.55). Inside
   a step the fill moves with time against that expectation until the step really ends, slowing if
-  late. Once a solve's round is published, the rounds still to come are expected at the pace
-  measured so far, so a slower machine or bigger network corrects the bar one round in. It never
+  late. Once a solve's first period is in, and again as each round is published, the rounds still to
+  come are expected at the pace measured so far, so a slower machine or bigger network corrects the
+  bar within the first wave of periods. It never
   goes back, and is never full before the work is done (a finished load shows about 95%, then the
   card goes).
 - A city opened later (a pan, construction) shows its estimate at once and the crowding rounds

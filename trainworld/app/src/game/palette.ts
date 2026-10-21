@@ -1,6 +1,7 @@
 // Colours of the network itself. These are not UI theme colours and do not change with the theme
 // (SPEC 8: only the UI is styled; lines, trains and stations take the line colours).
 
+import { signal } from "@preact/signals";
 import type { Level } from "./types";
 
 /** Default line colours in order: a normal saturated metro palette (SPEC 8). The last five (gray,
@@ -60,6 +61,18 @@ export const MODE_COLOURS = {
   drive: "#e61e1e",
 } as const;
 
+/** T-833: the colours bars and swatches show modes in under Train share bubbles. Car red and train
+ * blue are the ramp's ends; walking is yellow (the ramp has no green, and walkers pull a bubble
+ * towards red) and "other" (planes: the one mode that is not car, walk or train) orange, a step from
+ * both the yellow and the red. Under Mode mix, planes stay the muted grey. */
+const SHARE_MODE_COLOURS = { train: MODE_COLOURS.train, walk: "#f0c814", drive: MODE_COLOURS.drive, other: "#f07a14" } as const;
+const MIX_MODE_COLOURS = { ...MODE_COLOURS, other: "var(--muted)" } as const;
+/** The scheme in force; a signal, so panels that read `modeColours()` follow a change. */
+export const modeScheme = signal<"mode" | "ramp">("mode");
+/** The mode colours for bars, swatches and hover tags under the bubble scheme in force. */
+export const modeColours = (): { readonly train: string; readonly walk: string; readonly drive: string; readonly other: string } =>
+  modeScheme.value === "ramp" ? SHARE_MODE_COLOURS : MIX_MODE_COLOURS;
+
 /**
  * A bubble's colour for commuters by train, walking and driving, 0-255 rgb: the three mode colours
  * blended by share and scaled to full brightness (Anita chose this RGB mix, T-099), then towards a
@@ -98,6 +111,7 @@ let rampLut: Uint8ClampedArray | null = null;
  * swatches); the same arguments again change nothing. */
 export function setBubbleColours(s: BubbleScheme, from: string, to: string) {
   const key = s === "ramp" ? `ramp${from}${to}` : "mode";
+  modeScheme.value = s === "ramp" ? "ramp" : "mode";
   if (key === schemeKey) return;
   schemeKey = key;
   rampLut = s === "ramp" ? buildRamp(HEX.test(from) ? from : DEFAULT_RAMP.from, HEX.test(to) ? to : DEFAULT_RAMP.to) : null;

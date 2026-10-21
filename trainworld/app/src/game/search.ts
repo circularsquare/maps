@@ -32,9 +32,13 @@ export type SearchHit =
       tag?: string;
     }
   | { kind: "line"; name: string; line: LineInput }
-  | { kind: "city"; name: string; city: City }
+  /** `matched`: the alias the query matched, when it was not the name (T-825) */
+  | { kind: "city"; name: string; city: City; matched?: string }
   /** a town or neighbourhood from a place list; `tag` as for stations (its city, or a direction) */
   | { kind: "place"; name: string; place: Place; lng: number; lat: number; city: string; tag?: string };
+
+/** Letters NFD does not split into a base and an accent. */
+const PLAIN: Record<string, string> = { ł: "l", ø: "o", đ: "d", ħ: "h", ı: "i", ß: "ss", æ: "ae", œ: "oe", þ: "th" };
 
 /** Lower case, accents and punctuation dropped, spaces collapsed. */
 export function normalise(s: string): string {
@@ -42,6 +46,7 @@ export function normalise(s: string): string {
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "")
     .toLowerCase()
+    .replace(/[łøđħıßæœþ]/g, (ch) => PLAIN[ch])
     .replace(/&/g, " and ")
     .replace(/[^\p{L}\p{N}]+/gu, " ")
     .trim();
@@ -125,8 +130,8 @@ export function search(query: string): SearchHit[] {
     }
   }
   CITIES.forEach((c, i) => {
-    const score = matchScore(normalise(c.name), q);
-    if (score >= 0) scored.push({ hit: { kind: "city", name: c.name, city: c }, score, weight: -i });
+    const m = cityMatch(c, q);
+    if (m) scored.push({ hit: { kind: "city", name: c.name, city: c, matched: m.matched }, score: m.score, weight: (m.matched ? -1e6 : 0) - i });
   });
   for (const list of places.peek().values())
     for (const p of list) {
@@ -149,6 +154,25 @@ export function search(query: string): SearchHit[] {
 }
 
 const cityById = (id: string) => CITIES.find((c) => c.id === id)?.name ?? "";
+
+const aliasKeys = new Map<string, string[]>();
+/** How well a registry city or zone matches the normalised query `q` by its name or an alias
+ * (T-825): the best matchScore, and the alias matched when that was not the name. A match through
+ * an alias scores as one through the name, so "osaka" finds Kansai before Osaka's place-list
+ * entries; callers put name matches first among equal scores. Null when nothing matches. */
+export function cityMatch(c: City, q: string): { score: number; matched?: string } | null {
+  const own = matchScore(normalise(c.name), q);
+  if (own === 0) return { score: 0 };
+  let keys = aliasKeys.get(c.id);
+  if (!keys) aliasKeys.set(c.id, (keys = c.aliases.map(normalise)));
+  let best = own < 0 ? Infinity : own, matched: string | undefined;
+  keys.forEach((k, i) => {
+    const s = matchScore(k, q);
+    // among equal matches the shortest alias, so "hague" shows The Hague rather than "Rotterdam [The Hague]"
+    if (s >= 0 && (s < best || (s === best && matched !== undefined && c.aliases[i].length < matched.length))) { best = s; matched = c.aliases[i]; }
+  });
+  return best === Infinity ? null : { score: best, matched };
+}
 /** Names in natural order; one collator, since localeCompare with options builds one per call (T-348). */
 const numeric = new Intl.Collator(undefined, { numeric: true }).compare;
 

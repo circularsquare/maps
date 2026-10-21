@@ -6,16 +6,20 @@ import type { ComponentChildren } from "preact";
 import { demandView, intercityPlaceName, type PlaceFlows } from "../../game/demand";
 import { count } from "../../game/format";
 import { shownDayPhrase } from "../../game/ui";
-import { MODE_COLOURS } from "../../game/palette";
+import { modeColours } from "../../game/palette";
 import { intercityPick, intercityStationView } from "../../map/intercityView";
 import { Spinner } from "../Spinner";
 import { Icon, Row } from "../widgets";
 
-const MODES = [
-  { key: "rail", icon: Icon.train, colour: MODE_COLOURS.train, by: "by train" },
-  { key: "car", icon: Icon.ride, colour: MODE_COLOURS.drive, by: "by car" },
-  { key: "air", icon: Icon.plane, colour: "var(--muted)", by: "by plane" },
-] as const;
+/** Read while rendering: the colours follow the bubble scheme (T-833). */
+const modes = () => {
+  const c = modeColours();
+  return [
+    { key: "rail", icon: Icon.train, colour: c.train, by: "by train" },
+    { key: "car", icon: Icon.ride, colour: c.drive, by: "by car" },
+    { key: "air", icon: Icon.plane, colour: c.other, by: "by plane" },
+  ] as const;
+};
 type Split = { all: number; rail: number; car: number; air: number };
 
 const exact = (n: number) => Math.round(n).toLocaleString("en");
@@ -30,7 +34,7 @@ export function ModeHead({ what }: { what: string }) {
     <li class="muted small">
       <span class="grow" />
       <span class="val w-num" data-tip={`${what} ${shownDayPhrase.value}, every mode`}>All</span>
-      {MODES.map((m) => (
+      {modes().map((m) => (
         <span class="val w-mode" data-tip={`${what} ${m.by}`}>
           <span class="mode-icon" style={{ color: m.colour }}>{m.icon()}</span>
         </span>
@@ -44,7 +48,7 @@ export function ModeCells({ s, what }: { s: Split; what: string }) {
   return (
     <>
       <span class="val w-num" data-tip={`${exact(s.all)} ${what} ${shownDayPhrase.value}`}>{count(s.all)}</span>
-      {MODES.map((m) => (
+      {modes().map((m) => (
         <span class="val w-mode" data-tip={`${exact(s[m.key])} ${m.by}, ${pct(s[m.key], s.all)} of ${exact(s.all)}`}>{count(s[m.key])}</span>
       ))}
     </>
@@ -58,7 +62,7 @@ export function ElsewhereRow({ n, label = "Elsewhere" }: { n: number; label?: Co
     <li>
       <span class="grow" data-tip="Places outside every zone of the game; how these trips travel is not modelled">{label}</span>
       <span class="val w-num" data-tip={`${exact(n)} trips ${shownDayPhrase.value}`}>{count(n)}</span>
-      {MODES.map(() => <span class="val w-mode" />)}
+      {modes().map(() => <span class="val w-mode" />)}
     </li>
   );
 }

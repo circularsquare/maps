@@ -56,7 +56,9 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   the first market pack and sent with it to the solving workers, `cities.ts` `marketWorld`), `places.ts` (station and
   compass names for the inspectors), `placeList.ts` (each city's OSM place list, fetched per zone by
   search or station naming, the view's zones first, T-177, T-065, T-400), `boundaries.ts` (each city's boundary file, fetched
-  once, T-172), `search.ts` (the search box's matching, T-148), `walks.ts` (walking minutes to the
+  once, T-172), `zoneNames.ts` (zones' shown names and search aliases from the hand-edited
+  `zone-names.json` and the generated `zone-aliases.json`, `pipeline/zone_aliases.py`; T-825),
+  `search.ts` (the search box's matching, `cityMatch` for zones by name or alias, T-148), `walks.ts` (walking minutes to the
   closest stations on the demand model's walking barrier, T-312).
 - Stations and lines: `complexes.ts` (station complexes from platform geometry and the player's
   links, T-146), `complexView.ts` (a click selecting the complex, a station opened alone, the
@@ -379,10 +381,11 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   [--set k=v,..] [--params p.json] [--tag t]` runs the sim's `calib` bin (a weekday, commutes and
   everyday, 3 crowding rounds, about 22 s for New York) and scores it (station entries, operator
   totals, rail share by home area); `calib.py score <run.json>` rescores. notes/T-509.md.
-- `realgraph.py <cc ...> [--check]` (T-727b): the real network the layer draws as a routing graph
-  per noritetsu region, from noritetsu's extract and `ways.json` (read only), into
-  `data/packs/realgraph/<cc>.rgr` (gzip, layout in its docstring; 1.8-3.3 MB, about 15 s a region);
-  built so far for jp, us, gb, fr, de. Rerun after noritetsu rebuilds a region.
+- `realgraph.py <cc ...> [--check] [--out DIR]` (T-727b): the real network the layer draws as a routing
+  graph per noritetsu region, plus short undrawn track that fills its gaps (T-816), from noritetsu's
+  extract and `ways.json` (read only), into `data/packs/realgraph/<cc>.rgr` (gzip, layout in its
+  docstring; 2.0-3.7 MB, about 15 s a region); built so far for jp, us, gb, fr, de. Rerun after
+  noritetsu rebuilds a region.
 - Basemap glyph tiles (`app/public/fonts/`, checked in): `glyphs.py` rebuilds them, after a
   one-off `cargo install build_pbf_glyphs --locked` (on Windows set `CFLAGS` to a libz-sys zlib
   folder first, notes/T-056.md). Only needed to change the font, weights or fallback.

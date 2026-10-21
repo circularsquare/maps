@@ -100,6 +100,16 @@ impl Capacity {
         &self.users[x.first as usize..(x.first + x.count) as usize]
     }
 
+    /// The edges a resource caps the track of (T-819): a section's, and a flat crossing's two;
+    /// none for stations, termini and junction moves.
+    pub fn track_edges(&self, r: usize) -> Vec<u32> {
+        match self.tag[r] {
+            Tag::Section { first, count } => self.keys[first as usize..(first + count) as usize].iter().map(|k| k / 2).collect(),
+            Tag::Crossing { other } => vec![self.res[r].edge, other],
+            _ => vec![],
+        }
+    }
+
     /// Whether the resource caps throughput (T-517). A station crossover's load counts through
     /// trains that never conflict with each other, so it only delays.
     pub fn limits(&self, r: usize) -> bool {

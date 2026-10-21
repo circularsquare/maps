@@ -131,6 +131,9 @@ uniform vec3 u_bp_off_mid;   // the same switched off (T-333): cold grey rails r
 uniform vec3 u_bp_off_rail;  // middle in the light theme, dim in the dark one (game/shades.ts)
 uniform vec3 u_bp_off_fade;  // what its other colours are mixed towards
 uniform highp sampler2D u_line_colours;
+uniform int u_full_pass;     // T-819: 1 the pass drawing a red band this much (px) wider than the
+uniform float u_full_px;     // casing under the lines on track at capacity, nothing else
+uniform vec3 u_full_rgb;
 in vec4 a_seg;
 in uint a_colour;
 in uint a_edge;
@@ -140,6 +143,7 @@ in float a_speed;
 in float a_dist;
 in float a_wmul;            // width as a multiple of the line width (riders, T-084); 1 otherwise
 in vec2 a_lane;             // T-658: how far apart its two tracks are at its start and end, 0-1
+in float a_full;            // T-819: 1 on a line segment whose track is at capacity (traffic view)
 out vec3 v_color;
 out float v_alpha;
 out vec4 v_cap;             // px: along from the segment's start, along to its end, across, half the width
@@ -166,11 +170,14 @@ void main() {
   float core = bpTrack || bpLine ? u_bp.x + 2.0 * u_bp.y : u_width.x;
   float grow = u_lanes.z * max(0.0, lfm * (G + lt) - core * (bpTrack || bpLine ? 1.0 : a_wmul));
   float extra = sel ? u_width.y : 0.0;
+  bool full = u_full_pass == 1;
+  if (full && !(u_kind == 1 && a_full > 0.5)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+  float cas = full ? u_casing + u_full_px : u_casing;
   float w, lane_off = 0.0;
   if (u_lane_mode == 0) {
     w = (bpTrack ? u_bp.x + extra + (u_casing > 0.0 ? 2.0 * u_bp.y : 0.0)
-      : bpLine ? u_bp.x + extra + u_casing
-      : u_width.x * a_wmul + extra + u_casing) + grow;
+      : bpLine ? u_bp.x + extra + cas
+      : u_width.x * a_wmul + extra + cas) + grow;
   } else {
     // the gap opens from the middle while the pair's width stays: each track is half of what is
     // left; the band under both is the pair's width, or the traffic width behind them (Anita,
@@ -185,7 +192,7 @@ void main() {
       ? (casing ? !bpTrack : u_kind == 1 && !blueprint)
       : (casing ? bpTrack : true) && (u_lane_mode == 2 || lfm > 0.0);
     if (!keep) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
-    w = u_lane_mode == 1 ? band + extra + u_casing
+    w = u_lane_mode == 1 ? band + extra + cas
       : bpTrack || bpLine ? (casing ? wl : max(0.0, wl - 2.0 * u_bp.y))
       : wl;
     if (u_cap > 0.0 && u_lane_mode > 1) w = min(w, 0.5 * u_cap);
@@ -225,7 +232,7 @@ void main() {
   v_alpha = (!placement && !bp && (flags & 2) != 0 ? 0.55 : 1.0) * faint * (u_kind == 1 && !sel ? u_dim : 1.0);
   vec3 lc = u_level_colours[clamp(3 - int(round(a_level)), 0, 6)];
   bool bpMid = false;
-  if (u_casing > 0.0) v_color = bpTrack ? (swOff ? u_bp_off_rail : u_bp_rail) : placement ? u_sel : u_casing_rgb;
+  if (u_casing > 0.0) v_color = bpTrack ? (swOff ? u_bp_off_rail : u_bp_rail) : placement ? u_sel : full ? u_full_rgb : u_casing_rgb;
   else if ((flags & 16) != 0) v_color = u_bad;
   else if ((u_kind == 2 && !placement) || u_by_level == 1) v_color = lc;
   else if (u_by_speed == 1) {
@@ -957,6 +964,8 @@ interface StrokeVao {
   count: number;
   /** the per-segment width multipliers, rewritten by `setLayers` */
   wmulBuf: WebGLBuffer;
+  /** per segment 1 where its track is at capacity, rewritten by `setFull` (T-819) */
+  fullBuf: WebGLBuffer;
 }
 
 /**
@@ -1266,7 +1275,7 @@ export class NetworkRenderer {
     this.marks.init(gl);
     this.trainProg = compile(gl, TRAIN_VS, TRAIN_FS);
     this.hasStencil = (gl.getParameter(gl.STENCIL_BITS) ?? 0) > 0;
-    this.strokeU = uniforms(gl, this.strokeProg, ["u_matrix", "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_edge", "u_hot", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_dim", "u_by_level", "u_by_speed", "u_px_per_unit", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours"]);
+    this.strokeU = uniforms(gl, this.strokeProg, ["u_matrix", "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_edge", "u_hot", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_dim", "u_by_level", "u_by_speed", "u_px_per_unit", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours", "u_full_pass", "u_full_px", "u_full_rgb"]);
     this.stationU = uniforms(gl, this.stationProg, ["u_matrix", "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass", "u_layer", "u_halo", "u_halo_radius", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_hair", "u_plat", "u_mask", "u_stline", "u_lanes", "u_hot_st", "u_hot_n"]);
     this.bridgeProg = compile(gl, BRIDGE_VS, STATION_FS);
     this.bridgeU = uniforms(gl, this.bridgeProg, ["u_matrix", "u_viewport", "u_ring", "u_bridge", "u_pass", "u_layer", "u_halo", "u_ink", "u_bad", "u_crowd_rgb", "u_mask", "u_hot_st", "u_hot_n"]);
@@ -1346,6 +1355,8 @@ export class NetworkRenderer {
     this.attrib(p, "a_dist", this.buffer(one(s.dist, 1), list), 1, gl.FLOAT, 1);
     const wmulBuf = this.buffer(new Float32Array(Math.max(1, s.count)).fill(1), list);
     this.attrib(p, "a_wmul", wmulBuf, 1, gl.FLOAT, 1);
+    const fullBuf = this.buffer(new Float32Array(Math.max(1, s.count)), list);
+    this.attrib(p, "a_full", fullBuf, 1, gl.FLOAT, 1);
     const lane = s.count && s.lane ? s.lane : new Uint8Array(Math.max(1, s.count) * 2).fill(255);
     const loc = gl.getAttribLocation(p, "a_lane");
     if (loc >= 0) {
@@ -1355,7 +1366,7 @@ export class NetworkRenderer {
       gl.vertexAttribDivisor(loc, 1);
     }
     gl.bindVertexArray(null);
-    return { vao, count: s.count, wmulBuf };
+    return { vao, count: s.count, wmulBuf, fullBuf };
   }
 
   /** Rewrite a dynamic buffer in place (sizes never change between `setNetwork`s). */
@@ -1391,6 +1402,24 @@ export class NetworkRenderer {
     if (this.stationHaloBuf && n.stationCount) this.rewrite(this.stationHaloBuf, l?.stationHalo ?? new Float32Array(n.stationCount * 2));
   }
 
+  /** T-819: the edges whose track is at capacity, outlined in red on the lines over them; null or
+   * empty for none (any view but traffic). */
+  setFull(edges: ReadonlySet<number> | null) {
+    const was = this.fullEdges;
+    if ((!edges || !edges.size) && (!was || !was.size)) return;
+    if (edges && was && edges.size === was.size && [...edges].every((e) => was.has(e))) return;
+    this.fullEdges = edges;
+    this.writeFull();
+  }
+  private fullEdges: ReadonlySet<number> | null = null;
+  private writeFull() {
+    const l = this.lines, n = this.net;
+    if (!l || !l.count || !n) return;
+    const out = new Float32Array(l.count), f = this.fullEdges;
+    if (f?.size) for (let i = 0; i < l.count; i++) if (f.has(n.lines.edge[i])) out[i] = 1;
+    this.rewrite(l.fullBuf, out);
+  }
+
   /** Replace everything drawn but the trips (an edit). */
   setNetwork(n: NetworkBuffers) {
     const gl = this.gl;
@@ -1403,6 +1432,7 @@ export class NetworkRenderer {
     this.marks.setNetwork(n.marks);
     this.track = this.strokes(n.track);
     this.lines = this.strokes(n.lines);
+    this.writeFull();
     this.turnback = n.turnbacks?.count ? this.strokes(n.turnbacks) : null;
     // blueprint track sorts last (network.ts)
     this.hasBlueprint = n.track.count > 0 && (n.track.flags[n.track.count - 1] & F_BLUEPRINT) !== 0;
@@ -1625,6 +1655,11 @@ export class NetworkRenderer {
     const shades = shadeColours();
     gl.uniform3fv(u.u_sel, rgb(shades.mapInk).map((v) => v / 255));
     gl.uniform3fv(u.u_casing_rgb, rgb(shades.casing).map((v) => v / 255));
+    // T-819: 1.5 px of red either side, outside the casing, of a line on full track
+    const fullPass = !!this.fullEdges?.size;
+    gl.uniform1i(u.u_full_pass, 0);
+    gl.uniform1f(u.u_full_px, 3 * dpr);
+    gl.uniform3fv(u.u_full_rgb, rgb(shades.fullTrack).map((v) => v / 255));
     // blueprint track (T-322): a line-wide light blue middle between two thin dark blue rails
     const bpRail = Math.max(1, BP_NARROW * Math.max(1, BP_RAIL_SHARE * wLine / dpr)) * dpr;
     const bpMid = Math.max(0, BP_NARROW * (wLine + 2 * Math.max(1, BP_RAIL_SHARE * wLine / dpr) * dpr) - 2 * bpRail);
@@ -1651,17 +1686,22 @@ export class NetworkRenderer {
       gl.uniform3f(u.u_width, width, wSel, lanes.share * G * width / wLine);
       gl.uniform1f(u.u_cap, cap);
       gl.bindVertexArray(s.vao);
-      const passes: [number, number][] = cap > 0 ? [[0, 0]] : [[casing, 0], [0, 0]];
-      if (sel) passes.push(...(cap > 0 ? [[0, 1]] as [number, number][] : [[casing, 1], [0, 1]] as [number, number][]));
-      for (const [cas, only] of passes) {
+      // [casing px, selected only, T-819's red band under the lines on full track]
+      const passes: [number, number, number][] = cap > 0 ? [[0, 0, 0]] : [[casing, 0, 0], [0, 0, 0]];
+      if (kind === 1 && fullPass && cap === 0) passes.unshift([casing, 0, 1]);
+      if (sel) passes.push(...(cap > 0 ? [[0, 1, 0]] as [number, number, number][] : [[casing, 1, 0], [0, 1, 0]] as [number, number, number][]));
+      for (const [cas, only, full] of passes) {
         gl.uniform1f(u.u_casing, cas);
         gl.uniform1i(u.u_only_sel, only);
+        gl.uniform1i(u.u_full_pass, full);
         for (const mode of modes) {
           if (cap > 0 && mode === 1) continue;
+          if (full && mode > 1) continue;
           gl.uniform1i(u.u_lane_mode, mode);
           gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, s.count);
         }
       }
+      gl.uniform1i(u.u_full_pass, 0);
       gl.uniform1i(u.u_lane_mode, 0);
     };
     // Colour by height: the track itself, at line width, and no line strokes over it. Blueprint

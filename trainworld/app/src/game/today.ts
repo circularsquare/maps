@@ -30,19 +30,27 @@ export interface LineToday {
   /** T-472: trains in service now, and how many of them are packed full somewhere on their trip */
   trainsNow: number;
   fullNow: number;
-  /** T-491: the period now: rider-seconds waited after full trains, riders arriving, rider-seconds aboard */
+  /** T-491: the period now: rider-seconds waited after full trains, riders arriving, rider-seconds
+   * aboard; T-818: the first two times the km those riders ride */
   crowdWait: number;
   crowdRiders: number;
   crowdRide: number;
+  crowdWaitKm: number;
+  crowdRidersKm: number;
 }
 
-/** T-491: how much crowding costs a line's riders: the average rider's extra wait for a train
- * with room (min), and that wait against the square root of their average ride (min, at least 5),
- * so ten minutes weigh more on a short ride than on a long one. */
-export function crowding(waitS: number, riders: number, rideS: number): { wait: number; ride: number; score: number } {
-  if (!(riders > 0)) return { wait: 0, ride: 0, score: 0 };
-  const wait = waitS / riders / 60, ride = rideS / riders / 60;
-  return { wait, ride, score: wait / Math.sqrt(Math.max(5, ride)) };
+/** T-491, T-818: how much crowding costs a line's riders: their average extra wait for a train
+ * with room (min), each rider counted by the fare they pay on the line (the base plus the per-km
+ * rate times the km they ride; `waitKmS` and `ridersKm` are the waits and riders times those km),
+ * so a long ride weighs more than a short hop; and that wait against the square root of the
+ * average ride (min, at least 5), so ten minutes weigh more on a short ride than on a long one.
+ * `weight` is the fares the wait was averaged over, for averaging periods. */
+export function crowding(waitS: number, riders: number, rideS: number, waitKmS = 0, ridersKm = 0): { wait: number; ride: number; score: number; weight: number } {
+  if (!(riders > 0)) return { wait: 0, ride: 0, score: 0, weight: 0 };
+  const f = moneyState.peek()?.fares;
+  const paid = f ? f.base * riders + f.perKm * ridersKm : 0;
+  const wait = (paid > 0 ? (f!.base * waitS + f!.perKm * waitKmS) / paid : waitS / riders) / 60, ride = rideS / riders / 60;
+  return { wait, ride, score: wait / Math.sqrt(Math.max(5, ride)), weight: paid > 0 ? paid : riders };
 }
 
 /** T-491 grades of `crowding`'s score (DECISIONS 2026-10-16): 0 none to speak of, 1 some, 2 orange,
@@ -105,9 +113,9 @@ export function readToday(d: Float64Array): Map<string, LineToday> {
     const id = d[i], n = d[i + 1], nSpans = d[i + 6];
     const stops = Array.from(d.subarray(i + 7 + 2 * nSpans, i + 7 + 2 * nSpans + n));
     const e = i + 7 + 2 * nSpans + n;
-    const t: LineToday = { riders: d[i + 2], fullTrains: d[i + 3], leftBehind: d[i + 4], stops, fares: 0, trainsNow: d[e], fullNow: d[e + 1], trains: d[e + 2], crowdWait: d[e + 3], crowdRiders: d[e + 4], crowdRide: d[e + 5] };
+    const t: LineToday = { riders: d[i + 2], fullTrains: d[i + 3], leftBehind: d[i + 4], stops, fares: 0, trainsNow: d[e], fullNow: d[e + 1], trains: d[e + 2], crowdWait: d[e + 3], crowdRiders: d[e + 4], crowdRide: d[e + 5], crowdWaitKm: d[e + 6], crowdRidersKm: d[e + 7] };
     at.push({ id: String(id), t });
-    i = e + 6;
+    i = e + 8;
   }
   at.forEach((a, k) => { a.t.fares = (d[i + k] ?? 0) * 1e6; out.set(a.id, a.t); });
   return out;

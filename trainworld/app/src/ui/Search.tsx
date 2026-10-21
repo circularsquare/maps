@@ -191,7 +191,7 @@ function Row({ hit, pickLine }: { hit: SearchHit; pickLine: (l: LineInput) => vo
   if (hit.kind === "city")
     return <>
       <i class="search-mark city" />
-      <span class="grow">{hit.name}</span>
+      <span class="grow">{hit.name}{hit.matched && <><br /><span class="muted small">matched {hit.matched}</span></>}</span>
       <span class="muted small">City</span>
     </>;
   if (hit.kind === "place")

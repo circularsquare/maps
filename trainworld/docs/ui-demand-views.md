@@ -28,8 +28,13 @@ and the regional layer. Changing zone clears cell-indexed selections and cached 
 train blue #1e3ce6, walking green #1eaa3c, near-pure so a mix reads as RGB (all car red, all train
 blue, half and half magenta). A bubble's mix is pulled towards a grey (190, 190, 190) as its smallest
 mode share rises to a third (`modeMix`; fully grey at a third each, unchanged when a mode has none), so an
-even three-way mix is not white [T-653]. Bars and swatches by mode keep the true colours, whichever
-bubble colours are chosen (the Colours setting, "Local trip bubbles").
+even three-way mix is not white [T-653]. Bars and swatches by mode follow the bubble colours chosen
+(the Colours setting, "Local trip bubbles"; `modeColours()` in `game/palette.ts`, the CSS
+variables `--mode-*`): under Mode mix they are the colours above, under Train share (the default)
+walking is yellow #f0c814 and planes orange #f07a14, car red and train blue unchanged [T-833]. Yellow
+because a walker pulls a Train share bubble towards red and the ramp has no green; orange stands for
+"other", the one mode that is none of car, walk or train, which is planes (the longer-trip tables'
+plane column icon; muted grey under Mode mix).
 Trips by "other" (bus, taxi and bike for homes without a car, T-513, [demand-mode.md](demand-mode.md) 4.3)
 count as driving in every bar, split, bubble and hover, with no colour of their own; the sim
 reports them apart only as a total (`summary` index 10).
@@ -108,19 +113,20 @@ its constructed stations, grouped exactly as the complexes are, the player's lin
 - **Area is trip legs**, outward and return, at a fixed density: 50,000 legs/km² for homes and
   160,000 for destinations, times the Bubble size setting (0.5-2x width). No minimum size; nobody
   means no bubble.
-- **Colour** by the **Colours** setting: **Mode mix** (default) blends the mode colours by share;
-  **Train share** colours by the train share of the bubble's legs along a ramp from a start colour
+- **Colour** by the **Colours** setting: **Train share** (default since T-833; a stored Mode mix
+  from before settings version 6 is reset once) colours by the train share of the bubble's legs along a ramp from a start colour
   at 0% (default the driving red) to an end colour at 100% (the train blue), blended in OKLab and
   skewed towards the end colour (position = share^0.576, so 30% train is halfway and 70% is 81% of
-  the way; Anita, T-812), with two colour pickers shown while it is chosen (`game/palette.ts` `bubbleColour`). It colours the local
+  the way; Anita, T-812), with two colour pickers shown while it is chosen (`game/palette.ts` `bubbleColour`). **Mode mix**
+  blends the mode colours by share. Either colours the local
   bubbles, the zone bubbles zoomed out and the zone inspector's mark; bars, swatches by mode and
-  the hovers keep the mode colours and state the shares. Drawn at 80% opacity times the Opacity
+  the hovers use the mode colours of the scheme (Colours, above) and state the shares. Drawn at 80% opacity times the Opacity
   setting (90% by default, T-470), biggest bubbles under smaller ones. Bubbles have no outline; only a selected
   one has its dark outline [T-549].
   Drawn over the network and capacity tags, under station names.
 - **Hover** [T-323, T-494]: "422 trips per day from here" (Homes; "to here" for
   Destinations, a purpose's name before "trips" under a filter), then a thin **mode bar**
-  (`map/modeBar.ts`): train blue, walking green, driving red, widths by share, no numbers. A far-end
+  (`map/modeBar.ts`): train blue, walking green (yellow under Train share), driving red, widths by share, no numbers. A far-end
   bubble adds "Click to explore this trip". Every demand hover with a mode split uses the bar (the
   airport badges too). A bubble's hover has no split by trip purpose (Anita, 2026-10-19, T-697).
 - **Airports** [T-448, T-674, `map/airportMarks.ts`]: a small black plane (14 px, a thin white
@@ -261,7 +267,7 @@ is open: reached, near a station or selected [T-801]; with no market result yet,
 the world map, local trips alone), coloured by `modeMix` of train, walking
 and the rest [T-576: an open zone's walking is green, from its split; a zone not loaded in
 this session has no walk split, so its walking counts in the red; regional trips have no walking], labelled
-"Philadelphia · 187k trips/day" (at most eight labels on screen, the biggest first [T-493]). The hover
+"Philadelphia · 187k trips" (plain text on the map with a halo, no box [T-824]; at most eight labels on screen, the biggest first [T-493]). The hover
 has two lines, each with a mode bar [T-494]: "1.6m trips per day within Yamanashi" (bar from
 the zone's modelled split, none for a zone not loaded) and "120k inter-region trips per day on
 average to and from Yamanashi" (train blue, the rest red). One scale that depends on the zoom

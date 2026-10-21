@@ -86,7 +86,14 @@ there is no high-speed class and no hover yet.
 - **Track display** [T-105; on the map under the demand buttons since T-703], four choices, remembered per browser:
   - **Line**: uniform width in the line colours.
   - **Line + traffic thickness** (the default): width by riders over the day shown
-    ([ui-demand-views.md](ui-demand-views.md) "Line width by riders").
+    ([ui-demand-views.md](ui-demand-views.md) "Line width by riders"). A line on track at
+    capacity [T-819] (an edge of a track or single-track section, or either track of a flat
+    crossing, at `FULL_RHO` for the demand level in force, as the capacity tags take it;
+    `TrackApi.full_track`; platforms, termini and junctions keep only their tags) has a red band 1.5 px each side
+    outside its casing (#c0392b, #f0584f in the dark theme; `fullTrack` in `game/shadeTable.ts`),
+    drawn in a pass of its own before the lines' casings, so a red line keeps its casing between
+    and a neighbouring line's casing covers the band where they touch; the hover adds "Track at capacity at high
+    demand" in red.
   - **Elevation** (`height` in code): the track coloured by elevation (a level in code), blue-green to indigo above ground (open sky), green
     at ground, warm below (deep): +3 #4a2c9a, +2 #2f6fd0, +1 #16a39a, 0 #58b04a, -1 #f0b928, -2 #ee7a1a,
     -3 #c2351c (`LEVEL_COLOURS`, T-413, T-478, T-480; neighbours at least 30 apart in CIELAB). The same table colours
@@ -301,7 +308,7 @@ those who got on, less the load carried on.
   a line or track shows a tag at once saying what the track display draws there. Line: the name. Traffic:
   the name and "41,200 riders per day" (or "0 riders per day") on that stop-to-stop stretch, both
   directions together, for the day shown (counts to the nearest 100 above 1,000), with a third line under the purpose filter
-  ("Shopping and errands trips only"). Whatever the display [T-473], the tag also carries a row
+  ("Shopping and errands trips only"), and on track at capacity "Track at capacity at high demand" in red [T-819]. Whatever the display [T-473], the tag also carries a row
   for the elevation at that point (an up and down arrow, then "+1" on its Elevation colour) and one
   for the speed limit (two right chevrons, then "120 km/h" on its Max speed colour), each colour at
   half strength behind dark text (`map/trackTagRows.ts`), and last every line using the track as

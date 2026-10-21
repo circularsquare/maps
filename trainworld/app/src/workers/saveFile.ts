@@ -15,6 +15,7 @@
 // beside each slot its demand cache and two backups under keys the saves list does not show).
 
 import registry from "../game/registry.json";
+import { zoneName } from "../game/zoneNames";
 
 export const SAVE_MAGIC = "TWG1";
 export const SAVE_FORMAT = 1;
@@ -288,7 +289,8 @@ export function nextGameName(slots: { name: string }[]): string {
 /** A new game's slot name (T-728): its start city, or "World" for a map start, then " sandbox" for
  * a sandbox, then " 2", " 3" and on if a slot already has the name. */
 export function newGameName(slots: { name: string }[], spec: NewGameSpec): string {
-  const base = (registry.cities.find((c) => c.id === spec.start)?.name ?? "World") + (spec.mode === "sandbox" ? " sandbox" : "");
+  const start = registry.cities.find((c) => c.id === spec.start);
+  const base = (start ? zoneName(start.id, start.name) : "World") + (spec.mode === "sandbox" ? " sandbox" : "");
   const names = new Set(slots.map((s) => s.name));
   let name = base;
   for (let n = 2; names.has(name); n++) name = `${base} ${n}`;

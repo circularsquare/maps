@@ -245,7 +245,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       const c = bubbleColour(p.rail, p.walk, Math.max(0, p.all - p.rail - p.walk));
       const r = Math.sqrt(p.all / (own ? SELECTED_TRIPS_PER_PX2 : TRIPS_PER_PX2)) * zoomScale / pxPerUnit;
       discs.set([x, y, r, c[0] / 255, c[1] / 255, c[2] / 255, BUBBLE_ALPHA, p.isOwn ? 2 : 1], i * DISC);
-      label(`${p.city.name} · ${count(p.all)} trips/day`);
+      label(`${p.city.name} · ${count(p.all)} trips`);
     });
     const first = points.findIndex((p) => p.isOwn);
     marks = { discs, anchor: a, tags: points.map((p) => p.tag), cities: points.map((p) => p.city.id), first: first >= 0 ? first : undefined };
@@ -313,7 +313,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       discs.set([x, y, r, c[0] / 255, c[1] / 255, c[2] / 255, BUBBLE_ALPHA, 1], i * DISC);
       const place = z.name || "here";
       tags.push([`${count(z.all)} inter-region trips ${shownDayPhrase.peek()} ${verb} ${place}`, modeBar(z.rail, 0, Math.max(0, z.all - z.rail))]);
-      if (regional) label(`${z.name} · ${count(z.all)} trips/day`);
+      if (regional) label(`${z.name} · ${count(z.all)} trips`);
     });
     marks = { discs, anchor: a, tags };
     view.setDiscs("inter", discs, a);

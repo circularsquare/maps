@@ -128,7 +128,6 @@ export function TopBar() {
           <span class="split-train">
             <i class="sw sw-train" />
             <b class="lg pct">{pct(s.train)}</b>
-            <span class="sm rides">{rides ? count(rides.train) + " rides" : ""}</span>
           </span>
           <span class="split-other sm" data-tip={modeTip("Walking", s.walk, rides?.walk)}>
             <span class="mode-icon" style={{ color: "var(--mode-walk)" }}><Icon.walk /></span>

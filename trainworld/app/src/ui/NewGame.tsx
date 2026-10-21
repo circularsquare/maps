@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { activeCity, CITIES, cityById, viewedZone, type City } from "../game/cities";
 import { live } from "../map/live";
 import { display } from "../game/ui";
+import { cityMatch, normalise } from "../game/search";
 import type { GameMode, NewGameSpec } from "../workers/saveFile";
 
 /** The suggested starts (T-728): the cities the demand model was checked on, each with a real
@@ -18,7 +19,6 @@ export const REAL_NETWORKS = new Set(["nyc", "lon", "par", "tyo", "seo", "tor", 
 const WORLD_VIEW = { center: [20, 30] as [number, number], zoom: 1.8 };
 const MAX_HITS = 8;
 
-const fold = (s: string) => s.toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "");
 let regionNames: Intl.DisplayNames | null = null;
 function countryOf(c: City): string {
   const code = c.country;
@@ -31,13 +31,18 @@ function countryOf(c: City): string {
   }
 }
 
-/** Registry cities and zones whose name has a word starting with the text, ignoring case and
- * accents ("hague" finds "Rotterdam [The Hague]"), biggest first. */
-export function findStart(text: string): City[] {
-  const q = fold(text.trim());
+/** Registry cities and zones with a word of their name or of an alias starting with the text,
+ * ignoring case and accents ("hague" finds Rotterdam through The Hague, T-825): best match first
+ * (search.ts cityMatch): an exact match first, then by name before by alias, then biggest. */
+export function findStart(text: string): { city: City; matched?: string }[] {
+  const q = normalise(text);
   if (!q) return [];
-  return CITIES.filter((c) => fold(c.name).split(/[^a-z0-9]+/).some((_, i, words) => words.slice(i).join(" ").startsWith(q)))
-    .sort((a, b) => (b.localTrips ?? 0) - (a.localTrips ?? 0))
+  return CITIES.flatMap((city) => {
+    const m = cityMatch(city, q);
+    // an exact name first; any other word start ranks by size, so "hague" finds Rotterdam before Haguenau's Bas-Rhin
+    return m && m.score <= 2 ? [{ city, matched: m.matched, score: m.score ? 1 : 0 }] : [];
+  })
+    .sort((a, b) => a.score - b.score || Number(!!a.matched) - Number(!!b.matched) || (b.city.localTrips ?? 0) - (a.city.localTrips ?? 0))
     .slice(0, MAX_HITS);
 }
 
@@ -118,13 +123,13 @@ export function NewGameSheet({ onStart, onBack, heading = true }: { onStart: (sp
           onKeyDown={(e) => {
             if (e.key === "ArrowDown" && hits.length) { e.preventDefault(); setCursor((cursor + 1) % hits.length); }
             else if (e.key === "ArrowUp" && hits.length) { e.preventDefault(); setCursor((cursor + hits.length - 1) % hits.length); }
-            else if (e.key === "Enter" && hits.length) { e.preventDefault(); pick(hits[cursor].id); }
+            else if (e.key === "Enter" && hits.length) { e.preventDefault(); pick(hits[cursor].city.id); }
             else if (e.key === "Escape" && text) { e.preventDefault(); e.stopPropagation(); pick(null); }
           }} />
         {hits.length > 0 && <ul class="new-game-hits" role="listbox">
-          {hits.map((c, i) => (
+          {hits.map(({ city: c, matched }, i) => (
             <li role="option" aria-selected={i === cursor} class={i === cursor ? "on" : ""} data-city={c.id} onMouseDown={(e) => { e.preventDefault(); pick(c.id); }}>
-              <span>{c.name}</span><span class="muted small">{countryOf(c)}</span>
+              <span>{c.name}{matched && <span class="muted small">, matched {matched}</span>}</span><span class="muted small">{countryOf(c)}</span>
             </li>
           ))}
         </ul>}

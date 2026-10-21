@@ -3,7 +3,7 @@
 
 import { demandView } from "../../game/demand";
 import { count } from "../../game/format";
-import { MODE_COLOURS } from "../../game/palette";
+import { modeColours } from "../../game/palette";
 import { shownDayPhrase } from "../../game/ui";
 import { stationSide, stationView, type StationView } from "../../map/demandViews";
 import { Icon, Row } from "../widgets";
@@ -21,9 +21,10 @@ const pct = (n: number, of: number) => {
 function AccessSplit({ v }: { v: StationView }) {
   const all = v.walked + v.rode;
   if (!(all > 0)) return null;
+  const c = modeColours();
   const parts = [
-    { n: v.walked, icon: Icon.walk, colour: MODE_COLOURS.walk, cls: "seg-walk", what: "Walked" },
-    { n: v.rode, icon: Icon.ride, colour: MODE_COLOURS.drive, cls: "seg-drive", what: "Drove, took a bus or cycled" },
+    { n: v.walked, icon: Icon.walk, colour: c.walk, cls: "seg-walk", what: "Walked" },
+    { n: v.rode, icon: Icon.ride, colour: c.drive, cls: "seg-drive", what: "Drove, took a bus or cycled" },
   ];
   const exact = (n: number) => Math.round(n).toLocaleString("en");
   const tip = (p: (typeof parts)[number]) => `${p.what}: ${pct(p.n, all)}, ${exact(p.n)} of the ${exact(all)} commuters ${shownDayPhrase.value} who live nearby`;

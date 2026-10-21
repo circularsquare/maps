@@ -1,5 +1,5 @@
 // The game clock on the main thread: game seconds (float64), anchored to wall time, frozen while
-// paused or hidden. The renderer reads `now()` every frame; the UI reads `minute`, a signal that
+// paused, or hidden unless "Run in background" is on (T-826). The renderer reads `now()` every frame; the UI reads `minute`, a signal that
 // changes once per game minute, so the top bar re-renders a text node and nothing else. The clock
 // keeps world time; `local` is the minute in the local time in view (T-309, game/localTime.ts).
 //
@@ -24,6 +24,9 @@ class GameClock {
   private anchorSim: number;
   private anchorWall = performance.now();
   private hidden = document.visibilityState === "hidden";
+  /** T-826: time moves while hidden. The clock is wall-anchored and the worker settles money on its
+   * own timers, so nothing here needs a tick while hidden; the minute catches up on the next frame. */
+  private background = false;
   /** Frozen while a loaded game's demand is still being calculated (T-149, game/loading.ts):
    * separate from `running`, so the player's pause and speed survive it. */
   readonly held = signal(false);
@@ -60,7 +63,12 @@ class GameClock {
 
   /** Is time moving (so frames are needed)? */
   get ticking() {
-    return this.running.peek() && !this.hidden && !this.held.peek();
+    return this.running.peek() && (!this.hidden || this.background) && !this.held.peek();
+  }
+
+  /** Is the page hidden (nothing is drawn, time moves only with "Run in background")? */
+  get isHidden() {
+    return this.hidden;
   }
 
   private reanchor() {
@@ -105,6 +113,14 @@ class GameClock {
   setHidden(h: boolean) {
     this.reanchor(); // freeze at the moment it was hidden
     this.hidden = h;
+    this.reanchor();
+    this.changed();
+  }
+
+  setBackground(on: boolean) {
+    if (on === this.background) return;
+    this.reanchor();
+    this.background = on;
     this.reanchor();
     this.changed();
   }

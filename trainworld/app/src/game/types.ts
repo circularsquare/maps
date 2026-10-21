@@ -199,6 +199,9 @@ export interface WorldView {
   version: number;
   /** busy resources per demand level (SPEC 6.2), local units */
   capacity: { x: number; y: number; rho: number; delayS: number; kind: number; tph: number; held: boolean }[][];
+  /** T-819: per demand level, the edges whose track is at capacity, with the fuller direction's
+   * utilisation and trains an hour */
+  fullTrack: Map<EdgeId, { rho: number; tph: number }>[];
   save: Save;
   lineStats: Record<LineId, LineStats>;
   edges: TrackEdge[];

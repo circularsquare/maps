@@ -249,6 +249,8 @@ interface Solve {
   refinedAt?: number;
   /** T-793: when each round was published (the loading bar's pace) */
   roundAt?: number[];
+  /** T-793: when the first period of each round arrived */
+  roundFirstAt?: number[];
   /** T-324: when new or changed lines got the first estimate's figures early, and which */
   earlyAt?: number;
   earlyLines?: string[];
@@ -351,35 +353,51 @@ function timeShare(since: number | undefined, expected: number, now: number): nu
  * the first, `prior` spread over the rounds) sets how long the rest is expected to take, so a
  * machine busier than the remembered solve, or a bigger network, corrects the bar one round in
  * instead of at the end. The round in hand shows what has landed of it or the time against its
- * expectation (`timeShare`: creeping, never done until published). `ms` is the stage's expected length.
+ * expectation (`timeShare`: creeping, never done until published); once its first period is in, the
+ * round is expected at that time times the waves of periods a worker takes. `ms` is the stage's expected length.
  */
-function solveStage(sentAt: number, roundAt: readonly number[] | undefined, published: number, landed: number, doneRound: number, prior: number, now: number): { ms: number; share: number } {
+function solveStage(sentAt: number, roundAt: readonly number[] | undefined, published: number, landed: number, firstLandAt: number | undefined, doneRound: number, prior: number, now: number): { ms: number; share: number } {
   let total = 0, doneW = 0;
   for (let r = 0; r <= doneRound; r++) total += roundWeight(r);
   const d = Math.min(published + 1, doneRound + 1);
   for (let r = 0; r < d; r++) doneW += roundWeight(r);
   const boundary = d > 0 ? roundAt?.[d - 1] ?? sentAt : sentAt;
-  const pace = d > 0 && boundary > sentAt ? (boundary - sentAt) / doneW : prior / total;
+  let pace = d > 0 && boundary > sentAt ? (boundary - sentAt) / doneW : prior / total;
   if (d > doneRound) return { ms: pace * total, share: 1 };
   const w = roundWeight(d);
+  // the first period in is one wave of the round: the round takes as many waves as a worker has periods
+  if (firstLandAt !== undefined && landed > 0 && landed < PERIODS.length) pace = Math.max(pace, ((firstLandAt - boundary) * solveWaves) / w);
   const cur = Math.max(Math.min(STEP_CAP, landed / PERIODS.length), timeShare(boundary, pace * w, now));
   return { ms: pace * total, share: (doneW + w * cur) / total };
 }
 /** `finalMs`: to the card going (T-421: the zone in view's final); `allMs`: to the solve's final */
-function lastSolve(): { ms: number; stops: number; finalMs?: number; allMs?: number } | null {
+interface SolveRecord { ms: number; stops: number; finalMs?: number; allMs?: number }
+/** T-793: the record of the zone in view, else the last one made: a Tokyo solve takes three times a New
+ * York one of the same stops, so games in different zones do not share one. */
+function lastSolve(): SolveRecord | null {
   try {
     const v = JSON.parse(localStorage.getItem(LAST_SOLVE) || "null");
-    return v && v.ms > 0 && v.stops >= 0 ? v : null;
+    const r = v?.by?.[activeCity.peek()] ?? v;
+    return r && r.ms > 0 && r.stops >= 0 ? r : null;
   } catch { return null; }
 }
 function rememberSolve(ms: number, stops: number, finalMs?: number, allMs?: number) {
-  try { localStorage.setItem(LAST_SOLVE, JSON.stringify({ ms, stops, ...(finalMs ? { finalMs } : {}), ...(allMs ? { allMs } : {}) })); } catch { /* storage unavailable */ }
+  try {
+    const rec: SolveRecord = { ms, stops, ...(finalMs ? { finalMs } : {}), ...(allMs ? { allMs } : {}) };
+    const city = activeCity.peek();
+    const by: Record<string, SolveRecord> = {};
+    for (const [k, v] of Object.entries(JSON.parse(localStorage.getItem(LAST_SOLVE) || "null")?.by ?? {}).slice(-7)) if (k !== city) by[k] = v as SolveRecord;
+    by[city] = rec;
+    localStorage.setItem(LAST_SOLVE, JSON.stringify({ ...rec, by }));
+  } catch { /* storage unavailable */ }
 }
+/** T-793: the stops a game is guessed to have until its network arrives, with no solve remembered */
+const GUESS_STOPS = 1000;
 /** Expected ms from a solve's start to its first estimate, or (`toFinal`, T-347) to the card going,
  * or ("all") to the solve's final; `stops` null = the network is not known yet. */
 function solveEstimate(stops: number | null, toFinal: boolean | "all" = false): number {
   const last = lastSolve();
-  const n = stops ?? last?.stops ?? 0;
+  const n = stops ?? last?.stops ?? GUESS_STOPS;
   const final = toFinal === "all" ? last?.allMs ?? last?.finalMs : last?.finalMs;
   const ms = last ? (toFinal ? final ?? last.ms * FINAL_FACTOR : last.ms) * solveModel(n) / solveModel(last.stops) : solveModel(n) * solveWaves * (toFinal ? FINAL_FACTOR : 1);
   return ms;
@@ -1219,7 +1237,7 @@ class DemandClient {
     const s = this.cur;
     if (s && this.unsettled?.size && s.published < ROUNDS && !this.status.startsWith("failed")) {
       const stops = s.svc.lines.reduce((n, l) => n + l.stops.length, 0);
-      const f = solveStage(s.sentAt, s.roundAt, s.published, s.byRound[s.published + 1]?.filter(Boolean).length ?? 0, ROUNDS, solveEstimate(stops, "all"), now).share;
+      const f = solveStage(s.sentAt, s.roundAt, s.published, s.byRound[s.published + 1]?.filter(Boolean).length ?? 0, s.roundFirstAt?.[s.published + 1], ROUNDS, solveEstimate(stops, "all"), now).share;
       for (const id of this.unsettled) {
         if (next.has(id)) continue;
         next.set(id, Math.max(this.zoneBest.get(id) ?? 0, Math.min(0.99, f)));
@@ -1334,7 +1352,7 @@ class DemandClient {
       // T-793: a game load's zone in view is final with its cluster solved ahead (T-402): that cluster's rounds
       const a = this.hold && s.ahead && [...this.viewedSet()].every((id) => s.ahead!.cities.includes(id)) ? s.clusterRes?.get(s.ahead.key) : undefined;
       const published = (a ?? s).published, byRound = (a ?? s).byRound;
-      const st = solveStage(s.sentAt, (a ?? s).roundAt, published, byRound[published + 1]?.filter(Boolean).length ?? 0, doneRound, prior, now);
+      const st = solveStage(s.sentAt, (a ?? s).roundAt, published, byRound[published + 1]?.filter(Boolean).length ?? 0, a ? undefined : s.roundFirstAt?.[published + 1], doneRound, prior, now);
       solveMs = st.ms;
       solve = st.share;
     }
@@ -1669,6 +1687,7 @@ class DemandClient {
     const results = s.byRound[msg.summary[0]];
     if (!results) return;
     results[msg.period] = msg;
+    (s.roundFirstAt ??= [])[msg.summary[0]] ??= performance.now();
     (s.periodMs[msg.period] ??= [])[msg.summary[0]] = msg.ms;
     if (msg.setupMs) s.setupMs[i] = msg.setupMs;
     s.memBytes[i] = msg.memBytes;

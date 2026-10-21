@@ -140,6 +140,9 @@ export function SettingsTab() {
         <Check checked={d.moreCores} onChange={(v) => setDisplay("moreCores", v)}>
           <span data-tip="Up to 5 demand workers, using more of the processor and about 400 MB of memory each. Counts from the next time the page loads.">Use more cores</span>
         </Check>
+        <Check checked={d.runInBackground} onChange={(v) => setDisplay("runInBackground", v)}>
+          <span data-tip="The clock, fares and running costs carry on at the chosen speed while this tab is hidden. Off, the game pauses until the tab is shown again.">Run in background</span>
+        </Check>
       </div>
       <GameMode />
       <TripStart />
@@ -158,9 +161,9 @@ function GameMode() {
       <div class="game-mode">
         <span data-tip={sandbox ? "Nothing is refused for money and the cash is hidden" : "Building costs money, and an edit is refused when the cash runs short"}>{sandbox ? "Sandbox" : "Normal"}</span>
         {!sandbox && <button class="btn text" data-mode-switch onClick={() => (ask.value = {
-          text: "This game becomes a sandbox for good. Nothing will be refused for money and the cash will be hidden. It cannot become a normal game again.",
-          yes: "Make it a sandbox", no: "Keep it normal", run: makeSandbox,
-        })}>Make it a sandbox</button>}
+          text: "Entering sandbox mode will disable money permanently and irreversibly.",
+          yes: "Switch to sandbox mode", no: "Stay in normal mode", run: makeSandbox,
+        })}>Switch to sandbox mode</button>}
       </div>
     </>
   );

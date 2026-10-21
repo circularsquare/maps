@@ -2891,6 +2891,34 @@ impl TrackApi {
             .collect()
     }
 
+    /// Track at capacity at a level (T-819, `FULL_RHO`): per edge of a full section or flat
+    /// crossing (`Capacity::track_edges`), `[edge, utilisation, trains an hour through it]`, the
+    /// fullest resource where several are.
+    pub fn full_track(&self, level: usize) -> Vec<f64> {
+        let (cap, net) = (&self.w.svc.cap, &self.w.net);
+        let mut by: std::collections::HashMap<u32, (f64, f64)> = std::collections::HashMap::new();
+        for r in 0..cap.res.len() {
+            let rho = cap.rho[r][level];
+            if rho < FULL_RHO {
+                continue;
+            }
+            let edges = cap.track_edges(r);
+            if edges.is_empty() {
+                continue;
+            }
+            let tph = cap.trains(net, r, level);
+            for k in edges {
+                let e = by.entry(k).or_insert((0.0, 0.0));
+                if rho > e.0 {
+                    *e = (rho, tph);
+                }
+            }
+        }
+        let mut v: Vec<(u32, (f64, f64))> = by.into_iter().collect();
+        v.sort_unstable_by_key(|x| x.0);
+        v.into_iter().flat_map(|(e, (rho, tph))| [e as f64, rho, tph]).collect()
+    }
+
     /// Trains of a whole-line fleet that full track keeps from running at a level (T-517), or 0.
     fn waiting(&self, line: u32, level: usize) -> f64 {
         let (n, svc) = (&self.w.net, &self.w.svc);
@@ -3882,6 +3910,25 @@ mod tests {
         assert_eq!(a.set_line_with_trains(id, &[n0, n1], 2, 2, 2, 30.0, 420.0, 0, 0xd7263d, "Line".into()), 0, "{}", a.issues());
         assert_eq!(a.construct_all(), 0, "{}", a.issues());
         (a, id)
+    }
+
+    #[test]
+    fn full_track_lists_the_edges_of_full_sections() {
+        // T-819: with a quick turnaround the open track is what fills first
+        let mut a = api();
+        a.set_cash(6000.0);
+        let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(6000.0, 0.0).iter()).copied().collect();
+        assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+        let nodes = a.nodes_info();
+        let (n0, n1) = (nodes[0] as u32, nodes[10] as u32);
+        assert_eq!(a.add_station(1, n0, 0.0, 0.0, 200, "West".into()), 0);
+        assert_eq!(a.add_station(1, n1, 0.0, 0.0, 200, "East".into()), 0);
+        let id = a.new_line_id();
+        assert_eq!(a.set_line_with_trains(id, &[n0, n1], 60, 2, 2, 30.0, 0.0, 0, 0xd7263d, "Line".into()), 0, "{}", a.issues());
+        assert_eq!(a.construct_all(), 0, "{}", a.issues());
+        let full = a.full_track(0);
+        assert!(!full.is_empty() && full.chunks(3).all(|c| c[1] >= FULL_RHO && c[2] > 20.0), "{full:?}");
+        assert!(a.full_track(1).is_empty(), "two trains leave room: {:?}", a.full_track(1));
     }
 
     #[test]

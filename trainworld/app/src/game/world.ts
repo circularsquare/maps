@@ -8,7 +8,6 @@ import { signal } from "@preact/signals";
 import type { EditOp } from "../workers/protocol";
 import type { EditAnswer } from "../workers/clockClient";
 import { describeIssues } from "./issues";
-import { LINE_PALETTE } from "./palette";
 import type { Demand, LineId, WorldView } from "./types";
 import { DEMAND_INDEX } from "./types";
 
@@ -223,18 +222,6 @@ export function renameLine(id: LineId, name: string) {
 export function setLineColour(id: LineId, colour: string) {
   const l = lineById(id);
   if (l) void edit({ op: "lineLook", line: num(id), name: l.name, colour });
-}
-
-/** The next default colour: the first palette colour no line uses, else round again. */
-export function nextFreeColour(): string {
-  const used = new Set(world.value?.save.lines.map((l) => l.colour) ?? []);
-  return LINE_PALETTE.find((c) => !used.has(c)) ?? LINE_PALETTE[(world.value?.save.lines.length ?? 0) % LINE_PALETTE.length];
-}
-
-/** "Line 3": the lowest number not taken. */
-export function nextLineName(): string {
-  const taken = new Set(world.value?.save.lines.map((l) => l.name) ?? []);
-  for (let k = 1; ; k++) if (!taken.has(`Line ${k}`)) return `Line ${k}`;
 }
 
 export const undo = () => edit({ op: "undo" }, true);

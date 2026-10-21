@@ -1,5 +1,21 @@
 ﻿# Archive
 
+- T-816 [P2] Snap disjointed near the Eurostar line. Done 2026-10-21: the real-network graphs take short undrawn track filling gaps (Seikan and Folkestone portal joined, gb pieces 73 to 20), and routes over twice the clicks' distance plus 20 km are refused instead of looping. notes/T-816.md.
+
+- T-831 [P2] Points to three digits. Done 2026-10-21: `pointsShort` gives three significant digits ("103M", "4.56M", "512k", "12.3k") in the Cities tab.
+- T-832 [P2] Top bar tidy. Done 2026-10-21: the rides count is gone (still in the hover); the day ("Mon 1") is always shown, centred between the cash and the time.
+- T-833 [P2] Train share as the default colouring. Done 2026-10-21: default `bubbleColours` "ramp" (settings version 6 resets the stored one); under it bars and swatches show walking yellow #f0c814 and planes ("other") orange #f07a14 (`modeColours()`); to try, may be refined.
+- T-825 [P2] Zone names. Done 2026-10-21: zones show one short name (Rotterdam, Ruhr, Kansai, about 120 renames) set app-side in zone-names.json; search and the new game sheet match aliases (The Hague, Den Haag) from it and the zones' place lists. notes/T-825.md.
+- T-823 [P2] Hover on the demand level words. Done 2026-10-21: High, Medium and Low in a line's schedule add "Sets how many trains start service in this interval. Trains keep running after it ends and are taken out of service at the end of the line." under the times; not on the steppers.
+- T-824 [P2] Quieter intercity labels. Done 2026-10-21: plain text with a map-land halo (like station names), no box, 2 px side padding, "70.8M trips" without "/day"; readable in light and dark.
+- T-827 [P2] Empty region shows the whole network. Done 2026-10-21: `scopeZone` is null while no line stops in the viewed place, so the Lines, Stations and Money tabs list the whole network; the toggle lights the globe, pin hover says why.
+- T-818 [P2] Crowding on long lines. Done 2026-10-21: the crowding figure weighs each rider by the fare they pay (base plus per-km times the km a boarder there rides on average); the dot's hover names the stop with most waiting. Test London - Paris medium dot 27 to 9 min. notes/T-818.md.
+- T-819 [P2] Traffic view marks track at capacity. Done 2026-10-21: lines on a full section or flat crossing at the level in force get a red band 1.5 px each side outside the casing; hover "Track at capacity at high demand". notes/T-818.md.
+- T-813 [P2] New lines' names and colours. Done 2026-10-21: "Line m" with m the lowest number free in the line's city, and the first palette colour that city does not use (else the least used); `nextLineName`, `nextFreeColour` in lineActions.ts, no Rust.
+- T-814 [P2] Stations-passed hover. Done 2026-10-21: the "N stations passed" button's hover reads "Add Foo, Bar and Baz".
+- T-820 [P2] Average load in the line view. Done 2026-10-21: an "Average load" row after Profit, rider-seconds aboard over trip-seconds times crush capacity across today's kind of day (`averageLoad`, from `linePeriods`); the hover says so.
+- T-821 [P2] Disabled track says so. Done 2026-10-21: a selected disabled blueprint track shows "Disabled" under "Blueprint" in the track inspector.
+- T-822 [P2] Sandbox switch wording. Done 2026-10-21: "Are you sure?", "Entering sandbox mode will disable money permanently and irreversibly.", buttons "Switch to sandbox mode" and "Stay in normal mode".
 - T-793 [P2] The loading bar's last 5%. Done 2026-10-21: the solve stage re-measures its pace each round (`solveStage`), downloads stop growing once done, opening times recalibrated; time above 90% on the real save 70-86% to 14% when the remembered solve is off. notes/T-793.md.
 - T-812 [P2] Train share ramp red to blue (Anita 2026-10-21). Done 2026-10-21: the mode red to the train blue, skewed by share^0.576 (30% train #8c5394 purple, 70% #4e4dc8); stored ramp colours reset once (settings version 5).
 - T-809 [P2] A gentler border for the EU, Schengen and the UK. Done 2026-10-21: long trips between two of its countries take 0.5 (`OPEN_AREA_BORDER`); London - Paris 9.6k to about 28-31k a weekday, others unchanged; normalisers rebuild is T-811. notes/T-809.md.

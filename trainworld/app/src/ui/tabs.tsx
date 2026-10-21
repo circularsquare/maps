@@ -16,7 +16,7 @@ import { buildLevel, buildPlatform, display, keepPlacing, lineSort, selection, s
 import { setFares, world } from "../game/world";
 import { liveMoney, moneyState } from "../game/money";
 import { cityById, viewedZone } from "../game/cities";
-import { listScope, scopedLists, scopeZone, stationZone } from "../game/listScope";
+import { listScope, scopedLists, scopeEmpty, scopeZone, stationZone } from "../game/listScope";
 import { regionLedger } from "../game/regionMoney";
 import { accountVersion } from "../game/boarding";
 import { crowdClass, crowding, runningToday, stationsToday, today, todayLoaded, useToday, waitText, type LineToday } from "../game/today";
@@ -128,10 +128,11 @@ export function BuildTab() {
 function ScopeToggle({ tip }: { tip?: string }) {
   const zone = viewedZone.value;
   const name = zone ? cityById(zone).name : null;
-  const here = listScope.value === "here" && !!zone;
+  const empty = scopeEmpty();
+  const here = listScope.value === "here" && !!zone && !empty;
   return (
     <div class="group scope">
-      <button class={"btn" + (here ? " on" : "")} disabled={!zone} data-tip={name ? `Only ${name}` + (tip ? "\n" + tip : "") : "Nothing modelled here"}
+      <button class={"btn" + (here ? " on" : "")} disabled={!zone} data-tip={name ? (empty ? `No lines in ${name} yet, so the whole world is shown` : `Only ${name}` + (tip ? "\n" + tip : "")) : "Nothing modelled here"}
         onClick={() => (listScope.value = "here")}>
         <Icon.pin />{name}
       </button>
@@ -173,7 +174,7 @@ function MoneyToday({ l, st }: { l: LineInput; st: LineStats }) {
 /** T-472, T-491: a line's trains now, coloured by its riders' wait for a train with room in the period now. */
 function TrainsNow({ line, n, period }: { line: string; n: number; period: string }) {
   const d = today.value.get(line);
-  const c = d ? crowding(d.crowdWait, d.crowdRiders, d.crowdRide) : null;
+  const c = d ? crowding(d.crowdWait, d.crowdRiders, d.crowdRide, d.crowdWaitKm, d.crowdRidersKm) : null;
   const cls = c ? crowdClass(c.score) : "";
   const tip = d && c && d.crowdRiders > 0
     ? `${period}: riders wait ${waitText(c.wait)} on average for a train with room` + (d.trainsNow > 0 ? `\n${count(d.fullNow)}/${count(d.trainsNow)} trains running now are full on their trip` : "")

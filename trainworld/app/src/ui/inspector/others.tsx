@@ -665,6 +665,7 @@ export function TrackInspector({ edge }: { edge: number }) {
         {distance(e.lengthM)}, {lv}
       </div>
       <Built built={e.built} what={e.crossover ? "This crossover" : "This track"} />
+      {!e.built && e.off && <p class="muted" data-tip={`Construct leaves ${e.crossover ? "this crossover" : "this track"} out until it is enabled`}>Disabled</p>}
       <ul class="rows">
         <Row label="Slowest curve">{speed(e.vminKmh)}</Row>
         <Row label={e.built ? "Cost to build" : "Cost to construct"}>{money(cost)}</Row>

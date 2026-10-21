@@ -85,10 +85,14 @@ try {
   await page.click('.start-menu .start-new');
   await page.waitForSelector('.start-menu .new-game');
   const cities = await page.$$eval('.new-game-cities button', (b) => b.map((x) => x.textContent));
-  const hague = await find('hague'), sao = await find('sao'), none = await find('qqqzz'), aom = await find('AOMO');
+  const hague = await find('hague'), haag = await find('den haag'), sao = await find('sao'), none = await find('qqqzz'), aom = await find('AOMO');
   report('the five cities', cities.join(',') === 'New York,London,Paris,Tokyo,Toronto', `(${cities.join(', ')})`);
-  report('search', hague[0]?.startsWith('Rotterdam [The Hague]') && hague[0].endsWith('Netherlands') && sao[0]?.startsWith('São Paulo') && none.length === 0 && aom[0]?.startsWith('Aomori'),
-    `(hague: ${hague.join(' | ')}; sao: ${sao.join(' | ')}; nonsense: ${none.length} rows; AOMO: ${aom.join(' | ')})`);
+  // T-825: a zone is found by its aliases, shown by its own name with the alias matched
+  report('search', hague[0]?.startsWith('Rotterdam, matched The Hague') && hague[0].endsWith('Netherlands') && haag[0]?.startsWith('Rotterdam, matched Den Haag')
+    && sao[0]?.startsWith('São Paulo') && none.length === 0 && aom[0]?.startsWith('Aomori'),
+    `(hague: ${hague.join(' | ')}; den haag: ${haag.join(' | ')}; sao: ${sao.join(' | ')}; nonsense: ${none.length} rows; AOMO: ${aom.join(' | ')})`);
+  await find('hague');
+  await page.screenshot({ path: join(ART, 't825-newgame-hague.png') });
   await find('osa');
   await page.screenshot({ path: shot('sheet-light') });
   await page.fill('.new-game-find', '');

@@ -145,7 +145,8 @@ export function startStationLife(map: MlMap, overlay: Overlay, post: (notes: Rec
   const read = () => {
     const d = display.peek();
     const r = overlay.renderer, net = r.net, w = world.peek();
-    if (!net || !w || !r.tripCount || !clock.ticking) { prevT = NaN; return; }
+    // T-826: no faces or sounds for a hidden page, whose clock may run on
+    if (!net || !w || !r.tripCount || !clock.ticking || clock.isHidden) { prevT = NaN; return; }
     const now = clock.now(), prev = prevT;
     prevT = now;
     if (!(now - prev > 0) || now - prev > MAX_GAP_S) return;

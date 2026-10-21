@@ -27,11 +27,16 @@ export const STAR_SHARE = 10;
 
 const PERIOD_HOURS = PERIODS.map((p) => p.to - p.from);
 
-/** Points short: 980, 12k, 3.4M, 1.25B. */
+/** Points short, three significant digits (T-831): 980, 12.3k, 512k, 4.56M, 103M, 1.25B. */
 export function pointsShort(n: number): string {
-  if (n >= 1e9) return (n / 1e9).toFixed(n >= 1e10 ? 1 : 2) + "B";
-  if (n >= 1e6) return (n / 1e6).toFixed(n >= 1e7 ? 1 : 2) + "M";
-  if (n >= 1e3) return Math.round(n / 1000) + "k";
+  const sig = (v: number) => {
+    const r = Number(v.toPrecision(3));
+    return r >= 100 ? String(r) : r >= 10 ? r.toFixed(1) : r.toFixed(2);
+  };
+  // a figure that rounds up to the next unit (999.6k) is written in that unit
+  if (n >= 999.5e6) return sig(n / 1e9) + "B";
+  if (n >= 999.5e3) return sig(n / 1e6) + "M";
+  if (n >= 1e3) return sig(n / 1e3) + "k";
   return String(Math.round(n));
 }
 /** Points to the point: 12,345,678. */

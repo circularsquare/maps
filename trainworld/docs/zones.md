@@ -97,7 +97,29 @@ from the GHSL non-residential built-up layer (T-012). A country's non-city zones
 country's city adapter (Toronto's for Canada, T-277) with `kind: "zone"`.
 
 **Names.** A non-city zone is named after its unit ("Worcester County" in the US, the census
-division's name in Canada); a merged zone after its most populous unit.
+division's name in Canada); a merged zone after its most populous unit. That is the registry's
+name, which every join rewrites; the game shows its own (T-825, `app/src/game/zoneNames.ts`):
+
+- **One short name.** A city zone shows its biggest city ("Rotterdam", not GHSL's "Rotterdam [The
+  Hague]"), or a metro name only where that is clearly what people call the whole zone ("Ruhr",
+  "Kansai"; not "Rhine-Main" for Frankfurt, which people call Frankfurt). A countryside zone keeps
+  its unit's name (a county, department, prefecture, province) unless that name is a statistical
+  label nobody uses or a compound: NUTS groupings ("Overig Groningen", "Essex Thames Gateway", Ireland's
+  "South-West"), Poland's adjectival subregions ("Lubelski"), "X and Y" or "X, Y" merges, and a
+  unit that holds a much bigger city than its name says ("Aargau" holding Basel). Those show their
+  biggest city, or a well-known name for the whole ("Dodecanese", "Cyclades", "Teesside"). English
+  exonyms where English uses one (Florence, Venice, Geneva, Corfu).
+- **Automatically**, a zone with no hand-set name drops a bracketed part ("[The Hague]"), a
+  trailing parenthesis ("Halle (Saale)") and NUTS's " CC" ("Devon CC").
+- **Hand-set names** live in `app/src/game/zone-names.json` (zone id to `name` and extra `aliases`),
+  which no pipeline step writes. A newly joined country's zones need a look against this rule.
+- **Aliases** are every other name search finds a zone by: the hand-set ones, the registry's name
+  and its parts, and the six biggest cities and towns (20,000 people or more) in the zone's place list with
+  their OSM other names (`app/src/game/zone-aliases.json`, written by `pipeline/zone_aliases.py`
+  from `data/packs/<id>.places.json`; rerun after a join adds zones). Both the map search and the
+  new game sheet match aliases ignoring case and accents, show the zone's own name with "matched
+  The Hague" beside it, and rank a match through an alias with one through the name, the name
+  first among equals.
 
 ## 3. How the demand layers split the work
 
@@ -256,7 +278,7 @@ trips a day by purpose with no rail). A click on one selects the zone and draws 
 other zone for the commutes and longer trips between them, as T-186 does for cities.
 
 **Selection, the inspector and loading.** A non-city zone's city inspector is a city's. Search finds
-zones by name. Loading treats a zone as a city: opened when viewed or reached, its files fetched on
+zones by name or alias (section 2, "Names"). Loading treats a zone as a city: opened when viewed or reached, its files fetched on
 demand. **Startup must not fetch every zone's files.** Each registry entry carries a `box` (west,
 south, east, north round its boundary and water mask; `pipeline/zone_boxes.py`), so where a zone is
 is known without its files (T-302, T-400):

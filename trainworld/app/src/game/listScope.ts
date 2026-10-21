@@ -6,6 +6,7 @@
 import { signal } from "@preact/signals";
 import { viewedZone, type CityId } from "./cities";
 import { placeAt, zonesLoaded } from "./zones";
+import { world } from "./world";
 import type { LineInput, StationInput } from "./types";
 
 export type ListScope = "here" | "world";
@@ -14,9 +15,26 @@ export const listScope = signal<ListScope>("here");
 /** The map's centre [lng, lat] as of the last move end (map/zoneFocus.ts). */
 export const viewCentre = signal<[number, number] | null>(null);
 
-/** The place to filter the lists to, or null for the whole world (chosen, or nothing is modelled here). */
+/** The place to filter the lists to, or null for the whole world (chosen, nothing is modelled here,
+ * or the viewed place has no lines yet: T-827). */
 export function scopeZone(): CityId | null {
-  return listScope.value === "here" ? viewedZone.value : null;
+  const z = listScope.value === "here" ? viewedZone.value : null;
+  return z && placeHasLines(z) ? z : null;
+}
+
+/** The viewed place has no lines, so "here" lists the whole world (T-827). */
+export function scopeEmpty(): boolean {
+  const z = viewedZone.value;
+  return listScope.value === "here" && !!z && !placeHasLines(z);
+}
+
+/** Does any line stop in the place? A line with no stops yet is in none. */
+function placeHasLines(zone: CityId): boolean {
+  void zonesLoaded.value;
+  const w = world.value;
+  if (!w) return false;
+  const at = new Map(w.save.stations.map((s) => [s.id, s]));
+  return w.save.lines.some((l) => l.stops.some((id) => { const s = at.get(id); return !!s && stationZone(s) === zone; }));
 }
 
 let cacheAt = -1;

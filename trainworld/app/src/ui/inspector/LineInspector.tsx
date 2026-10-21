@@ -15,7 +15,7 @@ import { levelHours, PERIODS, periodAt } from "../../game/periods";
 import { crowdColour, crowdGrade, crowding, runningToday, today, useToday, waitText } from "../../game/today";
 import { accountVersion } from "../../game/boarding";
 import { complexOf } from "../../game/complexView";
-import { dayKindAt } from "../../game/days";
+import { DAY_KIND_NAME, dayKindAt } from "../../game/days";
 import { DEMAND_INDEX, DEMANDS, type Demand, type LineInput, type LineStats } from "../../game/types";
 import { ask, lineDraft, renameLinePrompt, selection, tool } from "../../game/ui";
 import { liveMoney, moneyState } from "../../game/money";
@@ -177,9 +177,10 @@ function AverageSpeed({ st, lev }: { st: LineStats; lev: number }) {
 /** The line's past 24 hours (T-446, game/today.ts): riders, fares less running cost, and its trains
  * from the boarding account (T-230): how many left full, and who was left on the platform. Its own
  * component: it re-renders as the counts move. */
-function LineToday({ l, st }: { l: LineInput; st: LineStats }) {
+function LineToday({ l, st, periods, kind }: { l: LineInput; st: LineStats; periods: Float64Array | null; kind: number }) {
   const d = today.value.get(l.id);
   if (!d) return null;
+  const load = periods ? averageLoad(periods, st) : null;
   const run = runningToday(l, st);
   const m = moneyState.value;
   const rule = m ? `\nRunning costs ${runCostRule(m)}: ${trainRunCost(m, st.cars)} for this line's ${carsText(st.cars)}` : "";
@@ -195,6 +196,12 @@ function LineToday({ l, st }: { l: LineInput; st: LineStats }) {
           <span class="grow">Profit</span>
           <span class="val">{money(d.fares)} −<span class="crowd-bad">{money(run)}</span></span>
         </li>
+        {load !== null && (
+          <li data-tip={`Riders aboard on average, as a share of the ${(st.cars * CRUSH_PER_CAR).toLocaleString("en-US")} a train holds at crush, over every trip on a ${DAY_KIND_NAME[kind].toLowerCase()}. Each trip counts for as long as it runs.`}>
+            <span class="grow">Average load</span>
+            <span class="val">{Math.round(load * 100)}%</span>
+          </li>
+        )}
         {d.fullTrains > 0 && <Row label="Trains leaving full"><span data-tip={`${count(d.fullTrains)}/${count(d.trains)} trains left full`}>{count(d.fullTrains)}/{count(d.trains)}</span></Row>}
         <li data-tip={`${count(d.leftBehind)} of the ${count(d.riders + d.leftBehind)} riders who wanted a train were left on the platform by a full one`}>
           <span class="grow">Riders left on the platform</span>
@@ -206,27 +213,47 @@ function LineToday({ l, st }: { l: LineInput; st: LineStats }) {
 }
 
 /** Numbers per period in `TrackApi.line_periods` (`PERIOD_STRIDE` in boarding.rs). */
-const PERIOD_STRIDE = 6;
+const PERIOD_STRIDE = 8;
 
-/** T-477, T-515: one dot per demand level, graded by `crowding` (the riders' wait for a train with
- * room against their ride) from the boarding account: the level's periods averaged by riders. */
-function CrowdDots({ v, d }: { v: Float64Array; d: Demand }) {
-  let trains = 0, full = 0, riders = 0, wait = 0, score = 0;
+/** T-820: the day's rider-seconds aboard over what the trips could hold at crush, each trip taken
+ * as its level's time from the first stop to the last; null with no trips. */
+function averageLoad(v: Float64Array, st: LineStats): number | null {
+  let aboard = 0, room = 0;
+  for (let i = 0; i < PERIODS.length; i++) {
+    const o = i * PERIOD_STRIDE;
+    if (!(v[o] > 0)) continue;
+    const times = st.fromStartByLevel[DEMAND_INDEX[PERIODS[i].demand]] ?? st.fromStartS;
+    aboard += v[o + 5];
+    room += v[o] * (times[times.length - 1] ?? 0) * CRUSH_PER_CAR * st.cars;
+  }
+  return room > 0 ? Math.min(1, aboard / room) : null;
+}
+
+/** T-477, T-515, T-818: one dot per demand level, graded by `crowding` (the riders' wait for a
+ * train with room, each by the fare they pay, against their ride) from the boarding account: the
+ * level's periods averaged by those fares. The hover names the stop with the most rider-minutes
+ * waited (`line_periods`' tail, per period and stop). */
+function CrowdDots({ v, d, stops }: { v: Float64Array; d: Demand; stops: string[] }) {
+  let trains = 0, full = 0, weight = 0, wait = 0, score = 0;
   let worst: { name: string; wait: number; score: number } | null = null;
+  const n = stops.length, tail = PERIODS.length * PERIOD_STRIDE, at = new Array<number>(n).fill(0);
   for (let i = 0; i < PERIODS.length; i++) {
     if (PERIODS[i].demand !== d) continue;
     const o = i * PERIOD_STRIDE;
     if (!(v[o] > 0)) continue;
-    const c = crowding(v[o + 4], v[o + 2], v[o + 5]);
-    trains += v[o]; full += v[o + 1]; riders += v[o + 2];
-    wait += c.wait * v[o + 2]; score += c.score * v[o + 2];
+    const c = crowding(v[o + 4], v[o + 2], v[o + 5], v[o + 6], v[o + 7]);
+    trains += v[o]; full += v[o + 1]; weight += c.weight;
+    wait += c.wait * c.weight; score += c.score * c.weight;
     if (!worst || c.score > worst.score) worst = { name: PERIODS[i].name, wait: c.wait, score: c.score };
+    if (v.length >= tail + PERIODS.length * n) for (let k = 0; k < n; k++) at[k] += v[tail + i * n + k];
   }
   if (!(trains > 0)) return null;
-  const avg = riders > 0 ? { wait: wait / riders, score: score / riders } : { wait: 0, score: 0 };
+  const avg = weight > 0 ? { wait: wait / weight, score: score / weight } : { wait: 0, score: 0 };
   const grade = crowdGrade(avg.score);
+  const most = at.reduce((b, x, k) => (x > at[b] ? k : b), 0);
   const tip = `Riders wait ${waitText(avg.wait)} on average for a train with room\n${count(full)}/${count(trains)} trains are full`
-    + (worst && crowdGrade(worst.score) > grade ? `\n${worst.name}: ${waitText(worst.wait)}` : "");
+    + (worst && crowdGrade(worst.score) > grade ? `\n${worst.name}: ${waitText(worst.wait)}` : "")
+    + (avg.wait >= 0.05 && at[most] > 0 && stops[most] ? `\nMost of the waiting is at ${stops[most]}` : "");
   return <i class="crowd-dot" style={{ background: crowdColour(avg.wait) }} data-tip={tip} />;
 }
 
@@ -495,6 +522,7 @@ export function LineInspector({ id }: { id: string }) {
     if (a.ok && lineDraft.peek().line === l.num) lineDraft.value = { line: l.num, stops };
   };
   const stationsText = (n: number) => `${n} ${n === 1 ? "station" : "stations"}`;
+  const andList = (names: string[]) => (names.length < 2 ? names.join("") : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`);
   const removeStop = async (i: number) => {
     const stops = l.stops.filter((_, k) => k !== i).map(Number);
     const a = await edit({ op: "setStops", line: l.num, stops });
@@ -548,7 +576,7 @@ export function LineInspector({ id }: { id: string }) {
             ))
             : !pending && (
               <li class="passed">
-                <button class="btn text mini" data-tip={here.map((p) => name.get(String(p.node))).join(", ")} onClick={() => setPending([i])}>
+                <button class="btn text mini" data-tip={`Add ${andList(here.map((p) => name.get(String(p.node)) ?? ""))}`} onClick={() => setPending([i])}>
                   <Icon.plus />{stationsText(here.length)} passed
                 </button>
               </li>
@@ -647,7 +675,7 @@ export function LineInspector({ id }: { id: string }) {
         </tr>
         {DEMANDS.map((d) => (
           <tr class={d === now ? "now" : ""}>
-            <td>{st.status === "running" && (periods ? <CrowdDots v={periods} d={d} /> : demandPending.value && <Spinner class="row-dot" tip="Crowding appears when demand has loaded" />)}<span data-tip={levelTimes(d)}>{DEMAND_LABEL[d]}</span></td>
+            <td>{st.status === "running" && (periods ? <CrowdDots v={periods} d={d} stops={l.stops.map((s) => name.get(s) ?? "")} /> : demandPending.value && <Spinner class="row-dot" tip="Crowding appears when demand has loaded" />)}<span data-tip={levelTimes(d) + "\nSets how many trains start service in this interval. Trains keep running after it ends and are taken out of service at the end of the line."}>{DEMAND_LABEL[d]}</span></td>
             <LevelCells l={l} st={st} d={d} auto={auto} limit={limits[DEMAND_INDEX[d]]} />
           </tr>
         ))}
@@ -667,7 +695,7 @@ export function LineInspector({ id }: { id: string }) {
         </ul>
       )}
 
-      {st.status === "running" && <LineToday l={l} st={st} />}
+      {st.status === "running" && <LineToday l={l} st={st} periods={periods} kind={kind} />}
 
       {!editingStops && stopsBlock}
       {st.status !== "broken" && l.stops.length >= 2 && <RoundTrip st={st} lev={lev} stops={l.stops.length} spots={spots} />}

@@ -322,6 +322,9 @@ export interface ClockState {
   version: number;
   /** busy resources per demand level (high, medium, low) */
   markers: CapacityMarker[][];
+  /** T-819: per demand level, track sections at capacity, `TrackApi.full_track`: per edge on one
+   * edge id, utilisation, trains an hour */
+  fullTrack: Float64Array[];
   /** US$M */
   cash: number;
   builtCost: number;

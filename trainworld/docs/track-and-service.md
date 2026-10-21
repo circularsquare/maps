@@ -690,7 +690,9 @@ per person and does not change who travels: demand still decides that (SPEC 4).
   trains, the train tag and inspector, the line inspector's "Trains today" (`Boarding::line_summary`:
   fullest train, trains leaving full and when, riders left behind a day, longest wait), the Lines
   tab's train count and the schedule's crowding dots (riders' extra wait after full trains
-  against their ride, `Boarding::crowding`, T-491) and the platforms. Demand's busiest-hour average train is not shown: on the real New York save 28 of the
+  against their ride, `Boarding::crowding`, T-491; each rider counted by the fare they pay, the
+  base plus the per-km rate times the km a boarder at that stop rides on average with every stop
+  letting off its share, `ride_km`, T-818) and the platforms. Demand's busiest-hour average train is not shown: on the real New York save 28 of the
   93 lines it put under 100% leave riders behind in the account (the L: 87%, yet 13 trains leave
   full 17:51-18:34 and 4,300 are left behind), because riders arrive fastest mid-peak.
 

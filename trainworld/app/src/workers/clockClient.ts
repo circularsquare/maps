@@ -138,6 +138,11 @@ function toWorld(s: ClockState, city: { population: number; jobs: number }): Wor
   return {
     version: s.version,
     capacity: s.markers,
+    fullTrack: (s.fullTrack ?? []).map((v) => {
+      const m = new Map<number, { rho: number; tph: number }>();
+      for (let k = 0; k + 2 < v.length; k += 3) m.set(v[k], { rho: v[k + 1], tph: v[k + 2] });
+      return m;
+    }),
     save: { version: 0, city: HOME_CITY, clock: clock.now(), cash: s.cash * 1e6, stations, lines, links: pairsOf(s.links ?? []) },
     lineStats,
     edges,

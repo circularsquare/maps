@@ -46,6 +46,8 @@ export interface ShadeColours {
   realMain: string;
   realOther: string;
   realMetro: string;
+  /** the outline of a line at capacity in the traffic view (T-819), the capacity tags' red */
+  fullTrack: string;
 }
 
 export const SHADES: Record<Shade, ShadeColours> = {
@@ -56,6 +58,7 @@ export const SHADES: Record<Shade, ShadeColours> = {
     outside: "#182536", outsideOpacity: 0.075, thumbTrack: "#b9b4ad",
     markInk: NET_INK, markBlueprint: "#2f62b3",
     realMain: "#6f7b93", realOther: "#9ea6b5", realMetro: "#9577a6",
+    fullTrack: "#c0392b",
   },
   dark: {
     land: DARK_LAND, water: DARK_WATER, park: DARK_PARK, road: DARK_ROAD, label: DARK_LABEL, basemapMix: DARK_WARM,
@@ -64,6 +67,7 @@ export const SHADES: Record<Shade, ShadeColours> = {
     outside: "#000000", outsideOpacity: 0.35, thumbTrack: "#6f6b66",
     markInk: "#e6e4e0", markBlueprint: "#8db6ee",
     realMain: "#6e788c", realOther: "#4e5563", realMetro: "#82699a",
+    fullTrack: "#f0584f",
   },
 };
 

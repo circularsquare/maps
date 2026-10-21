@@ -43,12 +43,15 @@ purpose filter the purpose drawn is ringed in the bar.
   A double click on a row fits the map to the line's stops (a jump, as search does) after the
   single click selected it [T-569, `ui/locate.ts`]; the line inspector's locate button (cross
   hairs, hover "Show on the map", beside the pencil) does the same.
-- **Trains to add** [T-472, T-491]: a row's train count (the trains its level needs now, the bare
+- **Trains to add** [T-472, T-491, T-818]: a row's train count (the trains its level needs now, the bare
   number under the "Trains" header [T-532]) is coloured by the crowding score of the line's period now, otherwise muted. The score is the
-  average rider's extra wait for a train with room (rider-minutes spent on the platform after a
+  riders' average extra wait for a train with room (rider-minutes spent on the platform after a
   full train left them, each waiting the gap to the next departure, over riders arriving in the
-  period) divided by the square root of their average ride on the line (rider-minutes aboard over
-  riders, at least 5 min): `crowding` in `game/today.ts`. Grades (`CROWD_GRADES`): yellow from
+  period), each rider counted by the fare they pay on the line: the fare's base plus its per-km
+  rate times the km a rider boarding at that stop rides on average (`ride_km` in
+  `sim/src/track/boarding.rs`: each stop lets off its share of whoever is aboard, as the account
+  does) [T-818]; divided by the square root of their average ride on the line (rider-minutes aboard over
+  riders, at least 5 min): `crowding` in `game/today.ts`. With free fares every rider counts the same. Grades (`CROWD_GRADES`): yellow from
   0.1, orange from 0.3, red from 0.6, so 2 min on a 10 min ride is red and so is 4 min on a 40
   min ride; orange and red colour the count (`crowdClass`). Hover "Morning peak: riders wait 1.8
   min on average for a train with room", then "4/12 trains running now are full on their
@@ -59,7 +62,9 @@ purpose filter the purpose drawn is ringed in the bar.
   <name>") and the whole world (a globe); one setting for both tabs, kept while the page is open, the
   place the default. The place is `viewedZone` (T-318); a station is in it when `placeAt` says so, a
   line when any stop is. A line with no stops and the selected row stay listed. Over unmodelled space
-  the pin is disabled and the world is shown. The Near header is always there (beside "Name" until it
+  the pin is disabled and the world is shown. So it is while no line stops in the viewed place
+  (`scopeZone`, `scopeEmpty`; the globe is lit and the pin's hover says "No lines in Toronto yet, so
+  the whole world is shown") [T-827]; the same for the Stations and Money tabs. The Near header is always there (beside "Name" until it
   is used); sorted by it, each row ends with its distance from the centre of the screen (a line's is
   its nearest stop's, hover "1.4 km from the centre of the screen"), rows without one last, and the
   column's width is given back to the names under any other sort. The centre is taken at each move end (`viewCentre`, set in
@@ -69,8 +74,11 @@ purpose filter the purpose drawn is ringed in the bar.
   hover "The first stop is in Toronto"). It sorts like the others and takes room from the Riders and
   Trains columns.
 - **New line** [T-109 to T-112] selects an empty zero-train line, enters stop editing
-  ([ui-building.md](ui-building.md)) and focuses its unique `Line N` name, text selected. N follows
-  saved creation order, copies included, skipping names in use. The N key does it from any tab
+  ([ui-building.md](ui-building.md)) and focuses its `Line m` name, text selected [T-813]. m is the lowest number no line in the same
+  city has as its name (a line's city is its first stop's zone, as the City column; a line with no
+  stops yet counts in the city being viewed), so a renamed line frees its number. The line's colour
+  is the first `LINE_PALETTE` colour no line in that city uses, else the first of the least used
+  (`nextLineName`, `nextFreeColour` in `game/lineActions.ts`). A copy is named "<name> copy". The N key does it from any tab
   [T-670]; the same on a selected track no line runs on (its inspector's "Lines on it" heading
   carries a plus button, hover "New line, starting at the stations on this track (N)") starts the
   line with the stations at the track's two ends, else empty.
@@ -104,15 +112,18 @@ purpose filter the purpose drawn is ringed in the bar.
   300 ms and paints the level's train count red until the cash covers it or another edit to the
   line goes through (`refusedForCash` in `game/world.ts`) [T-625]; hovering High, Medium or Low gives that
   level's times of day in the line's local time, from the period table in `game/periods.ts`:
-  "High demand: 06:00 to 10:00, 16:00 to 20:00"; weekends use the same hours) [T-406]; on a
+  "High demand: 06:00 to 10:00, 16:00 to 20:00"; weekends use the same hours) [T-406], then
+  "Sets how many trains start service in this interval. Trains keep running after it ends and are
+  taken out of service at the end of the line." (the steppers have no such hover) [T-823]; on a
   running line one dot before each level's name grades the level on today's kind of day by the
-  average wait for a train with room (the level's periods averaged by riders; High is its two
-  peaks), its colour running smoothly with that wait in minutes: green to 2, yellow at 3, orange
+  average wait for a train with room, each rider counted by the fare they pay as in Trains to add
+  (the level's periods averaged by those fares; High is its two peaks) [T-818], its colour running smoothly with that wait in minutes: green to 2, yellow at 3, orange
   at 10, red at 15 and a deep red from 20 (`crowdColour` in `game/today.ts`, fed `avg.wait` in
   `CrowdDots`; `Boarding::line_periods`) [T-692] [T-673] [T-477, T-491, T-515]; hover "Riders wait 4.0 min on
   average for a train with room", then "12/96 trains are full" (all the level's periods),
-  and a last line naming the worst period and its wait when that period's grade is worse than the
-  level's; the trains steppers take Shift-click for 5 and Ctrl-click for 20 (their hover says so)
+  a line naming the worst period and its wait when that period's grade is worse than the
+  level's, and "Most of the waiting is at Gare du Nord" (the stop with the most rider-minutes
+  waited over the level's periods, from the tail of `line_periods`) when anyone waits [T-818]; the trains steppers take Shift-click for 5 and Ctrl-click for 20 (their hover says so)
   [T-516]; under the table a **Train length** stepper in cars [T-733], 1 up to what the line's
   shortest platform fits (platform / 20 m), each button's hover giving the length it leads to,
   the riders a train then holds at crush ("7 cars, 1,120 riders a train at most"), the cars it
@@ -127,7 +138,10 @@ purpose filter the purpose drawn is ringed in the bar.
   Today for a running line:
   riders by purpose,
   one Profit row (fares, a minus sign, then the running cost over the 24 hours in red; the hover
-  gives fares, running cost and the net), how many trains left full as "x/y" of the trips that
+  gives fares, running cost and the net), the **Average load** in a percentage [T-820] (rider-seconds
+  aboard over the seconds each trip is under way times the riders a train holds at crush, 160 a car,
+  over every trip of today's kind of day from `linePeriods`; `averageLoad` in `LineInspector.tsx`; the hover says so),
+  how many trains left full as "x/y" of the trips that
   reached a stop in the 24 hours (the fourth number from the end of each `past_day` block) [T-481]
   and the riders left on the platform as "x/y", x those a full train left behind and y those who
   wanted a train (boarded plus left behind) [T-230, T-239, T-293, T-669]; the block's heading is

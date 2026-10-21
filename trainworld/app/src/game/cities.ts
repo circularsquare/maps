@@ -8,6 +8,7 @@
 import { signal } from "@preact/signals";
 import registryJson from "./registry.json";
 import { makeFrame, type Frame, type FrameSpec } from "./frame";
+import { zoneAliases, zoneName } from "./zoneNames";
 
 export type CityId = string;
 /** A zone of the world (T-276, docs/zones.md): a city zone, or a non-city zone (`kind` "zone");
@@ -20,7 +21,8 @@ export type CityId = string;
 /** T-377: `place`, the zone's place in the world market (every zone has one; `market` is the
  * Northeast joint commute gravity's, -1 outside it). Its market row is not here but in
  * market-rows.json, fetched once a market pack opens (T-776, `marketWorld`). `country`: ISO 3166 alpha-2. */
-export interface City { id: CityId; name: string; kind?: "city" | "zone"; country?: string; origin: { lon: number; lat: number }; center: [number, number]; zoom: number; utcOffset?: number; market: number; place: number; localTrips?: number; box?: [number, number, number, number] }
+/** `name` is the shown name and `aliases` every other name search finds it by (T-825, game/zoneNames.ts). */
+export interface City { id: CityId; name: string; aliases: string[]; kind?: "city" | "zone"; country?: string; origin: { lon: number; lat: number }; center: [number, number]; zoom: number; utcOffset?: number; market: number; place: number; localTrips?: number; box?: [number, number, number, number] }
 interface Registry {
   world: string;
   /** T-309: the UTC offset the game clock counts world time in (game/localTime.ts) */
@@ -28,10 +30,11 @@ interface Registry {
   frame: FrameSpec;
   legacyFrame: FrameSpec;
   market: { frame: FrameSpec; rule: unknown; places: { name: string; regionName: string }[] };
-  cities: City[];
+  cities: Omit<City, "aliases">[];
 }
 export const REGISTRY = registryJson as unknown as Registry;
-export const CITIES: City[] = REGISTRY.cities;
+const fold = (s: string) => s.normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
+export const CITIES: City[] = REGISTRY.cities.map((c) => ({ ...c, name: zoneName(c.id, c.name), aliases: zoneAliases(c.id, c.name, fold) }));
 /** The identity of the shared world in save headers and slot lists. */
 export const WORLD_ID = REGISTRY.world;
 /** The city a save names in its header (`city`): the first. */

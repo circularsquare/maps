@@ -83,6 +83,8 @@ export interface DisplaySettings {
   usUnits: boolean;
   /** T-381: demand workers by the old rule (half the threads less one, up to 5); read at the next load */
   moreCores: boolean;
+  /** T-826: the clock keeps running while the page is hidden (game/clock.ts) */
+  runInBackground: boolean;
 }
 
 /** T-247: the UI scale setting's steps */
@@ -111,7 +113,7 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   bubbleSize: 1,
   bubbleOpacity: 0.9,
   bubbleDetail: 1,
-  bubbleColours: "mode",
+  bubbleColours: "ramp",
   rampFrom: DEFAULT_RAMP.from,
   rampTo: DEFAULT_RAMP.to,
   uiScale: 0.9,
@@ -119,6 +121,7 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   dayShown: "average",
   usUnits: false,
   moreCores: false,
+  runInBackground: false,
 };
 
 const STORE = "trainworld-ui";
@@ -130,9 +133,9 @@ export interface DockLayout {
 }
 
 /** The stored settings' version: 2 since complex view became the default (T-192), 3 since Nunito and
- * 90% did (T-703), 4 since the real network did (T-727), 5 since the ramp went red to blue (T-812). Settings stored before a version had
+ * 90% did (T-703), 4 since the real network did (T-727), 5 since the ramp went red to blue (T-812), 6 since Train share became the bubble colouring (T-833). Settings stored before a version had
  * saved the old default with everything else, so that setting is dropped once and the new default applies. */
-const VERSION = 5;
+const VERSION = 6;
 
 function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partial<DisplaySettings>; dock: DockLayout; build: Partial<{ level: Level; tracks: 1 | 2 | 4; keep: boolean; snap: boolean }>; v: number }> {
   try {
@@ -155,6 +158,8 @@ if ((saved.v ?? 1) < 3) delete migratedDisplay.font, delete migratedDisplay.uiSc
 if ((saved.v ?? 1) < 4) delete migratedDisplay.realNetwork;
 // T-812: the ramp's default went from pink-green to the mode red and blue; the old default was stored
 if ((saved.v ?? 1) < 5) delete migratedDisplay.rampFrom, delete migratedDisplay.rampTo;
+// T-833: Train share became the default colouring, and the old default (Mode mix) was stored
+if ((saved.v ?? 1) < 6) delete migratedDisplay.bubbleColours;
 const trackColour = oldDisplay?.trackColour === "line" && legacyLineLoad !== undefined
   ? legacyLineLoad === false ? "line" : "traffic"
   : oldDisplay?.trackColour ?? DEFAULT_DISPLAY.trackColour;

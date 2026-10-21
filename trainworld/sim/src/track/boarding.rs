@@ -163,6 +163,8 @@ pub struct RunAccount {
     /// its platforms are empty then. Departures by time of day before it are the day wrapping
     /// round, not trains that ran. `NEG_INFINITY` otherwise.
     pub open: f64,
+    /// Per period and stop (`p * n + k`), the km a boarder there rides on this line (`ride_km`).
+    pub ride_km: Vec<f64>,
 }
 
 /// One line's counts over a window of the day (`Boarding::window`).
@@ -652,7 +654,7 @@ impl Boarding {
     /// of them are packed full on their trip (`under_way`, T-472), then the trips counted, the
     /// number the full ones are out of (T-481), then for the period now on `t`'s kind of day the
     /// rider-seconds waited after full trains, riders arriving and rider-seconds aboard
-    /// (`crowding`, T-491).
+    /// (`crowding`, T-491), and the first two times the km those riders ride (T-818).
     ///
     /// A stop's boardings since midnight telescope: the riders who have arrived by its last
     /// departure, less those still waiting after it, less the same at its last departure before
@@ -686,17 +688,43 @@ impl Boarding {
     }
 
     /// A line's day by period (T-477, T-491), on a kind of day: per period `PERIOD_STRIDE`
-    /// numbers (`crowding`). Empty without an account.
+    /// numbers (`crowding`), then per period the rider-seconds waited after full trains at each
+    /// stop, both directions, in the line's stop order (T-818: where they wait). Empty without an
+    /// account.
     pub fn line_periods(&self, svc: &Service, l: usize, day: usize) -> Vec<f64> {
         let Some(Some(acc)) = self.accounts[self.kind(day)].get(l) else { return vec![] };
         let Some(ls) = svc.lines.get(l) else { return vec![] };
-        Self::crowding(acc, ls).concat()
+        let mut out = Self::crowding(acc, ls).concat();
+        let n = acc.runs[0].n;
+        let mut at = vec![0.0f64; PERIODS * n];
+        for (r, ra) in acc.runs.iter().enumerate() {
+            let m = ra.deps.len();
+            if ra.n != n {
+                continue;
+            }
+            for k in 0..n {
+                let ts = &ra.order_t[k * m..(k + 1) * m];
+                let ord = &ra.order[k * m..(k + 1) * m];
+                let s = if r == 0 { k } else { n - 1 - k };
+                for i in 0..m {
+                    let q = ra.q_after[ord[i] as usize * n + k] as f64;
+                    if q > 0.0 {
+                        let gap = if i + 1 < m { ts[i + 1] - ts[i] } else { ts[0] + DAY - ts[i] };
+                        at[period_at(ts[i]) * n + s] += q * gap.max(0.0);
+                    }
+                }
+            }
+        }
+        out.extend(at);
+        out
     }
 
     /// Per period: trains leaving in it, those packed full somewhere on their trip, riders
     /// arriving at the line's platforms, riders a full train left behind, rider-seconds spent
     /// waiting for a later train after a full one (each left behind waits the gap to the next
-    /// departure), and rider-seconds aboard (T-491: the ride the wait is weighed against).
+    /// departure), and rider-seconds aboard (T-491: the ride the wait is weighed against); then the
+    /// waiting rider-seconds and the riders arriving each times the km they ride (`ride_km`), so the
+    /// app can weigh riders by the fare they pay (T-818).
     fn crowding(acc: &LineAccount, ls: &LineSvc) -> [[f64; PERIOD_STRIDE]; PERIODS] {
         let cap = CRUSH_PER_CAR * ls.cars.max(1) as f64;
         let mut out = [[0.0f64; PERIOD_STRIDE]; PERIODS];
@@ -717,9 +745,11 @@ impl Boarding {
                     p[5] += load[k] as f64 * (sd[k + 1] - sd[k]).max(0.0);
                 }
             }
+            let km = |p: usize, k: usize| ra.ride_km.get(p * n + k).copied().unwrap_or(0.0);
             for k in 0..n {
                 for (p, o) in out.iter_mut().enumerate() {
                     o[2] += ra.arrivals[k].per[p];
+                    o[7] += ra.arrivals[k].per[p] * km(p, k);
                 }
                 for h in 0..24 {
                     out[period_at(h as f64 * 3600.0)][3] += ra.left_h[k * 24 + h] as f64;
@@ -730,7 +760,9 @@ impl Boarding {
                     let q = ra.q_after[ord[i] as usize * n + k] as f64;
                     if q > 0.0 {
                         let gap = if i + 1 < m { ts[i + 1] - ts[i] } else { ts[0] + DAY - ts[i] };
-                        out[period_at(ts[i])][4] += q * gap.max(0.0);
+                        let p = period_at(ts[i]);
+                        out[p][4] += q * gap.max(0.0);
+                        out[p][6] += q * gap.max(0.0) * km(p, k);
                     }
                 }
             }
@@ -782,7 +814,7 @@ impl Boarding {
             let (on, packed) = Self::under_way(acc, ls, tod);
             out.extend([on, packed, trains]);
             let c = Self::crowding(acc, ls)[period_at(tod)];
-            out.extend([c[4], c[2], c[5]]);
+            out.extend([c[4], c[2], c[5], c[6], c[7]]);
             count += 1;
         }
         out[0] = count as f64;
@@ -874,7 +906,7 @@ impl Boarding {
 
 pub const QUEUE_STRIDE: usize = 12;
 /// Numbers per period in `Boarding::line_periods` (T-491).
-pub const PERIOD_STRIDE: usize = 6;
+pub const PERIOD_STRIDE: usize = 8;
 
 impl RunAccount {
     /// The account's index of a trip leaving its first stop at game time `dep` (any day).
@@ -922,6 +954,23 @@ fn alight_shares(lr: &LineRiders, r: usize) -> Vec<f64> {
     out
 }
 
+/// Per period and stop (`p * n + k`), the km a rider boarding there rides on average (T-818): each
+/// stop lets off its share of whoever is aboard, as `simulate` does, so a boarder rides on past
+/// stop j with the chance `1 - alpha` of every stop before it.
+fn ride_km(alpha: &[f64], stop_s: &[f64], n: usize) -> Vec<f64> {
+    let mut out = vec![0.0; PERIODS * n];
+    if stop_s.len() < n {
+        return out;
+    }
+    for p in 0..PERIODS {
+        for k in (0..n.saturating_sub(1)).rev() {
+            let on = if k + 2 < n { (1.0 - alpha[p * n + k + 1]) * out[p * n + k + 1] } else { 0.0 };
+            out[p * n + k] = (stop_s[k + 1] - stop_s[k]).max(0.0) / 1000.0 + on;
+        }
+    }
+    out
+}
+
 /// The account's day starts at this hour, when platforms are usually empty.
 pub const START_HOUR: f64 = 3.0;
 
@@ -952,6 +1001,7 @@ pub fn simulate(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRider
         .map(|k| Arrivals::new(std::array::from_fn(|p| lr.board[(p * 2 + r) * n + k]), peak))
         .collect();
     let alpha = alight_shares(lr, r);
+    let ride_km = ride_km(&alpha, &ls.runs[r].stop_s, n);
     let time = |i: usize, k: usize| trips[i].dep + stop_dep[trips[i].level as usize].get(k).copied().unwrap_or(0.0);
     // the last day's trips are the account, by time of day
     let kept = |i: usize| trips[i].dep >= t0;
@@ -979,6 +1029,7 @@ pub fn simulate(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRider
         alighted: 0.0,
         leftover: 0.0,
         open,
+        ride_km,
     };
     let mut carry = vec![0.0f64; m];
     let mut order: Vec<usize> = (0..m).collect();
@@ -1069,6 +1120,20 @@ pub fn simulate(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRider
 mod tests {
     use super::*;
     use crate::track::tests::{edge, line, node, station, world};
+
+    #[test]
+    fn ride_km_follows_the_alighting_shares() {
+        // stops 0, 10, 20 and 120 km; half of whoever is aboard gets off at each middle stop
+        let n = 4;
+        let alpha: Vec<f64> = (0..PERIODS).flat_map(|_| [0.0, 0.5, 0.5, 1.0]).collect();
+        let km = ride_km(&alpha, &[0.0, 10_000.0, 20_000.0, 120_000.0], n);
+        let want = [10.0 + 0.5 * (10.0 + 0.5 * 100.0), 10.0 + 0.5 * 100.0, 100.0, 0.0];
+        for p in 0..PERIODS {
+            for k in 0..n {
+                assert!((km[p * n + k] - want[k]).abs() < 1e-9, "{km:?}");
+            }
+        }
+    }
 
     #[test]
     fn shapes_keep_the_period_total_and_reach_the_busiest_hour() {
@@ -1305,13 +1370,20 @@ mod tests {
         assert!(p(0, 4) / p(0, 2) > 300.0 && p(0, 5) > 0.0, "{v:?}");
         assert!(p(1, 4) > 0.0, "{v:?}");
         let v2 = b2.line_periods(&w2.svc, l2 as usize, 0);
-        assert!(v2.chunks(PERIOD_STRIDE).all(|c| c[1] == 0.0 && c[3] < 1e-3 && c[4] < 1e-3 && c[5] > 0.0), "{v2:?}");
+        assert!(v2[..PERIODS * PERIOD_STRIDE].chunks(PERIOD_STRIDE).all(|c| c[1] == 0.0 && c[3] < 1e-3 && c[4] < 1e-3 && c[5] > 0.0), "{v2:?}");
+        // T-818: every rider rides some km, so the km-weighted sums are positive and no larger than
+        // the plain ones times the line's length; the stops' waits add up to the period's
+        let len_km = (w.svc.lines[l as usize].runs[0].stop_s.last().unwrap() - w.svc.lines[l as usize].runs[0].stop_s[0]) / 1000.0;
+        assert!(p(0, 6) > 0.0 && p(0, 6) <= p(0, 4) * len_km + 1e-6 && p(0, 7) > 0.0 && p(0, 7) <= p(0, 2) * len_km + 1e-6, "{v:?}");
+        let n = w.svc.lines[l as usize].stops.len();
+        let at: f64 = v[PERIODS * PERIOD_STRIDE..PERIODS * PERIOD_STRIDE + n].iter().sum();
+        assert!(v.len() == PERIODS * (PERIOD_STRIDE + n) && (at - p(0, 4)).abs() < 1e-6 * p(0, 4).max(1.0), "{at} {}", p(0, 4));
         // T-472: at 08:00 the trains in service are about the line's peak trains, every one full
         let v = b.past_day(&w.svc, 2.0 * DAY + 8.0 * 3600.0);
-        // T-491: the period now's wait, arrivals and ride end the block
-        let (wait, arrived) = (v[v.len() - 3], v[v.len() - 2]);
+        // T-491: the period now's wait, arrivals and ride end the block, then T-818's two
+        let (wait, arrived) = (v[v.len() - 5], v[v.len() - 4]);
         assert!((wait - p(0, 4)).abs() < 1e-6 && (arrived - p(0, 2)).abs() < 1e-6);
-        let (on, packed, trains) = (v[v.len() - 6], v[v.len() - 5], v[v.len() - 4]);
+        let (on, packed, trains) = (v[v.len() - 8], v[v.len() - 7], v[v.len() - 6]);
         assert!(on > 0.0 && (on - w.svc.lines[l as usize].trains[HIGH] as f64).abs() <= 2.0 && packed == on, "{on} {packed}");
         // T-481: the full trains are counted out of every trip in the 24 hours
         assert!(trains >= v[4] && trains > 100.0, "{trains} trips, {} full", v[4]);

@@ -2,13 +2,16 @@
 
     python realgraph.py jp us gb fr de      build these regions
     python realgraph.py --check jp ...      read the files back and print what they hold
+    --out DIR                               write or read the files there instead
 
 Reads noritetsu's extract (`noritetsu/data/proc/<cc>/ways.pkl`, `rels.pkl`, `coords.npz`) and its
 line model (`noritetsu/dist/data/<cc>/ways.json`); never writes there. Keeps exactly the ways the
 game's real-network layer draws (`app/src/map/realNetwork.ts`, the same filter as noritetsu's
 build_tiles.py, then SHOWN): subway, and rail that is main line or that a passenger route runs
 over, each with some line in ways.json running over it. The track tool snaps only to these
-(DECISIONS 2026-10-19, T-727).
+(DECISIONS 2026-10-19, T-727). Short groups of other track that join drawn track at two points or
+more go in too, so a portal or station throat no line runs over does not cut the graph (T-816,
+`gap_fillers`); they are not drawn, so a click never starts on one.
 
 Writes `data/packs/realgraph/<cc>.rgr`, gzip of the little-endian layout below; the app reads it
 with `game/realGraph.ts` and a production build copies it (vite.config.ts). Coordinates are
@@ -45,6 +48,10 @@ VERSION = 1
 THIN_M = 3.0
 KIND = {"rail": 0, "subway": 2}
 URBAN = {"light_rail", "subway", "tram", "monorail", "funicular"}
+# T-816: track the layer leaves out that may still fill a gap in it; the longest group of such ways
+# that goes in, km
+SPARE_USAGE = {"industrial", "military", "tourism", "test"}
+SPARE_KM = 3.0
 
 
 def rank_of(kind, tags):
@@ -82,6 +89,60 @@ def thin(x, y, tol):
             keep[i + 1 + m] = True
             st += [(i, i + 1 + m), (i + 1 + m, j)]
     return keep
+
+
+def node_positions(cid, nodes):
+    """A way's nodes as indices into the extract's coordinates; the longest run the extract holds
+    where a way leaves it. None if under two nodes."""
+    pos = np.searchsorted(cid, nodes)
+    np.clip(pos, 0, cid.size - 1, out=pos)
+    ok = cid[pos] == nodes
+    if not ok.all():
+        idx = np.flatnonzero(np.diff(np.concatenate(([0], ok.view(np.int8), [0]))))
+        starts, ends = idx[0::2], idx[1::2]
+        if starts.size == 0:
+            return None
+        b = np.argmax(ends - starts)
+        pos = pos[starts[b]:ends[b]]
+    return pos.astype(np.int64) if pos.size >= 2 else None
+
+
+def gap_fillers(keep, spare, cx, cy, n):
+    """The spare ways (track the layer leaves out) that fill a gap in the drawn network (T-816):
+    spare ways joined to one another through nodes off the drawn track form a group, and a group
+    goes in whole when it meets drawn track at two nodes or more and is at most SPARE_KM long. A
+    tunnel portal, a station throat or one track of a double line that no line in ways.json runs
+    over would otherwise leave the drawn line in pieces; a yard or a whole undrawn line is longer."""
+    from scipy.sparse import coo_matrix
+    from scipy.sparse.csgraph import connected_components
+    if not spare:
+        return []
+    drawn = np.zeros(n, bool)
+    for k in keep:
+        drawn[k[0]] = True
+    # a drawn node is its own vertex in each spare way, so groups meet only off the drawn track
+    verts, extra = [], n
+    for pos in (s[0] for s in spare):
+        v = pos.copy()
+        on = drawn[pos]
+        v[on] = extra + np.arange(on.sum())
+        extra += on.sum()
+        verts.append(v)
+    a = np.concatenate([v[:-1] for v in verts])
+    b = np.concatenate([v[1:] for v in verts])
+    _, lab = connected_components(coo_matrix((np.ones(a.size, np.int8), (a, b)), shape=(extra, extra)), directed=False)
+    group = np.array([lab[v[0]] for v in verts])
+    km = np.zeros(lab.max() + 1)
+    meets = {}
+    for g, (pos, *_rest) in zip(group, spare):
+        lon, lat = cx[pos] / 1e7, cy[pos] / 1e7
+        km[g] += np.sum(np.hypot(np.diff(lon) * np.cos(np.radians(lat[1:])) * 111.32, np.diff(lat) * 110.95))
+        meets.setdefault(g, set()).update(pos[drawn[pos]].tolist())
+    ok = {g for g, m in meets.items() if len(m) >= 2 and km[g] <= SPARE_KM}
+    out = [(pos, kind, 1, flags & ~1) for g, (pos, kind, rank, flags) in zip(group, spare) if g in ok]
+    print(f"  gap fillers: {len(out):,} of {len(spare):,} spare ways, {len(ok):,} groups, "
+          f"{sum(km[g] for g in ok):,.0f} km", flush=True)
+    return out
 
 
 def varints(v):
@@ -149,35 +210,29 @@ def build(cc, boxes):
                     on_route.add(ref)
     del rels
 
-    keep = []
+    keep, spare = [], []
     for wid, (tags, nodes) in ways.items():
         rw = tags.get("railway")
-        if rw not in KIND or wid not in on_line:
+        if rw not in KIND:
             continue
         rank = rank_of(rw, tags)
         pax = wid in on_route
-        if rank >= 2:
-            if not pax:
-                continue
+        shown = wid in on_line
+        if rank >= 2 and pax:
             rank = 1
-        if rw == "rail" and rank == 1 and not pax:
-            continue  # the layer draws other rail only where a passenger route runs
-        pos = np.searchsorted(cid, nodes)
-        np.clip(pos, 0, cid.size - 1, out=pos)
-        ok = cid[pos] == nodes
-        if not ok.all():
-            idx = np.flatnonzero(np.diff(np.concatenate(([0], ok.view(np.int8), [0]))))
-            starts, ends = idx[0::2], idx[1::2]
-            if starts.size == 0:
-                continue
-            b = np.argmax(ends - starts)
-            pos = pos[starts[b]:ends[b]]
-        if pos.size < 2:
+        if rank >= 2 or (rw == "rail" and rank == 1 and not pax):
+            shown = False  # the layer draws other rail only where a passenger route runs
+        # a way the layer leaves out is kept aside: it may fill a gap between drawn track (T-816)
+        if not shown and (tags.get("service") not in (None, "crossover") or tags.get("usage") in SPARE_USAGE):
+            continue
+        pos = node_positions(cid, nodes)
+        if pos is None:
             continue
         flags = (1 if pax else 0) | (2 if tags.get("bridge") not in (None, "no") else 0) \
             | (4 if tags.get("tunnel") not in (None, "no") else 0) | (8 if tags.get("highspeed") == "yes" else 0)
-        keep.append((pos.astype(np.int64), KIND[rw], rank, flags))
+        (keep if shown else spare).append((pos, KIND[rw], min(rank, 1), flags))
     del ways
+    keep += gap_fillers(keep, spare, cx, cy, cid.size)
 
     allpos = np.concatenate([k[0] for k in keep])
     uniq, counts = np.unique(allpos, return_counts=True)
@@ -287,7 +342,11 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("regions", nargs="+")
     ap.add_argument("--check", action="store_true")
+    ap.add_argument("--out", help="write or check the files here instead")
     args = ap.parse_args()
+    if args.out:
+        global OUT
+        OUT = Path(args.out)
     if args.check:
         sys.exit(0 if all([check(cc) for cc in args.regions]) else 1)
     boxes = region_boxes()

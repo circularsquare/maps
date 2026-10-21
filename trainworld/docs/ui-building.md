@@ -111,7 +111,9 @@ switch on, the track tool follows the real network the layer draws.
   real track under the click.
 - **The route**: with the start within reach of real track, the pointer resting 120 ms near real
   track asks the router worker for the route. It is shortest by length over the graph files
-  (`packs/realgraph/<cc>.rgr`), every chain within the snap radius (plus 20 m) a candidate at
+  (`packs/realgraph/<cc>.rgr`: the drawn track, and short undrawn track joining it at two points or
+  more, at most 3 km a group, so a tunnel portal or station throat no line runs over leaves no gap
+  [T-816]), every chain within the snap radius (plus 20 m) a candidate at
   either click, its distance from the click counted twice; no turn sharper than 60 degrees where
   two chains meet; the other family (metro or rail) than the first click's nearest track at three
   times its length, so a subway click follows the subway and an intercity route keeps off it. A
@@ -125,7 +127,9 @@ switch on, the track tool follows the real network the layer draws.
 - **The second click** places the route as one segment: one edit, one undo step, Shift or keep
   placing carrying on from its end. A click before the route is ready waits for it. It ends on the
   player's own track when the pointer is on it, else at the real line's snap point.
-- **Nothing joins them** (two networks that never meet, or the search ran out): a red straight
+- **Nothing joins them** (two networks that never meet, the search ran out, or the only route is
+  longer than twice the clicks' distance apart plus 20 km, as when a click on the line beside the
+  one meant could only turn back by a loop hundreds of km round [T-816]): a red straight
   ghost and "No real track joins these points" in the tag; the click places nothing and says so.
 - **Away from real track**, or where no graph file covers the click, the tool draws an ordinary
   segment.
@@ -242,7 +246,8 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   whatever the tool. Disabling and enabling are one undoable edit each (Ctrl+Z). Esc clears the
   pick, then leaves the tool; leaving also clears it.
 - Disabled is a state on the piece, saved with the game ([track-and-service.md](track-and-service.md)
-  6.4). The piece's own Construct button (track and station inspectors) and a line's Construct build
+  6.4). A selected disabled blueprint track says "Disabled" under "Blueprint" in its inspector
+  (hover: Construct leaves it out until it is enabled) [T-821]. The piece's own Construct button (track and station inspectors) and a line's Construct build
   it anyway, which clears the state.
 
 ## Reshaping blueprint
@@ -310,7 +315,7 @@ route, keeping the existing stop order; removing a stop leaves the others in ord
   Escape also leave. Red removal crosses show in the stop list while editing.
 - **Stations passed** [T-646, `TrackApi::passed_stations`]: while editing, the stop list shows,
   between two stops whose stretch of the line's own path runs through other stations, a row
-  "+ 2 stations passed" (its hover names them); with stations passed in more than one gap, "Add
+  "+ 2 stations passed" (its hover lists them: "Add Foo, Bar and Baz") [T-814]; with stations passed in more than one gap, "Add
   all 5 stations the line passes" heads the list. A click shows those stations in the list as
   faint "+ Name" rows, in path order, with Add and Cancel under the list; Add makes them stops in
   one undoable edit. Only stations on the line's path count: a quad twin on the pair beside, or a

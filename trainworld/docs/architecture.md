@@ -87,11 +87,20 @@ Web first, so it can be shared as a link.
   within about 2 cm. When the hour turns the clock worker lists the next hour's trips relative to
   the new epoch (computed in float64), and only that buffer is re-uploaded.
 - **Frame loop** [T-073, T-084, T-097]: frames only while the clock runs; 10 fps while the window is
-  visible but unfocused; nothing while hidden (the clock freezes) or paused; none while no trips run
+  visible but unfocused; nothing while hidden or paused; none while no trips run
   this hour (the clock wakes once a game minute instead). Otherwise the overlay draws on MapLibre's
   frames and once after a change to what is drawn. The demand views have a canvas of their own over
   it, drawn only on MapLibre's frames and after their data changes, never by the clock; bubbles and
   a selection's far end are summed in their own worker (`workers/commuters.worker.ts`).
+- **A hidden page** [T-826; notes/T-826.md]: the browser stops animation frames and slows the main
+  thread's timers to once a second (once a minute after five hidden minutes); worker timers run on
+  at nearly full rate. With "Run in background" off (the default) the clock freezes while hidden, so
+  the game pauses. With it on the clock runs on: it is anchored to wall time, the clock worker
+  settles money and autosaves on its own timers from the last clock message, and what the main
+  thread moves with frames (the shown minute and day, the render epoch with its trips and boarding
+  hour, and the demand level effects that follow the minute) catches up at the first frame back.
+  Hours that pass hidden pay their fares evenly within the hour (no boarding hour was worked out for
+  them), with the same whole-hour totals. Station faces and sounds stop while hidden either way.
 - **Simulation and demand**: Rust compiled to WebAssembly in Web Workers: one clock worker (track
   model, lines, money, the boarding account, autosave) and a pool of demand workers. The crate
   builds two WASM modules, the clock worker's and the demand workers', so each downloads only its
@@ -223,7 +232,7 @@ all results are recomputed. About 100 KB compressed per 10,000 route-km (T-040).
   true ground.
 - **When it saves**: the clock worker builds, compresses and writes to IndexedDB itself: at once
   after anything paid for, else once a wall minute if something changed, and when the page is
-  hidden. On start the player picks a slot or New game on the start menu [T-677]; `?continue=1`
+  hidden; a game running in the background keeps saving once a wall minute [T-826]. On start the player picks a slot or New game on the start menu [T-677]; `?continue=1`
   opens the slot opened last. `?new=1` starts a game that reads no slot and owns none, and
   does not autosave until "Save as a copy" gives it one [T-320]; `?synth=1` and `?demandTest=1`
   load the last game but never autosave it.

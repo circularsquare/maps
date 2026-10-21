@@ -429,7 +429,6 @@ rect.now { fill-opacity: .45; }
 .split-train { flex: none; display: inline-flex; align-items: center; gap: 6px; }
 .pct { display: inline-block; width: 5ch; text-align: left; }
 .split-other .pct { width: 5.6ch; }
-.rides { display: inline-block; width: 10.5ch; overflow: hidden; text-overflow: ellipsis; }
 /* T-349: the status is a small tag on the map's top row, right of the demand buttons (StatusTag.tsx), so
    the top bar makes no room for it. T-180: in a narrow column the text ends in an ellipsis; the whole
    text is its hover. */
@@ -454,9 +453,10 @@ rect.now { fill-opacity: .45; }
 .cash { flex: none; width: 16ch; display: flex; font-variant-numeric: tabular-nums; }
 .cash-sign, .cash-cur { flex: none; width: 1ch; }
 .cash-digits { flex: 1; min-width: 0; text-align: left; }
-.clock { display: flex; align-items: center; gap: 8px; font-variant-numeric: tabular-nums; }
+/* T-832: the clock takes the room between the cash and the time, the date centred in it */
+.clock { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; font-variant-numeric: tabular-nums; }
 .clock .time.held { color: var(--muted); }
-.clock .day { min-width: 58px; }
+.clock .day { flex: 1; min-width: 58px; text-align: center; }
 .clock .time { min-width: 46px; }
 .save-notice { flex: none; padding: 6px 10px; border-bottom: 1px solid var(--accent);
   background: var(--tint); display: flex; align-items: center; gap: 8px; font-size: 12px; }
@@ -728,7 +728,8 @@ rect.now { fill-opacity: .45; }
               background: color-mix(in srgb, var(--map-ink) 8%, transparent); }
 .intercity-labels { position: absolute; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; }
 .intercity-label { position: absolute; left: 0; top: 0; white-space: nowrap; font-size: 12px;
-  padding: 2px 5px; background: var(--bg); color: var(--text); border: 1px solid var(--rule); }
+  padding: 0 2px; color: var(--map-ink);
+  text-shadow: 0 0 2px var(--map-land), 0 0 2px var(--map-land), 0 0 3px var(--map-land); }
 
 #debug {
   position: absolute; right: 0; top: var(--bar-h); z-index: 3; margin: 0;
@@ -746,13 +747,11 @@ rect.now { fill-opacity: .45; }
 @container map-column (max-width: 1000px) {
   #topbar { gap: 12px; }
   .split-row { gap: 10px; }
-  .clock .day { display: none; }
 }
 @container map-column (max-width: 860px) {
   .split-other { display: none; }
 }
 @container map-column (max-width: 760px) {
-  .rides { display: none; }
   .city { width: 96px; }
 }
 /* T-349: below 700 px the bar takes two rows: name, cash, time and speed on the first, the split
@@ -766,7 +765,6 @@ rect.now { fill-opacity: .45; }
   #topbar .clock { grid-area: clock; justify-self: end; }
   #topbar .split { grid-area: split; max-width: none; }
   #topbar .speed { grid-area: speed; justify-self: end; }
-  .rides { display: inline-block; }
   .split-other { display: inline-flex; }
 }
 @container map-column (max-width: 520px) {

@@ -799,12 +799,24 @@ def browser_check(city, header, a, f, reg, out_dir):
     env = dict(os.environ, ROW=rp, OUT=os.path.join(out_dir, f"{city}-"), JSON_OUT=jp,
                WORKERS=os.environ.get("WORKERS", "1"))
     maps = os.path.dirname(ROOT)
-    p = subprocess.run(["node", os.path.join(HERE, "city-browser.mjs"), city], cwd=maps, env=env,
-                       capture_output=True, text=True, encoding="utf-8", errors="replace")
+    for attempt in range(2):
+        if os.path.exists(jp):
+            os.remove(jp)
+        p = subprocess.run(["node", os.path.join(HERE, "city-browser.mjs"), city], cwd=maps, env=env,
+                           capture_output=True, text=True, encoding="utf-8", errors="replace")
+        checks = []
+        if os.path.exists(jp):
+            with open(jp, encoding="utf-8") as fh:
+                checks = json.load(fh).get("checks", [])
+        # a wait timed out with nothing failed: the machine was busy (gates of two runs at once, T-788)
+        timed_out = p.returncode != 0 and "TimeoutError" in (p.stderr or "") and all(k["ok"] for k in checks)
+        if not timed_out:
+            break
     res = {"pass": p.returncode == 0, "line_from": how, "stations": len(line), "unreached": unreached}
+    if attempt:
+        res["tries"] = attempt + 1
     if os.path.exists(jp):
-        with open(jp, encoding="utf-8") as fh:
-            res["checks"] = json.load(fh).get("checks", [])
+        res["checks"] = checks
     if p.returncode != 0 and not any(not k["ok"] for k in res.get("checks", [])):  # died after passing checks (T-788)
         res["error"] = (p.stderr or p.stdout)[-400:]
     return res

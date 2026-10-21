@@ -12,7 +12,7 @@ import type { Map as MlMap } from "maplibre-gl";
 import { clock } from "../game/clock";
 import { demandView, lineLoadsFor, type DemandView } from "../game/demand";
 import { purposeName, type PurposeFilter } from "../game/purposes";
-import type { LineInput, WorldView } from "../game/types";
+import { DEMAND_INDEX, type LineInput, type WorldView } from "../game/types";
 import { ask, display, isBuildTool, purposeFilter, selection, shownDayPhrase, tool } from "../game/ui";
 import { world } from "../game/world";
 import { hoverAt } from "./demandHover";
@@ -50,7 +50,7 @@ export function dailyRiders(dv: DemandView | null, lineId: string, stops: number
 }
 
 /** The tag's lines for a line stroke segment `i`. */
-function lineTip(n: NetworkBuffers, w: WorldView | null, dv: DemandView | null, traffic: boolean, i: number): string[] {
+function lineTip(n: NetworkBuffers, w: WorldView | null, dv: DemandView | null, traffic: boolean, i: number): TipLine[] {
   const num = n.lines.colour[i];
   const l = w?.save.lines.find((x) => x.num === num);
   const name = l?.name ?? `Line ${num}`;
@@ -65,7 +65,13 @@ function lineTip(n: NetworkBuffers, w: WorldView | null, dv: DemandView | null, 
   if (day === null) return [name, "Calculating demand"];
   const count = `${day < 0.5 ? "0" : riders(day)} riders ${shownDayPhrase.peek()}`;
   // the purpose filter (T-158) says what it counted
-  return purpose === "all" ? [name, count] : [name, count, `${purposeName(purpose)} trips only`];
+  const out: TipLine[] = purpose === "all" ? [name, count] : [name, count, `${purposeName(purpose)} trips only`];
+  // T-819: the red outline drawn on track at capacity, at the level in force as the capacity tags
+  const lev = DEMAND_INDEX[clock.demand.peek()];
+  if (w?.fullTrack[lev]?.has(n.lines.edge[i])) {
+    out.push(Object.assign(document.createElement("div"), { textContent: `Track at capacity at ${clock.demand.peek()} demand`, style: "color: var(--bad)" }));
+  }
+  return out;
 }
 
 /** The tag's lines at a point (CSS px in the map), or null: what the current track display draws

@@ -70,10 +70,11 @@ import { ClockClient, clockWorkerStatus, onNetworkSnapshot } from "./workers/clo
 import { startDemand, submitNetwork } from "./workers/demandClient";
 import { startDemandViews, viewStats } from "./map/demandViews";
 import { startTripView } from "./map/tripView";
-import { MODE_COLOURS } from "./game/palette";
+import { modeColours } from "./game/palette";
 
-// The mode colours are the network's, not the theme's (T-084): the top bar's split uses them.
-for (const [k, v] of Object.entries(MODE_COLOURS)) document.documentElement.style.setProperty(`--mode-${k}`, v);
+// The mode colours are the network's, not the theme's (T-084): the top bar's split uses them. They
+// follow the bubble scheme (T-833).
+effect(() => { for (const [k, v] of Object.entries(modeColours())) document.documentElement.style.setProperty(`--mode-${k}`, v); });
 
 /** Other lines' strength while a line's stops are edited (T-233). */
 const STOP_EDIT_DIM = 0.3;
@@ -92,6 +93,7 @@ startTips();
 
 // ---- the clock: a new game starts on day 1 at 07:00 (morning peak) ----
 startClock(86400 + 7 * 3600);
+effect(() => clock.setBackground(display.value.runInBackground));
 if (params.get("paused") === "1") clock.setRunning(false);
 // T-149, T-172: the clock is held until the viewed city's demand has its first estimate
 startLoadingGate();
@@ -257,6 +259,13 @@ effect(() => {
   if (w && !SYNTH) capacity.set(w, level);
 });
 effect(() => capacity.setVisible(display.value.capacity && !SYNTH));
+// T-819: in the traffic view, lines on track at capacity at the level in force get a red outline
+effect(() => {
+  const w = world.value, traffic = display.value.trackColour === "traffic";
+  const full = w?.fullTrack[DEMAND_INDEX[clock.demand.value]];
+  renderer.setFull(traffic && full ? new Set(full.keys()) : null);
+  overlay.invalidate();
+});
 // Resting the pointer on track says what the track display shows there (T-157).
 startTrackHover(map, overlay);
 // T-732: resting the pointer lists what else is under it

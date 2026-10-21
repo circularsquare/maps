@@ -510,6 +510,7 @@ function buildState(): ClockState {
   return {
     version: ++version,
     markers,
+    fullTrack: [0, 1, 2].map((lev) => a.full_track(lev)),
     crossings,
     cash: a.cash(),
     builtCost: a.built_cost(),
@@ -846,7 +847,7 @@ function lineDaysAt(now: number, closed: boolean, shift?: number, past = false):
   const out: LineDay[] = [];
   let i = 1;
   for (let k = 0; k < count; k++) {
-    const id = v[i], n = v[i + 1], spans = v[i + 6], len = 13 + 2 * spans + n;
+    const id = v[i], n = v[i + 1], spans = v[i + 6], len = 15 + 2 * spans + n;
     const sh = a.line_shift(id);
     if (shift === undefined || sh === shift) {
       const per = lineIncome.get(id);

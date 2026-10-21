@@ -5,7 +5,7 @@
 // every drawn quantity has a hover with it.
 
 import { count, distance, roughDistance, speed } from "../../game/format";
-import { MODE_COLOURS } from "../../game/palette";
+import { MODE_COLOURS, modeColours } from "../../game/palette";
 import { PERIODS } from "../../game/periods";
 import { purposeName, purposeWords, type PurposeFilter } from "../../game/purposes";
 import { WALK_KMH } from "../../game/walks";
@@ -94,7 +94,7 @@ function ModeBar({ t, mix, of }: { t: TripPeriod; mix: TripMix | null; of: strin
       <ul class="rows">
         {parts.filter(([m]) => m !== "Walk" || t.walkMin < WALK_ROW_MIN).map(([m, v]) => (
           <li data-tip={`${m}: ${(100 * v).toFixed(1)}% of ${of}${m === "Walk" ? walkTip : ""}${note}`}>
-            <i class="mk" style={{ background: MODE_COLOURS[m === "Train" ? "train" : m === "Walk" ? "walk" : "drive"] }} />
+            <i class="mk" style={{ background: modeColours()[m === "Train" ? "train" : m === "Walk" ? "walk" : "drive"] }} />
             <span class="grow">{m}</span>
             <span class="val w-num">{pct(v)}</span>
           </li>
