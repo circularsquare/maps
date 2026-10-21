@@ -103,9 +103,18 @@ orchestrator's commit recipe is in CLAUDE.md "Before a commit".
 
 ## Interface
 Anita's playtest of 2026-10-19 (the 9e466a4 build): notes/playtest-2026-10-19.md, a section a task.
-- T-793 [P2] The loading bar's last 5% takes most of the wait (Anita 2026-10-21): time the stages behind the bar on a new game and the real save, and weight the bar by time so it moves evenly. Open.
 - T-811 [P2] T-809's open-border area in the normalisers: `pipeline/market_zones.py` `Field.normalisers` (line 137) takes the sim's rule (`OPEN_AREA`, 0.5), then `..\venv\Scripts\python.exe pipeline/market_zones.py` from trainworld/ for every zone and the rows, once the Europe batches finish. Until then European places' departures run high (far pairs about 8-17%, tail more) and near pairs' place totals are the old rule's. Open; notes/T-809.md.
 - T-810 [P3] Commutes across an open border: `pipeline/borders.json`'s national 0.05 is far too strong inside the EU, Schengen and the UK (Luxembourg, Geneva, Basel); its own value fitted on cross-border commuter counts, then the joint gravity groups rebuilt. Open; notes/T-809.md.
+- T-813 [P2] New lines' names and colours (Anita 2026-10-21): "Line m" with m the lowest number unused by a line in the same city, not the count of lines ever made; and a colour no line in that city uses yet. Taking, 2026-10-21.
+- T-814 [P2] The stations-passed button's hover for adding all passed stations starts with "Add" before the list (Anita 2026-10-21). Taking, 2026-10-21.
+- T-820 [P2] The line view shows the average load % after Profit (Anita 2026-10-21). Taking, 2026-10-21.
+- T-821 [P2] A selected disabled blueprint track says it is disabled (Anita 2026-10-21). Taking, 2026-10-21.
+- T-822 [P2] Sandbox switch wording (Anita 2026-10-21): buttons "Switch to sandbox mode" and "Stay in normal mode"; text "Are you sure? Entering sandbox mode will disable money permanently and irreversibly." Taking, 2026-10-21.
+- T-818 [P2] Crowding on long lines (Anita 2026-10-21): the Eurostar line reads red although its middle stretch is near empty; the crowding indicator averages wait per rider, so many short riders at the ends dominate. Weight long-distance riders more (her idea: by fare paid), or say where the crowding is. Taking, 2026-10-21.
+- T-819 [P2] The traffic view marks stretches at capacity (Anita 2026-10-21: a very thin red outline, say). Taking, 2026-10-21.
+- T-815 [P2] Select several blueprint pieces and change their elevation at once (Anita 2026-10-21; see T-248). After T-797's B1+B2 land (same tool files). Open.
+- T-816 [P2] Snap to the real network is disjointed near the Eurostar line (Anita 2026-10-21): the traced route breaks into pieces; find the gaps in the real-network graph and heal them generally if there is an easy way. Taking, 2026-10-21.
+- T-817 [P2] Faster curves on long segments (Anita 2026-10-21): drawn track takes curves for at most 160 km/h; on very long segments allow curves for up to 300 km/h. Her note is cut off ("at a smaller rate for normal rail? like"); waits on what she meant.
 - T-803 [P3] More station faces (Anita 2026-10-21): some by time of day and a few rare ones. Open.
 - T-719 [P2] Covering whole regions (all of Spain, as Japan) rather than lone metros, timings and speedups: note written 2026-10-19, waits on Anita's decisions (its last section); notes/T-719.md.
 - T-771 [P3] A Spain module (T-719 item 6, later tailoring): the transport ministry's mobile-phone trip tables (a curve per zone, jobs at work) and INE's 1 km census grid; would rebuild mad bar val sev mal and the 40 zones. Open; notes/T-719.md.

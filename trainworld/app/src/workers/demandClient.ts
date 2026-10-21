@@ -247,6 +247,8 @@ interface Solve {
   sentAt: number;
   firstAt?: number;
   refinedAt?: number;
+  /** T-793: when each round was published (the loading bar's pace) */
+  roundAt?: number[];
   /** T-324: when new or changed lines got the first estimate's figures early, and which */
   earlyAt?: number;
   earlyLines?: string[];
@@ -269,7 +271,7 @@ interface Solve {
   /** T-392: each cluster published ahead of the solve's final, by its cities: its results per
    * round and period as they come in, the last round in from every worker, and when its final
    * round was shown */
-  clusterRes?: Map<string, { byRound: (Result | null)[][]; published: number; at?: number }>;
+  clusterRes?: Map<string, { byRound: (Result | null)[][]; published: number; at?: number; roundAt?: number[] }>;
   /** T-402: the cluster in view, stepped through its rounds alone ahead of the rest (a solve with
    * the barrier, `plan.ahead`): its cities and key in `clusterRes` */
   ahead?: { cities: CityId[]; key: string };
@@ -279,22 +281,24 @@ interface Solve {
  * performance.now() (window.twDemand.start.loads with ?debug=1). */
 interface LoadLog { item: string; requestedAt: number; downloadedAt?: number; openedAt?: number; bare?: boolean; closedAt?: number }
 /** One file being downloaded, for the loading percentage (T-149). */
-interface Download { got: number; total: number; at: number }
+interface Download { got: number; total: number; at: number; end?: number }
 /**
  * T-243: the loading bar moves in proportion to time. Each step (downloading, opening in every
  * worker, solving every period to its first estimate) weighs as long as it is expected to take,
  * and within a step the bar moves with the time spent against that expectation, up to
  * STEP_CAP, until the step's real completion lands. Expected times, measured on Anita's desktop
- * (notes/T-243.md): opening a city pack 130 ms per MB of its .bin (New York's 16 MB: 2.1 s),
- * the regional market 40 ms per MB; the first estimate 600 ms plus 2.2 ms per line stop (an empty
- * network 0.6 s, the real New York save's 1,756 stops 4.4 s). A download's expected length is its
- * own rate so far. The last startup's solve time and stop count are remembered per browser
- * (LAST_SOLVE) and scale the estimate, so a slower machine corrects it after one load; until the
- * clock worker has sent the network, its stop count stands in (a reload opens the same game).
- * The bar never goes back: when an expectation grows, the rest of the work is spread over the
- * rest of the bar.
+ * (notes/T-243.md, T-793): opening a city pack 220 ms per MB of its .bin, a market pack 450 ms and
+ * 20 ms per MB; the first estimate 600 ms plus 2.2 ms per line stop, and each crowding round about
+ * as long (ROUND_WEIGHT). A download's expected length is its own rate so far. The last startup's
+ * solve time and stop count are remembered per browser (LAST_SOLVE) and scale the estimate, so a
+ * slower machine corrects it after one load; until the clock worker has sent the network, its stop
+ * count stands in (a reload opens the same game). The solve then re-measures itself round by
+ * round (`solveStage`). The bar never goes back: when an expectation grows, the rest of the work is
+ * spread over the rest of the bar.
  */
-const OPEN_MS_PER_MB = { city: 130, market: 60 };
+const OPEN_MS_PER_MB = { city: 220, market: 20 };
+/** a market pack's opening is mostly a fixed cost, nearly the same for 0.3 and 1.8 MB (T-793) */
+const OPEN_MARKET_MS = 450;
 /** T-484: the waits before each new try of a failed pack download, and, once those are spent, before
  * the zone is tried again (the last repeating) */
 const RETRY_MS = [500, 1500, 4000];
@@ -324,14 +328,42 @@ const KEEP_SPARE = 2;
 const lastLoad = (loads: LoadLog[], f: (l: LoadLog) => boolean) => { for (let i = loads.length - 1; i >= 0; i--) if (f(loads[i])) return loads[i]; return undefined; };
 
 const solveModel = (stops: number) => SOLVE_MS.base + SOLVE_MS.perStop * stops;
+/** T-793: the periods each solving worker takes in turn (5 periods on 3 workers: 2); SOLVE_MS was
+ * measured with one each, so a game with no remembered solve expects that many times as long */
+let solveWaves = 1;
+/** T-793: how long each round of a solve takes against the first estimate's (setup included), from the
+ * real New York save (notes/T-793.md): the last round is shorter, as periods that need no crowding
+ * carry over. Rounds past the list weigh as its last. */
+const ROUND_WEIGHT = [1, 1.1, 1.05, 0.55];
+const roundWeight = (r: number) => ROUND_WEIGHT[Math.min(r, ROUND_WEIGHT.length - 1)];
 /** T-347: until a load has timed its final round, the final is guessed at this many first estimates */
-const FINAL_FACTOR = 2.5;
+const FINAL_FACTOR = ROUND_WEIGHT.reduce((a, b) => a + b, 0);
 /** a share of `expected` ms gone since `since`: in step to 90%, then slowing toward STEP_CAP, so a
  * step that runs late still creeps rather than stopping dead */
 function timeShare(since: number | undefined, expected: number, now: number): number {
   if (since === undefined) return 0;
   const x = Math.max(0, now - since) / Math.max(1, expected);
   return x < 0.9 ? x : 0.9 + (STEP_CAP - 0.9) * (1 - Math.exp(-(x - 0.9) / 0.3));
+}
+/**
+ * T-793: the solve stage of the bar, through the rounds up to `doneRound`. A published round is
+ * real progress, and the pace measured over the rounds so far (ms per unit of ROUND_WEIGHT; before
+ * the first, `prior` spread over the rounds) sets how long the rest is expected to take, so a
+ * machine busier than the remembered solve, or a bigger network, corrects the bar one round in
+ * instead of at the end. The round in hand shows what has landed of it or the time against its
+ * expectation (`timeShare`: creeping, never done until published). `ms` is the stage's expected length.
+ */
+function solveStage(sentAt: number, roundAt: readonly number[] | undefined, published: number, landed: number, doneRound: number, prior: number, now: number): { ms: number; share: number } {
+  let total = 0, doneW = 0;
+  for (let r = 0; r <= doneRound; r++) total += roundWeight(r);
+  const d = Math.min(published + 1, doneRound + 1);
+  for (let r = 0; r < d; r++) doneW += roundWeight(r);
+  const boundary = d > 0 ? roundAt?.[d - 1] ?? sentAt : sentAt;
+  const pace = d > 0 && boundary > sentAt ? (boundary - sentAt) / doneW : prior / total;
+  if (d > doneRound) return { ms: pace * total, share: 1 };
+  const w = roundWeight(d);
+  const cur = Math.max(Math.min(STEP_CAP, landed / PERIODS.length), timeShare(boundary, pace * w, now));
+  return { ms: pace * total, share: (doneW + w * cur) / total };
 }
 /** `finalMs`: to the card going (T-421: the zone in view's final); `allMs`: to the solve's final */
 function lastSolve(): { ms: number; stops: number; finalMs?: number; allMs?: number } | null {
@@ -349,7 +381,7 @@ function solveEstimate(stops: number | null, toFinal: boolean | "all" = false): 
   const last = lastSolve();
   const n = stops ?? last?.stops ?? 0;
   const final = toFinal === "all" ? last?.allMs ?? last?.finalMs : last?.finalMs;
-  const ms = last ? (toFinal ? final ?? last.ms * FINAL_FACTOR : last.ms) * solveModel(n) / solveModel(last.stops) : solveModel(n) * (toFinal ? FINAL_FACTOR : 1);
+  const ms = last ? (toFinal ? final ?? last.ms * FINAL_FACTOR : last.ms) * solveModel(n) / solveModel(last.stops) : solveModel(n) * solveWaves * (toFinal ? FINAL_FACTOR : 1);
   return ms;
 }
 
@@ -547,6 +579,7 @@ class DemandClient {
   constructor(_city: string) {
     effect(() => { activeCity.value; worldFrameEpoch.value; this.syncFocus(); });
     const n = (this.computeN = poolSize());
+    solveWaves = Math.ceil(PERIODS.length / n);
     if (new URLSearchParams(location.search).has("debug")) console.info(`demand workers: ${n} (threads ${navigator.hardwareConcurrency}, memory ${(navigator as { deviceMemory?: number }).deviceMemory ?? "not reported"})`);
     for (let i = 0; i <= n; i++) {
       const w = new Worker(new URL("./demand.worker.ts", import.meta.url), { type: "module" });
@@ -883,6 +916,7 @@ class DemandClient {
     if (!r.body) {
       const b = new Uint8Array(await r.arrayBuffer());
       d.got = d.total = b.length;
+      d.end = performance.now();
       return b;
     }
     const reader = r.body.getReader(), chunks: Uint8Array[] = [];
@@ -895,6 +929,7 @@ class DemandClient {
     }
     // a compressed response's length is not its body's: the body is what was downloaded
     d.total = d.got;
+    d.end = performance.now();
     if (chunks.length === 1) return chunks[0];
     const out = new Uint8Array(d.got);
     let o = 0;
@@ -1183,10 +1218,8 @@ class DemandClient {
     // lands (through any newer solve: they have no final figures yet)
     const s = this.cur;
     if (s && this.unsettled?.size && s.published < ROUNDS && !this.status.startsWith("failed")) {
-      let landed = 0;
-      for (let r = 0; r <= ROUNDS; r++) landed += r <= s.published ? PERIODS.length : s.byRound[r].filter(Boolean).length;
       const stops = s.svc.lines.reduce((n, l) => n + l.stops.length, 0);
-      const f = Math.max(landed / (PERIODS.length * (ROUNDS + 1)), timeShare(s.sentAt, solveEstimate(stops, "all"), now));
+      const f = solveStage(s.sentAt, s.roundAt, s.published, s.byRound[s.published + 1]?.filter(Boolean).length ?? 0, ROUNDS, solveEstimate(stops, "all"), now).share;
       for (const id of this.unsettled) {
         if (next.has(id)) continue;
         next.set(id, Math.max(this.zoneBest.get(id) ?? 0, Math.min(0.99, f)));
@@ -1199,6 +1232,9 @@ class DemandClient {
     // a bare zone's load (and, T-421, a released solve's zones) moves with time; nothing else ticks for it
     if (moving && !this.progressTick) this.progressSoon();
   }
+
+  /** the last bar's parts: each step's expected ms and share done (window.twDemand.client.barParts with ?debug=1) */
+  barParts?: Record<string, number>;
 
   /** The loading progress: each step weighted by its expected time, T-243 (game/loading.ts). */
   private jobProgress() {
@@ -1266,16 +1302,17 @@ class DemandClient {
     const now = performance.now();
     const within = (since: number | undefined, expected: number) => timeShare(since, expected, now);
     // Downloading: bytes; expected to take as long as its rate so far says.
-    let got = 0, total = 0, dlStart = Infinity;
+    let got = 0, total = 0, dlStart = Infinity, dlEnd = 0;
     // Opening: each item in every worker, expected from its size; worker acks are its real progress.
     let openMs = 0, openDone = 0, openStart = Infinity;
     for (const item of job.items) {
       let size = 0;
       for (const f of isMarket(item) ? [`${marketZone(item)}.market.json`] : [`${item}.json`, `${item}.bin`]) {
         const d = this.downloads.get(f);
-        if (d) { got += Math.min(d.got, d.total || d.got); total += d.total || d.got; dlStart = Math.min(dlStart, d.at); size += d.total || d.got; }
+        if (d) { got += Math.min(d.got, d.total || d.got); total += d.total || d.got; dlStart = Math.min(dlStart, d.at); dlEnd = Math.max(dlEnd, d.end ?? now); size += d.total || d.got; }
       }
-      const ms = (this.bytes.get(item) ?? (size || GUESS_BYTES)) / 1e6 * (isMarket(item) ? OPEN_MS_PER_MB.market : OPEN_MS_PER_MB.city);
+      const mb = (this.bytes.get(item) ?? (size || GUESS_BYTES)) / 1e6;
+      const ms = isMarket(item) ? OPEN_MARKET_MS + mb * OPEN_MS_PER_MB.market : mb * OPEN_MS_PER_MB.city;
       openMs += ms;
       openDone += loaded(item) ? ms : ms * (this.acks.get(item) ?? 0) / this.workers.length;
       const log = lastLoad(this.start.loads, (l) => l.item === item);
@@ -1283,19 +1320,23 @@ class DemandClient {
     }
     const downloaded = job.items.every((i) => this.bytes.has(i) || loaded(i));
     const dl = downloaded ? 1 : total > 0 ? Math.min(0.99, got / total) : 0;
-    const dlElapsed = dlStart < Infinity ? now - dlStart : 0;
+    // (T-793: a finished download stays as long as it took, rather than growing with the clock)
+    const dlElapsed = dlStart < Infinity ? (downloaded && dlEnd > 0 ? dlEnd : now) - dlStart : 0;
     const dlMs = downloaded ? dlElapsed : got > 0 && total > got ? dlElapsed * total / got : 300;
     const open = openMs > 0 ? Math.max(openDone / openMs, job.items.every(loaded) ? 1 : within(openStart < Infinity ? openStart : undefined, openMs)) : 1;
     // Solving: period results landed, and time against the expected solve (none for a load of
     // zones opened bare, T-325).
     const svc = this.latest();
     // (T-351: a solve covering no zone, the market alone, is short)
-    const solveMs = !needsSolve ? 0 : sn?.size === 0 ? SOLVE_MS.base : solveEstimate(svc ? svc.lines.reduce((n, l) => n + l.stops.length, 0) : null, !!this.hold);
-    let solve = 0;
-    if (s && job.version !== undefined && s.version === job.version) {
-      let landed = 0;
-      for (let r = 0; r <= doneRound; r++) landed += r <= s.published ? PERIODS.length : s.byRound[r].filter(Boolean).length;
-      solve = Math.max(landed / (PERIODS.length * (doneRound + 1)), within(s.sentAt, solveMs));
+    const prior = !needsSolve ? 0 : sn?.size === 0 ? SOLVE_MS.base : solveEstimate(svc ? svc.lines.reduce((n, l) => n + l.stops.length, 0) : null, !!this.hold);
+    let solveMs = prior, solve = 0;
+    if (needsSolve && s && job.version !== undefined && s.version === job.version) {
+      // T-793: a game load's zone in view is final with its cluster solved ahead (T-402): that cluster's rounds
+      const a = this.hold && s.ahead && [...this.viewedSet()].every((id) => s.ahead!.cities.includes(id)) ? s.clusterRes?.get(s.ahead.key) : undefined;
+      const published = (a ?? s).published, byRound = (a ?? s).byRound;
+      const st = solveStage(s.sentAt, (a ?? s).roundAt, published, byRound[published + 1]?.filter(Boolean).length ?? 0, doneRound, prior, now);
+      solveMs = st.ms;
+      solve = st.share;
     }
     const doneMs = dlMs * dl + openMs * open + solveMs * solve;
     const fraction = Math.min(0.99, doneMs / (dlMs + openMs + solveMs));
@@ -1305,6 +1346,7 @@ class DemandClient {
     let shown = job.anchor ? job.anchor.shown + (1 - job.anchor.shown) * Math.max(0, fraction - job.anchor.frac) / Math.max(1e-6, 1 - job.anchor.frac) : fraction;
     if (shown < job.best - 1e-6) { job.anchor = { shown: job.best, frac: fraction }; shown = job.best; }
     job.best = Math.max(job.best, Math.min(0.99, shown));
+    this.barParts = { dlMs, dl, openMs, open, solveMs, solve, fraction, shown: job.best }; // ?debug=1
     const step = dl < 1 ? "Downloading city data" : open < 1 ? "Opening city data" : "Calculating demand";
     loadProgress.value = { cities: job.cities.filter((id) => !isMarket(id)), fraction: job.best, step, startup: job.startup };
   }
@@ -1615,6 +1657,7 @@ class DemandClient {
       res[msg.period] = msg;
       if (!res.every(Boolean) || round <= e.published) return;
       e.published = round;
+      (e.roundAt ??= [])[round] = performance.now();
       if (round > 0) e.byRound[round - 1] = [];
       if (round < ROUNDS && s.ahead?.key === key) for (const w of this.workers.slice(0, this.computeN)) w.postMessage({ kind: "go", version: s.version, round: round + 1, group: 0 } satisfies ToDemand);
       if (round >= ROUNDS) e.at = performance.now();
@@ -1634,6 +1677,7 @@ class DemandClient {
       if (!s.byRound[round].every(Boolean)) break;
       s.results = s.byRound[round];
       s.published = round;
+      (s.roundAt ??= [])[round] = performance.now();
       // T-327: every worker has the round, so the next may start
       if (round < ROUNDS) for (const w of this.workers.slice(0, this.computeN)) w.postMessage({ kind: "go", version: s.version, round: round + 1, group: s.ahead ? 1 : 0 } satisfies ToDemand);
       this.publish(s, round);

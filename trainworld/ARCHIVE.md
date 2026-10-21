@@ -1,5 +1,6 @@
 ﻿# Archive
 
+- T-793 [P2] The loading bar's last 5%. Done 2026-10-21: the solve stage re-measures its pace each round (`solveStage`), downloads stop growing once done, opening times recalibrated; time above 90% on the real save 70-86% to 14% when the remembered solve is off. notes/T-793.md.
 - T-812 [P2] Train share ramp red to blue (Anita 2026-10-21). Done 2026-10-21: the mode red to the train blue, skewed by share^0.576 (30% train #8c5394 purple, 70% #4e4dc8); stored ramp colours reset once (settings version 5).
 - T-809 [P2] A gentler border for the EU, Schengen and the UK. Done 2026-10-21: long trips between two of its countries take 0.5 (`OPEN_AREA_BORDER`); London - Paris 9.6k to about 28-31k a weekday, others unchanged; normalisers rebuild is T-811. notes/T-809.md.
 - T-800 [P2] Zone outlines always there. Done 2026-10-21: `packs/outlines.json` (pipeline/zone_outlines.py, 604 zones at 300 m, 1.7 MB, 0.65 MB gzipped) drawn at startup, each zone's own outline replacing its coarse one on load; rebuilt by `world_run.py join`, startup unchanged.

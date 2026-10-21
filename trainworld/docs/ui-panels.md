@@ -345,7 +345,7 @@ registry centre and zoom, or over New York with none [T-310].
 
 ## Loading
 
-[T-149, T-172, T-180, T-212, T-232, T-243, T-318; `game/loading.ts`, `ui/LoadingScreen.tsx`]
+[T-149, T-172, T-180, T-212, T-232, T-243, T-318, T-793; `game/loading.ts`, `ui/LoadingScreen.tsx`]
 
 - Nothing is blocked: the map, inspectors and building work as soon as the network is drawn.
 - **A loaded game** (the page opening, a file, a slot, a new game) holds only the clock until the
@@ -358,7 +358,7 @@ registry centre and zoom, or over New York with none [T-310].
   middle of the map says "Loading data" over a filling bar and the current step (Downloading city
   data, Opening city data, Calculating demand), naming no cities; the percentage is only the bar's
   hover ("42% loaded"). The bar counts to that final, so on the real New York save it fills
-  for about 20 s. A slot whose cities are all open shows the bar for its solve alone. The card
+  for 20 to 60 s, by the machine. A slot whose cities are all open shows the bar for its solve alone. The card
   takes no input but the bar's hover (a press pans the map beneath) and goes when the clock starts.
   Loading is the one place with motion [T-647, T-677, Anita; `ui/Spinner.tsx`]: on top of the card a
   drawn bunny rides a toy train in the theme's accent (104 px wide; wheels turn, the track's ties run
@@ -370,11 +370,15 @@ registry centre and zoom, or over New York with none [T-310].
   Nothing else animates. The figures behind it are the solve's estimates, or the last
   final result kept beside the save when there is one (T-328; the split's hover ends "(from the
   last time this game was open)").
-- **The bar moves in proportion to time** [T-243, notes/T-243.md]: each step weighs as long as it
-  is expected to take (a download by its rate, opening about 130 ms per MB of pack, the estimate
-  about 0.6 s plus 2.2 ms per line stop, scaled by this browser's last load); inside a step the fill
-  moves with time against that expectation until the step really ends, slowing if late, never
-  going back.
+- **The bar moves in proportion to time** [T-243, T-793, notes/T-793.md]: each step weighs as long as
+  it is expected to take (a download by its rate; opening 220 ms per MB of city pack, 450 ms and 20 ms
+  per MB for a market pack; the first estimate about 0.6 s plus 2.2 ms per line stop, scaled by this
+  browser's last load, and each crowding round about as long again: weights 1, 1.1, 1.05, 0.55). Inside
+  a step the fill moves with time against that expectation until the step really ends, slowing if
+  late. Once a solve's round is published, the rounds still to come are expected at the pace
+  measured so far, so a slower machine or bigger network corrects the bar one round in. It never
+  goes back, and is never full before the work is done (a finished load shows about 95%, then the
+  card goes).
 - A city opened later (a pan, construction) shows its estimate at once and the crowding rounds
   refine it with the clock running; the status says "Estimate, refining 2/4…" (hover: the figures
   are an early estimate) until the zone in view's cluster has its final [T-421].
