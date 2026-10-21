@@ -1438,7 +1438,7 @@ function colourInt(c: string) {
   return parseInt(c.slice(1), 16);
 }
 
-function apply(op: EditOp): { r: number; line?: number; node?: number } {
+function apply(op: EditOp): { r: number; line?: number; node?: number; skipped?: number } {
   const a = api!;
   switch (op.op) {
     case "route": {
@@ -1455,8 +1455,14 @@ function apply(op: EditOp): { r: number; line?: number; node?: number } {
       return { r: a.move_nodes(new Uint32Array(op.nodes), op.dx, op.dy) };
     case "edgeLevel":
       return { r: a.set_edge_level(op.edge, op.level) };
+    case "edgesLevel": {
+      const r = a.set_edges_level(new Uint32Array(op.edges), op.level);
+      return { r, skipped: a.last_skipped() };
+    }
     case "removeEdge":
       return { r: a.delete_edge(op.edge) };
+    case "removePieces":
+      return { r: a.delete_pieces(new Uint32Array(op.edges), new Uint32Array(op.stations)) };
     case "flying":
       return { r: a.set_flying(op.node, op.flying) };
     case "addStation":
@@ -1749,7 +1755,7 @@ async function handle(msg: ToClock) {
     }
     await masksFor(msg.op);
     const tA = performance.now();
-    const { r, line, node } = apply(msg.op);
+    const { r, line, node, skipped } = apply(msg.op);
     const tB = performance.now();
     timing = {};
     const charge = r === 0 ? api.last_charge() : 0;
@@ -1772,7 +1778,7 @@ async function handle(msg: ToClock) {
       sendState(msg.op.op === "setTrainCount" || msg.op.op === "setHeadway");
       if (demand.length || msg.op.op === "undo" || msg.op.op === "redo") scheduleSnapshot();
     }
-    send({ kind: "edited", seq: msg.seq, ok: r === 0, issues: r === 0 ? [] : r === INSERT_REFUSED ? ["InsertStop"] : issues(), charge, line, node, ms: { apply: tB - tA, ...timing, total: performance.now() - tA } });
+    send({ kind: "edited", seq: msg.seq, ok: r === 0, issues: r === 0 ? [] : r === INSERT_REFUSED ? ["InsertStop"] : issues(), charge, line, node, skipped, ms: { apply: tB - tA, ...timing, total: performance.now() - tA } });
     // Paid for something: keep it (T-029, autosave on construct).
     if (charge > 0) void autosave();
   } else if (msg.kind === "clock") {

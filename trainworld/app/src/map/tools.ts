@@ -130,7 +130,7 @@ export class Tools {
     // outside the marks' layer, so no demand tag covers it (T-526)
     map.getContainer().appendChild(this.tag);
     overlay.afterMapFrame.push(() => this.place());
-    effect(() => { buildPlatform.value; buildLevel.value; trackCount.value; if (tool.value === "station") this.place(); else this.clearFree(); });
+    effect(() => { buildPlatform.value; buildLevel.value; trackCount.value; if (tool.value === "station") this.place(); else { this.freeAt = null; this.clearFree(); } });
     // the place lists name stations where the tiles have no streets (T-065); the view's zones' are
     // fetched when the station tool is picked, not at startup (T-400)
     effect(() => { if (tool.value === "station") { const c = this.map.getCenter(); void loadPlacesAt(c.lng, c.lat); warmStreetNames(this.map); } });
@@ -286,6 +286,7 @@ export class Tools {
     if (t === "select") return;
     if (t === "delete") return this.deleteHover(e.point.x, e.point.y);
     if (t === "line") this.stops?.hover(e.point.x, e.point.y); // T-233: the toggle markers' tag
+    this.pointer = { px: e.point.x, py: e.point.y, lng: e.lngLat.lng, lat: e.lngLat.lat };
     this.hover = t === "line" ? null : this.snap(e.point.x, e.point.y, e.lngLat);
     if (t === "track") this.real.move(e.point.x, e.point.y);
     if (t === "track" && this.start) this.requestPreview();
@@ -307,7 +308,10 @@ export class Tools {
     if (t === "select") return false;
     if (e.key === "Escape") {
       if (t === "track" && this.start) this.reset();
-      else this.exit();
+      else if (t === "station" && this.freeAt) {
+        this.freeAt = null;
+        this.place();
+      } else this.exit();
       return true;
     }
     if (t === "track" && this.start) {
@@ -324,12 +328,6 @@ export class Tools {
       this.exit();
       return true;
     }
-    // T-794: R turns a station on open ground 45 degrees, Shift+R back
-    if (t === "station" && e.key.toLowerCase() === "r" && !e.ctrlKey && !e.metaKey && !e.altKey) {
-      this.freeTurn += (e.shiftKey ? -1 : 1) * (Math.PI / 4);
-      this.place();
-      return true;
-    }
     return false;
   }
 
@@ -340,7 +338,6 @@ export class Tools {
     this.reset();
     lineDraft.value = { line: null, stops: [] };
     ask.value = null;
-    this.freeTurn = 0;
     tool.value = "select";
   }
 
@@ -352,6 +349,7 @@ export class Tools {
     this.lastPreview = null;
     this.previewKey = "";
     this.real.reset();
+    this.freeAt = null;
     this.freeDrawn = "";
     this.overlay.renderer.setPreview(null);
     this.overlay.invalidate();
@@ -504,8 +502,14 @@ export class Tools {
   }
 
   private async stationClick(e: MapMouseEvent) {
+    if (this.freeAt) return this.freeStationClick(e);
     const first = this.snap(e.point.x, e.point.y, e.lngLat);
-    if (first.kind === "free") return this.freeStationClick(e, first);
+    if (first.kind === "free") {
+      // T-834: open ground, the first click sets the centre and the second the direction
+      this.freeAt = first;
+      this.place();
+      return;
+    }
     // T-671, T-695: the spot the ghost shows, else the first the track model takes of what is under the pointer
     const v = this.verdict();
     const tries = [...(v?.ok && v.spot && !v.held ? [v.spot] : []), ...this.alts];
@@ -522,10 +526,17 @@ export class Tools {
     } else if (r.issues.length) say(describeIssues(r.issues), true);
   }
 
-  /** T-794: open ground, the station and its own piece of track, one edit. */
-  private async freeStationClick(e: MapMouseEvent, h: Extract<Snap, { kind: "free" }>) {
-    const p = this.freePiece(h);
-    const name = await this.nameFor(e.point.x, e.point.y);
+  /** T-794, T-834: the second click on open ground, the station and its own piece of track, one edit. */
+  private async freeStationClick(e: MapMouseEvent) {
+    const h = this.freeAt!;
+    this.pointer = { px: e.point.x, py: e.point.y, lng: e.lngLat.lng, lat: e.lngLat.lat };
+    const phi = this.freeHeading();
+    const p = this.freePiece(h, phi);
+    this.freeAt = null;
+    this.lastHeading = phi;
+    this.clearFree();
+    this.place();
+    const name = await this.nameFor(...this.screen(h.lx, h.ly));
     const a = await edit({ op: "addStation", at: p.stationAt, platform: buildPlatform.peek(), name }, true);
     if (a.ok) {
       this.lastPlaced = toLngLat(h.lx, h.ly);
@@ -810,22 +821,26 @@ export class Tools {
     } else if (twin) twin.style.display="none";
   }
 
-  /** T-794: a station on open ground lays a straight piece of double track (quad with the tool's
-   * quad) at the selected elevation under it, FREE_MARGIN_M longer than the platform at each end,
-   * along the line to the nearest station or loose end (east and west when there is none), turned
-   * by R in 45 degree steps. */
-  private freeTurn = 0;
-  private freePiece(h: Extract<Snap, { kind: "free" }>) {
+  /** T-794, T-834: a station on open ground lays a straight piece of double track (quad with the
+   * tool's quad) at the selected elevation under it, FREE_MARGIN_M longer than the platform at each
+   * end, centred on the first click and heading `phi` (radians from east, ground). */
+  private freeAt: Extract<Snap, { kind: "free" }> | null = null;
+  /** the heading of the last station placed on open ground, shown before a first click */
+  private lastHeading = 0;
+  private pointer: { px: number; py: number; lng: number; lat: number } | null = null;
+  /** The heading from the first click towards the pointer; the last one while the pointer is on it. */
+  private freeHeading(): number {
+    const c = this.freeAt, p = this.pointer;
+    if (!c || !p) return this.lastHeading;
+    const [sx, sy] = this.screen(c.lx, c.ly);
+    if (Math.hypot(p.px - sx, p.py - sy) < 8) return this.lastHeading;
+    const [lng0, lat0] = toLngLat(c.lx, c.ly);
+    return Math.atan2(p.lat - lat0, (p.lng - lng0) * Math.cos((lat0 * Math.PI) / 180));
+  }
+  private freePiece(h: Extract<Snap, { kind: "free" }>, phi: number) {
     const w = world.peek();
     const [lng0, lat0] = toLngLat(h.lx, h.ly);
     const cos = Math.cos((lat0 * Math.PI) / 180), deg = 180 / Math.PI;
-    let phi = 0, best = Infinity;
-    for (const n of w?.nodes.values() ?? []) {
-      if (n.platform <= 0 && n.ports !== 1) continue;
-      const d = metresBetween(lng0, lat0, n.lng, n.lat);
-      if (d < best && d > 1) (best = d), (phi = Math.atan2(n.lat - lat0, (n.lng - lng0) * cos));
-    }
-    phi += this.freeTurn;
     const level = buildLevel.peek(), quad = trackCount.peek() === 4, z = level * 8;
     const half = buildPlatform.peek() / 2 + FREE_MARGIN_M;
     // ground metres east and north of the spot to lng, lat
@@ -856,7 +871,7 @@ export class Tools {
   private freeDrawn = "";
 
   private freeGhost(h: Extract<Snap, { kind: "free" }>): { ok: boolean | null; why: string; cost: number; lengthM: number } {
-    const p = this.freePiece(h);
+    const p = this.freePiece(h, this.freeHeading());
     if (this.freeAsked !== p.key) {
       this.freeAsked = p.key;
       this.client.checkStation(p.stationAt, buildPlatform.peek(), (ok, issues, cost) => {
@@ -1142,8 +1157,8 @@ export class Tools {
       return;
     }
     // the snap ring and the cursor tag
-    if (t === "station") this.checkGhost();
-    const h = t === "station" ? this.stationSpot() : this.hover;
+    if (t === "station" && !this.freeAt) this.checkGhost();
+    const h = t === "station" ? this.freeAt ?? this.stationSpot() : this.hover;
     const v = t === "station" ? this.verdict() : null;
     if (t === "station") this.shown = h && h.kind !== "free" ? v : null;
     if (t === "station" && h?.kind === "free") {
@@ -1161,7 +1176,10 @@ export class Tools {
           .map((s) => Object.assign(document.createElement("div"), { textContent: s })));
         if (!this.tag.firstChild) this.tag.style.display = "none";
       }
-      put(this.tag, h.lx, h.ly, 14, 12);
+      // T-834: while the direction is set, the tag follows the pointer
+      const p = this.freeAt && this.pointer;
+      if (p) this.tag.style.transform = `translate(${Math.round(p.px + 14)}px, ${Math.round(p.py + 12)}px)`;
+      else put(this.tag, h.lx, h.ly, 14, 12);
       return;
     }
     if (t === "station") this.clearFree();

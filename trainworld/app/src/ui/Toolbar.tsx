@@ -10,11 +10,11 @@ const HINT: Record<Tool, string> = {
   select: "",
   // T-253: hints say what a click does now, in as few words as will do
   track: "Click where the track starts, then where it goes. Hold Shift to carry on from there, or switch on keep placing; a double click ends the run, Backspace takes one back.",
-  station: "Click on track or open ground to put a station there. Press R to turn one on open ground.",
+  station: "Click on track to put a station there. On open ground, click its middle, then a second spot to set its direction.",
   line: "Click the circles to add or remove stops. Press Enter or Escape to finish editing.",
   delete: "Click track, a station or a flyover to remove it.",
   trip: "Click where a trip starts, or a station.",
-  blueprint: "Drag a box round blueprint track and stations. Shift adds to the selection. Right drag moves the map.",
+  blueprint: "Drag a box round track and stations. Shift adds to the selection. Right drag moves the map.",
 };
 
 /** Native modal keeps map input blocked and traps/restores focus; Escape answers no. */

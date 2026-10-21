@@ -10,7 +10,7 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
 
 [T-100; `ui/tabs.tsx`, `ui/Blueprint.tsx`; tools in `map/tools.ts`]
 
-- **Tools**: draw track (key 1), station (2), delete (3), select blueprints (5, below), three
+- **Tools**: draw track (key 1), station (2), delete (3), select (5, [below](#the-select-tool)), three
   buttons on the first row and one on the second; then the elevation (seven buttons
   tinted in their Elevation colours, the chosen one solid with a dark outline, a light one in the dark theme, T-478, T-692) with its
   multiplier and price per km, double or quad track [T-255; single track not offered since T-733],
@@ -36,7 +36,7 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
   [ui-inspectors.md](ui-inspectors.md).
 - **At the bottom of the pane**, fixed while the settings above scroll: the blueprint total, undo
   and redo, and "Construct blueprints", which builds every blueprint that is not disabled
-  ([below](#disabling-blueprint)). The total is red when it is more than the cash on hand [T-527]. It includes the new
+  ([below](#the-select-tool)). The total is red when it is more than the cash on hand [T-527]. It includes the new
   train cars that constructing starts, after spare cars. An expandable cost breakdown shows track
   by priced level, single or double, land or water and ramps (charged at the dearer end), stations,
   junction switches, flyovers and flat crossings, with lengths, counts and prices from the track
@@ -198,18 +198,20 @@ switch on, the track tool follows the real network the layer draws.
   A refused spot shows only the reason. Two thin rings at 1 km and
   2 km of ground distance, each labelled at its top, follow the spot under the ghost
   (`stationRings` in `map/tools.ts`, an SVG layer, fixed grey ink at 35%).
-- **On open ground** [T-794; `freePiece`, `freeGhost` in `map/tools.ts`]: where the pointer is
-  not within reach of track or a node (above), a click lays a straight blueprint piece of track one
-  platform long (plus 10 m each end) at the selected elevation, double or quad as set, and puts the
-  station at its middle, one undoable edit (rules: [track-and-service.md](track-and-service.md)
-  6.1). The piece lies along the line from the spot to the nearest station or loose end, so a
-  straight route later joins them; east and west when there is none. R turns it 45 degrees,
-  Shift+R back; the turn is kept until the tool is left. The ghost is the piece's track drawn as
-  the track tool's (red when refused) with the platform box on it (and the twin's on quad), and
-  the tag's first line is the price of both, "Station and 240 m of track, $31M", over the
-  placement help lines. The clock worker tries the same edit and rolls it back
-  (`TrackApi.preview_free_station`), so the ghost and the click agree; a refused spot shows the
-  reason instead.
+- **On open ground** [T-794, T-834; `freePiece`, `freeGhost` in `map/tools.ts`]: where the
+  pointer is not within reach of track or a node (above), a station is placed like track, in two
+  clicks: it lays a straight blueprint piece of track one platform long (plus 10 m each end) at the
+  selected elevation, double or quad as set, with the station at its middle, one undoable edit
+  (rules: [track-and-service.md](track-and-service.md) 6.1). The first click sets the middle; the
+  piece then turns about it to point at the pointer, its length unchanged, and the second click
+  (anywhere, track or not) places it. Within 8 px of the middle it keeps the last heading. Esc after
+  the first click drops it and the tool stays on. Before the first click the ghost follows the
+  pointer at the heading of the last station placed this way (east and west at first). The ghost
+  is the piece's track drawn as the track tool's (red when refused) with the platform box on it
+  (and the twin's on quad), and the tag (by the pointer) has the price of both, "Station and
+  240 m of track, $31M", over the placement help lines for the middle. The clock worker tries the
+  same edit and rolls it back (`TrackApi.preview_free_station`), so the ghost and the click agree;
+  a refused spot shows the reason instead.
 - How a new station is named: [track-and-service.md](track-and-service.md) 6.1. A double click on
   the name in its inspector renames it.
 
@@ -231,11 +233,13 @@ removed at once (undoable); anything constructed only after a yes in the confirm
 ("Remove 1.2 km of constructed track? Nothing is refunded." with Remove and Keep; Esc is Keep). The
 inspectors' Remove buttons ask the same way. Lines are removed from the line panel.
 
-## Disabling blueprint
+## The Select tool
 
-[T-333; `map/blueprintBox.ts`, `game/blueprintPick.ts`, `ui/Blueprint.tsx` `BlueprintPick`] The
-Select tool (key 5, a dashed box icon) picks blueprint track and blueprint stations so they can be
-disabled: Construct and the blueprint total leave a disabled piece out, and it is drawn grey
+[T-333, T-815, T-829; `map/blueprintBox.ts`, `game/blueprintPick.ts`, `ui/Blueprint.tsx`
+`BlueprintBar`] The Select tool (key 5, a dashed box icon) picks several pieces at once to disable,
+re-level or remove them. A pick is of one kind (Anita, T-829): one that holds any blueprint takes
+only blueprint, track and stations; one with no blueprint takes constructed track and constructed
+stations. Disabled blueprint is left out by Construct and the blueprint total, and drawn grey
 ([ui-map.md](ui-map.md) "Lines and track"). It is a tool of its own because a plain drag on the map
 is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
 
@@ -244,21 +248,41 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   track and picked stations; not a crossover's ends) by the same offset, previewed as a node drag
   is. Track between two moved nodes keeps its shape; track to a node that stays bends as in a node
   drag (`TrackApi.move_nodes`). One undoable edit. A press there without a drag is a click.
-- **Left drag** elsewhere draws a box. It picks the blueprint track it touches and the blueprint stations
-  inside it (stations only from zoom 9, where they are drawn); the pick follows the box live.
-  **Shift+drag adds** to the pick. A click picks the piece under the pointer, Shift+click adds it or
-  takes it out again, a click on nothing clears the pick. Constructed track and stations are never
-  picked.
+- **Left drag** elsewhere draws a box. It picks the track it touches and the stations inside it
+  (stations only from zoom 9, where they are drawn; a junction goes with its track, never on its
+  own), blueprint if the box holds any, else constructed; the pick follows the box live.
+  **Shift+drag adds** to the pick, and the sum keeps one kind by the same rule (constructed pieces
+  drop out once any blueprint is in). A click picks the piece under the pointer (a station first,
+  blueprint over constructed), Shift+click adds it or takes it out again, a click on nothing clears
+  the pick. A piece that is constructed or removed leaves a blueprint pick.
 - **Right or middle drag moves the map** while the tool is on; the wheel and arrow keys work as
   always. The map's own left drag is off for the tool's time.
 - **The selection bar** [T-353; `BlueprintBar` in `ui/Blueprint.tsx`] sits at the top centre of the
   map while the tool has a selection (on the demand buttons' row on a map column over 1350 px, so it
   clears the status tag beside them [T-349]; one row lower below that, lower again below 680 px; it
-  appears and goes in one step): "N selected" (its hover lists track and stations), Disable and
-  Enable as buttons with icon and word (keys D and E in their hovers), each greyed when it would
-  change nothing, and Clear. The Build tab shows only "N disabled" while any blueprint is disabled,
-  whatever the tool. Disabling and enabling are one undoable edit each (Ctrl+Z). Esc clears the
-  pick, then leaves the tool; leaving also clears it.
+  appears and goes in one step) is the pick's inspector: "N selected" (its hover says blueprint or
+  constructed and lists track and stations), the picked track's total length, and the actions.
+  For blueprint: the seven elevation buttons tinted as in the Build tab (the one all the picked
+  track is on solid), then Disable and Enable as buttons with icon and word (keys D and E in their
+  hovers), each greyed when it would change nothing. For either kind: Remove (key Delete) and
+  Clear. The Build tab shows only "N disabled" while any blueprint is disabled, whatever the tool.
+  Disabling and enabling are one undoable edit each (Ctrl+Z). Esc clears the pick, then leaves the
+  tool; leaving also clears it.
+- **Elevation** [T-815; `TrackApi.set_edges_level`]: a button puts every picked blueprint stretch
+  on that elevation, one undoable edit: each piece's corners as the track inspector's "Elevation of
+  the stretch" does for one, and every node all of whose track is picked (a joint, a loose end, a
+  junction, a blueprint station with its platform), so a picked run has no ramps at its joints. A
+  node with other track keeps its elevation and the picked piece ramps to it. Pieces that cannot
+  change are left as they are: a crossover, a piece with no corners whose two ends cannot both
+  move, and pieces the track model refuses there (a ramp with no room, a crossing between levels)
+  or that would make a flat crossing not there before; those are tried group by group (pieces
+  joined through moving nodes), then a refused group's pieces with corners one by one with their
+  ends kept. The message says how many changed ("9 of 12 pieces set to elevation +1. 3 could not
+  change."), or that none could.
+- **Remove** [T-829; `TrackApi.delete_pieces`]: everything picked goes in one edit, with the nodes
+  left bare and a crossover whole. Blueprint goes at once (one undo); constructed asks first, as
+  for one piece ("Remove 3.1 km of constructed track and 2 constructed stations? Nothing is
+  refunded."), and is final.
 - Disabled is a state on the piece, saved with the game ([track-and-service.md](track-and-service.md)
   6.4). A selected disabled blueprint track says "Disabled" under "Blueprint" in its inspector
   (hover: Construct leaves it out until it is enabled) [T-821]. The piece's own Construct button (track and station inspectors) and a line's Construct build

@@ -1,8 +1,9 @@
 import { distance, levelLabel, money } from "../game/format";
-import { clearBpPicked, offTotals, pickedState, switchPicked } from "../game/blueprintPick";
+import { clearBpPicked, levelPicked, offTotals, pickedState, removePicked, switchPicked } from "../game/blueprintPick";
 import { liveMoney, moneyState } from "../game/money";
+import { inkOn, LEVEL_COLOURS } from "../game/palette";
 import { tool } from "../game/ui";
-import type { BlueprintItem, Level } from "../game/types";
+import { LEVELS, type BlueprintItem, type Level } from "../game/types";
 import { constructBlueprints } from "../game/lineActions";
 import { edit, redo, say, undo, world } from "../game/world";
 import { Icon } from "./widgets";
@@ -51,21 +52,35 @@ export function BlueprintPick() {
   );
 }
 
-/** T-353: while the Select tool has a selection, a bar at the map's top centre: how many pieces are
- * selected, Disable, Enable and Clear in words (the dock's icon buttons were not found). Appears and
- * goes in one step. */
+/** T-353, T-815, T-829: while the Select tool has a selection, a bar at the map's top centre, the
+ * selection's inspector: how many pieces and how much track, then for blueprint the elevation
+ * buttons, Disable and Enable; Remove and Clear for either kind. Appears and goes in one step. */
 export function BlueprintBar() {
   const s = pickedState.value;
   const n = s.edges + s.stations;
   if (tool.value !== "blueprint" || n === 0) return null;
-  const piece = pieces(s.edges, s.stations);
+  const piece = (s.built ? "Constructed: " : "Blueprint: ") + pieces(s.edges, s.stations);
   return (
-    <div class="blueprint-bar" role="group" aria-label="Blueprint selection">
+    <div class="blueprint-bar" role="group" aria-label="Selection">
       <span class="count" data-tip={piece}>{n} selected</span>
-      <div class="group">
-        <button class="btn text" data-tip="Disable the selection (D): Construct and the total leave it out" disabled={!s.on} onClick={() => void switchPicked(true)}><Icon.switchOff />Disable</button>
-        <button class="btn text" data-tip="Enable the selection (E)" disabled={!s.off} onClick={() => void switchPicked(false)}><Icon.switchOn />Enable</button>
-      </div>
+      {s.edges > 0 && <span class="num" data-tip="Length of the selected track">{distance(s.lengthM)}</span>}
+      {!s.built && s.edges > 0 && (
+        <div class="group levels">
+          {LEVELS.map((l) => (
+            <button class={"btn lv" + (l === s.level ? " on" : "")} style={{ "--lc": LEVEL_COLOURS[l], "--lk": inkOn(LEVEL_COLOURS[l]) }}
+              data-tip={`Put the selected track at ${LEVEL_NAME[l].toLowerCase()} (${levelLabel(l)})`} aria-label={`Elevation ${levelLabel(l)}`} onClick={() => void levelPicked(l)}>
+              {levelLabel(l)}
+            </button>
+          ))}
+        </div>
+      )}
+      {!s.built && (
+        <div class="group">
+          <button class="btn text" data-tip="Disable the selection (D): Construct and the total leave it out" disabled={!s.on} onClick={() => void switchPicked(true)}><Icon.switchOff />Disable</button>
+          <button class="btn text" data-tip="Enable the selection (E)" disabled={!s.off} onClick={() => void switchPicked(false)}><Icon.switchOn />Enable</button>
+        </div>
+      )}
+      <button class="btn text" data-tip={s.built ? "Remove the selection (Delete). Nothing is refunded" : "Remove the selection (Delete)"} onClick={() => removePicked()}><Icon.bin />Remove</button>
       <button class="btn text" data-tip="Clear the selection (Esc)" onClick={() => clearBpPicked()}><Icon.cross />Clear</button>
     </div>
   );

@@ -8,7 +8,7 @@
 // Construct and the quote leave out switched-off pieces; they are drawn grey (renderer.ts).
 
 import type { Map as MlMap } from "maplibre-gl";
-import { bpPicked, switchPicked, unionPicked, type BpPicked } from "../game/blueprintPick";
+import { bpPicked, onlyOneKind, removePicked, switchPicked, unionPicked, type BpPicked } from "../game/blueprintPick";
 import { lngLatToPack } from "../game/coords";
 import { describeIssues } from "../game/issues";
 import { tool } from "../game/ui";
@@ -266,19 +266,18 @@ export class BlueprintBox {
     }
     const has = hit.edges.length ? cur.edges.includes(hit.edges[0]) : cur.stations.includes(hit.stations[0]);
     bpPicked.value = has
-      ? { edges: cur.edges.filter((v) => !hit.edges.includes(v)), stations: cur.stations.filter((v) => !hit.stations.includes(v)) }
+      ? { edges: cur.edges.filter((v) => !hit.edges.includes(v)), stations: cur.stations.filter((v) => !hit.stations.includes(v)), built: cur.built }
       : unionPicked(cur, hit);
   }
 
-  /** Blueprint track a box touches and blueprint stations (drawn, so zoomed in enough) inside it. */
+  /** The track a box touches and the stations (drawn, so zoomed in enough) inside it: the
+   * blueprint ones if there are any, else the constructed ones (T-829). */
   private within(r: Rect): BpPicked {
     const n = this.overlay.renderer.net, w = world.peek();
     const out: BpPicked = { edges: [], stations: [] };
     if (!n || !w) return out;
-    const blueprint = new Set(w.edges.filter((e) => !e.built).map((e) => e.id));
     const p = new Float64Array(4);
     for (const [id, pts] of n.edgePts) {
-      if (!blueprint.has(id)) continue;
       for (let k = 0; k + 5 < pts.length; k += 3) {
         this.overlay.toScreenInto(pts[k], pts[k + 1], p, 0);
         this.overlay.toScreenInto(pts[k + 3], pts[k + 4], p, 2);
@@ -289,39 +288,37 @@ export class BlueprintBox {
       }
     }
     if (this.map.getZoom() >= STATIONS_ZOOM) {
-      const unbuilt = new Set(w.save.stations.filter((s) => !s.built).map((s) => String(s.num)));
       for (let i = 0; i < n.stationCount; i++) {
-        if (!unbuilt.has(n.stationIds[i])) continue;
         this.overlay.toScreenInto(n.stations[i * 3], n.stations[i * 3 + 1], p, 0);
         if (p[0] >= r[0] && p[0] <= r[2] && p[1] >= r[1] && p[1] <= r[3]) out.stations.push(Number(n.stationIds[i]));
       }
     }
-    return out;
+    return onlyOneKind(out);
   }
 
-  /** The blueprint station or track piece under a point (px), a station first. */
+  /** The station or track piece under a point (px), a station first, blueprint before constructed. */
   private under(x: number, y: number): BpPicked {
     const n = this.overlay.renderer.net, w = world.peek();
     const none: BpPicked = { edges: [], stations: [] };
     if (!n || !w) return none;
+    const hits: BpPicked[] = [];
     if (this.map.getZoom() >= STATIONS_ZOOM) {
       const i = this.overlay.renderer.stationAt(x, y, (a, b) => this.overlay.toScreen(a, b), 7);
-      if (i >= 0) {
-        const num = Number(n.stationIds[i]);
-        if (w.save.stations.some((s) => s.num === num && !s.built)) return { edges: [], stations: [num] };
-      }
+      if (i >= 0) hits.push({ edges: [], stations: [Number(n.stationIds[i])] });
     }
     const [ti] = topSeg(this.overlay, n.track.seg, n.track.count, x, y, 7 * 7 + 1);
-    if (ti >= 0) {
-      const id = n.track.edge[ti];
-      if (w.edges.some((e) => e.id === id && !e.built)) return { edges: [id], stations: [] };
-    }
-    return none;
+    if (ti >= 0) hits.push({ edges: [n.track.edge[ti]], stations: [] });
+    const bp = hits.map(onlyOneKind);
+    return bp.find((h) => !h.built && (h.edges.length || h.stations.length)) ?? bp[0] ?? none;
   }
 
-  /** The D and E keys: switch the pick off or on. True if used. */
+  /** The D and E keys: switch the pick off or on; Delete removes it (T-829). True if used. */
   key(e: KeyboardEvent): boolean {
     if (tool.peek() !== "blueprint" || e.ctrlKey || e.metaKey || e.altKey) return false;
+    if (e.key === "Delete") {
+      removePicked();
+      return true;
+    }
     const k = e.key.toLowerCase();
     if (k !== "d" && k !== "e") return false;
     void switchPicked(k === "d");

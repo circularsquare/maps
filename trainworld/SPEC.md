@@ -234,9 +234,11 @@ The player draws curved track (straights and circular arcs, double or quad, at e
 -3 to +3, "levels" in the code) two clicks per segment, each segment one curve through the click leaving along the track, up
 to 350 degrees round [T-418, T-422, T-442], its curves laid out for a design speed the player picks
 (160 to 320 km/h, wider curves for faster; T-817), places stations (on track, or on open ground with a
-straight piece of their own track [T-794]), and makes lines, all as
+straight piece of their own track, one click for its middle and one for its direction [T-794,
+T-834]), and makes lines, all as
 **blueprints** that are free to edit and undo, then pays to **construct** them. A segment is one
-piece of track [T-244]. Each station on quad track gets a crossover just past it, placed by the
+piece of track [T-244]; the Select tool picks many at once, blueprint or else constructed, to
+disable, re-level or remove together [T-333, T-815, T-829]. Each station on quad track gets a crossover just past it, placed by the
 game in the same edit where it fits: an X between the two pairs, 120 m long, 50 km/h, priced as two
 junctions, so lines can change pairs between neighbouring quad stations [T-338, T-733]. Single
 track is not offered (saves and imports keep theirs, which run as before) [T-733]. Each line has

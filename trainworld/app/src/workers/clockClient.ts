@@ -40,6 +40,8 @@ export interface EditAnswer {
   line?: number;
   /** a route's end node, for drawing on from it (T-418) */
   node?: number;
+  /** pieces an edgesLevel left out (T-815) */
+  skipped?: number;
 }
 
 export interface PreviewAnswer {
@@ -545,7 +547,7 @@ export class ClockClient {
         if (this.editLog.length > 40) this.editLog.shift();
         // T-531: the world before and after this edit's state say where its money went
         if (msg.ok && msg.charge > 0 && world.value) this.post({ kind: "chargeShares", seq: msg.seq, ...chargeShares(this.worldBefore, world.value, msg.line) });
-        f?.({ ok: msg.ok, issues: msg.issues, charge: msg.charge, line: msg.line, node: msg.node });
+        f?.({ ok: msg.ok, issues: msg.issues, charge: msg.charge, line: msg.line, node: msg.node, skipped: msg.skipped });
         break;
       }
       case "preview": {

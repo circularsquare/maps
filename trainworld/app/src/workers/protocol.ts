@@ -56,6 +56,11 @@ export type EditOp =
   | { op: "moveNodes"; nodes: NodeId[]; dx: number; dy: number }
   /** a whole blueprint stretch on one level, shape kept */
   | { op: "edgeLevel"; edge: EdgeId; level: Level }
+  /** several blueprint stretches on one level, one undoable edit (T-815); pieces that cannot
+   * change are left out, counted in the answer's `skipped` */
+  | { op: "edgesLevel"; edges: EdgeId[]; level: Level }
+  /** remove several pieces at once (T-829): undoable when all blueprint, else final */
+  | { op: "removePieces"; edges: EdgeId[]; stations: NodeId[] }
   | { op: "flying"; node: NodeId; flying: boolean }
   | { op: "addStation"; at: StationAt; platform: number; name: string }
   /** a crossover on track `edge` near x, y and the track running beside it (T-338) */
@@ -366,7 +371,7 @@ export type FromClock =
   | { kind: "ready"; initMs: number; frame: FrameSpec }
   /** an edit's answer; `issues` are the track model's problem kinds (`TrackApi.issue_kinds`) */
   /** `ms`: the worker's time on the edit by step (T-229, for `?debug=1`) */
-  | { kind: "edited"; seq: number; ok: boolean; issues: string[]; charge: number; line?: number; node?: number; ms?: Record<string, number> }
+  | { kind: "edited"; seq: number; ok: boolean; issues: string[]; charge: number; line?: number; node?: number; skipped?: number; ms?: Record<string, number> }
   | {
       kind: "preview";
       seq: number;

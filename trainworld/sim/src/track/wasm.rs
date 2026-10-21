@@ -74,6 +74,8 @@ pub struct TrackApi {
     boarding: Boarding,
     /// Game seconds now (`set_now`; NaN until the worker sets it: edits then re-space at once).
     now: f64,
+    /// Pieces the last batch level change left out (T-815).
+    skipped: u32,
 }
 
 /// A pack's water raster and the origin of the pack's own frame.
@@ -165,6 +167,7 @@ impl TrackApi {
             rasters: vec![],
             boarding: Boarding::default(),
             now: f64::NAN,
+            skipped: 0,
         }
     }
 
@@ -2294,6 +2297,206 @@ impl TrackApi {
         self.run(Op::Batch(ops))
     }
 
+    /// Put several blueprint edges on one level (T-815), one undoable edit. Each piece's corners go
+    /// to the level as `set_edge_level` does for one, and so does every node all of whose track is
+    /// among them (a joint, a loose end, a junction, a blueprint station), so a picked run has no
+    /// ramp at its joints; a node with other track keeps its level and the piece ramps to it.
+    /// Pieces that cannot change are left out and counted in `last_skipped`: constructed track, a
+    /// crossover's diagonal, a piece with no corners whose ends cannot both move, and pieces the
+    /// track model refuses on that level or that would make a flat crossing not there now. Those
+    /// are tried as groups (pieces joined through moving nodes), then a refused group's pieces with
+    /// corners one by one with their ends kept. Pieces already on the level are not counted. 1 when
+    /// nothing changed (the issues of the last refusal, if any).
+    pub fn set_edges_level(&mut self, ids: &[u32], level: i8) -> u32 {
+        let net = &self.w.net;
+        let mut cand: Vec<u32> = ids.iter().copied().filter(|&e| net.edge_ok(e)).collect();
+        cand.sort_unstable();
+        cand.dedup();
+        let total = cand.len();
+        cand.retain(|&e| !net.edge_built[e as usize] && !net.edge_crossover[e as usize]);
+        let movable = |cand: &[u32], n: u32| {
+            net.node_ports[n as usize].ends().iter().all(|&c| cand.binary_search(&(c >> 1)).is_ok()) && !(net.node_platform[n as usize] > 0 && net.node_built[n as usize])
+        };
+        let cornerless = |e: u32| net.edge_data(e).is_some_and(|d| d.pis.is_empty() && d.thru.is_empty());
+        loop {
+            let was = cand.clone();
+            cand.retain(|&e| !cornerless(e) || (movable(&was, net.edge_a[e as usize]) && movable(&was, net.edge_b[e as usize])));
+            if cand.len() == was.len() {
+                break;
+            }
+        }
+        let mut skipped = (total - cand.len()) as u32;
+        // groups joined through moving nodes (union-find over positions in `cand`)
+        let mut up: Vec<usize> = (0..cand.len()).collect();
+        fn root(up: &mut [usize], mut i: usize) -> usize {
+            while up[i] != i {
+                up[i] = up[up[i]];
+                i = up[i];
+            }
+            i
+        }
+        let mut nodes: Vec<u32> = cand.iter().flat_map(|&e| [net.edge_a[e as usize], net.edge_b[e as usize]]).filter(|&n| movable(&cand, n)).collect();
+        nodes.sort_unstable();
+        nodes.dedup();
+        for &n in &nodes {
+            let at: Vec<usize> = net.node_ports[n as usize].ends().iter().filter_map(|&c| cand.binary_search(&(c >> 1)).ok()).collect();
+            for w in at.windows(2) {
+                let (a, b) = (root(&mut up, w[0]), root(&mut up, w[1]));
+                up[a] = b;
+            }
+        }
+        let edge_op = |e: u32| {
+            let mut d = net.edge_data(e)?;
+            if d.pis.iter().chain(d.thru.iter()).all(|p| p.level == level) {
+                return None;
+            }
+            for p in d.pis.iter_mut().chain(d.thru.iter_mut()) {
+                p.level = level;
+            }
+            Some(Op::Edge { id: e, data: Some(d) })
+        };
+        let node_op = |n: u32| net.node_data(n).filter(|d| d.level != level).map(|d| Op::Node { id: n, data: Some(NodeData { level, ..d }) });
+        let mut groups: Vec<(Vec<u32>, Vec<Op>)> = vec![];
+        let mut of_root = std::collections::HashMap::new();
+        for i in 0..cand.len() {
+            let r = root(&mut up, i);
+            let g = *of_root.entry(r).or_insert_with(|| {
+                groups.push((vec![], vec![]));
+                groups.len() - 1
+            });
+            groups[g].0.push(cand[i]);
+            groups[g].1.extend(edge_op(cand[i]));
+        }
+        for &n in &nodes {
+            let first = net.node_ports[n as usize].ends()[0] >> 1;
+            let g = of_root[&root(&mut up, cand.binary_search(&first).unwrap())];
+            groups[g].1.extend(node_op(n));
+        }
+        groups.retain(|g| !g.1.is_empty());
+        if groups.is_empty() {
+            self.skipped = skipped;
+            self.money_short = None;
+            self.issues.clear();
+            return 1;
+        }
+        let flat_key = |c: &super::net::Crossing| (c.e1.min(c.e2), c.e1.max(c.e2), c.x.round() as i64, c.y.round() as i64);
+        let flat = |net: &Network| -> Vec<(u32, u32, i64, i64)> {
+            let mut v: Vec<_> = net.crossings.iter().filter(|c| matches!(c.kind, CrossKind::Flat(_))).map(flat_key).collect();
+            v.sort_unstable();
+            v
+        };
+        let before = flat(net);
+        let mut last_issues = vec![];
+        // the track model accepts `ops` with no new flat crossing
+        let fits = |w: &mut TrackWorld, ops: Vec<Op>, last_issues: &mut Vec<Issue>| match w.trial_with(Op::Batch(ops), |w| flat(&w.net)) {
+            Ok((_, after)) => after.iter().all(|k| before.binary_search(k).is_ok()),
+            Err(e) => {
+                *last_issues = e;
+                false
+            }
+        };
+        let all: Vec<Op> = groups.iter().flat_map(|g| g.1.iter().cloned()).collect();
+        let mut take = vec![];
+        if fits(&mut self.w, all.clone(), &mut last_issues) {
+            take = all;
+        } else {
+            let mut refused = vec![];
+            for (edges, ops) in groups {
+                let mut more = take.clone();
+                more.extend(ops.iter().cloned());
+                if fits(&mut self.w, more.clone(), &mut last_issues) {
+                    take = more;
+                } else {
+                    refused.extend(edges);
+                }
+            }
+            // a refused group's pieces with corners one by one, their ends kept, twice since a
+            // ramp may fit only once its neighbour has changed
+            let mut todo: Vec<(u32, Op)> = vec![];
+            for e in refused {
+                match self.w.net.edge_data(e).filter(|d| !(d.pis.is_empty() && d.thru.is_empty())) {
+                    Some(mut d) if d.pis.iter().chain(d.thru.iter()).any(|p| p.level != level) => {
+                        for p in d.pis.iter_mut().chain(d.thru.iter_mut()) {
+                            p.level = level;
+                        }
+                        todo.push((e, Op::Edge { id: e, data: Some(d) }));
+                    }
+                    _ => skipped += 1,
+                }
+            }
+            for _ in 0..2 {
+                let mut rest = vec![];
+                for (e, op) in todo {
+                    let mut more = take.clone();
+                    more.push(op.clone());
+                    if fits(&mut self.w, more.clone(), &mut last_issues) {
+                        take = more;
+                    } else {
+                        rest.push((e, op));
+                    }
+                }
+                todo = rest;
+                if todo.is_empty() {
+                    break;
+                }
+            }
+            skipped += todo.len() as u32;
+        }
+        if take.is_empty() {
+            self.skipped = skipped;
+            self.money_short = None;
+            self.issues = last_issues;
+            return 1;
+        }
+        let r = self.run(Op::Batch(take));
+        self.skipped = skipped;
+        r
+    }
+
+    /// How many pieces the last `set_edges_level` left out (T-815).
+    pub fn last_skipped(&self) -> u32 {
+        self.skipped
+    }
+
+    /// Remove several edges and stations at once (T-829): one edit, undoable when all of it is
+    /// blueprint, else final with no refund, as `delete_edge` and `remove_station` are for one. A
+    /// crossover goes whole; nodes left with no track and no station go too.
+    pub fn delete_pieces(&mut self, edges: &[u32], stations: &[u32]) -> u32 {
+        let net = &self.w.net;
+        let mut gone: Vec<u32> = edges.iter().copied().filter(|&e| net.edge_ok(e)).collect();
+        for &e in edges {
+            if let Some(p) = crossover_partner(net, e).filter(|&p| net.edge_ok(p)) {
+                gone.push(p);
+            }
+        }
+        gone.sort_unstable();
+        gone.dedup();
+        let mut st: Vec<u32> = stations.iter().copied().filter(|&n| net.station_data(n).is_some()).collect();
+        st.sort_unstable();
+        st.dedup();
+        if gone.is_empty() && st.is_empty() {
+            return self.refuse(Issue::NoSuchEdge { edge: edges.first().copied().unwrap_or(u32::MAX) });
+        }
+        let built = gone.iter().any(|&e| net.edge_built[e as usize]) || st.iter().any(|&n| net.node_built[n as usize]);
+        let mut ops: Vec<Op> = gone.iter().map(|&id| Op::DeleteEdge { id }).collect();
+        ops.extend(st.iter().map(|&node| Op::Station { node, data: None }));
+        let mut nodes: Vec<u32> = gone.iter().flat_map(|&e| [net.edge_a[e as usize], net.edge_b[e as usize]]).chain(st.iter().copied()).collect();
+        nodes.sort_unstable();
+        nodes.dedup();
+        for n in nodes {
+            let left = net.node_ports[n as usize].ends().iter().any(|&c| gone.binary_search(&(c >> 1)).is_err());
+            let station = net.node_platform[n as usize] > 0 && st.binary_search(&n).is_err();
+            if !left && !station {
+                ops.push(Op::Node { id: n, data: None });
+            }
+        }
+        let r = if built { self.run_charged(Op::Batch(ops)) } else { self.run(Op::Batch(ops)) };
+        if r == 0 {
+            self.w.net.links.retain(|&[a, b]| st.binary_search(&a).is_err() && st.binary_search(&b).is_err());
+        }
+        r
+    }
+
     /// Construct what a line needs to run: its path's edges and its stops.
     pub fn construct_line(&mut self, line: u32) -> u32 {
         if !self.w.net.line_ok(line) {
@@ -4273,6 +4476,105 @@ mod tests {
         // building a switched off piece by hand clears the switch
         assert_eq!(a.construct(&edges[1..], &[]), 0, "{}", a.issues());
         assert!(a.off_edges().is_empty());
+    }
+
+    #[test]
+    fn several_pieces_change_level_at_once_but_not_into_a_flat_crossing() {
+        let mut a = api();
+        let route = |a: &mut TrackApi, x0: f64, y0: f64, x1: f64, y1: f64, level: f64| {
+            let ends = [0.0, 0.0, x0, y0, level, 0.0, 0.0, x1, y1, level];
+            let mid = [(x0 + x1) / 2.0 + 300.0, (y0 + y1) / 2.0 + 300.0, 0.0, level];
+            assert_eq!(a.add_route(&ends, &mid, 2, false), 0, "{}", a.issues());
+        };
+        // two east-west pieces at ground, and one north-south at +1 crossing both
+        route(&mut a, 0.0, 0.0, 4000.0, 0.0, 0.0);
+        route(&mut a, 0.0, 3000.0, 4000.0, 3000.0, 0.0);
+        route(&mut a, 2000.0, -1500.0, 2000.0, 4500.0, 1.0);
+        let ids: Vec<u32> = a.edges_info().chunks(10).map(|c| c[0] as u32).collect();
+        assert_eq!(ids.len(), 3);
+        let crossings = a.w.net.crossings.iter().filter(|c| matches!(c.kind, CrossKind::Flat(_))).count();
+        assert_eq!(crossings, 0, "grade separated");
+        // both ground pieces to -1: one edit, the +1 piece still clear of them
+        assert_eq!(a.set_edges_level(&ids[..2], -1), 0, "{}", a.issues());
+        assert_eq!(a.last_skipped(), 0);
+        let lv = |a: &TrackApi, e: u32| a.edges_info().chunks(10).find(|c| c[0] as u32 == e).unwrap()[8];
+        assert_eq!((lv(&a, ids[0]), lv(&a, ids[1])), (-1.0, -1.0));
+        // all three to -1: the +1 piece would cross both flat, so it is left out and counted
+        assert_eq!(a.set_edges_level(&ids, -1), 1, "nothing could change");
+        assert_eq!(a.last_skipped(), 1);
+        // all three to 0: the ground pieces go, the +1 piece would cross them flat
+        assert_eq!(a.set_edges_level(&ids, 0), 0, "{}", a.issues());
+        assert_eq!(a.last_skipped(), 1);
+        assert_eq!((lv(&a, ids[0]), lv(&a, ids[1])), (0.0, 0.0));
+        // one undo for the batch
+        assert_eq!(a.undo(), 0);
+        assert_eq!((lv(&a, ids[0]), lv(&a, ids[1])), (-1.0, -1.0));
+        assert_eq!(a.undo(), 0);
+        assert_eq!((lv(&a, ids[0]), lv(&a, ids[1])), (0.0, 0.0));
+    }
+
+    #[test]
+    fn a_picked_run_changes_level_with_its_joints() {
+        let mut a = api();
+        // a straight run of two pieces with no corners, and a third piece off its far end
+        let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(2000.0, 0.0).iter()).copied().collect();
+        assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+        let e0 = a.edges_info()[0] as u32;
+        assert!(a.w.net.edge_data(e0).unwrap().pis.is_empty(), "drawn with no corners");
+        let mid = a.w.net.edge_b[e0 as usize];
+        let next = [1.0, mid as f64, 0.0, 0.0, 0.0, 0.0, 0.0, 4000.0, 0.0, 0.0];
+        assert_eq!(a.add_route(&next, &[], 2, false), 0, "{}", a.issues());
+        let far = a.w.net.edge_b[1];
+        let off = [1.0, far as f64, 0.0, 0.0, 0.0, 0.0, 0.0, 6000.0, 0.0, 0.0];
+        assert_eq!(a.add_route(&off, &[], 2, false), 0, "{}", a.issues());
+        let lv = |a: &TrackApi, e: u32| { let c = a.edges_info(); let r = c.chunks(10).find(|c| c[0] as u32 == e).unwrap(); (r[8], r[9]) };
+        // the first two: the loose end and the joint go down with them; the far node has the third
+        // piece, so the second piece, with no corners to ramp at, cannot change; nor then the joint,
+        // so the first cannot either
+        assert_eq!(a.set_edges_level(&[0, 1], -2), 1);
+        assert_eq!(a.last_skipped(), 2);
+        // all three: every node goes, the whole run in a tunnel, one undo
+        assert_eq!(a.set_edges_level(&[0, 1, 2], -2), 0, "{}", a.issues());
+        assert_eq!(a.last_skipped(), 0);
+        for e in 0..3 {
+            assert_eq!(lv(&a, e), (-2.0, -2.0));
+        }
+        assert_eq!(a.undo(), 0);
+        for e in 0..3 {
+            assert_eq!(lv(&a, e), (0.0, 0.0));
+        }
+    }
+
+    #[test]
+    fn several_pieces_removed_at_once() {
+        let mut a = api();
+        a.set_cash(6000.0);
+        for y in [0.0, 3000.0] {
+            let ends: Vec<f64> = free(0.0, y).iter().chain(free(2000.0, y).iter()).copied().collect();
+            assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+        }
+        let n0 = a.nodes_info()[0] as u32;
+        assert_eq!(a.add_station(1, n0, 0.0, 0.0, 200, "A".into()), 0, "{}", a.issues());
+        let ids: Vec<u32> = a.edges_info().chunks(10).map(|c| c[0] as u32).collect();
+        let nodes = a.nodes_info().len() / 10;
+        // blueprint: one undoable edit takes both pieces, the station and the nodes left bare
+        assert_eq!(a.delete_pieces(&ids, &[n0]), 0, "{}", a.issues());
+        assert!(a.edges_info().is_empty() && a.nodes_info().is_empty());
+        assert_eq!(a.undo(), 0, "{}", a.issues());
+        assert_eq!(a.edges_info().len() / 10, 2);
+        assert_eq!(a.nodes_info().len() / 10, nodes);
+        assert!(a.w.net.station_data(n0).is_some());
+        // without the station, its node stays
+        assert_eq!(a.delete_pieces(&ids, &[]), 0, "{}", a.issues());
+        assert_eq!(a.nodes_info().len() / 10, 1);
+        assert_eq!(a.undo(), 0);
+        // constructed: final, nothing refunded
+        assert_eq!(a.construct_all(), 0, "{}", a.issues());
+        let cash = a.cash();
+        assert_eq!(a.delete_pieces(&ids, &[]), 0, "{}", a.issues());
+        assert_eq!(a.cash(), cash);
+        assert!(a.edges_info().is_empty());
+        assert!(!a.can_undo());
     }
 
     #[test]
