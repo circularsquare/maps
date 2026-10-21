@@ -1,5 +1,8 @@
 ﻿# Archive
 
+- T-826 [P2] Run in background. Done 2026-10-21: a Settings checkbox (off by default; off pauses the game while its tab is hidden, as before) keeps the clock, money and autosaves at full speed hidden, hour ledgers matching a visible run. notes/T-826.md.
+- T-817a [P2] Design speed. Done 2026-10-21: a Build tab stepper (160, 200, 250, 320 km/h) sizes newly drawn curves (radius 1.8 to 7.2 km); 160 draws as before; high-speed track designed in notes/T-817.md.
+- T-797 B1+B2 [P2] Lines that reverse partway at stops. Done 2026-10-21: reversals worked out from the path, the turnaround stood at the stop, 12 an hour a side, a fourth stop tier and a large U-turn icon; B3 (track ends) open. notes/T-797.md.
 - T-816 [P2] Snap disjointed near the Eurostar line. Done 2026-10-21: the real-network graphs take short undrawn track filling gaps (Seikan and Folkestone portal joined, gb pieces 73 to 20), and routes over twice the clicks' distance plus 20 km are refused instead of looping. notes/T-816.md.
 
 - T-831 [P2] Points to three digits. Done 2026-10-21: `pointsShort` gives three significant digits ("103M", "4.56M", "512k", "12.3k") in the Cities tab.
