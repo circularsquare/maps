@@ -1,5 +1,6 @@
 ﻿# Archive
 
+- T-851 [P3] Metro access to long-distance stations. Done 2026-10-21: yes, the market routes over the whole network; London - Paris 45% alone, 58% with three London feeders, 68% with Paris feeders too. New York's 25x drop was trips inside the zone; trips leaving it are 2-3k against about 55k real, since the save has no Amtrak. notes/T-851.md.
 - T-848 [P2] Opening-day crowding. Done 2026-10-21: each stop's platform starts filling one headway before the first train reaching it; T-828's line, opening morning left behind 27,820 to 608.
 - T-849 [P2] A line over built track set to headways ran 0 trains. Done 2026-10-21: a level with no trains gets its headway's count; an empty Construct gives `NothingToConstruct`.
 - T-850 [P2] Sparse cells measured. Done 2026-10-21: cells under 5 people are 24% of 5.14M but hold 3.2% of jobs, so not dropped; merging cells under 50 trip ends saves about 18% of pack bytes and 10% of countryside memory (T-850b); zones matter more (T-852). notes/T-850.md.
